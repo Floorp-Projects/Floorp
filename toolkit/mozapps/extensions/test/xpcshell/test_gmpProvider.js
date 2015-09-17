@@ -327,6 +327,22 @@ add_task(function* test_pluginRegistration() {
     // addon's lib files are NOT missing.
     Assert.strictEqual(reportedKeys[addon.missingFilesKey], 0);
 
+    // Setting the ABI to something invalid should cause plugin to be removed at startup.
+    clearPaths();
+    gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_ABI, addon.id), "invalid-ABI");
+    yield promiseRestartManager();
+    Assert.equal(addedPaths.indexOf(file.path), -1);
+    Assert.deepEqual(removedPaths, [file.path]);
+
+    // Setting the ABI to expected ABI should cause registration at startup.
+    clearPaths();
+    gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, addon.id),
+                       TEST_VERSION);
+    gPrefs.setCharPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_ABI, addon.id), GMPScope.GMPUtils.ABI());
+    yield promiseRestartManager();
+    Assert.notEqual(addedPaths.indexOf(file.path), -1);
+    Assert.deepEqual(removedPaths, []);
+
     // Check that clearing the version doesn't trigger registration.
     clearPaths();
     gPrefs.clearUserPref(gGetKey(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, addon.id));
