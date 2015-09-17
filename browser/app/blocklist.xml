@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1442261261000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1441833117000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -1991,15 +1991,6 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i1006" id="{d49175b3-3fd8-43b8-b28e-da5d47f3c398}">
-                        <versionRange  minVersion="0" maxVersion="1.0.59" severity="1">
-                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="41.0a1" maxVersion="*" />
-                          </targetApplication>
-                    </versionRange>
-                    <prefs>
-              </prefs>
-    </emItem>
       <emItem  blockID="i97" id="support3_en@adobe122.com">
                         <versionRange  minVersion="0" maxVersion="*">
                     </versionRange>
@@ -2238,15 +2229,6 @@
                     </versionRange>
                     <prefs>
                   <pref>browser.startup.homepage</pref>
-              </prefs>
-    </emItem>
-      <emItem  blockID="i1008" id="firefox-support@vworldc.com">
-                        <versionRange  minVersion="0" maxVersion="vb-20150728103734" severity="1">
-                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-                              <versionRange  minVersion="41.0a1" maxVersion="*" />
-                          </targetApplication>
-                    </versionRange>
-                    <prefs>
               </prefs>
     </emItem>
       <emItem  blockID="i686" id="{a7f2cb14-0472-42a1-915a-8adca2280a2c}">
