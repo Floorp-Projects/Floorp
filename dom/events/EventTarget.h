@@ -28,8 +28,8 @@ template <class T> struct Nullable;
 
 // IID for the dom::EventTarget interface
 #define NS_EVENTTARGET_IID \
-{ 0x605158a9, 0xe229, 0x45b1, \
- { 0xbc, 0x12, 0x02, 0x9f, 0xa3, 0xa9, 0x3f, 0xcb } }
+{ 0xde651c36, 0x0053, 0x4c67, \
+  { 0xb1, 0x3d, 0x67, 0xb9, 0x40, 0xfc, 0x82, 0xe4 } }
 
 class EventTarget : public nsIDOMEventTarget,
                     public nsWrapperCache
@@ -87,6 +87,8 @@ public:
    * exist.
    */
   virtual EventListenerManager* GetExistingListenerManager() const = 0;
+
+  virtual bool HasApzAwareListeners() const;
 
 protected:
   EventHandlerNonNull* GetEventHandler(nsIAtom* aType,
