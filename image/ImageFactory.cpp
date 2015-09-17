@@ -142,7 +142,13 @@ ImageFactory::CreateAnonymousImage(const nsCString& aMimeType)
   newTracker->SetImage(newImage);
   newImage->SetProgressTracker(newTracker);
 
-  rv = newImage->Init(aMimeType.get(), Image::INIT_FLAG_SYNC_LOAD);
+  uint32_t imageFlags = Image::INIT_FLAG_SYNC_LOAD;
+  if (gfxPrefs::ImageDownscaleDuringDecodeEnabled() &&
+      ShouldDownscaleDuringDecode(aMimeType)) {
+    imageFlags |= Image::INIT_FLAG_DOWNSCALE_DURING_DECODE;
+  }
+
+  rv = newImage->Init(aMimeType.get(), imageFlags);
   if (NS_FAILED(rv)) {
     return BadImage("RasterImage::Init failed", newImage);
   }

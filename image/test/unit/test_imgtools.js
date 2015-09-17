@@ -169,7 +169,7 @@ var encodedBytes = streamToArray(istream);
 var refName = "image1png16x16.jpg";
 var refFile = do_get_file(refName);
 istream = getFileInputStream(refFile);
-do_check_eq(istream.available(), 1078);
+do_check_eq(istream.available(), 1051);
 var referenceBytes = streamToArray(istream);
 
 // compare the encoder's output to the reference file.
@@ -228,7 +228,7 @@ encodedBytes = streamToArray(istream);
 refName = isWindows ? "image2jpg16x16-win.png" : "image2jpg16x16.png";
 refFile = do_get_file(refName);
 istream = getFileInputStream(refFile);
-do_check_eq(istream.available(), 948);
+do_check_eq(istream.available(), 950);
 referenceBytes = streamToArray(istream);
 
 // compare the encoder's output to the reference file.
