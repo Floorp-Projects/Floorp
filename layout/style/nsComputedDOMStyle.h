@@ -122,13 +122,13 @@ private:
   mozilla::dom::CSSValue* CreateTextAlignValue(uint8_t aAlign,
                                                bool aAlignTrue,
                                                const KTableValue aTable[]);
-  // This indicates error by leaving mStyleContextHolder null.
+  // This indicates error by leaving mStyleContext null.
   void UpdateCurrentStyleSources(bool aNeedsLayoutFlush);
   void ClearCurrentStyleSources();
 
 #define STYLE_STRUCT(name_, checkdata_cb_)                              \
   const nsStyle##name_ * Style##name_() {                               \
-    return mStyleContextHolder->Style##name_();                         \
+    return mStyleContext->Style##name_();                               \
   }
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
@@ -600,7 +600,7 @@ private:
    * it.  This can be either a style context we resolved ourselves or a style
    * context we got from our frame.
    */
-  nsRefPtr<nsStyleContext> mStyleContextHolder;
+  nsRefPtr<nsStyleContext> mStyleContext;
   nsCOMPtr<nsIAtom> mPseudo;
 
   /*
