@@ -15,7 +15,7 @@ var vmanual; // Video element with captureStream stream in manual (fps 0) mode.
 var vrate;   // Video element with captureStream stream with fixed frame rate.
 
 function checkDrawColorInitialRed() {
-  info("Checking that all video elements become red after first drawColor(red).");
+  info("Checking that all video elements become red when initiated just after the first drawColor(red).");
 
   h.drawColor(c, h.red);
 
@@ -35,34 +35,36 @@ function checkDrawColorInitialRed() {
 }
 
 function checkDrawColorGreen() {
-  info("Checking that drawColor(green) propagates properly to video elements.");
-  h.drawColor(c, h.green);
+  info("Checking that drawing green propagates properly to video elements.");
+
+  var drawing = h.startDrawing(() => h.drawColor(c, h.green));
 
   return Promise.resolve()
     .then(() => h.waitForPixel(vauto, h.green, 0, "should become green automatically"))
     .then(() => h.waitForPixel(vrate, h.green, 0, "should become green automatically"))
     .then(() => h.waitForPixel(vmanual, h.red, 0, "should still be red"))
     .then(() => h.requestFrame(vmanual))
-    .then(() => h.waitForPixel(vmanual, h.green, 0, "should become green after requstFrame()"));
+    .then(() => h.waitForPixel(vmanual, h.green, 0, "should become green after requstFrame()"))
+    .catch(err => ok(false, "checkDrawColorGreen failed: ", err))
+    .then(() => drawing.stop());
 }
 
 function checkRequestFrameOrderGuarantee() {
-  info("Checking that requestFrame() immediately before and after drawColor() " +
-       "calls results in the expected frame seen in the stream.");
+  info("Checking that requestFrame() immediately after a drawColor() " +
+       "call results in the expected frame seen in the stream.");
 
   return Promise.resolve()
     .then(() => h.waitForPixel(vmanual, h.green, 0, "should still be green"))
     .then(() => h.drawColor(c, h.red))   // 1. Draw canvas red
     .then(() => h.requestFrame(vmanual)) // 2. Immediately request a frame
-    .then(() => h.drawColor(c, h.green)) // 3. Immediately draw canvas green
     .then(() => h.waitForPixel(vmanual, h.red, 0, "should become red after call order test"))
-    .then(() => h.waitForPixelToTimeout(vmanual, h.green, 0, 500, "should not become green after call order test"));
 }
 
 function checkDrawImageNotCleanRed() {
   info("Checking that drawImage with not origin-clean image renders streams useless.");
   var ctx = c.getContext('2d');
   var notCleanRed = new Image();
+  var drawing;
 
   return new Promise((resolve, reject) => {
     notCleanRed.onload = resolve;
@@ -70,13 +72,15 @@ function checkDrawImageNotCleanRed() {
     notCleanRed.src = "http://example.com/tests/dom/canvas/test/image_red_crossorigin_credentials.png";
     document.body.appendChild(notCleanRed);
   })
-    .then(() => ctx.drawImage(notCleanRed, 0, 0, c.width, c.height))
+    .then(() => drawing = h.startDrawing(() => ctx.drawImage(notCleanRed, 0, 0, c.width, c.height)))
     .then(() => h.testNotClean(c))
     .then(() => h.waitForPixelToTimeout(vauto, h.red, 0, 1000, "should not become red"))
     .then(() => h.waitForPixelToTimeout(vrate, h.red, 0, 0, "should not become red"))
     .then(() => h.waitForPixel(vmanual, h.green, 0, "should still be green"))
     .then(() => h.requestFrame(vmanual))
-    .then(() => h.waitForPixelToTimeout(vmanual, h.red, 0, 1000, "should not become red"));
+    .then(() => h.waitForPixelToTimeout(vmanual, h.red, 0, 1000, "should not become red"))
+    .catch(err => ok(false, "checkDrawImageNotCleanRed failed: ", err))
+    .then(() => drawing.stop());
 }
 
 function finish() {
