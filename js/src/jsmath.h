@@ -109,6 +109,13 @@ class MathCache
 extern JSObject*
 InitMathClass(JSContext* cx, HandleObject obj);
 
+/*
+ * Fill |seed[0]| through |seed[length-1]| with random bits, suitable for
+ * seeding a random number generator.
+ */
+extern void
+random_generateSeed(uint64_t* seed, size_t length);
+
 extern void
 random_initState(uint64_t* rngState);
 
