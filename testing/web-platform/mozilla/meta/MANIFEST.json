@@ -549,6 +549,12 @@
             "path": "service-workers/service-worker/waiting.https.html",
             "url": "/_mozilla/service-workers/service-worker/waiting.https.html"
           }
+        ],
+        "service-workers/service-worker/worker-interception.https.html": [
+          {
+            "path": "service-workers/service-worker/worker-interception.https.html",
+            "url": "/_mozilla/service-workers/service-worker/worker-interception.https.html"
+          }
         ]
       }
     },
