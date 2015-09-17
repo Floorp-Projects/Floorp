@@ -172,7 +172,7 @@ template <> bool ThingIsPermanentAtomOrWellKnownSymbol<JS::Symbol>(JS::Symbol* s
 
 template<typename T>
 void
-js::CheckTracedThing(JSTracer* trc, T thing)
+js::CheckTracedThing(JSTracer* trc, T* thing)
 {
 #ifdef DEBUG
     MOZ_ASSERT(trc);
@@ -242,30 +242,16 @@ struct CheckTracedFunctor : public VoidDefaultAdaptor<S> {
     template <typename T> void operator()(T* t, JSTracer* trc) { CheckTracedThing(trc, t); }
 };
 
+template<typename T>
+void
+js::CheckTracedThing(JSTracer* trc, T thing)
+{
+    DispatchTyped(CheckTracedFunctor<T>(), thing, trc);
+}
+
 namespace js {
-template<>
-void
-CheckTracedThing<Value>(JSTracer* trc, Value val)
-{
-    DispatchValueTyped(CheckTracedFunctor<Value>(), val, trc);
-}
-
-template <>
-void
-CheckTracedThing<jsid>(JSTracer* trc, jsid id)
-{
-    DispatchIdTyped(CheckTracedFunctor<jsid>(), id, trc);
-}
-
-template <>
-void
-CheckTracedThing<TaggedProto>(JSTracer* trc, TaggedProto proto)
-{
-    DispatchTaggedProtoTyped(CheckTracedFunctor<TaggedProto>(), proto, trc);
-}
-
 #define IMPL_CHECK_TRACED_THING(_, type, __) \
-    template void CheckTracedThing<type*>(JSTracer*, type*);
+    template void CheckTracedThing<type>(JSTracer*, type*);
 JS_FOR_EACH_TRACEKIND(IMPL_CHECK_TRACED_THING);
 #undef IMPL_CHECK_TRACED_THING
 } // namespace js
@@ -427,10 +413,7 @@ JS_FOR_EACH_TRACEKIND(IMPL_BASE_GC_TYPE);
 // share the definitions with Value and jsid. Thus, we need to strip the
 // pointer before sending the type to BaseGCType and re-add it on the other
 // side. As such:
-template <typename T> struct PtrBaseGCType {};
-template <> struct PtrBaseGCType<Value> { typedef Value type; };
-template <> struct PtrBaseGCType<jsid> { typedef jsid type; };
-template <> struct PtrBaseGCType<TaggedProto> { typedef TaggedProto type; };
+template <typename T> struct PtrBaseGCType { typedef T type; };
 template <typename T> struct PtrBaseGCType<T*> { typedef typename BaseGCType<T>::type* type; };
 
 template <typename T>
@@ -442,6 +425,7 @@ ConvertToBase(T* thingp)
 
 template <typename T> void DispatchToTracer(JSTracer* trc, T* thingp, const char* name);
 template <typename T> T DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name);
+template <typename T> void DoMarking(GCMarker* gcmarker, T* thing);
 template <typename T> void DoMarking(GCMarker* gcmarker, T thing);
 
 template <typename T>
@@ -735,7 +719,7 @@ MustSkipMarking<JS::Symbol*>(JS::Symbol* sym)
 
 template <typename T>
 void
-DoMarking(GCMarker* gcmarker, T thing)
+DoMarking(GCMarker* gcmarker, T* thing)
 {
     // Do per-type marking precondition checks.
     if (MustSkipMarking(thing))
@@ -753,26 +737,11 @@ struct DoMarkingFunctor : public VoidDefaultAdaptor<S> {
     template <typename T> void operator()(T* t, GCMarker* gcmarker) { DoMarking(gcmarker, t); }
 };
 
-template <>
+template <typename T>
 void
-DoMarking<Value>(GCMarker* gcmarker, Value val)
+DoMarking(GCMarker* gcmarker, T thing)
 {
-    DispatchValueTyped(DoMarkingFunctor<Value>(), val, gcmarker);
-}
-
-template <>
-void
-DoMarking<jsid>(GCMarker* gcmarker, jsid id)
-{
-    DispatchIdTyped(DoMarkingFunctor<jsid>(), id, gcmarker);
-}
-
-template <>
-void
-DoMarking<TaggedProto>(GCMarker* gcmarker, TaggedProto proto)
-{
-    if (proto.isObject())
-        DoMarking<JSObject*>(gcmarker, proto.toObject());
+    DispatchTyped(DoMarkingFunctor<T>(), thing, gcmarker);
 }
 
 // The simplest traversal calls out to the fully generic traceChildren function
@@ -843,7 +812,7 @@ GCMarker::traverse(AccessorShape* thing) {
 
 template <typename S, typename T>
 void
-js::GCMarker::traverseEdge(S source, T target)
+js::GCMarker::traverseEdge(S source, T* target)
 {
     // Atoms and Symbols do not have or mark their internal pointers, respectively.
     MOZ_ASSERT(!ThingIsPermanentAtomOrWellKnownSymbol(source));
@@ -869,18 +838,11 @@ template <typename V, typename S> struct TraverseEdgeFunctor : public VoidDefaul
     }
 };
 
-template <typename S>
+template <typename S, typename T>
 void
-js::GCMarker::traverseEdge(S source, jsid id)
+js::GCMarker::traverseEdge(S source, T thing)
 {
-    DispatchIdTyped(TraverseEdgeFunctor<jsid, S>(), id, this, source);
-}
-
-template <typename S>
-void
-js::GCMarker::traverseEdge(S source, Value v)
-{
-    DispatchValueTyped(TraverseEdgeFunctor<Value, S>(), v, this, source);
+    DispatchTyped(TraverseEdgeFunctor<T, S>(), thing, this, source);
 }
 
 template <typename T>
@@ -1897,6 +1859,12 @@ GCMarker::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 /*** Tenuring Tracer *****************************************************************************/
 
 namespace js {
+template <typename T>
+void
+TenuringTracer::traverse(T** tp)
+{
+}
+
 template <>
 void
 TenuringTracer::traverse(JSObject** objp)
@@ -1908,39 +1876,20 @@ TenuringTracer::traverse(JSObject** objp)
         *objp = moveToTenured(*objp);
 }
 
-template <>
+template <typename S>
+struct TenuringTraversalFunctor : public IdentityDefaultAdaptor<S> {
+    template <typename T> S operator()(T* t, TenuringTracer* trc) {
+        trc->traverse(&t);
+        return js::gc::RewrapTaggedPointer<S, T*>::wrap(t);
+    }
+};
+
+template <typename T>
 void
-TenuringTracer::traverse(Value* valp)
+TenuringTracer::traverse(T* thingp)
 {
-    if (!valp->isObject())
-        return;
-
-    JSObject *obj = &valp->toObject();
-    traverse(&obj);
-    valp->setObject(*obj);
+    *thingp = DispatchTyped(TenuringTraversalFunctor<T>(), *thingp, this);
 }
-
-template <>
-void
-TenuringTracer::traverse(TaggedProto* protop)
-{
-    if (!protop->isObject())
-        return;
-
-    JSObject *obj = protop->toObject();
-    traverse(&obj);
-    *protop = TaggedProto(obj);
-}
-
-template <> void js::TenuringTracer::traverse(js::BaseShape**) {}
-template <> void js::TenuringTracer::traverse(js::jit::JitCode**) {}
-template <> void js::TenuringTracer::traverse(JSScript**) {}
-template <> void js::TenuringTracer::traverse(js::LazyScript**) {}
-template <> void js::TenuringTracer::traverse(js::Shape**) {}
-template <> void js::TenuringTracer::traverse(JSString**) {}
-template <> void js::TenuringTracer::traverse(JS::Symbol**) {}
-template <> void js::TenuringTracer::traverse(js::ObjectGroup**) {}
-template <> void js::TenuringTracer::traverse(jsid*) {}
 } // namespace js
 
 template <typename T>
@@ -2310,13 +2259,13 @@ IsMarkedInternalCommon(T* thingp)
 
 template <typename T>
 static bool
-IsMarkedInternal(T* thingp)
+IsMarkedInternal(T** thingp)
 {
     return IsMarkedInternalCommon(thingp);
 }
 
-template <typename T>
-static bool
+template <>
+/* static */ bool
 IsMarkedInternal(JSObject** thingp)
 {
     if (IsInsideNursery(*thingp)) {
@@ -2335,39 +2284,21 @@ struct IsMarkedFunctor : public IdentityDefaultAdaptor<S> {
     }
 };
 
-template <>
-bool
-IsMarkedInternal<Value>(Value* valuep)
+template <typename T>
+static bool
+IsMarkedInternal(T* thingp)
 {
     bool rv = true;
-    *valuep = DispatchValueTyped(IsMarkedFunctor<Value>(), *valuep, &rv);
-    return rv;
-}
-
-template <>
-bool
-IsMarkedInternal<jsid>(jsid* idp)
-{
-    bool rv = true;
-    *idp = DispatchIdTyped(IsMarkedFunctor<jsid>(), *idp, &rv);
-    return rv;
-}
-
-template <>
-bool
-IsMarkedInternal<TaggedProto>(TaggedProto* protop)
-{
-    bool rv = true;
-    *protop = DispatchTaggedProtoTyped(IsMarkedFunctor<TaggedProto>(), *protop, &rv);
+    *thingp = DispatchTyped(IsMarkedFunctor<T>(), *thingp, &rv);
     return rv;
 }
 
 template <typename T>
 static bool
-IsAboutToBeFinalizedInternal(T* thingp)
+IsAboutToBeFinalizedInternal(T** thingp)
 {
     CheckIsMarkedThing(thingp);
-    T thing = *thingp;
+    T* thing = *thingp;
     JSRuntime* rt = thing->runtimeFromAnyThread();
 
     /* Permanent atoms are never finalized by non-owning runtimes. */
@@ -2404,30 +2335,12 @@ struct IsAboutToBeFinalizedFunctor : public IdentityDefaultAdaptor<S> {
     }
 };
 
-template <>
-bool
-IsAboutToBeFinalizedInternal<Value>(Value* valuep)
+template <typename T>
+static bool
+IsAboutToBeFinalizedInternal(T* thingp)
 {
     bool rv = false;
-    *valuep = DispatchValueTyped(IsAboutToBeFinalizedFunctor<Value>(), *valuep, &rv);
-    return rv;
-}
-
-template <>
-bool
-IsAboutToBeFinalizedInternal<jsid>(jsid* idp)
-{
-    bool rv = false;
-    *idp = DispatchIdTyped(IsAboutToBeFinalizedFunctor<jsid>(), *idp, &rv);
-    return rv;
-}
-
-template <>
-bool
-IsAboutToBeFinalizedInternal<TaggedProto>(TaggedProto* protop)
-{
-    bool rv = false;
-    *protop = DispatchTaggedProtoTyped(IsAboutToBeFinalizedFunctor<TaggedProto>(), *protop, &rv);
+    *thingp = DispatchTyped(IsAboutToBeFinalizedFunctor<T>(), *thingp, &rv);
     return rv;
 }
 

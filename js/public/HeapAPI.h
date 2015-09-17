@@ -245,6 +245,24 @@ operator!=(const GCCellPtr& ptr1, const GCCellPtr& ptr2)
     return !(ptr1 == ptr2);
 }
 
+// Unwraps the given GCCellPtr and calls the given functor with a template
+// argument of the actual type of the pointer.
+template <typename F, typename... Args>
+auto
+DispatchTyped(F f, GCCellPtr thing, Args&&... args)
+  -> decltype(f(static_cast<JSObject*>(nullptr), mozilla::Forward<Args>(args)...))
+{
+    switch (thing.kind()) {
+#define JS_EXPAND_DEF(name, type, _) \
+      case JS::TraceKind::name: \
+          return f(&thing.as<type>(), mozilla::Forward<Args>(args)...);
+      JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
+#undef JS_EXPAND_DEF
+      default:
+          MOZ_CRASH("Invalid trace kind in DispatchTyped for GCCellPtr.");
+    }
+}
+
 } /* namespace JS */
 
 namespace js {

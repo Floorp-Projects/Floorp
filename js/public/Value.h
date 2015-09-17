@@ -1832,7 +1832,7 @@ class PersistentRootedBase<JS::Value> : public MutableValueOperations<JS::Persis
  */
 template <typename F, typename... Args>
 auto
-DispatchValueTyped(F f, const JS::Value& val, Args&&... args)
+DispatchTyped(F f, const JS::Value& val, Args&&... args)
   -> decltype(f(static_cast<JSObject*>(nullptr), mozilla::Forward<Args>(args)...))
 {
     if (val.isString())
