@@ -855,15 +855,16 @@ private:
    */
 public:
   /**
-   * Attempt a fling with the given velocity. If we are not pannable, tehe fling
+   * Attempt a fling with the given velocity. If we are not pannable, the fling
    * is handed off to the next APZC in the handoff chain via
-   * mTreeManager->DspatchFling(). Returns true iff. any APZC (whether this
-   * one or one further in the handoff chain) accepted the fling.
+   * mTreeManager->DispatchFling(). Returns true iff. the entire velocity of
+   * the fling was consumed by this APZC. aVelocity is modified to contain any
+   * unused, residual velocity.
    * |aHandoff| should be true iff. the fling was handed off from a previous
    *            APZC, and determines whether acceleration is applied to the
    *            fling.
    */
-  bool AttemptFling(ParentLayerPoint aVelocity,
+  bool AttemptFling(ParentLayerPoint& aVelocity,
                     const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
                     bool aHandoff);
 
@@ -889,7 +890,7 @@ private:
   void HandleSmoothScrollOverscroll(const ParentLayerPoint& aVelocity);
 
   // Helper function used by TakeOverFling() and HandleFlingOverscroll().
-  void AcceptFling(const ParentLayerPoint& aVelocity,
+  void AcceptFling(ParentLayerPoint& aVelocity,
                    const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
                    bool aHandoff);
 
@@ -967,9 +968,11 @@ public:
    * handoff chain, accepted the scroll (possibly entering an overscrolled
    * state). If this returns false, the caller APZC knows that it should enter
    * an overscrolled state itself if it can.
+   * aStartPoint and aEndPoint are modified depending on how much of the
+   * scroll gesture was consumed by APZCs in the handoff chain.
    */
-  bool AttemptScroll(const ParentLayerPoint& aStartPoint,
-                     const ParentLayerPoint& aEndPoint,
+  bool AttemptScroll(ParentLayerPoint& aStartPoint,
+                     ParentLayerPoint& aEndPoint,
                      OverscrollHandoffState& aOverscrollHandoffState);
 
   void FlushRepaintForOverscrollHandoff();
@@ -1007,8 +1010,8 @@ private:
    * Guards against the case where the APZC is being concurrently destroyed
    * (and thus mTreeManager is being nulled out).
    */
-  bool CallDispatchScroll(const ParentLayerPoint& aStartPoint,
-                          const ParentLayerPoint& aEndPoint,
+  void CallDispatchScroll(ParentLayerPoint& aStartPoint,
+                          ParentLayerPoint& aEndPoint,
                           OverscrollHandoffState& aOverscrollHandoffState);
 
   /**
@@ -1016,16 +1019,15 @@ private:
    * around OverscrollBy() that also implements restrictions on entering
    * overscroll based on the pan angle.
    */
-  bool OverscrollForPanning(ParentLayerPoint aOverscroll,
+  void OverscrollForPanning(ParentLayerPoint& aOverscroll,
                             const ScreenPoint& aPanDistance);
 
   /**
    * Try to overscroll by 'aOverscroll'.
-   * If we are pannable, 'aOverscroll' is added to any existing overscroll,
-   * and the function returns true.
-   * Otherwise, nothing happens and the function return false.
+   * If we are pannable on a particular axis, that component of 'aOverscroll'
+   * is transferred to any existing overscroll.
    */
-  bool OverscrollBy(const ParentLayerPoint& aOverscroll);
+  void OverscrollBy(ParentLayerPoint& aOverscroll);
 
 
   /* ===================================================================

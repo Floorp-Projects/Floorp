@@ -163,7 +163,7 @@
     <menulist popuponly="true" id="ContentSelectDropdown" hidden="true">
       <menupopup rolluponmousewheel="true"
 #ifdef XP_WIN
-                 consumeoutsideclicks="false"
+                 consumeoutsideclicks="false" ignorekeys="handled"
 #endif
         />
     </menulist>

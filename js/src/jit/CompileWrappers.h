@@ -102,6 +102,8 @@ class CompileZone
     const void* addressOfFreeListLast(gc::AllocKind allocKind);
 };
 
+class JitCompartment;
+
 class CompileCompartment
 {
     JSCompartment* compartment();

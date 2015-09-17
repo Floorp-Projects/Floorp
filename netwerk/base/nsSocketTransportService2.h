@@ -237,7 +237,7 @@ private:
     bool        mKeepaliveEnabledPref;
 
     mozilla::Atomic<bool>  mServingPendingQueue;
-    int32_t                mMaxTimePerPollIter;
+    mozilla::Atomic<int32_t, mozilla::Relaxed> mMaxTimePerPollIter;
     mozilla::Atomic<bool, mozilla::Relaxed>  mTelemetryEnabledPref;
 
     void OnKeepaliveEnabledPrefChange();
