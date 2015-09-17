@@ -6,7 +6,7 @@
 #ifndef nsTemplateMap_h__
 #define nsTemplateMap_h__
 
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "nsXULElement.h"
 
 class nsTemplateMap {

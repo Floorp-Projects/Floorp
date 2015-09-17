@@ -23,7 +23,7 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(AudioNode)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(AudioNode, DOMEventTargetHelper)
   tmp->DisconnectFromGraph();
   if (tmp->mContext) {
-    tmp->mContext->UpdateNodeCount(-1);
+    tmp->mContext->UnregisterNode(tmp);
   }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOutputNodes)
@@ -72,7 +72,7 @@ AudioNode::AudioNode(AudioContext* aContext,
 {
   MOZ_ASSERT(aContext);
   DOMEventTargetHelper::BindToOwner(aContext->GetParentObject());
-  aContext->UpdateNodeCount(1);
+  aContext->RegisterNode(this);
 }
 
 AudioNode::~AudioNode()
@@ -85,7 +85,7 @@ AudioNode::~AudioNode()
              "The webaudio-node-demise notification must have been sent");
 #endif
   if (mContext) {
-    mContext->UpdateNodeCount(-1);
+    mContext->UnregisterNode(this);
   }
 }
 
@@ -225,9 +225,8 @@ AudioNode::Connect(AudioNode& aDestination, uint32_t aOutput,
     MOZ_ASSERT(aInput <= UINT16_MAX, "Unexpected large input port number");
     MOZ_ASSERT(aOutput <= UINT16_MAX, "Unexpected large output port number");
     input->mStreamPort = destinationStream->
-      AllocateInputPort(mStream, 0,
-                            static_cast<uint16_t>(aInput),
-                            static_cast<uint16_t>(aOutput));
+      AllocateInputPort(mStream, static_cast<uint16_t>(aInput),
+                        static_cast<uint16_t>(aOutput));
   }
   aDestination.NotifyInputsChanged();
 
@@ -268,7 +267,7 @@ AudioNode::Connect(AudioParam& aDestination, uint32_t aOutput,
     // Setup our stream as an input to the AudioParam's stream
     MOZ_ASSERT(aOutput <= UINT16_MAX, "Unexpected large output port number");
     input->mStreamPort =
-      ps->AllocateInputPort(mStream, 0, 0, static_cast<uint16_t>(aOutput));
+      ps->AllocateInputPort(mStream, 0, static_cast<uint16_t>(aOutput));
   }
 }
 

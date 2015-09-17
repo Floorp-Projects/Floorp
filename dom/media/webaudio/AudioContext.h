@@ -175,16 +175,14 @@ public:
     return mSampleRate;
   }
 
-  AudioContextId Id() const
-  {
-    return mId;
-  }
+  bool ShouldSuspendNewStream() const { return mSuspendCalled; }
 
   double CurrentTime() const;
 
   AudioListener* Listener();
 
-  AudioContextState State() const;
+  AudioContextState State() const { return mAudioContextState; }
+
   // Those three methods return a promise to content, that is resolved when an
   // (possibly long) operation is completed on the MSG (and possibly other)
   // thread(s). To avoid having to match the calls and asychronous result when
@@ -303,7 +301,8 @@ public:
 
   AudioChannel TestAudioChannelInAudioNodeStream();
 
-  void UpdateNodeCount(int32_t aDelta);
+  void RegisterNode(AudioNode* aNode);
+  void UnregisterNode(AudioNode* aNode);
 
   double DOMTimeToStreamTime(double aTime) const
   {
@@ -343,6 +342,8 @@ private:
 
   bool CheckClosed(ErrorResult& aRv);
 
+  nsTArray<MediaStream*> GetAllStreams() const;
+
 private:
   // Each AudioContext has an id, that is passed down the MediaStreams that
   // back the AudioNodes, so we can easily compute the set of all the
@@ -361,6 +362,8 @@ private:
   // See RegisterActiveNode.  These will keep the AudioContext alive while it
   // is rendering and the window remains alive.
   nsTHashtable<nsRefPtrHashKey<AudioNode> > mActiveNodes;
+  // Raw (non-owning) references to all AudioNodes for this AudioContext.
+  nsTHashtable<nsPtrHashKey<AudioNode> > mAllNodes;
   // Hashsets containing all the PannerNodes, to compute the doppler shift.
   // These are weak pointers.
   nsTHashtable<nsPtrHashKey<PannerNode> > mPannerNodes;
@@ -368,13 +371,13 @@ private:
   nsRefPtr<BasicWaveFormCache> mBasicWaveFormCache;
   // Number of channels passed in the OfflineAudioContext ctor.
   uint32_t mNumberOfChannels;
-  // Number of nodes that currently exist for this AudioContext
-  int32_t mNodeCount;
   bool mIsOffline;
   bool mIsStarted;
   bool mIsShutDown;
   // Close has been called, reject suspend and resume call.
   bool mCloseCalled;
+  // Suspend has been called with no following resume.
+  bool mSuspendCalled;
 };
 
 static const dom::AudioContext::AudioContextId NO_AUDIO_CONTEXT = 0;

@@ -1456,6 +1456,16 @@ JSScript::getIonCounts()
 }
 
 void
+JSScript::takeOverScriptCountsMapEntry(ScriptCounts* entryValue)
+{
+#ifdef DEBUG
+    ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);
+    MOZ_ASSERT(entryValue == &p->value());
+#endif
+    hasScriptCounts_ = false;
+}
+
+void
 JSScript::releaseScriptCounts(ScriptCounts* counts)
 {
     ScriptCountsMap::Ptr p = GetScriptCountsMapEntry(this);

@@ -12,8 +12,8 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-AudioNodeExternalInputStream::AudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate, uint32_t aContextId)
-  : AudioNodeStream(aEngine, NO_STREAM_FLAGS, aSampleRate, aContextId)
+AudioNodeExternalInputStream::AudioNodeExternalInputStream(AudioNodeEngine* aEngine, TrackRate aSampleRate)
+  : AudioNodeStream(aEngine, NO_STREAM_FLAGS, aSampleRate)
 {
   MOZ_COUNT_CTOR(AudioNodeExternalInputStream);
 }
@@ -27,13 +27,14 @@ AudioNodeExternalInputStream::~AudioNodeExternalInputStream()
 AudioNodeExternalInputStream::Create(MediaStreamGraph* aGraph,
                                      AudioNodeEngine* aEngine)
 {
+  AudioContext* ctx = aEngine->NodeMainThread()->Context();
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aGraph->GraphRate() == aEngine->NodeMainThread()->Context()->SampleRate());
+  MOZ_ASSERT(aGraph->GraphRate() == ctx->SampleRate());
 
   nsRefPtr<AudioNodeExternalInputStream> stream =
-    new AudioNodeExternalInputStream(aEngine, aGraph->GraphRate(),
-                                     aEngine->NodeMainThread()->Context()->Id());
-  aGraph->AddStream(stream);
+    new AudioNodeExternalInputStream(aEngine, aGraph->GraphRate());
+  aGraph->AddStream(stream,
+    ctx->ShouldSuspendNewStream() ? MediaStreamGraph::ADD_STREAM_SUSPENDED : 0);
   return stream.forget();
 }
 
@@ -153,6 +154,8 @@ AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
         break;
       next = interval.mEnd;
 
+      // We know this stream does not block during the processing interval ---
+      // we're not finished, we don't underrun, and we're not suspended.
       StreamTime outputStart = GraphTimeToStreamTime(interval.mStart);
       StreamTime outputEnd = GraphTimeToStreamTime(interval.mEnd);
       StreamTime ticks = outputEnd - outputStart;
@@ -160,6 +163,8 @@ AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
       if (interval.mInputIsBlocked) {
         segment.AppendNullData(ticks);
       } else {
+        // The input stream is not blocked in this interval, so no need to call
+        // GraphTimeToStreamTimeWithBlocking.
         StreamTime inputStart =
           std::min(inputSegment.GetDuration(),
                    source->GraphTimeToStreamTime(interval.mStart));

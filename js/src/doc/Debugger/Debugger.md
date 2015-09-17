@@ -37,6 +37,24 @@ its prototype:
     Debugger API (e.g, [`Debugger.Source`][source]) for purposes other than
     step debugging a target JavaScript program.
 
+`collectCoverageInfo`
+:   A boolean value indicating whether code coverage should be enabled inside
+    each debuggee of this `Debugger` instance. Changing this flag value will
+    recompile all JIT code to add or remove code coverage
+    instrumentation. Changing this flag when any frame of the debuggee is
+    currently active on the stack will produce an exception.
+
+    Setting this to `true` enables code coverage instrumentation, which can be
+    accessed via the [`Debugger.Script`][script] `getOffsetsCoverage`
+    function. In some cases, the code coverage might expose information which
+    pre-date the modification of this flag. Code coverage reports are monotone,
+    thus one can take a snapshot when the Debugger is enabled, and output the
+    difference.
+
+    Setting this to `false` prevents this `Debugger` instance from requiring any
+    code coverage instrumentation, but it does not guarantee that the
+    instrumentation is not present.
+
 `uncaughtExceptionHook`
 :   Either `null` or a function that SpiderMonkey calls when a call to a
     debug event handler, breakpoint handler, watchpoint handler, or similar

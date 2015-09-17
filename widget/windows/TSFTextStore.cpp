@@ -535,19 +535,6 @@ GetDisplayAttrStr(const TF_DISPLAYATTRIBUTE& aDispAttr)
 }
 
 static const char*
-GetEventMessageName(uint32_t aMessage)
-{
-  switch (aMessage) {
-    case eMouseDown:
-      return "eMouseDown";
-    case eMouseUp:
-      return "eMouseUp";
-    default:
-      return "Unknown";
-  }
-}
-
-static const char*
 GetMouseButtonName(int16_t aButton)
 {
   switch (aButton) {
@@ -4744,8 +4731,7 @@ TSFTextStore::OnMouseButtonEventInternal(
           "aIMENotification={ mEventMessage=%s, mOffset=%u, mCursorPos={ "
           "mX=%d, mY=%d }, mCharRect={ mX=%d, mY=%d, mWidth=%d, mHeight=%d }, "
           "mButton=%s, mButtons=%s, mModifiers=%s })",
-          this, GetEventMessageName(
-                  aIMENotification.mMouseButtonEventData.mEventMessage),
+          this, ToChar(aIMENotification.mMouseButtonEventData.mEventMessage),
           aIMENotification.mMouseButtonEventData.mOffset,
           aIMENotification.mMouseButtonEventData.mCursorPos.mX,
           aIMENotification.mMouseButtonEventData.mCursorPos.mY,

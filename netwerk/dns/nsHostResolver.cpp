@@ -24,7 +24,7 @@
 #include "prerror.h"
 #include "prtime.h"
 #include "mozilla/Logging.h"
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "plstr.h"
 #include "nsURLHelper.h"
 #include "nsThreadUtils.h"
