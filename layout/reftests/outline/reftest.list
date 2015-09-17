@@ -1,7 +1,7 @@
 == outline-and-box-shadow.html outline-and-box-shadow-ref.html
 == outline-and-3d-transform-1a.html outline-and-3d-transform-1-ref.html
 == outline-and-3d-transform-1b.html outline-and-3d-transform-1-ref.html
-fuzzy-if(Android,255,356) fuzzy-if(d2d,16,96) fuzzy-if(cocoaWidget||B2G,128,60) fuzzy-if(gtkWidget,128,120) fuzzy-if(winWidget,255,120) == outline-and-3d-transform-2.html outline-and-3d-transform-2-ref.html
+fuzzy-if(d2d,16,96) == outline-and-3d-transform-2.html outline-and-3d-transform-2-ref.html
 == outline-overflow-block-abspos.html outline-overflow-block-ref.html
 == outline-overflow-block-float.html outline-overflow-block-ref.html
 == outline-overflow-inlineblock-abspos.html outline-overflow-inlineblock-ref.html
