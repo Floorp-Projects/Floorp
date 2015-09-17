@@ -360,7 +360,6 @@ ImageClientOverlay::UpdateImage(ImageContainer* aContainer, uint32_t aContentFla
   }
   mLastUpdateGenerationCounter = (uint32_t)image->GetSerial();
 
-  AutoRemoveTexture autoRemoveTexture(this);
   if (image->GetFormat() == ImageFormat::OVERLAY_IMAGE) {
     OverlayImage* overlayImage = static_cast<OverlayImage*>(image);
     uint32_t overlayId = overlayImage->GetOverlayId();
