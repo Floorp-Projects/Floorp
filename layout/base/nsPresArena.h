@@ -76,7 +76,7 @@ public:
    * (Defined in ArenaRefPtrInlines.h.)
    *
    * @param aPtr The ArenaRefPtr to clear.
-   * @param aObjectID The nsPresArena::ObjectID value that uniquely identifies
+   * @param aObjectID The ArenaObjectID value that uniquely identifies
    *   the type of object the ArenaRefPtr holds.
    */
   template<typename T>
@@ -99,6 +99,14 @@ public:
    * ensure arena-allocated objects are released earlier.
    */
   void ClearArenaRefPtrs();
+
+  /**
+   * Clears all currently registered ArenaRefPtrs for the given ArenaObjectID.
+   * This is called when we reconstruct the rule tree so that style contexts
+   * pointing into the old rule tree aren't released afterwards, triggering an
+   * assertion in ~nsStyleContext.
+   */
+  void ClearArenaRefPtrs(mozilla::ArenaObjectID aObjectID);
 
   /**
    * Increment aArenaStats with sizes of interesting objects allocated in this
