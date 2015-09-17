@@ -31,8 +31,9 @@
 #include "CounterStyleManager.h"
 
 class nsIFrame;
-class nsTextFrame;
 class nsIURI;
+class nsStyleContext;
+class nsTextFrame;
 class imgIContainer;
 
 // Includes nsStyleStructID.
