@@ -67,7 +67,7 @@ template <>
 Value
 DoCallback<Value>(JS::CallbackTracer* trc, Value* vp, const char* name)
 {
-    *vp = DispatchValueTyped(DoCallbackFunctor<Value>(), *vp, trc, name);
+    *vp = DispatchTyped(DoCallbackFunctor<Value>(), *vp, trc, name);
     return *vp;
 }
 
@@ -75,7 +75,7 @@ template <>
 jsid
 DoCallback<jsid>(JS::CallbackTracer* trc, jsid* idp, const char* name)
 {
-    *idp = DispatchIdTyped(DoCallbackFunctor<jsid>(), *idp, trc, name);
+    *idp = DispatchTyped(DoCallbackFunctor<jsid>(), *idp, trc, name);
     return *idp;
 }
 
@@ -83,7 +83,7 @@ template <>
 TaggedProto
 DoCallback<TaggedProto>(JS::CallbackTracer* trc, TaggedProto* protop, const char* name)
 {
-    *protop = DispatchTaggedProtoTyped(DoCallbackFunctor<TaggedProto>(), *protop, trc, name);
+    *protop = DispatchTyped(DoCallbackFunctor<TaggedProto>(), *protop, trc, name);
     return *protop;
 }
 
