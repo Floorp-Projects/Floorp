@@ -50,6 +50,7 @@ EXTRA_JS_MODULES.devtools.server.actors += [
     'actors/eventlooplag.js',
     'actors/framerate.js',
     'actors/gcli.js',
+    'actors/highlighters.css',
     'actors/highlighters.js',
     'actors/inspector.js',
     'actors/layout.js',

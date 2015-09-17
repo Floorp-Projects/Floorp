@@ -16,7 +16,6 @@ DIRS += [
     'pretty-fast',
     'qrcode',
     'security',
-    'server',
     'sourcemap',
     'shared',
     'styleinspector',
@@ -45,14 +44,6 @@ EXTRA_JS_MODULES.devtools += [
 EXTRA_JS_MODULES.devtools += [
     'Console.jsm',
     'Loader.jsm',
-]
-
-EXTRA_JS_MODULES.devtools.server.actors += [
-    'server/actors/highlighters.css'
-]
-
-EXTRA_JS_MODULES.devtools.layout += [
-    'layout/utils.js'
 ]
 
 EXTRA_JS_MODULES.devtools.layout += [
