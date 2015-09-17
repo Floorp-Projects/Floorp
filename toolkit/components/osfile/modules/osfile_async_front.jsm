@@ -1176,7 +1176,7 @@ File.writeAtomic = function writeAtomic(path, buffer, options = {}) {
   let promise = Scheduler.post("writeAtomic",
     [Type.path.toMsg(path),
      Type.void_t.in_ptr.toMsg(buffer),
-     options], [options, buffer]);
+     options], [options, buffer, path]);
   TelemetryStopwatch.finish("OSFILE_WRITEATOMIC_JANK_MS", refObj);
   return promise;
 };
