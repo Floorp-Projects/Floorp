@@ -169,7 +169,7 @@ AddonWrapper<Base>::getOwnPropertyDescriptor(JSContext* cx, HandleObject wrapper
 
 template<typename Base>
 bool
-AddonWrapper<Base>::get(JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<JSObject*> receiver,
+AddonWrapper<Base>::get(JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<Value> receiver,
                         JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp) const
 {
     Rooted<JSPropertyDescriptor> desc(cx);
@@ -180,10 +180,7 @@ AddonWrapper<Base>::get(JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle
         return Base::get(cx, wrapper, receiver, id, vp);
 
     if (desc.getter()) {
-        MOZ_ASSERT(desc.hasGetterObject());
-        AutoValueVector args(cx);
-        RootedValue fval(cx, ObjectValue(*desc.getterObject()));
-        return JS_CallFunctionValue(cx, receiver, fval, args, vp);
+        return Call(cx, receiver, desc.getterObject(), HandleValueArray::empty(), vp);
     } else {
         vp.set(desc.value());
         return true;

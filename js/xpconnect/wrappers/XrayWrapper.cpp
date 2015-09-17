@@ -2092,13 +2092,18 @@ XrayWrapper<Base, Traits>::delete_(JSContext* cx, HandleObject wrapper,
 template <typename Base, typename Traits>
 bool
 XrayWrapper<Base, Traits>::get(JSContext* cx, HandleObject wrapper,
-                               HandleObject receiver, HandleId id,
+                               HandleValue receiver, HandleId id,
                                MutableHandleValue vp) const
 {
     // Skip our Base if it isn't already ProxyHandler.
     // NB: None of the functions we call are prepared for the receiver not
     // being the wrapper, so ignore the receiver here.
-    return js::BaseProxyHandler::get(cx, wrapper, Traits::HasPrototype ? receiver : wrapper, id, vp);
+    RootedValue thisv(cx);
+    if (Traits::HasPrototype)
+      thisv = receiver;
+    else
+      thisv.setObject(*wrapper);
+    return js::BaseProxyHandler::get(cx, wrapper, thisv, id, vp);
 }
 
 template <typename Base, typename Traits>
