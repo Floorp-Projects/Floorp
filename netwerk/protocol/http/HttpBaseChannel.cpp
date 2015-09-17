@@ -2249,8 +2249,10 @@ HttpBaseChannel::ShouldIntercept()
   GetCallback(controller);
   bool shouldIntercept = false;
   if (controller && !mForceNoIntercept) {
+    nsContentPolicyType type = mLoadInfo->InternalContentPolicyType();
     nsresult rv = controller->ShouldPrepareForIntercept(mURI,
                                                         IsNavigation(),
+                                                        type,
                                                         &shouldIntercept);
     if (NS_FAILED(rv)) {
       return false;

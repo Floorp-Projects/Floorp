@@ -156,7 +156,9 @@ NS_IMPL_ISUPPORTS(HttpChannelParent,
                   nsINetworkInterceptController)
 
 NS_IMETHODIMP
-HttpChannelParent::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNavigate, bool* aShouldIntercept)
+HttpChannelParent::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNavigate,
+                                             nsContentPolicyType aType,
+                                             bool* aShouldIntercept)
 {
   *aShouldIntercept = mShouldIntercept;
   return NS_OK;

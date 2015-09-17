@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<title>Service Worker: intercepting Worker script loads</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="resources/test-helpers.sub.js"></script>
+<body>
+<script>
+promise_test(function(t) {
+    var worker_url = 'resources/dummy-synthesized-worker.js';
+    var service_worker = 'resources/dummy-worker-interceptor.js';
+    var scope = worker_url;
+
+    return service_worker_unregister_and_register(t, service_worker, scope)
+      .then(function(r) {
+          return wait_for_state(t, r.installing, 'activated');
+        })
+      .then(function() {
+          return new Promise(function(resolve, reject) {
+              var w = new Worker(worker_url);
+              w.onmessage = function(e) {
+                resolve(e.data);
+              }
+
+              w.onerror = function(e) {
+                reject(e.message);
+              }
+            });
+        })
+      .then(function(data) {
+          assert_equals(data, 'worker loading intercepted by service worker');
+          service_worker_unregister_and_done(t, scope);
+        });
+  }, 'Verify worker script from uncontrolled document is intercepted by Service Worker');
+
+</script>
+</body>
