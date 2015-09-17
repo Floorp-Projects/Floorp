@@ -3080,12 +3080,14 @@ Resolve(const std::string& fqdn, int address_family)
           &reinterpret_cast<struct sockaddr_in*>(res->ai_addr)->sin_addr,
           str_addr,
           sizeof(str_addr));
+      break;
     case AF_INET6:
       inet_ntop(
           AF_INET6,
           &reinterpret_cast<struct sockaddr_in6*>(res->ai_addr)->sin6_addr,
           str_addr,
           sizeof(str_addr));
+      break;
     default:
       std::cerr << "Got unexpected address family in DNS lookup: "
                 << res->ai_family << std::endl;

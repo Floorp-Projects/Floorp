@@ -197,6 +197,7 @@
 
 <!ENTITY fxaccount_status_header2 'Firefox Account'>
 <!ENTITY fxaccount_status_signed_in_as 'Signed in as'>
+<!ENTITY fxaccount_status_manage_account 'Manage account'>
 <!ENTITY fxaccount_status_auth_server 'Account server'>
 <!ENTITY fxaccount_status_sync_now 'Sync now'>
 <!ENTITY fxaccount_status_syncing2 'Syncing…'>

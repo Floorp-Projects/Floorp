@@ -19,7 +19,6 @@
     "chai": false,
     "console": false,
     "loop": true,
-    "MozActivity": false,
     "mozRTCSessionDescription": false,
     "OT": false,
     "performance": false,

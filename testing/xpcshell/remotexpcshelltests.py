@@ -16,6 +16,8 @@ import mozdevice
 import mozfile
 import mozinfo
 
+from xpcshellcommandline import parser_remote
+
 here = os.path.dirname(os.path.abspath(__file__))
 
 def remoteJoin(path1, path2):
@@ -105,7 +107,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         return (list(sanitize_list(test['head'], 'head')),
                 list(sanitize_list(test['tail'], 'tail')))
 
-    def buildXpcsCmd(self, testdir):
+    def buildXpcsCmd(self):
         # change base class' paths to remote paths and use base class to build command
         self.xpcshell = remoteJoin(self.remoteBinDir, "xpcw")
         self.headJSPath = remoteJoin(self.remoteScriptsDir, 'head.js')
@@ -113,7 +115,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         self.httpdManifest = remoteJoin(self.remoteComponentsDir, 'httpd.manifest')
         self.testingModulesDir = self.remoteModulesDir
         self.testharnessdir = self.remoteScriptsDir
-        xpcshell.XPCShellTestThread.buildXpcsCmd(self, testdir)
+        xpcshell.XPCShellTestThread.buildXpcsCmd(self)
         # remove "-g <dir> -a <dir>" and add "--greomni <apk>"
         del(self.xpcsCmd[1:5])
         if self.options.localAPK:
@@ -216,7 +218,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
 # via devicemanager.
 class XPCShellRemote(xpcshell.XPCShellTests, object):
 
-    def __init__(self, devmgr, options, args, log):
+    def __init__(self, devmgr, options, log):
         xpcshell.XPCShellTests.__init__(self, log)
 
         # Add Android version (SDK level) to mozinfo so that manifest entries
@@ -517,8 +519,8 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
             self.device.removeDir(self.remoteMinidumpDir)
         self.device.mkDir(self.remoteMinidumpDir)
 
-    def buildTestList(self, test_tags=None):
-        xpcshell.XPCShellTests.buildTestList(self, test_tags=test_tags)
+    def buildTestList(self, test_tags=None, test_paths=None):
+        xpcshell.XPCShellTests.buildTestList(self, test_tags=test_tags, test_paths=test_paths)
         uniqueTestPaths = set([])
         for test in self.alltests:
             uniqueTestPaths.add(test['here'])
@@ -527,90 +529,37 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
             remoteScriptDir = remoteJoin(self.remoteScriptsDir, abbrevTestDir)
             self.pathMapping.append(PathMapping(testdir, remoteScriptDir))
 
-class RemoteXPCShellOptions(xpcshell.XPCShellOptions):
-
-    def __init__(self):
-        xpcshell.XPCShellOptions.__init__(self)
-        defaults = {}
-
-        self.add_option("--deviceIP", action="store",
-                        type = "string", dest = "deviceIP",
-                        help = "ip address of remote device to test")
-        defaults["deviceIP"] = None
-
-        self.add_option("--devicePort", action="store",
-                        type = "string", dest = "devicePort",
-                        help = "port of remote device to test")
-        defaults["devicePort"] = 20701
-
-        self.add_option("--dm_trans", action="store",
-                        type = "string", dest = "dm_trans",
-                        help = "the transport to use to communicate with device: [adb|sut]; default=sut")
-        defaults["dm_trans"] = "sut"
-
-        self.add_option("--objdir", action="store",
-                        type = "string", dest = "objdir",
-                        help = "local objdir, containing xpcshell binaries")
-        defaults["objdir"] = None
-
-        self.add_option("--apk", action="store",
-                        type = "string", dest = "localAPK",
-                        help = "local path to Fennec APK")
-        defaults["localAPK"] = None
-
-        self.add_option("--noSetup", action="store_false",
-                        dest = "setup",
-                        help = "do not copy any files to device (to be used only if device is already setup)")
-        defaults["setup"] = True
-
-        self.add_option("--local-lib-dir", action="store",
-                        type = "string", dest = "localLib",
-                        help = "local path to library directory")
-        defaults["localLib"] = None
-
-        self.add_option("--local-bin-dir", action="store",
-                        type = "string", dest = "localBin",
-                        help = "local path to bin directory")
-        defaults["localBin"] = None
-
-        self.add_option("--remoteTestRoot", action = "store",
-                    type = "string", dest = "remoteTestRoot",
-                    help = "remote directory to use as test root (eg. /mnt/sdcard/tests or /data/local/tests)")
-        defaults["remoteTestRoot"] = None
-
-        self.set_defaults(**defaults)
-
-    def verifyRemoteOptions(self, options):
-        if options.localLib is None:
-            if options.localAPK and options.objdir:
-                for path in ['dist/fennec', 'fennec/lib']:
-                    options.localLib = os.path.join(options.objdir, path)
-                    if os.path.isdir(options.localLib):
-                        break
-                else:
-                    self.error("Couldn't find local library dir, specify --local-lib-dir")
-            elif options.objdir:
-                options.localLib = os.path.join(options.objdir, 'dist/bin')
-            elif os.path.isfile(os.path.join(here, '..', 'bin', 'xpcshell')):
-                # assume tests are being run from a tests.zip
-                options.localLib = os.path.abspath(os.path.join(here, '..', 'bin'))
+def verifyRemoteOptions(parser, options):
+    if options.localLib is None:
+        if options.localAPK and options.objdir:
+            for path in ['dist/fennec', 'fennec/lib']:
+                options.localLib = os.path.join(options.objdir, path)
+                if os.path.isdir(options.localLib):
+                    break
             else:
-                self.error("Couldn't find local library dir, specify --local-lib-dir")
+                parser.error("Couldn't find local library dir, specify --local-lib-dir")
+        elif options.objdir:
+            options.localLib = os.path.join(options.objdir, 'dist/bin')
+        elif os.path.isfile(os.path.join(here, '..', 'bin', 'xpcshell')):
+            # assume tests are being run from a tests.zip
+            options.localLib = os.path.abspath(os.path.join(here, '..', 'bin'))
+        else:
+            parser.error("Couldn't find local library dir, specify --local-lib-dir")
 
-        if options.localBin is None:
-            if options.objdir:
-                for path in ['dist/bin', 'bin']:
-                    options.localBin = os.path.join(options.objdir, path)
-                    if os.path.isdir(options.localBin):
-                        break
-                else:
-                    self.error("Couldn't find local binary dir, specify --local-bin-dir")
-            elif os.path.isfile(os.path.join(here, '..', 'bin', 'xpcshell')):
-                # assume tests are being run from a tests.zip
-                options.localBin = os.path.abspath(os.path.join(here, '..', 'bin'))
+    if options.localBin is None:
+        if options.objdir:
+            for path in ['dist/bin', 'bin']:
+                options.localBin = os.path.join(options.objdir, path)
+                if os.path.isdir(options.localBin):
+                    break
             else:
-                self.error("Couldn't find local binary dir, specify --local-bin-dir")
-        return options
+                parser.error("Couldn't find local binary dir, specify --local-bin-dir")
+        elif os.path.isfile(os.path.join(here, '..', 'bin', 'xpcshell')):
+            # assume tests are being run from a tests.zip
+            options.localBin = os.path.abspath(os.path.join(here, '..', 'bin'))
+        else:
+            parser.error("Couldn't find local binary dir, specify --local-bin-dir")
+    return options
 
 class PathMapping:
 
@@ -619,14 +568,13 @@ class PathMapping:
         self.remote = remoteDir
 
 def main():
-
     if sys.version_info < (2,7):
         print >>sys.stderr, "Error: You must use python version 2.7 or newer but less than 3.0"
         sys.exit(1)
 
-    parser = RemoteXPCShellOptions()
+    parser = parser_remote()
     commandline.add_logging_group(parser)
-    options, args = parser.parse_args()
+    options = parser.parse_args()
     if not options.localAPK:
         for file in os.listdir(os.path.join(options.objdir, "dist")):
             if (file.endswith(".apk") and file.startswith("fennec")):
@@ -638,15 +586,10 @@ def main():
             print >>sys.stderr, "Error: please specify an APK"
             sys.exit(1)
 
-    options = parser.verifyRemoteOptions(options)
+    options = verifyRemoteOptions(parser, options)
     log = commandline.setup_logging("Remote XPCShell",
                                     options,
                                     {"tbpl": sys.stdout})
-
-    if len(args) < 1 and options.manifest is None:
-        print >>sys.stderr, """Usage: %s <test dirs>
-             or: %s --manifest=test.manifest """ % (sys.argv[0], sys.argv[0])
-        sys.exit(1)
 
     if options.dm_trans == "adb":
         if options.deviceIP:
@@ -663,16 +606,17 @@ def main():
         print >>sys.stderr, "Error: You must specify a test filename in interactive mode!"
         sys.exit(1)
 
-    xpcsh = XPCShellRemote(dm, options, args, log)
+    if options.xpcshell is None:
+        options.xpcshell = "xpcshell"
+
+    xpcsh = XPCShellRemote(dm, options, log)
 
     # we don't run concurrent tests on mobile
     options.sequential = True
 
-    if not xpcsh.runTests(xpcshell='xpcshell',
-                          testClass=RemoteXPCShellTestThread,
-                          testdirs=args[0:],
+    if not xpcsh.runTests(testClass=RemoteXPCShellTestThread,
                           mobileArgs=xpcsh.mobileArgs,
-                          **options.__dict__):
+                          **vars(options)):
         sys.exit(1)
 
 
