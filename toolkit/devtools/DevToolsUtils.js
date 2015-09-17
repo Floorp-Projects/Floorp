@@ -310,7 +310,9 @@ exports.getProperty = function getProperty(aObj, aKey) {
  *         Whether a safe getter was found.
  */
 exports.hasSafeGetter = function hasSafeGetter(aDesc) {
-  let fn = aDesc.get;
+  // Scripted functions that are CCWs will not appear scripted until after
+  // unwrapping.
+  let fn = aDesc.get.unwrap();
   return fn && fn.callable && fn.class == "Function" && fn.script === undefined;
 };
 
