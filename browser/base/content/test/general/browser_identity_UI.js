@@ -17,7 +17,7 @@ var tests = [
   {
     name: "normal domain",
     location: "http://test1.example.org/",
-    effectiveHost: "example.org"
+    effectiveHost: "test1.example.org"
   },
   {
     name: "view-source",
@@ -33,17 +33,17 @@ var tests = [
   {
     name: "IDN subdomain",
     location: "http://sub1." + idnDomain + "/",
-    effectiveHost: idnDomain
+    effectiveHost: "sub1." + idnDomain
   },
   {
     name: "subdomain with port",
     location: "http://sub1.test1.example.org:8000/",
-    effectiveHost: "example.org"
+    effectiveHost: "sub1.test1.example.org"
   },
   {
     name: "subdomain HTTPS",
     location: "https://test1.example.com/",
-    effectiveHost: "example.com",
+    effectiveHost: "test1.example.com",
     isHTTPS: true
   },
   {
