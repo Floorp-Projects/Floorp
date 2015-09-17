@@ -1288,26 +1288,28 @@ extern bool
 NativeHasProperty(JSContext* cx, HandleNativeObject obj, HandleId id, bool* foundp);
 
 extern bool
-NativeGetProperty(JSContext* cx, HandleNativeObject obj, HandleObject receiver, HandleId id,
+NativeGetProperty(JSContext* cx, HandleNativeObject obj, HandleValue receiver, HandleId id,
                   MutableHandleValue vp);
 
 extern bool
-NativeGetPropertyNoGC(JSContext* cx, NativeObject* obj, JSObject* receiver, jsid id, Value* vp);
+NativeGetPropertyNoGC(JSContext* cx, NativeObject* obj, const Value& receiver, jsid id, Value* vp);
 
 extern bool
-NativeGetElement(JSContext* cx, HandleNativeObject obj, HandleObject receiver, uint32_t index,
+NativeGetElement(JSContext* cx, HandleNativeObject obj, HandleValue receiver, uint32_t index,
                  MutableHandleValue vp);
 
 inline bool
 NativeGetProperty(JSContext* cx, HandleNativeObject obj, HandleId id, MutableHandleValue vp)
 {
-    return NativeGetProperty(cx, obj, obj, id, vp);
+    RootedValue receiver(cx, ObjectValue(*obj));
+    return NativeGetProperty(cx, obj, receiver, id, vp);
 }
 
 inline bool
 NativeGetElement(JSContext* cx, HandleNativeObject obj, uint32_t index, MutableHandleValue vp)
 {
-    return NativeGetElement(cx, obj, obj, index, vp);
+    RootedValue receiver(cx, ObjectValue(*obj));
+    return NativeGetElement(cx, obj, receiver, index, vp);
 }
 
 bool
@@ -1409,7 +1411,7 @@ js::HasProperty(JSContext* cx, HandleObject obj, HandleId id, bool* foundp)
 }
 
 inline bool
-js::GetProperty(JSContext* cx, HandleObject obj, HandleObject receiver, HandleId id,
+js::GetProperty(JSContext* cx, HandleObject obj, HandleValue receiver, HandleId id,
                 MutableHandleValue vp)
 {
     if (GetPropertyOp op = obj->getOps()->getProperty)
@@ -1418,7 +1420,7 @@ js::GetProperty(JSContext* cx, HandleObject obj, HandleObject receiver, HandleId
 }
 
 inline bool
-js::GetPropertyNoGC(JSContext* cx, JSObject* obj, JSObject* receiver, jsid id, Value* vp)
+js::GetPropertyNoGC(JSContext* cx, JSObject* obj, const Value& receiver, jsid id, Value* vp)
 {
     if (obj->getOps()->getProperty)
         return false;

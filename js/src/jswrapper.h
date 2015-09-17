@@ -133,7 +133,7 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
                                    ObjectOpResult& result) const override;
     virtual bool isExtensible(JSContext* cx, HandleObject wrapper, bool* extensible) const override;
     virtual bool has(JSContext* cx, HandleObject wrapper, HandleId id, bool* bp) const override;
-    virtual bool get(JSContext* cx, HandleObject wrapper, HandleObject receiver,
+    virtual bool get(JSContext* cx, HandleObject wrapper, HandleValue receiver,
                      HandleId id, MutableHandleValue vp) const override;
     virtual bool set(JSContext* cx, HandleObject wrapper, HandleId id, HandleValue v,
                      HandleValue receiver, ObjectOpResult& result) const override;
@@ -191,7 +191,7 @@ class JS_FRIEND_API(OpaqueCrossCompartmentWrapper) : public CrossCompartmentWrap
     virtual bool isExtensible(JSContext* cx, HandleObject wrapper, bool* extensible) const override;
     virtual bool has(JSContext* cx, HandleObject wrapper, HandleId id,
                      bool* bp) const override;
-    virtual bool get(JSContext* cx, HandleObject wrapper, HandleObject receiver,
+    virtual bool get(JSContext* cx, HandleObject wrapper, HandleValue receiver,
                      HandleId id, MutableHandleValue vp) const override;
     virtual bool set(JSContext* cx, HandleObject wrapper, HandleId id, HandleValue v,
                      HandleValue receiver, ObjectOpResult& result) const override;

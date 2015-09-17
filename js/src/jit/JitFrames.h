@@ -699,8 +699,8 @@ class IonOOLSetterOpExitFrameLayout : public IonOOLPropertyOpExitFrameLayout
     }
 };
 
-// Proxy::get(JSContext* cx, HandleObject proxy, HandleObject receiver, HandleId id,
-//            MutableHandleValue vp)
+// ProxyGetProperty(JSContext* cx, HandleObject proxy, HandleId id, MutableHandleValue vp)
+// ProxyCallProperty(JSContext* cx, HandleObject proxy, HandleId id, MutableHandleValue vp)
 // ProxySetProperty(JSContext* cx, HandleObject proxy, HandleId id, MutableHandleValue vp,
 //                  bool strict)
 class IonOOLProxyExitFrameLayout
@@ -711,9 +711,6 @@ class IonOOLProxyExitFrameLayout
 
     // The proxy object.
     JSObject* proxy_;
-
-    // Object for HandleObject
-    JSObject* receiver_;
 
     // id for HandleId
     jsid id_;
@@ -745,9 +742,6 @@ class IonOOLProxyExitFrameLayout
     }
     inline jsid* id() {
         return &id_;
-    }
-    inline JSObject** receiver() {
-        return &receiver_;
     }
     inline JSObject** proxy() {
         return &proxy_;
