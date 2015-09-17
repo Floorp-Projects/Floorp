@@ -6067,10 +6067,6 @@ nsDocument::RegisterEnabled()
 Maybe<nsTArray<nsRefPtr<mozilla::dom::CustomElementData>>>
 nsDocument::sProcessingStack;
 
-// static
-bool
-nsDocument::sProcessingBaseElementQueue;
-
 void
 nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
                             const ElementRegistrationOptions& aOptions,
