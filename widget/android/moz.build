@@ -19,7 +19,6 @@ EXPORTS += [
     'AndroidBridge.h',
     'AndroidJavaWrappers.h',
     'AndroidJNIWrapper.h',
-    'GeneratedJNINatives.h',
     'GeneratedJNIWrappers.h',
 ]
 
