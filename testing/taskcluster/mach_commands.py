@@ -196,7 +196,7 @@ def remove_caches_from_task(task):
     """
     whitelist = [
         "tc-vcs",
-        "tc-vcs-public-source",
+        "tc-vcs-public-sources",
         "tooltool-cache",
     ]
     try:
