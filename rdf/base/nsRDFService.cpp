@@ -47,7 +47,7 @@
 #include "nsXPIDLString.h"
 #include "nsNetUtil.h"
 #include "nsIURI.h"
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "plhash.h"
 #include "plstr.h"
 #include "mozilla/Logging.h"

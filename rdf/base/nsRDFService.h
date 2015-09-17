@@ -24,7 +24,7 @@
 #include "nsWeakReference.h"
 #include "nsIFactory.h"
 #include "nsCOMPtr.h"
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "nsString.h"
 
 struct PLHashTable;

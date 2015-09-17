@@ -332,7 +332,7 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
     AudioNodeStream::NEED_MAIN_THREAD_CURRENT_TIME |
     AudioNodeStream::NEED_MAIN_THREAD_FINISHED |
     AudioNodeStream::EXTERNAL_OUTPUT;
-  mStream = AudioNodeStream::Create(graph, engine, flags);
+  mStream = AudioNodeStream::Create(aContext, engine, flags, graph);
   mStream->AddMainThreadListener(this);
   mStream->AddAudioOutput(&gWebAudioOutputKey);
 
@@ -680,7 +680,7 @@ AudioDestinationNode::SetIsOnlyNodeForContext(bool aIsOnlyNode)
   }
 
   if (aIsOnlyNode) {
-    mStream->ChangeExplicitBlockerCount(1);
+    mStream->Suspend();
     mStartedBlockingDueToBeingOnlyNode = TimeStamp::Now();
     // Don't do an update of mExtraCurrentTimeSinceLastStartedBlocking until the next stable state.
     mExtraCurrentTimeUpdatedSinceLastStableState = true;
@@ -690,7 +690,7 @@ AudioDestinationNode::SetIsOnlyNodeForContext(bool aIsOnlyNode)
     ExtraCurrentTime();
     mExtraCurrentTime += mExtraCurrentTimeSinceLastStartedBlocking;
     mExtraCurrentTimeSinceLastStartedBlocking = 0;
-    mStream->ChangeExplicitBlockerCount(-1);
+    mStream->Resume();
     mStartedBlockingDueToBeingOnlyNode = TimeStamp();
   }
 }

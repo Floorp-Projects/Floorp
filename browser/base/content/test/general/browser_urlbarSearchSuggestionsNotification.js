@@ -183,6 +183,19 @@ add_task(function* multipleWindows() {
   yield BrowserTestUtils.closeWindow(win3);
 });
 
+add_task(function* enableOutsideNotification() {
+  // Setting the suggest.searches pref outside the notification (e.g., by
+  // ticking the checkbox in the preferences window) should hide it.
+  Services.prefs.setBoolPref(SUGGEST_ALL_PREF, true);
+  Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, false);
+  yield setUserMadeChoicePref(false);
+
+  Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, true);
+  gURLBar.focus();
+  yield promiseAutocompleteResultPopup("foo");
+  assertVisible(false);
+});
+
 /**
  * Setting the choice pref triggers a pref observer in the urlbar, which hides
  * the notification if it's present.  This function returns a promise that's
@@ -214,13 +227,13 @@ function suggestionsPresent() {
   let present = false;
   for (let i = 0; i < matchCount; i++) {
     let url = controller.getValueAt(i);
-    let [, type, paramStr] = url.match(/^moz-action:([^,]+),(.*)$/);
-    let params = {};
-    try {
-      params = JSON.parse(paramStr);
-    } catch (err) {}
-    if (type == "searchengine" && "searchSuggestion" in params) {
-      return true;
+    let mozActionMatch = url.match(/^moz-action:([^,]+),(.*)$/);
+    if (mozActionMatch) {
+      let [, type, paramStr] = mozActionMatch;
+      let params = JSON.parse(paramStr);
+      if (type == "searchengine" && "searchSuggestion" in params) {
+        return true;
+      }
     }
   }
   return false;

@@ -91,6 +91,10 @@ public:
                         int32_t  aModType,
                         const nsAttrValue* aOldValue);
 
+  // Get an integer that increments every time we process pending restyles.
+  // The value is never 0.
+  uint32_t GetRestyleGeneration() const { return mRestyleGeneration; }
+
   // Get an integer that increments every time there is a style change
   // as a result of a change to the :hover content state.
   uint32_t GetHoverGeneration() const { return mHoverGeneration; }
@@ -519,6 +523,12 @@ private:
     // Fast-path the common case (esp. for the animation restyle
     // tracker) of not having anything to do.
     if (aRestyleTracker.Count() || ShouldStartRebuildAllFor(aRestyleTracker)) {
+      if (++mRestyleGeneration == 0) {
+        // Keep mRestyleGeneration from being 0, since that's what
+        // nsPresContext::GetRestyleGeneration returns when it no
+        // longer has a RestyleManager.
+        ++mRestyleGeneration;
+      }
       aRestyleTracker.DoProcessRestyles();
     }
   }
@@ -539,6 +549,7 @@ private:
   bool mSkipAnimationRules : 1;
   bool mHavePendingNonAnimationRestyles : 1;
 
+  uint32_t mRestyleGeneration;
   uint32_t mHoverGeneration;
   nsChangeHint mRebuildAllExtraHint;
   nsRestyleHint mRebuildAllRestyleHint;

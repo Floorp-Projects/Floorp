@@ -103,6 +103,7 @@ public:
                          APZCTreeManager* aTreeManager,
                          const nsRefPtr<InputQueue>& aInputQueue,
                          GeckoContentController* aController,
+                         TaskThrottler* aPaintThrottler,
                          GestureBehavior aGestures = DEFAULT_GESTURES);
 
   // --------------------------------------------------------------------------
@@ -384,14 +385,11 @@ public:
   void NotifyMozMouseScrollEvent(const nsString& aString) const;
 
 protected:
-  // These functions are protected virtual so test code can override them.
-
-  // Returns the cached current frame time.
-  virtual TimeStamp GetFrameTime() const;
-
-protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~AsyncPanZoomController();
+
+  // Returns the cached current frame time.
+  TimeStamp GetFrameTime() const;
 
   /**
    * Helper method for touches beginning. Sets everything up for panning and any
@@ -651,7 +649,7 @@ protected:
 
   uint64_t mLayersId;
   nsRefPtr<CompositorParent> mCompositorParent;
-  TaskThrottler mPaintThrottler;
+  nsRefPtr<TaskThrottler> mPaintThrottler;
 
   /* Access to the following two fields is protected by the mRefPtrMonitor,
      since they are accessed on the UI thread but can be cleared on the
@@ -659,6 +657,13 @@ protected:
   nsRefPtr<GeckoContentController> mGeckoContentController;
   nsRefPtr<GestureEventListener> mGestureEventListener;
   mutable Monitor mRefPtrMonitor;
+
+  // This is a raw pointer to avoid introducing a reference cycle between
+  // AsyncPanZoomController and APZCTreeManager. Since these objects don't
+  // live on the main thread, we can't use the cycle collector with them.
+  // The APZCTreeManager owns the lifetime of the APZCs, so nulling this
+  // pointer out in Destroy() will prevent accessing deleted memory.
+  Atomic<APZCTreeManager*> mTreeManager;
 
   /* Utility functions that return a addrefed pointer to the corresponding fields. */
   already_AddRefed<GeckoContentController> GetGeckoContentController() const;
@@ -928,12 +933,8 @@ public:
   }
 
 private:
-  // This is a raw pointer to avoid introducing a reference cycle between
-  // AsyncPanZoomController and APZCTreeManager. Since these objects don't
-  // live on the main thread, we can't use the cycle collector with them.
-  // The APZCTreeManager owns the lifetime of the APZCs, so nulling this
-  // pointer out in Destroy() will prevent accessing deleted memory.
-  Atomic<APZCTreeManager*> mTreeManager;
+  // |mTreeManager| belongs in this section but it's declaration is a bit
+  // further above due to initialization-order constraints.
 
   nsRefPtr<AsyncPanZoomController> mParent;
 

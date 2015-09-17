@@ -34,7 +34,7 @@
 #include "nsTextNode.h"
 #include "mozilla/dom/Element.h"
 
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "rdf.h"
 
 using namespace mozilla;

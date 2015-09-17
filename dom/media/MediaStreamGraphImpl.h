@@ -167,12 +167,17 @@ public:
     }
 #endif
   }
-  /*
-   * This does the actual iteration: Message processing, MediaStream ordering,
-   * blocking computation and processing.
-   */
-  void DoIteration();
 
+  void MaybeProduceMemoryReport();
+
+  /**
+   * Returns true if this MediaStreamGraph should keep running
+   */
+  bool UpdateMainThreadState();
+
+  /**
+   * Returns true if this MediaStreamGraph should keep running
+   */
   bool OneIteration(GraphTime aStateEnd);
 
   bool Running() const
@@ -216,10 +221,9 @@ public:
   bool ShouldUpdateMainThread();
   // The following methods are the various stages of RunThread processing.
   /**
-   * Advance all stream state to the new current time.
+   * Advance all stream state to mStateComputedTime.
    */
-  void UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime,
-                                   GraphTime aNextCurrentTime);
+  void UpdateCurrentTimeForStreams(GraphTime aPrevCurrentTime);
   /**
    * Process graph message for this iteration, update stream processing order,
    * and recompute stream blocking until aEndBlockingDecisions.
@@ -232,9 +236,10 @@ public:
     mFrontMessageQueue.SwapElements(mBackMessageQueue);
   }
   /**
-   * Do all the processing and play the audio and video, ffrom aFrom to aTo.
+   * Do all the processing and play the audio and video, from
+   * mProcessedTime to mStateComputedTime.
    */
-  void Process(GraphTime aFrom, GraphTime aTo);
+  void Process();
   /**
    * Update the consumption state of aStream to reflect whether its data
    * is needed or not.
@@ -250,17 +255,6 @@ public:
    * Update "have enough data" flags in aStream.
    */
   void UpdateBufferSufficiencyState(SourceMediaStream* aStream);
-  /**
-   * Mark aStream and all its inputs (recursively) as consumed.
-   */
-  static void MarkConsumed(MediaStream* aStream);
-
-  /**
-   * Given the Id of an AudioContext, return the set of all MediaStreams that
-   * are part of this context.
-   */
-  void StreamSetForAudioContext(dom::AudioContext::AudioContextId aAudioContextId,
-                                mozilla::LinkedList<MediaStream>& aStreamSet);
 
   /**
    * Called when a suspend/resume/close operation has been completed, on the
@@ -274,28 +268,28 @@ public:
    * Apply and AudioContext operation (suspend/resume/closed), on the graph
    * thread.
    */
-  void ApplyAudioContextOperationImpl(AudioNodeStream* aStream,
+  void ApplyAudioContextOperationImpl(MediaStream* aDestinationStream,
+                                      const nsTArray<MediaStream*>& aStreams,
                                       dom::AudioContextOperation aOperation,
                                       void* aPromise);
+
+  /**
+   * Increment suspend count on aStream and move it to mSuspendedStreams if
+   * necessary.
+   */
+  void IncrementSuspendCount(MediaStream* aStream);
+  /**
+   * Increment suspend count on aStream and move it to mStreams if
+   * necessary.
+   */
+  void DecrementSuspendCount(MediaStream* aStream);
 
   /*
    * Move streams from the mStreams to mSuspendedStream if suspending/closing an
    * AudioContext, or the inverse when resuming an AudioContext.
    */
-  void MoveStreams(dom::AudioContextOperation aAudioContextOperation,
-                   mozilla::LinkedList<MediaStream>& aStreamSet);
-
-  /*
-   * Reset some state about the streams before suspending them, or resuming
-   * them.
-   */
-  void ResetVisitedStreamState();
-
-  /*
-   * True if a stream is suspended, that is, is not in mStreams, but in
-   * mSuspendedStream.
-   */
-  bool StreamSuspended(MediaStream* aStream);
+  void SuspendOrResumeStreams(dom::AudioContextOperation aAudioContextOperation,
+                              const nsTArray<MediaStream*>& aStreamSet);
 
   /**
    * Sort mStreams so that every stream not in a cycle is after any streams
@@ -303,88 +297,33 @@ public:
    * Also sets mIsConsumed on every stream.
    */
   void UpdateStreamOrder();
-  /**
-   * Compute the blocking states of streams from mStateComputedTime
-   * until the desired future time aEndBlockingDecisions.
-   * Updates mStateComputedTime and sets MediaStream::mBlocked
-   * for all streams.
-   */
-  void RecomputeBlocking(GraphTime aEndBlockingDecisions);
 
-  // The following methods are used to help RecomputeBlocking.
-  /**
-   * If aStream isn't already in aStreams, add it and recursively call
-   * AddBlockingRelatedStreamsToSet on all the streams whose blocking
-   * status could depend on or affect the state of aStream.
-   */
-  void AddBlockingRelatedStreamsToSet(nsTArray<MediaStream*>* aStreams,
-                                      MediaStream* aStream);
-  /**
-   * Mark a stream blocked at time aTime. If this results in decisions that need
-   * to be revisited at some point in the future, *aEnd will be reduced to the
-   * first time in the future to recompute those decisions.
-   */
-  void MarkStreamBlocking(MediaStream* aStream);
-  /**
-   * Recompute blocking for the streams in aStreams for the interval starting at aTime.
-   * If this results in decisions that need to be revisited at some point
-   * in the future, *aEnd will be reduced to the first time in the future to
-   * recompute those decisions.
-   */
-  void RecomputeBlockingAt(const nsTArray<MediaStream*>& aStreams,
-                           GraphTime aTime, GraphTime aEndBlockingDecisions,
-                           GraphTime* aEnd);
   /**
    * Returns smallest value of t such that t is a multiple of
    * WEBAUDIO_BLOCK_SIZE and t > aTime.
    */
   GraphTime RoundUpToNextAudioBlock(GraphTime aTime);
   /**
-   * Produce data for all streams >= aStreamIndex for the given time interval.
+   * Produce data for all streams >= aStreamIndex for the current time interval.
    * Advances block by block, each iteration producing data for all streams
    * for a single block.
    * This is called whenever we have an AudioNodeStream in the graph.
    */
   void ProduceDataForStreamsBlockByBlock(uint32_t aStreamIndex,
-                                         TrackRate aSampleRate,
-                                         GraphTime aFrom,
-                                         GraphTime aTo);
+                                         TrackRate aSampleRate);
   /**
-   * Returns true if aStream will underrun at aTime for its own playback.
-   * aEndBlockingDecisions is when we plan to stop making blocking decisions.
-   * *aEnd will be reduced to the first time in the future to recompute these
-   * decisions.
+   * If aStream will underrun between aTime, and aEndBlockingDecisions, returns
+   * the time at which the underrun will start. Otherwise return
+   * aEndBlockingDecisions.
    */
-  bool WillUnderrun(MediaStream* aStream, GraphTime aTime,
-                    GraphTime aEndBlockingDecisions, GraphTime* aEnd);
+  GraphTime WillUnderrun(MediaStream* aStream, GraphTime aEndBlockingDecisions);
 
   /**
    * Given a graph time aTime, convert it to a stream time taking into
    * account the time during which aStream is scheduled to be blocked.
    */
-  StreamTime GraphTimeToStreamTime(MediaStream* aStream, GraphTime aTime);
-  /**
-   * Given a graph time aTime, convert it to a stream time taking into
-   * account the time during which aStream is scheduled to be blocked, and
-   * when we don't know whether it's blocked or not, we assume it's not blocked.
-   */
-  StreamTime GraphTimeToStreamTimeOptimistic(MediaStream* aStream, GraphTime aTime);
-  enum
-  {
-    INCLUDE_TRAILING_BLOCKED_INTERVAL = 0x01
-  };
+  StreamTime GraphTimeToStreamTimeWithBlocking(MediaStream* aStream, GraphTime aTime);
 
-  /**
-   * Given a stream time aTime, convert it to a graph time taking into
-   * account the time during which aStream is scheduled to be blocked.
-   * aTime must be <= mStateComputedTime since blocking decisions
-   * are only known up to that point.
-   * If aTime is exactly at the start of a blocked interval, then the blocked
-   * interval is included in the time returned if and only if
-   * aFlags includes INCLUDE_TRAILING_BLOCKED_INTERVAL.
-   */
-  GraphTime StreamTimeToGraphTime(MediaStream* aStream, StreamTime aTime,
-                                  uint32_t aFlags = 0);
   /**
    * Call NotifyHaveCurrentData on aStream's listeners.
    */
@@ -393,12 +332,12 @@ public:
    * If aStream needs an audio stream but doesn't have one, create it.
    * If aStream doesn't need an audio stream but has one, destroy it.
    */
-  void CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTime, MediaStream* aStream);
+  void CreateOrDestroyAudioStreams(MediaStream* aStream);
   /**
    * Queue audio (mix of stream audio and silence for blocked intervals)
    * to the audio output stream. Returns the number of frames played.
    */
-  StreamTime PlayAudio(MediaStream* aStream, GraphTime aFrom, GraphTime aTo);
+  StreamTime PlayAudio(MediaStream* aStream);
   /**
    * Set the correct current video frame for stream aStream.
    */
@@ -606,6 +545,10 @@ public:
    */
   nsTArray<MediaStream*> mSuspendedStreams;
   /**
+   * Suspended AudioContext IDs
+   */
+  nsTHashtable<nsUint64HashKey> mSuspendedContexts;
+  /**
    * Streams from mFirstCycleBreaker to the end of mStreams produce output
    * before they receive input.  They correspond to DelayNodes that are in
    * cycles.
@@ -730,13 +673,6 @@ public:
    */
   bool mPostedRunInStableStateEvent;
 
-  /**
-   * Used to flush any accumulated data when the output streams
-   * may have stalled (on Mac after an output device change)
-   */
-  bool mFlushSourcesNow;
-  bool mFlushSourcesOnNextIteration;
-
   // Main thread only
 
   /**
@@ -785,10 +721,6 @@ public:
 
 private:
   virtual ~MediaStreamGraphImpl();
-
-  void StreamNotifyOutput(MediaStream* aStream);
-
-  void StreamReadyToFinish(MediaStream* aStream);
 
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
 

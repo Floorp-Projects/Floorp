@@ -41,12 +41,15 @@
                 label="&provideSearchSuggestions.label;"
                 accesskey="&provideSearchSuggestions.accesskey;"
                 preference="browser.search.suggest.enabled"/>
-      <hbox class="indent">
+      <vbox class="indent">
         <checkbox id="urlBarSuggestion" label="&showURLBarSuggestions.label;"
-                  hidden="true"
                   accesskey="&showURLBarSuggestions.accesskey;"
                   preference="browser.urlbar.suggest.searches"/>
-      </hbox>
+        <hbox id="urlBarSuggestionPermanentPBLabel"
+              align="center" class="indent">
+          <label flex="1">&urlBarSuggestionsPermanentPB.label;</label>
+        </hbox>
+      </vbox>
       <checkbox id="redirectSearchCheckbox"
                 label="&redirectWindowsSearch.label;"
                 accesskey="&redirectWindowsSearch.accesskey;"

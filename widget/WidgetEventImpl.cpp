@@ -15,6 +15,49 @@
 namespace mozilla {
 
 /******************************************************************************
+ * Global helper methods
+ ******************************************************************************/
+
+const char*
+ToChar(EventMessage aEventMessage)
+{
+  switch (aEventMessage) {
+
+#define NS_EVENT_MESSAGE(aMessage) \
+    case aMessage: \
+      return #aMessage;
+
+#include "mozilla/EventMessageList.h"
+
+#undef NS_EVENT_MESSAGE
+    default:
+      return "illegal event message";
+  }
+}
+
+const char*
+ToChar(EventClassID aEventClassID)
+{
+  switch (aEventClassID) {
+
+#define NS_ROOT_EVENT_CLASS(aPrefix, aName) \
+    case eBasic##aName##Class: \
+      return "eBasic" #aName "Class";
+
+#define NS_EVENT_CLASS(aPrefix, aName) \
+    case e##aName##Class: \
+      return "e" #aName "Class";
+
+#include "mozilla/EventClassList.h"
+
+#undef NS_EVENT_CLASS
+#undef NS_ROOT_EVENT_CLASS
+    default:
+      return "illegal event class ID";
+  }
+}
+
+/******************************************************************************
  * As*Event() implementation
  ******************************************************************************/
 
