@@ -221,6 +221,7 @@ WebGLContext::WebGLContext()
 {
     mGeneration = 0;
     mInvalidated = false;
+    mCapturedFrameInvalidated = false;
     mShouldPresent = true;
     mResetLayer = true;
     mOptionsFrozen = false;
@@ -414,10 +415,12 @@ WebGLContext::DestroyResourcesAndContext()
 void
 WebGLContext::Invalidate()
 {
-    if (mInvalidated)
+    if (!mCanvasElement)
         return;
 
-    if (!mCanvasElement)
+    mCapturedFrameInvalidated = true;
+
+    if (mInvalidated)
         return;
 
     nsSVGEffects::InvalidateDirectRenderingObservers(mCanvasElement);

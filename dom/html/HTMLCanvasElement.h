@@ -214,6 +214,13 @@ public:
   // take a snapshot of the canvas that needs to be "live" (e.g. -moz-element).
   void MarkContextClean();
 
+  // Call this after capturing a frame, so we can avoid unnecessary surface
+  // copies for future frames when no drawing has occurred.
+  void MarkContextCleanForFrameCapture();
+
+  // Starts returning false when something is drawn.
+  bool IsContextCleanForFrameCapture();
+
   nsresult GetContext(const nsAString& aContextId, nsISupports** aContext);
 
 protected:

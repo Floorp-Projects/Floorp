@@ -1032,6 +1032,21 @@ HTMLCanvasElement::MarkContextClean()
   mCurrentContext->MarkContextClean();
 }
 
+void
+HTMLCanvasElement::MarkContextCleanForFrameCapture()
+{
+  if (!mCurrentContext)
+    return;
+
+  mCurrentContext->MarkContextCleanForFrameCapture();
+}
+
+bool
+HTMLCanvasElement::IsContextCleanForFrameCapture()
+{
+  return mCurrentContext && mCurrentContext->IsContextCleanForFrameCapture();
+}
+
 already_AddRefed<SourceSurface>
 HTMLCanvasElement::GetSurfaceSnapshot(bool* aPremultAlpha)
 {
