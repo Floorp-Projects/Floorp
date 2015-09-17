@@ -74,6 +74,7 @@ if CONFIG['MOZ_B2G_BT']:
                 'bluedroid/BluetoothAvrcpManager.cpp',
                 'bluedroid/BluetoothDaemonA2dpInterface.cpp',
                 'bluedroid/BluetoothDaemonAvrcpInterface.cpp',
+                'bluedroid/BluetoothDaemonCoreInterface.cpp',
                 'bluedroid/BluetoothDaemonGattInterface.cpp',
                 'bluedroid/BluetoothDaemonHandsfreeInterface.cpp',
                 'bluedroid/BluetoothDaemonHelpers.cpp',
