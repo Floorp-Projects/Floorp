@@ -1422,56 +1422,54 @@ AccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
   if (aVarChild.lVal == CHILDID_SELF)
     return this;
 
-  if (IsProxy()) {
-    if (Proxy()->MustPruneChildren())
-      return nullptr;
+  if (IsProxy() ? Proxy()->MustPruneChildren() : nsAccUtils::MustPrune(this)) {
+    return nullptr;
+  }
 
-    if (aVarChild.lVal > 0)
+  if (aVarChild.lVal > 0) {
+    // Gecko child indices are 0-based in contrast to indices used in MSAA.
+    if (IsProxy()) {
       return WrapperFor(Proxy()->ChildAt(aVarChild.lVal - 1));
+    } else {
+      return GetChildAt(aVarChild.lVal - 1);
+    }
+  }
 
+  if (IsProxy()) {
     // XXX Don't implement negative child ids for now because annoying, and
     // doesn't seem to be speced.
     return nullptr;
   }
 
-  if (nsAccUtils::MustPrune(this))
-    return nullptr;
-
   // If lVal negative then it is treated as child ID and we should look for
   // accessible through whole accessible subtree including subdocuments.
   // Otherwise we treat lVal as index in parent.
+  // Convert child ID to unique ID.
+  void* uniqueID = reinterpret_cast<void*>(-aVarChild.lVal);
 
-  if (aVarChild.lVal < 0) {
-    // Convert child ID to unique ID.
-    void* uniqueID = reinterpret_cast<void*>(-aVarChild.lVal);
-
-    DocAccessible* document = Document();
-    Accessible* child =
+  DocAccessible* document = Document();
+  Accessible* child =
 #ifdef _WIN64
     GetAccessibleInSubtree(document, static_cast<uint32_t>(aVarChild.lVal));
 #else
-      document->GetAccessibleByUniqueIDInSubtree(uniqueID);
+    document->GetAccessibleByUniqueIDInSubtree(uniqueID);
 #endif
 
-    // If it is a document then just return an accessible.
-    if (IsDoc())
+  // If it is a document then just return an accessible.
+  if (IsDoc())
+    return child;
+
+  // Otherwise check whether the accessible is a child (this path works for
+  // ARIA documents and popups).
+  Accessible* parent = child;
+  while (parent && parent != document) {
+    if (parent == this)
       return child;
 
-    // Otherwise check whether the accessible is a child (this path works for
-    // ARIA documents and popups).
-    Accessible* parent = child;
-    while (parent && parent != document) {
-      if (parent == this)
-        return child;
-
-      parent = parent->Parent();
-    }
-
-    return nullptr;
+    parent = parent->Parent();
   }
 
-  // Gecko child indices are 0-based in contrast to indices used in MSAA.
-  return GetChildAt(aVarChild.lVal - 1);
+  return nullptr;
 }
 
 void
