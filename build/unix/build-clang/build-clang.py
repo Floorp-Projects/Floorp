@@ -57,7 +57,7 @@ def updated_env(env):
 
 def build_tar_package(tar, name, base, directory):
     name = os.path.realpath(name)
-    run_in(base, [tar, "-cjf", name, directory])
+    run_in(base, [tar, "-cJf", name, directory])
 
 
 def copy_dir_contents(src, dest):
@@ -262,4 +262,4 @@ if __name__ == "__main__":
              "CXX": cxx + " %s" % extra_cxxflags},
             stage2_inst_dir)
 
-    build_tar_package("tar", "clang.tar.bz2", stage2_dir, "clang")
+    build_tar_package("tar", "clang.tar.xz", stage2_dir, "clang")
