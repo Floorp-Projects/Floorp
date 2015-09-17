@@ -72,6 +72,10 @@
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
 
+#ifndef MOZ_SIMPLEPUSH
+#include "mozilla/dom/TypedArray.h"
+#endif
+
 #ifdef PostMessage
 #undef PostMessage
 #endif
@@ -2293,13 +2297,13 @@ public:
 
 class SendPushEventRunnable final : public WorkerRunnable
 {
-  nsString mData;
+  nsTArray<uint8_t> mData;
   nsMainThreadPtrHandle<ServiceWorker> mServiceWorker;
 
 public:
   SendPushEventRunnable(
     WorkerPrivate* aWorkerPrivate,
-    const nsAString& aData,
+    const nsTArray<uint8_t>& aData,
     nsMainThreadPtrHandle<ServiceWorker>& aServiceWorker)
       : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
       , mData(aData)
@@ -2316,9 +2320,12 @@ public:
     MOZ_ASSERT(aWorkerPrivate);
     GlobalObject globalObj(aCx, aWorkerPrivate->GlobalScope()->GetWrapper());
 
+    JSObject* data = Uint8Array::Create(aCx, mData.Length(), mData.Elements());
+    if (!data) {
+      return false;
+    }
     PushEventInit pei;
-    // FIXME(nsm): Bug 1149195.
-    // pei.mData.Construct(mData);
+    pei.mData.Construct().SetAsArrayBufferView().Init(data);
     pei.mBubbles = false;
     pei.mCancelable = false;
 
@@ -2387,7 +2394,8 @@ public:
 NS_IMETHODIMP
 ServiceWorkerManager::SendPushEvent(const nsACString& aOriginAttributes,
                                     const nsACString& aScope,
-                                    const nsAString& aData)
+                                    uint32_t aDataLength,
+                                    uint8_t* aDataBytes)
 {
 #ifdef MOZ_SIMPLEPUSH
   return NS_ERROR_NOT_AVAILABLE;
@@ -2406,8 +2414,13 @@ ServiceWorkerManager::SendPushEvent(const nsACString& aOriginAttributes,
   nsMainThreadPtrHandle<ServiceWorker> serviceWorkerHandle(
     new nsMainThreadPtrHolder<ServiceWorker>(serviceWorker));
 
+  nsTArray<uint8_t> data;
+  if (!data.InsertElementsAt(0, aDataBytes, aDataLength, fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   nsRefPtr<SendPushEventRunnable> r =
-    new SendPushEventRunnable(serviceWorker->GetWorkerPrivate(), aData,
+    new SendPushEventRunnable(serviceWorker->GetWorkerPrivate(), data,
                               serviceWorkerHandle);
 
   AutoJSAPI jsapi;
