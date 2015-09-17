@@ -953,6 +953,7 @@ AccessibleCaretManager::DispatchCaretStateChangedEvent(CaretChangedReason aReaso
   init.mCollapsed = sel->IsCollapsed();
   init.mCaretVisible = mFirstCaret->IsLogicallyVisible() ||
                        mSecondCaret->IsLogicallyVisible();
+  sel->Stringify(init.mSelectedTextContent);
 
   nsRefPtr<CaretStateChangedEvent> event =
     CaretStateChangedEvent::Constructor(doc, NS_LITERAL_STRING("mozcaretstatechanged"), init);
