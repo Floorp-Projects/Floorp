@@ -9,10 +9,42 @@ const Cu = Components.utils;
 
 Cu.importGlobalProperties(['crypto']);
 
-this.EXPORTED_SYMBOLS = ['PushServiceHttp2Crypto', 'concatArray'];
+this.EXPORTED_SYMBOLS = ['PushCrypto', 'concatArray',
+                         'getEncryptionKeyParams', 'getEncryptionParams',
+                         'base64UrlDecode'];
 
 var ENCRYPT_INFO = new TextEncoder('utf-8').encode('Content-Encoding: aesgcm128');
 var NONCE_INFO = new TextEncoder('utf-8').encode('Content-Encoding: nonce');
+
+this.getEncryptionKeyParams = function(encryptKeyField) {
+  var params = encryptKeyField.split(',');
+  return params.reduce((m, p) => {
+    var pmap = p.split(';').reduce(parseHeaderFieldParams, {});
+    if (pmap.keyid && pmap.dh) {
+      m[pmap.keyid] = pmap.dh;
+    }
+    return m;
+  }, {});
+};
+
+this.getEncryptionParams = function(encryptField) {
+  var p = encryptField.split(',', 1)[0];
+  if (!p) {
+    return null;
+  }
+  return p.split(';').reduce(parseHeaderFieldParams, {});
+};
+
+var parseHeaderFieldParams = (m, v) => {
+  var i = v.indexOf('=');
+  if (i >= 0) {
+    // A quoted string with internal quotes is invalid for all the possible
+    // values of this header field.
+    m[v.substring(0, i).trim()] = v.substring(i + 1).trim()
+                                    .replace(/^"(.*)"$/, '$1');
+  }
+  return m;
+};
 
 function chunkArray(array, size) {
   var start = array.byteOffset || 0;
@@ -29,7 +61,7 @@ function chunkArray(array, size) {
   return result;
 }
 
-function base64UrlDecode(s) {
+this.base64UrlDecode = function(s) {
   s = s.replace(/-/g, '+').replace(/_/g, '/');
 
   // Replace padding if it was stripped by the sender.
@@ -55,7 +87,7 @@ function base64UrlDecode(s) {
     array[i] = decoded.charCodeAt(i);
   }
   return array;
-}
+};
 
 this.concatArray = function(arrays) {
   var size = arrays.reduce((total, a) => total + a.byteLength, 0);
@@ -108,7 +140,7 @@ function generateNonce(base, index) {
   return nonce;
 }
 
-this.PushServiceHttp2Crypto = {
+this.PushCrypto = {
 
   generateKeys: function() {
     return crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256'},
