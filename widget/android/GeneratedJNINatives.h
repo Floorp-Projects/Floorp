@@ -37,6 +37,21 @@ template<class Impl>
 constexpr JNINativeMethod ANRReporter::Natives<Impl>::methods[];
 
 template<class Impl>
+class GeckoJavaSampler::Natives : public mozilla::jni::NativeImpl<GeckoJavaSampler, Impl>
+{
+public:
+    static constexpr JNINativeMethod methods[] = {
+
+        mozilla::jni::MakeNativeMethod<GeckoJavaSampler::GetProfilerTime_t>(
+                mozilla::jni::NativeStub<GeckoJavaSampler::GetProfilerTime_t, Impl>
+                ::template Wrap<&Impl::GetProfilerTime>)
+    };
+};
+
+template<class Impl>
+constexpr JNINativeMethod GeckoJavaSampler::Natives<Impl>::methods[];
+
+template<class Impl>
 class GeckoThread::Natives : public mozilla::jni::NativeImpl<GeckoThread, Impl>
 {
 public:
