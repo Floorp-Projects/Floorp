@@ -187,7 +187,7 @@ nsUDPSocketCloseThread::Begin()
   mSelf = this;
   mThread = PR_CreateThread(PR_USER_THREAD, ThreadFunc, this,
                             PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
-                            PR_JOINABLE_THREAD, 4 * 4096);
+                            PR_JOINABLE_THREAD, 32 * 1024);
   if (!mThread) {
     // This doesn't join since there is no thread, just removes
     // this class as an observer.
