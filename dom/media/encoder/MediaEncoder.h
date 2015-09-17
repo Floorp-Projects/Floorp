@@ -62,10 +62,7 @@ public :
   MediaEncoder(ContainerWriter* aWriter,
                AudioTrackEncoder* aAudioEncoder,
                VideoTrackEncoder* aVideoEncoder,
-               const nsAString& aMIMEType,
-               uint32_t aAudioBitrate,
-               uint32_t aVideoBitrate,
-               uint32_t aBitrate)
+               const nsAString& aMIMEType)
     : mWriter(aWriter)
     , mAudioEncoder(aAudioEncoder)
     , mVideoEncoder(aVideoEncoder)
@@ -99,8 +96,6 @@ public :
    * Ogg+Opus if it is empty.
    */
   static already_AddRefed<MediaEncoder> CreateEncoder(const nsAString& aMIMEType,
-                                                      uint32_t aAudioBitrate, uint32_t aVideoBitrate,
-                                                      uint32_t aBitrate,
                                                       uint8_t aTrackTypes = ContainerWriter::CREATE_AUDIO_TRACK);
   /**
    * Encodes the raw track data and returns the final container data. Assuming
