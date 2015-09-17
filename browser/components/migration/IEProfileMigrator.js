@@ -16,11 +16,14 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource:///modules/MigrationUtils.jsm");
 Cu.import("resource:///modules/MSMigrationUtils.jsm");
+Cu.import("resource://gre/modules/LoginHelper.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
                                   "resource://gre/modules/WindowsRegistry.jsm");
+
+let CtypesKernelHelpers = MSMigrationUtils.CtypesKernelHelpers;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Resources
@@ -254,6 +257,10 @@ IEProfileMigrator.prototype.getResources = function IE_getResources() {
   , MSMigrationUtils.getCookiesMigrator()
   , new Settings()
   ];
+  let windowsVaultFormPasswordsMigrator =
+    MSMigrationUtils.getWindowsVaultFormPasswordsMigrator();
+  windowsVaultFormPasswordsMigrator.name = "IEVaultFormPasswords";
+  resources.push(windowsVaultFormPasswordsMigrator);
   return [r for each (r in resources) if (r.exists)];
 };
 
