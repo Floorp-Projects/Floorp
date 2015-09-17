@@ -17,10 +17,10 @@ DIRS += [
     'modules',
     'themes',
     'extensions',
+    '/devtools/client',
 ]
 
 DIRS += [
-    'devtools',
     'app',
 ]
 
