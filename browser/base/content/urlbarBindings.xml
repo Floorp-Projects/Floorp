@@ -663,12 +663,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               case "userMadeSearchSuggestionsChoice":
               case "suggest.searches":
                 this._cacheUserMadeSearchSuggestionsChoice();
-                // Make sure the urlbar is focused.  It won't be, for example,
-                // if the user used an accesskey to make an opt-in choice.
-                // mIgnoreFocus prevents the text from being selected.
-                this.mIgnoreFocus = true;
-                this.focus();
-                this.mIgnoreFocus = false;
                 if (this._userMadeSearchSuggestionsChoice) {
                   this.popup.searchSuggestionsNotificationWasDismissed(
                     this._prefs.getBoolPref("suggest.searches")
@@ -1189,6 +1183,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <method name="dismissSearchSuggestionsNotification">
         <parameter name="enableSuggestions"/>
         <body><![CDATA[
+          // Make sure the urlbar is focused.  It won't be, for example, if the
+          // user used an accesskey to make an opt-in choice.  mIgnoreFocus
+          // prevents the text from being selected.
+          this.input.mIgnoreFocus = true;
+          this.input.focus();
+          this.input.mIgnoreFocus = false;
+
           Services.prefs.setBoolPref(
             "browser.urlbar.suggest.searches", enableSuggestions
           );

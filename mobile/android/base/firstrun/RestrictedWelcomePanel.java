@@ -21,7 +21,7 @@ import java.util.EnumSet;
 public class RestrictedWelcomePanel extends FirstrunPanel {
     public static final int TITLE_RES = R.string.firstrun_panel_title_welcome;
 
-    private static final String LEARN_MORE_URL = "https://support.mozilla.org/kb/kids";
+    private static final String LEARN_MORE_URL = "https://support.mozilla.org/kb/controlledaccess";
 
     private HomePager.OnUrlOpenListener onUrlOpenListener;
 
