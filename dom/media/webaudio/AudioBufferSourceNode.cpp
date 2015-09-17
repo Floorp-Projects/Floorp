@@ -111,7 +111,11 @@ public:
   virtual void SetInt32Parameter(uint32_t aIndex, int32_t aParam) override
   {
     switch (aIndex) {
-    case AudioBufferSourceNode::SAMPLE_RATE: mBufferSampleRate = aParam; break;
+    case AudioBufferSourceNode::SAMPLE_RATE:
+      MOZ_ASSERT(aParam > 0);
+      mBufferSampleRate = aParam;
+      mSource->SetActive();
+      break;
     case AudioBufferSourceNode::BUFFERSTART:
       MOZ_ASSERT(aParam >= 0);
       if (mBufferPosition == 0) {
