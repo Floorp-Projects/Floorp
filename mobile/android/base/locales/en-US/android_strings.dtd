@@ -11,6 +11,7 @@
 <!ENTITY  onboard_start_subtext3 "Make your mobile Web browsing experience truly your own.">
 <!ENTITY  onboard_start_button_account "Sign in to &brandShortName;">
 <!ENTITY  onboard_start_button_browser "Start Browsing">
+<!ENTITY firstrun_button_next "Next">
 
 <!ENTITY  onboard_start_restricted1 "Stay safe and in control with this simplified version of &brandShortName;.">
 
@@ -19,6 +20,7 @@
 <!ENTITY firstrun_import_subtext "Import your bookmarks and history from another browser.">
 <!ENTITY firstrun_import_action "Transfer to &brandShortName;">
 <!ENTITY firstrun_import_dialog_button "Transfer">
+<!ENTITY firstrun_import_progress_title "Transferring">
 
 <!-- Localization note: These are used as the titles of different pages on the home screen.
      They are automatically converted to all caps by the Android platform. -->

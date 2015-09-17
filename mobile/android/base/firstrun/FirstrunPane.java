@@ -20,13 +20,14 @@ import org.mozilla.gecko.animation.TransitionsTracker;
 public class FirstrunPane extends LinearLayout {
     public static final String PREF_FIRSTRUN_ENABLED = "startpane_enabled";
 
-    public static interface OnFinishListener {
+    public static interface PagerNavigation {
+        public void next();
         public void onFinish();
     }
 
     private FirstrunPager pager;
     private boolean visible;
-    private OnFinishListener onFinishListener;
+    private PagerNavigation pagerNavigation;
 
     public FirstrunPane(Context context) {
         this(context, null);
@@ -35,10 +36,18 @@ public class FirstrunPane extends LinearLayout {
         super(context, attrs);
     }
 
-    public void load(FragmentManager fm) {
+    public void load(Context appContext, FragmentManager fm) {
         visible = true;
         pager = (FirstrunPager) findViewById(R.id.firstrun_pager);
-        pager.load(fm, new OnFinishListener() {
+        pager.load(appContext, fm, new PagerNavigation() {
+            @Override
+            public void next() {
+                final int currentPage = pager.getCurrentItem();
+                if (currentPage < pager.getChildCount() - 1) {
+                    pager.setCurrentItem(currentPage + 1);
+                }
+            }
+
             @Override
             public void onFinish() {
                 hide();
@@ -53,8 +62,8 @@ public class FirstrunPane extends LinearLayout {
     public void hide() {
         visible = false;
         pager.hide();
-        if (onFinishListener != null) {
-            onFinishListener.onFinish();
+        if (pagerNavigation != null) {
+            pagerNavigation.onFinish();
         }
         animateHide();
     }
@@ -74,7 +83,7 @@ public class FirstrunPane extends LinearLayout {
         alphaAnimator.start();
     }
 
-    public void registerOnFinishListener(OnFinishListener listener) {
-        this.onFinishListener = listener;
+    public void registerOnFinishListener(PagerNavigation listener) {
+        this.pagerNavigation = listener;
     }
 }
