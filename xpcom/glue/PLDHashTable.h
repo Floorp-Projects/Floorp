@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef pldhash_h___
-#define pldhash_h___
+#ifndef PLDHashTable_h
+#define PLDHashTable_h
 
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h" // for MOZ_ALWAYS_INLINE
@@ -567,7 +567,7 @@ typedef void (*PLDHashInitEntry)(PLDHashEntryHdr* aEntry, const void* aKey);
 
 // Finally, the "vtable" structure for PLDHashTable. The first four hooks
 // must be provided by implementations; they're called unconditionally by the
-// generic pldhash.c code. Hooks after these may be null.
+// generic PLDHashTable.cpp code. Hooks after these may be null.
 //
 // Summary of allocation-related hook usage with C++ placement new emphasis:
 //  initEntry           Call placement new using default key-based ctor.
@@ -603,4 +603,4 @@ struct PLDHashEntryStub : public PLDHashEntryHdr
   const void* key;
 };
 
-#endif /* pldhash_h___ */
+#endif /* PLDHashTable_h */

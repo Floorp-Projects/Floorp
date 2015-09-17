@@ -140,6 +140,7 @@ public:
         return r;
     }
     void SetPushedStream(Http2PushedStream *push) { mPushedStream = push; }
+    uint32_t InitialRwin() const { return mInitialRwin; };
 
     // Locked methods to get and set timing info
     const TimingStruct Timings();
@@ -248,6 +249,7 @@ private:
     uint32_t                        mInvalidResponseBytesRead;
 
     Http2PushedStream               *mPushedStream;
+    uint32_t                        mInitialRwin;
 
     nsHttpChunkedDecoder            *mChunkedDecoder;
 

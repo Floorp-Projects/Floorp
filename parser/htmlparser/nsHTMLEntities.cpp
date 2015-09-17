@@ -9,7 +9,7 @@
 
 #include "nsString.h"
 #include "nsCRT.h"
-#include "pldhash.h"
+#include "PLDHashTable.h"
 
 using namespace mozilla;
 

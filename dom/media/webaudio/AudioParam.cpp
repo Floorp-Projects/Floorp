@@ -100,7 +100,7 @@ AudioParam::Stream()
 
   AudioNodeEngine* engine = new AudioNodeEngine(nullptr);
   nsRefPtr<AudioNodeStream> stream =
-    AudioNodeStream::Create(mNode->Context()->Graph(), engine,
+    AudioNodeStream::Create(mNode->Context(), engine,
                             AudioNodeStream::NO_STREAM_FLAGS);
 
   // Force the input to have only one channel, and make it down-mix using
@@ -114,7 +114,7 @@ AudioParam::Stream()
   // Setup the AudioParam's stream as an input to the owner AudioNode's stream
   AudioNodeStream* nodeStream = mNode->GetStream();
   if (nodeStream) {
-    mNodeStreamPort = nodeStream->AllocateInputPort(mStream, 0);
+    mNodeStreamPort = nodeStream->AllocateInputPort(mStream);
   }
 
   // Let the MSG's copy of AudioParamTimeline know about the change in the stream

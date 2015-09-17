@@ -9,7 +9,7 @@
 #ifndef nsStaticNameTable_h___
 #define nsStaticNameTable_h___
 
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "nsString.h"
 
 /* This class supports case insensitive lookup.

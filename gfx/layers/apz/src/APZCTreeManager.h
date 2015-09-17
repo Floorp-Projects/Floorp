@@ -49,6 +49,7 @@ class LayerMetricsWrapper;
 class InputQueue;
 class GeckoContentController;
 class HitTestingTreeNode;
+class TaskThrottler;
 
 /**
  * ****************** NOTE ON LOCK ORDERING IN APZ **************************
@@ -391,9 +392,13 @@ protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~APZCTreeManager();
 
-  // Hook for gtests subclass
-  virtual AsyncPanZoomController* MakeAPZCInstance(uint64_t aLayersId,
-                                                   GeckoContentController* aController);
+  // Protected hooks for gtests subclass
+  virtual AsyncPanZoomController* NewAPZCInstance(uint64_t aLayersId,
+                                                  GeckoContentController* aController,
+                                                  TaskThrottler* aPaintThrottler);
+public:
+  // Public hooks for gtests subclass
+  virtual TimeStamp GetFrameTime();
 
 public:
   /* Some helper functions to find an APZC given some identifying input. These functions
@@ -506,7 +511,10 @@ private:
   /* Holds the zoom constraints for scrollable layers, as determined by the
    * the main-thread gecko code. */
   std::map<ScrollableLayerGuid, ZoomConstraints> mZoomConstraints;
-
+  /* Stores a paint throttler for each layers id. There is one for each layers
+   * id to ensure that one child process painting slowly doesn't hold up
+   * another. */
+  std::map<uint64_t, nsRefPtr<TaskThrottler>> mPaintThrottlerMap;
   /* This tracks the APZC that should receive all inputs for the current input event block.
    * This allows touch points to move outside the thing they started on, but still have the
    * touch events delivered to the same initial APZC. This will only ever be touched on the

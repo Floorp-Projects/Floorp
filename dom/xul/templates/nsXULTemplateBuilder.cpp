@@ -57,7 +57,7 @@
 #include "jsapi.h"
 #include "mozilla/Logging.h"
 #include "rdf.h"
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "plhash.h"
 #include "nsDOMClassInfoID.h"
 #include "nsPIDOMWindow.h"

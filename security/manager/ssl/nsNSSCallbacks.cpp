@@ -134,6 +134,9 @@ nsHTTPDownloadEvent::Run()
   if (internalChannel) {
     rv = internalChannel->SetAllowSpdy(false);
     NS_ENSURE_SUCCESS(rv, rv);
+    // OCSP requests should never be intercepted.
+    rv = internalChannel->ForceNoIntercept();
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   nsCOMPtr<nsIHttpChannel> hchan = do_QueryInterface(chan);

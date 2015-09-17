@@ -67,7 +67,7 @@ xpcom_glue_src = [
     'nsTObserverArray.cpp',
     'nsThreadUtils.cpp',
     'nsWeakReference.cpp',
-    'pldhash.cpp',
+    'PLDHashTable.cpp',
 ]
 src_list += [
     '/xpcom/glue/%s' % s for s in xpcom_glue_src
