@@ -492,18 +492,28 @@ public:
     }
   }
 
-  // For unicode-bidi: plaintext, reset the direction of the writing mode from
-  // the bidi paragraph level of the content
-
-  //XXX change uint8_t to UBiDiLevel after bug 924851
+  /**
+   * This function performs fixup for elements with 'unicode-bidi: plaintext',
+   * where inline directionality is derived from the Unicode bidi categories
+   * of the element's content, and not the CSS 'direction' property.
+   *
+   * The WritingMode constructor will have already incorporated the 'direction'
+   * property into our flag bits, so such elements need to use this method
+   * (after resolving the bidi level of their content) to update the direction
+   * bits as needed.
+   *
+   * If it turns out that our bidi direction already matches what plaintext
+   * resolution determined, there's nothing to do here. If it didn't (i.e. if
+   * the rtl-ness doesn't match), then we correct the direction by flipping the
+   * same bits that get flipped in the constructor's CSS 'direction'-based
+   * chunk.
+   *
+   * XXX change uint8_t to UBiDiLevel after bug 924851
+   */
   void SetDirectionFromBidiLevel(uint8_t level)
   {
-    if (IS_LEVEL_RTL(level)) {
-      // set RTL
-      mWritingMode |= eBidiMask;
-    } else {
-      // set LTR
-      mWritingMode &= ~eBidiMask;
+    if (IS_LEVEL_RTL(level) == IsBidiLTR()) {
+      mWritingMode ^= eBidiMask | eInlineFlowMask;
     }
   }
 
