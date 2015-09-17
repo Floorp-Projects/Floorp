@@ -11,10 +11,13 @@
 #define nsPresArena_h___
 
 #include "mozilla/ArenaObjectID.h"
+#include "mozilla/ArenaRefPtr.h"
 #include "mozilla/MemoryChecking.h" // Note: Do not remove this, needed for MOZ_HAVE_MEM_CHECKS below
 #include "mozilla/MemoryReporting.h"
 #include <stdint.h>
 #include "nscore.h"
+#include "nsDataHashtable.h"
+#include "nsHashKeys.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "plarena.h"
@@ -67,6 +70,37 @@ public:
   }
 
   /**
+   * Register an ArenaRefPtr to be cleared when this arena is about to
+   * be destroyed.
+   *
+   * (Defined in ArenaRefPtrInlines.h.)
+   *
+   * @param aPtr The ArenaRefPtr to clear.
+   * @param aObjectID The nsPresArena::ObjectID value that uniquely identifies
+   *   the type of object the ArenaRefPtr holds.
+   */
+  template<typename T>
+  void RegisterArenaRefPtr(mozilla::ArenaRefPtr<T>* aPtr);
+
+  /**
+   * Deregister an ArenaRefPtr that was previously registered with
+   * RegisterArenaRefPtr.
+   */
+  template<typename T>
+  void DeregisterArenaRefPtr(mozilla::ArenaRefPtr<T>* aPtr)
+  {
+    MOZ_ASSERT(mArenaRefPtrs.Contains(aPtr));
+    mArenaRefPtrs.Remove(aPtr);
+  }
+
+  /**
+   * Clears all currently registered ArenaRefPtrs.  This will be called during
+   * the destructor, but can be called by users of nsPresArena who want to
+   * ensure arena-allocated objects are released earlier.
+   */
+  void ClearArenaRefPtrs();
+
+  /**
    * Increment aArenaStats with sizes of interesting objects allocated in this
    * arena and its mOther field with the size of everything else.
    */
@@ -76,6 +110,10 @@ public:
 private:
   void* Allocate(uint32_t aCode, size_t aSize);
   void Free(uint32_t aCode, void* aPtr);
+
+  inline void ClearArenaRefPtrWithoutDeregistering(
+      void* aPtr,
+      mozilla::ArenaObjectID aObjectID);
 
   // All keys to this hash table fit in 32 bits (see below) so we do not
   // bother actually hashing them.
@@ -111,6 +149,7 @@ private:
 
   nsTHashtable<FreeList> mFreeLists;
   PLArenaPool mPool;
+  nsDataHashtable<nsPtrHashKey<void>, mozilla::ArenaObjectID> mArenaRefPtrs;
 };
 
 #endif
