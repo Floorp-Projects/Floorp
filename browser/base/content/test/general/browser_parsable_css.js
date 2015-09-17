@@ -114,6 +114,12 @@ add_task(function checkAllTheCSS() {
   // We build a list of promises that get resolved when their respective
   // files have loaded and produced no errors.
   let allPromises = [];
+
+  // filter out either the devtools paths or the non-devtools paths:
+  let isDevtools = SimpleTest.harnessParameters.subsuite == "devtools";
+  let devtoolsPathBits = ["webide", "devtools"];
+  uris = uris.filter(uri => isDevtools == devtoolsPathBits.some(path => uri.spec.includes(path)));
+
   for (let uri of uris) {
     let linkEl = doc.createElement("link");
     linkEl.setAttribute("rel", "stylesheet");
