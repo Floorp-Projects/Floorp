@@ -11,6 +11,7 @@
 
 <!ENTITY showURLBarSuggestions.label           "Show search suggestions in location bar results">
 <!ENTITY showURLBarSuggestions.accesskey       "l">
+<!ENTITY urlBarSuggestionsPermanentPB.label    "Search suggestions will not be shown in location bar results because you have configured &brandShortName; to never remember history.">
 
 <!ENTITY redirectWindowsSearch.label "Use this search engine for searches from Windows">
 <!ENTITY redirectWindowsSearch.accesskey "W">

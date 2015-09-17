@@ -5486,6 +5486,7 @@
             this._dndCanvas = canvas;
             this._dndPanel = document.createElement("panel");
             this._dndPanel.setAttribute("type", "drag");
+            this._dndPanel.setAttribute("mousethrough", "always");
             this._dndPanel.appendChild(canvas);
             document.documentElement.appendChild(this._dndPanel);
           }
