@@ -37,7 +37,7 @@
 using mozilla::Some;
 using mozilla::RangedPtr;
 using mozilla::UniquePtr;
-using JS::DispatchTraceKindTyped;
+using JS::DispatchTyped;
 using JS::HandleValue;
 using JS::Value;
 using JS::ZoneSet;
@@ -166,12 +166,12 @@ struct Node::ConstructFunctor : public js::BoolDefaultAdaptor<Value, false> {
 
 Node::Node(const JS::GCCellPtr &thing)
 {
-    DispatchTraceKindTyped(ConstructFunctor(), thing.asCell(), thing.kind(), this);
+    DispatchTyped(ConstructFunctor(), thing, this);
 }
 
 Node::Node(HandleValue value)
 {
-    if (!DispatchValueTyped(ConstructFunctor(), value, this))
+    if (!DispatchTyped(ConstructFunctor(), value, this))
         construct<void>(nullptr);
 }
 

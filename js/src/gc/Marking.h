@@ -183,10 +183,8 @@ class GCMarker : public JSTracer
     template <typename T> void traverse(T thing);
 
     // Calls traverse on target after making additional assertions.
+    template <typename S, typename T> void traverseEdge(S source, T* target);
     template <typename S, typename T> void traverseEdge(S source, T target);
-    // C++ requires explicit declarations of partial template instantiations.
-    template <typename S> void traverseEdge(S source, jsid target);
-    template <typename S> void traverseEdge(S source, Value target);
 
     /*
      * Care must be taken changing the mark color from gray to black. The cycle
@@ -470,6 +468,10 @@ DECLARE_REWRAP(js::TaggedProto, JSObject*, js::TaggedProto, );
 
 bool
 UnmarkGrayShapeRecursively(Shape* shape);
+
+template<typename T>
+void
+CheckTracedThing(JSTracer* trc, T* thing);
 
 template<typename T>
 void
