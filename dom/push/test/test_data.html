@@ -36,19 +36,17 @@ http://creativecommons.org/licenses/publicdomain/
     var p = new Promise(function(res, rej) {
       var iframe = document.createElement('iframe');
       iframe.id = "controlledFrame";
-      iframe.src = "http://mochi.test:8888/tests/dom/push/test/frame.html";
+      iframe.src = "/tests/dom/push/test/frame.html";
 
-      iframe.onload = function() {
-        res(swr)
-      }
+      iframe.onload = () => res();
       controlledFrame = iframe;
       document.body.appendChild(iframe);
     });
     return p;
   }
 
-  function subscribe(swr) {
-    return swr.pushManager.subscribe();
+  function subscribe() {
+    return registration.pushManager.subscribe();
   }
 
   function sendRequestToWorker(request) {
@@ -79,7 +77,7 @@ http://creativecommons.org/licenses/publicdomain/
 
   function waitForMessage(pushSubscription, message) {
     return Promise.all([
-      controlledFrame.contentWindow.waitOnPushMessage(pushSubscription),
+      controlledFrame.contentWindow.waitOnWorkerMessage("finished"),
       webpush(pushSubscription, message),
     ]).then(([message]) => message);
   }
@@ -135,8 +133,8 @@ http://creativecommons.org/licenses/publicdomain/
         is(text, "Hi! \ud83d\udc40", "Wrong blob data for message with emoji");
         // Send a blank message.
         return Promise.all([
-          controlledFrame.contentWindow.waitOnPushMessage(pushSubscription),
-          fetch("http://mochi.test:8888/tests/dom/push/test/push-server.sjs", {
+          controlledFrame.contentWindow.waitOnWorkerMessage("finished"),
+          fetch("/tests/dom/push/test/push-server.sjs", {
             method: "PUT",
             headers: {
               "X-Push-Method": "POST",
