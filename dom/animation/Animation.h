@@ -285,13 +285,13 @@ public:
    * if any.
    * Any properties already contained in |aSetProperties| are not changed. Any
    * properties that are changed are added to |aSetProperties|.
-   * |aNeedsRefreshes| will be set to true if this animation expects to update
+   * |aStyleChanging| will be set to true if this animation expects to update
    * the style rule on the next refresh driver tick as well (because it
    * is running and has an effect to sample).
    */
   void ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
                     nsCSSPropertySet& aSetProperties,
-                    bool& aNeedsRefreshes);
+                    bool& aStyleChanging);
 
 
   // FIXME: Because we currently determine if we need refresh driver ticks

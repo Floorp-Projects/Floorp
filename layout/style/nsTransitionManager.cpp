@@ -487,7 +487,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     // creates a new style rule if we started *or* stopped transitions.
     collection->mStyleRuleRefreshTime = TimeStamp();
     collection->UpdateCheckGeneration(mPresContext);
-    collection->mNeedsRefreshes = true;
+    collection->mStyleChanging = true;
     TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
     collection->EnsureStyleRuleFor(now);
   }

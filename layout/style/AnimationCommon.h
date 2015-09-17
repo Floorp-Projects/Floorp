@@ -213,7 +213,7 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
     , mManager(aManager)
     , mAnimationGeneration(0)
     , mCheckGeneration(0)
-    , mNeedsRefreshes(true)
+    , mStyleChanging(true)
     , mHasPendingAnimationRestyle(false)
 #ifdef DEBUG
     , mCalledPropertyDtor(false)
@@ -410,7 +410,7 @@ public:
   // False when we know that our current style rule is valid
   // indefinitely into the future (because all of our animations are
   // either completed or paused).  May be invalidated by a style change.
-  bool mNeedsRefreshes;
+  bool mStyleChanging;
 
 private:
   // Whether or not we have already posted for animation restyle.

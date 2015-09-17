@@ -697,7 +697,7 @@ AnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime)
 {
   mHasPendingAnimationRestyle = false;
 
-  if (!mNeedsRefreshes) {
+  if (!mStyleChanging) {
     mStyleRuleRefreshTime = aRefreshTime;
     return;
   }
@@ -716,8 +716,8 @@ AnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime)
 
   mStyleRuleRefreshTime = aRefreshTime;
   mStyleRule = nullptr;
-  // We'll set mNeedsRefreshes to true below in all cases where we need them.
-  mNeedsRefreshes = false;
+  // We'll set mStyleChanging to true below if necessary.
+  mStyleChanging = false;
 
   // If multiple animations specify behavior for the same property the
   // animation which occurs last in the value of animation-name wins.
@@ -726,7 +726,7 @@ AnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime)
   nsCSSPropertySet properties;
 
   for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    mAnimations[animIdx]->ComposeStyle(mStyleRule, properties, mNeedsRefreshes);
+    mAnimations[animIdx]->ComposeStyle(mStyleRule, properties, mStyleChanging);
   }
 }
 
@@ -842,7 +842,7 @@ AnimationCollection::RequestRestyle(RestyleType aRestyleType)
 
   if (aRestyleType == RestyleType::Layer) {
     mStyleRuleRefreshTime = TimeStamp();
-    mNeedsRefreshes = true;
+    mStyleChanging = true;
 
     // Prompt layers to re-sync their animations.
     presContext->ClearLastStyleUpdateForAllAnimations();
