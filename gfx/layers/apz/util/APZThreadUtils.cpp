@@ -81,5 +81,7 @@ APZThreadUtils::RunOnControllerThread(Task* aTask)
 #endif
 }
 
+NS_IMPL_ISUPPORTS(GenericTimerCallbackBase, nsITimerCallback)
+
 } // namespace layers
 } // namespace mozilla
