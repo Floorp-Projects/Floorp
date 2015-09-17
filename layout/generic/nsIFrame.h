@@ -1260,6 +1260,10 @@ public:
    */
   bool Combines3DTransformWithAncestors() const;
 
+  bool IsPreserve3DLeaf() const {
+    return Combines3DTransformWithAncestors() && !Extend3DContext();
+  }
+
   bool HasPerspective() const;
 
   bool ChildrenHavePerspective() const;
@@ -3029,6 +3033,10 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
    * or nullptr if there is no such anonymous content.
    */
   virtual mozilla::dom::Element* GetPseudoElement(nsCSSPseudoElements::Type aType);
+
+  bool BackfaceIsHidden() {
+    return StyleDisplay()->BackfaceIsHidden();
+  }
 
 protected:
   // Members
