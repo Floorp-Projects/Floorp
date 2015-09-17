@@ -104,7 +104,7 @@ enum nsCSSTokenType {
 // need to insert a "/**/" string between a '|' delim and a '|=' dashmatch
 // and between a '/' delim and a '*=' containsmatch.
 //
-// https://dvcs.w3.org/hg/csswg/raw-file/372e659027a0/css-syntax/Overview.html#serialization
+// https://drafts.csswg.org/css-syntax/#serialization
 enum nsCSSTokenSerializationType {
   eCSSTokenSerialization_Nothing,
   eCSSTokenSerialization_Whitespace,
