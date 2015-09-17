@@ -18,6 +18,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource:///modules/MigrationUtils.jsm");
 Cu.import("resource:///modules/MSMigrationUtils.jsm");
+Cu.import("resource://gre/modules/LoginHelper.jsm");
+
 
 XPCOMUtils.defineLazyModuleGetter(this, "ctypes",
                                   "resource://gre/modules/ctypes.jsm");
@@ -29,6 +31,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
                                   "resource://gre/modules/WindowsRegistry.jsm");
 
 Cu.importGlobalProperties(["URL"]);
+
+let CtypesKernelHelpers = MSMigrationUtils.CtypesKernelHelpers;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Resources
@@ -126,12 +130,19 @@ History.prototype = {
 
 // IE form password migrator supporting windows from XP until 7 and IE from 7 until 11
 function IE7FormPasswords () {
+  // used to distinguish between this migrator and other passwords migrators in tests.
+  this.name = "IE7FormPasswords";
 }
 
 IE7FormPasswords.prototype = {
   type: MigrationUtils.resourceTypes.PASSWORDS,
 
   get exists() {
+    // work only on windows until 7
+    if (AppConstants.isPlatformAndVersionAtLeast("win", "6.2")) {
+      return false;
+    }
+
     try {
       let nsIWindowsRegKey = Ci.nsIWindowsRegKey;
       let key = Cc["@mozilla.org/windows-registry-key;1"].
@@ -171,7 +182,7 @@ IE7FormPasswords.prototype = {
    * @param {nsIURI[]} uris - the uris that are going to be migrated.
    */
   _migrateURIs(uris) {
-    this.ctypesHelpers = new MSMigrationUtils.CtypesHelpers();
+    this.ctypesKernelHelpers = new MSMigrationUtils.CtypesKernelHelpers();
     this._crypto = new OSCrypto();
     let nsIWindowsRegKey = Ci.nsIWindowsRegKey;
     let key = Cc["@mozilla.org/windows-registry-key;1"].
@@ -240,7 +251,7 @@ IE7FormPasswords.prototype = {
 
     key.close();
     this._crypto.finalize();
-    this.ctypesHelpers.finalize();
+    this.ctypesKernelHelpers.finalize();
   },
 
   _crypto: null,
@@ -250,52 +261,16 @@ IE7FormPasswords.prototype = {
    * @param {Object[]} logins - array of the login details.
    */
   _addLogins(ieLogins) {
-    function addLogin(login, existingLogins) {
-      // Add the login only if it doesn't already exist
-      // if the login is not already available, it s going to be added or merged with another
-      // login
-      if (existingLogins.some(l => login.matches(l, true))) {
-        return;
-      }
-      let isUpdate = false; // the login is just an update for an old one
-      for (let existingLogin of existingLogins) {
-        if (login.username == existingLogin.username && login.password != existingLogin.password) {
-          // if a login with the same username and different password already exists and it's older
-          // than the current one, that login needs to be updated using the current one details
-          if (login.timePasswordChanged > existingLogin.timePasswordChanged) {
-            // Bug 1187190: Password changes should be propagated depending on timestamps.
-
-            // the existing login password and timestamps should be updated
-            let propBag = Cc["@mozilla.org/hash-property-bag;1"].
-                          createInstance(Ci.nsIWritablePropertyBag);
-            propBag.setProperty("password", login.password);
-            propBag.setProperty("timePasswordChanged", login.timePasswordChanged);
-            Services.logins.modifyLogin(existingLogin, propBag);
-            // make sure not to add the new login
-            isUpdate = true;
-          }
-        }
-      }
-      // if the new login is not an update, add it.
-      if (!isUpdate) {
-        Services.logins.addLogin(login);
-      }
-    }
-
     for (let ieLogin of ieLogins) {
       try {
-        let login = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(Ci.nsILoginInfo);
-
-        login.init(ieLogin.url, "", null,
-                   ieLogin.username, ieLogin.password, "", "");
-        login.QueryInterface(Ci.nsILoginMetaInfo);
-        login.timeCreated = ieLogin.creation;
-        login.timeLastUsed = ieLogin.creation;
-        login.timePasswordChanged = ieLogin.creation;
-        // login.timesUsed is going to set to the default value 1
-        // Add the login only if there's not an existing entry
-        let existingLogins = Services.logins.findLogins({}, login.hostname, "", null);
-        addLogin(login, existingLogins);
+        // create a new login
+        let login = {
+          username: ieLogin.username,
+          password: ieLogin.password,
+          hostname: ieLogin.url,
+          timeCreated: ieLogin.creation,
+          };
+        LoginHelper.maybeImportLogin(login);
       } catch (e) {
         Cu.reportError(e);
       }
@@ -365,7 +340,7 @@ IE7FormPasswords.prototype = {
       // Bytes 0-31 starting from currentInfoIndex contain the loginItem data structure for the
       // current login
       let currentLoginItem = currentLoginItemPointer.contents;
-      let creation = this.ctypesHelpers.
+      let creation = this.ctypesKernelHelpers.
                      fileTimeToSecondsSinceEpoch(currentLoginItem.hiDateTime,
                                                  currentLoginItem.loDateTime) * 1000;
       let currentResult = {
@@ -531,6 +506,10 @@ IEProfileMigrator.prototype.getResources = function IE_getResources() {
   if (AppConstants.isPlatformAndVersionAtMost("win", "6.1")) {
     resources.push(new IE7FormPasswords());
   }
+  let windowsVaultFormPasswordsMigrator =
+    MSMigrationUtils.getWindowsVaultFormPasswordsMigrator();
+  windowsVaultFormPasswordsMigrator.name = "IEVaultFormPasswords";
+  resources.push(windowsVaultFormPasswordsMigrator);
   return [r for each (r in resources) if (r.exists)];
 };
 
