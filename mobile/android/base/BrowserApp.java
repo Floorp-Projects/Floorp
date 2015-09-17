@@ -10,7 +10,6 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.DynamicToolbar.PinReason;
 import org.mozilla.gecko.DynamicToolbar.VisibilityTransition;
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
-import org.mozilla.gecko.PrintHelper;
 import org.mozilla.gecko.Tabs.TabEvents;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.TransitionsTracker;
@@ -24,7 +23,6 @@ import org.mozilla.gecko.favicons.LoadFaviconTask;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.decoders.IconDirectoryEntry;
 import org.mozilla.gecko.firstrun.FirstrunPane;
-import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerView;
@@ -97,7 +95,6 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
@@ -744,12 +741,17 @@ public class BrowserApp extends GeckoApp
 
             // Looks at the server if there are changes in the server URL that should be used in the future
             Log.d(LOGTAG, "update server urls from remote");
+            SwitchBoard.updateConfigServerUrl(this);
             new AsyncConfigLoader(this, AsyncConfigLoader.UPDATE_SERVER).execute();
 
             // Loads the actual config. This can be done on app start or on app onResume() depending
             // how often you want to update the config.
             Log.d(LOGTAG, "update app config");
-            new AsyncConfigLoader(this, AsyncConfigLoader.CONFIG_SERVER).execute();
+            // TODO: Make this NON-SYNCHRONOUS
+            SwitchBoard.loadConfig(this);
+            final AsyncConfigLoader loader = new AsyncConfigLoader(this, AsyncConfigLoader.CONFIG_SERVER);
+            loader.execute();
+
         }
 
         mBrowserChrome = (ViewGroup) findViewById(R.id.browser_chrome);
@@ -2581,8 +2583,8 @@ public class BrowserApp extends GeckoApp
         if (mFirstrunPane == null) {
             final ViewStub firstrunPagerStub = (ViewStub) findViewById(R.id.firstrun_pager_stub);
             mFirstrunPane = (FirstrunPane) firstrunPagerStub.inflate();
-            mFirstrunPane.load(getSupportFragmentManager());
-            mFirstrunPane.registerOnFinishListener(new FirstrunPane.OnFinishListener() {
+            mFirstrunPane.load(getApplicationContext(), getSupportFragmentManager());
+            mFirstrunPane.registerOnFinishListener(new FirstrunPane.PagerNavigation() {
                 @Override
                 public void onFinish() {
                     BrowserApp.this.mFirstrunPane = null;

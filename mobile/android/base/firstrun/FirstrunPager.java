@@ -23,7 +23,7 @@ import java.util.List;
 
 public class FirstrunPager extends ViewPager {
     private Context context;
-    protected FirstrunPane.OnFinishListener listener;
+    protected FirstrunPane.PagerNavigation listener;
 
     public FirstrunPager(Context context) {
         this(context, null);
@@ -34,13 +34,13 @@ public class FirstrunPager extends ViewPager {
         this.context = context;
     }
 
-    public void load(FragmentManager fm, FirstrunPane.OnFinishListener listener) {
-        final List<FirstrunPagerConfig.FirstrunPanel> panels;
+    public void load(Context appContext, FragmentManager fm, FirstrunPane.PagerNavigation listener) {
+        final List<FirstrunPagerConfig.FirstrunPanelConfig> panels;
 
         if (RestrictedProfiles.isUserRestricted(context)) {
             panels = FirstrunPagerConfig.getRestricted();
         } else {
-            panels = FirstrunPagerConfig.getDefault();
+            panels = FirstrunPagerConfig.getDefault(appContext);
         }
 
         setAdapter(new ViewPagerAdapter(fm, panels));
@@ -73,9 +73,9 @@ public class FirstrunPager extends ViewPager {
     }
 
     private class ViewPagerAdapter extends FragmentPagerAdapter {
-        private List<FirstrunPagerConfig.FirstrunPanel> panels;
+        private List<FirstrunPagerConfig.FirstrunPanelConfig> panels;
 
-        public ViewPagerAdapter(FragmentManager fm, List<FirstrunPagerConfig.FirstrunPanel> panels) {
+        public ViewPagerAdapter(FragmentManager fm, List<FirstrunPagerConfig.FirstrunPanelConfig> panels) {
             super(fm);
             this.panels = panels;
         }
@@ -83,7 +83,7 @@ public class FirstrunPager extends ViewPager {
         @Override
         public Fragment getItem(int i) {
             final Fragment fragment = Fragment.instantiate(context, panels.get(i).getClassname());
-            ((FirstrunPanel) fragment).setOnFinishListener(listener);
+            ((FirstrunPanel) fragment).setPagerNavigation(listener);
             return fragment;
         }
 

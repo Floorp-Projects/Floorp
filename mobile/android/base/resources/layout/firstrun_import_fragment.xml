@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:orientation="vertical"
+            android:fillViewport="true">
+
+    <LinearLayout android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:minHeight="@dimen/firstrun_min_height"
+                  android:background="@color/android:white"
+                  android:gravity="center_horizontal"
+                  android:orientation="vertical">
+
+        <FrameLayout android:layout_width="match_parent"
+                     android:layout_height="wrap_content"
+                     android:background="@color/link_blue">
+
+            <ImageView android:layout_width="wrap_content"
+                       android:layout_height="wrap_content"
+                       android:layout_gravity="center"
+                       android:adjustViewBounds="true"
+                       android:src="@drawable/firstrun_background_coffee"/>
+
+            <ImageView android:layout_width="@dimen/firstrun_brand_size"
+                       android:layout_height="@dimen/firstrun_brand_size"
+                       android:src="@drawable/large_icon"
+                       android:layout_gravity="center"/>
+        </FrameLayout>
+
+
+        <TextView android:layout_width="@dimen/firstrun_content_width"
+                      android:layout_height="wrap_content"
+                      android:gravity="center"
+                      android:paddingTop="30dp"
+                      android:textAppearance="@style/TextAppearance.FirstrunLight.Main"
+                      android:text="@string/firstrun_import_message"/>
+
+            <TextView android:layout_width="@dimen/firstrun_content_width"
+                      android:layout_height="wrap_content"
+                      android:paddingTop="20dp"
+                      android:paddingBottom="30dp"
+                      android:gravity="center"
+                      android:textAppearance="@style/TextAppearance.FirstrunRegular.Body"
+                      android:text="@string/firstrun_import_subtext"/>
+
+            <Button android:id="@+id/import_action_button"
+                    style="@style/Widget.Firstrun.Button"
+                    android:background="@drawable/button_background_action_orange_round"
+                    android:layout_gravity="center"
+                    android:text="@string/firstrun_import_action"/>
+
+            <ImageView android:id="@+id/confirm_check"
+                       android:layout_width="wrap_content"
+                       android:layout_height="wrap_content"
+                       android:visibility="gone"
+                       android:src="@drawable/overlay_check"/>
+
+            <TextView android:id="@+id/import_link"
+                      android:layout_width="@dimen/firstrun_content_width"
+                      android:layout_height="wrap_content"
+                      android:padding="20dp"
+                      android:gravity="center"
+                      android:textAppearance="@style/TextAppearance.FirstrunRegular.Link"
+                      android:text="@string/firstrun_button_next"/>
+        </LinearLayout>
+</ScrollView>
