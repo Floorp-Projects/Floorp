@@ -256,7 +256,8 @@ BluetoothDaemonProtocol::Handle(DaemonSocketPDU& aPDU)
       &BluetoothDaemonProtocol::HandleSetupSvc,
     [BluetoothDaemonCoreModule::SERVICE_ID] =
       &BluetoothDaemonProtocol::HandleCoreSvc,
-    [0x02] = &BluetoothDaemonProtocol::HandleSocketSvc,
+    [BluetoothDaemonSocketModule::SERVICE_ID] =
+      &BluetoothDaemonProtocol::HandleSocketSvc,
     [0x03] = nullptr, // HID host
     [0x04] = nullptr, // PAN
     [BluetoothDaemonHandsfreeModule::SERVICE_ID] =

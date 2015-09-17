@@ -20,6 +20,16 @@ using mozilla::ipc::DaemonSocketResultHandler;
 class BluetoothDaemonSocketModule
 {
 public:
+  enum {
+    SERVICE_ID = 0x02
+  };
+
+  enum {
+    OPCODE_ERROR = 0x00,
+    OPCODE_LISTEN = 0x01,
+    OPCODE_CONNECT = 0x02
+  };
+
   static const int MAX_NUM_CLIENTS;
 
   virtual nsresult Send(DaemonSocketPDU* aPDU,
