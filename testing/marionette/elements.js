@@ -681,7 +681,7 @@ ElementManager.prototype = {
         break;
       case LINK_TEXT:
       case PARTIAL_LINK_TEXT:
-        let allLinks = rootNode.getElementsByTagName('A');
+        let allLinks = startNode.getElementsByTagName('A');
         for (let i = 0; i < allLinks.length; i++) {
           let text = allLinks[i].text;
           if (PARTIAL_LINK_TEXT == using) {
