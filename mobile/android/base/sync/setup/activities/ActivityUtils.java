@@ -23,6 +23,7 @@ import android.text.style.ClickableSpan;
 import android.text.style.URLSpan;
 import android.view.View;
 import android.widget.TextView;
+import org.mozilla.gecko.tabqueue.TabQueueDispatcher;
 
 public class ActivityUtils {
   private static final String LOG_TAG = "ActivityUtils";
@@ -64,6 +65,7 @@ public class ActivityUtils {
     }
     intent.setClassName(GlobalConstants.BROWSER_INTENT_PACKAGE, GlobalConstants.BROWSER_INTENT_CLASS);
     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    intent.putExtra(TabQueueDispatcher.SKIP_TAB_QUEUE_FLAG, true);
     context.startActivity(intent);
   }
 
