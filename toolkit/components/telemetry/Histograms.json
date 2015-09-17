@@ -1524,6 +1524,12 @@
     "extended_statistics_ok": true,
     "description": "H2: Settings Initial Window (rounded to KB)"
   },
+  "SPDY_GOAWAY_LOCAL": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 32,
+    "description": "H2: goaway reason client sent from rfc 7540. 31 is none sent."
+  },
   "SPDY_GOAWAY_PEER": {
     "expires_in_version": "never",
     "kind": "enumerated",
