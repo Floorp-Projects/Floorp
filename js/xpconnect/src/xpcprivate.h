@@ -96,7 +96,7 @@
 #include "xpcpublic.h"
 #include "js/TracingAPI.h"
 #include "js/WeakMapPtr.h"
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "nscore.h"
 #include "nsXPCOM.h"
 #include "nsAutoPtr.h"

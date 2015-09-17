@@ -108,6 +108,7 @@ struct HttpChannelOpenArgs
   uint32_t                    cacheKey;
   nsCString                   schedulingContextID;
   OptionalCorsPreflightArgs   preflightArgs;
+  uint32_t                    initialRwin;
 };
 
 struct HttpChannelConnectArgs

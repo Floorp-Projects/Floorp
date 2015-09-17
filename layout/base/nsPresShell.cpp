@@ -85,7 +85,7 @@
 #include "nsXPCOM.h"
 #include "nsILayoutHistoryState.h"
 #include "nsILineIterator.h" // for ScrollContentIntoView
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "mozilla/dom/BeforeAfterKeyboardEventBinding.h"
 #include "mozilla/dom/Touch.h"
 #include "mozilla/dom/PointerEventBinding.h"
@@ -1231,6 +1231,23 @@ PresShell::Destroy()
     mViewManager = nullptr;
   }
 
+  // mFrameArena will be destroyed soon.  Clear out any ArenaRefPtrs
+  // pointing to objects in the arena now.  This is done:
+  //
+  //   (a) before mFrameArena's destructor runs so that our
+  //       mPresArenaAllocCount gets down to 0 and doesn't trip the assertion
+  //       in ~PresShell,
+  //   (b) before the mPresContext->SetShell(nullptr) below, so
+  //       that when we clear the ArenaRefPtrs they'll still be able to
+  //       get back to this PresShell to deregister themselves (e.g. note
+  //       how nsStyleContext::Arena returns the PresShell got from its
+  //       rule node's nsPresContext, which would return null if we'd already
+  //       called mPresContext->SetShell(nullptr)), and
+  //   (c) before the mStyleSet->BeginShutdown() call just below, so that
+  //       the nsStyleContexts don't complain they're being destroyed later
+  //       than the rule tree is.
+  mFrameArena.ClearArenaRefPtrs();
+
   mStyleSet->BeginShutdown();
   nsRefreshDriver* rd = GetPresContext()->RefreshDriver();
 
@@ -1731,9 +1748,9 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
         Preferences::GetInt("nglayout.initialpaint.delay",
                             PAINTLOCK_EVENT_DELAY);
 
-      mPaintSuppressionTimer->InitWithFuncCallback(sPaintSuppressionCallback,
-                                                   this, delay,
-                                                   nsITimer::TYPE_ONE_SHOT);
+      mPaintSuppressionTimer->InitWithNamedFuncCallback(
+        sPaintSuppressionCallback, this, delay, nsITimer::TYPE_ONE_SHOT,
+        "PresShell::sPaintSuppressionCallback");
     }
   }
 

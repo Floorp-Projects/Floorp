@@ -14,7 +14,7 @@
 #include "nsIScriptElement.h"
 #include "nsTArray.h"
 
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "nsIHttpChannel.h"
 #include "nsHTMLStyleSheet.h"
 

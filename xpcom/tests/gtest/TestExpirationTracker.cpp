@@ -43,7 +43,7 @@ static uint32_t slackMS = 30; // allow this much error
 
 template <uint32_t K> class Tracker : public nsExpirationTracker<Object,K> {
 public:
-  Tracker() : nsExpirationTracker<Object,K>(periodMS) {
+  Tracker() : nsExpirationTracker<Object,K>(periodMS, "Tracker") {
     Object* obj = new Object();
     mUniverse.AppendElement(obj);
     LogAction(obj, "Created");

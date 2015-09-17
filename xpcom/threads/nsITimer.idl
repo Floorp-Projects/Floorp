@@ -21,9 +21,24 @@ interface nsIEventTarget;
  */
 class nsITimer;
 typedef void (*nsTimerCallbackFunc) (nsITimer *aTimer, void *aClosure);
+
+/**
+ * The signature of the timer name callback function passed to
+ * initWithNameableFuncCallback.
+ * This is the function that will get called when timer profiling is enabled
+ * via the "TimerFirings" log module.
+ *
+ * @param aTimer the timer which has expired
+ * @param aClosure opaque parameter passed to initWithFuncCallback
+ * @param aBuf a buffer in which to put the name
+ * @param aLen the length of the buffer
+ */
+typedef void (*nsTimerNameCallbackFunc) (nsITimer *aTimer, void *aClosure,
+                                         char *aBuf, size_t aLen);
 %}
 
 native nsTimerCallbackFunc(nsTimerCallbackFunc);
+native nsTimerNameCallbackFunc(nsTimerNameCallbackFunc);
 
 /**
  * The callback interface for timers.
@@ -57,7 +72,7 @@ interface nsITimerCallback : nsISupports
  * target thread, or races may occur with bad results like timers firing after
  * they've been canceled, and/or not firing after re-initiatization.
  */
-[scriptable, uuid(c569e813-333f-4b78-8691-13ca5839e10a)]
+[scriptable, uuid(3de4b105-363c-482c-a409-baac83a01bfc)]
 interface nsITimer : nsISupports
 {
   /* Timer types */
@@ -98,10 +113,10 @@ interface nsITimer : nsISupports
 
   /**
    * Initialize a timer that will fire after the said delay.
-   * A user must keep a reference to this timer till it is 
+   * A user must keep a reference to this timer till it is
    * is no longer needed or has been cancelled.
    *
-   * @param aObserver   the callback object that observes the 
+   * @param aObserver   the callback object that observes the
    *                    ``timer-callback'' topic with the subject being
    *                    the timer itself when the timer fires:
    *
@@ -112,7 +127,7 @@ interface nsITimer : nsISupports
    * @param aDelay      delay in milliseconds for timer to fire
    * @param aType       timer type per TYPE* consts defined above
    */
-  void init(in nsIObserver aObserver, in unsigned long aDelay, 
+  void init(in nsIObserver aObserver, in unsigned long aDelay,
             in unsigned long aType);
 
 
@@ -128,7 +143,7 @@ interface nsITimer : nsISupports
    */
   [noscript] void initWithFuncCallback(in nsTimerCallbackFunc aCallback,
                                        in voidPtr aClosure,
-                                       in unsigned long aDelay, 
+                                       in unsigned long aDelay,
                                        in unsigned long aType);
 
   /**
@@ -140,7 +155,7 @@ interface nsITimer : nsISupports
    * @param aType      Timer type per TYPE* consts defined above
    */
   void initWithCallback(in nsITimerCallback aCallback,
-                        in unsigned long aDelay, 
+                        in unsigned long aDelay,
                         in unsigned long aType);
 
   /**
@@ -150,7 +165,41 @@ interface nsITimer : nsISupports
    * by conserving one timer instance).
    */
   void cancel();
-  
+
+  /**
+   * Like initWithFuncCallback, but also takes a name for the timer; the name
+   * will be used when timer profiling is enabled via the "TimerFirings" log
+   * module.
+   *
+   * @param aFunc      The function to invoke
+   * @param aClosure   An opaque pointer to pass to that function
+   * @param aDelay     The millisecond interval
+   * @param aType      Timer type per TYPE* consts defined above
+   * @param aName      The timer's name
+   */
+  [noscript] void initWithNamedFuncCallback(in nsTimerCallbackFunc aCallback,
+                                            in voidPtr aClosure,
+                                            in unsigned long aDelay,
+                                            in unsigned long aType,
+                                            in string aName);
+
+  /**
+   * Like initWithNamedFuncCallback, but instead of a timer name it takes a
+   * callback that will provide a name when the timer fires.
+   *
+   * @param aFunc      The function to invoke
+   * @param aClosure   An opaque pointer to pass to that function
+   * @param aDelay     The millisecond interval
+   * @param aType      Timer type per TYPE* consts defined above
+   * @param aNameCallback  The callback function
+   */
+  [noscript] void initWithNameableFuncCallback(
+                    in nsTimerCallbackFunc aCallback,
+                    in voidPtr aClosure,
+                    in unsigned long aDelay,
+                    in unsigned long aType,
+                    in nsTimerNameCallbackFunc aNameCallback);
+
   /**
    * The millisecond delay of the timeout.
    *
@@ -159,15 +208,15 @@ interface nsITimer : nsISupports
    * a one-shot timer.
    */
   attribute unsigned long delay;
-  
+
   /**
    * The timer type - one of the above TYPE_* constants.
-   */  
+   */
   attribute unsigned long type;
 
   /**
    * The opaque pointer pass to initWithFuncCallback.
-   */  
+   */
   [noscript] readonly attribute voidPtr closure;
 
   /**
@@ -178,7 +227,7 @@ interface nsITimer : nsISupports
   /**
    * The nsIEventTarget where the callback will be dispatched. Note that this
    * target may only be set before the call to one of the init methods above.
-   * 
+   *
    * By default the target is the thread that created the timer.
    */
   attribute nsIEventTarget target;

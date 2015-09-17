@@ -13,7 +13,7 @@
 #include "nsIDocument.h"
 #include "mozilla/EventListenerManager.h"
 #include "nsIXPConnect.h"
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "nsIDOMAttr.h"
 #include "nsCOMArray.h"
 #include "nsPIDOMWindow.h"

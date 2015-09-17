@@ -2844,6 +2844,15 @@ nsPresContext::IsDeviceSizePageSize()
   return isDeviceSizePageSize;
 }
 
+uint64_t
+nsPresContext::GetRestyleGeneration() const
+{
+  if (!mRestyleManager) {
+    return 0;
+  }
+  return mRestyleManager->GetRestyleGeneration();
+}
+
 nsRootPresContext::nsRootPresContext(nsIDocument* aDocument,
                                      nsPresContextType aType)
   : nsPresContext(aDocument, aType),

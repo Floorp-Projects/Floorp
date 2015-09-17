@@ -11,6 +11,7 @@
 #include "AudioChannelFormat.h"
 #include "AudioParamTimeline.h"
 #include "AudioContext.h"
+#include "nsMathUtils.h"
 
 using namespace mozilla::dom;
 
@@ -27,12 +28,10 @@ namespace mozilla {
 
 AudioNodeStream::AudioNodeStream(AudioNodeEngine* aEngine,
                                  Flags aFlags,
-                                 TrackRate aSampleRate,
-                                 AudioContext::AudioContextId aContextId)
+                                 TrackRate aSampleRate)
   : ProcessedMediaStream(nullptr),
     mEngine(aEngine),
     mSampleRate(aSampleRate),
-    mAudioContextId(aContextId),
     mFlags(aFlags),
     mNumberOfInputChannels(2),
     mMarkAsFinishedAfterThisBlock(false),
@@ -64,26 +63,25 @@ AudioNodeStream::DestroyImpl()
 }
 
 /* static */ already_AddRefed<AudioNodeStream>
-AudioNodeStream::Create(MediaStreamGraph* aGraph, AudioNodeEngine* aEngine,
-                        Flags aFlags)
+AudioNodeStream::Create(AudioContext* aCtx, AudioNodeEngine* aEngine,
+                        Flags aFlags, MediaStreamGraph* aGraph)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   // MediaRecorders use an AudioNodeStream, but no AudioNode
   AudioNode* node = aEngine->NodeMainThread();
-  MOZ_ASSERT(!node || aGraph->GraphRate() == node->Context()->SampleRate());
+  MediaStreamGraph* graph = aGraph ? aGraph : aCtx->Graph();
+  MOZ_ASSERT(graph->GraphRate() == aCtx->SampleRate());
 
-  dom::AudioContext::AudioContextId contextIdForStream = node ? node->Context()->Id() :
-                                                                NO_AUDIO_CONTEXT;
   nsRefPtr<AudioNodeStream> stream =
-    new AudioNodeStream(aEngine, aFlags, aGraph->GraphRate(),
-                        contextIdForStream);
-  if (aEngine->HasNode()) {
-    stream->SetChannelMixingParametersImpl(aEngine->NodeMainThread()->ChannelCount(),
-                                           aEngine->NodeMainThread()->ChannelCountModeValue(),
-                                           aEngine->NodeMainThread()->ChannelInterpretationValue());
+    new AudioNodeStream(aEngine, aFlags, graph->GraphRate());
+  if (node) {
+    stream->SetChannelMixingParametersImpl(node->ChannelCount(),
+                                           node->ChannelCountModeValue(),
+                                           node->ChannelInterpretationValue());
   }
-  aGraph->AddStream(stream);
+  graph->AddStream(stream,
+    aCtx->ShouldSuspendNewStream() ? MediaStreamGraph::ADD_STREAM_SUSPENDED : 0);
   return stream.forget();
 }
 
@@ -522,12 +520,7 @@ AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
   uint16_t outputCount = mLastChunks.Length();
   MOZ_ASSERT(outputCount == std::max(uint16_t(1), mEngine->OutputCount()));
 
-  // Consider this stream blocked if it has already finished output. Normally
-  // mBlocked would reflect this, but due to rounding errors our audio track may
-  // appear to extend slightly beyond aFrom, so we might not be blocked yet.
-  bool blocked = mFinished || mBlocked.GetAt(aFrom);
-  // If the stream has finished at this time, it will be blocked.
-  if (blocked || InMutedCycle()) {
+  if (mFinished || InMutedCycle()) {
     mInputChunks.Clear();
     for (uint16_t i = 0; i < outputCount; ++i) {
       mLastChunks[i].SetNull(WEBAUDIO_BLOCK_SIZE);
@@ -565,8 +558,8 @@ AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
     }
   }
 
-  if (!blocked) {
-    // Don't output anything while blocked
+  if (!mFinished) {
+    // Don't output anything while finished
     AdvanceOutputSegment();
     if (mMarkAsFinishedAfterThisBlock && (aFlags & ALLOW_FINISH)) {
       // This stream was finished the last time that we looked at it, and all
@@ -586,12 +579,7 @@ AudioNodeStream::ProduceOutputBeforeInput(GraphTime aFrom)
   MOZ_ASSERT(!InMutedCycle(), "DelayNodes should break cycles");
   MOZ_ASSERT(mLastChunks.Length() == 1);
 
-  // Consider this stream blocked if it has already finished output. Normally
-  // mBlocked would reflect this, but due to rounding errors our audio track may
-  // appear to extend slightly beyond aFrom, so we might not be blocked yet.
-  bool blocked = mFinished || mBlocked.GetAt(aFrom);
-  // If the stream has finished at this time, it will be blocked.
-  if (blocked) {
+  if (mFinished) {
     mLastChunks[0].SetNull(WEBAUDIO_BLOCK_SIZE);
   } else {
     mEngine->ProduceBlockBeforeInput(&mLastChunks[0]);
@@ -668,9 +656,8 @@ AudioNodeStream::FractionalTicksFromDestinationTime(AudioNodeStream* aDestinatio
 
   GraphTime graphTime =
     aDestination->StreamTimeToGraphTime(destinationStreamTime);
-  StreamTime thisStreamTime = GraphTimeToStreamTimeOptimistic(graphTime);
+  StreamTime thisStreamTime = GraphTimeToStreamTime(graphTime);
   double thisFractionalTicks = thisStreamTime + offset;
-  MOZ_ASSERT(thisFractionalTicks >= 0.0);
   return thisFractionalTicks;
 }
 
@@ -683,9 +670,7 @@ AudioNodeStream::TicksFromDestinationTime(MediaStream* aDestination,
 
   double thisSeconds =
     FractionalTicksFromDestinationTime(destination, aSeconds);
-  // Round to nearest
-  StreamTime ticks = thisSeconds + 0.5;
-  return ticks;
+  return NS_round(thisSeconds);
 }
 
 double
@@ -693,8 +678,9 @@ AudioNodeStream::DestinationTimeFromTicks(AudioNodeStream* aDestination,
                                           StreamTime aPosition)
 {
   MOZ_ASSERT(SampleRate() == aDestination->SampleRate());
+
   GraphTime graphTime = StreamTimeToGraphTime(aPosition);
-  StreamTime destinationTime = aDestination->GraphTimeToStreamTimeOptimistic(graphTime);
+  StreamTime destinationTime = aDestination->GraphTimeToStreamTime(graphTime);
   return StreamTimeToSeconds(destinationTime);
 }
 

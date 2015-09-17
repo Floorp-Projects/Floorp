@@ -26,7 +26,7 @@
 #include "nsISecurityEventSink.h"
 #include "nsISupportsPriority.h"
 #include "nsCOMPtr.h"
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "nsAutoPtr.h"
 
 #include "mozilla/LinkedList.h"
@@ -238,7 +238,7 @@ protected:
             return static_cast<nsIRequest*>(const_cast<void*>(mKey));
         }
 
-        const void* mKey; // Must be first for the pldhash stubs to work
+        const void* mKey; // Must be first for the PLDHashTable stubs to work
         int64_t mCurrentProgress;
         int64_t mMaxProgress;
         bool mUploading;
