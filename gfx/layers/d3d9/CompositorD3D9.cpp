@@ -692,7 +692,6 @@ CompositorD3D9::PrepareViewport(const gfx::IntSize& aSize)
   viewMatrix._22 = -2.0f / aSize.height;
   viewMatrix._41 = -1.0f;
   viewMatrix._42 = 1.0f;
-  viewMatrix._33 = 0.0f;
 
   HRESULT hr = device()->SetVertexShaderConstantF(CBmProjection, &viewMatrix._11, 4);
 
