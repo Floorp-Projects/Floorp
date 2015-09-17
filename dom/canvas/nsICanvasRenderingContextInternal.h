@@ -136,6 +136,13 @@ public:
 
   virtual void MarkContextClean() = 0;
 
+  // Called when a frame is captured.
+  virtual void MarkContextCleanForFrameCapture() = 0;
+
+  // Whether the context is clean or has been invalidated since the last frame
+  // was captured.
+  virtual bool IsContextCleanForFrameCapture() = 0;
+
   // Redraw the dirty rectangle of this canvas.
   NS_IMETHOD Redraw(const gfxRect &dirty) = 0;
 
