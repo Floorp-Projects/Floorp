@@ -17,6 +17,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ViewSourceBrowser",
   "resource://gre/modules/ViewSourceBrowser.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
   "resource://gre/modules/Deprecated.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 var gViewSourceUtils = {
 
@@ -217,18 +219,35 @@ var gViewSourceUtils = {
                          "openInExternalEditor are using an out-of-date API.",
                          "https://developer.mozilla.org/en-US/Add-ons/" +
                          "Code_snippets/View_Source_for_XUL_Applications");
+      if (Components.utils.isCrossProcessWrapper(aDocument)) {
+        throw new Error("View Source cannot accept a CPOW as a document.");
+      }
       data = {
         url: aArgsOrURL,
         pageDescriptor: aPageDescriptor,
         doc: aDocument,
-        lineNumber: aLineNumber
+        lineNumber: aLineNumber,
+        isPrivate: false,
       };
+      if (aDocument) {
+          data.isPrivate =
+            PrivateBrowsingUtils.isWindowPrivate(aDocument.defaultView);
+      }
     } else {
-      let { URL, outerWindowID, lineNumber } = aArgsOrURL;
+      let { URL, browser, lineNumber } = aArgsOrURL;
       data = {
         url: URL,
-        lineNumber
+        lineNumber,
+        isPrivate: false,
       };
+      if (browser) {
+        data.doc = {
+          characterSet: browser.characterSet,
+          contentType: browser.documentContentType,
+          title: browser.contentTitle,
+        };
+        data.isPrivate = PrivateBrowsingUtils.isBrowserPrivate(browser);
+      }
     }
 
     try {
@@ -241,12 +260,12 @@ var gViewSourceUtils = {
       // make a uri
       var ios = Components.classes["@mozilla.org/network/io-service;1"]
                           .getService(Components.interfaces.nsIIOService);
-      var charset = aDocument ? aDocument.characterSet : null;
+      var charset = data.doc ? data.doc.characterSet : null;
       var uri = ios.newURI(data.url, charset, null);
       data.uri = uri;
 
       var path;
-      var contentType = aDocument ? aDocument.contentType : null;
+      var contentType = data.doc ? data.doc.contentType : null;
       if (uri.scheme == "file") {
         // it's a local file; we can open it directly
         path = uri.QueryInterface(Components.interfaces.nsIFileURL).file.path;
@@ -260,23 +279,10 @@ var gViewSourceUtils = {
         this.viewSourceProgressListener.editor = editor;
         this.viewSourceProgressListener.callBack = aCallBack;
         this.viewSourceProgressListener.data = data;
-        if (!aPageDescriptor) {
+        if (!data.pageDescriptor) {
           // without a page descriptor, loadPage has no chance of working. download the file.
-          var file = this.getTemporaryFile(uri, aDocument, contentType);
+          var file = this.getTemporaryFile(uri, data.doc, contentType);
           this.viewSourceProgressListener.file = file;
-
-          let fromPrivateWindow = false;
-          if (aDocument) {
-            try {
-              fromPrivateWindow =
-                aDocument.defaultView
-                         .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                         .getInterface(Components.interfaces.nsIWebNavigation)
-                         .QueryInterface(Components.interfaces.nsILoadContext)
-                         .usePrivateBrowsing;
-            } catch (e) {
-            }
-          }
 
           var webBrowserPersist = Components
                                   .classes["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
@@ -285,11 +291,11 @@ var gViewSourceUtils = {
           webBrowserPersist.persistFlags = this.mnsIWebBrowserPersist.PERSIST_FLAGS_REPLACE_EXISTING_FILES;
           webBrowserPersist.progressListener = this.viewSourceProgressListener;
           let referrerPolicy = Components.interfaces.nsIHttpChannel.REFERRER_POLICY_NO_REFERRER;
-          webBrowserPersist.savePrivacyAwareURI(uri, null, null, referrerPolicy, null, null, file, fromPrivateWindow);
+          webBrowserPersist.savePrivacyAwareURI(uri, null, null, referrerPolicy, null, null, file, data.isPrivate);
 
           let helperService = Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"]
                                         .getService(Components.interfaces.nsPIExternalAppLauncher);
-          if (fromPrivateWindow) {
+          if (data.isPrivate) {
             // register the file to be deleted when possible
             helperService.deleteTemporaryPrivateFileWhenPossible(file);
           } else {
@@ -309,7 +315,7 @@ var gViewSourceUtils = {
           progress.addProgressListener(this.viewSourceProgressListener,
                                        this.mnsIWebProgress.NOTIFY_STATE_DOCUMENT);
           var pageLoader = webShell.QueryInterface(this.mnsIWebPageDescriptor);
-          pageLoader.loadPage(aPageDescriptor, this.mnsIWebPageDescriptor.DISPLAY_AS_SOURCE);
+          pageLoader.loadPage(data.pageDescriptor, this.mnsIWebPageDescriptor.DISPLAY_AS_SOURCE);
         }
       }
     } catch (ex) {
@@ -439,16 +445,9 @@ var gViewSourceUtils = {
           coStream.close();
           foStream.close();
 
-          let fromPrivateWindow =
-            this.data.doc.defaultView
-                         .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                         .getInterface(Components.interfaces.nsIWebNavigation)
-                         .QueryInterface(Components.interfaces.nsILoadContext)
-                         .usePrivateBrowsing;
-
           let helperService = Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"]
                               .getService(Components.interfaces.nsPIExternalAppLauncher);
-          if (fromPrivateWindow) {
+          if (this.data.isPrivate) {
             // register the file to be deleted when possible
             helperService.deleteTemporaryPrivateFileWhenPossible(this.file);
           } else {
