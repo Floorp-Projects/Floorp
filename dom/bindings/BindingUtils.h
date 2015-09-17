@@ -1847,8 +1847,8 @@ ThrowConstructorWithoutNew(JSContext* cx, const char* name);
 
 bool
 GetPropertyOnPrototype(JSContext* cx, JS::Handle<JSObject*> proxy,
-                       JS::Handle<jsid> id, bool* found,
-                       JS::MutableHandle<JS::Value> vp);
+                       JS::Handle<JS::Value> receiver, JS::Handle<jsid> id,
+                       bool* found, JS::MutableHandle<JS::Value> vp);
 
 //
 bool
