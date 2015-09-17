@@ -1250,7 +1250,7 @@ ContainerLayer::SortChildrenBy3DZOrder(nsTArray<Layer*>& aArray)
 
   for (Layer* l = GetFirstChild(); l; l = l->GetNextSibling()) {
     ContainerLayer* container = l->AsContainerLayer();
-    if (container && container->GetContentFlags() & CONTENT_PRESERVE_3D) {
+    if (container && container->GetContentFlags() & CONTENT_EXTEND_3D_CONTEXT) {
       toSort.AppendElement(l);
     } else {
       if (toSort.Length() > 0) {
