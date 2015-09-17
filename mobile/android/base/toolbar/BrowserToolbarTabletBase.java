@@ -20,6 +20,7 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -102,7 +103,7 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
 
     @Override
     public boolean addActionItem(final View actionItem) {
-        actionItemBar.addView(actionItem);
+        actionItemBar.addView(actionItem, LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT);
         return true;
     }
 
