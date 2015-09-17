@@ -101,5 +101,17 @@ IsValidLoadType(uint32_t aLoadType)
   return false;
 }
 
+static inline bool
+IsForceReloadType(uint32_t aLoadType) {
+  switch (aLoadType) {
+    case LOAD_RELOAD_BYPASS_CACHE:
+    case LOAD_RELOAD_BYPASS_PROXY:
+    case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
+    case LOAD_RELOAD_ALLOW_MIXED_CONTENT:
+      return true;
+  }
+  return false;
+}
+
 #endif // MOZILLA_INTERNAL_API
 #endif

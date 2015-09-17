@@ -6472,6 +6472,14 @@
     "n_buckets": "29",
     "description": "The number of times AddIceCandidate failed on a given PeerConnection, given that ICE failed."
   },
+  "WEBRTC_GET_USER_MEDIA_SECURE_ORIGIN": {
+    "alert_emails": ["seceng@mozilla.org"],
+    "expires_in_version": "50",
+    "kind": "enumerated",
+    "n_values": 15,
+    "description": "Origins for getUserMedia calls (0=other, 1=HTTPS, 2=file, 3=app, 4=localhost, 5=loop, 6=privileged)",
+    "releaseChannelCollection": "opt-out"
+  },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_TRACERDETACH_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -7247,7 +7255,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 13,
-    "description": "OS of DevTools user (0:Windows XP, 1:Windows Vista, 2:Windows 7, 3:Windows 8, 4:Windows 8.1, 5:OSX, 6:Linux 7:reserved, 8:reserved, 9:reserved, 10:reserved, 11:reserved, 12:other)"
+    "description": "OS of DevTools user (0:Windows XP, 1:Windows Vista, 2:Windows 7, 3:Windows 8, 4:Windows 8.1, 5:OSX, 6:Linux 7:Windows 10, 8:reserved, 9:reserved, 10:reserved, 11:reserved, 12:other)"
   },
   "DEVTOOLS_OS_IS_64_BITS_PER_USER": {
     "expires_in_version": "never",

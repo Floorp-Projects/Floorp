@@ -167,7 +167,21 @@ Add(nsStyleContext* aContext, nsCSSProperty aProp, css::ImageValue* aValue)
 inline void
 RemoveAll(nsStyleContext* aContext)
 {
-  detail::GetTable().Remove(aContext);
+  // Move all ImageValue references into removedImageList so that we can
+  // release them outside of any hashtable methods.  (If we just call
+  // Remove(aContext) on the table then we can end up calling back
+  // re-entrantly into hashtable methods, as other style contexts
+  // are released.)
+  detail::ImageValueArray removedImages;
+  auto& imageTable = detail::GetTable();
+  auto* perPropertyImageTable = imageTable.Get(aContext);
+  if (perPropertyImageTable) {
+    for (auto it = perPropertyImageTable->Iter(); !it.Done(); it.Next()) {
+      auto* imageList = it.UserData();
+      removedImages.AppendElements(Move(*imageList));
+    }
+  }
+  imageTable.Remove(aContext);
 }
 
 } // namespace CSSVariableImageTable

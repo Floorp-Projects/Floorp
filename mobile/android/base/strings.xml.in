@@ -472,8 +472,8 @@
   <string name="bookmarkdefaults_title_restricted_webmaker">&bookmarks_restricted_webmaker;</string>
   <string name="bookmarkdefaults_url_restricted_webmaker">https://webmaker.org/</string>
 
-  <string name="bookmarkdefaults_title_restricted_support">&bookmarks_restricted_support;</string>
-  <string name="bookmarkdefaults_url_restricted_support">https://support.mozilla.org/kb/kids</string>
+  <string name="bookmarkdefaults_title_restricted_support">&bookmarks_restricted_support2;</string>
+  <string name="bookmarkdefaults_url_restricted_support">https://support.mozilla.org/kb/controlledaccess</string>
 
   <!-- Site identity popup -->
   <string name="identity_connection_secure">&identity_connection_secure;</string>

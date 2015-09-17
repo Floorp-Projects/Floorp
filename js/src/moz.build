@@ -138,6 +138,7 @@ EXPORTS.js += [
 ]
 
 UNIFIED_SOURCES += [
+    'asmjs/AsmJSCompile.cpp',
     'asmjs/AsmJSFrameIterator.cpp',
     'asmjs/AsmJSLink.cpp',
     'asmjs/AsmJSModule.cpp',

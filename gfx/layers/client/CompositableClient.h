@@ -248,12 +248,7 @@ struct AutoRemoveTexture
     , mCompositable(aCompositable)
   {}
 
-  ~AutoRemoveTexture()
-  {
-    if (mCompositable && mTexture) {
-      mCompositable->RemoveTexture(mTexture);
-    }
-  }
+  ~AutoRemoveTexture();
 
   RefPtr<TextureClient> mTexture;
 private:

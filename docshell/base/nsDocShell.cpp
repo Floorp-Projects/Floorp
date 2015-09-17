@@ -10871,10 +10871,7 @@ nsDocShell::DoChannelLoad(nsIChannel* aChannel,
 
   // If the user pressed shift-reload, then do not allow ServiceWorker
   // interception to occur. See step 12.1 of the SW HandleFetch algorithm.
-  if (mLoadType == LOAD_RELOAD_BYPASS_CACHE ||
-      mLoadType == LOAD_RELOAD_BYPASS_PROXY ||
-      mLoadType == LOAD_RELOAD_BYPASS_PROXY_AND_CACHE ||
-      mLoadType == LOAD_RELOAD_ALLOW_MIXED_CONTENT) {
+  if (IsForceReloadType(mLoadType)) {
     nsCOMPtr<nsIHttpChannelInternal> internal = do_QueryInterface(aChannel);
     if (internal) {
       internal->ForceNoIntercept();
@@ -11163,11 +11160,7 @@ nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel, nsISupports* aOwner,
    * for the page. Save the new cacheKey in Session History.
    * see bug 90098
    */
-  if (aChannel &&
-      (aLoadType == LOAD_RELOAD_BYPASS_CACHE ||
-       aLoadType == LOAD_RELOAD_BYPASS_PROXY ||
-       aLoadType == LOAD_RELOAD_BYPASS_PROXY_AND_CACHE ||
-       aLoadType == LOAD_RELOAD_ALLOW_MIXED_CONTENT)) {
+  if (aChannel && IsForceReloadType(aLoadType)) {
     NS_ASSERTION(!updateSHistory,
                  "We shouldn't be updating session history for forced"
                  " reloads!");

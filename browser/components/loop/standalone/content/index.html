@@ -120,16 +120,7 @@
       // We don't use the SDK's CSS. This will prevent spurious 404 errors.
       window.OTProperties.cssURL = "about:blank";
     </script>
-    <script type="text/javascript" src="js/multiplexGum.js"></script>
     <script type="text/javascript" src="shared/libs/sdk.js"></script>
-    <script>
-      // multiplexGum needs evaluation before sdk.js, but TBPlugin is not
-      // defined until after sdk.js has been evaluated. This updates the
-      // navigator object to reference TBPlugin if it was defined by sdk.js.
-      if (!navigator.originalGum) {
-        navigator.originalGum = (window.TBPlugin && window.TBPlugin.getUserMedia);
-      }
-    </script>
     <script type="text/javascript" src="libs/l10n-gaia-02ca67948fe8.js"></script>
     <script type="text/javascript" src="shared/libs/react-0.12.2.js"></script>
     <script type="text/javascript" src="shared/libs/lodash-3.9.3.js"></script>
@@ -139,7 +130,6 @@
     <script type="text/javascript" src="config.js"></script>
     <script type="text/javascript" src="shared/js/utils.js"></script>
     <script type="text/javascript" src="shared/js/crypto.js"></script>
-    <script type="text/javascript" src="shared/js/models.js"></script>
     <script type="text/javascript" src="shared/js/mixins.js"></script>
     <script type="text/javascript" src="shared/js/actions.js"></script>
     <script type="text/javascript" src="shared/js/validate.js"></script>
@@ -154,7 +144,6 @@
     <script type="text/javascript" src="shared/js/urlRegExps.js"></script>
     <script type="text/javascript" src="shared/js/linkifiedTextView.js"></script>
     <script type="text/javascript" src="js/standaloneAppStore.js"></script>
-    <script type="text/javascript" src="js/standaloneClient.js"></script>
     <script type="text/javascript" src="js/standaloneMozLoop.js"></script>
     <script type="text/javascript" src="js/standaloneRoomViews.js"></script>
     <script type="text/javascript" src="js/standaloneMetricsStore.js"></script>
