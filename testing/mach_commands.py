@@ -97,7 +97,7 @@ TEST_SUITES = {
     'reftest': {
         'aliases': ('RR', 'rr', 'Rr'),
         'mach_command': 'reftest',
-        'kwargs': {'test_file': None},
+        'kwargs': {'tests': None},
     },
     'reftest-ipc': {
         'aliases': ('Ripc',),
@@ -140,7 +140,10 @@ TEST_FLAVORS = {
         'mach_command': 'mochitest',
         'kwargs': {'flavor': 'mochitest', 'test_paths': []},
     },
-    'reftest': { },
+    'reftest': {
+        'mach_command': 'reftest',
+        'kwargs': {'tests': []}
+    },
     'steeplechase': { },
     'web-platform-tests': {
         'mach_command': 'web-platform-tests',
