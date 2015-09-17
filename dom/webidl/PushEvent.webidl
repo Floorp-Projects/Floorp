@@ -11,7 +11,7 @@
  Func="nsContentUtils::PushEnabled",
  Exposed=ServiceWorker]
 interface PushEvent : ExtendableEvent {
-  readonly attribute PushMessageData data;
+  readonly attribute PushMessageData? data;
 };
 
 typedef (BufferSource or USVString) PushMessageDataInit;

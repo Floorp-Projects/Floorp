@@ -2297,22 +2297,22 @@ public:
 
 class SendPushEventRunnable final : public WorkerRunnable
 {
-  nsTArray<uint8_t> mData;
+  Maybe<nsTArray<uint8_t>> mData;
   nsMainThreadPtrHandle<ServiceWorker> mServiceWorker;
 
 public:
   SendPushEventRunnable(
     WorkerPrivate* aWorkerPrivate,
+    nsMainThreadPtrHandle<ServiceWorker>& aServiceWorker)
+      : SendPushEventRunnable(aWorkerPrivate, aServiceWorker,
+                              Nothing()) {}
+
+  SendPushEventRunnable(
+    WorkerPrivate* aWorkerPrivate,
     const nsTArray<uint8_t>& aData,
     nsMainThreadPtrHandle<ServiceWorker>& aServiceWorker)
-      : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
-      , mData(aData)
-      , mServiceWorker(aServiceWorker)
-  {
-    AssertIsOnMainThread();
-    MOZ_ASSERT(aWorkerPrivate);
-    MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
-  }
+      : SendPushEventRunnable(aWorkerPrivate, aServiceWorker,
+                              Some(aData)) {}
 
   bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
@@ -2320,12 +2320,16 @@ public:
     MOZ_ASSERT(aWorkerPrivate);
     GlobalObject globalObj(aCx, aWorkerPrivate->GlobalScope()->GetWrapper());
 
-    JSObject* data = Uint8Array::Create(aCx, mData.Length(), mData.Elements());
-    if (!data) {
-      return false;
-    }
+
     PushEventInit pei;
-    pei.mData.Construct().SetAsArrayBufferView().Init(data);
+    if (mData) {
+      const nsTArray<uint8_t>& bytes = mData.ref();
+      JSObject* data = Uint8Array::Create(aCx, bytes.Length(), bytes.Elements());
+      if (!data) {
+        return false;
+      }
+      pei.mData.Construct().SetAsArrayBufferView().Init(data);
+    }
     pei.mBubbles = false;
     pei.mCancelable = false;
 
@@ -2348,6 +2352,20 @@ public:
     }
 
     return true;
+  }
+
+private:
+  SendPushEventRunnable(
+    WorkerPrivate* aWorkerPrivate,
+    nsMainThreadPtrHandle<ServiceWorker>& aServiceWorker,
+    Maybe<nsTArray<uint8_t>> aData)
+      : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
+      , mData(aData)
+      , mServiceWorker(aServiceWorker)
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(aWorkerPrivate);
+    MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
   }
 };
 
@@ -2395,7 +2413,8 @@ NS_IMETHODIMP
 ServiceWorkerManager::SendPushEvent(const nsACString& aOriginAttributes,
                                     const nsACString& aScope,
                                     uint32_t aDataLength,
-                                    uint8_t* aDataBytes)
+                                    uint8_t* aDataBytes,
+                                    uint8_t optional_argc)
 {
 #ifdef MOZ_SIMPLEPUSH
   return NS_ERROR_NOT_AVAILABLE;
@@ -2414,14 +2433,19 @@ ServiceWorkerManager::SendPushEvent(const nsACString& aOriginAttributes,
   nsMainThreadPtrHandle<ServiceWorker> serviceWorkerHandle(
     new nsMainThreadPtrHolder<ServiceWorker>(serviceWorker));
 
-  nsTArray<uint8_t> data;
-  if (!data.InsertElementsAt(0, aDataBytes, aDataLength, fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsRefPtr<SendPushEventRunnable> r;
+  if (optional_argc == 2) {
+    nsTArray<uint8_t> data;
+    if (!data.InsertElementsAt(0, aDataBytes, aDataLength, fallible)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    r = new SendPushEventRunnable(serviceWorker->GetWorkerPrivate(), data,
+                                  serviceWorkerHandle);
+  } else {
+    MOZ_ASSERT(optional_argc == 0);
+    r = new SendPushEventRunnable(serviceWorker->GetWorkerPrivate(),
+                                  serviceWorkerHandle);
   }
-
-  nsRefPtr<SendPushEventRunnable> r =
-    new SendPushEventRunnable(serviceWorker->GetWorkerPrivate(), data,
-                              serviceWorkerHandle);
 
   AutoJSAPI jsapi;
   jsapi.Init();
