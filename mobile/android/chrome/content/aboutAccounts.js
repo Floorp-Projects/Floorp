@@ -37,6 +37,9 @@ const COMMAND_LOADED = "fxaccounts:loaded";
 
 const log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.bind("FxAccounts");
 
+XPCOMUtils.defineLazyServiceGetter(this, "ParentalControls",
+  "@mozilla.org/parental-controls-service;1", "nsIParentalControlsService");
+
 // Shows the toplevel element with |id| to be shown - all other top-level
 // elements are hidden.
 // If |id| is 'spinner', then 'remote' is also shown, with opacity 0.
@@ -186,6 +189,19 @@ function updateDisplayedEmail(user) {
 }
 
 function init() {
+  // Test for restrictions before getFirefoxAccount(), since that will fail if
+  // we are restricted.
+  if (!ParentalControls.isAllowed(ParentalControls.MODIFY_ACCOUNTS)) {
+    // It's better to log and show an error message than to invite user
+    // confusion by removing about:accounts entirely.  That is, if the user is
+    // restricted, this way they'll discover as much and may be able to get
+    // out of their restricted profile.  If we remove about:accounts entirely,
+    // it will look like Fennec is buggy, and the user will be very confused.
+    log.e("This profile cannot connect to Firefox Accounts: showing restricted error.");
+    show("restrictedError");
+    return;
+  }
+
   Accounts.getFirefoxAccount().then(user => {
     // It's possible for the window to start closing before getting the user
     // completes.  Tests in particular can cause this.
