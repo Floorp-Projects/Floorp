@@ -2945,12 +2945,12 @@ IsEscapeFreeStringLiteral(const TokenPos& pos, JSAtom* str)
 
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::checkUnescapedName(const Token& token)
+Parser<ParseHandler>::checkUnescapedName()
 {
-    if (!token.nameContainsEscape())
+    if (!tokenStream.currentToken().nameContainsEscape())
         return true;
 
-    reportWithOffset(ParseError, false, token.pos.begin, JSMSG_ESCAPED_KEYWORD);
+    report(ParseError, false, null(), JSMSG_ESCAPED_KEYWORD);
     return false;
 }
 
@@ -4590,7 +4590,7 @@ Parser<FullParseHandler>::namedImportsOrNamespaceImport(TokenKind tt, Node impor
             return false;
         }
 
-        if (!checkUnescapedName(tokenStream.currentToken()))
+        if (!checkUnescapedName())
             return false;
 
         MUST_MATCH_TOKEN(TOK_NAME, JSMSG_NO_BINDING_NAME);
@@ -4689,7 +4689,7 @@ Parser<ParseHandler>::importDeclaration()
             return null();
         }
 
-        if (!checkUnescapedName(tokenStream.currentToken()))
+        if (!checkUnescapedName())
             return null();
 
         MUST_MATCH_TOKEN(TOK_STRING, JSMSG_MODULE_SPEC_AFTER_FROM);
@@ -4880,7 +4880,7 @@ Parser<FullParseHandler>::exportDeclaration()
         if (!tokenStream.getToken(&tt))
             return null();
         if (tt == TOK_NAME && tokenStream.currentName() == context->names().from) {
-            if (!checkUnescapedName(tokenStream.currentToken()))
+            if (!checkUnescapedName())
                 return null();
 
             MUST_MATCH_TOKEN(TOK_STRING, JSMSG_MODULE_SPEC_AFTER_FROM);
@@ -5127,7 +5127,7 @@ Parser<ParseHandler>::matchInOrOf(bool* isForInp, bool* isForOfp)
     if (!*isForInp && !*isForOfp) {
         tokenStream.ungetToken();
     } else {
-        if (tt == TOK_NAME && !checkUnescapedName(tokenStream.currentToken()))
+        if (tt == TOK_NAME && !checkUnescapedName())
             return false;
     }
     return true;
@@ -6528,7 +6528,7 @@ Parser<FullParseHandler>::classDefinition(YieldHandling yieldHandling,
             if (!tokenStream.peekToken(&tt, TokenStream::KeywordIsName))
                 return null();
             if (tt != TOK_LP) {
-                if (!checkUnescapedName(tokenStream.currentToken()))
+                if (!checkUnescapedName())
                     return null();
 
                 isStatic = true;
@@ -8925,23 +8925,25 @@ Parser<ParseHandler>::propertyName(YieldHandling yieldHandling, Node propList,
         *propType = propAtom.get() == context->names().get ? PropertyType::Getter
                                                            : PropertyType::Setter;
 
-        Token getSetToken = tokenStream.currentToken();
-
         // We have parsed |get| or |set|. Look for an accessor property
         // name next.
         TokenKind tt;
-        if (!tokenStream.getToken(&tt, TokenStream::KeywordIsName))
+        if (!tokenStream.peekToken(&tt, TokenStream::KeywordIsName))
             return null();
         if (tt == TOK_NAME) {
-            if (!checkUnescapedName(getSetToken))
+            if (!checkUnescapedName())
                 return null();
+
+            tokenStream.consumeKnownToken(TOK_NAME, TokenStream::KeywordIsName);
 
             propAtom.set(tokenStream.currentName());
             return handler.newObjectLiteralPropertyName(propAtom, pos());
         }
         if (tt == TOK_STRING) {
-            if (!checkUnescapedName(getSetToken))
+            if (!checkUnescapedName())
                 return null();
+
+            tokenStream.consumeKnownToken(TOK_STRING, TokenStream::KeywordIsName);
 
             propAtom.set(tokenStream.currentToken().atom());
 
@@ -8955,8 +8957,10 @@ Parser<ParseHandler>::propertyName(YieldHandling yieldHandling, Node propList,
             return stringLiteral();
         }
         if (tt == TOK_NUMBER) {
-            if (!checkUnescapedName(getSetToken))
+            if (!checkUnescapedName())
                 return null();
+
+            tokenStream.consumeKnownToken(TOK_NUMBER, TokenStream::KeywordIsName);
 
             propAtom.set(DoubleToAtom(context, tokenStream.currentToken().number()));
             if (!propAtom.get())
@@ -8964,14 +8968,15 @@ Parser<ParseHandler>::propertyName(YieldHandling yieldHandling, Node propList,
             return newNumber(tokenStream.currentToken());
         }
         if (tt == TOK_LB) {
-            if (!checkUnescapedName(getSetToken))
+            if (!checkUnescapedName())
                 return null();
+
+            tokenStream.consumeKnownToken(TOK_LB, TokenStream::KeywordIsName);
 
             return computedPropertyName(yieldHandling, propList);
         }
 
         // Not an accessor property after all.
-        tokenStream.ungetToken();
         propName = handler.newObjectLiteralPropertyName(propAtom.get(), pos());
         if (!propName)
             return null();
@@ -9206,7 +9211,7 @@ Parser<ParseHandler>::tryNewTarget(Node &newTarget)
         return false;
     }
 
-    if (!checkUnescapedName(tokenStream.currentToken()))
+    if (!checkUnescapedName())
         return false;
 
     if (!pc->sc->allowNewTarget()) {
