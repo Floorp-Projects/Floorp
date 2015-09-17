@@ -5,5 +5,5 @@
 <SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
 <ShortName>browser_searchSuggestionEngine searchSuggestionEngine.xml</ShortName>
 <Url type="application/x-suggestions+json" method="GET" template="http://mochi.test:8888/browser/browser/base/content/test/general/searchSuggestionEngine.sjs?{searchTerms}"/>
-<Url type="text/html" method="GET" template="http://www.browser-searchSuggestionEngine.com/searchSuggestionEngine&amp;terms={searchTerms}" rel="searchform"/>
+<Url type="text/html" method="GET" template="http://mochi.test:8888/browser/browser/base/content/test/general/searchSuggestionEngine.sjs?{searchTerms}" rel="searchform"/>
 </SearchPlugin>
