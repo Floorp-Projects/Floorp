@@ -14,24 +14,23 @@ import android.widget.ImageView;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.fxa.FxAccountConstants;
-import org.mozilla.gecko.fxa.activities.FxAccountWebFlowActivity;
+import org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity;
 
-public class WelcomePanel extends FirstrunPanel {
-    public static final int TITLE_RES = R.string.firstrun_panel_title_welcome;
+public class SyncPanel extends FirstrunPanel {
+    // XXX: To simplify localization, this uses the pref_sync string. If this is used in the final product, add a new string to Nightly.
+    public static final int TITLE_RES = R.string.pref_sync;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstance) {
-        final ViewGroup root = (ViewGroup) inflater.inflate(R.layout.firstrun_welcome_fragment, container, false);
+        final ViewGroup root = (ViewGroup) inflater.inflate(R.layout.firstrun_sync_fragment, container, false);
+        // TODO: Update id names.
         root.findViewById(R.id.welcome_account).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "firstrun-sync");
 
-                final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_GET_STARTED);
-                intent.putExtra(FxAccountWebFlowActivity.EXTRA_ENDPOINT, FxAccountConstants.ENDPOINT_FIRSTRUN);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                startActivity(intent);
+                final Intent accountIntent = new Intent(getActivity(), FxAccountGetStartedActivity.class);
+                startActivity(accountIntent);
 
                 close();
             }

@@ -43,6 +43,7 @@
   <string name="firstrun_welcome_subtext">&onboard_start_subtext3;</string>
   <string name="firstrun_welcome_button_account">&onboard_start_button_account;</string>
   <string name="firstrun_welcome_button_browser">&onboard_start_button_browser;</string>
+  <string name="firstrun_button_next">&firstrun_button_next;</string>
   <string name="firstrun_empty_contentDescription"></string>
 
   <string name="firstrun_welcome_restricted">&onboard_start_restricted1;</string>
@@ -52,6 +53,7 @@
   <string name="firstrun_import_subtext">&firstrun_import_subtext;</string>
   <string name="firstrun_import_action">&firstrun_import_action;</string>
   <string name="firstrun_import_dialog_button">&firstrun_import_dialog_button;</string>
+  <string name="firstrun_import_progress_title">&firstrun_import_progress_title;</string>
 
   <string name="bookmarks_title">&bookmarks_title;</string>
   <string name="history_title">&history_title;</string>
