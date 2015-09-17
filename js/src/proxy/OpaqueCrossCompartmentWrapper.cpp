@@ -95,7 +95,7 @@ OpaqueCrossCompartmentWrapper::has(JSContext* cx, HandleObject wrapper, HandleId
 }
 
 bool
-OpaqueCrossCompartmentWrapper::get(JSContext* cx, HandleObject wrapper, HandleObject receiver,
+OpaqueCrossCompartmentWrapper::get(JSContext* cx, HandleObject wrapper, HandleValue receiver,
                                    HandleId id, MutableHandleValue vp) const
 {
     return BaseProxyHandler::get(cx, wrapper, receiver, id, vp);
