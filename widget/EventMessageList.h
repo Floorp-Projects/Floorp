@@ -8,6 +8,11 @@
  * Before including this header file, you should define
  * NS_EVENT_MESSAGE(aMessage, aValue)
  *
+ * Additionally, you can specify following macro for e*First and e*Last.
+ * NS_EVENT_MESSAGE_FIRST_LAST(aMessage, aFirst, aLast)
+ * This is optional, if you need only actual event messages, you don't need
+ * to define this macro.
+ *
  * Naming rules of the event messages:
  * 0. Starting with "e" prefix and use camelcase.
  * 1. Basically, use same name as the DOM name which is fired at dispatching
@@ -20,6 +25,11 @@
  *    generic event name, e.g., "Pointer" with "Event" and "First" or "Last"
  *    such as "ePointerEventFirst" and "ePointerEventLast".
  */
+
+#ifndef NS_EVENT_MESSAGE_FIRST_LAST
+#define UNDEF_NS_EVENT_MESSAGE_FIRST_LAST 1
+#define NS_EVENT_MESSAGE_FIRST_LAST(aMessage, aFirst, aLast)
+#endif
 
 NS_EVENT_MESSAGE(eVoidEvent,            0)
 
@@ -74,6 +84,8 @@ NS_EVENT_MESSAGE(eMouseEnter,           eMouseEventFirst + 34)
 NS_EVENT_MESSAGE(eMouseLeave,           eMouseEventFirst + 35)
 NS_EVENT_MESSAGE(eMouseLongTap,         eMouseEventFirst + 36)
 
+NS_EVENT_MESSAGE_FIRST_LAST(eMouseEvent, eMouseMove, eMouseLongTap)
+
 // Pointer spec events
 NS_EVENT_MESSAGE(ePointerEventFirst,    4400)
 NS_EVENT_MESSAGE(ePointerMove,          ePointerEventFirst)
@@ -87,6 +99,8 @@ NS_EVENT_MESSAGE(ePointerCancel,        ePointerEventFirst + 26)
 NS_EVENT_MESSAGE(ePointerGotCapture,    ePointerEventFirst + 27)
 NS_EVENT_MESSAGE(ePointerLostCapture,   ePointerEventFirst + 28)
 NS_EVENT_MESSAGE(ePointerEventLast,     ePointerLostCapture)
+
+NS_EVENT_MESSAGE_FIRST_LAST(ePointerEvent, ePointerMove, ePointerLostCapture)
 
 NS_EVENT_MESSAGE(eContextMenuFirst,     500)
 NS_EVENT_MESSAGE(eContextMenu,          eContextMenuFirst)
@@ -126,6 +140,8 @@ NS_EVENT_MESSAGE(eDrop,                 eDragDropEventFirst + 8)
 NS_EVENT_MESSAGE(eDragLeave,            eDragDropEventFirst + 9)
 NS_EVENT_MESSAGE(eDragDropEventLast,    eDragLeave)
 
+NS_EVENT_MESSAGE_FIRST_LAST(eDragDropEvent, eDragEnter, eDragLeave)
+
 // XUL specific events
 NS_EVENT_MESSAGE(eXULEventFirst,        1500)
 NS_EVENT_MESSAGE(eXULPopupShowing,      eXULEventFirst)
@@ -153,6 +169,9 @@ NS_EVENT_MESSAGE(eLegacyNodeInsertedIntoDocument, eLegacyMutationEventFirst + 4)
 NS_EVENT_MESSAGE(eLegacyAttrModified,             eLegacyMutationEventFirst + 5)
 NS_EVENT_MESSAGE(eLegacyCharacterDataModified,    eLegacyMutationEventFirst + 6)
 NS_EVENT_MESSAGE(eLegacyMutationEventLast,        eLegacyCharacterDataModified)
+
+NS_EVENT_MESSAGE_FIRST_LAST(eLegacyMutationEvent,
+  eLegacySubtreeModified, eLegacyCharacterDataModified)
 
 NS_EVENT_MESSAGE(eUnidentifiedEvent,    2000)
  
@@ -431,6 +450,9 @@ NS_EVENT_MESSAGE(eGamepadAxisMove,       eGamepadEventFirst + 2)
 NS_EVENT_MESSAGE(eGamepadConnected,      eGamepadEventFirst + 3)
 NS_EVENT_MESSAGE(eGamepadDisconnected,   eGamepadEventFirst + 4)
 NS_EVENT_MESSAGE(eGamepadEventLast,      eGamepadDisconnected)
+
+NS_EVENT_MESSAGE_FIRST_LAST(eGamepadEvent,
+                            eGamepadButtonDown, eGamepadDisconnected)
 #endif
 
 // input and beforeinput events.
@@ -441,3 +463,8 @@ NS_EVENT_MESSAGE(eEditorInput,           eEditorEventFirst)
 NS_EVENT_MESSAGE(eSelectEventFirst,      6200)
 NS_EVENT_MESSAGE(eSelectStart,           eSelectEventFirst)
 NS_EVENT_MESSAGE(eSelectionChange,       eSelectEventFirst + 1)
+
+#ifdef UNDEF_NS_EVENT_MESSAGE_FIRST_LAST
+#undef UNDEF_NS_EVENT_MESSAGE_FIRST_LAST
+#undef NS_EVENT_MESSAGE_FIRST_LAST
+#endif
