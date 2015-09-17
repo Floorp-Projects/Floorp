@@ -21,6 +21,7 @@ DIRS += [
     'security',
     'sourcemap',
     'shared',
+    'shims',
     'styleinspector',
     'tern',
     'touch',
