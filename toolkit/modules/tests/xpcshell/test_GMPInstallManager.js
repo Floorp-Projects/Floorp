@@ -488,6 +488,9 @@ function* test_checkForAddons_installAddon(id, includeSize, wantInstallReject) {
     do_check_eq(GMPScope.GMPPrefs.get(GMPScope.GMPPrefs.KEY_PLUGIN_VERSION, "",
                                       gmpAddon.id),
                 "1.1");
+    do_check_eq(GMPScope.GMPPrefs.get(GMPScope.GMPPrefs.KEY_PLUGIN_ABI, "",
+                                      gmpAddon.id),
+                GMPScope.GMPUtils.ABI());
     // Make sure it reports as being installed
     do_check_true(gmpAddon.isInstalled);
 
