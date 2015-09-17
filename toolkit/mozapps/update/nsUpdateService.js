@@ -31,6 +31,7 @@ const PREF_APP_UPDATE_CERT_ERRORS         = "app.update.cert.errors";
 const PREF_APP_UPDATE_CERT_MAXERRORS      = "app.update.cert.maxErrors";
 const PREF_APP_UPDATE_CERT_REQUIREBUILTIN = "app.update.cert.requireBuiltIn";
 const PREF_APP_UPDATE_CUSTOM              = "app.update.custom";
+const PREF_APP_UPDATE_IMEI_HASH           = "app.update.imei_hash";
 const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
 const PREF_APP_UPDATE_IDLETIME            = "app.update.idletime";
 const PREF_APP_UPDATE_INCOMPATIBLE_MODE   = "app.update.incompatible.mode";
@@ -3546,6 +3547,8 @@ Checker.prototype = {
       }
       url = url.replace(/%B2G_VERSION%/g,
                         getPref("getCharPref", PREF_APP_B2G_VERSION, null));
+      url = url.replace(/%IMEI%/g,
+                        getPref("getCharPref", PREF_APP_UPDATE_IMEI_HASH, "default"));
     }
 
     if (force) {

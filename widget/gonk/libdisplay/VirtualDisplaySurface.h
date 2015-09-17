@@ -84,7 +84,6 @@ public:
     virtual status_t compositionComplete();
     virtual status_t advanceFrame();
     virtual void onFrameCommitted();
-    virtual void dump(String8& result) const;
     virtual void resizeBuffers(const uint32_t w, const uint32_t h);
 
     virtual status_t setReleaseFenceFd(int fenceFd) { return INVALID_OPERATION; }
