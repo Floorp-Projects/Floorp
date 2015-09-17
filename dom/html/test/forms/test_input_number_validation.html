@@ -57,10 +57,25 @@ function runTest(test) {
   checkIsInvalid(elem, `${desc} without grouping separator`);
 }
 
+function runInvalidInputTest(test) {
+  elem.lang = test.langTag;
+
+  gInvalid = false; // reset
+  var desc = `${test.desc}  (lang='${test.langTag}', id='${elem.id}')`;
+  elem.value = 0;
+  elem.focus();
+  elem.select();
+  sendString(test.input);
+  checkIsInvalid(elem, `${desc} with invalid input ${test.input}`);
+}
+
 function startTests() {
   elem = document.getElementById("input");
   for (var test of tests) {
     runTest(test);
+  }
+  for (var test of invalidTests) {
+    runInvalidInputTest(test);
   }
   elem = document.getElementById("requiredinput");
   for (var test of tests) {
