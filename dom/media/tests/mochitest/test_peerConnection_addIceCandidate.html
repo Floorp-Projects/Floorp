@@ -8,7 +8,7 @@
 <script type="application/javascript">
   createHTML({
     bug: "1087551",
-    title: "addCandidate behavior in different states"
+    title: "addIceCandidate behavior (local and remote) including invalid data"
   });
 
   var test;
@@ -71,6 +71,28 @@
            sdpMLineIndex: 0});
         return test.pcRemote._pc.addIceCandidate(candidate)
         .then(ok(true, "Successfully added valid ICE candidate"));
+      },
+      // bug 1095793
+      function PC_REMOTE_ADD_MISMATCHED_MID_AND_LEVEL_CANDIDATE(test) {
+        var bogus = new mozRTCIceCandidate(
+          {candidate:"candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host",
+           sdpMLineIndex: 0,
+           sdpMid: "sdparta_1"});
+        return test.pcRemote._pc.addIceCandidate(bogus)
+        .then(
+          generateErrorCallback("addIceCandidate should have failed."),
+          err => {
+            is(err.name, "InvalidCandidateError", "Error is InvalidCandidateError");
+          }
+        );
+      },
+      function PC_REMOTE_ADD_MATCHING_MID_AND_LEVEL_CANDIDATE(test) {
+        var candidate = new mozRTCIceCandidate(
+          {candidate:"candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host",
+           sdpMLineIndex: 0,
+           sdpMid: "sdparta_0"});
+        return test.pcRemote._pc.addIceCandidate(candidate)
+        .then(ok(true, "Successfully added valid ICE candidate with matching mid and level"));
       }
     ]);
     test.run();

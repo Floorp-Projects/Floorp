@@ -545,6 +545,7 @@ DeallocPMediaParent(media::PMediaParent *aActor)
 {
   MOZ_ASSERT(sIPCServingParent == static_cast<Parent<PMediaParent>*>(aActor));
   delete sIPCServingParent;
+  sIPCServingParent = nullptr;
   return true;
 }
 

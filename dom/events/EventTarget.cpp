@@ -56,5 +56,12 @@ EventTarget::SetEventHandler(nsIAtom* aType, const nsAString& aTypeString,
   GetOrCreateListenerManager()->SetEventHandler(aType, aTypeString, aHandler);
 }
 
+bool
+EventTarget::HasApzAwareListeners() const
+{
+  EventListenerManager* elm = GetExistingListenerManager();
+  return elm && elm->HasApzAwareListeners();
+}
+
 } // namespace dom
 } // namespace mozilla
