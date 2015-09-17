@@ -9,6 +9,7 @@ const Cr = Components.results;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const FEEDWRITER_CID = Components.ID("{49bb6593-3aff-4eb3-a068-2712c28bd58e}");
 const FEEDWRITER_CONTRACTID = "@mozilla.org/browser/feeds/result-writer;1";
@@ -713,9 +714,7 @@ FeedWriter.prototype = {
     if (checkbox) {
       var alwaysUse = false;
       try {
-        var prefs = Cc["@mozilla.org/preferences-service;1"].
-                    getService(Ci.nsIPrefBranch);
-        if (prefs.getCharPref(getPrefActionForType(feedType)) != "ask")
+        if (Services.prefs.getCharPref(getPrefActionForType(feedType)) != "ask")
           alwaysUse = true;
       }
       catch(ex) { }
@@ -803,10 +802,7 @@ FeedWriter.prototype = {
   },
 
   _setSelectedHandler: function FW__setSelectedHandler(feedType) {
-    var prefs =
-        Cc["@mozilla.org/preferences-service;1"].
-        getService(Ci.nsIPrefBranch);
-
+    var prefs = Services.prefs;
     var handler = "bookmarks";
     try {
       handler = prefs.getCharPref(getPrefReaderForType(feedType));
@@ -899,10 +895,8 @@ FeedWriter.prototype = {
     menuItem.className = "menuitem-iconic selectedAppMenuItem";
     menuItem.setAttribute("handlerType", "client");
     try {
-      var prefs = Cc["@mozilla.org/preferences-service;1"].
-                  getService(Ci.nsIPrefBranch);
-      this._selectedApp = prefs.getComplexValue(getPrefAppForType(feedType),
-                                                Ci.nsILocalFile);
+      this._selectedApp = Services.prefs.getComplexValue(getPrefAppForType(feedType),
+                                                         Ci.nsILocalFile);
 
       if (this._selectedApp.exists())
         this._initMenuItemWithFile(menuItem, this._selectedApp);
@@ -958,25 +952,29 @@ FeedWriter.prototype = {
     var chooseAppSep = liveBookmarksMenuItem.nextSibling.cloneNode(false);
     handlersMenuPopup.appendChild(chooseAppSep);
 
-    // List of web handlers
-    var wccr = Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
-               getService(Ci.nsIWebContentConverterService);
-    var handlers = wccr.getContentHandlers(this._getMimeTypeForFeedType(feedType));
-    if (handlers.length != 0) {
-      for (var i = 0; i < handlers.length; ++i) {
-        if (!handlers[i].uri) {
-          LOG("Handler with name " + handlers[i].name + " has no URI!? Skipping...");
-          continue;
-        }
-        menuItem = liveBookmarksMenuItem.cloneNode(false);
-        menuItem.removeAttribute("selected");
-        menuItem.className = "menuitem-iconic";
-        menuItem.setAttribute("label", handlers[i].name);
-        menuItem.setAttribute("handlerType", "web");
-        menuItem.setAttribute("webhandlerurl", handlers[i].uri);
-        handlersMenuPopup.appendChild(menuItem);
+    // FIXME: getting a list of webhandlers doesn't work in the content process
+    // right now, see bug 1109714.
+    if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_CONTENT) {
+      // List of web handlers
+      var wccr = Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
+                 getService(Ci.nsIWebContentConverterService);
+      var handlers = wccr.getContentHandlers(this._getMimeTypeForFeedType(feedType));
+      if (handlers.length != 0) {
+        for (var i = 0; i < handlers.length; ++i) {
+          if (!handlers[i].uri) {
+            LOG("Handler with name " + handlers[i].name + " has no URI!? Skipping...");
+            continue;
+          }
+          menuItem = liveBookmarksMenuItem.cloneNode(false);
+          menuItem.removeAttribute("selected");
+          menuItem.className = "menuitem-iconic";
+          menuItem.setAttribute("label", handlers[i].name);
+          menuItem.setAttribute("handlerType", "web");
+          menuItem.setAttribute("webhandlerurl", handlers[i].uri);
+          handlersMenuPopup.appendChild(menuItem);
 
-        this._setFaviconForWebReader(handlers[i].uri, menuItem);
+          this._setFaviconForWebReader(handlers[i].uri, menuItem);
+        }
       }
     }
 
@@ -1000,7 +998,7 @@ FeedWriter.prototype = {
     // first-run ui
     var showFirstRunUI = true;
     try {
-      showFirstRunUI = prefs.getBoolPref(PREF_SHOW_FIRST_RUN_UI);
+      showFirstRunUI = Services.prefs.getBoolPref(PREF_SHOW_FIRST_RUN_UI);
     }
     catch (ex) { }
     if (showFirstRunUI) {
@@ -1029,7 +1027,7 @@ FeedWriter.prototype = {
 
       header.setAttribute('firstrun', 'true');
 
-      prefs.setBoolPref(PREF_SHOW_FIRST_RUN_UI, false);
+      this._mm.sendAsyncMessage("FeedWriter:ShownFirstRun");
     }
   },
 
@@ -1090,8 +1088,7 @@ FeedWriter.prototype = {
 
     // Set up the subscription UI
     this._initSubscriptionUI();
-    var prefs = Cc["@mozilla.org/preferences-service;1"].
-                getService(Ci.nsIPrefBranch);
+    let prefs = Services.prefs;
     prefs.addObserver(PREF_SELECTED_ACTION, this, false);
     prefs.addObserver(PREF_SELECTED_READER, this, false);
     prefs.addObserver(PREF_SELECTED_WEB, this, false);
@@ -1133,8 +1130,7 @@ FeedWriter.prototype = {
         .removeEventListener("command", this, false);
     this._document = null;
     this._window = null;
-    var prefs = Cc["@mozilla.org/preferences-service;1"].
-                getService(Ci.nsIPrefBranch);
+    let prefs = Services.prefs;
     prefs.removeObserver(PREF_SELECTED_ACTION, this);
     prefs.removeObserver(PREF_SELECTED_READER, this);
     prefs.removeObserver(PREF_SELECTED_WEB, this);
@@ -1172,8 +1168,7 @@ FeedWriter.prototype = {
     var feedType = this._getFeedType();
 
     // Subscribe to the feed using the selected handler and save prefs
-    var prefs = Cc["@mozilla.org/preferences-service;1"].
-                getService(Ci.nsIPrefBranch);
+    var prefs = Services.prefs;
     var defaultHandler = "reader";
     var useAsDefault = this._getUIElement("alwaysUse").getAttribute("checked");
 
@@ -1318,6 +1313,15 @@ FeedWriter.prototype = {
           aMenuItem.setAttribute('image', dataURL);
         }
       });
+  },
+
+  get _mm() {
+    let mm = this._window.QueryInterface(Ci.nsIInterfaceRequestor).
+                          getInterface(Ci.nsIDocShell).
+                          QueryInterface(Ci.nsIInterfaceRequestor).
+                          getInterface(Ci.nsIContentFrameMessageManager);
+    delete this._mm;
+    return this._mm = mm;
   },
 
   classID: FEEDWRITER_CID,
