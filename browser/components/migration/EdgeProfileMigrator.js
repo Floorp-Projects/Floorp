@@ -19,6 +19,10 @@ EdgeProfileMigrator.prototype.getResources = function() {
     MSMigrationUtils.getBookmarksMigrator(MSMigrationUtils.MIGRATION_TYPE_EDGE),
     MSMigrationUtils.getCookiesMigrator(MSMigrationUtils.MIGRATION_TYPE_EDGE),
   ];
+  let windowsVaultFormPasswordsMigrator =
+    MSMigrationUtils.getWindowsVaultFormPasswordsMigrator();
+  windowsVaultFormPasswordsMigrator.name = "EdgeVaultFormPasswords";
+  resources.push(windowsVaultFormPasswordsMigrator);
   return resources.filter(r => r.exists);
 };
 

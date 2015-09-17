@@ -2102,6 +2102,10 @@ NS_IMETHODIMP_(void)
 nsWindow::SetInputContext(const InputContext& aContext,
                           const InputContextAction& aAction)
 {
+#ifdef MOZ_B2GDROID
+    // Disable the Android keyboard on b2gdroid.
+    return;
+#endif
     nsWindow *top = TopWindow();
     if (top && this != top) {
         // We are using an IME event later to notify Java, and the IME event
