@@ -3,8 +3,8 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
 <window title="Menu ignorekeys Test"
-        onkeydown="keyDown()"
-        onload="setTimeout(runTests, 0);"
+        onkeydown="keyDown()" onkeypress="gKeyPressCount++; event.stopPropagation(); event.preventDefault();"
+        onload="runTests();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
@@ -18,7 +18,7 @@
   should not be highlighted.
   -->
 
-<menupopup id="popup" onpopupshown="popupShown()" onpopuphidden="popupHidden()">
+<menupopup id="popup">
   <menuitem id="i1" label="One" onDOMAttrModified="attrModified(event)"/>
   <menuitem id="i2" label="Two"/>
   <menuitem id="i3" label="Three"/>
@@ -32,42 +32,82 @@ SimpleTest.waitForExplicitFinish();
 
 var gIgnoreKeys = false;
 var gIgnoreAttrChange = false;
+var gKeyPressCount = 0;
+
+let {Task} = Components.utils.import("resource://gre/modules/Task.jsm", {});
+
+function waitForEvent(target, eventName) {
+  return new Promise(resolve => {
+    target.addEventListener(eventName, function eventOccurred(event) {
+      target.removeEventListener(eventName, eventOccurred, false);
+      resolve();
+    }, false);
+  });
+}
 
 function runTests()
 {
-  var popup = $("popup");
-  popup.enableKeyboardNavigator(false);
-  is(popup.getAttribute("ignorekeys"), "true", "keys disabled");
-  popup.enableKeyboardNavigator(true);
-  is(popup.hasAttribute("ignorekeys"), false, "keys enabled");
-  popup.openPopup(null, "after_start");
-}
-
-function popupShown()
-{
-  synthesizeKey("VK_DOWN", { });
-  if (gIgnoreKeys) {
+  Task.async(function* () {
     var popup = $("popup");
-    setTimeout(function() { popup.hidePopup() }, 1000);
-  }
-}
+    popup.enableKeyboardNavigator(false);
+    is(popup.getAttribute("ignorekeys"), "true", "keys disabled");
+    popup.enableKeyboardNavigator(true);
+    is(popup.hasAttribute("ignorekeys"), false, "keys enabled");
 
-function popupHidden()
-{
-  if (gIgnoreKeys) {
-    SimpleTest.finish();
-  }
-  else {
-    // try the test again with ignorekeys set
+    let popupShownPromise = waitForEvent(popup, "popupshown");
+    popup.openPopup(null, "after_start");
+    yield popupShownPromise;
+
+    let popupHiddenPromise = waitForEvent(popup, "popuphidden");
+    synthesizeKey("VK_DOWN", { });
+    yield popupHiddenPromise;
+
+    is(gKeyPressCount, 0, "keypresses with ignorekeys='false'");
+
     gIgnoreKeys = true;
-    var popup = $("popup");
     popup.setAttribute("ignorekeys", "true");
     // clear this first to avoid confusion
     gIgnoreAttrChange = true;
     $("i1").removeAttribute("_moz-menuactive")
     gIgnoreAttrChange = false;
+
+    popupShownPromise = waitForEvent(popup, "popupshown");
     popup.openPopup(null, "after_start");
-  }
+    yield popupShownPromise;
+
+    synthesizeKey("VK_DOWN", { });
+
+    yield new Promise(resolve => setTimeout(() => resolve(), 1000));
+    popupHiddenPromise = waitForEvent(popup, "popuphidden");
+    popup.hidePopup();
+    yield popupHiddenPromise;
+
+    is(gKeyPressCount, 1, "keypresses with ignorekeys='true'");
+
+    popup.setAttribute("ignorekeys", "handled");
+    // clear this first to avoid confusion
+    gIgnoreAttrChange = true;
+    $("i1").removeAttribute("_moz-menuactive")
+    gIgnoreAttrChange = false;
+
+    popupShownPromise = waitForEvent(popup, "popupshown");
+    popup.openPopup(null, "after_start");
+    yield popupShownPromise;
+
+    // When ignorekeys="handled", T should be handled but accel+T should propagate. 
+    synthesizeKey("t", { });
+    is(gKeyPressCount, 1, "keypresses after t pressed with ignorekeys='handled'");
+
+    let isWindows = navigator.platform.indexOf("Win") >= 0;
+    synthesizeKey("t", { accelKey: true });
+    is(gKeyPressCount, isWindows ? 2 : 1, "keypresses after accel+t pressed with ignorekeys='handled'");
+
+    popupHiddenPromise = waitForEvent(popup, "popuphidden");
+    popup.hidePopup();
+    yield popupHiddenPromise;
+
+    SimpleTest.finish();
+  })();
 }
 
 function attrModified(event)
