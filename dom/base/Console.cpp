@@ -18,6 +18,7 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsGlobalWindow.h"
 #include "nsJSUtils.h"
+#include "nsNetUtil.h"
 #include "nsPerformance.h"
 #include "ScriptSettings.h"
 #include "WorkerPrivate.h"
@@ -34,6 +35,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsILoadContext.h"
 #include "nsIProgrammingLanguage.h"
+#include "nsISensitiveInfoHiddenURI.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIWebNavigation.h"
@@ -1210,6 +1212,19 @@ Console::ProcessCallData(ConsoleCallData* aData)
 
   event.mLevel = aData->mMethodString;
   event.mFilename = frame.mFilename;
+
+  nsCOMPtr<nsIURI> filenameURI;
+  nsAutoCString pass;
+  if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(filenameURI), frame.mFilename)) &&
+      NS_SUCCEEDED(filenameURI->GetPassword(pass)) && !pass.IsEmpty()) {
+    nsCOMPtr<nsISensitiveInfoHiddenURI> safeURI = do_QueryInterface(filenameURI);
+    nsAutoCString spec;
+    if (safeURI &&
+        NS_SUCCEEDED(safeURI->GetSensitiveInfoHiddenSpec(spec))) {
+      CopyUTF8toUTF16(spec, event.mFilename);
+    }
+  }
+
   event.mLineNumber = frame.mLineNumber;
   event.mColumnNumber = frame.mColumnNumber;
   event.mFunctionName = frame.mFunctionName;
