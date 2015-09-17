@@ -22,7 +22,6 @@ public class GeckoJavaSampler {
 
     // Use the same timer primitive as the profiler
     // to get a perfect sample syncing.
-    @WrapForJNI
     private static native double getProfilerTime();
 
     private static class Sample {
@@ -209,3 +208,6 @@ public class GeckoJavaSampler {
         }
     }
 }
+
+
+
