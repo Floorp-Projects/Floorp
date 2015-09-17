@@ -304,6 +304,11 @@ public:
     mFrameArena.DeregisterArenaRefPtr(aPtr);
   }
 
+  void ClearArenaRefPtrs(mozilla::ArenaObjectID aObjectID)
+  {
+    mFrameArena.ClearArenaRefPtrs(aObjectID);
+  }
+
   nsIDocument* GetDocument() const { return mDocument; }
 
   nsPresContext* GetPresContext() const { return mPresContext; }

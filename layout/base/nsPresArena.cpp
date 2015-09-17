@@ -23,6 +23,7 @@
 #include "nsDebug.h"
 #include "nsArenaMemoryStats.h"
 #include "nsPrintfCString.h"
+#include "nsStyleContext.h"
 
 #include <inttypes.h>
 
@@ -92,6 +93,19 @@ nsPresArena::ClearArenaRefPtrs()
     ClearArenaRefPtrWithoutDeregistering(ptr, id);
   }
   mArenaRefPtrs.Clear();
+}
+
+void
+nsPresArena::ClearArenaRefPtrs(ArenaObjectID aObjectID)
+{
+  for (auto iter = mArenaRefPtrs.Iter(); !iter.Done(); iter.Next()) {
+    void* ptr = iter.Key();
+    ArenaObjectID id = iter.UserData();
+    if (id == aObjectID) {
+      ClearArenaRefPtrWithoutDeregistering(ptr, id);
+      iter.Remove();
+    }
+  }
 }
 
 void*
