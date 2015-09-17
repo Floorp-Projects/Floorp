@@ -2562,8 +2562,6 @@ GeckoDriver.prototype.clearImportedScripts = function(cmd, resp) {
  *     PNG image encoded as base64 encoded string.
  */
 GeckoDriver.prototype.takeScreenshot = function(cmd, resp) {
-  let {id, highlights, full} = cmd.parameters;
-
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
@@ -2606,7 +2604,10 @@ GeckoDriver.prototype.takeScreenshot = function(cmd, resp) {
       break;
 
     case Context.CONTENT:
-      return this.listener.takeScreenshot(id, highlights, full);
+      resp.body.value = yield this.listener.takeScreenshot({
+        id: cmd.parameters.id,
+        highlights: cmd.parameters.highlights,
+        full: cmd.parameters.full});
       break;
   }
 };
