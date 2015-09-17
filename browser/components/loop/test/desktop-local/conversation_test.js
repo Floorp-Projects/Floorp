@@ -87,9 +87,6 @@ describe("loop.conversation", function() {
       sandbox.stub(React, "render");
       sandbox.stub(document.mozL10n, "initialize");
 
-      sandbox.stub(loop.shared.models.ConversationModel.prototype,
-        "initialize");
-
       sandbox.stub(loop.Dispatcher.prototype, "dispatch");
 
       sandbox.stub(loop.shared.utils,
