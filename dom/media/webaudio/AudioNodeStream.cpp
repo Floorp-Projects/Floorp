@@ -34,6 +34,7 @@ AudioNodeStream::AudioNodeStream(AudioNodeEngine* aEngine,
     mSampleRate(aSampleRate),
     mFlags(aFlags),
     mNumberOfInputChannels(2),
+    mIsActive(aEngine->IsActive()),
     mMarkAsFinishedAfterThisBlock(false),
     mAudioParamStream(false),
     mPassThrough(false)
@@ -49,6 +50,7 @@ AudioNodeStream::AudioNodeStream(AudioNodeEngine* aEngine,
 
 AudioNodeStream::~AudioNodeStream()
 {
+  MOZ_ASSERT(mActiveInputCount == 0);
   MOZ_COUNT_DTOR(AudioNodeStream);
 }
 
@@ -520,7 +522,14 @@ AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
   uint16_t outputCount = mLastChunks.Length();
   MOZ_ASSERT(outputCount == std::max(uint16_t(1), mEngine->OutputCount()));
 
-  if (mFinished || InMutedCycle()) {
+  if (!mIsActive) {
+    // mLastChunks are already null.
+#ifdef DEBUG
+    for (const auto& chunk : mLastChunks) {
+      MOZ_ASSERT(chunk.IsNull());
+    }
+#endif
+  } else if (InMutedCycle()) {
     mInputChunks.Clear();
     for (uint16_t i = 0; i < outputCount; ++i) {
       mLastChunks[i].SetNull(WEBAUDIO_BLOCK_SIZE);
@@ -549,6 +558,7 @@ AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
     }
     if (finished) {
       mMarkAsFinishedAfterThisBlock = true;
+      CheckForInactive();
     }
 
     if (mDisabledTrackIDs.Contains(static_cast<TrackID>(AUDIO_TRACK))) {
@@ -579,7 +589,7 @@ AudioNodeStream::ProduceOutputBeforeInput(GraphTime aFrom)
   MOZ_ASSERT(!InMutedCycle(), "DelayNodes should break cycles");
   MOZ_ASSERT(mLastChunks.Length() == 1);
 
-  if (mFinished) {
+  if (!mIsActive) {
     mLastChunks[0].SetNull(WEBAUDIO_BLOCK_SIZE);
   } else {
     mEngine->ProduceBlockBeforeInput(&mLastChunks[0]);
@@ -682,6 +692,90 @@ AudioNodeStream::DestinationTimeFromTicks(AudioNodeStream* aDestination,
   GraphTime graphTime = StreamTimeToGraphTime(aPosition);
   StreamTime destinationTime = aDestination->GraphTimeToStreamTime(graphTime);
   return StreamTimeToSeconds(destinationTime);
+}
+
+void
+AudioNodeStream::AddInput(MediaInputPort* aPort)
+{
+  ProcessedMediaStream::AddInput(aPort);
+  AudioNodeStream* ns = aPort->GetSource()->AsAudioNodeStream();
+  // Streams that are not AudioNodeStreams are considered active.
+  if (!ns || (ns->mIsActive && !ns->IsAudioParamStream())) {
+    IncrementActiveInputCount();
+  }
+}
+void
+AudioNodeStream::RemoveInput(MediaInputPort* aPort)
+{
+  ProcessedMediaStream::RemoveInput(aPort);
+  AudioNodeStream* ns = aPort->GetSource()->AsAudioNodeStream();
+  // Streams that are not AudioNodeStreams are considered active.
+  if (!ns || (ns->mIsActive && !ns->IsAudioParamStream())) {
+    DecrementActiveInputCount();
+  }
+}
+
+void
+AudioNodeStream::SetActive()
+{
+  if (mIsActive || mMarkAsFinishedAfterThisBlock) {
+    return;
+  }
+
+  mIsActive = true;
+  if (IsAudioParamStream()) {
+    // Consumers merely influence stream order.
+    // They do not read from the stream.
+    return;
+  }
+
+  for (const auto& consumer : mConsumers) {
+    AudioNodeStream* ns = consumer->GetDestination()->AsAudioNodeStream();
+    if (ns) {
+      ns->IncrementActiveInputCount();
+    }
+  }
+}
+
+void
+AudioNodeStream::CheckForInactive()
+{
+  if (((mActiveInputCount > 0 || mEngine->IsActive()) &&
+       !mMarkAsFinishedAfterThisBlock) ||
+      !mIsActive) {
+    return;
+  }
+
+  mIsActive = false;
+  mInputChunks.Clear(); // not required for foreseeable future
+  for (auto& chunk : mLastChunks) {
+    chunk.SetNull(WEBAUDIO_BLOCK_SIZE);
+  }
+  if (IsAudioParamStream()) {
+    return;
+  }
+
+  for (const auto& consumer : mConsumers) {
+    AudioNodeStream* ns = consumer->GetDestination()->AsAudioNodeStream();
+    if (ns) {
+      ns->DecrementActiveInputCount();
+    }
+  }
+}
+
+void
+AudioNodeStream::IncrementActiveInputCount()
+{
+  ++mActiveInputCount;
+  SetActive();
+}
+
+void
+AudioNodeStream::DecrementActiveInputCount()
+{
+  MOZ_ASSERT(mActiveInputCount > 0);
+  --mActiveInputCount;
+  CheckForInactive();
 }
 
 } // namespace mozilla
