@@ -106,6 +106,8 @@ public:
   }
 
   virtual AudioNodeStream* AsAudioNodeStream() override { return this; }
+  virtual void AddInput(MediaInputPort* aPort) override;
+  virtual void RemoveInput(MediaInputPort* aPort) override;
 
   // Graph thread only
   void SetStreamTimeParameterImpl(uint32_t aIndex, MediaStream* aRelativeToStream,
@@ -165,6 +167,22 @@ public:
   void SizeOfAudioNodesIncludingThis(MallocSizeOf aMallocSizeOf,
                                      AudioNodeSizes& aUsage) const;
 
+  /*
+   * SetActive() is called when either an active input is added or the engine
+   * for a source node transitions from inactive to active.  This is not
+   * called from engines for processing nodes because they only become active
+   * when there are active input streams, in which case this stream is already
+   * active.
+   */
+  void SetActive();
+  /*
+   * CheckForInactive() is called when the engine transitions from active to
+   * inactive, or an active input is removed, or the stream finishes.  If the
+   * stream is now inactive, then mInputChunks will be cleared and mLastChunks
+   * will be set to null.  ProcessBlock() will not be called on the engine
+   * again until SetActive() is called.
+   */
+  void CheckForInactive();
 
 protected:
   virtual void DestroyImpl() override;
@@ -180,6 +198,8 @@ protected:
 
   uint32_t ComputedNumberOfChannels(uint32_t aInputChannelCount);
   void ObtainInputBlock(AudioBlock& aTmpChunk, uint32_t aPortIndex);
+  void IncrementActiveInputCount();
+  void DecrementActiveInputCount();
 
   // The engine that will generate output for this node.
   nsAutoPtr<AudioNodeEngine> mEngine;
@@ -192,11 +212,16 @@ protected:
   const TrackRate mSampleRate;
   // Whether this is an internal or external stream
   const Flags mFlags;
+  // The number of input streams that may provide non-silent input.
+  uint32_t mActiveInputCount = 0;
   // The number of input channels that this stream requires. 0 means don't care.
   uint32_t mNumberOfInputChannels;
   // The mixing modes
   ChannelCountMode mChannelCountMode;
   ChannelInterpretation mChannelInterpretation;
+  // Streams are considered active if the stream has not finished and either
+  // the engine is active or there are active input streams.
+  bool mIsActive;
   // Whether the stream should be marked as finished as soon
   // as the current time range has been computed block by block.
   bool mMarkAsFinishedAfterThisBlock;
