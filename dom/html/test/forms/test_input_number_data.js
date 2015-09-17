@@ -30,3 +30,9 @@ var tests = [
     inputWithoutGrouping: "123456.78", value: 123456.78
   },
 ];
+
+var invalidTests = [
+  // Right now this will pass in a 'de' build, but not in the 'en' build that
+  // are used for testing. See bug .
+  // { desc: "Invalid German", langTag: "de", input: "12.34" }
+];
