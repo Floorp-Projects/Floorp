@@ -120,7 +120,9 @@ void Simulator::init(Decoder* decoder, FILE* stream) {
   lock_ = PR_NewLock();
   if (!lock_)
     MOZ_CRASH("Could not allocate simulator lock.");
+#ifdef DEBUG
   lockOwner_ = nullptr;
+#endif
   redirection_ = nullptr;
 }
 
