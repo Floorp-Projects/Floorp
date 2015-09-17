@@ -179,13 +179,13 @@
     background: transparent;
   }
 
-  /* Ensure that the entire background is styled when maximized */
-  #main-window[sizemode="maximized"]:not([customizing]) #browser-panel {
+  /* Ensure that the entire background is styled when maximized/fullscreen */
+  #main-window:not([sizemode="normal"]):not([customizing]) #browser-panel {
     background: var(--chrome-background-color) !important;
   }
 
   /* The menu items need to be visible when the entire background is styled */
-  #main-window[sizemode="maximized"] #main-menubar {
+  #main-window:not([sizemode="normal"]) #main-menubar {
     color: var(--chrome-color);
     background-color: transparent;
   }
