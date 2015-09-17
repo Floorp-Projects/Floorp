@@ -52,6 +52,8 @@ enum EventMessage : EventMessageType
   eEventMessage_MaxValue
 };
 
+const char* ToChar(EventMessage aEventMessage);
+
 /**
  * Event class IDs
  */
@@ -71,6 +73,8 @@ enum EventClassID : EventClassIDType
 #undef NS_EVENT_CLASS
 #undef NS_ROOT_EVENT_CLASS
 };
+
+const char* ToChar(EventClassID aEventClassID);
 
 typedef uint16_t Modifiers;
 
