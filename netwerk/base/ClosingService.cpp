@@ -6,9 +6,6 @@
 
 #include "ClosingService.h"
 #include "nsIOService.h"
-#ifdef MOZ_NUWA_PROCESS
-#include "ipc/Nuwa.h"
-#endif
 
 class ClosingLayerSecret
 {
@@ -203,13 +200,6 @@ ClosingService::ShutdownInternal()
 void
 ClosingService::ThreadFunc()
 {
-  PR_SetCurrentThreadName("Closing Service");
-#ifdef MOZ_NUWA_PROCESS
-  if (IsNuwaProcess()) {
-    NuwaMarkCurrentThread(nullptr, nullptr);
-  }
-#endif
-
   for (;;) {
     PRFileDesc *fd;
     {
