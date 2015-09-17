@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<title>preserve-3d consequence nested context</title>
+<style>
+.rect {
+  width: 100px;
+  height: 100px;
+  background-color: green;
+}
+
+#outeri {
+  transform-style: preserve-3d;
+  transform: rotateX(45deg);
+}
+
+#inner {
+  transform: rotateX(0deg);
+}
+
+#inneri {
+  transform-style: preserve-3d;
+  transform: rotateX(45deg);
+}
+
+#rect2 {
+  transform: translate(50px, 50px);
+  background-color: pink;
+}
+
+#rect3 {
+  background-color: red;
+}
+
+</style>
+<body>
+  <div id="outer">
+    <div id="outeri">
+      <div id="rect1" class="rect"></div>
+      <div id="rect2" class="rect"></div>
+      <div id="inner">
+	<div id="inneri">
+	  <div id="rect3" class="rect"></div>
+	</div>
+      </div>
+    </div>
+  </div>
+</body>
