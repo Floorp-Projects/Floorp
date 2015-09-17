@@ -537,6 +537,48 @@ SettingsListener.observe("theme.selected",
   setPAC();
 })();
 
+#ifdef MOZ_B2G_RIL
+XPCOMUtils.defineLazyModuleGetter(this, "AppsUtils",
+                                  "resource://gre/modules/AppsUtils.jsm");
+
+// ======================= Dogfooders FOTA ==========================
+SettingsListener.observe('debug.performance_data.dogfooding', false,
+  isDogfooder => {
+    if (!isDogfooder) {
+      dump('AUS:Settings: Not a dogfooder!\n');
+      return;
+    }
+
+    if (!('mozTelephony' in navigator)) {
+      dump('AUS:Settings: There is no mozTelephony!\n');
+      return;
+    }
+
+    if (!('mozMobileConnections' in navigator)) {
+      dump('AUS:Settings: There is no mozMobileConnections!\n');
+      return;
+    }
+
+    let conn = navigator.mozMobileConnections[0];
+    conn.addEventListener('radiostatechange', function onradiostatechange() {
+      if (conn.radioState !== 'enabled') {
+        return;
+      }
+
+      conn.removeEventListener('radiostatechange', onradiostatechange);
+      navigator.mozTelephony.dial('*#06#').then(call => {
+        return call.result.then(res => {
+          if (res.success && res.statusMessage
+              && (res.serviceCode === 'scImei')) {
+            Services.prefs.setCharPref("app.update.imei_hash",
+                                       AppsUtils.computeHash(res.statusMessage, "SHA512"));
+          }
+        });
+      });
+    });
+  });
+#endif
+
 // =================== Various simple mapping  ======================
 var settingsToObserve = {
   'accessibility.screenreader_quicknav_modes': {
