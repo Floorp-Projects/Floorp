@@ -77,6 +77,9 @@ GetTimerLog()
 // This will show how often each unique line appears, with the most common ones
 // first.
 //
+// More detailed docs are here:
+// https://developer.mozilla.org/en-US/docs/Mozilla/Performance/TimerFirings_logging
+//
 PRLogModuleInfo*
 GetTimerFiringsLog()
 {
