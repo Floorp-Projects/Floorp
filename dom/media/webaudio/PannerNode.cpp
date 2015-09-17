@@ -149,6 +149,7 @@ public:
       } else {
         if (mLeftOverData != INT_MIN) {
           mLeftOverData = INT_MIN;
+          aStream->CheckForInactive();
           mHRTFPanner->reset();
 
           nsRefPtr<PlayingRefChangeHandler> refchanged =
@@ -156,7 +157,7 @@ public:
           aStream->Graph()->
             DispatchToMainThreadAfterStreamStateUpdate(refchanged.forget());
         }
-        *aOutput = aInput;
+        aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
         return;
       }
     } else if (mPanningModelFunction == &PannerNodeEngine::HRTFPanningFunction) {
