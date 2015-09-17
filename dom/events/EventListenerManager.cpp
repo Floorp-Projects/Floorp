@@ -405,6 +405,13 @@ EventListenerManager::AddEventListenerInternal(
     }
   }
 
+  if (IsApzAwareEvent(aTypeAtom)) {
+    nsCOMPtr<nsINode> node = do_QueryInterface(mTarget);
+    if (node) {
+      node->SetMayHaveApzAwareListeners();
+    }
+  }
+
   if (aTypeAtom && mTarget) {
     mTarget->EventListenerAdded(aTypeAtom);
   }
@@ -1488,6 +1495,30 @@ EventListenerManager::TraceListeners(JSTracer* aTrc)
     // We might have eWrappedJSListener, but that is the legacy type for
     // JS implemented event listeners, and trickier to handle here.
   }
+}
+
+bool
+EventListenerManager::HasApzAwareListeners()
+{
+  uint32_t count = mListeners.Length();
+  for (uint32_t i = 0; i < count; ++i) {
+    Listener* listener = &mListeners.ElementAt(i);
+    if (IsApzAwareEvent(listener->mTypeAtom)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool
+EventListenerManager::IsApzAwareEvent(nsIAtom* aEvent)
+{
+  return aEvent == nsGkAtoms::ontouchstart ||
+         aEvent == nsGkAtoms::ontouchmove ||
+         aEvent == nsGkAtoms::onwheel ||
+         aEvent == nsGkAtoms::onDOMMouseScroll ||
+         aEvent == nsHtml5Atoms::onmousewheel ||
+         aEvent == nsGkAtoms::onMozMousePixelScroll;
 }
 
 already_AddRefed<nsIScriptGlobalObject>

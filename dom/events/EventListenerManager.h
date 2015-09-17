@@ -443,6 +443,10 @@ public:
 
   dom::EventTarget* GetTarget() { return mTarget; }
 
+  bool HasApzAwareListeners();
+
+  bool IsApzAwareEvent(nsIAtom* aEvent);
+
 protected:
   void HandleEventInternal(nsPresContext* aPresContext,
                            WidgetEvent* aEvent,
