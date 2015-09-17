@@ -10,6 +10,23 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
+// Log only if browser.safebrowsing.debug is true
+function log(...stuff) {
+  let logging = null;
+  try {
+    logging = Services.prefs.getBoolPref("browser.safebrowsing.debug");
+  } catch(e) {
+    return;
+  }
+  if (!logging) {
+    return;
+  }
+
+  var d = new Date();
+  let msg = "SafeBrowsing: " + d.toTimeString() + ": " + stuff.join(" ");
+  dump(msg + "\n");
+}
+
 // Skip all the ones containining "test", because we never need to ask for
 // updates for them.
 function getLists(prefName) {
@@ -36,17 +53,6 @@ const downloadBlockLists = getLists("urlclassifier.downloadBlockTable");
 const downloadAllowLists = getLists("urlclassifier.downloadAllowTable");
 const trackingProtectionLists = getLists("urlclassifier.trackingTable");
 const trackingProtectionWhitelists = getLists("urlclassifier.trackingWhitelistTable");
-
-var debug = false;
-function log(...stuff) {
-  if (!debug)
-    return;
-
-  var d = new Date();
-  let msg = "SafeBrowsing: " + d.toTimeString() + ": " + stuff.join(" ");
-  Services.console.logStringMessage(msg);
-  dump(msg + "\n");
-}
 
 this.SafeBrowsing = {
 
@@ -143,7 +149,7 @@ this.SafeBrowsing = {
   readPrefs: function() {
     log("reading prefs");
 
-    debug = Services.prefs.getBoolPref("browser.safebrowsing.debug");
+    this.debug = Services.prefs.getBoolPref("browser.safebrowsing.debug");
     this.phishingEnabled = Services.prefs.getBoolPref("browser.safebrowsing.enabled");
     this.malwareEnabled = Services.prefs.getBoolPref("browser.safebrowsing.malware.enabled");
     this.trackingEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.enabled") || Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled");
@@ -181,7 +187,7 @@ this.SafeBrowsing = {
       this.providers[providerName] = {};
     }
 
-    if (debug) {
+    if (this.debug) {
       let providerStr = "";
       Object.keys(this.providers).forEach(function(provider) {
         if (providerStr === "") {
