@@ -31,9 +31,10 @@ runNetworkTest(() => {
   var canvas = document.createElement('canvas');
   canvas.id = 'source_canvas';
   canvas.width = canvas.height = 10;
+  canvas.style.display = 'none';
   document.getElementById('content').appendChild(canvas);
 
-  var gl = WebGLUtil.getWebGL(canvas.id, false, { preserveDrawingBuffer: true });
+  var gl = WebGLUtil.getWebGL(canvas.id, false);
   if (!gl) {
     todo(false, "WebGL unavailable.");
     networkTestFinished();
@@ -90,11 +91,14 @@ runNetworkTest(() => {
     function WAIT_FOR_REMOTE_GREEN() {
       return h.waitForPixel(vremote, h.green, 128, "pcRemote's remote should become green");
     },
+    function REQUEST_FRAME(test) {
+      // After requesting a frame it will be captured at the time of next render.
+      // Next render will happen at next stable state, at the earliest,
+      // i.e., this order of `requestFrame(); draw();` should work.
+      test.pcLocal.canvasStream.requestFrame();
+    },
     function DRAW_LOCAL_RED() {
       h.drawColor(canvas, h.red);
-    },
-    function REQUEST_FRAME(test) {
-      test.pcLocal.canvasStream.requestFrame();
     },
     function WAIT_FOR_REMOTE_RED() {
       return h.waitForPixel(vremote, h.red, 128, "pcRemote's remote should become red");
