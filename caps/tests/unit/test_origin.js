@@ -122,19 +122,6 @@ function run_test() {
   checkOriginAttributes(nullPrin_userContextApp, {appId: 24, userContextId: 42}, '^appId=24&userContextId=42');
   do_check_eq(exampleOrg_userContextApp.origin, 'http://example.org^appId=24&userContextId=42');
 
-  // Just signedPkg
-  var exampleOrg_signedPkg = ssm.createCodebasePrincipal(makeURI('http://example.org'), {signedPkg: 'whatever'});
-  checkOriginAttributes(exampleOrg_signedPkg, { signedPkg: 'id' }, '^signedPkg=whatever');
-  do_check_eq(exampleOrg_signedPkg.origin, 'http://example.org^signedPkg=whatever');
-
-  // signedPkg and browser
-  var exampleOrg_signedPkg_browser = ssm.createCodebasePrincipal(makeURI('http://example.org'), {signedPkg: 'whatever', inBrowser: true});
-  checkOriginAttributes(exampleOrg_signedPkg_browser, { signedPkg: 'whatever', inBrowser: true }, '^inBrowser=1&signedPkg=whatever');
-  do_check_eq(exampleOrg_signedPkg_browser.origin, 'http://example.org^inBrowser=1&signedPkg=whatever');
-
-  // Just signedPkg (but different value from 'exampleOrg_signedPkg_app')
-  var exampleOrg_signedPkg_another = ssm.createCodebasePrincipal(makeURI('http://example.org'), {signedPkg: 'whatup'});
-
   // Check that all of the above are cross-origin.
   checkCrossOrigin(exampleOrg_app, exampleOrg);
   checkCrossOrigin(exampleOrg_app, nullPrin_app);
@@ -148,7 +135,4 @@ function run_test() {
   checkCrossOrigin(exampleOrg_userContextAddon, exampleOrg);
   checkCrossOrigin(exampleOrg_userContext, exampleOrg_userContextAddon);
   checkCrossOrigin(exampleOrg_userContext, exampleOrg_userContextApp);
-  checkCrossOrigin(exampleOrg_signedPkg, exampleOrg);
-  checkCrossOrigin(exampleOrg_signedPkg, exampleOrg_signedPkg_browser);
-  checkCrossOrigin(exampleOrg_signedPkg, exampleOrg_signedPkg_another);
 }

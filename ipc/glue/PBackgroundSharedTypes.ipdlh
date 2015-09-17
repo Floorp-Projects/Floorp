@@ -12,7 +12,6 @@ struct ContentPrincipalInfo
   uint32_t appId;
   bool isInBrowserElement;
   nsCString spec;
-  nsCString signedPkg;
 };
 
 struct SystemPrincipalInfo
