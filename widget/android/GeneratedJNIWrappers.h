@@ -1695,6 +1695,21 @@ public:
     static auto GetFrameNameJavaProfilingWrapper(int32_t, int32_t, int32_t) -> mozilla::jni::String::LocalRef;
 
 public:
+    struct GetProfilerTime_t {
+        typedef GeckoJavaSampler Owner;
+        typedef double ReturnType;
+        typedef double SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getProfilerTime";
+        static constexpr char signature[] =
+                "()D";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
     struct GetSampleTimeJavaProfiling_t {
         typedef GeckoJavaSampler Owner;
         typedef double ReturnType;
@@ -1801,6 +1816,8 @@ public:
 
     static auto UnpauseJavaProfiling() -> void;
 
+public:
+    template<class Impl> class Natives;
 };
 
 class GeckoThread : public mozilla::jni::Class<GeckoThread>
