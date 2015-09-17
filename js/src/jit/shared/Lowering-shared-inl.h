@@ -184,8 +184,12 @@ LIRGeneratorShared::defineSinCos(LInstructionHelper<2, Ops, Temps> *lir, MDefini
 
     uint32_t vreg = getVirtualRegister();
     lir->setDef(0, LDefinition(vreg, LDefinition::DOUBLE, LFloatReg(ReturnDoubleReg)));
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
-    lir->setDef(1, LDefinition(vreg + VREG_INCREMENT, LDefinition::DOUBLE, LFloatReg(d1)));
+#if defined(JS_CODEGEN_ARM)
+    lir->setDef(1, LDefinition(vreg + VREG_INCREMENT, LDefinition::DOUBLE,
+                LFloatReg(FloatRegister(FloatRegisters::d1, FloatRegister::Double))));
+#elif defined(JS_CODEGEN_ARM64)
+    lir->setDef(1, LDefinition(vreg + VREG_INCREMENT, LDefinition::DOUBLE,
+                LFloatReg(FloatRegister(FloatRegisters::d1, FloatRegisters::Double))));
 #elif defined(JS_CODEGEN_MIPS32)
     lir->setDef(1, LDefinition(vreg + VREG_INCREMENT, LDefinition::DOUBLE, LFloatReg(f2)));
 #elif defined(JS_CODEGEN_NONE)
