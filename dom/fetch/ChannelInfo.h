@@ -46,12 +46,15 @@ public:
 
   ChannelInfo()
     : mInited(false)
+    , mRedirected(false)
   {
   }
 
   ChannelInfo(const ChannelInfo& aRHS)
     : mSecurityInfo(aRHS.mSecurityInfo)
+    , mRedirectedURISpec(aRHS.mRedirectedURISpec)
     , mInited(aRHS.mInited)
+    , mRedirected(aRHS.mRedirected)
   {
   }
 
@@ -59,7 +62,9 @@ public:
   operator=(const ChannelInfo& aRHS)
   {
     mSecurityInfo = aRHS.mSecurityInfo;
+    mRedirectedURISpec = aRHS.mRedirectedURISpec;
     mInited = aRHS.mInited;
+    mRedirected = aRHS.mRedirected;
     return *this;
   }
 
@@ -84,7 +89,9 @@ private:
 
 private:
   nsCString mSecurityInfo;
+  nsCString mRedirectedURISpec;
   bool mInited;
+  bool mRedirected;
 };
 
 } // namespace dom
