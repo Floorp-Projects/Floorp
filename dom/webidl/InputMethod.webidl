@@ -120,7 +120,7 @@ interface MozInputMethod : EventTarget {
 [JSImplementation="@mozilla.org/b2g-imm;1",
  Pref="dom.mozInputMethod.enabled",
  CheckAnyPermissions="input input-manage"]
-interface MozInputMethodManager : EventTarget {
+interface MozInputMethodManager {
   /**
    * Ask the OS to show a list of available inputs for users to switch from.
    * OS should sliently ignore this request if the app is currently not the
@@ -165,149 +165,6 @@ interface MozInputMethodManager : EventTarget {
    */
   [CheckAllPermissions="input-manage"]
   void setSupportsSwitchingTypes(sequence<MozInputMethodInputContextInputTypes> types);
-
-  /**
-   * CustomEvent dispatches to System when there is an input to handle.
-   * If the API consumer failed to handle and call preventDefault(),
-   * there will be a message printed on the console.
-   *
-   * evt.detail is defined by MozInputContextFocusEventDetail.
-   */
-  [CheckAnyPermissions="input-manage"]
-  attribute EventHandler oninputcontextfocus;
-
-  /**
-   * Event dispatches to System when there is no longer an input to handle.
-   * If the API consumer failed to handle and call preventDefault(),
-   * there will be a message printed on the console.
-   */
-  [CheckAnyPermissions="input-manage"]
-  attribute EventHandler oninputcontextblur;
-
-  /**
-   * Event dispatches to System when there is a showAll() call.
-   * If the API consumer failed to handle and call preventDefault(),
-   * there will be a message printed on the console.
-   */
-  [CheckAnyPermissions="input-manage"]
-  attribute EventHandler onshowallrequest;
-
-  /**
-   * Event dispatches to System when there is a next() call.
-   * If the API consumer failed to handle and call preventDefault(),
-   * there will be a message printed on the console.
-   */
-  [CheckAnyPermissions="input-manage"]
-  attribute EventHandler onnextrequest;
-
-  /**
-   * Event dispatches to System when there is a addInput() call.
-   * The API consumer must call preventDefault() to indicate the event is
-   * consumed, otherwise the request is not considered handled even if
-   * waitUntil() was called.
-   *
-   * evt.detail is defined by MozInputRegistryEventDetail.
-   */
-  [CheckAnyPermissions="input-manage"]
-  attribute EventHandler onaddinputrequest;
-
-  /**
-   * Event dispatches to System when there is a removeInput() call.
-   * The API consumer must call preventDefault() to indicate the event is
-   * consumed, otherwise the request is not considered handled even if
-   * waitUntil() was called.
-   *
-   * evt.detail is defined by MozInputRegistryEventDetail.
-   */
-  [CheckAnyPermissions="input-manage"]
-  attribute EventHandler onremoveinputrequest;
-};
-
-/**
- * Detail of the inputcontextfocus event.
- */
-[JSImplementation="@mozilla.org/b2g-imm-focus;1",
- Pref="dom.mozInputMethod.enabled",
- CheckAnyPermissions="input-manage"]
-interface MozInputContextFocusEventDetail {
-  /**
-   * The type of the focused input.
-   */
-  readonly attribute MozInputMethodInputContextTypes type;
-  /**
-   * The input type of the focused input.
-   */
-  readonly attribute MozInputMethodInputContextInputTypes inputType;
-
-  /**
-   * The following is only needed for rendering and handling "option" input types,
-   * in System app.
-   */
-
-  /**
-   * Current value of the input/select element.
-   */
-  readonly attribute DOMString? value;
-  /**
-   * An object representing all the <optgroup> and <option> elements
-   * in the <select> element.
-   */
-  [Pure, Cached, Frozen]
-  readonly attribute MozInputContextChoicesInfo? choices;
-  /**
-   * Max/min value of <input>
-   */
-  readonly attribute DOMString? min;
-  readonly attribute DOMString? max;
-};
-
-/**
- * Information about the options within the <select> element.
- */
-dictionary MozInputContextChoicesInfo {
-  boolean multiple;
-  sequence<MozInputMethodChoiceDict> choices;
-};
-
-/**
- * Content the header (<optgroup>) or an option (<option>).
- */
-dictionary MozInputMethodChoiceDict {
-  boolean group;
-  DOMString text;
-  boolean disabled;
-  boolean? inGroup;
-  boolean? selected;
-  long? optionIndex;
-};
-
-/**
- * detail of addinputrequest or removeinputrequest event.
- */
-[JSImplementation="@mozilla.org/b2g-imm-input-registry;1",
- Pref="dom.mozInputMethod.enabled",
- CheckAnyPermissions="input-manage"]
-interface MozInputRegistryEventDetail {
-  /**
-   * Manifest URL of the requesting app.
-   */
-  readonly attribute DOMString manifestURL;
-  /**
-   * ID of the input
-   */
-  readonly attribute DOMString inputId;
-  /**
-   * Input manifest of the input to add.
-   * Null for removeinputrequest event.
-   */
-  [Pure, Cached, Frozen]
-  readonly attribute MozInputMethodInputManifest? inputManifest;
-  /**
-   * Resolve or Reject the addInput() or removeInput() call when the passed
-   * promises are resolved.
-   */
-  [Throws]
-  void waitUntil(Promise<any> p);
 };
 
 /**
@@ -540,20 +397,19 @@ dictionary CompositionClauseParameters {
  * *and* the special keyword "contenteditable" for contenteditable element.
  */
 enum MozInputMethodInputContextTypes {
-  "input", "textarea", "contenteditable",
+  "input", "textarea", "contenteditable"
   /**
-   * <select> is managed by the API but it is handled by the System app only,
-   * so this value is only accessible by System app from inputcontextfocus event.
+   * <select> is managed by the API but it's not exposed through InputContext
+   * yet.
    */
-  "select"
+  // "select"
 };
 
 /**
  * InputTypes of the input that InputContext is representing. The value
- * is inferred from the type attribute of element.
+ * is inferred from the type attribute of input element.
  *
  * See https://html.spec.whatwg.org/multipage/forms.html#states-of-the-type-attribute
- * for types of HTMLInputElement.
  *
  * They are divided into groups -- an layout/input capable of handling one type
  * in the group is considered as capable of handling all of the types in the
@@ -588,15 +444,12 @@ enum MozInputMethodInputContextInputTypes {
    * Group "password".
    * An non-Latin alphabet layout/input should not be able to handle this type.
    */
-  "password",
+  "password"
   /**
-   * Group "option". These types are handled by System app itself currently, so
-   * no input app will be set to active for these input types.
-   * System app access these types from inputcontextfocus event.
-   * ("select-one" and "select-multiple" are valid HTMLSelectElement#type.)
+   * Group "option". These types are handled by System app itself currently, and
+   * not exposed and allowed to handled with input context.
    */
-  "datetime", "date", "month", "week", "time", "datetime-local", "color",
-  "select-one", "select-multiple"
+  //"datetime", "date", "month", "week", "time", "datetime-local", "color",
   /**
    * These types are ignored by the API even though they are valid
    * HTMLInputElement#type.

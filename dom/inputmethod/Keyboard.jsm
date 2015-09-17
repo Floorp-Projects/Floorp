@@ -45,12 +45,10 @@ this.Keyboard = {
   _keyboardMM: null,  // The keyboard app message manager.
   _keyboardID: -1,    // The keyboard app's ID number. -1 = invalid
   _nextKeyboardID: 0, // The ID number counter.
-  _systemMMs: [],     // The message managers registered to handle system async
-                      // messages.
   _supportsSwitchingTypes: [],
   _systemMessageNames: [
     'SetValue', 'RemoveFocus', 'SetSelectedOption', 'SetSelectedOptions',
-    'SetSupportsSwitchingTypes', 'RegisterSync', 'Unregister'
+    'SetSupportsSwitchingTypes'
   ],
 
   _messageNames: [
@@ -59,7 +57,7 @@ this.Keyboard = {
     'SwitchToNextInputMethod', 'HideInputMethod',
     'GetText', 'SendKey', 'GetContext',
     'SetComposition', 'EndComposition',
-    'RegisterSync', 'Unregister'
+    'Register', 'Unregister'
   ],
 
   get formMM() {
@@ -89,20 +87,6 @@ this.Keyboard = {
     try {
       this._keyboardMM.sendAsyncMessage(name, data);
     } catch(e) { }
-  },
-
-  sendToSystem: function(name, data) {
-    if (!this._systemMMs.length) {
-      dump("Keyboard.jsm: Attempt to send message " + name +
-        " to system but no message manager registered.\n");
-
-      return;
-    }
-
-    this._systemMMs.forEach((mm, i) => {
-      data.inputManageId = i;
-      mm.sendAsyncMessage(name, data);
-    });
   },
 
   init: function keyboardInit() {
@@ -140,14 +124,10 @@ this.Keyboard = {
         // keyboard app that the focus has been lost.
         this.sendToKeyboard('Keyboard:Blur', {});
         // Notify system app to hide keyboard.
-        this.sendToSystem('System:Blur', {});
-        // XXX: To be removed when content migrate away from mozChromeEvents.
         SystemAppProxy.dispatchEvent({
           type: 'inputmethod-contextchange',
           inputType: 'blur'
         });
-
-        this.formMM = null;
       }
     } else {
       // Ignore notifications that aren't from a BrowserOrApp
@@ -213,7 +193,7 @@ this.Keyboard = {
     }
 
     if (0 === msg.name.indexOf('Keyboard:') &&
-        ('Keyboard:RegisterSync' !== msg.name && this._keyboardID !== kbID)
+        ('Keyboard:Register' !== msg.name && this._keyboardID !== kbID)
        ) {
       return;
     }
@@ -248,24 +228,6 @@ this.Keyboard = {
       case 'Keyboard:RemoveFocus':
       case 'System:RemoveFocus':
         this.removeFocus();
-        break;
-      case 'System:RegisterSync': {
-        if (this._systemMMs.length !== 0) {
-          dump('Keyboard.jsm Warning: There are more than one content page ' +
-            'with input-manage permission. There will be undeterministic ' +
-            'responses to addInput()/removeInput() if both content pages are ' +
-            'trying to respond to the same request event.\n');
-        }
-
-        let id = this._systemMMs.length;
-        this._systemMMs.push(mm);
-
-        return id;
-      }
-
-      case 'System:Unregister':
-        this._systemMMs.splice(msg.data.id, 1);
-
         break;
       case 'System:SetSelectedOption':
         this.setSelectedOption(msg);
@@ -303,7 +265,7 @@ this.Keyboard = {
       case 'Keyboard:EndComposition':
         this.endComposition(msg);
         break;
-      case 'Keyboard:RegisterSync':
+      case 'Keyboard:Register':
         this._keyboardMM = mm;
         if (kbID) {
           // keyboard identifies itself, use its kbID
@@ -331,14 +293,10 @@ this.Keyboard = {
                 .frameLoader.messageManager;
     this.formMM = mm;
 
-    // Notify the current active input app to gain focus.
     this.forwardEvent('Keyboard:Focus', msg);
 
-    // Notify System app, used also to render value selectors for now;
-    // that's why we need the info about choices / min / max here as well...
-    this.sendToSystem('System:Focus', msg.data);
-
-    // XXX: To be removed when content migrate away from mozChromeEvents.
+    // Chrome event, used also to render value selectors; that's why we need
+    // the info about choices / min / max here as well...
     SystemAppProxy.dispatchEvent({
       type: 'inputmethod-contextchange',
       inputType: msg.data.inputType,
@@ -364,9 +322,7 @@ this.Keyboard = {
     this.formMM = null;
 
     this.forwardEvent('Keyboard:Blur', msg);
-    this.sendToSystem('System:Blur', {});
 
-    // XXX: To be removed when content migrate away from mozChromeEvents.
     SystemAppProxy.dispatchEvent({
       type: 'inputmethod-contextchange',
       inputType: 'blur'
@@ -406,18 +362,12 @@ this.Keyboard = {
   },
 
   showInputMethodPicker: function keyboardShowInputMethodPicker() {
-    this.sendToSystem('System:ShowAll', {});
-
-    // XXX: To be removed with mozContentEvent support from shell.js
     SystemAppProxy.dispatchEvent({
       type: "inputmethod-showall"
     });
   },
 
   switchToNextInputMethod: function keyboardSwitchToNextInputMethod() {
-    this.sendToSystem('System:Next', {});
-
-    // XXX: To be removed with mozContentEvent support from shell.js
     SystemAppProxy.dispatchEvent({
       type: "inputmethod-next"
     });
@@ -482,17 +432,14 @@ function InputRegistryGlue() {
 
   ppmm.addMessageListener('InputRegistry:Add', this);
   ppmm.addMessageListener('InputRegistry:Remove', this);
-  ppmm.addMessageListener('System:InputRegistry:Add:Done', this);
-  ppmm.addMessageListener('System:InputRegistry:Remove:Done', this);
 };
 
 InputRegistryGlue.prototype.receiveMessage = function(msg) {
   let mm = Utils.getMMFromMessage(msg);
 
-  let permName = msg.name.startsWith("System:") ? "input-mgmt" : "input";
-  if (!Utils.checkPermissionForMM(mm, permName)) {
+  if (!Utils.checkPermissionForMM(mm, 'input')) {
     dump("InputRegistryGlue message " + msg.name +
-      " from a content process with no " + permName + " privileges.");
+      " from a content process with no 'input' privileges.");
     return;
   }
 
@@ -504,12 +451,6 @@ InputRegistryGlue.prototype.receiveMessage = function(msg) {
 
     case 'InputRegistry:Remove':
       this.removeInput(msg, mm);
-
-      break;
-
-    case 'System:InputRegistry:Add:Done':
-    case 'System:InputRegistry:Remove:Done':
-      this.returnMessage(msg.data);
 
       break;
   }
@@ -524,14 +465,6 @@ InputRegistryGlue.prototype.addInput = function(msg, mm) {
 
   let manifestURL = appsService.getManifestURLByLocalId(msg.data.appId);
 
-  Keyboard.sendToSystem('System:InputRegistry:Add', {
-    id: msgId,
-    manifestURL: manifestURL,
-    inputId: msg.data.inputId,
-    inputManifest: msg.data.inputManifest
-  });
-
-  // XXX: To be removed when content migrate away from mozChromeEvents.
   SystemAppProxy.dispatchEvent({
     type: 'inputregistry-add',
     id: msgId,
@@ -550,13 +483,6 @@ InputRegistryGlue.prototype.removeInput = function(msg, mm) {
 
   let manifestURL = appsService.getManifestURLByLocalId(msg.data.appId);
 
-  Keyboard.sendToSystem('System:InputRegistry:Remove', {
-    id: msgId,
-    manifestURL: manifestURL,
-    inputId: msg.data.inputId
-  });
-
-  // XXX: To be removed when content migrate away from mozChromeEvents.
   SystemAppProxy.dispatchEvent({
     type: 'inputregistry-remove',
     id: msgId,
@@ -567,8 +493,6 @@ InputRegistryGlue.prototype.removeInput = function(msg, mm) {
 
 InputRegistryGlue.prototype.returnMessage = function(detail) {
   if (!this._msgMap.has(detail.id)) {
-    dump('InputRegistryGlue: Ignoring already handled message response. ' +
-         'id=' + detail.id + '\n');
     return;
   }
 
@@ -576,7 +500,6 @@ InputRegistryGlue.prototype.returnMessage = function(detail) {
   this._msgMap.delete(detail.id);
 
   if (Cu.isDeadWrapper(mm)) {
-    dump('InputRegistryGlue: Message manager has already died.\n');
     return;
   }
 
