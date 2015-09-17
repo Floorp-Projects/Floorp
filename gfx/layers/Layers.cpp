@@ -600,10 +600,13 @@ Layer::SnapTransformTranslation(const Matrix4x4& aTransform,
     *aResidualTransform = Matrix();
   }
 
+  if (!mManager->IsSnappingEffectiveTransforms()) {
+    return aTransform;
+  }
+
   Matrix matrix2D;
   Matrix4x4 result;
-  if (mManager->IsSnappingEffectiveTransforms() &&
-      aTransform.Is2D(&matrix2D) &&
+  if (aTransform.Is2D(&matrix2D) &&
       !matrix2D.HasNonTranslation() &&
       matrix2D.HasNonIntegerTranslation()) {
     IntPoint snappedTranslation = RoundedToInt(matrix2D.GetTranslation());
@@ -618,9 +621,65 @@ Layer::SnapTransformTranslation(const Matrix4x4& aTransform,
         Matrix::Translation(matrix2D._31 - snappedTranslation.x,
                             matrix2D._32 - snappedTranslation.y);
     }
-  } else {
-    result = aTransform;
+    return result;
   }
+
+  if(aTransform.IsSingular() ||
+     (aTransform._14 != 0 || aTransform._24 != 0 || aTransform._34 != 0)) {
+    // For a singular transform, there is no reversed matrix, so we
+    // don't snap it.
+    // For a perspective transform, the content is transformed in
+    // non-linear, so we don't snap it too.
+    return aTransform;
+  }
+
+  // Snap for 3D Transforms
+
+  Point3D transformedOrigin = aTransform * Point3D();
+
+  // Compute the transformed snap by rounding the values of
+  // transformed origin.
+  IntPoint transformedSnapXY =
+    RoundedToInt(Point(transformedOrigin.x, transformedOrigin.y));
+  Matrix4x4 inverse = aTransform;
+  inverse.Invert();
+  // see Matrix4x4::ProjectPoint()
+  Float transformedSnapZ =
+    inverse._33 == 0 ? 0 : (-(transformedSnapXY.x * inverse._13 +
+                              transformedSnapXY.y * inverse._23 +
+                              inverse._43) / inverse._33);
+  Point3D transformedSnap =
+    Point3D(transformedSnapXY.x, transformedSnapXY.y, transformedSnapZ);
+  if (transformedOrigin == transformedSnap) {
+    return aTransform;
+  }
+
+  // Compute the snap from the transformed snap.
+  Point3D snap = inverse * transformedSnap;
+  if (snap.z > 0.001 || snap.z < -0.001) {
+    // Allow some level of accumulated computation error.
+    MOZ_ASSERT(inverse._33 == 0.0);
+    return aTransform;
+  }
+
+  // The difference between the origin and snap is the residual transform.
+  if (aResidualTransform) {
+    // The residual transform is to translate the snap to the origin
+    // of the content buffer.
+    *aResidualTransform = Matrix::Translation(-snap.x, -snap.y);
+  }
+
+  // Translate transformed origin to transformed snap since the
+  // residual transform would trnslate the snap to the origin.
+  Point3D transformedShift = transformedSnap - transformedOrigin;
+  result = aTransform;
+  result.PostTranslate(transformedShift.x,
+                       transformedShift.y,
+                       transformedShift.z);
+
+  // For non-2d transform, residual translation could be more than
+  // 0.5 pixels for every axis.
+
   return result;
 }
 
