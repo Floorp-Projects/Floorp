@@ -57,7 +57,9 @@ BluetoothDaemonCoreModule::EnableCmd(BluetoothResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x01, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_ENABLE,
+                        0));
 
   nsresult rv = Send(pdu, aRes);
   if (NS_FAILED(rv)) {
@@ -72,7 +74,9 @@ BluetoothDaemonCoreModule::DisableCmd(BluetoothResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x02, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_DISABLE,
+                        0));
 
   nsresult rv = Send(pdu, aRes);
   if (NS_FAILED(rv)) {
@@ -88,7 +92,9 @@ BluetoothDaemonCoreModule::GetAdapterPropertiesCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x03, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_GET_ADAPTER_PROPERTIES,
+                        0));
 
   nsresult rv = Send(pdu, aRes);
   if (NS_FAILED(rv)) {
@@ -104,7 +110,9 @@ BluetoothDaemonCoreModule::GetAdapterPropertyCmd(const nsAString& aName,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x04, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_GET_ADAPTER_PROPERTY,
+                        0));
 
   nsresult rv = PackPDU(
     PackConversion<const nsAString, BluetoothPropertyType>(aName), *pdu);
@@ -125,7 +133,9 @@ BluetoothDaemonCoreModule::SetAdapterPropertyCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x05, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_SET_ADAPTER_PROPERTY,
+                        0));
 
   nsresult rv = PackPDU(aProperty, *pdu);
   if (NS_FAILED(rv)) {
@@ -145,7 +155,9 @@ BluetoothDaemonCoreModule::GetRemoteDevicePropertiesCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x06, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_GET_REMOTE_DEVICE_PROPERTIES,
+                        0));
 
   nsresult rv = PackPDU(
     PackConversion<nsAString, BluetoothAddress>(aRemoteAddr), *pdu);
@@ -168,7 +180,9 @@ BluetoothDaemonCoreModule::GetRemoteDevicePropertyCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x07, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_GET_REMOTE_DEVICE_PROPERTY,
+                        0));
 
   nsresult rv = PackPDU(
     PackConversion<nsAString, BluetoothAddress>(aRemoteAddr),
@@ -192,7 +206,9 @@ BluetoothDaemonCoreModule::SetRemoteDevicePropertyCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x08, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_SET_REMOTE_DEVICE_PROPERTY,
+                        0));
 
   nsresult rv = PackPDU(
     PackConversion<nsAString, BluetoothAddress>(aRemoteAddr),
@@ -215,7 +231,9 @@ BluetoothDaemonCoreModule::GetRemoteServiceRecordCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x09, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_GET_REMOTE_SERVICE_RECORD,
+                        0));
 
   nsresult rv = PackPDU(
     PackConversion<nsAString, BluetoothAddress>(aRemoteAddr),
@@ -237,7 +255,8 @@ BluetoothDaemonCoreModule::GetRemoteServicesCmd(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x0a, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_GET_REMOTE_SERVICES, 0));
 
   nsresult rv = PackPDU(
     PackConversion<nsAString, BluetoothAddress>(aRemoteAddr), *pdu);
@@ -257,7 +276,9 @@ BluetoothDaemonCoreModule::StartDiscoveryCmd(BluetoothResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x0b, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_START_DISCOVERY,
+                        0));
 
   nsresult rv = Send(pdu, aRes);
   if (NS_FAILED(rv)) {
@@ -272,7 +293,9 @@ BluetoothDaemonCoreModule::CancelDiscoveryCmd(BluetoothResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x0c, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_CANCEL_DISCOVERY,
+                        0));
 
   nsresult rv = Send(pdu, aRes);
   if (NS_FAILED(rv)) {
@@ -289,7 +312,9 @@ BluetoothDaemonCoreModule::CreateBondCmd(const nsAString& aBdAddr,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x0d, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_CREATE_BOND,
+                        0));
 
 #if ANDROID_VERSION >= 21
   nsresult rv = PackPDU(
@@ -315,7 +340,9 @@ BluetoothDaemonCoreModule::RemoveBondCmd(const nsAString& aBdAddr,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x0e, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_REMOVE_BOND,
+                        0));
 
   nsresult rv = PackPDU(
     PackConversion<nsAString, BluetoothAddress>(aBdAddr), *pdu);
@@ -336,7 +363,9 @@ BluetoothDaemonCoreModule::CancelBondCmd(const nsAString& aBdAddr,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x0f, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_CANCEL_BOND,
+                        0));
 
   nsresult rv = PackPDU(
     PackConversion<nsAString, BluetoothAddress>(aBdAddr), *pdu);
@@ -358,7 +387,9 @@ BluetoothDaemonCoreModule::PinReplyCmd(const nsAString& aBdAddr, bool aAccept,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x10, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_PIN_REPLY,
+                        0));
 
   nsresult rv = PackPDU(
     PackConversion<nsAString, BluetoothAddress>(aBdAddr),
@@ -383,7 +414,9 @@ BluetoothDaemonCoreModule::SspReplyCmd(const nsAString& aBdAddr,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x11, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_SSP_REPLY,
+                        0));
 
   nsresult rv = PackPDU(
     PackConversion<nsAString, BluetoothAddress>(aBdAddr),
@@ -405,7 +438,9 @@ BluetoothDaemonCoreModule::DutModeConfigureCmd(bool aEnable,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x12, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_DUT_MODE_CONFIGURE,
+                        0));
 
   nsresult rv = PackPDU(aEnable, *pdu);
   if (NS_FAILED(rv)) {
@@ -426,7 +461,9 @@ BluetoothDaemonCoreModule::DutModeSendCmd(uint16_t aOpcode,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x13, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_DUT_MODE_SEND,
+                        0));
 
   nsresult rv = PackPDU(aOpcode, aLen, PackArray<uint8_t>(aBuf, aLen),
                         *pdu);
@@ -448,7 +485,9 @@ BluetoothDaemonCoreModule::LeTestModeCmd(uint16_t aOpcode,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(0x01, 0x14, 0));
+  nsAutoPtr<DaemonSocketPDU> pdu(
+    new DaemonSocketPDU(SERVICE_ID, OPCODE_LE_TEST_MODE,
+                        0));
 
   nsresult rv = PackPDU(aOpcode, aLen, PackArray<uint8_t>(aBuf, aLen),
                         *pdu);
@@ -682,27 +721,48 @@ BluetoothDaemonCoreModule::HandleRsp(
     const DaemonSocketPDUHeader&,
     DaemonSocketPDU&,
     BluetoothResultHandler*) = {
-    [0x00] = &BluetoothDaemonCoreModule::ErrorRsp,
-    [0x01] = &BluetoothDaemonCoreModule::EnableRsp,
-    [0x02] = &BluetoothDaemonCoreModule::DisableRsp,
-    [0x03] = &BluetoothDaemonCoreModule::GetAdapterPropertiesRsp,
-    [0x04] = &BluetoothDaemonCoreModule::GetAdapterPropertyRsp,
-    [0x05] = &BluetoothDaemonCoreModule::SetAdapterPropertyRsp,
-    [0x06] = &BluetoothDaemonCoreModule::GetRemoteDevicePropertiesRsp,
-    [0x07] = &BluetoothDaemonCoreModule::GetRemoteDevicePropertyRsp,
-    [0x08] = &BluetoothDaemonCoreModule::SetRemoteDevicePropertyRsp,
-    [0x09] = &BluetoothDaemonCoreModule::GetRemoteServiceRecordRsp,
-    [0x0a] = &BluetoothDaemonCoreModule::GetRemoteServicesRsp,
-    [0x0b] = &BluetoothDaemonCoreModule::StartDiscoveryRsp,
-    [0x0c] = &BluetoothDaemonCoreModule::CancelDiscoveryRsp,
-    [0x0d] = &BluetoothDaemonCoreModule::CreateBondRsp,
-    [0x0e] = &BluetoothDaemonCoreModule::RemoveBondRsp,
-    [0x0f] = &BluetoothDaemonCoreModule::CancelBondRsp,
-    [0x10] = &BluetoothDaemonCoreModule::PinReplyRsp,
-    [0x11] = &BluetoothDaemonCoreModule::SspReplyRsp,
-    [0x12] = &BluetoothDaemonCoreModule::DutModeConfigureRsp,
-    [0x13] = &BluetoothDaemonCoreModule::DutModeSendRsp,
-    [0x14] = &BluetoothDaemonCoreModule::LeTestModeRsp,
+    [OPCODE_ERROR] =
+      &BluetoothDaemonCoreModule::ErrorRsp,
+    [OPCODE_ENABLE] =
+      &BluetoothDaemonCoreModule::EnableRsp,
+    [OPCODE_DISABLE] =
+      &BluetoothDaemonCoreModule::DisableRsp,
+    [OPCODE_GET_ADAPTER_PROPERTIES] =
+      &BluetoothDaemonCoreModule::GetAdapterPropertiesRsp,
+    [OPCODE_GET_ADAPTER_PROPERTY] =
+      &BluetoothDaemonCoreModule::GetAdapterPropertyRsp,
+    [OPCODE_SET_ADAPTER_PROPERTY] =
+      &BluetoothDaemonCoreModule::SetAdapterPropertyRsp,
+    [OPCODE_GET_REMOTE_DEVICE_PROPERTIES] =
+      &BluetoothDaemonCoreModule::GetRemoteDevicePropertiesRsp,
+    [OPCODE_GET_REMOTE_DEVICE_PROPERTY] =
+      &BluetoothDaemonCoreModule::GetRemoteDevicePropertyRsp,
+    [OPCODE_SET_REMOTE_DEVICE_PROPERTY] =
+      &BluetoothDaemonCoreModule::SetRemoteDevicePropertyRsp,
+    [OPCODE_GET_REMOTE_SERVICE_RECORD] =
+      &BluetoothDaemonCoreModule::GetRemoteServiceRecordRsp,
+    [OPCODE_GET_REMOTE_SERVICES] =
+      &BluetoothDaemonCoreModule::GetRemoteServicesRsp,
+    [OPCODE_START_DISCOVERY] =
+      &BluetoothDaemonCoreModule::StartDiscoveryRsp,
+    [OPCODE_CANCEL_DISCOVERY] =
+      &BluetoothDaemonCoreModule::CancelDiscoveryRsp,
+    [OPCODE_CREATE_BOND] =
+      &BluetoothDaemonCoreModule::CreateBondRsp,
+    [OPCODE_REMOVE_BOND] =
+      &BluetoothDaemonCoreModule::RemoveBondRsp,
+    [OPCODE_CANCEL_BOND] =
+      &BluetoothDaemonCoreModule::CancelBondRsp,
+    [OPCODE_PIN_REPLY] =
+      &BluetoothDaemonCoreModule::PinReplyRsp,
+    [OPCODE_SSP_REPLY] =
+      &BluetoothDaemonCoreModule::SspReplyRsp,
+    [OPCODE_DUT_MODE_CONFIGURE] =
+      &BluetoothDaemonCoreModule::DutModeConfigureRsp,
+    [OPCODE_DUT_MODE_SEND] =
+      &BluetoothDaemonCoreModule::DutModeSendRsp,
+    [OPCODE_LE_TEST_MODE] =
+      &BluetoothDaemonCoreModule::LeTestModeRsp,
   };
 
   MOZ_ASSERT(!NS_IsMainThread());
