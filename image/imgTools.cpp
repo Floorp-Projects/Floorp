@@ -198,26 +198,27 @@ imgTools::EncodeScaledImage(imgIContainer* aContainer,
     return EncodeImage(aContainer, aMimeType, aOutputOptions, aStream);
   }
 
-  // Use frame 0 from the image container.
-  RefPtr<SourceSurface> frame =
-    aContainer->GetFrame(imgIContainer::FRAME_FIRST,
-                         imgIContainer::FLAG_SYNC_DECODE);
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-
-  int32_t frameWidth = frame->GetSize().width;
-  int32_t frameHeight = frame->GetSize().height;
+  // Retrieve the image's size.
+  int32_t imageWidth = 0;
+  int32_t imageHeight = 0;
+  aContainer->GetWidth(&imageWidth);
+  aContainer->GetHeight(&imageHeight);
 
   // If the given width or height is zero we'll replace it with the image's
   // original dimensions.
-  if (aScaledWidth == 0) {
-    aScaledWidth = frameWidth;
-  } else if (aScaledHeight == 0) {
-    aScaledHeight = frameHeight;
-  }
+  IntSize scaledSize(aScaledWidth == 0 ? imageWidth : aScaledWidth,
+                     aScaledHeight == 0 ? imageHeight : aScaledHeight);
+
+  // Use frame 0 from the image container.
+  RefPtr<SourceSurface> frame =
+    aContainer->GetFrameAtSize(scaledSize,
+                               imgIContainer::FRAME_FIRST,
+                               imgIContainer::FLAG_HIGH_QUALITY_SCALING |
+                               imgIContainer::FLAG_SYNC_DECODE);
+  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
   RefPtr<DataSourceSurface> dataSurface =
-    Factory::CreateDataSourceSurface(IntSize(aScaledWidth, aScaledHeight),
-                                     SurfaceFormat::B8G8R8A8);
+    Factory::CreateDataSourceSurface(scaledSize, SurfaceFormat::B8G8R8A8);
   if (NS_WARN_IF(!dataSurface)) {
     return NS_ERROR_FAILURE;
   }
@@ -238,9 +239,10 @@ imgTools::EncodeScaledImage(imgIContainer* aContainer,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  IntSize frameSize = frame->GetSize();
   dt->DrawSurface(frame,
-                  Rect(0, 0, aScaledWidth, aScaledHeight),
-                  Rect(0, 0, frameWidth, frameHeight),
+                  Rect(0, 0, scaledSize.width, scaledSize.height),
+                  Rect(0, 0, frameSize.width, frameSize.height),
                   DrawSurfaceOptions(),
                   DrawOptions(1.0f, CompositionOp::OP_SOURCE));
 
