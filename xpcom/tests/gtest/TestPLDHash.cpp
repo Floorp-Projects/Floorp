@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "gtest/gtest.h"
 
 // This test mostly focuses on edge cases. But more coverage of normal
@@ -140,9 +140,9 @@ TEST(PLDHashTableTest, LazyStorage)
   ASSERT_EQ(t.ShallowSizeOfExcludingThis(moz_malloc_size_of), 0u);
 }
 
-// A trivial hash function is good enough here. It's also super-fast for
-// test_pldhash_grow_to_max_capacity() because we insert the integers 0..,
-// which means it's collision-free.
+// A trivial hash function is good enough here. It's also super-fast for the
+// GrowToMaxCapacity test because we insert the integers 0.., which means it's
+// collision-free.
 static PLDHashNumber
 TrivialHash(PLDHashTable *table, const void *key)
 {

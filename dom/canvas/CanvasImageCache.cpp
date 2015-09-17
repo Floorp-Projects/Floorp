@@ -216,7 +216,7 @@ public:
 };
 
 ImageCache::ImageCache()
-  : nsExpirationTracker<ImageCacheEntryData,4>(GENERATION_MS)
+  : nsExpirationTracker<ImageCacheEntryData,4>(GENERATION_MS, "ImageCache")
   , mTotal(0)
 {
   if (!sPrefsInitialized) {

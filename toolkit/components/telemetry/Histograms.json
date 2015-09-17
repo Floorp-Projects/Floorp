@@ -1524,6 +1524,12 @@
     "extended_statistics_ok": true,
     "description": "H2: Settings Initial Window (rounded to KB)"
   },
+  "SPDY_GOAWAY_PEER": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 32,
+    "description": "H2: goaway reason from peer from rfc 7540. 31 is none received."
+  },
   "DISK_CACHE_CORRUPT_DETAILS": {
     "expires_in_version": "40",
     "kind": "enumerated",
@@ -7389,6 +7395,12 @@
     "n_buckets": "15",
     "releaseChannelCollection": "opt-out",
     "description": "The number of times that a profile has seen the 'Set Default Browser' dialog."
+  },
+  "BROWSER_SET_DEFAULT_ALWAYS_CHECK": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
+    "description": "True if the profile has `browser.shell.checkDefaultBrowser` set to true."
   },
   "BROWSER_SET_DEFAULT_RESULT": {
     "expires_in_version": "never",

@@ -1875,10 +1875,6 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
   out->mFinishWhenEnded = aFinishWhenEnded;
 
   mAudioCaptured = true;
-  // Block the output stream initially.
-  // Decoders are responsible for removing the block while they are playing
-  // back into the output stream.
-  out->mStream->GetStream()->ChangeExplicitBlockerCount(1);
   if (mDecoder) {
     mDecoder->AddOutputStream(out->mStream->GetStream()->AsProcessedStream(),
                               aFinishWhenEnded);
@@ -3526,10 +3522,9 @@ void HTMLMediaElement::StartProgressTimer()
   NS_ASSERTION(!mProgressTimer, "Already started progress timer.");
 
   mProgressTimer = do_CreateInstance("@mozilla.org/timer;1");
-  mProgressTimer->InitWithFuncCallback(ProgressTimerCallback,
-                                       this,
-                                       PROGRESS_MS,
-                                       nsITimer::TYPE_REPEATING_SLACK);
+  mProgressTimer->InitWithNamedFuncCallback(
+    ProgressTimerCallback, this, PROGRESS_MS, nsITimer::TYPE_REPEATING_SLACK,
+    "HTMLMediaElement::ProgressTimerCallback");
 }
 
 void HTMLMediaElement::StartProgress()

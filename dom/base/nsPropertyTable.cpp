@@ -23,7 +23,7 @@
 
 #include "mozilla/MemoryReporting.h"
 
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "nsError.h"
 #include "nsIAtom.h"
 

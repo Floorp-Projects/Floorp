@@ -1121,7 +1121,11 @@ class StaticStrings
  *     private names).
  */
 class PropertyName : public JSAtom
-{};
+{
+  private:
+    /* Vacuous and therefore unimplemented. */
+    PropertyName* asPropertyName() = delete;
+};
 
 static_assert(sizeof(PropertyName) == sizeof(JSString),
               "string subclasses must be binary-compatible with JSString");

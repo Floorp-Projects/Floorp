@@ -53,6 +53,7 @@
 #include "ScriptSettings.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Snprintf.h"
 #include "mozilla/unused.h"
 
 // Other Classes
@@ -541,6 +542,14 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsTimeout)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsTimeout, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsTimeout, Release)
+
+nsresult
+nsTimeout::InitTimer(uint32_t aDelay)
+{
+  return mTimer->InitWithNameableFuncCallback(
+    nsGlobalWindow::TimerCallback, this, aDelay,
+    nsITimer::TYPE_ONE_SHOT, nsGlobalWindow::TimerNameCallback);
+}
 
 // Return true if this timeout has a refcount of 1. This is used to check
 // that dummy_timeout doesn't leak from nsGlobalWindow::RunTimeout.
@@ -12501,7 +12510,7 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
 
     nsRefPtr<nsTimeout> copy = timeout;
 
-    rv = timeout->InitTimer(TimerCallback, realInterval);
+    rv = timeout->InitTimer(realInterval);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -12757,7 +12766,7 @@ nsGlobalWindow::RescheduleTimeout(nsTimeout* aTimeout, const TimeStamp& now,
 
   // Reschedule the OS timer. Don't bother returning any error codes if
   // this fails since the callers of this method don't care about them.
-  nsresult rv = aTimeout->InitTimer(TimerCallback, delay.ToMilliseconds());
+  nsresult rv = aTimeout->InitTimer(delay.ToMilliseconds());
 
   if (NS_FAILED(rv)) {
     NS_ERROR("Error initializing timer for DOM timeout!");
@@ -13057,7 +13066,7 @@ nsresult nsGlobalWindow::ResetTimersForNonBackgroundWindow()
       timeout->mFiringDepth = firingDepth;
       timeout->Release();
 
-      nsresult rv = timeout->InitTimer(TimerCallback, delay.ToMilliseconds());
+      nsresult rv = timeout->InitTimer(delay.ToMilliseconds());
 
       if (NS_FAILED(rv)) {
         NS_WARNING("Error resetting non background timer for DOM timeout!");
@@ -13152,6 +13161,19 @@ nsGlobalWindow::TimerCallback(nsITimer *aTimer, void *aClosure)
   nsRefPtr<nsTimeout> timeout = (nsTimeout *)aClosure;
 
   timeout->mWindow->RunTimeout(timeout);
+}
+
+// static
+void
+nsGlobalWindow::TimerNameCallback(nsITimer* aTimer, void* aClosure, char* aBuf,
+                                  size_t aLen)
+{
+  nsRefPtr<nsTimeout> timeout = (nsTimeout*)aClosure;
+
+  const char* filename;
+  uint32_t lineNum, column;
+  timeout->mScriptHandler->GetLocation(&filename, &lineNum, &column);
+  snprintf(aBuf, aLen, "[content] %s:%u:%u", filename, lineNum, column);
 }
 
 //*****************************************************************************
@@ -13499,7 +13521,7 @@ nsGlobalWindow::ResumeTimeouts(bool aThawChildren)
       t->mTimer = do_CreateInstance("@mozilla.org/timer;1");
       NS_ENSURE_TRUE(t->mTimer, NS_ERROR_OUT_OF_MEMORY);
 
-      rv = t->InitTimer(TimerCallback, delay);
+      rv = t->InitTimer(delay);
       if (NS_FAILED(rv)) {
         t->mTimer = nullptr;
         return rv;

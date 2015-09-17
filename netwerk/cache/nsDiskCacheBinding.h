@@ -10,7 +10,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "nspr.h"
-#include "pldhash.h"
+#include "PLDHashTable.h"
 
 #include "nsISupports.h"
 #include "nsCacheEntry.h"

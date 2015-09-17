@@ -1636,10 +1636,10 @@ nsJSContext::BeginCycleCollectionCallback()
   // an incremental collection, and we want to be sure to finish it.
   CallCreateInstance("@mozilla.org/timer;1", &sICCTimer);
   if (sICCTimer) {
-    sICCTimer->InitWithFuncCallback(ICCTimerFired,
-                                    nullptr,
-                                    kICCIntersliceDelay,
-                                    nsITimer::TYPE_REPEATING_SLACK);
+    sICCTimer->InitWithNamedFuncCallback(ICCTimerFired, nullptr,
+                                         kICCIntersliceDelay,
+                                         nsITimer::TYPE_REPEATING_SLACK,
+                                         "ICCTimerFired");
   }
 }
 
@@ -2036,14 +2036,15 @@ nsJSContext::PokeGC(JS::gcreason::Reason aReason, int aDelay)
 
   static bool first = true;
 
-  sGCTimer->InitWithFuncCallback(GCTimerFired, reinterpret_cast<void *>(aReason),
-                                 aDelay
-                                 ? aDelay
-                                 : (first
-                                    ? NS_FIRST_GC_DELAY
-                                    : NS_GC_DELAY),
-                                 nsITimer::TYPE_ONE_SHOT);
-
+  sGCTimer->InitWithNamedFuncCallback(GCTimerFired,
+                                      reinterpret_cast<void *>(aReason),
+                                      aDelay
+                                      ? aDelay
+                                      : (first
+                                         ? NS_FIRST_GC_DELAY
+                                         : NS_GC_DELAY),
+                                      nsITimer::TYPE_ONE_SHOT,
+                                      "GCTimerFired");
   first = false;
 }
 
@@ -2062,9 +2063,11 @@ nsJSContext::PokeShrinkGCBuffers()
     return;
   }
 
-  sShrinkGCBuffersTimer->InitWithFuncCallback(ShrinkGCBuffersTimerFired, nullptr,
-                                              NS_SHRINK_GC_BUFFERS_DELAY,
-                                              nsITimer::TYPE_ONE_SHOT);
+  sShrinkGCBuffersTimer->InitWithNamedFuncCallback(ShrinkGCBuffersTimerFired,
+                                                   nullptr,
+                                                   NS_SHRINK_GC_BUFFERS_DELAY,
+                                                   nsITimer::TYPE_ONE_SHOT,
+                                                   "ShrinkGCBuffersTimerFired");
 }
 
 // static
@@ -2082,9 +2085,10 @@ nsJSContext::PokeShrinkingGC()
     return;
   }
 
-  sShrinkingGCTimer->InitWithFuncCallback(ShrinkingGCTimerFired, nullptr,
-                                          sCompactOnUserInactiveDelay,
-                                          nsITimer::TYPE_ONE_SHOT);
+  sShrinkingGCTimer->InitWithNamedFuncCallback(ShrinkingGCTimerFired, nullptr,
+                                               sCompactOnUserInactiveDelay,
+                                               nsITimer::TYPE_ONE_SHOT,
+                                               "ShrinkingGCTimerFired");
 }
 
 // static
@@ -2104,9 +2108,10 @@ nsJSContext::MaybePokeCC()
     // We can kill some objects before running forgetSkippable.
     nsCycleCollector_dispatchDeferredDeletion();
 
-    sCCTimer->InitWithFuncCallback(CCTimerFired, nullptr,
-                                   NS_CC_SKIPPABLE_DELAY,
-                                   nsITimer::TYPE_REPEATING_SLACK);
+    sCCTimer->InitWithNamedFuncCallback(CCTimerFired, nullptr,
+                                        NS_CC_SKIPPABLE_DELAY,
+                                        nsITimer::TYPE_REPEATING_SLACK,
+                                        "CCTimerFired");
   }
 }
 
@@ -2263,10 +2268,11 @@ DOMGCSliceCallback(JSRuntime *aRt, JS::GCProgress aProgress, const JS::GCDescrip
       if (aDesc.isCompartment_) {
         if (!sFullGCTimer && !sShuttingDown) {
           CallCreateInstance("@mozilla.org/timer;1", &sFullGCTimer);
-          sFullGCTimer->InitWithFuncCallback(FullGCTimerFired,
-                                             nullptr,
-                                             NS_FULL_GC_DELAY,
-                                             nsITimer::TYPE_ONE_SHOT);
+          sFullGCTimer->InitWithNamedFuncCallback(FullGCTimerFired,
+                                                  nullptr,
+                                                  NS_FULL_GC_DELAY,
+                                                  nsITimer::TYPE_ONE_SHOT,
+                                                  "FullGCTimerFired");
         }
       } else {
         nsJSContext::KillFullGCTimer();
@@ -2295,10 +2301,11 @@ DOMGCSliceCallback(JSRuntime *aRt, JS::GCProgress aProgress, const JS::GCDescrip
       nsJSContext::KillInterSliceGCTimer();
       if (!sShuttingDown) {
         CallCreateInstance("@mozilla.org/timer;1", &sInterSliceGCTimer);
-        sInterSliceGCTimer->InitWithFuncCallback(InterSliceGCTimerFired,
-                                                 nullptr,
-                                                 NS_INTERSLICE_GC_DELAY,
-                                                 nsITimer::TYPE_ONE_SHOT);
+        sInterSliceGCTimer->InitWithNamedFuncCallback(InterSliceGCTimerFired,
+                                                      nullptr,
+                                                      NS_INTERSLICE_GC_DELAY,
+                                                      nsITimer::TYPE_ONE_SHOT,
+                                                      "InterSliceGCTimerFired");
       }
 
       if (ShouldTriggerCC(nsCycleCollector_suspectedCount())) {

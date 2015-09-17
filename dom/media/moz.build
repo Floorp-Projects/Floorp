@@ -144,7 +144,6 @@ EXPORTS += [
     'StreamBuffer.h',
     'ThreadPoolCOMListener.h',
     'TimeUnits.h',
-    'TimeVarying.h',
     'TrackUnionStream.h',
     'VideoFrameContainer.h',
     'VideoSegment.h',

@@ -24,29 +24,6 @@ GetBoolName(bool aBool)
 }
 
 static const char*
-GetEventMessageName(EventMessage aMessage)
-{
-  switch (aMessage) {
-    case eCompositionStart:
-      return "eCompositionStart";
-    case eCompositionEnd:
-      return "eCompositionEnd";
-    case eCompositionUpdate:
-      return "eCompositionUpdate";
-    case eCompositionChange:
-      return "eCompositionChange";
-    case eCompositionCommitAsIs:
-      return "eCompositionCommitAsIs";
-    case eCompositionCommit:
-      return "eCompositionCommit";
-    case eSetSelection:
-      return "eSetSelection";
-    default:
-      return "unacceptable event message";
-  }
-}
-
-static const char*
 GetNotificationName(const IMENotification* aNotification)
 {
   if (!aNotification) {
@@ -851,7 +828,7 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
      "mMessage=%s, mData=\"%s\" (Length()=%u), mRanges->Length()=%u }), "
      "mPendingEventsNeedingAck=%u, mIsComposing=%s, "
      "mRequestedToCommitOrCancelComposition=%s",
-     this, GetEventMessageName(aEvent.mMessage),
+     this, ToChar(aEvent.mMessage),
      NS_ConvertUTF16toUTF8(aEvent.mData).get(), aEvent.mData.Length(),
      aEvent.mRanges ? aEvent.mRanges->Length() : 0, mPendingEventsNeedingAck,
      GetBoolName(mIsComposing),
@@ -905,7 +882,7 @@ ContentCacheInParent::OnSelectionEvent(
      "mMessage=%s, mOffset=%u, mLength=%u, mReversed=%s, "
      "mExpandToClusterBoundary=%s, mUseNativeLineBreak=%s }), "
      "mPendingEventsNeedingAck=%u, mIsComposing=%s",
-     this, GetEventMessageName(aSelectionEvent.mMessage),
+     this, ToChar(aSelectionEvent.mMessage),
      aSelectionEvent.mOffset, aSelectionEvent.mLength,
      GetBoolName(aSelectionEvent.mReversed),
      GetBoolName(aSelectionEvent.mExpandToClusterBoundary),
@@ -925,7 +902,7 @@ ContentCacheInParent::OnEventNeedingAckHandled(nsIWidget* aWidget,
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("ContentCacheInParent: 0x%p OnEventNeedingAckHandled(aWidget=0x%p, "
      "aMessage=%s), mPendingEventsNeedingAck=%u",
-     this, aWidget, GetEventMessageName(aMessage), mPendingEventsNeedingAck));
+     this, aWidget, ToChar(aMessage), mPendingEventsNeedingAck));
 
   MOZ_RELEASE_ASSERT(mPendingEventsNeedingAck > 0);
   if (--mPendingEventsNeedingAck) {
