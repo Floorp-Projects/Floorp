@@ -3,11 +3,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import string
+
+from marionette import MarionetteTestCase
+
 from marionette_driver.by import By
 from marionette_driver.marionette import Actions
 from marionette_driver.selection import SelectionManager
-from marionette import MarionetteTestCase
-import string
 
 
 class CommonCaretTestCase(object):
@@ -98,7 +100,7 @@ class CommonCaretTestCase(object):
         self.actions.flick(el, touch_caret0_x, touch_caret0_y,
                            touch_caret1_x, touch_caret1_y).perform()
 
-        el.send_keys(content_to_add)
+        self.actions.key_down(content_to_add).key_up(content_to_add).perform()
         assertFunc(target_content, sel.content)
 
     def _test_move_caret_to_end_by_dragging_touch_caret_to_bottom_right_corner(self, el, assertFunc):
@@ -116,7 +118,7 @@ class CommonCaretTestCase(object):
         dest_x, dest_y = el.size['width'], el.size['height']
         self.actions.flick(el, src_x, src_y, dest_x, dest_y).perform()
 
-        el.send_keys(content_to_add)
+        self.actions.key_down(content_to_add).key_up(content_to_add).perform()
         assertFunc(target_content, sel.content)
 
     def _test_move_caret_to_front_by_dragging_touch_caret_to_front_of_content(self, el, assertFunc):
@@ -141,7 +143,7 @@ class CommonCaretTestCase(object):
         # Move touch caret to the front of the input box.
         self.actions.flick(el, src_x, src_y, dest_x, dest_y).perform()
 
-        el.send_keys(content_to_add)
+        self.actions.key_down(content_to_add).key_up(content_to_add).perform()
         assertFunc(target_content, sel.content)
 
     def _test_touch_caret_timeout_by_dragging_it_to_top_left_corner_after_timout(self, el, assertFunc):
@@ -169,7 +171,7 @@ class CommonCaretTestCase(object):
         dest_x, dest_y = 0, 0
         self.actions.wait(timeout).flick(el, src_x, src_y, dest_x, dest_y).perform()
 
-        el.send_keys(content_to_add)
+        self.actions.key_down(content_to_add).key_up(content_to_add).perform()
         assertFunc(non_target_content, sel.content)
 
     def _test_touch_caret_hides_after_receiving_wheel_event(self, el, assertFunc):
@@ -204,7 +206,7 @@ class CommonCaretTestCase(object):
         )
         self.actions.flick(el, src_x, src_y, dest_x, dest_y).perform()
 
-        el.send_keys(content_to_add)
+        self.actions.key_down(content_to_add).key_up(content_to_add).perform()
         assertFunc(non_target_content, sel.content)
 
     def _test_caret_not_appear_when_typing_in_scrollable_content(self, el, assertFunc):

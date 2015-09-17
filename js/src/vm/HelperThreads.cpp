@@ -1277,7 +1277,8 @@ HelperThread::handleParseWorkload()
 
     // FinishOffThreadScript will need to be called on the script to
     // migrate it into the correct compartment.
-    HelperThreadState().parseFinishedList().append(parseTask);
+    if (!HelperThreadState().parseFinishedList().append(parseTask))
+        CrashAtUnhandlableOOM("handleParseWorkload");
 
     parseTask = nullptr;
 

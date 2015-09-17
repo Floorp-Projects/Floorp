@@ -33,6 +33,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIInputStream.h"
 #include "nsILineInputStream.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/Types.h"
 #include "mozilla/PeerIdentity.h"
 #include "mozilla/dom/ContentChild.h"
@@ -1579,6 +1580,16 @@ nsresult MediaManager::GenerateUUID(nsAString& aResult)
   return NS_OK;
 }
 
+enum class GetUserMediaSecurityState {
+  Other = 0,
+  HTTPS = 1,
+  File = 2,
+  App = 3,
+  Localhost = 4,
+  Loop = 5,
+  Privileged = 6
+};
+
 /**
  * The entry point for this file. A call from Navigator::mozGetUserMedia
  * will end up here. MediaManager is a singleton that is responsible
@@ -1630,9 +1641,47 @@ MediaManager::GetUserMedia(nsPIDOMWindow* aWindow,
   bool privileged = loop || IsPrivileged();
   bool isHTTPS = false;
   docURI->SchemeIs("https", &isHTTPS);
+  nsCString host;
+  nsresult rv = docURI->GetHost(host);
+  // Test for some other schemes that ServiceWorker recognizes
+  bool isFile;
+  docURI->SchemeIs("file", &isFile);
+  bool isApp;
+  docURI->SchemeIs("app", &isApp);
+  // Same localhost check as ServiceWorkers uses
+  // (see IsFromAuthenticatedOriginInternal())
+  bool isLocalhost = NS_SUCCEEDED(rv) &&
+                     (host.LowerCaseEqualsLiteral("localhost") ||
+                      host.LowerCaseEqualsLiteral("127.0.0.1") ||
+                      host.LowerCaseEqualsLiteral("::1"));
+
+  // Record telemetry about whether the source of the call was secure, i.e.,
+  // privileged or HTTPS.  We may handle other cases
+  if (loop) {
+    Telemetry::Accumulate(Telemetry::WEBRTC_GET_USER_MEDIA_SECURE_ORIGIN,
+                          (uint32_t) GetUserMediaSecurityState::Loop);
+  } else if (privileged) {
+    Telemetry::Accumulate(Telemetry::WEBRTC_GET_USER_MEDIA_SECURE_ORIGIN,
+                          (uint32_t) GetUserMediaSecurityState::Privileged);
+  } else if (isHTTPS) {
+    Telemetry::Accumulate(Telemetry::WEBRTC_GET_USER_MEDIA_SECURE_ORIGIN,
+                          (uint32_t) GetUserMediaSecurityState::HTTPS);
+  } else if (isFile) {
+    Telemetry::Accumulate(Telemetry::WEBRTC_GET_USER_MEDIA_SECURE_ORIGIN,
+                          (uint32_t) GetUserMediaSecurityState::File);
+  } else if (isApp) {
+    Telemetry::Accumulate(Telemetry::WEBRTC_GET_USER_MEDIA_SECURE_ORIGIN,
+                          (uint32_t) GetUserMediaSecurityState::App);
+  } else if (isLocalhost) {
+    Telemetry::Accumulate(Telemetry::WEBRTC_GET_USER_MEDIA_SECURE_ORIGIN,
+                          (uint32_t) GetUserMediaSecurityState::Localhost);
+  } else {
+    Telemetry::Accumulate(Telemetry::WEBRTC_GET_USER_MEDIA_SECURE_ORIGIN,
+                          (uint32_t) GetUserMediaSecurityState::Other);
+  }
 
   nsCString origin;
-  nsresult rv = nsPrincipal::GetOriginForURI(docURI, origin);
+  rv = nsPrincipal::GetOriginForURI(docURI, origin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

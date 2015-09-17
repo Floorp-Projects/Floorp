@@ -71,23 +71,44 @@ ShouldZoomToElement(const nsCOMPtr<dom::Element>& aElement) {
 }
 
 // Calculate the bounding rect of |aElement|, relative to the origin
-// of the document associated with |aShell|.
-// |aRootScrollFrame| should be the root scroll frame of the document in
-// question.
-// The implementation is adapted from Element::GetBoundingClientRect().
+// of the scrolled content of |aRootScrollFrame|.
+// The implementation of this calculation is adapted from
+// Element::GetBoundingClientRect().
+//
+// Where the element is contained inside a scrollable subframe, the
+// bounding rect is clipped to the bounds of the subframe.
 static CSSRect
-GetBoundingContentRect(const nsCOMPtr<nsIPresShell>& aShell,
-                       const nsCOMPtr<dom::Element>& aElement,
+GetBoundingContentRect(const nsCOMPtr<dom::Element>& aElement,
                        const nsIScrollableFrame* aRootScrollFrame) {
+
+  CSSRect result;
   if (nsIFrame* frame = aElement->GetPrimaryFrame()) {
-    return CSSRect::FromAppUnits(
+    nsIFrame* relativeTo = aRootScrollFrame->GetScrolledFrame();
+    result = CSSRect::FromAppUnits(
         nsLayoutUtils::GetAllInFlowRectsUnion(
             frame,
-            aShell->GetRootFrame(),
-            nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS)
-      + aRootScrollFrame->GetScrollPosition());
+            relativeTo,
+            nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS));
+
+    // If the element is contained in a scrollable frame that is not
+    // the root scroll frame, make sure to clip the result so that it is
+    // not larger than the containing scrollable frame's bounds.
+    nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetNearestScrollableFrame(frame);
+    if (scrollFrame && scrollFrame != aRootScrollFrame) {
+      nsIFrame* subFrame = do_QueryFrame(scrollFrame);
+      MOZ_ASSERT(subFrame);
+      // Get the bounds of the scroll frame in the same coordinate space
+      // as |result|.
+      CSSRect subFrameRect = CSSRect::FromAppUnits(
+          nsLayoutUtils::TransformFrameRectToAncestor(
+              subFrame,
+              subFrame->GetRectRelativeToSelf(),
+              relativeTo));
+
+      result = subFrameRect.Intersect(result);
+    }
   }
-  return CSSRect();
+  return result;
 }
 
 static bool
@@ -143,7 +164,27 @@ CalculateRectToZoomTo(const nsCOMPtr<nsIDocument>& aRootContentDocument,
   FrameMetrics metrics = nsLayoutUtils::CalculateBasicFrameMetrics(rootScrollFrame);
   CSSRect compositedArea(metrics.GetScrollOffset(), metrics.CalculateCompositedSizeInCssPixels());
   const CSSCoord margin = 15;
-  CSSRect rect = GetBoundingContentRect(shell, element, rootScrollFrame);
+  CSSRect rect = GetBoundingContentRect(element, rootScrollFrame);
+
+  // If the element is taller than the visible area of the page scale
+  // the height of the |rect| so that it has the same aspect ratio as
+  // the root frame.  The clipped |rect| is centered on the y value of
+  // the touch point. This allows tall narrow elements to be zoomed.
+  if (!rect.IsEmpty() && compositedArea.width > 0.0f) {
+    const float widthRatio = rect.width / compositedArea.width;
+    float targetHeight = compositedArea.height * widthRatio;
+    if (widthRatio < 0.9 && targetHeight < rect.height) {
+      const CSSPoint scrollPoint = CSSPoint::FromAppUnits(rootScrollFrame->GetScrollPosition());
+      float newY = aPoint.y + scrollPoint.y - (targetHeight * 0.5f);
+      if ((newY + targetHeight) > (rect.y + rect.height)) {
+        rect.y += rect.height - targetHeight;
+      } else if (newY > rect.y) {
+        rect.y = newY;
+      }
+      rect.height = targetHeight;
+    }
+  }
+
   rect = CSSRect(std::max(metrics.GetScrollableRect().x, rect.x - margin),
                  rect.y,
                  rect.width + 2 * margin,

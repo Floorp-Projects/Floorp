@@ -34,6 +34,7 @@ static const bool sForceHwcCopy = false;
 #define VDS_LOGV(msg, ...) ALOGV("[%s] " msg, \
         mDisplayName.string(), ##__VA_ARGS__)
 
+__attribute__((unused))
 static const char* dbgCompositionTypeStr(DisplaySurface::CompositionType type) {
     switch (type) {
         case DisplaySurface::COMPOSITION_UNKNOWN: return "UNKNOWN";
@@ -262,9 +263,6 @@ void VirtualDisplaySurface::onFrameCommitted() {
 
     resetPerFrameState();
 #endif
-}
-
-void VirtualDisplaySurface::dump(String8& /* result */) const {
 }
 
 void VirtualDisplaySurface::resizeBuffers(const uint32_t w, const uint32_t h) {

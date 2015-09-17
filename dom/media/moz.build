@@ -112,6 +112,7 @@ EXPORTS += [
     'EncodedBufferCache.h',
     'FileBlockCache.h',
     'FlushableTaskQueue.h',
+    'FrameStatistics.h',
     'Intervals.h',
     'Latency.h',
     'MediaCache.h',
