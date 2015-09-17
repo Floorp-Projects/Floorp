@@ -47,6 +47,10 @@
   box-shadow: none !important;
 }
 
+/* the normal theme adds box-shadow: <stuff> !important when the back-button is [open]. Fix: */
+#back-button[open="true"] > .toolbarbutton-icon {
+  box-shadow: none !important;
+}
 
 /* Force 1x image for back/forward button for now, otherwise it breaks the
    layout - Bug 1165360. */
