@@ -26,6 +26,8 @@
 
 #include <inttypes.h>
 
+using namespace mozilla;
+
 // Size to use for PLArena block allocations.
 static const size_t ARENA_PAGE_SIZE = 8192;
 
@@ -162,17 +164,17 @@ nsPresArena::AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
         break;
 #include "nsFrameIdList.h"
 #undef FRAME_ID
-      case nsLineBox_id:
+      case eArenaObjectID_nsLineBox:
         p = &aArenaStats->mLineBoxes;
         break;
-      case nsRuleNode_id:
+      case eArenaObjectID_nsRuleNode:
         p = &aArenaStats->mRuleNodes;
         break;
-      case nsStyleContext_id:
+      case eArenaObjectID_nsStyleContext:
         p = &aArenaStats->mStyleContexts;
         break;
 #define STYLE_STRUCT(name_, checkdata_cb_)      \
-        case nsStyle##name_##_id:
+        case eArenaObjectID_nsStyle##name_:
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
         p = &aArenaStats->mStyleStructs;

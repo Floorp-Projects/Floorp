@@ -25,6 +25,7 @@
 #include "nsIDocument.h"
 #include "nsPrintfCString.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ArenaObjectID.h"
 
 #ifdef DEBUG
 // #define NOISY_DEBUG
@@ -1178,7 +1179,8 @@ void*
 nsStyleContext::operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW
 {
   // Check the recycle list first.
-  return aPresContext->PresShell()->AllocateByObjectID(nsPresArena::nsStyleContext_id, sz);
+  return aPresContext->PresShell()->
+    AllocateByObjectID(eArenaObjectID_nsStyleContext, sz);
 }
 
 // Overridden to prevent the global delete from being called, since the memory
@@ -1194,7 +1196,8 @@ nsStyleContext::Destroy()
 
   // Don't let the memory be freed, since it will be recycled
   // instead. Don't call the global operator delete.
-  presContext->PresShell()->FreeByObjectID(nsPresArena::nsStyleContext_id, this);
+  presContext->PresShell()->
+    FreeByObjectID(eArenaObjectID_nsStyleContext, this);
 }
 
 already_AddRefed<nsStyleContext>
