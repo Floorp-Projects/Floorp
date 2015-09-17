@@ -7,6 +7,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "OSCrypto",
                                   "resource://gre/modules/OSCrypto.jsm");
 
 const CRYPT_PROTECT_UI_FORBIDDEN = 1;
+const IE7_FORM_PASSWORDS_MIGRATOR_NAME = "IE7FormPasswords";
 const LOGINS_KEY =  "Software\\Microsoft\\Internet Explorer\\IntelliForms\\Storage2";
 const EXTENSION = "-backup";
 const TESTED_WEBSITES = {
@@ -273,7 +274,7 @@ function getFirstResourceOfType(type) {
                  .wrappedJSObject;
   let migrators = migrator.getResources();
   for (let m of migrators) {
-    if (m.type == type) {
+    if (m.name == IE7_FORM_PASSWORDS_MIGRATOR_NAME && m.type == type) {
       return m;
     }
   }
