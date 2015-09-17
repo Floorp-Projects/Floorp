@@ -19,8 +19,12 @@ Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
-const {PushServiceHttp2Crypto, concatArray} =
-  Cu.import("resource://gre/modules/PushServiceHttp2Crypto.jsm");
+const {
+  PushCrypto,
+  concatArray,
+  getEncryptionKeyParams,
+  getEncryptionParams,
+} = Cu.import("resource://gre/modules/PushCrypto.jsm");
 
 this.EXPORTED_SYMBOLS = ["PushServiceHttp2"];
 
@@ -176,30 +180,10 @@ PushChannelListener.prototype = {
   }
 };
 
-var parseHeaderFieldParams = (m, v) => {
-  var i = v.indexOf('=');
-  if (i >= 0) {
-    // A quoted string with internal quotes is invalid for all the possible
-    // values of this header field.
-    m[v.substring(0, i).trim()] = v.substring(i + 1).trim()
-                                    .replace(/^"(.*)"$/, '$1');
-  }
-  return m;
-};
-
 function encryptKeyFieldParser(aRequest) {
   try {
     var encryptKeyField = aRequest.getRequestHeader("Encryption-Key");
-
-    var params = encryptKeyField.split(',');
-    return params.reduce((m, p) => {
-      var pmap = p.split(';').reduce(parseHeaderFieldParams, {});
-      if (pmap.keyid && pmap.dh) {
-        m[pmap.keyid] = pmap.dh;
-      }
-      return m;
-    }, {});
-
+    return getEncryptionKeyParams(encryptKeyField);
   } catch(e) {
     // getRequestHeader can throw.
     return null;
@@ -208,10 +192,8 @@ function encryptKeyFieldParser(aRequest) {
 
 function encryptFieldParser(aRequest) {
   try {
-    return aRequest.getRequestHeader("Encryption")
-             .split(',', 1)[0]
-             .split(';')
-             .reduce(parseHeaderFieldParams, {});
+    var encryptField = aRequest.getRequestHeader("Encryption");
+    return getEncryptionParams(encryptField);
   } catch(e) {
     // getRequestHeader can throw.
     return null;
@@ -533,7 +515,7 @@ this.PushServiceHttp2 = {
       retries: 0
     })
     .then(result =>
-      PushServiceHttp2Crypto.generateKeys()
+      PushCrypto.generateKeys()
       .then(exportedKeys => {
         result.p256dhPublicKey = exportedKeys[0];
         result.p256dhPrivateKey = exportedKeys[1];
@@ -724,34 +706,11 @@ this.PushServiceHttp2 = {
 
     for (let i = 0; i < aSubscriptions.length; i++) {
       let record = aSubscriptions[i];
-      if (record.p256dhPublicKey && record.p256dhPrivateKey) {
+      this._mainPushService.ensureP256dhKey(record).then(record => {
         this._startSingleConnection(record);
-      } else {
-        // We do not have a encryption key. so we need to generate it. This
-        // is only going to happen on db upgrade from version 4 to higher.
-        PushServiceHttp2Crypto.generateKeys()
-          .then(exportedKeys => {
-            if (this._mainPushService) {
-              return this._mainPushService
-                .updateRecordAndNotifyApp(record.subscriptionUri, record => {
-                  record.p256dhPublicKey = exportedKeys[0];
-                  record.p256dhPrivateKey = exportedKeys[1];
-                  return record;
-                });
-            }
-          }, error => {
-            record = null;
-            if (this._mainPushService) {
-              this._mainPushService
-                .dropRegistrationAndNotifyApp(record.subscriptionUri);
-            }
-          })
-          .then(_ => {
-            if (record) {
-              this._startSingleConnection(record);
-            }
-          });
-      }
+      }, error => {
+        debug("startConnections: Error updating record " + record.keyID);
+      });
     }
   },
 
@@ -875,22 +834,16 @@ this.PushServiceHttp2 = {
   _pushChannelOnStop: function(aUri, aAckUri, aMessage, dh, salt, rs) {
     debug("pushChannelOnStop() ");
 
-    this._mainPushService.getByKeyID(aUri)
-    .then(aPushRecord =>
-      PushServiceHttp2Crypto.decodeMsg(aMessage, aPushRecord.p256dhPrivateKey,
-                                       dh, salt, rs)
-      .then(msg => {
-        var msgString = '';
-        for (var i=0; i<msg.length; i++) {
-          msgString += String.fromCharCode(msg[i]);
-        }
-        return this._mainPushService.receivedPushMessage(aUri,
-                                                         msgString,
-                                                         record => {
-          // Always update the stored record.
-          return record;
-        });
-      })
+    let cryptoParams = {
+      dh: dh,
+      salt: salt,
+      rs: rs,
+    };
+    this._mainPushService.receivedPushMessage(
+      aUri, aMessage, cryptoParams, record => {
+        // Always update the stored record.
+        return record;
+      }
     )
     .then(_ => this._ackMsgRecv(aAckUri))
     .catch(err => {
@@ -907,8 +860,6 @@ function PushRecordHttp2(record) {
   PushRecord.call(this, record);
   this.subscriptionUri = record.subscriptionUri;
   this.pushReceiptEndpoint = record.pushReceiptEndpoint;
-  this.p256dhPublicKey = record.p256dhPublicKey;
-  this.p256dhPrivateKey = record.p256dhPrivateKey;
 }
 
 PushRecordHttp2.prototype = Object.create(PushRecord.prototype, {
@@ -922,13 +873,11 @@ PushRecordHttp2.prototype = Object.create(PushRecord.prototype, {
 PushRecordHttp2.prototype.toRegistration = function() {
   let registration = PushRecord.prototype.toRegistration.call(this);
   registration.pushReceiptEndpoint = this.pushReceiptEndpoint;
-  registration.p256dhKey = this.p256dhPublicKey;
   return registration;
 };
 
 PushRecordHttp2.prototype.toRegister = function() {
   let register = PushRecord.prototype.toRegister.call(this);
   register.pushReceiptEndpoint = this.pushReceiptEndpoint;
-  register.p256dhKey = this.p256dhPublicKey;
   return register;
 };
