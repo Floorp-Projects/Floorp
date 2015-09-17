@@ -1913,7 +1913,7 @@ GeckoDriver.prototype.findElement = function(cmd, resp) {
       resp.body.value = yield new Promise((resolve, reject) => {
         let win = this.getCurrentWindow();
         this.curBrowser.elementManager.find(
-            { frame: win },
+            {frame: win},
             cmd.parameters,
             this.searchTimeout,
             false /* all */,
@@ -1946,7 +1946,7 @@ GeckoDriver.prototype.findElements = function(cmd, resp) {
       resp.body = yield new Promise((resolve, reject) => {
         let win = this.getCurrentWindow();
         this.curBrowser.elementManager.find(
-            { frame: win },
+            {frame: win},
             cmd.parameters,
             this.searchTimeout,
             true /* all */,
