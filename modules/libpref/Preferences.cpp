@@ -37,7 +37,7 @@
 #include "nsPrintfCString.h"
 
 #include "nsQuickSort.h"
-#include "pldhash.h"
+#include "PLDHashTable.h"
 
 #include "prefapi.h"
 #include "prefread.h"

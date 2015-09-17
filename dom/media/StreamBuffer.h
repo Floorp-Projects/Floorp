@@ -61,7 +61,6 @@ public:
    * the same track across StreamBuffers. A StreamBuffer should never have
    * two tracks with the same ID (even if they don't overlap in time).
    * TODO Tracks can also be enabled and disabled over time.
-   * TODO Add TimeVarying<StreamTime,bool> mEnabled.
    * Takes ownership of aSegment.
    */
   class Track final

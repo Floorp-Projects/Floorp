@@ -2111,6 +2111,13 @@ GenerateLcovInfo(JSContext* cx, JSCompartment* comp, GenericPrinter& out)
             if (script->compartment() != comp)
                 continue;
 
+            // If we evaluate some code which contains a syntax error, then we
+            // might produce a JSScript which has no associated bytecode. This
+            // line filters out this kind of scripts.
+            if (!script->code())
+                continue;
+
+            // Filter out any JSScript which is not the top-level of a file.
             if (script->functionNonDelazifying())
                 continue;
 

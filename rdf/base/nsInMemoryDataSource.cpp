@@ -61,7 +61,7 @@
 #include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
 #include "rdfutil.h"
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "plstr.h"
 #include "mozilla/Logging.h"
 #include "rdf.h"

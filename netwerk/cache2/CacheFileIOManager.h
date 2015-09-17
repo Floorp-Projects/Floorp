@@ -10,6 +10,7 @@
 #include "nsIEventTarget.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/SHA1.h"
 #include "mozilla/TimeStamp.h"
 #include "nsTArray.h"
@@ -69,7 +70,7 @@ private:
   virtual ~CacheFileHandle();
 
   const SHA1Sum::Hash *mHash;
-  bool                 mIsDoomed;
+  mozilla::Atomic<bool,ReleaseAcquire> mIsDoomed;
   bool                 mPriority;
   bool                 mClosed;
   bool                 mSpecialFile;

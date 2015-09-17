@@ -8,6 +8,7 @@
 
 #include "nsLineBox.h"
 
+#include "mozilla/ArenaObjectID.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Likely.h"
 #include "mozilla/WritingModes.h"
@@ -148,14 +149,14 @@ nsLineBox::NoteFramesMovedFrom(nsLineBox* aFromLine)
 void*
 nsLineBox::operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW
 {
-  return aPresShell->AllocateByObjectID(nsPresArena::nsLineBox_id, sz);
+  return aPresShell->AllocateByObjectID(eArenaObjectID_nsLineBox, sz);
 }
 
 void
 nsLineBox::Destroy(nsIPresShell* aPresShell)
 {
   this->nsLineBox::~nsLineBox();
-  aPresShell->FreeByObjectID(nsPresArena::nsLineBox_id, this);
+  aPresShell->FreeByObjectID(eArenaObjectID_nsLineBox, this);
 }
 
 void

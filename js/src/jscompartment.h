@@ -465,13 +465,15 @@ struct JSCompartment
         IsDebuggee = 1 << 0,
         DebuggerObservesAllExecution = 1 << 1,
         DebuggerObservesAsmJS = 1 << 2,
-        DebuggerNeedsDelazification = 1 << 3
+        DebuggerObservesCoverage = 1 << 3,
+        DebuggerNeedsDelazification = 1 << 4
     };
 
     unsigned                     debugModeBits;
 
     static const unsigned DebuggerObservesMask = IsDebuggee |
                                                  DebuggerObservesAllExecution |
+                                                 DebuggerObservesCoverage |
                                                  DebuggerObservesAsmJS;
 
     void updateDebuggerObservesFlag(unsigned flag);
@@ -651,6 +653,22 @@ struct JSCompartment
     void updateDebuggerObservesAsmJS() {
         updateDebuggerObservesFlag(DebuggerObservesAsmJS);
     }
+
+    // True if this compartment's global is a debuggee of some Debugger object
+    // whose collectCoverageInfo flag is true.
+    bool debuggerObservesCoverage() const {
+        static const unsigned Mask = DebuggerObservesCoverage;
+        return (debugModeBits & Mask) == Mask;
+    }
+    void updateDebuggerObservesCoverage();
+
+    // The code coverage can be enabled either for each compartment, with the
+    // Debugger API, or for the entire runtime.
+    bool collectCoverage() const {
+        return debuggerObservesCoverage() ||
+               runtimeFromAnyThread()->profilingScripts;
+    }
+    void clearScriptCounts();
 
     bool needsDelazificationForDebugger() const {
         return debugModeBits & DebuggerNeedsDelazification;

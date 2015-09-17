@@ -30,7 +30,7 @@
 // Form related includes
 #include "nsIDOMHTMLFormElement.h"
 
-#include "pldhash.h"
+#include "PLDHashTable.h"
 
 #ifdef DEBUG_CONTENT_LIST
 #include "nsIContentIterator.h"

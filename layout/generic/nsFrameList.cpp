@@ -4,14 +4,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsFrameList.h"
-#include "nsContainerFrame.h"
-#include "nsLayoutUtils.h"
-#include "nsPresContext.h"
-#include "nsIPresShell.h"
 
+#include "mozilla/ArenaObjectID.h"
+#include "nsBidiPresUtils.h"
+#include "nsContainerFrame.h"
 #include "nsGkAtoms.h"
 #include "nsILineIterator.h"
-#include "nsBidiPresUtils.h"
+#include "nsIPresShell.h"
+#include "nsLayoutUtils.h"
+#include "nsPresContext.h"
+
+using namespace mozilla;
 
 namespace mozilla {
 namespace layout {
@@ -24,7 +27,7 @@ const AlignedFrameListBytes gEmptyFrameListBytes = { 0 };
 void*
 nsFrameList::operator new(size_t sz, nsIPresShell* aPresShell) CPP_THROW_NEW
 {
-  return aPresShell->AllocateByObjectID(nsPresArena::nsFrameList_id, sz);
+  return aPresShell->AllocateByObjectID(eArenaObjectID_nsFrameList, sz);
 }
 
 void
@@ -33,7 +36,7 @@ nsFrameList::Delete(nsIPresShell* aPresShell)
   NS_PRECONDITION(this != &EmptyList(), "Shouldn't Delete() this list");
   NS_ASSERTION(IsEmpty(), "Shouldn't Delete() a non-empty list");
 
-  aPresShell->FreeByObjectID(nsPresArena::nsFrameList_id, this);
+  aPresShell->FreeByObjectID(eArenaObjectID_nsFrameList, this);
 }
 
 void

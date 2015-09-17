@@ -916,6 +916,11 @@ public:
   }
 
   /**
+   * Returns the RestyleManager's restyle generation counter.
+   */
+  uint64_t GetRestyleGeneration() const;
+
+  /**
    * Returns whether there are any pending restyles or reflows.
    */
   bool HasPendingRestyleOrReflow();
