@@ -20,7 +20,7 @@
 #include "nsRuleProcessorData.h"
 #include <algorithm>
 #include "nsIAtom.h"
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "nsICSSPseudoComparator.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/css/StyleRule.h"

@@ -45,7 +45,7 @@
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheContainer.h"
 #include "nsStyleSet.h"
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "nsAttrAndChildArray.h"
 #include "nsDOMAttributeMap.h"
 #include "nsIContentViewer.h"

@@ -33,7 +33,7 @@
 #include "nsCCUncollectableMarker.h"
 #include "mozAutoDocUpdate.h"
 
-#include "pldhash.h"
+#include "PLDHashTable.h"
 #include "prprf.h"
 #include "nsWrapperCacheInlines.h"
 

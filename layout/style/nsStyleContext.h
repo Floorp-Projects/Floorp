@@ -73,6 +73,13 @@ public:
   void* operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW;
   void Destroy();
 
+  // These two methods are for use by ArenaRefPtr.
+  static mozilla::ArenaObjectID ArenaObjectID()
+  {
+    return mozilla::eArenaObjectID_nsStyleContext;
+  }
+  nsIPresShell* Arena();
+
 #ifdef DEBUG
   /**
    * Initializes a cached pref, which is only used in DEBUG code.

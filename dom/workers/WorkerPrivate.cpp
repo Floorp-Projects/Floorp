@@ -1188,8 +1188,9 @@ public:
       return false;
     }
 
-    if (NS_FAILED(timer->InitWithFuncCallback(DummyCallback, nullptr, aDelayMS,
-                                              nsITimer::TYPE_ONE_SHOT))) {
+    if (NS_FAILED(timer->InitWithNamedFuncCallback(
+          DummyCallback, nullptr, aDelayMS, nsITimer::TYPE_ONE_SHOT,
+          "dom::workers::DummyCallback(1)"))) {
       JS_ReportError(aCx, "Failed to start timer!");
       return false;
     }
@@ -4536,9 +4537,9 @@ WorkerPrivate::SetGCTimerMode(GCTimerMode aMode)
   }
 
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mGCTimer->SetTarget(target)));
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mGCTimer->InitWithFuncCallback(DummyCallback,
-                                                              nullptr, delay,
-                                                              type)));
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+    mGCTimer->InitWithNamedFuncCallback(DummyCallback, nullptr, delay, type,
+                                        "dom::workers::DummyCallback(2)")));
 
   if (aMode == PeriodicTimer) {
     LOG(("Worker %p scheduled periodic GC timer\n", this));
@@ -5945,8 +5946,9 @@ WorkerPrivate::RescheduleTimeoutTimer(JSContext* aCx)
     (mTimeouts[0]->mTargetTime - TimeStamp::Now()).ToMilliseconds();
   uint32_t delay = delta > 0 ? std::min(delta, double(UINT32_MAX)) : 0;
 
-  nsresult rv = mTimer->InitWithFuncCallback(DummyCallback, nullptr, delay,
-                                             nsITimer::TYPE_ONE_SHOT);
+  nsresult rv = mTimer->InitWithNamedFuncCallback(
+    DummyCallback, nullptr, delay, nsITimer::TYPE_ONE_SHOT,
+    "dom::workers::DummyCallback(3)");
   if (NS_FAILED(rv)) {
     JS_ReportError(aCx, "Failed to start timer!");
     return false;

@@ -1782,7 +1782,9 @@ public:
   // That's 4 generations of 1s each.
   enum { TIMEOUT_MS = 1000 };
   ScrollFrameActivityTracker()
-    : nsExpirationTracker<ScrollFrameHelper,4>(TIMEOUT_MS) {}
+    : nsExpirationTracker<ScrollFrameHelper,4>(TIMEOUT_MS,
+                                               "ScrollFrameActivityTracker")
+  {}
   ~ScrollFrameActivityTracker() {
     AgeAllGenerations();
   }

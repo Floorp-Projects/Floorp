@@ -57,9 +57,13 @@ public:
   /**
    * Create a stream that will process audio for an AudioNode.
    * Takes ownership of aEngine.
+   * If aGraph is non-null, use that as the MediaStreamGraph, otherwise use
+   * aCtx's graph. aGraph is only non-null when called for AudioDestinationNode
+   * since the context's graph hasn't been set up in that case.
    */
   static already_AddRefed<AudioNodeStream>
-  Create(MediaStreamGraph* aGraph, AudioNodeEngine* aEngine, Flags aKind);
+  Create(AudioContext* aCtx, AudioNodeEngine* aEngine, Flags aKind,
+         MediaStreamGraph* aGraph = nullptr);
 
 protected:
   /**
@@ -67,8 +71,7 @@ protected:
    */
   AudioNodeStream(AudioNodeEngine* aEngine,
                   Flags aFlags,
-                  TrackRate aSampleRate,
-                  AudioContext::AudioContextId aContextId);
+                  TrackRate aSampleRate);
 
   ~AudioNodeStream();
 
@@ -132,15 +135,10 @@ public:
     return ((mFlags & NEED_MAIN_THREAD_FINISHED) && mFinished) ||
       (mFlags & NEED_MAIN_THREAD_CURRENT_TIME);
   }
-  virtual bool IsIntrinsicallyConsumed() const override
-  {
-    return true;
-  }
 
   // Any thread
   AudioNodeEngine* Engine() { return mEngine; }
   TrackRate SampleRate() const { return mSampleRate; }
-  AudioContext::AudioContextId AudioContextId() const override { return mAudioContextId; }
 
   /**
    * Convert a time in seconds on the destination stream to ticks
@@ -192,9 +190,6 @@ protected:
   OutputChunks mLastChunks;
   // The stream's sampling rate
   const TrackRate mSampleRate;
-  // This is necessary to be able to find all the nodes for a given
-  // AudioContext. It is set on the main thread, in the constructor.
-  const AudioContext::AudioContextId mAudioContextId;
   // Whether this is an internal or external stream
   const Flags mFlags;
   // The number of input channels that this stream requires. 0 means don't care.

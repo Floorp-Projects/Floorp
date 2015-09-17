@@ -2145,6 +2145,7 @@ SeparatorRequiredBetweenTokens(nsCSSTokenSerializationType aToken1,
              aToken2 == eCSSTokenSerialization_URange ||
              aToken2 == eCSSTokenSerialization_CDC;
     case eCSSTokenSerialization_Symbol_Hash:
+    case eCSSTokenSerialization_Symbol_Minus:
       return aToken2 == eCSSTokenSerialization_Ident ||
              aToken2 == eCSSTokenSerialization_Function ||
              aToken2 == eCSSTokenSerialization_URL_or_BadURL ||
@@ -2153,7 +2154,6 @@ SeparatorRequiredBetweenTokens(nsCSSTokenSerializationType aToken1,
              aToken2 == eCSSTokenSerialization_Percentage ||
              aToken2 == eCSSTokenSerialization_Dimension ||
              aToken2 == eCSSTokenSerialization_URange;
-    case eCSSTokenSerialization_Symbol_Minus:
     case eCSSTokenSerialization_Number:
       return aToken2 == eCSSTokenSerialization_Ident ||
              aToken2 == eCSSTokenSerialization_Function ||

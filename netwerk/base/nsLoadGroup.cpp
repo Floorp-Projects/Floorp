@@ -205,7 +205,7 @@ AppendRequestsToArray(PLDHashTable* aTable, nsTArray<nsIRequest*> *aArray)
     for (auto iter = aTable->Iter(); !iter.Done(); iter.Next()) {
         auto e = static_cast<RequestMapEntry*>(iter.Get());
         nsIRequest *request = e->mKey;
-        NS_ASSERTION(request, "What? Null key in pldhash entry?");
+        NS_ASSERTION(request, "What? Null key in PLDHashTable entry?");
 
         bool ok = !!aArray->AppendElement(request);
         if (!ok) {

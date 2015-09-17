@@ -379,6 +379,13 @@ JSRuntime::~JSRuntime()
                 wpmap->clear();
         }
 
+        /*
+         * Clear script counts map, to remove the strong reference on the
+         * JSScript key.
+         */
+        for (CompartmentsIter comp(this, SkipAtoms); !comp.done(); comp.next())
+            comp->clearScriptCounts();
+
         /* Clear atoms to remove GC roots and heap allocations. */
         finishAtoms();
 
