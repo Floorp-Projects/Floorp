@@ -7,6 +7,8 @@
 #ifndef vm_SavedStacks_h
 #define vm_SavedStacks_h
 
+#include "mozilla/FastBernoulliTrial.h"
+
 #include "jscntxt.h"
 #include "jsmath.h"
 #include "jswrapper.h"
@@ -151,12 +153,11 @@ class SavedStacks {
                                                       JS::ubi::StackFrame& ubiFrame,
                                                       MutableHandleObject outSavedFrameStack);
 
+
   public:
     SavedStacks()
       : frames(),
-        allocationSamplingProbability(1.0),
-        allocationSkipCount(0),
-        rngState(0),
+        bernoulli(1.0, 0x59fdad7f6b4cc573, 0x91adf38db96a9354),
         creatingSavedFrame(false)
     { }
 
@@ -167,16 +168,14 @@ class SavedStacks {
     void     trace(JSTracer* trc);
     uint32_t count();
     void     clear();
-    void     setRNGState(uint64_t state) { rngState = state; }
+    void     setRNGState(uint64_t state0, uint64_t state1) { bernoulli.setRandomState(state0, state1); }
     void     chooseSamplingProbability(JSCompartment*);
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
   private:
     SavedFrame::Set frames;
-    double          allocationSamplingProbability;
-    uint32_t        allocationSkipCount;
-    uint64_t        rngState;
+    mozilla::FastBernoulliTrial bernoulli;
     bool            creatingSavedFrame;
 
     // Similar to mozilla::ReentrancyGuard, but instead of asserting against
