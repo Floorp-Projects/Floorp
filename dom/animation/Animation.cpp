@@ -573,7 +573,7 @@ Animation::CanThrottle() const
 void
 Animation::ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
                         nsCSSPropertySet& aSetProperties,
-                        bool& aNeedsRefreshes)
+                        bool& aStyleChanging)
 {
   if (!mEffect) {
     return;
@@ -583,7 +583,7 @@ Animation::ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
   if (playState == AnimationPlayState::Running ||
       playState == AnimationPlayState::Pending ||
       HasEndEventToQueue()) {
-    aNeedsRefreshes = true;
+    aStyleChanging = true;
   }
 
   if (!IsInEffect()) {
