@@ -39,7 +39,8 @@ ShouldDownscaleDuringDecode(const nsCString& aMimeType)
   return type == DecoderType::JPEG ||
          type == DecoderType::ICON ||
          type == DecoderType::PNG ||
-         type == DecoderType::BMP;
+         type == DecoderType::BMP ||
+         type == DecoderType::GIF;
 }
 
 static uint32_t
