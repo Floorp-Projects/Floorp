@@ -6983,16 +6983,14 @@ var gIdentityHandler = {
   },
 
   /**
-   * Return the eTLD+1 version of the current hostname
+   * Attempt to provide proper IDN treatment for host names
    */
-  getEffectiveHost : function() {
+  getEffectiveHost: function() {
     if (!this._IDNService)
       this._IDNService = Cc["@mozilla.org/network/idn-service;1"]
                          .getService(Ci.nsIIDNService);
     try {
-      let baseDomain =
-        Services.eTLD.getBaseDomainFromHost(this._uri.host);
-      return this._IDNService.convertToDisplayIDN(baseDomain, {});
+      return this._IDNService.convertToDisplayIDN(this._uri.host, {});
     } catch (e) {
       // If something goes wrong (e.g. host is an IP address) just fail back
       // to the full domain.
@@ -7162,6 +7160,7 @@ var gIdentityHandler = {
     let verifier = "";
     let host = "";
     let owner = "";
+    let crop = "start";
 
     try {
       host = this.getEffectiveHost();
@@ -7181,6 +7180,8 @@ var gIdentityHandler = {
 
     // Fill in organization information if we have a valid EV certificate.
     if (isEV) {
+      crop = "end";
+
       let iData = this.getIdentityData();
       host = owner = iData.subjectOrg;
       verifier = this._identityBox.tooltipText;
@@ -7200,6 +7201,7 @@ var gIdentityHandler = {
     // Push the appropriate strings out to the UI. Need to use |value| for the
     // host as it's a <label> that will be cropped if too long. Using
     // |textContent| would simply wrap the value.
+    this._identityPopupContentHost.setAttribute("crop", crop);
     this._identityPopupContentHost.setAttribute("value", host);
     this._identityPopupContentOwner.textContent = owner;
     this._identityPopupContentSupp.textContent = supplemental;
