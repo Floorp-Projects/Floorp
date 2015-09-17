@@ -1135,8 +1135,6 @@ function getJSON(element, focusCounter) {
     switch (inputTypeLowerCase) {
       case "datetime":
       case "datetime-local":
-      case "month":
-      case "week":
       case "range":
         inputType = inputTypeLowerCase;
         break;
