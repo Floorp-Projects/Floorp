@@ -240,7 +240,7 @@ public:
     mServiceWorker = aServiceWorker;
   }
 
-  PushMessageData* Data()
+  PushMessageData* GetData() const
   {
     return mData;
   }

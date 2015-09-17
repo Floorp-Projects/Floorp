@@ -132,6 +132,20 @@ http://creativecommons.org/licenses/publicdomain/
         });
       }).then(text => {
         is(text, "Hi! \ud83d\udc40", "Wrong blob data for message with emoji");
+        is(text, "Hi! \ud83d\udc40", "Wrong blob data for message with emoji");
+        // Send a blank message.
+        return Promise.all([
+          controlledFrame.contentWindow.waitOnPushMessage(pushSubscription),
+          fetch("http://mochi.test:8888/tests/dom/push/test/push-server.sjs", {
+            method: "PUT",
+            headers: {
+              "X-Push-Method": "POST",
+              "X-Push-Server": pushSubscription.endpoint,
+            },
+          }),
+        ]).then(([message]) => message);
+      }).then(message => {
+        ok(!message.data, "Should exclude data for blank messages");
         return pushSubscription;
       });
   }
