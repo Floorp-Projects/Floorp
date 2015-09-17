@@ -52,16 +52,6 @@ const PUSH_SERVICE_CONNECTION_DISABLE = 3;
 const PUSH_SERVICE_ACTIVE_OFFLINE = 4;
 const PUSH_SERVICE_RUNNING = 5;
 
-// Telemetry failure to send push notification to Service Worker reasons.
-// Key not found in local database.
-const kDROP_NOTIFICATION_REASON_KEY_NOT_FOUND = 0;
-// User cleared history.
-const kDROP_NOTIFICATION_REASON_NO_HISTORY = 1;
-// Version of message received not newer than previous one.
-const kDROP_NOTIFICATION_REASON_NO_VERSION_INCREMENT = 2;
-// Subscription has expired.
-const kDROP_NOTIFICATION_REASON_EXPIRED = 3;
-
 /**
  * State is change only in couple of functions:
  *   init - change state to PUSH_SERVICE_INIT if state was PUSH_SERVICE_UNINIT
@@ -283,7 +273,7 @@ this.PushService = {
                   // just for it
                   if (this._ws) {
                     debug("Had a connection, so telling the server");
-                    this._sendUnregister({channelID: record.channelID})
+                    this._sendRequest("unregister", {channelID: record.channelID})
                         .catch(function(e) {
                           debug("Unregister errored " + e);
                         });
@@ -296,7 +286,7 @@ this.PushService = {
                   // just for it
                   if (this._ws) {
                     debug("Had a connection, so telling the server");
-                    this._sendUnregister({channelID: record.channelID})
+                    this._sendRequest("unregister", {channelID: record.channelID})
                         .catch(function(e) {
                           debug("Unregister errored " + e);
                         });
@@ -683,7 +673,6 @@ this.PushService = {
       scope: record.scope
     };
 
-    Services.telemetry.getHistogramById("PUSH_API_NOTIFY_REGISTRATION_LOST").add();
     this._notifyListeners('pushsubscriptionchange', data);
   },
 
@@ -735,12 +724,6 @@ this.PushService = {
       .then(record => this._notifySubscriptionChangeObservers(record));
   },
 
-  _recordDidNotNotify: function(reason) {
-    Services.telemetry.
-      getHistogramById("PUSH_API_NOTIFICATION_RECEIVED_BUT_DID_NOT_NOTIFY").
-      add(reason);
-  },
-
   /**
    * Dispatches an incoming message to a service worker, recalculating the
    * quota for the associated push registration. If the quota is exceeded,
@@ -757,12 +740,10 @@ this.PushService = {
    */
   receivedPushMessage: function(keyID, message, updateFunc) {
     debug("receivedPushMessage()");
-    Services.telemetry.getHistogramById("PUSH_API_NOTIFICATION_RECEIVED").add();
 
     let shouldNotify = false;
     return this.getByKeyID(keyID).then(record => {
       if (!record) {
-        this._recordDidNotNotify(kDROP_NOTIFICATION_REASON_KEY_NOT_FOUND);
         throw new Error("No record for key ID " + keyID);
       }
       return record.getLastVisit();
@@ -770,21 +751,15 @@ this.PushService = {
       // As a special case, don't notify the service worker if the user
       // cleared their history.
       shouldNotify = isFinite(lastVisit);
-      if (!shouldNotify) {
-          this._recordDidNotNotify(kDROP_NOTIFICATION_REASON_NO_HISTORY);
-      }
       return this._db.update(keyID, record => {
         let newRecord = updateFunc(record);
         if (!newRecord) {
-          this._recordDidNotNotify(kDROP_NOTIFICATION_REASON_NO_VERSION_INCREMENT);
           return null;
         }
-        // FIXME(nsm): WHY IS expired checked here but then also checked in the next case?
         if (newRecord.isExpired()) {
           // Because `unregister` is advisory only, we can still receive messages
           // for stale registrations from the server.
           debug("receivedPushMessage: Ignoring update for expired key ID " + keyID);
-          this._recordDidNotNotify(kDROP_NOTIFICATION_REASON_EXPIRED);
           return null;
         }
         newRecord.receivedPush(lastVisit);
@@ -803,7 +778,7 @@ this.PushService = {
         // Drop the registration in the background. If the user returns to the
         // site, the service worker will be notified on the next `idle-daily`
         // event.
-        this._sendUnregister(record).catch(error => {
+        this._sendRequest("unregister", record).catch(error => {
           debug("receivedPushMessage: Unregister error: " + error);
         });
       }
@@ -850,7 +825,6 @@ this.PushService = {
       scope: aPushRecord.scope
     };
 
-    Services.telemetry.getHistogramById("PUSH_API_NOTIFY").add();
     this._notifyListeners('push', data);
     return true;
   },
@@ -879,7 +853,6 @@ this.PushService = {
   _registerWithServer: function(aPageRecord) {
     debug("registerWithServer()" + JSON.stringify(aPageRecord));
 
-    Services.telemetry.getHistogramById("PUSH_API_SUBSCRIBE_ATTEMPT").add();
     return this._sendRequest("register", aPageRecord)
       .then(record => this._onRegisterSuccess(record),
             err => this._onRegisterError(err))
@@ -923,17 +896,6 @@ this.PushService = {
       });
   },
 
-  _sendUnregister: function(aRecord) {
-    Services.telemetry.getHistogramById("PUSH_API_UNSUBSCRIBE_ATTEMPT").add();
-    return this._sendRequest("unregister", aRecord).then(function(v) {
-      Services.telemetry.getHistogramById("PUSH_API_UNSUBSCRIBE_SUCCEEDED").add();
-      return v;
-    }).catch(function(e) {
-      Services.telemetry.getHistogramById("PUSH_API_UNSUBSCRIBE_FAILED").add();
-      return Promise.reject(e);
-    });
-  },
-
   /**
    * Exceptions thrown in _onRegisterSuccess are caught by the promise obtained
    * from _service.request, causing the promise to be rejected instead.
@@ -942,13 +904,9 @@ this.PushService = {
     debug("_onRegisterSuccess()");
 
     return this._db.put(aRecord)
-      .then(_ => {
-        Services.telemetry.getHistogramById("PUSH_API_SUBSCRIBE_SUCCEEDED").add()
-      })
       .catch(error => {
-        Services.telemetry.getHistogramById("PUSH_API_SUBSCRIBE_FAILED").add()
         // Unable to save. Destroy the subscription in the background.
-        this._sendUnregister(aRecord).catch(err => {
+        this._sendRequest("unregister", aRecord).catch(err => {
           debug("_onRegisterSuccess: Error unregistering stale subscription" +
             err);
         });
@@ -962,7 +920,6 @@ this.PushService = {
    */
   _onRegisterError: function(reply) {
     debug("_onRegisterError()");
-    Services.telemetry.getHistogramById("PUSH_API_SUBSCRIBE_FAILED").add()
     if (!reply.error) {
       debug("Called without valid error message!");
       throw "Registration error";
@@ -1086,7 +1043,7 @@ this.PushService = {
         }
 
         return Promise.all([
-          this._sendUnregister(record),
+          this._sendRequest("unregister", record),
           this._db.delete(record.keyID),
         ]).then(() => true);
       });

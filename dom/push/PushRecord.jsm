@@ -45,7 +45,6 @@ function PushRecord(props) {
   this.pushCount = props.pushCount || 0;
   this.lastPush = props.lastPush || 0;
   this.setQuota(props.quota);
-  this.ctime = (typeof props.ctime === "number") ? props.ctime : 0;
 }
 
 PushRecord.prototype = {
@@ -75,17 +74,11 @@ PushRecord.prototype = {
         Math.round(8 * Math.pow(daysElapsed, -0.8)),
         prefs.get("maxQuotaPerSubscription")
       );
-      Services.telemetry.getHistogramById("PUSH_API_QUOTA_RESET_TO").add(currentQuota - 1);
     } else {
       // The user hasn't visited the site since the last notification.
       currentQuota = this.quota;
     }
     this.quota = Math.max(currentQuota - 1, 0);
-    // We check for ctime > 0 to skip older records that did not have ctime.
-    if (this.isExpired() && this.ctime > 0) {
-      let duration = Date.now() - this.ctime;
-      Services.telemetry.getHistogramById("PUSH_API_QUOTA_EXPIRATION_TIME").add(duration / 1000);
-    }
   },
 
   receivedPush(lastVisit) {
