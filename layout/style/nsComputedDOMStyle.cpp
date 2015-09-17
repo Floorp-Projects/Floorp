@@ -333,7 +333,7 @@ nsComputedDOMStyle::GetLength(uint32_t* aLength)
   // Make sure we have up to date style so that we can include custom
   // properties.
   UpdateCurrentStyleSources(false);
-  if (mStyleContextHolder) {
+  if (mStyleContext) {
     length += StyleVariables()->mVariables.Count();
   }
 
@@ -572,7 +572,7 @@ nsComputedDOMStyle::GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv
 void
 nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
 {
-  MOZ_ASSERT(!mStyleContextHolder);
+  MOZ_ASSERT(!mStyleContext);
 
   nsCOMPtr<nsIDocument> document = do_QueryReferent(mDocumentWeak);
   if (!document) {
@@ -615,19 +615,19 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
                      "the inner table");
       }
 
-      mStyleContextHolder = mInnerFrame->StyleContext();
-      NS_ASSERTION(mStyleContextHolder, "Frame without style context?");
+      mStyleContext = mInnerFrame->StyleContext();
+      NS_ASSERTION(mStyleContext, "Frame without style context?");
     }
   }
 
-  if (!mStyleContextHolder || mStyleContextHolder->HasPseudoElementData()) {
+  if (!mStyleContext || mStyleContext->HasPseudoElementData()) {
 #ifdef DEBUG
-    if (mStyleContextHolder) {
+    if (mStyleContext) {
       // We want to check that going through this path because of
       // HasPseudoElementData is rare, because it slows us down a good
       // bit.  So check that we're really inside something associated
       // with a pseudo-element that contains elements.
-      nsStyleContext *topWithPseudoElementData = mStyleContextHolder;
+      nsStyleContext* topWithPseudoElementData = mStyleContext;
       while (topWithPseudoElementData->GetParent()->HasPseudoElementData()) {
         topWithPseudoElementData = topWithPseudoElementData->GetParent();
       }
@@ -643,16 +643,16 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
     }
 #endif
     // Need to resolve a style context
-    mStyleContextHolder =
+    mStyleContext =
       nsComputedDOMStyle::GetStyleContextForElement(mContent->AsElement(),
                                                     mPseudo,
                                                     mPresShell,
                                                     mStyleType);
-    if (!mStyleContextHolder) {
+    if (!mStyleContext) {
       return;
     }
 
-    NS_ASSERTION(mPseudo || !mStyleContextHolder->HasPseudoElementData(),
+    NS_ASSERTION(mPseudo || !mStyleContext->HasPseudoElementData(),
                  "should not have pseudo-element data");
   }
 
@@ -660,10 +660,10 @@ nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush)
   // require chrome privilege.
   MOZ_ASSERT(!mExposeVisitedStyle || nsContentUtils::IsCallerChrome(),
              "mExposeVisitedStyle set incorrectly");
-  if (mExposeVisitedStyle && mStyleContextHolder->RelevantLinkVisited()) {
-    nsStyleContext *styleIfVisited = mStyleContextHolder->GetStyleIfVisited();
+  if (mExposeVisitedStyle && mStyleContext->RelevantLinkVisited()) {
+    nsStyleContext *styleIfVisited = mStyleContext->GetStyleIfVisited();
     if (styleIfVisited) {
-      mStyleContextHolder = styleIfVisited;
+      mStyleContext = styleIfVisited;
     }
   }
 }
@@ -677,7 +677,7 @@ nsComputedDOMStyle::ClearCurrentStyleSources()
 
   // Release the current style context for it should be re-resolved
   // whenever a frame is not available.
-  mStyleContextHolder = nullptr;
+  mStyleContext = nullptr;
 }
 
 already_AddRefed<CSSValue>
@@ -724,7 +724,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName, ErrorRes
   }
 
   UpdateCurrentStyleSources(needsLayoutFlush);
-  if (!mStyleContextHolder) {
+  if (!mStyleContext) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
     return nullptr;
   }
@@ -793,7 +793,7 @@ nsComputedDOMStyle::IndexedGetter(uint32_t aIndex, bool& aFound,
   // Custom properties are exposed with indexed properties just after all
   // of the built-in properties.
   UpdateCurrentStyleSources(false);
-  if (!mStyleContextHolder) {
+  if (!mStyleContext) {
     aFound = false;
     return;
   }
@@ -1268,8 +1268,8 @@ nsComputedDOMStyle::DoGetTransform()
    RuleNodeCacheConditions dummy;
    gfx::Matrix4x4 matrix =
      nsStyleTransformMatrix::ReadTransforms(display->mSpecifiedTransform->mHead,
-                                            mStyleContextHolder,
-                                            mStyleContextHolder->PresContext(),
+                                            mStyleContext,
+                                            mStyleContext->PresContext(),
                                             dummy,
                                             refBox,
                                             float(mozilla::AppUnitsPerCSSPixel()));
@@ -3818,7 +3818,7 @@ nsComputedDOMStyle::DoGetAlignSelf()
 
   if (computedAlignSelf == NS_STYLE_ALIGN_SELF_AUTO) {
     // "align-self: auto" needs to compute to parent's align-items value.
-    nsStyleContext* parentStyleContext = mStyleContextHolder->GetParent();
+    nsStyleContext* parentStyleContext = mStyleContext->GetParent();
     if (parentStyleContext) {
       computedAlignSelf =
         parentStyleContext->StylePosition()->mAlignItems;
@@ -4638,7 +4638,7 @@ nsComputedDOMStyle::GetLineHeightCoord(nscoord& aCoord)
 
   // lie about font size inflation since we lie about font size (since
   // the inflation only applies to text)
-  aCoord = nsHTMLReflowState::CalcLineHeight(mContent, mStyleContextHolder,
+  aCoord = nsHTMLReflowState::CalcLineHeight(mContent, mStyleContext,
                                              blockHeight, 1.0f);
 
   // CalcLineHeight uses font->mFont.size, but we want to use
