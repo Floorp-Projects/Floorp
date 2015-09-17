@@ -4,7 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DevToolsModules(
-    'connection-manager.js',
-    'main.js',
-)
+# Unlike most DevTools build files, this file does not use DevToolsModules
+# because these files are here for add-on compatibility, and so they must be
+# installed to previously defined locations.
+
+EXTRA_JS_MODULES.devtools += [
+    'dbg-server.jsm',
+]
