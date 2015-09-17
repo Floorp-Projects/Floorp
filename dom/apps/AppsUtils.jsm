@@ -757,8 +757,8 @@ this.AppsUtils = {
     return deferred.promise;
   },
 
-  // Returns the MD5 hash of a string.
-  computeHash: function(aString) {
+  // Returns the hash of a string, with MD5 as a default hashing function.
+  computeHash: function(aString, aAlgorithm = "MD5") {
     let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                       .createInstance(Ci.nsIScriptableUnicodeConverter);
     converter.charset = "UTF-8";
@@ -768,7 +768,7 @@ this.AppsUtils = {
 
     let hasher = Cc["@mozilla.org/security/hash;1"]
                    .createInstance(Ci.nsICryptoHash);
-    hasher.init(hasher.MD5);
+    hasher.initWithString(aAlgorithm);
     hasher.update(data, data.length);
     // We're passing false to get the binary hash and not base64.
     let hash = hasher.finish(false);

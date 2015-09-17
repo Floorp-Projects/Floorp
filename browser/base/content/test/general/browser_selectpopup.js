@@ -23,7 +23,7 @@ const PAGECONTENT =
   "  <optgroup label='Third Group'>" +
   "    <option value='Seven'>   Seven  </option>" +
   "    <option value='Eight'>&nbsp;&nbsp;Eight&nbsp;&nbsp;</option>" +
-  "  </optgroup></select><input />" +
+  "  </optgroup></select><input />Text" +
   "</body></html>";
 
 function openSelectPopup(selectPopup, withMouse)
@@ -107,6 +107,12 @@ function doSelectTests(contentType, dtd)
   is(menulist.selectedIndex, isWindows ? 3 : 1, "Select item 3 selectedIndex");
 
   is((yield getChangeEvents()), 0, "Before closed - number of change events");
+
+  EventUtils.synthesizeKey("a", { accelKey: true });
+  let selection = yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+    return String(content.getSelection());
+  });
+  is(selection, isWindows ? "Text" : "", "Select all while popup is open");
 
   yield hideSelectPopup(selectPopup);
 
