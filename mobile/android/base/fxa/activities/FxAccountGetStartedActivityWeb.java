@@ -6,6 +6,6 @@ package org.mozilla.gecko.fxa.activities;
 
 public class FxAccountGetStartedActivityWeb extends FxAccountWebFlowActivity {
   public FxAccountGetStartedActivityWeb() {
-    super(CANNOT_RESUME_WHEN_ACCOUNTS_EXIST, "signin");
+    super(CANNOT_RESUME_WHEN_ACCOUNTS_EXIST, "signup");
   }
 }
