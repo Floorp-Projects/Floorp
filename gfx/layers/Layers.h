@@ -785,7 +785,7 @@ public:
      * If this is set then this layer is part of a preserve-3d group, and should
      * be sorted with sibling layers that are also part of the same group.
      */
-    CONTENT_PRESERVE_3D = 0x08,
+    CONTENT_EXTEND_3D_CONTEXT = 0x08,
     /**
      * This indicates that the transform may be changed on during an empty
      * transaction where there is no possibility of redrawing the content, so the
