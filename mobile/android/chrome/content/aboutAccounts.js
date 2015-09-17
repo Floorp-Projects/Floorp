@@ -58,6 +58,8 @@ function show(id) {
   }
 }
 
+// Each time we try to load the remote <iframe>, loadedDeferred is replaced.  It
+// is resolved by a LOADED message, and rejected by a failure to load.
 var loadedDeferred = null;
 
 // We have a new load starting.  Replace the existing promise with a new one,
@@ -66,14 +68,17 @@ function deferTransitionToRemoteAfterLoaded() {
   log.d('Waiting for LOADED message.');
   loadedDeferred = PromiseUtils.defer();
   loadedDeferred.promise.then(() => {
+    log.d('Got LOADED message!');
     document.getElementById("remote").style.opacity = 0;
     show("remote");
     document.getElementById("remote").style.opacity = 1;
+  })
+  .catch((e) => {
+    log.w('Did not get LOADED message: ' + e.toString());
   });
 }
 
 function handleLoadedMessage(message) {
-  log.d('Got LOADED message!');
   loadedDeferred.resolve();
 };
 
@@ -131,6 +136,12 @@ let wrapper = {
       // so avoid doing that more than once
       if (failure && aStatus != Components.results.NS_BINDING_ABORTED) {
         aRequest.cancel(Components.results.NS_BINDING_ABORTED);
+        // Since after a promise is fulfilled, subsequent fulfillments are
+        // treated as no-ops, we don't care that we might see multiple failures
+        // due to multiple listener callbacks.  (It's not easy to extract this
+        // from the Promises spec, but it is widely quoted.  Start with
+        // http://stackoverflow.com/a/18218542.)
+        loadedDeferred.reject(new Error("Failed in onStateChange!"));
         show("networkError");
       }
     },
@@ -138,6 +149,8 @@ let wrapper = {
     onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
       if (aRequest && aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
         aRequest.cancel(Components.results.NS_BINDING_ABORTED);
+        // As above, we're not concerned by multiple listener callbacks.
+        loadedDeferred.reject(new Error("Failed in onLocationChange!"));
         show("networkError");
       }
     },
