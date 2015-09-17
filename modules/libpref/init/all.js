@@ -1965,7 +1965,7 @@ pref("security.mixed_content.block_active_content", false);
 pref("security.mixed_content.block_display_content", false);
 
 // Sub-resource integrity
-pref("security.sri.enable", false);
+pref("security.sri.enable", true);
 
 // Disable pinning checks by default.
 pref("security.cert_pinning.enforcement_level", 0);
