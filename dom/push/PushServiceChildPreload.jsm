@@ -23,8 +23,12 @@ var processType = Cc["@mozilla.org/xre/app-info;1"]
 var isParent = processType === Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 
 Services.cpmm.addMessageListener("push", function (aMessage) {
+  let {payload} = aMessage.data;
+  let length = payload ? payload.length : 0;
   swm.sendPushEvent(aMessage.data.originAttributes,
-                    aMessage.data.scope, aMessage.data.payload);
+                    aMessage.data.scope,
+                    length,
+                    payload);
 });
 
 Services.cpmm.addMessageListener("pushsubscriptionchange", function (aMessage) {

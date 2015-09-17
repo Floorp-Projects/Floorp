@@ -827,9 +827,9 @@ this.PushService = {
           cryptoParams.dh,
           cryptoParams.salt,
           cryptoParams.rs
-        ).then(bytes => new TextDecoder("utf-8").decode(bytes));
+        );
       } else {
-        decodedPromise = Promise.resolve("");
+        decodedPromise = Promise.resolve(null);
       }
       return decodedPromise.then(message => {
         if (shouldNotify) {
@@ -865,7 +865,16 @@ this.PushService = {
                          .createInstance(Ci.nsIPushObserverNotification);
     notification.pushEndpoint = aPushRecord.pushEndpoint;
     notification.version = aPushRecord.version;
-    notification.data = message;
+
+    let payload = ArrayBuffer.isView(message) ?
+                  new Uint8Array(message.buffer) : message;
+    if (payload) {
+      notification.data = "";
+      for (let i = 0; i < payload.length; i++) {
+        notification.data += String.fromCharCode(payload[i]);
+      }
+    }
+
     notification.lastPush = aPushRecord.lastPush;
     notification.pushCount = aPushRecord.pushCount;
 
@@ -881,9 +890,8 @@ this.PushService = {
       return false;
     }
 
-    // TODO data.
     let data = {
-      payload: message,
+      payload: payload,
       originAttributes: aPushRecord.originAttributes,
       scope: aPushRecord.scope
     };
