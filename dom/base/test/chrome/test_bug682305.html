@@ -36,6 +36,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 var SimpleURI = Cc["@mozilla.org/network/simple-uri;1"];
 var ios = Cc["@mozilla.org/network/io-service;1"]
             .getService(Ci.nsIIOService);
+var contentSecManager = Cc["@mozilla.org/contentsecuritymanager;1"]
+                          .getService(Ci.nsIContentSecurityManager);
 
 var PROTOCOL_SCHEME = "jsproto";
 
@@ -70,11 +72,21 @@ CustomChannel.prototype = {
       listener.onStopRequest(this, context, Cr.NS_OK);
     } catch(e) {}
   },
+  asyncOpen2: function(listener) {
+    // throws an error if security checks fail
+    var outListener = contentSecManager.performSecurityCheck(this, listener);
+    return this.asyncOpen(outListener, null);
+  },
   open: function() {
     let data = "bar";
     let stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
     stream.setData(data, data.length);
     return stream;
+  },
+  open2: function() {
+    // throws an error if security checks fail
+    contentSecManager.performSecurityCheck(this, null);
+    return this.open();
   },
   isPending: function() {
     return false;

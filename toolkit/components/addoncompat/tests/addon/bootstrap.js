@@ -10,6 +10,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const baseURL = "http://mochi.test:8888/browser/" +
   "toolkit/components/addoncompat/tests/browser/";
 
+var contentSecManager = Cc["@mozilla.org/contentsecuritymanager;1"]
+                          .getService(Ci.nsIContentSecurityManager);
+
 function forEachWindow(f)
 {
   let wins = Services.ww.getWindowEnumerator("navigator:browser");
@@ -295,6 +298,12 @@ function testAboutModuleRegistration()
       Services.tm.currentThread.dispatch(runnable, Ci.nsIEventTarget.DISPATCH_NORMAL);
     },
 
+    asyncOpen2: function(listener) {
+      // throws an error if security checks fail
+      var outListener = contentSecManager.performSecurityCheck(this, listener);
+      return this.asyncOpen(outListener, null);
+    },
+
     open: function() {
       function getWindow(channel) {
         try
@@ -320,6 +329,12 @@ function testAboutModuleRegistration()
       let stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
       stream.setData(data, data.length);
       return stream;
+    },
+
+    open2: function() {
+      // throws an error if security checks fail
+      contentSecManager.performSecurityCheck(this, null);
+      return this.open();
     },
 
     isPending: function() {
