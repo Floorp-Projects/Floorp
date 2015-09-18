@@ -1259,7 +1259,7 @@ inDOMUtils::ParseStyleSheet(nsIDOMCSSStyleSheet *aSheet,
   nsRefPtr<CSSStyleSheet> sheet = do_QueryObject(aSheet);
   NS_ENSURE_ARG_POINTER(sheet);
 
-  return sheet->ParseSheet(aInput);
+  return sheet->ReparseSheet(aInput);
 }
 
 NS_IMETHODIMP
