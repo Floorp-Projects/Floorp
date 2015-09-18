@@ -23,7 +23,6 @@ loader.lazyRequireGetter(this, "AnimationsFront",
 
 const STRINGS_URI = "chrome://browser/locale/devtools/animationinspector.properties";
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
-const V3_UI_PREF = "devtools.inspector.animationInspectorV3";
 
 // Global toolbox/inspector, set when startup is called.
 var gToolbox, gInspector;
@@ -99,9 +98,6 @@ var getServerTraits = Task.async(function*(target) {
     traits[name] = yield target.actorHasMethod(actor, method);
   }
 
-  // Special pref-based UI trait.
-  traits.isNewUI = Services.prefs.getBoolPref(V3_UI_PREF);
-
   return traits;
 });
 
@@ -112,9 +108,6 @@ var getServerTraits = Task.async(function*(target) {
  * no updates are done when the animationinspector sidebar panel is not visible.
  *
  * AnimationPlayerFronts are available in AnimationsController.animationPlayers.
- *
- * Note also that all AnimationPlayerFronts handled by the controller are set to
- * auto-refresh (except when the sidebar panel is not visible).
  *
  * Usage example:
  *
@@ -182,7 +175,7 @@ var AnimationsController = {
 
   startListeners: function() {
     // Re-create the list of players when a new node is selected, except if the
-    // sidebar isn't visible. And set the players to auto-refresh when needed.
+    // sidebar isn't visible.
     gInspector.selection.on("new-node-front", this.onNewNodeFront);
     gInspector.sidebar.on("select", this.onPanelVisibilityChange);
     gToolbox.on("select", this.onPanelVisibilityChange);
@@ -206,9 +199,6 @@ var AnimationsController = {
   onPanelVisibilityChange: Task.async(function*() {
     if (this.isPanelVisible()) {
       this.onNewNodeFront();
-      this.startAllAutoRefresh();
-    } else {
-      this.stopAllAutoRefresh();
     }
   }),
 
@@ -304,7 +294,6 @@ var AnimationsController = {
 
     this.animationPlayers = yield this.animationsFront
                                       .getAnimationPlayersForNode(nodeFront);
-    this.startAllAutoRefresh();
 
     // Start listening for animation mutations only after the first method call
     // otherwise events won't be sent.
@@ -320,15 +309,9 @@ var AnimationsController = {
     for (let {type, player} of changes) {
       if (type === "added") {
         this.animationPlayers.push(player);
-        if (!this.traits.isNewUI) {
-          player.startAutoRefresh();
-        }
       }
 
       if (type === "removed") {
-        if (!this.traits.isNewUI) {
-          player.stopAutoRefresh();
-        }
         yield player.release();
         let index = this.animationPlayers.indexOf(player);
         this.animationPlayers.splice(index, 1);
@@ -358,26 +341,6 @@ var AnimationsController = {
     return time;
   },
 
-  startAllAutoRefresh: function() {
-    if (this.traits.isNewUI) {
-      return;
-    }
-
-    for (let front of this.animationPlayers) {
-      front.startAutoRefresh();
-    }
-  },
-
-  stopAllAutoRefresh: function() {
-    if (this.traits.isNewUI) {
-      return;
-    }
-
-    for (let front of this.animationPlayers) {
-      front.stopAutoRefresh();
-    }
-  },
-
   destroyAnimationPlayers: Task.async(function*() {
     // Let the server know that we're not interested in receiving updates about
     // players for the current node. We're either being destroyed or a new node
@@ -385,7 +348,7 @@ var AnimationsController = {
     if (this.traits.hasMutationEvents) {
       yield this.animationsFront.stopAnimationPlayerUpdates();
     }
-    this.stopAllAutoRefresh();
+
     for (let front of this.animationPlayers) {
       yield front.release();
     }

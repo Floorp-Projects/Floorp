@@ -28,17 +28,12 @@
 const {Cu} = require("chrome");
 const promise = require("promise");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
-const {setInterval, clearInterval} = require("sdk/timers");
 const protocol = require("devtools/server/protocol");
 const {ActorClass, Actor, FrontClass, Front,
        Arg, method, RetVal, types} = protocol;
 // Make sure the nodeActor type is know here.
 const {NodeActor} = require("devtools/server/actors/inspector");
 const events = require("sdk/event/core");
-
-// How long (in ms) should we wait before polling again the state of an
-// animationPlayer.
-const PLAYER_DEFAULT_AUTO_REFRESH_TIMEOUT = 500;
 
 // Types of animations.
 const ANIMATION_TYPES = {
@@ -423,8 +418,6 @@ var AnimationPlayerActor = ActorClass({
 });
 
 var AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
-  AUTO_REFRESH_EVENT: "updated-state",
-
   initialize: function(conn, form, detail, ctx) {
     Front.prototype.initialize.call(this, conn, form, detail, ctx);
 
@@ -441,7 +434,6 @@ var AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
   },
 
   destroy: function() {
-    this.stopAutoRefresh();
     Front.prototype.destroy.call(this);
   },
 
@@ -475,75 +467,14 @@ var AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
     this.state = state;
   }),
 
-  // About auto-refresh:
-  //
-  // The AnimationPlayerFront is capable of automatically refreshing its state
-  // by calling the getCurrentState method at regular intervals. This allows
-  // consumers to update their knowledge of the player's currentTime, playState,
-  // ... dynamically.
-  //
-  // Calling startAutoRefresh will start the automatic refreshing of the state,
-  // and calling stopAutoRefresh will stop it.
-  // Once the automatic refresh has been started, the AnimationPlayerFront emits
-  // "updated-state" events everytime the state changes.
-  //
-  // Note that given the time-related nature of animations, the actual state
-  // changes a lot more often than "updated-state" events are emitted. This is
-  // to avoid making many protocol requests.
-
   /**
-   * Start auto-refreshing this player's state.
-   * @param {Number} interval Optional auto-refresh timer interval to override
-   * the default value.
+   * Refresh the current state of this animation on the client from information
+   * found on the server. Doesn't return anything, just stores the new state.
    */
-  startAutoRefresh: function(interval=PLAYER_DEFAULT_AUTO_REFRESH_TIMEOUT) {
-    if (this.autoRefreshTimer) {
-      return;
-    }
-
-    this.autoRefreshTimer = setInterval(() => {
-      // Save the refresh promise for tests. The tests need to detect when the
-      // last request completes or they might finish too early.
-      // Storing the latest Promise is enough to know that there is no pending
-      // requests left as p.js guarantees the last request will get the reply
-      // last.
-      this.pendingRefreshStatePromise = this.refreshState();
-      this.pendingRefreshStatePromise.then(() => {
-        this.pendingRefreshStatePromise = null;
-      });
-    }, interval);
-  },
-
-  /**
-   * Stop auto-refreshing this player's state.
-   */
-  stopAutoRefresh: function() {
-    if (!this.autoRefreshTimer) {
-      return;
-    }
-
-    clearInterval(this.autoRefreshTimer);
-    this.autoRefreshTimer = null;
-  },
-
-  /**
-   * Called automatically when auto-refresh is on. Doesn't return anything, but
-   * emits the "updated-state" event.
-   * @param {Boolean} forceRefresh This function is normally called by the
-   * auto-refresh loop. If you need to call it but are not using this mechanism,
-   * then set this to true.
-   */
-  refreshState: Task.async(function*(forceRefresh) {
+  refreshState: Task.async(function*() {
     let data = yield this.getCurrentState();
-
-    // By the time the new state is received, auto-refresh might be stopped.
-    if (!this.autoRefreshTimer && !forceRefresh) {
-      return;
-    }
-
     if (this.currentStateHasChanged) {
       this.state = data;
-      events.emit(this, this.AUTO_REFRESH_EVENT, this.state);
     }
   }),
 
