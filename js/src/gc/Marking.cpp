@@ -502,7 +502,7 @@ void
 js::TraceNullableRoot(JSTracer* trc, T* thingp, const char* name)
 {
     AssertRootMarkingPhase(trc);
-    if (InternalBarrierMethods<T>::isMarkableTaggedPointer(*thingp))
+    if (InternalBarrierMethods<T>::isMarkable(*thingp))
         DispatchToTracer(trc, ConvertToBase(thingp), name);
 }
 
