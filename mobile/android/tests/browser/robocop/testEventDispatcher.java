@@ -9,6 +9,7 @@ import static org.mozilla.gecko.tests.helpers.AssertionHelper.*;
 import org.mozilla.gecko.tests.helpers.*;
 
 import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.NativeEventListener;
@@ -26,7 +27,7 @@ import org.json.JSONObject;
  * including associated NativeJSObject objects.
  */
 public class testEventDispatcher extends UITest
-        implements GeckoEventListener, NativeEventListener {
+        implements BundleEventListener, GeckoEventListener, NativeEventListener {
 
     private static final String TEST_JS = "testEventDispatcher.js";
     private static final String GECKO_EVENT = "Robocop:TestGeckoEvent";
@@ -34,9 +35,19 @@ public class testEventDispatcher extends UITest
     private static final String NATIVE_EVENT = "Robocop:TestNativeEvent";
     private static final String NATIVE_RESPONSE_EVENT = "Robocop:TestNativeResponse";
     private static final String NATIVE_EXCEPTION_EVENT = "Robocop:TestNativeException";
+    private static final String UI_EVENT = "Robocop:TestUIEvent";
+    private static final String UI_RESPONSE_EVENT = "Robocop:TestUIResponse";
+    private static final String BACKGROUND_EVENT = "Robocop:TestBackgroundEvent";
+    private static final String BACKGROUND_RESPONSE_EVENT = "Robocop:TestBackgrondResponse";
+
+    private static final long WAIT_FOR_BUNDLE_EVENT_TIMEOUT_MILLIS = 10000; // 10 seconds
 
     private JavascriptBridge js;
     private NativeJSObject savedMessage;
+
+    private boolean handledGeckoEvent;
+    private boolean handledNativeEvent;
+    private boolean handledAsyncEvent;
 
     @Override
     public void setUp() throws Exception {
@@ -48,6 +59,10 @@ public class testEventDispatcher extends UITest
         EventDispatcher.getInstance().registerGeckoThreadListener(
                 (NativeEventListener) this,
                 NATIVE_EVENT, NATIVE_RESPONSE_EVENT, NATIVE_EXCEPTION_EVENT);
+        EventDispatcher.getInstance().registerUiThreadListener(
+                this, UI_EVENT, UI_RESPONSE_EVENT);
+        EventDispatcher.getInstance().registerBackgroundThreadListener(
+                this, BACKGROUND_EVENT, BACKGROUND_RESPONSE_EVENT);
     }
 
     @Override
@@ -57,9 +72,34 @@ public class testEventDispatcher extends UITest
         EventDispatcher.getInstance().unregisterGeckoThreadListener(
                 (NativeEventListener) this,
                 NATIVE_EVENT, NATIVE_RESPONSE_EVENT, NATIVE_EXCEPTION_EVENT);
+        EventDispatcher.getInstance().unregisterUiThreadListener(
+                this, UI_EVENT, UI_RESPONSE_EVENT);
+        EventDispatcher.getInstance().unregisterBackgroundThreadListener(
+                this, BACKGROUND_EVENT, BACKGROUND_RESPONSE_EVENT);
 
         js.disconnect();
         super.tearDown();
+    }
+
+    private synchronized void waitForAsyncEvent() {
+        final long startTime = System.nanoTime();
+        while (!handledAsyncEvent) {
+            if (System.nanoTime() - startTime
+                    >= WAIT_FOR_BUNDLE_EVENT_TIMEOUT_MILLIS * 1e6 /* ns per ms */) {
+                fFail("Should have completed event before timeout");
+            }
+            try {
+                wait(1000); // Wait for 1 second at a time.
+            } catch (final InterruptedException e) {
+                // Attempt waiting again.
+            }
+        }
+        handledAsyncEvent = false;
+    }
+
+    private synchronized void notifyAsyncEvent() {
+        handledAsyncEvent = true;
+        notifyAll();
     }
 
     public void testEventDispatcher() {
@@ -67,13 +107,18 @@ public class testEventDispatcher extends UITest
         NavigationHelper.enterAndLoadUrl(mStringHelper.getHarnessUrlForJavascript(TEST_JS));
 
         js.syncCall("send_test_message", GECKO_EVENT);
+        fAssertTrue("Should have handled Gecko event synchronously", handledGeckoEvent);
+
         js.syncCall("send_message_for_response", GECKO_RESPONSE_EVENT, "success");
         js.syncCall("send_message_for_response", GECKO_RESPONSE_EVENT, "error");
+
         js.syncCall("send_test_message", NATIVE_EVENT);
+        fAssertTrue("Should have handled native event synchronously", handledNativeEvent);
+
         js.syncCall("send_message_for_response", NATIVE_RESPONSE_EVENT, "success");
         js.syncCall("send_message_for_response", NATIVE_RESPONSE_EVENT, "error");
-        js.syncCall("send_test_message", NATIVE_EXCEPTION_EVENT);
 
+        js.syncCall("send_test_message", NATIVE_EXCEPTION_EVENT);
         fAssertNotSame("Should have saved a message", null, savedMessage);
         try {
             savedMessage.toString();
@@ -81,7 +126,61 @@ public class testEventDispatcher extends UITest
         } catch (final NullPointerException e) {
         }
 
+        js.syncCall("send_test_message", UI_EVENT);
+        waitForAsyncEvent();
+
+        js.syncCall("send_message_for_response", UI_RESPONSE_EVENT, "success");
+        waitForAsyncEvent();
+
+        js.syncCall("send_message_for_response", UI_RESPONSE_EVENT, "error");
+        waitForAsyncEvent();
+
+        js.syncCall("send_test_message", BACKGROUND_EVENT);
+        waitForAsyncEvent();
+
+        js.syncCall("send_message_for_response", BACKGROUND_RESPONSE_EVENT, "success");
+        waitForAsyncEvent();
+
+        js.syncCall("send_message_for_response", BACKGROUND_RESPONSE_EVENT, "error");
+        waitForAsyncEvent();
+
         js.syncCall("finish_test");
+    }
+
+    @Override
+    public void handleMessage(final String event, final Bundle message,
+                              final EventCallback callback) {
+
+        if (UI_EVENT.equals(event) || UI_RESPONSE_EVENT.equals(event)) {
+            fAssertTrue("UI event should be on UI thread", ThreadUtils.isOnUiThread());
+
+        } else if (BACKGROUND_EVENT.equals(event) || BACKGROUND_RESPONSE_EVENT.equals(event)) {
+            fAssertTrue("Background event should be on background thread",
+                        ThreadUtils.isOnBackgroundThread());
+
+        } else {
+            fFail("Event type should be valid: " + event);
+        }
+
+        if (UI_EVENT.equals(event) || BACKGROUND_EVENT.equals(event)) {
+            checkBundle(message);
+            checkBundle(message.getBundle("object"));
+
+        } else if (UI_RESPONSE_EVENT.equals(event) || BACKGROUND_RESPONSE_EVENT.equals(event)) {
+            final String response = message.getString("response");
+            if ("success".equals(response)) {
+                callback.sendSuccess(response);
+            } else if ("error".equals(response)) {
+                callback.sendError(response);
+            } else {
+                fFail("Response type should be valid: " + response);
+            }
+
+        } else {
+            fFail("Event type should be valid: " + event);
+        }
+
+        notifyAsyncEvent();
     }
 
     @Override
@@ -92,6 +191,7 @@ public class testEventDispatcher extends UITest
             if (GECKO_EVENT.equals(event)) {
                 checkJSONObject(message);
                 checkJSONObject(message.getJSONObject("object"));
+                handledGeckoEvent = true;
 
             } else if (GECKO_RESPONSE_EVENT.equals(event)) {
                 final String response = message.getString("response");
@@ -153,6 +253,8 @@ public class testEventDispatcher extends UITest
                 null, message.optBundleArray("objectArray", null));
             fAssertSame("optBundleArray returns fallback value if nonexistent",
                 null, message.optBundleArray("nonexistent_objectArray", null));
+
+            handledNativeEvent = true;
 
         } else if (NATIVE_RESPONSE_EVENT.equals(event)) {
             final String response = message.getString("response");
