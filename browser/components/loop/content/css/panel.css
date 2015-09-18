@@ -365,26 +365,6 @@ html[dir="rtl"] .tab-view li:nth-child(2).selected ~ .slide-bar {
   -moz-margin-start: 0;
 }
 
-.new-room-view > .context > .checkbox-wrapper {
-  height: 2rem;
-  margin-bottom: .5em;
-  line-height: 2rem;
-}
-
-.new-room-view > .context > .checkbox-wrapper > .checkbox {
-  border-color: #d8d8d8;
-  background-color: #fff;
-}
-
-.new-room-view > .context > .checkbox-wrapper > .checkbox.checked {
-  background-image: url("../shared/img/check.svg#check-blue");
-}
-
-.new-room-view > .context > .checkbox-wrapper > label {
-  color: #333;
-  font-size: 1.1rem;
-}
-
 .new-room-view > .btn {
   flex: 1;
   height: 3rem;
