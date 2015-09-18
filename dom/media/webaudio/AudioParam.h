@@ -145,11 +145,6 @@ public:
     return mDefaultValue;
   }
 
-  AudioNode* Node() const
-  {
-    return mNode;
-  }
-
   const nsTArray<AudioNode::InputNode>& InputNodes() const
   {
     return mInputNodes;
