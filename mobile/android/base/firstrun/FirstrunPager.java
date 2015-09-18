@@ -11,12 +11,15 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
+import android.util.Log;
 import com.nineoldandroids.animation.Animator;
 import com.nineoldandroids.animation.AnimatorSet;
 import com.nineoldandroids.animation.ObjectAnimator;
 import com.nineoldandroids.view.ViewHelper;
 
 import org.mozilla.gecko.RestrictedProfiles;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.animation.TransitionsTracker;
 
 import java.util.List;
@@ -61,6 +64,18 @@ public class FirstrunPager extends ViewPager {
                 }
             }
         };
+        addOnPageChangeListener(new OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int i, float v, int i1) {}
+
+            @Override
+            public void onPageSelected(int i) {
+                Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.PANEL, "onboarding." + i);
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int i) {}
+        });
 
         animateLoad();
     }

@@ -17,6 +17,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.preferences.AndroidImport;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -46,12 +48,15 @@ public class ImportPanel extends FirstrunPanel {
             public void onClick(View v) {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                 final List<Integer> checked = new ArrayList<>(Arrays.asList(0, 1));
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "firstrun-import-action");
                 builder.setTitle(R.string.firstrun_import_action)
                        .setMultiChoiceItems(R.array.pref_import_android_entries, makeBooleanArray(R.array.pref_import_android_defaults), new DialogInterface.OnMultiChoiceClickListener() {
                            @Override
                            public void onClick(DialogInterface dialogInterface, int index, boolean isChecked) {
+                               // Add telemetry for toggling checkboxes.
+                               Telemetry.sendUIEvent(TelemetryContract.Event.EDIT, TelemetryContract.Method.DIALOG, "firstrun-import-dialog-checkbox");
                                if (isChecked && !checked.contains(index)) {
-                                  checked.add(index);
+                                   checked.add(index);
                                } else if (!isChecked && checked.contains(index)) {
                                    checked.remove(checked.indexOf(index));
                                }
@@ -60,6 +65,7 @@ public class ImportPanel extends FirstrunPanel {
                        .setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {
                            @Override
                            public void onClick(DialogInterface dialog, int i) {
+                               Telemetry.sendUIEvent(TelemetryContract.Event.CANCEL, TelemetryContract.Method.BUTTON, "firstrun-import-dialog");
                                dialog.dismiss();
                            }
                        })
@@ -70,6 +76,10 @@ public class ImportPanel extends FirstrunPanel {
                                final boolean importHistory = checked.contains(HISTORY_INDEX);
 
                                runImport(importBookmarks, importHistory);
+
+                               // Telemetry for what options are confirmed.
+                               final int importState = (importBookmarks ? 1 : 0) + (importHistory ? 2 : 0);
+                               Telemetry.sendUIEvent(TelemetryContract.Event.SAVE, TelemetryContract.Method.BUTTON, "firstrun-import-dialog-" + importState);
                                dialog.dismiss();
                            }
                        });
@@ -81,6 +91,7 @@ public class ImportPanel extends FirstrunPanel {
         root.findViewById(R.id.import_link).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "firstrun-import-next");
                 pagerNavigation.next();
             }
         });
