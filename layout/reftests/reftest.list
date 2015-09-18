@@ -390,4 +390,4 @@ include invalidation/reftest.list
 include ../../dom/encoding/test/reftest/reftest.list
 
 # APZ/async positioning tests
-include ../../gfx/layers/apz/reftests/reftest.list
+include ../../gfx/layers/apz/test/reftest/reftest.list
