@@ -34,6 +34,32 @@ using namespace dom;
 using Appearance = AccessibleCaret::Appearance;
 using PositionChangedResult = AccessibleCaret::PositionChangedResult;
 
+#define AC_PROCESS_ENUM_TO_STREAM(e) case(e): aStream << #e; break;
+std::ostream&
+operator<<(std::ostream& aStream,
+           const AccessibleCaretManager::CaretMode& aCaretMode)
+{
+  using CaretMode = AccessibleCaretManager::CaretMode;
+  switch (aCaretMode) {
+    AC_PROCESS_ENUM_TO_STREAM(CaretMode::None);
+    AC_PROCESS_ENUM_TO_STREAM(CaretMode::Cursor);
+    AC_PROCESS_ENUM_TO_STREAM(CaretMode::Selection);
+  }
+  return aStream;
+}
+
+std::ostream& operator<<(std::ostream& aStream,
+                         const AccessibleCaretManager::UpdateCaretsHint& aHint)
+{
+  using UpdateCaretsHint = AccessibleCaretManager::UpdateCaretsHint;
+  switch (aHint) {
+    AC_PROCESS_ENUM_TO_STREAM(UpdateCaretsHint::Default);
+    AC_PROCESS_ENUM_TO_STREAM(UpdateCaretsHint::RespectOldAppearance);
+  }
+  return aStream;
+}
+#undef AC_PROCESS_ENUM_TO_STREAM
+
 AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
   : mPresShell(aPresShell)
 {
