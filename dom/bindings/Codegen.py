@@ -11039,7 +11039,7 @@ class CGDOMJSProxyHandler_get(ClassMethod):
     def __init__(self, descriptor):
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'proxy'),
-                Argument('JS::Handle<JSObject*>', 'receiver'),
+                Argument('JS::Handle<JS::Value>', 'receiver'),
                 Argument('JS::Handle<jsid>', 'id'),
                 Argument('JS::MutableHandle<JS::Value>', 'vp')]
         ClassMethod.__init__(self, "get", "bool", args,
@@ -11094,7 +11094,7 @@ class CGDOMJSProxyHandler_get(ClassMethod):
 
         getOnPrototype = dedent("""
             bool foundOnPrototype;
-            if (!GetPropertyOnPrototype(cx, proxy, id, &foundOnPrototype, vp)) {
+            if (!GetPropertyOnPrototype(cx, proxy, receiver, id, &foundOnPrototype, vp)) {
               return false;
             }
 
