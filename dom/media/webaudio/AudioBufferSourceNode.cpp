@@ -458,6 +458,7 @@ public:
   }
 
   virtual void ProcessBlock(AudioNodeStream* aStream,
+                            GraphTime aFrom,
                             const AudioBlock& aInput,
                             AudioBlock* aOutput,
                             bool* aFinished) override
@@ -468,7 +469,7 @@ public:
       return;
     }
 
-    StreamTime streamPosition = aStream->GetCurrentPosition();
+    StreamTime streamPosition = aStream->GraphTimeToStreamTime(aFrom);
     // We've finished if we've gone past mStop, or if we're past mDuration when
     // looping is disabled.
     if (streamPosition >= mStop ||

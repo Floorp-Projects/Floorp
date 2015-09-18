@@ -93,6 +93,7 @@ public:
   }
 
   virtual void ProcessBlock(AudioNodeStream* aStream,
+                            GraphTime aFrom,
                             const AudioBlock& aInput,
                             AudioBlock* aOutput,
                             bool* aFinished) override
@@ -110,7 +111,7 @@ public:
                                                     aInput.ChannelCount());
     }
 
-    StreamTime pos = aStream->GetCurrentPosition();
+    StreamTime pos = aStream->GraphTimeToStreamTime(aFrom);
     mCompressor->setParameterValue(DynamicsCompressor::ParamThreshold,
                                    mThreshold.GetValueAtTime(pos));
     mCompressor->setParameterValue(DynamicsCompressor::ParamKnee,
