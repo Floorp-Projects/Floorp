@@ -120,12 +120,31 @@ var gTests = [
   }
 ];
 
+function checkState(expectedStates, contentStates) {
+  is(contentStates.inDOMFullscreen, expectedStates.inDOMFullscreen,
+     "The DOM fullscreen state of the content should match");
+  // TODO window.fullScreen is not updated as soon as the fullscreen
+  //      state flips in child process, hence checking it could cause
+  //      anonying intermittent failure. As we just want to confirm the
+  //      fullscreen state of the browser window, we can just check the
+  //      that on the chrome window below.
+  // is(contentStates.inFullscreen, expectedStates.inFullscreen,
+  //    "The fullscreen state of the content should match");
+  is(document.mozFullScreen, expectedStates.inDOMFullscreen,
+     "The DOM fullscreen state of the chrome should match");
+  is(window.fullScreen, expectedStates.inFullscreen,
+     "The fullscreen state of the chrome should match");
+}
+
+const kPage = "http://example.org/browser/browser/" +
+              "base/content/test/general/dummy_page.html";
+
 add_task(function* () {
   yield pushPrefs(
     ["full-screen-api.transition-duration.enter", "0 0"],
     ["full-screen-api.transition-duration.leave", "0 0"]);
 
-  let tab = gBrowser.addTab("about:robots");
+  let tab = gBrowser.addTab(kPage);
   let browser = tab.linkedBrowser;
   gBrowser.selectedTab = tab;
   yield waitForDocLoadComplete();
@@ -148,63 +167,53 @@ add_task(function* () {
   yield new Promise(resolve => listenOneMessage("Test:Activated", resolve));
 
   for (let test of gTests) {
+    let contentStates;
     info("Testing exit DOM fullscreen via " + test.desc);
 
-    var { inDOMFullscreen, inFullscreen } = yield queryFullscreenState();
-    ok(!inDOMFullscreen, "Shouldn't have been in DOM fullscreen");
-    ok(!inFullscreen, "Shouldn't have been in fullscreen");
+    contentStates = yield queryFullscreenState();
+    checkState({inDOMFullscreen: false, inFullscreen: false}, contentStates);
 
     /* DOM fullscreen without fullscreen mode */
 
-    // Enter DOM fullscreen
+    info("> Enter DOM fullscreen");
     gMessageManager.sendAsyncMessage("Test:RequestFullscreen");
-    var { inDOMFullscreen, inFullscreen } =
-      yield waitForFullscreenChanges(FS_CHANGE_BOTH);
-    ok(inDOMFullscreen, "Should now be in DOM fullscreen");
-    ok(inFullscreen, "Should now be in fullscreen");
+    contentStates = yield waitForFullscreenChanges(FS_CHANGE_BOTH);
+    checkState({inDOMFullscreen: true, inFullscreen: true}, contentStates);
 
-    // Exit DOM fullscreen
+    info("> Exit DOM fullscreen");
     test.exitFunc();
-    var { inDOMFullscreen, inFullscreen } =
-      yield waitForFullscreenChanges(FS_CHANGE_BOTH);
-    ok(!inDOMFullscreen, "Should no longer be in DOM fullscreen");
-    ok(!inFullscreen, "Should no longer be in fullscreen");
+    contentStates = yield waitForFullscreenChanges(FS_CHANGE_BOTH);
+    checkState({inDOMFullscreen: false, inFullscreen: false}, contentStates);
 
     /* DOM fullscreen with fullscreen mode */
 
-    // Enter fullscreen mode
+    info("> Enter fullscreen mode");
     // Need to be asynchronous because sizemodechange event could be
     // dispatched synchronously, which would cause the event listener
     // miss that event and wait infinitely.
     executeSoon(() => BrowserFullScreen());
-    var { inDOMFullscreen, inFullscreen } =
-      yield waitForFullscreenChanges(FS_CHANGE_SIZE);
-    ok(!inDOMFullscreen, "Shouldn't have been in DOM fullscreen");
-    ok(inFullscreen, "Should now be in fullscreen mode");
+    contentStates = yield waitForFullscreenChanges(FS_CHANGE_SIZE);
+    checkState({inDOMFullscreen: false, inFullscreen: true}, contentStates);
 
-    // Enter DOM fullscreen
+    info("> Enter DOM fullscreen in fullscreen mode");
     gMessageManager.sendAsyncMessage("Test:RequestFullscreen");
-    var { inDOMFullscreen, inFullscreen } =
-      yield waitForFullscreenChanges(FS_CHANGE_DOM);
-    ok(inDOMFullscreen, "Should now be in DOM fullscreen");
-    ok(inFullscreen, "Should still be in fullscreen");
+    contentStates = yield waitForFullscreenChanges(FS_CHANGE_DOM);
+    checkState({inDOMFullscreen: true, inFullscreen: true}, contentStates);
 
-    // Exit DOM fullscreen
+    info("> Exit DOM fullscreen in fullscreen mode");
     test.exitFunc();
-    var { inDOMFullscreen, inFullscreen } =
-      yield waitForFullscreenChanges(test.affectsFullscreenMode ?
-                                     FS_CHANGE_BOTH : FS_CHANGE_DOM);
-    ok(!inDOMFullscreen, "Should no longer be in DOM fullscreen");
-    if (test.affectsFullscreenMode) {
-      ok(!inFullscreen, "Should no longer be in fullscreen mode");
-    } else {
-      ok(inFullscreen, "Should still be in fullscreen mode");
-    }
+    contentStates = yield waitForFullscreenChanges(
+      test.affectsFullscreenMode ? FS_CHANGE_BOTH : FS_CHANGE_DOM);
+    checkState({
+      inDOMFullscreen: false,
+      inFullscreen: !test.affectsFullscreenMode
+    }, contentStates);
 
     /* Cleanup */
 
     // Exit fullscreen mode if we are still in
-    if (browser.contentWindow.fullScreen) {
+    if (window.fullScreen) {
+      info("> Cleanup");
       executeSoon(() => BrowserFullScreen());
       yield waitForFullscreenChanges(FS_CHANGE_SIZE);
     }

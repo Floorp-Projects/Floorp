@@ -828,7 +828,7 @@ xpc::SandboxProxyHandler::hasOwn(JSContext* cx, JS::Handle<JSObject*> proxy,
 
 bool
 xpc::SandboxProxyHandler::get(JSContext* cx, JS::Handle<JSObject*> proxy,
-                              JS::Handle<JSObject*> receiver,
+                              JS::Handle<JS::Value> receiver,
                               JS::Handle<jsid> id,
                               JS::MutableHandle<Value> vp) const
 {

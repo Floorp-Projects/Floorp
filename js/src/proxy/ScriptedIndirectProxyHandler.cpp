@@ -285,7 +285,7 @@ ScriptedIndirectProxyHandler::hasOwn(JSContext* cx, HandleObject proxy, HandleId
 }
 
 bool
-ScriptedIndirectProxyHandler::get(JSContext* cx, HandleObject proxy, HandleObject receiver,
+ScriptedIndirectProxyHandler::get(JSContext* cx, HandleObject proxy, HandleValue receiver,
                                   HandleId id, MutableHandleValue vp) const
 {
     RootedObject handler(cx, GetIndirectProxyHandlerObject(proxy));
@@ -293,7 +293,7 @@ ScriptedIndirectProxyHandler::get(JSContext* cx, HandleObject proxy, HandleObjec
     if (!IdToStringOrSymbol(cx, id, &idv))
         return false;
     JS::AutoValueArray<2> argv(cx);
-    argv[0].setObjectOrNull(receiver);
+    argv[0].set(receiver);
     argv[1].set(idv);
     RootedValue fval(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().get, &fval))
