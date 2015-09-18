@@ -8896,11 +8896,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Reports whether the graphics sanity test passed an OS snapshot test. 0=Pass, 1=Fail, 2=Error, 3=Timed out."
   },
-  "NONLOWERCASE_NONHTML_ATTR_NODE_SET": {
-    "expires_in_version": "never",
-    "kind": "flag",
-    "description": "An Attr node that's not namespace-aware and was created from an HTML document is set on a non-HTML element and has a name containing uppercase ASCII chars"
-  },
   "DEVTOOLS_HUD_JANK": {
     "expires_in_version": "never",
     "kind": "exponential",
