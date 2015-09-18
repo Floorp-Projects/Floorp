@@ -305,6 +305,8 @@ MOZ_TOOL_VARIABLES
 
 MOZ_CHECK_COMPILER_WRAPPER
 
+MOZ_RUST_SUPPORT
+
 dnl Special win32 checks
 dnl ========================================================
 
