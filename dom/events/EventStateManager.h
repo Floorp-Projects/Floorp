@@ -173,6 +173,15 @@ public:
 
   static void GetAccessKeyLabelPrefix(dom::Element* aElement, nsAString& aPrefix);
 
+  bool HandleAccessKey(nsPresContext* aPresContext,
+                       nsTArray<uint32_t>& aAccessCharCodes,
+                       bool aIsTrusted,
+                       int32_t aModifierMask)
+  {
+    return HandleAccessKey(aPresContext, aAccessCharCodes, aIsTrusted,
+                           nullptr, eAccessKeyProcessingNormal, aModifierMask);
+  }
+
   nsresult SetCursor(int32_t aCursor, imgIContainer* aContainer,
                      bool aHaveHotspot, float aHotspotX, float aHotspotY,
                      nsIWidget* aWidget, bool aLockCursor); 
@@ -388,8 +397,8 @@ protected:
    * set to the docshell associated with |this|), until something matches.
    *
    * @param aPresContext the presentation context
-   * @param aEvent the key event
-   * @param aStatus the event status
+   * @param aAccessCharCodes list of charcode candidates
+   * @param aIsTrusted true if triggered by a trusted key event
    * @param aBubbledFrom is used by an ancestor to avoid calling HandleAccessKey()
    *        on the child the call originally came from, i.e. this is the child
    *        that recursively called us in its Up phase. The initial caller
@@ -399,12 +408,12 @@ protected:
    *        processing children and Up when recursively calling its ancestor.
    * @param aModifierMask modifier mask for the key event
    */
-  void HandleAccessKey(nsPresContext* aPresContext,
-                       WidgetKeyboardEvent* aEvent,
-                       nsEventStatus* aStatus,
-                       nsIDocShellTreeItem* aBubbledFrom,
-                       ProcessingAccessKeyState aAccessKeyState,
-                       int32_t aModifierMask);
+  bool HandleAccessKey(nsPresContext* aPresContext,
+                     nsTArray<uint32_t>& aAccessCharCodes,
+                     bool aIsTrusted,
+                     nsIDocShellTreeItem* aBubbledFrom,
+                     ProcessingAccessKeyState aAccessKeyState,
+                     int32_t aModifierMask);
 
   bool ExecuteAccessKey(nsTArray<uint32_t>& aAccessCharCodes,
                           bool aIsTrustedEvent);
