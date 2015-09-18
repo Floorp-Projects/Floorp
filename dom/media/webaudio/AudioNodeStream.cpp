@@ -541,7 +541,8 @@ AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
       mLastChunks[0] = mInputChunks[0];
     } else {
       if (maxInputs <= 1 && outputCount <= 1) {
-        mEngine->ProcessBlock(this, mInputChunks[0], &mLastChunks[0], &finished);
+        mEngine->ProcessBlock(this, aFrom,
+                              mInputChunks[0], &mLastChunks[0], &finished);
       } else {
         mEngine->ProcessBlocksOnPorts(this, mInputChunks, mLastChunks, &finished);
       }
@@ -586,7 +587,7 @@ AudioNodeStream::ProduceOutputBeforeInput(GraphTime aFrom)
   if (!mIsActive) {
     mLastChunks[0].SetNull(WEBAUDIO_BLOCK_SIZE);
   } else {
-    mEngine->ProduceBlockBeforeInput(&mLastChunks[0]);
+    mEngine->ProduceBlockBeforeInput(aFrom, &mLastChunks[0]);
     NS_ASSERTION(mLastChunks[0].GetDuration() == WEBAUDIO_BLOCK_SIZE,
                  "Invalid WebAudio chunk size");
     if (mDisabledTrackIDs.Contains(static_cast<TrackID>(AUDIO_TRACK))) {
@@ -618,13 +619,6 @@ AudioNodeStream::AdvanceOutputSegment()
     l->NotifyQueuedTrackChanges(Graph(), AUDIO_TRACK,
                                 segment->GetDuration(), 0, tmpSegment);
   }
-}
-
-StreamTime
-AudioNodeStream::GetCurrentPosition()
-{
-  NS_ASSERTION(!mFinished, "Don't create another track after finishing");
-  return EnsureTrack(AUDIO_TRACK)->Get<AudioSegment>()->GetDuration();
 }
 
 void

@@ -315,6 +315,7 @@ public:
    * call this again.
    */
   virtual void ProcessBlock(AudioNodeStream* aStream,
+                            GraphTime aFrom,
                             const AudioBlock& aInput,
                             AudioBlock* aOutput,
                             bool* aFinished);
@@ -323,7 +324,8 @@ public:
    * ProcessBlock() will be called later, and it then should not change
    * aOutput.  This is used only for DelayNodeEngine in a feedback loop.
    */
-  virtual void ProduceBlockBeforeInput(AudioBlock* aOutput)
+  virtual void ProduceBlockBeforeInput(GraphTime aFrom,
+                                       AudioBlock* aOutput)
   {
     NS_NOTREACHED("ProduceBlockBeforeInput called on wrong engine\n");
   }
