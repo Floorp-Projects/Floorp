@@ -235,8 +235,7 @@ public:
   // The number of frames consumed/produced depends on the amount of space
   // remaining in both the input and output buffer, and the playback rate (that
   // is, the ratio between the output samplerate and the input samplerate).
-  void CopyFromInputBufferWithResampling(AudioNodeStream* aStream,
-                                         AudioBlock* aOutput,
+  void CopyFromInputBufferWithResampling(AudioBlock* aOutput,
                                          uint32_t aChannels,
                                          uint32_t* aOffsetWithinBlock,
                                          uint32_t aAvailableInOutput,
@@ -368,8 +367,7 @@ public:
    * This function knows when it needs to allocate the output buffer, and also
    * optimizes the case where it can avoid memory allocations.
    */
-  void CopyFromBuffer(AudioNodeStream* aStream,
-                      AudioBlock* aOutput,
+  void CopyFromBuffer(AudioBlock* aOutput,
                       uint32_t aChannels,
                       uint32_t* aOffsetWithinBlock,
                       StreamTime* aCurrentPosition,
@@ -380,7 +378,7 @@ public:
       std::min<StreamTime>(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
                            mStop - *aCurrentPosition);
     if (mResampler) {
-      CopyFromInputBufferWithResampling(aStream, aOutput, aChannels,
+      CopyFromInputBufferWithResampling(aOutput, aChannels,
                                         aOffsetWithinBlock, availableInOutput,
                                         aCurrentPosition, aBufferMax);
       return;
@@ -503,10 +501,10 @@ public:
         if (mBufferPosition >= mLoopEnd) {
           mBufferPosition = mLoopStart;
         }
-        CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mLoopEnd);
+        CopyFromBuffer(aOutput, channels, &written, &streamPosition, mLoopEnd);
       } else {
         if (mBufferPosition < mBufferEnd || mRemainingResamplerTail) {
-          CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mBufferEnd);
+          CopyFromBuffer(aOutput, channels, &written, &streamPosition, mBufferEnd);
         } else {
           FillWithZeroes(aOutput, channels, &written, &streamPosition, STREAM_TIME_MAX);
         }
