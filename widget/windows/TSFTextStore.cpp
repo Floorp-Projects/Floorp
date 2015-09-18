@@ -816,13 +816,6 @@ public:
          NS_LITERAL_STRING("\x5FAE\x8EDF\x8F38\x5165\x6CD5")));
   }
 
-  bool IsGoogleJapaneseInputActive() const
-  {
-    return mActiveTIPKeyboardDescription.Equals(
-             NS_LITERAL_STRING("Google \x65E5\x672C\x8A9E\x5165\x529B")) ||
-           mActiveTIPKeyboardDescription.EqualsLiteral("Google Japanese Input");
-  }
-
   bool IsATOKActive() const
   {
     // FYI: Name of ATOK includes the release year like "ATOK 2015".
