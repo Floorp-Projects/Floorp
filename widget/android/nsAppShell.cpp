@@ -28,6 +28,7 @@
 #include "nsIURIFixup.h"
 #include "nsCategoryManagerUtils.h"
 #include "nsCDefaultURIFixup.h"
+#include "nsToolkitCompsCID.h"
 
 #include "mozilla/HangMonitor.h"
 #include "mozilla/Services.h"
@@ -275,18 +276,32 @@ nsAppShell::Observe(nsISupports* aSubject,
         // or we'll see crashes, as the app shell outlives XPConnect.
         mObserversHash.Clear();
         return nsBaseAppShell::Observe(aSubject, aTopic, aData);
+
     } else if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) &&
                aData &&
                nsDependentString(aData).Equals(NS_LITERAL_STRING(PREFNAME_COALESCE_TOUCHES))) {
         mAllowCoalescingTouches = Preferences::GetBool(PREFNAME_COALESCE_TOUCHES, true);
         return NS_OK;
+
     } else if (!strcmp(aTopic, "browser-delayed-startup-finished")) {
         NS_CreateServicesFromCategory("browser-delayed-startup-finished", nullptr,
                                       "browser-delayed-startup-finished");
+
     } else if (!strcmp(aTopic, "profile-do-change")) {
         if (jni::IsAvailable()) {
             widget::GeckoThread::SetState(
                     widget::GeckoThread::State::PROFILE_READY());
+
+            // Gecko on Android follows the Android app model where it never
+            // stops until it is killed by the system or told explicitly to
+            // quit. Therefore, we should *not* exit Gecko when there is no
+            // window or the last window is closed. nsIAppStartup::Quit will
+            // still force Gecko to exit.
+            nsCOMPtr<nsIAppStartup> appStartup =
+                do_GetService(NS_APPSTARTUP_CONTRACTID);
+            if (appStartup) {
+                appStartup->EnterLastWindowClosingSurvivalArea();
+            }
         }
         nsCOMPtr<nsIObserverService> obsServ =
             mozilla::services::GetObserverService();
