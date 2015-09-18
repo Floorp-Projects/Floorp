@@ -4,14 +4,14 @@
 
 "use strict";
 
-// Check that animation delay is visualized in the timeline-based UI when the
-// animation is delayed.
+// Check that animation delay is visualized in the timeline when the animation
+// is delayed.
 // Also check that negative delays do not overflow the UI, and are shown like
 // positive delays.
 
 add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
-  let {inspector, panel} = yield openAnimationInspectorNewUI();
+  let {inspector, panel} = yield openAnimationInspector();
 
   info("Selecting a delayed animated node");
   yield selectNode(".delayed", inspector);

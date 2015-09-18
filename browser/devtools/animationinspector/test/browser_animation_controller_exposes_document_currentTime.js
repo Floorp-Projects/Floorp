@@ -9,7 +9,7 @@
 
 add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
-  let {panel, controller} = yield openAnimationInspectorNewUI();
+  let {panel, controller} = yield openAnimationInspector();
 
   ok(controller.documentCurrentTime, "The documentCurrentTime getter exists");
   checkDocumentTimeIsCorrect(controller);
