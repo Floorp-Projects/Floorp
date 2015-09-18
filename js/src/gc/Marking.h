@@ -414,14 +414,6 @@ ToMarkable(Cell* cell)
     return cell;
 }
 
-// Return true if the pointer is nullptr, or if it is a tagged pointer to
-// nullptr.
-MOZ_ALWAYS_INLINE bool
-IsNullTaggedPointer(void* p)
-{
-    return uintptr_t(p) <= LargestTaggedNullCellPointer;
-}
-
 // Wrap a GC thing pointer into a new Value or jsid. The type system enforces
 // that the thing pointer is a wrappable type.
 template <typename S, typename T>
