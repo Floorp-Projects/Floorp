@@ -157,54 +157,55 @@ loop.contacts = (function(_, mozL10n) {
       // If the contact is blocked or not.
       blocked: React.PropTypes.bool,
       canEdit: React.PropTypes.bool,
+      // Position of mouse when opening menu
+      eventPosY: React.PropTypes.number.isRequired,
+      // callback function that provides height and top coordinate for contacts container
+      getContainerCoordinates: React.PropTypes.func.isRequired,
       handleAction: React.PropTypes.func.isRequired
     },
 
-    getInitialState: function () {
+    getInitialState: function() {
       return {
         openDirUp: false
       };
-    },
-
-    componentDidMount: function () {
-      // This method is called once when the dropdown menu is added to the DOM
-      // inside the contact item.  If the menu extends outside of the visible
-      // area of the scrollable list, it is re-rendered in different direction.
-
-      let menuNode = this.getDOMNode();
-      let menuNodeRect = menuNode.getBoundingClientRect();
-
-      let listNode = document.getElementsByClassName("contact-list")[0];
-      // XXX Workaround the contact-list element not being available in tests.
-      // Assumptions about the embedded DOM are a bad idea, and this needs
-      // reworking. For example, tests use a virtual DOM. Really we should
-      // rework this view with the DropdownMenuMixin, which would save some of this pain.
-      if (!listNode) {
-        return;
-      }
-      let listNodeRect = listNode.getBoundingClientRect();
-
-      if (menuNodeRect.top + menuNodeRect.height >=
-          listNodeRect.top + listNodeRect.height) {
-        this.setState({
-          openDirUp: true
-        });
-      }
     },
 
     onItemClick: function(event) {
       this.props.handleAction(event.currentTarget.dataset.action);
     },
 
+    componentDidMount: function() {
+      var menuNode = this.getDOMNode();
+      var menuNodeRect = menuNode.getBoundingClientRect();
+      var listNodeCoords = this.props.getContainerCoordinates();
+
+      // Click offset to not display the menu right next to the area clicked.
+      var offset = 10;
+
+      if (this.props.eventPosY + menuNodeRect.height >=
+        listNodeCoords.top + listNodeCoords.height) {
+
+        // Position above click area.
+        menuNode.style.top = this.props.eventPosY - menuNodeRect.height
+          - offset + "px";
+      } else {
+        // Position below click area.
+        menuNode.style.top = this.props.eventPosY + offset + "px";
+      }
+    },
+
     render: function() {
       var cx = React.addons.classSet;
+      var dropdownClasses = cx({
+        "dropdown-menu": true,
+        "dropdown-menu-up": this.state.openDirUp
+      });
       let blockAction = this.props.blocked ? "unblock" : "block";
       let blockLabel = this.props.blocked ? "unblock_contact_menu_button"
                                           : "block_contact_menu_button";
 
       return (
-        <ul className={cx({ "dropdown-menu": true,
-                            "dropdown-menu-up": this.state.openDirUp })}>
+        <ul className={dropdownClasses}>
           <li className={cx({ "dropdown-menu-item": true,
                               "disabled": this.props.blocked,
                               "video-call-item": true })}
@@ -244,38 +245,39 @@ loop.contacts = (function(_, mozL10n) {
   });
 
   const ContactDetail = React.createClass({
-    getInitialState: function() {
-      return {
-        showMenu: false
-      };
-    },
-
     propTypes: {
       contact: React.PropTypes.object.isRequired,
+      getContainerCoordinates: React.PropTypes.func.isRequired,
       handleContactAction: React.PropTypes.func
     },
 
-    _onBodyClick: function() {
-      // Hide the menu after other click handlers have been invoked.
-      setTimeout(this.hideDropdownMenu, 10);
+    mixins: [
+      sharedMixins.DropdownMenuMixin()
+    ],
+
+    getInitialState: function() {
+      return {
+        eventPosY: 0
+      };
     },
 
-    showDropdownMenu: function() {
-      document.body.addEventListener("click", this._onBodyClick);
-      this.setState({showMenu: true});
+    handleShowDropdownClick: function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      this.setState({
+        eventPosY: e.pageY
+      });
+
+      this.toggleDropdownMenu();
     },
 
-    hideDropdownMenu: function() {
-      document.body.removeEventListener("click", this._onBodyClick);
+    hideDropdownMenuHandler: function() {
       // Since this call may be deferred, we need to guard it, for example in
       // case the contact was removed in the meantime.
       if (this.isMounted()) {
-        this.setState({showMenu: false});
+        this.hideDropdownMenu();
       }
-    },
-
-    componentWillUnmount: function() {
-      document.body.removeEventListener("click", this._onBodyClick);
     },
 
     shouldComponentUpdate: function(nextProps, nextState) {
@@ -294,6 +296,7 @@ loop.contacts = (function(_, mozL10n) {
     handleAction: function(actionName) {
       if (this.props.handleContactAction) {
         this.props.handleContactAction(this.props.contact, actionName);
+        this.hideDropdownMenuHandler();
       }
     },
 
@@ -301,6 +304,16 @@ loop.contacts = (function(_, mozL10n) {
       // We cannot modify imported contacts.  For the moment, the check for
       // determining whether the contact is imported is based on its category.
       return this.props.contact.category[0] !== "google";
+    },
+
+    /**
+     * Callback called when moving cursor away from the conversation entry.
+     * Will close the dropdown menu.
+     */
+    _handleMouseOut: function() {
+      if (this.state.showMenu) {
+        this.toggleDropdownMenu();
+      }
     },
 
     render: function() {
@@ -316,9 +329,9 @@ loop.contacts = (function(_, mozL10n) {
         avatar: true,
         defaultAvatar: !avatarSrc
       });
-
       return (
-        <li className={contactCSSClass} onMouseLeave={this.hideDropdownMenu}>
+        <li className={contactCSSClass}
+            onMouseLeave={this._handleMouseOut}>
           <div className={avatarCSSClass}>
             {avatarSrc ? <img src={avatarSrc} /> : null}
           </div>
@@ -332,11 +345,13 @@ loop.contacts = (function(_, mozL10n) {
             <i className="icon icon-contact-video-call"
                onClick={this.handleAction.bind(null, "video-call")} />
             <i className="icon icon-vertical-ellipsis icon-contact-menu-button"
-               onClick={this.showDropdownMenu} />
+               onClick={this.handleShowDropdownClick} />
           </div>
           {this.state.showMenu
             ? <ContactDropdown blocked={this.props.contact.blocked}
                                canEdit={this.canEdit()}
+                               eventPosY={this.state.eventPosY}
+                               getContainerCoordinates={this.props.getContainerCoordinates}
                                handleAction={this.handleAction} />
             : null
           }
@@ -636,6 +651,17 @@ loop.contacts = (function(_, mozL10n) {
       return contact1._guid - contact2._guid;
     },
 
+    getCoordinates: function() {
+      // Returns coordinates for use by child elements to place menus etc that are absolutely positioned
+      var domNode = this.getDOMNode();
+      var domNodeRect = domNode.getBoundingClientRect();
+
+      return {
+        "top": domNodeRect.top,
+        "height": domNodeRect.height
+      };
+    },
+
     _renderFilterClearButton: function() {
       if (this.state.filter) {
         return (
@@ -668,6 +694,7 @@ loop.contacts = (function(_, mozL10n) {
       let viewForItem = item => {
         return (
           <ContactDetail contact={item}
+                         getContainerCoordinates={this.getCoordinates}
                          handleContactAction={this.handleContactAction}
                          key={item._guid} />
         );

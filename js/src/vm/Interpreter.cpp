@@ -255,7 +255,9 @@ GetPropertyOperation(JSContext* cx, InterpreterFrame* fp, HandleScript script, j
     }
 
     MOZ_ASSERT(op == JSOP_GETPROP || op == JSOP_LENGTH);
-    return GetProperty(cx, lval, name, vp);
+    // Copy lval, because it might alias vp.
+    RootedValue v(cx, lval);
+    return GetProperty(cx, v, name, vp);
 }
 
 static inline bool
@@ -916,7 +918,7 @@ js::InternalConstructWithProvidedThis(JSContext* cx, HandleValue fval, HandleVal
 }
 
 bool
-js::InvokeGetter(JSContext* cx, JSObject* obj, Value fval, MutableHandleValue rval)
+js::InvokeGetter(JSContext* cx, const Value& thisv, Value fval, MutableHandleValue rval)
 {
     /*
      * Invoke could result in another try to get or set the same id again, see
@@ -924,7 +926,7 @@ js::InvokeGetter(JSContext* cx, JSObject* obj, Value fval, MutableHandleValue rv
      */
     JS_CHECK_RECURSION(cx, return false);
 
-    return Invoke(cx, ObjectValue(*obj), fval, 0, nullptr, rval);
+    return Invoke(cx, thisv, fval, 0, nullptr, rval);
 }
 
 bool
@@ -4190,7 +4192,7 @@ js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name, MutableHa
             proto = GlobalObject::getOrCreateSymbolPrototype(cx, cx->global());
         }
         if (!proto)
-             return false;
+            return false;
 
         if (GetPropertyPure(cx, proto, NameToId(name), vp.address()))
             return true;
@@ -4200,7 +4202,9 @@ js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name, MutableHa
     if (!obj)
         return false;
 
-    return GetProperty(cx, obj, obj, name, vp);
+    // Bug 603201: Pass primitive receiver here.
+    RootedValue receiver(cx, ObjectValue(*obj));
+    return GetProperty(cx, obj, receiver, name, vp);
 }
 
 bool

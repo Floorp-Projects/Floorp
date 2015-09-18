@@ -95,6 +95,7 @@ Http2Session::Http2Session(nsISocketTransport *aSocketTransport, uint32_t versio
   , mCleanShutdown(false)
   , mTLSProfileConfirmed(false)
   , mGoAwayReason(NO_HTTP_ERROR)
+  , mClientGoAwayReason(UNASSIGNED)
   , mPeerGoAwayReason(UNASSIGNED)
   , mGoAwayID(0)
   , mOutgoingGoAwayID(0)
@@ -195,6 +196,7 @@ Http2Session::~Http2Session()
   Telemetry::Accumulate(Telemetry::SPDY_REQUEST_PER_CONN, (mNextStreamID - 1) / 2);
   Telemetry::Accumulate(Telemetry::SPDY_SERVER_INITIATED_STREAMS,
                         mServerPushedResources);
+  Telemetry::Accumulate(Telemetry::SPDY_GOAWAY_LOCAL, mClientGoAwayReason);
   Telemetry::Accumulate(Telemetry::SPDY_GOAWAY_PEER, mPeerGoAwayReason);
 }
 
@@ -806,6 +808,7 @@ Http2Session::GenerateGoAway(uint32_t aStatusCode)
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
   LOG3(("Http2Session::GenerateGoAway %p code=%X\n", this, aStatusCode));
 
+  mClientGoAwayReason = aStatusCode;
   uint32_t frameSize = kFrameHeaderBytes + 8;
   char *packet = EnsureOutputBuffer(frameSize);
   mOutputQueueUsed += frameSize;

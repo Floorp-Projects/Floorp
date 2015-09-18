@@ -2920,12 +2920,16 @@ JS_GetPropertyDescriptor(JSContext* cx, HandleObject obj, const char* name,
 JS_PUBLIC_API(bool)
 JS_GetPropertyById(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
-    return JS_ForwardGetPropertyTo(cx, obj, id, obj, vp);
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj, id);
+
+    return GetProperty(cx, obj, obj, id, vp);
 }
 
 JS_PUBLIC_API(bool)
-JS_ForwardGetPropertyTo(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject onBehalfOf,
-                        JS::MutableHandleValue vp)
+JS_ForwardGetPropertyTo(JSContext* cx, HandleObject obj, HandleId id, HandleValue onBehalfOf,
+                        MutableHandleValue vp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -2935,9 +2939,13 @@ JS_ForwardGetPropertyTo(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS
 }
 
 JS_PUBLIC_API(bool)
-JS_GetElement(JSContext* cx, HandleObject objArg, uint32_t index, MutableHandleValue vp)
+JS_GetElement(JSContext* cx, HandleObject obj, uint32_t index, MutableHandleValue vp)
 {
-    return JS_ForwardGetElementTo(cx, objArg, index, objArg, vp);
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, obj);
+
+    return GetElement(cx, obj, obj, index, vp);
 }
 
 JS_PUBLIC_API(bool)

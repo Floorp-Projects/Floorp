@@ -65,7 +65,7 @@ BaseProxyHandler::hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* b
 }
 
 bool
-BaseProxyHandler::get(JSContext* cx, HandleObject proxy, HandleObject receiver,
+BaseProxyHandler::get(JSContext* cx, HandleObject proxy, HandleValue receiver,
                       HandleId id, MutableHandleValue vp) const
 {
     assertEnteredPolicy(cx, proxy, id, GET);

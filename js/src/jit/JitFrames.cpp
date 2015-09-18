@@ -1401,7 +1401,6 @@ MarkJitExitFrame(JSTracer* trc, const JitFrameIterator& frame)
         TraceRoot(trc, oolproxy->vp(), "ion-ool-proxy-vp");
         TraceRoot(trc, oolproxy->id(), "ion-ool-proxy-id");
         TraceRoot(trc, oolproxy->proxy(), "ion-ool-proxy-proxy");
-        TraceRoot(trc, oolproxy->receiver(), "ion-ool-proxy-receiver");
         return;
     }
 
