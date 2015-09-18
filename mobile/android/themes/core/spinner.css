@@ -1,0 +1,124 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.mui-refresh-main {
+  padding: 0;
+  overflow: hidden;
+  border-radius: 999px;
+  position: relative;
+}
+
+.mui-refresh-wrapper {
+  width: 60px;
+  height: 60px;
+}
+
+.mui-spinner-main {
+  width: 60px;
+  height: 60px;
+  position: relative;
+  animation: sporadic-rotate 5.25s cubic-bezier(.35, 0, .25, 1) infinite;
+}
+
+.mui-spinner-wrapper {
+  animation: outer-rotate 2.91667s linear infinite;
+}
+
+.mui-spinner-left, .mui-spinner-right {
+  position: absolute;
+  top: 0;
+  height: 60px;
+  width: 30px;
+  overflow: hidden;
+}
+
+.mui-spinner-left {
+  left: 0;
+}
+
+.mui-spinner-right {
+  right: 0;
+}
+
+.mui-half-circle-left, .mui-half-circle-right  {
+  position: absolute;
+  top: 0;
+  width: 60px;
+  height: 60px;
+  box-sizing: border-box;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #000 #000 transparent;
+  border-radius: 999px;
+  animation-iteration-count: infinite;
+  animation-duration: 1.3125s;
+  animation-timing-function: cubic-bezier(.35, 0, .25, 1);
+}
+
+.mui-half-circle-left {
+  left: 0;
+  border-right-color: transparent;
+  border-top-color: #FF9500; /*matched to fennec_ui_orange in java codebase*/
+  border-left-color: #FF9500; /*matched to fennec_ui_orange in java codebase*/
+  animation-name: left-wobble;
+}
+
+.mui-half-circle-right {
+  right: 0;
+  border-left-color: transparent;
+  border-top-color: #FF9500; /*matched to fennec_ui_orange in java codebase*/
+  border-right-color: #FF9500; /*matched to fennec_ui_orange in java codebase*/
+  animation-name: right-wobble;
+}
+
+@keyframes outer-rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes left-wobble {
+  0%, 100% {
+    transform: rotate(130deg);
+  }
+  50% {
+    transform: rotate(-5deg);
+  }
+}
+
+@keyframes right-wobble {
+  0%, 100% {
+    transform: rotate(-130deg);
+  }
+  50% {
+    transform: rotate(5deg);
+  }
+}
+
+@keyframes sporadic-rotate {
+  12.5% {
+    transform: rotate(135deg);
+  }
+  25% {
+    transform: rotate(270deg);
+  }
+  37.5% {
+    transform: rotate(405deg);
+  }
+  50% {
+    transform: rotate(540deg);
+  }
+  62.5% {
+    transform: rotate(675deg);
+  }
+  75% {
+    transform: rotate(810deg);
+  }
+  87.5% {
+    transform: rotate(945deg);
+  }
+  100% {
+    transform: rotate(1080deg);
+  }
+}

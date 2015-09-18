@@ -29,6 +29,7 @@ chrome.jar:
   skin/config.css                           (config.css)
   skin/touchcontrols.css                    (touchcontrols.css)
   skin/netError.css                         (netError.css)
+  skin/spinner.css                          (spinner.css)
 % override chrome://global/skin/about.css chrome://browser/skin/about.css
 % override chrome://global/skin/aboutMemory.css chrome://browser/skin/aboutMemory.css
 % override chrome://global/skin/aboutReader.css chrome://browser/skin/aboutReader.css
@@ -44,7 +45,6 @@ chrome.jar:
 #
 
 * skin/aboutLogins.css                      (aboutLogins.css)
-  skin/images/spinning_throbber.svg         (images/spinning_throbber.svg)
 
   skin/images/search.png                    (images/search.png)
   skin/images/lock.png                      (images/lock.png)
