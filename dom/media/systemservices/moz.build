@@ -5,22 +5,22 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['MOZ_WEBRTC']:
-    EXPORTS += ['CamerasChild.h',
-                'CamerasParent.h',
-                'CamerasUtils.h',
-                'LoadManager.h',
-                'LoadManagerFactory.h',
-                'LoadMonitor.h',
+    EXPORTS += [
+        'CamerasChild.h',
+        'CamerasParent.h',
+        'CamerasUtils.h',
+        'LoadManager.h',
+        'LoadManagerFactory.h',
+        'LoadMonitor.h',
     ]
-    UNIFIED_SOURCES += ['CamerasChild.cpp',
-                        'CamerasParent.cpp',
-                        'CamerasUtils.cpp',
-                        'LoadManager.cpp',
-                        'LoadManagerFactory.cpp',
-                        'LoadMonitor.cpp',
-    ]
-    IPDL_SOURCES = [
-        'PCameras.ipdl',
+    UNIFIED_SOURCES += [
+        'CamerasChild.cpp',
+        'CamerasParent.cpp',
+        'CamerasUtils.cpp',
+        'LoadManager.cpp',
+        'LoadManagerFactory.cpp',
+        'LoadMonitor.cpp',
+        'ShmemPool.cpp',
     ]
     LOCAL_INCLUDES += [
         '/media/webrtc/signaling',
@@ -63,17 +63,18 @@ EXPORTS.mozilla.media += ['MediaChild.h',
                           'MediaSystemResourceTypes.h',
                           'MediaUtils.h',
 ]
-UNIFIED_SOURCES += ['MediaChild.cpp',
-                    'MediaParent.cpp',
-                    'MediaSystemResourceClient.cpp',
-                    'MediaSystemResourceManager.cpp',
-                    'MediaSystemResourceManagerChild.cpp',
-                    'MediaSystemResourceManagerParent.cpp',
-                    'MediaSystemResourceService.cpp',
-                    'MediaUtils.cpp',
-                    'ShmemPool.cpp',
+UNIFIED_SOURCES += [
+    'MediaChild.cpp',
+    'MediaParent.cpp',
+    'MediaSystemResourceClient.cpp',
+    'MediaSystemResourceManager.cpp',
+    'MediaSystemResourceManagerChild.cpp',
+    'MediaSystemResourceManagerParent.cpp',
+    'MediaSystemResourceService.cpp',
+    'MediaUtils.cpp',
 ]
 IPDL_SOURCES += [
+    'PCameras.ipdl',
     'PMedia.ipdl',
     'PMediaSystemResourceManager.ipdl',
 ]
