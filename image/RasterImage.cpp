@@ -65,142 +65,6 @@ using std::min;
 // used for statistics.
 static int32_t sMaxDecodeCount = 0;
 
-class ScaleRunner : public nsRunnable
-{
-  enum ScaleState
-  {
-    eNew,
-    eReady,
-    eFinish,
-    eFinishWithError
-  };
-
-public:
-  ScaleRunner(RasterImage* aImage,
-              uint32_t aImageFlags,
-              const IntSize& aSize,
-              RawAccessFrameRef&& aSrcRef)
-    : mImage(aImage)
-    , mSrcRef(Move(aSrcRef))
-    , mDstSize(aSize)
-    , mImageFlags(aImageFlags)
-    , mState(eNew)
-  {
-    MOZ_ASSERT(!mSrcRef->GetIsPaletted());
-    MOZ_ASSERT(aSize.width > 0 && aSize.height > 0);
-  }
-
-  bool Init()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(mState == eNew, "Calling Init() twice?");
-
-    // We'll need a destination frame. It's unconditionally ARGB32 because
-    // that's what the scaler outputs.
-    nsRefPtr<imgFrame> tentativeDstFrame = new imgFrame();
-    nsresult rv =
-      tentativeDstFrame->InitForDecoder(mDstSize, SurfaceFormat::B8G8R8A8);
-    if (NS_FAILED(rv)) {
-      return false;
-    }
-
-    // We need a strong reference to the raw data for the destination frame.
-    // (We already got one for the source frame in the constructor.)
-    RawAccessFrameRef tentativeDstRef = tentativeDstFrame->RawAccessRef();
-    if (!tentativeDstRef) {
-      return false;
-    }
-
-    // Everything worked, so commit to these objects and mark ourselves ready.
-    mDstRef = Move(tentativeDstRef);
-    mState = eReady;
-
-    // Insert the new surface into the cache immediately. We need to do this so
-    // that we won't start multiple scaling jobs for the same size.
-    SurfaceCache::Insert(mDstRef.get(), ImageKey(mImage.get()),
-                         RasterSurfaceKey(mDstSize,
-                                          ToSurfaceFlags(mImageFlags),
-                                          /* aFrameNum = */ 0),
-                         Lifetime::Transient);
-
-    return true;
-  }
-
-  NS_IMETHOD Run() override
-  {
-    if (mState == eReady) {
-      // Collect information from the frames that we need to scale.
-      ScalingData srcData = mSrcRef->GetScalingData();
-      ScalingData dstData = mDstRef->GetScalingData();
-
-      // Actually do the scaling.
-      bool succeeded =
-        gfx::Scale(srcData.mRawData, srcData.mSize.width, srcData.mSize.height,
-                   srcData.mBytesPerRow, dstData.mRawData, mDstSize.width,
-                   mDstSize.height, dstData.mBytesPerRow, srcData.mFormat);
-
-      if (succeeded) {
-        // Mark the frame as complete and discardable.
-        mDstRef->ImageUpdated(mDstRef->GetRect());
-        MOZ_ASSERT(mDstRef->IsImageComplete(),
-                   "Incomplete, but just updated the entire frame");
-      }
-
-      // We need to send notifications and release our references on the main
-      // thread, so finish up there.
-      mState = succeeded ? eFinish : eFinishWithError;
-      NS_DispatchToMainThread(this);
-    } else if (mState == eFinish) {
-      MOZ_ASSERT(NS_IsMainThread());
-      MOZ_ASSERT(mDstRef, "Should have a valid scaled frame");
-
-      // Notify, so observers can redraw.
-      nsRefPtr<RasterImage> image = mImage.get();
-      if (image) {
-        image->NotifyNewScaledFrame();
-      }
-
-      // We're done, so release everything.
-      mSrcRef.reset();
-      mDstRef.reset();
-    } else if (mState == eFinishWithError) {
-      MOZ_ASSERT(NS_IsMainThread());
-      NS_WARNING("HQ scaling failed");
-
-      // Remove the frame from the cache since we know we don't need it.
-      SurfaceCache::RemoveSurface(ImageKey(mImage.get()),
-                                  RasterSurfaceKey(mDstSize,
-                                                   ToSurfaceFlags(mImageFlags),
-                                                   /* aFrameNum = */ 0));
-
-      // Release everything we're holding, too.
-      mSrcRef.reset();
-      mDstRef.reset();
-    } else {
-      // mState must be eNew, which is invalid in Run().
-      MOZ_ASSERT(false, "Need to call Init() before dispatching");
-    }
-
-    return NS_OK;
-  }
-
-private:
-  virtual ~ScaleRunner()
-  {
-    MOZ_ASSERT(!mSrcRef && !mDstRef,
-               "Should have released strong refs in Run()");
-  }
-
-  WeakPtr<RasterImage> mImage;
-  RawAccessFrameRef    mSrcRef;
-  RawAccessFrameRef    mDstRef;
-  const IntSize      mDstSize;
-  uint32_t             mImageFlags;
-  ScaleState           mState;
-};
-
-static nsCOMPtr<nsIThread> sScaleWorkerThread = nullptr;
-
 #ifndef DEBUG
 NS_IMPL_ISUPPORTS(RasterImage, imgIContainer, nsIProperties)
 #else
@@ -1550,74 +1414,13 @@ RasterImage::RecoverFromInvalidFrames(const IntSize& aSize, uint32_t aFlags)
 }
 
 bool
-RasterImage::CanScale(GraphicsFilter aFilter,
-                      const IntSize& aSize,
-                      uint32_t aFlags)
-{
-#ifndef MOZ_ENABLE_SKIA
-  // The high-quality scaler requires Skia.
-  return false;
-#else
-  // Check basic requirements: HQ downscaling is enabled, we have all the source
-  // data and know our size, the flags allow us to do it, and a 'good' filter is
-  // being used. The flags may ask us not to scale because the caller isn't
-  // drawing to the window. If we're drawing to something else (e.g. a canvas)
-  // we usually have no way of updating what we've drawn, so HQ scaling is
-  // useless.
-  if (!gfxPrefs::ImageHQDownscalingEnabled() || !mHasSize || !mHasSourceData ||
-      !(aFlags & imgIContainer::FLAG_HIGH_QUALITY_SCALING) ||
-      aFilter != GraphicsFilter::FILTER_GOOD) {
-    return false;
-  }
-
-  // We don't HQ scale images that we can downscale during decode.
-  if (mDownscaleDuringDecode) {
-    return false;
-  }
-
-  // We don't use the scaler for animated or transient images to avoid doing a
-  // bunch of work on an image that just gets thrown away.
-  if (mAnim || mTransient) {
-    return false;
-  }
-
-  // If target size is 1:1 with original, don't scale.
-  if (aSize == mSize) {
-    return false;
-  }
-
-  // To save memory, don't quality upscale images bigger than the limit.
-  if (aSize.width > mSize.width || aSize.height > mSize.height) {
-    uint32_t scaledSize = static_cast<uint32_t>(aSize.width * aSize.height);
-    if (scaledSize > gfxPrefs::ImageHQUpscalingMaxSize()) {
-      return false;
-    }
-  }
-
-  // There's no point in scaling if we can't store the result.
-  if (!SurfaceCache::CanHold(aSize)) {
-    return false;
-  }
-
-  // XXX(seth): It's not clear what this check buys us over
-  // gfxPrefs::ImageHQUpscalingMaxSize().
-  // The default value of this pref is 1000, which means that we never upscale.
-  // If that's all it's getting us, I'd rather we just forbid that explicitly.
-  gfx::Size scale(double(aSize.width) / mSize.width,
-                  double(aSize.height) / mSize.height);
-  gfxFloat minFactor = gfxPrefs::ImageHQDownscalingMinFactor() / 1000.0;
-  return (scale.width < minFactor || scale.height < minFactor);
-#endif
-}
-
-bool
 RasterImage::CanDownscaleDuringDecode(const IntSize& aSize, uint32_t aFlags)
 {
   // Check basic requirements: downscale-during-decode is enabled for this
   // image, we have all the source data and know our size, the flags allow us to
   // do it, and a 'good' filter is being used.
   if (!mDownscaleDuringDecode || !mHasSize ||
-      !gfxPrefs::ImageHQDownscalingEnabled() ||
+      !gfxPrefs::ImageDownscaleDuringDecodeEnabled() ||
       !(aFlags & imgIContainer::FLAG_HIGH_QUALITY_SCALING)) {
     return false;
   }
@@ -1645,87 +1448,21 @@ RasterImage::CanDownscaleDuringDecode(const IntSize& aSize, uint32_t aFlags)
   return true;
 }
 
-void
-RasterImage::NotifyNewScaledFrame()
-{
-  // Send an invalidation so observers will repaint and can take advantage of
-  // the new scaled frame if possible.
-  NotifyProgress(NoProgress, IntRect(0, 0, mSize.width, mSize.height));
-}
-
-void
-RasterImage::RequestScale(imgFrame* aFrame,
-                          uint32_t aFlags,
-                          const IntSize& aSize)
-{
-  // We don't scale frames which aren't fully decoded.
-  if (!aFrame->IsImageComplete()) {
-    return;
-  }
-
-  // We can't scale frames that need padding or are single pixel.
-  if (aFrame->NeedsPadding() || aFrame->IsSinglePixel()) {
-    return;
-  }
-
-  // We also can't scale if we can't lock the image data for this frame.
-  RawAccessFrameRef frameRef = aFrame->RawAccessRef();
-  if (!frameRef) {
-    return;
-  }
-
-  nsRefPtr<ScaleRunner> runner =
-    new ScaleRunner(this, aFlags, aSize, Move(frameRef));
-  if (runner->Init()) {
-    if (!sScaleWorkerThread) {
-      NS_NewNamedThread("Image Scaler", getter_AddRefs(sScaleWorkerThread));
-      ClearOnShutdown(&sScaleWorkerThread);
-    }
-
-    sScaleWorkerThread->Dispatch(runner, NS_DISPATCH_NORMAL);
-  }
-}
-
 DrawResult
-RasterImage::DrawWithPreDownscaleIfNeeded(DrawableFrameRef&& aFrameRef,
-                                          gfxContext* aContext,
-                                          const IntSize& aSize,
-                                          const ImageRegion& aRegion,
-                                          GraphicsFilter aFilter,
-                                          uint32_t aFlags)
+RasterImage::DrawInternal(DrawableFrameRef&& aFrameRef,
+                          gfxContext* aContext,
+                          const IntSize& aSize,
+                          const ImageRegion& aRegion,
+                          GraphicsFilter aFilter,
+                          uint32_t aFlags)
 {
-  DrawableFrameRef frameRef;
-
-  if (CanScale(aFilter, aSize, aFlags)) {
-    LookupResult result =
-      SurfaceCache::Lookup(ImageKey(this),
-                           RasterSurfaceKey(aSize,
-                                            ToSurfaceFlags(aFlags),
-                                            /* aFrameNum = */ 0));
-    if (!result) {
-      // We either didn't have a matching scaled frame or the OS threw it away.
-      // Request a new one so we'll be ready next time. For now, we'll fall back
-      // to aFrameRef below.
-      RequestScale(aFrameRef.get(), aFlags, aSize);
-    }
-    if (result && result.DrawableRef()->IsImageComplete()) {
-      frameRef = Move(result.DrawableRef());  // The scaled version is ready.
-    }
-  }
-
   gfxContextMatrixAutoSaveRestore saveMatrix(aContext);
   ImageRegion region(aRegion);
-  bool frameIsComplete = true;  // We already checked HQ scaled frames.
-  if (!frameRef) {
-    // There's no HQ scaled frame available, so we'll have to use the frame
-    // provided by the caller.
-    frameRef = Move(aFrameRef);
-    frameIsComplete = frameRef->IsImageComplete();
-  }
+  bool frameIsComplete = aFrameRef->IsImageComplete();
 
   // By now we may have a frame with the requested size. If not, we need to
   // adjust the drawing parameters accordingly.
-  IntSize finalSize = frameRef->GetImageSize();
+  IntSize finalSize = aFrameRef->GetImageSize();
   bool couldRedecodeForBetterFrame = false;
   if (finalSize != aSize) {
     gfx::Size scale(double(aSize.width) / finalSize.width,
@@ -1737,7 +1474,7 @@ RasterImage::DrawWithPreDownscaleIfNeeded(DrawableFrameRef&& aFrameRef,
                                   CanDownscaleDuringDecode(aSize, aFlags);
   }
 
-  if (!frameRef->Draw(aContext, region, aFilter, aFlags)) {
+  if (!aFrameRef->Draw(aContext, region, aFilter, aFlags)) {
     RecoverFromInvalidFrames(aSize, aFlags);
     return DrawResult::TEMPORARY_ERROR;
   }
@@ -1811,8 +1548,8 @@ RasterImage::Draw(gfxContext* aContext,
   bool shouldRecordTelemetry = !mDrawStartTime.IsNull() &&
                                ref->IsImageComplete();
 
-  auto result = DrawWithPreDownscaleIfNeeded(Move(ref), aContext, aSize,
-                                             aRegion, aFilter, flags);
+  auto result = DrawInternal(Move(ref), aContext, aSize,
+                             aRegion, aFilter, flags);
 
   if (shouldRecordTelemetry) {
       TimeDuration drawLatency = TimeStamp::Now() - mDrawStartTime;
@@ -2137,28 +1874,9 @@ RasterImage::OptimalImageSizeForDest(const gfxSize& aDest, uint32_t aWhichFrame,
   if (aFilter == GraphicsFilter::FILTER_GOOD &&
       CanDownscaleDuringDecode(destSize, aFlags)) {
     return destSize;
-  } else if (CanScale(aFilter, destSize, aFlags)) {
-    LookupResult result =
-      SurfaceCache::Lookup(ImageKey(this),
-                           RasterSurfaceKey(destSize,
-                                            ToSurfaceFlags(aFlags),
-                                            /* aFrameNum = */ 0));
-
-    if (result && result.DrawableRef()->IsImageComplete()) {
-      return destSize;  // We have an existing HQ scale for this size.
-    }
-    if (!result) {
-      // We could HQ scale to this size, but we haven't. Request a scale now.
-      DrawableFrameRef ref = LookupFrame(GetRequestedFrameIndex(aWhichFrame),
-                                         mSize, aFlags);
-      if (ref) {
-        RequestScale(ref.get(), aFlags, destSize);
-      }
-    }
   }
 
-  // We either can't HQ scale to this size or the scaled version isn't ready
-  // yet. Use our intrinsic size for now.
+  // We can't scale to this size. Use our intrinsic size for now.
   return mSize;
 }
 

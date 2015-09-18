@@ -23,8 +23,8 @@
     branch.setBoolPref("extensions.blocklist.enabled", false);
     // Make url-classifier updates so rare that they won't affect tests
     branch.setIntPref("urlclassifier.updateinterval", 172800);
-    // Disable high-quality downscaling, since it makes reftests more difficult.
-    branch.setBoolPref("image.high_quality_downscaling.enabled", false);
+    // Disable downscale-during-decode, since it makes reftests more difficult.
+    branch.setBoolPref("image.downscale-during-decode.enabled", false);
     // Disable the single-color optimization, since it can cause intermittent
     // oranges and it causes many of our tests to test a different code path
     // than the one that normal images on the web use.
