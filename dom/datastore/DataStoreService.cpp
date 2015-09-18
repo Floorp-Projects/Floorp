@@ -125,6 +125,7 @@ namespace {
 
 // Singleton for DataStoreService.
 StaticRefPtr<DataStoreService> gDataStoreService;
+nsString gHomeScreenManifestURL;
 static uint64_t gCounterID = 0;
 
 typedef nsClassHashtable<nsUint32HashKey, DataStoreInfo> HashApp;
@@ -447,6 +448,18 @@ AddAccessPermissionsEnumerator(const uint32_t& aAppId,
                                   aInfo->mManifestURL,
                                   permission, readOnly);
   return NS_FAILED(data->mResult) ? PL_DHASH_STOP : PL_DHASH_NEXT;
+}
+
+void
+HomeScreenPrefCallback(const char* aPrefName, void* /* aClosure */)
+{
+  MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
+  nsRefPtr<DataStoreService> service = DataStoreService::Get();
+  if (!service) {
+    return;
+  }
+
+  service->HomeScreenPrefChanged();
 }
 
 } /* anonymous namespace */
@@ -805,6 +818,12 @@ DataStoreService::Shutdown()
       if (obs) {
         obs->RemoveObserver(gDataStoreService, "webapps-clear-data");
       }
+
+      nsresult rv =
+        Preferences::UnregisterCallback(HomeScreenPrefCallback,
+                                        "dom.mozApps.homescreenURL",
+                                        nullptr);
+      NS_WARN_IF(NS_FAILED(rv));
     }
 
     gDataStoreService = nullptr;
@@ -843,6 +862,13 @@ DataStoreService::Init()
   }
 
   nsresult rv = obs->AddObserver(this, "webapps-clear-data", false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = Preferences::RegisterCallback(HomeScreenPrefCallback,
+                                     "dom.mozApps.homescreenURL",
+                                     nullptr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1493,6 +1519,91 @@ DataStoreService::GenerateUUID(nsAString& aID)
   CopyASCIItoUTF16(chars, aID);
 
   return NS_OK;
+}
+
+void
+DataStoreService::HomeScreenPrefChanged()
+{
+  MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
+
+  nsAdoptingString homescreen =
+    Preferences::GetString("dom.mozApps.homescreenURL");
+  if (homescreen == gHomeScreenManifestURL) {
+    return;
+  }
+
+  // Remove datastores of the old homescreen.
+  if (!gHomeScreenManifestURL.IsEmpty()) {
+    DeleteDataStoresIfNotAllowed(gHomeScreenManifestURL);
+  }
+
+  gHomeScreenManifestURL = homescreen;
+  if (gHomeScreenManifestURL.IsEmpty()) {
+    return;
+  }
+
+  // Add datastores for the new homescreen.
+  AddDataStoresIfAllowed(gHomeScreenManifestURL);
+}
+
+void
+DataStoreService::DeleteDataStoresIfNotAllowed(const nsAString& aManifestURL)
+{
+  nsCOMPtr<nsIAppsService> appsService =
+    do_GetService("@mozilla.org/AppsService;1");
+  if (NS_WARN_IF(!appsService)) {
+    return;
+  }
+
+  nsCOMPtr<mozIApplication> app;
+  nsresult rv = appsService->GetAppByManifestURL(aManifestURL,
+                                                 getter_AddRefs(app));
+  if (NS_WARN_IF(NS_FAILED(rv)) || !app) {
+    return;
+  }
+
+  uint32_t localId;
+  rv = app->GetLocalId(&localId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal;
+  rv = app->GetPrincipal(getter_AddRefs(principal));
+
+  // We delete all the dataStores for this app here.
+  if (NS_WARN_IF(NS_FAILED(rv)) || !principal ||
+      !CheckPermission(principal)) {
+    DeleteDataStores(localId);
+  }
+}
+
+void
+DataStoreService::AddDataStoresIfAllowed(const nsAString& aManifestURL)
+{
+  nsCOMPtr<nsIAppsService> appsService =
+    do_GetService("@mozilla.org/AppsService;1");
+  if (NS_WARN_IF(!appsService)) {
+    return;
+  }
+
+  nsCOMPtr<mozIApplication> app;
+  nsresult rv = appsService->GetAppByManifestURL(aManifestURL,
+                                                 getter_AddRefs(app));
+  if (NS_WARN_IF(NS_FAILED(rv)) || !app) {
+    return;
+  }
+
+  uint32_t localId;
+  rv = app->GetLocalId(&localId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  rv = appsService->UpdateDataStoreEntriesFromLocalId(localId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
 }
 
 } // namespace dom
