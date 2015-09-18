@@ -28,8 +28,11 @@ class TryToolsMixin(TransferMixin):
     }
 
     def _extract_try_message(self):
-        msg = self.buildbot_config['sourcestamp']['changes'][-1]['comments']
-        if len(msg) == 1024:
+        msg = None
+        if self.buildbot_config['sourcestamp']['changes']:
+            msg = self.buildbot_config['sourcestamp']['changes'][-1]['comments']
+
+        if msg is None or len(msg) == 1024:
             # This commit message was potentially truncated, get the full message
             # from hg.
             props = self.buildbot_config['properties']
