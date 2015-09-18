@@ -160,11 +160,6 @@ public:
     aRv = MozGetIPCContext(aContextId, getter_AddRefs(context));
     return context.forget();
   }
-  void MozFetchAsStream(nsIInputStreamCallback* aCallback,
-                        const nsAString& aType, ErrorResult& aRv)
-  {
-    aRv = MozFetchAsStream(aCallback, aType);
-  }
   PrintCallback* GetMozPrintCallback() const;
   void SetMozPrintCallback(PrintCallback* aCallback);
 
