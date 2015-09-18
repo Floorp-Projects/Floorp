@@ -36,7 +36,8 @@ public:
     return mAppId == aOther.mAppId &&
            mInBrowser == aOther.mInBrowser &&
            mAddonId == aOther.mAddonId &&
-           mUserContextId == aOther.mUserContextId;
+           mUserContextId == aOther.mUserContextId &&
+           mSignedPkg == aOther.mSignedPkg;
   }
   bool operator!=(const OriginAttributes& aOther) const
   {
@@ -85,6 +86,10 @@ public:
     }
 
     if (mUserContextId.WasPassed() && mUserContextId.Value() != aAttrs.mUserContextId) {
+      return false;
+    }
+
+    if (mSignedPkg.WasPassed() && mSignedPkg.Value() != aAttrs.mSignedPkg) {
       return false;
     }
 

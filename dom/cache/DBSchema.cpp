@@ -1913,8 +1913,9 @@ ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
       return NS_ERROR_FAILURE;
     }
 
+    nsCString signedPkg = NS_ConvertUTF16toUTF8(attrs.mSignedPkg);
     aSavedResponseOut->mValue.principalInfo() =
-      mozilla::ipc::ContentPrincipalInfo(attrs.mAppId, attrs.mInBrowser, originNoSuffix);
+      mozilla::ipc::ContentPrincipalInfo(attrs.mAppId, attrs.mInBrowser, originNoSuffix, signedPkg);
   }
 
   int32_t redirected;

@@ -62,6 +62,10 @@ OriginAttributes::CreateSuffix(nsACString& aStr) const
     params->Set(NS_LITERAL_STRING("userContextId"), value);
   }
 
+  if (!mSignedPkg.IsEmpty()) {
+    params->Set(NS_LITERAL_STRING("signedPkg"), mSignedPkg);
+  }
+
   aStr.Truncate();
 
   params->Serialize(value);
@@ -129,6 +133,12 @@ public:
         return false;
       }
 
+      return true;
+    }
+
+    if (aName.EqualsLiteral("signedPkg")) {
+      MOZ_RELEASE_ASSERT(mOriginAttributes->mSignedPkg.IsEmpty());
+      mOriginAttributes->mSignedPkg.Assign(aValue);
       return true;
     }
 
