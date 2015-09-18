@@ -67,7 +67,7 @@
         <menuitem command="cmd_newApp" accesskey="&projectMenu_newApp_accesskey;"/>
         <menuitem command="cmd_importPackagedApp" accesskey="&projectMenu_importPackagedApp_accesskey;"/>
         <menuitem command="cmd_importHostedApp" accesskey="&projectMenu_importHostedApp_accesskey;"/>
-        <menuitem command="cmd_showProjectPanel" key="key_showProjectPanel" label="&projectMenu_selectApp_label;" accesskey="&projectMenu_selectApp_accesskey;"/>
+        <menuitem id="menuitem-show_projectPanel" command="cmd_showProjectPanel" key="key_showProjectPanel" label="&projectMenu_selectApp_label;" accesskey="&projectMenu_selectApp_accesskey;"/>
         <menuseparator/>
         <menuitem command="cmd_play" key="key_play" label="&projectMenu_play_label;" accesskey="&projectMenu_play_accesskey;"/>
         <menuitem command="cmd_stop" accesskey="&projectMenu_stop_accesskey;"/>

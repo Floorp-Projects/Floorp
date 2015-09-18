@@ -14,10 +14,13 @@
     <link rel="stylesheet" href="chrome://browser/skin/devtools/animationinspector.css" type="text/css"/>
     <script type="application/javascript;version=1.8" src="chrome://browser/content/devtools/theme-switching.js"/>
   </head>
-  <body class="theme-sidebar devtools-monospace" role="application">
-    <div id="toolbar" class="theme-toolbar">
+  <body class="theme-sidebar devtools-monospace" role="application" empty="true">
+    <div id="global-toolbar" class="theme-toolbar">
       <span class="label">&allAnimations;</span>
-      <button id="toggle-all" standalone="true" class="devtools-button"></button>
+      <button id="toggle-all" standalone="true" class="devtools-button pause-button"></button>
+    </div>
+    <div id="timeline-toolbar" class="theme-toolbar">
+      <button id="pause-resume-timeline" standalone="true" class="devtools-button pause-button paused"></button>
     </div>
     <div id="players"></div>
     <div id="error-message">
