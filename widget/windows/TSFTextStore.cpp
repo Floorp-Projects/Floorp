@@ -1292,8 +1292,6 @@ bool TSFTextStore::sDoNotReturnNoLayoutErrorToFreeChangJie = false;
 bool TSFTextStore::sDoNotReturnNoLayoutErrorToEasyChangjei = false;
 bool TSFTextStore::sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar = false;
 bool TSFTextStore::sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret = false;
-bool TSFTextStore::sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar = false;
-bool TSFTextStore::sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret = false;
 bool TSFTextStore::sHackQueryInsertForMSSimplifiedTIP = false;
 bool TSFTextStore::sHackQueryInsertForMSTraditionalTIP = false;
 
@@ -3552,40 +3550,6 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
                   "acpEnd=%d", this, acpStart, acpEnd));
         }
       }
-    } else if ((sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar ||
-                sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret) &&
-               kSink->IsGoogleJapaneseInputActive()) {
-      // Google Japanese Input doesn't handle ITfContextView::GetTextExt()
-      // properly due to the same bug of TSF mentioned above.  Google Japanese
-      // Input calls this twice for the first character of changing range of
-      // composition string and the caret which is typically at the end of
-      // composition string.  The formar is used for showing candidate window.
-      // This is typically shown at wrong position.  We should avoid only this
-      // case. This is not necessary on Windows 10.
-      if (sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar &&
-          !mLockedContent.IsLayoutChangedAfter(acpStart) &&
-          acpStart < acpEnd) {
-        acpEnd = acpStart;
-        MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-               ("TSF: 0x%p   TSFTextStore::GetTextExt() hacked the offsets of "
-                "the first character of changing range of the composition "
-                "string for TIP acpStart=%d, acpEnd=%d",
-                this, acpStart, acpEnd));
-      }
-      // Google Japanese Input sometimes uses caret position for deciding its
-      // candidate window position. In such case, we should return the previous
-      // offset of selected clause. However, it's difficult to get where is
-      // selected clause for now.  Instead, we should use the first character
-      // which is modified. This is useful in most cases.
-      else if (sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret &&
-               acpStart == acpEnd &&
-               currentSel.IsCollapsed() && currentSel.EndOffset() == acpEnd) {
-        acpEnd = acpStart = mLockedContent.MinOffsetOfLayoutChanged();
-        MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-               ("TSF: 0x%p   TSFTextStore::GetTextExt() hacked the offsets of "
-                "the caret of the composition string for TIP acpStart=%d, "
-                "acpEnd=%d", this, acpStart, acpEnd));
-      }
     }
     // Free ChangJie 2010 and Easy Changjei 1.0.12.0 doesn't handle
     // ITfContextView::GetTextExt() properly.  Prehaps, it's due to the bug of
@@ -5290,14 +5254,6 @@ TSFTextStore::Initialize()
     Preferences::GetBool(
       "intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_caret",
       true);
-  sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar =
-    Preferences::GetBool(
-      "intl.tsf.hack.google_ja_input."
-        "do_not_return_no_layout_error_at_first_char", true);
-  sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret =
-    Preferences::GetBool(
-      "intl.tsf.hack.google_ja_input.do_not_return_no_layout_error_at_caret",
-      true);
   sHackQueryInsertForMSSimplifiedTIP =
     Preferences::GetBool(
       "intl.tsf.hack.ms_simplified_chinese.query_insert_result", true);
@@ -5313,18 +5269,14 @@ TSFTextStore::Initialize()
      "sDoNotReturnNoLayoutErrorToFreeChangJie=%s, "
      "sDoNotReturnNoLayoutErrorToEasyChangjei=%s, "
      "sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar=%s, "
-     "sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret=%s, "
-     "sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar=%s, "
-     "sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret=%s",
+     "sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret=%s",
      sThreadMgr.get(), sClientId, sDisplayAttrMgr.get(),
      sCategoryMgr.get(), sDisabledDocumentMgr.get(), sDisabledContext.get(),
      GetBoolName(sCreateNativeCaretForATOK),
      GetBoolName(sDoNotReturnNoLayoutErrorToFreeChangJie),
      GetBoolName(sDoNotReturnNoLayoutErrorToEasyChangjei),
      GetBoolName(sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar),
-     GetBoolName(sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret),
-     GetBoolName(sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar),
-     GetBoolName(sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret)));
+     GetBoolName(sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret)));
 }
 
 // static
