@@ -172,8 +172,8 @@ function do_test() {
   // test property
   var prop = "float";
   var values = utils.getCSSValuesForProperty(prop);
-  var expected = [ "initial", "inherit", "unset", "none", "left", "right" ];
-  ok(testValues(values, expected), "proprety float values");
+  var expected = [ "initial", "inherit", "unset", "none", "left", "right", "inline-start", "inline-end" ];
+  ok(testValues(values, expected), "property float's values.");
 
   // Test property with "auto"
   var prop = "margin";

@@ -343,8 +343,10 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_CLEAR_NONE                     0
 #define NS_STYLE_CLEAR_LEFT                     1
 #define NS_STYLE_CLEAR_RIGHT                    2
-#define NS_STYLE_CLEAR_BOTH                     3
-#define NS_STYLE_CLEAR_LINE                     4
+#define NS_STYLE_CLEAR_INLINE_START             3
+#define NS_STYLE_CLEAR_INLINE_END               4
+#define NS_STYLE_CLEAR_BOTH                     5
+#define NS_STYLE_CLEAR_LINE                     8
 // @note NS_STYLE_CLEAR_LINE can be added to one of the other values in layout
 // so it needs to use a bit value that none of the other values can have.
 #define NS_STYLE_CLEAR_MAX (NS_STYLE_CLEAR_LINE | NS_STYLE_CLEAR_BOTH)
@@ -545,6 +547,8 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_FLOAT_NONE                     0
 #define NS_STYLE_FLOAT_LEFT                     1
 #define NS_STYLE_FLOAT_RIGHT                    2
+#define NS_STYLE_FLOAT_INLINE_START             3
+#define NS_STYLE_FLOAT_INLINE_END               4
 
 // See nsStyleClipPath
 #define NS_STYLE_CLIP_PATH_NONE                 0
