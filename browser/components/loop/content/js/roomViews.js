@@ -191,6 +191,10 @@ loop.roomViews = (function(mozL10n) {
    * Desktop room invitation view (overlay).
    */
   var DesktopRoomInvitationView = React.createClass({displayName: "DesktopRoomInvitationView",
+    statics: {
+      TRIGGERED_RESET_DELAY: 2000
+    },
+
     mixins: [sharedMixins.DropdownMenuMixin(".room-invitation-overlay")],
 
     propTypes: {
@@ -236,6 +240,16 @@ loop.roomViews = (function(mozL10n) {
       }));
 
       this.setState({copiedUrl: true});
+      setTimeout(this.resetTriggeredButtons, this.constructor.TRIGGERED_RESET_DELAY);
+    },
+
+    /**
+     * Reset state of triggered buttons if necessary
+     */
+    resetTriggeredButtons: function() {
+      if (this.state.copiedUrl) {
+        this.setState({copiedUrl: false});
+      }
     },
 
     handleShareButtonClick: function(event) {
@@ -252,14 +266,6 @@ loop.roomViews = (function(mozL10n) {
       this.toggleDropdownMenu();
     },
 
-    handleAddContextClick: function(event) {
-      event.preventDefault();
-
-      if (this.props.onAddContextClick) {
-        this.props.onAddContextClick();
-      }
-    },
-
     handleEditContextClose: function() {
       if (this.props.onEditContextClose) {
         this.props.onEditContextClose();
@@ -271,22 +277,12 @@ loop.roomViews = (function(mozL10n) {
         return null;
       }
 
-      var canAddContext = this.props.mozLoop.getLoopPref("contextInConversations.enabled") &&
-        // Don't show the link when we're showing the edit form already:
-        !this.props.showEditContext &&
-        // Don't show the link when there's already context data available:
-        !(this.props.roomData.roomContextUrls || this.props.roomData.roomDescription);
-
       var cx = React.addons.classSet;
       return (
         React.createElement("div", {className: "room-invitation-overlay"}, 
           React.createElement("div", {className: "room-invitation-content"}, 
             React.createElement("p", {className: cx({hide: this.props.showEditContext})}, 
-              mozL10n.get("invite_header_text")
-            ), 
-            React.createElement("a", {className: cx({hide: !canAddContext, "room-invitation-addcontext": true}), 
-               onClick: this.handleAddContextClick}, 
-              mozL10n.get("context_add_some_label")
+              mozL10n.get("invite_header_text2")
             )
           ), 
           React.createElement("div", {className: cx({
@@ -294,19 +290,21 @@ loop.roomViews = (function(mozL10n) {
             "call-action-group": true,
             hide: this.props.showEditContext
           })}, 
-            React.createElement("button", {className: "btn btn-info btn-email", 
-                    onClick: this.handleEmailButtonClick}, 
-              mozL10n.get("email_link_button")
+            React.createElement("div", {className: cx({
+                "btn-copy": true,
+                "invite-button": true,
+                "triggered": this.state.copiedUrl
+              }), 
+              onClick: this.handleCopyButtonClick}, 
+              React.createElement("img", {src: "loop/shared/img/svg/glyph-link-16x16.svg"}), 
+              React.createElement("p", null, mozL10n.get("invite_copy_" +
+                (this.state.copiedUrl ? "triggered" : "button")))
             ), 
-            React.createElement("button", {className: "btn btn-info btn-copy", 
-                    onClick: this.handleCopyButtonClick}, 
-              this.state.copiedUrl ? mozL10n.get("copied_url_button") :
-                                      mozL10n.get("copy_url_button2")
-            ), 
-            React.createElement("button", {className: "btn btn-info btn-share", 
-                    onClick: this.handleShareButtonClick, 
-                    ref: "anchor"}, 
-              mozL10n.get("share_button3")
+            React.createElement("div", {className: "btn-email invite-button", 
+              onClick: this.handleEmailButtonClick, 
+              onMouseOver: this.resetTriggeredButtons}, 
+              React.createElement("img", {src: "loop/shared/img/svg/glyph-email-16x16.svg"}), 
+              React.createElement("p", null, mozL10n.get("invite_email_button"))
             )
           ), 
           React.createElement(SocialShareDropdown, {
