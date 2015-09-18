@@ -406,6 +406,9 @@ CXXFLAGS += [
     ]
 ]
 
+if CONFIG['ENABLE_TESTS']:
+    DIRS += ['apz/test/gtest']
+
 MOCHITEST_MANIFESTS += ['apz/test/mochitest/mochitest.ini']
 MOCHITEST_CHROME_MANIFESTS += ['apz/test/mochitest/chrome.ini']
 
