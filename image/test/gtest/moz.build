@@ -12,7 +12,6 @@ UNIFIED_SOURCES = [
     'TestDecoders.cpp',
     'TestDecodeToSurface.cpp',
     'TestMetadata.cpp',
-    'TestStreamingLexer.cpp',
 ]
 
 TEST_HARNESS_FILES.gtest += [

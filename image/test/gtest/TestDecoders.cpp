@@ -212,7 +212,8 @@ TEST(ImageDecoders, ICOSingleChunk)
   CheckDecoderSingleChunk(GreenICOTestCase());
 }
 
-TEST(ImageDecoders, ICOMultiChunk)
+// XXX(seth): Disabled. We'll fix this in bug 1196066.
+TEST(ImageDecoders, DISABLED_ICOMultiChunk)
 {
   CheckDecoderMultiChunk(GreenICOTestCase());
 }
