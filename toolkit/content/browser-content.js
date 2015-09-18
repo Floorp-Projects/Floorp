@@ -377,11 +377,25 @@ var Printing = {
 
   init() {
     this.MESSAGES.forEach(msgName => addMessageListener(msgName, this));
+    addEventListener("PrintingError", this, true);
   },
 
   get shouldSavePrintSettings() {
     return Services.prefs.getBoolPref("print.use_global_printsettings", false) &&
            Services.prefs.getBoolPref("print.save_print_settings", false);
+  },
+
+  handleEvent(event) {
+    if (event.type == "PrintingError") {
+      let win = event.target.defaultView;
+      let wbp = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIWebBrowserPrint);
+      let nsresult = event.detail;
+      sendAsyncMessage("Printing:Error", {
+        isPrinting: wbp.doingPrint,
+        nsresult: nsresult,
+      });
+    }
   },
 
   receiveMessage(message) {
@@ -489,6 +503,10 @@ var Printing = {
       if (e.result != Cr.NS_ERROR_ABORT) {
         Cu.reportError(`In Printing:Print:Done handler, got unexpected rv
                         ${e.result}.`);
+        sendAsyncMessage("Printing:Error", {
+          isPrinting: true,
+          nsresult: e.result,
+        });
       }
     }
 

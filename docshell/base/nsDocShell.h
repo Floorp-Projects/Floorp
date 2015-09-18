@@ -887,9 +887,6 @@ protected:
   // Cached value of the "browser.xul.error_pages.enabled" preference.
   static bool sUseErrorPages;
 
-  // Cached value of the "dom.serviceWorkers.interception.enabled" preference.
-  static bool sInterceptionEnabled;
-
   bool mCreated;
   bool mAllowSubframes;
   bool mAllowPlugins;

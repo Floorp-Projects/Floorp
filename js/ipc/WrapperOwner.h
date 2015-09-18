@@ -40,7 +40,7 @@ class WrapperOwner : public virtual JavaScriptShared
     bool preventExtensions(JSContext* cx, JS::HandleObject proxy, JS::ObjectOpResult& result);
     bool isExtensible(JSContext* cx, JS::HandleObject proxy, bool* extensible);
     bool has(JSContext* cx, JS::HandleObject proxy, JS::HandleId id, bool* bp);
-    bool get(JSContext* cx, JS::HandleObject proxy, JS::HandleObject receiver,
+    bool get(JSContext* cx, JS::HandleObject proxy, JS::HandleValue receiver,
              JS::HandleId id, JS::MutableHandleValue vp);
     bool set(JSContext* cx, JS::HandleObject proxy, JS::HandleId id, JS::HandleValue v,
              JS::HandleValue receiver, JS::ObjectOpResult& result);
@@ -125,7 +125,7 @@ class WrapperOwner : public virtual JavaScriptShared
                          ReturnStatus* rs, bool* bp) = 0;
     virtual bool SendHasOwn(const ObjectId& objId, const JSIDVariant& id,
                             ReturnStatus* rs, bool* bp) = 0;
-    virtual bool SendGet(const ObjectId& objId, const ObjectVariant& receiverVar,
+    virtual bool SendGet(const ObjectId& objId, const JSVariant& receiverVar,
                          const JSIDVariant& id,
                          ReturnStatus* rs, JSVariant* result) = 0;
     virtual bool SendSet(const ObjectId& objId, const JSIDVariant& id, const JSVariant& value,

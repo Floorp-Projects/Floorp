@@ -169,3 +169,11 @@ class TestElements(MarionetteTestCase):
         self.assertIsNotNone(re.search(uuid_regex, el.id),
                              'UUID for the WebElement is not valid. ID is {}'\
                              .format(el.id))
+    def test_should_find_elements_by_link_text(self):
+        test_html = self.marionette.absolute_url("nestedElements.html")
+        self.marionette.navigate(test_html)
+        element = self.marionette.find_element(By.NAME, "div1")
+        children = element.find_elements(By.LINK_TEXT, "hello world")
+        self.assertEqual(len(children), 2)
+        self.assertEqual("link1", children[0].get_attribute("name"))
+        self.assertEqual("link2", children[1].get_attribute("name"))

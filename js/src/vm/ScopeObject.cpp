@@ -504,11 +504,14 @@ with_HasProperty(JSContext* cx, HandleObject obj, HandleId id, bool* foundp)
 }
 
 static bool
-with_GetProperty(JSContext* cx, HandleObject obj, HandleObject receiver, HandleId id,
+with_GetProperty(JSContext* cx, HandleObject obj, HandleValue receiver, HandleId id,
                  MutableHandleValue vp)
 {
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    return GetProperty(cx, actual, actual, id, vp);
+    RootedValue actualReceiver(cx, receiver);
+    if (receiver.isObject() && &receiver.toObject() == obj)
+        actualReceiver.setObject(*actual);
+    return GetProperty(cx, actual, actualReceiver, id, vp);
 }
 
 static bool
@@ -982,7 +985,7 @@ uninitialized_HasProperty(JSContext* cx, HandleObject obj, HandleId id, bool* fo
 }
 
 static bool
-uninitialized_GetProperty(JSContext* cx, HandleObject obj, HandleObject receiver, HandleId id,
+uninitialized_GetProperty(JSContext* cx, HandleObject obj, HandleValue receiver, HandleId id,
                           MutableHandleValue vp)
 {
     ReportUninitializedLexicalId(cx, id);
@@ -1624,7 +1627,7 @@ class DebugScopeProxy : public BaseProxyHandler
         return true;
     }
 
-    bool get(JSContext* cx, HandleObject proxy, HandleObject receiver, HandleId id,
+    bool get(JSContext* cx, HandleObject proxy, HandleValue receiver, HandleId id,
              MutableHandleValue vp) const override
     {
         Rooted<DebugScopeObject*> debugScope(cx, &proxy->as<DebugScopeObject>());

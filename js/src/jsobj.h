@@ -819,11 +819,11 @@ HasProperty(JSContext* cx, HandleObject obj, PropertyName* name, bool* foundp);
  * `receiver[id]`, and we've already searched the prototype chain up to `obj`.
  */
 inline bool
-GetProperty(JSContext* cx, HandleObject obj, HandleObject receiver, HandleId id,
+GetProperty(JSContext* cx, HandleObject obj, HandleValue receiver, HandleId id,
             MutableHandleValue vp);
 
 inline bool
-GetProperty(JSContext* cx, HandleObject obj, HandleObject receiver, PropertyName* name,
+GetProperty(JSContext* cx, HandleObject obj, HandleValue receiver, PropertyName* name,
             MutableHandleValue vp)
 {
     RootedId id(cx, NameToId(name));
@@ -831,17 +831,52 @@ GetProperty(JSContext* cx, HandleObject obj, HandleObject receiver, PropertyName
 }
 
 inline bool
+GetProperty(JSContext* cx, HandleObject obj, HandleObject receiver, HandleId id,
+            MutableHandleValue vp)
+{
+    RootedValue receiverValue(cx, ObjectValue(*receiver));
+    return GetProperty(cx, obj, receiverValue, id, vp);
+}
+
+inline bool
+GetProperty(JSContext* cx, HandleObject obj, HandleObject receiver, PropertyName* name,
+            MutableHandleValue vp)
+{
+    RootedValue receiverValue(cx, ObjectValue(*receiver));
+    return GetProperty(cx, obj, receiverValue, name, vp);
+}
+
+inline bool
+GetElement(JSContext* cx, HandleObject obj, HandleValue receiver, uint32_t index,
+           MutableHandleValue vp);
+
+inline bool
 GetElement(JSContext* cx, HandleObject obj, HandleObject receiver, uint32_t index,
            MutableHandleValue vp);
 
 inline bool
-GetPropertyNoGC(JSContext* cx, JSObject* obj, JSObject* receiver, jsid id, Value* vp);
+GetPropertyNoGC(JSContext* cx, JSObject* obj, const Value& receiver, jsid id, Value* vp);
+
+inline bool
+GetPropertyNoGC(JSContext* cx, JSObject* obj, JSObject* receiver, jsid id, Value* vp)
+{
+    return GetPropertyNoGC(cx, obj, ObjectValue(*receiver), id, vp);
+}
+
+inline bool
+GetPropertyNoGC(JSContext* cx, JSObject* obj, const Value& receiver, PropertyName* name, Value* vp)
+{
+    return GetPropertyNoGC(cx, obj, receiver, NameToId(name), vp);
+}
 
 inline bool
 GetPropertyNoGC(JSContext* cx, JSObject* obj, JSObject* receiver, PropertyName* name, Value* vp)
 {
-    return GetPropertyNoGC(cx, obj, receiver, NameToId(name), vp);
+    return GetPropertyNoGC(cx, obj, ObjectValue(*receiver), name, vp);
 }
+
+inline bool
+GetElementNoGC(JSContext* cx, JSObject* obj, const Value& receiver, uint32_t index, Value* vp);
 
 inline bool
 GetElementNoGC(JSContext* cx, JSObject* obj, JSObject* receiver, uint32_t index, Value* vp);
