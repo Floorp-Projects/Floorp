@@ -32,7 +32,7 @@ both:
 
     prio(high) sync Has(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, bool has);
     prio(high) sync HasOwn(uint64_t objId, JSIDVariant id) returns (ReturnStatus rs, bool has);
-    prio(high) sync Get(uint64_t objId, ObjectVariant receiver, JSIDVariant id) returns (ReturnStatus rs, JSVariant result);
+    prio(high) sync Get(uint64_t objId, JSVariant receiver, JSIDVariant id) returns (ReturnStatus rs, JSVariant result);
     prio(high) sync Set(uint64_t objId, JSIDVariant id, JSVariant value, JSVariant receiver) returns (ReturnStatus rs);
 
     prio(high) sync IsExtensible(uint64_t objId) returns (ReturnStatus rs, bool result);

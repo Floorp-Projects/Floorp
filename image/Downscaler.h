@@ -162,6 +162,34 @@ public:
 
 #endif // MOZ_ENABLE_SKIA
 
+/**
+ * Deinterlacer is a utility class to allow Downscaler to work with interlaced
+ * images.
+
+ * Since Downscaler needs to receive rows in top-to-bottom or
+ * bottom-to-top order, it can't natively handle interlaced images, in which the
+ * rows arrive in an interleaved order. Deinterlacer solves this problem by
+ * acting as an intermediate buffer that records decoded rows. Unlike
+ * Downscaler, it allows the rows to be written in arbitrary order. After each
+ * pass, calling PropagatePassToDownscaler() will downscale every buffered row
+ * in a single operation. The rows remain in the buffer, so rows that were
+ * written in one pass will be included in subsequent passes.
+ */
+class Deinterlacer
+{
+public:
+  explicit Deinterlacer(const nsIntSize& aImageSize);
+
+  uint8_t* RowBuffer(uint32_t aRow);
+  void PropagatePassToDownscaler(Downscaler& aDownscaler);
+
+private:
+  uint32_t RowSize() const;
+
+  nsIntSize mImageSize;
+  UniquePtr<uint8_t[]> mBuffer;
+};
+
 } // namespace image
 } // namespace mozilla
 

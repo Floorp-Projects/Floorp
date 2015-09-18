@@ -1064,6 +1064,12 @@ nsContentSink::ProcessOfflineManifest(const nsAString& aManifestSpec)
     return;
   }
 
+  // If this document has been interecepted, let's skip the processing of the
+  // manifest.
+  if (nsContentUtils::IsControlledByServiceWorker(mDocument)) {
+    return;
+  }
+
   // If the docshell's in private browsing mode, we don't want to do any
   // manifest processing.
   nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(mDocShell);
