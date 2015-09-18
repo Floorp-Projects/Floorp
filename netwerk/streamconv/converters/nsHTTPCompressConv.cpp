@@ -496,17 +496,15 @@ nsresult
 NS_NewHTTPCompressConv(mozilla::net::nsHTTPCompressConv **aHTTPCompressConv)
 {
   NS_PRECONDITION(aHTTPCompressConv != nullptr, "null ptr");
-
   if (!aHTTPCompressConv) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  *aHTTPCompressConv = new mozilla::net::nsHTTPCompressConv();
-
-  if (!*aHTTPCompressConv) {
+  nsRefPtr<mozilla::net::nsHTTPCompressConv> outVal =
+    new mozilla::net::nsHTTPCompressConv();
+  if (!outVal) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  NS_ADDREF(*aHTTPCompressConv);
+  outVal.forget(aHTTPCompressConv);
   return NS_OK;
 }
