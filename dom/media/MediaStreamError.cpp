@@ -12,10 +12,10 @@ namespace mozilla {
 
 BaseMediaMgrError::BaseMediaMgrError(const nsAString& aName,
                                      const nsAString& aMessage,
-                                     const nsAString& aConstraintName)
+                                     const nsAString& aConstraint)
   : mName(aName)
   , mMessage(aMessage)
-  , mConstraintName(aConstraintName)
+  , mConstraint(aConstraint)
 {
   if (mMessage.IsEmpty()) {
     if (mName.EqualsLiteral("NotFoundError")) {
@@ -43,8 +43,8 @@ MediaStreamError::MediaStreamError(
     nsPIDOMWindow* aParent,
     const nsAString& aName,
     const nsAString& aMessage,
-    const nsAString& aConstraintName)
-  : BaseMediaMgrError(aName, aMessage, aConstraintName)
+    const nsAString& aConstraint)
+  : BaseMediaMgrError(aName, aMessage, aConstraint)
   , mParent(aParent) {}
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MediaStreamError, mParent)
@@ -75,9 +75,9 @@ MediaStreamError::GetMessage(nsAString& aMessage) const
 }
 
 void
-MediaStreamError::GetConstraintName(nsAString& aConstraintName) const
+MediaStreamError::GetConstraint(nsAString& aConstraint) const
 {
-  aConstraintName = mConstraintName;
+  aConstraint = mConstraint;
 }
 
 } // namespace dom
