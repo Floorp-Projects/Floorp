@@ -565,18 +565,21 @@ var TimeScale = {
    * @param {Object} state A PlayerFront.state object.
    */
   addAnimation: function(state) {
-    let {startTime, delay, duration, iterationCount, playbackRate} = state;
+    let {previousStartTime, delay, duration,
+         iterationCount, playbackRate} = state;
 
     // Negative-delayed animations have their startTimes set such that we would
     // be displaying the delay outside the time window if we didn't take it into
     // account here.
     let relevantDelay = delay < 0 ? delay / playbackRate : 0;
+    previousStartTime = previousStartTime || 0;
 
-    this.minStartTime = Math.min(this.minStartTime, startTime + relevantDelay);
+    this.minStartTime = Math.min(this.minStartTime,
+                                 previousStartTime + relevantDelay);
     let length = (delay / playbackRate) +
                  ((duration / playbackRate) *
                   (!iterationCount ? 1 : iterationCount));
-    this.maxEndTime = Math.max(this.maxEndTime, startTime + length);
+    this.maxEndTime = Math.max(this.maxEndTime, previousStartTime + length);
   },
 
   /**
@@ -867,12 +870,17 @@ AnimationsTimeline.prototype = {
     }
   },
 
+  isAtLeastOneAnimationPlaying: function() {
+    return this.animations.some(({state}) => state.playState === "running");
+  },
+
   startAnimatingScrubber: function(time) {
     let x = TimeScale.startTimeToDistance(time, this.timeHeaderEl.offsetWidth);
     this.scrubberEl.style.left = x + "px";
 
     if (time < TimeScale.minStartTime ||
-        time > TimeScale.maxEndTime) {
+        time > TimeScale.maxEndTime ||
+        !this.isAtLeastOneAnimationPlaying()) {
       this.stopAnimatingScrubber();
       this.emit("timeline-data-changed", {
         isPaused: false,
@@ -957,7 +965,7 @@ AnimationsTimeline.prototype = {
     // Create a container element to hold the delay and iterations.
     // It is positioned according to its delay (divided by the playbackrate),
     // and its width is according to its duration (divided by the playbackrate).
-    let start = state.startTime;
+    let start = state.previousStartTime || 0;
     let duration = state.duration;
     let rate = state.playbackRate;
     let count = state.iterationCount;

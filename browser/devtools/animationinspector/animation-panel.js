@@ -50,7 +50,7 @@ var AnimationsPanel = {
     // Binding functions that need to be called in scope.
     for (let functionName of ["onPickerStarted", "onPickerStopped",
       "refreshAnimations", "toggleAll", "onTabNavigated",
-      "onTimelineDataChanged"]) {
+      "onTimelineDataChanged", "playPauseTimeline"]) {
       this[functionName] = this[functionName].bind(this);
     }
     let hUtils = gToolbox.highlighterUtils;
@@ -100,11 +100,12 @@ var AnimationsPanel = {
     AnimationsController.on(AnimationsController.PLAYERS_UPDATED_EVENT,
       this.refreshAnimations);
 
-    this.pickerButtonEl.addEventListener("click", this.togglePicker, false);
+    this.pickerButtonEl.addEventListener("click", this.togglePicker);
     gToolbox.on("picker-started", this.onPickerStarted);
     gToolbox.on("picker-stopped", this.onPickerStopped);
 
-    this.toggleAllButtonEl.addEventListener("click", this.toggleAll, false);
+    this.toggleAllButtonEl.addEventListener("click", this.toggleAll);
+    this.playTimelineButtonEl.addEventListener("click", this.playPauseTimeline);
     gToolbox.target.on("navigate", this.onTabNavigated);
 
     if (this.animationsTimelineComponent) {
@@ -117,11 +118,12 @@ var AnimationsPanel = {
     AnimationsController.off(AnimationsController.PLAYERS_UPDATED_EVENT,
       this.refreshAnimations);
 
-    this.pickerButtonEl.removeEventListener("click", this.togglePicker, false);
+    this.pickerButtonEl.removeEventListener("click", this.togglePicker);
     gToolbox.off("picker-started", this.onPickerStarted);
     gToolbox.off("picker-stopped", this.onPickerStopped);
 
-    this.toggleAllButtonEl.removeEventListener("click", this.toggleAll, false);
+    this.toggleAllButtonEl.removeEventListener("click", this.toggleAll);
+    this.playTimelineButtonEl.removeEventListener("click", this.playPauseTimeline);
     gToolbox.target.off("navigate", this.onTabNavigated);
 
     if (this.animationsTimelineComponent) {
@@ -170,6 +172,24 @@ var AnimationsPanel = {
 
     btnClass.toggle("paused");
     yield AnimationsController.toggleAll();
+  }),
+
+  /**
+   * Depending on the state of the timeline either pause or play the animations
+   * displayed in it.
+   * If the animations are finished, this will play them from the start again.
+   * If the animations are playing, this will pause them.
+   * If the animations are paused, this will resume them.
+   */
+  playPauseTimeline: Task.async(function*() {
+    yield AnimationsController.toggleCurrentAnimations(this.timelineData.isMoving);
+
+    // Now that the playState have been changed make sure the player (the
+    // fronts) are up to date, and then refresh the UI.
+    for (let player of AnimationsController.animationPlayers) {
+      yield player.refreshState(true);
+    }
+    yield this.refreshAnimations();
   }),
 
   onTabNavigated: function() {

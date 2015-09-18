@@ -12,19 +12,19 @@ const {TimeScale} = require("devtools/animationinspector/components");
 const TEST_ANIMATIONS = [{
   desc: "Testing a few standard animations",
   animations: [{
-    startTime: 500,
+    previousStartTime: 500,
     delay: 0,
     duration: 1000,
     iterationCount: 1,
     playbackRate: 1
   }, {
-    startTime: 400,
+    previousStartTime: 400,
     delay: 100,
     duration: 10,
     iterationCount: 100,
     playbackRate: 1
   }, {
-    startTime: 50,
+    previousStartTime: 50,
     delay: 1000,
     duration: 100,
     iterationCount: 20,
@@ -35,7 +35,7 @@ const TEST_ANIMATIONS = [{
 }, {
   desc: "Testing a single negative-delay animation",
   animations: [{
-    startTime: 100,
+    previousStartTime: 100,
     delay: -100,
     duration: 100,
     iterationCount: 1,
@@ -46,7 +46,7 @@ const TEST_ANIMATIONS = [{
 }, {
   desc: "Testing a single negative-delay animation with a different rate",
   animations: [{
-    startTime: 3500,
+    previousStartTime: 3500,
     delay: -1000,
     duration: 10000,
     iterationCount: 2,
