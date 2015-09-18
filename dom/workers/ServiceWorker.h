@@ -53,6 +53,8 @@ public:
   void
   GetScriptURL(nsString& aURL) const;
 
+  const ServiceWorkerInfo* Info() const { return mInfo; }
+
   void
   DispatchStateChange(ServiceWorkerState aState)
   {
