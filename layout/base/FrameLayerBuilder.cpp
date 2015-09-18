@@ -1029,7 +1029,7 @@ public:
     MOZ_ASSERT_IF(isAtRoot, mContainerReferenceFrame == mBuilder->RootReferenceFrame());
     mContainerAnimatedGeometryRoot = isAtRoot
       ? mContainerReferenceFrame
-      : nsLayoutUtils::GetAnimatedGeometryRootFor(aContainerItem, aBuilder);
+      : aContainerItem->AnimatedGeometryRoot();
     MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(mBuilder->RootReferenceFrame(),
                                                       mContainerAnimatedGeometryRoot));
     NS_ASSERTION(!aContainerItem || !aContainerItem->ShouldFixToViewport(mBuilder),
@@ -3636,8 +3636,7 @@ ContainerState::ChooseAnimatedGeometryRoot(const nsDisplayList& aList,
 
     // Try using the actual active scrolled root of the backmost item, as that
     // should result in the least invalidation when scrolling.
-    *aAnimatedGeometryRoot =
-      nsLayoutUtils::GetAnimatedGeometryRootFor(item, mBuilder);
+    *aAnimatedGeometryRoot = item->AnimatedGeometryRoot();
     return true;
   }
   return false;
@@ -3813,8 +3812,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     bool forceInactive;
     const nsIFrame* animatedGeometryRoot;
     const nsIFrame* animatedGeometryRootForScrollMetadata = nullptr;
-    const nsIFrame* realAnimatedGeometryRootOfItem =
-      nsLayoutUtils::GetAnimatedGeometryRootFor(item, mBuilder);
+    const nsIFrame* realAnimatedGeometryRootOfItem = item->AnimatedGeometryRoot();
     if (mFlattenToSingleLayer) {
       forceInactive = true;
       animatedGeometryRoot = lastAnimatedGeometryRoot;
