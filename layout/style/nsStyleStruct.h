@@ -2425,6 +2425,12 @@ struct nsStyleDisplay {
    * aContextFrame is the frame for which this is the nsStylePosition.
    */
   inline bool IsFixedPosContainingBlock(const nsIFrame* aContextFrame) const;
+
+  // Return the 'float' and 'clear' properties, with inline-{start,end} values
+  // resolved to {left,right} according to the given writing mode. These are
+  // defined in WritingModes.h.
+  inline uint8_t PhysicalFloats(mozilla::WritingMode aWM) const;
+  inline uint8_t PhysicalBreakType(mozilla::WritingMode aWM) const;
 };
 
 struct nsStyleTable {
