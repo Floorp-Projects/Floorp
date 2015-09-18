@@ -1093,8 +1093,7 @@ class XPCShellTests(object):
         # code path should never be executed in local runs because the build system
         # should always set this argument.
         if not testingModulesDir:
-            ourDir = os.path.dirname(__file__)
-            possible = os.path.join(ourDir, os.path.pardir, 'modules')
+            possible = os.path.join(here, os.path.pardir, 'modules')
 
             if os.path.isdir(possible):
                 testingModulesDir = possible
