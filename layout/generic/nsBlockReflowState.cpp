@@ -738,7 +738,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   // when floats are inserted before it.
   if (NS_STYLE_CLEAR_NONE != floatDisplay->mBreakType) {
     // XXXldb Does this handle vertical margins correctly?
-    mBCoord = ClearFloats(mBCoord, floatDisplay->mBreakType);
+    mBCoord = ClearFloats(mBCoord, floatDisplay->PhysicalBreakType(wm));
   }
     // Get the band of available space
   nsFlowAreaRect floatAvailableSpace = GetFloatAvailableSpace(mBCoord);
@@ -781,9 +781,10 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   // Find a place to place the float. The CSS2 spec doesn't want
   // floats overlapping each other or sticking out of the containing
   // block if possible (CSS2 spec section 9.5.1, see the rule list).
-  NS_ASSERTION((NS_STYLE_FLOAT_LEFT == floatDisplay->mFloats) ||
-	       (NS_STYLE_FLOAT_RIGHT == floatDisplay->mFloats),
-	       "invalid float type");
+  uint8_t floatStyle = floatDisplay->PhysicalFloats(wm);
+  NS_ASSERTION((NS_STYLE_FLOAT_LEFT == floatStyle) ||
+               (NS_STYLE_FLOAT_RIGHT == floatStyle),
+               "invalid float type");
 
   // Can the float fit here?
   bool keepFloatOnSameLine = false;
@@ -877,7 +878,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
   // LineLeft() and LineRight() here, because we would only have to
   // convert the result back into this block's writing mode.
   LogicalPoint floatPos(wm);
-  bool leftFloat = NS_STYLE_FLOAT_LEFT == floatDisplay->mFloats;
+  bool leftFloat = NS_STYLE_FLOAT_LEFT == floatStyle;
 
   if (leftFloat == wm.IsBidiLTR()) {
     floatPos.I(wm) = floatAvailableSpace.mRect.IStart(wm);
@@ -1037,11 +1038,12 @@ nsBlockReflowState::PushFloatPastBreak(nsIFrame *aFloat)
   //    must have their tops below the top of this float)
   //  * don't waste much time trying to reflow this float again until
   //    after the break
-  if (aFloat->StyleDisplay()->mFloats == NS_STYLE_FLOAT_LEFT) {
+  uint8_t floatStyle =
+    aFloat->StyleDisplay()->PhysicalFloats(mReflowState.GetWritingMode());
+  if (floatStyle == NS_STYLE_FLOAT_LEFT) {
     mFloatManager->SetPushedLeftFloatPastBreak();
   } else {
-    MOZ_ASSERT(aFloat->StyleDisplay()->mFloats == NS_STYLE_FLOAT_RIGHT,
-               "unexpected float value");
+    MOZ_ASSERT(floatStyle == NS_STYLE_FLOAT_RIGHT, "unexpected float value");
     mFloatManager->SetPushedRightFloatPastBreak();
   }
 
