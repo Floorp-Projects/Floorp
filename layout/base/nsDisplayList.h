@@ -1067,6 +1067,7 @@ public:
     : mFrame(aFrame)
     , mClip(nullptr)
     , mReferenceFrame(nullptr)
+    , mAnimatedGeometryRoot(nullptr)
 #ifdef MOZ_DUMP_PAINTING
     , mPainted(false)
 #endif
@@ -1513,6 +1514,11 @@ public:
    */
   virtual const nsIFrame* ReferenceFrameForChildren() const { return mReferenceFrame; }
 
+  nsIFrame* AnimatedGeometryRoot() const {
+    MOZ_ASSERT(mAnimatedGeometryRoot, "Must have cached AGR before accessing it!");
+    return mAnimatedGeometryRoot;
+  }
+
   /**
    * Checks if this display item (or any children) contains content that might
    * be rendered with component alpha (e.g. subpixel antialiasing). Returns the
@@ -1568,6 +1574,7 @@ protected:
   const DisplayItemClip* mClip;
   // Result of FindReferenceFrameFor(mFrame), if mFrame is non-null
   const nsIFrame* mReferenceFrame;
+  nsIFrame* mAnimatedGeometryRoot;
   // Result of ToReferenceFrame(mFrame), if mFrame is non-null
   nsPoint   mToReferenceFrame;
   // This is the rectangle that needs to be painted.
