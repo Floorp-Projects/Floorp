@@ -317,6 +317,41 @@ html[dir="rtl"] .conversation-toolbar-btn-box.btn-edit-entry {
   width: 100%;
 }
 
+.call-action-group > .invite-button {
+  margin: 0 4px;
+  position: relative;
+}
+
+.call-action-group > .invite-button > img {
+  background-color: #00a9dc;
+  border-radius: 100%;
+  height: 28px;
+  width: 28px;
+}
+
+.call-action-group > .invite-button:hover > img {
+  background-color: #5cccee;
+}
+
+.call-action-group > .invite-button.triggered > img {
+  background-color: #56b397;
+}
+
+.call-action-group > .invite-button > p {
+  display: none;
+  /* Position the text under the button while centering it without impacting the
+   * rest of the layout */
+  left: -10rem;
+  margin: .5rem 0 0;
+  position: absolute;
+  right: -10rem;
+}
+
+.call-action-group > .invite-button.triggered > p,
+.call-action-group > .invite-button:hover > p {
+  display: block;
+}
+
 .direct-call-failure,
 .room-failure {
   /* This flex allows us to not calculate the height of the logo area
@@ -888,13 +923,13 @@ html[dir="rtl"] .room-conversation-wrapper header a {
 
 .room-invitation-overlay {
   position: absolute;
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.85);
   top: 0;
   height: 100%;
   right: 0;
   left: 0;
   text-align: center;
-  color: #fff;
+  color: #000;
   z-index: 1010;
   display: flex;
   flex-flow: column nowrap;
@@ -911,30 +946,7 @@ html[dir="rtl"] .room-conversation-wrapper header a {
 }
 
 .room-invitation-overlay .btn-group {
-  padding: 0 0 5rem 0;
-}
-
-.room-invitation-addcontext {
-  color: #0095dd;
-  padding-left: 1.5em;
-  margin-bottom: 1em;
-  background-image: url("../img/icons-10x10.svg#edit-active");
-  background-size: 1em 1em;
-  background-repeat: no-repeat;
-  background-position: left top;
-  font-size: 1em;
-  cursor: pointer;
-}
-
-.room-invitation-addcontext:hover,
-.room-invitation-addcontext:hover:active {
-  text-decoration: underline;
-}
-
-html[dir="rtl"] .room-invitation-addcontext {
-  padding-left: 0;
-  padding-right: 1.5em;
-  background-position: right top;
+  padding: 0 0 10rem;
 }
 
 .share-service-dropdown {
@@ -1027,6 +1039,7 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   text-shadow: 1px 1px 0 rgba(0,0,0,.3);
 }
 
+.room-invitation-content,
 .room-context-header {
   color: #333;
   font-size: 1.2rem;
