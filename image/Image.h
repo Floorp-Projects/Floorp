@@ -147,10 +147,6 @@ public:
    * flag is set, INIT_FLAG_DISCARDABLE and INIT_FLAG_DECODE_ONLY_ON_DRAW must
    * not be set.
    *
-   * INIT_FLAG_DOWNSCALE_DURING_DECODE: The container should attempt to
-   * downscale images during decoding instead of decoding them to their
-   * intrinsic size.
-   *
    * INIT_FLAG_SYNC_LOAD: The container is being loaded synchronously, so
    * it should avoid relying on async workers to get the container ready.
    */
@@ -158,8 +154,7 @@ public:
   static const uint32_t INIT_FLAG_DISCARDABLE              = 0x1;
   static const uint32_t INIT_FLAG_DECODE_IMMEDIATELY       = 0x2;
   static const uint32_t INIT_FLAG_TRANSIENT                = 0x4;
-  static const uint32_t INIT_FLAG_DOWNSCALE_DURING_DECODE  = 0x8;
-  static const uint32_t INIT_FLAG_SYNC_LOAD                = 0x10;
+  static const uint32_t INIT_FLAG_SYNC_LOAD                = 0x8;
 
   virtual already_AddRefed<ProgressTracker> GetProgressTracker() = 0;
   virtual void SetProgressTracker(ProgressTracker* aProgressTracker) {}
