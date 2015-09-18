@@ -6,6 +6,9 @@
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+var contentSecManager = Cc["@mozilla.org/contentsecuritymanager;1"]
+                          .getService(Ci.nsIContentSecurityManager);
+
 function ProtocolHandler() {
   this.uri = Cc["@mozilla.org/network/simple-uri;1"].
                createInstance(Ci.nsIURI);
@@ -55,7 +58,16 @@ ProtocolHandler.prototype = {
                                           Ci.nsILoadInfo.SEC_NORMAL,
                                           Ci.nsIContentPolicy.TYPE_OTHER).open();
   },
+  open2: function() {
+    // throws an error if security checks fail
+    contentSecManager.performSecurityCheck(this, null);
+    return this.open();
+  },
   asyncOpen: function(aListener, aContext) {
+    throw Components.Exception("Not implemented",
+                               Cr.NS_ERROR_NOT_IMPLEMENTED);
+  },
+  asyncOpen2: function(aListener, aContext) {
     throw Components.Exception("Not implemented",
                                Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
