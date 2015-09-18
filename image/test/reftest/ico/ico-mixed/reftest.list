@@ -1,3 +1,14 @@
 # ICO BMP and PNG mixed tests
 
-== mixed-bmp-png.ico mixed-bmp-png48.png
+== mixed-bmp-png.ico mixed-bmp-png.png
+
+# Using media fragments to select different resolutions
+
+== mixed-bmp-png.ico#-moz-resolution=8,8 mixed-bmp-png.png
+== mixed-bmp-png.ico#test=true&-moz-resolution=8,8&other mixed-bmp-png.png
+== mixed-bmp-png.ico#-moz-resolution=32,32 mixed-bmp-png32.png
+== mixed-bmp-png.ico#-moz-resolution=39,39 mixed-bmp-png48.png
+== mixed-bmp-png.ico#-moz-resolution=40,40 mixed-bmp-png48.png
+== mixed-bmp-png.ico#-moz-resolution=48,48 mixed-bmp-png48.png
+== mixed-bmp-png.ico#-moz-resolution=64,64 mixed-bmp-png48.png
+== mixed-bmp-png.ico#-moz-resolution=64 mixed-bmp-png.png # Bad syntax will fall back to lowest resolution
