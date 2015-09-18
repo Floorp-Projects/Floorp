@@ -26,6 +26,7 @@ struct nsPoint;
 namespace mozilla {
 
 namespace dom {
+class Element;
 class Selection;
 } // namespace dom
 
@@ -104,7 +105,6 @@ protected:
     // Two carets, i.e. the selection is not collapsed.
     Selection
   };
-  CaretMode GetCaretMode() const;
 
   enum class UpdateCaretsHint : uint8_t {
     // Update everything including appearance and position.
@@ -123,7 +123,6 @@ protected:
 
   void UpdateCaretsForCursorMode(UpdateCaretsHint aHint);
   void UpdateCaretsForSelectionMode(UpdateCaretsHint aHint);
-  void UpdateCaretsForTilt();
 
   // Get the nearest enclosing focusable frame of aFrame.
   // @return focusable frame if there is any; nullptr otherwise.
@@ -145,14 +144,10 @@ protected:
   nsresult DragCaretInternal(const nsPoint& aPoint);
   nsPoint AdjustDragBoundary(const nsPoint& aPoint) const;
   void ClearMaintainedSelection() const;
-
+  void FlushLayout() const;
+  dom::Element* GetEditingHostForFrame(nsIFrame* aFrame) const;
   dom::Selection* GetSelection() const;
   already_AddRefed<nsFrameSelection> GetFrameSelection() const;
-  nsIContent* GetFocusedContent() const;
-
-  // This function will call FlushPendingNotifications. So caller must ensure
-  // everything exists after calling this method.
-  void DispatchCaretStateChangedEvent(dom::CaretChangedReason aReason) const;
 
   // If we're dragging the first caret, we do not want to drag it over the
   // previous character of the second caret. Same as the second caret. So we
@@ -166,7 +161,34 @@ protected:
   void LaunchCaretTimeoutTimer();
   void CancelCaretTimeoutTimer();
 
+  // ---------------------------------------------------------------------------
+  // The following functions are made virtual for stubbing or mocking in gtest.
+  //
+  // Get caret mode based on current selection.
+  virtual CaretMode GetCaretMode() const;
+
+  // @return true if aStartFrame comes before aEndFrame.
+  virtual bool CompareTreePosition(nsIFrame* aStartFrame,
+                                   nsIFrame* aEndFrame) const;
+
+  // Check if the two carets is overlapping to become tilt.
+  virtual void UpdateCaretsForTilt();
+
+  // Check whether AccessibleCaret is displayable in cursor mode or not.
+  // @param aOutFrame returns frame of the cursor if it's displayable.
+  // @param aOutOffset returns frame offset as well.
+  virtual bool IsCaretDisplayableInCursorMode(nsIFrame** aOutFrame = nullptr,
+                                              int32_t* aOutOffset = nullptr) const;
+
+  virtual bool HasNonEmptyTextContent(nsINode* aNode) const;
+
+  // This function will call FlushPendingNotifications. So caller must ensure
+  // everything exists after calling this method.
+  virtual void DispatchCaretStateChangedEvent(dom::CaretChangedReason aReason) const;
+
+  // ---------------------------------------------------------------------------
   // Member variables
+  //
   nscoord mOffsetYToCaretLogicalPosition = NS_UNCONSTRAINEDSIZE;
 
   // AccessibleCaretEventHub owns us. When it's Terminate() called by
