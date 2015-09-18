@@ -10,7 +10,7 @@ const {AnimationsFront} = require("devtools/server/actors/animation");
 const {InspectorFront} = require("devtools/server/actors/inspector");
 
 add_task(function*() {
-  let doc = yield addTab(MAIN_DOMAIN + "animation.html");
+  yield addTab(MAIN_DOMAIN + "animation.html");
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());

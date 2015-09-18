@@ -4,15 +4,15 @@
 
 "use strict";
 
-// Check that the scrubber in the timeline-based UI can be moved by clicking &
-// dragging in the header area.
+// Check that the scrubber in the timeline can be moved by clicking & dragging
+// in the header area.
 // Also check that doing so changes the timeline's play/pause button to paused
 // state.
 
 add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
 
-  let {panel} = yield openAnimationInspectorNewUI();
+  let {panel} = yield openAnimationInspector();
 
   let timeline = panel.animationsTimelineComponent;
   let win = timeline.win;
