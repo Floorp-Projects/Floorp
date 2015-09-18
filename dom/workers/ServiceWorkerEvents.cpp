@@ -6,15 +6,18 @@
 
 #include "ServiceWorkerEvents.h"
 #include "ServiceWorkerClient.h"
+#include "ServiceWorkerManager.h"
 
 #include "nsIHttpChannelInternal.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIOutputStream.h"
+#include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStreamUtils.h"
 #include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "nsSerializationHelper.h"
 #include "nsQueryObject.h"
 
@@ -104,13 +107,17 @@ namespace {
 class FinishResponse final : public nsRunnable
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
+  nsMainThreadPtrHandle<ServiceWorker> mServiceWorker;
   nsRefPtr<InternalResponse> mInternalResponse;
   ChannelInfo mWorkerChannelInfo;
+
 public:
   FinishResponse(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
+                 nsMainThreadPtrHandle<ServiceWorker> aServiceWorker,
                  InternalResponse* aInternalResponse,
                  const ChannelInfo& aWorkerChannelInfo)
     : mChannel(aChannel)
+    , mServiceWorker(aServiceWorker)
     , mInternalResponse(aInternalResponse)
     , mWorkerChannelInfo(aWorkerChannelInfo)
   {
@@ -120,6 +127,11 @@ public:
   Run()
   {
     AssertIsOnMainThread();
+
+    if (!CSPPermitsResponse()) {
+      mChannel->Cancel(NS_ERROR_CONTENT_BLOCKED);
+      return NS_OK;
+    }
 
     ChannelInfo channelInfo;
     if (mInternalResponse->GetChannelInfo().IsInitialized()) {
@@ -146,6 +158,34 @@ public:
     rv = mChannel->FinishSynthesizedResponse();
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to finish synthesized response");
     return rv;
+  }
+
+  bool CSPPermitsResponse()
+  {
+    AssertIsOnMainThread();
+
+    nsresult rv;
+    nsCOMPtr<nsIURI> uri;
+    nsAutoCString url;
+    mInternalResponse->GetUnfilteredUrl(url);
+    if (url.IsEmpty()) {
+      // Synthetic response. The buck stops at the worker script.
+      url = mServiceWorker->Info()->ScriptSpec();
+    }
+    rv = NS_NewURI(getter_AddRefs(uri), url, nullptr, nullptr);
+    NS_ENSURE_SUCCESS(rv, false);
+
+    nsCOMPtr<nsIChannel> underlyingChannel;
+    rv = mChannel->GetChannel(getter_AddRefs(underlyingChannel));
+    NS_ENSURE_SUCCESS(rv, false);
+    NS_ENSURE_TRUE(underlyingChannel, false);
+    nsCOMPtr<nsILoadInfo> loadInfo = underlyingChannel->GetLoadInfo();
+
+    int16_t decision = nsIContentPolicy::ACCEPT;
+    rv = NS_CheckContentLoadPolicy(loadInfo->InternalContentPolicyType(), uri, loadInfo->LoadingPrincipal(),
+                                   loadInfo->LoadingNode(), EmptyCString(), nullptr, &decision);
+    NS_ENSURE_SUCCESS(rv, false);
+    return decision == nsIContentPolicy::ACCEPT;
   }
 };
 
@@ -183,13 +223,16 @@ private:
 struct RespondWithClosure
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mInterceptedChannel;
+  nsMainThreadPtrHandle<ServiceWorker> mServiceWorker;
   nsRefPtr<InternalResponse> mInternalResponse;
   ChannelInfo mWorkerChannelInfo;
 
   RespondWithClosure(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
+                     nsMainThreadPtrHandle<ServiceWorker>& aServiceWorker,
                      InternalResponse* aInternalResponse,
                      const ChannelInfo& aWorkerChannelInfo)
     : mInterceptedChannel(aChannel)
+    , mServiceWorker(aServiceWorker)
     , mInternalResponse(aInternalResponse)
     , mWorkerChannelInfo(aWorkerChannelInfo)
   {
@@ -202,6 +245,7 @@ void RespondWithCopyComplete(void* aClosure, nsresult aStatus)
   nsCOMPtr<nsIRunnable> event;
   if (NS_SUCCEEDED(aStatus)) {
     event = new FinishResponse(data->mInterceptedChannel,
+                               data->mServiceWorker,
                                data->mInternalResponse,
                                data->mWorkerChannelInfo);
   } else {
@@ -307,7 +351,7 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   }
 
   nsAutoPtr<RespondWithClosure> closure(
-      new RespondWithClosure(mInterceptedChannel, ir, worker->GetChannelInfo()));
+      new RespondWithClosure(mInterceptedChannel, mServiceWorker, ir, worker->GetChannelInfo()));
   nsCOMPtr<nsIInputStream> body;
   ir->GetUnfilteredBody(getter_AddRefs(body));
   // Errors and redirects may not have a body.
