@@ -691,17 +691,11 @@ class MarionetteTestCase(CommonTestCase):
 
     def tearDown(self):
         if not self.marionette.check_for_crash():
-            try:
-                self.marionette.clear_imported_scripts()
-                self.marionette.execute_script("log('TEST-END: %s:%s')" %
-                                               (self.filepath.replace('\\', '\\\\'),
-                                                self.methodName))
-                self.marionette.test_name = None
-            except:
-                # We have tried to log the test end when there is no listener
-                # object that we can access
-                pass
-
+           self.marionette.set_context("content")
+           self.marionette.clear_imported_scripts()
+           self.marionette.execute_script("log('TEST-END: %s:%s')" %
+                                          (self.filepath.replace('\\', '\\\\'), self.methodName))
+        self.marionette.test_name = None
         CommonTestCase.tearDown(self)
 
     def get_new_emulator(self):
