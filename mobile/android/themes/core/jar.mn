@@ -8,6 +8,9 @@ chrome.jar:
 % skin browser classic/1.0 %skin/
   skin/aboutPage.css                        (aboutPage.css)
   skin/about.css                            (about.css)
+#ifndef MOZ_ANDROID_NATIVE_ACCOUNT_UI
+  skin/aboutAccounts.css                    (aboutAccounts.css)
+#endif
 * skin/aboutAddons.css                      (aboutAddons.css)
 * skin/aboutBase.css                        (aboutBase.css)
 #ifdef MOZ_DEVICES
