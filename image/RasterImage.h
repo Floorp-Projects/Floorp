@@ -305,10 +305,6 @@ private:
    *
    * It's an error to call Decode() before this image's intrinsic size is
    * available. A metadata decode must successfully complete first.
-   *
-   * If downscale-during-decode is not enabled for this image (i.e., if
-   * mDownscaleDuringDecode is false), it is an error to pass an @aSize value
-   * different from this image's intrinsic size.
    */
   NS_IMETHOD Decode(const gfx::IntSize& aSize, uint32_t aFlags);
 
@@ -401,7 +397,6 @@ private: // data
   bool                       mDiscardable:1;   // Is container discardable?
   bool                       mHasSourceData:1; // Do we have source data?
   bool                       mHasBeenDecoded:1; // Decoded at least once?
-  bool                       mDownscaleDuringDecode:1;
 
   // Whether we're waiting to start animation. If we get a StartAnimation() call
   // but we don't yet have more than one frame, mPendingAnimation is set so that
