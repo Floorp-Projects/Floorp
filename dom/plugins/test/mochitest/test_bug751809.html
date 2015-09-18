@@ -23,21 +23,6 @@
   const utils = window.QueryInterface(Ci.nsIInterfaceRequestor).
                                     getInterface(Ci.nsIDOMWindowUtils);
 
-  function waitForCondition(condition, nextTest, errorMsg) {
-    var tries = 0;
-    var interval = setInterval(function() {
-      if (tries >= 30) {
-        ok(false, errorMsg);
-        moveOn();
-      }
-      if (condition()) {
-        moveOn();
-      }
-      tries++;
-    }, 100);
-    var moveOn = function() { clearInterval(interval); nextTest(); };
-  }
-
   function go() {
     var plugin = document.getElementById('plugin');
     var objLoadingContent = SpecialPowers.wrap(plugin);
@@ -52,7 +37,8 @@
 
     objLoadingContent.playPlugin();
     var condition = () => plugin.setColor !== undefined;
-    waitForCondition(condition, afterPluginActivation, "Waited too long for plugin to activate");
+    SimpleTest.waitForCondition(condition, afterPluginActivation,
+                                "Waited too long for plugin to activate");
   }
     
   function afterPluginActivation() {
@@ -77,7 +63,8 @@
 
     synthesizeMouseAtCenter(plugin, {});
     var condition = () => plugin.getMouseUpEventCount() > 0;
-    waitForCondition(condition, afterFirstClick, "Waited too long for plugin to receive the mouse click");
+    SimpleTest.waitForCondition(condition, afterFirstClick,
+                                "Waited too long for plugin to receive the mouse click");
   }
 
   function afterFirstClick() {

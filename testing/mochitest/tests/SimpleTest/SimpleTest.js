@@ -974,6 +974,45 @@ SimpleTest.waitForClipboard = function(aExpectedStringOrValidatorFn, aSetupFn,
 }
 
 /**
+ * Wait for a condition for a while (actually up to 3s here).
+ *
+ * @param aCond
+ *        A function returns the result of the condition
+ * @param aCallback
+ *        A function called after the condition is passed or timeout.
+ * @param aErrorMsg
+ *        The message displayed when the condition failed to pass
+ *        before timeout.
+ */
+SimpleTest.waitForCondition = function (aCond, aCallback, aErrorMsg) {
+  var tries = 0;
+  var interval = setInterval(() => {
+    if (tries >= 30) {
+      ok(false, aErrorMsg);
+      moveOn();
+      return;
+    }
+    var conditionPassed;
+    try {
+      conditionPassed = aCond();
+    } catch (e) {
+      ok(false, `${e}\n${e.stack}`);
+      conditionPassed = false;
+    }
+    if (conditionPassed) {
+      moveOn();
+    }
+    tries++;
+  }, 100);
+  var moveOn = () => { clearInterval(interval); aCallback(); };
+};
+SimpleTest.promiseWaitForCondition = function (aCond, aErrorMsg) {
+  return new Promise(resolve => {
+    this.waitForCondition(aCond, resolve, aErrorMsg);
+  });
+};
+
+/**
  * Executes a function shortly after the call, but lets the caller continue
  * working (or finish).
  */
