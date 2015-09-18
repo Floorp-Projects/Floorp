@@ -29,6 +29,7 @@
   var DirectCallFailureView = loop.conversationViews.DirectCallFailureView;
   var RoomFailureView = loop.roomViews.RoomFailureView;
   var DesktopRoomConversationView = loop.roomViews.DesktopRoomConversationView;
+  var DesktopRoomEditContextView = loop.roomViews.DesktopRoomEditContextView;
 
   // 2. Standalone webapp
   var HomeView = loop.webapp.HomeView;
@@ -1387,6 +1388,23 @@
                   onCallTerminated: function(){}, 
                   roomState: ROOM_STATES.INIT, 
                   roomStore: invitationRoomStore})
+              )
+            ), 
+
+            React.createElement(FramedExample, {height: 278.6, 
+                           onContentsRendered: invitationRoomStore.activeRoomStore.forcedUpdate, 
+                           summary: "Desktop room Edit Context w/Error", 
+                           width: 298}, 
+              React.createElement("div", {className: "fx-embedded room-invitation-overlay"}, 
+                React.createElement(DesktopRoomEditContextView, {
+                  dispatcher: dispatcher, 
+                  error: {}, 
+                  mozLoop: navigator.mozLoop, 
+                  onClose: function(){}, 
+                  roomData: {}, 
+                  savingContext: false, 
+                  show: true}
+                   )
               )
             ), 
 
