@@ -113,8 +113,8 @@ def add_remote_arguments(parser):
                         default=20701, help="port of remote device to test")
 
     parser.add_argument("--dm_trans", action="store", type=str, dest="dm_trans",
-                        choices=["adb", "sut"], default="sut",
-                        help="the transport to use to communicate with device: [adb|sut]; default=sut")
+                        choices=["adb", "sut"], default="adb",
+                        help="the transport to use to communicate with device: [adb|sut]; default=adb")
 
     parser.add_argument("--objdir", action="store", type=str, dest="objdir",
                         help="local objdir, containing xpcshell binaries")
