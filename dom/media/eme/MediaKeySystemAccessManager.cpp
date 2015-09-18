@@ -84,6 +84,7 @@ ShouldTrialCreateGMP(const nsAString& aKeySystem)
   // * ClearKey and Primetime on Windows Vista and later.
   // * Primetime on MacOSX Lion and later.
   return
+    Preferences::GetBool("media.gmp.trial-create.enabled", false) &&
 #ifdef XP_WIN
     IsVistaOrLater();
 #elif defined(XP_MACOSX)
