@@ -84,13 +84,6 @@ function addTab(url) {
 }
 
 /**
- * Switch ON the new UI pref.
- */
-function enableNewUI() {
-  Services.prefs.setBoolPref(NEW_UI_PREF, true);
-}
-
-/**
  * Reload the current tab location.
  */
 function reloadTab() {
@@ -147,15 +140,9 @@ var selectNode = Task.async(function*(data, inspector, reason="test") {
  * @param {String} msg An optional string to be used as the assertion message.
  */
 function assertAnimationsDisplayed(panel, nbAnimations, msg="") {
-  let isNewUI = Services.prefs.getBoolPref(NEW_UI_PREF);
   msg = msg || `There are ${nbAnimations} animations in the panel`;
-  if (isNewUI) {
-    is(panel.animationsTimelineComponent.animationsEl.childNodes.length,
-       nbAnimations, msg);
-  } else {
-    is(panel.playersEl.querySelectorAll(".player-widget").length,
-       nbAnimations, msg);
-  }
+  is(panel.animationsTimelineComponent.animationsEl.childNodes.length,
+     nbAnimations, msg);
 }
 
 /**
@@ -230,40 +217,12 @@ var openAnimationInspector = Task.async(function*() {
 });
 
 /**
- * Turn on the new timeline-based UI pref ON, and then open the toolbox, with
- * the inspector tool visible and the animationinspector sidebar selected.
- * @return a promise that resolves when the inspector is ready.
- */
-function openAnimationInspectorNewUI() {
-  enableNewUI();
-  return openAnimationInspector();
-}
-
-/**
  * Close the toolbox.
  * @return a promise that resolves when the toolbox has closed.
  */
 var closeAnimationInspector = Task.async(function*() {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   yield gDevTools.closeToolbox(target);
-});
-
-/**
- * During the time period we migrate from the playerWidgets-based UI to the new
- * AnimationTimeline UI, we'll want to run certain tests against both UI.
- * This closes the toolbox, switch the new UI pref ON, and opens the toolbox
- * again, with the animation inspector panel selected.
- * @param {Boolean} reload Optionally reload the page after the toolbox was
- * closed and before it is opened again.
- * @return a promise that resolves when the animation inspector is ready.
- */
-var closeAnimationInspectorAndRestartWithNewUI = Task.async(function*(reload) {
-  info("Close the toolbox and test again with the new UI");
-  yield closeAnimationInspector();
-  if (reload) {
-    yield reloadTab();
-  }
-  return yield openAnimationInspectorNewUI();
 });
 
 /**
@@ -481,13 +440,7 @@ function isNodeVisible(node) {
  * @return {Array} all AnimationTargetNode instances
  */
 var waitForAllAnimationTargets = Task.async(function*(panel) {
-  let targets = [];
-  if (panel.animationsTimelineComponent) {
-    targets = targets.concat(panel.animationsTimelineComponent.targetNodes);
-  }
-  if (panel.playerWidgets) {
-    targets = targets.concat(panel.playerWidgets.map(w => w.targetNodeComponent));
-  }
+  let targets = panel.animationsTimelineComponent.targetNodes;
   yield promise.all(targets.map(t => {
     if (!t.nodeFront) {
       return t.once("target-retrieved");

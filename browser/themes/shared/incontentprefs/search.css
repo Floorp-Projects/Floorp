@@ -19,25 +19,11 @@
   margin: .5em 0;
 }
 
-#engineList treechildren::-moz-tree-image(engineShown, checked) {
-  list-style-image: url("chrome://global/skin/in-content/check.svg#check");
-  width: 21px;
-  height: 21px;
-}
-
-#engineList treechildren::-moz-tree-image(engineShown, checked, selected) {
-  list-style-image: url("chrome://global/skin/in-content/check.svg#check-inverted");
-}
-
 #engineList treechildren::-moz-tree-image(engineName) {
   -moz-margin-end: 10px;
   -moz-margin-start: 1px;
   width: 16px;
   height: 16px;
-}
-
-#engineList treechildren::-moz-tree-row {
-  min-height: 36px;
 }
 
 #engineList treechildren::-moz-tree-drop-feedback {

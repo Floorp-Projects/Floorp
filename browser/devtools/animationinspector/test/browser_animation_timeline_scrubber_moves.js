@@ -4,15 +4,14 @@
 
 "use strict";
 
-// Check that the scrubber in the timeline-based UI moves when animations are
-// playing.
+// Check that the scrubber in the timeline moves when animations are playing.
 // The animations in the test page last for a very long time, so the test just
 // measures the position of the scrubber once, then waits for some time to pass
 // and measures its position again.
 
 add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
-  let {panel} = yield openAnimationInspectorNewUI();
+  let {panel} = yield openAnimationInspector();
 
   let timeline = panel.animationsTimelineComponent;
   let scrubberEl = timeline.scrubberEl;
