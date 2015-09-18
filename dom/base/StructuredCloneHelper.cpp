@@ -432,14 +432,25 @@ StructuredCloneHelper::ReadFullySerializableObjects(JSContext* aCx,
         return nullptr;
       }
 
+      uint32_t signedPkgLength, dummy;
+      if (!JS_ReadUint32Pair(aReader, &signedPkgLength, &dummy)) {
+        return nullptr;
+      }
+
       nsAutoCString spec;
       spec.SetLength(specLength);
       if (!JS_ReadBytes(aReader, spec.BeginWriting(), specLength)) {
         return nullptr;
       }
 
+      nsAutoCString signedPkg;
+      signedPkg.SetLength(signedPkgLength);
+      if (!JS_ReadBytes(aReader, signedPkg.BeginWriting(), signedPkgLength)) {
+        return nullptr;
+      }
+
       info = mozilla::ipc::ContentPrincipalInfo(appId, isInBrowserElement,
-                                                spec);
+                                                spec, signedPkg);
     }
 
     nsresult rv;
@@ -570,7 +581,9 @@ StructuredCloneHelper::WriteFullySerializableObjects(JSContext* aCx,
                                 cInfo.appId()) &&
              JS_WriteUint32Pair(aWriter, cInfo.isInBrowserElement(),
                                 cInfo.spec().Length()) &&
-             JS_WriteBytes(aWriter, cInfo.spec().get(), cInfo.spec().Length());
+             JS_WriteUint32Pair(aWriter, cInfo.signedPkg().Length(), 0) &&
+             JS_WriteBytes(aWriter, cInfo.spec().get(), cInfo.spec().Length()) &&
+             JS_WriteBytes(aWriter, cInfo.signedPkg().get(), cInfo.signedPkg().Length());
     }
   }
 

@@ -221,7 +221,7 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
 
       nsAutoCString spec;
       spec.AppendPrintf("spec write %d", i);
-      d->principal() = mozilla::ipc::ContentPrincipalInfo(i, i % 2, spec);
+      d->principal() = mozilla::ipc::ContentPrincipalInfo(i, i % 2, spec, EmptyCString());
       d->scope().AppendPrintf("scope write %d", i);
       d->scriptSpec().AppendPrintf("scriptSpec write %d", i);
       d->currentWorkerURL().AppendPrintf("currentWorkerURL write %d", i);
