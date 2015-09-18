@@ -162,9 +162,7 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
   }
   bool snap;
   nsRect rect = aItem->GetBounds(aBuilder, &snap);
-  nsRect layerRect = rect -
-    nsLayoutUtils::GetAnimatedGeometryRootFor(aItem, aBuilder)->
-      GetOffsetToCrossDoc(aItem->ReferenceFrame());
+  nsRect layerRect = rect - aItem->AnimatedGeometryRoot()->GetOffsetToCrossDoc(aItem->ReferenceFrame());
   nscolor color;
   nsRect vis = aItem->GetVisibleRect();
   nsRect component = aItem->GetComponentAlphaBounds(aBuilder);
