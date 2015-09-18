@@ -19,13 +19,6 @@
 #include "secerr.h"
 #include "ssl.h"
 
-namespace mozilla {
-
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPRDir, PRDir, PR_CloseDir);
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPORTString, char, PORT_Free);
-
-} // namespace mozilla
-
 namespace mozilla { namespace test {
 
 enum DebugLevel
@@ -48,9 +41,6 @@ SECStatus
 ConfigSecureServerWithNamedCert(PRFileDesc *fd, const char *certName,
                                 /*optional*/ ScopedCERTCertificate *cert,
                                 /*optional*/ SSLKEAType *kea);
-
-SECStatus
-InitializeNSS(const char* nssCertDBDir);
 
 int
 StartServer(const char *nssCertDBDir, SSLSNISocketConfig sniSocketConfig,

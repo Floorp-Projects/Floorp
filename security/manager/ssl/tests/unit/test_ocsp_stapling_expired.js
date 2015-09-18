@@ -24,18 +24,18 @@ function add_ocsp_test(aHost, aExpectedResult, aOCSPResponseToServe,
     function() {
       equal(gOCSPRequestCount, aExpectedRequestCount,
             "Should have made " + aExpectedRequestCount +
-            " fallback OCSP request" + (aExpectedRequestCount == 1 ? "" : "s"));
+            " fallback OCSP request" + aExpectedRequestCount == 1 ? "" : "s");
     });
 }
 
 do_get_profile();
 Services.prefs.setBoolPref("security.ssl.enable_ocsp_stapling", true);
 Services.prefs.setIntPref("security.OCSP.enabled", 1);
-var args = [["good", "default-ee", "unused"],
-             ["expiredresponse", "default-ee", "unused"],
-             ["oldvalidperiod", "default-ee", "unused"],
-             ["revoked", "default-ee", "unused"],
-             ["unknown", "default-ee", "unused"],
+var args = [["good", "localhostAndExampleCom", "unused"],
+             ["expiredresponse", "localhostAndExampleCom", "unused"],
+             ["oldvalidperiod", "localhostAndExampleCom", "unused"],
+             ["revoked", "localhostAndExampleCom", "unused"],
+             ["unknown", "localhostAndExampleCom", "unused"],
             ];
 var ocspResponses = generateOCSPResponses(args, "tlsserver");
 // Fresh response, certificate is good.
@@ -53,9 +53,9 @@ var ocspResponseUnknown = ocspResponses[4];
 var willNotRetry = 1;
 // but sometimes, since a bad response is in the cache, OCSP fetch will be
 // attempted for each validation - in practice, for these test certs, this
-// means 8 requests because various hash algorithm and key size combinations
-// are tried.
-var willRetry = 8;
+// means 4 requests because various hash algorithm combinations are tried
+// (for sha-1 telemetry)
+var willRetry = 4;
 
 function run_test() {
   let ocspResponder = new HttpServer();
