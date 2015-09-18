@@ -2551,17 +2551,16 @@ bool
 BytecodeEmitter::emitPropLHS(ParseNode* pn)
 {
     MOZ_ASSERT(pn->isKind(PNK_DOT));
-    ParseNode* pn2 = pn->maybeExpr();
+    MOZ_ASSERT(!pn->as<PropertyAccess>().isSuper());
 
-    // Don't want super sneaking in here.
-    MOZ_ASSERT(!pn2->isKind(PNK_POSHOLDER));
+    ParseNode* pn2 = pn->maybeExpr();
 
     /*
      * If the object operand is also a dotted property reference, reverse the
      * list linked via pn_expr temporarily so we can iterate over it from the
      * bottom up (reversing again as we go), to avoid excessive recursion.
      */
-    if (pn2->isKind(PNK_DOT)) {
+    if (pn2->isKind(PNK_DOT) && !pn2->as<PropertyAccess>().isSuper()) {
         ParseNode* pndot = pn2;
         ParseNode* pnup = nullptr;
         ParseNode* pndown;
