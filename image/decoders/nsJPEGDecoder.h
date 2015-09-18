@@ -15,7 +15,6 @@
 
 #include "Decoder.h"
 
-#include "Downscaler.h"
 #include "nsAutoPtr.h"
 
 #include "nsIInputStream.h"
@@ -55,8 +54,6 @@ class nsJPEGDecoder : public Decoder
 public:
   virtual ~nsJPEGDecoder();
 
-  virtual nsresult SetTargetSize(const nsIntSize& aSize) override;
-
   virtual void SetSampleSize(int aSampleSize) override
   {
     mSampleSize = aSampleSize;
@@ -72,8 +69,6 @@ public:
 protected:
   Orientation ReadOrientationFromEXIF();
   void OutputScanlines(bool* suspend);
-
-  Maybe<Downscaler> mDownscaler;
 
 private:
   friend class DecoderFactory;

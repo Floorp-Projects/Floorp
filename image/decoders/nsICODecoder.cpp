@@ -73,20 +73,6 @@ nsICODecoder::nsICODecoder(RasterImage* aImage)
   , mHasMaskAlpha(false)
 { }
 
-nsresult
-nsICODecoder::SetTargetSize(const nsIntSize& aSize)
-{
-  // Make sure the size is reasonable.
-  if (MOZ_UNLIKELY(aSize.width <= 0 || aSize.height <= 0)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Create a downscaler that we'll filter our output through.
-  mDownscaler.emplace(aSize);
-
-  return NS_OK;
-}
-
 void
 nsICODecoder::FinishInternal()
 {

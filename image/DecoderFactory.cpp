@@ -133,8 +133,6 @@ DecoderFactory::CreateDecoder(DecoderType aType,
   // Set a target size for downscale-during-decode if applicable.
   if (aTargetSize) {
     DebugOnly<nsresult> rv = decoder->SetTargetSize(*aTargetSize);
-    MOZ_ASSERT(nsresult(rv) != NS_ERROR_NOT_AVAILABLE,
-               "We're downscale-during-decode but decoder doesn't support it?");
     MOZ_ASSERT(NS_SUCCEEDED(rv), "Bad downscale-during-decode target size?");
   }
 
