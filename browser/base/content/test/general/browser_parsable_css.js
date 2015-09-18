@@ -22,13 +22,8 @@ const kWhitelist = [
   // Loop standalone client CSS uses placeholder cross browser pseudo-element
   {sourceName: /loop\/.*\.css/i,
    errorMessage: /Unknown pseudo-class.*placeholder/i},
-  // Loop issues that crept in since this test was broken, see bug ...
-  {sourceName: /loop\/.*shared\/css\/conversation.css/i,
-   errorMessage: /Error in parsing value for 'display'/i},
   {sourceName: /loop\/.*shared\/css\/common.css/i,
    errorMessage: /Unknown property 'user-select'/i},
-  {sourceName: /loop\/.*css\/panel.css/i,
-   errorMessage: /Expected color but found 'none'/i},
   // Highlighter CSS uses chrome-only pseudo-class, see bug 985597.
   {sourceName: /highlighter\.css/i,
    errorMessage: /Unknown pseudo-class.*moz-native-anonymous/i},
