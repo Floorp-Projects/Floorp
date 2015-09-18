@@ -1029,6 +1029,7 @@
                            width={334}>
               <div className="panel force-menu-show">
                 <ContactDetail contact={fakeManyContacts[0]}
+                               getContainerCoordinates={function() { return {"top": 0, "height": 0 }; }}
                                handleContactAction={function() {}} />
               </div>
             </FramedExample>
@@ -1043,6 +1044,8 @@
              <div className="panel">
                <ContactDropdown blocked={false}
                                 canEdit={true}
+                                eventPosY={0}
+                                getContainerCoordinates={function() { return {"top": 0, "height": 0 }; }}
                                 handleAction={function () {}} />
              </div>
             </FramedExample>
@@ -1053,8 +1056,10 @@
                            width={300}>
              <div className="panel">
                <ContactDropdown blocked={true}
-                 canEdit={false}
-                 handleAction={function () {}} />
+                                canEdit={false}
+                                eventPosY={0}
+                                getContainerCoordinates={function() { return {"top": 0, "height": 0 }; }}
+                                handleAction={function () {}} />
              </div>
             </FramedExample>
           </Section>
