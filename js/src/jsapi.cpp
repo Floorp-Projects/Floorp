@@ -1802,7 +1802,7 @@ JS_IdToValue(JSContext* cx, jsid id, MutableHandleValue vp)
 }
 
 JS_PUBLIC_API(bool)
-JS_DefaultValue(JSContext* cx, HandleObject obj, JSType hint, MutableHandleValue vp)
+JS::ToPrimitive(JSContext* cx, HandleObject obj, JSType hint, MutableHandleValue vp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);

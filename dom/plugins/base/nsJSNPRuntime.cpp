@@ -2297,14 +2297,14 @@ NPObjectMember_toPrimitive(JSContext *cx, unsigned argc, JS::Value *vp)
   if (!memberPrivate)
     return false;
 
-  JSType type;
-  if (!JS::GetFirstArgumentAsTypeHint(cx, args, &type))
+  JSType hint;
+  if (!JS::GetFirstArgumentAsTypeHint(cx, args, &hint))
     return false;
 
   args.rval().set(memberPrivate->fieldValue);
   if (args.rval().isObject()) {
     JS::Rooted<JSObject*> objVal(cx, &args.rval().toObject());
-    return JS_DefaultValue(cx, objVal, type, args.rval());
+    return JS::ToPrimitive(cx, objVal, hint, args.rval());
   }
   return true;
 }

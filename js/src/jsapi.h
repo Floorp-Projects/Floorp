@@ -1898,6 +1898,8 @@ JS_StringToId(JSContext* cx, JS::HandleString s, JS::MutableHandleId idp);
 extern JS_PUBLIC_API(bool)
 JS_IdToValue(JSContext* cx, jsid id, JS::MutableHandle<JS::Value> vp);
 
+namespace JS {
+
 /**
  * Convert obj to a primitive value. On success, store the result in vp and
  * return true.
@@ -1908,10 +1910,7 @@ JS_IdToValue(JSContext* cx, jsid id, JS::MutableHandle<JS::Value> vp);
  * Implements: ES6 7.1.1 ToPrimitive(input, [PreferredType]).
  */
 extern JS_PUBLIC_API(bool)
-JS_DefaultValue(JSContext* cx, JS::HandleObject obj, JSType hint,
-                JS::MutableHandleValue vp);
-
-namespace JS {
+ToPrimitive(JSContext* cx, JS::HandleObject obj, JSType hint, JS::MutableHandleValue vp);
 
 /**
  * If args.get(0) is one of the strings "string", "number", or "default", set
