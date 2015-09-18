@@ -20,10 +20,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Prefetcher",
 XPCOMUtils.defineLazyServiceGetter(this, "SystemPrincipal",
                                    "@mozilla.org/systemprincipal;1", "nsIPrincipal");
 
-XPCOMUtils.defineLazyServiceGetter(this, "contentSecManager",
-                                   "@mozilla.org/contentsecuritymanager;1",
-                                   "nsIContentSecurityManager");
-
 // Similar to Python. Returns dict[key] if it exists. Otherwise,
 // sets dict[key] to default_ and returns default_.
 function setDefault(dict, key, default_)
@@ -278,17 +274,7 @@ AboutProtocolChannel.prototype = {
     Services.tm.currentThread.dispatch(runnable, Ci.nsIEventTarget.DISPATCH_NORMAL);
   },
 
-  asyncOpen2: function(listener) {
-    // throws an error if security checks fail
-    var outListener = contentSecManager.performSecurityCheck(this, listener);
-    this.asyncOpen(outListener, null);
-  },
-
   open: function() {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  },
-
-  open2: function() {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 

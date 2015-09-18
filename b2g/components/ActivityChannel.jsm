@@ -12,10 +12,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsIMessageSender");
 
-XPCOMUtils.defineLazyServiceGetter(this, "contentSecManager",
-                                   "@mozilla.org/contentsecuritymanager;1",
-                                   "nsIContentSecurityManager");
-
 this.EXPORTED_SYMBOLS = ["ActivityChannel"];
 
 this.ActivityChannel = function(aURI, aLoadInfo, aName, aDetails) {
@@ -55,9 +51,7 @@ this.ActivityChannel.prototype = {
   },
 
   asyncOpen2: function(aListener) {
-    // throws an error if security checks fail
-    var outListener = contentSecManager.performSecurityCheck(this, aListener);
-    this.asyncOpen(outListener, null);
+    this.asyncOpen(aListener, null);
   },
 
   QueryInterface2: XPCOMUtils.generateQI([Ci.nsIChannel])
