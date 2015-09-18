@@ -2498,7 +2498,7 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "none" ],
-    other_values: [ "left", "right", "both" ],
+    other_values: [ "left", "right", "both", "inline-start", "inline-end" ],
     invalid_values: []
   },
   "clip": {
@@ -2602,7 +2602,7 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "none" ],
-    other_values: [ "left", "right" ],
+    other_values: [ "left", "right", "inline-start", "inline-end" ],
     invalid_values: []
   },
   "font": {

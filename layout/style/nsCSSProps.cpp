@@ -1005,10 +1005,12 @@ const KTableValue nsCSSProps::kCaptionSideKTable[] = {
 };
 
 const KTableValue nsCSSProps::kClearKTable[] = {
-  eCSSKeyword_none, NS_STYLE_CLEAR_NONE,
-  eCSSKeyword_left, NS_STYLE_CLEAR_LEFT,
-  eCSSKeyword_right, NS_STYLE_CLEAR_RIGHT,
-  eCSSKeyword_both, NS_STYLE_CLEAR_BOTH,
+  eCSSKeyword_none,         NS_STYLE_CLEAR_NONE,
+  eCSSKeyword_left,         NS_STYLE_CLEAR_LEFT,
+  eCSSKeyword_right,        NS_STYLE_CLEAR_RIGHT,
+  eCSSKeyword_inline_start, NS_STYLE_CLEAR_INLINE_START,
+  eCSSKeyword_inline_end,   NS_STYLE_CLEAR_INLINE_END,
+  eCSSKeyword_both,         NS_STYLE_CLEAR_BOTH,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -1353,9 +1355,11 @@ const KTableValue nsCSSProps::kHyphensKTable[] = {
 };
 
 const KTableValue nsCSSProps::kFloatKTable[] = {
-  eCSSKeyword_none,  NS_STYLE_FLOAT_NONE,
-  eCSSKeyword_left,  NS_STYLE_FLOAT_LEFT,
-  eCSSKeyword_right, NS_STYLE_FLOAT_RIGHT,
+  eCSSKeyword_none,         NS_STYLE_FLOAT_NONE,
+  eCSSKeyword_left,         NS_STYLE_FLOAT_LEFT,
+  eCSSKeyword_right,        NS_STYLE_FLOAT_RIGHT,
+  eCSSKeyword_inline_start, NS_STYLE_FLOAT_INLINE_START,
+  eCSSKeyword_inline_end,   NS_STYLE_FLOAT_INLINE_END,
   eCSSKeyword_UNKNOWN,-1
 };
 
