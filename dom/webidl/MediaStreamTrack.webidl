@@ -37,6 +37,9 @@ typedef (double or ConstrainDoubleRange) ConstrainDouble;
 typedef (boolean or ConstrainBooleanParameters) ConstrainBoolean;
 typedef (DOMString or sequence<DOMString> or ConstrainDOMStringParameters) ConstrainDOMString;
 
+// Note: When adding new constraints, remember to update the SelectSettings()
+// function in MediaManager.cpp to make OverconstrainedError's constraint work!
+
 dictionary MediaTrackConstraintSet {
     ConstrainLong width;
     ConstrainLong height;
