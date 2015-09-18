@@ -4780,7 +4780,9 @@ pref("browser.safebrowsing.provider.mozilla.gethashURL", "https://shavar.service
 // Block lists for tracking protection. The name values will be used as the keys
 // to lookup the localized name in preferences.properties.
 pref("browser.safebrowsing.provider.mozilla.lists.mozstd.name", "mozstdName");
+pref("browser.safebrowsing.provider.mozilla.lists.mozstd.description", "mozstdDesc");
 pref("browser.safebrowsing.provider.mozilla.lists.mozfull.name", "mozfullName");
+pref("browser.safebrowsing.provider.mozilla.lists.mozfull.description", "mozfullDesc");
 
 // Turn off Spatial navigation by default.
 pref("snav.enabled", false);
