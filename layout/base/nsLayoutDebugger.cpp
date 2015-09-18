@@ -162,7 +162,9 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
   }
   bool snap;
   nsRect rect = aItem->GetBounds(aBuilder, &snap);
-  nsRect layerRect = rect - aItem->AnimatedGeometryRoot()->GetOffsetToCrossDoc(aItem->ReferenceFrame());
+  nsRect layerRect = rect -
+    nsLayoutUtils::GetAnimatedGeometryRootFor(aItem, aBuilder, nullptr)->
+      GetOffsetToCrossDoc(aItem->ReferenceFrame());
   nscolor color;
   nsRect vis = aItem->GetVisibleRect();
   nsRect component = aItem->GetComponentAlphaBounds(aBuilder);
@@ -192,7 +194,7 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
     aStream << nsPrintfCString(" (opaque %d,%d,%d,%d)", r->x, r->y, r->width, r->height);
   }
 
-  if (aItem->ShouldFixToViewport(aBuilder)) {
+  if (aItem->ShouldFixToViewport(nullptr)) {
     aStream << " fixed";
   }
 
