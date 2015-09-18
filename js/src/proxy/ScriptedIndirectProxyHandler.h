@@ -35,7 +35,7 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler
                                    ObjectOpResult& result) const override;
     virtual bool isExtensible(JSContext* cx, HandleObject proxy, bool* extensible) const override;
     virtual bool has(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) const override;
-    virtual bool get(JSContext* cx, HandleObject proxy, HandleObject receiver, HandleId id,
+    virtual bool get(JSContext* cx, HandleObject proxy, HandleValue receiver, HandleId id,
                      MutableHandleValue vp) const override;
     virtual bool set(JSContext* cx, HandleObject proxy, HandleId id, HandleValue v,
                      HandleValue receiver, ObjectOpResult& result) const override;

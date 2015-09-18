@@ -62,8 +62,8 @@ def generate_histograms(filename):
                             'description': desc }
 
         def append_counters(name, desc):
-            append_counter('USE_COUNTER_%s_DOCUMENT' % name, 'Whether a document %s' % desc)
-            append_counter('USE_COUNTER_%s_PAGE' % name, 'Whether a page %s' % desc)
+            append_counter('USE_COUNTER2_%s_DOCUMENT' % name, 'Whether a document %s' % desc)
+            append_counter('USE_COUNTER2_%s_PAGE' % name, 'Whether a page %s' % desc)
 
         if counter['type'] == 'method':
             method = '%s.%s' % (counter['interface_name'], counter['method_name'])
