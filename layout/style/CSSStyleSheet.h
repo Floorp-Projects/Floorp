@@ -242,7 +242,7 @@ public:
   bool UseForPresentation(nsPresContext* aPresContext,
                             nsMediaQueryResultCacheKey& aKey) const;
 
-  nsresult ParseSheet(const nsAString& aInput);
+  nsresult ReparseSheet(const nsAString& aInput);
 
   void SetInRuleProcessorCache() { mInRuleProcessorCache = true; }
 

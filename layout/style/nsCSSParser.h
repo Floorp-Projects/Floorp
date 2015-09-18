@@ -33,6 +33,7 @@ namespace css {
 class Rule;
 class Declaration;
 class Loader;
+class LoaderReusableStyleSheets;
 class StyleRule;
 } // namespace css
 } // namespace mozilla
@@ -79,13 +80,17 @@ public:
    * @param aLineNumber the line number of the first line of the sheet.
    * @param aAllowUnsafeRules see aEnableUnsafeRules in
    *                          mozilla::css::Loader::LoadSheetSync
+   * @param aReusableSheets style sheets that can be reused by an @import.
+   *                        This can be nullptr.
    */
   nsresult ParseSheet(const nsAString& aInput,
                       nsIURI*          aSheetURL,
                       nsIURI*          aBaseURI,
                       nsIPrincipal*    aSheetPrincipal,
                       uint32_t         aLineNumber,
-                      bool             aAllowUnsafeRules);
+                      bool             aAllowUnsafeRules,
+                      mozilla::css::LoaderReusableStyleSheets* aReusableSheets =
+                        nullptr);
 
   // Parse HTML style attribute or its equivalent in other markup
   // languages.  aBaseURL is the base url to use for relative links in
