@@ -112,14 +112,6 @@ public:
     }
   }
 
-  virtual bool IsActive() const override
-  {
-    // Keep processing to track stream time, which is used for all timelines
-    // associated with the same AudioContext.
-    return true;
-  }
-
-
   class OnCompleteTask final : public nsRunnable
   {
   public:
@@ -261,16 +253,6 @@ public:
       aStream->Graph()->
         DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
     }
-  }
-
-  virtual bool IsActive() const override
-  {
-    // Keep processing to track stream time, which is used for all timelines
-    // associated with the same AudioContext.  If there are no other engines
-    // for the AudioContext, then this could return false to suspend the
-    // stream, but the stream is blocked anyway through
-    // AudioDestinationNode::SetIsOnlyNodeForContext().
-    return true;
   }
 
   virtual void SetDoubleParameter(uint32_t aIndex, double aParam) override

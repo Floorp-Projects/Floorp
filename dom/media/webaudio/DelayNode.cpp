@@ -96,8 +96,6 @@ public:
     } else {
       if (mLeftOverData != INT32_MIN) {
         mLeftOverData = INT32_MIN;
-        aStream->CheckForInactive();
-
         // Delete our buffered data now we no longer need it
         mBuffer.Reset();
 
@@ -106,7 +104,7 @@ public:
         aStream->Graph()->
           DispatchToMainThreadAfterStreamStateUpdate(refchanged.forget());
       }
-      aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
+      *aOutput = aInput;
       return;
     }
 
@@ -161,11 +159,6 @@ public:
       UpdateOutputBlock(aOutput, WEBAUDIO_BLOCK_SIZE);
     }
     mHaveProducedBeforeInput = true;
-  }
-
-  virtual bool IsActive() const override
-  {
-    return mLeftOverData != INT32_MIN;
   }
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
