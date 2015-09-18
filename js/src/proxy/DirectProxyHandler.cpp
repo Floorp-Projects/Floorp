@@ -217,7 +217,7 @@ DirectProxyHandler::hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool*
 }
 
 bool
-DirectProxyHandler::get(JSContext* cx, HandleObject proxy, HandleObject receiver,
+DirectProxyHandler::get(JSContext* cx, HandleObject proxy, HandleValue receiver,
                         HandleId id, MutableHandleValue vp) const
 {
     assertEnteredPolicy(cx, proxy, id, GET);

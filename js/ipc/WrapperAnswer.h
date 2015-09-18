@@ -39,7 +39,7 @@ class WrapperAnswer : public virtual JavaScriptShared
                  ReturnStatus* rs, bool* foundp);
     bool RecvHasOwn(const ObjectId& objId, const JSIDVariant& id,
                     ReturnStatus* rs, bool* foundp);
-    bool RecvGet(const ObjectId& objId, const ObjectVariant& receiverVar,
+    bool RecvGet(const ObjectId& objId, const JSVariant& receiverVar,
                  const JSIDVariant& id,
                  ReturnStatus* rs, JSVariant* result);
     bool RecvSet(const ObjectId& objId, const JSIDVariant& id, const JSVariant& value,

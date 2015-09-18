@@ -780,7 +780,7 @@ UnboxedPlainObject::obj_hasProperty(JSContext* cx, HandleObject obj, HandleId id
 }
 
 /* static */ bool
-UnboxedPlainObject::obj_getProperty(JSContext* cx, HandleObject obj, HandleObject receiver,
+UnboxedPlainObject::obj_getProperty(JSContext* cx, HandleObject obj, HandleValue receiver,
                                     HandleId id, MutableHandleValue vp)
 {
     const UnboxedLayout& layout = obj->as<UnboxedPlainObject>().layout();
@@ -793,7 +793,9 @@ UnboxedPlainObject::obj_getProperty(JSContext* cx, HandleObject obj, HandleObjec
     if (UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando()) {
         if (expando->containsShapeOrElement(cx, id)) {
             RootedObject nexpando(cx, expando);
-            RootedObject nreceiver(cx, (obj == receiver) ? expando : receiver.get());
+            RootedValue nreceiver(cx, receiver);
+            if (receiver.isObject() && &receiver.toObject() == obj)
+                nreceiver.setObject(*expando);
             return GetProperty(cx, nexpando, nreceiver, id, vp);
         }
     }
@@ -1482,7 +1484,7 @@ UnboxedArrayObject::obj_hasProperty(JSContext* cx, HandleObject obj, HandleId id
 }
 
 /* static */ bool
-UnboxedArrayObject::obj_getProperty(JSContext* cx, HandleObject obj, HandleObject receiver,
+UnboxedArrayObject::obj_getProperty(JSContext* cx, HandleObject obj, HandleValue receiver,
                                     HandleId id, MutableHandleValue vp)
 {
     if (obj->as<UnboxedArrayObject>().containsProperty(cx, id)) {

@@ -1793,7 +1793,7 @@ TypedObject::obj_hasProperty(JSContext* cx, HandleObject obj, HandleId id, bool*
 }
 
 bool
-TypedObject::obj_getProperty(JSContext* cx, HandleObject obj, HandleObject receiver,
+TypedObject::obj_getProperty(JSContext* cx, HandleObject obj, HandleValue receiver,
                              HandleId id, MutableHandleValue vp)
 {
     Rooted<TypedObject*> typedObj(cx, &obj->as<TypedObject>());
@@ -1850,7 +1850,7 @@ TypedObject::obj_getProperty(JSContext* cx, HandleObject obj, HandleObject recei
 }
 
 bool
-TypedObject::obj_getElement(JSContext* cx, HandleObject obj, HandleObject receiver,
+TypedObject::obj_getElement(JSContext* cx, HandleObject obj, HandleValue receiver,
                             uint32_t index, MutableHandleValue vp)
 {
     MOZ_ASSERT(obj->is<TypedObject>());

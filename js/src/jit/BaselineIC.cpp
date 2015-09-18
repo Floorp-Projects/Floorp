@@ -6869,8 +6869,9 @@ ICGetProp_DOMProxyShadowed::Compiler::getStub(ICStubSpace* space)
 static bool
 ProxyGet(JSContext* cx, HandleObject proxy, HandlePropertyName name, MutableHandleValue vp)
 {
+    RootedValue receiver(cx, ObjectValue(*proxy));
     RootedId id(cx, NameToId(name));
-    return Proxy::get(cx, proxy, proxy, id, vp);
+    return Proxy::get(cx, proxy, receiver, id, vp);
 }
 
 typedef bool (*ProxyGetFn)(JSContext* cx, HandleObject proxy, HandlePropertyName name,
