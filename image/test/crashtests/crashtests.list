@@ -53,6 +53,8 @@ load invalid-disposal-method-1.gif
 load invalid-disposal-method-2.gif
 load invalid-disposal-method-3.gif
 
+load 1205923-1.html
+
 # Ensure we handle ICO directory entries which specify the wrong size for the
 # contained resource.
 load invalid_ico_height.ico
