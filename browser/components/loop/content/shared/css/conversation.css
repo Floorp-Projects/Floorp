@@ -1024,21 +1024,17 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   text-shadow: 1px 1px 0 rgba(0,0,0,.3);
 }
 
-.new-room-view > .context > .checkbox-wrapper .checkbox {
-  border-color: #d8d8d8;
-  background-color: #fff;
-}
-
-.new-room-view > .context > .checkbox-wrapper .checkbox.checked {
-  background-image: url("../img/check.svg#check-blue");
-}
-
-.new-room-view > .context > .checkbox-wrapper > label {
-  color: #333;
+.room-context > .checkbox-wrapper {
+  margin-bottom: .5em;
+  width: 100%;
 }
 
 .room-context-label {
   margin-bottom: 1em;
+}
+
+.room-context-label,
+.room-context > .checkbox-wrapper > label {
   color: #fff;
 }
 

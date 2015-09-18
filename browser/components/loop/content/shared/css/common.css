@@ -484,10 +484,6 @@ html[dir="rtl"] .dropdown-menu {
 /* Custom checkbox */
 
 .checkbox-wrapper {
-  height: 2rem;
-  margin-bottom: .5rem;
-  width: 100%;
-  line-height: 2.2rem;
   -moz-user-select: none;
   user-select: none;
 }
@@ -496,15 +492,15 @@ html[dir="rtl"] .dropdown-menu {
   float: left;
   width: 2rem;
   height: 2rem;
-  -moz-margin-end: .5rem;
-  margin-top: .1rem;
+  -moz-margin-end: .5em;
+  margin-top: .1em;
   border: 1px solid #999;
-  border-radius: .3rem;
+  border-radius: 3px;
   cursor: pointer;
   background-color: transparent;
   background-position: center center;
   background-repeat: no-repeat;
-  background-size: 2rem;
+  background-size: 1em 1em;
 }
 
 html[dir="rtl"] .checkbox {
@@ -533,10 +529,6 @@ html[dir="rtl"] .checkbox {
   white-space: nowrap;
   overflow: hidden;
   text-align: left;
-}
-
-.checkbox-wrapper > checkbox-label {
-  font-size: 1.1rem;
 }
 
 html[dir="rtl"] .checkbox-label.ellipsis {
