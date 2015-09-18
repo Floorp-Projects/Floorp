@@ -136,8 +136,8 @@ Instrument::Instrument(const char* datafile, uint64_t sample_period)
 
   // Construct Counter objects from counter description array.
   for (int i = 0; i < num_counters; i++) {
-    Counter* counter = new Counter(kCounterList[i].name, kCounterList[i].type);
-    counters_.push_back(counter);
+    Counter* counter = js_new<Counter>(kCounterList[i].name, kCounterList[i].type);
+    counters_.append(counter);
   }
 
   DumpCounterNames();
@@ -149,9 +149,8 @@ Instrument::~Instrument() {
   DumpCounters();
 
   // Free all the counter objects.
-  std::list<Counter*>::iterator it;
-  for (it = counters_.begin(); it != counters_.end(); it++) {
-    delete *it;
+  for (auto counter : counters_) {
+    js_delete(counter);
   }
 
   if (output_stream_ != stdout) {
@@ -176,9 +175,8 @@ void Instrument::Update() {
 void Instrument::DumpCounters() {
   // Iterate through the counter objects, dumping their values to the output
   // stream.
-  std::list<Counter*>::const_iterator it;
-  for (it = counters_.begin(); it != counters_.end(); it++) {
-    fprintf(output_stream_, "%" PRIu64 ",", (*it)->count());
+  for (auto counter : counters_) {
+    fprintf(output_stream_, "%" PRIu64 ",", counter->count());
   }
   fprintf(output_stream_, "\n");
   fflush(output_stream_);
@@ -188,9 +186,8 @@ void Instrument::DumpCounters() {
 void Instrument::DumpCounterNames() {
   // Iterate through the counter objects, dumping the counter names to the
   // output stream.
-  std::list<Counter*>::const_iterator it;
-  for (it = counters_.begin(); it != counters_.end(); it++) {
-    fprintf(output_stream_, "%s,", (*it)->name());
+  for (auto counter : counters_) {
+    fprintf(output_stream_, "%s,", counter->name());
   }
   fprintf(output_stream_, "\n");
   fflush(output_stream_);
@@ -218,10 +215,9 @@ void Instrument::DumpEventMarker(unsigned marker) {
 
 Counter* Instrument::GetCounter(const char* name) {
   // Get a Counter object by name from the counter list.
-  std::list<Counter*>::const_iterator it;
-  for (it = counters_.begin(); it != counters_.end(); it++) {
-    if (strcmp((*it)->name(), name) == 0) {
-      return *it;
+  for (auto counter : counters_) {
+    if (strcmp(counter->name(), name) == 0) {
+      return counter;
     }
   }
 
@@ -236,17 +232,15 @@ Counter* Instrument::GetCounter(const char* name) {
 
 
 void Instrument::Enable() {
-  std::list<Counter*>::iterator it;
-  for (it = counters_.begin(); it != counters_.end(); it++) {
-    (*it)->Enable();
+  for (auto counter : counters_) {
+    counter->Enable();
   }
 }
 
 
 void Instrument::Disable() {
-  std::list<Counter*>::iterator it;
-  for (it = counters_.begin(); it != counters_.end(); it++) {
-    (*it)->Disable();
+  for (auto counter : counters_) {
+    counter->Disable();
   }
 }
 
