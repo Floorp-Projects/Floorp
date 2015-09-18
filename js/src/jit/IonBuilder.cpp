@@ -2716,6 +2716,21 @@ IonBuilder::processNextTableSwitchCase(CFGState& state)
         current->end(MGoto::New(alloc(), successor));
         if (!successor->addPredecessor(alloc(), current))
             return ControlStatus_Error;
+    } else {
+        // If this is an actual case statement, optimize by replacing the
+        // input to the switch case with the actual number of the case.
+        // This constant has been emitted when creating the case blocks.
+        if (state.tableswitch.ins->getDefault() != successor) {
+            MConstant* constant = successor->begin()->toConstant();
+            for (uint32_t j = 0; j < successor->stackDepth(); j++) {
+                MDefinition* ins = successor->getSlot(j);
+                if (ins != state.tableswitch.ins->getOperand(0))
+                    continue;
+
+                constant->setDependency(state.tableswitch.ins);
+                successor->setSlot(j, constant);
+            }
+        }
     }
 
     // Insert successor after the current block, to maintain RPO.
@@ -3367,9 +3382,15 @@ IonBuilder::tableSwitch(JSOp op, jssrcnote* sn)
         tableswitch->addCase(tableswitch->addSuccessor(caseblock));
 
         // If this is an actual case (not filled gap),
-        // add this block to the list that still needs to get processed
-        if (casepc != pc)
+        // add this block to the list that still needs to get processed.
+        if (casepc != pc) {
             tableswitch->addBlock(caseblock);
+
+            // Add constant to indicate which case this is for use by
+            // processNextTableSwitchCase.
+            MConstant* constant = MConstant::New(alloc(), Int32Value(i + low));
+            caseblock->add(constant);
+        }
 
         pc2 += JUMP_OFFSET_LEN;
     }
