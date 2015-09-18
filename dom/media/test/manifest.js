@@ -126,6 +126,11 @@ var gMediaRecorderTests = [
   { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 }
 ];
 
+// Used by video media recorder tests
+var gMediaRecorderVideoTests = [
+  { name:"seek.webm", type:"video/webm", width:320, height:240, duration:3.966 },
+];
+
 // These are files that we want to make sure we can play through.  We can
 // also check metadata.  Put files of the same type together in this list so if
 // something crashes we have some idea of which backend is responsible.
