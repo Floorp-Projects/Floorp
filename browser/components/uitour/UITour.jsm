@@ -220,12 +220,6 @@ this.UITour = {
       query: "#searchbar",
       widgetName: "search-container",
     }],
-    ["searchProvider", {
-      query: (aDocument) => {
-        return null;
-      },
-      widgetName: "search-container",
-    }],
     ["searchIcon", {
       query: (aDocument) => {
         let searchbar = aDocument.getElementById("searchbar");
@@ -987,11 +981,6 @@ this.UITour = {
       return deferred.promise;
     }
 
-    if (aTargetName.startsWith(TARGET_SEARCHENGINE_PREFIX)) {
-      let engineID = aTargetName.slice(TARGET_SEARCHENGINE_PREFIX.length);
-      return this.getSearchEngineTarget(aWindow, engineID);
-    }
-
     let targetObject = this.targets.get(aTargetName);
     if (!targetObject) {
       log.warn("getTarget: The specified target name is not in the allowed set");
@@ -1331,18 +1320,6 @@ this.UITour = {
    */
   showHighlight: function(aChromeWindow, aTarget, aEffect = "none") {
     function showHighlightPanel() {
-      if (aTarget.targetName.startsWith(TARGET_SEARCHENGINE_PREFIX)) {
-        // This won't affect normal higlights done via the panel, so we need to
-        // manually hide those.
-        this.hideHighlight(aChromeWindow);
-        aTarget.node.setAttribute("_moz-menuactive", true);
-        return;
-      }
-
-      // Conversely, highlights for search engines are highlighted via CSS
-      // rather than a panel, so need to be manually removed.
-      this._hideSearchEngineHighlight(aChromeWindow);
-
       let highlighter = aChromeWindow.document.getElementById("UITourHighlight");
 
       let effect = aEffect;
@@ -1419,24 +1396,6 @@ this.UITour = {
     highlighter.removeAttribute("active");
 
     this._setAppMenuStateForAnnotation(aWindow, "highlight", false);
-    this._hideSearchEngineHighlight(aWindow);
-  },
-
-  _hideSearchEngineHighlight: function(aWindow) {
-    // We special case highlighting items in the search engines dropdown,
-    // so just blindly remove any highlight there.
-    let searchMenuBtn = null;
-    try {
-      searchMenuBtn = this.targets.get("searchProvider").query(aWindow.document);
-    } catch (e) { /* This is ok to fail. */ }
-    if (searchMenuBtn) {
-      let searchPopup = aWindow.document
-                               .getAnonymousElementByAttribute(searchMenuBtn,
-                                                               "anonid",
-                                                               "searchbar-popup");
-      for (let menuItem of searchPopup.children)
-        menuItem.removeAttribute("_moz-menuactive");
-    }
   },
 
   /**
@@ -1558,11 +1517,6 @@ this.UITour = {
       return;
     }
 
-    // Due to a platform limitation, we can't anchor a panel to an element in a
-    // <menupopup>. So we can't support showing info panels for search engines.
-    if (aAnchor.targetName.startsWith(TARGET_SEARCHENGINE_PREFIX))
-      return;
-
     this._setAppMenuStateForAnnotation(aChromeWindow, "info",
                                        this.targetIsInAppMenu(aAnchor),
                                        showInfoPanel.bind(this, this._correctAnchor(aAnchor.node)));
@@ -1670,10 +1624,6 @@ this.UITour = {
       });
       panel.addEventListener("popuphidden", this.onPanelHidden);
       panel.addEventListener("popuphiding", this.hideLoopPanelAnnotations);
-    } else if (aMenuName == "searchEngines") {
-      this.getTarget(aWindow, "searchProvider").then(target => {
-        openMenuButton(target.node);
-      }).catch(log.error);
     } else if (aMenuName == "pocket") {
       this.getTarget(aWindow, "pocket").then(Task.async(function* onPocketTarget(target) {
         let widgetGroupWrapper = CustomizableUI.getWidget(target.widgetName);
@@ -1735,9 +1685,6 @@ this.UITour = {
     } else if (aMenuName == "loop") {
       let panel = aWindow.document.getElementById("loop-notification-panel");
       panel.hidePopup();
-    } else if (aMenuName == "searchEngines") {
-      let menuBtn = this.targets.get("searchProvider").query(aWindow.document);
-      closeMenuButton(menuBtn);
     }
   },
 
@@ -1882,17 +1829,22 @@ this.UITour = {
           gettingStartedSeen: Services.prefs.getBoolPref("loop.gettingStarted.seen"),
         });
         break;
+      case "search":
       case "selectedSearchEngine":
         Services.search.init(rv => {
-          let engine;
+          let data;
           if (Components.isSuccessCode(rv)) {
-            engine = Services.search.defaultEngine;
+            let engines = Services.search.getVisibleEngines();
+            data = {
+              searchEngineIdentifier: Services.search.defaultEngine.identifier,
+              engines: [TARGET_SEARCHENGINE_PREFIX + engine.identifier
+                        for (engine of engines)
+                          if (engine.identifier)]
+            };
           } else {
-            engine = { identifier: "" };
+            data = {engines: [], searchEngineIdentifier: ""};
           }
-          this.sendPageCallback(aMessageManager, aCallbackID, {
-            searchEngineIdentifier: engine.identifier
-          });
+          this.sendPageCallback(aMessageManager, aCallbackID, data);
         });
         break;
       case "sync":
@@ -1949,10 +1901,6 @@ this.UITour = {
         if (targetObject.node)
           targetNames.push(targetObject.targetName);
       }
-
-      targetNames = targetNames.concat(
-        yield this.getAvailableSearchEngineTargets(window)
-      );
 
       data = {
         targets: targetNames,
@@ -2056,55 +2004,6 @@ this.UITour = {
           }
         }
         reject("selectSearchEngine could not find engine with given ID");
-      });
-    });
-  },
-
-  getAvailableSearchEngineTargets(aWindow) {
-    return new Promise(resolve => {
-      this.getTarget(aWindow, "search").then(searchTarget => {
-        if (!searchTarget.node || this.targetIsInAppMenu(searchTarget))
-          return resolve([]);
-
-        Services.search.init(() => {
-          let engines = Services.search.getVisibleEngines();
-          resolve([TARGET_SEARCHENGINE_PREFIX + engine.identifier
-                   for (engine of engines)
-                   if (engine.identifier)]);
-        });
-      }).catch(() => resolve([]));
-    });
-  },
-
-  // We only allow matching based on a search engine's identifier - this gives
-  // us a non-changing ID and guarentees we only match against app-provided
-  // engines.
-  getSearchEngineTarget(aWindow, aIdentifier) {
-    return new Promise((resolve, reject) => {
-      Task.spawn(function*() {
-        let searchTarget = yield this.getTarget(aWindow, "search");
-        // We're not supporting having the searchbar in the app-menu, because
-        // popups within popups gets crazy. This restriction should be lifted
-        // once bug 988151 is implemented, as the page can then be responsible
-        // for opening each menu when appropriate.
-        if (!searchTarget.node || this.targetIsInAppMenu(searchTarget))
-          return reject("Search engine not available");
-
-        yield Services.search.init();
-
-        let searchPopup = searchTarget.node._popup;
-        for (let engineNode of searchPopup.children) {
-          let engine = engineNode.engine;
-          if (engine && engine.identifier == aIdentifier) {
-            return resolve({
-              targetName: TARGET_SEARCHENGINE_PREFIX + engine.identifier,
-              node: engineNode,
-            });
-          }
-        }
-        reject("Search engine not available");
-      }.bind(this)).catch(() => {
-        reject("Search engine not available");
       });
     });
   },
