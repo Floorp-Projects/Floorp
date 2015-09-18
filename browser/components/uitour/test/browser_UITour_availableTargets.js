@@ -34,13 +34,6 @@ function test() {
   UITourTest();
 }
 
-function searchEngineTargets() {
-  let engines = Services.search.getVisibleEngines();
-  return ["searchEngine-" + engine.identifier
-          for (engine of engines)
-          if (engine.identifier)];
-}
-
 var tests = [
   function test_availableTargets(done) {
     gContentAPI.getConfiguration("availableTargets", (data) => {
@@ -63,7 +56,6 @@ var tests = [
         "searchIcon",
         "trackingProtection",
         "urlbar",
-        ...searchEngineTargets(),
         ...(hasWebIDE ? ["webide"] : [])
       ]);
 
@@ -96,7 +88,6 @@ var tests = [
         "searchIcon",
         "trackingProtection",
         "urlbar",
-        ...searchEngineTargets(),
         ...(hasWebIDE ? ["webide"] : [])
       ]);
 
@@ -114,7 +105,7 @@ var tests = [
     // Make sure the callback still fires with the other available targets.
     CustomizableUI.removeWidgetFromArea("search-container");
     gContentAPI.getConfiguration("availableTargets", (data) => {
-      // Default minus "search" and "searchProvider" and "searchIcon"
+      // Default minus "search" and "searchIcon"
       ok_targets(data, [
         "accountStatus",
         "addons",

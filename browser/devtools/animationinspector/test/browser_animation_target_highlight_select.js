@@ -12,12 +12,9 @@ add_task(function*() {
 
   let ui = yield openAnimationInspector();
   yield testTargetNode(ui);
-
-  ui = yield closeAnimationInspectorAndRestartWithNewUI();
-  yield testTargetNode(ui, true);
 });
 
-function* testTargetNode({toolbox, inspector, panel}, isNewUI) {
+function* testTargetNode({toolbox, inspector, panel}) {
   info("Select the simple animated node");
 
   let onPanelUpdated = panel.once(panel.UI_UPDATED_EVENT);

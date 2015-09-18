@@ -7,7 +7,7 @@ if [ 0$B2G_DEBUG -ne 0 ]; then
   debug_flag='--debug'
 fi
 
-./mozharness/scripts/b2g_build.py \
+$WORKSPACE/gecko/testing/mozharness/scripts/b2g_build.py \
   --config b2g/taskcluster-phone.py \
   "$debug_flag" \
   --disable-mock \
