@@ -28,17 +28,12 @@
 const {Cu} = require("chrome");
 const promise = require("promise");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
-const {setInterval, clearInterval} = require("sdk/timers");
 const protocol = require("devtools/server/protocol");
 const {ActorClass, Actor, FrontClass, Front,
        Arg, method, RetVal, types} = protocol;
 // Make sure the nodeActor type is know here.
 const {NodeActor} = require("devtools/server/actors/inspector");
 const events = require("sdk/event/core");
-
-// How long (in ms) should we wait before polling again the state of an
-// animationPlayer.
-const PLAYER_DEFAULT_AUTO_REFRESH_TIMEOUT = 500;
 
 // Types of animations.
 const ANIMATION_TYPES = {
@@ -267,6 +262,15 @@ var AnimationPlayerActor = ActorClass({
    * @return {Object}
    */
   getCurrentState: method(function() {
+    // Remember the startTime each time getCurrentState is called, it may be
+    // useful when animations get paused. As in, when an animation gets paused,
+    // it's startTime goes back to null, but the front-end might still be
+    // interested in knowing what the previous startTime was. So everytime it
+    // is set, remember it and send it along with the newState.
+    if (this.player.startTime) {
+      this.previousStartTime = this.player.startTime;
+    }
+
     // Note that if you add a new property to the state object, make sure you
     // add the corresponding property in the AnimationPlayerFront' initialState
     // getter.
@@ -274,6 +278,7 @@ var AnimationPlayerActor = ActorClass({
       type: this.getType(),
       // startTime is null whenever the animation is paused or waiting to start.
       startTime: this.player.startTime,
+      previousStartTime: this.previousStartTime,
       currentTime: this.player.currentTime,
       playState: this.player.playState,
       playbackRate: this.player.playbackRate,
@@ -413,8 +418,6 @@ var AnimationPlayerActor = ActorClass({
 });
 
 var AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
-  AUTO_REFRESH_EVENT: "updated-state",
-
   initialize: function(conn, form, detail, ctx) {
     Front.prototype.initialize.call(this, conn, form, detail, ctx);
 
@@ -431,7 +434,6 @@ var AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
   },
 
   destroy: function() {
-    this.stopAutoRefresh();
     Front.prototype.destroy.call(this);
   },
 
@@ -443,6 +445,7 @@ var AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
     return {
       type: this._form.type,
       startTime: this._form.startTime,
+      previousStartTime: this._form.previousStartTime,
       currentTime: this._form.currentTime,
       playState: this._form.playState,
       playbackRate: this._form.playbackRate,
@@ -464,72 +467,14 @@ var AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
     this.state = state;
   }),
 
-  // About auto-refresh:
-  //
-  // The AnimationPlayerFront is capable of automatically refreshing its state
-  // by calling the getCurrentState method at regular intervals. This allows
-  // consumers to update their knowledge of the player's currentTime, playState,
-  // ... dynamically.
-  //
-  // Calling startAutoRefresh will start the automatic refreshing of the state,
-  // and calling stopAutoRefresh will stop it.
-  // Once the automatic refresh has been started, the AnimationPlayerFront emits
-  // "updated-state" events everytime the state changes.
-  //
-  // Note that given the time-related nature of animations, the actual state
-  // changes a lot more often than "updated-state" events are emitted. This is
-  // to avoid making many protocol requests.
-
   /**
-   * Start auto-refreshing this player's state.
-   * @param {Number} interval Optional auto-refresh timer interval to override
-   * the default value.
-   */
-  startAutoRefresh: function(interval=PLAYER_DEFAULT_AUTO_REFRESH_TIMEOUT) {
-    if (this.autoRefreshTimer) {
-      return;
-    }
-
-    this.autoRefreshTimer = setInterval(() => {
-      // Save the refresh promise for tests. The tests need to detect when the
-      // last request completes or they might finish too early.
-      // Storing the latest Promise is enough to know that there is no pending
-      // requests left as p.js guarantees the last request will get the reply
-      // last.
-      this.pendingRefreshStatePromise = this.refreshState();
-      this.pendingRefreshStatePromise.then(() => {
-        this.pendingRefreshStatePromise = null;
-      });
-    }, interval);
-  },
-
-  /**
-   * Stop auto-refreshing this player's state.
-   */
-  stopAutoRefresh: function() {
-    if (!this.autoRefreshTimer) {
-      return;
-    }
-
-    clearInterval(this.autoRefreshTimer);
-    this.autoRefreshTimer = null;
-  },
-
-  /**
-   * Called automatically when auto-refresh is on. Doesn't return anything, but
-   * emits the "updated-state" event.
+   * Refresh the current state of this animation on the client from information
+   * found on the server. Doesn't return anything, just stores the new state.
    */
   refreshState: Task.async(function*() {
     let data = yield this.getCurrentState();
-
-    // By the time the new state is received, auto-refresh might be stopped.
-    if (!this.autoRefreshTimer) {
-      return;
-    }
-
     if (this.currentStateHasChanged) {
       this.state = data;
-      events.emit(this, this.AUTO_REFRESH_EVENT, this.state);
     }
   }),
 
@@ -837,6 +782,24 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
     return this.pauseAll();
   }, {
     request: {},
+    response: {}
+  }),
+
+  /**
+   * Toggle (play/pause) several animations at the same time.
+   * @param {Array} players A list of AnimationPlayerActor objects.
+   * @param {Boolean} shouldPause If set to true, the players will be paused,
+   * otherwise they will be played.
+   */
+  toggleSeveral: method(function(players, shouldPause) {
+    return promise.all(players.map(player => {
+      return shouldPause ? player.pause() : player.play();
+    }));
+  }, {
+    request: {
+      players: Arg(0, "array:animationplayer"),
+      shouldPause: Arg(1, "boolean")
+    },
     response: {}
   }),
 

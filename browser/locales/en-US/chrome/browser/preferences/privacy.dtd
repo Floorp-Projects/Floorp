@@ -13,6 +13,8 @@
 <!ENTITY trackingProtectionPBM5.label         "Use Tracking Protection in Private Windows">
 <!ENTITY trackingProtectionPBM5.accesskey     "v">
 <!ENTITY trackingProtectionPBMLearnMore.label "Learn more">
+<!ENTITY changeBlockList.label          "Change Block List">
+<!ENTITY changeBlockList.accesskey      "C">
 
 <!ENTITY  history.label                 "History">
 

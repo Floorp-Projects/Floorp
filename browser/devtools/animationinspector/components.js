@@ -36,268 +36,6 @@ const MILLIS_TIME_FORMAT_MAX_DURATION = 4000;
 const TIME_GRADUATION_MIN_SPACING = 40;
 
 /**
- * UI component responsible for displaying and updating the player meta-data:
- * name, duration, iterations, delay.
- * The parent UI component for this should drive its updates by calling
- * render(state) whenever it wants the component to update.
- */
-function PlayerMetaDataHeader() {
-  // Store the various state pieces we need to only refresh the UI when things
-  // change.
-  this.state = {};
-}
-
-exports.PlayerMetaDataHeader = PlayerMetaDataHeader;
-
-PlayerMetaDataHeader.prototype = {
-  init: function(containerEl) {
-    // The main title element.
-    this.el = createNode({
-      parent: containerEl,
-      attributes: {
-        "class": "animation-title"
-      }
-    });
-
-    // Animation name.
-    this.nameLabel = createNode({
-      parent: this.el,
-      nodeType: "span"
-    });
-
-    this.nameValue = createNode({
-      parent: this.el,
-      nodeType: "strong",
-      attributes: {
-        "style": "display:none;"
-      }
-    });
-
-    // Animation duration, delay and iteration container.
-    let metaData = createNode({
-      parent: this.el,
-      nodeType: "span",
-      attributes: {
-        "class": "meta-data"
-      }
-    });
-
-    // Animation is running on compositor
-    this.compositorIcon = createNode({
-      parent: metaData,
-      nodeType: "span",
-      attributes: {
-        "class": "compositor-icon",
-        "title": L10N.getStr("player.runningOnCompositorTooltip")
-      }
-    });
-
-    // Animation duration.
-    this.durationLabel = createNode({
-      parent: metaData,
-      nodeType: "span",
-      textContent: L10N.getStr("player.animationDurationLabel")
-    });
-
-    this.durationValue = createNode({
-      parent: metaData,
-      nodeType: "strong"
-    });
-
-    // Animation delay (hidden by default since there may not be a delay).
-    this.delayLabel = createNode({
-      parent: metaData,
-      nodeType: "span",
-      attributes: {
-        "style": "display:none;"
-      },
-      textContent: L10N.getStr("player.animationDelayLabel")
-    });
-
-    this.delayValue = createNode({
-      parent: metaData,
-      nodeType: "strong"
-    });
-
-    // Animation iteration count (also hidden by default since we don't display
-    // single iterations).
-    this.iterationLabel = createNode({
-      parent: metaData,
-      nodeType: "span",
-      attributes: {
-        "style": "display:none;"
-      },
-      textContent: L10N.getStr("player.animationIterationCountLabel")
-    });
-
-    this.iterationValue = createNode({
-      parent: metaData,
-      nodeType: "strong",
-      attributes: {
-        "style": "display:none;"
-      }
-    });
-  },
-
-  destroy: function() {
-    this.state = null;
-    this.el.remove();
-    this.el = null;
-    this.nameLabel = this.nameValue = null;
-    this.durationLabel = this.durationValue = null;
-    this.delayLabel = this.delayValue = null;
-    this.iterationLabel = this.iterationValue = null;
-    this.compositorIcon = null;
-  },
-
-  render: function(state) {
-    // Update the name if needed.
-    if (state.name !== this.state.name) {
-      if (state.name) {
-        // Animations (and transitions since bug 1122414) have names.
-        this.nameLabel.textContent = L10N.getStr("player.animationNameLabel");
-        this.nameValue.style.display = "inline";
-        this.nameValue.textContent = state.name;
-      } else {
-        // With older actors, Css transitions don't have names.
-        this.nameLabel.textContent = L10N.getStr("player.transitionNameLabel");
-        this.nameValue.style.display = "none";
-      }
-    }
-
-    // update the duration value if needed.
-    if (state.duration !== this.state.duration) {
-      this.durationValue.textContent = L10N.getFormatStr("player.timeLabel",
-        L10N.numberWithDecimals(state.duration / 1000, 2));
-    }
-
-    // Update the delay if needed.
-    if (state.delay !== this.state.delay) {
-      if (state.delay) {
-        this.delayLabel.style.display = "inline";
-        this.delayValue.style.display = "inline";
-        this.delayValue.textContent = L10N.getFormatStr("player.timeLabel",
-          L10N.numberWithDecimals(state.delay / 1000, 2));
-      } else {
-        // Hide the delay elements if there is no delay defined.
-        this.delayLabel.style.display = "none";
-        this.delayValue.style.display = "none";
-      }
-    }
-
-    // Update the iterationCount if needed.
-    if (state.iterationCount !== this.state.iterationCount) {
-      if (state.iterationCount !== 1) {
-        this.iterationLabel.style.display = "inline";
-        this.iterationValue.style.display = "inline";
-        let count = state.iterationCount ||
-                    L10N.getStr("player.infiniteIterationCount");
-        this.iterationValue.innerHTML = count;
-      } else {
-        // Hide the iteration elements if iteration is 1.
-        this.iterationLabel.style.display = "none";
-        this.iterationValue.style.display = "none";
-      }
-    }
-
-    // Show the Running on compositor icon if needed.
-    if (state.isRunningOnCompositor !== this.state.isRunningOnCompositor) {
-      if (state.isRunningOnCompositor) {
-        this.compositorIcon.style.display = "inline";
-      } else {
-        // Hide the compositor icon
-        this.compositorIcon.style.display = "none";
-      }
-    }
-
-    this.state = state;
-  }
-};
-
-/**
- * UI component responsible for displaying the playback rate drop-down in each
- * player widget, updating it when the state changes, and emitting events when
- * the user selects a new value.
- * The parent UI component for this should drive its updates by calling
- * render(state) whenever it wants the component to update.
- */
-function PlaybackRateSelector() {
-  this.currentRate = null;
-  this.onSelectionChanged = this.onSelectionChanged.bind(this);
-  EventEmitter.decorate(this);
-}
-
-exports.PlaybackRateSelector = PlaybackRateSelector;
-
-PlaybackRateSelector.prototype = {
-  PRESETS: [.1, .5, 1, 2, 5, 10],
-
-  init: function(containerEl) {
-    // This component is simple enough that we can re-create the markup every
-    // time it's rendered. So here we only store the parentEl.
-    this.parentEl = containerEl;
-  },
-
-  destroy: function() {
-    this.removeSelect();
-    this.parentEl = this.el = null;
-  },
-
-  removeSelect: function() {
-    if (this.el) {
-      this.el.removeEventListener("change", this.onSelectionChanged);
-      this.el.remove();
-    }
-  },
-
-  /**
-   * Get the ordered list of presets, including the current playbackRate if
-   * different from the existing presets.
-   */
-  getCurrentPresets: function({playbackRate}) {
-    return [...new Set([...this.PRESETS, playbackRate])].sort((a, b) => a > b);
-  },
-
-  render: function(state) {
-    if (state.playbackRate === this.currentRate) {
-      return;
-    }
-
-    this.removeSelect();
-
-    this.el = createNode({
-      parent: this.parentEl,
-      nodeType: "select",
-      attributes: {
-        "class": "rate devtools-button"
-      }
-    });
-
-    for (let preset of this.getCurrentPresets(state)) {
-      let option = createNode({
-        parent: this.el,
-        nodeType: "option",
-        attributes: {
-          value: preset,
-        },
-        textContent: L10N.getFormatStr("player.playbackRateLabel", preset)
-      });
-      if (preset === state.playbackRate) {
-        option.setAttribute("selected", "");
-      }
-    }
-
-    this.el.addEventListener("change", this.onSelectionChanged);
-
-    this.currentRate = state.playbackRate;
-  },
-
-  onSelectionChanged: function() {
-    this.emit("rate-changed", parseFloat(this.el.value));
-  }
-};
-
-/**
  * UI component responsible for displaying a preview of the target dom node of
  * a given animation.
  * @param {InspectorPanel} inspector Requires a reference to the inspector-panel
@@ -565,18 +303,21 @@ var TimeScale = {
    * @param {Object} state A PlayerFront.state object.
    */
   addAnimation: function(state) {
-    let {startTime, delay, duration, iterationCount, playbackRate} = state;
+    let {previousStartTime, delay, duration,
+         iterationCount, playbackRate} = state;
 
     // Negative-delayed animations have their startTimes set such that we would
     // be displaying the delay outside the time window if we didn't take it into
     // account here.
     let relevantDelay = delay < 0 ? delay / playbackRate : 0;
+    previousStartTime = previousStartTime || 0;
 
-    this.minStartTime = Math.min(this.minStartTime, startTime + relevantDelay);
+    this.minStartTime = Math.min(this.minStartTime,
+                                 previousStartTime + relevantDelay);
     let length = (delay / playbackRate) +
                  ((duration / playbackRate) *
                   (!iterationCount ? 1 : iterationCount));
-    this.maxEndTime = Math.max(this.maxEndTime, startTime + length);
+    this.maxEndTime = Math.max(this.maxEndTime, previousStartTime + length);
   },
 
   /**
@@ -661,8 +402,8 @@ exports.TimeScale = TimeScale;
  * Animations are organized by lines, with a left margin containing the preview
  * of the target DOM element the animation applies to.
  * The current time play head can be moved by clicking/dragging in the header.
- * when this happens, the component emits "current-time-changed" events with the
- * new time.
+ * when this happens, the component emits "current-data-changed" events with the
+ * new time and state of the timeline.
  *
  * @param {InspectorPanel} inspector.
  */
@@ -793,7 +534,12 @@ AnimationsTimeline.prototype = {
 
     let time = TimeScale.distanceToRelativeTime(offset,
       this.timeHeaderEl.offsetWidth);
-    this.emit("current-time-changed", time);
+
+    this.emit("timeline-data-changed", {
+      isPaused: true,
+      isMoving: false,
+      time: time
+    });
   },
 
   render: function(animations, documentCurrentTime) {
@@ -862,17 +608,38 @@ AnimationsTimeline.prototype = {
     }
   },
 
+  isAtLeastOneAnimationPlaying: function() {
+    return this.animations.some(({state}) => state.playState === "running");
+  },
+
   startAnimatingScrubber: function(time) {
     let x = TimeScale.startTimeToDistance(time, this.timeHeaderEl.offsetWidth);
     this.scrubberEl.style.left = x + "px";
 
     if (time < TimeScale.minStartTime ||
-        time > TimeScale.maxEndTime) {
+        time > TimeScale.maxEndTime ||
+        !this.isAtLeastOneAnimationPlaying()) {
+      this.stopAnimatingScrubber();
+      this.emit("timeline-data-changed", {
+        isPaused: false,
+        isMoving: false,
+        time: TimeScale.distanceToRelativeTime(x, this.timeHeaderEl.offsetWidth)
+      });
       return;
     }
 
+    this.emit("timeline-data-changed", {
+      isPaused: false,
+      isMoving: true,
+      time: TimeScale.distanceToRelativeTime(x, this.timeHeaderEl.offsetWidth)
+    });
+
     let now = this.win.performance.now();
     this.rafID = this.win.requestAnimationFrame(() => {
+      if (!this.rafID) {
+        // In case the scrubber was stopped in the meantime.
+        return;
+      }
       this.startAnimatingScrubber(time + this.win.performance.now() - now);
     });
   },
@@ -880,6 +647,7 @@ AnimationsTimeline.prototype = {
   stopAnimatingScrubber: function() {
     if (this.rafID) {
       this.win.cancelAnimationFrame(this.rafID);
+      this.rafID = null;
     }
   },
 
@@ -935,7 +703,7 @@ AnimationsTimeline.prototype = {
     // Create a container element to hold the delay and iterations.
     // It is positioned according to its delay (divided by the playbackrate),
     // and its width is according to its duration (divided by the playbackrate).
-    let start = state.startTime;
+    let start = state.previousStartTime || 0;
     let duration = state.duration;
     let rate = state.playbackRate;
     let count = state.iterationCount;
