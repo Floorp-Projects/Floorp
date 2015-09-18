@@ -778,6 +778,16 @@ child:
      */
     SwappedWithOtherRemoteLoader();
 
+    /**
+     * A potential accesskey was just pressed. Look for accesskey targets
+     * using the list of provided charCodes.
+     *
+     * @param charCode array of potential character codes
+     * @param isTrusted true if triggered by a trusted key event
+     * @param modifierMask indicates which accesskey modifiers are pressed
+     */
+    HandleAccessKey(uint32_t[] charCodes, bool isTrusted, int32_t modifierMask);
+
 /*
  * FIXME: write protocol!
 
