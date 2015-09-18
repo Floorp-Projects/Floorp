@@ -216,7 +216,8 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBOffset,
       }
 
       // Shrink our band's width if needed.
-      if (fi.mFrame->StyleDisplay()->mFloats == NS_STYLE_FLOAT_LEFT) {
+      uint8_t floatStyle = fi.mFrame->StyleDisplay()->PhysicalFloats(aWM);
+      if (floatStyle == NS_STYLE_FLOAT_LEFT) {
         // A left float
         nscoord lineRightEdge = fi.LineRight();
         if (lineRightEdge > lineLeft) {
@@ -274,7 +275,7 @@ nsFloatManager::AddFloat(nsIFrame* aFloatFrame, const LogicalRect& aMarginRect,
     info.mLeftBEnd = nscoord_MIN;
     info.mRightBEnd = nscoord_MIN;
   }
-  uint8_t floatStyle = aFloatFrame->StyleDisplay()->mFloats;
+  uint8_t floatStyle = aFloatFrame->StyleDisplay()->PhysicalFloats(aWM);
   NS_ASSERTION(floatStyle == NS_STYLE_FLOAT_LEFT ||
                floatStyle == NS_STYLE_FLOAT_RIGHT, "unexpected float");
   nscoord& sideBEnd = floatStyle == NS_STYLE_FLOAT_LEFT ? info.mLeftBEnd
@@ -310,7 +311,8 @@ nsFloatManager::CalculateRegionFor(WritingMode          aWM,
     // Preserve the right margin-edge for left floats and the left
     // margin-edge for right floats
     const nsStyleDisplay* display = aFloat->StyleDisplay();
-    if ((NS_STYLE_FLOAT_LEFT == display->mFloats) == aWM.IsBidiLTR()) {
+    uint8_t floatStyle = display->PhysicalFloats(aWM);
+    if ((NS_STYLE_FLOAT_LEFT == floatStyle) == aWM.IsBidiLTR()) {
       region.IStart(aWM) = region.IEnd(aWM);
     }
     region.ISize(aWM) = 0;
