@@ -57,13 +57,14 @@ AccessibleCaret::AccessibleCaret(nsIPresShell* aPresShell)
   : mPresShell(aPresShell)
 {
   // Check all resources required.
-  MOZ_ASSERT(mPresShell);
-  MOZ_ASSERT(RootFrame());
-  MOZ_ASSERT(mPresShell->GetDocument());
-  MOZ_ASSERT(mPresShell->GetCanvasFrame());
-  MOZ_ASSERT(mPresShell->GetCanvasFrame()->GetCustomContentContainer());
+  if (mPresShell) {
+    MOZ_ASSERT(RootFrame());
+    MOZ_ASSERT(mPresShell->GetDocument());
+    MOZ_ASSERT(mPresShell->GetCanvasFrame());
+    MOZ_ASSERT(mPresShell->GetCanvasFrame()->GetCustomContentContainer());
 
-  InjectCaretElement(mPresShell->GetDocument());
+    InjectCaretElement(mPresShell->GetDocument());
+  }
 
   static bool prefsAdded = false;
   if (!prefsAdded) {
@@ -77,7 +78,9 @@ AccessibleCaret::AccessibleCaret(nsIPresShell* aPresShell)
 
 AccessibleCaret::~AccessibleCaret()
 {
-  RemoveCaretElement(mPresShell->GetDocument());
+  if (mPresShell) {
+    RemoveCaretElement(mPresShell->GetDocument());
+  }
 }
 
 void
