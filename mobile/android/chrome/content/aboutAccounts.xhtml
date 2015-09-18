@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd" >
+%globalDTD;
+<!ENTITY % aboutDTD SYSTEM "chrome://browser/locale/aboutAccounts.dtd">
+%aboutDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml" dir="&locale.dir;">
+  <head>
+    <title>Firefox Sync</title>
+    <meta name="viewport" content="width=device-width; user-scalable=0" />
+    <link rel="icon" type="image/png" sizes="64x64" href="chrome://branding/content/favicon64.png" />
+    <link rel="stylesheet" href="chrome://browser/skin/spinner.css" type="text/css"/>
+    <link rel="stylesheet" href="chrome://browser/skin/aboutBase.css" type="text/css"/>
+    <link rel="stylesheet" href="chrome://browser/skin/aboutAccounts.css" type="text/css"/>
+  </head>
+  <body>
+    <div id="spinner" class="toplevel">
+      <div class="container flex-column">
+        <!-- Empty text-container for spacing. -->
+        <div class="text-container flex-column" />
+
+          <div class="mui-refresh-main">
+            <div class="mui-refresh-wrapper">
+              <div class="mui-spinner-wrapper">
+                <div class="mui-spinner-main">
+                  <div class="mui-spinner-left">
+                    <div class="mui-half-circle-left" />
+                  </div>
+                  <div class="mui-spinner-right">
+                    <div class="mui-half-circle-right" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+      </div>
+    </div>
+
+    <iframe mozframetype="content" id="remote" class="toplevel" />
+
+    <div id="prefs" class="toplevel">
+      <div class="container flex-column">
+        <div class="text-container flex-column">
+          <div class="text">&aboutAccounts.connected.title;</div>
+          <div class="hint">&aboutAccounts.connected.description;</div>
+          <div id="email" class="hint"></div>
+        </div>
+        <a id="buttonOpenPrefs" tabindex="0" href="#">&aboutAccounts.syncPreferences.label;</a>
+      </div>
+    </div>
+
+    <div id="networkError" class="toplevel">
+      <div class="container flex-column">
+        <div class="text-container flex-column">
+          <div class="text">&aboutAccounts.noConnection.title;</div>
+        </div>
+        <div class="button-row">
+          <button id="buttonRetry" class="button" tabindex="1">&aboutAccounts.retry.label;</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="application/javascript;version=1.8" src="chrome://browser/content/aboutAccounts.js"></script>
+  </body>
+</html>
