@@ -377,105 +377,121 @@ nsCSPContext::AppendPolicy(const nsAString& aPolicyString,
   return NS_OK;
 }
 
-// aNonceOrContent either holds the nonce-value or otherwise the content
-// of the element to be hashed.
-NS_IMETHODIMP
-nsCSPContext::getAllowsInternal(nsContentPolicyType aContentType,
-                                enum CSPKeyword aKeyword,
-                                const nsAString& aNonceOrContent,
-                                bool* outShouldReportViolation,
-                                bool* outIsAllowed) const
-{
-  *outShouldReportViolation = false;
-  *outIsAllowed = true;
-
-  // Skip things that aren't hash/nonce compatible
-  if (aKeyword == CSP_NONCE || aKeyword == CSP_HASH) {
-    if (!(aContentType == nsIContentPolicy::TYPE_SCRIPT ||
-          aContentType == nsIContentPolicy::TYPE_STYLESHEET)) {
-      *outIsAllowed = false;
-      return NS_OK;
-    }
-  }
-
-  for (uint32_t i = 0; i < mPolicies.Length(); i++) {
-    if (!mPolicies[i]->allows(aContentType,
-                              aKeyword,
-                              aNonceOrContent)) {
-      // policy is violated: must report the violation and allow the inline
-      // script if the policy is report-only.
-      *outShouldReportViolation = true;
-      if (!mPolicies[i]->getReportOnlyFlag()) {
-        *outIsAllowed = false;
-      }
-    }
-  }
-  CSPCONTEXTLOG(("nsCSPContext::getAllowsInternal, aContentType: %d, aKeyword: %s, aNonceOrContent: %s, isAllowed: %s",
-                aContentType,
-                aKeyword == CSP_HASH ? "hash" : CSP_EnumToKeyword(aKeyword),
-                NS_ConvertUTF16toUTF8(aNonceOrContent).get(),
-                *outIsAllowed ? "load" : "deny"));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCSPContext::GetAllowsInlineScript(bool* outShouldReportViolation,
-                                    bool* outAllowsInlineScript)
-{
-  return getAllowsInternal(nsIContentPolicy::TYPE_SCRIPT,
-                           CSP_UNSAFE_INLINE,
-                           EmptyString(),
-                           outShouldReportViolation,
-                           outAllowsInlineScript);
-}
-
 NS_IMETHODIMP
 nsCSPContext::GetAllowsEval(bool* outShouldReportViolation,
                             bool* outAllowsEval)
 {
-  return getAllowsInternal(nsIContentPolicy::TYPE_SCRIPT,
-                           CSP_UNSAFE_EVAL,
-                           EmptyString(),
-                           outShouldReportViolation,
-                           outAllowsEval);
+  *outShouldReportViolation = false;
+  *outAllowsEval = true;
+
+  for (uint32_t i = 0; i < mPolicies.Length(); i++) {
+    if (!mPolicies[i]->allows(nsIContentPolicy::TYPE_SCRIPT,
+                              CSP_UNSAFE_EVAL, EmptyString())) {
+      // policy is violated: must report the violation and allow the inline
+      // script if the policy is report-only.
+      *outShouldReportViolation = true;
+      if (!mPolicies[i]->getReportOnlyFlag()) {
+        *outAllowsEval = false;
+      }
+    }
+  }
+  return NS_OK;
+}
+
+// Helper function to report inline violations
+void
+nsCSPContext::reportInlineViolation(nsContentPolicyType aContentType,
+                                    const nsAString& aNonce,
+                                    const nsAString& aContent,
+                                    const nsAString& aViolatedDirective,
+                                    uint32_t aViolatedPolicyIndex, // TODO, use report only flag for that
+                                    uint32_t aLineNumber)
+{
+  nsString observerSubject;
+  // if the nonce is non empty, then we report the nonce error, otherwise
+  // let's report the hash error; no need to report the unsafe-inline error
+  // anymore.
+  if (!aNonce.IsEmpty()) {
+    observerSubject = (aContentType == nsIContentPolicy::TYPE_SCRIPT)
+                      ? NS_LITERAL_STRING(SCRIPT_NONCE_VIOLATION_OBSERVER_TOPIC)
+                      : NS_LITERAL_STRING(STYLE_NONCE_VIOLATION_OBSERVER_TOPIC);
+  }
+  else {
+    observerSubject = (aContentType == nsIContentPolicy::TYPE_SCRIPT)
+                      ? NS_LITERAL_STRING(SCRIPT_HASH_VIOLATION_OBSERVER_TOPIC)
+                      : NS_LITERAL_STRING(STYLE_HASH_VIOLATION_OBSERVER_TOPIC);
+  }
+
+  nsCOMPtr<nsISupportsCString> selfICString(do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
+  if (selfICString) {
+    selfICString->SetData(nsDependentCString("self"));
+  }
+  nsCOMPtr<nsISupports> selfISupports(do_QueryInterface(selfICString));
+
+  // use selfURI as the sourceFile
+  nsAutoCString sourceFile;
+  mSelfURI->GetSpec(sourceFile);
+
+  nsAutoString codeSample(aContent);
+  // cap the length of the script sample at 40 chars
+  if (codeSample.Length() > 40) {
+    codeSample.Truncate(40);
+    codeSample.AppendLiteral("...");
+  }
+  AsyncReportViolation(selfISupports,                      // aBlockedContentSource
+                       mSelfURI,                           // aOriginalURI
+                       aViolatedDirective,                 // aViolatedDirective
+                       aViolatedPolicyIndex,               // aViolatedPolicyIndex
+                       observerSubject,                    // aObserverSubject
+                       NS_ConvertUTF8toUTF16(sourceFile),  // aSourceFile
+                       codeSample,                         // aScriptSample
+                       aLineNumber);                       // aLineNum
 }
 
 NS_IMETHODIMP
-nsCSPContext::GetAllowsInlineStyle(bool* outShouldReportViolation,
-                                   bool* outAllowsInlineStyle)
+nsCSPContext::GetAllowsInline(nsContentPolicyType aContentType,
+                              const nsAString& aNonce,
+                              const nsAString& aContent,
+                              uint32_t aLineNumber,
+                              bool* outAllowsInline)
 {
-  return getAllowsInternal(nsIContentPolicy::TYPE_STYLESHEET,
-                           CSP_UNSAFE_INLINE,
-                           EmptyString(),
-                           outShouldReportViolation,
-                           outAllowsInlineStyle);
+  *outAllowsInline = true;
+
+  MOZ_ASSERT(aContentType == nsContentUtils::InternalContentPolicyTypeToExternal(aContentType),
+             "We should only see external content policy types here.");
+
+  if (aContentType != nsIContentPolicy::TYPE_SCRIPT &&
+      aContentType != nsIContentPolicy::TYPE_STYLESHEET) {
+    MOZ_ASSERT(false, "can only allow inline for script or style");
+    return NS_OK;
+  }
+
+  // always iterate all policies, otherwise we might not send out all reports
+  for (uint32_t i = 0; i < mPolicies.Length(); i++) {
+    bool allowed =
+      mPolicies[i]->allows(aContentType, CSP_UNSAFE_INLINE, EmptyString()) ||
+      mPolicies[i]->allows(aContentType, CSP_NONCE, aNonce) ||
+      mPolicies[i]->allows(aContentType, CSP_HASH, aContent);
+
+    if (!allowed) {
+      // policy is violoated: deny the load unless policy is report only and
+      // report the violation.
+      if (!mPolicies[i]->getReportOnlyFlag()) {
+        *outAllowsInline = false;
+      }
+      nsAutoString violatedDirective;
+      mPolicies[i]->getDirectiveStringForContentType(aContentType, violatedDirective);
+      reportInlineViolation(aContentType,
+                            aNonce,
+                            aContent,
+                            violatedDirective,
+                            i,
+                            aLineNumber);
+    }
+  }
+  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsCSPContext::GetAllowsNonce(const nsAString& aNonce,
-                             uint32_t aContentType,
-                             bool* outShouldReportViolation,
-                             bool* outAllowsNonce)
-{
-  return getAllowsInternal(aContentType,
-                           CSP_NONCE,
-                           aNonce,
-                           outShouldReportViolation,
-                           outAllowsNonce);
-}
-
-NS_IMETHODIMP
-nsCSPContext::GetAllowsHash(const nsAString& aContent,
-                            uint16_t aContentType,
-                            bool* outShouldReportViolation,
-                            bool* outAllowsHash)
-{
-  return getAllowsInternal(aContentType,
-                           CSP_HASH,
-                           aContent,
-                           outShouldReportViolation,
-                           outAllowsHash);
-}
 
 /**
  * Reduces some code repetition for the various logging situations in

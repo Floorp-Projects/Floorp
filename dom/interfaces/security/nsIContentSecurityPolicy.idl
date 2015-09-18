@@ -20,7 +20,7 @@ interface nsIURI;
 
 typedef unsigned short CSPDirective;
 
-[scriptable, uuid(b622b0f8-ee51-4f7a-8c23-b3bce20e752e)]
+[scriptable, uuid(fe07ab08-21ba-470c-8b89-78d0e7298c68)]
 interface nsIContentSecurityPolicy : nsISerializable
 {
   /**
@@ -101,18 +101,22 @@ interface nsIContentSecurityPolicy : nsISerializable
    */
   void appendPolicy(in AString policyString, in boolean reportOnly);
 
-  /**
-   * Whether this policy allows in-page script.
-   * @param shouldReportViolations
-   *     Whether or not the use of inline script should be reported.
-   *     This function always returns "true" for report-only policies, but when
-   *     any policy (report-only or otherwise) is violated,
-   *     shouldReportViolations is true as well.
+  /*
+   * Whether this policy allows inline script or style.
+   * @param aContentPolicyType Either TYPE_SCRIPT or TYPE_STYLESHEET
+   * @param aNonce The nonce string to check against the policy
+   * @param aContent  The content of the inline resource to hash
+   *        (and compare to the hashes listed in the policy)
+   * @param aLineNumber The line number of the inline resource
+   *        (used for reporting)
    * @return
-   *     Whether or not the effects of the inline script should be allowed
-   *     (block the compilation if false).
+   *     Whether or not the effects of the inline style should be allowed
+   *     (block the rules if false).
    */
-  boolean getAllowsInlineScript(out boolean shouldReportViolations);
+  boolean getAllowsInline(in nsContentPolicyType aContentPolicyType,
+                          in AString aNonce,
+                          in AString aContent,
+                          in unsigned long aLineNumber);
 
   /**
    * whether this policy allows eval and eval-like functions
@@ -127,59 +131,6 @@ interface nsIContentSecurityPolicy : nsISerializable
    *     (block the call if false).
    */
   boolean getAllowsEval(out boolean shouldReportViolations);
-
-  /**
-   * Whether this policy allows in-page styles.
-   * This includes <style> tags with text content and style="" attributes in
-   * HTML elements.
-   * @param shouldReportViolations
-   *     Whether or not the use of inline style should be reported.
-   *     If there are report-only policies, this function may return true
-   *     (don't block), but one or more policy may still want to send
-   *     violation reports so shouldReportViolations will be true even if the
-   *     inline style should be permitted.
-   * @return
-   *     Whether or not the effects of the inline style should be allowed
-   *     (block the rules if false).
-   */
-  boolean getAllowsInlineStyle(out boolean shouldReportViolations);
-
-  /**
-   * Whether this policy accepts the given nonce
-   * @param aNonce
-   *     The nonce string to check against the policy
-   * @param aContentType
-   *     The type of element on which we encountered this nonce
-   * @param shouldReportViolation
-   *     Whether or not the use of an incorrect nonce should be reported.
-   *     This function always returns "true" for report-only policies, but when
-   *     the report-only policy is violated, shouldReportViolation is true as
-   *     well.
-   * @return
-   *     Whether or not this nonce is valid
-   */
-   boolean getAllowsNonce(in AString aNonce,
-                          in unsigned long aContentType,
-                          out boolean shouldReportViolation);
-
-   /**
-    * Whether this policy accepts the given inline resource based on the hash
-    * of its content.
-    * @param aContent
-    *     The content of the inline resource to hash (and compare to the
-    *     hashes listed in the policy)
-    * @param aContentType
-    *     The type of inline element (script or style)
-    * @param shouldReportViolation
-    *     Whether this inline resource should be reported as a hash-source
-    *     violation. If there are no hash-sources in the policy, this is
-    *     always false.
-    * @return
-    *     Whether or not this inline resource is whitelisted by a hash-source
-    */
-   boolean getAllowsHash(in AString aContent,
-                         in unsigned short aContentType,
-                         out boolean shouldReportViolation);
 
   /**
    * For each violated policy (of type violationType), log policy violation on
