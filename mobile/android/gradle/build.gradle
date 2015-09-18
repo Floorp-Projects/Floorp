@@ -1,3 +1,5 @@
+import java.util.regex.Pattern
+
 allprojects {
     // Expose the per-object-directory configuration to all projects.
     ext {
@@ -62,10 +64,15 @@ task generateCodeAndResources(type:Exec) {
 // Skip unit test for all build variants, unless if it was specifically requested by user.
 // The enabled property for the unit test tasks is reset based on the command line task names just before the task execution.
 // I bet there is a easier/cleaner way to do this, but this gets the job done for now.
+Pattern pattern = Pattern.compile('.*test(.+UnitTest)?.*')
+boolean startTasksIncludeTest = gradle.startParameter.taskNames.any {
+    taskName ->
+        taskName.matches(pattern)
+}
 gradle.taskGraph.beforeTask {
     Task task ->
-        if (task.name.startsWith('test') && task.name.endsWith('UnitTest')) {
-            task.enabled = gradle.startParameter.taskNames.contains('test')
+        if (task.name.matches(pattern)) {
+            task.enabled = startTasksIncludeTest
         }
 }
 
