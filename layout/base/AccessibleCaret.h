@@ -37,11 +37,11 @@ namespace mozilla {
 // that SetPosition() works correctly, the caller must make sure the layout is
 // up to date.
 //
-class AccessibleCaret final
+class AccessibleCaret
 {
 public:
   explicit AccessibleCaret(nsIPresShell* aPresShell);
-  ~AccessibleCaret();
+  virtual ~AccessibleCaret();
 
   // This enumeration representing the visibility and visual style of an
   // AccessibleCaret.
@@ -74,7 +74,7 @@ public:
     return mAppearance;
   }
 
-  void SetAppearance(Appearance aAppearance);
+  virtual void SetAppearance(Appearance aAppearance);
 
   // Return true if current appearance is either Normal, NormalNotShown, Left,
   // or Right.
@@ -92,7 +92,7 @@ public:
 
   // Set true to enable the "Text Selection Bar" described in "Text Selection
   // Visual Spec" in bug 921965.
-  void SetSelectionBarEnabled(bool aEnabled);
+  virtual void SetSelectionBarEnabled(bool aEnabled);
 
   // This enumeration representing the result returned by SetPosition().
   enum class PositionChangedResult : uint8_t {
@@ -105,7 +105,7 @@ public:
     // Position is out of scroll port.
     Invisible
   };
-  PositionChangedResult SetPosition(nsIFrame* aFrame, int32_t aOffset);
+  virtual PositionChangedResult SetPosition(nsIFrame* aFrame, int32_t aOffset);
 
   // Does two AccessibleCarets overlap?
   bool Intersects(const AccessibleCaret& aCaret) const;
@@ -127,7 +127,7 @@ public:
     return mCaretElementHolder->GetContentNode();
   }
 
-private:
+protected:
   // Argument aRect should be relative to CustomContentContainerFrame().
   void SetCaretElementStyle(const nsRect& aRect);
   void SetSelectionBarElementStyle(const nsRect& aRect);
