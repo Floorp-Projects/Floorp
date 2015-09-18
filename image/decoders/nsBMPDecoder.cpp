@@ -64,20 +64,6 @@ nsBMPDecoder::~nsBMPDecoder()
   }
 }
 
-nsresult
-nsBMPDecoder::SetTargetSize(const nsIntSize& aSize)
-{
-  // Make sure the size is reasonable.
-  if (MOZ_UNLIKELY(aSize.width <= 0 || aSize.height <= 0)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Create a downscaler that we'll filter our output through.
-  mDownscaler.emplace(aSize);
-
-  return NS_OK;
-}
-
 // Sets whether or not the BMP will use alpha data
 void
 nsBMPDecoder::SetUseAlphaData(bool useAlphaData)
