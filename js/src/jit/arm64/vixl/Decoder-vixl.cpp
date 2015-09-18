@@ -26,6 +26,8 @@
 
 #include "jit/arm64/vixl/Decoder-vixl.h"
 
+#include <algorithm>
+
 #include "jit/arm64/vixl/Globals-vixl.h"
 #include "jit/arm64/vixl/Utils-vixl.h"
 
@@ -110,50 +112,45 @@ void Decoder::DecodeInstruction(const Instruction *instr) {
 }
 
 void Decoder::AppendVisitor(DecoderVisitor* new_visitor) {
-  visitors_.push_back(new_visitor);
+  visitors_.append(new_visitor);
 }
 
 
 void Decoder::PrependVisitor(DecoderVisitor* new_visitor) {
-  visitors_.push_front(new_visitor);
+  visitors_.insert(visitors_.begin(), new_visitor);
 }
 
 
 void Decoder::InsertVisitorBefore(DecoderVisitor* new_visitor,
                                   DecoderVisitor* registered_visitor) {
-  std::list<DecoderVisitor*>::iterator it;
-  for (it = visitors_.begin(); it != visitors_.end(); it++) {
+  for (auto it = visitors_.begin(); it != visitors_.end(); it++) {
     if (*it == registered_visitor) {
       visitors_.insert(it, new_visitor);
       return;
     }
   }
-  // We reached the end of the list. The last element must be
-  // registered_visitor.
-  VIXL_ASSERT(*it == registered_visitor);
-  visitors_.insert(it, new_visitor);
+  // We reached the end of the list without finding registered_visitor.
+  visitors_.append(new_visitor);
 }
 
 
 void Decoder::InsertVisitorAfter(DecoderVisitor* new_visitor,
                                  DecoderVisitor* registered_visitor) {
-  std::list<DecoderVisitor*>::iterator it;
-  for (it = visitors_.begin(); it != visitors_.end(); it++) {
+  for (auto it = visitors_.begin(); it != visitors_.end(); it++) {
     if (*it == registered_visitor) {
       it++;
       visitors_.insert(it, new_visitor);
       return;
     }
   }
-  // We reached the end of the list. The last element must be
-  // registered_visitor.
-  VIXL_ASSERT(*it == registered_visitor);
-  visitors_.push_back(new_visitor);
+  // We reached the end of the list without finding registered_visitor.
+  visitors_.append(new_visitor);
 }
 
 
 void Decoder::RemoveVisitor(DecoderVisitor* visitor) {
-  visitors_.remove(visitor);
+  visitors_.erase(std::remove(visitors_.begin(), visitors_.end(), visitor),
+                  visitors_.end());
 }
 
 
@@ -698,9 +695,8 @@ void Decoder::DecodeAdvSIMDDataProcessing(const Instruction* instr) {
 #define DEFINE_VISITOR_CALLERS(A)                                              \
   void Decoder::Visit##A(const Instruction *instr) {                           \
     VIXL_ASSERT(instr->Mask(A##FMask) == A##Fixed);                            \
-    std::list<DecoderVisitor*>::iterator it;                                   \
-    for (it = visitors_.begin(); it != visitors_.end(); it++) {                \
-      (*it)->Visit##A(instr);                                                  \
+    for (auto visitor : visitors_) {                                           \
+      visitor->Visit##A(instr);                                                \
     }                                                                          \
   }
 VISITOR_LIST(DEFINE_VISITOR_CALLERS)
