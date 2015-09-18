@@ -11686,6 +11686,41 @@ GetRootWindow(nsIDocument* aDoc)
   return rootItem ? rootItem->GetWindow() : nullptr;
 }
 
+static bool
+ShouldApplyFullscreenDirectly(nsIDocument* aDoc,
+                              nsPIDOMWindow* aRootWin)
+{
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    // If we are in the content process, we can apply the fullscreen
+    // state directly only if we have been in DOM fullscreen, because
+    // otherwise we always need to notify the chrome.
+    return nsContentUtils::GetRootDocument(aDoc)->IsFullScreenDoc();
+  } else {
+    // If we are in the chrome process, and the window has not been in
+    // fullscreen, we certainly need to make that fullscreen first.
+    bool fullscreen;
+    NS_WARN_IF(NS_FAILED(aRootWin->GetFullScreen(&fullscreen)));
+    if (!fullscreen) {
+      return false;
+    }
+    // The iterator not being at end indicates there is still some
+    // pending fullscreen request relates to this document. We have to
+    // push the request to the pending queue so requests are handled
+    // in the correct order.
+    PendingFullscreenRequestList::Iterator
+      iter(aDoc, PendingFullscreenRequestList::eDocumentsWithSameRoot);
+    if (!iter.AtEnd()) {
+      return false;
+    }
+    // We have to apply the fullscreen state directly in this case,
+    // because nsGlobalWindow::SetFullscreenInternal() will do nothing
+    // if it is already in fullscreen. If we do not apply the state but
+    // instead add it to the queue and wait for the window as normal,
+    // we would get stuck.
+    return true;
+  }
+}
+
 void
 nsDocument::RequestFullScreen(UniquePtr<FullscreenRequest>&& aRequest)
 {
@@ -11694,19 +11729,7 @@ nsDocument::RequestFullScreen(UniquePtr<FullscreenRequest>&& aRequest)
     return;
   }
 
-  // If we have been in fullscreen, apply the new state directly.
-  // Note that we should check both condition, because if we are in
-  // child process, our window may not report to be in fullscreen.
-  // Also, it is possible that the root window reports that it is in
-  // fullscreen while there exists pending fullscreen request because
-  // of ongoing fullscreen transition. In that case, we shouldn't
-  // apply the state before any previous request.
-  if ((static_cast<nsGlobalWindow*>(rootWin.get())->FullScreen() &&
-       // The iterator being at end at the beginning indicates there is
-       // no pending fullscreen request which relates to this document.
-       PendingFullscreenRequestList::Iterator(
-         this, PendingFullscreenRequestList::eDocumentsWithSameRoot).AtEnd()) ||
-      nsContentUtils::GetRootDocument(this)->IsFullScreenDoc()) {
+  if (ShouldApplyFullscreenDirectly(this, rootWin)) {
     ApplyFullscreen(*aRequest);
     return;
   }
