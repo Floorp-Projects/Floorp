@@ -249,7 +249,7 @@ function run_test() {
   add_tls_server_setup("BadCertServer");
 
   // Add a user-specified trust anchor.
-  addCertFromFile(certdb, "tlsserver/other-test-ca.pem", "CTu,u,u");
+  addCertFromFile(certdb, "tlsserver/other-test-ca.der", "CTu,u,u");
 
   test_strict();
   test_mitm();

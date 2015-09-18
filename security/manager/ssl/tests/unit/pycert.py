@@ -16,8 +16,7 @@ subject:<subject distinguished name specification>
 [validity:<YYYYMMDD-YYYYMMDD|duration in days>]
 [issuerKey:<key specification>]
 [subjectKey:<key specification>]
-[signature:{sha256WithRSAEncryption,sha1WithRSAEncryption,
-            md5WithRSAEncryption,ecdsaWithSHA256}]
+[signature:{sha1WithRSAEncryption,sha256WithRSAEncryption,ecdsaWithSHA256}]
 [extension:<extension name:<extension-specific data>>]
 [...]
 
@@ -32,7 +31,6 @@ subjectAlternativeName:[<dNSName>,...]
 authorityInformationAccess:<OCSP URI>
 certificatePolicies:<policy OID>
 nameConstraints:{permitted,excluded}:[<dNSName|directoryName>,...]
-nsCertType:sslServer
 
 Where:
   [] indicates an optional field or component of a field
@@ -66,9 +64,6 @@ be 'utf8String' or 'printableString'. If the given string does not
 contain a '/', it is assumed to represent a common name.
 DirectoryNames also use this format. When specifying a directoryName in
 a nameConstraints extension, the implicit form may not be used.
-
-If an extension name has '[critical]' after it, it will be marked as
-critical. Otherwise (by default), it will not be marked as critical.
 """
 
 from pyasn1.codec.der import decoder
@@ -183,14 +178,6 @@ class UnknownDNTypeError(UnknownBaseError):
         self.category = 'DN'
 
 
-class UnknownNSCertTypeError(UnknownBaseError):
-    """Helper exception type to handle unknown nsCertType types."""
-
-    def __init__(self, value):
-        UnknownBaseError.__init__(self, value)
-        self.category = 'nsCertType'
-
-
 def getASN1Tag(asn1Type):
     """Helper function for returning the base tag value of a given
     type from the pyasn1 package"""
@@ -267,29 +254,27 @@ def stringToDN(string, tag=None):
     name.setComponentByPosition(0, rdns)
     return name
 
-def stringToAlgorithmIdentifiers(string):
+def stringToAlgorithmIdentifier(string):
     """Helper function that converts a description of an algorithm
-    to a representation usable by the pyasn1 package and a hash
-    algorithm name for use by pykey."""
+    to a representation usable by the pyasn1 package"""
     algorithmIdentifier = rfc2459.AlgorithmIdentifier()
-    algorithmName = None
     algorithm = None
+    name = None
     if string == 'sha1WithRSAEncryption':
-        algorithmName = 'SHA-1'
+        name = 'SHA-1'
         algorithm = rfc2459.sha1WithRSAEncryption
     elif string == 'sha256WithRSAEncryption':
-        algorithmName = 'SHA-256'
+        name = 'SHA-256'
         algorithm = univ.ObjectIdentifier('1.2.840.113549.1.1.11')
-    elif string == 'md5WithRSAEncryption':
-        algorithmName = 'MD5'
-        algorithm = rfc2459.md5WithRSAEncryption
     elif string == 'ecdsaWithSHA256':
-        algorithmName = 'sha256'
+        # Note that this value is only used by pykey.py to tell if
+        # ECDSA is allowed.  It does not conform to the pyECC syntax.
+        name = 'SHA-256'
         algorithm = univ.ObjectIdentifier('1.2.840.10045.4.3.2')
     else:
         raise UnknownAlgorithmTypeError(string)
     algorithmIdentifier.setComponentByName('algorithm', algorithm)
-    return (algorithmIdentifier, algorithmName)
+    return (algorithmIdentifier, name)
 
 def datetimeToTime(dt):
     """Takes a datetime object and returns an rfc2459.Time object with
@@ -395,28 +380,22 @@ class Certificate:
             self.notAfter = self.now + delta
 
     def decodeExtension(self, extension):
-        match = re.search('([a-zA-Z]+)(\[critical\])?:(.*)', extension)
-        if not match:
-            raise UnknownExtensionTypeError(extension)
-        extensionType = match.group(1)
-        critical = match.group(2)
-        value = match.group(3)
+        extensionType = extension.split(':')[0]
+        value = ':'.join(extension.split(':')[1:])
         if extensionType == 'basicConstraints':
-            self.addBasicConstraints(value, critical)
+            self.addBasicConstraints(value)
         elif extensionType == 'keyUsage':
-            self.addKeyUsage(value, critical)
+            self.addKeyUsage(value)
         elif extensionType == 'extKeyUsage':
-            self.addExtKeyUsage(value, critical)
+            self.addExtKeyUsage(value)
         elif extensionType == 'subjectAlternativeName':
-            self.addSubjectAlternativeName(value, critical)
+            self.addSubjectAlternativeName(value)
         elif extensionType == 'authorityInformationAccess':
-            self.addAuthorityInformationAccess(value, critical)
+            self.addAuthorityInformationAccess(value)
         elif extensionType == 'certificatePolicies':
-            self.addCertificatePolicies(value, critical)
+            self.addCertificatePolicies(value)
         elif extensionType == 'nameConstraints':
-            self.addNameConstraints(value, critical)
-        elif extensionType == 'nsCertType':
-            self.addNSCertType(value, critical)
+            self.addNameConstraints(value)
         else:
             raise UnknownExtensionTypeError(extensionType)
 
@@ -428,20 +407,16 @@ class Certificate:
         else:
             raise UnknownKeyTargetError(subjectOrIssuer)
 
-    def addExtension(self, extensionType, extensionValue, critical):
+    def addExtension(self, extensionType, extensionValue):
         if not self.extensions:
             self.extensions = []
         encapsulated = univ.OctetString(encoder.encode(extensionValue))
         extension = rfc2459.Extension()
         extension.setComponentByName('extnID', extensionType)
-        # critical is either the string '[critical]' or None.
-        # We only care whether or not it is truthy.
-        if critical:
-            extension.setComponentByName('critical', True)
         extension.setComponentByName('extnValue', encapsulated)
         self.extensions.append(extension)
 
-    def addBasicConstraints(self, basicConstraints, critical):
+    def addBasicConstraints(self, basicConstraints):
         cA = basicConstraints.split(',')[0]
         pathLenConstraint = basicConstraints.split(',')[1]
         basicConstraintsExtension = rfc2459.BasicConstraints()
@@ -452,11 +427,11 @@ class Certificate:
                     subtypeSpec=constraint.ValueRangeConstraint(0, 64))
             basicConstraintsExtension.setComponentByName('pathLenConstraint',
                                                          pathLenConstraintValue)
-        self.addExtension(rfc2459.id_ce_basicConstraints, basicConstraintsExtension, critical)
+        self.addExtension(rfc2459.id_ce_basicConstraints, basicConstraintsExtension)
 
-    def addKeyUsage(self, keyUsage, critical):
+    def addKeyUsage(self, keyUsage):
         keyUsageExtension = rfc2459.KeyUsage(keyUsage)
-        self.addExtension(rfc2459.id_ce_keyUsage, keyUsageExtension, critical)
+        self.addExtension(rfc2459.id_ce_keyUsage, keyUsageExtension)
 
     def keyPurposeToOID(self, keyPurpose):
         if keyPurpose == 'serverAuth':
@@ -477,15 +452,15 @@ class Certificate:
             return rfc2459.id_kp_timeStamping
         raise UnknownKeyPurposeTypeError(keyPurpose)
 
-    def addExtKeyUsage(self, extKeyUsage, critical):
+    def addExtKeyUsage(self, extKeyUsage):
         extKeyUsageExtension = rfc2459.ExtKeyUsageSyntax()
         count = 0
         for keyPurpose in extKeyUsage.split(','):
             extKeyUsageExtension.setComponentByPosition(count, self.keyPurposeToOID(keyPurpose))
             count += 1
-        self.addExtension(rfc2459.id_ce_extKeyUsage, extKeyUsageExtension, critical)
+        self.addExtension(rfc2459.id_ce_extKeyUsage, extKeyUsageExtension)
 
-    def addSubjectAlternativeName(self, dNSNames, critical):
+    def addSubjectAlternativeName(self, dNSNames):
         subjectAlternativeName = rfc2459.SubjectAltName()
         count = 0
         for dNSName in dNSNames.split(','):
@@ -496,15 +471,15 @@ class Certificate:
             generalName.setComponentByName('dNSName', dNSName.decode(encoding='string_escape'))
             subjectAlternativeName.setComponentByPosition(count, generalName)
             count += 1
-        self.addExtension(rfc2459.id_ce_subjectAltName, subjectAlternativeName, critical)
+        self.addExtension(rfc2459.id_ce_subjectAltName, subjectAlternativeName)
 
-    def addAuthorityInformationAccess(self, ocspURI, critical):
+    def addAuthorityInformationAccess(self, ocspURI):
         sequence = univ.Sequence()
         accessDescription = stringToAccessDescription(ocspURI)
         sequence.setComponentByPosition(0, accessDescription)
-        self.addExtension(rfc2459.id_pe_authorityInfoAccess, sequence, critical)
+        self.addExtension(rfc2459.id_pe_authorityInfoAccess, sequence)
 
-    def addCertificatePolicies(self, policyOID, critical):
+    def addCertificatePolicies(self, policyOID):
         policies = rfc2459.CertificatePolicies()
         policy = rfc2459.PolicyInformation()
         if policyOID == 'any':
@@ -512,9 +487,9 @@ class Certificate:
         policyIdentifier = rfc2459.CertPolicyId(policyOID)
         policy.setComponentByName('policyIdentifier', policyIdentifier)
         policies.setComponentByPosition(0, policy)
-        self.addExtension(rfc2459.id_ce_certificatePolicies, policies, critical)
+        self.addExtension(rfc2459.id_ce_certificatePolicies, policies)
 
-    def addNameConstraints(self, constraints, critical):
+    def addNameConstraints(self, constraints):
         nameConstraints = NameConstraints()
         if constraints.startswith('permitted:'):
             (subtreesType, subtreesTag) = ('permittedSubtrees', 0)
@@ -539,13 +514,7 @@ class Certificate:
             generalSubtrees.setComponentByPosition(pos, generalSubtree)
             pos = pos + 1
         nameConstraints.setComponentByName(subtreesType, generalSubtrees)
-        self.addExtension(rfc2459.id_ce_nameConstraints, nameConstraints, critical)
-
-    def addNSCertType(self, certType, critical):
-        if certType != 'sslServer':
-            raise UnknownNSCertTypeError(certType)
-        self.addExtension(univ.ObjectIdentifier('2.16.840.1.113730.1.1'), univ.BitString("'01'B"),
-            critical)
+        self.addExtension(rfc2459.id_ce_nameConstraints, nameConstraints)
 
     def getVersion(self):
         return rfc2459.Version(self.versionValue).subtype(
@@ -553,6 +522,9 @@ class Certificate:
 
     def getSerialNumber(self):
         return decoder.decode(self.serialNumber)[0]
+
+    def getSignature(self):
+        return stringToAlgorithmIdentifier(self.signature)
 
     def getIssuer(self):
         return stringToDN(self.issuer)
@@ -573,7 +545,8 @@ class Certificate:
         return stringToDN(self.subject)
 
     def toDER(self):
-        (signatureOID, hashName) = stringToAlgorithmIdentifiers(self.signature)
+        (signatureOID, hashAlg) = self.getSignature()
+
         tbsCertificate = rfc2459.TBSCertificate()
         tbsCertificate.setComponentByName('version', self.getVersion())
         tbsCertificate.setComponentByName('serialNumber', self.getSerialNumber())
@@ -595,7 +568,8 @@ class Certificate:
         certificate.setComponentByName('tbsCertificate', tbsCertificate)
         certificate.setComponentByName('signatureAlgorithm', signatureOID)
         tbsDER = encoder.encode(tbsCertificate)
-        certificate.setComponentByName('signatureValue', self.issuerKey.sign(tbsDER, hashName))
+
+        certificate.setComponentByName('signatureValue', self.issuerKey.sign(tbsDER, hashAlg))
         return encoder.encode(certificate)
 
     def toPEM(self):
