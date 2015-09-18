@@ -490,35 +490,6 @@ HTMLCanvasElement::ToDataURL(const nsAString& aType, JS::Handle<JS::Value> aPara
   return ToDataURLImpl(aCx, aType, aParams, aDataURL);
 }
 
-// HTMLCanvasElement::mozFetchAsStream
-
-NS_IMETHODIMP
-HTMLCanvasElement::MozFetchAsStream(nsIInputStreamCallback *aCallback,
-                                    const nsAString& aType)
-{
-  if (!nsContentUtils::IsCallerChrome())
-    return NS_ERROR_FAILURE;
-
-  nsresult rv;
-  nsCOMPtr<nsIInputStream> inputData;
-
-  nsAutoString type(aType);
-  rv = ExtractData(type, EmptyString(), getter_AddRefs(inputData));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIAsyncInputStream> asyncData = do_QueryInterface(inputData, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIThread> mainThread;
-  rv = NS_GetMainThread(getter_AddRefs(mainThread));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIInputStreamCallback> asyncCallback =
-    NS_NewInputStreamReadyEvent(aCallback, mainThread);
-
-  return asyncCallback->OnInputStreamReady(asyncData);
-}
-
 void
 HTMLCanvasElement::SetMozPrintCallback(PrintCallback* aCallback)
 {
