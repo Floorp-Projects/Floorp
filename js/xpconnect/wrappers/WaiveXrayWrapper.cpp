@@ -50,8 +50,7 @@ WaiveXrayWrapper::getOwnPropertyDescriptor(JSContext* cx, HandleObject wrapper,
 }
 
 bool
-WaiveXrayWrapper::get(JSContext* cx, HandleObject wrapper,
-                      HandleObject receiver, HandleId id,
+WaiveXrayWrapper::get(JSContext* cx, HandleObject wrapper, HandleValue receiver, HandleId id,
                       MutableHandleValue vp) const
 {
     return CrossCompartmentWrapper::get(cx, wrapper, receiver, id, vp) &&

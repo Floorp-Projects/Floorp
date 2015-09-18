@@ -424,8 +424,9 @@ private:
   // only NO_HTTP_ERROR, PROTOCOL_ERROR, or INTERNAL_ERROR will be sent.
   errorType            mGoAwayReason;
 
-  // The error code received from the peer in a goaway frame. UNASSIGNED/31
-  // if not received.
+  // The error code sent/received on the session goaway frame. UNASSIGNED/31
+  // if not transmitted.
+  int32_t             mClientGoAwayReason;
   int32_t             mPeerGoAwayReason;
 
   // If a GoAway message was received this is the ID of the last valid

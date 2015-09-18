@@ -76,18 +76,23 @@ a11y::ProxyDestroyed(ProxyAccessible* aProxy)
 }
 
 void
-a11y::ProxyEvent(ProxyAccessible*, uint32_t)
+a11y::ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType)
 {
+  AccessibleWrap::FireWinEvent(WrapperFor(aTarget), aEventType);
 }
 
 void
-a11y::ProxyStateChangeEvent(ProxyAccessible*, uint64_t, bool)
+a11y::ProxyStateChangeEvent(ProxyAccessible* aTarget, uint64_t, bool)
 {
+  AccessibleWrap::FireWinEvent(WrapperFor(aTarget),
+                               nsIAccessibleEvent::EVENT_STATE_CHANGE);
 }
 
 void
 a11y::ProxyCaretMoveEvent(ProxyAccessible* aTarget, int32_t aOffset)
 {
+  AccessibleWrap::FireWinEvent(WrapperFor(aTarget),
+                               nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED);
 }
 
 void
@@ -104,4 +109,8 @@ a11y::ProxyTextChangeEvent(ProxyAccessible* aText, const nsString& aStr,
   if (text) {
     ia2AccessibleText::UpdateTextChangeData(text, aInsert, aStr, aStart, aLen);
   }
+
+  uint32_t eventType = aInsert ? nsIAccessibleEvent::EVENT_TEXT_INSERTED :
+    nsIAccessibleEvent::EVENT_TEXT_REMOVED;
+  AccessibleWrap::FireWinEvent(wrapper, eventType);
 }

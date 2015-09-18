@@ -26,10 +26,10 @@ def main(output, *filenames):
     print("enum ID : uint32_t {", file=output)
 
     groups = itertools.groupby(histogram_tools.from_files(filenames),
-                               lambda h: h.name().startswith("USE_COUNTER_"))
+                               lambda h: h.name().startswith("USE_COUNTER2_"))
     seen_use_counters = False
 
-    # Note that histogram_tools.py guarantees that all of the USE_COUNTER_*
+    # Note that histogram_tools.py guarantees that all of the USE_COUNTER2_*
     # histograms are defined in a contiguous block.  We therefore assume
     # that there's at most one group for which use_counter_group is true.
     for (use_counter_group, histograms) in groups:

@@ -839,8 +839,8 @@ protected:
   static bool sDoNotReturnNoLayoutErrorToMSTraditionalTIP;
   static bool sDoNotReturnNoLayoutErrorToFreeChangJie;
   static bool sDoNotReturnNoLayoutErrorToEasyChangjei;
-  static bool sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar;
-  static bool sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret;
+  static bool sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar;
+  static bool sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret;
   static bool sHackQueryInsertForMSSimplifiedTIP;
   static bool sHackQueryInsertForMSTraditionalTIP;
 };

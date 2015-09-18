@@ -446,7 +446,7 @@ class XrayWrapper : public Base {
     virtual bool isExtensible(JSContext* cx, JS::Handle<JSObject*> wrapper, bool* extensible) const override;
     virtual bool has(JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
                      bool* bp) const override;
-    virtual bool get(JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<JSObject*> receiver,
+    virtual bool get(JSContext* cx, JS::Handle<JSObject*> wrapper, JS::HandleValue receiver,
                      JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp) const override;
     virtual bool set(JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
                      JS::Handle<JS::Value> v, JS::Handle<JS::Value> receiver,
@@ -520,7 +520,7 @@ public:
     // which implement them in terms of lower-level methods.
     virtual bool has(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
                      bool* bp) const override;
-    virtual bool get(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<JSObject*> receiver,
+    virtual bool get(JSContext* cx, JS::Handle<JSObject*> proxy, JS::HandleValue receiver,
                      JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp) const override;
     virtual bool set(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
                      JS::Handle<JS::Value> v, JS::Handle<JS::Value> receiver,
