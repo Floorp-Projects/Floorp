@@ -9,23 +9,27 @@ import android.content.Context;
 import android.util.Log;
 import com.keepsafe.switchboard.SwitchBoard;
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 
 import java.util.LinkedList;
 import java.util.List;
 
 public class FirstrunPagerConfig {
     public static final String LOGTAG = "FirstrunPagerConfig";
-    private static final String ONBOARDING_A = "onboarding-a";
-    private static final String ONBOARDING_B = "onboarding-b";
+    public static final String ONBOARDING_A = "onboarding-a";
+    public static final String ONBOARDING_B = "onboarding-b";
 
     public static List<FirstrunPanelConfig> getDefault(Context context) {
         final List<FirstrunPanelConfig> panels = new LinkedList<>();
         if (isInExperimentLocal(context, ONBOARDING_A)) {
             panels.add(new FirstrunPanelConfig(WelcomePanel.class.getName(), WelcomePanel.TITLE_RES));
+            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, ONBOARDING_A);
         } else if (isInExperimentLocal(context, ONBOARDING_B)) {
             // Strings used for first run, pulled from existing strings.
             panels.add(new FirstrunPanelConfig(ImportPanel.class.getName(), ImportPanel.TITLE_RES));
             panels.add(new FirstrunPanelConfig(SyncPanel.class.getName(), SyncPanel.TITLE_RES));
+            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, ONBOARDING_B);
         } else {
             Log.d(LOGTAG, "Not in an experiment!");
             panels.add(new FirstrunPanelConfig(WelcomePanel.class.getName(), WelcomePanel.TITLE_RES));
