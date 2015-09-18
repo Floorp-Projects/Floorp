@@ -1,0 +1,10 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!ENTITY aboutAccounts.connected.title "Firefox Accounts">
+<!ENTITY aboutAccounts.connected.description "You are connected as">
+<!ENTITY aboutAccounts.syncPreferences.label "Tap here to check Sync settings">
+
+<!ENTITY aboutAccounts.noConnection.title "No Internet connection">
+<!ENTITY aboutAccounts.retry.label "Try again">
