@@ -1459,22 +1459,6 @@ TriggerPendingAnimations(nsIDocument* aDocument,
                                          const_cast<TimeStamp*>(&aReadyTime));
 }
 
-LayerManager*
-nsDisplayListBuilder::GetWidgetLayerManager(nsView** aView, bool* aAllowRetaining)
-{
-  nsView* view = RootReferenceFrame()->GetView();
-  if (aView) {
-    *aView = view;
-  }
-  NS_ASSERTION(RootReferenceFrame() == nsLayoutUtils::GetDisplayRootFrame(RootReferenceFrame()),
-               "Reference frame must be a display root for us to use the layer manager");
-  nsIWidget* window = RootReferenceFrame()->GetNearestWidget();
-  if (window) {
-    return window->GetLayerManager(aAllowRetaining);
-  }
-  return nullptr;
-}
-
 /**
  * We paint by executing a layer manager transaction, constructing a
  * single layer representing the display list, and then making it the
@@ -1492,10 +1476,17 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
   bool doBeginTransaction = true;
   nsView *view = nullptr;
   if (aFlags & PAINT_USE_WIDGET_LAYERS) {
-    layerManager = aBuilder->GetWidgetLayerManager(&view, &allowRetaining);
-    if (layerManager) {
-      doBeginTransaction = !(aFlags & PAINT_EXISTING_TRANSACTION);
-      widgetTransaction = true;
+    nsIFrame* rootReferenceFrame = aBuilder->RootReferenceFrame();
+    view = rootReferenceFrame->GetView();
+    NS_ASSERTION(rootReferenceFrame == nsLayoutUtils::GetDisplayRootFrame(rootReferenceFrame),
+                 "Reference frame must be a display root for us to use the layer manager");
+    nsIWidget* window = rootReferenceFrame->GetNearestWidget();
+    if (window) {
+      layerManager = window->GetLayerManager(&allowRetaining);
+      if (layerManager) {
+        doBeginTransaction = !(aFlags & PAINT_EXISTING_TRANSACTION);
+        widgetTransaction = true;
+      }
     }
   }
   if (!layerManager) {
@@ -1984,15 +1975,11 @@ void nsDisplayList::Sort(nsDisplayListBuilder* aBuilder,
 nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
   : mFrame(aFrame)
   , mClip(aBuilder->ClipState().GetCurrentCombinedClip(aBuilder))
-  , mAnimatedGeometryRoot(nullptr)
 #ifdef MOZ_DUMP_PAINTING
   , mPainted(false)
 #endif
 {
   mReferenceFrame = aBuilder->FindReferenceFrameFor(aFrame, &mToReferenceFrame);
-  // This can return the wrong result if the item override ShouldFixToViewport(),
-  // the item needs to set it again in its constructor.
-  mAnimatedGeometryRoot = nsLayoutUtils::GetAnimatedGeometryRootFor(this, aBuilder);
   NS_ASSERTION(aBuilder->GetDirtyRect().width >= 0 ||
                !aBuilder->IsForPainting(), "dirty rect not set");
   // The dirty rect is for mCurrentFrame, so we have to use
@@ -2132,9 +2119,6 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilde
   MOZ_COUNT_CTOR(nsDisplayBackgroundImage);
 
   mBounds = GetBoundsInternal(aBuilder);
-  if (ShouldFixToViewport(aBuilder)) {
-    mAnimatedGeometryRoot = nsLayoutUtils::GetAnimatedGeometryRootFor(this, aBuilder);
-  }
 }
 
 nsDisplayBackgroundImage::~nsDisplayBackgroundImage()
@@ -2378,12 +2362,11 @@ nsDisplayBackgroundImage::IsNonEmptyFixedImage() const
 }
 
 bool
-nsDisplayBackgroundImage::ShouldFixToViewport(nsDisplayListBuilder* aBuilder)
+nsDisplayBackgroundImage::ShouldFixToViewport(LayerManager* aManager)
 {
   // APZ needs background-attachment:fixed images layerized for correctness.
-  nsRefPtr<LayerManager> layerManager = aBuilder->GetWidgetLayerManager();
   if (!nsLayoutUtils::UsesAsyncScrolling(mFrame) &&
-      layerManager && layerManager->ShouldAvoidComponentAlphaLayers()) {
+      aManager && aManager->ShouldAvoidComponentAlphaLayers()) {
     return false;
   }
 
@@ -3720,7 +3703,8 @@ RequiredLayerStateForChildren(nsDisplayListBuilder* aBuilder,
   LayerState result = LAYER_INACTIVE;
   for (nsDisplayItem* i = aList.GetBottom(); i; i = i->GetAbove()) {
     if (result == LAYER_INACTIVE &&
-        i->AnimatedGeometryRoot() != aExpectedAnimatedGeometryRootForChildren) {
+        nsLayoutUtils::GetAnimatedGeometryRootFor(i, aBuilder, aManager) !=
+          aExpectedAnimatedGeometryRootForChildren) {
       result = LAYER_ACTIVE;
     }
 
@@ -3977,7 +3961,8 @@ nsDisplayOpacity::GetLayerState(nsDisplayListBuilder* aBuilder,
   if (NeedsActiveLayer(aBuilder))
     return LAYER_ACTIVE;
 
-  return RequiredLayerStateForChildren(aBuilder, aManager, aParameters, mList, AnimatedGeometryRoot());
+  return RequiredLayerStateForChildren(aBuilder, aManager, aParameters, mList,
+    nsLayoutUtils::GetAnimatedGeometryRootFor(this, aBuilder, aManager));
 }
 
 bool
