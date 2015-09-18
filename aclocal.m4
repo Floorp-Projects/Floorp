@@ -34,6 +34,7 @@ builtin(include, build/autoconf/clang-plugin.m4)dnl
 builtin(include, build/autoconf/alloc.m4)dnl
 builtin(include, build/autoconf/ios.m4)dnl
 builtin(include, build/autoconf/jemalloc.m4)dnl
+builtin(include, build/autoconf/rust.m4)dnl
 
 MOZ_PROG_CHECKMSYS()
 
