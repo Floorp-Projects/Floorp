@@ -82,6 +82,16 @@ public:
     aURL.Assign(mURL);
   }
 
+  void
+  GetUnfilteredUrl(nsCString& aURL) const
+  {
+    if (mWrappedResponse) {
+      return mWrappedResponse->GetUrl(aURL);
+    }
+
+    return GetUrl(aURL);
+  }
+
   // SetUrl should only be called when the fragment has alredy been stripped
   void
   SetUrl(const nsACString& aURL)
