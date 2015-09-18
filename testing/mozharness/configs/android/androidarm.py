@@ -193,6 +193,7 @@ config = {
             "run_filename": "remotexpcshelltests.py",
             "testsdir": "xpcshell",
             "options": [
+                "--dm_trans=sut",
                 "--deviceIP=%(device_ip)s",
                 "--devicePort=%(device_port)s",
                 "--xre-path=%(xre_path)s",
