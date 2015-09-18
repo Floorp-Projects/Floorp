@@ -49,6 +49,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIContentViewer.h"
 #include "nsFrameManager.h"
+#include "nsITabChild.h"
 
 #include "nsIDOMXULElement.h"
 #include "nsIDOMKeyEvent.h"
@@ -914,15 +915,28 @@ EventStateManager::ExecuteAccessKey(nsTArray<uint32_t>& aAccessCharCodes,
           if (IsAccessKeyTarget(oc, of, accessKey))
             shouldActivate = false;
         }
-        if (shouldActivate)
-          content->PerformAccesskey(shouldActivate, aIsTrustedEvent);
-        else {
+
+        bool focusChanged = false;
+        if (shouldActivate) {
+          focusChanged = content->PerformAccesskey(shouldActivate, aIsTrustedEvent);
+        } else {
           nsIFocusManager* fm = nsFocusManager::GetFocusManager();
           if (fm) {
             nsCOMPtr<nsIDOMElement> element = do_QueryInterface(content);
             fm->SetFocus(element, nsIFocusManager::FLAG_BYKEY);
+            focusChanged = true;
           }
         }
+
+        if (focusChanged && aIsTrustedEvent) {
+          // If this is a child process, inform the parent that we want the focus, but
+          // pass false since we don't want to change the window order.
+          nsCOMPtr<nsITabChild> child = do_GetInterface(mPresContext->GetDocShell());
+          if (child) {
+            child->SendRequestFocus(false);
+          }
+        }
+
         return true;
       }
     }
@@ -967,6 +981,34 @@ EventStateManager::GetAccessKeyLabelPrefix(Element* aElement, nsAString& aPrefix
   }
 }
 
+struct AccessKeyInfo
+{
+  nsTArray<uint32_t>& charCodes;
+  bool isTrusted;
+  int32_t modifierMask;
+
+  AccessKeyInfo(nsTArray<uint32_t>& aCharCodes, bool aIsTrusted, int32_t aModifierMask)
+    : charCodes(aCharCodes)
+    , isTrusted(aIsTrusted)
+    , modifierMask(aModifierMask)
+  {
+  }
+};
+
+static void
+HandleAccessKeyInRemoteChild(TabParent* aTabParent, void* aArg)
+{
+  AccessKeyInfo* accessKeyInfo = static_cast<AccessKeyInfo*>(aArg);
+
+  // Only forward accesskeys for the active tab.
+  bool active;
+  aTabParent->GetDocShellIsActive(&active);
+  if (active) {
+    aTabParent->HandleAccessKey(accessKeyInfo->charCodes, accessKeyInfo->isTrusted,
+                                accessKeyInfo->modifierMask);
+  }
+}
+
 bool
 EventStateManager::HandleAccessKey(nsPresContext* aPresContext,
                                    nsTArray<uint32_t>& aAccessCharCodes,
@@ -975,10 +1017,9 @@ EventStateManager::HandleAccessKey(nsPresContext* aPresContext,
                                    ProcessingAccessKeyState aAccessKeyState,
                                    int32_t aModifierMask)
 {
+  EnsureDocument(mPresContext);
   nsCOMPtr<nsIDocShell> docShell = aPresContext->GetDocShell();
-
-  if (!docShell) {
-    NS_WARNING("no docShellTreeNode for presContext");
+  if (NS_WARN_IF(!docShell) || NS_WARN_IF(!mDocument)) {
     return false;
   }
 
@@ -1047,6 +1088,20 @@ EventStateManager::HandleAccessKey(nsPresContext* aPresContext,
       }
     }
   }// if end. bubble up process
+
+  // Now try remote children
+  if (mDocument && mDocument->GetWindow()) {
+    // If the focus is currently on a node with a TabParent, the key event will
+    // get forwarded to the child process and HandleAccessKey called from there.
+    // If focus is somewhere else, then we need to check the remote children.
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
+    nsIContent* focusedContent = fm ? fm->GetFocusedContent() : nullptr;
+    if (!TabParent::GetFrom(focusedContent)) {
+      AccessKeyInfo accessKeyInfo(aAccessCharCodes, aIsTrusted, aModifierMask);
+      nsContentUtils::CallOnAllRemoteChildren(mDocument->GetWindow(),
+                                              HandleAccessKeyInRemoteChild, &accessKeyInfo);
+    }
+  }
 
   return false;
 }// end of HandleAccessKey
