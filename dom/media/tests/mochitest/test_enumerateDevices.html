@@ -16,9 +16,13 @@ function mustSucceed(msg, f) {
                   e => is(e.name, null, msg + " must succeed: " + e.message));
 }
 
-function mustFailWith(msg, reason, f) {
-  return f().then(() => ok(false, msg + " must fail"),
-                  e => is(e.name, reason, msg + " must fail: " + e.message));
+function mustFailWith(msg, reason, constraint, f) {
+  return f().then(() => ok(false, msg + " must fail"), e => {
+      is(e.name, reason, msg + " must fail: " + e.message);
+      if (constraint) {
+        is(e.constraint, constraint, msg + " must fail w/correct constraint.");
+      }
+    });
 }
 
 var pushPrefs = (...p) => new Promise(r => SpecialPowers.pushPrefEnv({set: p}, r));
@@ -49,13 +53,15 @@ runTest(() =>
     audio: { deviceId: "unknown9qHr8B0JIbcHlbl9xR+jMbZZ8WyoPfpCXPfc=" },
     fake: true,
   })))
-  .then(() => mustFailWith("unknown exact deviceId on video", "NotFoundError",
-                       () => navigator.mediaDevices.getUserMedia({
+  .then(() => mustFailWith("unknown exact deviceId on video",
+                           "OverconstrainedError", "deviceId",
+                           () => navigator.mediaDevices.getUserMedia({
     video: { deviceId: { exact: "unknown9qHr8B0JIbcHlbl9xR+jMbZZ8WyoPfpCXPfc=" } },
     fake: true,
   })))
-  .then(() => mustFailWith("unknown exact deviceId on audio", "NotFoundError",
-                       () => navigator.mediaDevices.getUserMedia({
+  .then(() => mustFailWith("unknown exact deviceId on audio",
+                           "OverconstrainedError", "deviceId",
+                           () => navigator.mediaDevices.getUserMedia({
     audio: { deviceId: { exact: "unknown9qHr8B0JIbcHlbl9xR+jMbZZ8WyoPfpCXPfc=" } },
     fake: true,
   })))

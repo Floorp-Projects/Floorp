@@ -28,8 +28,9 @@ BaseMediaMgrError::BaseMediaMgrError(const nsAString& aName,
     } else if (mName.EqualsLiteral("InternalError")) {
       mMessage.AssignLiteral("Internal error.");
     } else if (mName.EqualsLiteral("NotSupportedError")) {
-      mMessage.AssignLiteral("Constraints with no audio or video in it are not "
-          "supported");
+      mMessage.AssignLiteral("The operation is not supported.");
+    } else if (mName.EqualsLiteral("OverconstrainedError")) {
+      mMessage.AssignLiteral("Constraints could be not satisfied.");
     }
   }
 }
