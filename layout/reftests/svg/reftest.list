@@ -33,7 +33,7 @@ include svg-integration/reftest.list
 == clip-02a.svg clip-02-ref.svg
 == clip-02b.svg clip-02-ref.svg
 == clipPath-advanced-01.svg pass.svg
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/.test(http.oscpu),1,5) fuzzy-if(azureQuartz,1,6) fuzzy-if(OSX,1,2) == clipPath-and-shape-rendering-01.svg clipPath-and-shape-rendering-01-ref.svg # bug 614840
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/.test(http.oscpu),1,5) fuzzy-if(azureQuartz,1,6) fuzzy-if(OSX,1,6) == clipPath-and-shape-rendering-01.svg clipPath-and-shape-rendering-01-ref.svg # bug 614840
 == clipPath-and-transform-01.svg pass.svg
 == clipPath-basic-01.svg pass.svg
 == clipPath-basic-02.svg pass.svg
