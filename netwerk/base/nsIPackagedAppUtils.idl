@@ -1,0 +1,68 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIVerificationCallback;
+
+%{C++
+#define NS_PACKAGEDAPPUTILS_CONTRACTID "@mozilla.org/network/packaged-app-utils;1"
+%}
+
+/**
+ * A package using privileged APIs should be signed by marketplace or trust-
+ * worthy developers. When Necko receives such a package, it has to
+ * extract the manifest and the signature and calls verifyManifest(...) to verify
+ * the manifest. nsIPackagedAppUtils will parse the manifest and
+ * store the hash values of each resource. When a resource is ready, Necko
+ * will calculate its hash value (including the header like Content-Location: xxx),
+ * and calls checkIntegrity(...) to verify the integrity.
+ *
+ * For more detail:
+ *   https://wiki.mozilla.org/FirefoxOS/New_security_model/Packaging
+ */
+
+[scriptable, uuid(d0a98a69-a215-4cf9-abb3-7a0b9237cd27)]
+interface nsIPackagedAppUtils : nsISupports
+{
+  /**
+   * @aHeader is the package's header including
+   *   - "manifest-signature: xxxxxx" (base64 encoding)
+   * @aManifest is the manifest of the package
+   *   - the multipart header is included
+   *   - manifest must be the first resource of the package
+   * @aCallback is the callback, see comments of nsIVerificationCallback below
+   */
+  void verifyManifest(in ACString aHeader,
+                      in ACString aManifest,
+                      in nsIVerificationCallback aVerifier);
+
+  /**
+   * @aFileName is the name of a resource in the package
+   * @aHashValue is the hash value of this resource named aFileName
+   *   - aHashValue should be computed by the caller of this method
+   * @aCallback is the callback, see comments of nsIVerificationCallback below
+   */
+  void checkIntegrity(in ACString aFileName,
+                      in ACString aHashValue,
+                      in nsIVerificationCallback aVerifier);
+};
+
+/**
+  * The callback passed to verifyManifest and checkIntegrity
+  */
+[scriptable, uuid(e1912028-93e5-4378-aa3f-a58702937169)]
+interface nsIVerificationCallback : nsISupports
+{
+  /**
+   * @aForManifest
+   *   - true if it's called by verifyManifest
+   *   - false if it's called by checkIntegrity
+   * @aSuccess
+   *   - true if the verification succeeds, false otherwise
+   */
+  void fireVerifiedEvent(in boolean aForManifest,
+                         in boolean aSuccess);
+};
