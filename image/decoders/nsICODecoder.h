@@ -8,7 +8,6 @@
 #define mozilla_image_decoders_nsICODecoder_h
 
 #include "nsAutoPtr.h"
-#include "StreamingLexer.h"
 #include "Decoder.h"
 #include "imgFrame.h"
 #include "nsBMPDecoder.h"
@@ -20,57 +19,27 @@ namespace image {
 
 class RasterImage;
 
-enum class ICOState
-{
-  SUCCESS,
-  FAILURE,
-  HEADER,
-  DIR_ENTRY,
-  SKIP_TO_RESOURCE,
-  FOUND_RESOURCE,
-  SNIFF_RESOURCE,
-  READ_PNG,
-  READ_BIH,
-  READ_BMP,
-  PREPARE_FOR_MASK,
-  READ_MASK_ROW,
-  SKIP_MASK,
-  FINISHED_RESOURCE
-};
-
 class nsICODecoder : public Decoder
 {
 public:
-  virtual ~nsICODecoder() { }
+  virtual ~nsICODecoder();
 
-  nsresult SetTargetSize(const nsIntSize& aSize) override;
-
-  /// @return the width of the icon directory entry @aEntry.
-  static uint32_t GetRealWidth(const IconDirEntry& aEntry)
+  // Obtains the width of the icon directory entry
+  uint32_t GetRealWidth() const
   {
-    return aEntry.mWidth == 0 ? 256 : aEntry.mWidth;
+    return mDirEntry.mWidth == 0 ? 256 : mDirEntry.mWidth;
   }
 
-  /// @return the width of the selected directory entry (mDirEntry).
-  uint32_t GetRealWidth() const { return GetRealWidth(mDirEntry); }
-
-  /// @return the height of the icon directory entry @aEntry.
-  static uint32_t GetRealHeight(const IconDirEntry& aEntry)
+  // Obtains the height of the icon directory entry
+  uint32_t GetRealHeight() const
   {
-    return aEntry.mHeight == 0 ? 256 : aEntry.mHeight;
+    return mDirEntry.mHeight == 0 ? 256 : mDirEntry.mHeight;
   }
 
-  /// @return the height of the selected directory entry (mDirEntry).
-  uint32_t GetRealHeight() const { return GetRealHeight(mDirEntry); }
-
-  /// @return the size of the selected directory entry (mDirEntry).
-  gfx::IntSize GetRealSize() const
+  virtual void SetResolution(const gfx::IntSize& aResolution) override
   {
-    return gfx::IntSize(GetRealWidth(), GetRealHeight());
+    mResolution = aResolution;
   }
-
-  /// @return The offset from the beginning of the ICO to the first resource.
-  size_t FirstResourceOffset() const;
 
   virtual void WriteInternal(const char* aBuffer, uint32_t aCount) override;
   virtual void FinishInternal() override;
@@ -89,6 +58,10 @@ private:
   // Gets decoder state from the contained decoder so it's visible externally.
   void GetFinalStateFromContainedDecoder();
 
+  // Processes a single dir entry of the icon resource
+  void ProcessDirEntry(IconDirEntry& aTarget);
+  // Sets the hotspot property of if we have a cursor
+  void SetHotSpotIfCursor();
   // Creates a bitmap file header buffer, returns true if successful
   bool FillBitmapFileHeaderBuffer(int8_t* bfh);
   // Fixes the ICO height to match that of the BIH.
@@ -100,40 +73,36 @@ private:
   // Returns false if invalid information is contained within.
   bool FixBitmapWidth(int8_t* bih);
   // Extract bitmap info header size count from BMP information header
-  int32_t ReadBIHSize(const char* aBIH);
+  int32_t ExtractBIHSizeFromBitmap(int8_t* bih);
   // Extract bit count from BMP information header
-  int32_t ReadBPP(const char* aBIH);
+  int32_t ExtractBPPFromBitmap(int8_t* bih);
   // Calculates the row size in bytes for the AND mask table
   uint32_t CalcAlphaRowSize();
   // Obtains the number of colors from the BPP, mBPP must be filled in
   uint16_t GetNumColors();
 
-  LexerTransition<ICOState> ReadHeader(const char* aData);
-  LexerTransition<ICOState> ReadDirEntry(const char* aData);
-  LexerTransition<ICOState> SniffResource(const char* aData);
-  LexerTransition<ICOState> ReadPNG(const char* aData, uint32_t aLen);
-  LexerTransition<ICOState> ReadBIH(const char* aData);
-  LexerTransition<ICOState> ReadBMP(const char* aData, uint32_t aLen);
-  LexerTransition<ICOState> PrepareForMask();
-  LexerTransition<ICOState> ReadMaskRow(const char* aData);
-  LexerTransition<ICOState> FinishResource();
+  gfx::IntSize mResolution;  // The requested -moz-resolution for this icon.
+  uint16_t mBPP; // Stores the images BPP
+  uint32_t mPos; // Keeps track of the position we have decoded up until
+  uint16_t mNumIcons; // Stores the number of icons in the ICO file
+  uint16_t mCurrIcon; // Stores the current dir entry index we are processing
+  uint32_t mImageOffset; // Stores the offset of the image data we want
+  uint8_t* mRow;      // Holds one raw line of the image
+  int32_t mCurLine;   // Line index of the image that's currently being decoded
+  uint32_t mRowBytes; // How many bytes of the row were already received
+  int32_t mOldLine;   // Previous index of the line
+  nsRefPtr<Decoder> mContainedDecoder; // Contains either a BMP or PNG resource
 
-  StreamingLexer<ICOState, 32> mLexer; // The lexer.
-  Maybe<Downscaler> mDownscaler;       // Our downscaler, if we're downscaling.
-  nsRefPtr<Decoder> mContainedDecoder; // Either a BMP or PNG decoder.
-  char mBIHraw[40];                    // The bitmap information header.
-  IconDirEntry mDirEntry;              // The dir entry for the selected resource.
-  IntSize mBiggestResourceSize;        // Used to select the intrinsic size.
-  IntSize mBiggestResourceHotSpot;     // Used to select the intrinsic size.
-  uint16_t mBiggestResourceColorDepth; // Used to select the intrinsic size.
-  int32_t mBestResourceDelta;          // Used to select the best resource.
-  uint16_t mBestResourceColorDepth;    // Used to select the best resource.
-  uint16_t mNumIcons; // Stores the number of icons in the ICO file.
-  uint16_t mCurrIcon; // Stores the current dir entry index we are processing.
-  uint16_t mBPP;      // The BPP of the resource we're decoding.
-  uint32_t mMaskRowSize;  // The size in bytes of each row in the BMP alpha mask.
-  uint32_t mCurrMaskLine; // The line of the BMP alpha mask we're processing.
-  bool mIsCursor;         // Is this ICO a cursor?
+  char mDirEntryArray[ICODIRENTRYSIZE]; // Holds the current dir entry buffer
+  IconDirEntry mDirEntry; // Holds a decoded dir entry
+  // Holds the potential bytes that can be a PNG signature
+  char mSignature[PNGSIGNATURESIZE];
+  // Holds the potential bytes for a bitmap information header
+  char mBIHraw[40];
+  // Stores whether or not the icon file we are processing has type 1 (icon)
+  bool mIsCursor;
+  // Stores whether or not the contained resource is a PNG
+  bool mIsPNG;
 };
 
 } // namespace image
