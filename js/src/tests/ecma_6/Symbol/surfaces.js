@@ -8,7 +8,7 @@ assertEq(desc.configurable, true);
 assertEq(desc.enumerable, false);
 assertEq(desc.writable, true);
 assertEq(typeof Symbol, "function");
-assertEq(Symbol.length, 1);
+assertEq(Symbol.length, 0);
 
 desc = Object.getOwnPropertyDescriptor(Symbol, "prototype");
 assertEq(desc.configurable, false);
