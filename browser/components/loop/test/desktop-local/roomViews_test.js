@@ -14,7 +14,7 @@ describe("loop.roomViews", function () {
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
 
   var sandbox, dispatcher, roomStore, activeRoomStore, view;
-  var fakeWindow, fakeMozLoop, fakeContextURL;
+  var clock, fakeWindow, fakeMozLoop, fakeContextURL;
   var favicon = "data:image/x-icon;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
 
   beforeEach(function() {
@@ -47,6 +47,8 @@ describe("loop.roomViews", function () {
       telemetryAddValue: sinon.stub(),
       setLoopPref: sandbox.stub()
     };
+
+    clock = sandbox.useFakeTimers();
 
     fakeWindow = {
       close: sinon.stub(),
@@ -92,6 +94,7 @@ describe("loop.roomViews", function () {
 
   afterEach(function() {
     sandbox.restore();
+    clock.restore();
     loop.shared.mixins.setRootObject(window);
     view = null;
   });
@@ -250,82 +253,54 @@ describe("loop.roomViews", function () {
       });
 
       it("should dispatch a CopyRoomUrl action when the copy button is pressed", function() {
-          var copyBtn = view.getDOMNode().querySelector(".btn-copy");
-
-          React.addons.TestUtils.Simulate.click(copyBtn);
-
-          sinon.assert.calledOnce(dispatcher.dispatch);
-          sinon.assert.calledWith(dispatcher.dispatch, new sharedActions.CopyRoomUrl({
-            roomUrl: "http://invalid",
-            from: "conversation"
-          }));
-        });
-
-      it("should change the text when the url has been copied", function() {
-          var copyBtn = view.getDOMNode().querySelector(".btn-copy");
-
-          React.addons.TestUtils.Simulate.click(copyBtn);
-
-          // copied_url_button is the l10n string.
-          expect(copyBtn.textContent).eql("copied_url_button");
-      });
-    });
-
-    describe("Share button", function() {
-      it("should dispatch a AddSocialShareProvider action when the share button is clicked", function() {
-        view = mountTestComponent();
-
-        var shareBtn = view.getDOMNode().querySelector(".btn-share");
-
-        React.addons.TestUtils.Simulate.click(shareBtn);
+        var copyBtn = view.getDOMNode().querySelector(".btn-copy");
+        React.addons.TestUtils.Simulate.click(copyBtn);
 
         sinon.assert.calledOnce(dispatcher.dispatch);
-        sinon.assert.calledWith(dispatcher.dispatch,
-          new sharedActions.AddSocialShareProvider());
+        sinon.assert.calledWith(dispatcher.dispatch, new sharedActions.CopyRoomUrl({
+          roomUrl: "http://invalid",
+          from: "conversation"
+        }));
       });
 
-      it("should toggle the share dropdown when the share button is clicked", function() {
-        view = mountTestComponent({
-          socialShareProviders: [{
-            name: "foo",
-            origin: "https://foo",
-            iconURL: "http://example.com/foo.png"
-          }]
-        });
+      it("should change the text when the url has been copied", function() {
+        var copyBtn = view.getDOMNode().querySelector(".btn-copy");
+        React.addons.TestUtils.Simulate.click(copyBtn);
 
-        var shareBtn = view.getDOMNode().querySelector(".btn-share");
+        // invite_copy_triggered is the l10n string.
+        expect(copyBtn.textContent).eql("invite_copy_triggered");
+      });
 
-        React.addons.TestUtils.Simulate.click(shareBtn);
+      it("should keep the text for a while after the url has been copied", function() {
+        var copyBtn = view.getDOMNode().querySelector(".btn-copy");
+        React.addons.TestUtils.Simulate.click(copyBtn);
+        clock.tick(loop.roomViews.DesktopRoomInvitationView.TRIGGERED_RESET_DELAY / 2);
 
-        expect(view.state.showMenu).to.eql(true);
-        expect(view.refs.menu.props.show).to.eql(true);
+        // invite_copy_triggered is the l10n string.
+        expect(copyBtn.textContent).eql("invite_copy_triggered");
+      });
+
+      it("should reset the text a bit after the url has been copied", function() {
+        var copyBtn = view.getDOMNode().querySelector(".btn-copy");
+        React.addons.TestUtils.Simulate.click(copyBtn);
+        clock.tick(loop.roomViews.DesktopRoomInvitationView.TRIGGERED_RESET_DELAY);
+
+        // invite_copy_button is the l10n string.
+        expect(copyBtn.textContent).eql("invite_copy_button");
+      });
+
+      it("should reset the text after the url has been copied then mouse over another button", function() {
+        var copyBtn = view.getDOMNode().querySelector(".btn-copy");
+        React.addons.TestUtils.Simulate.click(copyBtn);
+        var emailBtn = view.getDOMNode().querySelector(".btn-email");
+        React.addons.TestUtils.Simulate.mouseOver(emailBtn);
+
+        // invite_copy_button is the l10n string.
+        expect(copyBtn.textContent).eql("invite_copy_button");
       });
     });
 
     describe("Edit Context", function() {
-      it("should show the 'Add some context' link", function() {
-        view = mountTestComponent();
-
-        expect(view.getDOMNode().querySelector(
-          ".room-invitation-addcontext")).to.not.eql(null);
-      });
-
-      it("should call a callback when the link is clicked", function() {
-        var onAddContextClick = sinon.stub();
-        view = mountTestComponent({
-          onAddContextClick: onAddContextClick
-        });
-
-        var node = view.getDOMNode();
-        expect(node.querySelector(".room-context")).to.eql(null);
-
-        var addLink = node.querySelector(".room-invitation-addcontext");
-
-        React.addons.TestUtils.Simulate.click(addLink);
-
-        sinon.assert.calledOnce(onAddContextClick);
-      });
-
       it("should show the edit context view", function() {
         view = mountTestComponent({
           showEditContext: true

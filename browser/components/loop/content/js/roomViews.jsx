@@ -191,6 +191,10 @@ loop.roomViews = (function(mozL10n) {
    * Desktop room invitation view (overlay).
    */
   var DesktopRoomInvitationView = React.createClass({
+    statics: {
+      TRIGGERED_RESET_DELAY: 2000
+    },
+
     mixins: [sharedMixins.DropdownMenuMixin(".room-invitation-overlay")],
 
     propTypes: {
@@ -236,6 +240,16 @@ loop.roomViews = (function(mozL10n) {
       }));
 
       this.setState({copiedUrl: true});
+      setTimeout(this.resetTriggeredButtons, this.constructor.TRIGGERED_RESET_DELAY);
+    },
+
+    /**
+     * Reset state of triggered buttons if necessary
+     */
+    resetTriggeredButtons: function() {
+      if (this.state.copiedUrl) {
+        this.setState({copiedUrl: false});
+      }
     },
 
     handleShareButtonClick: function(event) {
@@ -252,14 +266,6 @@ loop.roomViews = (function(mozL10n) {
       this.toggleDropdownMenu();
     },
 
-    handleAddContextClick: function(event) {
-      event.preventDefault();
-
-      if (this.props.onAddContextClick) {
-        this.props.onAddContextClick();
-      }
-    },
-
     handleEditContextClose: function() {
       if (this.props.onEditContextClose) {
         this.props.onEditContextClose();
@@ -271,43 +277,35 @@ loop.roomViews = (function(mozL10n) {
         return null;
       }
 
-      var canAddContext = this.props.mozLoop.getLoopPref("contextInConversations.enabled") &&
-        // Don't show the link when we're showing the edit form already:
-        !this.props.showEditContext &&
-        // Don't show the link when there's already context data available:
-        !(this.props.roomData.roomContextUrls || this.props.roomData.roomDescription);
-
       var cx = React.addons.classSet;
       return (
         <div className="room-invitation-overlay">
           <div className="room-invitation-content">
             <p className={cx({hide: this.props.showEditContext})}>
-              {mozL10n.get("invite_header_text")}
+              {mozL10n.get("invite_header_text2")}
             </p>
-            <a className={cx({hide: !canAddContext, "room-invitation-addcontext": true})}
-               onClick={this.handleAddContextClick}>
-              {mozL10n.get("context_add_some_label")}
-            </a>
           </div>
           <div className={cx({
             "btn-group": true,
             "call-action-group": true,
             hide: this.props.showEditContext
           })}>
-            <button className="btn btn-info btn-email"
-                    onClick={this.handleEmailButtonClick}>
-              {mozL10n.get("email_link_button")}
-            </button>
-            <button className="btn btn-info btn-copy"
-                    onClick={this.handleCopyButtonClick}>
-              {this.state.copiedUrl ? mozL10n.get("copied_url_button") :
-                                      mozL10n.get("copy_url_button2")}
-            </button>
-            <button className="btn btn-info btn-share"
-                    onClick={this.handleShareButtonClick}
-                    ref="anchor">
-              {mozL10n.get("share_button3")}
-            </button>
+            <div className={cx({
+                "btn-copy": true,
+                "invite-button": true,
+                "triggered": this.state.copiedUrl
+              })}
+              onClick={this.handleCopyButtonClick}>
+              <img src="loop/shared/img/svg/glyph-link-16x16.svg" />
+              <p>{mozL10n.get("invite_copy_" +
+                (this.state.copiedUrl ? "triggered" : "button"))}</p>
+            </div>
+            <div className="btn-email invite-button"
+              onClick={this.handleEmailButtonClick}
+              onMouseOver={this.resetTriggeredButtons}>
+              <img src="loop/shared/img/svg/glyph-email-16x16.svg" />
+              <p>{mozL10n.get("invite_email_button")}</p>
+            </div>
           </div>
           <SocialShareDropdown
             dispatcher={this.props.dispatcher}
