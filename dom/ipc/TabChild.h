@@ -480,6 +480,10 @@ public:
 
     virtual bool RecvThemeChanged(nsTArray<LookAndFeelInt>&& aLookAndFeelIntCache) override;
 
+    virtual bool RecvHandleAccessKey(nsTArray<uint32_t>&& aCharCodes,
+                                     const bool& aIsTrusted,
+                                     const int32_t& aModifierMask) override;
+
     /**
      * Native widget remoting protocol for use with windowed plugins with e10s.
      */

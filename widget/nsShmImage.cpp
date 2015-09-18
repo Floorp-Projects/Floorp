@@ -15,11 +15,11 @@
 #ifdef MOZ_WIDGET_GTK
 #include "gfxPlatformGtk.h"
 #endif
-#include "gfxImageSurface.h"
 
 #ifdef MOZ_HAVE_SHMIMAGE
 
 using namespace mozilla::ipc;
+using namespace mozilla::gfx;
 
 // If XShm isn't available to our client, we'll try XShm once, fail,
 // set this to false and then never try again.
@@ -33,14 +33,25 @@ bool nsShmImage::UseShm()
 #endif
 }
 
+#ifdef MOZ_WIDGET_GTK
+static int gShmError = 0;
+
+static int
+TrapShmError(Display* aDisplay, XErrorEvent* aEvent)
+{
+    // store the error code and ignore the error
+    gShmError = aEvent->error_code;
+    return 0;
+}
+#endif
+
 already_AddRefed<nsShmImage>
 nsShmImage::Create(const gfxIntSize& aSize,
-                   Visual* aVisual, unsigned int aDepth)
+                   Display* aDisplay, Visual* aVisual, unsigned int aDepth)
 {
-    Display* dpy = DISPLAY();
-
     nsRefPtr<nsShmImage> shm = new nsShmImage();
-    shm->mImage = XShmCreateImage(dpy, aVisual, aDepth,
+    shm->mDisplay = aDisplay;
+    shm->mImage = XShmCreateImage(aDisplay, aVisual, aDepth,
                                   ZPixmap, nullptr,
                                   &(shm->mInfo),
                                   aSize.width, aSize.height);
@@ -60,17 +71,20 @@ nsShmImage::Create(const gfxIntSize& aSize,
         shm->mImage->data = static_cast<char*>(shm->mSegment->memory());
     shm->mInfo.readOnly = False;
 
-    int xerror = 0;
 #if defined(MOZ_WIDGET_GTK)
-    gdk_error_trap_push();
-    Status attachOk = XShmAttach(dpy, &shm->mInfo);
-    XSync(dpy, False);
-    xerror = gdk_error_trap_pop();
+    gShmError = 0;
+    XErrorHandler previousHandler = XSetErrorHandler(TrapShmError);
+    Status attachOk = XShmAttach(aDisplay, &shm->mInfo);
+    XSync(aDisplay, False);
+    XSetErrorHandler(previousHandler);
+    if (gShmError) {
+      attachOk = 0;
+    }
 #elif defined(MOZ_WIDGET_QT)
-    Status attachOk = XShmAttach(dpy, &shm->mInfo);
+    Status attachOk = XShmAttach(aDisplay, &shm->mInfo);
 #endif
 
-    if (!attachOk || xerror) {
+    if (!attachOk) {
         // Assume XShm isn't available, and don't attempt to use it
         // again.
         gShmAvailable = false;
@@ -84,7 +98,7 @@ nsShmImage::Create(const gfxIntSize& aSize,
         if ((shm->mImage->red_mask == 0xff0000) &&
             (shm->mImage->green_mask == 0xff00) &&
             (shm->mImage->blue_mask == 0xff)) {
-            shm->mFormat = gfxImageFormat::ARGB32;
+            shm->mFormat = SurfaceFormat::B8G8R8A8;
             break;
         }
         goto unsupported;
@@ -93,12 +107,13 @@ nsShmImage::Create(const gfxIntSize& aSize,
         if ((shm->mImage->red_mask == 0xff0000) &&
             (shm->mImage->green_mask == 0xff00) &&
             (shm->mImage->blue_mask == 0xff)) {
-            shm->mFormat = gfxImageFormat::RGB24;
+            shm->mFormat = SurfaceFormat::B8G8R8X8;
             break;
         }
         goto unsupported;
     case 16:
-        shm->mFormat = gfxImageFormat::RGB16_565; break;
+        shm->mFormat = SurfaceFormat::R5G6B5;
+        break;
     unsupported:
     default:
         NS_WARNING("Unsupported XShm Image format!");
@@ -108,40 +123,33 @@ nsShmImage::Create(const gfxIntSize& aSize,
     return shm.forget();
 }
 
-already_AddRefed<gfxASurface>
-nsShmImage::AsSurface()
+already_AddRefed<DrawTarget>
+nsShmImage::CreateDrawTarget()
 {
-    return nsRefPtr<gfxASurface>(
-        new gfxImageSurface(static_cast<unsigned char*>(mSegment->memory()),
-                            mSize,
-                            mImage->bytes_per_line,
-                            mFormat)
-        ).forget();
+  return gfxPlatform::GetPlatform()->CreateDrawTargetForData(
+    static_cast<unsigned char*>(mSegment->memory()),
+    mSize,
+    mImage->bytes_per_line,
+    mFormat);
 }
 
-#if (MOZ_WIDGET_GTK == 2)
+#ifdef MOZ_WIDGET_GTK
 void
-nsShmImage::Put(GdkWindow* aWindow, const nsIntRegion& aRegion)
+nsShmImage::Put(Display* aDisplay, Drawable aWindow, const nsIntRegion& aRegion)
 {
-    GdkDrawable* gd;
-    gint dx, dy;
-    gdk_window_get_internal_paint_info(aWindow, &gd, &dx, &dy);
-
-    Display* dpy = gdk_x11_get_default_xdisplay();
-    Drawable d = GDK_DRAWABLE_XID(gd);
-
-    GC gc = XCreateGC(dpy, d, 0, nullptr);
+    GC gc = XCreateGC(aDisplay, aWindow, 0, nullptr);
     nsIntRegion bounded;
     bounded.And(aRegion, nsIntRect(0, 0, mImage->width, mImage->height));
     nsIntRegionRectIterator iter(bounded);
     for (const nsIntRect *r = iter.Next(); r; r = iter.Next()) {
-        XShmPutImage(dpy, d, gc, mImage,
+        XShmPutImage(aDisplay, aWindow, gc, mImage,
                      r->x, r->y,
-                     r->x - dx, r->y - dy,
+                     r->x, r->y,
                      r->width, r->height,
                      False);
     }
-    XFreeGC(dpy, gc);
+
+    XFreeGC(aDisplay, gc);
 
     // FIXME/bug 597336: we need to ensure that the shm image isn't
     // scribbled over before all its pending XShmPutImage()s complete.
@@ -149,38 +157,7 @@ nsShmImage::Put(GdkWindow* aWindow, const nsIntRegion& aRegion)
     // synchronization mechanism; other options are possible.  If this
     // XSync is shown to hurt responsiveness, we need to explore the
     // other options.
-    XSync(dpy, False);
-}
-
-#elif (MOZ_WIDGET_GTK == 3)
-void
-nsShmImage::Put(GdkWindow* aWindow, const nsIntRegion& aRegion)
-{
-    Display* dpy = gdk_x11_get_default_xdisplay();
-    Drawable d = GDK_WINDOW_XID(aWindow);
-    int dx = 0, dy = 0;
-
-    GC gc = XCreateGC(dpy, d, 0, nullptr);
-    nsIntRegion bounded;
-    bounded.And(aRegion, nsIntRect(0, 0, mImage->width, mImage->height));
-    nsIntRegionRectIterator iter(bounded);
-    for (const nsIntRect *r = iter.Next(); r; r = iter.Next()) {
-        XShmPutImage(dpy, d, gc, mImage,
-                     r->x, r->y,
-                     r->x - dx, r->y - dy,
-                     r->width, r->height,
-                     False);
-    }
-
-    XFreeGC(dpy, gc);
-
-    // FIXME/bug 597336: we need to ensure that the shm image isn't
-    // scribbled over before all its pending XShmPutImage()s complete.
-    // However, XSync() is an unnecessarily heavyweight
-    // synchronization mechanism; other options are possible.  If this
-    // XSync is shown to hurt responsiveness, we need to explore the
-    // other options.
-    XSync(dpy, False);
+    XSync(aDisplay, False);
 }
 
 #elif defined(MOZ_WIDGET_QT)
@@ -202,9 +179,10 @@ nsShmImage::Put(QWindow* aWindow, QRect& aRect)
 }
 #endif
 
-already_AddRefed<gfxASurface>
-nsShmImage::EnsureShmImage(const gfxIntSize& aSize, Visual* aVisual, unsigned int aDepth,
-               nsRefPtr<nsShmImage>& aImage)
+already_AddRefed<DrawTarget>
+nsShmImage::EnsureShmImage(const gfxIntSize& aSize,
+                           Display* aDisplay, Visual* aVisual, unsigned int aDepth,
+                           nsRefPtr<nsShmImage>& aImage)
 {
     if (!aImage || aImage->Size() != aSize) {
         // Because we XSync() after XShmAttach() to trap errors, we
@@ -212,9 +190,9 @@ nsShmImage::EnsureShmImage(const gfxIntSize& aSize, Visual* aVisual, unsigned in
         // into its address space, so it's OK to destroy the old image
         // here even if there are outstanding Puts.  The Detach is
         // ordered after the Puts.
-        aImage = nsShmImage::Create(aSize, aVisual, aDepth);
+        aImage = nsShmImage::Create(aSize, aDisplay, aVisual, aDepth);
     }
-    return !aImage ? nullptr : aImage->AsSurface();
+    return !aImage ? nullptr : aImage->CreateDrawTarget();
 }
 
 #endif  // defined(MOZ_X11) && defined(MOZ_HAVE_SHAREDMEMORYSYSV)

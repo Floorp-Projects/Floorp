@@ -178,27 +178,15 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
     rv = principal->GetCsp(getter_AddRefs(csp));
     NS_ENSURE_SUCCESS(rv, rv);
     if (csp) {
-        bool allowsInline = true;
-        bool reportViolations = false;
-        rv = csp->GetAllowsInlineScript(&reportViolations, &allowsInline);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        if (reportViolations) {
-            // gather information to log with violation report
-            nsCOMPtr<nsIURI> uri;
-            principal->GetURI(getter_AddRefs(uri));
-            nsAutoCString asciiSpec;
-            uri->GetAsciiSpec(asciiSpec);
-            csp->LogViolationDetails(nsIContentSecurityPolicy::VIOLATION_TYPE_INLINE_SCRIPT,
-                                     NS_ConvertUTF8toUTF16(asciiSpec),
-                                     NS_ConvertUTF8toUTF16(mURL),
-                                     0,
-                                     EmptyString(),
-                                     EmptyString());
-        }
+        bool allowsInlineScript = true;
+        rv = csp->GetAllowsInline(nsIContentPolicy::TYPE_SCRIPT,
+                                  EmptyString(), // aNonce
+                                  EmptyString(), // aContent
+                                  0,             // aLineNumber
+                                  &allowsInlineScript);
 
         //return early if inline scripts are not allowed
-        if (!allowsInline) {
+        if (!allowsInlineScript) {
           return NS_ERROR_DOM_RETVAL_UNDEFINED;
         }
     }

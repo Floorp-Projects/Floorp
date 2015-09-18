@@ -27,7 +27,7 @@ public:
   using nsGenericHTMLElement::Focus;
   virtual void Focus(ErrorResult& aError) override;
 
-  virtual void PerformAccesskey(bool aKeyCausesActivation,
+  virtual bool PerformAccesskey(bool aKeyCausesActivation,
                                 bool aIsTrustedEvent) override;
 
   // nsIContent

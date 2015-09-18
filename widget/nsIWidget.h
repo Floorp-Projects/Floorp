@@ -1228,6 +1228,9 @@ class nsIWidget : public nsISupports {
      * before each composition.
      */
     virtual already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawing() = 0;
+    virtual already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawingInRegion(nsIntRegion& aInvalidRegion) {
+      return StartRemoteDrawing();
+    }
 
     /**
      * Ensure that what was painted into the DrawTarget returned from

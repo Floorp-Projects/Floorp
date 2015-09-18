@@ -85,6 +85,8 @@ var UI = {
       projectNode.setAttribute("hidden", "true");
       let runtimeNode = document.querySelector("#runtime-panel-button");
       runtimeNode.setAttribute("hidden", "true");
+      let openAppNode = document.querySelector("#menuitem-show_projectPanel");
+      openAppNode.setAttribute("hidden", "true");
     }
     runtimeList = new RuntimeList(window, window);
     if (runtimeList.sidebarsEnabled) {

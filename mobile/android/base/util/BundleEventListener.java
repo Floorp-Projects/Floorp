@@ -5,8 +5,11 @@
 
 package org.mozilla.gecko.util;
 
+import org.mozilla.gecko.annotation.RobocopTarget;
+
 import android.os.Bundle;
 
+@RobocopTarget
 public interface BundleEventListener {
     /**
      * Handles a message sent from Gecko.

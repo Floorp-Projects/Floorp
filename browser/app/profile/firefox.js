@@ -1380,8 +1380,6 @@ pref("devtools.inspector.showUserAgentStyles", false);
 pref("devtools.inspector.showAllAnonymousContent", false);
 // Enable the MDN docs tooltip
 pref("devtools.inspector.mdnDocsTooltip.enabled", true);
-// Show the new animation inspector UI
-pref("devtools.inspector.animationInspectorV3", false);
 
 // DevTools default color unit
 pref("devtools.defaultColorUnit", "hex");
@@ -1836,6 +1834,10 @@ pref("ui.key.menuAccessKeyFocuses", true);
 // Encrypted media extensions.
 pref("media.eme.enabled", true);
 pref("media.eme.apiVisible", true);
+
+// Whether we should run a test-pattern through EME GMPs before assuming they'll
+// decode H.264.
+pref("media.gmp.trial-create.enabled", true);
 
 #ifdef MOZ_ADOBE_EME
 pref("browser.eme.ui.enabled", true);

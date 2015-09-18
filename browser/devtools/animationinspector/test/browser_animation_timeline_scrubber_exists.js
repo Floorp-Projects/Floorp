@@ -4,11 +4,11 @@
 
 "use strict";
 
-// Check that the timeline-based UI does have a scrubber element.
+// Check that the timeline does have a scrubber element.
 
 add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
-  let {panel} = yield openAnimationInspectorNewUI();
+  let {panel} = yield openAnimationInspector();
 
   let timeline = panel.animationsTimelineComponent;
   let scrubberEl = timeline.scrubberEl;
