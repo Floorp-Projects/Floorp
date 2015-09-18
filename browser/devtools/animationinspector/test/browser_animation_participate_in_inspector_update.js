@@ -13,9 +13,6 @@ add_task(function*() {
 
   let ui = yield openAnimationInspector();
   yield testEventsOrder(ui);
-
-  ui = yield closeAnimationInspectorAndRestartWithNewUI();
-  yield testEventsOrder(ui);
 });
 
 function* testEventsOrder({inspector, panel, controller}) {

@@ -11,7 +11,7 @@
 
 add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_negative_animation.html");
-  let {controller, panel} = yield openAnimationInspectorNewUI();
+  let {controller, panel} = yield openAnimationInspector();
 
   info("Wait until all animations have been added " +
        "(they're added with setTimeout)");
