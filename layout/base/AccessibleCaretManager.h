@@ -106,6 +106,9 @@ protected:
     Selection
   };
 
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const CaretMode& aCaretMode);
+
   enum class UpdateCaretsHint : uint8_t {
     // Update everything including appearance and position.
     Default,
@@ -115,6 +118,10 @@ protected:
     // appearance to Normal.
     RespectOldAppearance
   };
+
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const UpdateCaretsHint& aResult);
+
   // Update carets based on current selection status.
   void UpdateCarets(UpdateCaretsHint aHint = UpdateCaretsHint::Default);
 
@@ -216,6 +223,12 @@ protected:
 
   static const int32_t kAutoScrollTimerDelay = 30;
 };
+
+std::ostream& operator<<(std::ostream& aStream,
+                         const AccessibleCaretManager::CaretMode& aCaretMode);
+
+std::ostream& operator<<(std::ostream& aStream,
+                         const AccessibleCaretManager::UpdateCaretsHint& aResult);
 
 } // namespace mozilla
 

@@ -69,6 +69,9 @@ public:
     Right
   };
 
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const Appearance& aAppearance);
+
   Appearance GetAppearance() const
   {
     return mAppearance;
@@ -105,6 +108,10 @@ public:
     // Position is out of scroll port.
     Invisible
   };
+
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const PositionChangedResult& aResult);
+
   virtual PositionChangedResult SetPosition(nsIFrame* aFrame, int32_t aOffset);
 
   // Does two AccessibleCarets overlap?
@@ -212,6 +219,12 @@ protected:
   static float sBarWidth;
 
 }; // class AccessibleCaret
+
+std::ostream& operator<<(std::ostream& aStream,
+                         const AccessibleCaret::Appearance& aAppearance);
+
+std::ostream& operator<<(std::ostream& aStream,
+                         const AccessibleCaret::PositionChangedResult& aResult);
 
 } // namespace mozilla
 
