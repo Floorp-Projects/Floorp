@@ -1046,7 +1046,7 @@
                        class="search-panel-one-offs"/>
       <xul:vbox anonid="add-engines"/>
       <xul:button anonid="search-settings"
-                  oncommand="BrowserUITelemetry.countSearchSettingsEvent('searchbar');openPreferences('paneSearch')"
+                  oncommand="showSettings();"
                   class="search-setting-button search-panel-header"
                   label="&changeSearchSettings.button;"/>
     </content>
@@ -1089,6 +1089,16 @@
                   .setAttribute("value", headerText);
           document.getAnonymousElementByAttribute(this, "anonid", "searchbar-engine")
                   .engine = currentEngine;
+        ]]></body>
+      </method>
+
+      <method name="showSettings">
+        <body><![CDATA[
+          BrowserUITelemetry.countSearchSettingsEvent("searchbar");
+          openPreferences("paneSearch");
+          // If the preference tab was already selected, the panel doesn't
+          // close itself automatically.
+          BrowserSearch.searchBar._textbox.closePopup();
         ]]></body>
       </method>
     </implementation>

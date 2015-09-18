@@ -116,6 +116,8 @@ var gPrivacyPane = {
                      gPrivacyPane.showCookies);
     setEventListener("clearDataSettings", "command",
                      gPrivacyPane.showClearPrivateDataSettings);
+    setEventListener("changeBlockList", "command",
+                     gPrivacyPane.showBlockLists);
   },
 
   // HISTORY MODE
@@ -363,6 +365,21 @@ var gPrivacyPane = {
       mode.doCommand();
 
       this._shouldPromptForRestart = true;
+  },
+
+  /**
+   * Displays the available block lists for tracking protection.
+   */
+  showBlockLists: function ()
+  {
+    var bundlePreferences = document.getElementById("bundlePreferences");
+    let brandName = document.getElementById("bundleBrand")
+                            .getString("brandShortName");
+    var params = { brandShortName: brandName,
+                   windowTitle: bundlePreferences.getString("blockliststitle"),
+                   introText: bundlePreferences.getString("blockliststext") };
+    gSubDialog.open("chrome://browser/content/preferences/blocklists.xul",
+                    null, params);
   },
 
   // HISTORY

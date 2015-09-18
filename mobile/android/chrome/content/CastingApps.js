@@ -63,6 +63,8 @@ var CastingApps = {
   _castMenuId: -1,
   mirrorStartMenuId: -1,
   mirrorStopMenuId: -1,
+  _blocked: null,
+  _bound: null,
 
   init: function ca_init() {
     if (!this.isCastingEnabled()) {
@@ -96,6 +98,9 @@ var CastingApps = {
     BrowserApp.deck.addEventListener("pageshow", this, true);
     BrowserApp.deck.addEventListener("playing", this, true);
     BrowserApp.deck.addEventListener("ended", this, true);
+    BrowserApp.deck.addEventListener("MozAutoplayMediaBlocked", this, true);
+    // Note that the XBL binding is untrusted
+    BrowserApp.deck.addEventListener("MozNoControlsVideoBindingAttached", this, true, true);
   },
 
   _mirrorStarted: function(stopMirrorCallback) {
@@ -220,6 +225,28 @@ var CastingApps = {
         if (video instanceof HTMLVideoElement) {
           // If playing, send the <video>, but if ended we send nothing to shutdown the pageaction
           this._updatePageActionForVideo(aEvent.type === "playing" ? video : null);
+        }
+        break;
+      }
+      case "MozAutoplayMediaBlocked": {
+        if (this._bound && this._bound.has(aEvent.target)) {
+          aEvent.target.dispatchEvent(new CustomEvent("MozNoControlsBlockedVideo"));
+        } else {
+          if (!this._blocked) {
+            this._blocked = new WeakMap;
+          }
+          this._blocked.set(aEvent.target, true);
+        }
+        break;
+      }
+      case "MozNoControlsVideoBindingAttached": {
+        if (!this._bound) {
+          this._bound = new WeakMap;
+        }
+        this._bound.set(aEvent.target, true);
+        if (this._blocked && this._blocked.has(aEvent.target)) {
+          this._blocked.delete(aEvent.target);
+          aEvent.target.dispatchEvent(new CustomEvent("MozNoControlsBlockedVideo"));
         }
         break;
       }

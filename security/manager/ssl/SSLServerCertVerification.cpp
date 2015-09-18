@@ -1143,6 +1143,50 @@ GatherRootCATelemetry(const ScopedCERTCertList& certList)
                                rootCert);
 }
 
+// These time are appoximate, i.e., doesn't account for leap seconds, etc
+const uint64_t ONE_WEEK_IN_SECONDS = (7 * (24 * 60 *60));
+const uint64_t ONE_YEAR_IN_WEEKS   = 52;
+
+// Gathers telemetry on the certificate lifetimes we observe in the wild
+void
+GatherEndEntityTelemetry(const ScopedCERTCertList& certList)
+{
+  CERTCertListNode* endEntityNode = CERT_LIST_HEAD(certList);
+  PR_ASSERT(endEntityNode);
+  if (!endEntityNode) {
+    return;
+  }
+
+  CERTCertificate * endEntityCert = endEntityNode->cert;
+  PR_ASSERT(endEntityCert);
+  if (!endEntityCert) {
+    return;
+  }
+
+  PRTime notBefore;
+  PRTime notAfter;
+
+  if (CERT_GetCertTimes(endEntityCert, &notBefore, &notAfter) != SECSuccess) {
+    return;
+  }
+
+  PR_ASSERT(notAfter > notBefore);
+  if (notAfter <= notBefore) {
+    return;
+  }
+
+  uint64_t durationInWeeks = (notAfter - notBefore)
+    / PR_USEC_PER_SEC
+    / ONE_WEEK_IN_SECONDS;
+
+  if (durationInWeeks > (2 * ONE_YEAR_IN_WEEKS)) {
+    durationInWeeks = (2 * ONE_YEAR_IN_WEEKS) + 1;
+  }
+
+  Telemetry::Accumulate(Telemetry::SSL_OBSERVED_END_ENTITY_CERTIFICATE_LIFETIME,
+      durationInWeeks);
+}
+
 // There are various things that we want to measure about certificate
 // chains that we accept.  This is a single entry point for all of them.
 void
@@ -1151,6 +1195,7 @@ GatherSuccessfulValidationTelemetry(const ScopedCERTCertList& certList)
   GatherBaselineRequirementsTelemetry(certList);
   GatherEKUTelemetry(certList);
   GatherRootCATelemetry(certList);
+  GatherEndEntityTelemetry(certList);
 }
 
 SECStatus

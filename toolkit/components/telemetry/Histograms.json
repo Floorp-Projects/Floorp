@@ -1368,6 +1368,14 @@
     "n_values": 16,
     "description": "SSL Handshake Key Exchange Algorithm for resumed handshake (null=0, rsa=1, dh=2, fortezza=3, ecdh=4)"
   },
+  "SSL_OBSERVED_END_ENTITY_CERTIFICATE_LIFETIME": {
+    "expires_in_version": "55",
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "kind": "enumerated",
+    "n_values": 125,
+    "releaseChannelCollection": "opt-out",
+    "description": "The lifetime of accepted HTTPS server certificates, in weeks, up to 2 years. Bucket 105 is all end-entity HTTPS server certificates with a lifetime > 2 years."
+  },
   "WEBSOCKETS_HANDSHAKE_TYPE": {
     "expires_in_version": "never",
     "kind": "enumerated",

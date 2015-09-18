@@ -65,8 +65,8 @@ function checkClearColorInitialRed() {
 }
 
 function checkDrawColorGreen() {
-  info("Checking that drawColor() results in green frames.");
-  h.drawColor(c, h.green);
+  info("Checking that drawing green results in green video frames.");
+  var drawing = h.startDrawing(h.drawColor.bind(h, c, h.green));
   checkGLError('after DrawColor');
   return Promise.resolve()
     .then(() => h.waitForPixel(vauto, h.green, 0, "should become green automatically"))
@@ -74,49 +74,29 @@ function checkDrawColorGreen() {
     .then(() => h.waitForPixel(vmanual, h.red, 0, "should still be red"))
     .then(() => h.requestFrame(vmanual))
     .then(() => h.waitForPixel(vmanual, h.green, 0, "should become green after requstFrame()"))
+    .then(() => drawing.stop());
 }
 
 function checkClearColorRed() {
   info("Checking that clearing to red works.");
-  h.clearColor(c, h.red);
+  var drawing = h.startDrawing(h.clearColor.bind(h, c, h.red));
   return Promise.resolve()
     .then(() => h.waitForPixel(vauto, h.red, 0, "should become red automatically"))
     .then(() => h.waitForPixel(vrate, h.red, 0, "should become red automatically"))
     .then(() => h.waitForPixel(vmanual, h.green, 0, "should still be green"))
     .then(() => h.requestFrame(vmanual))
     .then(() => h.waitForPixel(vmanual, h.red, 0, "should become red after requestFrame()"))
+    .then(() => drawing.stop());
 }
 
 function checkRequestFrameOrderGuarantee() {
-  info("Checking that requestFrame() immediately before and after draw " +
-       "calls results in the expected frame seen in the stream.");
+  info("Checking that requestFrame() immediately after a draw " +
+       "call results in the expected frame seen in the stream.");
   return Promise.resolve()
     .then(() => h.waitForPixel(vmanual, h.red, 0, "should still be red"))
     .then(() => h.drawColor(c, h.green)) // 1. Draw canvas green
     .then(() => h.requestFrame(vmanual)) // 2. Immediately request a frame
-    .then(() => h.clearColor(c, h.red))  // 3. Immediately clear to red
     .then(() => h.waitForPixel(vmanual, h.green, 0, "should become green after call order test"))
-    .then(() => h.waitForPixelToTimeout(vmanual, h.red, 0, 500, "should not become red after call order test"));
-}
-
-function checkCapturingForbidden() {
-  info("Checking that capturing a WebGL context with " +
-       "`preservDrawingBuffer: false` is forbidden.");
-  var c2 = h.createAndAppendElement("canvas", "c2");
-  var gl2 = WebGLUtil.getWebGL("c2", false, { preserveDrawingBuffer: false });
-
-  var checkThrows = function(f, expected, fName) {
-    try {
-      f();
-      ok(false, fName + " should throw when not preserving drawing buffer");
-    } catch(e) {
-      is(e.name, expected, fName + " forbidden when not preserving drawing buffer");
-    }
-  };
-
-  checkThrows(() => c2.captureStream(), "NS_ERROR_FAILURE", "captureStream()");
-  checkThrows(() => c2.captureStream(0), "NS_ERROR_FAILURE", "captureStream(0)");
-  checkThrows(() => c2.captureStream(10), "NS_ERROR_FAILURE", "captureStream(10)");
 }
 
 function finish() {
@@ -132,7 +112,7 @@ function beginTest() {
   vmanual = h.createAndAppendElement('video', 'vmanual');
   vrate = h.createAndAppendElement('video', 'vrate');
 
-  gl = WebGLUtil.getWebGL('c', false, { preserveDrawingBuffer: true });
+  gl = WebGLUtil.getWebGL('c', false);
   if (!gl) {
     todo(false, 'WebGL is unavailable.');
     finish();
@@ -186,7 +166,6 @@ function beginTest() {
     .then(checkDrawColorGreen)
     .then(checkClearColorRed)
     .then(checkRequestFrameOrderGuarantee)
-    .then(checkCapturingForbidden)
     .then(finish);
 }
 

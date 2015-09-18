@@ -69,7 +69,7 @@ SymbolObject::initClass(JSContext* cx, HandleObject obj)
         return nullptr;
 
     RootedFunction ctor(cx, global->createConstructor(cx, construct,
-                                                      ClassName(JSProto_Symbol, cx), 1));
+                                                      ClassName(JSProto_Symbol, cx), 0));
     if (!ctor)
         return nullptr;
 

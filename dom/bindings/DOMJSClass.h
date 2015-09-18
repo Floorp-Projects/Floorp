@@ -231,9 +231,9 @@ struct DOMJSClass
   ParentGetter mGetParent;
   ProtoHandleGetter mGetProto;
 
-  // This stores the CC participant for the native, null if this class is for a
-  // worker or for a native inheriting from nsISupports (we can get the CC
-  // participant by QI'ing in that case).
+  // This stores the CC participant for the native, null if this class does not
+  // implement cycle collection or if it inherits from nsISupports (we can get
+  // the CC participant by QI'ing in that case).
   nsCycleCollectionParticipant* mParticipant;
 
   static const DOMJSClass* FromJSClass(const JSClass* base) {

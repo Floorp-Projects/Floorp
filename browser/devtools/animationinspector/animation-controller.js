@@ -23,7 +23,6 @@ loader.lazyRequireGetter(this, "AnimationsFront",
 
 const STRINGS_URI = "chrome://browser/locale/devtools/animationinspector.properties";
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
-const V3_UI_PREF = "devtools.inspector.animationInspectorV3";
 
 // Global toolbox/inspector, set when startup is called.
 var gToolbox, gInspector;
@@ -80,6 +79,8 @@ var getServerTraits = Task.async(function*(target) {
   let config = [
     { name: "hasToggleAll", actor: "animations",
       method: "toggleAll" },
+    { name: "hasToggleSeveral", actor: "animations",
+      method: "toggleSeveral" },
     { name: "hasSetCurrentTime", actor: "animationplayer",
       method: "setCurrentTime" },
     { name: "hasMutationEvents", actor: "animations",
@@ -97,9 +98,6 @@ var getServerTraits = Task.async(function*(target) {
     traits[name] = yield target.actorHasMethod(actor, method);
   }
 
-  // Special pref-based UI trait.
-  traits.isNewUI = Services.prefs.getBoolPref(V3_UI_PREF);
-
   return traits;
 });
 
@@ -110,9 +108,6 @@ var getServerTraits = Task.async(function*(target) {
  * no updates are done when the animationinspector sidebar panel is not visible.
  *
  * AnimationPlayerFronts are available in AnimationsController.animationPlayers.
- *
- * Note also that all AnimationPlayerFronts handled by the controller are set to
- * auto-refresh (except when the sidebar panel is not visible).
  *
  * Usage example:
  *
@@ -180,7 +175,7 @@ var AnimationsController = {
 
   startListeners: function() {
     // Re-create the list of players when a new node is selected, except if the
-    // sidebar isn't visible. And set the players to auto-refresh when needed.
+    // sidebar isn't visible.
     gInspector.selection.on("new-node-front", this.onNewNodeFront);
     gInspector.sidebar.on("select", this.onPanelVisibilityChange);
     gToolbox.on("select", this.onPanelVisibilityChange);
@@ -204,9 +199,6 @@ var AnimationsController = {
   onPanelVisibilityChange: Task.async(function*() {
     if (this.isPanelVisible()) {
       this.onNewNodeFront();
-      this.startAllAutoRefresh();
-    } else {
-      this.stopAllAutoRefresh();
     }
   }),
 
@@ -246,10 +238,31 @@ var AnimationsController = {
   },
 
   /**
+   * Similar to toggleAll except that it only plays/pauses the currently known
+   * animations (those listed in this.animationPlayers).
+   * @param {Boolean} shouldPause True if the animations should be paused, false
+   * if they should be played.
+   * @return {Promise} Resolves when the playState has been changed.
+   */
+  toggleCurrentAnimations: Task.async(function*(shouldPause) {
+    if (this.traits.hasToggleSeveral) {
+      yield this.animationsFront.toggleSeveral(this.animationPlayers,
+                                               shouldPause);
+    } else {
+      // Fall back to pausing/playing the players one by one, which is bound to
+      // introduce some de-synchronization.
+      for (let player of this.animationPlayers) {
+        if (shouldPause) {
+          yield player.pause();
+        } else {
+          yield player.play();
+        }
+      }
+    }
+  }),
+
+  /**
    * Set all known animations' currentTimes to the provided time.
-   * Note that depending on the server's capabilities, this might resolve in
-   * either one packet, or as many packets as there are animations. In the
-   * latter case, some time deltas might be introduced.
    * @param {Number} time.
    * @param {Boolean} shouldPause Should the animations be paused too.
    * @return {Promise} Resolves when the current time has been set.
@@ -259,6 +272,8 @@ var AnimationsController = {
       yield this.animationsFront.setCurrentTimes(this.animationPlayers, time,
                                                  shouldPause);
     } else {
+      // Fall back to pausing and setting the current time on each player, one
+      // by one, which is bound to introduce some de-synchronization.
       for (let animation of this.animationPlayers) {
         if (shouldPause) {
           yield animation.pause();
@@ -279,7 +294,6 @@ var AnimationsController = {
 
     this.animationPlayers = yield this.animationsFront
                                       .getAnimationPlayersForNode(nodeFront);
-    this.startAllAutoRefresh();
 
     // Start listening for animation mutations only after the first method call
     // otherwise events won't be sent.
@@ -295,15 +309,9 @@ var AnimationsController = {
     for (let {type, player} of changes) {
       if (type === "added") {
         this.animationPlayers.push(player);
-        if (!this.traits.isNewUI) {
-          player.startAutoRefresh();
-        }
       }
 
       if (type === "removed") {
-        if (!this.traits.isNewUI) {
-          player.stopAutoRefresh();
-        }
         yield player.release();
         let index = this.animationPlayers.indexOf(player);
         this.animationPlayers.splice(index, 1);
@@ -333,26 +341,6 @@ var AnimationsController = {
     return time;
   },
 
-  startAllAutoRefresh: function() {
-    if (this.traits.isNewUI) {
-      return;
-    }
-
-    for (let front of this.animationPlayers) {
-      front.startAutoRefresh();
-    }
-  },
-
-  stopAllAutoRefresh: function() {
-    if (this.traits.isNewUI) {
-      return;
-    }
-
-    for (let front of this.animationPlayers) {
-      front.stopAutoRefresh();
-    }
-  },
-
   destroyAnimationPlayers: Task.async(function*() {
     // Let the server know that we're not interested in receiving updates about
     // players for the current node. We're either being destroyed or a new node
@@ -360,7 +348,7 @@ var AnimationsController = {
     if (this.traits.hasMutationEvents) {
       yield this.animationsFront.stopAnimationPlayerUpdates();
     }
-    this.stopAllAutoRefresh();
+
     for (let front of this.animationPlayers) {
       yield front.release();
     }

@@ -32,6 +32,20 @@ CaptureStreamTestHelper.prototype = {
   elemWidth: 100,
   elemHeight: 100,
 
+  /*
+   * Perform the drawing operation on each animation frame until stop is called
+   * on the returned object.
+   */
+  startDrawing: function (f) {
+    var stop = false;
+    var draw = () => {
+      f();
+      if (!stop) { window.requestAnimationFrame(draw); }
+    };
+    draw();
+    return { stop: () => stop = true };
+  },
+
   /* Request a frame from the stream played by |video|. */
   requestFrame: function (video) {
     info("Requesting frame from " + video.id);
@@ -121,8 +135,8 @@ CaptureStreamTestHelper2D.prototype.clear = function(canvas) {
 CaptureStreamTestHelper2D.prototype.drawColor = function(canvas, color) {
   var ctx = canvas.getContext('2d');
   var rgba = color.data.slice(); // Copy to not overwrite the original array
-  info("Drawing color " + rgba.join(','));
   rgba[3] = rgba[3] / 255.0; // Convert opacity to double in range [0,1]
+  info("Drawing color " + rgba.join(','));
   ctx.fillStyle = "rgba(" + rgba.join(',') + ")";
 
   // Only fill top left corner to test that output is not flipped or rotated.

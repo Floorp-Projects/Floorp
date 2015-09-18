@@ -39,22 +39,32 @@ BasicContainerLayer::ComputeEffectiveTransforms(const Matrix4x4& aTransformToSur
   // containers.
   Matrix residual;
   Matrix4x4 idealTransform = GetLocalTransform() * aTransformToSurface;
-  idealTransform.ProjectTo2D();
+  if (!Extend3DContext() && !Is3DContextLeaf()) {
+    // For 3D transform leaked from extended parent layer.
+    idealTransform.ProjectTo2D();
+  }
 
   if (!idealTransform.CanDraw2D()) {
+    if (!Extend3DContext() ||
+        (!idealTransform.Is2D() && Creates3DContextWithExtendingChildren())) {
+      if (!Creates3DContextWithExtendingChildren()) {
+        idealTransform.ProjectTo2D();
+      }
+      mEffectiveTransform = idealTransform;
+      ComputeEffectiveTransformsForChildren(Matrix4x4());
+      ComputeEffectiveTransformForMaskLayers(Matrix4x4());
+      mUseIntermediateSurface = true;
+      return;
+    }
+
     mEffectiveTransform = idealTransform;
-    ComputeEffectiveTransformsForChildren(Matrix4x4());
-    ComputeEffectiveTransformForMaskLayers(Matrix4x4());
-    mUseIntermediateSurface = true;
+    ComputeEffectiveTransformsForChildren(idealTransform);
+    ComputeEffectiveTransformForMaskLayers(idealTransform);
+    mUseIntermediateSurface = false;
     return;
   }
 
-  mEffectiveTransform = SnapTransformTranslation(idealTransform, &residual);
-  // We always pass the ideal matrix down to our children, so there is no
-  // need to apply any compensation using the residual from SnapTransformTranslation.
-  ComputeEffectiveTransformsForChildren(idealTransform);
-
-  ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
+  // With 2D transform or extended 3D context.
 
   Layer* child = GetFirstChild();
   bool hasSingleBlendingChild = false;
@@ -74,6 +84,20 @@ BasicContainerLayer::ComputeEffectiveTransforms(const Matrix4x4& aTransformToSur
     GetForceIsolatedGroup() ||
     (GetMixBlendMode() != CompositionOp::OP_OVER && HasMultipleChildren()) ||
     (GetEffectiveOpacity() != 1.0 && (HasMultipleChildren() || hasSingleBlendingChild));
+
+  if (!Extend3DContext()) {
+    idealTransform.ProjectTo2D();
+  }
+  mEffectiveTransform =
+    !mUseIntermediateSurface ?
+    idealTransform : SnapTransformTranslation(idealTransform, &residual);
+  Matrix4x4 childTransformToSurface =
+    (!mUseIntermediateSurface ||
+     (mUseIntermediateSurface && !Extend3DContext() /* 2D */)) ?
+    idealTransform : Matrix4x4::From2D(residual);
+  ComputeEffectiveTransformsForChildren(childTransformToSurface);
+
+  ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
 }
 
 bool

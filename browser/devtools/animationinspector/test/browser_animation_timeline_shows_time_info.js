@@ -4,12 +4,12 @@
 
 "use strict";
 
-// Check that the timeline-based UI displays animations' duration, delay and
-// iteration counts in tooltips.
+// Check that the timeline displays animations' duration, delay and iteration
+// counts in tooltips.
 
 add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
-  let {panel} = yield openAnimationInspectorNewUI();
+  let {panel} = yield openAnimationInspector();
 
   info("Getting the animation element from the panel");
   let timelineEl = panel.animationsTimelineComponent.rootWrapperEl;

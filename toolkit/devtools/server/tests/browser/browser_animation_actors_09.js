@@ -14,7 +14,7 @@ const URL = MAIN_DOMAIN + "animation.html";
 
 add_task(function*() {
   info("Creating a test document with 2 iframes containing animated nodes");
-  let doc = yield addTab("data:text/html;charset=utf-8," +
+  yield addTab("data:text/html;charset=utf-8," +
                          "<iframe id='i1' src='" + URL + "'></iframe>" +
                          "<iframe id='i2' src='" + URL + "'></iframe>");
 
@@ -48,7 +48,8 @@ function* checkState(front, nodeFront, playState) {
   let [player] = yield front.getAnimationPlayersForNode(nodeFront);
   yield player.ready;
   let state = yield player.getCurrentState();
-  is(state.playState, playState, "The playState of the test node is " + playState);
+  is(state.playState, playState,
+     "The playState of the test node is " + playState);
 }
 
 function* getNodeInFrame(walker, frameSelector, nodeSelector) {

@@ -58,12 +58,6 @@ class nsCSPContext : public nsIContentSecurityPolicy
                                   uint32_t aLineNum);
 
   private:
-    NS_IMETHODIMP getAllowsInternal(nsContentPolicyType aContentType,
-                                    enum CSPKeyword aKeyword,
-                                    const nsAString& aNonceOrContent,
-                                    bool* outShouldReportViolations,
-                                    bool* outIsAllowed) const;
-
     bool permitsInternal(CSPDirective aDir,
                          nsIURI* aContentLocation,
                          nsIURI* aOriginalURI,
@@ -73,6 +67,14 @@ class nsCSPContext : public nsIContentSecurityPolicy
                          bool aSpecific,
                          bool aSendViolationReports,
                          bool aSendContentLocationInViolationReports);
+
+    // helper to report inline script/style violations
+    void reportInlineViolation(nsContentPolicyType aContentType,
+                               const nsAString& aNonce,
+                               const nsAString& aContent,
+                               const nsAString& aViolatedDirective,
+                               uint32_t aViolatedPolicyIndex,
+                               uint32_t aLineNumber);
 
     nsCOMPtr<nsIURI>                           mReferrer;
     uint64_t                                   mInnerWindowID; // used for web console logging

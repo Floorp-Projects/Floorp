@@ -18,17 +18,18 @@ runNetworkTest(() => {
   var vremote;
   var h = new CaptureStreamTestHelper2D();
   var canvas = document.createElement('canvas');
+  var stream;
   canvas.id = 'source_canvas';
   canvas.width = canvas.height = 10;
   document.getElementById('content').appendChild(canvas);
 
   test.setMediaConstraints([{video: true}], []);
   test.chain.replace("PC_LOCAL_GUM", [
-    function DRAW_LOCAL_GREEN(test) {
+    function DRAW_INITIAL_LOCAL_GREEN(test) {
       h.drawColor(canvas, h.green);
     },
     function PC_LOCAL_CANVAS_CAPTURESTREAM(test) {
-      var stream = canvas.captureStream(10);
+      stream = canvas.captureStream(0);
       test.pcLocal.attachMedia(stream, 'video', 'local');
     }
   ]);
@@ -41,6 +42,10 @@ runNetworkTest(() => {
       return h.waitForPixel(vremote, h.green, 128, "pcRemote's remote should become green");
     },
     function DRAW_LOCAL_RED() {
+      // After requesting a frame it will be captured at the time of next render.
+      // Next render will happen at next stable state, at the earliest,
+      // i.e., this order of `requestFrame(); draw();` should work.
+      stream.requestFrame();
       h.drawColor(canvas, h.red);
     },
     function WAIT_FOR_REMOTE_RED() {
