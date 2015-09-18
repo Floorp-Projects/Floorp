@@ -66,9 +66,8 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
                       ReturnStatus* rs, bool* bp) {
         return Answer::RecvHasOwn(ObjectId::deserialize(objId), id, rs, bp);
     }
-    bool RecvGet(const uint64_t& objId, const ObjectVariant& receiverVar,
-                   const JSIDVariant& id,
-                   ReturnStatus* rs, JSVariant* result) {
+    bool RecvGet(const uint64_t& objId, const JSVariant& receiverVar, const JSIDVariant& id,
+                 ReturnStatus* rs, JSVariant* result) {
         return Answer::RecvGet(ObjectId::deserialize(objId), receiverVar, id, rs, result);
     }
     bool RecvSet(const uint64_t& objId, const JSIDVariant& id, const JSVariant& value,
@@ -155,8 +154,7 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
                     ReturnStatus* rs, bool* bp) {
         return Base::SendHasOwn(objId.serialize(), id, rs, bp);
     }
-    bool SendGet(const ObjectId& objId, const ObjectVariant& receiverVar,
-                 const JSIDVariant& id,
+    bool SendGet(const ObjectId& objId, const JSVariant& receiverVar, const JSIDVariant& id,
                  ReturnStatus* rs, JSVariant* result) {
         return Base::SendGet(objId.serialize(), receiverVar, id, rs, result);
     }

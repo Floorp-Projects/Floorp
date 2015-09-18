@@ -271,7 +271,7 @@ OuterizeValue(JSContext* cx, HandleValue v)
 }
 
 bool
-Proxy::get(JSContext* cx, HandleObject proxy, HandleObject receiver_, HandleId id,
+Proxy::get(JSContext* cx, HandleObject proxy, HandleValue receiver_, HandleId id,
            MutableHandleValue vp)
 {
     JS_CHECK_RECURSION(cx, return false);
@@ -283,7 +283,7 @@ Proxy::get(JSContext* cx, HandleObject proxy, HandleObject receiver_, HandleId i
 
     // Outerize the receiver. Proxy handlers shouldn't have to know about
     // the Window/WindowProxy distinction.
-    RootedObject receiver(cx, GetOuterObject(cx, receiver_));
+    RootedValue receiver(cx, OuterizeValue(cx, receiver_));
 
     if (handler->hasPrototype()) {
         bool own;
@@ -303,7 +303,7 @@ Proxy::get(JSContext* cx, HandleObject proxy, HandleObject receiver_, HandleId i
 }
 
 bool
-Proxy::callProp(JSContext* cx, HandleObject proxy, HandleObject receiver, HandleId id,
+Proxy::callProp(JSContext* cx, HandleObject proxy, HandleValue receiver, HandleId id,
                 MutableHandleValue vp)
 {
     // The inline caches need an access point for JSOP_CALLPROP sites that accounts
@@ -594,7 +594,7 @@ js::proxy_HasProperty(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool
 }
 
 bool
-js::proxy_GetProperty(JSContext* cx, HandleObject obj, HandleObject receiver, HandleId id,
+js::proxy_GetProperty(JSContext* cx, HandleObject obj, HandleValue receiver, HandleId id,
                       MutableHandleValue vp)
 {
     return Proxy::get(cx, obj, receiver, id, vp);

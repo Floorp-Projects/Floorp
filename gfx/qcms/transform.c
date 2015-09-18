@@ -259,9 +259,9 @@ static struct matrix
 adaption_matrix(struct CIE_XYZ source_illumination, struct CIE_XYZ target_illumination)
 {
 	struct matrix lam_rigg = {{ // Bradford matrix
-	                         {  0.8951,  0.2664, -0.1614 },
-	                         { -0.7502,  1.7135,  0.0367 },
-	                         {  0.0389, -0.0685,  1.0296 }
+	                         {  0.8951f,  0.2664f, -0.1614f },
+	                         { -0.7502f,  1.7135f,  0.0367f },
+	                         {  0.0389f, -0.0685f,  1.0296f }
 	                         }};
 	return compute_chromatic_adaption(source_illumination, target_illumination, lam_rigg);
 }
@@ -1394,7 +1394,7 @@ qcms_transform* qcms_transform_create(
 	return transform;
 }
 
-#if defined(__GNUC__) && !defined(__x86_64__) && !defined(__amd64__)
+#if defined(__GNUC__) && defined(__i386__)
 /* we need this to avoid crashes when gcc assumes the stack is 128bit aligned */
 __attribute__((__force_align_arg_pointer__))
 #endif

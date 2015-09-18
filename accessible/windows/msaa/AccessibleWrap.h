@@ -159,6 +159,8 @@ public: // construction, destruction
   static int32_t GetChildIDFor(Accessible* aAccessible);
   static HWND GetHWNDFor(Accessible* aAccessible);
 
+  static void FireWinEvent(Accessible* aTarget, uint32_t aEventType);
+
   /**
    * System caret support: update the Windows caret position. 
    * The system caret works more universally than the MSAA caret

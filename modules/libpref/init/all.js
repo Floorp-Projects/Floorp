@@ -1965,7 +1965,7 @@ pref("security.mixed_content.block_active_content", false);
 pref("security.mixed_content.block_display_content", false);
 
 // Sub-resource integrity
-pref("security.sri.enable", false);
+pref("security.sri.enable", true);
 
 // Disable pinning checks by default.
 pref("security.cert_pinning.enforcement_level", 0);
@@ -2715,7 +2715,10 @@ pref("font.size.fixed.zh-TW", 16);
 
 // mathml.css sets font-size to "inherit" and font-family to "serif" so only
 // font.name.*.x-math and font.minimum-size.x-math are really relevant.
+pref("font.default.x-math", "serif");
 pref("font.minimum-size.x-math", 0);
+pref("font.size.variable.x-math", 16);
+pref("font.size.fixed.x-math", 13);
 
 /*
  * A value greater than zero enables font size inflation for
@@ -3165,11 +3168,11 @@ pref("intl.tsf.hack.easy_changjei.do_not_return_no_layout_error", true);
 // Whether use previous character rect for the result of
 // ITfContextView::GetTextExt() if the specified range is the first character
 // of selected clause of composition string.
-pref("intl.tsf.hack.google_ja_input.do_not_return_no_layout_error_at_first_char", true);
+pref("intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_first_char", true);
 // Whether use previous character rect for the result of
 // ITfContextView::GetTextExt() if the specified range is the caret of
 // composition string.
-pref("intl.tsf.hack.google_ja_input.do_not_return_no_layout_error_at_caret", true);
+pref("intl.tsf.hack.ms_japanese_ime.do_not_return_no_layout_error_at_caret", true);
 // Whether hack ITextStoreACP::QueryInsert() or not.  The method should return
 // new selection after specified length text is inserted at specified range.
 // However, Microsoft's some Chinese TIPs expect that the result is same as

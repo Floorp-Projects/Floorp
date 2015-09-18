@@ -17,9 +17,6 @@ SOURCES += [
     'transform_util.c',
 ]
 
-# XXX: We should fix these warnings.
-ALLOW_COMPILER_WARNINGS = True
-
 FINAL_LIBRARY = 'xul'
 
 if CONFIG['GNU_CC']:
