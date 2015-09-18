@@ -5314,12 +5314,6 @@
     "kind": "flag",
     "description": "Whether enablePrivilege has ever been called during the current session"
   },
-  "READ_SAVED_PING_SUCCESS": {
-    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Successfully reading a saved ping file"
-  },
   "TOUCH_ENABLED_DEVICE": {
     "expires_in_version": "never",
     "kind": "boolean",
