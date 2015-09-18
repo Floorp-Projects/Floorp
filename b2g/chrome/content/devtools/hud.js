@@ -781,8 +781,7 @@ var performanceEntriesWatcher = {
     let defaultValue = this._supported.join(',');
 
     SettingsListener.observe(setting, defaultValue, supported => {
-      let value = supported || defaultValue;
-      this._supported = value.split(',');
+      this._supported = supported.split(',');
     });
   },
 
