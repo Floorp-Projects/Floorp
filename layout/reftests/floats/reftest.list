@@ -92,6 +92,8 @@ fuzzy-if(OSX==1010,103,802) fuzzy-if(winWidget,116,700) HTTP(..) == orthogonal-f
 
 == logical-float-side-1.html logical-float-side-1-ref.html
 == logical-float-side-2.html logical-float-side-2-ref.html
+== logical-float-side-3.html logical-float-side-3-ref.html
+== logical-float-side-4.html logical-float-side-4-ref.html
 
 == float-in-rtl-slr-1a.html float-in-rtl-slr-1-ref.html
 == float-in-rtl-slr-1b.html float-in-rtl-slr-1-ref.html
