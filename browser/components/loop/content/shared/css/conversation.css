@@ -1386,7 +1386,6 @@ html[dir="rtl"] .room-context-btn-close {
 
   .media-wrapper > .focus-stream > .local {
     position: absolute;
-    display:fixed;
     right: 0;
     left: auto;
     /* 30% is the height of the text chat. As we have a margin,
