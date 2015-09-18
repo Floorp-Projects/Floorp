@@ -101,21 +101,14 @@ function run_test() {
   // test that inline script violations cause a report.
   makeTest(0, {"blocked-uri": "self"}, false,
       function(csp) {
-        let inlineOK = true, oReportViolation = {'value': false};
-        inlineOK = csp.getAllowsInlineScript(oReportViolation);
+        let inlineOK = true;
+        inlineOK = csp.getAllowsInline(Ci.nsIContentPolicy.TYPE_SCRIPT,
+                                       "", // aNonce
+                                       "", // aContent
+                                       0); // aLineNumber
 
         // this is not a report only policy, so it better block inline scripts
         do_check_false(inlineOK);
-        // ... and cause reports to go out
-        do_check_true(oReportViolation.value);
-
-        if (oReportViolation.value) {
-          // force the logging, since the getter doesn't.
-          csp.logViolationDetails(Ci.nsIContentSecurityPolicy.VIOLATION_TYPE_INLINE_SCRIPT,
-                                  selfuri.asciiSpec,
-                                  "script sample",
-                                  0);
-        }
       });
 
   // test that eval violations cause a report.
@@ -149,22 +142,14 @@ function run_test() {
   // test that inline script violations cause a report in report-only policy
   makeTest(3, {"blocked-uri": "self"}, true,
       function(csp) {
-        let inlineOK = true, oReportViolation = {'value': false};
-        inlineOK = csp.getAllowsInlineScript(oReportViolation);
+        let inlineOK = true;
+        inlineOK = csp.getAllowsInline(Ci.nsIContentPolicy.TYPE_SCRIPT,
+                                       "", // aNonce
+                                       "", // aContent
+                                       0); // aLineNumber
 
         // this is a report only policy, so it better allow inline scripts
         do_check_true(inlineOK);
-
-        // ... and cause reports to go out
-        do_check_true(oReportViolation.value);
-
-        if (oReportViolation.value) {
-          // force the logging, since the getter doesn't.
-          csp.logViolationDetails(Ci.nsIContentSecurityPolicy.VIOLATION_TYPE_INLINE_SCRIPT,
-                                  selfuri.asciiSpec,
-                                  "script sample",
-                                  3);
-        }
       });
 
   // test that eval violations cause a report in report-only policy
