@@ -149,7 +149,6 @@ public:
       } else {
         if (mLeftOverData != INT_MIN) {
           mLeftOverData = INT_MIN;
-          aStream->CheckForInactive();
           mHRTFPanner->reset();
 
           nsRefPtr<PlayingRefChangeHandler> refchanged =
@@ -157,7 +156,7 @@ public:
           aStream->Graph()->
             DispatchToMainThreadAfterStreamStateUpdate(refchanged.forget());
         }
-        aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
+        *aOutput = aInput;
         return;
       }
     } else if (mPanningModelFunction == &PannerNodeEngine::HRTFPanningFunction) {
@@ -171,11 +170,6 @@ public:
     }
 
     (this->*mPanningModelFunction)(aInput, aOutput);
-  }
-
-  virtual bool IsActive() const override
-  {
-    return mLeftOverData != INT_MIN;
   }
 
   void ComputeAzimuthAndElevation(float& aAzimuth, float& aElevation);

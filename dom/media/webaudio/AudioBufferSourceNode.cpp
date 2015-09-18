@@ -111,11 +111,7 @@ public:
   virtual void SetInt32Parameter(uint32_t aIndex, int32_t aParam) override
   {
     switch (aIndex) {
-    case AudioBufferSourceNode::SAMPLE_RATE:
-      MOZ_ASSERT(aParam > 0);
-      mBufferSampleRate = aParam;
-      mSource->SetActive();
-      break;
+    case AudioBufferSourceNode::SAMPLE_RATE: mBufferSampleRate = aParam; break;
     case AudioBufferSourceNode::BUFFERSTART:
       MOZ_ASSERT(aParam >= 0);
       if (mBufferPosition == 0) {
@@ -470,21 +466,12 @@ public:
       return;
     }
 
-    StreamTime streamPosition = aStream->GetCurrentPosition();
-    // We've finished if we've gone past mStop, or if we're past mDuration when
-    // looping is disabled.
-    if (streamPosition >= mStop ||
-        (!mLoop && mBufferPosition >= mBufferEnd && !mRemainingResamplerTail)) {
-      *aFinished = true;
-      aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
-      return;
-    }
-
     uint32_t channels = mBuffer ? mBuffer->GetChannels() : 0;
 
     UpdateSampleRateIfNeeded(channels);
 
     uint32_t written = 0;
+    StreamTime streamPosition = aStream->GetCurrentPosition();
     while (written < WEBAUDIO_BLOCK_SIZE) {
       if (mStop != STREAM_TIME_MAX &&
           streamPosition >= mStop) {
@@ -512,12 +499,13 @@ public:
         }
       }
     }
-  }
 
-  virtual bool IsActive() const override
-  {
-    // Whether buffer has been set and start() has been called.
-    return mBufferSampleRate != 0;
+    // We've finished if we've gone past mStop, or if we're past mDuration when
+    // looping is disabled.
+    if (streamPosition >= mStop ||
+        (!mLoop && mBufferPosition >= mBufferEnd && !mRemainingResamplerTail)) {
+      *aFinished = true;
+    }
   }
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
