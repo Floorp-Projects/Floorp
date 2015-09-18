@@ -2365,8 +2365,8 @@ MediaInputPort::Disconnect()
     return;
 
   mSource->RemoveConsumer(this);
-  mDest->RemoveInput(this);
   mSource = nullptr;
+  mDest->RemoveInput(this);
   mDest = nullptr;
 
   GraphImpl()->SetStreamOrderDirty();
