@@ -949,10 +949,26 @@ GetSources(MediaEngine *engine, dom::MediaSourceEnum aSrcType,
   }
 }
 
+template<class DeviceType>
+static bool
+AreUnfitSettings(const MediaTrackConstraints &aConstraints,
+                 nsTArray<nsRefPtr<DeviceType>>& aSources)
+{
+  nsTArray<const MediaTrackConstraintSet*> aggregateConstraints;
+  aggregateConstraints.AppendElement(&aConstraints);
+
+  for (auto& source : aSources) {
+    if (source->GetBestFitnessDistance(aggregateConstraints) != UINT32_MAX) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // Apply constrains to a supplied list of sources (removes items from the list)
 
 template<class DeviceType>
-static void
+static const char*
 SelectSettings(const MediaTrackConstraints &aConstraints,
                nsTArray<nsRefPtr<DeviceType>>& aSources)
 {
@@ -963,6 +979,7 @@ SelectSettings(const MediaTrackConstraints &aConstraints,
   // Stack constraintSets that pass, starting with the required one, because the
   // whole stack must be re-satisfied each time a capability-set is ruled out
   // (this avoids storing state or pushing algorithm into the lower-level code).
+  nsTArray<nsRefPtr<DeviceType>> unsatisfactory;
   nsTArray<const MediaTrackConstraintSet*> aggregateConstraints;
   aggregateConstraints.AppendElement(&c);
 
@@ -971,6 +988,7 @@ SelectSettings(const MediaTrackConstraints &aConstraints,
   for (uint32_t i = 0; i < aSources.Length();) {
     uint32_t distance = aSources[i]->GetBestFitnessDistance(aggregateConstraints);
     if (distance == UINT32_MAX) {
+      unsatisfactory.AppendElement(aSources[i]);
       aSources.RemoveElementAt(i);
     } else {
       ordered.insert(std::pair<uint32_t, nsRefPtr<DeviceType>>(distance,
@@ -978,6 +996,49 @@ SelectSettings(const MediaTrackConstraints &aConstraints,
       ++i;
     }
   }
+  if (!aSources.Length()) {
+    // None selected. The spec says to report a constraint that satisfies NONE
+    // of the sources. Unfortunately, this is a bit laborious to find out, and
+    // requires updating as new constraints are added!
+
+    if (c.mDeviceId.IsConstrainDOMStringParameters()) {
+      MediaTrackConstraints fresh;
+      fresh.mDeviceId = c.mDeviceId;
+      if (AreUnfitSettings(fresh, unsatisfactory)) {
+        return "deviceId";
+      }
+    }
+    if (c.mWidth.IsConstrainLongRange()) {
+      MediaTrackConstraints fresh;
+      fresh.mWidth = c.mWidth;
+      if (AreUnfitSettings(fresh, unsatisfactory)) {
+        return "width";
+      }
+    }
+    if (c.mHeight.IsConstrainLongRange()) {
+      MediaTrackConstraints fresh;
+      fresh.mHeight = c.mHeight;
+      if (AreUnfitSettings(fresh, unsatisfactory)) {
+        return "height";
+      }
+    }
+    if (c.mFrameRate.IsConstrainDoubleRange()) {
+      MediaTrackConstraints fresh;
+      fresh.mFrameRate = c.mFrameRate;
+      if (AreUnfitSettings(fresh, unsatisfactory)) {
+        return "frameRate";
+      }
+    }
+    if (c.mFacingMode.IsConstrainDOMStringParameters()) {
+      MediaTrackConstraints fresh;
+      fresh.mFacingMode = c.mFacingMode;
+      if (AreUnfitSettings(fresh, unsatisfactory)) {
+        return "facingMode";
+      }
+    }
+    return "";
+  }
+
   // Order devices by shortest distance
   for (auto& ordinal : ordered) {
     aSources.RemoveElement(ordinal.second);
@@ -1006,9 +1067,10 @@ SelectSettings(const MediaTrackConstraints &aConstraints,
       }
     }
   }
+  return nullptr;
 }
 
-static bool
+static const char*
 SelectSettings(MediaStreamConstraints &aConstraints,
                nsTArray<nsRefPtr<MediaDevice>>& aSources)
 {
@@ -1016,7 +1078,6 @@ SelectSettings(MediaStreamConstraints &aConstraints,
   // a candidate set is overconstrained (zero members), we must split up the
   // list into videos and audios, and put it back together again at the end.
 
-  bool overconstrained = false;
   nsTArray<nsRefPtr<VideoDevice>> videos;
   nsTArray<nsRefPtr<AudioDevice>> audios;
 
@@ -1032,25 +1093,21 @@ SelectSettings(MediaStreamConstraints &aConstraints,
   aSources.Clear();
   MOZ_ASSERT(!aSources.Length());
 
+  const char* badConstraint = nullptr;
+
   if (IsOn(aConstraints.mVideo)) {
-    SelectSettings(GetInvariant(aConstraints.mVideo), videos);
-    if (!videos.Length()) {
-      overconstrained = true;
-    }
+    badConstraint = SelectSettings(GetInvariant(aConstraints.mVideo), videos);
     for (auto& video : videos) {
       aSources.AppendElement(video);
     }
   }
-  if (IsOn(aConstraints.mAudio)) {
-    SelectSettings(GetInvariant(aConstraints.mAudio), audios);
-    if (!audios.Length()) {
-      overconstrained = true;
-    }
+  if (audios.Length() && IsOn(aConstraints.mAudio)) {
+    badConstraint = SelectSettings(GetInvariant(aConstraints.mAudio), audios);
     for (auto& audio : audios) {
       aSources.AppendElement(audio);
     }
   }
-  return !overconstrained;
+  return badConstraint;
 }
 
 /**
@@ -1697,7 +1754,7 @@ MediaManager::GetUserMedia(nsPIDOMWindow* aWindow,
     auto& vc = c.mVideo.GetAsMediaTrackConstraints();
     videoType = StringToEnum(dom::MediaSourceEnumValues::strings,
                              vc.mMediaSource,
-                             videoType);
+                             dom::MediaSourceEnum::Other);
     switch (videoType) {
       case dom::MediaSourceEnum::Camera:
         break;
@@ -1740,7 +1797,10 @@ MediaManager::GetUserMedia(nsPIDOMWindow* aWindow,
       case dom::MediaSourceEnum::Other:
       default: {
         nsRefPtr<MediaStreamError> error =
-            new MediaStreamError(aWindow, NS_LITERAL_STRING("NotFoundError"));
+            new MediaStreamError(aWindow,
+                                 NS_LITERAL_STRING("OverconstrainedError"),
+                                 NS_LITERAL_STRING(""),
+                                 NS_LITERAL_STRING("mediaSource"));
         onFailure->OnError(error);
         return NS_OK;
       }
@@ -1785,7 +1845,7 @@ MediaManager::GetUserMedia(nsPIDOMWindow* aWindow,
     auto& ac = c.mAudio.GetAsMediaTrackConstraints();
     audioType = StringToEnum(dom::MediaSourceEnumValues::strings,
                              ac.mMediaSource,
-                             audioType);
+                             dom::MediaSourceEnum::Other);
     // Work around WebIDL default since spec uses same dictionary w/audio & video.
     if (audioType == dom::MediaSourceEnum::Camera) {
       audioType = dom::MediaSourceEnum::Microphone;
@@ -1812,7 +1872,10 @@ MediaManager::GetUserMedia(nsPIDOMWindow* aWindow,
       case dom::MediaSourceEnum::Other:
       default: {
         nsRefPtr<MediaStreamError> error =
-            new MediaStreamError(aWindow, NS_LITERAL_STRING("NotFoundError"));
+            new MediaStreamError(aWindow,
+                                 NS_LITERAL_STRING("OverconstrainedError"),
+                                 NS_LITERAL_STRING(""),
+                                 NS_LITERAL_STRING("mediaSource"));
         onFailure->OnError(error);
         return NS_OK;
       }
@@ -1905,8 +1968,19 @@ MediaManager::GetUserMedia(nsPIDOMWindow* aWindow,
     }
 
     // Apply any constraints. This modifies the list.
-
-    if (!SelectSettings(c, *devices)) {
+    const char* badConstraint = SelectSettings(c, *devices);
+    if (badConstraint) {
+      nsString constraint;
+      constraint.AssignASCII(badConstraint);
+      nsRefPtr<MediaStreamError> error =
+          new MediaStreamError(window,
+                               NS_LITERAL_STRING("OverconstrainedError"),
+                               NS_LITERAL_STRING(""),
+                               constraint);
+      onFailure->OnError(error);
+      return;
+    }
+    if (!devices->Length()) {
       nsRefPtr<MediaStreamError> error =
           new MediaStreamError(window, NS_LITERAL_STRING("NotFoundError"));
       onFailure->OnError(error);
