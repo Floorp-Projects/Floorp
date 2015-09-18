@@ -115,7 +115,10 @@ protected:
     // appearance to Normal.
     RespectOldAppearance
   };
+  // Update carets based on current selection status.
   void UpdateCarets(UpdateCaretsHint aHint = UpdateCaretsHint::Default);
+
+  // Force hiding all carets regardless of the current selection status.
   void HideCarets();
 
   void UpdateCaretsForCursorMode(UpdateCaretsHint aHint);
@@ -182,8 +185,12 @@ protected:
   // The caret being pressed or dragged.
   AccessibleCaret* mActiveCaret = nullptr;
 
+  // The timer for hiding the caret in cursor mode after timeout behind the
+  // preference "layout.accessiblecaret.timeout_ms".
   nsCOMPtr<nsITimer> mCaretTimeoutTimer;
-  CaretMode mCaretMode = CaretMode::None;
+
+  // The caret mode since last update carets.
+  CaretMode mLastUpdateCaretMode = CaretMode::None;
 
   static const int32_t kAutoScrollTimerDelay = 30;
 };
