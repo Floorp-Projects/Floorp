@@ -218,18 +218,20 @@ HTMLLabelElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
   return NS_OK;
 }
 
-void
+bool
 HTMLLabelElement::PerformAccesskey(bool aKeyCausesActivation,
                                    bool aIsTrustedEvent)
 {
   if (!aKeyCausesActivation) {
     nsRefPtr<Element> element = GetLabeledElement();
-    if (element)
-      element->PerformAccesskey(aKeyCausesActivation, aIsTrustedEvent);
+    if (element) {
+      return element->PerformAccesskey(aKeyCausesActivation, aIsTrustedEvent);
+    }
   } else {
     nsPresContext *presContext = GetPresContext(eForUncomposedDoc);
-    if (!presContext)
-      return;
+    if (!presContext) {
+      return false;
+    }
 
     // Click on it if the users prefs indicate to do so.
     WidgetMouseEvent event(aIsTrustedEvent, eMouseClick,
@@ -242,6 +244,8 @@ HTMLLabelElement::PerformAccesskey(bool aKeyCausesActivation,
     EventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext,
                               &event);
   }
+
+  return aKeyCausesActivation;
 }
 
 nsGenericHTMLElement*

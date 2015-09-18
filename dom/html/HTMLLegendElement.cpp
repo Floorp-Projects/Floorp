@@ -128,13 +128,14 @@ HTMLLegendElement::Focus(ErrorResult& aError)
                          getter_AddRefs(result));
 }
 
-void
+bool
 HTMLLegendElement::PerformAccesskey(bool aKeyCausesActivation,
                                     bool aIsTrustedEvent)
 {
   // just use the same behaviour as the focus method
   ErrorResult rv;
   Focus(rv);
+  return NS_SUCCEEDED(rv.StealNSResult());
 }
 
 already_AddRefed<HTMLFormElement>

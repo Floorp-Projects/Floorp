@@ -399,7 +399,7 @@ public:
     }
 #endif
 
-    virtual void PerformAccesskey(bool aKeyCausesActivation,
+    virtual bool PerformAccesskey(bool aKeyCausesActivation,
                                   bool aIsTrustedEvent) override;
     nsresult ClickWithInputSource(uint16_t aInputSource);
 
