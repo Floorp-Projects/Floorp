@@ -57,6 +57,8 @@ public:
                                 nsIPrincipal* aPrincipal,
                                 nsTArray<DataStoreSetting>* aValue);
 
+  void HomeScreenPrefChanged();
+
 private:
   DataStoreService();
   ~DataStoreService();
@@ -96,6 +98,9 @@ private:
   already_AddRefed<RetrieveRevisionsCounter> GetCounter(uint32_t aId) const;
 
   void RemoveCounter(uint32_t aId);
+
+  void DeleteDataStoresIfNotAllowed(const nsAString& aManifestURL);
+  void AddDataStoresIfAllowed(const nsAString& aManifestURL);
 
   nsClassHashtable<nsStringHashKey, HashApp> mStores;
   nsClassHashtable<nsStringHashKey, HashApp> mAccessStores;
