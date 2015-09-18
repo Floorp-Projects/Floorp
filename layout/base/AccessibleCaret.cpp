@@ -32,23 +32,34 @@ float AccessibleCaret::sHeight = 0.0f;
 float AccessibleCaret::sMarginLeft = 0.0f;
 float AccessibleCaret::sBarWidth = 0.0f;
 
+#define AC_PROCESS_ENUM_TO_STREAM(e) case(e): aStream << #e; break;
 std::ostream&
 operator<<(std::ostream& aStream, const AccessibleCaret::Appearance& aAppearance)
 {
   using Appearance = AccessibleCaret::Appearance;
-
-#define AC_PROCESS_APPEARANCE_TO_STREAM(e) case(e): aStream << #e; break;
   switch (aAppearance) {
-    AC_PROCESS_APPEARANCE_TO_STREAM(Appearance::None);
-    AC_PROCESS_APPEARANCE_TO_STREAM(Appearance::Normal);
-    AC_PROCESS_APPEARANCE_TO_STREAM(Appearance::NormalNotShown);
-    AC_PROCESS_APPEARANCE_TO_STREAM(Appearance::Left);
-    AC_PROCESS_APPEARANCE_TO_STREAM(Appearance::Right);
+    AC_PROCESS_ENUM_TO_STREAM(Appearance::None);
+    AC_PROCESS_ENUM_TO_STREAM(Appearance::Normal);
+    AC_PROCESS_ENUM_TO_STREAM(Appearance::NormalNotShown);
+    AC_PROCESS_ENUM_TO_STREAM(Appearance::Left);
+    AC_PROCESS_ENUM_TO_STREAM(Appearance::Right);
   }
-#undef AC_PROCESS_APPEARANCE_TO_STREAM
-
   return aStream;
 }
+
+std::ostream&
+operator<<(std::ostream& aStream,
+           const AccessibleCaret::PositionChangedResult& aResult)
+{
+  using PositionChangedResult = AccessibleCaret::PositionChangedResult;
+  switch (aResult) {
+    AC_PROCESS_ENUM_TO_STREAM(PositionChangedResult::NotChanged);
+    AC_PROCESS_ENUM_TO_STREAM(PositionChangedResult::Changed);
+    AC_PROCESS_ENUM_TO_STREAM(PositionChangedResult::Invisible);
+  }
+  return aStream;
+}
+#undef AC_PROCESS_ENUM_TO_STREAM
 
 // -----------------------------------------------------------------------------
 // Implementation of AccessibleCaret methods
