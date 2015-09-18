@@ -507,6 +507,30 @@ SheetLoadData::ScheduleLoadEventIfNeeded(nsresult aStatus)
   }
 }
 
+/*********************
+ * Style sheet reuse *
+ *********************/
+
+bool
+LoaderReusableStyleSheets::FindReusableStyleSheet(nsIURI* aURL,
+                                                  nsRefPtr<CSSStyleSheet>& aResult)
+{
+  MOZ_ASSERT(aURL);
+  for (size_t i = mReusableSheets.Length(); i > 0; --i) {
+    size_t index = i - 1;
+    bool sameURI;
+    MOZ_ASSERT(mReusableSheets[index]->GetOriginalURI());
+    nsresult rv = aURL->Equals(mReusableSheets[index]->GetOriginalURI(),
+                               &sameURI);
+    if (!NS_FAILED(rv) && sameURI) {
+      aResult = mReusableSheets[index];
+      mReusableSheets.RemoveElementAt(index);
+      return true;
+    }
+  }
+  return false;
+}
+
 /*************************
  * Loader Implementation *
  *************************/
@@ -2151,7 +2175,8 @@ nsresult
 Loader::LoadChildSheet(CSSStyleSheet* aParentSheet,
                        nsIURI* aURL,
                        nsMediaList* aMedia,
-                       ImportRule* aParentRule)
+                       ImportRule* aParentRule,
+                       LoaderReusableStyleSheets* aReusableSheets)
 {
   LOG(("css::Loader::LoadChildSheet"));
   NS_PRECONDITION(aURL, "Must have a URI to load");
@@ -2220,18 +2245,23 @@ Loader::LoadChildSheet(CSSStyleSheet* aParentSheet,
   // Now that we know it's safe to load this (passes security check and not a
   // loop) do so.
   nsRefPtr<CSSStyleSheet> sheet;
-  bool isAlternate;
   StyleSheetState state;
-  const nsSubstring& empty = EmptyString();
-  // For now, use CORS_NONE for child sheets
-  rv = CreateSheet(aURL, nullptr, principal, CORS_NONE,
-                   aParentSheet->GetReferrerPolicy(),
-                   EmptyString(), // integrity is only checked on main sheet
-                   parentData ? parentData->mSyncLoad : false,
-                   false, empty, state, &isAlternate, getter_AddRefs(sheet));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (aReusableSheets && aReusableSheets->FindReusableStyleSheet(aURL, sheet)) {
+    aParentRule->SetSheet(sheet);
+    state = eSheetComplete;
+  } else {
+    bool isAlternate;
+    const nsSubstring& empty = EmptyString();
+    // For now, use CORS_NONE for child sheets
+    rv = CreateSheet(aURL, nullptr, principal, CORS_NONE,
+                     aParentSheet->GetReferrerPolicy(),
+                     EmptyString(), // integrity is only checked on main sheet
+                     parentData ? parentData->mSyncLoad : false,
+                     false, empty, state, &isAlternate, getter_AddRefs(sheet));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-  PrepareSheet(sheet, empty, empty, aMedia, nullptr, isAlternate);
+    PrepareSheet(sheet, empty, empty, aMedia, nullptr, isAlternate);
+  }
 
   rv = InsertChildSheet(sheet, aParentSheet, aParentRule);
   NS_ENSURE_SUCCESS(rv, rv);

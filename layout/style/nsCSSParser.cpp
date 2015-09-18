@@ -129,7 +129,8 @@ public:
                       nsIURI*          aBaseURI,
                       nsIPrincipal*    aSheetPrincipal,
                       uint32_t         aLineNumber,
-                      bool             aAllowUnsafeRules);
+                      bool             aAllowUnsafeRules,
+                      LoaderReusableStyleSheets* aReusableSheets);
 
   nsresult ParseStyleAttribute(const nsAString&  aAttributeValue,
                                nsIURI*           aDocURL,
@@ -1174,6 +1175,9 @@ protected:
   // Used for @import rules
   mozilla::css::Loader* mChildLoader; // not ref counted, it owns us
 
+  // Any sheets we may reuse when parsing an @import.
+  LoaderReusableStyleSheets* mReusableSheets;
+
   // Sheet section we're in.  This is used to enforce correct ordering of the
   // various rule types (eg the fact that a @charset rule must come before
   // anything else).  Note that there are checks of similar things in various
@@ -1319,6 +1323,7 @@ CSSParserImpl::CSSParserImpl()
     mScanner(nullptr),
     mReporter(nullptr),
     mChildLoader(nullptr),
+    mReusableSheets(nullptr),
     mSection(eCSSSection_Charset),
     mNameSpaceMap(nullptr),
     mHavePushBack(false),
@@ -1431,7 +1436,8 @@ CSSParserImpl::ParseSheet(const nsAString& aInput,
                           nsIURI*          aBaseURI,
                           nsIPrincipal*    aSheetPrincipal,
                           uint32_t         aLineNumber,
-                          bool             aAllowUnsafeRules)
+                          bool             aAllowUnsafeRules,
+                          LoaderReusableStyleSheets* aReusableSheets)
 {
   NS_PRECONDITION(aSheetPrincipal, "Must have principal here!");
   NS_PRECONDITION(aBaseURI, "need base URI");
@@ -1477,6 +1483,7 @@ CSSParserImpl::ParseSheet(const nsAString& aInput,
   }
 
   mUnsafeRulesEnabled = aAllowUnsafeRules;
+  mReusableSheets = aReusableSheets;
 
   nsCSSToken* tk = &mToken;
   for (;;) {
@@ -1500,6 +1507,7 @@ CSSParserImpl::ParseSheet(const nsAString& aInput,
   ReleaseScanner();
 
   mUnsafeRulesEnabled = false;
+  mReusableSheets = nullptr;
 
   // XXX check for low level errors
   return NS_OK;
@@ -3440,7 +3448,7 @@ CSSParserImpl::ProcessImport(const nsString& aURLSpec,
   }
 
   if (mChildLoader) {
-    mChildLoader->LoadChildSheet(mSheet, url, aMedia, rule);
+    mChildLoader->LoadChildSheet(mSheet, url, aMedia, rule, mReusableSheets);
   }
 }
 
@@ -15785,11 +15793,12 @@ nsCSSParser::ParseSheet(const nsAString& aInput,
                         nsIURI*          aBaseURI,
                         nsIPrincipal*    aSheetPrincipal,
                         uint32_t         aLineNumber,
-                        bool             aAllowUnsafeRules)
+                        bool             aAllowUnsafeRules,
+                        LoaderReusableStyleSheets* aReusableSheets)
 {
   return static_cast<CSSParserImpl*>(mImpl)->
     ParseSheet(aInput, aSheetURI, aBaseURI, aSheetPrincipal, aLineNumber,
-               aAllowUnsafeRules);
+               aAllowUnsafeRules, aReusableSheets);
 }
 
 nsresult
