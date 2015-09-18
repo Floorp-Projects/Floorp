@@ -1162,6 +1162,16 @@ TabParent::ThemeChanged()
 }
 
 void
+TabParent::HandleAccessKey(nsTArray<uint32_t>& aCharCodes,
+                           const bool& aIsTrusted,
+                           const int32_t& aModifierMask)
+{
+  if (!mIsDestroyed) {
+    unused << SendHandleAccessKey(aCharCodes, aIsTrusted, aModifierMask);
+  }
+}
+
+void
 TabParent::RequestFlingSnap(const FrameMetrics::ViewID& aScrollId,
                             const mozilla::CSSPoint& aDestination)
 {

@@ -10,6 +10,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "Layers.h"
+#include "MediaSegment.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/CheckedInt.h"
@@ -35,6 +36,7 @@
 #include "nsLayoutUtils.h"
 #include "nsMathUtils.h"
 #include "nsNetUtil.h"
+#include "nsRefreshDriver.h"
 #include "nsStreamUtils.h"
 #include "ActiveLayerTracker.h"
 #include "WebGL1Context.h"
@@ -47,6 +49,136 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Canvas)
 
 namespace mozilla {
 namespace dom {
+
+class RequestedFrameRefreshObserver : public nsARefreshObserver
+{
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RequestedFrameRefreshObserver, override)
+
+public:
+  RequestedFrameRefreshObserver(HTMLCanvasElement* const aOwningElement,
+                                nsRefreshDriver* aRefreshDriver)
+    : mRegistered(false),
+      mOwningElement(aOwningElement),
+      mRefreshDriver(aRefreshDriver)
+  {
+    MOZ_ASSERT(mOwningElement);
+  }
+
+  static already_AddRefed<DataSourceSurface>
+  CopySurface(const RefPtr<SourceSurface>& aSurface)
+  {
+    RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
+    if (!data) {
+      return nullptr;
+    }
+
+    DataSourceSurface::ScopedMap read(data, DataSourceSurface::READ);
+    if (!read.IsMapped()) {
+      return nullptr;
+    }
+
+    RefPtr<DataSourceSurface> copy =
+      Factory::CreateDataSourceSurfaceWithStride(data->GetSize(),
+                                                 data->GetFormat(),
+                                                 read.GetStride());
+    if (!copy) {
+      return nullptr;
+    }
+
+    DataSourceSurface::ScopedMap write(copy, DataSourceSurface::WRITE);
+    if (!write.IsMapped()) {
+      return nullptr;
+    }
+
+    MOZ_ASSERT(read.GetStride() == write.GetStride());
+    MOZ_ASSERT(data->GetSize() == copy->GetSize());
+    MOZ_ASSERT(data->GetFormat() == copy->GetFormat());
+
+    memcpy(write.GetData(), read.GetData(),
+           write.GetStride() * copy->GetSize().height);
+
+    return copy.forget();
+  }
+
+  void WillRefresh(TimeStamp aTime) override
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!mOwningElement) {
+      return;
+    }
+
+    if (mOwningElement->IsWriteOnly()) {
+      return;
+    }
+
+    if (mOwningElement->IsContextCleanForFrameCapture()) {
+      return;
+    }
+
+    if (!mOwningElement->IsFrameCaptureRequested()) {
+      return;
+    }
+
+    RefPtr<SourceSurface> snapshot = mOwningElement->GetSurfaceSnapshot(nullptr);
+    if (!snapshot) {
+      return;
+    }
+
+    RefPtr<DataSourceSurface> copy = CopySurface(snapshot);
+
+    mOwningElement->SetFrameCapture(copy.forget());
+    mOwningElement->MarkContextCleanForFrameCapture();
+  }
+
+  void DetachFromRefreshDriver()
+  {
+    MOZ_ASSERT(mOwningElement);
+    MOZ_ASSERT(mRefreshDriver);
+
+    Unregister();
+    mRefreshDriver = nullptr;
+  }
+
+  void Register()
+  {
+    if (mRegistered) {
+      return;
+    }
+
+    MOZ_ASSERT(mRefreshDriver);
+    if (mRefreshDriver) {
+      mRefreshDriver->AddRefreshObserver(this, Flush_Display);
+      mRegistered = true;
+    }
+  }
+
+  void Unregister()
+  {
+    if (!mRegistered) {
+      return;
+    }
+
+    MOZ_ASSERT(mRefreshDriver);
+    if (mRefreshDriver) {
+      mRefreshDriver->RemoveRefreshObserver(this, Flush_Display);
+      mRegistered = false;
+    }
+  }
+
+private:
+  virtual ~RequestedFrameRefreshObserver()
+  {
+    MOZ_ASSERT(!mRefreshDriver);
+    MOZ_ASSERT(!mRegistered);
+  }
+
+  bool mRegistered;
+  HTMLCanvasElement* const mOwningElement;
+  RefPtr<nsRefreshDriver> mRefreshDriver;
+};
+
+// ---------------------------------------------------------------------------
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(HTMLCanvasPrintState, mCanvas,
                                       mContext, mCallback)
@@ -116,6 +248,9 @@ HTMLCanvasElement::HTMLCanvasElement(already_AddRefed<mozilla::dom::NodeInfo>& a
 HTMLCanvasElement::~HTMLCanvasElement()
 {
   ResetPrintCallback();
+  if (mRequestedFrameRefreshObserver) {
+    mRequestedFrameRefreshObserver->DetachFromRefreshDriver();
+  }
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLCanvasElement, nsGenericHTMLElement,
@@ -419,14 +554,6 @@ HTMLCanvasElement::CaptureStream(const Optional<double>& aFrameRate,
     return nullptr;
   }
 
-  if (mCurrentContextType != CanvasContextType::Canvas2D) {
-    WebGLContext* gl = static_cast<WebGLContext*>(mCurrentContext.get());
-    if (!gl->IsPreservingDrawingBuffer()) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return nullptr;
-    }
-  }
-
   nsRefPtr<CanvasCaptureMediaStream> stream =
     CanvasCaptureMediaStream::CreateSourceStream(window, this);
   if (!stream) {
@@ -443,6 +570,9 @@ HTMLCanvasElement::CaptureStream(const Optional<double>& aFrameRate,
     aRv.Throw(rv);
     return nullptr;
   }
+
+  stream->CreateDOMTrack(videoTrackId, MediaSegment::VIDEO);
+  RegisterFrameCaptureListener(stream->FrameCaptureListener());
   return stream.forget();
 }
 
@@ -1030,6 +1160,100 @@ HTMLCanvasElement::MarkContextClean()
     return;
 
   mCurrentContext->MarkContextClean();
+}
+
+void
+HTMLCanvasElement::MarkContextCleanForFrameCapture()
+{
+  if (!mCurrentContext)
+    return;
+
+  mCurrentContext->MarkContextCleanForFrameCapture();
+}
+
+bool
+HTMLCanvasElement::IsContextCleanForFrameCapture()
+{
+  return mCurrentContext && mCurrentContext->IsContextCleanForFrameCapture();
+}
+
+void
+HTMLCanvasElement::RegisterFrameCaptureListener(FrameCaptureListener* aListener)
+{
+  WeakPtr<FrameCaptureListener> listener = aListener;
+
+  if (mRequestedFrameListeners.Contains(listener)) {
+    return;
+  }
+
+  mRequestedFrameListeners.AppendElement(listener);
+
+  if (!mRequestedFrameRefreshObserver) {
+    nsIDocument* doc = OwnerDoc();
+    MOZ_RELEASE_ASSERT(doc);
+
+    nsIPresShell* shell = doc->GetShell();
+    MOZ_RELEASE_ASSERT(shell);
+
+    nsPresContext* context = shell->GetPresContext();
+    MOZ_RELEASE_ASSERT(context);
+
+    context = context->GetRootPresContext();
+    MOZ_RELEASE_ASSERT(context);
+
+    nsRefreshDriver* driver = context->RefreshDriver();
+    MOZ_RELEASE_ASSERT(driver);
+
+    mRequestedFrameRefreshObserver =
+      new RequestedFrameRefreshObserver(this, driver);
+  }
+
+  mRequestedFrameRefreshObserver->Register();
+}
+
+bool
+HTMLCanvasElement::IsFrameCaptureRequested() const
+{
+  for (WeakPtr<FrameCaptureListener> listener : mRequestedFrameListeners) {
+    if (!listener) {
+      continue;
+    }
+
+    if (listener->FrameCaptureRequested()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void
+HTMLCanvasElement::SetFrameCapture(already_AddRefed<SourceSurface> aSurface)
+{
+  RefPtr<SourceSurface> surface = aSurface;
+
+  CairoImage::Data imageData;
+  imageData.mSize = surface->GetSize();
+  imageData.mSourceSurface = surface;
+
+  nsRefPtr<CairoImage> image = new CairoImage();
+  image->SetData(imageData);
+
+  // Loop backwards to allow removing elements in the loop.
+  for (int i = mRequestedFrameListeners.Length() - 1; i >= 0; --i) {
+    WeakPtr<FrameCaptureListener> listener = mRequestedFrameListeners[i];
+    if (!listener) {
+      // listener was destroyed. Remove it from the list.
+      mRequestedFrameListeners.RemoveElementAt(i);
+      continue;
+    }
+
+    nsRefPtr<Image> imageRefCopy = image.get();
+    listener->NewFrame(imageRefCopy.forget());
+  }
+
+  if (mRequestedFrameListeners.IsEmpty()) {
+    mRequestedFrameRefreshObserver->Unregister();
+  }
 }
 
 already_AddRefed<SourceSurface>

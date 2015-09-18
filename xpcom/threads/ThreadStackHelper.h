@@ -66,7 +66,6 @@ private:
 #ifdef MOZ_THREADSTACKHELPER_PSEUDO
   const PseudoStack* const mPseudoStack;
 #ifdef MOZ_THREADSTACKHELPER_NATIVE
-  class CodeModulesProvider;
   class ThreadContext;
   // Set to non-null if GetStack should get the thread context.
   ThreadContext* mContextToFill;

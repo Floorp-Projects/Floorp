@@ -11,11 +11,6 @@ add_task(function*() {
 
   let {inspector, panel} = yield openAnimationInspector();
   yield testRefreshOnRemove(inspector, panel);
-  yield testAddedAnimationWorks(inspector, panel);
-
-  info("Reload and test again with the new UI");
-  ({inspector, panel} = yield closeAnimationInspectorAndRestartWithNewUI(true));
-  yield testRefreshOnRemove(inspector, panel, true);
 });
 
 function* testRefreshOnRemove(inspector, panel) {
@@ -50,23 +45,4 @@ function* testRefreshOnRemove(inspector, panel) {
   yield waitForAllAnimationTargets(panel);
 
   assertAnimationsDisplayed(panel, 1);
-}
-
-function* testAddedAnimationWorks(inspector, panel) {
-  info("Now wait until the animation finishes");
-  let widget = panel.playerWidgets[0];
-  yield waitForPlayState(widget.player, "finished");
-
-  is(panel.playersEl.querySelectorAll(".player-widget").length, 1,
-    "There is still a player widget in the panel after the animation finished");
-
-  info("Checking that the animation's currentTime can still be set");
-  info("Click at the center of the slider input");
-
-  let onPaused = waitForPlayState(widget.player, "paused");
-  let input = widget.currentTimeEl;
-  let win = input.ownerDocument.defaultView;
-  EventUtils.synthesizeMouseAtCenter(input, {type: "mousedown"}, win);
-  yield onPaused;
-  ok(widget.el.classList.contains("paused"), "The widget is in paused mode");
 }

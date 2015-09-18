@@ -1,11 +1,7 @@
 About the hyphenation code in this directory
 ============================================
 
-The core hyphenation code (files "hyphen.c" and "hyphen.h") comes from the
-Hyphen library, part of the hunspell project. The various COPYING* and README*
-files (except this README.mozilla) are likewise from the hunspell distribution
-of Hyphen:
-
+The hyphen directory comes from the Hyphen library, part of the hunspell project.
   http://sourceforge.net/projects/hunspell/files/Hyphen/.
 
 This code is distributed under the GPL 2.0/LGPL 2.1/MPL 1.1 tri-license, as
@@ -15,14 +11,3 @@ Note that we do not include other tools and resources found in the complete
 Hyphen package from upstream, so the original README.* files may refer to
 additional files that are not present in the Mozilla source tree.
 
-
-The other source files here:
-
-  hnjalloc.h
-  hnjstdio.cpp
-  nsHyphenationManager.cpp
-  nsHyphenator.cpp
-
-as well as the build files (Makefile.in and moz.build) are Mozilla-authored
-code, and the standard MPL 2.0 applies to these, as noted in the comments
-within the files.

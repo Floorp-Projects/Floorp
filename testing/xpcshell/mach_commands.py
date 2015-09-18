@@ -109,6 +109,9 @@ class XPCShellRunner(MozbuildObject):
         if kwargs["pluginsPath"] is None:
             kwargs['pluginsPath'] = os.path.join(self.distdir, 'plugins')
 
+        if kwargs["testingModulesDir"] is None:
+            kwargs["testingModulesDir"] = os.path.join(self.topobjdir, '_tests/modules')
+
         if kwargs["utility_path"] is None:
             kwargs['utility_path'] = self.bindir
 

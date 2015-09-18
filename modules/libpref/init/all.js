@@ -4767,7 +4767,7 @@ pref("urlclassifier.malwareTable", "goog-malware-shavar,goog-unwanted-shavar,tes
 pref("urlclassifier.phishTable", "goog-phish-shavar,test-phish-simple");
 pref("urlclassifier.downloadBlockTable", "");
 pref("urlclassifier.downloadAllowTable", "");
-pref("urlclassifier.disallow_completions", "test-malware-simple,test-phish-simple,test-unwanted-simple,test-track-simple,test-trackwhite-simple,goog-downloadwhite-digest256,mozstd-track-digest256,mozstd-trackwhite-digest256");
+pref("urlclassifier.disallow_completions", "test-malware-simple,test-phish-simple,test-unwanted-simple,test-track-simple,test-trackwhite-simple,goog-downloadwhite-digest256,mozstd-track-digest256,mozstd-trackwhite-digest256,mozfull-track-digest256");
 
 // The table and update/gethash URLs for Safebrowsing phishing and malware
 // checks.
@@ -4777,6 +4777,12 @@ pref("urlclassifier.trackingWhitelistTable", "test-trackwhite-simple,mozstd-trac
 pref("browser.safebrowsing.provider.mozilla.lists", "mozstd-track-digest256,mozstd-trackwhite-digest256");
 pref("browser.safebrowsing.provider.mozilla.updateURL", "https://shavar.services.mozilla.com/downloads?client=SAFEBROWSING_ID&appver=%VERSION%&pver=2.2");
 pref("browser.safebrowsing.provider.mozilla.gethashURL", "https://shavar.services.mozilla.com/gethash?client=SAFEBROWSING_ID&appver=%VERSION%&pver=2.2");
+// Block lists for tracking protection. The name values will be used as the keys
+// to lookup the localized name in preferences.properties.
+pref("browser.safebrowsing.provider.mozilla.lists.mozstd.name", "mozstdName");
+pref("browser.safebrowsing.provider.mozilla.lists.mozstd.description", "mozstdDesc");
+pref("browser.safebrowsing.provider.mozilla.lists.mozfull.name", "mozfullName");
+pref("browser.safebrowsing.provider.mozilla.lists.mozfull.description", "mozfullDesc");
 
 // Turn off Spatial navigation by default.
 pref("snav.enabled", false);
