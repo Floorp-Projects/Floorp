@@ -5,8 +5,8 @@
 Components.utils.import("resource://gre/modules/Services.jsm");
 const TEST_LIST = "test-track-simple";
 const TRACK_SUFFIX = "-track-digest256";
-const NAME_SUFFIX = ".name";
 const TRACKING_TABLE_PREF = "urlclassifier.trackingTable";
+const LISTS_PREF_BRANCH = "browser.safebrowsing.provider.mozilla.lists.";
 
 let gBlocklistManager = {
   _type: "",
@@ -22,7 +22,11 @@ let gBlocklistManager = {
     },
     getCellText: function (row, column) {
       if (column.id == "listCol") {
-        return gBlocklistManager._blockLists[row].name;
+        let list = gBlocklistManager._blockLists[row];
+        let desc = list.description ? list.description : "";
+        let text = gBlocklistManager._bundle.getFormattedString("mozNameTemplate",
+                                                                [list.name, desc]);
+        return text;
       }
       return "";
     },
@@ -144,22 +148,12 @@ let gBlocklistManager = {
   _loadBlockLists: function () {
     this._blockLists = [];
 
-    // Get the active block list.
-    let activeList = this._getActiveList();
-
     // Load blocklists into a table.
-    let branch = Services.prefs.getBranch("browser.safebrowsing.provider.mozilla.lists.");
+    let branch = Services.prefs.getBranch(LISTS_PREF_BRANCH);
     let itemArray = branch.getChildList("");
     for (let itemName of itemArray) {
-      if (!itemName.endsWith(NAME_SUFFIX)) {
-        continue;
-      }
       try {
-        let nameKey = branch.getCharPref(itemName);
-        let name = this._bundle.getString(nameKey);
-        let id = itemName.replace(NAME_SUFFIX, "");
-        let selected = activeList === id;
-        this._blockLists.push({ name, id, selected });
+        this._createOrUpdateBlockList(itemName);
       } catch (e) {
         // Ignore bogus or missing list name.
         continue;
@@ -167,6 +161,27 @@ let gBlocklistManager = {
     }
 
     this._updateTree();
+  },
+
+  _createOrUpdateBlockList: function (itemName) {
+    let branch = Services.prefs.getBranch(LISTS_PREF_BRANCH);
+    let key = branch.getCharPref(itemName);
+    let value = this._bundle.getString(key);
+
+    let suffix = itemName.slice(itemName.lastIndexOf("."));
+    let id = itemName.replace(suffix, "");
+    let list = this._blockLists.find(el => el.id === id);
+    if (!list) {
+      list = { id };
+      this._blockLists.push(list);
+    }
+    list.selected = this._getActiveList() === id;
+
+    // Get the property name from the suffix (e.g. ".name" -> "name").
+    let prop = suffix.slice(1);
+    list[prop] = value;
+
+    return list;
   },
 
   _updateTree: function () {
