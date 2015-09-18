@@ -273,6 +273,7 @@ AudioBufferSumOfSquares(const float* aInput, uint32_t aLength)
 
 void
 AudioNodeEngine::ProcessBlock(AudioNodeStream* aStream,
+                              GraphTime aFrom,
                               const AudioBlock& aInput,
                               AudioBlock* aOutput,
                               bool* aFinished)
