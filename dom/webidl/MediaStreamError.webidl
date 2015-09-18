@@ -17,5 +17,5 @@
 interface MediaStreamError {
   readonly attribute DOMString  name;
   readonly attribute DOMString? message;
-  readonly attribute DOMString? constraintName;
+  readonly attribute DOMString? constraint;
 };
