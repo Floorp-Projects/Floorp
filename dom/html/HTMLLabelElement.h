@@ -69,7 +69,7 @@ public:
   // nsIContent
   virtual nsresult PostHandleEvent(
                      EventChainPostVisitor& aVisitor) override;
-  virtual void PerformAccesskey(bool aKeyCausesActivation,
+  virtual bool PerformAccesskey(bool aKeyCausesActivation,
                                 bool aIsTrustedEvent) override;
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override;
 

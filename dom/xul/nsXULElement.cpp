@@ -620,7 +620,7 @@ nsXULElement::IsFocusableInternal(int32_t *aTabIndex, bool aWithMouse)
   return shouldFocus;
 }
 
-void
+bool
 nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
                                bool aIsTrustedEvent)
 {
@@ -643,21 +643,24 @@ nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
         // |element|, or clear it.
         content = do_QueryInterface(element);
 
-        if (!content)
-            return;
+        if (!content) {
+            return false;
+        }
     }
 
     nsIFrame* frame = content->GetPrimaryFrame();
-    if (!frame || !frame->IsVisibleConsideringAncestors())
-        return;
+    if (!frame || !frame->IsVisibleConsideringAncestors()) {
+        return false;
+    }
 
+    bool focused = false;
     nsXULElement* elm = FromContent(content);
     if (elm) {
         // Define behavior for each type of XUL element.
         if (!content->IsXULElement(nsGkAtoms::toolbarbutton)) {
           nsIFocusManager* fm = nsFocusManager::GetFocusManager();
           if (fm) {
-            nsCOMPtr<nsIDOMElement> element;
+            nsCOMPtr<nsIDOMElement> elementToFocus;
             // for radio buttons, focus the radiogroup instead
             if (content->IsXULElement(nsGkAtoms::radio)) {
               nsCOMPtr<nsIDOMXULSelectControlItemElement> controlItem(do_QueryInterface(content));
@@ -667,14 +670,19 @@ nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
                 if (!disabled) {
                   nsCOMPtr<nsIDOMXULSelectControlElement> selectControl;
                   controlItem->GetControl(getter_AddRefs(selectControl));
-                  element = do_QueryInterface(selectControl);
+                  elementToFocus = do_QueryInterface(selectControl);
                 }
               }
             } else {
-              element = do_QueryInterface(content);
+              elementToFocus = do_QueryInterface(content);
             }
-            if (element)
-              fm->SetFocus(element, nsIFocusManager::FLAG_BYKEY);
+            if (elementToFocus) {
+              fm->SetFocus(elementToFocus, nsIFocusManager::FLAG_BYKEY);
+
+              // Return true if the element became focused.
+              nsPIDOMWindow* window = OwnerDoc()->GetWindow();
+              focused = (window && window->GetFocusedNode());
+            }
           }
         }
         if (aKeyCausesActivation &&
@@ -682,8 +690,10 @@ nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
           elm->ClickWithInputSource(nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD);
         }
     } else {
-        content->PerformAccesskey(aKeyCausesActivation, aIsTrustedEvent);
+        return content->PerformAccesskey(aKeyCausesActivation, aIsTrustedEvent);
     }
+
+    return focused;
 }
 
 //----------------------------------------------------------------------
