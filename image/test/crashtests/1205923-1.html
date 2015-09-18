@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<body>
+</body>
+<script>
+  function createImage() {
+    var newImage = new Image;
+    newImage.id = "thepreviewimage";
+    newImage.setAttribute("src", "unsized-svg.svg");
+    physWidth = newImage.width || 0;
+    physHeight = newImage.height || 0;
+    document.documentElement.innerHTML += newImage.width + " x " + newImage.height + "<br>";
+  }
+  function createImageAndEnd() {
+    createImage();
+    document.documentElement.removeAttribute("class");
+  }
+
+  // Trigger image load:
+  createImage();
+
+  // Asynchronously trigger image load again (hitting cache this time):
+  setTimeout(createImageAndEnd, 0);
+</script>
+</html>
