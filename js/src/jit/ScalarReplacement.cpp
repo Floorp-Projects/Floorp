@@ -895,7 +895,7 @@ IsArrayEscaped(MInstruction* ins)
 {
     MOZ_ASSERT(ins->type() == MIRType_Object);
     MOZ_ASSERT(ins->isNewArray());
-    uint32_t count = ins->toNewArray()->count();
+    uint32_t length = ins->toNewArray()->length();
 
     JitSpewDef(JitSpew_Escape, "Check array\n", ins);
     JitSpewIndent spewIndent(JitSpew_Escape);
@@ -911,7 +911,7 @@ IsArrayEscaped(MInstruction* ins)
         return true;
     }
 
-    if (count >= 16) {
+    if (length >= 16) {
         JitSpew(JitSpew_Escape, "Array has too many elements");
         return true;
     }
@@ -935,7 +935,7 @@ IsArrayEscaped(MInstruction* ins)
           case MDefinition::Op_Elements: {
             MElements *elem = def->toElements();
             MOZ_ASSERT(elem->object() == ins);
-            if (IsElementEscaped(elem, count)) {
+            if (IsElementEscaped(elem, length)) {
                 JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", elem);
                 return true;
             }

@@ -4220,12 +4220,12 @@ CodeGenerator::visitNewArrayCallVM(LNewArray* lir)
     if (templateObject) {
         pushArg(Imm32(lir->mir()->convertDoubleElements()));
         pushArg(ImmGCPtr(templateObject->group()));
-        pushArg(Imm32(lir->mir()->count()));
+        pushArg(Imm32(lir->mir()->length()));
 
         callVM(NewArrayWithGroupInfo, lir);
     } else {
         pushArg(Imm32(GenericObject));
-        pushArg(Imm32(lir->mir()->count()));
+        pushArg(Imm32(lir->mir()->length()));
         pushArg(ImmPtr(lir->mir()->pc()));
         pushArg(ImmGCPtr(lir->mir()->block()->info().script()));
 
@@ -4301,9 +4301,9 @@ CodeGenerator::visitNewArray(LNewArray* lir)
     Register objReg = ToRegister(lir->output());
     Register tempReg = ToRegister(lir->temp());
     JSObject* templateObject = lir->mir()->templateObject();
-    DebugOnly<uint32_t> count = lir->mir()->count();
+    DebugOnly<uint32_t> length = lir->mir()->length();
 
-    MOZ_ASSERT(count < NativeObject::NELEMENTS_LIMIT);
+    MOZ_ASSERT(length < NativeObject::NELEMENTS_LIMIT);
 
     if (lir->mir()->shouldUseVM()) {
         visitNewArrayCallVM(lir);
