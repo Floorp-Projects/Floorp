@@ -3517,7 +3517,7 @@ SetElemAddHasSameShapes(ICSetElem_DenseOrUnboxedArrayAdd* stub, JSObject* obj)
             return false;
         if (proto->as<NativeObject>().lastProperty() != nstub->shape(i + 1))
             return false;
-        proto = proto->getProto();
+        proto = obj->getProto();
         if (!proto) {
             if (i != stub->protoChainDepth() - 1)
                 return false;
@@ -3535,51 +3535,20 @@ DenseOrUnboxedArraySetElemStubExists(JSContext* cx, ICStub::Kind kind,
     MOZ_ASSERT(kind == ICStub::SetElem_DenseOrUnboxedArray ||
                kind == ICStub::SetElem_DenseOrUnboxedArrayAdd);
 
-    if (obj->isSingleton())
-        return false;
-
     for (ICStubConstIterator iter = stub->beginChainConst(); !iter.atEnd(); iter++) {
         if (kind == ICStub::SetElem_DenseOrUnboxedArray && iter->isSetElem_DenseOrUnboxedArray()) {
             ICSetElem_DenseOrUnboxedArray* nstub = iter->toSetElem_DenseOrUnboxedArray();
-            if (obj->maybeShape() == nstub->shape() && obj->group() == nstub->group())
+            if (obj->maybeShape() == nstub->shape() && obj->getGroup(cx) == nstub->group())
                 return true;
         }
 
         if (kind == ICStub::SetElem_DenseOrUnboxedArrayAdd && iter->isSetElem_DenseOrUnboxedArrayAdd()) {
             ICSetElem_DenseOrUnboxedArrayAdd* nstub = iter->toSetElem_DenseOrUnboxedArrayAdd();
-            if (obj->group() == nstub->group() && SetElemAddHasSameShapes(nstub, obj))
+            if (obj->getGroup(cx) == nstub->group() && SetElemAddHasSameShapes(nstub, obj))
                 return true;
         }
     }
     return false;
-}
-
-static void
-RemoveMatchingDenseOrUnboxedArraySetElemAddStub(JSContext* cx,
-                                                ICSetElem_Fallback* stub, HandleObject obj)
-{
-    if (obj->isSingleton())
-        return;
-
-    // Before attaching a new stub to add elements to a dense or unboxed array,
-    // remove any other stub with the same group/shape but different prototype
-    // shapes.
-    for (ICStubIterator iter = stub->beginChain(); !iter.atEnd(); iter++) {
-        if (!iter->isSetElem_DenseOrUnboxedArrayAdd())
-            continue;
-
-        ICSetElem_DenseOrUnboxedArrayAdd* nstub = iter->toSetElem_DenseOrUnboxedArrayAdd();
-        if (obj->group() != nstub->group())
-            continue;
-
-        static const size_t MAX_DEPTH = ICSetElem_DenseOrUnboxedArrayAdd::MAX_PROTO_CHAIN_DEPTH;
-        ICSetElem_DenseOrUnboxedArrayAddImpl<MAX_DEPTH>* nostub = nstub->toImplUnchecked<MAX_DEPTH>();
-
-        if (obj->maybeShape() == nostub->shape(0)) {
-            iter.unlink(cx);
-            return;
-        }
-    }
 }
 
 static bool
@@ -3763,8 +3732,6 @@ DoSetElemFallback(JSContext* cx, BaselineFrame* frame, ICSetElem_Fallback* stub_
                 !DenseOrUnboxedArraySetElemStubExists(cx, ICStub::SetElem_DenseOrUnboxedArrayAdd,
                                                       stub, obj))
             {
-                RemoveMatchingDenseOrUnboxedArraySetElemAddStub(cx, stub, obj);
-
                 JitSpew(JitSpew_BaselineIC,
                         "  Generating SetElem_DenseOrUnboxedArrayAdd stub "
                         "(shape=%p, group=%p, protoDepth=%u)",

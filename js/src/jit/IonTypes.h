@@ -745,33 +745,10 @@ enum class BarrierKind : uint32_t {
     // Specific object types don't have to be checked.
     TypeTagOnly,
 
-    // The barrier only has to check that object values are in the type set.
-    // Non-object types don't have to be checked.
-    ObjectTypesOnly,
-
     // Check if the value is in the TypeSet, including the object type if it's
     // an object.
     TypeSet
 };
-
-static inline BarrierKind
-CombineBarrierKinds(BarrierKind first, BarrierKind second)
-{
-    // Barrier kinds form the following lattice:
-    //
-    //         TypeSet
-    //          |   |
-    // TypeTagOnly ObjectTypesOnly
-    //          |   |
-    //        NoBarrier
-    //
-    // This function computes the least upper bound of two barrier kinds.
-    if (first == BarrierKind::NoBarrier || first == second)
-        return second;
-    if (second == BarrierKind::NoBarrier)
-        return first;
-    return BarrierKind::TypeSet;
-}
 
 } // namespace jit
 } // namespace js

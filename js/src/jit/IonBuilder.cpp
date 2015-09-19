@@ -8464,12 +8464,6 @@ IonBuilder::pushScalarLoadFromTypedObject(MDefinition* obj,
     return true;
 }
 
-static bool
-BarrierMustTestTypeTag(BarrierKind kind)
-{
-    return kind == BarrierKind::TypeSet || kind == BarrierKind::TypeTagOnly;
-}
-
 bool
 IonBuilder::pushReferenceLoadFromTypedObject(MDefinition* typedObj,
                                              const LinearSum& byteOffset,
@@ -8505,7 +8499,7 @@ IonBuilder::pushReferenceLoadFromTypedObject(MDefinition* typedObj,
         // MLoadUnboxedObjectOrNull, which avoids the need to box the result
         // for a type barrier instruction.
         MLoadUnboxedObjectOrNull::NullBehavior nullBehavior;
-        if (!observedTypes->hasType(TypeSet::NullType()) && !BarrierMustTestTypeTag(barrier))
+        if (barrier == BarrierKind::NoBarrier && !observedTypes->hasType(TypeSet::NullType()))
             nullBehavior = MLoadUnboxedObjectOrNull::BailOnNull;
         else
             nullBehavior = MLoadUnboxedObjectOrNull::HandleNull;
@@ -11222,7 +11216,7 @@ IonBuilder::loadUnboxedValue(MDefinition* elements, size_t elementsOffset,
 
       case JSVAL_TYPE_OBJECT: {
         MLoadUnboxedObjectOrNull::NullBehavior nullBehavior;
-        if (types->hasType(TypeSet::NullType()) || BarrierMustTestTypeTag(barrier))
+        if (types->hasType(TypeSet::NullType()) || barrier != BarrierKind::NoBarrier)
             nullBehavior = MLoadUnboxedObjectOrNull::HandleNull;
         else
             nullBehavior = MLoadUnboxedObjectOrNull::NullNotPossible;
@@ -11619,7 +11613,10 @@ IonBuilder::getPropTryCache(bool* emitted, MDefinition* obj, PropertyName* name,
     if (barrier != BarrierKind::TypeSet) {
         BarrierKind protoBarrier =
             PropertyReadOnPrototypeNeedsTypeBarrier(this, obj, name, types);
-        barrier = CombineBarrierKinds(barrier, protoBarrier);
+        if (protoBarrier != BarrierKind::NoBarrier) {
+            MOZ_ASSERT(barrier <= protoBarrier);
+            barrier = protoBarrier;
+        }
     }
 
     MGetPropertyCache* load = MGetPropertyCache::New(alloc(), obj, name,
