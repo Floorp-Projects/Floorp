@@ -3136,17 +3136,11 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
     visibleRegion = aDirtyRegion;
   }
 
-  // If we're going to display something different from what we'd normally
-  // paint in a window then we will flush out any retained layer trees before
-  // *and after* we draw.
-  bool willFlushRetainedLayers = (aFlags & PAINT_HIDE_CARET) != 0;
-
   nsDisplayList list;
 
   // If the root has embedded plugins, flag the builder so we know we'll need
   // to update plugin geometry after painting.
   if ((aFlags & PAINT_WIDGET_LAYERS) &&
-      !willFlushRetainedLayers &&
       !(aFlags & PAINT_DOCUMENT_RELATIVE) &&
       rootPresContext->NeedToComputePluginGeometryUpdates()) {
     builder.SetWillComputePluginGeometry(true);
@@ -3262,32 +3256,11 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
       buildingDisplayList(&builder, aFrame, canvasArea, false);
     presShell->AddCanvasBackgroundColorItem(
            builder, list, aFrame, canvasArea, aBackstop);
-
-    // If the passed in backstop color makes us draw something different from
-    // normal, we need to flush layers.
-    if ((aFlags & PAINT_WIDGET_LAYERS) && !willFlushRetainedLayers) {
-      nsView* view = aFrame->GetView();
-      if (view) {
-        nscolor backstop = presShell->ComputeBackstopColor(view);
-        // The PresShell's canvas background color doesn't get updated until
-        // EnterPresShell, so this check has to be done after that.
-        nscolor canvasColor = presShell->GetCanvasBackground();
-        if (NS_ComposeColors(aBackstop, canvasColor) !=
-            NS_ComposeColors(backstop, canvasColor)) {
-          willFlushRetainedLayers = true;
-        }
-      }
-    }
   }
 
   builder.LeavePresShell(aFrame);
   Telemetry::AccumulateTimeDelta(Telemetry::PAINT_BUILD_DISPLAYLIST_TIME,
                                  startBuildDisplayList);
-
-  if (builder.GetHadToIgnorePaintSuppression()) {
-    willFlushRetainedLayers = true;
-  }
-
 
   bool profilerNeedsDisplayList = profiler_feature_active("displaylistdump");
   bool consoleNeedsDisplayList = gfxUtils::DumpDisplayList() || gfxUtils::sDumpPainting;
@@ -3332,16 +3305,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   uint32_t flags = nsDisplayList::PAINT_DEFAULT;
   if (aFlags & PAINT_WIDGET_LAYERS) {
     flags |= nsDisplayList::PAINT_USE_WIDGET_LAYERS;
-    if (willFlushRetainedLayers) {
-      // The caller wanted to paint from retained layers, but set up
-      // the paint in such a way that we can't use them.  We're going
-      // to display something different from what we'd normally paint
-      // in a window, so make sure we flush out any retained layer
-      // trees before *and after* we draw.  Callers should be fixed to
-      // not do this.
-      NS_WARNING("Flushing retained layers!");
-      flags |= nsDisplayList::PAINT_FLUSH_LAYERS;
-    } else if (!(aFlags & PAINT_DOCUMENT_RELATIVE)) {
+    if (!(aFlags & PAINT_DOCUMENT_RELATIVE)) {
       nsIWidget *widget = aFrame->GetNearestWidget();
       if (widget) {
         // If we're finished building display list items for painting of the outermost
@@ -3416,7 +3380,6 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   // glass boundaries on Windows. Also set up the window dragging region
   // and plugin clip regions and bounds.
   if ((aFlags & PAINT_WIDGET_LAYERS) &&
-      !willFlushRetainedLayers &&
       !(aFlags & PAINT_DOCUMENT_RELATIVE)) {
     nsIWidget *widget = aFrame->GetNearestWidget();
     if (widget) {
