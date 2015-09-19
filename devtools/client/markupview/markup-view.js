@@ -647,6 +647,11 @@ MarkupView.prototype = {
         this.beginEditingOuterHTML(this._selectedContainer.node);
         break;
       }
+      case Ci.nsIDOMKeyEvent.DOM_VK_S: {
+        let selection = this._selectedContainer.node;
+        this._inspector.scrollNodeIntoView(selection);
+        break;
+      }
       case Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE: {
         if (this.isDragging) {
           this.cancelDragging();
