@@ -43,8 +43,6 @@ class nsICODecoder : public Decoder
 public:
   virtual ~nsICODecoder() { }
 
-  nsresult SetTargetSize(const nsIntSize& aSize) override;
-
   /// @return the width of the icon directory entry @aEntry.
   static uint32_t GetRealWidth(const IconDirEntry& aEntry)
   {
@@ -119,7 +117,6 @@ private:
   LexerTransition<ICOState> FinishResource();
 
   StreamingLexer<ICOState, 32> mLexer; // The lexer.
-  Maybe<Downscaler> mDownscaler;       // Our downscaler, if we're downscaling.
   nsRefPtr<Decoder> mContainedDecoder; // Either a BMP or PNG decoder.
   char mBIHraw[40];                    // The bitmap information header.
   IconDirEntry mDirEntry;              // The dir entry for the selected resource.
