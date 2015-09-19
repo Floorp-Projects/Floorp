@@ -961,8 +961,8 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
     // Round-out the display port to the nearest alignment (tiles)
     float x = alignmentX * floor(screenRect.x / alignmentX);
     float y = alignmentY * floor(screenRect.y / alignmentY);
-    float w = alignmentX * ceil(screenRect.width / alignmentX);
-    float h = alignmentY * ceil(screenRect.height / alignmentY);
+    float w = alignmentX * ceil(screenRect.width / alignmentX + 1);
+    float h = alignmentY * ceil(screenRect.height / alignmentY + 1);
     screenRect = ScreenRect(x, y, w, h);
     screenRect -= scrollPosScreen;
 
