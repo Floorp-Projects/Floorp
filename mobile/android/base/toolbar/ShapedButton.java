@@ -18,6 +18,10 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
 import android.util.AttributeSet;
 
+/**
+ * A ImageButton with a custom drawn path and lightweight theme support. Note that {@link ShapedButtonFrameLayout}
+ * copies the lwt support so if you change it here, you should probably change it there.
+ */
 public class ShapedButton extends ThemedImageButton
                           implements CanvasDelegate.DrawManager {
 
