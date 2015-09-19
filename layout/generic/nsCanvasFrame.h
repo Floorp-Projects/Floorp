@@ -195,11 +195,10 @@ protected:
  * We can also paint an "extra background color" behind the normal
  * background.
  */
-class nsDisplayCanvasBackgroundColor : public nsDisplayItem {
+class nsDisplayCanvasBackgroundColor : public nsDisplaySolidColorBase {
 public:
   nsDisplayCanvasBackgroundColor(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame)
-    : nsDisplayItem(aBuilder, aFrame)
-    , mColor(NS_RGBA(0,0,0,0))
+    : nsDisplaySolidColorBase(aBuilder, aFrame, NS_RGBA(0,0,0,0))
   {
   }
 
@@ -207,19 +206,6 @@ public:
                                  nsRegion* aVisibleRegion) override
   {
     return NS_GET_A(mColor) > 0;
-  }
-  virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                   bool* aSnap) override
-  {
-    if (NS_GET_A(mColor) == 255) {
-      return nsRegion(GetBounds(aBuilder, aSnap));
-    }
-    return nsRegion();
-  }
-  virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) override
-  {
-    *aColor = mColor;
-    return true;
   }
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override
   {
@@ -234,19 +220,6 @@ public:
     aOutFrames->AppendElement(mFrame);
   }
 
-  virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override
-  {
-    return new nsDisplayItemBoundsGeometry(this, aBuilder);
-  }
-
-  virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                         const nsDisplayItemGeometry* aGeometry,
-                                         nsRegion* aInvalidRegion) override
-  {
-    const nsDisplayItemBoundsGeometry* geometry = static_cast<const nsDisplayItemBoundsGeometry*>(aGeometry);
-    ComputeInvalidationRegionDifference(aBuilder, geometry, aInvalidRegion);
-  }
-
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) override;
 
@@ -259,9 +232,6 @@ public:
 #ifdef MOZ_DUMP_PAINTING
   virtual void WriteDebugInfo(std::stringstream& aStream) override;
 #endif
-
-private:
-  nscolor mColor;
 };
 
 class nsDisplayCanvasBackgroundImage : public nsDisplayBackgroundImage {
