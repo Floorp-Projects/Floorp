@@ -3,8 +3,6 @@
 """
 import os
 from datetime import datetime, timedelta
-from urlparse import urljoin
-
 from mozharness.base.log import LogMixin
 
 
@@ -114,65 +112,3 @@ class Taskcluster(LogMixin):
             self.task_id,
             os.path.basename(filename)
         )
-
-
-# TasckClusterArtifactFinderMixin {{{1
-class TaskClusterArtifactFinderMixin(object):
-    # This class depends that you have extended from the base script
-    QUEUE_URL = 'https://queue.taskcluster.net/v1/task/'
-    SCHEDULER_URL = 'https://scheduler.taskcluster.net/v1/task-graph/'
-
-    def get_task(self, task_id):
-        """ Get Task Definition """
-        # Signature: task(taskId) : result
-        return self.load_json_url(urljoin(self.QUEUE_URL, task_id))
-
-    def get_list_latest_artifacts(self, task_id):
-        """ Get Artifacts from Latest Run """
-        # Signature: listLatestArtifacts(taskId) : result
-
-        # Notice that this grabs the most recent run of a task since we don't
-        # know the run_id. This slightly slower, however, it is more convenient
-        return self.load_json_url(urljoin(self.QUEUE_URL, '{}/artifacts'.format(task_id)))
-
-    def url_to_artifact(self, task_id, full_path):
-        """ Return a URL for an artifact. """
-        return urljoin(self.QUEUE_URL, '{}/artifacts/{}'.format(task_id, full_path))
-
-    def get_inspect_graph(self, task_group_id):
-        """ Inspect Task Graph """
-        # Signature: inspect(taskGraphId) : result
-        return self.load_json_url(urljoin(self.SCHEDULER_URL, '{}/inspect'.format(task_group_id)))
-
-    def find_parent_task_id(self, task_id):
-        """ Returns the task_id of the parent task associated to the given task_id."""
-        # Find group id to associated to all related tasks
-        task_group_id = self.get_task(task_id)['taskGroupId']
-
-        # Find child task and determine on which task it depends on
-        for task in self.get_inspect_graph(task_group_id)['tasks']:
-            if task['taskId'] == task_id:
-                parent_task_id = task['requires'][0]
-
-        return parent_task_id
-
-    def set_artifacts(self, task_id):
-        """ Sets installer, test and symbols URLs from the artifacts of a task.
-
-        In this case we set:
-            self.installer_url
-            self.test_url (points to test_packages.json)
-            self.symbols_url
-        """
-        # The tasks which represent a buildbot job only uploads one artifact:
-        # the properties.json file
-        p = self.load_json_url(
-            self.url_to_artifact(task_id, 'public/properties.json'))
-
-        # Set importants artifacts for test jobs
-        self.installer_url = p['packageUrl'][0] if p.get('packageUrl') else None
-        self.test_url = p['testPackagesUrl'][0] if p.get('testPackagesUrl') else None
-        self.symbols_url = p['symbolsUrl'][0] if p.get('symbolsUrl') else None
-
-    def set_parent_artifacts(self, child_task_id):
-        self.set_artifacts(self.find_parent_task_id(child_task_id))
