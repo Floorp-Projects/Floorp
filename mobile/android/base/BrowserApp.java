@@ -1542,7 +1542,7 @@ public class BrowserApp extends GeckoApp
         }
 
         GeckoAppShell.openUriExternal(url, "text/plain", "", "",
-                                      Intent.ACTION_SEND, tab.getDisplayTitle());
+                                      Intent.ACTION_SEND, tab.getDisplayTitle(), false);
 
         // Context: Sharing via chrome list (no explicit session is active)
         Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST);
@@ -1783,7 +1783,7 @@ public class BrowserApp extends GeckoApp
         } else if ("Reader:Share".equals(event)) {
             final String title = message.getString("title");
             final String url = message.getString("url");
-            GeckoAppShell.openUriExternal(url, "text/plain", "", "", Intent.ACTION_SEND, title);
+            GeckoAppShell.openUriExternal(url, "text/plain", "", "", Intent.ACTION_SEND, title, false);
         } else if ("Sanitize:ClearHistory".equals(event)) {
             handleClearHistory(message.optBoolean("clearSearchHistory", false));
             callback.sendSuccess(true);

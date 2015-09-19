@@ -4,6 +4,7 @@
 
 package org.mozilla.gecko.widget;
 
+import org.mozilla.gecko.ActivityHandlerHelper;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -55,12 +56,14 @@ public class ExternalIntentDuringPrivateBrowsingPromptFragment extends DialogFra
         return builder.create();
     }
 
-    public static void showDialogOrAndroidChooser(final Context context, final FragmentManager fragmentManager,
+    /**
+     * @return true if the Activity is started or a dialog is shown. false if the Activity fails to start.
+     */
+    public static boolean showDialogOrAndroidChooser(final Context context, final FragmentManager fragmentManager,
             final Intent intent) {
         final Tab selectedTab = Tabs.getInstance().getSelectedTab();
         if (selectedTab == null || !selectedTab.isPrivate()) {
-            context.startActivity(intent);
-            return;
+            return ActivityHandlerHelper.startIntentAndCatch(LOGTAG, context, intent);
         }
 
         final PackageManager pm = context.getPackageManager();
@@ -74,14 +77,17 @@ public class ExternalIntentDuringPrivateBrowsingPromptFragment extends DialogFra
             fragment.setArguments(args);
 
             fragment.show(fragmentManager, FRAGMENT_TAG);
+            // We don't know the results of the user interaction with the fragment so just return true.
+            return true;
         } else if (matchingActivities.size() > 1) {
             // Android chooser dialog will be shown, which should make the users
             // aware they're entering a new application from private browsing.
-            context.startActivity(intent);
+            return ActivityHandlerHelper.startIntentAndCatch(LOGTAG, context, intent);
         } else {
             // Normally, we show about:neterror when an Intent does not resolve
             // but we don't have the references here to do that so log instead.
             Log.w(LOGTAG, "showDialogOrAndroidChooser unexpectedly called with Intent that does not resolve");
+            return false;
         }
     }
 }
