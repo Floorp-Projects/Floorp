@@ -91,7 +91,6 @@ RasterImage::RasterImage(ImageURL* aURI /* = nullptr */) :
   mDiscardable(false),
   mHasSourceData(false),
   mHasBeenDecoded(false),
-  mDownscaleDuringDecode(false),
   mPendingAnimation(false),
   mAnimationFinished(false),
   mWantFullDecode(false)
@@ -127,22 +126,14 @@ RasterImage::Init(const char* aMimeType,
   }
 
   // We want to avoid redecodes for transient images.
-  MOZ_ASSERT(!(aFlags & INIT_FLAG_TRANSIENT) ||
-               (!(aFlags & INIT_FLAG_DISCARDABLE) &&
-                !(aFlags & INIT_FLAG_DOWNSCALE_DURING_DECODE)),
-             "Illegal init flags for transient image");
+  MOZ_ASSERT_IF(aFlags & INIT_FLAG_TRANSIENT,
+                !(aFlags & INIT_FLAG_DISCARDABLE));
 
   // Store initialization data
   mDiscardable = !!(aFlags & INIT_FLAG_DISCARDABLE);
   mWantFullDecode = !!(aFlags & INIT_FLAG_DECODE_IMMEDIATELY);
   mTransient = !!(aFlags & INIT_FLAG_TRANSIENT);
-  mDownscaleDuringDecode = !!(aFlags & INIT_FLAG_DOWNSCALE_DURING_DECODE);
   mSyncLoad = !!(aFlags & INIT_FLAG_SYNC_LOAD);
-
-#ifndef MOZ_ENABLE_SKIA
-  // Downscale-during-decode requires Skia.
-  mDownscaleDuringDecode = false;
-#endif
 
   // Use the MIME type to select a decoder type, and make sure there *is* a
   // decoder for this MIME type.
@@ -1207,10 +1198,6 @@ RasterImage::RequestDecodeForSize(const IntSize& aSize, uint32_t aFlags)
     return NS_OK;
   }
 
-  // Fall back to our intrinsic size if we don't support
-  // downscale-during-decode.
-  IntSize targetSize = mDownscaleDuringDecode ? aSize : mSize;
-
   // Decide whether to sync decode images we can decode quickly. Here we are
   // explicitly trading off flashing for responsiveness in the case that we're
   // redecoding an image (see bug 845147).
@@ -1223,7 +1210,7 @@ RasterImage::RequestDecodeForSize(const IntSize& aSize, uint32_t aFlags)
 
   // Look up the first frame of the image, which will implicitly start decoding
   // if it's not available right now.
-  LookupFrame(0, targetSize, flags);
+  LookupFrame(0, aSize, flags);
 
   return NS_OK;
 }
@@ -1273,20 +1260,14 @@ RasterImage::Decode(const IntSize& aSize, uint32_t aFlags)
     return NS_OK;
   }
 
-  if (mDownscaleDuringDecode) {
-    // We're about to decode again, which may mean that some of the previous
-    // sizes we've decoded at aren't useful anymore. We can allow them to
-    // expire from the cache by unlocking them here. When the decode finishes,
-    // it will send an invalidation that will cause all instances of this image
-    // to redraw. If this image is locked, any surfaces that are still useful
-    // will become locked again when LookupFrame touches them, and the remainder
-    // will eventually expire.
-    SurfaceCache::UnlockSurfaces(ImageKey(this));
-  }
-
-  MOZ_ASSERT(mDownscaleDuringDecode || aSize == mSize,
-             "Can only decode to our intrinsic size if we're not allowed to "
-             "downscale-during-decode");
+  // We're about to decode again, which may mean that some of the previous sizes
+  // we've decoded at aren't useful anymore. We can allow them to expire from
+  // the cache by unlocking them here. When the decode finishes, it will send an
+  // invalidation that will cause all instances of this image to redraw. If this
+  // image is locked, any surfaces that are still useful will become locked
+  // again when LookupFrame touches them, and the remainder will eventually
+  // expire.
+  SurfaceCache::UnlockSurfaces(ImageKey(this));
 
   Maybe<IntSize> targetSize = mSize != aSize ? Some(aSize) : Nothing();
 
@@ -1411,13 +1392,23 @@ RasterImage::RecoverFromInvalidFrames(const IntSize& aSize, uint32_t aFlags)
   Decode(aSize, aFlags);
 }
 
+static bool
+HaveSkia()
+{
+#ifdef MOZ_ENABLE_SKIA
+  return true;
+#else
+  return false;
+#endif
+}
+
 bool
 RasterImage::CanDownscaleDuringDecode(const IntSize& aSize, uint32_t aFlags)
 {
-  // Check basic requirements: downscale-during-decode is enabled for this
-  // image, we have all the source data and know our size, the flags allow us to
-  // do it, and a 'good' filter is being used.
-  if (!mDownscaleDuringDecode || !mHasSize ||
+  // Check basic requirements: downscale-during-decode is enabled, Skia is
+  // available, this image isn't transient, we have all the source data and know
+  // our size, and the flags allow us to do it.
+  if (!mHasSize || mTransient || !HaveSkia() ||
       !gfxPrefs::ImageDownscaleDuringDecodeEnabled() ||
       !(aFlags & imgIContainer::FLAG_HIGH_QUALITY_SCALING)) {
     return false;
@@ -1468,8 +1459,7 @@ RasterImage::DrawInternal(DrawableFrameRef&& aFrameRef,
     aContext->Multiply(gfxMatrix::Scaling(scale.width, scale.height));
     region.Scale(1.0 / scale.width, 1.0 / scale.height);
 
-    couldRedecodeForBetterFrame = mDownscaleDuringDecode &&
-                                  CanDownscaleDuringDecode(aSize, aFlags);
+    couldRedecodeForBetterFrame = CanDownscaleDuringDecode(aSize, aFlags);
   }
 
   if (!aFrameRef->Draw(aContext, region, aFilter, aFlags)) {
