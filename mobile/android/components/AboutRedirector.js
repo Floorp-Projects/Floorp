@@ -89,6 +89,12 @@ if (AppConstants.MOZ_DEVICES) {
     privileged: true
   };
 }
+if (!AppConstants.MOZ_ANDROID_NATIVE_ACCOUNT_UI) {
+  modules['accounts'] = {
+    uri: "chrome://browser/content/aboutAccounts.xhtml",
+    privileged: true
+  };
+}
 
 function AboutRedirector() {}
 AboutRedirector.prototype = {
