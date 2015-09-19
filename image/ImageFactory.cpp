@@ -32,18 +32,6 @@ namespace image {
 ImageFactory::Initialize()
 { }
 
-static bool
-ShouldDownscaleDuringDecode(const nsCString& aMimeType)
-{
-  DecoderType type = DecoderFactory::GetDecoderType(aMimeType.get());
-  return type == DecoderType::JPEG ||
-         type == DecoderType::ICON ||
-         type == DecoderType::ICO ||
-         type == DecoderType::PNG ||
-         type == DecoderType::BMP ||
-         type == DecoderType::GIF;
-}
-
 static uint32_t
 ComputeImageFlags(ImageURL* uri, const nsCString& aMimeType, bool isMultiPart)
 {
@@ -52,7 +40,6 @@ ComputeImageFlags(ImageURL* uri, const nsCString& aMimeType, bool isMultiPart)
   // We default to the static globals.
   bool isDiscardable = gfxPrefs::ImageMemDiscardable();
   bool doDecodeImmediately = gfxPrefs::ImageDecodeImmediatelyEnabled();
-  bool doDownscaleDuringDecode = gfxPrefs::ImageDownscaleDuringDecodeEnabled();
 
   // We want UI to be as snappy as possible and not to flicker. Disable
   // discarding for chrome URLS.
@@ -69,15 +56,10 @@ ComputeImageFlags(ImageURL* uri, const nsCString& aMimeType, bool isMultiPart)
     isDiscardable = false;
   }
 
-  // Downscale-during-decode is only enabled for certain content types.
-  if (doDownscaleDuringDecode && !ShouldDownscaleDuringDecode(aMimeType)) {
-    doDownscaleDuringDecode = false;
-  }
-
   // For multipart/x-mixed-replace, we basically want a direct channel to the
   // decoder. Disable everything for this case.
   if (isMultiPart) {
-    isDiscardable = doDownscaleDuringDecode = false;
+    isDiscardable = false;
   }
 
   // We have all the information we need.
@@ -90,9 +72,6 @@ ComputeImageFlags(ImageURL* uri, const nsCString& aMimeType, bool isMultiPart)
   }
   if (isMultiPart) {
     imageFlags |= Image::INIT_FLAG_TRANSIENT;
-  }
-  if (doDownscaleDuringDecode) {
-    imageFlags |= Image::INIT_FLAG_DOWNSCALE_DURING_DECODE;
   }
 
   return imageFlags;
@@ -143,13 +122,7 @@ ImageFactory::CreateAnonymousImage(const nsCString& aMimeType)
   newTracker->SetImage(newImage);
   newImage->SetProgressTracker(newTracker);
 
-  uint32_t imageFlags = Image::INIT_FLAG_SYNC_LOAD;
-  if (gfxPrefs::ImageDownscaleDuringDecodeEnabled() &&
-      ShouldDownscaleDuringDecode(aMimeType)) {
-    imageFlags |= Image::INIT_FLAG_DOWNSCALE_DURING_DECODE;
-  }
-
-  rv = newImage->Init(aMimeType.get(), imageFlags);
+  rv = newImage->Init(aMimeType.get(), Image::INIT_FLAG_SYNC_LOAD);
   if (NS_FAILED(rv)) {
     return BadImage("RasterImage::Init failed", newImage);
   }
