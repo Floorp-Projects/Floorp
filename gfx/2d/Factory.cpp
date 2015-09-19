@@ -401,7 +401,7 @@ Factory::CreateDrawTargetForData(BackendType aBackend,
     }
 #endif
   default:
-    gfxDebug() << "Invalid draw target type specified.";
+    gfxCriticalNote << "Invalid draw target type specified: " << (int)aBackend;
     return nullptr;
   }
 
@@ -410,7 +410,7 @@ Factory::CreateDrawTargetForData(BackendType aBackend,
   }
 
   if (!retVal) {
-    gfxDebug() << "Failed to create DrawTarget, Type: " << int(aBackend) << " Size: " << aSize;
+    gfxCriticalNote << "Failed to create DrawTarget, Type: " << int(aBackend) << " Size: " << aSize << ", Data: " << hexa(aData) << ", Stride: " << aStride;
   }
 
   return retVal.forget();
