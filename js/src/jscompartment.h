@@ -454,9 +454,6 @@ struct JSCompartment
      */
     JSObject*                    gcIncomingGrayPointers;
 
-    /* Linked list of live weakmaps in this compartment. */
-    js::WeakMapBase*             gcWeakMapList;
-
   private:
     /* Whether to preserve JIT code on non-shrinking GCs. */
     bool                         gcPreserveJitCode;
@@ -546,7 +543,6 @@ struct JSCompartment
     void sweepJitCompartment(js::FreeOp* fop);
     void sweepRegExps();
     void sweepDebugScopes();
-    void sweepWeakMaps();
     void sweepNativeIterators();
     void sweepTemplateObjects();
 
