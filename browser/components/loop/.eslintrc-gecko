@@ -50,6 +50,7 @@
     "SocialShare": false,
     "Task": false,
     "UITour": false,
+    "WebChannel": false,
     "XPCOMUtils": false,
     "uuidgen": true,
     // Test Related
