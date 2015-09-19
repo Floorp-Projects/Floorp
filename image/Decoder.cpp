@@ -324,8 +324,7 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
       SurfaceCache::Insert(frame, ImageKey(mImage.get()),
                            RasterSurfaceKey(aTargetSize,
                                             mSurfaceFlags,
-                                            aFrameNum),
-                           Lifetime::Persistent);
+                                            aFrameNum));
     if (outcome == InsertOutcome::FAILURE) {
       // We couldn't insert the surface, almost certainly due to low memory. We
       // treat this as a permanent error to help the system recover; otherwise,
