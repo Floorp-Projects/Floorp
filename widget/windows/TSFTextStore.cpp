@@ -3523,19 +3523,27 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
   if (mComposition.IsComposing() && mComposition.mStart < acpEnd &&
       mLockedContent.IsLayoutChangedAfter(acpEnd)) {
     const Selection& currentSel = CurrentSelection();
-    if ((sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar ||
-         sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret) &&
-        kSink->IsMSJapaneseIMEActive()) {
+    // The bug of Microsoft Office IME 2010 for Japanese is similar to
+    // MS-IME for Win 8.1 and Win 10.  Newer version of MS Office IME is not
+    // released yet.  So, we can hack it without prefs  because there must be
+    // no developers who want to disable this hack for tests.
+    const bool kIsMSOfficeJapaneseIME2010 =
+      kSink->IsMSOfficeJapaneseIME2010Active();
+    if (kIsMSOfficeJapaneseIME2010 ||
+        ((sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar ||
+          sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret) &&
+         kSink->IsMSJapaneseIMEActive())) {
       // MS IME for Japanese doesn't support asynchronous handling at deciding
       // its suggest list window position.  The feature was implemented
       // starting from Windows 8.
-      if (IsWin8OrLater()) {
+      if (IsWin8OrLater() || kIsMSOfficeJapaneseIME2010) {
         // Basically, MS-IME tries to retrieve whole composition string rect
         // at deciding suggest window immediately after unlocking the document.
         // However, in e10s mode, the content hasn't updated yet in most cases.
         // Therefore, if the first character at the retrieving range rect is
         // available, we should use it as the result.
-        if (sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar &&
+        if ((kIsMSOfficeJapaneseIME2010 ||
+             sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar) &&
             !mLockedContent.IsLayoutChangedAfter(acpStart) &&
             acpStart < acpEnd) {
           acpEnd = acpStart;
@@ -3549,7 +3557,8 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
         // caret rect immediately after modifying the composition string but
         // before unlocking the document.  In such case, we should return the
         // nearest character rect.
-        else if (sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret &&
+        else if ((kIsMSOfficeJapaneseIME2010 ||
+                  sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret) &&
                  acpStart == acpEnd &&
                  currentSel.IsCollapsed() && currentSel.EndOffset() == acpEnd) {
           acpEnd = acpStart = mLockedContent.MinOffsetOfLayoutChanged();
