@@ -451,5 +451,31 @@ this.BrowserTestUtils = {
         tab.ownerDocument.defaultView.gBrowser.removeTab(tab);
       }
     });
+  },
+
+  /**
+   * Version of EventUtils' `sendChar` function; it will synthesize a keypress
+   * event in a child process and returns a Promise that will result when the
+   * event was fired. Instead of a Window, a Browser object is required to be
+   * passed to this function.
+   *
+   * @param {String} char
+   *        A character for the keypress event that is sent to the browser.
+   * @param {Browser} browser
+   *        Browser element, must not be null.
+   *
+   * @returns {Promise}
+   * @resolves True if the keypress event was synthesized.
+   */
+  sendChar(char, browser) {
+    return new Promise(resolve => {
+      let mm = browser.messageManager;
+      mm.addMessageListener("Test:SendCharDone", function charMsg(message) {
+        mm.removeMessageListener("Test:SendCharDone", charMsg);
+        resolve(message.data.sendCharResult);
+      });
+
+      mm.sendAsyncMessage("Test:SendChar", { char: char });
+    });
   }
 };
