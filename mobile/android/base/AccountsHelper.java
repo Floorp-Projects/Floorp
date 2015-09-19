@@ -21,6 +21,7 @@ import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.Engaged;
 import org.mozilla.gecko.fxa.login.State;
+import org.mozilla.gecko.restrictions.Restriction;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.util.EventCallback;
@@ -74,6 +75,16 @@ public class AccountsHelper implements NativeEventListener {
 
     @Override
     public void handleMessage(String event, NativeJSObject message, final EventCallback callback) {
+        if (!RestrictedProfiles.isAllowed(mContext, Restriction.DISALLOW_MODIFY_ACCOUNTS)) {
+            // We register for messages in all contexts; we drop, with a log and an error to JavaScript,
+            // when the profile is restricted.  It's better to return errors than silently ignore messages.
+            Log.e(LOGTAG, "Profile is not allowed to modify accounts!  Ignoring event: " + event);
+            if (callback != null) {
+                callback.sendError("Profile is not allowed to modify accounts!");
+            }
+            return;
+        }
+
         if ("Accounts:CreateFirefoxAccountFromJSON".equals(event)) {
             AndroidFxAccount fxAccount = null;
             try {

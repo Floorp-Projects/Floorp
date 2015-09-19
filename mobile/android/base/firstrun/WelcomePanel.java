@@ -10,10 +10,12 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.fxa.activities.FxAccountWebFlowActivity;
 
 public class WelcomePanel extends FirstrunPanel {
     public static final int TITLE_RES = R.string.firstrun_panel_title_welcome;
@@ -27,6 +29,7 @@ public class WelcomePanel extends FirstrunPanel {
                 Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "firstrun-sync");
 
                 final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_GET_STARTED);
+                intent.putExtra(FxAccountWebFlowActivity.EXTRA_ENDPOINT, FxAccountConstants.ENDPOINT_FIRSTRUN);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                 startActivity(intent);
 

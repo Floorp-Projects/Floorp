@@ -5,4 +5,4 @@
 
 const eventListeners = require('./event-listeners');
 
-module.exports = { eventListeners };
+exports.eventListeners = eventListeners;

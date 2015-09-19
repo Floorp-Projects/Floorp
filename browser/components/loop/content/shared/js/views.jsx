@@ -150,12 +150,12 @@ loop.shared.views = (function(_, mozL10n) {
         "disabled": this.props.state === SCREEN_SHARE_STATES.PENDING
       });
       var dropdownMenuClasses = cx({
-        "native-dropdown-menu": true,
-        "conversation-window-dropdown": true,
-        "hide": !this.state.showMenu,
-        "visually-hidden": true
+        "screen-share-menu": true,
+        "dropdown-menu": true,
+        "hide": !this.state.showMenu
       });
       var windowSharingClasses = cx({
+        "dropdown-menu-item": true,
         "disabled": this.state.windowSharingDisabled
       });
 
@@ -168,7 +168,7 @@ loop.shared.views = (function(_, mozL10n) {
             {isActive ? null : <span className="chevron"/>}
           </button>
           <ul className={dropdownMenuClasses} ref="menu">
-            <li onClick={this._handleShareTabs}>
+            <li className="dropdown-menu-item" onClick={this._handleShareTabs}>
               {mozL10n.get("share_tabs_button_title2")}
             </li>
             <li className={windowSharingClasses} onClick={this._handleShareWindows}>
