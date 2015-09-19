@@ -517,9 +517,6 @@ pref("media.video-queue.send-to-compositor-size", 9999);
 // Whether to disable the video stats to prevent fingerprinting
 pref("media.video_stats.enabled", true);
 
-// Whether to enable the audio writing APIs on the audio element
-pref("media.audio_data.enabled", false);
-
 // Whether to use async panning and zooming
 pref("layers.async-pan-zoom.enabled", false);
 
