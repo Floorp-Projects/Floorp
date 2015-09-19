@@ -700,15 +700,6 @@ public:
   void OnSelectionChange(const IMENotification& aIMENotification);
 
   /**
-   * DispatchCompositionCommitEvent() dispatches a compositioncommit event or
-   * compositioncommitasis event.  If aCommitString is null, dispatches
-   * compositioncommitasis event.  I.e., if aCommitString is null, this
-   * commits the composition with the last data.  Otherwise, commits the
-   * composition with aCommitString value.
-   */
-  bool DispatchCompositionCommitEvent(const nsAString* aCommitString = nullptr);
-
-  /**
    * SetMarkedText() is a handler of setMarkedText of NSTextInput.
    *
    * @param aAttrString           This mut be an instance of NSAttributedString.
@@ -958,11 +949,6 @@ private:
   void InitCompositionEvent(WidgetCompositionEvent& aCompositionEvent);
 
   /**
-   * When a composition is finished, OnEndIMEComposition() is called.
-   */
-  void OnEndIMEComposition();
-
-  /**
    * DispatchCompositionStartEvent() dispatches a compositionstart event and
    * initializes the members indicating composition state.
    *
@@ -988,6 +974,18 @@ private:
   bool DispatchCompositionChangeEvent(const nsString& aText,
                                       NSAttributedString* aAttrString,
                                       NSRange& aSelectedRange);
+
+  /**
+   * DispatchCompositionCommitEvent() dispatches a compositioncommit event or
+   * compositioncommitasis event.  If aCommitString is null, dispatches
+   * compositioncommitasis event.  I.e., if aCommitString is null, this
+   * commits the composition with the last data.  Otherwise, commits the
+   * composition with aCommitString value.
+   *
+   * @return                      true if the widget isn't destroyed.
+   *                              Otherwise, false.
+   */
+  bool DispatchCompositionCommitEvent(const nsAString* aCommitString = nullptr);
 
   // The focused IME handler.  Please note that the handler might lost the
   // actual focus by deactivating the application.  If we are active, this
