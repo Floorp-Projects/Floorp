@@ -115,6 +115,7 @@ private:
   LexerTransition<ICOState> ReadBMP(const char* aData, uint32_t aLen);
   LexerTransition<ICOState> PrepareForMask();
   LexerTransition<ICOState> ReadMaskRow(const char* aData);
+  LexerTransition<ICOState> FinishResource();
 
   StreamingLexer<ICOState, 32> mLexer; // The lexer.
   nsRefPtr<Decoder> mContainedDecoder; // Either a BMP or PNG decoder.
