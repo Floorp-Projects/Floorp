@@ -2696,6 +2696,37 @@ IMEInputHandler::CreateTextRangeArray(NSAttributedString *aAttrString,
 }
 
 bool
+IMEInputHandler::DispatchCompositionStartEvent()
+{
+  MOZ_LOG(gLog, LogLevel::Info,
+    ("%p IMEInputHandler::DispatchCompositionStartEvent, "
+     "mSelectedRange={ location=%llu, length=%llu }, Destroyed()=%s, "
+     "mView=%p, mWidget=%p, inputContext=%p, mIsIMEComposing=%s",
+     this,  mSelectedRange.location, mSelectedRange.length,
+     TrueOrFalse(Destroyed()), mView, mWidget,
+     mView ? [mView inputContext] : nullptr, TrueOrFalse(mIsIMEComposing)));
+
+  WidgetCompositionEvent compositionStartEvent(true, eCompositionStart,
+                                               mWidget);
+  InitCompositionEvent(compositionStartEvent);
+
+  NS_ASSERTION(!mIsIMEComposing, "There is a composition already");
+  mIsIMEComposing = true;
+
+  DispatchEvent(compositionStartEvent);
+
+  if (Destroyed()) {
+    MOZ_LOG(gLog, LogLevel::Info,
+      ("%p IMEInputHandler::DispatchCompositionStartEvent, "
+       "destroyed by compositionstart event", this));
+    return false;
+  }
+
+  // FYI: compositionstart may cause committing composition by the webapp.
+  return mIsIMEComposing;
+}
+
+bool
 IMEInputHandler::DispatchCompositionChangeEvent(const nsString& aText,
                                                 NSAttributedString* aAttrString,
                                                 NSRange& aSelectedRange)
@@ -2811,20 +2842,12 @@ IMEInputHandler::InsertTextAsCommittingComposition(
       NS_ENSURE_TRUE_VOID(SetSelection(*aReplacementRange));
     }
 
-    // XXXmnakano Probably, we shouldn't emulate composition in this case.
-    // I think that we should just fire DOM3 textInput event if we implement it.
-    WidgetCompositionEvent compStart(true, eCompositionStart, mWidget);
-    InitCompositionEvent(compStart);
-
-    DispatchEvent(compStart);
-    if (Destroyed()) {
+    if (!DispatchCompositionStartEvent()) {
       MOZ_LOG(gLog, LogLevel::Info,
         ("%p IMEInputHandler::InsertTextAsCommittingComposition, "
-         "destroyed by compositionstart event", this));
+         "cannot continue handling composition after compositionstart", this));
       return;
     }
-
-    OnStartIMEComposition();
   }
 
   DispatchCompositionCommitEvent(&str);
@@ -2903,22 +2926,12 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
 
     mMarkedRange.location = SelectedRange().location;
 
-    WidgetCompositionEvent compStart(true, eCompositionStart, mWidget);
-    InitCompositionEvent(compStart);
-
-    DispatchEvent(compStart);
-    if (Destroyed()) {
+    if (!DispatchCompositionStartEvent()) {
       MOZ_LOG(gLog, LogLevel::Info,
-        ("%p IMEInputHandler::SetMarkedText, "
-         "destroyed by compositionstart event", this));
+        ("%p IMEInputHandler::SetMarkedText, cannot continue handling "
+         "composition after dispatching compositionstart", this));
       return;
     }
-
-    OnStartIMEComposition();
-  }
-
-  if (!IsIMEComposing()) {
-    return;
   }
 
   if (!str.IsEmpty()) {
@@ -3390,23 +3403,6 @@ IMEInputHandler::OnDestroyWidget(nsChildView* aDestroyingWidget)
   mIMEHasFocus = false;
 
   return true;
-}
-
-void
-IMEInputHandler::OnStartIMEComposition()
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  MOZ_LOG(gLog, LogLevel::Info,
-    ("%p IMEInputHandler::OnStartIMEComposition, mView=%p, mWidget=%p"
-     "inputContext=%p, mIsIMEComposing=%s",
-     this, mView, mWidget, mView ? [mView inputContext] : nullptr,
-     TrueOrFalse(mIsIMEComposing)));
-
-  NS_ASSERTION(!mIsIMEComposing, "There is a composition already");
-  mIsIMEComposing = true;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 void
