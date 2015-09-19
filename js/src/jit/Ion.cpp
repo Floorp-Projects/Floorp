@@ -409,12 +409,14 @@ JitCompartment::ensureIonStubsExist(JSContext* cx)
 struct OnIonCompilationInfo {
     size_t numBlocks;
     size_t scriptIndex;
+    LifoAlloc alloc;
     LSprinter graph;
 
-    explicit OnIonCompilationInfo(LifoAlloc* alloc)
+    OnIonCompilationInfo()
       : numBlocks(0),
         scriptIndex(0),
-        graph(alloc)
+        alloc(4096),
+        graph(&alloc)
     { }
 
     bool filled() const {
@@ -594,7 +596,7 @@ jit::LazyLink(JSContext* cx, HandleScript calleeScript)
 
     // See PrepareForDebuggerOnIonCompilationHook
     Rooted<ScriptVector> debugScripts(cx, ScriptVector(cx));
-    OnIonCompilationInfo info(builder->alloc().lifoAlloc());
+    OnIonCompilationInfo info;
 
     {
         AutoEnterAnalysis enterTypes(cx);
@@ -606,13 +608,13 @@ jit::LazyLink(JSContext* cx, HandleScript calleeScript)
         }
     }
 
-    if (info.filled())
-        Debugger::onIonCompilation(cx, debugScripts, info.graph);
-
     {
         AutoLockHelperThreadState lock;
         FinishOffThreadBuilder(cx, builder);
     }
+
+    if (info.filled())
+        Debugger::onIonCompilation(cx, debugScripts, info.graph);
 
     MOZ_ASSERT(calleeScript->hasBaselineScript());
     MOZ_ASSERT(calleeScript->baselineOrIonRawPointer());
@@ -2227,7 +2229,7 @@ IonCompile(JSContext* cx, JSScript* script,
 
     // See PrepareForDebuggerOnIonCompilationHook
     Rooted<ScriptVector> debugScripts(cx, ScriptVector(cx));
-    OnIonCompilationInfo debugInfo(alloc);
+    OnIonCompilationInfo debugInfo;
 
     ScopedJSDeletePtr<CodeGenerator> codegen;
     {
