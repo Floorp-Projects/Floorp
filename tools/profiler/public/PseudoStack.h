@@ -276,16 +276,10 @@ public:
 
     // Make sure we increment the pointer after the name has
     // been written such that mStack is always consistent.
+    entry.initCppFrame(aStackAddress, line);
     entry.setLabel(aName);
-    entry.setCppFrame(aStackAddress, line);
     MOZ_ASSERT(entry.flags() == js::ProfileEntry::IS_CPP_ENTRY);
-
-    uint32_t uint_category = static_cast<uint32_t>(aCategory);
-    MOZ_ASSERT(
-      uint_category >= static_cast<uint32_t>(js::ProfileEntry::Category::FIRST) &&
-      uint_category <= static_cast<uint32_t>(js::ProfileEntry::Category::LAST));
-
-    entry.setFlag(uint_category);
+    entry.setCategory(aCategory);
 
     // Track if mLabel needs a copy.
     if (aCopy)
@@ -466,4 +460,3 @@ public:
 };
 
 #endif
-
