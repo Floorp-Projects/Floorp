@@ -6,6 +6,6 @@ package org.mozilla.gecko.fxa.activities;
 
 public class FxAccountConfirmAccountActivityWeb extends FxAccountWebFlowActivity {
   public FxAccountConfirmAccountActivityWeb() {
-    super(CANNOT_RESUME_WHEN_NO_ACCOUNTS_EXIST, "settings");
+    super(CANNOT_RESUME_WHEN_NO_ACCOUNTS_EXIST, "manage");
   }
 }

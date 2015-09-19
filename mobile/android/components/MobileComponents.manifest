@@ -20,7 +20,9 @@ contract @mozilla.org/network/protocol/about;1?what=blocked {322ba47e-7047-4f71-
 #ifdef MOZ_DEVICES
 contract @mozilla.org/network/protocol/about;1?what=devices {322ba47e-7047-4f71-aebf-cb7d69325cd9}
 #endif
-
+#ifndef MOZ_ANDROID_NATIVE_ACCOUNT_UI
+contract @mozilla.org/network/protocol/about;1?what=accounts {322ba47e-7047-4f71-aebf-cb7d69325cd9}
+#endif
 contract @mozilla.org/network/protocol/about;1?what=logins {322ba47e-7047-4f71-aebf-cb7d69325cd9}
 
 # DirectoryProvider.js

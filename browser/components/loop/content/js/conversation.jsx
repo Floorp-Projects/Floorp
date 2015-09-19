@@ -134,6 +134,9 @@ loop.conversation = (function(mozL10n) {
       mozLoop: navigator.mozLoop
     });
 
+    // expose for functional tests
+    loop.conversation._sdkDriver = sdkDriver;
+
     // Create the stores.
     var conversationAppStore = new loop.store.ConversationAppStore({
       dispatcher: dispatcher,
