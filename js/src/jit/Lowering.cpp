@@ -3303,6 +3303,9 @@ LIRGenerator::visitGetElementCache(MGetElementCache* ins)
 {
     MOZ_ASSERT(ins->object()->type() == MIRType_Object);
 
+    if (ins->monitoredResult())
+        gen->setPerformsCall(); // See visitGetPropertyCache.
+
     if (ins->type() == MIRType_Value) {
         MOZ_ASSERT(ins->index()->type() == MIRType_Value);
         LGetElementCacheV* lir = new(alloc()) LGetElementCacheV(useRegister(ins->object()));
@@ -3518,6 +3521,8 @@ LIRGenerator::visitSetElementCache(MSetElementCache* ins)
 {
     MOZ_ASSERT(ins->object()->type() == MIRType_Object);
     MOZ_ASSERT(ins->index()->type() == MIRType_Value);
+
+    gen->setPerformsCall(); // See visitSetPropertyCache.
 
     // Due to lack of registers on x86, we reuse the object register as a
     // temporary. This register may be used in a 1-byte store, which on x86

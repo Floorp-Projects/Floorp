@@ -601,6 +601,13 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, bool frame
     if (frameRange.empty())
         return frameOk;
 
+    auto frameMapsGuard = MakeScopeExit([&] {
+        // Clean up all Debugger.Frame instances. This call creates a fresh
+        // FrameRange, as one debugger's onPop handler could have caused another
+        // debugger to create its own Debugger.Frame instance.
+        removeFromFrameMapsAndClearBreakpointsIn(cx, frame);
+    });
+
     /* Save the frame's completion value. */
     JSTrapStatus status;
     RootedValue value(cx);
@@ -660,13 +667,6 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, bool frame
             }
         }
     }
-
-    /*
-     * Clean up all Debugger.Frame instances. This call creates a fresh
-     * FrameRange, as one debugger's onPop handler could have caused another
-     * debugger to create its own Debugger.Frame instance.
-     */
-    removeFromFrameMapsAndClearBreakpointsIn(cx, frame);
 
     /* Establish (status, value) as our resumption value. */
     switch (status) {
