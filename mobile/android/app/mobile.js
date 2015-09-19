@@ -945,3 +945,15 @@ pref("browser.tabs.showAudioPlayingIcon", true);
 pref("dom.serviceWorkers.enabled", true);
 pref("dom.serviceWorkers.interception.enabled", true);
 #endif
+
+// The remote content URL where FxAccountsWebChannel messages originate.  Must use HTTPS.
+pref("identity.fxaccounts.remote.webchannel.uri", "https://accounts.firefox.com");
+
+// The remote URL of the Firefox Account profile server.
+pref("identity.fxaccounts.remote.profile.uri", "https://profile.accounts.firefox.com/v1");
+
+// The remote URL of the Firefox Account oauth server.
+pref("identity.fxaccounts.remote.oauth.uri", "https://oauth.accounts.firefox.com/v1"); 
+
+// Token server used by Firefox Account-authenticated Sync.
+pref("identity.sync.tokenserver.uri", "https://token.services.mozilla.com/1.0/sync/1.5");

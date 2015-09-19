@@ -15,6 +15,8 @@ import com.nineoldandroids.animation.Animator;
 import com.nineoldandroids.animation.AnimatorListenerAdapter;
 import com.nineoldandroids.animation.ObjectAnimator;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.animation.TransitionsTracker;
 
 public class FirstrunPane extends LinearLayout {
@@ -35,10 +37,10 @@ public class FirstrunPane extends LinearLayout {
         super(context, attrs);
     }
 
-    public void load(FragmentManager fm) {
+    public void load(Context appContext, FragmentManager fm) {
         visible = true;
         pager = (FirstrunPager) findViewById(R.id.firstrun_pager);
-        pager.load(fm, new OnFinishListener() {
+        pager.load(appContext, fm, new OnFinishListener() {
             @Override
             public void onFinish() {
                 hide();
@@ -57,6 +59,10 @@ public class FirstrunPane extends LinearLayout {
             onFinishListener.onFinish();
         }
         animateHide();
+
+        // Stop all versions of firstrun A/B sessions.
+        Telemetry.stopUISession(TelemetryContract.Session.EXPERIMENT, FirstrunPagerConfig.ONBOARDING_A);
+        Telemetry.stopUISession(TelemetryContract.Session.EXPERIMENT, FirstrunPagerConfig.ONBOARDING_B);
     }
 
     private void animateHide() {
