@@ -425,8 +425,7 @@ class IonBuilder
                                     TemporaryTypeSet* types);
     bool getPropTryArgumentsLength(bool* emitted, MDefinition* obj);
     bool getPropTryArgumentsCallee(bool* emitted, MDefinition* obj, PropertyName* name);
-    bool getPropTryConstant(bool* emitted, MDefinition* obj, PropertyName* name,
-                            TemporaryTypeSet* types);
+    bool getPropTryConstant(bool* emitted, MDefinition* obj, jsid id, TemporaryTypeSet* types);
     bool getPropTryDefiniteSlot(bool* emitted, MDefinition* obj, PropertyName* name,
                                 BarrierKind barrier, TemporaryTypeSet* types);
     bool getPropTryUnboxed(bool* emitted, MDefinition* obj, PropertyName* name,
@@ -585,6 +584,7 @@ class IonBuilder
 
     // jsop_getelem() helpers.
     bool getElemTryDense(bool* emitted, MDefinition* obj, MDefinition* index);
+    bool getElemTryGetProp(bool* emitted, MDefinition* obj, MDefinition* index);
     bool getElemTryTypedStatic(bool* emitted, MDefinition* obj, MDefinition* index);
     bool getElemTryTypedArray(bool* emitted, MDefinition* obj, MDefinition* index);
     bool getElemTryTypedObject(bool* emitted, MDefinition* obj, MDefinition* index);
@@ -960,8 +960,8 @@ class IonBuilder
 
     MGetPropertyCache* getInlineableGetPropertyCache(CallInfo& callInfo);
 
-    JSObject* testSingletonProperty(JSObject* obj, PropertyName* name);
-    JSObject* testSingletonPropertyTypes(MDefinition* obj, PropertyName* name);
+    JSObject* testSingletonProperty(JSObject* obj, jsid id);
+    JSObject* testSingletonPropertyTypes(MDefinition* obj, jsid id);
 
     uint32_t getDefiniteSlot(TemporaryTypeSet* types, PropertyName* name, uint32_t* pnfixed);
     MDefinition* convertUnboxedObjects(MDefinition* obj);
