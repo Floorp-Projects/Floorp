@@ -16,6 +16,7 @@
     <title>&aboutLogins.title;</title>
     <meta name="viewport" content="width=device-width; user-scalable=0" />
     <link rel="icon" type="image/png" sizes="64x64" href="chrome://branding/content/favicon64.png" />
+    <link rel="stylesheet" href="chrome://browser/skin/spinner.css" type="text/css"/>
     <link rel="stylesheet" href="chrome://browser/skin/aboutBase.css" type="text/css"/>
     <link rel="stylesheet" href="chrome://browser/skin/aboutLogins.css" type="text/css"/>
     <script type="application/javascript;version=1.8" src="chrome://browser/content/aboutLogins.js"></script>
@@ -38,7 +39,22 @@
       </div>
       <div id="logins-list-loading-body" class="hidden">
         <div id="loading-img-container">
-          <object type="image/svg+xml" id="spinner" data="chrome://browser/skin/images/spinning_throbber.svg"/>
+
+          <div id="spinner" class="mui-refresh-main">
+            <div class="mui-refresh-wrapper">
+              <div class="mui-spinner-wrapper">
+                <div class="mui-spinner-main">
+                  <div class="mui-spinner-left">
+                    <div class="mui-half-circle-left" />
+                  </div>
+                  <div class="mui-spinner-right">
+                    <div class="mui-half-circle-right" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
       <div id="empty-body" class="hidden">

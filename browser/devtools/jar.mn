@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
+    content/browser/devtools/d3.js                                     (shared/vendor/d3.js)
+    content/browser/devtools/dagre-d3.js                               (shared/vendor/dagre-d3.js)
     content/browser/devtools/widgets.css                               (shared/widgets/widgets.css)
     content/browser/devtools/widgets/VariablesView.xul                 (shared/widgets/VariablesView.xul)
     content/browser/devtools/markup-view.xhtml                         (markupview/markup-view.xhtml)
@@ -84,9 +86,7 @@ browser.jar:
     content/browser/devtools/canvasdebugger.js                         (canvasdebugger/canvasdebugger.js)
     content/browser/devtools/canvasdebugger/snapshotslist.js           (canvasdebugger/snapshotslist.js)
     content/browser/devtools/canvasdebugger/callslist.js               (canvasdebugger/callslist.js)
-    content/browser/devtools/d3.js                                     (shared/d3.js)
     content/browser/devtools/webaudioeditor.xul                        (webaudioeditor/webaudioeditor.xul)
-    content/browser/devtools/dagre-d3.js                               (webaudioeditor/lib/dagre-d3.js)
     content/browser/devtools/webaudioeditor/includes.js                (webaudioeditor/includes.js)
     content/browser/devtools/webaudioeditor/models.js                  (webaudioeditor/models.js)
     content/browser/devtools/webaudioeditor/controller.js              (webaudioeditor/controller.js)

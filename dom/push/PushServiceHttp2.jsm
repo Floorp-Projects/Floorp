@@ -260,6 +260,7 @@ var SubscriptionListener = function(aSubInfo, aResolve, aReject,
   this._data = '';
   this._serverURI = aServerURI;
   this._service = aPushServiceHttp2;
+  this._ctime = Date.now();
 };
 
 SubscriptionListener.prototype = {
@@ -362,8 +363,10 @@ SubscriptionListener.prototype = {
       scope: this._subInfo.record.scope,
       originAttributes: this._subInfo.record.originAttributes,
       quota: this._subInfo.record.maxQuota,
+      ctime: Date.now(),
     });
 
+    Services.telemetry.getHistogramById("PUSH_API_SUBSCRIBE_HTTP2_TIME").add(Date.now() - this._ctime);
     this._resolve(reply);
   },
 };

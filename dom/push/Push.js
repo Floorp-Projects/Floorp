@@ -98,14 +98,20 @@ Push.prototype = {
       principal: principal,
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionRequest]),
       allow: function() {
+        let histogram = Services.telemetry.getHistogramById("PUSH_API_PERMISSION_GRANTED");
+        histogram.add();
         aAllowCallback();
       },
       cancel: function() {
+        let histogram = Services.telemetry.getHistogramById("PUSH_API_PERMISSION_DENIED");
+        histogram.add();
         aCancelCallback();
       },
       window: this._window
     };
 
+    let histogram = Services.telemetry.getHistogramById("PUSH_API_PERMISSION_REQUESTED");
+    histogram.add(1);
     // Using askPermission from nsIDOMWindowUtils that takes care of the
     // remoting if needed.
     let windowUtils = this._window.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -159,6 +165,8 @@ Push.prototype = {
 
   subscribe: function() {
     debug("subscribe()");
+    let histogram = Services.telemetry.getHistogramById("PUSH_API_USED");
+    histogram.add(true);
     return this.getEndpointResponse(this._client.subscribe.bind(this._client));
   },
 

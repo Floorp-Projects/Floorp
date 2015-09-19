@@ -390,12 +390,14 @@ class ScriptMixin(PlatformMixin):
             self.warning("Socket error when accessing %s: %s" % (url, str(e)))
             raise
 
-    def _retry_download_file(self, url, file_name, error_level, retry_config=None):
-        """ Helper method to retry _download_file().
+    def _retry_download(self, url, error_level, file_name=None, retry_config=None):
+        """ Helper method to retry download methods
         Split out so we can alter the retry logic in mozharness.mozilla.testing.gaia_test.
 
         This method calls `self.retry` on `self._download_file` using the passed
-        parameters.
+        parameters if a file_name is specified. If no file is specified, we will
+        instead call `self._urlopen`, which grabs the contents of a url but does
+        not create a file on disk.
 
         Args:
             url (str): URL path where the file is located.
@@ -421,11 +423,24 @@ class ScriptMixin(PlatformMixin):
         if retry_config:
             retry_args.update(retry_config)
 
+        download_func = self._urlopen
+        kwargs = {"url": url}
+        if file_name:
+            download_func = self._download_file
+            kwargs = {"url": url, "file_name": file_name}
+
         return self.retry(
-            self._download_file,
-            args=(url, file_name),
+            download_func,
+            kwargs=kwargs,
             **retry_args
         )
+
+    def load_json_url(self, url, error_level=None, *args, **kwargs):
+        """ Returns a json object from a url (it retries). """
+        contents = self._retry_download(
+            url=url, error_level=error_level, *args, **kwargs
+        )
+        return json.loads(contents.read())
 
     # http://www.techniqal.com/blog/2008/07/31/python-file-read-write-with-urllib2/
     # TODO thinking about creating a transfer object.
@@ -467,7 +482,12 @@ class ScriptMixin(PlatformMixin):
             if create_parent_dir:
                 self.mkdir_p(parent_dir, error_level=error_level)
         self.info("Downloading %s to %s" % (url, file_name))
-        status = self._retry_download_file(url, file_name, error_level, retry_config=retry_config)
+        status = self._retry_download(
+            url=url,
+            error_level=error_level,
+            file_name=file_name,
+            retry_config=retry_config
+        )
         if status == file_name:
             self.info("Downloaded %d bytes." % os.path.getsize(file_name))
         return status
