@@ -1739,8 +1739,8 @@ js::str_lastIndexOf(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-HasSubstringAt(JSLinearString* text, JSLinearString* pat, size_t start)
+bool
+js::HasSubstringAt(JSLinearString* text, JSLinearString* pat, size_t start)
 {
     MOZ_ASSERT(start + pat->length() <= text->length());
 
