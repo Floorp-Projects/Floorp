@@ -971,11 +971,6 @@ private:
   void InitCompositionEvent(WidgetCompositionEvent& aCompositionEvent);
 
   /**
-   * When a composition starts, OnStartIMEComposition() is called.
-   */
-  void OnStartIMEComposition();
-
-  /**
    * When a composition is updated, OnUpdateIMEComposition() is called.
    */
   void OnUpdateIMEComposition(NSString* aIMECompositionString);
@@ -984,6 +979,16 @@ private:
    * When a composition is finished, OnEndIMEComposition() is called.
    */
   void OnEndIMEComposition();
+
+  /**
+   * DispatchCompositionStartEvent() dispatches a compositionstart event and
+   * initializes the members indicating composition state.
+   *
+   * @return                      true if it can continues handling composition.
+   *                              Otherwise, e.g., canceled by the web page,
+   *                              this returns false.
+   */
+  bool DispatchCompositionStartEvent();
 
   // The focused IME handler.  Please note that the handler might lost the
   // actual focus by deactivating the application.  If we are active, this
