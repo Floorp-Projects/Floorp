@@ -502,10 +502,10 @@ SetOrExtendBoxedOrUnboxedDenseElements(ExclusiveContext* cx, JSObject* obj,
     // that were left alone.
     size_t i = 0;
     if (updateTypes == ShouldUpdateTypes::DontUpdate) {
-        for (size_t j = start; i < count && j < oldInitlen; i++)
+        for (size_t j = start; i < count && j < oldInitlen; i++, j++)
             nobj->setElementNoTypeChangeSpecific<Type>(j, vp[i]);
     } else {
-        for (size_t j = start; i < count && j < oldInitlen; i++) {
+        for (size_t j = start; i < count && j < oldInitlen; i++, j++) {
             if (!nobj->setElementSpecific<Type>(cx, j, vp[i]))
                 return DenseElementResult::Incomplete;
         }

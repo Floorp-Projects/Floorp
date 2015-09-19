@@ -9,11 +9,14 @@
 #include "txXSLTPatterns.h"
 #include "txExprParser.h"
 
+class txStylesheetCompilerState;
+
 class txPatternParser : public txExprParser
 {
 public:
-    static txPattern* createPattern(const nsAFlatString& aPattern,
-                                    txIParseContext* aContext);
+    static nsresult createPattern(const nsAFlatString& aPattern,
+                                  txIParseContext* aContext,
+                                  txPattern** aResult);
 protected:
     static nsresult createUnionPattern(txExprLexer& aLexer,
                                        txIParseContext* aContext,

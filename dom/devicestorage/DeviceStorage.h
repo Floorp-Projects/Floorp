@@ -249,6 +249,7 @@ public:
   bool CanBeFormatted();
   bool CanBeShared();
   bool IsRemovable();
+  bool LowDiskSpace();
   bool Default();
   void GetStorageName(nsAString& aStorageName);
 
