@@ -124,7 +124,7 @@ fails == collapsed-border-top-6.html border-top-10-ref.html
 == image-width-left-6.html image-width-6.html
 
 
-skip pref(image.high_quality_downscaling.enabled,true) == image-high-quality-scaling-1.html image-high-quality-scaling-1-ref.html
+skip pref(image.downscale-during-decode.enabled,true) == image-high-quality-scaling-1.html image-high-quality-scaling-1-ref.html
 
 
 != offscreen-0-ref.html offscreen-10-ref.html
