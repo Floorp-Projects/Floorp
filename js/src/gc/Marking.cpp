@@ -1788,8 +1788,8 @@ GCMarker::enterWeakMarkingMode()
     if (weakMapAction() == ExpandWeakMaps) {
         tag_ = TracerKindTag::WeakMarking;
 
-        for (GCCompartmentGroupIter c(runtime()); !c.done(); c.next()) {
-            for (WeakMapBase* m = c->gcWeakMapList; m; m = m->next) {
+        for (GCZoneGroupIter zone(runtime()); !zone.done(); zone.next()) {
+            for (WeakMapBase* m = zone->gcWeakMapList; m; m = m->next) {
                 if (m->marked)
                     m->markEphemeronEntries(this);
             }
