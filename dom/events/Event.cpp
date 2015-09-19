@@ -1005,7 +1005,7 @@ Event::GetOffsetCoords(nsPresContext* aPresContext,
                        LayoutDeviceIntPoint aPoint,
                        CSSIntPoint aDefaultPoint)
 {
-  if (!aEvent->mFlags.mIsBeingDispatched) {
+  if (!aEvent->target) {
     return GetPageCoords(aPresContext, aEvent, aPoint, aDefaultPoint);
   }
   nsCOMPtr<nsIContent> content = do_QueryInterface(aEvent->target);

@@ -1368,7 +1368,7 @@ Promise::Settle(JS::Handle<JS::Value> aValue, PromiseState aState)
   }
 #endif
 
-  if (!mGlobal || mGlobal->IsDying()) {
+  if (mGlobal->IsDying()) {
     return;
   }
 

@@ -8176,7 +8176,7 @@
   },
   "LOOP_SHARING_ROOM_URL": {
     "alert_emails": ["firefox-dev@mozilla.org", "mdeboer@mozilla.com"],
-    "expires_in_version": "44",
+    "expires_in_version": "45",
     "kind": "enumerated",
     "n_values": 8,
     "releaseChannelCollection": "opt-out",
@@ -8184,7 +8184,7 @@
   },
   "LOOP_ROOM_CREATE": {
     "alert_emails": ["firefox-dev@mozilla.org", "mdeboer@mozilla.com"],
-    "expires_in_version": "44",
+    "expires_in_version": "45",
     "kind": "enumerated",
     "n_values": 4,
     "releaseChannelCollection": "opt-out",
@@ -8192,7 +8192,7 @@
   },
   "LOOP_ROOM_DELETE": {
     "alert_emails": ["firefox-dev@mozilla.org", "mdeboer@mozilla.com"],
-    "expires_in_version": "44",
+    "expires_in_version": "45",
     "kind": "enumerated",
     "n_values": 4,
     "releaseChannelCollection": "opt-out",
@@ -8200,7 +8200,7 @@
   },
   "LOOP_ROOM_CONTEXT_ADD": {
     "alert_emails": ["firefox-dev@mozilla.org", "mdeboer@mozilla.com"],
-    "expires_in_version": "44",
+    "expires_in_version": "45",
     "kind": "enumerated",
     "n_values": 8,
     "releaseChannelCollection": "opt-out",
@@ -8208,7 +8208,7 @@
   },
   "LOOP_ROOM_CONTEXT_CLICK": {
     "alert_emails": ["firefox-dev@mozilla.org", "mdeboer@mozilla.com"],
-    "expires_in_version": "44",
+    "expires_in_version": "45",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
     "description": "Number times room context is clicked to visit the attached URL"
@@ -8896,11 +8896,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Reports whether the graphics sanity test passed an OS snapshot test. 0=Pass, 1=Fail, 2=Error, 3=Timed out."
   },
-  "NONLOWERCASE_NONHTML_ATTR_NODE_SET": {
-    "expires_in_version": "never",
-    "kind": "flag",
-    "description": "An Attr node that's not namespace-aware and was created from an HTML document is set on a non-HTML element and has a name containing uppercase ASCII chars"
-  },
   "DEVTOOLS_HUD_JANK": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -9477,5 +9472,122 @@
     "expires_in_version": "never",
     "kind": "count",
     "description": "Number of top-level content documents destroyed; used in conjunction with use counter histograms"
+  },
+  "PUSH_API_USED": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "flag",
+    "description": "A Push API subscribe() operation was performed at least once this session."
+  },
+  "PUSH_API_PERMISSION_REQUESTED": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Count of number of times the PermissionManager explicitly prompted user for Push Notifications permission"
+  },
+  "PUSH_API_PERMISSION_DENIED": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "User explicitly denied Push Notifications permission"
+  },
+  "PUSH_API_PERMISSION_GRANTED": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "User explicitly granted Push Notifications permission"
+  },
+  "PUSH_API_SUBSCRIBE_ATTEMPT": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Push Service attempts to subscribe with Push Server."
+  },
+  "PUSH_API_SUBSCRIBE_FAILED": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Attempt to subscribe with Push Server failed."
+  },
+  "PUSH_API_SUBSCRIBE_SUCCEEDED": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Attempt to subscribe with Push Server succeeded."
+  },
+  "PUSH_API_UNSUBSCRIBE_ATTEMPT": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Push Service attempts to unsubscribe with Push Server."
+  },
+  "PUSH_API_UNSUBSCRIBE_FAILED": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Attempt to unsubscribe with Push Server failed."
+  },
+  "PUSH_API_UNSUBSCRIBE_SUCCEEDED": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Attempt to unsubscribe with Push Server succeeded."
+  },
+  "PUSH_API_SUBSCRIBE_WS_TIME": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": "15000",
+    "n_buckets": 10,
+    "description": "Time taken to subscribe over WebSocket (ms)."
+  },
+  "PUSH_API_SUBSCRIBE_HTTP2_TIME": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": "15000",
+    "n_buckets": 10,
+    "description": "Time taken to subscribe over HTTP2 (ms)."
+  },
+  "PUSH_API_QUOTA_EXPIRATION_TIME": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": "31622400",
+    "n_buckets": 20,
+    "description": "Time taken for a push subscription to expire its quota (seconds). The maximum is just over an year."
+  },
+  "PUSH_API_QUOTA_RESET_TO": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "exponential",
+    "high": "200",
+    "n_buckets": 10,
+    "description": "The value a push record quota (a count) is reset to based on the user's browsing history."
+  },
+  "PUSH_API_NOTIFICATION_RECEIVED": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Push notification was received from server."
+  },
+  "PUSH_API_NOTIFICATION_RECEIVED_BUT_DID_NOT_NOTIFY": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "enumerated",
+    "n_values": 16,
+    "description": "Push notification was received from server, but not delivered to ServiceWorker. Enumeration values are defined in dom/push/PushService.jsm as kDROP_NOTIFICATION_REASON_*."
+  },
+  "PUSH_API_NOTIFY": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Attempt to notify ServiceWorker of push notification."
+  },
+  "PUSH_API_NOTIFY_REGISTRATION_LOST": {
+    "alert_emails": ["push@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "description": "Attempt to notify ServiceWorker of push notification resubscription."
   }
 }

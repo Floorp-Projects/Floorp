@@ -34,6 +34,32 @@ using namespace dom;
 using Appearance = AccessibleCaret::Appearance;
 using PositionChangedResult = AccessibleCaret::PositionChangedResult;
 
+#define AC_PROCESS_ENUM_TO_STREAM(e) case(e): aStream << #e; break;
+std::ostream&
+operator<<(std::ostream& aStream,
+           const AccessibleCaretManager::CaretMode& aCaretMode)
+{
+  using CaretMode = AccessibleCaretManager::CaretMode;
+  switch (aCaretMode) {
+    AC_PROCESS_ENUM_TO_STREAM(CaretMode::None);
+    AC_PROCESS_ENUM_TO_STREAM(CaretMode::Cursor);
+    AC_PROCESS_ENUM_TO_STREAM(CaretMode::Selection);
+  }
+  return aStream;
+}
+
+std::ostream& operator<<(std::ostream& aStream,
+                         const AccessibleCaretManager::UpdateCaretsHint& aHint)
+{
+  using UpdateCaretsHint = AccessibleCaretManager::UpdateCaretsHint;
+  switch (aHint) {
+    AC_PROCESS_ENUM_TO_STREAM(UpdateCaretsHint::Default);
+    AC_PROCESS_ENUM_TO_STREAM(UpdateCaretsHint::RespectOldAppearance);
+  }
+  return aStream;
+}
+#undef AC_PROCESS_ENUM_TO_STREAM
+
 AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
   : mPresShell(aPresShell)
 {
@@ -99,9 +125,9 @@ AccessibleCaretManager::HideCarets()
 void
 AccessibleCaretManager::UpdateCarets(UpdateCaretsHint aHint)
 {
-  mCaretMode = GetCaretMode();
+  mLastUpdateCaretMode = GetCaretMode();
 
-  switch (mCaretMode) {
+  switch (mLastUpdateCaretMode) {
   case CaretMode::None:
     HideCarets();
     break;
@@ -114,27 +140,53 @@ AccessibleCaretManager::UpdateCarets(UpdateCaretsHint aHint)
   }
 }
 
-void
-AccessibleCaretManager::UpdateCaretsForCursorMode(UpdateCaretsHint aHint)
+bool
+AccessibleCaretManager::IsCaretDisplayableInCursorMode(nsIFrame** aOutFrame,
+                                                       int32_t* aOutOffset) const
 {
-  AC_LOG("%s, selection: %p", __FUNCTION__, GetSelection());
-
   nsRefPtr<nsCaret> caret = mPresShell->GetCaret();
   if (!caret || !caret->IsVisible()) {
-    HideCarets();
-    return;
+    return false;
   }
 
   int32_t offset = 0;
   nsIFrame* frame = nsCaret::GetFrameAndOffset(GetSelection(), nullptr, 0, &offset);
 
   if (!frame) {
-    HideCarets();
-    return;
+    return false;
   }
 
-  Element* editingHost = frame->GetContent()->GetEditingHost();
-  if (!editingHost) {
+  if (!GetEditingHostForFrame(frame)) {
+    return false;
+  }
+
+  if (aOutFrame) {
+    *aOutFrame = frame;
+  }
+
+  if (aOutOffset) {
+    *aOutOffset = offset;
+  }
+
+  return true;
+}
+
+bool
+AccessibleCaretManager::HasNonEmptyTextContent(nsINode* aNode) const
+{
+  return nsContentUtils::HasNonEmptyTextContent(
+           aNode, nsContentUtils::eRecurseIntoChildren);
+}
+
+
+void
+AccessibleCaretManager::UpdateCaretsForCursorMode(UpdateCaretsHint aHint)
+{
+  AC_LOG("%s, selection: %p", __FUNCTION__, GetSelection());
+
+  int32_t offset = 0;
+  nsIFrame* frame = nullptr;
+  if (!IsCaretDisplayableInCursorMode(&frame, &offset)) {
     HideCarets();
     return;
   }
@@ -150,8 +202,7 @@ AccessibleCaretManager::UpdateCaretsForCursorMode(UpdateCaretsHint aHint)
     case PositionChangedResult::Changed:
       switch (aHint) {
         case UpdateCaretsHint::Default:
-          if (nsContentUtils::HasNonEmptyTextContent(
-                editingHost, nsContentUtils::eRecurseIntoChildren)) {
+          if (HasNonEmptyTextContent(GetEditingHostForFrame(frame))) {
             mFirstCaret->SetAppearance(Appearance::Normal);
           } else {
             mFirstCaret->SetAppearance(Appearance::NormalNotShown);
@@ -192,8 +243,8 @@ AccessibleCaretManager::UpdateCaretsForSelectionMode(UpdateCaretsHint aHint)
   int32_t endOffset = 0;
   nsIFrame* endFrame = FindFirstNodeWithFrame(true, &endOffset);
 
-  if (!startFrame || !endFrame ||
-      nsLayoutUtils::CompareTreePosition(startFrame, endFrame) > 0) {
+  if (!CompareTreePosition(startFrame, endFrame)) {
+    // XXX: Do we really have to hide carets if this condition isn't satisfied?
     HideCarets();
     return;
   }
@@ -228,7 +279,7 @@ AccessibleCaretManager::UpdateCaretsForSelectionMode(UpdateCaretsHint aHint)
   if (firstCaretResult == PositionChangedResult::Changed ||
       secondCaretResult == PositionChangedResult::Changed) {
     // Flush layout to make the carets intersection correct.
-    mPresShell->FlushPendingNotifications(Flush_Layout);
+    FlushLayout();
   }
 
   UpdateCaretsForTilt();
@@ -355,10 +406,9 @@ AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint)
 #endif
 
   // Firstly check long press on an empty editable content.
-  Element* newFocusEditingHost = ptFrame->GetContent()->GetEditingHost();
+  Element* newFocusEditingHost = GetEditingHostForFrame(ptFrame);
   if (focusableFrame && newFocusEditingHost &&
-      !nsContentUtils::HasNonEmptyTextContent(
-        newFocusEditingHost, nsContentUtils::eRecurseIntoChildren)) {
+      !HasNonEmptyTextContent(newFocusEditingHost)) {
     ChangeFocusToOrClearOldFocus(focusableFrame);
     // We need to update carets to get correct information before dispatching
     // CaretStateChangedEvent.
@@ -402,7 +452,7 @@ AccessibleCaretManager::OnScrollStart()
 void
 AccessibleCaretManager::OnScrollEnd()
 {
-  if (mCaretMode != GetCaretMode()) {
+  if (mLastUpdateCaretMode != GetCaretMode()) {
     return;
   }
 
@@ -418,7 +468,7 @@ AccessibleCaretManager::OnScrollEnd()
 void
 AccessibleCaretManager::OnScrollPositionChanged()
 {
-  if (mCaretMode != GetCaretMode()) {
+  if (mLastUpdateCaretMode != GetCaretMode()) {
     return;
   }
 
@@ -429,7 +479,7 @@ AccessibleCaretManager::OnScrollPositionChanged()
 void
 AccessibleCaretManager::OnReflow()
 {
-  if (mCaretMode != GetCaretMode()) {
+  if (mLastUpdateCaretMode != GetCaretMode()) {
     return;
   }
 
@@ -455,14 +505,6 @@ AccessibleCaretManager::OnKeyboardEvent()
   }
 }
 
-nsIContent*
-AccessibleCaretManager::GetFocusedContent() const
-{
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  MOZ_ASSERT(fm);
-  return fm->GetFocusedContent();
-}
-
 Selection*
 AccessibleCaretManager::GetSelection() const
 {
@@ -476,7 +518,14 @@ AccessibleCaretManager::GetSelection() const
 already_AddRefed<nsFrameSelection>
 AccessibleCaretManager::GetFrameSelection() const
 {
-  nsIContent* focusedContent = GetFocusedContent();
+  if (!mPresShell) {
+    return nullptr;
+  }
+
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  MOZ_ASSERT(fm);
+
+  nsIContent* focusedContent = fm->GetFocusedContent();
   if (focusedContent) {
     nsIFrame* focusFrame = focusedContent->GetPrimaryFrame();
     if (!focusFrame) {
@@ -496,6 +545,22 @@ AccessibleCaretManager::GetFrameSelection() const
     return mPresShell->FrameSelection();
   }
 }
+
+Element*
+AccessibleCaretManager::GetEditingHostForFrame(nsIFrame* aFrame) const
+{
+  if (!aFrame) {
+    return nullptr;
+  }
+
+  auto content = aFrame->GetContent();
+  if (!content) {
+    return nullptr;
+  }
+
+  return content->GetEditingHost();
+}
+
 
 AccessibleCaretManager::CaretMode
 AccessibleCaretManager::GetCaretMode() const
@@ -592,6 +657,14 @@ AccessibleCaretManager::ClearMaintainedSelection() const
   nsRefPtr<nsFrameSelection> fs = GetFrameSelection();
   if (fs) {
     fs->MaintainSelection(eSelectNoAmount);
+  }
+}
+
+void
+AccessibleCaretManager::FlushLayout() const
+{
+  if (mPresShell) {
+    mPresShell->FlushPendingNotifications(Flush_Layout);
   }
 }
 
@@ -732,6 +805,14 @@ AccessibleCaretManager::CompareRangeWithContentOffset(nsIFrame::ContentOffsets& 
   }
 
   return true;
+}
+
+bool
+AccessibleCaretManager::CompareTreePosition(nsIFrame* aStartFrame,
+                                            nsIFrame* aEndFrame) const
+{
+  return (aStartFrame && aEndFrame &&
+          nsLayoutUtils::CompareTreePosition(aStartFrame, aEndFrame) <= 0);
 }
 
 nsresult
@@ -894,8 +975,8 @@ AccessibleCaretManager::DispatchCaretStateChangedEvent(CaretChangedReason aReaso
 {
   // Holding PresShell to prevent AccessibleCaretManager to be destroyed.
   nsCOMPtr<nsIPresShell> presShell = mPresShell;
-  // XXX: Do we need to flush layout?
-  presShell->FlushPendingNotifications(Flush_Layout);
+
+  FlushLayout();
   if (presShell->IsDestroying()) {
     return;
   }
@@ -946,7 +1027,7 @@ AccessibleCaretManager::DispatchCaretStateChangedEvent(CaretChangedReason aReaso
   // Send isEditable info w/ event detail. This info can help determine
   // whether to show cut command on selection dialog or not.
   init.mSelectionEditable = commonAncestorFrame &&
-    commonAncestorFrame->GetContent()->GetEditingHost();
+    GetEditingHostForFrame(commonAncestorFrame);
 
   init.mBoundingClientRect = domRect;
   init.mReason = aReason;

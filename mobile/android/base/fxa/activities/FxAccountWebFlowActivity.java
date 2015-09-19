@@ -4,11 +4,11 @@
 
 package org.mozilla.gecko.fxa.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.fxa.FxAccountConstants;
-import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
 /**
@@ -18,6 +18,13 @@ public class FxAccountWebFlowActivity extends FxAccountAbstractActivity {
     protected static final String LOG_TAG = FxAccountWebFlowActivity.class.getSimpleName();
 
     protected static final String ABOUT_ACCOUNTS = "about:accounts";
+
+    public static final String EXTRA_ENDPOINT = "entrypoint";
+
+    protected static final String[] EXTRAS_TO_PASSTHROUGH = new String[] {
+            EXTRA_ENDPOINT,
+    };
+
     private final String action;
     private final String extras;
 
@@ -49,8 +56,28 @@ public class FxAccountWebFlowActivity extends FxAccountAbstractActivity {
         if (redirected) {
             return true;
         }
-        ActivityUtils.openURLInFennec(getApplicationContext(),
-                ABOUT_ACCOUNTS + "?action=" + action + extras);
+
+        final StringBuilder sb = new StringBuilder();
+        sb.append(ABOUT_ACCOUNTS);
+        sb.append("?action=");
+        sb.append(action);
+        sb.append(extras);
+
+        // Pass through a set of known string values from intent extras to about:accounts.
+        final Intent intent = getIntent();
+        if (intent != null) {
+            for (String key : EXTRAS_TO_PASSTHROUGH) {
+                final String value = intent.getStringExtra(key);
+                if (value != null) {
+                    sb.append("&");
+                    sb.append(key);
+                    sb.append("=");
+                    sb.append(value);
+                }
+            }
+        }
+
+        ActivityUtils.openURLInFennec(getApplicationContext(), sb.toString());
         return true;
     }
 

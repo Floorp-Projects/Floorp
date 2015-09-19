@@ -1879,7 +1879,7 @@ pref("browser.polaris.enabled", false);
 pref("privacy.trackingprotection.ui.enabled", false);
 #endif
 pref("privacy.trackingprotection.introCount", 0);
-pref("privacy.trackingprotection.introURL", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/tracking-protection-pbm");
+pref("privacy.trackingprotection.introURL", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/tracking-protection/start/");
 
 #ifndef RELEASE_BUILD
 // At the moment, autostart.2 is used, while autostart.1 is unused.

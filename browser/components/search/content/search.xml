@@ -335,6 +335,7 @@
       <method name="handleSearchCommand">
         <parameter name="aEvent"/>
         <parameter name="aEngine"/>
+        <parameter name="aForceNewTab"/>
         <body><![CDATA[
           var textBox = this._textbox;
           var textValue = textBox.value;
@@ -346,6 +347,11 @@
             if (aEvent.button == 2)
               return;
             where = whereToOpenLink(aEvent, false, true);
+          }
+          else if (aForceNewTab) {
+            where = "tab";
+            if (Services.prefs.getBoolPref("browser.tabs.loadInBackground"))
+              where += "-background";
           }
           else {
             var newTabPref = Services.prefs.getBoolPref("browser.search.openintab");
@@ -380,6 +386,8 @@
             } else if (aEvent instanceof XULCommandEvent) {
               if (target.getAttribute("anonid") == "paste-and-search") {
                 source = "paste";
+              } else if (target.getAttribute("anonid") == "search-one-offs-context-open-in-new-tab") {
+                source = "oneoff-context";
               }
             }
 
@@ -1007,7 +1015,7 @@
     <resources>
       <stylesheet src="chrome://browser/skin/searchbar.css"/>
     </resources>
-    <content ignorekeys="true" level="top" consumeoutsideclicks="never">
+    <content ignorekeys="true" level="top" consumeoutsideclicks="never" context="_child">
       <xul:hbox anonid="searchbar-engine" xbl:inherits="showonlysettings"
                 class="search-panel-header search-panel-current-engine">
         <xul:image class="searchbar-engine-image" xbl:inherits="src"/>
@@ -1049,6 +1057,14 @@
                   oncommand="showSettings();"
                   class="search-setting-button search-panel-header"
                   label="&changeSearchSettings.button;"/>
+      <xul:menupopup anonid="search-one-offs-context-menu">
+        <xul:menuitem anonid="search-one-offs-context-open-in-new-tab"
+                      label="&searchInNewTab.label;"
+                      accesskey="&searchInNewTab.accesskey;"/>
+        <xul:menuitem anonid="search-one-offs-context-set-default"
+                      label="&searchSetAsDefault.label;"
+                      accesskey="&searchSetAsDefault.accesskey;"/>
+      </xul:menupopup>
     </content>
     <implementation>
       <!-- Popup rollup is triggered by native events before the mousedown event
@@ -1056,6 +1072,9 @@
            false after the mousedown event has been triggered to detect what
            caused rollup. -->
       <field name="_isHiding">false</field>
+      <!-- When a context menu is opened on a one-off button, this is set to the
+           engine of that button for use with the context menu actions. -->
+      <field name="_contextEngine">null</field>
       <field name="_bundle">null</field>
       <property name="bundle" readonly="true">
         <getter>
@@ -1101,12 +1120,41 @@
           BrowserSearch.searchBar._textbox.closePopup();
         ]]></body>
       </method>
+
+      <constructor><![CDATA[
+        // Prevent popup events from the context menu from reaching the autocomplete
+        // binding (or other listeners).
+        let menu = document.getAnonymousElementByAttribute(this, "anonid", "search-one-offs-context-menu");
+        let listener = aEvent => aEvent.stopPropagation();
+        menu.addEventListener("popupshowing", listener);
+        menu.addEventListener("popuphiding", listener);
+        menu.addEventListener("popupshown", aEvent => {
+          this._ignoreMouseEvents = true;
+          aEvent.stopPropagation();
+        });
+        menu.addEventListener("popuphidden", aEvent => {
+          this._ignoreMouseEvents = false;
+          aEvent.stopPropagation();
+        });
+      ]]></constructor>
     </implementation>
     <handlers>
       <handler event="popuphidden"><![CDATA[
         Services.tm.mainThread.dispatch(function() {
           document.getElementById("searchbar").textbox.selectedButton = null;
         }, Ci.nsIThread.DISPATCH_NORMAL);
+        this._contextEngine = null;
+      ]]></handler>
+
+      <handler event="contextmenu"><![CDATA[
+        let target = event.originalTarget;
+        // Prevent the context menu from appearing except on the one off buttons.
+        if (!target.classList.contains("searchbar-engine-one-off-item") ||
+            target.classList.contains("dummy")) {
+          event.preventDefault();
+          return;
+        }
+        this._contextEngine = target.engine;
       ]]></handler>
 
       <handler event="popupshowing"><![CDATA[
@@ -1321,6 +1369,10 @@
         if (target.localName != "button")
           return;
 
+        // Ignore mouse events when the context menu is open.
+         if (this._ignoreMouseEvents)
+           return;
+
         if ((target.classList.contains("searchbar-engine-one-off-item") &&
              !target.classList.contains("dummy")) ||
             target.classList.contains("addengine-item") ||
@@ -1334,6 +1386,10 @@
       <handler event="mouseout"><![CDATA[
         let target = event.originalTarget;
         if (target.localName != "button")
+          return;
+
+        // Don't deselect the current button if the context menu is open.
+        if (this._ignoreMouseEvents)
           return;
 
         let textbox = document.getElementById("searchbar").textbox;
@@ -1350,6 +1406,14 @@
 
         if (!engine)
           return;
+
+        // For some reason, if the context menu had been opened prior to the
+        // click, the suggestions popup won't be closed after loading the search
+        // in the current tab - so we hide it manually. Some focusing magic
+        // that happens when a search is loaded ensures that the popup is opened
+        // again if it needs to be, so we don't need to worry about which cases
+        // require manual hiding.
+        this.hidePopup();
 
         let searchbar = document.getElementById("searchbar");
         searchbar.handleSearchCommand(event, engine);
@@ -1372,6 +1436,29 @@
                                     Ci.nsISearchEngine.DATA_XML,
                                     target.getAttribute("image"), false,
                                     installCallback);
+        }
+        let anonid = target.getAttribute("anonid");
+        if (anonid == "search-one-offs-context-open-in-new-tab") {
+          let searchbar = document.getElementById("searchbar");
+          searchbar.handleSearchCommand(event, this._contextEngine, true);
+        }
+        if (anonid == "search-one-offs-context-set-default") {
+          let currentEngine = Services.search.currentEngine;
+
+          // Make the target button of the context menu reflect the current
+          // search engine first. Doing this as opposed to rebuilding all the
+          // one-off buttons avoids flicker.
+          let button = document.getElementById("searchbar-engine-one-off-item-" +
+            this._contextEngine.name.replace(/ /g, '-'));
+          button.id = "searchbar-engine-one-off-item-" + currentEngine.name.replace(/ /g, '-');
+          let uri = "chrome://browser/skin/search-engine-placeholder.png";
+          if (currentEngine.iconURI)
+            uri = PlacesUtils.getImageURLForResolution(window, currentEngine.iconURI.spec);
+          button.setAttribute("image", uri);
+          button.setAttribute("tooltiptext", currentEngine.name);
+          button.engine = currentEngine;
+
+          Services.search.currentEngine = this._contextEngine;
         }
       ]]></handler>
 

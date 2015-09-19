@@ -36,7 +36,7 @@ ObjectGroup::ObjectGroup(const Class* clasp, TaggedProto proto, JSCompartment* c
     MOZ_ASSERT_IF(proto.isObject(), !proto.toObject()->getClass()->ext.outerObject);
 
     this->clasp_ = clasp;
-    this->proto_ = proto.raw();
+    this->proto_ = proto;
     this->compartment_ = comp;
     this->flags_ = initialFlags;
 
@@ -58,8 +58,9 @@ ObjectGroup::finalize(FreeOp* fop)
 void
 ObjectGroup::setProtoUnchecked(TaggedProto proto)
 {
-    proto_ = proto.raw();
-    MOZ_ASSERT_IF(proto_ && proto_->isNative(), proto_->isDelegate());
+    proto_ = proto;
+    MOZ_ASSERT_IF(proto_.isObject() && proto_.toObject()->isNative(),
+                  proto_.toObject()->isDelegate());
 }
 
 void

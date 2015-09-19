@@ -1,0 +1,131 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test MediaRecorder Bitrate</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+var results = [];
+
+/**
+ * Starts a test on every media recorder file included to check that
+ * the bitrate control works
+ */
+function startTest(test, token) {
+  manager.started(token);
+  runTest(test, token, 1000000);
+  runTest(test, token, 100000);
+}
+
+function runTest(test, token, bitrate) {
+  var element = document.createElement('video');
+  var expectedMimeType = test.type.substring(0, test.type.indexOf(';'));
+
+  element.token = token;
+
+  element.src = test.name;
+  element.test = test;
+  element.stream = element.mozCaptureStreamUntilEnded();
+
+  var mediaRecorder = new MediaRecorder(element.stream , {videoBitsPerSecond: bitrate});
+  var onStopFired = false;
+  var onDataAvailableFired = false;
+  var encoded_size = 0;
+
+  mediaRecorder.onerror = function () {
+    ok(false, 'Unexpected onerror callback fired');
+  };
+
+  mediaRecorder.onwarning = function () {
+    ok(false, 'Unexpected onwarning callback fired');
+  };
+
+  // This handler verifies that only a single onstop event handler is fired.
+  mediaRecorder.onstop = function () {
+    if (onStopFired) {
+      ok(false, 'onstop unexpectedly fired more than once');
+    } else {
+      onStopFired = true;
+
+      // ondataavailable should always fire before onstop
+      if (onDataAvailableFired) {
+        ok(true, 'onstop fired after ondataavailable');
+        info("test " + test.name + " encoded@" + bitrate + "=" + encoded_size);
+        if (results[test.name]) {
+          var big, small, temp;
+          big = {};
+	  big.bitrate = bitrate;
+	  big.size = encoded_size;
+	  small = results[test.name];
+	  // Don't assume the order that these will finish in
+	  if (results[test.name].bitrate > bitrate) {
+	    temp = big;
+	    big = small;
+	    small = temp;
+	  }
+	  // Ensure there is a big enough difference in the encoded
+	  // sizes
+          ok(small.size*1.25 < big.size,
+	     test.name + ' encoded@' + big.bitrate + '=' + big.size +
+	     ' > encoded@' + small.bitrate + '=' + small.size);
+          manager.finished(token);
+        } else {
+	  results[test.name] = {};
+	  results[test.name].bitrate = bitrate;
+          results[test.name].size = encoded_size;
+        }
+      } else {
+        ok(false, 'onstop fired without an ondataavailable event first');
+      }
+    }
+  };
+
+  // This handler verifies that only a single ondataavailable event handler
+  // is fired with the blob generated having greater than zero size
+  // and a correct mime type.
+  mediaRecorder.ondataavailable = function (evt) {
+    if (onDataAvailableFired) {
+      ok(false, 'ondataavailable unexpectedly fired more than once');
+    } else {
+      onDataAvailableFired = true;
+
+      ok(evt instanceof BlobEvent,
+         'Events fired from ondataavailable should be BlobEvent');
+      is(evt.type, 'dataavailable',
+         'Event type should dataavailable');
+      ok(evt.data.size > 0,
+         'Blob data received should be greater than zero');
+      encoded_size = evt.data.size;
+
+      // onstop should not have fired before ondataavailable
+      if (onStopFired) {
+        ok(false, 'ondataavailable unexpectedly fired later than onstop');
+        manager.finished(token);
+      }
+    }
+  };
+
+  element.preload = "metadata";
+
+  element.onloadedmetadata = function () {
+    element.onloadedmetadata = null;
+    mediaRecorder.start();
+    is(mediaRecorder.state, 'recording',
+     'Media recorder should be recording');
+    is(mediaRecorder.stream, element.stream,
+     'Media recorder stream = element stream at the start of recording');
+
+    element.play();
+  }
+}
+
+manager.runTests(gMediaRecorderVideoTests, startTest);
+</script>
+</pre>
+</body>
+</html>
