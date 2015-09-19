@@ -10,7 +10,7 @@
 
 using js::gc::Cell;
 
-mozilla::Atomic<int> MemProfiler::sActiveProfilerCount;
+mozilla::Atomic<uint32_t, mozilla::Relaxed> MemProfiler::sActiveProfilerCount;
 NativeProfiler* MemProfiler::sNativeProfiler;
 
 GCHeapProfiler*
