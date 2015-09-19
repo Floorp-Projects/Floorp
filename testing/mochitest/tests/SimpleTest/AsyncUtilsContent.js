@@ -11,6 +11,10 @@ EventUtils.window = {};
 EventUtils.parent = EventUtils.window;
 EventUtils._EU_Ci = Components.interfaces;
 EventUtils._EU_Cc = Components.classes;
+// EventUtils' `sendChar` function relies on the navigator to synthetize events.
+EventUtils.navigator = content.document.defaultView.navigator;
+EventUtils.KeyboardEvent = content.document.defaultView.KeyboardEvent;
+
 Services.scriptloader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
 addMessageListener("Test:SynthesizeMouse", (message) => {
@@ -38,4 +42,9 @@ addMessageListener("Test:SynthesizeMouse", (message) => {
 
   let result = EventUtils.synthesizeMouseAtPoint(left, top, data.event, content);
   sendAsyncMessage("Test:SynthesizeMouseDone", { defaultPrevented: result });
+});
+
+addMessageListener("Test:SendChar", message => {
+  let result = EventUtils.sendChar(message.data.char, content);
+  sendAsyncMessage("Test:SendCharDone", { sendCharResult: result });
 });
