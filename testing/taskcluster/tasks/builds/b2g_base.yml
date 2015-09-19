@@ -2,3 +2,8 @@ $inherits:
   from: 'tasks/build.yml'
   variables:
     build_product: 'b2g'
+task:
+  extra:
+    locations:
+      test_packages: 'public/build/test_packages.json'
+      mozharness: 'public/build/mozharness.zip'

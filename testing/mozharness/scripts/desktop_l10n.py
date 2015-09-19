@@ -697,8 +697,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             # has a different version number from the one in the current
             # checkout.
             self.bootstrap_env['ZIP_IN'] = dst_filename
-            return self.download_file(url=binary_file, file_name=dst_filename,
-                                      error_level=FATAL)
+            return self._retry_download_file(binary_file, dst_filename, error_level=FATAL)
 
         # binary url is not an installer, use make wget-en-US to download it
         return self._make(target=["wget-en-US"], cwd=cwd, env=env)
