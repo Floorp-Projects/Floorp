@@ -700,19 +700,6 @@ public:
   void OnSelectionChange(const IMENotification& aIMENotification);
 
   /**
-   * DispatchCompositionChangeEvent() dispatches a compositionchange event on
-   * mWidget.
-   *
-   * @param aText                 User text input.
-   * @param aAttrString           An NSAttributedString instance which indicates
-   *                              current composition string.
-   * @param aSelectedRange        Current selected range (or caret position).
-   */
-  bool DispatchCompositionChangeEvent(const nsString& aText,
-                                      NSAttributedString* aAttrString,
-                                      NSRange& aSelectedRange);
-
-  /**
    * DispatchCompositionCommitEvent() dispatches a compositioncommit event or
    * compositioncommitasis event.  If aCommitString is null, dispatches
    * compositioncommitasis event.  I.e., if aCommitString is null, this
@@ -971,11 +958,6 @@ private:
   void InitCompositionEvent(WidgetCompositionEvent& aCompositionEvent);
 
   /**
-   * When a composition is updated, OnUpdateIMEComposition() is called.
-   */
-  void OnUpdateIMEComposition(NSString* aIMECompositionString);
-
-  /**
    * When a composition is finished, OnEndIMEComposition() is called.
    */
   void OnEndIMEComposition();
@@ -989,6 +971,23 @@ private:
    *                              this returns false.
    */
   bool DispatchCompositionStartEvent();
+
+  /**
+   * DispatchCompositionChangeEvent() dispatches a compositionchange event on
+   * mWidget and modifies the members indicating composition state.
+   *
+   * @param aText                 User text input.
+   * @param aAttrString           An NSAttributedString instance which indicates
+   *                              current composition string.
+   * @param aSelectedRange        Current selected range (or caret position).
+   *
+   * @return                      true if it can continues handling composition.
+   *                              Otherwise, e.g., canceled by the web page,
+   *                              this returns false.
+   */
+  bool DispatchCompositionChangeEvent(const nsString& aText,
+                                      NSAttributedString* aAttrString,
+                                      NSRange& aSelectedRange);
 
   // The focused IME handler.  Please note that the handler might lost the
   // actual focus by deactivating the application.  If we are active, this
