@@ -3,43 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const constants = require('../constants');
-const promise = require('promise');
-const { rdpInvoke, asPaused } = require('../utils');
+const constants = require("../constants");
+const { rdpInvoke, asPaused } = require("../utils");
 const { reportException } = require("devtools/toolkit/DevToolsUtils");
 
 const FETCH_EVENT_LISTENERS_DELAY = 200; // ms
 
-const initialState = {
-  activeEventNames: [],
-  listeners: [],
-  fetchingListeners: false,
-};
-
-function update(state = initialState, action, emitChange) {
-  switch(action.type) {
-  case constants.UPDATE_EVENT_BREAKPOINTS:
-    state.activeEventNames = action.eventNames;
-    emitChange('activeEventNames', state.activeEventNames);
-    break;
-  case constants.FETCH_EVENT_LISTENERS:
-    if (action.status === "begin") {
-      state.fetchingListeners = true;
-    }
-    else if (action.status === "done") {
-      state.fetchingListeners = false;
-      state.listeners = action.listeners;
-      emitChange('listeners', state.listeners);
-    }
-    break;
-  }
-
-  return state;
-};
-
 function fetchEventListeners() {
   return (dispatch, getState) => {
-    // Make sure we're not sending a batch of closely repeated requests.
+    // Make sure we"re not sending a batch of closely repeated requests.
     // This can easily happen whenever new sources are fetched.
     setNamedTimeout("event-listeners-fetch", FETCH_EVENT_LISTENERS_DELAY, () => {
       // In case there is still a request of listeners going on (it
@@ -81,7 +53,7 @@ const _getListeners = Task.async(function*() {
   const response = yield rdpInvoke(gThreadClient, gThreadClient.eventListeners);
 
   // Make sure all the listeners are sorted by the event type, since
-  // they're not guaranteed to be clustered together.
+  // they"re not guaranteed to be clustered together.
   response.listeners.sort((a, b) => a.type > b.type ? 1 : -1);
 
   // Add all the listeners in the debugger view event linsteners container.
@@ -94,8 +66,8 @@ const _getListeners = Task.async(function*() {
     } else if (listener.function.class == "Function") {
       definitionSite = yield _getDefinitionSite(listener.function);
       if (!definitionSite) {
-        // We don't know where this listener comes from so don't show it in
-        // the UI as breaking on it doesn't work (bug 942899).
+        // We don"t know where this listener comes from so don"t show it in
+        // the UI as breaking on it doesn"t work (bug 942899).
         continue;
       }
 
@@ -141,7 +113,4 @@ function updateEventBreakpoints(eventNames) {
   }
 }
 
-module.exports = {
-  update: update,
-  actions: { updateEventBreakpoints, fetchEventListeners }
-}
+module.exports = { updateEventBreakpoints, fetchEventListeners };

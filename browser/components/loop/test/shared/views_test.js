@@ -169,7 +169,7 @@ describe("loop.shared.views", function() {
           }));
 
         TestUtils.Simulate.click(comp.getDOMNode().querySelector(
-          ".conversation-window-dropdown > li"));
+          ".screen-share-menu > li"));
 
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
@@ -186,7 +186,7 @@ describe("loop.shared.views", function() {
           }));
 
         TestUtils.Simulate.click(comp.getDOMNode().querySelector(
-          ".conversation-window-dropdown > li:last-child"));
+          ".screen-share-menu > li:last-child"));
 
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
@@ -201,7 +201,7 @@ describe("loop.shared.views", function() {
           state: SCREEN_SHARE_STATES.INACTIVE
         }));
 
-      var node = comp.getDOMNode().querySelector(".conversation-window-dropdown > li:last-child");
+      var node = comp.getDOMNode().querySelector(".screen-share-menu > li:last-child");
       expect(node.classList.contains("disabled")).eql(false);
     });
 
@@ -216,7 +216,7 @@ describe("loop.shared.views", function() {
           state: SCREEN_SHARE_STATES.INACTIVE
         }));
 
-      var node = comp.getDOMNode().querySelector(".conversation-window-dropdown > li:last-child");
+      var node = comp.getDOMNode().querySelector(".screen-share-menu > li:last-child");
       expect(node.classList.contains("disabled")).eql(true);
     });
 
@@ -231,7 +231,7 @@ describe("loop.shared.views", function() {
           state: SCREEN_SHARE_STATES.INACTIVE
         }));
 
-      var node = comp.getDOMNode().querySelector(".conversation-window-dropdown > li:last-child");
+      var node = comp.getDOMNode().querySelector(".screen-share-menu > li:last-child");
       expect(node.classList.contains("disabled")).eql(true);
     });
 

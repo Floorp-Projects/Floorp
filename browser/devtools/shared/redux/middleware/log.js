@@ -7,11 +7,11 @@
  * A middleware that logs all actions coming through the system
  * to the console.
  */
-function logMiddleware({ dispatch, getState }) {
+function log({ dispatch, getState }) {
   return next => action => {
-    console.log('[DISPATCH]', JSON.stringify(action));
+    console.log("[DISPATCH]", JSON.stringify(action));
     next(action);
   }
 }
 
-module.exports = logMiddleware;
+exports.log = log;
