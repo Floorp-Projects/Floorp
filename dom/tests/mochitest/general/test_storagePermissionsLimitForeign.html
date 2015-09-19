@@ -17,10 +17,12 @@ task(function* () {
   // We should be able to access storage
   yield storageAllowed();
 
-  // Same origin iframes should be prevented, unless they have chrome privileges
+  // Same origin iframes should be allowed.
   yield runIFrame("frameStorageAllowed.html");
+  yield runIFrame("frameStorageChrome.html?allowed=yes");
+
+  // Null principal iframes should not.
   yield runIFrame("frameStorageNullprincipal.sjs");
-  yield runIFrame("frameStorageChrome.html");
 
   // Sandboxed iframes should have the null principal, and thus can't access storage
   document.querySelector('iframe').setAttribute('sandbox', 'allow-scripts');
@@ -28,10 +30,10 @@ task(function* () {
   yield runIFrame("frameStorageNullprincipal.sjs");
   document.querySelector('iframe').removeAttribute('sandbox');
 
-  // Thirdparty iframes should be blocked, unless they have chrome privileges
+  // Thirdparty iframes should be blocked, even when accessed from chrome over Xrays.
   yield runIFrame(thirdparty + "frameStoragePrevented.html#thirdparty");
   yield runIFrame(thirdparty + "frameStorageNullprincipal.sjs");
-  yield runIFrame(thirdparty + "frameStorageChrome.html");
+  yield runIFrame(thirdparty + "frameStorageChrome.html?allowed=no");
 
   // Workers should be unable to access storage
   yield runWorker("workerStorageAllowed.js");

@@ -20,7 +20,7 @@ task(function* () {
   // Same origin iframes should be allowed, unless they redirect to a URI with the null principal
   yield runIFrame("frameStorageAllowed.html");
   yield runIFrame("frameStorageNullprincipal.sjs");
-  yield runIFrame("frameStorageChrome.html");
+  yield runIFrame("frameStorageChrome.html?allowed=yes");
 
   // Sandboxed iframes should have the null principal, and thus can't access storage
   document.querySelector('iframe').setAttribute('sandbox', 'allow-scripts');
@@ -31,7 +31,7 @@ task(function* () {
   // Thirdparty iframes should be allowed, unless they redirect to a URI with the null principal
   yield runIFrame(thirdparty + "frameStorageAllowed.html");
   yield runIFrame(thirdparty + "frameStorageNullprincipal.sjs");
-  yield runIFrame(thirdparty + "frameStorageChrome.html");
+  yield runIFrame(thirdparty + "frameStorageChrome.html?allowed=yes");
 
   // Workers should be able to access storage
   yield runWorker("workerStorageAllowed.js");

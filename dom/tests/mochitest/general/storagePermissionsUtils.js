@@ -62,44 +62,49 @@ function runWorker(url) {
   });
 }
 
-function chromePower() {
+function chromePower(allowed, blockSessionStorage) {
+
+  // localStorage is affected by storage policy.
   try {
     SpecialPowers.wrap(window).localStorage.getItem("X");
-    ok(true, "getting localStorage didn't throw");
+    ok(allowed, "getting localStorage from chrome didn't throw");
   } catch (e) {
-    ok(false, "getting localStorage should not throw");
+    ok(!allowed, "getting localStorage from chrome threw");
   }
 
+
+  // sessionStorage is not. See bug 1183968.
   try {
     SpecialPowers.wrap(window).sessionStorage.getItem("X");
-    ok(true, "getting sessionStorage didn't throw");
+    ok(!blockSessionStorage, "getting sessionStorage from chrome didn't throw");
   } catch (e) {
-    ok(false, "getting sessionStorage should not throw");
+    ok(blockSessionStorage, "getting sessionStorage from chrome threw");
   }
 
+  // indexedDB is affected by storage policy.
   try {
     SpecialPowers.wrap(window).indexedDB;
-    ok(true, "getting indexedDB didn't throw");
+    ok(allowed, "getting indexedDB from chrome didn't throw");
   } catch (e) {
-    ok(false, "getting indexedDB should not throw");
+    ok(!allowed, "getting indexedDB from chrome threw");
   }
 
+  // Same with caches, along with the additional https-only requirement.
   try {
+    var shouldResolve = allowed && location.protocol == "https:";
     var promise = SpecialPowers.wrap(window).caches.keys();
-    ok(true, "getting caches didn't throw");
-
+    ok(true, "getting caches from chrome should never throw");
     return new Promise((resolve, reject) => {
       promise.then(function() {
-        ok(location.protocol == "https:", "The promise was not rejected");
+        ok(shouldResolve, "The promise was resolved for chrome");
         resolve();
       }, function(e) {
-        ok(location.protocol != "https:", "The promise should not have been rejected: " + e);
+        ok(!shouldResolve, "The promise was rejected for chrome: " + e);
         resolve();
       });
     });
   } catch (e) {
-    ok(false, "getting caches should not have thrown");
-    return Promise.resolve();
+    ok(false, "getting caches from chrome threw");
   }
 }
 
