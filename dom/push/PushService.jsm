@@ -44,7 +44,7 @@ gDebuggingEnabled = prefs.get("debug");
 
 const kCHILD_PROCESS_MESSAGES = ["Push:Register", "Push:Unregister",
                                  "Push:Registration", "Push:RegisterEventNotificationListener",
-                                 "Push:Reset", "child-process-shutdown"];
+                                 "child-process-shutdown"];
 
 const PUSH_SERVICE_UNINIT = 0;
 const PUSH_SERVICE_INIT = 1; // No serverURI
@@ -1047,7 +1047,6 @@ this.PushService = {
       return null;
     }
 
-    let name = aMessage.name.slice("Push:".length);
     let mm = aMessage.target.QueryInterface(Ci.nsIMessageSender);
     let pageRecord = aMessage.data;
 
@@ -1058,7 +1057,7 @@ this.PushService = {
         requestID: pageRecord.requestID,
         error: "SecurityError"
       };
-      mm.sendAsyncMessage("PushService:" + name + ":KO", message);
+      mm.sendAsyncMessage("PushService:Register:KO", message);
       return;
     }
 
@@ -1071,24 +1070,11 @@ this.PushService = {
         requestID: pageRecord.requestID,
         error: "SecurityError"
       };
-      mm.sendAsyncMessage("PushService:" + name + ":KO", message);
+      mm.sendAsyncMessage("PushService:Register:KO", message);
       return;
     }
 
-    this[name.toLowerCase()](pageRecord, mm);
-  },
-
-  reset: function(aPageRecord, aMessageManager) {
-    this.dropRegistrations().then(() => {
-      aMessageManager.sendAsyncMessage("PushService:Reset:OK", {
-        requestID: aPageRecord.requestID,
-      });
-    }, error => {
-      aMessageManager.sendAsyncMessage("PushService:Reset:KO", {
-        requestID: aPageRecord.requestID,
-        error: error,
-      });
-    });
+    this[aMessage.name.slice("Push:".length).toLowerCase()](pageRecord, mm);
   },
 
   register: function(aPageRecord, aMessageManager) {

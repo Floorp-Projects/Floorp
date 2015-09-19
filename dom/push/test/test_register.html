@@ -32,9 +32,11 @@ http://creativecommons.org/licenses/publicdomain/
     var p = new Promise(function(res, rej) {
       var iframe = document.createElement('iframe');
       iframe.id = "controlledFrame";
-      iframe.src = "/tests/dom/push/test/frame.html";
+      iframe.src = "http://mochi.test:8888/tests/dom/push/test/frame.html";
 
-      iframe.onload = () => res(swr);
+      iframe.onload = function() {
+        res(swr)
+      }
       controlledFrame = iframe;
       document.body.appendChild(iframe);
     });
@@ -103,7 +105,7 @@ http://creativecommons.org/licenses/publicdomain/
   }
 
   function waitForPushNotification(pushSubscription) {
-    var p = controlledFrame.contentWindow.waitOnWorkerMessage("finished");
+    var p = controlledFrame.contentWindow.waitOnPushMessage();
     sendPushToPushServer(pushSubscription.endpoint);
     return p.then(function() {
       return pushSubscription;

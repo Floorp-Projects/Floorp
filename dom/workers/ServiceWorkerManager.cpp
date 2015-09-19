@@ -2390,27 +2390,19 @@ public:
   {
     MOZ_ASSERT(aWorkerPrivate);
 
-    nsRefPtr<EventTarget> target = aWorkerPrivate->GlobalScope();
+    WorkerGlobalScope* globalScope = aWorkerPrivate->GlobalScope();
 
-    ExtendableEventInit init;
-    init.mBubbles = false;
-    init.mCancelable = false;
+    nsRefPtr<Event> event = NS_NewDOMEvent(globalScope, nullptr, nullptr);
 
-    ErrorResult result;
-    nsRefPtr<ExtendableEvent> event =
-      ExtendableEvent::Constructor(target,
-                                   NS_LITERAL_STRING("pushsubscriptionchange"),
-                                   init);
+    nsresult rv = event->InitEvent(NS_LITERAL_STRING("pushsubscriptionchange"),
+                                   false, false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return false;
+    }
 
     event->SetTrusted(true);
 
-    nsRefPtr<Promise> waitUntilPromise =
-      DispatchExtendableEventOnWorkerScope(aCx, aWorkerPrivate->GlobalScope(), event);
-    if (waitUntilPromise) {
-      nsRefPtr<KeepAliveHandler> handler = new KeepAliveHandler(mServiceWorker);
-      waitUntilPromise->AppendNativeHandler(handler);
-    }
-
+    globalScope->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
     return true;
   }
 };
