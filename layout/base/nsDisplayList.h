@@ -2411,40 +2411,11 @@ protected:
  * is not yet a frame tree to go in the frame/iframe so we use the subdoc
  * frame of the parent document as a standin.
  */
-class nsDisplaySolidColor : public nsDisplayItem {
+class nsDisplaySolidColorBase : public nsDisplayItem {
 public:
-  nsDisplaySolidColor(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                      const nsRect& aBounds, nscolor aColor)
-    : nsDisplayItem(aBuilder, aFrame), mBounds(aBounds), mColor(aColor)
-  {
-    NS_ASSERTION(NS_GET_A(aColor) > 0, "Don't create invisible nsDisplaySolidColors!");
-    MOZ_COUNT_CTOR(nsDisplaySolidColor);
-  }
-#ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplaySolidColor() {
-    MOZ_COUNT_DTOR(nsDisplaySolidColor);
-  }
-#endif
-
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override;
-
-  virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                   bool* aSnap) override {
-    *aSnap = false;
-    nsRegion result;
-    if (NS_GET_A(mColor) == 255) {
-      result = GetBounds(aBuilder, aSnap);
-    }
-    return result;
-  }
-
-  virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) override
-  {
-    *aColor = mColor;
-    return true;
-  }
-
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) override;
+  nsDisplaySolidColorBase(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nscolor aColor)
+    : nsDisplayItem(aBuilder, aFrame), mColor(aColor)
+  {}
 
   virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override
   {
@@ -2465,13 +2436,51 @@ public:
     ComputeInvalidationRegionDifference(aBuilder, geometry, aInvalidRegion);
   }
 
+  virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                   bool* aSnap) override {
+    *aSnap = false;
+    nsRegion result;
+    if (NS_GET_A(mColor) == 255) {
+      result = GetBounds(aBuilder, aSnap);
+    }
+    return result;
+  }
+
+  virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) override
+  {
+    *aColor = mColor;
+    return true;
+  }
+
+protected:
+  nscolor mColor;
+};
+
+class nsDisplaySolidColor : public nsDisplaySolidColorBase {
+public:
+  nsDisplaySolidColor(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                      const nsRect& aBounds, nscolor aColor)
+    : nsDisplaySolidColorBase(aBuilder, aFrame, aColor), mBounds(aBounds)
+  {
+    NS_ASSERTION(NS_GET_A(aColor) > 0, "Don't create invisible nsDisplaySolidColors!");
+    MOZ_COUNT_CTOR(nsDisplaySolidColor);
+  }
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplaySolidColor() {
+    MOZ_COUNT_DTOR(nsDisplaySolidColor);
+  }
+#endif
+
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override;
+
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) override;
+
   virtual void WriteDebugInfo(std::stringstream& aStream) override;
 
   NS_DISPLAY_DECL_NAME("SolidColor", TYPE_SOLID_COLOR)
 
 private:
   nsRect  mBounds;
-  nscolor mColor;
 };
 
 /**
