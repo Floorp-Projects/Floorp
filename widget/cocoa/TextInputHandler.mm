@@ -2702,7 +2702,7 @@ IMEInputHandler::DispatchCompositionStartEvent()
     ("%p IMEInputHandler::DispatchCompositionStartEvent, "
      "mSelectedRange={ location=%llu, length=%llu }, Destroyed()=%s, "
      "mView=%p, mWidget=%p, inputContext=%p, mIsIMEComposing=%s",
-     this,  mSelectedRange.location, mSelectedRange.length,
+     this,  SelectedRange().location, mSelectedRange.length,
      TrueOrFalse(Destroyed()), mView, mWidget,
      mView ? [mView inputContext] : nullptr, TrueOrFalse(mIsIMEComposing)));
 
@@ -2723,7 +2723,14 @@ IMEInputHandler::DispatchCompositionStartEvent()
   }
 
   // FYI: compositionstart may cause committing composition by the webapp.
-  return mIsIMEComposing;
+  if (!mIsIMEComposing) {
+    return false;
+  }
+
+  // FYI: The selection range might have been modified by a compositionstart
+  //      event handler.
+  mIMECompositionStart = SelectedRange().location;
+  return true;
 }
 
 bool
@@ -2756,6 +2763,9 @@ IMEInputHandler::DispatchCompositionChangeEvent(const nsString& aText,
   compositionChangeEvent.mData = aText;
   compositionChangeEvent.mRanges =
     CreateTextRangeArray(aAttrString, aSelectedRange);
+
+  mSelectedRange.location = mIMECompositionStart + aSelectedRange.location;
+  mSelectedRange.length = aSelectedRange.length;
 
   if (mIMECompositionString) {
     [mIMECompositionString release];
@@ -2803,10 +2813,25 @@ IMEInputHandler::DispatchCompositionCommitEvent(const nsAString* aCommitString)
     if (aCommitString) {
       compositionCommitEvent.mData = *aCommitString;
     }
+
+    // IME may query selection immediately after this, however, in e10s mode,
+    // OnSelectionChange() will be called asynchronously.  Until then, we
+    // should emulate expected selection range if the webapp does nothing.
+    mSelectedRange.location = mIMECompositionStart;
+    if (message == eCompositionCommit) {
+      mSelectedRange.location += compositionCommitEvent.mData.Length();
+    } else if (mIMECompositionString) {
+      nsAutoString commitString;
+      nsCocoaUtils::GetStringForNSString(mIMECompositionString, commitString);
+      mSelectedRange.location += commitString.Length();
+    }
+    mSelectedRange.length = 0;
+
     DispatchEvent(compositionCommitEvent);
   }
 
   mIsIMEComposing = false;
+  mIMECompositionStart = UINT32_MAX;
   if (mIMECompositionString) {
     [mIMECompositionString release];
     mIMECompositionString = nullptr;
@@ -2971,13 +2996,6 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
   }
 
   if (!str.IsEmpty()) {
-    // Set temprary range for Apple Japanese IME with e10s because
-    // SelectedRange may return invalid range until OnSelectionChange is
-    // called from content process.
-    // This value will be updated by OnSelectionChange soon.
-    mSelectedRange.location = aSelectedRange.location + mMarkedRange.location;
-    mSelectedRange.length = aSelectedRange.length;
-
     if (!DispatchCompositionChangeEvent(str, aAttrString, aSelectedRange)) {
       MOZ_LOG(gLog, LogLevel::Info,
         ("%p IMEInputHandler::SetMarkedText, cannot continue handling "
@@ -3350,12 +3368,17 @@ IMEInputHandler::GetValidAttributesForMarkedText()
  ******************************************************************************/
 
 IMEInputHandler::IMEInputHandler(nsChildView* aWidget,
-                                 NSView<mozView> *aNativeView) :
-  TextInputHandlerBase(aWidget, aNativeView),
-  mPendingMethods(0), mIMECompositionString(nullptr),
-  mIsIMEComposing(false), mIsIMEEnabled(true),
-  mIsASCIICapableOnly(false), mIgnoreIMECommit(false),
-  mIsInFocusProcessing(false), mIMEHasFocus(false)
+                                 NSView<mozView> *aNativeView)
+  : TextInputHandlerBase(aWidget, aNativeView)
+  , mPendingMethods(0)
+  , mIMECompositionString(nullptr)
+  , mIMECompositionStart(UINT32_MAX)
+  , mIsIMEComposing(false)
+  , mIsIMEEnabled(true)
+  , mIsASCIICapableOnly(false)
+  , mIgnoreIMECommit(false)
+  , mIsInFocusProcessing(false)
+  , mIMEHasFocus(false)
 {
   InitStaticMembers();
 
