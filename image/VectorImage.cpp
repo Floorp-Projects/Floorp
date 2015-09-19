@@ -497,18 +497,14 @@ NS_IMETHODIMP
 VectorImage::GetWidth(int32_t* aWidth)
 {
   if (mError || !mIsFullyLoaded) {
-    return NS_ERROR_FAILURE;
+    *aWidth = -1;
+  } else {
+    SVGSVGElement* rootElem = mSVGDocumentWrapper->GetRootSVGElem();
+    MOZ_ASSERT(rootElem, "Should have a root SVG elem, since we finished "
+                         "loading without errors");
+    *aWidth = rootElem->GetIntrinsicWidth();
   }
-
-  SVGSVGElement* rootElem = mSVGDocumentWrapper->GetRootSVGElem();
-  MOZ_ASSERT(rootElem, "Should have a root SVG elem, since we finished "
-             "loading without errors");
-  nscoord rootElemWidth = rootElem->GetIntrinsicWidth();
-  if (rootElemWidth < 0) {
-    return NS_ERROR_FAILURE;
-  }
-  *aWidth = rootElemWidth;
-  return NS_OK;
+  return *aWidth >= 0 ? NS_OK : NS_ERROR_FAILURE;
 }
 
 //******************************************************************************
@@ -565,18 +561,14 @@ NS_IMETHODIMP
 VectorImage::GetHeight(int32_t* aHeight)
 {
   if (mError || !mIsFullyLoaded) {
-    return NS_ERROR_FAILURE;
+    *aHeight = -1;
+  } else {
+    SVGSVGElement* rootElem = mSVGDocumentWrapper->GetRootSVGElem();
+    MOZ_ASSERT(rootElem, "Should have a root SVG elem, since we finished "
+                         "loading without errors");
+    *aHeight = rootElem->GetIntrinsicHeight();
   }
-
-  SVGSVGElement* rootElem = mSVGDocumentWrapper->GetRootSVGElem();
-  MOZ_ASSERT(rootElem, "Should have a root SVG elem, since we finished "
-             "loading without errors");
-  nscoord rootElemHeight = rootElem->GetIntrinsicHeight();
-  if (rootElemHeight < 0) {
-    return NS_ERROR_FAILURE;
-  }
-  *aHeight = rootElemHeight;
-  return NS_OK;
+  return *aHeight >= 0 ? NS_OK : NS_ERROR_FAILURE;
 }
 
 //******************************************************************************
