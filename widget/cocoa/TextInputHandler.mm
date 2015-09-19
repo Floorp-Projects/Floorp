@@ -3064,6 +3064,40 @@ IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange,
 
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
+  // If we're in composing, the queried range may be in the composition string.
+  // In such case, we should use mIMECompositionString since if the composition
+  // string is handled by a remote process, the content cache may be out of
+  // date.
+  NSUInteger compositionLength =
+    mIMECompositionString ? [mIMECompositionString length] : 0;
+  if (mIMECompositionStart != UINT32_MAX &&
+      mIMECompositionStart >= aRange.location &&
+      mIMECompositionStart + compositionLength <=
+        aRange.location + aRange.length) {
+    NSRange range =
+      NSMakeRange(aRange.location - mIMECompositionStart, aRange.length);
+    NSString* nsstr = [mIMECompositionString substringWithRange:range];
+    NSMutableAttributedString* result =
+      [[[NSMutableAttributedString alloc] initWithString:nsstr
+                                              attributes:nil] autorelease];
+    // XXX We cannot return font information in this case.  However, this
+    //     case must occur only when IME tries to confirm if composing string
+    //     is handled as expected.
+    if (aActualRange) {
+      *aActualRange = aRange;
+    }
+
+    if (MOZ_LOG_TEST(gLog, LogLevel::Info)) {
+      nsAutoString str;
+      nsCocoaUtils::GetStringForNSString(nsstr, str);
+      MOZ_LOG(gLog, LogLevel::Info,
+        ("%p IMEInputHandler::GetAttributedSubstringFromRange, "
+         "computed with mIMECompositionString (result string=\"%s\")",
+         this, NS_ConvertUTF16toUTF8(str).get()));
+    }
+    return result;
+  }
+
   nsAutoString str;
   WidgetQueryContentEvent textContent(true, eQueryTextContent, mWidget);
   textContent.InitForQueryTextContent(aRange.location, aRange.length);
