@@ -1974,12 +1974,6 @@ js::TryConvertToUnboxedLayout(ExclusiveContext* cx, Shape* templateShape,
         // element type for the objects.
         if (UnboxedTypeSize(elementType) == 0)
             return true;
-
-        // Don't use an unboxed representation if objects in the group have
-        // ever had holes in the past. Even if they have been filled in, future
-        // objects that are created might be given holes as well.
-        if (group->flags() & OBJECT_FLAG_NON_PACKED)
-            return true;
     } else {
         if (objectCount <= 1) {
             // If only one of the objects has been created, it is more likely
