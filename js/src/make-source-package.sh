@@ -1,9 +1,30 @@
-#!/bin/sh
+#!/bin/bash
 
 # Find out ASAP if some command breaks here, because we're copying a lot of
 # files we don't actually maintain ourselves, and requirements could easily be
 # broken.
 set -e
+
+: ${MAKE:=make}
+: ${MKDIR:=mkdir}
+: ${TAR:=tar}
+: ${SRCDIR:=$(cd $(dirname $0); pwd 2>/dev/null)}
+: ${MOZJS_NAME:=mozjs}
+: ${DIST:=/tmp/mozjs-src-pkg}
+
+if [[ -f "$SRCDIR/../../config/milestone.txt" ]]; then
+    MILESTONE="$(tail -1 $SRCDIR/../../config/milestone.txt)"
+    IFS=. read -a VERSION < <(echo "$MILESTONE")
+    MOZJS_MAJOR_VERSION=${MOZJS_MAJOR_VERSION:-${VERSION[0]}}
+    MOZJS_MINOR_VERSION=${MOZJS_MINOR_VERSION:-${VERSION[1]}}
+    MOZJS_PATCH_VERSION=${MOZJS_PATCH_VERSION:-${VERSION[2]}}
+fi
+
+cmd=${1:-build}
+pkg="${MOZJS_NAME}-${MOZJS_MAJOR_VERSION}.${MOZJS_MINOR_VERSION}.${MOZJS_PATCH_VERSION:-${MOZJS_ALPHA:-0}}.tar.bz2"
+pkgpath=${pkg%.tar*}
+tgtpath=${DIST}/${pkgpath}
+taropts="-jcf"
 
 # need these environment vars:
 echo "Environment:"
@@ -12,16 +33,12 @@ echo "    MKDIR = $MKDIR"
 echo "    TAR = $TAR"
 echo "    DIST = $DIST"
 echo "    SRCDIR = $SRCDIR"
+echo "    MOZJS_NAME = $MOZJS_NAME"
 echo "    MOZJS_MAJOR_VERSION = $MOZJS_MAJOR_VERSION"
 echo "    MOZJS_MINOR_VERSION = $MOZJS_MINOR_VERSION"
 echo "    MOZJS_PATCH_VERSION = $MOZJS_PATCH_VERSION"
 echo "    MOZJS_ALPHA = $MOZJS_ALPHA"
-
-cmd=${1:-build}
-pkg="mozjs-${MOZJS_MAJOR_VERSION}.${MOZJS_MINOR_VERSION}.${MOZJS_PATCH_VERSION:-${MOZJS_ALPHA:-0}}.tar.bz2"
-pkgpath=${pkg%.tar*}
-tgtpath=${DIST}/${pkgpath}
-taropts="-jcf"
+echo ""
 
 TOPSRCDIR=${SRCDIR}/../..
 
@@ -31,6 +48,9 @@ case $cmd in
 	rm -rf ${pkg} ${tgtpath}
 	;;
 "build")
+        echo -n "Press enter to build $pkg> "
+        read
+
         # Ensure that the configure script is newer than the configure.in script.
         if [ ${SRCDIR}/configure.in -nt ${SRCDIR}/configure ]; then
             echo "error: js/src/configure is out of date. Please regenerate before packaging." >&2
@@ -50,10 +70,8 @@ case $cmd in
 	# copy main moz.build and Makefile.in
 	cp -t ${tgtpath} -dRp ${TOPSRCDIR}/Makefile.in ${TOPSRCDIR}/moz.build
 
-	# copy a nspr file used by the build system
-	${MKDIR} -p ${tgtpath}/nsprpub/config
-	cp -t ${tgtpath}/nsprpub/config -dRp \
-		${TOPSRCDIR}/nsprpub/config/make-system-wrappers.pl
+        # copy nspr.
+        cp -t ${tgtpath} -dRP ${SRCDIR}/../../nsprpub
 
 	# copy build and config directory.
 	cp -t ${tgtpath} -dRp ${TOPSRCDIR}/build ${TOPSRCDIR}/config
@@ -80,8 +98,8 @@ case $cmd in
 	${MKDIR} -p ${tgtpath}/testing
 	cp -t ${tgtpath}/testing -dRp \
 		${TOPSRCDIR}/testing/mozbase
-	${MKDIR} -p ${tgtpath}/modules/zlib
-	cp -t ${tgtpath}/modules/zlib -dRp \
+	${MKDIR} -p ${tgtpath}/modules
+	cp -t ${tgtpath}/modules -dRp \
 		${TOPSRCDIR}/modules/zlib/src
 	${MKDIR} -p ${tgtpath}/layout/tools/reftest
 	cp -t ${tgtpath}/layout/tools/reftest -dRp \
@@ -94,6 +112,7 @@ case $cmd in
 	cp -t ${tgtpath}/mozglue -dRp \
 	        ${TOPSRCDIR}/mozglue/build \
 	        ${TOPSRCDIR}/mozglue/crt \
+	        ${TOPSRCDIR}/mozglue/misc \
 	        ${TOPSRCDIR}/mozglue/moz.build
         ${MKDIR} -p ${tgtpath}/memory
         cp -t ${tgtpath}/memory -dRp \
@@ -108,7 +127,7 @@ case $cmd in
 	find ${tgtpath} -type f -name "*.pyc" -o -name "*.pyo" |xargs rm -f
 
 	# copy or create INSTALL
-	if [ -e {DIST}/INSTALL ]; then
+	if [ -e ${DIST}/INSTALL ]; then
 		cp -t ${tgtpath} ${DIST}/INSTALL
 	else
 		cat <<INSTALL_EOF >${tgtpath}/INSTALL
@@ -121,8 +140,10 @@ be run over the binaries before deploying them.
 
 Building with default options may be performed as follows:
   cd js/src
-  ./configure
-  make
+  mkdir obj
+  cd obj
+  ../configure
+  make # or mozmake on Windows
 INSTALL_EOF
 	fi
 
@@ -158,7 +179,7 @@ README_EOF
 
 	# Roll the tarball
 	${TAR} $taropts ${DIST}/../${pkg} -C ${DIST} ${pkgpath}
-	echo "done."
+	echo "Wrote $(cd ${DIST}/..; echo $PWD)/${pkg}"
 	;;
 *)
 	echo "Unrecognized command: $cmd"
