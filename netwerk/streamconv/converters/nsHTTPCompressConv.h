@@ -32,6 +32,9 @@ class nsIStringInputStream;
 #define	HTTP_IDENTITY_TYPE	    "identity"
 #define	HTTP_UNCOMPRESSED_TYPE	"uncompressed"
 
+namespace mozilla {
+namespace net {
+
 typedef enum    {
   HTTP_COMPRESS_GZIP,
   HTTP_COMPRESS_DEFLATE,
@@ -81,5 +84,8 @@ private:
 
     uint32_t check_header (nsIInputStream *iStr, uint32_t streamLen, nsresult *rv);
 };
+
+} // namespace net
+} // namespace mozilla
 
 #endif

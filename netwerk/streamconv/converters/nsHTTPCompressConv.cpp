@@ -15,6 +15,9 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Preferences.h"
 
+namespace mozilla {
+namespace net {
+
 // nsISupports implementation
 NS_IMPL_ISUPPORTS(nsHTTPCompressConv,
                   nsIStreamConverter,
@@ -486,8 +489,11 @@ nsHTTPCompressConv::check_header(nsIInputStream *iStr, uint32_t streamLen, nsres
   return streamLen;
 }
 
+} // namespace net
+} // namespace mozilla
+
 nsresult
-NS_NewHTTPCompressConv(nsHTTPCompressConv **aHTTPCompressConv)
+NS_NewHTTPCompressConv(mozilla::net::nsHTTPCompressConv **aHTTPCompressConv)
 {
   NS_PRECONDITION(aHTTPCompressConv != nullptr, "null ptr");
 
@@ -495,7 +501,7 @@ NS_NewHTTPCompressConv(nsHTTPCompressConv **aHTTPCompressConv)
     return NS_ERROR_NULL_POINTER;
   }
 
-  *aHTTPCompressConv = new nsHTTPCompressConv();
+  *aHTTPCompressConv = new mozilla::net::nsHTTPCompressConv();
 
   if (!*aHTTPCompressConv) {
     return NS_ERROR_OUT_OF_MEMORY;
