@@ -26,6 +26,11 @@ extern "C" {
 
 #include "nr_socket_prsock.h"
 
+#include "stunserver.h"
+// TODO(bcampen@mozilla.com): Big fat hack since the build system doesn't give
+// us a clean way to add object files to a single executable.
+#include "stunserver.cpp"
+
 #include "nricectx.h"
 #include "nricemediastream.h"
 
@@ -82,29 +87,17 @@ class MultiTcpSocketTest : public ::testing::Test {
     return port | 49152;
   }
 
-  void Create_s(nr_socket_tcp_type tcp_type, nr_socket *stun_server_socket,
-                int use_framing, nr_socket **sock) {
+  void Create_s(nr_socket_tcp_type tcp_type, std::string stun_server_addr,
+                uint16_t stun_server_port, nr_socket **sock) {
     nr_transport_addr local;
     // Get start of port range for test
     static unsigned short port_s = GetRandomPort();
     int r;
 
-    if (stun_server_socket) {
-      nr_transport_addr stun_addr;
-      int port;
-      char stun_host[1000];
-
-      r = nr_socket_getaddr(stun_server_socket, &stun_addr);
-      ASSERT_EQ(0, r);
-      r = nr_transport_addr_get_port(&stun_addr, &port);
-      ASSERT_EQ(0, r);
-      r = nr_transport_addr_get_addrstring(&stun_addr, &stun_host[0],
-                                           sizeof(stun_host));
-      ASSERT_EQ(0, r);
-
+    if (!stun_server_addr.empty()) {
       std::vector<NrIceStunServer> stun_servers;
       ScopedDeletePtr<NrIceStunServer> server(NrIceStunServer::Create(
-          stun_host, port, kNrIceTransportTcp));
+          stun_server_addr, stun_server_port, kNrIceTransportTcp));
       stun_servers.push_back(*server);
 
       ASSERT_TRUE(NS_SUCCEEDED(ice_ctx_->SetStunServers(stun_servers)));
@@ -117,7 +110,7 @@ class MultiTcpSocketTest : public ::testing::Test {
       ASSERT_EQ(0, r);
 
       r = nr_socket_multi_tcp_create(ice_ctx_->ctx(),
-          &local, tcp_type, 1, use_framing, 2048, sock);
+          &local, tcp_type, 1, 2048, sock);
     }
 
     ASSERT_EQ(0, r);
@@ -128,13 +121,13 @@ class MultiTcpSocketTest : public ::testing::Test {
   }
 
   nr_socket *Create(nr_socket_tcp_type tcp_type,
-                    nr_socket *stun_server_socket = NULL,
-                    int use_framing = 1) {
+                    std::string stun_server_addr = "",
+                    uint16_t stun_server_port = 0) {
     nr_socket *sock=nullptr;
     test_utils->sts_target()->Dispatch(
             WrapRunnable(
                 this, &MultiTcpSocketTest::Create_s, tcp_type,
-                stun_server_socket, use_framing, &sock),
+                stun_server_addr, stun_server_port, &sock),
             NS_DISPATCH_SYNC);
     return sock;
   }
@@ -207,50 +200,93 @@ class MultiTcpSocketTest : public ::testing::Test {
             NS_DISPATCH_SYNC);
   }
 
-  void SendData_s(nr_socket *from, nr_socket *to, const char *data,
+  void SendDataToAddress_s(nr_socket *from, nr_transport_addr *to, const char *data,
+                           size_t len) {
+    nr_transport_addr addr_from;
+
+    int r=nr_socket_getaddr(from, &addr_from);
+    ASSERT_EQ(0, r);
+    printf("Sending %lu bytes %s -> %s\n", (unsigned long)len,
+      addr_from.as_string, to->as_string);
+    r=nr_socket_sendto(from, data, len, 0, to);
+    ASSERT_EQ(0, r);
+  }
+
+  void SendData(nr_socket *from, nr_transport_addr *to, const char *data, size_t len) {
+    test_utils->sts_target()->Dispatch(
+            WrapRunnable(
+                this, &MultiTcpSocketTest::SendDataToAddress_s, from, to, data,
+                len),
+            NS_DISPATCH_SYNC);
+  }
+
+  void SendDataToSocket_s(nr_socket *from, nr_socket *to, const char *data,
                   size_t len) {
-    nr_transport_addr addr_from, addr_to;
+    nr_transport_addr addr_to;
 
     int r=nr_socket_getaddr(to, &addr_to);
     ASSERT_EQ(0, r);
-    r=nr_socket_getaddr(from, &addr_from);
-    ASSERT_EQ(0, r);
-    printf("Sending %lu bytes %s -> %s\n", (unsigned long)len,
-      addr_from.as_string, addr_to.as_string);
-    r=nr_socket_sendto(from, data, len, 0, &addr_to);
-    ASSERT_EQ(0, r);
+    SendDataToAddress_s(from, &addr_to, data, len);
   }
 
   void SendData(nr_socket *from, nr_socket *to, const char *data, size_t len) {
     test_utils->sts_target()->Dispatch(
             WrapRunnable(
-                this, &MultiTcpSocketTest::SendData_s, from, to, data, len),
+                this, &MultiTcpSocketTest::SendDataToSocket_s, from, to, data,
+                len),
             NS_DISPATCH_SYNC);
   }
 
-  void RecvData_s(nr_socket *expected_from, nr_socket *sent_to,
-                  const char *expected_data, size_t expected_len) {
+  void RecvDataFromAddress_s(nr_transport_addr *expected_from,
+                             nr_socket *sent_to,
+                             const char *expected_data,
+                             size_t expected_len) {
     SetReadable(false);
-    char received_data[expected_len+1];
-    nr_transport_addr addr_from, addr_to;
+    size_t buflen = expected_len ? expected_len+1 : 100;
+    char received_data[buflen];
+    nr_transport_addr addr_to;
     nr_transport_addr retaddr;
     size_t retlen;
 
     int r=nr_socket_getaddr(sent_to, &addr_to);
     ASSERT_EQ(0, r);
-    r=nr_socket_getaddr(expected_from, &addr_from);
-    ASSERT_EQ(0, r);
     printf("Receiving %lu bytes %s <- %s\n", (unsigned long)expected_len,
-      addr_to.as_string, addr_from.as_string);
-    r=nr_socket_recvfrom(sent_to, received_data, expected_len+1,
+      addr_to.as_string, expected_from->as_string);
+    r=nr_socket_recvfrom(sent_to, received_data, buflen,
                          &retlen, 0, &retaddr);
     ASSERT_EQ(0, r);
-    r=nr_transport_addr_cmp(&retaddr, &addr_from,
+    r=nr_transport_addr_cmp(&retaddr, expected_from,
                             NR_TRANSPORT_ADDR_CMP_MODE_ALL);
     ASSERT_EQ(0, r);
-    ASSERT_EQ(expected_len, retlen);
-    r=memcmp(expected_data, received_data, retlen);
+    // expected_len == 0 means we just expected some data
+    if (expected_len == 0) {
+      ASSERT_GT(retlen, 0U);
+    } else {
+      ASSERT_EQ(expected_len, retlen);
+      r=memcmp(expected_data, received_data, retlen);
+      ASSERT_EQ(0, r);
+    }
+  }
+
+  void RecvData(nr_transport_addr *expected_from, nr_socket *sent_to,
+                const char *expected_data = nullptr, size_t expected_len = 0) {
+    ASSERT_TRUE_WAIT(IsReadable(), 1000);
+    test_utils->sts_target()->Dispatch(
+            WrapRunnable(
+                this, &MultiTcpSocketTest::RecvDataFromAddress_s,
+                expected_from, sent_to, expected_data,
+                expected_len),
+            NS_DISPATCH_SYNC);
+  }
+
+  void RecvDataFromSocket_s(nr_socket *expected_from, nr_socket *sent_to,
+                            const char *expected_data, size_t expected_len) {
+    nr_transport_addr addr_from;
+
+    int r=nr_socket_getaddr(expected_from, &addr_from);
     ASSERT_EQ(0, r);
+
+    RecvDataFromAddress_s(&addr_from, sent_to, expected_data, expected_len);
   }
 
   void RecvData(nr_socket *expected_from, nr_socket *sent_to,
@@ -258,8 +294,8 @@ class MultiTcpSocketTest : public ::testing::Test {
     ASSERT_TRUE_WAIT(IsReadable(), 1000);
     test_utils->sts_target()->Dispatch(
             WrapRunnable(
-                this, &MultiTcpSocketTest::RecvData_s, expected_from, sent_to,
-                expected_data, expected_len),
+                this, &MultiTcpSocketTest::RecvDataFromSocket_s,
+                expected_from, sent_to, expected_data, expected_len),
             NS_DISPATCH_SYNC);
   }
 
@@ -432,18 +468,25 @@ TEST_F(MultiTcpSocketTest, TestActivePassiveWithStunServerMockup) {
   };
   const char data[] = "TestActivePassiveWithStunServerMockup";
 
-  socks[0] = Create(TCP_TYPE_PASSIVE, NULL, 0); // stun server socket
+  nr_transport_addr stun_srv_addr;
+  std::string stun_addr;
+  uint16_t stun_port;
+  stun_addr = TestStunTcpServer::GetInstance(AF_INET)->addr();
+  stun_port = TestStunTcpServer::GetInstance(AF_INET)->port();
+  int r = nr_str_port_to_transport_addr(stun_addr.c_str(), stun_port, IPPROTO_TCP, &stun_srv_addr);
+  ASSERT_EQ(0, r);
+
+  socks[0] = Create(TCP_TYPE_PASSIVE, stun_addr, stun_port);
   Listen(socks[0]);
+  socks[1] = Create(TCP_TYPE_ACTIVE, stun_addr, stun_port);
 
-  socks[1] = Create(TCP_TYPE_PASSIVE, socks[0]);
-  Listen(socks[1]);
-  socks[2] = Create(TCP_TYPE_ACTIVE, socks[0]);
+  /* Send a fake STUN request and expect a STUN error response */
+  SendData(socks[0], &stun_srv_addr, stunMessage, sizeof(stunMessage));
+  RecvData(&stun_srv_addr, socks[0]);
 
-  TransferData(socks[1], socks[0], stunMessage, sizeof(stunMessage));
-  TransferData(socks[0], socks[1], stunMessage, sizeof(stunMessage));
-  Connect(socks[2], socks[1]);
-  TransferData(socks[2], socks[1], data, sizeof(data));
-  TransferData(socks[1], socks[2], data, sizeof(data));
+  Connect(socks[1], socks[0]);
+  TransferData(socks[1], socks[0], data, sizeof(data));
+  TransferData(socks[0], socks[1], data, sizeof(data));
 }
 
 TEST_F(MultiTcpSocketTest,  TestConnectTwoSo) {
@@ -498,10 +541,20 @@ int main(int argc, char **argv)
   // Adds a listener to the end.  Google Test takes the ownership.
   listeners.Append(new test::RingbufferDumper(test_utils));
 
+  test_utils->sts_target()->Dispatch(
+      WrapRunnableNM(&TestStunTcpServer::GetInstance, AF_INET),
+                     NS_DISPATCH_SYNC);
+  test_utils->sts_target()->Dispatch(
+    WrapRunnableNM(&TestStunTcpServer::GetInstance, AF_INET6),
+                   NS_DISPATCH_SYNC);
+
   // Start the tests
   ::testing::InitGoogleTest(&argc, argv);
 
   int rv = RUN_ALL_TESTS();
+
+  test_utils->sts_target()->Dispatch(
+    WrapRunnableNM(&TestStunTcpServer::ShutdownInstance), NS_DISPATCH_SYNC);
 
   delete test_utils;
   return rv;
