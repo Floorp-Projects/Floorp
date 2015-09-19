@@ -254,12 +254,12 @@ public:
 private:
   nsresult Init(const char* aMimeType, uint32_t aFlags);
 
-  DrawResult DrawWithPreDownscaleIfNeeded(DrawableFrameRef&& aFrameRef,
-                                          gfxContext* aContext,
-                                          const nsIntSize& aSize,
-                                          const ImageRegion& aRegion,
-                                          GraphicsFilter aFilter,
-                                          uint32_t aFlags);
+  DrawResult DrawInternal(DrawableFrameRef&& aFrameRef,
+                          gfxContext* aContext,
+                          const nsIntSize& aSize,
+                          const ImageRegion& aRegion,
+                          GraphicsFilter aFilter,
+                          uint32_t aFlags);
 
   already_AddRefed<gfx::SourceSurface> CopyFrame(uint32_t aWhichFrame,
                                              uint32_t aFlags);
@@ -420,21 +420,9 @@ private: // data
   // Scaling.
   //////////////////////////////////////////////////////////////////////////////
 
-  // Initiates an HQ scale for the given frame, if possible.
-  void RequestScale(imgFrame* aFrame, uint32_t aFlags, const nsIntSize& aSize);
-
-  // Determines whether we can perform an HQ scale with the given parameters.
-  bool CanScale(GraphicsFilter aFilter, const nsIntSize& aSize,
-                uint32_t aFlags);
-
   // Determines whether we can downscale during decode with the given
   // parameters.
   bool CanDownscaleDuringDecode(const nsIntSize& aSize, uint32_t aFlags);
-
-  // Called by the HQ scaler when a new scaled frame is ready.
-  void NotifyNewScaledFrame();
-
-  friend class ScaleRunner;
 
 
   // Error handling.
