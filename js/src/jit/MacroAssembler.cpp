@@ -35,7 +35,7 @@ template <typename Source> void
 MacroAssembler::guardTypeSet(const Source& address, const TypeSet* types, BarrierKind kind,
                              Register scratch, Label* miss)
 {
-    MOZ_ASSERT(kind == BarrierKind::TypeTagOnly || kind == BarrierKind::TypeSet);
+    MOZ_ASSERT(kind != BarrierKind::NoBarrier);
     MOZ_ASSERT(!types->unknown());
 
     Label matched;
@@ -50,24 +50,49 @@ MacroAssembler::guardTypeSet(const Source& address, const TypeSet* types, Barrie
         TypeSet::AnyObjectType()
     };
 
-    // The double type also implies Int32.
-    // So replace the int32 test with the double one.
-    if (types->hasType(TypeSet::DoubleType())) {
-        MOZ_ASSERT(types->hasType(TypeSet::Int32Type()));
-        tests[0] = TypeSet::DoubleType();
-    }
-
     Register tag = extractTag(address, scratch);
-
-    // Emit all typed tests.
     BranchType lastBranch;
-    for (size_t i = 0; i < mozilla::ArrayLength(tests); i++) {
-        if (!types->hasType(tests[i]))
-            continue;
 
-        if (lastBranch.isInitialized())
-            lastBranch.emit(*this);
-        lastBranch = BranchType(Equal, tag, tests[i], &matched);
+    if (kind != BarrierKind::ObjectTypesOnly) {
+        // The double type also implies Int32.
+        // So replace the int32 test with the double one.
+        if (types->hasType(TypeSet::DoubleType())) {
+            MOZ_ASSERT(types->hasType(TypeSet::Int32Type()));
+            tests[0] = TypeSet::DoubleType();
+        }
+
+        // Emit all typed tests.
+        for (size_t i = 0; i < mozilla::ArrayLength(tests); i++) {
+            if (!types->hasType(tests[i]))
+                continue;
+
+            if (lastBranch.isInitialized())
+                lastBranch.emit(*this);
+            lastBranch = BranchType(Equal, tag, tests[i], &matched);
+        }
+    } else {
+#ifdef DEBUG
+        // Any non-object will be considered to match the type set. Make sure
+        // such values encountered are actually in the type set.
+
+        if (types->hasType(TypeSet::DoubleType())) {
+            MOZ_ASSERT(types->hasType(TypeSet::Int32Type()));
+            tests[0] = TypeSet::DoubleType();
+        }
+
+        Label matchedPrimitive;
+        for (size_t i = 0; i < mozilla::ArrayLength(tests); i++) {
+            if (!types->hasType(tests[i]))
+                continue;
+            BranchType branch(Equal, tag, tests[i], &matchedPrimitive);
+            branch.emit(*this);
+        }
+        branchTestObject(Equal, tag, &matchedPrimitive);
+
+        assumeUnreachable("Unexpected primitive type");
+
+        bind(&matchedPrimitive);
+#endif
     }
 
     // If this is the last check, invert the last branch.
@@ -90,7 +115,7 @@ MacroAssembler::guardTypeSet(const Source& address, const TypeSet* types, Barrie
 
     // Test specific objects.
     MOZ_ASSERT(scratch != InvalidReg);
-    branchTestObject(NotEqual, tag, miss);
+    branchTestObject(NotEqual, tag, kind == BarrierKind::ObjectTypesOnly ? &matched : miss);
     if (kind != BarrierKind::TypeTagOnly) {
         Register obj = extractObject(address, scratch);
         guardObjectType(obj, types, scratch, miss);
