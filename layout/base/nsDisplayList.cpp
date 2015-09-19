@@ -1508,10 +1508,6 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
     layerBuilder->SetLayerTreeCompressionMode();
   }
 
-  if (aFlags & PAINT_FLUSH_LAYERS) {
-    FrameLayerBuilder::InvalidateAllLayers(layerManager);
-  }
-
   if (doBeginTransaction) {
     if (aCtx) {
       layerManager->BeginTransactionWithTarget(aCtx->ThebesContext());
@@ -1710,10 +1706,6 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
     } else if (shouldInvalidate) {
       view->GetViewManager()->InvalidateView(view);
     }
-  }
-
-  if (aFlags & PAINT_FLUSH_LAYERS) {
-    FrameLayerBuilder::InvalidateAllLayers(layerManager);
   }
 
   layerManager->SetUserData(&gLayerManagerLayerBuilder, oldBuilder);
