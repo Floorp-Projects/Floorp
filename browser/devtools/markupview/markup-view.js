@@ -653,11 +653,6 @@ MarkupView.prototype = {
           break;
         }
       }
-      case Ci.nsIDOMKeyEvent.DOM_VK_S: {
-        let selection = this._selectedContainer.node;
-        this._inspector.scrollNodeIntoView(selection);
-        break;
-      }
       default:
         handled = false;
     }
