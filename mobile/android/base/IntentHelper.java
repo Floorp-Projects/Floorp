@@ -123,7 +123,7 @@ public final class IntentHelper implements GeckoEventListener,
                                       message.optString("packageName"),
                                       message.optString("className"),
                                       message.optString("action"),
-                                      message.optString("title"));
+                                      message.optString("title"), false);
     }
 
     private void openForResult(final JSONObject message) throws JSONException {
