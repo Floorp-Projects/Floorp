@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ArrayUtils.h"
-
 #include "TextInputHandler.h"
 
 #include "mozilla/Logging.h"
 
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
@@ -2780,27 +2780,48 @@ IMEInputHandler::DispatchCompositionChangeEvent(const nsString& aText,
 bool
 IMEInputHandler::DispatchCompositionCommitEvent(const nsAString* aCommitString)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::DispatchCompositionCommitEvent, "
-     "aCommitString=0x%p (\"%s\"), Destroyed()=%s",
+     "aCommitString=0x%p (\"%s\"), Destroyed()=%s, mView=%p, mWidget=%p, "
+     "inputContext=%p, mIsIMEComposing=%s",
      this, aCommitString,
      aCommitString ? NS_ConvertUTF16toUTF8(*aCommitString).get() : "",
-     TrueOrFalse(Destroyed())));
+     TrueOrFalse(Destroyed()), mView, mWidget,
+     mView ? [mView inputContext] : nullptr, TrueOrFalse(mIsIMEComposing)));
 
-  if (NS_WARN_IF(Destroyed())) {
-    return false;
-  }
+  NS_ASSERTION(mIsIMEComposing, "We're not in composition");
 
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
-  EventMessage message =
-    aCommitString ? eCompositionCommit : eCompositionCommitAsIs;
-  WidgetCompositionEvent compositionCommitEvent(true, message, mWidget);
-  compositionCommitEvent.time = PR_IntervalNow();
-  if (aCommitString) {
-    compositionCommitEvent.mData = *aCommitString;
+  if (!Destroyed()) {
+    EventMessage message =
+      aCommitString ? eCompositionCommit : eCompositionCommitAsIs;
+    WidgetCompositionEvent compositionCommitEvent(true, message, mWidget);
+    compositionCommitEvent.time = PR_IntervalNow();
+    if (aCommitString) {
+      compositionCommitEvent.mData = *aCommitString;
+    }
+    DispatchEvent(compositionCommitEvent);
   }
-  return DispatchEvent(compositionCommitEvent);
+
+  mIsIMEComposing = false;
+  if (mIMECompositionString) {
+    [mIMECompositionString release];
+    mIMECompositionString = nullptr;
+  }
+
+  if (Destroyed()) {
+    MOZ_LOG(gLog, LogLevel::Info,
+      ("%p IMEInputHandler::DispatchCompositionCommitEvent, "
+       "destroyed by compositioncommit event", this));
+    return false;
+  }
+
+  return true;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
 
 void
@@ -2841,15 +2862,13 @@ IMEInputHandler::InsertTextAsCommittingComposition(
   if (IsIMEComposing() && aReplacementRange &&
       aReplacementRange->location != NSNotFound &&
       !NSEqualRanges(MarkedRange(), *aReplacementRange)) {
-    DispatchCompositionCommitEvent();
-    if (Destroyed()) {
+    if (!DispatchCompositionCommitEvent()) {
       MOZ_LOG(gLog, LogLevel::Info,
         ("%p IMEInputHandler::InsertTextAsCommittingComposition, "
          "destroyed by commiting composition for setting replacement range",
          this));
       return;
     }
-    OnEndIMEComposition();
   }
 
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
@@ -2873,15 +2892,12 @@ IMEInputHandler::InsertTextAsCommittingComposition(
     }
   }
 
-  DispatchCompositionCommitEvent(&str);
-  if (Destroyed()) {
+  if (!DispatchCompositionCommitEvent(&str)) {
     MOZ_LOG(gLog, LogLevel::Info,
       ("%p IMEInputHandler::InsertTextAsCommittingComposition, "
        "destroyed by compositioncommit event", this));
     return;
   }
-
-  OnEndIMEComposition();
 
   mMarkedRange = NSMakeRange(NSNotFound, 0);
 
@@ -2920,18 +2936,15 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
   if (IsIMEComposing() && aReplacementRange &&
       aReplacementRange->location != NSNotFound &&
       !NSEqualRanges(MarkedRange(), *aReplacementRange)) {
-    bool ignoreIMECommit = mIgnoreIMECommit;
+    AutoRestore<bool> ignoreIMECommit(mIgnoreIMECommit);
     mIgnoreIMECommit = false;
-    DispatchCompositionCommitEvent();
-    mIgnoreIMECommit = ignoreIMECommit;
-    if (Destroyed()) {
+    if (!DispatchCompositionCommitEvent()) {
       MOZ_LOG(gLog, LogLevel::Info,
         ("%p IMEInputHandler::SetMarkedText, "
          "destroyed by commiting composition for setting replacement range",
          this));
       return;
     }
-    OnEndIMEComposition();
   }
 
   nsString str;
@@ -2975,14 +2988,11 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
 
   // If the composition string becomes empty string, we should commit
   // current composition.
-  DispatchCompositionCommitEvent(&EmptyString());
-  if (Destroyed()) {
+  if (!DispatchCompositionCommitEvent(&EmptyString())) {
     MOZ_LOG(gLog, LogLevel::Info,
       ("%p IMEInputHandler::SetMarkedText, "
        "destroyed by compositioncommit event", this));
-    return;
   }
-  OnEndIMEComposition();
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -3364,6 +3374,10 @@ IMEInputHandler::~IMEInputHandler()
   if (sFocusedIMEHandler == this) {
     sFocusedIMEHandler = nullptr;
   }
+  if (mIMECompositionString) {
+    [mIMECompositionString release];
+    mIMECompositionString = nullptr;
+  }
 }
 
 void
@@ -3416,36 +3430,12 @@ IMEInputHandler::OnDestroyWidget(nsChildView* aDestroyingWidget)
   if (IsIMEComposing()) {
     // If our view is in the composition, we should clean up it.
     CancelIMEComposition();
-    OnEndIMEComposition();
   }
 
   mSelectedRange.location = NSNotFound; // Marking dirty
   mIMEHasFocus = false;
 
   return true;
-}
-
-void
-IMEInputHandler::OnEndIMEComposition()
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  MOZ_LOG(gLog, LogLevel::Info,
-    ("%p IMEInputHandler::OnEndIMEComposition, mView=%p, mWidget=%p, "
-     "inputContext=%p, mIsIMEComposing=%s",
-     this, mView, mWidget, mView ? [mView inputContext] : nullptr,
-     TrueOrFalse(mIsIMEComposing)));
-
-  NS_ASSERTION(mIsIMEComposing, "We're not in composition");
-
-  mIsIMEComposing = false;
-
-  if (mIMECompositionString) {
-    [mIMECompositionString release];
-    mIMECompositionString = nullptr;
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 void
