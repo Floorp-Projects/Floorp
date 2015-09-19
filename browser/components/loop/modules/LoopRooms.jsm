@@ -15,6 +15,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
                                   "resource://services-common/utils.js");
+XPCOMUtils.defineLazyModuleGetter(this, "WebChannel",
+                                  "resource://gre/modules/WebChannel.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "eventEmitter", function() {
   const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js", {});
   return new EventEmitter();
@@ -45,6 +48,9 @@ const MAX_TIME_BEFORE_ENCRYPTION = 30 * 60 * 1000;
 // Wait time between individual re-encryption cycles (1 second).
 const TIME_BETWEEN_ENCRYPTIONS = 1000;
 
+// This is the pref name for the url of the standalone pages.
+const LINKCLICKER_URL_PREFNAME = "loop.linkClicker.url";
+
 const roomsPushNotification = function(version, channelID) {
   return LoopRoomsInternal.onNotification(version, channelID);
 };
@@ -58,6 +64,8 @@ var gDirty = true;
 var gCurrentUser = null;
 // Global variable that keeps track of the room cache.
 var gRoomsCache = null;
+// Global variable that keeps track of the link clicker channel.
+var gLinkClickerChannel = null;
 
 /**
  * Extend a `target` object with the properties defined in `source`.
@@ -175,6 +183,40 @@ var LoopRoomsInternal = {
       this.queue = [];
       this.timer = null;
     }
+  },
+
+  /**
+   * Initialises the rooms, sets up the link clicker listener.
+   */
+  init: function() {
+    Services.prefs.addObserver(LINKCLICKER_URL_PREFNAME,
+      this.setupLinkClickerListener.bind(this), false);
+
+    this.setupLinkClickerListener();
+  },
+
+  /**
+   * Sets up a WebChannel listener for the link clicker so that we can open
+   * rooms in the Firefox UI.
+   */
+  setupLinkClickerListener: function() {
+    // Ensure any existing channel is tidied up.
+    if (gLinkClickerChannel) {
+      gLinkClickerChannel.stopListening();
+      gLinkClickerChannel = null;
+    }
+
+    let linkClickerUrl = Services.prefs.getCharPref(LINKCLICKER_URL_PREFNAME);
+
+    // Don't do anything if there's no url.
+    if (!linkClickerUrl) {
+      return;
+    }
+
+    let uri = Services.io.newURI(linkClickerUrl, null, null);
+
+    gLinkClickerChannel = new WebChannel("loop-link-clicker", uri);
+    gLinkClickerChannel.listen(this._handleLinkClickerMessage.bind(this));
   },
 
   /**
@@ -905,6 +947,42 @@ var LoopRoomsInternal = {
       eventEmitter.emit("refresh");
       this.getAll(null, () => {});
     }
+  },
+
+  /**
+   * Handles a message received from the content channel.
+   *
+   * @param {String} id              The channel id.
+   * @param {Object} message         The message received.
+   * @param {Object} sendingContext  The context for the sending location.
+   */
+  _handleLinkClickerMessage: function(id, message, sendingContext) {
+    if (!message) {
+      return;
+    }
+
+    let sendResponse = response => {
+      gLinkClickerChannel.send({
+        response: response
+      }, sendingContext);
+    };
+
+    let hasRoom = this.rooms.has(message.roomToken);
+
+    switch (message.command) {
+      case "checkWillOpenRoom":
+        sendResponse(hasRoom);
+        break;
+      case "openRoom":
+        if (hasRoom) {
+          this.open(message.roomToken);
+        }
+        sendResponse(hasRoom);
+        break;
+      default:
+        sendResponse(false);
+        break;
+    }
   }
 };
 Object.freeze(LoopRoomsInternal);
@@ -926,6 +1004,10 @@ Object.freeze(LoopRoomsInternal);
  * See the internal code for the API documentation.
  */
 this.LoopRooms = {
+  init: function() {
+    LoopRoomsInternal.init();
+  },
+
   get participantsCount() {
     return LoopRoomsInternal.participantsCount;
   },
@@ -1016,6 +1098,24 @@ this.LoopRooms = {
 
   once: (...params) => eventEmitter.once(...params),
 
-  off: (...params) => eventEmitter.off(...params)
+  off: (...params) => eventEmitter.off(...params),
+
+  /**
+   * Expose the internal rooms map for testing purposes only. This avoids
+   * needing to mock the server interfaces.
+   *
+   * @param {Map} roomsCache The new cache data to set for testing purposes. If
+   *                         not specified, it will reset the cache.
+   */
+  _setRoomsCache: function(roomsCache) {
+    LoopRoomsInternal.rooms.clear();
+
+    if (roomsCache) {
+      // Need a clone as the internal map is read-only.
+      for (let [key, value] of roomsCache) {
+        LoopRoomsInternal.rooms.set(key, value);
+      }
+    }
+  }
 };
 Object.freeze(this.LoopRooms);
