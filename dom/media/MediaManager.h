@@ -54,6 +54,65 @@ struct MediaTrackConstraintSet;
 extern PRLogModuleInfo* GetMediaManagerLog();
 #define MM_LOG(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Debug, msg)
 
+class MediaDevice : public nsIMediaDevice
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIMEDIADEVICE
+
+  void SetId(const nsAString& aID);
+  virtual uint32_t GetBestFitnessDistance(
+      const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets);
+protected:
+  virtual ~MediaDevice() {}
+  explicit MediaDevice(MediaEngineSource* aSource, bool aIsVideo);
+  static uint32_t FitnessDistance(nsString aN,
+    const dom::OwningStringOrStringSequenceOrConstrainDOMStringParameters& aConstraint);
+private:
+  static bool StringsContain(const dom::OwningStringOrStringSequence& aStrings,
+                             nsString aN);
+  static uint32_t FitnessDistance(nsString aN,
+      const dom::ConstrainDOMStringParameters& aParams);
+protected:
+  nsString mName;
+  nsString mID;
+  dom::MediaSourceEnum mMediaSource;
+  nsRefPtr<MediaEngineSource> mSource;
+public:
+  dom::MediaSourceEnum GetMediaSource() {
+    return mMediaSource;
+  }
+  bool mIsVideo;
+};
+
+class VideoDevice : public MediaDevice
+{
+public:
+  typedef MediaEngineVideoSource Source;
+
+  explicit VideoDevice(Source* aSource);
+  NS_IMETHOD GetType(nsAString& aType);
+  Source* GetSource();
+  nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
+                    const MediaEnginePrefs &aPrefs);
+  nsresult Restart(const dom::MediaTrackConstraints &aConstraints,
+                   const MediaEnginePrefs &aPrefs);
+};
+
+class AudioDevice : public MediaDevice
+{
+public:
+  typedef MediaEngineAudioSource Source;
+
+  explicit AudioDevice(Source* aSource);
+  NS_IMETHOD GetType(nsAString& aType);
+  Source* GetSource();
+  nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
+                    const MediaEnginePrefs &aPrefs);
+  nsresult Restart(const dom::MediaTrackConstraints &aConstraints,
+                   const MediaEnginePrefs &aPrefs);
+};
+
 /**
  * This class is an implementation of MediaStreamListener. This is used
  * to Start() and Stop() the underlying MediaEngineSource when MediaStreams
@@ -80,13 +139,13 @@ public:
   }
 
   void Activate(already_AddRefed<SourceMediaStream> aStream,
-    MediaEngineSource* aAudioSource,
-    MediaEngineSource* aVideoSource)
+                AudioDevice* aAudioDevice,
+                VideoDevice* aVideoDevice)
   {
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
     mStream = aStream;
-    mAudioSource = aAudioSource;
-    mVideoSource = aVideoSource;
+    mAudioDevice = aAudioDevice;
+    mVideoDevice = aVideoDevice;
 
     mStream->AddListener(this);
   }
@@ -111,46 +170,50 @@ public:
   void ApplyConstraintsToTrack(TrackID aID, bool aIsAudio,
                                const dom::MediaTrackConstraints& aConstraints);
 
-  // mVideo/AudioSource are set by Activate(), so we assume they're capturing
+  // mVideo/AudioDevice are set by Activate(), so we assume they're capturing
   // if set and represent a real capture device.
   bool CapturingVideo()
   {
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-    return mVideoSource && !mStopped &&
-           mVideoSource->GetMediaSource() == dom::MediaSourceEnum::Camera &&
-           (!mVideoSource->IsFake() ||
+    return mVideoDevice && !mStopped &&
+           mVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Camera &&
+           (!mVideoDevice->GetSource()->IsFake() ||
             Preferences::GetBool("media.navigator.permission.fake"));
   }
   bool CapturingAudio()
   {
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-    return mAudioSource && !mStopped &&
-           (!mAudioSource->IsFake() ||
+    return mAudioDevice && !mStopped &&
+           (!mAudioDevice->GetSource()->IsFake() ||
             Preferences::GetBool("media.navigator.permission.fake"));
   }
   bool CapturingScreen()
   {
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-    return mVideoSource && !mStopped && !mVideoSource->IsAvailable() &&
-           mVideoSource->GetMediaSource() == dom::MediaSourceEnum::Screen;
+    return mVideoDevice && !mStopped &&
+           !mVideoDevice->GetSource()->IsAvailable() &&
+           mVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Screen;
   }
   bool CapturingWindow()
   {
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-    return mVideoSource && !mStopped && !mVideoSource->IsAvailable() &&
-           mVideoSource->GetMediaSource() == dom::MediaSourceEnum::Window;
+    return mVideoDevice && !mStopped &&
+           !mVideoDevice->GetSource()->IsAvailable() &&
+           mVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Window;
   }
   bool CapturingApplication()
   {
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-    return mVideoSource && !mStopped && !mVideoSource->IsAvailable() &&
-           mVideoSource->GetMediaSource() == dom::MediaSourceEnum::Application;
+    return mVideoDevice && !mStopped &&
+           !mVideoDevice->GetSource()->IsAvailable() &&
+           mVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Application;
   }
   bool CapturingBrowser()
   {
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-    return mVideoSource && !mStopped && mVideoSource->IsAvailable() &&
-           mVideoSource->GetMediaSource() == dom::MediaSourceEnum::Browser;
+    return mVideoDevice && !mStopped &&
+           mVideoDevice->GetSource()->IsAvailable() &&
+           mVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Browser;
   }
 
   void SetStopped()
@@ -191,11 +254,13 @@ public:
   {
     // Currently audio sources ignore NotifyPull, but they could
     // watch it especially for fake audio.
-    if (mAudioSource) {
-      mAudioSource->NotifyPull(aGraph, mStream, kAudioTrack, aDesiredTime);
+    if (mAudioDevice) {
+      mAudioDevice->GetSource()->NotifyPull(aGraph, mStream, kAudioTrack,
+                                            aDesiredTime);
     }
-    if (mVideoSource) {
-      mVideoSource->NotifyPull(aGraph, mStream, kVideoTrack, aDesiredTime);
+    if (mVideoDevice) {
+      mVideoDevice->GetSource()->NotifyPull(aGraph, mStream, kVideoTrack,
+                                            aDesiredTime);
     }
   }
 
@@ -241,8 +306,8 @@ private:
 
   // Accessed from MediaStreamGraph thread, MediaManager thread, and MainThread
   // No locking needed as they're only addrefed except on the MediaManager thread
-  nsRefPtr<MediaEngineSource> mAudioSource; // threadsafe refcnt
-  nsRefPtr<MediaEngineSource> mVideoSource; // threadsafe refcnt
+  nsRefPtr<AudioDevice> mAudioDevice; // threadsafe refcnt
+  nsRefPtr<VideoDevice> mVideoDevice; // threadsafe refcnt
   nsRefPtr<SourceMediaStream> mStream; // threadsafe refcnt
   bool mFinished;
 
@@ -318,62 +383,6 @@ private:
 
 typedef nsTArray<nsRefPtr<GetUserMediaCallbackMediaStreamListener> > StreamListeners;
 typedef nsClassHashtable<nsUint64HashKey, StreamListeners> WindowTable;
-
-class MediaDevice : public nsIMediaDevice
-{
-public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIMEDIADEVICE
-
-  void SetId(const nsAString& aID);
-  virtual uint32_t GetBestFitnessDistance(
-      const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets);
-protected:
-  virtual ~MediaDevice() {}
-  explicit MediaDevice(MediaEngineSource* aSource, bool aIsVideo);
-  static uint32_t FitnessDistance(nsString aN,
-    const dom::OwningStringOrStringSequenceOrConstrainDOMStringParameters& aConstraint);
-private:
-  static bool StringsContain(const dom::OwningStringOrStringSequence& aStrings,
-                             nsString aN);
-  static uint32_t FitnessDistance(nsString aN,
-      const dom::ConstrainDOMStringParameters& aParams);
-protected:
-  nsString mName;
-  nsString mID;
-  dom::MediaSourceEnum mMediaSource;
-  nsRefPtr<MediaEngineSource> mSource;
-public:
-  bool mIsVideo;
-};
-
-class VideoDevice : public MediaDevice
-{
-public:
-  typedef MediaEngineVideoSource Source;
-
-  explicit VideoDevice(Source* aSource);
-  NS_IMETHOD GetType(nsAString& aType);
-  Source* GetSource();
-  nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
-                    const MediaEnginePrefs &aPrefs);
-  nsresult Restart(const dom::MediaTrackConstraints &aConstraints,
-                   const MediaEnginePrefs &aPrefs);
-};
-
-class AudioDevice : public MediaDevice
-{
-public:
-  typedef MediaEngineAudioSource Source;
-
-  explicit AudioDevice(Source* aSource);
-  NS_IMETHOD GetType(nsAString& aType);
-  Source* GetSource();
-  nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
-                    const MediaEnginePrefs &aPrefs);
-  nsresult Restart(const dom::MediaTrackConstraints &aConstraints,
-                   const MediaEnginePrefs &aPrefs);
-};
 
 // we could add MediaManager if needed
 typedef void (*WindowListenerCallback)(MediaManager *aThis,

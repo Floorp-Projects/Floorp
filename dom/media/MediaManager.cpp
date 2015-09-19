@@ -226,8 +226,8 @@ public:
     GetUserMediaCallbackMediaStreamListener* aListener,
     DOMMediaStream* aStream,
     DOMMediaStream::OnTracksAvailableCallback* aOnTracksAvailableCallback,
-    MediaEngineSource* aAudioSource,
-    MediaEngineSource* aVideoSource,
+    AudioDevice* aAudioDevice,
+    VideoDevice* aVideoDevice,
     bool aBool,
     uint64_t aWindowID,
     already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError,
@@ -235,8 +235,8 @@ public:
     : mType(aType)
     , mStream(aStream)
     , mOnTracksAvailableCallback(aOnTracksAvailableCallback)
-    , mAudioSource(aAudioSource)
-    , mVideoSource(aVideoSource)
+    , mAudioDevice(aAudioDevice)
+    , mVideoDevice(aVideoDevice)
     , mListener(aListener)
     , mBool(aBool)
     , mWindowID(aWindowID)
@@ -267,15 +267,15 @@ public:
           NS_ASSERTION(!NS_IsMainThread(), "Never call on main thread");
           nsresult rv;
 
-          if (mAudioSource) {
-            rv = mAudioSource->Start(source, kAudioTrack);
+          if (mAudioDevice) {
+            rv = mAudioDevice->GetSource()->Start(source, kAudioTrack);
             if (NS_FAILED(rv)) {
               ReturnCallbackError(rv, "Starting audio failed");
               return;
             }
           }
-          if (mVideoSource) {
-            rv = mVideoSource->Start(source, kVideoTrack);
+          if (mVideoDevice) {
+            rv = mVideoDevice->GetSource()->Start(source, kVideoTrack);
             if (NS_FAILED(rv)) {
               ReturnCallbackError(rv, "Starting video failed");
               return;
@@ -295,8 +295,8 @@ public:
             new GetUserMediaNotificationEvent(GetUserMediaNotificationEvent::STARTING,
                                               mStream.forget(),
                                               mOnTracksAvailableCallback.forget(),
-                                              mAudioSource != nullptr,
-                                              mVideoSource != nullptr,
+                                              mAudioDevice != nullptr,
+                                              mVideoDevice != nullptr,
                                               mWindowID, mOnFailure.forget());
           // event must always be released on mainthread due to the JS callbacks
           // in the TracksAvailableCallback
@@ -308,13 +308,13 @@ public:
       case MEDIA_STOP_TRACK:
         {
           NS_ASSERTION(!NS_IsMainThread(), "Never call on main thread");
-          if (mAudioSource) {
-            mAudioSource->Stop(source, kAudioTrack);
-            mAudioSource->Deallocate();
+          if (mAudioDevice) {
+            mAudioDevice->GetSource()->Stop(source, kAudioTrack);
+            mAudioDevice->GetSource()->Deallocate();
           }
-          if (mVideoSource) {
-            mVideoSource->Stop(source, kVideoTrack);
-            mVideoSource->Deallocate();
+          if (mVideoDevice) {
+            mVideoDevice->GetSource()->Stop(source, kVideoTrack);
+            mVideoDevice->GetSource()->Deallocate();
           }
           // Do this after stopping all tracks with EndTrack()
           if (mBool) {
@@ -326,8 +326,8 @@ public:
                                               mType == MEDIA_STOP ?
                                               GetUserMediaNotificationEvent::STOPPING :
                                               GetUserMediaNotificationEvent::STOPPED_TRACK,
-                                              mAudioSource != nullptr,
-                                              mVideoSource != nullptr,
+                                              mAudioDevice != nullptr,
+                                              mVideoDevice != nullptr,
                                               mWindowID);
           // event must always be released on mainthread due to the JS callbacks
           // in the TracksAvailableCallback
@@ -340,11 +340,11 @@ public:
           nsRefPtr<MediaManager> mgr = MediaManager::GetInstance();
 
           NS_ASSERTION(!NS_IsMainThread(), "Never call on main thread");
-          if (mAudioSource) {
-            mAudioSource->Restart(mConstraints, mgr->mPrefs);
+          if (mAudioDevice) {
+            mAudioDevice->Restart(mConstraints, mgr->mPrefs);
           }
-          if (mVideoSource) {
-            mVideoSource->Restart(mConstraints, mgr->mPrefs);
+          if (mVideoDevice) {
+            mVideoDevice->Restart(mConstraints, mgr->mPrefs);
           }
 
           // Need to dispatch something back to main to resolve promise
@@ -352,8 +352,8 @@ public:
           nsIRunnable *event =
             new GetUserMediaNotificationEvent(mListener,
                                               GetUserMediaNotificationEvent::APPLIED_CONSTRAINTS,
-                                              mAudioSource != nullptr,
-                                              mVideoSource != nullptr,
+                                              mAudioDevice != nullptr,
+                                              mVideoDevice != nullptr,
                                               mWindowID);
           // event must always be released on mainthread due to the JS callbacks
           // in the TracksAvailableCallback
@@ -364,8 +364,8 @@ public:
       case MEDIA_DIRECT_LISTENERS:
         {
           NS_ASSERTION(!NS_IsMainThread(), "Never call on main thread");
-          if (mVideoSource) {
-            mVideoSource->SetDirectListeners(mBool);
+          if (mVideoDevice) {
+            mVideoDevice->GetSource()->SetDirectListeners(mBool);
           }
         }
         break;
@@ -380,8 +380,8 @@ private:
   MediaOperation mType;
   nsRefPtr<DOMMediaStream> mStream;
   nsAutoPtr<DOMMediaStream::OnTracksAvailableCallback> mOnTracksAvailableCallback;
-  nsRefPtr<MediaEngineSource> mAudioSource; // threadsafe
-  nsRefPtr<MediaEngineSource> mVideoSource; // threadsafe
+  nsRefPtr<AudioDevice> mAudioDevice; // threadsafe
+  nsRefPtr<VideoDevice> mVideoDevice; // threadsafe
   nsRefPtr<GetUserMediaCallbackMediaStreamListener> mListener; // threadsafe
   bool mBool;
   uint64_t mWindowID;
@@ -665,23 +665,23 @@ public:
   static already_AddRefed<nsDOMUserMediaStream>
   CreateTrackUnionStream(nsIDOMWindow* aWindow,
                          GetUserMediaCallbackMediaStreamListener* aListener,
-                         MediaEngineSource* aAudioSource,
-                         MediaEngineSource* aVideoSource,
+                         AudioDevice* aAudioDevice,
+                         VideoDevice* aVideoDevice,
                          MediaStreamGraph* aMSG)
   {
     nsRefPtr<nsDOMUserMediaStream> stream = new nsDOMUserMediaStream(aListener,
-                                                                     aAudioSource,
-                                                                     aVideoSource);
+                                                                     aAudioDevice,
+                                                                     aVideoDevice);
     stream->InitTrackUnionStream(aWindow, aMSG);
     return stream.forget();
   }
 
   nsDOMUserMediaStream(GetUserMediaCallbackMediaStreamListener* aListener,
-                       MediaEngineSource *aAudioSource,
-                       MediaEngineSource *aVideoSource) :
+                       AudioDevice *aAudioDevice,
+                       VideoDevice *aVideoDevice) :
     mListener(aListener),
-    mAudioSource(aAudioSource),
-    mVideoSource(aVideoSource),
+    mAudioDevice(aAudioDevice),
+    mVideoDevice(aVideoDevice),
     mEchoOn(true),
     mAgcOn(false),
     mNoiseOn(true),
@@ -826,10 +826,10 @@ public:
     // MediaEngine supports only one video and on video track now and TrackID is
     // fixed in MediaEngine.
     if (aTrackID == kVideoTrack) {
-      return mVideoSource;
+      return mVideoDevice ? mVideoDevice->GetSource() : nullptr;
     }
     else if (aTrackID == kAudioTrack) {
-      return mAudioSource;
+      return mAudioDevice ? mAudioDevice->GetSource() : nullptr;
     }
 
     return nullptr;
@@ -840,8 +840,8 @@ public:
   nsRefPtr<SourceMediaStream> mSourceStream;
   nsRefPtr<MediaInputPort> mPort;
   nsRefPtr<GetUserMediaCallbackMediaStreamListener> mListener;
-  nsRefPtr<MediaEngineSource> mAudioSource; // so we can turn on AEC
-  nsRefPtr<MediaEngineSource> mVideoSource;
+  nsRefPtr<AudioDevice> mAudioDevice; // so we can turn on AEC
+  nsRefPtr<VideoDevice> mVideoDevice;
   bool mEchoOn;
   bool mAgcOn;
   bool mNoiseOn;
@@ -894,11 +894,11 @@ public:
     uint64_t aWindowID,
     GetUserMediaCallbackMediaStreamListener* aListener,
     const nsCString& aOrigin,
-    MediaEngineSource* aAudioSource,
-    MediaEngineSource* aVideoSource,
+    AudioDevice* aAudioDevice,
+    VideoDevice* aVideoDevice,
     PeerIdentity* aPeerIdentity)
-    : mAudioSource(aAudioSource)
-    , mVideoSource(aVideoSource)
+    : mAudioDevice(aAudioDevice)
+    , mVideoDevice(aVideoDevice)
     , mWindowID(aWindowID)
     , mListener(aListener)
     , mOrigin(aOrigin)
@@ -995,7 +995,7 @@ public:
 #endif
 
     MediaStreamGraph::GraphDriverType graphDriverType =
-      mAudioSource ? MediaStreamGraph::AUDIO_THREAD_DRIVER
+      mAudioDevice ? MediaStreamGraph::AUDIO_THREAD_DRIVER
                    : MediaStreamGraph::SYSTEM_THREAD_DRIVER;
     MediaStreamGraph* msg =
       MediaStreamGraph::GetInstance(graphDriverType,
@@ -1008,8 +1008,8 @@ public:
     // using the audio source and the SourceMediaStream, which acts as
     // placeholders. We re-route a number of stream internaly in the MSG and mix
     // them down instead.
-    if (mAudioSource &&
-        mAudioSource->GetMediaSource() == dom::MediaSourceEnum::AudioCapture) {
+    if (mAudioDevice &&
+        mAudioDevice->GetMediaSource() == dom::MediaSourceEnum::AudioCapture) {
       domStream = DOMLocalMediaStream::CreateAudioCaptureStream(window, msg);
       // It should be possible to pipe the capture stream to anything. CORS is
       // not a problem here, we got explicit user content.
@@ -1022,7 +1022,7 @@ public:
       // avoid us blocking
       nsRefPtr<nsDOMUserMediaStream> trackunion =
         nsDOMUserMediaStream::CreateTrackUnionStream(window, mListener,
-                                                     mAudioSource, mVideoSource,
+                                                     mAudioDevice, mVideoDevice,
                                                      msg);
       trackunion->GetStream()->AsProcessedStream()->SetAutofinish(true);
       nsRefPtr<MediaInputPort> port = trackunion->GetStream()->AsProcessedStream()->
@@ -1067,7 +1067,7 @@ public:
     // Activate our listener. We'll call Start() on the source when get a callback
     // that the MediaStream has started consuming. The listener is freed
     // when the page is invalidated (on navigation or close).
-    mListener->Activate(stream.forget(), mAudioSource, mVideoSource);
+    mListener->Activate(stream.forget(), mAudioDevice, mVideoDevice);
 
     // Note: includes JS callbacks; must be released on MainThread
     TracksAvailableCallback* tracksAvailableCallback =
@@ -1082,11 +1082,11 @@ public:
     // because that can take a while.
     // Pass ownership of trackunion to the MediaOperationTask
     // to ensure it's kept alive until the MediaOperationTask runs (at least).
-    MediaManager::PostTask(
-      FROM_HERE, new MediaOperationTask(MEDIA_START, mListener, domStream,
-                                        tracksAvailableCallback, mAudioSource,
-                                        mVideoSource, false, mWindowID,
-                                        mOnFailure.forget()));
+    MediaManager::PostTask(FROM_HERE,
+        new MediaOperationTask(MEDIA_START, mListener, domStream,
+                               tracksAvailableCallback,
+                               mAudioDevice, mVideoDevice,
+                               false, mWindowID, mOnFailure.forget()));
     // We won't need mOnFailure now.
     mOnFailure = nullptr;
 
@@ -1101,8 +1101,8 @@ public:
 private:
   nsCOMPtr<nsIDOMGetUserMediaSuccessCallback> mOnSuccess;
   nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mOnFailure;
-  nsRefPtr<MediaEngineSource> mAudioSource;
-  nsRefPtr<MediaEngineSource> mVideoSource;
+  nsRefPtr<AudioDevice> mAudioDevice;
+  nsRefPtr<VideoDevice> mVideoDevice;
   uint64_t mWindowID;
   nsRefPtr<GetUserMediaCallbackMediaStreamListener> mListener;
   nsCString mOrigin;
@@ -1408,13 +1408,10 @@ public:
       peerIdentity = new PeerIdentity(mConstraints.mPeerIdentity);
     }
 
-    NS_DispatchToMainThread(do_AddRef(new GetUserMediaStreamRunnable(
-      mOnSuccess, mOnFailure, mWindowID, mListener, mOrigin,
-      (mAudioDevice? mAudioDevice->GetSource() : nullptr),
-      (mVideoDevice? mVideoDevice->GetSource() : nullptr),
-      peerIdentity
-    )));
-
+    NS_DispatchToMainThread(do_AddRef(
+        new GetUserMediaStreamRunnable(mOnSuccess, mOnFailure, mWindowID,
+                                       mListener, mOrigin, mAudioDevice,
+                                       mVideoDevice, peerIdentity)));
     MOZ_ASSERT(!mOnSuccess);
     MOZ_ASSERT(!mOnFailure);
   }
@@ -3135,10 +3132,10 @@ GetUserMediaCallbackMediaStreamListener::AudioConfig(bool aEchoOn,
               bool aNoiseOn, uint32_t aNoise,
               int32_t aPlayoutDelay)
 {
-  if (mAudioSource) {
+  if (mAudioDevice) {
 #ifdef MOZ_WEBRTC
     MediaManager::PostTask(FROM_HERE,
-      NewRunnableMethod(mAudioSource.get(), &MediaEngineSource::Config,
+      NewRunnableMethod(mAudioDevice->GetSource(), &MediaEngineSource::Config,
                         aEchoOn, aEcho, aAgcOn, aAGC, aNoiseOn,
                         aNoise, aPlayoutDelay));
 #endif
@@ -3156,7 +3153,7 @@ GetUserMediaCallbackMediaStreamListener::Invalidate()
   MediaManager::PostTask(FROM_HERE,
     new MediaOperationTask(MEDIA_STOP,
                            this, nullptr, nullptr,
-                           mAudioSource, mVideoSource,
+                           mAudioDevice, mVideoDevice,
                            mFinished, mWindowID, nullptr));
 }
 
@@ -3166,18 +3163,18 @@ void
 GetUserMediaCallbackMediaStreamListener::StopSharing()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
-  if (mVideoSource && !mStopped &&
-      (mVideoSource->GetMediaSource() == dom::MediaSourceEnum::Screen ||
-       mVideoSource->GetMediaSource() == dom::MediaSourceEnum::Application ||
-       mVideoSource->GetMediaSource() == dom::MediaSourceEnum::Window)) {
+  if (mVideoDevice && !mStopped &&
+      (mVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Screen ||
+       mVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Application ||
+       mVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Window)) {
     // Stop the whole stream if there's no audio; just the video track if we have both
     MediaManager::PostTask(FROM_HERE,
-      new MediaOperationTask(mAudioSource ? MEDIA_STOP_TRACK : MEDIA_STOP,
+      new MediaOperationTask(mAudioDevice ? MEDIA_STOP_TRACK : MEDIA_STOP,
                              this, nullptr, nullptr,
-                             nullptr, mVideoSource,
+                             nullptr, mVideoDevice,
                              mFinished, mWindowID, nullptr));
-  } else if (mAudioSource &&
-             mAudioSource->GetMediaSource() == dom::MediaSourceEnum::AudioCapture) {
+  } else if (mAudioDevice &&
+             mAudioDevice->GetMediaSource() == dom::MediaSourceEnum::AudioCapture) {
     nsCOMPtr<nsPIDOMWindow> window = nsGlobalWindow::GetInnerWindowWithId(mWindowID);
     MOZ_ASSERT(window);
     window->SetAudioCapture(false);
@@ -3197,16 +3194,16 @@ GetUserMediaCallbackMediaStreamListener::ApplyConstraintsToTrack(
     bool aIsAudio,
     const MediaTrackConstraints& aConstraints)
 {
-  if (((aIsAudio && mAudioSource) ||
-       (!aIsAudio && mVideoSource)) && !mStopped)
+  if (((aIsAudio && mAudioDevice) ||
+       (!aIsAudio && mVideoDevice)) && !mStopped)
   {
     // XXX to support multiple tracks of a type in a stream, this should key off
     // the TrackID and not just the type
     MediaManager::PostTask(FROM_HERE,
       new MediaOperationTask(MEDIA_APPLYCONSTRAINTS_TRACK,
                              this, nullptr, nullptr,
-                             aIsAudio  ? mAudioSource.get() : nullptr,
-                             !aIsAudio ? mVideoSource.get() : nullptr,
+                             aIsAudio  ? mAudioDevice.get() : nullptr,
+                             !aIsAudio ? mVideoDevice.get() : nullptr,
                              mFinished, mWindowID, nullptr, aConstraints));
   } else {
     LOG(("gUM track %d applyConstraints, but we don't have type %s",
@@ -3219,16 +3216,16 @@ GetUserMediaCallbackMediaStreamListener::ApplyConstraintsToTrack(
 void
 GetUserMediaCallbackMediaStreamListener::StopTrack(TrackID aID, bool aIsAudio)
 {
-  if (((aIsAudio && mAudioSource) ||
-       (!aIsAudio && mVideoSource)) && !mStopped)
+  if (((aIsAudio && mAudioDevice) ||
+       (!aIsAudio && mVideoDevice)) && !mStopped)
   {
     // XXX to support multiple tracks of a type in a stream, this should key off
     // the TrackID and not just the type
     MediaManager::PostTask(FROM_HERE,
       new MediaOperationTask(MEDIA_STOP_TRACK,
                              this, nullptr, nullptr,
-                             aIsAudio  ? mAudioSource.get() : nullptr,
-                             !aIsAudio ? mVideoSource.get() : nullptr,
+                             aIsAudio  ? mAudioDevice.get() : nullptr,
+                             !aIsAudio ? mVideoDevice.get() : nullptr,
                              mFinished, mWindowID, nullptr));
   } else {
     LOG(("gUM track %d ended, but we don't have type %s",
@@ -3253,7 +3250,7 @@ GetUserMediaCallbackMediaStreamListener::NotifyDirectListeners(MediaStreamGraph*
   MediaManager::PostTask(FROM_HERE,
     new MediaOperationTask(MEDIA_DIRECT_LISTENERS,
                            this, nullptr, nullptr,
-                           mAudioSource, mVideoSource,
+                           mAudioDevice, mVideoDevice,
                            aHasListeners, mWindowID, nullptr));
 }
 
