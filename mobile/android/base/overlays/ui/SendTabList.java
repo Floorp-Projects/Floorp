@@ -122,12 +122,7 @@ public class SendTabList extends ListView {
     public AlertDialog getDialog() {
         final Context context = getContext();
 
-        final AlertDialog.Builder builder;
-        if (Versions.feature11Plus) {
-            builder = new AlertDialog.Builder(context, R.style.Gecko_Dialog);
-        } else {
-            builder = new AlertDialog.Builder(context);
-        }
+        final AlertDialog.Builder builder = new AlertDialog.Builder(context);
 
         final RemoteClient[] records = clientListAdapter.toArray();
         final String[] dialogElements = new String[records.length];
