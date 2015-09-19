@@ -48,8 +48,8 @@ async_test(function(t) {
           return navigator.serviceWorker.register(worker_url, { scope: scope });
         })
       .then(function(new_registration) {
-          assert_equals(registration, new_registration,
-                        'register should resolve to the same value');
+          assert_equals(registration.scope, new_registration.scope,
+                        'new registration should resolve to the same scope');
           service_worker_unregister_and_done(t, scope);
         })
       .catch(unreached_rejection(t));

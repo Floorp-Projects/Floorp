@@ -56,6 +56,7 @@ class MOZ_RAII AutoTraceSession
     void operator=(const AutoTraceSession&) = delete;
 
     JS::HeapState prevState;
+    AutoSPSEntry pseudoFrame;
 };
 
 struct MOZ_RAII AutoPrepareForTracing

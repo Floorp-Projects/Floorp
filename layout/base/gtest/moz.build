@@ -5,14 +5,21 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'TestAccessibleCaretEventHub.cpp'
+    'TestAccessibleCaretEventHub.cpp',
+    'TestAccessibleCaretManager.cpp',
 ]
+
+# XXX: Allow -Winconsistent-missing-override for TestAccessibleCaretManager.cpp
+# that stub virtual methods have 'override' keyword while mocked methods by
+# MOCK_METHOD macro does not. (See 1169974)
+ALLOW_COMPILER_WARNINGS = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
 LOCAL_INCLUDES += [
     '/docshell/base',
-    '/layout/base'
+    '/layout/base',
+    '/layout/style',
 ]
 
 if CONFIG['GNU_CXX']:

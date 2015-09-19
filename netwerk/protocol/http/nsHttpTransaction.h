@@ -300,6 +300,7 @@ private:
     bool                            mReuseOnRestart;
     bool                            mContentDecoding;
     bool                            mContentDecodingCheck;
+    bool                            mDeferredSendProgress;
 
     // mClosed           := transaction has been explicitly closed
     // mTransactionDone  := transaction ran to completion or was interrupted

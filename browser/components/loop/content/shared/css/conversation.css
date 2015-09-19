@@ -457,15 +457,35 @@ html[dir="rtl"] .room-failure > .settings-control {
   white-space: nowrap;
 }
 
+.screen-share-menu.dropdown-menu,
 .settings-menu.dropdown-menu {
   left: auto;
   bottom: 3.1rem;
+}
+
+.screen-share-menu.dropdown-menu {
+  /*offset dropdown menu to be above menu button*/
+  right: 40px;
+}
+
+.settings-menu.dropdown-menu {
+  /*offset dropdown menu to be above menu button*/
   right: 14px;
 }
 
+html[dir="rtl"] .screen-share-menu.dropdown-menu,
 html[dir="rtl"] .settings-menu.dropdown-menu {
-  left: 14px;
   right: auto;
+}
+
+html[dir="rtl"] .screen-share-menu.dropdown-menu {
+  /*offset dropdown menu to be above menu button*/
+  left: 40px;
+}
+
+html[dir="rtl"] .settings-menu.dropdown-menu {
+  /*offset dropdown menu to be above menu button*/
+  left: 14px;
 }
 
 .settings-menu.dropdown-menu.menu-below {

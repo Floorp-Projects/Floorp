@@ -16,6 +16,7 @@ import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.common.telemetry.TelemetryWrapper;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.fxa.activities.FxAccountWebFlowActivity;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.Action;
@@ -93,6 +94,9 @@ public class FxAccountNotificationManager {
       text = context.getResources().getString(R.string.fxaccount_sync_sign_in_error_notification_text, state.email);
       notificationIntent = new Intent(FxAccountConstants.ACTION_FXA_STATUS);
     }
+
+    notificationIntent.putExtra(FxAccountWebFlowActivity.EXTRA_ENDPOINT, FxAccountConstants.ENDPOINT_NOTIFICATION);
+
     Logger.info(LOG_TAG, "State " + state.getStateLabel() + " needs action; offering notification with title: " + title);
     FxAccountUtils.pii(LOG_TAG, "And text: " + text);
 
