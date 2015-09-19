@@ -350,7 +350,7 @@ static int nr_ice_component_create_tcp_host_candidate(struct nr_ice_ctx_ *ctx,
 
       /* It would be better to stop trying if there is error other than
          port already used, but it'd require significant work to support this. */
-      r=nr_socket_multi_tcp_create(ctx,&addr,tcp_type,so_sock_ct,1,NR_STUN_MAX_MESSAGE_SIZE,&nrsock);
+      r=nr_socket_multi_tcp_create(ctx,&addr,tcp_type,so_sock_ct,NR_STUN_MAX_MESSAGE_SIZE,&nrsock);
 
     } while(r);
 
