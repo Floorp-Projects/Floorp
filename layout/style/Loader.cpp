@@ -607,7 +607,7 @@ Loader::SetPreferredSheet(const nsAString& aTitle)
     mDatasToNotifyOn += arr.Length();
     for (uint32_t i = 0; i < arr.Length(); ++i) {
       --mDatasToNotifyOn;
-      LoadSheet(arr[i], eSheetNeedsParser);
+      LoadSheet(arr[i], eSheetNeedsParser, false);
     }
   }
 
@@ -1025,7 +1025,8 @@ Loader::ObsoleteSheet(nsIURI* aURI)
 nsresult
 Loader::CheckLoadAllowed(nsIPrincipal* aSourcePrincipal,
                          nsIURI* aTargetURI,
-                         nsISupports* aContext)
+                         nsISupports* aContext,
+                         bool aIsPreload)
 {
   LOG(("css::Loader::CheckLoadAllowed"));
 
@@ -1044,9 +1045,12 @@ Loader::CheckLoadAllowed(nsIPrincipal* aSourcePrincipal,
     LOG(("  Passed security check"));
 
     // Check with content policy
+    nsContentPolicyType contentPolicyType =
+      aIsPreload ? nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD
+                 : nsIContentPolicy::TYPE_INTERNAL_STYLESHEET;
 
     int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_STYLESHEET,
+    rv = NS_CheckContentLoadPolicy(contentPolicyType,
                                    aTargetURI,
                                    aSourcePrincipal,
                                    aContext,
@@ -1411,7 +1415,9 @@ Loader::InsertChildSheet(CSSStyleSheet* aSheet,
  * a new load is kicked off asynchronously.
  */
 nsresult
-Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
+Loader::LoadSheet(SheetLoadData* aLoadData,
+                  StyleSheetState aSheetState,
+                  bool aIsPreload)
 {
   LOG(("css::Loader::LoadSheet"));
   NS_PRECONDITION(aLoadData, "Need a load data");
@@ -1561,7 +1567,7 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
       mSheets->mPendingDatas.Remove(&key);
 
       LOG(("  Forcing load of pending data"));
-      return LoadSheet(existingData, eSheetNeedsParser);
+      return LoadSheet(existingData, eSheetNeedsParser, aIsPreload);
     }
     // All done here; once the load completes we'll be marked complete
     // automatically
@@ -1583,6 +1589,10 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
     securityFlags |= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   }
 
+  nsContentPolicyType contentPolicyType =
+    aIsPreload ? nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD
+               : nsIContentPolicy::TYPE_INTERNAL_STYLESHEET;
+
   nsCOMPtr<nsIChannel> channel;
   // Note we are calling NS_NewChannelWithTriggeringPrincipal here with a node
   // and a principal. This is because of a case where the node is the document
@@ -1594,7 +1604,7 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
                                               aLoadData->mRequestingNode,
                                               triggeringPrincipal,
                                               securityFlags,
-                                              nsIContentPolicy::TYPE_STYLESHEET,
+                                              contentPolicyType,
                                               loadGroup,
                                               nullptr,   // aCallbacks
                                               nsIChannel::LOAD_NORMAL |
@@ -1610,7 +1620,7 @@ Loader::LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState)
                        aLoadData->mURI,
                        triggeringPrincipal,
                        securityFlags,
-                       nsIContentPolicy::TYPE_STYLESHEET,
+                       contentPolicyType,
                        loadGroup,
                        nullptr,   // aCallbacks
                        nsIChannel::LOAD_NORMAL |
@@ -2044,7 +2054,7 @@ Loader::LoadStyleLink(nsIContent* aElement,
   if (!context) {
     context = mDocument;
   }
-  nsresult rv = CheckLoadAllowed(principal, aURL, context);
+  nsresult rv = CheckLoadAllowed(principal, aURL, context, false);
   if (NS_FAILED(rv)) return rv;
 
   LOG(("  Passed load check"));
@@ -2100,7 +2110,7 @@ Loader::LoadStyleLink(nsIContent* aElement,
   }
 
   // Load completion will free the data
-  rv = LoadSheet(data, state);
+  rv = LoadSheet(data, state, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   data->mMustNotify = true;
@@ -2178,7 +2188,7 @@ Loader::LoadChildSheet(CSSStyleSheet* aParentSheet,
   }
 
   nsIPrincipal* principal = aParentSheet->Principal();
-  nsresult rv = CheckLoadAllowed(principal, aURL, context);
+  nsresult rv = CheckLoadAllowed(principal, aURL, context, false);
   if (NS_FAILED(rv)) return rv;
 
   LOG(("  Passed load check"));
@@ -2242,7 +2252,7 @@ Loader::LoadChildSheet(CSSStyleSheet* aParentSheet,
   bool syncLoad = data->mSyncLoad;
 
   // Load completion will release the data
-  rv = LoadSheet(data, state);
+  rv = LoadSheet(data, state, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // If syncLoad is true, |data| will be deleted by now.
@@ -2258,7 +2268,7 @@ Loader::LoadSheetSync(nsIURI* aURL, bool aAllowUnsafeRules,
                       CSSStyleSheet** aSheet)
 {
   LOG(("css::Loader::LoadSheetSync"));
-  return InternalLoadNonDocumentSheet(aURL, aAllowUnsafeRules,
+  return InternalLoadNonDocumentSheet(aURL, false, aAllowUnsafeRules,
                                       aUseSystemPrincipal, nullptr,
                                       EmptyCString(), aSheet, nullptr);
 }
@@ -2272,13 +2282,14 @@ Loader::LoadSheet(nsIURI* aURL,
 {
   LOG(("css::Loader::LoadSheet(aURL, aObserver, aSheet) api call"));
   NS_PRECONDITION(aSheet, "aSheet is null");
-  return InternalLoadNonDocumentSheet(aURL, false, false,
+  return InternalLoadNonDocumentSheet(aURL, false, false, false,
                                       aOriginPrincipal, aCharset,
                                       aSheet, aObserver);
 }
 
 nsresult
 Loader::LoadSheet(nsIURI* aURL,
+                  bool aIsPreload,
                   nsIPrincipal* aOriginPrincipal,
                   const nsCString& aCharset,
                   nsICSSLoaderObserver* aObserver,
@@ -2287,7 +2298,7 @@ Loader::LoadSheet(nsIURI* aURL,
                   const nsAString& aIntegrity)
 {
   LOG(("css::Loader::LoadSheet(aURL, aObserver) api call"));
-  return InternalLoadNonDocumentSheet(aURL, false, false,
+  return InternalLoadNonDocumentSheet(aURL, aIsPreload, false, false,
                                       aOriginPrincipal, aCharset,
                                       nullptr, aObserver, aCORSMode,
                                       aReferrerPolicy, aIntegrity);
@@ -2295,6 +2306,7 @@ Loader::LoadSheet(nsIURI* aURL,
 
 nsresult
 Loader::InternalLoadNonDocumentSheet(nsIURI* aURL,
+                                     bool aIsPreload,
                                      bool aAllowUnsafeRules,
                                      bool aUseSystemPrincipal,
                                      nsIPrincipal* aOriginPrincipal,
@@ -2322,7 +2334,7 @@ Loader::InternalLoadNonDocumentSheet(nsIURI* aURL,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsresult rv = CheckLoadAllowed(aOriginPrincipal, aURL, mDocument);
+  nsresult rv = CheckLoadAllowed(aOriginPrincipal, aURL, mDocument, aIsPreload);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2357,7 +2369,7 @@ Loader::InternalLoadNonDocumentSheet(nsIURI* aURL,
                       aOriginPrincipal, mDocument);
 
   NS_ADDREF(data);
-  rv = LoadSheet(data, state);
+  rv = LoadSheet(data, state, aIsPreload);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aSheet) {
@@ -2549,7 +2561,7 @@ Loader::StartAlternateLoads()
   mDatasToNotifyOn += arr.Length();
   for (uint32_t i = 0; i < arr.Length(); ++i) {
     --mDatasToNotifyOn;
-    LoadSheet(arr[i], eSheetNeedsParser);
+    LoadSheet(arr[i], eSheetNeedsParser, false);
   }
 }
 
