@@ -119,7 +119,7 @@ native nsIntSizeByVal(nsIntSize);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(4880727a-5673-44f7-b248-f6c86e22a434)]
+[scriptable, builtinclass, uuid(4e5a0547-6c54-4051-8b52-1f2fdd667696)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -266,6 +266,21 @@ interface imgIContainer : nsISupports
    */
   [noscript, notxpcom] TempRefSourceSurface getFrame(in uint32_t aWhichFrame,
                                                      in uint32_t aFlags);
+
+  /**
+   * Get a surface for the given frame at the specified size. Matching the
+   * requested size is best effort; it's not guaranteed that the surface you get
+   * will be a perfect match. (Some reasons you may get a surface of a different
+   * size include: if you requested upscaling, if downscale-during-decode is
+   * disabled, or if you didn't request the first frame.)
+   *
+   * @param aSize The desired size.
+   * @param aWhichFrame Frame specifier of the FRAME_* variety.
+   * @param aFlags Flags of the FLAG_* variety
+   */
+  [noscript, notxpcom] TempRefSourceSurface getFrameAtSize([const] in nsIntSize aSize,
+                                                           in uint32_t aWhichFrame,
+                                                           in uint32_t aFlags);
 
   /**
    * Whether this image is opaque (i.e., needs a background painted behind it).

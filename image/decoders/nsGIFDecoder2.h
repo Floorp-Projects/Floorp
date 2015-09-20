@@ -8,7 +8,6 @@
 #define mozilla_image_decoders_nsGIFDecoder2_h
 
 #include "Decoder.h"
-#include "Downscaler.h"
 
 #include "GIF2.h"
 #include "nsCOMPtr.h"
@@ -24,8 +23,6 @@ class nsGIFDecoder2 : public Decoder
 {
 public:
   ~nsGIFDecoder2();
-
-  nsresult SetTargetSize(const nsIntSize& aSize) override;
 
   virtual void WriteInternal(const char* aBuffer, uint32_t aCount) override;
   virtual void FinishInternal() override;
@@ -73,7 +70,6 @@ private:
   bool mSawTransparency;
 
   gif_struct mGIFStruct;
-  Maybe<Downscaler> mDownscaler;
   Maybe<Deinterlacer> mDeinterlacer;
 };
 
