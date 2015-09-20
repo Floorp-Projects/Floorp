@@ -1,5 +1,5 @@
 $inherits:
-  from: 'tasks/builds/opt_linux64.yml'
+  from: 'tasks/builds/opt_linux64_clobber.yml'
   variables:
     build_name: 'linux64-st-an'
 task:

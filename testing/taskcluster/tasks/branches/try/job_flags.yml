@@ -188,7 +188,7 @@ builds:
       - Linux64 Static Analysis
     types:
       opt:
-        task: tasks/builds/opt_linux64_st-an.yml
+        task: tasks/builds/opt_linux64_st-an_clobber.yml
   macosx64:
     platforms:
       - MacOSX64
