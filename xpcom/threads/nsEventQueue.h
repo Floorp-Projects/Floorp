@@ -9,7 +9,6 @@
 
 #include <stdlib.h>
 #include "mozilla/Monitor.h"
-#include "mozilla/ReentrantMonitor.h"
 #include "nsIRunnable.h"
 #include "nsCOMPtr.h"
 #include "mozilla/AlreadyAddRefed.h"
@@ -21,12 +20,6 @@ template<>
 struct MonitorAutoEnterChooser<mozilla::Monitor>
 {
   typedef mozilla::MonitorAutoLock Type;
-};
-
-template<>
-struct MonitorAutoEnterChooser<mozilla::ReentrantMonitor>
-{
-  typedef mozilla::ReentrantMonitorAutoEnter Type;
 };
 
 // A threadsafe FIFO event queue...
