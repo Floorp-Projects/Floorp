@@ -115,6 +115,14 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
     CSPCONTEXTLOG(("nsCSPContext::ShouldLoad, aContentLocation: %s", spec.get()));
   }
 
+  bool isStyleOrScriptPreLoad =
+    (aContentType == nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD ||
+     aContentType == nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD);
+
+  // Since we know whether we are dealing with a preload, we have to convert
+  // the internal policytype ot the external policy type before moving on.
+  aContentType = nsContentUtils::InternalContentPolicyTypeToExternal(aContentType);
+
   nsresult rv = NS_OK;
 
   // This ShouldLoad function is called from nsCSPService::ShouldLoad,
@@ -145,29 +153,8 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
     return NS_OK;
   }
 
-  // This may be a load or a preload. If it is a preload, the document will
-  // not have been fully parsed yet, and aRequestContext will be an
-  // nsIDOMHTMLDocument rather than the nsIDOMHTMLElement associated with the
-  // resource. As a result, we cannot extract the element's corresponding
-  // nonce attribute, and so we cannot correctly check the nonce on a preload.
-  //
-  // Therefore, the decision returned here for a preload may be *incorrect* as
-  // it cannot take the nonce into account. We will still check the load, but
-  // we will not cache the result or report a violation. When the "real load"
-  // happens subsequently, we will re-check with the additional context to
-  // make a final decision.
-  //
-  // We don't just return false because that would block all preloads and
-  // degrade performance. However, we do want to block preloads that are
-  // clearly blocked (their urls are not whitelisted) by CSP.
-
-  nsCOMPtr<nsIDOMHTMLDocument> doc = do_QueryInterface(aRequestContext);
-  bool isPreload = doc &&
-                   (aContentType == nsIContentPolicy::TYPE_SCRIPT ||
-                    aContentType == nsIContentPolicy::TYPE_STYLESHEET);
-
   nsAutoString nonce;
-  if (!isPreload) {
+  if (!isStyleOrScriptPreLoad) {
     nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(aRequestContext);
     if (htmlElement) {
       rv = htmlElement->GetAttribute(NS_LITERAL_STRING("nonce"), nonce);
@@ -184,7 +171,7 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
                                    originalURI,
                                    nonce,
                                    wasRedirected,
-                                   isPreload,
+                                   isStyleOrScriptPreLoad,
                                    false,     // allow fallback to default-src
                                    true,      // send violation reports
                                    true);     // send blocked URI in violation reports
@@ -193,7 +180,7 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
                            : nsIContentPolicy::REJECT_SERVER;
 
   // Done looping, cache any relevant result
-  if (cacheKey.Length() > 0 && !isPreload) {
+  if (cacheKey.Length() > 0 && !isStyleOrScriptPreLoad) {
     mShouldLoadCache.Put(cacheKey, *outDecision);
   }
 
