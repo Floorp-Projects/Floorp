@@ -8,7 +8,6 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "nsJSUtils.h"
-#include "nsIDOMTCPSocket.h"
 #include "mozilla/unused.h"
 #include "mozilla/AppProcessChecker.h"
 #include "mozilla/net/NeckoCommon.h"

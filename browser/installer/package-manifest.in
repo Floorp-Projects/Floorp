@@ -567,11 +567,6 @@
 @RESPATH@/components/InterAppMessagePort.js
 #endif
 
-@RESPATH@/components/TCPSocket.js
-@RESPATH@/components/TCPServerSocket.js
-@RESPATH@/components/TCPSocketParentIntermediary.js
-@RESPATH@/components/TCPSocket.manifest
-
 #ifdef MOZ_ACTIVITIES
 @RESPATH@/components/SystemMessageCache.js
 @RESPATH@/components/SystemMessageInternal.js
