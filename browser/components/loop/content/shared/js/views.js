@@ -803,7 +803,7 @@ loop.shared.views = (function(_, mozL10n) {
         return null;
       }
 
-      return React.createElement("p", null, mozL10n.get("context_inroom_label"));
+      return React.createElement("p", null, mozL10n.get("context_inroom_label2"));
     },
 
     render: function() {
