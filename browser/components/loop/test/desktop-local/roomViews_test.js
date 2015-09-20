@@ -837,12 +837,12 @@ describe("loop.roomViews", function () {
         expect(view.getDOMNode()).to.eql(null);
       });
 
-      it("should close the view when the close button is clicked", function() {
+      it("should close the view when the cancel button is clicked", function() {
         view = mountTestComponent({
           roomData: { roomContextUrls: [fakeContextURL] }
         });
 
-        var closeBtn = view.getDOMNode().querySelector(".room-context-btn-close");
+        var closeBtn = view.getDOMNode().querySelector(".button-cancel");
         React.addons.TestUtils.Simulate.click(closeBtn);
         expect(view.getDOMNode()).to.eql(null);
       });
@@ -862,35 +862,6 @@ describe("loop.roomViews", function () {
         expect(node.querySelector(".room-context-name").value).to.eql(roomName);
         expect(node.querySelector(".room-context-url").value).to.eql(fakeContextURL.location);
         expect(node.querySelector(".room-context-comments").value).to.eql(fakeContextURL.description);
-      });
-
-      it("should show the checkbox as disabled when context is already set", function() {
-        view = mountTestComponent({
-          roomData: {
-            roomToken: "fakeToken",
-            roomName: "fakeName",
-            roomContextUrls: [fakeContextURL]
-          }
-        });
-
-        var checkbox = view.getDOMNode().querySelector(".checkbox");
-        expect(checkbox.classList.contains("disabled")).to.eql(true);
-      });
-
-      it("should hide the checkbox when no context data is stored or available", function() {
-        view = mountTestComponent({
-          roomData: {
-            roomToken: "fakeToken",
-            roomName: "Hello, is it me you're looking for?"
-          }
-        });
-
-        // First check if availableContext is set correctly.
-        expect(view.state.availableContext).to.not.eql(null);
-        expect(view.state.availableContext.previewImage).to.eql(favicon);
-
-        var node = view.getDOMNode();
-        expect(node.querySelector(".checkbox-wrapper").classList.contains("hide")).to.eql(true);
       });
     });
 
@@ -916,7 +887,7 @@ describe("loop.roomViews", function () {
             value: "reallyFake"
           }});
 
-          React.addons.TestUtils.Simulate.click(view.getDOMNode().querySelector(".btn-info"));
+          React.addons.TestUtils.Simulate.click(view.getDOMNode().querySelector(".button-accept"));
 
           sinon.assert.calledOnce(dispatcher.dispatch);
           sinon.assert.calledWithExactly(dispatcher.dispatch,
@@ -952,7 +923,7 @@ describe("loop.roomViews", function () {
         view.setProps({ savingContext: true }, function() {
           var node = view.getDOMNode();
           // The button should show up as disabled.
-          expect(node.querySelector(".btn-info").hasAttribute("disabled")).to.eql(true);
+          expect(node.querySelector(".button-accept").hasAttribute("disabled")).to.eql(true);
 
           // Now simulate a successful save.
           view.setProps({ savingContext: false }, function() {
@@ -961,45 +932,6 @@ describe("loop.roomViews", function () {
             done();
           });
         });
-      });
-    });
-
-    describe("#handleCheckboxChange", function() {
-      var node, checkbox;
-
-      beforeEach(function() {
-        fakeMozLoop.getSelectedTabMetadata = sinon.stub().callsArgWith(0, {
-          favicon: fakeContextURL.thumbnail,
-          title: fakeContextURL.description,
-          url: fakeContextURL.location
-        });
-        view = mountTestComponent({
-          roomData: {
-            roomToken: "fakeToken",
-            roomName: "fakeName"
-          }
-        });
-
-        node = view.getDOMNode();
-        checkbox = node.querySelector(".checkbox");
-      });
-
-      it("should prefill the form with available context data when clicked", function() {
-        React.addons.TestUtils.Simulate.click(checkbox);
-
-        expect(node.querySelector(".room-context-name").value).to.eql("fakeName");
-        expect(node.querySelector(".room-context-url").value).to.eql(fakeContextURL.location);
-        expect(node.querySelector(".room-context-comments").value).to.eql(fakeContextURL.description);
-      });
-
-      it("should undo prefill when clicking the checkbox again", function() {
-        React.addons.TestUtils.Simulate.click(checkbox);
-        // Twice.
-        React.addons.TestUtils.Simulate.click(checkbox);
-
-        expect(node.querySelector(".room-context-name").value).to.eql("fakeName");
-        expect(node.querySelector(".room-context-url").value).to.eql("");
-        expect(node.querySelector(".room-context-comments").value).to.eql("");
       });
     });
 

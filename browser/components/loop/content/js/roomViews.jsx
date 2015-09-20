@@ -449,25 +449,6 @@ loop.roomViews = (function(mozL10n) {
       mozLoop.telemetryAddValue("LOOP_ROOM_CONTEXT_CLICK", 1);
     },
 
-    handleCheckboxChange: function(state) {
-      if (state.checked) {
-        // The checkbox was checked, prefill the fields with the values available
-        // in `availableContext`.
-        var context = this.state.availableContext;
-        this.setState({
-          newRoomURL: context.url,
-          newRoomDescription: context.description,
-          newRoomThumbnail: context.previewImage
-        });
-      } else {
-        this.setState({
-          newRoomURL: "",
-          newRoomDescription: "",
-          newRoomThumbnail: ""
-        });
-      }
-    },
-
     handleFormSubmit: function(event) {
       event && event.preventDefault();
 
@@ -516,27 +497,13 @@ loop.roomViews = (function(mozL10n) {
 
       var cx = React.addons.classSet;
       var availableContext = this.state.availableContext;
-      // The checkbox shows as checked when there's already context data
-      // attached to this room.
-      var checked = !!urlDescription;
-      var checkboxLabel = urlDescription || (availableContext && availableContext.url ?
-        availableContext.description : "");
-
       return (
         <div className="room-context">
           <p className={cx({"error": !!this.props.error,
                             "error-display-area": true})}>
             {mozL10n.get("rooms_change_failed_label")}
           </p>
-          <div className="room-context-label">{mozL10n.get("context_inroom_label")}</div>
-          <sharedViews.Checkbox
-            additionalClass={cx({ hide: !checkboxLabel })}
-            checked={checked}
-            disabled={checked}
-            label={checkboxLabel}
-            onChange={this.handleCheckboxChange}
-            useEllipsis={true}
-            value={location} />
+          <h2 className="room-context-header">{mozL10n.get("context_inroom_header")}</h2>
           <form onSubmit={this.handleFormSubmit}>
             <input className="room-context-name"
               maxLength={this.maxRoomNameLength}
@@ -555,15 +522,16 @@ loop.roomViews = (function(mozL10n) {
               placeholder={mozL10n.get("context_edit_comments_placeholder")}
               rows="2" type="text"
               valueLink={this.linkState("newRoomDescription")} />
+            <sharedViews.ButtonGroup>
+              <sharedViews.Button additionalClass="button-cancel"
+                caption={mozL10n.get("context_cancel_label")}
+                onClick={this.handleCloseClick} />
+              <sharedViews.Button additionalClass="button-accept"
+                caption={mozL10n.get("context_done_label")}
+                disabled={this.props.savingContext}
+                onClick={this.handleFormSubmit} />
+            </sharedViews.ButtonGroup>
           </form>
-          <button className="btn btn-info"
-                  disabled={this.props.savingContext}
-                  onClick={this.handleFormSubmit}>
-            {mozL10n.get("context_save_label2")}
-          </button>
-          <button className="room-context-btn-close"
-                  onClick={this.handleCloseClick}
-                  title={mozL10n.get("cancel_button")}/>
         </div>
       );
     }

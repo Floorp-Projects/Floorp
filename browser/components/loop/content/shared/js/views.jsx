@@ -803,7 +803,7 @@ loop.shared.views = (function(_, mozL10n) {
         return null;
       }
 
-      return <p>{mozL10n.get("context_inroom_label")}</p>;
+      return <p>{mozL10n.get("context_inroom_label2")}</p>;
     },
 
     render: function() {
