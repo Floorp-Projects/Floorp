@@ -778,7 +778,10 @@ nsThread::HasPendingEvents(bool* aResult)
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  *aResult = mEvents->HasPendingEvent();
+  {
+    MutexAutoLock lock(mLock);
+    *aResult = mEvents->HasPendingEvent();
+  }
   return NS_OK;
 }
 
