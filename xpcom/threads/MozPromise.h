@@ -922,15 +922,15 @@ private:
 
 } // namespace detail
 
-template<typename PromiseType, typename ThisType, typename ...ArgTypes>
+template<typename PromiseType, typename ThisType, typename ...ArgTypes, typename ...ActualArgTypes>
 static nsRefPtr<PromiseType>
 InvokeAsync(AbstractThread* aTarget, ThisType* aThisVal, const char* aCallerName,
-            nsRefPtr<PromiseType>(ThisType::*aMethod)(ArgTypes...), ArgTypes... aArgs)
+            nsRefPtr<PromiseType>(ThisType::*aMethod)(ArgTypes...), ActualArgTypes&&... aArgs)
 {
   typedef detail::MethodCall<PromiseType, ThisType, ArgTypes...> MethodCallType;
   typedef detail::ProxyRunnable<PromiseType, ThisType, ArgTypes...> ProxyRunnableType;
 
-  MethodCallType* methodCall = new MethodCallType(aMethod, aThisVal, Forward<ArgTypes>(aArgs)...);
+  MethodCallType* methodCall = new MethodCallType(aMethod, aThisVal, Forward<ActualArgTypes>(aArgs)...);
   nsRefPtr<typename PromiseType::Private> p = new (typename PromiseType::Private)(aCallerName);
   nsRefPtr<ProxyRunnableType> r = new ProxyRunnableType(p, methodCall);
   MOZ_ASSERT(aTarget->IsDispatchReliable());
