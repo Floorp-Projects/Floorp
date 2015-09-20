@@ -1530,7 +1530,7 @@ nsObjectLoadingContent::CheckProcessPolicy(int16_t *aContentPolicy)
   int32_t objectType;
   switch (mType) {
     case eType_Image:
-      objectType = nsIContentPolicy::TYPE_IMAGE;
+      objectType = nsIContentPolicy::TYPE_INTERNAL_IMAGE;
       break;
     case eType_Document:
       objectType = nsIContentPolicy::TYPE_DOCUMENT;
