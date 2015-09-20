@@ -43,9 +43,8 @@ private:
   nsresult PutEvent(already_AddRefed<nsIRunnable>&& aEvent);
 
   nsCOMArray<nsIThread> mThreads;
-  mozilla::Monitor      mMonitor;
   mozilla::Mutex        mMutex;
-  nsEventQueueBase<mozilla::Monitor> mEvents;
+  nsEventQueue          mEvents;
   uint32_t              mThreadLimit;
   uint32_t              mIdleThreadLimit;
   uint32_t              mIdleThreadTimeout;

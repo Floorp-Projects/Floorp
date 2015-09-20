@@ -27,26 +27,18 @@ GetLog()
 #endif
 #define LOG(args) MOZ_LOG(GetLog(), mozilla::LogLevel::Debug, args)
 
-template<typename MonitorType>
-nsEventQueueBase<MonitorType>::nsEventQueueBase()
+nsEventQueue::nsEventQueue(Mutex& aLock)
   : mHead(nullptr)
   , mTail(nullptr)
   , mOffsetHead(0)
   , mOffsetTail(0)
+  , mEventsAvailable(aLock, "[nsEventQueue.mEventsAvailable]")
 {
 }
 
-template nsEventQueueBase<Monitor>::nsEventQueueBase();
-
-nsEventQueue::nsEventQueue()
-  : mMonitor("[nsEventQueue.mMonitor]")
+nsEventQueue::~nsEventQueue()
 {
-}
-
-template<typename MonitorType>
-nsEventQueueBase<MonitorType>::~nsEventQueueBase()
-{
-  // It'd be nice to be able to assert that no one else is holding the monitor,
+  // It'd be nice to be able to assert that no one else is holding the lock,
   // but NSPR doesn't really expose APIs for it.
   NS_ASSERTION(IsEmpty(),
                "Non-empty event queue being destroyed; events being leaked.");
@@ -56,13 +48,9 @@ nsEventQueueBase<MonitorType>::~nsEventQueueBase()
   }
 }
 
-template nsEventQueueBase<Monitor>::~nsEventQueueBase();
-
-template<typename MonitorType>
 bool
-nsEventQueueBase<MonitorType>::GetEvent(bool aMayWait, nsIRunnable** aResult,
-                                        MonitorAutoEnterType& aProofOfLock,
-                                        MutexAutoLock&)
+nsEventQueue::GetEvent(bool aMayWait, nsIRunnable** aResult,
+                       MutexAutoLock& aProofOfLock)
 {
   while (IsEmpty()) {
     if (!aMayWait) {
@@ -72,7 +60,7 @@ nsEventQueueBase<MonitorType>::GetEvent(bool aMayWait, nsIRunnable** aResult,
       return false;
     }
     LOG(("EVENTQ(%p): wait begin\n", this));
-    aProofOfLock.Wait();
+    mEventsAvailable.Wait();
     LOG(("EVENTQ(%p): wait end\n", this));
   }
 
@@ -91,25 +79,9 @@ nsEventQueueBase<MonitorType>::GetEvent(bool aMayWait, nsIRunnable** aResult,
   return true;
 }
 
-template bool nsEventQueueBase<Monitor>::GetEvent(bool aMayWait, nsIRunnable** aResult,
-                                                  MonitorAutoLock& aProofOfLock,
-                                                  MutexAutoLock&);
-
-bool
-nsEventQueue::GetEvent(bool aMayWait, nsIRunnable** aEvent,
-                       MutexAutoLock& aExtraneousLock)
-{
-  MonitorAutoEnterType mon(mMonitor);
-
-  return Base::GetEvent(aMayWait, aEvent, mon, aExtraneousLock);
-}
-
-template<typename MonitorType>
 void
-nsEventQueueBase<MonitorType>::PutEvent(
-    already_AddRefed<nsIRunnable>&& aRunnable,
-    MonitorAutoEnterType& aProofOfLock,
-    MutexAutoLock&)
+nsEventQueue::PutEvent(already_AddRefed<nsIRunnable>&& aRunnable,
+                       MutexAutoLock& aProofOfLock)
 {
   if (!mHead) {
     mHead = NewPage();
@@ -132,41 +104,18 @@ nsEventQueueBase<MonitorType>::PutEvent(
   queueLocation = aRunnable.take();
   ++mOffsetTail;
   LOG(("EVENTQ(%p): notify\n", this));
-  aProofOfLock.Notify();
+  mEventsAvailable.Notify();
 }
 
-template void nsEventQueueBase<Monitor>::PutEvent(already_AddRefed<nsIRunnable>&& aRunnable,
-                                                  MonitorAutoLock& aProofOfLock,
-                                                  MutexAutoLock&);
-
 void
-nsEventQueue::PutEvent(nsIRunnable* aRunnable, MutexAutoLock& aExtraneousLock)
+nsEventQueue::PutEvent(nsIRunnable* aRunnable, MutexAutoLock& aProofOfLock)
 {
   nsCOMPtr<nsIRunnable> event(aRunnable);
-  PutEvent(event.forget(), aExtraneousLock);
+  PutEvent(event.forget(), aProofOfLock);
 }
 
-void
-nsEventQueue::PutEvent(already_AddRefed<nsIRunnable>&& aRunnable,
-                       MutexAutoLock& aExtraneousLock)
-{
-  if (ChaosMode::isActive(ChaosFeature::ThreadScheduling)) {
-    // With probability 0.5, yield so other threads have a chance to
-    // dispatch events to this queue first.
-    if (ChaosMode::randomUint32LessThan(2)) {
-      PR_Sleep(PR_INTERVAL_NO_WAIT);
-    }
-  }
-
-  MonitorAutoEnterType mon(mMonitor);
-
-  Base::PutEvent(Move(aRunnable), mon, aExtraneousLock);
-}
-
-template<typename MonitorType>
 size_t
-nsEventQueueBase<MonitorType>::Count(MonitorAutoEnterType& aProofOfLock,
-                                     MutexAutoLock&)
+nsEventQueue::Count(MutexAutoLock& aProofOfLock)
 {
   // It is obvious count is 0 when the queue is empty.
   if (!mHead) {
@@ -197,15 +146,4 @@ nsEventQueueBase<MonitorType>::Count(MonitorAutoEnterType& aProofOfLock,
   MOZ_ASSERT(count >= 0);
 
   return count;
-}
-
-template size_t nsEventQueueBase<Monitor>::Count(MonitorAutoLock& aProofOfLock,
-                                                 MutexAutoLock&);
-
-size_t
-nsEventQueue::Count(MutexAutoLock& aExtraneousLock)
-{
-  MonitorAutoEnterType mon(mMonitor);
-
-  return Base::Count(mon, aExtraneousLock);
 }
