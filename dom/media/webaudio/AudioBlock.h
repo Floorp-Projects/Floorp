@@ -23,6 +23,7 @@ class AudioBlock : private AudioChunk
 public:
   AudioBlock() {
     mDuration = WEBAUDIO_BLOCK_SIZE;
+    mBufferFormat = AUDIO_FORMAT_SILENCE;
   }
   // No effort is made in constructors to ensure that mBufferIsDownstreamRef
   // is set because the block is expected to be a temporary and so the
