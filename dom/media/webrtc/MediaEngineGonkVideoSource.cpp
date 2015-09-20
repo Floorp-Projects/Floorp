@@ -328,6 +328,14 @@ MediaEngineGonkVideoSource::Stop(SourceMediaStream* aSource, TrackID aID)
   return NS_OK;
 }
 
+nsresult
+MediaEngineGonkVideoSource::Restart(const dom::MediaTrackConstraints& aConstraints,
+                                    const MediaEnginePrefs& aPrefs,
+                                    const nsString& aDeviceId)
+{
+  return NS_OK;
+}
+
 /**
 * Initialization and Shutdown functions for the video source, called by the
 * constructor and destructor respectively.
