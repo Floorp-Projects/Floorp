@@ -3558,7 +3558,7 @@ nsDownload::Resume()
   rv = NS_NewChannel(getter_AddRefs(channel),
                      mSource,
                      nsContentUtils::GetSystemPrincipal(),
-                     nsILoadInfo::SEC_NORMAL,
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                      nsIContentPolicy::TYPE_OTHER,
                      nullptr,  // aLoadGroup
                      ir);
