@@ -819,6 +819,7 @@ loop.roomViews = (function(mozL10n) {
                   publishStream={this.publishStream}
                   screenShare={screenShareData}
                   settingsMenuItems={settingsMenuItems}
+                  show={!shouldRenderEditContextView}
                   video={{enabled: !this.state.videoMuted, visible: true}} />
                 <DesktopRoomInvitationView
                   dispatcher={this.props.dispatcher}
