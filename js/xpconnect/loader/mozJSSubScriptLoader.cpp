@@ -410,7 +410,7 @@ mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri, JSObject* targetObjArg,
     rv = NS_NewChannel(getter_AddRefs(channel),
                        uri,
                        nsContentUtils::GetSystemPrincipal(),
-                       nsILoadInfo::SEC_NORMAL,
+                       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                        nsIContentPolicy::TYPE_OTHER,
                        nullptr,  // aLoadGroup
                        nullptr,  // aCallbacks
@@ -436,7 +436,7 @@ mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri, JSObject* targetObjArg,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIStreamListener> listener = loader.get();
-    return channel->AsyncOpen(listener, nullptr);
+    return channel->AsyncOpen2(listener);
 }
 
 nsresult
@@ -459,7 +459,7 @@ mozJSSubScriptLoader::ReadScript(nsIURI* uri, JSContext* cx, JSObject* targetObj
     rv = NS_NewChannel(getter_AddRefs(chan),
                        uri,
                        nsContentUtils::GetSystemPrincipal(),
-                       nsILoadInfo::SEC_NORMAL,
+                       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                        nsIContentPolicy::TYPE_OTHER,
                        nullptr,  // aLoadGroup
                        nullptr,  // aCallbacks
@@ -468,7 +468,7 @@ mozJSSubScriptLoader::ReadScript(nsIURI* uri, JSContext* cx, JSObject* targetObj
 
     if (NS_SUCCEEDED(rv)) {
         chan->SetContentType(NS_LITERAL_CSTRING("application/javascript"));
-        rv = chan->Open(getter_AddRefs(instream));
+        rv = chan->Open2(getter_AddRefs(instream));
     }
 
     if (NS_FAILED(rv)) {
@@ -868,7 +868,7 @@ mozJSSubScriptLoader::PrecompileScript(nsIURI* aURI,
     nsresult rv = NS_NewChannel(getter_AddRefs(channel),
                                 aURI,
                                 nsContentUtils::GetSystemPrincipal(),
-                                nsILoadInfo::SEC_NORMAL,
+                                nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                                 nsIContentPolicy::TYPE_OTHER);
 
     NS_ENSURE_SUCCESS(rv, rv);
@@ -881,7 +881,7 @@ mozJSSubScriptLoader::PrecompileScript(nsIURI* aURI,
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIStreamListener> listener = loader.get();
-    rv = channel->AsyncOpen(listener, nullptr);
+    rv = channel->AsyncOpen2(listener);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
