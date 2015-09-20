@@ -32,5 +32,8 @@
     "MozLoopServiceInternal": true,
     "LoopRoomsInternal": true,
     "LoopUI": false,
+    // Other items
+    "Chat": true,
+    "WebChannel": true
   }
 }

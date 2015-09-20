@@ -684,8 +684,11 @@ AnimationsTimeline.prototype = {
     let getTime = time => L10N.getFormatStr("player.timeLabel",
                             L10N.numberWithDecimals(time / 1000, 2));
 
-    let title = L10N.getFormatStr("timeline." + state.type + ".nameLabel",
-                                  state.name);
+    // The type isn't always available, older servers don't send it.
+    let title =
+      state.type
+      ? L10N.getFormatStr("timeline." + state.type + ".nameLabel", state.name)
+      : state.name;
     let delay = L10N.getStr("player.animationDelayLabel") + " " +
                 getTime(state.delay);
     let duration = L10N.getStr("player.animationDurationLabel") + " " +
