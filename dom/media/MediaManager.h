@@ -586,7 +586,7 @@ public:
   typedef nsTArray<nsRefPtr<MediaDevice>> SourceSet;
   static bool IsPrivateBrowsing(nsPIDOMWindow *window);
 private:
-  typedef media::Pledge<SourceSet*, dom::MediaStreamError> PledgeSourceSet;
+  typedef media::Pledge<SourceSet*, dom::MediaStreamError*> PledgeSourceSet;
 
   static bool IsPrivileged();
   static bool IsLoop(nsIURI* aDocURI);
