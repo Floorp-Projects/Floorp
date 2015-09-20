@@ -599,7 +599,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             // are hard to read when encoded
             if (!uri.schemeIs("javascript") && !uri.schemeIs("data")) {
               // Parentheses are known to confuse third-party applications (bug 458565).
-              selectedVal = uri.spec.replace(/[()]/g, function (c) escape(c));
+              selectedVal = uri.spec.replace(/[()]/g, c => escape(c));
             }
 
             return selectedVal;
