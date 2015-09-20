@@ -3250,7 +3250,8 @@ XULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, bool* aBlock)
                             this,
                             static_cast<nsIDocument*>(this),
                             aScriptProto->mSrcURI,
-                            NS_LITERAL_STRING("application/x-javascript"));
+                            NS_LITERAL_STRING("application/x-javascript"),
+                            false);
     if (NS_FAILED(rv)) {
       *aBlock = false;
       return rv;
