@@ -495,6 +495,74 @@ add_test(function test_update_iap() {
 });
 
 /**
+ * Verify ICCRecordHelper.readADNLike.
+ */
+add_test(function test_read_adn_like() {
+  const RECORD_SIZE = 0x20;
+
+  let worker = newUint8Worker();
+  let context = worker.ContextPool._contexts[0];
+  let helper = context.GsmPDUHelper;
+  let record = context.ICCRecordHelper;
+  let buf = context.Buf;
+  let io = context.ICCIOHelper;
+  let ril = context.RIL;
+
+  function do_test(extFileId, rawEF, expectedExtRecordNumber, expectedNumber) {
+    io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options) {
+      // Write data size
+      buf.writeInt32(rawEF.length * 2);
+
+      // Write adn
+      for (let i = 0; i < rawEF.length; i += 2) {
+        helper.writeHexOctet(parseInt(rawEF.substr(i, 2), 16));
+      }
+
+      // Write string delimiter
+      buf.writeStringDelimiter(rawEF.length * 2);
+
+      options.p1 = 1;
+      options.recordSize = RECORD_SIZE;
+      options.totalRecords = 1;
+      if (options.callback) {
+        options.callback(options);
+      }
+    };
+
+    record.readExtension = function(fileId, recordNumber, onsuccess, onerror) {
+      onsuccess("1234");
+    }
+
+    let successCb = function successCb(contacts) {
+      ok(contacts[0].number == expectedNumber);
+    };
+
+    let errorCb = function errorCb(errorMsg) {
+      do_print("Reading ADNLike failed, msg = " + errorMsg);
+      ok(false);
+    };
+
+    record.readADNLike(ICC_EF_ADN, extFileId, successCb, errorCb);
+  }
+
+  ril.appType = CARD_APPTYPE_SIM;
+  // Valid extension
+  do_test(ICC_EF_EXT1,"436f6e74616374303031ffffffffffffffff0b8199887766554433221100ff01",
+          0x01,"998877665544332211001234");
+  // Empty extension
+  do_test(ICC_EF_EXT1,"436f6e74616374303031ffffffffffffffff0b8199887766554433221100ffff",
+          0xff, "99887766554433221100");
+  // Unsupport extension
+  do_test(null,"436f6e74616374303031ffffffffffffffff0b8199887766554433221100ffff",
+          0xff, "99887766554433221100");
+  // Empty dialling number contact
+  do_test(null,"436f6e74616374303031ffffffffffffffffffffffffffffffffffffffffffff",
+          0xff, null);
+
+  run_next_test();
+});
+
+/**
  * Verify ICCRecordHelper.updateADNLike.
  */
 add_test(function test_update_adn_like() {
@@ -718,6 +786,63 @@ add_test(function test_handling_iccid() {
   do_test("986800A2909090001519", "8986002090909005191");
   // Valid ICCID.
   do_test("98101430121181157002", "89014103211118510720");
+
+  run_next_test();
+});
+
+/**
+ *  Verify ICCRecordHelper.readExtension
+ */
+add_test(function test_read_extension() {
+  let worker = newUint8Worker();
+  let context = worker.ContextPool._contexts[0];
+  let helper = context.GsmPDUHelper;
+  let record = context.ICCRecordHelper;
+  let buf = context.Buf;
+  let io = context.ICCIOHelper;
+
+  function do_test(rawExtension, expectedExtensionNumber) {
+    io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options) {
+      // Write data size
+      buf.writeInt32(rawExtension.length * 2);
+
+      // Write ext
+      for (let i = 0; i < rawExtension.length; i += 2) {
+        helper.writeHexOctet(parseInt(rawExtension.substr(i, 2), 16));
+      }
+
+      // Write string delimiter
+      buf.writeStringDelimiter(rawExtension.length);
+
+      if (options.callback) {
+        options.callback(options);
+      }
+    };
+
+    let successCb = function successCb(number) {
+      do_print("extension number:" + number);
+      equal(number, expectedExtensionNumber);
+    };
+
+    let errorCb = function errorCb() {
+      ok(expectedExtensionNumber == null);
+    };
+
+    record.readExtension(0x6f4a, 1, successCb, errorCb);
+  }
+
+  // Test unsupported record type 0x01
+  do_test("010a10325476981032547698ff", "");
+  // Test invalid length 0xc1
+  do_test("020c10325476981032547698ff", null);
+  // Test extension chain which we don't support
+  do_test("020a1032547698103254769802", "01234567890123456789");
+  // Test valid Extension
+  do_test("020a10325476981032547698ff", "01234567890123456789");
+  // Test valid Extension
+  do_test("0209103254769810325476ffff", "012345678901234567");
+  // Test empty Extension
+  do_test("02ffffffffffffffffffffffff", "");
 
   run_next_test();
 });

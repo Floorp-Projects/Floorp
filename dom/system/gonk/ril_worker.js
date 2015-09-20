@@ -11108,6 +11108,9 @@ ICCFileHelperObject.prototype = {
       case ICC_EF_FDN:
       case ICC_EF_MSISDN:
       case ICC_EF_SMS:
+      case ICC_EF_EXT1:
+      case ICC_EF_EXT2:
+      case ICC_EF_EXT3:
         return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM;
       case ICC_EF_AD:
       case ICC_EF_MBDN:
@@ -11177,6 +11180,9 @@ ICCFileHelperObject.prototype = {
       case ICC_EF_CSIM_SPN:
         return EF_PATH_MF_SIM + EF_PATH_DF_CDMA;
       case ICC_EF_FDN:
+      case ICC_EF_EXT1:
+      case ICC_EF_EXT2:
+      case ICC_EF_EXT3:
         return EF_PATH_MF_SIM + EF_PATH_DF_TELECOM;
       default:
         return null;
@@ -11582,24 +11588,20 @@ ICCRecordHelperObject.prototype = {
   /**
    * Read ICC ADN like EF, i.e. EF_ADN, EF_FDN.
    *
-   * @param fileId      EF id of the ADN or FDN.
+   * @param fileId      EF id of the ADN, FDN or SDN.
+   * @param extFileId   EF id of the EXT.
    * @param onsuccess   Callback to be called when success.
    * @param onerror     Callback to be called when error.
    */
-  readADNLike: function(fileId, onsuccess, onerror) {
+  readADNLike: function(fileId, extFileId, onsuccess, onerror) {
     let ICCIOHelper = this.context.ICCIOHelper;
 
     function callback(options) {
-      let contact =
-        this.context.ICCPDUHelper.readAlphaIdDiallingNumber(options.recordSize);
-      if (contact) {
-        contact.recordId = options.p1;
-        contacts.push(contact);
-      }
-
-      if (options.p1 < options.totalRecords) {
-        ICCIOHelper.loadNextRecord(options);
-      } else {
+      let loadNextContactRecord = () => {
+        if (options.p1 < options.totalRecords) {
+          ICCIOHelper.loadNextRecord(options);
+          return;
+        }
         if (DEBUG) {
           for (let i = 0; i < contacts.length; i++) {
             this.context.debug("contact [" + i + "] " +
@@ -11609,7 +11611,29 @@ ICCRecordHelperObject.prototype = {
         if (onsuccess) {
           onsuccess(contacts);
         }
+      };
+
+      let contact =
+        this.context.ICCPDUHelper.readAlphaIdDiallingNumber(options.recordSize);
+      if (contact) {
+        let record = {
+          recordId: options.p1,
+          alphaId: contact.alphaId,
+          number: contact.number
+        };
+        contacts.push(record);
+
+        if (extFileId && contact.extRecordNumber != 0xff) {
+          this.readExtension(extFileId, contact.extRecordNumber, (number) => {
+            if (number) {
+              record.number += number;
+            }
+            loadNextContactRecord();
+          }, () => loadNextContactRecord());
+          return;
+        }
       }
+      loadNextContactRecord();
     }
 
     let contacts = [];
@@ -12083,6 +12107,64 @@ ICCRecordHelperObject.prototype = {
                                    recordNumber: recordNumber,
                                    callback: callback.bind(this),
                                    onerror: onerror});
+  },
+
+  /**
+   * Read Extension Number from TS 151.011 clause 10.5.10, TS 31.102, clause 4.4.2.4
+   *
+   * @param fileId        EF Extension id
+   * @param recordNumber  The number of the record shall be loaded.
+   * @param onsuccess     Callback to be called when success.
+   * @param onerror       Callback to be called when error.
+   */
+  readExtension: function(fileId, recordNumber, onsuccess, onerror) {
+    let callback = (options) => {
+      let Buf = this.context.Buf;
+      let length = Buf.readInt32();
+      let recordType = this.context.GsmPDUHelper.readHexOctet();
+      let number = "";
+
+      // TS 31.102, clause 4.4.2.4 EFEXT1
+      // Case 1, Extension1 record is additional data
+      if (recordType & 0x02) {
+        let numLen = this.context.GsmPDUHelper.readHexOctet();
+        if (numLen != 0xff) {
+          if (numLen > EXT_MAX_BCD_NUMBER_BYTES) {
+            if (DEBUG) {
+              this.context.debug(
+              "Error: invalid length of BCD number/SSC contents - " + numLen);
+            }
+            // +1 to skip Identifier
+            Buf.seekIncoming((EXT_MAX_BCD_NUMBER_BYTES + 1) * Buf.PDU_HEX_OCTET_SIZE);
+            Buf.readStringDelimiter(length);
+            onerror();
+            return;
+          }
+
+          number = this.context.GsmPDUHelper.readSwappedNibbleExtendedBcdString(numLen);
+          if (DEBUG) this.context.debug("Contact Extension Number: "+ number);
+          Buf.seekIncoming((EXT_MAX_BCD_NUMBER_BYTES - numLen) * Buf.PDU_HEX_OCTET_SIZE);
+        } else {
+          Buf.seekIncoming(EXT_MAX_BCD_NUMBER_BYTES * Buf.PDU_HEX_OCTET_SIZE);
+        }
+      } else {
+        // Don't support Case 2, Extension1 record is Called Party Subaddress.
+        // +1 skip numLen
+        Buf.seekIncoming((EXT_MAX_BCD_NUMBER_BYTES + 1) * Buf.PDU_HEX_OCTET_SIZE);
+      }
+
+      // Skip Identifier
+      Buf.seekIncoming(Buf.PDU_HEX_OCTET_SIZE);
+      Buf.readStringDelimiter(length);
+      onsuccess(number);
+    }
+
+    this.context.ICCIOHelper.loadLinearFixedEF({
+      fileId: fileId,
+      recordNumber: recordNumber,
+      callback: callback,
+      onerror: onerror
+    });
   },
 };
 
@@ -13994,7 +14076,9 @@ ICCContactHelperObject.prototype = {
     switch (contactType) {
       case GECKO_CARDCONTACT_TYPE_ADN:
         if (!this.hasDfPhoneBook(appType)) {
-          ICCRecordHelper.readADNLike(ICC_EF_ADN, onsuccess, onerror);
+          ICCRecordHelper.readADNLike(ICC_EF_ADN,
+            (ICCUtilsHelper.isICCServiceAvailable("EXT1")) ? ICC_EF_EXT1 : null,
+            onsuccess, onerror);
         } else {
           this.readUSimContacts(onsuccess, onerror);
         }
@@ -14004,7 +14088,9 @@ ICCContactHelperObject.prototype = {
           onerror(CONTACT_ERR_CONTACT_TYPE_NOT_SUPPORTED);
           break;
         }
-        ICCRecordHelper.readADNLike(ICC_EF_FDN, onsuccess, onerror);
+        ICCRecordHelper.readADNLike(ICC_EF_FDN,
+          (ICCUtilsHelper.isICCServiceAvailable("EXT2")) ? ICC_EF_EXT2 : null,
+          onsuccess, onerror);
         break;
       case GECKO_CARDCONTACT_TYPE_SDN:
         if (!ICCUtilsHelper.isICCServiceAvailable("SDN")) {
@@ -14012,7 +14098,9 @@ ICCContactHelperObject.prototype = {
           break;
         }
 
-        ICCRecordHelper.readADNLike(ICC_EF_SDN, onsuccess, onerror);
+        ICCRecordHelper.readADNLike(ICC_EF_SDN,
+          (ICCUtilsHelper.isICCServiceAvailable("EXT3")) ? ICC_EF_EXT3 : null,
+          onsuccess, onerror);
         break;
       default:
         if (DEBUG) {
@@ -14224,11 +14312,13 @@ ICCContactHelperObject.prototype = {
    * @param onerror       Callback to be called when error.
    */
   readPhonebookSet: function(pbr, onsuccess, onerror) {
+    let ICCRecordHelper = this.context.ICCRecordHelper;
     let gotAdnCb = function gotAdnCb(contacts) {
       this.readSupportedPBRFields(pbr, contacts, onsuccess, onerror);
     }.bind(this);
 
-    this.context.ICCRecordHelper.readADNLike(pbr.adn.fileId, gotAdnCb, onerror);
+    ICCRecordHelper.readADNLike(pbr.adn.fileId,
+      (pbr.ext1) ? pbr.ext1.fileId : null, gotAdnCb, onerror);
   },
 
   /**
