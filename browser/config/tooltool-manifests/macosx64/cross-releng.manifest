@@ -10,13 +10,6 @@
 "unpack": true
 },
 {
-"size": 80458572,
-"digest": "e5101f9dee1e462f6cbd3897ea57eede41d23981825c7b20d91d23ab461875d54d3dfc24999aa58a31e8b01f49fb3140e05ffe5af2957ef1d1afb89fd0dfe1ad",
-"algorithm": "sha512", 
-"filename": "gcc.tar.xz",
-"unpack": true
-},
-{
 "size": 3008804, 
 "visibility": "public", 
 "digest": "ba6937f14f3d8b26dcb2d39490dee6b0a8afb60f672f5debb71d7b62c1ec52103201b4b1a3d258f945567de531384b36ddb2ce4aa73dc63d72305b11c146847c", 
