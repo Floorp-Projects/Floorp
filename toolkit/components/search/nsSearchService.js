@@ -2081,7 +2081,7 @@ Engine.prototype = {
                                                         Services.scriptSecurityManager.getSystemPrincipal(),
                                                         null,      // aTriggeringPrincipal
                                                         Ci.nsILoadInfo.SEC_NORMAL,
-                                                        Ci.nsIContentPolicy.TYPE_IMAGE);
+                                                        Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE);
 
         let iconLoadCallback = function (aByteArray, aEngine) {
           // This callback may run after we've already set a preferred icon,
