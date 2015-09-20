@@ -167,8 +167,12 @@ public:
 
   void StopTrack(TrackID aID, bool aIsAudio);
 
-  void ApplyConstraintsToTrack(TrackID aID, bool aIsAudio,
-                               const dom::MediaTrackConstraints& aConstraints);
+  typedef media::Pledge<bool, dom::MediaStreamError*> PledgeVoid;
+
+  already_AddRefed<PledgeVoid>
+  ApplyConstraintsToTrack(nsPIDOMWindow* aWindow,
+                          TrackID aID, bool aIsAudio,
+                          const dom::MediaTrackConstraints& aConstraints);
 
   // mVideo/AudioDevice are set by Activate(), so we assume they're capturing
   // if set and represent a real capture device.
@@ -323,7 +327,6 @@ class GetUserMediaNotificationEvent: public nsRunnable
       STARTING,
       STOPPING,
       STOPPED_TRACK,
-      APPLIED_CONSTRAINTS,
     };
     GetUserMediaNotificationEvent(GetUserMediaCallbackMediaStreamListener* aListener,
                                   GetUserMediaStatus aStatus,
@@ -362,7 +365,6 @@ typedef enum {
   MEDIA_STOP,
   MEDIA_STOP_TRACK,
   MEDIA_DIRECT_LISTENERS,
-  MEDIA_APPLYCONSTRAINTS_TRACK,
 } MediaOperation;
 
 class MediaManager;
@@ -393,6 +395,7 @@ typedef void (*WindowListenerCallback)(MediaManager *aThis,
 class MediaManager final : public nsIMediaManagerService,
                            public nsIObserver
 {
+  friend GetUserMediaCallbackMediaStreamListener;
 public:
   static already_AddRefed<MediaManager> GetInstance();
 
@@ -520,6 +523,7 @@ private:
   static StaticRefPtr<MediaManager> sSingleton;
 
   media::CoatCheck<PledgeSourceSet> mOutstandingPledges;
+  media::CoatCheck<GetUserMediaCallbackMediaStreamListener::PledgeVoid> mOutstandingVoidPledges;
 #if defined(MOZ_B2G_CAMERA) && defined(MOZ_WIDGET_GONK)
   nsRefPtr<nsDOMCameraManager> mCameraManager;
 #endif

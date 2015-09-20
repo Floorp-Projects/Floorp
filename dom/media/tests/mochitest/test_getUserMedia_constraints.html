@@ -117,7 +117,12 @@ runTest(function() {
         is(e.constraint, test.constraint,
            test.message + " w/correct constraint.");
       }
-    }), p);
+    }), p)
+    .then(() => navigator.mediaDevices.getUserMedia({video: true, audio: true}))
+    .then(stream => stream.getVideoTracks()[0].applyConstraints({ width: 320 })
+      .then(() => stream.getAudioTracks()[0].applyConstraints({ })))
+    .then(() => ok(true, "applyConstraints code exercised"))
+    // TODO: Test outcome once fake devices support constraints (Bug 1088621)
 });
 
 </script>

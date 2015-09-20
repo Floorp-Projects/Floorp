@@ -217,16 +217,23 @@ MediaEngineRemoteVideoSource::Restart(const dom::MediaTrackConstraints& aConstra
                                       const MediaEnginePrefs& aPrefs,
                                       const nsString& aDeviceId)
 {
-  if (mState == kStarted && mInitDone &&
-      ChooseCapability(aConstraints, aPrefs, aDeviceId)) {
-    mozilla::camera::StopCapture(mCapEngine, mCaptureIndex);
-    if (mozilla::camera::StartCapture(mCapEngine,
-                                      mCaptureIndex, mCapability, this)) {
-      LOG(("StartCapture failed"));
-      return NS_ERROR_FAILURE;
-    }
+  if (!mInitDone) {
+    LOG(("Init not done"));
+    return NS_ERROR_FAILURE;
+  }
+  if (!ChooseCapability(aConstraints, aPrefs, aDeviceId)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  if (mState != kStarted) {
+    return NS_OK;
   }
 
+  mozilla::camera::StopCapture(mCapEngine, mCaptureIndex);
+  if (mozilla::camera::StartCapture(mCapEngine,
+                                    mCaptureIndex, mCapability, this)) {
+    LOG(("StartCapture failed"));
+    return NS_ERROR_FAILURE;
+  }
   return NS_OK;
 }
 

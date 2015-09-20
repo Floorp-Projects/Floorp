@@ -333,32 +333,6 @@ public:
         }
         break;
 
-      case MEDIA_APPLYCONSTRAINTS_TRACK:
-        {
-          nsRefPtr<MediaManager> mgr = MediaManager::GetInstance();
-
-          NS_ASSERTION(!NS_IsMainThread(), "Never call on main thread");
-          if (mAudioDevice) {
-            mAudioDevice->Restart(mConstraints, mgr->mPrefs);
-          }
-          if (mVideoDevice) {
-            mVideoDevice->Restart(mConstraints, mgr->mPrefs);
-          }
-
-          // Need to dispatch something back to main to resolve promise
-          // redo this with pledge?
-          nsIRunnable *event =
-            new GetUserMediaNotificationEvent(mListener,
-                                              GetUserMediaNotificationEvent::APPLIED_CONSTRAINTS,
-                                              mAudioDevice != nullptr,
-                                              mVideoDevice != nullptr,
-                                              mWindowID);
-          // event must always be released on mainthread due to the JS callbacks
-          // in the TracksAvailableCallback
-          NS_DispatchToMainThread(event);
-        }
-        break;
-
       case MEDIA_DIRECT_LISTENERS:
         {
           NS_ASSERTION(!NS_IsMainThread(), "Never call on main thread");
@@ -726,9 +700,10 @@ public:
       // risky to do late in a release since that will affect all track ends, and not
       // just StopTrack()s.
       if (GetDOMTrackFor(aTrackID)) {
-        mListener->StopTrack(aTrackID, !!GetDOMTrackFor(aTrackID)->AsAudioStreamTrack());
+        mListener->StopTrack(aTrackID,
+                             !!GetDOMTrackFor(aTrackID)->AsAudioStreamTrack());
       } else {
-        LOG(("StopTrack(%d) on non-existant track", aTrackID));
+        LOG(("StopTrack(%d) on non-existent track", aTrackID));
       }
     }
   }
@@ -738,22 +713,45 @@ public:
                           const MediaTrackConstraints& aConstraints,
                           ErrorResult &aRv) override
   {
-    if (mSourceStream) {
-      nsRefPtr<dom::MediaStreamTrack> track = GetDOMTrackFor(aTrackID);
-      if (track) {
-        mListener->ApplyConstraintsToTrack(aTrackID,
-                                           !!track->AsAudioStreamTrack(),
-                                           aConstraints);
-      } else {
-        LOG(("ApplyConstraintsToTrack(%d) on non-existant track", aTrackID));
-      }
-    }
-
     nsPIDOMWindow* window = static_cast<nsPIDOMWindow*>(mWindow.get());
     nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(window);
-    nsRefPtr<Promise> p = Promise::Create(go, aRv);
-    p->MaybeResolve(false);
-    return p.forget();
+    nsRefPtr<Promise> promise = Promise::Create(go, aRv);
+
+    if (sInShutdown) {
+      nsRefPtr<MediaStreamError> error = new MediaStreamError(window,
+          NS_LITERAL_STRING("AbortError"),
+          NS_LITERAL_STRING("In shutdown"));
+      promise->MaybeReject(error);
+      return promise.forget();
+    }
+    if (!mSourceStream) {
+      nsRefPtr<MediaStreamError> error = new MediaStreamError(window,
+          NS_LITERAL_STRING("InternalError"),
+          NS_LITERAL_STRING("No stream."));
+      promise->MaybeReject(error);
+      return promise.forget();
+    }
+
+    nsRefPtr<dom::MediaStreamTrack> track = GetDOMTrackFor(aTrackID);
+    if (!track) {
+      LOG(("ApplyConstraintsToTrack(%d) on non-existent track", aTrackID));
+      nsRefPtr<MediaStreamError> error = new MediaStreamError(window,
+          NS_LITERAL_STRING("InternalError"),
+          NS_LITERAL_STRING("No track."));
+      promise->MaybeReject(error);
+      return promise.forget();
+    }
+
+    typedef media::Pledge<bool, MediaStreamError*> PledgeVoid;
+
+    nsRefPtr<PledgeVoid> p = mListener->ApplyConstraintsToTrack(window,
+        aTrackID, !!track->AsAudioStreamTrack(), aConstraints);
+    p->Then([promise](bool& aDummy) mutable {
+      promise->MaybeResolve(false);
+    }, [promise](MediaStreamError*& reason) mutable {
+      promise->MaybeReject(reason);
+    });
+    return promise.forget();
   }
 
 #if 0
@@ -804,14 +802,14 @@ public:
   }
 
   // let us intervene for direct listeners when someone does track.enabled = false
-  virtual void SetTrackEnabled(TrackID aID, bool aEnabled) override
+  virtual void SetTrackEnabled(TrackID aTrackID, bool aEnabled) override
   {
     // We encapsulate the SourceMediaStream and TrackUnion into one entity, so
     // we can handle the disabling at the SourceMediaStream
 
-    // We need to find the input track ID for output ID aID, so we let the TrackUnion
+    // We need to find the input track ID for output ID aTrackID, so we let the TrackUnion
     // forward the request to the source and translate the ID
-    GetStream()->AsProcessedStream()->ForwardTrackEnabled(aID, aEnabled);
+    GetStream()->AsProcessedStream()->ForwardTrackEnabled(aTrackID, aEnabled);
   }
 
   virtual DOMLocalMediaStream* AsDOMLocalMediaStream() override
@@ -3067,33 +3065,102 @@ GetUserMediaCallbackMediaStreamListener::StopSharing()
 
 // ApplyConstraints for track
 
-void
+already_AddRefed<GetUserMediaCallbackMediaStreamListener::PledgeVoid>
 GetUserMediaCallbackMediaStreamListener::ApplyConstraintsToTrack(
-    TrackID aID,
+    nsPIDOMWindow* aWindow,
+    TrackID aTrackID,
     bool aIsAudio,
     const MediaTrackConstraints& aConstraints)
 {
-  if (((aIsAudio && mAudioDevice) ||
-       (!aIsAudio && mVideoDevice)) && !mStopped)
+  MOZ_ASSERT(NS_IsMainThread());
+  nsRefPtr<PledgeVoid> p = new PledgeVoid();
+
+  if (!(((aIsAudio && mAudioDevice) ||
+         (!aIsAudio && mVideoDevice)) && !mStopped))
   {
-    // XXX to support multiple tracks of a type in a stream, this should key off
-    // the TrackID and not just the type
-    MediaManager::PostTask(FROM_HERE,
-      new MediaOperationTask(MEDIA_APPLYCONSTRAINTS_TRACK,
-                             this, nullptr, nullptr,
-                             aIsAudio  ? mAudioDevice.get() : nullptr,
-                             !aIsAudio ? mVideoDevice.get() : nullptr,
-                             mFinished, mWindowID, nullptr, aConstraints));
-  } else {
     LOG(("gUM track %d applyConstraints, but we don't have type %s",
-         aID, aIsAudio ? "audio" : "video"));
+         aTrackID, aIsAudio ? "audio" : "video"));
+    p->Resolve(false);
+    return p.forget();
   }
+
+  // XXX to support multiple tracks of a type in a stream, this should key off
+  // the TrackID and not just the type
+  nsRefPtr<AudioDevice> audioDevice = aIsAudio ? mAudioDevice.get() : nullptr;
+  nsRefPtr<VideoDevice> videoDevice = !aIsAudio ? mVideoDevice.get() : nullptr;
+
+  nsRefPtr<MediaManager> mgr = MediaManager::GetInstance();
+  uint32_t id = mgr->mOutstandingVoidPledges.Append(*p);
+  uint64_t windowId = aWindow->WindowID();
+
+  MediaManager::PostTask(FROM_HERE, NewTaskFrom([id, windowId,
+                                                 audioDevice, videoDevice,
+                                                 aConstraints]() mutable {
+    MOZ_ASSERT(MediaManager::IsInMediaThread());
+    nsRefPtr<MediaManager> mgr = MediaManager::GetInstance();
+    const char* badConstraint = nullptr;
+    nsresult rv = NS_OK;
+
+    if (audioDevice) {
+      rv = audioDevice->Restart(aConstraints, mgr->mPrefs);
+      if (rv == NS_ERROR_NOT_AVAILABLE) {
+        nsTArray<nsRefPtr<AudioDevice>> audios;
+        audios.AppendElement(audioDevice);
+        badConstraint = MediaConstraintsHelper::SelectSettings(aConstraints,
+                                                               audios);
+      }
+    } else {
+      rv = videoDevice->Restart(aConstraints, mgr->mPrefs);
+      if (rv == NS_ERROR_NOT_AVAILABLE) {
+        nsTArray<nsRefPtr<VideoDevice>> videos;
+        videos.AppendElement(videoDevice);
+        badConstraint = MediaConstraintsHelper::SelectSettings(aConstraints,
+                                                               videos);
+      }
+    }
+    NS_DispatchToMainThread(do_AddRef(NewRunnableFrom([id, windowId, rv,
+                                                       badConstraint]() mutable {
+      MOZ_ASSERT(NS_IsMainThread());
+      nsRefPtr<MediaManager> mgr = MediaManager_GetInstance();
+      if (!mgr) {
+        return NS_OK;
+      }
+      nsRefPtr<PledgeVoid> p = mgr->mOutstandingVoidPledges.Remove(id);
+      if (p) {
+        if (NS_SUCCEEDED(rv)) {
+          p->Resolve(false);
+        } else {
+          nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
+              (nsGlobalWindow::GetInnerWindowWithId(windowId));
+          if (window) {
+            if (rv == NS_ERROR_NOT_AVAILABLE) {
+              nsString constraint;
+              constraint.AssignASCII(badConstraint);
+              nsRefPtr<MediaStreamError> error =
+                  new MediaStreamError(window,
+                                       NS_LITERAL_STRING("OverconstrainedError"),
+                                       NS_LITERAL_STRING(""),
+                                       constraint);
+              p->Reject(error);
+            } else {
+              nsRefPtr<MediaStreamError> error =
+                  new MediaStreamError(window,
+                                       NS_LITERAL_STRING("InternalError"));
+              p->Reject(error);
+            }
+          }
+        }
+      }
+      return NS_OK;
+    })));
+  }));
+  return p.forget();
 }
 
 // Stop backend for track
 
 void
-GetUserMediaCallbackMediaStreamListener::StopTrack(TrackID aID, bool aIsAudio)
+GetUserMediaCallbackMediaStreamListener::StopTrack(TrackID aTrackID, bool aIsAudio)
 {
   if (((aIsAudio && mAudioDevice) ||
        (!aIsAudio && mVideoDevice)) && !mStopped)
@@ -3108,7 +3175,7 @@ GetUserMediaCallbackMediaStreamListener::StopTrack(TrackID aID, bool aIsAudio)
                              mFinished, mWindowID, nullptr));
   } else {
     LOG(("gUM track %d ended, but we don't have type %s",
-         aID, aIsAudio ? "audio" : "video"));
+         aTrackID, aIsAudio ? "audio" : "video"));
   }
 }
 
@@ -3173,9 +3240,6 @@ GetUserMediaNotificationEvent::Run()
     break;
   case STOPPED_TRACK:
     msg = NS_LITERAL_STRING("shutdown");
-    break;
-  case APPLIED_CONSTRAINTS:
-    msg = NS_LITERAL_STRING("constraints-changed");
     break;
   }
 
