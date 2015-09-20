@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ArrayUtils.h"
-
 #include "TextInputHandler.h"
 
 #include "mozilla/Logging.h"
 
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/AutoRestore.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
@@ -2696,21 +2696,64 @@ IMEInputHandler::CreateTextRangeArray(NSAttributedString *aAttrString,
 }
 
 bool
+IMEInputHandler::DispatchCompositionStartEvent()
+{
+  MOZ_LOG(gLog, LogLevel::Info,
+    ("%p IMEInputHandler::DispatchCompositionStartEvent, "
+     "mSelectedRange={ location=%llu, length=%llu }, Destroyed()=%s, "
+     "mView=%p, mWidget=%p, inputContext=%p, mIsIMEComposing=%s",
+     this,  SelectedRange().location, mSelectedRange.length,
+     TrueOrFalse(Destroyed()), mView, mWidget,
+     mView ? [mView inputContext] : nullptr, TrueOrFalse(mIsIMEComposing)));
+
+  WidgetCompositionEvent compositionStartEvent(true, eCompositionStart,
+                                               mWidget);
+  InitCompositionEvent(compositionStartEvent);
+
+  NS_ASSERTION(!mIsIMEComposing, "There is a composition already");
+  mIsIMEComposing = true;
+
+  DispatchEvent(compositionStartEvent);
+
+  if (Destroyed()) {
+    MOZ_LOG(gLog, LogLevel::Info,
+      ("%p IMEInputHandler::DispatchCompositionStartEvent, "
+       "destroyed by compositionstart event", this));
+    return false;
+  }
+
+  // FYI: compositionstart may cause committing composition by the webapp.
+  if (!mIsIMEComposing) {
+    return false;
+  }
+
+  // FYI: The selection range might have been modified by a compositionstart
+  //      event handler.
+  mIMECompositionStart = SelectedRange().location;
+  return true;
+}
+
+bool
 IMEInputHandler::DispatchCompositionChangeEvent(const nsString& aText,
                                                 NSAttributedString* aAttrString,
                                                 NSRange& aSelectedRange)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::DispatchCompositionChangeEvent, "
      "aText=\"%s\", aAttrString=\"%s\", "
-     "aSelectedRange={ location=%llu, length=%llu }, "
-     "Destroyed()=%s",
+     "aSelectedRange={ location=%llu, length=%llu }, Destroyed()=%s, mView=%p, "
+     "mWidget=%p, inputContext=%p, mIsIMEComposing=%s",
      this, NS_ConvertUTF16toUTF8(aText).get(),
      GetCharacters([aAttrString string]),
      aSelectedRange.location, aSelectedRange.length,
-     TrueOrFalse(Destroyed())));
+     TrueOrFalse(Destroyed()), mView, mWidget,
+     mView ? [mView inputContext] : nullptr, TrueOrFalse(mIsIMEComposing)));
 
   NS_ENSURE_TRUE(!Destroyed(), false);
+
+  NS_ASSERTION(mIsIMEComposing, "We're not in composition");
 
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
@@ -2720,33 +2763,90 @@ IMEInputHandler::DispatchCompositionChangeEvent(const nsString& aText,
   compositionChangeEvent.mData = aText;
   compositionChangeEvent.mRanges =
     CreateTextRangeArray(aAttrString, aSelectedRange);
-  return DispatchEvent(compositionChangeEvent);
+
+  mSelectedRange.location = mIMECompositionStart + aSelectedRange.location;
+  mSelectedRange.length = aSelectedRange.length;
+
+  if (mIMECompositionString) {
+    [mIMECompositionString release];
+  }
+  mIMECompositionString = [[aAttrString string] retain];
+
+  DispatchEvent(compositionChangeEvent);
+
+  if (Destroyed()) {
+    MOZ_LOG(gLog, LogLevel::Info,
+      ("%p IMEInputHandler::DispatchCompositionChangeEvent, "
+       "destroyed by compositionchange event", this));
+    return false;
+  }
+
+  // FYI: compositionstart may cause committing composition by the webapp.
+  return mIsIMEComposing;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
 
 bool
 IMEInputHandler::DispatchCompositionCommitEvent(const nsAString* aCommitString)
 {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
+
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::DispatchCompositionCommitEvent, "
-     "aCommitString=0x%p (\"%s\"), Destroyed()=%s",
+     "aCommitString=0x%p (\"%s\"), Destroyed()=%s, mView=%p, mWidget=%p, "
+     "inputContext=%p, mIsIMEComposing=%s",
      this, aCommitString,
      aCommitString ? NS_ConvertUTF16toUTF8(*aCommitString).get() : "",
-     TrueOrFalse(Destroyed())));
+     TrueOrFalse(Destroyed()), mView, mWidget,
+     mView ? [mView inputContext] : nullptr, TrueOrFalse(mIsIMEComposing)));
 
-  if (NS_WARN_IF(Destroyed())) {
-    return false;
-  }
+  NS_ASSERTION(mIsIMEComposing, "We're not in composition");
 
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
-  EventMessage message =
-    aCommitString ? eCompositionCommit : eCompositionCommitAsIs;
-  WidgetCompositionEvent compositionCommitEvent(true, message, mWidget);
-  compositionCommitEvent.time = PR_IntervalNow();
-  if (aCommitString) {
-    compositionCommitEvent.mData = *aCommitString;
+  if (!Destroyed()) {
+    EventMessage message =
+      aCommitString ? eCompositionCommit : eCompositionCommitAsIs;
+    WidgetCompositionEvent compositionCommitEvent(true, message, mWidget);
+    compositionCommitEvent.time = PR_IntervalNow();
+    if (aCommitString) {
+      compositionCommitEvent.mData = *aCommitString;
+    }
+
+    // IME may query selection immediately after this, however, in e10s mode,
+    // OnSelectionChange() will be called asynchronously.  Until then, we
+    // should emulate expected selection range if the webapp does nothing.
+    mSelectedRange.location = mIMECompositionStart;
+    if (message == eCompositionCommit) {
+      mSelectedRange.location += compositionCommitEvent.mData.Length();
+    } else if (mIMECompositionString) {
+      nsAutoString commitString;
+      nsCocoaUtils::GetStringForNSString(mIMECompositionString, commitString);
+      mSelectedRange.location += commitString.Length();
+    }
+    mSelectedRange.length = 0;
+
+    DispatchEvent(compositionCommitEvent);
   }
-  return DispatchEvent(compositionCommitEvent);
+
+  mIsIMEComposing = false;
+  mIMECompositionStart = UINT32_MAX;
+  if (mIMECompositionString) {
+    [mIMECompositionString release];
+    mIMECompositionString = nullptr;
+  }
+
+  if (Destroyed()) {
+    MOZ_LOG(gLog, LogLevel::Info,
+      ("%p IMEInputHandler::DispatchCompositionCommitEvent, "
+       "destroyed by compositioncommit event", this));
+    return false;
+  }
+
+  return true;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
 
 void
@@ -2787,15 +2887,13 @@ IMEInputHandler::InsertTextAsCommittingComposition(
   if (IsIMEComposing() && aReplacementRange &&
       aReplacementRange->location != NSNotFound &&
       !NSEqualRanges(MarkedRange(), *aReplacementRange)) {
-    DispatchCompositionCommitEvent();
-    if (Destroyed()) {
+    if (!DispatchCompositionCommitEvent()) {
       MOZ_LOG(gLog, LogLevel::Info,
         ("%p IMEInputHandler::InsertTextAsCommittingComposition, "
          "destroyed by commiting composition for setting replacement range",
          this));
       return;
     }
-    OnEndIMEComposition();
   }
 
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
@@ -2811,31 +2909,20 @@ IMEInputHandler::InsertTextAsCommittingComposition(
       NS_ENSURE_TRUE_VOID(SetSelection(*aReplacementRange));
     }
 
-    // XXXmnakano Probably, we shouldn't emulate composition in this case.
-    // I think that we should just fire DOM3 textInput event if we implement it.
-    WidgetCompositionEvent compStart(true, eCompositionStart, mWidget);
-    InitCompositionEvent(compStart);
-
-    DispatchEvent(compStart);
-    if (Destroyed()) {
+    if (!DispatchCompositionStartEvent()) {
       MOZ_LOG(gLog, LogLevel::Info,
         ("%p IMEInputHandler::InsertTextAsCommittingComposition, "
-         "destroyed by compositionstart event", this));
+         "cannot continue handling composition after compositionstart", this));
       return;
     }
-
-    OnStartIMEComposition();
   }
 
-  DispatchCompositionCommitEvent(&str);
-  if (Destroyed()) {
+  if (!DispatchCompositionCommitEvent(&str)) {
     MOZ_LOG(gLog, LogLevel::Info,
       ("%p IMEInputHandler::InsertTextAsCommittingComposition, "
        "destroyed by compositioncommit event", this));
     return;
   }
-
-  OnEndIMEComposition();
 
   mMarkedRange = NSMakeRange(NSNotFound, 0);
 
@@ -2874,18 +2961,15 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
   if (IsIMEComposing() && aReplacementRange &&
       aReplacementRange->location != NSNotFound &&
       !NSEqualRanges(MarkedRange(), *aReplacementRange)) {
-    bool ignoreIMECommit = mIgnoreIMECommit;
+    AutoRestore<bool> ignoreIMECommit(mIgnoreIMECommit);
     mIgnoreIMECommit = false;
-    DispatchCompositionCommitEvent();
-    mIgnoreIMECommit = ignoreIMECommit;
-    if (Destroyed()) {
+    if (!DispatchCompositionCommitEvent()) {
       MOZ_LOG(gLog, LogLevel::Info,
         ("%p IMEInputHandler::SetMarkedText, "
          "destroyed by commiting composition for setting replacement range",
          this));
       return;
     }
-    OnEndIMEComposition();
   }
 
   nsString str;
@@ -2903,53 +2987,30 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
 
     mMarkedRange.location = SelectedRange().location;
 
-    WidgetCompositionEvent compStart(true, eCompositionStart, mWidget);
-    InitCompositionEvent(compStart);
-
-    DispatchEvent(compStart);
-    if (Destroyed()) {
+    if (!DispatchCompositionStartEvent()) {
       MOZ_LOG(gLog, LogLevel::Info,
-        ("%p IMEInputHandler::SetMarkedText, "
-         "destroyed by compositionstart event", this));
+        ("%p IMEInputHandler::SetMarkedText, cannot continue handling "
+         "composition after dispatching compositionstart", this));
       return;
     }
-
-    OnStartIMEComposition();
-  }
-
-  if (!IsIMEComposing()) {
-    return;
   }
 
   if (!str.IsEmpty()) {
-    OnUpdateIMEComposition([aAttrString string]);
-
-    // Set temprary range for Apple Japanese IME with e10s because
-    // SelectedRange may return invalid range until OnSelectionChange is
-    // called from content process.
-    // This value will be updated by OnSelectionChange soon.
-    mSelectedRange.location = aSelectedRange.location + mMarkedRange.location;
-    mSelectedRange.length = aSelectedRange.length;
-
-    DispatchCompositionChangeEvent(str, aAttrString, aSelectedRange);
-    if (Destroyed()) {
+    if (!DispatchCompositionChangeEvent(str, aAttrString, aSelectedRange)) {
       MOZ_LOG(gLog, LogLevel::Info,
-        ("%p IMEInputHandler::SetMarkedText, "
-         "destroyed by compositionchange event", this));
+        ("%p IMEInputHandler::SetMarkedText, cannot continue handling "
+         "composition after dispatching compositionchange", this));
     }
     return;
   }
 
   // If the composition string becomes empty string, we should commit
   // current composition.
-  DispatchCompositionCommitEvent(&EmptyString());
-  if (Destroyed()) {
+  if (!DispatchCompositionCommitEvent(&EmptyString())) {
     MOZ_LOG(gLog, LogLevel::Info,
       ("%p IMEInputHandler::SetMarkedText, "
        "destroyed by compositioncommit event", this));
-    return;
   }
-  OnEndIMEComposition();
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -3002,6 +3063,40 @@ IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange,
   }
 
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
+
+  // If we're in composing, the queried range may be in the composition string.
+  // In such case, we should use mIMECompositionString since if the composition
+  // string is handled by a remote process, the content cache may be out of
+  // date.
+  NSUInteger compositionLength =
+    mIMECompositionString ? [mIMECompositionString length] : 0;
+  if (mIMECompositionStart != UINT32_MAX &&
+      mIMECompositionStart >= aRange.location &&
+      mIMECompositionStart + compositionLength <=
+        aRange.location + aRange.length) {
+    NSRange range =
+      NSMakeRange(aRange.location - mIMECompositionStart, aRange.length);
+    NSString* nsstr = [mIMECompositionString substringWithRange:range];
+    NSMutableAttributedString* result =
+      [[[NSMutableAttributedString alloc] initWithString:nsstr
+                                              attributes:nil] autorelease];
+    // XXX We cannot return font information in this case.  However, this
+    //     case must occur only when IME tries to confirm if composing string
+    //     is handled as expected.
+    if (aActualRange) {
+      *aActualRange = aRange;
+    }
+
+    if (MOZ_LOG_TEST(gLog, LogLevel::Info)) {
+      nsAutoString str;
+      nsCocoaUtils::GetStringForNSString(nsstr, str);
+      MOZ_LOG(gLog, LogLevel::Info,
+        ("%p IMEInputHandler::GetAttributedSubstringFromRange, "
+         "computed with mIMECompositionString (result string=\"%s\")",
+         this, NS_ConvertUTF16toUTF8(str).get()));
+    }
+    return result;
+  }
 
   nsAutoString str;
   WidgetQueryContentEvent textContent(true, eQueryTextContent, mWidget);
@@ -3307,12 +3402,17 @@ IMEInputHandler::GetValidAttributesForMarkedText()
  ******************************************************************************/
 
 IMEInputHandler::IMEInputHandler(nsChildView* aWidget,
-                                 NSView<mozView> *aNativeView) :
-  TextInputHandlerBase(aWidget, aNativeView),
-  mPendingMethods(0), mIMECompositionString(nullptr),
-  mIsIMEComposing(false), mIsIMEEnabled(true),
-  mIsASCIICapableOnly(false), mIgnoreIMECommit(false),
-  mIsInFocusProcessing(false), mIMEHasFocus(false)
+                                 NSView<mozView> *aNativeView)
+  : TextInputHandlerBase(aWidget, aNativeView)
+  , mPendingMethods(0)
+  , mIMECompositionString(nullptr)
+  , mIMECompositionStart(UINT32_MAX)
+  , mIsIMEComposing(false)
+  , mIsIMEEnabled(true)
+  , mIsASCIICapableOnly(false)
+  , mIgnoreIMECommit(false)
+  , mIsInFocusProcessing(false)
+  , mIMEHasFocus(false)
 {
   InitStaticMembers();
 
@@ -3330,6 +3430,10 @@ IMEInputHandler::~IMEInputHandler()
   }
   if (sFocusedIMEHandler == this) {
     sFocusedIMEHandler = nullptr;
+  }
+  if (mIMECompositionString) {
+    [mIMECompositionString release];
+    mIMECompositionString = nullptr;
   }
 }
 
@@ -3383,73 +3487,12 @@ IMEInputHandler::OnDestroyWidget(nsChildView* aDestroyingWidget)
   if (IsIMEComposing()) {
     // If our view is in the composition, we should clean up it.
     CancelIMEComposition();
-    OnEndIMEComposition();
   }
 
   mSelectedRange.location = NSNotFound; // Marking dirty
   mIMEHasFocus = false;
 
   return true;
-}
-
-void
-IMEInputHandler::OnStartIMEComposition()
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  MOZ_LOG(gLog, LogLevel::Info,
-    ("%p IMEInputHandler::OnStartIMEComposition, mView=%p, mWidget=%p"
-     "inputContext=%p, mIsIMEComposing=%s",
-     this, mView, mWidget, mView ? [mView inputContext] : nullptr,
-     TrueOrFalse(mIsIMEComposing)));
-
-  NS_ASSERTION(!mIsIMEComposing, "There is a composition already");
-  mIsIMEComposing = true;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-void
-IMEInputHandler::OnUpdateIMEComposition(NSString* aIMECompositionString)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  MOZ_LOG(gLog, LogLevel::Info,
-    ("%p IMEInputHandler::OnUpdateIMEComposition, mView=%p, mWidget=%p, "
-     "inputContext=%p, mIsIMEComposing=%s, aIMECompositionString=\"%s\"",
-     this, mView, mWidget, mView ? [mView inputContext] : nullptr,
-     TrueOrFalse(mIsIMEComposing), GetCharacters(aIMECompositionString)));
-
-  NS_ASSERTION(mIsIMEComposing, "We're not in composition");
-
-  if (mIMECompositionString)
-    [mIMECompositionString release];
-  mIMECompositionString = [aIMECompositionString retain];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-void
-IMEInputHandler::OnEndIMEComposition()
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  MOZ_LOG(gLog, LogLevel::Info,
-    ("%p IMEInputHandler::OnEndIMEComposition, mView=%p, mWidget=%p, "
-     "inputContext=%p, mIsIMEComposing=%s",
-     this, mView, mWidget, mView ? [mView inputContext] : nullptr,
-     TrueOrFalse(mIsIMEComposing)));
-
-  NS_ASSERTION(mIsIMEComposing, "We're not in composition");
-
-  mIsIMEComposing = false;
-
-  if (mIMECompositionString) {
-    [mIMECompositionString release];
-    mIMECompositionString = nullptr;
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 void
