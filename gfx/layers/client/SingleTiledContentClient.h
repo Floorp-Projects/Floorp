@@ -119,6 +119,7 @@ protected:
   }
 
 public:
+  static bool ClientSupportsLayerSize(const IntSize& aSize, ClientLayerManager* aManager);
 
   virtual void ClearCachedResources() override;
 
@@ -126,6 +127,8 @@ public:
 
   virtual ClientTiledLayerBuffer* GetTiledBuffer() override { return mTiledBuffer; }
   virtual ClientTiledLayerBuffer* GetLowPrecisionTiledBuffer() override { return nullptr; }
+
+  virtual bool SupportsLayerSize(const IntSize& aSize, ClientLayerManager* aManager) const override;
 
 private:
   nsRefPtr<ClientSingleTiledLayerBuffer> mTiledBuffer;
