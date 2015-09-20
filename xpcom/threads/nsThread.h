@@ -105,10 +105,6 @@ protected:
   }
 
   // Wrappers for event queue methods:
-  bool GetEvent(bool aMayWait, nsIRunnable** aEvent)
-  {
-    return mEvents->GetEvent(aMayWait, aEvent);
-  }
   nsresult PutEvent(nsIRunnable* aEvent, nsNestedEventTarget* aTarget);
   nsresult PutEvent(already_AddRefed<nsIRunnable>&& aEvent, nsNestedEventTarget* aTarget);
 
