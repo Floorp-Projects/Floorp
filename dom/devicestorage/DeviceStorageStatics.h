@@ -30,6 +30,7 @@ public:
   static void AddListener(nsDOMDeviceStorage* aListener);
   static void RemoveListener(nsDOMDeviceStorage* aListener);
 
+  static bool LowDiskSpace();
   static bool IsPromptTesting();
   static void GetWritableName(nsString& aName);
   static void SetWritableName(const nsAString& aName);
@@ -92,6 +93,7 @@ private:
 
   bool mInitialized;
   bool mPromptTesting;
+  bool mLowDiskSpace;
   nsString mWritableName;
 
   static StaticRefPtr<DeviceStorageStatics> sInstance;

@@ -3416,6 +3416,7 @@ GetElementIC::attachGetProp(JSContext* cx, HandleScript outerScript, IonScript* 
             JitSpew(JitSpew_IonIC, "GETELEM uncacheable property");
             return true;
         }
+        MOZ_ASSERT(monitoredResult());
     } else if (obj->is<UnboxedPlainObject>()) {
         MOZ_ASSERT(canCache == GetPropertyIC::CanAttachNone);
         const UnboxedLayout::Property* property =

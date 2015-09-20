@@ -28,6 +28,7 @@ Cu.import("resource://gre/modules/Promise.jsm");
 
 const {PushServiceWebSocket} = Cu.import("resource://gre/modules/PushServiceWebSocket.jsm");
 const {PushServiceHttp2} = Cu.import("resource://gre/modules/PushServiceHttp2.jsm");
+const {PushCrypto} = Cu.import("resource://gre/modules/PushCrypto.jsm");
 
 // Currently supported protocols: WebSocket.
 const CONNECTION_PROTOCOLS = [PushServiceWebSocket, PushServiceHttp2];
@@ -710,11 +711,11 @@ this.PushService = {
   _notifyAllAppsRegister: function() {
     debug("notifyAllAppsRegister()");
     // records are objects describing the registration as stored in IndexedDB.
-    return this._db.getAllUnexpired().then(records =>
-      records.forEach(record =>
-        this._notifySubscriptionChangeObservers(record)
-      )
-    );
+    return this._db.getAllUnexpired().then(records => {
+      records.forEach(record => {
+        this._notifySubscriptionChangeObservers(record);
+      });
+    });
   },
 
   dropRegistrationAndNotifyApp: function(aKeyId) {
@@ -730,9 +731,31 @@ this.PushService = {
       .then(record => this._notifySubscriptionChangeObservers(record));
   },
 
+  ensureP256dhKey: function(record) {
+    if (record.p256dhPublicKey && record.p256dhPrivateKey) {
+      return Promise.resolve(record);
+    }
+    // We do not have a encryption key. so we need to generate it. This
+    // is only going to happen on db upgrade from version 4 to higher.
+    return PushCrypto.generateKeys()
+      .then(exportedKeys => {
+        return this.updateRecordAndNotifyApp(record.keyID, record => {
+          record.p256dhPublicKey = exportedKeys[0];
+          record.p256dhPrivateKey = exportedKeys[1];
+          return record;
+        });
+      }, error => {
+        return this.dropRegistrationAndNotifyApp(record.keyID).then(
+          () => Promise.reject(error));
+      });
+  },
+
   updateRecordAndNotifyApp: function(aKeyID, aUpdateFunc) {
     return this._db.update(aKeyID, aUpdateFunc)
-      .then(record => this._notifySubscriptionChangeObservers(record));
+      .then(record => {
+        this._notifySubscriptionChangeObservers(record);
+        return record;
+      });
   },
 
   _recordDidNotNotify: function(reason) {
@@ -749,13 +772,14 @@ this.PushService = {
    *
    * @param {String} keyID The push registration ID.
    * @param {String} message The message contents.
+   * @param {Object} cryptoParams The message encryption settings.
    * @param {Function} updateFunc A function that receives the existing
    *  registration record as its argument, and returns a new record. If the
    *  function returns `null` or `undefined`, the record will not be updated.
    *  `PushServiceWebSocket` uses this to drop incoming updates with older
    *  versions.
    */
-  receivedPushMessage: function(keyID, message, updateFunc) {
+  receivedPushMessage: function(keyID, message, cryptoParams, updateFunc) {
     debug("receivedPushMessage()");
     Services.telemetry.getHistogramById("PUSH_API_NOTIFICATION_RECEIVED").add();
 
@@ -779,10 +803,11 @@ this.PushService = {
           this._recordDidNotNotify(kDROP_NOTIFICATION_REASON_NO_VERSION_INCREMENT);
           return null;
         }
-        // FIXME(nsm): WHY IS expired checked here but then also checked in the next case?
+        // Because `unregister` is advisory only, we can still receive messages
+        // for stale Simple Push registrations from the server. To work around
+        // this, we check if the record has expired before *and* after updating
+        // the quota.
         if (newRecord.isExpired()) {
-          // Because `unregister` is advisory only, we can still receive messages
-          // for stale registrations from the server.
           debug("receivedPushMessage: Ignoring update for expired key ID " + keyID);
           return null;
         }
@@ -794,20 +819,33 @@ this.PushService = {
       if (!record) {
         return notified;
       }
-
-      if (shouldNotify) {
-        notified = this._notifyApp(record, message);
+      let decodedPromise;
+      if (cryptoParams) {
+        decodedPromise = PushCrypto.decodeMsg(
+          message,
+          record.p256dhPrivateKey,
+          cryptoParams.dh,
+          cryptoParams.salt,
+          cryptoParams.rs
+        );
+      } else {
+        decodedPromise = Promise.resolve(null);
       }
-      if (record.isExpired()) {
-        this._recordDidNotNotify(kDROP_NOTIFICATION_REASON_EXPIRED);
-        // Drop the registration in the background. If the user returns to the
-        // site, the service worker will be notified on the next `idle-daily`
-        // event.
-        this._sendUnregister(record).catch(error => {
-          debug("receivedPushMessage: Unregister error: " + error);
-        });
-      }
-      return notified;
+      return decodedPromise.then(message => {
+        if (shouldNotify) {
+          notified = this._notifyApp(record, message);
+        }
+        if (record.isExpired()) {
+          this._recordDidNotNotify(kDROP_NOTIFICATION_REASON_EXPIRED);
+          // Drop the registration in the background. If the user returns to the
+          // site, the service worker will be notified on the next `idle-daily`
+          // event.
+          this._sendUnregister(record).catch(error => {
+            debug("receivedPushMessage: Unregister error: " + error);
+          });
+        }
+        return notified;
+      });
     }).catch(error => {
       debug("receivedPushMessage: Error notifying app: " + error);
     });
@@ -827,7 +865,16 @@ this.PushService = {
                          .createInstance(Ci.nsIPushObserverNotification);
     notification.pushEndpoint = aPushRecord.pushEndpoint;
     notification.version = aPushRecord.version;
-    notification.data = message;
+
+    let payload = ArrayBuffer.isView(message) ?
+                  new Uint8Array(message.buffer) : message;
+    if (payload) {
+      notification.data = "";
+      for (let i = 0; i < payload.length; i++) {
+        notification.data += String.fromCharCode(payload[i]);
+      }
+    }
+
     notification.lastPush = aPushRecord.lastPush;
     notification.pushCount = aPushRecord.pushCount;
 
@@ -843,9 +890,8 @@ this.PushService = {
       return false;
     }
 
-    // TODO data.
     let data = {
-      payload: message,
+      payload: payload,
       originAttributes: aPushRecord.originAttributes,
       scope: aPushRecord.scope
     };
