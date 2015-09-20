@@ -2058,7 +2058,7 @@ DocAccessible::ValidateARIAOwned()
     for (uint32_t idx = 0; idx < childEls->Length(); idx++) {
       nsIContent* childEl = childEls->ElementAt(idx);
       Accessible* child = GetAccessible(childEl);
-      if (child && !child->GetFrame()) {
+      if (child && child->IsInDocument() && !child->GetFrame()) {
         UpdateTreeOnRemoval(child->Parent(), childEl);
       }
     }
