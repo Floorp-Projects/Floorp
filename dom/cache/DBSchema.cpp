@@ -275,7 +275,12 @@ static_assert(nsIContentPolicy::TYPE_INVALID == 0 &&
               nsIContentPolicy::TYPE_INTERNAL_TRACK == 32 &&
               nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST == 33 &&
               nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE == 34 &&
-              nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER == 35,
+              nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER == 35 &&
+              nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD == 36 &&
+              nsIContentPolicy::TYPE_INTERNAL_IMAGE == 37 &&
+              nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD == 38 &&
+              nsIContentPolicy::TYPE_INTERNAL_STYLESHEET == 39 &&
+              nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD == 40,
               "nsContentPolicyType values are as expected");
 
 namespace {
