@@ -359,6 +359,7 @@ loop.shared.views = (function(_, mozL10n) {
       publishStream: React.PropTypes.func.isRequired,
       screenShare: React.PropTypes.object,
       settingsMenuItems: React.PropTypes.array,
+      show: React.PropTypes.bool.isRequired,
       video: React.PropTypes.object.isRequired
     },
 
@@ -440,6 +441,10 @@ loop.shared.views = (function(_, mozL10n) {
     },
 
     render: function() {
+      if (!this.props.show) {
+        return null;
+      }
+
       var cx = React.addons.classSet;
       var conversationToolbarCssClasses = cx({
         "conversation-toolbar": true,
