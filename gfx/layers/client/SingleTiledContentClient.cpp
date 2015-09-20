@@ -40,6 +40,19 @@ SingleTiledContentClient::UpdatedBuffer(TiledBufferType aType)
   mTiledBuffer->ClearPaintedRegion();
 }
 
+/* static */ bool
+SingleTiledContentClient::ClientSupportsLayerSize(const IntSize& aSize, ClientLayerManager* aManager)
+{
+  int32_t maxTextureSize = aManager->GetMaxTextureSize();
+  return aSize.width <= maxTextureSize && aSize.height <= maxTextureSize;
+}
+
+bool
+SingleTiledContentClient::SupportsLayerSize(const IntSize& aSize, ClientLayerManager* aManager) const
+{
+  return ClientSupportsLayerSize(aSize, aManager);
+}
+
 ClientSingleTiledLayerBuffer::ClientSingleTiledLayerBuffer(ClientTiledPaintedLayer* aPaintedLayer,
                                                            CompositableClient* aCompositableClient,
                                                            ClientLayerManager* aManager)
