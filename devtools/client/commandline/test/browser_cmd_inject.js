@@ -46,8 +46,8 @@ function test() {
         setup:    'inject http://example.com/browser/devtools/client/commandline/test/browser_cmd_inject.js',
         check: {
           input:  'inject http://example.com/browser/devtools/client/commandline/test/browser_cmd_inject.js',
-          markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
-          hints:                                                                                            '',
+          markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
+          hints:                                                                                           '',
           status: 'VALID',
           args: {
             library: {
@@ -61,7 +61,7 @@ function test() {
           }
         },
         exec: {
-          output: [ /http:\/\/example.com\/browser\/browser\/devtools\/commandline\/test\/browser_cmd_inject.js loaded/ ]
+          output: [ /http:\/\/example.com\/browser\/devtools\/client\/commandline\/test\/browser_cmd_inject.js loaded/ ]
         }
       }
     ]);
