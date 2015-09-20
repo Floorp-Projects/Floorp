@@ -708,16 +708,13 @@ describe("loop.roomViews", function () {
         expect(view.getDOMNode().querySelector(".room-context")).to.not.eql(null);
       });
 
-      it("should hide the form when the edit button is clicked again", function() {
+      it("should not have a settings menu when the edit button is clicked", function() {
         view = mountTestComponent();
 
         var editButton = view.getDOMNode().querySelector(".settings-menu > li.entry-settings-edit");
         React.addons.TestUtils.Simulate.click(editButton);
 
-        // Click again.
-        React.addons.TestUtils.Simulate.click(editButton);
-
-        expect(view.getDOMNode().querySelector(".room-context")).to.eql(null);
+        expect(view.getDOMNode().querySelector(".settings-menu")).to.eql(null);
       });
     });
   });
