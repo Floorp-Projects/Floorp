@@ -358,7 +358,7 @@ nsThread::ThreadFunc(void* aArg)
 
   // Wait for and process startup event
   nsCOMPtr<nsIRunnable> event;
-  if (!self->GetEvent(true, getter_AddRefs(event))) {
+  if (!self->mEvents->GetEvent(true, getter_AddRefs(event))) {
     NS_WARNING("failed waiting for thread startup event");
     return;
   }
