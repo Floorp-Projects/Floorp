@@ -37,7 +37,6 @@ nsEventQueueBase<MonitorType>::nsEventQueueBase()
 }
 
 template nsEventQueueBase<Monitor>::nsEventQueueBase();
-template nsEventQueueBase<ReentrantMonitor>::nsEventQueueBase();
 
 nsEventQueue::nsEventQueue()
   : mMonitor("[nsEventQueue.mMonitor]")
@@ -58,7 +57,6 @@ nsEventQueueBase<MonitorType>::~nsEventQueueBase()
 }
 
 template nsEventQueueBase<Monitor>::~nsEventQueueBase();
-template nsEventQueueBase<ReentrantMonitor>::~nsEventQueueBase();
 
 template<typename MonitorType>
 bool
@@ -94,8 +92,6 @@ nsEventQueueBase<MonitorType>::GetEvent(bool aMayWait, nsIRunnable** aResult,
 
 template bool nsEventQueueBase<Monitor>::GetEvent(bool aMayWait, nsIRunnable** aResult,
                                                   MonitorAutoLock& aProofOfLock);
-template bool nsEventQueueBase<ReentrantMonitor>::GetEvent(bool aMayWait, nsIRunnable** aResult,
-                                                           ReentrantMonitorAutoEnter& aProofOfLock);
 
 bool
 nsEventQueue::GetEvent(bool aMayWait, nsIRunnable** aEvent)
@@ -137,8 +133,6 @@ nsEventQueueBase<MonitorType>::PutEvent(
 
 template void nsEventQueueBase<Monitor>::PutEvent(already_AddRefed<nsIRunnable>&& aRunnable,
                                                   MonitorAutoLock& aProofOfLock);
-template void nsEventQueueBase<ReentrantMonitor>::PutEvent(already_AddRefed<nsIRunnable>&& aRunnable,
-                                                           ReentrantMonitorAutoEnter& aProofOfLock);
 
 void
 nsEventQueue::PutEvent(nsIRunnable* aRunnable)
@@ -199,7 +193,6 @@ nsEventQueueBase<MonitorType>::Count(MonitorAutoEnterType& aProofOfLock)
 }
 
 template size_t nsEventQueueBase<Monitor>::Count(MonitorAutoLock& aProofOfLock);
-template size_t nsEventQueueBase<ReentrantMonitor>::Count(ReentrantMonitorAutoEnter& aProofOfLock);
 
 size_t
 nsEventQueue::Count()
