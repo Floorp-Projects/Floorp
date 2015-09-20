@@ -3,8 +3,7 @@
 
 "use strict";
 
-const HOST = 'mochi.test:8888';
-const URI  = "http://" + HOST + "/browser/devtools/client/sourceeditor/test/vimemacs.html";
+const URI = "chrome://mochitests/content/browser/devtools/client/sourceeditor/test/vimemacs.html";
 loadHelperScript("helper_codemirror_runner.js");
 
 function test() {

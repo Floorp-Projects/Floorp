@@ -2,7 +2,7 @@ let Cu = Components.utils;
 let Cc = Components.classes;
 let Ci = Components.interfaces;
 
-Cu.import("resource://gre/modules/Services.jsm");
+let { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 // Always log packets when running tests.
 Services.prefs.setBoolPref("devtools.debugger.log", true);
@@ -10,13 +10,12 @@ SimpleTest.registerCleanupFunction(function() {
   Services.prefs.clearUserPref("devtools.debugger.log");
 });
 
-Cu.import("resource://gre/modules/devtools/shared/client/dbg-client.jsm");
-Cu.import("resource://gre/modules/devtools/server/dbg-server.jsm");
+let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
+let { require } =
+  Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 
-Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/devtools/shared/Loader.jsm");
-let { require } = devtools;
-
+let { DebuggerClient } = require("devtools/shared/client/main");
+let { DebuggerServer } = require("devtools/server/main");
 let { MemprofFront } = require("devtools/server/actors/memprof");
 
 function startServerAndGetSelectedTabMemprof() {

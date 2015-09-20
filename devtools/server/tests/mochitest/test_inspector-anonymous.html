@@ -19,11 +19,10 @@ window.onload = function() {
     require("devtools/server/actors/inspector");
   const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-  Services.prefs.setBoolPref("dom.webcomponents.enabled", true);
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.webcomponents.enabled", true]
+  ]});
   SimpleTest.waitForExplicitFinish();
-  SimpleTest.registerCleanupFunction(() => {
-    Services.prefs.clearUserPref("dom.webcomponents.enabled");
-  });
 
   let gWalker = null;
   let gClient = null;
