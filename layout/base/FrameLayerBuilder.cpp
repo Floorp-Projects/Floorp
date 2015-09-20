@@ -2097,18 +2097,30 @@ ContainerState::GetLayerCreationHint(const nsIFrame* aAnimatedGeometryRoot)
   if (mParameters.mInLowPrecisionDisplayPort) {
     return LayerManager::SCROLLABLE;
   }
-  nsIFrame* animatedGeometryRootParent = aAnimatedGeometryRoot->GetParent();
-  nsIScrollableFrame* scrollable = do_QueryFrame(animatedGeometryRootParent);
-  if (scrollable
-#ifdef MOZ_B2G
-      && scrollable->WantAsyncScroll()
-#endif
-     ) {
-    // WantAsyncScroll() returns false when the frame has overflow:hidden,
-    // so we won't create tiled layers for overflow:hidden frames even if
-    // they have a display port. The main purpose of the WantAsyncScroll check
-    // is to allow the B2G camera app to use hardware composer for compositing.
-    return LayerManager::SCROLLABLE;
+
+  // Check whether there's any active scroll frame on the animated geometry
+  // root chain.
+  nsIFrame* fParent;
+  for (const nsIFrame* f = aAnimatedGeometryRoot;
+       f != mContainerAnimatedGeometryRoot;
+       f = nsLayoutUtils::GetAnimatedGeometryRootForFrame(mBuilder,
+           fParent, mContainerAnimatedGeometryRoot)) {
+    fParent = nsLayoutUtils::GetCrossDocParentFrame(f);
+    if (!fParent) {
+      break;
+    }
+    nsIScrollableFrame* scrollable = do_QueryFrame(fParent);
+    if (scrollable
+  #ifdef MOZ_B2G
+        && scrollable->WantAsyncScroll()
+  #endif
+       ) {
+      // WantAsyncScroll() returns false when the frame has overflow:hidden,
+      // so we won't create tiled layers for overflow:hidden frames even if
+      // they have a display port. The main purpose of the WantAsyncScroll check
+      // is to allow the B2G camera app to use hardware composer for compositing.
+      return LayerManager::SCROLLABLE;
+    }
   }
   return LayerManager::NONE;
 }
