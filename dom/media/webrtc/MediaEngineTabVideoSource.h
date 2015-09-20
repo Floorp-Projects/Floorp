@@ -29,6 +29,9 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
     virtual void SetDirectListeners(bool aHasDirectListeners) override {};
     virtual void NotifyPull(mozilla::MediaStreamGraph*, mozilla::SourceMediaStream*, mozilla::TrackID, mozilla::StreamTime) override;
     virtual nsresult Stop(mozilla::SourceMediaStream*, mozilla::TrackID) override;
+    virtual nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
+                             const mozilla::MediaEnginePrefs& aPrefs,
+                             const nsString& aDeviceId) override;
     virtual nsresult Config(bool, uint32_t, bool, uint32_t, bool, uint32_t, int32_t) override;
     virtual bool IsFake() override;
     virtual const dom::MediaSourceEnum GetMediaSource() override {

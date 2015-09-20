@@ -119,6 +119,7 @@ using dom::File;
 using dom::MediaStreamConstraints;
 using dom::MediaTrackConstraintSet;
 using dom::MediaTrackConstraints;
+using dom::MediaStreamTrack;
 using dom::MediaStreamError;
 using dom::GetUserMediaRequest;
 using dom::Sequence;
@@ -229,7 +230,8 @@ public:
     MediaEngineSource* aVideoSource,
     bool aBool,
     uint64_t aWindowID,
-    already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError)
+    already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError,
+    const dom::MediaTrackConstraints& aConstraints = dom::MediaTrackConstraints())
     : mType(aType)
     , mStream(aStream)
     , mOnTracksAvailableCallback(aOnTracksAvailableCallback)
@@ -239,6 +241,7 @@ public:
     , mBool(aBool)
     , mWindowID(aWindowID)
     , mOnFailure(aError)
+    , mConstraints(aConstraints)
   {}
 
   ~MediaOperationTask()
@@ -332,6 +335,32 @@ public:
         }
         break;
 
+      case MEDIA_APPLYCONSTRAINTS_TRACK:
+        {
+          nsRefPtr<MediaManager> mgr = MediaManager::GetInstance();
+
+          NS_ASSERTION(!NS_IsMainThread(), "Never call on main thread");
+          if (mAudioSource) {
+            mAudioSource->Restart(mConstraints, mgr->mPrefs);
+          }
+          if (mVideoSource) {
+            mVideoSource->Restart(mConstraints, mgr->mPrefs);
+          }
+
+          // Need to dispatch something back to main to resolve promise
+          // redo this with pledge?
+          nsIRunnable *event =
+            new GetUserMediaNotificationEvent(mListener,
+                                              GetUserMediaNotificationEvent::APPLIED_CONSTRAINTS,
+                                              mAudioSource != nullptr,
+                                              mVideoSource != nullptr,
+                                              mWindowID);
+          // event must always be released on mainthread due to the JS callbacks
+          // in the TracksAvailableCallback
+          NS_DispatchToMainThread(event);
+        }
+        break;
+
       case MEDIA_DIRECT_LISTENERS:
         {
           NS_ASSERTION(!NS_IsMainThread(), "Never call on main thread");
@@ -357,6 +386,7 @@ private:
   bool mBool;
   uint64_t mWindowID;
   nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mOnFailure;
+  dom::MediaTrackConstraints mConstraints;
 };
 
 /**
@@ -615,6 +645,16 @@ nsresult AudioDevice::Allocate(const dom::MediaTrackConstraints &aConstraints,
   return GetSource()->Allocate(aConstraints, aPrefs, mID);
 }
 
+nsresult VideoDevice::Restart(const dom::MediaTrackConstraints &aConstraints,
+                              const MediaEnginePrefs &aPrefs) {
+  return GetSource()->Restart(aConstraints, aPrefs, mID);
+}
+
+nsresult AudioDevice::Restart(const dom::MediaTrackConstraints &aConstraints,
+                              const MediaEnginePrefs &aPrefs) {
+  return GetSource()->Restart(aConstraints, aPrefs, mID);
+}
+
 /**
  * A subclass that we only use to stash internal pointers to MediaStreamGraph objects
  * that need to be cleaned up.
@@ -693,6 +733,29 @@ public:
         LOG(("StopTrack(%d) on non-existant track", aTrackID));
       }
     }
+  }
+
+  virtual already_AddRefed<Promise>
+  ApplyConstraintsToTrack(TrackID aTrackID,
+                          const MediaTrackConstraints& aConstraints,
+                          ErrorResult &aRv) override
+  {
+    if (mSourceStream) {
+      nsRefPtr<dom::MediaStreamTrack> track = GetDOMTrackFor(aTrackID);
+      if (track) {
+        mListener->ApplyConstraintsToTrack(aTrackID,
+                                           !!track->AsAudioStreamTrack(),
+                                           aConstraints);
+      } else {
+        LOG(("ApplyConstraintsToTrack(%d) on non-existant track", aTrackID));
+      }
+    }
+
+    nsPIDOMWindow* window = static_cast<nsPIDOMWindow*>(mWindow.get());
+    nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(window);
+    nsRefPtr<Promise> p = Promise::Create(go, aRv);
+    p->MaybeResolve(false);
+    return p.forget();
   }
 
 #if 0
@@ -3126,6 +3189,31 @@ GetUserMediaCallbackMediaStreamListener::StopSharing()
   }
 }
 
+// ApplyConstraints for track
+
+void
+GetUserMediaCallbackMediaStreamListener::ApplyConstraintsToTrack(
+    TrackID aID,
+    bool aIsAudio,
+    const MediaTrackConstraints& aConstraints)
+{
+  if (((aIsAudio && mAudioSource) ||
+       (!aIsAudio && mVideoSource)) && !mStopped)
+  {
+    // XXX to support multiple tracks of a type in a stream, this should key off
+    // the TrackID and not just the type
+    MediaManager::PostTask(FROM_HERE,
+      new MediaOperationTask(MEDIA_APPLYCONSTRAINTS_TRACK,
+                             this, nullptr, nullptr,
+                             aIsAudio  ? mAudioSource.get() : nullptr,
+                             !aIsAudio ? mVideoSource.get() : nullptr,
+                             mFinished, mWindowID, nullptr, aConstraints));
+  } else {
+    LOG(("gUM track %d applyConstraints, but we don't have type %s",
+         aID, aIsAudio ? "audio" : "video"));
+  }
+}
+
 // Stop backend for track
 
 void
@@ -3209,6 +3297,9 @@ GetUserMediaNotificationEvent::Run()
     break;
   case STOPPED_TRACK:
     msg = NS_LITERAL_STRING("shutdown");
+    break;
+  case APPLIED_CONSTRAINTS:
+    msg = NS_LITERAL_STRING("constraints-changed");
     break;
   }
 

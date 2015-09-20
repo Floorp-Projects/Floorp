@@ -292,6 +292,15 @@ MediaEngineTabVideoSource::Stop(mozilla::SourceMediaStream*, mozilla::TrackID)
 }
 
 nsresult
+MediaEngineTabVideoSource::Restart(const dom::MediaTrackConstraints& aConstraints,
+                                   const mozilla::MediaEnginePrefs& aPrefs,
+                                   const nsString& aDeviceId)
+{
+  // TODO
+  return NS_OK;
+}
+
+nsresult
 MediaEngineTabVideoSource::Config(bool, uint32_t, bool, uint32_t, bool, uint32_t, int32_t)
 {
   return NS_OK;
