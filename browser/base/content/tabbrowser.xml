@@ -50,7 +50,7 @@
         <getter><![CDATA[
           if (!this._visibleTabs)
             this._visibleTabs = Array.filter(this.tabs,
-                                             function (tab) !tab.hidden && !tab.closing);
+                                             tab => !tab.hidden && !tab.closing);
           return this._visibleTabs;
         ]]></getter>
       </property>
@@ -2702,7 +2702,7 @@
         <body>
           <![CDATA[
             this.mProgressListeners =
-              this.mProgressListeners.filter(function (l) l != aListener);
+              this.mProgressListeners.filter(l => l != aListener);
          ]]>
         </body>
       </method>
@@ -2719,7 +2719,7 @@
         <body>
         <![CDATA[
           this.mTabsProgressListeners =
-            this.mTabsProgressListeners.filter(function (l) l != aListener);
+            this.mTabsProgressListeners.filter(l => l != aListener);
         ]]>
         </body>
       </method>
@@ -2833,7 +2833,7 @@
        <getter>
           <![CDATA[
             return this._browsers ||
-                   (this._browsers = Array.map(this.tabs, function (tab) tab.linkedBrowser));
+                   (this._browsers = Array.map(this.tabs, tab => tab.linkedBrowser));
           ]]>
         </getter>
       </property>
@@ -5522,7 +5522,9 @@
         // positioned relative to the corner of the new window created upon
         // dragend such that the mouse appears to have the same position
         // relative to the corner of the dragged tab.
-        function clientX(ele) ele.getBoundingClientRect().left;
+        function clientX(ele) {
+          return ele.getBoundingClientRect().left;
+        }
         let tabOffsetX = clientX(tab) - clientX(this);
         tab._dragData = {
           offsetX: event.screenX - window.screenX - tabOffsetX,
