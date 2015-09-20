@@ -47,6 +47,7 @@
 namespace mozilla {
 namespace dom {
 struct MediaStreamConstraints;
+struct MediaTrackConstraints;
 struct MediaTrackConstraintSet;
 } // namespace dom
 
@@ -106,6 +107,9 @@ public:
   void StopSharing();
 
   void StopTrack(TrackID aID, bool aIsAudio);
+
+  void ApplyConstraintsToTrack(TrackID aID, bool aIsAudio,
+                               const dom::MediaTrackConstraints& aConstraints);
 
   // mVideo/AudioSource are set by Activate(), so we assume they're capturing
   // if set and represent a real capture device.
@@ -253,7 +257,8 @@ class GetUserMediaNotificationEvent: public nsRunnable
     enum GetUserMediaStatus {
       STARTING,
       STOPPING,
-      STOPPED_TRACK
+      STOPPED_TRACK,
+      APPLIED_CONSTRAINTS,
     };
     GetUserMediaNotificationEvent(GetUserMediaCallbackMediaStreamListener* aListener,
                                   GetUserMediaStatus aStatus,
@@ -291,7 +296,8 @@ typedef enum {
   MEDIA_START,
   MEDIA_STOP,
   MEDIA_STOP_TRACK,
-  MEDIA_DIRECT_LISTENERS
+  MEDIA_DIRECT_LISTENERS,
+  MEDIA_APPLYCONSTRAINTS_TRACK,
 } MediaOperation;
 
 class MediaManager;
@@ -351,6 +357,8 @@ public:
   Source* GetSource();
   nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                     const MediaEnginePrefs &aPrefs);
+  nsresult Restart(const dom::MediaTrackConstraints &aConstraints,
+                   const MediaEnginePrefs &aPrefs);
 };
 
 class AudioDevice : public MediaDevice
@@ -363,6 +371,8 @@ public:
   Source* GetSource();
   nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                     const MediaEnginePrefs &aPrefs);
+  nsresult Restart(const dom::MediaTrackConstraints &aConstraints,
+                   const MediaEnginePrefs &aPrefs);
 };
 
 // we could add MediaManager if needed

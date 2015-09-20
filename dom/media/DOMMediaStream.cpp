@@ -358,6 +358,14 @@ DOMMediaStream::StopTrack(TrackID aTrackID)
   }
 }
 
+already_AddRefed<Promise>
+DOMMediaStream::ApplyConstraintsToTrack(TrackID aTrackID,
+                                        const MediaTrackConstraints& aConstraints,
+                                        ErrorResult &aRv)
+{
+  return nullptr;
+}
+
 bool
 DOMMediaStream::CombineWithPrincipal(nsIPrincipal* aPrincipal)
 {
