@@ -449,25 +449,6 @@ loop.roomViews = (function(mozL10n) {
       mozLoop.telemetryAddValue("LOOP_ROOM_CONTEXT_CLICK", 1);
     },
 
-    handleCheckboxChange: function(state) {
-      if (state.checked) {
-        // The checkbox was checked, prefill the fields with the values available
-        // in `availableContext`.
-        var context = this.state.availableContext;
-        this.setState({
-          newRoomURL: context.url,
-          newRoomDescription: context.description,
-          newRoomThumbnail: context.previewImage
-        });
-      } else {
-        this.setState({
-          newRoomURL: "",
-          newRoomDescription: "",
-          newRoomThumbnail: ""
-        });
-      }
-    },
-
     handleFormSubmit: function(event) {
       event && event.preventDefault();
 
@@ -516,27 +497,13 @@ loop.roomViews = (function(mozL10n) {
 
       var cx = React.addons.classSet;
       var availableContext = this.state.availableContext;
-      // The checkbox shows as checked when there's already context data
-      // attached to this room.
-      var checked = !!urlDescription;
-      var checkboxLabel = urlDescription || (availableContext && availableContext.url ?
-        availableContext.description : "");
-
       return (
         React.createElement("div", {className: "room-context"}, 
           React.createElement("p", {className: cx({"error": !!this.props.error,
                             "error-display-area": true})}, 
             mozL10n.get("rooms_change_failed_label")
           ), 
-          React.createElement("div", {className: "room-context-label"}, mozL10n.get("context_inroom_label")), 
-          React.createElement(sharedViews.Checkbox, {
-            additionalClass: cx({ hide: !checkboxLabel }), 
-            checked: checked, 
-            disabled: checked, 
-            label: checkboxLabel, 
-            onChange: this.handleCheckboxChange, 
-            useEllipsis: true, 
-            value: location}), 
+          React.createElement("h2", {className: "room-context-header"}, mozL10n.get("context_inroom_header")), 
           React.createElement("form", {onSubmit: this.handleFormSubmit}, 
             React.createElement("input", {className: "room-context-name", 
               maxLength: this.maxRoomNameLength, 
@@ -554,16 +521,17 @@ loop.roomViews = (function(mozL10n) {
               onKeyDown: this.handleTextareaKeyDown, 
               placeholder: mozL10n.get("context_edit_comments_placeholder"), 
               rows: "2", type: "text", 
-              valueLink: this.linkState("newRoomDescription")})
-          ), 
-          React.createElement("button", {className: "btn btn-info", 
-                  disabled: this.props.savingContext, 
-                  onClick: this.handleFormSubmit}, 
-            mozL10n.get("context_save_label2")
-          ), 
-          React.createElement("button", {className: "room-context-btn-close", 
-                  onClick: this.handleCloseClick, 
-                  title: mozL10n.get("cancel_button")})
+              valueLink: this.linkState("newRoomDescription")}), 
+            React.createElement(sharedViews.ButtonGroup, null, 
+              React.createElement(sharedViews.Button, {additionalClass: "button-cancel", 
+                caption: mozL10n.get("context_cancel_label"), 
+                onClick: this.handleCloseClick}), 
+              React.createElement(sharedViews.Button, {additionalClass: "button-accept", 
+                caption: mozL10n.get("context_done_label"), 
+                disabled: this.props.savingContext, 
+                onClick: this.handleFormSubmit})
+            )
+          )
         )
       );
     }
