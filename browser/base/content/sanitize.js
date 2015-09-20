@@ -406,8 +406,8 @@ Sanitizer.prototype = {
 
         let count = 0;
         let countDone = {
-          handleResult : function(aResult) count = aResult,
-          handleError : function(aError) Components.utils.reportError(aError),
+          handleResult : aResult => count = aResult,
+          handleError : aError => Components.utils.reportError(aError),
           handleCompletion :
             function(aReason) { aCallback("formdata", aReason == 0 && count > 0, aArg); }
         };

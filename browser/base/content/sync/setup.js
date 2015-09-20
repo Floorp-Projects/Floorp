@@ -51,7 +51,9 @@ var gSyncSetup = {
     server: false
   },
 
-  get _remoteSites() [Weave.Service.serverURL, RECAPTCHA_DOMAIN],
+  get _remoteSites() {
+    return [Weave.Service.serverURL, RECAPTCHA_DOMAIN];
+  },
 
   get _usingMainServers() {
     if (this._settingUpNew)
@@ -79,7 +81,7 @@ var gSyncSetup = {
       });
     };
     addRem(true);
-    window.addEventListener("unload", function() addRem(false), false);
+    window.addEventListener("unload", () => addRem(false), false);
 
     window.setTimeout(function () {
       // Force Service to be loaded so that engines are registered.
