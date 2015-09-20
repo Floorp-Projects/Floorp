@@ -48,16 +48,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'NetworkStatsService.jsm',
     ]
 
-EXTRA_COMPONENTS += [
-    'TCPServerSocket.js',
-    'TCPSocket.manifest',
-    'TCPSocketParentIntermediary.js',
-]
-
-EXTRA_PP_COMPONENTS += [
-    'TCPSocket.js',
-]
-
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     EXTRA_COMPONENTS += [
         'NetworkStatsManager.js',

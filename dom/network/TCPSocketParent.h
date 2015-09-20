@@ -9,10 +9,8 @@
 
 #include "mozilla/dom/TCPSocketBinding.h"
 #include "mozilla/net/PTCPSocketParent.h"
-#include "nsITCPSocketParent.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMTCPSocket.h"
 #include "js/TypeDecls.h"
 #include "mozilla/net/OfflineObserver.h"
 
