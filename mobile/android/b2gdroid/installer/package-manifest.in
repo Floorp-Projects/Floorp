@@ -423,11 +423,6 @@
 @BINPATH@/components/ActivityWrapper.js
 @BINPATH@/components/ActivityMessageConfigurator.js
 
-@BINPATH@/components/TCPSocket.js
-@BINPATH@/components/TCPSocketParentIntermediary.js
-@BINPATH@/components/TCPServerSocket.js
-@BINPATH@/components/TCPSocket.manifest
-
 #ifdef MOZ_WEBRTC
 @BINPATH@/components/PeerConnection.js
 @BINPATH@/components/PeerConnection.manifest
