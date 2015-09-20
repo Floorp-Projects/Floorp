@@ -589,7 +589,7 @@ nsImageLoadingContent::PolicyTypeForLoad(ImageLoadType aImageLoadType)
 
   MOZ_ASSERT(aImageLoadType == eImageLoadType_Normal,
              "Unknown ImageLoadType type in PolicyTypeForLoad");
-  return nsIContentPolicy::TYPE_IMAGE;
+  return nsIContentPolicy::TYPE_INTERNAL_IMAGE;
 }
 
 int32_t
