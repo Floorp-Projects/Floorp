@@ -300,20 +300,19 @@ MacroAssemblerARM::alu_dbl(Register src1, Imm32 imm, Register dest, ALUOp op,
 {
     if ((s == SetCC && ! condsAreSafe(op)) || !can_dbl(op))
         return false;
+
     ALUOp interop = getDestVariant(op);
     Imm8::TwoImm8mData both = Imm8::EncodeTwoImms(imm.value);
     if (both.fst.invalid)
         return false;
-
-    ScratchRegisterScope scratch(asMasm());
 
     // For the most part, there is no good reason to set the condition codes for
     // the first instruction. We can do better things if the second instruction
     // doesn't have a dest, such as check for overflow by doing first operation
     // don't do second operation if first operation overflowed. This preserves
     // the overflow condition code. Unfortunately, it is horribly brittle.
-    as_alu(scratch, src1, Operand2(both.fst), interop, LeaveCC, c);
-    as_alu(dest, scratch, Operand2(both.snd), op, s, c);
+    as_alu(dest, src1, Operand2(both.fst), interop, LeaveCC, c);
+    as_alu(dest, dest, Operand2(both.snd), op, s, c);
     return true;
 }
 
