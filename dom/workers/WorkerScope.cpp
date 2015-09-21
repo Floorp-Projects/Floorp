@@ -35,6 +35,7 @@
 #include <android/log.h>
 #endif
 
+#include "Crypto.h"
 #include "Principal.h"
 #include "RuntimeService.h"
 #include "ScriptLoader.h"
@@ -76,6 +77,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(WorkerGlobalScope,
                                                   DOMEventTargetHelper)
   tmp->mWorkerPrivate->AssertIsOnWorkerThread();
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsole)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCrypto)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPerformance)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocation)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNavigator)
@@ -88,6 +90,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(WorkerGlobalScope,
                                                 DOMEventTargetHelper)
   tmp->mWorkerPrivate->AssertIsOnWorkerThread();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsole)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mCrypto)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPerformance)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocation)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mNavigator)
@@ -130,6 +133,19 @@ WorkerGlobalScope::GetConsole(ErrorResult& aRv)
   }
 
   return mConsole;
+}
+
+Crypto*
+WorkerGlobalScope::GetCrypto(ErrorResult& aError)
+{
+  mWorkerPrivate->AssertIsOnWorkerThread();
+
+  if (!mCrypto) {
+    mCrypto = new Crypto();
+    mCrypto->Init(this);
+  }
+
+  return mCrypto;
 }
 
 already_AddRefed<CacheStorage>
