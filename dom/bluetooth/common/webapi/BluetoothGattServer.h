@@ -102,6 +102,9 @@ private:
   friend class AddServiceTask;
   friend class RemoveServiceTask;
 
+  void HandleServerRegistered(const BluetoothValue& aValue);
+  void HandleServerUnregistered(const BluetoothValue& aValue);
+  void HandleConnectionStateChanged(const BluetoothValue& aValue);
   void HandleServiceHandleUpdated(const BluetoothValue& aValue);
   void HandleCharacteristicHandleUpdated(const BluetoothValue& aValue);
   void HandleDescriptorHandleUpdated(const BluetoothValue& aValue);
