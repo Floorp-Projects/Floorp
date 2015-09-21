@@ -200,12 +200,54 @@ public:
   }
 };
 
+class ResponseSynthesizer final : public nsIFetchEventDispatcher
+{
+public:
+  ResponseSynthesizer(nsIInterceptedChannel* aChannel,
+                       HttpChannelParent* aParentChannel)
+    : mChannel(aChannel)
+    , mParentChannel(aParentChannel)
+  {
+  }
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIFETCHEVENTDISPATCHER
+
+private:
+  ~ResponseSynthesizer()
+  {
+  }
+
+  nsCOMPtr<nsIInterceptedChannel> mChannel;
+  nsRefPtr<HttpChannelParent> mParentChannel;
+};
+
+NS_IMPL_ISUPPORTS(ResponseSynthesizer, nsIFetchEventDispatcher)
+
 NS_IMETHODIMP
-HttpChannelParent::ChannelIntercepted(nsIInterceptedChannel* aChannel)
+ResponseSynthesizer::Dispatch()
+{
+  mParentChannel->SynthesizeResponse(mChannel);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpChannelParent::ChannelIntercepted(nsIInterceptedChannel* aChannel,
+                                      nsIFetchEventDispatcher** aDispatcher)
+{
+  nsRefPtr<ResponseSynthesizer> dispatcher =
+    new ResponseSynthesizer(aChannel, this);
+  dispatcher.forget(aDispatcher);
+  return NS_OK;
+}
+
+void
+HttpChannelParent::SynthesizeResponse(nsIInterceptedChannel* aChannel)
 {
   if (mShouldSuspendIntercept) {
     mInterceptedChannel = aChannel;
-    return NS_OK;
+    return;
   }
 
   aChannel->SynthesizeStatus(mSynthesizedResponseHead->Status(),
@@ -217,7 +259,6 @@ HttpChannelParent::ChannelIntercepted(nsIInterceptedChannel* aChannel)
   NS_DispatchToCurrentThread(event);
 
   mSynthesizedResponseHead = nullptr;
-  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
