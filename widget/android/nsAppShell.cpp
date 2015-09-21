@@ -253,7 +253,7 @@ nsAppShell::Init()
         mozilla::services::GetObserverService();
     if (obsServ) {
         obsServ->AddObserver(this, "browser-delayed-startup-finished", false);
-        obsServ->AddObserver(this, "profile-do-change", false);
+        obsServ->AddObserver(this, "profile-after-change", false);
         obsServ->AddObserver(this, "xpcom-shutdown", false);
     }
 
@@ -286,7 +286,7 @@ nsAppShell::Observe(nsISupports* aSubject,
         NS_CreateServicesFromCategory("browser-delayed-startup-finished", nullptr,
                                       "browser-delayed-startup-finished");
 
-    } else if (!strcmp(aTopic, "profile-do-change")) {
+    } else if (!strcmp(aTopic, "profile-after-change")) {
         if (jni::IsAvailable()) {
             widget::GeckoThread::SetState(
                     widget::GeckoThread::State::PROFILE_READY());
@@ -305,7 +305,7 @@ nsAppShell::Observe(nsISupports* aSubject,
         nsCOMPtr<nsIObserverService> obsServ =
             mozilla::services::GetObserverService();
         if (obsServ) {
-            obsServ->RemoveObserver(this, "profile-do-change");
+            obsServ->RemoveObserver(this, "profile-after-change");
         }
     }
     return NS_OK;
