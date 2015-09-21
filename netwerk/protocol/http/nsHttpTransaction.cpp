@@ -792,6 +792,8 @@ nsHttpTransaction::WriteSegments(nsAHttpSegmentWriter *writer,
                                  uint32_t count, uint32_t *countWritten)
 {
     static bool reentrantFlag = false;
+    LOG(("nsHttpTransaction::WriteSegments %p reentrantFlag=%d",
+         this, reentrantFlag));
     MOZ_DIAGNOSTIC_ASSERT(!reentrantFlag);
     reentrantFlag = true;
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
