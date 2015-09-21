@@ -492,14 +492,11 @@ var BrowserApp = {
     Tabs.init();
     SearchEngines.init();
 
-    let url = null;
     if ("arguments" in window) {
       if (window.arguments[0])
-        url = window.arguments[0];
+        gScreenWidth = window.arguments[0];
       if (window.arguments[1])
-        gScreenWidth = window.arguments[1];
-      if (window.arguments[2])
-        gScreenHeight = window.arguments[2];
+        gScreenHeight = window.arguments[1];
     }
 
     // XXX maybe we don't do this if the launch was kicked off from external
