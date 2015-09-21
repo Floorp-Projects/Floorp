@@ -10,11 +10,13 @@ use std::net::TcpStream;
 use std::path::PathBuf;
 use std::sync::Mutex;
 use std::thread::sleep_ms;
-
+use hyper::method::Method;
+use regex::Captures;
 use mozrunner::runner::{Runner, FirefoxRunner};
 use mozprofile::preferences::{PrefValue};
 
-use webdriver::command::{WebDriverMessage};
+use webdriver::command::{WebDriverCommand, WebDriverMessage, Parameters,
+                         WebDriverExtensionCommand};
 use webdriver::command::WebDriverCommand::{
     NewSession, DeleteSession, Get, GetCurrentUrl,
     GoBack, GoForward, Refresh, GetTitle, GetWindowHandle,
@@ -41,6 +43,113 @@ use webdriver::common::{
 use webdriver::error::{
     WebDriverResult, WebDriverError, ErrorStatus};
 use webdriver::server::{WebDriverHandler, Session};
+use webdriver::httpapi::{WebDriverExtensionRoute};
+
+pub fn extension_routes() -> Vec<(Method, &'static str, GeckoExtensionRoute)> {
+    return vec![(Method::Get, "/session/{sessionId}/moz/context", GeckoExtensionRoute::GetContext),
+                (Method::Post, "/session/{sessionId}/moz/context", GeckoExtensionRoute::SetContext)]
+}
+
+#[derive(Clone, Copy, PartialEq)]
+pub enum GeckoExtensionRoute {
+    GetContext,
+    SetContext
+}
+
+impl WebDriverExtensionRoute for GeckoExtensionRoute {
+    type Command = GeckoExtensionCommand;
+
+    fn command(&self,
+               _captures: &Captures,
+               body_data: &Json) -> WebDriverResult<WebDriverCommand<GeckoExtensionCommand>> {
+        let command = match self {
+            &GeckoExtensionRoute::GetContext => {
+                GeckoExtensionCommand::GetContext
+            }
+            &GeckoExtensionRoute::SetContext => {
+                let parameters: GeckoContextParameters = try!(Parameters::from_json(&body_data));
+                GeckoExtensionCommand::SetContext(parameters)
+            }
+        };
+        Ok(WebDriverCommand::Extension(command))
+    }
+}
+
+#[derive(Clone, PartialEq)]
+pub enum GeckoExtensionCommand {
+    GetContext,
+    SetContext(GeckoContextParameters),
+}
+
+impl WebDriverExtensionCommand for GeckoExtensionCommand {
+    fn parameters_json(&self) -> Option<Json> {
+        match self {
+            &GeckoExtensionCommand::GetContext => None,
+            &GeckoExtensionCommand::SetContext(ref x) => Some(x.to_json()),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+enum GeckoContext {
+    Content,
+    Chrome
+}
+
+impl ToJson for GeckoContext {
+    fn to_json(&self) -> Json {
+        match self {
+            &GeckoContext::Content => Json::String("content".to_owned()),
+            &GeckoContext::Chrome => Json::String("chrome".to_owned()),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+struct GeckoContextParameters {
+    context: GeckoContext
+}
+
+impl Parameters for GeckoContextParameters {
+    fn from_json(body: &Json) -> WebDriverResult<GeckoContextParameters> {
+        let data = try!(body.as_object().ok_or(
+            WebDriverError::new(ErrorStatus::InvalidArgument,
+                                "Message body was not an object")));
+        let context_value = try!(data.get("context").ok_or(
+            WebDriverError::new(ErrorStatus::InvalidArgument,
+                                "Missing context key")));
+        let value = try!(context_value.as_string().ok_or(
+            WebDriverError::new(
+                ErrorStatus::InvalidArgument,
+                "context was not a string")));
+        let context = try!(match value {
+            "chrome" => Ok(GeckoContext::Chrome),
+            "content" => Ok(GeckoContext::Content),
+            _ => Err(WebDriverError::new(ErrorStatus::InvalidArgument,
+                                         &format!("{} is not a valid context",
+                                                  value)))
+        });
+        Ok(GeckoContextParameters {
+            context: context
+        })
+    }
+}
+
+impl ToJson for GeckoContextParameters {
+    fn to_json(&self) -> Json {
+        let mut data = BTreeMap::new();
+        data.insert("context".to_owned(), self.context.to_json());
+        Json::Object(data)
+    }
+}
+
+impl ToMarionette for GeckoContextParameters {
+    fn to_marionette(&self) -> WebDriverResult<Json> {
+        let mut data = BTreeMap::new();
+        data.insert("value".to_owned(), self.context.to_json());
+        Ok(Json::Object(data))
+    }
+}
 
 pub static FIREFOX_PREFERENCES: [(&'static str, PrefValue); 49] = [
     ("app.update.enabled", PrefValue::PrefBool(false)),
@@ -162,8 +271,8 @@ impl MarionetteHandler {
     }
 }
 
-impl WebDriverHandler for MarionetteHandler {
-    fn handle_command(&mut self, _: &Option<Session>, msg: &WebDriverMessage) -> WebDriverResult<WebDriverResponse> {
+impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
+    fn handle_command(&mut self, _: &Option<Session>, msg: &WebDriverMessage<GeckoExtensionRoute>) -> WebDriverResult<WebDriverResponse> {
         let mut create_connection = false;
         match self.connection.lock() {
             Ok(ref mut connection) => {
@@ -240,7 +349,7 @@ impl MarionetteSession {
         }
     }
 
-    pub fn msg_to_marionette(&self, msg: &WebDriverMessage) -> WebDriverResult<Json> {
+    pub fn msg_to_marionette(&self, msg: &WebDriverMessage<GeckoExtensionRoute>) -> WebDriverResult<Json> {
         let x = try!(msg.to_marionette());
         let data = try_opt!(x.as_object(),
                             ErrorStatus::UnknownError,
@@ -248,7 +357,7 @@ impl MarionetteSession {
         Ok(Json::Object(data))
     }
 
-    pub fn update(&mut self, msg: &WebDriverMessage,
+    pub fn update(&mut self, msg: &WebDriverMessage<GeckoExtensionRoute>,
                   resp: &Json) -> WebDriverResult<()> {
         match msg.command {
             NewSession => {
@@ -288,7 +397,7 @@ impl MarionetteSession {
         Ok(WebElement::new(id))
     }
 
-    pub fn response_from_json(&mut self, message: &WebDriverMessage,
+    pub fn response_from_json(&mut self, message: &WebDriverMessage<GeckoExtensionRoute>,
                               data: &str) -> WebDriverResult<WebDriverResponse> {
 
         let json_data = try!(Json::from_str(data));
@@ -440,8 +549,16 @@ impl MarionetteSession {
             DeleteSession => {
                 WebDriverResponse::DeleteSession
             },
-            Extension(_) => {
-                panic!("No extensions implemented")
+            Extension(ref extension) => {
+                match extension {
+                    &GeckoExtensionCommand::GetContext => {
+                        let value = try_opt!(json_data.find("value"),
+                                             ErrorStatus::UnknownError,
+                                             "Failed to find value field");
+                        WebDriverResponse::Generic(ValueResponse::new(value.clone()))
+                    }
+                    &GeckoExtensionCommand::SetContext(_) => WebDriverResponse::Void
+                }
             }
         })
     }
@@ -607,7 +724,7 @@ impl MarionetteConnection {
         format!("{}:{}", data.len(), data)
     }
 
-    pub fn send_message(&mut self, msg: &WebDriverMessage) -> WebDriverResult<WebDriverResponse>  {
+    pub fn send_message(&mut self, msg: &WebDriverMessage<GeckoExtensionRoute>) -> WebDriverResult<WebDriverResponse>  {
         let resp = try!(self.session.msg_to_marionette(msg));
         let resp_data = try!(self.send(&resp));
         self.session.response_from_json(msg, &resp_data[..])
@@ -698,7 +815,7 @@ trait ToMarionette {
     fn to_marionette(&self) -> WebDriverResult<Json>;
 }
 
-impl ToMarionette for WebDriverMessage {
+impl ToMarionette for WebDriverMessage<GeckoExtensionRoute> {
     fn to_marionette(&self) -> WebDriverResult<Json> {
         let (opt_name, opt_parameters) = match self.command {
             NewSession => {
@@ -735,7 +852,7 @@ impl ToMarionette for WebDriverMessage {
 
                 let mut data = try_opt!(body.unwrap().as_object(),
                                         ErrorStatus::UnknownError,
-                                        "Marionette response was not an object").clone();
+                                        "Marionette request was not an object").clone();
                 data.insert("element".to_string(), e.id.to_json());
                 (Some("findElement"), Some(Ok(Json::Object(data.clone()))))
             },
@@ -747,7 +864,7 @@ impl ToMarionette for WebDriverMessage {
 
                 let mut data = try_opt!(body.unwrap().as_object(),
                                         ErrorStatus::UnknownError,
-                                        "Marionette response was not an object").clone();
+                                        "Marionette request was not an object").clone();
                 data.insert("element".to_string(), e.id.to_json());
                 (Some("findElements"), Some(Ok(Json::Object(data.clone()))))
             },
@@ -807,8 +924,13 @@ impl ToMarionette for WebDriverMessage {
                 data.insert("full".to_string(), Json::Boolean(false));
                 (Some("takeScreenshot"), Some(Ok(Json::Object(data))))
             },
-            Extension(_) => {
-                panic!("No extensions implemented");
+            Extension(ref extension) => {
+                match extension {
+                    &GeckoExtensionCommand::GetContext => (Some("getContext"), None),
+                    &GeckoExtensionCommand::SetContext(ref x) => {
+                        (Some("setContext"), Some(x.to_marionette()))
+                    }
+                }
             }
         };
 
