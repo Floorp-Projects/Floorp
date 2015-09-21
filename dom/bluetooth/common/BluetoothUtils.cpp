@@ -67,17 +67,17 @@ StringToUuid(const nsAString& aString, BluetoothUuid& aUuid)
   memcpy(&aUuid.mUuid[14], &uuid5, sizeof(uint16_t));
 }
 
-void
+nsresult
 GenerateUuid(nsAString &aUuidString)
 {
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidGenerator =
     do_GetService("@mozilla.org/uuid-generator;1", &rv);
-  NS_ENSURE_SUCCESS_VOID(rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsID uuid;
   rv = uuidGenerator->GenerateUUIDInPlace(&uuid);
-  NS_ENSURE_SUCCESS_VOID(rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Build a string in {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx} format
   char uuidBuffer[NSID_LENGTH];
@@ -86,6 +86,8 @@ GenerateUuid(nsAString &aUuidString)
 
   // Remove {} and the null terminator
   aUuidString.Assign(Substring(uuidString, 1, NSID_LENGTH - 3));
+
+  return NS_OK;
 }
 
 void
