@@ -7959,7 +7959,6 @@ nsContentUtils::InternalContentPolicyTypeToExternal(nsContentPolicyType aType)
 {
   switch (aType) {
   case nsIContentPolicy::TYPE_INTERNAL_SCRIPT:
-  case nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD:
   case nsIContentPolicy::TYPE_INTERNAL_WORKER:
   case nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER:
   case nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER:
@@ -7982,14 +7981,6 @@ nsContentUtils::InternalContentPolicyTypeToExternal(nsContentPolicyType aType)
   case nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE:
     return nsIContentPolicy::TYPE_XMLHTTPREQUEST;
 
-  case nsIContentPolicy::TYPE_INTERNAL_IMAGE:
-  case nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD:
-    return nsIContentPolicy::TYPE_IMAGE;
-
-  case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET:
-  case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD:
-    return nsIContentPolicy::TYPE_STYLESHEET;
-
   default:
     return aType;
   }
@@ -8011,17 +8002,6 @@ nsContentUtils::InternalContentPolicyTypeToExternalOrScript(nsContentPolicyType 
   }
 }
 
-/* static */
-nsContentPolicyType
-nsContentUtils::InternalContentPolicyTypeToExternalOrPreload(nsContentPolicyType aType)
-{
-  if (aType == nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD ||
-      aType == nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD ||
-      aType == nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD) {
-    return aType;
-  }
-  return InternalContentPolicyTypeToExternal(aType);
-}
 
 nsresult
 nsContentUtils::SetFetchReferrerURIWithPolicy(nsIPrincipal* aPrincipal,

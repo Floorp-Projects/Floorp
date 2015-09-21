@@ -43,7 +43,7 @@ namespace dom {
  * frame             | TYPE_INTERNAL_FRAME
  * hyperlink         |
  * iframe            | TYPE_INTERNAL_IFRAME
- * image             | TYPE_INTERNAL_IMAGE, TYPE_INTERNAL_IMAGE_PRELOAD
+ * image             | TYPE_IMAGE
  * imageset          | TYPE_IMAGESET
  * import            | Not supported by Gecko
  * internal          | TYPE_DOCUMENT, TYPE_XBL, TYPE_OTHER
@@ -53,10 +53,10 @@ namespace dom {
  * ping              | TYPE_PING
  * plugin            | TYPE_OBJECT_SUBREQUEST
  * prefetch          |
- * script            | TYPE_INTERNAL_SCRIPT, TYPE_INTERNAL_SCRIPT_PRELOAD
+ * script            | TYPE_INTERNAL_SCRIPT
  * sharedworker      | TYPE_INTERNAL_SHARED_WORKER
  * subresource       | Not supported by Gecko
- * style             | TYPE_INTERNAL_STYLESHEET, TYPE_INTERNAL_STYLESHEET_PRELOAD
+ * style             | TYPE_STYLESHEET
  * track             | TYPE_INTERNAL_TRACK
  * video             | TYPE_INTERNAL_VIDEO
  * worker            | TYPE_INTERNAL_WORKER

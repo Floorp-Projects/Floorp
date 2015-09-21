@@ -116,7 +116,6 @@ InternalRequest::MapContentPolicyTypeToRequestContext(nsContentPolicyType aConte
     context = RequestContext::Internal;
     break;
   case nsIContentPolicy::TYPE_INTERNAL_SCRIPT:
-  case nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD:
   case nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER:
     context = RequestContext::Script;
     break;
@@ -126,12 +125,10 @@ InternalRequest::MapContentPolicyTypeToRequestContext(nsContentPolicyType aConte
   case nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER:
     context = RequestContext::Sharedworker;
     break;
-  case nsIContentPolicy::TYPE_INTERNAL_IMAGE:
-  case nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD:
+  case nsIContentPolicy::TYPE_IMAGE:
     context = RequestContext::Image;
     break;
-  case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET:
-  case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD:
+  case nsIContentPolicy::TYPE_STYLESHEET:
     context = RequestContext::Style;
     break;
   case nsIContentPolicy::TYPE_INTERNAL_OBJECT:

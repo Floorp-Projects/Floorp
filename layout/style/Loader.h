@@ -317,7 +317,6 @@ public:
    * not-yet-loaded sheet.
    */
   nsresult LoadSheet(nsIURI* aURL,
-                     bool aIsPreload,
                      nsIPrincipal* aOriginPrincipal,
                      const nsCString& aCharset,
                      nsICSSLoaderObserver* aObserver,
@@ -406,12 +405,9 @@ private:
 
   // Note: null aSourcePrincipal indicates that the content policy and
   // CheckLoadURI checks should be skipped.
-  // aIsPreload indicates whether the html parser preloads that
-  // stylesheet or if it is a regular load.
   nsresult CheckLoadAllowed(nsIPrincipal* aSourcePrincipal,
                             nsIURI* aTargetURI,
-                            nsISupports* aContext,
-                            bool aIsPreload);
+                            nsISupports* aContext);
 
 
   // For inline style, the aURI param is null, but the aLinkingContent
@@ -450,7 +446,6 @@ private:
                             ImportRule* aParentRule);
 
   nsresult InternalLoadNonDocumentSheet(nsIURI* aURL,
-                                        bool aIsPreload,
                                         bool aAllowUnsafeRules,
                                         bool aUseSystemPrincipal,
                                         nsIPrincipal* aOriginPrincipal,
@@ -482,9 +477,7 @@ private:
 
   // Note: LoadSheet is responsible for releasing aLoadData and setting the
   // sheet to complete on failure.
-  nsresult LoadSheet(SheetLoadData* aLoadData,
-                     StyleSheetState aSheetState,
-                     bool aIsPreLoad);
+  nsresult LoadSheet(SheetLoadData* aLoadData, StyleSheetState aSheetState);
 
   // Parse the stylesheet in aLoadData.  The sheet data comes from aInput.
   // Set aCompleted to true if the parse finished, false otherwise (e.g. if the

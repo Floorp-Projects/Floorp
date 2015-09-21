@@ -2791,7 +2791,7 @@ nsHTMLEditor::ReplaceStyleSheet(const nsAString& aURL)
   NS_ENSURE_SUCCESS(rv, rv);
 
   return ps->GetDocument()->CSSLoader()->
-    LoadSheet(uaURI, false, nullptr, EmptyCString(), this);
+    LoadSheet(uaURI, nullptr, EmptyCString(), this);
 }
 
 NS_IMETHODIMP
