@@ -240,6 +240,9 @@ nsCocoaDebugUtils::GetAddressStringInt(void* aAddress, CSTypeRef aOwner)
       addressName = CSSymbolGetName(symbol);
       CSRange range = CSSymbolGetRange(symbol);
       addressOffset = (unsigned long long) aAddress - range.location;
+    } else {
+      addressOffset = (unsigned long long)
+        aAddress - CSSymbolOwnerGetBaseAddress(owner);
     }
   }
 
