@@ -1,3 +1,5 @@
+enableNoSuchMethod();
+
 var count = 0;
 var a = {__noSuchMethod__: function() { count++; } }
 

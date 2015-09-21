@@ -1,5 +1,8 @@
+// |reftest| skip-if(!xulRuntime.shell)
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/licenses/publicdomain/
+
+enableNoSuchMethod();
 
 var sym = Symbol("method");
 var hits = 0;
