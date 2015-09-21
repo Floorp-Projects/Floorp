@@ -4,6 +4,12 @@ OLD_ESR_CHANGESET = "16351963d75c"
 
 config = {
     "log_name": "relese_to_esr",
+    "version_files": [
+        "browser/config/version.txt",
+        "browser/config/version_display.txt",
+        "config/milestone.txt",
+        "b2g/confvars.sh",
+    ],
     "replacements": [
         # File, from, to
         ("browser/confvars.sh",
