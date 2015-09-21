@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sys/types.h>
 #include <sys/queue.h>
 #include <assert.h>
+#include <inttypes.h>
 
 #include "p_buf.h"
 #include "nr_socket.h"
@@ -374,8 +375,10 @@ static void nr_socket_buffered_stun_connected_cb(NR_SOCKET s, int how, void *arg
   assert(!sock->connected);
 
   sock->connected = 1;
-  if (sock->pending)
+  if (sock->pending) {
+    r_log(LOG_GENERIC, LOG_INFO, "Invoking writable_cb on connected (%u)", (uint32_t) sock->pending);
     nr_socket_buffered_stun_writable_cb(s, how, arg);
+  }
 }
 
 static int nr_socket_buffered_stun_connect(void *obj, nr_transport_addr *addr)
@@ -398,6 +401,7 @@ static int nr_socket_buffered_stun_connect(void *obj, nr_transport_addr *addr)
     }
     ABORT(r);
   } else {
+    r_log(LOG_GENERIC, LOG_INFO, "Connected without blocking");
     sock->connected = 1;
   }
 
@@ -432,7 +436,9 @@ static int nr_socket_buffered_stun_write(void *obj,const void *msg, size_t len, 
   /* Buffers are close to full, report error. Do this now so we never
      get partial writes */
   if ((sock->pending + len) > sock->max_pending) {
-    r_log(LOG_GENERIC, LOG_INFO, "Write buffer for %s full", sock->remote_addr.as_string);
+    r_log(LOG_GENERIC, LOG_INFO, "Write buffer for %s full (%u + %u > %u) - re-arming @%p",
+          sock->remote_addr.as_string, (uint32_t)sock->pending, (uint32_t)len, (uint32_t)sock->max_pending,
+          &(sock->pending));
     ABORT(R_WOULDBLOCK);
   }
 
@@ -440,8 +446,13 @@ static int nr_socket_buffered_stun_write(void *obj,const void *msg, size_t len, 
   if (sock->connected && !sock->pending) {
     r = nr_socket_write(sock->inner, msg, len, &written2, 0);
     if (r) {
-      if (r != R_WOULDBLOCK)
+      if (r != R_WOULDBLOCK) {
+        r_log(LOG_GENERIC, LOG_ERR, "Write error for %s - %d",
+              sock->remote_addr.as_string, r);
         ABORT(r);
+      }
+      r_log(LOG_GENERIC, LOG_INFO, "Write of %" PRIu64 " blocked for %s",
+            (uint64_t) len, sock->remote_addr.as_string);
 
       written2=0;
     }
@@ -454,8 +465,12 @@ static int nr_socket_buffered_stun_write(void *obj,const void *msg, size_t len, 
 
   if (len) {
     if ((r=nr_p_buf_write_to_chain(sock->p_bufs, &sock->pending_writes,
-                                     ((UCHAR *)msg) + written2, len)))
+                                   ((UCHAR *)msg) + written2, len))) {
+      r_log(LOG_GENERIC, LOG_ERR, "Write_to_chain error for %s - %d",
+            sock->remote_addr.as_string, r);
+
       ABORT(r);
+    }
 
     sock->pending += len;
   }
@@ -464,6 +479,9 @@ static int nr_socket_buffered_stun_write(void *obj,const void *msg, size_t len, 
       if ((r=nr_socket_buffered_stun_arm_writable_cb(sock)))
         ABORT(r);
   }
+  r_log(LOG_GENERIC, LOG_INFO, "Write buffer not empty for %s  %u - %s armed (@%p)",
+        sock->remote_addr.as_string, (uint32_t)sock->pending,
+        already_armed ? "already" : "", &sock->pending);
 
   *written = original_len;
 
@@ -486,6 +504,8 @@ static void nr_socket_buffered_stun_writable_cb(NR_SOCKET s, int how, void *arg)
                            n1->length - n1->r_offset,
                            &written, 0))) {
 
+      r_log(LOG_GENERIC, LOG_ERR, "Write error for %s - %d",
+            sock->remote_addr.as_string, r);
       ABORT(r);
     }
 
@@ -495,6 +515,9 @@ static void nr_socket_buffered_stun_writable_cb(NR_SOCKET s, int how, void *arg)
 
     if (n1->r_offset < n1->length) {
       /* We wrote something, but not everything */
+      r_log(LOG_GENERIC, LOG_INFO, "Write in callback didn't write all (remaining %u of %u) for %s",
+            n1->length - n1->r_offset, n1->length,
+            sock->remote_addr.as_string);
       ABORT(R_WOULDBLOCK);
     }
 
@@ -506,7 +529,10 @@ static void nr_socket_buffered_stun_writable_cb(NR_SOCKET s, int how, void *arg)
   assert(!sock->pending);
   _status=0;
 abort:
+  r_log(LOG_GENERIC, LOG_INFO, "Writable_cb %s (%u (%p) pending)",
+        sock->remote_addr.as_string, (uint32_t)sock->pending, &(sock->pending));
   if (_status && _status != R_WOULDBLOCK) {
+    r_log(LOG_GENERIC, LOG_ERR, "Failure in writable_cb: %d", _status);
     nr_socket_buffered_stun_failed(sock);
   } else if (sock->pending) {
     nr_socket_buffered_stun_arm_writable_cb(sock);

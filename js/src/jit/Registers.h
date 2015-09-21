@@ -93,6 +93,26 @@ struct Register {
     }
 };
 
+struct Register64
+{
+#ifdef JS_PUNBOX64
+    Register reg;
+#else
+    Register high;
+    Register low;
+#endif
+
+#ifdef JS_PUNBOX64
+    explicit MOZ_CONSTEXPR Register64(Register r)
+      : reg(r)
+    {}
+#else
+    MOZ_CONSTEXPR Register64(Register h, Register l)
+      : high(h), low(l)
+    {}
+#endif
+};
+
 class RegisterDump
 {
   public:

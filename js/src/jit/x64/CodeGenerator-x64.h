@@ -12,8 +12,6 @@
 namespace js {
 namespace jit {
 
-class OutOfLineRandom;
-
 class CodeGeneratorX64 : public CodeGeneratorX86Shared
 {
     CodeGeneratorX64* thisFromCtor() {
@@ -61,8 +59,6 @@ class CodeGeneratorX64 : public CodeGeneratorX86Shared
     void visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc* ins);
     void visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble* lir);
     void visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32* lir);
-    void visitRandom(LRandom* ins);
-    void visitOutOfLineRandom(OutOfLineRandom* ool);
 };
 
 typedef CodeGeneratorX64 CodeGeneratorSpecific;

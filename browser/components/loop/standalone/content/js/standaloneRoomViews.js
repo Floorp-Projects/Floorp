@@ -582,6 +582,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
               hangup: this.leaveRoom, 
               hangupButtonLabel: mozL10n.get("rooms_leave_button_label"), 
               publishStream: this.publishStream, 
+              show: true, 
               video: {enabled: !this.state.videoMuted,
                       visible: this._roomIsActive()}})
           ), 

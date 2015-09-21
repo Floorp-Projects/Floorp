@@ -719,6 +719,7 @@ loop.conversationViews = (function(mozL10n) {
               mozLoop={this.props.mozLoop}
               publishStream={this.publishStream}
               settingsMenuItems={settingsMenuItems}
+              show={true}
               video={this.props.video} />
           </sharedViews.MediaLayoutView>
         </div>

@@ -146,11 +146,11 @@ protected:
   virtual PTCPServerSocketParent*
     AllocPTCPServerSocketParent(const uint16_t& aLocalPort,
                                 const uint16_t& aBacklog,
-                                const nsString& aBinaryType) override;
+                                const bool& aUseArrayBuffers) override;
   virtual bool RecvPTCPServerSocketConstructor(PTCPServerSocketParent*,
                                                const uint16_t& aLocalPort,
                                                const uint16_t& aBacklog,
-                                               const nsString& aBinaryType) override;
+                                               const bool& aUseArrayBuffers) override;
   virtual bool DeallocPTCPServerSocketParent(PTCPServerSocketParent*) override;
   virtual PUDPSocketParent* AllocPUDPSocketParent(const Principal& aPrincipal,
                                                   const nsCString& aFilter) override;

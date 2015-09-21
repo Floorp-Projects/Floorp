@@ -125,6 +125,13 @@ MacroAssemblerCompat::movePatchablePtr(ImmWord ptr, Register dest)
 }
 
 void
+MacroAssemblerCompat::loadPrivate(const Address& src, Register dest)
+{
+    loadPtr(src, dest);
+    asMasm().lshiftPtr(Imm32(1), dest);
+}
+
+void
 MacroAssemblerCompat::handleFailureWithHandlerTail(void* handler)
 {
     // Reserve space for exception information.

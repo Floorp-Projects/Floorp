@@ -51,6 +51,14 @@ public:
      * Callback to be used by the Parser if errors are detected.
      */
     virtual void SetErrorOffset(uint32_t aOffset) = 0;
+
+    enum Allowed {
+        KEY_FUNCTION = 1 << 0
+    };
+    virtual bool allowed(Allowed aAllowed)
+    {
+        return true;
+    }
 };
 
 /*

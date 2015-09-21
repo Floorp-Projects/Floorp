@@ -21,8 +21,9 @@ SpecialPowers.pushPrefEnv({"set": [['dom.mozTCPSocket.enabled', true]]}, runTest
 function runTest() {
   SpecialPowers.addPermission("tcp-socket", true, document);
 
-  ok('mozTCPSocket' in navigator, "navigator.mozTCPSocket should be accessible if dom.mozTCPSocket.enabled is true");
+  ok('TCPSocket' in this, "TCPSocket should be accessible if dom.mozTCPSocket.enabled is true");
 
+  ok(new TCPSocket('localhost', 80), "TCPSocket constructor should work for content that has the tcp-socket permission");
   ok(navigator.mozTCPSocket.open('localhost', 80), "navigator.mozTCPSocket.open should work for content that has the tcp-socket permission");
   SimpleTest.finish();
 }

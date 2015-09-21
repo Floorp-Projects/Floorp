@@ -99,6 +99,7 @@ class TVManager;
 class InputPortManager;
 class DeviceStorageAreaListener;
 class Presentation;
+class LegacyMozTCPSocket;
 
 namespace time {
 class TimeManager;
@@ -242,6 +243,7 @@ public:
   Voicemail* GetMozVoicemail(ErrorResult& aRv);
   TVManager* GetTv();
   InputPortManager* GetInputPortManager(ErrorResult& aRv);
+  already_AddRefed<LegacyMozTCPSocket> MozTCPSocket();
   network::Connection* GetConnection(ErrorResult& aRv);
   nsDOMCameraManager* GetMozCameras(ErrorResult& aRv);
   MediaDevices* GetMediaDevices(ErrorResult& aRv);

@@ -700,28 +700,6 @@ public:
   void OnSelectionChange(const IMENotification& aIMENotification);
 
   /**
-   * DispatchCompositionChangeEvent() dispatches a compositionchange event on
-   * mWidget.
-   *
-   * @param aText                 User text input.
-   * @param aAttrString           An NSAttributedString instance which indicates
-   *                              current composition string.
-   * @param aSelectedRange        Current selected range (or caret position).
-   */
-  bool DispatchCompositionChangeEvent(const nsString& aText,
-                                      NSAttributedString* aAttrString,
-                                      NSRange& aSelectedRange);
-
-  /**
-   * DispatchCompositionCommitEvent() dispatches a compositioncommit event or
-   * compositioncommitasis event.  If aCommitString is null, dispatches
-   * compositioncommitasis event.  I.e., if aCommitString is null, this
-   * commits the composition with the last data.  Otherwise, commits the
-   * composition with aCommitString value.
-   */
-  bool DispatchCompositionCommitEvent(const nsAString* aCommitString = nullptr);
-
-  /**
    * SetMarkedText() is a handler of setMarkedText of NSTextInput.
    *
    * @param aAttrString           This mut be an instance of NSAttributedString.
@@ -887,9 +865,8 @@ protected:
 private:
   // If mIsIMEComposing is true, the composition string is stored here.
   NSString* mIMECompositionString;
-  // mLastDispatchedCompositionString stores the lastest dispatched composition
-  // string by compositionupdate event.
-  nsString mLastDispatchedCompositionString;
+  // If mIsIMEComposing is true, the start offset of the composition string.
+  uint32_t mIMECompositionStart;
 
   NSRange mMarkedRange;
   NSRange mSelectedRange;
@@ -974,19 +951,43 @@ private:
   void InitCompositionEvent(WidgetCompositionEvent& aCompositionEvent);
 
   /**
-   * When a composition starts, OnStartIMEComposition() is called.
+   * DispatchCompositionStartEvent() dispatches a compositionstart event and
+   * initializes the members indicating composition state.
+   *
+   * @return                      true if it can continues handling composition.
+   *                              Otherwise, e.g., canceled by the web page,
+   *                              this returns false.
    */
-  void OnStartIMEComposition();
+  bool DispatchCompositionStartEvent();
 
   /**
-   * When a composition is updated, OnUpdateIMEComposition() is called.
+   * DispatchCompositionChangeEvent() dispatches a compositionchange event on
+   * mWidget and modifies the members indicating composition state.
+   *
+   * @param aText                 User text input.
+   * @param aAttrString           An NSAttributedString instance which indicates
+   *                              current composition string.
+   * @param aSelectedRange        Current selected range (or caret position).
+   *
+   * @return                      true if it can continues handling composition.
+   *                              Otherwise, e.g., canceled by the web page,
+   *                              this returns false.
    */
-  void OnUpdateIMEComposition(NSString* aIMECompositionString);
+  bool DispatchCompositionChangeEvent(const nsString& aText,
+                                      NSAttributedString* aAttrString,
+                                      NSRange& aSelectedRange);
 
   /**
-   * When a composition is finished, OnEndIMEComposition() is called.
+   * DispatchCompositionCommitEvent() dispatches a compositioncommit event or
+   * compositioncommitasis event.  If aCommitString is null, dispatches
+   * compositioncommitasis event.  I.e., if aCommitString is null, this
+   * commits the composition with the last data.  Otherwise, commits the
+   * composition with aCommitString value.
+   *
+   * @return                      true if the widget isn't destroyed.
+   *                              Otherwise, false.
    */
-  void OnEndIMEComposition();
+  bool DispatchCompositionCommitEvent(const nsAString* aCommitString = nullptr);
 
   // The focused IME handler.  Please note that the handler might lost the
   // actual focus by deactivating the application.  If we are active, this

@@ -679,11 +679,6 @@
 @RESPATH@/components/ActivityWrapper.js
 @RESPATH@/components/ActivityMessageConfigurator.js
 
-@RESPATH@/components/TCPSocket.js
-@RESPATH@/components/TCPServerSocket.js
-@RESPATH@/components/TCPSocketParentIntermediary.js
-@RESPATH@/components/TCPSocket.manifest
-
 @RESPATH@/components/Payment.js
 @RESPATH@/components/PaymentFlowInfo.js
 @RESPATH@/components/PaymentProvider.js

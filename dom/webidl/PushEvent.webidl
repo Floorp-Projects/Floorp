@@ -11,13 +11,11 @@
  Func="nsContentUtils::PushEnabled",
  Exposed=ServiceWorker]
 interface PushEvent : ExtendableEvent {
-  // FIXME(nsm): Bug 1149195.
-  // readonly attribute PushMessageData data;
+  readonly attribute PushMessageData? data;
 };
 
-typedef USVString PushMessageDataInit;
+typedef (BufferSource or USVString) PushMessageDataInit;
 
 dictionary PushEventInit : ExtendableEventInit {
-  // FIXME(nsm): Bug 1149195.
-  // PushMessageDataInit data;
+  PushMessageDataInit data;
 };

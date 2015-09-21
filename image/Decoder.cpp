@@ -245,6 +245,20 @@ Decoder::CompleteDecode()
 }
 
 nsresult
+Decoder::SetTargetSize(const nsIntSize& aSize)
+{
+  // Make sure the size is reasonable.
+  if (MOZ_UNLIKELY(aSize.width <= 0 || aSize.height <= 0)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Create a downscaler that we'll filter our output through.
+  mDownscaler.emplace(aSize);
+
+  return NS_OK;
+}
+
+nsresult
 Decoder::AllocateFrame(uint32_t aFrameNum,
                        const nsIntSize& aTargetSize,
                        const nsIntRect& aFrameRect,
@@ -324,8 +338,7 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
       SurfaceCache::Insert(frame, ImageKey(mImage.get()),
                            RasterSurfaceKey(aTargetSize,
                                             mSurfaceFlags,
-                                            aFrameNum),
-                           Lifetime::Persistent);
+                                            aFrameNum));
     if (outcome == InsertOutcome::FAILURE) {
       // We couldn't insert the surface, almost certainly due to low memory. We
       // treat this as a permanent error to help the system recover; otherwise,
