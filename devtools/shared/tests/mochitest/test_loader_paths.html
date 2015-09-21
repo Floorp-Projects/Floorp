@@ -35,7 +35,7 @@
                                      srcDirStr);
 
       const { BuiltinProvider, SrcdirProvider } =
-        Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+        Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 
       let builtin = new BuiltinProvider();
       builtin.load();
@@ -43,8 +43,8 @@
       srcdir.load();
 
       is(builtin.loader.mapping.length,
-         srcdir.loader.mapping.length,
-         "The built-in loader should have the same number of mapping than testing.");
+         srcdir.loader.mapping.length + 2,
+         "The built-in loader has 2 additional mappings.");
 
       Services.prefs.clearUserPref(SRCDIR_PREF);
     </script>

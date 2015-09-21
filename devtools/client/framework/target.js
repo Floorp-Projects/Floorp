@@ -6,11 +6,11 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 const promise = require("promise");
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
-loader.lazyRequireGetter(this, "DebuggerClient", "devtools/toolkit/client/main", true);
+loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/main", true);
 
 const targets = new WeakMap();
 const promiseTargets = new WeakMap();

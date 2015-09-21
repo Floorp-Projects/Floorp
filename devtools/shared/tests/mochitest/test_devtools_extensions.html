@@ -19,7 +19,7 @@
       const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
       const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
-      let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+      let { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
       const contentGlobals  = require("devtools/server/content-globals");
       const tabs = require('sdk/tabs');
       const { getMostRecentBrowserWindow, getInnerId } = require('sdk/window/utils');

@@ -244,7 +244,7 @@ const GcliActor = ActorClass({
     this._system = createSystem({ location: "server" });
     this._system.commands.onCommandsChange.add(this._commandsChanged);
 
-    const gcliInit = require("devtools/toolkit/gcli/commands/index");
+    const gcliInit = require("devtools/shared/gcli/commands/index");
     gcliInit.addAllItemsByModule(this._system);
 
     // this._requisitionPromise should be created synchronously with the call

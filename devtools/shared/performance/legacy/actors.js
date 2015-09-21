@@ -7,14 +7,14 @@ const { Task } = require("resource://gre/modules/Task.jsm");
 
 loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter",
-  "devtools/toolkit/event-emitter");
+  "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "Poller",
-  "devtools/shared/poller", true);
+  "devtools/client/shared/poller", true);
 
 loader.lazyRequireGetter(this, "CompatUtils",
-  "devtools/toolkit/performance/legacy/compatibility");
+  "devtools/shared/performance/legacy/compatibility");
 loader.lazyRequireGetter(this, "RecordingUtils",
-  "devtools/toolkit/performance/utils");
+  "devtools/shared/performance/utils");
 loader.lazyRequireGetter(this, "TimelineFront",
   "devtools/server/actors/timeline", true);
 loader.lazyRequireGetter(this, "ProfilerFront",

@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { Class } = require("sdk/core/heritage");
-const { registerPlugin, Plugin } = require("projecteditor/plugins/core");
-const { getLocalizedString } = require("projecteditor/helpers/l10n");
+const { registerPlugin, Plugin } = require("devtools/client/projecteditor/lib/plugins/core");
+const { getLocalizedString } = require("devtools/client/projecteditor/lib/helpers/l10n");
 
 var RenamePlugin = Class({
   extends: Plugin,

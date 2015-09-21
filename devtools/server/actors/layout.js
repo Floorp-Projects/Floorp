@@ -31,7 +31,7 @@ const {method, Arg, RetVal, types} = protocol;
 const events = require("sdk/event/core");
 const Heritage = require("sdk/core/heritage");
 const {setTimeout, clearTimeout} = require("sdk/timers");
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 /**
  * The reflow actor tracks reflows and emits events about them.

@@ -4,10 +4,10 @@
 "use strict";
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-const { loader, require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { loader, require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 
 const { Task } = require("resource://gre/modules/Task.jsm");
-const { Heritage, ViewHelpers, WidgetMethods } = require("resource:///modules/devtools/ViewHelpers.jsm");
+const { Heritage, ViewHelpers, WidgetMethods } = require("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
 
 /**
  * The current target, toolbox and MemoryFront, set by this tool's host.

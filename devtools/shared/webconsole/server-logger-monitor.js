@@ -10,9 +10,9 @@ const {Ci} = require("chrome");
 const Services = require("Services");
 
 const {DebuggerServer} = require("devtools/server/main");
-const {makeInfallible} = require("devtools/toolkit/DevToolsUtils");
+const {makeInfallible} = require("devtools/shared/DevToolsUtils");
 
-loader.lazyGetter(this, "NetworkHelper", () => require("devtools/toolkit/webconsole/network-helper"));
+loader.lazyGetter(this, "NetworkHelper", () => require("devtools/shared/webconsole/network-helper"));
 
 // Helper tracer. Should be generic sharable by other modules (bug 1171927)
 const trace = {

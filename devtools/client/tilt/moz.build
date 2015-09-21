@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXTRA_JS_MODULES.devtools.tilt += [
+DevToolsModules(
     'tilt-commands.js',
     'tilt-gl.js',
     'tilt-math.js',
@@ -12,6 +12,6 @@ EXTRA_JS_MODULES.devtools.tilt += [
     'tilt.js',
     'TiltWorkerCrafter.js',
     'TiltWorkerPicker.js'
-]
+)
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']

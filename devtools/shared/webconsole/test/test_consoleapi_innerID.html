@@ -18,7 +18,7 @@ let expectedConsoleCalls = [];
 
 function doConsoleCalls(aState)
 {
-  let { ConsoleAPI } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+  let { ConsoleAPI } = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
   let console = new ConsoleAPI({
     innerID: window.QueryInterface(Ci.nsIInterfaceRequestor)
                    .getInterface(Ci.nsIDOMWindowUtils)

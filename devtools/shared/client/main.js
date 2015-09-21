@@ -8,14 +8,14 @@
 
 const { Ci, Cu, components } = require("chrome");
 const Services = require("Services");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
-const promise = Cu.import("resource://gre/modules/devtools/deprecated-sync-thenables.js", {}).Promise;
+const promise = Cu.import("resource://gre/modules/devtools/shared/deprecated-sync-thenables.js", {}).Promise;
 
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
-loader.lazyRequireGetter(this, "WebConsoleClient", "devtools/toolkit/webconsole/client", true);
-loader.lazyRequireGetter(this, "DebuggerSocket", "devtools/toolkit/security/socket", true);
-loader.lazyRequireGetter(this, "Authentication", "devtools/toolkit/security/auth");
+loader.lazyRequireGetter(this, "WebConsoleClient", "devtools/shared/webconsole/client", true);
+loader.lazyRequireGetter(this, "DebuggerSocket", "devtools/shared/security/socket", true);
+loader.lazyRequireGetter(this, "Authentication", "devtools/shared/security/auth");
 
 const noop = () => {};
 

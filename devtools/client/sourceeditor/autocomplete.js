@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { Cu } = require("chrome");
-const cssAutoCompleter = require("devtools/sourceeditor/css-autocompleter");
-const { AutocompletePopup } = require("devtools/shared/autocomplete-popup");
+const cssAutoCompleter = require("devtools/client/sourceeditor/css-autocompleter");
+const { AutocompletePopup } = require("devtools/client/shared/autocomplete-popup");
 
 const CM_TERN_SCRIPTS = [
   "chrome://devtools/content/sourceeditor/codemirror/tern/tern.js",

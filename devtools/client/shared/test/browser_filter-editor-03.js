@@ -7,7 +7,7 @@
 
 const BASE_URI = "chrome://devtools/content/shared/widgets/";
 const TEST_URI = BASE_URI + "filter-frame.xhtml";
-const {CSSFilterEditorWidget} = require("devtools/shared/widgets/FilterWidget");
+const {CSSFilterEditorWidget} = require("devtools/client/shared/widgets/FilterWidget");
 const GRAYSCALE_MAX = 100;
 const INVERT_MIN = 0;
 

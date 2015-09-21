@@ -7,20 +7,20 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 var { Preferences } = Cu.import("resource://gre/modules/Preferences.jsm", {});
 var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-var { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-var { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-var { console } = require("resource://gre/modules/devtools/Console.jsm");
-var { TargetFactory } = require("devtools/framework/target");
+var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var { gDevTools } = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
+var { console } = require("resource://gre/modules/devtools/shared/Console.jsm");
+var { TargetFactory } = require("devtools/client/framework/target");
 var Promise = require("promise");
-var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { DebuggerServer } = require("devtools/server/main");
 var { merge } = require("sdk/util/object");
 var { createPerformanceFront } = require("devtools/server/actors/performance");
-var RecordingUtils = require("devtools/toolkit/performance/utils");
+var RecordingUtils = require("devtools/shared/performance/utils");
 var {
   PMM_loadFrameScripts, PMM_isProfilerActive, PMM_stopProfiler,
   sendProfilerCommand, consoleMethod
-} = require("devtools/toolkit/performance/process-communication");
+} = require("devtools/shared/performance/process-communication");
 
 var mm = null;
 
@@ -263,7 +263,7 @@ function consoleExecute (console, method, val) {
   ui.on("new-messages", handler);
   jsterm.execute(message);
 
-  let { console: c } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+  let { console: c } = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
   function handler (event, messages) {
     for (let msg of messages) {
       if (msg.response._message === message) {

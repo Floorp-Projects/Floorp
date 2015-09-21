@@ -6,27 +6,27 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 const Ci = Components.interfaces;
 
-Cu.import("resource:///modules/devtools/gDevTools.jsm");
+Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
-const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const {Toolbox} = require("devtools/framework/toolbox");
+const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const {Toolbox} = require("devtools/client/framework/toolbox");
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
-const {AppProjects} = require("devtools/app-manager/app-projects");
-const {Connection} = require("devtools/client/connection-manager");
-const {AppManager} = require("devtools/webide/app-manager");
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const {AppProjects} = require("devtools/client/app-manager/app-projects");
+const {Connection} = require("devtools/shared/client/connection-manager");
+const {AppManager} = require("devtools/client/webide/modules/app-manager");
+const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
-const ProjectEditor = require("projecteditor/projecteditor");
-const {GetAvailableAddons} = require("devtools/webide/addons");
-const {getJSON} = require("devtools/shared/getjson");
-const utils = require("devtools/webide/utils");
-const Telemetry = require("devtools/shared/telemetry");
-const {RuntimeScanners} = require("devtools/webide/runtimes");
-const {showDoorhanger} = require("devtools/shared/doorhanger");
-const ProjectList = require("devtools/webide/project-list");
-const {Simulators} = require("devtools/webide/simulators");
-const RuntimeList = require("devtools/webide/runtime-list");
+const ProjectEditor = require("devtools/client/projecteditor/lib/projecteditor");
+const {GetAvailableAddons} = require("devtools/client/webide/modules/addons");
+const {getJSON} = require("devtools/client/shared/getjson");
+const utils = require("devtools/client/webide/modules/utils");
+const Telemetry = require("devtools/client/shared/telemetry");
+const {RuntimeScanners} = require("devtools/client/webide/modules/runtimes");
+const {showDoorhanger} = require("devtools/client/shared/doorhanger");
+const ProjectList = require("devtools/client/webide/modules/project-list");
+const {Simulators} = require("devtools/client/webide/modules/simulators");
+const RuntimeList = require("devtools/client/webide/modules/runtime-list");
 
 const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
 

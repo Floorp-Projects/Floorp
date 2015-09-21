@@ -20,7 +20,7 @@ function test() {
   waitForExplicitFinish();
 
   createTab(function() {
-    let {TargetFactory} = require("devtools/framework/target");
+    let {TargetFactory} = require("devtools/client/framework/target");
     let target = TargetFactory.forTab(gBrowser.selectedTab);
 
     gDevTools.showToolbox(target, "inspector")

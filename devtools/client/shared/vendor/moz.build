@@ -4,12 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXTRA_JS_MODULES.devtools.shared.vendor += [
+modules = []
+
+if CONFIG['DEBUG_JS_MODULES']:
+    modules += [
+        'react-dev.js',
+    ]
+
+modules += [
     'react.js',
     'redux.js',
 ]
 
-if CONFIG['DEBUG_JS_MODULES']:
-    EXTRA_JS_MODULES.devtools.shared.vendor += [
-        'content/react-dev.js'
-    ]
+# Currently `DevToolsModules` can only be called once per moz.build, so we build
+# a list manually above.  Bug 1198013 tracks fixing this to make it more like
+# other moz.build constructs.
+DevToolsModules(*modules)

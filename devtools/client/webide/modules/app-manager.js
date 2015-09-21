@@ -5,24 +5,24 @@
 const {Cu} = require("chrome");
 
 const promise = require("promise");
-const {TargetFactory} = require("devtools/framework/target");
+const {TargetFactory} = require("devtools/client/framework/target");
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm");
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const {TextEncoder, OS}  = Cu.import("resource://gre/modules/osfile.jsm", {});
-const {AppProjects} = require("devtools/app-manager/app-projects");
-const TabStore = require("devtools/webide/tab-store");
-const {AppValidator} = require("devtools/app-manager/app-validator");
-const {ConnectionManager, Connection} = require("devtools/client/connection-manager");
-const {AppActorFront} = require("devtools/app-actor-front");
+const {AppProjects} = require("devtools/client/app-manager/app-projects");
+const TabStore = require("devtools/client/webide/modules/tab-store");
+const {AppValidator} = require("devtools/client/app-manager/app-validator");
+const {ConnectionManager, Connection} = require("devtools/shared/client/connection-manager");
+const {AppActorFront} = require("devtools/shared/apps/app-actor-front");
 const {getDeviceFront} = require("devtools/server/actors/device");
 const {getPreferenceFront} = require("devtools/server/actors/preference");
 const {getSettingsFront} = require("devtools/server/actors/settings");
 const {setTimeout} = require("sdk/timers");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
-const {RuntimeScanners, RuntimeTypes} = require("devtools/webide/runtimes");
+const {RuntimeScanners, RuntimeTypes} = require("devtools/client/webide/modules/runtimes");
 const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-const Telemetry = require("devtools/shared/telemetry");
+const Telemetry = require("devtools/client/shared/telemetry");
 const {ProjectBuilding} = require("./build");
 
 const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");

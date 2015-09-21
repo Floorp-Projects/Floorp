@@ -13,20 +13,20 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const { TargetFactory } = require("devtools/framework/target");
+const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const { TargetFactory } = require("devtools/client/framework/target");
 const promise = require("promise");
 
 const Node = Ci.nsIDOMNode;
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
-                                  "resource://gre/modules/devtools/Console.jsm");
+                                  "resource://gre/modules/devtools/shared/Console.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
-                                  "resource://gre/modules/devtools/event-emitter.js");
+                                  "resource://gre/modules/devtools/shared/event-emitter.js");
 
 XPCOMUtils.defineLazyGetter(this, "prefBranch", function() {
   let prefService = Cc["@mozilla.org/preferences-service;1"]
@@ -39,11 +39,11 @@ XPCOMUtils.defineLazyGetter(this, "toolboxStrings", function () {
   return Services.strings.createBundle("chrome://browser/locale/devtools/toolbox.properties");
 });
 
-const Telemetry = require("devtools/shared/telemetry");
+const Telemetry = require("devtools/client/shared/telemetry");
 
 XPCOMUtils.defineLazyGetter(this, "gcliInit", function() {
   try {
-    return require("devtools/toolkit/gcli/commands/index");
+    return require("devtools/shared/gcli/commands/index");
   }
   catch (ex) {
     console.log(ex);
@@ -56,7 +56,7 @@ XPCOMUtils.defineLazyGetter(this, "util", () => {
 
 Object.defineProperty(this, "ConsoleServiceListener", {
   get: function() {
-    return require("devtools/toolkit/webconsole/utils").ConsoleServiceListener;
+    return require("devtools/shared/webconsole/utils").ConsoleServiceListener;
   },
   configurable: true,
   enumerable: true

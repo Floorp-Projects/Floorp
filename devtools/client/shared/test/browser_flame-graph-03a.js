@@ -8,7 +8,7 @@ var TEST_BOUNDS = { startTime: 0, endTime: 150 };
 var TEST_WIDTH = 200;
 var TEST_HEIGHT = 100;
 
-var {FlameGraph} = require("devtools/shared/widgets/FlameGraph");
+var {FlameGraph} = require("devtools/client/shared/widgets/FlameGraph");
 
 add_task(function*() {
   yield promiseTab("about:blank");

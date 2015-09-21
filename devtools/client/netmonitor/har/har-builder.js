@@ -7,8 +7,8 @@ const { Cu, Ci, Cc } = require("chrome");
 const { defer, all, resolve } = require("promise");
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
-loader.lazyImporter(this, "ViewHelpers", "resource:///modules/devtools/ViewHelpers.jsm");
-loader.lazyRequireGetter(this, "NetworkHelper", "devtools/toolkit/webconsole/network-helper");
+loader.lazyImporter(this, "ViewHelpers", "resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
+loader.lazyRequireGetter(this, "NetworkHelper", "devtools/shared/webconsole/network-helper");
 
 loader.lazyGetter(this, "appInfo", () => {
   return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);

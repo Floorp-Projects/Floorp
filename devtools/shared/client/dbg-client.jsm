@@ -9,7 +9,7 @@
 
 const Cu = Components.utils;
 
-const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 
 this.EXPORTED_SYMBOLS = ["DebuggerTransport",
                          "DebuggerClient",
@@ -18,7 +18,7 @@ this.EXPORTED_SYMBOLS = ["DebuggerTransport",
                          "EnvironmentClient",
                          "ObjectClient"];
 
-var client = require("devtools/toolkit/client/main");
+var client = require("devtools/shared/client/main");
 
 this.DebuggerClient = client.DebuggerClient;
 this.RootClient = client.RootClient;
@@ -26,4 +26,4 @@ this.LongStringClient = client.LongStringClient;
 this.EnvironmentClient = client.EnvironmentClient;
 this.ObjectClient = client.ObjectClient;
 
-this.DebuggerTransport = require("devtools/toolkit/transport/transport").DebuggerTransport;
+this.DebuggerTransport = require("devtools/shared/transport/transport").DebuggerTransport;

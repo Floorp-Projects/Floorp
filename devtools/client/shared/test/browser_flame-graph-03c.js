@@ -9,7 +9,7 @@ var TEST_WIDTH = 200;
 var TEST_HEIGHT = 100;
 var TEST_DPI_DENSITIY = 2;
 
-var {FlameGraph} = require("devtools/shared/widgets/FlameGraph");
+var {FlameGraph} = require("devtools/client/shared/widgets/FlameGraph");
 
 add_task(function*() {
   yield promiseTab("about:blank");

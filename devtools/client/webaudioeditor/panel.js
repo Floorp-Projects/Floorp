@@ -6,7 +6,7 @@
 "use strict";
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const { WebAudioFront } = require("devtools/server/actors/webaudio");
 var Promise = require("promise");
 

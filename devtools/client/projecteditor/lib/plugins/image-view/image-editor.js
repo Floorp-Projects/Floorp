@@ -7,7 +7,7 @@
 const { Cu } = require("chrome");
 const { Class } = require("sdk/core/heritage");
 const promise = require("promise");
-const { ItchEditor } = require("projecteditor/editors");
+const { ItchEditor } = require("devtools/client/projecteditor/lib/editors");
 
 var ImageEditor = Class({
   extends: ItchEditor,

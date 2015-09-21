@@ -4,7 +4,7 @@
 "use strict";
 
 const actions = require('../actions/event-listeners');
-const { bindActionCreators } = require('devtools/shared/vendor/redux');
+const { bindActionCreators } = require('devtools/client/shared/vendor/redux');
 
 /**
  * Functions handling the event listeners UI.

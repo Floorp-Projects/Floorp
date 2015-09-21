@@ -5,14 +5,14 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-var { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-var { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-var { TargetFactory } = require("devtools/framework/target");
-var { Toolbox } = require("devtools/framework/toolbox");
+var { gDevTools } = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
+var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var { TargetFactory } = require("devtools/client/framework/target");
+var { Toolbox } = require("devtools/client/framework/toolbox");
 var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-var { DebuggerClient } = require("devtools/toolkit/client/main");
+var { DebuggerClient } = require("devtools/shared/client/main");
 var { ViewHelpers } =
-  Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
+  Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm", {});
 var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 
 /**

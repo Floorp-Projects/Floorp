@@ -8,30 +8,30 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 
-const {Utils: WebConsoleUtils, CONSOLE_WORKER_IDS} = require("devtools/toolkit/webconsole/utils");
+const {Utils: WebConsoleUtils, CONSOLE_WORKER_IDS} = require("devtools/shared/webconsole/utils");
 const promise = require("promise");
 
 loader.lazyServiceGetter(this, "clipboardHelper",
                          "@mozilla.org/widget/clipboardhelper;1",
                          "nsIClipboardHelper");
 loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
-loader.lazyGetter(this, "EventEmitter", () => require("devtools/toolkit/event-emitter"));
+loader.lazyGetter(this, "EventEmitter", () => require("devtools/shared/event-emitter"));
 loader.lazyGetter(this, "AutocompletePopup",
-                  () => require("devtools/shared/autocomplete-popup").AutocompletePopup);
+                  () => require("devtools/client/shared/autocomplete-popup").AutocompletePopup);
 loader.lazyGetter(this, "ToolSidebar",
-                  () => require("devtools/framework/sidebar").ToolSidebar);
+                  () => require("devtools/client/framework/sidebar").ToolSidebar);
 loader.lazyGetter(this, "ConsoleOutput",
-                  () => require("devtools/webconsole/console-output").ConsoleOutput);
+                  () => require("devtools/client/webconsole/console-output").ConsoleOutput);
 loader.lazyGetter(this, "Messages",
-                  () => require("devtools/webconsole/console-output").Messages);
+                  () => require("devtools/client/webconsole/console-output").Messages);
 loader.lazyGetter(this, "asyncStorage",
-                  () => require("devtools/toolkit/shared/async-storage"));
-loader.lazyRequireGetter(this, "EnvironmentClient", "devtools/toolkit/client/main", true);
-loader.lazyRequireGetter(this, "ObjectClient", "devtools/toolkit/client/main", true);
-loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/VariablesView.jsm");
-loader.lazyImporter(this, "VariablesViewController", "resource:///modules/devtools/VariablesViewController.jsm");
+                  () => require("devtools/shared/shared/async-storage"));
+loader.lazyRequireGetter(this, "EnvironmentClient", "devtools/shared/client/main", true);
+loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/main", true);
+loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/client/shared/widgets/VariablesView.jsm");
+loader.lazyImporter(this, "VariablesViewController", "resource:///modules/devtools/client/shared/widgets/VariablesViewController.jsm");
 loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
-loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.jsm");
+loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/client/framework/gDevTools.jsm");
 loader.lazyGetter(this, "Timers", () => require("sdk/timers"));
 
 const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";

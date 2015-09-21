@@ -10,62 +10,31 @@ XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 DIRS += [
     'redux',
     'vendor',
+    'widgets',
 ]
 
-EXTRA_JS_MODULES.devtools += [
+DevToolsModules(
     'AppCacheUtils.jsm',
-    'Curl.jsm',
-    'DeveloperToolbar.jsm',
-    'DOMHelpers.jsm',
-    'Jsbeautify.jsm',
-    'Parser.jsm',
-    'SplitView.jsm',
-]
-
-EXTRA_JS_MODULES.devtools += [
-    'widgets/AbstractTreeItem.jsm',
-    'widgets/BreadcrumbsWidget.jsm',
-    'widgets/Chart.jsm',
-    'widgets/GraphsWorker.js',
-    'widgets/SideMenuWidget.jsm',
-    'widgets/SimpleListWidget.jsm',
-    'widgets/VariablesView.jsm',
-    'widgets/VariablesViewController.jsm',
-    'widgets/ViewHelpers.jsm',
-]
-
-EXTRA_JS_MODULES.devtools.shared += [
     'autocomplete-popup.js',
     'browser-loader.js',
+    'Curl.jsm',
+    'DeveloperToolbar.jsm',
     'devices.js',
+    'DOMHelpers.jsm',
     'doorhanger.js',
     'frame-script-utils.js',
     'getjson.js',
     'inplace-editor.js',
+    'Jsbeautify.jsm',
     'node-attribute-parser.js',
     'observable-object.js',
     'options-view.js',
+    'Parser.jsm',
     'poller.js',
     'source-utils.js',
+    'SplitView.jsm',
     'telemetry.js',
     'theme-switching.js',
     'theme.js',
     'undo.js'
-]
-
-EXTRA_JS_MODULES.devtools.shared.widgets += [
-    'widgets/BarGraphWidget.js',
-    'widgets/CubicBezierPresets.js',
-    'widgets/CubicBezierWidget.js',
-    'widgets/FastListWidget.js',
-    'widgets/FilterWidget.js',
-    'widgets/FlameGraph.js',
-    'widgets/Graphs.js',
-    'widgets/LineGraphWidget.js',
-    'widgets/MdnDocsWidget.js',
-    'widgets/MountainGraphWidget.js',
-    'widgets/Spectrum.js',
-    'widgets/TableWidget.js',
-    'widgets/Tooltip.js',
-    'widgets/TreeWidget.js',
-]
+)

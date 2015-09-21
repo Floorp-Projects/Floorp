@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var {TiltMath} = require("devtools/tilt/tilt-math");
+var {TiltMath} = require("devtools/client/tilt/tilt-math");
 var rgba = TiltMath.hex2rgba;
 
 /**

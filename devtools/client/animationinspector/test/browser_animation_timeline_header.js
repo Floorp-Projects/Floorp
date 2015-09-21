@@ -6,8 +6,8 @@
 
 // Check that the timeline shows correct time graduations in the header.
 
-const {findOptimalTimeInterval} = require("devtools/animationinspector/utils");
-const {TimeScale} = require("devtools/animationinspector/components");
+const {findOptimalTimeInterval} = require("devtools/client/animationinspector/utils");
+const {TimeScale} = require("devtools/client/animationinspector/components");
 // Should be kept in sync with TIME_GRADUATION_MIN_SPACING in components.js
 const TIME_GRADUATION_MIN_SPACING = 40;
 

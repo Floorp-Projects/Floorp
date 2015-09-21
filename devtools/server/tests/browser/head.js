@@ -7,12 +7,12 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
-const {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
-const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const {DebuggerClient} = require("devtools/toolkit/client/main");
+const {console} = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
+const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const {DebuggerClient} = require("devtools/shared/client/main");
 const {DebuggerServer} = require("devtools/server/main");
 const {defer} = require("promise");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 const PATH = "browser/toolkit/devtools/server/tests/browser/";
 const MAIN_DOMAIN = "http://test1.example.org/" + PATH;

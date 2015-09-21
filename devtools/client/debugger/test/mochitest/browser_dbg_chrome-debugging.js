@@ -12,7 +12,7 @@ var gAttached = promise.defer();
 var gNewGlobal = promise.defer()
 var gNewChromeSource = promise.defer()
 
-var { DevToolsLoader } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var { DevToolsLoader } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 var loader = new DevToolsLoader();
 loader.invisibleToDebugger = true;
 loader.main("devtools/server/main");

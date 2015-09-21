@@ -5,7 +5,7 @@
 "use strict";
 
 const { Cc, Ci, Cu } = require("chrome");
-const { reportException } = require("devtools/toolkit/DevToolsUtils");
+const { reportException } = require("devtools/shared/DevToolsUtils");
 const { Class } = require("sdk/core/heritage");
 const { expectState } = require("devtools/server/actors/common");
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
@@ -16,7 +16,7 @@ loader.lazyRequireGetter(this, "StackFrameCache",
   "devtools/server/actors/utils/stack", true);
 loader.lazyRequireGetter(this, "ThreadSafeChromeUtils");
 loader.lazyRequireGetter(this, "HeapSnapshotFileUtils",
-  "devtools/toolkit/heapsnapshot/HeapSnapshotFileUtils");
+  "devtools/shared/heapsnapshot/HeapSnapshotFileUtils");
 
 /**
  * A class that returns memory data for a parent actor's window.

@@ -4,19 +4,19 @@
 
 const Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
-const {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+const {gDevTools} = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
 
-const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const {TargetFactory} = require("devtools/framework/target");
+const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const {TargetFactory} = require("devtools/client/framework/target");
 
 const {ConnectionManager, Connection}
-  = require("devtools/client/connection-manager");
+  = require("devtools/shared/client/connection-manager");
 const {getDeviceFront} = require("devtools/server/actors/device");
 const {getTargetForApp, launchApp, closeApp}
-  = require("devtools/app-actor-front");
-const DeviceStore = require("devtools/app-manager/device-store");
-const WebappsStore = require("devtools/app-manager/webapps-store");
-const promise = require("devtools/toolkit/deprecated-sync-thenables");
+  = require("devtools/shared/apps/app-actor-front");
+const DeviceStore = require("devtools/client/app-manager/device-store");
+const WebappsStore = require("devtools/client/app-manager/webapps-store");
+const promise = require("devtools/shared/deprecated-sync-thenables");
 const DEFAULT_APP_ICON = "chrome://browser/skin/devtools/app-manager/default-app-icon.png";
 
 window.addEventListener("message", function(event) {

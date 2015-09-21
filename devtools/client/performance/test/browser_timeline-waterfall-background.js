@@ -9,7 +9,7 @@
 function* spawnTest() {
   let { target, panel } = yield initPerformance(SIMPLE_URL);
   let { $, EVENTS, PerformanceController, OverviewView, DetailsView, WaterfallView } = panel.panelWin;
-  let { WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS } = require("devtools/performance/marker-view");
+  let { WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS } = require("devtools/client/performance/modules/widgets/marker-view");
 
   yield startRecording(panel);
   ok(true, "Recording has started.");

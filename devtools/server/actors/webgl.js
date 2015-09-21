@@ -7,7 +7,7 @@ const {Cc, Ci, Cu, Cr} = require("chrome");
 const events = require("sdk/event/core");
 const promise = require("promise");
 const protocol = require("devtools/server/protocol");
-const { ContentObserver } = require("devtools/content-observer");
+const { ContentObserver } = require("devtools/shared/content-observer");
 const { on, once, off, emit } = events;
 const { method, Arg, Option, RetVal } = protocol;
 

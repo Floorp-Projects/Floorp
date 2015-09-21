@@ -94,31 +94,31 @@ const FRAME_TYPE = {
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/devtools/event-emitter.js");
-Cu.import("resource:///modules/devtools/SimpleListWidget.jsm");
-Cu.import("resource:///modules/devtools/BreadcrumbsWidget.jsm");
-Cu.import("resource:///modules/devtools/SideMenuWidget.jsm");
-Cu.import("resource:///modules/devtools/VariablesView.jsm");
-Cu.import("resource:///modules/devtools/VariablesViewController.jsm");
-Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+Cu.import("resource://gre/modules/devtools/shared/event-emitter.js");
+Cu.import("resource:///modules/devtools/client/shared/widgets/SimpleListWidget.jsm");
+Cu.import("resource:///modules/devtools/client/shared/widgets/BreadcrumbsWidget.jsm");
+Cu.import("resource:///modules/devtools/client/shared/widgets/SideMenuWidget.jsm");
+Cu.import("resource:///modules/devtools/client/shared/widgets/VariablesView.jsm");
+Cu.import("resource:///modules/devtools/client/shared/widgets/VariablesViewController.jsm");
+Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
 
-Cu.import("resource:///modules/devtools/shared/browser-loader.js");
-const require = BrowserLoader("resource:///modules/devtools/debugger/", this).require;
+Cu.import("resource:///modules/devtools/client/shared/browser-loader.js");
+const require = BrowserLoader("resource:///modules/devtools/client/debugger/", this).require;
 
-const {TargetFactory} = require("devtools/framework/target");
-const {Toolbox} = require("devtools/framework/toolbox");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-const promise = require("devtools/toolkit/deprecated-sync-thenables");
-const Editor = require("devtools/sourceeditor/editor");
-const DebuggerEditor = require("devtools/sourceeditor/debugger.js");
-const {Tooltip} = require("devtools/shared/widgets/Tooltip");
-const FastListWidget = require("devtools/shared/widgets/FastListWidget");
+const {TargetFactory} = require("devtools/client/framework/target");
+const {Toolbox} = require("devtools/client/framework/toolbox");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const promise = require("devtools/shared/deprecated-sync-thenables");
+const Editor = require("devtools/client/sourceeditor/editor");
+const DebuggerEditor = require("devtools/client/sourceeditor/debugger");
+const {Tooltip} = require("devtools/client/shared/widgets/Tooltip");
+const FastListWidget = require("devtools/client/shared/widgets/FastListWidget");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Parser",
-  "resource:///modules/devtools/Parser.jsm");
+  "resource:///modules/devtools/client/shared/Parser.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
   "resource://gre/modules/ShortcutUtils.jsm");
@@ -128,7 +128,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
 
 Object.defineProperty(this, "NetworkHelper", {
   get: function() {
-    return require("devtools/toolkit/webconsole/network-helper");
+    return require("devtools/shared/webconsole/network-helper");
   },
   configurable: true,
   enumerable: true

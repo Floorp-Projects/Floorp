@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const Cu = Components.utils;
-const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const RuntimeList = require("devtools/webide/runtime-list");
+const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const RuntimeList = require("devtools/client/webide/modules/runtime-list");
 
 var runtimeList = new RuntimeList(window, window.parent);
 

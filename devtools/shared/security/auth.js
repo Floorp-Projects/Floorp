@@ -9,14 +9,14 @@
 var { Ci, Cc } = require("chrome");
 var Services = require("Services");
 var promise = require("promise");
-var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn, dumpv } = DevToolsUtils;
 loader.lazyRequireGetter(this, "prompt",
-  "devtools/toolkit/security/prompt");
+  "devtools/shared/security/prompt");
 loader.lazyRequireGetter(this, "cert",
-  "devtools/toolkit/security/cert");
+  "devtools/shared/security/cert");
 loader.lazyRequireGetter(this, "asyncStorage",
-  "devtools/toolkit/shared/async-storage");
+  "devtools/shared/shared/async-storage");
 DevToolsUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 

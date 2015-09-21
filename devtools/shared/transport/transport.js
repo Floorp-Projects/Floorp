@@ -14,7 +14,7 @@
       factory.call(this, require, this);
     } else {
       const Cu = Components.utils;
-      const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+      const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
       factory.call(this, require, this);
     }
   }
@@ -24,13 +24,13 @@
 
 const { Cc, Ci, Cr, Cu, CC } = require("chrome");
 const Services = require("Services");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { dumpn, dumpv } = DevToolsUtils;
-const StreamUtils = require("devtools/toolkit/transport/stream-utils");
+const StreamUtils = require("devtools/shared/transport/stream-utils");
 const { Packet, JSONPacket, BulkPacket } =
-  require("devtools/toolkit/transport/packets");
+  require("devtools/shared/transport/packets");
 const promise = require("promise");
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 DevToolsUtils.defineLazyGetter(this, "Pipe", () => {
   return CC("@mozilla.org/pipe;1", "nsIPipe", "init");

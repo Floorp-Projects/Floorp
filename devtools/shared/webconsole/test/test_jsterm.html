@@ -16,8 +16,8 @@ SimpleTest.waitForExplicitFinish();
 
 let gState;
 
-let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-let {MAX_AUTOCOMPLETE_ATTEMPTS,MAX_AUTOCOMPLETIONS} = require("devtools/toolkit/webconsole/utils");
+let {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+let {MAX_AUTOCOMPLETE_ATTEMPTS,MAX_AUTOCOMPLETIONS} = require("devtools/shared/webconsole/utils");
 
 // This test runs all of its assertions twice - once with
 // evaluateJS and once with evaluateJSAsync.

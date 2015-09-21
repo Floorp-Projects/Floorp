@@ -6,14 +6,14 @@
 (function (factory) { // Module boilerplate
   if (this.module && module.id.indexOf("worker") >= 0) { // require
     const { Cc, Ci, Cu, ChromeWorker } = require("chrome");
-    const dumpn = require("devtools/toolkit/DevToolsUtils").dumpn;
+    const dumpn = require("devtools/shared/DevToolsUtils").dumpn;
     factory.call(this, require, exports, module, { Cc, Ci, Cu }, ChromeWorker, dumpn);
   } else { // Cu.import
     const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-    const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+    const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
     this.isWorker = false;
     this.Promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
-    this.console = Cu.import("resource://gre/modules/devtools/Console.jsm", {}).console;
+    this.console = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {}).console;
     factory.call(
       this, require, this, { exports: this },
       { Cc, Ci, Cu }, ChromeWorker, null
@@ -160,7 +160,7 @@ exports.workerify = workerify;
  */
 function createWorkerString (fn) {
   return `importScripts("resource://gre/modules/workers/require.js");
-    const { createTask } = require("resource://gre/modules/devtools/shared/worker-helper");
+    const { createTask } = require("resource://gre/modules/devtools/shared/shared/worker-helper.js");
     createTask(self, "workerifiedTask", ${fn.toString()});
   `;
 }

@@ -5,7 +5,7 @@
 
 "use strict";
 
-const {colorUtils} = require("devtools/css-color");
+const {colorUtils} = require("devtools/shared/css-color");
 
 const CLASSIFY_TESTS = [
   { input: "rgb(255,0,192)", output: "rgb" },

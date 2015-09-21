@@ -3,9 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const Cu = Components.utils;
-Cu.import("resource:///modules/devtools/gDevTools.jsm");
-const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const {AppManager} = require("devtools/webide/app-manager");
+Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm");
+const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const {AppManager} = require("devtools/client/webide/modules/app-manager");
 
 window.addEventListener("load", function onLoad() {
   window.removeEventListener("load", onLoad);

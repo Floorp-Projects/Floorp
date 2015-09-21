@@ -7,8 +7,8 @@ DIRS += [
     'har'
 ]
 
-EXTRA_JS_MODULES.devtools.netmonitor += [
+DevToolsModules(
     'panel.js'
-]
+)
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']

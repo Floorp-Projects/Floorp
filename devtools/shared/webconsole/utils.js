@@ -7,7 +7,7 @@
 "use strict";
 
 const {Cc, Ci, Cu, components} = require("chrome");
-const {isWindowIncluded} = require("devtools/toolkit/layout/utils");
+const {isWindowIncluded} = require("devtools/shared/layout/utils");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -15,8 +15,8 @@ loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
 
 // TODO: Bug 842672 - browser/ imports modules from toolkit/.
 // Note that these are only used in WebConsoleCommands, see $0 and pprint().
-loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/VariablesView.jsm");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/client/shared/widgets/VariablesView.jsm");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 // Match the function name from the result of toString() or toSource().
 //

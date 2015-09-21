@@ -11,7 +11,7 @@ const { WebConsoleActor } = require("devtools/server/actors/webconsole");
 const makeDebugger = require("devtools/server/actors/utils/make-debugger");
 const { ActorPool } = require("devtools/server/main");
 const Services = require("Services");
-const { dbg_assert } = require("devtools/toolkit/DevToolsUtils");
+const { dbg_assert } = require("devtools/shared/DevToolsUtils");
 const { TabSources } = require("./utils/TabSources");
 
 function ChildProcessActor(aConnection) {

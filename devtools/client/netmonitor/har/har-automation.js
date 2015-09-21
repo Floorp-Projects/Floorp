@@ -10,9 +10,9 @@ const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 Cu.import("resource://gre/modules/Task.jsm");
 
-loader.lazyRequireGetter(this, "HarCollector", "devtools/netmonitor/har/har-collector", true);
-loader.lazyRequireGetter(this, "HarExporter", "devtools/netmonitor/har/har-exporter", true);
-loader.lazyRequireGetter(this, "HarUtils", "devtools/netmonitor/har/har-utils", true);
+loader.lazyRequireGetter(this, "HarCollector", "devtools/client/netmonitor/har/har-collector", true);
+loader.lazyRequireGetter(this, "HarExporter", "devtools/client/netmonitor/har/har-exporter", true);
+loader.lazyRequireGetter(this, "HarUtils", "devtools/client/netmonitor/har/har-utils", true);
 
 const prefDomain = "devtools.netmonitor.har.";
 

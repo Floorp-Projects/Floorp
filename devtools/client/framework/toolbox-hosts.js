@@ -6,10 +6,10 @@
 "use strict";
 
 const {Cu} = require("chrome");
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource:///modules/devtools/DOMHelpers.jsm");
+Cu.import("resource:///modules/devtools/client/shared/DOMHelpers.jsm");
 
 /* A host should always allow this much space for the page to be displayed.
  * There is also a min-height on the browser, but we still don't want to set

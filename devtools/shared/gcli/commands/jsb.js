@@ -10,7 +10,7 @@ const XMLHttpRequest = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"];
 
 loader.lazyImporter(this, "Preferences", "resource://gre/modules/Preferences.jsm");
 
-loader.lazyRequireGetter(this, "beautify", "devtools/jsbeautify");
+loader.lazyRequireGetter(this, "beautify", "devtools/shared/jsbeautify/beautify");
 
 exports.items = [
   {

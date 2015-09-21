@@ -10,10 +10,10 @@ const CC = Components.Constructor;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
-const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const {DebuggerClient} = require("devtools/toolkit/client/main");
+const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const {DebuggerClient} = require("devtools/shared/client/main");
 const {DebuggerServer} = require("devtools/server/main");
-const {AppActorFront} = require("devtools/app-actor-front");
+const {AppActorFront} = require("devtools/shared/apps/app-actor-front");
 
 var gClient, gActor, gActorFront;
 

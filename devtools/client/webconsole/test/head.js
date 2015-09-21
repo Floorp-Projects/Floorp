@@ -5,16 +5,16 @@
 
 "use strict";
 
-var {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-var {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+var {gDevTools} = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
+var {console} = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
 var {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
-var {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 var promise = require("promise");
-var {TargetFactory} = require("devtools/framework/target");
-var {Utils: WebConsoleUtils} = require("devtools/toolkit/webconsole/utils");
-var {Messages} = require("devtools/webconsole/console-output");
-var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-const asyncStorage = require("devtools/toolkit/shared/async-storage");
+var {TargetFactory} = require("devtools/client/framework/target");
+var {Utils: WebConsoleUtils} = require("devtools/shared/webconsole/utils");
+var {Messages} = require("devtools/client/webconsole/console-output");
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const asyncStorage = require("devtools/shared/shared/async-storage");
 
 // Services.prefs.setBoolPref("devtools.debugger.log", true);
 

@@ -11,20 +11,20 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 
-const ToolDefinitions = require("main").Tools;
-const {CssLogic} = require("devtools/styleinspector/css-logic");
+const ToolDefinitions = require("devtools/client/main").Tools;
+const {CssLogic} = require("devtools/shared/styleinspector/css-logic");
 const {ELEMENT_STYLE} = require("devtools/server/actors/styles");
 const promise = require("promise");
 const {setTimeout, clearTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
-const {OutputParser} = require("devtools/output-parser");
-const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/styleeditor/utils");
-const {createChild} = require("devtools/styleinspector/utils");
-const {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+const {OutputParser} = require("devtools/shared/output-parser");
+const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/utils");
+const {createChild} = require("devtools/client/styleinspector/utils");
+const {gDevTools} = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
 
 loader.lazyRequireGetter(this, "overlays",
-  "devtools/styleinspector/style-inspector-overlays");
+  "devtools/client/styleinspector/style-inspector-overlays");
 loader.lazyRequireGetter(this, "StyleInspectorMenu",
-  "devtools/styleinspector/style-inspector-menu");
+  "devtools/client/styleinspector/style-inspector-menu");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");

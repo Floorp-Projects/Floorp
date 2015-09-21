@@ -7,13 +7,13 @@
 const {Cc, Ci} = require("chrome");
 const events = require("sdk/event/core");
 const protocol = require("devtools/server/protocol");
-const {async} = require("devtools/async-utils");
+const {async} = require("devtools/shared/async-utils");
 const {Arg, method, RetVal, types} = protocol;
 const {LongStringActor} = require("devtools/server/actors/string");
 const {DebuggerServer} = require("devtools/server/main");
 const Services = require("Services");
 const promise = require("promise");
-const {isWindowIncluded} = require("devtools/toolkit/layout/utils");
+const {isWindowIncluded} = require("devtools/shared/layout/utils");
 const { setTimeout, clearTimeout } = require("sdk/timers");
 
 loader.lazyImporter(this, "OS", "resource://gre/modules/osfile.jsm");

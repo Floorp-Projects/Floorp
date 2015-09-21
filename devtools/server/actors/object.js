@@ -9,7 +9,7 @@
 const { Cu, Ci } = require("chrome");
 const { GeneratedLocation } = require("devtools/server/actors/common");
 const { DebuggerServer } = require("devtools/server/main")
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { dbg_assert, dumpn } = DevToolsUtils;
 const PromiseDebugging = require("PromiseDebugging");
 

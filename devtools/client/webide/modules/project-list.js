@@ -5,13 +5,13 @@
 const {Cu} = require("chrome");
 
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
-const {AppProjects} = require("devtools/app-manager/app-projects");
-const {AppManager} = require("devtools/webide/app-manager");
+const {AppProjects} = require("devtools/client/app-manager/app-projects");
+const {AppManager} = require("devtools/client/webide/modules/app-manager");
 const promise = require("promise");
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
-const utils = require("devtools/webide/utils");
-const Telemetry = require("devtools/shared/telemetry");
+const utils = require("devtools/client/webide/modules/utils");
+const Telemetry = require("devtools/client/shared/telemetry");
 
 const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
 

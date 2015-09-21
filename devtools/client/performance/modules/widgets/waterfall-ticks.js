@@ -9,9 +9,9 @@
  */
 
 loader.lazyRequireGetter(this, "L10N",
-  "devtools/performance/global", true);
+  "devtools/client/performance/modules/global", true);
 loader.lazyRequireGetter(this, "WATERFALL_MARKER_SIDEBAR_WIDTH",
-  "devtools/performance/marker-view", true);
+  "devtools/client/performance/modules/widgets/marker-view", true);
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 

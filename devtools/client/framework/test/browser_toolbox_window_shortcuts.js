@@ -3,7 +3,7 @@
 
 "use strict";
 
-var {Toolbox} = require("devtools/framework/toolbox");
+var {Toolbox} = require("devtools/client/framework/toolbox");
 
 var toolbox, toolIDs, idIndex, modifiedPrefs = [];
 

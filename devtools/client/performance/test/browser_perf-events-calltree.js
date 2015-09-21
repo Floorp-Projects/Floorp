@@ -4,7 +4,7 @@
 /**
  * Tests that the call tree up/down events work for js calltree and memory calltree.
  */
-const { ThreadNode } = require("devtools/performance/tree-model");
+const { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
 
 function* spawnTest() {
   let focus = 0;

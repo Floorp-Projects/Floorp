@@ -19,19 +19,19 @@ const SCREENSIZE_HISTOGRAM = "DEVTOOLS_SCREEN_RESOLUTION_ENUMERATED_PER_USER";
 
 var {Cc, Ci, Cu} = require("chrome");
 var promise = require("promise");
-var EventEmitter = require("devtools/toolkit/event-emitter");
-var Telemetry = require("devtools/shared/telemetry");
-var HUDService = require("devtools/webconsole/hudservice");
-var sourceUtils = require("devtools/shared/source-utils");
+var EventEmitter = require("devtools/shared/event-emitter");
+var Telemetry = require("devtools/client/shared/telemetry");
+var HUDService = require("devtools/client/webconsole/hudservice");
+var sourceUtils = require("devtools/client/shared/source-utils");
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource:///modules/devtools/gDevTools.jsm");
-Cu.import("resource:///modules/devtools/scratchpad-manager.jsm");
-Cu.import("resource:///modules/devtools/DOMHelpers.jsm");
+Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm");
+Cu.import("resource:///modules/devtools/client/scratchpad/scratchpad-manager.jsm");
+Cu.import("resource:///modules/devtools/client/shared/DOMHelpers.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 loader.lazyImporter(this, "CommandUtils",
-  "resource:///modules/devtools/DeveloperToolbar.jsm");
+  "resource:///modules/devtools/client/shared/DeveloperToolbar.jsm");
 loader.lazyGetter(this, "toolboxStrings", () => {
   const properties = "chrome://browser/locale/devtools/toolbox.properties";
   const bundle = Services.strings.createBundle(properties);
@@ -48,26 +48,26 @@ loader.lazyGetter(this, "toolboxStrings", () => {
   };
 });
 loader.lazyRequireGetter(this, "getHighlighterUtils",
-  "devtools/framework/toolbox-highlighter-utils", true);
+  "devtools/client/framework/toolbox-highlighter-utils", true);
 loader.lazyRequireGetter(this, "Hosts",
-  "devtools/framework/toolbox-hosts", true);
+  "devtools/client/framework/toolbox-hosts", true);
 loader.lazyRequireGetter(this, "Selection",
-  "devtools/framework/selection", true);
+  "devtools/client/framework/selection", true);
 loader.lazyRequireGetter(this, "InspectorFront",
   "devtools/server/actors/inspector", true);
 loader.lazyRequireGetter(this, "DevToolsUtils",
-  "devtools/toolkit/DevToolsUtils");
+  "devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "showDoorhanger",
-  "devtools/shared/doorhanger", true);
+  "devtools/client/shared/doorhanger", true);
 loader.lazyRequireGetter(this, "createPerformanceFront",
   "devtools/server/actors/performance", true);
 loader.lazyRequireGetter(this, "system",
-  "devtools/toolkit/shared/system");
+  "devtools/shared/shared/system");
 loader.lazyGetter(this, "osString", () => {
   return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
 });
 loader.lazyGetter(this, "registerHarOverlay", () => {
-  return require("devtools/netmonitor/har/toolbox-overlay.js").register;
+  return require("devtools/client/netmonitor/har/toolbox-overlay").register;
 });
 
 // White-list buttons that can be toggled to prevent adding prefs for
@@ -88,7 +88,7 @@ const ToolboxButtons = exports.ToolboxButtons = [
   { id: "command-button-responsive" },
   { id: "command-button-paintflashing" },
   { id: "command-button-tilt",
-    commands: "devtools/tilt/tilt-commands" },
+    commands: "devtools/client/tilt/tilt-commands" },
   { id: "command-button-scratchpad" },
   { id: "command-button-eyedropper" },
   { id: "command-button-screenshot" },

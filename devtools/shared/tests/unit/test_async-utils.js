@@ -12,7 +12,7 @@ Object.defineProperty(this, "Promise", {
   value: require("promise"),
   writable: false, configurable: false
 });
-const {async, asyncOnce, promiseInvoke, promiseCall} = require("devtools/async-utils");
+const {async, asyncOnce, promiseInvoke, promiseCall} = require("devtools/shared/async-utils");
 
 function run_test() {
   do_test_pending();

@@ -6,7 +6,7 @@
 //
 // And tests `workerify` by doing so.
 
-const { DevToolsWorker, workerify } = require("devtools/toolkit/shared/worker");
+const { DevToolsWorker, workerify } = require("devtools/shared/shared/worker");
 function square (x) {
   return x * x;
 }

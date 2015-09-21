@@ -9,8 +9,8 @@ var Services = require("Services");
 var { ActorPool } = require("devtools/server/actors/common");
 var { TabSources } = require("./utils/TabSources");
 var makeDebugger = require("./utils/make-debugger");
-var { ConsoleAPIListener } = require("devtools/toolkit/webconsole/utils");
-var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var { ConsoleAPIListener } = require("devtools/shared/webconsole/utils");
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dbg_assert, update } = DevToolsUtils;
 
 loader.lazyRequireGetter(this, "AddonThreadActor", "devtools/server/actors/script", true);

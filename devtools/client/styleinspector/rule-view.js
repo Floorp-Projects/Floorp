@@ -14,13 +14,13 @@ const {Cc, Ci, Cu} = require("chrome");
 const promise = require("promise");
 const {setTimeout, clearTimeout} =
       Cu.import("resource://gre/modules/Timer.jsm", {});
-const {CssLogic} = require("devtools/styleinspector/css-logic");
+const {CssLogic} = require("devtools/shared/styleinspector/css-logic");
 const {InplaceEditor, editableField, editableItem} =
-      require("devtools/shared/inplace-editor");
+      require("devtools/client/shared/inplace-editor");
 const {ELEMENT_STYLE, PSEUDO_ELEMENTS} =
       require("devtools/server/actors/styles");
-const {OutputParser} = require("devtools/output-parser");
-const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/styleeditor/utils");
+const {OutputParser} = require("devtools/shared/output-parser");
+const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/utils");
 const {
   createChild,
   appendText,
@@ -28,7 +28,7 @@ const {
   blurOnMultipleProperties,
   promiseWarn,
   throttle
-} = require("devtools/styleinspector/utils");
+} = require("devtools/client/styleinspector/utils");
 const {
   parseDeclarations,
   parseSingleValue,
@@ -36,13 +36,13 @@ const {
   SELECTOR_ATTRIBUTE,
   SELECTOR_ELEMENT,
   SELECTOR_PSEUDO_CLASS
-} = require("devtools/styleinspector/css-parsing-utils");
+} = require("devtools/client/styleinspector/css-parsing-utils");
 loader.lazyRequireGetter(this, "overlays",
-  "devtools/styleinspector/style-inspector-overlays");
+  "devtools/client/styleinspector/style-inspector-overlays");
 loader.lazyRequireGetter(this, "EventEmitter",
-  "devtools/toolkit/event-emitter");
+  "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "StyleInspectorMenu",
-  "devtools/styleinspector/style-inspector-menu");
+  "devtools/client/styleinspector/style-inspector-menu");
 loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -3805,5 +3805,5 @@ XPCOMUtils.defineLazyGetter(this, "domUtils", function() {
 });
 
 loader.lazyGetter(this, "AutocompletePopup", function() {
-  return require("devtools/shared/autocomplete-popup").AutocompletePopup;
+  return require("devtools/client/shared/autocomplete-popup").AutocompletePopup;
 });

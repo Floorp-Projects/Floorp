@@ -3,8 +3,9 @@
 
 // Tests errors are handled properly by the DevToolsWorker.
 
-const { DevToolsWorker } = require("devtools/toolkit/shared/worker");
-const WORKER_URL = "resource:///modules/devtools/GraphsWorker.js";
+const { DevToolsWorker } = require("devtools/shared/shared/worker");
+const WORKER_URL =
+  "resource:///modules/devtools/client/shared/widgets/GraphsWorker.js";
 
 add_task(function*() {
   try {

@@ -4,10 +4,10 @@
 
 "use strict";
 
-const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const Editor  = require("devtools/sourceeditor/editor");
+const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const Editor  = require("devtools/client/sourceeditor/editor");
 const promise = require("promise");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 DevToolsUtils.testing = true;
 SimpleTest.registerCleanupFunction(() => {

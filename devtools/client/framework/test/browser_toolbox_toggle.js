@@ -8,7 +8,7 @@
 
 const URL = "data:text/html;charset=utf-8,Toggling devtools using shortcuts";
 
-var {Toolbox} = require("devtools/framework/toolbox");
+var {Toolbox} = require("devtools/client/framework/toolbox");
 
 add_task(function*() {
   // Test with ACCEL+SHIFT+I / ACCEL+ALT+I (MacOSX) ; modifiers should match :

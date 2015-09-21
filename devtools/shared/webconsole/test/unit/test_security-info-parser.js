@@ -5,12 +5,12 @@
 
 // Test that NetworkHelper.parseSecurityInfo returns correctly formatted object.
 
-const { require } = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { require } = Components.utils.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 Object.defineProperty(this, "NetworkHelper", {
   get: function() {
-    return require("devtools/toolkit/webconsole/network-helper");
+    return require("devtools/shared/webconsole/network-helper");
   },
   configurable: true,
   writeable: false,

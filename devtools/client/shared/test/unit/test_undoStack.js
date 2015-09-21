@@ -15,7 +15,7 @@ var loader = new Loader.Loader({
 });
 var require = Loader.Require(loader, { id: "undo-test" })
 
-var {UndoStack} = require("devtools/shared/undo");
+var {UndoStack} = require("devtools/client/shared/undo");
 
 const MAX_SIZE = 5;
 

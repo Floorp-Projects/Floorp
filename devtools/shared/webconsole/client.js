@@ -7,10 +7,10 @@
 "use strict";
 
 const {Cc, Ci, Cu} = require("chrome");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
-const {LongStringClient} = require("devtools/toolkit/client/main");
+const {LongStringClient} = require("devtools/shared/client/main");
 
 /**
  * A WebConsoleClient is used as a front end for the WebConsoleActor that is

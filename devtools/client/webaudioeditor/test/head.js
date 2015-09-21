@@ -12,15 +12,15 @@ var gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 Services.prefs.setBoolPref("devtools.debugger.log", false);
 
 var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-var { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-var { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-var { TargetFactory } = require("devtools/framework/target");
+var { gDevTools } = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
+var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var { TargetFactory } = require("devtools/client/framework/target");
 var { DebuggerServer } = require("devtools/server/main");
 var { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 
 var Promise = require("promise");
 var { WebAudioFront } = require("devtools/server/actors/webaudio");
-var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var audioNodes = require("devtools/server/actors/utils/audionodes.json");
 var mm = null;
 

@@ -10,8 +10,8 @@ MOCHITEST_MANIFESTS += [
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
-EXTRA_JS_MODULES.devtools += [
+DevToolsModules(
     'app-actor-front.js',
     'Devices.jsm',
     'Simulator.jsm'
-]
+)

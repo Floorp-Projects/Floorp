@@ -3,7 +3,7 @@
 
 // Tests that flame graph data is cached, and that the cache may be cleared.
 
-var {FlameGraphUtils} = require("devtools/shared/widgets/FlameGraph");
+var {FlameGraphUtils} = require("devtools/client/shared/widgets/FlameGraph");
 
 add_task(function*() {
   yield promiseTab("about:blank");

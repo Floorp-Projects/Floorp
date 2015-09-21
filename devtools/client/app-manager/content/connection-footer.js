@@ -5,18 +5,18 @@
 const Cu = Components.utils;
 const Ci = Components.interfaces;
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource:///modules/devtools/gDevTools.jsm");
+Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm");
 
-const {Simulator} = Cu.import("resource://gre/modules/devtools/Simulator.jsm")
-const {Devices} = Cu.import("resource://gre/modules/devtools/Devices.jsm");
-const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const {Simulator} = Cu.import("resource://gre/modules/devtools/shared/apps/Simulator.jsm")
+const {Devices} = Cu.import("resource://gre/modules/devtools/shared/apps/Devices.jsm");
+const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 
-const {ConnectionManager, Connection} = require("devtools/client/connection-manager");
+const {ConnectionManager, Connection} = require("devtools/shared/client/connection-manager");
 const {getDeviceFront} = require("devtools/server/actors/device");
-const ConnectionStore = require("devtools/app-manager/connection-store");
-const DeviceStore = require("devtools/app-manager/device-store");
-const simulatorsStore = require("devtools/app-manager/simulators-store");
-const adbStore = require("devtools/app-manager/builtin-adb-store");
+const ConnectionStore = require("devtools/client/app-manager/connection-store");
+const DeviceStore = require("devtools/client/app-manager/device-store");
+const simulatorsStore = require("devtools/client/app-manager/simulators-store");
+const adbStore = require("devtools/client/app-manager/builtin-adb-store");
 
 window.addEventListener("unload", function onUnload() {
   window.removeEventListener("unload", onUnload);

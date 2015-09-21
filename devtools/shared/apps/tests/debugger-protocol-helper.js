@@ -5,8 +5,8 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const { DebuggerClient } = require("devtools/toolkit/client/main");
+const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const { DebuggerClient } = require("devtools/shared/client/main");
 const { DebuggerServer } = require("devtools/server/main");
 const { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm");
 const { Services } = Cu.import("resource://gre/modules/Services.jsm");

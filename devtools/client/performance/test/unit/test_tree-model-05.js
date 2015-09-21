@@ -47,7 +47,7 @@ function run_test() {
 }
 
 add_task(function test() {
-  let { ThreadNode } = require("devtools/performance/tree-model");
+  let { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
 
   let root = new ThreadNode(gThread, { invertTree: true, startTime: 0, endTime: 4 });
 

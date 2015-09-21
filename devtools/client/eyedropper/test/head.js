@@ -5,7 +5,7 @@
 Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/browser/devtools/framework/test/shared-head.js", this);
 Services.scriptloader.loadSubScript(TEST_DIR + "../../../commandline/test/helpers.js", this);
 
-const { Eyedropper, EyedropperManager } = require("devtools/eyedropper/eyedropper");
+const { Eyedropper, EyedropperManager } = require("devtools/client/eyedropper/eyedropper");
 
 function waitForClipboard(setup, expected) {
   let deferred = promise.defer();

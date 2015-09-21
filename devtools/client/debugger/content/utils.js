@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { promiseInvoke } = require("devtools/async-utils");
-const { reportException } = require("devtools/toolkit/DevToolsUtils");
+const { promiseInvoke } = require("devtools/shared/async-utils");
+const { reportException } = require("devtools/shared/DevToolsUtils");
 
 function rdpInvoke(client, method, ...args) {
   return promiseInvoke(client, method, ...args)

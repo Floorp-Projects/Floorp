@@ -17,8 +17,8 @@
 
 var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-var {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-var {CssLogic} = require("devtools/styleinspector/css-logic");
+var {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var {CssLogic} = require("devtools/shared/styleinspector/css-logic");
 var promise = require("promise");
 
 /**

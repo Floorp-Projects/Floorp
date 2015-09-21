@@ -36,7 +36,7 @@ function test() {
 function getHighlighterNumber() {
   // Note that this only works as long as gcli tests aren't run with e10s on.
   // To make this e10s ready, execute this in a content frame script instead.
-  return require("devtools/toolkit/gcli/commands/highlight").highlighters.length;
+  return require("devtools/shared/gcli/commands/highlight").highlighters.length;
 }
 
 function* runCommand(cmd, options) {

@@ -3,7 +3,7 @@
 
 // Tests that flame graph widget works properly.
 
-var {FlameGraph} = require("devtools/shared/widgets/FlameGraph");
+var {FlameGraph} = require("devtools/client/shared/widgets/FlameGraph");
 
 add_task(function*() {
   yield promiseTab("about:blank");

@@ -10,16 +10,16 @@ const DEVELOPER_HUD_LOG_PREFIX = 'DeveloperHUD';
 const CUSTOM_HISTOGRAM_PREFIX = 'DEVTOOLS_HUD_CUSTOM_';
 
 XPCOMUtils.defineLazyGetter(this, 'devtools', function() {
-  const {devtools} = Cu.import('resource://gre/modules/devtools/Loader.jsm', {});
+  const {devtools} = Cu.import('resource://gre/modules/devtools/shared/Loader.jsm', {});
   return devtools;
 });
 
 XPCOMUtils.defineLazyGetter(this, 'DebuggerClient', function() {
-  return devtools.require('devtools/toolkit/client/main').DebuggerClient;
+  return devtools.require('devtools/shared/client/main').DebuggerClient;
 });
 
 XPCOMUtils.defineLazyGetter(this, 'WebConsoleUtils', function() {
-  return devtools.require('devtools/toolkit/webconsole/utils').Utils;
+  return devtools.require('devtools/shared/webconsole/utils').Utils;
 });
 
 XPCOMUtils.defineLazyGetter(this, 'EventLoopLagFront', function() {

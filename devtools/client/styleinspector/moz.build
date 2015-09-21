@@ -7,7 +7,7 @@
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
-EXTRA_JS_MODULES.devtools.styleinspector += [
+DevToolsModules(
     'computed-view.js',
     'css-parsing-utils.js',
     'rule-view.js',
@@ -15,4 +15,4 @@ EXTRA_JS_MODULES.devtools.styleinspector += [
     'style-inspector-overlays.js',
     'style-inspector.js',
     'utils.js',
-]
+)

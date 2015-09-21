@@ -11,7 +11,7 @@ const {
   createSVGNode, createNode } = require("./utils/markup");
 
 const { setIgnoreLayoutChanges,
-  getAdjustedQuads } = require("devtools/toolkit/layout/utils");
+  getAdjustedQuads } = require("devtools/shared/layout/utils");
 
 const GEOMETRY_LABEL_SIZE = 6;
 

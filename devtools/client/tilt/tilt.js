@@ -7,11 +7,11 @@
 
 const {Cu} = require("chrome");
 
-var {TiltVisualizer} = require("devtools/tilt/tilt-visualizer");
-var TiltGL = require("devtools/tilt/tilt-gl");
-var TiltUtils = require("devtools/tilt/tilt-utils");
-var EventEmitter = require("devtools/toolkit/event-emitter");
-var Telemetry = require("devtools/shared/telemetry");
+var {TiltVisualizer} = require("devtools/client/tilt/tilt-visualizer");
+var TiltGL = require("devtools/client/tilt/tilt-gl");
+var TiltUtils = require("devtools/client/tilt/tilt-utils");
+var EventEmitter = require("devtools/shared/event-emitter");
+var Telemetry = require("devtools/client/shared/telemetry");
 
 Cu.import("resource://gre/modules/Services.jsm");
 

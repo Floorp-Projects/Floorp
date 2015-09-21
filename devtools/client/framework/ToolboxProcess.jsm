@@ -12,13 +12,13 @@ const CHROME_DEBUGGER_PROFILE_NAME = "chrome_debugger_profile";
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm")
-const { require, DevToolsLoader } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { require, DevToolsLoader } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 
 XPCOMUtils.defineLazyGetter(this, "Telemetry", function () {
-  return require("devtools/shared/telemetry");
+  return require("devtools/client/shared/telemetry");
 });
 XPCOMUtils.defineLazyGetter(this, "EventEmitter", function () {
-  return require("devtools/toolkit/event-emitter");
+  return require("devtools/shared/event-emitter");
 });
 const promise = require("promise");
 

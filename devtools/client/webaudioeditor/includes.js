@@ -7,25 +7,25 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
-Cu.import("resource:///modules/devtools/gDevTools.jsm");
+Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
+Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm");
 
-const { loader, require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { loader, require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 
-var { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+var { console } = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
 var { EventTarget } = require("sdk/event/target");
 
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 const { Class } = require("sdk/core/heritage");
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const STRINGS_URI = "chrome://browser/locale/devtools/webaudioeditor.properties"
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
-const Telemetry = require("devtools/shared/telemetry");
+const Telemetry = require("devtools/client/shared/telemetry");
 const telemetry = new Telemetry();
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 loader.lazyRequireGetter(this, "LineGraphWidget",
-  "devtools/shared/widgets/LineGraphWidget");
+  "devtools/client/shared/widgets/LineGraphWidget");
 
 // `AUDIO_NODE_DEFINITION` defined in the controller's initialization,
 // which describes all the properties of an AudioNode

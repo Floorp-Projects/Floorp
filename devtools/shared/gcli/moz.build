@@ -4,27 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXTRA_JS_MODULES.devtools.gcli.commands += [
-    'commands/addon.js',
-    'commands/appcache.js',
-    'commands/calllog.js',
-    'commands/cmd.js',
-    'commands/cookie.js',
-    'commands/csscoverage.js',
-    'commands/folder.js',
-    'commands/highlight.js',
-    'commands/index.js',
-    'commands/inject.js',
-    'commands/jsb.js',
-    'commands/listen.js',
-    'commands/media.js',
-    'commands/pagemod.js',
-    'commands/paintflashing.js',
-    'commands/restart.js',
-    'commands/rulers.js',
-    'commands/screenshot.js',
-    'commands/security.js',
-    'commands/tools.js',
+DIRS += [
+    'commands',
 ]
 
 EXTRA_JS_MODULES.devtools.gcli.commands += [
@@ -123,7 +104,7 @@ EXTRA_JS_MODULES.devtools.gcli += [
     'source/lib/gcli/system.js',
 ]
 
-EXTRA_JS_MODULES.devtools += [
+EXTRA_JS_MODULES.devtools.shared.gcli += [
     'gcli.jsm',
     'Templater.jsm',
 ]

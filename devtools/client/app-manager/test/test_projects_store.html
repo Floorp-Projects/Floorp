@@ -22,9 +22,9 @@ Bug 907206 - data store for local apps
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+        const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 
-        const { AppProjects } = require("devtools/app-manager/app-projects");
+        const { AppProjects } = require("devtools/client/app-manager/app-projects");
 
         function testHosted(projects) {
           let manifestURL = document.location.href.replace("test_projects_store.html", "hosted_app/webapp.manifest");

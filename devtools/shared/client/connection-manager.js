@@ -8,10 +8,10 @@
 
 const {Cc, Ci, Cu, Cr} = require("chrome");
 const {setTimeout, clearTimeout} = require('sdk/timers');
-const EventEmitter = require("devtools/toolkit/event-emitter");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const EventEmitter = require("devtools/shared/event-emitter");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { DebuggerServer } = require("devtools/server/main");
-const { DebuggerClient } = require("devtools/toolkit/client/main");
+const { DebuggerClient } = require("devtools/shared/client/main");
 
 Cu.import("resource://gre/modules/Services.jsm");
 DevToolsUtils.defineLazyModuleGetter(this, "Task",
@@ -23,7 +23,7 @@ const REMOTE_TIMEOUT = "devtools.debugger.remote-timeout";
  * Connection Manager.
  *
  * To use this module:
- * const {ConnectionManager} = require("devtools/client/connection-manager");
+ * const {ConnectionManager} = require("devtools/shared/client/connection-manager");
  *
  * # ConnectionManager
  *

@@ -4,75 +4,75 @@
 "use strict";
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
-const { loader, require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { loader, require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 
 const { Task } = require("resource://gre/modules/Task.jsm");
-const { Heritage, ViewHelpers, WidgetMethods } = require("resource:///modules/devtools/ViewHelpers.jsm");
+const { Heritage, ViewHelpers, WidgetMethods } = require("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
 
 // Events emitted by various objects in the panel.
-const EVENTS = require("devtools/performance/events");
+const EVENTS = require("devtools/client/performance/events");
 
 loader.lazyRequireGetter(this, "Services");
 loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter",
-  "devtools/toolkit/event-emitter");
+  "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "DevToolsUtils",
-  "devtools/toolkit/DevToolsUtils");
+  "devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "system",
-  "devtools/toolkit/shared/system");
+  "devtools/shared/shared/system");
 
 // Logic modules
 
 loader.lazyRequireGetter(this, "L10N",
-  "devtools/performance/global", true);
+  "devtools/client/performance/modules/global", true);
 loader.lazyRequireGetter(this, "PerformanceTelemetry",
-  "devtools/performance/telemetry", true);
+  "devtools/client/performance/modules/logic/telemetry", true);
 loader.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
-  "devtools/performance/markers", true);
+  "devtools/client/performance/modules/markers", true);
 loader.lazyRequireGetter(this, "RecordingUtils",
-  "devtools/toolkit/performance/utils");
+  "devtools/shared/performance/utils");
 loader.lazyRequireGetter(this, "GraphsController",
-  "devtools/performance/graphs", true);
+  "devtools/client/performance/modules/widgets/graphs", true);
 loader.lazyRequireGetter(this, "OptimizationsGraph",
-  "devtools/performance/graphs", true);
+  "devtools/client/performance/modules/widgets/graphs", true);
 loader.lazyRequireGetter(this, "WaterfallHeader",
-  "devtools/performance/waterfall-ticks", true);
+  "devtools/client/performance/modules/widgets/waterfall-ticks", true);
 loader.lazyRequireGetter(this, "MarkerView",
-  "devtools/performance/marker-view", true);
+  "devtools/client/performance/modules/widgets/marker-view", true);
 loader.lazyRequireGetter(this, "MarkerDetails",
-  "devtools/performance/marker-details", true);
+  "devtools/client/performance/modules/widgets/marker-details", true);
 loader.lazyRequireGetter(this, "MarkerUtils",
-  "devtools/performance/marker-utils");
+  "devtools/client/performance/modules/logic/marker-utils");
 loader.lazyRequireGetter(this, "WaterfallUtils",
-  "devtools/performance/waterfall-utils");
+  "devtools/client/performance/modules/logic/waterfall-utils");
 loader.lazyRequireGetter(this, "FrameUtils",
-  "devtools/performance/frame-utils");
+  "devtools/client/performance/modules/logic/frame-utils");
 loader.lazyRequireGetter(this, "CallView",
-  "devtools/performance/tree-view", true);
+  "devtools/client/performance/modules/widgets/tree-view", true);
 loader.lazyRequireGetter(this, "ThreadNode",
-  "devtools/performance/tree-model", true);
+  "devtools/client/performance/modules/logic/tree-model", true);
 loader.lazyRequireGetter(this, "FrameNode",
-  "devtools/performance/tree-model", true);
+  "devtools/client/performance/modules/logic/tree-model", true);
 loader.lazyRequireGetter(this, "JITOptimizations",
-  "devtools/performance/jit", true);
+  "devtools/client/performance/modules/logic/jit", true);
 
 // Widgets modules
 
 loader.lazyRequireGetter(this, "OptionsView",
-  "devtools/shared/options-view", true);
+  "devtools/client/shared/options-view", true);
 loader.lazyRequireGetter(this, "FlameGraphUtils",
-  "devtools/shared/widgets/FlameGraph", true);
+  "devtools/client/shared/widgets/FlameGraph", true);
 loader.lazyRequireGetter(this, "FlameGraph",
-  "devtools/shared/widgets/FlameGraph", true);
+  "devtools/client/shared/widgets/FlameGraph", true);
 loader.lazyRequireGetter(this, "TreeWidget",
-  "devtools/shared/widgets/TreeWidget", true);
+  "devtools/client/shared/widgets/TreeWidget", true);
 
 loader.lazyImporter(this, "SideMenuWidget",
-  "resource:///modules/devtools/SideMenuWidget.jsm");
+  "resource:///modules/devtools/client/shared/widgets/SideMenuWidget.jsm");
 loader.lazyImporter(this, "setNamedTimeout",
-  "resource:///modules/devtools/ViewHelpers.jsm");
+  "resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
 loader.lazyImporter(this, "clearNamedTimeout",
-  "resource:///modules/devtools/ViewHelpers.jsm");
+  "resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
 loader.lazyImporter(this, "PluralForm",
   "resource://gre/modules/PluralForm.jsm");
 
@@ -128,7 +128,7 @@ var PerformanceController = {
     this._e10s = Services.appinfo.browserTabsRemoteAutostart;
     this._setMultiprocessAttributes();
 
-    this._prefs = require("devtools/performance/global").PREFS;
+    this._prefs = require("devtools/client/performance/modules/global").PREFS;
     this._prefs.on("pref-changed", this._onPrefChanged);
 
     gFront.on("*", this._onFrontEvent);

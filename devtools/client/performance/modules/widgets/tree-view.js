@@ -9,9 +9,9 @@
  */
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
-const { L10N } = require("devtools/performance/global");
-const { Heritage } = require("resource:///modules/devtools/ViewHelpers.jsm");
-const { AbstractTreeItem } = require("resource:///modules/devtools/AbstractTreeItem.jsm");
+const { L10N } = require("devtools/client/performance/modules/global");
+const { Heritage } = require("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
+const { AbstractTreeItem } = require("resource:///modules/devtools/client/shared/widgets/AbstractTreeItem.jsm");
 
 const URL_LABEL_TOOLTIP = L10N.getStr("table.url.tooltiptext");
 const VIEW_OPTIMIZATIONS_TOOLTIP = L10N.getStr("table.view-optimizations.tooltiptext2");

@@ -8,16 +8,16 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource:///modules/devtools/SideMenuWidget.jsm");
-Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
-Cu.import("resource://gre/modules/devtools/Console.jsm");
+Cu.import("resource:///modules/devtools/client/shared/widgets/SideMenuWidget.jsm");
+Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
+Cu.import("resource://gre/modules/devtools/shared/Console.jsm");
 
-const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 const promise = require("promise");
-const EventEmitter = require("devtools/toolkit/event-emitter");
-const {Tooltip} = require("devtools/shared/widgets/Tooltip");
-const Editor = require("devtools/sourceeditor/editor");
-const Telemetry = require("devtools/shared/telemetry");
+const EventEmitter = require("devtools/shared/event-emitter");
+const {Tooltip} = require("devtools/client/shared/widgets/Tooltip");
+const Editor = require("devtools/client/sourceeditor/editor");
+const Telemetry = require("devtools/client/shared/telemetry");
 const telemetry = new Telemetry();
 
 // The panel's window global is an EventEmitter firing the following events:

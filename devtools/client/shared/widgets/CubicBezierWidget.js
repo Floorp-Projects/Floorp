@@ -25,9 +25,9 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const {setTimeout, clearTimeout} = require("sdk/timers");
-const {PREDEFINED, PRESETS, DEFAULT_PRESET_CATEGORY} = require("devtools/shared/widgets/CubicBezierPresets");
+const {PREDEFINED, PRESETS, DEFAULT_PRESET_CATEGORY} = require("devtools/client/shared/widgets/CubicBezierPresets");
 const {Cc, Ci} = require('chrome');
 loader.lazyGetter(this, "DOMUtils", () => {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);

@@ -18,14 +18,14 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        const asyncStorage = require("devtools/toolkit/shared/async-storage");
-        const EventEmitter = require("devtools/toolkit/event-emitter");
-        const { GetAvailableAddons } = require("devtools/webide/addons");
-        const { GetDevices } = require("devtools/shared/devices");
-        const { Simulator, Simulators } = require("devtools/webide/simulators");
+        const asyncStorage = require("devtools/shared/shared/async-storage");
+        const EventEmitter = require("devtools/shared/event-emitter");
+        const { GetAvailableAddons } = require("devtools/client/webide/modules/addons");
+        const { GetDevices } = require("devtools/client/shared/devices");
+        const { Simulator, Simulators } = require("devtools/client/webide/modules/simulators");
         const { AddonSimulatorProcess,
                 OldAddonSimulatorProcess,
-                CustomSimulatorProcess } = require("devtools/webide/simulator-process");
+                CustomSimulatorProcess } = require("devtools/client/webide/modules/simulator-process");
 
         function addonStatus(addon, status) {
           if (addon.status == status) {

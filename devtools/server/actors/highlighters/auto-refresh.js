@@ -5,9 +5,9 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const { isNodeValid } = require("./utils/markup");
-const { getAdjustedQuads } = require("devtools/toolkit/layout/utils");
+const { getAdjustedQuads } = require("devtools/shared/layout/utils");
 
 // Note that the order of items in this array is important because it is used
 // for drawing the BoxModelHighlighter's path elements correctly.

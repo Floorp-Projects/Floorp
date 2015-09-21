@@ -11,19 +11,19 @@ const { Services } = require("resource://gre/modules/Services.jsm");
 loader.lazyGetter(this, "osString", () => Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS);
 
 // Panels
-loader.lazyGetter(this, "OptionsPanel", () => require("devtools/framework/toolbox-options").OptionsPanel);
-loader.lazyGetter(this, "InspectorPanel", () => require("devtools/inspector/inspector-panel").InspectorPanel);
-loader.lazyGetter(this, "WebConsolePanel", () => require("devtools/webconsole/panel").WebConsolePanel);
-loader.lazyGetter(this, "DebuggerPanel", () => require("devtools/debugger/panel").DebuggerPanel);
-loader.lazyGetter(this, "StyleEditorPanel", () => require("devtools/styleeditor/styleeditor-panel").StyleEditorPanel);
-loader.lazyGetter(this, "ShaderEditorPanel", () => require("devtools/shadereditor/panel").ShaderEditorPanel);
-loader.lazyGetter(this, "CanvasDebuggerPanel", () => require("devtools/canvasdebugger/panel").CanvasDebuggerPanel);
-loader.lazyGetter(this, "WebAudioEditorPanel", () => require("devtools/webaudioeditor/panel").WebAudioEditorPanel);
-loader.lazyGetter(this, "MemoryPanel", () => require("devtools/memory/panel").MemoryPanel);
-loader.lazyGetter(this, "PerformancePanel", () => require("devtools/performance/panel").PerformancePanel);
-loader.lazyGetter(this, "NetMonitorPanel", () => require("devtools/netmonitor/panel").NetMonitorPanel);
-loader.lazyGetter(this, "StoragePanel", () => require("devtools/storage/panel").StoragePanel);
-loader.lazyGetter(this, "ScratchpadPanel", () => require("devtools/scratchpad/scratchpad-panel").ScratchpadPanel);
+loader.lazyGetter(this, "OptionsPanel", () => require("devtools/client/framework/toolbox-options").OptionsPanel);
+loader.lazyGetter(this, "InspectorPanel", () => require("devtools/client/inspector/inspector-panel").InspectorPanel);
+loader.lazyGetter(this, "WebConsolePanel", () => require("devtools/client/webconsole/panel").WebConsolePanel);
+loader.lazyGetter(this, "DebuggerPanel", () => require("devtools/client/debugger/panel").DebuggerPanel);
+loader.lazyGetter(this, "StyleEditorPanel", () => require("devtools/client/styleeditor/styleeditor-panel").StyleEditorPanel);
+loader.lazyGetter(this, "ShaderEditorPanel", () => require("devtools/client/shadereditor/panel").ShaderEditorPanel);
+loader.lazyGetter(this, "CanvasDebuggerPanel", () => require("devtools/client/canvasdebugger/panel").CanvasDebuggerPanel);
+loader.lazyGetter(this, "WebAudioEditorPanel", () => require("devtools/client/webaudioeditor/panel").WebAudioEditorPanel);
+loader.lazyGetter(this, "MemoryPanel", () => require("devtools/client/memory/panel").MemoryPanel);
+loader.lazyGetter(this, "PerformancePanel", () => require("devtools/client/performance/panel").PerformancePanel);
+loader.lazyGetter(this, "NetMonitorPanel", () => require("devtools/client/netmonitor/panel").NetMonitorPanel);
+loader.lazyGetter(this, "StoragePanel", () => require("devtools/client/storage/panel").StoragePanel);
+loader.lazyGetter(this, "ScratchpadPanel", () => require("devtools/client/scratchpad/scratchpad-panel").ScratchpadPanel);
 
 // Strings
 const toolboxProps = "chrome://browser/locale/devtools/toolbox.properties";
@@ -95,9 +95,9 @@ Tools.inspector = {
   },
   inMenu: true,
   commands: [
-    "devtools/responsivedesign/resize-commands",
-    "devtools/inspector/inspector-commands",
-    "devtools/eyedropper/commands.js"
+    "devtools/client/responsivedesign/resize-commands",
+    "devtools/client/inspector/inspector-commands",
+    "devtools/client/eyedropper/commands.js"
   ],
 
   preventClosingOnKey: true,
@@ -131,7 +131,7 @@ Tools.webConsole = {
     ( osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+" ) + this.key);
   },
   inMenu: true,
-  commands: "devtools/webconsole/console-commands",
+  commands: "devtools/client/webconsole/console-commands",
 
   preventClosingOnKey: true,
   onkey: function(panel, toolbox) {
@@ -167,7 +167,7 @@ Tools.jsdebugger = {
     ( osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+" ) + this.key);
   },
   inMenu: true,
-  commands: "devtools/debugger/debugger-commands",
+  commands: "devtools/client/debugger/debugger-commands",
 
   isTargetSupported: function(target) {
     return true;
@@ -194,7 +194,7 @@ Tools.styleEditor = {
     "Shift+" + functionkey(this.key));
   },
   inMenu: true,
-  commands: "devtools/styleeditor/styleeditor-commands",
+  commands: "devtools/client/styleeditor/styleeditor-commands",
 
   isTargetSupported: function(target) {
     return target.hasActor("styleEditor") || target.hasActor("styleSheets");
@@ -388,7 +388,7 @@ Tools.scratchpad = {
   panelLabel: l10n("scratchpad.panelLabel", scratchpadStrings),
   tooltip: l10n("scratchpad.tooltip", scratchpadStrings),
   inMenu: false,
-  commands: "devtools/scratchpad/scratchpad-commands",
+  commands: "devtools/client/scratchpad/scratchpad-commands",
 
   isTargetSupported: function(target) {
     return target.isRemote;

@@ -1,6 +1,6 @@
 "use strict";
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 
 
 function isObject(value) {

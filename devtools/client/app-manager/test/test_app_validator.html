@@ -18,9 +18,9 @@
     const Cc = Components.classes;
     const Ci = Components.interfaces;
     Cu.import("resource://testing-common/httpd.js");
-    const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+    const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 
-    const {AppValidator} = require("devtools/app-manager/app-validator");
+    const {AppValidator} = require("devtools/client/app-manager/app-validator");
     const {Services} = Cu.import("resource://gre/modules/Services.jsm");
     const nsFile = Components.Constructor("@mozilla.org/file/local;1",
                                            "nsILocalFile", "initWithPath");

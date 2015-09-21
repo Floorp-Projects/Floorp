@@ -18,7 +18,7 @@ window.onload = function() {
 
   var Cu = Components.utils;
 
-  var {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+  var {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
   var {DebuggerServer} = require("devtools/server/main");
   Cu.import("resource://gre/modules/Services.jsm");
 
@@ -27,7 +27,7 @@ window.onload = function() {
     DebuggerServer.addBrowserActors();
   }
 
-  var {ConnectionManager, Connection} = require("devtools/client/connection-manager");
+  var {ConnectionManager, Connection} = require("devtools/shared/client/connection-manager");
 
   var orgCount = ConnectionManager.connections.length;
 

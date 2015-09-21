@@ -4,7 +4,7 @@
 
 "use strict";
 
-const cssAutoCompleter  = require("devtools/sourceeditor/css-autocompleter");
+const cssAutoCompleter  = require("devtools/client/sourceeditor/css-autocompleter");
 const { Cc, Ci } = require("chrome");
 
 const CSS_URI = "http://mochi.test:8888/browser/browser/devtools/sourceeditor" +

@@ -6,14 +6,14 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-var { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-var { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-var { CurlUtils } = Cu.import("resource:///modules/devtools/Curl.jsm", {});
+var { gDevTools } = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
+var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var { CurlUtils } = Cu.import("resource:///modules/devtools/client/shared/Curl.jsm", {});
 var promise = require("promise");
-var NetworkHelper = require("devtools/toolkit/webconsole/network-helper");
-var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-var { TargetFactory } = require("devtools/framework/target");
-var { Toolbox } = require("devtools/framework/toolbox");
+var NetworkHelper = require("devtools/shared/webconsole/network-helper");
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+var { TargetFactory } = require("devtools/client/framework/target");
+var { Toolbox } = require("devtools/client/framework/toolbox");
 
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/netmonitor/test/";
 

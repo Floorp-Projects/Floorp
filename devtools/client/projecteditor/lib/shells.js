@@ -8,8 +8,8 @@ const { Cu } = require("chrome");
 const { Class } = require("sdk/core/heritage");
 const { EventTarget } = require("sdk/event/target");
 const { emit } = require("sdk/event/core");
-const { EditorTypeForResource } = require("projecteditor/editors");
-const NetworkHelper = require("devtools/toolkit/webconsole/network-helper");
+const { EditorTypeForResource } = require("devtools/client/projecteditor/lib/editors");
+const NetworkHelper = require("devtools/shared/webconsole/network-helper");
 const promise = require("promise");
 
 /**

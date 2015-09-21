@@ -6,7 +6,7 @@
 
 const { Cc, Ci } = require("chrome");
 
-loader.lazyGetter(this, "gDevTools", () => require("resource:///modules/devtools/gDevTools.jsm").gDevTools);
+loader.lazyGetter(this, "gDevTools", () => require("resource:///modules/devtools/client/framework/gDevTools.jsm").gDevTools);
 
 const domtemplate = require("gcli/util/domtemplate");
 const csscoverage = require("devtools/server/actors/csscoverage");
@@ -14,7 +14,7 @@ const l10n = csscoverage.l10n;
 
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Chart", "resource:///modules/devtools/Chart.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Chart", "resource:///modules/devtools/client/shared/widgets/Chart.jsm");
 
 /**
  * The commands/converters for GCLI

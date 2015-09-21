@@ -10,7 +10,7 @@ function run_test() {
 }
 
 add_task(function () {
-  let { TIMELINE_BLUEPRINT } = require("devtools/performance/markers");
+  let { TIMELINE_BLUEPRINT } = require("devtools/client/performance/modules/markers");
 
   ok(TIMELINE_BLUEPRINT,
     "A timeline blueprint should be available.");

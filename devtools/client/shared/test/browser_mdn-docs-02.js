@@ -21,8 +21,8 @@
 
 "use strict";
 
-const {CssDocsTooltip} = require("devtools/shared/widgets/Tooltip");
-const {setBaseCssDocsUrl, MdnDocsWidget} = require("devtools/shared/widgets/MdnDocsWidget");
+const {CssDocsTooltip} = require("devtools/client/shared/widgets/Tooltip");
+const {setBaseCssDocsUrl, MdnDocsWidget} = require("devtools/client/shared/widgets/MdnDocsWidget");
 
 // frame to load the tooltip into
 const MDN_DOCS_TOOLTIP_FRAME = "chrome://devtools/content/shared/widgets/mdn-docs-frame.xhtml";

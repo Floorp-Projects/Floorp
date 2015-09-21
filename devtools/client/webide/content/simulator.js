@@ -4,13 +4,13 @@
 
 const Cu = Components.utils;
 
-const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const { GetDevices, GetDeviceString } = require("devtools/shared/devices");
+const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const { GetDevices, GetDeviceString } = require("devtools/client/shared/devices");
 const { Services } = Cu.import("resource://gre/modules/Services.jsm");
-const { Simulators, Simulator } = require("devtools/webide/simulators");
-const EventEmitter = require('devtools/toolkit/event-emitter');
+const { Simulators, Simulator } = require("devtools/client/webide/modules/simulators");
+const EventEmitter = require('devtools/shared/event-emitter');
 const promise = require("promise");
-const utils = require("devtools/webide/utils");
+const utils = require("devtools/client/webide/modules/utils");
 
 const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
 

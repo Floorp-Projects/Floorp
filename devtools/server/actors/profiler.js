@@ -7,7 +7,7 @@
 const { Cu } = require("chrome");
 const protocol = require("devtools/server/protocol");
 const { custom, method, RetVal, Arg, Option, types } = protocol;
-const { Profiler } = require("devtools/toolkit/shared/profiler");
+const { Profiler } = require("devtools/shared/shared/profiler");
 const { actorBridge } = require("devtools/server/actors/common");
 
 loader.lazyRequireGetter(this, "events", "sdk/event/core");

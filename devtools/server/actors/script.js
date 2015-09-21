@@ -11,14 +11,14 @@ const { Cc, Ci, Cu, components, ChromeWorker } = require("chrome");
 const { ActorPool, OriginalLocation, GeneratedLocation } = require("devtools/server/actors/common");
 const { ObjectActor, createValueGrip, longStringGrip } = require("devtools/server/actors/object");
 const { DebuggerServer } = require("devtools/server/main");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { dbg_assert, dumpn, update, fetch } = DevToolsUtils;
-const { dirname, joinURI } = require("devtools/toolkit/path");
+const { dirname, joinURI } = require("devtools/shared/path");
 const promise = require("promise");
 const PromiseDebugging = require("PromiseDebugging");
 const xpcInspector = require("xpcInspector");
 const ScriptStore = require("./utils/ScriptStore");
-const { DevToolsWorker } = require("devtools/toolkit/shared/worker.js");
+const { DevToolsWorker } = require("devtools/shared/shared/worker");
 
 const { defer, resolve, reject, all } = promise;
 
@@ -29,7 +29,7 @@ loader.lazyGetter(this, "Debugger", () => {
 });
 loader.lazyRequireGetter(this, "SourceMapConsumer", "source-map", true);
 loader.lazyRequireGetter(this, "SourceMapGenerator", "source-map", true);
-loader.lazyRequireGetter(this, "CssLogic", "devtools/styleinspector/css-logic", true);
+loader.lazyRequireGetter(this, "CssLogic", "devtools/shared/styleinspector/css-logic", true);
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
 loader.lazyRequireGetter(this, "mapURIToAddonID", "devtools/server/actors/utils/map-uri-to-addon-id");
 loader.lazyRequireGetter(this, "setTimeout", "sdk/timers", true);

@@ -8,7 +8,7 @@
 const Services = require("Services")
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 /**
  * A tree widget with keyboard navigation and collapsable structure.

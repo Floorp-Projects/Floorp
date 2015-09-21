@@ -6,35 +6,35 @@
 
 const { Cc, Ci, Cu } = require("chrome");
 const { Class } = require("sdk/core/heritage");
-const { Project } = require("projecteditor/project");
-const { ProjectTreeView } = require("projecteditor/tree");
-const { ShellDeck } = require("projecteditor/shells");
-const { Resource } = require("projecteditor/stores/resource");
-const { registeredPlugins } = require("projecteditor/plugins/core");
+const { Project } = require("devtools/client/projecteditor/lib/project");
+const { ProjectTreeView } = require("devtools/client/projecteditor/lib/tree");
+const { ShellDeck } = require("devtools/client/projecteditor/lib/shells");
+const { Resource } = require("devtools/client/projecteditor/lib/stores/resource");
+const { registeredPlugins } = require("devtools/client/projecteditor/lib/plugins/core");
 const { EventTarget } = require("sdk/event/target");
-const { on, forget } = require("projecteditor/helpers/event");
+const { on, forget } = require("devtools/client/projecteditor/lib/helpers/event");
 const { emit } = require("sdk/event/core");
 const { merge } = require("sdk/util/object");
 const promise = require("promise");
-const { ViewHelpers } = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
-const { DOMHelpers } = Cu.import("resource:///modules/devtools/DOMHelpers.jsm");
+const { ViewHelpers } = Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm", {});
+const { DOMHelpers } = Cu.import("resource:///modules/devtools/client/shared/DOMHelpers.jsm");
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 const ITCHPAD_URL = "chrome://devtools/content/projecteditor/chrome/content/projecteditor.xul";
-const { confirm } = require("projecteditor/helpers/prompts");
-const { getLocalizedString } = require("projecteditor/helpers/l10n");
+const { confirm } = require("devtools/client/projecteditor/lib/helpers/prompts");
+const { getLocalizedString } = require("devtools/client/projecteditor/lib/helpers/l10n");
 
 // Enabled Plugins
-require("projecteditor/plugins/dirty/dirty");
-require("projecteditor/plugins/delete/delete");
-require("projecteditor/plugins/new/new");
-require("projecteditor/plugins/rename/rename");
-require("projecteditor/plugins/save/save");
-require("projecteditor/plugins/image-view/plugin");
-require("projecteditor/plugins/app-manager/plugin");
-require("projecteditor/plugins/status-bar/plugin");
+require("devtools/client/projecteditor/lib/plugins/dirty/dirty");
+require("devtools/client/projecteditor/lib/plugins/delete/delete");
+require("devtools/client/projecteditor/lib/plugins/new/new");
+require("devtools/client/projecteditor/lib/plugins/rename/rename");
+require("devtools/client/projecteditor/lib/plugins/save/save");
+require("devtools/client/projecteditor/lib/plugins/image-view/plugin");
+require("devtools/client/projecteditor/lib/plugins/app-manager/plugin");
+require("devtools/client/projecteditor/lib/plugins/status-bar/plugin");
 
 // Uncomment to enable logging.
-// require("projecteditor/plugins/logging/logging");
+// require("devtools/client/projecteditor/lib/plugins/logging/logging");
 
 /**
  * This is the main class tying together an instance of the ProjectEditor.

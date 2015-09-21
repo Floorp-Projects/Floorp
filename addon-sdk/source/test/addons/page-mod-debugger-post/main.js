@@ -12,9 +12,9 @@ const { getMostRecentBrowserWindow } = require('sdk/window/utils');
 const { data } = require('sdk/self');
 const { set } = require('sdk/preferences/service');
 
-const { require: devtoolsRequire } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { require: devtoolsRequire } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 const { DebuggerServer } = devtoolsRequire("devtools/server/main");
-const { DebuggerClient } = devtoolsRequire("devtools/toolkit/client/main");
+const { DebuggerClient } = devtoolsRequire("devtools/shared/client/main");
 
 var gClient;
 var ok;
