@@ -6,8 +6,8 @@
 
 <!DOCTYPE window []>
 
-<?xml-stylesheet href="chrome://browser/skin/devtools/common.css"?>
-<?xml-stylesheet href="chrome://browser/skin/devtools/eyedropper.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/themes/common.css"?>
+<?xml-stylesheet href="chrome://devtools/skin/themes/eyedropper.css" type="text/css"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <commandset id="eyedropper-commandset">

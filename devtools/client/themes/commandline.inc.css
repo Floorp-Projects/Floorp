@@ -52,7 +52,7 @@
 
 :root[devtoolstheme="light"] #developer-toolbar > toolbarbutton:not([checked=true]) > image,
 :root[devtoolstheme="light"] .gclitoolbar-input-node:not([focused=true])::before  {
-  filter: url("chrome://browser/skin/devtools/filters.svg#invert");
+  filter: url("chrome://devtools/skin/themes/images/filters.svg#invert");
 }
 
 .developer-toolbar-button > .toolbarbutton-icon,
@@ -62,7 +62,7 @@
 }
 
 #developer-toolbar-toolbox-button {
-  list-style-image: url("chrome://browser/skin/devtools/toggle-tools.png");
+  list-style-image: url("chrome://devtools/skin/themes/images/toggle-tools.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
@@ -84,7 +84,7 @@
 
 @media (min-resolution: 1.1dppx) {
   #developer-toolbar-toolbox-button {
-    list-style-image: url("chrome://browser/skin/devtools/toggle-tools@2x.png");
+    list-style-image: url("chrome://devtools/skin/themes/images/toggle-tools@2x.png");
     -moz-image-region: rect(0px, 32px, 32px, 0px);
   }
 
@@ -102,7 +102,7 @@
 }
 
 #developer-toolbar-closebutton {
-  list-style-image: url("chrome://browser/skin/devtools/close.png");
+  list-style-image: url("chrome://devtools/skin/themes/images/close.png");
   -moz-appearance: none;
   border: none;
   margin: 0 4px;
@@ -113,7 +113,7 @@
 
 @media (min-resolution: 1.1dppx) {
   #developer-toolbar-closebutton {
-    list-style-image: url("chrome://browser/skin/devtools/close@2x.png");
+    list-style-image: url("chrome://devtools/skin/themes/images/close@2x.png");
   }
 }
 
@@ -190,7 +190,7 @@ html|*#gcli-output-frame {
   width: 16px;
   height: 16px;
   margin: 0 2px;
-  background-image: url("chrome://browser/skin/devtools/commandline-icon.png");
+  background-image: url("chrome://devtools/skin/themes/images/commandline-icon.png");
   background-position: 0 center;
   background-size: 32px 16px;
 }
@@ -201,7 +201,7 @@ html|*#gcli-output-frame {
 
 @media (min-resolution: 1.1dppx) {
   .gclitoolbar-input-node::before {
-    background-image: url("chrome://browser/skin/devtools/commandline-icon@2x.png");
+    background-image: url("chrome://devtools/skin/themes/images/commandline-icon@2x.png");
   }
 }
 

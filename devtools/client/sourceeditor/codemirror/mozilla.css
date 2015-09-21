@@ -33,18 +33,18 @@
 }
 
 .error {
-  background-image: url("chrome://browser/skin/devtools/editor-error.png");
+  background-image: url("chrome://devtools/skin/themes/images/editor-error.png");
   opacity: 0.75;
 }
 
 .breakpoint {
-  background-image: url("chrome://browser/skin/devtools/editor-breakpoint.png");
+  background-image: url("chrome://devtools/skin/themes/images/editor-breakpoint.png");
   position: relative;
 }
 
 @media (min-resolution: 1.1dppx) {
   .breakpoint {
-    background-image: url("chrome://browser/skin/devtools/editor-breakpoint@2x.png");
+    background-image: url("chrome://devtools/skin/themes/images/editor-breakpoint@2x.png");
   }
 }
 
@@ -53,26 +53,26 @@
 }
 
 .debugLocation {
-  background-image: url("chrome://browser/skin/devtools/editor-debug-location.png");
+  background-image: url("chrome://devtools/skin/themes/images/editor-debug-location.png");
 }
 
 @media (min-resolution: 1.1dppx) {
   .debugLocation {
-    background-image: url("chrome://browser/skin/devtools/editor-debug-location@2x.png");
+    background-image: url("chrome://devtools/skin/themes/images/editor-debug-location@2x.png");
   }
 }
 
 .breakpoint.debugLocation {
   background-image:
-    url("chrome://browser/skin/devtools/editor-debug-location.png"),
-    url("chrome://browser/skin/devtools/editor-breakpoint.png");
+    url("chrome://devtools/skin/themes/images/editor-debug-location.png"),
+    url("chrome://devtools/skin/themes/images/editor-breakpoint.png");
 }
 
 @media (min-resolution: 1.1dppx) {
   .breakpoint.debugLocation {
     background-image:
-      url("chrome://browser/skin/devtools/editor-debug-location@2x.png"),
-      url("chrome://browser/skin/devtools/editor-breakpoint@2x.png");
+      url("chrome://devtools/skin/themes/images/editor-debug-location@2x.png"),
+      url("chrome://devtools/skin/themes/images/editor-breakpoint@2x.png");
   }
 }
 

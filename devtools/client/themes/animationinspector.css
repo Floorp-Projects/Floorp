@@ -116,11 +116,11 @@ body {
 }
 
 #element-picker::before {
-  background-image: url("chrome://browser/skin/devtools/command-pick.png");
+  background-image: url("chrome://devtools/skin/themes/images/command-pick.png");
 }
 
 .pause-button::before {
-  background-image: url("debugger-pause.png");
+  background-image: url("images/debugger-pause.png");
 }
 
 #element-picker[checked]::before {
@@ -129,21 +129,21 @@ body {
 }
 
 .pause-button.paused::before {
-  background-image: url("debugger-play.png");
+  background-image: url("images/debugger-play.png");
 }
 
 @media (min-resolution: 1.1dppx) {
   #element-picker::before {
-    background-image: url("chrome://browser/skin/devtools/command-pick@2x.png");
+    background-image: url("chrome://devtools/skin/themes/images/command-pick@2x.png");
     background-size: 64px;
   }
 
   .pause-button::before {
-    background-image: url("debugger-pause@2x.png");
+    background-image: url("images/debugger-pause@2x.png");
   }
 
   .pause-button.paused::before {
-    background-image: url("debugger-play@2x.png");
+    background-image: url("images/debugger-play@2x.png");
   }
 }
 
@@ -356,7 +356,7 @@ body {
 }
 
 .animation-target .node-selector {
-  background: url("chrome://browser/skin/devtools/vview-open-inspector.png") no-repeat 0 0;
+  background: url("chrome://devtools/skin/themes/images/vview-open-inspector.png") no-repeat 0 0;
   padding-left: 16px;
   margin-right: 5px;
   cursor: pointer;
@@ -390,7 +390,7 @@ body {
 
 .animation-title .meta-data .compositor-icon {
     display: none;
-    background-image: url("animation-fast-track.svg");
+    background-image: url("images/animation-fast-track.svg");
     background-repeat: no-repeat;
     padding-left: 12px;
     /* Make sure the icon is positioned above the timeline range input so that
@@ -422,38 +422,38 @@ body {
 }
 
 .timeline .toggle::before {
-  background-image: url(debugger-pause.png);
+  background-image: url(images/debugger-pause.png);
 }
 
 .paused .timeline .toggle::before,
 .finished .timeline .toggle::before {
-  background-image: url(debugger-play.png);
+  background-image: url(images/debugger-play.png);
 }
 
 .timeline .ff::before {
-  background-image: url(fast-forward.png);
+  background-image: url(images/fast-forward.png);
 }
 
 .timeline .rw::before {
-  background-image: url(rewind.png);
+  background-image: url(images/rewind.png);
 }
 
 @media (min-resolution: 1.1dppx) {
   .timeline .toggle::before {
-    background-image: url(debugger-pause@2x.png);
+    background-image: url(images/debugger-pause@2x.png);
   }
 
   .paused .timeline .toggle::before,
   .finished .timeline .toggle::before {
-    background-image: url(debugger-play@2x.png);
+    background-image: url(images/debugger-play@2x.png);
   }
 
   .timeline .ff::before {
-    background-image: url(fast-forward@2x.png);
+    background-image: url(images/fast-forward@2x.png);
   }
 
   .timeline .rw::before {
-    background-image: url(rewind@2x.png);
+    background-image: url(images/rewind@2x.png);
   }
 }
 

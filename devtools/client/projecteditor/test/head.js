@@ -97,7 +97,7 @@ function addProjectEditorTabForTempDirectory(opts = {}) {
   }
   let customOpts = {
     name: "Test",
-    iconUrl: "chrome://browser/skin/devtools/tool-options.svg",
+    iconUrl: "chrome://devtools/skin/themes/images/tool-options.svg",
     projectOverviewURL: SAMPLE_WEBAPP_URL
   };
 

@@ -5,12 +5,12 @@
 /* CSS Variables specific to this panel that aren't defined by the themes */
 .theme-light {
   --rule-highlight-background-color: #ffee99;
-  --rule-filter-icon: url(magnifying-glass-light.png);
+  --rule-filter-icon: url(images/magnifying-glass-light.png);
 }
 
 .theme-dark {
   --rule-highlight-background-color: #594724;
-  --rule-filter-icon: url(magnifying-glass.png);
+  --rule-filter-icon: url(images/magnifying-glass.png);
 }
 
 .ruleview {
@@ -103,7 +103,7 @@
 }
 
 .ruleview-warning {
-  background-image: url(alerticon-warning.png);
+  background-image: url(images/alerticon-warning.png);
   background-size: 13px 12px;
   -moz-margin-start: 5px;
   display: inline-block;
@@ -113,7 +113,7 @@
 
 @media (min-resolution: 1.1dppx) {
   .ruleview-warning {
-    background-image: url(alerticon-warning@2x.png);
+    background-image: url(images/alerticon-warning@2x.png);
   }
 }
 
@@ -198,18 +198,18 @@
 }
 
 .ruleview-bezierswatch {
-  background: url("chrome://browser/skin/devtools/cubic-bezier-swatch.png");
+  background: url("chrome://devtools/skin/themes/images/cubic-bezier-swatch.png");
   background-size: 1em;
 }
 
 .ruleview-filterswatch {
-  background: url("chrome://browser/skin/devtools/filter-swatch.svg");
+  background: url("chrome://devtools/skin/themes/images/filter-swatch.svg");
   background-size: 1em;
 }
 
 @media (min-resolution: 1.1dppx) {
   .ruleview-bezierswatch {
-    background: url("chrome://browser/skin/devtools/cubic-bezier-swatch@2x.png");
+    background: url("chrome://devtools/skin/themes/images/cubic-bezier-swatch@2x.png");
     background-size: 1em;
   }
 }
@@ -277,7 +277,7 @@
 }
 
 .ruleview-selectorhighlighter {
-  background: url("chrome://browser/skin/devtools/vview-open-inspector.png") no-repeat 0 0;
+  background: url("chrome://devtools/skin/themes/images/vview-open-inspector.png") no-repeat 0 0;
   padding-left: 16px;
   margin-left: 5px;
   cursor: pointer;
@@ -293,16 +293,16 @@
 }
 
 #ruleview-add-rule-button::before {
-  background-image: url("chrome://browser/skin/devtools/add.svg");
+  background-image: url("chrome://devtools/skin/themes/images/add.svg");
   background-size: cover;
 }
 
 #pseudo-class-panel-toggle::before {
-  background-image: url("chrome://browser/skin/devtools/pseudo-class.svg#pseudo-class");
+  background-image: url("chrome://devtools/skin/themes/images/pseudo-class.svg#pseudo-class");
   background-size: cover;
 }
 #pseudo-class-panel-toggle[checked]::before {
-  background-image: url("chrome://browser/skin/devtools/pseudo-class.svg#pseudo-class-checked");
+  background-image: url("chrome://devtools/skin/themes/images/pseudo-class.svg#pseudo-class-checked");
   filter: none !important;
 }
 

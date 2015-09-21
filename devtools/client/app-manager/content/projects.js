@@ -131,7 +131,7 @@ var UI = {
       }
     }
     if (!icon)
-      return "chrome://browser/skin/devtools/app-manager/default-app-icon.png";
+      return "chrome://devtools/skin/themes/app-manager/images/default-app-icon.png";
     if (project.type == "hosted") {
       let manifestURL = Services.io.newURI(project.location, null, null);
       let origin = Services.io.newURI(manifestURL.prePath, null, null);

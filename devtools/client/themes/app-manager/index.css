@@ -65,7 +65,7 @@
 }
 
 .projects-button {
-  background: url('chrome://browser/skin/devtools/app-manager/index-icons.svg') no-repeat;
+  background: url('chrome://devtools/skin/themes/app-manager/images/index-icons.svg') no-repeat;
   background-position: left -5px;
 }
 
@@ -74,7 +74,7 @@
 }
 
 .device-button {
-  background-image: url('chrome://browser/skin/devtools/app-manager/index-icons.svg');
+  background-image: url('chrome://devtools/skin/themes/app-manager/images/index-icons.svg');
   background-position: left -85px, top left;
   background-repeat: no-repeat, no-repeat;
   background-size: 160px 240px, 2px 80px;
@@ -86,7 +86,7 @@
 
 .help-button {
   border-bottom: 0;
-  background-image: url('chrome://browser/skin/devtools/app-manager/index-icons.svg');
+  background-image: url('chrome://devtools/skin/themes/app-manager/images/index-icons.svg');
   background-position: left -165px, top left;
   background-repeat: no-repeat, no-repeat;
   background-size: 160px 240px, 2px 80px;

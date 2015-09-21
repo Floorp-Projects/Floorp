@@ -93,25 +93,25 @@
 }
 
 .theme-dark .splitview-nav > li.splitview-active {
-  background-image: url(itemArrow-dark-ltr.svg),
+  background-image: url(images/itemArrow-dark-ltr.svg),
                     linear-gradient(@smw_marginDark@, @smw_marginDark@),
                     linear-gradient(#1d4f73, #1d4f73);
 }
 
 .theme-dark .splitview-nav > li.splitview-active:-moz-locale-dir(rtl) {
-  background-image: url(itemArrow-dark-rtl.svg),
+  background-image: url(images/itemArrow-dark-rtl.svg),
                     linear-gradient(@smw_marginDark@, @smw_marginDark@),
                     linear-gradient(#1d4f73, #1d4f73);
 }
 
 .theme-light .splitview-nav > li.splitview-active {
-  background-image: url(itemArrow-ltr.svg),
+  background-image: url(images/itemArrow-ltr.svg),
                     linear-gradient(@smw_marginLight@, @smw_marginLight@),
                     linear-gradient(#4c9ed9, #4c9ed9);
 }
 
 .theme-light .splitview-nav > li.splitview-active:-moz-locale-dir(rtl) {
-  background-image: url(itemArrow-rtl.svg),
+  background-image: url(images/itemArrow-rtl.svg),
                     linear-gradient(@smw_marginLight@, @smw_marginLight@),
                     linear-gradient(#4c9ed9, #4c9ed9);
 }
