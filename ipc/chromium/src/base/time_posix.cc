@@ -99,13 +99,19 @@ Time Time::FromExploded(bool is_local, const Exploded& exploded) {
     // When representing the most distant time in the future, add in an extra
     // 999ms to avoid the time being less than any other possible value that
     // this function can return.
+
+    // Take care to avoid overflows when time_t is int64_t.
     if (exploded.year < 1969) {
-      milliseconds = std::numeric_limits<time_t>::min() *
-                     kMillisecondsPerSecond;
+      int64_t min_seconds = (sizeof(time_t) < sizeof(int64_t))
+                          ? std::numeric_limits<time_t>::min()
+                          : std::numeric_limits<int32_t>::min();
+      milliseconds = min_seconds * kMillisecondsPerSecond;
     } else {
-      milliseconds = (std::numeric_limits<time_t>::max() *
-                      kMillisecondsPerSecond) +
-                     kMillisecondsPerSecond - 1;
+      int64_t max_seconds = (sizeof(time_t) < sizeof(int64_t))
+                          ? std::numeric_limits<time_t>::max()
+                          : std::numeric_limits<int32_t>::max();
+      milliseconds = max_seconds * kMillisecondsPerSecond;
+      milliseconds += kMillisecondsPerSecond - 1;
     }
   } else {
     milliseconds = seconds * kMillisecondsPerSecond + exploded.millisecond;
