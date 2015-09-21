@@ -1384,13 +1384,15 @@ DisplayName(JSContext* cx, unsigned argc, Value* vp)
 static JSObject*
 ShellObjectMetadataCallback(JSContext* cx, JSObject*)
 {
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+
     RootedObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!obj)
-        CrashAtUnhandlableOOM("ShellObjectMetadataCallback");
+        oomUnsafe.crash("ShellObjectMetadataCallback");
 
     RootedObject stack(cx, NewDenseEmptyArray(cx));
     if (!stack)
-        CrashAtUnhandlableOOM("ShellObjectMetadataCallback");
+        oomUnsafe.crash("ShellObjectMetadataCallback");
 
     static int createdIndex = 0;
     createdIndex++;
@@ -1398,13 +1400,13 @@ ShellObjectMetadataCallback(JSContext* cx, JSObject*)
     if (!JS_DefineProperty(cx, obj, "index", createdIndex, 0,
                            JS_STUBGETTER, JS_STUBSETTER))
     {
-        CrashAtUnhandlableOOM("ShellObjectMetadataCallback");
+        oomUnsafe.crash("ShellObjectMetadataCallback");
     }
 
     if (!JS_DefineProperty(cx, obj, "stack", stack, 0,
                            JS_STUBGETTER, JS_STUBSETTER))
     {
-        CrashAtUnhandlableOOM("ShellObjectMetadataCallback");
+        oomUnsafe.crash("ShellObjectMetadataCallback");
     }
 
     int stackIndex = 0;
@@ -1417,7 +1419,7 @@ ShellObjectMetadataCallback(JSContext* cx, JSObject*)
             if (!JS_DefinePropertyById(cx, stack, id, callee, 0,
                                        JS_STUBGETTER, JS_STUBSETTER))
             {
-                CrashAtUnhandlableOOM("ShellObjectMetadataCallback");
+                oomUnsafe.crash("ShellObjectMetadataCallback");
             }
             stackIndex++;
         }

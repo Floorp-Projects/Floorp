@@ -987,8 +987,12 @@ NativeRegExpMacroAssembler::PushBacktrack(Label* label)
     CodeOffsetLabel patchOffset = masm.movWithPatch(ImmPtr(nullptr), temp0);
 
     MOZ_ASSERT(!label->bound());
-    if (!labelPatches.append(LabelPatch(label, patchOffset)))
-        CrashAtUnhandlableOOM("NativeRegExpMacroAssembler::PushBacktrack");
+
+    {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        if (!labelPatches.append(LabelPatch(label, patchOffset)))
+            oomUnsafe.crash("NativeRegExpMacroAssembler::PushBacktrack");
+    }
 
     PushBacktrack(temp0);
     CheckBacktrackStackLimit();

@@ -258,8 +258,9 @@ struct Zone : public JS::shadow::Zone,
     void enqueueForPromotionToTenuredLogging(JSObject& obj) {
         MOZ_ASSERT(hasDebuggers());
         MOZ_ASSERT(!IsInsideNursery(&obj));
+        js::AutoEnterOOMUnsafeRegion oomUnsafe;
         if (!awaitingTenureLogging.append(&obj))
-            js::CrashAtUnhandlableOOM("Zone::enqueueForPromotionToTenuredLogging");
+            oomUnsafe.crash("Zone::enqueueForPromotionToTenuredLogging");
     }
     void logPromotionsToTenured();
 

@@ -372,7 +372,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     /*
      * Recompute the set of debuggee zones based on the set of debuggee globals.
      */
-    bool recomputeDebuggeeZoneSet();
+    void recomputeDebuggeeZoneSet();
 
     /*
      * Return true if there is an existing object metadata callback for the
