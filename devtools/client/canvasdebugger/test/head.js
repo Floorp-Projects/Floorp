@@ -28,7 +28,7 @@ var { TargetFactory } = require("devtools/framework/target");
 var { Toolbox } = require("devtools/framework/toolbox");
 var mm = null
 
-const FRAME_SCRIPT_UTILS_URL = "chrome://browser/content/devtools/frame-script-utils.js";
+const FRAME_SCRIPT_UTILS_URL = "chrome://devtools/content/shared/frame-script-utils.js";
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/canvasdebugger/test/";
 const SET_TIMEOUT_URL = EXAMPLE_URL + "doc_settimeout.html";
 const NO_CANVAS_URL = EXAMPLE_URL + "doc_no-canvas.html";

@@ -25,7 +25,7 @@ const {setBaseCssDocsUrl, MdnDocsWidget} = require("devtools/shared/widgets/MdnD
 const promise = require("promise");
 
 // frame to load the tooltip into
-const MDN_DOCS_TOOLTIP_FRAME = "chrome://browser/content/devtools/mdn-docs-frame.xhtml";
+const MDN_DOCS_TOOLTIP_FRAME = "chrome://devtools/content/shared/widgets/mdn-docs-frame.xhtml";
 
 /**
  * Test properties

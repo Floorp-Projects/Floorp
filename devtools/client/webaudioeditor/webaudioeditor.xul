@@ -3,7 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/devtools/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/webaudioeditor.css" type="text/css"?>
@@ -15,18 +15,18 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript;version=1.8"
-          src="chrome://browser/content/devtools/theme-switching.js"/>
+          src="chrome://devtools/content/shared/theme-switching.js"/>
 
-  <script type="application/javascript" src="chrome://browser/content/devtools/d3.js"/>
-  <script type="application/javascript" src="chrome://browser/content/devtools/dagre-d3.js"/>
-  <script type="application/javascript" src="webaudioeditor/includes.js"/>
-  <script type="application/javascript" src="webaudioeditor/models.js"/>
-  <script type="application/javascript" src="webaudioeditor/controller.js"/>
-  <script type="application/javascript" src="webaudioeditor/views/utils.js"/>
-  <script type="application/javascript" src="webaudioeditor/views/context.js"/>
-  <script type="application/javascript" src="webaudioeditor/views/inspector.js"/>
-  <script type="application/javascript" src="webaudioeditor/views/properties.js"/>
-  <script type="application/javascript" src="webaudioeditor/views/automation.js"/>
+  <script type="application/javascript" src="chrome://devtools/content/shared/vendor/d3.js"/>
+  <script type="application/javascript" src="chrome://devtools/content/shared/vendor/dagre-d3.js"/>
+  <script type="application/javascript" src="includes.js"/>
+  <script type="application/javascript" src="models.js"/>
+  <script type="application/javascript" src="controller.js"/>
+  <script type="application/javascript" src="views/utils.js"/>
+  <script type="application/javascript" src="views/context.js"/>
+  <script type="application/javascript" src="views/inspector.js"/>
+  <script type="application/javascript" src="views/properties.js"/>
+  <script type="application/javascript" src="views/automation.js"/>
 
   <vbox class="theme-body" flex="1">
     <hbox id="reload-notice"

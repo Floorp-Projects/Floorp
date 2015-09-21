@@ -7,12 +7,12 @@
  %toolboxDTD;
 ]>
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
-<?xml-stylesheet rel="stylesheet" href="chrome://browser/content/devtools/framework/options-panel.css" type="text/css"?>
+<?xml-stylesheet rel="stylesheet" href="chrome://devtools/content/framework/options-panel.css" type="text/css"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript;version=1.8"
-          src="chrome://browser/content/devtools/theme-switching.js"/>
+          src="chrome://devtools/content/shared/theme-switching.js"/>
   <hbox id="options-panel-container" flex="1">
     <hbox id="options-panel" class="theme-body" flex="1">
       <vbox id="tools-box" class="options-vertical-pane" flex="1">

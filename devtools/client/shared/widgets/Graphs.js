@@ -17,7 +17,7 @@ loader.lazyImporter(this, "DevToolsWorker",
   "resource://gre/modules/devtools/shared/worker.js");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
-const GRAPH_SRC = "chrome://browser/content/devtools/graphs-frame.xhtml";
+const GRAPH_SRC = "chrome://devtools/content/shared/widgets/graphs-frame.xhtml";
 const WORKER_URL = "resource:///modules/devtools/GraphsWorker.js";
 
 // Generic constants.

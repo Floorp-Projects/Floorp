@@ -12,7 +12,7 @@ const SAMPLE_ICON = "chrome://browser/skin/devtools/tool-debugger.svg";
 
 /**
  * Create a workspace for working on projecteditor, available at
- * chrome://browser/content/devtools/projecteditor-loader.xul.
+ * chrome://devtools/content/projecteditor/chrome/content/projecteditor-loader.xul.
  * This emulates the integration points that the app manager uses.
  */
 var appManagerEditor;

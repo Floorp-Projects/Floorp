@@ -8,7 +8,7 @@ importScripts("resource://gre/modules/osfile.jsm");
 
 /**
  * This file is meant to be loaded in a worker using:
- *   new ChromeWorker("chrome://browser/content/devtools/readdir.js");
+ *   new ChromeWorker("chrome://devtools/content/projecteditor/lib/helpers/readdir.js");
  *
  * Read a local directory inside of a web woker
  *

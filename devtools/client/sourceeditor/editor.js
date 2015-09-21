@@ -47,35 +47,35 @@ const { OS } = Services.appinfo;
 
 const CM_STYLES   = [
   "chrome://browser/skin/devtools/common.css",
-  "chrome://browser/content/devtools/codemirror/codemirror.css",
-  "chrome://browser/content/devtools/codemirror/dialog.css",
-  "chrome://browser/content/devtools/codemirror/mozilla.css"
+  "chrome://devtools/content/sourceeditor/codemirror/codemirror.css",
+  "chrome://devtools/content/sourceeditor/codemirror/dialog/dialog.css",
+  "chrome://devtools/content/sourceeditor/codemirror/mozilla.css"
 ];
 
 const CM_SCRIPTS  = [
-  "chrome://browser/content/devtools/theme-switching.js",
-  "chrome://browser/content/devtools/codemirror/codemirror.js",
-  "chrome://browser/content/devtools/codemirror/dialog.js",
-  "chrome://browser/content/devtools/codemirror/searchcursor.js",
-  "chrome://browser/content/devtools/codemirror/search.js",
-  "chrome://browser/content/devtools/codemirror/matchbrackets.js",
-  "chrome://browser/content/devtools/codemirror/closebrackets.js",
-  "chrome://browser/content/devtools/codemirror/comment.js",
-  "chrome://browser/content/devtools/codemirror/javascript.js",
-  "chrome://browser/content/devtools/codemirror/xml.js",
-  "chrome://browser/content/devtools/codemirror/css.js",
-  "chrome://browser/content/devtools/codemirror/htmlmixed.js",
-  "chrome://browser/content/devtools/codemirror/clike.js",
-  "chrome://browser/content/devtools/codemirror/activeline.js",
-  "chrome://browser/content/devtools/codemirror/trailingspace.js",
-  "chrome://browser/content/devtools/codemirror/emacs.js",
-  "chrome://browser/content/devtools/codemirror/vim.js",
-  "chrome://browser/content/devtools/codemirror/sublime.js",
-  "chrome://browser/content/devtools/codemirror/foldcode.js",
-  "chrome://browser/content/devtools/codemirror/brace-fold.js",
-  "chrome://browser/content/devtools/codemirror/comment-fold.js",
-  "chrome://browser/content/devtools/codemirror/xml-fold.js",
-  "chrome://browser/content/devtools/codemirror/foldgutter.js"
+  "chrome://devtools/content/shared/theme-switching.js",
+  "chrome://devtools/content/sourceeditor/codemirror/codemirror.js",
+  "chrome://devtools/content/sourceeditor/codemirror/dialog/dialog.js",
+  "chrome://devtools/content/sourceeditor/codemirror/search/searchcursor.js",
+  "chrome://devtools/content/sourceeditor/codemirror/search/search.js",
+  "chrome://devtools/content/sourceeditor/codemirror/edit/matchbrackets.js",
+  "chrome://devtools/content/sourceeditor/codemirror/edit/closebrackets.js",
+  "chrome://devtools/content/sourceeditor/codemirror/comment/comment.js",
+  "chrome://devtools/content/sourceeditor/codemirror/mode/javascript.js",
+  "chrome://devtools/content/sourceeditor/codemirror/mode/xml.js",
+  "chrome://devtools/content/sourceeditor/codemirror/mode/css.js",
+  "chrome://devtools/content/sourceeditor/codemirror/mode/htmlmixed.js",
+  "chrome://devtools/content/sourceeditor/codemirror/mode/clike.js",
+  "chrome://devtools/content/sourceeditor/codemirror/selection/active-line.js",
+  "chrome://devtools/content/sourceeditor/codemirror/edit/trailingspace.js",
+  "chrome://devtools/content/sourceeditor/codemirror/keymap/emacs.js",
+  "chrome://devtools/content/sourceeditor/codemirror/keymap/vim.js",
+  "chrome://devtools/content/sourceeditor/codemirror/keymap/sublime.js",
+  "chrome://devtools/content/sourceeditor/codemirror/fold/foldcode.js",
+  "chrome://devtools/content/sourceeditor/codemirror/fold/brace-fold.js",
+  "chrome://devtools/content/sourceeditor/codemirror/fold/comment-fold.js",
+  "chrome://devtools/content/sourceeditor/codemirror/fold/xml-fold.js",
+  "chrome://devtools/content/sourceeditor/codemirror/fold/foldgutter.js"
 ];
 
 const CM_IFRAME   =

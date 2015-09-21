@@ -25,7 +25,7 @@ const {CssDocsTooltip} = require("devtools/shared/widgets/Tooltip");
 const {setBaseCssDocsUrl, MdnDocsWidget} = require("devtools/shared/widgets/MdnDocsWidget");
 
 // frame to load the tooltip into
-const MDN_DOCS_TOOLTIP_FRAME = "chrome://browser/content/devtools/mdn-docs-frame.xhtml";
+const MDN_DOCS_TOOLTIP_FRAME = "chrome://devtools/content/shared/widgets/mdn-docs-frame.xhtml";
 
 const BASIC_EXPECTED_SUMMARY = "A summary of the property.";
 const BASIC_EXPECTED_SYNTAX = [{type: "comment",        text: "/* The part we want   */"},
