@@ -634,7 +634,7 @@ BluetoothGattManager::StartLeScan(const nsTArray<nsString>& aServiceUuids,
   client->mStartLeScanRunnable = aRunnable;
 
   BluetoothUuid appUuid;
-  StringToUuid(NS_ConvertUTF16toUTF8(appUuidStr).get(), appUuid);
+  StringToUuid(appUuidStr, appUuid);
 
   // 'startLeScan' will be proceeded after client registered
   sBluetoothGattInterface->RegisterClient(
@@ -726,7 +726,7 @@ BluetoothGattManager::Connect(const nsAString& aAppUuid,
                                            new ConnectResultHandler(client));
   } else {
     BluetoothUuid uuid;
-    StringToUuid(NS_ConvertUTF16toUTF8(aAppUuid).get(), uuid);
+    StringToUuid(aAppUuid, uuid);
 
     // connect will be proceeded after client registered
     sBluetoothGattInterface->RegisterClient(
@@ -1507,7 +1507,7 @@ BluetoothGattManager::ConnectPeripheral(
       new ConnectPeripheralResultHandler(server, aAddress));
   } else {
     BluetoothUuid uuid;
-    StringToUuid(NS_ConvertUTF16toUTF8(aAppUuid).get(), uuid);
+    StringToUuid(aAppUuid, uuid);
 
     // connect will be proceeded after server registered
     sBluetoothGattInterface->RegisterServer(
