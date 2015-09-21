@@ -122,7 +122,14 @@ InterceptedJARChannel::NotifyController()
                            0, UINT32_MAX, true, true);
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  rv = mController->ChannelIntercepted(this);
+  nsCOMPtr<nsIFetchEventDispatcher> dispatcher;
+  rv = mController->ChannelIntercepted(this, getter_AddRefs(dispatcher));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    rv = ResetInterception();
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
+        "Failed to resume intercepted network request");
+  }
+  rv = dispatcher->Dispatch();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     rv = ResetInterception();
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
