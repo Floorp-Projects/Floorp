@@ -28,7 +28,7 @@ public:
   FFmpegDecoderModule() {}
   virtual ~FFmpegDecoderModule() {}
 
-  virtual already_AddRefed<MediaDataDecoder>
+  already_AddRefed<MediaDataDecoder>
   CreateVideoDecoder(const VideoInfo& aConfig,
                      layers::LayersBackend aLayersBackend,
                      layers::ImageContainer* aImageContainer,
@@ -41,7 +41,7 @@ public:
     return decoder.forget();
   }
 
-  virtual already_AddRefed<MediaDataDecoder>
+  already_AddRefed<MediaDataDecoder>
   CreateAudioDecoder(const AudioInfo& aConfig,
                      FlushableTaskQueue* aAudioTaskQueue,
                      MediaDataDecoderCallback* aCallback) override
@@ -51,13 +51,13 @@ public:
     return decoder.forget();
   }
 
-  virtual bool SupportsMimeType(const nsACString& aMimeType) override
+  bool SupportsMimeType(const nsACString& aMimeType) override
   {
     return FFmpegAudioDecoder<V>::GetCodecId(aMimeType) != AV_CODEC_ID_NONE ||
       FFmpegH264Decoder<V>::GetCodecId(aMimeType) != AV_CODEC_ID_NONE;
   }
 
-  virtual ConversionRequired
+  ConversionRequired
   DecoderNeedsConversion(const TrackInfo& aConfig) const override
   {
     if (aConfig.IsVideo() &&

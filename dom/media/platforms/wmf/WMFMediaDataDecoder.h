@@ -69,17 +69,17 @@ public:
                       MediaDataDecoderCallback* aCallback);
   ~WMFMediaDataDecoder();
 
-  virtual nsRefPtr<MediaDataDecoder::InitPromise> Init() override;
+  nsRefPtr<MediaDataDecoder::InitPromise> Init() override;
 
-  virtual nsresult Input(MediaRawData* aSample);
+  nsresult Input(MediaRawData* aSample);
 
-  virtual nsresult Flush() override;
+  nsresult Flush() override;
 
-  virtual nsresult Drain() override;
+  nsresult Drain() override;
 
-  virtual nsresult Shutdown() override;
+  nsresult Shutdown() override;
 
-  virtual bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
+  bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
 
 private:
 
