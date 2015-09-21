@@ -233,7 +233,7 @@ public:
                             const Sequence<nsString>& aKeyUsages);
 protected:
   ScopedPLArenaPool mArena;
-  CryptoKeyPair mKeyPair;
+  UniquePtr<CryptoKeyPair> mKeyPair;
   nsString mAlgName;
   CK_MECHANISM_TYPE mMechanism;
   PK11RSAGenParams mRsaParams;
@@ -243,6 +243,7 @@ protected:
   virtual void ReleaseNSSResources() override;
   virtual nsresult DoCrypto() override;
   virtual void Resolve() override;
+  virtual void Cleanup() override;
 
 private:
   ScopedSECKEYPublicKey mPublicKey;
