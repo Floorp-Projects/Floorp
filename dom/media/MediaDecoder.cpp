@@ -351,7 +351,6 @@ MediaDecoder::MediaDecoder() :
   mDormantSupported(false),
   mLogicalPosition(0.0),
   mDuration(std::numeric_limits<double>::quiet_NaN()),
-  mMediaSeekable(true),
   mReentrantMonitor("media.decoder"),
   mIgnoreProgressData(false),
   mInfiniteStream(false),
@@ -407,7 +406,9 @@ MediaDecoder::MediaDecoder() :
   mPlaybackRateReliable(AbstractThread::MainThread(), true,
                         "MediaDecoder::mPlaybackRateReliable (Canonical)"),
   mDecoderPosition(AbstractThread::MainThread(), 0,
-                   "MediaDecoder::mDecoderPosition (Canonical)")
+                   "MediaDecoder::mDecoderPosition (Canonical)"),
+  mMediaSeekable(AbstractThread::MainThread(), true,
+                 "MediaDecoder::mMediaSeekable (Canonical)")
 {
   MOZ_COUNT_CTOR(MediaDecoder);
   MOZ_ASSERT(NS_IsMainThread());
@@ -1124,8 +1125,8 @@ MediaDecoder::IsTransportSeekable()
 
 bool MediaDecoder::IsMediaSeekable()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_TRUE(GetStateMachine(), false);
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   return mMediaSeekable;
 }
 
