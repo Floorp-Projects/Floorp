@@ -211,7 +211,6 @@ loop.contacts = (function(_, mozL10n) {
                               "video-call-item": true })}
               data-action="video-call"
               onClick={this.onItemClick}>
-            <i className="icon icon-video-call" />
             {mozL10n.get("video_call_menu_button")}
           </li>
           <li className={cx({ "dropdown-menu-item": true,
@@ -219,7 +218,6 @@ loop.contacts = (function(_, mozL10n) {
                               "audio-call-item": true })}
               data-action="audio-call"
               onClick={this.onItemClick}>
-            <i className="icon icon-audio-call" />
             {mozL10n.get("audio_call_menu_button")}
           </li>
           <li className={cx({ "dropdown-menu-item": true,
