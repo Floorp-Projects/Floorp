@@ -57,9 +57,8 @@ function testFiles() {
   yield ["opaque.bmp", false];
 
   // ICO files which contain BMPs have an additional type of transparency - the
-  // AND mask - that warrants separate testing. (Although, after bug 1201796,
-  // all ICOs are considered transparent.)
-  yield ["ico-bmp-opaque.ico", true];
+  // AND mask - that warrants separate testing.
+  yield ["ico-bmp-opaque.ico", false];
   yield ["ico-bmp-transparent.ico", true];
 
   // SVGs are always transparent.

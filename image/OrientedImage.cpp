@@ -122,16 +122,6 @@ OrientedImage::GetFrame(uint32_t aWhichFrame,
   return target->Snapshot();
 }
 
-NS_IMETHODIMP_(already_AddRefed<SourceSurface>)
-OrientedImage::GetFrameAtSize(const IntSize& aSize,
-                              uint32_t aWhichFrame,
-                              uint32_t aFlags)
-{
-  // XXX(seth): It'd be nice to support downscale-during-decode for this case,
-  // but right now we just fall back to the intrinsic size.
-  return GetFrame(aWhichFrame, aFlags);
-}
-
 NS_IMETHODIMP_(bool)
 OrientedImage::IsImageContainerAvailable(LayerManager* aManager, uint32_t aFlags)
 {
