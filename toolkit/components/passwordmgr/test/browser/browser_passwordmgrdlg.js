@@ -57,57 +57,25 @@ function test() {
         // Prepare a set of tests
         //   filter: the text entered in the filter search box
         //   count: the number of logins which should match the respective filter
-        //   count2: the number of logins which should match the respective filter
-        //           if the passwords are being shown as well
-        //   Note: if a test doesn't have count2 set, count is used instead.
         let tests = [
-            {filter: "pass", count: 0, count2: 4},
+            {filter: "pass", count: 4},
             {filter: "", count: 10}, // test clearing the filter
             {filter: "moz", count: 7},
             {filter: "mozi", count: 7},
             {filter: "mozil", count: 7},
             {filter: "mozill", count: 7},
             {filter: "mozilla", count: 7},
-            {filter: "mozilla.com", count: 1, count2: 2},
+            {filter: "mozilla.com", count: 2},
             {filter: "user", count: 4},
             {filter: "user ", count: 1},
             {filter: " user", count: 2},
             {filter: "http", count: 10},
             {filter: "https", count: 1},
-            {filter: "secret", count: 0, count2: 2},
+            {filter: "secret", count: 2},
             {filter: "secret!", count: 0},
         ];
 
-        let toggleCalls = 0;
-        function toggleShowPasswords(func) {
-            let toggleButton = doc.getElementById("togglePasswords");
-            let showMode = (toggleCalls++ % 2) == 0;
-
-            // only watch for a confirmation dialog every other time being called
-            if (showMode) {
-                Services.ww.registerNotification(function (aSubject, aTopic, aData) {
-                    if (aTopic == "domwindowclosed")
-                        Services.ww.unregisterNotification(arguments.callee);
-                    else if (aTopic == "domwindowopened") {
-                        let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
-                        SimpleTest.waitForFocus(function() {
-                            EventUtils.sendKey("RETURN", win);
-                        }, win);
-                    }
-                });
-            }
-
-            Services.obs.addObserver(function (aSubject, aTopic, aData) {
-                if (aTopic == "passwordmgr-password-toggle-complete") {
-                    Services.obs.removeObserver(arguments.callee, aTopic);
-                    func();
-                }
-            }, "passwordmgr-password-toggle-complete", false);
-
-            EventUtils.synthesizeMouse(toggleButton, 1, 1, {}, win);
-        }
-
-        function runTests(mode, endFunction) {
+        function runTests(endFunction) {
             let testCounter = 0;
 
             function setFilter(string) {
@@ -116,29 +84,7 @@ function test() {
             }
 
             function runOneTest(test) {
-                function tester() {
-                    is(view.rowCount, expected, expected + " logins should match '" + test.filter + "'");
-                }
-
-                let expected;
-                switch (mode) {
-                case 1: // without showing passwords
-                    expected = test.count;
-                    break;
-                case 2: // showing passwords
-                    expected = ("count2" in test) ? test.count2 : test.count;
-                    break;
-                case 3: // toggle
-                    expected = test.count;
-                    tester();
-                    toggleShowPasswords(function () {
-                        expected = ("count2" in test) ? test.count2 : test.count;
-                        tester();
-                        toggleShowPasswords(proceed);
-                    });
-                    return;
-                }
-                tester();
+                is(view.rowCount, test.count, test.count + " logins should match '" + test.filter + "'");
                 proceed();
             }
 
@@ -160,19 +106,7 @@ function test() {
         }
 
         function step1() {
-            runTests(1, step2);
-        }
-
-        function step2() {
-            toggleShowPasswords(function() {
-                runTests(2, step3);
-            });
-        }
-
-        function step3() {
-            toggleShowPasswords(function() {
-                runTests(3, lastStep);
-            });
+            runTests(lastStep);
         }
 
         function lastStep() {
