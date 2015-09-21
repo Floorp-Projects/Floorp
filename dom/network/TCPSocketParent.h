@@ -57,7 +57,7 @@ public:
                             const nsCString& aLocalAddr,
                             const uint16_t& aLocalPort,
                             const bool&     aUseSSL,
-                            const nsCString& aBinaryType) override;
+                            const bool& aUseArrayBuffers) override;
 
   virtual bool RecvStartTLS() override;
   virtual bool RecvSuspend() override;

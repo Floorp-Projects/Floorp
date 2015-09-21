@@ -164,7 +164,13 @@ public:
   // Dispatch an event of the given type at this object.
   void FireEvent(const nsAString& aType);
   // Dispatch a "data" event at this object.
+  void FireDataEvent(const nsAString& aType, const InfallibleTArray<uint8_t>& buffer);
+  void FireDataEvent(const nsAString& aType, const nsAString& aString);
   void FireDataEvent(JSContext* aCx, const nsAString& aType, JS::Handle<JS::Value> aData);
+
+  // Initialize this socket from a low-level connection that hasn't connected yet
+  // (called from RecvOpenBind() in TCPSocketParent).
+  nsresult InitWithUnconnectedTransport(nsISocketTransport* aTransport);
 
 private:
   ~TCPSocket();

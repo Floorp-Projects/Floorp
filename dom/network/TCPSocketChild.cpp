@@ -102,8 +102,8 @@ TCPSocketChild::SendOpen(TCPSocket* aSocket, bool aUseSSL, bool aUseArrayBuffers
   PTCPSocketChild::SendOpen(mHost, mPort, aUseSSL, aUseArrayBuffers);
 }
 
-NS_IMETHODIMP
-TCPSocketChild::SendWindowlessOpenBind(nsITCPSocketInternal* aSocket,
+void
+TCPSocketChild::SendWindowlessOpenBind(TCPSocket* aSocket,
                                        const nsACString& aRemoteHost, uint16_t aRemotePort,
                                        const nsACString& aLocalHost, uint16_t aLocalPort,
                                        bool aUseSSL)
@@ -115,8 +115,7 @@ TCPSocketChild::SendWindowlessOpenBind(nsITCPSocketInternal* aSocket,
                                          aRemotePort);
   PTCPSocketChild::SendOpenBind(nsCString(aRemoteHost), aRemotePort,
                                 nsCString(aLocalHost), aLocalPort,
-                                aUseSSL, NS_LITERAL_CSTRING("arraybuffer"));
-  return NS_OK;
+                                aUseSSL, true);
 }
 
 void
@@ -165,35 +164,12 @@ TCPSocketChild::RecvCallback(const nsString& aType,
     const SendableData& data = aData.get_SendableData();
 
     if (data.type() == SendableData::TArrayOfuint8_t) {
-      // See if we can pass array directly.
-      nsCOMPtr<nsITCPSocketInternalNative> nativeSocket = do_QueryInterface(mSocket);
-      if (nativeSocket) {
-        const InfallibleTArray<uint8_t>& buffer = data.get_ArrayOfuint8_t();
-        nativeSocket->CallListenerNativeArray(const_cast<uint8_t*>(buffer.Elements()),
-                                              buffer.Length());
-        return true;
-      }
-    }
-    AutoJSAPI api;
-    if (NS_WARN_IF(!api.Init(mSocket->GetOwner()))) {
-      return true;
-    }
-    JSContext* cx = api.cx();
-    JS::Rooted<JS::Value> val(cx);
-
-    if (data.type() == SendableData::TArrayOfuint8_t) {
-      bool ok = IPC::DeserializeArrayBuffer(cx, data.get_ArrayOfuint8_t(), &val);
-      NS_ENSURE_TRUE(ok, true);
-
+      mSocket->FireDataEvent(cx, aType, data.get_ArrayOfuint8_t());
     } else if (data.type() == SendableData::TnsCString) {
-      bool ok = ToJSValue(cx, NS_ConvertASCIItoUTF16(data.get_nsCString()), &val);
-      NS_ENSURE_TRUE(ok, true);
-
+      mSocket->FireDataEvent(aType, data.get_nsCString());
     } else {
       MOZ_CRASH("Invalid callback data type!");
     }
-    mSocket->FireDataEvent(cx, aType, val);
-
   } else {
     MOZ_CRASH("Invalid callback type!");
   }
@@ -227,9 +203,9 @@ TCPSocketChild::SendSend(const ArrayBuffer& aData,
 }
 
 NS_IMETHODIMP
-TCPSocketChild::SendSendArray(nsTArray<uint8_t> *aArr, uint32_t aTrackingNumber)
+TCPSocketChild::SendSendArray(nsTArray<uint8_t>& aArray, uint32_t aTrackingNumber)
 {
-  SendData(*aArr, aTrackingNumber);
+  SendData(aArray, aTrackingNumber);
   return NS_OK;
 }
 
