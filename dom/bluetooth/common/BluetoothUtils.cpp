@@ -43,12 +43,13 @@ UuidToString(const BluetoothUuid& aUuid, nsAString& aString)
 }
 
 void
-StringToUuid(const char* aString, BluetoothUuid& aUuid)
+StringToUuid(const nsAString& aString, BluetoothUuid& aUuid)
 {
   uint32_t uuid0, uuid4;
   uint16_t uuid1, uuid2, uuid3, uuid5;
 
-  sscanf(aString, "%08x-%04hx-%04hx-%04hx-%08x%04hx",
+  sscanf(NS_ConvertUTF16toUTF8(aString).get(),
+         "%08x-%04hx-%04hx-%04hx-%08x%04hx",
          &uuid0, &uuid1, &uuid2, &uuid3, &uuid4, &uuid5);
 
   uuid0 = htonl(uuid0);
@@ -64,12 +65,6 @@ StringToUuid(const char* aString, BluetoothUuid& aUuid)
   memcpy(&aUuid.mUuid[8], &uuid3, sizeof(uint16_t));
   memcpy(&aUuid.mUuid[10], &uuid4, sizeof(uint32_t));
   memcpy(&aUuid.mUuid[14], &uuid5, sizeof(uint16_t));
-}
-
-void
-StringToUuid(const nsAString& aString, BluetoothUuid& aUuid)
-{
-  StringToUuid(NS_ConvertUTF16toUTF8(aString).get(), aUuid);
 }
 
 void
