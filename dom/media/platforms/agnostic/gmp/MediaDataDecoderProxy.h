@@ -68,27 +68,27 @@ public:
   {
   }
 
-  virtual void Output(MediaData* aData) override {
+  void Output(MediaData* aData) override {
     mProxyCallback->Output(aData);
   }
 
-  virtual void Error() override;
+  void Error() override;
 
-  virtual void InputExhausted() override {
+  void InputExhausted() override {
     mProxyCallback->InputExhausted();
   }
 
-  virtual void DrainComplete() override {
+  void DrainComplete() override {
     mProxyCallback->DrainComplete();
   }
 
-  virtual void ReleaseMediaResources() override {
+  void ReleaseMediaResources() override {
     mProxyCallback->ReleaseMediaResources();
   }
 
-  virtual void FlushComplete();
+  void FlushComplete();
 
-  virtual bool OnReaderTaskQueue() override
+  bool OnReaderTaskQueue() override
   {
     return mProxyCallback->OnReaderTaskQueue();
   }
@@ -132,11 +132,11 @@ public:
   // Init and Shutdown run synchronously on the proxy thread, all others are
   // asynchronously and responded to via the MediaDataDecoderCallback.
   // Note: the nsresults returned by the proxied decoder are lost.
-  virtual nsRefPtr<InitPromise> Init() override;
-  virtual nsresult Input(MediaRawData* aSample) override;
-  virtual nsresult Flush() override;
-  virtual nsresult Drain() override;
-  virtual nsresult Shutdown() override;
+  nsRefPtr<InitPromise> Init() override;
+  nsresult Input(MediaRawData* aSample) override;
+  nsresult Flush() override;
+  nsresult Drain() override;
+  nsresult Shutdown() override;
 
   // Called by MediaDataDecoderCallbackProxy.
   void FlushComplete();
