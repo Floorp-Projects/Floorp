@@ -21,13 +21,13 @@
 //    c.destroy();
 
 const {Cu} = require("chrome");
-Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 const {
   createNode,
   drawGraphElementBackground,
   findOptimalTimeInterval
-} = require("devtools/animationinspector/utils");
+} = require("devtools/client/animationinspector/utils");
 
 const STRINGS_URI = "chrome://browser/locale/devtools/animationinspector.properties";
 const L10N = new ViewHelpers.L10N(STRINGS_URI);

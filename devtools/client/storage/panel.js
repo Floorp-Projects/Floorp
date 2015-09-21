@@ -7,12 +7,12 @@
 "use strict";
 
 const {Cu} = require("chrome");
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 loader.lazyRequireGetter(this, "StorageFront",
                         "devtools/server/actors/storage", true);
 loader.lazyRequireGetter(this, "StorageUI",
-                         "devtools/storage/ui", true);
+                         "devtools/client/storage/ui", true);
 
 var StoragePanel = this.StoragePanel =
 function StoragePanel(panelWin, toolbox) {

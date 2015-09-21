@@ -10,16 +10,16 @@
 
 const {Cc, Cu, Ci} = require("chrome");
 const promise = require("promise");
-const {Tools} = require("main");
+const {Tools} = require("devtools/client/main");
 Cu.import("resource://gre/modules/Services.jsm");
-const {PREF_ORIG_SOURCES} = require("devtools/styleeditor/utils");
+const {PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/utils");
 
 loader.lazyGetter(this, "gDevTools", () =>
-  Cu.import("resource:///modules/devtools/gDevTools.jsm", {}).gDevTools);
+  Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {}).gDevTools);
 loader.lazyGetter(this, "RuleView",
-  () => require("devtools/styleinspector/rule-view"));
+  () => require("devtools/client/styleinspector/rule-view"));
 loader.lazyGetter(this, "ComputedView",
-  () => require("devtools/styleinspector/computed-view"));
+  () => require("devtools/client/styleinspector/computed-view"));
 loader.lazyGetter(this, "_strings", () => Services.strings
   .createBundle("chrome://global/locale/devtools/styleinspector.properties"));
 

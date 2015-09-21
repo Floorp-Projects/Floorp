@@ -7,7 +7,7 @@
 
 function test() {
   let { Parser, ParserHelpers, SyntaxTreeVisitor } =
-    Cu.import("resource:///modules/devtools/Parser.jsm", {});
+    Cu.import("resource:///modules/devtools/client/shared/Parser.jsm", {});
 
   function verify(source, predicate, string) {
     let ast = Parser.reflectionAPI.parse(source);

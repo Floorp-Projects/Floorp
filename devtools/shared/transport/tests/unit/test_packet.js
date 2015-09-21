@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const { JSONPacket, BulkPacket } =
-  require("devtools/toolkit/transport/packets");
+  require("devtools/shared/transport/packets");
 
 function run_test() {
   add_test(test_packet_done);

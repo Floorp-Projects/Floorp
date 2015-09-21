@@ -6,8 +6,8 @@
  * is keyboard accessible.
  */
 
-var { AbstractTreeItem } = Cu.import("resource:///modules/devtools/AbstractTreeItem.jsm", {});
-var { Heritage } = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
+var { AbstractTreeItem } = Cu.import("resource:///modules/devtools/client/shared/widgets/AbstractTreeItem.jsm", {});
+var { Heritage } = Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm", {});
 
 function* spawnTest() {
   let container = document.createElement("vbox");

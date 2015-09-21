@@ -10,8 +10,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
-var EventEmitter = require("devtools/toolkit/event-emitter");
-var Telemetry = require("devtools/shared/telemetry");
+var EventEmitter = require("devtools/shared/event-emitter");
+var Telemetry = require("devtools/client/shared/telemetry");
 
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 

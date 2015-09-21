@@ -8,7 +8,7 @@
 
 const TESTCASE_URI = TEST_BASE_HTTP + "simple.html";
 
-const {Toolbox} = require("devtools/framework/toolbox");
+const {Toolbox} = require("devtools/client/framework/toolbox");
 
 add_task(function* () {
   let { toolbox, ui } = yield openStyleEditorForURL(TESTCASE_URI);

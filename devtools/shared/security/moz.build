@@ -18,9 +18,9 @@ UNIFIED_SOURCES += [
 
 FINAL_LIBRARY = 'xul'
 
-EXTRA_JS_MODULES.devtools.security += [
+DevToolsModules(
     'auth.js',
     'cert.js',
     'prompt.js',
     'socket.js',
-]
+)

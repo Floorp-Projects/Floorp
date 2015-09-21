@@ -4,7 +4,7 @@
 
 // Test that the sidebar widget auto-registers existing tabs.
 
-const {ToolSidebar} = require("devtools/framework/sidebar");
+const {ToolSidebar} = require("devtools/client/framework/sidebar");
 
 const testToolURL = "data:text/xml;charset=utf8,<?xml version='1.0'?>" +
                 "<?xml-stylesheet href='chrome://browser/skin/devtools/common.css' type='text/css'?>" +

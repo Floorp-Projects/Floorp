@@ -20,7 +20,7 @@ function toggleAllTools(state) {
 function getChromeActors(callback)
 {
   let { DebuggerServer } = require("devtools/server/main");
-  let { DebuggerClient } = require("devtools/toolkit/client/main");
+  let { DebuggerClient } = require("devtools/shared/client/main");
 
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();

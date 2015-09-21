@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const l10n = require("gcli/l10n");
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const eventEmitter = new EventEmitter();
 
-var { Eyedropper, EyedropperManager } = require("devtools/eyedropper/eyedropper");
+var { Eyedropper, EyedropperManager } = require("devtools/client/eyedropper/eyedropper");
 
 /**
  * 'eyedropper' command

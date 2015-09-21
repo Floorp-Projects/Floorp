@@ -4,9 +4,9 @@
 
 const Cu = Components.utils;
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
-const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const {AppManager} = require("devtools/webide/app-manager");
-const {Connection} = require("devtools/client/connection-manager");
+const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const {AppManager} = require("devtools/client/webide/modules/app-manager");
+const {Connection} = require("devtools/shared/client/connection-manager");
 
 window.addEventListener("load", function onLoad() {
   window.removeEventListener("load", onLoad);

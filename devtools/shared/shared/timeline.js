@@ -27,8 +27,8 @@ const { Class } = require("sdk/core/heritage");
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
 loader.lazyRequireGetter(this, "Timers", "sdk/timers");
 loader.lazyRequireGetter(this, "Task", "resource://gre/modules/Task.jsm", true);
-loader.lazyRequireGetter(this, "Memory", "devtools/toolkit/shared/memory", true);
-loader.lazyRequireGetter(this, "Framerate", "devtools/toolkit/shared/framerate", true);
+loader.lazyRequireGetter(this, "Memory", "devtools/shared/shared/memory", true);
+loader.lazyRequireGetter(this, "Framerate", "devtools/shared/shared/framerate", true);
 loader.lazyRequireGetter(this, "StackFrameCache", "devtools/server/actors/utils/stack", true);
 loader.lazyRequireGetter(this, "EventTarget", "sdk/event/target", true);
 

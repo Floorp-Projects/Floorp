@@ -7,8 +7,8 @@
 const { Cu } = require("chrome");
 
 const promise = require("promise");
-loader.lazyGetter(this, "EventEmitter", () => require("devtools/toolkit/event-emitter"));
-loader.lazyGetter(this, "AutocompletePopup", () => require("devtools/shared/autocomplete-popup").AutocompletePopup);
+loader.lazyGetter(this, "EventEmitter", () => require("devtools/shared/event-emitter"));
+loader.lazyGetter(this, "AutocompletePopup", () => require("devtools/client/shared/autocomplete-popup").AutocompletePopup);
 
 // Maximum number of selector suggestions shown in the panel.
 const MAX_SUGGESTIONS = 15;

@@ -9,8 +9,8 @@
 
 const TEST_URI = TEST_URL_ROOT + "doc_media_queries.html";
 
-var {PropertyView} = require("devtools/styleinspector/computed-view");
-var {CssLogic} = require("devtools/styleinspector/css-logic");
+var {PropertyView} = require("devtools/client/styleinspector/computed-view");
+var {CssLogic} = require("devtools/shared/styleinspector/css-logic");
 
 add_task(function*() {
   yield addTab(TEST_URI);

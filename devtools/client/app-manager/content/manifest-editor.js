@@ -5,7 +5,7 @@
 
 Cu.import("resource://gre/modules/osfile.jsm");
 const {VariablesView} =
-  Cu.import("resource:///modules/devtools/VariablesView.jsm", {});
+  Cu.import("resource:///modules/devtools/client/shared/widgets/VariablesView.jsm", {});
 
 const VARIABLES_VIEW_URL =
   "chrome://devtools/content/shared/widgets/VariablesView.xul";

@@ -7,7 +7,7 @@
 // A helper actor for brower/devtools/inspector tests.
 
 let { Cc, Ci, Cu, Cr } = require("chrome");
-const {getElementFromPoint, getAdjustedQuads} = require("devtools/toolkit/layout/utils");
+const {getElementFromPoint, getAdjustedQuads} = require("devtools/shared/layout/utils");
 const promise = require("promise");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 var DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);

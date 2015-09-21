@@ -8,7 +8,7 @@ const { Cc, Ci, Cu, Cr } = require("chrome");
 loader.lazyRequireGetter(this, "Services");
 loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "RecordingUtils",
-  "devtools/toolkit/performance/utils");
+  "devtools/shared/performance/utils");
 
 loader.lazyImporter(this, "FileUtils",
   "resource://gre/modules/FileUtils.jsm");

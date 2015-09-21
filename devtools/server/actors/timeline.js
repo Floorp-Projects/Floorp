@@ -19,7 +19,7 @@
 const protocol = require("devtools/server/protocol");
 const { method, Arg, RetVal, Option } = protocol;
 const events = require("sdk/event/core");
-const { Timeline } = require("devtools/toolkit/shared/timeline");
+const { Timeline } = require("devtools/shared/shared/timeline");
 const { actorBridge } = require("devtools/server/actors/common");
 
 /**

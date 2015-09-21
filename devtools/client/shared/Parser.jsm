@@ -9,8 +9,8 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 XPCOMUtils.defineLazyModuleGetter(this,
   "Reflect", "resource://gre/modules/reflect.jsm");

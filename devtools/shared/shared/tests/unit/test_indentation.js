@@ -4,7 +4,7 @@
 "use strict";
 
 const Cu = Components.utils;
-const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm");
+const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm");
 const Services = require("Services");
 const {
   EXPAND_TAB,
@@ -13,7 +13,7 @@ const {
   getIndentationFromPrefs,
   getIndentationFromIteration,
   getIndentationFromString,
-} = require("devtools/toolkit/shared/indentation");
+} = require("devtools/shared/shared/indentation");
 
 function test_indent_from_prefs() {
   Services.prefs.setBoolPref(DETECT_INDENT, true);

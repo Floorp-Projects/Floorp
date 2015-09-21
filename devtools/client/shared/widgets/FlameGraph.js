@@ -4,27 +4,27 @@
 "use strict";
 
 const { Task } = require("resource://gre/modules/Task.jsm");
-const { ViewHelpers } = require("resource:///modules/devtools/ViewHelpers.jsm");
-const { setNamedTimeout, clearNamedTimeout } = require("resource:///modules/devtools/ViewHelpers.jsm");
+const { ViewHelpers } = require("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
+const { setNamedTimeout, clearNamedTimeout } = require("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
 
 loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter",
-  "devtools/toolkit/event-emitter");
+  "devtools/shared/event-emitter");
 
 loader.lazyRequireGetter(this, "getColor",
-  "devtools/shared/theme", true);
+  "devtools/client/shared/theme", true);
 
 loader.lazyRequireGetter(this, "CATEGORY_MAPPINGS",
-  "devtools/performance/global", true);
+  "devtools/client/performance/modules/global", true);
 loader.lazyRequireGetter(this, "FrameUtils",
-  "devtools/performance/frame-utils");
+  "devtools/client/performance/modules/logic/frame-utils");
 
 loader.lazyRequireGetter(this, "AbstractCanvasGraph",
-  "devtools/shared/widgets/Graphs", true);
+  "devtools/client/shared/widgets/Graphs", true);
 loader.lazyRequireGetter(this, "GraphArea",
-  "devtools/shared/widgets/Graphs", true);
+  "devtools/client/shared/widgets/Graphs", true);
 loader.lazyRequireGetter(this, "GraphAreaDragger",
-  "devtools/shared/widgets/Graphs", true);
+  "devtools/client/shared/widgets/Graphs", true);
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const GRAPH_SRC = "chrome://devtools/content/shared/widgets/graphs-frame.xhtml";

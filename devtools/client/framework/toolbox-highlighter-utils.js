@@ -7,7 +7,7 @@
 const {Cc, Ci, Cu} = require("chrome");
 const promise = require("promise");
 Cu.import("resource://gre/modules/Task.jsm");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 /**
  * Client-side highlighter shared module.

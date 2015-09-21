@@ -5,7 +5,7 @@
 // Test that the sidebar widget correctly displays the "all tabs..." button
 // when the tabs overflow.
 
-const {ToolSidebar} = require("devtools/framework/sidebar");
+const {ToolSidebar} = require("devtools/client/framework/sidebar");
 
 const testToolDefinition = {
   id: "testTool",

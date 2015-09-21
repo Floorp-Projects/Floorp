@@ -7,7 +7,7 @@ const protocol = require("devtools/server/protocol");
 const { actorBridge } = require("devtools/server/actors/common");
 const { method, custom, Arg, Option, RetVal } = protocol;
 const { on, once, off, emit } = require("sdk/event/core");
-const { Framerate } = require("devtools/toolkit/shared/framerate");
+const { Framerate } = require("devtools/shared/shared/framerate");
 
 /**
  * An actor wrapper around Framerate. Uses exposed

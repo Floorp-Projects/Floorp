@@ -30,7 +30,7 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 function ObservableObject(object = {}) {
   EventEmitter.decorate(this);

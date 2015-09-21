@@ -15,19 +15,19 @@ var Services = require("Services");
 var { ActorPool, OriginalLocation, RegisteredActorFactory,
       ObservedActorFactory } = require("devtools/server/actors/common");
 var { LocalDebuggerTransport, ChildDebuggerTransport, WorkerDebuggerTransport } =
-  require("devtools/toolkit/transport/transport");
-var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+  require("devtools/shared/transport/transport");
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn, dumpv, dbg_assert } = DevToolsUtils;
-var EventEmitter = require("devtools/toolkit/event-emitter");
+var EventEmitter = require("devtools/shared/event-emitter");
 var Debugger = require("Debugger");
 var Promise = require("promise");
 
 DevToolsUtils.defineLazyGetter(this, "DebuggerSocket", () => {
-  let { DebuggerSocket } = require("devtools/toolkit/security/socket");
+  let { DebuggerSocket } = require("devtools/shared/security/socket");
   return DebuggerSocket;
 });
 DevToolsUtils.defineLazyGetter(this, "Authentication", () => {
-  return require("devtools/toolkit/security/auth");
+  return require("devtools/shared/security/auth");
 });
 
 // On B2G, `this` != Global scope, so `Ci` won't be binded on `this`
@@ -84,7 +84,7 @@ function loadSubScript(aURL)
 
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
 
-var {defer, resolve, reject, all} = require("devtools/toolkit/deprecated-sync-thenables");
+var {defer, resolve, reject, all} = require("devtools/shared/deprecated-sync-thenables");
 this.defer = defer;
 this.resolve = resolve;
 this.reject = reject;
@@ -1003,7 +1003,7 @@ var DebuggerServer = {
 
       actor = msg.json.actor;
 
-      let { NetworkMonitorManager } = require("devtools/toolkit/webconsole/network-monitor");
+      let { NetworkMonitorManager } = require("devtools/shared/webconsole/network-monitor");
       netMonitor = new NetworkMonitorManager(aFrame, actor.actor);
 
       events.emit(DebuggerServer, "new-child-process", { mm: mm });

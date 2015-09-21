@@ -7,6 +7,7 @@
 DIRS += [
     'content',
     'components',
+    'modules',
     'themes',
 ]
 
@@ -19,21 +20,6 @@ MOCHITEST_CHROME_MANIFESTS += [
     'test/sidebars/chrome.ini'
 ]
 
-EXTRA_JS_MODULES.devtools.webide += [
-    'modules/addons.js',
-    'modules/app-manager.js',
-    'modules/build.js',
-    'modules/config-view.js',
-    'modules/project-list.js',
-    'modules/runtime-list.js',
-    'modules/runtimes.js',
-    'modules/simulator-process.js',
-    'modules/simulators.js',
-    'modules/tab-store.js',
-    'modules/utils.js'
-]
-
 JS_PREFERENCE_FILES += [
     'webide-prefs.js',
 ]
-

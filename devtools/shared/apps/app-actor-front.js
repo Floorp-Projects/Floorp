@@ -4,12 +4,12 @@ const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm");
 const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm");
 const promise = require("promise");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 // Bug 1188401: When loaded from xpcshell tests, we do not have browser/ files
 // and can't load target.js. Should be fixed by bug 912121.
-loader.lazyRequireGetter(this, "TargetFactory", "devtools/framework/target", true);
+loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
 
 // XXX: bug 912476 make this module a real protocol.js front
 // by converting webapps actor to protocol.js

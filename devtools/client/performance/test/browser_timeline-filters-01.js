@@ -10,7 +10,7 @@ const EPSILON = 0.00000001;
 function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let { $, $$, EVENTS, PerformanceController, OverviewView, WaterfallView } = panel.panelWin;
-  let { TimelineGraph } = require("devtools/performance/graphs");
+  let { TimelineGraph } = require("devtools/client/performance/modules/widgets/graphs");
   let { rowHeight: MARKERS_GRAPH_ROW_HEIGHT } = TimelineGraph.prototype;
 
   yield startRecording(panel);

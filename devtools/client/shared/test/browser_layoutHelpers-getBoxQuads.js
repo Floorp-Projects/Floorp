@@ -5,7 +5,7 @@
 // iframes, scroll and zoom
 
 const {utils: Cu} = Components;
-let {getAdjustedQuads} = require("devtools/toolkit/layout/utils");
+let {getAdjustedQuads} = require("devtools/shared/layout/utils");
 
 const TEST_URI = TEST_URI_ROOT + "browser_layoutHelpers-getBoxQuads.html";
 

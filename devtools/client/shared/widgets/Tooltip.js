@@ -9,30 +9,30 @@
 
 const {Cu, Ci} = require("chrome");
 const promise = require("promise");
-const {Spectrum} = require("devtools/shared/widgets/Spectrum");
+const {Spectrum} = require("devtools/client/shared/widgets/Spectrum");
 const {CubicBezierWidget} =
-      require("devtools/shared/widgets/CubicBezierWidget");
-const {MdnDocsWidget} = require("devtools/shared/widgets/MdnDocsWidget");
-const {CSSFilterEditorWidget} = require("devtools/shared/widgets/FilterWidget");
-const EventEmitter = require("devtools/toolkit/event-emitter");
-const {colorUtils} = require("devtools/css-color");
+      require("devtools/client/shared/widgets/CubicBezierWidget");
+const {MdnDocsWidget} = require("devtools/client/shared/widgets/MdnDocsWidget");
+const {CSSFilterEditorWidget} = require("devtools/client/shared/widgets/FilterWidget");
+const EventEmitter = require("devtools/shared/event-emitter");
+const {colorUtils} = require("devtools/shared/css-color");
 const Heritage = require("sdk/core/heritage");
-const {Eyedropper} = require("devtools/eyedropper/eyedropper");
-const Editor = require("devtools/sourceeditor/editor");
+const {Eyedropper} = require("devtools/client/eyedropper/eyedropper");
+const Editor = require("devtools/client/sourceeditor/editor");
 
-loader.lazyRequireGetter(this, "beautify", "devtools/jsbeautify");
+loader.lazyRequireGetter(this, "beautify", "devtools/shared/jsbeautify/beautify");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "setNamedTimeout",
-  "resource:///modules/devtools/ViewHelpers.jsm");
+  "resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "clearNamedTimeout",
-  "resource:///modules/devtools/ViewHelpers.jsm");
+  "resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
-  "resource:///modules/devtools/VariablesView.jsm");
+  "resource:///modules/devtools/client/shared/widgets/VariablesView.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "VariablesViewController",
-  "resource:///modules/devtools/VariablesViewController.jsm");
+  "resource:///modules/devtools/client/shared/widgets/VariablesViewController.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 

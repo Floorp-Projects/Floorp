@@ -5,7 +5,7 @@
 
 loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter",
-  "devtools/toolkit/event-emitter");
+  "devtools/shared/event-emitter");
 
 /**
  * A dummy front decorated with the provided methods.

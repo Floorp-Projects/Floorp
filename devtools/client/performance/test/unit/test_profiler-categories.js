@@ -10,7 +10,7 @@ function run_test() {
 }
 
 add_task(function () {
-  let global = require("devtools/performance/global");
+  let global = require("devtools/client/performance/modules/global");
   let l10n = global.L10N;
   let categories = global.CATEGORIES;
   let mappings = global.CATEGORY_MAPPINGS;

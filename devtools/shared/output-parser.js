@@ -7,7 +7,7 @@
 "use strict";
 
 const {Cc, Ci, Cu} = require("chrome");
-const {colorUtils} = require("devtools/css-color");
+const {colorUtils} = require("devtools/shared/css-color");
 const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
@@ -41,8 +41,8 @@ loader.lazyGetter(this, "DOMUtils", function() {
  *
  * Usage:
  *   const {require} =
- *      Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
- *   const {OutputParser} = require("devtools/output-parser");
+ *      Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+ *   const {OutputParser} = require("devtools/shared/output-parser");
  *
  *   let parser = new OutputParser(document);
  *

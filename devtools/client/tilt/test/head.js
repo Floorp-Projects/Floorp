@@ -2,14 +2,14 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-var {require} = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
-var TiltManager = require("devtools/tilt/tilt").TiltManager;
-var TiltGL = require("devtools/tilt/tilt-gl");
-var {EPSILON, TiltMath, vec3, mat3, mat4, quat4} = require("devtools/tilt/tilt-math");
-var TiltUtils = require("devtools/tilt/tilt-utils");
-var {TiltVisualizer} = require("devtools/tilt/tilt-visualizer");
-var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-var {getRect, getIframeContentOffset} = require("devtools/toolkit/layout/utils");
+var {require} = Components.utils.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var TiltManager = require("devtools/client/tilt/tilt").TiltManager;
+var TiltGL = require("devtools/client/tilt/tilt-gl");
+var {EPSILON, TiltMath, vec3, mat3, mat4, quat4} = require("devtools/client/tilt/tilt-math");
+var TiltUtils = require("devtools/client/tilt/tilt-utils");
+var {TiltVisualizer} = require("devtools/client/tilt/tilt-visualizer");
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+var {getRect, getIframeContentOffset} = require("devtools/shared/layout/utils");
 
 
 const DEFAULT_HTML = "data:text/html," +

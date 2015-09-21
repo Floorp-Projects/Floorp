@@ -4,7 +4,7 @@
 
 "use strict";
 
-var {editableField, getInplaceEditorForSpan: inplaceEditor} = require("devtools/shared/inplace-editor");
+var {editableField, getInplaceEditorForSpan: inplaceEditor} = require("devtools/client/shared/inplace-editor");
 var promise = require("promise");
 
 // Test that the trimOutput option for the inplace editor works correctly.

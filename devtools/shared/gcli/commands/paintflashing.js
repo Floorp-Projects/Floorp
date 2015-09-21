@@ -10,13 +10,13 @@ loader.lazyRequireGetter(this, "getBrowserForTab", "sdk/tabs/utils", true);
 
 var telemetry;
 try {
-  const Telemetry = require("devtools/shared/telemetry");
+  const Telemetry = require("devtools/client/shared/telemetry");
   telemetry = new Telemetry();
 } catch(e) {
   // DevTools Telemetry module only available in Firefox
 }
 
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const eventEmitter = new EventEmitter();
 
 const gcli = require("gcli/index");

@@ -26,8 +26,8 @@ function test()
 
     openScratchpad(function () {
       let sw = gScratchpadWindow;
-      let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-      let {TargetFactory} = require("devtools/framework/target");
+      let {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+      let {TargetFactory} = require("devtools/client/framework/target");
 
       openScratchpad(function () {
         let target = TargetFactory.forTab(gBrowser.selectedTab);

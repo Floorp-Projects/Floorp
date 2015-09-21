@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
-                                  "resource://gre/modules/devtools/Console.jsm");
+                                  "resource://gre/modules/devtools/shared/Console.jsm");
 
 function section(number, url)
 {

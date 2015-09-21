@@ -4,7 +4,7 @@
 
 // Tests that theme utilities work
 
-var {getColor, getTheme, setTheme} = require("devtools/shared/theme");
+var {getColor, getTheme, setTheme} = require("devtools/client/shared/theme");
 
 function test() {
   testGetTheme();

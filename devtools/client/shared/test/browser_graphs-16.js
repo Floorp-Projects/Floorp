@@ -3,7 +3,7 @@
 
 // Tests that mounta graphs work as expected.
 
-var MountainGraphWidget = require("devtools/shared/widgets/MountainGraphWidget");
+var MountainGraphWidget = require("devtools/client/shared/widgets/MountainGraphWidget");
 
 const TEST_DATA = [
   { delta: 0, values: [0.1, 0.5, 0.3] },

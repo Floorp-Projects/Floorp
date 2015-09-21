@@ -7,7 +7,7 @@
 const { Cc, Ci, Cu } = require("chrome");
 const Services = require("Services");
 const { OS } = require("resource://gre/modules/osfile.jsm");
-const { devtools } = require("resource://gre/modules/devtools/Loader.jsm");
+const { devtools } = require("resource://gre/modules/devtools/shared/Loader.jsm");
 const gcli = require("gcli/index");
 const l10n = require("gcli/l10n");
 

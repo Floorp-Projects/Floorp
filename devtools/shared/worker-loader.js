@@ -494,12 +494,18 @@ this.worker = new WorkerDebuggerLoader({
     "xpcInspector": xpcInspector
   },
   paths: {
+    // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
     "": "resource://gre/modules/commonjs/",
-    "devtools": "resource:///modules/devtools",
-    "devtools/server": "resource://gre/modules/devtools/server",
-    "devtools/toolkit": "resource://gre/modules/devtools",
+    // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
+    "devtools": "resource://gre/modules/devtools",
+    // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
+    "devtools/client": "resource:///modules/devtools/client",
+    // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
     "promise": "resource://gre/modules/Promise-backend.js",
-    "source-map": "resource://gre/modules/devtools/source-map",
+    // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
+    "source-map": "resource://gre/modules/devtools/sourcemap/source-map.js",
+    // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
     "xpcshell-test": "resource://test"
+    // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
   }
 });

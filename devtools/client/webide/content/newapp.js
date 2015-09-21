@@ -12,11 +12,11 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ZipUtils", "resource://gre/modules/ZipUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads", "resource://gre/modules/Downloads.jsm");
 
-const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm");
-const {AppProjects} = require("devtools/app-manager/app-projects");
-const {AppManager} = require("devtools/webide/app-manager");
-const {getJSON} = require("devtools/shared/getjson");
+const {AppProjects} = require("devtools/client/app-manager/app-projects");
+const {AppManager} = require("devtools/client/webide/modules/app-manager");
+const {getJSON} = require("devtools/client/shared/getjson");
 
 const TEMPLATES_URL = "devtools.webide.templatesURL";
 

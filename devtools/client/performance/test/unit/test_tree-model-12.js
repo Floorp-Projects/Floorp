@@ -9,7 +9,7 @@ function run_test() {
 }
 
 add_task(function () {
-  let { ThreadNode } = require("devtools/performance/tree-model");
+  let { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
   let thread = new ThreadNode(gThread, { startTime: 0, endTime: 50 });
   let root = getFrameNodePath(thread, "(root)");
 

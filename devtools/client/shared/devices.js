@@ -5,7 +5,7 @@
 "use strict";
 
 const { Ci, Cc } = require("chrome");
-const { getJSON } = require("devtools/shared/getjson");
+const { getJSON } = require("devtools/client/shared/getjson");
 const { Services } = require("resource://gre/modules/Services.jsm");
 const promise = require("promise");
 
@@ -31,7 +31,7 @@ const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/
  * addon) like so:
  *
  *   var myPhone = { name: "My Phone", ... };
- *   require("devtools/shared/devices").AddDevice(myPhone, "phones");
+ *   require("devtools/client/shared/devices").AddDevice(myPhone, "phones");
  */
 
 // Local devices catalog that addons can add to.

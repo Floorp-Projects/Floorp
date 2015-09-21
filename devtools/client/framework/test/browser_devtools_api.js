@@ -17,7 +17,7 @@ const toolId1 = "test-tool-1";
 const toolId2 = "test-tool-2";
 
 var tempScope = {};
-Cu.import("resource://gre/modules/devtools/event-emitter.js", tempScope);
+Cu.import("resource://gre/modules/devtools/shared/event-emitter.js", tempScope);
 var EventEmitter = tempScope.EventEmitter;
 
 function test() {

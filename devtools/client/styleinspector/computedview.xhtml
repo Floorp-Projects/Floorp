@@ -35,8 +35,8 @@
 
     <script type="application/javascript;version=1.8">
       window.setPanel = function(panel, iframe) {
-        let {require} = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
-        let inspector = require("devtools/styleinspector/style-inspector");
+        let {require} = Components.utils.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+        let inspector = require("devtools/client/styleinspector/style-inspector");
         this.computedview = new inspector.ComputedViewTool(panel, window);
       }
       window.onunload = function() {

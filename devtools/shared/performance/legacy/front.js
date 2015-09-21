@@ -12,19 +12,19 @@ loader.lazyRequireGetter(this, "extend",
   "sdk/util/object", true);
 
 loader.lazyRequireGetter(this, "Actors",
-  "devtools/toolkit/performance/legacy/actors");
+  "devtools/shared/performance/legacy/actors");
 loader.lazyRequireGetter(this, "LegacyPerformanceRecording",
-  "devtools/toolkit/performance/legacy/recording", true);
+  "devtools/shared/performance/legacy/recording", true);
 loader.lazyRequireGetter(this, "importRecording",
-  "devtools/toolkit/performance/legacy/recording", true);
+  "devtools/shared/performance/legacy/recording", true);
 loader.lazyRequireGetter(this, "normalizePerformanceFeatures",
-  "devtools/toolkit/performance/utils", true);
+  "devtools/shared/performance/utils", true);
 loader.lazyRequireGetter(this, "DevToolsUtils",
-  "devtools/toolkit/DevToolsUtils");
+  "devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "getDeviceFront",
-  "devtools/toolkit/server/actors/device", true);
+  "devtools/server/actors/device", true);
 loader.lazyRequireGetter(this, "getSystemInfo",
-  "devtools/toolkit/shared/system", true);
+  "devtools/shared/shared/system", true);
 loader.lazyRequireGetter(this, "events",
   "sdk/event/core");
 loader.lazyRequireGetter(this, "EventTarget",

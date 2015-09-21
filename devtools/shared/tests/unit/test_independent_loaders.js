@@ -10,8 +10,8 @@ function run_test() {
   let loader1 = new DevToolsLoader();
   let loader2 = new DevToolsLoader();
 
-  let color1 = loader1.require("devtools/css-color");
-  let color2 = loader2.require("devtools/css-color");
+  let color1 = loader1.require("devtools/shared/css-color");
+  let color2 = loader2.require("devtools/shared/css-color");
 
   do_check_true(color1 !== color2);
 

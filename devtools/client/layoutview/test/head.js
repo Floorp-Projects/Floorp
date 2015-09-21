@@ -5,12 +5,12 @@
 "use strict";
 
 const Cu = Components.utils;
-var {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-var {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-var {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
-var {TargetFactory} = require("devtools/framework/target");
+var {gDevTools} = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
+var {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var {console} = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
+var {TargetFactory} = require("devtools/client/framework/target");
 var promise = require("promise");
-var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 // All test are asynchronous
 waitForExplicitFinish();

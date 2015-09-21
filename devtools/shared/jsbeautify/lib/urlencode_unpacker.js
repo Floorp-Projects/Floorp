@@ -14,7 +14,7 @@
 
 var isNode = (typeof module !== 'undefined' && module.exports);
 if (isNode) {
-    var SanityTest = require("devtools/toolkit/jsbeautify/sanitytest");
+    var SanityTest = require("devtools/shared/jsbeautify/lib/sanitytest");
 }
 
 var Urlencoded = {

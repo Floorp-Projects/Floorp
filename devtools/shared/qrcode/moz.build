@@ -14,9 +14,9 @@ if CONFIG['MOZ_BUILD_APP'] != 'mobile/android':
         'decoder'
     ]
 
-EXTRA_JS_MODULES.devtools.qrcode += [
+DevToolsModules(
     'index.js',
-]
+)
 
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']

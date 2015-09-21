@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const ObservableObject = require("devtools/shared/observable-object");
-const promise = require("devtools/toolkit/deprecated-sync-thenables");
-const {Connection} = require("devtools/client/connection-manager");
+const ObservableObject = require("devtools/client/shared/observable-object");
+const promise = require("devtools/shared/deprecated-sync-thenables");
+const {Connection} = require("devtools/shared/client/connection-manager");
 
 const {Cu} = require("chrome");
 const _knownWebappsStores = new WeakMap();

@@ -6,7 +6,7 @@
 
 "use strict";
 
-const {cssTokenizer} = require("devtools/sourceeditor/css-tokenizer");
+const {cssTokenizer} = require("devtools/client/sourceeditor/css-tokenizer");
 
 const SELECTOR_ATTRIBUTE = exports.SELECTOR_ATTRIBUTE = 1;
 const SELECTOR_ELEMENT = exports.SELECTOR_ELEMENT = 2;

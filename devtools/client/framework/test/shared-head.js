@@ -5,12 +5,12 @@
 // This shared-head.js file is used for multiple directories in devtools.
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
-const {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-const {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
-const {ScratchpadManager} = Cu.import("resource:///modules/devtools/scratchpad-manager.jsm", {});
-const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const {TargetFactory} = require("devtools/framework/target");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const {gDevTools} = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
+const {console} = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
+const {ScratchpadManager} = Cu.import("resource:///modules/devtools/client/scratchpad/scratchpad-manager.jsm", {});
+const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const {TargetFactory} = require("devtools/client/framework/target");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const promise = require("promise");
 
 const TEST_DIR = gTestPath.substr(0, gTestPath.lastIndexOf("/"));

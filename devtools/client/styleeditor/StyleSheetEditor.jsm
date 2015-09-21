@@ -11,19 +11,19 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const Editor  = require("devtools/sourceeditor/editor");
+const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const Editor  = require("devtools/client/sourceeditor/editor");
 const promise = require("promise");
-const {CssLogic} = require("devtools/styleinspector/css-logic");
-const {console} = require("resource://gre/modules/devtools/Console.jsm");
+const {CssLogic} = require("devtools/shared/styleinspector/css-logic");
+const {console} = require("resource://gre/modules/devtools/shared/Console.jsm");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/devtools/event-emitter.js");
-Cu.import("resource:///modules/devtools/StyleEditorUtil.jsm");
+Cu.import("resource://gre/modules/devtools/shared/event-emitter.js");
+Cu.import("resource:///modules/devtools/client/styleeditor/StyleEditorUtil.jsm");
 
 const LOAD_ERROR = "error-load";
 const SAVE_ERROR = "error-save";

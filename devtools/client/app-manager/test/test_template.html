@@ -158,9 +158,9 @@
     SimpleTest.waitForExplicitFinish();
 
     const Cu = Components.utils;
-    Cu.import("resource:///modules/devtools/gDevTools.jsm");
-    const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-    const ObservableObject = require("devtools/shared/observable-object");
+    Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm");
+    const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+    const ObservableObject = require("devtools/client/shared/observable-object");
 
     let data = {
       title: "ttt",

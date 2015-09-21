@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1192536
   <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
   <script type="application/javascript;version=1.8">
 
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const wasTesting = DevToolsUtils.testing;
 SimpleTest.registerCleanupFunction(() => DevToolsUtils.testing = wasTesting);
 

@@ -6,11 +6,11 @@
 "use strict";
 
 XPCOMUtils.defineLazyGetter(this, "HarExporter", function() {
-  return require("devtools/netmonitor/har/har-exporter.js").HarExporter;
+  return require("devtools/client/netmonitor/har/har-exporter").HarExporter;
 });
 
 XPCOMUtils.defineLazyGetter(this, "NetworkHelper", function() {
-  return require("devtools/toolkit/webconsole/network-helper");
+  return require("devtools/shared/webconsole/network-helper");
 });
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";

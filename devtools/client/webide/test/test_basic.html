@@ -21,7 +21,7 @@
         Task.spawn(function* () {
             let win = yield openWebIDE();
 
-            const {gDevToolsBrowser} = Cu.import("resource:///modules/devtools/gDevTools.jsm");
+            const {gDevToolsBrowser} = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm");
             yield gDevToolsBrowser.isWebIDEInitialized.promise;
             ok(true, "WebIDE was initialized");
 

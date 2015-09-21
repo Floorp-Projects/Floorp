@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { combineReducers } = require("devtools/shared/vendor/redux");
+const { combineReducers } = require("devtools/client/shared/vendor/redux");
 
 /**
  * Function that takes a hash of reducers, like `combineReducers`,

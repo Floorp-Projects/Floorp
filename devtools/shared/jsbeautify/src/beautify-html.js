@@ -814,7 +814,7 @@
         return multi_parser.output.join('');
     }
 
-    var beautify = require('devtools/jsbeautify');
+    var beautify = require('devtools/shared/jsbeautify/beautify');
 
     exports.htmlBeautify = function(html_source, options) {
         return style_html(html_source, options, beautify.js, beautify.css);

@@ -15,10 +15,10 @@
   <body>
 
     <script type="application/javascript;version=1.8">
-      const Telemetry = require("devtools/shared/telemetry");
+      const Telemetry = require("devtools/client/shared/telemetry");
       const { _DeprecatedUSBRuntime, _WiFiRuntime, _SimulatorRuntime,
               _gRemoteRuntime, _gLocalRuntime, RuntimeTypes }
-            = require("devtools/webide/runtimes");
+            = require("devtools/client/webide/modules/runtimes");
       const { DebuggerServer } = require("devtools/server/main");
 
       // Because we need to gather stats for the period of time that a tool has

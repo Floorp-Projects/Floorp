@@ -389,7 +389,7 @@ var FileResource = Class({
    * See editors.js -> EditorTypeForResource.
    */
   get contentCategory() {
-    const NetworkHelper = require("devtools/toolkit/webconsole/network-helper");
+    const NetworkHelper = require("devtools/shared/webconsole/network-helper");
     let category = NetworkHelper.mimeCategoryMap[this.contentType];
     // Special treatment for manifest.webapp.
     if (!category && this.basename === "manifest.webapp") {

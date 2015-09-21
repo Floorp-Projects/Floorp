@@ -4,10 +4,11 @@
 
 "use strict";
 
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-const { DevToolsWorker } = require("devtools/toolkit/shared/worker.js");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const { DevToolsWorker } = require("devtools/shared/shared/worker");
 
-const WORKER_URL = "resource://gre/modules/devtools/heapsnapshot/HeapAnalysesWorker.js";
+const WORKER_URL =
+  "resource://gre/modules/devtools/shared/heapsnapshot/HeapAnalysesWorker.js";
 var workerCounter = 0;
 
 /**

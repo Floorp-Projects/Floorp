@@ -8,7 +8,7 @@
 
 "use strict";
 
-var {Tools} = require("definitions");
+var {Tools} = require("devtools/client/definitions");
 
 var test = asyncTest(function* () {
   let currWindow, hud, mainWindow;

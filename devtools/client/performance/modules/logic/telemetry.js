@@ -4,13 +4,13 @@
 "use strict";
 
 loader.lazyRequireGetter(this, "Telemetry",
-  "devtools/shared/telemetry");
+  "devtools/client/shared/telemetry");
 loader.lazyRequireGetter(this, "Services",
   "resource://gre/modules/Services.jsm", true);
 loader.lazyRequireGetter(this, "DevToolsUtils",
-  "devtools/toolkit/DevToolsUtils");
+  "devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "EVENTS",
-  "devtools/performance/events");
+  "devtools/client/performance/events");
 
 const EVENT_MAP_FLAGS = new Map([
   [EVENTS.RECORDING_IMPORTED, "DEVTOOLS_PERFTOOLS_RECORDING_IMPORT_FLAG"],

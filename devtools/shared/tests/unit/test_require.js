@@ -9,8 +9,8 @@ function testBug1091706() {
   let loader = new DevToolsLoader();
   let require = loader.require;
 
-  let color1 = require("devtools/css-color");
-  let color2 = require("devtools/css-color");
+  let color1 = require("devtools/shared/css-color");
+  let color2 = require("devtools/shared/css-color");
 
   do_check_true(color1 === color2);
 }

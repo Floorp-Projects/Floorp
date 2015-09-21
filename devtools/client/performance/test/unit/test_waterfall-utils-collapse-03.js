@@ -11,7 +11,7 @@ function run_test() {
 }
 
 add_task(function test() {
-  const WaterfallUtils = require("devtools/performance/waterfall-utils");
+  const WaterfallUtils = require("devtools/client/performance/modules/logic/waterfall-utils");
 
   let rootMarkerNode = WaterfallUtils.createParentNode({ name: "(root)" });
 

@@ -18,21 +18,21 @@ loader.lazyRequireGetter(this, "events",
   "sdk/event/core");
 
 loader.lazyRequireGetter(this, "Memory",
-  "devtools/toolkit/shared/memory", true);
+  "devtools/shared/shared/memory", true);
 loader.lazyRequireGetter(this, "Timeline",
-  "devtools/toolkit/shared/timeline", true);
+  "devtools/shared/shared/timeline", true);
 loader.lazyRequireGetter(this, "Profiler",
-  "devtools/toolkit/shared/profiler", true);
+  "devtools/shared/shared/profiler", true);
 loader.lazyRequireGetter(this, "PerformanceRecordingActor",
   "devtools/server/actors/performance-recording", true);
 loader.lazyRequireGetter(this, "PerformanceRecordingFront",
   "devtools/server/actors/performance-recording", true);
 loader.lazyRequireGetter(this, "mapRecordingOptions",
-  "devtools/toolkit/performance/utils", true);
+  "devtools/shared/performance/utils", true);
 loader.lazyRequireGetter(this, "DevToolsUtils",
-  "devtools/toolkit/DevToolsUtils");
+  "devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "getSystemInfo",
-  "devtools/toolkit/shared/system", true);
+  "devtools/shared/shared/system", true);
 
 const PROFILER_EVENTS = [
   "console-api-profiler",

@@ -9,7 +9,7 @@ const { Class } = require("sdk/core/heritage");
 const { EventTarget } = require("sdk/event/target");
 const { emit } = require("sdk/event/core");
 const promise = require("promise");
-const Editor  = require("devtools/sourceeditor/editor");
+const Editor  = require("devtools/client/sourceeditor/editor");
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 

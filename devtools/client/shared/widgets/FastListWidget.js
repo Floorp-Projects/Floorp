@@ -5,9 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const { Cu, Ci } = require("chrome");
-const { ViewHelpers } = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
+const { ViewHelpers } = Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm", {});
 
 /**
  * A list menu widget that attempts to be very fast.

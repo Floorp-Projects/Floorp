@@ -11,7 +11,7 @@ function run_test() {
 }
 
 add_task(function () {
-  let FrameUtils = require("devtools/performance/frame-utils");
+  let FrameUtils = require("devtools/client/performance/modules/logic/frame-utils");
 
   let isContent = (frame) => {
     FrameUtils.computeIsContentAndCategory(frame);

@@ -14,7 +14,7 @@ const protocol = require("devtools/server/protocol");
 const { method, custom, RetVal, Arg } = protocol;
 
 loader.lazyGetter(this, "gDevTools", () => {
-  return require("resource:///modules/devtools/gDevTools.jsm").gDevTools;
+  return require("resource:///modules/devtools/client/framework/gDevTools.jsm").gDevTools;
 });
 loader.lazyGetter(this, "DOMUtils", () => {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils)
@@ -23,7 +23,7 @@ loader.lazyGetter(this, "stylesheets", () => {
   return require("devtools/server/actors/stylesheets");
 });
 loader.lazyGetter(this, "CssLogic", () => {
-  return require("devtools/styleinspector/css-logic").CssLogic;
+  return require("devtools/shared/styleinspector/css-logic").CssLogic;
 });
 
 const CSSRule = Ci.nsIDOMCSSRule;

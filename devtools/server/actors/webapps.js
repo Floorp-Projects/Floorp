@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/UserCustomizations.jsm");
 
 var promise = require("promise");
-var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { ActorPool } = require("devtools/server/actors/common");
 var { DebuggerServer } = require("devtools/server/main");
 var Services = require("Services");

@@ -12,13 +12,13 @@ const {Arg, Option, method, RetVal, types} = protocol;
 const events = require("sdk/event/core");
 const {Class} = require("sdk/core/heritage");
 const {LongStringActor} = require("devtools/server/actors/string");
-const {PSEUDO_ELEMENT_SET} = require("devtools/styleinspector/css-logic");
+const {PSEUDO_ELEMENT_SET} = require("devtools/shared/styleinspector/css-logic");
 
 // This will add the "stylesheet" actor type for protocol.js to recognize
 require("devtools/server/actors/stylesheets");
 
 loader.lazyGetter(this, "CssLogic", () => {
-  return require("devtools/styleinspector/css-logic").CssLogic;
+  return require("devtools/shared/styleinspector/css-logic").CssLogic;
 });
 loader.lazyGetter(this, "DOMUtils", () => {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);

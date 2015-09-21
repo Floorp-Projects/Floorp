@@ -10,7 +10,7 @@ const { Task } = require("resource://gre/modules/Task.jsm");
 
 loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter",
-  "devtools/toolkit/event-emitter");
+  "devtools/shared/event-emitter");
 
 function PerformancePanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;

@@ -6,7 +6,7 @@
  */
 
 const { PerformanceFront } = require("devtools/server/actors/performance");
-const { consoleMethod, PMM_loadFrameScripts } = require("devtools/toolkit/performance/process-communication");
+const { consoleMethod, PMM_loadFrameScripts } = require("devtools/shared/performance/process-communication");
 const MARKER_NAME = "TimeStamp";
 
 add_task(function*() {

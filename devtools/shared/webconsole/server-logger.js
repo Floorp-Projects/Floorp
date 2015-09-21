@@ -11,11 +11,11 @@ const {Class} = require("sdk/core/heritage");
 const Services = require("Services");
 
 const {DebuggerServer} = require("devtools/server/main");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 Cu.importGlobalProperties(["atob"]);
 
-loader.lazyGetter(this, "NetworkHelper", () => require("devtools/toolkit/webconsole/network-helper"));
+loader.lazyGetter(this, "NetworkHelper", () => require("devtools/shared/webconsole/network-helper"));
 
 // Helper tracer. Should be generic sharable by other modules (bug 1171927)
 const trace = {
@@ -113,7 +113,7 @@ var ServerLoggingListener = Class({
     trace.log("ServerLoggingListener.attachParentProcess;");
 
     this.owner.conn.setupInParent({
-      module: "devtools/toolkit/webconsole/server-logger-monitor",
+      module: "devtools/shared/webconsole/server-logger-monitor",
       setupParent: "setupParentProcess"
     });
 

@@ -7,8 +7,8 @@
 const {Cc, Ci, Cu} = require("chrome");
 const promise = require("promise");
 
-loader.lazyGetter(this, "HUDService", () => require("devtools/webconsole/hudservice"));
-loader.lazyGetter(this, "EventEmitter", () => require("devtools/toolkit/event-emitter"));
+loader.lazyGetter(this, "HUDService", () => require("devtools/client/webconsole/hudservice"));
+loader.lazyGetter(this, "EventEmitter", () => require("devtools/shared/event-emitter"));
 
 /**
  * A DevToolPanel that controls the Web Console.

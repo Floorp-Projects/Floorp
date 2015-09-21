@@ -8,9 +8,9 @@
 
 const TEST_URI = "chrome://devtools/content/shared/widgets/cubic-bezier-frame.xhtml";
 const {CubicBezierPresetWidget} =
-  require("devtools/shared/widgets/CubicBezierWidget");
+  require("devtools/client/shared/widgets/CubicBezierWidget");
 const {PREDEFINED, PRESETS, DEFAULT_PRESET_CATEGORY} =
-  require("devtools/shared/widgets/CubicBezierPresets");
+  require("devtools/client/shared/widgets/CubicBezierPresets");
 
 add_task(function*() {
   yield promiseTab("about:blank");

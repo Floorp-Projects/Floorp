@@ -16,19 +16,19 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/devtools/event-emitter.js");
-Cu.import("resource:///modules/devtools/gDevTools.jsm");
-Cu.import("resource:///modules/devtools/StyleEditorUtil.jsm");
-Cu.import("resource:///modules/devtools/SplitView.jsm");
-Cu.import("resource:///modules/devtools/StyleSheetEditor.jsm");
+Cu.import("resource://gre/modules/devtools/shared/event-emitter.js");
+Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm");
+Cu.import("resource:///modules/devtools/client/styleeditor/StyleEditorUtil.jsm");
+Cu.import("resource:///modules/devtools/client/shared/SplitView.jsm");
+Cu.import("resource:///modules/devtools/client/styleeditor/StyleSheetEditor.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 
-const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const { PrefObserver, PREF_ORIG_SOURCES } = require("devtools/styleeditor/utils");
+const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const { PrefObserver, PREF_ORIG_SOURCES } = require("devtools/client/styleeditor/utils");
 const csscoverage = require("devtools/server/actors/csscoverage");
-const console = require("resource://gre/modules/devtools/Console.jsm").console;
+const console = require("resource://gre/modules/devtools/shared/Console.jsm").console;
 const promise = require("promise");
 
 const LOAD_ERROR = "error-load";

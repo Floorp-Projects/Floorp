@@ -4,7 +4,7 @@
 
 const {Cu} = require("chrome");
 
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
 

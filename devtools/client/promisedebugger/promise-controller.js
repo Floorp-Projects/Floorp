@@ -10,15 +10,15 @@
 
 const { utils: Cu } = Components;
 const { loader, require } =
-  Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+  Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 
 const { Task } = require("resource://gre/modules/Task.jsm");
 
 loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter",
-  "devtools/toolkit/event-emitter");
+  "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "DevToolsUtils",
-  "devtools/toolkit/DevToolsUtils");
+  "devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "PromisesFront",
   "devtools/server/actors/promises", true);
 

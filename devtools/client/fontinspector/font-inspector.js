@@ -14,7 +14,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "console",
-  "resource://gre/modules/devtools/Console.jsm");
+  "resource://gre/modules/devtools/shared/Console.jsm");
 
 function FontInspector(inspector, window)
 {

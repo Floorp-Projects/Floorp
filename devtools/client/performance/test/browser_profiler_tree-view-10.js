@@ -7,8 +7,8 @@
  */
 
 function test() {
-  let { ThreadNode } = require("devtools/performance/tree-model");
-  let { CallView } = require("devtools/performance/tree-view");
+  let { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
+  let { CallView } = require("devtools/client/performance/modules/widgets/tree-view");
 
   let threadNode = new ThreadNode(gThread, { invertTree: true, startTime: 0, endTime: 50 });
   let treeRoot = new CallView({ frame: threadNode, inverted: true, hidden: true });

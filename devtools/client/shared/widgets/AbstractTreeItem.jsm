@@ -8,13 +8,13 @@
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
-  "resource://gre/modules/devtools/event-emitter.js");
+  "resource://gre/modules/devtools/shared/event-emitter.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
-  "resource://gre/modules/devtools/Console.jsm");
+  "resource://gre/modules/devtools/shared/Console.jsm");
 
 this.EXPORTED_SYMBOLS = ["AbstractTreeItem"];
 

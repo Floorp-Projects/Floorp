@@ -5,7 +5,7 @@
 // latter in a functioning state.
 
 var {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
-var {TargetFactory} = require("devtools/framework/target");
+var {TargetFactory} = require("devtools/client/framework/target");
 
 function test() {
   const options = {

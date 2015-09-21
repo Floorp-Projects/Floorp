@@ -3,7 +3,7 @@
 
 // Tests that options-view OptionsView responds to events correctly.
 
-const {OptionsView} = require("devtools/shared/options-view");
+const {OptionsView} = require("devtools/client/shared/options-view");
 const {Services} = require("resource://gre/modules/Services.jsm");
 
 const BRANCH = "devtools.debugger.";

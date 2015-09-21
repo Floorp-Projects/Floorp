@@ -17,7 +17,7 @@
 
 "use strict";
 
-const {setBaseCssDocsUrl} = require("devtools/shared/widgets/MdnDocsWidget");
+const {setBaseCssDocsUrl} = require("devtools/client/shared/widgets/MdnDocsWidget");
 
 const PROPERTYNAME = "color";
 

@@ -21,8 +21,8 @@ const SPECIALVALUES = new Set([
  * This module is used to convert between various color types.
  *
  * Usage:
- *   let {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
- *   let {colorUtils} = require("devtools/css-color");
+ *   let {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+ *   let {colorUtils} = require("devtools/shared/css-color");
  *   let color = new colorUtils.CssColor("red");
  *
  *   color.authored === "red"

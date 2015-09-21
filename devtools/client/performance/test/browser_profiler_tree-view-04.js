@@ -6,11 +6,11 @@
  * creates the correct DOM nodes in the correct order.
  */
 
-var { CATEGORY_MASK } = require("devtools/performance/global");
+var { CATEGORY_MASK } = require("devtools/client/performance/modules/global");
 
 function test() {
-  let { ThreadNode } = require("devtools/performance/tree-model");
-  let { CallView } = require("devtools/performance/tree-view");
+  let { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
+  let { CallView } = require("devtools/client/performance/modules/widgets/tree-view");
 
   let threadNode = new ThreadNode(gThread, { startTime: 0, endTime: 20 });
   // Don't display the synthesized (root) and the real (root) node twice.

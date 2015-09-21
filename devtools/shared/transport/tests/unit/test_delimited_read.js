@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const StreamUtils = require("devtools/toolkit/transport/stream-utils");
+const StreamUtils = require("devtools/shared/transport/stream-utils");
 
 const StringInputStream = CC("@mozilla.org/io/string-input-stream;1",
                              "nsIStringInputStream", "setData");

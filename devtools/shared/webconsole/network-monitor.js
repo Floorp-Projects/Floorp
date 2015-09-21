@@ -11,10 +11,10 @@ const {Cc, Ci, Cu, Cr} = require("chrome");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 loader.lazyRequireGetter(this, "NetworkHelper",
-                         "devtools/toolkit/webconsole/network-helper");
+                         "devtools/shared/webconsole/network-helper");
 loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
 loader.lazyRequireGetter(this, "DevToolsUtils",
-                         "devtools/toolkit/DevToolsUtils");
+                         "devtools/shared/DevToolsUtils");
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 loader.lazyServiceGetter(this, "gActivityDistributor",
                          "@mozilla.org/network/http-activity-distributor;1",

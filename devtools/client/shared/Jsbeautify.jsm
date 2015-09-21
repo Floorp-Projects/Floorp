@@ -5,12 +5,12 @@
 "use strict";
 
 /*
- * JS Beautifier. Please use require("devtools/jsbeautify") instead of
+ * JS Beautifier. Please use require("devtools/shared/jsbeautify/beautify") instead of
  * this JSM.
  */
 
 this.EXPORTED_SYMBOLS = [ "jsBeautify" ];
 
-const { require } = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
-const { beautify } = require("devtools/jsbeautify");
+const { require } = Components.utils.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const { beautify } = require("devtools/shared/jsbeautify/beautify");
 const jsBeautify = beautify.js;

@@ -6,12 +6,8 @@
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
-EXTRA_JS_MODULES.devtools += [
+DevToolsModules(
     'gDevTools.jsm',
-    'ToolboxProcess.jsm',
-]
-
-EXTRA_JS_MODULES.devtools.framework += [
     'selection.js',
     'sidebar.js',
     'target.js',
@@ -19,4 +15,5 @@ EXTRA_JS_MODULES.devtools.framework += [
     'toolbox-hosts.js',
     'toolbox-options.js',
     'toolbox.js',
-]
+    'ToolboxProcess.jsm',
+)

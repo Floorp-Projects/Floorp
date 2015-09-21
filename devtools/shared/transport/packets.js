@@ -25,9 +25,9 @@
  */
 
 const { Cc, Ci, Cu } = require("chrome");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { dumpn, dumpv } = DevToolsUtils;
-const StreamUtils = require("devtools/toolkit/transport/stream-utils");
+const StreamUtils = require("devtools/shared/transport/stream-utils");
 const promise = require("promise");
 
 DevToolsUtils.defineLazyGetter(this, "unicodeConverter", () => {

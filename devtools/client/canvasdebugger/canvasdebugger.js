@@ -7,18 +7,18 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/devtools/SideMenuWidget.jsm");
-Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
-Cu.import("resource://gre/modules/devtools/Console.jsm");
+Cu.import("resource:///modules/devtools/client/shared/widgets/SideMenuWidget.jsm");
+Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
+Cu.import("resource://gre/modules/devtools/shared/Console.jsm");
 
-const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 const promise = require("promise");
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const { CallWatcherFront } = require("devtools/server/actors/call-watcher");
 const { CanvasFront } = require("devtools/server/actors/canvas");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
-const Telemetry = require("devtools/shared/telemetry");
+const Telemetry = require("devtools/client/shared/telemetry");
 const telemetry = new Telemetry();
 
 const CANVAS_ACTOR_RECORDING_ATTEMPT = DevToolsUtils.testing ? 500 : 5000;
@@ -36,7 +36,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "NetworkHelper", function() {
-  return require("devtools/toolkit/webconsole/network-helper");
+  return require("devtools/shared/webconsole/network-helper");
 });
 
 // The panel's window global is an EventEmitter firing the following events:

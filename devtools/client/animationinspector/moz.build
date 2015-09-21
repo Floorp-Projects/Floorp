@@ -7,7 +7,7 @@
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
-EXTRA_JS_MODULES.devtools.animationinspector += [
+DevToolsModules(
     'components.js',
     'utils.js',
-]
+)

@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { L10N } = require("devtools/performance/global");
-const { Formatters } = require("devtools/performance/marker-utils");
+const { L10N } = require("devtools/client/performance/modules/global");
+const { Formatters } = require("devtools/client/performance/modules/logic/marker-utils");
 
 /**
  * A simple schema for mapping markers to the timeline UI. The keys correspond

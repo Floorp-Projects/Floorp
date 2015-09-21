@@ -5,9 +5,9 @@
  "use strict";
 
 const {Cu} = require("chrome");
-const Editor = require("devtools/sourceeditor/editor");
+const Editor = require("devtools/client/sourceeditor/editor");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/devtools/event-emitter.js");
+Cu.import("resource://gre/modules/devtools/shared/event-emitter.js");
 
 exports.HTMLEditor = HTMLEditor;
 

@@ -6,7 +6,7 @@
 
 const events = require("sdk/event/core");
 const { getCurrentZoom,
-  setIgnoreLayoutChanges } = require("devtools/toolkit/layout/utils");
+  setIgnoreLayoutChanges } = require("devtools/shared/layout/utils");
 const {
   CanvasFrameAnonymousContentHelper,
   createSVGNode, createNode } = require("./utils/markup");

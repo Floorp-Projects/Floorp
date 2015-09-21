@@ -472,7 +472,7 @@ exports.defineLazyGetter(this, "TextDecoder", () => {
 });
 
 exports.defineLazyGetter(this, "NetworkHelper", () => {
-  return require("devtools/toolkit/webconsole/network-helper");
+  return require("devtools/shared/webconsole/network-helper");
 });
 
 /**

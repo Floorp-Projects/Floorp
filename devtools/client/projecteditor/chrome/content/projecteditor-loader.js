@@ -1,9 +1,9 @@
 const Cu = Components.utils;
-const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 const promise = require("promise");
-const ProjectEditor = require("projecteditor/projecteditor");
+const ProjectEditor = require("devtools/client/projecteditor/lib/projecteditor");
 
 const SAMPLE_PATH = buildTempDirectoryStructure();
 const SAMPLE_NAME = "DevTools Content Application Name";

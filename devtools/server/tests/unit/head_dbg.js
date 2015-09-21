@@ -8,11 +8,11 @@ const Cu = Components.utils;
 const Cr = Components.results;
 const CC = Components.Constructor;
 
-const { require, loader } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const { worker } = Cu.import("resource://gre/modules/devtools/worker-loader.js", {})
+const { require, loader } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const { worker } = Cu.import("resource://gre/modules/devtools/shared/worker-loader.js", {})
 const promise = require("promise");
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-const { promiseInvoke } = require("devtools/async-utils");
+const { promiseInvoke } = require("devtools/shared/async-utils");
 
 const Services = require("Services");
 // Always log packets when running tests. runxpcshelltests.py will throw
@@ -21,10 +21,10 @@ Services.prefs.setBoolPref("devtools.debugger.log", true);
 // Enable remote debugging for the relevant tests.
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { DebuggerServer } = require("devtools/server/main");
 const { DebuggerServer: WorkerDebuggerServer } = worker.require("devtools/server/main");
-const { DebuggerClient, ObjectClient } = require("devtools/toolkit/client/main");
+const { DebuggerClient, ObjectClient } = require("devtools/shared/client/main");
 const { MemoryFront } = require("devtools/server/actors/memory");
 
 const { addDebuggerToGlobal } = Cu.import("resource://gre/modules/jsdebugger.jsm", {});
@@ -173,8 +173,8 @@ function tryImport(url) {
   }
 }
 
-tryImport("resource://gre/modules/devtools/Loader.jsm");
-tryImport("resource://gre/modules/devtools/Console.jsm");
+tryImport("resource://gre/modules/devtools/shared/Loader.jsm");
+tryImport("resource://gre/modules/devtools/shared/Console.jsm");
 
 function testExceptionHook(ex) {
   try {

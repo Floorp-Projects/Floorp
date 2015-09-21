@@ -9,10 +9,10 @@
 "use strict";
 
 const {Cc, Ci, Cu} = require("chrome");
-const {PREF_ORIG_SOURCES} = require("devtools/styleeditor/utils");
+const {PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/utils");
 
 loader.lazyRequireGetter(this, "overlays",
-  "devtools/styleinspector/style-inspector-overlays");
+  "devtools/client/styleinspector/style-inspector-overlays");
 loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
 loader.lazyServiceGetter(this, "clipboardHelper",
   "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");

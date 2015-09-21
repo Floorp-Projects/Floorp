@@ -5,7 +5,7 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const eventEmitter = new EventEmitter();
 const events = require("sdk/event/core");
 loader.lazyRequireGetter(this, "getOuterId", "sdk/window/utils", true);

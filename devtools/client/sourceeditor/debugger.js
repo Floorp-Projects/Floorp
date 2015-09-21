@@ -5,7 +5,7 @@
  "use strict";
 
 const {Cu} = require("chrome");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const promise = require("promise");
 const dbginfo = new WeakMap();
 

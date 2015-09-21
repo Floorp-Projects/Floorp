@@ -3,9 +3,9 @@
 
 "use strict";
 
-var {require} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-var {TargetFactory} = require("devtools/framework/target");
-var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var {require} = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
+var {TargetFactory} = require("devtools/client/framework/target");
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var promise = require("promise");
 
 // Import the GCLI test helper

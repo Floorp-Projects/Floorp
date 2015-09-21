@@ -10,7 +10,7 @@ var Ci = Components.interfaces;
 var Cc = Components.classes;
 var CC = Components.Constructor;
 
-var { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 var { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 var promise = require("promise");
 
@@ -67,7 +67,7 @@ exports.getTestActor = Task.async(function* (toolbox) {
 // then just create a front for the given `tab`
 exports.getTestActorWithoutToolbox = Task.async(function* (tab) {
   let { DebuggerServer } = require("devtools/server/main");
-  let { DebuggerClient } = require("devtools/toolkit/client/main");
+  let { DebuggerClient } = require("devtools/shared/client/main");
 
   // We need to spawn a client instance,
   // but for that we have to first ensure a server is running

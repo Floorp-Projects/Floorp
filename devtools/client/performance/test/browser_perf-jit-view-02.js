@@ -8,7 +8,7 @@
 
 Services.prefs.setBoolPref(INVERT_PREF, false);
 Services.prefs.setBoolPref(PLATFORM_DATA_PREF, false);
-var { CATEGORY_MASK } = require("devtools/performance/global");
+var { CATEGORY_MASK } = require("devtools/client/performance/modules/global");
 
 function* spawnTest() {
   let { panel } = yield initPerformance(SIMPLE_URL);

@@ -3,18 +3,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const {Cu, Ci} = require("chrome");
-const {Devices} = Cu.import("resource://gre/modules/devtools/Devices.jsm");
+const {Devices} = Cu.import("resource://gre/modules/devtools/shared/apps/Devices.jsm");
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
-const {Connection} = require("devtools/client/connection-manager");
+const {Connection} = require("devtools/shared/client/connection-manager");
 const {DebuggerServer} = require("devtools/server/main");
-const {Simulators} = require("devtools/webide/simulators");
-const discovery = require("devtools/toolkit/discovery/discovery");
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const {Simulators} = require("devtools/client/webide/modules/simulators");
+const discovery = require("devtools/shared/discovery/discovery");
+const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
 loader.lazyRequireGetter(this, "AuthenticationResult",
-  "devtools/toolkit/security/auth", true);
+  "devtools/shared/security/auth", true);
 loader.lazyRequireGetter(this, "DevToolsUtils",
-  "devtools/toolkit/DevToolsUtils");
+  "devtools/shared/DevToolsUtils");
 
 const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
 

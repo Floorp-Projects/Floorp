@@ -6,9 +6,9 @@
 
 const { Ci, Cu } = require("chrome");
 const Services = require("Services");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { dbg_assert, fetch } = DevToolsUtils;
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const { OriginalLocation, GeneratedLocation, getOffsetColumn } = require("devtools/server/actors/common");
 const { resolve } = require("promise");
 

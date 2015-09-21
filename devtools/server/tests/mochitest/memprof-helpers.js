@@ -10,11 +10,11 @@ SimpleTest.registerCleanupFunction(function() {
   Services.prefs.clearUserPref("devtools.debugger.log");
 });
 
-Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
-Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+Cu.import("resource://gre/modules/devtools/shared/client/dbg-client.jsm");
+Cu.import("resource://gre/modules/devtools/server/dbg-server.jsm");
 
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://gre/modules/devtools/Loader.jsm");
+Cu.import("resource://gre/modules/devtools/shared/Loader.jsm");
 let { require } = devtools;
 
 let { MemprofFront } = require("devtools/server/actors/memprof");

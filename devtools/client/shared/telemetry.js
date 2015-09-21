@@ -20,7 +20,7 @@
  *    },
  *
  * 3. Include this module at the top of your tool. Use:
- *      let Telemetry = require("devtools/shared/telemetry")
+ *      let Telemetry = require("devtools/client/shared/telemetry")
  *
  * 4. Create a telemetry instance in your tool's constructor:
  *      this._telemetry = new Telemetry();

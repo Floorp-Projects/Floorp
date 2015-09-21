@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var { GetDevices, GetDeviceString, AddDevice } = require("devtools/shared/devices");
+var { GetDevices, GetDeviceString, AddDevice } = require("devtools/client/shared/devices");
 
 add_task(function*() {
   Services.prefs.setCharPref("devtools.devices.url", TEST_URI_ROOT + "browser_devices.json");

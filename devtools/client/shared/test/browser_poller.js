@@ -3,7 +3,7 @@
 
 // Tests the Poller class.
 
-const { Poller } = require("devtools/shared/poller");
+const { Poller } = require("devtools/client/shared/poller");
 
 add_task(function* () {
   let count1 = 0, count2 = 0, count3 = 0;

@@ -12,11 +12,11 @@ Test decoding a simple message
   <script type="application/javascript;version=1.8">
 window.onload = function() {
   const { utils: Cu } = Components;
-  const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+  const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
   const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
   const promise = require("promise");
 
-  const QR = require("devtools/toolkit/qrcode/index");
+  const QR = require("devtools/shared/qrcode/index");
 
   SimpleTest.waitForExplicitFinish();
 
