@@ -214,10 +214,6 @@ var gFxAccounts = {
     this.showDoorhanger("sync-start-panel");
   },
 
-  showSyncFailedDoorhanger: function () {
-    this.showDoorhanger("sync-error-panel");
-  },
-
   updateUI: function () {
     this.updateAppMenuItem();
     this.updateMigrationNotification();

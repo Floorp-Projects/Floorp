@@ -975,7 +975,7 @@ loop.panel = (function(_, mozL10n) {
         <div className="new-room-view">
           <div className={contextClasses}>
             <Checkbox checked={this.state.checked}
-                      label={mozL10n.get("context_inroom_label")}
+                      label={mozL10n.get("context_inroom_label2")}
                       onChange={this.onCheckboxChange} />
             <sharedViews.ContextUrlView
               allowClick={false}

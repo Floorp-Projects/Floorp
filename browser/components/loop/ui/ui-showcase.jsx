@@ -1118,6 +1118,7 @@
                                        publishStream={noop}
                                        screenShare={{ state: SCREEN_SHARE_STATES.INACTIVE, visible: true }}
                                        settingsMenuItems={[{ id: "feedback" }]}
+                                       show={true}
                                        video={{ enabled: true, visible: true }} />
                 </div>
               </FramedExample>
@@ -1132,6 +1133,7 @@
                                        publishStream={noop}
                                        screenShare={{ state: SCREEN_SHARE_STATES.PENDING, visible: true }}
                                        settingsMenuItems={[{ id: "feedback" }]}
+                                       show={true}
                                        video={{ enabled: false, visible: true }} />
                 </div>
               </FramedExample>
@@ -1146,6 +1148,7 @@
                                        publishStream={noop}
                                        screenShare={{ state: SCREEN_SHARE_STATES.ACTIVE, visible: true }}
                                        settingsMenuItems={[{ id: "feedback" }]}
+                                       show={true}
                                        video={{ enabled: true, visible: true }} />
                 </div>
               </FramedExample>

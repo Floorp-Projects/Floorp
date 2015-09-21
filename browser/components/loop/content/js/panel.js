@@ -975,7 +975,7 @@ loop.panel = (function(_, mozL10n) {
         React.createElement("div", {className: "new-room-view"}, 
           React.createElement("div", {className: contextClasses}, 
             React.createElement(Checkbox, {checked: this.state.checked, 
-                      label: mozL10n.get("context_inroom_label"), 
+                      label: mozL10n.get("context_inroom_label2"), 
                       onChange: this.onCheckboxChange}), 
             React.createElement(sharedViews.ContextUrlView, {
               allowClick: false, 
