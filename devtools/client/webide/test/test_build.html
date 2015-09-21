@@ -19,7 +19,7 @@
         SimpleTest.waitForExplicitFinish();
 
         let {TextDecoder, OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
-        let {ProjectBuilding} = require("devtools/webide/build");
+        let {ProjectBuilding} = require("devtools/client/webide/modules/build");
 
         Task.spawn(function* () {
             let win = yield openWebIDE();

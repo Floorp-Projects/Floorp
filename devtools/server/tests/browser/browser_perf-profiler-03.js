@@ -9,7 +9,7 @@
  */
 
 const { PerformanceFront } = require("devtools/server/actors/performance");
-const { sendProfilerCommand, PMM_isProfilerActive, PMM_stopProfiler, PMM_loadFrameScripts } = require("devtools/toolkit/performance/process-communication");
+const { sendProfilerCommand, PMM_isProfilerActive, PMM_stopProfiler, PMM_loadFrameScripts } = require("devtools/shared/performance/process-communication");
 
 add_task(function*() {
   // Ensure the profiler is already running when the test starts.

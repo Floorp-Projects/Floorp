@@ -7,7 +7,7 @@
 
 const {Cu} = require("chrome");
 
-var TiltUtils = require("devtools/tilt/tilt-utils");
+var TiltUtils = require("devtools/client/tilt/tilt-utils");
 
 /**
  * Module containing high performance matrix and vector operations for WebGL.

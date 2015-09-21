@@ -8,7 +8,7 @@
 const { Cc, Ci, Cu } = require("chrome");
 
 const Environment = require("sdk/system/environment").env;
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
 const Subprocess = require("sdk/system/child_process/subprocess");
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});

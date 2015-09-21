@@ -4,6 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+include('../templates.mozbuild')
+
 DIRS += [
     'acorn',
     'apps',
@@ -12,6 +14,7 @@ DIRS += [
     'gcli',
     'heapsnapshot',
     'jsbeautify',
+    'layout',
     'performance',
     'pretty-fast',
     'qrcode',
@@ -28,24 +31,17 @@ DIRS += [
 MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
-EXTRA_JS_MODULES.devtools += [
+DevToolsModules(
     'async-utils.js',
+    'Console.jsm',
     'content-observer.js',
     'css-color.js',
     'deprecated-sync-thenables.js',
     'DevToolsUtils.js',
     'event-emitter.js',
     'event-parsers.js',
+    'Loader.jsm',
     'output-parser.js',
     'path.js',
     'worker-loader.js',
-]
-
-EXTRA_JS_MODULES.devtools += [
-    'Console.jsm',
-    'Loader.jsm',
-]
-
-EXTRA_JS_MODULES.devtools.layout += [
-    'layout/utils.js'
-]
+)

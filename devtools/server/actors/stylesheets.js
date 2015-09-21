@@ -17,11 +17,11 @@ const events = require("sdk/event/core");
 const protocol = require("devtools/server/protocol");
 const {Arg, Option, method, RetVal, types} = protocol;
 const {LongStringActor, ShortLongString} = require("devtools/server/actors/string");
-const {fetch} = require("devtools/toolkit/DevToolsUtils");
-const {listenOnce} = require("devtools/async-utils");
+const {fetch} = require("devtools/shared/DevToolsUtils");
+const {listenOnce} = require("devtools/shared/async-utils");
 const {SourceMapConsumer} = require("source-map");
 
-loader.lazyGetter(this, "CssLogic", () => require("devtools/styleinspector/css-logic").CssLogic);
+loader.lazyGetter(this, "CssLogic", () => require("devtools/shared/styleinspector/css-logic").CssLogic);
 
 var TRANSITION_CLASS = "moz-styleeditor-transitioning";
 var TRANSITION_DURATION_MS = 500;

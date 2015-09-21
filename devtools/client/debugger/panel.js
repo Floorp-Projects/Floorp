@@ -7,8 +7,8 @@
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
 const promise = require("promise");
-const EventEmitter = require("devtools/toolkit/event-emitter");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const EventEmitter = require("devtools/shared/event-emitter");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 function DebuggerPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;

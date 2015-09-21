@@ -7,8 +7,8 @@
 
 var WAIT_TIME = 100;
 
-const { TargetFactory } = require("devtools/framework/target");
-const { LegacyPerformanceFront } = require("devtools/toolkit/performance/legacy/front");
+const { TargetFactory } = require("devtools/client/framework/target");
+const { LegacyPerformanceFront } = require("devtools/shared/performance/legacy/front");
 const { merge } = require("sdk/util/object");
 
 add_task(function*() {

@@ -13,7 +13,7 @@ const { Cu, Cc, Ci } = require("chrome");
 const { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 const promise = require("promise");
 const { merge } = require("sdk/util/object");
-const { getLocalizedString } = require("projecteditor/helpers/l10n");
+const { getLocalizedString } = require("devtools/client/projecteditor/lib/helpers/l10n");
 
 /**
  * Show a file / folder picker.

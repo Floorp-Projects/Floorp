@@ -9,7 +9,7 @@ const {method, RetVal} = protocol;
 const promise = require("promise");
 const {LongStringActor} = require("devtools/server/actors/string");
 const {DebuggerServer} = require("devtools/server/main");
-const {getSystemInfo, getSetting} = require("devtools/toolkit/shared/system");
+const {getSystemInfo, getSetting} = require("devtools/shared/shared/system");
 
 Cu.import("resource://gre/modules/PermissionsTable.jsm")
 

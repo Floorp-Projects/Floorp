@@ -7,7 +7,7 @@
 // Test the basic functionality of async-storage.
 // Adapted from https://github.com/mozilla-b2g/gaia/blob/f09993563fb5fec4393eb71816ce76cb00463190/apps/sharedtest/test/unit/async_storage_test.js.
 
-const asyncStorage = require("devtools/toolkit/shared/async-storage");
+const asyncStorage = require("devtools/shared/shared/async-storage");
 add_task(function*() {
   is(typeof asyncStorage.length, "function", "API exists.");
   is(typeof asyncStorage.key, "function", "API exists.");

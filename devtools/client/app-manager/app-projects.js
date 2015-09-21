@@ -1,8 +1,8 @@
 const {Cc,Ci,Cu,Cr} = require("chrome");
-const ObservableObject = require("devtools/shared/observable-object");
-const promise = require("devtools/toolkit/deprecated-sync-thenables");
+const ObservableObject = require("devtools/client/shared/observable-object");
+const promise = require("devtools/shared/deprecated-sync-thenables");
 
-const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js");
+const {EventEmitter} = Cu.import("resource://gre/modules/devtools/shared/event-emitter.js");
 const {generateUUID} = Cc['@mozilla.org/uuid-generator;1'].getService(Ci.nsIUUIDGenerator);
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm");
 const { indexedDB } = require("sdk/indexed-db");

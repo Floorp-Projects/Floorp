@@ -11,7 +11,7 @@ function run_test() {
 }
 
 add_task(function test() {
-  let { JITOptimizations, OptimizationSite } = require("devtools/performance/jit");
+  let { JITOptimizations, OptimizationSite } = require("devtools/client/performance/modules/logic/jit");
 
   let rawSites = [];
   rawSites.push(gRawSite2);

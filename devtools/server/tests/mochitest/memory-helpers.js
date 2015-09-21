@@ -11,8 +11,8 @@ SimpleTest.registerCleanupFunction(function() {
 });
 
 Cu.import("resource://gre/modules/Task.jsm");
-var { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-var { DebuggerClient } = require("devtools/toolkit/client/main");
+var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var { DebuggerClient } = require("devtools/shared/client/main");
 var { DebuggerServer } = require("devtools/server/main");
 
 var { MemoryFront } = require("devtools/server/actors/memory");

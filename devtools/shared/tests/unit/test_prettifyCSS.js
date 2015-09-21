@@ -5,7 +5,7 @@
 
 "use strict";
 
-const {CssLogic} = require("devtools/styleinspector/css-logic");
+const {CssLogic} = require("devtools/shared/styleinspector/css-logic");
 
 
 const TESTS = [

@@ -36,11 +36,11 @@ const PROMISE_DEBUGGER_URL =
   "chrome://devtools/content/promisedebugger/promise-debugger.xhtml";
 
 const debuggerControllerEmit = DebuggerController.emit.bind(DebuggerController);
-const createStore = require("devtools/shared/redux/create-store")();
-const { combineEmittingReducers } = require("devtools/shared/redux/reducers");
+const createStore = require("devtools/client/shared/redux/create-store")();
+const { combineEmittingReducers } = require("devtools/client/shared/redux/reducers");
 const reducers = require("./content/reducers/index");
 const store = createStore(combineEmittingReducers(reducers, debuggerControllerEmit));
-const { NAME: WAIT_UNTIL_NAME } = require("devtools/shared/redux/middleware/wait-service");
+const { NAME: WAIT_UNTIL_NAME } = require("devtools/client/shared/redux/middleware/wait-service");
 
 const services = {
   WAIT_UNTIL: WAIT_UNTIL_NAME

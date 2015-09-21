@@ -1,6 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* globals NetUtil, FileUtils, OS */
 
 "use strict";
 
@@ -67,7 +68,10 @@ XPCOMUtils.defineLazyGetter(loaderModules, "indexedDB", () => {
 
 var sharedGlobalBlacklist = ["sdk/indexed-db"];
 
-// Used when the tools should be loaded from the Firefox package itself (the default)
+/**
+ * Used when the tools should be loaded from the Firefox package itself.
+ * This is the default case.
+ */
 function BuiltinProvider() {}
 BuiltinProvider.prototype = {
   load: function() {
@@ -77,32 +81,28 @@ BuiltinProvider.prototype = {
       paths: {
         // When you add a line to this mapping, don't forget to make a
         // corresponding addition to the SrcdirProvider mapping below as well.
+        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "": "resource://gre/modules/commonjs/",
-        "main": "resource:///modules/devtools/main.js",
-        "definitions": "resource:///modules/devtools/definitions.js",
-        "devtools": "resource:///modules/devtools",
-        "devtools/toolkit": "resource://gre/modules/devtools",
-        "devtools/server": "resource://gre/modules/devtools/server",
-        "devtools/toolkit/webconsole": "resource://gre/modules/devtools/toolkit/webconsole",
-        "devtools/app-actor-front": "resource://gre/modules/devtools/app-actor-front.js",
-        "devtools/styleinspector/css-logic": "resource://gre/modules/devtools/styleinspector/css-logic",
-        "devtools/css-color": "resource://gre/modules/devtools/css-color",
-        "devtools/output-parser": "resource://gre/modules/devtools/output-parser",
-        "devtools/client": "resource://gre/modules/devtools/client",
-        "devtools/pretty-fast": "resource://gre/modules/devtools/pretty-fast.js",
-        "devtools/jsbeautify": "resource://gre/modules/devtools/jsbeautify/beautify.js",
-        "devtools/async-utils": "resource://gre/modules/devtools/async-utils",
-        "devtools/content-observer": "resource://gre/modules/devtools/content-observer",
+        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
+        "devtools": "resource://gre/modules/devtools",
+        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
+        "devtools/client": "resource:///modules/devtools/client",
+        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "gcli": "resource://gre/modules/devtools/gcli",
-        "projecteditor": "resource:///modules/devtools/projecteditor",
+        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "promise": "resource://gre/modules/Promise-backend.js",
+        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "acorn": "resource://gre/modules/devtools/acorn",
+        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "acorn/util/walk": "resource://gre/modules/devtools/acorn/walk.js",
+        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "tern": "resource://gre/modules/devtools/tern",
+        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "source-map": "resource://gre/modules/devtools/sourcemap/source-map.js",
-
+        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         // Allow access to xpcshell test items from the loader.
         "xpcshell-test": "resource://test"
+        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
       },
       globals: this.globals,
       invisibleToDebugger: this.invisibleToDebugger,
@@ -119,9 +119,11 @@ BuiltinProvider.prototype = {
   },
 };
 
-// Used when the tools should be loaded from a mozilla-central checkout.  In addition
-// to different paths, it needs to write chrome.manifest files to override chrome urls
-// from the builtin tools.
+/**
+ * Used when the tools should be loaded from a mozilla-central checkout.  In
+ * addition to different paths, it needs to write chrome.manifest files to
+ * override chrome urls from the builtin tools.
+ */
 function SrcdirProvider() {}
 SrcdirProvider.prototype = {
   fileURI: function(path) {
@@ -130,63 +132,43 @@ SrcdirProvider.prototype = {
   },
 
   load: function() {
-    let srcdir = Services.prefs.getComplexValue("devtools.loader.srcdir",
+    let srcDir = Services.prefs.getComplexValue("devtools.loader.srcdir",
                                                 Ci.nsISupportsString);
-    srcdir = OS.Path.normalize(srcdir.data.trim());
-    let devtoolsDir = OS.Path.join(srcdir, "browser", "devtools");
-    let toolkitDir = OS.Path.join(srcdir, "toolkit", "devtools");
-    let modulesDir = OS.Path.join(srcdir, "toolkit", "modules");
-    let mainURI = this.fileURI(OS.Path.join(devtoolsDir, "main.js"));
-    let definitionsURI = this.fileURI(OS.Path.join(devtoolsDir, "definitions.js"));
+    srcDir = OS.Path.normalize(srcDir.data.trim());
+    let devtoolsDir = OS.Path.join(srcDir, "devtools");
+    let sharedDir = OS.Path.join(devtoolsDir, "shared");
+    let modulesDir = OS.Path.join(srcDir, "toolkit", "modules");
     let devtoolsURI = this.fileURI(devtoolsDir);
-    let toolkitURI = this.fileURI(toolkitDir);
-    let serverURI = this.fileURI(OS.Path.join(toolkitDir, "server"));
-    let webideURI = this.fileURI(OS.Path.join(devtoolsDir, "webide", "modules"));
-    let webconsoleURI = this.fileURI(OS.Path.join(toolkitDir, "webconsole"));
-    let appActorURI = this.fileURI(OS.Path.join(toolkitDir, "apps", "app-actor-front.js"));
-    let cssLogicURI = this.fileURI(OS.Path.join(toolkitDir, "styleinspector", "css-logic"));
-    let cssColorURI = this.fileURI(OS.Path.join(toolkitDir, "css-color"));
-    let outputParserURI = this.fileURI(OS.Path.join(toolkitDir, "output-parser"));
-    let clientURI = this.fileURI(OS.Path.join(toolkitDir, "client"));
-    let prettyFastURI = this.fileURI(OS.Path.join(toolkitDir, "pretty-fast.js"));
-    let jsBeautifyURI = this.fileURI(OS.Path.join(toolkitDir, "jsbeautify", "beautify.js"));
-    let asyncUtilsURI = this.fileURI(OS.Path.join(toolkitDir, "async-utils.js"));
-    let contentObserverURI = this.fileURI(OS.Path.join(toolkitDir), "content-observer.js");
-    let gcliURI = this.fileURI(OS.Path.join(toolkitDir, "gcli", "source", "lib", "gcli"));
-    let projecteditorURI = this.fileURI(OS.Path.join(devtoolsDir, "projecteditor", "lib"));
-    let promiseURI = this.fileURI(OS.Path.join(modulesDir, "Promise-backend.js"));
-    let acornURI = this.fileURI(OS.Path.join(toolkitDir, "acorn"));
+    let gcliURI = this.fileURI(OS.Path.join(sharedDir,
+                                            "gcli", "source", "lib", "gcli"));
+    let promiseURI = this.fileURI(OS.Path.join(modulesDir,
+                                               "Promise-backend.js"));
+    let acornURI = this.fileURI(OS.Path.join(sharedDir, "acorn"));
     let acornWalkURI = OS.Path.join(acornURI, "walk.js");
-    let ternURI = OS.Path.join(toolkitDir, "tern");
-    let sourceMapURI = this.fileURI(OS.Path.join(toolkitDir, "sourcemap", "source-map.js"));
+    let ternURI = OS.Path.join(sharedDir, "tern");
+    let sourceMapURI = this.fileURI(OS.Path.join(sharedDir,
+                                                 "sourcemap", "source-map.js"));
     this.loader = new Loader.Loader({
       id: "fx-devtools",
       modules: loaderModules,
       paths: {
+        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "": "resource://gre/modules/commonjs/",
-        "main": mainURI,
-        "definitions": definitionsURI,
+        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "devtools": devtoolsURI,
-        "devtools/toolkit": toolkitURI,
-        "devtools/server": serverURI,
-        "devtools/webide": webideURI,
-        "devtools/toolkit/webconsole": webconsoleURI,
-        "devtools/app-actor-front": appActorURI,
-        "devtools/styleinspector/css-logic": cssLogicURI,
-        "devtools/css-color": cssColorURI,
-        "devtools/output-parser": outputParserURI,
-        "devtools/client": clientURI,
-        "devtools/pretty-fast": prettyFastURI,
-        "devtools/jsbeautify": jsBeautifyURI,
-        "devtools/async-utils": asyncUtilsURI,
-        "devtools/content-observer": contentObserverURI,
+        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "gcli": gcliURI,
-        "projecteditor": projecteditorURI,
+        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "promise": promiseURI,
+        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "acorn": acornURI,
+        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "acorn/util/walk": acornWalkURI,
+        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "tern": ternURI,
+        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "source-map": sourceMapURI,
+        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
       },
       globals: this.globals,
       invisibleToDebugger: this.invisibleToDebugger,
@@ -194,7 +176,7 @@ SrcdirProvider.prototype = {
       sharedGlobalBlacklist: sharedGlobalBlacklist
     });
 
-    return this._writeManifest(devtoolsDir).then(null, Cu.reportError);
+    return this._writeManifest(srcDir).then(null, Cu.reportError);
   },
 
   unload: function(reason) {
@@ -225,14 +207,16 @@ SrcdirProvider.prototype = {
     return promise.then(null, (ex) => new Error("Couldn't write manifest: " + ex + "\n"));
   },
 
-  _writeManifest: function(dir) {
-    return this._readFile(OS.Path.join(dir, "jar.mn")).then((data) => {
+  _writeManifest: function(srcDir) {
+    let clientDir = OS.Path.join(srcDir, "devtools", "client");
+    return this._readFile(OS.Path.join(clientDir, "jar.mn")).then((data) => {
       // The file data is contained within inputStream.
       // You can read it into a string with
       let entries = [];
       let lines = data.split(/\n/);
       let preprocessed = /^\s*\*/;
-      let contentEntry = new RegExp("^\\s+content/(\\w+)/(\\S+)\\s+\\((\\S+)\\)");
+      let contentEntry =
+        new RegExp("^\\s+content/(\\w+)/(\\S+)\\s+\\((\\S+)\\)");
       for (let line of lines) {
         if (preprocessed.test(line)) {
           dump("Unable to override preprocessed file: " + line + "\n");
@@ -241,16 +225,19 @@ SrcdirProvider.prototype = {
         let match = contentEntry.exec(line);
         if (match) {
           let pathComponents = match[3].split("/");
-          pathComponents.unshift(dir);
+          pathComponents.unshift(clientDir);
           let path = OS.Path.join.apply(OS.Path, pathComponents);
           let uri = this.fileURI(path);
-          let entry = "override chrome://" + match[1] + "/content/" + match[2] + "\t" + uri;
+          let entry = "override chrome://" + match[1] +
+                      "/content/" + match[2] + "\t" + uri;
           entries.push(entry);
         }
       }
-      return this._writeFile(OS.Path.join(dir, "chrome.manifest"), entries.join("\n"));
+      return this._writeFile(OS.Path.join(clientDir, "chrome.manifest"),
+                             entries.join("\n"));
     }).then(() => {
-      Components.manager.addBootstrappedManifestLocation(new FileUtils.File(dir));
+      let clientDirFile = new FileUtils.File(clientDir);
+      Components.manager.addBootstrappedManifestLocation(clientDirFile);
     });
   }
 };
@@ -410,7 +397,7 @@ DevToolsLoader.prototype = {
     };
     // Lazy define console in order to load Console.jsm only when it is used
     XPCOMUtils.defineLazyGetter(this._provider.globals, "console", () => {
-      return Cu.import("resource://gre/modules/devtools/Console.jsm", {}).console;
+      return Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {}).console;
     });
 
     this._provider.load();
@@ -444,7 +431,7 @@ DevToolsLoader.prototype = {
     delete this._provider;
     delete this._mainid;
     this._chooseProvider();
-    this.main("main");
+    this.main("devtools/client/main");
   },
 
   /**

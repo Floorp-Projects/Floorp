@@ -11,8 +11,8 @@ function run_test() {
 }
 
 add_task(function () {
-  let { ThreadNode } = require("devtools/performance/tree-model");
-  const { getProfileThreadFromAllocations } = require("devtools/toolkit/performance/utils");
+  let { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
+  const { getProfileThreadFromAllocations } = require("devtools/shared/performance/utils");
   let allocationData = getProfileThreadFromAllocations(TEST_DATA);
   let thread = new ThreadNode(allocationData, { invertTree: true, startTime: 0, endTime: 1000 });
 

@@ -12,7 +12,7 @@ function test() {
   requestLongerTimeout(2);
 
   let {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
-  let {Toolbox} = require("devtools/framework/toolbox")
+  let {Toolbox} = require("devtools/client/framework/toolbox")
   let toolbox;
 
   loadTab(TEST_URI).then(testConsoleLoadOnDifferentPanel);

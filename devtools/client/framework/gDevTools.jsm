@@ -10,22 +10,22 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-const { require, loader } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { require, loader } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 const promise = require("promise");
 // Load target and toolbox lazily as they need gDevTools to be fully initialized
-loader.lazyRequireGetter(this, "TargetFactory", "devtools/framework/target", true);
-loader.lazyRequireGetter(this, "Toolbox", "devtools/framework/toolbox", true);
+loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
+loader.lazyRequireGetter(this, "Toolbox", "devtools/client/framework/toolbox", true);
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
-                                  "resource://gre/modules/devtools/Console.jsm");
+                                  "resource://gre/modules/devtools/shared/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
                                   "resource:///modules/CustomizableUI.jsm");
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
-loader.lazyRequireGetter(this, "DebuggerClient", "devtools/toolkit/client/main", true);
+loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/main", true);
 
-const DefaultTools = require("definitions").defaultTools;
-const EventEmitter = require("devtools/toolkit/event-emitter");
-const Telemetry = require("devtools/shared/telemetry");
+const DefaultTools = require("devtools/client/definitions").defaultTools;
+const EventEmitter = require("devtools/shared/event-emitter");
+const Telemetry = require("devtools/client/shared/telemetry");
 
 const TABS_OPEN_PEAK_HISTOGRAM = "DEVTOOLS_TABS_OPEN_PEAK_LINEAR";
 const TABS_OPEN_AVG_HISTOGRAM = "DEVTOOLS_TABS_OPEN_AVERAGE_LINEAR";
@@ -1327,4 +1327,4 @@ gDevTools.on("toolbox-destroyed", gDevToolsBrowser._updateMenuCheckbox);
 Services.obs.addObserver(gDevToolsBrowser.destroy, "quit-application", false);
 
 // Load the browser devtools main module as the loader's main module.
-loader.main("main");
+loader.main("devtools/client/main");

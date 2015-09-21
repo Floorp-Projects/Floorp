@@ -3,15 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const Cu = Components.utils;
-var {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-var {TargetFactory} = require("devtools/framework/target");
-var {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+var {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var {TargetFactory} = require("devtools/client/framework/target");
+var {console} = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
 var promise = require("promise");
-var {getInplaceEditorForSpan: inplaceEditor} = require("devtools/shared/inplace-editor");
+var {getInplaceEditorForSpan: inplaceEditor} = require("devtools/client/shared/inplace-editor");
 var clipboard = require("sdk/clipboard");
 var {setTimeout, clearTimeout} = require("sdk/timers");
-var {promiseInvoke} = require("devtools/async-utils");
-var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var {promiseInvoke} = require("devtools/shared/async-utils");
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 // All test are asynchronous
 waitForExplicitFinish();

@@ -11,7 +11,7 @@ const {
   getBindingElementAndPseudo, hasPseudoClassLock, getComputedStyle,
   createSVGNode, createNode, isNodeValid } = require("./utils/markup");
 const { getCurrentZoom,
-  setIgnoreLayoutChanges } = require("devtools/toolkit/layout/utils");
+  setIgnoreLayoutChanges } = require("devtools/shared/layout/utils");
 
 // Note that the order of items in this array is important because it is used
 // for drawing the BoxModelHighlighter's path elements correctly.

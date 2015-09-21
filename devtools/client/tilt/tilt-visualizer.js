@@ -7,14 +7,14 @@
 
 const {Cu, Ci, ChromeWorker} = require("chrome");
 
-var TiltGL = require("devtools/tilt/tilt-gl");
-var TiltUtils = require("devtools/tilt/tilt-utils");
-var TiltVisualizerStyle = require("devtools/tilt/tilt-visualizer-style");
-var {EPSILON, TiltMath, vec3, mat4, quat4} = require("devtools/tilt/tilt-math");
-var {TargetFactory} = require("devtools/framework/target");
+var TiltGL = require("devtools/client/tilt/tilt-gl");
+var TiltUtils = require("devtools/client/tilt/tilt-utils");
+var TiltVisualizerStyle = require("devtools/client/tilt/tilt-visualizer-style");
+var {EPSILON, TiltMath, vec3, mat4, quat4} = require("devtools/client/tilt/tilt-math");
+var {TargetFactory} = require("devtools/client/framework/target");
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource:///modules/devtools/gDevTools.jsm");
+Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm");
 
 const ELEMENT_MIN_SIZE = 4;
 const INVISIBLE_ELEMENTS = {
@@ -54,8 +54,10 @@ const ARCBALL_ZOOM_MAX = 500;
 const ARCBALL_RESET_SPHERICAL_FACTOR = 0.1;
 const ARCBALL_RESET_LINEAR_FACTOR = 0.01;
 
-const TILT_CRAFTER = "resource:///modules/devtools/tilt/TiltWorkerCrafter.js";
-const TILT_PICKER = "resource:///modules/devtools/tilt/TiltWorkerPicker.js";
+const TILT_CRAFTER =
+  "resource:///modules/devtools/client/tilt/TiltWorkerCrafter.js";
+const TILT_PICKER =
+  "resource:///modules/devtools/client/tilt/TiltWorkerPicker.js";
 
 
 /**
@@ -1394,7 +1396,7 @@ TiltVisualizer.Controller.prototype = {
     }
 
     if (e.keyCode === e.DOM_VK_ESCAPE) {
-      let {TiltManager} = require("devtools/tilt/tilt");
+      let {TiltManager} = require("devtools/client/tilt/tilt");
       let tilt =
         TiltManager.getTiltForBrowser(this.presenter.chromeWindow);
       e.preventDefault();

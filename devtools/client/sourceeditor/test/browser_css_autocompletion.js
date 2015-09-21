@@ -4,9 +4,9 @@
 
 "use strict";
 
-const cssAutoCompleter  = require("devtools/sourceeditor/css-autocompleter");
+const cssAutoCompleter  = require("devtools/client/sourceeditor/css-autocompleter");
 const {InspectorFront} = require("devtools/server/actors/inspector");
-const {TargetFactory} = require("devtools/framework/target");
+const {TargetFactory} = require("devtools/client/framework/target");
 const { Cc, Ci } = require("chrome");
 
 const CSS_URI = "http://mochi.test:8888/browser/browser/devtools/sourceeditor" +

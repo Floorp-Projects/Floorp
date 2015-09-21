@@ -15,15 +15,15 @@ loader.lazyRequireGetter(this, "events", "sdk/event/core");
 loader.lazyRequireGetter(this, "extend", "sdk/util/object", true);
 
 loader.lazyRequireGetter(this, "PerformanceRecorder",
-  "devtools/toolkit/performance/recorder", true);
+  "devtools/shared/performance/recorder", true);
 loader.lazyRequireGetter(this, "PerformanceIO",
-  "devtools/toolkit/performance/io");
+  "devtools/shared/performance/io");
 loader.lazyRequireGetter(this, "normalizePerformanceFeatures",
-  "devtools/toolkit/performance/utils", true);
+  "devtools/shared/performance/utils", true);
 loader.lazyRequireGetter(this, "LegacyPerformanceFront",
-  "devtools/toolkit/performance/legacy/front", true);
+  "devtools/shared/performance/legacy/front", true);
 loader.lazyRequireGetter(this, "getSystemInfo",
-  "devtools/toolkit/shared/system", true);
+  "devtools/shared/shared/system", true);
 
 const PIPE_TO_FRONT_EVENTS = new Set([
   "recording-started", "recording-stopping", "recording-stopped",

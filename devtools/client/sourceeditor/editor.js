@@ -13,7 +13,7 @@ const {
   TAB_SIZE,
   DETECT_INDENT,
   getIndentationFromIteration
-} = require("devtools/toolkit/shared/indentation");
+} = require("devtools/shared/shared/indentation");
 
 const ENABLE_CODE_FOLDING = "devtools.editor.enableCodeFolding";
 const KEYMAP      = "devtools.editor.keymap";
@@ -33,8 +33,8 @@ const RE_SCRATCHPAD_ERROR = /(?:@Scratchpad\/\d+:|\()(\d+):?(\d+)?(?:\)|\n)/;
 const RE_JUMP_TO_LINE = /^(\d+):?(\d+)?/;
 
 const promise = require("promise");
-const events  = require("devtools/toolkit/event-emitter");
-const { PrefObserver } = require("devtools/styleeditor/utils");
+const events  = require("devtools/shared/event-emitter");
+const { PrefObserver } = require("devtools/client/styleeditor/utils");
 
 Cu.import("resource://gre/modules/Services.jsm");
 const L10N = Services.strings.createBundle(L10N_BUNDLE);

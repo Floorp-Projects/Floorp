@@ -6,7 +6,7 @@
 
 const { Ci, Cc } = require("chrome");
 const { Services } = require("resource://gre/modules/Services.jsm");
-const { DOMHelpers } = require("resource:///modules/devtools/DOMHelpers.jsm");
+const { DOMHelpers } = require("resource:///modules/devtools/client/shared/DOMHelpers.jsm");
 const { Task } = require("resource://gre/modules/Task.jsm");
 const { Promise } = require("promise");
 const { setTimeout } = require("sdk/timers");

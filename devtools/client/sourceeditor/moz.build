@@ -4,12 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXTRA_JS_MODULES.devtools.sourceeditor += [
+DevToolsModules(
     'autocomplete.js',
     'css-autocompleter.js',
     'css-tokenizer.js',
     'debugger.js',
     'editor.js'
-]
+)
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']

@@ -6,7 +6,7 @@
 "use strict";
 
 const {Cc, Ci, Cu} = require("chrome");
-const {getRect} = require("devtools/toolkit/layout/utils");
+const {getRect} = require("devtools/shared/layout/utils");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");

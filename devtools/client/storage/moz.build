@@ -6,7 +6,7 @@
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
-EXTRA_JS_MODULES.devtools.storage += [
+DevToolsModules(
     'panel.js',
     'ui.js'
-]
+)

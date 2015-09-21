@@ -5,7 +5,7 @@
 
 const constants = require("../constants");
 const { rdpInvoke, asPaused } = require("../utils");
-const { reportException } = require("devtools/toolkit/DevToolsUtils");
+const { reportException } = require("devtools/shared/DevToolsUtils");
 
 const FETCH_EVENT_LISTENERS_DELAY = 200; // ms
 

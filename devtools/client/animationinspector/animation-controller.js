@@ -11,13 +11,13 @@
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Task.jsm");
-var { loader, require } = Cu.import("resource://gre/modules/devtools/Loader.jsm");
-Cu.import("resource://gre/modules/devtools/Console.jsm");
-Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+var { loader, require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm");
+Cu.import("resource://gre/modules/devtools/shared/Console.jsm");
+Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
 
 loader.lazyRequireGetter(this, "promise");
 loader.lazyRequireGetter(this, "EventEmitter",
-                               "devtools/toolkit/event-emitter");
+                               "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "AnimationsFront",
                                "devtools/server/actors/animation", true);
 

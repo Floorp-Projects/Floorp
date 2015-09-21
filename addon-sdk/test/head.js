@@ -5,7 +5,7 @@
 const { utils: Cu } = Components;
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 const LoaderModule = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {}).Loader;
-const { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+const { console } = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
 var {
   Loader, main, Module, Require, unload
 } = LoaderModule;

@@ -7,8 +7,8 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 
-var TiltUtils = require("devtools/tilt/tilt-utils");
-var {TiltMath, mat4} = require("devtools/tilt/tilt-math");
+var TiltUtils = require("devtools/client/tilt/tilt-utils");
+var {TiltMath, mat4} = require("devtools/client/tilt/tilt-math");
 
 Cu.import("resource://gre/modules/Services.jsm");
 

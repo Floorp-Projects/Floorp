@@ -128,7 +128,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gScreenManager",
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
   "@mozilla.org/base/telemetry;1", "nsITelemetry");
 XPCOMUtils.defineLazyModuleGetter(this, "console",
-  "resource://gre/modules/devtools/Console.jsm");
+  "resource://gre/modules/devtools/shared/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
   "resource:///modules/RecentWindow.jsm");
 
@@ -141,7 +141,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivacyFilter",
 XPCOMUtils.defineLazyModuleGetter(this, "RunState",
   "resource:///modules/sessionstore/RunState.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ScratchpadManager",
-  "resource:///modules/devtools/scratchpad-manager.jsm");
+  "resource:///modules/devtools/client/scratchpad/scratchpad-manager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionSaver",
   "resource:///modules/sessionstore/SessionSaver.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionCookies",

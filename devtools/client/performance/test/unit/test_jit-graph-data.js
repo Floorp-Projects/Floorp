@@ -19,8 +19,8 @@ const TIME_PER_SAMPLE = 5;
 const TIME_OFFSET = 5;
 
 add_task(function test() {
-  let { ThreadNode } = require("devtools/performance/tree-model");
-  let { createTierGraphDataFromFrameNode } = require("devtools/performance/jit");
+  let { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
+  let { createTierGraphDataFromFrameNode } = require("devtools/client/performance/modules/logic/jit");
 
   // Select the second half of the set of samples
   let startTime = (SAMPLE_COUNT / 2 * TIME_PER_SAMPLE) - TIME_OFFSET;

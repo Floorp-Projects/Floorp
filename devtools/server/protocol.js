@@ -5,7 +5,7 @@
 "use strict";
 
 var { Cu, components } = require("chrome");
-var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var Services = require("Services");
 var promise = require("promise");
 var {Class} = require("sdk/core/heritage");

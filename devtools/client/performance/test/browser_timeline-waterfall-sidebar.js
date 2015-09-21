@@ -8,8 +8,8 @@
 function* spawnTest() {
   let { target, panel } = yield initPerformance(SIMPLE_URL);
   let { $, $$, PerformanceController, WaterfallView } = panel.panelWin;
-  let { L10N } = require("devtools/performance/global");
-  let { getMarkerLabel } = require("devtools/performance/marker-utils");
+  let { L10N } = require("devtools/client/performance/modules/global");
+  let { getMarkerLabel } = require("devtools/client/performance/modules/logic/marker-utils");
 
   // Hijack the markers massaging part of creating the waterfall view,
   // to prevent collapsing markers and allowing this test to verify

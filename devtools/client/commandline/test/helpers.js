@@ -22,8 +22,8 @@ var { helpers, assert } = (function() {
 
 var helpers = {};
 
-var { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-var { TargetFactory } = require("devtools/framework/target");
+var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var { TargetFactory } = require("devtools/client/framework/target");
 
 var assert = { ok: ok, is: is, log: info };
 var util = require('gcli/util/util');

@@ -10,7 +10,7 @@ function run_test() {
 }
 
 add_task(function test() {
-  const { ThreadNode } = require("devtools/performance/tree-model");
+  const { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
 
   // Create a root node from a given samples array.
 

@@ -1,7 +1,7 @@
 
-Components.utils.import("resource:///modules/devtools/gDevTools.jsm");
+Components.utils.import("resource:///modules/devtools/client/framework/gDevTools.jsm");
 const {devtools} =
-  Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
+  Components.utils.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 const { getActiveTab } = devtools.require("sdk/tabs/utils");
 const { getMostRecentBrowserWindow } = devtools.require("sdk/window/utils");
 

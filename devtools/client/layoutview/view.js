@@ -10,11 +10,11 @@
 const {utils: Cu, interfaces: Ci, classes: Cc} = Components;
 
 Cu.import("resource://gre/modules/Task.jsm");
-const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-Cu.import("resource://gre/modules/devtools/Console.jsm");
-Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+Cu.import("resource://gre/modules/devtools/shared/Console.jsm");
+Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
 
-const {InplaceEditor, editableItem} = require("devtools/shared/inplace-editor");
+const {InplaceEditor, editableItem} = require("devtools/client/shared/inplace-editor");
 const {ReflowFront} = require("devtools/server/actors/layout");
 
 const STRINGS_URI = "chrome://browser/locale/devtools/shared.properties";

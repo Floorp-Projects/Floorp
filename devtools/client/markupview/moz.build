@@ -6,7 +6,7 @@
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
-EXTRA_JS_MODULES.devtools.markupview += [
+DevToolsModules(
     'html-editor.js',
     'markup-view.js',
-]
+)

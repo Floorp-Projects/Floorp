@@ -6,7 +6,7 @@
  */
 
 function test() {
-  let { Parser } = Cu.import("resource:///modules/devtools/Parser.jsm", {});
+  let { Parser } = Cu.import("resource:///modules/devtools/client/shared/Parser.jsm", {});
 
   let source = "let x + 42;";
   let parser = new Parser();

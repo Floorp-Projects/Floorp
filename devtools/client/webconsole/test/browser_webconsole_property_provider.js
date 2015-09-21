@@ -16,7 +16,7 @@ function test() {
 
 function testPropertyProvider({browser}) {
   browser.removeEventListener("load", testPropertyProvider, true);
-  let {JSPropertyProvider} = require("devtools/toolkit/webconsole/utils");
+  let {JSPropertyProvider} = require("devtools/shared/webconsole/utils");
 
   let tmp = Cu.import("resource://gre/modules/jsdebugger.jsm", {});
   tmp.addDebuggerToGlobal(tmp);

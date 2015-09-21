@@ -13,10 +13,10 @@ do_register_cleanup(() => {
 });
 
 const { require } =
-  Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+  Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 const promise = require("promise");
-const EventEmitter = require("devtools/toolkit/event-emitter");
-const discovery = require("devtools/toolkit/discovery/discovery");
+const EventEmitter = require("devtools/shared/event-emitter");
+const discovery = require("devtools/shared/discovery/discovery");
 const { setTimeout, clearTimeout } = require("sdk/timers");
 
 function log(msg) {

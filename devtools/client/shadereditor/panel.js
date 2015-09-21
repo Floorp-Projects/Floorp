@@ -7,9 +7,9 @@
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
 const promise = require("promise");
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const { WebGLFront } = require("devtools/server/actors/webgl");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 function ShaderEditorPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;

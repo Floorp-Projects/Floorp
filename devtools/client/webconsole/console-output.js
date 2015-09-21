@@ -9,15 +9,15 @@ const {Cc, Ci, Cu} = require("chrome");
 
 const { Services } = require("resource://gre/modules/Services.jsm");
 
-loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/VariablesView.jsm");
-loader.lazyImporter(this, "escapeHTML", "resource:///modules/devtools/VariablesView.jsm");
-loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.jsm");
+loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/client/shared/widgets/VariablesView.jsm");
+loader.lazyImporter(this, "escapeHTML", "resource:///modules/devtools/client/shared/widgets/VariablesView.jsm");
+loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/client/framework/gDevTools.jsm");
 loader.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm");
 loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 
 loader.lazyRequireGetter(this, "promise");
-loader.lazyRequireGetter(this, "TableWidget", "devtools/shared/widgets/TableWidget", true);
-loader.lazyRequireGetter(this, "ObjectClient", "devtools/toolkit/client/main", true);
+loader.lazyRequireGetter(this, "TableWidget", "devtools/client/shared/widgets/TableWidget", true);
+loader.lazyRequireGetter(this, "ObjectClient", "devtools/shared/client/main", true);
 
 const Heritage = require("sdk/core/heritage");
 const URI = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
@@ -25,7 +25,7 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
 
-const WebConsoleUtils = require("devtools/toolkit/webconsole/utils").Utils;
+const WebConsoleUtils = require("devtools/shared/webconsole/utils").Utils;
 const l10n = new WebConsoleUtils.l10n(STRINGS_URI);
 
 const MAX_STRING_GRIP_LENGTH = 36;

@@ -1,9 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { console, ConsoleAPI } = Cu.import("resource://gre/modules/devtools/Console.jsm");
+const { console, ConsoleAPI } = Cu.import("resource://gre/modules/devtools/shared/Console.jsm");
 
-const { ConsoleAPIListener } = require("devtools/toolkit/webconsole/utils");
+const { ConsoleAPIListener } = require("devtools/shared/webconsole/utils");
 
 var seenMessages = 0;
 var seenTypes = 0;

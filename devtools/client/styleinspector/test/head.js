@@ -5,18 +5,18 @@
 "use strict";
 
 const Cu = Components.utils;
-var {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-var {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-var {TargetFactory} = require("devtools/framework/target");
-var {CssComputedView} = require("devtools/styleinspector/computed-view");
-var {CssRuleView, _ElementStyle} = require("devtools/styleinspector/rule-view");
-var {CssLogic, CssSelector} = require("devtools/styleinspector/css-logic");
-var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var {gDevTools} = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
+var {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var {TargetFactory} = require("devtools/client/framework/target");
+var {CssComputedView} = require("devtools/client/styleinspector/computed-view");
+var {CssRuleView, _ElementStyle} = require("devtools/client/styleinspector/rule-view");
+var {CssLogic, CssSelector} = require("devtools/shared/styleinspector/css-logic");
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var promise = require("promise");
 var {editableField, getInplaceEditorForSpan: inplaceEditor} =
-  require("devtools/shared/inplace-editor");
+  require("devtools/client/shared/inplace-editor");
 var {console} =
-  Components.utils.import("resource://gre/modules/devtools/Console.jsm", {});
+  Components.utils.import("resource://gre/modules/devtools/shared/Console.jsm", {});
 
 // All tests are asynchronous
 waitForExplicitFinish();

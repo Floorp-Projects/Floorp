@@ -8,7 +8,7 @@
 
 "use strict";
 
-const {AnimationsTimeline} = require("devtools/animationinspector/components");
+const {AnimationsTimeline} = require("devtools/client/animationinspector/components");
 
 /**
  * The main animations panel UI.

@@ -10,7 +10,7 @@
 
 "use strict";
 
-importScripts("resource://gre/modules/devtools/shared/worker-helper.js");
+importScripts("resource://gre/modules/devtools/shared/shared/worker-helper.js");
 
 // The set of HeapSnapshot instances this worker has read into memory. Keyed by
 // snapshot file path.

@@ -4,11 +4,11 @@
 
 "use strict";
 
-var { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
-var { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-var { TargetFactory } = require("devtools/framework/target");
+var { console } = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
+var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var { TargetFactory } = require("devtools/client/framework/target");
 var promise = require("promise");
-var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 const SPLIT_CONSOLE_PREF = "devtools.toolbox.splitconsoleEnabled";
 const STORAGE_PREF = "devtools.storage.enabled";

@@ -5,7 +5,7 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 

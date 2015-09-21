@@ -40,8 +40,8 @@
 
 const { Cc, Ci, Cu } = require("chrome");
 const Services = require("Services");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-const { getRootBindingParent } = require("devtools/toolkit/layout/utils");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const { getRootBindingParent } = require("devtools/shared/layout/utils");
 
 var pseudos = new Set([
   ":after",

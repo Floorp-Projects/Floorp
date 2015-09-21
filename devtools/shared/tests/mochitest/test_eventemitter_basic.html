@@ -23,9 +23,9 @@
 
       const { utils: Cu } = Components;
       const { Promise: promise } =
-        Cu.import("resource://gre/modules/devtools/deprecated-sync-thenables.js", {});
+        Cu.import("resource://gre/modules/devtools/shared/deprecated-sync-thenables.js", {});
       const { EventEmitter } =
-        Cu.import("resource://gre/modules/devtools/event-emitter.js", {});
+        Cu.import("resource://gre/modules/devtools/shared/event-emitter.js", {});
       const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 
       SimpleTest.waitForExplicitFinish();

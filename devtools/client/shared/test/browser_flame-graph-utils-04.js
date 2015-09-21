@@ -3,9 +3,9 @@
 
 // Tests if (idle) nodes are added when necessary in the flame graph data.
 
-var {FlameGraphUtils} = require("devtools/shared/widgets/FlameGraph");
-var {PALLETTE_SIZE} = require("devtools/shared/widgets/FlameGraph");
-var {FrameNode} = require("devtools/performance/tree-model");
+var {FlameGraphUtils} = require("devtools/client/shared/widgets/FlameGraph");
+var {PALLETTE_SIZE} = require("devtools/client/shared/widgets/FlameGraph");
+var {FrameNode} = require("devtools/client/performance/modules/logic/tree-model");
 
 add_task(function*() {
   yield promiseTab("about:blank");

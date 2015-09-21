@@ -8,9 +8,9 @@ const { Cc, Ci, Cu } = require("chrome");
 const l10n = require("gcli/l10n");
 const gcli = require("gcli/index");
 
-loader.lazyRequireGetter(this, "TargetFactory", "devtools/framework/target", true);
+loader.lazyRequireGetter(this, "TargetFactory", "devtools/client/framework/target", true);
 
-loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.jsm");
+loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/client/framework/gDevTools.jsm");
 
 loader.lazyGetter(this, "Debugger", () => {
   let global = Cu.getGlobalForObject({});

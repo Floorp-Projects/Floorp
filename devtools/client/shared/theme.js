@@ -12,7 +12,7 @@
 const { Ci, Cu } = require("chrome");
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 loader.lazyRequireGetter(this, "Services");
-loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.jsm");
+loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/client/framework/gDevTools.jsm");
 
 const themeURIs = {
   light: "chrome://browser/skin/devtools/light-theme.css",

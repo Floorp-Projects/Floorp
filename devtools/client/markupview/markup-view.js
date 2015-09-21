@@ -20,21 +20,21 @@ const DRAG_DROP_MIN_AUTOSCROLL_SPEED = 5;
 const DRAG_DROP_MAX_AUTOSCROLL_SPEED = 15;
 const AUTOCOMPLETE_POPUP_PANEL_ID = "markupview_autoCompletePopup";
 
-const {UndoStack} = require("devtools/shared/undo");
-const {editableField, InplaceEditor} = require("devtools/shared/inplace-editor");
-const {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-const {HTMLEditor} = require("devtools/markupview/html-editor");
+const {UndoStack} = require("devtools/client/shared/undo");
+const {editableField, InplaceEditor} = require("devtools/client/shared/inplace-editor");
+const {gDevTools} = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
+const {HTMLEditor} = require("devtools/client/markupview/html-editor");
 const promise = require("promise");
-const {Tooltip} = require("devtools/shared/widgets/Tooltip");
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const {Tooltip} = require("devtools/client/shared/widgets/Tooltip");
+const EventEmitter = require("devtools/shared/event-emitter");
 const Heritage = require("sdk/core/heritage");
 const {setTimeout, clearTimeout, setInterval, clearInterval} = require("sdk/timers");
-const {parseAttribute} = require("devtools/shared/node-attribute-parser");
+const {parseAttribute} = require("devtools/client/shared/node-attribute-parser");
 const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
 const {Task} = require("resource://gre/modules/Task.jsm");
-const {scrollIntoViewIfNeeded} = require("devtools/toolkit/layout/utils");
+const {scrollIntoViewIfNeeded} = require("devtools/shared/layout/utils");
 
-Cu.import("resource://gre/modules/devtools/Templater.jsm");
+Cu.import("resource://gre/modules/devtools/shared/gcli/Templater.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -42,7 +42,7 @@ loader.lazyGetter(this, "DOMParser", function() {
  return Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser);
 });
 loader.lazyGetter(this, "AutocompletePopup", () => {
-  return require("devtools/shared/autocomplete-popup").AutocompletePopup;
+  return require("devtools/client/shared/autocomplete-popup").AutocompletePopup;
 });
 
 /**

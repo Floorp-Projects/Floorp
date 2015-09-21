@@ -9,11 +9,11 @@
  */
 
 const { Cc, Ci, Cu, Cr } = require("chrome");
-const { Heritage } = require("resource:///modules/devtools/ViewHelpers.jsm");
-const { AbstractTreeItem } = require("resource:///modules/devtools/AbstractTreeItem.jsm");
+const { Heritage } = require("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
+const { AbstractTreeItem } = require("resource:///modules/devtools/client/shared/widgets/AbstractTreeItem.jsm");
 
 loader.lazyRequireGetter(this, "MarkerUtils",
-  "devtools/performance/marker-utils");
+  "devtools/client/performance/modules/logic/marker-utils");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 

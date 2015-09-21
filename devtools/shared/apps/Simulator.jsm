@@ -4,7 +4,7 @@
 
 "use strict";
 
-Components.utils.import("resource://gre/modules/devtools/event-emitter.js");
+Components.utils.import("resource://gre/modules/devtools/shared/event-emitter.js");
 
 /**
  * TODO (Bug 1132453) The `Simulator` module is deprecated, and should be

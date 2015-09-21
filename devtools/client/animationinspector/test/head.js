@@ -5,13 +5,13 @@
 "use strict";
 
 const Cu = Components.utils;
-const {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const {gDevTools} = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
+const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 const promise = require("promise");
-const {TargetFactory} = require("devtools/framework/target");
-const {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
-const {ViewHelpers} = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const {TargetFactory} = require("devtools/client/framework/target");
+const {console} = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
+const {ViewHelpers} = Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm", {});
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 // All tests are asynchronous
 waitForExplicitFinish();

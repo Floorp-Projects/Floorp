@@ -10,8 +10,8 @@ function run_test() {
 }
 
 add_task(function () {
-  let { TIMELINE_BLUEPRINT } = require("devtools/performance/markers");
-  let Utils = require("devtools/performance/marker-utils");
+  let { TIMELINE_BLUEPRINT } = require("devtools/client/performance/modules/markers");
+  let Utils = require("devtools/client/performance/modules/logic/marker-utils");
 
   Services.prefs.setBoolPref(PLATFORM_DATA_PREF, false);
 

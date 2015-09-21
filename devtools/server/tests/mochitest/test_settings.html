@@ -19,8 +19,8 @@ function runTests() {
   var Cc = Components.classes;
   var Ci = Components.interfaces;
 
-  var {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-  var {DebuggerClient} = require("devtools/toolkit/client/main");
+  var {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+  var {DebuggerClient} = require("devtools/shared/client/main");
   var {DebuggerServer} = require("devtools/server/main");
 
   if (SpecialPowers.isMainProcess()) {

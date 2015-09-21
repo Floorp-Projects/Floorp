@@ -8,11 +8,11 @@ const { Cc, Ci, Cu, ChromeWorker } = require("chrome");
 const { Class } = require("sdk/core/heritage");
 const { OS } = Cu.import("resource://gre/modules/osfile.jsm", {});
 const { emit } = require("sdk/event/core");
-const { Store } = require("projecteditor/stores/base");
+const { Store } = require("devtools/client/projecteditor/lib/stores/base");
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 const promise = require("promise");
-const { on, forget } = require("projecteditor/helpers/event");
-const { FileResource } = require("projecteditor/stores/resource");
+const { on, forget } = require("devtools/client/projecteditor/lib/helpers/event");
+const { FileResource } = require("devtools/client/projecteditor/lib/stores/resource");
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const {setTimeout, clearTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
 

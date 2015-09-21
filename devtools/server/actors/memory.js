@@ -5,10 +5,10 @@
 "use strict";
 
 const { Cc, Ci, Cu, components } = require("chrome");
-const { openFileStream } = require("devtools/toolkit/DevToolsUtils");
+const { openFileStream } = require("devtools/shared/DevToolsUtils");
 const protocol = require("devtools/server/protocol");
 const { method, RetVal, Arg, types } = protocol;
-const { Memory } = require("devtools/toolkit/shared/memory");
+const { Memory } = require("devtools/shared/shared/memory");
 const { actorBridge } = require("devtools/server/actors/common");
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
 loader.lazyRequireGetter(this, "StackFrameCache",
@@ -19,7 +19,7 @@ loader.lazyRequireGetter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm", 
 loader.lazyRequireGetter(this, "Task", "resource://gre/modules/Task.jsm", true);
 loader.lazyRequireGetter(this, "OS", "resource://gre/modules/osfile.jsm", true);
 loader.lazyRequireGetter(this, "HeapSnapshotFileUtils",
-                         "devtools/toolkit/heapsnapshot/HeapSnapshotFileUtils");
+                         "devtools/shared/heapsnapshot/HeapSnapshotFileUtils");
 loader.lazyRequireGetter(this, "ThreadSafeChromeUtils");
 
 types.addDictType("AllocationsRecordingOptions", {

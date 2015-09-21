@@ -54,25 +54,25 @@ exports.baseModules = [
  * modules that are *not* owned by a tool.
  */
 exports.devtoolsModules = [
-  "devtools/toolkit/gcli/commands/addon",
-  "devtools/toolkit/gcli/commands/appcache",
-  "devtools/toolkit/gcli/commands/calllog",
-  "devtools/toolkit/gcli/commands/cmd",
-  "devtools/toolkit/gcli/commands/cookie",
-  "devtools/toolkit/gcli/commands/csscoverage",
-  "devtools/toolkit/gcli/commands/folder",
-  "devtools/toolkit/gcli/commands/highlight",
-  "devtools/toolkit/gcli/commands/inject",
-  "devtools/toolkit/gcli/commands/jsb",
-  "devtools/toolkit/gcli/commands/listen",
-  "devtools/toolkit/gcli/commands/media",
-  "devtools/toolkit/gcli/commands/pagemod",
-  "devtools/toolkit/gcli/commands/paintflashing",
-  "devtools/toolkit/gcli/commands/restart",
-  "devtools/toolkit/gcli/commands/rulers",
-  "devtools/toolkit/gcli/commands/screenshot",
-  "devtools/toolkit/gcli/commands/security",
-  "devtools/toolkit/gcli/commands/tools",
+  "devtools/shared/gcli/commands/addon",
+  "devtools/shared/gcli/commands/appcache",
+  "devtools/shared/gcli/commands/calllog",
+  "devtools/shared/gcli/commands/cmd",
+  "devtools/shared/gcli/commands/cookie",
+  "devtools/shared/gcli/commands/csscoverage",
+  "devtools/shared/gcli/commands/folder",
+  "devtools/shared/gcli/commands/highlight",
+  "devtools/shared/gcli/commands/inject",
+  "devtools/shared/gcli/commands/jsb",
+  "devtools/shared/gcli/commands/listen",
+  "devtools/shared/gcli/commands/media",
+  "devtools/shared/gcli/commands/pagemod",
+  "devtools/shared/gcli/commands/paintflashing",
+  "devtools/shared/gcli/commands/restart",
+  "devtools/shared/gcli/commands/rulers",
+  "devtools/shared/gcli/commands/screenshot",
+  "devtools/shared/gcli/commands/security",
+  "devtools/shared/gcli/commands/tools",
 ];
 
 /**
@@ -80,7 +80,7 @@ exports.devtoolsModules = [
  * The map/reduce incantation squashes the array of arrays to a single array.
  */
 try {
-  const defaultTools = require("definitions").defaultTools;
+  const defaultTools = require("devtools/client/definitions").defaultTools;
   exports.devtoolsToolModules = defaultTools.map(def => def.commands || [])
                                    .reduce((prev, curr) => prev.concat(curr), []);
 } catch(e) {
@@ -94,7 +94,7 @@ try {
  * single array.
  */
 try {
-  const { ToolboxButtons } = require("devtools/framework/toolbox");
+  const { ToolboxButtons } = require("devtools/client/framework/toolbox");
   exports.devtoolsButtonModules = ToolboxButtons.map(def => def.commands || [])
                                      .reduce((prev, curr) => prev.concat(curr), []);
 } catch(e) {
@@ -111,7 +111,7 @@ exports.addAllItemsByModule = function(system) {
   system.addItemsByModule(exports.devtoolsToolModules, { delayedLoad: true });
   system.addItemsByModule(exports.devtoolsButtonModules, { delayedLoad: true });
 
-  const { mozDirLoader } = require("devtools/toolkit/gcli/commands/cmd");
+  const { mozDirLoader } = require("devtools/shared/gcli/commands/cmd");
   system.addItemsByModule("mozcmd", { delayedLoad: true, loader: mozDirLoader });
 };
 

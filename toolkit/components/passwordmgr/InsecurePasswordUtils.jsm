@@ -12,11 +12,11 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "devtools",
-                                  "resource://gre/modules/devtools/Loader.jsm");
+                                  "resource://gre/modules/devtools/shared/Loader.jsm");
 
 Object.defineProperty(this, "WebConsoleUtils", {
   get: function() {
-    return devtools.require("devtools/toolkit/webconsole/utils").Utils;
+    return devtools.require("devtools/shared/webconsole/utils").Utils;
   },
   configurable: true,
   enumerable: true

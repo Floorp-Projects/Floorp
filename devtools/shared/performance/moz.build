@@ -4,19 +4,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+DIRS += [
+    'legacy',
+]
+
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell.ini']
 
-EXTRA_JS_MODULES.devtools.performance += [
+DevToolsModules(
   'io.js',
   'process-communication.js',
   'recorder.js',
   'recording-common.js',
   'utils.js',
-]
-
-EXTRA_JS_MODULES.devtools.performance.legacy += [
-  'legacy/actors.js',
-  'legacy/compatibility.js',
-  'legacy/front.js',
-  'legacy/recording.js',
-]
+)

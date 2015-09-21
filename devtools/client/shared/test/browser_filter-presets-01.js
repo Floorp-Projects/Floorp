@@ -6,7 +6,7 @@
 // Tests saving presets
 
 const TEST_URI = "chrome://devtools/content/shared/widgets/filter-frame.xhtml";
-const {CSSFilterEditorWidget} = require("devtools/shared/widgets/FilterWidget");
+const {CSSFilterEditorWidget} = require("devtools/client/shared/widgets/FilterWidget");
 
 add_task(function* () {
   yield promiseTab("about:blank");

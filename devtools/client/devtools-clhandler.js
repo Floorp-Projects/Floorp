@@ -39,11 +39,11 @@ devtoolsCommandlineHandler.prototype = {
   handleConsoleFlag: function(cmdLine) {
     let window = Services.wm.getMostRecentWindow("devtools:webconsole");
     if (!window) {
-      let { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+      let { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
       // Load the browser devtools main module as the loader's main module.
-      Cu.import("resource:///modules/devtools/gDevTools.jsm");
-      let hudservice = require("devtools/webconsole/hudservice");
-      let { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+      Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm");
+      let hudservice = require("devtools/client/webconsole/hudservice");
+      let { console } = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
       hudservice.toggleBrowserConsole().then(null, console.error);
     } else {
       window.focus(); // the Browser Console was already open
@@ -77,7 +77,7 @@ devtoolsCommandlineHandler.prototype = {
     if (!this._isRemoteDebuggingEnabled()) {
       return;
     }
-    Cu.import("resource:///modules/devtools/ToolboxProcess.jsm");
+    Cu.import("resource:///modules/devtools/client/framework/ToolboxProcess.jsm");
     BrowserToolboxProcess.init();
 
     if (cmdLine.state == Ci.nsICommandLine.STATE_REMOTE_AUTO) {
@@ -94,7 +94,7 @@ devtoolsCommandlineHandler.prototype = {
       portOrPath = 6000;
     }
     let { DevToolsLoader } =
-      Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+      Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 
     try {
       // Create a separate loader instance, so that we can be sure to receive

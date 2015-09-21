@@ -3,7 +3,7 @@
 
 function test() {
   const Cu = Components.utils;
-  let {ToolSidebar} = require("devtools/framework/sidebar");
+  let {ToolSidebar} = require("devtools/client/framework/sidebar");
 
   const toolURL = "data:text/xml;charset=utf8,<?xml version='1.0'?>" +
                   "<?xml-stylesheet href='chrome://browser/skin/devtools/common.css' type='text/css'?>" +

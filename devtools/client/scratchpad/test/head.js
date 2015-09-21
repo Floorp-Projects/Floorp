@@ -6,10 +6,10 @@
 
 const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm", {});
-const {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
-const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const {console} = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
+const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const promise = require("promise");
 
 

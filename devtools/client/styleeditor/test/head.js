@@ -7,11 +7,11 @@ const TEST_BASE_HTTP = "http://example.com/browser/browser/devtools/styleeditor/
 const TEST_BASE_HTTPS = "https://example.com/browser/browser/devtools/styleeditor/test/";
 const TEST_HOST = 'mochi.test:8888';
 
-var {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-var {TargetFactory} = require("devtools/framework/target");
-var {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+var {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var {TargetFactory} = require("devtools/client/framework/target");
+var {console} = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
 var promise = require("promise");
-var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 // Import the GCLI test helper
 var testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));

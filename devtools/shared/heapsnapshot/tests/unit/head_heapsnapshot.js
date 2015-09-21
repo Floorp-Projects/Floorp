@@ -9,18 +9,18 @@ const Cu = Components.utils;
 const Cr = Components.results;
 const CC = Components.Constructor;
 
-const { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 const { Match } = Cu.import("resource://test/Match.jsm", {});
 const { Census } = Cu.import("resource://test/Census.jsm", {});
 const { addDebuggerToGlobal } =
   Cu.import("resource://gre/modules/jsdebugger.jsm", {});
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const HeapAnalysesClient =
-  require("devtools/toolkit/heapsnapshot/HeapAnalysesClient");
+  require("devtools/shared/heapsnapshot/HeapAnalysesClient");
 const Services = require("Services");
-const { CensusTreeNode } = require("devtools/toolkit/heapsnapshot/census-tree-node");
+const { CensusTreeNode } = require("devtools/shared/heapsnapshot/census-tree-node");
 
 // Always log packets when running tests. runxpcshelltests.py will throw
 // the output away anyway, unless you give it the --verbose flag.

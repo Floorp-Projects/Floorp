@@ -4,9 +4,9 @@
 
 const { Cu } = require("chrome");
 
-const { TargetFactory } = require("devtools/framework/target");
-const EventEmitter = require("devtools/toolkit/event-emitter");
-const { Connection } = require("devtools/client/connection-manager");
+const { TargetFactory } = require("devtools/client/framework/target");
+const EventEmitter = require("devtools/shared/event-emitter");
+const { Connection } = require("devtools/shared/client/connection-manager");
 const promise = require("promise");
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 

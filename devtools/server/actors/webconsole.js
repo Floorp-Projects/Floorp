@@ -10,29 +10,29 @@ const { Cc, Ci, Cu } = require("chrome");
 const { DebuggerServer, ActorPool } = require("devtools/server/main");
 const { EnvironmentActor, ThreadActor } = require("devtools/server/actors/script");
 const { ObjectActor, LongStringActor, createValueGrip, stringIsLong } = require("devtools/server/actors/object");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyGetter(this, "NetworkMonitor", () => {
-  return require("devtools/toolkit/webconsole/network-monitor")
+  return require("devtools/shared/webconsole/network-monitor")
          .NetworkMonitor;
 });
 XPCOMUtils.defineLazyGetter(this, "NetworkMonitorChild", () => {
-  return require("devtools/toolkit/webconsole/network-monitor")
+  return require("devtools/shared/webconsole/network-monitor")
          .NetworkMonitorChild;
 });
 XPCOMUtils.defineLazyGetter(this, "ConsoleProgressListener", () => {
-  return require("devtools/toolkit/webconsole/network-monitor")
+  return require("devtools/shared/webconsole/network-monitor")
          .ConsoleProgressListener;
 });
 XPCOMUtils.defineLazyGetter(this, "events", () => {
   return require("sdk/event/core");
 });
 XPCOMUtils.defineLazyGetter(this, "ServerLoggingListener", () => {
-  return require("devtools/toolkit/webconsole/server-logger")
+  return require("devtools/shared/webconsole/server-logger")
          .ServerLoggingListener;
 });
 
@@ -44,7 +44,7 @@ for (let name of ["WebConsoleUtils", "ConsoleServiceListener",
       if (prop == "WebConsoleUtils") {
         prop = "Utils";
       }
-      return require("devtools/toolkit/webconsole/utils")[prop];
+      return require("devtools/shared/webconsole/utils")[prop];
     }.bind(null, name),
     configurable: true,
     enumerable: true

@@ -5,12 +5,12 @@
 const {utils: Cu, classes: Cc, interfaces: Ci} = Components;
 
 const {Promise: promise} =
-  Cu.import("resource://gre/modules/devtools/deprecated-sync-thenables.js", {});
+  Cu.import("resource://gre/modules/devtools/shared/deprecated-sync-thenables.js", {});
 const {require} =
-  Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+  Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 
-const {AppProjects} = require("devtools/app-manager/app-projects");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const {AppProjects} = require("devtools/client/app-manager/app-projects");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 const APP_MANAGER_URL = "about:app-manager";
 const TEST_BASE =

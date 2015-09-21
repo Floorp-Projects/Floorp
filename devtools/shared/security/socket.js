@@ -13,20 +13,20 @@ Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
 
 var Services = require("Services");
 var promise = require("promise");
-var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn, dumpv } = DevToolsUtils;
 loader.lazyRequireGetter(this, "DebuggerTransport",
-  "devtools/toolkit/transport/transport", true);
+  "devtools/shared/transport/transport", true);
 loader.lazyRequireGetter(this, "DebuggerServer",
   "devtools/server/main", true);
 loader.lazyRequireGetter(this, "discovery",
-  "devtools/toolkit/discovery/discovery");
+  "devtools/shared/discovery/discovery");
 loader.lazyRequireGetter(this, "cert",
-  "devtools/toolkit/security/cert");
+  "devtools/shared/security/cert");
 loader.lazyRequireGetter(this, "Authenticators",
-  "devtools/toolkit/security/auth", true);
+  "devtools/shared/security/auth", true);
 loader.lazyRequireGetter(this, "AuthenticationResult",
-  "devtools/toolkit/security/auth", true);
+  "devtools/shared/security/auth", true);
 loader.lazyRequireGetter(this, "setTimeout", "Timer", true);
 loader.lazyRequireGetter(this, "clearTimeout", "Timer", true);
 

@@ -13,18 +13,18 @@ var gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 Services.prefs.setBoolPref("devtools.debugger.log", false);
 
 var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-var { Promise: promise } = Cu.import("resource://gre/modules/devtools/deprecated-sync-thenables.js", {});
-var { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-var { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-var { BrowserToolboxProcess } = Cu.import("resource:///modules/devtools/ToolboxProcess.jsm", {});
+var { Promise: promise } = Cu.import("resource://gre/modules/devtools/shared/deprecated-sync-thenables.js", {});
+var { gDevTools } = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
+var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+var { BrowserToolboxProcess } = Cu.import("resource:///modules/devtools/client/framework/ToolboxProcess.jsm", {});
 var { DebuggerServer } = require("devtools/server/main");
-var { DebuggerClient, ObjectClient } = require("devtools/toolkit/client/main");
+var { DebuggerClient, ObjectClient } = require("devtools/shared/client/main");
 var { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
-var EventEmitter = require("devtools/toolkit/event-emitter");
-const { promiseInvoke } = require("devtools/async-utils");
-var { TargetFactory } = require("devtools/framework/target");
-var { Toolbox } = require("devtools/framework/toolbox")
+var EventEmitter = require("devtools/shared/event-emitter");
+const { promiseInvoke } = require("devtools/shared/async-utils");
+var { TargetFactory } = require("devtools/client/framework/target");
+var { Toolbox } = require("devtools/client/framework/toolbox")
 
 const EXAMPLE_URL = "http://example.com/browser/browser/devtools/debugger/test/mochitest/";
 const FRAME_SCRIPT_URL = getRootDirectory(gTestPath) + "code_frame-script.js";

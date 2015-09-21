@@ -6,7 +6,7 @@
 
 function run_test() {
   const name = "asyncUtils";
-  const path = "devtools/async-utils";
+  const path = "devtools/shared/async-utils";
   const o = {};
   devtools.lazyRequireGetter(o, name, path);
   const asyncUtils = require(path);

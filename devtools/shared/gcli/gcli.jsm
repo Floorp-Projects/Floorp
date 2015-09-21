@@ -18,7 +18,7 @@
 
 this.EXPORTED_SYMBOLS = [ "gcli", "Requisition" ];
 
-var {require} = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
+var {require} = Components.utils.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 
 this.gcli = require('gcli/index');
 this.Requisition = require('gcli/cli').Requisition;

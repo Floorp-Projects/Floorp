@@ -9,7 +9,7 @@ const { method, RetVal, Arg, types } = protocol;
 const { expectState, ActorPool } = require("devtools/server/actors/common");
 const { ObjectActor,
         createValueGrip } = require("devtools/server/actors/object");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
 
 /* global events */

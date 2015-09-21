@@ -3,13 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const Cu = Components.utils;
-Cu.import("resource:///modules/devtools/gDevTools.jsm");
+Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm");
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
-const {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-const {AppProjects} = require("devtools/app-manager/app-projects");
-const {AppValidator} = require("devtools/app-manager/app-validator");
-const {AppManager} = require("devtools/webide/app-manager");
-const {ProjectBuilding} = require("devtools/webide/build");
+const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+const {AppProjects} = require("devtools/client/app-manager/app-projects");
+const {AppValidator} = require("devtools/client/app-manager/app-validator");
+const {AppManager} = require("devtools/client/webide/modules/app-manager");
+const {ProjectBuilding} = require("devtools/client/webide/modules/build");
 
 window.addEventListener("load", function onLoad() {
   window.removeEventListener("load", onLoad);

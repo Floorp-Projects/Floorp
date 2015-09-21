@@ -58,7 +58,7 @@ exports.items = [{
   to: "dom",
    exec: function(args, context) {
      let target = context.environment.target;
-     let gDevTools = require("resource:///modules/devtools/gDevTools.jsm").gDevTools;
+     let gDevTools = require("resource:///modules/devtools/client/framework/gDevTools.jsm").gDevTools;
      return gDevTools.showToolbox(target, "styleeditor").then(function(toolbox) {
        let styleEditor = toolbox.getCurrentPanel();
        styleEditor.selectStyleSheet(args.href, args.line);

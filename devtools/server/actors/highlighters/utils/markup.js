@@ -6,12 +6,12 @@
 
 const { Cc, Ci, Cu } = require("chrome");
 const { getCurrentZoom,
-  getRootBindingParent } = require("devtools/toolkit/layout/utils");
+  getRootBindingParent } = require("devtools/shared/layout/utils");
 
 const lazyContainer = {};
 
 loader.lazyRequireGetter(lazyContainer, "CssLogic",
-  "devtools/styleinspector/css-logic", true);
+  "devtools/shared/styleinspector/css-logic", true);
 exports.getComputedStyle = (node) =>
   lazyContainer.CssLogic.getComputedStyle(node);
 

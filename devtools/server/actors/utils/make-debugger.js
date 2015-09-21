@@ -6,10 +6,10 @@
 
 "use strict";
 
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const Debugger = require("Debugger");
 
-const { reportException } = require("devtools/toolkit/DevToolsUtils");
+const { reportException } = require("devtools/shared/DevToolsUtils");
 
 /**
  * Multiple actors that use a |Debugger| instance come in a few versions, each

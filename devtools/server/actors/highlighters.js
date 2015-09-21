@@ -6,11 +6,11 @@
 
 const { Ci } = require("chrome");
 
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 const events = require("sdk/event/core");
 const protocol = require("devtools/server/protocol");
 const { Arg, Option, method, RetVal } = protocol;
-const { isWindowIncluded } = require("devtools/toolkit/layout/utils");
+const { isWindowIncluded } = require("devtools/shared/layout/utils");
 const { isXUL, isNodeValid } = require("./highlighters/utils/markup");
 const { SimpleOutlineHighlighter } = require("./highlighters/simple-outline");
 

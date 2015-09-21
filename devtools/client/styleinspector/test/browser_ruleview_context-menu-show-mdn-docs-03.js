@@ -14,7 +14,7 @@
 
 "use strict";
 
-const { PrefObserver } = require("devtools/styleeditor/utils");
+const { PrefObserver } = require("devtools/client/styleeditor/utils");
 const PREF_ENABLE_MDN_DOCS_TOOLTIP =
   "devtools.inspector.mdnDocsTooltip.enabled";
 const PROPERTY_NAME_CLASS = "ruleview-propertyname";

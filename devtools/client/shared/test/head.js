@@ -2,14 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var {require} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-var {TargetFactory} = require("devtools/framework/target");
-var {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
-var {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-const {DOMHelpers} = Cu.import("resource:///modules/devtools/DOMHelpers.jsm", {});
-const {Hosts} = require("devtools/framework/toolbox-hosts");
+var {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+var {TargetFactory} = require("devtools/client/framework/target");
+var {console} = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
+var {gDevTools} = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
+const {DOMHelpers} = Cu.import("resource:///modules/devtools/client/shared/DOMHelpers.jsm", {});
+const {Hosts} = require("devtools/client/framework/toolbox-hosts");
 const {defer} = require("promise");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 DevToolsUtils.testing = true;
 SimpleTest.registerCleanupFunction(() => {
@@ -166,7 +166,7 @@ var createHost = Task.async(function*(type = "bottom", src = "data:text/html;cha
 function loadTelemetryAndRecordLogs() {
   info("Mock the Telemetry log function to record logged information");
 
-  let Telemetry = require("devtools/shared/telemetry");
+  let Telemetry = require("devtools/client/shared/telemetry");
   Telemetry.prototype.telemetryInfo = {};
   Telemetry.prototype._oldlog = Telemetry.prototype.log;
   Telemetry.prototype.log = function(histogramId, value) {
@@ -251,7 +251,7 @@ function* openAndCloseToolbox(nbOfTimes, usageTime, toolId) {
  * Synthesize a profile for testing.
  */
 function synthesizeProfileForTest(samples) {
-  const RecordingUtils = require("devtools/toolkit/performance/utils");
+  const RecordingUtils = require("devtools/shared/performance/utils");
 
   samples.unshift({
     time: 0,

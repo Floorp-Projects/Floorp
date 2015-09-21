@@ -4,7 +4,8 @@
 // Tests that the devtools/shared/worker communicates properly
 // as both CommonJS module and as a JSM.
 
-const WORKER_URL = "resource:///modules/devtools/GraphsWorker.js";
+const WORKER_URL =
+  "resource:///modules/devtools/client/shared/widgets/GraphsWorker.js";
 
 const count = 100000;
 const WORKER_DATA = (function () {
@@ -20,8 +21,8 @@ const DURATION = 1000;
 add_task(function*() {
   // Test both CJS and JSM versions
 
-  yield testWorker("JSM", () => Cu.import("resource://gre/modules/devtools/shared/worker.js", {}));
-  yield testWorker("CommonJS", () => require("devtools/toolkit/shared/worker"));
+  yield testWorker("JSM", () => Cu.import("resource://gre/modules/devtools/shared/shared/worker.js", {}));
+  yield testWorker("CommonJS", () => require("devtools/shared/shared/worker"));
 });
 
 function *testWorker (context, workerFactory) {

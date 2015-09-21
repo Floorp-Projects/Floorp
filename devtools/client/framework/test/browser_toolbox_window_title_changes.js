@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var {Toolbox} = require("devtools/framework/toolbox");
+var {Toolbox} = require("devtools/client/framework/toolbox");
 
 function test() {
   const URL_1 = "data:text/plain;charset=UTF-8,abcde";

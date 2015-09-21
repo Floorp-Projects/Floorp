@@ -7,7 +7,7 @@
 const {Cc, Ci, Cu, Cr} = require("chrome");
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/devtools/event-emitter.js");
+Cu.import("resource://gre/modules/devtools/shared/event-emitter.js");
 
 exports.PREF_ORIG_SOURCES = "devtools.styleeditor.source-maps-enabled";
 

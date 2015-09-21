@@ -8,7 +8,7 @@ const {Cu, Cc, Ci} = require("chrome");
 const Services = require("Services");
 const promise = require("promise");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "gDevTools", "resource:///modules/devtools/gDevTools.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "gDevTools", "resource:///modules/devtools/client/framework/gDevTools.jsm");
 
 exports.OptionsPanel = OptionsPanel;
 
@@ -84,7 +84,7 @@ function OptionsPanel(iframeWindow, toolbox) {
 
   this._addListeners();
 
-  const EventEmitter = require("devtools/toolkit/event-emitter");
+  const EventEmitter = require("devtools/shared/event-emitter");
   EventEmitter.decorate(this);
 }
 

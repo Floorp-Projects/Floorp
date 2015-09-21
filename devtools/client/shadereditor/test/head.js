@@ -11,17 +11,17 @@ var gEnableLogging = Services.prefs.getBoolPref("devtools.debugger.log");
 Services.prefs.setBoolPref("devtools.debugger.log", false);
 
 var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-var { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-var { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var { gDevTools } = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
+var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 
 var promise = require("promise");
-var { DebuggerClient } = require("devtools/toolkit/client/main");
+var { DebuggerClient } = require("devtools/shared/client/main");
 var { DebuggerServer } = require("devtools/server/main");
 var { WebGLFront } = require("devtools/server/actors/webgl");
-var DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-var TiltGL = require("devtools/tilt/tilt-gl");
-var {TargetFactory} = require("devtools/framework/target");
-var {Toolbox} = require("devtools/framework/toolbox");
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+var TiltGL = require("devtools/client/tilt/tilt-gl");
+var {TargetFactory} = require("devtools/client/framework/target");
+var {Toolbox} = require("devtools/client/framework/toolbox");
 var mm = null;
 
 const FRAME_SCRIPT_UTILS_URL = "chrome://devtools/content/shared/frame-script-utils.js"

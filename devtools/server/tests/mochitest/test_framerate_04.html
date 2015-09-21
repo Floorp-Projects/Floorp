@@ -17,7 +17,7 @@ Bug 1023018 - Tests if the framerate actor keeps recording after navigations.
 window.onload = function() {
   SimpleTest.waitForExplicitFinish();
   var {FramerateFront} = require("devtools/server/actors/framerate");
-  var {TargetFactory} = require("devtools/framework/target");
+  var {TargetFactory} = require("devtools/client/framework/target");
 
   var url = document.getElementById("testContent").href;
   attachURL(url, onTab);

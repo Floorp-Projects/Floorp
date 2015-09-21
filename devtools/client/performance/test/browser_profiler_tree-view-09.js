@@ -6,11 +6,11 @@
  * "self cost" and not "total cost".
  */
 
-var { CATEGORY_MASK } = require("devtools/performance/global");
+var { CATEGORY_MASK } = require("devtools/client/performance/modules/global");
 
 var test = Task.async(function*() {
-  let { ThreadNode } = require("devtools/performance/tree-model");
-  let { CallView } = require("devtools/performance/tree-view");
+  let { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
+  let { CallView } = require("devtools/client/performance/modules/widgets/tree-view");
 
   let threadNode = new ThreadNode(gSamples, { invertTree: true, startTime: 0, endTime: 10 });
   let treeRoot = new CallView({ frame: threadNode, inverted: true, autoExpandDepth: 1 });

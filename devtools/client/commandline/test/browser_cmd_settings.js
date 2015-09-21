@@ -23,7 +23,7 @@ function* spawnTest() {
   const { createSystem } = require("gcli/system");
   const system = createSystem({ location: "server" });
 
-  const gcliInit = require("devtools/toolkit/gcli/commands/index");
+  const gcliInit = require("devtools/shared/gcli/commands/index");
   gcliInit.addAllItemsByModule(system);
   yield system.load();
 

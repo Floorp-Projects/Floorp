@@ -6,18 +6,18 @@
 "use strict";
 
 const {Cu} = require("chrome");
-const EventEmitter = require("devtools/toolkit/event-emitter");
+const EventEmitter = require("devtools/shared/event-emitter");
 
 loader.lazyRequireGetter(this, "TreeWidget",
-                         "devtools/shared/widgets/TreeWidget", true);
+                         "devtools/client/shared/widgets/TreeWidget", true);
 loader.lazyRequireGetter(this, "TableWidget",
-                         "devtools/shared/widgets/TableWidget", true);
+                         "devtools/client/shared/widgets/TableWidget", true);
 loader.lazyImporter(this, "ViewHelpers",
-  "resource:///modules/devtools/ViewHelpers.jsm");
+  "resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
 loader.lazyImporter(this, "VariablesView",
-  "resource:///modules/devtools/VariablesView.jsm");
+  "resource:///modules/devtools/client/shared/widgets/VariablesView.jsm");
 
-const Telemetry = require("devtools/shared/telemetry");
+const Telemetry = require("devtools/client/shared/telemetry");
 
 /**
  * Localization convenience methods.

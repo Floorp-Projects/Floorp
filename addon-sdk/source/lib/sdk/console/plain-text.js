@@ -12,7 +12,7 @@ const { Cc, Ci, Cu, Cr } = require("chrome");
 const self = require("../self");
 const prefs = require("../preferences/service");
 const { merge } = require("../util/object");
-const { ConsoleAPI } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+const { ConsoleAPI } = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
 
 const DEFAULT_LOG_LEVEL = "error";
 const ADDON_LOG_LEVEL_PREF = "extensions." + self.id + ".sdk.console.logLevel";

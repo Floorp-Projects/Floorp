@@ -4,67 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+DIRS += ['lib']
+
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
-
-EXTRA_JS_MODULES.devtools.projecteditor += [
-    'lib/editors.js',
-    'lib/project.js',
-    'lib/projecteditor.js',
-    'lib/shells.js',
-    'lib/tree.js',
-]
-
-EXTRA_JS_MODULES.devtools.projecteditor.helpers += [
-    'lib/helpers/event.js',
-    'lib/helpers/file-picker.js',
-    'lib/helpers/l10n.js',
-    'lib/helpers/prompts.js',
-    'lib/helpers/readdir.js',
-]
-EXTRA_JS_MODULES.devtools.projecteditor.plugins += [
-    'lib/plugins/core.js',
-]
-
-EXTRA_JS_MODULES.devtools.projecteditor.plugins['app-manager'] += [
-    'lib/plugins/app-manager/app-project-editor.js',
-    'lib/plugins/app-manager/plugin.js',
-]
-
-EXTRA_JS_MODULES.devtools.projecteditor.plugins.delete += [
-    'lib/plugins/delete/delete.js',
-]
-
-EXTRA_JS_MODULES.devtools.projecteditor.plugins.dirty += [
-    'lib/plugins/dirty/dirty.js',
-]
-
-EXTRA_JS_MODULES.devtools.projecteditor.plugins['image-view'] += [
-    'lib/plugins/image-view/image-editor.js',
-    'lib/plugins/image-view/plugin.js',
-]
-
-EXTRA_JS_MODULES.devtools.projecteditor.plugins.logging += [
-    'lib/plugins/logging/logging.js',
-]
-
-EXTRA_JS_MODULES.devtools.projecteditor.plugins.new += [
-    'lib/plugins/new/new.js',
-]
-
-EXTRA_JS_MODULES.devtools.projecteditor.plugins.rename += [
-    'lib/plugins/rename/rename.js',
-]
-
-EXTRA_JS_MODULES.devtools.projecteditor.plugins.save += [
-    'lib/plugins/save/save.js',
-]
-
-EXTRA_JS_MODULES.devtools.projecteditor.plugins['status-bar'] += [
-    'lib/plugins/status-bar/plugin.js',
-]
-
-EXTRA_JS_MODULES.devtools.projecteditor.stores += [
-    'lib/stores/base.js',
-    'lib/stores/local.js',
-    'lib/stores/resource.js',
-]

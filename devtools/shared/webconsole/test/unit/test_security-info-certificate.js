@@ -6,11 +6,11 @@
 // Tests that NetworkHelper.parseCertificateInfo parses certificate information
 // correctly.
 
-const { require } = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { require } = Components.utils.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 
 Object.defineProperty(this, "NetworkHelper", {
   get: function() {
-    return require("devtools/toolkit/webconsole/network-helper");
+    return require("devtools/shared/webconsole/network-helper");
   },
   configurable: true,
   writeable: false,
