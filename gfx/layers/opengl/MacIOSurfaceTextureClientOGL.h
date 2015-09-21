@@ -50,8 +50,6 @@ public:
   CreateSimilar(TextureFlags, TextureAllocationFlags) const override { return nullptr; }
 
 protected:
-  virtual void FinalizeOnIPDLThread() override;
-
   RefPtr<MacIOSurface> mSurface;
   bool mIsLocked;
 };
