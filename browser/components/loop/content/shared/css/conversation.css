@@ -915,13 +915,6 @@ html[dir="rtl"] .room-conversation-wrapper header a {
   align-items: center;
 }
 
-.room-invitation-overlay input[type="text"] {
-  display: block;
-  background-color: rgba(0,0,0,.5);
-  border-radius: 3px;
-  padding: .5em;
-}
-
 .room-invitation-overlay .btn-group {
   padding: 0 0 5rem 0;
 }
@@ -999,10 +992,9 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 }
 
 .room-context {
-  background: rgba(0,0,0,.8);
+  background: #fff;
   border-top: 2px solid #444;
   border-bottom: 2px solid #444;
-  padding: .5rem;
   position: absolute;
   left: 0;
   bottom: 0;
@@ -1049,13 +1041,11 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   width: 100%;
 }
 
-.room-context-label {
-  margin-bottom: 1em;
-}
-
-.room-context-label,
-.room-context > .checkbox-wrapper > label {
-  color: #fff;
+.room-context-header {
+  color: #333;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin: 1rem auto;
 }
 
 .room-context-comment {
@@ -1079,71 +1069,40 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 }
 
 .room-context > form {
+  margin-bottom: 1rem;
+  padding: .5rem;
   width: 100%;
 }
 
 .room-context > form > textarea,
 .room-context > form > input[type="text"] {
   display: block;
-  background: rgba(0,0,0,.5);
-  font-family: "Helvetica Neue", Arial, sans;
-  border: 1px solid rgba(255,255,255,.2);
   width: 100%;
-  padding: .5em;
-  border-radius: 3px;
-  resize: none;
-  color: #fff;
+  outline: none;
+  border-radius: 4px;
+  margin: 10px 0;
+  border: 1px solid #c3c3c3;
+  height: 2.6rem;
+  padding: 6px;
+  font-size: 1.1rem;
+  color: #4a4a4a;
+  box-shadow: none;
 }
 
 .room-context > form > textarea {
-  font-size: 1em;
+  font-family: inherit;
+  height: 5.2rem;
+  resize: none;
 }
 
-.room-context > form > input:not([disabled]).room-context-url {
-  color: #0095dd;
+.room-context > form > textarea::-moz-placeholder,
+.room-context > form > input::-moz-placeholder {
+  color: #999;
 }
 
-.room-context > form > input[disabled] {
-  background-color: rgba(255,255,255,.2);
-  color: rgba(255,255,255,.4);
-}
-
-.room-context > form > textarea:not(:last-of-type),
-.room-context > form > input[type="text"] {
-  margin: 0 0 .5em 0;
-}
-
-.room-context > .btn {
-  margin: .5em 0 0;
-  font-size: 1.1em;
-  padding: 0 .5em;
-  align-self: flex-end;
-}
-
-.room-context-btn-close {
-  position: absolute;
-  right: 8px;
-  /* 8px offset + 2px border-top */
-  top: 10px;
-  width: 8px;
-  height: 8px;
-  background-color: transparent;
-  background-image: url("../img/icons-10x10.svg#close-darkergrey");
-  background-size: 8px 8px;
-  background-repeat: no-repeat;
-  border: 0;
-  padding: 0;
-  cursor: pointer;
-}
-
-.room-context-btn-close:hover,
-.room-context-btn-close:hover:active {
-  background-image: url("../img/icons-10x10.svg#close-active");
-}
-
-html[dir="rtl"] .room-context-btn-close {
-  right: auto;
-  left: 8px;
+.room-context > form > textarea:focus,
+.room-context > form > input:focus {
+  border: 0.1rem solid #5cccee;
 }
 
 .media-layout {

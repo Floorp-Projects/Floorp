@@ -2473,15 +2473,13 @@ notification[value="loop-sharing-notification"] .messageImage {
   margin-top: 1em;
 }
 
-#sync-error-panel-title,
 #sync-start-panel-title {
   font-size: 120%;
   font-weight: bold;
   margin-bottom: 5px;
 }
 
-#sync-start-panel-subtitle,
-#sync-error-panel-subtitle {
+#sync-start-panel-subtitle {
   margin: 0;
 }
 

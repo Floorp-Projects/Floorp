@@ -70,11 +70,11 @@
 
 <!-- Passwords -->
 <groupbox id="passwordsGroup" orient="vertical" data-category="paneSecurity" hidden="true">
-  <caption><label>&passwords.label;</label></caption>
+  <caption><label>&logins.label;</label></caption>
 
   <hbox id="savePasswordsBox">
     <checkbox id="savePasswords"
-              label="&rememberPasswords.label;" accesskey="&rememberPasswords.accesskey;"
+              label="&rememberLogins.label;" accesskey="&rememberLogins.accesskey;"
               preference="signon.rememberSignons"
               onsyncfrompreference="return gSecurityPane.readSavePasswords();"/>
     <spacer flex="1"/>
@@ -103,7 +103,7 @@
       <row id="showPasswordRow">
         <hbox id="showPasswordsBox"/>
         <button id="showPasswords"
-                label="&savedPasswords.label;" accesskey="&savedPasswords.accesskey;"
+                label="&savedLogins.label;" accesskey="&savedLogins.accesskey;"
                 preference="pref.privacy.disable_button.view_passwords"/>
       </row>
     </rows>
