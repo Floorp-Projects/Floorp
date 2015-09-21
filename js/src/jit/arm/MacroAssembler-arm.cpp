@@ -2015,15 +2015,13 @@ MacroAssemblerARMCompat::load8ZeroExtend(const BaseIndex& src, Register dest)
     Register base = src.base;
     uint32_t scale = Imm32::ShiftOf(src.scale).value;
 
-    ScratchRegisterScope scratch(asMasm());
-
-    if (src.offset != 0) {
-        ma_mov(base, scratch);
-        base = scratch;
-        ma_add(base, Imm32(src.offset), base);
+    if (src.offset == 0) {
+        ma_ldrb(DTRAddr(base, DtrRegImmShift(src.index, LSL, scale)), dest);
+    } else {
+        ScratchRegisterScope scratch(asMasm());
+        ma_add(base, Imm32(src.offset), scratch);
+        ma_ldrb(DTRAddr(scratch, DtrRegImmShift(src.index, LSL, scale)), dest);
     }
-    ma_ldrb(DTRAddr(base, DtrRegImmShift(src.index, LSL, scale)), dest);
-
 }
 
 void
