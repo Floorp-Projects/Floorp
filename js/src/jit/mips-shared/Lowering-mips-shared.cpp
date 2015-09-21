@@ -411,14 +411,3 @@ LIRGeneratorMIPSShared::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayEleme
 {
     MOZ_CRASH("NYI");
 }
-
-void
-LIRGeneratorMIPSShared::visitRandom(MRandom* ins)
-{
-    LRandom *lir = new(alloc()) LRandom(temp(),
-                                        temp(),
-                                        temp(),
-                                        temp(),
-                                        temp());
-    defineFixed(lir, ins, LFloatReg(ReturnDoubleReg));
-}
