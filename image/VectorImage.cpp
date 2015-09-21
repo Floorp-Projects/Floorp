@@ -920,7 +920,8 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams)
   SurfaceCache::Insert(frame, ImageKey(this),
                        VectorSurfaceKey(aParams.size,
                                         aParams.svgContext,
-                                        aParams.animationTime));
+                                        aParams.animationTime),
+                       Lifetime::Persistent);
 
   // Draw.
   nsRefPtr<gfxDrawable> drawable =

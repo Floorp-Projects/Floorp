@@ -8,6 +8,7 @@
 #define mozilla_image_decoders_nsPNGDecoder_h
 
 #include "Decoder.h"
+#include "Downscaler.h"
 
 #include "gfxTypes.h"
 
@@ -25,6 +26,8 @@ class nsPNGDecoder : public Decoder
 {
 public:
   virtual ~nsPNGDecoder();
+
+  virtual nsresult SetTargetSize(const nsIntSize& aSize) override;
 
   virtual void InitInternal() override;
   virtual void WriteInternal(const char* aBuffer, uint32_t aCount) override;
@@ -82,6 +85,7 @@ private:
 
 public:
   png_structp mPNG;
+  Maybe<Downscaler> mDownscaler;
   png_infop mInfo;
   nsIntRect mFrameRect;
   uint8_t* mCMSLine;
