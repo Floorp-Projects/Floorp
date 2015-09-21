@@ -16,6 +16,8 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "nsISocketTransportService.h"
+#include "nsISocketTransport.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsNetUtil.h"
 
@@ -167,6 +169,74 @@ TCPSocketParent::RecvOpen(const nsString& aHost, const uint16_t& aPort, const bo
   mSocket->SetAppIdAndBrowser(appId, inBrowser);
   mSocket->SetSocketBridgeParent(this);
   NS_ENSURE_SUCCESS(mSocket->Init(), true);
+  return true;
+}
+
+bool
+TCPSocketParent::RecvOpenBind(const nsCString& aRemoteHost,
+                              const uint16_t& aRemotePort,
+                              const nsCString& aLocalAddr,
+                              const uint16_t& aLocalPort,
+                              const bool&     aUseSSL,
+                              const bool&     aUseArrayBuffers)
+{
+  if (net::UsingNeckoIPCSecurity() &&
+      !AssertAppProcessPermission(Manager()->Manager(), "tcp-socket")) {
+    FireInteralError(this, __LINE__);
+    return true;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsISocketTransportService> sts =
+    do_GetService("@mozilla.org/network/socket-transport-service;1", &rv);
+  if (NS_FAILED(rv)) {
+    FireInteralError(this, __LINE__);
+    return true;
+  }
+
+  nsCOMPtr<nsISocketTransport> socketTransport;
+  rv = sts->CreateTransport(nullptr, 0,
+                            aRemoteHost, aRemotePort,
+                            nullptr, getter_AddRefs(socketTransport));
+  if (NS_FAILED(rv)) {
+    FireInteralError(this, __LINE__);
+    return true;
+  }
+
+  PRNetAddr prAddr;
+  if (PR_SUCCESS != PR_InitializeNetAddr(PR_IpAddrAny, aLocalPort, &prAddr)) {
+    FireInteralError(this, __LINE__);
+    return true;
+  }
+  if (PR_SUCCESS != PR_StringToNetAddr(aLocalAddr.BeginReading(), &prAddr)) {
+    FireInteralError(this, __LINE__);
+    return true;
+  }
+
+  mozilla::net::NetAddr addr;
+  PRNetAddrToNetAddr(&prAddr, &addr);
+  rv = socketTransport->Bind(&addr);
+  if (NS_FAILED(rv)) {
+    FireInteralError(this, __LINE__);
+    return true;
+  }
+
+  // Obtain App ID
+  uint32_t appId = nsIScriptSecurityManager::NO_APP_ID;
+  bool     inBrowser = false;
+  const PContentParent *content = Manager()->Manager();
+  const InfallibleTArray<PBrowserParent*>& browsers = content->ManagedPBrowserParent();
+  if (browsers.Length() > 0) {
+    TabParent *tab = static_cast<TabParent*>(browsers[0]);
+    appId = tab->OwnAppId();
+    inBrowser = tab->IsBrowserElement();
+  }
+
+  mSocket = new TCPSocket(nullptr, NS_ConvertUTF8toUTF16(aRemoteHost), aRemotePort, aUseSSL, aUseArrayBuffers);
+  mSocket->SetAppIdAndBrowser(appId, inBrowser);
+  mSocket->SetSocketBridgeParent(this);
+  rv = mSocket->InitWithUnconnectedTransport(socketTransport);
+  NS_ENSURE_SUCCESS(rv, true);
   return true;
 }
 

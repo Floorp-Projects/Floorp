@@ -65,6 +65,10 @@ static Register CallReg = t9;
 static const int defaultShift = 3;
 static_assert(1 << defaultShift == sizeof(JS::Value), "The defaultShift is wrong");
 
+static const uint32_t LOW_32_MASK = (1LL << 32) - 1;
+static const int32_t LOW_32_OFFSET = 0;
+static const int32_t HIGH_32_OFFSET = 4;
+
 class MacroAssemblerMIPS : public Assembler
 {
   protected:
@@ -676,6 +680,8 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         loadPtr(lhs, SecondScratchReg);
         branchTestPtr(cond, SecondScratchReg, imm, label);
     }
+    void branchTest64(Condition cond, Register64 lhs, Register64 rhs, Register temp,
+                      Label* label);
     void branchPtr(Condition cond, Register lhs, Register rhs, Label* label) {
         ma_b(lhs, rhs, label, cond);
     }
@@ -1101,6 +1107,11 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void add32(Register src, Register dest);
     void add32(Imm32 imm, Register dest);
     void add32(Imm32 imm, const Address& dest);
+    void add64(Imm32 imm, Register64 dest) {
+        as_addiu(dest.low, dest.low, imm.value);
+        as_sltiu(ScratchRegister, dest.low, imm.value);
+        as_addu(dest.high, dest.high, ScratchRegister);
+    }
     void sub32(Imm32 imm, Register dest);
     void sub32(Register src, Register dest);
 
@@ -1140,6 +1151,10 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
 
     void move32(Imm32 imm, Register dest);
     void move32(Register src, Register dest);
+    void move64(Register64 src, Register64 dest) {
+        move32(src.low, dest.low);
+        move32(src.high, dest.high);
+    }
 
     void movePtr(Register src, Register dest);
     void movePtr(ImmWord imm, Register dest);
@@ -1163,6 +1178,10 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void load32(const BaseIndex& address, Register dest);
     void load32(AbsoluteAddress address, Register dest);
     void load32(AsmJSAbsoluteAddress address, Register dest);
+    void load64(const Address& address, Register64 dest) {
+        load32(Address(address.base, address.offset + LOW_32_OFFSET), dest.low);
+        load32(Address(address.base, address.offset + HIGH_32_OFFSET), dest.high);
+    }
 
     void loadPtr(const Address& address, Register dest);
     void loadPtr(const BaseIndex& src, Register dest);
@@ -1231,6 +1250,11 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     // implementation without second scratch.
     void store32_NoSecondScratch(Imm32 src, const Address& address) {
         store32(src, address);
+    }
+
+    void store64(Register64 src, Address address) {
+        store32(src.low, Address(address.base, address.offset + LOW_32_OFFSET));
+        store32(src.high, Address(address.base, address.offset + HIGH_32_OFFSET));
     }
 
     template <typename T> void storePtr(ImmWord imm, T address);
@@ -1302,6 +1326,15 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         as_addu(dest, dest, src);
     }
 
+    void mul64(Imm64 imm, const Register64& dest);
+
+    void convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest);
+    void mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest) {
+        movePtr(imm, ScratchRegister);
+        loadDouble(Address(ScratchRegister, 0), ScratchDoubleReg);
+        mulDouble(ScratchDoubleReg, dest);
+    }
+
     void breakpoint();
 
     void branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
@@ -1315,16 +1348,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void alignStackPointer();
     void restoreStackPointer();
     static void calculateAlignedStackPointer(void** stackPointer);
-
-    void rshiftPtr(Imm32 imm, Register dest) {
-        ma_srl(dest, dest, imm);
-    }
-    void rshiftPtrArithmetic(Imm32 imm, Register dest) {
-        ma_sra(dest, dest, imm);
-    }
-    void lshiftPtr(Imm32 imm, Register dest) {
-        ma_sll(dest, dest, imm);
-    }
 
     // If source is a double, load it into dest. If source is int32,
     // convert it to double. Else, branch to failure.

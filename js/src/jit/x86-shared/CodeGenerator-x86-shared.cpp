@@ -3644,5 +3644,18 @@ CodeGeneratorX86Shared::visitMemoryBarrier(LMemoryBarrier* ins)
         masm.storeLoadFence();
 }
 
+void
+CodeGeneratorX86Shared::setReturnDoubleRegs(LiveRegisterSet* regs)
+{
+    MOZ_ASSERT(ReturnFloat32Reg.encoding() == X86Encoding::xmm0);
+    MOZ_ASSERT(ReturnDoubleReg.encoding() == X86Encoding::xmm0);
+    MOZ_ASSERT(ReturnInt32x4Reg.encoding() == X86Encoding::xmm0);
+    MOZ_ASSERT(ReturnFloat32x4Reg.encoding() == X86Encoding::xmm0);
+    regs->add(ReturnFloat32Reg);
+    regs->add(ReturnDoubleReg);
+    regs->add(ReturnInt32x4Reg);
+    regs->add(ReturnFloat32x4Reg);
+}
+
 } // namespace jit
 } // namespace js

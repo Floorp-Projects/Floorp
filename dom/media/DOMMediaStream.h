@@ -48,6 +48,7 @@ class VideoTrack;
 class AudioTrackList;
 class VideoTrackList;
 class MediaTrackListListener;
+struct MediaTrackConstraints;
 } // namespace dom
 
 namespace layers {
@@ -77,6 +78,7 @@ class DOMMediaStream : public DOMEventTargetHelper
   typedef dom::MediaTrackListListener MediaTrackListListener;
 
 public:
+  typedef dom::MediaTrackConstraints MediaTrackConstraints;
   typedef uint8_t TrackTypeHints;
 
   DOMMediaStream();
@@ -120,6 +122,11 @@ public:
   virtual void SetTrackEnabled(TrackID aTrackID, bool aEnabled);
 
   virtual void StopTrack(TrackID aTrackID);
+
+  virtual already_AddRefed<dom::Promise>
+  ApplyConstraintsToTrack(TrackID aTrackID,
+                          const MediaTrackConstraints& aConstraints,
+                          ErrorResult &aRv);
 
   virtual DOMLocalMediaStream* AsDOMLocalMediaStream() { return nullptr; }
   virtual DOMHwMediaStream* AsDOMHwMediaStream() { return nullptr; }

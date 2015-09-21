@@ -14,6 +14,7 @@
 #include "nsISupportsImpl.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
+#include "nsITCPSocketCallback.h"
 #include "js/RootingAPI.h"
 
 class nsISocketTransport;
@@ -72,6 +73,7 @@ class TCPSocket final : public DOMEventTargetHelper
                       , public nsIInputStreamCallback
                       , public nsIObserver
                       , public nsSupportsWeakReference
+                      , public nsITCPSocketCallback
 {
 public:
   TCPSocket(nsIGlobalObject* aGlobal, const nsAString& aHost, uint16_t aPort,
@@ -84,6 +86,7 @@ public:
   NS_DECL_NSITRANSPORTEVENTSINK
   NS_DECL_NSIINPUTSTREAMCALLBACK
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSITCPSOCKETCALLBACK
 
   nsPIDOMWindow* GetParentObject() const
   {
@@ -154,17 +157,9 @@ public:
   // Inform this socket that a buffered send() has completed sending.
   void NotifyCopyComplete(nsresult aStatus);
 
-  // Set this child socket's number of buffered bytes, based on the count from the parent
-  // process associated with the given sequence id.
-  void UpdateBufferedAmount(uint32_t aAmount, uint32_t aTrackingNumber);
-  // Set this child socket's ready state, based on the state in the parent process.
-  void UpdateReadyState(uint32_t aReadyState);
-  // Dispatch an "error" event at this object.
-  void FireErrorEvent(const nsAString& aName, const nsAString& aMessage);
-  // Dispatch an event of the given type at this object.
-  void FireEvent(const nsAString& aType);
-  // Dispatch a "data" event at this object.
-  void FireDataEvent(JSContext* aCx, const nsAString& aType, JS::Handle<JS::Value> aData);
+  // Initialize this socket from a low-level connection that hasn't connected yet
+  // (called from RecvOpenBind() in TCPSocketParent).
+  nsresult InitWithUnconnectedTransport(nsISocketTransport* aTransport);
 
 private:
   ~TCPSocket();
