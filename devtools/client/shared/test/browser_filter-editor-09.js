@@ -6,7 +6,7 @@
 // Tests the Filter Editor Widget inputs increase/decrease value when cursor is
 // on a number using arrow keys, applying multiplier using alt/shift on strings
 
-const TEST_URI = "chrome://browser/content/devtools/filter-frame.xhtml";
+const TEST_URI = "chrome://devtools/content/shared/widgets/filter-frame.xhtml";
 const {CSSFilterEditorWidget} = require("devtools/shared/widgets/FilterWidget");
 
 const FAST_VALUE_MULTIPLIER = 10;

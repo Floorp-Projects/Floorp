@@ -41,7 +41,7 @@ const ENABLE_AUTOCOMPLETION = "devtools.scratchpad.enableAutocompletion";
 const TAB_SIZE = "devtools.editor.tabsize";
 const FALLBACK_CHARSET_LIST = "intl.fallbackCharsetList.ISO-8859-1";
 
-const VARIABLES_VIEW_URL = "chrome://browser/content/devtools/widgets/VariablesView.xul";
+const VARIABLES_VIEW_URL = "chrome://devtools/content/shared/widgets/VariablesView.xul";
 
 const {require, loader} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 

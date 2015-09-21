@@ -6,7 +6,7 @@
 
 // Tests that coordinates can be changed programatically in the CubicBezierWidget
 
-const TEST_URI = "chrome://browser/content/devtools/cubic-bezier-frame.xhtml";
+const TEST_URI = "chrome://devtools/content/shared/widgets/cubic-bezier-frame.xhtml";
 const {CubicBezierWidget} =
   require("devtools/shared/widgets/CubicBezierWidget");
 const {PREDEFINED} = require("devtools/shared/widgets/CubicBezierPresets");

@@ -3,7 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/devtools/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/performance.css" type="text/css"?>
@@ -13,20 +13,20 @@
 ]>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script src="chrome://browser/content/devtools/theme-switching.js"/>
-  <script type="application/javascript" src="performance/performance-controller.js"/>
-  <script type="application/javascript" src="performance/performance-view.js"/>
-  <script type="application/javascript" src="performance/views/overview.js"/>
-  <script type="application/javascript" src="performance/views/toolbar.js"/>
-  <script type="application/javascript" src="performance/views/details-subview.js"/>
-  <script type="application/javascript" src="performance/views/details-waterfall.js"/>
-  <script type="application/javascript" src="performance/views/details-js-call-tree.js"/>
-  <script type="application/javascript" src="performance/views/details-js-flamegraph.js"/>
-  <script type="application/javascript" src="performance/views/details-memory-call-tree.js"/>
-  <script type="application/javascript" src="performance/views/details-memory-flamegraph.js"/>
-  <script type="application/javascript" src="performance/views/details.js"/>
-  <script type="application/javascript" src="performance/views/recordings.js"/>
-  <script type="application/javascript" src="performance/views/optimizations-list.js"/>
+  <script src="chrome://devtools/content/shared/theme-switching.js"/>
+  <script type="application/javascript" src="performance-controller.js"/>
+  <script type="application/javascript" src="performance-view.js"/>
+  <script type="application/javascript" src="views/overview.js"/>
+  <script type="application/javascript" src="views/toolbar.js"/>
+  <script type="application/javascript" src="views/details-abstract-subview.js"/>
+  <script type="application/javascript" src="views/details-waterfall.js"/>
+  <script type="application/javascript" src="views/details-js-call-tree.js"/>
+  <script type="application/javascript" src="views/details-js-flamegraph.js"/>
+  <script type="application/javascript" src="views/details-memory-call-tree.js"/>
+  <script type="application/javascript" src="views/details-memory-flamegraph.js"/>
+  <script type="application/javascript" src="views/details.js"/>
+  <script type="application/javascript" src="views/recordings.js"/>
+  <script type="application/javascript" src="views/optimizations-list.js"/>
 
   <popupset id="performance-options-popupset">
     <menupopup id="performance-filter-menupopup"/>

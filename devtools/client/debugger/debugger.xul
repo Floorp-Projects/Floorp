@@ -3,8 +3,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/devtools/widgets.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/devtools/debugger.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
+<?xml-stylesheet href="debugger.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/debugger.css" type="text/css"?>
@@ -23,22 +23,22 @@
         persist="screenX screenY width height sizemode">
 
   <script type="application/javascript;version=1.8"
-          src="chrome://browser/content/devtools/theme-switching.js"/>
+          src="chrome://devtools/content/shared/theme-switching.js"/>
   <script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="text/javascript" src="debugger-controller.js"/>
   <script type="text/javascript" src="debugger-view.js"/>
-  <script type="text/javascript" src="debugger/utils.js"/>
-  <script type="text/javascript" src="debugger/workers-view.js"/>
-  <script type="text/javascript" src="debugger/sources-view.js"/>
-  <script type="text/javascript" src="debugger/variable-bubble-view.js"/>
-  <script type="text/javascript" src="debugger/watch-expressions-view.js"/>
-  <script type="text/javascript" src="debugger/event-listeners-view.js"/>
-  <script type="text/javascript" src="debugger/global-search-view.js"/>
-  <script type="text/javascript" src="debugger/toolbar-view.js"/>
-  <script type="text/javascript" src="debugger/options-view.js"/>
-  <script type="text/javascript" src="debugger/stack-frames-view.js"/>
-  <script type="text/javascript" src="debugger/stack-frames-classic-view.js"/>
-  <script type="text/javascript" src="debugger/filter-view.js"/>
+  <script type="text/javascript" src="utils.js"/>
+  <script type="text/javascript" src="views/workers-view.js"/>
+  <script type="text/javascript" src="views/sources-view.js"/>
+  <script type="text/javascript" src="views/variable-bubble-view.js"/>
+  <script type="text/javascript" src="views/watch-expressions-view.js"/>
+  <script type="text/javascript" src="views/event-listeners-view.js"/>
+  <script type="text/javascript" src="views/global-search-view.js"/>
+  <script type="text/javascript" src="views/toolbar-view.js"/>
+  <script type="text/javascript" src="views/options-view.js"/>
+  <script type="text/javascript" src="views/stack-frames-view.js"/>
+  <script type="text/javascript" src="views/stack-frames-classic-view.js"/>
+  <script type="text/javascript" src="views/filter-view.js"/>
 
   <commandset id="editMenuCommands"/>
 

@@ -19,7 +19,7 @@ const promise = require("promise");
 const { ViewHelpers } = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
 const { DOMHelpers } = Cu.import("resource:///modules/devtools/DOMHelpers.jsm");
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-const ITCHPAD_URL = "chrome://browser/content/devtools/projecteditor.xul";
+const ITCHPAD_URL = "chrome://devtools/content/projecteditor/chrome/content/projecteditor.xul";
 const { confirm } = require("projecteditor/helpers/prompts");
 const { getLocalizedString } = require("projecteditor/helpers/l10n");
 

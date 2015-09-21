@@ -7,7 +7,7 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-const DBG_XUL = "chrome://browser/content/devtools/framework/toolbox-process-window.xul";
+const DBG_XUL = "chrome://devtools/content/framework/toolbox-process-window.xul";
 const CHROME_DEBUGGER_PROFILE_NAME = "chrome_debugger_profile";
 
 Cu.import("resource://gre/modules/Services.jsm");

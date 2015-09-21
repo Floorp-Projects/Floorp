@@ -25,7 +25,7 @@ waitForExplicitFinish();
 
 function getFrameScript() {
   let mm = gBrowser.selectedBrowser.messageManager;
-  let frameURL = "chrome://browser/content/devtools/frame-script-utils.js";
+  let frameURL = "chrome://devtools/content/shared/frame-script-utils.js";
   mm.loadFrameScript(frameURL, false);
   SimpleTest.registerCleanupFunction(() => {
     mm = null;

@@ -5,7 +5,7 @@
 
 // Tests that the Filter Editor Widget parses filter values correctly (setCssValue)
 
-const TEST_URI = "chrome://browser/content/devtools/filter-frame.xhtml";
+const TEST_URI = "chrome://devtools/content/shared/widgets/filter-frame.xhtml";
 const {CSSFilterEditorWidget} = require("devtools/shared/widgets/FilterWidget");
 
 add_task(function *() {
@@ -28,7 +28,8 @@ add_task(function *() {
   info("Test parsing of string-typed values");
   widget.setCssValue("drop-shadow( 2px  1px 5px black) url( example.svg#filter )");
 
-  const computedURI = "chrome://browser/content/devtools/example.svg#filter";
+  const computedURI =
+    "chrome://devtools/content/shared/widgets/example.svg#filter";
   const expected = `drop-shadow(rgb(0, 0, 0) 2px 1px 5px) url(${computedURI})`;
   is(widget.getCssValue(), expected,
      "setCssValue should work for string-typed values");

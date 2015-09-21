@@ -5,7 +5,7 @@
 
 // Tests that the Filter Editor Widget renders filters correctly
 
-const TEST_URI = "chrome://browser/content/devtools/filter-frame.xhtml";
+const TEST_URI = "chrome://devtools/content/shared/widgets/filter-frame.xhtml";
 const {CSSFilterEditorWidget} = require("devtools/shared/widgets/FilterWidget");
 
 const { ViewHelpers } = Cu.import("resource:///modules/devtools/ViewHelpers.jsm", {});
@@ -47,7 +47,7 @@ add_task(function*() {
       expected: [
         {
           label: "url",
-          value: "chrome://browser/content/devtools/example.svg",
+          value: "chrome://devtools/content/shared/widgets/example.svg",
           unit: null
         }
       ]

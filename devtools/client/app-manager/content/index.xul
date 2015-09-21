@@ -29,13 +29,13 @@
         <button class="button help-button" panel="help">&index.help;</button>
       </vbox>
       <hbox id="tab-panels" flex="1">
-        <iframe flex="1" class="panel projects-panel" src="chrome://browser/content/devtools/app-manager/projects.xhtml"/>
-        <iframe flex="1" class="panel device-panel" src="chrome://browser/content/devtools/app-manager/device.xhtml"/>
-        <iframe flex="1" class="panel help-panel" src="chrome://browser/content/devtools/app-manager/help.xhtml"></iframe>
+        <iframe flex="1" class="panel projects-panel" src="chrome://devtools/content/app-manager/content/projects.xhtml"/>
+        <iframe flex="1" class="panel device-panel" src="chrome://devtools/content/app-manager/content/device.xhtml"/>
+        <iframe flex="1" class="panel help-panel" src="chrome://devtools/content/app-manager/content/help.xhtml"></iframe>
       </hbox>
     </hbox>
-    <iframe id="connection-footer" src="chrome://browser/content/devtools/app-manager/connection-footer.xhtml"></iframe>
+    <iframe id="connection-footer" src="chrome://devtools/content/app-manager/content/connection-footer.xhtml"></iframe>
   </vbox>
 
-  <script type="application/javascript;version=1.8" src="chrome://browser/content/devtools/app-manager/index.js"></script>
+  <script type="application/javascript;version=1.8" src="chrome://devtools/content/app-manager/content/index.js"></script>
 </window>

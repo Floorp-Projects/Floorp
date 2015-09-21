@@ -5,7 +5,7 @@
 
 // Tests the Filter Editor Widget's remove button
 
-const TEST_URI = "chrome://browser/content/devtools/filter-frame.xhtml";
+const TEST_URI = "chrome://devtools/content/shared/widgets/filter-frame.xhtml";
 
 const { Cu } = require("chrome");
 const {CSSFilterEditorWidget} = require("devtools/shared/widgets/FilterWidget");

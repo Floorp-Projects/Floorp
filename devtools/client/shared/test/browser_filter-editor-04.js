@@ -5,7 +5,7 @@
 
 // Tests the Filter Editor Widget's drag-drop re-ordering
 
-const TEST_URI = "chrome://browser/content/devtools/filter-frame.xhtml";
+const TEST_URI = "chrome://devtools/content/shared/widgets/filter-frame.xhtml";
 const {CSSFilterEditorWidget} = require("devtools/shared/widgets/FilterWidget");
 const LIST_ITEM_HEIGHT = 32;
 

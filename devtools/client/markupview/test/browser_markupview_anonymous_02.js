@@ -5,7 +5,7 @@
 "use strict";
 
 // Test XBL anonymous content in the markupview
-const TEST_URL = "chrome://browser/content/devtools/scratchpad.xul";
+const TEST_URL = "chrome://devtools/content/scratchpad/scratchpad.xul";
 
 add_task(function*() {
   let {inspector} = yield addTab(TEST_URL).then(openInspector);

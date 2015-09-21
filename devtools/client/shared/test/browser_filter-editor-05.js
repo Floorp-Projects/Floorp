@@ -5,7 +5,7 @@
 
 // Tests the Filter Editor Widget's label-dragging
 
-const TEST_URI = "chrome://browser/content/devtools/filter-frame.xhtml";
+const TEST_URI = "chrome://devtools/content/shared/widgets/filter-frame.xhtml";
 const {CSSFilterEditorWidget} = require("devtools/shared/widgets/FilterWidget");
 
 const FAST_VALUE_MULTIPLIER = 10;
@@ -127,6 +127,6 @@ add_task(function*() {
     shiftKey: true
   });
 
-  is(widget.getValueAt(1), "chrome://browser/content/devtools/test.svg",
+  is(widget.getValueAt(1), "chrome://devtools/content/shared/widgets/test.svg",
      "Label-dragging on string-type filters shouldn't affect their value");
 });
