@@ -31,6 +31,7 @@ import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 
@@ -167,11 +168,9 @@ public class GeckoView extends LayerView
             final GeckoProfile profile = GeckoProfile.get(context);
          }
 
+        GeckoThread.ensureInit(null, null);
         if (url != null) {
-            GeckoThread.ensureInit(null, Intent.ACTION_VIEW, url);
             GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(url));
-        } else {
-            GeckoThread.ensureInit(null, null, null);
         }
 
         if (context instanceof Activity) {
@@ -203,6 +202,28 @@ public class GeckoView extends LayerView
             // destroyed, so we need to re-attach Gecko to this GeckoView.
             connectToGecko();
         }
+    }
+
+    @Override
+    public void onAttachedToWindow()
+    {
+        super.onAttachedToWindow();
+
+        final DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
+
+        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+            Window.open(window, metrics.widthPixels, metrics.heightPixels);
+        } else {
+            GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY, Window.class,
+                    "open", window, metrics.widthPixels, metrics.heightPixels);
+        }
+    }
+
+    @Override
+    public void onDetachedFromWindow()
+    {
+        super.onAttachedToWindow();
+        window.disposeNative();
     }
 
     /**
