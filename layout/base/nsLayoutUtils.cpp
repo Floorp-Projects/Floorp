@@ -112,6 +112,14 @@
 #include "nsTransitionManager.h"
 #include "RestyleManager.h"
 
+// Make sure getpid() works.
+#ifdef XP_WIN
+#include <process.h>
+#define getpid _getpid
+#else
+#include <unistd.h>
+#endif
+
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::image;
@@ -3266,6 +3274,10 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
 #ifdef MOZ_DUMP_PAINTING
     if (gfxUtils::sDumpPaintingToFile) {
       nsCString string("dump-");
+      // Include the process ID in the dump file name, to make sure that in an
+      // e10s setup different processes don't clobber each other's dump files.
+      string.AppendInt(getpid());
+      string.AppendLiteral("-");
       string.AppendInt(gPaintCount);
       string.AppendLiteral(".html");
       gfxUtils::sDumpPaintFile = fopen(string.BeginReading(), "w");
