@@ -713,7 +713,7 @@ class NativeObject : public JSObject
                         JSGetterOp getter, JSSetterOp setter, uint32_t slot, unsigned attrs,
                         unsigned flags, ShapeTable::Entry* entry, bool allowDictionary);
 
-    void fillInAfterSwap(JSContext* cx, const Vector<Value>& values, void* priv);
+    bool fillInAfterSwap(JSContext* cx, const Vector<Value>& values, void* priv);
 
   public:
     // Return true if this object has been converted from shared-immutable

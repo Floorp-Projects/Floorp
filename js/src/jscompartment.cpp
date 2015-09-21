@@ -819,14 +819,15 @@ JSCompartment::setNewObjectMetadata(JSContext* cx, JSObject* obj)
     assertSameCompartment(cx, this, obj);
 
     if (JSObject* metadata = objectMetadataCallback(cx, obj)) {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
         assertSameCompartment(cx, metadata);
         if (!objectMetadataTable) {
             objectMetadataTable = cx->new_<ObjectWeakMap>(cx);
             if (!objectMetadataTable || !objectMetadataTable->init())
-                CrashAtUnhandlableOOM("setNewObjectMetadata");
+                oomUnsafe.crash("setNewObjectMetadata");
         }
         if (!objectMetadataTable->add(cx, obj, metadata))
-            CrashAtUnhandlableOOM("setNewObjectMetadata");
+            oomUnsafe.crash("setNewObjectMetadata");
     }
 }
 
