@@ -50,7 +50,7 @@ function test() {
             assertMenuitemEnabled("copyusername", false, "empty username");
             assertMenuitemEnabled("editusername", true);
             assertMenuitemEnabled("copypassword", true);
-            assertMenuitemEnabled("editpassword", false, "password column hidden");
+            assertMenuitemEnabled("editpassword", true);
 
             info("Clear the selection");
             selection.clearSelection();
@@ -61,7 +61,6 @@ function test() {
 
             info("Select the third row and making the password column visible");
             selection.select(2);
-            doc.getElementById("passwordCol").hidden = false;
             assertMenuitemEnabled("copyusername", true);
             assertMenuitemEnabled("editusername", true);
             assertMenuitemEnabled("copypassword", true);
@@ -80,7 +79,6 @@ function test() {
             Services.ww.registerNotification(function (aSubject, aTopic, aData) {
                 Services.ww.unregisterNotification(arguments.callee);
                 Services.logins.removeAllLogins();
-                doc.getElementById("passwordCol").hidden = true;
                 finish();
             });
             pwmgrdlg.close();
