@@ -497,7 +497,7 @@ public:
     /* Read feature */
     rv = UnpackPDU(
       pdu,
-      UnpackConversion<BluetoothAvrcpRemoteFeature, unsigned long>(aArg2));
+      UnpackConversion<BluetoothAvrcpRemoteFeatureBits, unsigned long>(aArg2));
     if (NS_FAILED(rv)) {
       return rv;
     }

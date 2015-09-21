@@ -510,6 +510,10 @@ public class BrowserSearch extends HomeFragment
         return null;
     }
 
+    public void resetScrollState() {
+        mSearchEngineBar.scrollToPosition(0);
+    }
+
     private void filterSuggestions() {
         if (mSuggestClient == null || !mSuggestionsEnabled) {
             return;

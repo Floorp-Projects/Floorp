@@ -993,8 +993,6 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 
 .room-context {
   background: #fff;
-  border-top: 2px solid #444;
-  border-bottom: 2px solid #444;
   position: absolute;
   left: 0;
   bottom: 0;
@@ -1036,36 +1034,11 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   text-shadow: 1px 1px 0 rgba(0,0,0,.3);
 }
 
-.room-context > .checkbox-wrapper {
-  margin-bottom: .5em;
-  width: 100%;
-}
-
 .room-context-header {
   color: #333;
   font-size: 1.2rem;
   font-weight: bold;
   margin: 1rem auto;
-}
-
-.room-context-comment {
-  color: #707070;
-}
-
-.room-context-comment {
-  word-wrap: break-word;
-}
-
-:not(input).room-context-url {
-  color: #0095dd;
-  font-style: italic;
-  text-decoration: none;
-  display: block;
-  cursor: pointer;
-}
-
-.room-context-url:hover {
-  text-decoration: underline;
 }
 
 .room-context > form {
@@ -1076,17 +1049,17 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 
 .room-context > form > textarea,
 .room-context > form > input[type="text"] {
-  display: block;
-  width: 100%;
-  outline: none;
-  border-radius: 4px;
-  margin: 10px 0;
   border: 1px solid #c3c3c3;
-  height: 2.6rem;
-  padding: 6px;
-  font-size: 1.1rem;
-  color: #4a4a4a;
+  border-radius: 4px;
   box-shadow: none;
+  color: #4a4a4a;
+  display: block;
+  font-size: 1.1rem;
+  height: 2.6rem;
+  margin: 10px 0;
+  outline: none;
+  padding: 6px;
+  width: 100%;
 }
 
 .room-context > form > textarea {

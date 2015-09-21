@@ -352,7 +352,7 @@ add_test(function test_read_icc_contacts() {
       onsuccess(JSON.parse(JSON.stringify(aTestData.pbrs)));
     };
 
-    record.readADNLike = function readADNLike(fileId, onsuccess, onerror) {
+    record.readADNLike = function readADNLike(fileId, extFileId, onsuccess, onerror) {
       onsuccess(JSON.parse(JSON.stringify(aTestData.adnLike)));
     };
 
@@ -398,6 +398,7 @@ add_test(function test_update_icc_contact() {
   const EMAIL_RECORD_ID = 20;
   const ANR0_FILE_ID    = 0x4f11;
   const ANR0_RECORD_ID  = 30;
+  const EXT_RECORD_ID  = 0x01;
 
   let worker = newUint8Worker();
   let context = worker.ContextPool._contexts[0];
@@ -408,11 +409,11 @@ add_test(function test_update_icc_contact() {
   function do_test(aSimType, aContactType, aContact, aPin2, aFileType, aHaveIapIndex, aEnhancedPhoneBook) {
     ril.appType = aSimType;
     ril._isCdma = (aSimType === CARD_APPTYPE_RUIM);
-    ril.iccInfoPrivate.cst = (aEnhancedPhoneBook) ? [0x20, 0x0C, 0x0, 0x0, 0x0]
-                                                  : [0x20, 0x00, 0x0, 0x0, 0x0];
+    ril.iccInfoPrivate.cst = (aEnhancedPhoneBook) ? [0x20, 0x0C, 0x28, 0x0, 0x20]
+                                                  : [0x20, 0x0, 0x28, 0x0, 0x20];
     ril.iccInfoPrivate.sst = (aSimType === CARD_APPTYPE_SIM)?
-                                    [0x20, 0x0, 0x0, 0x0, 0x0]:
-                                    [0x2, 0x0, 0x0, 0x0, 0x0];
+                                    [0x20, 0x0, 0x28, 0x0, 0x20]:
+                                    [0x16, 0x0, 0x0, 0x0, 0x0];
 
     recordHelper.readPBR = function(onsuccess, onerror) {
       if (aFileType === ICC_USIM_TYPE1_TAG) {
@@ -421,7 +422,9 @@ add_test(function test_update_icc_contact() {
           email: {fileId: EMAIL_FILE_ID,
                   fileType: ICC_USIM_TYPE1_TAG},
           anr0:  {fileId: ANR0_FILE_ID,
-                  fileType: ICC_USIM_TYPE1_TAG}
+                  fileType: ICC_USIM_TYPE1_TAG},
+          ext1:  {fileId: ICC_EF_EXT1}
+
         }]);
       } else if (aFileType === ICC_USIM_TYPE2_TAG) {
         onsuccess([{
@@ -433,23 +436,47 @@ add_test(function test_update_icc_contact() {
                   indexInIAP: 0},
           anr0:  {fileId: ANR0_FILE_ID,
                   fileType: ICC_USIM_TYPE2_TAG,
-                  indexInIAP: 1}
+                  indexInIAP: 1},
+          ext1:  {fileId: ICC_EF_EXT1}
         }]);
       }
     };
 
-    recordHelper.updateADNLike = function(fileId, contact, pin2, onsuccess, onerror) {
+    recordHelper.updateADNLike = function(fileId, extRecordNumber, contact, pin2, onsuccess, onerror) {
       if (aContactType === GECKO_CARDCONTACT_TYPE_FDN) {
         equal(fileId, ICC_EF_FDN);
       } else if (aContactType === GECKO_CARDCONTACT_TYPE_ADN) {
         equal(fileId, ICC_EF_ADN);
       }
+
+      if (aContact.number.length > ADN_MAX_NUMBER_DIGITS) {
+        equal(extRecordNumber, EXT_RECORD_ID);
+      } else {
+        equal(extRecordNumber, 0xff);
+      }
+
       equal(pin2, aPin2);
       equal(contact.alphaId, aContact.alphaId);
       equal(contact.number, aContact.number);
       onsuccess({alphaId: contact.alphaId,
-                  number: contact.number});
+                  number: contact.number.substring(0, ADN_MAX_NUMBER_DIGITS)});
     };
+
+    recordHelper.getADNLikeExtensionRecordNumber = function(fileId, recordNumber, onsuccess, onerror) {
+      onsuccess(EXT_RECORD_ID);
+    };
+
+    recordHelper.updateExtension = function(fileId, recordNumber, number, onsuccess, onerror) {
+      onsuccess();
+    };
+
+    recordHelper.findFreeRecordId = function(fileId, onsuccess, onerror) {
+      onsuccess(EXT_RECORD_ID);
+    };
+
+    recordHelper.cleanEFRecord = function(fileId, recordNumber, onsuccess, onerror) {
+      onsuccess();
+    }
 
     recordHelper.readIAP = function(fileId, recordNumber, onsuccess, onerror) {
       equal(fileId, IAP_FILE_ID);
@@ -502,6 +529,8 @@ add_test(function test_update_icc_contact() {
     let onsuccess = function onsuccess(updatedContact) {
       equal(ADN_RECORD_ID, updatedContact.recordId);
       equal(aContact.alphaId, updatedContact.alphaId);
+      equal(aContact.number.substring(0, ADN_MAX_NUMBER_DIGITS + EXT_MAX_NUMBER_DIGITS),
+            updatedContact.number);
       if ((aSimType == CARD_APPTYPE_USIM || aSimType == CARD_APPTYPE_RUIM) &&
           (aFileType == ICC_USIM_TYPE1_TAG || aFileType == ICC_USIM_TYPE2_TAG)) {
         if (aContact.hasOwnProperty('email')) {
@@ -558,6 +587,22 @@ add_test(function test_update_icc_contact() {
       recordId: ADN_RECORD_ID,
       alphaId:  "test4",
       number:   "123456",
+      anr:      ["+654321"]
+    },
+    // a contact number over 20 digits.
+    {
+      pbrIndex: 0,
+      recordId: ADN_RECORD_ID,
+      alphaId:  "test4",
+      number:   "0123456789012345678901234567890123456789",
+      anr:      ["+654321"]
+    },
+    // a contact number over 40 digits.
+    {
+      pbrIndex: 0,
+      recordId: ADN_RECORD_ID,
+      alphaId:  "test5",
+      number:   "01234567890123456789012345678901234567890123456789",
       anr:      ["+654321"]
     }];
 
@@ -643,7 +688,7 @@ add_test(function test_update_icc_contact_full_email_and_anr_field() {
       }]);
     };
 
-    recordHelper.updateADNLike = function(fileId, contact, pin2, onsuccess, onerror) {
+    recordHelper.updateADNLike = function(fileId, extRecordNumber, contact, pin2, onsuccess, onerror) {
       if (aContactType === GECKO_CARDCONTACT_TYPE_ADN) {
         equal(fileId, ICC_EF_ADN);
       }
@@ -727,7 +772,7 @@ add_test(function test_update_icc_contact_with_remove_type1_attr() {
   let recordHelper = context.ICCRecordHelper;
   let contactHelper = context.ICCContactHelper;
 
-  recordHelper.updateADNLike = function(fileId, contact, pin2, onsuccess, onerror) {
+  recordHelper.updateADNLike = function(fileId, extRecordNumber, contact, pin2, onsuccess, onerror) {
     onsuccess({alphaId: contact.alphaId,
                number: contact.number});
   };
@@ -904,6 +949,94 @@ add_test(function test_find_free_icc_contact_usim() {
   contactHelper.findFreeICCContact(CARD_APPTYPE_USIM,
                                    GECKO_CARDCONTACT_TYPE_ADN,
                                    successCb, errorCb);
+
+  run_next_test();
+});
+
+/**
+ *  Verify ICCContactHelper.updateADNLikeWithExtension
+ */
+add_test(function test_update_adn_like_with_extension() {
+  let worker = newUint8Worker();
+  let context = worker.ContextPool._contexts[0];
+  let ril = context.RIL;
+  let record = context.ICCRecordHelper;
+  let contactHelper = context.ICCContactHelper;
+  ril.appType = CARD_APPTYPE_SIM;
+  // Correct record Id starts from 1, so put a null element at index 0.
+  // ext_records contains data at index 1, and it only has 1 free record at index 2.
+  let notFree = 0x01;
+  let ext_records = [null, notFree, null];
+
+  function do_test(contact, extRecordNumber, expectedExtRecordNumber, expectedNumber, expectedCleanEFRecord) {
+    // Override some functions to test.
+    record.getADNLikeExtensionRecordNumber = function(fileId, recordNumber, onsuccess, onerror) {
+      onsuccess(extRecordNumber);
+    }
+
+    record.updateADNLike = function(fileId, extRecordNumber, contact, pin2, onsuccess, onerror) {
+      equal(extRecordNumber, expectedExtRecordNumber);
+      onsuccess({alphaId: contact.alphaId,
+                 number: contact.number.substring(0, ADN_MAX_NUMBER_DIGITS)});
+    }
+
+    record.updateExtension = function(fileId, recordNumber, number, onsuccess, onerror) {
+      if (recordNumber > ext_records.length) {
+        onerror("updateExtension failed.");
+        return;
+      }
+      ext_records[recordNumber] = number;
+      onsuccess();
+    }
+
+    record.findFreeRecordId = function(fileId, onsuccess, onerror) {
+      for (let i = 1; i < ext_records.length; i++) {
+        if (!ext_records[i]) {
+          onsuccess(i);
+          return;
+        }
+      }
+
+      onerror("No free record found.");
+    }
+
+    let isCleanEFRecord = false;
+    record.cleanEFRecord = function(fileId, recordNumber, onsuccess, onerror) {
+      if (recordNumber > ext_records.length) {
+        onerror("cleanEFRecord failed.");
+        return;
+      }
+      ext_records[recordNumber] = null;
+      isCleanEFRecord = true;
+      onsuccess();
+    }
+
+    let successCb = function successCb(updatedContact) {
+      equal(updatedContact.number, expectedNumber);
+    };
+
+    let errorCb = function errorCb(errorMsg) {
+      do_print("updateADNLikeWithExtension failed, msg = " + errorMsg);
+      ok(false);
+    };
+
+    contactHelper.updateADNLikeWithExtension(ICC_EF_ADN, ICC_EF_EXT1, contact, null, successCb, errorCb);
+
+    if (expectedCleanEFRecord) {
+      ok(isCleanEFRecord);
+    }
+  }
+
+  // Update extension record with previous extension record number.
+  do_test({recordId: 1, alphaId: "test", number: "001122334455667788991234"}, 0x01, 0x01, "001122334455667788991234");
+  // Update extension record and find a free record.
+  do_test({recordId: 1, alphaId: "test", number: "001122334455667788995678"}, 0xff, 0x02, "001122334455667788995678");
+  // Update extension record with no free extension record.
+  do_test({recordId: 1, alphaId: "test", number: "001122334455667788994321"}, 0xff, 0xff, "00112233445566778899");
+  // Update extension record with clean previous extension record.
+  do_test({recordId: 1, alphaId: "test", number: "00112233445566778899"}, 0x01, 0xff, "00112233445566778899", true);
+  // Update extension record with no extension record and previous extension record.
+  do_test({recordId: 1, alphaId: "test", number: "00112233445566778899"}, 0xff, 0xff, "00112233445566778899");
 
   run_next_test();
 });

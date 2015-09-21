@@ -18,8 +18,8 @@ BEGIN_BLUETOOTH_NAMESPACE
 // Setup Interface
 //
 
-BluetoothSetupResultHandler::~BluetoothSetupResultHandler()
-{ }
+// Result handling
+//
 
 void
 BluetoothSetupResultHandler::OnError(BluetoothStatus aStatus)
@@ -43,6 +43,34 @@ BluetoothSetupResultHandler::Configuration()
 // Socket Interface
 //
 
+// Result handling
+//
+
+void
+BluetoothSocketResultHandler::OnError(BluetoothStatus aStatus)
+{
+  BT_WARNING("Received error code %d", (int)aStatus);
+}
+
+void
+BluetoothSocketResultHandler::Listen(int aSockFd)
+{ }
+
+void
+BluetoothSocketResultHandler::Connect(int aSockFd,
+                                      const nsAString& aBdAddress,
+                                      int aConnectionState)
+{ }
+
+void
+BluetoothSocketResultHandler::Accept(int aSockFd,
+                                     const nsAString& aBdAddress,
+                                     int aConnectionState)
+{ }
+
+// Interface
+//
+
 BluetoothSocketInterface::~BluetoothSocketInterface()
 { }
 
@@ -53,8 +81,172 @@ BluetoothSocketInterface::~BluetoothSocketInterface()
 // Notification handling
 //
 
-BluetoothHandsfreeNotificationHandler::
-  ~BluetoothHandsfreeNotificationHandler()
+BluetoothHandsfreeNotificationHandler::BluetoothHandsfreeNotificationHandler()
+{ }
+
+BluetoothHandsfreeNotificationHandler::~BluetoothHandsfreeNotificationHandler()
+{ }
+
+void
+BluetoothHandsfreeNotificationHandler::ConnectionStateNotification(
+  BluetoothHandsfreeConnectionState aState, const nsAString& aBdAddr)
+{ }
+
+void
+BluetoothHandsfreeNotificationHandler::AudioStateNotification(
+  BluetoothHandsfreeAudioState aState, const nsAString& aBdAddr)
+{ }
+
+void
+BluetoothHandsfreeNotificationHandler::VoiceRecognitionNotification(
+  BluetoothHandsfreeVoiceRecognitionState aState, const nsAString& aBdAddr)
+{ }
+
+void
+BluetoothHandsfreeNotificationHandler::AnswerCallNotification(
+  const nsAString& aBdAddr)
+{ }
+
+void
+BluetoothHandsfreeNotificationHandler::HangupCallNotification(
+  const nsAString& aBdAddr)
+{ }
+
+void
+BluetoothHandsfreeNotificationHandler::VolumeNotification(
+  BluetoothHandsfreeVolumeType aType, int aVolume, const nsAString& aBdAddr)
+{ }
+
+void
+BluetoothHandsfreeNotificationHandler::DialCallNotification(
+  const nsAString& aNumber, const nsAString& aBdAddr)
+{ }
+
+void
+BluetoothHandsfreeNotificationHandler::DtmfNotification(
+  char aDtmf, const nsAString& aBdAddr)
+{ }
+
+void
+BluetoothHandsfreeNotificationHandler::NRECNotification(
+  BluetoothHandsfreeNRECState aNrec, const nsAString& aBdAddr)
+{ }
+
+void
+BluetoothHandsfreeNotificationHandler::WbsNotification(
+  BluetoothHandsfreeWbsConfig aWbs, const nsAString& aBdAddr)
+{ }
+
+void
+BluetoothHandsfreeNotificationHandler::CallHoldNotification(
+  BluetoothHandsfreeCallHoldType aChld, const nsAString& aBdAddr)
+{ }
+
+void
+BluetoothHandsfreeNotificationHandler::CnumNotification(
+  const nsAString& aBdAddr)
+{ }
+
+void
+BluetoothHandsfreeNotificationHandler::CindNotification(
+  const nsAString& aBdAddr)
+{ }
+
+void
+BluetoothHandsfreeNotificationHandler::CopsNotification(
+  const nsAString& aBdAddr)
+{ }
+
+void
+BluetoothHandsfreeNotificationHandler::ClccNotification(
+  const nsAString& aBdAddr)
+{ }
+
+void
+BluetoothHandsfreeNotificationHandler::UnknownAtNotification(
+  const nsACString& aAtString, const nsAString& aBdAddr)
+{ }
+
+void
+BluetoothHandsfreeNotificationHandler::KeyPressedNotification(
+  const nsAString& aBdAddr)
+{ }
+
+// Result handling
+//
+
+void
+BluetoothHandsfreeResultHandler::OnError(BluetoothStatus aStatus)
+{
+  BT_WARNING("Received error code %d", (int)aStatus);
+}
+
+void
+BluetoothHandsfreeResultHandler::Init()
+{ }
+
+void
+BluetoothHandsfreeResultHandler::Cleanup()
+{ }
+
+void
+BluetoothHandsfreeResultHandler::Connect()
+{ }
+
+void
+BluetoothHandsfreeResultHandler::Disconnect()
+{ }
+
+void
+BluetoothHandsfreeResultHandler::ConnectAudio()
+{ }
+
+void
+BluetoothHandsfreeResultHandler::DisconnectAudio()
+{ }
+
+void
+BluetoothHandsfreeResultHandler::StartVoiceRecognition()
+{ }
+
+void
+BluetoothHandsfreeResultHandler::StopVoiceRecognition()
+{ }
+
+void
+BluetoothHandsfreeResultHandler::VolumeControl()
+{ }
+
+void
+BluetoothHandsfreeResultHandler::DeviceStatusNotification()
+{ }
+
+void
+BluetoothHandsfreeResultHandler::CopsResponse()
+{ }
+
+void
+BluetoothHandsfreeResultHandler::CindResponse()
+{ }
+
+void
+BluetoothHandsfreeResultHandler::FormattedAtResponse()
+{ }
+
+void
+BluetoothHandsfreeResultHandler::AtResponse()
+{ }
+
+void
+BluetoothHandsfreeResultHandler::ClccResponse()
+{ }
+
+void
+BluetoothHandsfreeResultHandler::PhoneStateChange()
+{ }
+
+void
+BluetoothHandsfreeResultHandler::ConfigureWbs()
 { }
 
 // Interface
@@ -73,7 +265,50 @@ BluetoothHandsfreeInterface::~BluetoothHandsfreeInterface()
 // Notification handling
 //
 
+BluetoothA2dpNotificationHandler::BluetoothA2dpNotificationHandler()
+{ }
+
 BluetoothA2dpNotificationHandler::~BluetoothA2dpNotificationHandler()
+{ }
+
+void
+BluetoothA2dpNotificationHandler::ConnectionStateNotification(
+  BluetoothA2dpConnectionState aState, const nsAString& aBdAddr)
+{ }
+
+void
+BluetoothA2dpNotificationHandler::AudioStateNotification(
+  BluetoothA2dpAudioState aState, const nsAString& aBdAddr)
+{ }
+
+void
+BluetoothA2dpNotificationHandler::AudioConfigNotification(
+  const nsAString& aBdAddr, uint32_t aSampleRate, uint8_t aChannelCount)
+{ }
+
+// Result handling
+//
+
+void
+BluetoothA2dpResultHandler::OnError(BluetoothStatus aStatus)
+{
+  BT_WARNING("Received error code %d", (int)aStatus);
+}
+
+void
+BluetoothA2dpResultHandler::Init()
+{ }
+
+void
+BluetoothA2dpResultHandler::Cleanup()
+{ }
+
+void
+BluetoothA2dpResultHandler::Connect()
+{ }
+
+void
+BluetoothA2dpResultHandler::Disconnect()
 { }
 
 // Interface
@@ -92,7 +327,125 @@ BluetoothA2dpInterface::~BluetoothA2dpInterface()
 // Notification handling
 //
 
+BluetoothAvrcpNotificationHandler::BluetoothAvrcpNotificationHandler()
+{ }
+
 BluetoothAvrcpNotificationHandler::~BluetoothAvrcpNotificationHandler()
+{ }
+
+void
+BluetoothAvrcpNotificationHandler::GetPlayStatusNotification()
+{ }
+
+void
+BluetoothAvrcpNotificationHandler::ListPlayerAppAttrNotification()
+{ }
+
+void
+BluetoothAvrcpNotificationHandler::ListPlayerAppValuesNotification(
+  BluetoothAvrcpPlayerAttribute aAttrId)
+{ }
+
+void
+BluetoothAvrcpNotificationHandler::GetPlayerAppValueNotification(
+  uint8_t aNumAttrs, const BluetoothAvrcpPlayerAttribute* aAttrs)
+{ }
+
+void
+BluetoothAvrcpNotificationHandler::GetPlayerAppAttrsTextNotification(
+  uint8_t aNumAttrs, const BluetoothAvrcpPlayerAttribute* aAttrs)
+{ }
+
+void
+BluetoothAvrcpNotificationHandler::GetPlayerAppValuesTextNotification(
+  uint8_t aAttrId, uint8_t aNumVals, const uint8_t* aValues)
+{ }
+
+void
+BluetoothAvrcpNotificationHandler::SetPlayerAppValueNotification(
+  const BluetoothAvrcpPlayerSettings& aSettings)
+{ }
+
+void
+BluetoothAvrcpNotificationHandler::GetElementAttrNotification(
+  uint8_t aNumAttrs, const BluetoothAvrcpMediaAttribute* aAttrs)
+{ }
+
+void
+BluetoothAvrcpNotificationHandler::RegisterNotificationNotification(
+  BluetoothAvrcpEvent aEvent, uint32_t aParam)
+{ }
+
+void
+BluetoothAvrcpNotificationHandler::RemoteFeatureNotification(
+  const nsAString& aBdAddr, unsigned long aFeatures)
+{ }
+
+void
+BluetoothAvrcpNotificationHandler::VolumeChangeNotification(
+  uint8_t aVolume, uint8_t aCType)
+{ }
+
+void
+BluetoothAvrcpNotificationHandler::PassthroughCmdNotification(
+  int aId, int aKeyState)
+{ }
+
+// Result handling
+//
+
+void
+BluetoothAvrcpResultHandler::OnError(BluetoothStatus aStatus)
+{
+  BT_WARNING("Received error code %d", (int)aStatus);
+}
+
+void
+BluetoothAvrcpResultHandler::Init()
+{ }
+
+void
+BluetoothAvrcpResultHandler::Cleanup()
+{ }
+
+void
+BluetoothAvrcpResultHandler::GetPlayStatusRsp()
+{ }
+
+void
+BluetoothAvrcpResultHandler::ListPlayerAppAttrRsp()
+{ }
+
+void
+BluetoothAvrcpResultHandler::ListPlayerAppValueRsp()
+{ }
+
+void
+BluetoothAvrcpResultHandler::GetPlayerAppValueRsp()
+{ }
+
+void
+BluetoothAvrcpResultHandler::GetPlayerAppAttrTextRsp()
+{ }
+
+void
+BluetoothAvrcpResultHandler::GetPlayerAppValueTextRsp()
+{ }
+
+void
+BluetoothAvrcpResultHandler::GetElementAttrRsp()
+{ }
+
+void
+BluetoothAvrcpResultHandler::SetPlayerAppValueRsp()
+{ }
+
+void
+BluetoothAvrcpResultHandler::RegisterNotificationRsp()
+{ }
+
+void
+BluetoothAvrcpResultHandler::SetVolume()
 { }
 
 // Interface
@@ -111,7 +464,360 @@ BluetoothAvrcpInterface::~BluetoothAvrcpInterface()
 // Notification handling
 //
 
+BluetoothGattNotificationHandler::BluetoothGattNotificationHandler()
+{ }
+
 BluetoothGattNotificationHandler::~BluetoothGattNotificationHandler()
+{ }
+
+void
+BluetoothGattNotificationHandler::RegisterClientNotification(
+  BluetoothGattStatus aStatus, int aClientIf, const BluetoothUuid& aAppUuid)
+{ }
+
+void
+BluetoothGattNotificationHandler::ScanResultNotification(
+  const nsAString& aBdAddr, int aRssi, const BluetoothGattAdvData& aAdvData)
+{ }
+
+void
+BluetoothGattNotificationHandler::ConnectNotification(
+  int aConnId, BluetoothGattStatus aStatus, int aClientIf,
+  const nsAString& aBdAddr)
+{ }
+
+void
+BluetoothGattNotificationHandler::DisconnectNotification(
+  int aConnId, BluetoothGattStatus aStatus, int aClientIf,
+  const nsAString& aBdAddr)
+{ }
+
+void
+BluetoothGattNotificationHandler::SearchCompleteNotification(
+  int aConnId, BluetoothGattStatus aStatus)
+{ }
+
+void
+BluetoothGattNotificationHandler::SearchResultNotification(
+  int aConnId, const BluetoothGattServiceId& aServiceId)
+{ }
+
+void
+BluetoothGattNotificationHandler::GetCharacteristicNotification(
+  int aConnId, BluetoothGattStatus aStatus,
+  const BluetoothGattServiceId& aServiceId,
+  const BluetoothGattId& aCharId,
+  const BluetoothGattCharProp& aCharProperty)
+{ }
+
+void
+BluetoothGattNotificationHandler::GetDescriptorNotification(
+  int aConnId, BluetoothGattStatus aStatus,
+  const BluetoothGattServiceId& aServiceId,
+  const BluetoothGattId& aCharId,
+  const BluetoothGattId& aDescriptorId)
+{ }
+
+void
+BluetoothGattNotificationHandler::GetIncludedServiceNotification(
+  int aConnId, BluetoothGattStatus aStatus,
+  const BluetoothGattServiceId& aServiceId,
+  const BluetoothGattServiceId& aIncludedServId)
+{ }
+
+void
+BluetoothGattNotificationHandler::RegisterNotificationNotification(
+  int aConnId, int aIsRegister, BluetoothGattStatus aStatus,
+  const BluetoothGattServiceId& aServiceId, const BluetoothGattId& aCharId)
+{ }
+
+void
+BluetoothGattNotificationHandler::NotifyNotification(
+  int aConnId, const BluetoothGattNotifyParam& aNotifyParam)
+{ }
+
+void
+BluetoothGattNotificationHandler::ReadCharacteristicNotification(
+  int aConnId, BluetoothGattStatus aStatus,
+  const BluetoothGattReadParam& aReadParam)
+{ }
+
+void
+BluetoothGattNotificationHandler::WriteCharacteristicNotification(
+  int aConnId, BluetoothGattStatus aStatus,
+  const BluetoothGattWriteParam& aWriteParam)
+{ }
+
+void
+BluetoothGattNotificationHandler::ReadDescriptorNotification(
+  int aConnId, BluetoothGattStatus aStatus,
+  const BluetoothGattReadParam& aReadParam)
+{ }
+
+void
+BluetoothGattNotificationHandler::WriteDescriptorNotification(
+  int aConnId, BluetoothGattStatus aStatus,
+  const BluetoothGattWriteParam& aWriteParam)
+{ }
+
+void
+BluetoothGattNotificationHandler::ExecuteWriteNotification(
+  int aConnId, BluetoothGattStatus aStatus)
+{ }
+
+void
+BluetoothGattNotificationHandler::ReadRemoteRssiNotification(
+  int aClientIf, const nsAString& aBdAddr, int aRssi,
+  BluetoothGattStatus aStatus)
+{ }
+
+void
+BluetoothGattNotificationHandler::ListenNotification(
+  BluetoothGattStatus aStatus, int aServerIf)
+{ }
+
+void
+BluetoothGattNotificationHandler::RegisterServerNotification(
+  BluetoothGattStatus aStatus, int aServerIf, const BluetoothUuid& aAppUuid)
+{ }
+
+void
+BluetoothGattNotificationHandler::ConnectionNotification(
+  int aConnId, int aServerIf, bool aConnected, const nsAString& aBdAddr)
+{ }
+
+void
+BluetoothGattNotificationHandler::ServiceAddedNotification(
+  BluetoothGattStatus aStatus, int aServerIf,
+  const BluetoothGattServiceId& aServiceId, int aServiceHandle)
+{ }
+
+void
+BluetoothGattNotificationHandler::IncludedServiceAddedNotification(
+  BluetoothGattStatus aStatus, int aServerIf, int aServiceHandle,
+  int aIncludedServiceHandle)
+{ }
+
+void
+BluetoothGattNotificationHandler::CharacteristicAddedNotification(
+  BluetoothGattStatus aStatus, int aServerIf, const BluetoothUuid& aCharId,
+  int aServiceHandle, int aCharacteristicHandle)
+{ }
+
+void
+BluetoothGattNotificationHandler::DescriptorAddedNotification(
+  BluetoothGattStatus aStatus, int aServerIf, const BluetoothUuid& aCharId,
+  int aServiceHandle, int aDescriptorHandle)
+{ }
+
+void
+BluetoothGattNotificationHandler::ServiceStartedNotification(
+  BluetoothGattStatus aStatus, int aServerIf, int aServiceHandle)
+{ }
+
+void
+BluetoothGattNotificationHandler::ServiceStoppedNotification(
+  BluetoothGattStatus aStatus, int aServerIf, int aServiceHandle)
+{ }
+
+void
+BluetoothGattNotificationHandler::ServiceDeletedNotification(
+  BluetoothGattStatus aStatus, int aServerIf, int aServiceHandle)
+{ }
+
+void
+BluetoothGattNotificationHandler::RequestReadNotification(
+  int aConnId, int aTransId, const nsAString& aBdAddr, int aAttributeHandle,
+  int aOffset, bool aIsLong)
+{ }
+
+void
+BluetoothGattNotificationHandler::RequestWriteNotification(
+  int aConnId, int aTransId, const nsAString& aBdAddr, int aAttributeHandle,
+  int aOffset, int aLength, const uint8_t* aValue, bool aNeedResponse,
+  bool aIsPrepareWrite)
+{ }
+
+void
+BluetoothGattNotificationHandler::RequestExecuteWriteNotification(
+  int aConnId, int aTransId, const nsAString& aBdAddr, bool aExecute)
+{ }
+
+void
+BluetoothGattNotificationHandler::ResponseConfirmationNotification(
+  BluetoothGattStatus aStatus, int aHandle)
+{ }
+
+void
+BluetoothGattNotificationHandler::IndicationSentNotification(
+  int aConnId, BluetoothGattStatus aStatus)
+{ }
+
+void
+BluetoothGattNotificationHandler::CongestionNotification(int aConnId,
+                                                         bool aCongested)
+{ }
+
+void
+BluetoothGattNotificationHandler::MtuChangedNotification(int aConnId,
+                                                         int aMtu)
+{ }
+
+// Result handling
+//
+
+void
+BluetoothGattResultHandler::OnError(BluetoothStatus aStatus)
+{
+  BT_WARNING("Received error code %d", (int)aStatus);
+}
+
+void
+BluetoothGattResultHandler::Init()
+{ }
+
+void
+BluetoothGattResultHandler::Cleanup()
+{ }
+
+void
+BluetoothGattResultHandler::RegisterClient()
+{ }
+
+void
+BluetoothGattResultHandler::UnregisterClient()
+{ }
+
+void
+BluetoothGattResultHandler::Scan()
+{ }
+
+void
+BluetoothGattResultHandler::Connect()
+{ }
+
+void
+BluetoothGattResultHandler::Disconnect()
+{ }
+
+void
+BluetoothGattResultHandler::Listen()
+{ }
+
+void
+BluetoothGattResultHandler::Refresh()
+{ }
+
+void
+BluetoothGattResultHandler::SearchService()
+{ }
+
+void
+BluetoothGattResultHandler::GetIncludedService()
+{ }
+
+void
+BluetoothGattResultHandler::GetCharacteristic()
+{ }
+
+void
+BluetoothGattResultHandler::GetDescriptor()
+{ }
+
+void
+BluetoothGattResultHandler::ReadCharacteristic()
+{ }
+
+void
+BluetoothGattResultHandler::WriteCharacteristic()
+{ }
+
+void
+BluetoothGattResultHandler::ReadDescriptor()
+{ }
+
+void
+BluetoothGattResultHandler::WriteDescriptor()
+{ }
+
+void
+BluetoothGattResultHandler::ExecuteWrite()
+{ }
+
+void
+BluetoothGattResultHandler::RegisterNotification()
+{ }
+
+void
+BluetoothGattResultHandler::DeregisterNotification()
+{ }
+
+void
+BluetoothGattResultHandler::ReadRemoteRssi()
+{ }
+
+void
+BluetoothGattResultHandler::GetDeviceType(BluetoothTypeOfDevice aType)
+{ }
+
+void
+BluetoothGattResultHandler::SetAdvData()
+{ }
+
+void
+BluetoothGattResultHandler::TestCommand()
+{ }
+
+void
+BluetoothGattResultHandler::RegisterServer()
+{ }
+
+void
+BluetoothGattResultHandler::UnregisterServer()
+{ }
+
+void
+BluetoothGattResultHandler::ConnectPeripheral()
+{ }
+
+void
+BluetoothGattResultHandler::DisconnectPeripheral()
+{ }
+
+void
+BluetoothGattResultHandler::AddService()
+{ }
+
+void
+BluetoothGattResultHandler::AddIncludedService()
+{ }
+
+void
+BluetoothGattResultHandler::AddCharacteristic()
+{ }
+
+void
+BluetoothGattResultHandler::AddDescriptor()
+{ }
+
+void
+BluetoothGattResultHandler::StartService()
+{ }
+
+void
+BluetoothGattResultHandler::StopService()
+{ }
+
+void
+BluetoothGattResultHandler::DeleteService()
+{ }
+
+void
+BluetoothGattResultHandler::SendIndication()
+{ }
+
+void
+BluetoothGattResultHandler::SendResponse()
 { }
 
 // Interface
@@ -130,7 +836,182 @@ BluetoothGattInterface::~BluetoothGattInterface()
 // Notification handling
 //
 
+BluetoothNotificationHandler::BluetoothNotificationHandler()
+{ }
+
 BluetoothNotificationHandler::~BluetoothNotificationHandler()
+{ }
+
+void
+BluetoothNotificationHandler::AdapterStateChangedNotification(bool aState)
+{ }
+
+void
+BluetoothNotificationHandler::AdapterPropertiesNotification(
+  BluetoothStatus aStatus,int aNumProperties,
+  const BluetoothProperty* aProperties)
+{ }
+
+void
+BluetoothNotificationHandler::RemoteDevicePropertiesNotification(
+  BluetoothStatus aStatus, const nsAString& aBdAddr, int aNumProperties,
+  const BluetoothProperty* aProperties)
+{ }
+
+void
+BluetoothNotificationHandler::DeviceFoundNotification(
+  int aNumProperties, const BluetoothProperty* aProperties)
+{ }
+
+void
+BluetoothNotificationHandler::DiscoveryStateChangedNotification(bool aState)
+{ }
+
+void
+BluetoothNotificationHandler::PinRequestNotification(
+  const nsAString& aRemoteBdAddr, const nsAString& aBdName, uint32_t aCod)
+{ }
+
+void
+BluetoothNotificationHandler::SspRequestNotification(
+  const nsAString& aRemoteBdAddr, const nsAString& aBdName, uint32_t aCod,
+  BluetoothSspVariant aPairingVariant, uint32_t aPassKey)
+{ }
+
+void
+BluetoothNotificationHandler::BondStateChangedNotification(
+  BluetoothStatus aStatus, const nsAString& aRemoteBdAddr,
+  BluetoothBondState aState)
+{ }
+
+void
+BluetoothNotificationHandler::AclStateChangedNotification(
+  BluetoothStatus aStatus, const nsAString& aRemoteBdAddr, bool aState)
+{ }
+
+void
+BluetoothNotificationHandler::DutModeRecvNotification(uint16_t aOpcode,
+                                                      const uint8_t* aBuf,
+                                                      uint8_t aLen)
+{ }
+
+void
+BluetoothNotificationHandler::LeTestModeNotification(BluetoothStatus aStatus,
+                                                     uint16_t aNumPackets)
+{ }
+
+void
+BluetoothNotificationHandler::EnergyInfoNotification(
+  const BluetoothActivityEnergyInfo& aInfo)
+{ }
+
+void
+BluetoothNotificationHandler::BackendErrorNotification(bool aCrashed)
+{ }
+
+// Result handling
+//
+
+void
+BluetoothResultHandler::OnError(BluetoothStatus aStatus)
+{
+  BT_LOGR("Received error code %d", aStatus);
+}
+
+void
+BluetoothResultHandler::Init()
+{ }
+
+void
+BluetoothResultHandler::Cleanup()
+{ }
+
+void
+BluetoothResultHandler::Enable()
+{ }
+
+void
+BluetoothResultHandler::Disable()
+{ }
+
+void
+BluetoothResultHandler::GetAdapterProperties()
+{ }
+
+void
+BluetoothResultHandler::GetAdapterProperty()
+{ }
+
+void
+BluetoothResultHandler::SetAdapterProperty()
+{ }
+
+void
+BluetoothResultHandler::GetRemoteDeviceProperties()
+{ }
+
+void
+BluetoothResultHandler::GetRemoteDeviceProperty()
+{ }
+
+void
+BluetoothResultHandler::SetRemoteDeviceProperty()
+{ }
+
+void
+BluetoothResultHandler::GetRemoteServiceRecord()
+{ }
+
+void
+BluetoothResultHandler::GetRemoteServices()
+{ }
+
+void
+BluetoothResultHandler::StartDiscovery()
+{ }
+
+void
+BluetoothResultHandler::CancelDiscovery()
+{ }
+
+void
+BluetoothResultHandler::CreateBond()
+{ }
+
+void
+BluetoothResultHandler::RemoveBond()
+{ }
+
+void
+BluetoothResultHandler::CancelBond()
+{ }
+
+void
+BluetoothResultHandler::GetConnectionState()
+{ }
+
+void
+BluetoothResultHandler::PinReply()
+{ }
+
+void
+BluetoothResultHandler::SspReply()
+{ }
+
+void
+BluetoothResultHandler::DutModeConfigure()
+{ }
+
+void
+BluetoothResultHandler::DutModeSend()
+{ }
+
+void
+BluetoothResultHandler::LeTestMode()
+{ }
+
+void
+BluetoothResultHandler::ReadEnergyInfo()
 { }
 
 // Interface
