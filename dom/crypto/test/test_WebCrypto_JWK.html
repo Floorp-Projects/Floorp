@@ -177,8 +177,11 @@ TestArray.addTest(
 );
 
 // -----------------------------------------------------------------------------
-function importExportRSAPrivateKey(jwk) {
-  return function () {
+TestArray.addTest(
+  "JWK import/export of an RSA private key",
+  function () {
+    var jwk = tv.rsassa.jwk_priv;
+
     var that = this;
     var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" };
 
@@ -208,16 +211,43 @@ function importExportRSAPrivateKey(jwk) {
         error(that)
       );
   }
-}
-
-TestArray.addTest(
-  "JWK import/export of an RSA private key",
-  importExportRSAPrivateKey(tv.rsassa.jwk_priv)
 );
 
+// -----------------------------------------------------------------------------
 TestArray.addTest(
   "JWK import/export of an RSA private key where p < q",
-  importExportRSAPrivateKey(tv.rsassa.jwk_priv_pLTq)
+  function () {
+    var jwk = tv.rsassa.jwk_priv_pLTq;
+
+    var that = this;
+    var alg = { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" };
+
+    function doExport(k) {
+      return crypto.subtle.exportKey("jwk", k);
+    }
+
+    crypto.subtle.importKey("jwk", jwk, alg, true, ['sign'])
+      .then(doExport)
+      .then(
+        complete(that, function(x) {
+          return hasBaseJwkFields(x) &&
+                 hasFields(x, ['n', 'e', 'd', 'p', 'q', 'dp', 'dq', 'qi']) &&
+                 x.kty == 'RSA' &&
+                 x.alg == 'RS256' &&
+                 x.ext &&
+                 shallowArrayEquals(x.key_ops, ['sign']) &&
+                 x.n  == jwk.n  &&
+                 x.e  == jwk.e  &&
+                 x.d  == jwk.d  &&
+                 x.p  == jwk.p  &&
+                 x.q  == jwk.q  &&
+                 x.dp == jwk.dp &&
+                 x.dq == jwk.dq &&
+                 x.qi == jwk.qi;
+          }),
+        error(that)
+      );
+  }
 );
 
 // -----------------------------------------------------------------------------
