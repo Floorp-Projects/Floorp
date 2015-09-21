@@ -143,6 +143,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TCPSocket)
   NS_INTERFACE_MAP_ENTRY(nsIInputStreamCallback)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsITCPSocketCallback)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 TCPSocket::TCPSocket(nsIGlobalObject* aGlobal, const nsAString& aHost, uint16_t aPort,
@@ -460,12 +461,12 @@ TCPSocket::ActivateTLS()
   }
 }
 
-void
+NS_IMETHODIMP
 TCPSocket::FireErrorEvent(const nsAString& aName, const nsAString& aType)
 {
   if (mSocketBridgeParent) {
     mSocketBridgeParent->FireErrorEvent(aName, aType, mReadyState);
-    return;
+    return NS_OK;
   }
 
   TCPSocketErrorEventInit init;
@@ -476,30 +477,32 @@ TCPSocket::FireErrorEvent(const nsAString& aName, const nsAString& aType)
 
   nsRefPtr<TCPSocketErrorEvent> event =
     TCPSocketErrorEvent::Constructor(this, NS_LITERAL_STRING("error"), init);
+  MOZ_ASSERT(event);
   event->SetTrusted(true);
   bool dummy;
   DispatchEvent(event, &dummy);
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 TCPSocket::FireEvent(const nsAString& aType)
 {
   if (mSocketBridgeParent) {
     mSocketBridgeParent->FireEvent(aType, mReadyState);
-    return;
+    return NS_OK;
   }
 
   AutoJSAPI api;
   if (NS_WARN_IF(!api.Init(GetOwner()))) {
-    return;
+    return NS_ERROR_FAILURE;
   }
   JS::Rooted<JS::Value> val(api.cx());
-  FireDataEvent(api.cx(), aType, val);
+  return FireDataEvent(api.cx(), aType, val);
 }
 
-void
-TCPSocket::FireDataEvent(const nsAString& aType,
-                         const InfallibleTArray<uint8_t>& buffer)
+NS_IMETHODIMP
+TCPSocket::FireDataArrayEvent(const nsAString& aType,
+                              const InfallibleTArray<uint8_t>& buffer)
 {
   AutoJSAPI api;
   if (NS_WARN_IF(!api.Init(GetOwner()))) {
@@ -510,13 +513,14 @@ TCPSocket::FireDataEvent(const nsAString& aType,
 
   bool ok = IPC::DeserializeArrayBuffer(cx, buffer, &val);
   if (ok) {
-    FireDataEvent(aType, val);
+    return FireDataEvent(cx, aType, val);
   }
+  return NS_ERROR_FAILURE;
 }
 
-void
-TCPSocket::FireDataEvent(const nsAString& aType,
-                         const nsACString& aString)
+NS_IMETHODIMP
+TCPSocket::FireDataStringEvent(const nsAString& aType,
+                               const nsACString& aString)
 {
   AutoJSAPI api;
   if (NS_WARN_IF(!api.Init(GetOwner()))) {
@@ -527,11 +531,12 @@ TCPSocket::FireDataEvent(const nsAString& aType,
 
   bool ok = ToJSValue(cx, NS_ConvertASCIItoUTF16(aString), &val);
   if (ok) {
-    FireDataEvent(aType, val);
+    return FireDataEvent(cx, aType, val);
   }
+  return NS_ERROR_FAILURE;
 }
 
-void
+NS_IMETHODIMP
 TCPSocket::FireDataEvent(JSContext* aCx, const nsAString& aType, JS::Handle<JS::Value> aData)
 {
   MOZ_ASSERT(!mSocketBridgeParent);
@@ -546,6 +551,7 @@ TCPSocket::FireDataEvent(JSContext* aCx, const nsAString& aType, JS::Handle<JS::
   event->SetTrusted(true);
   bool dummy;
   DispatchEvent(event, &dummy);
+  return NS_OK;
 }
 
 JSObject*
@@ -733,11 +739,10 @@ TCPSocket::MaybeReportErrorAndCloseIfOpen(nsresult status) {
       }
     }
 
-    FireErrorEvent(errName, errorType);
+    NS_WARN_IF(NS_FAILED(FireErrorEvent(errName, errorType)));
   }
 
-  FireEvent(NS_LITERAL_STRING("close"));
-  return NS_OK;
+  return FireEvent(NS_LITERAL_STRING("close"));
 }
 
 void
@@ -1105,26 +1110,28 @@ TCPSocket::SetAppIdAndBrowser(uint32_t aAppId, bool aInBrowser)
 #endif
 }
 
-void
+NS_IMETHODIMP
 TCPSocket::UpdateReadyState(uint32_t aReadyState)
 {
   MOZ_ASSERT(mSocketBridgeChild);
   mReadyState = static_cast<TCPReadyState>(aReadyState);
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 TCPSocket::UpdateBufferedAmount(uint32_t aBufferedAmount, uint32_t aTrackingNumber)
 {
   if (aTrackingNumber != mTrackingNumber) {
-    return;
+    return NS_OK;
   }
   mBufferedAmount = aBufferedAmount;
   if (!mBufferedAmount) {
     if (mWaitingForDrain) {
       mWaitingForDrain = false;
-      FireEvent(NS_LITERAL_STRING("drain"));
+      return FireEvent(NS_LITERAL_STRING("drain"));
     }
   }
+  return NS_OK;
 }
 
 #ifdef MOZ_WIDGET_GONK

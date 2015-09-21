@@ -12,6 +12,8 @@
 #include "nsCOMPtr.h"
 #include "js/TypeDecls.h"
 
+class nsITCPSocketCallback;
+
 namespace IPC {
 bool
 DeserializeArrayBuffer(JSContext* cx,
@@ -36,7 +38,7 @@ protected:
   TCPSocketChildBase();
   virtual ~TCPSocketChildBase();
 
-  nsRefPtr<TCPSocket> mSocket;
+  nsCOMPtr<nsITCPSocketCallback> mSocket;
   bool mIPCOpen;
 };
 
@@ -49,8 +51,8 @@ public:
   TCPSocketChild(const nsAString& aHost, const uint16_t& aPort);
   ~TCPSocketChild();
 
-  void SendOpen(TCPSocket* aSocket, bool aUseSSL, bool aUseArrayBuffers);
-  void SendWindowlessOpenBind(TCPSocket* aSocket,
+  void SendOpen(nsITCPSocketCallback* aSocket, bool aUseSSL, bool aUseArrayBuffers);
+  void SendWindowlessOpenBind(nsITCPSocketCallback* aSocket,
                               const nsACString& aRemoteHost, uint16_t aRemotePort,
                               const nsACString& aLocalHost, uint16_t aLocalPort,
                               bool aUseSSL);
