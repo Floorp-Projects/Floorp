@@ -157,7 +157,7 @@ nsresult
 Convert(uint8_t aIn, BluetoothAvrcpPlayerAttribute& aOut);
 
 nsresult
-Convert(uint8_t aIn, BluetoothAvrcpRemoteFeature& aOut);
+Convert(uint8_t aIn, BluetoothAvrcpRemoteFeatureBits& aOut);
 
 nsresult
 Convert(uint8_t aIn, BluetoothHandsfreeAudioState& aOut);
@@ -229,7 +229,7 @@ nsresult
 Convert(BluetoothAvrcpPlayerAttribute aIn, uint8_t& aOut);
 
 nsresult
-Convert(BluetoothAvrcpRemoteFeature aIn, unsigned long& aOut);
+Convert(BluetoothAvrcpRemoteFeatureBits aIn, unsigned long& aOut);
 
 nsresult
 Convert(BluetoothAvrcpStatus aIn, uint8_t& aOut);
@@ -443,7 +443,7 @@ nsresult
 UnpackPDU(DaemonSocketPDU& aPDU, BluetoothAvrcpPlayerSettings& aOut);
 
 nsresult
-UnpackPDU(DaemonSocketPDU& aPDU, BluetoothAvrcpRemoteFeature& aOut);
+UnpackPDU(DaemonSocketPDU& aPDU, BluetoothAvrcpRemoteFeatureBits& aOut);
 
 nsresult
 UnpackPDU(DaemonSocketPDU& aPDU, BluetoothBondState& aOut);

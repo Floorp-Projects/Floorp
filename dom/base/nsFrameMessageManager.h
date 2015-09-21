@@ -248,6 +248,8 @@ public:
 
   void SetInitialProcessData(JS::HandleValue aInitialData);
 
+  void LoadPendingScripts();
+
 private:
   nsresult SendMessage(const nsAString& aMessageName,
                        JS::Handle<JS::Value> aJSON,
