@@ -223,15 +223,10 @@ nsresult
 nsScriptLoader::CheckContentPolicy(nsIDocument* aDocument,
                                    nsISupports *aContext,
                                    nsIURI *aURI,
-                                   const nsAString &aType,
-                                   bool aIsPreLoad)
+                                   const nsAString &aType)
 {
-  nsContentPolicyType contentPolicyType = aIsPreLoad
-                                          ? nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD
-                                          : nsIContentPolicy::TYPE_INTERNAL_SCRIPT;
-
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentLoadPolicy(contentPolicyType,
+  nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_INTERNAL_SCRIPT,
                                           aURI,
                                           aDocument->NodePrincipal(),
                                           aContext,
@@ -254,8 +249,7 @@ nsresult
 nsScriptLoader::ShouldLoadScript(nsIDocument* aDocument,
                                  nsISupports* aContext,
                                  nsIURI* aURI,
-                                 const nsAString &aType,
-                                 bool aIsPreLoad)
+                                 const nsAString &aType)
 {
   // Check that the containing page is allowed to load this URI.
   nsresult rv = nsContentUtils::GetSecurityManager()->
@@ -265,7 +259,7 @@ nsScriptLoader::ShouldLoadScript(nsIDocument* aDocument,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // After the security manager, the content-policy stuff gets a veto
-  rv = CheckContentPolicy(aDocument, aContext, aURI, aType, aIsPreLoad);
+  rv = CheckContentPolicy(aDocument, aContext, aURI, aType);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -280,7 +274,7 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
   nsISupports *context = aRequest->mElement.get()
                          ? static_cast<nsISupports *>(aRequest->mElement.get())
                          : static_cast<nsISupports *>(mDocument);
-  nsresult rv = ShouldLoadScript(mDocument, context, aRequest->mURI, aType, aRequest->IsPreload());
+  nsresult rv = ShouldLoadScript(mDocument, context, aRequest->mURI, aType);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -302,16 +296,12 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
     return NS_OK;
   }
 
-  nsContentPolicyType contentPolicyType = aRequest->IsPreload()
-                                          ? nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD
-                                          : nsIContentPolicy::TYPE_INTERNAL_SCRIPT;
-
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel),
                      aRequest->mURI,
                      mDocument,
                      nsILoadInfo::SEC_NORMAL,
-                     contentPolicyType,
+                     nsIContentPolicy::TYPE_INTERNAL_SCRIPT,
                      loadGroup,
                      prompter,
                      nsIRequest::LOAD_NORMAL |
@@ -540,7 +530,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       if (elementCharset.Equals(preloadCharset) &&
           ourCORSMode == request->mCORSMode &&
           ourRefPolicy == request->mReferrerPolicy) {
-        rv = CheckContentPolicy(mDocument, aElement, request->mURI, type, false);
+        rv = CheckContentPolicy(mDocument, aElement, request->mURI, type);
         NS_ENSURE_SUCCESS(rv, false);
       } else {
         // Drop the preload
