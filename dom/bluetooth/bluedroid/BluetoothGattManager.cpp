@@ -617,7 +617,11 @@ BluetoothGattManager::StartLeScan(const nsTArray<nsString>& aServiceUuids,
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
 
   nsString appUuidStr;
-  GenerateUuid(appUuidStr);
+  if (NS_WARN_IF(NS_FAILED(GenerateUuid(appUuidStr))) || appUuidStr.IsEmpty()) {
+    DispatchReplyError(aRunnable,
+                       NS_LITERAL_STRING("start LE scan failed"));
+    return;
+  }
 
   size_t index = sClients->IndexOf(appUuidStr, 0 /* Start */, UuidComparator());
 
