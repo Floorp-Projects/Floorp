@@ -33,8 +33,6 @@
     fl.switchProcessAndLoadURI(uri);
   }
 
-  var messageManager;
-
   function runTest() {
     ok(true, "Run Test");
     var iframe = document.createElement("iframe");
@@ -47,15 +45,11 @@
       iframe.addEventListener("mozbrowserloadend", function loadend(e) {
         iframe.removeEventListener("mozbrowserloadend", loadend);
         ok(true, "Got mozbrowserloadend");
-        mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
         expectProcessCreated().then(next);
         switchProcessAndLoadURI(iframe, "data:text/html,%3Cscript%3Ealert(true)%3C/script%3E");
       });
     }))
     .then(() => new Promise(next => {
-      var newMessageManager = SpecialPowers.getBrowserFrameMessageManager(iframe);
-      isnot(messageManager, newMessageManager, "Got a new message manager");
-      messageManager = newMessageManager;
       iframe.addEventListener("mozbrowsershowmodalprompt", function prompt(e) {
         iframe.removeEventListener("mozbrowsershowmodalprompt", prompt);
         ok(true, "Browser API still works after process switch");
