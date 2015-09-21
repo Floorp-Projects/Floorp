@@ -336,6 +336,7 @@ SurfaceFactory::NewTexClient(const gfx::IntSize& size)
         mRecycleFreePool.pop();
 
         if (cur->Surf()->mSize == size) {
+            cur->Surf()->WaitForBufferOwnership();
             return cur.forget();
         }
 

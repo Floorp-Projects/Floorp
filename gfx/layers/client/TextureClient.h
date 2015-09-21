@@ -442,7 +442,7 @@ public:
     mReleaseFenceHandle.Merge(aReleaseFenceHandle);
   }
 
-  FenceHandle GetAndResetReleaseFenceHandle()
+  virtual FenceHandle GetAndResetReleaseFenceHandle()
   {
     FenceHandle fence;
     mReleaseFenceHandle.TransferToAnotherFenceHandle(fence);
@@ -454,7 +454,7 @@ public:
     mAcquireFenceHandle = aAcquireFenceHandle;
   }
 
-  const FenceHandle& GetAcquireFenceHandle() const
+  virtual const FenceHandle& GetAcquireFenceHandle() const
   {
     return mAcquireFenceHandle;
   }
