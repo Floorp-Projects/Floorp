@@ -74,7 +74,6 @@ private:
   nsTArray<nsRefPtr<TrackBuffersManager>> mSourceBuffers;
 
   MozPromiseHolder<InitPromise> mInitPromise;
-  bool mInitDone;
 
   // Monitor to protect members below across multiple threads.
   mutable Monitor mMonitor;
