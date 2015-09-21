@@ -11,6 +11,7 @@
 
 #include "gfxWindowsPlatform.h"
 #include "nsIWidget.h"
+#include "nsIGfxInfo.h"
 #include "mozilla/layers/ImageHost.h"
 #include "mozilla/layers/ContentHost.h"
 #include "mozilla/layers/Effects.h"
@@ -18,6 +19,7 @@
 #include "gfxPrefs.h"
 #include "gfxCrashReporterUtils.h"
 #include "gfxVR.h"
+#include "mozilla/Services.h"
 
 #include "mozilla/EnumeratedArray.h"
 
@@ -1087,7 +1089,13 @@ CompositorD3D11::EndFrame()
   if (oldSize == mSize) {
     RefPtr<IDXGISwapChain1> chain;
     HRESULT hr = mSwapChain->QueryInterface((IDXGISwapChain1**)byRef(chain));
-    if (SUCCEEDED(hr) && chain) {
+    nsString vendorID;
+    nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+    gfxInfo->GetAdapterVendorID(vendorID);
+    bool isNvidia = vendorID.EqualsLiteral("0x10de") && !gfxWindowsPlatform::GetPlatform()->IsWARP();
+    if (SUCCEEDED(hr) && chain && !isNvidia) {
+        // Avoid partial present on Nvidia hardware to try to work around
+        // bug 1189940
       DXGI_PRESENT_PARAMETERS params;
       PodZero(&params);
       params.DirtyRectsCount = mInvalidRegion.GetNumRects();
