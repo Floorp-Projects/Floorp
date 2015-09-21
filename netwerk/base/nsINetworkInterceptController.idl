@@ -26,7 +26,7 @@ class ChannelInfo;
  * which do not implement nsIChannel.
  */
 
-[scriptable, uuid(1062c96a-d73c-4ad5-beb7-6e803e414973)]
+[scriptable, uuid(40851f73-f799-4a22-a69b-05e0371ee373)]
 interface nsIInterceptedChannel : nsISupports
 {
     /**
@@ -84,12 +84,28 @@ interface nsIInterceptedChannel : nsISupports
 };
 
 /**
+ * Interface to allow consumers to dispatch the fetch event asynchronously.
+ * Consumers get access to this interface by calling channelIntercepted(),
+ * and they can choose to either dispatch() immediately or do that at some
+ * later time.
+ */
+
+[scriptable, uuid(799504e4-36f8-4ab5-b9d2-53f0c0c40c04)]
+interface nsIFetchEventDispatcher : nsISupports
+{
+  /**
+   * Actually dispatches the fetch event to the service worker.
+   */
+  void dispatch();
+};
+
+/**
  * Interface to allow consumers to attach themselves to a channel's
  * notification callbacks/loadgroup and determine if a given channel
  * request should be intercepted before any network request is initiated.
  */
 
-[scriptable, uuid(69150b77-b561-43a2-bfba-7301dd5a35d0)]
+[scriptable, uuid(0a7aa192-0520-4995-88a3-225ed1a0930d)]
 interface nsINetworkInterceptController : nsISupports
 {
     /**
@@ -107,5 +123,5 @@ interface nsINetworkInterceptController : nsISupports
      *
      * @param aChannel the controlling interface for a channel that has been intercepted
      */
-    void channelIntercepted(in nsIInterceptedChannel aChannel);
+    nsIFetchEventDispatcher channelIntercepted(in nsIInterceptedChannel aChannel);
 };
