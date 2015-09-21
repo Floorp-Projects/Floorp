@@ -198,13 +198,6 @@ TextureClientD3D11::TextureClientD3D11(ISurfaceAllocator* aAllocator,
 
 TextureClientD3D11::~TextureClientD3D11()
 {
-  if (mActor) {
-    if (mTexture) {
-      KeepUntilFullDeallocation(MakeUnique<TKeepAlive<ID3D11Texture2D>>(mTexture));
-    } else if (mTexture10) {
-      KeepUntilFullDeallocation(MakeUnique<TKeepAlive<ID3D10Texture2D>>(mTexture10));
-    }
-  }
 #ifdef DEBUG
   // An Azure DrawTarget needs to be locked when it gets nullptr'ed as this is
   // when it calls EndDraw. This EndDraw should not execute anything so it
@@ -226,6 +219,18 @@ TextureClientD3D11::~TextureClientD3D11()
     }
   }
 #endif
+}
+
+void
+TextureClientD3D11::FinalizeOnIPDLThread()
+{
+  if (mActor) {
+    if (mTexture) {
+      KeepUntilFullDeallocation(MakeUnique<TKeepAlive<ID3D11Texture2D>>(mTexture));
+    } else if (mTexture10) {
+      KeepUntilFullDeallocation(MakeUnique<TKeepAlive<ID3D10Texture2D>>(mTexture10));
+    }
+  }
 }
 
 // static
@@ -657,10 +662,15 @@ protected:
 
 DXGIYCbCrTextureClient::~DXGIYCbCrTextureClient()
 {
+  MOZ_COUNT_DTOR(DXGIYCbCrTextureClient);
+}
+
+void
+DXGIYCbCrTextureClient::FinalizeOnIPDLThread()
+{
   if (mHoldRefs[0] && mActor) {
     KeepUntilFullDeallocation(MakeUnique<YCbCrKeepAliveD3D11>(mHoldRefs), true);
   }
-  MOZ_COUNT_DTOR(DXGIYCbCrTextureClient);
 }
 
 // static
