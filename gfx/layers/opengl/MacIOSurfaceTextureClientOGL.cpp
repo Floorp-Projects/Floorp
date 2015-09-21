@@ -17,11 +17,6 @@ MacIOSurfaceTextureClientOGL::MacIOSurfaceTextureClientOGL(ISurfaceAllocator* aA
 
 MacIOSurfaceTextureClientOGL::~MacIOSurfaceTextureClientOGL()
 {
-}
-
-void
-MacIOSurfaceTextureClientOGL::FinalizeOnIPDLThread()
-{
   if (mActor && mSurface) {
     KeepUntilFullDeallocation(MakeUnique<TKeepAlive<MacIOSurface>>(mSurface));
   }
