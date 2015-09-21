@@ -12,6 +12,15 @@
 #include "nsCOMPtr.h"
 #include "js/TypeDecls.h"
 
+class nsITCPSocketCallback;
+
+namespace IPC {
+bool
+DeserializeArrayBuffer(JSContext* cx,
+                       const InfallibleTArray<uint8_t>& aBuffer,
+                       JS::MutableHandle<JS::Value> aVal);
+}
+
 namespace mozilla {
 namespace dom {
 
@@ -29,7 +38,7 @@ protected:
   TCPSocketChildBase();
   virtual ~TCPSocketChildBase();
 
-  nsRefPtr<TCPSocket> mSocket;
+  nsCOMPtr<nsITCPSocketCallback> mSocket;
   bool mIPCOpen;
 };
 
@@ -42,12 +51,20 @@ public:
   TCPSocketChild(const nsAString& aHost, const uint16_t& aPort);
   ~TCPSocketChild();
 
-  void SendOpen(TCPSocket* aSocket, bool aUseSSL, bool aUseArrayBuffers);
+  void SendOpen(nsITCPSocketCallback* aSocket, bool aUseSSL, bool aUseArrayBuffers);
+  void SendWindowlessOpenBind(nsITCPSocketCallback* aSocket,
+                              const nsACString& aRemoteHost, uint16_t aRemotePort,
+                              const nsACString& aLocalHost, uint16_t aLocalPort,
+                              bool aUseSSL);
+  NS_IMETHOD SendSendArray(nsTArray<uint8_t>& aArray,
+                           uint32_t aTrackingNumber);
   void SendSend(const nsACString& aData, uint32_t aTrackingNumber);
   nsresult SendSend(const ArrayBuffer& aData,
                     uint32_t aByteOffset,
                     uint32_t aByteLength,
                     uint32_t aTrackingNumber);
+  void SendSendArray(nsTArray<uint8_t>* arr,
+                     uint32_t trackingNumber);
   void SetSocket(TCPSocket* aSocket);
 
   void GetHost(nsAString& aHost);

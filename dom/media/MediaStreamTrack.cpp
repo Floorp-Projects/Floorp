@@ -62,5 +62,12 @@ MediaStreamTrack::Stop()
   mStream->StopTrack(mTrackID);
 }
 
+already_AddRefed<Promise>
+MediaStreamTrack::ApplyConstraints(const MediaTrackConstraints& aConstraints,
+                                   ErrorResult &aRv)
+{
+  return mStream->ApplyConstraintsToTrack(mTrackID, aConstraints, aRv);
+}
+
 } // namespace dom
 } // namespace mozilla

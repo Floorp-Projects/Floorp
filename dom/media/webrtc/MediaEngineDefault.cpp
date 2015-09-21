@@ -201,6 +201,14 @@ MediaEngineDefaultVideoSource::Stop(SourceMediaStream *aSource, TrackID aID)
   return NS_OK;
 }
 
+nsresult
+MediaEngineDefaultVideoSource::Restart(const dom::MediaTrackConstraints& aConstraints,
+                                       const MediaEnginePrefs &aPrefs,
+                                       const nsString& aDeviceId)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 MediaEngineDefaultVideoSource::Notify(nsITimer* aTimer)
 {
@@ -467,6 +475,14 @@ MediaEngineDefaultAudioSource::Stop(SourceMediaStream *aSource, TrackID aID)
   }
 
   mState = kStopped;
+  return NS_OK;
+}
+
+nsresult
+MediaEngineDefaultAudioSource::Restart(const dom::MediaTrackConstraints& aConstraints,
+                                       const MediaEnginePrefs &aPrefs,
+                                       const nsString& aDeviceId)
+{
   return NS_OK;
 }
 
