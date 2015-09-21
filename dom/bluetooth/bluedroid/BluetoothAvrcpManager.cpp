@@ -339,6 +339,23 @@ BluetoothAvrcpManager::HandleShutdown()
   sBluetoothAvrcpManager = nullptr;
 }
 
+class BluetoothAvrcpManager::ConnectRunnable final : public nsRunnable
+{
+public:
+  ConnectRunnable(BluetoothAvrcpManager* aManager)
+    : mManager(aManager)
+  {
+    MOZ_ASSERT(mManager);
+  }
+  NS_METHOD Run() override
+  {
+    mManager->OnConnect(EmptyString());
+    return NS_OK;
+  }
+private:
+  BluetoothAvrcpManager* mManager;
+};
+
 void
 BluetoothAvrcpManager::Connect(const nsAString& aDeviceAddress,
                                BluetoothProfileController* aController)
@@ -350,10 +367,27 @@ BluetoothAvrcpManager::Connect(const nsAString& aDeviceAddress,
   // AVRCP doesn't require connecting. We just set the remote address here.
   mDeviceAddress = aDeviceAddress;
   mController = aController;
-
   SetConnected(true);
-  OnConnect(EmptyString());
+
+  NS_DispatchToMainThread(new ConnectRunnable(this));
 }
+
+class BluetoothAvrcpManager::DisconnectRunnable final : public nsRunnable
+{
+public:
+  DisconnectRunnable(BluetoothAvrcpManager* aManager)
+    : mManager(aManager)
+  {
+    MOZ_ASSERT(mManager);
+  }
+  NS_METHOD Run() override
+  {
+    mManager->OnDisconnect(EmptyString());
+    return NS_OK;
+  }
+private:
+  BluetoothAvrcpManager* mManager;
+};
 
 void
 BluetoothAvrcpManager::Disconnect(BluetoothProfileController* aController)
@@ -362,11 +396,10 @@ BluetoothAvrcpManager::Disconnect(BluetoothProfileController* aController)
   MOZ_ASSERT(!mController);
 
   mDeviceAddress.Truncate();
-
   mController = aController;
-
   SetConnected(false);
-  OnDisconnect(EmptyString());
+
+  NS_DispatchToMainThread(new DisconnectRunnable(this));
 }
 
 void

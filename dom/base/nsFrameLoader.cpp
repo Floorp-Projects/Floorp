@@ -2657,31 +2657,22 @@ nsFrameLoader::SwapRemoteBrowser(nsITabParent* aTabParent)
   if (newParent == mRemoteBrowser) {
     return NS_OK;
   }
-  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  if (os) {
-    os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
-                        "frameloader-message-manager-will-change", nullptr);
-  }
-
   mRemoteBrowser->CacheFrameLoader(nullptr);
   mRemoteBrowser->SetOwnerElement(nullptr);
   mRemoteBrowser->Detach();
   mRemoteBrowser->Destroy();
 
-  if (mMessageManager) {
-    mMessageManager->Disconnect();
-    mMessageManager = nullptr;
-  }
-
   mRemoteBrowser = newParent;
   mRemoteBrowser->Attach(this);
   mChildID = mRemoteBrowser->Manager()->ChildID();
-  ReallyLoadFrameScripts();
-  InitializeBrowserAPI();
 
+  // Force the new remote frame manager to load pending scripts
+  mMessageManager->LoadPendingScripts();
+
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
     os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, this),
-                        "frameloader-message-manager-changed", nullptr);
+                        "remote-browser-swapped", nullptr);
   }
   if (!mRemoteBrowserShown) {
     ShowRemoteFrame(ScreenIntSize(0, 0));
