@@ -1562,11 +1562,13 @@ bool gfxUtils::sDumpPainting = getenv("MOZ_DUMP_PAINT") != 0;
 bool gfxUtils::sDumpPaintingIntermediate = getenv("MOZ_DUMP_PAINT_INTERMEDIATE") != 0;
 bool gfxUtils::sDumpPaintingToFile = getenv("MOZ_DUMP_PAINT_TO_FILE") != 0;
 bool gfxUtils::sDumpPaintItems = getenv("MOZ_DUMP_PAINT_ITEMS") != 0;
+bool gfxUtils::sDumpCompositorTextures = getenv("MOZ_DUMP_COMPOSITOR_TEXTURES") != 0;
 #else
 bool gfxUtils::sDumpPainting = false;
 bool gfxUtils::sDumpPaintingIntermediate = false;
 bool gfxUtils::sDumpPaintingToFile = false;
 bool gfxUtils::sDumpPaintItems = false;
+bool gfxUtils::sDumpCompositorTextures = false;
 #endif
 
 namespace mozilla {

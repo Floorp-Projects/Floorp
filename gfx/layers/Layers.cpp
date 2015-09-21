@@ -1675,7 +1675,7 @@ Layer::Dump(std::stringstream& aStream, const char* aPrefix, bool aDumpHtml)
   DumpSelf(aStream, aPrefix);
 
 #ifdef MOZ_DUMP_PAINTING
-  if (gfxUtils::sDumpPainting && AsLayerComposite() && AsLayerComposite()->GetCompositableHost()) {
+  if (gfxUtils::sDumpCompositorTextures && AsLayerComposite() && AsLayerComposite()->GetCompositableHost()) {
     AsLayerComposite()->GetCompositableHost()->Dump(aStream, aPrefix, aDumpHtml);
   }
 #endif
