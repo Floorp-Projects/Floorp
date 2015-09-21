@@ -88,6 +88,8 @@ public:
 protected:
   bool AllocateD3D11Surface(ID3D11Device* aDevice, const gfx::IntSize& aSize);
 
+  virtual void FinalizeOnIPDLThread() override;
+
   gfx::IntSize mSize;
   RefPtr<ID3D10Texture2D> mTexture10;
   RefPtr<ID3D11Texture2D> mTexture;
@@ -157,6 +159,8 @@ public:
     CreateSimilar(TextureFlags, TextureAllocationFlags) const override{ return nullptr; }
 
 private:
+  virtual void FinalizeOnIPDLThread() override;
+
   RefPtr<IUnknown> mHoldRefs[3];
   HANDLE mHandles[3];
   gfx::IntSize mSize;
