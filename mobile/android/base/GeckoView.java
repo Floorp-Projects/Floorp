@@ -12,8 +12,10 @@ import java.util.Set;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.mozglue.GeckoLoader;
+import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoEventListener;
@@ -103,6 +105,14 @@ public class GeckoView extends LayerView
             }
         }
     };
+
+    @WrapForJNI
+    private static final class Window extends JNIObject {
+        static native void open(Window instance, int width, int height);
+        @Override protected native void disposeNative();
+    }
+
+    private final Window window = new Window();
 
     public GeckoView(Context context) {
         super(context);
