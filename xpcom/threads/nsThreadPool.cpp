@@ -49,6 +49,7 @@ NS_IMPL_CI_INTERFACE_GETTER(nsThreadPool, nsIThreadPool, nsIEventTarget)
 
 nsThreadPool::nsThreadPool()
   : mMonitor("[nsThreadPool.mMonitor]")
+  , mMutex("[nsThreadPool.mMutex]")
   , mThreadLimit(DEFAULT_THREAD_LIMIT)
   , mIdleThreadLimit(DEFAULT_IDLE_THREAD_LIMIT)
   , mIdleThreadTimeout(DEFAULT_IDLE_THREAD_TIMEOUT)
@@ -82,6 +83,7 @@ nsThreadPool::PutEvent(already_AddRefed<nsIRunnable>&& aEvent)
   uint32_t stackSize = 0;
   {
     MonitorAutoLock mon(mMonitor);
+    MutexAutoLock lock(mMutex);
 
     if (NS_WARN_IF(mShutdown)) {
       return NS_ERROR_NOT_AVAILABLE;
@@ -94,11 +96,11 @@ nsThreadPool::PutEvent(already_AddRefed<nsIRunnable>&& aEvent)
     if (mThreads.Count() < (int32_t)mThreadLimit &&
         // Spawn a new thread if we don't have enough idle threads to serve
         // pending events immediately.
-        mEvents.Count(mon) >= mIdleCount) {
+        mEvents.Count(mon, lock) >= mIdleCount) {
       spawnThread = true;
     }
 
-    mEvents.PutEvent(Move(aEvent), mon);
+    mEvents.PutEvent(Move(aEvent), mon, lock);
     stackSize = mStackSize;
   }
 
@@ -179,7 +181,9 @@ nsThreadPool::Run()
     nsCOMPtr<nsIRunnable> event;
     {
       MonitorAutoLock mon(mMonitor);
-      if (!mEvents.GetPendingEvent(getter_AddRefs(event), mon)) {
+      MutexAutoLock lock(mMutex);
+
+      if (!mEvents.GetPendingEvent(getter_AddRefs(event), mon, lock)) {
         PRIntervalTime now     = PR_IntervalNow();
         PRIntervalTime timeout = PR_MillisecondsToInterval(mIdleThreadTimeout);
 
