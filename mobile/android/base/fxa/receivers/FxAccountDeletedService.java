@@ -13,7 +13,6 @@ import org.mozilla.gecko.background.fxa.oauth.FxAccountOAuthClient10;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.sync.FxAccountNotificationManager;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncAdapter;
-import org.mozilla.gecko.sync.config.AccountPickler;
 import org.mozilla.gecko.sync.repositories.android.AndroidBrowserHistoryDataExtender;
 import org.mozilla.gecko.sync.repositories.android.ClientsDatabase;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
@@ -65,9 +64,6 @@ public class FxAccountDeletedService extends IntentService {
       return;
     }
 
-    Logger.info(LOG_TAG, "Firefox account named " + accountName + " being removed; " +
-        "deleting saved pickle file '" + FxAccountConstants.ACCOUNT_PICKLE_FILENAME + "'.");
-    deletePickle(context);
 
     // Delete client database and non-local tabs.
     Logger.info(LOG_TAG, "Deleting the entire Fennec clients database and non-local tabs");
@@ -153,15 +149,6 @@ public class FxAccountDeletedService extends IntentService {
       }
     } else {
       Logger.error(LOG_TAG, "Cached OAuth server URI is null or cached OAuth tokens are null; ignoring.");
-    }
-  }
-
-  public static void deletePickle(final Context context) {
-    try {
-      AccountPickler.deletePickle(context, FxAccountConstants.ACCOUNT_PICKLE_FILENAME);
-    } catch (Exception e) {
-      // This should never happen, but we really don't want to die in a background thread.
-      Logger.warn(LOG_TAG, "Got exception deleting saved pickle file; ignoring.", e);
     }
   }
 }
