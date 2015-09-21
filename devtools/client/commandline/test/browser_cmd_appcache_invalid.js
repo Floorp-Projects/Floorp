@@ -4,7 +4,7 @@
 // Tests that the appcache validate works as they should with an invalid
 // manifest.
 
-const TEST_URI = "http://sub1.test1.example.com/browser/browser/devtools/commandline/" +
+const TEST_URI = "http://sub1.test1.example.com/browser/devtools/client/commandline/" +
                  "test/browser_cmd_appcache_invalid_index.html";
 
 function test() {
@@ -44,9 +44,9 @@ function* spawnTest() {
     'main/app.js points to a resource that is not available at line 35.',
     '/settings/home points to a resource that is not available at line 37.',
     '/settings/app.js points to a resource that is not available at line 38.',
-    'The file http://sub1.test1.example.com/browser/browser/devtools/' +
+    'The file http://sub1.test1.example.com/browser/devtools/client/' +
       'commandline/test/browser_cmd_appcache_invalid_page3.html was modified ' +
-      'after http://sub1.test1.example.com/browser/browser/devtools/' +
+      'after http://sub1.test1.example.com/browser/devtools/client/' +
       'commandline/test/browser_cmd_appcache_invalid_appcache.appcache. Unless ' +
       'the text in the manifest file is changed the cached version will be used ' +
       'instead at line 39.',

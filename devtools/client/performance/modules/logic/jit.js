@@ -23,7 +23,7 @@ const SUCCESSFUL_OUTCOMES = [
  * An OptimizationSite contains a record of how many times the
  * RawOptimizationSite was sampled, as well as the unique id based off of the
  * original profiler array, and the RawOptimizationSite itself as a reference.
- * @see browser/devtools/performance/modules/logic/tree-model.js
+ * @see devtools/client/performance/modules/logic/tree-model.js
  *
  * @struct RawOptimizationSite
  * A structure describing a location in a script that was attempted to be optimized.

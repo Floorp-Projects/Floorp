@@ -10,7 +10,7 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,Web Console subresource STS " +
                  "warning test";
-const TEST_DOC = "https://example.com/browser/browser/devtools/webconsole/" +
+const TEST_DOC = "https://example.com/browser/devtools/client/webconsole/" +
                  "test/test_bug1092055_shouldwarn.html";
 const SAMPLE_MSG = "specified a header that could not be parsed successfully.";
 

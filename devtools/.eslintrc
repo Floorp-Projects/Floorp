@@ -328,7 +328,7 @@
     // Warn about invalid JSDoc comments.
     // Disabled for now because of https://github.com/eslint/eslint/issues/2270
     // The rule fails on some jsdoc comments like in:
-    // browser/devtools/webconsole/console-output.js
+    // devtools/client/webconsole/console-output.js
     "valid-jsdoc": 0,
     // Ensure that the results of typeof are compared against a valid string.
     "valid-typeof": 2,

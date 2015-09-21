@@ -13,7 +13,7 @@ const { Framerate } = require("devtools/shared/shared/framerate");
  * An actor wrapper around Framerate. Uses exposed
  * methods via bridge and provides RDP definitions.
  *
- * @see toolkit/devtools/shared/framerate.js for documentation.
+ * @see devtools/shared/shared/framerate.js for documentation.
  */
 var FramerateActor = exports.FramerateActor = protocol.ActorClass({
   typeName: "framerate",

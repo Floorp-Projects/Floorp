@@ -7,7 +7,7 @@
 // Check that the right duration/iterationCount/delay are retrieved even when
 // the node has multiple animations and one of them already ended before getting
 // the player objects.
-// See toolkit/devtools/server/actors/animation.js |getPlayerIndex| for more
+// See devtools/server/actors/animation.js |getPlayerIndex| for more
 // information.
 
 const {AnimationsFront} = require("devtools/server/actors/animation");

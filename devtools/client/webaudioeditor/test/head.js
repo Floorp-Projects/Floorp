@@ -25,7 +25,7 @@ var audioNodes = require("devtools/server/actors/utils/audionodes.json");
 var mm = null;
 
 const FRAME_SCRIPT_UTILS_URL = "chrome://devtools/content/shared/frame-script-utils.js";
-const EXAMPLE_URL = "http://example.com/browser/browser/devtools/webaudioeditor/test/";
+const EXAMPLE_URL = "http://example.com/browser/devtools/client/webaudioeditor/test/";
 const SIMPLE_CONTEXT_URL = EXAMPLE_URL + "doc_simple-context.html";
 const COMPLEX_CONTEXT_URL = EXAMPLE_URL + "doc_complex-context.html";
 const SIMPLE_NODES_URL = EXAMPLE_URL + "doc_simple-node-creation.html";

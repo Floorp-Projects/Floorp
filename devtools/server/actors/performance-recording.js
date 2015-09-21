@@ -19,10 +19,10 @@ loader.lazyRequireGetter(this, "PerformanceRecordingCommon",
   "devtools/shared/performance/recording-common", true);
 
 /**
- * This actor wraps the Performance module at toolkit/devtools/shared/performance.js
+ * This actor wraps the Performance module at devtools/shared/shared/performance.js
  * and provides RDP definitions.
  *
- * @see toolkit/devtools/shared/performance.js for documentation.
+ * @see devtools/shared/shared/performance.js for documentation.
  */
 var PerformanceRecordingActor = exports.PerformanceRecordingActor = protocol.ActorClass(merge({
   typeName: "performance-recording",

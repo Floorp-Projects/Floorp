@@ -3,7 +3,7 @@
 
 "use strict";
 
-const TEST_URI = "https://example.com/browser/browser/devtools/webconsole/" +
+const TEST_URI = "https://example.com/browser/devtools/client/webconsole/" +
                  "test/test-bug-837351-security-errors.html";
 
 var test = asyncTest(function* () {

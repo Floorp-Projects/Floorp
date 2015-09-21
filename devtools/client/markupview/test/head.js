@@ -48,8 +48,8 @@ registerCleanupFunction(function*() {
   }
 });
 
-const TEST_URL_ROOT = "http://mochi.test:8888/browser/browser/devtools/markupview/test/";
-const CHROME_BASE = "chrome://mochitests/content/browser/browser/devtools/markupview/test/";
+const TEST_URL_ROOT = "http://mochi.test:8888/browser/devtools/client/markupview/test/";
+const CHROME_BASE = "chrome://mochitests/content/browser/devtools/client/markupview/test/";
 const COMMON_FRAME_SCRIPT_URL = "chrome://devtools/content/shared/frame-script-utils.js";
 const MARKUPVIEW_FRAME_SCRIPT_URL = CHROME_BASE + "frame-script-utils.js";
 

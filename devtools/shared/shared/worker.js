@@ -29,7 +29,7 @@ var MESSAGE_COUNTER = 0;
  * communication to offload demanding tasks. The corresponding URL
  * must implement the interface provided by `devtools/toolkit/shared/worker-helper`.
  *
- * @see `./browser/devtools/shared/widgets/GraphsWorker.js`
+ * @see `./devtools/client/shared/widgets/GraphsWorker.js`
  *
  * @param {string} url
  *        The URL of the worker.
@@ -115,7 +115,7 @@ DevToolsWorker.prototype.onError = function({ message, filename, lineno }) {
 /**
  * Takes a function and returns a Worker-wrapped version of the same function.
  * Returns a promise upon resolution.
- * @see `./toolkit/devtools/shared/tests/browser/browser_devtools-worker-03.js
+ * @see `./devtools/shared/shared/tests/browser/browser_devtools-worker-03.js
  *
  * * * * ! ! ! This should only be used for tests or A/B testing performance ! ! ! * * * * * *
  *

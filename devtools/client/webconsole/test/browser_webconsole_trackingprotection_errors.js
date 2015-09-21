@@ -6,7 +6,7 @@
 
 "use strict";
 
-const TEST_URI = "http://tracking.example.org/browser/browser/devtools/webconsole/test/test-trackingprotection-securityerrors.html";
+const TEST_URI = "http://tracking.example.org/browser/devtools/client/webconsole/test/test-trackingprotection-securityerrors.html";
 const LEARN_MORE_URI = "https://developer.mozilla.org/Firefox/Privacy/Tracking_Protection";
 const PREF = "privacy.trackingprotection.enabled";
 const {UrlClassifierTestUtils} = Cu.import("resource://testing-common/UrlClassifierTestUtils.jsm", {});

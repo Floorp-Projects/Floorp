@@ -7,7 +7,7 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-console.html";
 
 // Constants used for defining the direction of JSTerm input history navigation.

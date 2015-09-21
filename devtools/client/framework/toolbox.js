@@ -2094,7 +2094,7 @@ Toolbox.prototype = {
 
   /**
    * Opens source in style editor. Falls back to plain "view-source:".
-   * @see browser/devtools/shared/source-utils.js
+   * @see devtools/client/shared/source-utils.js
    */
   viewSourceInStyleEditor: function(sourceURL, sourceLine) {
     return sourceUtils.viewSourceInStyleEditor(this, sourceURL, sourceLine);
@@ -2102,7 +2102,7 @@ Toolbox.prototype = {
 
   /**
    * Opens source in debugger. Falls back to plain "view-source:".
-   * @see browser/devtools/shared/source-utils.js
+   * @see devtools/client/shared/source-utils.js
    */
   viewSourceInDebugger: function(sourceURL, sourceLine) {
     return sourceUtils.viewSourceInDebugger(this, sourceURL, sourceLine);
@@ -2115,7 +2115,7 @@ Toolbox.prototype = {
    * to infer the URL from this toolbox, or use the built in scratchpad IN
    * the toolbox.
    *
-   * @see browser/devtools/shared/source-utils.js
+   * @see devtools/client/shared/source-utils.js
    */
   viewSourceInScratchpad: function(sourceURL, sourceLine) {
     return sourceUtils.viewSourceInScratchpad(sourceURL, sourceLine);
@@ -2123,7 +2123,7 @@ Toolbox.prototype = {
 
   /**
    * Opens source in plain "view-source:".
-   * @see browser/devtools/shared/source-utils.js
+   * @see devtools/client/shared/source-utils.js
    */
   viewSource: function(sourceURL, sourceLine) {
     return sourceUtils.viewSource(this, sourceURL, sourceLine);

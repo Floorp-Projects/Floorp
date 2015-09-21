@@ -13,7 +13,7 @@ Components.utils.import("resource://gre/modules/devtools/shared/event-emitter.js
  * If you want to register, unregister, or otherwise deal with installed
  * simulators, please use the `Simulators` module defined in:
  *
- *   browser/devtools/webide/modules/simulators.js
+ *   devtools/client/webide/modules/simulators.js
  */
 
 const EXPORTED_SYMBOLS = ["Simulator"];

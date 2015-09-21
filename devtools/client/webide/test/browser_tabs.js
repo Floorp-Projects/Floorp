@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webide/test/doc_tabs.html";
+const TEST_URI = "http://example.com/browser/devtools/client/webide/test/doc_tabs.html";
 
 function test() {
   waitForExplicitFinish();

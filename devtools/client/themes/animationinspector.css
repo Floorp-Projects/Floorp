@@ -154,7 +154,7 @@ body {
   overflow: hidden;
   position: relative;
   /* The timeline gets its background-image from a canvas element created in
-     /browser/devtools/animationinspector/utils.js drawGraphElementBackground
+     /devtools/client/animationinspector/utils.js drawGraphElementBackground
      thanks to document.mozSetImageElement("time-graduations", canvas)
      This is done so that the background can be built dynamically from script */
   background-image: -moz-element(#time-graduations);
@@ -193,7 +193,7 @@ body {
   overflow: hidden;
   position: relative;
   /* This is the same color as the time graduations in
-     browser/devtools/animationinspector/utils.js */
+     devtools/client/animationinspector/utils.js */
   border-bottom: 1px solid rgba(128, 136, 144, .5);
   cursor: col-resize;
   -moz-user-select: none;

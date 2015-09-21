@@ -12,7 +12,7 @@
  *
  * Templates are used this way:
  *
- * (See examples in browser/devtools/app-manager/content/*.xhtml)
+ * (See examples in devtools/client/app-manager/content/*.xhtml)
  *
  * <div template="{JSON Object}">
  *

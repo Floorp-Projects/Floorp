@@ -38,7 +38,7 @@ const VENDOR_CONTENT_URL = "resource:///modules/devtools/shared/vendor";
  * outside of that path will still be loaded from the devtools loader,
  * so all system modules are still shared and cached across instances.
  * An exception to this is anything under
- * `browser/devtools/shared/content`, which is where shared libraries
+ * `devtools/client/shared/content`, which is where shared libraries
  * live that should be evaluated in a browser environment.
  *
  * @param string baseURI

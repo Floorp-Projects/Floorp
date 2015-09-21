@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// A helper frame-script for browser/devtools/framework service worker tests.
+// A helper frame-script for devtools/client/framework service worker tests.
 
 "use strict";
 

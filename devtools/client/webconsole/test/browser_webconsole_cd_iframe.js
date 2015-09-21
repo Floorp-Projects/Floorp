@@ -8,7 +8,7 @@
 function test() {
   let hud;
 
-  const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+  const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                    "test/test-bug-609872-cd-iframe-parent.html";
 
   const parentMessages = [{

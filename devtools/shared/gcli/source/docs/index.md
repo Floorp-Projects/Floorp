@@ -57,7 +57,7 @@ Other sources of GCLI documentation:
 - Source
   - The most up-to-date source is in [this Github repository](https://github.com/joewalker/gcli/).
   - When a feature is 'done' it's merged into the [Mozilla clone](https://github.com/mozilla/gcli/).
-  - From which it flows into [Mozilla Central](https://hg.mozilla.org/mozilla-central/file/tip/browser/devtools/commandline).
+  - From which it flows into [Mozilla Central](https://hg.mozilla.org/mozilla-central/file/tip/devtools/client/commandline).
 - [Demo of GCLI](http://mozilla.github.com/gcli/) with an arbitrary set of demo
   commands
 - Other Documentation

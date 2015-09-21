@@ -14,7 +14,7 @@
 
 const EXPECTED_RESULT = "Not supporting directive 'reflected-xss'. Directive " +
                         "and values will be ignored.";
-const TEST_FILE = "http://example.com/browser/browser/devtools/webconsole/" +
+const TEST_FILE = "http://example.com/browser/devtools/client/webconsole/" +
                   "test/test_bug1045902_console_csp_ignore_reflected_xss_" +
                   "message.html";
 

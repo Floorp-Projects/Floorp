@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# A script to generate toolkit/devtools/server/CoreDump.pb.{h,cc} from
-# toolkit/devtools/server/CoreDump.proto. This script assumes you have
+# A script to generate devtools/server/CoreDump.pb.{h,cc} from
+# devtools/server/CoreDump.proto. This script assumes you have
 # downloaded and installed the protocol buffer compiler, and that it is either
 # on your $PATH or located at $PROTOC_PATH.
 #

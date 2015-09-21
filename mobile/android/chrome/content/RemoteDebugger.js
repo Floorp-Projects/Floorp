@@ -39,7 +39,7 @@ var RemoteDebugger = {
    *        }
    *        Specific authentication modes may include additional fields.  Check
    *        the different |allowConnection| methods in
-   *        toolkit/devtools/security/auth.js.
+   *        devtools/shared/security/auth.js.
    * @return An AuthenticationResult value.
    *         A promise that will be resolved to the above is also allowed.
    */

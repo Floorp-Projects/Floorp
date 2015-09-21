@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Test that screenshot command works properly
-const TEST_URI = "http://example.com/browser/browser/devtools/commandline/" +
+const TEST_URI = "http://example.com/browser/devtools/client/commandline/" +
                  "test/browser_cmd_screenshot.html";
 
 var FileUtils = (Cu.import("resource://gre/modules/FileUtils.jsm", {})).FileUtils;

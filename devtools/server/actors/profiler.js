@@ -30,10 +30,10 @@ types.addType("profiler-data", {
 });
 
 /**
- * This actor wraps the Profiler module at toolkit/devtools/shared/profiler.js
+ * This actor wraps the Profiler module at devtools/shared/shared/profiler.js
  * and provides RDP definitions.
  *
- * @see toolkit/devtools/shared/profiler.js for documentation.
+ * @see devtools/shared/shared/profiler.js for documentation.
  */
 var ProfilerActor = exports.ProfilerActor = protocol.ActorClass({
   typeName: "profiler",

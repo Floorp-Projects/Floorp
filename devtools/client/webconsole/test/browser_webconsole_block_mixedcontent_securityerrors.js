@@ -14,7 +14,7 @@
 
 "use strict";
 
-const TEST_URI = "https://example.com/browser/browser/devtools/webconsole/" +
+const TEST_URI = "https://example.com/browser/devtools/client/webconsole/" +
                  "test/test-mixedcontent-securityerrors.html";
 const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Security/" +
                        "MixedContent";

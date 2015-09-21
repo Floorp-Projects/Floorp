@@ -15,7 +15,7 @@ var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 // All test are asynchronous
 waitForExplicitFinish();
 
-const TEST_URL_ROOT = "http://example.com/browser/browser/devtools/layoutview/test/";
+const TEST_URL_ROOT = "http://example.com/browser/devtools/client/layoutview/test/";
 
 // Uncomment this pref to dump all devtools emitted events to the console.
 // Services.prefs.setBoolPref("devtools.dump.emit", true);

@@ -7,7 +7,7 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-bug_923281_console_log_filter.html";
 
 var hud;

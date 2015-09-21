@@ -3,7 +3,7 @@
 
 "use strict";
 
-const TEST_URI = "http://mochi.test:8888/browser/browser/devtools/" +
+const TEST_URI = "http://mochi.test:8888/browser/devtools/client/" +
                  "responsivedesign/test/touch.html";
 
 add_task(function*() {

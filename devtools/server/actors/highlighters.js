@@ -470,7 +470,7 @@ let CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
    *
    * Most custom highlighters are made to highlight DOM nodes, hence the first
    * NodeActor argument (NodeActor as in
-   * toolkit/devtools/server/actor/inspector).
+   * devtools/server/actor/inspector).
    * Note however that some highlighters use this argument merely as a context
    * node: the RectHighlighter for instance uses it to calculate the absolute
    * position of the provided rect. The SelectHighlighter uses it as a base node
