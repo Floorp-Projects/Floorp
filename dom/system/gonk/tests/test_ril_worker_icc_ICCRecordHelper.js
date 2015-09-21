@@ -495,6 +495,74 @@ add_test(function test_update_iap() {
 });
 
 /**
+ * Verify ICCRecordHelper.readADNLike.
+ */
+add_test(function test_read_adn_like() {
+  const RECORD_SIZE = 0x20;
+
+  let worker = newUint8Worker();
+  let context = worker.ContextPool._contexts[0];
+  let helper = context.GsmPDUHelper;
+  let record = context.ICCRecordHelper;
+  let buf = context.Buf;
+  let io = context.ICCIOHelper;
+  let ril = context.RIL;
+
+  function do_test(extFileId, rawEF, expectedExtRecordNumber, expectedNumber) {
+    io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options) {
+      // Write data size
+      buf.writeInt32(rawEF.length * 2);
+
+      // Write adn
+      for (let i = 0; i < rawEF.length; i += 2) {
+        helper.writeHexOctet(parseInt(rawEF.substr(i, 2), 16));
+      }
+
+      // Write string delimiter
+      buf.writeStringDelimiter(rawEF.length * 2);
+
+      options.p1 = 1;
+      options.recordSize = RECORD_SIZE;
+      options.totalRecords = 1;
+      if (options.callback) {
+        options.callback(options);
+      }
+    };
+
+    record.readExtension = function(fileId, recordNumber, onsuccess, onerror) {
+      onsuccess("1234");
+    }
+
+    let successCb = function successCb(contacts) {
+      ok(contacts[0].number == expectedNumber);
+    };
+
+    let errorCb = function errorCb(errorMsg) {
+      do_print("Reading ADNLike failed, msg = " + errorMsg);
+      ok(false);
+    };
+
+    record.readADNLike(ICC_EF_ADN, extFileId, successCb, errorCb);
+  }
+
+  ril.appType = CARD_APPTYPE_SIM;
+  // Valid extension
+  do_test(ICC_EF_EXT1,"436f6e74616374303031ffffffffffffffff0b8199887766554433221100ff01",
+          0x01,"998877665544332211001234");
+  // Empty extension
+  do_test(ICC_EF_EXT1,"436f6e74616374303031ffffffffffffffff0b8199887766554433221100ffff",
+          0xff, "99887766554433221100");
+  // Unsupport extension
+  do_test(null,"436f6e74616374303031ffffffffffffffff0b8199887766554433221100ffff",
+          0xff, "99887766554433221100");
+  // Empty dialling number contact
+  do_test(null,"436f6e74616374303031ffffffffffffffffffffffffffffffffffffffffffff",
+          0xff, "");
+
+  run_next_test();
+});
+
+/**
  * Verify ICCRecordHelper.updateADNLike.
  */
 add_test(function test_update_adn_like() {
@@ -549,6 +617,7 @@ add_test(function test_update_adn_like() {
     let contact = pdu.readAlphaIdDiallingNumber(0x20);
     equal(contact.alphaId, "test");
     equal(contact.number, "123456");
+    equal(contact.extRecordNumber, "0xff");
 
     // pin2.
     if (fileId == ICC_EF_ADN) {
@@ -566,11 +635,11 @@ add_test(function test_update_adn_like() {
   };
 
   fileId = ICC_EF_ADN;
-  record.updateADNLike(fileId,
+  record.updateADNLike(fileId, 0xff,
                        {recordId: 1, alphaId: "test", number: "123456"});
 
   fileId = ICC_EF_FDN;
-  record.updateADNLike(fileId,
+  record.updateADNLike(fileId, 0xff,
                        {recordId: 1, alphaId: "test", number: "123456"},
                        "1111");
 });
@@ -718,6 +787,294 @@ add_test(function test_handling_iccid() {
   do_test("986800A2909090001519", "8986002090909005191");
   // Valid ICCID.
   do_test("98101430121181157002", "89014103211118510720");
+
+  run_next_test();
+});
+
+/**
+ *  Verify ICCRecordHelper.readExtension
+ */
+add_test(function test_read_extension() {
+  let worker = newUint8Worker();
+  let context = worker.ContextPool._contexts[0];
+  let helper = context.GsmPDUHelper;
+  let record = context.ICCRecordHelper;
+  let buf = context.Buf;
+  let io = context.ICCIOHelper;
+
+  function do_test(rawExtension, expectedExtensionNumber) {
+    io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options) {
+      // Write data size
+      buf.writeInt32(rawExtension.length * 2);
+
+      // Write ext
+      for (let i = 0; i < rawExtension.length; i += 2) {
+        helper.writeHexOctet(parseInt(rawExtension.substr(i, 2), 16));
+      }
+
+      // Write string delimiter
+      buf.writeStringDelimiter(rawExtension.length);
+
+      if (options.callback) {
+        options.callback(options);
+      }
+    };
+
+    let successCb = function successCb(number) {
+      do_print("extension number:" + number);
+      equal(number, expectedExtensionNumber);
+    };
+
+    let errorCb = function errorCb() {
+      ok(expectedExtensionNumber == null);
+    };
+
+    record.readExtension(0x6f4a, 1, successCb, errorCb);
+  }
+
+  // Test unsupported record type 0x01
+  do_test("010a10325476981032547698ff", "");
+  // Test invalid length 0xc1
+  do_test("020c10325476981032547698ff", null);
+  // Test extension chain which we don't support
+  do_test("020a1032547698103254769802", "01234567890123456789");
+  // Test valid Extension
+  do_test("020a10325476981032547698ff", "01234567890123456789");
+  // Test valid Extension
+  do_test("0209103254769810325476ffff", "012345678901234567");
+  // Test empty Extension
+  do_test("02ffffffffffffffffffffffff", "");
+
+  run_next_test();
+});
+
+/**
+ *  Verify ICCRecordHelper.updateExtension
+ */
+add_test(function test_update_extension() {
+  const RECORD_SIZE = 13;
+  const RECORD_NUMBER = 1;
+
+  let worker = newUint8Worker();
+  let context = worker.ContextPool._contexts[0];
+  let pduHelper = context.GsmPDUHelper;
+  let ril = context.RIL;
+  let recordHelper = context.ICCRecordHelper;
+  let buf = context.Buf;
+  let ioHelper = context.ICCIOHelper;
+
+  // Override.
+  ioHelper.updateLinearFixedEF = function(options) {
+    options.pathId = context.ICCFileHelper.getEFPath(options.fileId);
+    options.command = ICC_COMMAND_UPDATE_RECORD;
+    options.p1 = options.recordNumber;
+    options.p2 = READ_RECORD_ABSOLUTE_MODE;
+    options.p3 = RECORD_SIZE;
+    ril.iccIO(options);
+  };
+
+  function do_test(fileId, number, expectedNumber) {
+    buf.sendParcel = function() {
+      // Request Type.
+      equal(this.readInt32(), REQUEST_SIM_IO);
+
+      // Token : we don't care
+      this.readInt32();
+
+      // command.
+      equal(this.readInt32(), ICC_COMMAND_UPDATE_RECORD);
+
+      // fileId.
+      equal(this.readInt32(), fileId);
+
+      // pathId.
+      if (ril.appType == CARD_APPTYPE_SIM || ril.appType == CARD_APPTYPE_RUIM) {
+        equal(this.readString(),
+              EF_PATH_MF_SIM + EF_PATH_DF_TELECOM);
+      } else{
+        equal(this.readString(),
+              EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK);
+      }
+
+      // p1.
+      equal(this.readInt32(), RECORD_NUMBER);
+
+      // p2.
+      equal(this.readInt32(), READ_RECORD_ABSOLUTE_MODE);
+
+      // p3.
+      equal(this.readInt32(), RECORD_SIZE);
+
+      // data.
+      let strLen = this.readInt32();
+      // Extension record
+      let recordType = pduHelper.readHexOctet();
+
+      equal(recordType, 0x02);
+      equal(pduHelper.readHexOctet(), 10);
+      equal(
+        pduHelper.readSwappedNibbleExtendedBcdString(EXT_MAX_NUMBER_DIGITS - 1),
+        expectedNumber);
+
+      this.readStringDelimiter(strLen);
+
+      // pin2.
+      equal(this.readString(), null);
+
+      // AID. Ignore because it's from modem.
+      this.readInt32();
+    };
+
+    recordHelper.updateExtension(fileId, RECORD_NUMBER, number);
+  }
+
+  ril.appType = CARD_APPTYPE_SIM;
+  do_test(ICC_EF_EXT1, "01234567890123456789", "01234567890123456789");
+  // We don't support extension chain.
+  do_test(ICC_EF_EXT1, "012345678901234567891234", "01234567890123456789");
+
+  ril.appType = CARD_APPTYPE_USIM;
+  do_test(ICC_EF_EXT1, "01234567890123456789", "01234567890123456789");
+
+  ril.appType = CARD_APPTYPE_RUIM;
+  do_test(ICC_EF_EXT1, "01234567890123456789", "01234567890123456789");
+
+  run_next_test();
+});
+
+/**
+ *  Verify ICCRecordHelper.cleanEFRecord
+ */
+add_test(function test_clean_ef_record() {
+  const RECORD_SIZE = 13;
+  const RECORD_NUMBER = 1;
+
+  let worker = newUint8Worker();
+  let context = worker.ContextPool._contexts[0];
+  let pduHelper = context.GsmPDUHelper;
+  let ril = context.RIL;
+  let recordHelper = context.ICCRecordHelper;
+  let buf = context.Buf;
+  let ioHelper = context.ICCIOHelper;
+
+  // Override.
+  ioHelper.updateLinearFixedEF = function(options) {
+    options.pathId = context.ICCFileHelper.getEFPath(options.fileId);
+    options.command = ICC_COMMAND_UPDATE_RECORD;
+    options.p1 = options.recordNumber;
+    options.p2 = READ_RECORD_ABSOLUTE_MODE;
+    options.p3 = RECORD_SIZE;
+    ril.iccIO(options);
+  };
+
+  function do_test(fileId) {
+    buf.sendParcel = function() {
+      // Request Type.
+      equal(this.readInt32(), REQUEST_SIM_IO);
+
+      // Token : we don't care
+      this.readInt32();
+
+      // command.
+      equal(this.readInt32(), ICC_COMMAND_UPDATE_RECORD);
+
+      // fileId.
+      equal(this.readInt32(), fileId);
+
+      // pathId.
+      if (ril.appType == CARD_APPTYPE_SIM || ril.appType == CARD_APPTYPE_RUIM) {
+        equal(this.readString(),
+              EF_PATH_MF_SIM + EF_PATH_DF_TELECOM);
+      } else{
+        equal(this.readString(),
+              EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK);
+      }
+
+      // p1.
+      equal(this.readInt32(), RECORD_NUMBER);
+
+      // p2.
+      equal(this.readInt32(), READ_RECORD_ABSOLUTE_MODE);
+
+      // p3.
+      equal(this.readInt32(), RECORD_SIZE);
+
+      // data.
+      let strLen = this.readInt32();
+      // Extension record
+      for (let i = 0; i < RECORD_SIZE; i++) {
+        equal(pduHelper.readHexOctet(), 0xff);
+      }
+
+      this.readStringDelimiter(strLen);
+
+      // pin2.
+      equal(this.readString(), null);
+
+      // AID. Ignore because it's from modem.
+      this.readInt32();
+    };
+
+    recordHelper.cleanEFRecord(fileId, RECORD_NUMBER);
+  }
+
+  ril.appType = CARD_APPTYPE_SIM;
+  do_test(ICC_EF_EXT1);
+
+  run_next_test();
+});
+
+/**
+ *  Verify ICCRecordHelper.getADNLikeExtensionRecordNumber
+ */
+add_test(function test_get_adn_like_extension_record_number() {
+  const RECORD_SIZE = 0x20;
+
+  let worker = newUint8Worker();
+  let context = worker.ContextPool._contexts[0];
+  let helper = context.GsmPDUHelper;
+  let record = context.ICCRecordHelper;
+  let buf    = context.Buf;
+  let io     = context.ICCIOHelper;
+
+  function do_test(rawEF, expectedRecordNumber) {
+    io.loadLinearFixedEF = function fakeLoadLinearFixedEF(options) {
+      // Write data size
+      buf.writeInt32(rawEF.length * 2);
+
+      // Write ext
+      for (let i = 0; i < rawEF.length; i += 2) {
+        helper.writeHexOctet(parseInt(rawEF.substr(i, 2), 16));
+      }
+
+      // Write string delimiter
+      buf.writeStringDelimiter(rawEF.length);
+      options.recordSize = RECORD_SIZE;
+      if (options.callback) {
+        options.callback(options);
+      }
+    };
+
+    let isSuccess = false;
+    let successCb = function successCb(number) {
+      equal(number, expectedRecordNumber);
+      isSuccess = true;
+    };
+
+    let errorCb = function errorCb(errorMsg) {
+      do_print("Reading ADNLike failed, msg = " + errorMsg);
+      ok(false);
+    };
+
+    record.getADNLikeExtensionRecordNumber(ICC_EF_ADN, 1, successCb, errorCb);
+    ok(isSuccess);
+  }
+
+  // Valid Extension, Alpha Id(Encoded with GSM 8 bit): "Contact001",
+  // Dialling Number: 99887766554433221100, Ext1: 0x01
+  do_test("436f6e74616374303031ffffffffffffffff0b8199887766554433221100ff01", 0x01);
+  // Empty Extension, Alpha Id(Encoded with GSM 8 bit): "Contact001", Ext1: 0xff
+  do_test("436f6e74616374303031ffffffffffffffffffffffffffffffffffffffffffff", 0xff);
 
   run_next_test();
 });

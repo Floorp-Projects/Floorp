@@ -9,8 +9,9 @@ function testReadContacts(aIcc, aType) {
   let iccId = aIcc.iccInfo.iccid;
   return aIcc.readContacts(aType)
     .then((aResult) => {
+
       is(Array.isArray(aResult), true);
-      is(aResult.length, 4, "Check contact number.");
+      is(aResult.length, 6, "Check contact number.");
 
       // Alpha Id(Encoded with GSM 8 bit): "Mozilla", Dialling Number: 15555218201
       is(aResult[0].name[0], "Mozilla");
@@ -31,6 +32,18 @@ function testReadContacts(aIcc, aType) {
       is(aResult[3].name[0], "Huang 黃");
       is(aResult[3].tel[0].value, "15555218204");
       is(aResult[3].id, iccId + "4");
+
+      // Alpha Id(Encoded with GSM 8 bit): "Contact001",
+      // Dialling Number: 9988776655443322110001234567890123456789
+      is(aResult[4].name[0], "Contact001");
+      is(aResult[4].tel[0].value, "9988776655443322110001234567890123456789");
+      is(aResult[4].id, iccId + "5");
+
+      // Alpha Id(Encoded with GSM 8 bit): "Contact002",
+      // Dialling Number: 0123456789012345678999887766554433221100
+      is(aResult[5].name[0], "Contact002");
+      is(aResult[5].tel[0].value, "0123456789012345678999887766554433221100");
+      is(aResult[5].id, iccId + "6");
     }, (aError) => {
       ok(false, "Cannot get " + aType + " contacts");
     });
