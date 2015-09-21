@@ -1299,6 +1299,9 @@ private:
   // Current decoding position in the stream.
   Mirror<int64_t> mDecoderPosition;
 
+  // True if the media is seekable (i.e. supports random access).
+  Mirror<bool> mMediaSeekable;
+
   // Duration of the media. This is guaranteed to be non-null after we finish
   // decoding the first frame.
   Canonical<media::NullableTimeUnit> mDuration;

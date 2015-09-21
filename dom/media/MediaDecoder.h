@@ -801,9 +801,6 @@ protected:
   // Official duration of the media resource as observed by script.
   double mDuration;
 
-  // True if the media is seekable (i.e. supports random access).
-  bool mMediaSeekable;
-
   /******
    * The following member variables can be accessed from any thread.
    ******/
@@ -1001,6 +998,9 @@ protected:
   // back again.
   Canonical<int64_t> mDecoderPosition;
 
+  // True if the media is seekable (i.e. supports random access).
+  Canonical<bool> mMediaSeekable;
+
 public:
   AbstractCanonical<media::NullableTimeUnit>* CanonicalDurationOrNull() override;
   AbstractCanonical<double>* CanonicalVolume() {
@@ -1038,6 +1038,9 @@ public:
   }
   AbstractCanonical<int64_t>* CanonicalDecoderPosition() {
     return &mDecoderPosition;
+  }
+  AbstractCanonical<bool>* CanonicalMediaSeekable() {
+    return &mMediaSeekable;
   }
 };
 
