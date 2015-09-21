@@ -1,3 +1,5 @@
+enableNoSuchMethod();
+
 function testStuff(x, y) {
     for (var i = 0; i < 60; i++) {
         x[y]();

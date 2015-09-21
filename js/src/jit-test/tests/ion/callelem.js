@@ -1,3 +1,5 @@
+enableNoSuchMethod();
+
 var res = 0;
 var o = {};
 o.__noSuchMethod__ = function(x) { res += x; };

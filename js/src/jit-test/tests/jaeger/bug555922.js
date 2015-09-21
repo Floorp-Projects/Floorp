@@ -1,3 +1,5 @@
+enableNoSuchMethod();
+
 (function() {
   let(z) {
     for each(b in [{}]) { ({

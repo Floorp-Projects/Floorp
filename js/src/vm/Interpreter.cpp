@@ -169,6 +169,9 @@ static const Class js_NoSuchMethodClass = {
 bool
 js::OnUnknownMethod(JSContext* cx, HandleObject obj, Value idval_, MutableHandleValue vp)
 {
+    if (!cx->runtime()->options().noSuchMethod())
+        return true;
+
     RootedValue idval(cx, idval_);
 
     RootedValue value(cx);
