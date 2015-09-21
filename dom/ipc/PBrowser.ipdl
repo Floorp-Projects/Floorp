@@ -15,7 +15,6 @@ include protocol PFilePicker;
 include protocol PIndexedDBPermissionRequest;
 include protocol PRenderFrame;
 include protocol PPluginWidget;
-include protocol PWebBrowserPersistDocument;
 include DOMTypes;
 include JavaScriptTypes;
 include URIParams;
@@ -111,7 +110,6 @@ prio(normal upto urgent) sync protocol PBrowser
     manages PIndexedDBPermissionRequest;
     manages PRenderFrame;
     manages PPluginWidget;
-    manages PWebBrowserPersistDocument;
 
 both:
     AsyncMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows,
@@ -122,8 +120,6 @@ both:
      * the page that is currently loaded in the <browser>.
      */
     PRenderFrame();
-
-    PWebBrowserPersistDocument(uint64_t aOuterWindowID);
 
 parent:
     /**
