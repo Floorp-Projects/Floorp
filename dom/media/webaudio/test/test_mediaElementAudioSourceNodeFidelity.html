@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<meta charset="utf-8">
+<head>
+  <title>Test MediaStreamAudioSourceNode doesn't get data from cross-origin media resources</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+// Get an Opus file containing a sine wave at maximum amplitude, of duration
+// `lengthSeconds`, and of frequency `frequency`.
+function getSineWaveFile(frequency, lengthSeconds, callback) {
+  var chunks = [];
+  var off = new OfflineAudioContext(1, lengthSeconds * 48000, 48000);
+  var osc = off.createOscillator();
+  var rec = new MediaRecorder(osc);
+  rec.ondataavailable = function(e) {
+    chunks.push(e.data);
+  };
+  rec.onstop = function(e) {
+    var blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
+    callback(blob);
+  }
+  osc.frequency.value = 1.0;
+  osc.start();
+  rec.start();
+  off.startRendering().then(function(buffer) {
+    rec.stop();
+  });
+}
+
+function binIndexForFrequency(frequency, analyser) {
+  return 1 + Math.round(frequency *
+                        analyser.fftSize /
+                        analyser.context.sampleRate);
+}
+
+function debugCanvas(analyser) {
+  var cvs = document.createElement("canvas");
+  document.body.appendChild(cvs);
+
+  // Easy: 1px per bin
+  cvs.width = analyser.frequencyBinCount;
+  cvs.height = 256;
+  cvs.style.border = "1px solid red";
+
+  var c = cvs.getContext('2d');
+  var buf = new Uint8Array(analyser.frequencyBinCount);
+
+  function render() {
+    c.clearRect(0, 0, cvs.width, cvs.height);
+    analyser.getByteFrequencyData(buf);
+    for (var i = 0; i < buf.length; i++) {
+      c.fillRect(i, (256 - (buf[i])), 1, 256);
+    }
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+}
+
+
+function checkFrequency(an) {
+  an.getFloatFrequencyData(frequencyArray);
+  // We should have no energy when checking the data largely outside the index
+  // for 440Hz (the frequency of the sine wave), start checking an octave above,
+  // the Opus compression can add some harmonics to the pure since wave.
+  var index = binIndexForFrequency(880, an);
+  var underTreshold = true;
+  for (var i = index; i < frequencyArray.length; i++) {
+    // Let some slack, there might be some noise here because of int -> float
+    // conversion or the Opus encoding.
+    if (frequencyArray[i] > an.minDecibels + 40) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function test() {
+  getSineWaveFile(440, 1, (blob) => {
+      var audioElement = new Audio();
+      audioElement.src = URL.createObjectURL(blob);
+      audioElement.loop = true;
+      var ac = new AudioContext();
+      var mediaElementSource = ac.createMediaElementSource(audioElement);
+      var an = ac.createAnalyser();
+      frequencyArray = new Float32Array(an.frequencyBinCount);
+
+      // Uncomment this to check what the analyser is doing.
+      // debugCanvas(an);
+
+      mediaElementSource.connect(an);
+
+      audioElement.play();
+      // We want to check the we have the expected audio for at least one loop of
+      // the HTMLMediaElement. The file is one second, and we use the default FFT
+      // size.
+      var lastCurrentTime = 0;
+      var looped = false;
+      audioElement.onplaying = function() {
+        audioElement.ontimeupdate = function() {
+          if (checkFrequency(an)) {
+            ok(true, "Found correct audio signal during analysis");
+            dump(lastCurrentTime + " " + audioElement.currentTime + "\n");
+            if (lastCurrentTime > audioElement.currentTime) {
+              if (looped) {
+                audioElement.ontimeupdate = null;
+                audioElement.onplaying = null;
+                SimpleTest.finish()
+              }
+              lastCurrentTime = audioElement.currentTime;
+              looped = true;
+            } else {
+              lastCurrentTime = audioElement.currentTime;
+            }
+          } else {
+            ok(false, "Found unexpected noise during analysis.");
+            audioElement.ontimeupdate = null;
+            audioElement.onplaying = null;
+            ac.close();
+            audioElement.src = '';
+            SimpleTest.finish()
+          }
+        }
+      }
+  });
+}
+
+SpecialPowers.pushPrefEnv(
+    {'set': [['media.recorder.audio_node.enabled', true]]}, test);
+
+</script>
