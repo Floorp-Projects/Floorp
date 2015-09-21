@@ -24,10 +24,10 @@
 <!ENTITY  addonExceptions.accesskey     "E">
 
 
-<!ENTITY  passwords.label               "Passwords">
+<!ENTITY  logins.label                  "Logins">
 
-<!ENTITY  rememberPasswords.label       "Remember passwords for sites">
-<!ENTITY  rememberPasswords.accesskey   "R">
+<!ENTITY  rememberLogins.label          "Remember logins for sites">
+<!ENTITY  rememberLogins.accesskey      "R">
 <!ENTITY  passwordExceptions.label      "Exceptions…">
 <!ENTITY  passwordExceptions.accesskey  "x">
 
@@ -36,5 +36,5 @@
 <!ENTITY  changeMasterPassword.label     "Change Master Password…">
 <!ENTITY  changeMasterPassword.accesskey "M">
 
-<!ENTITY  savedPasswords.label            "Saved Passwords…">
-<!ENTITY  savedPasswords.accesskey        "P">
+<!ENTITY  savedLogins.label              "Saved Logins…">
+<!ENTITY  savedLogins.accesskey          "L">
