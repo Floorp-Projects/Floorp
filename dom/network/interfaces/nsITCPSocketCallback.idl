@@ -1,0 +1,62 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * MozTCPSocket exposes a TCP client and server sockets
+ * to highly privileged apps. It provides a buffered, non-blocking
+ * interface for sending. For receiving, it uses an asynchronous,
+ * event handler based interface.
+ */
+
+#include "domstubs.idl"
+
+%{C++
+template<class T> class InfallibleTArray;
+%}
+[ref] native nsUint8TArrayRef(InfallibleTArray<uint8_t>);
+[ptr] native JSContextPtr(JSContext);
+
+
+/*
+ * This interface is implemented in TCPSocket.cpp as an internal interface
+ * for use in cross-process socket implementation.
+ * Needed to account for multiple possible types that can be provided to
+ * the socket callbacks as arguments.
+ */
+[scriptable, uuid(ac2c4b69-cb79-4767-b1ce-bcf62945cd39)]
+interface nsITCPSocketCallback : nsISupports {
+  // Limitation of TCPSocket's buffer size.
+  const unsigned long BUFFER_SIZE = 65536;
+
+  // Dispatch an "error" event at this object with the given name and type.
+  void fireErrorEvent(in AString name, in AString type);
+
+  // Dispatch a "data" event at this object with a string
+  void fireDataStringEvent(in DOMString type, in ACString data);
+
+  // Dispatch a "data" event at this object with an Array
+  void fireDataArrayEvent(in DOMString type, [const] in nsUint8TArrayRef data);
+
+  // Dispatch a "data" event at this object with an ArrayBuffer argument
+  void fireDataEvent(in JSContextPtr cx, in DOMString type, in jsval data);
+
+  // Dispatch an event of the given type at this object.
+  void fireEvent(in DOMString type);
+
+  // Update the DOM object's readyState.
+  // @param readyState
+  //        new ready state
+  void updateReadyState(in unsigned long readystate);
+
+  // Update the DOM object's bufferedAmount value with a tracking number to
+  // to allow tracking of which writes are "in-flight"
+  // @param bufferedAmount
+  //        TCPSocket parent's bufferedAmount.
+  // @param trackingNumber
+  //        A number to ensure the bufferedAmount is updated after data
+  //        from child are sent to parent.
+  void updateBufferedAmount(in uint32_t bufferedAmount,
+                            in uint32_t trackingNumber);
+};
+

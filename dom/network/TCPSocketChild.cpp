@@ -11,6 +11,7 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/dom/PBrowserChild.h"
 #include "mozilla/dom/TabChild.h"
+#include "nsITCPSocketCallback.h"
 #include "TCPSocket.h"
 #include "nsContentUtils.h"
 #include "jsapi.h"
@@ -93,7 +94,7 @@ TCPSocketChild::TCPSocketChild(const nsAString& aHost, const uint16_t& aPort)
 }
 
 void
-TCPSocketChild::SendOpen(TCPSocket* aSocket, bool aUseSSL, bool aUseArrayBuffers)
+TCPSocketChild::SendOpen(nsITCPSocketCallback* aSocket, bool aUseSSL, bool aUseArrayBuffers)
 {
   mSocket = aSocket;
 
@@ -103,7 +104,7 @@ TCPSocketChild::SendOpen(TCPSocket* aSocket, bool aUseSSL, bool aUseArrayBuffers
 }
 
 void
-TCPSocketChild::SendWindowlessOpenBind(TCPSocket* aSocket,
+TCPSocketChild::SendWindowlessOpenBind(nsITCPSocketCallback* aSocket,
                                        const nsACString& aRemoteHost, uint16_t aRemotePort,
                                        const nsACString& aLocalHost, uint16_t aLocalPort,
                                        bool aUseSSL)
@@ -164,9 +165,9 @@ TCPSocketChild::RecvCallback(const nsString& aType,
     const SendableData& data = aData.get_SendableData();
 
     if (data.type() == SendableData::TArrayOfuint8_t) {
-      mSocket->FireDataEvent(cx, aType, data.get_ArrayOfuint8_t());
+      mSocket->FireDataArrayEvent(aType, data.get_ArrayOfuint8_t());
     } else if (data.type() == SendableData::TnsCString) {
-      mSocket->FireDataEvent(aType, data.get_nsCString());
+      mSocket->FireDataStringEvent(aType, data.get_nsCString());
     } else {
       MOZ_CRASH("Invalid callback data type!");
     }
