@@ -12,6 +12,13 @@
 #include "nsCOMPtr.h"
 #include "js/TypeDecls.h"
 
+namespace IPC {
+bool
+DeserializeArrayBuffer(JSContext* cx,
+                       const InfallibleTArray<uint8_t>& aBuffer,
+                       JS::MutableHandle<JS::Value> aVal);
+}
+
 namespace mozilla {
 namespace dom {
 
@@ -43,11 +50,19 @@ public:
   ~TCPSocketChild();
 
   void SendOpen(TCPSocket* aSocket, bool aUseSSL, bool aUseArrayBuffers);
+  void SendWindowlessOpenBind(TCPSocket* aSocket,
+                              const nsACString& aRemoteHost, uint16_t aRemotePort,
+                              const nsACString& aLocalHost, uint16_t aLocalPort,
+                              bool aUseSSL);
+  NS_IMETHOD SendSendArray(nsTArray<uint8_t>& aArray,
+                           uint32_t aTrackingNumber);
   void SendSend(const nsACString& aData, uint32_t aTrackingNumber);
   nsresult SendSend(const ArrayBuffer& aData,
                     uint32_t aByteOffset,
                     uint32_t aByteLength,
                     uint32_t aTrackingNumber);
+  void SendSendArray(nsTArray<uint8_t>* arr,
+                     uint32_t trackingNumber);
   void SetSocket(TCPSocket* aSocket);
 
   void GetHost(nsAString& aHost);

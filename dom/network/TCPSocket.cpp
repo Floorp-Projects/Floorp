@@ -167,12 +167,14 @@ TCPSocket::TCPSocket(nsIGlobalObject* aGlobal, const nsAString& aHost, uint16_t 
   , mInBrowser(false)
 #endif
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal);
-  if (window && window->IsOuterWindow()) {
-    window = window->GetCurrentInnerWindow();
-  }
-  if (window) {
-    mInnerWindowID = window->WindowID();
+  if (aGlobal) {
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal);
+    if (window && window->IsOuterWindow()) {
+      window = window->GetCurrentInnerWindow();
+    }
+    if (window) {
+      mInnerWindowID = window->WindowID();
+    }
   }
 }
 
@@ -235,6 +237,24 @@ TCPSocket::CreateStream()
 }
 
 nsresult
+TCPSocket::InitWithUnconnectedTransport(nsISocketTransport* aTransport)
+{
+  mReadyState = TCPReadyState::Connecting;
+  mTransport = aTransport;
+
+  MOZ_ASSERT(XRE_GetProcessType() != GeckoProcessType_Content);
+
+  nsCOMPtr<nsIThread> mainThread;
+  NS_GetMainThread(getter_AddRefs(mainThread));
+  mTransport->SetEventSink(this, mainThread);
+
+  nsresult rv = CreateStream();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
 TCPSocket::Init()
 {
   nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1");
@@ -242,9 +262,8 @@ TCPSocket::Init()
     obs->AddObserver(this, "inner-window-destroyed", true);
   }
 
-  mReadyState = TCPReadyState::Connecting;
-
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mReadyState = TCPReadyState::Connecting;
     mSocketBridgeChild = new TCPSocketChild(mHost, mPort);
     mSocketBridgeChild->SendOpen(this, mSsl, mUseArrayBuffers);
     return NS_OK;
@@ -259,19 +278,12 @@ TCPSocket::Init()
   } else {
     socketTypes[0] = "starttls";
   }
+  nsCOMPtr<nsISocketTransport> transport;
   nsresult rv = sts->CreateTransport(socketTypes, 1, NS_ConvertUTF16toUTF8(mHost), mPort,
-                                     nullptr, getter_AddRefs(mTransport));
+                                     nullptr, getter_AddRefs(transport));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIThread> mainThread;
-  NS_GetMainThread(getter_AddRefs(mainThread));
-
-  mTransport->SetEventSink(this, mainThread);
-
-  rv = CreateStream();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  return InitWithUnconnectedTransport(transport);
 }
 
 void
@@ -483,6 +495,40 @@ TCPSocket::FireEvent(const nsAString& aType)
   }
   JS::Rooted<JS::Value> val(api.cx());
   FireDataEvent(api.cx(), aType, val);
+}
+
+void
+TCPSocket::FireDataEvent(const nsAString& aType,
+                         const InfallibleTArray<uint8_t>& buffer)
+{
+  AutoJSAPI api;
+  if (NS_WARN_IF(!api.Init(GetOwner()))) {
+    return NS_ERROR_FAILURE;
+  }
+  JSContext* cx = api.cx();
+  JS::Rooted<JS::Value> val(cx);
+
+  bool ok = IPC::DeserializeArrayBuffer(cx, buffer, &val);
+  if (ok) {
+    FireDataEvent(aType, val);
+  }
+}
+
+void
+TCPSocket::FireDataEvent(const nsAString& aType,
+                         const nsACString& aString)
+{
+  AutoJSAPI api;
+  if (NS_WARN_IF(!api.Init(GetOwner()))) {
+    return NS_ERROR_FAILURE;
+  }
+  JSContext* cx = api.cx();
+  JS::Rooted<JS::Value> val(cx);
+
+  bool ok = ToJSValue(cx, NS_ConvertASCIItoUTF16(aString), &val);
+  if (ok) {
+    FireDataEvent(aType, val);
+  }
 }
 
 void

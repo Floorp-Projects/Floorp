@@ -178,7 +178,7 @@ TCPSocketParent::RecvOpenBind(const nsCString& aRemoteHost,
                               const nsCString& aLocalAddr,
                               const uint16_t& aLocalPort,
                               const bool&     aUseSSL,
-                              const nsCString& aBinaryType)
+                              const bool&     aUseArrayBuffers)
 {
   if (net::UsingNeckoIPCSecurity() &&
       !AssertAppProcessPermission(Manager()->Manager(), "tcp-socket")) {
@@ -223,18 +223,20 @@ TCPSocketParent::RecvOpenBind(const nsCString& aRemoteHost,
 
   // Obtain App ID
   uint32_t appId = nsIScriptSecurityManager::NO_APP_ID;
+  bool     inBrowser = false;
   const PContentParent *content = Manager()->Manager();
   const InfallibleTArray<PBrowserParent*>& browsers = content->ManagedPBrowserParent();
   if (browsers.Length() > 0) {
     TabParent *tab = static_cast<TabParent*>(browsers[0]);
     appId = tab->OwnAppId();
+    inBrowser = tab->IsBrowserElement();
   }
 
-  mSocket = new TCPSocket(nullptr, aRemoteHost, aRemotePort, aUseSSL,
-                          aBinaryType.EqualsLiteral("arraybuffer"));
+  mSocket = new TCPSocket(nullptr, NS_ConvertUTF8toUTF16(aRemoteHost), aRemotePort, aUseSSL, aUseArrayBuffers);
   mSocket->SetAppIdAndBrowser(appId, inBrowser);
   mSocket->SetSocketBridgeParent(this);
-  NS_ENSURE_SUCCESS(mSocket->InitWithTransport(socketTransport), true);
+  rv = mSocket->InitWithUnconnectedTransport(socketTransport);
+  NS_ENSURE_SUCCESS(rv, true);
   return true;
 }
 
