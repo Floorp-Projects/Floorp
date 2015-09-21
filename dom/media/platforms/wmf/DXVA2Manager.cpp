@@ -92,7 +92,7 @@ public:
                       ImageContainer* aContainer,
                       Image** aOutImage) override;
 
-  virtual bool SupportsConfig(IMFMediaType* aType, float aFramerate) override;
+  bool SupportsConfig(IMFMediaType* aType, float aFramerate) override;
 
 private:
   nsRefPtr<IDirect3D9Ex> mD3D9;
@@ -481,11 +481,11 @@ public:
                       ImageContainer* aContainer,
                       Image** aOutImage) override;
 
-  virtual HRESULT ConfigureForSize(uint32_t aWidth, uint32_t aHeight) override;
+  HRESULT ConfigureForSize(uint32_t aWidth, uint32_t aHeight) override;
 
-  virtual bool IsD3D11() override { return true; }
+  bool IsD3D11() override { return true; }
 
-  virtual bool SupportsConfig(IMFMediaType* aType, float aFramerate) override;
+  bool SupportsConfig(IMFMediaType* aType, float aFramerate) override;
 
 private:
   HRESULT CreateFormatConverter();

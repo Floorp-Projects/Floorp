@@ -36,9 +36,9 @@ public:
                     ImageContainer* aImageContainer);
   virtual ~FFmpegH264Decoder();
 
-  virtual nsRefPtr<InitPromise> Init() override;
-  virtual nsresult Input(MediaRawData* aSample) override;
-  virtual void ProcessDrain() override;
+  nsRefPtr<InitPromise> Init() override;
+  nsresult Input(MediaRawData* aSample) override;
+  void ProcessDrain() override;
   static AVCodecID GetCodecId(const nsACString& aMimeType);
 
 private:

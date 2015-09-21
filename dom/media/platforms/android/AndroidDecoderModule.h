@@ -20,14 +20,14 @@ typedef std::queue<nsRefPtr<MediaRawData>> SampleQueue;
 
 class AndroidDecoderModule : public PlatformDecoderModule {
 public:
-  virtual already_AddRefed<MediaDataDecoder>
+  already_AddRefed<MediaDataDecoder>
   CreateVideoDecoder(const VideoInfo& aConfig,
                      layers::LayersBackend aLayersBackend,
                      layers::ImageContainer* aImageContainer,
                      FlushableTaskQueue* aVideoTaskQueue,
                      MediaDataDecoderCallback* aCallback) override;
 
-  virtual already_AddRefed<MediaDataDecoder>
+  already_AddRefed<MediaDataDecoder>
   CreateAudioDecoder(const AudioInfo& aConfig,
                      FlushableTaskQueue* aAudioTaskQueue,
                      MediaDataDecoderCallback* aCallback) override;
@@ -36,9 +36,9 @@ public:
   AndroidDecoderModule() {}
   virtual ~AndroidDecoderModule() {}
 
-  virtual bool SupportsMimeType(const nsACString& aMimeType) override;
+  bool SupportsMimeType(const nsACString& aMimeType) override;
 
-  virtual ConversionRequired
+  ConversionRequired
   DecoderNeedsConversion(const TrackInfo& aConfig) const override;
 };
 
@@ -52,11 +52,11 @@ public:
 
   virtual ~MediaCodecDataDecoder();
 
-  virtual nsRefPtr<MediaDataDecoder::InitPromise> Init() override;
-  virtual nsresult Flush() override;
-  virtual nsresult Drain() override;
-  virtual nsresult Shutdown() override;
-  virtual nsresult Input(MediaRawData* aSample);
+  nsRefPtr<MediaDataDecoder::InitPromise> Init() override;
+  nsresult Flush() override;
+  nsresult Drain() override;
+  nsresult Shutdown() override;
+  nsresult Input(MediaRawData* aSample) override;
 
 protected:
   friend class AndroidDecoderModule;

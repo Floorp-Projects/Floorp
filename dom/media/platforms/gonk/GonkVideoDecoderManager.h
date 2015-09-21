@@ -44,16 +44,16 @@ public:
 
   virtual ~GonkVideoDecoderManager() override;
 
-  virtual nsRefPtr<InitPromise> Init(MediaDataDecoderCallback* aCallback) override;
+  nsRefPtr<InitPromise> Init(MediaDataDecoderCallback* aCallback) override;
 
-  virtual nsresult Input(MediaRawData* aSample) override;
+  nsresult Input(MediaRawData* aSample) override;
 
-  virtual nsresult Output(int64_t aStreamOffset,
+  nsresult Output(int64_t aStreamOffset,
                           nsRefPtr<MediaData>& aOutput) override;
 
-  virtual nsresult Flush() override;
+  nsresult Flush() override;
 
-  virtual bool HasQueuedSample() override;
+  bool HasQueuedSample() override;
 
   static void RecycleCallback(TextureClient* aClient, void* aClosure);
 
@@ -76,7 +76,7 @@ private:
     MessageHandler(GonkVideoDecoderManager *aManager);
     ~MessageHandler();
 
-    virtual void onMessageReceived(const android::sp<android::AMessage> &aMessage);
+    void onMessageReceived(const android::sp<android::AMessage> &aMessage) override;
 
   private:
     // Forbidden
@@ -94,8 +94,8 @@ private:
     VideoResourceListener(GonkVideoDecoderManager *aManager);
     ~VideoResourceListener();
 
-    virtual void codecReserved() override;
-    virtual void codecCanceled() override;
+    void codecReserved() override;
+    void codecCanceled() override;
 
   private:
     // Forbidden

@@ -45,12 +45,12 @@ public:
   {
   }
 
-  virtual nsRefPtr<InitPromise> Init() override {
+  nsRefPtr<InitPromise> Init() override {
     MOZ_ASSERT(!mIsShutdown);
     return mDecoder->Init();
   }
 
-  virtual nsresult Input(MediaRawData* aSample) override {
+  nsresult Input(MediaRawData* aSample) override {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
     MOZ_ASSERT(!mIsShutdown);
     if (mSamplesWaitingForKey->WaitIfKeyNotUsable(aSample)) {
@@ -104,7 +104,7 @@ public:
     }
   }
 
-  virtual nsresult Flush() override {
+  nsresult Flush() override {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
     MOZ_ASSERT(!mIsShutdown);
     mDecrypts.Enumerate(&DropDecryptPromises, nullptr);
@@ -114,7 +114,7 @@ public:
     return rv;
   }
 
-  virtual nsresult Drain() override {
+  nsresult Drain() override {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
     MOZ_ASSERT(!mIsShutdown);
     mDecrypts.Enumerate(&DropDecryptPromises, nullptr);
@@ -123,7 +123,7 @@ public:
     return rv;
   }
 
-  virtual nsresult Shutdown() override {
+  nsresult Shutdown() override {
     MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
     MOZ_ASSERT(!mIsShutdown);
     mIsShutdown = true;
@@ -157,8 +157,8 @@ public:
   {
   }
 
-  virtual nsresult Input(MediaRawData* aSample) override;
-  virtual nsresult Shutdown() override;
+  nsresult Input(MediaRawData* aSample) override;
+  nsresult Shutdown() override;
 
 private:
   nsRefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;

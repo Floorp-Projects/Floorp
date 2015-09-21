@@ -25,11 +25,11 @@ public:
                  MediaDataDecoderCallback* aCallback);
   virtual ~AppleATDecoder();
 
-  virtual nsRefPtr<InitPromise> Init() override;
-  virtual nsresult Input(MediaRawData* aSample) override;
-  virtual nsresult Flush() override;
-  virtual nsresult Drain() override;
-  virtual nsresult Shutdown() override;
+  nsRefPtr<InitPromise> Init() override;
+  nsresult Input(MediaRawData* aSample) override;
+  nsresult Flush() override;
+  nsresult Drain() override;
+  nsresult Shutdown() override;
 
   // Callbacks also need access to the config.
   const AudioInfo& mConfig;
