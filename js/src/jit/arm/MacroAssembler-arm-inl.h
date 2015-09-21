@@ -64,6 +64,13 @@ MacroAssembler::andPtr(Imm32 imm, Register dest)
 }
 
 void
+MacroAssembler::and64(Imm64 imm, Register64 dest)
+{
+    and32(Imm32(imm.value & 0xFFFFFFFFL), dest.low);
+    and32(Imm32((imm.value >> 32) & 0xFFFFFFFFL), dest.high);
+}
+
+void
 MacroAssembler::or32(Register src, Register dest)
 {
     ma_orr(src, dest);
@@ -97,6 +104,13 @@ MacroAssembler::orPtr(Imm32 imm, Register dest)
 }
 
 void
+MacroAssembler::or64(Register64 src, Register64 dest)
+{
+    or32(src.low, dest.low);
+    or32(src.high, dest.high);
+}
+
+void
 MacroAssembler::xor32(Imm32 imm, Register dest)
 {
     ma_eor(imm, dest, SetCC);
@@ -112,6 +126,43 @@ void
 MacroAssembler::xorPtr(Imm32 imm, Register dest)
 {
     ma_eor(imm, dest);
+}
+
+// ===============================================================
+// Shift functions
+
+void
+MacroAssembler::lshiftPtr(Imm32 imm, Register dest)
+{
+    ma_lsl(imm, dest, dest);
+}
+
+void
+MacroAssembler::lshift64(Imm32 imm, Register64 dest)
+{
+    as_mov(dest.high, lsl(dest.high, imm.value));
+    as_orr(dest.high, dest.high, lsr(dest.low, 32 - imm.value));
+    as_mov(dest.low, lsl(dest.low, imm.value));
+}
+
+void
+MacroAssembler::rshiftPtr(Imm32 imm, Register dest)
+{
+    ma_lsr(imm, dest, dest);
+}
+
+void
+MacroAssembler::rshiftPtrArithmetic(Imm32 imm, Register dest)
+{
+    ma_asr(imm, dest, dest);
+}
+
+void
+MacroAssembler::rshift64(Imm32 imm, Register64 dest)
+{
+    as_mov(dest.low, lsr(dest.low, imm.value));
+    as_orr(dest.low, dest.low, lsl(dest.high, 32 - imm.value));
+    as_mov(dest.high, lsr(dest.high, imm.value));
 }
 
 //}}} check_macroassembler_style

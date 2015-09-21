@@ -61,6 +61,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
 
+#include "nsITCPSocketCallback.h"
 #include "databuffer.h"
 #include "m_cpp_utils.h"
 #include "mozilla/ReentrantMonitor.h"
@@ -71,6 +72,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Stub declaration for nICEr type
 typedef struct nr_socket_vtbl_ nr_socket_vtbl;
 typedef struct nr_socket_ nr_socket;
+
+#if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
+namespace mozilla {
+namespace dom {
+class TCPSocketChild;
+}
+}
+#endif
 
 namespace mozilla {
 
@@ -209,7 +218,22 @@ public:
     NR_CLOSED,
   };
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrSocketIpc, override)
+  NrSocketIpc(nsIEventTarget* aThread);
+
+protected:
+  nsCOMPtr<nsIEventTarget> sts_thread_;
+  // Note: for UDP PBackground, this is a thread held by SingletonThreadHolder.
+  // For TCP PNecko, this is MainThread (and TCPSocket requires MainThread currently)
+  const nsCOMPtr<nsIEventTarget> io_thread_;
+  virtual ~NrSocketIpc() {};
+
+private:
+  DISALLOW_COPY_ASSIGN(NrSocketIpc);
+};
+
+class NrUdpSocketIpc : public NrSocketIpc {
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(NrUdpSocketIpc, override)
 
   NS_IMETHODIMP CallListenerError(const nsACString &message,
                                   const nsACString &filename,
@@ -221,7 +245,7 @@ public:
   NS_IMETHODIMP CallListenerOpened();
   NS_IMETHODIMP CallListenerClosed();
 
-  NrSocketIpc();
+  NrUdpSocketIpc();
 
   // Implementations of the NrSocketBase APIs
   virtual int create(nr_transport_addr *addr) override;
@@ -239,11 +263,9 @@ public:
   virtual int accept(nr_transport_addr *addrp, nr_socket **sockp) override;
 
 private:
-  virtual ~NrSocketIpc();
+  virtual ~NrUdpSocketIpc();
 
-  DISALLOW_COPY_ASSIGN(NrSocketIpc);
-
-  static nsIThread* GetIOThreadAndAddUse_s();
+  DISALLOW_COPY_ASSIGN(NrUdpSocketIpc);
 
   // Main or private thread executors of the NrSocketBase APIs
   void create_i(const nsACString &host, const uint16_t port);
@@ -256,31 +278,117 @@ private:
   // STS thread executor
   void recv_callback_s(RefPtr<nr_udp_message> msg);
 
+  ReentrantMonitor monitor_; // protects err_and state_
   bool err_;
   NrSocketIpcState state_;
-  std::queue<RefPtr<nr_udp_message> > received_msgs_;
+
+  std::queue<RefPtr<nr_udp_message>> received_msgs_;
 
   nsRefPtr<nsIUDPSocketChild> socket_child_; // only accessed from the io_thread
-  nsCOMPtr<nsIEventTarget> sts_thread_;
-  const nsCOMPtr<nsIEventTarget> io_thread_;
-  ReentrantMonitor monitor_;
 };
 
 // The socket child holds onto one of these, which just passes callbacks
 // through and makes sure the ref to the NrSocketIpc is released on STS.
-class NrSocketIpcProxy : public nsIUDPSocketInternal {
+class NrUdpSocketIpcProxy : public nsIUDPSocketInternal {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIUDPSOCKETINTERNAL
 
-  nsresult Init(const nsRefPtr<NrSocketIpc>& socket);
+  nsresult Init(const nsRefPtr<NrUdpSocketIpc>& socket);
 
 private:
-  virtual ~NrSocketIpcProxy();
+  virtual ~NrUdpSocketIpcProxy();
 
-  nsRefPtr<NrSocketIpc> socket_;
+  nsRefPtr<NrUdpSocketIpc> socket_;
   nsCOMPtr<nsIEventTarget> sts_thread_;
 };
+
+struct nr_tcp_message {
+  explicit nr_tcp_message(nsAutoPtr<DataBuffer> &data)
+    : read_bytes(0)
+    , data(data) {
+  }
+
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nr_tcp_message);
+
+  const uint8_t *reading_pointer() const {
+    return data->data() + read_bytes;
+  }
+
+  size_t unread_bytes() const {
+    return data->len() - read_bytes;
+  }
+
+  size_t read_bytes;
+
+private:
+  ~nr_tcp_message() {}
+  DISALLOW_COPY_ASSIGN(nr_tcp_message);
+
+  nsAutoPtr<DataBuffer> data;
+};
+
+#if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
+class NrTcpSocketIpc : public NrSocketIpc,
+                       public nsITCPSocketCallback {
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSITCPSOCKETCALLBACK
+
+  explicit NrTcpSocketIpc(nsIThread* aThread);
+
+  // Implementations of the NrSocketBase APIs
+  virtual int create(nr_transport_addr *addr) override;
+  virtual int sendto(const void *msg, size_t len,
+                     int flags, nr_transport_addr *to) override;
+  virtual int recvfrom(void * buf, size_t maxlen,
+                       size_t *len, int flags,
+                       nr_transport_addr *from) override;
+  virtual int getaddr(nr_transport_addr *addrp) override;
+  virtual void close() override;
+  virtual int connect(nr_transport_addr *addr) override;
+  virtual int write(const void *msg, size_t len, size_t *written) override;
+  virtual int read(void* buf, size_t maxlen, size_t *len) override;
+  virtual int listen(int backlog) override;
+  virtual int accept(nr_transport_addr *addrp, nr_socket **sockp) override;
+
+private:
+  class TcpSocketReadyRunner;
+  DISALLOW_COPY_ASSIGN(NrTcpSocketIpc);
+  virtual ~NrTcpSocketIpc();
+
+  // Main thread executors of the NrSocketBase APIs
+  void connect_i(const nsACString &remote_addr,
+                 uint16_t remote_port,
+                 const nsACString &local_addr,
+                 uint16_t local_port);
+  void write_i(nsAutoPtr<InfallibleTArray<uint8_t>> buf,
+               uint32_t tracking_number);
+  void close_i();
+
+  static void release_child_i(dom::TCPSocketChild* aChild, nsCOMPtr<nsIEventTarget> ststhread);
+
+  // STS thread executor
+  void message_sent_s(uint32_t bufferedAmount, uint32_t tracking_number);
+  void recv_message_s(nr_tcp_message *msg);
+  void update_state_s(NrSocketIpcState next_state);
+  void maybe_post_socket_ready();
+
+  // Accessed from UpdateReadyState (not sts_thread) to avoid sending
+  // runnables when not needed
+  NrSocketIpcState mirror_state_;
+
+  // variables that can only be accessed on STS.
+  NrSocketIpcState state_;
+  std::queue<RefPtr<nr_tcp_message>> msg_queue_;
+  uint32_t buffered_bytes_;
+  uint32_t tracking_number_;
+  std::deque<size_t> writes_in_flight_;
+
+  // main thread.
+  nsRefPtr<dom::TCPSocketChild> socket_child_;
+};
+#endif
 
 int nr_netaddr_to_transport_addr(const net::NetAddr *netaddr,
                                  nr_transport_addr *addr,

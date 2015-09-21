@@ -52,6 +52,13 @@ public:
   virtual bool RecvOpen(const nsString& aHost, const uint16_t& aPort,
                         const bool& useSSL, const bool& aUseArrayBuffers) override;
 
+  virtual bool RecvOpenBind(const nsCString& aRemoteHost,
+                            const uint16_t& aRemotePort,
+                            const nsCString& aLocalAddr,
+                            const uint16_t& aLocalPort,
+                            const bool&     aUseSSL,
+                            const bool& aUseArrayBuffers) override;
+
   virtual bool RecvStartTLS() override;
   virtual bool RecvSuspend() override;
   virtual bool RecvResume() override;

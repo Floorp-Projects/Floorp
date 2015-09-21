@@ -7176,6 +7176,57 @@ class LArrowNewTarget : public LInstructionHelper<BOX_PIECES, 1, 0>
     }
 };
 
+// Math.random().
+#ifdef JS_PUNBOX64
+# define LRANDOM_NUM_TEMPS 3
+#else
+# define LRANDOM_NUM_TEMPS 5
+#endif
+
+class LRandom : public LInstructionHelper<1, 0, LRANDOM_NUM_TEMPS>
+{
+  public:
+    LIR_HEADER(Random)
+    LRandom(const LDefinition &tempMaybeEAX, const LDefinition &tempMaybeEDX,
+            const LDefinition &temp1
+#ifndef JS_PUNBOX64
+            , const LDefinition &temp2, const LDefinition &temp3
+#endif
+            )
+    {
+        setTemp(0, tempMaybeEAX);
+        setTemp(1, tempMaybeEDX);
+        setTemp(2, temp1);
+#ifndef JS_PUNBOX64
+        setTemp(3, temp2);
+        setTemp(4, temp3);
+#endif
+    }
+    // On x86, following 2 methods return eax and edx necessary for mull.
+    // On others, following 2 methods return ordinary temporary registers.
+    const LDefinition* tempMaybeEAX() {
+        return getTemp(0);
+    }
+    const LDefinition* tempMaybeEDX() {
+        return getTemp(1);
+    }
+    const LDefinition *temp1() {
+        return getTemp(2);
+    }
+#ifndef JS_PUNBOX64
+    const LDefinition *temp2() {
+        return getTemp(3);
+    }
+    const LDefinition *temp3() {
+        return getTemp(4);
+    }
+#endif
+
+    MRandom* mir() const {
+        return mir_->toRandom();
+    }
+};
+
 } // namespace jit
 } // namespace js
 
