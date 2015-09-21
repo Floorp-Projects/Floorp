@@ -8,12 +8,14 @@ license = "MPL-2.0"
 
 [dependencies]
 env_logger = "0.3.1"
+hyper = "0.6.13"
 log = "0.3.1"
+mozprofile = "0.1.0"
+mozrunner = "0.1.0"
 rustc-serialize = "0.3.14"
 uuid = "0.1.17"
-mozrunner = "0.1.0"
-mozprofile = "0.1.0"
 webdriver = "0.3.1"
+regex="0.1.41"
 
 [dependencies.argparse]
 git = "https://github.com/tailhook/rust-argparse.git"
