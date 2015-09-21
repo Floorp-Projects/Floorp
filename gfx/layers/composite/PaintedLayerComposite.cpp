@@ -115,7 +115,7 @@ PaintedLayerComposite::RenderLayer(const gfx::IntRect& aClipRect)
   const nsIntRegion& visibleRegion = GetEffectiveVisibleRegion();
 
 #ifdef MOZ_DUMP_PAINTING
-  if (gfxUtils::sDumpPainting) {
+  if (gfxUtils::sDumpCompositorTextures) {
     RefPtr<gfx::DataSourceSurface> surf = mBuffer->GetAsSurface();
     if (surf) {
       WriteSnapshotToDumpFile(this, surf);
