@@ -447,14 +447,6 @@ class StoreBuffer
         putFromAnyThread(bufferGeneric, CallbackRef<Key>(callback, key, data));
     }
 
-    void assertHasCellEdge(Cell** cellp) {
-        CellPtrEdge cpe(cellp);
-
-        MOZ_ASSERT(bufferCell.has(this, CellPtrEdge(cellp)) ||
-                   !CellPtrEdge(cellp).maybeInRememberedSet(nursery_));
-
-    }
-
     void assertHasValueEdge(JS::Value* vp) {
         MOZ_ASSERT(bufferVal.has(this, ValueEdge(vp)) ||
                    !ValueEdge(vp).maybeInRememberedSet(nursery_));
