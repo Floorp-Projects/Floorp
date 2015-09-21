@@ -156,7 +156,7 @@ public:
   void RemoveOutputStream(MediaStream* aStream);
 
   // Set/Unset dormant state.
-  void SetDormant(bool aDormant);
+  void DispatchSetDormant(bool aDormant);
 
   TimedMetadataEventSource& TimedMetadataEvent() {
     return mMetadataManager.TimedMetadataEvent();
@@ -168,11 +168,17 @@ private:
   // constructor immediately after the task queue is created.
   void InitializationTask();
 
+  void SetDormant(bool aDormant);
+
   void SetAudioCaptured(bool aCaptured);
 
-  void Shutdown();
-public:
+  void NotifyWaitingForResourcesStatusChanged();
 
+  nsRefPtr<MediaDecoder::SeekPromise> Seek(SeekTarget aTarget);
+
+  void Shutdown();
+
+public:
   void DispatchShutdown();
 
   void FinishShutdown();
@@ -186,8 +192,7 @@ public:
   bool OnTaskQueue() const;
 
   // Seeks to the decoder to aTarget asynchronously.
-  // Must be called on the state machine thread.
-  nsRefPtr<MediaDecoder::SeekPromise> Seek(SeekTarget aTarget);
+  nsRefPtr<MediaDecoder::SeekPromise> InvokeSeek(SeekTarget aTarget);
 
   // Clear the flag indicating that a playback position change event
   // is currently queued. This is called from the main thread and must
@@ -341,7 +346,7 @@ public:
 
   // Called when the reader may have acquired the hardware resources required
   // to begin decoding.
-  void NotifyWaitingForResourcesStatusChanged();
+  void DispatchWaitingForResourcesStatusChanged();
 
   // Notifies the state machine that should minimize the number of samples
   // decoded we preroll, until playback starts. The first time playback starts
