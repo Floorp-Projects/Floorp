@@ -4808,10 +4808,12 @@ var BrowserEventHandler = {
         break;
 
       case "Gesture:SingleTap": {
+        let focusedElement = null;
         try {
           // If the element was previously focused, show the caret attached to it.
           let element = this._highlightElement;
-          if (element && element == BrowserApp.getFocusedInput(BrowserApp.selectedBrowser)) {
+          focusedElement = BrowserApp.getFocusedInput(BrowserApp.selectedBrowser);
+          if (element && element == focusedElement) {
             let result = SelectionHandler.attachCaret(element);
             if (result !== SelectionHandler.ERROR_NONE) {
               dump("Unexpected failure during caret attach: " + result);
@@ -4825,6 +4827,17 @@ var BrowserEventHandler = {
         let {x, y} = data;
 
         if (this._inCluster && this._clickInZoomedView != true) {
+          // If there is a focused element, the display of the zoomed view won't remove the focus.
+          // In this case, the form assistant linked to the focused element will never be closed.
+          // To avoid this situation, the focus is moved and the form assistant is closed.
+          if (focusedElement) {
+            try {
+              Services.focus.moveFocus(BrowserApp.selectedBrowser.contentWindow, null, Services.focus.MOVEFOCUS_ROOT, 0);
+            } catch(e) {
+              Cu.reportError(e);
+            }
+            Messaging.sendRequest({ type: "FormAssist:Hide" });
+          }
           this._clusterClicked(x, y);
         } else {
           if (this._clickInZoomedView != true) {
