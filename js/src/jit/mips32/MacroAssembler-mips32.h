@@ -1353,8 +1353,8 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     }
 
     void memIntToValue(Address Source, Address Dest) {
-        load32(Source, SecondScratchReg);
-        storeValue(JSVAL_TYPE_INT32, SecondScratchReg, Dest);
+        load32(Source, ScratchRegister);
+        storeValue(JSVAL_TYPE_INT32, ScratchRegister, Dest);
     }
 
     void lea(Operand addr, Register dest) {
