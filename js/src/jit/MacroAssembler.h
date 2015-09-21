@@ -680,6 +680,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void andPtr(Register src, Register dest) PER_ARCH;
     inline void andPtr(Imm32 imm, Register dest) PER_ARCH;
 
+    inline void and64(Imm64 imm, Register64 dest) PER_ARCH;
+
     inline void or32(Register src, Register dest) PER_SHARED_ARCH;
     inline void or32(Imm32 imm, Register dest) PER_SHARED_ARCH;
     inline void or32(Imm32 imm, const Address& dest) PER_SHARED_ARCH;
@@ -687,11 +689,27 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void orPtr(Register src, Register dest) PER_ARCH;
     inline void orPtr(Imm32 imm, Register dest) PER_ARCH;
 
+    inline void or64(Register64 src, Register64 dest) PER_ARCH;
+
     inline void xor32(Register src, Register dest) DEFINED_ON(x86_shared);
     inline void xor32(Imm32 imm, Register dest) PER_SHARED_ARCH;
 
     inline void xorPtr(Register src, Register dest) PER_ARCH;
     inline void xorPtr(Imm32 imm, Register dest) PER_ARCH;
+
+    // ===============================================================
+    // Shift functions
+
+    inline void lshiftPtr(Imm32 imm, Register dest) PER_ARCH;
+
+    inline void lshift64(Imm32 imm, Register64 dest) PER_ARCH;
+
+    inline void rshiftPtr(Imm32 imm, Register dest) PER_ARCH;
+    inline void rshiftPtr(Imm32 imm, Register src, Register dest) DEFINED_ON(arm64);
+
+    inline void rshiftPtrArithmetic(Imm32 imm, Register dest) PER_ARCH;
+
+    inline void rshift64(Imm32 imm, Register64 dest) PER_ARCH;
 
     //}}} check_macroassembler_style
   public:

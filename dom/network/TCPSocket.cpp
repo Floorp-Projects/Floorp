@@ -143,6 +143,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(TCPSocket)
   NS_INTERFACE_MAP_ENTRY(nsIInputStreamCallback)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsITCPSocketCallback)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 TCPSocket::TCPSocket(nsIGlobalObject* aGlobal, const nsAString& aHost, uint16_t aPort,
@@ -167,12 +168,14 @@ TCPSocket::TCPSocket(nsIGlobalObject* aGlobal, const nsAString& aHost, uint16_t 
   , mInBrowser(false)
 #endif
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal);
-  if (window && window->IsOuterWindow()) {
-    window = window->GetCurrentInnerWindow();
-  }
-  if (window) {
-    mInnerWindowID = window->WindowID();
+  if (aGlobal) {
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal);
+    if (window && window->IsOuterWindow()) {
+      window = window->GetCurrentInnerWindow();
+    }
+    if (window) {
+      mInnerWindowID = window->WindowID();
+    }
   }
 }
 
@@ -235,6 +238,24 @@ TCPSocket::CreateStream()
 }
 
 nsresult
+TCPSocket::InitWithUnconnectedTransport(nsISocketTransport* aTransport)
+{
+  mReadyState = TCPReadyState::Connecting;
+  mTransport = aTransport;
+
+  MOZ_ASSERT(XRE_GetProcessType() != GeckoProcessType_Content);
+
+  nsCOMPtr<nsIThread> mainThread;
+  NS_GetMainThread(getter_AddRefs(mainThread));
+  mTransport->SetEventSink(this, mainThread);
+
+  nsresult rv = CreateStream();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult
 TCPSocket::Init()
 {
   nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1");
@@ -242,9 +263,8 @@ TCPSocket::Init()
     obs->AddObserver(this, "inner-window-destroyed", true);
   }
 
-  mReadyState = TCPReadyState::Connecting;
-
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mReadyState = TCPReadyState::Connecting;
     mSocketBridgeChild = new TCPSocketChild(mHost, mPort);
     mSocketBridgeChild->SendOpen(this, mSsl, mUseArrayBuffers);
     return NS_OK;
@@ -259,19 +279,12 @@ TCPSocket::Init()
   } else {
     socketTypes[0] = "starttls";
   }
+  nsCOMPtr<nsISocketTransport> transport;
   nsresult rv = sts->CreateTransport(socketTypes, 1, NS_ConvertUTF16toUTF8(mHost), mPort,
-                                     nullptr, getter_AddRefs(mTransport));
+                                     nullptr, getter_AddRefs(transport));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIThread> mainThread;
-  NS_GetMainThread(getter_AddRefs(mainThread));
-
-  mTransport->SetEventSink(this, mainThread);
-
-  rv = CreateStream();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
+  return InitWithUnconnectedTransport(transport);
 }
 
 void
@@ -448,12 +461,12 @@ TCPSocket::ActivateTLS()
   }
 }
 
-void
+NS_IMETHODIMP
 TCPSocket::FireErrorEvent(const nsAString& aName, const nsAString& aType)
 {
   if (mSocketBridgeParent) {
     mSocketBridgeParent->FireErrorEvent(aName, aType, mReadyState);
-    return;
+    return NS_OK;
   }
 
   TCPSocketErrorEventInit init;
@@ -464,28 +477,66 @@ TCPSocket::FireErrorEvent(const nsAString& aName, const nsAString& aType)
 
   nsRefPtr<TCPSocketErrorEvent> event =
     TCPSocketErrorEvent::Constructor(this, NS_LITERAL_STRING("error"), init);
+  MOZ_ASSERT(event);
   event->SetTrusted(true);
   bool dummy;
   DispatchEvent(event, &dummy);
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 TCPSocket::FireEvent(const nsAString& aType)
 {
   if (mSocketBridgeParent) {
     mSocketBridgeParent->FireEvent(aType, mReadyState);
-    return;
+    return NS_OK;
   }
 
   AutoJSAPI api;
   if (NS_WARN_IF(!api.Init(GetOwner()))) {
-    return;
+    return NS_ERROR_FAILURE;
   }
   JS::Rooted<JS::Value> val(api.cx());
-  FireDataEvent(api.cx(), aType, val);
+  return FireDataEvent(api.cx(), aType, val);
 }
 
-void
+NS_IMETHODIMP
+TCPSocket::FireDataArrayEvent(const nsAString& aType,
+                              const InfallibleTArray<uint8_t>& buffer)
+{
+  AutoJSAPI api;
+  if (NS_WARN_IF(!api.Init(GetOwner()))) {
+    return NS_ERROR_FAILURE;
+  }
+  JSContext* cx = api.cx();
+  JS::Rooted<JS::Value> val(cx);
+
+  bool ok = IPC::DeserializeArrayBuffer(cx, buffer, &val);
+  if (ok) {
+    return FireDataEvent(cx, aType, val);
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+TCPSocket::FireDataStringEvent(const nsAString& aType,
+                               const nsACString& aString)
+{
+  AutoJSAPI api;
+  if (NS_WARN_IF(!api.Init(GetOwner()))) {
+    return NS_ERROR_FAILURE;
+  }
+  JSContext* cx = api.cx();
+  JS::Rooted<JS::Value> val(cx);
+
+  bool ok = ToJSValue(cx, NS_ConvertASCIItoUTF16(aString), &val);
+  if (ok) {
+    return FireDataEvent(cx, aType, val);
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 TCPSocket::FireDataEvent(JSContext* aCx, const nsAString& aType, JS::Handle<JS::Value> aData)
 {
   MOZ_ASSERT(!mSocketBridgeParent);
@@ -500,6 +551,7 @@ TCPSocket::FireDataEvent(JSContext* aCx, const nsAString& aType, JS::Handle<JS::
   event->SetTrusted(true);
   bool dummy;
   DispatchEvent(event, &dummy);
+  return NS_OK;
 }
 
 JSObject*
@@ -687,11 +739,10 @@ TCPSocket::MaybeReportErrorAndCloseIfOpen(nsresult status) {
       }
     }
 
-    FireErrorEvent(errName, errorType);
+    NS_WARN_IF(NS_FAILED(FireErrorEvent(errName, errorType)));
   }
 
-  FireEvent(NS_LITERAL_STRING("close"));
-  return NS_OK;
+  return FireEvent(NS_LITERAL_STRING("close"));
 }
 
 void
@@ -1059,26 +1110,28 @@ TCPSocket::SetAppIdAndBrowser(uint32_t aAppId, bool aInBrowser)
 #endif
 }
 
-void
+NS_IMETHODIMP
 TCPSocket::UpdateReadyState(uint32_t aReadyState)
 {
   MOZ_ASSERT(mSocketBridgeChild);
   mReadyState = static_cast<TCPReadyState>(aReadyState);
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 TCPSocket::UpdateBufferedAmount(uint32_t aBufferedAmount, uint32_t aTrackingNumber)
 {
   if (aTrackingNumber != mTrackingNumber) {
-    return;
+    return NS_OK;
   }
   mBufferedAmount = aBufferedAmount;
   if (!mBufferedAmount) {
     if (mWaitingForDrain) {
       mWaitingForDrain = false;
-      FireEvent(NS_LITERAL_STRING("drain"));
+      return FireEvent(NS_LITERAL_STRING("drain"));
     }
   }
+  return NS_OK;
 }
 
 #ifdef MOZ_WIDGET_GONK

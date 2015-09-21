@@ -107,9 +107,6 @@ function beginTest() {
 
 SimpleTest.waitForExplicitFinish();
 
-var prefs = [
-  [ "canvas.capturestream.enabled", true ],
-];
-SpecialPowers.pushPrefEnv({ "set" : prefs }, beginTest);
+beginTest();
 </script>
 

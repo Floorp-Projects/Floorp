@@ -78,6 +78,63 @@ MacroAssemblerMIPSCompat::convertUInt32ToDouble(Register src, FloatRegister dest
 }
 
 void
+MacroAssemblerMIPSCompat::mul64(Imm64 imm, const Register64& dest)
+{
+    // LOW32  = LOW(LOW(dest) * LOW(imm));
+    // HIGH32 = LOW(HIGH(dest) * LOW(imm)) [multiply imm into upper bits]
+    //        + LOW(LOW(dest) * HIGH(imm)) [multiply dest into upper bits]
+    //        + HIGH(LOW(dest) * LOW(imm)) [carry]
+
+    // HIGH(dest) = LOW(HIGH(dest) * LOW(imm));
+    ma_li(ScratchRegister, Imm32(imm.value & LOW_32_MASK));
+    as_multu(dest.high, ScratchRegister);
+    as_mflo(dest.high);
+
+    // mfhi:mflo = LOW(dest) * LOW(imm);
+    as_multu(dest.low, ScratchRegister);
+
+    // HIGH(dest) += mfhi;
+    as_mfhi(ScratchRegister);
+    as_addu(dest.high, dest.high, ScratchRegister);
+
+    if (((imm.value >> 32) & LOW_32_MASK) == 5) {
+        // Optimized case for Math.random().
+
+        // HIGH(dest) += LOW(LOW(dest) * HIGH(imm));
+        as_sll(ScratchRegister, dest.low, 2);
+        as_addu(ScratchRegister, ScratchRegister, dest.low);
+        as_addu(dest.high, dest.high, ScratchRegister);
+
+        // LOW(dest) = mflo;
+        as_mflo(dest.low);
+    } else {
+        // tmp = mflo
+        as_mflo(SecondScratchReg);
+
+        // HIGH(dest) += LOW(LOW(dest) * HIGH(imm));
+        ma_li(ScratchRegister, Imm32((imm.value >> 32) & LOW_32_MASK));
+        as_multu(dest.low, ScratchRegister);
+        as_mflo(ScratchRegister);
+        as_addu(dest.high, dest.high, ScratchRegister);
+
+        // LOW(dest) = tmp;
+        ma_move(dest.low, SecondScratchReg);
+    }
+}
+
+static const double TO_DOUBLE_HIGH_SCALE = 0x100000000;
+
+void
+MacroAssemblerMIPSCompat::convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest)
+{
+    convertUInt32ToDouble(src.high, dest);
+    loadConstantDouble(TO_DOUBLE_HIGH_SCALE, ScratchDoubleReg);
+    mulDouble(ScratchDoubleReg, dest);
+    convertUInt32ToDouble(src.low, ScratchDoubleReg);
+    addDouble(ScratchDoubleReg, dest);
+}
+
+void
 MacroAssemblerMIPSCompat::convertUInt32ToFloat32(Register src, FloatRegister dest)
 {
     Label positive, done;
@@ -2556,6 +2613,20 @@ MacroAssemblerMIPSCompat::branchTestBooleanTruthy(bool b, const ValueOperand& op
                                                   Label* label)
 {
     ma_b(operand.payloadReg(), operand.payloadReg(), label, b ? NonZero : Zero);
+}
+
+void
+MacroAssemblerMIPSCompat::branchTest64(Condition cond, Register64 lhs, Register64 rhs,
+                                       Register temp, Label* label)
+{
+    if (cond == Assembler::Zero) {
+        MOZ_ASSERT(lhs.low == rhs.low);
+        MOZ_ASSERT(lhs.high == rhs.high);
+        as_or(ScratchRegister, lhs.low, lhs.high);
+        branchTestPtr(cond, ScratchRegister, ScratchRegister, label);
+    } else {
+        MOZ_CRASH("Unsupported condition");
+    }
 }
 
 Register

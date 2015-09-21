@@ -74,6 +74,15 @@ MacroAssembler::andPtr(Imm32 imm, Register dest)
 }
 
 void
+MacroAssembler::and64(Imm64 imm, Register64 dest)
+{
+    vixl::UseScratchRegisterScope temps(this);
+    const Register scratch = temps.AcquireX().asUnsized();
+    mov(ImmWord(imm.value), scratch);
+    andPtr(scratch, dest.reg);
+}
+
+void
 MacroAssembler::or32(Imm32 imm, Register dest)
 {
     Orr(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(imm.value));
@@ -109,6 +118,12 @@ MacroAssembler::orPtr(Imm32 imm, Register dest)
 }
 
 void
+MacroAssembler::or64(Register64 src, Register64 dest)
+{
+    orPtr(src.reg, dest.reg);
+}
+
+void
 MacroAssembler::xor32(Imm32 imm, Register dest)
 {
     Eor(ARMRegister(dest, 32), ARMRegister(dest, 32), Operand(imm.value));
@@ -124,6 +139,45 @@ void
 MacroAssembler::xorPtr(Imm32 imm, Register dest)
 {
     Eor(ARMRegister(dest, 64), ARMRegister(dest, 64), Operand(imm.value));
+}
+
+// ===============================================================
+// Shift functions
+
+void
+MacroAssembler::lshiftPtr(Imm32 imm, Register dest)
+{
+    Lsl(ARMRegister(dest, 64), ARMRegister(dest, 64), imm.value);
+}
+
+void
+MacroAssembler::lshift64(Imm32 imm, Register64 dest)
+{
+    lshiftPtr(imm, dest.reg);
+}
+
+void
+MacroAssembler::rshiftPtr(Imm32 imm, Register dest)
+{
+    Lsr(ARMRegister(dest, 64), ARMRegister(dest, 64), imm.value);
+}
+
+void
+MacroAssembler::rshiftPtr(Imm32 imm, Register src, Register dest)
+{
+    Lsr(ARMRegister(dest, 64), ARMRegister(src, 64), imm.value);
+}
+
+void
+MacroAssembler::rshiftPtrArithmetic(Imm32 imm, Register dest)
+{
+    Asr(ARMRegister(dest, 64), ARMRegister(dest, 64), imm.value);
+}
+
+void
+MacroAssembler::rshift64(Imm32 imm, Register64 dest)
+{
+    rshiftPtr(imm, dest.reg);
 }
 
 //}}} check_macroassembler_style
