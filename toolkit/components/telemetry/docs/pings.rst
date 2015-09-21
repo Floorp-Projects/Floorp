@@ -14,6 +14,8 @@ It contains some basic information shared between different ping types, the :doc
 Submission
 ==========
 
+*Note:* The server-side behaviour is documented in the `HTTP Edge Server specification <https://wiki.mozilla.org/CloudServices/DataPipeline/HTTPEdgeServerSpecification>`_.
+
 Pings are submitted via a common API on ``TelemetryController``.
 If a ping fails to successfully submit to the server immediately (e.g. because
 of missing internet connection), Telemetry will store it on disk and retry to
