@@ -64,6 +64,11 @@ public:
 
   virtual bool ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor) override;
 
+  virtual void SetReleaseFenceHandle(const FenceHandle& aReleaseFenceHandle) override;
+  virtual FenceHandle GetAndResetReleaseFenceHandle() override;
+  virtual void SetAcquireFenceHandle(const FenceHandle& aAcquireFenceHandle) override;
+  virtual const FenceHandle& GetAcquireFenceHandle() const override;
+
   gl::SharedSurface* Surf() const {
     return mSurf.get();
   }
