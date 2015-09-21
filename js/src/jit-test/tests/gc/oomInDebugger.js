@@ -1,4 +1,4 @@
-// |jit-test| --no-ggc; allow-unhandlable-oom
+// |jit-test| --no-threads
 
 load(libdir + 'oomTest.js');
 var g = newGlobal();
