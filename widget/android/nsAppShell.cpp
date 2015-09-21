@@ -196,6 +196,7 @@ nsAppShell::nsAppShell()
         AndroidBridge::ConstructBridge();
         GeckoThreadNatives::Init();
         mozilla::ANRReporter::Init();
+        nsWindow::InitNatives();
 
         widget::GeckoThread::SetState(widget::GeckoThread::State::JNI_READY());
     }
