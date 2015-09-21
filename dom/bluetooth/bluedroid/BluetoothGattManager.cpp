@@ -947,9 +947,6 @@ public:
                (int)aStatus);
     MOZ_ASSERT(mClient->mReadRemoteRssiRunnable);
 
-    BluetoothService* bs = BluetoothService::Get();
-    NS_ENSURE_TRUE_VOID(bs);
-
     // Reject the read remote rssi request
     DispatchReplyError(mClient->mReadRemoteRssiRunnable,
                        NS_LITERAL_STRING("ReadRemoteRssi failed"));
@@ -1484,9 +1481,6 @@ public:
     BT_WARNING("BluetoothGattServerInterface::RegisterServer failed: %d",
                (int)aStatus);
 
-    BluetoothService* bs = BluetoothService::Get();
-    NS_ENSURE_TRUE_VOID(bs);
-
     // Reject the connect request
     if (mServer->mConnectPeripheralRunnable) {
       DispatchReplyError(mServer->mConnectPeripheralRunnable,
@@ -1527,9 +1521,6 @@ public:
     BT_WARNING("BluetoothGattServerInterface::ConnectPeripheral failed: %d",
                (int)aStatus);
     MOZ_ASSERT(mServer->mConnectPeripheralRunnable);
-
-    BluetoothService* bs = BluetoothService::Get();
-    NS_ENSURE_TRUE_VOID(bs);
 
     DispatchReplyError(mServer->mConnectPeripheralRunnable,
                        NS_LITERAL_STRING("ConnectPeripheral failed"));
@@ -1622,9 +1613,6 @@ public:
     BT_WARNING("BluetoothGattServerInterface::DisconnectPeripheral failed: %d",
                (int)aStatus);
     MOZ_ASSERT(mServer->mDisconnectPeripheralRunnable);
-
-    BluetoothService* bs = BluetoothService::Get();
-    NS_ENSURE_TRUE_VOID(bs);
 
     // Reject the disconnect request
     DispatchReplyError(mServer->mDisconnectPeripheralRunnable,
@@ -2938,9 +2926,6 @@ BluetoothGattManager::ReadRemoteRssiNotification(int aClientIf,
                                                  BluetoothGattStatus aStatus)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  BluetoothService* bs = BluetoothService::Get();
-  NS_ENSURE_TRUE_VOID(bs);
 
   size_t index = sClients->IndexOf(aClientIf, 0 /* Start */,
                                    InterfaceIdComparator());
