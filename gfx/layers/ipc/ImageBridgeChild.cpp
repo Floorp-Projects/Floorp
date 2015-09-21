@@ -188,7 +188,7 @@ static void ImageBridgeShutdownStep1(ReentrantMonitor *aBarrier, bool *aDone)
     InfallibleTArray<PTextureChild*> textures;
     sImageBridgeChildSingleton->ManagedPTextureChild(textures);
     for (int i = textures.Length() - 1; i >= 0; --i) {
-      TextureClient* client = TextureClient::AsTextureClient(textures[i]);
+      RefPtr<TextureClient> client = TextureClient::AsTextureClient(textures[i]);
       if (client) {
         client->ForceRemove();
       }
