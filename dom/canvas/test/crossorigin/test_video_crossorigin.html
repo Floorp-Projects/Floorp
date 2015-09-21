@@ -211,13 +211,8 @@ function beginTest() {
   document.manager.runTests(corsTests, startTest);
 }
 
-var prefs = [
-  [ "canvas.capturestream.enabled", true ],
-];
-
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({ "set" : prefs }, beginTest);
-
+beginTest();
 </script>
 </pre>
 </body>

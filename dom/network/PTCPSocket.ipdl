@@ -41,6 +41,12 @@ parent:
   // |binaryType| (from TCPOption.binaryType).
   Open(nsString host, uint16_t port, bool useSSL, bool useArrayBuffers);
 
+  // Ask parent to open a socket and bind the newly-opened socket to a local
+  // address specified in |localAddr| and |localPort|.
+  OpenBind(nsCString host, uint16_t port,
+           nsCString localAddr, uint16_t localPort,
+           bool useSSL, bool aUseArrayBuffers);
+
   // When child's send() is called, this message requrests parent to send
   // data and update it's trackingNumber.
   Data(SendableData data, uint32_t trackingNumber);

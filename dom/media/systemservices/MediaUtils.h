@@ -63,7 +63,7 @@ class Pledge : public PledgeBase
   };
 
 public:
-  explicit Pledge() : mDone(false), mError(nullptr) {}
+  explicit Pledge() : mDone(false), mRejected(false) {}
   Pledge(const Pledge& aOther) = delete;
   Pledge& operator = (const Pledge&) = delete;
 
@@ -97,10 +97,10 @@ public:
     mFunctors = new Functors(aOnSuccess, aOnFailure);
 
     if (mDone) {
-      if (!mError) {
+      if (!mRejected) {
         mFunctors->Succeed(mValue);
       } else {
-        mFunctors->Fail(*mError);
+        mFunctors->Fail(mError);
       }
     }
   }
@@ -110,22 +110,11 @@ public:
     mValue = aValue;
     Resolve();
   }
-protected:
-  void Resolve()
-  {
-    if (!mDone) {
-      mDone = true;
-      MOZ_ASSERT(!mError);
-      if (mFunctors) {
-        mFunctors->Succeed(mValue);
-      }
-    }
-  }
 
   void Reject(ErrorType rv)
   {
     if (!mDone) {
-      mDone = true;
+      mDone = mRejected = true;
       mError = rv;
       if (mFunctors) {
         mFunctors->Fail(mError);
@@ -133,95 +122,14 @@ protected:
     }
   }
 
-  ValueType mValue;
-private:
-  ~Pledge() {};
-  bool mDone;
-  nsRefPtr<ErrorType> mError;
-  ScopedDeletePtr<FunctorsBase> mFunctors;
-};
-
-template<typename ValueType>
-class Pledge<ValueType, nsresult>  : public PledgeBase
-{
-  // TODO: Remove workaround once mozilla allows std::function from <functional>
-  // wo/std::function support, do template + virtual trick to accept lambdas
-  class FunctorsBase
-  {
-  public:
-    FunctorsBase() {}
-    virtual void Succeed(ValueType& result) = 0;
-    virtual void Fail(nsresult error) = 0;
-    virtual ~FunctorsBase() {};
-  };
-
-public:
-  explicit Pledge() : mDone(false), mError(NS_OK) {}
-  Pledge(const Pledge& aOther) = delete;
-  Pledge& operator = (const Pledge&) = delete;
-
-  template<typename OnSuccessType>
-  void Then(OnSuccessType aOnSuccess)
-  {
-    Then(aOnSuccess, [](nsresult){});
-  }
-
-  template<typename OnSuccessType, typename OnFailureType>
-  void Then(OnSuccessType aOnSuccess, OnFailureType aOnFailure)
-  {
-    class Functors : public FunctorsBase
-    {
-    public:
-      Functors(OnSuccessType& aOnSuccess, OnFailureType& aOnFailure)
-        : mOnSuccess(aOnSuccess), mOnFailure(aOnFailure) {}
-
-      void Succeed(ValueType& result)
-      {
-        mOnSuccess(result);
-      }
-      void Fail(nsresult rv)
-      {
-        mOnFailure(rv);
-      };
-
-      OnSuccessType mOnSuccess;
-      OnFailureType mOnFailure;
-    };
-    mFunctors = new Functors(aOnSuccess, aOnFailure);
-
-    if (mDone) {
-      if (mError == NS_OK) {
-        mFunctors->Succeed(mValue);
-      } else {
-        mFunctors->Fail(mError);
-      }
-    }
-  }
-
-  void Resolve(const ValueType& aValue)
-  {
-    mValue = aValue;
-    Resolve();
-  }
 protected:
   void Resolve()
   {
     if (!mDone) {
       mDone = true;
-      MOZ_ASSERT(mError == NS_OK);
+      MOZ_ASSERT(!mRejected);
       if (mFunctors) {
         mFunctors->Succeed(mValue);
-      }
-    }
-  }
-
-  void Reject(nsresult error)
-  {
-    if (!mDone) {
-      mDone = true;
-      mError = error;
-      if (mFunctors) {
-        mFunctors->Fail(mError);
       }
     }
   }
@@ -230,7 +138,8 @@ protected:
 private:
   ~Pledge() {};
   bool mDone;
-  nsresult mError;
+  bool mRejected;
+  ErrorType mError;
   ScopedDeletePtr<FunctorsBase> mFunctors;
 };
 
