@@ -43,7 +43,7 @@ StringToUuid(const nsAString& aString, BluetoothUuid& aUuid);
  *
  * @param aUuidString [out] String to store the generated uuid.
  */
-void
+nsresult
 GenerateUuid(nsAString &aUuidString);
 
 //
