@@ -449,28 +449,6 @@
       </hbox>
     </panel>
 
-    <!-- Sync Error Panel -->
-    <panel id="sync-error-panel" class="sync-panel" type="arrow" hidden="true"
-           noautofocus="true" onclick="this.hidePopup();"
-           flip="slide">
-      <hbox class="sync-panel-outer">
-        <image class="sync-panel-icon"/>
-        <vbox class="sync-panel-inner">
-          <description id="sync-error-panel-title"
-                       value="&syncErrorPanel.heading;"/>
-          <description id="sync-error-panel-subtitle"
-                       value="&syncErrorPanel.subTitle;"/>
-          <hbox class="sync-panel-button-box">
-            <spacer flex="1"/>
-            <button class="sync-panel-button"
-                    label="&syncErrorPanel.signInButton.label;"
-                    accesskey="&syncErrorPanel.signInButton.accesskey;"
-                    onclick="gFxAccounts.openSignInAgainPage();"/>
-          </hbox>
-        </vbox>
-      </hbox>
-    </panel>
-
     <!-- Bookmarks and history tooltip -->
     <tooltip id="bhTooltip"/>
 

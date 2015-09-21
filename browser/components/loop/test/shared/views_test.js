@@ -429,7 +429,8 @@ describe("loop.shared.views", function() {
     function mountTestComponent(props) {
       props = _.extend({
         dispatcher: dispatcher,
-        mozLoop: {}
+        mozLoop: {},
+        show: true
       }, props || {});
       return TestUtils.renderIntoDocument(
         React.createElement(sharedViews.ConversationToolbar, props));
@@ -443,6 +444,16 @@ describe("loop.shared.views", function() {
 
     afterEach(function() {
       clock.restore();
+    });
+
+    it("should not render the component when 'show' is false", function() {
+      var comp = mountTestComponent({
+        hangup: hangup,
+        publishStream: publishStream,
+        show: false
+      });
+
+      expect(comp.getDOMNode()).to.eql(null);
     });
 
     it("should start no idle", function() {
