@@ -116,10 +116,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DocAccessible, Accessible)
   tmp->mDependentIDsHash.EnumerateRead(CycleCollectorTraverseDepIDsEntry, &cb);
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAccessibleCache)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnchorJumpElm)
-  for (uint32_t i = 0; i < tmp->mARIAOwnsInvalidationList.Length(); ++i) {
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mARIAOwnsInvalidationList[i].mOwner)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mARIAOwnsInvalidationList[i].mChild)
-  }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DocAccessible, Accessible)
@@ -130,10 +126,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DocAccessible, Accessible)
   tmp->mNodeToAccessibleMap.Clear();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAccessibleCache)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAnchorJumpElm)
-  for (uint32_t i = 0; i < tmp->mARIAOwnsInvalidationList.Length(); ++i) {
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mARIAOwnsInvalidationList[i].mOwner)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mARIAOwnsInvalidationList[i].mChild)
-  }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DocAccessible)
@@ -1348,10 +1340,6 @@ DocAccessible::ProcessInvalidationList()
   // Alter the tree according to aria-owns (seize the trees).
   for (uint32_t idx = 0; idx < mARIAOwnsInvalidationList.Length(); idx++) {
     Accessible* owner = mARIAOwnsInvalidationList[idx].mOwner;
-    if (owner->IsDefunct()) { // eventually died until we've got here
-      continue;
-    }
-
     Accessible* child = GetAccessible(mARIAOwnsInvalidationList[idx].mChild);
     if (!child) {
       continue;
