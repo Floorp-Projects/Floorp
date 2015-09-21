@@ -16,6 +16,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/Monitor.h"
 
 class nsThreadPool final
@@ -43,6 +44,7 @@ private:
 
   nsCOMArray<nsIThread> mThreads;
   mozilla::Monitor      mMonitor;
+  mozilla::Mutex        mMutex;
   nsEventQueueBase<mozilla::Monitor> mEvents;
   uint32_t              mThreadLimit;
   uint32_t              mIdleThreadLimit;
