@@ -220,16 +220,6 @@ ClippedImage::GetFrame(uint32_t aWhichFrame,
   return GetFrameInternal(mClip.Size(), Nothing(), aWhichFrame, aFlags);
 }
 
-NS_IMETHODIMP_(already_AddRefed<SourceSurface>)
-ClippedImage::GetFrameAtSize(const IntSize& aSize,
-                             uint32_t aWhichFrame,
-                             uint32_t aFlags)
-{
-  // XXX(seth): It'd be nice to support downscale-during-decode for this case,
-  // but right now we just fall back to the intrinsic size.
-  return GetFrame(aWhichFrame, aFlags);
-}
-
 already_AddRefed<SourceSurface>
 ClippedImage::GetFrameInternal(const nsIntSize& aSize,
                                const Maybe<SVGImageContext>& aSVGContext,

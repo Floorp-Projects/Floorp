@@ -168,18 +168,10 @@ DynamicImage::GetFrame(uint32_t aWhichFrame,
                        uint32_t aFlags)
 {
   gfxIntSize size(mDrawable->Size());
-  return GetFrameAtSize(IntSize(size.width, size.height),
-                        aWhichFrame,
-                        aFlags);
-}
 
-NS_IMETHODIMP_(already_AddRefed<SourceSurface>)
-DynamicImage::GetFrameAtSize(const IntSize& aSize,
-                             uint32_t aWhichFrame,
-                             uint32_t aFlags)
-{
   RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->
-    CreateOffscreenContentDrawTarget(aSize, SurfaceFormat::B8G8R8A8);
+    CreateOffscreenContentDrawTarget(IntSize(size.width, size.height),
+                                     SurfaceFormat::B8G8R8A8);
   if (!dt) {
     gfxWarning() <<
       "DynamicImage::GetFrame failed in CreateOffscreenContentDrawTarget";
@@ -187,7 +179,7 @@ DynamicImage::GetFrameAtSize(const IntSize& aSize,
   }
   nsRefPtr<gfxContext> context = new gfxContext(dt);
 
-  auto result = Draw(context, aSize, ImageRegion::Create(aSize),
+  auto result = Draw(context, size, ImageRegion::Create(size),
                      aWhichFrame, GraphicsFilter::FILTER_NEAREST,
                      Nothing(), aFlags);
 

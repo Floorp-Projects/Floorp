@@ -14,14 +14,13 @@
 
 #include "RasterImage.h"
 
-using namespace mozilla::gfx;
-
 namespace mozilla {
 namespace image {
 
 // Constants.
 static const uint32_t ICOHEADERSIZE = 6;
 static const uint32_t BITMAPINFOSIZE = 40;
+static const uint32_t PREFICONSIZE = 16;
 
 // ----------------------------------------
 // Actual Data Processing
@@ -61,7 +60,6 @@ nsICODecoder::GetNumColors()
 nsICODecoder::nsICODecoder(RasterImage* aImage)
   : Decoder(aImage)
   , mLexer(Transition::To(ICOState::HEADER, ICOHEADERSIZE))
-  , mBiggestResourceColorDepth(0)
   , mBestResourceDelta(INT_MIN)
   , mBestResourceColorDepth(0)
   , mNumIcons(0)
@@ -70,20 +68,6 @@ nsICODecoder::nsICODecoder(RasterImage* aImage)
   , mMaskRowSize(0)
   , mCurrMaskLine(0)
 { }
-
-nsresult
-nsICODecoder::SetTargetSize(const nsIntSize& aSize)
-{
-  // Make sure the size is reasonable.
-  if (MOZ_UNLIKELY(aSize.width <= 0 || aSize.height <= 0)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Create a downscaler that we'll filter our output through.
-  mDownscaler.emplace(aSize);
-
-  return NS_OK;
-}
 
 void
 nsICODecoder::FinishInternal()
@@ -238,6 +222,16 @@ nsICODecoder::ReadBIHSize(const char* aBIH)
   return headerSize;
 }
 
+void
+nsICODecoder::SetHotSpotIfCursor()
+{
+  if (!mIsCursor) {
+    return;
+  }
+
+  mImageMetadata.SetHotspot(mDirEntry.mXHotspot, mDirEntry.mYHotspot);
+}
+
 LexerTransition<ICOState>
 nsICODecoder::ReadHeader(const char* aData)
 {
@@ -254,13 +248,10 @@ nsICODecoder::ReadHeader(const char* aData)
     return Transition::Terminate(ICOState::SUCCESS); // Nothing to do.
   }
 
-  // Downscale-during-decode can end up decoding different resources in the ICO
-  // file depending on the target size. Since the resources are not necessarily
-  // scaled versions of the same image, some may be transparent and some may not
-  // be. We could be precise about transparency if we decoded the metadata of
-  // every resource, but for now we don't and it's safest to assume that
-  // transparency could be present.
-  PostHasTransparency();
+  // If we didn't get a #-moz-resolution, default to PREFICONSIZE.
+  if (mResolution.width == 0 && mResolution.height == 0) {
+    mResolution.SizeTo(PREFICONSIZE, PREFICONSIZE);
+  }
 
   return Transition::To(ICOState::DIR_ENTRY, ICODIRENTRYSIZE);
 }
@@ -297,69 +288,30 @@ nsICODecoder::ReadDirEntry(const char* aData)
   memcpy(&e.mImageOffset, aData + 12, sizeof(e.mImageOffset));
   e.mImageOffset = LittleEndian::readUint32(&e.mImageOffset);
 
-  // Determine if this is the biggest resource we've seen so far. We always use
-  // the biggest resource for the intrinsic size, and if we're not downscaling,
-  // we select it as the best resource as well.
-  IntSize entrySize(GetRealWidth(e), GetRealHeight(e));
-  if (e.mBitCount >= mBiggestResourceColorDepth &&
-      entrySize.width * entrySize.height >=
-        mBiggestResourceSize.width * mBiggestResourceSize.height) {
-    mBiggestResourceSize = entrySize;
-    mBiggestResourceColorDepth = e.mBitCount;
-    mBiggestResourceHotSpot = IntSize(e.mXHotspot, e.mYHotspot);
+  // Calculate the delta between this image's size and the desired size, so we
+  // can see if it is better than our current-best option.  In the case of
+  // several equally-good images, we use the last one. "Better" in this case is
+  // determined by |delta|, a measure of the difference in size between the
+  // entry we've found and the requested size. We will choose the smallest image
+  // that is >= requested size (i.e. we assume it's better to downscale a larger
+  // icon than to upscale a smaller one).
+  int32_t delta = GetRealWidth(e) - mResolution.width +
+                  GetRealHeight(e) - mResolution.height;
+  if (e.mBitCount >= mBestResourceColorDepth &&
+      ((mBestResourceDelta < 0 && delta >= mBestResourceDelta) ||
+       (delta >= 0 && delta <= mBestResourceDelta))) {
+    mBestResourceDelta = delta;
 
-    if (!mDownscaler) {
-      mDirEntry = e;
-    }
-  }
-
-  if (mDownscaler) {
-    // Calculate the delta between this resource's size and the desired size, so
-    // we can see if it is better than our current-best option.  In the case of
-    // several equally-good resources, we use the last one. "Better" in this
-    // case is determined by |delta|, a measure of the difference in size
-    // between the entry we've found and the downscaler's target size. We will
-    // choose the smallest resource that is >= the target size (i.e. we assume
-    // it's better to downscale a larger icon than to upscale a smaller one).
-    IntSize desiredSize = mDownscaler->TargetSize();
-    int32_t delta = entrySize.width - desiredSize.width +
-                    entrySize.height - desiredSize.height;
-    if (e.mBitCount >= mBestResourceColorDepth &&
-        ((mBestResourceDelta < 0 && delta >= mBestResourceDelta) ||
-         (delta >= 0 && delta <= mBestResourceDelta))) {
-      mBestResourceDelta = delta;
-      mBestResourceColorDepth = e.mBitCount;
-      mDirEntry = e;
-    }
-  }
-
-  if (mCurrIcon == mNumIcons) {
-    // Ensure the resource we selected has an offset past the ICO headers.
-    if (mDirEntry.mImageOffset < FirstResourceOffset()) {
+    // Ensure mImageOffset is >= size of the direntry headers (bug #245631).
+    if (e.mImageOffset < FirstResourceOffset()) {
       return Transition::Terminate(ICOState::FAILURE);
     }
 
-    // If this is a cursor, set the hotspot. We use the hotspot from the biggest
-    // resource since we also use that resource for the intrinsic size.
-    if (mIsCursor) {
-      mImageMetadata.SetHotspot(mBiggestResourceHotSpot.width,
-                                mBiggestResourceHotSpot.height);
-    }
+    mBestResourceColorDepth = e.mBitCount;
+    mDirEntry = e;
+  }
 
-    // We always report the biggest resource's size as the intrinsic size; this
-    // is necessary for downscale-during-decode to work since we won't even
-    // attempt to *upscale* while decoding.
-    PostSize(mBiggestResourceSize.width, mBiggestResourceSize.height);
-    if (IsMetadataDecode()) {
-      return Transition::Terminate(ICOState::SUCCESS);
-    }
-
-    // If the resource we selected matches the downscaler's target size
-    // perfectly, we don't need to do any downscaling.
-    if (mDownscaler && GetRealSize() == mDownscaler->TargetSize()) {
-      mDownscaler.reset();
-    }
-
+  if (mCurrIcon == mNumIcons) {
     size_t offsetToResource = mDirEntry.mImageOffset - FirstResourceOffset();
     return Transition::ToUnbuffered(ICOState::FOUND_RESOURCE,
                                     ICOState::SKIP_TO_RESOURCE,
@@ -382,9 +334,6 @@ nsICODecoder::SniffResource(const char* aData)
     mContainedDecoder->SetMetadataDecode(IsMetadataDecode());
     mContainedDecoder->SetDecoderFlags(GetDecoderFlags());
     mContainedDecoder->SetSurfaceFlags(GetSurfaceFlags());
-    if (mDownscaler) {
-      mContainedDecoder->SetTargetSize(mDownscaler->TargetSize());
-    }
     mContainedDecoder->Init();
 
     if (!WriteToContainedDecoder(aData, PNGSIGNATURESIZE)) {
@@ -409,9 +358,6 @@ nsICODecoder::SniffResource(const char* aData)
     mContainedDecoder->SetMetadataDecode(IsMetadataDecode());
     mContainedDecoder->SetDecoderFlags(GetDecoderFlags());
     mContainedDecoder->SetSurfaceFlags(GetSurfaceFlags());
-    if (mDownscaler) {
-      mContainedDecoder->SetTargetSize(mDownscaler->TargetSize());
-    }
     mContainedDecoder->Init();
 
     // Make sure we have a sane size for the bitmap information header.
@@ -436,9 +382,19 @@ nsICODecoder::ReadPNG(const char* aData, uint32_t aLen)
     return Transition::Terminate(ICOState::FAILURE);
   }
 
+  if (!HasSize() && mContainedDecoder->HasSize()) {
+    nsIntSize size = mContainedDecoder->GetSize();
+    PostSize(size.width, size.height);
+
+    if (IsMetadataDecode()) {
+      return Transition::Terminate(ICOState::SUCCESS);
+    }
+  }
+
   // Raymond Chen says that 32bpp only are valid PNG ICOs
   // http://blogs.msdn.com/b/oldnewthing/archive/2010/10/22/10079192.aspx
-  if (!static_cast<nsPNGDecoder*>(mContainedDecoder.get())->IsValidICO()) {
+  if (!IsMetadataDecode() &&
+      !static_cast<nsPNGDecoder*>(mContainedDecoder.get())->IsValidICO()) {
     return Transition::Terminate(ICOState::FAILURE);
   }
 
@@ -468,6 +424,9 @@ nsICODecoder::ReadBIH(const char* aData)
     return Transition::Terminate(ICOState::FAILURE);
   }
 
+  // Set up the cursor hot spot if one is present.
+  SetHotSpotIfCursor();
+
   // Fix the ICO height from the BIH. It needs to be halved so our BMP decoder
   // will understand, because the BMP decoder doesn't expect the alpha mask that
   // follows the BMP data in an ICO.
@@ -483,6 +442,14 @@ nsICODecoder::ReadBIH(const char* aData)
   // Write out the BMP's bitmap info header.
   if (!WriteToContainedDecoder(mBIHraw, sizeof(mBIHraw))) {
     return Transition::Terminate(ICOState::FAILURE);
+  }
+
+  nsIntSize size = mContainedDecoder->GetSize();
+  PostSize(size.width, size.height);
+
+  // We have the size. If we're doing a metadata decode, we're done.
+  if (IsMetadataDecode()) {
+    return Transition::Terminate(ICOState::SUCCESS);
   }
 
   // Sometimes the ICO BPP header field is not filled out so we should trust the
@@ -607,19 +574,6 @@ nsICODecoder::ReadMaskRow(const char* aData)
   return Transition::To(ICOState::READ_MASK_ROW, mMaskRowSize);
 }
 
-LexerTransition<ICOState>
-nsICODecoder::FinishResource()
-{
-  // Make sure the actual size of the resource matches the size in the directory
-  // entry. If not, we consider the image corrupt.
-  if (mContainedDecoder->HasSize() &&
-      mContainedDecoder->GetSize() != GetRealSize()) {
-    return Transition::Terminate(ICOState::FAILURE);
-  }
-
-  return Transition::Terminate(ICOState::SUCCESS);
-}
-
 void
 nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
 {
@@ -654,7 +608,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
         case ICOState::SKIP_MASK:
           return Transition::ContinueUnbuffered(ICOState::SKIP_MASK);
         case ICOState::FINISHED_RESOURCE:
-          return FinishResource();
+          return Transition::Terminate(ICOState::SUCCESS);
         default:
           MOZ_ASSERT_UNREACHABLE("Unknown ICOState");
           return Transition::Terminate(ICOState::FAILURE);

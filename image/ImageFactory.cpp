@@ -38,7 +38,6 @@ ShouldDownscaleDuringDecode(const nsCString& aMimeType)
   DecoderType type = DecoderFactory::GetDecoderType(aMimeType.get());
   return type == DecoderType::JPEG ||
          type == DecoderType::ICON ||
-         type == DecoderType::ICO ||
          type == DecoderType::PNG ||
          type == DecoderType::BMP ||
          type == DecoderType::GIF;
@@ -143,13 +142,7 @@ ImageFactory::CreateAnonymousImage(const nsCString& aMimeType)
   newTracker->SetImage(newImage);
   newImage->SetProgressTracker(newTracker);
 
-  uint32_t imageFlags = Image::INIT_FLAG_SYNC_LOAD;
-  if (gfxPrefs::ImageDownscaleDuringDecodeEnabled() &&
-      ShouldDownscaleDuringDecode(aMimeType)) {
-    imageFlags |= Image::INIT_FLAG_DOWNSCALE_DURING_DECODE;
-  }
-
-  rv = newImage->Init(aMimeType.get(), imageFlags);
+  rv = newImage->Init(aMimeType.get(), Image::INIT_FLAG_SYNC_LOAD);
   if (NS_FAILED(rv)) {
     return BadImage("RasterImage::Init failed", newImage);
   }
