@@ -1,4 +1,4 @@
-// |jit-test| --no-ggc; allow-unhandlable-oom; --no-threads
+// |jit-test| --no-threads
 
 load(libdir + 'oomTest.js');
 oomTest(function () {
