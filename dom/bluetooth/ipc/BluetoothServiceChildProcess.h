@@ -287,7 +287,7 @@ public:
     const BluetoothGattServiceId& aServiceId,
     const BluetoothGattId& aCharacteristicId,
     const BluetoothGattId& aDescriptorId,
-    BluetoothReplyRunnable* aRunnable);
+    BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
   GattClientWriteDescriptorValueInternal(
@@ -296,19 +296,19 @@ public:
     const BluetoothGattId& aCharacteristicId,
     const BluetoothGattId& aDescriptorId,
     const nsTArray<uint8_t>& aValue,
-    BluetoothReplyRunnable* aRunnable);
+    BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
   GattServerConnectPeripheralInternal(
     const nsAString& aAppUuid,
     const nsAString& aAddress,
-    BluetoothReplyRunnable* aRunnable);
+    BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
   GattServerDisconnectPeripheralInternal(
     const nsAString& aAppUuid,
     const nsAString& aAddress,
-    BluetoothReplyRunnable* aRunnable);
+    BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
   UnregisterGattServerInternal(int aServerIf,
