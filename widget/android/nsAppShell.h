@@ -53,6 +53,8 @@ public:
         }
     };
 
+    class LegacyGeckoEvent;
+
     template<typename T>
     class LambdaEvent : public Event
     {
@@ -65,7 +67,6 @@ public:
     };
 
     static nsAppShell *gAppShell;
-    static mozilla::AndroidGeckoEvent *gEarlyEvent;
 
     nsAppShell();
 
@@ -124,7 +125,11 @@ protected:
 
     class Queue
     {
+    public:
+        // XXX need to be public for the mQueuedViewportEvent ugliness.
         mozilla::Monitor mMonitor;
+
+    private:
         mozilla::LinkedList<Event> mQueue;
 
     public:
@@ -163,7 +168,7 @@ protected:
 
     } mEventQueue;
 
-    mozilla::AndroidGeckoEvent *mQueuedViewportEvent;
+    Event* mQueuedViewportEvent;
     bool mAllowCoalescingTouches;
 
     nsCOMPtr<nsIAndroidBrowserApp> mBrowserApp;
