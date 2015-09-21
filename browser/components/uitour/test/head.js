@@ -165,17 +165,21 @@ function promisePanelShown(win) {
 }
 
 function promisePanelElementEvent(win, aPanel, aEvent) {
-  let deferred = Promise.defer();
-  let timeoutId = win.setTimeout(() => {
-    deferred.reject("Event did not happen within 5 seconds.");
-  }, 5000);
-  aPanel.addEventListener(aEvent, function onPanelEvent(e) {
-    aPanel.removeEventListener(aEvent, onPanelEvent);
-    win.clearTimeout(timeoutId);
-    // Wait one tick to let UITour.jsm process the event as well.
-    executeSoon(deferred.resolve);
+  return new Promise((resolve, reject) => {
+    let timeoutId = win.setTimeout(() => {
+      aPanel.removeEventListener(aEvent, onPanelEvent);
+      reject("Event did not happen within 5 seconds.");
+    }, 5000);
+
+    function onPanelEvent(e) {
+      aPanel.removeEventListener(aEvent, onPanelEvent);
+      win.clearTimeout(timeoutId);
+      // Wait one tick to let UITour.jsm process the event as well.
+      executeSoon(resolve);
+    }
+
+    aPanel.addEventListener(aEvent, onPanelEvent);
   });
-  return deferred.promise;
 }
 
 function promisePanelElementShown(win, aPanel) {
