@@ -1,6 +1,5 @@
 #PopupAutoCompleteRichResult > hbox[anonid="search-suggestions-notification"] {
   border-bottom: 1px solid hsla(210, 4%, 10%, 0.14);
-  color: -moz-FieldText;
   background-color: hsla(210, 4%, 10%, 0.07);
   padding: 6px 0;
   -moz-padding-start: 44px;
