@@ -642,11 +642,11 @@ JSObject::writeBarrierPost(void* cellp, JSObject* prev, JSObject* next)
     js::gc::StoreBuffer* buffer;
     if (next && (buffer = next->storeBuffer())) {
         // If we know that the prev has already inserted an entry, we can skip
-        // doing the lookup to add the new entry.
-        if (prev && prev->storeBuffer()) {
-            buffer->assertHasCellEdge(static_cast<js::gc::Cell**>(cellp));
+        // doing the lookup to add the new entry. Note that we cannot safely
+        // assert the presence of the entry because it may have been added
+        // via a different store buffer.
+        if (prev && prev->storeBuffer())
             return;
-        }
         buffer->putCellFromAnyThread(static_cast<js::gc::Cell**>(cellp));
         return;
     }
