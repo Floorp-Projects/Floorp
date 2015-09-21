@@ -62,8 +62,8 @@ protected:
 private:
   class CleanupAvrcpResultHandler;
   class CleanupAvrcpResultHandlerRunnable;
-  class ConnectResultHandler;
-  class DisconnectResultHandler;
+  class ConnectRunnable;
+  class DisconnectRunnable;
   class InitAvrcpResultHandler;
   class OnErrorProfileResultHandlerRunnable;
 
