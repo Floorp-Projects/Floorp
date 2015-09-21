@@ -2256,6 +2256,7 @@ private:
 GenerateAsymmetricKeyTask::GenerateAsymmetricKeyTask(
     JSContext* aCx, const ObjectOrString& aAlgorithm, bool aExtractable,
     const Sequence<nsString>& aKeyUsages)
+  : mKeyPair(new CryptoKeyPair())
 {
   nsIGlobalObject* global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
   if (!global) {
@@ -2269,9 +2270,9 @@ GenerateAsymmetricKeyTask::GenerateAsymmetricKeyTask(
     return;
   }
 
-  // Create an empty key and set easy attributes
-  mKeyPair.mPrivateKey = new CryptoKey(global);
-  mKeyPair.mPublicKey  = new CryptoKey(global);
+  // Create an empty key pair and set easy attributes
+  mKeyPair->mPrivateKey = new CryptoKey(global);
+  mKeyPair->mPublicKey = new CryptoKey(global);
 
   // Extract algorithm name
   mEarlyRv = GetAlgorithmName(aCx, aAlgorithm, mAlgName);
@@ -2303,17 +2304,17 @@ GenerateAsymmetricKeyTask::GenerateAsymmetricKeyTask(
     }
 
     // Create algorithm
-    if (!mKeyPair.mPublicKey.get()->Algorithm().MakeRsa(mAlgName,
-                                                        modulusLength,
-                                                        publicExponent,
-                                                        hashName)) {
-      mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
-      return;
-    }
-    if (!mKeyPair.mPrivateKey.get()->Algorithm().MakeRsa(mAlgName,
+    if (!mKeyPair->mPublicKey.get()->Algorithm().MakeRsa(mAlgName,
                                                          modulusLength,
                                                          publicExponent,
                                                          hashName)) {
+      mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
+      return;
+    }
+    if (!mKeyPair->mPrivateKey.get()->Algorithm().MakeRsa(mAlgName,
+                                                          modulusLength,
+                                                          publicExponent,
+                                                          hashName)) {
       mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
       return;
     }
@@ -2341,8 +2342,8 @@ GenerateAsymmetricKeyTask::GenerateAsymmetricKeyTask(
     }
 
     // Create algorithm.
-    mKeyPair.mPublicKey.get()->Algorithm().MakeEc(mAlgName, mNamedCurve);
-    mKeyPair.mPrivateKey.get()->Algorithm().MakeEc(mAlgName, mNamedCurve);
+    mKeyPair->mPublicKey.get()->Algorithm().MakeEc(mAlgName, mNamedCurve);
+    mKeyPair->mPrivateKey.get()->Algorithm().MakeEc(mAlgName, mNamedCurve);
     mMechanism = CKM_EC_KEY_PAIR_GEN;
   } else if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_DH)) {
     RootedDictionary<DhKeyGenParams> params(aCx);
@@ -2366,15 +2367,15 @@ GenerateAsymmetricKeyTask::GenerateAsymmetricKeyTask(
     }
 
     // Create algorithm.
-    if (!mKeyPair.mPublicKey.get()->Algorithm().MakeDh(mAlgName,
-                                                       prime,
-                                                       generator)) {
+    if (!mKeyPair->mPublicKey.get()->Algorithm().MakeDh(mAlgName,
+                                                        prime,
+                                                        generator)) {
       mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
       return;
     }
-    if (!mKeyPair.mPrivateKey.get()->Algorithm().MakeDh(mAlgName,
-                                                        prime,
-                                                        generator)) {
+    if (!mKeyPair->mPrivateKey.get()->Algorithm().MakeDh(mAlgName,
+                                                         prime,
+                                                         generator)) {
       mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
       return;
     }
@@ -2398,31 +2399,31 @@ GenerateAsymmetricKeyTask::GenerateAsymmetricKeyTask(
     publicAllowedUsages = 0;
   }
 
-  mKeyPair.mPrivateKey.get()->SetExtractable(aExtractable);
-  mKeyPair.mPrivateKey.get()->SetType(CryptoKey::PRIVATE);
+  mKeyPair->mPrivateKey.get()->SetExtractable(aExtractable);
+  mKeyPair->mPrivateKey.get()->SetType(CryptoKey::PRIVATE);
 
-  mKeyPair.mPublicKey.get()->SetExtractable(true);
-  mKeyPair.mPublicKey.get()->SetType(CryptoKey::PUBLIC);
+  mKeyPair->mPublicKey.get()->SetExtractable(true);
+  mKeyPair->mPublicKey.get()->SetType(CryptoKey::PUBLIC);
 
-  mKeyPair.mPrivateKey.get()->ClearUsages();
-  mKeyPair.mPublicKey.get()->ClearUsages();
+  mKeyPair->mPrivateKey.get()->ClearUsages();
+  mKeyPair->mPublicKey.get()->ClearUsages();
   for (uint32_t i=0; i < aKeyUsages.Length(); ++i) {
-    mEarlyRv = mKeyPair.mPrivateKey.get()->AddUsageIntersecting(aKeyUsages[i],
-                                                                privateAllowedUsages);
+    mEarlyRv = mKeyPair->mPrivateKey.get()->AddUsageIntersecting(aKeyUsages[i],
+                                                                 privateAllowedUsages);
     if (NS_FAILED(mEarlyRv)) {
       return;
     }
 
-    mEarlyRv = mKeyPair.mPublicKey.get()->AddUsageIntersecting(aKeyUsages[i],
-                                                               publicAllowedUsages);
+    mEarlyRv = mKeyPair->mPublicKey.get()->AddUsageIntersecting(aKeyUsages[i],
+                                                                publicAllowedUsages);
     if (NS_FAILED(mEarlyRv)) {
       return;
     }
   }
 
   // If no usages ended up being allowed, DataError
-  if (!mKeyPair.mPublicKey.get()->HasAnyUsage() &&
-      !mKeyPair.mPrivateKey.get()->HasAnyUsage()) {
+  if (!mKeyPair->mPublicKey.get()->HasAnyUsage() &&
+      !mKeyPair->mPrivateKey.get()->HasAnyUsage()) {
     mEarlyRv = NS_ERROR_DOM_DATA_ERR;
     return;
   }
@@ -2438,6 +2439,8 @@ GenerateAsymmetricKeyTask::ReleaseNSSResources()
 nsresult
 GenerateAsymmetricKeyTask::DoCrypto()
 {
+  MOZ_ASSERT(mKeyPair);
+
   ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
   MOZ_ASSERT(slot.get());
 
@@ -2468,15 +2471,15 @@ GenerateAsymmetricKeyTask::DoCrypto()
     return NS_ERROR_DOM_UNKNOWN_ERR;
   }
 
-  nsresult rv = mKeyPair.mPrivateKey.get()->SetPrivateKey(mPrivateKey);
+  nsresult rv = mKeyPair->mPrivateKey.get()->SetPrivateKey(mPrivateKey);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
-  rv = mKeyPair.mPublicKey.get()->SetPublicKey(mPublicKey);
+  rv = mKeyPair->mPublicKey.get()->SetPublicKey(mPublicKey);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
 
   // PK11_GenerateKeyPair() does not set a CKA_EC_POINT attribute on the
   // private key, we need this later when exporting to PKCS8 and JWK though.
   if (mMechanism == CKM_EC_KEY_PAIR_GEN) {
-    rv = mKeyPair.mPrivateKey->AddPublicKeyData(mPublicKey);
+    rv = mKeyPair->mPrivateKey->AddPublicKeyData(mPublicKey);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
   }
 
@@ -2486,7 +2489,13 @@ GenerateAsymmetricKeyTask::DoCrypto()
 void
 GenerateAsymmetricKeyTask::Resolve()
 {
-  mResultPromise->MaybeResolve(mKeyPair);
+  mResultPromise->MaybeResolve(*mKeyPair);
+}
+
+void
+GenerateAsymmetricKeyTask::Cleanup()
+{
+  mKeyPair = nullptr;
 }
 
 class DerivePbkdfBitsTask : public ReturnArrayBufferViewTask
