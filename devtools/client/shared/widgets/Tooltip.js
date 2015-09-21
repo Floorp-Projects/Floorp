@@ -37,11 +37,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
-const SPECTRUM_FRAME = "chrome://browser/content/devtools/spectrum-frame.xhtml";
+const SPECTRUM_FRAME = "chrome://devtools/content/shared/widgets/spectrum-frame.xhtml";
 const CUBIC_BEZIER_FRAME =
-      "chrome://browser/content/devtools/cubic-bezier-frame.xhtml";
-const MDN_DOCS_FRAME = "chrome://browser/content/devtools/mdn-docs-frame.xhtml";
-const FILTER_FRAME = "chrome://browser/content/devtools/filter-frame.xhtml";
+      "chrome://devtools/content/shared/widgets/cubic-bezier-frame.xhtml";
+const MDN_DOCS_FRAME = "chrome://devtools/content/shared/widgets/mdn-docs-frame.xhtml";
+const FILTER_FRAME = "chrome://devtools/content/shared/widgets/filter-frame.xhtml";
 const ESCAPE_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE;
 const RETURN_KEYCODE = Ci.nsIDOMKeyEvent.DOM_VK_RETURN;
 const POPUP_EVENTS = ["shown", "hidden", "showing", "hiding"];

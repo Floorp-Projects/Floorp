@@ -6,7 +6,7 @@
 <?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/shadereditor.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/devtools/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
 <!DOCTYPE window [
   <!ENTITY % debuggerDTD SYSTEM "chrome://browser/locale/devtools/shadereditor.dtd">
   %debuggerDTD;
@@ -15,7 +15,7 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript;version=1.8"
-          src="chrome://browser/content/devtools/theme-switching.js"/>
+          src="chrome://devtools/content/shared/theme-switching.js"/>
 
   <script type="application/javascript" src="shadereditor.js"/>
 

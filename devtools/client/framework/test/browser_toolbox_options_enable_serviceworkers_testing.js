@@ -5,7 +5,7 @@
 // mServiceWorkersTestingEnabled attribute added to nsPIDOMWindow.
 
 const COMMON_FRAME_SCRIPT_URL =
-  "chrome://browser/content/devtools/frame-script-utils.js";
+  "chrome://devtools/content/shared/frame-script-utils.js";
 const ROOT_TEST_DIR =
   getRootDirectory(gTestPath);
 const FRAME_SCRIPT_URL =

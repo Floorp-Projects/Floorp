@@ -27,7 +27,7 @@ loader.lazyRequireGetter(this, "GraphAreaDragger",
   "devtools/shared/widgets/Graphs", true);
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
-const GRAPH_SRC = "chrome://browser/content/devtools/graphs-frame.xhtml";
+const GRAPH_SRC = "chrome://devtools/content/shared/widgets/graphs-frame.xhtml";
 
 const L10N = new ViewHelpers.L10N();
 

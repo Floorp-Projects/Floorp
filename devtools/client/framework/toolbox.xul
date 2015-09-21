@@ -19,7 +19,7 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/javascript;version=1.8"
-          src="chrome://browser/content/devtools/theme-switching.js"/>
+          src="chrome://devtools/content/shared/theme-switching.js"/>
   <script type="application/javascript"
           src="chrome://global/content/viewSourceUtils.js"/>
 

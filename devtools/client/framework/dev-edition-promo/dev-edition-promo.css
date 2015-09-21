@@ -48,7 +48,7 @@ window {
 }
 
 #icon {
-  background-image: url("chrome://browser/content/devtools/framework/dev-edition-logo.png");
+  background-image: url("chrome://devtools/content/framework/dev-edition-promo/dev-edition-logo.png");
   background-size: 64px 64px;
   background-repeat: no-repeat;
   width: 64px;

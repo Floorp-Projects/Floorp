@@ -6,7 +6,7 @@
 
 // Tests that the CubicBezierPresetWidget cycles menus
 
-const TEST_URI = "chrome://browser/content/devtools/cubic-bezier-frame.xhtml";
+const TEST_URI = "chrome://devtools/content/shared/widgets/cubic-bezier-frame.xhtml";
 const {CubicBezierPresetWidget} =
   require("devtools/shared/widgets/CubicBezierWidget");
 const {PREDEFINED, PRESETS, DEFAULT_PRESET_CATEGORY} =

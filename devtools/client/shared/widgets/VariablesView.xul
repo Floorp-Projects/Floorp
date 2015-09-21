@@ -3,7 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
-<?xml-stylesheet href="chrome://browser/content/devtools/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/devtools/widgets.css" type="text/css"?>
 <!DOCTYPE window [
@@ -14,6 +14,6 @@
         title="&PropertiesViewWindowTitle;">
 
   <script type="application/javascript;version=1.8"
-          src="chrome://browser/content/devtools/theme-switching.js"/>
+          src="chrome://devtools/content/shared/theme-switching.js"/>
   <vbox id="variables" flex="1"/>
 </window>

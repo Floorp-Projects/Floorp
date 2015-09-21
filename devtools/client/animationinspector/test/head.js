@@ -19,7 +19,7 @@ waitForExplicitFinish();
 const TEST_URL_ROOT = "http://example.com/browser/browser/devtools/animationinspector/test/";
 const ROOT_TEST_DIR = getRootDirectory(gTestPath);
 const FRAME_SCRIPT_URL = ROOT_TEST_DIR + "doc_frame_script.js";
-const COMMON_FRAME_SCRIPT_URL = "chrome://browser/content/devtools/frame-script-utils.js";
+const COMMON_FRAME_SCRIPT_URL = "chrome://devtools/content/shared/frame-script-utils.js";
 const NEW_UI_PREF = "devtools.inspector.animationInspectorV3";
 const TAB_NAME = "animationinspector";
 

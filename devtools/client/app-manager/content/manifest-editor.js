@@ -8,7 +8,7 @@ const {VariablesView} =
   Cu.import("resource:///modules/devtools/VariablesView.jsm", {});
 
 const VARIABLES_VIEW_URL =
-  "chrome://browser/content/devtools/widgets/VariablesView.xul";
+  "chrome://devtools/content/shared/widgets/VariablesView.xul";
 
 function ManifestEditor(project) {
   this.project = project;

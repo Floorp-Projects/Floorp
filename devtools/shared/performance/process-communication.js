@@ -10,7 +10,7 @@
  * the parent process.
  */
 
-const FRAME_SCRIPT_UTILS_URL = "chrome://browser/content/devtools/frame-script-utils.js";
+const FRAME_SCRIPT_UTILS_URL = "chrome://devtools/content/shared/frame-script-utils.js";
 loader.lazyRequireGetter(this, "Task", "resource://gre/modules/Task.jsm", true);
 loader.lazyRequireGetter(this, "uuid", "sdk/util/uuid", true);
 
