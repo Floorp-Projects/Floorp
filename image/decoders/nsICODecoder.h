@@ -43,8 +43,6 @@ class nsICODecoder : public Decoder
 public:
   virtual ~nsICODecoder() { }
 
-  nsresult SetTargetSize(const nsIntSize& aSize) override;
-
   /// @return the width of the icon directory entry @aEntry.
   static uint32_t GetRealWidth(const IconDirEntry& aEntry)
   {
@@ -63,10 +61,9 @@ public:
   /// @return the height of the selected directory entry (mDirEntry).
   uint32_t GetRealHeight() const { return GetRealHeight(mDirEntry); }
 
-  /// @return the size of the selected directory entry (mDirEntry).
-  gfx::IntSize GetRealSize() const
+  virtual void SetResolution(const gfx::IntSize& aResolution) override
   {
-    return gfx::IntSize(GetRealWidth(), GetRealHeight());
+    mResolution = aResolution;
   }
 
   /// @return The offset from the beginning of the ICO to the first resource.
@@ -89,6 +86,8 @@ private:
   // Gets decoder state from the contained decoder so it's visible externally.
   void GetFinalStateFromContainedDecoder();
 
+  // Sets the hotspot property of if we have a cursor
+  void SetHotSpotIfCursor();
   // Creates a bitmap file header buffer, returns true if successful
   bool FillBitmapFileHeaderBuffer(int8_t* bfh);
   // Fixes the ICO height to match that of the BIH.
@@ -116,16 +115,12 @@ private:
   LexerTransition<ICOState> ReadBMP(const char* aData, uint32_t aLen);
   LexerTransition<ICOState> PrepareForMask();
   LexerTransition<ICOState> ReadMaskRow(const char* aData);
-  LexerTransition<ICOState> FinishResource();
 
   StreamingLexer<ICOState, 32> mLexer; // The lexer.
-  Maybe<Downscaler> mDownscaler;       // Our downscaler, if we're downscaling.
   nsRefPtr<Decoder> mContainedDecoder; // Either a BMP or PNG decoder.
+  gfx::IntSize mResolution;            // The requested -moz-resolution.
   char mBIHraw[40];                    // The bitmap information header.
   IconDirEntry mDirEntry;              // The dir entry for the selected resource.
-  IntSize mBiggestResourceSize;        // Used to select the intrinsic size.
-  IntSize mBiggestResourceHotSpot;     // Used to select the intrinsic size.
-  uint16_t mBiggestResourceColorDepth; // Used to select the intrinsic size.
   int32_t mBestResourceDelta;          // Used to select the best resource.
   uint16_t mBestResourceColorDepth;    // Used to select the best resource.
   uint16_t mNumIcons; // Stores the number of icons in the ICO file.
