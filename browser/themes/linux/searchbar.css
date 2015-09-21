@@ -54,9 +54,6 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
   list-style-image: url("moz-icon://stock/gtk-clear?size=menu&state=disabled");
 }
 
-
-
-
 .searchbar-search-button-container {
   -moz-box-align: center;
 }
@@ -88,15 +85,14 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
 }
 
 .search-panel-current-engine {
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 .search-panel-header {
   font-weight: normal;
-  background-color: rgb(245, 245, 245);
-  border-top: 1px solid #ccc;
+  border-top: 1px solid rgba(0, 0, 0, 0.2);
   padding: 3px 5px;
-  color: #666;
+  color: MenuText;
 }
 
 .search-panel-tree[collapsed=true] + .search-panel-header {
@@ -113,12 +109,12 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
 }
 
 .search-panel-input-value {
-  color: black;
+  color: Highlight;
 }
 
 .search-panel-one-offs {
   margin: 0 -1px !important;
-  border-top: 1px solid #ccc;
+  border-top: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 .searchbar-engine-one-off-item {
@@ -130,14 +126,14 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
   margin: 0 0;
   padding: 0 0;
   background: none;
-  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAWCAYAAAABxvaqAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gofECQNNVW2/AAAABBJREFUGFdjOHPmzH8GehEA/KpKg9YTf4AAAAAASUVORK5CYII=');
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAWCAYAAAABxvaqAAAABmJLR0QA/wD/AP+gvaeTAAAAFElEQVQI12NgYGAwZmJgYGCgBwEAHpIAXs+dj/cAAAAASUVORK5CYII=');
   background-repeat: no-repeat;
   background-position: right center;
 }
 
 .searchbar-engine-one-off-item:not(.last-row) {
   box-sizing: content-box;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 .searchbar-engine-one-off-item.last-of-row {
@@ -178,7 +174,7 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
 }
 
 .addengine-item:first-of-type {
-  border-top: 1px solid #ccc;
+  border-top: 1px solid rgba(0, 0, 0, 0.2);
 }
 
 .addengine-item[selected] {
@@ -231,13 +227,15 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
 
 .search-setting-button {
   -moz-appearance: none;
+  background-color: Menu;
   border: none;
-  border-top: 1px solid #ccc;
+  border-top: 1px solid rgba(0, 0, 0, 0.2);
   margin: 0;
   min-height: 32px;
 }
 
 .search-setting-button[selected] {
-  background-color: #d3d3d3;
+  background-color: Highlight;
+  color: HighlightText;
   border-top-color: #bdbebe;
 }
