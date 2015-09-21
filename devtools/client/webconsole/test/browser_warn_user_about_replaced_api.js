@@ -5,9 +5,9 @@
 
 "use strict";
 
-const TEST_REPLACED_API_URI = "http://example.com/browser/browser/devtools/" +
+const TEST_REPLACED_API_URI = "http://example.com/browser/devtools/client/" +
                               "webconsole/test/test-console-replaced-api.html";
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/testscript.js";
 const PREF = "devtools.webconsole.persistlog";
 

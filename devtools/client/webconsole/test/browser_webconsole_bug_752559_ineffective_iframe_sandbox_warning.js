@@ -6,14 +6,14 @@
 
 "use strict";
 
-const TEST_URI_WARNING = "http://example.com/browser/browser/devtools/" +
+const TEST_URI_WARNING = "http://example.com/browser/devtools/client/" +
                          "webconsole/test/test-bug-752559-ineffective-iframe-sandbox-warning0.html";
 const TEST_URI_NOWARNING = [
-  "http://example.com/browser/browser/devtools/webconsole/test/test-bug-752559-ineffective-iframe-sandbox-warning1.html",
-  "http://example.com/browser/browser/devtools/webconsole/test/test-bug-752559-ineffective-iframe-sandbox-warning2.html",
-  "http://example.com/browser/browser/devtools/webconsole/test/test-bug-752559-ineffective-iframe-sandbox-warning3.html",
-  "http://example.com/browser/browser/devtools/webconsole/test/test-bug-752559-ineffective-iframe-sandbox-warning4.html",
-  "http://example.com/browser/browser/devtools/webconsole/test/test-bug-752559-ineffective-iframe-sandbox-warning5.html"
+  "http://example.com/browser/devtools/client/webconsole/test/test-bug-752559-ineffective-iframe-sandbox-warning1.html",
+  "http://example.com/browser/devtools/client/webconsole/test/test-bug-752559-ineffective-iframe-sandbox-warning2.html",
+  "http://example.com/browser/devtools/client/webconsole/test/test-bug-752559-ineffective-iframe-sandbox-warning3.html",
+  "http://example.com/browser/devtools/client/webconsole/test/test-bug-752559-ineffective-iframe-sandbox-warning4.html",
+  "http://example.com/browser/devtools/client/webconsole/test/test-bug-752559-ineffective-iframe-sandbox-warning5.html"
 ];
 
 const INEFFECTIVE_IFRAME_SANDBOXING_MSG = "An iframe which has both " +

@@ -566,7 +566,7 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
    * Retrieve the list of AnimationPlayerActor actors for currently running
    * animations on a node and its descendants.
    * @param {NodeActor} nodeActor The NodeActor as defined in
-   * /toolkit/devtools/server/actors/inspector
+   * /devtools/server/actors/inspector
    */
   getAnimationPlayersForNode: method(function(nodeActor) {
     let animations = [

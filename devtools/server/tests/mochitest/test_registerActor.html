@@ -26,7 +26,7 @@ window.onload = function() {
   SimpleTest.waitForExplicitFinish();
 
   var {ActorRegistryFront} = require("devtools/server/actors/actor-registry");
-  var actorURL = "chrome://mochitests/content/chrome/toolkit/devtools/server/tests/mochitest/hello-actor.js";
+  var actorURL = "chrome://mochitests/content/chrome/devtools/server/tests/mochitest/hello-actor.js";
 
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();

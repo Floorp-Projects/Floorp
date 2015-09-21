@@ -5,14 +5,14 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-bug-593003-iframe-wrong-hud.html";
 
-const TEST_IFRAME_URI = "http://example.com/browser/browser/devtools/" +
+const TEST_IFRAME_URI = "http://example.com/browser/devtools/client/" +
                         "webconsole/test/test-bug-593003-iframe-wrong-" +
                         "hud-iframe.html";
 
-const TEST_DUMMY_URI = "http://example.com/browser/browser/devtools/" +
+const TEST_DUMMY_URI = "http://example.com/browser/devtools/client/" +
                        "webconsole/test/test-console.html";
 
 var tab1, tab2;

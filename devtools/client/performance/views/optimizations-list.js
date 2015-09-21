@@ -12,7 +12,7 @@ const PROPNAME_MAX_LENGTH = 4;
 /**
  * View for rendering a list of all optmizations found in a frame.
  * The terminology and types used here can be referenced:
- * @see browser/devtools/performance/modules/logic/jit.js
+ * @see devtools/client/performance/modules/logic/jit.js
  */
 
 var OptimizationsListView = {
@@ -247,7 +247,7 @@ var OptimizationsListView = {
   /**
    * Creates an element for insertion in the raw view for an IonType.
    *
-   * @see browser/devtools/performance/modules/logic/jit.js
+   * @see devtools/client/performance/modules/logic/jit.js
    * @param {IonType} ionType
    * @return {Element}
    */
@@ -261,7 +261,7 @@ var OptimizationsListView = {
   /**
    * Creates an element for insertion in the raw view for an ObservedType.
    *
-   * @see browser/devtools/performance/modules/logic/jit.js
+   * @see devtools/client/performance/modules/logic/jit.js
    * @param {ObservedType} type
    * @return {Element}
    */
@@ -300,7 +300,7 @@ var OptimizationsListView = {
   /**
    * Creates an element for insertion in the raw view for an OptimizationAttempt.
    *
-   * @see browser/devtools/performance/modules/logic/jit.js
+   * @see devtools/client/performance/modules/logic/jit.js
    * @param {OptimizationAttempt} attempt
    * @return {Element}
    */

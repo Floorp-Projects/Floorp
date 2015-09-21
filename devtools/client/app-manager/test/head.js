@@ -14,7 +14,7 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 const APP_MANAGER_URL = "about:app-manager";
 const TEST_BASE =
-  "chrome://mochitests/content/browser/browser/devtools/app-manager/test/";
+  "chrome://mochitests/content/browser/devtools/client/app-manager/test/";
 const HOSTED_APP_MANIFEST = TEST_BASE + "hosted_app.manifest";
 
 const PACKAGED_APP_DIR_PATH = getTestFilePath(".");

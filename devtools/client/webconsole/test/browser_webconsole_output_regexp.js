@@ -7,7 +7,7 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-console-output-regexp.html";
 
 var dateNow = Date.now();

@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // shared-head.js handles imports, constants, and utility functions
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/browser/devtools/framework/test/shared-head.js", this);
+Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js", this);
 Services.scriptloader.loadSubScript(TEST_DIR + "../../../commandline/test/helpers.js", this);
 
 const { Eyedropper, EyedropperManager } = require("devtools/client/eyedropper/eyedropper");

@@ -30,7 +30,7 @@ DebuggerServer.registerModule("devtools/server/actors/webapps", {
 });
 ```
 
-If you are adding a new built-in devtools actor, you should be registering it using `DebuggerServer.registerModule` in `addBrowserActors` or `addTabActors` in `/toolkit/devtools/server/main.js`.
+If you are adding a new built-in devtools actor, you should be registering it using `DebuggerServer.registerModule` in `addBrowserActors` or `addTabActors` in `/devtools/server/main.js`.
 
 If you are adding a new actor from an add-on, you should call `DebuggerServer.registerModule` directly from your add-on code.
 

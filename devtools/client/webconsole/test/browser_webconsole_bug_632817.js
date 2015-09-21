@@ -9,7 +9,7 @@
 const TEST_NETWORK_REQUEST_URI = "https://example.com/browser/browser/" +
                                  "devtools/webconsole/test/test-network-request.html";
 
-const TEST_IMG = "http://example.com/browser/browser/devtools/webconsole/" +
+const TEST_IMG = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-image.png";
 
 const TEST_DATA_JSON_CONTENT =

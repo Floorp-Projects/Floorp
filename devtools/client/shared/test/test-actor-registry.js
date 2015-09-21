@@ -14,7 +14,7 @@ var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm",
 var { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 var promise = require("promise");
 
-var TEST_URL_ROOT = "http://example.com/browser/browser/devtools/shared/test/";
+var TEST_URL_ROOT = "http://example.com/browser/devtools/client/shared/test/";
 var ACTOR_URL = TEST_URL_ROOT + "test-actor.js";
 
 // Register a test actor that can operate on the remote document

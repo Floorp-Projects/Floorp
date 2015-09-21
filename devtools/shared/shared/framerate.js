@@ -9,7 +9,7 @@ const { Class } = require("sdk/core/heritage");
 /**
  * A very simple utility for monitoring framerate. Takes a `tabActor`
  * and monitors framerate over time. The actor wrapper around this
- * can be found at toolkit/devtools/server/actors/framerate.js
+ * can be found at devtools/server/actors/framerate.js
  */
 var Framerate = exports.Framerate = Class({
   initialize: function (tabActor) {

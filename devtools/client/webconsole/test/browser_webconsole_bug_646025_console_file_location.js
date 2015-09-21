@@ -10,7 +10,7 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,Web Console file location " +
                  "display test";
-const TEST_URI2 = "http://example.com/browser/browser/devtools/" +
+const TEST_URI2 = "http://example.com/browser/devtools/client/" +
                  "webconsole/test/" +
                  "test-bug-646025-console-file-location.html";
 

@@ -23,14 +23,14 @@ namespace dom {
 class ThreadSafeChromeUtils
 {
 public:
-  // Implemented in toolkit/devtools/heapsnapshot/HeapSnapshot.cpp
+  // Implemented in devtools/shared/heapsnapshot/HeapSnapshot.cpp
   static void SaveHeapSnapshot(GlobalObject& global,
                                JSContext* cx,
                                const HeapSnapshotBoundaries& boundaries,
                                nsAString& filePath,
                                ErrorResult& rv);
 
-  // Implemented in toolkit/devtools/heapsnapshot/HeapSnapshot.cpp
+  // Implemented in devtools/shared/heapsnapshot/HeapSnapshot.cpp
   static already_AddRefed<devtools::HeapSnapshot> ReadHeapSnapshot(GlobalObject& global,
                                                                    JSContext* cx,
                                                                    const nsAString& filePath,

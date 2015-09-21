@@ -10,7 +10,7 @@
 function test() {
   function* runner() {
     const TEST_EVAL_STRING = "document";
-    const TEST_PAGE_URI = "http://example.com/browser/browser/devtools/" +
+    const TEST_PAGE_URI = "http://example.com/browser/devtools/client/" +
                           "webconsole/test/test-console.html";
     const {tab} = yield loadTab(TEST_PAGE_URI);
     const hud = yield openConsole(tab);

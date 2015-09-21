@@ -5,7 +5,7 @@
 
 // Tests that the edit command works
 
-const TEST_URI = "http://example.com/browser/browser/devtools/styleeditor/" +
+const TEST_URI = "http://example.com/browser/devtools/client/styleeditor/" +
                  "test/browser_styleeditor_cmd_edit.html";
 
 add_task(function* () {
@@ -56,7 +56,7 @@ add_task(function* () {
       setup: "edit http",
       check: {
         input: "edit http",
-        hints: "://example.com/browser/browser/devtools/styleeditor/test/" +
+        hints: "://example.com/browser/devtools/client/styleeditor/test/" +
                "resources_inpage1.css [line]",
         markup: "VVVVVIIII",
         status: "ERROR",
@@ -74,7 +74,7 @@ add_task(function* () {
       setup: "edit page1",
       check: {
         input: "edit page1",
-        hints: " [line] -> http://example.com/browser/browser/devtools/" +
+        hints: " [line] -> http://example.com/browser/devtools/client/" +
                "styleeditor/test/resources_inpage1.css",
         markup: "VVVVVIIIII",
         status: "ERROR",
@@ -92,7 +92,7 @@ add_task(function* () {
       setup: "edit page2",
       check: {
         input: "edit page2",
-        hints: " [line] -> http://example.com/browser/browser/devtools/" +
+        hints: " [line] -> http://example.com/browser/devtools/client/" +
                "styleeditor/test/resources_inpage2.css",
         markup: "VVVVVIIIII",
         status: "ERROR",

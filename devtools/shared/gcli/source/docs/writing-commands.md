@@ -93,7 +93,7 @@ And you should access them using ``let l10n = require("gcli/l10n")`` and then
 ``l10n.lookup(...)`` or ``l10n.lookupFormat()``
 
 For examples of existing commands, take a look in
-``browser/devtools/webconsole/GcliCommands.jsm``, which contains most of the
+``devtools/client/webconsole/GcliCommands.jsm``, which contains most of the
 current GCLI commands. If you will be adding a number of new commands, then
 consider starting a new JSM.
 

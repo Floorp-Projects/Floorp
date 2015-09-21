@@ -2,9 +2,9 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const FRAME_SCRIPT_UTILS_URL = "chrome://devtools/content/shared/frame-script-utils.js"
-const TEST_BASE = "chrome://mochitests/content/browser/browser/devtools/styleeditor/test/";
-const TEST_BASE_HTTP = "http://example.com/browser/browser/devtools/styleeditor/test/";
-const TEST_BASE_HTTPS = "https://example.com/browser/browser/devtools/styleeditor/test/";
+const TEST_BASE = "chrome://mochitests/content/browser/devtools/client/styleeditor/test/";
+const TEST_BASE_HTTP = "http://example.com/browser/devtools/client/styleeditor/test/";
+const TEST_BASE_HTTPS = "https://example.com/browser/devtools/client/styleeditor/test/";
 const TEST_HOST = 'mochi.test:8888';
 
 var {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});

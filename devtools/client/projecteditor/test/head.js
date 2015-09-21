@@ -12,7 +12,7 @@ const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 const ProjectEditor = require("devtools/client/projecteditor/lib/projecteditor");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
-const TEST_URL_ROOT = "http://mochi.test:8888/browser/browser/devtools/projecteditor/test/";
+const TEST_URL_ROOT = "http://mochi.test:8888/browser/devtools/client/projecteditor/test/";
 const SAMPLE_WEBAPP_URL = TEST_URL_ROOT + "/helper_homepage.html";
 var TEMP_PATH;
 var TEMP_FOLDER_NAME = "ProjectEditor" + (new Date().getTime());

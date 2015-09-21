@@ -1,6 +1,6 @@
 # How actors are organized
 
-To start with, actors are living within /toolkit/devtools/server/actors/ folder.
+To start with, actors are living within /devtools/server/actors/ folder.
 They are organized in a hierarchy for easier lifecycle/memory management:
 once a parent is removed from the pool, its children are removed as well.
 (See actor-registration.md for more information about how to implement one)

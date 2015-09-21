@@ -20,7 +20,7 @@ const TEST_URI = "data:text/html;charset=utf-8,Web Console network " +
 const TEST_NETWORK_REQUEST_URI = "http://example.com/browser/browser/" +
                  "devtools/webconsole/test/test-network-request.html";
 
-const TEST_IMG = "http://example.com/browser/browser/devtools/webconsole/" +
+const TEST_IMG = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-image.png";
 
 const TEST_DATA_JSON_CONTENT =

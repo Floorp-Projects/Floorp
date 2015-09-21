@@ -7,4 +7,4 @@ Tern is a stand-alone code-analysis engine for JavaScript. It is intended to be 
 
 Currently used version is 0.6.2.  To upgrade, download the latest release from http://ternjs.net/, and copy the files from lib/ into this directory.
 
-You may also need to update the CodeMirror plugin found in browser/devtools/sourceeditor/codemirror/tern, but it will most likely work without updating.
+You may also need to update the CodeMirror plugin found in devtools/client/sourceeditor/codemirror/tern, but it will most likely work without updating.

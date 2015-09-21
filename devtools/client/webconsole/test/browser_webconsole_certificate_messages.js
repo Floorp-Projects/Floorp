@@ -8,7 +8,7 @@
 
 const TEST_URI = "data:text/html;charset=utf8,Web Console weak crypto " +
                  "warnings test";
-const TEST_URI_PATH = "/browser/browser/devtools/webconsole/test/" +
+const TEST_URI_PATH = "/browser/devtools/client/webconsole/test/" +
                       "test-certificate-messages.html";
 
 var gWebconsoleTests = [

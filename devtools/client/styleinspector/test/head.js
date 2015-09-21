@@ -22,9 +22,9 @@ var {console} =
 waitForExplicitFinish();
 
 const TEST_URL_ROOT =
-  "http://example.com/browser/browser/devtools/styleinspector/test/";
+  "http://example.com/browser/devtools/client/styleinspector/test/";
 const TEST_URL_ROOT_SSL =
-  "https://example.com/browser/browser/devtools/styleinspector/test/";
+  "https://example.com/browser/devtools/client/styleinspector/test/";
 const ROOT_TEST_DIR = getRootDirectory(gTestPath);
 const FRAME_SCRIPT_URL = ROOT_TEST_DIR + "doc_frame_script.js";
 

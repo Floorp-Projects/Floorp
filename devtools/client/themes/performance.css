@@ -376,7 +376,7 @@
 
 .waterfall-background-ticks {
   /* Background created on a <canvas> in js. */
-  /* @see browser/devtools/timeline/widgets/waterfall.js */
+  /* @see devtools/client/timeline/widgets/waterfall.js */
   background-image: -moz-element(#waterfall-background);
   background-repeat: repeat-y;
   background-position: -1px center;

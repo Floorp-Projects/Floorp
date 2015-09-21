@@ -40,10 +40,10 @@ types.addDictType("AllocationsRecordingOptions", {
  * parent tab. A global-scoped instance however, will measure the memory
  * footprint of the chrome window referenced by the root actor.
  *
- * This actor wraps the Memory module at toolkit/devtools/shared/memory.js
+ * This actor wraps the Memory module at devtools/shared/shared/memory.js
  * and provides RDP definitions.
  *
- * @see toolkit/devtools/shared/memory.js for documentation.
+ * @see devtools/shared/shared/memory.js for documentation.
  */
 var MemoryActor = exports.MemoryActor = protocol.ActorClass({
   typeName: "memory",

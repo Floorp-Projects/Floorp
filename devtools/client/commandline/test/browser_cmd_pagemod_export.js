@@ -3,7 +3,7 @@
 
 // Tests that the inspect command works as it should
 
-const TEST_URI = "http://example.com/browser/browser/devtools/commandline/"+
+const TEST_URI = "http://example.com/browser/devtools/client/commandline/"+
                  "test/browser_cmd_pagemod_export.html";
 
 function test() {
