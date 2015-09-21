@@ -12,6 +12,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
+#include "mozilla/jni/Natives.h"
 #include "nsBaseAppShell.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
@@ -173,6 +174,19 @@ protected:
 
     nsCOMPtr<nsIAndroidBrowserApp> mBrowserApp;
     nsInterfaceHashtable<nsStringHashKey, nsIObserver> mObserversHash;
+};
+
+// Class that implement native JNI methods can inherit from
+// UsesGeckoThreadProxy to have the native call forwarded
+// automatically to the Gecko thread.
+class UsesGeckoThreadProxy : public mozilla::jni::UsesNativeCallProxy
+{
+public:
+    template<class Functor>
+    static void OnNativeCall(Functor&& call)
+    {
+        nsAppShell::gAppShell->PostEvent(mozilla::Move(call));
+    }
 };
 
 #endif // nsAppShell_h__
