@@ -1328,12 +1328,11 @@ NS_IMETHODIMP nsEditor::Observe(nsISupports* aSubj, const char *aTopic,
 
   // When nsIEditorSpellCheck::GetCurrentDictionary changes
   if (mInlineSpellChecker) {
-    // if the current dictionary is no longer available, find another one
+    // Do the right thing in the spellchecker, if the dictionary is no longer
+    // available. This will not set a new dictionary.
     nsCOMPtr<nsIEditorSpellCheck> editorSpellCheck;
     mInlineSpellChecker->GetSpellChecker(getter_AddRefs(editorSpellCheck));
     if (editorSpellCheck) {
-      // Note: This might change the current dictionary, which may call
-      // this observer recursively.
       editorSpellCheck->CheckCurrentDictionary();
     }
 
