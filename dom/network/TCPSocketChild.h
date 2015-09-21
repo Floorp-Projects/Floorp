@@ -8,20 +8,25 @@
 #define mozilla_dom_TCPSocketChild_h
 
 #include "mozilla/net/PTCPSocketChild.h"
-#include "nsITCPSocketChild.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 #include "js/TypeDecls.h"
 
-#define TCPSOCKETCHILD_CID \
-  { 0xa589d96f, 0x7e09, 0x4edf, { 0xa0, 0x1a, 0xeb, 0x49, 0x51, 0xf4, 0x2f, 0x37 } }
+class nsITCPSocketCallback;
 
-class nsITCPSocketInternal;
+namespace IPC {
+bool
+DeserializeArrayBuffer(JSContext* cx,
+                       const InfallibleTArray<uint8_t>& aBuffer,
+                       JS::MutableHandle<JS::Value> aVal);
+}
 
 namespace mozilla {
 namespace dom {
 
-class TCPSocketChildBase : public nsITCPSocketChild {
+class TCPSocket;
+
+class TCPSocketChildBase : public nsISupports {
 public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TCPSocketChildBase)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -33,8 +38,7 @@ protected:
   TCPSocketChildBase();
   virtual ~TCPSocketChildBase();
 
-  nsCOMPtr<nsITCPSocketInternal> mSocket;
-  JS::Heap<JSObject*> mWindowObj;
+  nsCOMPtr<nsITCPSocketCallback> mSocket;
   bool mIPCOpen;
 };
 
@@ -42,17 +46,33 @@ class TCPSocketChild : public mozilla::net::PTCPSocketChild
                      , public TCPSocketChildBase
 {
 public:
-  NS_DECL_NSITCPSOCKETCHILD
   NS_IMETHOD_(MozExternalRefCountType) Release() override;
 
-  TCPSocketChild();
+  TCPSocketChild(const nsAString& aHost, const uint16_t& aPort);
   ~TCPSocketChild();
 
-  void Init(const nsString& aHost, const uint16_t& aPort);
+  void SendOpen(nsITCPSocketCallback* aSocket, bool aUseSSL, bool aUseArrayBuffers);
+  void SendWindowlessOpenBind(nsITCPSocketCallback* aSocket,
+                              const nsACString& aRemoteHost, uint16_t aRemotePort,
+                              const nsACString& aLocalHost, uint16_t aLocalPort,
+                              bool aUseSSL);
+  NS_IMETHOD SendSendArray(nsTArray<uint8_t>& aArray,
+                           uint32_t aTrackingNumber);
+  void SendSend(const nsACString& aData, uint32_t aTrackingNumber);
+  nsresult SendSend(const ArrayBuffer& aData,
+                    uint32_t aByteOffset,
+                    uint32_t aByteLength,
+                    uint32_t aTrackingNumber);
+  void SendSendArray(nsTArray<uint8_t>* arr,
+                     uint32_t trackingNumber);
+  void SetSocket(TCPSocket* aSocket);
+
+  void GetHost(nsAString& aHost);
+  void GetPort(uint16_t* aPort);
 
   virtual bool RecvCallback(const nsString& aType,
                             const CallbackData& aData,
-                            const nsString& aReadyState) override;
+                            const uint32_t& aReadyState) override;
   virtual bool RecvRequestDelete() override;
   virtual bool RecvUpdateBufferedAmount(const uint32_t& aBufferred,
                                         const uint32_t& aTrackingNumber) override;

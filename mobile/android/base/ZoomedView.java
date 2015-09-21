@@ -78,6 +78,7 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
     private int containterSize; // shadow, margin, ...
     private Point lastPosition;
     private boolean shouldSetVisibleOnUpdate;
+    private boolean isBlockedFromAppearing; // Prevent the display of the zoomedview while FormAssistantPopup is visible
     private PointF returnValue;
     private final PointF animationStart;
     private ImageView closeButton;
@@ -228,6 +229,7 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
     public ZoomedView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         isSimplifiedUI = true;
+        isBlockedFromAppearing = false;
         getPrefs();
         currentZoomFactorIndex = 0;
         returnValue = new PointF();
@@ -241,7 +243,8 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
         touchListener = new ZoomedViewTouchListener();
         EventDispatcher.getInstance().registerGeckoThreadListener(this,
                 "Gesture:clusteredLinksClicked", "Window:Resize", "Content:LocationChange",
-                "Gesture:CloseZoomedView", "Browser:ZoomToPageWidth", "Browser:ZoomToRect");
+                "Gesture:CloseZoomedView", "Browser:ZoomToPageWidth", "Browser:ZoomToRect",
+                "FormAssist:AutoComplete", "FormAssist:Hide");
     }
 
     void destroy() {
@@ -250,7 +253,8 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
         ThreadUtils.removeCallbacksFromUiThread(requestRenderRunnable);
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
                 "Gesture:clusteredLinksClicked", "Window:Resize", "Content:LocationChange",
-                "Gesture:CloseZoomedView", "Browser:ZoomToPageWidth", "Browser:ZoomToRect");
+                "Gesture:CloseZoomedView", "Browser:ZoomToPageWidth", "Browser:ZoomToRect",
+                "FormAssist:AutoComplete", "FormAssist:Hide");
     }
 
     // This method (onFinishInflate) is called only when the zoomed view class is used inside
@@ -541,6 +545,9 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
     }
 
     private void startZoomDisplay(LayerView aLayerView, final int leftFromGecko, final int topFromGecko) {
+        if (isBlockedFromAppearing) {
+            return;
+        }
         if (layerView == null) {
             layerView = aLayerView;
             layerView.addZoomedViewListener(this);
@@ -625,6 +632,11 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
                             event.equals("Browser:ZoomToPageWidth") ||
                             event.equals("Browser:ZoomToRect")) {
                         stopZoomDisplay(true);
+                    } else if (event.equals("FormAssist:AutoComplete")) {
+                        isBlockedFromAppearing = true;
+                        stopZoomDisplay(true);
+                    } else if (event.equals("FormAssist:Hide")) {
+                        isBlockedFromAppearing = false;
                     }
                 } catch (JSONException e) {
                     Log.e(LOGTAG, "JSON exception", e);

@@ -13,11 +13,12 @@ using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 
 struct TCPError {
   nsString name;
+  nsString message;
 };
 
 union SendableData {
   uint8_t[];
-  nsString;
+  nsCString;
 };
 
 union CallbackData {
@@ -38,7 +39,13 @@ parent:
   // Forward calling to child's open() method to parent, expect TCPOptions
   // is expanded to |useSSL| (from TCPOptions.useSecureTransport) and
   // |binaryType| (from TCPOption.binaryType).
-  Open(nsString host, uint16_t port, bool useSSL, nsString binaryType);
+  Open(nsString host, uint16_t port, bool useSSL, bool useArrayBuffers);
+
+  // Ask parent to open a socket and bind the newly-opened socket to a local
+  // address specified in |localAddr| and |localPort|.
+  OpenBind(nsCString host, uint16_t port,
+           nsCString localAddr, uint16_t localPort,
+           bool useSSL, bool aUseArrayBuffers);
 
   // When child's send() is called, this message requrests parent to send
   // data and update it's trackingNumber.
@@ -58,7 +65,7 @@ parent:
 
 child:
   // Forward events that are dispatched by parent.
-  Callback(nsString type, CallbackData data, nsString readyState);
+  Callback(nsString type, CallbackData data, uint32_t readyState);
 
   // Update child's bufferedAmount when parent's bufferedAmount is updated.
   // trackingNumber is also passed back to child to ensure the bufferedAmount

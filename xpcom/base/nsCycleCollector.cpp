@@ -3296,7 +3296,7 @@ nsCycleCollector::CollectWhite()
   }
   timeLog.Checkpoint("CollectWhite::Unroot");
 
-  nsCycleCollector_dispatchDeferredDeletion(false);
+  nsCycleCollector_dispatchDeferredDeletion(false, true);
   timeLog.Checkpoint("CollectWhite::dispatchDeferredDeletion");
 
   mIncrementalPhase = CleanupPhase;
@@ -4057,11 +4057,11 @@ nsCycleCollector_forgetSkippable(bool aRemoveChildlessNodes,
 }
 
 void
-nsCycleCollector_dispatchDeferredDeletion(bool aContinuation)
+nsCycleCollector_dispatchDeferredDeletion(bool aContinuation, bool aPurge)
 {
   CycleCollectedJSRuntime* rt = CycleCollectedJSRuntime::Get();
   if (rt) {
-    rt->DispatchDeferredDeletion(aContinuation);
+    rt->DispatchDeferredDeletion(aContinuation, aPurge);
   }
 }
 

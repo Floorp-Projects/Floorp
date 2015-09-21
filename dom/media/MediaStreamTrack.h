@@ -9,6 +9,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "nsID.h"
 #include "StreamBuffer.h"
+#include "MediaTrackConstraints.h"
 
 namespace mozilla {
 
@@ -49,6 +50,8 @@ public:
   bool Enabled() { return mEnabled; }
   void SetEnabled(bool aEnabled);
   void Stop();
+  already_AddRefed<Promise>
+  ApplyConstraints(const dom::MediaTrackConstraints& aConstraints, ErrorResult &aRv);
 
   // Notifications from the MediaStreamGraph
   void NotifyEnded() { mEnded = true; }

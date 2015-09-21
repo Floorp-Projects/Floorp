@@ -12,21 +12,15 @@
 <pre id="test">
 <script type="application/javascript">
 
-/** Test to ensure TCPSocket permission being turned on enables 
-  navigator.mozTCPSocket, but mozTCPSocket.open does not work
-  in content.
+/** Test to ensure TCPSocket preference being turned on does not enable
+  navigator.mozTCPSocket.
 **/
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({"set": [['dom.mozTCPSocket.enabled', true]]}, runTest);
 function runTest() {
-  ok('mozTCPSocket' in navigator, "navigator.mozTCPSocket should be accessible if dom.mozTCPSocket.enabled  is true");
+  is('TCPSocket' in this, false, "TCPSocket should not be accessible if dom.mozTCPSocket.enabled is true");
+  is('mozTCPSocket' in navigator, false, "mozTCPSocket should be accessible if dom.mozTCPSocket.enabled is true");
 
-  try {
-    navigator.mozTCPSocket.open('localhost', 80);
-    throw new Error("Error: navigator.mozTCPSocket.open should raise for content that does not have the tcp-socket permission");
-  } catch (e) {
-      ok(true, "navigator.mozTCPSocket.open should raise for content that does not have the tcp-socket permission");
-  }
   SimpleTest.finish();
 }
 </script>

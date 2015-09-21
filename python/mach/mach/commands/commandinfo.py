@@ -16,10 +16,16 @@ class BuiltinCommands(object):
     def __init__(self, context):
         self.context = context
 
+    @property
+    def command_keys(self):
+        # NOTE 'REMOVED' is a function in testing/mochitest/mach_commands.py
+        return (k for k, v in self.context.commands.command_handlers.items()
+                if not v.conditions or v.conditions[0].__name__ != 'REMOVED')
+
     @Command('mach-commands', category='misc',
         description='List all mach commands.')
     def commands(self):
-        print("\n".join(self.context.commands.command_handlers.keys()))
+        print("\n".join(self.command_keys))
 
     @Command('mach-debug-commands', category='misc',
         description='Show info about available mach commands.')
@@ -29,7 +35,7 @@ class BuiltinCommands(object):
         import inspect
 
         handlers = self.context.commands.command_handlers
-        for command in sorted(handlers.keys()):
+        for command in sorted(self.command_keys):
             if match and match not in command:
                 continue
 

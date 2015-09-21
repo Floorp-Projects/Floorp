@@ -5,13 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIDOMTCPServerSocket.idl',
-    'nsIDOMTCPSocket.idl',
     'nsIMozNavigatorNetwork.idl',
-    'nsITCPServerSocketChild.idl',
-    'nsITCPServerSocketParent.idl',
-    'nsITCPSocketChild.idl',
-    'nsITCPSocketParent.idl',
+    'nsITCPSocketCallback.idl',
     'nsIUDPSocketChild.idl',
 ]
 
