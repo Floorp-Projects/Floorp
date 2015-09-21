@@ -105,7 +105,7 @@
   background-size: 14px 16px;
   background-position: 0 center;
   background-repeat: no-repeat;
-  background-image: url("breadcrumbs-scrollbutton.png");
+  background-image: url("images/breadcrumbs-scrollbutton.png");
   list-style-image: none;
   margin: 0 8px;
   padding: 0;
@@ -114,7 +114,7 @@
 @media (min-resolution: 1.1dppx) {
   .scrollbutton-up > .toolbarbutton-icon,
   .scrollbutton-down > .toolbarbutton-icon {
-    background-image: url("breadcrumbs-scrollbutton@2x.png");
+    background-image: url("images/breadcrumbs-scrollbutton@2x.png");
   }
 }
 
@@ -187,7 +187,7 @@
  * we can handle RTL support with a CSS transform).
  */
 #breadcrumb-separator-normal {
-  background: url(breadcrumbs-divider@2x.png) no-repeat center right;
+  background: url(images/breadcrumbs-divider@2x.png) no-repeat center right;
   background-size: 12px 24px;
 }
 
@@ -459,19 +459,19 @@
 }
 
 .theme-dark .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(ltr) {
-  background-image: url(itemArrow-dark-ltr.svg), linear-gradient(to right, @smw_marginDark@, @smw_marginDark@);
+  background-image: url(images/itemArrow-dark-ltr.svg), linear-gradient(to right, @smw_marginDark@, @smw_marginDark@);
 }
 
 .theme-dark .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(rtl) {
-  background-image: url(itemArrow-dark-rtl.svg), linear-gradient(to right, @smw_marginDark@, @smw_marginDark@);
+  background-image: url(images/itemArrow-dark-rtl.svg), linear-gradient(to right, @smw_marginDark@, @smw_marginDark@);
 }
 
 .theme-light .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(ltr) {
-  background-image: url(itemArrow-ltr.svg), linear-gradient(to right, @smw_marginLight@, @smw_marginLight@);
+  background-image: url(images/itemArrow-ltr.svg), linear-gradient(to right, @smw_marginLight@, @smw_marginLight@);
 }
 
 .theme-light .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(rtl) {
-  background-image: url(itemArrow-rtl.svg), linear-gradient(to right, @smw_marginLight@, @smw_marginLight@);
+  background-image: url(images/itemArrow-rtl.svg), linear-gradient(to right, @smw_marginLight@, @smw_marginLight@);
 }
 
 /* SideMenuWidget items contents */
@@ -641,7 +641,7 @@
 }
 
 .variable-or-property-non-writable-icon {
-  background: url("chrome://browser/skin/devtools/vview-lock.png") no-repeat;
+  background: url("chrome://devtools/skin/themes/images/vview-lock.png") no-repeat;
   background-size: cover;
   width: 16px;
   height: 16px;
@@ -649,7 +649,7 @@
 
 @media (min-resolution: 1.1dppx) {
   .variable-or-property-non-writable-icon {
-    background-image: url("chrome://browser/skin/devtools/vview-lock@2x.png");
+    background-image: url("chrome://devtools/skin/themes/images/vview-lock@2x.png");
   }
 }
 
@@ -741,7 +741,7 @@
 /* Variables and properties editing */
 
 .variables-view-delete {
-  background: url("chrome://browser/skin/devtools/vview-delete.png");
+  background: url("chrome://devtools/skin/themes/images/vview-delete.png");
   background-size: cover;
   width: 16px;
   height: 16px;
@@ -749,7 +749,7 @@
 
 @media (min-resolution: 1.1dppx) {
   .variables-view-delete {
-    background-image: url("chrome://browser/skin/devtools/vview-delete@2x.png");
+    background-image: url("chrome://devtools/skin/themes/images/vview-delete@2x.png");
   }
 }
 
@@ -766,7 +766,7 @@
 }
 
 .variables-view-edit {
-  background: url("chrome://browser/skin/devtools/vview-edit.png");
+  background: url("chrome://devtools/skin/themes/images/vview-edit.png");
   background-size: cover;
   width: 16px;
   height: 16px;
@@ -775,7 +775,7 @@
 
 @media (min-resolution: 1.1dppx) {
   .variables-view-edit {
-    background-image: url("chrome://browser/skin/devtools/vview-edit@2x.png");
+    background-image: url("chrome://devtools/skin/themes/images/vview-edit@2x.png");
   }
 }
 
@@ -792,7 +792,7 @@
 }
 
 .variables-view-open-inspector {
-  background: url("chrome://browser/skin/devtools/vview-open-inspector.png");
+  background: url("chrome://devtools/skin/themes/images/vview-open-inspector.png");
   background-size: cover;
   width: 16px;
   height: 16px;
@@ -801,7 +801,7 @@
 
 @media (min-resolution: 1.1dppx) {
   .variables-view-open-inspector {
-    background-image: url("chrome://browser/skin/devtools/vview-open-inspector@2x.png");
+    background-image: url("chrome://devtools/skin/themes/images/vview-open-inspector@2x.png");
   }
 }
 
@@ -1374,7 +1374,7 @@
   float: left;
   margin: 3px 2px -3px;
   background-repeat: no-repeat;
-  background-image: url("chrome://browser/skin/devtools/controls.png");
+  background-image: url("chrome://devtools/skin/themes/images/controls.png");
   background-size: 56px 28px;
   cursor: pointer;
   background-position: -28px -14px;
@@ -1432,7 +1432,7 @@
 
 @media (min-resolution: 1.1dppx) {
   .tree-widget-item:before {
-    background-image: url("chrome://browser/skin/devtools/controls@2x.png");
+    background-image: url("chrome://devtools/skin/themes/images/controls@2x.png");
   }
 }
 
@@ -1502,20 +1502,20 @@
 }
 
 .tree-widget-item[type="dir"]::after {
-  background-image: url(chrome://browser/skin/devtools/filetype-dir-close.svg);
+  background-image: url(chrome://devtools/skin/themes/images/filetypes/dir-close.svg);
   background-position: 2px 0;
   background-size: auto 16px;
   width: 20px;
 }
 
 .tree-widget-item[type="dir"][expanded]:not([empty])::after {
-  background-image: url(chrome://browser/skin/devtools/filetype-dir-open.svg);
+  background-image: url(chrome://devtools/skin/themes/images/filetypes/dir-open.svg);
 }
 
 .tree-widget-item[type="url"]::after {
-  background-image: url(chrome://browser/skin/devtools/filetype-globe.svg);
+  background-image: url(chrome://devtools/skin/themes/images/filetypes/globe.svg);
   background-size: auto 18px;
   width: 18px;
 }
 
-%include ../../shared/devtools/app-manager/manifest-editor.inc.css
+%include app-manager/manifest-editor.inc.css

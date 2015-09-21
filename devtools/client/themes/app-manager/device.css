@@ -39,7 +39,7 @@ h1 {
 }
 
 #detail {
-  background-image: url('noise.png');
+  background-image: url('images/noise.png');
   display: flex;
   flex-grow: 1;
   z-index: 1;
@@ -381,7 +381,7 @@ body.notconnected > #content {
 
 #notConnectedMessage > span:before {
   content: '';
-  background: url('error.svg') no-repeat;
+  background: url('images/error.svg') no-repeat;
   background-size: 18px;
   height: 24px;
   width: 24px;

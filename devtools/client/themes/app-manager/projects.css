@@ -102,7 +102,7 @@ strong {
 }
 
 .button-remove {
-  background-image: url('remove.svg');
+  background-image: url('images/remove.svg');
   background-size: 20px;
   width: 20px;
   height: 20px;
@@ -189,7 +189,7 @@ strong {
 
 #new-packaged-project,
 #new-hosted-project-click {
-  background-image: url('plus.svg');
+  background-image: url('images/plus.svg');
   background-size: 20px;
   background-repeat: no-repeat;
   cursor: pointer;
@@ -223,7 +223,7 @@ strong {
   z-index: 1;
   overflow: hidden;
   background-color: rgb(225, 225, 225);
-  background-image: url('rocket.svg'), url('noise.png');
+  background-image: url('images/rocket.svg'), url('images/noise.png');
   background-repeat: no-repeat, repeat;
   background-size: 35%, auto;
   background-position: center center, top left;
@@ -442,11 +442,11 @@ strong {
 }
 
 .project-item-warnings {
-  background-image: url('warning.svg');
+  background-image: url('images/warning.svg');
 }
 
 .project-item-errors {
-  background-image: url('error.svg');
+  background-image: url('images/error.svg');
   color: rgb(227, 79, 34);
 }
 

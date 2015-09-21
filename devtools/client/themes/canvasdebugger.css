@@ -22,7 +22,7 @@
   min-width: 30px;
   min-height: 28px;
   margin: 0;
-  list-style-image: url(profiler-stopwatch.svg);
+  list-style-image: url(images/profiler-stopwatch.svg);
 }
 
 #empty-notice > button .button-text {
@@ -54,11 +54,11 @@
 }
 
 #record-snapshot {
-  list-style-image: url("chrome://browser/skin/devtools/profiler-stopwatch.svg");
+  list-style-image: url("chrome://devtools/skin/themes/images/profiler-stopwatch.svg");
 }
 
 #record-snapshot[checked] {
-  list-style-image: url("chrome://browser/skin/devtools/profiler-stopwatch-checked.svg");
+  list-style-image: url("chrome://devtools/skin/themes/images/profiler-stopwatch-checked.svg");
 }
 
 /* Snapshots items */
@@ -129,38 +129,38 @@
 }
 
 #resume {
-  list-style-image: url(debugger-play.png);
+  list-style-image: url(images/debugger-play.png);
   -moz-image-region: rect(0px,32px,16px,16px);
 }
 
 #step-over {
-  list-style-image: url(debugger-step-over.png);
+  list-style-image: url(images/debugger-step-over.png);
 }
 
 #step-in {
-  list-style-image: url(debugger-step-in.png);
+  list-style-image: url(images/debugger-step-in.png);
 }
 
 #step-out {
-  list-style-image: url(debugger-step-out.png);
+  list-style-image: url(images/debugger-step-out.png);
 }
 
 @media (min-resolution: 1.1dppx) {
   #resume {
-    list-style-image: url(debugger-play@2x.png);
+    list-style-image: url(images/debugger-play@2x.png);
     -moz-image-region: rect(0px,64px,32px,32px);
   }
 
   #step-over {
-    list-style-image: url(debugger-step-over@2x.png);
+    list-style-image: url(images/debugger-step-over@2x.png);
   }
 
   #step-in {
-    list-style-image: url(debugger-step-in@2x.png);
+    list-style-image: url(images/debugger-step-in@2x.png);
   }
 
   #step-out {
-    list-style-image: url(debugger-step-out@2x.png);
+    list-style-image: url(images/debugger-step-out@2x.png);
   }
 }
 
@@ -244,7 +244,7 @@
 }
 
 .selected .call-item-gutter {
-  background-image: url("editor-debug-location.png");
+  background-image: url("images/editor-debug-location.png");
   background-repeat: no-repeat;
   background-position: 6px center;
   background-size: 12px;
@@ -252,7 +252,7 @@
 
 @media (min-resolution: 1.1dppx) {
   .selected .call-item-gutter {
-    background-image: url("editor-debug-location@2x.png");
+    background-image: url("images/editor-debug-location@2x.png");
   }
 }
 

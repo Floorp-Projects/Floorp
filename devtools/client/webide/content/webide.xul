@@ -12,7 +12,7 @@
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
-<?xml-stylesheet href="chrome://browser/skin/devtools/common.css"?>
+<?xml-stylesheet href="chrome://devtools/skin/themes/common.css"?>
 <?xml-stylesheet href="chrome://webide/skin/webide.css"?>
 
 <window id="webide" onclose="return UI.canCloseProject();"

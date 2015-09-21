@@ -17,7 +17,7 @@ const {getTargetForApp, launchApp, closeApp}
 const DeviceStore = require("devtools/client/app-manager/device-store");
 const WebappsStore = require("devtools/client/app-manager/webapps-store");
 const promise = require("devtools/shared/deprecated-sync-thenables");
-const DEFAULT_APP_ICON = "chrome://browser/skin/devtools/app-manager/default-app-icon.png";
+const DEFAULT_APP_ICON = "chrome://devtools/skin/themes/app-manager/images/default-app-icon.png";
 
 window.addEventListener("message", function(event) {
   try {

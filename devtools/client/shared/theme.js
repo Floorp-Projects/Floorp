@@ -15,8 +15,8 @@ loader.lazyRequireGetter(this, "Services");
 loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/client/framework/gDevTools.jsm");
 
 const themeURIs = {
-  light: "chrome://browser/skin/devtools/light-theme.css",
-  dark: "chrome://browser/skin/devtools/dark-theme.css"
+  light: "chrome://devtools/skin/themes/light-theme.css",
+  dark: "chrome://devtools/skin/themes/dark-theme.css"
 }
 
 const cachedThemes = {};

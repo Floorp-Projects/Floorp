@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #eyedropper-button {
-  background-image: url("chrome://browser/skin/devtools/command-eyedropper.png");
+  background-image: url("chrome://devtools/skin/themes/images/command-eyedropper.png");
   width: 16px;
   height: 16px;
   background-size: 64px 16px;
@@ -15,7 +15,7 @@
 }
 
 .theme-light #eyedropper-button {
-  filter: url(chrome://browser/skin/devtools/filters.svg#invert);
+  filter: url(chrome://devtools/skin/themes/images/filters.svg#invert);
   border: 1px solid #AAA;
 }
 
@@ -35,7 +35,7 @@
 
 @media (min-resolution: 1.1dppx) {
   #eyedropper-button {
-    background-image: url("chrome://browser/skin/devtools/command-eyedropper@2x.png");
+    background-image: url("chrome://devtools/skin/themes/images/command-eyedropper@2x.png");
   }
 }
 

@@ -85,10 +85,10 @@ g.edgePath.param-connection {
  */
 
 .theme-light .nodes g.bypassed rect {
-  fill: url(chrome://browser/skin/devtools/filters.svg#bypass-light);
+  fill: url(chrome://devtools/skin/themes/images/filters.svg#bypass-light);
 }
 .theme-dark .nodes g.bypassed rect {
-  fill: url(chrome://browser/skin/devtools/filters.svg#bypass-dark);
+  fill: url(chrome://devtools/skin/themes/images/filters.svg#bypass-dark);
 }
 .nodes g.bypassed.selected rect {
   stroke: var(--theme-selection-background);
@@ -145,7 +145,7 @@ text {
 }
 
 .web-audio-inspector .error {
-  background-image: url(alerticon-warning.png);
+  background-image: url(images/alerticon-warning.png);
   background-size: 13px 12px;
   -moz-appearance: none;
   opacity: 0;
@@ -156,7 +156,7 @@ text {
   background: none;
   box-shadow: none;
   border: none;
-  list-style-image: url(debugger-collapse.png);
+  list-style-image: url(images/debugger-collapse.png);
   -moz-image-region: rect(0px,16px,16px,0px);
 }
 
@@ -166,7 +166,7 @@ text {
 }
 
 #inspector-pane-toggle[pane-collapsed] {
-  list-style-image: url(debugger-expand.png);
+  list-style-image: url(images/debugger-expand.png);
 }
 
 #inspector-pane-toggle:active {
@@ -189,12 +189,12 @@ text {
 
 @media (min-resolution: 1.1dppx) {
   #inspector-pane-toggle {
-    list-style-image: url(debugger-collapse@2x.png);
+    list-style-image: url(images/debugger-collapse@2x.png);
     -moz-image-region: rect(0px,32px,32px,0px);
   }
 
   #inspector-pane-toggle[pane-collapsed] {
-    list-style-image: url(debugger-expand@2x.png);
+    list-style-image: url(images/debugger-expand@2x.png);
   }
 
   #inspector-pane-toggle:active {
@@ -202,7 +202,7 @@ text {
   }
 
   .web-audio-inspector .error {
-    background-image: url(alerticon-warning@2x.png);
+    background-image: url(images/alerticon-warning@2x.png);
   }
 }
 
@@ -211,7 +211,7 @@ text {
  */
 
 #audio-node-toolbar .bypass {
-  list-style-image: url(power.svg);
+  list-style-image: url(images/power.svg);
 }
 
 #audio-node-toolbar toolbarbutton[disabled] {
