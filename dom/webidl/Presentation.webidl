@@ -5,8 +5,7 @@
  */
 
 [Pref="dom.presentation.enabled",
- CheckAnyPermissions="presentation",
- AvailableIn="PrivilegedApps"]
+ CheckAnyPermissions="presentation"]
 interface Presentation : EventTarget {
  /*
   * This should be used by the UA as the default presentation request for the
