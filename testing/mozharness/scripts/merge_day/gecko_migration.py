@@ -321,15 +321,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
             """
         curr_weave_version = str(int(curr_version) + 2)
         next_weave_version = str(int(curr_weave_version) + 1)
-        version_files = ["browser/config/version.txt", "config/milestone.txt",
-                         "mobile/android/confvars.sh", "b2g/confvars.sh"]
-        # TODO: remove the following block when version_about.txt is all way to
-        # ESR (45?)
-        version_about = "browser/config/version_about.txt"
-        if os.path.exists(os.path.join(cwd, version_about)):
-            version_files.append(version_about)
-        # TODO: end of remove block
-        for f in version_files:
+        for f in self.config["version_files"]:
             self.replace(os.path.join(cwd, f), "%s.0%s" % (curr_version, curr_suffix),
                          "%s.0%s" % (next_version, next_suffix))
 
@@ -341,9 +333,9 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
                 "static const unsigned int kVersion = %s;" % next_version
             )
             self.replace(
-                os.path.join(cwd, "services/sync/Makefile.in"),
-                "weave_version := 1.%s.0" % curr_weave_version,
-                "weave_version := 1.%s.0" % next_weave_version
+                os.path.join(cwd, "services/sync/moz.build"),
+                "DEFINES['weave_version'] = '1.%s.0'" % curr_weave_version,
+                "DEFINES['weave_version'] = '1.%s.0'" % next_weave_version
             )
 
     # Branch-specific workflow helper methods {{{1
