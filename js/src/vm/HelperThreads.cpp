@@ -117,8 +117,9 @@ js::StartOffThreadIonCompile(JSContext* cx, jit::IonBuilder* builder)
 static void
 FinishOffThreadIonCompile(jit::IonBuilder* builder)
 {
+    AutoEnterOOMUnsafeRegion oomUnsafe;
     if (!HelperThreadState().ionFinishedList().append(builder))
-        CrashAtUnhandlableOOM("FinishOffThreadIonCompile");
+        oomUnsafe.crash("FinishOffThreadIonCompile");
 }
 
 static inline bool

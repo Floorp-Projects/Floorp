@@ -1369,12 +1369,13 @@ SavedStacksMetadataCallback(JSContext* cx, JSObject* target)
                                                 std::log(notSamplingProb));
     }
 
+    AutoEnterOOMUnsafeRegion oomUnsafe;
     RootedSavedFrame frame(cx);
     if (!stacks.saveCurrentStack(cx, &frame))
-        CrashAtUnhandlableOOM("SavedStacksMetadataCallback");
+        oomUnsafe.crash("SavedStacksMetadataCallback");
 
     if (!Debugger::onLogAllocationSite(cx, obj, frame, JS_GetCurrentEmbedderTime()))
-        CrashAtUnhandlableOOM("SavedStacksMetadataCallback");
+        oomUnsafe.crash("SavedStacksMetadataCallback");
 
     MOZ_ASSERT_IF(frame, !frame->is<WrapperObject>());
     return frame;
