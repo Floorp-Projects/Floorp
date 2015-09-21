@@ -43,7 +43,7 @@ label,
   margin-top: 0;
 }
 
-.panel-header[hidden] {
+.panel-header[hidden], .panel-item[hidden] {
   display: none;
 }
 

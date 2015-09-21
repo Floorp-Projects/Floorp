@@ -457,10 +457,10 @@ NeckoParent::DeallocPTCPSocketParent(PTCPSocketParent* actor)
 
 PTCPServerSocketParent*
 NeckoParent::AllocPTCPServerSocketParent(const uint16_t& aLocalPort,
-                                   const uint16_t& aBacklog,
-                                   const nsString& aBinaryType)
+                                         const uint16_t& aBacklog,
+                                         const bool& aUseArrayBuffers)
 {
-  TCPServerSocketParent* p = new TCPServerSocketParent();
+  TCPServerSocketParent* p = new TCPServerSocketParent(this, aLocalPort, aBacklog, aUseArrayBuffers);
   p->AddIPDLReference();
   return p;
 }
@@ -469,10 +469,10 @@ bool
 NeckoParent::RecvPTCPServerSocketConstructor(PTCPServerSocketParent* aActor,
                                              const uint16_t& aLocalPort,
                                              const uint16_t& aBacklog,
-                                             const nsString& aBinaryType)
+                                             const bool& aUseArrayBuffers)
 {
-  return static_cast<TCPServerSocketParent*>(aActor)->
-      Init(this, aLocalPort, aBacklog, aBinaryType);
+  static_cast<TCPServerSocketParent*>(aActor)->Init();
+  return true;
 }
 
 bool

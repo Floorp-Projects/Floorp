@@ -9,6 +9,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     SOURCES += [
         'libstagefright.cpp',
     ]
+    # Some codec-related code uses multi-character constants; allow this.
+    # XXX: could instead use the FOURCC macro to define these constants.
+    if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
+        SOURCES['libstagefright.cpp'].flags += ['-Wno-error=multichar']
 
 SharedLibrary('stagefright')
 
@@ -24,6 +28,3 @@ USE_LIBS += [
 # Don't use STL wrappers; this isn't Gecko code
 DISABLE_STL_WRAPPING = True
 NO_VISIBILITY_FLAGS = True
-
-# XXX: We should fix these warnings.
-ALLOW_COMPILER_WARNINGS = True

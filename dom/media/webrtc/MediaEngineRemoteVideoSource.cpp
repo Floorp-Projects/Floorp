@@ -212,6 +212,31 @@ MediaEngineRemoteVideoSource::Stop(mozilla::SourceMediaStream* aSource,
   return NS_OK;
 }
 
+nsresult
+MediaEngineRemoteVideoSource::Restart(const dom::MediaTrackConstraints& aConstraints,
+                                      const MediaEnginePrefs& aPrefs,
+                                      const nsString& aDeviceId)
+{
+  if (!mInitDone) {
+    LOG(("Init not done"));
+    return NS_ERROR_FAILURE;
+  }
+  if (!ChooseCapability(aConstraints, aPrefs, aDeviceId)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  if (mState != kStarted) {
+    return NS_OK;
+  }
+
+  mozilla::camera::StopCapture(mCapEngine, mCaptureIndex);
+  if (mozilla::camera::StartCapture(mCapEngine,
+                                    mCaptureIndex, mCapability, this)) {
+    LOG(("StartCapture failed"));
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
 void
 MediaEngineRemoteVideoSource::NotifyPull(MediaStreamGraph* aGraph,
                                          SourceMediaStream* aSource,

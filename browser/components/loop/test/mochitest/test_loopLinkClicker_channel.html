@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<script>
+"use strict";
+
+// Add a listener for responses to our remote requests.
+window.addEventListener("WebChannelMessageToContent", function (event) {
+  if (event.detail.id == "loop-link-clicker") {
+    // Send what we got back to the test.
+    var backEvent = new window.CustomEvent("WebChannelMessageToChrome", {
+      detail: {
+        id: "test-loop-link-clicker-backchannel",
+        message: {
+          message: event.detail.message
+        }
+      }
+    });
+    window.dispatchEvent(backEvent);
+    // and stick it in our DOM just for good measure/diagnostics.
+    document.getElementById("troubleshooting").textContent =
+      JSON.stringify(event.detail.message, null, 2);
+  }
+});
+
+// Send a message on load requesting that the room is opened.
+window.onload = function() {
+  var hash = window.location.hash;
+
+  var event = new window.CustomEvent("WebChannelMessageToChrome", {
+    detail: {
+      id: "loop-link-clicker",
+      message: {
+        command: hash.substring(1, hash.length),
+        roomToken: "fake1234"
+      }
+    }
+  });
+  window.dispatchEvent(event);
+};
+</script>
+
+<body>
+  <pre id="troubleshooting"/>
+</body>
+
+</html>

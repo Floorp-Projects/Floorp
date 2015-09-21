@@ -6,12 +6,6 @@ var host_info = get_host_info();
 var results = '';
 var port = undefined;
 
-var meta = document.createElement('meta');
-meta.setAttribute('http-equiv', 'Content-Security-Policy');
-meta.setAttribute('content', 'img-src ' + host_info['HTTPS_ORIGIN'] +
-                  '; script-src \'unsafe-inline\'');
-document.head.appendChild(meta);
-
 function test1() {
   var img = document.createElement('img');
   document.body.appendChild(img);

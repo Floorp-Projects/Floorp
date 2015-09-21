@@ -8,7 +8,6 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "nsJSUtils.h"
-#include "nsIDOMTCPSocket.h"
 #include "mozilla/unused.h"
 #include "mozilla/AppProcessChecker.h"
 #include "mozilla/net/NeckoCommon.h"
@@ -17,6 +16,8 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "nsISocketTransportService.h"
+#include "nsISocketTransport.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsNetUtil.h"
 
@@ -24,7 +25,7 @@ namespace IPC {
 
 //Defined in TCPSocketChild.cpp
 extern bool
-DeserializeArrayBuffer(JS::Handle<JSObject*> aObj,
+DeserializeArrayBuffer(JSContext* aCx,
                        const InfallibleTArray<uint8_t>& aBuffer,
                        JS::MutableHandle<JS::Value> aVal);
 
@@ -38,33 +39,15 @@ FireInteralError(mozilla::net::PTCPSocketParent* aActor, uint32_t aLineNo)
 {
   mozilla::unused <<
       aActor->SendCallback(NS_LITERAL_STRING("onerror"),
-                           TCPError(NS_LITERAL_STRING("InvalidStateError")),
-                           NS_LITERAL_STRING("connecting"));
+                           TCPError(NS_LITERAL_STRING("InvalidStateError"), NS_LITERAL_STRING("Internal error")),
+                           static_cast<uint32_t>(TCPReadyState::Connecting));
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(TCPSocketParentBase)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TCPSocketParentBase)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSocket)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIntermediary)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TCPSocketParentBase)
-  tmp->mIntermediaryObj = nullptr;
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSocket)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mIntermediary)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(TCPSocketParentBase)
-  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mIntermediaryObj)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TCPSocketParentBase)
-  NS_INTERFACE_MAP_ENTRY(nsITCPSocketParent)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+NS_IMPL_CYCLE_COLLECTION(TCPSocketParentBase, mSocket)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TCPSocketParentBase)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TCPSocketParentBase)
 
@@ -72,7 +55,6 @@ TCPSocketParentBase::TCPSocketParentBase()
 : mIPCOpen(false)
 {
   mObserver = new mozilla::net::OfflineObserver(this);
-  mozilla::HoldJSObjects(this);
 }
 
 TCPSocketParentBase::~TCPSocketParentBase()
@@ -80,7 +62,6 @@ TCPSocketParentBase::~TCPSocketParentBase()
   if (mObserver) {
     mObserver->RemoveObserver();
   }
-  mozilla::DropJSObjects(this);
 }
 
 uint32_t
@@ -130,8 +111,6 @@ TCPSocketParent::OfflineNotification(nsISupports *aSubject)
   if (mSocket && NS_IsAppOffline(appId)) {
     mSocket->Close();
     mSocket = nullptr;
-    mIntermediaryObj = nullptr;
-    mIntermediary = nullptr;
   }
 
   return NS_OK;
@@ -166,7 +145,7 @@ NS_IMETHODIMP_(MozExternalRefCountType) TCPSocketParent::Release(void)
 
 bool
 TCPSocketParent::RecvOpen(const nsString& aHost, const uint16_t& aPort, const bool& aUseSSL,
-                          const nsString& aBinaryType)
+                          const bool& aUseArrayBuffers)
 {
   // We don't have browser actors in xpcshell, and hence can't run automated
   // tests without this loophole.
@@ -186,37 +165,88 @@ TCPSocketParent::RecvOpen(const nsString& aHost, const uint16_t& aPort, const bo
     return true;
   }
 
+  mSocket = new TCPSocket(nullptr, aHost, aPort, aUseSSL, aUseArrayBuffers);
+  mSocket->SetAppIdAndBrowser(appId, inBrowser);
+  mSocket->SetSocketBridgeParent(this);
+  NS_ENSURE_SUCCESS(mSocket->Init(), true);
+  return true;
+}
+
+bool
+TCPSocketParent::RecvOpenBind(const nsCString& aRemoteHost,
+                              const uint16_t& aRemotePort,
+                              const nsCString& aLocalAddr,
+                              const uint16_t& aLocalPort,
+                              const bool&     aUseSSL,
+                              const bool&     aUseArrayBuffers)
+{
+  if (net::UsingNeckoIPCSecurity() &&
+      !AssertAppProcessPermission(Manager()->Manager(), "tcp-socket")) {
+    FireInteralError(this, __LINE__);
+    return true;
+  }
+
   nsresult rv;
-  mIntermediary = do_CreateInstance("@mozilla.org/tcp-socket-intermediary;1", &rv);
+  nsCOMPtr<nsISocketTransportService> sts =
+    do_GetService("@mozilla.org/network/socket-transport-service;1", &rv);
   if (NS_FAILED(rv)) {
     FireInteralError(this, __LINE__);
     return true;
   }
 
-  rv = mIntermediary->Open(this, aHost, aPort, aUseSSL, aBinaryType, appId,
-                           inBrowser, getter_AddRefs(mSocket));
-  if (NS_FAILED(rv) || !mSocket) {
+  nsCOMPtr<nsISocketTransport> socketTransport;
+  rv = sts->CreateTransport(nullptr, 0,
+                            aRemoteHost, aRemotePort,
+                            nullptr, getter_AddRefs(socketTransport));
+  if (NS_FAILED(rv)) {
     FireInteralError(this, __LINE__);
     return true;
   }
 
-  return true;
-}
+  PRNetAddr prAddr;
+  if (PR_SUCCESS != PR_InitializeNetAddr(PR_IpAddrAny, aLocalPort, &prAddr)) {
+    FireInteralError(this, __LINE__);
+    return true;
+  }
+  if (PR_SUCCESS != PR_StringToNetAddr(aLocalAddr.BeginReading(), &prAddr)) {
+    FireInteralError(this, __LINE__);
+    return true;
+  }
 
-NS_IMETHODIMP
-TCPSocketParent::InitJS(JS::Handle<JS::Value> aIntermediary, JSContext* aCx)
-{
-  MOZ_ASSERT(aIntermediary.isObject());
-  mIntermediaryObj = &aIntermediary.toObject();
-  return NS_OK;
+  mozilla::net::NetAddr addr;
+  PRNetAddrToNetAddr(&prAddr, &addr);
+  rv = socketTransport->Bind(&addr);
+  if (NS_FAILED(rv)) {
+    FireInteralError(this, __LINE__);
+    return true;
+  }
+
+  // Obtain App ID
+  uint32_t appId = nsIScriptSecurityManager::NO_APP_ID;
+  bool     inBrowser = false;
+  const PContentParent *content = Manager()->Manager();
+  const InfallibleTArray<PBrowserParent*>& browsers = content->ManagedPBrowserParent();
+  if (browsers.Length() > 0) {
+    TabParent *tab = static_cast<TabParent*>(browsers[0]);
+    appId = tab->OwnAppId();
+    inBrowser = tab->IsBrowserElement();
+  }
+
+  mSocket = new TCPSocket(nullptr, NS_ConvertUTF8toUTF16(aRemoteHost), aRemotePort, aUseSSL, aUseArrayBuffers);
+  mSocket->SetAppIdAndBrowser(appId, inBrowser);
+  mSocket->SetSocketBridgeParent(this);
+  rv = mSocket->InitWithUnconnectedTransport(socketTransport);
+  NS_ENSURE_SUCCESS(rv, true);
+  return true;
 }
 
 bool
 TCPSocketParent::RecvStartTLS()
 {
   NS_ENSURE_TRUE(mSocket, true);
-  nsresult rv = mSocket->UpgradeToSecure();
-  NS_ENSURE_SUCCESS(rv, true);
+  ErrorResult rv;
+  mSocket->UpgradeToSecure(rv);
+  NS_ENSURE_FALSE(rv.Failed(), true);
   return true;
 }
 
@@ -224,8 +254,7 @@ bool
 TCPSocketParent::RecvSuspend()
 {
   NS_ENSURE_TRUE(mSocket, true);
-  nsresult rv = mSocket->Suspend();
-  NS_ENSURE_SUCCESS(rv, true);
+  mSocket->Suspend();
   return true;
 }
 
@@ -233,8 +262,9 @@ bool
 TCPSocketParent::RecvResume()
 {
   NS_ENSURE_TRUE(mSocket, true);
-  nsresult rv = mSocket->Resume();
-  NS_ENSURE_SUCCESS(rv, true);
+  ErrorResult rv;
+  mSocket->Resume(rv);
+  NS_ENSURE_FALSE(rv.Failed(), true);
   return true;
 }
 
@@ -242,29 +272,31 @@ bool
 TCPSocketParent::RecvData(const SendableData& aData,
                           const uint32_t& aTrackingNumber)
 {
-  NS_ENSURE_TRUE(mIntermediary, true);
-
-  nsresult rv;
+  ErrorResult rv;
   switch (aData.type()) {
     case SendableData::TArrayOfuint8_t: {
-      AutoSafeJSContext cx;
-      JSAutoRequest ar(cx);
-      JS::Rooted<JS::Value> val(cx);
-      JS::Rooted<JSObject*> obj(cx, mIntermediaryObj);
-      IPC::DeserializeArrayBuffer(obj, aData.get_ArrayOfuint8_t(), &val);
-      rv = mIntermediary->OnRecvSendArrayBuffer(val, aTrackingNumber);
-      NS_ENSURE_SUCCESS(rv, true);
+      AutoSafeJSContext autoCx;
+      JS::Rooted<JS::Value> val(autoCx);
+      const nsTArray<uint8_t>& buffer = aData.get_ArrayOfuint8_t();
+      bool ok = IPC::DeserializeArrayBuffer(autoCx, buffer, &val);
+      NS_ENSURE_TRUE(ok, true);
+      RootedTypedArray<ArrayBuffer> data(autoCx);
+      data.Init(&val.toObject());
+      Optional<uint32_t> byteLength(buffer.Length());
+      mSocket->SendWithTrackingNumber(autoCx, data, 0, byteLength, aTrackingNumber, rv);
       break;
     }
 
-    case SendableData::TnsString:
-      rv = mIntermediary->OnRecvSendString(aData.get_nsString(), aTrackingNumber);
-      NS_ENSURE_SUCCESS(rv, true);
+    case SendableData::TnsCString: {
+      const nsCString& strData = aData.get_nsCString();
+      mSocket->SendWithTrackingNumber(strData, aTrackingNumber, rv);
       break;
+    }
 
     default:
       MOZ_CRASH("unexpected SendableData type");
   }
+  NS_ENSURE_FALSE(rv.Failed(), true);
   return true;
 }
 
@@ -272,123 +304,70 @@ bool
 TCPSocketParent::RecvClose()
 {
   NS_ENSURE_TRUE(mSocket, true);
-  nsresult rv = mSocket->Close();
-  NS_ENSURE_SUCCESS(rv, true);
+  mSocket->Close();
   return true;
 }
 
-NS_IMETHODIMP
-TCPSocketParent::SendEvent(const nsAString& aType, JS::Handle<JS::Value> aDataVal,
-                           const nsAString& aReadyState, JSContext* aCx)
+void
+TCPSocketParent::FireErrorEvent(const nsAString& aName, const nsAString& aType, TCPReadyState aReadyState)
 {
-  if (!mIPCOpen) {
-    NS_WARNING("Dropping callback due to no IPC connection");
-    return NS_OK;
-  }
-
-  CallbackData data;
-  if (aDataVal.isString()) {
-    JSString* jsstr = aDataVal.toString();
-    nsAutoJSString str;
-    if (!str.init(aCx, jsstr)) {
-      FireInteralError(this, __LINE__);
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    data = SendableData(str);
-
-  } else if (aDataVal.isUndefined() || aDataVal.isNull()) {
-    data = mozilla::void_t();
-
-  } else if (aDataVal.isObject()) {
-    JS::Rooted<JSObject *> obj(aCx, &aDataVal.toObject());
-    if (JS_IsArrayBufferObject(obj)) {
-      FallibleTArray<uint8_t> fallibleArr;
-      uint32_t errLine = 0;
-      do {
-          JS::AutoCheckCannotGC nogc;
-          uint32_t nbytes = JS_GetArrayBufferByteLength(obj);
-          uint8_t* buffer = JS_GetArrayBufferData(obj, nogc);
-          if (!buffer) {
-              errLine = __LINE__;
-              break;
-          }
-          if (!fallibleArr.InsertElementsAt(0, buffer, nbytes, fallible)) {
-              errLine = __LINE__;
-              break;
-          }
-      } while (false);
-
-      if (errLine) {
-          FireInteralError(this, errLine);
-          return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      InfallibleTArray<uint8_t> arr;
-      arr.SwapElements(fallibleArr);
-      data = SendableData(arr);
-
-    } else {
-      nsAutoJSString name;
-
-      JS::Rooted<JS::Value> val(aCx);
-      if (!JS_GetProperty(aCx, obj, "name", &val)) {
-        NS_ERROR("No name property on supposed error object");
-      } else if (val.isString()) {
-        if (!name.init(aCx, val.toString())) {
-          NS_WARNING("couldn't initialize string");
-        }
-      }
-
-      data = TCPError(name);
-    }
-  } else {
-    NS_ERROR("Unexpected JS value encountered");
-    FireInteralError(this, __LINE__);
-    return NS_ERROR_FAILURE;
-  }
-  mozilla::unused <<
-      PTCPSocketParent::SendCallback(nsString(aType), data,
-                                     nsString(aReadyState));
-  return NS_OK;
+  SendEvent(NS_LITERAL_STRING("error"), TCPError(nsString(aName), nsString(aType)), aReadyState);
 }
 
-NS_IMETHODIMP
-TCPSocketParent::SetSocketAndIntermediary(nsIDOMTCPSocket *socket,
-                                          nsITCPSocketIntermediary *intermediary,
-                                          JSContext* cx)
+void
+TCPSocketParent::FireEvent(const nsAString& aType, TCPReadyState aReadyState)
+{
+  return SendEvent(aType, mozilla::void_t(), aReadyState);
+}
+
+void
+TCPSocketParent::FireArrayBufferDataEvent(nsTArray<uint8_t>& aBuffer, TCPReadyState aReadyState)
+{
+  InfallibleTArray<uint8_t> arr;
+  arr.SwapElements(aBuffer);
+  SendableData data(arr);
+  SendEvent(NS_LITERAL_STRING("data"), data, aReadyState);
+}
+
+void
+TCPSocketParent::FireStringDataEvent(const nsACString& aData, TCPReadyState aReadyState)
+{
+  SendEvent(NS_LITERAL_STRING("data"), SendableData(nsCString(aData)), aReadyState);
+}
+
+void
+TCPSocketParent::SendEvent(const nsAString& aType, CallbackData aData, TCPReadyState aReadyState)
+{
+  mozilla::unused << PTCPSocketParent::SendCallback(nsString(aType), aData,
+                                                    static_cast<uint32_t>(aReadyState));
+}
+
+void
+TCPSocketParent::SetSocket(TCPSocket *socket)
 {
   mSocket = socket;
-  mIntermediary = intermediary;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-TCPSocketParent::SendUpdateBufferedAmount(uint32_t aBufferedAmount,
-                                          uint32_t aTrackingNumber)
-{
-  mozilla::unused << PTCPSocketParent::SendUpdateBufferedAmount(aBufferedAmount,
-                                                                aTrackingNumber);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+nsresult
 TCPSocketParent::GetHost(nsAString& aHost)
 {
   if (!mSocket) {
     NS_ERROR("No internal socket instance mSocket!");
     return NS_ERROR_FAILURE;
   }
-  return mSocket->GetHost(aHost);
+  mSocket->GetHost(aHost);
+  return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 TCPSocketParent::GetPort(uint16_t* aPort)
 {
   if (!mSocket) {
     NS_ERROR("No internal socket instance mSocket!");
     return NS_ERROR_FAILURE;
   }
-  return mSocket->GetPort(aPort);
+  *aPort = mSocket->Port();
+  return NS_OK;
 }
 
 void
@@ -398,8 +377,6 @@ TCPSocketParent::ActorDestroy(ActorDestroyReason why)
     mSocket->Close();
   }
   mSocket = nullptr;
-  mIntermediaryObj = nullptr;
-  mIntermediary = nullptr;
 }
 
 bool

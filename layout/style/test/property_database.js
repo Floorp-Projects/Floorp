@@ -4727,8 +4727,8 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
       domProp: "writingMode",
       inherited: true,
       type: CSS_TYPE_LONGHAND,
-      initial_values: [ "horizontal-tb" ],
-      other_values: [ "vertical-lr", "vertical-rl" ],
+      initial_values: [ "horizontal-tb", "lr", "lr-tb", "rl", "rl-tb" ],
+      other_values: [ "vertical-lr", "vertical-rl", "tb", "tb-rl" ],
       invalid_values: [ "10px", "30%", "justify", "auto", "1em" ]
     },
     "text-orientation": {

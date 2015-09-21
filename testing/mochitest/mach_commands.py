@@ -648,6 +648,9 @@ class RobocopCommands(MachCommandBase):
         return mochitest.run_robocop_test(self._mach_context, tests, 'robocop', **kwargs)
 
 
+# NOTE python/mach/mach/commands/commandinfo.py references this function
+#      by name. If this function is renamed or removed, that file should
+#      be updated accordingly as well.
 def REMOVED(cls):
     """Command no longer exists! Use |mach mochitest| instead.
 

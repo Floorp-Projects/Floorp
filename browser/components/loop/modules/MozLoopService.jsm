@@ -1211,6 +1211,9 @@ this.MozLoopService = {
     // stub out API functions for unit testing
     Object.freeze(this);
 
+    // Initialise anything that needs it in rooms.
+    LoopRooms.init();
+
     // Don't do anything if loop is not enabled.
     if (!Services.prefs.getBoolPref("loop.enabled")) {
       return Promise.reject(new Error("loop is not enabled"));

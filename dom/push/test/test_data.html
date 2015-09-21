@@ -1,0 +1,186 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1185544: Add data delivery to the WebSocket backend.
+
+Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/licenses/publicdomain/
+
+-->
+<head>
+  <title>Test for Bug 1185544</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/dom/push/test/webpush.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1185544">Mozilla Bug 1185544</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="text/javascript">
+
+  var registration;
+
+  function start() {
+    return navigator.serviceWorker.register("worker.js" + "?" + (Math.random()), {scope: "."})
+    .then(swr => { registration = swr; return swr; });
+  }
+
+  var controlledFrame;
+  function createControlledIFrame(swr) {
+    var p = new Promise(function(res, rej) {
+      var iframe = document.createElement('iframe');
+      iframe.id = "controlledFrame";
+      iframe.src = "http://mochi.test:8888/tests/dom/push/test/frame.html";
+
+      iframe.onload = function() {
+        res(swr)
+      }
+      controlledFrame = iframe;
+      document.body.appendChild(iframe);
+    });
+    return p;
+  }
+
+  function subscribe(swr) {
+    return swr.pushManager.subscribe();
+  }
+
+  function sendRequestToWorker(request) {
+    return new Promise((resolve, reject) => {
+      var channel = new MessageChannel();
+      channel.port1.onmessage = e => {
+        (e.data.error ? reject : resolve)(e.data);
+      };
+      registration.active.postMessage(request, [channel.port2]);
+    });
+  }
+
+  function comparePublicKey(pushSubscription) {
+    // FIXME(kitcambridge): Enable when `ServiceWorkerMessageEvent` is
+    // implemented (bug 1143717).
+    return Promise.resolve(pushSubscription);
+    /*
+    return sendRequestToWorker({ type: "publicKey" }).then(data => {
+      return registration.pushManager.getSubscription().then(
+        pushSubscription => {
+          isDeeply(pushSubscription.getKey("p256dh"), data,
+            "Mismatched key share");
+          return pushSubscription;
+      });
+    });
+    */
+  }
+
+  function waitForMessage(pushSubscription, message) {
+    return Promise.all([
+      controlledFrame.contentWindow.waitOnPushMessage(pushSubscription),
+      webpush(pushSubscription, message),
+    ]).then(([message]) => message);
+  }
+
+  function sendPushMessageFromPage(pushSubscription) {
+    var typedArray = new Uint8Array([226, 130, 40, 240, 40, 140, 188]);
+    var json = { hello: "world" };
+    return waitForMessage(pushSubscription, "Text message from page")
+      .then(message => {
+        is(message.data.text, "Text message from page", "Wrong text message data");
+        return waitForMessage(
+          pushSubscription,
+          typedArray
+        );
+      }).then(message => {
+        isDeeply(new Uint8Array(message.data.arrayBuffer), typedArray,
+          "Wrong array buffer message data");
+        return waitForMessage(
+          pushSubscription,
+          JSON.stringify(json)
+        );
+      }).then(message => {
+        ok(message.data.json.ok, "Unexpected error parsing JSON");
+        isDeeply(message.data.json.value, json, "Wrong JSON message data");
+        return waitForMessage(
+          pushSubscription,
+          ""
+        );
+      }).then(message => {
+        ok(message, "Should include data for empty messages");
+        is(message.data.text, "", "Wrong text for empty message");
+        is(message.data.arrayBuffer.byteLength, 0, "Wrong buffer length for empty message");
+        ok(!message.data.json.ok, "Expected JSON parse error for empty message");
+        return waitForMessage(
+          pushSubscription,
+          new Uint8Array([0x48, 0x69, 0x21, 0x20, 0xf0, 0x9f, 0x91, 0x80])
+        );
+      }).then(message => {
+        is(message.data.text, "Hi! \ud83d\udc40", "Wrong text for message with emoji");
+        return new Promise((resolve, reject) => {
+          var reader = new FileReader();
+          reader.onloadend = event => {
+            if (reader.error) {
+              reject(reader.error);
+            } else {
+              resolve(reader.result);
+            }
+          };
+          reader.readAsText(message.data.blob);
+        });
+      }).then(text => {
+        is(text, "Hi! \ud83d\udc40", "Wrong blob data for message with emoji");
+        is(text, "Hi! \ud83d\udc40", "Wrong blob data for message with emoji");
+        // Send a blank message.
+        return Promise.all([
+          controlledFrame.contentWindow.waitOnPushMessage(pushSubscription),
+          fetch("http://mochi.test:8888/tests/dom/push/test/push-server.sjs", {
+            method: "PUT",
+            headers: {
+              "X-Push-Method": "POST",
+              "X-Push-Server": pushSubscription.endpoint,
+            },
+          }),
+        ]).then(([message]) => message);
+      }).then(message => {
+        ok(!message.data, "Should exclude data for blank messages");
+        return pushSubscription;
+      });
+  }
+
+  function unsubscribe(pushSubscription) {
+    controlledFrame.parentNode.removeChild(controlledFrame);
+    controlledFrame = null;
+    return pushSubscription.unsubscribe();
+  }
+
+  function unregister() {
+    return registration.unregister();
+  }
+
+  function runTest() {
+    start()
+    .then(createControlledIFrame)
+    .then(subscribe)
+    .then(comparePublicKey)
+    .then(sendPushMessageFromPage)
+    .then(unsubscribe)
+    .then(unregister)
+    .catch(function(e) {
+      ok(false, "Some test failed with error " + e);
+    }).then(SimpleTest.finish);
+  }
+
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.push.enabled", true],
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+    ]}, runTest);
+  SpecialPowers.addPermission('push', true, document);
+  SimpleTest.waitForExplicitFinish();
+</script>
+</body>
+</html>

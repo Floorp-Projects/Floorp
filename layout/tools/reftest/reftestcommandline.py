@@ -85,7 +85,7 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                           action="store",
                           type=str,
                           dest="utilityPath",
-                          default="bindir",
+                          default=self.build_obj.bindir if self.build_obj else None,
                           help="absolute path to directory containing utility "
                           "programs (xpcshell, ssltunnel, certutil)")
 

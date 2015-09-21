@@ -845,6 +845,7 @@ BufferTextureClient::BorrowDrawTarget()
 
   ImageDataSerializer serializer(GetBuffer(), GetBufferSize());
   if (!serializer.IsValid()) {
+    gfxCriticalNote << "Invalid serializer " << IsValid() << ", " << IsLocked() << ", " << GetBufferSize();
     return nullptr;
   }
 
@@ -854,6 +855,9 @@ BufferTextureClient::BorrowDrawTarget()
   }
 
   mDrawTarget = serializer.GetAsDrawTarget(BackendType::CAIRO);
+  if (!mDrawTarget) {
+    gfxCriticalNote << "BorrowDrawTarget failure, original backend " << (int)mBackend;
+  }
 
   return mDrawTarget;
 }

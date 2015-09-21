@@ -816,6 +816,16 @@ public:
          NS_LITERAL_STRING("\x5FAE\x8EDF\x8F38\x5165\x6CD5")));
   }
 
+  bool IsMSOfficeJapaneseIME2010Active() const
+  {
+    // {54EDCC94-1524-4BB1-9FB7-7BABE4F4CA64}
+    static const GUID kGUID = {
+      0x54EDCC94, 0x1524, 0x4BB1,
+        { 0x9F, 0xB7, 0x7B, 0xAB, 0xE4, 0xF4, 0xCA, 0x64 }
+    };
+    return mActiveTIPGUID == kGUID;
+  }
+
   bool IsATOKActive() const
   {
     // FYI: Name of ATOK includes the release year like "ATOK 2015".
@@ -919,6 +929,9 @@ private:
   // i.e., IMM-IME or just a keyboard layout, this is empty.
   nsString mActiveTIPKeyboardDescription;
 
+  // Active TIP's GUID
+  GUID mActiveTIPGUID;
+
   static StaticRefPtr<TSFStaticSink> sInstance;
 };
 
@@ -930,6 +943,7 @@ TSFStaticSink::TSFStaticSink()
   , mLangID(0)
   , mIsIMM_IME(false)
   , mOnActivatedCalled(false)
+  , mActiveTIPGUID(GUID_NULL)
 {
 }
 
@@ -1044,6 +1058,7 @@ TSFStaticSink::OnActivated(REFCLSID clsid, REFGUID guidProfile,
   if (fActivated) {
     // TODO: We should check if the profile's category is keyboard or not.
     mOnActivatedCalled = true;
+    mActiveTIPGUID = guidProfile;
     mIsIMM_IME = IsIMM_IME(::GetKeyboardLayout(0));
 
     HRESULT hr = mInputProcessorProfiles->GetCurrentLanguage(&mLangID);
@@ -1086,6 +1101,7 @@ TSFStaticSink::OnActivated(DWORD dwProfileType,
       (dwProfileType == TF_PROFILETYPE_KEYBOARDLAYOUT ||
        catid == GUID_TFCAT_TIP_KEYBOARD)) {
     mOnActivatedCalled = true;
+    mActiveTIPGUID = guidProfile;
     mLangID = langid;
     mIsIMM_IME = IsIMM_IME(hkl);
     GetTIPDescription(rclsid, mLangID, guidProfile,
@@ -3507,19 +3523,27 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
   if (mComposition.IsComposing() && mComposition.mStart < acpEnd &&
       mLockedContent.IsLayoutChangedAfter(acpEnd)) {
     const Selection& currentSel = CurrentSelection();
-    if ((sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar ||
-         sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret) &&
-        kSink->IsMSJapaneseIMEActive()) {
+    // The bug of Microsoft Office IME 2010 for Japanese is similar to
+    // MS-IME for Win 8.1 and Win 10.  Newer version of MS Office IME is not
+    // released yet.  So, we can hack it without prefs  because there must be
+    // no developers who want to disable this hack for tests.
+    const bool kIsMSOfficeJapaneseIME2010 =
+      kSink->IsMSOfficeJapaneseIME2010Active();
+    if (kIsMSOfficeJapaneseIME2010 ||
+        ((sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar ||
+          sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret) &&
+         kSink->IsMSJapaneseIMEActive())) {
       // MS IME for Japanese doesn't support asynchronous handling at deciding
       // its suggest list window position.  The feature was implemented
       // starting from Windows 8.
-      if (IsWin8OrLater()) {
+      if (IsWin8OrLater() || kIsMSOfficeJapaneseIME2010) {
         // Basically, MS-IME tries to retrieve whole composition string rect
         // at deciding suggest window immediately after unlocking the document.
         // However, in e10s mode, the content hasn't updated yet in most cases.
         // Therefore, if the first character at the retrieving range rect is
         // available, we should use it as the result.
-        if (sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar &&
+        if ((kIsMSOfficeJapaneseIME2010 ||
+             sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar) &&
             !mLockedContent.IsLayoutChangedAfter(acpStart) &&
             acpStart < acpEnd) {
           acpEnd = acpStart;
@@ -3533,7 +3557,8 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
         // caret rect immediately after modifying the composition string but
         // before unlocking the document.  In such case, we should return the
         // nearest character rect.
-        else if (sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret &&
+        else if ((kIsMSOfficeJapaneseIME2010 ||
+                  sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret) &&
                  acpStart == acpEnd &&
                  currentSel.IsCollapsed() && currentSel.EndOffset() == acpEnd) {
           acpEnd = acpStart = mLockedContent.MinOffsetOfLayoutChanged();

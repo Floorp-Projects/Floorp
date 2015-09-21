@@ -422,6 +422,14 @@ MediaEngineWebRTCMicrophoneSource::Stop(SourceMediaStream *aSource, TrackID aID)
   return NS_OK;
 }
 
+nsresult
+MediaEngineWebRTCMicrophoneSource::Restart(const dom::MediaTrackConstraints& aConstraints,
+                                           const MediaEnginePrefs &aPrefs,
+                                           const nsString& aDeviceId)
+{
+  return NS_OK;
+}
+
 void
 MediaEngineWebRTCMicrophoneSource::NotifyPull(MediaStreamGraph *aGraph,
                                               SourceMediaStream *aSource,
@@ -661,6 +669,15 @@ MediaEngineWebRTCAudioCaptureSource::Stop(SourceMediaStream *aMediaStream,
                                           TrackID aId)
 {
   aMediaStream->EndAllTrackAndFinish();
+  return NS_OK;
+}
+
+nsresult
+MediaEngineWebRTCAudioCaptureSource::Restart(
+    const dom::MediaTrackConstraints& aConstraints,
+    const MediaEnginePrefs &aPrefs,
+    const nsString& aDeviceId)
+{
   return NS_OK;
 }
 
