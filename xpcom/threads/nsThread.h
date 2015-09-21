@@ -125,23 +125,23 @@ protected:
     bool GetEvent(bool aMayWait, nsIRunnable** aEvent,
                   mozilla::MutexAutoLock& aProofOfLock)
     {
-      return mQueue.GetEvent(aMayWait, aEvent);
+      return mQueue.GetEvent(aMayWait, aEvent, aProofOfLock);
     }
 
     void PutEvent(nsIRunnable* aEvent, mozilla::MutexAutoLock& aProofOfLock)
     {
-      mQueue.PutEvent(aEvent);
+      mQueue.PutEvent(aEvent, aProofOfLock);
     }
 
     void PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
                   mozilla::MutexAutoLock& aProofOfLock)
     {
-      mQueue.PutEvent(mozilla::Move(aEvent));
+      mQueue.PutEvent(mozilla::Move(aEvent), aProofOfLock);
     }
 
     bool HasPendingEvent(mozilla::MutexAutoLock& aProofOfLock)
     {
-      return mQueue.HasPendingEvent();
+      return mQueue.HasPendingEvent(aProofOfLock);
     }
 
     nsChainedEventQueue* mNext;

@@ -61,7 +61,8 @@ template nsEventQueueBase<Monitor>::~nsEventQueueBase();
 template<typename MonitorType>
 bool
 nsEventQueueBase<MonitorType>::GetEvent(bool aMayWait, nsIRunnable** aResult,
-                                        MonitorAutoEnterType& aProofOfLock)
+                                        MonitorAutoEnterType& aProofOfLock,
+                                        MutexAutoLock&)
 {
   while (IsEmpty()) {
     if (!aMayWait) {
@@ -91,21 +92,24 @@ nsEventQueueBase<MonitorType>::GetEvent(bool aMayWait, nsIRunnable** aResult,
 }
 
 template bool nsEventQueueBase<Monitor>::GetEvent(bool aMayWait, nsIRunnable** aResult,
-                                                  MonitorAutoLock& aProofOfLock);
+                                                  MonitorAutoLock& aProofOfLock,
+                                                  MutexAutoLock&);
 
 bool
-nsEventQueue::GetEvent(bool aMayWait, nsIRunnable** aEvent)
+nsEventQueue::GetEvent(bool aMayWait, nsIRunnable** aEvent,
+                       MutexAutoLock& aExtraneousLock)
 {
   MonitorAutoEnterType mon(mMonitor);
 
-  return Base::GetEvent(aMayWait, aEvent, mon);
+  return Base::GetEvent(aMayWait, aEvent, mon, aExtraneousLock);
 }
 
 template<typename MonitorType>
 void
 nsEventQueueBase<MonitorType>::PutEvent(
     already_AddRefed<nsIRunnable>&& aRunnable,
-    MonitorAutoEnterType& aProofOfLock)
+    MonitorAutoEnterType& aProofOfLock,
+    MutexAutoLock&)
 {
   if (!mHead) {
     mHead = NewPage();
@@ -132,17 +136,19 @@ nsEventQueueBase<MonitorType>::PutEvent(
 }
 
 template void nsEventQueueBase<Monitor>::PutEvent(already_AddRefed<nsIRunnable>&& aRunnable,
-                                                  MonitorAutoLock& aProofOfLock);
+                                                  MonitorAutoLock& aProofOfLock,
+                                                  MutexAutoLock&);
 
 void
-nsEventQueue::PutEvent(nsIRunnable* aRunnable)
+nsEventQueue::PutEvent(nsIRunnable* aRunnable, MutexAutoLock& aExtraneousLock)
 {
   nsCOMPtr<nsIRunnable> event(aRunnable);
-  PutEvent(event.forget());
+  PutEvent(event.forget(), aExtraneousLock);
 }
 
 void
-nsEventQueue::PutEvent(already_AddRefed<nsIRunnable>&& aRunnable)
+nsEventQueue::PutEvent(already_AddRefed<nsIRunnable>&& aRunnable,
+                       MutexAutoLock& aExtraneousLock)
 {
   if (ChaosMode::isActive(ChaosFeature::ThreadScheduling)) {
     // With probability 0.5, yield so other threads have a chance to
@@ -154,12 +160,13 @@ nsEventQueue::PutEvent(already_AddRefed<nsIRunnable>&& aRunnable)
 
   MonitorAutoEnterType mon(mMonitor);
 
-  Base::PutEvent(Move(aRunnable), mon);
+  Base::PutEvent(Move(aRunnable), mon, aExtraneousLock);
 }
 
 template<typename MonitorType>
 size_t
-nsEventQueueBase<MonitorType>::Count(MonitorAutoEnterType& aProofOfLock)
+nsEventQueueBase<MonitorType>::Count(MonitorAutoEnterType& aProofOfLock,
+                                     MutexAutoLock&)
 {
   // It is obvious count is 0 when the queue is empty.
   if (!mHead) {
@@ -192,12 +199,13 @@ nsEventQueueBase<MonitorType>::Count(MonitorAutoEnterType& aProofOfLock)
   return count;
 }
 
-template size_t nsEventQueueBase<Monitor>::Count(MonitorAutoLock& aProofOfLock);
+template size_t nsEventQueueBase<Monitor>::Count(MonitorAutoLock& aProofOfLock,
+                                                 MutexAutoLock&);
 
 size_t
-nsEventQueue::Count()
+nsEventQueue::Count(MutexAutoLock& aExtraneousLock)
 {
   MonitorAutoEnterType mon(mMonitor);
 
-  return Base::Count(mon);
+  return Base::Count(mon, aExtraneousLock);
 }

@@ -26,6 +26,8 @@ struct MonitorAutoEnterChooser<mozilla::Monitor>
 template<typename MonitorType>
 class nsEventQueueBase
 {
+  typedef mozilla::MutexAutoLock MutexAutoLock;
+
 public:
   typedef MonitorType Monitor;
   typedef typename MonitorAutoEnterChooser<Monitor>::Type MonitorAutoEnterType;
@@ -37,7 +39,7 @@ public:
   // a strong reference to the event after this method returns.  This method
   // cannot fail.
   void PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
-                MonitorAutoEnterType& aProofOfLock);
+                MonitorAutoEnterType& aProofOfLock, MutexAutoLock&);
 
   // This method gets an event from the event queue.  If mayWait is true, then
   // the method will block the calling thread until an event is available.  If
@@ -46,16 +48,16 @@ public:
   // caller is responsible for releasing the event object.  This method does
   // not alter the reference count of the resulting event.
   bool GetEvent(bool aMayWait, nsIRunnable** aEvent,
-                MonitorAutoEnterType& aProofOfLock);
+                MonitorAutoEnterType& aProofOfLock, MutexAutoLock&);
 
   // This method returns the next pending event or null.
   bool GetPendingEvent(nsIRunnable** aRunnable,
-                       MonitorAutoEnterType& aProofOfLock)
+                       MonitorAutoEnterType& aProofOfLock, MutexAutoLock& aExtraneousLock)
   {
-    return GetEvent(false, aRunnable, aProofOfLock);
+    return GetEvent(false, aRunnable, aProofOfLock, aExtraneousLock);
   }
 
-  size_t Count(MonitorAutoEnterType& aProofOfLock);
+  size_t Count(MonitorAutoEnterType& aProofOfLock, MutexAutoLock&);
 
 private:
   bool IsEmpty()
@@ -103,6 +105,7 @@ private:
   // Can't use typedefs or type alias templates here to name the base type.
   friend class nsEventQueueBase<mozilla::Monitor>;
 
+  typedef mozilla::MutexAutoLock MutexAutoLock;
   typedef Base::Monitor MonitorType;
   typedef Base::MonitorAutoEnterType MonitorAutoEnterType;
   MonitorType mMonitor;
@@ -113,8 +116,8 @@ public:
   // This method adds a new event to the pending event queue.  The queue holds
   // a strong reference to the event after this method returns.  This method
   // cannot fail.
-  void PutEvent(nsIRunnable* aEvent);
-  void PutEvent(already_AddRefed<nsIRunnable>&& aEvent);
+  void PutEvent(nsIRunnable* aEvent, MutexAutoLock&);
+  void PutEvent(already_AddRefed<nsIRunnable>&& aEvent, MutexAutoLock&);
 
   // This method gets an event from the event queue.  If mayWait is true, then
   // the method will block the calling thread until an event is available.  If
@@ -122,21 +125,21 @@ public:
   // or not an event is pending.  When the resulting event is non-null, the
   // caller is responsible for releasing the event object.  This method does
   // not alter the reference count of the resulting event.
-  bool GetEvent(bool aMayWait, nsIRunnable** aEvent);
+  bool GetEvent(bool aMayWait, nsIRunnable** aEvent, MutexAutoLock&);
 
   // This method returns true if there is a pending event.
-  bool HasPendingEvent()
+  bool HasPendingEvent(MutexAutoLock& aProofOfLock)
   {
-    return GetEvent(false, nullptr);
+    return GetEvent(false, nullptr, aProofOfLock);
   }
 
   // This method returns the next pending event or null.
-  bool GetPendingEvent(nsIRunnable** aRunnable)
+  bool GetPendingEvent(nsIRunnable** aRunnable, MutexAutoLock& aProofOfLock)
   {
-    return GetEvent(false, aRunnable);
+    return GetEvent(false, aRunnable, aProofOfLock);
   }
 
-  size_t Count();
+  size_t Count(MutexAutoLock&);
 };
 
 #endif  // nsEventQueue_h__
