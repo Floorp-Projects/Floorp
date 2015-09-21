@@ -707,7 +707,7 @@ ContainerRender(ContainerT* aContainer,
     gfx::Rect visibleRect(aContainer->GetEffectiveVisibleRegion().GetBounds());
     nsRefPtr<Compositor> compositor = aManager->GetCompositor();
 #ifdef MOZ_DUMP_PAINTING
-    if (gfxUtils::sDumpPainting) {
+    if (gfxUtils::sDumpCompositorTextures) {
       RefPtr<gfx::DataSourceSurface> surf = surface->Dump(compositor);
       if (surf) {
         WriteSnapshotToDumpFile(aContainer, surf);

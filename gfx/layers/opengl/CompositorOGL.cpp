@@ -1415,7 +1415,7 @@ CompositorOGL::EndFrame()
   MOZ_ASSERT(mCurrentRenderTarget == mWindowRenderTarget, "Rendering target not properly restored");
 
 #ifdef MOZ_DUMP_PAINTING
-  if (gfxUtils::sDumpPainting) {
+  if (gfxUtils::sDumpCompositorTextures) {
     IntRect rect;
     if (mUseExternalSurfaceSize) {
       rect = IntRect(0, 0, mSurfaceSize.width, mSurfaceSize.height);
