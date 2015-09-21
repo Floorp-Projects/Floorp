@@ -87,16 +87,19 @@
     tree =
       { SECTION: [ // container
         { LABEL: [ // label, has aria-owns
-          { TEXT_LEAF: [ ] },
-          { LABEL: [ // label, referenced by aria-owns
-            { TEXT_LEAF: [ ] }
-          ] },
+          { TEXT_LEAF: [ ] }
         ] },
+        { TEXT_LEAF: [ ] },
+        { LABEL: [ // label, referenced by aria-owns
+          { TEXT_LEAF: [ ] }
+        ] },
+        { TEXT_LEAF: [ ] },
         { LABEL: [ // label, has aria-owns
-          { TEXT_LEAF: [ ] },
-          { LABEL: [ // label, referenced by aria-owns
-            { TEXT_LEAF: [ ] }
-          ] }
+          { TEXT_LEAF: [ ] }
+        ] },
+        { TEXT_LEAF: [ ] },
+        { LABEL: [ // label, referenced by aria-owns
+          { TEXT_LEAF: [ ] }
         ] }
       ] };
     testAccessibleTree("airaglobalprop_cnt", tree);
@@ -169,11 +172,12 @@
     </ul>
   </div>
 
-  <div id="airaglobalprop_cnt"><label
-    role="presentation" aria-owns="ariaowned">has aria-owns</label><label
-    role="presentation" id="ariaowned">referred by aria-owns</label><label
-    role="none" aria-owns="ariaowned2">has aria-owns</label><label
-    role="none" id="ariaowned2">referred by aria-owns</label></div>
+  <div id="airaglobalprop_cnt">
+    <label role="presentation" aria-owns="ariaowned">has aria-owns</label>
+    <label role="presentation" id="ariaowned">referred by aria-owns</label>
+    <label role="none" aria-owns="ariaowned2">has aria-owns</label>
+    <label role="none" id="ariaowned2">referred by aria-owns</label>
+  </div>
 
 </body>
 </html>

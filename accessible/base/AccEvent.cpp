@@ -104,9 +104,8 @@ AccReorderEvent::IsShowHideEventTarget(const Accessible* aTarget) const
 ////////////////////////////////////////////////////////////////////////////////
 
 AccHideEvent::
-  AccHideEvent(Accessible* aTarget, nsINode* aTargetNode, bool aNeedsShutdown) :
-  AccMutationEvent(::nsIAccessibleEvent::EVENT_HIDE, aTarget, aTargetNode),
-  mNeedsShutdown(aNeedsShutdown)
+  AccHideEvent(Accessible* aTarget, nsINode* aTargetNode) :
+  AccMutationEvent(::nsIAccessibleEvent::EVENT_HIDE, aTarget, aTargetNode)
 {
   mNextSibling = mAccessible->NextSibling();
   mPrevSibling = mAccessible->PrevSibling();

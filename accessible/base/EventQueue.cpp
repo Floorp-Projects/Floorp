@@ -546,10 +546,8 @@ EventQueue::ProcessEventQueue()
       }
     }
 
-    AccHideEvent* hideEvent = downcast_accEvent(event);
-    if (hideEvent && hideEvent->NeedsShutdown()) {
+    if (event->mEventType == nsIAccessibleEvent::EVENT_HIDE)
       mDocument->ShutdownChildrenInSubtree(event->mAccessible);
-    }
 
     if (!mDocument)
       return;
