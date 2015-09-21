@@ -143,6 +143,7 @@ public:
   IMPL_EVENT_HANDLER(focus)
   IMPL_EVENT_HANDLER(picture)
   IMPL_EVENT_HANDLER(configurationchange)
+  IMPL_EVENT_HANDLER(poster)
 
 protected:
   virtual ~nsDOMCameraControl();

@@ -202,24 +202,26 @@ Convert(uint8_t aIn, BluetoothAvrcpPlayerAttribute& aOut)
 }
 
 nsresult
-Convert(uint8_t aIn, BluetoothAvrcpRemoteFeature& aOut)
+Convert(uint8_t aIn, BluetoothAvrcpRemoteFeatureBits& aOut)
 {
-  static const BluetoothAvrcpRemoteFeature sAvrcpRemoteFeature[] = {
-    [0x00] = AVRCP_REMOTE_FEATURE_NONE,
-    [0x01] = AVRCP_REMOTE_FEATURE_METADATA,
-    [0x02] = AVRCP_REMOTE_FEATURE_ABSOLUTE_VOLUME,
-    [0x03] = AVRCP_REMOTE_FEATURE_BROWSE
+  static const uint8_t sAvrcpRemoteFeatureBits[] = {
+    [0] = AVRCP_REMOTE_FEATURE_METADATA,
+    [1] = AVRCP_REMOTE_FEATURE_ABSOLUTE_VOLUME,
+    [2] = AVRCP_REMOTE_FEATURE_BROWSE
   };
+  uint8_t bits = 0;
+  size_t i;
+  for (i = 0; i < MOZ_ARRAY_LENGTH(sAvrcpRemoteFeatureBits); ++i, aIn >>= 1) {
+    if (aIn & 0x01) {
+      bits |= sAvrcpRemoteFeatureBits[i];
+    }
+  }
   if (MOZ_HAL_IPC_CONVERT_WARN_IF(
-        !aIn, uint8_t, BluetoothAvrcpRemoteFeature) ||
-      MOZ_HAL_IPC_CONVERT_WARN_IF(
-        aIn >= MOZ_ARRAY_LENGTH(sAvrcpRemoteFeature), uint8_t,
-        BluetoothAvrcpRemoteFeature)) {
-    // silences compiler warning
-    aOut = static_cast<BluetoothAvrcpRemoteFeature>(0);
+        aIn << i, 'uint8_t', BluetoothAvrcpRemoteFeatureBits)) {
+    aOut = AVRCP_REMOTE_FEATURE_NONE; // silences compiler warning
     return NS_ERROR_ILLEGAL_VALUE;
   }
-  aOut = sAvrcpRemoteFeature[aIn];
+  aOut = static_cast<BluetoothAvrcpRemoteFeatureBits>(bits);
   return NS_OK;
 }
 
@@ -685,7 +687,7 @@ Convert(BluetoothAvrcpPlayerAttribute aIn, uint8_t& aOut)
 }
 
 nsresult
-Convert(BluetoothAvrcpRemoteFeature aIn, unsigned long& aOut)
+Convert(BluetoothAvrcpRemoteFeatureBits aIn, unsigned long& aOut)
 {
   if (MOZ_HAL_IPC_CONVERT_WARN_IF(
         aIn < std::numeric_limits<unsigned long>::min(),
@@ -1498,10 +1500,10 @@ UnpackPDU(DaemonSocketPDU& aPDU, BluetoothAvrcpPlayerSettings& aOut)
 }
 
 nsresult
-UnpackPDU(DaemonSocketPDU& aPDU, BluetoothAvrcpRemoteFeature& aOut)
+UnpackPDU(DaemonSocketPDU& aPDU, BluetoothAvrcpRemoteFeatureBits& aOut)
 {
   return UnpackPDU(
-    aPDU, UnpackConversion<uint8_t, BluetoothAvrcpRemoteFeature>(aOut));
+    aPDU, UnpackConversion<uint8_t, BluetoothAvrcpRemoteFeatureBits>(aOut));
 }
 
 nsresult
