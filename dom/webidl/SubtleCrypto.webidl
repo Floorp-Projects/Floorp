@@ -167,6 +167,7 @@ dictionary CryptoKeyPair {
 typedef DOMString KeyFormat;
 typedef (object or DOMString) AlgorithmIdentifier;
 
+[Exposed=(Window,Worker)]
 interface SubtleCrypto {
   [Throws]
   Promise<any> encrypt(AlgorithmIdentifier algorithm,
