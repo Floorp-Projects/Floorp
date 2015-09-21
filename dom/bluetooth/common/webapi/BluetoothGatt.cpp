@@ -113,8 +113,8 @@ BluetoothGatt::Connect(ErrorResult& aRv)
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   if (mAppUuid.IsEmpty()) {
-    GenerateUuid(mAppUuid);
-    BT_ENSURE_TRUE_REJECT(!mAppUuid.IsEmpty(),
+    nsresult rv = GenerateUuid(mAppUuid);
+    BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(rv) && !mAppUuid.IsEmpty(),
                           promise,
                           NS_ERROR_DOM_OPERATION_ERR);
     RegisterBluetoothSignalHandler(mAppUuid, this);
