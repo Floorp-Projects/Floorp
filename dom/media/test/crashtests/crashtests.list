@@ -83,6 +83,7 @@ load 1185176.html
 load 1185192.html
 load analyser-channels-1.html
 load audiocontext-double-suspend.html
+load buffer-source-duration-1.html
 load buffer-source-ended-1.html
 load buffer-source-resampling-start-1.html
 load doppler-1.html
