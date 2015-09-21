@@ -6,7 +6,7 @@ function test() {
   let {ToolSidebar} = require("devtools/client/framework/sidebar");
 
   const toolURL = "data:text/xml;charset=utf8,<?xml version='1.0'?>" +
-                  "<?xml-stylesheet href='chrome://browser/skin/devtools/common.css' type='text/css'?>" +
+                  "<?xml-stylesheet href='chrome://devtools/skin/themes/common.css' type='text/css'?>" +
                   "<window xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul'>" +
                   "<hbox flex='1'><description flex='1'>foo</description><splitter class='devtools-side-splitter'/>" +
                   "<tabbox flex='1' id='sidebar' class='devtools-sidebar-tabs'><tabs/><tabpanels flex='1'/></tabbox>" +

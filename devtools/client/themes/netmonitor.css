@@ -26,7 +26,7 @@
   min-width: 30px;
   min-height: 26px;
   margin: 0;
-  list-style-image: url(profiler-stopwatch.svg);
+  list-style-image: url(images/profiler-stopwatch.svg);
 }
 
 #requests-menu-perf-notice-button .button-text {
@@ -402,7 +402,7 @@ box.requests-menu-status[code^="5"] {
   background: none;
   box-shadow: none;
   border-color: transparent;
-  list-style-image: url("chrome://browser/skin/devtools/debugger-collapse.png");
+  list-style-image: url("chrome://devtools/skin/themes/images/debugger-collapse.png");
   -moz-image-region: rect(0px,16px,16px,0px);
 }
 
@@ -412,7 +412,7 @@ box.requests-menu-status[code^="5"] {
 }
 
 #details-pane-toggle[pane-collapsed] {
-  list-style-image: url("chrome://browser/skin/devtools/debugger-expand.png");
+  list-style-image: url("chrome://devtools/skin/themes/images/debugger-expand.png");
 }
 
 #details-pane-toggle:active {
@@ -421,12 +421,12 @@ box.requests-menu-status[code^="5"] {
 
 @media (min-resolution: 1.1dppx) {
   #details-pane-toggle {
-    list-style-image: url("chrome://browser/skin/devtools/debugger-collapse@2x.png");
+    list-style-image: url("chrome://devtools/skin/themes/images/debugger-collapse@2x.png");
     -moz-image-region: rect(0px,32px,32px,0px);
   }
 
   #details-pane-toggle[pane-collapsed] {
-    list-style-image: url("chrome://browser/skin/devtools/debugger-expand@2x.png");
+    list-style-image: url("chrome://devtools/skin/themes/images/debugger-expand@2x.png");
   }
 
   #details-pane-toggle:active {
@@ -555,7 +555,7 @@ box.requests-menu-status[code^="5"] {
 }
 
 .security-warning-icon {
-  background-image: url(alerticon-warning.png);
+  background-image: url(images/alerticon-warning.png);
   background-size: 13px 12px;
   -moz-margin-start: 5px;
   vertical-align: top;
@@ -565,7 +565,7 @@ box.requests-menu-status[code^="5"] {
 
 @media (min-resolution: 1.1dppx) {
   .security-warning-icon {
-    background-image: url(alerticon-warning@2x.png);
+    background-image: url(images/alerticon-warning@2x.png);
   }
 }
 
@@ -677,7 +677,7 @@ box.requests-menu-status[code^="5"] {
   background: none;
   box-shadow: none;
   border-color: transparent;
-  list-style-image: url(profiler-stopwatch.svg);
+  list-style-image: url(images/profiler-stopwatch.svg);
   -moz-padding-end: 0;
   cursor: pointer;
 }

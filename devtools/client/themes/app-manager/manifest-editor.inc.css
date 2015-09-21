@@ -73,10 +73,10 @@
 }
 
 .manifest-editor .variables-view-delete::before {
-  background-image: url("app-manager/remove.svg");
+  background-image: url("images/app-manager/remove.svg");
 }
 
 .manifest-editor .variables-view-add-property::before {
-  background-image: url("app-manager/add.svg");
+  background-image: url("images/app-manager/add.svg");
   -moz-margin-end: 2px;
 }
