@@ -6,8 +6,7 @@
 
 [Constructor(DOMString url),
  Pref="dom.presentation.enabled",
- CheckAnyPermissions="presentation",
- AvailableIn="PrivilegedApps"]
+ CheckAnyPermissions="presentation"]
 interface PresentationRequest : EventTarget {
   /*
    * A requesting page use start() to start a new session, and the session will

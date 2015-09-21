@@ -432,7 +432,7 @@ partial interface Navigator {
 };
 
 partial interface Navigator {
-  [Throws, Pref="dom.presentation.enabled", CheckAnyPermissions="presentation", AvailableIn="PrivilegedApps", SameObject]
+  [Throws, Pref="dom.presentation.enabled", CheckAnyPermissions="presentation", SameObject]
   readonly attribute Presentation? presentation;
 };
 
