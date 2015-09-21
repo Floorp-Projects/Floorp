@@ -13,7 +13,7 @@ comparing with the result of getAdjustedQuads.
 
 There's a separate test for checking that getAdjustedQuads actually returns
 sensible values
-(browser/devtools/shared/test/browser_layoutHelpers-getBoxQuads.js),
+(devtools/client/shared/test/browser_layoutHelpers-getBoxQuads.js),
 so the present test doesn't care about that, it just verifies that the css
 transform highlighter applies those values correctly to the SVG elements
 */

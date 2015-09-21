@@ -8,7 +8,7 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test" +
+const TEST_URI = "http://example.com/browser/devtools/client/webconsole/test" +
                  "/test-bug-766001-js-console-links.html";
 
 function test() {

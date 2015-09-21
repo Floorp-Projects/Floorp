@@ -77,7 +77,7 @@ DevTools.prototype = {
    * - invertIconForLightTheme: The icon can automatically have an inversion
    *         filter applied (default is false).  All builtin tools are true, but
    *         addons may omit this to prevent unwanted changes to the `icon`
-   *         image. See browser/themes/shared/devtools/filters.svg#invert for
+   *         image. See devtools/client/themes/filters.svg#invert for
    *         the filter being applied to the images (boolean|optional)
    * - url: URL pointing to a XUL/XHTML document containing the user interface
    *        (string|required)

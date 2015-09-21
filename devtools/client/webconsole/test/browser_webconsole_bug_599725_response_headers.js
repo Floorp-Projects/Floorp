@@ -11,7 +11,7 @@
 "use strict";
 
 const INIT_URI = "data:text/plain;charset=utf8,hello world";
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-bug-599725-response-headers.sjs";
 
 var loads = 0;

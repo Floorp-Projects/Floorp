@@ -8,7 +8,7 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-webconsole-error-observer.html";
 
 // On e10s, the exception is triggered in child process

@@ -21,7 +21,7 @@ const { Formatters } = require("devtools/client/performance/modules/logic/marker
  * - colorName: The label of the DevTools color used for this marker. If
  *              adding a new color, be sure to check that there's an entry
  *              for `.marker-details-bullet.{COLORNAME}` for the equivilent
- *              entry in ./browser/themes/shared/devtools/performance.inc.css
+ *              entry in ./devtools/client/themes/performance.inc.css
  *              https://developer.mozilla.org/en-US/docs/Tools/DevToolsColors
  * - collapsible: Whether or not this marker can contain other markers it
  *                eclipses, and becomes collapsible to reveal its nestable children.

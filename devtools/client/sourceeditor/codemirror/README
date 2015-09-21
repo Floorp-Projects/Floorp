@@ -92,9 +92,9 @@ in the LICENSE file:
 
 # Localization patches
 
-diff --git a/browser/devtools/sourceeditor/codemirror/search/search.js b/browser/devtools/sourceeditor/codemirror/search/search.js
---- a/browser/devtools/sourceeditor/codemirror/search/search.js
-+++ b/browser/devtools/sourceeditor/codemirror/search/search.js
+diff --git a/devtools/client/sourceeditor/codemirror/search/search.js b/devtools/client/sourceeditor/codemirror/search/search.js
+--- a/devtools/client/sourceeditor/codemirror/search/search.js
++++ b/devtools/client/sourceeditor/codemirror/search/search.js
 @@ -62,19 +62,31 @@
      if (isRE) {
        query = new RegExp(isRE[1], isRE[2].indexOf("i") == -1 ? "" : "i");
@@ -135,7 +135,7 @@ diff --git a/browser/devtools/sourceeditor/codemirror/search/search.js b/browser
 # Footnotes
 
 [1] http://codemirror.net
-[2] browser/devtools/sourceeditor/codemirror
-[3] browser/devtools/sourceeditor/test/browser_codemirror.js
-[4] browser/devtools/jar.mn
-[5] browser/devtools/sourceeditor/editor.js
+[2] devtools/client/sourceeditor/codemirror
+[3] devtools/client/sourceeditor/test/browser_codemirror.js
+[4] devtools/client/jar.mn
+[5] devtools/client/sourceeditor/editor.js

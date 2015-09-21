@@ -9,9 +9,9 @@ const {InspectorFront} = require("devtools/server/actors/inspector");
 const {TargetFactory} = require("devtools/client/framework/target");
 const { Cc, Ci } = require("chrome");
 
-const CSS_URI = "http://mochi.test:8888/browser/browser/devtools/sourceeditor" +
+const CSS_URI = "http://mochi.test:8888/browser/devtools/client/sourceeditor" +
                 "/test/css_statemachine_testcases.css";
-const TESTS_URI = "http://mochi.test:8888/browser/browser/devtools/sourceeditor" +
+const TESTS_URI = "http://mochi.test:8888/browser/devtools/client/sourceeditor" +
                   "/test/css_autocompletion_tests.json";
 
 const source = read(CSS_URI);

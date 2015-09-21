@@ -17,7 +17,7 @@ add_task(function*() {
   is(ui._openLinkNewTabItem.getAttribute("hidden"), "false",
     "The menu item is not hidden");
 
-  let url = "https://example.com/browser/browser/devtools/styleeditor/test/" +
+  let url = "https://example.com/browser/devtools/client/styleeditor/test/" +
     "simple.css";
   is(ui._contextMenuStyleSheet.href, url, "Correct URL for sheet");
 

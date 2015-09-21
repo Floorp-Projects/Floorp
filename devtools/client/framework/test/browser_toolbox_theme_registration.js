@@ -2,7 +2,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const CHROME_URL = "chrome://mochitests/content/browser/browser/devtools/framework/test/";
+const CHROME_URL = "chrome://mochitests/content/browser/devtools/client/framework/test/";
 
 var toolbox;
 

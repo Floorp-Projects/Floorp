@@ -8,7 +8,7 @@
 
 function test() {
   Task.spawn(function* () {
-    const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+    const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                      "test/test-closure-optimized-out.html";
     let {tab} = yield loadTab(TEST_URI);
     let hud = yield openConsole(tab);
@@ -49,7 +49,7 @@ function test() {
   });
 }
 
-// Debugger helper functions stolen from browser/devtools/debugger/test/head.js.
+// Debugger helper functions stolen from devtools/client/debugger/test/head.js.
 
 function ensureThreadClientState(aPanel, aState) {
   let thread = aPanel.panelWin.gThreadClient;

@@ -3,7 +3,7 @@
 
 // Tests that the appcache commands works as they should
 
-const TEST_URI = "http://sub1.test2.example.com/browser/browser/devtools/" +
+const TEST_URI = "http://sub1.test2.example.com/browser/devtools/client/" +
                  "commandline/test/browser_cmd_appcache_valid_index.html";
 
 function test() {
@@ -110,7 +110,7 @@ function* spawnTest() {
       setup: 'appcache validate ' + TEST_URI,
       check: {
         input:  'appcache validate ' + TEST_URI,
-              // appcache validate http://sub1.test2.example.com/browser/browser/devtools/commandline/test/browser_cmd_appcache_valid_index.html
+              // appcache validate http://sub1.test2.example.com/browser/devtools/client/commandline/test/browser_cmd_appcache_valid_index.html
         markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
         status: 'VALID',
         args: {
@@ -160,7 +160,7 @@ function* spawnTest() {
       setup: 'appcache viewentry --key ' + TEST_URI,
       check: {
         input:  'appcache viewentry --key ' + TEST_URI,
-              // appcache viewentry --key http://sub1.test2.example.com/browser/browser/devtools/commandline/test/browser_cmd_appcache_valid_index.html
+              // appcache viewentry --key http://sub1.test2.example.com/browser/devtools/client/commandline/test/browser_cmd_appcache_valid_index.html
         markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
         status: 'VALID',
         args: {}

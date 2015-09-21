@@ -8,7 +8,7 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-bug-952277-highlight-nodes-in-vview.html";
 
 var gWebConsole, gJSTerm, gVariablesView, gToolbox;

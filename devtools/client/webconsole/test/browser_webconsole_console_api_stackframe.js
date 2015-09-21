@@ -9,7 +9,7 @@
 function test() {
   let hud;
 
-  const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+  const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                    "test/test-console-api-stackframe.html";
   const TEST_FILE = TEST_URI.substr(TEST_URI.lastIndexOf("/"));
 

@@ -7,7 +7,7 @@
 // Check stylesheets on HMTL and XUL document
 
 // FIXME: this test opens the devtools for nothing, it should be changed into a
-// toolkit/devtools/server/tests/mochitest/test_css-logic-...something...html
+// devtools/server/tests/mochitest/test_css-logic-...something...html
 // test
 
 const TEST_URI_HTML = TEST_URL_ROOT + "doc_content_stylesheet.html";

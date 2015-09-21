@@ -300,7 +300,7 @@ box.requests-menu-status[code^="5"] {
   -moz-padding-start: 0px;
   -moz-padding-end: 4px;
   /* Background created on a <canvas> in js. */
-  /* @see browser/devtools/netmonitor/netmonitor-view.js */
+  /* @see devtools/client/netmonitor/netmonitor-view.js */
   background-image: -moz-element(#waterfall-background);
   background-repeat: repeat-y;
   background-position: -1px center;

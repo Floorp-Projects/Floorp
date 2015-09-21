@@ -18,7 +18,7 @@ function test() {
   Task.spawn(runner).then(finishTest);
 
   function* runner() {
-    const TEST_PAGE_URI = "http://example.com/browser/browser/devtools/" +
+    const TEST_PAGE_URI = "http://example.com/browser/devtools/client/" +
                           "webconsole/test/test-console.html" + "?_uniq=" +
                           Date.now();
 

@@ -1287,7 +1287,7 @@ function waitForMessages(options) {
         let url = location.title;
         // Prevent recursion with the browser console and any potential
         // messages coming from head.js.
-        if (url.indexOf("browser/devtools/webconsole/test/head.js") != -1) {
+        if (url.indexOf("devtools/client/webconsole/test/head.js") != -1) {
           continue;
         }
       }

@@ -11,7 +11,7 @@
  *    toolkit/components/telemetry/Histograms.json. Each type is optional but it
  *    is best if all three can be included.
  *
- * 2. Add your chart entries to browser/devtools/shared/telemetry.js
+ * 2. Add your chart entries to devtools/client/shared/telemetry.js
  *    (Telemetry.prototype._histograms):
  *    mytoolname: {
  *      histogram: "DEVTOOLS_MYTOOLNAME_OPENED_BOOLEAN",

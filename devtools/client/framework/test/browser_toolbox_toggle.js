@@ -12,7 +12,7 @@ var {Toolbox} = require("devtools/client/framework/toolbox");
 
 add_task(function*() {
   // Test with ACCEL+SHIFT+I / ACCEL+ALT+I (MacOSX) ; modifiers should match :
-  // - toolbox-key-toggle in browser/devtools/framework/toolbox-window.xul
+  // - toolbox-key-toggle in devtools/client/framework/toolbox-window.xul
   // - key_devToolboxMenuItem in browser/base/content/browser.xul
   info("Test toggle using CTRL+SHIFT+I/CMD+ALT+I");
   yield testToggle("I", {

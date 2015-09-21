@@ -4,7 +4,7 @@
 /**
  * Tests if the retrieved profiler data samples always have a (root) node.
  * If this ever changes, the |ThreadNode.prototype.insert| function in
- * browser/devtools/performance/modules/logic/tree-model.js will have to be changed.
+ * devtools/client/performance/modules/logic/tree-model.js will have to be changed.
  */
 
 const WAIT_TIME = 1000; // ms

@@ -6,7 +6,7 @@
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-result-format-as-string.html";
 
 var test = asyncTest(function* () {

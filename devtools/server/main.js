@@ -596,7 +596,7 @@ var DebuggerServer = {
    * After calling this, set some socket options, such as the port / path to
    * listen on, and then call |open| on the listener.
    *
-   * See SocketListener in toolkit/devtools/security/socket.js for available
+   * See SocketListener in devtools/shared/security/socket.js for available
    * options.
    *
    * @return SocketListener

@@ -153,7 +153,7 @@
   color: #666;
 }
 
-/* Tooltip widget (see browser/devtools/shared/widgets/Tooltip.js) */
+/* Tooltip widget (see devtools/client/shared/widgets/Tooltip.js) */
 
 .devtools-tooltip .panel-arrowcontent {
   padding: 4px;

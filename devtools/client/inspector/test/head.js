@@ -17,7 +17,7 @@ const CC = Components.Constructor;
 // Uncomment this pref to dump all devtools emitted events to the console.
 // Services.prefs.setBoolPref("devtools.dump.emit", true);
 
-var TEST_URL_ROOT = "http://example.com/browser/browser/devtools/inspector/test/";
+var TEST_URL_ROOT = "http://example.com/browser/devtools/client/inspector/test/";
 var ROOT_TEST_DIR = getRootDirectory(gTestPath);
 
 // All test are asynchronous

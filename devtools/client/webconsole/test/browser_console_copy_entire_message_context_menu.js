@@ -11,7 +11,7 @@ function test() {
   let outputNode;
   let contextMenu;
 
-  const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+  const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                    "test/test-console.html";
 
   Task.spawn(runner).then(finishTest);

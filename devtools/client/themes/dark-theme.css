@@ -341,7 +341,7 @@ div.CodeMirror span.eval-text {
   }
 }
 
-/* XUL panel styling (see browser/devtools/shared/widgets/Tooltip.js) */
+/* XUL panel styling (see devtools/client/shared/widgets/Tooltip.js) */
 
 .theme-tooltip-panel .panel-arrowcontent {
   padding: 5px;

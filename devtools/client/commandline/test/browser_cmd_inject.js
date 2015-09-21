@@ -3,7 +3,7 @@
 
 // Tests that the inject commands works as they should
 
-const TEST_URI = 'http://example.com/browser/browser/devtools/commandline/'+
+const TEST_URI = 'http://example.com/browser/devtools/client/commandline/'+
                  'test/browser_cmd_inject.html';
 
 function test() {
@@ -43,9 +43,9 @@ function test() {
         }
       },
       {
-        setup:    'inject http://example.com/browser/browser/devtools/commandline/test/browser_cmd_inject.js',
+        setup:    'inject http://example.com/browser/devtools/client/commandline/test/browser_cmd_inject.js',
         check: {
-          input:  'inject http://example.com/browser/browser/devtools/commandline/test/browser_cmd_inject.js',
+          input:  'inject http://example.com/browser/devtools/client/commandline/test/browser_cmd_inject.js',
           markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
           hints:                                                                                            '',
           status: 'VALID',

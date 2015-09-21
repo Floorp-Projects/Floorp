@@ -9,7 +9,7 @@
  * has a name, start and end timestamps. Markers are stored in docShells.
  *
  * This module exposes this tracking mechanism. To use with devtools' RDP,
- * use toolkit/devtools/server/actors/timeline.js directly.
+ * use devtools/server/actors/timeline.js directly.
  *
  * To start/stop recording markers:
  *   timeline.start()

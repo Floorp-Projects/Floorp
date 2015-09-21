@@ -17,12 +17,12 @@ to:
 
 3. Copy acorn.js to our tree:
 
-       $ cp acorn.js /path/to/mozilla-central/toolkit/devtools/acorn/acorn.js
+       $ cp acorn.js /path/to/mozilla-central/devtools/shared/acorn/acorn.js
 
 4. Copy acorn_loose.js to our tree:
 
-       $ cp acorn_loose.js /path/to/mozilla-central/toolkit/devtools/acorn/acorn_loose.js
+       $ cp acorn_loose.js /path/to/mozilla-central/devtools/shared/acorn/acorn_loose.js
 
 5. Copy util/walk.js to our tree:
 
-       $ cp util/walk.js /path/to/mozilla-central/toolkit/devtools/acorn/walk.js
+       $ cp util/walk.js /path/to/mozilla-central/devtools/shared/acorn/walk.js

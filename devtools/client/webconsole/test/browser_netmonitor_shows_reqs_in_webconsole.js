@@ -10,7 +10,7 @@ const TEST_URI = "data:text/html;charset=utf8,Test that the netmonitor " +
                  "web console, even if the netmonitor hadn't opened yet.";
 
 const TEST_FILE = "test-network-request.html";
-const TEST_PATH = "http://example.com/browser/browser/devtools/webconsole/" +
+const TEST_PATH = "http://example.com/browser/devtools/client/webconsole/" +
                   "test/" + TEST_FILE;
 
 const NET_PREF = "devtools.webconsole.filter.networkinfo";

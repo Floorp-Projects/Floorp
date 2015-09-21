@@ -16,7 +16,7 @@ SimpleTest.registerCleanupFunction(() => {
   DevToolsUtils.testing = false;
 });
 
-const TEST_URI_ROOT = "http://example.com/browser/browser/devtools/shared/test/";
+const TEST_URI_ROOT = "http://example.com/browser/devtools/client/shared/test/";
 const OPTIONS_VIEW_URL = TEST_URI_ROOT + "doc_options-view.xul";
 
 /**

@@ -26,7 +26,7 @@ const { promiseInvoke } = require("devtools/shared/async-utils");
 var { TargetFactory } = require("devtools/client/framework/target");
 var { Toolbox } = require("devtools/client/framework/toolbox")
 
-const EXAMPLE_URL = "http://example.com/browser/browser/devtools/debugger/test/mochitest/";
+const EXAMPLE_URL = "http://example.com/browser/devtools/client/debugger/test/mochitest/";
 const FRAME_SCRIPT_URL = getRootDirectory(gTestPath) + "code_frame-script.js";
 
 DevToolsUtils.testing = true;

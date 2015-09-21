@@ -9,7 +9,7 @@
 "use strict";
 
 const INIT_URI = "data:text/html;charset=utf8,hello world";
-const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/" +
+const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-duplicate-error.html";
 
 var test = asyncTest(function* () {

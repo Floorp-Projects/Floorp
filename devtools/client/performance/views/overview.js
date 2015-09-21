@@ -5,7 +5,7 @@
 
 // No sense updating the overview more often than receiving data from the
 // backend. Make sure this isn't lower than DEFAULT_TIMELINE_DATA_PULL_TIMEOUT
-// in toolkit/devtools/server/actors/timeline.js
+// in devtools/server/actors/timeline.js
 const OVERVIEW_UPDATE_INTERVAL = 200; // ms
 const FRAMERATE_GRAPH_LOW_RES_INTERVAL = 100; // ms
 const FRAMERATE_GRAPH_HIGH_RES_INTERVAL = 16; // ms

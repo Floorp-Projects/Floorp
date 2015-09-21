@@ -2,7 +2,7 @@
 
 1. `git clone https://github.com/beautify-web/js-beautify.git`
 
-2. Copy `js/lib/beautify.js` to `toolkit/devtools/jsbeautify/src/beautify-js.js`
+2. Copy `js/lib/beautify.js` to `devtools/shared/jsbeautify/src/beautify-js.js`
 
 3. Remove the acorn section from the file and add the following to the top:
 
@@ -16,7 +16,7 @@
  exports.jsBeautify = js_beautify;
  ```
 
-5. Copy `beautify-html.js` to `toolkit/devtools/jsbeautify/src/beautify-html.js`
+5. Copy `beautify-html.js` to `devtools/shared/jsbeautify/src/beautify-html.js`
 
 6. Replace the require blocks at the bottom of the file with:
 
@@ -28,10 +28,10 @@
  };
  ```
 
-7. Copy `beautify-css.js` to `toolkit/devtools/jsbeautify/src/beautify-css.js`
+7. Copy `beautify-css.js` to `devtools/shared/jsbeautify/src/beautify-css.js`
 
 8. Replace the global define block at the bottom of the file with:
  ```
  exports.cssBeautify = css_beautify;
  ```
-9. Copy `js/test/beautify-tests.js` to `toolkit/devtools/jsbeautify/src/beautify-tests.js`
+9. Copy `js/test/beautify-tests.js` to `devtools/shared/jsbeautify/src/beautify-tests.js`

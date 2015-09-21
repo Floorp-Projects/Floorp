@@ -33,7 +33,7 @@ const acceptableHeaders = ["x-chromelogger-data"];
  * The monitor listens to HTTP events and forwards it into the right child process.
  *
  * Read more about the architecture:
- * https://github.com/mozilla/gecko-dev/blob/fx-team/toolkit/devtools/server/docs/actor-e10s-handling.md
+ * https://github.com/mozilla/gecko-dev/blob/fx-team/devtools/server/docs/actor-e10s-handling.md
  */
 var ServerLoggerMonitor = {
   // Initialization

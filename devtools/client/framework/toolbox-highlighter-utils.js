@@ -196,7 +196,7 @@ exports.getHighlighterUtils = function(toolbox) {
   /**
    * Show the box model highlighter on a node in the content page.
    * The node needs to be a NodeFront, as defined by the inspector actor
-   * @see toolkit/devtools/server/actors/inspector.js
+   * @see devtools/server/actors/inspector.js
    * @param {NodeFront} nodeFront The node to highlight
    * @param {Object} options
    * @return A promise that resolves when the node has been highlighted

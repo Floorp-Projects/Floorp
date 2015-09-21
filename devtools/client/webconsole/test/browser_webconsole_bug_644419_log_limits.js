@@ -13,7 +13,7 @@ const INIT_URI = "data:text/html;charset=utf-8,Web Console test for " +
                  "bug 644419: Console should " +
                  "have user-settable log limits for each message category";
 
-const TEST_URI = "http://example.com/browser/browser/devtools/" +
+const TEST_URI = "http://example.com/browser/devtools/client/" +
                  "webconsole/test/test-bug-644419-log-limits.html";
 
 var hud, outputNode;

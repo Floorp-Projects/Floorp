@@ -7,7 +7,7 @@
 // This test makes sure that the style editor does not store any
 // content CSS files in the permanent cache when opened from PB mode.
 
-const TEST_URL = "http://" + TEST_HOST + "/browser/browser/devtools/" +
+const TEST_URL = "http://" + TEST_HOST + "/browser/devtools/client/" +
   "styleeditor/test/test_private.html";
 const {LoadContextInfo} =
   Cu.import("resource://gre/modules/LoadContextInfo.jsm", {});

@@ -82,7 +82,7 @@ function testOpenTestFile()
     ok(win, "scratchpad opened for file open");
     try {
       win.Scratchpad.importFromFile(
-        "http://example.com/browser/browser/devtools/scratchpad/test/NS_ERROR_ILLEGAL_INPUT.txt",
+        "http://example.com/browser/devtools/client/scratchpad/test/NS_ERROR_ILLEGAL_INPUT.txt",
         "silent",
         function (aStatus, content) {
           let nb = win.document.querySelector('#scratchpad-notificationbox');
