@@ -61,6 +61,32 @@ if (typeof Reflect.parse === "function")
 
   assertEq(oneStatementAST.body.length, 1);
   assertEq(oneStatementAST.body[0].type, "ExportDeclaration");
+
+  twoStatementAST =
+    Reflect.parse(`export { x } from "bar"
+                  /bar/g`,
+                  { target: "module" });
+
+  statements = twoStatementAST.body;
+  assertEq(statements.length, 2,
+           "should have two items in the module, not one ExportDeclaration");
+  assertEq(statements[0].type, "ExportDeclaration");
+  assertEq(statements[1].type, "ExpressionStatement");
+  assertEq(statements[1].expression.type, "Literal");
+  assertEq(statements[1].expression.value.toString(), "/bar/g");
+
+  twoStatementAST =
+    Reflect.parse(`export * from "bar"
+                  /bar/g`,
+                  { target: "module" });
+
+  statements = twoStatementAST.body;
+  assertEq(statements.length, 2,
+           "should have two items in the module, not one ExportDeclaration");
+  assertEq(statements[0].type, "ExportDeclaration");
+  assertEq(statements[1].type, "ExpressionStatement");
+  assertEq(statements[1].expression.type, "Literal");
+  assertEq(statements[1].expression.value.toString(), "/bar/g");
 }
 
 /******************************************************************************/
