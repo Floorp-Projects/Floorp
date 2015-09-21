@@ -112,7 +112,7 @@ private:
       return NS_ERROR_DOM_UNKNOWN_ERR;
     }
 
-    ScopedSECKEYPublicKey publicKey(mKeyPair.mPublicKey.get()->GetPublicKey());
+    ScopedSECKEYPublicKey publicKey(mKeyPair->mPublicKey.get()->GetPublicKey());
     ScopedCERTSubjectPublicKeyInfo spki(
         SECKEY_CreateSubjectPublicKeyInfo(publicKey));
     if (!spki) {
@@ -180,7 +180,7 @@ private:
       return NS_ERROR_DOM_UNKNOWN_ERR;
     }
 
-    ScopedSECKEYPrivateKey privateKey(mKeyPair.mPrivateKey.get()->GetPrivateKey());
+    ScopedSECKEYPrivateKey privateKey(mKeyPair->mPrivateKey.get()->GetPrivateKey());
     rv = SEC_DerSignData(arena, signedCert, innerDER.data, innerDER.len,
                          privateKey, mSignatureAlg);
     if (rv != SECSuccess) {
@@ -232,7 +232,7 @@ private:
   {
     // Make copies of the private key and certificate, otherwise, when this
     // object is deleted, the structures they reference will be deleted too.
-    SECKEYPrivateKey* key = mKeyPair.mPrivateKey.get()->GetPrivateKey();
+    SECKEYPrivateKey* key = mKeyPair->mPrivateKey.get()->GetPrivateKey();
     CERTCertificate* cert = CERT_DupCertificate(mCertificate);
     nsRefPtr<RTCCertificate> result =
         new RTCCertificate(mResultPromise->GetParentObject(),
