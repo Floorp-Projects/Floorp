@@ -200,7 +200,6 @@ public:
 #endif
 
   nsIContent* GetNextChild();
-  nsIContent* Parent() const { return mOriginalContent; }
 
 private:
   enum IteratorPhase
