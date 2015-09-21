@@ -188,7 +188,7 @@ PathCairo::ContainsPoint(const Point &aPoint, const Matrix &aTransform) const
   inverse.Invert();
   Point transformed = inverse * aPoint;
 
-  EnsureContainingContext();
+  EnsureContainingContext(aTransform);
 
   return cairo_in_fill(mContainingContext, transformed.x, transformed.y);
 }
@@ -202,7 +202,7 @@ PathCairo::StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
   inverse.Invert();
   Point transformed = inverse * aPoint;
 
-  EnsureContainingContext();
+  EnsureContainingContext(aTransform);
 
   SetCairoStrokeOptions(mContainingContext, aStrokeOptions);
 
@@ -212,7 +212,7 @@ PathCairo::StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
 Rect
 PathCairo::GetBounds(const Matrix &aTransform) const
 {
-  EnsureContainingContext();
+  EnsureContainingContext(aTransform);
 
   double x1, y1, x2, y2;
 
@@ -225,7 +225,7 @@ Rect
 PathCairo::GetStrokedBounds(const StrokeOptions &aStrokeOptions,
                             const Matrix &aTransform) const
 {
-  EnsureContainingContext();
+  EnsureContainingContext(aTransform);
 
   double x1, y1, x2, y2;
 
@@ -266,13 +266,21 @@ PathCairo::StreamToSink(PathSink *aSink) const
 }
 
 void
-PathCairo::EnsureContainingContext() const
+PathCairo::EnsureContainingContext(const Matrix &aTransform) const
 {
   if (mContainingContext) {
-    return;
+    if (mContainingTransform.ExactlyEquals(aTransform)) {
+      return;
+    }
+  } else {
+    mContainingContext = cairo_create(DrawTargetCairo::GetDummySurface());
   }
 
-  mContainingContext = cairo_create(DrawTargetCairo::GetDummySurface());
+  mContainingTransform = aTransform;
+
+  cairo_matrix_t mat;
+  GfxMatrixToCairoMatrix(mContainingTransform, mat);
+  cairo_set_matrix(mContainingContext, &mat);
 
   SetPathOnContext(mContainingContext);
 }
