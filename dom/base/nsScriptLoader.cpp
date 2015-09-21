@@ -10,6 +10,7 @@
 
 #include "nsScriptLoader.h"
 
+#include "prsystem.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "xpcpublic.h"
@@ -1588,7 +1589,7 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
   aRequest->mProgress = nsScriptLoadRequest::Progress_DoneLoading;
 
   // If this is currently blocking the parser, attempt to compile it off-main-thread.
-  if (aRequest == mParserBlockingRequest) {
+  if (aRequest == mParserBlockingRequest && (PR_GetNumberOfProcessors() > 1)) {
     nsresult rv = AttemptAsyncScriptCompile(aRequest);
     if (rv == NS_OK) {
       NS_ASSERTION(aRequest->mProgress == nsScriptLoadRequest::Progress_Compiling,
