@@ -274,6 +274,7 @@ private: // methods
   nsresult LockImageData();
   nsresult UnlockImageData();
   nsresult Optimize();
+  nsresult Deoptimize();
 
   void AssertImageDataLocked() const;
 
@@ -447,9 +448,6 @@ private:
  * This may be considerably more expensive than is necessary just for drawing,
  * so only use this when you need to read or write the raw underlying image data
  * that the imgFrame holds.
- *
- * Once all an imgFrame's RawAccessFrameRefs go out of scope, new
- * RawAccessFrameRefs cannot be created.
  */
 class RawAccessFrameRef final
 {

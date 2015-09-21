@@ -11,7 +11,6 @@
 #include "mozilla/RefPtr.h"
 #include "DecodePool.h"
 #include "DecoderFlags.h"
-#include "Downscaler.h"
 #include "ImageMetadata.h"
 #include "Orientation.h"
 #include "SourceBuffer.h"
@@ -113,14 +112,19 @@ public:
    * If this decoder supports downscale-during-decode, sets the target size that
    * this image should be decoded to.
    *
-   * If the provided size is unacceptable, an error is returned.
+   * If this decoder *doesn't* support downscale-during-decode, returns
+   * NS_ERROR_NOT_AVAILABLE. If the provided size is unacceptable, returns
+   * another error.
    *
    * Returning NS_OK from this method is a promise that the decoder will decode
    * the image to the requested target size unless it encounters an error.
    *
    * This must be called before Init() is called.
    */
-  nsresult SetTargetSize(const nsIntSize& aSize);
+  virtual nsresult SetTargetSize(const nsIntSize& aSize)
+  {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   /**
    * Set the requested sample size for this decoder. Used to implement the
@@ -399,8 +403,6 @@ protected:
                                           imgFrame* aPreviousFrame);
 
 protected:
-  Maybe<Downscaler> mDownscaler;
-
   uint8_t* mImageData;  // Pointer to image data in either Cairo or 8bit format
   uint32_t mImageDataLength;
   uint32_t* mColormap;  // Current colormap to be used in Cairo format
