@@ -574,6 +574,12 @@ this.ADN_MAX_BCD_NUMBER_BYTES = 11;
 // Maximum digits of the Dialling Number in ADN.
 // See TS 151.011 clause 10.5.1 EF_ADN, 'Dialling Number'.
 this.ADN_MAX_NUMBER_DIGITS = 20;
+// Maximum size of BCD numbers in EXT.
+// See TS 151.011 clause 10.5.10 EF_EXT1, 'Extension data'.
+this.EXT_MAX_BCD_NUMBER_BYTES = 10;
+// Maximum digits of the Dialling Number in EXT.
+// See TS 151.011 clause 10.5.10 EF_EXT1, 'Extension data'.
+this.EXT_MAX_NUMBER_DIGITS = 20;
 
 // READ_RECORD mode,  TS 102.221
 this.READ_RECORD_ABSOLUTE_MODE = 4;
@@ -1262,10 +1268,13 @@ this.GECKO_ICC_SERVICES = {
     FDN: 3,
     PLMNSEL: 7,
     MSISDN: 9,
+    EXT1: 10,
+    EXT2: 11,
     CBMI: 14,
     GID1: 15,
     SPN: 17,
     SDN: 18,
+    EXT3: 19,
     DATA_DOWNLOAD_SMS_CB: 25,
     DATA_DOWNLOAD_SMS_PP: 26,
     CBMIR: 30,
@@ -1280,7 +1289,9 @@ this.GECKO_ICC_SERVICES = {
   // @see 3GPP TS 31.102 4.2.8 (USIM).
   usim: {
     FDN: 2,
+    EXT2: 3,
     SDN: 4,
+    EXT3: 5,
     BDN: 6,
     CBMI: 15,
     CBMIR: 16,
@@ -1300,8 +1311,11 @@ this.GECKO_ICC_SERVICES = {
   ruim: {
     FDN: 3,
     ENHANCED_PHONEBOOK: 6,
+    EXT1: 10,
+    EXT2: 11,
     SPN: 17,
-    SDN: 18
+    SDN: 18,
+    EXT3: 19,
   },
   // @see B.3.1.1 CPHS Information in CPHS Phase 2:
   // Indicates which of the CPHS 'optional' data-fields are present in the SIM card:
