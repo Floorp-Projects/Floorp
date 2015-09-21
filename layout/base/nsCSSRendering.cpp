@@ -1581,22 +1581,29 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
     gfxContext* renderContext = aRenderingContext.ThebesContext();
     DrawTarget* drawTarget = renderContext->GetDrawTarget();
     nsContextBoxBlur blurringArea;
+    gfxContext* shadowContext =
+      blurringArea.Init(shadowPaintRect, 0, blurRadius, twipsPerPixel,
+                        renderContext, aDirtyRect, &skipGfxRect);
+    if (!shadowContext)
+      continue;
+    DrawTarget* shadowDT = shadowContext->GetDrawTarget();
+
+    // shadowContext is owned by either blurringArea or aRenderingContext.
+    MOZ_ASSERT(shadowContext == renderContext ||
+               shadowContext == blurringArea.GetContext());
+
+    // Set the shadow color; if not specified, use the foreground color
+    Color shadowColor = Color::FromABGR(shadowItem->mHasColor ?
+                                          shadowItem->mColor :
+                                          aForFrame->StyleColor()->mColor);
+    renderContext->Save();
+    renderContext->SetColor(ThebesColor(shadowColor));
 
     // Clip the context to the area of the frame's padding rect, so no part of the
     // shadow is painted outside. Also cut out anything beyond where the inset shadow
     // will be.
     Rect shadowGfxRect = NSRectToRect(paddingRect, twipsPerPixel);
     shadowGfxRect.Round();
-
-    // Set the shadow color; if not specified, use the foreground color
-    Color shadowColor = Color::FromABGR(shadowItem->mHasColor ?
-                                          shadowItem->mColor :
-                                          aForFrame->StyleColor()->mColor);
-
-    renderContext->Save();
-
-    // This clips the outside border radius.
-    // clipRectRadii is the border radius inside the inset shadow.
     if (hasBorderRadius) {
       RefPtr<Path> roundedRect =
         MakePathForRoundedRect(*drawTarget, shadowGfxRect, innerRadii);
@@ -1605,13 +1612,22 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
       renderContext->Clip(shadowGfxRect);
     }
 
-    nsContextBoxBlur insetBoxBlur;
-    gfxRect destRect = nsLayoutUtils::RectToGfxRect(shadowPaintRect, twipsPerPixel);
-    insetBoxBlur.InsetBoxBlur(renderContext, ToRect(destRect),
-                              shadowClipGfxRect, shadowColor,
-                              blurRadius, spreadDistanceAppUnits,
-                              twipsPerPixel, hasBorderRadius,
-                              clipRectRadii, ToRect(skipGfxRect));
+    // Fill the surface minus the area within the frame that we should
+    // not paint in, and blur and apply it.
+    RefPtr<PathBuilder> builder =
+      shadowDT->CreatePathBuilder(FillRule::FILL_EVEN_ODD);
+    AppendRectToPath(builder, shadowPaintGfxRect, true);
+    if (hasBorderRadius) {
+      AppendRoundedRectToPath(builder, shadowClipGfxRect, clipRectRadii, false);
+    } else {
+      AppendRectToPath(builder, shadowClipGfxRect, false);
+    }
+    RefPtr<Path> path = builder->Finish();
+    shadowContext->SetPath(path);
+    shadowContext->Fill();
+    shadowContext->NewPath();
+
+    blurringArea.DoPaint();
     renderContext->Restore();
   }
 }
@@ -5307,12 +5323,27 @@ nsContextBoxBlur::Init(const nsRect& aRect, nscoord aSpreadRadius,
     return nullptr;
   }
 
-  gfxIntSize blurRadius;
-  gfxIntSize spreadRadius;
-  GetBlurAndSpreadRadius(aDestinationCtx, aAppUnitsPerDevPixel,
-                         aBlurRadius, aSpreadRadius,
-                         blurRadius, spreadRadius);
+  gfxFloat scaleX = 1;
+  gfxFloat scaleY = 1;
 
+  // Do blurs in device space when possible.
+  // Chrome/Skia always does the blurs in device space
+  // and will sometimes get incorrect results (e.g. rotated blurs)
+  gfxMatrix transform = aDestinationCtx->CurrentMatrix();
+  // XXX: we could probably handle negative scales but for now it's easier just to fallback
+  if (transform.HasNonAxisAlignedTransform() || transform._11 <= 0.0 || transform._22 <= 0.0) {
+    transform = gfxMatrix();
+  } else {
+    scaleX = transform._11;
+    scaleY = transform._22;
+  }
+
+  // compute a large or smaller blur radius
+  gfxIntSize blurRadius = ComputeBlurRadius(aBlurRadius, aAppUnitsPerDevPixel, scaleX, scaleY);
+  gfxIntSize spreadRadius = gfxIntSize(std::min(int32_t(aSpreadRadius * scaleX / aAppUnitsPerDevPixel),
+                                              int32_t(MAX_SPREAD_RADIUS)),
+                                       std::min(int32_t(aSpreadRadius * scaleY / aAppUnitsPerDevPixel),
+                                              int32_t(MAX_SPREAD_RADIUS)));
   mDestinationCtx = aDestinationCtx;
 
   // If not blurring, draw directly onto the destination device
@@ -5330,7 +5361,6 @@ nsContextBoxBlur::Init(const nsRect& aRect, nscoord aSpreadRadius,
     nsLayoutUtils::RectToGfxRect(aDirtyRect, aAppUnitsPerDevPixel);
   dirtyRect.RoundOut();
 
-  gfxMatrix transform = aDestinationCtx->CurrentMatrix();
   rect = transform.TransformBounds(rect);
 
   mPreTransformed = !transform.IsIdentity();
@@ -5357,9 +5387,8 @@ nsContextBoxBlur::Init(const nsRect& aRect, nscoord aSpreadRadius,
 void
 nsContextBoxBlur::DoPaint()
 {
-  if (mContext == mDestinationCtx) {
+  if (mContext == mDestinationCtx)
     return;
-  }
 
   gfxContextMatrixAutoSaveRestore saveMatrix(mDestinationCtx);
 
@@ -5456,100 +5485,4 @@ nsContextBoxBlur::BlurRectangle(gfxContext* aDestinationCtx,
                                  aShadowColor,
                                  dirtyRect,
                                  skipRect);
-}
-
-/* static */ void
-nsContextBoxBlur::GetBlurAndSpreadRadius(gfxContext* aDestinationCtx,
-                                         int32_t aAppUnitsPerDevPixel,
-                                         nscoord aBlurRadius,
-                                         nscoord aSpreadRadius,
-                                         gfxIntSize& aOutBlurRadius,
-                                         gfxIntSize& aOutSpreadRadius,
-                                         bool aConstrainSpreadRadius)
-{
-  gfxFloat scaleX = 1;
-  gfxFloat scaleY = 1;
-
-  // Do blurs in device space when possible.
-  // Chrome/Skia always does the blurs in device space
-  // and will sometimes get incorrect results (e.g. rotated blurs)
-  gfxMatrix transform = aDestinationCtx->CurrentMatrix();
-  // XXX: we could probably handle negative scales but for now it's easier just to fallback
-  if (transform.HasNonAxisAlignedTransform() || transform._11 <= 0.0 || transform._22 <= 0.0) {
-    transform = gfxMatrix();
-  } else {
-    scaleX = transform._11;
-    scaleY = transform._22;
-  }
-
-  // compute a large or smaller blur radius
-  aOutBlurRadius = ComputeBlurRadius(aBlurRadius, aAppUnitsPerDevPixel, scaleX, scaleY);
-  aOutSpreadRadius =
-      gfxIntSize(int32_t(aSpreadRadius * scaleX / aAppUnitsPerDevPixel),
-                 int32_t(aSpreadRadius * scaleY / aAppUnitsPerDevPixel));
-
-
-  if (aConstrainSpreadRadius) {
-    aOutSpreadRadius.width = std::min(aOutSpreadRadius.width, int32_t(MAX_SPREAD_RADIUS));
-    aOutSpreadRadius.height = std::min(aOutSpreadRadius.height, int32_t(MAX_SPREAD_RADIUS));
-  }
-}
-
-/* static */ bool
-nsContextBoxBlur::InsetBoxBlur(gfxContext* aDestinationCtx,
-                               Rect aDestinationRect,
-                               Rect aShadowClipRect,
-                               Color& aShadowColor,
-                               nscoord aBlurRadiusAppUnits,
-                               nscoord aSpreadDistanceAppUnits,
-                               int32_t aAppUnitsPerDevPixel,
-                               bool aHasBorderRadius,
-                               RectCornerRadii& aInnerClipRectRadii,
-                               Rect aSkipRect)
-{
-  if (aDestinationRect.IsEmpty()) {
-    mContext = nullptr;
-    return false;
-  }
-
-  gfxIntSize blurRadius;
-  gfxIntSize spreadRadius;
-  // Convert the blur and spread radius to device pixels
-  bool constrainSpreadRadius = false;
-  GetBlurAndSpreadRadius(aDestinationCtx, aAppUnitsPerDevPixel,
-                         aBlurRadiusAppUnits, aSpreadDistanceAppUnits,
-                         blurRadius, spreadRadius, constrainSpreadRadius);
-
-  // The blur and spread radius are scaled already, so scale all
-  // input data to the blur. This way, we don't have to scale the min
-  // inset blur to the invert of the dest context, then rescale it back
-  // when we draw to the destination surface.
-  gfxSize scale = aDestinationCtx->CurrentMatrix().ScaleFactors(true);
-  Matrix currentMatrix = ToMatrix(aDestinationCtx->CurrentMatrix());
-
-  Rect transformedDestRect = currentMatrix.TransformBounds(aDestinationRect);
-  Rect transformedShadowClipRect = currentMatrix.TransformBounds(aShadowClipRect);
-  Rect transformedSkipRect = currentMatrix.TransformBounds(aSkipRect);
-
-  transformedDestRect.RoundIn();
-  transformedShadowClipRect.Round();
-  transformedSkipRect.RoundIn();
-
-  for (size_t i = 0; i < 4; i++) {
-    aInnerClipRectRadii[i].width = std::floor(scale.width * aInnerClipRectRadii[i].width);
-    aInnerClipRectRadii[i].height = std::floor(scale.height * aInnerClipRectRadii[i].height);
-  }
-
-  {
-    gfxContextAutoSaveRestore autoRestore(aDestinationCtx);
-    aDestinationCtx->SetMatrix(gfxMatrix());
-
-    mAlphaBoxBlur.BlurInsetBox(aDestinationCtx, transformedDestRect,
-                               transformedShadowClipRect,
-                               blurRadius, spreadRadius,
-                               aShadowColor,
-                               aHasBorderRadius,
-                               aInnerClipRectRadii, transformedSkipRect);
-  }
-  return true;
 }
