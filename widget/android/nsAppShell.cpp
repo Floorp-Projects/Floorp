@@ -30,9 +30,7 @@
 #include "nsCDefaultURIFixup.h"
 #include "nsToolkitCompsCID.h"
 
-#include "mozilla/HangMonitor.h"
 #include "mozilla/Services.h"
-#include "mozilla/unused.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Hal.h"
 #include "prenv.h"
@@ -185,10 +183,7 @@ public:
 };
 
 nsAppShell::nsAppShell()
-    : mQueueLock("nsAppShell.mQueueLock"),
-      mCondLock("nsAppShell.mCondLock"),
-      mQueueCond(mCondLock, "nsAppShell.mQueueCond"),
-      mQueuedViewportEvent(nullptr)
+    : mQueuedViewportEvent(nullptr)
 {
     gAppShell = this;
 
@@ -216,6 +211,10 @@ nsAppShell::nsAppShell()
 
 nsAppShell::~nsAppShell()
 {
+    while (mEventQueue.Pop(/* mayWait */ false)) {
+        NS_WARNING("Discarded event on shutdown");
+    }
+
     gAppShell = nullptr;
 
     if (sPowerManagerService) {
@@ -233,8 +232,7 @@ nsAppShell::~nsAppShell()
 void
 nsAppShell::NotifyNativeEvent()
 {
-    MutexAutoLock lock(mCondLock);
-    mQueueCond.Notify();
+    mEventQueue.Signal();
 }
 
 #define PREFNAME_COALESCE_TOUCHES "dom.event.touch.coalescing.enabled"
@@ -310,15 +308,6 @@ nsAppShell::Observe(nsISupports* aSubject,
         }
     }
     return NS_OK;
-}
-
-void
-nsAppShell::ScheduleNativeEventCallback()
-{
-    EVLOG("nsAppShell::ScheduleNativeEventCallback pth: %p thread: %p main: %d", (void*) pthread_self(), (void*) NS_GetCurrentThread(), NS_IsMainThread());
-
-    // this is valid to be called from any thread, so do so.
-    PostEvent(AndroidGeckoEvent::MakeNativePoke());
 }
 
 bool
@@ -818,34 +807,6 @@ nsAppShell::ResendLastResizeEvent(nsWindow* aDest) {
     }
 }
 
-AndroidGeckoEvent*
-nsAppShell::PopNextEvent()
-{
-    AndroidGeckoEvent *ae = nullptr;
-    MutexAutoLock lock(mQueueLock);
-    if (mEventQueue.Length()) {
-        ae = mEventQueue[0];
-        mEventQueue.RemoveElementAt(0);
-        if (mQueuedViewportEvent == ae) {
-            mQueuedViewportEvent = nullptr;
-        }
-    }
-
-    return ae;
-}
-
-AndroidGeckoEvent*
-nsAppShell::PeekNextEvent()
-{
-    AndroidGeckoEvent *ae = nullptr;
-    MutexAutoLock lock(mQueueLock);
-    if (mEventQueue.Length()) {
-        ae = mEventQueue[0];
-    }
-
-    return ae;
-}
-
 void
 nsAppShell::PostEvent(AndroidGeckoEvent *ae)
 {
@@ -919,11 +880,6 @@ nsAppShell::PostEvent(AndroidGeckoEvent *ae)
             mQueuedViewportEvent = nullptr;
     }
     NotifyNativeEvent();
-}
-
-void
-nsAppShell::OnResume()
-{
 }
 
 nsresult

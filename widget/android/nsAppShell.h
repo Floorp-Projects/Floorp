@@ -6,8 +6,12 @@
 #ifndef nsAppShell_h__
 #define nsAppShell_h__
 
-#include "mozilla/CondVar.h"
-#include "mozilla/Mutex.h"
+#include "mozilla/HangMonitor.h"
+#include "mozilla/LinkedList.h"
+#include "mozilla/Monitor.h"
+#include "mozilla/Move.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/unused.h"
 #include "nsBaseAppShell.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
@@ -25,10 +29,41 @@ class nsWindow;
 class nsAppShell :
     public nsBaseAppShell
 {
-    typedef mozilla::CondVar CondVar;
-    typedef mozilla::Mutex Mutex;
-
 public:
+    struct Event : mozilla::LinkedListElement<Event>
+    {
+        bool HasSameTypeAs(const Event* other) const
+        {
+            // Compare vtable addresses to determine same type.
+            return *reinterpret_cast<const uintptr_t*>(this)
+                    == *reinterpret_cast<const uintptr_t*>(other);
+        }
+
+        virtual ~Event() {}
+        virtual void Run() = 0;
+
+        virtual void PostTo(mozilla::LinkedList<Event>& queue)
+        {
+            queue.insertBack(this);
+        }
+
+        virtual mozilla::HangMonitor::ActivityType ActivityType() const
+        {
+            return mozilla::HangMonitor::kGeneralActivity;
+        }
+    };
+
+    template<typename T>
+    class LambdaEvent : public Event
+    {
+    protected:
+        T lambda;
+
+    public:
+        LambdaEvent(T&& l) : lambda(mozilla::Move(l)) {}
+        void Run() override { return lambda(); }
+    };
+
     static nsAppShell *gAppShell;
     static mozilla::AndroidGeckoEvent *gEarlyEvent;
 
@@ -40,14 +75,30 @@ public:
     nsresult Init();
 
     void NotifyNativeEvent();
+    bool ProcessNextNativeEvent(bool mayWait) override;
 
-    virtual bool ProcessNextNativeEvent(bool mayWait) override;
+    // Post a subclass of Event.
+    // e.g. PostEvent(mozilla::MakeUnique<MyEvent>());
+    template<typename T, typename D>
+    void PostEvent(mozilla::UniquePtr<T, D>&& event)
+    {
+        mEventQueue.Post(mozilla::Move(event));
+    }
 
-    void PostEvent(mozilla::AndroidGeckoEvent *event);
-    void OnResume();
+    // Post a event that will call a lambda
+    // e.g. PostEvent([=] { /* do something */ });
+    template<typename T>
+    void PostEvent(T&& lambda)
+    {
+        mEventQueue.Post(mozilla::MakeUnique<LambdaEvent<T>>(
+                mozilla::Move(lambda)));
+    }
 
-    nsresult AddObserver(const nsAString &aObserverKey, nsIObserver *aObserver);
+    void PostEvent(mozilla::AndroidGeckoEvent* event);
+
     void ResendLastResizeEvent(nsWindow* aDest);
+
+    void OnResume() {}
 
     void SetBrowserApp(nsIAndroidBrowserApp* aBrowserApp) {
         mBrowserApp = aBrowserApp;
@@ -58,21 +109,65 @@ public:
     }
 
 protected:
-    virtual void ScheduleNativeEventCallback() override;
     virtual ~nsAppShell();
 
-    Mutex mQueueLock;
-    Mutex mCondLock;
-    CondVar mQueueCond;
+    nsresult AddObserver(const nsAString &aObserverKey, nsIObserver *aObserver);
+
+    void ScheduleNativeEventCallback() override
+    {
+        // Capturing the nsAppShell instance is safe because if the app
+        // shell is detroyed, this lambda will not be called either.
+        PostEvent([this] {
+            NativeEventCallback();
+        });
+    }
+
+    class Queue
+    {
+        mozilla::Monitor mMonitor;
+        mozilla::LinkedList<Event> mQueue;
+
+    public:
+        Queue() : mMonitor("nsAppShell.Queue")
+        {}
+
+        void Signal()
+        {
+            mozilla::MonitorAutoLock lock(mMonitor);
+            lock.NotifyAll();
+        }
+
+        void Post(mozilla::UniquePtr<Event>&& event)
+        {
+            MOZ_ASSERT(event && !event->isInList());
+
+            mozilla::MonitorAutoLock lock(mMonitor);
+            event->PostTo(mQueue);
+            if (event->isInList()) {
+                // Ownership of event object transfers to the queue.
+                mozilla::unused << event.release();
+            }
+            lock.NotifyAll();
+        }
+
+        mozilla::UniquePtr<Event> Pop(bool mayWait)
+        {
+            mozilla::MonitorAutoLock lock(mMonitor);
+
+            if (mayWait && mQueue.isEmpty()) {
+                lock.Wait();
+            }
+            // Ownership of event object transfers to the return value.
+            return mozilla::UniquePtr<Event>(mQueue.popFirst());
+        }
+
+    } mEventQueue;
+
     mozilla::AndroidGeckoEvent *mQueuedViewportEvent;
     bool mAllowCoalescingTouches;
-    nsTArray<mozilla::AndroidGeckoEvent *> mEventQueue;
-    nsInterfaceHashtable<nsStringHashKey, nsIObserver> mObserversHash;
-
-    mozilla::AndroidGeckoEvent *PopNextEvent();
-    mozilla::AndroidGeckoEvent *PeekNextEvent();
 
     nsCOMPtr<nsIAndroidBrowserApp> mBrowserApp;
+    nsInterfaceHashtable<nsStringHashKey, nsIObserver> mObserversHash;
 };
 
 #endif // nsAppShell_h__
