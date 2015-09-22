@@ -12,14 +12,14 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ThreadLocal.h"
 
-#if defined(XP_MACOSX)
+#if defined(XP_DARWIN)
 #include <mach/mach.h>
 #elif defined(XP_UNIX)
 #include <sys/resource.h>
 #elif defined(XP_WIN)
 #include <processthreadsapi.h>
 #include <windows.h>
-#endif // defined(XP_MACOSX) || defined(XP_UNIX) || defined(XP_WIN)
+#endif // defined(XP_DARWIN) || defined(XP_UNIX) || defined(XP_WIN)
 
 #include <locale.h>
 #include <string.h>
@@ -1109,7 +1109,7 @@ JSRuntime::Stopwatch::getResources(uint64_t* userTime,
     MOZ_ASSERT(userTime);
     MOZ_ASSERT(systemTime);
 
-#if defined(XP_MACOSX)
+#if defined(XP_DARWIN)
     // On MacOS X, to get we per-thread data, we need to
     // reach into the kernel.
 
@@ -1176,7 +1176,7 @@ JSRuntime::Stopwatch::getResources(uint64_t* userTime,
     // Convert 100 ns to 1 us.
     *userTime = userTimeInt.QuadPart / 10;
 
-#endif // defined(XP_MACOSX) || defined(XP_UNIX) || defined(XP_WIN)
+#endif // defined(XP_DARWIN) || defined(XP_UNIX) || defined(XP_WIN)
 
     return true;
 }

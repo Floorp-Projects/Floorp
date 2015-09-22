@@ -7,7 +7,9 @@ import string
 
 propList = eval(sys.stdin.read())
 props = ""
-for [name, prop, id, flags, pref] in propList:
+for [name, prop, id, flags, pref, proptype] in propList:
+    if "CSS_PROPERTY_INTERNAL" in flags:
+        continue
     extendedAttrs = ["Throws", "TreatNullAs=EmptyString"]
     if pref is not "":
         extendedAttrs.append('Pref="%s"' % pref)

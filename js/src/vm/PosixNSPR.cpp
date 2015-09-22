@@ -148,7 +148,7 @@ PRStatus
 PR_SetCurrentThreadName(const char* name)
 {
     int result;
-#ifdef XP_MACOSX
+#ifdef XP_DARWIN
     result = pthread_setname_np(name);
 #elif defined(__DragonFly__) || defined(__FreeBSD__) || defined(__OpenBSD__)
     pthread_set_name_np(pthread_self(), name);

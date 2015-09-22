@@ -230,7 +230,7 @@ MediaPermissionRequest::Cancel()
 {
   nsString callID;
   mRequest->GetCallID(callID);
-  NotifyPermissionDeny(callID, NS_LITERAL_STRING("PermissionDeniedError"));
+  NotifyPermissionDeny(callID, NS_LITERAL_STRING("SecurityError"));
   return NS_OK;
 }
 

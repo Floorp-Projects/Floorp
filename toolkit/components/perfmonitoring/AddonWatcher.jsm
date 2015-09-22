@@ -62,6 +62,7 @@ var AddonWatcher = {
    * @type {number}
    */
   _latestWakeup: Date.now(),
+  _latestSnapshot: null,
 
   /**
    * Initialize and launch the AddonWatcher.
@@ -168,7 +169,7 @@ var AddonWatcher = {
       return true;
     }
 
-    let diff = snapshot.processData.subtract(previousSnapshot.processData);
+    let diff = currentSnapshot.processData.subtract(previousSnapshot.processData);
     if (diff.totalCPUTime >= deltaT * THREAD_TAKES_LOTS_OF_CPU_FACTOR ) {
       // The main thread itself is using lots of CPU, perhaps because of
       // an add-on. We need to investigate.
@@ -198,7 +199,7 @@ var AddonWatcher = {
 
     return Task.spawn(function*() {
       try {
-        let previousSnapshot = this._latestSnapshot; // FIXME: Implement
+        let previousSnapshot = this._latestSnapshot;
         let snapshot = this._latestSnapshot = yield this._monitor.promiseSnapshot();
         let isSystemTooBusy = this._isSystemTooBusy(currentWakeup - previousWakeup, snapshot, previousSnapshot);
 
@@ -242,7 +243,7 @@ var AddonWatcher = {
             // The main event loop is behaving weirdly, most likely because of
             // the system being busy or asleep, so results are not trustworthy.
             // Ignore.
-            continue;
+            return;
           }
 
           // Report misbehaviors to Telemetry

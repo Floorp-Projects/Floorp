@@ -585,7 +585,12 @@ PackagedAppService::PackagedAppDownloader::FinalizeDownload(nsresult aStatusCode
   }
   ClearCallbacks(aStatusCode);
 
-  mVerifier = nullptr;
+  // Explicity remove the downloader from the verifier. The downloader
+  // will die after exiting this function but the verifier may still be
+  // alive for a while since some resources maybe being verified.
+  if (mVerifier) {
+    mVerifier->ClearListener();
+  }
 }
 
 nsCString
@@ -634,7 +639,15 @@ PackagedAppService::PackagedAppDownloader::OnStopRequest(nsIRequest *aRequest,
       // Chances to get here:
       //   1) Very likely the package has been cached or
       //   2) Less likely the package is malformed.
-      FinalizeDownload(aStatusCode);
+      if (!mVerifier) {
+        FinalizeDownload(aStatusCode);
+      } else {
+        // We've got a broken last part and some resources might be still
+        // in the verification queue. Send a dummy ResourceCacheInfo to the
+        // verifier so this broken resource will be processed in the correct
+        // order.
+        mVerifier->SetHasBrokenLastPart(aStatusCode);
+      }
     }
     return NS_OK;
   }
@@ -863,6 +876,12 @@ PackagedAppService::PackagedAppDownloader::OnVerified(bool aIsManifest,
                                                       bool aIsLastPart,
                                                       bool aVerificationSuccess)
 {
+  if (!aUri) {
+    NS_WARNING("We've got a broken last part.");
+    FinalizeDownload(aStatusCode);
+    return NS_OK;
+  }
+
   RefPtr<ResourceCacheInfo> info =
     new ResourceCacheInfo(aUri, aCacheEntry, aStatusCode, aIsLastPart);
 
@@ -883,6 +902,12 @@ PackagedAppService::PackagedAppDownloader::OnManifestVerified(const ResourceCach
 
   // TODO: If we disallow the request for the manifest file, do NOT callback here.
   CallCallbacks(aInfo->mURI, aInfo->mCacheEntry, aInfo->mStatusCode);
+
+  if (aInfo->mIsLastPart) {
+    NS_WARNING("This package has manifest only.");
+    FinalizeDownload(aInfo->mStatusCode);
+    return;
+  }
 
   bool isPackagedSigned;
   mVerifier->GetIsPackageSigned(&isPackagedSigned);
