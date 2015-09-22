@@ -19,7 +19,7 @@ try {
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyGetter(this, "eventEmitter", function() {
-  const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js", {});
+  const {EventEmitter} = Cu.import("resource://gre/modules/devtools/shared/event-emitter.js", {});
   return new EventEmitter();
 });
 

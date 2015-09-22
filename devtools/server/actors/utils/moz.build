@@ -1,0 +1,16 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DevToolsModules(
+    'actor-registry-utils.js',
+    'audionodes.json',
+    'automation-timeline.js',
+    'make-debugger.js',
+    'map-uri-to-addon-id.js',
+    'ScriptStore.js',
+    'stack.js',
+    'TabSources.js'
+)

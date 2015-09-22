@@ -13,7 +13,7 @@ const Environment = require("sdk/system/environment").env;
 const Runtime = require("sdk/system/runtime");
 const Subprocess = require("sdk/system/child_process/subprocess");
 const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
-const { EventEmitter } = Cu.import("resource://gre/modules/devtools/event-emitter.js", {});
+const { EventEmitter } = Cu.import("resource://gre/modules/devtools/shared/event-emitter.js", {});
 
 
 // Log subprocess error and debug messages to the console.  This logs messages

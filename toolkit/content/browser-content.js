@@ -353,7 +353,7 @@ PopupBlocking.init();
 
 XPCOMUtils.defineLazyGetter(this, "console", () => {
   // Set up console.* for frame scripts.
-  let Console = Components.utils.import("resource://gre/modules/devtools/Console.jsm", {});
+  let Console = Components.utils.import("resource://gre/modules/devtools/shared/Console.jsm", {});
   return new Console.ConsoleAPI();
 });
 

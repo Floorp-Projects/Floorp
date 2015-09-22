@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+     - License, v. 2.0. If a copy of the MPL was not distributed with this
+     - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE html [
+  <!ENTITY % appMgrDTD SYSTEM "chrome://browser/locale/devtools/app-manager.dtd" >
+  %appMgrDTD;
+]>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf8"/>
+    <link rel="stylesheet" href="chrome://devtools/skin/themes/app-manager/connection-footer.css" type="text/css"/>
+  </head>
+
+  <body onload="UI.init()">
+
+    <div id="connection-footer" template='{"type":"attribute","path":"connection.status","name":"status"}'>
+      <div id="banners-and-logs">
+
+        <!-- Connected -->
+        <div id="banner-connected" class="banner">
+          <div class="connected-indicator"></div>
+          <div id="status" class="banner-box">
+            <div class="banner-content">
+              <span template='{"type":"localizedContent","property":"connection.connectedToDevice","paths":["device.description.name"]}'></span>
+              <button class="action-cancel" onclick="UI.disconnect()" title="&connection.disconnectTooltip;">&connection.disconnect;</button>
+              <button class="action-primary" onclick="UI.screenshot()" title="&device.screenshotTooltip;">&device.screenshot;</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Disconnected -->
+        <div id="banner-disconnected" class="banner">
+          <div class="connected-indicator"></div>
+          <div class="banner-box">
+            <div class="banner-content" template='{"type":"attribute","path":"adb.available","name":"adb-available"}'>
+              <span>&connection.notConnected2;</span>
+              <div id="connection-manual">
+                <button class="action-primary left" onclick="UI.connect()" id="connect-button" template='{"type":"localizedContent","property":"connection.connectTo","paths":["connection.host","connection.port"]}' title="&connection.connectTooltip;"></button>
+                <button class="right" onclick="UI.editConnectionParameters()" title="&connection.changeHostAndPortTooltip;">&connection.changeHostAndPort;</button>
+              </div>
+              <div id="connection-assisted" template='{"type":"attribute","path":"adb.devices.length","name":"device-count"}'>
+                <div id="connection-found-device">
+                  <span>&connection.connectTo;</span>
+                  <span template-loop='{"arrayPath":"adb.devices","childSelector":"#adb-devices-template"}'></span>
+                </div>
+                <div id="connection-no-device">
+                  <span>&connection.noDeviceFound;</span>
+                </div>
+              </div>
+              <div id="start-simulator-box">
+                <span>&connection.or;</span>
+                <button id="start-simulator-button" class="action-primary" onclick="UI.showSimulatorList()" title="&connection.startSimulatorTooltip;">&connection.startSimulator;</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Connecting -->
+        <div id="banner-connecting" class="banner">
+          <div class="connected-indicator"></div>
+          <div id="status" class="banner-box">
+            <div class="banner-content">
+              <span>&connection.connecting;</span>
+              <button class="action-cancel" onclick="UI.disconnect()" title="&connection.cancelConnectTooltip;">&connection.cancel;</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Disconnecting -->
+        <div id="banner-disconnecting" class="banner">
+          <div class="connected-indicator"></div>
+          <div id="status" class="banner-box">
+            <div class="banner-content">
+              <span>&connection.disconnecting;</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Editing -->
+        <div id="banner-editing" class="banner">
+          <div class="connected-indicator"></div>
+          <div class="banner-box">
+            <div class="banner-content">
+              <form onsubmit="UI.saveConnectionInfo()">
+                <input class="host" template='{"type":"attribute","path":"connection.host","name":"value"}'></input>
+                <input class="port" pattern="\d+" template='{"type":"attribute","path":"connection.port","name":"value"}' type="number"></input>
+                <button type="submit" title="&connection.saveConnectionInfoTooltip;">&connection.saveConnectionInfo;</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Simulator -->
+        <div id="banner-simulators" class="banner" template='{"type":"attribute","path":"simulators.versions.length","name":"simulator-count"}'>
+          <div class="connected-indicator"></div>
+          <div class="banner-box">
+            <div class="banner-content">
+              <div class="no-simulator">
+                <span>&connection.noSimulatorInstalled;</span>
+                <button class="action-primary" onclick="UI.installSimulator()" title="&connection.installOneSimulatorTooltip;">&connection.installOneSimulator;</button>
+              </div>
+              <div class="found-simulator">
+                <span>&connection.startRegisteredSimulator;</span>
+                <span template-loop='{"arrayPath":"simulators.versions","childSelector":"#simulator-item-template"}'></span>
+                <button class="action-primary" onclick="UI.installSimulator()" title="&connection.installAnotherSimulatorTooltip;">&connection.installAnotherSimulator;</button>
+              </div>
+              <button class="action-cancel" onclick="UI.cancelShowSimulatorList()" title="&connection.cancelShowSimulatorTooltip;">&connection.cancel;</button>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Logs -->
+        <div id="banner-logs">
+        <div id="logs" class="banner-box">
+          <pre></pre>
+        </div>
+        </div>
+
+      </div>
+    </div>
+  </body>
+
+  <template id="simulator-item-template">
+  <span>
+    <button class="simulator-item action-primary" onclick="UI.startSimulator(this.dataset.version)" template='{"type":"attribute","path":"version","name":"data-version"}' title="&connection.startSimulatorTooltip;">
+      <span template='{"type":"textContent", "path":"label"}'></span>
+    </button>
+  </span>
+  </template>
+
+  <template id="adb-devices-template">
+  <span>
+    <button class="adb-device action-primary" onclick="UI.connectToAdbDevice(this.dataset.name)" template='{"type":"attribute","path":"name","name":"data-name"}'>
+      <span template='{"type":"textContent", "path":"name"}'></span>
+    </button>
+  </span>
+  </template>
+
+  <script type="application/javascript;version=1.8" src="utils.js"></script>
+  <script type="application/javascript;version=1.8" src="template.js"></script>
+  <script type="application/javascript;version=1.8" src="connection-footer.js"></script>
+</html>

@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/themes/common.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/themes/widgets.css" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript;version=1.8" src="chrome://devtools/content/shared/theme-switching.js"/>
+  <box flex="1" class="devtools-responsive-container theme-body">
+    <vbox flex="1" class="devtools-main-content" id="content">test</vbox>
+    <splitter class="devtools-side-splitter"/>
+    <tabbox flex="1" id="sidebar" class="devtools-sidebar-tabs">
+      <tabs/>
+      <tabpanels flex="1"/>
+    </tabbox>
+  </box>
+</window>

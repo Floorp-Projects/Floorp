@@ -1,0 +1,22 @@
+# Ignore d3
+client/shared/d3.js
+client/webaudioeditor/lib/dagre-d3.js
+
+# Ignore codemirror
+client/sourceeditor/codemirror/*.js
+client/sourceeditor/codemirror/**/*.js
+
+# Ignore jquery test libs
+client/markupview/test/lib_*
+
+# Ignore pre-processed files
+client/framework/toolbox-process-window.js
+client/performance/system.js
+client/webide/webide-prefs.js
+
+# Ignore various libs
+shared/jsbeautify/*
+shared/acorn/*
+shared/tern/*
+shared/pretty-fast/*
+shared/sourcemap/*

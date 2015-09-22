@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/content/inspector/inspector.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/themes/common.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/themes/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/themes/inspector.css" type="text/css"?>
+<!DOCTYPE window [
+  <!ENTITY % inspectorDTD SYSTEM "chrome://browser/locale/devtools/inspector.dtd" >
+   %inspectorDTD;
+]>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript;version=1.8"
+          src="chrome://devtools/content/shared/theme-switching.js"/>
+
+  <commandset>
+    <command id="nodeSearchCommand"
+      oncommand="inspector.searchBox.focus()"/>
+  </commandset>
+
+  <keyset>
+    <key id="nodeSearchKey"
+      key="&inspectorSearchHTML.key;"
+      modifiers="accel"
+      command="nodeSearchCommand"/>
+  </keyset>
+
+  <popupset id="inspectorPopupSet">
+    <!-- Used by the Markup Panel, the Highlighter and the Breadcrumbs -->
+    <menupopup id="inspector-node-popup">
+      <menuitem id="node-menu-edithtml"
+        label="&inspectorHTMLEdit.label;"
+        accesskey="&inspectorHTMLEdit.accesskey;"
+        oncommand="inspector.editHTML()"/>
+      <menuitem id="node-menu-copyinner"
+        label="&inspectorHTMLCopyInner.label;"
+        accesskey="&inspectorHTMLCopyInner.accesskey;"
+        oncommand="inspector.copyInnerHTML()"/>
+      <menuitem id="node-menu-copyouter"
+        label="&inspectorHTMLCopyOuter.label;"
+        accesskey="&inspectorHTMLCopyOuter.accesskey;"
+        oncommand="inspector.copyOuterHTML()"/>
+      <menuitem id="node-menu-copyuniqueselector"
+        label="&inspectorCopyUniqueSelector.label;"
+        accesskey="&inspectorCopyUniqueSelector.accesskey;"
+        oncommand="inspector.copyUniqueSelector()"/>
+      <menuitem id="node-menu-copyimagedatauri"
+        label="&inspectorCopyImageDataUri.label;"
+        oncommand="inspector.copyImageDataUri()"/>
+      <menuitem id="node-menu-showdomproperties"
+        label="&inspectorShowDOMProperties.label;"
+        oncommand="inspector.showDOMProperties()"/>
+      <menuitem id="node-menu-useinconsole"
+        label="&inspectorUseInConsole.label;"
+        oncommand="inspector.useInConsole()"/>
+      <menuitem id="node-menu-expand"
+        label="&inspectorExpandNode.label;"
+        oncommand="inspector.expandNode()"/>
+      <menuitem id="node-menu-collapse"
+        label="&inspectorCollapseNode.label;"
+        oncommand="inspector.collapseNode()"/>
+      <menuseparator/>
+      <menuitem id="node-menu-pasteinnerhtml"
+        label="&inspectorHTMLPasteInner.label;"
+        accesskey="&inspectorHTMLPasteInner.accesskey;"
+        oncommand="inspector.pasteInnerHTML()"/>
+      <menuitem id="node-menu-pasteouterhtml"
+        label="&inspectorHTMLPasteOuter.label;"
+        accesskey="&inspectorHTMLPasteOuter.accesskey;"
+        oncommand="inspector.pasteOuterHTML()"/>
+      <menu id="node-menu-paste-extra-submenu"
+        label="&inspectorHTMLPasteExtraSubmenu.label;"
+        accesskey="&inspectorHTMLPasteExtraSubmenu.accesskey;">
+        <menupopup>
+          <menuitem id="node-menu-pastebefore"
+            label="&inspectorHTMLPasteBefore.label;"
+            accesskey="&inspectorHTMLPasteBefore.accesskey;"
+            oncommand="inspector.pasteAdjacentHTML('beforeBegin')"/>
+          <menuitem id="node-menu-pasteafter"
+            label="&inspectorHTMLPasteAfter.label;"
+            accesskey="&inspectorHTMLPasteAfter.accesskey;"
+            oncommand="inspector.pasteAdjacentHTML('afterEnd')"/>
+          <menuitem id="node-menu-pastefirstchild"
+            label="&inspectorHTMLPasteFirstChild.label;"
+            accesskey="&inspectorHTMLPasteFirstChild.accesskey;"
+            oncommand="inspector.pasteAdjacentHTML('afterBegin')"/>
+          <menuitem id="node-menu-pastelastchild"
+            label="&inspectorHTMLPasteLastChild.label;"
+            accesskey="&inspectorHTMLPasteLastChild.accesskey;"
+            oncommand="inspector.pasteAdjacentHTML('beforeEnd')"/>
+        </menupopup>
+      </menu>
+      <menuseparator/>
+      <menuitem id="node-menu-scrollnodeintoview"
+        label="&inspectorScrollNodeIntoView.label;"
+        accesskey="&inspectorScrollNodeIntoView.accesskey;"
+        oncommand="inspector.scrollNodeIntoView()"/>
+      <menuitem id="node-menu-screenshotnode"
+        label="&inspectorScreenshotNode.label;"
+        oncommand="inspector.screenshotNode()" />
+      <menuitem id="node-menu-delete"
+        label="&inspectorHTMLDelete.label;"
+        accesskey="&inspectorHTMLDelete.accesskey;"
+        oncommand="inspector.deleteNode()"/>
+      <menuseparator id="node-menu-link-separator"/>
+      <menuitem id="node-menu-link-follow"
+        oncommand="inspector.onFollowLink()"/>
+      <menuitem id="node-menu-link-copy"
+        oncommand="inspector.onCopyLink()"/>
+      <menuseparator/>
+      <menuitem id="node-menu-pseudo-hover"
+        label=":hover" type="checkbox"
+        oncommand="inspector.togglePseudoClass(':hover')"/>
+      <menuitem id="node-menu-pseudo-active"
+        label=":active" type="checkbox"
+        oncommand="inspector.togglePseudoClass(':active')"/>
+      <menuitem id="node-menu-pseudo-focus"
+        label=":focus" type="checkbox"
+        oncommand="inspector.togglePseudoClass(':focus')"/>
+    </menupopup>
+  </popupset>
+
+  <box flex="1" class="devtools-responsive-container theme-body">
+    <vbox flex="1" class="devtools-main-content">
+      <toolbar id="inspector-toolbar"
+        class="devtools-toolbar"
+        nowindowdrag="true">
+        <arrowscrollbox id="inspector-breadcrumbs"
+          class="breadcrumbs-widget-container"
+          flex="1" orient="horizontal"
+          clicktoscroll="true"/>
+        <textbox id="inspector-searchbox"
+          type="search"
+          timeout="50"
+          class="devtools-searchinput"
+          placeholder="&inspectorSearchHTML.label2;"/>
+        <toolbarbutton id="inspector-pane-toggle"
+          class="devtools-toolbarbutton"
+          tabindex="0" />
+      </toolbar>
+      <vbox flex="1" id="markup-box">
+      </vbox>
+    </vbox>
+    <splitter class="devtools-side-splitter"/>
+    <tabbox id="inspector-sidebar" handleCtrlTab="false" class="devtools-sidebar-tabs" hidden="true">
+      <tabs/>
+      <tabpanels flex="1"/>
+    </tabbox>
+  </box>
+</window>

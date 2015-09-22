@@ -1,0 +1,167 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug </title>
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
+  <script type="application/javascript;version=1.8">
+const {CssLogic} = require("devtools/shared/styleinspector/css-logic");
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+}
+
+addTest(function findAllCssSelectors() {
+  var nodes = document.querySelectorAll('*');
+  for (var i = 0; i < nodes.length; i++) {
+    var selector = CssLogic.findCssSelector(nodes[i]);
+    var matches = document.querySelectorAll(selector);
+
+    is(matches.length, 1, 'There is a single match: ' + selector);
+    is(matches[0], nodes[i], 'The selector matches the correct node: ' + selector);
+  }
+
+  runNextTest();
+});
+
+addTest(function findCssSelectorNotContainedInDocument() {
+
+  var unattached = document.createElement("div");
+  unattached.id = "unattached";
+  try {
+    CssLogic.findCssSelector(unattached);
+    ok (false, "Unattached node did not throw")
+  } catch(e) {
+    ok(e, "Unattached node throws an exception");
+  }
+
+  var unattachedChild = document.createElement("div");
+  unattached.appendChild(unattachedChild);
+  try {
+    CssLogic.findCssSelector(unattachedChild);
+    ok (false, "Unattached child node did not throw")
+  } catch(e) {
+    ok(e, "Unattached child node throws an exception");
+  }
+
+  var unattachedBody = document.createElement("body");
+  try {
+    CssLogic.findCssSelector(unattachedBody);
+    ok (false, "Unattached body node did not throw")
+  } catch(e) {
+    ok(e, "Unattached body node throws an exception");
+  }
+
+  runNextTest();
+});
+
+addTest(function findCssSelector() {
+
+  let data = [
+    "#one",
+    "#" + CSS.escape("2"),
+    ".three",
+    "." + CSS.escape("4"),
+    "#find-css-selector > div:nth-child(5)",
+    "#find-css-selector > p:nth-child(6)",
+    ".seven",
+    ".eight",
+    ".nine",
+    ".ten",
+    "div.sameclass:nth-child(11)",
+    "div.sameclass:nth-child(12)",
+    "div.sameclass:nth-child(13)",
+    "#" + CSS.escape("!, \", #, $, %, &, ', (, ), *, +, ,, -, ., /, :, ;, <, =, >, ?, @, [, \\, ], ^, `, {, |, }, ~"),
+  ];
+
+  let container = document.querySelector("#find-css-selector");
+  is (container.children.length, data.length, "Container has correct number of children.");
+
+  for (let i = 0; i < data.length; i++) {
+    let node = container.children[i];
+    is (CssLogic.findCssSelector(node), data[i], "matched id for index " + (i-1));
+  }
+
+  runNextTest();
+});
+
+addTest(function getComputedStyle() {
+  let node = document.querySelector("#computed-style");
+  is (CssLogic.getComputedStyle(node).getPropertyValue("width"),
+      "50px", "Computed style on a normal node works (width)");
+  is (CssLogic.getComputedStyle(node).getPropertyValue("height"),
+      "10px", "Computed style on a normal node works (height)");
+
+  let firstChild = new _documentWalker(node, window).firstChild();
+  is (CssLogic.getComputedStyle(firstChild).getPropertyValue("content"),
+      "\"before\"", "Computed style on a ::before node works (content)");
+  let lastChild = new _documentWalker(node, window).lastChild();
+  is (CssLogic.getComputedStyle(lastChild).getPropertyValue("content"),
+      "\"after\"", "Computed style on a ::after node works (content)");
+
+  runNextTest();
+});
+
+addTest(function getBindingElementAndPseudo() {
+  let node = document.querySelector("#computed-style");
+  var {bindingElement, pseudo} = CssLogic.getBindingElementAndPseudo(node);
+
+  is (bindingElement, node,
+      "Binding element is the node itself for a normal node");
+  ok (!pseudo, "Pseudo is null for a normal node");
+
+  let firstChild = new _documentWalker(node, window).firstChild();
+  var {bindingElement, pseudo} = CssLogic.getBindingElementAndPseudo(firstChild);
+  is (bindingElement, node,
+      "Binding element is the parent for a pseudo node");
+  is (pseudo, ":before", "Pseudo is correct for a ::before node");
+
+  let lastChild = new _documentWalker(node, window).lastChild();
+  var {bindingElement, pseudo} = CssLogic.getBindingElementAndPseudo(lastChild);
+  is (bindingElement, node,
+      "Binding element is the parent for a pseudo node");
+  is (pseudo, ":after", "Pseudo is correct for a ::after node");
+
+  runNextTest();
+});
+
+  </script>
+</head>
+<body>
+  <div id="find-css-selector">
+    <div id="one"></div> <!-- Basic ID -->
+    <div id="2"></div> <!-- Escaped ID -->
+    <div class="three"></div> <!-- Basic Class -->
+    <div class="4"></div> <!-- Escaped Class -->
+    <div attr="5"></div>  <!-- Only an attribute -->
+    <p></p> <!-- Nothing unique -->
+    <div class="seven seven"></div> <!-- Two classes with same name -->
+    <div class="eight eight2"></div> <!-- Two classes with different names -->
+
+    <!-- Two elements with the same id - should not use ID -->
+    <div class="nine" id="nine-and-ten"></div>
+    <div class="ten" id="nine-and-ten"></div>
+
+    <!-- Three elements with the same id - should use class and nth-child instead -->
+    <div class="sameclass" id="11-12-13"></div>
+    <div class="sameclass" id="11-12-13"></div>
+    <div class="sameclass" id="11-12-13"></div>
+
+    <!-- Special characters -->
+    <div id="!, &quot;, #, $, %, &amp;, ', (, ), *, +, ,, -, ., /, :, ;, <, =, >, ?, @, [, \, ], ^, `, {, |, }, ~"></div>
+  </div>
+  <style type="text/css">
+    #computed-style { width: 50px; height: 10px; }
+    #computed-style::before { content: "before"; }
+    #computed-style::after { content: "after"; }
+  </style>
+  <div id="computed-style"></div>
+</body>
+</html>

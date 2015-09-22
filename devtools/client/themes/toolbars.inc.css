@@ -1,0 +1,1058 @@
+%if 0
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+%endif
+
+/* CSS Variables specific to the devtools toolbar that aren't defined by the themes */
+.theme-light {
+  --searchbox-background-color: #ffee99;
+  --searchbox-border-color: #ffbf00;
+  --searcbox-no-match-background-color: #ffe5e5;
+  --searcbox-no-match-border-color: #e52e2e;
+}
+
+.theme-dark {
+  --searchbox-background-color: #4d4222;
+  --searchbox-border-color: #d99f2b;
+  --searcbox-no-match-background-color: #402325;
+  --searcbox-no-match-border-color: #cc3d3d;
+}
+
+/* Toolbars */
+.devtools-toolbar,
+.devtools-sidebar-tabs tabs {
+  -moz-appearance: none;
+  padding: 0;
+  border-width: 0;
+  border-bottom-width: 1px;
+  border-style: solid;
+  height: 24px;
+  line-height: 24px;
+  box-sizing: border-box;
+}
+
+.devtools-toolbar {
+  padding: 0 3px;
+}
+
+.devtools-toolbar checkbox {
+  margin: 0 2px;
+  padding: 0;
+  line-height: -moz-block-height;
+}
+.devtools-toolbar checkbox .checkbox-check {
+  margin: 0;
+  padding: 0;
+  vertical-align: bottom;
+}
+.devtools-toolbar checkbox .checkbox-label-box {
+  border: none !important; /* overrides .checkbox-label-box from checkbox.css */
+}
+.devtools-toolbar checkbox .checkbox-label-box .checkbox-label {
+  margin: 0 6px !important; /* overrides .checkbox-label from checkbox.css */
+  padding: 0;
+}
+
+/* Toolbar buttons */
+.devtools-menulist,
+.devtools-toolbarbutton {
+  -moz-appearance: none;
+  -moz-box-align: center;
+  background: transparent;
+  min-width: 78px;
+  min-height: 18px;
+  padding: 1px;
+  text-shadow: none;
+  border: none;
+  border-radius: 0;
+  margin: 2px 3px;
+  color: inherit;
+  transition: background 0.05s ease-in-out;
+  color: var(--theme-content-color1);
+  background-color: var(--theme-toolbar-background);
+}
+
+.devtools-menulist:-moz-focusring,
+.devtools-toolbarbutton:-moz-focusring {
+  outline: 1px dotted hsla(210,30%,85%,0.7);
+  outline-offset: -4px;
+}
+
+.devtools-toolbarbutton[standalone] {
+  -moz-margin-end: 5px;
+  border-width: 1px;
+  border-style: solid;
+}
+.devtools-toolbarbutton[label][standalone] {
+  min-height: 2em;
+}
+
+.devtools-toolbarbutton:not([label]),
+.devtools-toolbarbutton[text-as-image] {
+  min-width: 32px;
+}
+
+#toolbox-buttons .devtools-toolbarbutton[text-as-image] {
+  -moz-padding-start: 5px;
+  -moz-padding-end: 5px;
+  min-width: inherit;
+}
+
+/* Command buttons with menupopups should be styled slightly differently -
+   no background color and a bit more narrow */
+#toolbox-buttons .devtools-toolbarbutton:not([text-as-image]):not(:hover):not([open=true]) {
+  background: transparent;
+}
+#toolbox-buttons .devtools-toolbarbutton[type=menu] > .toolbarbutton-menu-dropmarker {
+  padding: 0 2px;
+}
+
+.devtools-toolbarbutton:not([label]) > .toolbarbutton-text {
+  display: none;
+}
+
+.devtools-toolbar .devtools-toolbarbutton {
+  border-width: 0;
+}
+
+.devtools-toolbarbutton > .toolbarbutton-icon {
+  margin: 0;
+}
+
+.devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-button {
+  -moz-appearance: none;
+  color: inherit;
+  border-width: 0;
+  -moz-box-orient: horizontal;
+  padding: 0;
+}
+
+.devtools-toolbarbutton[type=menu-button] {
+  padding: 0 1px;
+  -moz-box-align: stretch;
+}
+
+.devtools-toolbarbutton > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
+  -moz-margin-end: 4px;
+}
+
+.devtools-menulist > .menulist-dropmarker {
+  -moz-appearance: none;
+  display: -moz-box;
+  list-style-image: url("chrome://devtools/skin/themes/images/dropmarker.svg");
+  -moz-box-align: center;
+  min-width: 16px;
+}
+
+.devtools-toolbarbutton[type=menu] > .toolbarbutton-menu-dropmarker,
+.devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-dropmarker {
+  -moz-appearance: none !important;
+  list-style-image: url("chrome://devtools/skin/themes/images/dropmarker.svg");
+  -moz-box-align: center;
+  padding: 0 3px;
+}
+
+.theme-dark .devtools-menulist,
+.theme-dark .devtools-toolbarbutton {
+  border-color: rgba(0, 0, 0, .4); /* Splitters */
+}
+.theme-light .devtools-menulist,
+.theme-light .devtools-toolbarbutton {
+  border-color: rgba(170, 170, 170, .5); /* Splitters */
+}
+
+/* Text-only buttons */
+.theme-light .devtools-toolbarbutton[label]:not([text-as-image]):not([type=menu-button]),
+.theme-light #toolbox-buttons .devtools-toolbarbutton[text-as-image] {
+  background-color: rgba(170, 170, 170, .2); /* Splitter */
+}
+.theme-dark .devtools-toolbarbutton[label]:not([text-as-image]):not([type=menu-button]),
+.theme-dark #toolbox-buttons .devtools-toolbarbutton[text-as-image] {
+  background-color: rgba(0, 0, 0, .2); /* Splitter */
+}
+
+/* Button States */
+.theme-dark .devtools-toolbarbutton:not([disabled]):hover,
+.theme-dark #toolbox-buttons .devtools-toolbarbutton:not([disabled])[text-as-image]:hover,
+.theme-dark .devtools-toolbarbutton:not([disabled])[label]:not([text-as-image]):not([type=menu-button]):hover {
+  background: rgba(0, 0, 0, .3); /* Splitters */
+}
+.theme-light .devtools-toolbarbutton:not([disabled]):hover,
+.theme-light #toolbox-buttons .devtools-toolbarbutton:not([disabled])[text-as-image]:hover,
+.theme-light .devtools-toolbarbutton:not([disabled])[label]:not([text-as-image]):not([type=menu-button]):hover {
+  background: rgba(170, 170, 170, .3); /* Splitters */
+}
+
+.theme-dark .devtools-toolbarbutton:not([disabled]):hover:active,
+.theme-dark #toolbox-buttons .devtools-toolbarbutton:not([disabled])[text-as-image]:hover:active,
+.theme-dark .devtools-toolbarbutton:not([disabled])[label]:not([text-as-image]):not([type=menu-button]):hover:active {
+  background: rgba(0, 0, 0, .4); /* Splitters */
+}
+.theme-light .devtools-toolbarbutton:not([disabled]):hover:active,
+.theme-light #toolbox-buttons .devtools-toolbarbutton:not([disabled])[text-as-image]:hover:active,
+.theme-light .devtools-toolbarbutton:not([disabled])[label]:not([text-as-image]):not([type=menu-button]):hover:active {
+  background: rgba(170, 170, 170, .4); /* Splitters */
+}
+
+/* Menu type buttons and checked states */
+.theme-dark .devtools-toolbarbutton[checked=true],
+.theme-dark #toolbox-buttons .devtools-toolbarbutton[text-as-image][checked] {
+  background: rgba(29, 79, 115, .7); /* Select highlight blue */
+  color: var(--theme-selection-color);
+}
+
+.theme-light .devtools-toolbarbutton[checked=true],
+.theme-light #toolbox-buttons .devtools-toolbarbutton[text-as-image][checked] {
+  background: rgba(76, 158, 217, .2); /* Select highlight blue */
+}
+
+.theme-dark .devtools-menulist[open=true],
+.theme-dark .devtools-toolbarbutton[open=true],
+.theme-dark .devtools-toolbarbutton[open=true]:hover,
+.theme-dark .devtools-toolbarbutton[open=true]:hover:active,
+.theme-dark .devtools-toolbarbutton[checked=true]:hover {
+  background: rgba(29, 79, 115, .8); /* Select highlight blue */
+  color: var(--theme-selection-color);
+}
+
+.theme-light .devtools-menulist[open=true],
+.theme-light .devtools-toolbarbutton[open=true],
+.theme-light .devtools-toolbarbutton[open=true]:hover,
+.theme-light .devtools-toolbarbutton[open=true]:hover:active,
+.theme-light .devtools-toolbarbutton[checked=true]:hover {
+  background: rgba(76, 158, 217, .4); /* Select highlight blue */
+}
+
+.devtools-option-toolbarbutton {
+  -moz-appearance: none;
+  list-style-image: url("chrome://devtools/skin/themes/images/tool-options.svg");
+  background: none;
+  opacity: .8;
+  border: none;
+}
+
+.devtools-option-toolbarbutton[open=true] {
+  opacity: 1;
+}
+
+/* Toolbar button groups */
+.devtools-toolbarbutton-group > .devtools-toolbarbutton {
+  margin-left: 1px;
+  margin-right: 1px;
+  outline-offset: -3px;
+  box-shadow: none;
+}
+
+.devtools-toolbarbutton-group > .devtools-toolbarbutton:last-child {
+  -moz-margin-end: 0;
+}
+
+.devtools-toolbarbutton-group + .devtools-toolbarbutton {
+  -moz-margin-start: 3px;
+}
+
+.devtools-separator + .devtools-toolbarbutton {
+  -moz-margin-start: 1px;
+}
+
+/* HTML buttons, similar to toolbar buttons, but work in HTML documents */
+
+.devtools-button {
+  border: 0 solid var(--theme-splitter-color);
+  background: var(--theme-toolbar-background);
+  color: var(--theme-body-color);
+  margin: 0;
+  padding: 0;
+  min-width: 32px;
+  min-height: 18px;
+  /* The icon is absolutely positioned in the button using ::before */
+  position: relative;
+}
+
+.devtools-button[standalone] {
+  min-height: 32px;
+  border-width: 1px;
+}
+
+/* Button States */
+.theme-dark .devtools-button:not([disabled]):hover {
+  background: rgba(0, 0, 0, .3); /* Splitters */
+}
+.theme-light .devtools-button:not([disabled]):hover {
+  background: rgba(170, 170, 170, .3); /* Splitters */
+}
+
+.theme-dark .devtools-button:not([disabled]):hover:active {
+  background: rgba(0, 0, 0, .4); /* Splitters */
+}
+.theme-light .devtools-button:not([disabled]):hover:active {
+  background: rgba(170, 170, 170, .4); /* Splitters */
+}
+
+/* Menu type buttons and checked states */
+.theme-dark .devtools-button[checked] {
+  background: rgba(29, 79, 115, .7) !important; /* Select highlight blue */
+  color: var(--theme-selection-color);
+}
+
+.theme-light .devtools-button[checked] {
+  background: rgba(76, 158, 217, .2) !important; /* Select highlight blue */
+}
+
+.devtools-button::before {
+  content: "";
+  display: block;
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: -8px 0 0 -8px;
+  background-repeat: no-repeat;
+}
+
+.devtools-button[disabled]::before,
+.devtools-button:disabled::before {
+  opacity: 0.5;
+}
+
+@media (min-resolution: 1.1dppx) {
+  .devtools-button::before {
+    background-size: 32px;
+  }
+}
+
+/* Text input */
+
+.devtools-textinput,
+.devtools-searchinput {
+  -moz-appearance: none;
+  margin: 0 3px;
+  border: 1px solid;
+%ifdef XP_MACOSX
+  border-radius: 20px;
+%else
+  border-radius: 2px;
+%endif
+  padding: 4px 6px;
+  border-color: var(--theme-splitter-color);
+}
+
+.devtools-searchinput {
+  margin-top: 1px;
+  margin-bottom: 1px;
+  padding: 0;
+  -moz-padding-start: 22px;
+  -moz-padding-end: 4px;
+  background-position: 8px center;
+  background-size: 11px 11px;
+  background-repeat: no-repeat;
+  font-size: inherit;
+}
+
+.theme-dark .devtools-searchinput {
+  background-image: url(images/magnifying-glass.png);
+}
+
+.theme-light .devtools-searchinput {
+  background-image: url(images/magnifying-glass-light.png);
+}
+
+.devtools-searchinput:-moz-locale-dir(rtl) {
+  background-position: calc(100% - 8px) center;
+}
+
+.devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-icon {
+  visibility: hidden;
+}
+
+/* Searchbox is a div container element for a search input element */
+.devtools-searchbox {
+  display: flex;
+  flex: 1;
+  position: relative;
+}
+
+.devtools-rule-searchbox {
+  -moz-box-flex: 1;
+  padding-right: 23px;
+  width: 100%;
+  font: inherit;
+}
+
+.devtools-rule-searchbox[filled] {
+  background-color: var(--searchbox-background-color);
+  border-color: var(--searchbox-border-color);
+}
+
+.devtools-style-searchbox-no-match {
+  background-color: var(--searcbox-no-match-background-color) !important;
+  border-color: var(--searcbox-no-match-border-color) !important;
+}
+
+.devtools-no-search-result {
+  border-color: var(--theme-highlight-red) !important;
+}
+
+.devtools-searchinput-clear {
+  position: absolute;
+  top: 3.5px;
+  right: 7px;
+  padding: 0;
+  border: 0;
+  width: 16px;
+  height: 16px;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  background-color: transparent;
+}
+
+.theme-dark .devtools-searchinput-clear {
+  background-image: url("chrome://devtools/skin/themes/images/search-clear-dark.svg");
+}
+
+.theme-light .devtools-searchinput-clear {
+  background-image: url("chrome://devtools/skin/themes/images/search-clear-light.svg");
+}
+
+.devtools-style-searchbox-no-match + .devtools-searchinput-clear {
+  background-image: url("chrome://devtools/skin/themes/images/search-clear-failed.svg") !important;
+}
+
+.devtools-searchinput-clear:hover {
+  background-position: -16px 0;
+}
+
+.theme-dark .devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
+  list-style-image: url("chrome://devtools/skin/themes/images/search-clear-dark.svg");
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+.theme-light .devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
+  list-style-image: url("chrome://devtools/skin/themes/images/search-clear-light.svg");
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+.devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+@media (min-resolution: 1.1dppx) {
+  .theme-dark .devtools-searchinput {
+    background-image: url(images/magnifying-glass@2x.png);
+  }
+
+  .theme-light .devtools-searchinput {
+    background-image: url(images/magnifying-glass-light@2x.png);
+  }
+}
+
+/* Close button */
+
+.devtools-closebutton {
+  -moz-appearance: none;
+  border: none;
+  margin: 0 4px;
+  min-width: 16px;
+  width: 16px;
+  opacity: 0.8;
+}
+
+.devtools-closebutton > image {
+  width: 16px;
+  height: 16px;
+  -moz-appearance: none;
+  background-size: 16px 16px;
+  background-image: url("chrome://devtools/skin/themes/images/close@2x.png");
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+.devtools-closebutton > .toolbarbutton-icon {
+  /* XXX Buttons have padding in widget/ that we don't want here but can't override with good CSS, so we must
+     use evil CSS to give the impression of smaller content */
+  margin: -4px;
+}
+
+.devtools-closebutton > .toolbarbutton-text {
+  display: none;
+}
+
+.devtools-closebutton:hover {
+  opacity: 1;
+}
+
+/* In-tools sidebar */
+.devtools-sidebar-tabs {
+  -moz-appearance: none;
+  margin: 0;
+}
+
+.devtools-sidebar-tabs > tabpanels {
+  -moz-appearance: none;
+  background: transparent;
+  padding: 0;
+  border: 0;
+}
+
+.theme-light .devtools-sidebar-tabs > tabpanels {
+  background: var(--theme-sidebar-background);
+  color: var(--theme-body-color);
+}
+
+.devtools-sidebar-tabs tabs {
+  position: static;
+  font: inherit;
+  margin-bottom: 0;
+  overflow: hidden;
+}
+
+.devtools-sidebar-alltabs {
+  -moz-appearance: none;
+  height: 24px;
+  line-height: 24px;
+  padding: 0 4px;
+  margin: 0;
+  border-width: 0 0 1px 0;
+  -moz-border-start-width: 1px;
+  border-style: solid;
+}
+
+.devtools-sidebar-alltabs .toolbarbutton-icon {
+  display: none;
+}
+
+.devtools-sidebar-tabs tabs > .tabs-right,
+.devtools-sidebar-tabs tabs > .tabs-left {
+  display: none;
+}
+
+.devtools-sidebar-tabs tabs > tab {
+  -moz-appearance: none;
+  /* We want to match the height of a toolbar with a toolbarbutton
+   * First, we need to replicated the padding of toolbar (4px),
+   * then we need to take the border of the buttons into account (1px).
+   */
+  padding: 0 3px;
+  margin: 0;
+  min-width: 78px;
+  text-align: center;
+  background-color: transparent;
+  color: inherit;
+  -moz-box-flex: 1;
+  border-width: 0;
+  -moz-border-start-width: 1px;
+  border-style: solid;
+  border-radius: 0;
+  position: static;
+  text-shadow: none;
+}
+
+.devtools-sidebar-tabs tabs > tab {
+  border-image: linear-gradient(transparent 15%, var(--theme-splitter-color) 15%, var(--theme-splitter-color) 85%, transparent 85%) 1 1;
+}
+
+.devtools-sidebar-tabs tabs > tab[selected],
+.devtools-sidebar-tabs tabs > tab[selected] + tab {
+  border-image: linear-gradient(var(--theme-splitter-color), var(--theme-splitter-color)) 1 1;
+}
+
+.devtools-sidebar-tabs tabs > tab:first-child {
+  -moz-border-start-width: 0;
+}
+
+.theme-dark .devtools-sidebar-tabs tabs > tab:hover {
+  background: hsla(206,37%,4%,.2);
+}
+
+.theme-dark .devtools-sidebar-tabs tabs > tab:hover:active {
+  background: hsla(206,37%,4%,.4);
+}
+
+.theme-dark .devtools-sidebar-tabs tabs > tab[selected] + tab:hover {
+  background: hsla(206,37%,4%,.2);
+}
+
+.theme-dark .devtools-sidebar-tabs tabs > tab[selected] + tab:hover:active {
+  background: hsla(206,37%,4%,.4);
+}
+
+.theme-dark .devtools-sidebar-tabs tabs > tab[selected],
+.theme-dark .devtools-sidebar-tabs tabs > tab[selected]:hover:active {
+  color: var(--theme-selection-color);
+  background: #1d4f73;
+}
+
+.theme-light .devtools-sidebar-tabs tabs > tab:hover {
+  background: #ddd;
+}
+
+.theme-light .devtools-sidebar-tabs tabs > tab:hover:active {
+  background: #ddd;
+}
+
+.theme-light .devtools-sidebar-tabs tabs > tab[selected] + tab:hover {
+  background: #ddd;
+}
+
+.theme-light .devtools-sidebar-tabs tabs > tab[selected],
+.theme-light .devtools-sidebar-tabs tabs > tab[selected]:hover:active {
+  color: var(--theme-selection-color);
+  background: #4c9ed9;
+}
+
+/* Toolbox - moved from toolbox.css.
+ * Rules that apply to the global toolbox like command buttons,
+ * devtools tabs, docking buttons, etc. */
+
+#toolbox-controls > toolbarbutton,
+#toolbox-dock-buttons > toolbarbutton {
+  -moz-appearance: none;
+  border: none;
+  margin: 0 4px;
+  min-width: 16px;
+  width: 16px;
+}
+
+#toolbox-controls > toolbarbutton > .toolbarbutton-text,
+#toolbox-dock-buttons > toolbarbutton > .toolbarbutton-text,
+.command-button > .toolbarbutton-text {
+  display: none;
+}
+
+#toolbox-dock-buttons > toolbarbutton > image {
+  -moz-appearance: none;
+  width: 16px;
+  height: 16px;
+  background-size: 16px 16px;
+  background-position: 0 center;
+  background-repeat: no-repeat;
+}
+
+#toolbox-dock-bottom > image {
+  background-image: url("chrome://devtools/skin/themes/images/dock-bottom@2x.png");
+}
+
+#toolbox-dock-side  > image {
+  background-image: url("chrome://devtools/skin/themes/images/dock-side@2x.png");
+}
+
+#toolbox-dock-window > image {
+  background-image: url("chrome://devtools/skin/themes/images/undock@2x.png");
+}
+
+#toolbox-dock-bottom-minimize {
+  /* Bug 1177463 - The minimize button is currently hidden until we agree on
+     the UI for it, and until bug 1173849 is fixed too. */
+  display: none;
+}
+
+#toolbox-dock-bottom-minimize > image {
+  background-image: url("chrome://devtools/skin/themes/images/dock-bottom-minimize@2x.png");
+}
+
+#toolbox-dock-bottom-minimize.minimized > image {
+  background-image: url("chrome://devtools/skin/themes/images/dock-bottom-maximize@2x.png");
+}
+
+#toolbox-dock-window,
+#toolbox-dock-bottom,
+#toolbox-dock-side {
+  opacity: 0.8;
+}
+
+#toolbox-dock-window:hover,
+#toolbox-dock-bottom:hover,
+#toolbox-dock-side:hover {
+  opacity: 1;
+}
+
+.devtools-separator {
+  margin: 0 2px;
+  width: 2px;
+  background-image: linear-gradient(transparent, hsla(204,45%,98%,.1), transparent),
+                    linear-gradient(transparent, hsla(206,37%,4%,.6), transparent),
+                    linear-gradient(transparent, hsla(204,45%,98%,.1), transparent);
+  background-size: 1px 100%;
+  background-repeat: no-repeat;
+  background-position: 0, 1px, 2px;
+}
+
+#toolbox-buttons:empty + .devtools-separator,
+.devtools-separator[invisible] {
+  visibility: hidden;
+}
+
+#toolbox-controls-separator {
+  margin: 0;
+}
+
+/* Command buttons */
+
+.command-button {
+  -moz-appearance: none;
+  border: none;
+  padding: 0 8px;
+  margin: 0;
+  width: 32px;
+  position: relative;
+}
+
+.command-button:hover {
+  background-color: hsla(206,37%,4%,.2);
+}
+.command-button:hover:active, .command-button[checked=true]:not(:hover) {
+  background-color: hsla(206,37%,4%,.4);
+}
+
+.command-button > image {
+  -moz-appearance: none;
+  width: 16px;
+  height: 16px;
+  background-size: 64px 16px;
+  background-position: 0 center;
+  background-repeat: no-repeat;
+}
+.command-button:hover > image {
+  background-position: -16px center;
+}
+.command-button:hover:active > image {
+  background-position: -32px center;
+}
+.command-button[checked=true] > image {
+  background-position: -48px center;
+}
+.command-button[open=true] > image {
+  background-position: 0 center;
+}
+
+#command-button-paintflashing > image {
+  background-image: url("chrome://devtools/skin/themes/images/command-paintflashing.png");
+}
+
+#command-button-screenshot > image {
+  background-image: url("chrome://devtools/skin/themes/images/command-screenshot.png");
+}
+
+#command-button-responsive > image {
+  background-image: url("chrome://devtools/skin/themes/images/command-responsivemode.png");
+}
+
+#command-button-tilt > image {
+  background-image: url("chrome://devtools/skin/themes/images/command-tilt.png");
+}
+
+#command-button-scratchpad > image {
+  background-image: url("chrome://devtools/skin/themes/images/command-scratchpad.png");
+  background-size: 48px 16px;
+}
+
+#command-button-pick > image {
+  background-image: url("chrome://devtools/skin/themes/images/command-pick.png");
+}
+
+#command-button-frames > image {
+  background-image: url("chrome://devtools/skin/themes/images/command-frames.png");
+}
+
+#command-button-splitconsole > image {
+  background-image: url("chrome://devtools/skin/themes/images/command-console.png");
+}
+
+#command-button-eyedropper > image {
+  background-image: url("chrome://devtools/skin/themes/images/command-eyedropper.png");
+}
+
+#command-button-rulers > image {
+  background-image: url("chrome://devtools/skin/themes/images/command-rulers.png");
+}
+
+@media (min-resolution: 1.1dppx) {
+  #command-button-paintflashing > image {
+    background-image: url("chrome://devtools/skin/themes/images/command-paintflashing@2x.png");
+  }
+
+  #command-button-screenshot > image {
+    background-image: url("chrome://devtools/skin/themes/images/command-screenshot@2x.png");
+  }
+
+  #command-button-responsive > image {
+    background-image: url("chrome://devtools/skin/themes/images/command-responsivemode@2x.png");
+  }
+
+  #command-button-tilt > image {
+    background-image: url("chrome://devtools/skin/themes/images/command-tilt@2x.png");
+  }
+
+  #command-button-scratchpad > image {
+    background-image: url("chrome://devtools/skin/themes/images/command-scratchpad@2x.png");
+  }
+
+  #command-button-pick > image {
+    background-image: url("chrome://devtools/skin/themes/images/command-pick@2x.png");
+  }
+
+  #command-button-frames > image {
+    background-image: url("chrome://devtools/skin/themes/images/command-frames@2x.png");
+  }
+
+  #command-button-splitconsole > image {
+    background-image: url("chrome://devtools/skin/themes/images/command-console@2x.png");
+  }
+
+  #command-button-eyedropper > image {
+    background-image: url("chrome://devtools/skin/themes/images/command-eyedropper@2x.png");
+  }
+
+  #command-button-rulers > image {
+    background-image: url("chrome://devtools/skin/themes/images/command-rulers@2x.png");
+  }
+}
+
+/* Tabs */
+
+.devtools-tabbar {
+  -moz-appearance: none;
+  min-height: 24px;
+  border: 0px solid;
+  border-bottom-width: 1px;
+  padding: 0;
+  background: var(--theme-tab-toolbar-background);
+  border-bottom-color: var(--theme-splitter-color);
+}
+
+.theme-light .devtools-tabbar {
+  box-shadow: 0 -2px 0 rgba(170,170,170,.1) inset;
+}
+
+.theme-dark .devtools-tabbar {
+  box-shadow: 0 -2px 0 rgba(0,0,0,.1) inset;
+}
+
+#toolbox-tabs {
+  margin: 0;
+}
+
+.devtools-tab {
+  -moz-appearance: none;
+  -moz-binding: url("chrome://global/content/bindings/general.xml#control-item");
+  -moz-box-align: center;
+  min-width: 32px;
+  min-height: 24px;
+  max-width: 110px;
+  margin: 0;
+  padding: 0;
+  border-style: solid;
+  border-width: 0;
+  -moz-border-start-width: 1px;
+  -moz-box-align: center;
+}
+
+.theme-dark .devtools-tab {
+  color: var(--theme-body-color-alt);
+  border-color: #42484f;
+}
+
+.theme-light .devtools-tab {
+  color: var(--theme-body-color);
+  border-color: var(--theme-splitter-color);
+}
+
+.theme-dark .devtools-tab:hover {
+  background-color: hsla(206,37%,4%,.2);
+  color: #ced3d9;
+}
+
+.theme-light .devtools-tab:hover {
+  background-color: rgba(170,170,170,.2);
+}
+
+.theme-dark .devtools-tab:hover:active {
+  background-color: hsla(206,37%,4%,.4);
+  color: var(--theme-selection-color);
+}
+
+.theme-light .devtools-tab:hover:active {
+  background-color: rgba(170,170,170,.4);
+}
+
+.devtools-tab:not([selected])[highlighted] {
+  box-shadow: 0 2px 0 var(--theme-highlight-green) inset;
+}
+
+.theme-dark .devtools-tab:not([selected])[highlighted] {
+  background-color: hsla(99,100%,14%,.2);
+}
+
+.theme-light .devtools-tab:not([selected])[highlighted] {
+  background-color: rgba(44, 187, 15, .2);
+}
+
+.devtools-tab > image {
+  border: none;
+  -moz-margin-end: 0;
+  -moz-margin-start: 4px;
+  opacity: 0.6;
+  max-height: 16px;
+  width: 16px; /* Prevents collapse during theme switching */
+}
+
+.devtools-tab > label {
+  white-space: nowrap;
+}
+
+.devtools-tab:hover > image {
+  opacity: 0.8;
+}
+
+.devtools-tab:active > image,
+.devtools-tab[selected] > image {
+  opacity: 1;
+}
+
+.devtools-tabbar .devtools-tab[selected],
+.devtools-tabbar .devtools-tab[selected]:hover:active {
+  color: var(--theme-selection-color);
+  background-color: var(--theme-selection-background);
+}
+
+.theme-dark .devtools-tabbar .devtools-tab[selected] {
+  box-shadow: 0 2px 0 #d7f1ff inset,
+              0 8px 3px -5px #2b82bf inset,
+              0 -2px 0 rgba(0,0,0,.2) inset;
+}
+
+.theme-light .devtools-tabbar .devtools-tab[selected] {
+  box-shadow: 0 2px 0 #d7f1ff inset,
+              0 8px 3px -5px #2b82bf inset,
+              0 -2px 0 rgba(0,0,0,.06) inset;
+}
+
+#toolbox-tabs .devtools-tab[selected],
+#toolbox-tabs .devtools-tab[highlighted] {
+  border-width: 0;
+  -moz-padding-start: 1px;
+}
+
+#toolbox-tabs .devtools-tab[selected]:last-child,
+#toolbox-tabs .devtools-tab[highlighted]:last-child {
+  -moz-padding-end: 1px;
+}
+
+#toolbox-tabs .devtools-tab[selected] + .devtools-tab,
+#toolbox-tabs .devtools-tab[highlighted] + .devtools-tab {
+  -moz-border-start-width: 0;
+  -moz-padding-start: 1px;
+}
+
+#toolbox-tabs .devtools-tab:first-child[selected] {
+  -moz-border-start-width: 0;
+}
+
+#toolbox-tabs .devtools-tab:last-child {
+  -moz-border-end-width: 1px;
+}
+
+.devtools-tab:not([highlighted]) > .highlighted-icon,
+.devtools-tab[selected] > .highlighted-icon,
+.devtools-tab:not([selected])[highlighted] > .default-icon {
+  visibility: collapse;
+}
+
+/* The options tab is special - it doesn't have the same parent
+   as the other tabs (toolbox-option-container vs toolbox-tabs) */
+#toolbox-option-container .devtools-tab:not([selected]) {
+  background-color: transparent;
+}
+#toolbox-option-container .devtools-tab {
+  border-color: transparent;
+  border-width: 0;
+  -moz-padding-start: 1px;
+}
+#toolbox-tab-options > image {
+  margin: 0 8px;
+}
+
+/* Invert the colors of certain dark theme images for displaying
+ * inside of the light theme.
+ */
+.theme-light .devtools-tab[icon-invertable] > image,
+.theme-light #toolbox-dock-buttons > toolbarbutton > image,
+.theme-light .command-button-invertable > image,
+.theme-light .command-button-invertable:active > image,
+.theme-light .devtools-closebutton > image,
+.theme-light .devtools-toolbarbutton > image,
+.theme-light .devtools-option-toolbarbutton > image,
+.theme-light #breadcrumb-separator-normal,
+.theme-light .scrollbutton-up > .toolbarbutton-icon,
+.theme-light .scrollbutton-down > .toolbarbutton-icon,
+.theme-light #black-boxed-message-button .button-icon,
+.theme-light .notice-container button .button-icon,
+.theme-light #requests-menu-perf-notice-button .button-icon,
+.theme-light #requests-menu-network-summary-button .button-icon,
+.theme-light .event-tooltip-debugger-icon,
+.theme-light .devtools-button::before {
+  filter: url(images/filters.svg#invert);
+}
+
+/* Since selected backgrounds are blue, we want to use the normal
+ * (light) icons. */
+.theme-light .command-button-invertable[checked=true]:not(:active) > image,
+.theme-light .devtools-tab[icon-invertable][selected] > image,
+.theme-light .devtools-tab[icon-invertable][highlighted] > image,
+.theme-light #record-snapshot[checked] > image,
+.theme-light #profiler-start[checked] > image,
+.theme-light .notice-container button[checked] .button-icon {
+  filter: none !important;
+}
+
+.theme-light .command-button:hover {
+  background-color: inherit;
+}
+
+.theme-light .command-button:hover:active,
+.theme-light .command-button[checked=true]:not(:hover) {
+  background-color: inherit;
+}
+
+.hidden-labels-box:not(.visible) > label,
+.hidden-labels-box.visible ~ .hidden-labels-box > label:last-child {
+  display: none;
+}
+
+.devtools-invisible-splitter {
+  border-color: transparent;
+}
+
+.devtools-horizontal-splitter {
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
+.devtools-side-splitter {
+  -moz-border-end: 1px solid var(--theme-splitter-color);
+  border-color: var(--theme-splitter-color); /* Needed for responsive container at low width. */
+}
+
+/* Throbbers */
+.devtools-throbber::before {
+  content: "";
+  display: inline-block;
+  vertical-align: bottom;
+  -moz-margin-end: 0.5em;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: 1.1s linear throbber-spin infinite;
+}
+
+@keyframes throbber-spin {
+  from {
+    transform: none;
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

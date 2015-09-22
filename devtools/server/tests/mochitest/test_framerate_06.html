@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1171489 - Tests if the framerate actor does not record timestamps from multiple frames. 
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Framerate actor test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script>
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  var {FramerateFront} = require("devtools/server/actors/framerate");
+  var {TargetFactory} = require("devtools/client/framework/target");
+
+  var url = document.getElementById("testContent").href;
+  attachURL(url, onTab);
+
+  function onTab(_, client, form, contentDoc) {
+    var contentWin = contentDoc.defaultView;
+    var chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+    var selectedTab = chromeWin.gBrowser.selectedTab;
+
+    var target = TargetFactory.forTab(selectedTab);
+    var front = FramerateFront(client, form);
+
+    front.startRecording().then(() => {
+      window.setTimeout(() => {
+        // Wait for the iframe to be loaded again
+        window.addEventListener("message", function loaded (event) {
+          if (event.data === "ready") {
+            window.removeEventListener("message", loaded);
+            window.setTimeout(() => {
+              front.stopRecording().then(ticks => {
+                onRecordingStopped(client, ticks);
+              });
+            }, 1000);
+          }
+        });
+        contentWin.location.reload();
+      }, 1000);
+    });
+  }
+
+  function onRecordingStopped(client, ticks) {
+    var diffs = [];
+
+    info(`Got ${ticks.length} ticks.`);
+
+    for (var i = 1; i < ticks.length; i++) {
+      var prev = ticks[i - 1];
+      var curr = ticks[i];
+      diffs.push(curr - prev);
+      info(curr + " - " + (curr - prev));
+    }
+
+    // 1000 / 60 => 16.666... so we shouldn't get more than diffs of 16.66.. but
+    // when we get ticks from other frames they're usually at diffs of < 1. Sometimes
+    // ticks can still be less than 16ms even on one frame (usually following a very slow
+    // frame), so use a low number (2) to be our threshold
+    var THRESHOLD = 2;
+    ok(ticks.length >= 20, "we should have atleast 20 ticks over the course of two seconds.");
+    var belowThreshold = diffs.filter(v => v <= THRESHOLD);
+    ok(belowThreshold.length <= 10, "we should have very few frames less than the threshold");
+
+    client.close(() => {
+      DebuggerServer.destroy();
+      SimpleTest.finish()
+    });
+  }
+}
+</script>
+</pre>
+<a id="testContent" target="_blank" href="inspector-traversal-data.html">Test Document</a>
+</body>
+</html>

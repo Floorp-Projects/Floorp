@@ -1,0 +1,677 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Sources and breakpoints pane */
+
+#sources-pane[selectedIndex="0"] + #sources-and-editor-splitter {
+  border-color: transparent;
+}
+
+#sources-pane > tabs {
+  -moz-border-end: 1px solid;
+}
+
+#sources-pane .devtools-toolbar {
+  border: none; /* Remove the devtools-toolbar bottom border. */
+  -moz-border-end: 1px solid;
+}
+
+#sources-pane > tabs,
+#sources-pane .devtools-toolbar {
+  -moz-border-end-color: var(--theme-splitter-color);
+}
+
+/* Sources and breakpoints list */
+
+.dbg-source-item {
+  padding: 2px 0px;
+}
+
+.dbg-breakpoint-line {
+  font-weight: 600;
+}
+
+.dbg-breakpoint-text {
+  -moz-padding-start: 6px;
+  font-style: italic;
+  font-size: 90%;
+}
+
+.dbg-breakpoint-checkbox {
+  width: 16px;
+  height: 16px;
+  margin: 2px;
+}
+
+.dbg-breakpoint-condition-thrown-message {
+  display: none;
+  color: var(--theme-highlight-red);
+}
+
+.dbg-breakpoint.dbg-breakpoint-condition-thrown .dbg-breakpoint-condition-thrown-message {
+  display: block;
+  -moz-padding-start: 0;
+}
+
+/* Sources toolbar */
+
+#sources-toolbar > .devtools-toolbarbutton,
+#sources-controls > .devtools-toolbarbutton {
+  min-width: 32px;
+}
+
+#black-box {
+  list-style-image: url(images/debugger-blackbox.png);
+}
+
+@media (min-resolution: 1.1dppx) {
+  #black-box {
+    list-style-image: url(images/debugger-blackbox@2x.png);
+  }
+}
+
+#pretty-print {
+  list-style-image: url(images/debugger-prettyprint.png);
+}
+
+@media (min-resolution: 1.1dppx) {
+  #pretty-print {
+    list-style-image: url(images/debugger-prettyprint@2x.png);
+  }
+}
+
+#toggle-breakpoints {
+  list-style-image: url(images/debugger-toggleBreakpoints.png);
+}
+
+@media (min-resolution: 1.1dppx) {
+  #toggle-breakpoints {
+    list-style-image: url(images/debugger-toggleBreakpoints@2x.png);
+  }
+}
+
+#toggle-promise-debugger {
+  /* TODO Bug 1186119: Add a toggle promise debugger image */
+}
+
+#sources-toolbar .devtools-toolbarbutton:not([label]) {
+  -moz-image-region: rect(0px,16px,16px,0px);
+}
+
+#sources-toolbar .devtools-toolbarbutton:not([label])[checked] {
+  -moz-image-region: rect(0px,32px,16px,16px);
+}
+
+@media (min-resolution: 1.1dppx) {
+  #sources-toolbar .devtools-toolbarbutton:not([label]) {
+    -moz-image-region: rect(0px,32px,32px,0px);
+  }
+
+  #sources-toolbar .devtools-toolbarbutton:not([label])[checked] {
+    -moz-image-region: rect(0px,64px,32px,32px);
+  }
+}
+
+#sources .black-boxed {
+  color: rgba(128,128,128,0.4);
+}
+
+#sources .selected .black-boxed {
+  color: rgba(255,255,255,0.4);
+}
+
+#sources .black-boxed ~ .dbg-breakpoint {
+  display: none;
+}
+
+/* Debugger unblackbox button */
+
+#black-boxed-message-button > .button-box > .button-icon {
+  width: 16px;
+  height: 16px;
+  background-image: url(images/debugger-blackbox.png);
+  background-position: 0 0;
+  background-size: 32px 16px;
+  background-repeat: no-repeat;
+  -moz-margin-end: 5px;
+}
+
+@media (min-resolution: 1.1dppx) {
+  #black-boxed-message-button > .button-box > .button-icon {
+    background-image: url(images/debugger-blackbox@2x.png);
+  }
+}
+
+/* Black box message and source progress meter */
+
+#black-boxed-message,
+#source-progress-container {
+  /* Prevent the container deck from aquiring the size from this message. */
+  min-width: 1px;
+  min-height: 1px;
+}
+
+#source-progress {
+  min-height: 2em;
+  min-width: 40em;
+}
+
+#black-boxed-message-label,
+#black-boxed-message-button {
+  text-align: center;
+  font-size: 120%;
+}
+
+#black-boxed-message-button {
+  margin-top: 1em;
+  padding: .25em;
+}
+
+/* Breadcrumbs stack frames view */
+
+.dbg-stackframe-details {
+  -moz-padding-start: 4px;
+}
+
+/* Classic stack frames view */
+
+.dbg-classic-stackframe {
+  display: block;
+}
+
+.dbg-classic-stackframe-title {
+  font-weight: 600;
+}
+
+.dbg-classic-stackframe-details:-moz-locale-dir(ltr) {
+  float: right;
+}
+
+.dbg-classic-stackframe-details:-moz-locale-dir(rtl) {
+  float: left;
+}
+
+.dbg-classic-stackframe-details-url {
+  max-width: 90%;
+  text-align: end;
+}
+
+.dbg-classic-stackframe-details-url {
+  color: var(--theme-content-color1);
+}
+
+.dbg-classic-stackframe-details-sep {
+  color: var(--theme-body-color-alt)
+}
+
+.dbg-classic-stackframe-details-line {
+  color: var(--theme-highlight-bluegrey);
+}
+
+#callstack-list .selected label {
+  /* Text inside a selected item should not be custom colored. */
+  color: inherit !important;
+}
+
+/* Tracer */
+
+#trace {
+  list-style-image: url(images/tracer-icon.png);
+  -moz-image-region: rect(0px,16px,16px,0px);
+}
+
+#trace[checked] {
+  -moz-image-region: rect(0px,32px,16px,16px);
+}
+
+@media (min-resolution: 1.1dppx) {
+  #trace {
+    list-style-image: url(images/tracer-icon@2x.png);
+    -moz-image-region: rect(0px,32px,32px,0px);
+  }
+
+  #trace[checked] {
+    -moz-image-region: rect(0px,64px,32px,32px);
+  }
+}
+
+#clear-tracer {
+  /* Make this button as narrow as the text inside it. */
+  min-width: 1px;
+}
+
+.trace-name {
+  -moz-padding-start: 4px;
+}
+
+/* Tracer dark theme */
+
+.theme-dark .trace-item {
+  color: var(--theme-selection-color);
+}
+
+.theme-dark .trace-item.black-boxed {
+  color: rgba(128,128,128,0.4);
+}
+
+.theme-dark .trace-item.selected-matching {
+  background-color: rgba(29,79,115,.4); /* Select highlight blue at 40% alpha */
+}
+
+.theme-dark .selected > .trace-item {
+  background-color: rgba(29,79,115,.6); /* Select highlight blue at 60% alpha */
+}
+
+.trace-call {
+  color: var(--theme-highlight-blue);
+}
+
+.trace-return,
+.trace-yield {
+  color: var(--theme-highlight-green);
+}
+
+.trace-throw {
+  color: var(--theme-highlight-red);
+}
+
+.trace-param {
+  color: var(--theme-content-color1);
+}
+
+.theme-dark .trace-syntax {
+  color: var(--theme-content-color2);
+}
+
+/* Tracer light theme */
+.theme-light .trace-item {
+  color: var(--theme-content-color1);
+}
+
+.theme-light .trace-item.black-boxed {
+  color: rgba(128,128,128,0.4);
+}
+
+.theme-light .trace-item.selected-matching {
+  background-color: rgba(76,158,217,.4); /* Select highlight blue at 40% alpha */
+}
+
+.theme-light .selected > .trace-item {
+  background-color: rgba(76,158,217,.6); /* Select highlight blue at 60% alpha */
+}
+
+#tracer-traces .selected label {
+  /* Text inside a selected item should not be custom colored. */
+  color: inherit !important;
+}
+
+/* Watch expressions view */
+
+#expressions {
+  min-height: 10px;
+  max-height: 125px;
+}
+
+.dbg-expression {
+  height: 20px;
+}
+
+.dbg-expression-arrow {
+  background-image: url(images/commandline-icon.png);
+  background-position: -16px 0;
+  background-repeat: no-repeat;
+  background-size: 32px 16px;
+  width: 16px;
+  height: 16px;
+  margin: 2px;
+}
+
+@media (min-resolution: 1.1dppx) {
+  .dbg-expression-arrow {
+    background-image: url(images/commandline-icon@2x.png);
+  }
+}
+
+.dbg-expression-input {
+  color: inherit;
+}
+
+.dbg-expression-button {
+  -moz-appearance: none;
+  border: none;
+  background: none;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.dbg-expression-button {
+  color: var(--theme-highlight-blue);
+}
+
+/* Event listeners view */
+
+.dbg-event-listener-type {
+  font-weight: 600;
+}
+
+.dbg-event-listener-location {
+  color: var(--theme-content-color1);
+}
+
+.dbg-event-listener-separator {
+  color: var(--theme-body-color-alt);
+}
+
+.dbg-event-listener-targets {
+  color: var(--theme-highlight-bluegrey);
+}
+
+.theme-dark #event-listeners .selected {
+  /* Selected items shouldn't be displayed differently. */
+  background: none;
+  color: #fff;
+}
+
+.theme-light #event-listeners .selected {
+  /* Selected items shouldn't be displayed differently. */
+  background: none;
+  color: #000;
+}
+
+/* Searchbox and the search operations help panel */
+
+#searchbox {
+  min-width: 220px;
+  -moz-margin-start: 1px;
+}
+
+#filter-label {
+  -moz-margin-start: 2px;
+}
+
+#searchbox-panel-operators {
+  margin-top: 5px;
+  margin-bottom: 8px;
+  -moz-margin-start: 2px;
+}
+
+.searchbox-panel-operator-button {
+  min-width: 26px;
+  margin-top: 0;
+  margin-bottom: 0;
+  -moz-margin-start: 2px;
+  -moz-margin-end: 6px;
+  text-align: center;
+}
+
+.searchbox-panel-operator-label {
+  padding-bottom: 2px;
+}
+
+/* Searchbox results panel */
+
+#results-panel {
+  border: none;
+}
+
+.results-panel-item {
+  padding: 6px 8px;
+  border-top: 1px solid rgba(128,128,128,0.2);
+}
+
+.results-panel-item:first-of-type {
+  border-top: none;
+}
+
+.results-panel-item-label {
+  font-weight: 600;
+}
+
+.results-panel-item-label-before {
+  -moz-padding-end: 6px;
+}
+
+.theme-dark .results-panel-item-label {
+  color: var(--theme-selection-color);
+}
+
+.theme-light .results-panel-item-label {
+  color: var(--theme-body-color);
+}
+
+.results-panel-item-label-before {
+  color: var(--theme-highlight-bluegrey);
+}
+
+.results-panel-item-label-below {
+  color: var(--theme-content-color3);
+}
+
+#results-panel .selected label {
+  /* Text inside a selected item should not be custom colored. */
+  color: inherit !important;
+}
+
+/* Sources search view */
+
+#globalsearch {
+  min-height: 10px;
+  max-height: 50vh;
+}
+
+.dbg-results-header {
+  -moz-padding-start: 6px;
+}
+
+.dbg-results-header-location {
+  font-weight: 600;
+}
+
+.dbg-results-header-match-count {
+  -moz-padding-start: 6px;
+}
+
+.dbg-results-line-number {
+  min-width: 3em;
+  -moz-border-end: 1px solid rgba(128,128,128,0.2);
+  -moz-padding-end: 4px;
+  text-align: end;
+}
+
+.dbg-results-line-contents {
+  -moz-padding-start: 4px;
+}
+
+.dbg-results-line-contents-string[match=true] {
+  background-color: rgba(255,255,0,0.2);
+  border: 1px solid rgba(128,128,128,0.7);
+  border-radius: 4px;
+  margin-top: -1px !important;
+  margin-bottom: -1px !important;
+  cursor: pointer;
+}
+
+.dbg-results-line-contents-string[match=true][focusing] {
+  transition: transform 0.3s ease-in-out;
+}
+
+.dbg-results-line-contents-string[match=true][focused] {
+  transition-duration: 0.1s;
+  transform: scale(1.75, 1.75);
+}
+
+.dbg-source-results:not(.selected):hover {
+  background-color: var(--theme-sidebar-background);
+}
+
+.dbg-results-header {
+  background-color: var(--theme-tab-toolbar-background);
+}
+
+.theme-dark .dbg-results-header {
+  color: var(--theme-content-color1);
+}
+
+.theme-light .dbg-results-header {
+  color: var(--theme-content-color3);
+}
+
+.theme-dark .dbg-search-result:hover {
+  background-color: rgba(29,79,115,.2); /* Select highlight blue at 40% alpha */
+}
+
+.theme-light .dbg-search-result:hover {
+  background-color: rgba(76,158,217,.2); /* Select highlight blue at 40% alpha */
+}
+
+.dbg-results-header-match-count {
+  color: var(--theme-content-color3);
+}
+
+.dbg-results-line-number {
+  background-color: var(--theme-tab-toolbar-background);
+  color: var(--theme-body-color-alt);
+}
+
+.dbg-results-line-contents-string {
+  color: var(--theme-body-color-alt);
+}
+
+.theme-dark .dbg-results-line-contents-string[match=true] {
+  color: var(--theme-selection-color);
+}
+
+.theme-light .dbg-results-line-contents-string[match=true] {
+  color: var(--theme-body-color);
+}
+
+/* Toolbar controls */
+
+#debugger-toolbar .devtools-toolbarbutton:not([label]) > .toolbarbutton-icon,
+#sources-toolbar .devtools-toolbarbutton:not([label]) > .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
+}
+
+#resume {
+  list-style-image: url(images/debugger-pause.png);
+  -moz-image-region: rect(0px,16px,16px,0px);
+}
+
+#resume[checked] {
+  list-style-image: url(images/debugger-play.png);
+}
+
+@media (min-resolution: 1.1dppx) {
+  #resume {
+    list-style-image: url(images/debugger-pause@2x.png);
+    -moz-image-region: rect(0px,32px,32px,0px);
+  }
+
+  #resume[checked] {
+    list-style-image: url(images/debugger-play@2x.png);
+    -moz-image-region: rect(0px,64px,32px,32px);
+  }
+}
+
+#debugger-controls toolbarbutton {
+  transition: opacity 0.15s ease-in-out;
+}
+
+#debugger-controls toolbarbutton[disabled] {
+  opacity: .5;
+  transition: none;
+}
+
+#resume[break-on-next] {
+  background: var(--theme-highlight-lightorange);
+}
+
+#step-over {
+  list-style-image: url(images/debugger-step-over.png);
+}
+
+#step-in {
+  list-style-image: url(images/debugger-step-in.png);
+}
+
+#step-out {
+  list-style-image: url(images/debugger-step-out.png);
+}
+
+@media (min-resolution: 1.1dppx) {
+  #step-over {
+    list-style-image: url(images/debugger-step-over@2x.png);
+  }
+
+  #step-in {
+    list-style-image: url(images/debugger-step-in@2x.png);
+  }
+
+  #step-out {
+    list-style-image: url(images/debugger-step-out@2x.png);
+  }
+}
+
+#instruments-pane-toggle {
+  background: none;
+  box-shadow: none;
+  border: none;
+  list-style-image: url(images/debugger-collapse.png);
+  -moz-image-region: rect(0px,16px,16px,0px);
+}
+
+#instruments-pane-toggle[pane-collapsed] {
+  list-style-image: url(images/debugger-expand.png);
+}
+
+#instruments-pane-toggle:hover {
+  -moz-image-region: rect(0px,32px,16px,16px);
+}
+
+@media (min-resolution: 1.1dppx) {
+  #instruments-pane-toggle {
+    list-style-image: url(images/debugger-collapse@2x.png);
+    -moz-image-region: rect(0px,32px,32px,0px);
+  }
+
+  #instruments-pane-toggle[pane-collapsed] {
+    list-style-image: url(images/debugger-expand@2x.png);
+  }
+
+  #instruments-pane-toggle:hover {
+    -moz-image-region: rect(0px,64px,32px,32px);
+  }
+}
+
+/* Horizontal vs. vertical layout */
+
+#vertical-layout-panes-container {
+  min-height: 35vh;
+  max-height: 80vh;
+}
+
+#body[layout=vertical] #sources-pane > tabs {
+  -moz-border-end: none;
+}
+
+#body[layout=vertical] #instruments-pane {
+  margin: 0 !important;
+  /* To prevent all the margin hacks to hide the sidebar. */
+}
+
+#body[layout=vertical] .side-menu-widget-container,
+#body[layout=vertical] .side-menu-widget-empty-text {
+  box-shadow: none !important;
+}
+
+#body[layout=vertical] .side-menu-widget-item-arrow {
+  background-image: none !important;
+}
+
+#body[layout=vertical] .side-menu-widget-group,
+#body[layout=vertical] .side-menu-widget-item {
+  -moz-margin-end: 0;
+}

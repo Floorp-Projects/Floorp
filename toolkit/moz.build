@@ -7,7 +7,6 @@
 DIRS += [
     'components',
     'content',
-    'devtools',
     'forgetaboutsite',
     'identity',
     'locales',
