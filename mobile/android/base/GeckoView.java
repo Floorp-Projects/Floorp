@@ -12,8 +12,10 @@ import java.util.Set;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.mozglue.GeckoLoader;
+import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoEventListener;
@@ -29,6 +31,7 @@ import android.content.SharedPreferences;
 import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 
@@ -104,6 +107,14 @@ public class GeckoView extends LayerView
         }
     };
 
+    @WrapForJNI
+    private static final class Window extends JNIObject {
+        static native void open(Window instance, int width, int height);
+        @Override protected native void disposeNative();
+    }
+
+    private final Window window = new Window();
+
     public GeckoView(Context context) {
         super(context);
         init(context, null, true);
@@ -157,11 +168,9 @@ public class GeckoView extends LayerView
             final GeckoProfile profile = GeckoProfile.get(context);
          }
 
+        GeckoThread.ensureInit(null, null);
         if (url != null) {
-            GeckoThread.ensureInit(null, Intent.ACTION_VIEW, url);
             GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(url));
-        } else {
-            GeckoThread.ensureInit(null, null, null);
         }
 
         if (context instanceof Activity) {
@@ -193,6 +202,28 @@ public class GeckoView extends LayerView
             // destroyed, so we need to re-attach Gecko to this GeckoView.
             connectToGecko();
         }
+    }
+
+    @Override
+    public void onAttachedToWindow()
+    {
+        super.onAttachedToWindow();
+
+        final DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
+
+        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+            Window.open(window, metrics.widthPixels, metrics.heightPixels);
+        } else {
+            GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY, Window.class,
+                    "open", window, metrics.widthPixels, metrics.heightPixels);
+        }
+    }
+
+    @Override
+    public void onDetachedFromWindow()
+    {
+        super.onAttachedToWindow();
+        window.disposeNative();
     }
 
     /**

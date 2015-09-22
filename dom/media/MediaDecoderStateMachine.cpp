@@ -249,6 +249,8 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
                         "MediaDecoderStateMachine::mPlaybackRateReliable (Mirror)"),
   mDecoderPosition(mTaskQueue, 0,
                    "MediaDecoderStateMachine::mDecoderPosition (Mirror)"),
+  mMediaSeekable(mTaskQueue, true,
+                 "MediaDecoderStateMachine::mMediaSeekable (Mirror)"),
   mDuration(mTaskQueue, NullableTimeUnit(),
             "MediaDecoderStateMachine::mDuration (Canonical"),
   mIsShutdown(mTaskQueue, false,
@@ -334,6 +336,7 @@ MediaDecoderStateMachine::InitializationTask()
   mPlaybackBytesPerSecond.Connect(mDecoder->CanonicalPlaybackBytesPerSecond());
   mPlaybackRateReliable.Connect(mDecoder->CanonicalPlaybackRateReliable());
   mDecoderPosition.Connect(mDecoder->CanonicalDecoderPosition());
+  mMediaSeekable.Connect(mDecoder->CanonicalMediaSeekable());
 
   // Initialize watchers.
   mWatchManager.Watch(mBuffered, &MediaDecoderStateMachine::BufferedRangeUpdated);
@@ -1231,7 +1234,16 @@ void MediaDecoderStateMachine::RecomputeDuration()
   mDuration = Some(duration);
 }
 
-void MediaDecoderStateMachine::SetDormant(bool aDormant)
+void
+MediaDecoderStateMachine::DispatchSetDormant(bool aDormant)
+{
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArg<bool>(
+    this, &MediaDecoderStateMachine::SetDormant, aDormant);
+  OwnerThread()->Dispatch(r.forget());
+}
+
+void
+MediaDecoderStateMachine::SetDormant(bool aDormant)
 {
   MOZ_ASSERT(OnTaskQueue());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
@@ -1379,7 +1391,16 @@ void MediaDecoderStateMachine::StartDecoding()
   ScheduleStateMachine();
 }
 
-void MediaDecoderStateMachine::NotifyWaitingForResourcesStatusChanged()
+void
+MediaDecoderStateMachine::DispatchWaitingForResourcesStatusChanged()
+{
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(
+    this, &MediaDecoderStateMachine::NotifyWaitingForResourcesStatusChanged);
+  OwnerThread()->Dispatch(r.forget());
+}
+
+void
+MediaDecoderStateMachine::NotifyWaitingForResourcesStatusChanged()
 {
   MOZ_ASSERT(OnTaskQueue());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
@@ -1483,7 +1504,7 @@ MediaDecoderStateMachine::Seek(SeekTarget aTarget)
 
   // We need to be able to seek both at a transport level and at a media level
   // to seek.
-  if (!mDecoder->IsMediaSeekable()) {
+  if (!mMediaSeekable) {
     DECODER_WARN("Seek() function should not be called on a non-seekable state machine");
     return MediaDecoder::SeekPromise::CreateAndReject(/* aIgnored = */ true, __func__);
   }
@@ -1507,6 +1528,13 @@ MediaDecoderStateMachine::Seek(SeekTarget aTarget)
   ScheduleStateMachine();
 
   return mPendingSeek.mPromise.Ensure(__func__);
+}
+
+nsRefPtr<MediaDecoder::SeekPromise>
+MediaDecoderStateMachine::InvokeSeek(SeekTarget aTarget)
+{
+  return InvokeAsync(OwnerThread(), this, __func__,
+                     &MediaDecoderStateMachine::Seek, aTarget);
 }
 
 void MediaDecoderStateMachine::StopMediaSink()
@@ -1932,7 +1960,7 @@ MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
 
   // Set mode to PLAYBACK after reading metadata.
   mResource->SetReadMode(MediaCacheStream::MODE_PLAYBACK);
-  mDecoder->SetMediaSeekable(mReader->IsMediaSeekable());
+  mDecoder->DispatchSetMediaSeekable(mReader->IsMediaSeekable());
   mInfo = aMetadata->mInfo;
   mMetadataTags = aMetadata->mTags.forget();
   nsRefPtr<MediaDecoderStateMachine> self = this;
@@ -2067,7 +2095,7 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
 
   DECODER_LOG("Media duration %lld, "
               "transportSeekable=%d, mediaSeekable=%d",
-              Duration().ToMicroseconds(), mResource->IsTransportSeekable(), mDecoder->IsMediaSeekable());
+              Duration().ToMicroseconds(), mResource->IsTransportSeekable(), mMediaSeekable.Ref());
 
   if (HasAudio() && !HasVideo() && !mSentFirstFrameLoadedEvent) {
     // We're playing audio only. We don't need to worry about slow video
@@ -2236,6 +2264,7 @@ MediaDecoderStateMachine::FinishShutdown()
   mPlaybackBytesPerSecond.DisconnectIfConnected();
   mPlaybackRateReliable.DisconnectIfConnected();
   mDecoderPosition.DisconnectIfConnected();
+  mMediaSeekable.DisconnectIfConnected();
 
   mDuration.DisconnectAll();
   mIsShutdown.DisconnectAll();

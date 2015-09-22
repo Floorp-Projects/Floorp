@@ -46,44 +46,44 @@ class WeakMapBase {
     friend void js::GCMarker::enterWeakMarkingMode();
 
   public:
-    WeakMapBase(JSObject* memOf, JSCompartment* c);
+    WeakMapBase(JSObject* memOf, JS::Zone* zone);
     virtual ~WeakMapBase();
 
     void trace(JSTracer* tracer);
 
     // Garbage collector entry points.
 
-    // Unmark all weak maps in a compartment.
-    static void unmarkCompartment(JSCompartment* c);
+    // Unmark all weak maps in a zone.
+    static void unmarkZone(JS::Zone* zone);
 
-    // Mark all the weakmaps in a compartment.
-    static void markAll(JSCompartment* c, JSTracer* tracer);
+    // Mark all the weakmaps in a zone.
+    static void markAll(JS::Zone* zone, JSTracer* tracer);
 
-    // Check all weak maps in a compartment that have been marked as live in this garbage
+    // Check all weak maps in a zone that have been marked as live in this garbage
     // collection, and mark the values of all entries that have become strong references
     // to them. Return true if we marked any new values, indicating that we need to make
     // another pass. In other words, mark my marked maps' marked members' mid-collection.
-    static bool markCompartmentIteratively(JSCompartment* c, JSTracer* tracer);
+    static bool markZoneIteratively(JS::Zone* zone, JSTracer* tracer);
 
     // Add zone edges for weakmaps with key delegates in a different zone.
-    static bool findZoneEdgesForCompartment(JSCompartment* c);
+    static bool findInterZoneEdges(JS::Zone* zone);
 
-    // Sweep the weak maps in a compartment, removing dead weak maps and removing
+    // Sweep the weak maps in a zone, removing dead weak maps and removing
     // entries of live weak maps whose keys are dead.
-    static void sweepCompartment(JSCompartment* c);
+    static void sweepZone(JS::Zone* zone);
 
     // Trace all delayed weak map bindings. Used by the cycle collector.
     static void traceAllMappings(WeakMapTracer* tracer);
 
     bool isInList() { return next != WeakMapNotInList; }
 
-    // Save information about which weak maps are marked for a compartment.
-    static bool saveCompartmentMarkedWeakMaps(JSCompartment* c, WeakMapSet& markedWeakMaps);
+    // Save information about which weak maps are marked for a zone.
+    static bool saveZoneMarkedWeakMaps(JS::Zone* zone, WeakMapSet& markedWeakMaps);
 
-    // Restore information about which weak maps are marked for many compartments.
+    // Restore information about which weak maps are marked for many zones.
     static void restoreMarkedWeakMaps(WeakMapSet& markedWeakMaps);
 
-    // Remove a weakmap from its compartment's weakmaps list.
+    // Remove a weakmap from its zone's weakmaps list.
     static void removeWeakMapFromList(WeakMapBase* weakmap);
 
     // Any weakmap key types that want to participate in the non-iterative
@@ -106,12 +106,12 @@ class WeakMapBase {
     // Object that this weak map is part of, if any.
     HeapPtrObject memberOf;
 
-    // Compartment that this weak map is part of.
-    JSCompartment* compartment;
+    // Zone containing this weak map.
+    JS::Zone* zone;
 
-    // Link in a list of all WeakMaps in a compartment, headed by
-    // JSCompartment::gcWeakMapList. The last element of the list has nullptr as
-    // its next. Maps not in the list have WeakMapNotInList as their next.
+    // Link in a list of all WeakMaps in a Zone, headed by
+    // JS::Zone::gcWeakMapList. The last element of the list has nullptr as its
+    // next. Maps not in the list have WeakMapNotInList as their next.
     WeakMapBase* next;
 
     // Whether this object has been traced during garbage collection.
@@ -142,14 +142,14 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
     typedef typename Base::AddPtr AddPtr;
 
     explicit WeakMap(JSContext* cx, JSObject* memOf = nullptr)
-        : Base(cx->runtime()), WeakMapBase(memOf, cx->compartment()) { }
+        : Base(cx->runtime()), WeakMapBase(memOf, cx->compartment()->zone()) { }
 
     bool init(uint32_t len = 16) {
         if (!Base::init(len))
             return false;
-        next = compartment->gcWeakMapList;
-        compartment->gcWeakMapList = this;
-        marked = JS::IsIncrementalGCInProgress(compartment->runtimeFromMainThread());
+        next = zone->gcWeakMapList;
+        zone->gcWeakMapList = this;
+        marked = JS::IsIncrementalGCInProgress(zone->runtimeFromMainThread());
         return true;
     }
 

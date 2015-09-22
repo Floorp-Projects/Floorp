@@ -99,7 +99,7 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
   }
 
   int16_t decision = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentProcessPolicy(nsIContentPolicy::TYPE_IMAGE,
+  nsresult rv = NS_CheckContentProcessPolicy(nsIContentPolicy::TYPE_INTERNAL_IMAGE,
                                              channelURI,
                                              channelPrincipal,
                                              domWindow->GetFrameElementInternal(),

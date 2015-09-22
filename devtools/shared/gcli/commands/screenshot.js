@@ -357,7 +357,7 @@ function saveToClipboard(context, reply) {
                                    Services.scriptSecurityManager.getSystemPrincipal(),
                                    null,      // aTriggeringPrincipal
                                    Ci.nsILoadInfo.SEC_NORMAL,
-                                   Ci.nsIContentPolicy.TYPE_IMAGE);
+                                   Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE);
     const input = channel.open();
     const imgTools = Cc["@mozilla.org/image/tools;1"]
                         .getService(Ci.imgITools);

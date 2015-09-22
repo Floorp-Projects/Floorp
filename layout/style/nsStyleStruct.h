@@ -353,7 +353,7 @@ struct nsStyleColor {
 
   nsChangeHint CalcDifference(const nsStyleColor& aOther) const;
   static nsChangeHint MaxDifference() {
-    return NS_STYLE_HINT_VISUAL;
+    return nsChangeHint_RepaintFrame;
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {
     // CalcDifference never returns the reflow hints that are sometimes
@@ -390,7 +390,7 @@ struct nsStyleBackground {
   nsChangeHint CalcDifference(const nsStyleBackground& aOther) const;
   static nsChangeHint MaxDifference() {
     return NS_CombineHint(nsChangeHint_UpdateEffects,
-                          NS_CombineHint(NS_STYLE_HINT_VISUAL,
+                          NS_CombineHint(nsChangeHint_RepaintFrame,
                                          nsChangeHint_NeutralChange));
   }
   static nsChangeHint DifferenceAlwaysHandledForDescendants() {

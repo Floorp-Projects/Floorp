@@ -110,6 +110,20 @@ builds:
     types:
       opt:
         task: tasks/builds/b2g_nexus_5l_eng.yml
+  linux64:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/opt_linux64.yml
+      debug:
+        task: tasks/builds/dbg_linux64.yml
+  macosx64:
+    platforms:
+      - MacOSX64
+    types:
+      debug:
+        task: tasks/builds/dbg_macosx64.yml
 
 tests:
   cppunit:

@@ -455,7 +455,7 @@ var OldStyleSheetActor = protocol.ActorClass({
     }
 
     let options = {
-      policy: Ci.nsIContentPolicy.TYPE_STYLESHEET,
+      policy: Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET,
       window: this.window,
       charset: this._getCSSCharset()
     };

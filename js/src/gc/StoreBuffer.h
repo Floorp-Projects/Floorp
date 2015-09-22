@@ -107,8 +107,9 @@ class StoreBuffer
         void sinkStore(StoreBuffer* owner) {
             MOZ_ASSERT(stores_.initialized());
             if (last_) {
+                AutoEnterOOMUnsafeRegion oomUnsafe;
                 if (!stores_.put(last_))
-                    CrashAtUnhandlableOOM("Failed to allocate for MonoTypeBuffer::put.");
+                    oomUnsafe.crash("Failed to allocate for MonoTypeBuffer::put.");
             }
             last_ = T();
 
@@ -167,15 +168,16 @@ class StoreBuffer
             /* Ensure T is derived from BufferableRef. */
             (void)static_cast<const BufferableRef*>(&t);
 
+            AutoEnterOOMUnsafeRegion oomUnsafe;
             unsigned size = sizeof(T);
             unsigned* sizep = storage_->pod_malloc<unsigned>();
             if (!sizep)
-                CrashAtUnhandlableOOM("Failed to allocate for GenericBuffer::put.");
+                oomUnsafe.crash("Failed to allocate for GenericBuffer::put.");
             *sizep = size;
 
             T* tp = storage_->new_<T>(t);
             if (!tp)
-                CrashAtUnhandlableOOM("Failed to allocate for GenericBuffer::put.");
+                oomUnsafe.crash("Failed to allocate for GenericBuffer::put.");
 
             if (isAboutToOverflow())
                 owner->setAboutToOverflow();
@@ -443,14 +445,6 @@ class StoreBuffer
     template <typename Key>
     void putCallback(void (*callback)(JSTracer* trc, Key* key, void* data), Key* key, void* data) {
         putFromAnyThread(bufferGeneric, CallbackRef<Key>(callback, key, data));
-    }
-
-    void assertHasCellEdge(Cell** cellp) {
-        CellPtrEdge cpe(cellp);
-
-        MOZ_ASSERT(bufferCell.has(this, CellPtrEdge(cellp)) ||
-                   !CellPtrEdge(cellp).maybeInRememberedSet(nursery_));
-
     }
 
     void assertHasValueEdge(JS::Value* vp) {
