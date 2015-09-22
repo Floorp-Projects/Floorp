@@ -4506,33 +4506,6 @@ var XULBrowserWindow = {
       throw "onSecurityChange: aIsSimulated receieved an unexpected type";
     }
 
-    // aState is defined as a bitmask that may be extended in the future.
-    // We filter out any unknown bits before testing for known values.
-    const wpl = Components.interfaces.nsIWebProgressListener;
-    const wpl_security_bits = wpl.STATE_IS_SECURE |
-                              wpl.STATE_IS_BROKEN |
-                              wpl.STATE_IS_INSECURE;
-    var level;
-
-    switch (this._state & wpl_security_bits) {
-      case wpl.STATE_IS_SECURE:
-        level = "high";
-        break;
-      case wpl.STATE_IS_BROKEN:
-        level = "broken";
-        break;
-    }
-
-    if (level) {
-      // We don't style the Location Bar based on the the 'level' attribute
-      // anymore, but still set it for third-party themes.
-      if (gURLBar)
-        gURLBar.setAttribute("level", level);
-    } else {
-      if (gURLBar)
-        gURLBar.removeAttribute("level");
-    }
-
     // Make sure the "https" part of the URL is striked out or not,
     // depending on the current mixed active content blocking state.
     gURLBar.formatValue();
@@ -4540,7 +4513,7 @@ var XULBrowserWindow = {
     try {
       uri = Services.uriFixup.createExposableURI(uri);
     } catch (e) {}
-    gIdentityHandler.checkIdentity(this._state, uri);
+    gIdentityHandler.updateIdentity(this._state, uri);
     TrackingProtection.onSecurityChange(this._state, aIsSimulated);
   },
 
@@ -6741,21 +6714,63 @@ function formatURL(aFormat, aIsPref) {
  * Utility object to handle manipulations of the identity indicators in the UI
  */
 var gIdentityHandler = {
-  // Mode strings used to control CSS display
-  IDENTITY_MODE_IDENTIFIED                             : "verifiedIdentity", // High-quality identity information
-  IDENTITY_MODE_DOMAIN_VERIFIED                        : "verifiedDomain",   // Minimal SSL CA-signed domain verification
-  IDENTITY_MODE_UNKNOWN                                : "unknownIdentity",  // No trusted identity information
-  IDENTITY_MODE_USES_WEAK_CIPHER                       : "unknownIdentity weakCipher",  // SSL with RC4 cipher suite or SSL3
-  IDENTITY_MODE_MIXED_DISPLAY_LOADED                   : "unknownIdentity mixedContent mixedDisplayContent",  // SSL with unauthenticated display content
-  IDENTITY_MODE_MIXED_ACTIVE_LOADED                    : "unknownIdentity mixedContent mixedActiveContent",  // SSL with unauthenticated active (and perhaps also display) content
-  IDENTITY_MODE_MIXED_DISPLAY_LOADED_ACTIVE_BLOCKED    : "unknownIdentity mixedContent mixedDisplayContentLoadedActiveBlocked",  // SSL with unauthenticated display content; unauthenticated active content is blocked.
-  IDENTITY_MODE_MIXED_ACTIVE_BLOCKED                   : "verifiedDomain mixedContent mixedActiveBlocked",  // SSL with unauthenticated active content blocked; no unauthenticated display content
-  IDENTITY_MODE_MIXED_ACTIVE_BLOCKED_IDENTIFIED        : "verifiedIdentity mixedContent mixedActiveBlocked",  // SSL with unauthenticated active content blocked; no unauthenticated display content
-  IDENTITY_MODE_CHROMEUI                               : "chromeUI",         // Part of the product's UI
-
-  _isChromeUI: false,
-  _sslStatus: null,
+  /**
+   * nsIURI for which the identity UI is displayed. This has been already
+   * processed by nsIURIFixup.createExposableURI.
+   */
   _uri: null,
+
+  /**
+   * We only know the connection type if this._uri has a defined "host" part.
+   *
+   * These URIs, like "about:" and "data:" URIs, will usually be treated as a
+   * non-secure connection, unless they refer to an internally implemented
+   * browser page or resolve to "file:" URIs.
+   */
+  _uriHasHost: false,
+
+  /**
+   * Whether this._uri refers to an internally implemented browser page.
+   *
+   * Note that this is set for some "about:" pages, but general "chrome:" URIs
+   * are not included in this category by default.
+   */
+  _isSecureInternalUI: false,
+
+  /**
+   * nsISSLStatus metadata provided by gBrowser.securityUI the last time the
+   * identity UI was updated, or null if the connection is not secure.
+   */
+  _sslStatus: null,
+
+  /**
+   * Bitmask provided by nsIWebProgressListener.onSecurityChange.
+   */
+  _state: 0,
+
+  get _isBroken() {
+    return this._state & Ci.nsIWebProgressListener.STATE_IS_BROKEN;
+  },
+
+  get _isSecure() {
+    return this._state & Ci.nsIWebProgressListener.STATE_IS_SECURE;
+  },
+
+  get _isEV() {
+    return this._state & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL;
+  },
+
+  get _isMixedActiveContentLoaded() {
+    return this._state & Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT;
+  },
+
+  get _isMixedActiveContentBlocked() {
+    return this._state & Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT;
+  },
+
+  get _isMixedPassiveContentLoaded() {
+    return this._state & Ci.nsIWebProgressListener.STATE_LOADED_MIXED_DISPLAY_CONTENT;
+  },
 
   // smart getters
   get _identityPopup () {
@@ -6888,8 +6903,7 @@ var gIdentityHandler = {
   */
   getIdentityData : function() {
     var result = {};
-    var status = this._sslStatus.QueryInterface(Ci.nsISSLStatus);
-    var cert = status.serverCert;
+    var cert = this._sslStatus.serverCert;
 
     // Human readable name of Subject
     result.subjectOrg = cert.organization;
@@ -6916,69 +6930,45 @@ var gIdentityHandler = {
   },
 
   /**
-   * Determine the identity of the page being displayed by examining its SSL cert
-   * (if available) and, if necessary, update the UI to reflect this.  Intended to
-   * be called by onSecurityChange
+   * Update the identity user interface for the page currently being displayed.
    *
-   * @param PRUint32 state
-   * @param nsIURI uri The address for which the UI should be updated.
+   * This examines the SSL certificate metadata, if available, as well as the
+   * connection type and other security-related state information for the page.
+   *
+   * @param state
+   *        Bitmask provided by nsIWebProgressListener.onSecurityChange.
+   * @param uri
+   *        nsIURI for which the identity UI should be displayed, already
+   *        processed by nsIURIFixup.createExposableURI.
    */
-  checkIdentity : function(state, uri) {
-    let nsIWebProgressListener = Ci.nsIWebProgressListener;
+  updateIdentity(state, uri) {
+    this._state = state;
+    this._uri = uri;
 
-    // For some URIs like data: we can't get a host. URIs without a host will
-    // usually be treated as a non-secure connection if they're not on the
-    // whitelist below and don't resolve to file:// URIs internally.
-    let unknown = false;
+    // Firstly, populate the state properties required to display the UI. See
+    // the documentation of the individual properties for details.
+
     try {
-      uri.host;
-    } catch (e) { unknown = true; }
-
-    // Chrome URIs however get special treatment. Some chrome URIs are
-    // whitelisted to provide a positive security signal to the user.
-    let whitelist = /^(?:accounts|addons|app-manager|cache|config|crashes|customizing|downloads|healthreport|home|license|newaddon|permissions|preferences|privatebrowsing|rights|sessionrestore|support|welcomeback)(?:[?#]|$)/i;
-    let isChromeUI = uri.schemeIs("about") && whitelist.test(uri.path);
-    let mode = this.IDENTITY_MODE_UNKNOWN;
-
-    if (isChromeUI) {
-      mode = this.IDENTITY_MODE_CHROMEUI;
-    } else if (unknown) {
-      // Use default mode.
-    } else if (state & nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL) {
-      if (state & nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT) {
-        mode = this.IDENTITY_MODE_MIXED_ACTIVE_BLOCKED_IDENTIFIED;
-      } else {
-        mode = this.IDENTITY_MODE_IDENTIFIED;
-      }
-    } else if (state & nsIWebProgressListener.STATE_IS_SECURE) {
-      if (state & nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT) {
-        mode = this.IDENTITY_MODE_MIXED_ACTIVE_BLOCKED;
-      } else {
-        mode = this.IDENTITY_MODE_DOMAIN_VERIFIED;
-      }
-    } else if (state & nsIWebProgressListener.STATE_IS_BROKEN) {
-      if (state & nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT) {
-        mode = this.IDENTITY_MODE_MIXED_ACTIVE_LOADED;
-      } else if (state & nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT) {
-        mode = this.IDENTITY_MODE_MIXED_DISPLAY_LOADED_ACTIVE_BLOCKED;
-      } else if (state & nsIWebProgressListener.STATE_LOADED_MIXED_DISPLAY_CONTENT) {
-        mode = this.IDENTITY_MODE_MIXED_DISPLAY_LOADED;
-      } else {
-        mode = this.IDENTITY_MODE_USES_WEAK_CIPHER;
-      }
+      this._uri.host;
+      this._uriHasHost = true;
+    } catch (ex) {
+      this._uriHasHost = false;
     }
 
-    // We need those values later when populating the control center.
-    this._uri = uri;
-    this._state = state;
-    this._isChromeUI = isChromeUI;
-    this._sslStatus =
-      gBrowser.securityUI.QueryInterface(Ci.nsISSLStatusProvider).SSLStatus;
+    let whitelist = /^(?:accounts|addons|app-manager|cache|config|crashes|customizing|downloads|healthreport|home|license|newaddon|permissions|preferences|privatebrowsing|rights|sessionrestore|support|welcomeback)(?:[?#]|$)/i;
+    this._isSecureInternalUI = uri.schemeIs("about") && whitelist.test(uri.path);
 
-    // Update the identity block.
+    this._sslStatus = gBrowser.securityUI
+                              .QueryInterface(Ci.nsISSLStatusProvider)
+                              .SSLStatus;
+    if (this._sslStatus) {
+      this._sslStatus.QueryInterface(Ci.nsISSLStatus);
+    }
+
+    // Then, update the user interface with the available data.
+
     if (this._identityBox) {
-      this._identityBox.className = mode;
-      this.refreshIdentityBlock(mode);
+      this.refreshIdentityBlock();
     }
 
     // NOTE: We do NOT update the identity popup (the control center) when
@@ -7004,48 +6994,40 @@ var gIdentityHandler = {
   },
 
   /**
-   * Return the current mode, which should be one of IDENTITY_MODE_*.
+   * Return the CSS class name to set on the "fullscreen-warning" element to
+   * display information about connection security in the notification shown
+   * when a site enters the fullscreen mode.
    */
-  getMode: function() {
-    return this._mode;
+  get fullscreenWarningClassName() {
+    // Note that the fullscreen warning does not handle _isSecureInternalUI.
+    if (this._uriHasHost && this._isEV) {
+      return "verifiedIdentity";
+    }
+    if (this._uriHasHost && this._isSecure) {
+      return "verifiedDomain";
+    }
+    return "unknownIdentity";
   },
 
   /**
-   * Set up the messages for the primary identity UI based on the specified mode,
-   * and the details of the SSL cert, where applicable
-   *
-   * @param newMode The newly set identity mode.  Should be one of the IDENTITY_MODE_* constants.
+   * Updates the identity block user interface with the data from this object.
    */
-  refreshIdentityBlock(newMode) {
+  refreshIdentityBlock() {
     let icon_label = "";
     let tooltip = "";
     let icon_country_label = "";
     let icon_labels_dir = "ltr";
 
-    switch (newMode) {
-    case this.IDENTITY_MODE_DOMAIN_VERIFIED:
-    case this.IDENTITY_MODE_MIXED_ACTIVE_BLOCKED: {
-      let iData = this.getIdentityData();
+    if (this._isSecureInternalUI) {
+      this._identityBox.className = "chromeUI";
+      let brandBundle = document.getElementById("bundle_brand");
+      icon_label = brandBundle.getString("brandShorterName");
+    } else if (this._uriHasHost && this._isEV) {
+      this._identityBox.className = "verifiedIdentity";
+      if (this._isMixedActiveContentBlocked) {
+        this._identityBox.classList.add("mixedActiveBlocked");
+      }
 
-      // Verifier is either the CA Org, for a normal cert, or a special string
-      // for certs that are trusted because of a security exception.
-      tooltip = gNavigatorBundle.getFormattedString("identity.identified.verifier",
-                                                    [iData.caOrg]);
-
-      // This can't throw, because URI's with a host that throw don't end up in this case.
-      let host = this._uri.host;
-      let port = 443;
-      try {
-        if (this._uri.port > 0)
-          port = this._uri.port;
-      } catch (e) {}
-
-      if (this._overrideService.hasMatchingOverride(host, port, iData.cert, {}, {}))
-        tooltip = gNavigatorBundle.getString("identity.identified.verified_by_you");
-
-      break; }
-    case this.IDENTITY_MODE_IDENTIFIED:
-    case this.IDENTITY_MODE_MIXED_ACTIVE_BLOCKED_IDENTIFIED: {
       // If it's identified, then we can populate the dialog with credentials
       let iData = this.getIdentityData();
       tooltip = gNavigatorBundle.getFormattedString("identity.identified.verifier",
@@ -7062,12 +7044,43 @@ var gIdentityHandler = {
       // Unicode Bidirectional Algorithm proper (at the paragraph level).
       icon_labels_dir = /^[\u0590-\u08ff\ufb1d-\ufdff\ufe70-\ufefc]/.test(icon_label) ?
                         "rtl" : "ltr";
-      break; }
-    case this.IDENTITY_MODE_CHROMEUI:
-      let brandBundle = document.getElementById("bundle_brand");
-      icon_label = brandBundle.getString("brandShorterName");
-      break;
-    default:
+
+    } else if (this._uriHasHost && this._isSecure) {
+      this._identityBox.className = "verifiedDomain";
+      if (this._isMixedActiveContentBlocked) {
+        this._identityBox.classList.add("mixedActiveBlocked");
+      }
+
+      let iData = this.getIdentityData();
+
+      // Verifier is either the CA Org, for a normal cert, or a special string
+      // for certs that are trusted because of a security exception.
+      tooltip = gNavigatorBundle.getFormattedString("identity.identified.verifier",
+                                                    [iData.caOrg]);
+
+      let host = this._uri.host;
+      let port = 443;
+      try {
+        if (this._uri.port > 0)
+          port = this._uri.port;
+      } catch (e) {}
+
+      if (this._overrideService.hasMatchingOverride(host, port, iData.cert, {}, {})) {
+        tooltip = gNavigatorBundle.getString("identity.identified.verified_by_you");
+      }
+    } else {
+      this._identityBox.className = "unknownIdentity";
+      if (this._isBroken) {
+        if (this._isMixedActiveContentLoaded) {
+          this._identityBox.classList.add("mixedActiveContent");
+        } else if (this._isMixedActiveContentBlocked) {
+          this._identityBox.classList.add("mixedDisplayContentLoadedActiveBlocked");
+        } else if (this._isMixedPassiveContentLoaded) {
+          this._identityBox.classList.add("mixedDisplayContent");
+        } else {
+          this._identityBox.classList.add("weakCipher");
+        }
+      }
       tooltip = gNavigatorBundle.getString("identity.unknown.tooltip");
     }
 
@@ -7093,39 +7106,26 @@ var gIdentityHandler = {
     let learnMoreHref = `${baseURL}mixed-content`;
     this._identityPopupMixedContentLearnMore.setAttribute("href", learnMoreHref);
 
-    // Basic connection properties.
-    let isBroken = this._state & Ci.nsIWebProgressListener.STATE_IS_BROKEN;
-    let isSecure = this._state & Ci.nsIWebProgressListener.STATE_IS_SECURE;
-    let isEV = this._state & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL;
-
     // Determine connection security information.
     let connection = "not-secure";
-    if (this._isChromeUI) {
+    if (this._isSecureInternalUI) {
       connection = "chrome";
-    } else if (this._isURILoadedFromFile(this._uri)) {
+    } else if (this._isURILoadedFromFile) {
       connection = "file";
-    } else if (isEV) {
+    } else if (this._isEV) {
       connection = "secure-ev";
-    } else if (isSecure) {
+    } else if (this._isSecure) {
       connection = "secure";
     }
 
-    // Mixed content flags.
-    let isMixedActiveContentLoaded =
-      this._state & Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT;
-    let isMixedActiveContentBlocked =
-      this._state & Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_ACTIVE_CONTENT;
-    let isMixedPassiveContentLoaded =
-      this._state & Ci.nsIWebProgressListener.STATE_LOADED_MIXED_DISPLAY_CONTENT;
-
     // Determine the mixed content state.
     let mixedcontent = [];
-    if (isMixedPassiveContentLoaded) {
+    if (this._isMixedPassiveContentLoaded) {
       mixedcontent.push("passive-loaded");
     }
-    if (isMixedActiveContentLoaded) {
+    if (this._isMixedActiveContentLoaded) {
       mixedcontent.push("active-loaded");
-    } else if (isMixedActiveContentBlocked) {
+    } else if (this._isMixedActiveContentBlocked) {
       mixedcontent.push("active-blocked");
     }
     mixedcontent = mixedcontent.join(" ");
@@ -7134,7 +7134,7 @@ var gIdentityHandler = {
     // broken and we can't detect any mixed content loaded then it's a weak
     // cipher.
     let ciphers = "";
-    if (isBroken && !isMixedActiveContentLoaded && !isMixedPassiveContentLoaded) {
+    if (this._isBroken && !this._isMixedActiveContentLoaded && !this._isMixedPassiveContentLoaded) {
       ciphers = "weak";
     }
 
@@ -7157,7 +7157,7 @@ var gIdentityHandler = {
       updateAttribute(element, "connection", connection);
       updateAttribute(element, "ciphers", ciphers);
       updateAttribute(element, "mixedcontent", mixedcontent);
-      updateAttribute(element, "isbroken", isBroken);
+      updateAttribute(element, "isbroken", this._isBroken);
     }
 
     // Initialize the optional strings to empty values
@@ -7179,12 +7179,12 @@ var gIdentityHandler = {
     }
 
     // Fill in the CA name if we have a valid TLS certificate.
-    if (isSecure) {
+    if (this._isSecure) {
       verifier = this._identityBox.tooltipText;
     }
 
     // Fill in organization information if we have a valid EV certificate.
-    if (isEV) {
+    if (this._isEV) {
       crop = "end";
 
       let iData = this.getIdentityData();
@@ -7216,10 +7216,10 @@ var gIdentityHandler = {
     this.updateSitePermissions();
   },
 
-  _isURILoadedFromFile(uri) {
+  get _isURILoadedFromFile() {
     // Create a channel for the sole purpose of getting the resolved URI
     // of the request to determine if it's loaded from the file system.
-    let chanOptions = {uri, loadUsingSystemPrincipal: true};
+    let chanOptions = {uri: this._uri, loadUsingSystemPrincipal: true};
     let resolvedURI;
     try {
       resolvedURI = NetUtil.newChannel(chanOptions).URI;

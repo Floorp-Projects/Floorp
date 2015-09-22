@@ -5,7 +5,7 @@ function test() {
   gBrowser.selectedBrowser.addEventListener("load", function () {
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
     is(document.getElementById("identity-box").className,
-       gIdentityHandler.IDENTITY_MODE_MIXED_DISPLAY_LOADED,
+       "unknownIdentity mixedDisplayContent",
        "identity box has class name for mixed content");
 
     gBrowser.removeCurrentTab();
