@@ -180,9 +180,7 @@ protected:
   
   int32_t mNotifyLevel;
   nsCOMPtr<nsIContent> mLastTextNode;
-  int32_t mLastTextNodeSize;
 
-  uint8_t mConstrainSize : 1;
   uint8_t mPrettyPrintXML : 1;
   uint8_t mPrettyPrintHasSpecialRoot : 1;
   uint8_t mPrettyPrintHasFactoredElements : 1;
