@@ -1005,7 +1005,18 @@ class TracerConcreteWithCompartment : public TracerConcrete<Referent> {
 
 // Define specializations for some commonly-used public JSAPI types.
 // These can use the generic templates above.
-template<> struct Concrete<JS::Symbol> : TracerConcrete<JS::Symbol> { };
+template<>
+struct Concrete<JS::Symbol> : TracerConcrete<JS::Symbol> {
+    Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
+
+  protected:
+    explicit Concrete(JS::Symbol* ptr) : TracerConcrete(ptr) { }
+
+  public:
+    static void construct(void* storage, JS::Symbol* ptr) {
+        new (storage) Concrete(ptr);
+    }
+};
 
 template<> struct Concrete<JSScript> : TracerConcreteWithCompartment<JSScript> {
     CoarseType coarseType() const final { return CoarseType::Script; }
