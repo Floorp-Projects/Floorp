@@ -7,7 +7,7 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
+const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const promise = require("promise");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const { BrowserTabList } = require("devtools/server/actors/webbrowser");

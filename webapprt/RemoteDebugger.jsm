@@ -12,7 +12,7 @@ var Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-var { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 var { DebuggerServer } = require("devtools/server/main");
 
 this.RemoteDebugger = {

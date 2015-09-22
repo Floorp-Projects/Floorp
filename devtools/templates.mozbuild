@@ -1,0 +1,31 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+@template
+def DevToolsModules(*modules):
+    '''Installs JS modules at a resource:// path that corresponds directly to
+    their source tree location.
+
+    For this to work as intended, a moz.build file should be placed in each
+    source directory which uses this template to install only the JS files in
+    its own directory.  Subdirectories should use their own moz.build.
+
+    By following this pattern, there's less magic to require() and resource://
+    paths, since they now match the source tree.
+
+    Currently `DevToolsModules` can only be called once per moz.build, so we
+    build a list manually above.  Bug 1198013 tracks fixing this to make it more
+    like other moz.build constructs.'''
+
+    for m in modules:
+        if '/' in m:
+            error('DevToolsModules must be used from the same directory as ' +
+                  'the files to be installed.')
+
+    base = EXTRA_JS_MODULES
+    for dir in RELATIVEDIR.split('/'):
+        base = base[dir]
+    base += [m for m in modules]

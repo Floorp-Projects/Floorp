@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 895360 - [app manager] Device meta data actor
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Mozilla Bug</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script>
+var gClient;
+window.onload = function() {
+  var Cu = Components.utils;
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+
+  var {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+  var {DebuggerClient} = require("devtools/shared/client/main");
+  var {DebuggerServer} = require("devtools/server/main");
+  Cu.import("resource://gre/modules/Services.jsm");
+
+  SimpleTest.waitForExplicitFinish();
+
+  var {ActorRegistryFront} = require("devtools/server/actors/actor-registry");
+  var actorURL = "chrome://mochitests/content/chrome/devtools/server/tests/mochitest/hello-actor.js";
+
+  if (!DebuggerServer.initialized) {
+    DebuggerServer.init();
+    DebuggerServer.addBrowserActors();
+  }
+
+  gClient = new DebuggerClient(DebuggerServer.connectPipe());
+  gClient.connect(function onConnect() {
+    gClient.listTabs(function onListTabs(aResponse) {
+
+      var options = {
+        prefix: "helloActor",
+        constructor: "HelloActor",
+        type: { tab: true }
+      };
+
+      var registry = ActorRegistryFront(gClient, aResponse);
+      registry.registerActor(actorURL, options).then(actorFront => {
+        gClient.listTabs(response => {
+          var tab = response.tabs[response.selected];
+          ok(!!tab.helloActor, "Hello actor must exist");
+
+          // Make sure actor's state is maintained across listTabs requests.
+          checkActorState(tab.helloActor, () => {
+
+            // Clean up
+            actorFront.unregister().then(() => {
+              gClient.close(() => {
+                 DebuggerServer.destroy();
+                 SimpleTest.finish();
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+}
+
+function checkActorState(helloActor, callback) {
+  getCount(helloActor, response => {
+    ok(!response.error, "No error");
+    is(response.count, 1, "The counter must be valid");
+
+    getCount(helloActor, response => {
+      ok(!response.error, "No error");
+      is(response.count, 2, "The counter must be valid");
+
+      gClient.listTabs(response => {
+        var tab = response.tabs[response.selected];
+        is(tab.helloActor, helloActor, "Hello actor must be valid");
+
+        getCount(helloActor, response => {
+          ok(!response.error, "No error");
+          is(response.count, 3, "The counter must be valid");
+
+          callback();
+        });
+      });
+    });
+  });
+}
+
+function getCount(actor, callback) {
+  gClient.request({
+    to: actor,
+    type: "count"
+  }, callback);
+}
+</script>
+</pre>
+</body>
+</html>

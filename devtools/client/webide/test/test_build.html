@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+
+<html>
+
+  <head>
+    <meta charset="utf8">
+    <title></title>
+
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+    <script type="application/javascript;version=1.8" src="head.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  </head>
+
+  <body>
+
+    <script type="application/javascript;version=1.8">
+      window.onload = function() {
+        SimpleTest.waitForExplicitFinish();
+
+        let {TextDecoder, OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
+        let {ProjectBuilding} = require("devtools/client/webide/modules/build");
+
+        Task.spawn(function* () {
+            let win = yield openWebIDE();
+            let AppManager = win.AppManager;
+
+            function isProjectMarkedAsValid() {
+              let details = win.frames[0];
+              return !details.document.body.classList.contains("error");
+            }
+
+            // # Test first package.json like this: `{webide: {prepackage: "command line string"}}`
+            let platform = Services.appShell.hiddenDOMWindow.navigator.platform;
+            let testSuffix = "";
+            if (platform.indexOf("Win") != -1) {
+              testSuffix = "_windows";
+            }
+
+            let packagedAppLocation = getTestFilePath("build_app" + testSuffix + "1");
+
+            yield win.projectList.importPackagedApp(packagedAppLocation);
+            yield waitForUpdate(win, "details");
+
+            let project = win.AppManager.selectedProject;
+
+            ok(!project.manifest, "manifest includes name");
+            is(project.name, "--", "Display name uses manifest name");
+
+            let loggedMessages = [];
+            let logger = function (msg) {
+              loggedMessages.push(msg);
+            }
+
+            yield ProjectBuilding.build({
+              project,
+              logger
+            });
+            let packageDir = yield ProjectBuilding.getPackageDir(project);
+            is(packageDir, packagedAppLocation, "no custom packagedir");
+            is(loggedMessages[0], "start", "log messages are correct");
+            ok(loggedMessages[1].indexOf("Running pre-package hook") != -1, "log messages are correct");
+            is(loggedMessages[2], "Terminated with error code: 0", "log messages are correct");
+            is(loggedMessages[3], "succeed", "log messages are correct");
+
+            // Trigger validation
+            yield AppManager.validateAndUpdateProject(AppManager.selectedProject);
+            yield nextTick();
+
+            ok("name" in project.manifest, "manifest includes name");
+            is(project.name, "hello", "Display name uses manifest name");
+            is(project.manifest.name, project.name, "Display name uses manifest name");
+
+            yield OS.File.remove(OS.Path.join(packagedAppLocation, "manifest.webapp"));
+
+            // # Now test a full featured package.json
+            packagedAppLocation = getTestFilePath("build_app" + testSuffix + "2");
+
+            yield win.projectList.importPackagedApp(packagedAppLocation);
+            yield waitForUpdate(win, "project-validated");
+
+            project = win.AppManager.selectedProject;
+
+            loggedMessages = [];
+            yield ProjectBuilding.build({
+              project,
+              logger
+            });
+            packageDir = yield ProjectBuilding.getPackageDir(project);
+            is(OS.Path.normalize(packageDir),
+               OS.Path.join(packagedAppLocation, "stage"), "custom packagedir");
+            is(loggedMessages[0], "start", "log messages are correct");
+            ok(loggedMessages[1].indexOf("Running pre-package hook") != -1, "log messages are correct");
+            is(loggedMessages[2], "Terminated with error code: 0", "log messages are correct");
+            is(loggedMessages[3], "succeed", "log messages are correct");
+
+            // Switch to the package dir in order to verify the generated webapp.manifest
+            yield win.projectList.importPackagedApp(packageDir);
+            yield waitForUpdate(win, "project-validated");
+
+            project = win.AppManager.selectedProject;
+
+            ok("name" in project.manifest, "manifest includes name");
+            is(project.name, "world", "Display name uses manifest name");
+            is(project.manifest.name, project.name, "Display name uses manifest name");
+
+            yield closeWebIDE(win);
+
+            yield removeAllProjects();
+
+            SimpleTest.finish();
+        });
+      }
+
+
+    </script>
+  </body>
+</html>

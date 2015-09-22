@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+
+<html>
+
+  <head>
+    <meta charset="utf8">
+    <title></title>
+
+    <script type="application/javascript"
+            src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css"
+          href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  </head>
+
+  <body>
+
+    <script type="application/javascript;version=1.8">
+      const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+      const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+
+      const SRCDIR_PREF = "devtools.loader.srcdir";
+      let srcDir = Cc["@mozilla.org/file/directory_service;1"]
+                   .getService(Components.interfaces.nsIProperties)
+                   .get("CurWorkD", Components.interfaces.nsIFile).path;
+
+      let srcDirStr = Cc["@mozilla.org/supports-string;1"]
+                      .createInstance(Ci.nsISupportsString);
+      srcDirStr.data = srcDir;
+      Services.prefs.setComplexValue(SRCDIR_PREF, Ci.nsISupportsString,
+                                     srcDirStr);
+
+      const { BuiltinProvider, SrcdirProvider } =
+        Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+
+      let builtin = new BuiltinProvider();
+      builtin.load();
+      let srcdir = new SrcdirProvider();
+      srcdir.load();
+
+      is(builtin.loader.mapping.length,
+         srcdir.loader.mapping.length + 2,
+         "The built-in loader has 2 additional mappings.");
+
+      Services.prefs.clearUserPref(SRCDIR_PREF);
+    </script>
+  </body>
+</html>

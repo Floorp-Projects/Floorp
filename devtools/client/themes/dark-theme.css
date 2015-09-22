@@ -1,0 +1,415 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Colors are taken from:
+ * https://developer.mozilla.org/en-US/docs/Tools/DevToolsColors.
+ * Changes should be kept in sync with commandline.css and commandline.inc.css.
+ */
+:root {
+  --theme-body-background: #14171a;
+  --theme-sidebar-background: #181d20;
+  --theme-contrast-background: #b28025;
+
+  --theme-tab-toolbar-background: #252c33;
+  --theme-toolbar-background: #343c45;
+  --theme-selection-background: #1d4f73;
+  --theme-selection-background-semitransparent: rgba(29, 79, 115, .5);
+  --theme-selection-color: #f5f7fa;
+  --theme-splitter-color: black;
+  --theme-comment: #757873;
+
+  --theme-body-color: #8fa1b2;
+  --theme-body-color-alt: #b6babf;
+  --theme-content-color1: #a9bacb;
+  --theme-content-color2: #8fa1b2;
+  --theme-content-color3: #5f7387;
+
+  --theme-highlight-green: #70bf53;
+  --theme-highlight-blue: #46afe3;
+  --theme-highlight-bluegrey: #5e88b0;
+  --theme-highlight-purple: #6b7abb;
+  --theme-highlight-lightorange: #d99b28;
+  --theme-highlight-orange: #d96629;
+  --theme-highlight-red: #eb5368;
+  --theme-highlight-pink: #df80ff;
+
+  /* Colors used in Graphs, like performance tools. Mostly similar to some "highlight-*" colors. */
+  --theme-graphs-green: #70bf53;
+  --theme-graphs-blue: #46afe3;
+  --theme-graphs-bluegrey: #5e88b0;
+  --theme-graphs-purple: #df80ff;
+  --theme-graphs-yellow: #d99b28;
+  --theme-graphs-red: #eb5368;
+  --theme-graphs-grey: #757873;
+}
+
+.theme-body {
+  background: var(--theme-body-background);
+  color: var(--theme-body-color);
+}
+
+.theme-sidebar {
+  background: var(--theme-sidebar-background);
+  color: var(--theme-content-color1);
+}
+
+::-moz-selection {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+}
+
+.theme-bg-darker {
+  background-color: var(--theme-selection-background-semitransparent);
+}
+
+.theme-selected,
+.CodeMirror-hint-active {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+}
+
+.theme-bg-contrast,
+.variable-or-property:not([overridden])[changed] {
+  background: var(--theme-contrast-background);
+}
+
+.theme-link,
+.cm-s-mozilla .cm-link {
+  color: var(--theme-highlight-blue);
+}
+
+/*
+ * FIXME: http://bugzil.la/575675 CSS links without :visited set cause assertion
+ * failures in debug builds.
+ */
+.theme-link:visited,
+.cm-s-mozilla .cm-link:visited,
+.CodeMirror-Tern-type {
+  color: var(--theme-highlight-blue);
+}
+
+
+.theme-comment,
+.cm-s-mozilla .cm-meta,
+.cm-s-mozilla .cm-hr,
+.cm-s-mozilla .cm-comment,
+.variable-or-property .token-undefined,
+.variable-or-property .token-null,
+.CodeMirror-Tern-completion-unknown:before {
+  color: var(--theme-comment);
+}
+
+.theme-gutter {
+  background-color: #0f171f;
+  color: var(--theme-content-color3);
+  border-color: #303b47;
+}
+
+.theme-separator { /* grey */
+  border-color: #303b47;
+}
+
+.theme-fg-color1,
+.cm-s-mozilla .cm-number,
+.variable-or-property .token-number,
+.variable-or-property[return] > .title > .name,
+.variable-or-property[scope] > .title > .name {
+  color: var(--theme-highlight-green);
+}
+
+.CodeMirror-Tern-completion-number:before {
+  background-color: #5c9966;
+}
+
+.theme-fg-color2,
+.cm-s-mozilla .cm-attribute,
+.cm-s-mozilla .cm-variable,
+.cm-s-mozilla .cm-def,
+.cm-s-mozilla .cm-property,
+.cm-s-mozilla .cm-qualifier,
+.variables-view-variable > .title > .name {
+  color: var(--theme-highlight-blue);
+}
+
+.CodeMirror-Tern-completion-object:before {
+  background-color: #3689b2;
+}
+
+.cm-s-mozilla .cm-unused-line {
+  text-decoration: line-through;
+  text-decoration-color: #0072ab;
+}
+
+.cm-s-mozilla .cm-executed-line {
+  background-color: #133c26;
+}
+
+.theme-fg-color3,
+.cm-s-mozilla .cm-builtin,
+.cm-s-mozilla .cm-tag,
+.cm-s-mozilla .cm-header,
+.cm-s-mozilla .cm-bracket,
+.variables-view-property > .title > .name {
+  color: var(--theme-highlight-pink);
+}
+
+.CodeMirror-Tern-completion-array:before {
+  background-color: var(--theme-highlight-bluegrey);
+}
+
+.theme-fg-color4 {
+  color: var(--theme-highlight-purple);
+}
+
+.theme-fg-color5,
+.cm-s-mozilla .cm-keyword {
+  color: var(--theme-highlight-lightorange);
+}
+
+.theme-fg-color6,
+.cm-s-mozilla .cm-string,
+.cm-s-mozilla .cm-string-2,
+.variable-or-property .token-string,
+.CodeMirror-Tern-farg {
+  color: var(--theme-highlight-orange);
+}
+
+.CodeMirror-Tern-completion-string:before,
+.CodeMirror-Tern-completion-fn:before {
+  background-color: #b26b47;
+}
+
+.theme-fg-color7,
+.cm-s-mozilla .cm-atom,
+.cm-s-mozilla .cm-quote,
+.cm-s-mozilla .cm-error,
+.variable-or-property .token-boolean,
+.variable-or-property .token-domnode,
+.variable-or-property[exception] > .title > .name {
+  color: var(--theme-highlight-red);
+}
+
+.CodeMirror-Tern-completion-bool:before {
+  background-color: #bf5656;
+}
+
+.variable-or-property .token-domnode {
+  font-weight: bold;
+}
+
+.theme-toolbar,
+.devtools-toolbar,
+.devtools-sidebar-tabs tabs,
+.devtools-sidebar-alltabs,
+.CodeMirror-dialog { /* General toolbar styling */
+  color: var(--theme-body-color-alt);
+  background-color: var(--theme-toolbar-background);
+  border-color: hsla(210,8%,5%,.6);
+}
+
+.theme-fg-contrast { /* To be used for text on theme-bg-contrast */
+  color: black;
+}
+
+.ruleview-swatch,
+.computedview-colorswatch {
+  box-shadow: 0 0 0 1px #818181;
+}
+
+/* CodeMirror specific styles.
+ * Best effort to match the existing theme, some of the colors
+ * are duplicated here to prevent weirdness in the main theme. */
+
+.CodeMirror { /* Inherit platform specific font sizing and styles */
+  font-family: inherit;
+  font-size: inherit;
+  background: transparent;
+}
+
+.CodeMirror pre,
+.cm-s-mozilla .cm-variable-2,
+.cm-s-mozilla .cm-variable-3,
+.cm-s-mozilla .cm-operator,
+.cm-s-mozilla .cm-special {
+  color: var(--theme-content-color1);
+}
+
+.cm-s-mozilla .CodeMirror-lines .CodeMirror-cursor {
+  border-left: solid 1px #fff;
+}
+
+.cm-s-mozilla.CodeMirror-focused .CodeMirror-selected { /* selected text (focused) */
+  background: rgb(185, 215, 253);
+}
+
+.cm-s-mozilla .CodeMirror-selected { /* selected text (unfocused) */
+  background: rgb(176, 176, 176);
+}
+
+.cm-s-mozilla .CodeMirror-activeline-background { /* selected color with alpha */
+  background: rgba(185, 215, 253, .15);
+}
+
+div.cm-s-mozilla span.CodeMirror-matchingbracket { /* highlight brackets */
+  outline: solid 1px rgba(255, 255, 255, .25);
+  color: white;
+}
+
+/* Highlight for a line that contains an error. */
+div.CodeMirror div.error-line {
+  background: rgba(255,0,0,0.2);
+}
+
+/* Highlight for a line that represents a stack frame's location. */
+div.CodeMirror div.debug-line {
+  background: rgba(0,128,255,0.1);
+  box-shadow:
+    0 1px 0 0 rgba(0,128,255,0.4),
+    0 -1px 0 0 rgba(0,128,255,0.4);
+}
+
+/* Generic highlighted text */
+div.CodeMirror span.marked-text {
+  background: rgba(255,255,0,0.2);
+  border: 1px dashed rgba(192,192,0,0.6);
+  -moz-margin-start: -1px;
+  -moz-margin-end: -1px;
+}
+
+/* Highlight for evaluating current statement. */
+div.CodeMirror span.eval-text {
+  background-color: #556;
+}
+
+.cm-s-mozilla .CodeMirror-linenumber { /* line number text */
+  color: var(--theme-content-color3);
+}
+
+.cm-s-mozilla .CodeMirror-gutters { /* vertical line next to line numbers */
+  border-right-color: var(--theme-toolbar-background);
+  background-color: var(--theme-sidebar-background);
+}
+
+.cm-s-markup-view pre {
+  line-height: 1.4em;
+  min-height: 1.4em;
+}
+
+/* Twisty and checkbox controls */
+.theme-twisty, .theme-checkbox {
+  width: 14px;
+  height: 14px;
+  background-repeat: no-repeat;
+  background-image: url("chrome://devtools/skin/themes/images/controls.png");
+  background-size: 56px 28px;
+}
+
+.theme-twisty {
+  cursor: pointer;
+  background-position: -28px -14px;
+}
+
+.theme-twisty:-moz-focusring {
+  outline-style: none;
+}
+
+.theme-twisty[open] {
+  background-position: -42px -14px;
+}
+
+.theme-twisty[invisible] {
+  visibility: hidden;
+}
+
+.theme-checkbox {
+  display: inline-block;
+  border: 0;
+  padding: 0;
+  outline: none;
+  background-position: -28px 0;
+}
+
+.theme-checkbox[checked] {
+  background-position: -42px 0;
+}
+
+@media (min-resolution: 1.1dppx) {
+  .theme-twisty, .theme-checkbox {
+    background-image: url("chrome://devtools/skin/themes/images/controls@2x.png");
+  }
+}
+
+/* XUL panel styling (see devtools/client/shared/widgets/Tooltip.js) */
+
+.theme-tooltip-panel .panel-arrowcontent {
+  padding: 5px;
+  background: rgba(19, 28, 38, .9);
+  border-radius: 5px;
+  box-shadow: none;
+  border: 3px solid #434850;
+}
+
+/* Overring panel arrow images to fit with our light and dark themes */
+
+.theme-tooltip-panel .panel-arrow[side="top"] {
+  list-style-image: url("chrome://devtools/skin/themes/tooltip/arrow-vertical-dark.png");
+  margin-bottom: -4px;
+}
+
+.theme-tooltip-panel .panel-arrow[side="bottom"] {
+  list-style-image: url("chrome://devtools/skin/themes/tooltip/arrow-vertical-dark.png");
+  margin-top: -4px;
+}
+
+.theme-tooltip-panel .panel-arrow[side="left"] {
+  list-style-image: url("chrome://devtools/skin/themes/tooltip/arrow-horizontal-dark.png");
+  margin-right: -4px;
+}
+
+.theme-tooltip-panel .panel-arrow[side="right"] {
+  list-style-image: url("chrome://devtools/skin/themes/tooltip/arrow-horizontal-dark.png");
+  margin-left: -4px;
+}
+
+@media (min-resolution: 1.1dppx) {
+  .theme-tooltip-panel .panel-arrow[side="top"],
+  .theme-tooltip-panel .panel-arrow[side="bottom"] {
+    list-style-image: url("chrome://devtools/skin/themes/tooltip/arrow-vertical-dark@2x.png");
+  }
+
+  .theme-tooltip-panel .panel-arrow[side="left"],
+  .theme-tooltip-panel .panel-arrow[side="right"] {
+    list-style-image: url("chrome://devtools/skin/themes/tooltip/arrow-horizontal-dark@2x.png");
+  }
+}
+
+.theme-tooltip-panel .devtools-tooltip-simple-text {
+  color: white;
+  border-bottom: 1px solid #434850;
+}
+
+.theme-tooltip-panel .devtools-tooltip-simple-text:last-child {
+  border-bottom: 0;
+}
+
+.devtools-textinput,
+.devtools-searchinput {
+  background-color: rgba(24, 29, 32, 1);
+  color: rgba(184, 200, 217, 1);
+}
+
+.CodeMirror-Tern-fname {
+  color: #f7f7f7;
+}
+
+.CodeMirror-hints,
+.CodeMirror-Tern-tooltip {
+  box-shadow: 0 0 4px rgba(255, 255, 255, .3);
+  background-color: #0f171f;
+  color: var(--theme-body-color);
+}
+
+
+%include toolbars.inc.css
