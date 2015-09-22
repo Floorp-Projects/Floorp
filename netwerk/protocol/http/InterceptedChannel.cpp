@@ -66,10 +66,12 @@ InterceptedChannelBase::DoNotifyController()
       rv = ResetInterception();
       NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to resume intercepted network request");
     }
-    rv = dispatcher->Dispatch();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      rv = ResetInterception();
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to resume intercepted network request");
+    if (dispatcher) {
+      rv = dispatcher->Dispatch();
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        rv = ResetInterception();
+        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to resume intercepted network request");
+      }
     }
     mController = nullptr;
 }
