@@ -26,7 +26,7 @@ from mozharness.mozilla.proxxy import Proxxy
 from mozharness.mozilla.structuredlog import StructuredOutputParser
 from mozharness.mozilla.taskcluster_helper import TaskClusterArtifactFinderMixin
 from mozharness.mozilla.testing.unittest import DesktopUnittestOutputParser
-from mozharness.mozilla.testing.try_tools import TryToolsMixin
+from mozharness.mozilla.testing.try_tools import TryToolsMixin, try_config_options
 from mozharness.mozilla.tooltool import TooltoolMixin
 
 from mozharness.lib.python.authentication import get_credentials
@@ -83,7 +83,7 @@ testing_config_options = [
      "choices": ['ondemand', 'true'],
      "help": "Download and extract crash reporter symbols.",
       }],
-] + copy.deepcopy(virtualenv_config_options)
+] + copy.deepcopy(virtualenv_config_options) + copy.deepcopy(try_config_options)
 
 
 # TestingMixin {{{1
@@ -676,6 +676,35 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?""")
 
         return self.minidump_stackwalk_path
 
+    def query_options(self, *args, **kwargs):
+        if "str_format_values" in kwargs:
+            str_format_values = kwargs.pop("str_format_values")
+        else:
+            str_format_values = {}
+
+        arguments = []
+
+        for arg in args:
+            if arg is not None:
+                arguments.extend(argument % str_format_values for argument in arg)
+
+        return arguments
+
+    def query_tests_args(self, *args, **kwargs):
+        if "str_format_values" in kwargs:
+            str_format_values = kwargs.pop("str_format_values")
+        else:
+            str_format_values = {}
+
+        arguments = []
+
+        for arg in reversed(args):
+            if arg:
+                arguments.append("--")
+                arguments.extend(argument % str_format_values for argument in arg)
+                break
+
+        return arguments
 
     def _run_cmd_checks(self, suites):
         if not suites:

@@ -483,14 +483,12 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                 continue
             cmd.append(arg)
 
-        tests = None
-        if "tests" in self.test_suite_definitions[self.test_suite]:
-            tests = self.test_suite_definitions[self.test_suite]["tests"]
-        elif "tests" in self.config["suite_definitions"][suite_category]:
-            tests = self.config["suite_definitions"][suite_category]["tests"]
-
-        if tests:
-            cmd.extend(tests)
+        try_options, try_tests = self.try_args(suite_category)
+        cmd.extend(try_options)
+        cmd.extend(self.query_tests_args(
+            self.config["suite_definitions"][suite_category].get("tests"),
+            self.test_suite_definitions[self.test_suite].get("tests"),
+            try_tests))
 
         return cmd
 
@@ -664,7 +662,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         Run the tests
         """
         cmd = self._build_command()
-        cmd = self.append_harness_extra_args(cmd)
+
         try:
             cwd = self._query_tests_dir()
         except:
