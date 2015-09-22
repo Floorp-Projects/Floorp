@@ -755,9 +755,6 @@ private:
   virtual bool
   DeallocPCrashReporterParent(PCrashReporterParent* crashreporter) override;
 
-  virtual bool RecvGetRandomValues(const uint32_t& length,
-                                   InfallibleTArray<uint8_t>* randomValues) override;
-
   virtual bool RecvIsSecureURI(const uint32_t& aType, const URIParams& aURI,
                                const uint32_t& aFlags, bool* aIsSecureURI) override;
 

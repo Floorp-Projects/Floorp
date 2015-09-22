@@ -835,9 +835,6 @@ parent:
 
     sync PCrashReporter(NativeThreadId tid, uint32_t processType);
 
-    prio(urgent) sync GetRandomValues(uint32_t length)
-        returns (uint8_t[] randomValues);
-
     async GetSystemMemory(uint64_t getterId);
 
     sync IsSecureURI(uint32_t type, URIParams uri, uint32_t flags)
