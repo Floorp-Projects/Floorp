@@ -10,7 +10,12 @@
             android:key="profile"
             android:icon="@drawable/sync_avatar_default"
             android:persistent="false"
-            android:title="" />
+            android:title="" >
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:targetClass="@string/browser_intent_class"
+                android:targetPackage="@string/browser_intent_package" />
+        </Preference>
         <Preference
             android:editable="false"
             android:key="email"

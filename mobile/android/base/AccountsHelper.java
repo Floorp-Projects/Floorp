@@ -56,7 +56,8 @@ public class AccountsHelper implements NativeEventListener {
                 "Accounts:UpdateFirefoxAccountFromJSON",
                 "Accounts:Create",
                 "Accounts:DeleteFirefoxAccount",
-                "Accounts:Exist");
+                "Accounts:Exist",
+                "Accounts:ProfileUpdated");
     }
 
     public synchronized void uninit() {
@@ -70,7 +71,8 @@ public class AccountsHelper implements NativeEventListener {
                 "Accounts:UpdateFirefoxAccountFromJSON",
                 "Accounts:Create",
                 "Accounts:DeleteFirefoxAccount",
-                "Accounts:Exist");
+                "Accounts:Exist",
+                "Accounts:ProfileUpdated");
     }
 
     @Override
@@ -260,6 +262,14 @@ public class AccountsHelper implements NativeEventListener {
                 callback.sendError("Could not query account existence: " + e.toString());
                 return;
             }
+        } else if ("Accounts:ProfileUpdated".equals(event)) {
+            final Account account = FirefoxAccounts.getFirefoxAccount(mContext);
+            if (account == null) {
+                Log.w(LOGTAG, "Can't change profile of non-existent Firefox Account!; ignored");
+                return;
+            }
+            final AndroidFxAccount androidFxAccount = new AndroidFxAccount(mContext, account);
+            androidFxAccount.fetchProfileJSON();
         }
     }
 }
