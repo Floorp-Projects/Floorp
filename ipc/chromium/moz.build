@@ -144,12 +144,6 @@ if os_posix:
         'src/chrome/common/ipc_channel_posix.cc',
         'src/chrome/common/process_watcher_posix_sigchld.cc',
     ]
-    if CONFIG['OS_TARGET'] == 'Android':
-        UNIFIED_SOURCES += [
-            'src/base/message_pump_android.cc',
-        ]
-        DEFINES['ANDROID'] = True
-        DEFINES['_POSIX_MONOTONIC_CLOCK'] = 0
 
 if os_macosx:
     UNIFIED_SOURCES += [
@@ -213,6 +207,12 @@ if os_linux:
         'src/base/process_util_linux.cc',
         'src/base/time_posix.cc',
     ]
+    if CONFIG['OS_TARGET'] == 'Android':
+        UNIFIED_SOURCES += [
+            'src/base/message_pump_android.cc',
+        ]
+        DEFINES['ANDROID'] = True
+        DEFINES['_POSIX_MONOTONIC_CLOCK'] = 0
     if CONFIG['MOZ_WIDGET_GTK']:
         SOURCES += [
             'src/base/message_pump_glib.cc',
@@ -223,16 +223,15 @@ if os_linux:
             'src/base/message_pump_qt.cc',
         ]
     if not CONFIG['MOZ_NATIVE_LIBEVENT']:
-        if CONFIG['OS_TARGET'] != 'Android':
-            SOURCES += [
-                'src/third_party/libevent/epoll_sub.c',
-            ]
         SOURCES += [
             'src/third_party/libevent/epoll.c',
         ]
         if CONFIG['OS_TARGET'] == 'Android':
             LOCAL_INCLUDES += ['src/third_party/libevent/android']
         else:
+            SOURCES += [
+                'src/third_party/libevent/epoll_sub.c',
+            ]
             LOCAL_INCLUDES += ['src/third_party/libevent/linux']
 
 ost = CONFIG['OS_TEST']
