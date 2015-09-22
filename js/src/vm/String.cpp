@@ -1138,8 +1138,11 @@ NewStringCopyNDontDeflate(ExclusiveContext* cx, const CharT* s, size_t n)
         return NewInlineString<allowGC>(cx, mozilla::Range<const CharT>(s, n));
 
     ScopedJSFreePtr<CharT> news(cx->pod_malloc<CharT>(n + 1));
-    if (!news)
+    if (!news) {
+        if (!allowGC)
+            cx->recoverFromOutOfMemory();
         return nullptr;
+    }
 
     PodCopy(news.get(), s, n);
     news[n] = 0;

@@ -42,6 +42,9 @@ function init() {
                     spellchecker.spellChecker.GetCurrentDictionary();
             } catch(e) {}
             is(dictionary, lang, "Unexpected spell check dictionary");
+
+            // This will clear the content preferences and reset "spellchecker.dictionary".
+            spellchecker.spellChecker.SetCurrentDictionary("");
             SimpleTest.finish();
         });
     });

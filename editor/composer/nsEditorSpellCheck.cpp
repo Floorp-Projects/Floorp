@@ -600,8 +600,9 @@ nsEditorSpellCheck::SetCurrentDictionary(const nsAString& aDictionary)
     uint32_t flags = 0;
     mEditor->GetFlags(&flags);
     if (!(flags & nsIPlaintextEditor::eEditorMailMask)) {
-      if (mPreferredLang.IsEmpty() ||
-          !mPreferredLang.Equals(aDictionary, nsCaseInsensitiveStringComparator())) {
+      if (!aDictionary.IsEmpty() && (mPreferredLang.IsEmpty() ||
+          !mPreferredLang.Equals(aDictionary,
+                                 nsCaseInsensitiveStringComparator()))) {
         // When user sets dictionary manually, we store this value associated
         // with editor url, if it doesn't match the document language exactly.
         // For example on "en" sites, we need to store "en-GB", otherwise
@@ -639,27 +640,6 @@ NS_IMETHODIMP
 nsEditorSpellCheck::CheckCurrentDictionary()
 {
   mSpellChecker->CheckCurrentDictionary();
-
-  // Check if our current dictionary is still available.
-  nsAutoString currentDictionary;
-  nsresult rv = GetCurrentDictionary(currentDictionary);
-  if (NS_SUCCEEDED(rv) && !currentDictionary.IsEmpty()) {
-    return NS_OK;
-  }
-
-  // If our preferred current dictionary has gone, pick another one.
-  nsTArray<nsString> dictList;
-  rv = mSpellChecker->GetDictionaryList(&dictList);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (dictList.Length() > 0) {
-    // Use RAII object to prevent content preferences being written during
-    // this call.
-    UpdateDictionaryHolder holder(this);
-    rv = SetCurrentDictionary(dictList[0]);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   return NS_OK;
 }
 
@@ -764,7 +744,7 @@ nsEditorSpellCheck::TryDictionary(const nsAString& aDictName,
         break;
     }
     if (equals) {
-      rv = SetCurrentDictionary(dictStr);
+      rv = mSpellChecker->SetCurrentDictionary(dictStr);
 #ifdef DEBUG_DICT
       if (NS_SUCCEEDED(rv))
         printf("***** Set |%s|.\n", NS_ConvertUTF16toUTF8(dictStr).get());
@@ -835,6 +815,14 @@ nsEditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
 #endif
   }
 
+  // Auxiliary status.
+  nsresult rv2;
+
+  // We obtain a list of available dictionaries.
+  nsTArray<nsString> dictList;
+  rv2 = mSpellChecker->GetDictionaryList(&dictList);
+  NS_ENSURE_SUCCESS(rv2, rv2);
+
   // Priority 1:
   // If we successfully fetched a dictionary from content prefs, do not go
   // further. Use this exact dictionary.
@@ -845,7 +833,7 @@ nsEditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
   if (!(flags & nsIPlaintextEditor::eEditorMailMask)) {
     dictName.Assign(aFetcher->mDictionary);
     if (!dictName.IsEmpty()) {
-      if (NS_SUCCEEDED(SetCurrentDictionary(dictName))) {
+      if (NS_SUCCEEDED(TryDictionary(dictName, dictList, DICT_NORMAL_COMPARE))) {
 #ifdef DEBUG_DICT
         printf("***** Assigned from content preferences |%s|\n",
                NS_ConvertUTF16toUTF8(dictName).get());
@@ -870,14 +858,6 @@ nsEditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
   printf("***** Assigned from element/doc |%s|\n",
          NS_ConvertUTF16toUTF8(dictName).get());
 #endif
-
-  // Auxiliary status.
-  nsresult rv2;
-
-  // We obtain a list of available dictionaries.
-  nsTArray<nsString> dictList;
-  rv2 = mSpellChecker->GetDictionaryList(&dictList);
-  NS_ENSURE_SUCCESS(rv2, rv2);
 
   // Get the preference value.
   nsAutoString preferredDict;
@@ -1006,7 +986,9 @@ nsEditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher)
       // If it does not work, pick the first one.
       if (NS_FAILED(rv)) {
         if (dictList.Length() > 0) {
-          rv = SetCurrentDictionary(dictList[0]);
+          nsAutoString firstInList;
+          firstInList.Assign(dictList[0]);
+          rv = TryDictionary(firstInList, dictList, DICT_NORMAL_COMPARE);
 #ifdef DEBUG_DICT
           printf("***** Trying first of list |%s|\n",
                  NS_ConvertUTF16toUTF8(dictList[0]).get());
