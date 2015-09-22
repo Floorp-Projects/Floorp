@@ -198,7 +198,7 @@ class AutoSetHandlingSignal
 # else
 #  define R15_sig(p) ((p)->uc_mcontext.mc_r15)
 # endif
-#elif defined(XP_MACOSX)
+#elif defined(XP_DARWIN)
 # define EIP_sig(p) ((p)->uc_mcontext->__ss.__eip)
 # define RIP_sig(p) ((p)->uc_mcontext->__ss.__rip)
 #else
@@ -313,7 +313,7 @@ enum { REG_EIP = 14 };
 // the same as CONTEXT, but on Mac we use a different structure since we call
 // into the emulator code from a Mach exception handler rather than a
 // sigaction-style signal handler.
-#if defined(XP_MACOSX) && defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
+#if defined(XP_DARWIN) && defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 # if defined(JS_CODEGEN_X64)
 struct macos_x64_context {
     x86_thread_state64_t thread;
@@ -421,7 +421,7 @@ StoreValueFromGPImm(void* addr, size_t size, int32_t imm)
     memcpy(addr, &imm, size);
 }
 
-# if !defined(XP_MACOSX)
+# if !defined(XP_DARWIN)
 MOZ_COLD static void*
 AddressOfFPRegisterSlot(CONTEXT* context, FloatRegisters::Encoding encoding)
 {
@@ -521,7 +521,7 @@ AddressOfGPRegisterSlot(EMULATOR_CONTEXT* context, Registers::Code code)
     }
     MOZ_CRASH();
 }
-# endif  // !XP_MACOSX
+# endif  // !XP_DARWIN
 #endif // JS_CODEGEN_X64
 
 MOZ_COLD static void
@@ -793,7 +793,7 @@ AsmJSFaultHandler(LPEXCEPTION_POINTERS exception)
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-#elif defined(XP_MACOSX)
+#elif defined(XP_DARWIN)
 # include <mach/exc.h>
 
 static uint8_t**
@@ -1199,7 +1199,7 @@ JitInterruptHandler(int signum, siginfo_t* info, void* context)
 bool
 js::EnsureSignalHandlersInstalled(JSRuntime* rt)
 {
-#if defined(XP_MACOSX) && defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
+#if defined(XP_DARWIN) && defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
     // On OSX, each JSRuntime gets its own handler thread.
     if (!rt->asmJSMachExceptionHandler.installed() && !rt->asmJSMachExceptionHandler.install(rt))
         return false;
@@ -1262,7 +1262,7 @@ js::EnsureSignalHandlersInstalled(JSRuntime* rt)
 # if defined(XP_WIN)
     if (!AddVectoredExceptionHandler(/* FirstHandler = */ true, AsmJSFaultHandler))
         return false;
-# elif defined(XP_MACOSX)
+# elif defined(XP_DARWIN)
     // OSX handles seg faults via the Mach exception handler above, so don't
     // install AsmJSFaultHandler.
 # else
