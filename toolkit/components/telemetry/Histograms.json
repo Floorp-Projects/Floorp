@@ -1694,7 +1694,13 @@
     "kind": "boolean",
     "description": "Fraction of responses with a quic alt-protocol advertisement."
   },
- "HTTP_DISK_CACHE_OVERHEAD": {
+  "HTTP_CONTENT_ENCODING": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 6,
+    "description": "encoding removed: 0=unknown, 1=gzip, 2=deflate, 3=brotli"
+  },
+  "HTTP_DISK_CACHE_OVERHEAD": {
     "expires_in_version": "default",
     "kind": "exponential",
     "high": "32000000",

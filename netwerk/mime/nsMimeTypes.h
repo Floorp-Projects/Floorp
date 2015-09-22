@@ -30,6 +30,7 @@
 #define APPLICATION_GZIP                    "application/x-gzip"
 #define APPLICATION_GZIP2                   "application/gzip"
 #define APPLICATION_GZIP3                   "application/x-gunzip"
+#define APPLICATION_BROTLI                  "application/brotli"
 #define APPLICATION_ZIP                     "application/zip"
 #define APPLICATION_HTTP_INDEX_FORMAT       "application/http-index-format"
 #define APPLICATION_ECMASCRIPT              "application/ecmascript"
