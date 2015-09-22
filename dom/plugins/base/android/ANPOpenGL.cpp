@@ -28,7 +28,7 @@ static ANPEGLContext anp_opengl_acquireContext(NPP instance) {
         return nullptr;
 
     context->MakeCurrent();
-    return GLContextEGL::Cast(context)->GetEGLContext();
+    return GLContextEGL::Cast(context)->mContext;
 }
 
 static ANPTextureInfo anp_opengl_lockTexture(NPP instance) {

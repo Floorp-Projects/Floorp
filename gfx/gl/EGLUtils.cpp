@@ -23,7 +23,7 @@ CreateEGLImage(GLContext* gl, GLuint tex)
     MOZ_ASSERT(DoesEGLContextSupportSharingWithEGLImage(gl));
 
     EGLClientBuffer clientBuffer = (EGLClientBuffer)((uint64_t)tex);
-    EGLContext eglContext = GLContextEGL::Cast(gl)->GetEGLContext();
+    EGLContext eglContext = GLContextEGL::Cast(gl)->mContext;
     EGLImage image = sEGLLibrary.fCreateImage(EGL_DISPLAY(),
                                               eglContext,
                                               LOCAL_EGL_GL_TEXTURE_2D,
@@ -42,7 +42,7 @@ EGLImageWrapper::Create(GLContext* gl, GLuint tex)
 
     GLLibraryEGL& library = sEGLLibrary;
     EGLDisplay display = EGL_DISPLAY();
-    EGLContext eglContext = GLContextEGL::Cast(gl)->GetEGLContext();
+    EGLContext eglContext = GLContextEGL::Cast(gl)->mContext;
     EGLClientBuffer clientBuffer = (EGLClientBuffer)((uint64_t)tex);
     EGLImage image = library.fCreateImage(display,
                                           eglContext,
