@@ -118,8 +118,8 @@ config = {
                 "--log-errorsummary=%(error_summary_file)s",
                 "--certificate-path=%(certificate_path)s",
                 "--screenshot-on-fail",
-                "%(test_path)s"
             ],
+            "tests": ["%(test_path)s"],
             "run_filename": "runtestsb2g.py",
             "testsdir": "mochitest"
         },
@@ -142,8 +142,8 @@ config = {
                 "--log-errorsummary=%(error_summary_file)s",
                 "--certificate-path=%(certificate_path)s",
                 "--screenshot-on-fail",
-                "%(test_path)s"
             ],
+            "tests": ["%(test_path)s"],
             "run_filename": "runtestsb2g.py",
             "testsdir": "mochitest"
         },
