@@ -84,3 +84,19 @@ try {
 } catch(e) {
     assertEq(e instanceof TypeError, true);
 }
+
+(function() {
+    var zappa = 0;
+
+    function testBailouts() {
+        var i4 = SIMD.Int32x4(1, 2, 3, 4);
+        for (var i = 0; i < 300; i++) {
+            var value = i == 299 ? 2.5 : 1;
+            SIMD.Int32x4.swizzle(i4, value, 3, 2, 0);
+            zappa = i;
+        }
+    }
+
+    try { testBailouts(); } catch (e) {}
+    assertEq(zappa, 298);
+})();

@@ -89,7 +89,6 @@ class LIRGeneratorMIPSShared : public LIRGeneratorShared
     void visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins);
     void visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins);
     void visitSubstr(MSubstr* ins);
-    void visitRandom(MRandom* ins);
 };
 
 } // namespace jit

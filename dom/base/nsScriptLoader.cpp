@@ -10,6 +10,7 @@
 
 #include "nsScriptLoader.h"
 
+#include "prsystem.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "xpcpublic.h"
@@ -223,10 +224,15 @@ nsresult
 nsScriptLoader::CheckContentPolicy(nsIDocument* aDocument,
                                    nsISupports *aContext,
                                    nsIURI *aURI,
-                                   const nsAString &aType)
+                                   const nsAString &aType,
+                                   bool aIsPreLoad)
 {
+  nsContentPolicyType contentPolicyType = aIsPreLoad
+                                          ? nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD
+                                          : nsIContentPolicy::TYPE_INTERNAL_SCRIPT;
+
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-  nsresult rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_INTERNAL_SCRIPT,
+  nsresult rv = NS_CheckContentLoadPolicy(contentPolicyType,
                                           aURI,
                                           aDocument->NodePrincipal(),
                                           aContext,
@@ -249,7 +255,8 @@ nsresult
 nsScriptLoader::ShouldLoadScript(nsIDocument* aDocument,
                                  nsISupports* aContext,
                                  nsIURI* aURI,
-                                 const nsAString &aType)
+                                 const nsAString &aType,
+                                 bool aIsPreLoad)
 {
   // Check that the containing page is allowed to load this URI.
   nsresult rv = nsContentUtils::GetSecurityManager()->
@@ -259,7 +266,7 @@ nsScriptLoader::ShouldLoadScript(nsIDocument* aDocument,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // After the security manager, the content-policy stuff gets a veto
-  rv = CheckContentPolicy(aDocument, aContext, aURI, aType);
+  rv = CheckContentPolicy(aDocument, aContext, aURI, aType, aIsPreLoad);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -274,7 +281,7 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
   nsISupports *context = aRequest->mElement.get()
                          ? static_cast<nsISupports *>(aRequest->mElement.get())
                          : static_cast<nsISupports *>(mDocument);
-  nsresult rv = ShouldLoadScript(mDocument, context, aRequest->mURI, aType);
+  nsresult rv = ShouldLoadScript(mDocument, context, aRequest->mURI, aType, aRequest->IsPreload());
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -296,12 +303,16 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
     return NS_OK;
   }
 
+  nsContentPolicyType contentPolicyType = aRequest->IsPreload()
+                                          ? nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD
+                                          : nsIContentPolicy::TYPE_INTERNAL_SCRIPT;
+
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel),
                      aRequest->mURI,
                      mDocument,
                      nsILoadInfo::SEC_NORMAL,
-                     nsIContentPolicy::TYPE_INTERNAL_SCRIPT,
+                     contentPolicyType,
                      loadGroup,
                      prompter,
                      nsIRequest::LOAD_NORMAL |
@@ -530,7 +541,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       if (elementCharset.Equals(preloadCharset) &&
           ourCORSMode == request->mCORSMode &&
           ourRefPolicy == request->mReferrerPolicy) {
-        rv = CheckContentPolicy(mDocument, aElement, request->mURI, type);
+        rv = CheckContentPolicy(mDocument, aElement, request->mURI, type, false);
         NS_ENSURE_SUCCESS(rv, false);
       } else {
         // Drop the preload
@@ -587,7 +598,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
         // loop gets a chance to spin.
 
         // KVKV TODO: Instead of processing immediately, try off-thread-parsing
-        // it and only schedule a ProcessRequest if that fails.
+        // it and only schedule a pending ProcessRequest if that fails.
         ProcessPendingRequestsAsync();
       } else {
         mLoadingAsyncRequests.AppendElement(request);
@@ -636,6 +647,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       }
       return true;
     }
+
     if (request->IsDoneLoading() && ReadyToExecuteScripts()) {
       // The request has already been loaded and there are no pending style
       // sheets. If the script comes from the network stream, cheat for
@@ -654,6 +666,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       ProcessPendingRequestsAsync();
       return true;
     }
+
     // The script hasn't loaded yet or there's a style sheet blocking it.
     // The script will be run when it loads or the style sheet loads.
     NS_ASSERTION(!mParserBlockingRequest,
@@ -752,6 +765,23 @@ nsScriptLoader::ProcessOffThreadRequest(nsScriptLoadRequest* aRequest)
 {
   MOZ_ASSERT(aRequest->mProgress == nsScriptLoadRequest::Progress_Compiling);
   aRequest->mProgress = nsScriptLoadRequest::Progress_DoneCompiling;
+  if (aRequest == mParserBlockingRequest) {
+    if (!ReadyToExecuteScripts()) {
+      // If not ready to execute scripts, schedule an async call to
+      // ProcessPendingRequests to handle it.
+      ProcessPendingRequestsAsync();
+      return NS_OK;
+    }
+
+    // Same logic as in top of ProcessPendingRequests.
+    mParserBlockingRequest = nullptr;
+    UnblockParser(aRequest);
+    ProcessRequest(aRequest);
+    mDocument->UnblockOnload(false);
+    ContinueParserAsync(aRequest);
+    return NS_OK;
+  }
+
   nsresult rv = ProcessRequest(aRequest);
   mDocument->UnblockOnload(false);
   return rv;
@@ -800,9 +830,10 @@ OffThreadScriptLoaderCallback(void *aToken, void *aCallbackData)
 }
 
 nsresult
-nsScriptLoader::AttemptAsyncScriptParse(nsScriptLoadRequest* aRequest)
+nsScriptLoader::AttemptAsyncScriptCompile(nsScriptLoadRequest* aRequest)
 {
-  if (!aRequest->mElement->GetScriptAsync() || aRequest->mIsInline) {
+  // Don't off-thread compile inline scripts.
+  if (aRequest->mIsInline) {
     return NS_ERROR_FAILURE;
   }
 
@@ -843,7 +874,8 @@ nsScriptLoader::AttemptAsyncScriptParse(nsScriptLoadRequest* aRequest)
 }
 
 nsresult
-nsScriptLoader::CompileOffThreadOrProcessRequest(nsScriptLoadRequest* aRequest)
+nsScriptLoader::CompileOffThreadOrProcessRequest(nsScriptLoadRequest* aRequest,
+                                                 bool* oCompiledOffThread)
 {
   NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
                "Processing requests when running scripts is unsafe.");
@@ -852,8 +884,11 @@ nsScriptLoader::CompileOffThreadOrProcessRequest(nsScriptLoadRequest* aRequest)
   NS_ASSERTION(!aRequest->InCompilingStage(),
                "Candidate for off-thread compile is already in compiling stage.");
 
-  nsresult rv = AttemptAsyncScriptParse(aRequest);
+  nsresult rv = AttemptAsyncScriptCompile(aRequest);
   if (rv != NS_ERROR_FAILURE) {
+    if (oCompiledOffThread && rv == NS_OK) {
+      *oCompiledOffThread = true;
+    }
     return rv;
   }
 
@@ -1144,8 +1179,12 @@ nsScriptLoader::ProcessPendingRequests()
       mParserBlockingRequest->IsReadyToRun() &&
       ReadyToExecuteScripts()) {
     request.swap(mParserBlockingRequest);
+    bool offThreadCompiled = request->mProgress == nsScriptLoadRequest::Progress_DoneCompiling;
     UnblockParser(request);
     ProcessRequest(request);
+    if (offThreadCompiled) {
+      mDocument->UnblockOnload(false);
+    }
     ContinueParserAsync(request);
   }
 
@@ -1548,6 +1587,23 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
 
   // Mark this as loaded
   aRequest->mProgress = nsScriptLoadRequest::Progress_DoneLoading;
+
+  // If this is currently blocking the parser, attempt to compile it off-main-thread.
+  if (aRequest == mParserBlockingRequest && (PR_GetNumberOfProcessors() > 1)) {
+    nsresult rv = AttemptAsyncScriptCompile(aRequest);
+    if (rv == NS_OK) {
+      NS_ASSERTION(aRequest->mProgress == nsScriptLoadRequest::Progress_Compiling,
+          "Request should be off-thread compiling now.");
+      return NS_OK;
+    }
+
+    // If off-thread compile errored, return the error.
+    if (rv != NS_ERROR_FAILURE) {
+      return rv;
+    }
+
+    // If off-thread compile was rejected, continue with regular processing.
+  }
 
   // And if it's async, move it to the loaded list.  aRequest->mIsAsync really
   // _should_ be in a list, but the consequences if it's not are bad enough we

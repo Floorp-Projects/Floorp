@@ -67,6 +67,25 @@ template<class Impl>
 constexpr JNINativeMethod GeckoThread::Natives<Impl>::methods[];
 
 template<class Impl>
+class GeckoView::Window::Natives : public mozilla::jni::NativeImpl<Window, Impl>
+{
+public:
+    static constexpr JNINativeMethod methods[] = {
+
+        mozilla::jni::MakeNativeMethod<GeckoView::Window::DisposeNative_t>(
+                mozilla::jni::NativeStub<GeckoView::Window::DisposeNative_t, Impl>
+                ::template Wrap<&Impl::DisposeNative>),
+
+        mozilla::jni::MakeNativeMethod<GeckoView::Window::Open_t>(
+                mozilla::jni::NativeStub<GeckoView::Window::Open_t, Impl>
+                ::template Wrap<&Impl::Open>)
+    };
+};
+
+template<class Impl>
+constexpr JNINativeMethod GeckoView::Window::Natives<Impl>::methods[];
+
+template<class Impl>
 class NativeJSContainer::Natives : public mozilla::jni::NativeImpl<NativeJSContainer, Impl>
 {
 public:

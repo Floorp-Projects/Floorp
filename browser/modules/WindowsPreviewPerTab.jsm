@@ -79,7 +79,7 @@ function _imageFromURI(doc, uri, privateMode, callback) {
                                          null,  // aLoadingPrincipal
                                          null,  // aTriggeringPrincipal
                                          Ci.nsILoadInfo.SEC_NORMAL,
-                                         Ci.nsIContentPolicy.TYPE_IMAGE);
+                                         Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE);
   try {
     channel.QueryInterface(Ci.nsIPrivateBrowsingChannel);
     channel.setPrivate(privateMode);

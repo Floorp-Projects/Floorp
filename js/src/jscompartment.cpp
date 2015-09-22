@@ -67,7 +67,6 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     objectMetadataTable(nullptr),
     lazyArrayBuffers(nullptr),
     gcIncomingGrayPointers(nullptr),
-    gcWeakMapList(nullptr),
     gcPreserveJitCode(options.preserveJitCode()),
     debugModeBits(0),
     rngState(0),
@@ -659,13 +658,6 @@ JSCompartment::sweepDebugScopes()
 }
 
 void
-JSCompartment::sweepWeakMaps()
-{
-    /* Finalize unreachable (key,value) pairs in all weak maps. */
-    WeakMapBase::sweepCompartment(this);
-}
-
-void
 JSCompartment::sweepNativeIterators()
 {
     /* Sweep list of native iterators. */
@@ -783,7 +775,6 @@ JSCompartment::clearTables()
     MOZ_ASSERT(crossCompartmentWrappers.empty());
     MOZ_ASSERT(!jitCompartment_);
     MOZ_ASSERT(!debugScopes);
-    MOZ_ASSERT(!gcWeakMapList);
     MOZ_ASSERT(enumerators->next() == enumerators);
     MOZ_ASSERT(regExps.empty());
 
@@ -819,14 +810,15 @@ JSCompartment::setNewObjectMetadata(JSContext* cx, JSObject* obj)
     assertSameCompartment(cx, this, obj);
 
     if (JSObject* metadata = objectMetadataCallback(cx, obj)) {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
         assertSameCompartment(cx, metadata);
         if (!objectMetadataTable) {
             objectMetadataTable = cx->new_<ObjectWeakMap>(cx);
             if (!objectMetadataTable || !objectMetadataTable->init())
-                CrashAtUnhandlableOOM("setNewObjectMetadata");
+                oomUnsafe.crash("setNewObjectMetadata");
         }
         if (!objectMetadataTable->add(cx, obj, metadata))
-            CrashAtUnhandlableOOM("setNewObjectMetadata");
+            oomUnsafe.crash("setNewObjectMetadata");
     }
 }
 

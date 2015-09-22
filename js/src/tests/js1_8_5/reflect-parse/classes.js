@@ -13,7 +13,8 @@ function classesEnabled() {
 function testClasses() {
     function methodFun(id, kind, generator, args, body = []) {
         assertEq(generator && kind === "method", generator);
-        let idN = ident(id);
+        assertEq(typeof id === 'string' || id === null, true);
+        let idN = typeof id === 'string' ? ident(id): null;
         let methodMaker = generator ? genFunExpr : funExpr;
         let methodName = kind !== "method" ? null : idN;
         return methodMaker(methodName, args.map(ident), blockStmt(body));
@@ -45,14 +46,14 @@ function testClasses() {
     function assertClass(str, methods, heritage=null) {
         let namelessStr = str.replace("NAME", "");
         let namedStr = str.replace("NAME", "Foo");
-        let namedCtor = ctorWithName("NAME");
+        let namedCtor = ctorWithName("Foo");
         let namelessCtor = ctorWithName(null);
-        let namelessMethods = methods.map(x => x == ctorPlaceholder ? namedCtor : x);
+        let namelessMethods = methods.map(x => x == ctorPlaceholder ? namelessCtor : x);
         let namedMethods = methods.map(x => x == ctorPlaceholder ? namedCtor : x);
-        assertClassExpr(namelessStr, methods, heritage);
-        assertClassExpr(namedStr, methods, heritage, ident("Foo"));
+        assertClassExpr(namelessStr, namelessMethods, heritage);
+        assertClassExpr(namedStr, namedMethods, heritage, ident("Foo"));
 
-        let template = classStmt(ident("Foo"), heritage, methods);
+        let template = classStmt(ident("Foo"), heritage, namedMethods);
         assertStmt(namedStr, template);
     }
     function assertNamedClassError(str, error) {

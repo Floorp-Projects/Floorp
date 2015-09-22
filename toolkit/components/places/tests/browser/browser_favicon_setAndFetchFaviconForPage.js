@@ -33,7 +33,7 @@ function test() {
     NetUtil.asyncFetch({
       uri: favIconLocation,
       loadUsingSystemPrincipal: true,
-      contentPolicyType: Ci.nsIContentPolicy.TYPE_IMAGE
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE
     }, function(inputStream, status) {
         if (!Components.isSuccessCode(status)) {
           ok(false, "Could not get the icon file");

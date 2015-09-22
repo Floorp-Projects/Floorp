@@ -170,9 +170,12 @@ private:
   void DivertOnStopRequest(const nsresult& statusCode);
   void DivertComplete();
 
+  void SynthesizeResponse(nsIInterceptedChannel* aChannel);
+
   friend class DivertDataAvailableEvent;
   friend class DivertStopRequestEvent;
   friend class DivertCompleteEvent;
+  friend class ResponseSynthesizer;
 
   nsRefPtr<nsHttpChannel>       mChannel;
   nsCOMPtr<nsICacheEntry>       mCacheEntry;

@@ -63,7 +63,7 @@ function run_test()
                                         Services.scriptSecurityManager.getSystemPrincipal(),
                                         null,      // aTriggeringPrincipal
                                         Ci.nsILoadInfo.SEC_NORMAL,
-                                        Ci.nsIContentPolicy.TYPE_IMAGE);
+                                        Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE);
   channel.asyncOpen(new streamListener("image/png"), null);
   do_test_pending();
 
@@ -76,7 +76,7 @@ function run_test()
                             Services.scriptSecurityManager.getSystemPrincipal(),
                             null,      // aTriggeringPrincipal
                             Ci.nsILoadInfo.SEC_NORMAL,
-                            Ci.nsIContentPolicy.TYPE_IMAGE);
+                            Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE);
   channel.asyncOpen(new streamListener("image/png"), null);
   do_test_pending();
 
@@ -94,7 +94,7 @@ function run_test()
                             Services.scriptSecurityManager.getSystemPrincipal(),
                             null,      // aTriggeringPrincipal
                             Ci.nsILoadInfo.SEC_NORMAL,
-                            Ci.nsIContentPolicy.TYPE_IMAGE);
+                            Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE);
   channel.asyncOpen(new streamListener("image/png"), null);
   do_test_pending();
 }
