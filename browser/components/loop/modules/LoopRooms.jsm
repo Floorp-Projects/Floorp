@@ -961,9 +961,10 @@ var LoopRoomsInternal = {
       return;
     }
 
-    let sendResponse = response => {
+    let sendResponse = (response, alreadyOpen) => {
       gLinkClickerChannel.send({
-        response: response
+        response: response,
+        alreadyOpen: alreadyOpen
       }, sendingContext);
     };
 
@@ -971,16 +972,22 @@ var LoopRoomsInternal = {
 
     switch (message.command) {
       case "checkWillOpenRoom":
-        sendResponse(hasRoom);
+        sendResponse(hasRoom, false);
         break;
       case "openRoom":
         if (hasRoom) {
-          this.open(message.roomToken);
+          if (MozLoopService.isChatWindowOpen(message.roomToken)) {
+            sendResponse(hasRoom, true);
+          } else {
+            this.open(message.roomToken);
+            sendResponse(hasRoom, false);
+          }
+        } else {
+          sendResponse(hasRoom, false);
         }
-        sendResponse(hasRoom);
         break;
       default:
-        sendResponse(false);
+        sendResponse(false, false);
         break;
     }
   }
