@@ -499,6 +499,8 @@ WebGLContext::GenerateWarning(const char* fmt, va_list ap)
         return;
     }
 
+    api.TakeOwnershipOfErrorReporting();
+
     JSContext* cx = api.cx();
     JS_ReportWarning(cx, "WebGL: %s", buf);
     if (!ShouldGenerateWarnings()) {
