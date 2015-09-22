@@ -193,6 +193,7 @@
 @RESPATH@/components/dom_messages.xpt
 #endif
 @RESPATH@/components/dom_apps.xpt
+@RESPATH@/components/dom_newapps.xpt
 @RESPATH@/components/dom_base.xpt
 @RESPATH@/components/dom_system.xpt
 #ifdef MOZ_B2G_BT
@@ -635,6 +636,10 @@
 @RESPATH@/components/privatebrowsing.xpt
 @RESPATH@/components/PrivateBrowsing.manifest
 @RESPATH@/components/PrivateBrowsingTrackingProtectionWhitelist.js
+
+; Signed Packaged Content
+@RESPATH@/components/InstallPackagedWebapp.manifest
+@RESPATH@/components/InstallPackagedWebapp.js
 
 ; ANGLE GLES-on-D3D rendering library
 #ifdef MOZ_ANGLE_RENDERER
