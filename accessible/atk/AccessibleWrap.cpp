@@ -827,7 +827,15 @@ getChildCountCB(AtkObject *aAtkObj)
       return 0;
     }
 
-    return static_cast<gint>(accWrap->EmbeddedChildCount());
+    uint32_t count = accWrap->EmbeddedChildCount();
+    if (count) {
+      return static_cast<gint>(count);
+    }
+
+    OuterDocAccessible* outerDoc = accWrap->AsOuterDoc();
+    if (outerDoc && outerDoc->RemoteChildDoc()) {
+      return 1;
+    }
   }
 
   ProxyAccessible* proxy = GetProxy(aAtkObj);
