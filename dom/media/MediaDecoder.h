@@ -530,9 +530,6 @@ public:
   // state.
   ReentrantMonitor& GetReentrantMonitor() override;
 
-  // Returns true if the decoder is shut down
-  bool IsShutdown() const final override;
-
   // Constructs the time ranges representing what segments of the media
   // are buffered and playable.
   virtual media::TimeIntervals GetBuffered();
