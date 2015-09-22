@@ -21,8 +21,9 @@
 
     <style name="GeckoTitleDialogBase" parent="@android:style/Theme.Dialog" />
 
-    <style name="GeckoPreferencesBase" parent="GeckoBase">
+    <style name="GeckoPreferencesBase" parent="@android:style/Theme.Light">
         <item name="android:windowNoTitle">false</item>
+        <item name="android:windowContentOverlay">@null</item>
     </style>
 
     <!--
