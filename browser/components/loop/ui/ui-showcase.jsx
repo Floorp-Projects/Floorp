@@ -1341,7 +1341,8 @@
           </Section>
 
           <Section name="UnsupportedBrowserView">
-            <FramedExample dashed={true}
+            <FramedExample cssClass="standalone"
+                           dashed={true}
                            height={430}
                            summary="Standalone Unsupported Browser"
                            width={480}>
@@ -1352,7 +1353,8 @@
           </Section>
 
           <Section name="UnsupportedDeviceView">
-            <FramedExample dashed={true}
+            <FramedExample cssClass="standalone"
+                           dashed={true}
                            height={430}
                            summary="Standalone Unsupported Device"
                            width={480}>

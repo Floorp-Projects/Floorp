@@ -5,21 +5,16 @@
 package org.mozilla.gecko.tabs;
 
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.widget.TabThumbnailWrapper;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.content.Context;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.TouchDelegate;
 import android.view.View;
@@ -135,6 +130,8 @@ public class TabsLayoutItemView extends LinearLayout
         }
 
         mTabId = tab.getId();
+
+        setChecked(Tabs.getInstance().isSelectedTab(tab));
 
         Drawable thumbnailImage = tab.getThumbnail();
         mThumbnail.setImageDrawable(thumbnailImage);
