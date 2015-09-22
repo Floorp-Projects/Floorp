@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE window [
+  <!ENTITY % inspectorDTD SYSTEM "chrome://browser/locale/devtools/styleinspector.dtd">
+  %inspectorDTD;
+  <!ELEMENT loop ANY>
+  <!ATTLIST li foreach CDATA #IMPLIED>
+  <!ATTLIST div foreach CDATA #IMPLIED>
+  <!ATTLIST loop foreach CDATA #IMPLIED>
+  <!ATTLIST a target CDATA #IMPLIED>
+  <!ATTLIST a __pathElement CDATA #IMPLIED>
+  <!ATTLIST div _id CDATA #IMPLIED>
+  <!ATTLIST div save CDATA #IMPLIED>
+  <!ATTLIST table save CDATA #IMPLIED>
+  <!ATTLIST loop if CDATA #IMPLIED>
+  <!ATTLIST tr if CDATA #IMPLIED>
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      class="theme-sidebar">
+
+  <head>
+
+    <title>&computedViewTitle;</title>
+
+    <link rel="stylesheet" href="chrome://global/skin/global.css"  type="text/css"/>
+    <link rel="stylesheet" href="chrome://devtools/skin/themes/common.css"  type="text/css"/>
+    <link rel="stylesheet" href="chrome://devtools/skin/themes/computedview.css"  type="text/css"/>
+
+    <script type="application/javascript;version=1.8" src="chrome://devtools/content/shared/theme-switching.js"/>
+
+    <script type="application/javascript;version=1.8">
+      window.setPanel = function(panel, iframe) {
+        let {require} = Components.utils.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+        let inspector = require("devtools/client/styleinspector/style-inspector");
+        this.computedview = new inspector.ComputedViewTool(panel, window);
+      }
+      window.onunload = function() {
+        if (this.computedview) {
+          this.computedview.destroy();
+        }
+      }
+    </script>
+  </head>
+
+  <body>
+
+    <div id="root" class="devtools-monospace">
+      <div class="devtools-toolbar">
+        <div class="devtools-searchbox">
+          <input id="computedview-searchbox"
+                 class="devtools-searchinput devtools-rule-searchbox"
+                 type="search" placeholder="&filterStylesPlaceholder;"/>
+          <button id="computedview-searchinput-clear" class="devtools-searchinput-clear"></button>
+        </div>
+        <xul:checkbox id="browser-style-checkbox"
+                      class="includebrowserstyles"
+                      checked="false" label="&browserStylesLabel;"/>
+      </div>
+    </div>
+
+    <!-- The output from #templateProperty (below) is appended here. -->
+    <div id="propertyContainer" class="devtools-monospace">
+    </div>
+
+    <!-- When no properties are found the following block is displayed. -->
+    <div id="noResults" hidden="">
+      &noPropertiesFound;
+    </div>
+
+  </body>
+</html>

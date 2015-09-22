@@ -1,0 +1,56 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Web Audio Editor test page</title>
+  </head>
+
+  <body>
+
+    <script type="text/javascript;version=1.8">
+      "use strict";
+
+      let audioURL = "http://example.com/browser/devtools/client/webaudioeditor/test/440hz_sine.ogg";
+
+      let ctx = new AudioContext();
+      let bufferNode = ctx.createBufferSource();
+      let shaperNode = ctx.createWaveShaper();
+      shaperNode.curve = generateWaveShapingCurve();
+
+      let xhr = getBuffer(audioURL, () => {
+        ctx.decodeAudioData(xhr.response, (buffer) => {
+          bufferNode.buffer = buffer;
+          bufferNode.connect(shaperNode);
+          shaperNode.connect(ctx.destination);
+        });
+      });
+
+      function generateWaveShapingCurve() {
+        let frames = 65536;
+        let curve = new Float32Array(frames);
+        let n = frames;
+        let n2 = n / 2;
+
+        for (let i = 0; i < n; ++i) {
+          let x = (i - n2) / n2;
+          let y = Math.atan(5 * x) / (0.5 * Math.PI);
+        }
+
+        return curve;
+      }
+
+      function getBuffer (url, callback) {
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", url, true);
+        xhr.responseType = "arraybuffer";
+        xhr.onload = callback;
+        xhr.send();
+        return xhr;
+      }
+    </script>
+  </body>
+
+</html>

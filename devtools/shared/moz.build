@@ -1,0 +1,48 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+include('../templates.mozbuild')
+
+DIRS += [
+    'acorn',
+    'apps',
+    'client',
+    'discovery',
+    'gcli',
+    'heapsnapshot',
+    'jsbeautify',
+    'layout',
+    'performance',
+    'pretty-fast',
+    'qrcode',
+    'security',
+    'sourcemap',
+    'shared',
+    'shims',
+    'styleinspector',
+    'tern',
+    'touch',
+    'transport',
+    'webconsole'
+]
+
+MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
+XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
+
+DevToolsModules(
+    'async-utils.js',
+    'Console.jsm',
+    'content-observer.js',
+    'css-color.js',
+    'deprecated-sync-thenables.js',
+    'DevToolsUtils.js',
+    'event-emitter.js',
+    'event-parsers.js',
+    'Loader.jsm',
+    'output-parser.js',
+    'path.js',
+    'worker-loader.js',
+)

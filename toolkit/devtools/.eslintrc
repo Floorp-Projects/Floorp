@@ -1,4 +1,0 @@
-{
-  // Extend from the main devtools eslintrc over in browser/devtools.
-  "extends": "../../browser/devtools/.eslintrc"
-}

@@ -1,0 +1,37 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+include('../templates.mozbuild')
+
+DIRS += [
+    'actors',
+    'shims',
+]
+
+BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
+MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
+XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
+
+XPIDL_SOURCES += [
+    'nsIJSInspector.idl',
+]
+
+XPIDL_MODULE = 'jsinspector'
+
+SOURCES += [
+    'nsJSInspector.cpp',
+]
+
+FINAL_LIBRARY = 'xul'
+
+DevToolsModules(
+    'child.js',
+    'content-globals.js',
+    'content-server.jsm',
+    'main.js',
+    'protocol.js',
+    'worker.js'
+)
