@@ -288,4 +288,46 @@ TEST_F(AccessibleCaretManagerTester, TestSingleTapOnEmptyInput)
   EXPECT_EQ(FirstCaretAppearance(), Appearance::NormalNotShown);
 }
 
+TEST_F(AccessibleCaretManagerTester, TestTypingAtEndOfInput)
+{
+  EXPECT_CALL(mManager, GetCaretMode())
+    .WillRepeatedly(Return(CaretMode::Cursor));
+
+  EXPECT_CALL(mManager, HasNonEmptyTextContent(_))
+    .WillRepeatedly(Return(true));
+
+  MockFunction<void(std::string aCheckPointName)> check;
+  {
+    InSequence dummy;
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                  CaretChangedReason::Updateposition)).Times(1);
+    EXPECT_CALL(check, Call("update"));
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                  CaretChangedReason::Visibilitychange)).Times(1);
+    EXPECT_CALL(check, Call("keyboard"));
+
+    // No CaretStateChanged events should be dispatched since the caret has
+    // being hidden in cursor mode.
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(_)).Times(0);
+  }
+
+  // Simulate typing the end of the input.
+  mManager.UpdateCarets();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
+  check.Call("update");
+
+  mManager.OnKeyboardEvent();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::None);
+  check.Call("keyboard");
+
+  mManager.OnSelectionChanged(nullptr, nullptr,
+                              nsISelectionListener::NO_REASON);
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::None);
+
+  mManager.OnScrollPositionChanged();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::None);
+}
+
 } // namespace mozilla

@@ -479,8 +479,10 @@ AccessibleCaretManager::OnScrollPositionChanged()
     return;
   }
 
-  AC_LOG("%s: UpdateCarets(RespectOldAppearance)", __FUNCTION__);
-  UpdateCarets(UpdateCaretsHint::RespectOldAppearance);
+  if (mFirstCaret->IsLogicallyVisible() || mSecondCaret->IsLogicallyVisible()) {
+    AC_LOG("%s: UpdateCarets(RespectOldAppearance)", __FUNCTION__);
+    UpdateCarets(UpdateCaretsHint::RespectOldAppearance);
+  }
 }
 
 void
