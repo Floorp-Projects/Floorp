@@ -358,9 +358,12 @@ nsThread::ThreadFunc(void* aArg)
 
   // Wait for and process startup event
   nsCOMPtr<nsIRunnable> event;
-  if (!self->GetEvent(true, getter_AddRefs(event))) {
-    NS_WARNING("failed waiting for thread startup event");
-    return;
+  {
+    MutexAutoLock lock(self->mLock);
+    if (!self->mEvents->GetEvent(true, getter_AddRefs(event), lock)) {
+      NS_WARNING("failed waiting for thread startup event");
+      return;
+    }
   }
   event->Run();  // unblocks nsThread::Init
   event = nullptr;
@@ -396,7 +399,7 @@ nsThread::ThreadFunc(void* aArg)
 
       {
         MutexAutoLock lock(self->mLock);
-        if (!self->mEvents->HasPendingEvent()) {
+        if (!self->mEvents->HasPendingEvent(lock)) {
           // No events in the queue, so we will stop now. Don't let any more
           // events be added, since they won't be processed. It is critical
           // that no PutEvent can occur between testing that the event queue is
@@ -469,6 +472,7 @@ nsThread::nsThread(MainThreadFlag aMainThread, uint32_t aStackSize)
   : mLock("nsThread.mLock")
   , mScriptObserver(nullptr)
   , mEvents(&mEventsRoot)
+  , mEventsRoot(mLock)
   , mPriority(PRIORITY_NORMAL)
   , mThread(nullptr)
   , mNestedEventLoopDepth(0)
@@ -508,7 +512,7 @@ nsThread::Init()
   // that mThread is set properly.
   {
     MutexAutoLock lock(mLock);
-    mEventsRoot.PutEvent(startup); // retain a reference
+    mEventsRoot.PutEvent(startup, lock); // retain a reference
   }
 
   // Wait for thread to call ThreadManager::SetupCurrentThread, which completes
@@ -554,7 +558,7 @@ nsThread::PutEvent(already_AddRefed<nsIRunnable>&& aEvent, nsNestedEventTarget* 
       nsIRunnable* temp2 = temp.forget().take(); // can't use unused << aEvent here due to Windows (boo)
       return temp2 ? NS_ERROR_UNEXPECTED : NS_ERROR_UNEXPECTED; // to make compiler not bletch on us
     }
-    queue->PutEvent(Move(aEvent));
+    queue->PutEvent(Move(aEvent), lock);
 
     // Make sure to grab the observer before dropping the lock, otherwise the
     // event that we just placed into the queue could run and eventually delete
@@ -778,7 +782,10 @@ nsThread::HasPendingEvents(bool* aResult)
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  *aResult = mEvents->HasPendingEvent();
+  {
+    MutexAutoLock lock(mLock);
+    *aResult = mEvents->HasPendingEvent(lock);
+  }
   return NS_OK;
 }
 
@@ -936,7 +943,10 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
 
     // If we are shutting down, then do not wait for new events.
     nsCOMPtr<nsIRunnable> event;
-    mEvents->GetEvent(reallyWait, getter_AddRefs(event));
+    {
+      MutexAutoLock lock(mLock);
+      mEvents->GetEvent(reallyWait, getter_AddRefs(event), lock);
+    }
 
     *aResult = (event.get() != nullptr);
 
@@ -1092,7 +1102,7 @@ nsThread::PushEventQueue(nsIEventTarget** aResult)
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  nsChainedEventQueue* queue = new nsChainedEventQueue();
+  nsChainedEventQueue* queue = new nsChainedEventQueue(mLock);
   queue->mEventTarget = new nsNestedEventTarget(this, queue);
 
   {
@@ -1134,8 +1144,8 @@ nsThread::PopEventQueue(nsIEventTarget* aInnermostTarget)
     mEvents = mEvents->mNext;
 
     nsCOMPtr<nsIRunnable> event;
-    while (queue->GetEvent(false, getter_AddRefs(event))) {
-      mEvents->PutEvent(event.forget());
+    while (queue->GetEvent(false, getter_AddRefs(event), lock)) {
+      mEvents->PutEvent(event.forget(), lock);
     }
 
     // Don't let the event target post any more events.

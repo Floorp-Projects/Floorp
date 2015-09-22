@@ -23,7 +23,7 @@ const kPostMimeTypeReceived = "application/x-www-form-urlencoded; charset=utf-8"
 const kJsonPostPath = "/json_post";
 const kJsonPostUrl = kBaseUrl + kJsonPostPath;
 const kJsonPostData = JSON.stringify(kPostDataSent);
-const kJsonPostMimeType = "application/json; charset=UTF-8";
+const kJsonPostMimeType = "application/json";
 
 const kPutPath = "/put";
 const kPutUrl = kBaseUrl + kPutPath;

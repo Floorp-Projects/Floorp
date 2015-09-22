@@ -29,10 +29,16 @@ public:
     : mValue()
   {}
 
-  explicit Nullable(T aValue)
+  explicit Nullable(const T& aValue)
     : mValue()
   {
     mValue.emplace(aValue);
+  }
+
+  explicit Nullable(T&& aValue)
+    : mValue()
+  {
+    mValue.emplace(mozilla::Move(aValue));
   }
 
   Nullable(Nullable<T>&& aOther)
@@ -48,9 +54,16 @@ public:
     mValue = aOther.mValue;
   }
 
-  void SetValue(T aValue) {
+  void SetValue(const T& aArgs)
+  {
     mValue.reset();
-    mValue.emplace(aValue);
+    mValue.emplace(aArgs);
+  }
+
+  void SetValue(T&& aArgs)
+  {
+    mValue.reset();
+    mValue.emplace(mozilla::Move(aArgs));
   }
 
   // For cases when |T| is some type with nontrivial copy behavior, we may want

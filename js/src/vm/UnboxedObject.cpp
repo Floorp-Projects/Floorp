@@ -1245,11 +1245,29 @@ UnboxedArrayObject::objectMovedDuringMinorGC(JSTracer* trc, JSObject* dst, JSObj
 // a little weird, but were chosen to allow the inline data of objects of each
 // size to be fully utilized for arrays of the various types on both 32 bit and
 // 64 bit platforms.
+//
+// To find the possible inline capacities, the following script was used:
+//
+// var fixedSlotCapacities = [0, 2, 4, 8, 12, 16];
+// var dataSizes = [1, 4, 8];
+// var header32 = 4 * 2 + 4 * 2;
+// var header64 = 8 * 2 + 4 * 2;
+//
+// for (var i = 0; i < fixedSlotCapacities.length; i++) {
+//    var nfixed = fixedSlotCapacities[i];
+//    var size32 = 4 * 4 + 8 * nfixed - header32;
+//    var size64 = 8 * 4 + 8 * nfixed - header64;
+//    for (var j = 0; j < dataSizes.length; j++) {
+//        print(size32 / dataSizes[j]);
+//        print(size64 / dataSizes[j]);
+//    }
+// }
+//
 /* static */ const uint32_t
 UnboxedArrayObject::CapacityArray[] = {
     UINT32_MAX, // For CapacityMatchesLengthIndex.
-    0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 13, 16, 17, 18, 20, 24, 26, 32, 34, 36, 40, 48, 52, 64, 68,
-    72, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288,
+    0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 13, 16, 17, 18, 24, 26, 32, 34, 40, 64, 72, 96, 104, 128, 136,
+    256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288,
     1048576, 2097152, 3145728, 4194304, 5242880, 6291456, 7340032, 8388608, 9437184, 11534336,
     13631488, 15728640, 17825792, 20971520, 24117248, 27262976, 31457280, 35651584, 40894464,
     46137344, 52428800, 59768832, MaximumCapacity
@@ -1257,30 +1275,30 @@ UnboxedArrayObject::CapacityArray[] = {
 
 static const uint32_t
 Pow2CapacityIndexes[] = {
-    1,  // 1
-    2,  // 2
-    4,  // 4
+    2,  // 1
+    3,  // 2
+    5,  // 4
     8,  // 8
     13, // 16
-    19, // 32
-    25, // 64
-    28, // 128
-    29, // 256
-    30, // 512
-    31, // 1024
-    32, // 2048
-    33, // 4096
-    34, // 8192
-    35, // 16384
-    36, // 32768
-    37, // 65536
-    38, // 131072
-    39, // 262144
-    40, // 524288
-    41  // 1048576
+    18, // 32
+    21, // 64
+    25, // 128
+    27, // 256
+    28, // 512
+    29, // 1024
+    30, // 2048
+    31, // 4096
+    32, // 8192
+    33, // 16384
+    34, // 32768
+    35, // 65536
+    36, // 131072
+    37, // 262144
+    38, // 524288
+    39  // 1048576
 };
 
-static const uint32_t MebiCapacityIndex = 41;
+static const uint32_t MebiCapacityIndex = 39;
 
 /* static */ uint32_t
 UnboxedArrayObject::chooseCapacityIndex(uint32_t capacity, uint32_t length)

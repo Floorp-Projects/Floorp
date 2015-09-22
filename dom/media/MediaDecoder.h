@@ -523,7 +523,7 @@ public:
 
   bool OnDecodeTaskQueue() const override;
 
-  MediaDecoderStateMachine* GetStateMachine() { return mDecoderStateMachine; }
+  MediaDecoderStateMachine* GetStateMachine() const;
   void SetStateMachine(MediaDecoderStateMachine* aStateMachine);
 
   // Returns the monitor for other threads to synchronise access to
@@ -651,9 +651,6 @@ public:
   // Find the end of the cached data starting at the current decoder
   // position.
   int64_t GetDownloadPosition();
-
-  // Provide access to the state machine object
-  MediaDecoderStateMachine* GetStateMachine() const;
 
   // Drop reference to state machine.  Only called during shutdown dance.
   virtual void BreakCycles();

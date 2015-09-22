@@ -867,8 +867,40 @@ ObjectGroup::newArrayObject(ExclusiveContext* cx,
             return nullptr;
     }
 
-    return NewCopiedArrayTryUseGroup(cx, group, vp, length, newKind,
-                                     ShouldUpdateTypes::DontUpdate);
+    // The type of the elements being added will already be reflected in type
+    // information, but make sure when creating an unboxed array that the
+    // common element type is suitable for the unboxed representation.
+    ShouldUpdateTypes updateTypes = ShouldUpdateTypes::DontUpdate;
+    if (group->maybePreliminaryObjects())
+        group->maybePreliminaryObjects()->maybeAnalyze(cx, group);
+    if (group->maybeUnboxedLayout()) {
+        switch (group->unboxedLayout().elementType()) {
+          case JSVAL_TYPE_BOOLEAN:
+            if (elementType != TypeSet::BooleanType())
+                updateTypes = ShouldUpdateTypes::Update;
+            break;
+          case JSVAL_TYPE_INT32:
+            if (elementType != TypeSet::Int32Type())
+                updateTypes = ShouldUpdateTypes::Update;
+            break;
+          case JSVAL_TYPE_DOUBLE:
+            if (elementType != TypeSet::Int32Type() && elementType != TypeSet::DoubleType())
+                updateTypes = ShouldUpdateTypes::Update;
+            break;
+          case JSVAL_TYPE_STRING:
+            if (elementType != TypeSet::StringType())
+                updateTypes = ShouldUpdateTypes::Update;
+            break;
+          case JSVAL_TYPE_OBJECT:
+            if (elementType != TypeSet::NullType() && !elementType.get().isObjectUnchecked())
+                updateTypes = ShouldUpdateTypes::Update;
+            break;
+          default:
+            MOZ_CRASH();
+        }
+    }
+
+    return NewCopiedArrayTryUseGroup(cx, group, vp, length, newKind, updateTypes);
 }
 
 // Try to change the group of |source| to match that of |target|.

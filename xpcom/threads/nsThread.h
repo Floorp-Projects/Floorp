@@ -105,10 +105,6 @@ protected:
   }
 
   // Wrappers for event queue methods:
-  bool GetEvent(bool aMayWait, nsIRunnable** aEvent)
-  {
-    return mEvents->GetEvent(aMayWait, aEvent);
-  }
   nsresult PutEvent(nsIRunnable* aEvent, nsNestedEventTarget* aTarget);
   nsresult PutEvent(already_AddRefed<nsIRunnable>&& aEvent, nsNestedEventTarget* aTarget);
 
@@ -121,29 +117,32 @@ protected:
   class nsChainedEventQueue
   {
   public:
-    nsChainedEventQueue()
+    explicit nsChainedEventQueue(mozilla::Mutex& aLock)
       : mNext(nullptr)
+      , mQueue(aLock)
     {
     }
 
-    bool GetEvent(bool aMayWait, nsIRunnable** aEvent)
+    bool GetEvent(bool aMayWait, nsIRunnable** aEvent,
+                  mozilla::MutexAutoLock& aProofOfLock)
     {
-      return mQueue.GetEvent(aMayWait, aEvent);
+      return mQueue.GetEvent(aMayWait, aEvent, aProofOfLock);
     }
 
-    void PutEvent(nsIRunnable* aEvent)
+    void PutEvent(nsIRunnable* aEvent, mozilla::MutexAutoLock& aProofOfLock)
     {
-      mQueue.PutEvent(aEvent);
+      mQueue.PutEvent(aEvent, aProofOfLock);
     }
 
-    void PutEvent(already_AddRefed<nsIRunnable>&& aEvent)
+    void PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
+                  mozilla::MutexAutoLock& aProofOfLock)
     {
-      mQueue.PutEvent(mozilla::Move(aEvent));
+      mQueue.PutEvent(mozilla::Move(aEvent), aProofOfLock);
     }
 
-    bool HasPendingEvent()
+    bool HasPendingEvent(mozilla::MutexAutoLock& aProofOfLock)
     {
-      return mQueue.HasPendingEvent();
+      return mQueue.HasPendingEvent(aProofOfLock);
     }
 
     nsChainedEventQueue* mNext;

@@ -79,7 +79,6 @@ class MatchPairs
     bool initArrayFrom(MatchPairs& copyFrom);
     void forgetArray() { pairs_ = nullptr; }
 
-    void displace(size_t disp);
     void checkAgainst(size_t inputLength) {
 #ifdef DEBUG
         for (size_t i = 0; i < pairCount_; i++) {

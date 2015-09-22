@@ -1044,19 +1044,27 @@ ReadAllocation(const JitFrameIterator& frame, const LAllocation* a)
 #endif
 
 static void
-MarkThisAndArguments(JSTracer* trc, JitFrameLayout* layout)
+MarkThisAndArguments(JSTracer* trc, const JitFrameIterator& frame)
 {
     // Mark |this| and any extra actual arguments for an Ion frame. Marking of
     // formal arguments is taken care of by the frame's safepoint/snapshot,
     // except when the script might have lazy arguments, in which case we mark
-    // them as well.
+    // them as well. We also have to mark formals if we have a LazyLink frame.
+
+    JitFrameLayout* layout = frame.isExitFrameLayout<LazyLinkExitFrameLayout>()
+                             ? frame.exitFrame()->as<LazyLinkExitFrameLayout>()->jsFrame()
+                             : frame.jsFrame();
 
     size_t nargs = layout->numActualArgs();
     size_t nformals = 0;
     size_t newTargetOffset = 0;
     if (CalleeTokenIsFunction(layout->calleeToken())) {
         JSFunction* fun = CalleeTokenToFunction(layout->calleeToken());
-        nformals = fun->nonLazyScript()->argumentsHasVarBinding() ? 0 : fun->nargs();
+        if (!frame.isExitFrameLayout<LazyLinkExitFrameLayout>() &&
+            !fun->nonLazyScript()->argumentsHasVarBinding())
+        {
+            nformals = fun->nargs();
+        }
         newTargetOffset = Max(nargs, fun->nargs());
     }
 
@@ -1073,13 +1081,6 @@ MarkThisAndArguments(JSTracer* trc, JitFrameLayout* layout)
     // +1 to pass |this|
     if (CalleeTokenIsConstructing(layout->calleeToken()))
         TraceRoot(trc, &argv[1 + newTargetOffset], "ion-newTarget");
-}
-
-static void
-MarkThisAndArguments(JSTracer* trc, const JitFrameIterator& frame)
-{
-    JitFrameLayout* layout = frame.jsFrame();
-    MarkThisAndArguments(trc, layout);
 }
 
 #ifdef JS_NUNBOX32
@@ -1425,7 +1426,7 @@ MarkJitExitFrame(JSTracer* trc, const JitFrameIterator& frame)
 
         TraceRoot(trc, ll->stubCode(), "lazy-link-code");
         layout->replaceCalleeToken(MarkCalleeToken(trc, layout->calleeToken()));
-        MarkThisAndArguments(trc, layout);
+        MarkThisAndArguments(trc, frame);
         return;
     }
 

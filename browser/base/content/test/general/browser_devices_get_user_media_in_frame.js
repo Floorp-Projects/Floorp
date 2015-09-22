@@ -221,8 +221,6 @@ function getFrameGlobal(aFrameId) {
   return content.wrappedJSObject.document.getElementById(aFrameId).contentWindow;
 }
 
-const permissionError = "error: PermissionDeniedError: The user did not grant permission for the operation.";
-
 var gTests = [
 
 {

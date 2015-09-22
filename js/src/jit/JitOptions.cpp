@@ -112,7 +112,7 @@ JitOptions::JitOptions()
 
     // Toggles whether sincos optimization is globally disabled.
     // See bug984018: The MacOS is the only one that has the sincos fast.
-    #if defined(XP_MACOSX)
+    #if defined(XP_DARWIN)
         SET_DEFAULT(disableSincos, false);
     #else
         SET_DEFAULT(disableSincos, true);

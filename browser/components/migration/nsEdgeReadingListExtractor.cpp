@@ -44,6 +44,9 @@ nsEdgeReadingListExtractor::Extract(const nsAString& aDBPath, nsIArray** aItems)
   JET_COLUMNDEF urlColumnInfo = { 0 };
   JET_COLUMNDEF titleColumnInfo = { 0 };
   JET_COLUMNDEF addedDateColumnInfo = { 0 };
+  FILETIME addedDate;
+  wchar_t urlBuffer[MAX_URL_LENGTH] = { 0 };
+  wchar_t titleBuffer[MAX_TITLE_LENGTH] = { 0 };
 
   // Need to ensure this happens before we skip ahead to CloseDB,
   // otherwise the compiler complains.
@@ -59,13 +62,13 @@ nsEdgeReadingListExtractor::Extract(const nsAString& aDBPath, nsIArray** aItems)
   err = JetGetDatabaseFileInfoW(static_cast<char16ptr_t>(aDBPath.BeginReading()),
                                 &pageSize, sizeof(pageSize), JET_DbInfoPageSize);
   NS_HANDLE_JET_ERROR(err)
-  err = JetSetSystemParameter(&instance, NULL, JET_paramDatabasePageSize, pageSize, NULL);
+  err = JetSetSystemParameter(&instance, 0, JET_paramDatabasePageSize, pageSize, NULL);
   NS_HANDLE_JET_ERROR(err)
 
   // Turn off recovery, because otherwise we will create log files in either the cwd or
   // overwrite Edge's own logfiles, which is useless at best and at worst might mess with
   // Edge actually using the DB
-  err = JetSetSystemParameter(&instance, NULL, JET_paramRecovery, NULL, "Off");
+  err = JetSetSystemParameter(&instance, 0, JET_paramRecovery, 0, "Off");
   NS_HANDLE_JET_ERROR(err)
 
   // Start our session:
@@ -122,10 +125,6 @@ nsEdgeReadingListExtractor::Extract(const nsAString& aDBPath, nsIArray** aItems)
     goto CloseDB;
   }
 
-  JET_COLUMNID urlColumnId = urlColumnInfo.columnid;
-  JET_COLUMNID titleColumnId = titleColumnInfo.columnid;
-  JET_COLUMNID addedDateColumnId = addedDateColumnInfo.columnid;
-
   // If we got here, we've found our table and column information
 
   err = JetMove(sesid, tableid, JET_MoveFirst, 0);
@@ -138,17 +137,14 @@ nsEdgeReadingListExtractor::Extract(const nsAString& aDBPath, nsIArray** aItems)
   // Check for any other errors
   NS_HANDLE_JET_ERROR(err)
 
-  FILETIME addedDate;
-  wchar_t urlBuffer[MAX_URL_LENGTH] = { 0 };
-  wchar_t titleBuffer[MAX_TITLE_LENGTH] = { 0 };
   do {
-    err = JetRetrieveColumn(sesid, tableid, urlColumnId, &urlBuffer,
+    err = JetRetrieveColumn(sesid, tableid, urlColumnInfo.columnid, &urlBuffer,
                             sizeof(urlBuffer), NULL, 0, NULL);
     NS_HANDLE_JET_ERROR(err)
-    err = JetRetrieveColumn(sesid, tableid, titleColumnId, &titleBuffer,
+    err = JetRetrieveColumn(sesid, tableid, titleColumnInfo.columnid, &titleBuffer,
                             sizeof(titleBuffer), NULL, 0, NULL);
     NS_HANDLE_JET_ERROR(err)
-    err = JetRetrieveColumn(sesid, tableid, addedDateColumnId, &addedDate,
+    err = JetRetrieveColumn(sesid, tableid, addedDateColumnInfo.columnid, &addedDate,
                             sizeof(addedDate), NULL, 0, NULL);
     NS_HANDLE_JET_ERROR(err)
     nsCOMPtr<nsIWritablePropertyBag2> pbag = do_CreateInstance("@mozilla.org/hash-property-bag;1");
