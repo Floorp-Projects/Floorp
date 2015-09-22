@@ -20,33 +20,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=469304
 
 /** Test for Bug 469304 **/
 function testGetAttribute() {
-  var a1 = document.createAttribute("aa");
+  var a1 = document.createAttributeNS("", "aa");
   a1.nodeValue = "lowercase";
-  var a2 = document.createAttribute("AA");
+  var a2 = document.createAttributeNS("", "AA");
   a2.nodeValue = "UPPERCASE";
   document.body.setAttributeNode(a1);
   document.body.setAttributeNode(a2);
   var log = document.getElementById("log");
-  is(document.body.getAttribute('aa'), "UPPERCASE", "Wrong value (1)");
-  is(document.body.getAttribute('AA'), "UPPERCASE", "Wrong value (2)");
+  is(document.body.getAttribute('aa'), null, "Attribute has the localName AA and not aa.");
+  is(document.body.getAttribute('AA'), null, "Attribute has the localName AA and not aa.");
+  is(document.body.getAttributeNS("", "aa"), null, "Attribute should have localName AA.");
+  is(document.body.getAttributeNS("", "AA"), "UPPERCASE", "Attribute should have value UPPERCASE!");
 
   var s = "";
   for (var i = 0; i < document.body.attributes.length; ++i) {
     s += document.body.attributes[i].nodeName + "=" +
          document.body.attributes[i].nodeValue;
   }
-  is(s, "aa=UPPERCASE", "Wrong attribute!");
+  is(s, "AA=UPPERCASE", "Wrong attribute!");
 
   is(document.body.getAttributeNode("aa"), document.body.getAttributeNode("AA"),
      "Wrong node!");
 
-  document.body.getAttributeNode("AA").nodeValue = "FOO";
-  is(document.body.getAttribute("AA"), "FOO", "Wrong value!");
+  document.body.getAttributeNodeNS("", "AA").nodeValue = "FOO";
+  is(document.body.getAttributeNS("", "AA"), "FOO", "Wrong value!");
 
-  document.body.removeAttributeNode(document.body.getAttributeNode("AA"));
-  ok(!document.body.hasAttribute("AA"), "Should not have attribute!");
+  document.body.removeAttributeNode(document.body.getAttributeNodeNS("", "AA"));
   ok(!document.body.getAttributeNode("AA"), "Should not have attribute node!");
-  ok(!document.body.hasAttribute("aa"), "Should not have attribute!");
   ok(!document.body.getAttributeNode("aa"), "Should not have attribute node!");
 
   is(a2.nodeValue, "FOO", "Wrong value!");
@@ -54,10 +54,10 @@ function testGetAttribute() {
   is(a2.nodeValue, "UPPERCASE", "Wrong value!");
 
   document.body.setAttributeNode(a2);
-  is(document.body.getAttribute("AA"), "UPPERCASE", "wrong value!");
-  ok(document.body.getAttributeNode("AA"), "Should have attribute node!");
-  is(document.body.getAttribute("aa"), "UPPERCASE", "wrong value!");
-  ok(document.body.getAttributeNode("aa"), "Should have attribute node!");
+  is(document.body.getAttributeNS("", "AA"), "UPPERCASE", "Wrong value!");
+  ok(document.body.getAttributeNodeNS("", "AA"), "Should have attribute node!");
+  is(document.body.getAttributeNS("", "aa"), null, "No attribute has the localName aa.");
+  ok(!document.body.getAttributeNodeNS("", "aa"), "Should not have attribute node!");
 }
 testGetAttribute();
 
@@ -72,10 +72,10 @@ is(testGetAttributeCaseInsensitive(), "x", "(1)");
 
 function testGetAttributeNodeMixedCase() {
   var div = document.createElement('div');
-  var a = div.ownerDocument.createAttribute("mixedCaseAttrib");
+  var a = div.ownerDocument.createAttributeNS("", "mixedCaseAttrib");
   a.nodeValue = "x";
   div.setAttributeNode(a);
-  return div.getAttribute("mixedCaseAttrib");
+  return div.getAttributeNS("", "mixedCaseAttrib");
 }
 is(testGetAttributeNodeMixedCase(), "x", "(2)");
 
@@ -114,7 +114,7 @@ function testAttribNodeNameFoldsCaseGetNode() {
   var a = body.ownerDocument.createAttribute("A");
   a.nodeValue = "x";
   body.setAttributeNode(a);
-  a = document.body.getAttributeNode("A");
+  a = document.body.getAttributeNodeNS("", "a");
   if (!a)
       return "FAIL";
   var result = [ a.name, a.nodeName ];
@@ -127,14 +127,14 @@ function testAttribNodeNameFoldsCaseGetNode2() {
   var a = body.ownerDocument.createAttribute("B");
   a.nodeValue = "x";
   body.setAttributeNode(a);
-  a = document.body.getAttributeNode("B");
+  a = document.body.getAttributeNodeNS("", "b");
   if (!a)
       return "FAIL";
   // Now create node second time
   a = body.ownerDocument.createAttribute("B");
   a.nodeValue = "x";
   body.setAttributeNode(a);
-  a = document.body.getAttributeNode("B");
+  a = document.body.getAttributeNodeNS("", "b");
   var result = [ a.name, a.nodeName ];
   return result.join(",");
 }
