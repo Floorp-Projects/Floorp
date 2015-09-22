@@ -50,6 +50,11 @@ PresentationParent::ActorDestroy(ActorDestroyReason aWhy)
   }
   mSessionIds.Clear();
 
+  for (uint32_t i = 0; i < mWindowIds.Length(); i++) {
+    NS_WARN_IF(NS_FAILED(mService->UnregisterRespondingListener(mWindowIds[i])));
+  }
+  mWindowIds.Clear();
+
   mService->UnregisterAvailabilityListener(this);
   mService = nullptr;
 }
@@ -149,6 +154,8 @@ PresentationParent::RecvUnregisterSessionHandler(const nsString& aSessionId)
 PresentationParent::RecvRegisterRespondingHandler(const uint64_t& aWindowId)
 {
   MOZ_ASSERT(mService);
+
+  mWindowIds.AppendElement(aWindowId);
   NS_WARN_IF(NS_FAILED(mService->RegisterRespondingListener(aWindowId, this)));
   return true;
 }
@@ -157,6 +164,7 @@ PresentationParent::RecvRegisterRespondingHandler(const uint64_t& aWindowId)
 PresentationParent::RecvUnregisterRespondingHandler(const uint64_t& aWindowId)
 {
   MOZ_ASSERT(mService);
+  mWindowIds.RemoveElement(aWindowId);
   NS_WARN_IF(NS_FAILED(mService->UnregisterRespondingListener(aWindowId)));
   return true;
 }

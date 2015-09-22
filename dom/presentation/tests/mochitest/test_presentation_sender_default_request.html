@@ -81,6 +81,8 @@ function testStartSession() {
       gScript.sendAsyncMessage('trigger-incoming-answer');
     });
 
+    ok(!navigator.presentation.receiver, "Sender shouldn't get a presentation receiver instance.");
+
     navigator.presentation.defaultRequest.onsessionconnect = function(aEvent) {
       navigator.presentation.defaultRequest.onsessionconnect = null;
       session = aEvent.session;
