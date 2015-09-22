@@ -2237,10 +2237,6 @@ struct nsStyleDisplay {
     return NS_STYLE_POSITION_RELATIVE == mPosition ||
            NS_STYLE_POSITION_STICKY == mPosition;
   }
-  bool IsPositionForcingStackingContext() const {
-    return NS_STYLE_POSITION_STICKY == mPosition ||
-           NS_STYLE_POSITION_FIXED == mPosition;
-  }
 
   static bool IsRubyDisplayType(uint8_t aDisplay) {
     return NS_STYLE_DISPLAY_RUBY == aDisplay ||
