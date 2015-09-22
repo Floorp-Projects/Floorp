@@ -69,7 +69,7 @@ SOURCES += [
     'nsCocoaDebugUtils.mm',
 ]
 
-if not CONFIG['RELEASE_BUILD'] or CONFIG['DEBUG']:
+if not CONFIG['RELEASE_BUILD'] or CONFIG['MOZ_DEBUG']:
     SOURCES += [
         'nsSandboxViolationSink.mm',
     ]
