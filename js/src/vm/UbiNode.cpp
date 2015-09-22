@@ -477,7 +477,7 @@ RootList::addRoot(Node node, const char16_t* edgeName)
 
     UniquePtr<char16_t[], JS::FreePolicy> name;
     if (edgeName) {
-        name = DuplicateString(edgeName);
+        name = js::DuplicateString(edgeName);
         if (!name)
             return false;
     }
