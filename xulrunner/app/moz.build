@@ -13,7 +13,7 @@ SOURCES += [
 ]
 
 DEFINES['XULRUNNER_PROGNAME'] = '"xulrunner"'
-if CONFIG['DEBUG']:
+if CONFIG['MOZ_DEBUG']:
     DEFINES['DEBUG'] = True
 
 LOCAL_INCLUDES += [
