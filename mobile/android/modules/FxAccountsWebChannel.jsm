@@ -29,6 +29,7 @@ const COMMAND_CAN_LINK_ACCOUNT     = "fxaccounts:can_link_account";
 const COMMAND_LOGIN                = "fxaccounts:login";
 const COMMAND_CHANGE_PASSWORD      = "fxaccounts:change_password";
 const COMMAND_DELETE_ACCOUNT       = "fxaccounts:delete_account";
+const COMMAND_PROFILE_CHANGE       = "profile:change";
 
 const PREF_LAST_FXA_USER           = "identity.fxaccounts.lastSignedInUserHash";
 
@@ -332,6 +333,19 @@ this.FxAccountsWebChannel.prototype = {
                 log.i("Firefox Account deleted.");
               });
             }).catch(e => {
+              log.e(e.toString());
+            });
+            break;
+
+          case COMMAND_PROFILE_CHANGE:
+            // Only update an existing Android Account.
+            Accounts.getFirefoxAccount().then(account => {
+              if (!account) {
+                throw new Error("Can't change profile of non-existent Firefox Account!");
+              }
+              return Accounts.notifyFirefoxAccountProfileChanged();
+            })
+            .catch(e => {
               log.e(e.toString());
             });
             break;

@@ -57,13 +57,13 @@ public:
 
   virtual void Listen(BluetoothSocketType aType,
                       const nsAString& aServiceName,
-                      const uint8_t aServiceUuid[16],
+                      const BluetoothUuid& aServiceUuid,
                       int aChannel, bool aEncrypt, bool aAuth,
                       BluetoothSocketResultHandler* aRes) = 0;
 
   virtual void Connect(const nsAString& aBdAddr,
                        BluetoothSocketType aType,
-                       const uint8_t aUuid[16],
+                       const BluetoothUuid& aServiceUuid,
                        int aChannel, bool aEncrypt, bool aAuth,
                        BluetoothSocketResultHandler* aRes) = 0;
 
@@ -1052,7 +1052,7 @@ public:
   /* Remote Services */
 
   virtual void GetRemoteServiceRecord(const nsAString& aRemoteAddr,
-                                      const uint8_t aUuid[16],
+                                      const BluetoothUuid& aUuid,
                                       BluetoothResultHandler* aRes) = 0;
   virtual void GetRemoteServices(const nsAString& aRemoteAddr,
                                  BluetoothResultHandler* aRes) = 0;
