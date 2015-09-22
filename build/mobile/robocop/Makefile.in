@@ -66,6 +66,7 @@ stumbler_jars_dir := $(DEPTH)/mobile/android/stumbler
 ANDROID_CLASSPATH_JARS += \
   $(wildcard $(jars_dir)/*.jar) \
   $(wildcard $(stumbler_jars_dir)/*.jar) \
-  $(ANDROID_COMPAT_LIB) \
-  $(ANDROID_RECYCLERVIEW_LIB) \
+  $(ANDROID_SUPPORT_V4_AAR_LIB) \
+  $(ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB) \
+  $(ANDROID_RECYCLERVIEW_V7_AAR_LIB) \
   $(NULL)
