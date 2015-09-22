@@ -117,7 +117,7 @@ protected:
   class nsChainedEventQueue
   {
   public:
-    nsChainedEventQueue(mozilla::Mutex& aLock)
+    explicit nsChainedEventQueue(mozilla::Mutex& aLock)
       : mNext(nullptr)
       , mQueue(aLock)
     {
