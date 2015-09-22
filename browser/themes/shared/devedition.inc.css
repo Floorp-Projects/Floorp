@@ -268,7 +268,6 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
 .tabbrowser-tab::after,
 .tabbrowser-tab::before {
   background: currentColor;
-  opacity: 0.2 !important;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down,
