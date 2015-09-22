@@ -5,52 +5,30 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
-    'mozHunspell.cpp',
-    'mozHunspellDirProvider.cpp',
-    'RemoteSpellCheckEngineChild.cpp',
-    'RemoteSpellCheckEngineParent.cpp',
+    'affentry.cxx',
+    'affixmgr.cxx',
+    'csutil.cxx',
+    'dictmgr.cxx',
+    'filemgr.cxx',
+    'hashmgr.cxx',
+    'hunspell.cxx',
+    'hunzip.cxx',
+    'phonet.cxx',
+    'replist.cxx',
+    'suggestmgr.cxx',
 ]
 
-if not CONFIG['MOZ_NATIVE_HUNSPELL']:
-    SOURCES += [
-        'affentry.cxx',
-        'affixmgr.cxx',
-        'csutil.cxx',
-        'dictmgr.cxx',
-        'filemgr.cxx',
-        'hashmgr.cxx',
-        'hunspell.cxx',
-        'hunzip.cxx',
-        'phonet.cxx',
-        'replist.cxx',
-        'suggestmgr.cxx',
-    ]
-    # This variable is referenced in configure.in.  Make sure to change that file
-    # too if you need to change this variable.
-    DEFINES['HUNSPELL_STATIC'] = True
-else:
-    CXXFLAGS += CONFIG['MOZ_HUNSPELL_CFLAGS']
+# This variable is referenced in configure.in.  Make sure to change that file
+# too if you need to change this variable.
+DEFINES['HUNSPELL_STATIC'] = True
 
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
-    '/dom/base',
-    '/editor/libeditor',
-    '/extensions/spellcheck/src',
+    '../glue',
 ]
 
-# XXX: This directory is a mix of Mozilla code and third-party code. We should
-# put the Mozilla code in a separate directory and disallow compiler warnings
-# there (bug 1200065). Until then, allow warnings for all of the code.
 ALLOW_COMPILER_WARNINGS = True
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
-IPDL_SOURCES = [
-    'PRemoteSpellcheckEngine.ipdl',
-]
-
-EXPORTS.mozilla += [
-     'RemoteSpellCheckEngineChild.h',
-     'RemoteSpellCheckEngineParent.h',
-]
