@@ -7,10 +7,6 @@
 os_win = 0
 os_posix = 0
 os_macosx = 0
-os_dragonfly = 0
-os_freebsd = 0
-os_netbsd = 0
-os_openbsd = 0
 os_bsd = 0
 os_linux = 0
 
@@ -20,17 +16,8 @@ else:
     os_posix = 1
     if CONFIG['OS_ARCH'] == 'Darwin':
         os_macosx = 1
-    elif CONFIG['OS_ARCH'] == 'DragonFly':
-        os_dragonfly = 1
-        os_bsd = 1
-    elif CONFIG['OS_ARCH'] in ['FreeBSD', 'GNU_kFreeBSD']:
-        os_freebsd = 1
-        os_bsd = 1
-    elif CONFIG['OS_ARCH'] == 'NetBSD':
-        os_netbsd = 1
-        os_bsd = 1
-    elif CONFIG['OS_ARCH'] == 'OpenBSD':
-        os_openbsd = 1
+    elif CONFIG['OS_ARCH'] in ['DragonFly', 'FreeBSD', 'GNU_kFreeBSD',
+                               'NetBSD', 'OpenBSD']:
         os_bsd = 1
     else:
         os_linux = 1
@@ -124,7 +111,8 @@ elif not CONFIG['MOZ_NATIVE_LIBEVENT']:
         'src/third_party/libevent/strlcpy.c',
     ]
     SOURCES += [
-        # This file cannot be built in unified mode because of strtotimeval symbol clash.
+        # This file cannot be built in unified mode because of strtotimeval
+        # symbol clash.
         'src/third_party/libevent/evdns.c',
     ]
     DEFINES['HAVE_CONFIG_H'] = True
@@ -180,7 +168,8 @@ if os_macosx:
         'src/chrome/common/transport_dib_mac.cc',
     ]
     SOURCES += [
-        # This file cannot be built in unified mode because of the redefinition of NoOp.
+        # This file cannot be built in unified mode because of the redefinition
+        # of NoOp.
         'src/base/platform_thread_mac.mm',
     ]
     if not CONFIG['MOZ_NATIVE_LIBEVENT']:
