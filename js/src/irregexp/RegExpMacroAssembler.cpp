@@ -523,12 +523,14 @@ InterpretedRegExpMacroAssembler::Emit8(uint32_t word)
 void
 InterpretedRegExpMacroAssembler::Expand()
 {
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+
     int newLength = Max(100, length_ * 2);
     if (newLength < length_ + 4)
-        CrashAtUnhandlableOOM("InterpretedRegExpMacroAssembler::Expand");
+        oomUnsafe.crash("InterpretedRegExpMacroAssembler::Expand");
 
     buffer_ = (uint8_t*) js_realloc(buffer_, newLength);
     if (!buffer_)
-        CrashAtUnhandlableOOM("InterpretedRegExpMacroAssembler::Expand");
+        oomUnsafe.crash("InterpretedRegExpMacroAssembler::Expand");
     length_ = newLength;
 }

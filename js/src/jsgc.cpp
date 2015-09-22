@@ -2015,19 +2015,30 @@ PtrIsInRange(const void* ptr, const void* start, size_t length)
 }
 #endif
 
-static bool
+static TenuredCell*
+AllocRelocatedCell(Zone* zone, AllocKind thingKind, size_t thingSize)
+{
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    void* dstAlloc = zone->arenas.allocateFromFreeList(thingKind, thingSize);
+    if (!dstAlloc)
+        dstAlloc = GCRuntime::refillFreeListInGC(zone, thingKind);
+    if (!dstAlloc) {
+        // This can only happen in zeal mode or debug builds as we don't
+        // otherwise relocate more cells than we have existing free space
+        // for.
+        oomUnsafe.crash("Could not allocate new arena while compacting");
+    }
+    return TenuredCell::fromPointer(dstAlloc);
+}
+
+static void
 RelocateCell(Zone* zone, TenuredCell* src, AllocKind thingKind, size_t thingSize)
 {
     JS::AutoSuppressGCAnalysis nogc(zone->runtimeFromMainThread());
 
     // Allocate a new cell.
     MOZ_ASSERT(zone == src->zone());
-    void* dstAlloc = zone->arenas.allocateFromFreeList(thingKind, thingSize);
-    if (!dstAlloc)
-        dstAlloc = GCRuntime::refillFreeListInGC(zone, thingKind);
-    if (!dstAlloc)
-        return false;
-    TenuredCell* dst = TenuredCell::fromPointer(dstAlloc);
+    TenuredCell* dst = AllocRelocatedCell(zone, thingKind, thingSize);
 
     // Copy source cell contents to destination.
     memcpy(dst, src, thingSize);
@@ -2068,8 +2079,6 @@ RelocateCell(Zone* zone, TenuredCell* src, AllocKind thingKind, size_t thingSize
     // Mark source cell as forwarded and leave a pointer to the destination.
     RelocationOverlay* overlay = RelocationOverlay::fromCell(src);
     overlay->forwardTo(dst);
-
-    return true;
 }
 
 static void
@@ -2086,12 +2095,7 @@ RelocateArena(ArenaHeader* aheader, SliceBudget& sliceBudget)
     size_t thingSize = aheader->getThingSize();
 
     for (ArenaCellIterUnderFinalize i(aheader); !i.done(); i.next()) {
-        if (!RelocateCell(zone, i.getCell(), thingKind, thingSize)) {
-            // This can only happen in zeal mode or debug builds as we don't
-            // otherwise relocate more cells than we have existing free space
-            // for.
-            CrashAtUnhandlableOOM("Could not allocate new arena while compacting");
-        }
+        RelocateCell(zone, i.getCell(), thingKind, thingSize);
         sliceBudget.step();
     }
 
@@ -2299,6 +2303,7 @@ GCRuntime::sweepZoneAfterCompacting(Zone* zone)
     FreeOp* fop = rt->defaultFreeOp();
     sweepTypesAfterCompacting(zone);
     zone->sweepBreakpoints(fop);
+    zone->sweepWeakMaps();
 
     for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
         c->sweepInnerViews();
@@ -2312,7 +2317,6 @@ GCRuntime::sweepZoneAfterCompacting(Zone* zone)
         c->sweepSelfHostingScriptSource();
         c->sweepDebugScopes();
         c->sweepJitCompartment(fop);
-        c->sweepWeakMaps();
         c->sweepNativeIterators();
         c->sweepTemplateObjects();
     }
@@ -2632,9 +2636,9 @@ GCRuntime::updatePointersToRelocatedCells(Zone* zone)
         Debugger::markAll(&trc);
         Debugger::markIncomingCrossCompartmentEdges(&trc);
 
+        WeakMapBase::markAll(zone, &trc);
         for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
             c->trace(&trc);
-            WeakMapBase::markAll(c, &trc);
             if (c->watchpointMap)
                 c->watchpointMap->markAll(&trc);
         }
@@ -3390,8 +3394,12 @@ GCHelperState::startBackgroundThread(State newState)
     MOZ_ASSERT(!thread && state() == IDLE && newState != IDLE);
     setState(newState);
 
-    if (!HelperThreadState().gcHelperWorklist().append(this))
-        CrashAtUnhandlableOOM("Could not add to pending GC helpers list");
+    {
+        AutoEnterOOMUnsafeRegion noOOM;
+        if (!HelperThreadState().gcHelperWorklist().append(this))
+            noOOM.crash("Could not add to pending GC helpers list");
+    }
+
     HelperThreadState().notifyAll(GlobalHelperThreadState::PRODUCER);
 }
 
@@ -3939,9 +3947,9 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason)
             zone->arenas.unmarkAll();
         }
 
-        for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
-            /* Unmark all weak maps in the compartments being collected. */
-            WeakMapBase::unmarkCompartment(c);
+        for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+            /* Unmark all weak maps in the zones being collected. */
+            WeakMapBase::unmarkZone(zone);
         }
 
         if (isFull)
@@ -4023,7 +4031,7 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason)
     return true;
 }
 
-template <class CompartmentIterT>
+template <class ZoneIterT>
 void
 GCRuntime::markWeakReferences(gcstats::Phase phase)
 {
@@ -4039,11 +4047,13 @@ GCRuntime::markWeakReferences(gcstats::Phase phase)
 
     for (;;) {
         bool markedAny = false;
-        for (CompartmentIterT c(rt); !c.done(); c.next()) {
+        if (!marker.isWeakMarkingTracer()) {
+            for (ZoneIterT zone(rt); !zone.done(); zone.next())
+                markedAny |= WeakMapBase::markZoneIteratively(zone, &marker);
+        }
+        for (CompartmentsIterT<ZoneIterT> c(rt); !c.done(); c.next()) {
             if (c->watchpointMap)
                 markedAny |= c->watchpointMap->markIteratively(&marker);
-            if (!marker.isWeakMarkingTracer())
-                markedAny |= WeakMapBase::markCompartmentIteratively(c, &marker);
         }
         markedAny |= Debugger::markAllIteratively(&marker);
         markedAny |= jit::JitRuntime::MarkJitcodeGlobalTableIteratively(&marker);
@@ -4062,7 +4072,7 @@ GCRuntime::markWeakReferences(gcstats::Phase phase)
 void
 GCRuntime::markWeakReferencesInCurrentGroup(gcstats::Phase phase)
 {
-    markWeakReferences<GCCompartmentGroupIter>(phase);
+    markWeakReferences<GCZoneGroupIter>(phase);
 }
 
 template <class ZoneIterT, class CompartmentIterT>
@@ -4091,7 +4101,7 @@ GCRuntime::markGrayReferencesInCurrentGroup(gcstats::Phase phase)
 void
 GCRuntime::markAllWeakReferences(gcstats::Phase phase)
 {
-    markWeakReferences<GCCompartmentsIter>(phase);
+    markWeakReferences<GCZonesIter>(phase);
 }
 
 void
@@ -4194,8 +4204,8 @@ js::gc::MarkingValidator::nonIncrementalMark()
     if (!markedWeakMaps.init())
         return;
 
-    for (GCCompartmentsIter c(runtime); !c.done(); c.next()) {
-        if (!WeakMapBase::saveCompartmentMarkedWeakMaps(c, markedWeakMaps))
+    for (GCZonesIter zone(runtime); !zone.done(); zone.next()) {
+        if (!WeakMapBase::saveZoneMarkedWeakMaps(zone, markedWeakMaps))
             return;
     }
 
@@ -4204,8 +4214,9 @@ js::gc::MarkingValidator::nonIncrementalMark()
         return;
 
     for (gc::WeakKeyTable::Range r = gc->marker.weakKeys.all(); !r.empty(); r.popFront()) {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
         if (!savedWeakKeys.put(Move(r.front().key), Move(r.front().value)))
-            CrashAtUnhandlableOOM("saving weak keys table for validator");
+            oomUnsafe.crash("saving weak keys table for validator");
     }
 
     /*
@@ -4226,8 +4237,8 @@ js::gc::MarkingValidator::nonIncrementalMark()
         {
             gcstats::AutoPhase ap(gc->stats, gcstats::PHASE_UNMARK);
 
-            for (GCCompartmentsIter c(runtime); !c.done(); c.next())
-                WeakMapBase::unmarkCompartment(c);
+            for (GCZonesIter zone(runtime); !zone.done(); zone.next())
+                WeakMapBase::unmarkZone(zone);
 
             MOZ_ASSERT(gcmarker->isDrained());
             gcmarker->reset();
@@ -4276,14 +4287,15 @@ js::gc::MarkingValidator::nonIncrementalMark()
         Swap(*entry, *bitmap);
     }
 
-    for (GCCompartmentsIter c(runtime); !c.done(); c.next())
-        WeakMapBase::unmarkCompartment(c);
+    for (GCZonesIter zone(runtime); !zone.done(); zone.next())
+        WeakMapBase::unmarkZone(zone);
     WeakMapBase::restoreMarkedWeakMaps(markedWeakMaps);
 
     gc->marker.weakKeys.clear();
     for (gc::WeakKeyTable::Range r = savedWeakKeys.all(); !r.empty(); r.popFront()) {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
         if (!gc->marker.weakKeys.put(Move(r.front().key), Move(r.front().value)))
-            CrashAtUnhandlableOOM("restoring weak keys table for validator");
+            oomUnsafe.crash("restoring weak keys table for validator");
     }
 
     gc->incrementalState = state;
@@ -4480,8 +4492,8 @@ GCRuntime::findZoneEdgesForWeakMaps()
      * group.
      */
 
-    for (GCCompartmentsIter comp(rt); !comp.done(); comp.next()) {
-        if (!WeakMapBase::findZoneEdgesForCompartment(comp))
+    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+        if (!WeakMapBase::findInterZoneEdges(zone))
             return false;
     }
 
@@ -5006,9 +5018,11 @@ GCRuntime::beginSweepingZoneGroup()
                 c->sweepObjectPendingMetadata();
                 c->sweepDebugScopes();
                 c->sweepJitCompartment(&fop);
-                c->sweepWeakMaps();
                 c->sweepTemplateObjects();
             }
+
+            for (GCZoneGroupIter zone(rt); !zone.done(); zone.next())
+                zone->sweepWeakMaps();
 
             // Bug 1071218: the following two methods have not yet been
             // refactored to work on a single zone-group at once.

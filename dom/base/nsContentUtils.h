@@ -624,7 +624,7 @@ public:
    * @param aContext the context the image is loaded in (eg an element)
    * @param aLoadingDocument the document we belong to
    * @param aLoadingPrincipal the principal doing the load
-   * @param [aContentPolicyType=nsIContentPolicy::TYPE_IMAGE] (Optional)
+   * @param [aContentPolicyType=nsIContentPolicy::TYPE_INTERNAL_IMAGE] (Optional)
    *        The CP content type to use
    * @param aImageBlockingStatus the nsIContentPolicy blocking status for this
    *        image.  This will be set even if a security check fails for the
@@ -640,7 +640,7 @@ public:
                            nsIDocument* aLoadingDocument,
                            nsIPrincipal* aLoadingPrincipal,
                            int16_t* aImageBlockingStatus = nullptr,
-                           uint32_t aContentPolicyType = nsIContentPolicy::TYPE_IMAGE);
+                           uint32_t aContentPolicyType = nsIContentPolicy::TYPE_INTERNAL_IMAGE);
 
   /**
    * Returns true if objects in aDocument shouldn't initiate image loads.
@@ -660,7 +660,7 @@ public:
    *         creation
    * @param aObserver the observer for the image load
    * @param aLoadFlags the load flags to use.  See nsIRequest
-   * @param [aContentPolicyType=nsIContentPolicy::TYPE_IMAGE] (Optional)
+   * @param [aContentPolicyType=nsIContentPolicy::TYPE_INTERNAL_IMAGE] (Optional)
    *        The CP content type to use
    * @return the imgIRequest for the image load
    */
@@ -673,7 +673,7 @@ public:
                             int32_t aLoadFlags,
                             const nsAString& initiatorType,
                             imgRequestProxy** aRequest,
-                            uint32_t aContentPolicyType = nsIContentPolicy::TYPE_IMAGE);
+                            uint32_t aContentPolicyType = nsIContentPolicy::TYPE_INTERNAL_IMAGE);
 
   /**
    * Obtain an image loader that respects the given document/channel's privacy status.
@@ -964,6 +964,16 @@ public:
    * Note: DO NOT call this function unless you know what you're doing!
    */
   static nsContentPolicyType InternalContentPolicyTypeToExternalOrScript(nsContentPolicyType aType);
+
+  /**
+   * Map internal content policy types to external ones or preload types:
+   *   * TYPE_INTERNAL_SCRIPT_PRELOAD
+   *   * TYPE_INTERNAL_IMAGE_PRELOAD
+   *   * TYPE_INTERNAL_STYLESHEET_PRELOAD
+   *
+   * Note: DO NOT call this function unless you know what you're doing!
+   */
+  static nsContentPolicyType InternalContentPolicyTypeToExternalOrPreload(nsContentPolicyType aType);
 
   /**
    * Quick helper to determine whether there are any mutation listeners

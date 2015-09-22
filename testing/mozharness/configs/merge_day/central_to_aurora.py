@@ -1,6 +1,11 @@
 config = {
     "log_name": "central_to_aurora",
-
+    "version_files": [
+        "browser/config/version.txt",
+        "browser/config/version_display.txt",
+        "config/milestone.txt",
+        "b2g/confvars.sh",
+    ],
     "replacements": [
         # File, from, to
         ("{}/{}".format(d, f),

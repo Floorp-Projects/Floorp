@@ -1205,6 +1205,16 @@ intrinsic_RuntimeDefaultLocale(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+intrinsic_LocalTZA(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 0, "the LocalTZA intrinsic takes no arguments");
+
+    args.rval().setDouble(cx->runtime()->dateTimeInfo.localTZA());
+    return true;
+}
+
+static bool
 intrinsic_IsConstructing(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1324,6 +1334,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("_ConstructorForTypedArray", intrinsic_ConstructorForTypedArray, 1,0),
     JS_FN("DecompileArg",            intrinsic_DecompileArg,            2,0),
     JS_FN("RuntimeDefaultLocale",    intrinsic_RuntimeDefaultLocale,    0,0),
+    JS_FN("LocalTZA",                intrinsic_LocalTZA,                0,0),
 
     JS_INLINABLE_FN("_IsConstructing", intrinsic_IsConstructing,        0,0,
                     IntrinsicIsConstructing),

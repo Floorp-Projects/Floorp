@@ -120,6 +120,7 @@ public:
       } else {
         if (mLeftOverData != INT32_MIN) {
           mLeftOverData = INT32_MIN;
+          aStream->CheckForInactive();
           nsRefPtr<PlayingRefChanged> refchanged =
             new PlayingRefChanged(aStream, PlayingRefChanged::RELEASE);
           aStream->Graph()->
@@ -152,6 +153,11 @@ public:
     aOutput->AllocateChannels(2);
 
     mReverb->process(&input, aOutput, WEBAUDIO_BLOCK_SIZE);
+  }
+
+  virtual bool IsActive() const override
+  {
+    return mLeftOverData != INT32_MIN;
   }
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override

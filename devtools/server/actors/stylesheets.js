@@ -606,7 +606,7 @@ var StyleSheetActor = protocol.ActorClass({
 
     let options = {
       loadFromCache: true,
-      policy: Ci.nsIContentPolicy.TYPE_STYLESHEET,
+      policy: Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET,
       window: this.window,
       charset: this._getCSSCharset()
     };
@@ -692,7 +692,7 @@ var StyleSheetActor = protocol.ActorClass({
       url = normalize(url, this.href);
       let options = {
         loadFromCache: false,
-        policy: Ci.nsIContentPolicy.TYPE_STYLESHEET,
+        policy: Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET,
         window: this.window
       };
       let map = fetch(url, options)
@@ -1020,7 +1020,7 @@ var OriginalSourceActor = protocol.ActorClass({
       return promise.resolve(content);
     }
     let options = {
-      policy: Ci.nsIContentPolicy.TYPE_STYLESHEET,
+      policy: Ci.nsIContentPolicy.TYPE_INTERNAL_STYLESHEET,
       window: this.window
     };
     return fetch(this.url, options).then(({content}) => {

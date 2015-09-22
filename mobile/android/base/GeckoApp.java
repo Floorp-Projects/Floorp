@@ -1227,7 +1227,6 @@ public abstract class GeckoApp
             final String uri = getURIFromIntent(intent);
 
             GeckoThread.ensureInit(args, action,
-                    TextUtils.isEmpty(uri) ? null : uri,
                     /* debugging */ ACTION_DEBUG.equals(action));
 
             if (!TextUtils.isEmpty(uri)) {
