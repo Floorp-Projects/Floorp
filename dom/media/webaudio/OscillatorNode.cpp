@@ -295,7 +295,7 @@ public:
   {
     MOZ_ASSERT(mSource == aStream, "Invalid source stream");
 
-    StreamTime ticks = aStream->GraphTimeToStreamTime(aFrom);
+    StreamTime ticks = mDestination->GraphTimeToStreamTime(aFrom);
     if (mStart == -1) {
       ComputeSilence(aOutput);
       return;

@@ -87,7 +87,7 @@ public:
       aOutput->AllocateChannels(aInput.ChannelCount());
 
       // Compute the gain values for the duration of the input AudioChunk
-      StreamTime tick = aStream->GraphTimeToStreamTime(aFrom);
+      StreamTime tick = mDestination->GraphTimeToStreamTime(aFrom);
       float computedGain[WEBAUDIO_BLOCK_SIZE];
       mGain.GetValuesAtTime(tick, computedGain, WEBAUDIO_BLOCK_SIZE);
 

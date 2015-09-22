@@ -18,7 +18,7 @@ void WebAudioUtils::ConvertAudioTimelineEventToTicks(AudioTimelineEvent& aEvent,
 {
   MOZ_ASSERT(!aSource || aSource->SampleRate() == aDest->SampleRate());
   aEvent.SetTimeInTicks(
-      aSource->TicksFromDestinationTime(aDest, aEvent.Time<double>()));
+      aDest->SecondsToNearestStreamTime(aEvent.Time<double>()));
   aEvent.mTimeConstant *= aSource->SampleRate();
   aEvent.mDuration *= aSource->SampleRate();
 }
