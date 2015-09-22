@@ -264,6 +264,18 @@ class B2GBuildBaseScript(BuildbotMixin, MockMixin,
         self.gecko_config = self.query_remote_gecko_config()
         return self.gecko_config
 
+    def symlink_gtk3(self):
+        dirs = self.query_abs_dirs()
+        gtk3_path = os.path.join(dirs['abs_work_dir'], 'gtk3')
+        gtk3_symlink_path = os.path.join(dirs['abs_work_dir'], 'gecko', 'gtk3')
+
+        if os.path.isdir(gtk3_path) and not os.path.isdir(gtk3_symlink_path):
+            cmd = ["ln", "-sf", gtk3_path, gtk3_symlink_path]
+            retval = self.run_command(cmd)
+            if retval != 0:
+                self.error("failed to create symlink")
+                self.return_code = 2
+
     def query_build_env(self):
         """Retrieves the environment for building"""
         dirs = self.query_abs_dirs()
@@ -284,6 +296,13 @@ class B2GBuildBaseScript(BuildbotMixin, MockMixin,
         # If we get a buildid from buildbot, pass that in as MOZ_BUILD_DATE
         if self.buildbot_config and 'buildid' in self.buildbot_config.get('properties', {}):
             env['MOZ_BUILD_DATE'] = self.buildbot_config['properties']['buildid']
+
+        self.symlink_gtk3()
+        env['LD_LIBRARY_PATH'] = os.environ.get('LD_LIBRARY_PATH')
+        if env['LD_LIBRARY_PATH'] is None:
+            env['LD_LIBRARY_PATH'] = os.path.join(dirs['abs_work_dir'], 'gecko', 'gtk3', 'usr', 'local', 'lib')
+        else:
+            env['LD_LIBRARY_PATH'] += ':%s' % os.path.join(dirs['abs_work_dir'], 'gecko', 'gtk3', 'usr', 'local', 'lib')
 
         return env
 
