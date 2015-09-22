@@ -34,6 +34,7 @@ enum class ICOState
   READ_BMP,
   PREPARE_FOR_MASK,
   READ_MASK_ROW,
+  FINISH_MASK,
   SKIP_MASK,
   FINISHED_RESOURCE
 };
@@ -116,11 +117,13 @@ private:
   LexerTransition<ICOState> ReadBMP(const char* aData, uint32_t aLen);
   LexerTransition<ICOState> PrepareForMask();
   LexerTransition<ICOState> ReadMaskRow(const char* aData);
+  LexerTransition<ICOState> FinishMask();
   LexerTransition<ICOState> FinishResource();
 
   StreamingLexer<ICOState, 32> mLexer; // The lexer.
   Maybe<Downscaler> mDownscaler;       // Our downscaler, if we're downscaling.
   nsRefPtr<Decoder> mContainedDecoder; // Either a BMP or PNG decoder.
+  UniquePtr<uint8_t[]> mMaskBuffer;    // A temporary buffer for the alpha mask.
   char mBIHraw[40];                    // The bitmap information header.
   IconDirEntry mDirEntry;              // The dir entry for the selected resource.
   IntSize mBiggestResourceSize;        // Used to select the intrinsic size.
@@ -134,6 +137,7 @@ private:
   uint32_t mMaskRowSize;  // The size in bytes of each row in the BMP alpha mask.
   uint32_t mCurrMaskLine; // The line of the BMP alpha mask we're processing.
   bool mIsCursor;         // Is this ICO a cursor?
+  bool mHasMaskAlpha;     // Did the BMP alpha mask have any transparency?
 };
 
 } // namespace image
