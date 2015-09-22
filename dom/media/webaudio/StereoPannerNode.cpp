@@ -149,7 +149,7 @@ public:
       bool onLeft[WEBAUDIO_BLOCK_SIZE];
 
       float values[WEBAUDIO_BLOCK_SIZE];
-      StreamTime tick = aStream->GraphTimeToStreamTime(aFrom);
+      StreamTime tick = mDestination->GraphTimeToStreamTime(aFrom);
       mPan.GetValuesAtTime(tick, values, WEBAUDIO_BLOCK_SIZE);
 
       for (size_t counter = 0; counter < WEBAUDIO_BLOCK_SIZE; ++counter) {

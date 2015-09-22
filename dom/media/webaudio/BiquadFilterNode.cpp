@@ -187,7 +187,7 @@ public:
     uint32_t numberOfChannels = mBiquads.Length();
     aOutput->AllocateChannels(numberOfChannels);
 
-    StreamTime pos = aStream->GraphTimeToStreamTime(aFrom);
+    StreamTime pos = mDestination->GraphTimeToStreamTime(aFrom);
 
     double freq = mFrequency.GetValueAtTime(pos);
     double q = mQ.GetValueAtTime(pos);

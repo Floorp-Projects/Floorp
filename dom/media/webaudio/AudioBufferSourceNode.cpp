@@ -98,8 +98,7 @@ public:
     switch (aIndex) {
     case AudioBufferSourceNode::START:
       MOZ_ASSERT(!mStart, "Another START?");
-      mStart =
-        mSource->FractionalTicksFromDestinationTime(mDestination, aParam);
+      mStart = mDestination->SecondsToNearestStreamTime(aParam);
       // Round to nearest
       mBeginProcessing = mStart + 0.5;
       break;
@@ -471,7 +470,7 @@ public:
       return;
     }
 
-    StreamTime streamPosition = aStream->GraphTimeToStreamTime(aFrom);
+    StreamTime streamPosition = mDestination->GraphTimeToStreamTime(aFrom);
     // We've finished if we've gone past mStop, or if we're past mDuration when
     // looping is disabled.
     if (streamPosition >= mStop ||

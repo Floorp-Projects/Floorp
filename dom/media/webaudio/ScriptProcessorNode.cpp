@@ -365,14 +365,13 @@ private:
     MOZ_ASSERT(!NS_IsMainThread());
 
     // we now have a full input buffer ready to be sent to the main thread.
-    StreamTime playbackTick = mSource->GraphTimeToStreamTime(aFrom);
+    StreamTime playbackTick = mDestination->GraphTimeToStreamTime(aFrom);
     // Add the duration of the current sample
     playbackTick += WEBAUDIO_BLOCK_SIZE;
     // Add the delay caused by the main thread
     playbackTick += mSharedBuffers->DelaySoFar();
     // Compute the playback time in the coordinate system of the destination
-    double playbackTime =
-      mSource->DestinationTimeFromTicks(mDestination, playbackTick);
+    double playbackTime = mDestination->StreamTimeToSeconds(playbackTick);
 
     class Command final : public nsRunnable
     {
