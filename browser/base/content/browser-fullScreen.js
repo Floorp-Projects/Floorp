@@ -399,7 +399,7 @@ var FullScreen = {
         Cu.import("resource://gre/modules/DownloadUtils.jsm", utils);
         hostLabel.value = utils.DownloadUtils.getURIHost(uri.spec)[0];
       }
-      this._element.className = gIdentityHandler.getMode();
+      this._element.className = gIdentityHandler.fullscreenWarningClassName;
 
       // User should be allowed to explicitly disable
       // the prompt if they really want.

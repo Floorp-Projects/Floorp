@@ -107,7 +107,8 @@ function checkResult() {
   // getEffectiveHost can't be called for all modes
   if (gCurrentTest.effectiveHost === null) {
     let identityBox = document.getElementById("identity-box");
-    is(identityBox.className == gIdentityHandler.IDENTITY_MODE_UNKNOWN || identityBox.className == gIdentityHandler.IDENTITY_MODE_CHROMEUI, true, "mode matched");
+    ok(identityBox.className == "unknownIdentity" ||
+       identityBox.className == "chromeUI", "mode matched");
   } else {
     is(gIdentityHandler.getEffectiveHost(), gCurrentTest.effectiveHost, "effectiveHost matches for test " + gTestDesc);
   }
