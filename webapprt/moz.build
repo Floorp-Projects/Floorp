@@ -46,9 +46,6 @@ MOCHITEST_WEBAPPRT_CONTENT_MANIFESTS += ['test/content/webapprt.ini']
 DIST_SUBDIR = 'webapprt'
 export('DIST_SUBDIR')
 
-if CONFIG['MOZ_DEBUG']:
-    DEFINES['MOZ_DEBUG'] = 1
-
 if CONFIG['MOZILLA_OFFICIAL']:
     DEFINES['MOZILLA_OFFICIAL'] = True
 
