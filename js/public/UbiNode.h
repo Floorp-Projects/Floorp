@@ -1020,6 +1020,7 @@ struct Concrete<JS::Symbol> : TracerConcrete<JS::Symbol> {
 
 template<> struct Concrete<JSScript> : TracerConcreteWithCompartment<JSScript> {
     CoarseType coarseType() const final { return CoarseType::Script; }
+    Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
 
   protected:
     explicit Concrete(JSScript *ptr) : TracerConcreteWithCompartment<JSScript>(ptr) { }
