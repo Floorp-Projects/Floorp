@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import errno
 import os
+import stat
 import subprocess
 
 
@@ -147,15 +148,31 @@ def install_mobile_android_sdk_or_ndk(url, path):
         file = url.split('/')[-1]
 
         os.chdir(path)
+        abspath = os.path.join(download_path, file)
         if file.endswith('.tar.gz') or file.endswith('.tgz'):
-            cmd = ['tar', 'zvxf']
+            cmd = ['tar', 'zvxf', abspath]
         elif file.endswith('.tar.bz2'):
-            cmd = ['tar', 'jvxf']
-        elif file.endswitch('.zip'):
-            cmd = ['unzip']
+            cmd = ['tar', 'jvxf', abspath]
+        elif file.endswith('.zip'):
+            cmd = ['unzip', abspath]
+        elif file.endswith('.bin'):
+            # Execute the .bin file, which unpacks the content.
+            mode = os.stat(path).st_mode
+            os.chmod(abspath, mode | stat.S_IXUSR)
+            cmd = [abspath]
         else:
             raise NotImplementedError("Don't know how to unpack file: %s" % file)
-        subprocess.check_call(cmd + [os.path.join(download_path, file)])
+
+        print('Unpacking %s...' % abspath)
+
+        with open(os.devnull, "w") as stdout:
+            # These unpack commands produce a ton of output; ignore it.  The
+            # .bin files are 7z archives; there's no command line flag to quiet
+            # output, so we use this hammer.
+            subprocess.check_call(cmd, stdout=stdout)
+
+        print('Unpacking %s... DONE' % abspath)
+
     finally:
         os.chdir(old_path)
 

@@ -29,7 +29,7 @@ MOZ_SZIP_FLAGS="-D auto -f auto"
 
 ac_add_options --enable-elf-hack
 
-ANDROID_NDK_VERSION="r8e"
+ANDROID_NDK_VERSION="r10e"
 ANDROID_NDK_VERSION_32BIT="r8c"
 
 # Build Fennec
