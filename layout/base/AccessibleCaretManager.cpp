@@ -490,9 +490,9 @@ AccessibleCaretManager::OnReflow()
     return;
   }
 
-  if (mFirstCaret->IsVisuallyVisible() || mSecondCaret->IsVisuallyVisible()) {
-    AC_LOG("%s: UpdateCarets()", __FUNCTION__);
-    UpdateCarets();
+  if (mFirstCaret->IsLogicallyVisible() || mSecondCaret->IsLogicallyVisible()) {
+    AC_LOG("%s: UpdateCarets(RespectOldAppearance)", __FUNCTION__);
+    UpdateCarets(UpdateCaretsHint::RespectOldAppearance);
   }
 }
 
