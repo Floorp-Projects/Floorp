@@ -128,13 +128,8 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   nsCOMPtr<nsIDocument> doc = mContent->GetComposedDoc();
 
   nsIContent* content = GetContent();
-  bool isDirPicker =
-#if defined(ANDROID) || defined(MOZ_B2G)
-    false;
-#else
-    Preferences::GetBool("dom.input.dirpicker", false) &&
-                         content && content->HasAttr(kNameSpaceID_None, nsGkAtoms::directory);
-#endif
+  bool isDirPicker = Preferences::GetBool("dom.input.dirpicker", false) &&
+                     content && content->HasAttr(kNameSpaceID_None, nsGkAtoms::directory);
 
   nsRefPtr<HTMLInputElement> fileContent = HTMLInputElement::FromContentOrNull(mContent);
 

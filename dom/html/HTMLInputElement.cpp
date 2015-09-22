@@ -4850,9 +4850,6 @@ HTMLInputElement::ChooseDirectory(ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-  // Script can call this method directly, so even though we don't show the
-  // "Pick Folder..." button on platforms that don't have a directory picker
-  // we have to redirect to the file picker here.
   InitFilePicker(
 #if defined(ANDROID) || defined(MOZ_B2G)
                  // No native directory picker - redirect to plain file picker
