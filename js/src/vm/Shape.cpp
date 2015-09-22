@@ -1663,3 +1663,9 @@ JS::ubi::Concrete<js::Shape>::size(mozilla::MallocSizeOf mallocSizeOf) const
 
     return size;
 }
+
+JS::ubi::Node::Size
+JS::ubi::Concrete<js::BaseShape>::size(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    return js::gc::Arena::thingSize(get().asTenured().getAllocKind());
+}
