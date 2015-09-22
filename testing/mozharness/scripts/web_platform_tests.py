@@ -115,31 +115,31 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
         abs_app_dir = self.query_abs_app_dir()
         run_file_name = "runtests.py"
 
-        base_cmd = [self.query_python_path('python'), '-u']
-        base_cmd.append(os.path.join(dirs["abs_wpttest_dir"], run_file_name))
+        cmd = [self.query_python_path('python'), '-u']
+        cmd.append(os.path.join(dirs["abs_wpttest_dir"], run_file_name))
 
         # Make sure that the logging directory exists
         if self.mkdir_p(dirs["abs_blob_upload_dir"]) == -1:
             self.fatal("Could not create blobber upload directory")
             # Exit
 
-        base_cmd += ["--log-raw=-",
-                     "--log-raw=%s" % os.path.join(dirs["abs_blob_upload_dir"],
-                                                   "wpt_raw.log"),
-                     "--binary=%s" % self.binary_path,
-                     "--symbols-path=%s" % self.query_symbols_url(),
-                     "--stackwalk-binary=%s" % self.query_minidump_stackwalk()]
+        cmd += ["--log-raw=-",
+                "--log-raw=%s" % os.path.join(dirs["abs_blob_upload_dir"],
+                                              "wpt_raw.log"),
+                "--binary=%s" % self.binary_path,
+                "--symbols-path=%s" % self.query_symbols_url(),
+                "--stackwalk-binary=%s" % self.query_minidump_stackwalk()]
 
         for test_type in c.get("test_type", []):
-            base_cmd.append("--test-type=%s" % test_type)
+            cmd.append("--test-type=%s" % test_type)
 
         if c.get("e10s"):
-            base_cmd.append("--e10s")
+            cmd.append("--e10s")
 
         for opt in ["total_chunks", "this_chunk"]:
             val = c.get(opt)
             if val:
-                base_cmd.append("--%s=%s" % (opt.replace("_", "-"), val))
+                cmd.append("--%s=%s" % (opt.replace("_", "-"), val))
 
         options = list(c.get("options", []))
 
@@ -151,9 +151,15 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
             'abs_work_dir': dirs["abs_work_dir"]
             }
 
-        opt_cmd = [item % str_format_values for item in options]
+        try_options, try_tests = self.try_args("web-platform-tests")
 
-        return base_cmd + opt_cmd
+        cmd.extend(self.query_options(options,
+                                      try_options,
+                                      str_format_values=str_format_values))
+        cmd.extend(self.query_tests_args(try_tests,
+                                         str_format_values=str_format_values))
+
+        return cmd
 
     def download_and_extract(self):
         super(WebPlatformTest, self).download_and_extract(
@@ -167,7 +173,6 @@ class WebPlatformTest(TestingMixin, MercurialScript, BlobUploadMixin):
     def run_tests(self):
         dirs = self.query_abs_dirs()
         cmd = self._query_cmd()
-        cmd = self.append_harness_extra_args(cmd)
 
         parser = StructuredOutputParser(config=self.config,
                                         log_obj=self.log_obj)
