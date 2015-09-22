@@ -21,6 +21,8 @@ wget -c -P $TMPDIR ftp://ftp.gnu.org/gnu/binutils/binutils-$binutils_version.tar
 tar xjf $TMPDIR/binutils-$binutils_version.tar.bz2
 mkdir binutils-objdir
 cd binutils-objdir
+# gold is disabled because we don't use it on automation, and also we ran into
+# some issues with it using this script in build-clang.py.
 ../binutils-$binutils_version/configure --prefix /tools/gcc/ --disable-gold --enable-plugins --disable-nls || exit 1
 make $make_flags || exit 1
 make install $make_flags DESTDIR=$root_dir || exit 1
