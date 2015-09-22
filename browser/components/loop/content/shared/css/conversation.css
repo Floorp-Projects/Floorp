@@ -357,7 +357,6 @@ html[dir="rtl"] .room-failure > .settings-control {
  * Dropdown menu hidden behind a chevron
  *
  * .native-dropdown-menu Generic class, contains common styles
- * .standalone-dropdown-menu Initiate call dropdown menu
  * .conversation-window-dropdown Dropdown menu for answer/decline/block options
  */
 
@@ -876,6 +875,22 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   background-color: #4E4E4E;
 }
 
+.media-wrapper > .local {
+  flex: 0 1 auto;
+  width: 200px;
+  height: 150px;
+}
+
+.media-wrapper > .local > .local-video,
+.media-wrapper > .focus-stream > .local > .local-video {
+  width: 100%;
+  height: 100%;
+  /* Transform is to make the local video act like a mirror, as is the
+     convention in video conferencing systems. */
+  transform: scale(-1, 1);
+  transform-origin: 50% 50% 0;
+}
+
 .media-wrapper > .remote {
   /* Works around an issue with object-fit: cover in Google Chrome - it doesn't
      currently crop but overlaps the surrounding elements.
@@ -885,6 +900,13 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 
 .media-wrapper > .remote > .remote-video {
   object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+.media-wrapper > .screen > .screen-share-video {
+  width: 100%;
+  height: 100%;
 }
 
 /* Note: we can't use "display: flex;" for the text-chat-view itself,
@@ -930,14 +952,10 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   height: 100%;
 }
 
-.media-wrapper > .local {
-  flex: 0 1 auto;
-  width: 200px;
-  height: 150px;
-}
-
 .media-wrapper.receiving-screen-share > .screen {
   order: 1;
+  /* Since there is grey stuff behind us, avoid obvious letterboxing */
+  background-color: black;
 }
 
 .media-wrapper.receiving-screen-share > .text-chat-view {
@@ -957,8 +975,8 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 
 @media screen and (max-width:640px) {
   .standalone-room-wrapper > .media-layout {
-    /* 50px is height of header, 38px is height of toolbar, 25px is height of footer. */
-    height: calc(100% - 50px - 38px - 25px);
+    /* 50px is height of header, 25px is height of footer. */
+    height: calc(100% - 50px - 25px);
   }
 
   .media-layout > .media-wrapper {
@@ -1002,9 +1020,7 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
     z-index: 2;
     margin: 3px;
     right: 0;
-    left:auto;
-    /* 29px is (30% of 50px high header) + (height toolbar (38px) +
-       height footer (25px) - height header (50px)) */
+    left: auto;
     bottom: 0;
     width: 120px;
     height: 120px;
@@ -1150,83 +1166,6 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
     flex: 1 1 auto;
     height: auto;
   }
-}
-
-.standalone > #main > .room-conversation-wrapper > .media-layout > .conversation-toolbar {
-  border: none;
-}
-
-/* Standalone rooms */
-
-.standalone .room-conversation-wrapper {
-  position: relative;
-  height: 100%;
-  background: #000;
-}
-.standalone .room-conversation-wrapper .video-layout-wrapper {
-  /* 50px = height of header, 3em = height of footer */
-  /* XXX This is currently wrong for narrow/mobile display,
-     bug 1168829  will hopefully address it. */
-  height: calc(100% - 50px - 3em);
-}
-
-.standalone .room-conversation-wrapper .room-inner-info-area {
-  color: #fff;
-  margin: auto;
-  /* 290px is the width of the widest info child, i.e., a tile */
-  width: 290px;
-}
-
-.standalone .prompt-media-message {
-  padding-top: 136px; /* Fallback for browsers that don't support calc() */
-  /* 122px is 2x the intrinsic height of the background-image, and
-     1rem puts one line of margin between the background-image and
-     supporting text. */
-  padding-top: calc(122px + 1rem);
-  color: #000;
-  background-color: #fff;
-  background-image: url("../../img/gum-others.svg");
-  background-position: top center;
-  /* The background-image is scaled up at 2x the instrinsic size
-     (witdh & height) to make it easier to see. */
-  background-size: 202px 122px;
-  background-repeat: no-repeat;
-  border: 1rem #fff solid;
-  box-shadow: 0 0 5px #000;
-  margin: auto;
-  /* `width` here is specified by the design spec. */
-  width: 250px;
-}
-
-.standalone .prompt-media-message.chrome {
-  background-image: url("../../img/gum-chrome.svg");
-}
-
-.standalone .prompt-media-message.firefox {
-  background-image: url("../../img/gum-firefox.svg");
-}
-
-.standalone .prompt-media-message.opera {
-  background-image: url("../../img/gum-opera.svg");
-}
-
-.standalone .room-conversation-wrapper .room-inner-info-area button {
-  border-radius: 3px;
-  font-size: 1.2em;
-  padding: .2em 1.2em;
-  cursor: pointer;
-}
-
-.standalone .room-conversation-wrapper .room-inner-info-area a.btn {
-  padding: .5em 3em .3em 3em;
-  border-radius: 3px;
-  font-weight: normal;
-  max-width: 400px;
-}
-
-.standalone .room-conversation-wrapper .ended-conversation {
-  position: relative;
-  height: auto;
 }
 
 /* Text chat in styles */
@@ -1578,37 +1517,6 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
     position: relative;
     top: 90px;
   }
-}
-
-.remote-video {
-  /* Since there is grey stuff behind us, avoid obvious letterboxing, only do
-   * this on remote video as local video has transparent background.
-   */
-  background-color: black;
-}
-
-.standalone .screen.focus-stream {
-  /* Since there is grey stuff behind us, avoid obvious letterboxing */
-  background-color: black;
-}
-
-.local-video {
-  width: 100%;
-  height: 100%;
-  /* Transform is to make the local video act like a mirror, as is the
-     convention in video conferencing systems. */
-  transform: scale(-1, 1);
-  transform-origin: 50% 50% 0;
-}
-
-.remote-video {
-  width: 100%;
-  height: 100%;
-}
-
-.screen-share-video {
-  width: 100%;
-  height: 100%;
 }
 
 /* Make sure the loading spinner always gets the same background */
