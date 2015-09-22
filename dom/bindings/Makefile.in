@@ -32,14 +32,14 @@ css2properties_dependencies = \
   $(topsrcdir)/layout/style/nsCSSPropList.h \
   $(topsrcdir)/layout/style/nsCSSPropAliasList.h \
   $(webidl_base)/CSS2Properties.webidl.in \
-  $(webidl_base)/CSS2PropertiesProps.h \
+  $(topsrcdir)/layout/style/PythonCSSProps.h \
   $(srcdir)/GenerateCSS2PropertiesWebIDL.py \
   $(GLOBAL_DEPS) \
   $(NULL)
 
 CSS2Properties.webidl: $(css2properties_dependencies)
 	$(CPP) $(DEFINES) $(ACDEFINES) -I$(topsrcdir)/layout/style \
-	  $(webidl_base)/CSS2PropertiesProps.h | \
+	  $(topsrcdir)/layout/style/PythonCSSProps.h | \
 	    PYTHONDONTWRITEBYTECODE=1 $(PYTHON) \
 	      $(srcdir)/GenerateCSS2PropertiesWebIDL.py \
 	      $(webidl_base)/CSS2Properties.webidl.in > $@
