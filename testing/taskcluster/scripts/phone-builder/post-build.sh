@@ -21,8 +21,8 @@ if [ -f $WORKSPACE/B2G/upload/b2g-*.crashreporter-symbols.zip ]; then
   mv $WORKSPACE/B2G/upload/b2g-*.crashreporter-symbols.zip $HOME/artifacts/b2g-crashreporter-symbols.zip
 fi
 
-if [ -f $WORKSPACE/B2G/upload-public/${DEVICE}.blobfree-dist.zip ]; then
-  mv $WORKSPACE/B2G/upload-public/${DEVICE}.blobfree-dist.zip $HOME/artifacts-public
+if [ -f $WORKSPACE/B2G/upload-public/*.blobfree-dist.zip ]; then
+  mv $WORKSPACE/B2G/upload-public/*.blobfree-dist.zip $HOME/artifacts-public/
 fi
 
 if [ -f $WORKSPACE/B2G/upload-public/$mar_file ]; then
