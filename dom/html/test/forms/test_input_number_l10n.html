@@ -49,23 +49,10 @@ function runTest(test) {
                                      "') localization without grouping separator");
 }
 
-function runInvalidInputTest(test) {
-  elem.lang = test.langTag;
-  elem.value = 0;
-  elem.focus();
-  elem.select();
-  sendString(test.input);
-  is(elem.value, "", "Test " + test.desc + " ('" + test.langTag +
-                             "') with invalid input: " + test.input);
-}
-
 function startTests() {
   elem = document.getElementById("input");
   for (var test of tests) {
     runTest(test, elem);
-  }
-  for (var test of invalidTests) {
-    runInvalidInputTest(test, elem);
   }
 }
 
