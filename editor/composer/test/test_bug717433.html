@@ -32,7 +32,6 @@ var hunspell;
 
 var loadListener = function(evt) {
   Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
-  Components.utils.import("resource://gre/modules/Services.jsm");
 
   if (firstLoad) {
     var dir = Components.classes["@mozilla.org/file/directory_service;1"]
@@ -86,8 +85,8 @@ var loadListener = function(evt) {
       // Remove the fake en-GB dictionary again, since it's otherwise picked up by later tests.
       hunspell.removeDirectory(en_GB);
 
-      // Reset the preference, so the last value we set doesn't collide with the next test.
-      Services.prefs.setCharPref("spellchecker.dictionary", "");
+      // This will clear the content preferences and reset "spellchecker.dictionary".
+      spellchecker.SetCurrentDictionary("");
       SimpleTest.finish();
     }
   });

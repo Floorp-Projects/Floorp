@@ -585,7 +585,8 @@ class RefTest(object):
 
     def runApp(self, profile, binary, cmdargs, env,
                timeout=None, debuggerInfo=None,
-               symbolsPath=None, options=None):
+               symbolsPath=None, options=None,
+               valgrindPath=None, valgrindArgs=None, valgrindSuppFiles=None):
 
         def timeoutHandler():
             self.handleTimeout(

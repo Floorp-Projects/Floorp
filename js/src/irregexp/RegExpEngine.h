@@ -88,7 +88,7 @@ struct RegExpCode
 RegExpCode
 CompilePattern(JSContext* cx, RegExpShared* shared, RegExpCompileData* data,
                HandleLinearString sample,  bool is_global, bool ignore_case,
-               bool is_ascii, bool match_only, bool force_bytecode);
+               bool is_ascii, bool match_only, bool force_bytecode, bool sticky);
 
 // Note: this may return RegExpRunStatus_Error if an interrupt was requested
 // while the code was executing.

@@ -13,6 +13,7 @@
 #include "nsHashKeys.h"
 #include "nsICryptoHash.h"
 #include "nsIPackagedAppVerifier.h"
+#include "mozilla/LinkedList.h"
 
 namespace mozilla {
 namespace net {
@@ -31,6 +32,11 @@ public:
     // The initial state.
     STATE_UNKNOWN,
 
+    // When we are notified to process the first resource, we will start to
+    // verify the manifest and go to this state no matter the package has
+    // signature or not.
+    STATE_MANIFEST_VERIFYING,
+
     // Either the package has no signature or the manifest is verified
     // successfully will we be in this state.
     STATE_MANIFEST_VERIFIED_OK,
@@ -45,6 +51,7 @@ public:
   // The only reason to inherit from nsISupports is it needs to be
   // passed as the context to PackagedAppVerifier::OnStopRequest.
   class ResourceCacheInfo : public nsISupports
+                          , public mozilla::LinkedListElement<ResourceCacheInfo>
   {
   public:
     NS_DECL_ISUPPORTS
@@ -60,6 +67,16 @@ public:
     {
     }
 
+    ResourceCacheInfo(const ResourceCacheInfo& aCopyFrom)
+      : mURI(aCopyFrom.mURI)
+      , mCacheEntry(aCopyFrom.mCacheEntry)
+      , mStatusCode(aCopyFrom.mStatusCode)
+      , mIsLastPart(aCopyFrom.mIsLastPart)
+    {
+    }
+
+    // A ResourceCacheInfo must have a URI. If mURI is null, this
+    // resource is broken.
     nsCOMPtr<nsIURI> mURI;
     nsCOMPtr<nsICacheEntry> mCacheEntry;
     nsresult mStatusCode;
@@ -77,10 +94,17 @@ public:
                       const nsACString& aSignature,
                       nsICacheEntry* aPackageCacheEntry);
 
+  // A internal used function to let the verifier know there's a broken
+  // last part.
+  void SetHasBrokenLastPart(nsresult aStatusCode);
+
+  // Used to explicitly clear the listener to avoid circula reference.
+  void ClearListener() { mListener = nullptr; }
+
   static const char* kSignedPakOriginMetadataKey;
 
 private:
-  virtual ~PackagedAppVerifier() { }
+  virtual ~PackagedAppVerifier();
 
   // Called when a resource is already fully written in the cache. This resource
   // will be processed and is guaranteed to be called back in either:
@@ -100,8 +124,11 @@ private:
   void VerifyManifest(const ResourceCacheInfo* aInfo);
   void VerifyResource(const ResourceCacheInfo* aInfo);
 
-  void OnManifestVerified(const ResourceCacheInfo* aInfo, bool aSuccess);
-  void OnResourceVerified(const ResourceCacheInfo* aInfo, bool aSuccess);
+  void OnManifestVerified(bool aSuccess);
+  void OnResourceVerified(bool aSuccess);
+
+  // Fire a async event to notify the verification result.
+  void FireVerifiedEvent(bool aForManifest, bool aSuccess);
 
   // To notify that either manifest or resource check is done.
   nsCOMPtr<nsIPackagedAppVerifierListener> mListener;
@@ -131,6 +158,12 @@ private:
   // The last computed hash value for a resource. It will be set on every
   // |EndResourceHash| call.
   nsCString mLastComputedResourceHash;
+
+  // A list of pending resource that is downloaded but not verified yet.
+  mozilla::LinkedList<ResourceCacheInfo> mPendingResourceCacheInfoList;
+
+  // A place to store the computed hashes of each resource.
+  nsClassHashtable<nsCStringHashKey, nsCString> mResourceHashStore;
 }; // class PackagedAppVerifier
 
 } // namespace net

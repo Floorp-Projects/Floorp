@@ -10,6 +10,7 @@
 #include "js/RootingAPI.h"
 #include "js/Value.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 #include "mozilla/dom/indexedDB/Key.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"

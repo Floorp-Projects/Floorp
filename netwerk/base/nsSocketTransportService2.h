@@ -222,6 +222,7 @@ private:
     // pending socket queue - see NotifyWhenCanAttachSocket
     //-------------------------------------------------------------------------
 
+    mozilla::Mutex mEventQueueLock;
     nsEventQueue mPendingSocketQ; // queue of nsIRunnable objects
 
     // Preference Monitor for SendBufferSize and Keepalive prefs.

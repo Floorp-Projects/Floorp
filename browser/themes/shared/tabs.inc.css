@@ -436,20 +436,28 @@
                                     currentColor 5px,
                                     currentColor calc(100% - 4px),
                                     transparent calc(100% - 4px));
-  opacity: 0.2;
+  opacity: 0;
+  content: "";
+  display: -moz-box;
 }
 
-#TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-tab::before,
-#TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-tab::after {
-  opacity: 0.4;
+.tabbrowser-tab:hover::before,
+.tabbrowser-tab[afterhovered]::before,
+.tabbrowser-tab[last-visible-tab]:hover::after {
+  transition: opacity 100ms ease;
 }
 
 /* Also show separators beside the selected tab when dragging it. */
 #tabbrowser-tabs[movingtab] > .tabbrowser-tab[beforeselected]:not([last-visible-tab])::after,
 .tabbrowser-tab:not([visuallyselected]):not([afterselected-visible]):not([afterhovered]):not([first-visible-tab]):not(:hover)::before,
 #tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([visuallyselected]):not([beforehovered]):not(:hover)::after {
-  content: "";
-  display: -moz-box;
+  opacity: 0.2;
+}
+
+#TabsToolbar[brighttext] > #tabbrowser-tabs[movingtab] > .tabbrowser-tab[beforeselected]:not([last-visible-tab])::after,
+#TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-tab:not([visuallyselected]):not([afterselected-visible]):not([afterhovered]):not([first-visible-tab]):not(:hover)::before,
+#TabsToolbar[brighttext] > #tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([visuallyselected]):not([beforehovered]):not(:hover)::after {
+  opacity: 0.4;
 }
 
 /* New tab button */
