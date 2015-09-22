@@ -665,7 +665,7 @@ BluetoothSocket::Connect(const nsAString& aDeviceAddress,
 
   sBluetoothSocketInterface->Connect(
     aDeviceAddress, aType,
-    aServiceUuid.mUuid, aChannel,
+    aServiceUuid, aChannel,
     aEncrypt, aAuth, res);
 
   return NS_OK;
@@ -729,7 +729,7 @@ BluetoothSocket::Listen(const nsAString& aServiceName,
 
   sBluetoothSocketInterface->Listen(
     aType,
-    aServiceName, aServiceUuid.mUuid, aChannel,
+    aServiceName, aServiceUuid, aChannel,
     aEncrypt, aAuth, res);
 
   return NS_OK;
