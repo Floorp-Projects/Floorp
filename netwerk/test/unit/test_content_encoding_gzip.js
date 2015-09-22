@@ -24,6 +24,31 @@ var tests = [
 	 0x00, 0x6e, 0x90, 0x7a, 0x85, 0x24, 0x00, 0x00, 0x00],
      datalen: 14 // the data length of the uncompressed document
     },
+
+    {url: "/test/cebrotli1",
+     flags: CL_EXPECT_GZIP,
+     ce: "brotli",
+     body: [0x0B, 0x02, 0x80, 0x74, 0x65, 0x73, 0x74, 0x0A, 0x03],
+
+     datalen: 5 // the data length of the uncompressed document
+    },
+
+    // this is not a brotli document
+    {url: "/test/cebrotli2",
+     flags: CL_EXPECT_GZIP | CL_EXPECT_FAILURE,
+     ce: "brotli",
+     body: [0x0B, 0x0A, 0x09],
+     datalen: 3
+    },
+
+    // this is brotli but should come through as identity due to prefs
+    {url: "/test/cebrotli3",
+     flags: 0,
+     ce: "brotli",
+     body: [0x0B, 0x02, 0x80, 0x74, 0x65, 0x73, 0x74, 0x0A, 0x03],
+
+     datalen: 9
+    },
 ];
 
 function setupChannel(url) {
@@ -42,22 +67,38 @@ function setupChannel(url) {
 }
 
 function startIter() {
+    if (tests[index].url === "/test/cebrotli3") {
+      // this test wants to make sure we don't do brotli when not in a-e
+      prefs.setCharPref("network.http.accept-encoding", "gzip, deflate");
+    }
     var channel = setupChannel(tests[index].url);
     channel.asyncOpen(new ChannelListener(completeIter, channel, tests[index].flags), null);
 }
 
 function completeIter(request, data, ctx) {
-    do_check_true(data.length == tests[index].datalen);
+    if (!(tests[index].flags & CL_EXPECT_FAILURE)) {
+	do_check_eq(data.length, tests[index].datalen);
+    }
     if (++index < tests.length) {
 	startIter();
     } else {
         httpserver.stop(do_test_finished);
+	prefs.setCharPref("network.http.accept-encoding", cePref);
     }
 }
 
+var prefs;
+var cePref;
 function run_test() {
+    prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+    cePref = prefs.getCharPref("network.http.accept-encoding");
+    prefs.setCharPref("network.http.accept-encoding", "gzip, deflate, brotli");
+
     httpserver.registerPathHandler("/test/cegzip1", handler);
     httpserver.registerPathHandler("/test/cegzip2", handler);
+    httpserver.registerPathHandler("/test/cebrotli1", handler);
+    httpserver.registerPathHandler("/test/cebrotli2", handler);
+    httpserver.registerPathHandler("/test/cebrotli3", handler);
     httpserver.start(-1);
 
     startIter();
