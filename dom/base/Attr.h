@@ -107,8 +107,6 @@ protected:
   static bool sInitialized;
 
 private:
-  already_AddRefed<nsIAtom> GetNameAtom(nsIContent* aContent);
-
   nsString mValue;
 };
 

@@ -497,12 +497,7 @@ class UnboxedArrayObject : public JSObject
     }
 
     inline void setLength(ExclusiveContext* cx, uint32_t len);
-
-    void setInitializedLength(uint32_t initlen) {
-        MOZ_ASSERT(initlen <= InitializedLengthMask);
-        capacityIndexAndInitializedLength_ =
-            (capacityIndexAndInitializedLength_ & CapacityMask) | initlen;
-    }
+    inline void setInitializedLength(uint32_t initlen);
 
   private:
     void setInlineElements() {

@@ -26,7 +26,7 @@ req.send("Some text");
 is(SpecialPowers.wrap(req).channel
       .QueryInterface(SpecialPowers.Ci.nsIHttpChannel)
       .getRequestHeader("Content-Type"),
-   "text/plain; charset=UTF-8; boundary=01234567890",
+   "text/plain; boundary=01234567890",
    "Charset should come before boundary");
 </script>
 </pre>

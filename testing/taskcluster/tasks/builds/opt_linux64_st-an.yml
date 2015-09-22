@@ -1,0 +1,24 @@
+$inherits:
+  from: 'tasks/builds/opt_linux64.yml'
+  variables:
+    build_name: 'linux64-st-an'
+task:
+  metadata:
+      name: '[TC] Linux64 Static Analysis Opt'
+      description: 'Linux64 Static Analysis Opt'
+
+  routes:
+    - 'index.buildbot.branches.{{project}}.linux64-st-an'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux64-st-an'
+
+  payload:
+    env:
+      MOZHARNESS_SCRIPT: 'mozharness/scripts/fx_desktop_build.py'
+      MOZHARNESS_CONFIG: 'builds/releng_sub_linux_configs/64_stat_and_opt.py balrog/production.py'
+      DIST_UPLOADS: ''
+      DIST_TARGET_UPLOADS: ''
+
+  extra:
+    treeherder:
+      groupSymbol: "?"
+      symbol: S

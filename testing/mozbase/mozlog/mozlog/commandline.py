@@ -39,6 +39,9 @@ def buffer_handler_wrapper(handler, buffer_limit):
         buffer_limit = int(buffer_limit)
     return handlers.BufferHandler(handler, buffer_limit)
 
+def valgrind_handler_wrapper(handler):
+    return handlers.ValgrindHandler(handler)
+
 def default_formatter_options(log_type, overrides):
     formatter_option_defaults = {
         "raw": {
@@ -151,17 +154,24 @@ def setup_handlers(logger, formatters, formatter_options):
     for fmt, streams in formatters.iteritems():
         formatter_cls = log_formatters[fmt][0]
         formatter = formatter_cls()
-        handler_wrapper, handler_option = None, ""
+        handler_wrappers_and_options = []
+
         for option, value in formatter_options[fmt].iteritems():
-            if option == "buffer":
-                handler_wrapper, handler_option = fmt_options[option][0], value
+            wrapper, wrapper_args = None, ()
+            if option == "valgrind":
+                wrapper = valgrind_handler_wrapper
+            elif option == "buffer":
+                wrapper, wrapper_args = fmt_options[option][0], (value,)
             else:
                 formatter = fmt_options[option][0](formatter, value)
 
+            if wrapper is not None:
+                handler_wrappers_and_options.append((wrapper, wrapper_args))
+
         for value in streams:
             handler = handlers.StreamHandler(stream=value, formatter=formatter)
-            if handler_wrapper:
-                handler = handler_wrapper(handler, handler_option)
+            for wrapper, wrapper_args in handler_wrappers_and_options:
+                handler = wrapper(handler, *wrapper_args)
             logger.add_handler(handler)
 
 
@@ -211,7 +221,9 @@ def setup_logging(logger, args, defaults=None, formatter_defaults=None):
         parts = name.split('_')
         if len(parts) > 3:
             continue
-        # Our args will be ['log', <formatter>] or ['log', <formatter>, <option>].
+        # Our args will be ['log', <formatter>]
+        #               or ['log', <formatter>, <option>]
+        #               or ['valgrind']
         if parts[0] == 'log' and values is not None:
             if len(parts) == 1 or parts[1] not in log_formatters:
                 continue
@@ -245,6 +257,10 @@ def setup_logging(logger, args, defaults=None, formatter_defaults=None):
         if name not in formatter_options:
             formatter_options[name] = default_formatter_options(name, formatter_defaults)
 
+    # If the user specified --valgrind, add it as an option for all formatters
+    if args.get('valgrind', None) is not None:
+        for name in formatters:
+            formatter_options[name]['valgrind'] = True
     setup_handlers(logger, formatters, formatter_options)
     set_default_logger(logger)
 

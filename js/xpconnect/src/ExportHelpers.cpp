@@ -9,11 +9,11 @@
 #include "AccessCheck.h"
 #include "jsfriendapi.h"
 #include "jswrapper.h"
-#include "js/StructuredClone.h"
 #include "js/Proxy.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/StructuredCloneHelper.h"
 #ifdef MOZ_NFC
 #include "mozilla/dom/MozNDEFRecord.h"
 #endif
@@ -45,110 +45,6 @@ enum StackScopedCloneTags {
     SCTAG_DOM_NFC_NDEF
 };
 
-class MOZ_STACK_CLASS StackScopedCloneData {
-public:
-    StackScopedCloneData(JSContext* aCx, StackScopedCloneOptions* aOptions)
-        : mOptions(aOptions)
-        , mReflectors(aCx)
-        , mFunctions(aCx)
-    {}
-
-    StackScopedCloneOptions* mOptions;
-    AutoObjectVector mReflectors;
-    AutoObjectVector mFunctions;
-    nsTArray<nsRefPtr<BlobImpl>> mBlobImpls;
-};
-
-static JSObject*
-StackScopedCloneRead(JSContext* cx, JSStructuredCloneReader* reader, uint32_t tag,
-                     uint32_t data, void* closure)
-{
-    MOZ_ASSERT(closure, "Null pointer!");
-    StackScopedCloneData* cloneData = static_cast<StackScopedCloneData*>(closure);
-    if (tag == SCTAG_REFLECTOR) {
-        MOZ_ASSERT(!data);
-
-        size_t idx;
-        if (!JS_ReadBytes(reader, &idx, sizeof(size_t)))
-            return nullptr;
-
-        RootedObject reflector(cx, cloneData->mReflectors[idx]);
-        MOZ_ASSERT(reflector, "No object pointer?");
-        MOZ_ASSERT(IsReflector(reflector), "Object pointer must be a reflector!");
-
-        if (!JS_WrapObject(cx, &reflector))
-            return nullptr;
-
-        return reflector;
-    }
-
-    if (tag == SCTAG_FUNCTION) {
-      MOZ_ASSERT(data < cloneData->mFunctions.length());
-
-      RootedValue functionValue(cx);
-      RootedObject obj(cx, cloneData->mFunctions[data]);
-
-      if (!JS_WrapObject(cx, &obj))
-          return nullptr;
-
-      FunctionForwarderOptions forwarderOptions;
-      if (!xpc::NewFunctionForwarder(cx, JSID_VOIDHANDLE, obj, forwarderOptions,
-                                     &functionValue))
-      {
-          return nullptr;
-      }
-
-      return &functionValue.toObject();
-    }
-
-    if (tag == SCTAG_BLOB) {
-        MOZ_ASSERT(!data);
-
-        size_t idx;
-        if (!JS_ReadBytes(reader, &idx, sizeof(size_t))) {
-            return nullptr;
-        }
-
-        nsIGlobalObject* global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(cx));
-        MOZ_ASSERT(global);
-
-        // nsRefPtr<File> needs to go out of scope before toObjectOrNull() is called because
-        // otherwise the static analysis thinks it can gc the JSObject via the stack.
-        JS::Rooted<JS::Value> val(cx);
-        {
-            nsRefPtr<Blob> blob = Blob::Create(global, cloneData->mBlobImpls[idx]);
-            if (!ToJSValue(cx, blob, &val)) {
-                return nullptr;
-            }
-        }
-
-        return val.toObjectOrNull();
-    }
-
-    if (tag == SCTAG_DOM_NFC_NDEF) {
-#ifdef MOZ_NFC
-      nsIGlobalObject* global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(cx));
-      if (!global) {
-        return nullptr;
-      }
-
-      // Prevent the return value from being trashed by a GC during ~nsRefPtr.
-      JS::Rooted<JSObject*> result(cx);
-      {
-        nsRefPtr<MozNDEFRecord> ndefRecord = new MozNDEFRecord(global);
-        result = ndefRecord->ReadStructuredClone(cx, reader) ?
-                 ndefRecord->WrapObject(cx, nullptr) : nullptr;
-      }
-      return result;
-#else
-      return nullptr;
-#endif
-    }
-
-    MOZ_ASSERT_UNREACHABLE("Encountered garbage in the clone stream!");
-    return nullptr;
-}
-
 // The HTML5 structured cloning algorithm includes a few DOM objects, notably
 // FileList. That wouldn't in itself be a reason to support them here,
 // but we've historically supported them for Cu.cloneInto (where we didn't support
@@ -170,73 +66,171 @@ bool IsFileList(JSObject* obj)
     return false;
 }
 
-static bool
-StackScopedCloneWrite(JSContext* cx, JSStructuredCloneWriter* writer,
-                      Handle<JSObject*> obj, void* closure)
+class MOZ_STACK_CLASS StackScopedCloneData
+    : public StructuredCloneHelperInternal
 {
-    MOZ_ASSERT(closure, "Null pointer!");
-    StackScopedCloneData* cloneData = static_cast<StackScopedCloneData*>(closure);
+public:
+    StackScopedCloneData(JSContext* aCx, StackScopedCloneOptions* aOptions)
+        : mOptions(aOptions)
+        , mReflectors(aCx)
+        , mFunctions(aCx)
+    {}
 
+    ~StackScopedCloneData()
     {
-        Blob* blob = nullptr;
-        if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, obj, blob))) {
-            BlobImpl* blobImpl = blob->Impl();
-            MOZ_ASSERT(blobImpl);
+        Shutdown();
+    }
 
-            if (!cloneData->mBlobImpls.AppendElement(blobImpl))
+    JSObject* ReadCallback(JSContext* aCx,
+                           JSStructuredCloneReader* aReader,
+                           uint32_t aTag,
+                           uint32_t aData)
+    {
+        if (aTag == SCTAG_REFLECTOR) {
+            MOZ_ASSERT(!aData);
+
+            size_t idx;
+            if (!JS_ReadBytes(aReader, &idx, sizeof(size_t)))
+                return nullptr;
+
+            RootedObject reflector(aCx, mReflectors[idx]);
+            MOZ_ASSERT(reflector, "No object pointer?");
+            MOZ_ASSERT(IsReflector(reflector), "Object pointer must be a reflector!");
+
+            if (!JS_WrapObject(aCx, &reflector))
+                return nullptr;
+
+            return reflector;
+        }
+
+        if (aTag == SCTAG_FUNCTION) {
+          MOZ_ASSERT(aData < mFunctions.length());
+
+          RootedValue functionValue(aCx);
+          RootedObject obj(aCx, mFunctions[aData]);
+
+          if (!JS_WrapObject(aCx, &obj))
+              return nullptr;
+
+          FunctionForwarderOptions forwarderOptions;
+          if (!xpc::NewFunctionForwarder(aCx, JSID_VOIDHANDLE, obj, forwarderOptions,
+                                         &functionValue))
+          {
+              return nullptr;
+          }
+
+          return &functionValue.toObject();
+        }
+
+        if (aTag == SCTAG_BLOB) {
+            MOZ_ASSERT(!aData);
+
+            size_t idx;
+            if (!JS_ReadBytes(aReader, &idx, sizeof(size_t))) {
+                return nullptr;
+            }
+
+            nsIGlobalObject* global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+            MOZ_ASSERT(global);
+
+            // nsRefPtr<File> needs to go out of scope before toObjectOrNull() is called because
+            // otherwise the static analysis thinks it can gc the JSObject via the stack.
+            JS::Rooted<JS::Value> val(aCx);
+            {
+                nsRefPtr<Blob> blob = Blob::Create(global, mBlobImpls[idx]);
+                if (!ToJSValue(aCx, blob, &val)) {
+                    return nullptr;
+                }
+            }
+
+            return val.toObjectOrNull();
+        }
+
+        if (aTag == SCTAG_DOM_NFC_NDEF) {
+#ifdef MOZ_NFC
+          nsIGlobalObject* global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
+          if (!global) {
+            return nullptr;
+          }
+
+          // Prevent the return value from being trashed by a GC during ~nsRefPtr.
+          JS::Rooted<JSObject*> result(aCx);
+          {
+            nsRefPtr<MozNDEFRecord> ndefRecord = new MozNDEFRecord(global);
+            result = ndefRecord->ReadStructuredClone(aCx, aReader) ?
+                     ndefRecord->WrapObject(aCx, nullptr) : nullptr;
+          }
+          return result;
+#else
+          return nullptr;
+#endif
+        }
+
+        MOZ_ASSERT_UNREACHABLE("Encountered garbage in the clone stream!");
+        return nullptr;
+    }
+
+    bool WriteCallback(JSContext* aCx,
+                       JSStructuredCloneWriter* aWriter,
+                       JS::Handle<JSObject*> aObj)
+    {
+        {
+            Blob* blob = nullptr;
+            if (NS_SUCCEEDED(UNWRAP_OBJECT(Blob, aObj, blob))) {
+                BlobImpl* blobImpl = blob->Impl();
+                MOZ_ASSERT(blobImpl);
+
+                if (!mBlobImpls.AppendElement(blobImpl))
+                    return false;
+
+                size_t idx = mBlobImpls.Length() - 1;
+                return JS_WriteUint32Pair(aWriter, SCTAG_BLOB, 0) &&
+                       JS_WriteBytes(aWriter, &idx, sizeof(size_t));
+            }
+        }
+
+        if ((mOptions->wrapReflectors && IsReflector(aObj)) ||
+            IsFileList(aObj))
+        {
+            if (!mReflectors.append(aObj))
                 return false;
 
-            size_t idx = cloneData->mBlobImpls.Length() - 1;
-            return JS_WriteUint32Pair(writer, SCTAG_BLOB, 0) &&
-                   JS_WriteBytes(writer, &idx, sizeof(size_t));
+            size_t idx = mReflectors.length() - 1;
+            if (!JS_WriteUint32Pair(aWriter, SCTAG_REFLECTOR, 0))
+                return false;
+            if (!JS_WriteBytes(aWriter, &idx, sizeof(size_t)))
+                return false;
+            return true;
         }
-    }
 
-    if ((cloneData->mOptions->wrapReflectors && IsReflector(obj)) ||
-        IsFileList(obj))
-    {
-        if (!cloneData->mReflectors.append(obj))
-            return false;
-
-        size_t idx = cloneData->mReflectors.length() - 1;
-        if (!JS_WriteUint32Pair(writer, SCTAG_REFLECTOR, 0))
-            return false;
-        if (!JS_WriteBytes(writer, &idx, sizeof(size_t)))
-            return false;
-        return true;
-    }
-
-    if (JS::IsCallable(obj)) {
-        if (cloneData->mOptions->cloneFunctions) {
-            cloneData->mFunctions.append(obj);
-            return JS_WriteUint32Pair(writer, SCTAG_FUNCTION, cloneData->mFunctions.length() - 1);
-        } else {
-            JS_ReportError(cx, "Permission denied to pass a Function via structured clone");
-            return false;
+        if (JS::IsCallable(aObj)) {
+            if (mOptions->cloneFunctions) {
+                mFunctions.append(aObj);
+                return JS_WriteUint32Pair(aWriter, SCTAG_FUNCTION, mFunctions.length() - 1);
+            } else {
+                JS_ReportError(aCx, "Permission denied to pass a Function via structured clone");
+                return false;
+            }
         }
-    }
 
 #ifdef MOZ_NFC
-    {
-      MozNDEFRecord* ndefRecord;
-      if (NS_SUCCEEDED(UNWRAP_OBJECT(MozNDEFRecord, obj, ndefRecord))) {
-        return JS_WriteUint32Pair(writer, SCTAG_DOM_NFC_NDEF, 0) &&
-               ndefRecord->WriteStructuredClone(cx, writer);
-      }
-    }
+        {
+          MozNDEFRecord* ndefRecord;
+          if (NS_SUCCEEDED(UNWRAP_OBJECT(MozNDEFRecord, aObj, ndefRecord))) {
+            return JS_WriteUint32Pair(aWriter, SCTAG_DOM_NFC_NDEF, 0) &&
+                   ndefRecord->WriteStructuredClone(aCx, aWriter);
+          }
+        }
 #endif
 
-    JS_ReportError(cx, "Encountered unsupported value type writing stack-scoped structured clone");
-    return false;
-}
+        JS_ReportError(aCx, "Encountered unsupported value type writing stack-scoped structured clone");
+        return false;
+    }
 
-static const JSStructuredCloneCallbacks gStackScopedCloneCallbacks = {
-    StackScopedCloneRead,
-    StackScopedCloneWrite,
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr
+    StackScopedCloneOptions* mOptions;
+    AutoObjectVector mReflectors;
+    AutoObjectVector mFunctions;
+    nsTArray<nsRefPtr<BlobImpl>> mBlobImpls;
 };
 
 /*
@@ -254,7 +248,6 @@ bool
 StackScopedClone(JSContext* cx, StackScopedCloneOptions& options,
                  MutableHandleValue val)
 {
-    JSAutoStructuredCloneBuffer buffer;
     StackScopedCloneData data(cx, &options);
     {
         // For parsing val we have to enter its compartment.
@@ -266,12 +259,12 @@ StackScopedClone(JSContext* cx, StackScopedCloneOptions& options,
             return false;
         }
 
-        if (!buffer.write(cx, val, &gStackScopedCloneCallbacks, &data))
+        if (!data.Write(cx, val))
             return false;
     }
 
     // Now recreate the clones in the target compartment.
-    if (!buffer.read(cx, val, &gStackScopedCloneCallbacks, &data))
+    if (!data.Read(cx, val))
         return false;
 
     // Deep-freeze if requested.

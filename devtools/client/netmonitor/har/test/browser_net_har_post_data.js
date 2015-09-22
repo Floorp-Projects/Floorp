@@ -29,7 +29,7 @@ add_task(function*() {
   is(har.log.entries.length, 1, "There must be one request");
 
   let entry = har.log.entries[0];
-  is(entry.request.postData.mimeType, "application/json; charset=UTF-8",
+  is(entry.request.postData.mimeType, "application/json",
     "Check post data content type");
   is(entry.request.postData.text, "{'first': 'John', 'last': 'Doe'}",
     "Check post data payload");

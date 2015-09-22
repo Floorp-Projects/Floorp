@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1060938
+-->
+  <head>
+    <meta charset="utf-8">
+    <title> Test for Bug 1060938 </title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"> </script>
+    <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"> </script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1060938"> Mozilla Bug 1060938 </a>
+  <p id="display"></p>
+
+  <pre id="test">
+  <script type="application/javascript">
+
+    /** Test for Bug 1060938 **/
+    // test: Element.removeAttributeNode()
+
+    parent = document.getElementsByTagName("p")[0];
+    parent.setAttributeNS("www.test1.com", "ID", "Test1");
+    parent.setAttributeNS("www.test2.com", "Class", "Test2");
+    parent.setAttribute("id", "www.test3.com");
+    parent.className = "www.test4.com";
+
+    allAttributes = parent.attributes;
+
+    function removeAttr(iter){
+      var removed_attribute = allAttributes[0];
+      is(removed_attribute, parent.removeAttributeNode(removed_attribute),
+          "(" + iter + ")" + " Returned attribute and remove attribute should be same.");
+    }
+
+    removeAttr(1);
+    removeAttr(2);
+    removeAttr(3);
+    removeAttr(4);
+
+  </script>
+  </body>
+</html>
