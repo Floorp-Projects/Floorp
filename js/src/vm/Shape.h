@@ -1445,7 +1445,16 @@ template<> struct Concrete<js::Shape> : TracerConcreteWithCompartment<js::Shape>
     static void construct(void *storage, js::Shape *ptr) { new (storage) Concrete(ptr); }
 };
 
-template<> struct Concrete<js::BaseShape> : TracerConcreteWithCompartment<js::BaseShape> { };
+template<> struct Concrete<js::BaseShape> : TracerConcreteWithCompartment<js::BaseShape> {
+    Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
+
+  protected:
+    explicit Concrete(js::BaseShape *ptr) : TracerConcreteWithCompartment<js::BaseShape>(ptr) { }
+
+  public:
+    static void construct(void *storage, js::BaseShape *ptr) { new (storage) Concrete(ptr); }
+};
+
 } // namespace ubi
 } // namespace JS
 
