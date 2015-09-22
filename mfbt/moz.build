@@ -91,6 +91,7 @@ EXPORTS.mozilla = [
     'Variant.h',
     'Vector.h',
     'WeakPtr.h',
+    'XorShift128PlusRNG.h',
     'unused.h',
 ]
 
