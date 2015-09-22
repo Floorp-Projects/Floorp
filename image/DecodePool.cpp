@@ -246,7 +246,7 @@ private:
   {
     Work work;
     work.mType = Work::Type::DECODE;
-    work.mDecoder = aQueue.LastElement();
+    work.mDecoder = aQueue.LastElement().forget();
     aQueue.RemoveElementAt(aQueue.Length() - 1);
 
     return work;
