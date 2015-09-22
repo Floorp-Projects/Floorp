@@ -82,3 +82,6 @@ if CONFIG['MOZ_UPDATE_CHANNEL'] not in ('release') and \
 FINAL_LIBRARY = 'xul'
 
 include('/ipc/chromium/chromium-config.mozbuild')
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']
