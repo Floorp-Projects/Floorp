@@ -17,6 +17,7 @@
 #include "mozilla/PublicSSL.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -86,8 +87,30 @@ bool EnsureNSSInitializedChromeOrContent()
     return true;
   }
 
+  // If this is a content process and not the main thread (i.e. probably a
+  // worker) then forward this call to the main thread.
   if (!NS_IsMainThread()) {
-    return false;
+    static Atomic<bool> initialized(false);
+
+    // Cache the result to dispatch to the main thread only once per worker.
+    if (initialized) {
+      return true;
+    }
+
+    nsCOMPtr<nsIThread> mainThread;
+    nsresult rv = NS_GetMainThread(getter_AddRefs(mainThread));
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+
+    // Forward to the main thread synchronously.
+    mozilla::SyncRunnable::DispatchToThread(mainThread,
+      new SyncRunnable(NS_NewRunnableFunction([]() {
+        initialized = EnsureNSSInitializedChromeOrContent();
+      }))
+    );
+
+    return initialized;
   }
 
   if (NSS_IsInitialized()) {

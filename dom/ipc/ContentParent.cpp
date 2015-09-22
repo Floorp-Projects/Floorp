@@ -4266,25 +4266,6 @@ ContentParent::RecvSetURITitle(const URIParams& uri,
 }
 
 bool
-ContentParent::RecvGetRandomValues(const uint32_t& length,
-                                   InfallibleTArray<uint8_t>* randomValues)
-{
-  uint8_t* buf = Crypto::GetRandomValues(length);
-  if (!buf) {
-    return true;
-  }
-
-  randomValues->SetCapacity(length);
-  randomValues->SetLength(length);
-
-  memcpy(randomValues->Elements(), buf, length);
-
-  free(buf);
-
-  return true;
-}
-
-bool
 ContentParent::RecvGetSystemMemory(const uint64_t& aGetterId)
 {
   uint32_t memoryTotal = 0;
