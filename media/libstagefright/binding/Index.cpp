@@ -255,6 +255,7 @@ Index::Index(const nsTArray<Indice>& aIndex,
                                          indice.end_offset);
       sample.mCompositionRange = Interval<Microseconds>(indice.start_composition,
                                                         indice.end_composition);
+      sample.mDecodeTime = indice.start_decode;
       sample.mSync = indice.sync;
       // FIXME: Make this infallible after bug 968520 is done.
       MOZ_ALWAYS_TRUE(mIndex.AppendElement(sample, fallible));
