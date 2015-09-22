@@ -62,6 +62,8 @@ private:
   int64_t GetPts(const AVPacket& packet);
 
   nsRefPtr<ImageContainer> mImageContainer;
+  uint32_t mPictureWidth;
+  uint32_t mPictureHeight;
   uint32_t mDisplayWidth;
   uint32_t mDisplayHeight;
   AVCodecParserContext* mCodecParser;

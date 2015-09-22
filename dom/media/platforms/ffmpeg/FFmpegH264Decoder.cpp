@@ -30,6 +30,8 @@ FFmpegH264Decoder<LIBAV_VER>::FFmpegH264Decoder(
   ImageContainer* aImageContainer)
   : FFmpegDataDecoder(aTaskQueue, aCallback, GetCodecId(aConfig.mMimeType))
   , mImageContainer(aImageContainer)
+  , mPictureWidth(aConfig.mImage.width)
+  , mPictureHeight(aConfig.mImage.height)
   , mDisplayWidth(aConfig.mDisplay.width)
   , mDisplayHeight(aConfig.mDisplay.height)
   , mCodecParser(nullptr)
@@ -49,6 +51,8 @@ FFmpegH264Decoder<LIBAV_VER>::Init()
 
   mCodecContext->get_buffer = AllocateBufferCb;
   mCodecContext->release_buffer = ReleaseBufferCb;
+  mCodecContext->width = mPictureWidth;
+  mCodecContext->height = mPictureHeight;
 
   return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
 }
