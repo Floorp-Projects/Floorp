@@ -4258,9 +4258,10 @@ nsTArray<MediaSource::Indice> MPEG4Source::exportIndex()
       uint32_t compositionTime;
       uint32_t duration;
       bool isSyncSample;
+      uint32_t decodeTime;
       if (mSampleTable->getMetaDataForSample(sampleIndex, &offset, &size,
                                              &compositionTime, &duration,
-                                             &isSyncSample) != OK) {
+                                             &isSyncSample, &decodeTime) != OK) {
           ALOGE("Unexpected sample table problem");
           continue;
       }
@@ -4274,6 +4275,7 @@ nsTArray<MediaSource::Indice> MPEG4Source::exportIndex()
       indice.end_composition =
           (compositionTime * 1000000ll + duration * 1000000ll) / mTimescale;
       indice.sync = isSyncSample;
+      indice.start_decode = (decodeTime * 1000000ll) / mTimescale;
       index.AppendElement(indice);
   }
 
