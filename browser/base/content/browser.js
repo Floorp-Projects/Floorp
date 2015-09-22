@@ -2370,7 +2370,6 @@ function BrowserViewSourceOfDocument(aArgsOrDocument) {
   let viewInternal = () => {
     let inTab = Services.prefs.getBoolPref("view_source.tab");
     if (inTab) {
-      let viewSourceURL = `view-source:${args.URL}`;
       let tabBrowser = gBrowser;
       // In the case of sidebars and chat windows, gBrowser is defined but null,
       // because no #content element exists.  For these cases, we need to find
@@ -2381,7 +2380,12 @@ function BrowserViewSourceOfDocument(aArgsOrDocument) {
         let browserWindow = RecentWindow.getMostRecentBrowserWindow();
         tabBrowser = browserWindow.gBrowser;
       }
-      let tab = tabBrowser.loadOneTab(viewSourceURL, {
+      // `viewSourceInBrowser` will load the source content from the page
+      // descriptor for the tab (when possible) or fallback to the network if
+      // that fails.  Either way, the view source module will manage the tab's
+      // location, so use "about:blank" here to avoid unnecessary redundant
+      // requests.
+      let tab = tabBrowser.loadOneTab("about:blank", {
         relatedToCurrent: true,
         inBackground: false
       });
