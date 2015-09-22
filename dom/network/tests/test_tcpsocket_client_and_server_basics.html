@@ -13,6 +13,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1084245
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="add_task.js"></script>
+  <script type="application/javascript">
+    function createServer(port, options, backlog) {
+      return new TCPServerSocket(port, options, backlog);
+    }
+
+    function createSocket(host, port, options) {
+      return new TCPSocket(host, port, options);
+    }
+
+    function enablePrefsAndPermissions() {
+      return true;
+    }
+  </script>
   <script type="application/javascript;version=1.7" src="test_tcpsocket_client_and_server_basics.js"></script>
 </head>
 <body>
