@@ -13,16 +13,16 @@ import subprocess
 # These are the platform and build-tools versions for building
 # mobile/android, respectively. Try to keep these in synch with the
 # build system and Mozilla's automation.
-ANDROID_PLATFORM = 'android-22'
+ANDROID_TARGET_SDK = '22'
 ANDROID_BUILD_TOOLS_VERSION = '22.0.1'
 
 # These are the "Android packages" needed for building Firefox for Android.
 # Use |android list sdk --extended| to see these identifiers.
 ANDROID_PACKAGES = [
     'tools',
-    'platform-tools',
+    'platform-tools-preview', # Temporarily, tools depends on platform-tools-preview.
     'build-tools-%s' % ANDROID_BUILD_TOOLS_VERSION,
-    ANDROID_PLATFORM,
+    'android-%s' % ANDROID_TARGET_SDK,
     'extra-google-m2repository',
     'extra-android-m2repository',
 ]
@@ -192,7 +192,11 @@ def ensure_android_packages(android_tool, packages=None):
     if not packages:
         packages = ANDROID_PACKAGES
 
-    missing = list_missing_android_packages(android_tool, packages=packages)
+
+    # Bug 1171232: The |android| tool behaviour has changed; we no longer can
+    # see what packages are installed easily.  Force installing everything until
+    # we find a way to actually see the missing packages.
+    missing = packages
     if not missing:
         print(NOT_INSTALLING_ANDROID_PACKAGES % ', '.join(packages))
         return
@@ -201,11 +205,13 @@ def ensure_android_packages(android_tool, packages=None):
     # may be prompted to agree to the Android license.
     print(INSTALLING_ANDROID_PACKAGES % ', '.join(missing))
     subprocess.check_call([android_tool,
-                           'update', 'sdk', '--no-ui',
+                           'update', 'sdk', '--no-ui', '--all',
                            '--filter', ','.join(missing)])
 
-    # Let's verify.
-    failing = list_missing_android_packages(android_tool, packages=packages)
+    # Bug 1171232: The |android| tool behaviour has changed; we no longer can
+    # see what packages are installed easily.  Don't check until we find a way
+    # to actually verify.
+    failing = []
     if failing:
         raise Exception(MISSING_ANDROID_PACKAGES % (', '.join(missing), ', '.join(failing)))
 
