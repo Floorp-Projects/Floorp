@@ -786,18 +786,37 @@ class Node {
 
 /*** Edge and EdgeRange ***************************************************************************/
 
-// Edge is the abstract base class representing an outgoing edge of a node.
-// Edges are owned by EdgeRanges, and need not have assignment operators or copy
-// constructors.
-//
-// Each Edge class should inherit from this base class, overriding as
-// appropriate.
+// An outgoing edge to a referent node.
 class Edge {
-  protected:
-    Edge() : name(nullptr), referent() { }
-    virtual ~Edge() { }
-
   public:
+    Edge() : name(nullptr), referent() { }
+
+    // Construct an initialized Edge, taking ownership of |name|.
+    Edge(char16_t* name, const Node& referent) {
+        this->name = name;
+        this->referent = referent;
+    }
+
+    // Move construction and assignment.
+    Edge(Edge&& rhs) {
+        name = rhs.name;
+        referent = rhs.referent;
+        rhs.name = nullptr;
+    }
+    Edge& operator=(Edge&& rhs) {
+        MOZ_ASSERT(&rhs != this);
+        this->~Edge();
+        new (this) Edge(mozilla::Move(rhs));
+        return *this;
+    }
+
+    ~Edge() {
+        js_free(const_cast<char16_t*>(name));
+    }
+
+    Edge(const Edge&) = delete;
+    Edge& operator=(const Edge&) = delete;
+
     // This edge's name. This may be nullptr, if Node::edges was called with
     // false as the wantNames parameter.
     //
@@ -811,12 +830,7 @@ class Edge {
 
     // This edge's referent.
     Node referent;
-
-  private:
-    Edge(const Edge&) = delete;
-    Edge& operator=(const Edge&) = delete;
 };
-
 
 // EdgeRange is an abstract base class for iterating over a node's outgoing
 // edges. (This is modeled after js::HashTable<K,V>::Range.)
@@ -854,55 +868,22 @@ class EdgeRange {
 };
 
 
-// A dumb Edge concrete class. All but the most essential members have the
-// default behavior.
-class SimpleEdge : public Edge {
-    SimpleEdge(SimpleEdge&) = delete;
-    SimpleEdge& operator=(const SimpleEdge&) = delete;
-
-  public:
-    SimpleEdge() : Edge() { }
-
-    // Construct an initialized SimpleEdge, taking ownership of |name|.
-    SimpleEdge(char16_t* name, const Node& referent) {
-        this->name = name;
-        this->referent = referent;
-    }
-    ~SimpleEdge() {
-        js_free(const_cast<char16_t*>(name));
-    }
-
-    // Move construction and assignment.
-    SimpleEdge(SimpleEdge&& rhs) {
-        name = rhs.name;
-        referent = rhs.referent;
-
-        rhs.name = nullptr;
-    }
-    SimpleEdge& operator=(SimpleEdge&& rhs) {
-        MOZ_ASSERT(&rhs != this);
-        this->~SimpleEdge();
-        new(this) SimpleEdge(mozilla::Move(rhs));
-        return *this;
-    }
-};
-
-typedef mozilla::Vector<SimpleEdge, 8, js::TempAllocPolicy> SimpleEdgeVector;
+typedef mozilla::Vector<Edge, 8, js::TempAllocPolicy> EdgeVector;
 
 // An EdgeRange concrete class that holds a pre-existing vector of
-// SimpleEdges. A PreComputedEdgeRange does not take ownership of its
-// SimpleEdgeVector; it is up to the PreComputedEdgeRange's consumer to manage
+// Edges. A PreComputedEdgeRange does not take ownership of its
+// EdgeVector; it is up to the PreComputedEdgeRange's consumer to manage
 // that lifetime.
 class PreComputedEdgeRange : public EdgeRange {
-    SimpleEdgeVector& edges;
-    size_t            i;
+    EdgeVector& edges;
+    size_t      i;
 
     void settle() {
         front_ = i < edges.length() ? &edges[i] : nullptr;
     }
 
   public:
-    explicit PreComputedEdgeRange(JSContext* cx, SimpleEdgeVector& edges)
+    explicit PreComputedEdgeRange(JSContext* cx, EdgeVector& edges)
       : edges(edges),
         i(0)
     {
@@ -951,8 +932,8 @@ class MOZ_STACK_CLASS RootList {
     JSContext*               cx;
 
   public:
-    SimpleEdgeVector edges;
-    bool             wantNames;
+    EdgeVector edges;
+    bool       wantNames;
 
     RootList(JSContext* cx, Maybe<AutoCheckCannotGC>& noGC, bool wantNames = false);
 
