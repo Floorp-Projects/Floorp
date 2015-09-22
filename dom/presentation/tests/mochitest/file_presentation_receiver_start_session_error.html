@@ -35,8 +35,9 @@ var session;
 function testSessionAvailable() {
   return new Promise(function(aResolve, aReject) {
     ok(navigator.presentation, "navigator.presentation should be available.");
+    ok(navigator.presentation.receiver, "navigator.presentation.receiver should be available.");
 
-    navigator.presentation.getSession().then(
+    navigator.presentation.receiver.getSession().then(
       function(aSession) {
         session = aSession;
 
