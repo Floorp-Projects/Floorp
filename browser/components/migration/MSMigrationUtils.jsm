@@ -717,7 +717,7 @@ function getTypedURLs(registryKeyPath) {
                     createInstance(Ci.nsIWindowsRegKey);
   let typedURLTimeKey = Cc["@mozilla.org/windows-registry-key;1"].
                         createInstance(Ci.nsIWindowsRegKey);
-  let cTypes = new CtypesHelpers();
+  let cTypes = new CtypesKernelHelpers();
   try {
     typedURLKey.open(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
                      registryKeyPath + "\\TypedURLs",
