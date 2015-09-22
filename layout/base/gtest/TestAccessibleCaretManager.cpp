@@ -218,4 +218,74 @@ TEST_F(AccessibleCaretManagerTester, TestSingleTapOnNonEmptyInput)
   EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
 }
 
+TEST_F(AccessibleCaretManagerTester, TestSingleTapOnEmptyInput)
+{
+  EXPECT_CALL(mManager, GetCaretMode())
+    .WillRepeatedly(Return(CaretMode::Cursor));
+
+  EXPECT_CALL(mManager, HasNonEmptyTextContent(_))
+    .WillRepeatedly(Return(false));
+
+  MockFunction<void(std::string aCheckPointName)> check;
+  {
+    InSequence dummy;
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                  CaretChangedReason::Updateposition)).Times(1);
+    EXPECT_CALL(check, Call("update"));
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                  CaretChangedReason::Visibilitychange)).Times(1);
+    EXPECT_CALL(check, Call("mouse down"));
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(_)).Times(0);
+    EXPECT_CALL(check, Call("reflow"));
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(_)).Times(0);
+    EXPECT_CALL(check, Call("blur"));
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                  CaretChangedReason::Updateposition)).Times(1);
+    EXPECT_CALL(check, Call("mouse up"));
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                  CaretChangedReason::Updateposition)).Times(1);
+    EXPECT_CALL(check, Call("reflow2"));
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                  CaretChangedReason::Updateposition)).Times(1);
+  }
+
+  // Simulate a single tap on an empty input.
+  mManager.UpdateCarets();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::NormalNotShown);
+  check.Call("update");
+
+  mManager.OnSelectionChanged(nullptr, nullptr,
+                              nsISelectionListener::DRAG_REASON |
+                              nsISelectionListener::MOUSEDOWN_REASON);
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::None);
+  check.Call("mouse down");
+
+  mManager.OnReflow();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::None);
+  check.Call("reflow");
+
+  mManager.OnBlur();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::None);
+  check.Call("blur");
+
+  mManager.OnSelectionChanged(nullptr, nullptr,
+                              nsISelectionListener::MOUSEUP_REASON);
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::NormalNotShown);
+  check.Call("mouse up");
+
+  mManager.OnReflow();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::NormalNotShown);
+  check.Call("reflow2");
+
+  mManager.OnScrollPositionChanged();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::NormalNotShown);
+}
+
 } // namespace mozilla
