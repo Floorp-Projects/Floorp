@@ -62,10 +62,9 @@ public:
   {
     mRecomputeParameters = true;
 
-    MOZ_ASSERT(mSource && mDestination);
+    MOZ_ASSERT(mDestination);
 
     WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent,
-                                                    mSource,
                                                     mDestination);
 
     switch (aIndex) {

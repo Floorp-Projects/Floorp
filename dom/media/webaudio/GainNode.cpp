@@ -28,16 +28,10 @@ class GainNodeEngine final : public AudioNodeEngine
 public:
   GainNodeEngine(AudioNode* aNode, AudioDestinationNode* aDestination)
     : AudioNodeEngine(aNode)
-    , mSource(nullptr)
     , mDestination(aDestination->Stream())
     // Keep the default value in sync with the default value in GainNode::GainNode.
     , mGain(1.f)
   {
-  }
-
-  void SetSourceStream(AudioNodeStream* aSource)
-  {
-    mSource = aSource;
   }
 
   enum Parameters {
@@ -46,9 +40,8 @@ public:
   void RecvTimelineEvent(uint32_t aIndex,
                          AudioTimelineEvent& aEvent) override
   {
-    MOZ_ASSERT(mSource && mDestination);
+    MOZ_ASSERT(mDestination);
     WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent,
-                                                    mSource,
                                                     mDestination);
 
     switch (aIndex) {
@@ -66,8 +59,6 @@ public:
                             AudioBlock* aOutput,
                             bool* aFinished) override
   {
-    MOZ_ASSERT(mSource == aStream, "Invalid source stream");
-
     if (aInput.IsNull()) {
       // If input is silent, so is the output
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
@@ -107,7 +98,6 @@ public:
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     // Not owned:
-    // - mSource (probably)
     // - mDestination (probably)
     // - mGain - Internal ref owned by AudioNode
     return AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
@@ -118,7 +108,6 @@ public:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  AudioNodeStream* mSource;
   AudioNodeStream* mDestination;
   AudioParamTimeline mGain;
 };
@@ -133,7 +122,6 @@ GainNode::GainNode(AudioContext* aContext)
   GainNodeEngine* engine = new GainNodeEngine(this, aContext->Destination());
   mStream = AudioNodeStream::Create(aContext, engine,
                                     AudioNodeStream::NO_STREAM_FLAGS);
-  engine->SetSourceStream(mStream);
 }
 
 GainNode::~GainNode()
