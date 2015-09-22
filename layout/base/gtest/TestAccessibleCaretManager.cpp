@@ -148,7 +148,7 @@ TEST_F(AccessibleCaretManagerTester, TestUpdatesInSelectionMode)
   EXPECT_EQ(SecondCaretAppearance(), Appearance::Normal);
 }
 
-TEST_F(AccessibleCaretManagerTester, TestUpdatesInCursorModeOnNonEmptyContent)
+TEST_F(AccessibleCaretManagerTester, TestSingleTapOnNonEmptyInput)
 {
   EXPECT_CALL(mManager, GetCaretMode())
     .WillRepeatedly(Return(CaretMode::Cursor));
@@ -162,14 +162,16 @@ TEST_F(AccessibleCaretManagerTester, TestUpdatesInCursorModeOnNonEmptyContent)
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
                   CaretChangedReason::Updateposition)).Times(1);
-    EXPECT_CALL(check, Call("mouse down"));
-
-    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
-                  CaretChangedReason::Updateposition)).Times(1);
-    EXPECT_CALL(check, Call("reflow"));
+    EXPECT_CALL(check, Call("update"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
                   CaretChangedReason::Visibilitychange)).Times(1);
+    EXPECT_CALL(check, Call("mouse down"));
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(_)).Times(0);
+    EXPECT_CALL(check, Call("reflow"));
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(_)).Times(0);
     EXPECT_CALL(check, Call("blur"));
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
@@ -178,17 +180,25 @@ TEST_F(AccessibleCaretManagerTester, TestUpdatesInCursorModeOnNonEmptyContent)
 
     EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
                   CaretChangedReason::Updateposition)).Times(1);
+    EXPECT_CALL(check, Call("reflow2"));
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                  CaretChangedReason::Updateposition)).Times(1);
   }
 
   // Simulate a single tap on a non-empty input.
+  mManager.UpdateCarets();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
+  check.Call("update");
+
   mManager.OnSelectionChanged(nullptr, nullptr,
                               nsISelectionListener::DRAG_REASON |
                               nsISelectionListener::MOUSEDOWN_REASON);
-  EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::None);
   check.Call("mouse down");
 
   mManager.OnReflow();
-  EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::None);
   check.Call("reflow");
 
   mManager.OnBlur();
@@ -199,6 +209,10 @@ TEST_F(AccessibleCaretManagerTester, TestUpdatesInCursorModeOnNonEmptyContent)
                               nsISelectionListener::MOUSEUP_REASON);
   EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
   check.Call("mouse up");
+
+  mManager.OnReflow();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
+  check.Call("reflow2");
 
   mManager.OnScrollPositionChanged();
   EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
