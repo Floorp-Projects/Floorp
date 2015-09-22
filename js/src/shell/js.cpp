@@ -184,7 +184,7 @@ static FILE* gOutFile = nullptr;
 
 static bool reportWarnings = true;
 static bool compileOnly = false;
-static bool gFuzzingSafe = false;
+static bool fuzzingSafe = false;
 
 #ifdef DEBUG
 static bool dumpEntrainedVariables = false;
@@ -5691,17 +5691,17 @@ NewGlobalObject(JSContext* cx, JS::CompartmentOptions& options,
         {
             return nullptr;
         }
-        if (!js::DefineTestingFunctions(cx, glob, gFuzzingSafe))
+        if (!js::DefineTestingFunctions(cx, glob, fuzzingSafe))
             return nullptr;
 
-        if (!gFuzzingSafe) {
+        if (!fuzzingSafe) {
             if (!JS_DefineFunctionsWithHelp(cx, glob, fuzzing_unsafe_functions))
                 return nullptr;
             if (!DefineConsole(cx, glob))
                 return nullptr;
         }
 
-        if (!DefineOS(cx, glob, gFuzzingSafe))
+        if (!DefineOS(cx, glob, fuzzingSafe))
             return nullptr;
 
         RootedObject performanceObj(cx, JS_NewObject(cx, nullptr));
@@ -6115,8 +6115,10 @@ Shell(JSContext* cx, OptionParser* op, char** envp)
 
     JSAutoRequest ar(cx);
 
-    gFuzzingSafe = op->getBoolOption("fuzzing-safe") ||
-                   (getenv("MOZ_FUZZING_SAFE") && getenv("MOZ_FUZZING_SAFE")[0] != '0');
+    if (op->getBoolOption("fuzzing-safe"))
+        fuzzingSafe = true;
+    else
+        fuzzingSafe = (getenv("MOZ_FUZZING_SAFE") && getenv("MOZ_FUZZING_SAFE")[0] != '0');
 
     RootedObject glob(cx);
     JS::CompartmentOptions options;
@@ -6168,14 +6170,11 @@ static void
 PreInit()
 {
 #ifdef XP_WIN
-    // Disable the segfault dialog. This is used by test harnesses to fail the
-    // tests immediately instead of hanging automation.
-    const char* crash_option = getenv("XRE_NO_WINDOWS_CRASH_DIALOG");
-    if (crash_option && strncmp(crash_option, "1", 1)) {
-        UINT prevMode = SetErrorMode(0);
-        UINT newMode = SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX;
-        SetErrorMode(prevMode | newMode);
-    }
+    // Disable the segfault dialog. We want to fail the tests immediately
+    // instead of hanging automation.
+    UINT prevMode = SetErrorMode(0);
+    UINT newMode = SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX;
+    SetErrorMode(prevMode | newMode);
 #endif
 }
 
@@ -6190,6 +6189,15 @@ main(int argc, char** argv, char** envp)
     JSRuntime* rt;
     JSContext* cx;
     int result;
+#ifdef XP_WIN
+    {
+        const char* crash_option = getenv("XRE_NO_WINDOWS_CRASH_DIALOG");
+        if (crash_option && strncmp(crash_option, "1", 1)) {
+            DWORD oldmode = SetErrorMode(SEM_NOGPFAULTERRORBOX);
+            SetErrorMode(oldmode | SEM_NOGPFAULTERRORBOX);
+        }
+    }
+#endif
 
 #ifdef HAVE_SETLOCALE
     setlocale(LC_ALL, "");
