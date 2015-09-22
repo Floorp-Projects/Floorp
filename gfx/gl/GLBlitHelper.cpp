@@ -842,7 +842,7 @@ GLBlitHelper::BlitEGLImageImage(layers::EGLImageImage* image)
 
     mGL->fDrawArrays(LOCAL_GL_TRIANGLE_STRIP, 0, 4);
 
-    mGL->fBindTexture(LOCAL_GL_TEXTURE_EXTERNAL_OES, oldBinding);
+    mGL->fBindTexture(LOCAL_GL_TEXTURE_2D, oldBinding);
     return true;
 }
 
