@@ -355,7 +355,7 @@ class OSXBootstrapper(BaseBootstrapper):
     def suggest_homebrew_mobile_android_mozconfig(self):
         import android
         # We could probably fish this path from |brew info android-sdk|.
-        sdk_path = '/usr/local/opt/android-sdk/platforms/%s' % android.ANDROID_PLATFORM
+        sdk_path = '/usr/local/opt/android-sdk'
         ndk_path = '/usr/local/opt/android-ndk'
         android.suggest_mozconfig(sdk_path=sdk_path, ndk_path=ndk_path)
 

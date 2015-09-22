@@ -23,8 +23,6 @@ ANDROID_PACKAGES = [
     'platform-tools',
     'build-tools-%s' % ANDROID_BUILD_TOOLS_VERSION,
     ANDROID_PLATFORM,
-    'extra-android-support',
-    'extra-google-google_play_services',
     'extra-google-m2repository',
     'extra-android-m2repository',
 ]
