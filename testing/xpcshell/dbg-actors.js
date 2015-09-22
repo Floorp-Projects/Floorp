@@ -6,7 +6,7 @@
 
 const { Promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { devtools } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 const { RootActor } = devtools.require("devtools/server/actors/root");
 const { BrowserTabList } = devtools.require("devtools/server/actors/webbrowser");
 

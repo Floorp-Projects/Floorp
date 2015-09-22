@@ -364,8 +364,9 @@ NativeObject::setLastPropertyMakeNative(ExclusiveContext* cx, Shape* shape)
 
     // A failure at this point will leave the object as a mutant, and we
     // can't recover.
+    AutoEnterOOMUnsafeRegion oomUnsafe;
     if (oldSpan != newSpan && !updateSlotsForSpan(cx, oldSpan, newSpan))
-        CrashAtUnhandlableOOM("NativeObject::setLastPropertyMakeNative");
+        oomUnsafe.crash("NativeObject::setLastPropertyMakeNative");
 }
 
 bool

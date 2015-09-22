@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1067491 - Test taking a census over the RDP.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Census Tree 01</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css" />
+  <link href="chrome://devtools/skin/themes/light-theme.css" type="text/css" />
+  <link href="chrome://devtools/skin/themes/common.css" type="text/css" />
+  <link href="chrome://devtools/skin/themes/widgets.css" type="text/css" />
+  <link href="chrome://devtools/skin/themes/memory.css" type="text/css" />
+</head>
+<body>
+<ul id="container" style="width:100%;height:300px;"></ul>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script>
+window.onload = function() {
+  var { CensusTreeNode } = require("devtools/shared/heapsnapshot/census-tree-node");
+  var { INDENTATION, CensusView } = require("devtools/client/memory/modules/census-view");
+  SimpleTest.waitForExplicitFinish();
+  const countBreakdown = { by: "count", count: true, bytes: true };
+
+  const BREAKDOWN = {
+    by: "coarseType",
+    objects: { by: "objectClass", then: countBreakdown },
+    strings: countBreakdown,
+    other: { by: "internalType", then: countBreakdown },
+  };
+
+  const REPORT = {
+    "objects": {
+      "Function": { bytes: 10, count: 1 },
+      "Array": { bytes: 20, count: 2 },
+    },
+    "strings": { bytes: 10, count: 1 },
+    "other": {
+      "js::Shape": { bytes: 30, count: 3 },
+      "js::Shape2": { bytes: 40, count: 4 }
+    },
+  };
+
+  const EXPECTED_ROWS = [
+    { level: 0, name: "strings", bytes: 10, count: 1, },
+    { level: 0, name: "objects" },
+        { level: 1, name: "Array", bytes: 20, count: 2, },
+        { level: 1, name: "Function", bytes: 10, count: 1, },
+    { level: 0, name: "other" },
+        { level: 1, name: "js::Shape2", bytes: 40, count: 4, },
+        { level: 1, name: "js::Shape", bytes: 30, count: 3, },
+  ];
+  var censusTreeNode = new CensusTreeNode(BREAKDOWN, REPORT);
+
+  var view = new CensusView({
+    censusTreeNode: censusTreeNode,
+    hidden: true
+  });
+
+  view.attachTo(document.querySelector("#container"));
+
+  var ul = document.querySelector("#container");
+  var children = Array.from(ul.children).filter(n => n.style.display !== "none");
+
+  for (var i = 0; i < children.length; i++) {
+    var el = children[i];
+    var expected = EXPECTED_ROWS[i];
+    var nameEl = el.querySelector(".heap-tree-cell[type='name']");
+    var bytesEl = el.querySelector(".heap-tree-cell[type='bytes']");
+    var countEl = el.querySelector(".heap-tree-cell[type='count']");
+
+    is(nameEl.innerHTML, expected.name,
+      `correct name "${expected.name}" in heap tree`);
+
+    is(el.style.MozMarginStart, (INDENTATION * expected.level) + "px",
+      `correct indentation for ${expected.name}`);
+
+    if ("bytes" in expected) {
+      is(bytesEl.innerHTML, String(expected.bytes),
+        `correct bytes "${expected.bytes}" in heap tree`);
+    } else {
+      ok(!bytesEl, "no bytes correctly displayed for ${expected.name}");
+    }
+
+    if ("count" in expected) {
+      is(countEl.innerHTML, String(expected.count),
+        `correct count "${expected.count}" in heap tree`);
+    } else {
+      ok(!countEl, "no count correctly displayed for ${expected.name}");
+    }
+  }
+
+  SimpleTest.finish();
+};
+</script>
+</pre>
+</body>
+</html>

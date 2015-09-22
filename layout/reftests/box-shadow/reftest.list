@@ -21,7 +21,6 @@ random-if(d2d) == boxshadow-threecorners.html boxshadow-threecorners-ref.html
 == boxshadow-skiprect.html boxshadow-skiprect-ref.html
 == boxshadow-opacity.html boxshadow-opacity-ref.html
 == boxshadow-color-rounding.html boxshadow-color-rounding-ref.html
-== boxshadow-color-rounding-middle.html boxshadow-color-rounding-middle-ref.html
 
 == overflow-not-scrollable-1.html overflow-not-scrollable-1-ref.html
 == overflow-not-scrollable-1.html overflow-not-scrollable-1-ref2.html

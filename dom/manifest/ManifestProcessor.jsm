@@ -32,7 +32,7 @@ const orientationTypes = new Set(['any', 'natural', 'landscape', 'portrait',
   'portrait-primary', 'portrait-secondary', 'landscape-primary',
   'landscape-secondary'
 ]);
-Cu.import('resource://gre/modules/devtools/Console.jsm');
+Cu.import('resource://gre/modules/devtools/shared/Console.jsm');
 // ValueExtractor is used by the various processors to get values
 // from the manifest and to report errors.
 Cu.import('resource://gre/modules/ValueExtractor.jsm');

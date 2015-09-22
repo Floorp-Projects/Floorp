@@ -938,6 +938,24 @@ auto GeckoThread::State::RUNNING() -> State::LocalRef
     return mozilla::jni::Field<RUNNING_t>::Get(nullptr, nullptr);
 }
 
+constexpr char GeckoView::name[];
+
+constexpr char GeckoView::Window::name[];
+
+constexpr char GeckoView::Window::New_t::name[];
+constexpr char GeckoView::Window::New_t::signature[];
+
+auto GeckoView::Window::New() -> Window::LocalRef
+{
+    return mozilla::jni::Constructor<New_t>::Call(nullptr, nullptr);
+}
+
+constexpr char GeckoView::Window::DisposeNative_t::name[];
+constexpr char GeckoView::Window::DisposeNative_t::signature[];
+
+constexpr char GeckoView::Window::Open_t::name[];
+constexpr char GeckoView::Window::Open_t::signature[];
+
 constexpr char RestrictedProfiles::name[];
 
 constexpr char RestrictedProfiles::IsAllowed_t::name[];

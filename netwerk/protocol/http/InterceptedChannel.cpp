@@ -59,10 +59,19 @@ InterceptedChannelBase::EnsureSynthesizedResponse()
 void
 InterceptedChannelBase::DoNotifyController()
 {
-    nsresult rv = mController->ChannelIntercepted(this);
+    nsCOMPtr<nsIFetchEventDispatcher> dispatcher;
+    nsresult rv = mController->ChannelIntercepted(this,
+                                                  getter_AddRefs(dispatcher));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       rv = ResetInterception();
       NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to resume intercepted network request");
+    }
+    if (dispatcher) {
+      rv = dispatcher->Dispatch();
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        rv = ResetInterception();
+        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to resume intercepted network request");
+      }
     }
     mController = nullptr;
 }

@@ -1,0 +1,31 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DevToolsModules(
+    'AbstractTreeItem.jsm',
+    'BarGraphWidget.js',
+    'BreadcrumbsWidget.jsm',
+    'Chart.jsm',
+    'CubicBezierPresets.js',
+    'CubicBezierWidget.js',
+    'FastListWidget.js',
+    'FilterWidget.js',
+    'FlameGraph.js',
+    'Graphs.js',
+    'GraphsWorker.js',
+    'LineGraphWidget.js',
+    'MdnDocsWidget.js',
+    'MountainGraphWidget.js',
+    'SideMenuWidget.jsm',
+    'SimpleListWidget.jsm',
+    'Spectrum.js',
+    'TableWidget.js',
+    'Tooltip.js',
+    'TreeWidget.js',
+    'VariablesView.jsm',
+    'VariablesViewController.jsm',
+    'ViewHelpers.jsm',
+)

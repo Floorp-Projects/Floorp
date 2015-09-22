@@ -32,11 +32,6 @@ function synthesizeDblClickOnCell(aTree, column, row) {
                              aTree.ownerDocument.defaultView);
 }
 
-function* togglePasswords() {
-  pwmgrdlg.document.querySelector("#togglePasswords").doCommand();
-  yield new Promise(resolve => waitForFocus(resolve, pwmgrdlg));
-}
-
 function* editUsernamePromises(site, oldUsername, newUsername) {
   is(Services.logins.findLogins({}, site, "", "").length, 1, "Correct login found");
   let login = Services.logins.findLogins({}, site, "", "")[0];
@@ -114,9 +109,7 @@ add_task(function* test_edit_multiple_logins() {
   function* testLoginChange(site, oldUsername, oldPassword, newUsername, newPassword) {
     addLogin(site, oldUsername, oldPassword);
     yield* editUsernamePromises(site, oldUsername, newUsername);
-    yield* togglePasswords();
     yield* editPasswordPromises(site, oldPassword, newPassword);
-    yield* togglePasswords();
   }
 
   yield* testLoginChange("http://c.tn/", "userC", "passC", "usernameC", "passwordC");

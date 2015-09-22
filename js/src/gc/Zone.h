@@ -242,6 +242,7 @@ struct Zone : public JS::shadow::Zone,
     LogTenurePromotionQueue awaitingTenureLogging;
 
     void sweepBreakpoints(js::FreeOp* fop);
+    void sweepWeakMaps();
     void sweepCompartments(js::FreeOp* fop, bool keepAtleastOne, bool lastGC);
 
     js::jit::JitZone* createJitZone(JSContext* cx);
@@ -258,14 +259,18 @@ struct Zone : public JS::shadow::Zone,
     void enqueueForPromotionToTenuredLogging(JSObject& obj) {
         MOZ_ASSERT(hasDebuggers());
         MOZ_ASSERT(!IsInsideNursery(&obj));
+        js::AutoEnterOOMUnsafeRegion oomUnsafe;
         if (!awaitingTenureLogging.append(&obj))
-            js::CrashAtUnhandlableOOM("Zone::enqueueForPromotionToTenuredLogging");
+            oomUnsafe.crash("Zone::enqueueForPromotionToTenuredLogging");
     }
     void logPromotionsToTenured();
 
     js::gc::ArenaLists arenas;
 
     js::TypeZone types;
+
+    /* Linked list of live weakmaps in this zone. */
+    js::WeakMapBase* gcWeakMapList;
 
     // The set of compartments in this zone.
     typedef js::Vector<JSCompartment*, 1, js::SystemAllocPolicy> CompartmentVector;

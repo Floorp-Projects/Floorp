@@ -1498,7 +1498,7 @@ js::XDRObjectLiteral(XDRState<XDR_ENCODE>* xdr, MutableHandleObject obj);
 template bool
 js::XDRObjectLiteral(XDRState<XDR_DECODE>* xdr, MutableHandleObject obj);
 
-void
+bool
 NativeObject::fillInAfterSwap(JSContext* cx, const Vector<Value>& values, void* priv)
 {
     // This object has just been swapped with some other object, and its shape
@@ -1510,7 +1510,7 @@ NativeObject::fillInAfterSwap(JSContext* cx, const Vector<Value>& values, void* 
     size_t nfixed = gc::GetGCKindSlots(asTenured().getAllocKind(), getClass());
     if (nfixed != shape_->numFixedSlots()) {
         if (!generateOwnShape(cx))
-            CrashAtUnhandlableOOM("fillInAfterSwap");
+            return false;
         shape_->setNumFixedSlots(nfixed);
     }
 
@@ -1527,11 +1527,12 @@ NativeObject::fillInAfterSwap(JSContext* cx, const Vector<Value>& values, void* 
     if (size_t ndynamic = dynamicSlotsCount(nfixed, values.length(), getClass())) {
         slots_ = cx->zone()->pod_malloc<HeapSlot>(ndynamic);
         if (!slots_)
-            CrashAtUnhandlableOOM("fillInAfterSwap");
+            return false;
         Debug_SetSlotRangeToCrashOnTouch(slots_, ndynamic);
     }
 
     initSlotRange(0, values.begin(), values.length());
+    return true;
 }
 
 void
@@ -1552,12 +1553,14 @@ JSObject::swap(JSContext* cx, HandleObject a, HandleObject b)
                IsBackgroundFinalized(b->asTenured().getAllocKind()));
     MOZ_ASSERT(a->compartment() == b->compartment());
 
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+
     AutoCompartment ac(cx, a);
 
     if (!a->getGroup(cx))
-        CrashAtUnhandlableOOM("JSObject::swap");
+        oomUnsafe.crash("JSObject::swap");
     if (!b->getGroup(cx))
-        CrashAtUnhandlableOOM("JSObject::swap");
+        oomUnsafe.crash("JSObject::swap");
 
     /*
      * Neither object may be in the nursery, but ensure we update any embedded
@@ -1616,7 +1619,7 @@ JSObject::swap(JSContext* cx, HandleObject a, HandleObject b)
             apriv = na->hasPrivate() ? na->getPrivate() : nullptr;
             for (size_t i = 0; i < na->slotSpan(); i++) {
                 if (!avals.append(na->getSlot(i)))
-                    CrashAtUnhandlableOOM("JSObject::swap");
+                    oomUnsafe.crash("JSObject::swap");
             }
         }
         Vector<Value> bvals(cx);
@@ -1625,7 +1628,7 @@ JSObject::swap(JSContext* cx, HandleObject a, HandleObject b)
             bpriv = nb->hasPrivate() ? nb->getPrivate() : nullptr;
             for (size_t i = 0; i < nb->slotSpan(); i++) {
                 if (!bvals.append(nb->getSlot(i)))
-                    CrashAtUnhandlableOOM("JSObject::swap");
+                    oomUnsafe.crash("JSObject::swap");
             }
         }
 
@@ -1638,10 +1641,10 @@ JSObject::swap(JSContext* cx, HandleObject a, HandleObject b)
         a->fixDictionaryShapeAfterSwap();
         b->fixDictionaryShapeAfterSwap();
 
-        if (na)
-            b->as<NativeObject>().fillInAfterSwap(cx, avals, apriv);
-        if (nb)
-            a->as<NativeObject>().fillInAfterSwap(cx, bvals, bpriv);
+        if (na && !b->as<NativeObject>().fillInAfterSwap(cx, avals, apriv))
+            oomUnsafe.crash("fillInAfterSwap");
+        if (nb && !a->as<NativeObject>().fillInAfterSwap(cx, bvals, bpriv))
+            oomUnsafe.crash("fillInAfterSwap");
     }
 
     // Swapping the contents of two objects invalidates type sets which contain
@@ -2384,6 +2387,19 @@ JSObject::reportNotExtensible(JSContext* cx, unsigned report)
                                  nullptr, nullptr);
 }
 
+// Our immutable-prototype behavior is non-standard, and it's unclear whether
+// it's shippable.  (Or at least it's unclear whether it's shippable with any
+// provided-by-default uses exposed to script.)  If this bool is true,
+// immutable-prototype behavior is enforced; if it's false, behavior is not
+// enforced, and immutable-prototype bits stored on objects are completely
+// ignored.
+static const bool ImmutablePrototypesEnabled = true;
+
+JS_FRIEND_API(bool)
+JS_ImmutablePrototypesEnabled()
+{
+    return ImmutablePrototypesEnabled;
+}
 
 /*** ES6 standard internal methods ***************************************************************/
 
@@ -2402,9 +2418,8 @@ js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto, JS::Object
     }
 
     /* Disallow mutation of immutable [[Prototype]]s. */
-    if (obj->nonLazyPrototypeIsImmutable()) {
+    if (obj->nonLazyPrototypeIsImmutable() && ImmutablePrototypesEnabled)
         return result.fail(JSMSG_CANT_SET_PROTO);
-    }
 
     /*
      * Disallow mutating the [[Prototype]] on ArrayBuffer objects, which

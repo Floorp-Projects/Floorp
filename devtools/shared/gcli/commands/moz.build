@@ -1,0 +1,28 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DevToolsModules(
+    'addon.js',
+    'appcache.js',
+    'calllog.js',
+    'cmd.js',
+    'cookie.js',
+    'csscoverage.js',
+    'folder.js',
+    'highlight.js',
+    'index.js',
+    'inject.js',
+    'jsb.js',
+    'listen.js',
+    'media.js',
+    'pagemod.js',
+    'paintflashing.js',
+    'restart.js',
+    'rulers.js',
+    'screenshot.js',
+    'security.js',
+    'tools.js',
+)

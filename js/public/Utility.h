@@ -181,6 +181,45 @@ static inline bool ShouldFailWithOOM() { return false; }
 
 # endif /* DEBUG || JS_OOM_BREAKPOINT */
 
+namespace js {
+
+MOZ_NORETURN MOZ_COLD void
+CrashAtUnhandlableOOM(const char* reason);
+
+/* Disable OOM testing in sections which are not OOM safe. */
+struct MOZ_RAII AutoEnterOOMUnsafeRegion
+{
+    void crash(const char* reason) {
+        CrashAtUnhandlableOOM(reason);
+    }
+
+#if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
+    AutoEnterOOMUnsafeRegion()
+      : oomEnabled_(OOM_maxAllocations != UINT32_MAX), oomAfter_(0)
+    {
+        if (oomEnabled_) {
+            oomAfter_ = int64_t(OOM_maxAllocations) - OOM_counter;
+            OOM_maxAllocations = UINT32_MAX;
+        }
+    }
+
+    ~AutoEnterOOMUnsafeRegion() {
+        MOZ_ASSERT(OOM_maxAllocations == UINT32_MAX);
+        if (oomEnabled_) {
+            int64_t maxAllocations = OOM_counter + oomAfter_;
+            MOZ_ASSERT(maxAllocations >= 0 && maxAllocations < UINT32_MAX);
+            OOM_maxAllocations = uint32_t(maxAllocations);
+        }
+    }
+
+  private:
+    bool oomEnabled_;
+    int64_t oomAfter_;
+#endif
+};
+
+} /* namespace js */
+
 static inline void* js_malloc(size_t bytes)
 {
     JS_OOM_POSSIBLY_FAIL();

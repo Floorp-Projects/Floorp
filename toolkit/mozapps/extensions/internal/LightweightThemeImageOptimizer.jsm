@@ -119,7 +119,7 @@ var ImageFile = {
     this._netUtil.asyncFetch({
       uri: aURI,
       loadUsingSystemPrincipal: true,
-      contentPolicyType: Ci.nsIContentPolicy.TYPE_IMAGE
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE
     }, function read_asyncFetch(aInputStream, aStatus, aRequest) {
         if (Components.isSuccessCode(aStatus) && aRequest instanceof Ci.nsIChannel) {
           let channel = aRequest.QueryInterface(Ci.nsIChannel);

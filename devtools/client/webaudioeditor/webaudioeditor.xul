@@ -1,0 +1,142 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/themes/common.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/themes/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/themes/webaudioeditor.css" type="text/css"?>
+<!DOCTYPE window [
+  <!ENTITY % debuggerDTD SYSTEM "chrome://browser/locale/devtools/webaudioeditor.dtd">
+  %debuggerDTD;
+]>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript;version=1.8"
+          src="chrome://devtools/content/shared/theme-switching.js"/>
+
+  <script type="application/javascript" src="chrome://devtools/content/shared/vendor/d3.js"/>
+  <script type="application/javascript" src="chrome://devtools/content/shared/vendor/dagre-d3.js"/>
+  <script type="application/javascript" src="includes.js"/>
+  <script type="application/javascript" src="models.js"/>
+  <script type="application/javascript" src="controller.js"/>
+  <script type="application/javascript" src="views/utils.js"/>
+  <script type="application/javascript" src="views/context.js"/>
+  <script type="application/javascript" src="views/inspector.js"/>
+  <script type="application/javascript" src="views/properties.js"/>
+  <script type="application/javascript" src="views/automation.js"/>
+
+  <vbox class="theme-body" flex="1">
+    <hbox id="reload-notice"
+          class="notice-container"
+          align="center"
+          pack="center"
+          flex="1">
+      <button id="requests-menu-reload-notice-button"
+              class="devtools-toolbarbutton"
+              standalone="true"
+              label="&webAudioEditorUI.reloadNotice1;"
+              oncommand="gFront.setup({ reload: true });"/>
+      <label id="requests-menu-reload-notice-label"
+             class="plain"
+             value="&webAudioEditorUI.reloadNotice2;"/>
+    </hbox>
+    <hbox id="waiting-notice"
+          class="notice-container devtools-throbber"
+          align="center"
+          pack="center"
+          flex="1"
+          hidden="true">
+      <label id="requests-menu-waiting-notice-label"
+             class="plain"
+             value="&webAudioEditorUI.emptyNotice;"/>
+    </hbox>
+
+    <vbox id="content"
+         flex="1"
+         hidden="true">
+      <toolbar id="web-audio-toolbar" class="devtools-toolbar">
+        <spacer flex="1"></spacer>
+        <toolbarbutton id="inspector-pane-toggle" class="devtools-toolbarbutton"
+                       tabindex="0"/>
+      </toolbar>
+      <splitter class="devtools-horizontal-splitter"/>
+      <box id="web-audio-content-pane"
+           class="devtools-responsive-container"
+           flex="1">
+        <hbox flex="1">
+          <box id="web-audio-graph" flex="1">
+            <vbox flex="1">
+              <svg id="graph-svg"
+                  xmlns="http://www.w3.org/2000/svg"
+                  xmlns:xlink="http://www.w3.org/1999/xlink">
+                <g id="graph-target" transform="translate(20,20)"/>
+              </svg>
+            </vbox>
+          </box>
+        </hbox>
+        <splitter id="inspector-splitter" class="devtools-side-splitter"/>
+        <vbox id="web-audio-inspector" hidden="true">
+          <deck id="web-audio-editor-details-pane" flex="1">
+            <vbox id="web-audio-editor-details-pane-empty" flex="1">
+              <label value="&webAudioEditorUI.inspectorEmpty;"></label>
+            </vbox>
+            <tabbox id="web-audio-editor-tabs"
+                    class="devtools-sidebar-tabs"
+                    handleCtrlTab="false">
+              <toolbar id="audio-node-toolbar" class="devtools-toolbar">
+                <hbox class="devtools-toolbarbutton-group">
+                  <toolbarbutton class="bypass devtools-toolbarbutton"
+                                 data-command="bypass"
+                                 tabindex="0"/>
+                </hbox>
+              </toolbar>
+              <tabs>
+                <tab id="properties-tab"
+                     label="&webAudioEditorUI.tab.properties2;"/>
+                <!-- bug 1134036
+                <tab id="automation-tab"
+                     label="&webAudioEditorUI.tab.automation;"/>
+                -->
+              </tabs>
+              <tabpanels flex="1">
+                <!-- Properties Panel -->
+                <tabpanel id="properties-tabpanel"
+                          class="tabpanel-content">
+                  <vbox id="properties-content" flex="1" hidden="true">
+                  </vbox>
+                  <vbox id="properties-empty" flex="1" hidden="true">
+                    <label value="&webAudioEditorUI.propertiesEmpty;"></label>
+                  </vbox>
+                </tabpanel>
+
+                <!-- Automation Panel -->
+                <tabpanel id="automation-tabpanel"
+                          class="tabpanel-content">
+                  <vbox id="automation-content" flex="1" hidden="true">
+                    <toolbar id="automation-param-toolbar" class="devtools-toolbar">
+                      <hbox id="automation-param-toolbar-buttons" class="devtools-toolbarbutton-group">
+                      </hbox>
+                    </toolbar>
+                    <box id="automation-graph-container" flex="1">
+                      <canvas id="automation-graph"></canvas>
+                    </box>
+                    <vbox id="automation-no-events" flex="1" hidden="true">
+                      <label value="&webAudioEditorUI.automationNoEvents;"></label>
+                    </vbox>
+                  </vbox>
+                  <vbox id="automation-empty" flex="1" hidden="true">
+                    <label value="&webAudioEditorUI.automationEmpty;"></label>
+                  </vbox>
+                </tabpanel>
+              </tabpanels>
+            </tabbox>
+          </deck>
+        </vbox>
+      </box>
+    </vbox>
+  </vbox>
+
+</window>

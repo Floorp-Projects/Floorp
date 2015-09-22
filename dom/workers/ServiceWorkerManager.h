@@ -315,12 +315,17 @@ public:
   bool
   IsControlled(nsIDocument* aDocument, ErrorResult& aRv);
 
+  already_AddRefed<nsIRunnable>
+  PrepareFetchEvent(const OriginAttributes& aOriginAttributes,
+                    nsIDocument* aDoc,
+                    nsIInterceptedChannel* aChannel,
+                    bool aIsReload,
+                    ErrorResult& aRv);
+
   void
-  DispatchFetchEvent(const OriginAttributes& aOriginAttributes,
-                     nsIDocument* aDoc,
-                     nsIInterceptedChannel* aChannel,
-                     bool aIsReload,
-                     ErrorResult& aRv);
+  DispatchPreparedFetchEvent(nsIInterceptedChannel* aChannel,
+                             nsIRunnable* aPreparedRunnable,
+                             ErrorResult& aRv);
 
   void
   SoftUpdate(nsIPrincipal* aPrincipal,

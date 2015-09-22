@@ -1,0 +1,40 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+
+DIRS += [
+    'redux',
+    'vendor',
+    'widgets',
+]
+
+DevToolsModules(
+    'AppCacheUtils.jsm',
+    'autocomplete-popup.js',
+    'browser-loader.js',
+    'Curl.jsm',
+    'DeveloperToolbar.jsm',
+    'devices.js',
+    'DOMHelpers.jsm',
+    'doorhanger.js',
+    'frame-script-utils.js',
+    'getjson.js',
+    'inplace-editor.js',
+    'Jsbeautify.jsm',
+    'node-attribute-parser.js',
+    'observable-object.js',
+    'options-view.js',
+    'Parser.jsm',
+    'poller.js',
+    'source-utils.js',
+    'SplitView.jsm',
+    'telemetry.js',
+    'theme-switching.js',
+    'theme.js',
+    'undo.js'
+)

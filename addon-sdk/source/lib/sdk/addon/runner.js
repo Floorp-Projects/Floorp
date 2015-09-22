@@ -24,7 +24,7 @@ const Startup = Cu.import("resource://gre/modules/sdk/system/Startup.js", {}).ex
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyGetter(this, "BrowserToolboxProcess", function () {
-  return Cu.import("resource:///modules/devtools/ToolboxProcess.jsm", {}).
+  return Cu.import("resource:///modules/devtools/client/framework/ToolboxProcess.jsm", {}).
          BrowserToolboxProcess;
 });
 
