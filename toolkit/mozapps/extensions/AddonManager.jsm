@@ -859,13 +859,6 @@ var AddonManagerInternal = {
     logger.debug(`Provider finished startup: ${providerName(aProvider)}`);
   },
 
-  _getProviderByName(aName) {
-    for (let provider of this.providers) {
-      if (providerName(provider) == aName)
-        return provider;
-    }
-  },
-
   /**
    * Initializes the AddonManager, loading any known providers and initializing
    * them.
@@ -1471,9 +1464,9 @@ var AddonManagerInternal = {
     let buPromise = Task.spawn(function* backgroundUpdateTask() {
       let hotfixID = this.hotfixID;
 
-      let appUpdateEnabled = Services.prefs.getBoolPref(PREF_APP_UPDATE_ENABLED) &&
-                             Services.prefs.getBoolPref(PREF_APP_UPDATE_AUTO);
-      let checkHotfix = hotfixID && appUpdateEnabled;
+      let checkHotfix = hotfixID &&
+                        Services.prefs.getBoolPref(PREF_APP_UPDATE_ENABLED) &&
+                        Services.prefs.getBoolPref(PREF_APP_UPDATE_AUTO);
 
       logger.debug("Background update check beginning");
 
@@ -1617,15 +1610,6 @@ var AddonManagerInternal = {
 
             aInstall.install();
           }
-        }
-      }
-
-      if (appUpdateEnabled) {
-        try {
-          yield AddonManagerInternal._getProviderByName("XPIProvider").updateSystemAddons();
-        }
-        catch (e) {
-          logger.warn("Failed to update system addons", e);
         }
       }
 

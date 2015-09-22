@@ -60,7 +60,7 @@ add_task(function*() {
 
   let updateChannel = null;
   try {
-    updateChannel = Cu.import("resource://gre/modules/UpdateUtils.jsm", {}).UpdateUtils.UpdateChannel;
+    updateChannel = Cu.import("resource://gre/modules/UpdateChannel.jsm", {}).UpdateChannel.get();
   } catch (ex) {}
   if (!updateChannel) {
     Assert.ok(!('updateChannel' in got.message.application),
