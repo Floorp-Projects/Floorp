@@ -528,6 +528,21 @@ public:
     return kIDLNameTable[aProperty];
   }
 
+private:
+  static const int32_t kIDLNameSortPositionTable[eCSSProperty_COUNT];
+
+public:
+  /**
+   * Returns the position of the specified property in a list of all
+   * properties sorted by their IDL name.
+   */
+  static int32_t PropertyIDLNameSortPosition(nsCSSProperty aProperty)
+  {
+    MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT,
+               "out of range");
+    return kIDLNameSortPositionTable[aProperty];
+  }
+
 public:
 
   static bool IsEnabled(nsCSSProperty aProperty) {
