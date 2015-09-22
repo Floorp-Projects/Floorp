@@ -505,6 +505,7 @@ STUB(gtk_window_unmaximize)
 #ifdef GTK3_SYMBOLS
 STUB(gdk_device_get_source)
 STUB(gdk_device_manager_get_client_pointer)
+STUB(gdk_disable_multidevice)
 STUB(gdk_display_get_device_manager)
 STUB(gdk_error_trap_pop_ignored)
 STUB(gdk_event_get_source_device)
