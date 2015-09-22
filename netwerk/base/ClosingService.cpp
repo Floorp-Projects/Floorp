@@ -83,6 +83,7 @@ ClosingService::ClosingService()
 void
 ClosingService::Start()
 {
+#ifndef MOZ_WIDGET_GONK
   if (!sTcpUdpPRCloseLayerMethodsPtr) {
     sTcpUdpPRCloseLayerId =  PR_GetUniqueIdentity("TCP and UDP PRClose layer");
     PR_ASSERT(PR_INVALID_IO_LAYER != sTcpUdpPRCloseLayerId);
@@ -101,6 +102,7 @@ ClosingService::Start()
       delete service;
     }
   }
+#endif
 }
 
 nsresult
@@ -119,6 +121,12 @@ ClosingService::StartInternal()
 nsresult
 ClosingService::AttachIOLayer(PRFileDesc *aFd)
 {
+#ifdef MOZ_WIDGET_GONK
+
+  return NS_OK;
+
+#else
+
   if (!sTcpUdpPRCloseLayerMethodsPtr) {
     return NS_OK;
   }
@@ -143,6 +151,8 @@ ClosingService::AttachIOLayer(PRFileDesc *aFd)
     PR_DELETE(layer);
   }
   return NS_OK;
+
+#endif //MOZ_WIDGET_GONK
 }
 
 void
@@ -171,12 +181,14 @@ ClosingService::PostRequest(PRFileDesc *aFd)
 void
 ClosingService::Shutdown()
 {
+#ifndef MOZ_WIDGET_GONK
   MOZ_ASSERT(NS_IsMainThread());
 
   if (sInstance) {
     sInstance->ShutdownInternal();
     NS_RELEASE(sInstance);
   }
+#endif //MOZ_WIDGET_GONK
 }
 
 void
