@@ -211,7 +211,14 @@ RESOURCE_FILES += [
     'TopLevelVideoDocument.css',
 ]
 
-GENERATED_FILES += ['nsStyleStructList.h']
+# nsCSSPropsGenerated.inc is generated from nsCSSPropsGenerated.inc.in by
+# GenerateCSSPropsGenerated.py; see the corresponding rules in Makefile.in.
+
+GENERATED_FILES += [
+    'nsCSSPropsGenerated.inc',
+    'nsStyleStructList.h',
+]
+
 style_struct_list = GENERATED_FILES['nsStyleStructList.h']
 style_struct_list.script = 'generate-stylestructlist.py'
 
