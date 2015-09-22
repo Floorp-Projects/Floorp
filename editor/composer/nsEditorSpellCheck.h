@@ -70,7 +70,7 @@ protected:
 
   bool mUpdateDictionaryRunning;
 
-  nsresult TryDictionary(nsAutoString aDictName, nsTArray<nsString>& aDictList,
+  nsresult TryDictionary(const nsAString& aDictName, nsTArray<nsString>& aDictList,
                          enum dictCompare aCompareType);
 
   nsresult DictionaryFetched(DictionaryFetcher* aFetchState);

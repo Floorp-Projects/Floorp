@@ -23,15 +23,42 @@ var openChatOrig = Chat.open;
 
 var fakeRoomList = new Map([[ ROOM_TOKEN, { roomToken: ROOM_TOKEN } ]]);
 
+function BackChannel(uri) {
+  this.channel = new WebChannel("test-loop-link-clicker-backchannel", uri);
+
+  this.channel.listen((id, data) => {
+    if (this.pendingResolve) {
+      this.pendingResolve(data);
+      return;
+    }
+
+    this.receivedData = data;
+  });
+}
+
+BackChannel.prototype = {
+  channel: null,
+  receivedData: null,
+  pendingResolve: null,
+
+  tearDown: function() {
+    this.channel.stopListening();
+  }
+};
+
+var gGoodBackChannel;
+var gBadBackChannel;
+
 // Loads the specified URI in a new tab and waits for it to send us data on our
 // test web-channel and resolves with that data.
-function promiseNewChannelResponse(uri, hash) {
+function promiseNewChannelResponse(uri, channel, hash) {
   let waitForChannelPromise = new Promise((resolve, reject) => {
-    let channel = new WebChannel("test-loop-link-clicker-backchannel", uri);
-    channel.listen((id, data, target) => {
-      channel.stopListening();
-      resolve(data);
-    });
+    if (channel.receivedData) {
+      resolve(channel.receivedData);
+      return;
+    }
+
+    channel.pendingResolve = resolve;
   });
 
   return BrowserTestUtils.withNewTab({
@@ -40,9 +67,21 @@ function promiseNewChannelResponse(uri, hash) {
   }, () => waitForChannelPromise);
 }
 
+add_task(function* setup() {
+  gGoodBackChannel = new BackChannel(TEST_URI_GOOD);
+  gBadBackChannel = new BackChannel(TEST_URI_BAD);
+
+  registerCleanupFunction(() => {
+    gGoodBackChannel.tearDown();
+    gBadBackChannel.tearDown();
+  });
+
+  yield undefined;
+});
+
 add_task(function* test_loopRooms_webChannel_permissions() {
   // We haven't set the allowed web page yet - so even the "good" URI should fail.
-  let got = yield promiseNewChannelResponse(TEST_URI_GOOD, "checkWillOpenRoom");
+  let got = yield promiseNewChannelResponse(TEST_URI_GOOD, gGoodBackChannel, "checkWillOpenRoom");
   // Should have no data.
   Assert.ok(got.message === undefined, "should have failed to get any data");
 
@@ -53,13 +92,13 @@ add_task(function* test_loopRooms_webChannel_permissions() {
   });
 
   // Try again - now we are expecting a response with actual data.
-  got = yield promiseNewChannelResponse(TEST_URI_GOOD, "checkWillOpenRoom");
+  got = yield promiseNewChannelResponse(TEST_URI_GOOD, gGoodBackChannel, "checkWillOpenRoom");
 
   // The room doesn't exist, so we should get a negative response.
   Assert.equal(got.message.response, false, "should have got a response of false");
 
   // Now a http:// URI - should get nothing even with the permission setup.
-  got = yield promiseNewChannelResponse(TEST_URI_BAD, "checkWillOpenRoom");
+  got = yield promiseNewChannelResponse(TEST_URI_BAD, gBadBackChannel, "checkWillOpenRoom");
   Assert.ok(got.message === undefined, "should have failed to get any data");
 });
 
@@ -68,7 +107,7 @@ add_task(function* test_loopRooms_webchannel_checkWillOpenRoom() {
   // room and check the result.
   LoopRooms._setRoomsCache(fakeRoomList);
 
-  let got = yield promiseNewChannelResponse(TEST_URI_GOOD, "checkWillOpenRoom");
+  let got = yield promiseNewChannelResponse(TEST_URI_GOOD, gGoodBackChannel, "checkWillOpenRoom");
 
   Assert.equal(got.message.response, true, "should have got a response of true");
 });
@@ -85,7 +124,7 @@ add_task(function* test_loopRooms_webchannel_openRoom() {
   // Test when the room doesn't exist
   LoopRooms._setRoomsCache();
 
-  let got = yield promiseNewChannelResponse(TEST_URI_GOOD, "openRoom");
+  let got = yield promiseNewChannelResponse(TEST_URI_GOOD, gGoodBackChannel, "openRoom");
 
   Assert.ok(!openedUrl, "should not open a chat window");
   Assert.equal(got.message.response, false, "should have got a response of false");
@@ -93,7 +132,7 @@ add_task(function* test_loopRooms_webchannel_openRoom() {
   // Now add a room & check it.
   LoopRooms._setRoomsCache(fakeRoomList);
 
-  got = yield promiseNewChannelResponse(TEST_URI_GOOD, "openRoom");
+  got = yield promiseNewChannelResponse(TEST_URI_GOOD, gGoodBackChannel, "openRoom");
 
   // Check the room was opened.
   Assert.ok(openedUrl, "should open a chat window");

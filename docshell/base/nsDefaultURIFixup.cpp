@@ -22,6 +22,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "mozilla/Tokenizer.h"
 #include "nsIObserverService.h"
 #include "nsXULAppAPI.h"
 
@@ -122,6 +123,35 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI,
 
   fixupInfo->GetPreferredURI(aURI);
   return rv;
+}
+
+// Returns true if the URL contains a user:password@ or user@
+static bool
+HasUserPassword(const nsACString& aStringURI)
+{
+  mozilla::Tokenizer parser(aStringURI);
+  mozilla::Tokenizer::Token token;
+
+  // May start with any of "protocol:", "protocol://",  "//", "://"
+  if (parser.Check(Tokenizer::TOKEN_WORD, token)) { // Skip protocol if any
+  }
+  if (parser.CheckChar(':')) { // Skip colon if found
+  }
+  while (parser.CheckChar('/')) { // Skip all of the following slashes
+  }
+
+  while (parser.Next(token)) {
+    if (token.Type() == Tokenizer::TOKEN_CHAR) {
+      if (token.AsChar() == '/') {
+        return false;
+      }
+      if (token.AsChar() == '@') {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 NS_IMETHODIMP
@@ -327,7 +357,14 @@ nsDefaultURIFixup::GetFixupURIInfo(const nsACString& aStringURI,
       // It's more likely the user wants to search, and so we
       // chuck this over to their preferred search provider instead:
       if (!handlerExists) {
-        TryKeywordFixupForURIInfo(uriString, info, aPostData);
+        bool hasUserPassword = HasUserPassword(uriString);
+        if (!hasUserPassword) {
+          TryKeywordFixupForURIInfo(uriString, info, aPostData);
+        } else {
+          // If the given URL has a user:password we can't just pass it to the
+          // external protocol handler; we'll try using it with http instead later
+          info->mFixedURI = nullptr;
+        }
       }
     }
   }
@@ -749,6 +786,7 @@ nsDefaultURIFixup::FixupURIProtocol(const nsACString& aURIString,
   //   ftp.no-scheme.com
   //   ftp4.no-scheme.com
   //   no-scheme.com/query?foo=http://www.foo.com
+  //   user:pass@no-scheme.com
   //
   int32_t schemeDelim = uriString.Find("://", 0);
   int32_t firstDelim = uriString.FindCharInSet("/:");

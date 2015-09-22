@@ -25,7 +25,7 @@ body,
   background: #000;
 }
 
-.standalone .beta-logo {
+.room-conversation-wrapper > .beta-logo {
   position: fixed;
   top: 0;
   left: 0;
@@ -36,116 +36,7 @@ body,
   z-index: 1000;
 }
 
-.standalone-header {
-  border-radius: 4px;
-  background: #fff;
-  border: 1px solid #E7E7E7;
-  box-shadow: 0px 2px 0px rgba(0, 0, 0, 0.03);
-  background-image: url("../shared/img/beta-ribbon.svg#beta-ribbon");
-  background-size: 5rem 5rem;
-  background-repeat: no-repeat;
-}
-
-.header-box {
-  padding: 1rem 5rem;
-  margin-top: 2rem;
-}
-
-/* Waiting info offer */
-
-.standalone .empty-room-message {
-  font-size: 1.2em;
-  font-weight: bold;
-}
-
-.standalone .room-waiting-area {
-  display: flex;
-  justify-content: space-between;
-  margin: 3em auto 1em;
-}
-
-.standalone .room-waiting-help {
-  background: transparent url("../shared/img/svg/glyph-help-16x16.svg") no-repeat;
-  display: inline-block;
-  height: 16px;
-  margin-left: 5px;
-  vertical-align: middle;
-  width: 16px;
-}
-
-.standalone .room-waiting-tile {
-  border: 0;
-  border-radius: 5px;
-  /* These sizes are the size of the tile image and title */
-  height: 204px;
-  /* Override the default iframe 300px width with the inherited width */
-  width: 100%;
-}
-
-/*
- * Top/Bottom spacing
- **/
-.container {
-  display: flex;
-  flex-direction: column;
-  margin: 0 auto;
-
-  /* prevent the video conversation elements to occupy the whole available
-   width hence the height while keeping aspect ratio */
-  width: 30%;
-  min-width: 400px;
-  height: 100%;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.container-box {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  align-content: center;
-}
-
-/* call-url only */
-
-.terms-service,
-.terms-service a {
-  font-size: 1.1rem;
-  font-weight: 400;
-  color: #4a4a4a;
-}
-
-  .terms-service a {
-    text-decoration: none;
-  }
-
-  .terms-service a:hover {
-    text-decoration: underline;
-  }
-
-  .terms-service a {
-    color: #777;
-  }
-
-.standalone-footer {
-  margin-bottom: 2rem;
-}
-
-.footer-external-links {
-  padding: .2rem .7rem;
-}
-
-.footer-external-links a {
-  margin: 0 .5rem;
-  text-decoration: none;
-  color: #adadad;
-}
-
-.footer-external-links a:hover {
-  color: #777;
-}
-
-/* Both call-url & rooms */
+/* Footer */
 
 .footer-logo {
   width: 100px;
@@ -155,8 +46,6 @@ body,
   background-image: url("../shared/img/mozilla-logo.png");
   background-repeat: no-repeat;
 }
-
-/* Rooms Footer */
 
 .rooms-footer {
   background: #000;
@@ -219,117 +108,9 @@ html[dir="rtl"] .rooms-footer .footer-logo {
   }
 }
 
-.loop-logo {
-  width: 100px;
-  height: 100px;
-  margin: 1rem auto;
-  background-image: url("../shared/img/firefox-logo.png");
-  background-size: cover;
-  background-repeat: no-repeat;
-}
-
-.standalone-header-title,
-.standalone-btn-label {
-  font-weight: lighter;
-}
-
-.standalone-header-title {
-  font-size: 1.8rem;
-  line-height: 2.2rem;
-}
-
-p.standalone-btn-label {
-  font-size: 1.2rem;
-  line-height: 1.5rem;
-}
-
-.light-color-font {
-  opacity: .4;
-  font-weight: normal;
-}
-
-.standalone-btn-chevron-menu-group {
-  display: flex;
-  justify-content: space-between;
-  flex: 2;
-}
-
-.start-audio-only-call,
-.standalone-call-btn-video-icon {
-  width: 1.2rem;
-  height: 1.2rem;
-  background-repeat: no-repeat;
-  cursor: pointer;
-}
-
-.start-audio-only-call {
-  width: 100%;
-  border: none;
-  color: #111;
-  background-color: #fff;
-  background-size: 10px;
-  background-image: url("../shared/img/audio-default-16x16@1.5x.png");
-  background-position: 90% center;
-}
-
-.start-audio-only-call:hover {
-  background-image: url("../shared/img/audio-inverse-14x14.png");
-}
-
-.standalone-call-btn-video-icon {
-  background-image: url("../shared/img/video-inverse-14x14.png");
-  display: inline-block;
-  background-size: 1.2rem;
-  margin-left: .5rem;
-}
-
-/* Ellipsed text content of audio-video call btn */
-.standalone-call-btn-text {
-  /* make some room for the video icon */
-  max-width: 85%;
-  vertical-align: bottom;
-}
-
-.standalone-call-btn-video-icon {
-  vertical-align: top;
-}
-
-@media (min-resolution: 2dppx) {
-  .start-audio-only-call {
-    background-image: url("../shared/img/audio-default-16x16@2x.png");
-  }
-  .start-audio-only-call:hover {
-    background-image: url("../shared/img/audio-inverse-14x14@2x.png");
-  }
-  .standalone-call-btn-video-icon {
-    background-image: url("../shared/img/video-inverse-14x14@2x.png");
-  }
-}
-
-.btn-pending-cancel-group > .btn-cancel {
-  flex: 2 1 auto;
-  border-radius: 2px;
-}
-
 .btn-large {
-  /* Dimensions from spec
-   * https://people.mozilla.org/~dhenein/labs/loop-link-spec/#call-start */
   font-size: 1rem;
   padding: .3em .5rem;
-}
-
-  .btn-large + .btn-chevron {
-    padding: 1rem;
-    height: 100%; /* match full height of button */
-  }
-
-/*
- * Left / Right padding elements
- * used to center components
- * */
-.flex-padding-1 {
-  display: flex;
-  flex: 1;
 }
 
 /**
@@ -357,27 +138,97 @@ p.standalone-btn-label {
   line-height: 24px;
 }
 
-/**
- * Feedback form overlay (standalone only)
- */
-.standalone .ended-conversation {
+/* Room wrapper layout */
+
+.room-conversation-wrapper {
   position: relative;
   height: 100%;
-  background-color: #444;
-  text-align: left; /* as backup */
-  text-align: start;
+  background: #000;
 }
 
-.standalone .ended-conversation .local-stream {
-  /* Hide  local media stream when feedback form is shown. */
-  display: none;
+/* gUM prompts */
+
+.prompt-media-message {
+  padding-top: 136px; /* Fallback for browsers that don't support calc() */
+  /* 122px is 2x the intrinsic height of the background-image, and
+     1rem puts one line of margin between the background-image and
+     supporting text. */
+  padding-top: calc(122px + 1rem);
+  color: #000;
+  background-color: #fff;
+  background-image: url("../img/gum-others.svg");
+  background-position: top center;
+  /* The background-image is scaled up at 2x the instrinsic size
+     (witdh & height) to make it easier to see. */
+  background-size: 202px 122px;
+  background-repeat: no-repeat;
+  border: 1rem #fff solid;
+  box-shadow: 0 0 5px #000;
+  margin: auto;
+  /* `width` here is specified by the design spec. */
+  width: 250px;
 }
 
-@media screen and (max-width:640px) {
-  .standalone .ended-conversation .feedback {
-    width: 92%;
-    top: 10%;
-    left: 5px;
-    right: 5px;
-  }
+.prompt-media-message.chrome {
+  background-image: url("../img/gum-chrome.svg");
+}
+
+.prompt-media-message.firefox {
+  background-image: url("../img/gum-firefox.svg");
+}
+
+.prompt-media-message.opera {
+  background-image: url("../img/gum-opera.svg");
+}
+
+/* Room Info area layout */
+
+.room-inner-info-area {
+  color: #fff;
+  margin: auto;
+  /* 290px is the width of the widest info child, i.e., a tile */
+  width: 290px;
+}
+
+.room-inner-info-area > button {
+  border-radius: 3px;
+  font-size: 1.2em;
+  padding: .2em 1.2em;
+  cursor: pointer;
+}
+
+.room-inner-info-area > p > a.btn {
+  padding: .5em 3em .3em 3em;
+  border-radius: 3px;
+  font-weight: normal;
+  max-width: 400px;
+}
+
+.room-inner-info-area > .empty-room-message {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.room-inner-info-area > .room-waiting-area {
+  display: flex;
+  justify-content: space-between;
+  margin: 3em auto 1em;
+}
+
+.room-inner-info-area > .room-waiting-area > a >.room-waiting-help {
+  background: transparent url("../shared/img/svg/glyph-help-16x16.svg") no-repeat;
+  display: inline-block;
+  height: 16px;
+  margin-left: 5px;
+  vertical-align: middle;
+  width: 16px;
+}
+
+.room-inner-info-area > .room-waiting-tile {
+  border: 0;
+  border-radius: 5px;
+  /* These sizes are the size of the tile image and title */
+  height: 204px;
+  /* Override the default iframe 300px width with the inherited width */
+  width: 100%;
 }

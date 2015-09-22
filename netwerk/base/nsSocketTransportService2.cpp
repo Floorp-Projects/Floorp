@@ -100,6 +100,8 @@ nsSocketTransportService::nsSocketTransportService()
     , mIdleCount(0)
     , mSentBytesCount(0)
     , mReceivedBytesCount(0)
+    , mEventQueueLock("nsSocketTransportService::mEventQueueLock")
+    , mPendingSocketQ(mEventQueueLock)
     , mSendBufferSize(0)
     , mKeepaliveIdleTimeS(600)
     , mKeepaliveRetryIntervalS(1)
@@ -198,7 +200,10 @@ nsSocketTransportService::NotifyWhenCanAttachSocket(nsIRunnable *event)
         return Dispatch(event, NS_DISPATCH_NORMAL);
     }
 
-    mPendingSocketQ.PutEvent(event);
+    {
+      MutexAutoLock lock(mEventQueueLock);
+      mPendingSocketQ.PutEvent(event, lock);
+    }
     return NS_OK;
 }
 
@@ -251,7 +256,11 @@ nsSocketTransportService::DetachSocket(SocketContext *listHead, SocketContext *s
     // notify the first element on the pending socket queue...
     //
     nsCOMPtr<nsIRunnable> event;
-    if (mPendingSocketQ.GetPendingEvent(getter_AddRefs(event))) {
+    {
+      MutexAutoLock lock(mEventQueueLock);
+      mPendingSocketQ.GetPendingEvent(getter_AddRefs(event), lock);
+    }
+    if (event) {
         // move event from pending queue to dispatch queue
         return Dispatch(event, NS_DISPATCH_NORMAL);
     }

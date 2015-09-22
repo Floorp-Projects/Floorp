@@ -32,6 +32,7 @@ import org.mozilla.gecko.fxa.login.State.StateLabel;
 import org.mozilla.gecko.fxa.login.StateFactory;
 import org.mozilla.gecko.fxa.sync.FxAccountNotificationManager;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncAdapter;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.Executor;
@@ -351,11 +352,31 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
     // Broadcast intents protected with permissions are secure, so it's okay
     // to include private information such as a password.
     final AndroidFxAccount androidFxAccount = new AndroidFxAccount(context, account);
+
+    // Deleting the pickle file in a blocking manner will avoid race conditions that might happen when
+    // an account is unpickled while an FxAccount is being deleted.
+    // Also we have an assumption that this method is always called from a background thread, so we delete
+    // the pickle file directly without being afraid from a StrictMode violation.
+    ThreadUtils.assertNotOnUiThread();
+
+    Logger.info(LOG_TAG, "Firefox account named " + account.name + " being removed; " +
+            "deleting saved pickle file '" + FxAccountConstants.ACCOUNT_PICKLE_FILENAME + "'.");
+    deletePickle();
+
     final Intent intent = androidFxAccount.makeDeletedAccountIntent();
     Logger.info(LOG_TAG, "Account named " + account.name + " being removed; " +
         "broadcasting secure intent " + intent.getAction() + ".");
     context.sendBroadcast(intent, FxAccountConstants.PER_ACCOUNT_TYPE_PERMISSION);
 
     return result;
+  }
+
+  private void deletePickle() {
+    try {
+      AccountPickler.deletePickle(context, FxAccountConstants.ACCOUNT_PICKLE_FILENAME);
+    } catch (Exception e) {
+      // This should never happen, but we really don't want to die in a background thread.
+      Logger.warn(LOG_TAG, "Got exception deleting saved pickle file; ignoring.", e);
+    }
   }
 }
