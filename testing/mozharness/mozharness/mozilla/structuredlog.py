@@ -96,6 +96,7 @@ class StructuredOutputParser(OutputParser):
         failure_conditions = [
             sum(summary.unexpected_statuses.values()) > 0,
             summary.action_counts.get('crash', 0) > summary.expected_statuses.get('CRASH', 0),
+            summary.action_counts.get('valgrind_error', 0) > 0
         ]
         for condition in failure_conditions:
             if condition:

@@ -91,6 +91,11 @@ TinderBoxPrintRe = {
         'minimum_regex': re.compile(r'''(TEST-UNEXPECTED|PROCESS-CRASH)'''),
         'retry_regex': re.compile(r'''FAIL-SHOULD-RETRY''')
     },
+    "valgrind_error": {
+        'substr': 'TEST-VALGRIND-ERROR',
+        'level': ERROR,
+        'explanation': 'Valgrind detected memory errors during the run'
+    },
 }
 
 TestPassed = [
