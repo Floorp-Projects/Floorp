@@ -3700,6 +3700,11 @@ XREMain::XRE_mainStartup(bool* aExitFlag)
 
   // Initialize GTK here for splash.
 
+#if (MOZ_WIDGET_GTK == 3) && defined(MOZ_X11)
+  // Disable XInput2 support due to focus bugginess. See bugs 1182700, 1170342.
+  gdk_disable_multidevice();
+#endif
+
   // Open the display ourselves instead of using gtk_init, so that we can
   // close it without fear that one day gtk might clean up the display it
   // opens.
