@@ -234,41 +234,71 @@ AC_SUBST([STLPORT_LIBS])
 
 ])
 
+
+AC_DEFUN([concat],[$1$2$3$4])
+
+dnl Find a component of an AAR.
+dnl Arg 1: variable name to expose, like ANDROID_SUPPORT_V4_LIB.
+dnl Arg 2: path to component.
+dnl Arg 3: if non-empty, expect and require component.
+AC_DEFUN([MOZ_ANDROID_AAR_COMPONENT], [
+  ifelse([$3], ,
+  [
+    if test -e "$$1" ; then
+      AC_MSG_ERROR([Found unexpected exploded $1!])
+    fi
+  ],
+  [
+    AC_MSG_CHECKING([for $1])
+    $1="$2"
+    if ! test -e "$$1" ; then
+      AC_MSG_ERROR([Could not find required exploded $1!])
+    fi
+    AC_MSG_RESULT([$$1])
+    AC_SUBST($1)
+  ])
+])
+
+dnl Find an AAR and expose variables representing its exploded components.
+dnl AC_SUBSTs ANDROID_NAME_{AAR,AAR_RES,AAR_LIB,AAR_INTERNAL_LIB}.
+dnl Arg 1: name, like play-services-base
+dnl Arg 2: version, like 7.8.0
+dnl Arg 3: extras subdirectory, either android or google
+dnl Arg 4: package subdirectory, like com/google/android/gms
+dnl Arg 5: if non-empty, expect and require internal_impl JAR.
+dnl Arg 6: if non-empty, expect and require assets/ directory.
+AC_DEFUN([MOZ_ANDROID_AAR],[
+  define([local_aar_var_base], translit($1, [-a-z], [_A-Z]))
+  define([local_aar_var], concat(ANDROID_, local_aar_var_base, _AAR))
+  local_aar_var="$ANDROID_SDK_ROOT/extras/$3/m2repository/$4/$1/$2/$1-$2.aar"
+  AC_MSG_CHECKING([for $1 AAR])
+  if ! test -e "$local_aar_var" ; then
+    AC_MSG_ERROR([You must download the $1 AAR.  Run the Android SDK tool and install the Android and Google Support Repositories under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (Looked for $local_aar_var)])
+  fi
+  AC_SUBST(local_aar_var)
+  AC_MSG_RESULT([$local_aar_var])
+
+  if ! $PYTHON -m mozbuild.action.explode_aar --destdir=$MOZ_BUILD_ROOT/dist/exploded-aar $local_aar_var ; then
+    AC_MSG_ERROR([Could not explode $local_aar_var!])
+  fi
+
+  define([root], $MOZ_BUILD_ROOT/dist/exploded-aar/$1-$2/)
+  MOZ_ANDROID_AAR_COMPONENT(concat(local_aar_var, _LIB), concat(root, $1-$2-classes.jar), REQUIRED)
+  MOZ_ANDROID_AAR_COMPONENT(concat(local_aar_var, _RES), concat(root, res), REQUIRED)
+  MOZ_ANDROID_AAR_COMPONENT(concat(local_aar_var, _INTERNAL_LIB), concat(root, libs/$1-$2-internal_impl-$2.jar), $5)
+  MOZ_ANDROID_AAR_COMPONENT(concat(local_aar_var, _ASSETS), concat(root, assets), $6)
+])
+
 AC_DEFUN([MOZ_ANDROID_GOOGLE_PLAY_SERVICES],
 [
 
 if test -n "$MOZ_NATIVE_DEVICES" ; then
     AC_SUBST(MOZ_NATIVE_DEVICES)
 
-    AC_MSG_CHECKING([for google play services])
-    GOOGLE_PLAY_SERVICES_LIB="${ANDROID_SDK_ROOT}/extras/google/google_play_services/libproject/google-play-services_lib/libs/google-play-services.jar"
-    GOOGLE_PLAY_SERVICES_RES="${ANDROID_SDK_ROOT}/extras/google/google_play_services/libproject/google-play-services_lib/res"
-    AC_SUBST(GOOGLE_PLAY_SERVICES_LIB)
-    AC_SUBST(GOOGLE_PLAY_SERVICES_RES)
-    if ! test -e $GOOGLE_PLAY_SERVICES_LIB ; then
-        AC_MSG_ERROR([You must download Google Play Services to build with native video casting support enabled.  Run the Android SDK tool and install Google Play Services under Extras.  See http://developer.android.com/google/play-services/setup.html for more info. (looked for $GOOGLE_PLAY_SERVICES_LIB) ])
-    fi
-    AC_MSG_RESULT([$GOOGLE_PLAY_SERVICES_LIB])
-
-    ANDROID_APPCOMPAT_LIB="$ANDROID_COMPAT_DIR_BASE/v7/appcompat/libs/android-support-v7-appcompat.jar"
-    ANDROID_APPCOMPAT_RES="$ANDROID_COMPAT_DIR_BASE/v7/appcompat/res"
-    AC_MSG_CHECKING([for v7 appcompat library])
-    if ! test -e $ANDROID_APPCOMPAT_LIB ; then
-        AC_MSG_ERROR([You must download the v7 app compat Android support library when targeting Android with native video casting support enabled.  Run the Android SDK tool and install Android Support Library under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (looked for $ANDROID_APPCOMPAT_LIB)])
-    fi
-    AC_MSG_RESULT([$ANDROID_APPCOMPAT_LIB])
-    AC_SUBST(ANDROID_APPCOMPAT_LIB)
-    AC_SUBST(ANDROID_APPCOMPAT_RES)
-
-    ANDROID_MEDIAROUTER_LIB="$ANDROID_COMPAT_DIR_BASE/v7/mediarouter/libs/android-support-v7-mediarouter.jar"
-    ANDROID_MEDIAROUTER_RES="$ANDROID_COMPAT_DIR_BASE/v7/mediarouter/res"
-    AC_MSG_CHECKING([for v7 mediarouter library])
-    if ! test -e $ANDROID_MEDIAROUTER_LIB ; then
-        AC_MSG_ERROR([You must download the v7 media router Android support library when targeting Android with native video casting support enabled.  Run the Android SDK tool and install Android Support Library under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (looked for $ANDROID_MEDIAROUTER_LIB)])
-    fi
-    AC_MSG_RESULT([$ANDROID_MEDIAROUTER_LIB])
-    AC_SUBST(ANDROID_MEDIAROUTER_LIB)
-    AC_SUBST(ANDROID_MEDIAROUTER_RES)
+    MOZ_ANDROID_AAR(play-services-base, 7.8.0, google, com/google/android/gms)
+    MOZ_ANDROID_AAR(play-services-cast, 7.8.0, google, com/google/android/gms)
+    MOZ_ANDROID_AAR(appcompat-v7, 22.2.1, android, com/android/support)
+    MOZ_ANDROID_AAR(mediarouter-v7, 22.2.1, android, com/android/support, REQUIRED_INTERNAL_IMPL)
 fi
 
 ])
@@ -355,14 +385,6 @@ case "$target" in
     ANDROID_SDK="${android_sdk}"
     ANDROID_SDK_ROOT="${android_sdk_root}"
 
-    AC_MSG_CHECKING([for compat library dirs])
-    if test -e "${android_sdk_root}/extras/android/compatibility/v4/android-support-v4.jar" ; then
-        ANDROID_COMPAT_DIR_BASE="${android_sdk_root}/extras/android/compatibility";
-    else
-        ANDROID_COMPAT_DIR_BASE="${android_sdk_root}/extras/android/support";
-    fi
-    AC_MSG_RESULT([$ANDROID_COMPAT_DIR_BASE])
-
     ANDROID_TOOLS="${android_tools}"
     ANDROID_PLATFORM_TOOLS="${android_platform_tools}"
     ANDROID_BUILD_TOOLS="${android_build_tools}"
@@ -372,23 +394,18 @@ case "$target" in
     AC_SUBST(ANDROID_PLATFORM_TOOLS)
     AC_SUBST(ANDROID_BUILD_TOOLS)
 
-    ANDROID_COMPAT_LIB=$ANDROID_COMPAT_DIR_BASE/v4/android-support-v4.jar
-    AC_MSG_CHECKING([for v4 compat library])
-    AC_SUBST(ANDROID_COMPAT_LIB)
-    if ! test -e $ANDROID_COMPAT_LIB ; then
-        AC_MSG_ERROR([You must download the Android v4 support library when targeting Android.  Run the Android SDK tool and install Android Support Library under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (looked for $ANDROID_COMPAT_LIB)])
-    fi
-    AC_MSG_RESULT([$ANDROID_COMPAT_LIB])
+    MOZ_ANDROID_AAR(support-v4, 22.2.1, android, com/android/support, REQUIRED_INTERNAL_IMPL)
+    MOZ_ANDROID_AAR(recyclerview-v7, 22.2.1, android, com/android/support)
 
-    ANDROID_RECYCLERVIEW_LIB="$ANDROID_COMPAT_DIR_BASE/v7/recyclerview/libs/android-support-v7-recyclerview.jar"
-    ANDROID_RECYCLERVIEW_RES="$ANDROID_COMPAT_DIR_BASE/v7/recyclerview/res"
-    AC_MSG_CHECKING([for v7 recyclerview library])
-    if ! test -e $ANDROID_RECYCLERVIEW_LIB ; then
-        AC_MSG_ERROR([You must download the v7 recyclerview Android support library.  Run the Android SDK tool and install Android Support Library under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (looked for $ANDROID_RECYCLERVIEW_LIB)])
+    ANDROID_SUPPORT_ANNOTATIONS_JAR="$ANDROID_SDK_ROOT/extras/android/m2repository/com/android/support/support-annotations/22.2.1/support-annotations-22.2.1.jar"
+    AC_MSG_CHECKING([for support-annotations JAR])
+    if ! test -e $ANDROID_SUPPORT_ANNOTATIONS_JAR ; then
+        AC_MSG_ERROR([You must download the support-annotations lib.  Run the Android SDK tool and install the Android Support Repository under Extras.  See https://developer.android.com/tools/extras/support-library.html for more info. (looked for $ANDROID_SUPPORT_ANNOTATIONS_JAR)])
     fi
-    AC_MSG_RESULT([$ANDROID_RECYCLERVIEW_LIB])
-    AC_SUBST(ANDROID_RECYCLERVIEW_LIB)
-    AC_SUBST(ANDROID_RECYCLERVIEW_RES)
+    AC_MSG_RESULT([$ANDROID_SUPPORT_ANNOTATIONS_JAR])
+    AC_SUBST(ANDROID_SUPPORT_ANNOTATIONS_JAR)
+    ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB=$ANDROID_SUPPORT_ANNOTATIONS_JAR
+    AC_SUBST(ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB)
 
     dnl Google has a history of moving the Android tools around.  We don't
     dnl care where they are, so let's try to find them anywhere we can.

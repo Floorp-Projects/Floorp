@@ -49,20 +49,26 @@ GARBAGE_DIRS += classes db jars res sync services generated
 # over changes in behaviour between versions.
 JAVA_BOOTCLASSPATH := \
     $(ANDROID_SDK)/android.jar \
-    $(ANDROID_COMPAT_LIB) \
     $(NULL)
 
 JAVA_BOOTCLASSPATH := $(subst $(NULL) ,:,$(strip $(JAVA_BOOTCLASSPATH)))
 
-JAVA_CLASSPATH += $(ANDROID_RECYCLERVIEW_LIB)
+JAVA_CLASSPATH += \
+    $(ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB) \
+    $(ANDROID_SUPPORT_V4_AAR_LIB) \
+    $(ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB) \
+    $(ANDROID_RECYCLERVIEW_V7_AAR_LIB) \
+    $(NULL)
 
 # If native devices are enabled, add Google Play Services and some of the v7
 # compat libraries.
 ifdef MOZ_NATIVE_DEVICES
     JAVA_CLASSPATH += \
-        $(GOOGLE_PLAY_SERVICES_LIB) \
-        $(ANDROID_MEDIAROUTER_LIB) \
-        $(ANDROID_APPCOMPAT_LIB) \
+        $(ANDROID_PLAY_SERVICES_BASE_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_CAST_AAR_LIB) \
+        $(ANDROID_MEDIAROUTER_V7_AAR_LIB) \
+        $(ANDROID_MEDIAROUTER_V7_AAR_INTERNAL_LIB) \
+        $(ANDROID_APPCOMPAT_V7_AAR_LIB) \
         $(NULL)
 endif
 
@@ -71,15 +77,18 @@ JAVA_CLASSPATH := $(subst $(NULL) ,:,$(strip $(JAVA_CLASSPATH)))
 # Library jars that we're bundling: these are subject to Proguard before inclusion
 # into classes.dex.
 java_bundled_libs := \
-    $(ANDROID_COMPAT_LIB) \
-    $(ANDROID_RECYCLERVIEW_LIB) \
+    $(ANDROID_SUPPORT_V4_AAR_LIB) \
+    $(ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB) \
+    $(ANDROID_RECYCLERVIEW_V7_AAR_LIB) \
     $(NULL)
 
 ifdef MOZ_NATIVE_DEVICES
     java_bundled_libs += \
-        $(GOOGLE_PLAY_SERVICES_LIB) \
-        $(ANDROID_MEDIAROUTER_LIB) \
-        $(ANDROID_APPCOMPAT_LIB) \
+        $(ANDROID_PLAY_SERVICES_BASE_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_CAST_AAR_LIB) \
+        $(ANDROID_MEDIAROUTER_V7_AAR_LIB) \
+        $(ANDROID_MEDIAROUTER_V7_AAR_INTERNAL_LIB) \
+        $(ANDROID_APPCOMPAT_V7_AAR_LIB) \
         $(NULL)
 endif
 
@@ -358,10 +367,12 @@ endif
 generated/org/mozilla/gecko/R.java: .aapt.deps ;
 
 # If native devices are enabled, add Google Play Services, build their resources
+generated/android/support/v4/R.java: .aapt.deps ;
 generated/android/support/v7/appcompat/R.java: .aapt.deps ;
 generated/android/support/v7/mediarouter/R.java: .aapt.deps ;
 generated/android/support/v7/recyclerview/R.java: .aapt.deps ;
 generated/com/google/android/gms/R.java: .aapt.deps ;
+generated/com/google/android/gms/cast/R.java: .aapt.deps ;
 
 gecko.ap_: .aapt.deps ;
 R.txt: .aapt.deps ;

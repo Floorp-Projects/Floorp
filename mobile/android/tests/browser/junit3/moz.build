@@ -29,8 +29,8 @@ jar.generated_sources = [] # None yet -- try to keep it this way.
 jar.javac_flags += ['-Xlint:all']
 
 jar.extra_jars += [
-    CONFIG['ANDROID_COMPAT_LIB'],
-    CONFIG['ANDROID_RECYCLERVIEW_LIB'],
+    CONFIG['ANDROID_SUPPORT_V4_AAR_LIB'],
+    CONFIG['ANDROID_RECYCLERVIEW_V7_AAR_LIB'],
     TOPOBJDIR + '/mobile/android/base/constants.jar',
     TOPOBJDIR + '/mobile/android/base/gecko-R.jar',
     TOPOBJDIR + '/mobile/android/base/gecko-browser.jar',
