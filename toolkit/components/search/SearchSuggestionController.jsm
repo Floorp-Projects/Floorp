@@ -286,7 +286,9 @@ this.SearchSuggestionController.prototype = {
       return;
     }
 
-    if (this._searchString !== serverResults[0]) {
+    if (!serverResults[0] ||
+        this._searchString.localeCompare(serverResults[0], undefined,
+                                         { sensitivity: "base" })) {
       // something is wrong here so drop remote results
       deferredResponse.resolve("Unexpected response, this._searchString does not match remote response");
       return;
