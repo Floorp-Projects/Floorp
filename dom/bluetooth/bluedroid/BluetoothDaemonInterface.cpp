@@ -704,7 +704,7 @@ BluetoothDaemonInterface::SetRemoteDeviceProperty(
 
 void
 BluetoothDaemonInterface::GetRemoteServiceRecord(const nsAString& aRemoteAddr,
-                                                 const uint8_t aUuid[16],
+                                                 const BluetoothUuid& aUuid,
                                                  BluetoothResultHandler* aRes)
 {
   nsresult rv = static_cast<BluetoothDaemonCoreModule*>
