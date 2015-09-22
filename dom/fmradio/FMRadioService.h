@@ -196,6 +196,10 @@ public:
   /* FMRadioRDSObserver */
   void Notify(const hal::FMRadioRDSGroup& aRDSGroup) override;
 
+  void EnableFMRadio();
+  void DisableFMRadio();
+  void DispatchFMRadioEventToMainThread(enum FMRadioEventType aType);
+
   NS_DECL_NSIOBSERVER
 
 protected:
