@@ -315,14 +315,15 @@ Nursery::setForwardingPointer(void* oldData, void* newData, bool direct)
     if (direct) {
         *reinterpret_cast<void**>(oldData) = newData;
     } else {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
         if (!forwardedBuffers.initialized() && !forwardedBuffers.init())
-            CrashAtUnhandlableOOM("Nursery::setForwardingPointer");
+            oomUnsafe.crash("Nursery::setForwardingPointer");
 #ifdef DEBUG
         if (ForwardedBufferMap::Ptr p = forwardedBuffers.lookup(oldData))
             MOZ_ASSERT(p->value() == newData);
 #endif
         if (!forwardedBuffers.put(oldData, newData))
-            CrashAtUnhandlableOOM("Nursery::setForwardingPointer");
+            oomUnsafe.crash("Nursery::setForwardingPointer");
     }
 }
 

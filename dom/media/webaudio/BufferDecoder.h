@@ -33,8 +33,6 @@ public:
 
   virtual ReentrantMonitor& GetReentrantMonitor() final override;
 
-  virtual bool IsShutdown() const final override;
-
   virtual bool OnStateMachineTaskQueue() const final override;
 
   virtual bool OnDecodeTaskQueue() const final override;

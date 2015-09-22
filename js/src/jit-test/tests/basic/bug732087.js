@@ -1,3 +1,4 @@
+enableNoSuchMethod();
 gczeal(2,1);
 var count = 0;
 var a = {__noSuchMethod__: function() { count++; } }

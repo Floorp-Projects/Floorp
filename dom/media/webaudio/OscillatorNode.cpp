@@ -81,7 +81,10 @@ public:
   virtual void SetStreamTimeParameter(uint32_t aIndex, StreamTime aParam) override
   {
     switch (aIndex) {
-    case START: mStart = aParam; break;
+    case START:
+      mStart = aParam;
+      mSource->SetActive();
+      break;
     case STOP: mStop = aParam; break;
     default:
       NS_ERROR("Bad OscillatorNodeEngine StreamTimeParameter");
@@ -328,6 +331,12 @@ public:
         ComputeSilence(aOutput);
     };
 
+  }
+
+  virtual bool IsActive() const override
+  {
+    // start() has been called.
+    return mStart != -1;
   }
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override

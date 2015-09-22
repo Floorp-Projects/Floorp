@@ -277,9 +277,10 @@ class LifoAlloc
 
     MOZ_ALWAYS_INLINE
     void* allocInfallible(size_t n) {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
         if (void* result = allocImpl(n))
             return result;
-        CrashAtUnhandlableOOM("LifoAlloc::allocInfallible");
+        oomUnsafe.crash("LifoAlloc::allocInfallible");
         return nullptr;
     }
 

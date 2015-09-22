@@ -2,11 +2,6 @@
 <html>
 <script>
 
-var Cu = parent.Components.utils;
-Cu.import("resource://gre/modules/AppConstants.jsm");
-// This gives us `AppConstants` in the global scope.
-// We need this because we only expose debug_renderer_info #ifndef MOZ_RELEASE_BUILD.
-// This should match AppConstants.RELEASE_BUILD.
 
 // This file has the portion of the test_webgl_renderer_info chrome mochitest
 // that has to run as non-chrome to check that this WebGL extension is not exposed to content
@@ -23,20 +18,17 @@ function ok(res, msg) {
 function messageListener(e) {
   // This is how the chrome test tells us to start running -- we have to wait for this
   // message to avoid running before it's set up its event handler.
-  if (e.data == "run") {
-    run();
+  if (e.data.run) {
+    var canBeUnprivileged = e.data.canBeUnprivileged;
+    run(canBeUnprivileged);
   }
 }
 
 window.addEventListener("message", messageListener, true);
 
-function run() {
+function run(canBeUnprivileged) {
   const UNMASKED_VENDOR_WEBGL = 0x9245;
   const UNMASKED_RENDERER_WEBGL = 0x9246;
-
-  var shouldHaveRendererInfo = false;
-  if (!AppConstants.RELEASE_BUILD)
-    shouldHaveRendererInfo = true;
 
   var canvas = document.createElement("canvas");
   var gl = canvas.getContext("experimental-webgl");
@@ -51,7 +43,7 @@ function run() {
       + " WEBGL_debug_renderer_info extension");
 
   var exts = gl.getSupportedExtensions();
-  if (shouldHaveRendererInfo) {
+  if (canBeUnprivileged) {
     ok(exts.indexOf("WEBGL_debug_renderer_info") != -1,
        "WEBGL_debug_renderer_info should be listed by getSupportedExtensions in"
        + " non-chrome contexts on non-RELEASE_BUILDs");

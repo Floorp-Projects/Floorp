@@ -7959,6 +7959,7 @@ nsContentUtils::InternalContentPolicyTypeToExternal(nsContentPolicyType aType)
 {
   switch (aType) {
   case nsIContentPolicy::TYPE_INTERNAL_SCRIPT:
+  case nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD:
   case nsIContentPolicy::TYPE_INTERNAL_WORKER:
   case nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER:
   case nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER:
@@ -7981,6 +7982,14 @@ nsContentUtils::InternalContentPolicyTypeToExternal(nsContentPolicyType aType)
   case nsIContentPolicy::TYPE_INTERNAL_EVENTSOURCE:
     return nsIContentPolicy::TYPE_XMLHTTPREQUEST;
 
+  case nsIContentPolicy::TYPE_INTERNAL_IMAGE:
+  case nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD:
+    return nsIContentPolicy::TYPE_IMAGE;
+
+  case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET:
+  case nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD:
+    return nsIContentPolicy::TYPE_STYLESHEET;
+
   default:
     return aType;
   }
@@ -8002,6 +8011,17 @@ nsContentUtils::InternalContentPolicyTypeToExternalOrScript(nsContentPolicyType 
   }
 }
 
+/* static */
+nsContentPolicyType
+nsContentUtils::InternalContentPolicyTypeToExternalOrPreload(nsContentPolicyType aType)
+{
+  if (aType == nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD ||
+      aType == nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD ||
+      aType == nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD) {
+    return aType;
+  }
+  return InternalContentPolicyTypeToExternal(aType);
+}
 
 nsresult
 nsContentUtils::SetFetchReferrerURIWithPolicy(nsIPrincipal* aPrincipal,
@@ -8133,28 +8153,17 @@ nsContentUtils::InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
     access = std::min(StorageAccess::eSessionScoped, access);
   }
 
-  // If the caller is chrome privileged, then it is allowed to access any
-  // storage it likes, no matter whether the storage for that window/principal
-  // would normally be permitted.
-  if (IsSystemPrincipal(SubjectPrincipal())) {
-    return access;
-  }
-
-  if (!SubjectPrincipal()->Subsumes(aPrincipal)) {
-    NS_WARNING("A principal is attempting to access storage for a principal "
-               "which it doesn't subsume!");
-    return StorageAccess::eDeny;
-  }
-
   // About URIs are allowed to access storage, even if they don't have chrome
   // privileges. If this is not desired, than the consumer will have to
   // implement their own restriction functionality.
   nsCOMPtr<nsIURI> uri;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aPrincipal->GetURI(getter_AddRefs(uri))));
-  bool isAbout = false;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(uri->SchemeIs("about", &isAbout)));
-  if (isAbout) {
-    return access;
+  nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
+  if (NS_SUCCEEDED(rv) && uri) {
+    bool isAbout = false;
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(uri->SchemeIs("about", &isAbout)));
+    if (isAbout) {
+      return access;
+    }
   }
 
   nsCOMPtr<nsIPermissionManager> permissionManager =

@@ -18,8 +18,7 @@ enum PresentationSessionState
 };
 
 [Pref="dom.presentation.enabled",
- CheckAnyPermissions="presentation",
- AvailableIn="PrivilegedApps"]
+ CheckAnyPermissions="presentation"]
 interface PresentationSession : EventTarget {
   /*
    * Unique id for all existing sessions.
