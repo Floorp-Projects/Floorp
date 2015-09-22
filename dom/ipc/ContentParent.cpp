@@ -33,6 +33,7 @@
 #include "imgIContainer.h"
 #include "mozIApplication.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/devtools/HeapSnapshotTempFileHelperParent.h"
 #include "mozilla/docshell/OfflineCacheUpdateParent.h"
 #include "mozilla/dom/DataStoreService.h"
 #include "mozilla/dom/DataTransfer.h"
@@ -3606,6 +3607,20 @@ bool
 ContentParent::DeallocPHalParent(hal_sandbox::PHalParent* aHal)
 {
     delete aHal;
+    return true;
+}
+
+devtools::PHeapSnapshotTempFileHelperParent*
+ContentParent::AllocPHeapSnapshotTempFileHelperParent()
+{
+    return devtools::HeapSnapshotTempFileHelperParent::Create();
+}
+
+bool
+ContentParent::DeallocPHeapSnapshotTempFileHelperParent(
+    devtools::PHeapSnapshotTempFileHelperParent* aHeapSnapshotHelper)
+{
+    delete aHeapSnapshotHelper;
     return true;
 }
 
