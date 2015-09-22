@@ -23,6 +23,7 @@ AV_FUNC(av_dict_get, 0)
 AV_FUNC(av_parser_init, 0)
 AV_FUNC(av_parser_close, 0)
 AV_FUNC(av_parser_parse2, 0)
+AV_FUNC(avcodec_version, 0)
 
 /* libavutil */
 AV_FUNC(av_image_fill_linesizes, 0)
