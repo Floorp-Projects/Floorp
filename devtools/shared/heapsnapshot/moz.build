@@ -14,6 +14,7 @@ EXPORTS.mozilla.devtools += [
     'AutoMemMap.h',
     'CoreDump.pb.h',
     'DeserializedNode.h',
+    'FileDescriptorOutputStream.h',
     'HeapSnapshot.h',
     'ZeroCopyNSIOutputStream.h',
 ]
@@ -22,6 +23,7 @@ SOURCES += [
     'AutoMemMap.cpp',
     'CoreDump.pb.cc',
     'DeserializedNode.cpp',
+    'FileDescriptorOutputStream.cpp',
     'HeapSnapshot.cpp',
     'ZeroCopyNSIOutputStream.cpp',
 ]
