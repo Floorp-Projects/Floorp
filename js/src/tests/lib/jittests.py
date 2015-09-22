@@ -377,6 +377,7 @@ def run_test(test, prefix, options):
         run = run_cmd
 
     env = os.environ.copy()
+    env['XRE_NO_WINDOWS_CRASH_DIALOG'] = '1'
     if test.tz_pacific:
         env['TZ'] = 'PST8PDT'
 
