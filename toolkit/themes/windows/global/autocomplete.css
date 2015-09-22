@@ -45,6 +45,7 @@ panel[type="autocomplete-richlistbox"],
   -moz-border-bottom-colors: ThreeDShadow;
   -moz-border-left-colors: ThreeDShadow;
   padding: 0;
+  color: -moz-FieldText;
   background-color: -moz-Field;
 }
 

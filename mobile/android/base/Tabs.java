@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import android.support.annotation.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -314,6 +315,7 @@ public class Tabs implements GeckoEventListener {
      *
      * @return the selected tab, or null if no tabs exist
      */
+    @Nullable
     public Tab getSelectedTab() {
         return mSelectedTab;
     }

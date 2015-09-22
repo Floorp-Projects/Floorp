@@ -115,6 +115,20 @@ var Accounts = Object.freeze({
   },
 
   /**
+   * Notify that profile for Android Account has updated.
+   * The account will re-fetch the profile image.
+   *
+   * It is an error if no Android Account exists.
+   *
+   * There is no return value from this method.
+   */
+  notifyFirefoxAccountProfileChanged: function () {
+    Messaging.sendRequest({
+      type: "Accounts:ProfileUpdated",
+    });
+  },
+
+  /**
    * Fetch information about an existing Android Firefox Account.
    *
    * Returns a Promise that resolves to null if no Android Firefox Account

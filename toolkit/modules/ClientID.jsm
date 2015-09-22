@@ -12,6 +12,10 @@ Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+
+const LOGGER_NAME = "Toolkit.Telemetry";
+const LOGGER_PREFIX = "ClientID::";
 
 XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
                                   "resource://services-common/utils.js");
@@ -25,6 +29,18 @@ XPCOMUtils.defineLazyGetter(this, "gStateFilePath", () => {
 });
 
 const PREF_CACHED_CLIENTID = "toolkit.telemetry.cachedClientID";
+
+/**
+ * Checks if client ID has a valid format.
+ *
+ * @param {String} id A string containing the client ID.
+ * @return {Boolean} True when the client ID has valid format, or False
+ * otherwise.
+ */
+function isValidClientID(id) {
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return UUID_REGEX.test(id);
+}
 
 this.ClientID = Object.freeze({
   /**
@@ -62,6 +78,7 @@ var ClientIDImpl = {
   _clientID: null,
   _loadClientIdTask: null,
   _saveClientIdTask: null,
+  _logger: null,
 
   _loadClientID: function () {
     if (this._loadClientIdTask) {
@@ -83,9 +100,7 @@ var ClientIDImpl = {
     // Try to load the client id from the DRS state file first.
     try {
       let state = yield CommonUtils.readJSON(gStateFilePath);
-      if (state && 'clientID' in state && typeof(state.clientID) == 'string') {
-        this._clientID = state.clientID;
-        Preferences.set(PREF_CACHED_CLIENTID, this._clientID);
+      if (state && this.updateClientID(state.clientID)) {
         return this._clientID;
       }
     } catch (e) {
@@ -96,9 +111,7 @@ var ClientIDImpl = {
     try {
       let fhrStatePath = OS.Path.join(OS.Constants.Path.profileDir, "healthreport", "state.json");
       let state = yield CommonUtils.readJSON(fhrStatePath);
-      if (state && 'clientID' in state && typeof(state.clientID) == 'string') {
-        this._clientID = state.clientID;
-        Preferences.set(PREF_CACHED_CLIENTID, this._clientID);
+      if (state && this.updateClientID(state.clientID)) {
         this._saveClientID();
         return this._clientID;
       }
@@ -107,8 +120,7 @@ var ClientIDImpl = {
     }
 
     // We dont have an id from FHR yet, generate a new ID.
-    this._clientID = CommonUtils.generateUUID();
-    Preferences.set(PREF_CACHED_CLIENTID, this._clientID);
+    this.updateClientID(CommonUtils.generateUUID());
     this._saveClientIdTask = this._saveClientID();
 
     // Wait on persisting the id. Otherwise failure to save the ID would result in
@@ -161,7 +173,13 @@ var ClientIDImpl = {
     }
 
     // Not yet loaded, return the cached client id if we have one.
-    return Preferences.get(PREF_CACHED_CLIENTID, null);
+    let id = Preferences.get(PREF_CACHED_CLIENTID, null);
+    if (!isValidClientID(id)) {
+      this._log.error("getCachedClientID - invalid client id in preferences, resetting", id);
+      Preferences.reset(PREF_CACHED_CLIENTID);
+      return null;
+    }
+    return id;
   },
 
   /*
@@ -172,4 +190,34 @@ var ClientIDImpl = {
     yield this._saveClientIdTask;
     this._clientID = null;
   }),
+
+  /**
+   * Sets the client id to the given value and updates the value cached in
+   * preferences only if the given id is a valid.
+   *
+   * @param {String} id A string containing the client ID.
+   * @return {Boolean} True when the client ID has valid format, or False
+   * otherwise.
+   */
+  updateClientID: function (id){
+    if (!isValidClientID(id)) {
+      this._log.error("updateClientID - invalid client ID", id);
+      return false;
+    }
+
+    this._clientID = id;
+    Preferences.set(PREF_CACHED_CLIENTID, this._clientID);
+    return true;
+  },
+
+  /**
+   * A helper for getting access to telemetry logger.
+   */
+  get _log() {
+    if (!this._logger) {
+      this._logger = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
+    }
+
+    return this._logger;
+  },
 };

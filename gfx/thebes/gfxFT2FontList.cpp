@@ -1205,6 +1205,22 @@ gfxFT2FontList::FindFonts()
         FindFontsInOmnijar(&fnc);
     }
 
+    // Look for downloaded fonts in a profile-agnostic "fonts" directory.
+    nsCOMPtr<nsIProperties> dirSvc =
+      do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
+    if (dirSvc) {
+        nsCOMPtr<nsIFile> appDir;
+        nsresult rv = dirSvc->Get(NS_XPCOM_CURRENT_PROCESS_DIR,
+                         NS_GET_IID(nsIFile), getter_AddRefs(appDir));
+        if (NS_SUCCEEDED(rv)) {
+            appDir->AppendNative(NS_LITERAL_CSTRING("fonts"));
+            nsCString localPath;
+            if (NS_SUCCEEDED(appDir->GetNativePath(localPath))) {
+                FindFontsInDir(localPath, &fnc, FT2FontFamily::kVisible);
+            }
+        }
+    }
+
     // look for locally-added fonts in a "fonts" subdir of the profile
     nsCOMPtr<nsIFile> localDir;
     nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR,
