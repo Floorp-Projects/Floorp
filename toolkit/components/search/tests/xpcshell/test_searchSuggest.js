@@ -124,6 +124,14 @@ add_task(function* simple_remote_no_local_result() {
   do_check_eq(result.remote[2], "mom");
 });
 
+add_task(function* remote_term_case_mismatch() {
+  let controller = new SearchSuggestionController();
+  let result = yield controller.fetch("Query Case Mismatch", false, getEngine);
+  do_check_eq(result.term, "Query Case Mismatch");
+  do_check_eq(result.remote.length, 1);
+  do_check_eq(result.remote[0], "Query Case Mismatch");
+});
+
 add_task(function* simple_local_no_remote_result() {
   yield updateSearchHistory("bump", "no remote entries");
 
