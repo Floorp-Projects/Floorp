@@ -50,7 +50,8 @@ BaselineFrame::trace(JSTracer* trc, JitFrameIterator& frameIterator)
 
     if (isEvalFrame()) {
         TraceRoot(trc, &evalScript_, "baseline-evalscript");
-        TraceRoot(trc, evalNewTargetAddress(), "baseline-evalNewTarget");
+        if (isFunctionFrame())
+            TraceRoot(trc, evalNewTargetAddress(), "baseline-evalNewTarget");
     }
 
     if (hasArgsObj())
