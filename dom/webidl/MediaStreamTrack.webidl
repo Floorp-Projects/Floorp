@@ -30,6 +30,7 @@ enum MediaSourceEnum {
     "microphone",
     "audioCapture",
     "other"
+    // If values are added, adjust n_values in Histograms.json (2 places)
 };
 
 typedef (long or ConstrainLongRange) ConstrainLong;

@@ -183,6 +183,12 @@ builds:
         task: tasks/builds/opt_linux64_clobber.yml
       debug:
         task: tasks/builds/dbg_linux64_clobber.yml
+  linux64-st-an:
+    platforms:
+      - Linux64 Static Analysis
+    types:
+      opt:
+        task: tasks/builds/opt_linux64_st-an_clobber.yml
   macosx64:
     platforms:
       - MacOSX64
@@ -194,6 +200,7 @@ post-build:
   upload-symbols:
     allowed_build_tasks:
       - tasks/builds/opt_linux64.yml
+      - tasks/builds/opt_linux64_st-an.yml
       - tasks/builds/dbg_linux64.yml
       - tasks/builds/android_api_11.yml
     task: tasks/post-builds/upload_symbols.yml

@@ -118,6 +118,12 @@ builds:
         task: tasks/builds/opt_linux64.yml
       debug:
         task: tasks/builds/dbg_linux64.yml
+  linux64-st-an:
+    platforms:
+      - Linux64 Static Analysis
+    types:
+      opt:
+        task: tasks/builds/opt_linux64_st-an.yml
   macosx64:
     platforms:
       - MacOSX64

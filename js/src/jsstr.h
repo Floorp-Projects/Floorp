@@ -219,6 +219,10 @@ StringHasPattern(JSLinearString* text, const char16_t* pat, uint32_t patlen);
 extern int
 StringFindPattern(JSLinearString* text, JSLinearString* pat, size_t start);
 
+/* Return true if the string contains a pattern at |start|. */
+extern bool
+HasSubstringAt(JSLinearString* text, JSLinearString* pat, size_t start);
+
 template <typename CharT>
 extern bool
 HasRegExpMetaChars(const CharT* chars, size_t length);
