@@ -228,11 +228,32 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
           let textNode = this.editor.rootElement.firstChild;
           let value = textNode.textContent;
-
-          let protocol = value.match(/^[a-z\d.+\-]+:(?=[^\d])/);
-          if (protocol &&
-              ["http:", "https:", "ftp:"].indexOf(protocol[0]) == -1)
+          if (!value)
             return;
+
+          // Get the URL from the fixup service:
+          let flags = Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
+                      Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+          let uriInfo = Services.uriFixup.getFixupURIInfo(value, flags);
+          // Ignore if we couldn't make a URI out of this, the URI resulted in a search,
+          // or the URI has a non-http(s)/ftp protocol.
+          if (!uriInfo.fixedURI ||
+              uriInfo.keywordProviderName ||
+              ["http", "https", "ftp"].indexOf(uriInfo.fixedURI.scheme) == -1) {
+            return;
+          }
+
+          // If we trimmed off the http scheme, ensure we stick it back on before
+          // trying to figure out what domain we're accessing, so we don't get
+          // confused by user:pass@host http URLs. We later use
+          // trimmedLength to ensure we don't count the length of a trimmed protocol
+          // when determining which parts of the URL to highlight as "preDomain".
+          let trimmedLength = 0;
+          if (uriInfo.fixedURI.scheme == "http" && !value.startsWith("http://")) {
+            value = "http://" + value;
+            trimmedLength = "http://".length;
+          }
+
           let matchedURL = value.match(/^((?:[a-z]+:\/\/)?(?:[^\/]+@)?)(.+?)(?::\d+)?(?:\/|$)/);
           if (!matchedURL)
             return;
@@ -251,23 +272,20 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           let [, preDomain, domain] = matchedURL;
           let baseDomain = domain;
           let subDomain = "";
-          // getBaseDomainFromHost doesn't recognize IPv6 literals in brackets as IPs (bug 667159)
-          if (domain[0] != "[") {
-            try {
-              baseDomain = Services.eTLD.getBaseDomainFromHost(domain);
-              if (!domain.endsWith(baseDomain)) {
-                // getBaseDomainFromHost converts its resultant to ACE.
-                let IDNService = Cc["@mozilla.org/network/idn-service;1"]
-                                 .getService(Ci.nsIIDNService);
-                baseDomain = IDNService.convertACEtoUTF8(baseDomain);
-              }
-            } catch (e) {}
-          }
+          try {
+            baseDomain = Services.eTLD.getBaseDomainFromHost(uriInfo.fixedURI.host);
+            if (!domain.endsWith(baseDomain)) {
+              // getBaseDomainFromHost converts its resultant to ACE.
+              let IDNService = Cc["@mozilla.org/network/idn-service;1"]
+                               .getService(Ci.nsIIDNService);
+              baseDomain = IDNService.convertACEtoUTF8(baseDomain);
+            }
+          } catch (e) {}
           if (baseDomain != domain) {
             subDomain = domain.slice(0, -baseDomain.length);
           }
 
-          let rangeLength = preDomain.length + subDomain.length;
+          let rangeLength = preDomain.length + subDomain.length - trimmedLength;
           if (rangeLength) {
             let range = document.createRange();
             range.setStart(textNode, 0);
@@ -275,11 +293,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             selection.addRange(range);
           }
 
-          let startRest = preDomain.length + domain.length;
-          if (startRest < value.length) {
+          let startRest = preDomain.length + domain.length - trimmedLength;
+          if (startRest < value.length - trimmedLength) {
             let range = document.createRange();
             range.setStart(textNode, startRest);
-            range.setEnd(textNode, value.length);
+            range.setEnd(textNode, value.length - trimmedLength);
             selection.addRange(range);
           }
         ]]></body>

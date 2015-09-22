@@ -42,14 +42,14 @@ function test() {
 
   testVal("https://user:pass@mozilla.org/", "https://user:pass@mozilla.org");
   testVal("https://user@mozilla.org/", "https://user@mozilla.org");
-  testVal("http://user:pass@mozilla.org/", "http://user:pass@mozilla.org");
+  testVal("http://user:pass@mozilla.org/", "user:pass@mozilla.org");
   testVal("http://user@mozilla.org/", "user@mozilla.org");
   testVal("http://sub.mozilla.org:666/", "sub.mozilla.org:666");
 
   testVal("https://[fe80::222:19ff:fe11:8c76]/file.ext");
   testVal("http://[fe80::222:19ff:fe11:8c76]/", "[fe80::222:19ff:fe11:8c76]");
   testVal("https://user:pass@[fe80::222:19ff:fe11:8c76]:666/file.ext");
-  testVal("http://user:pass@[fe80::222:19ff:fe11:8c76]:666/file.ext");
+  testVal("http://user:pass@[fe80::222:19ff:fe11:8c76]:666/file.ext", "user:pass@[fe80::222:19ff:fe11:8c76]:666/file.ext");
 
   testVal("mailto:admin@mozilla.org");
   testVal("gopher://mozilla.org/");

@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.CheckBoxPreference;
@@ -481,6 +482,7 @@ public class FxAccountStatusFragment
     FxAccountSyncStatusHelper.getInstance().startObserving(syncStatusDelegate);
 
     if (AppConstants.MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES) {
+      profilePreference.getIntent().setData(Uri.parse("about:accounts?action=avatar"));
       // Register a local broadcast receiver to get profile cached notification.
       final IntentFilter intentFilter = new IntentFilter();
       intentFilter.addAction(FxAccountConstants.ACCOUNT_PROFILE_JSON_UPDATED_ACTION);

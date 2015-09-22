@@ -898,7 +898,7 @@ public:
   void CancelDiscovery() override
   {
     // Disabled discovery mode, now perform SDP operation.
-    sBtInterface->GetRemoteServiceRecord(mDeviceAddress, mUuid.mUuid, this);
+    sBtInterface->GetRemoteServiceRecord(mDeviceAddress, mUuid, this);
   }
 
 private:
@@ -941,7 +941,7 @@ BluetoothServiceBluedroid::GetServiceChannel(
     sBtInterface->CancelDiscovery(res);
   } else {
     sBtInterface->GetRemoteServiceRecord(
-      aDeviceAddress, uuid.mUuid, res);
+      aDeviceAddress, uuid, res);
   }
 
   return NS_OK;

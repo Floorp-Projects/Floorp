@@ -723,7 +723,7 @@ nsEditorSpellCheck::UpdateCurrentDictionary(nsIEditorSpellCheckCallback* aCallba
 // Helper function that iterates over the list of dictionaries and sets the one
 // that matches based on a given comparison type.
 nsresult
-nsEditorSpellCheck::TryDictionary(nsAutoString aDictName,
+nsEditorSpellCheck::TryDictionary(const nsAString& aDictName,
                                   nsTArray<nsString>& aDictList,
                                   enum dictCompare aCompareType)
 {

@@ -97,7 +97,7 @@ public:
                                       BluetoothResultHandler* aRes);
 
   nsresult GetRemoteServiceRecordCmd(const nsAString& aRemoteAddr,
-                                     const uint8_t aUuid[16],
+                                     const BluetoothUuid& aUuid,
                                      BluetoothResultHandler* aRes);
 
   nsresult GetRemoteServicesCmd(const nsAString& aRemoteAddr,

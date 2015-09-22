@@ -11,12 +11,18 @@ import org.json.JSONObject;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.text.TextUtils;
+import android.util.Log;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
 public final class WebActivityMapper {
+    private static final String LOGTAG = "Gecko";
+
     private static final Map<String, WebActivityMapping> activityMap = new HashMap<String, WebActivityMapping>();
     static {
         activityMap.put("dial", new DialMapping());
@@ -24,21 +30,28 @@ public final class WebActivityMapper {
         activityMap.put("pick", new PickMapping());
         activityMap.put("send", new SendMapping());
         activityMap.put("view", new ViewMapping());
+        activityMap.put("record", new RecordMapping());
     };
 
     private static abstract class WebActivityMapping {
+        protected JSONObject mData;
+
+        public void setData(JSONObject data) {
+            mData = data;
+        }
+
         // Cannot return null
         public abstract String getAction();
 
-        public String getMime(JSONObject data) throws JSONException {
+        public String getMime() throws JSONException {
             return null;
         }
 
-        public String getUri(JSONObject data) throws JSONException {
+        public String getUri() throws JSONException {
             return null;
         }
 
-        public void putExtras(JSONObject data, Intent intent) throws JSONException {}
+        public void putExtras(Intent intent) throws JSONException {}
     }
 
     /**
@@ -49,18 +62,18 @@ public final class WebActivityMapper {
          * If 'type' is present in data object, uses the value as the MIME type.
          */
         @Override
-        public String getMime(JSONObject data) throws JSONException {
-            return data.optString("type", null);
+        public String getMime() throws JSONException {
+            return mData.optString("type", null);
         }
 
         /**
          * If 'uri' or 'url' is present in data object, uses the respective value as the Uri.
          */
         @Override
-        public String getUri(JSONObject data) throws JSONException {
+        public String getUri() throws JSONException {
             // Will return uri or url if present.
-            String uri = data.optString("uri", null);
-            return uri != null ? uri : data.optString("url", null);
+            String uri = mData.optString("uri", null);
+            return uri != null ? uri : mData.optString("url", null);
         }
     }
 
@@ -68,20 +81,28 @@ public final class WebActivityMapper {
         final String name = message.getString("name").toLowerCase();
         final JSONObject data = message.getJSONObject("data");
 
+        Log.w(LOGTAG, "Activity is: " + name);
         final WebActivityMapping mapping = activityMap.get(name);
+        if (mapping == null) {
+            Log.w(LOGTAG, "No mapping found!");
+            return null;
+        }
+
+        mapping.setData(data);
+
         final Intent intent = new Intent(mapping.getAction());
 
-        final String mime = mapping.getMime(data);
+        final String mime = mapping.getMime();
         if (!TextUtils.isEmpty(mime)) {
             intent.setType(mime);
         }
 
-        final String uri = mapping.getUri(data);
+        final String uri = mapping.getUri();
         if (!TextUtils.isEmpty(uri)) {
             intent.setData(Uri.parse(uri));
         }
 
-        mapping.putExtras(data, intent);
+        mapping.putExtras(intent);
 
         return intent;
     }
@@ -93,8 +114,8 @@ public final class WebActivityMapper {
         }
 
         @Override
-        public String getUri(JSONObject data) throws JSONException {
-            return "tel:" + data.getString("number");
+        public String getUri() throws JSONException {
+            return "tel:" + mData.getString("number");
         }
     }
 
@@ -112,9 +133,9 @@ public final class WebActivityMapper {
         }
 
         @Override
-        public String getMime(JSONObject data) throws JSONException {
+        public String getMime() throws JSONException {
             // bug 1007112 - pick action needs a mimetype to work
-            String mime = data.optString("type", null);
+            String mime = mData.optString("type", null);
             return !TextUtils.isEmpty(mime) ? mime : "*/*";
         }
     }
@@ -126,14 +147,14 @@ public final class WebActivityMapper {
         }
 
         @Override
-        public void putExtras(JSONObject data, Intent intent) throws JSONException {
-            optPutExtra("text", Intent.EXTRA_TEXT, data, intent);
-            optPutExtra("html_text", Intent.EXTRA_HTML_TEXT, data, intent);
-            optPutExtra("stream", Intent.EXTRA_STREAM, data, intent);
+        public void putExtras(Intent intent) throws JSONException {
+            optPutExtra("text", Intent.EXTRA_TEXT, intent);
+            optPutExtra("html_text", Intent.EXTRA_HTML_TEXT, intent);
+            optPutExtra("stream", Intent.EXTRA_STREAM, intent);
         }
 
-        private static void optPutExtra(String key, String extraName, JSONObject data, Intent intent) {
-            final String extraValue = data.optString(key);
+        private void optPutExtra(String key, String extraName, Intent intent) {
+            final String extraValue = mData.optString(key);
             if (!TextUtils.isEmpty(extraValue)) {
                 intent.putExtra(extraName, extraValue);
             }
@@ -147,13 +168,53 @@ public final class WebActivityMapper {
         }
 
         @Override
-        public String getMime(JSONObject data) {
+        public String getMime() {
             // MozActivity adds a type 'url' here, we don't want to set the MIME to 'url'.
-            String type = data.optString("type", null);
+            String type = mData.optString("type", null);
             if ("url".equals(type) || "uri".equals(type)) {
                 return null;
             } else {
                 return type;
+            }
+        }
+    }
+
+    private static class RecordMapping extends WebActivityMapping {
+        @Override
+        public String getAction() {
+            String type = mData.optString("type", null);
+            if ("photos".equals(type)) {
+                return "android.media.action.IMAGE_CAPTURE";
+            } else if ("videos".equals(type)) {
+                return "android.media.action.VIDEO_CAPTURE";
+            }
+            return null;
+        }
+
+        // Add an extra to specify where to save the picture/video.
+        @Override
+        public void putExtras(Intent intent) {
+            final String action = getAction();
+
+            final String dirType = action == "android.media.action.IMAGE_CAPTURE"
+                ? Environment.DIRECTORY_PICTURES
+                : Environment.DIRECTORY_MOVIES;
+
+            final String ext = action == "android.media.action.IMAGE_CAPTURE"
+                ? ".jpg"
+                : ".mp4";
+
+            File destDir = Environment.getExternalStoragePublicDirectory(dirType);
+
+            try {
+                File dest = File.createTempFile(
+                    "capture", /* prefix */
+                    ext,       /* suffix */
+                    destDir    /* directory */
+                );
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(dest));
+            } catch(Exception e) {
+                Log.w(LOGTAG, "Failed to add extra for " + action + " : " + e);
             }
         }
     }
