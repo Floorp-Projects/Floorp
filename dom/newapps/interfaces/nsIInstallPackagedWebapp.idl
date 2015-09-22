@@ -1,0 +1,13 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(3b4b69a0-56dc-11e5-a837-0800200c9a66)]
+interface nsIInstallPackagedWebapp : nsISupports
+{
+  boolean installPackagedWebapp(in string aManifestContent,
+                                in string aOrigin,
+                                in string aManifestURL);
+};
