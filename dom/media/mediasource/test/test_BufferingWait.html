@@ -41,14 +41,14 @@ runWithMSE(function(ms, v) {
       /* Note - Missing |46712, 67833 - 46712| segment here corresponding to (0.8, 1.2] */
       /* Note - Missing |67833, 88966 - 67833| segment here corresponding to (1.2, 1.6]  */
       loadSegment.bind(null, sb, new Uint8Array(arrayBuffer, 88966))).then(function() {
-        var promise = waitUntilTime(0.7);
+        var promise = waitUntilTime(0.27);
         info("Playing video. It should play for a bit, then fire 'waiting'");
         v.play();
         return promise;
       }).then(function() {
         window.firstStop = Date.now();
         loadSegment(sb, new Uint8Array(arrayBuffer, 46712, 67833 - 46712));
-        return waitUntilTime(1.0);
+        return waitUntilTime(0.66);
       }).then(function() {
         var waitDuration = (Date.now() - window.firstStop) / 1000;
         ok(waitDuration < 15, "Should not spend an inordinate amount of time buffering: " + waitDuration);
