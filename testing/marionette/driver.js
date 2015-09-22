@@ -16,8 +16,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-var {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
-this.DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils.js");
+var {devtools} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+this.DevToolsUtils = devtools.require("devtools/shared/DevToolsUtils");
 
 XPCOMUtils.defineLazyServiceGetter(
     this, "cookieManager", "@mozilla.org/cookiemanager;1", "nsICookieManager2");

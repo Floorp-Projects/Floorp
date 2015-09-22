@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+
+<html>
+
+  <head>
+    <meta charset="utf8">
+    <title></title>
+
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  </head>
+
+  <body>
+
+    <script type="application/javascript;version=1.8">
+    const Cu = Components.utils;
+    const Cc = Components.classes;
+    const Ci = Components.interfaces;
+    Cu.import("resource://testing-common/httpd.js");
+    const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+
+    const {AppValidator} = require("devtools/client/app-manager/app-validator");
+    const {Services} = Cu.import("resource://gre/modules/Services.jsm");
+    const nsFile = Components.Constructor("@mozilla.org/file/local;1",
+                                           "nsILocalFile", "initWithPath");
+    const cr = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                 .getService(Ci.nsIChromeRegistry);
+    const strings = Services.strings.createBundle("chrome://browser/locale/devtools/app-manager.properties");
+    let httpserver, origin;
+
+    window.onload = function() {
+      SimpleTest.waitForExplicitFinish();
+
+      httpserver = new HttpServer();
+      httpserver.start(-1);
+      origin = "http://localhost:" + httpserver.identity.primaryPort + "/";
+
+      next();
+    }
+
+    function createHosted(path, manifestFile="/manifest.webapp") {
+      let dirPath = getTestFilePath("validator/" + path);
+      httpserver.registerDirectory("/", nsFile(dirPath));
+      return new AppValidator({
+        type: "hosted",
+        location: origin + manifestFile
+      });
+    }
+
+    function createPackaged(path) {
+      let dirPath = getTestFilePath("validator/" + path);
+      return new AppValidator({
+        type: "packaged",
+        location: dirPath
+      });
+    }
+
+    function next() {
+      let test = tests.shift();
+      if (test) {
+        try {
+          test();
+        } catch(e) {
+          console.error("exception", String(e), e, e.stack);
+        }
+      } else {
+        httpserver.stop(function() {
+          SimpleTest.finish();
+        });
+      }
+    }
+
+    let tests =  [
+      // Test a 100% valid example
+      function () {
+        let validator = createHosted("valid");
+        validator.validate().then(() => {
+            is(validator.errors.length, 0, "valid app got no error");
+            is(validator.warnings.length, 0, "valid app got no warning");
+
+            next();
+          });
+      },
+
+      function () {
+        let validator = createPackaged("valid");
+        validator.validate().then(() => {
+            is(validator.errors.length, 0, "valid packaged app got no error");
+            is(validator.warnings.length, 0, "valid packaged app got no warning");
+
+            next();
+          });
+      },
+
+      // Test a launch path that returns a 404
+      function () {
+        let validator = createHosted("wrong-launch-path");
+        validator.validate().then(() => {
+            is(validator.errors.length, 1, "app with non-existant launch path got an error");
+            is(validator.errors[0], strings.formatStringFromName("validator.accessFailedLaunchPathBadHttpCode", [origin + "wrong-path.html", 404], 2),
+               "with the right error message");
+            is(validator.warnings.length, 0, "but no warning");
+            next();
+          });
+      },
+      function () {
+        let validator = createPackaged("wrong-launch-path");
+        validator.validate().then(() => {
+            is(validator.errors.length, 1, "app with wrong path got an error");
+            let file = nsFile(validator.location);
+            file.append("wrong-path.html");
+            let url = Services.io.newFileURI(file);
+            is(validator.errors[0], strings.formatStringFromName("validator.accessFailedLaunchPath", [url.spec], 1),
+               "with the expected message");
+            is(validator.warnings.length, 0, "but no warning");
+
+            next();
+          });
+      },
+
+      // Test when using a non-absolute path for launch_path
+      function () {
+        let validator = createHosted("non-absolute-path");
+        validator.validate().then(() => {
+            is(validator.errors.length, 1, "app with non absolute path got an error");
+            is(validator.errors[0], strings.formatStringFromName("validator.nonAbsoluteLaunchPath", ["non-absolute.html"], 1),
+               "with expected message");
+            is(validator.warnings.length, 0, "but no warning");
+            next();
+          });
+      },
+      function () {
+        let validator = createPackaged("non-absolute-path");
+        validator.validate().then(() => {
+            is(validator.errors.length, 1, "app with non absolute path got an error");
+            is(validator.errors[0], strings.formatStringFromName("validator.nonAbsoluteLaunchPath", ["non-absolute.html"], 1),
+               "with expected message");
+            is(validator.warnings.length, 0, "but no warning");
+            next();
+          });
+      },
+
+      // Test multiple failures (missing name [error] and icon [warning])
+      function () {
+        let validator = createHosted("no-name-or-icon");
+        validator.validate().then(() => {
+          checkNoNameOrIcon(validator);
+        });
+      },
+      function () {
+        let validator = createPackaged("no-name-or-icon");
+        validator.validate().then(() => {
+          checkNoNameOrIcon(validator);
+        });
+      },
+
+      // Test a regular URL instead of a direct link to the manifest
+      function () {
+        let validator = createHosted("valid", "/");
+        validator.validate().then(() => {
+          is(validator.warnings.length, 0, "manifest found got no warning");
+          is(validator.errors.length, 0, "manifest found got no error");
+
+          next();
+        });
+      },
+
+      // Test finding a manifest at origin's root
+      function () {
+        let validator = createHosted("valid", "/unexisting-dir");
+        validator.validate().then(() => {
+          is(validator.warnings.length, 0, "manifest found at origin root got no warning");
+          is(validator.errors.length, 0, "manifest found at origin root got no error");
+
+          next();
+        });
+      },
+
+      // Test priorization of manifest.webapp at provided location instead of a manifest located at origin's root
+      function() {
+        let validator = createHosted("valid", "/alsoValid");
+        validator.validate().then(() => {
+          is(validator.manifest.name, "valid at subfolder", "manifest at subfolder was used");
+
+          next();
+        });
+      }
+    ];
+
+    function checkNoNameOrIcon(validator) {
+      is(validator.errors.length, 1, "app with no name has an error");
+      is(validator.errors[0],
+         strings.GetStringFromName("validator.missNameManifestProperty"),
+         "with expected message");
+      is(validator.warnings.length, 1, "app with no icon has a warning");
+      is(validator.warnings[0],
+         strings.GetStringFromName("validator.missIconsManifestProperty"),
+         "with expected message");
+      next();
+    }
+
+    </script>
+  </body>
+</html>

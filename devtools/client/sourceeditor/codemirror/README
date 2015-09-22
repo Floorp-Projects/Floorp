@@ -1,0 +1,141 @@
+This is the CodeMirror editor packaged for the Mozilla Project. CodeMirror
+is a JavaScript component that provides a code editor in the browser. When
+a mode is available for the language you are coding in, it will color your
+code, and optionally help with indentation.
+
+# Upgrade
+
+Currently used version is 4.2.0. To upgrade, download a new version of
+CodeMirror from the project's page [1] and replace all JavaScript and
+CSS files inside the codemirror directory [2].
+
+To confirm the functionality run mochitests for the following components:
+
+ * sourceeditor
+ * scratchpad
+ * debugger
+ * styleditor
+ * netmonitor
+
+The sourceeditor component contains imported CodeMirror tests [3].
+
+ * Some tests were commented out because we don't use that functionality
+   within Firefox (for example Ruby editing mode). Be careful when updating
+   files test/codemirror.html and test/vimemacs.html; they were modified to
+   co-exist with Mozilla's testing infrastructure. Basically, vimemacs.html
+   is a copy of codemirror.html but only with VIM and Emacs mode tests
+   enabled.
+ * In cm_comment_test.js comment out fallbackToBlock and fallbackToLine
+   tests.
+ * The search addon (search.js) was slightly modified to make search
+   UI localizable (see patch below).
+
+Other than that, we don't have any Mozilla-specific patches applied to
+CodeMirror itself.
+
+# Addons
+
+To install a new CodeMirror addon add it to the codemirror directory,
+jar.mn [4] file and editor.js [5]. Also, add it to the License section
+below.
+
+# License
+
+The following files in this directory are licensed according to the contents
+in the LICENSE file:
+
+ * codemirror.css
+ * codemirror.js
+ * comment/comment.js
+ * comment/continue-comment.js
+ * activeline.js
+ * dialog/dialog.css
+ * dialog/dialog.js
+ * edit/closebrackets.js
+ * edit/closetag.js
+ * edit/continuelist.js
+ * edit/matchbrackets.js
+ * edit/matchtags.js
+ * edit/trailingspace.js
+ * fold/foldcode.js
+ * fold/brace-fold.js
+ * fold/comment-fold.js
+ * fold/xml-fold.js
+ * fold/foldgutter.js
+ * hint/show-hint.js
+ * keymap/emacs.js
+ * keymap/sublime.js
+ * keymap/vim.js
+ * mode/xml.js
+ * mode/css.js
+ * mode/javascript.js
+ * mode/clike.js
+ * mode/htmlmixed.js
+ * search/match-highlighter.js
+ * search/search.js
+ * search/searchcursor.js
+ * tern/tern.js
+ * tern/tern.css
+ * test/codemirror.html
+ * test/cm_comment_test.js
+ * test/cm_doc_test.js
+ * test/cm_driver.js
+ * test/cm_mode_javascript_test.js
+ * test/cm_mode_test.css
+ * test/cm_mode_test.js
+ * test/cm_multi_test.js
+ * test/cm_search_test.js
+ * test/cm_test.js
+ * test/cm_sublime_test.js
+ * test/cm_vim_test.js
+ * test/cm_emacs_test.js
+
+# Localization patches
+
+diff --git a/devtools/client/sourceeditor/codemirror/search/search.js b/devtools/client/sourceeditor/codemirror/search/search.js
+--- a/devtools/client/sourceeditor/codemirror/search/search.js
++++ b/devtools/client/sourceeditor/codemirror/search/search.js
+@@ -62,19 +62,31 @@
+     if (isRE) {
+       query = new RegExp(isRE[1], isRE[2].indexOf("i") == -1 ? "" : "i");
+       if (query.test("")) query = /x^/;
+     } else if (query == "") {
+       query = /x^/;
+     }
+     return query;
+   }
+-  var queryDialog =
+-    'Search: <input type="text" style="width: 10em"/> <span style="color: #888">(Use /re/ syntax for regexp search)</span>';
++  var queryDialog;
+   function doSearch(cm, rev) {
++    if (!queryDialog) {
++      let doc = cm.getWrapperElement().ownerDocument;
++      let inp = doc.createElement("input");
++
++      inp.type = "search";
++      inp.placeholder = cm.l10n("findCmd.promptMessage");
++      inp.style.MozMarginStart = "1em";
++      inp.style.MozMarginEnd = "1em";
++      inp.style.flexGrow = "1";
++      inp.addEventListener("focus", () => inp.select());
++
++      queryDialog = doc.createElement("div");
++      queryDialog.appendChild(inp);
++      queryDialog.style.display = "flex";
++    }
+     var state = getSearchState(cm);
+     if (state.query) return findNext(cm, rev);
+     dialog(cm, queryDialog, "Search for:", cm.getSelection(), function(query) {
+       cm.operation(function() {
+         if (!query || state.query) return;
+         state.query = parseQuery(query);
+         cm.removeOverlay(state.overlay, queryCaseInsensitive(state.query));
+         state.overlay = searchOverlay(state.query, queryCaseInsensitive(state.query));
+
+# Footnotes
+
+[1] http://codemirror.net
+[2] devtools/client/sourceeditor/codemirror
+[3] devtools/client/sourceeditor/test/browser_codemirror.js
+[4] devtools/client/jar.mn
+[5] devtools/client/sourceeditor/editor.js

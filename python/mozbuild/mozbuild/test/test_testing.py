@@ -142,16 +142,16 @@ ALL_TESTS_JSON = b'''
             "subsuite": ""
         }
    ],
-   "browser/devtools/markupview/test/browser_markupview_copy_image_data.js": [
+   "devtools/client/markupview/test/browser_markupview_copy_image_data.js": [
         {
-            "dir_relpath": "browser/devtools/markupview/test",
-            "file_relpath": "browser/devtools/markupview/test/browser_markupview_copy_image_data.js",
+            "dir_relpath": "devtools/client/markupview/test",
+            "file_relpath": "devtools/client/markupview/test/browser_markupview_copy_image_data.js",
             "flavor": "browser-chrome",
-            "here": "/home/chris/m-c/obj-dbg/_tests/testing/mochitest/browser/browser/devtools/markupview/test",
-            "manifest": "/home/chris/m-c/browser/devtools/markupview/test/browser.ini",
+            "here": "/home/chris/m-c/obj-dbg/_tests/testing/mochitest/browser/devtools/client/markupview/test",
+            "manifest": "/home/chris/m-c/devtools/client/markupview/test/browser.ini",
             "name": "browser_markupview_copy_image_data.js",
-            "path": "/home/chris/m-c/obj-dbg/_tests/testing/mochitest/browser/browser/devtools/markupview/test/browser_markupview_copy_image_data.js",
-            "relpath": "browser/devtools/markupview/test/browser_markupview_copy_image_data.js",
+            "path": "/home/chris/m-c/obj-dbg/_tests/testing/mochitest/browser/devtools/client/markupview/test/browser_markupview_copy_image_data.js",
+            "relpath": "devtools/client/markupview/test/browser_markupview_copy_image_data.js",
             "subsuite": "devtools",
             "tags": "devtools"
         }

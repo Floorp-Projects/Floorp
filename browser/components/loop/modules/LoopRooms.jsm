@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebChannel",
                                   "resource://gre/modules/WebChannel.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "eventEmitter", function() {
-  const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js", {});
+  const {EventEmitter} = Cu.import("resource://gre/modules/devtools/shared/event-emitter.js", {});
   return new EventEmitter();
 });
 XPCOMUtils.defineLazyGetter(this, "gLoopBundle", function() {

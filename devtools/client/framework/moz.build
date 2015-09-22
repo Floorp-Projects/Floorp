@@ -1,0 +1,19 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+
+DevToolsModules(
+    'gDevTools.jsm',
+    'selection.js',
+    'sidebar.js',
+    'target.js',
+    'toolbox-highlighter-utils.js',
+    'toolbox-hosts.js',
+    'toolbox-options.js',
+    'toolbox.js',
+    'ToolboxProcess.jsm',
+)

@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE window [
+  <!ENTITY % inspectorDTD SYSTEM "chrome://browser/locale/devtools/styleinspector.dtd">
+  %inspectorDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      class="theme-sidebar">
+  <head>
+    <title>&ruleViewTitle;</title>
+    <link rel="stylesheet" href="chrome://global/skin/global.css"  type="text/css"/>
+    <link rel="stylesheet" href="chrome://devtools/skin/themes/common.css"  type="text/css"/>
+    <link rel="stylesheet" href="chrome://devtools/content/styleinspector/ruleview.css"  type="text/css"/>
+    <link rel="stylesheet" href="chrome://devtools/skin/themes/ruleview.css"  type="text/css"/>
+    <script type="application/javascript;version=1.8" src="chrome://devtools/content/shared/theme-switching.js"/>
+    <script type="application/javascript;version=1.8">
+      window.setPanel = function(panel, iframe) {
+        let {require} = Components.utils.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+        let inspector = require("devtools/client/styleinspector/style-inspector");
+        this.ruleview = new inspector.RuleViewTool(panel, window);
+      }
+      window.onunload = function() {
+        if (this.ruleview) {
+          this.ruleview.destroy();
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root" class="devtools-monospace">
+      <div id="ruleview-toolbar" class="devtools-toolbar">
+        <div class="devtools-searchbox">
+          <input id="ruleview-searchbox"
+                 class="devtools-searchinput devtools-rule-searchbox"
+                 type="search" placeholder="&filterStylesPlaceholder;"/>
+          <button id="ruleview-searchinput-clear" class="devtools-searchinput-clear"></button>
+        </div>
+        <button id="ruleview-add-rule-button" title="&addRuleButtonTooltip;" class="devtools-button"></button>
+        <button id="pseudo-class-panel-toggle" title="&togglePseudoClassPanel;" class="devtools-button"></button>
+      </div>
+      <div id="pseudo-class-panel" class="devtools-toolbar" hidden="true" tabindex="-1">
+        <label><input id="pseudo-hover-toggle" type="checkbox" value=":hover" tabindex="-1" />:hover</label>
+        <label><input id="pseudo-active-toggle" type="checkbox" value=":active" tabindex="-1" />:active</label>
+        <label><input id="pseudo-focus-toggle" type="checkbox" value=":focus" tabindex="-1" />:focus</label>
+      </div>
+    </div>
+
+    <div id="ruleview-container" class="ruleview devtools-monospace">
+    </div>
+  </body>
+</html>
