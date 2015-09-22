@@ -1509,8 +1509,9 @@ class irregexp::RegExpCompiler
                         int capture_count);
 
     inline void AddWork(RegExpNode* node) {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
         if (!work_list_.append(node))
-            CrashAtUnhandlableOOM("AddWork");
+            oomUnsafe.crash("AddWork");
     }
 
     static const int kImplementationOffset = 0;
@@ -2394,9 +2395,13 @@ BoyerMooreLookahead::EmitSkipInstructions(RegExpMacroAssembler* masm)
         return true;
     }
 
-    uint8_t* boolean_skip_table = static_cast<uint8_t*>(js_malloc(kSize));
-    if (!boolean_skip_table || !masm->shared->addTable(boolean_skip_table))
-        CrashAtUnhandlableOOM("Table malloc");
+    uint8_t* boolean_skip_table;
+    {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        boolean_skip_table = static_cast<uint8_t*>(js_malloc(kSize));
+        if (!boolean_skip_table || !masm->shared->addTable(boolean_skip_table))
+            oomUnsafe.crash("Table malloc");
+    }
 
     int skip_distance = GetSkipTable(min_lookahead, max_lookahead, boolean_skip_table);
     MOZ_ASSERT(skip_distance != 0);
@@ -3101,9 +3106,13 @@ EmitUseLookupTable(RegExpMacroAssembler* masm,
     }
 
     // TODO(erikcorry): Cache these.
-    uint8_t* ba = static_cast<uint8_t*>(js_malloc(kSize));
-    if (!ba || !masm->shared->addTable(ba))
-        CrashAtUnhandlableOOM("Table malloc");
+    uint8_t* ba;
+    {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        ba = static_cast<uint8_t*>(js_malloc(kSize));
+        if (!ba || !masm->shared->addTable(ba))
+            oomUnsafe.crash("Table malloc");
+    }
 
     for (int i = 0; i < kSize; i++)
         ba[i] = templ[i];

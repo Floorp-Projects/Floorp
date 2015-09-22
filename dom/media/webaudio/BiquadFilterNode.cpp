@@ -155,6 +155,7 @@ public:
       if (!hasTail) {
         if (!mBiquads.IsEmpty()) {
           mBiquads.Clear();
+          aStream->CheckForInactive();
 
           nsRefPtr<PlayingRefChangeHandler> refchanged =
             new PlayingRefChangeHandler(aStream, PlayingRefChangeHandler::RELEASE);
@@ -209,6 +210,11 @@ public:
                           aOutput->ChannelFloatsForWrite(i),
                           aInput.GetDuration());
     }
+  }
+
+  virtual bool IsActive() const override
+  {
+    return !mBiquads.IsEmpty();
   }
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override

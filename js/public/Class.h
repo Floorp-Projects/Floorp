@@ -46,6 +46,37 @@ template <typename T>
 class AutoVectorRooter;
 typedef AutoVectorRooter<jsid> AutoIdVector;
 
+// The answer to a successful query as to whether an object is an Array per
+// ES6's internal |IsArray| operation (as exposed by |Array.isArray|).
+enum class IsArrayAnswer
+{
+    Array,
+    NotArray,
+    RevokedProxy
+};
+
+// ES6 7.2.2.
+//
+// Returns false on failure, otherwise returns true and sets |*isArray|
+// indicating whether the object passes ECMAScript's IsArray test.  This is the
+// same test performed by |Array.isArray|.
+//
+// This is NOT the same as asking whether |obj| is an Array or a wrapper around
+// one.  If |obj| is a proxy created by |Proxy.revocable()| and has been
+// revoked, or if |obj| is a proxy whose target (at any number of hops) is a
+// revoked proxy, this method throws a TypeError and returns false.
+extern JS_PUBLIC_API(bool)
+IsArray(JSContext* cx, HandleObject obj, bool* isArray);
+
+// Identical to IsArray above, but the nature of the object (if successfully
+// determined) is communicated via |*answer|.  In particular this method
+// returns true and sets |*answer = IsArrayAnswer::RevokedProxy| when called on
+// a revoked proxy.
+//
+// Most users will want the overload above, not this one.
+extern JS_PUBLIC_API(bool)
+IsArray(JSContext* cx, HandleObject obj, IsArrayAnswer* answer);
+
 /*
  * Per ES6, the [[DefineOwnProperty]] internal method has three different
  * possible outcomes:
@@ -800,11 +831,7 @@ Valueify(const JSClass* c)
 enum ESClassValue {
     ESClass_Object, ESClass_Array, ESClass_Number, ESClass_String,
     ESClass_Boolean, ESClass_RegExp, ESClass_ArrayBuffer, ESClass_SharedArrayBuffer,
-    ESClass_Date, ESClass_Set, ESClass_Map,
-
-    // Special snowflake for the ES6 IsArray method.
-    // Please don't use it without calling that function.
-    ESClass_IsArray
+    ESClass_Date, ESClass_Set, ESClass_Map
 };
 
 /*

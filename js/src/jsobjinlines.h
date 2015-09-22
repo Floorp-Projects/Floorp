@@ -819,8 +819,6 @@ ObjectClassIs(HandleObject obj, ESClassValue classValue, JSContext* cx)
     switch (classValue) {
       case ESClass_Object: return obj->is<PlainObject>() || obj->is<UnboxedPlainObject>();
       case ESClass_Array:
-      case ESClass_IsArray:
-        // The difference between Array and IsArray is only relevant for proxies.
         return obj->is<ArrayObject>() || obj->is<UnboxedArrayObject>();
       case ESClass_Number: return obj->is<NumberObject>();
       case ESClass_String: return obj->is<StringObject>();
@@ -842,16 +840,6 @@ IsObjectWithClass(const Value& v, ESClassValue classValue, JSContext* cx)
         return false;
     RootedObject obj(cx, &v.toObject());
     return ObjectClassIs(obj, classValue, cx);
-}
-
-// ES6 7.2.2
-inline bool
-IsArray(HandleObject obj, JSContext* cx)
-{
-    if (obj->is<ArrayObject>() || obj->is<UnboxedArrayObject>())
-        return true;
-
-    return ObjectClassIs(obj, ESClass_IsArray, cx);
 }
 
 inline bool

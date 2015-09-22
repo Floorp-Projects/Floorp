@@ -164,7 +164,7 @@ this.ContentLinkHandler = {
     }
 
     // Security says okay, now ask content policy
-    if (contentPolicy.shouldLoad(Ci.nsIContentPolicy.TYPE_IMAGE,
+    if (contentPolicy.shouldLoad(Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE,
                                  uri, targetDoc.documentURIObject,
                                  aLink, aLink.type, null)
                                  != Ci.nsIContentPolicy.ACCEPT)

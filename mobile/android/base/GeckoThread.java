@@ -22,7 +22,6 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.MessageQueue;
 import android.os.SystemClock;
-import android.util.DisplayMetrics;
 import android.util.Log;
 
 import java.io.IOException;
@@ -109,27 +108,25 @@ public class GeckoThread extends Thread implements GeckoEventListener {
 
     private final String mArgs;
     private final String mAction;
-    private final String mUri;
     private final boolean mDebugging;
 
-    GeckoThread(String args, String action, String uri, boolean debugging) {
+    GeckoThread(String args, String action, boolean debugging) {
         mArgs = args;
         mAction = action;
-        mUri = uri;
         mDebugging = debugging;
 
         setName("Gecko");
         EventDispatcher.getInstance().registerGeckoThreadListener(this, "Gecko:Ready");
     }
 
-    public static boolean ensureInit(String args, String action, String uri) {
-        return ensureInit(args, action, uri, /* debugging */ false);
+    public static boolean ensureInit(String args, String action) {
+        return ensureInit(args, action, /* debugging */ false);
     }
 
-    public static boolean ensureInit(String args, String action, String uri, boolean debugging) {
+    public static boolean ensureInit(String args, String action, boolean debugging) {
         ThreadUtils.assertOnUiThread();
         if (isState(State.INITIAL) && sGeckoThread == null) {
-            sGeckoThread = new GeckoThread(args, action, uri, debugging);
+            sGeckoThread = new GeckoThread(args, action, debugging);
             return true;
         }
         return false;
@@ -361,10 +358,6 @@ public class GeckoThread extends Thread implements GeckoEventListener {
             args.append(' ').append(userArgs);
         }
 
-        if (mUri != null) {
-            args.append(" -url ").append(mUri);
-        }
-
         final String type = getTypeFromAction(mAction);
         if (type != null) {
             args.append(" ").append(type);
@@ -379,11 +372,6 @@ public class GeckoThread extends Thread implements GeckoEventListener {
                           "startup (JavaScript) caches.");
             args.append(" -purgecaches");
         }
-
-        final DisplayMetrics metrics
-                = GeckoAppShell.getContext().getResources().getDisplayMetrics();
-        args.append(" -width ").append(metrics.widthPixels)
-            .append(" -height ").append(metrics.heightPixels);
 
         return args.toString();
     }
