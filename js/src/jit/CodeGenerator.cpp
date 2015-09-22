@@ -1126,9 +1126,6 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
     masm.branchPtr(Assembler::Equal, codePointer, ImmWord(0), failure);
     masm.loadPtr(Address(codePointer, JitCode::offsetOfCode()), codePointer);
 
-    // Don't handle execution inside a PreserveRegExpStatics instance.
-    masm.branchPtr(Assembler::NotEqual, AbsoluteAddress(res->addressOfBufferLink()), ImmWord(0), failure);
-
     // Finish filling in the InputOutputData instance on the stack.
     if (mode == RegExpShared::Normal) {
         masm.computeEffectiveAddress(Address(masm.getStackPointer(), matchPairsStartOffset), temp2);

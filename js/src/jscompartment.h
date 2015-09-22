@@ -750,7 +750,7 @@ struct JSCompartment
         // NO LONGER USING 6
         DeprecatedFlagsArgument = 7,        // JS 1.3 or older
         // NO LONGER USING 8
-        DeprecatedRestoredRegExpStatics = 9,// Unknown
+        // NO LONGER USING 9
         DeprecatedLanguageExtensionCount
     };
 
