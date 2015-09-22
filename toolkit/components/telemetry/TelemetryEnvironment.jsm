@@ -32,8 +32,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
 #endif
 XPCOMUtils.defineLazyModuleGetter(this, "ProfileAge",
                                   "resource://gre/modules/ProfileAge.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
-                                  "resource://gre/modules/UpdateUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
+                                  "resource://gre/modules/UpdateChannel.jsm");
 
 const CHANGE_THROTTLE_INTERVAL_MS = 5 * 60 * 1000;
 
@@ -1007,7 +1007,7 @@ EnvironmentCache.prototype = {
   _updateSettings: function () {
     let updateChannel = null;
     try {
-      updateChannel = UpdateUtils.getUpdateChannel(false);
+      updateChannel = UpdateChannel.get(false);
     } catch (e) {}
 
     this._currentEnvironment.settings = {
