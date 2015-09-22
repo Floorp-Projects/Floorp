@@ -54,6 +54,7 @@ JSFunction::AutoParseUsingFunctionBox::AutoParseUsingFunctionBox(ExclusiveContex
   : fun_(cx, funbox->function()),
     oldEnv_(cx, fun_->environment())
 {
+    fun_->unsetEnvironment();
     fun_->setFunctionBox(funbox);
     funbox->computeAllowSyntax(fun_);
     funbox->computeInWith(fun_);
@@ -62,7 +63,7 @@ JSFunction::AutoParseUsingFunctionBox::AutoParseUsingFunctionBox(ExclusiveContex
 JSFunction::AutoParseUsingFunctionBox::~AutoParseUsingFunctionBox()
 {
     fun_->unsetFunctionBox();
-    fun_->setEnvironment(oldEnv_);
+    fun_->initEnvironment(oldEnv_);
 }
 
 namespace js {
