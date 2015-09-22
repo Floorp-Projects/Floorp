@@ -241,6 +241,13 @@ public class FxAccountStatusFragment
 
   @Override
   public boolean onPreferenceClick(Preference preference) {
+    if (preference == profilePreference) {
+      if (!AppConstants.MOZ_ANDROID_NATIVE_ACCOUNT_UI) {
+        // There is no native equivalent, bind the click action to fire an intent.
+        ActivityUtils.openURLInFennec(getActivity().getApplicationContext(), "about:accounts?action=avatar");
+      }
+    }
+
     if (preference == manageAccountPreference) {
       // There's no native equivalent, so no need to re-direct through an Intent filter.
       ActivityUtils.openURLInFennec(getActivity().getApplicationContext(), "about:accounts?action=manage");
