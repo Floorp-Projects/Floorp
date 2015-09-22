@@ -16,11 +16,17 @@ else:
     os_posix = 1
     if CONFIG['OS_ARCH'] == 'Darwin':
         os_macosx = 1
+        libevent_include_suffix = 'mac'
     elif CONFIG['OS_ARCH'] in ['DragonFly', 'FreeBSD', 'GNU_kFreeBSD',
                                'NetBSD', 'OpenBSD']:
         os_bsd = 1
+        libevent_include_suffix = 'bsd'
     else:
         os_linux = 1
+        if CONFIG['OS_TARGET'] == 'Android':
+            libevent_include_suffix = 'android'
+        else:
+            libevent_include_suffix = 'linux'
 
 UNIFIED_SOURCES += [
     'src/base/at_exit.cc',
@@ -116,10 +122,11 @@ elif not CONFIG['MOZ_NATIVE_LIBEVENT']:
         'src/third_party/libevent/evdns.c',
     ]
     DEFINES['HAVE_CONFIG_H'] = True
-    LOCAL_INCLUDES += [
+    LOCAL_INCLUDES += sorted([
         'src/third_party/libevent',
         'src/third_party/libevent/include',
-    ]
+        'src/third_party/libevent/' + libevent_include_suffix,
+    ])
 
 if os_posix:
     UNIFIED_SOURCES += [
@@ -170,7 +177,6 @@ if os_macosx:
         UNIFIED_SOURCES += [
             'src/third_party/libevent/kqueue.c',
         ]
-        LOCAL_INCLUDES += ['src/third_party/libevent/mac']
 
 if os_bsd:
     SOURCES += [
@@ -198,7 +204,6 @@ if os_bsd:
         SOURCES += [
             'src/third_party/libevent/kqueue.c',
         ]
-        LOCAL_INCLUDES += ['src/third_party/libevent/bsd']
 
 if os_linux:
     SOURCES += [
@@ -226,13 +231,10 @@ if os_linux:
         SOURCES += [
             'src/third_party/libevent/epoll.c',
         ]
-        if CONFIG['OS_TARGET'] == 'Android':
-            LOCAL_INCLUDES += ['src/third_party/libevent/android']
-        else:
+        if CONFIG['OS_TARGET'] != 'Android':
             SOURCES += [
                 'src/third_party/libevent/epoll_sub.c',
             ]
-            LOCAL_INCLUDES += ['src/third_party/libevent/linux']
 
 ost = CONFIG['OS_TEST']
 if '86' not in ost and 'arm' not in ost and 'mips' not in ost:
