@@ -1295,7 +1295,18 @@ PrintTypes(JSContext* cx, JSCompartment* comp, bool force);
 // with no associated compartment.
 namespace JS {
 namespace ubi {
-template<> struct Concrete<js::ObjectGroup> : TracerConcrete<js::ObjectGroup> { };
+
+template<>
+struct Concrete<js::ObjectGroup> : TracerConcrete<js::ObjectGroup> {
+    Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
+
+  protected:
+    explicit Concrete(js::ObjectGroup *ptr) : TracerConcrete<js::ObjectGroup>(ptr) { }
+
+  public:
+    static void construct(void *storage, js::ObjectGroup *ptr) { new (storage) Concrete(ptr); }
+};
+
 } // namespace ubi
 } // namespace JS
 
