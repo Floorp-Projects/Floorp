@@ -169,12 +169,17 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
 
   AddUniforms(result);
 
+  vs << "#ifdef GL_ES" << endl;
+  vs << "#define EDGE_PRECISION mediump" << endl;
+  vs << "#else" << endl;
+  vs << "#define EDGE_PRECISION" << endl;
+  vs << "#endif" << endl;
   vs << "uniform mat4 uMatrixProj;" << endl;
   vs << "uniform vec4 uLayerRects[4];" << endl;
   vs << "uniform mat4 uLayerTransform;" << endl;
   if (aConfig.mFeatures & ENABLE_DEAA) {
     vs << "uniform mat4 uLayerTransformInverse;" << endl;
-    vs << "uniform vec3 uSSEdges[4];" << endl;
+    vs << "uniform EDGE_PRECISION vec3 uSSEdges[4];" << endl;
     vs << "uniform vec2 uVisibleCenter;" << endl;
     vs << "uniform vec2 uViewportSize;" << endl;
   }
@@ -282,8 +287,10 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   fs << "#ifdef GL_ES" << endl;
   fs << "precision mediump float;" << endl;
   fs << "#define COLOR_PRECISION lowp" << endl;
+  fs << "#define EDGE_PRECISION mediump" << endl;
   fs << "#else" << endl;
   fs << "#define COLOR_PRECISION" << endl;
+  fs << "#define EDGE_PRECISION" << endl;
   fs << "#endif" << endl;
   if (aConfig.mFeatures & ENABLE_RENDER_COLOR) {
     fs << "uniform COLOR_PRECISION vec4 uRenderColor;" << endl;
@@ -344,7 +351,7 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   }
 
   if (aConfig.mFeatures & ENABLE_DEAA) {
-    fs << "uniform vec3 uSSEdges[4];" << endl;
+    fs << "uniform EDGE_PRECISION vec3 uSSEdges[4];" << endl;
   }
 
   if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
