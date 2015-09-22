@@ -12,7 +12,6 @@ EXTRA_JS_MODULES.addons += [
     'Content.js',
     'GMPProvider.jsm',
     'LightweightThemeImageOptimizer.jsm',
-    'ProductAddonChecker.jsm',
     'SpellCheckDictionaryBootstrap.js',
     'WebExtensionBootstrap.js',
 ]
