@@ -65,11 +65,6 @@ public:
       mSecondCaret = MakeUnique<MockAccessibleCaret>();
     }
 
-    CaretMode LastUpdateCaretMode() const
-    {
-      return mLastUpdateCaretMode;
-    }
-
     MockAccessibleCaret& FirstCaret()
     {
       return static_cast<MockAccessibleCaret&>(*mFirstCaret);
@@ -117,13 +112,14 @@ public:
       .WillRepeatedly(Return(PositionChangedResult::Changed));
   }
 
-  void CheckStates(CaretMode aCaretMode,
-                   Appearance aFirstCaretAppearance,
-                   Appearance aSecondCaretAppearance)
+  AccessibleCaret::Appearance FirstCaretAppearance()
   {
-    EXPECT_EQ(mManager.LastUpdateCaretMode(), aCaretMode);
-    EXPECT_EQ(mManager.FirstCaret().GetAppearance(), aFirstCaretAppearance);
-    EXPECT_EQ(mManager.SecondCaret().GetAppearance(), aSecondCaretAppearance);
+    return mManager.FirstCaret().GetAppearance();
+  }
+
+  AccessibleCaret::Appearance SecondCaretAppearance()
+  {
+    return mManager.SecondCaret().GetAppearance();
   }
 
   // Member variables
@@ -140,13 +136,16 @@ TEST_F(AccessibleCaretManagerTester, TestUpdatesInSelectionMode)
                 CaretChangedReason::Updateposition)).Times(3);
 
   mManager.UpdateCarets();
-  CheckStates(CaretMode::Selection, Appearance::Normal, Appearance::Normal);
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
+  EXPECT_EQ(SecondCaretAppearance(), Appearance::Normal);
 
   mManager.OnReflow();
-  CheckStates(CaretMode::Selection, Appearance::Normal, Appearance::Normal);
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
+  EXPECT_EQ(SecondCaretAppearance(), Appearance::Normal);
 
   mManager.OnScrollPositionChanged();
-  CheckStates(CaretMode::Selection, Appearance::Normal, Appearance::Normal);
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
+  EXPECT_EQ(SecondCaretAppearance(), Appearance::Normal);
 }
 
 TEST_F(AccessibleCaretManagerTester, TestUpdatesInCursorModeOnNonEmptyContent)
@@ -185,24 +184,24 @@ TEST_F(AccessibleCaretManagerTester, TestUpdatesInCursorModeOnNonEmptyContent)
   mManager.OnSelectionChanged(nullptr, nullptr,
                               nsISelectionListener::DRAG_REASON |
                               nsISelectionListener::MOUSEDOWN_REASON);
-  CheckStates(CaretMode::Cursor, Appearance::Normal, Appearance::None);
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
   check.Call("mouse down");
 
   mManager.OnReflow();
-  CheckStates(CaretMode::Cursor, Appearance::Normal, Appearance::None);
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
   check.Call("reflow");
 
   mManager.OnBlur();
-  CheckStates(CaretMode::Cursor, Appearance::None, Appearance::None);
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::None);
   check.Call("blur");
 
   mManager.OnSelectionChanged(nullptr, nullptr,
                               nsISelectionListener::MOUSEUP_REASON);
-  CheckStates(CaretMode::Cursor, Appearance::Normal, Appearance::None);
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
   check.Call("mouse up");
 
   mManager.OnScrollPositionChanged();
-  CheckStates(CaretMode::Cursor, Appearance::Normal, Appearance::None);
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
 }
 
 } // namespace mozilla
