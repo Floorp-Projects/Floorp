@@ -1341,7 +1341,8 @@
           ), 
 
           React.createElement(Section, {name: "UnsupportedBrowserView"}, 
-            React.createElement(FramedExample, {dashed: true, 
+            React.createElement(FramedExample, {cssClass: "standalone", 
+                           dashed: true, 
                            height: 430, 
                            summary: "Standalone Unsupported Browser", 
                            width: 480}, 
@@ -1352,7 +1353,8 @@
           ), 
 
           React.createElement(Section, {name: "UnsupportedDeviceView"}, 
-            React.createElement(FramedExample, {dashed: true, 
+            React.createElement(FramedExample, {cssClass: "standalone", 
+                           dashed: true, 
                            height: 430, 
                            summary: "Standalone Unsupported Device", 
                            width: 480}, 

@@ -7,11 +7,6 @@ html {
   font-family: menu;
 }
 
-/* Shared conversation window styles */
-.conversation {
-  position: relative;
-}
-
 button::-moz-focus-inner {
   border: 0;
 }
@@ -92,14 +87,6 @@ html[dir="rtl"] .conversation-toolbar-media-btn-group-box > button:first-child:a
 html[dir="rtl"] .conversation-toolbar-media-btn-group-box > button:first-child:hover {
   background-image: url("../img/svg/media-group-right-hover.svg");
   background-size: cover;
-}
-
-.conversation-toolbar-media-btn-group-box > li {
-  float: left;
-}
-
-html[dir="rtl"] .conversation-toolbar-media-btn-group-box > li {
-  float: right;
 }
 
 .conversation-toolbar-btn-box.btn-edit-entry {
@@ -232,42 +219,6 @@ html[dir="rtl"] .conversation-toolbar-btn-box.btn-edit-entry {
 .btn-screen-share.disabled {
   /* The screen share button is in its pending state when its disabled. */
   background-image: url("../img/svg/sharing-pending.svg");
-}
-
-.fx-embedded .remote_wrapper {
-  position: absolute;
-  top: 0px;
-  right: 0px;
-  bottom: 0px;
-  left: 0px;
-}
-
-.fx-embedded .no-video {
-  background: black none repeat scroll 0% 0%;
-  height: 100%;
-  width: 100%;
-}
-
-.standalone .local-stream {
-  /* required to have it superimposed to the control toolbar */
-  z-index: 1001;
-}
-
-/* Side by side video elements */
-
-.conversation .media.side-by-side .focus-stream {
-  width: 50%;
-  float: left;
-}
-
-.conversation .media.side-by-side .local-stream,
-.conversation .media.side-by-side .remote-inset-stream {
-  width: 50%;
-}
-
-/* Call ended view */
-.call-ended p {
-  text-align: center;
 }
 
 /* General Call (incoming or outgoing). */
@@ -405,13 +356,12 @@ html[dir="rtl"] .room-failure > .settings-control {
 /*
  * Dropdown menu hidden behind a chevron
  *
- * .native-dropdown-menu[-large-parent] Generic class, contains common styles
+ * .native-dropdown-menu Generic class, contains common styles
  * .standalone-dropdown-menu Initiate call dropdown menu
  * .conversation-window-dropdown Dropdown menu for answer/decline/block options
  */
 
-.native-dropdown-menu,
-.native-dropdown-large-parent {
+.native-dropdown-menu {
   /* Should match a native select menu */
   padding: 0;
   position: absolute; /* element can be wider than the parent */
@@ -423,26 +373,13 @@ html[dir="rtl"] .room-failure > .settings-control {
   border-color: #aaa #111 #111 #aaa;
 }
 
-  /*
-   * If the component is smaller than the parent
-   * we need it to display block to occupy full width
-   * Same as above but overrides apropriate styles
-   */
-  .native-dropdown-large-parent {
-    position: relative;
-    display: block;
-  }
-
-  .native-dropdown-menu li,
-  .native-dropdown-large-parent li {
+  .native-dropdown-menu li {
     list-style: none;
     cursor: pointer;
     color: #000;
   }
 
-  .native-dropdown-menu li:hover,
-  .native-dropdown-large-parent li:hover,
-  .native-dropdown-large-parent li:hover button {
+  .native-dropdown-menu li:hover {
     color: #fff;
     background-color: #111;
   }
@@ -493,24 +430,6 @@ html[dir="rtl"] .settings-menu.dropdown-menu {
   bottom: auto;
 }
 
-/* Expired call url page */
-
-.expired-url-info {
-  width: 400px;
-  margin: 0 auto;
-}
-
-.promote-firefox {
-  text-align: center;
-  font-size: 18px;
-  line-height: 24px;
-  margin: 2em 0;
-}
-
-.promote-firefox h3 {
-  font-weight: 300;
-}
-
 /* Feedback form */
 .feedback-view-container {
   display: flex;
@@ -553,54 +472,6 @@ html[dir="rtl"] .settings-menu.dropdown-menu {
   background: #4E92DF;
   color: #fff;
   cursor: pointer;
-}
-
-.fx-embedded-btn-back {
-  margin-bottom: 1rem;
-  padding: .2rem .8rem;
-  border: 1px solid #aaa;
-  border-radius: 2px;
-  background: transparent;
-  color: #777;
-  cursor: pointer;
-}
-
-.feedback-category-label {
-  display: block;
-  line-height: 1.5em;
-}
-
-.feedback-category-radio {
-  margin-right: .5em;
-}
-
-.feedback > form > .btn-success,
-.feedback-description {
-  width: 100%;
-  margin-top: 14px;
-}
-
-.feedback > form > .btn-success {
-  padding-top: .5em;
-  padding-bottom: .5em;
-  border-radius: 2px;
-}
-
-.feedback .info {
-  display: block;
-  font-size: 10px;
-  color: #CCC;
-  text-align: center;
-}
-
-.conversation .media.nested .focus-stream {
-  display: inline-block;
-  position: absolute; /* workaround for lack of object-fit; see bug 1020445 */
-  width: 100%;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
 }
 
 /*
@@ -653,11 +524,6 @@ html[dir="rtl"] .settings-menu.dropdown-menu {
   to {
     transform: rotate(360deg);
   }
-}
-
-.conversation .local .avatar {
-  position: absolute;
-  z-index: 1;
 }
 
 .remote > .avatar {
@@ -737,100 +603,9 @@ html[dir="rtl"] .settings-menu.dropdown-menu {
  * on the video element
  * */
 html, .fx-embedded, #main,
-.video-layout-wrapper,
-.conversation,
 .desktop-call-wrapper,
 .desktop-room-wrapper {
   height: 100%;
-}
-
-/* We use 641px rather than 640, as min-width and max-width are inclusive */
-@media screen and (min-width: 641px) {
-  .standalone .conversation .conversation-toolbar {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-  }
-
-  .standalone .conversation .local-stream {
-    position: absolute;
-    right: 15px;
-    bottom: 15px;
-    width: 20%;
-    height: 20%;
-    max-width: 400px;
-    max-height: 300px;
-  }
-
-  /* Nested video elements */
-  .standalone .conversation .media.nested {
-    position: relative;
-    height: 100%;
-  }
-
-  .standalone .media.nested {
-    margin-left: 10px;
-  }
-
-  .standalone .remote_wrapper {
-    position: relative;
-    width: 100%;
-    height: 100%;
-  }
-
-  .standalone {
-    margin: 0 auto;
-  }
-}
-
-@media screen and (max-width:640px) {
-  .standalone .video-layout-wrapper,
-  .standalone .conversation {
-    height: 100%;
-  }
-
-  .standalone .media {
-    height: 90%;
-  }
-
-  .standalone .media.nested {
-    min-height: 500px;
-  }
-
-  .standalone .conversation .local-stream {
-    flex: 1;
-    min-width: 120px;
-    min-height: 150px;
-    width: 100%;
-  }
-
-  /* Nested video elements */
-  .standalone .conversation .media.nested {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex: 1 1 0%;
-  }
-
-  .standalone .video_wrapper.remote_wrapper {
-    /* Because of OT markup we need to set a high flex value
-     * Flex rule assures remote and local streams stack on top of each other
-     * Computed width is not 100% unless the `width` rule */
-    flex: 2;
-    width: 100%;
-    position: relative;
-  }
-}
-
-@media screen and (max-width:420px) {
-  /* Restore video height so that we get
-   * vertical centering for free on a small screen
-   **/
-  .standalone .conversation .media video {
-    height: 100%;
-  }
 }
 
 /**
@@ -885,10 +660,6 @@ html[dir="rtl"] .room-conversation-wrapper header a {
   width: 20px;
   height: 20px;
   background: transparent url("../img/svg/glyph-help-16x16.svg") no-repeat;
-}
-
-.fx-embedded .room-conversation .conversation-toolbar .btn-hangup {
-  background-image: url("../img/icons-14x14.svg#exit-white");
 }
 
 .room-invitation-overlay {
@@ -1185,10 +956,6 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 }
 
 @media screen and (max-width:640px) {
-  .media-layout-wrapper {
-    height: 100%;
-  }
-
   .standalone-room-wrapper > .media-layout {
     /* 50px is height of header, 38px is height of toolbar, 25px is height of footer. */
     height: calc(100% - 50px - 38px - 25px);
@@ -1354,6 +1121,10 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   html[dir="rtl"] .media-wrapper > .focus-stream > .local {
     left: 0;
     right: auto;
+  }
+
+  .screen > .no-video {
+    display: none;
   }
 
   .media-wrapper:not(.showing-remote-streams) > .focus-stream > .no-video {
@@ -1722,10 +1493,6 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
 
 @media screen and (max-width:640px) {
   /* Rooms specific responsive styling */
-  .standalone .room-conversation {
-    background: #000;
-  }
-
   .standalone .room-conversation-wrapper .room-inner-info-area {
     right: 0;
     margin: auto;
@@ -1741,15 +1508,6 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
   }
   .standalone .room-conversation .video_wrapper.remote_wrapper.not-joined {
     width: 100%;
-  }
-  .standalone .conversation .focus-stream {
-    /* Set at maximum height, minus height of conversation toolbar */
-    height: 100%;
-  }
-
-  .standalone .media.nested {
-    /* This forces the remote video stream to fit within wrapper's height */
-    min-height: 0px;
   }
 }
 
