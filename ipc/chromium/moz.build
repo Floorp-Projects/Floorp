@@ -178,6 +178,34 @@ if os_macosx:
         ]
         LOCAL_INCLUDES += ['src/third_party/libevent/mac']
 
+if os_bsd:
+    SOURCES += [
+        'src/base/atomicops_internals_x86_gcc.cc',
+        'src/base/time_posix.cc',
+    ]
+    if CONFIG['OS_ARCH'] == 'GNU_kFreeBSD':
+        SOURCES += [
+            'src/base/process_util_linux.cc'
+        ]
+    else:
+        SOURCES += [
+            'src/base/process_util_bsd.cc'
+        ]
+    if CONFIG['MOZ_WIDGET_GTK']:
+        SOURCES += [
+            'src/base/message_pump_glib.cc',
+        ]
+    if CONFIG['MOZ_ENABLE_QT']:
+        SOURCES += [
+            '!moc_message_pump_qt.cc',
+            'src/base/message_pump_qt.cc',
+        ]
+    if not CONFIG['MOZ_NATIVE_LIBEVENT']:
+        SOURCES += [
+            'src/third_party/libevent/kqueue.c',
+        ]
+        LOCAL_INCLUDES += ['src/third_party/libevent/bsd']
+
 if os_linux:
     SOURCES += [
         'src/base/atomicops_internals_x86_gcc.cc',
@@ -206,34 +234,6 @@ if os_linux:
             LOCAL_INCLUDES += ['src/third_party/libevent/android']
         else:
             LOCAL_INCLUDES += ['src/third_party/libevent/linux']
-
-if os_bsd:
-    SOURCES += [
-        'src/base/atomicops_internals_x86_gcc.cc',
-        'src/base/time_posix.cc',
-    ]
-    if CONFIG['OS_ARCH'] == 'GNU_kFreeBSD':
-        SOURCES += [
-            'src/base/process_util_linux.cc'
-        ]
-    else:
-        SOURCES += [
-            'src/base/process_util_bsd.cc'
-        ]
-    if CONFIG['MOZ_WIDGET_GTK']:
-        SOURCES += [
-            'src/base/message_pump_glib.cc',
-        ]
-    if CONFIG['MOZ_ENABLE_QT']:
-        SOURCES += [
-            '!moc_message_pump_qt.cc',
-            'src/base/message_pump_qt.cc',
-        ]
-    if not CONFIG['MOZ_NATIVE_LIBEVENT']:
-        SOURCES += [
-            'src/third_party/libevent/kqueue.c',
-        ]
-        LOCAL_INCLUDES += ['src/third_party/libevent/bsd']
 
 ost = CONFIG['OS_TEST']
 if '86' not in ost and 'arm' not in ost and 'mips' not in ost:
