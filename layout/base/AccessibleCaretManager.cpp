@@ -80,8 +80,8 @@ nsresult
 AccessibleCaretManager::OnSelectionChanged(nsIDOMDocument* aDoc,
                                            nsISelection* aSel, int16_t aReason)
 {
-  AC_LOG("aSel: %p, GetSelection(): %p, aReason: %d", aSel, GetSelection(),
-         aReason);
+  AC_LOG("%s: aSel: %p, GetSelection(): %p, aReason: %d", __FUNCTION__,
+         aSel, GetSelection(), aReason);
 
   if (aSel != GetSelection()) {
     return NS_OK;
@@ -95,6 +95,13 @@ AccessibleCaretManager::OnSelectionChanged(nsIDOMDocument* aDoc,
 
   // Move cursor by keyboard.
   if (aReason & nsISelectionListener::KEYPRESS_REASON) {
+    HideCarets();
+    return NS_OK;
+  }
+
+  // OnBlur() might be called between mouse down and mouse up, so we hide carets
+  // upon mouse down anyway, and update carets upon mouse up.
+  if (aReason & nsISelectionListener::MOUSEDOWN_REASON) {
     HideCarets();
     return NS_OK;
   }
