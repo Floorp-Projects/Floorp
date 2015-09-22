@@ -13,6 +13,7 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 
 #include "CoreDump.pb.h"
@@ -129,6 +130,12 @@ public:
                                                const uint8_t* buffer,
                                                uint32_t size,
                                                ErrorResult& rv);
+
+  // Creates the `$TEMP_DIR/XXXXXX-XXX.fxsnapshot` core dump file that heap
+  // snapshots are serialized into.
+  static already_AddRefed<nsIFile> CreateUniqueCoreDumpFile(ErrorResult& rv,
+                                                            const TimeStamp& now,
+                                                            nsAString& outFilePath);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(HeapSnapshot)
