@@ -36,21 +36,6 @@ body,
   z-index: 1000;
 }
 
-.standalone-header {
-  border-radius: 4px;
-  background: #fff;
-  border: 1px solid #E7E7E7;
-  box-shadow: 0px 2px 0px rgba(0, 0, 0, 0.03);
-  background-image: url("../shared/img/beta-ribbon.svg#beta-ribbon");
-  background-size: 5rem 5rem;
-  background-repeat: no-repeat;
-}
-
-.header-box {
-  padding: 1rem 5rem;
-  margin-top: 2rem;
-}
-
 /* Waiting info offer */
 
 .standalone .empty-room-message {
@@ -82,70 +67,7 @@ body,
   width: 100%;
 }
 
-/*
- * Top/Bottom spacing
- **/
-.container {
-  display: flex;
-  flex-direction: column;
-  margin: 0 auto;
-
-  /* prevent the video conversation elements to occupy the whole available
-   width hence the height while keeping aspect ratio */
-  width: 30%;
-  min-width: 400px;
-  height: 100%;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.container-box {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  align-content: center;
-}
-
-/* call-url only */
-
-.terms-service,
-.terms-service a {
-  font-size: 1.1rem;
-  font-weight: 400;
-  color: #4a4a4a;
-}
-
-  .terms-service a {
-    text-decoration: none;
-  }
-
-  .terms-service a:hover {
-    text-decoration: underline;
-  }
-
-  .terms-service a {
-    color: #777;
-  }
-
-.standalone-footer {
-  margin-bottom: 2rem;
-}
-
-.footer-external-links {
-  padding: .2rem .7rem;
-}
-
-.footer-external-links a {
-  margin: 0 .5rem;
-  text-decoration: none;
-  color: #adadad;
-}
-
-.footer-external-links a:hover {
-  color: #777;
-}
-
-/* Both call-url & rooms */
+/* Footer */
 
 .footer-logo {
   width: 100px;
@@ -155,8 +77,6 @@ body,
   background-image: url("../shared/img/mozilla-logo.png");
   background-repeat: no-repeat;
 }
-
-/* Rooms Footer */
 
 .rooms-footer {
   background: #000;
@@ -219,117 +139,9 @@ html[dir="rtl"] .rooms-footer .footer-logo {
   }
 }
 
-.loop-logo {
-  width: 100px;
-  height: 100px;
-  margin: 1rem auto;
-  background-image: url("../shared/img/firefox-logo.png");
-  background-size: cover;
-  background-repeat: no-repeat;
-}
-
-.standalone-header-title,
-.standalone-btn-label {
-  font-weight: lighter;
-}
-
-.standalone-header-title {
-  font-size: 1.8rem;
-  line-height: 2.2rem;
-}
-
-p.standalone-btn-label {
-  font-size: 1.2rem;
-  line-height: 1.5rem;
-}
-
-.light-color-font {
-  opacity: .4;
-  font-weight: normal;
-}
-
-.standalone-btn-chevron-menu-group {
-  display: flex;
-  justify-content: space-between;
-  flex: 2;
-}
-
-.start-audio-only-call,
-.standalone-call-btn-video-icon {
-  width: 1.2rem;
-  height: 1.2rem;
-  background-repeat: no-repeat;
-  cursor: pointer;
-}
-
-.start-audio-only-call {
-  width: 100%;
-  border: none;
-  color: #111;
-  background-color: #fff;
-  background-size: 10px;
-  background-image: url("../shared/img/audio-default-16x16@1.5x.png");
-  background-position: 90% center;
-}
-
-.start-audio-only-call:hover {
-  background-image: url("../shared/img/audio-inverse-14x14.png");
-}
-
-.standalone-call-btn-video-icon {
-  background-image: url("../shared/img/video-inverse-14x14.png");
-  display: inline-block;
-  background-size: 1.2rem;
-  margin-left: .5rem;
-}
-
-/* Ellipsed text content of audio-video call btn */
-.standalone-call-btn-text {
-  /* make some room for the video icon */
-  max-width: 85%;
-  vertical-align: bottom;
-}
-
-.standalone-call-btn-video-icon {
-  vertical-align: top;
-}
-
-@media (min-resolution: 2dppx) {
-  .start-audio-only-call {
-    background-image: url("../shared/img/audio-default-16x16@2x.png");
-  }
-  .start-audio-only-call:hover {
-    background-image: url("../shared/img/audio-inverse-14x14@2x.png");
-  }
-  .standalone-call-btn-video-icon {
-    background-image: url("../shared/img/video-inverse-14x14@2x.png");
-  }
-}
-
-.btn-pending-cancel-group > .btn-cancel {
-  flex: 2 1 auto;
-  border-radius: 2px;
-}
-
 .btn-large {
-  /* Dimensions from spec
-   * https://people.mozilla.org/~dhenein/labs/loop-link-spec/#call-start */
   font-size: 1rem;
   padding: .3em .5rem;
-}
-
-  .btn-large + .btn-chevron {
-    padding: 1rem;
-    height: 100%; /* match full height of button */
-  }
-
-/*
- * Left / Right padding elements
- * used to center components
- * */
-.flex-padding-1 {
-  display: flex;
-  flex: 1;
 }
 
 /**
@@ -355,29 +167,4 @@ p.standalone-btn-label {
 .btn-unsupported-device {
   width: 80%;
   line-height: 24px;
-}
-
-/**
- * Feedback form overlay (standalone only)
- */
-.standalone .ended-conversation {
-  position: relative;
-  height: 100%;
-  background-color: #444;
-  text-align: left; /* as backup */
-  text-align: start;
-}
-
-.standalone .ended-conversation .local-stream {
-  /* Hide  local media stream when feedback form is shown. */
-  display: none;
-}
-
-@media screen and (max-width:640px) {
-  .standalone .ended-conversation .feedback {
-    width: 92%;
-    top: 10%;
-    left: 5px;
-    right: 5px;
-  }
 }
