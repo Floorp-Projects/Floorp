@@ -3982,20 +3982,22 @@ public:
 
 NS_IMPL_ISUPPORTS_INHERITED(FetchEventRunnable, WorkerRunnable, nsIHttpHeaderVisitor)
 
-void
-ServiceWorkerManager::DispatchFetchEvent(const OriginAttributes& aOriginAttributes,
-                                         nsIDocument* aDoc,
-                                         nsIInterceptedChannel* aChannel,
-                                         bool aIsReload,
-                                         ErrorResult& aRv)
+already_AddRefed<nsIRunnable>
+ServiceWorkerManager::PrepareFetchEvent(const OriginAttributes& aOriginAttributes,
+                                        nsIDocument* aDoc,
+                                        nsIInterceptedChannel* aChannel,
+                                        bool aIsReload,
+                                        ErrorResult& aRv)
 {
   MOZ_ASSERT(aChannel);
+  MOZ_ASSERT(NS_IsMainThread());
+
   nsCOMPtr<nsISupports> serviceWorker;
 
   bool isNavigation = false;
   aRv = aChannel->GetIsNavigation(&isNavigation);
   if (NS_WARN_IF(aRv.Failed())) {
-    return;
+    return nullptr;
   }
 
   // if the ServiceWorker script fails to load for some reason, just resume
@@ -4014,13 +4016,13 @@ ServiceWorkerManager::DispatchFetchEvent(const OriginAttributes& aOriginAttribut
     nsCOMPtr<nsIChannel> internalChannel;
     aRv = aChannel->GetChannel(getter_AddRefs(internalChannel));
     if (NS_WARN_IF(aRv.Failed())) {
-      return;
+      return nullptr;
     }
 
     nsCOMPtr<nsIURI> uri;
     aRv = internalChannel->GetURI(getter_AddRefs(uri));
     if (NS_WARN_IF(aRv.Failed())) {
-      return;
+      return nullptr;
     }
 
     nsRefPtr<ServiceWorkerRegistrationInfo> registration =
@@ -4028,7 +4030,7 @@ ServiceWorkerManager::DispatchFetchEvent(const OriginAttributes& aOriginAttribut
     if (!registration) {
       NS_WARNING("No registration found when dispatching the fetch event");
       aRv.Throw(NS_ERROR_FAILURE);
-      return;
+      return nullptr;
     }
 
     // This should only happen if IsAvailable() returned true.
@@ -4043,7 +4045,7 @@ ServiceWorkerManager::DispatchFetchEvent(const OriginAttributes& aOriginAttribut
   }
 
   if (NS_WARN_IF(aRv.Failed())) {
-    return;
+    return nullptr;
   }
 
   nsMainThreadPtrHandle<nsIInterceptedChannel> handle(
@@ -4058,6 +4060,18 @@ ServiceWorkerManager::DispatchFetchEvent(const OriginAttributes& aOriginAttribut
                                            serviceWorkerHandle, clientInfo,
                                            aIsReload);
 
+  return continueRunnable.forget();
+}
+
+void
+ServiceWorkerManager::DispatchPreparedFetchEvent(nsIInterceptedChannel* aChannel,
+                                                 nsIRunnable* aPreparedRunnable,
+                                                 ErrorResult& aRv)
+{
+  MOZ_ASSERT(aChannel);
+  MOZ_ASSERT(aPreparedRunnable);
+  MOZ_ASSERT(NS_IsMainThread());
+
   nsCOMPtr<nsIChannel> innerChannel;
   aRv = aChannel->GetChannel(getter_AddRefs(innerChannel));
   if (NS_WARN_IF(aRv.Failed())) {
@@ -4068,13 +4082,13 @@ ServiceWorkerManager::DispatchFetchEvent(const OriginAttributes& aOriginAttribut
 
   // If there is no upload stream, then continue immediately
   if (!uploadChannel) {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(continueRunnable->Run()));
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aPreparedRunnable->Run()));
     return;
   }
 
   // Otherwise, ensure the upload stream can be cloned directly.  This may
   // require some async copying, so provide a callback.
-  aRv = uploadChannel->EnsureUploadStreamIsCloneable(continueRunnable);
+  aRv = uploadChannel->EnsureUploadStreamIsCloneable(aPreparedRunnable);
 }
 
 bool

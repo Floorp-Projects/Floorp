@@ -157,6 +157,14 @@ OpaqueCrossCompartmentWrapper::objectClassIs(HandleObject obj, ESClassValue clas
   return false;
 }
 
+bool
+OpaqueCrossCompartmentWrapper::isArray(JSContext* cx, HandleObject obj,
+                                       JS::IsArrayAnswer* answer) const
+{
+    *answer = JS::IsArrayAnswer::NotArray;
+    return true;
+}
+
 const char*
 OpaqueCrossCompartmentWrapper::className(JSContext* cx,
                                          HandleObject proxy) const

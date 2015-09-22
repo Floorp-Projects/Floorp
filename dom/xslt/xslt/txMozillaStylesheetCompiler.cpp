@@ -424,7 +424,7 @@ txCompileObserver::loadURI(const nsAString& aUri,
 
     // Content Policy
     int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_STYLESHEET,
+    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_INTERNAL_STYLESHEET,
                                    uri,
                                    referrerPrincipal,
                                    mLoaderDocument,
@@ -524,7 +524,7 @@ TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
     // Content Policy
     int16_t shouldLoad = nsIContentPolicy::ACCEPT;
     nsresult rv =
-        NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_STYLESHEET,
+        NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_INTERNAL_STYLESHEET,
                                   aUri,
                                   principal,
                                   aLoaderDocument,
@@ -666,7 +666,7 @@ txSyncCompileObserver::loadURI(const nsAString& aUri,
 
     // Content Policy
     int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_STYLESHEET,
+    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_INTERNAL_STYLESHEET,
                                    uri,
                                    referrerPrincipal,
                                    nullptr,

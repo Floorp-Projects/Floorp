@@ -57,7 +57,39 @@ using mozilla::IsNaN;
 using mozilla::UniquePtr;
 
 using JS::AutoCheckCannotGC;
+using JS::IsArrayAnswer;
 using JS::ToUint32;
+
+bool
+JS::IsArray(JSContext* cx, HandleObject obj, IsArrayAnswer* answer)
+{
+    if (obj->is<ArrayObject>() || obj->is<UnboxedArrayObject>()) {
+        *answer = IsArrayAnswer::Array;
+        return true;
+    }
+
+    if (obj->is<ProxyObject>())
+        return Proxy::isArray(cx, obj, answer);
+
+    *answer = IsArrayAnswer::NotArray;
+    return true;
+}
+
+bool
+JS::IsArray(JSContext* cx, HandleObject obj, bool* isArray)
+{
+    IsArrayAnswer answer;
+    if (!IsArray(cx, obj, &answer))
+        return false;
+
+    if (answer == IsArrayAnswer::RevokedProxy) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        return false;
+    }
+
+    *isArray = answer == IsArrayAnswer::Array;
+    return true;
+}
 
 bool
 js::GetLengthProperty(JSContext* cx, HandleObject obj, uint32_t* lengthp)
@@ -1996,8 +2028,13 @@ js::array_push(JSContext* cx, unsigned argc, Value* vp)
             // SetOrExtendAnyBoxedOrUnboxedDenseElements takes care of updating the
             // length for boxed and unboxed arrays. Handle updates to the length of
             // non-arrays here.
-            if (!IsArray(obj, cx))
+            bool isArray;
+            if (!IsArray(cx, obj, &isArray))
+                return false;
+
+            if (!isArray)
                 return SetLengthProperty(cx, obj, newlength);
+
             return true;
         }
     }
@@ -2590,7 +2627,10 @@ js::array_concat(JSContext* cx, unsigned argc, Value* vp)
 
     RootedObject narr(cx);
     uint32_t length;
-    if (IsArray(aobj, cx) && !ObjectMayHaveExtraIndexedProperties(aobj)) {
+    bool isArray;
+    if (!IsArray(cx, aobj, &isArray))
+        return false;
+    if (isArray && !ObjectMayHaveExtraIndexedProperties(aobj)) {
         if (!GetLengthProperty(cx, aobj, &length))
             return false;
 
@@ -2615,7 +2655,10 @@ js::array_concat(JSContext* cx, unsigned argc, Value* vp)
                 RootedObject obj(cx, &v.toObject());
 
                 // This should be IsConcatSpreadable
-                if (!IsArray(obj, cx) || ObjectMayHaveExtraIndexedProperties(obj))
+                bool isArray;
+                if (!IsArray(cx, obj, &isArray))
+                    return false;
+                if (!isArray || ObjectMayHaveExtraIndexedProperties(obj))
                     break;
 
                 uint32_t argLength;
@@ -2671,7 +2714,10 @@ js::array_concat(JSContext* cx, unsigned argc, Value* vp)
         if (v.isObject()) {
             RootedObject obj(cx, &v.toObject());
             // This should be IsConcatSpreadable
-            if (IsArray(obj, cx)) {
+            bool isArray;
+            if (!IsArray(cx, obj, &isArray))
+                return false;
+            if (isArray) {
                 uint32_t alength;
                 if (!GetLengthProperty(cx, obj, &alength))
                     return false;
@@ -2994,7 +3040,8 @@ array_isArray(JSContext* cx, unsigned argc, Value* vp)
     bool isArray = false;
     if (args.get(0).isObject()) {
         RootedObject obj(cx, &args[0].toObject());
-        isArray = IsArray(obj, cx);
+        if (!IsArray(cx, obj, &isArray))
+            return false;
     }
     args.rval().setBoolean(isArray);
     return true;

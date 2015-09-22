@@ -17,6 +17,8 @@
 if (getJitCompilerOptions()["ion.forceinlineCaches"])
     setJitCompilerOption("ion.forceinlineCaches", 0);
 
+enableNoSuchMethod();
+
 Array.prototype.__proto__ = Proxy.create({
     getPropertyDescriptor: function(name) {
 	return (560566);

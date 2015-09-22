@@ -250,7 +250,7 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
                                     this, nullptr,
                                     aInPrivateBrowsing ? nsIRequest::LOAD_ANONYMOUS :
                                                          nsIRequest::LOAD_NORMAL,
-                                    nullptr, nsIContentPolicy::TYPE_IMAGE,
+                                    nullptr, nsIContentPolicy::TYPE_INTERNAL_IMAGE,
                                     EmptyString(),
                                     getter_AddRefs(osxni->mIconRequest));
         if (NS_SUCCEEDED(rv)) {

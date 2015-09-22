@@ -86,7 +86,9 @@ function checkPrototypeMutationFailure(obj, desc)
 
 function runNormalTests(global)
 {
-  if (typeof setImmutablePrototype !== "function")
+  if (typeof setImmutablePrototype !== "function" ||
+      (typeof immutablePrototypesEnabled === "function" &&
+       !immutablePrototypesEnabled()))
   {
     print("no usable setImmutablePrototype function available, skipping tests");
     return;

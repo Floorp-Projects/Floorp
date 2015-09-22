@@ -111,12 +111,12 @@ public:
     }
 
     // Note that because there is no "serviceworker" RequestContext type, we can
-    // use the external TYPE_SCRIPT content policy types when loading a service
+    // use the TYPE_INTERNAL_SCRIPT content policy types when loading a service
     // worker.
     rv = NS_NewChannel(getter_AddRefs(mChannel),
                        uri, aPrincipal,
                        nsILoadInfo::SEC_NORMAL,
-                       nsIContentPolicy::TYPE_SCRIPT,
+                       nsIContentPolicy::TYPE_INTERNAL_SCRIPT,
                        loadGroup);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;

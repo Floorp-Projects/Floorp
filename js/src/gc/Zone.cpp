@@ -27,6 +27,7 @@ JS::Zone::Zone(JSRuntime* rt)
     debuggers(nullptr),
     arenas(rt),
     types(this),
+    gcWeakMapList(nullptr),
     compartments(),
     gcGrayRoots(),
     gcMallocBytes(0),
@@ -201,6 +202,13 @@ Zone::sweepBreakpoints(FreeOp* fop)
             }
         }
     }
+}
+
+void
+Zone::sweepWeakMaps()
+{
+    /* Finalize unreachable (key,value) pairs in all weak maps. */
+    WeakMapBase::sweepZone(this);
 }
 
 void

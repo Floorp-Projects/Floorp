@@ -7,8 +7,7 @@
 [Constructor(DOMString type,
              optional PresentationSessionConnectEventInit eventInitDict),
  Pref="dom.presentation.enabled",
- CheckAnyPermissions="presentation",
- AvailableIn="PrivilegedApps"]
+ CheckAnyPermissions="presentation"]
 interface PresentationSessionConnectEvent : Event
 {
   [SameObject]

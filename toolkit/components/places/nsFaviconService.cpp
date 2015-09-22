@@ -330,7 +330,7 @@ nsFaviconService::ReplaceFaviconDataFromDataURL(nsIURI* aFaviconURI,
                           nullptr, // aTriggeringPrincipal
                           nullptr, // aLoadingNode
                           nsILoadInfo::SEC_NORMAL,
-                          nsIContentPolicy::TYPE_IMAGE);
+                          nsIContentPolicy::TYPE_INTERNAL_IMAGE);
 
   nsCOMPtr<nsIChannel> channel;
   rv = protocolHandler->NewChannel2(dataURI, loadInfo, getter_AddRefs(channel));
