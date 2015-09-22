@@ -265,11 +265,6 @@ private:
 
   void FinishShutdown();
 
-  // Clear the flag indicating that a playback position change event
-  // is currently queued. This is called from the main thread and must
-  // be called with the decode monitor held.
-  void ClearPositionChangeFlag();
-
   // Update the playback position. This can result in a timeupdate event
   // and an invalidate of the frame being dispatched asynchronously if
   // there is no such event currently queued.
@@ -321,10 +316,6 @@ private:
 
   // Returns the state machine task queue.
   TaskQueue* OwnerThread() const { return mTaskQueue; }
-
-  // Calls ScheduleStateMachine() after taking the decoder lock. Also
-  // notifies the decoder thread in case it's waiting on the decoder lock.
-  void ScheduleStateMachineWithLockAndWakeDecoder();
 
   // Schedules the shared state machine thread to run the state machine.
   //
@@ -1146,13 +1137,6 @@ private:
   // streams). When this is true, the audio thread will never start again after
   // it has stopped.
   bool mAudioCaptured;
-
-  // True if an event to notify about a change in the playback
-  // position has been queued, but not yet run. It is set to false when
-  // the event is run. This allows coalescing of these events as they can be
-  // produced many times per second. Synchronised via decoder monitor.
-  // Accessed on main and state machine threads.
-  bool mPositionChangeQueued;
 
   // True if the audio playback thread has finished. It is finished
   // when either all the audio frames have completed playing, or we've moved

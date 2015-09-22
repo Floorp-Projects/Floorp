@@ -95,8 +95,11 @@ jit::ReorderInstructions(MIRGenerator* mir, MIRGraph& graph)
             {
                 iter++;
                 MInstructionIterator targetIter = block->begin();
-                if (targetIter->isInterruptCheck())
+                while (targetIter->isConstant() || targetIter->isInterruptCheck()) {
+                    if (*targetIter == ins)
+                        break;
                     targetIter++;
+                }
                 MoveBefore(*block, *targetIter, ins);
                 continue;
             }

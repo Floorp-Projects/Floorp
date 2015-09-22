@@ -232,6 +232,13 @@ class MachFormatter(base.BaseFormatter):
                 rv = rv[:-1]
         return rv
 
+    def valgrind_error(self, data):
+        rv = " " + data['primary'] + "\n"
+        for line in data['secondary']:
+            rv = rv + line + "\n"
+
+        return rv
+
     def test_status(self, data):
         self.summary_values["subtests"] += 1
 

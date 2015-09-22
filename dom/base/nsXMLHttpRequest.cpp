@@ -2703,6 +2703,13 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
                                        contentType)) ||
           contentType.IsEmpty()) {
         contentType = defaultContentType;
+
+        if (!charset.IsEmpty()) {
+          // If we are providing the default content type, then we also need to
+          // provide a charset declaration.
+          contentType.Append(NS_LITERAL_CSTRING(";charset="));
+          contentType.Append(charset);
+        }
       }
 
       // We don't want to set a charset for streams.
@@ -2713,7 +2720,7 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
         rv = NS_ExtractCharsetFromContentType(contentType, specifiedCharset,
                                               &haveCharset, &charsetStart,
                                               &charsetEnd);
-        if (NS_SUCCEEDED(rv)) {
+        while (NS_SUCCEEDED(rv) && haveCharset) {
           // special case: the extracted charset is quoted with single quotes
           // -- for the purpose of preserving what was set we want to handle
           // them as delimiters (although they aren't really)
@@ -2733,11 +2740,26 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
           // table, hence might be differently cased).
           if (!specifiedCharset.Equals(charset,
                                        nsCaseInsensitiveCStringComparator())) {
-            nsAutoCString newCharset("; charset=");
-            newCharset.Append(charset);
-            contentType.Replace(charsetStart, charsetEnd - charsetStart,
-                                newCharset);
+            // Find the start of the actual charset declaration, skipping the
+            // "; charset=" to avoid modifying whitespace.
+            int32_t charIdx =
+              Substring(contentType, charsetStart,
+                        charsetEnd - charsetStart).FindChar('=') + 1;
+            MOZ_ASSERT(charIdx != -1);
+
+            contentType.Replace(charsetStart + charIdx,
+                                charsetEnd - charsetStart - charIdx,
+                                charset);
           }
+
+          // Look for another charset declaration in the string, limiting the
+          // search to only look for charsets before the current charset, to
+          // prevent finding the same charset twice.
+          nsDependentCSubstring interestingSection =
+            Substring(contentType, 0, charsetStart);
+          rv = NS_ExtractCharsetFromContentType(interestingSection,
+                                                specifiedCharset, &haveCharset,
+                                                &charsetStart, &charsetEnd);
         }
       }
 
