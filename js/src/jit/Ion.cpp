@@ -2839,9 +2839,11 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
                 type = "Baseline";
             else if (it.isBailoutJS())
                 type = "Bailing";
-            JitSpew(JitSpew_IonInvalidate, "#%d %s JS frame @ %p, %s:%" PRIuSIZE " (fun: %p, script: %p, pc %p)",
-                    frameno, type, it.fp(), it.script()->filename(), it.script()->lineno(),
-                    it.maybeCallee(), (JSScript*)it.script(), it.returnAddressToFp());
+            JitSpew(JitSpew_IonInvalidate,
+                    "#%d %s JS frame @ %p, %s:%" PRIuSIZE " (fun: %p, script: %p, pc %p)",
+                    frameno, type, it.fp(), it.script()->maybeForwardedFilename(),
+                    it.script()->lineno(), it.maybeCallee(), (JSScript*)it.script(),
+                    it.returnAddressToFp());
             break;
           }
           case JitFrame_IonStub:
