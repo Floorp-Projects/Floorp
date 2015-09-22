@@ -426,6 +426,13 @@ const kEventConstructors = {
                                                          return e;
                                                        },
                                              },
+  ServiceWorkerMessageEvent:                 { create: function (aName, aProps) {
+                                                         var e = new ServiceWorkerMessageEvent("serviceworkermessageevent", { bubbles: aProps.bubbles,
+                                                             cancelable: aProps.cancelable, data: aProps.data, origin: aProps.origin,
+                                                             lastEventId: aProps.lastEventId, source: aProps.source });
+                                                         return e;
+                                                       },
+                                             },
   SimpleGestureEvent:                        { create: function (aName, aProps) {
                                                          var e = document.createEvent("simplegestureevent");
                                                          e.initSimpleGestureEvent(aName, aProps.bubbles, aProps.cancelable,
