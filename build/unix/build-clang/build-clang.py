@@ -10,6 +10,10 @@ import subprocess
 import platform
 import json
 import argparse
+import tempfile
+import glob
+import errno
+from contextlib import contextmanager
 
 centOS6 = False
 
@@ -42,27 +46,78 @@ def build_package(package_source_dir, package_build_dir, configure_args,
     run_in(package_build_dir, ["make", "install"])
 
 
-def with_env(env, f):
+@contextmanager
+def updated_env(env):
     old_env = os.environ.copy()
     os.environ.update(env)
-    f()
+    yield
     os.environ.clear()
     os.environ.update(old_env)
 
 
 def build_tar_package(tar, name, base, directory):
     name = os.path.realpath(name)
-    run_in(base, [tar, "-cjf", name, directory])
+    run_in(base, [tar, "-cJf", name, directory])
+
+
+def copy_dir_contents(src, dest):
+    for f in glob.glob("%s/*" % src):
+        try:
+            destname = "%s/%s" % (dest, os.path.basename(f))
+            shutil.copytree(f, destname)
+        except OSError as e:
+            if e.errno == errno.ENOTDIR:
+                shutil.copy2(f, destname)
+            elif e.errno == errno.EEXIST:
+                if os.path.isdir(f):
+                    copy_dir_contents(f, destname)
+                else:
+                    os.remove(destname)
+                    shutil.copy2(f, destname)
+            else:
+                raise Exception('Directory not copied. Error: %s' % e)
+
+
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as e:
+        if e.errno != errno.EEXIST or not os.path.isdir(path):
+            raise
+
+
+def build_and_use_libgcc(env, clang_dir):
+    with updated_env(env):
+        tempdir = tempfile.mkdtemp()
+        gcc_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "..", "build-gcc")
+        run_in(gcc_dir, ["./build-gcc.sh", tempdir, "libgcc"])
+        run_in(tempdir, ["tar", "-xf", "gcc.tar.xz"])
+        libgcc_dir = glob.glob(os.path.join(tempdir,
+                                            "gcc", "lib", "gcc",
+                                            "x86_64-unknown-linux-gnu",
+                                            "[0-9]*"))[0]
+        clang_lib_dir = os.path.join(clang_dir, "lib", "gcc",
+                                     "x86_64-unknown-linux-gnu",
+                                     os.path.basename(libgcc_dir))
+        mkdir_p(clang_lib_dir)
+        copy_dir_contents(libgcc_dir, clang_lib_dir)
+        libgcc_dir = os.path.join(tempdir, "gcc", "lib64")
+        clang_lib_dir = os.path.join(clang_dir, "lib")
+        copy_dir_contents(libgcc_dir, clang_lib_dir)
+        include_dir = os.path.join(tempdir, "gcc", "include")
+        clang_include_dir = os.path.join(clang_dir, "include")
+        copy_dir_contents(include_dir, clang_include_dir)
+        shutil.rmtree(tempdir)
 
 
 def svn_co(url, directory, revision):
     check_run(["svn", "co", "-r", revision, url, directory])
 
 
-def build_one_stage(env, stage_dir, llvm_source_dir, gcc_toolchain_dir):
-    def f():
-        build_one_stage_aux(stage_dir, llvm_source_dir, gcc_toolchain_dir)
-    with_env(env, f)
+def build_one_stage(env, stage_dir, llvm_source_dir):
+    with updated_env(env):
+        build_one_stage_aux(stage_dir, llvm_source_dir)
 
 
 def get_platform():
@@ -82,7 +137,7 @@ def is_darwin():
     return platform.system() == "Darwin"
 
 
-def build_one_stage_aux(stage_dir, llvm_source_dir, gcc_toolchain_dir):
+def build_one_stage_aux(stage_dir, llvm_source_dir):
     os.mkdir(stage_dir)
 
     build_dir = stage_dir + "/build"
@@ -108,7 +163,6 @@ def build_one_stage_aux(stage_dir, llvm_source_dir, gcc_toolchain_dir):
                       "--disable-libedit",
                       "--with-python=%s" % python_path,
                       "--prefix=%s" % inst_dir,
-                      "--with-gcc-toolchain=%s" % gcc_toolchain_dir,
                       "--disable-compiler-version-checks"]
     build_package(llvm_source_dir, build_dir, configure_opts, [])
 
@@ -180,8 +234,8 @@ if __name__ == "__main__":
     else:
         extra_cflags = ""
         extra_cxxflags = ""
-        extra_cflags2 = "-static-libgcc"
-        extra_cxxflags2 = "-static-libgcc -static-libstdc++"
+        extra_cflags2 = "-static-libgcc --gcc-toolchain=%s" % gcc_dir
+        extra_cxxflags2 = "-static-libgcc -static-libstdc++ --gcc-toolchain=%s" % gcc_dir
         cc = gcc_dir + "/bin/gcc"
         cxx = gcc_dir + "/bin/g++"
 
@@ -193,12 +247,19 @@ if __name__ == "__main__":
     build_one_stage(
         {"CC": cc + " %s" % extra_cflags,
          "CXX": cxx + " %s" % extra_cxxflags},
-        stage1_dir, llvm_source_dir, gcc_dir)
+        stage1_dir, llvm_source_dir)
 
     stage2_dir = build_dir + '/stage2'
     build_one_stage(
         {"CC": stage1_inst_dir + "/bin/clang %s" % extra_cflags2,
          "CXX": stage1_inst_dir + "/bin/clang++ %s" % extra_cxxflags2},
-        stage2_dir, llvm_source_dir, gcc_dir)
+        stage2_dir, llvm_source_dir)
 
-    build_tar_package("tar", "clang.tar.bz2", stage2_dir, "clang")
+    if not is_darwin():
+        stage2_inst_dir = stage2_dir + '/clang'
+        build_and_use_libgcc(
+            {"CC": cc + " %s" % extra_cflags,
+             "CXX": cxx + " %s" % extra_cxxflags},
+            stage2_inst_dir)
+
+    build_tar_package("tar", "clang.tar.xz", stage2_dir, "clang")

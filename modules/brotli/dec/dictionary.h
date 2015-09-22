@@ -11,9 +11,9 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-
-   Collection of static dictionary words.
 */
+
+/* Collection of static dictionary words. */
 
 #ifndef BROTLI_DEC_DICTIONARY_H_
 #define BROTLI_DEC_DICTIONARY_H_
@@ -9478,7 +9478,7 @@ static const int kBrotliDictionaryOffsetsByLength[] = {
  115968, 118528, 119872, 121280, 122016,
 };
 
-static const int kBrotliDictionarySizeBitsByLength[] = {
+static const int8_t kBrotliDictionarySizeBitsByLength[] = {
   0,  0,  0,  0, 10, 10, 11, 11, 10, 10,
  10, 10, 10,  9,  9,  8,  7,  7,  8,  7,
   7,  6,  6,  5,  5,

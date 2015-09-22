@@ -206,7 +206,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mIsAudioPrerolling(false),
   mIsVideoPrerolling(false),
   mAudioCaptured(false),
-  mPositionChangeQueued(false),
   mAudioCompleted(false, "MediaDecoderStateMachine::mAudioCompleted"),
   mNotifyMetadataBeforeFirstFrame(false),
   mDispatchedEventToDecode(false),
@@ -1153,14 +1152,6 @@ void MediaDecoderStateMachine::UpdatePlaybackPosition(int64_t aTime)
   if (fragmentEnded) {
     StopPlayback();
   }
-}
-
-void MediaDecoderStateMachine::ClearPositionChangeFlag()
-{
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  AssertCurrentThreadInMonitor();
-
-  mPositionChangeQueued = false;
 }
 
 static const char* const gMachineStateStr[] = {
@@ -2894,14 +2885,6 @@ void MediaDecoderStateMachine::StartBuffering()
   DECODER_LOG("Playback rate: %.1lfKB/s%s download rate: %.1lfKB/s%s",
               stats.mPlaybackRate/1024, stats.mPlaybackRateReliable ? "" : " (unreliable)",
               stats.mDownloadRate/1024, stats.mDownloadRateReliable ? "" : " (unreliable)");
-}
-
-void MediaDecoderStateMachine::ScheduleStateMachineWithLockAndWakeDecoder()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  DispatchAudioDecodeTaskIfNeeded();
-  DispatchVideoDecodeTaskIfNeeded();
 }
 
 void

@@ -52,6 +52,7 @@
 
 #include "mozilla/CheckedInt.h"
 
+#if defined(PR_LOGGING)
 GFX2D_API PRLogModuleInfo *
 GetGFX2DLog()
 {
@@ -60,6 +61,7 @@ GetGFX2DLog()
     sLog = PR_NewLogModule("gfx2d");
   return sLog;
 }
+#endif
 
 // The following code was largely taken from xpcom/glue/SSE.cpp and
 // made a little simpler.

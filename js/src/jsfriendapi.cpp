@@ -1017,12 +1017,6 @@ js::SetActivityCallback(JSRuntime* rt, ActivityCallback cb, void* arg)
     rt->activityCallbackArg = arg;
 }
 
-JS_FRIEND_API(bool)
-js::IsContextRunningJS(JSContext* cx)
-{
-    return cx->currentlyRunning();
-}
-
 JS_FRIEND_API(void)
 JS::NotifyDidPaint(JSRuntime* rt)
 {

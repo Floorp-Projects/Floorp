@@ -8,43 +8,29 @@
 #define nsEventQueue_h__
 
 #include <stdlib.h>
-#include "mozilla/Monitor.h"
-#include "mozilla/ReentrantMonitor.h"
+#include "mozilla/CondVar.h"
+#include "mozilla/Mutex.h"
 #include "nsIRunnable.h"
 #include "nsCOMPtr.h"
 #include "mozilla/AlreadyAddRefed.h"
 
-template<typename MonitorType>
-struct MonitorAutoEnterChooser;
-
-template<>
-struct MonitorAutoEnterChooser<mozilla::Monitor>
-{
-  typedef mozilla::MonitorAutoLock Type;
-};
-
-template<>
-struct MonitorAutoEnterChooser<mozilla::ReentrantMonitor>
-{
-  typedef mozilla::ReentrantMonitorAutoEnter Type;
-};
+class nsThreadPool;
 
 // A threadsafe FIFO event queue...
-template<typename MonitorType>
-class nsEventQueueBase
+class nsEventQueue
 {
 public:
-  typedef MonitorType Monitor;
-  typedef typename MonitorAutoEnterChooser<Monitor>::Type MonitorAutoEnterType;
+  typedef mozilla::MutexAutoLock MutexAutoLock;
 
-  nsEventQueueBase();
-  ~nsEventQueueBase();
+  explicit nsEventQueue(mozilla::Mutex& aLock);
+  ~nsEventQueue();
 
   // This method adds a new event to the pending event queue.  The queue holds
   // a strong reference to the event after this method returns.  This method
   // cannot fail.
+  void PutEvent(nsIRunnable* aEvent, MutexAutoLock& aProofOfLock);
   void PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
-                MonitorAutoEnterType& aProofOfLock);
+                MutexAutoLock& aProofOfLock);
 
   // This method gets an event from the event queue.  If mayWait is true, then
   // the method will block the calling thread until an event is available.  If
@@ -53,16 +39,21 @@ public:
   // caller is responsible for releasing the event object.  This method does
   // not alter the reference count of the resulting event.
   bool GetEvent(bool aMayWait, nsIRunnable** aEvent,
-                MonitorAutoEnterType& aProofOfLock);
+                MutexAutoLock& aProofOfLock);
+
+  // This method returns true if there is a pending event.
+  bool HasPendingEvent(MutexAutoLock& aProofOfLock)
+  {
+    return GetEvent(false, nullptr, aProofOfLock);
+  }
 
   // This method returns the next pending event or null.
-  bool GetPendingEvent(nsIRunnable** aRunnable,
-                       MonitorAutoEnterType& aProofOfLock)
+  bool GetPendingEvent(nsIRunnable** aRunnable, MutexAutoLock& aProofOfLock)
   {
     return GetEvent(false, aRunnable, aProofOfLock);
   }
 
-  size_t Count(MonitorAutoEnterType& aProofOfLock);
+  size_t Count(MutexAutoLock&);
 
 private:
   bool IsEmpty()
@@ -101,49 +92,21 @@ private:
 
   uint16_t mOffsetHead;  // offset into mHead where next item is removed
   uint16_t mOffsetTail;  // offset into mTail where next item is added
-};
+  mozilla::CondVar mEventsAvailable;
 
-class nsEventQueue : protected nsEventQueueBase<mozilla::ReentrantMonitor>
-{
-private:
-  typedef nsEventQueueBase<mozilla::ReentrantMonitor> Base;
-  // Can't use typedefs or type alias templates here to name the base type.
-  friend class nsEventQueueBase<mozilla::ReentrantMonitor>;
-
-  typedef Base::Monitor MonitorType;
-  typedef Base::MonitorAutoEnterType MonitorAutoEnterType;
-  MonitorType mMonitor;
-
-public:
-  nsEventQueue();
-
-  // This method adds a new event to the pending event queue.  The queue holds
-  // a strong reference to the event after this method returns.  This method
-  // cannot fail.
-  void PutEvent(nsIRunnable* aEvent);
-  void PutEvent(already_AddRefed<nsIRunnable>&& aEvent);
-
-  // This method gets an event from the event queue.  If mayWait is true, then
-  // the method will block the calling thread until an event is available.  If
-  // the event is null, then the method returns immediately indicating whether
-  // or not an event is pending.  When the resulting event is non-null, the
-  // caller is responsible for releasing the event object.  This method does
-  // not alter the reference count of the resulting event.
-  bool GetEvent(bool aMayWait, nsIRunnable** aEvent);
-
-  // This method returns true if there is a pending event.
-  bool HasPendingEvent()
+  // These methods are made available to nsThreadPool as a hack, since
+  // nsThreadPool needs to have its threads sleep for fixed amounts of
+  // time as well as being able to wake up all threads when thread
+  // limits change.
+  friend class nsThreadPool;
+  void Wait(PRIntervalTime aInterval)
   {
-    return GetEvent(false, nullptr);
+    mEventsAvailable.Wait(aInterval);
   }
-
-  // This method returns the next pending event or null.
-  bool GetPendingEvent(nsIRunnable** aRunnable)
+  void NotifyAll()
   {
-    return GetEvent(false, aRunnable);
+    mEventsAvailable.NotifyAll();
   }
-
-  size_t Count();
 };
 
 #endif  // nsEventQueue_h__

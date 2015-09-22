@@ -226,7 +226,7 @@ BluetoothDaemonCoreModule::SetRemoteDevicePropertyCmd(
 
 nsresult
 BluetoothDaemonCoreModule::GetRemoteServiceRecordCmd(
-  const nsAString& aRemoteAddr, const uint8_t aUuid[16],
+  const nsAString& aRemoteAddr, const BluetoothUuid& aUuid,
   BluetoothResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -237,7 +237,7 @@ BluetoothDaemonCoreModule::GetRemoteServiceRecordCmd(
 
   nsresult rv = PackPDU(
     PackConversion<nsAString, BluetoothAddress>(aRemoteAddr),
-    PackArray<uint8_t>(aUuid, 16), *pdu);
+    aUuid, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }

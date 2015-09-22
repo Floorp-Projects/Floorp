@@ -6493,6 +6493,12 @@
     "description": "Origins for getUserMedia calls (0=other, 1=HTTPS, 2=file, 3=app, 4=localhost, 5=loop, 6=privileged)",
     "releaseChannelCollection": "opt-out"
   },
+  "WEBRTC_GET_USER_MEDIA_TYPE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 8,
+    "description": "Type for media in getUserMedia calls (0=Camera, 1=Screen, 2=Application, 3=Window, 4=Browser, 5=Microphone, 6=AudioCapture, 7=Other)"
+  },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_TRACERDETACH_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -9332,6 +9338,12 @@
     "high": "30",
     "n_buckets": "29",
     "description": "The number of times AddIceCandidate failed on a given PeerConnection, given that ICE failed."
+  },
+  "LOOP_GET_USER_MEDIA_TYPE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 8,
+    "description": "Type for media in getUserMedia calls (0=Camera, 1=Screen, 2=Application, 3=Window, 4=Browser, 5=Microphone, 6=AudioCapture, 7=Other)"
   },
   "PERF_MONITORING_TEST_CPU_RESCHEDULING_PROPORTION_MOVED": {
     "alert_emails": ["dteller@mozilla.com"],

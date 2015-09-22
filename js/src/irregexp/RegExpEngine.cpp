@@ -1651,7 +1651,7 @@ IsNativeRegExpEnabled(JSContext* cx)
 RegExpCode
 irregexp::CompilePattern(JSContext* cx, RegExpShared* shared, RegExpCompileData* data,
                          HandleLinearString sample, bool is_global, bool ignore_case,
-                         bool is_ascii, bool match_only, bool force_bytecode)
+                         bool is_ascii, bool match_only, bool force_bytecode, bool sticky)
 {
     if ((data->capture_count + 1) * 2 - 1 > RegExpMacroAssembler::kMaxRegister) {
         JS_ReportError(cx, "regexp too big");
@@ -1677,7 +1677,7 @@ irregexp::CompilePattern(JSContext* cx, RegExpShared* shared, RegExpCompileData*
                                                       compiler.accept());
     RegExpNode* node = captured_body;
     bool is_end_anchored = data->tree->IsAnchoredAtEnd();
-    bool is_start_anchored = data->tree->IsAnchoredAtStart();
+    bool is_start_anchored = sticky || data->tree->IsAnchoredAtStart();
     int max_length = data->tree->max_match();
     if (!is_start_anchored) {
         // Add a .*? at the beginning, outside the body capture, unless

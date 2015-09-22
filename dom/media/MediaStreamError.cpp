@@ -20,8 +20,8 @@ BaseMediaMgrError::BaseMediaMgrError(const nsAString& aName,
   if (mMessage.IsEmpty()) {
     if (mName.EqualsLiteral("NotFoundError")) {
       mMessage.AssignLiteral("The object can not be found here.");
-    } else if (mName.EqualsLiteral("PermissionDeniedError")) {
-      mMessage.AssignLiteral("The user did not grant permission for the operation.");
+    } else if (mName.EqualsLiteral("SecurityError")) {
+      mMessage.AssignLiteral("The operation is insecure.");
     } else if (mName.EqualsLiteral("SourceUnavailableError")) {
       mMessage.AssignLiteral("The source of the MediaStream could not be "
           "accessed due to a hardware error (e.g. lock from another process).");
