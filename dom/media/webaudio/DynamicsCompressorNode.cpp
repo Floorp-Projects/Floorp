@@ -110,7 +110,7 @@ public:
                                                     aInput.ChannelCount());
     }
 
-    StreamTime pos = aStream->GraphTimeToStreamTime(aFrom);
+    StreamTime pos = mDestination->GraphTimeToStreamTime(aFrom);
     mCompressor->setParameterValue(DynamicsCompressor::ParamThreshold,
                                    mThreshold.GetValueAtTime(pos));
     mCompressor->setParameterValue(DynamicsCompressor::ParamKnee,
