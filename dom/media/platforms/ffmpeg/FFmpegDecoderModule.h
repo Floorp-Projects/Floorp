@@ -25,6 +25,15 @@ public:
     return pdm.forget();
   }
 
+  static bool
+  GetVersion(uint32_t& aMajor, uint32_t& aMinor)
+  {
+    uint32_t version = avcodec_version();
+    aMajor = (version >> 16) & 0xff;
+    aMinor = (version >> 8) & 0xff;
+    return true;
+  }
+
   FFmpegDecoderModule() {}
   virtual ~FFmpegDecoderModule() {}
 
