@@ -2417,7 +2417,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
   bool isPositioned = disp->IsAbsPosContainingBlock(child);
   bool isStackingContext =
-    (isPositioned && (disp->IsPositionForcingStackingContext() ||
+    (isPositioned && (disp->mPosition == NS_STYLE_POSITION_STICKY ||
                       pos->mZIndex.GetUnit() == eStyleUnit_Integer)) ||
      (disp->mWillChangeBitField & NS_STYLE_WILL_CHANGE_STACKING_CONTEXT) ||
      disp->mIsolation != NS_STYLE_ISOLATION_AUTO ||
