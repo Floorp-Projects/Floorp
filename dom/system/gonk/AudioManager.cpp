@@ -77,7 +77,9 @@ static const uint32_t sMaxStreamVolumeTbl[AUDIO_STREAM_CNT] = {
   15,  // enforced audible
   15,  // DTMF
   15,  // TTS
+#if ANDROID_VERSION < 19
   15,  // FM
+#endif
 };
 
 // Use a half value of each volume category as the default volume.
@@ -794,12 +796,16 @@ AudioManager::SetFmRadioAudioEnabled(bool aFmRadioAudioEnabled)
     aFmRadioAudioEnabled ? AUDIO_POLICY_DEVICE_STATE_AVAILABLE :
     AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE, "");
   UpdateHeadsetConnectionState(GetCurrentSwitchState(SWITCH_HEADPHONES));
+  // AUDIO_STREAM_FM is not used on recent gonk.
+  // AUDIO_STREAM_MUSIC is used for FM radio volume control.
+#if ANDROID_VERSION < 19
   // sync volume with music after powering on fm radio
   if (aFmRadioAudioEnabled) {
     uint32_t volIndex = mCurrentStreamVolumeTbl[AUDIO_STREAM_MUSIC];
     SetStreamVolumeIndex(AUDIO_STREAM_FM, volIndex);
     mCurrentStreamVolumeTbl[AUDIO_STREAM_FM] = volIndex;
   }
+#endif
   return NS_OK;
 }
 
@@ -819,6 +825,9 @@ AudioManager::SetVolumeByCategory(uint32_t aCategory, uint32_t aIndex)
   nsresult status;
   switch (static_cast<AudioVolumeCategories>(aCategory)) {
     case VOLUME_MEDIA:
+      // AUDIO_STREAM_FM is not used on recent gonk.
+      // AUDIO_STREAM_MUSIC is used for FM radio volume control.
+#if ANDROID_VERSION < 19
       // sync FMRadio's volume with content channel.
       if (IsDeviceOn(AUDIO_DEVICE_OUT_FM)) {
         status = SetStreamVolumeIndex(AUDIO_STREAM_FM, aIndex);
@@ -826,6 +835,7 @@ AudioManager::SetVolumeByCategory(uint32_t aCategory, uint32_t aIndex)
           return status;
         }
       }
+#endif
       status = SetStreamVolumeIndex(AUDIO_STREAM_MUSIC, aIndex);
       break;
     case VOLUME_NOTIFICATION:
@@ -1005,6 +1015,7 @@ AudioManager::SetStreamVolumeIndex(int32_t aStream, uint32_t aIndex) {
               aIndex);
    return status ? NS_ERROR_FAILURE : NS_OK;
 #else
+#if ANDROID_VERSION < 19
   if (aStream == AUDIO_STREAM_FM) {
     status = AudioSystem::setStreamVolumeIndex(
                static_cast<audio_stream_type_t>(aStream),
@@ -1012,7 +1023,7 @@ AudioManager::SetStreamVolumeIndex(int32_t aStream, uint32_t aIndex) {
                AUDIO_DEVICE_OUT_FM);
     return status ? NS_ERROR_FAILURE : NS_OK;
   }
-
+#endif
   if (mPresentProfile == DEVICE_PRIMARY) {
     status = AudioSystem::setStreamVolumeIndex(
             static_cast<audio_stream_type_t>(aStream),
