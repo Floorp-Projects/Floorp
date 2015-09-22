@@ -720,10 +720,7 @@ void OggReader::SetChained(bool aIsChained) {
     ReentrantMonitorAutoEnter mon(mMonitor);
     mIsChained = aIsChained;
   }
-  {
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    mDecoder->SetMediaSeekable(false);
-  }
+  mDecoder->DispatchSetMediaSeekable(false);
 }
 
 bool OggReader::ReadOggChain()

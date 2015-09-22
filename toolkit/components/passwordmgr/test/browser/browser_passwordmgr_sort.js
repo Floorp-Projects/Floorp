@@ -67,35 +67,6 @@ function test() {
         let userCol = doc.getElementById("userCol");
         let passwordCol = doc.getElementById("passwordCol");
 
-        let toggleCalls = 0;
-        function toggleShowPasswords(func) {
-            let toggleButton = doc.getElementById("togglePasswords");
-            let showMode = (toggleCalls++ % 2) == 0;
-
-            // only watch for a confirmation dialog every other time being called
-            if (showMode) {
-                Services.ww.registerNotification(function (aSubject, aTopic, aData) {
-                    if (aTopic == "domwindowclosed")
-                        Services.ww.unregisterNotification(arguments.callee);
-                    else if (aTopic == "domwindowopened") {
-                        let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
-                        SimpleTest.waitForFocus(function() {
-                            EventUtils.sendKey("RETURN", win);
-                        }, win);
-                    }
-                });
-            }
-
-            Services.obs.addObserver(function (aSubject, aTopic, aData) {
-                if (aTopic == "passwordmgr-password-toggle-complete") {
-                    Services.obs.removeObserver(arguments.callee, aTopic);
-                    func();
-                }
-            }, "passwordmgr-password-toggle-complete", false);
-
-            EventUtils.synthesizeMouse(toggleButton, 1, 1, {}, win);
-        }
-
         function clickCol(col) {
             EventUtils.synthesizeMouse(col, 20, 1, {}, win);
             setTimeout(runNextTest, 0);
@@ -202,7 +173,6 @@ function test() {
             }
         }
 
-        // Toggle Show Passwords to display Password column, then start tests
-        toggleShowPasswords(runNextTest);
+        runNextTest();
     }
 }

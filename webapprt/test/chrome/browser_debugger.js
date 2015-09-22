@@ -1,7 +1,7 @@
 Cu.import("resource://gre/modules/Services.jsm");
-var { require } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 var { DebuggerServer } = require("devtools/server/main");
-var { DebuggerClient } = require("devtools/toolkit/client/main");
+var { DebuggerClient } = require("devtools/shared/client/main");
 var { RemoteDebugger } = Cu.import("resource://webapprt/modules/RemoteDebugger.jsm", {});
 
 function test() {

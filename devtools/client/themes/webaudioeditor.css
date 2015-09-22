@@ -1,0 +1,253 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Reload and waiting notices */
+.notice-container {
+  margin-top: -50vh;
+  background-color: var(--theme-toolbar-background);
+  color: var(--theme-body-color-alt);
+}
+
+#reload-notice {
+  font-size: 120%;
+}
+
+#waiting-notice {
+  font-size: 110%;
+}
+
+/* Context Graph */
+svg {
+  overflow: hidden;
+  -moz-box-flex: 1;
+}
+
+/* Edges in graph */
+.edgePath path {
+  stroke-width: 1px;
+  fill: none;
+}
+
+.theme-dark .edgePath path {
+  stroke: #b6babf; /* Grey foreground text */
+}
+.theme-light .edgePath path {
+  stroke: #aaaaaa; /* Splitters */
+}
+
+/* AudioParam connection edges */
+g.edgePath.param-connection {
+  stroke-dasharray: 5,5;
+}
+
+.theme-dark .edgePath.param-connection path {
+  stroke: #b6babf; /* Grey foreground text */
+}
+.theme-light .edgePath.param-connection path {
+  stroke: #aaaaaa; /* Splitters */
+}
+
+/* Labels in AudioParam connection should have background that match
+ * the main background so there's whitespace around the label, on top of the
+ * dotted lines. */
+.theme-dark g.edgeLabel rect {
+  fill: #14171a;
+}
+.theme-light g.edgeLabel rect {
+  fill: #fcfcfc; /* Background - Editor */
+}
+.theme-dark g.edgeLabel tspan {
+  fill: var(--theme-body-color-alt);
+}
+.theme-light g.edgeLabel tspan {
+  fill: #585959; /* Grey foreground text */
+}
+
+/* Audio Nodes */
+.nodes rect {
+  stroke-width: 1px;
+  cursor: pointer;
+}
+
+.nodes rect {
+  stroke: var(--theme-tab-toolbar-background);
+}
+.theme-light rect {
+  fill: var(--theme-tab-toolbar-background);
+}
+.theme-dark rect {
+  fill: var(--theme-toolbar-background);
+}
+
+/**
+ * Bypassed Nodes
+ */
+
+.theme-light .nodes g.bypassed rect {
+  fill: url(chrome://devtools/skin/themes/images/filters.svg#bypass-light);
+}
+.theme-dark .nodes g.bypassed rect {
+  fill: url(chrome://devtools/skin/themes/images/filters.svg#bypass-dark);
+}
+.nodes g.bypassed.selected rect {
+  stroke: var(--theme-selection-background);
+}
+
+/*
+.nodes g.bypassed text {
+  opacity: 0.8;
+}
+*/
+
+/**
+ * Selected Nodes
+ */
+.nodes g.selected rect {
+  fill: var(--theme-selection-background);
+}
+
+/* Don't style bypassed nodes text different because it'd be illegible in light-theme */
+.theme-light g.selected:not(.bypassed) text {
+  fill: var(--theme-toolbar-background);
+}
+
+
+/* Text in nodes and edges */
+text {
+  cursor: default; /* override the "text" cursor */
+  font-weight: 300;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serf;
+  font-size: 14px;
+}
+
+text {
+  fill: var(--theme-body-color-alt);
+}
+
+
+.nodes text {
+  cursor: pointer;
+}
+
+/**
+ * Inspector Styles
+ */
+
+/* hide the variables view scope title as its redundant,
+ * because there's only one scope displayed. */
+.variables-view-scope > .title {
+  display: none;
+}
+
+#web-audio-inspector-title {
+  margin: 6px;
+}
+
+.web-audio-inspector .error {
+  background-image: url(images/alerticon-warning.png);
+  background-size: 13px 12px;
+  -moz-appearance: none;
+  opacity: 0;
+  transition: opacity .5s ease-out 0s;
+}
+
+#inspector-pane-toggle {
+  background: none;
+  box-shadow: none;
+  border: none;
+  list-style-image: url(images/debugger-collapse.png);
+  -moz-image-region: rect(0px,16px,16px,0px);
+}
+
+#inspector-pane-toggle > .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
+}
+
+#inspector-pane-toggle[pane-collapsed] {
+  list-style-image: url(images/debugger-expand.png);
+}
+
+#inspector-pane-toggle:active {
+  -moz-image-region: rect(0px,32px,16px,16px);
+}
+
+/**
+ * Automation Styles
+ */
+
+#automation-param-toolbar .automation-param-button[selected] {
+  color: var(--theme-selection-color);
+  background-color: var(--theme-selection-background);
+}
+
+#automation-graph {
+  overflow: hidden;
+  -moz-box-flex: 1;
+}
+
+@media (min-resolution: 1.1dppx) {
+  #inspector-pane-toggle {
+    list-style-image: url(images/debugger-collapse@2x.png);
+    -moz-image-region: rect(0px,32px,32px,0px);
+  }
+
+  #inspector-pane-toggle[pane-collapsed] {
+    list-style-image: url(images/debugger-expand@2x.png);
+  }
+
+  #inspector-pane-toggle:active {
+    -moz-image-region: rect(0px,64px,32px,32px);
+  }
+
+  .web-audio-inspector .error {
+    background-image: url(images/alerticon-warning@2x.png);
+  }
+}
+
+/**
+ * Inspector toolbar
+ */
+
+#audio-node-toolbar .bypass {
+  list-style-image: url(images/power.svg);
+}
+
+#audio-node-toolbar toolbarbutton[disabled] {
+  opacity: 0.5;
+  background-color: transparent;
+}
+
+.theme-dark #audio-node-toolbar toolbarbutton[checked] {
+  background-color: #1d4f73; /* Select Highlight Blue */
+}
+.theme-light #audio-node-toolbar toolbarbutton[checked] {
+  background-color: #4c9ed9; /* Select Highlight Blue */
+}
+
+/* don't invert checked buttons so we can have white icons on light theme */
+#audio-node-toolbar toolbarbutton[checked] > .toolbarbutton-icon {
+  filter: none;
+}
+
+
+/**
+ * Responsive Styles
+ * `.devtools-responsive-container` takes care of most of
+ * the changing of host types.
+ */
+@media (max-width: 700px) {
+  /**
+   * Override the inspector toggle so it's always open
+   * in the portrait view, with the toggle button hidden.
+   */
+  #inspector-pane-toggle {
+    display: none;
+  }
+
+  #web-audio-inspector {
+    margin-left: 0px !important;
+    margin-right: 0px !important;
+  }
+}

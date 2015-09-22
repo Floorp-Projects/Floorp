@@ -1,0 +1,4 @@
+{
+  // Extend from the common devtools xpcshell eslintrc config.
+  "extends": "../../../../../devtools/client/.eslintrc.xpcshell"
+}

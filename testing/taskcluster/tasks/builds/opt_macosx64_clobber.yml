@@ -1,0 +1,55 @@
+$inherits:
+  from: 'tasks/builds/firefox_base.yml'
+  variables:
+    build_name: 'macosx64'
+    build_type: 'opt'
+task:
+  metadata:
+      name: '[TC] MacOSX64 Opt'
+      description: 'MacOSX64 Opt'
+
+  workerType: opt-macosx64
+
+  routes:
+    - 'index.buildbot.branches.{{project}}.macosx64'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.macosx64'
+
+  scopes:
+    - 'docker-worker:cache:tooltool-cache'
+    - 'docker-worker:relengapi-proxy:tooltool.download.internal'
+    - 'docker-worker:relengapi-proxy:tooltool.download.public'
+
+  payload:
+    image: '{{#docker_image}}desktop-build{{/docker_image}}'
+    cache:
+      tooltool-cache: '/home/worker/tooltool-cache'
+
+    features:
+      relengAPIProxy: true
+
+    env:
+      MOZHARNESS_SCRIPT: 'mozharness/scripts/fx_desktop_build.py'
+      MOZHARNESS_CONFIG: 'builds/releng_base_mac_64_cross_builds.py balrog/production.py'
+      MH_BRANCH: {{project}}
+      MH_BUILD_POOL: taskcluster
+      # image paths
+      TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
+
+    maxRunTime: 36000
+
+    command: ["/bin/bash", "bin/build.sh"]
+
+  extra:
+    treeherderEnv:
+      - production
+      - staging
+    treeherder:
+      machine:
+        # see https://github.com/mozilla/treeherder/blob/master/ui/js/values.js
+        platform: osx-10-7
+    # Rather then enforcing particular conventions we require that all build
+    # tasks provide the "build" extra field to specify where the build and tests
+    # files are located.
+    locations:
+      build: 'public/build/target.dmg'
+      tests: 'public/build/target.tests.zip'

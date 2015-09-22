@@ -354,7 +354,8 @@ public:
   static nsresult ShouldLoadScript(nsIDocument* aDocument,
                                    nsISupports* aContext,
                                    nsIURI* aURI,
-                                   const nsAString &aType);
+                                   const nsAString &aType,
+                                   bool aIsPreLoad);
 
   /**
    * Starts deferring deferred scripts and puts them in the mDeferredRequests
@@ -435,7 +436,8 @@ private:
   static nsresult CheckContentPolicy(nsIDocument* aDocument,
                                      nsISupports *aContext,
                                      nsIURI *aURI,
-                                     const nsAString &aType);
+                                     const nsAString &aType,
+                                     bool aIsPreLoad);
 
   /**
    * Start a load for aRequest's URI.
@@ -468,9 +470,10 @@ private:
     return mEnabled && !mBlockerCount;
   }
 
-  nsresult AttemptAsyncScriptParse(nsScriptLoadRequest* aRequest);
+  nsresult AttemptAsyncScriptCompile(nsScriptLoadRequest* aRequest);
   nsresult ProcessRequest(nsScriptLoadRequest* aRequest);
-  nsresult CompileOffThreadOrProcessRequest(nsScriptLoadRequest* aRequest);
+  nsresult CompileOffThreadOrProcessRequest(nsScriptLoadRequest* aRequest,
+                                            bool* oCompiledOffThread=nullptr);
   void FireScriptAvailable(nsresult aResult,
                            nsScriptLoadRequest* aRequest);
   void FireScriptEvaluated(nsresult aResult,

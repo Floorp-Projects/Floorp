@@ -51,7 +51,7 @@ toolkit/library
 browser/app
   browser/base
   browser/components
-  browser/devtools
+  devtools/client
   browser/locales
   browser/modules
   browser/themes
@@ -60,7 +60,7 @@ browser/app
   toolkit/components/jsdownloads
   toolkit/content
   toolkit/crashreporter
-  toolkit/devtools
+  devtools/shared
   toolkit/forgetaboutsite
   toolkit/identity
   toolkit/modules

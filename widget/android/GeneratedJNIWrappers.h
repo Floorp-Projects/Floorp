@@ -2225,6 +2225,93 @@ public:
 
 };
 
+class GeckoView : public mozilla::jni::Class<GeckoView>
+{
+public:
+    typedef mozilla::jni::Ref<GeckoView> Ref;
+    typedef mozilla::jni::LocalRef<GeckoView> LocalRef;
+    typedef mozilla::jni::GlobalRef<GeckoView> GlobalRef;
+    typedef const mozilla::jni::Param<GeckoView>& Param;
+
+    static constexpr char name[] =
+            "org/mozilla/gecko/GeckoView";
+
+protected:
+    GeckoView(jobject instance) : Class(instance) {}
+
+public:
+    class Window;
+
+};
+
+class GeckoView::Window : public mozilla::jni::Class<Window>
+{
+public:
+    typedef mozilla::jni::Ref<Window> Ref;
+    typedef mozilla::jni::LocalRef<Window> LocalRef;
+    typedef mozilla::jni::GlobalRef<Window> GlobalRef;
+    typedef const mozilla::jni::Param<Window>& Param;
+
+    static constexpr char name[] =
+            "org/mozilla/gecko/GeckoView$Window";
+
+protected:
+    Window(jobject instance) : Class(instance) {}
+
+public:
+    struct New_t {
+        typedef Window Owner;
+        typedef Window::LocalRef ReturnType;
+        typedef Window::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "<init>";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto New() -> Window::LocalRef;
+
+public:
+    struct DisposeNative_t {
+        typedef Window Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "disposeNative";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct Open_t {
+        typedef Window Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                Window::Param,
+                int32_t,
+                int32_t> Args;
+        static constexpr char name[] = "open";
+        static constexpr char signature[] =
+                "(Lorg/mozilla/gecko/GeckoView$Window;II)V";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    template<class Impl> class Natives;
+};
+
 class RestrictedProfiles : public mozilla::jni::Class<RestrictedProfiles>
 {
 public:

@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "BrowserToolboxProcess", function () {
-  return Cu.import("resource:///modules/devtools/ToolboxProcess.jsm", {}).
+  return Cu.import("resource:///modules/devtools/client/framework/ToolboxProcess.jsm", {}).
          BrowserToolboxProcess;
 });
 XPCOMUtils.defineLazyModuleGetter(this, "Experiments",

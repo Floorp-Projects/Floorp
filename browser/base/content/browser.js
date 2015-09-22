@@ -181,13 +181,13 @@ XPCOMUtils.defineLazyGetter(this, "PopupNotifications", function () {
 
 XPCOMUtils.defineLazyGetter(this, "DeveloperToolbar", function() {
   let tmp = {};
-  Cu.import("resource:///modules/devtools/DeveloperToolbar.jsm", tmp);
+  Cu.import("resource:///modules/devtools/client/shared/DeveloperToolbar.jsm", tmp);
   return new tmp.DeveloperToolbar(window, document.getElementById("developer-toolbar"));
 });
 
 XPCOMUtils.defineLazyGetter(this, "BrowserToolboxProcess", function() {
   let tmp = {};
-  Cu.import("resource:///modules/devtools/ToolboxProcess.jsm", tmp);
+  Cu.import("resource:///modules/devtools/client/framework/ToolboxProcess.jsm", tmp);
   return tmp.BrowserToolboxProcess;
 });
 
@@ -7689,15 +7689,15 @@ var TabContextMenu = {
 };
 
 XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
-                                  "resource:///modules/devtools/gDevTools.jsm");
+                                  "resource:///modules/devtools/client/framework/gDevTools.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "gDevToolsBrowser",
-                                  "resource:///modules/devtools/gDevTools.jsm");
+                                  "resource:///modules/devtools/client/framework/gDevTools.jsm");
 
 Object.defineProperty(this, "HUDService", {
   get: function HUDService_getter() {
-    let devtools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
-    return devtools.require("devtools/webconsole/hudservice");
+    let devtools = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {}).devtools;
+    return devtools.require("devtools/client/webconsole/hudservice");
   },
   configurable: true,
   enumerable: true
@@ -7768,7 +7768,7 @@ var Scratchpad = {
 
 XPCOMUtils.defineLazyGetter(Scratchpad, "ScratchpadManager", function() {
   let tmp = {};
-  Cu.import("resource:///modules/devtools/scratchpad-manager.jsm", tmp);
+  Cu.import("resource:///modules/devtools/client/scratchpad/scratchpad-manager.jsm", tmp);
   return tmp.ScratchpadManager;
 });
 
@@ -7780,7 +7780,7 @@ var ResponsiveUI = {
 
 XPCOMUtils.defineLazyGetter(ResponsiveUI, "ResponsiveUIManager", function() {
   let tmp = {};
-  Cu.import("resource:///modules/devtools/responsivedesign.jsm", tmp);
+  Cu.import("resource:///modules/devtools/client/responsivedesign/responsivedesign.jsm", tmp);
   return tmp.ResponsiveUIManager;
 });
 
@@ -7792,8 +7792,8 @@ function openEyedropper() {
 
 Object.defineProperty(this, "Eyedropper", {
   get: function() {
-    let devtools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
-    return devtools.require("devtools/eyedropper/eyedropper").Eyedropper;
+    let devtools = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {}).devtools;
+    return devtools.require("devtools/client/eyedropper/eyedropper").Eyedropper;
   },
   configurable: true,
   enumerable: true

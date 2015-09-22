@@ -46,13 +46,6 @@ BufferDecoder::GetReentrantMonitor()
 }
 
 bool
-BufferDecoder::IsShutdown() const
-{
-  // BufferDecoder cannot be shut down.
-  return false;
-}
-
-bool
 BufferDecoder::OnStateMachineTaskQueue() const
 {
   // BufferDecoder doesn't have the concept of a state machine.

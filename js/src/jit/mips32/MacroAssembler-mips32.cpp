@@ -1921,6 +1921,31 @@ MacroAssemblerMIPSCompat::storePtr(Register src, AbsoluteAddress dest)
     storePtr(src, Address(ScratchRegister, 0));
 }
 
+void
+MacroAssemblerMIPSCompat::clampIntToUint8(Register reg)
+{
+    // look at (reg >> 8) if it is 0, then src shouldn't be clamped
+    // if it is <0, then we want to clamp to 0,
+    // otherwise, we wish to clamp to 255
+    Label done;
+    ma_move(ScratchRegister, reg);
+    asMasm().rshiftPtrArithmetic(Imm32(8), ScratchRegister);
+    ma_b(ScratchRegister, ScratchRegister, &done, Assembler::Zero, ShortJump);
+    {
+        Label negative;
+        ma_b(ScratchRegister, ScratchRegister, &negative, Assembler::Signed, ShortJump);
+        {
+            ma_li(reg, Imm32(255));
+            ma_b(&done, ShortJump);
+        }
+        bind(&negative);
+        {
+            ma_move(reg, zero);
+        }
+    }
+    bind(&done);
+}
+
 // Note: this function clobbers the input register.
 void
 MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)

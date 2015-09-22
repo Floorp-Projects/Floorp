@@ -5,7 +5,6 @@
 /*** =================== SAVED SIGNONS CODE =================== ***/
 
 var kSignonBundle;
-var showingPasswords = false;
 var dateFormatter = new Intl.DateTimeFormat(undefined,
                       { day: "numeric", month: "short", year: "numeric" });
 var dateAndTimeFormatter = new Intl.DateTimeFormat(undefined,
@@ -14,8 +13,6 @@ var dateAndTimeFormatter = new Intl.DateTimeFormat(undefined,
 
 function SignonsStartup() {
   kSignonBundle = document.getElementById("signonBundle");
-  document.getElementById("togglePasswords").label = kSignonBundle.getString("showPasswords");
-  document.getElementById("togglePasswords").accessKey = kSignonBundle.getString("showPasswordsAccessKey");
   document.getElementById("signonsIntro").textContent = kSignonBundle.getString("loginsDescriptionAll");
 
   let treecols = document.getElementsByTagName("treecols")[0];
@@ -79,9 +76,14 @@ var signonsTreeView = {
     }
   },
   isEditable : function(row, col) {
-    if (col.id == "userCol" || col.id == "passwordCol") {
+    if (col.id == "userCol") {
       return true;
     }
+
+    if (col.id == "passwordCol") {
+      return masterPasswordLogin();
+    }
+
     return false;
   },
   isSeparator : function(index) { return false; },
@@ -128,7 +130,8 @@ function LoadSignons() {
   try {
     signons = passwordmanager.getAllLogins();
   } catch (e) {
-    signons = [];
+    window.close();
+    return;
   }
   signons.forEach(login => login.QueryInterface(Components.interfaces.nsILoginMetaInfo));
   signonsTreeView.rowCount = signons.length;
@@ -143,13 +146,10 @@ function LoadSignons() {
 
   // disable "remove all signons" button if there are no signons
   var element = document.getElementById("removeAllSignons");
-  var toggle = document.getElementById("togglePasswords");
   if (signons.length == 0) {
     element.setAttribute("disabled","true");
-    toggle.setAttribute("disabled","true");
   } else {
     element.removeAttribute("disabled");
-    toggle.removeAttribute("disabled");
   }
 
   return true;
@@ -189,34 +189,6 @@ function DeleteAllSignons() {
                         deletedSignons, "removeSignon", "removeAllSignons");
   FinalizeSignonDeletions(syncNeeded);
   Services.telemetry.getHistogramById("PWMGR_MANAGE_DELETED_ALL").add(1);
-}
-
-function TogglePasswordVisible() {
-  if (showingPasswords || masterPasswordLogin(AskUserShowPasswords)) {
-    showingPasswords = !showingPasswords;
-    document.getElementById("togglePasswords").label = kSignonBundle.getString(showingPasswords ? "hidePasswords" : "showPasswords");
-    document.getElementById("togglePasswords").accessKey = kSignonBundle.getString(showingPasswords ? "hidePasswordsAccessKey" : "showPasswordsAccessKey");
-    document.getElementById("passwordCol").hidden = !showingPasswords;
-    _filterPasswords();
-  }
-
-  // Notify observers that the password visibility toggling is
-  // completed.  (Mostly useful for tests)
-  Components.classes["@mozilla.org/observer-service;1"]
-            .getService(Components.interfaces.nsIObserverService)
-            .notifyObservers(null, "passwordmgr-password-toggle-complete", null);
-  Services.telemetry.getHistogramById("PWMGR_MANAGE_VISIBILITY_TOGGLED").add(showingPasswords);
-}
-
-function AskUserShowPasswords() {
-  var prompter = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-  var dummy = { value: false };
-
-  // Confirm the user wants to display passwords
-  return prompter.confirmEx(window,
-          null,
-          kSignonBundle.getString("noMasterPasswordPrompt"), prompter.STD_YES_NO_BUTTONS,
-          null, null, null, null, dummy) == 0;    // 0=="Yes" button
 }
 
 function FinalizeSignonDeletions(syncNeeded) {
@@ -332,7 +304,7 @@ function SignonMatchesFilter(aSignon, aFilterValue) {
   if (aSignon.httpRealm &&
       aSignon.httpRealm.toLowerCase().indexOf(aFilterValue) != -1)
     return true;
-  if (showingPasswords && aSignon.password &&
+  if (Services.logins.isLoggedIn && aSignon.password &&
       aSignon.password.toLowerCase().indexOf(aFilterValue) != -1)
     return true;
 
@@ -388,9 +360,8 @@ function _filterPasswords()
 }
 
 function CopyPassword() {
-  // Don't copy passwords if we aren't already showing the passwords & a master
-  // password hasn't been entered.
-  if (!showingPasswords && !masterPasswordLogin())
+  // Don't copy passwords if a master password hasn't been entered.
+  if (!masterPasswordLogin())
     return;
   // Copy selected signon's password to clipboard
   var clipboard = Components.classes["@mozilla.org/widget/clipboardhelper;1"].
@@ -443,13 +414,7 @@ function UpdateContextMenu() {
 
   menuItems.get("context-editusername").removeAttribute("disabled");
   menuItems.get("context-copypassword").removeAttribute("disabled");
-
-  // Disable "Edit Password" if the password column isn't showing.
-  if (!document.getElementById("passwordCol").hidden) {
-    menuItems.get("context-editpassword").removeAttribute("disabled");
-  } else {
-    menuItems.get("context-editpassword").setAttribute("disabled", "true");
-  }
+  menuItems.get("context-editpassword").removeAttribute("disabled");
 }
 
 function masterPasswordLogin(noPasswordCallback) {
