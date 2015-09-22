@@ -112,20 +112,24 @@ public:
 
 StaticRefPtr<MediaMemoryTracker> MediaMemoryTracker::sUniqueInstance;
 
+#if defined(PR_LOGGING)
 PRLogModuleInfo* gStateWatchingLog;
 PRLogModuleInfo* gMozPromiseLog;
 PRLogModuleInfo* gMediaTimerLog;
 PRLogModuleInfo* gMediaSampleLog;
+#endif
 
 void
 MediaDecoder::InitStatics()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+#if defined(PR_LOGGING)
   // Log modules.
   gMediaDecoderLog = PR_NewLogModule("MediaDecoder");
   gMediaTimerLog = PR_NewLogModule("MediaTimer");
   gMediaSampleLog = PR_NewLogModule("MediaSample");
+#endif
 }
 
 NS_IMPL_ISUPPORTS(MediaMemoryTracker, nsIMemoryReporter)
