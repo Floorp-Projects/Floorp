@@ -1918,7 +1918,7 @@ DocAccessibleChild::RecvExtents(const uint64_t& aID,
   *aWidth = 0;
   *aHeight = 0;
   Accessible* acc = IdToAccessible(aID);
-  if (acc && !acc->IsDefunct() && !nsAccUtils::MustPrune(acc)) {
+  if (acc && !acc->IsDefunct()) {
     nsIntRect screenRect = acc->Bounds();
     if (!screenRect.IsEmpty()) {
       if (aNeedsScreenCoords) {
