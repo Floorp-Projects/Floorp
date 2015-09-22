@@ -1,0 +1,22 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+modules = []
+
+if CONFIG['DEBUG_JS_MODULES']:
+    modules += [
+        'react-dev.js',
+    ]
+
+modules += [
+    'react.js',
+    'redux.js',
+]
+
+# Currently `DevToolsModules` can only be called once per moz.build, so we build
+# a list manually above.  Bug 1198013 tracks fixing this to make it more like
+# other moz.build constructs.
+DevToolsModules(*modules)

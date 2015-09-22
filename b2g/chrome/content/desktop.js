@@ -8,9 +8,9 @@ var isMulet = "ResponsiveUI" in browserWindow;
 // Enable touch event shim on desktop that translates mouse events
 // into touch ones
 function enableTouch() {
-  let require = Cu.import('resource://gre/modules/devtools/Loader.jsm', {})
+  let require = Cu.import('resource://gre/modules/devtools/shared/Loader.jsm', {})
                   .devtools.require;
-  let { TouchEventSimulator } = require('devtools/toolkit/touch/simulator');
+  let { TouchEventSimulator } = require('devtools/shared/touch/simulator');
   let touchEventSimulator = new TouchEventSimulator(shell.contentBrowser);
   touchEventSimulator.start();
 }
@@ -108,7 +108,7 @@ function checkDebuggerPort() {
 
 
 function initResponsiveDesign() {
-  Cu.import('resource:///modules/devtools/responsivedesign.jsm');
+  Cu.import('resource:///modules/devtools/client/responsivedesign/responsivedesign.jsm');
   ResponsiveUIManager.on('on', function(event, {tab:tab}) {
     let responsive = ResponsiveUIManager.getResponsiveUIForTab(tab);
     let document = tab.ownerDocument;
@@ -154,8 +154,8 @@ function openDevtools() {
   Services.prefs.setIntPref('devtools.toolbox.sidebar.width',
                             browserWindow.outerWidth - 550);
   Services.prefs.setCharPref('devtools.toolbox.host', 'side');
-  let {gDevTools} = Cu.import('resource:///modules/devtools/gDevTools.jsm', {});
-  let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+  let {gDevTools} = Cu.import('resource:///modules/devtools/client/framework/gDevTools.jsm', {});
+  let {devtools} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
   let target = devtools.TargetFactory.forTab(browserWindow.gBrowser.selectedTab);
   gDevTools.showToolbox(target);
 }

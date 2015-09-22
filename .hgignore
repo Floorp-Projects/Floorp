@@ -64,8 +64,8 @@ _OPT\.OBJ/
 .git/
 
 # Ignore chrome.manifest files from the devtools loader
-^browser/devtools/chrome.manifest$
-^toolkit/devtools/chrome.manifest$
+^devtools/client/chrome.manifest$
+^devtools/shared/chrome.manifest$
 
 # git checkout of libstagefright
 ^media/libstagefright/android$

@@ -314,7 +314,7 @@ const char*
 SPSProfiler::allocProfileString(JSScript* script, JSFunction* maybeFun)
 {
     // Note: this profiler string is regexp-matched by
-    // browser/devtools/profiler/cleopatra/js/parserWorker.js.
+    // devtools/client/profiler/cleopatra/js/parserWorker.js.
 
     // Get the function name, if any.
     JSAtom* atom = maybeFun ? maybeFun->displayAtom() : nullptr;

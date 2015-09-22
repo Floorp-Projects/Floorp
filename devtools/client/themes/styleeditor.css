@@ -1,0 +1,305 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.stylesheet-title,
+.stylesheet-name {
+  text-decoration: none;
+}
+
+.stylesheet-name {
+  font-size: 13px;
+}
+
+.theme-dark .stylesheet-title,
+.theme-dark .stylesheet-name {
+  color: var(--theme-selection-color);
+}
+
+.theme-dark .stylesheet-rule-count,
+.theme-dark .stylesheet-linked-file,
+.theme-dark .stylesheet-saveButton {
+  color: var(--theme-body-color-alt);
+}
+
+.theme-light .stylesheet-title,
+.theme-light .stylesheet-name {
+  color: var(--theme-body-color-alt);
+}
+
+.theme-light .stylesheet-rule-count,
+.theme-light .stylesheet-linked-file,
+.theme-light .stylesheet-saveButton {
+  color: var(--theme-body-color);
+}
+
+.stylesheet-saveButton {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.splitview-active .stylesheet-title,
+.splitview-active .stylesheet-name,
+.theme-light .splitview-active .stylesheet-rule-count,
+.theme-light .splitview-active .stylesheet-linked-file,
+.theme-light .splitview-active .stylesheet-saveButton {
+  color: var(--theme-selection-color);
+}
+
+.splitview-nav:focus {
+  outline: 0; /* focus ring is on the stylesheet name */
+}
+
+.splitview-nav > li.unsaved > hgroup .stylesheet-name {
+  font-style: italic;
+}
+
+.splitview-nav:-moz-locale-dir(ltr) > li.unsaved > hgroup .stylesheet-name:before,
+.splitview-nav:-moz-locale-dir(rtl) > li.unsaved > hgroup .stylesheet-name:after {
+  font-style: italic;
+}
+
+.splitview-nav.empty > p {
+  padding: 0 10px;
+}
+
+.stylesheet-sidebar {
+  max-width: 400px;
+  min-width: 100px;
+}
+
+.theme-light .stylesheet-sidebar {
+  border-color: #aaa; /* Splitters */
+}
+
+.theme-dark .stylesheet-sidebar {
+  border-color: #000;  /* Splitters */
+}
+
+.theme-light .media-rule-label {
+  border-bottom-color: #cddae5; /* Grey */
+}
+
+.theme-dark .media-rule-label {
+  border-bottom-color: #303b47; /* Grey */
+}
+
+.media-rule-label {
+  padding: 4px;
+  cursor: pointer;
+  border-bottom: 1px solid;
+}
+
+.media-rule-line {
+  -moz-padding-start: 4px;
+}
+
+.theme-light .media-condition-unmatched {
+  color: grey;
+}
+
+.theme-dark .media-condition-unmatched {
+  color: #606C75;
+}
+
+.stylesheet-enabled {
+  padding: 8px 0;
+  margin: 0 8px;
+  background-image: url(images/itemToggle.png);
+  background-repeat: no-repeat;
+  background-clip: content-box;
+  background-position: 0 8px;
+  background-size: 48px 24px;
+  width: 24px;
+  height: 40px;
+}
+
+@media (min-resolution: 1.1dppx) {
+  .stylesheet-enabled {
+    background-image: url(images/itemToggle@2x.png);
+  }
+}
+
+.disabled > .stylesheet-enabled {
+  background-position: -24px 8px;
+}
+
+/* Invert all toggle icons but the one in the active row for light theme */
+.theme-light .splitview-nav > li:not(.splitview-active) .stylesheet-enabled {
+  filter: url(images/filters.svg#invert);
+}
+
+.splitview-nav > li > .stylesheet-enabled:focus,
+.splitview-nav > li:hover > .stylesheet-enabled {
+  outline: 0;
+}
+
+.stylesheet-linked-file:not(:empty){
+  -moz-margin-end: 0.4em;
+}
+
+.stylesheet-linked-file:not(:empty):before {
+  -moz-margin-start: 0.4em;
+}
+
+li.linked-file-error .stylesheet-linked-file:after {
+  font-size: 110%;
+}
+
+.stylesheet-more > h3 {
+  font-size: 11px;
+  -moz-margin-end: 2px;
+}
+
+.devtools-searchinput {
+  max-width: 25ex;
+  font-size: 11px;
+}
+
+.placeholder a {
+  text-decoration: underline;
+}
+
+h1,
+h2,
+h3 {
+  font-size: inherit;
+  font-weight: normal;
+  margin: 0;
+  padding: 0;
+}
+
+@media (max-width: 700px) {
+  .stylesheet-sidebar {
+    width: 150px;
+  }
+}
+
+/* portrait mode */
+@media (max-width: 550px) {
+  .splitview-nav {
+    box-shadow: none;
+  }
+
+  .splitview-nav > li.splitview-active {
+    background-size: 0 0, 0 0, auto;
+  }
+
+  .stylesheet-enabled {
+    padding: 0;
+    background-position: 0 0;
+    height: 24px;
+  }
+
+  .disabled > .stylesheet-enabled {
+    background-position: -24px 0;
+  }
+
+  .splitview-nav > li > hgroup.stylesheet-info {
+    -moz-box-align: baseline;
+  }
+
+  .stylesheet-sidebar {
+    width: 180px;
+  }
+}
+
+.csscoverage-report {
+  background-color: var(--theme-toolbar-background);
+}
+
+.csscoverage-report-container {
+  height: 100vh;
+  padding: 0 30px;
+}
+
+.csscoverage-report-content {
+  margin: 20px auto;
+  -moz-column-width: 300px;
+  font-size: 13px;
+}
+
+.csscoverage-report h1 {
+  font-size: 120%;
+}
+
+.csscoverage-report h2 {
+  font-size: 110%;
+}
+
+.csscoverage-report h1,
+.csscoverage-report h2,
+.csscoverage-report h3 {
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.csscoverage-list:after {
+  content: ', ';
+}
+
+.csscoverage-list:last-child:after {
+  display: none;
+}
+
+.csscoverage-report textarea {
+  width: 100%;
+  height: 100px;
+}
+
+.csscoverage-report a {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.csscoverage-report > .csscoverage-toolbar {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.csscoverage-report > .csscoverage-toolbarbutton {
+  min-width: 4em;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  border-top: none;
+  border-bottom: none;
+  -moz-border-start: none;
+}
+
+.chart-colored-blob[name="Used Preload"] {
+  fill: var(--theme-highlight-pink);
+  background: var(--theme-highlight-pink);;
+}
+
+.chart-colored-blob[name=Used] {
+  fill: var(--theme-highlight-green);
+  background: var(--theme-highlight-green);
+}
+
+.chart-colored-blob[name=Unused] {
+  fill: var(--theme-highlight-lightorange);
+  background: var(--theme-highlight-lightorange);
+}
+
+/* Undo 'largest' customization */
+.theme-dark .pie-chart-slice[largest] {
+  stroke-width: 1px;
+  stroke: rgba(0,0,0,0.2);
+}
+
+.theme-light .pie-chart-slice[largest] {
+  stroke-width: 1px;
+  stroke: rgba(255,255,255,0.8);
+}
+
+.csscoverage-report .pie-chart-slice {
+  cursor: default;
+}
+
+.csscoverage-report-chart {
+  margin: 0 50px;
+}

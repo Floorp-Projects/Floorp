@@ -1,0 +1,142 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1007200 - Create a framerate actor
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Framerate actor test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script>
+
+window.onload = function() {
+  var Cu = Components.utils;
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+
+  Cu.import("resource://gre/modules/Services.jsm");
+
+  // Always log packets when running tests.
+  Services.prefs.setBoolPref("devtools.debugger.log", true);
+  SimpleTest.registerCleanupFunction(function() {
+    Services.prefs.clearUserPref("devtools.debugger.log");
+  });
+
+  var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+  var { DebuggerClient } = require("devtools/shared/client/main");
+  var { DebuggerServer } = require("devtools/server/main");
+
+  SimpleTest.waitForExplicitFinish();
+
+  var {FramerateFront} = require("devtools/server/actors/framerate");
+
+  function plotFPS(ticks, interval = 100, clamp = 60) {
+    var timeline = [];
+    var totalTicks = ticks.length;
+
+    // If the refresh driver didn't get a chance to tick before the
+    // recording was stopped, assume framerate was 0.
+    if (totalTicks == 0) {
+      timeline.push({ delta: 0, value: 0 });
+      timeline.push({ delta: interval, value: 0 });
+      return timeline;
+    }
+
+    var frameCount = 0;
+    var prevTime = ticks[0];
+
+    for (var i = 1; i < totalTicks; i++) {
+      var currTime = ticks[i];
+      frameCount++;
+
+      var elapsedTime = currTime - prevTime;
+      if (elapsedTime < interval) {
+        continue;
+      }
+
+      var framerate = Math.min(1000 / (elapsedTime / frameCount), clamp);
+      timeline.push({ delta: prevTime, value: framerate });
+      timeline.push({ delta: currTime, value: framerate });
+
+      frameCount = 0;
+      prevTime = currTime;
+    }
+
+    return timeline;
+  };
+
+  if (!DebuggerServer.initialized) {
+    DebuggerServer.init();
+    DebuggerServer.addBrowserActors();
+  }
+
+  var client = new DebuggerClient(DebuggerServer.connectPipe());
+  client.connect(function onConnect() {
+    client.listTabs(function onListTabs(aResponse) {
+      var form = aResponse.tabs[aResponse.selected];
+      var front = FramerateFront(client, form);
+
+      window.setTimeout(() => {
+        front.startRecording().then(() => {
+          window.setTimeout(() => {
+            front.stopRecording().then(rawData => {
+              onRecordingStopped(front, rawData);
+            });
+          }, 1000);
+        });
+      }, 1000);
+    });
+  });
+
+  function onRecordingStopped(front, rawData) {
+    ok(rawData, "There should be a recording available.");
+
+    var timeline = plotFPS(rawData);
+    ok(timeline.length >= 2,
+      "There should be at least one measurement available, with two entries.");
+
+    var prevTimeStart = timeline[0].delta;
+
+    for (var i = 0; i < timeline.length; i += 2) {
+      var currTimeStart = timeline[i].delta;
+      var currTimeEnd = timeline[i + 1].delta;
+      info("Testing delta: " + currTimeStart + " vs. " + currTimeEnd);
+
+      ok(currTimeStart < currTimeEnd,
+        "The start and end time deltas should be consecutive.");
+      is(currTimeStart, prevTimeStart,
+        "There should be two time deltas for each framerate value.");
+
+      prevTimeStart = currTimeEnd;
+    }
+
+    var prevFramerateValue = -1;
+
+    for (var i = 0; i < timeline.length; i += 2) {
+      var currFramerateStart = timeline[i].value;
+      var currFramerateEnd = timeline[i + 1].value;
+      info("Testing framerate: " + currFramerateStart);
+
+      is(currFramerateStart, currFramerateEnd,
+        "The start and end framerate values should be equal.");
+
+      is(typeof currFramerateStart, "number", "All values should be numbers.");
+      ok(currFramerateStart <= 60, "All values were correctly clamped.")
+
+      prevFramerateValue = currFramerateStart;
+    }
+
+    client.close(() => {
+      DebuggerServer.destroy();
+      SimpleTest.finish()
+    });
+  }
+}
+</script>
+</pre>
+</body>
+</html>
