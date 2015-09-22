@@ -19,7 +19,7 @@
 #ifndef asmjs_AsmJSSignalHandlers_h
 #define asmjs_AsmJSSignalHandlers_h
 
-#if defined(XP_MACOSX) && defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
+#if defined(XP_DARWIN) && defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 # include <mach/mach.h>
 # include "jslock.h"
 #endif
@@ -39,7 +39,7 @@ EnsureSignalHandlersInstalled(JSRuntime* rt);
 extern void
 InterruptRunningJitCode(JSRuntime* rt);
 
-#if defined(XP_MACOSX) && defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
+#if defined(XP_DARWIN) && defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 // On OSX we are forced to use the lower-level Mach exception mechanism instead
 // of Unix signals. Mach exceptions are not handled on the victim's stack but
 // rather require an extra thread. For simplicity, we create one such thread
