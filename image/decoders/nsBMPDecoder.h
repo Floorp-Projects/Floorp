@@ -43,6 +43,7 @@ public:
 
     // Obtains the internal output image buffer
     uint32_t* GetImageData();
+    size_t GetImageDataLength() const { return mImageDataLength; }
 
     // Obtains the size of the compressed image resource
     int32_t GetCompressedImageSize() const;
