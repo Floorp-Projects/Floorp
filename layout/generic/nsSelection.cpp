@@ -350,7 +350,7 @@ struct MOZ_RAII AutoPrepareFocusRange
     if (aSelection->mFrameSelection->IsUserSelectionReason()) {
       mUserSelect.emplace(aSelection);
     }
-    bool userSelection = aSelection->mApplyUserSelectStyle;
+    bool userSelection = aSelection->mUserInitiated;
 
     nsTArray<RangeData>& ranges = aSelection->mRanges;
     if (!userSelection ||
@@ -424,7 +424,7 @@ struct MOZ_RAII AutoPrepareFocusRange
     }
   }
 
-  Maybe<Selection::AutoApplyUserSelectStyle> mUserSelect;
+  Maybe<Selection::AutoUserInitiated> mUserSelect;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
@@ -1682,7 +1682,7 @@ nsFrameSelection::TakeFocus(nsIContent*        aNewFocus,
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
-  Maybe<Selection::AutoApplyUserSelectStyle> userSelect;
+  Maybe<Selection::AutoUserInitiated> userSelect;
   if (IsUserSelectionReason()) {
     userSelect.emplace(mDomSelections[index]);
   }
@@ -3331,7 +3331,7 @@ Selection::Selection()
   : mCachedOffsetForFrame(nullptr)
   , mDirection(eDirNext)
   , mType(nsISelectionController::SELECTION_NORMAL)
-  , mApplyUserSelectStyle(false)
+  , mUserInitiated(false)
   , mSelectionChangeBlockerCount(0)
 {
 }
@@ -3341,7 +3341,7 @@ Selection::Selection(nsFrameSelection* aList)
   , mCachedOffsetForFrame(nullptr)
   , mDirection(eDirNext)
   , mType(nsISelectionController::SELECTION_NORMAL)
-  , mApplyUserSelectStyle(false)
+  , mUserInitiated(false)
   , mSelectionChangeBlockerCount(0)
 {
 }
@@ -3700,10 +3700,7 @@ Selection::AddItem(nsRange* aItem, int32_t* aOutIndex, bool aNoStartSelect)
 
   NS_ASSERTION(aOutIndex, "aOutIndex can't be null");
 
-  // XXX Rename mApplyUserSelectStyle? Not the best name (as it is also being
-  // used to detect here whether the event is user initiated for the purposes of
-  // dispatching the selectstart event).
-  if (mApplyUserSelectStyle) {
+  if (mUserInitiated) {
     nsAutoTArray<nsRefPtr<nsRange>, 4> rangesToAdd;
     *aOutIndex = -1;
 
