@@ -51,7 +51,6 @@ import java.util.List;
 class TabsGridLayout extends GridView
                      implements TabsLayout,
                                 Tabs.OnTabsChangedListener {
-
     private static final String LOGTAG = "Gecko" + TabsGridLayout.class.getSimpleName();
 
     public static final int ANIM_DELAY_MULTIPLE_MS = 20;
@@ -267,28 +266,14 @@ class TabsGridLayout extends GridView
      *
      * @param selected position of the selected tab
      */
-    private void updateSelectedStyle(final int selected) {
-        // setItemChecked doesn't exist until API 11, despite what the API docs say!
-        if (AppConstants.Versions.feature11Plus) {
-            for (int i = 0; i < getChildCount(); i++) {
+    private void updateSelectedStyle(int selected) {
+        for (int i = 0; i < tabsAdapter.getCount(); i++) {
+            // setItemChecked doesn't exist until API 11, despite what the API docs say!
+            if (AppConstants.Versions.feature11Plus) {
                 setItemChecked(i, (i == selected));
+            } else {
+                setSelection(i);
             }
-        } else {
-            post(new Runnable() {
-                @Override
-                public void run() {
-                    final int displayCount = getChildCount();
-
-                    for (int i = getFirstVisiblePosition(); i < getLastVisiblePosition(); i++) {
-                        final Tab tab = tabsAdapter.getItem(i);
-                        final boolean checked = displayCount == 1 || i == selected;
-                        final View tabView = getViewForTab(tab);
-                        if (tabView != null) {
-                            ((TabsLayoutItemView) tabView).setChecked(checked);
-                        }
-                    }
-                }
-            });
         }
     }
 
