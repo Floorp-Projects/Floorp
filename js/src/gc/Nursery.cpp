@@ -113,7 +113,7 @@ js::Nursery::updateDecommittedRegion()
     if (numActiveChunks_ < numNurseryChunks_) {
         // Bug 994054: madvise on MacOS is too slow to make this
         //             optimization worthwhile.
-# ifndef XP_MACOSX
+# ifndef XP_DARWIN
         uintptr_t decommitStart = chunk(numActiveChunks_).start();
         uintptr_t decommitSize = heapEnd() - decommitStart;
         MOZ_ASSERT(decommitStart == AlignBytes(decommitStart, Alignment));
