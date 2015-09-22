@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+
+<!--
+Bug 912646 - Closing app toolbox causes phone to disconnect
+-->
+
+<html>
+
+  <head>
+    <meta charset="utf8">
+    <title></title>
+
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  </head>
+
+  <body>
+
+    <script type="application/javascript;version=1.8">
+      const Cu = Components.utils;
+      const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm");
+      const {DebuggerServer} = require("devtools/server/main");
+
+      if (!DebuggerServer.initialized) {
+        DebuggerServer.init();
+        DebuggerServer.addBrowserActors();
+      }
+
+      window.onload = function() {
+        SimpleTest.waitForExplicitFinish();
+
+        Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm");
+
+        const {TargetFactory} = require("devtools/client/framework/target");
+        const {Toolbox} = require("devtools/client/framework/toolbox");
+
+        const {Connection, ConnectionManager} =
+          require("devtools/shared/client/connection-manager");
+        const ConnectionStore =
+          require("devtools/client/app-manager/connection-store");
+
+        let connection = ConnectionManager.createConnection();
+
+        connection.host = null; // force pipe
+        connection.port = null;
+
+        let been_through_connecting = false;
+        let been_through_connected = false;
+        let been_through_disconnected = false;
+
+        is(connection.status, Connection.Status.DISCONNECTED,
+           "status updated (diconnected)");
+
+        connection.once("connecting", () => {
+          SimpleTest.executeSoon(() => {
+            been_through_connecting = true;
+            is(connection.status, Connection.Status.CONNECTING,
+               "status updated (connecting)");
+          })
+        });
+
+        connection.once("connected", () => {
+          SimpleTest.executeSoon(() => {
+            been_through_connected = true;
+            is(connection.status, Connection.Status.CONNECTED,
+               "status updated (connected)");
+            cycleToolbox();
+          })
+        });
+
+        function cycleToolbox() {
+          connection.client.listTabs(response => {
+            let options = {
+              form: response.tabs[0],
+              client: connection.client,
+              chrome: true
+            };
+            TargetFactory.forRemoteTab(options).then(target => {
+              let hostType = Toolbox.HostType.WINDOW;
+              gDevTools.showToolbox(target,
+                                    null,
+                                    hostType).then(toolbox => {
+                SimpleTest.executeSoon(() => {
+                  toolbox.once("destroyed", onDestroyToolbox);
+                  toolbox.destroy();
+                });
+              });
+            });
+          });
+        }
+
+        function onDestroyToolbox() {
+          is(connection.status, Connection.Status.CONNECTED,
+             "toolbox cycled, still connected");
+          connection.disconnect();
+        }
+
+        connection.once("disconnected", () => {
+          SimpleTest.executeSoon(() => {
+            been_through_disconnected = true;
+            is(connection.status, Connection.Status.DISCONNECTED,
+               "status updated (disconnected)");
+            connection.destroy();
+            finishUp();
+          })
+        });
+
+        function finishUp() {
+          ok(been_through_connecting &&
+             been_through_connected &&
+             been_through_disconnected, "All updates happened");
+          DebuggerServer.destroy();
+          SimpleTest.finish();
+        }
+
+        connection.connect();
+      }
+
+    </script>
+  </body>
+</html>

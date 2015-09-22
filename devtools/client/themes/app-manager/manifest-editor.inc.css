@@ -1,0 +1,82 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Manifest Editor overrides */
+
+.variables-view-container.manifest-editor {
+  background-color: #F5F5F5;
+  padding: 20px 2px;
+}
+
+.manifest-editor .variable-or-property:focus > .title {
+  background-color: #EDEDED;
+  color: #000;
+  border-radius: 4px;
+}
+
+.manifest-editor .variables-view-property > .title > .name {
+  color: #27406A;
+}
+
+.manifest-editor .variable-or-property > .title > label,
+.manifest-editor textbox  {
+  font-family: monospace;
+}
+
+.manifest-editor .variable-or-property > .title > .token-string {
+  color: #54BC6A;
+  font-weight: bold;
+}
+
+.manifest-editor .variable-or-property > .title > .token-boolean,
+.manifest-editor .variable-or-property > .title > .token-number {
+  color: #009BD4;
+  font-weight: bold;
+}
+
+.manifest-editor .variable-or-property > .title > .token-undefined {
+  color: #bbb;
+}
+
+.manifest-editor .variable-or-property > .title > .token-null {
+  color: #999;
+}
+
+.manifest-editor .variable-or-property > .title > .token-other {
+  color: #333;
+}
+
+.manifest-editor .variables-view-variable {
+  border-bottom: none;
+}
+
+.manifest-editor .variables-view-delete,
+.manifest-editor .variables-view-delete:hover,
+.manifest-editor .variables-view-delete:active,
+.manifest-editor .variable-or-property:focus .variables-view-delete,
+.manifest-editor .variables-view-add-property,
+.manifest-editor .variables-view-add-property:hover,
+.manifest-editor .variables-view-add-property:active,
+.manifest-editor .variable-or-property:focus .variables-view-add-property {
+  list-style-image: none;
+  -moz-image-region: initial;
+}
+
+.manifest-editor .variables-view-delete::before,
+.manifest-editor .variables-view-add-property::before {
+  width: 11px;
+  height: 11px;
+  content: "";
+  display: inline-block;
+  background-size: 11px auto;
+}
+
+.manifest-editor .variables-view-delete::before {
+  background-image: url("images/app-manager/remove.svg");
+}
+
+.manifest-editor .variables-view-add-property::before {
+  background-image: url("images/app-manager/add.svg");
+  -moz-margin-end: 2px;
+}

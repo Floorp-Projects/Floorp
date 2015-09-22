@@ -1788,8 +1788,8 @@ GCMarker::enterWeakMarkingMode()
     if (weakMapAction() == ExpandWeakMaps) {
         tag_ = TracerKindTag::WeakMarking;
 
-        for (GCCompartmentGroupIter c(runtime()); !c.done(); c.next()) {
-            for (WeakMapBase* m = c->gcWeakMapList; m; m = m->next) {
+        for (GCZoneGroupIter zone(runtime()); !zone.done(); zone.next()) {
+            for (WeakMapBase* m = zone->gcWeakMapList; m; m = m->next) {
                 if (m->marked)
                     m->markEphemeronEntries(this);
             }
@@ -2060,9 +2060,10 @@ js::TenuringTracer::moveToTenured(JSObject* src)
     if (!t) {
         zone->arenas.checkEmptyFreeList(dstKind);
         AutoMaybeStartBackgroundAllocation maybeStartBackgroundAllocation;
+        AutoEnterOOMUnsafeRegion oomUnsafe;
         t = zone->arenas.allocateFromArena(zone, dstKind, maybeStartBackgroundAllocation);
         if (!t)
-            CrashAtUnhandlableOOM("Failed to allocate object while tenuring.");
+            oomUnsafe.crash("Failed to allocate object while tenuring.");
     }
     JSObject* dst = reinterpret_cast<JSObject*>(t);
     tenuredSize += moveObjectToTenured(dst, src, dstKind);
@@ -2212,9 +2213,14 @@ js::TenuringTracer::moveSlotsToTenured(NativeObject* dst, NativeObject* src, All
 
     Zone* zone = src->zone();
     size_t count = src->numDynamicSlots();
-    dst->slots_ = zone->pod_malloc<HeapSlot>(count);
-    if (!dst->slots_)
-        CrashAtUnhandlableOOM("Failed to allocate slots while tenuring.");
+
+    {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        dst->slots_ = zone->pod_malloc<HeapSlot>(count);
+        if (!dst->slots_)
+            oomUnsafe.crash("Failed to allocate slots while tenuring.");
+    }
+
     PodCopy(dst->slots_, src->slots_, count);
     nursery().setSlotsForwardingPointer(src->slots_, dst->slots_, count);
     return count * sizeof(HeapSlot);
@@ -2249,9 +2255,14 @@ js::TenuringTracer::moveElementsToTenured(NativeObject* dst, NativeObject* src, 
     }
 
     MOZ_ASSERT(nslots >= 2);
-    dstHeader = reinterpret_cast<ObjectElements*>(zone->pod_malloc<HeapSlot>(nslots));
-    if (!dstHeader)
-        CrashAtUnhandlableOOM("Failed to allocate elements while tenuring.");
+
+    {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        dstHeader = reinterpret_cast<ObjectElements*>(zone->pod_malloc<HeapSlot>(nslots));
+        if (!dstHeader)
+            oomUnsafe.crash("Failed to allocate elements while tenuring.");
+    }
+
     js_memcpy(dstHeader, srcHeader, nslots * sizeof(HeapSlot));
     nursery().setElementsForwardingPointer(srcHeader, dstHeader, nslots);
     dst->elements_ = dstHeader->elements();

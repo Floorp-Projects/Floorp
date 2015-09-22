@@ -36,7 +36,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "FinalizationWitnessService",
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "console",
-                                  "resource://gre/modules/devtools/Console.jsm");
+                                  "resource://gre/modules/devtools/shared/Console.jsm");
 
 // Counts the number of created connections per database basename(). This is
 // used for logging to distinguish connection instances.

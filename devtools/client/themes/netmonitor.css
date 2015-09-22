@@ -1,0 +1,890 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root.theme-dark {
+  --table-splitter-color: rgba(255,255,255,0.15);
+  --table-zebra-background: rgba(255,255,255,0.05);
+}
+:root.theme-light {
+  --table-splitter-color: rgba(0,0,0,0.15);
+  --table-zebra-background: rgba(0,0,0,0.05);
+}
+
+#requests-menu-empty-notice {
+  margin: 0;
+  padding: 12px;
+  font-size: 120%;
+}
+
+#notice-perf-message {
+  margin-top: 2px;
+}
+
+#requests-menu-perf-notice-button {
+  min-width: 30px;
+  min-height: 26px;
+  margin: 0;
+  list-style-image: url(images/profiler-stopwatch.svg);
+}
+
+#requests-menu-perf-notice-button .button-text {
+  display: none;
+}
+
+#requests-menu-reload-notice-button {
+  min-height: 26px;
+  margin: 0;
+}
+
+/* Network requests table */
+
+#requests-menu-toolbar {
+  padding: 0;
+}
+
+.requests-menu-header:first-child,
+.requests-menu-subitem:first-child {
+  -moz-padding-start: 6px;
+}
+
+.requests-menu-subitem {
+  padding: 3px;
+}
+
+.requests-menu-header:not(:last-child),
+.requests-menu-subitem:not(:last-child) {
+  -moz-border-end: 1px solid var(--table-splitter-color);
+}
+
+.requests-menu-header-button {
+  -moz-appearance: none;
+  background: none;
+  min-width: 1px;
+  min-height: 24px;
+  margin: 0;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font-weight: inherit !important;
+  transition: background-color 0.1s ease-in-out;
+}
+
+.requests-menu-header-button:hover {
+  background: rgba(0,0,0,0.10);
+}
+
+.requests-menu-header-button:hover:active {
+  background: rgba(0,0,0,0.25);
+}
+
+.requests-menu-header-button:not(:active)[sorted] {
+  background: rgba(0,0,0,0.15);
+}
+
+.requests-menu-header-button:not(:active)[sorted=ascending] {
+  background-image: radial-gradient(farthest-side at center top, hsla(200,100%,70%,.7), hsla(200,100%,70%,0.3));
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+}
+
+.requests-menu-header-button:not(:active)[sorted=descending] {
+  background-image: radial-gradient(farthest-side at center bottom, hsla(200,100%,70%,.7), hsla(200,100%,70%,0.3));
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+  background-position: bottom;
+}
+
+/* Network requests table: specific column dimensions */
+
+.requests-menu-status-and-method {
+  width: 12em;
+}
+
+.requests-menu-status {
+  width: 20px;
+  height: 10px;
+}
+
+.requests-menu-method {
+  text-align: center;
+  font-weight: 600;
+}
+
+.requests-menu-icon-and-file {
+  width: 20vw;
+  min-width: 4em;
+}
+
+.requests-menu-icon {
+  background: #fff;
+  width: calc(1em + 4px);
+  height: calc(1em + 4px);
+  margin: -4px 0px;
+  -moz-margin-end: 4px;
+}
+
+.requests-menu-icon {
+  outline: 1px solid var(--table-splitter-color);
+}
+
+.requests-menu-file {
+  text-align: start;
+}
+
+.requests-menu-security-and-domain {
+  width: 14vw;
+  min-width: 10em;
+}
+
+.requests-security-state-icon {
+  width: 16px;
+  height: 16px;
+  -moz-margin-end: 4px;
+  cursor: pointer;
+}
+
+.security-state-insecure {
+  list-style-image: url(chrome://browser/skin/identity-mixed-active-loaded.svg);
+}
+
+.security-state-secure {
+  list-style-image: url(chrome://browser/skin/identity-secure.svg);
+}
+
+.security-state-weak {
+  list-style-image: url(chrome://browser/skin/identity-mixed-passive-loaded.svg);
+}
+
+.security-state-broken {
+  list-style-image: url(chrome://browser/skin/controlcenter/warning-gray.svg);
+}
+
+.security-state-local {
+  list-style-image: url(chrome://browser/skin/identity-not-secure.svg);
+}
+
+.requests-menu-type {
+  text-align: center;
+  width: 4em;
+}
+
+.requests-menu-size {
+  text-align: center;
+  width: 8em;
+}
+
+.requests-menu-transferred {
+  text-align: center;
+  width: 8em;
+}
+
+/* Network requests table: status codes */
+
+box.requests-menu-status {
+  background: #fff;
+  width: 10px;
+  -moz-margin-start: 5px;
+  -moz-margin-end: 5px;
+  border-radius: 10px;
+  transition: box-shadow 0.5s ease-in-out;
+}
+
+label.requests-menu-status-code {
+  -moz-margin-start: 3px !important;
+  width: 3em;
+  -moz-margin-end: -3em !important;
+}
+
+box.requests-menu-status:not([code]) {
+  background-color: var(--theme-highlight-red);
+  border-radius: 0; /* squares */
+}
+
+box.requests-menu-status[code="cached"] {
+  border: 2px solid var(--theme-content-color2);
+  background-color: transparent;  
+}
+
+box.requests-menu-status[code^="1"] {
+  background-color: var(---theme-highlight-blue);
+}
+
+box.requests-menu-status[code^="2"] {
+  background-color: var(--theme-highlight-green);
+}
+
+/* 3xx are triangles */
+box.requests-menu-status[code^="3"] {
+  background-color: transparent;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 10px solid var(--theme-highlight-lightorange);
+  border-radius: 0;
+}
+
+/* 4xx and 5xx are squares - error codes */
+box.requests-menu-status[code^="4"] {
+  background-color: var(--theme-highlight-red);
+  border-radius: 0; /* squares */
+}
+
+box.requests-menu-status[code^="5"] {
+  background-color: var(--theme-highlight-pink);
+  border-radius: 0;
+  transform: rotate(45deg);
+}
+
+/* Network requests table: waterfall header */
+
+#requests-menu-waterfall-label {
+  -moz-padding-start: 8px;
+  -moz-padding-end: 8px;
+}
+
+.requests-menu-timings-division {
+  width: 100px;
+  padding-top: 2px;
+  -moz-padding-start: 4px;
+  font-size: 75%;
+  pointer-events: none;
+}
+
+.requests-menu-timings-division:not(:first-child) {
+  -moz-border-start: 1px dotted;
+  -moz-margin-start: -100px !important; /* Don't affect layout. */
+}
+
+.requests-menu-timings-division:-moz-locale-dir(ltr) {
+  transform-origin: left center;
+}
+
+.requests-menu-timings-division:-moz-locale-dir(rtl) {
+  transform-origin: right center;
+}
+
+.theme-dark .requests-menu-timings-division[division-scale=millisecond] {
+  -moz-border-start-color: var(--theme-selection-color) !important;
+}
+
+.theme-light .requests-menu-timings-division[division-scale=millisecond] {
+  -moz-border-start-color: var(--theme-body-color-alt) !important;
+}
+
+.theme-dark .requests-menu-timings-division[division-scale=second] {
+  -moz-border-start-color: var(--theme-selection-color) !important;
+  font-weight: 600;
+}
+
+.theme-light .requests-menu-timings-division[division-scale=second] {
+  -moz-border-start-color: var(--theme-body-color-alt) !important;
+  font-weight: 600;
+}
+
+.theme-dark .requests-menu-timings-division[division-scale=minute] {
+  -moz-border-start-color: var(--theme-selection-color) !important;
+  font-weight: 600;
+}
+
+.theme-light .requests-menu-timings-division[division-scale=minute] {
+  -moz-border-start-color: var(--theme-body-color-alt) !important;
+  font-weight: 600;
+}
+
+/* Network requests table: waterfall items */
+
+.requests-menu-subitem.requests-menu-waterfall {
+  -moz-padding-start: 0px;
+  -moz-padding-end: 4px;
+  /* Background created on a <canvas> in js. */
+  /* @see devtools/client/netmonitor/netmonitor-view.js */
+  background-image: -moz-element(#waterfall-background);
+  background-repeat: repeat-y;
+  background-position: -1px center;
+}
+
+.requests-menu-subitem.requests-menu-waterfall:-moz-locale-dir(rtl) {
+  background-position: right center;
+}
+
+.requests-menu-timings:-moz-locale-dir(ltr) {
+  transform-origin: left center;
+}
+
+.requests-menu-timings:-moz-locale-dir(rtl) {
+  transform-origin: right center;
+}
+
+.requests-menu-timings-total:-moz-locale-dir(ltr) {
+  transform-origin: left center;
+}
+
+.requests-menu-timings-total:-moz-locale-dir(rtl) {
+  transform-origin: right center;
+}
+
+.requests-menu-timings-total {
+  -moz-padding-start: 4px;
+  font-size: 85%;
+  font-weight: 600;
+}
+
+.requests-menu-timings-box {
+  height: 9px;
+}
+
+.requests-menu-timings-box.blocked {
+  background-color: rgba(235, 83, 104, 0.8); /* red */
+}
+
+.requests-menu-timings-box.dns {
+  background-color: rgba(223, 128, 255, 0.8); /* pink */
+}
+
+.requests-menu-timings-box.connect {
+  background-color: rgba(217, 102, 41, 0.8); /* orange */
+}
+
+/* Use custom colors for dark and light theme on remaining timing types. */
+.theme-dark .requests-menu-timings-box.send {
+  background-color: rgba(70, 175, 227, 0.8); /* light blue */
+}
+
+.theme-light .requests-menu-timings-box.send {
+  background-color: rgba(0, 136, 204, 0.8); /* blue */
+}
+
+.theme-dark .requests-menu-timings-box.wait {
+  background-color: rgba(94, 136, 176, 0.8); /* blue grey */
+}
+
+.theme-light .requests-menu-timings-box.wait {
+  background-color: rgba(95, 136, 176, 0.8); /* blue grey */
+}
+
+.theme-dark .requests-menu-timings-box.receive {
+  background-color: rgba(112, 191, 83, 0.8); /* green */
+}
+
+.theme-light .requests-menu-timings-box.receive {
+  background-color: rgba(44, 187, 15, 0.8); /* green */
+}
+
+/* SideMenuWidget */
+#network-table .side-menu-widget-empty-text,
+#network-table .side-menu-widget-container {
+  background-color: var(--theme-body-background);
+}
+
+#network-table .side-menu-widget-item {
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.side-menu-widget-item-contents {
+  padding: 0px;
+}
+
+.side-menu-widget-item:not(.selected)[odd] {
+  background-color: var(--table-zebra-background);
+}
+
+.side-menu-widget-item:not(.selected):hover {
+  background-color: var(--theme-selection-background-semitransparent);
+}
+
+/* Network request details */
+
+#details-pane-toggle {
+  background: none;
+  box-shadow: none;
+  border-color: transparent;
+  list-style-image: url("chrome://devtools/skin/themes/images/debugger-collapse.png");
+  -moz-image-region: rect(0px,16px,16px,0px);
+}
+
+#details-pane-toggle > .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
+}
+
+#details-pane-toggle[pane-collapsed] {
+  list-style-image: url("chrome://devtools/skin/themes/images/debugger-expand.png");
+}
+
+#details-pane-toggle:active {
+  -moz-image-region: rect(0px,32px,16px,16px);
+}
+
+@media (min-resolution: 1.1dppx) {
+  #details-pane-toggle {
+    list-style-image: url("chrome://devtools/skin/themes/images/debugger-collapse@2x.png");
+    -moz-image-region: rect(0px,32px,32px,0px);
+  }
+
+  #details-pane-toggle[pane-collapsed] {
+    list-style-image: url("chrome://devtools/skin/themes/images/debugger-expand@2x.png");
+  }
+
+  #details-pane-toggle:active {
+    -moz-image-region: rect(0px,64px,32px,32px);
+  }
+}
+
+/* Network request details tabpanels */
+
+.tabpanel-content {
+  background-color: var(--theme-sidebar-background);
+}
+
+.theme-dark .tabpanel-content {
+  color: var(--theme-selection-color);
+}
+
+#headers-tabpanel {
+  background-color: var(--theme-toolbar-background);
+}
+
+/* Summary tabpanel */
+
+.tabpanel-summary-container {
+  padding: 1px;
+}
+
+.tabpanel-summary-label {
+  -moz-padding-start: 4px;
+  -moz-padding-end: 3px;
+  font-weight: 600;
+}
+
+.tabpanel-summary-value {
+  color: inherit;
+  -moz-padding-start: 3px;
+}
+
+.theme-dark .tabpanel-summary-value {
+  color: var(--theme-selection-color);
+}
+
+/* Headers tabpanel */
+
+#headers-summary-status,
+#headers-summary-version {
+  padding-bottom: 2px;
+}
+
+#headers-summary-size {
+  padding-top: 2px;
+}
+
+#headers-summary-resend {
+  margin-top: -10px;
+  -moz-margin-end: 6px;
+}
+
+#toggle-raw-headers {
+  margin-top: -10px;
+  -moz-margin-end: 6px;
+}
+
+.raw-response-textarea {
+  height: 50vh;
+}
+
+/* Response tabpanel */
+
+#response-content-info-header {
+  margin: 0;
+  padding: 3px 8px;
+  background-color: var(--theme-highlight-red);
+  color: var(--theme-selection-color);
+}
+
+#response-content-image-box {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+#response-content-image {
+  background: #fff;
+  border: 1px dashed GrayText;
+  margin-bottom: 10px;
+}
+
+/* Preview tabpanel */
+
+#preview-tabpanel {
+  background: #fff;
+}
+
+#response-preview {
+  display: -moz-box;
+  -moz-box-flex: 1;
+}
+
+/* Timings tabpanel */
+
+#timings-tabpanel .tabpanel-summary-label {
+  width: 10em;
+}
+
+#timings-tabpanel .requests-menu-timings-box {
+  transition: transform 0.2s ease-out;
+  border: none;
+  min-width: 1px;
+}
+
+#timings-tabpanel .requests-menu-timings-total {
+  transition: transform 0.2s ease-out;
+}
+
+/* Security tabpanel */
+.security-info-section {
+  -moz-padding-start: 1em;
+}
+
+.theme-dark #security-error-message {
+  color: var(--theme-selection-color);
+}
+
+#security-tabpanel {
+  overflow: auto;
+}
+
+.security-warning-icon {
+  background-image: url(images/alerticon-warning.png);
+  background-size: 13px 12px;
+  -moz-margin-start: 5px;
+  vertical-align: top;
+  width: 13px;
+  height: 12px;
+}
+
+@media (min-resolution: 1.1dppx) {
+  .security-warning-icon {
+    background-image: url(images/alerticon-warning@2x.png);
+  }
+}
+
+/* Custom request form */
+
+#custom-pane {
+  padding: 0.6em 0.5em;
+}
+
+.custom-header {
+  font-size: 1.1em;
+}
+
+.custom-section {
+  margin-top: 0.5em;
+}
+
+#custom-method-value {
+  width: 4.5em;
+}
+
+/* Footer */
+
+#requests-menu-footer {
+  background-color: var(--theme-toolbar-background);
+  border-top: 1px solid var(--table-splitter-color);
+}
+
+.requests-menu-footer-button,
+.requests-menu-footer-label {
+  min-width: 1em;
+  margin: 0;
+  border: none;
+  padding: 2px 1vw;
+}
+
+.theme-dark .requests-menu-footer-button,
+.theme-dark .requests-menu-footer-label {
+  color: var(--theme-selection-color);
+}
+
+.theme-light .requests-menu-footer-button,
+.theme-light .requests-menu-footer-label {
+  color: var(--theme-body-color);
+}
+
+.requests-menu-footer-spacer {
+  min-width: 2px;
+}
+
+.theme-dark .requests-menu-footer-spacer:not(:first-child),
+.theme-dark .requests-menu-footer-button:not(:first-child) {
+  -moz-border-start: 1px solid var(--table-splitter-color);
+}
+
+.theme-light .requests-menu-footer-spacer:not(:first-child),
+.theme-light .requests-menu-footer-button:not(:first-child) {
+  -moz-border-start: 1px solid var(--table-splitter-color);
+}
+
+.requests-menu-footer-button {
+  -moz-appearance: none;
+  background: rgba(0,0,0,0.025);
+}
+
+.requests-menu-footer-button:hover {
+  background: rgba(0,0,0,0.10);
+}
+
+.requests-menu-footer-button:hover:active {
+  background-color: var(--theme-selection-background-semitransparent);
+}
+
+.requests-menu-footer-button:not(:active)[checked] {
+  background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
+}
+
+.requests-menu-footer-label {
+  padding-top: 3px;
+  font-weight: 600;
+}
+
+#requests-menu-filter-freetext-text {
+  transition-property: max-width, -moz-padding-end, -moz-padding-start;
+  transition-duration: 250ms;
+  transition-timing-function: ease;
+}
+
+#requests-menu-filter-freetext-text:not([focused]):not([filled]) > .textbox-input-box {
+  overflow: hidden;
+}
+
+#requests-menu-filter-freetext-text:not([focused]):not([filled]) {
+  max-width: 20px !important;
+  -moz-padding-end: 5px;
+  -moz-padding-start: 22px;
+  background-position: 8px center, top left, top left;
+}
+
+#requests-menu-filter-freetext-text[focused],
+#requests-menu-filter-freetext-text[filled] {
+  max-width: 200px !important;
+}
+
+/* Performance analysis buttons */
+
+#requests-menu-network-summary-button {
+  background: none;
+  box-shadow: none;
+  border-color: transparent;
+  list-style-image: url(images/profiler-stopwatch.svg);
+  -moz-padding-end: 0;
+  cursor: pointer;
+}
+
+#requests-menu-network-summary-label {
+  -moz-padding-start: 0;
+  cursor: pointer;
+}
+
+#requests-menu-network-summary-label:hover {
+  text-decoration: underline;
+}
+
+/* Performance analysis view */
+
+#network-statistics-toolbar {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+#network-statistics-back-button {
+  min-width: 4em;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  border-top: none;
+  border-bottom: none;
+  -moz-border-start: none;
+}
+
+#network-statistics-view-splitter {
+  border-color: rgba(0,0,0,0.2);
+  cursor: default;
+  pointer-events: none;
+}
+
+#network-statistics-charts {
+  min-height: 1px;
+}
+
+#network-statistics-charts {
+  background-color: var(--theme-sidebar-background);
+}
+
+#network-statistics-charts .pie-chart-container {
+  -moz-margin-start: 3vw;
+  -moz-margin-end: 1vw;
+}
+
+#network-statistics-charts .table-chart-container {
+  -moz-margin-start: 1vw;
+  -moz-margin-end: 3vw;
+}
+
+.chart-colored-blob[name=html] {
+  fill: var(--theme-highlight-bluegrey);
+  background: var(--theme-highlight-bluegrey);
+}
+
+.chart-colored-blob[name=css] {
+  fill: var(--theme-highlight-blue);
+  background: var(--theme-highlight-blue);
+}
+
+.chart-colored-blob[name=js] {
+  fill: var(--theme-highlight-lightorange);
+  background: var(--theme-highlight-lightorange);
+}
+
+.chart-colored-blob[name=xhr] {
+  fill: var(--theme-highlight-orange);
+  background: var(--theme-highlight-orange);
+}
+
+.chart-colored-blob[name=fonts] {
+  fill: var(--theme-highlight-purple);
+  background: var(--theme-highlight-purple);
+}
+
+.chart-colored-blob[name=images] {
+  fill: var(--theme-highlight-pink);
+  background: var(--theme-highlight-pink);
+}
+
+.chart-colored-blob[name=media] {
+  fill: var(--theme-highlight-green);
+  background: var(--theme-highlight-green);
+}
+
+.chart-colored-blob[name=flash] {
+  fill: var(--theme-highlight-red);
+  background: var(--theme-highlight-red);
+}
+
+.table-chart-row-label[name=cached] {
+  display: none;
+}
+
+.table-chart-row-label[name=count] {
+  width: 3em;
+  text-align: end;
+}
+
+.table-chart-row-label[name=label] {
+  width: 7em;
+}
+
+.table-chart-row-label[name=size] {
+  width: 7em;
+}
+
+.table-chart-row-label[name=time] {
+  width: 7em;
+}
+
+/* Responsive sidebar */
+@media (max-width: 700px) {
+  #requests-menu-toolbar {
+    height: 22px;
+  }
+
+  .requests-menu-header-button {
+    min-height: 20px;
+  }
+
+  #details-pane {
+    margin: 0 !important;
+    /* To prevent all the margin hacks to hide the sidebar. */
+  }
+
+  .requests-menu-status-and-method {
+    width: 16vw;
+  }
+
+  .requests-menu-icon-and-file {
+    width: 30vw;
+  }
+
+  .requests-menu-security-and-domain {
+    width: 30vw;
+  }
+
+  .requests-menu-type {
+    width: 8vw;
+  }
+
+  .requests-menu-size {
+    width: 16vw;
+    border-width: 0 !important;
+    box-shadow: none !important;
+    /* The "Timeline" header is not visible anymore, and thus the
+       right border and box-shadow of "Size" column should be hidden. */
+  }
+}
+
+/* Platform overrides (copied in from the old platform specific files) */
+%ifdef XP_WIN
+.requests-menu-header-button > .button-box {
+  padding: 0;
+}
+
+.requests-menu-timings-division {
+  padding-top: 1px;
+  font-size: 90%;
+}
+
+.requests-menu-footer-button,
+.requests-menu-footer-label {
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+
+/* Responsive sidebar */
+@media (max-width: 700px) {
+  .requests-menu-footer-button,
+  .requests-menu-footer-label {
+    padding-top: 0px;
+    padding-bottom: 0px;
+  }
+}
+%elifdef XP_LINUX
+#headers-summary-resend {
+  padding: 4px;
+}
+
+#toggle-raw-headers {
+  padding: 4px;
+}
+
+.requests-menu-status-and-method {
+  width: 9em;
+}
+
+.requests-menu-security-and-domain {
+  width: 16vw;
+}
+
+.requests-menu-size {
+  width: 6em;
+}
+
+/* Responsive sidebar */
+@media (max-width: 700px) {
+  .requests-menu-header-button {
+    font-size: 85%;
+  }
+}
+%endif

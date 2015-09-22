@@ -270,7 +270,7 @@ class nspr::CondVar
     nspr::Lock* lock_;
 
   public:
-    CondVar(nspr::Lock* lock) : lock_(lock) {}
+    explicit CondVar(nspr::Lock* lock) : lock_(lock) {}
     pthread_cond_t& cond() { return cond_; }
     nspr::Lock* lock() { return lock_; }
 };

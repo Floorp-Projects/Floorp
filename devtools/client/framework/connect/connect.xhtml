@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html [
+<!ENTITY % connectionDTD SYSTEM "chrome://browser/locale/devtools/connection-screen.dtd" >
+ %connectionDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <head>
+    <title>&title;</title>
+    <link rel="stylesheet" href="chrome://devtools/skin/themes/dark-theme.css" type="text/css"/>
+    <link rel="stylesheet" href="chrome://devtools/content/framework/connect/connect.css" type="text/css"/>
+    <script type="application/javascript;version=1.8" src="connect.js"></script>
+  </head>
+  <body>
+    <h1>&header;</h1>
+    <section id="connection-form">
+      <form validate="validate" action="#">
+        <label>
+          <span>&host;</span>
+          <input required="required" class="devtools-textinput" id="host" type="text"></input>
+        </label>
+        <label>
+          <span>&port;</span>
+          <input required="required" class="devtools-textinput" id="port" type="number" pattern="\d+"></input>
+        </label>
+        <label>
+          <input class="devtools-toolbarbutton" id="submit" standalone="true" type="submit" value="&connect;"></input>
+        </label>
+      </form>
+      <p class="error-message error-timeout">&errorTimeout;</p>
+      <p class="error-message error-refused">&errorRefused;</p>
+      <p class="error-message error-unexpected">&errorUnexpected;</p>
+    </section>
+    <section id="actors-list">
+      <p>&availableTabs;</p>
+      <ul class="actors" id="tabActors"></ul>
+      <p>&availableAddons;</p>
+      <ul class="actors" id="addonActors"></ul>
+      <p>&availableProcesses;</p>
+      <ul class="actors" id="globalActors"></ul>
+    </section>
+    <section id="connecting">
+      <p><img src="chrome://browser/skin/tabbrowser/loading.png"></img> &connecting;</p>
+    </section>
+    <footer>&remoteHelp;<a target='_' href='https://developer.mozilla.org/docs/Tools/Remote_Debugging'>&remoteDocumentation;</a>&remoteHelpSuffix;</footer>
+  </body>
+</html>

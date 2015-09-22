@@ -1,0 +1,112 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=548193
+-->
+<head>
+  <title>Test for Bug 548193</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<iframe style="width:200px;height:200px;" id='cspframe'></iframe>
+<script class="testbody" type="text/javascript">
+
+/*
+ * Description of the test:
+ * We are loading a stylesheet using a csp policy that only allows styles from 'self'
+ * to be loaded. In other words, the *.css file itself should be allowed to load, but
+ * the @import file within the CSS should get blocked. We verify that the generated
+ * csp-report is sent and contains all the expected values.
+ * In detail, the test starts by sending an XHR request to the report-server
+ * which waits on the server side till the report was received and hands the
+ * report in JSON format back to the testfile which then verifies accuracy
+ * of all the different report fields in the CSP report.
+ */
+
+const TEST_FILE = "tests/dom/security/test/csp/file_report_for_import.html";
+const REPORT_URI =
+  "http://mochi.test:8888/tests/dom/security/test/csp/file_report_for_import_server.sjs?report";
+const POLICY = "style-src 'self'; report-uri " + REPORT_URI;
+
+const DOC_URI =
+  "http://mochi.test:8888/tests/dom/security/test/csp/file_testserver.sjs?" +
+  "file=tests/dom/security/test/csp/file_report_for_import.html&" +
+  "csp=style-src%20%27self%27%3B%20" +
+  "report-uri%20http%3A//mochi.test%3A8888/tests/dom/security/test/csp/" +
+  "file_report_for_import_server.sjs%3Freport";
+
+function checkResults(reportStr) {
+  try {
+    var reportObj = JSON.parse(reportStr);
+    var cspReport = reportObj["csp-report"];
+
+    is(cspReport["document-uri"], DOC_URI, "Incorrect document-uri");
+    is(cspReport["referrer"],
+       "http://mochi.test:8888/tests/dom/security/test/csp/test_report_for_import.html",
+       "Incorrect referrer");
+    is(cspReport["violated-directive"],
+       "style-src http://mochi.test:8888",
+       "Incorrect violated-directive");
+    is(cspReport["original-policy"],
+       "style-src http://mochi.test:8888; report-uri " +
+       "http://mochi.test:8888/tests/dom/security/test/csp/file_report_for_import_server.sjs?report",
+       "Incorrect original-policy");
+    is(cspReport["blocked-uri"],
+       "http://example.com/tests/dom/security/test/csp/file_report_for_import_server.sjs?stylesheet",
+       "Incorrect blocked-uri");
+
+    // we do not always set the following fields
+    is(cspReport["source-file"], undefined, "Incorrect source-file");
+    is(cspReport["script-sample"], undefined, "Incorrect script-sample");
+    is(cspReport["line-number"], undefined, "Incorrect line-number");
+  }
+  catch (e) {
+    ok(false, "Could not parse JSON (exception: " + e + ")");
+  }
+}
+
+function loadTestPageIntoFrame() {
+  // load the resource which will generate a CSP violation report
+  // save this for last so that our listeners are registered.
+  var src = "file_testserver.sjs";
+  // append the file that should be served
+  src += "?file=" + escape(TEST_FILE);
+  // append the CSP that should be used to serve the file
+  src += "&csp=" + escape(POLICY);
+  // appending a fragment so we can test that it's correctly stripped
+  // for document-uri and source-file.
+  src += "#foo";
+  document.getElementById("cspframe").src = src;
+}
+
+function runTest() {
+  // send an xhr request to the server which is processed async, which only
+  // returns after the server has received the csp report.
+  var myXHR = new XMLHttpRequest();
+  myXHR.open("GET", "file_report_for_import_server.sjs?queryresult");
+  myXHR.onload = function(e) {
+    checkResults(myXHR.responseText);
+    SimpleTest.finish();
+  }
+  myXHR.onerror = function(e) {
+    ok(false, "could not query results from server (" + e.message + ")");
+    SimpleTest.finish();
+  }
+  myXHR.send();
+
+  // give it some time and run the testpage
+  SimpleTest.executeSoon(loadTestPageIntoFrame);
+}
+
+SimpleTest.waitForExplicitFinish();
+runTest();
+
+</script>
+</pre>
+</body>
+</html>

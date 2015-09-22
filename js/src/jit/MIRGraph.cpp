@@ -107,8 +107,9 @@ MIRGenerator::addAbortedPreliminaryGroup(ObjectGroup* group)
         if (group == abortedPreliminaryGroups_[i])
             return;
     }
+    AutoEnterOOMUnsafeRegion oomUnsafe;
     if (!abortedPreliminaryGroups_.append(group))
-        CrashAtUnhandlableOOM("addAbortedPreliminaryGroup");
+        oomUnsafe.crash("addAbortedPreliminaryGroup");
 }
 
 bool
@@ -1137,16 +1138,18 @@ MBasicBlock::addPredecessorSameInputsAs(MBasicBlock* pred, MBasicBlock* existing
     MOZ_ASSERT(pred->hasLastIns());
     MOZ_ASSERT(!pred->successorWithPhis());
 
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+
     if (!phisEmpty()) {
         size_t existingPosition = indexForPredecessor(existingPred);
         for (MPhiIterator iter = phisBegin(); iter != phisEnd(); iter++) {
             if (!iter->addInputSlow(iter->getOperand(existingPosition)))
-                CrashAtUnhandlableOOM("MBasicBlock::addPredecessorAdjustPhis");
+                oomUnsafe.crash("MBasicBlock::addPredecessorAdjustPhis");
         }
     }
 
     if (!predecessors_.append(pred))
-        CrashAtUnhandlableOOM("MBasicBlock::addPredecessorAdjustPhis");
+        oomUnsafe.crash("MBasicBlock::addPredecessorAdjustPhis");
 }
 
 bool

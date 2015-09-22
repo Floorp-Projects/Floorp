@@ -678,6 +678,10 @@
 @RESPATH@/browser/chrome/webide.manifest
 @RESPATH@/browser/@PREF_DIR@/webide-prefs.js
 
+; DevTools
+@RESPATH@/browser/chrome/devtools@JAREXT@
+@RESPATH@/browser/chrome/devtools.manifest
+
 ; shell icons
 #ifdef XP_UNIX
 #ifndef XP_MACOSX

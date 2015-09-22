@@ -1,5 +1,12 @@
 config = {
     "log_name": "beta_to_release",
+    "version_files": [
+        "browser/config/version.txt",
+        "browser/config/version_display.txt",
+        "config/milestone.txt",
+        "mobile/android/confvars.sh",  # TODO: remove this line before gecko 43 merge
+        "b2g/confvars.sh",
+    ],
     "replacements": [
         # File, from, to
         ("{}/{}".format(d, f),

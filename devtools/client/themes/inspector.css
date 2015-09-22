@@ -1,0 +1,166 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%ifdef XP_MACOSX
+
+#inspector-toolbar:-moz-locale-dir(ltr) {
+  padding-left: 2px;
+}
+
+#inspector-toolbar:-moz-locale-dir(rtl) {
+  padding-left: 4px;
+}
+
+%endif
+
+#inspector-searchbox {
+  transition-property: max-width, -moz-padding-end, -moz-padding-start;
+  transition-duration: 250ms;
+  transition-timing-function: ease;
+}
+
+#inspector-searchbox:not([focused]):not([filled]) > .textbox-input-box {
+  overflow: hidden;
+}
+
+#inspector-searchbox:not([focused]):not([filled]) {
+  max-width: 20px !important;
+  -moz-padding-end: 5px;
+  -moz-padding-start: 22px;
+  background-position: 8px center, top left, top left;
+}
+
+#inspector-searchbox[focused],
+#inspector-searchbox[filled] {
+  max-width: 200px !important;
+}
+
+/* Expand/collapse panel toolbar button */
+
+#inspector-pane-toggle {
+  background: none;
+  box-shadow: none;
+  border: none;
+  list-style-image: url(images/debugger-collapse.png);
+  -moz-image-region: rect(0px,16px,16px,0px);
+}
+
+#inspector-pane-toggle > .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
+}
+
+#inspector-pane-toggle[pane-collapsed] {
+  list-style-image: url(images/debugger-expand.png);
+}
+
+#inspector-pane-toggle:active {
+  -moz-image-region: rect(0px,32px,16px,16px);
+}
+
+@media (min-resolution: 1.1dppx) {
+  #inspector-pane-toggle {
+    list-style-image: url(images/debugger-collapse@2x.png);
+    -moz-image-region: rect(0px,32px,32px,0px);
+  }
+
+  #inspector-pane-toggle[pane-collapsed] {
+    list-style-image: url(images/debugger-expand@2x.png);
+  }
+
+  #inspector-pane-toggle:active {
+    -moz-image-region: rect(0px,64px,32px,32px);
+  }
+}
+
+/* Tooltip: Events */
+
+#devtools-tooltip-events-container {
+  margin: -4px; /* Compensate for the .panel-arrowcontent padding. */
+  max-width: 590px;
+  overflow-y: auto;
+}
+
+.event-header {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.event-tooltip-event-type,
+.event-tooltip-filename,
+.event-tooltip-attributes {
+  -moz-margin-start: 0;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.event-tooltip-event-type {
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.event-tooltip-filename {
+  -moz-margin-end: 0;
+  font-size: 100%;
+  flex-shrink: 1;
+}
+
+.event-tooltip-debugger-icon {
+  width: 16px;
+  height: 16px;
+  -moz-margin-end: 4px;
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.event-tooltip-debugger-icon:hover {
+  opacity: 1;
+}
+
+.event-tooltip-content-box {
+  display: none;
+  overflow: auto;
+  -moz-margin-end: 0;
+}
+
+.event-tooltip-content-box[open] {
+  display: block;
+}
+
+.event-tooltip-source-container {
+  margin-top: 5px;
+  margin-bottom: 10px;
+  -moz-margin-start: 5px;
+  -moz-margin-end: 0;
+}
+
+.event-tooltip-source {
+  margin-bottom: 0;
+}
+
+.event-tooltip-attributes-container {
+  display: flex;
+  flex-shrink: 0;
+  flex-grow: 1;
+  justify-content: flex-end;
+}
+
+.event-tooltip-attributes-box {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  border-radius: 3px;
+  padding: 2px;
+  -moz-margin-start: 5px;
+  background-color: var(--theme-body-color-alt);
+  color: var(--theme-toolbar-background);
+}
+
+.event-tooltip-attributes {
+  margin: 0;
+  font-size: 9px;
+  padding-top: 2px;
+}

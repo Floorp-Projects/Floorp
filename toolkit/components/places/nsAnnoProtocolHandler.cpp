@@ -53,7 +53,7 @@ GetDefaultIcon(nsIChannel **aChannel)
                        defaultIconURI,
                        nsContentUtils::GetSystemPrincipal(),
                        nsILoadInfo::SEC_NORMAL,
-                       nsIContentPolicy::TYPE_IMAGE);
+                       nsIContentPolicy::TYPE_INTERNAL_IMAGE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

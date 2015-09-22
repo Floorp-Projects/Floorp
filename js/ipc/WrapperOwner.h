@@ -55,6 +55,7 @@ class WrapperOwner : public virtual JavaScriptShared
                                       JS::AutoIdVector& props);
     bool hasInstance(JSContext* cx, JS::HandleObject proxy, JS::MutableHandleValue v, bool* bp);
     bool objectClassIs(JSContext* cx, JS::HandleObject obj, js::ESClassValue classValue);
+    bool isArray(JSContext* cx, JS::HandleObject proxy, JS::IsArrayAnswer* answer);
     const char* className(JSContext* cx, JS::HandleObject proxy);
     bool getPrototype(JSContext* cx, JS::HandleObject proxy, JS::MutableHandleObject protop);
 
@@ -140,6 +141,8 @@ class WrapperOwner : public virtual JavaScriptShared
                                  ReturnStatus* rs, bool* bp) = 0;
     virtual bool SendObjectClassIs(const ObjectId& objId, const uint32_t& classValue,
                                    bool* result) = 0;
+    virtual bool SendIsArray(const ObjectId& objId, ReturnStatus* rs,
+                             uint32_t* answer) = 0;
     virtual bool SendClassName(const ObjectId& objId, nsCString* result) = 0;
     virtual bool SendGetPrototype(const ObjectId& objId, ReturnStatus* rs, ObjectOrNullVariant* result) = 0;
     virtual bool SendRegExpToShared(const ObjectId& objId, ReturnStatus* rs, nsString* source,

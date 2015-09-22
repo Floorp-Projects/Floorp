@@ -1,0 +1,130 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for the $_ getter</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript;version=1.8" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for the $_ getter</p>
+
+<iframe id="content-iframe" src="http://example.com/chrome/devtools/shared/webconsole/test/sandboxed_iframe.html"></iframe>
+
+<script class="testbody" type="text/javascript;version=1.8">
+SimpleTest.waitForExplicitFinish();
+let gState;
+
+function evaluateJS(input, callback) {
+  return new Promise((resolve, reject) => {
+    gState.client.evaluateJSAsync(input, response => {
+      if (callback) {
+        callback(response);
+      }
+      resolve(response);
+    });
+  });
+}
+
+function startTest()
+{
+  removeEventListener("load", startTest);
+  attachConsole([], state => {
+    gState = state;
+    let tests = [checkUndefinedResult,checkAdditionResult,checkObjectResult];
+    runTests(tests, testEnd);
+  }, true);
+}
+
+let checkUndefinedResult = Task.async(function*() {
+  info ("$_ returns undefined if nothing has evaluated yet");
+  let response = yield evaluateJS("$_");
+  basicResultCheck(response, "$_", undefined);
+  nextTest();
+});
+
+let checkAdditionResult = Task.async(function*() {
+  info ("$_ returns last value and performs basic arithmetic");
+  let response = yield evaluateJS("2+2");
+  basicResultCheck(response, "2+2", 4);
+
+  response = yield evaluateJS("$_");
+  basicResultCheck(response, "$_", 4);
+
+  response = yield evaluateJS("$_ + 2");
+  basicResultCheck(response, "$_ + 2", 6);
+
+  response = yield evaluateJS("$_ + 4");
+  basicResultCheck(response, "$_ + 4", 10);
+
+  nextTest();
+});
+
+let checkObjectResult = Task.async(function*() {
+  info ("$_ has correct references to objects");
+
+  let response = yield evaluateJS("var foo = {bar:1}; foo;");
+  basicResultCheck(response, "var foo = {bar:1}; foo;", {
+    type: "object",
+    class: "Object",
+    actor: /[a-z]/,
+  });
+  checkObject(response.result.preview.ownProperties, {
+    bar: {
+      value: 1
+    }
+  });
+
+  response = yield evaluateJS("$_");
+  basicResultCheck(response, "$_", {
+    type: "object",
+    class: "Object",
+    actor: /[a-z]/,
+  });
+  checkObject(response.result.preview.ownProperties, {
+    bar: {
+      value: 1
+    }
+  });
+
+  top.foo.bar = 2;
+
+  response = yield evaluateJS("$_");
+  basicResultCheck(response, "$_", {
+    type: "object",
+    class: "Object",
+    actor: /[a-z]/,
+  });
+  checkObject(response.result.preview.ownProperties, {
+    bar: {
+      value: 2
+    }
+  });
+
+  nextTest();
+});
+
+function basicResultCheck(response, input, output) {
+  checkObject(response, {
+    from: gState.actor,
+    input: input,
+    result: output,
+  });
+  ok(!response.exception, "no eval exception");
+  ok(!response.helperResult, "no helper result");
+}
+
+function testEnd()
+{
+  closeDebugger(gState, function() {
+    gState = null;
+    SimpleTest.finish();
+  });
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>
