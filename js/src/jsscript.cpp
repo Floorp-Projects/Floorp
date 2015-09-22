@@ -4319,3 +4319,23 @@ JSScript::AutoDelazify::dropScript()
         script_->setDoNotRelazify(oldDoNotRelazify_);
     script_ = nullptr;
 }
+
+JS::ubi::Node::Size
+JS::ubi::Concrete<JSScript>::size(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    Size size = Arena::thingSize(get().asTenured().getAllocKind());
+
+    size += get().sizeOfData(mallocSizeOf);
+    size += get().sizeOfTypeScript(mallocSizeOf);
+
+    size_t baselineSize = 0;
+    size_t baselineStubsSize = 0;
+    jit::AddSizeOfBaselineData(&get(), mallocSizeOf, &baselineSize, &baselineStubsSize);
+    size += baselineSize;
+    size += baselineStubsSize;
+
+    size += jit::SizeOfIonData(&get(), mallocSizeOf);
+
+    MOZ_ASSERT(size > 0);
+    return size;
+}
