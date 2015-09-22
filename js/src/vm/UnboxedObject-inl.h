@@ -571,7 +571,7 @@ CopyBoxedOrUnboxedDenseElements(JSContext* cx, JSObject* dst, JSObject* src,
     MOZ_ASSERT(HasBoxedOrUnboxedDenseElements<SrcType>(src));
     MOZ_ASSERT(HasBoxedOrUnboxedDenseElements<DstType>(dst));
     MOZ_ASSERT(GetBoxedOrUnboxedInitializedLength<DstType>(dst) == dstStart);
-    MOZ_ASSERT(GetBoxedOrUnboxedInitializedLength<DstType>(src) >= srcStart + length);
+    MOZ_ASSERT(GetBoxedOrUnboxedInitializedLength<SrcType>(src) >= srcStart + length);
     MOZ_ASSERT(GetBoxedOrUnboxedCapacity<DstType>(dst) >= dstStart + length);
 
     SetBoxedOrUnboxedInitializedLength<DstType>(cx, dst, dstStart + length);
