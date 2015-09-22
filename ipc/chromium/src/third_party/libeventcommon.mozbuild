@@ -1,0 +1,37 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+os_win = 0
+os_posix = 0
+os_macosx = 0
+os_bsd = 0
+os_linux = 0
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    os_win = 1
+else:
+    os_posix = 1
+    if CONFIG['OS_ARCH'] == 'Darwin':
+        os_macosx = 1
+        libevent_include_suffix = 'mac'
+    elif CONFIG['OS_ARCH'] in ['DragonFly', 'FreeBSD', 'GNU_kFreeBSD',
+                               'NetBSD', 'OpenBSD']:
+        os_bsd = 1
+        libevent_include_suffix = 'bsd'
+    else:
+        os_linux = 1
+        if CONFIG['OS_TARGET'] == 'Android':
+            libevent_include_suffix = 'android'
+        else:
+            libevent_include_suffix = 'linux'
+
+if os_posix and not CONFIG['MOZ_NATIVE_LIBEVENT']:
+    DEFINES['HAVE_CONFIG_H'] = True
+    LOCAL_INCLUDES += sorted([
+        libevent_path_prefix + '/libevent',
+        libevent_path_prefix + '/libevent/include',
+        libevent_path_prefix + '/libevent/' + libevent_include_suffix,
+    ])

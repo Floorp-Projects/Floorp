@@ -4,29 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+libevent_path_prefix = '.'
+include(libevent_path_prefix + '/libeventcommon.mozbuild')
+
+if os_win:
     error('should not reach here on Windows')
 
 if CONFIG['MOZ_NATIVE_LIBEVENT']:
     error('should not reach here if we are using a native libevent')
-
-os_macosx = 0
-os_bsd = 0
-os_linux = 0
-
-if CONFIG['OS_ARCH'] == 'Darwin':
-    os_macosx = 1
-    libevent_include_suffix = 'mac'
-elif CONFIG['OS_ARCH'] in ['DragonFly', 'FreeBSD', 'GNU_kFreeBSD',
-                           'NetBSD', 'OpenBSD']:
-    os_bsd = 1
-    libevent_include_suffix = 'bsd'
-else:
-    os_linux = 1
-    if CONFIG['OS_TARGET'] == 'Android':
-        libevent_include_suffix = 'android'
-    else:
-        libevent_include_suffix = 'linux'
 
 UNIFIED_SOURCES += [
     'libevent/buffer.c',
@@ -54,12 +39,6 @@ SOURCES += [
     # symbol clash.
     'libevent/evdns.c',
 ]
-DEFINES['HAVE_CONFIG_H'] = True
-LOCAL_INCLUDES += sorted([
-    'libevent',
-    'libevent/include',
-    'libevent/' + libevent_include_suffix,
-])
 
 if os_macosx or os_bsd:
     UNIFIED_SOURCES += [

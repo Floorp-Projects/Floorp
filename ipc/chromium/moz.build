@@ -4,29 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-os_win = 0
-os_posix = 0
-os_macosx = 0
-os_bsd = 0
-os_linux = 0
-
-if CONFIG['OS_ARCH'] == 'WINNT':
-    os_win = 1
-else:
-    os_posix = 1
-    if CONFIG['OS_ARCH'] == 'Darwin':
-        os_macosx = 1
-        libevent_include_suffix = 'mac'
-    elif CONFIG['OS_ARCH'] in ['DragonFly', 'FreeBSD', 'GNU_kFreeBSD',
-                               'NetBSD', 'OpenBSD']:
-        os_bsd = 1
-        libevent_include_suffix = 'bsd'
-    else:
-        os_linux = 1
-        if CONFIG['OS_TARGET'] == 'Android':
-            libevent_include_suffix = 'android'
-        else:
-            libevent_include_suffix = 'linux'
+libevent_path_prefix = 'src/third_party'
+include(libevent_path_prefix + '/libeventcommon.mozbuild')
 
 UNIFIED_SOURCES += [
     'src/base/at_exit.cc',
@@ -96,12 +75,6 @@ if os_win:
     ]
 elif not CONFIG['MOZ_NATIVE_LIBEVENT']:
     DIRS += ['src/third_party']
-    DEFINES['HAVE_CONFIG_H'] = True
-    LOCAL_INCLUDES += sorted([
-        'src/third_party/libevent',
-        'src/third_party/libevent/include',
-        'src/third_party/libevent/' + libevent_include_suffix,
-    ])
 
 if os_posix:
     UNIFIED_SOURCES += [
@@ -162,15 +135,6 @@ if os_bsd:
         SOURCES += [
             'src/base/process_util_bsd.cc'
         ]
-    if CONFIG['MOZ_WIDGET_GTK']:
-        SOURCES += [
-            'src/base/message_pump_glib.cc',
-        ]
-    if CONFIG['MOZ_ENABLE_QT']:
-        SOURCES += [
-            '!moc_message_pump_qt.cc',
-            'src/base/message_pump_qt.cc',
-        ]
 
 if os_linux:
     SOURCES += [
@@ -185,6 +149,8 @@ if os_linux:
         ]
         DEFINES['ANDROID'] = True
         DEFINES['_POSIX_MONOTONIC_CLOCK'] = 0
+
+if os_bsd or os_linux:
     if CONFIG['MOZ_WIDGET_GTK']:
         SOURCES += [
             'src/base/message_pump_glib.cc',
