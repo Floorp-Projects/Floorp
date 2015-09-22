@@ -34,9 +34,3 @@ builds:
         task: tasks/builds/b2g_flame_kk_ota_opt.yml
       debug:
         task: tasks/builds/b2g_flame_kk_ota_debug.yml
-  linux64-st-an:
-    platforms:
-      - Linux64 Static Analysis
-    types:
-      opt:
-        task: tasks/builds/opt_linux64_st-an.yml
