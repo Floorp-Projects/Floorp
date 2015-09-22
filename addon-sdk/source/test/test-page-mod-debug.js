@@ -10,7 +10,7 @@ const { testPageMod, handleReadyState, openNewTab,
 const { cleanUI, after } = require("sdk/test/utils");
 const { open, getFrames, getMostRecentBrowserWindow, getInnerId } = require("sdk/window/utils");
 
-const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { devtools } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 const { require: devtoolsRequire } = devtools;
 const contentGlobals = devtoolsRequire("devtools/server/content-globals");
 

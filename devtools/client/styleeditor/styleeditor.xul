@@ -1,0 +1,224 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE window [
+<!ENTITY % styleEditorDTD SYSTEM "chrome://browser/locale/devtools/styleeditor.dtd" >
+ %styleEditorDTD;
+<!ENTITY % editMenuStrings SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
+ %editMenuStrings;
+<!ENTITY % sourceEditorStrings SYSTEM "chrome://browser/locale/devtools/sourceeditor.dtd">
+ %sourceEditorStrings;
+<!ENTITY % csscoverageDTD SYSTEM "chrome://global/locale/devtools/csscoverage.dtd">
+ %csscoverageDTD;
+]>
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/content/shared/splitview.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/themes/common.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/themes/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/themes/splitview.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/content/styleeditor/styleeditor.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/themes/styleeditor.css" type="text/css"?>
+<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
+
+<xul:window xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.w3.org/1999/xhtml"
+        id="style-editor-chrome-window">
+
+  <script type="application/javascript;version=1.8"
+          src="chrome://devtools/content/shared/theme-switching.js"/>
+  <xul:script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
+  <xul:script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
+  <xul:script type="application/javascript">
+    function goUpdateSourceEditorMenuItems() {
+      goUpdateGlobalEditMenuItems();
+
+      ['cmd_undo', 'cmd_redo', 'cmd_cut', 'cmd_paste',
+       'cmd_delete', 'cmd_find', 'cmd_findAgain'].forEach(goUpdateCommand);
+    }
+  </xul:script>
+
+  <xul:popupset id="style-editor-popups">
+    <xul:menupopup id="sourceEditorContextMenu"
+                  onpopupshowing="goUpdateSourceEditorMenuItems()">
+      <xul:menuitem id="cMenu_undo"/>
+      <xul:menuseparator/>
+      <xul:menuitem id="cMenu_cut"/>
+      <xul:menuitem id="cMenu_copy"/>
+      <xul:menuitem id="cMenu_paste"/>
+      <xul:menuitem id="cMenu_delete"/>
+      <xul:menuseparator/>
+      <xul:menuitem id="cMenu_selectAll"/>
+      <xul:menuseparator/>
+      <xul:menuitem id="se-menu-find"
+        label="&findCmd.label;" accesskey="&findCmd.accesskey;" command="cmd_find"/>
+      <xul:menuitem id="cMenu_findAgain"/>
+      <xul:menuseparator/>
+      <xul:menuitem id="se-menu-gotoLine"
+          label="&gotoLineCmd.label;"
+          accesskey="&gotoLineCmd.accesskey;"
+          key="key_gotoLine"
+          command="cmd_gotoLine"/>
+    </xul:menupopup>
+    <xul:menupopup id="sidebar-context">
+      <xul:menuitem id="context-openlinknewtab"
+        label="&openLinkNewTab.label;"/>
+    </xul:menupopup>
+    <xul:menupopup id="style-editor-options-popup"
+                   position="before_start">
+      <xul:menuitem id="options-origsources"
+                    type="checkbox"
+                    label="&showOriginalSources.label;"
+                    accesskey="&showOriginalSources.accesskey;"/>
+      <xul:menuitem id="options-show-media"
+                    type="checkbox"
+                    label="&showMediaSidebar.label;"
+                    accesskey="&showMediaSidebar.accesskey;"/>
+    </xul:menupopup>
+  </xul:popupset>
+
+  <xul:commandset id="editMenuCommands"/>
+
+  <xul:commandset id="sourceEditorCommands">
+    <xul:command id="cmd_gotoLine" oncommand="goDoCommand('cmd_gotoLine')"/>
+    <xul:command id="cmd_find" oncommand="goDoCommand('cmd_find')"/>
+    <xul:command id="cmd_findAgain" oncommand="goDoCommand('cmd_findAgain')"/>
+  </xul:commandset>
+
+  <xul:keyset id="sourceEditorKeys"/>
+
+  <xul:stack id="style-editor-chrome" class="loading theme-body">
+
+    <xul:box class="splitview-root devtools-responsive-container" context="sidebar-context">
+      <xul:box class="splitview-controller">
+        <xul:box class="splitview-main">
+          <xul:toolbar class="devtools-toolbar">
+             <xul:hbox class="devtools-toolbarbutton-group">
+              <xul:toolbarbutton class="style-editor-newButton devtools-toolbarbutton"
+                          accesskey="&newButton.accesskey;"
+                          tooltiptext="&newButton.tooltip;"
+                          label="&newButton.label;"/>
+              <xul:toolbarbutton class="style-editor-importButton devtools-toolbarbutton"
+                          accesskey="&importButton.accesskey;"
+                          tooltiptext="&importButton.tooltip;"
+                          label="&importButton.label;"/>
+            </xul:hbox>
+            <xul:spacer/>
+            <xul:toolbarbutton id="style-editor-options"
+                        class="devtools-toolbarbutton devtools-option-toolbarbutton"
+                        tooltiptext="&optionsButton.tooltip;"
+                        popup="style-editor-options-popup"/>
+          </xul:toolbar>
+        </xul:box>
+        <xul:box id="splitview-resizer-target" class="theme-sidebar splitview-nav-container"
+                persist="height">
+          <div class="devtools-throbber"></div>
+          <ol class="splitview-nav" tabindex="0"></ol>
+          <div class="splitview-nav placeholder empty">
+            <p><strong>&noStyleSheet.label;</strong></p>
+            <p>&noStyleSheet-tip-start.label;
+              <a href="#"
+                class="style-editor-newButton">&noStyleSheet-tip-action.label;</a>
+              &noStyleSheet-tip-end.label;</p>
+          </div>
+        </xul:box> <!-- .splitview-nav-container -->
+      </xul:box>   <!-- .splitview-controller -->
+      <xul:splitter class="devtools-side-splitter devtools-invisible-splitter"/>
+      <xul:box class="splitview-side-details devtools-main-content"/>
+
+      <div id="splitview-templates" hidden="true">
+        <li id="splitview-tpl-summary-stylesheet" tabindex="0">
+          <xul:label class="stylesheet-enabled" tabindex="0"
+            tooltiptext="&visibilityToggle.tooltip;"
+            accesskey="&saveButton.accesskey;"></xul:label>
+          <hgroup class="stylesheet-info">
+            <h1><a class="stylesheet-name" tabindex="0"><xul:label crop="center"/></a></h1>
+            <div class="stylesheet-more">
+              <h3 class="stylesheet-title"></h3>
+              <h3 class="stylesheet-linked-file"></h3>
+              <h3 class="stylesheet-rule-count"></h3>
+              <xul:spacer/>
+              <h3><xul:label class="stylesheet-saveButton"
+                    tooltiptext="&saveButton.tooltip;"
+                    accesskey="&saveButton.accesskey;">&saveButton.label;</xul:label></h3>
+            </div>
+          </hgroup>
+        </li>
+
+        <xul:box id="splitview-tpl-details-stylesheet" class="splitview-details">
+          <xul:hbox class="stylesheet-details-container">
+            <xul:box class="stylesheet-editor-input textbox"
+                     data-placeholder="&editorTextbox.placeholder;"/>
+            <xul:splitter class="devtools-side-splitter"/>
+            <xul:vbox class="stylesheet-sidebar theme-sidebar" hidden="true">
+              <xul:toolbar class="devtools-toolbar">
+                &mediaRules.label;
+              </xul:toolbar>
+              <xul:vbox class="stylesheet-media-container" flex="1">
+                <div class="stylesheet-media-list" />
+              </xul:vbox>
+            </xul:vbox>
+          </xul:hbox>
+        </xul:box>
+      </div> <!-- #splitview-templates -->
+    </xul:box>   <!-- .splitview-root -->
+
+    <xul:box class="csscoverage-template" hidden="true">
+      <xul:toolbar class="devtools-toolbar csscoverage-toolbar">
+        <xul:button class="devtools-toolbarbutton csscoverage-toolbarbutton"
+            label="&csscoverage.backButton;"
+            onclick="${onback}"/>
+      </xul:toolbar>
+      <!-- The data for this comes from CSSUsageActor.createPageReport -->
+      <div class="csscoverage-report-container">
+        <div class="csscoverage-report-content">
+          <div class="csscoverage-report-summary">
+            <div class="csscoverage-report-chart"/>
+          </div>
+          <div class="csscoverage-report-unused">
+            <h2>&csscoverage.unused;</h2>
+            <p>&csscoverage.noMatches;</p>
+            <div foreach="page in ${unused}">
+              <h3>${page.url}</h3>
+              <code foreach="rule in ${page.rules}"
+                    href="${rule.url}"
+                    class="csscoverage-list">${rule.selectorText}</code>
+            </div>
+          </div>
+          <div class="csscoverage-report-optimize">
+            <h2>&csscoverage.optimize.header;</h2>
+            <p>
+              &csscoverage.optimize.body1;
+              <code>&lt;link ...></code>
+              &csscoverage.optimize.body2;
+              <code>&lt;style>...</code>
+              &csscoverage.optimize.body3;
+            </p>
+            <div if="${preload.length == 0}">&csscoverage.optimize.bodyX;</div>
+            <div if="${preload.length > 0}">
+              <div foreach="page in ${preload}">
+                <h3>${page.url}</h3>
+                <textarea>&lt;style>
+<loop foreach="rule in ${page.rules}"
+                      onclick="${rule.onclick}">${rule.formattedCssText}</loop>&lt;/style></textarea>
+              </div>
+            </div>
+            <p>
+              &csscoverage.footer1;
+              <a target="_blank" href="&csscoverage.footer2a;">&csscoverage.footer3;</a>
+              &csscoverage.footer4;
+            </p>
+          </div>
+          <p>&#160;</p>
+        </div>
+      </div>
+    </xul:box>
+
+    <xul:box class="csscoverage-report" hidden="true">
+    </xul:box>
+
+  </xul:stack>
+
+</xul:window>

@@ -8642,11 +8642,6 @@
     "kind": "count",
     "description": "Reports the column that logins are sorted by"
   },
-  "PWMGR_MANAGE_VISIBILITY_TOGGLED": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Whether the visibility of passwords was toggled (0=Hide, 1=Show)"
-  },
   "PWMGR_NUM_PASSWORDS_PER_HOSTNAME": {
     "expires_in_version": "never",
     "kind": "linear",

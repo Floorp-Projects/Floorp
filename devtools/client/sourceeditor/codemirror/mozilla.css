@@ -1,0 +1,246 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.errors,
+.breakpoints {
+  width: 16px;
+}
+
+.hit-counts {
+  width: 6px;
+}
+
+.error, .breakpoint, .debugLocation, .breakpoint-debugLocation {
+  display: inline-block;
+  margin-left: 5px;
+  width: 12px;
+  height: 12px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+.hit-count {
+  display: inline-block;
+  height: 12px;
+  border: solid rgba(0,0,0,0.2);
+  border-width: 1px 1px 1px 0;
+  border-radius: 0 3px 3px 0;
+  padding: 0 3px;
+  font-size: 10px;
+  pointer-events: none;
+}
+
+.error {
+  background-image: url("chrome://devtools/skin/themes/images/editor-error.png");
+  opacity: 0.75;
+}
+
+.breakpoint {
+  background-image: url("chrome://devtools/skin/themes/images/editor-breakpoint.png");
+  position: relative;
+}
+
+@media (min-resolution: 1.1dppx) {
+  .breakpoint {
+    background-image: url("chrome://devtools/skin/themes/images/editor-breakpoint@2x.png");
+  }
+}
+
+.breakpoint[adding] {
+  transition: transform .25s;
+}
+
+.debugLocation {
+  background-image: url("chrome://devtools/skin/themes/images/editor-debug-location.png");
+}
+
+@media (min-resolution: 1.1dppx) {
+  .debugLocation {
+    background-image: url("chrome://devtools/skin/themes/images/editor-debug-location@2x.png");
+  }
+}
+
+.breakpoint.debugLocation {
+  background-image:
+    url("chrome://devtools/skin/themes/images/editor-debug-location.png"),
+    url("chrome://devtools/skin/themes/images/editor-breakpoint.png");
+}
+
+@media (min-resolution: 1.1dppx) {
+  .breakpoint.debugLocation {
+    background-image:
+      url("chrome://devtools/skin/themes/images/editor-debug-location@2x.png"),
+      url("chrome://devtools/skin/themes/images/editor-breakpoint@2x.png");
+  }
+}
+
+.CodeMirror {
+  cursor: text;
+}
+
+.CodeMirror-gutters {
+  cursor: default;
+}
+
+/* This is to avoid the fake horizontal scrollbar div of codemirror to go 0
+height when floating scrollbars are active. Make sure that this value is equal
+to the maximum of `min-height` specific to the `scrollbar[orient="horizontal"]`
+selector in floating-scrollbar-light.css across all platforms. */
+.CodeMirror-hscrollbar {
+  min-height: 10px;
+}
+
+/* This is to avoid the fake vertical scrollbar div of codemirror to go 0
+width when floating scrollbars are active. Make sure that this value is equal
+to the maximum of `min-width` specific to the `scrollbar[orient="vertical"]`
+selector in floating-scrollbar-light.css across all platforms. */
+.CodeMirror-vscrollbar {
+  min-width: 10px;
+}
+
+.cm-trailingspace {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAACCAYAAAB/qH1jAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3QUXCToH00Y1UgAAACFJREFUCNdjPMDBUc/AwNDAAAFMTAwMDA0OP34wQgX/AQBYgwYEx4f9lQAAAABJRU5ErkJggg==");
+  opacity: 0.75;
+  background-position: left bottom;
+  background-repeat: repeat-x;
+}
+
+/* CodeMirror dialogs styling */
+
+.CodeMirror-dialog {
+  padding: 4px 3px;
+}
+
+.CodeMirror-dialog,
+.CodeMirror-dialog input {
+  font: message-box;
+}
+
+/* Fold addon */
+
+.CodeMirror-foldmarker {
+  color: blue;
+  text-shadow: #b9f 1px 1px 2px, #b9f -1px -1px 2px, #b9f 1px -1px 2px, #b9f -1px 1px 2px;
+  font-family: sans-serif;
+  line-height: .3;
+  cursor: pointer;
+}
+
+.CodeMirror-foldgutter {
+  width: 16px; /* Same as breakpoints gutter above */
+}
+
+.CodeMirror-foldgutter-open,
+.CodeMirror-foldgutter-folded {
+  color: #555;
+  cursor: pointer;
+}
+
+.CodeMirror-foldgutter-open:after {
+  font-size: 120%;
+  content: "\25BE";
+}
+
+.CodeMirror-foldgutter-folded:after {
+  font-size: 120%;
+  content: "\25B8";
+}
+
+.CodeMirror-hints {
+  position: absolute;
+  z-index: 10;
+  overflow: hidden;
+  list-style: none;
+  margin: 0;
+  padding: 2px;
+  border-radius: 3px;
+  font-size: 90%;
+  max-height: 20em;
+  overflow-y: auto;
+}
+
+.CodeMirror-hint {
+  margin: 0;
+  padding: 0 4px;
+  border-radius: 2px;
+  max-width: 19em;
+  overflow: hidden;
+  white-space: pre;
+  cursor: pointer;
+}
+
+.CodeMirror-Tern-completion {
+  -moz-padding-start: 22px;
+  position: relative;
+  line-height: 18px;
+}
+
+.CodeMirror-Tern-completion:before {
+  position: absolute;
+  left: 2px;
+  bottom: 2px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+  height: 15px;
+  width: 15px;
+  line-height: 16px;
+  text-align: center;
+  color: #ffffff;
+  box-sizing: border-box;
+}
+
+.CodeMirror-Tern-completion-unknown:before {
+  content: "?";
+}
+
+.CodeMirror-Tern-completion-object:before {
+  content: "O";
+}
+
+.CodeMirror-Tern-completion-fn:before {
+  content: "F";
+}
+
+.CodeMirror-Tern-completion-array:before {
+  content: "A";
+}
+
+.CodeMirror-Tern-completion-number:before {
+  content: "N";
+}
+
+.CodeMirror-Tern-completion-string:before {
+  content: "S";
+}
+
+.CodeMirror-Tern-completion-bool:before {
+  content: "B";
+}
+
+.CodeMirror-Tern-completion-guess {
+  color: #999;
+}
+
+.CodeMirror-Tern-tooltip {
+  border-radius: 3px;
+  padding: 2px 5px;
+  white-space: pre-wrap;
+  max-width: 40em;
+  position: absolute;
+  z-index: 10;
+}
+
+.CodeMirror-Tern-hint-doc {
+  max-width: 25em;
+}
+
+.CodeMirror-Tern-farg-current {
+  text-decoration: underline;
+}
+
+.CodeMirror-Tern-fhint-guess {
+  opacity: .7;
+}

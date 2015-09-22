@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1023018 - Tests whether or not the framerate actor can handle time ranges.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Framerate actor test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script>
+
+window.onload = function() {
+  var Cu = Components.utils;
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+
+  Cu.import("resource://gre/modules/Services.jsm");
+
+  // Always log packets when running tests.
+  Services.prefs.setBoolPref("devtools.debugger.log", true);
+  SimpleTest.registerCleanupFunction(function() {
+    Services.prefs.clearUserPref("devtools.debugger.log");
+  });
+
+  var {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+  var {DebuggerClient} = require("devtools/shared/client/main");
+  var {DebuggerServer} = require("devtools/server/main");
+
+  SimpleTest.waitForExplicitFinish();
+
+  var {FramerateFront} = require("devtools/server/actors/framerate");
+  var START_TICK = 2000;
+  var STOP_TICK = 3000;
+  var TOTAL_TIME = 5000;
+
+  if (!DebuggerServer.initialized) {
+    DebuggerServer.init();
+    DebuggerServer.addBrowserActors();
+  }
+
+  var client = new DebuggerClient(DebuggerServer.connectPipe());
+  client.connect(function onConnect() {
+    client.listTabs(function onListTabs(aResponse) {
+      var form = aResponse.tabs[aResponse.selected];
+      var front = FramerateFront(client, form);
+
+      front.startRecording().then(() => {
+        window.setTimeout(() => {
+          front.stopRecording(START_TICK, STOP_TICK).then(rawData => {
+            onRecordingStopped(front, rawData);
+          });
+        }, TOTAL_TIME);
+      });
+    });
+  });
+
+  function onRecordingStopped(front, rawData) {
+    ok(rawData, "There should be a recording available.");
+
+    ok(!rawData.find(e => e < START_TICK),
+      "There should be no tick before 2000ms.");
+    ok(!rawData.find(e => e > STOP_TICK),
+      "There should be no tick after 3000ms.");
+
+    for (var tick of rawData) {
+      info("Testing tick: " + tick);
+      is(typeof tick, "number", "All values should be numbers.");
+    }
+
+    client.close(() => {
+      DebuggerServer.destroy();
+      SimpleTest.finish()
+    });
+  }
+}
+</script>
+</pre>
+</body>
+</html>

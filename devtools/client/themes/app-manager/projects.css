@@ -1,0 +1,556 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-size: 0.9rem;
+}
+
+html, body {
+  height: 100%;
+}
+
+template {
+  display: none;
+}
+
+body {
+  display: flex;
+  color: #333;
+  background-color: white;
+  font-family: Lucida Grande, Helvetica, Helvetica Neue, sans-serif;
+  overflow: hidden;
+}
+
+body:not(.connected) button.device-action {
+  display: none;
+}
+
+strong {
+  color: #111;
+}
+
+
+/********* SIDEBAR ***********/
+
+
+
+#sidebar {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 350px;
+  overflow: hidden;
+  z-index: 100;
+  background-color: #E9EAEB;
+  position: relative;
+  box-shadow: 3px 0 1.5px rgba(0,0,0,0.08);
+}
+
+#project-list {
+  height: 100%;
+  overflow: auto;
+}
+
+#project-list:not([projects-count="0"]) > #no-project {
+  display: none;
+}
+
+#no-project {
+  padding: 100px 20px 0;
+  font-weight: bold;
+  color: #BBB;
+  font-size: 22px;
+}
+
+
+/********* PROJECT MENU ***********/
+
+
+.project-item {
+  padding: 10px 0;
+  background-color: #F0F1F2;
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,0.1);
+  color: #666;
+  line-height: 120%;
+  cursor: pointer;
+  display: flex;
+  position: relative;
+}
+
+.project-item:hover {
+  background-color: #EEE;
+}
+
+.project-item > * {
+  flex-shrink: 0;
+}
+
+.project-item.selected {
+  background-color: #46AFE3;
+}
+
+.project-item.selected strong {
+  color: #FFF;
+}
+
+.project-item.selected p,
+.project-item.selected span {
+  color: #C1DCF0;
+}
+
+.button-remove {
+  background-image: url('images/remove.svg');
+  background-size: 20px;
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  visibility: hidden;
+  opacity: 0.5;
+}
+
+.project-item:hover .button-remove {
+  visibility: visible;
+}
+
+.project-item-status {
+  width: 6px;
+  margin: -10px 0;
+  border-right: 1px solid rgba(0,0,0,0.1);
+  box-shadow: inset 0 0 1px 1px rgba(255,255,255,0.2), inset 0 -1px 0 0 rgba(0,0,0,0.2);
+}
+
+.project-item-status[status="valid"] {
+  background-color: #70BF53;
+}
+
+.project-item-status[status~="warning"] {
+  background-color: #F2B33F;
+}
+
+.project-item-status[status~="error"] {
+  background-color: #ED4C62;
+}
+
+.project-item-icon {
+  width: 32px;
+  height: 32px;
+  margin: 0 10px;
+}
+
+.project-item-meta {
+  flex-grow: 1;
+  flex-shrink: 1 !important;
+}
+
+.project-item-type {
+  font-size: 10px;
+  line-height: 20px;
+  float: right;
+  padding-right: 10px;
+  color: #7597B9;
+  text-transform: uppercase;
+}
+
+.project-item-description {
+  color: #888;
+  font-size: 90%;
+}
+
+/********* ADD PROJECT ***********/
+
+#new-packaged-project {
+  box-shadow: 0 -1px 5px rgba(0,0,0,0.1);
+  background-position: calc(100% - 10px) 10px;
+}
+
+#new-packaged-project,
+#new-hosted-project {
+  background-color: #EEE;
+  border: none;
+  border-top: 1px solid #DDD;
+  padding: 10px;
+  font-weight: bold;
+}
+
+#new-packaged-project:hover,
+#new-hosted-project:hover {
+  background-color: #DDD;
+}
+
+#new-hosted-project-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+#new-packaged-project,
+#new-hosted-project-click {
+  background-image: url('images/plus.svg');
+  background-size: 20px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+#new-hosted-project-click {
+  background-position: top right;
+  width: 20px;
+  height: 20px;
+  margin-left: 5px;
+}
+
+#url-input {
+  flex-grow: 1;
+  width: 90%;
+  box-shadow: none;
+  border-radius: 3px;
+  border: 1px solid #DDD;
+  padding: 4px;
+  margin-top: 4px;
+}
+
+
+/********* LENSE ***********/
+
+
+#lense {
+  height: 100%;
+  flex-grow: 1;
+  display: flex;
+  z-index: 1;
+  overflow: hidden;
+  background-color: rgb(225, 225, 225);
+  background-image: url('images/rocket.svg'), url('images/noise.png');
+  background-repeat: no-repeat, repeat;
+  background-size: 35%, auto;
+  background-position: center center, top left;
+}
+
+#lense > div {
+  display: flex;
+  flex-grow: 1;
+  flex-direction: column;
+}
+
+
+/********* PROJECT ***********/
+
+
+.project-details {
+  background-color: rgb(225, 225, 225);
+  padding: 10px;
+  line-height: 160%;
+  display: flex;
+  flex-direction: column;
+}
+
+.project-metadata {
+  flex-grow: 1;
+}
+
+.project-status {
+  display: flex;
+}
+
+.project-title {
+  flex-direction: row;
+  display: flex;
+  align-items: flex-start;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #CCC;
+  margin-bottom: 10px;
+}
+
+.project-title > h1 {
+  flex-grow: 1;
+  font-size: 24px;
+}
+
+.project-location {
+  color: gray;
+  font-size: 10px;
+  cursor: pointer;
+  font-family: monospace;
+}
+
+.project-location:hover {
+  text-decoration: underline;
+}
+
+.project-header {
+  display: flex;
+  border-bottom: 1px solid #CCC;
+  margin: 10px 20px 10px 20px;
+  padding-bottom: 10px;
+}
+
+.project-icon {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  margin-right: 10px;
+}
+
+.project-location {
+  font-size: 11px;
+  color: #999;
+}
+
+.project-description {
+  font-style: italic;
+  color: #333;
+}
+
+.project-status > p {
+  text-transform: uppercase;
+  font-size: 10px;
+  padding: 2px 10px;
+  border-radius: 2px;
+  margin-top: 6px;
+  line-height: 10px;
+}
+
+.project-validation {
+  color: #FFF;
+  display: none;
+  margin-left: 10px;
+}
+
+.project-validation.valid {
+  background-color: #70BF53;
+}
+
+.project-validation.warning {
+  background-color: #F2B33F;
+}
+
+.project-validation.error {
+  background-color: #ED4C62;
+}
+
+[status="valid"] > .project-validation.valid,
+[status~="warning"] > .project-validation.warning,
+[status~="error"] > .project-validation.error {
+  display: inline;
+}
+
+.project-type {
+  display: none;
+  margin-left: 10px;
+}
+[type="hosted"] > .project-type.hosted,
+[type="packaged"] > .project-type.packaged {
+  display: inline;
+}
+
+/********* PROJECT BUTTONS ***********/
+
+
+
+.project-buttons {
+  display: flex;
+  margin-left: 20px;
+  color: #BBB;
+}
+
+.project-buttons > button {
+  margin: 0;
+  font-size: 11px;
+  border: 1px solid #CCC;
+  border-left-width: 0;
+  padding: 5px 15px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+}
+
+.project-buttons > button[disabled] {
+  background-color: transparent;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.project-buttons > button:first-child {
+  border-left-width: 1px;
+}
+
+.project-button-debug {
+  color: #3498DB;
+}
+
+.project-button-debug:hover {
+  background-color: #3498DB;
+  color: #FFF;
+}
+
+.project-button-debug[disabled] {
+  color: #3498DB;
+}
+
+.project-button-update {
+  color: #777;
+}
+
+.project-button-update:hover {
+  background-color: #777;
+  color: #FFF;
+}
+
+.project-button-update[disabled] {
+  color: #777;
+}
+
+
+
+/********* ERRORS AND WARNINGS ***********/
+
+.project-warnings,
+.project-errors,
+.project-item-warnings,
+.project-item-errors {
+  display: none;
+}
+
+[status~="warning"] .project-item-warnings,
+[status~="error"] .project-item-errors {
+  display: inline-block;
+}
+
+[status~="warning"] > .project-warnings,
+[status~="error"] > .project-errors {
+  display: block;
+}
+
+.project-warnings,
+.project-errors {
+  margin: 20px 20px 0;
+  padding: 10px 10px;
+  font-family: monospace;
+}
+
+.project-warnings {
+  border-left: 3px solid #ECB51E;
+  background-color: rgba(236, 181, 20, 0.1);
+}
+
+.project-errors {
+  border-left: 3px solid #ED4C62;
+  background-color: rgba(237,76,98,0.1);
+}
+
+.project-item-warnings {
+  background-image: url('images/warning.svg');
+}
+
+.project-item-errors {
+  background-image: url('images/error.svg');
+  color: rgb(227, 79, 34);
+}
+
+.project-item-warnings,
+.project-item-errors {
+  background-repeat: no-repeat;
+  background-size: 12px;
+  background-position: left center;
+  margin-top: 6px;
+}
+
+.project-item-warnings > span,
+.project-item-errors > span {
+  font-size: 11px;
+  padding-left: 16px;
+  font-weight: bold;
+}
+
+
+/********* MANIFEST EDITOR ***********/
+
+.manifest-editor {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  background-color: #E1E1E1;
+}
+
+.manifest-header {
+  display: flex;
+  flex-direction: row;
+}
+
+.manifest-header > h2 {
+  font-size: 18px;
+  margin: 1em 15px 1em 30px;
+  display: none;
+}
+
+.manifest-header > button {
+  margin: 18px 0;
+  font-size: 11px;
+  border: 1px solid #CCC;
+  border-right-width: 0;
+  padding: 2px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  display: none;
+}
+
+.manifest-header > button[disabled] {
+  background-color: transparent;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.manifest-header > button:last-child {
+  border-right-width: 1px;
+}
+
+[type="packaged"] > .editable {
+  display: block;
+}
+
+[type="hosted"] > .viewable {
+  display: block;
+}
+
+.manifest-button-save {
+  color: #777;
+}
+
+.manifest-button-save:hover {
+  background-color: #777;
+  color: #FFF;
+}
+
+.manifest-button-save[disabled] {
+  color: #777;
+}
+
+.variables-view {
+  flex-grow: 1;
+  border: 0;
+  border-top: 5px solid #C9C9C9;
+}
+
+/* Bug 925921: Remove when the manifest editor is always on */
+
+.manifest-editor {
+  display: none;
+}
+
+.project-details {
+  flex-grow: 1;
+}
+
+#lense[manifest-editable] .manifest-editor {
+  display: flex;
+}
+
+#lense[manifest-editable] .project-details {
+  flex-grow: 0;
+}
+
+/* End blocks to remove */

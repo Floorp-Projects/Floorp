@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<!DOCTYPE window [
+<!ENTITY % toolboxDTD SYSTEM "chrome://browser/locale/devtools/toolbox.dtd" >
+ %toolboxDTD;
+]>
+<?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<?xml-stylesheet rel="stylesheet" href="chrome://devtools/content/framework/options-panel.css" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript;version=1.8"
+          src="chrome://devtools/content/shared/theme-switching.js"/>
+  <hbox id="options-panel-container" flex="1">
+    <hbox id="options-panel" class="theme-body" flex="1">
+      <vbox id="tools-box" class="options-vertical-pane" flex="1">
+        <label>&options.selectDefaultTools.label;</label>
+        <vbox id="default-tools-box" class="options-groupbox" tabindex="0"/>
+        <label>&options.selectAdditionalTools.label;</label>
+        <vbox id="additional-tools-box" class="options-groupbox"/>
+        <label>&options.selectEnabledToolboxButtons.label;</label>
+        <vbox id="enabled-toolbox-buttons-box" class="options-groupbox"/>
+        <label id="tools-not-supported-label"
+               class="options-citation-label theme-comment"
+        >&options.toolNotSupported.label;</label>
+
+      </vbox>
+      <vbox class="options-vertical-pane" flex="1">
+        <label>&options.selectDevToolsTheme.label2;</label>
+        <vbox id="theme-options" class="options-groupbox">
+          <radiogroup id="devtools-theme-box"
+                      class="options-groupbox"
+                      data-pref="devtools.theme"
+                      orient="horizontal">
+          </radiogroup>
+        </vbox>
+        <label>&options.commonPrefs.label;</label>
+        <vbox id="commonprefs-options" class="options-groupbox">
+          <checkbox label="&options.enablePersistentLogs.label;"
+                    tooltiptext="&options.enablePersistentLogs.tooltip;"
+                    data-pref="devtools.webconsole.persistlog"/>
+        </vbox>
+        <label>&options.context.inspector;</label>
+        <vbox id="inspector-options" class="options-groupbox">
+          <checkbox label="&options.showUserAgentStyles.label;"
+                    tooltiptext="&options.showUserAgentStyles.tooltip;"
+                    data-pref="devtools.inspector.showUserAgentStyles"/>
+          <description>
+            <label control="defaultColorUnitMenuList"
+                   accesskey="&options.defaultColorUnit.accesskey;"
+            >&options.defaultColorUnit.label;</label>
+            <hbox>
+              <menulist id="defaultColorUnitMenuList"
+                        data-pref="devtools.defaultColorUnit">
+                <menupopup>
+                  <menuitem label="&options.defaultColorUnit.hex;" value="hex"/>
+                  <menuitem label="&options.defaultColorUnit.hsl;" value="hsl"/>
+                  <menuitem label="&options.defaultColorUnit.rgb;" value="rgb"/>
+                  <menuitem label="&options.defaultColorUnit.name;" value="name"/>
+                </menupopup>
+              </menulist>
+            </hbox>
+          </description>
+        </vbox>
+        <label>&options.webconsole.label;</label>
+        <vbox id="webconsole-options" class="options-groupbox">
+          <checkbox id="webconsole-timestamp-messages"
+                    label="&options.timestampMessages.label;"
+                    tooltiptext="&options.timestampMessages.tooltip;"
+                    data-pref="devtools.webconsole.timestampMessages"/>
+        </vbox>
+        <label>&options.styleeditor.label;</label>
+        <vbox id="styleeditor-options" class="options-groupbox">
+          <checkbox label="&options.stylesheetSourceMaps.label;"
+                    tooltiptext="&options.stylesheetSourceMaps.tooltip;"
+                    data-pref="devtools.styleeditor.source-maps-enabled"/>
+          <checkbox label="&options.stylesheetAutocompletion.label;"
+                    tooltiptext="&options.stylesheetAutocompletion.tooltip;"
+                    data-pref="devtools.styleeditor.autocompletion-enabled"/>
+        </vbox>
+      </vbox>
+
+      <vbox id="sourceeditor-box" class="options-vertical-pane" flex="1">
+        <label>&options.sourceeditor.label;</label>
+        <vbox id="sourceeditor-options" class="options-groupbox">
+          <checkbox id="devtools-sourceeditor-detectindentation"
+                    label="&options.sourceeditor.detectindentation.label;"
+                    tooltiptext="&options.sourceeditor.detectindentation.tooltip;"
+                    data-pref="devtools.editor.detectindentation"/>
+          <checkbox id="devtools-sourceeditor-autoclosebrackets"
+                    label="&options.sourceeditor.autoclosebrackets.label;"
+                    tooltiptext="&options.sourceeditor.autoclosebrackets.tooltip;"
+                    data-pref="devtools.editor.autoclosebrackets"/>
+          <checkbox id="devtools-sourceeditor-expandtab"
+                    label="&options.sourceeditor.expandtab.label;"
+                    tooltiptext="&options.sourceeditor.expandtab.tooltip;"
+                    data-pref="devtools.editor.expandtab"/>
+          <description>
+            <label control="devtools-sourceeditor-tabsize-menulist"
+                   accesskey="&options.sourceeditor.tabsize.accesskey;"
+            >&options.sourceeditor.tabsize.label;</label>
+            <hbox>
+              <menulist id="devtools-sourceeditor-tabsize-menulist"
+                        data-pref="devtools.editor.tabsize">
+                <menupopup>
+                  <menuitem label="2" value="2"/>
+                  <menuitem label="4" value="4"/>
+                  <menuitem label="8" value="8"/>
+                </menupopup>
+              </menulist>
+            </hbox>
+          </description>
+          <description>
+            <label control="devtools-sourceeditor-keybinding-menulist"
+                   accesskey="&options.sourceeditor.keybinding.accesskey;"
+            >&options.sourceeditor.keybinding.label;</label>
+            <hbox>
+              <menulist id="devtools-sourceeditor-keybinding-menulist"
+                        data-pref="devtools.editor.keymap">
+                <menupopup>
+                  <menuitem value="default"
+                            label="&options.sourceeditor.keybinding.default.label;"/>
+                  <menuitem label="Vim" value="vim"/>
+                  <menuitem label="Emacs" value="emacs"/>
+                  <menuitem label="Sublime Text" value="sublime"/>
+                </menupopup>
+              </menulist>
+            </hbox>
+          </description>
+        </vbox>
+        <label>&options.context.advancedSettings;</label>
+        <vbox id="context-options" class="options-groupbox">
+          <checkbox id="devtools-show-gecko-data"
+                    label="&options.showPlatformData.label;"
+                    tooltiptext="&options.showPlatformData.tooltip;"
+                    data-pref="devtools.performance.ui.show-platform-data"/>
+          <checkbox id="devtools-disable-cache"
+                    label="&options.disableCache.label2;"
+                    tooltiptext="&options.disableCache.tooltip2;"
+                    data-pref="devtools.cache.disabled"/>
+          <checkbox id="devtools-disable-javascript"
+                    label="&options.disableJavaScript.label;"
+                    tooltiptext="&options.disableJavaScript.tooltip;"/>
+          <checkbox id="devtools-enable-serviceWorkersTesting"
+                    label="&options.enableServiceWorkersHTTP.label;"
+                    tooltiptext="&options.enableServiceWorkersHTTP.tooltip;"
+                    data-pref="devtools.serviceWorkers.testing.enabled"/>
+          <hbox class="hidden-labels-box">
+            <checkbox label="&options.enableChrome.label5;"
+                      tooltiptext="&options.enableChrome.tooltip3;"
+                      data-pref="devtools.chrome.enabled"/>
+          </hbox>
+          <hbox class="hidden-labels-box">
+            <checkbox label="&options.enableRemote.label3;"
+                      tooltiptext="&options.enableRemote.tooltip;"
+                      data-pref="devtools.debugger.remote-enabled"/>
+          </hbox>
+          <hbox class="hidden-labels-box">
+            <checkbox label="&options.enableWorkers.label;"
+                      tooltiptext="&options.enableWorkers.tooltip;"
+                      data-pref="devtools.debugger.workers"/>
+          </hbox>
+          <label class="options-citation-label theme-comment"
+          >&options.context.triggersPageRefresh;</label>
+        </vbox>
+      </vbox>
+    </hbox>
+  </hbox>
+</window>

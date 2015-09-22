@@ -682,7 +682,7 @@ static const char*
 BuiltinToName(AsmJSExit::BuiltinKind builtin)
 {
     // Note: this label is regexp-matched by
-    // browser/devtools/profiler/cleopatra/js/parserWorker.js.
+    // devtools/client/profiler/cleopatra/js/parserWorker.js.
 
     switch (builtin) {
       case AsmJSExit::Builtin_ToInt32:   return "ToInt32 (in asm.js)";
@@ -726,7 +726,7 @@ AsmJSProfilingFrameIterator::label() const
     // entries will be coalesced by the profiler.
     //
     // NB: these labels are regexp-matched by
-    //     browser/devtools/profiler/cleopatra/js/parserWorker.js.
+    //     devtools/client/profiler/cleopatra/js/parserWorker.js.
     const char* jitFFIDescription = "fast FFI trampoline (in asm.js)";
     const char* slowFFIDescription = "slow FFI trampoline (in asm.js)";
     const char* interruptDescription = "interrupt due to out-of-bounds or long execution (in asm.js)";

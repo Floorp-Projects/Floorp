@@ -1,0 +1,319 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for JavaScript terminal functionality</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript;version=1.8" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for JavaScript terminal functionality</p>
+
+<script class="testbody" type="text/javascript;version=1.8">
+SimpleTest.waitForExplicitFinish();
+
+let gState;
+
+let {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+let {MAX_AUTOCOMPLETE_ATTEMPTS,MAX_AUTOCOMPLETIONS} = require("devtools/shared/webconsole/utils");
+
+// This test runs all of its assertions twice - once with
+// evaluateJS and once with evaluateJSAsync.
+let evaluatingSync = true;
+function evaluateJS(input, callback) {
+  if (evaluatingSync) {
+    gState.client.evaluateJS(input, callback);
+  } else {
+    gState.client.evaluateJSAsync(input, callback);
+  }
+}
+
+function startTest()
+{
+  removeEventListener("load", startTest);
+
+  attachConsole(["PageError"], onAttach, true);
+}
+
+function onAttach(aState, aResponse)
+{
+  top.foobarObject = Object.create(null);
+  top.foobarObject.foo = 1;
+  top.foobarObject.foobar = 2;
+  top.foobarObject.foobaz = 3;
+  top.foobarObject.omg = 4;
+  top.foobarObject.omgfoo = 5;
+  top.foobarObject.strfoo = "foobarz";
+  top.foobarObject.omgstr = "foobarz" +
+    (new Array(DebuggerServer.LONG_STRING_LENGTH * 2)).join("abb");
+
+  top.largeObject1 = Object.create(null);
+  for (let i = 0; i < MAX_AUTOCOMPLETE_ATTEMPTS + 1; i++) {
+    top.largeObject1['a' + i] = i;
+  }
+
+  top.largeObject2 = Object.create(null);
+  for (let i = 0; i < MAX_AUTOCOMPLETIONS * 2; i++) {
+    top.largeObject2['a' + i] = i;
+  }
+
+  gState = aState;
+
+  let tests = [doAutocomplete1, doAutocomplete2, doAutocomplete3,
+               doAutocomplete4, doAutocompleteLarge1, doAutocompleteLarge2,
+               doSimpleEval, doWindowEval, doEvalWithException,
+               doEvalWithHelper, doEvalString, doEvalLongString];
+  runTests(tests, testEnd);
+}
+
+function doAutocomplete1()
+{
+  info("test autocomplete for 'window.foo'");
+  gState.client.autocomplete("window.foo", 10, onAutocomplete1);
+}
+
+function onAutocomplete1(aResponse)
+{
+  let matches = aResponse.matches;
+
+  is(aResponse.matchProp, "foo", "matchProp");
+  is(matches.length, 1, "matches.length");
+  is(matches[0], "foobarObject", "matches[0]");
+
+  nextTest();
+}
+
+function doAutocomplete2()
+{
+  info("test autocomplete for 'window.foobarObject.'");
+  gState.client.autocomplete("window.foobarObject.", 20, onAutocomplete2);
+}
+
+function onAutocomplete2(aResponse)
+{
+  let matches = aResponse.matches;
+
+  ok(!aResponse.matchProp, "matchProp");
+  is(matches.length, 7, "matches.length");
+  checkObject(matches,
+    ["foo", "foobar", "foobaz", "omg", "omgfoo", "omgstr", "strfoo"]);
+
+  nextTest();
+}
+
+function doAutocomplete3()
+{
+  // Check that completion suggestions are offered inside the string.
+  info("test autocomplete for 'dump(window.foobarObject.)'");
+  gState.client.autocomplete("dump(window.foobarObject.)", 25, onAutocomplete3);
+}
+
+function onAutocomplete3(aResponse)
+{
+  let matches = aResponse.matches;
+
+  ok(!aResponse.matchProp, "matchProp");
+  is(matches.length, 7, "matches.length");
+  checkObject(matches,
+    ["foo", "foobar", "foobaz", "omg", "omgfoo", "omgstr", "strfoo"]);
+
+  nextTest();
+}
+
+function doAutocomplete4()
+{
+  // Check that completion requests can have no suggestions.
+  info("test autocomplete for 'dump(window.foobarObject.)'");
+  gState.client.autocomplete("dump(window.foobarObject.)", 26, onAutocomplete4);
+}
+
+function onAutocomplete4(aResponse)
+{
+  ok(!aResponse.matchProp, "matchProp");
+  is(aResponse.matches.length, 0, "matches.length");
+
+  nextTest();
+}
+
+function doAutocompleteLarge1()
+{
+  // Check that completion requests with too large objects will
+  // have no suggestions.
+  info("test autocomplete for 'window.largeObject1.'");
+  gState.client.autocomplete("window.largeObject1.", 20, onAutocompleteLarge1);
+}
+
+function onAutocompleteLarge1(aResponse)
+{
+  ok(!aResponse.matchProp, "matchProp");
+  info (aResponse.matches.join("|"));
+  is(aResponse.matches.length, 0, "Bailed out with too many properties");
+
+  nextTest();
+}
+
+function doAutocompleteLarge2()
+{
+  // Check that completion requests with pretty large objects will
+  // have MAX_AUTOCOMPLETIONS suggestions
+  info("test autocomplete for 'window.largeObject2.'");
+  gState.client.autocomplete("window.largeObject2.", 20, onAutocompleteLarge2);
+}
+
+function onAutocompleteLarge2(aResponse)
+{
+  ok(!aResponse.matchProp, "matchProp");
+  is(aResponse.matches.length, MAX_AUTOCOMPLETIONS, "matches.length is MAX_AUTOCOMPLETIONS");
+
+  nextTest();
+}
+
+function doSimpleEval()
+{
+  info("test eval '2+2'");
+  evaluateJS("2+2", onSimpleEval);
+}
+
+function onSimpleEval(aResponse)
+{
+  checkObject(aResponse, {
+    from: gState.actor,
+    input: "2+2",
+    result: 4,
+  });
+
+  ok(!aResponse.exception, "no eval exception");
+  ok(!aResponse.helperResult, "no helper result");
+
+  nextTest();
+}
+
+function doWindowEval()
+{
+  info("test eval 'document'");
+  evaluateJS("document", onWindowEval);
+}
+
+function onWindowEval(aResponse)
+{
+  checkObject(aResponse, {
+    from: gState.actor,
+    input: "document",
+    result: {
+      type: "object",
+      class: "XULDocument",
+      actor: /[a-z]/,
+    },
+  });
+
+  ok(!aResponse.exception, "no eval exception");
+  ok(!aResponse.helperResult, "no helper result");
+
+  nextTest();
+}
+
+function doEvalWithException()
+{
+  info("test eval with exception");
+  evaluateJS("window.doTheImpossible()", onEvalWithException);
+}
+
+function onEvalWithException(aResponse)
+{
+  checkObject(aResponse, {
+    from: gState.actor,
+    input: "window.doTheImpossible()",
+    result: {
+      type: "undefined",
+    },
+    exceptionMessage: /doTheImpossible/,
+  });
+
+  ok(aResponse.exception, "js eval exception");
+  ok(!aResponse.helperResult, "no helper result");
+
+  nextTest();
+}
+
+function doEvalWithHelper()
+{
+  info("test eval with helper");
+  evaluateJS("clear()", onEvalWithHelper);
+}
+
+function onEvalWithHelper(aResponse)
+{
+  checkObject(aResponse, {
+    from: gState.actor,
+    input: "clear()",
+    result: {
+      type: "undefined",
+    },
+    helperResult: { type: "clearOutput" },
+  });
+
+  ok(!aResponse.exception, "no eval exception");
+
+  nextTest();
+}
+
+function doEvalString()
+{
+  evaluateJS("window.foobarObject.strfoo", onEvalString);
+}
+
+function onEvalString(aResponse)
+{
+  checkObject(aResponse, {
+    from: gState.actor,
+    input: "window.foobarObject.strfoo",
+    result: "foobarz",
+  });
+
+  nextTest();
+}
+
+function doEvalLongString()
+{
+  evaluateJS("window.foobarObject.omgstr", onEvalLongString);
+}
+
+function onEvalLongString(aResponse)
+{
+  let str = top.foobarObject.omgstr;
+  let initial = str.substring(0, DebuggerServer.LONG_STRING_INITIAL_LENGTH);
+
+  checkObject(aResponse, {
+    from: gState.actor,
+    input: "window.foobarObject.omgstr",
+    result: {
+      type: "longString",
+      initial: initial,
+      length: str.length,
+    },
+  });
+
+  nextTest();
+}
+
+function testEnd()
+{
+  // If this is the first run, reload the page and do it again.
+  // Otherwise, end the test.
+  closeDebugger(gState, function() {
+    gState = null;
+    if (evaluatingSync) {
+      evaluatingSync = false;
+      startTest();
+    } else {
+      SimpleTest.finish();
+    }
+  });
+}
+
+addEventListener("load", startTest);
+</script>
+</body>
+</html>
