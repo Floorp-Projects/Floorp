@@ -651,6 +651,8 @@ FunctionBox::FunctionBox(ExclusiveContext* cx, ObjectBox* traceListHead, JSFunct
     enclosingStaticScope_(enclosingStaticScope),
     bufStart(0),
     bufEnd(0),
+    startLine(1),
+    startColumn(0),
     length(0),
     generatorKindBits_(GeneratorKindAsBits(generatorKind)),
     inGenexpLambda(false),
