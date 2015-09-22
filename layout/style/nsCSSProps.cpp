@@ -224,6 +224,42 @@ nsCSSProps::AddRefTable(void)
           }
         }
       }
+
+      // Assert that CSS_PROPERTY_INTERNAL is used on properties in
+      // #ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL sections of nsCSSPropList.h
+      // and on no others.
+      static nsCSSProperty nonInternalProperties[] = {
+        #define CSS_PROP(name_, id_, ...)           eCSSProperty_##id_,
+        #define CSS_PROP_SHORTHAND(name_, id_, ...) eCSSProperty_##id_,
+        #define CSS_PROP_LIST_INCLUDE_LOGICAL
+        #define CSS_PROP_LIST_EXCLUDE_INTERNAL
+        #include "nsCSSPropList.h"
+        #undef CSS_PROP_LIST_EXCLUDE_INTERNAL
+        #undef CSS_PROP_LIST_INCLUDE_LOGICAL
+        #undef CSS_PROP_SHORTHAND
+        #undef CSS_PROP
+      };
+      MOZ_ASSERT(ArrayLength(nonInternalProperties) <= eCSSProperty_COUNT);
+
+      bool found[eCSSProperty_COUNT];
+      PodArrayZero(found);
+      for (nsCSSProperty p : nonInternalProperties) {
+        MOZ_ASSERT(!nsCSSProps::PropHasFlags(p, CSS_PROPERTY_INTERNAL),
+                   "properties defined outside of #ifndef "
+                   "CSS_PROP_LIST_EXCLUDE_INTERNAL sections must not have "
+                   "the CSS_PROPERTY_INTERNAL flag");
+        found[p] = true;
+      }
+
+      for (size_t i = 0; i < ArrayLength(found); ++i) {
+        if (!found[i]) {
+          auto p = static_cast<nsCSSProperty>(i);
+          MOZ_ASSERT(nsCSSProps::PropHasFlags(p, CSS_PROPERTY_INTERNAL),
+                     "properties defined in #ifndef "
+                     "CSS_PROP_LIST_EXCLUDE_INTERNAL sections must have "
+                     "the CSS_PROPERTY_INTERNAL flag");
+        }
+      }
     }
 #endif
   }

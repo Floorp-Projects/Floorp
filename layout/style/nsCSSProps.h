@@ -230,6 +230,11 @@ static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 // This property can be animated on the compositor.
 #define CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR    (1<<27)
 
+// This property is an internal property that is not represented
+// in the DOM.  Properties with this flag must be defined in an #ifndef
+// CSS_PROP_LIST_EXCLUDE_INTERNAL section of nsCSSPropList.h.
+#define CSS_PROPERTY_INTERNAL                     (1<<28)
+
 /**
  * Types of animatable values.
  */
