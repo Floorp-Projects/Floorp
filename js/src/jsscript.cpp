@@ -4339,3 +4339,11 @@ JS::ubi::Concrete<JSScript>::size(mozilla::MallocSizeOf mallocSizeOf) const
     MOZ_ASSERT(size > 0);
     return size;
 }
+
+JS::ubi::Node::Size
+JS::ubi::Concrete<js::LazyScript>::size(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    Size size = js::gc::Arena::thingSize(get().asTenured().getAllocKind());
+    size += get().sizeOfExcludingThis(mallocSizeOf);
+    return size;
+}
