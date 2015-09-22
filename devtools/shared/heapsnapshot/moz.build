@@ -7,8 +7,9 @@
 if CONFIG['ENABLE_TESTS']:
     DIRS += ['tests/gtest']
 
-XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
-MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
+XPCSHELL_TESTS_MANIFESTS += [ 'tests/unit/xpcshell.ini' ]
+MOCHITEST_MANIFESTS += [ 'tests/mochitest/mochitest.ini' ]
+MOCHITEST_CHROME_MANIFESTS += [ 'tests/mochitest/chrome.ini' ]
 
 EXPORTS.mozilla.devtools += [
     'AutoMemMap.h',
@@ -16,8 +17,16 @@ EXPORTS.mozilla.devtools += [
     'DeserializedNode.h',
     'FileDescriptorOutputStream.h',
     'HeapSnapshot.h',
+    'HeapSnapshotTempFileHelperChild.h',
+    'HeapSnapshotTempFileHelperParent.h',
     'ZeroCopyNSIOutputStream.h',
 ]
+
+IPDL_SOURCES += [
+    'PHeapSnapshotTempFileHelper.ipdl',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
 
 SOURCES += [
     'AutoMemMap.cpp',
@@ -25,6 +34,7 @@ SOURCES += [
     'DeserializedNode.cpp',
     'FileDescriptorOutputStream.cpp',
     'HeapSnapshot.cpp',
+    'HeapSnapshotTempFileHelperParent.cpp',
     'ZeroCopyNSIOutputStream.cpp',
 ]
 

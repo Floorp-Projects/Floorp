@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<!--
+Bug 1201597 - Sanity test that we can take a heap snapshot in an e10s child process.
+-->
+<html>
+<head>
+  <title>saveHeapSnapshot in e10s child processes</title>
+  <script type="application/javascript"
+          src="/tests/SimpleTest/SimpleTest.js">
+  </script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+    <script type="application/javascript">
+     window.onerror = function (msg, url, line, col, err) {
+         ok(false, "@" + url + ":" + line + ":" + col + ": " + msg + "\n" + err.stack);
+     };
+
+     SimpleTest.waitForExplicitFinish();
+
+     var childFrameURL = "data:text/html,<!DOCTYPE HTML><html><body></body></html>";
+
+     // This function is stringified and loaded in the child process as a frame
+     // script.
+     function childFrameScript() {
+         try {
+             ChromeUtils.saveHeapSnapshot({ runtime: true });
+         } catch (err) {
+             sendAsyncMessage("testSaveHeapSnapshot:error",
+                              { error: err.toString() });
+             return;
+         }
+
+         sendAsyncMessage("testSaveHeapSnapshot:done", {});
+     }
+
+     // Kick everything off on load.
+     window.onload = function () {
+         info("window.onload fired");
+         SpecialPowers.addPermission("browser", true, document);
+         SpecialPowers.pushPrefEnv({
+             "set": [
+                 ["dom.ipc.browser_frames.oop_by_default", true],
+                 ["dom.mozBrowserFramesEnabled", true],
+                 ["browser.pagethumbnails.capturing_disabled", true]
+             ]
+         }, function () {
+             var iframe = document.createElement("iframe");
+             SpecialPowers.wrap(iframe).mozbrowser = true;
+             iframe.id = "iframe";
+             iframe.src = childFrameURL;
+
+
+             iframe.addEventListener("mozbrowserloadend", function onLoadEnd() {
+                 iframe.removeEventListener("mozbrowserloadend", onLoadEnd);
+                 info("iframe done loading");
+
+                 var mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
+
+                 function onError(e) {
+                     ok(false, e.data.error);
+                 }
+                 mm.addMessageListener("testSaveHeapSnapshot:error", onError);
+
+                 mm.addMessageListener("testSaveHeapSnapshot:done", function onMsg() {
+                     mm.removeMessageListener("testSaveHeapSnapshot:done", onMsg);
+                     mm.removeMessageListener("testSaveHeapSnapshot:error", onError);
+                     ok(true, "Saved heap snapshot in child process");
+                     SimpleTest.finish();
+                 });
+
+                 info("Loading frame script to save heap snapshot");
+                 mm.loadFrameScript("data:,(" + encodeURI(childFrameScript.toString()) + ")();",
+                                    false);
+             });
+
+             info("Loading iframe");
+             document.body.appendChild(iframe);
+         });
+     };
+    </script>
+</window>

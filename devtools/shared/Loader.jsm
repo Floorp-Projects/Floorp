@@ -33,6 +33,7 @@ var loaderModules = {
   "toolkit/loader": Loader,
   PromiseDebugging,
   ThreadSafeChromeUtils,
+  HeapSnapshot,
 };
 XPCOMUtils.defineLazyGetter(loaderModules, "Debugger", () => {
   // addDebuggerToGlobal only allows adding the Debugger object to a global. The
