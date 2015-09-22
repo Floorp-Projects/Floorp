@@ -437,9 +437,14 @@
                                     currentColor calc(100% - 4px),
                                     transparent calc(100% - 4px));
   opacity: 0;
-  transition: opacity 100ms ease;
   content: "";
   display: -moz-box;
+}
+
+.tabbrowser-tab:hover::before,
+.tabbrowser-tab[afterhovered]::before,
+.tabbrowser-tab[last-visible-tab]:hover::after {
+  transition: opacity 100ms ease;
 }
 
 /* Also show separators beside the selected tab when dragging it. */
