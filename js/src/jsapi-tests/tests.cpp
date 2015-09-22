@@ -95,20 +95,8 @@ JSObject * JSAPITest::createGlobal(JSPrincipals* principals)
     return newGlobal;
 }
 
-static void PreInit()
-{
-#ifdef XP_WIN
-    // Disable the segfault dialog to avoid hanging when run in automation.
-    UINT prevMode = SetErrorMode(0);
-    UINT newMode = SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX | SEM_NOOPENFILEERRORBOX;
-    SetErrorMode(prevMode | newMode);
-#endif
-}
-
 int main(int argc, char* argv[])
 {
-    PreInit();
-
     int total = 0;
     int failures = 0;
     const char* filter = (argc == 2) ? argv[1] : nullptr;
