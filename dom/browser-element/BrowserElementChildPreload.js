@@ -1261,7 +1261,7 @@ BrowserElementChild.prototype = {
   },
 
   _buildMenuObj: function(menu, idPrefix, copyableElements) {
-    var menuObj = {type: 'menu', items: []};
+    var menuObj = {type: 'menu', customized: false, items: []};
     // Customized context menu
     if (menu) {
       this._maybeCopyAttribute(menu, menuObj, 'label');
@@ -1277,6 +1277,10 @@ BrowserElementChild.prototype = {
           this._ctxHandlers[id] = child;
           menuObj.items.push(menuitem);
         }
+      }
+
+      if (menuObj.items.length > 0) {
+        menuObj.customized = true;
       }
     }
     // Note: Display "Copy Link" first in order to make sure "Copy Image" is

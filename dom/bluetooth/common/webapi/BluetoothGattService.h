@@ -25,6 +25,7 @@ class BluetoothGattService final : public nsISupports
                                  , public nsWrapperCache
 {
   friend class BluetoothGatt;
+  friend class BluetoothGattServer;
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(BluetoothGattService)
@@ -60,6 +61,23 @@ public:
   }
 
   /****************************************************************************
+   * Methods (Web API Implementation)
+   ***************************************************************************/
+  static already_AddRefed<BluetoothGattService> Constructor(
+    const GlobalObject& aGlobal,
+    const BluetoothGattServiceInit& aInit,
+    ErrorResult& aRv);
+  already_AddRefed<Promise> AddCharacteristic(
+    const nsAString& aCharacteristicUuid,
+    const GattPermissions& aPermissions,
+    const GattCharacteristicProperties& aProperties,
+    const ArrayBuffer& aValue,
+    ErrorResult& aRv);
+  already_AddRefed<Promise> AddIncludedService(
+    BluetoothGattService& aIncludedService,
+    ErrorResult& aRv);
+
+  /****************************************************************************
    * Others
    ***************************************************************************/
   const nsAString& GetAppUuid() const
@@ -72,17 +90,28 @@ public:
     return mServiceId;
   }
 
+  const BluetoothAttributeHandle& GetServiceHandle() const
+  {
+    return mServiceHandle;
+  }
+
   nsPIDOMWindow* GetParentObject() const
   {
      return mOwner;
   }
 
+  uint16_t GetHandleCount() const;
+
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
+  // Constructor of BluetoothGattService in ATT client role
   BluetoothGattService(nsPIDOMWindow* aOwner,
                        const nsAString& aAppUuid,
                        const BluetoothGattServiceId& aServiceId);
+  // Constructor of BluetoothGattService in ATT server role
+  BluetoothGattService(nsPIDOMWindow* aOwner,
+                       const BluetoothGattServiceInit& aInit);
 
 private:
   ~BluetoothGattService();
@@ -122,6 +151,61 @@ private:
     const BluetoothGattId& aCharacteristicId,
     const nsTArray<BluetoothGattId>& aDescriptorIds);
 
+  /**
+   * Assign AppUuid of this GATT service.
+   *
+   * @param aAppUuid The value of AppUuid.
+   */
+  void AssignAppUuid(const nsAString& aAppUuid);
+
+  /**
+   * Assign the handle value for this GATT service. This function would be
+   * called only after a valid handle value is retrieved from the Bluetooth
+   * backend.
+   *
+   * @param aServiceHandle [in] The handle value of this GATT service.
+   */
+  void AssignServiceHandle(const BluetoothAttributeHandle& aServiceHandle);
+
+  /**
+   * Assign the handle value for one of the characteristic within this GATT
+   * service. This function would be called only after a valid handle value is
+   * retrieved from the Bluetooth backend.
+   *
+   * @param aCharacteristicUuid [in] BluetoothUuid of this GATT characteristic.
+   * @param aCharacteristicHandle [in] The handle value of this GATT
+   *                                   characteristic.
+   */
+  void AssignCharacteristicHandle(
+    const BluetoothUuid& aCharacteristicUuid,
+    const BluetoothAttributeHandle& aCharacteristicHandle);
+
+  /**
+   * Assign the handle value for one of the descriptor within this GATT
+   * service. This function would be called only after a valid handle value is
+   * retrieved from the Bluetooth backend.
+   *
+   * @param aDescriptorUuid [in] BluetoothUuid of this GATT descriptor.
+   * @param aCharacteristicHandle [in] The handle value of this GATT
+   *                                   characteristic.
+   * @param aDescriptorHandle [in] The handle value of this GATT descriptor.
+   */
+  void AssignDescriptorHandle(
+    const BluetoothUuid& aDescriptorUuid,
+    const BluetoothAttributeHandle& aCharacteristicHandle,
+    const BluetoothAttributeHandle& aDescriptorHandle);
+
+  /**
+   * Examine whether this GATT service can react with the Bluetooth backend.
+   *
+   * @return true if this service can react with the Bluetooth backend; false
+   *         if this service cannot react with the Bluetooth backend.
+   */
+  bool IsActivated() const
+  {
+    return mActive;
+  }
+
   /****************************************************************************
    * Variables
    ***************************************************************************/
@@ -154,6 +238,36 @@ private:
    * Array of discovered characteristics for this service.
    */
   nsTArray<nsRefPtr<BluetoothGattCharacteristic>> mCharacteristics;
+
+  /**
+   * ATT role of this GATT service.
+   */
+  const BluetoothAttRole mAttRole;
+
+  /**
+   * Activeness of this GATT service.
+   *
+   * True means this service does react with the Bluetooth backend. False means
+   * this service doesn't react with the Bluetooth backend. The value should be
+   * true if |mAttRole| equals |ATT_CLIENT_ROLE| because the service instance
+   * could be created only when the Bluetooth backend has found one GATT
+   * service. The value would be false at the beginning if |mAttRole| equals
+   * |ATT_SERVER_ROLE|. Then the value would become true later if this GATT
+   * service has been added into Bluetooth backend.
+   */
+  bool mActive;
+
+  /**
+   * Handle of this GATT service.
+   *
+   * The value is only valid if |mAttRole| equals |ATT_SERVER_ROLE|.
+   */
+  BluetoothAttributeHandle mServiceHandle;
+
+  /**
+   * Total count of handles of this GATT service itself.
+   */
+  static const uint16_t sHandleCount;
 };
 
 END_BLUETOOTH_NAMESPACE
@@ -176,6 +290,28 @@ public:
     const mozilla::dom::bluetooth::BluetoothGattServiceId& aServiceId) const
   {
     return aService->GetServiceId() == aServiceId;
+  }
+};
+
+/**
+ * Explicit Specialization of Function Templates
+ *
+ * Allows customizing the template code for a given set of template arguments.
+ * With this function template, nsTArray can handle comparison between
+ * 'nsRefPtr<BluetoothGattService>' and 'BluetoothAttributeHandle' properly,
+ * including IndexOf() and Contains();
+ */
+template <>
+class nsDefaultComparator <
+  nsRefPtr<mozilla::dom::bluetooth::BluetoothGattService>,
+  mozilla::dom::bluetooth::BluetoothAttributeHandle> {
+public:
+  bool Equals(
+    const nsRefPtr<mozilla::dom::bluetooth::BluetoothGattService>& aService,
+    const mozilla::dom::bluetooth::BluetoothAttributeHandle& aServiceHandle)
+    const
+  {
+    return aService->GetServiceHandle() == aServiceHandle;
   }
 };
 
