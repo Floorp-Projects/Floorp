@@ -22,6 +22,7 @@ task:
       GAIA_OPTIMIZE: '1'
       B2G_SYSTEM_APPS: '1'
       MOZHARNESS_CONFIG: b2g/taskcluster-spark.py
+      TOOLTOOL_MANIFEST: 'b2g/config/aries/releng-aries.tt'
     command:
       - >
         checkout-gecko workspace &&
