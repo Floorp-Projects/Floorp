@@ -3489,7 +3489,7 @@ js::CloneScriptIntoFunction(JSContext* cx, HandleObject enclosingScope, HandleFu
         return nullptr;
 
     dst->setFunction(fun);
-    LazyScript* lazy = nullptr;
+    Rooted<LazyScript*> lazy(cx);
     if (fun->isInterpretedLazy()) {
         lazy = fun->lazyScriptOrNull();
         fun->setUnlazifiedScript(dst);
