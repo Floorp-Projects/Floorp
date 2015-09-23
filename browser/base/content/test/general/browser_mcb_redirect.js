@@ -112,7 +112,7 @@ function checkUIForTest1() {
 
   var expected = "script blocked";
   waitForCondition(
-    function() content.document.getElementById('mctestdiv').innerHTML == expected,
+    () => content.document.getElementById('mctestdiv').innerHTML == expected,
     test2, "Error: Waited too long for status in Test 1!",
     "OK: Expected result in innerHTML for Test1!");
 }
@@ -132,7 +132,7 @@ function checkUIForTest2() {
 
   var expected = "script executed";
   waitForCondition(
-    function() content.document.getElementById('mctestdiv').innerHTML == expected,
+    () => content.document.getElementById('mctestdiv').innerHTML == expected,
     test3, "Error: Waited too long for status in Test 2!",
     "OK: Expected result in innerHTML for Test2!");
 }
@@ -150,7 +150,7 @@ function checkLoadEventForTest3() {
 
   var expected = "image blocked"
   waitForCondition(
-    function() content.document.getElementById('mctestdiv').innerHTML == expected,
+    () => content.document.getElementById('mctestdiv').innerHTML == expected,
     test4, "Error: Waited too long for status in Test 3!",
     "OK: Expected result in innerHTML for Test3!");
 }
@@ -168,7 +168,7 @@ function checkLoadEventForTest4() {
 
   var expected = "image loaded"
   waitForCondition(
-    function() content.document.getElementById('mctestdiv').innerHTML == expected,
+    () => content.document.getElementById('mctestdiv').innerHTML == expected,
     test5, "Error: Waited too long for status in Test 4!",
     "OK: Expected result in innerHTML for Test4!");
 }
@@ -191,7 +191,7 @@ function checkLoadEventForTest5() {
 
   var expected = "image loaded"
   waitForCondition(
-    function() content.document.getElementById('mctestdiv').innerHTML == expected,
+    () => content.document.getElementById('mctestdiv').innerHTML == expected,
     test6, "Error: Waited too long for status in Test 5!",
     "OK: Expected result in innerHTML for Test5!");
   // Go back online
@@ -216,7 +216,7 @@ function checkLoadEventForTest6() {
 
   var expected = "image blocked"
   waitForCondition(
-    function() content.document.getElementById('mctestdiv').innerHTML == expected,
+    () => content.document.getElementById('mctestdiv').innerHTML == expected,
     test7, "Error: Waited too long for status in Test 6!",
     "OK: Expected result in innerHTML for Test6!");
   // Go back online
@@ -236,7 +236,7 @@ function checkLoadEventForTest7() {
 
   var expected = "image loaded"
   waitForCondition(
-    function() content.document.getElementById('mctestdiv').innerHTML == expected,
+    () => content.document.getElementById('mctestdiv').innerHTML == expected,
     test8, "Error: Waited too long for status in Test 7!",
     "OK: Expected result in innerHTML for Test7!");
 }
@@ -259,7 +259,7 @@ function checkLoadEventForTest8() {
 
   var expected = "image loaded"
   waitForCondition(
-    function() content.document.getElementById('mctestdiv').innerHTML == expected,
+    () => content.document.getElementById('mctestdiv').innerHTML == expected,
     test9, "Error: Waited too long for status in Test 8!",
     "OK: Expected result in innerHTML for Test8!");
   // Go back online
@@ -284,7 +284,7 @@ function checkLoadEventForTest9() {
 
   var expected = "image blocked"
   waitForCondition(
-    function() content.document.getElementById('mctestdiv').innerHTML == expected,
+    () => content.document.getElementById('mctestdiv').innerHTML == expected,
     cleanUpAfterTests, "Error: Waited too long for status in Test 9!",
     "OK: Expected result in innerHTML for Test9!");
   // Go back online

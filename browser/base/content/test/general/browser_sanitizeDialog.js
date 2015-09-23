@@ -964,7 +964,7 @@ function formNameExists(name)
 
   let count = 0;
   FormHistory.count({ fieldname: name },
-                    { handleResult: function (result) count = result,
+                    { handleResult: result => count = result,
                       handleError: function (error) {
                         do_throw("Error occurred searching form history: " + error);
                         deferred.reject(error);
