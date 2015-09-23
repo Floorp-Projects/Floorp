@@ -7,24 +7,23 @@ from __future__ import print_function
 
 import errno
 import os
+import stat
 import subprocess
 
 
 # These are the platform and build-tools versions for building
 # mobile/android, respectively. Try to keep these in synch with the
 # build system and Mozilla's automation.
-ANDROID_PLATFORM = 'android-22'
+ANDROID_TARGET_SDK = '22'
 ANDROID_BUILD_TOOLS_VERSION = '22.0.1'
 
 # These are the "Android packages" needed for building Firefox for Android.
 # Use |android list sdk --extended| to see these identifiers.
 ANDROID_PACKAGES = [
     'tools',
-    'platform-tools',
+    'platform-tools-preview', # Temporarily, tools depends on platform-tools-preview.
     'build-tools-%s' % ANDROID_BUILD_TOOLS_VERSION,
-    ANDROID_PLATFORM,
-    'extra-android-support',
-    'extra-google-google_play_services',
+    'android-%s' % ANDROID_TARGET_SDK,
     'extra-google-m2repository',
     'extra-android-m2repository',
 ]
@@ -149,15 +148,31 @@ def install_mobile_android_sdk_or_ndk(url, path):
         file = url.split('/')[-1]
 
         os.chdir(path)
+        abspath = os.path.join(download_path, file)
         if file.endswith('.tar.gz') or file.endswith('.tgz'):
-            cmd = ['tar', 'zvxf']
+            cmd = ['tar', 'zvxf', abspath]
         elif file.endswith('.tar.bz2'):
-            cmd = ['tar', 'jvxf']
-        elif file.endswitch('.zip'):
-            cmd = ['unzip']
+            cmd = ['tar', 'jvxf', abspath]
+        elif file.endswith('.zip'):
+            cmd = ['unzip', abspath]
+        elif file.endswith('.bin'):
+            # Execute the .bin file, which unpacks the content.
+            mode = os.stat(path).st_mode
+            os.chmod(abspath, mode | stat.S_IXUSR)
+            cmd = [abspath]
         else:
             raise NotImplementedError("Don't know how to unpack file: %s" % file)
-        subprocess.check_call(cmd + [os.path.join(download_path, file)])
+
+        print('Unpacking %s...' % abspath)
+
+        with open(os.devnull, "w") as stdout:
+            # These unpack commands produce a ton of output; ignore it.  The
+            # .bin files are 7z archives; there's no command line flag to quiet
+            # output, so we use this hammer.
+            subprocess.check_call(cmd, stdout=stdout)
+
+        print('Unpacking %s... DONE' % abspath)
+
     finally:
         os.chdir(old_path)
 
@@ -194,7 +209,11 @@ def ensure_android_packages(android_tool, packages=None):
     if not packages:
         packages = ANDROID_PACKAGES
 
-    missing = list_missing_android_packages(android_tool, packages=packages)
+
+    # Bug 1171232: The |android| tool behaviour has changed; we no longer can
+    # see what packages are installed easily.  Force installing everything until
+    # we find a way to actually see the missing packages.
+    missing = packages
     if not missing:
         print(NOT_INSTALLING_ANDROID_PACKAGES % ', '.join(packages))
         return
@@ -203,11 +222,13 @@ def ensure_android_packages(android_tool, packages=None):
     # may be prompted to agree to the Android license.
     print(INSTALLING_ANDROID_PACKAGES % ', '.join(missing))
     subprocess.check_call([android_tool,
-                           'update', 'sdk', '--no-ui',
+                           'update', 'sdk', '--no-ui', '--all',
                            '--filter', ','.join(missing)])
 
-    # Let's verify.
-    failing = list_missing_android_packages(android_tool, packages=packages)
+    # Bug 1171232: The |android| tool behaviour has changed; we no longer can
+    # see what packages are installed easily.  Don't check until we find a way
+    # to actually verify.
+    failing = []
     if failing:
         raise Exception(MISSING_ANDROID_PACKAGES % (', '.join(missing), ', '.join(failing)))
 

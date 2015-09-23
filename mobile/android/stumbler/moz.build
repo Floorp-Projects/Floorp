@@ -8,5 +8,5 @@ include('stumbler_sources.mozbuild')
 
 stumbler_jar = add_java_jar('stumbler')
 stumbler_jar.sources += stumbler_sources
-stumbler_jar.extra_jars += [CONFIG['ANDROID_COMPAT_LIB']]
+stumbler_jar.extra_jars += [CONFIG['ANDROID_SUPPORT_V4_AAR_LIB']]
 stumbler_jar.javac_flags += ['-Xlint:all']

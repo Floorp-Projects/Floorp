@@ -485,38 +485,50 @@ class AndroidEmulator(object):
     def _find_sdk_exe(self, exe, tools):
         if tools:
             subdir = 'tools'
-            var = 'ANDROID_TOOLS'
         else:
             subdir = 'platform-tools'
-            var = 'ANDROID_PLATFORM_TOOLS'
 
         found = False
+        if not found and self.substs:
+            # It's best to use the tool specified by the build, rather
+            # than something we find on the PATH or crawl for.
+            try:
+                exe_path = self.substs[exe.upper()]
+                if os.path.exists(exe_path):
+                    found = True
+                else:
+                    self._log_debug(
+                        "Unable to find executable at %s" % exe_path)
+            except KeyError:
+                self._log_debug("%s not set" % exe.upper())
 
         # Can exe be found in the Android SDK?
-        try:
-            android_sdk_root = os.environ['ANDROID_SDK_ROOT']
-            exe_path = os.path.join(
-                android_sdk_root, subdir, exe)
-            if os.path.exists(exe_path):
-                found = True
-            else:
-                _log_debug(
-                    "Unable to find executable at %s" % exe_path)
-        except KeyError:
-            _log_debug("ANDROID_SDK_ROOT not set")
-
-        if not found and self.substs:
-            # Can exe be found in ANDROID_TOOLS/ANDROID_PLATFORM_TOOLS?
+        if not found:
             try:
+                android_sdk_root = os.environ['ANDROID_SDK_ROOT']
                 exe_path = os.path.join(
-                    self.substs[var], exe)
+                    android_sdk_root, subdir, exe)
                 if os.path.exists(exe_path):
                     found = True
                 else:
                     _log_debug(
                         "Unable to find executable at %s" % exe_path)
             except KeyError:
-                _log_debug("%s not set" % var)
+                _log_debug("ANDROID_SDK_ROOT not set")
+
+        if not found:
+            # Can exe be found in the Android SDK?
+            try:
+                android_sdk_root = os.environ['ANDROID_SDK_ROOT']
+                exe_path = os.path.join(
+                    android_sdk_root, subdir, exe)
+                if os.path.exists(exe_path):
+                    found = True
+                else:
+                    _log_debug(
+                        "Unable to find executable at %s" % exe_path)
+            except KeyError:
+                _log_debug("ANDROID_SDK_ROOT not set")
 
         if not found:
             # Can exe be found in the default bootstrap location?

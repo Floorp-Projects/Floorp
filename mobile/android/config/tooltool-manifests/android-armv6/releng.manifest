@@ -7,8 +7,9 @@
 "unpack": true
 },
 {
-"size": 329217868,
-"digest": "1cf54f12c271a2eea8f03caafa458207768ba12400cf53d742e3c4654a32b18fb75d8e0dece95e27691695751a6f6514ccb724b1a74958948c5f111c5c00da4f",
+"size": 408728104, 
+"visibility": "internal", 
+"digest": "f78e203a95d748ff74ad69e42ce11829417a2752306dd469bb81bbbc9e5dbaa26eccab92b9de5f30a3a045754e2ebddf6734b3bd9676bbb0aa4131a1c24f7613", 
 "algorithm": "sha512",
 "filename": "android-sdk-linux.tar.xz",
 "unpack": true
