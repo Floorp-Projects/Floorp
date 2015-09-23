@@ -11,7 +11,6 @@
       <script class="testbody" type="text/javascript;version=1.7">
         "use strict";
 
-        const swPref = "dom.workers.sharedWorkers.enabled";
         const scrollbarPref = "layout.testing.overlay-scrollbars.always-visible";
         const bfCacheEnabledPref = "browser.sessionhistory.cache_subframes";
         const bfCacheDepthPref = "browser.sessionhistory.max_total_viewers";
@@ -23,16 +22,11 @@
         let testGenerator = (function() {
           SimpleTest.waitForExplicitFinish();
 
-          if (!SpecialPowers.getBoolPref(swPref)) {
-            ok(!("SharedWorker" in window), "No SharedWorker without pref set");
-          }
-
-          // Enable SharedWorkers and force scrollbar to always be shown.  The
-          // scrollbar setting is necessary to avoid the fade-in/fade-out from
-          // evicting our document from the BF cache below.  If bug 1049277
-          // is fixed, then we can stop setting the scrollbar pref here.
-          SpecialPowers.pushPrefEnv({ set: [[swPref, true],
-                                            [scrollbarPref, true]] },
+	  // Force scrollbar to always be shown.  The scrollbar setting is
+	  // necessary to avoid the fade-in/fade-out from evicting our document
+	  // from the BF cache below.  If bug 1049277 is fixed, then we can
+	  // stop setting the scrollbar pref here.
+          SpecialPowers.pushPrefEnv({ set: [[scrollbarPref, true]] },
                                     sendToGenerator);
           yield undefined;
 

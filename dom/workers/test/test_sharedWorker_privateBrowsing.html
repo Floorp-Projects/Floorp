@@ -92,7 +92,6 @@ function runTest() {
 
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({"set": [
-  ["dom.workers.sharedWorkers.enabled", true],
   ["browser.startup.page", 0],
   ["browser.startup.homepage_override.mstone", "ignore"],
 ]}, runTest);
