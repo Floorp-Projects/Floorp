@@ -634,15 +634,15 @@ BluetoothGattNotificationHandler::ServiceDeletedNotification(
 
 void
 BluetoothGattNotificationHandler::RequestReadNotification(
-  int aConnId, int aTransId, const nsAString& aBdAddr, int aAttributeHandle,
-  int aOffset, bool aIsLong)
+  int aConnId, int aTransId, const nsAString& aBdAddr,
+  const BluetoothAttributeHandle& aAttributeHandle, int aOffset, bool aIsLong)
 { }
 
 void
 BluetoothGattNotificationHandler::RequestWriteNotification(
-  int aConnId, int aTransId, const nsAString& aBdAddr, int aAttributeHandle,
-  int aOffset, int aLength, const uint8_t* aValue, bool aNeedResponse,
-  bool aIsPrepareWrite)
+  int aConnId, int aTransId, const nsAString& aBdAddr,
+  const BluetoothAttributeHandle& aAttributeHandle, int aOffset, int aLength,
+  const uint8_t* aValue, bool aNeedResponse, bool aIsPrepareWrite)
 { }
 
 void
