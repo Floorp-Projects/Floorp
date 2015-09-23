@@ -3,7 +3,6 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/BrowserUtils.jsm");
 var ssm = Services.scriptSecurityManager;
 function makeURI(uri) { return Services.io.newURI(uri, null, null); }
 
@@ -28,9 +27,9 @@ function checkOriginAttributes(prin, attrs, suffix) {
   do_check_eq(prin.originAttributes.inBrowser, attrs.inBrowser || false);
   do_check_eq(prin.originSuffix, suffix || '');
   if (!prin.isNullPrincipal && !prin.origin.startsWith('[')) {
-    do_check_true(BrowserUtils.principalFromOrigin(prin.origin).equals(prin));
+    do_check_true(ssm.createCodebasePrincipalFromOrigin(prin.origin).equals(prin));
   } else {
-    checkThrows(() => BrowserUtils.principalFromOrigin(prin.origin));
+    checkThrows(() => ssm.createCodebasePrincipalFromOrigin(prin.origin));
   }
 }
 
