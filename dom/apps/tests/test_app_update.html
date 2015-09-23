@@ -158,7 +158,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
     ok(app, "App is non-null");
     if (app.installState == "pending") {
       ok(true, "App is pending. Waiting for progress");
-      app.onprogress = function() ok(true, "Got download progress");
+      app.onprogress = () => ok(true, "Got download progress");
       app.ondownloadsuccess = continueTest;
       app.ondownloaderror = mozAppsError;
       yield undefined;
@@ -173,8 +173,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
     // manifest, so there should always be an update.
     var lastCheck = app.lastUpdateCheck;
     ok(true, "Setting callbacks");
-    app.ondownloadapplied = function() ok(true, "downloadapplied fired.");
-    app.ondownloadavailable = function() ok(false, "downloadavailable fired");
+    app.ondownloadapplied = () => ok(true, "downloadapplied fired.");
+    app.ondownloadavailable = () => ok(false, "downloadavailable fired");
     ok(true, "Checking for updates");
     var request = app.checkForUpdate();
     request.onerror = mozAppsError;
