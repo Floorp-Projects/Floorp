@@ -32,6 +32,7 @@ class BluetoothGattDescriptor final : public nsISupports
                                     , public nsWrapperCache
                                     , public BluetoothSignalObserver
 {
+  friend class BluetoothGattServer;
   friend class BluetoothGattCharacteristic;
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -86,6 +87,11 @@ public:
   uint16_t GetHandleCount() const
   {
     return sHandleCount;
+  }
+
+  const nsTArray<uint8_t>& GetValue() const
+  {
+    return mValue;
   }
 
   virtual JSObject* WrapObject(JSContext* aCx,
@@ -225,6 +231,27 @@ public:
     mozilla::dom::bluetooth::BluetoothUuid uuid;
     aDesc->GetUuid(uuid);
     return uuid == aUuid;
+  }
+};
+
+/**
+ * Explicit Specialization of Function Templates
+ *
+ * Allows customizing the template code for a given set of template arguments.
+ * With this function template, nsTArray can handle comparison between
+ * 'nsRefPtr<BluetoothGattDescriptor>' and 'BluetoothAttributeHandle'
+ * properly, including IndexOf() and Contains();
+ */
+template <>
+class nsDefaultComparator <
+  nsRefPtr<mozilla::dom::bluetooth::BluetoothGattDescriptor>,
+  mozilla::dom::bluetooth::BluetoothAttributeHandle> {
+public:
+  bool Equals(
+    const nsRefPtr<mozilla::dom::bluetooth::BluetoothGattDescriptor>& aDesc,
+    const mozilla::dom::bluetooth::BluetoothAttributeHandle& aHandle) const
+  {
+    return aDesc->GetDescriptorHandle() == aHandle;
   }
 };
 

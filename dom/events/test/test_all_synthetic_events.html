@@ -64,6 +64,10 @@ const kEventConstructors = {
                                                           return new BluetoothDeviceEvent(aName, aProps);
                                                        },
                                              },
+  BluetoothGattAttributeEvent:               { create: function (aName, aProps) {
+                                                          return new BluetoothGattAttributeEvent(aName, aProps);
+                                                       },
+                                             },
   BluetoothGattCharacteristicEvent:          { create: function (aName, aProps) {
                                                           return new BluetoothGattCharacteristicEvent(aName, aProps);
                                                        },

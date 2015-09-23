@@ -12,6 +12,7 @@
 #include "mozilla/dom/bluetooth/BluetoothCommon.h"
 #include "mozilla/dom/bluetooth/BluetoothGattService.h"
 #include "mozilla/dom/Promise.h"
+#include "nsClassHashtable.h"
 #include "nsCOMPtr.h"
 #include "nsPIDOMWindow.h"
 
@@ -46,6 +47,8 @@ public:
    * Event Handlers
    ***************************************************************************/
   IMPL_EVENT_HANDLER(connectionstatechanged);
+  IMPL_EVENT_HANDLER(attributereadreq);
+  IMPL_EVENT_HANDLER(attributewritereq);
 
   /****************************************************************************
    * Methods (Web API Implementation)
@@ -58,6 +61,11 @@ public:
                                        ErrorResult& aRv);
   already_AddRefed<Promise> RemoveService(BluetoothGattService& aService,
                                           ErrorResult& aRv);
+
+  already_AddRefed<Promise> SendResponse(const nsAString& aAddress,
+                                         uint16_t aStatus,
+                                         int32_t aRequestId,
+                                         ErrorResult& aRv);
 
   /****************************************************************************
    * Others
@@ -102,12 +110,29 @@ private:
   friend class AddServiceTask;
   friend class RemoveServiceTask;
 
+  struct RequestData
+  {
+    RequestData(const BluetoothAttributeHandle& aHandle,
+                BluetoothGattCharacteristic* aCharacteristic,
+                BluetoothGattDescriptor* aDescriptor)
+    : mHandle(aHandle)
+    , mCharacteristic(aCharacteristic)
+    , mDescriptor(aDescriptor)
+    { }
+
+    BluetoothAttributeHandle mHandle;
+    nsRefPtr<BluetoothGattCharacteristic> mCharacteristic;
+    nsRefPtr<BluetoothGattDescriptor> mDescriptor;
+  };
+
   void HandleServerRegistered(const BluetoothValue& aValue);
   void HandleServerUnregistered(const BluetoothValue& aValue);
   void HandleConnectionStateChanged(const BluetoothValue& aValue);
   void HandleServiceHandleUpdated(const BluetoothValue& aValue);
   void HandleCharacteristicHandleUpdated(const BluetoothValue& aValue);
   void HandleDescriptorHandleUpdated(const BluetoothValue& aValue);
+  void HandleReadWriteRequest(const BluetoothValue& aValue,
+                              const nsAString& aString);
 
   /****************************************************************************
    * Variables
@@ -136,6 +161,11 @@ private:
    * The service that is being added to this server.
    */
   nsRefPtr<BluetoothGattService> mPendingService;
+
+  /**
+   * Map request information from the request ID.
+   */
+  nsClassHashtable<nsUint32HashKey, RequestData> mRequestMap;
 };
 
 END_BLUETOOTH_NAMESPACE

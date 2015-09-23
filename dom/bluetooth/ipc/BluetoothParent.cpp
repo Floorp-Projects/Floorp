@@ -316,6 +316,8 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_GattServerStartServiceRequest());
     case Request::TGattServerStopServiceRequest:
       return actor->DoRequest(aRequest.get_GattServerStopServiceRequest());
+    case Request::TGattServerSendResponseRequest:
+      return actor->DoRequest(aRequest.get_GattServerSendResponseRequest());
     default:
       MOZ_CRASH("Unknown type!");
   }
@@ -1153,6 +1155,25 @@ BluetoothRequestParent::DoRequest(
   mService->GattServerStopServiceInternal(
     aRequest.appUuid(),
     aRequest.serviceHandle(),
+    mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(
+  const GattServerSendResponseRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType ==
+             Request::TGattServerSendResponseRequest);
+
+  mService->GattServerSendResponseInternal(
+    aRequest.appUuid(),
+    aRequest.address(),
+    aRequest.status(),
+    aRequest.requestId(),
+    aRequest.response(),
     mReplyRunnable.get());
 
   return true;

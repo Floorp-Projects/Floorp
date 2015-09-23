@@ -13,6 +13,10 @@ interface BluetoothGattServer : EventTarget
   // Fired when a remote device has been connected/disconnected
   attribute EventHandler  onconnectionstatechanged;
 
+  // Fired when a remote BLE client send a read/write request
+  attribute EventHandler  onattributereadreq;
+  attribute EventHandler  onattributewritereq;
+
   /**
    * Connect/Disconnect to the remote BLE device with the target address.
    *
@@ -41,4 +45,11 @@ interface BluetoothGattServer : EventTarget
    */
   [NewObject]
   Promise<void> removeService(BluetoothGattService service);
+
+  /**
+   * Send a read/write response to a remote BLE client
+   */
+  [NewObject]
+  Promise<void> sendResponse(
+    DOMString address, unsigned short status, long requestId);
 };

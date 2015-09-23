@@ -291,6 +291,7 @@ public:
   nsRefPtr<BluetoothReplyRunnable> mRemoveServiceRunnable;
   nsRefPtr<BluetoothReplyRunnable> mStartServiceRunnable;
   nsRefPtr<BluetoothReplyRunnable> mStopServiceRunnable;
+  nsRefPtr<BluetoothReplyRunnable> mSendResponseRunnable;
 
   // Map connection id from device address
   nsDataHashtable<nsStringHashKey, int> mConnectionMap;
@@ -340,6 +341,18 @@ public:
               int aConnId) const
   {
     return aClient->mConnId == aConnId;
+  }
+
+  bool Equals(const nsRefPtr<BluetoothGattServer>& aServer,
+              int aConnId) const
+  {
+    for (
+      auto iter = aServer->mConnectionMap.Iter(); !iter.Done(); iter.Next()) {
+      if (aConnId == iter.Data()) {
+        return true;
+      }
+    }
+    return false;
   }
 };
 
@@ -2210,6 +2223,81 @@ BluetoothGattManager::ServerStopService(
     new ServerStopServiceResultHandler(server));
 }
 
+class BluetoothGattManager::ServerSendResponseResultHandler final
+  : public BluetoothGattResultHandler
+{
+public:
+  ServerSendResponseResultHandler(BluetoothGattServer* aServer)
+  : mServer(aServer)
+  {
+    MOZ_ASSERT(mServer);
+  }
+
+  void SendResponse() override
+  {
+    if (mServer->mSendResponseRunnable) {
+      DispatchReplySuccess(mServer->mSendResponseRunnable);
+      mServer->mSendResponseRunnable = nullptr;
+    }
+  }
+
+  void OnError(BluetoothStatus aStatus) override
+  {
+    BT_WARNING("BluetoothGattServerInterface::SendResponse failed: %d",
+               (int)aStatus);
+
+    // Reject the send response request
+    if (mServer->mSendResponseRunnable) {
+      DispatchReplyError(mServer->mSendResponseRunnable,
+                         NS_LITERAL_STRING("Send response failed"));
+      mServer->mSendResponseRunnable = nullptr;
+    }
+  }
+
+private:
+  nsRefPtr<BluetoothGattServer> mServer;
+};
+
+void
+BluetoothGattManager::ServerSendResponse(const nsAString& aAppUuid,
+                                         const nsAString& aAddress,
+                                         uint16_t aStatus,
+                                         int aRequestId,
+                                         const BluetoothGattResponse& aRsp,
+                                         BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aRunnable);
+
+  ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
+
+  size_t index = sServers->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  if (index == sServers->NoIndex) {
+    DispatchReplyError(aRunnable, STATUS_NOT_READY);
+    return;
+  }
+  nsRefPtr<BluetoothGattServer> server = sServers->ElementAt(index);
+
+  if (server->mSendResponseRunnable) {
+    DispatchReplyError(aRunnable, STATUS_BUSY);
+    return;
+  }
+
+  int connId = 0;
+  server->mConnectionMap.Get(aAddress, &connId);
+  if (!connId) {
+    DispatchReplyError(aRunnable, STATUS_NOT_READY);
+    return;
+  }
+
+  sBluetoothGattInterface->SendResponse(
+    connId,
+    aRequestId,
+    aStatus,
+    aRsp,
+    new ServerSendResponseResultHandler(server));
+}
+
 //
 // Notification Handlers
 //
@@ -3334,6 +3422,110 @@ BluetoothGattManager::ServiceDeletedNotification(
     DispatchReplySuccess(server->mRemoveServiceRunnable);
     server->mRemoveServiceRunnable = nullptr;
   }
+}
+
+void
+BluetoothGattManager::RequestReadNotification(
+  int aConnId,
+  int aTransId,
+  const nsAString& aBdAddr,
+  const BluetoothAttributeHandle& aAttributeHandle,
+  int aOffset,
+  bool aIsLong)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  NS_ENSURE_TRUE_VOID(aConnId);
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
+  size_t index = sServers->IndexOf(aConnId, 0 /* Start */, ConnIdComparator());
+  NS_ENSURE_TRUE_VOID(index != sServers->NoIndex);
+
+  nsRefPtr<BluetoothGattServer> server = (*sServers)[index];
+
+  // Send an error response for unsupported requests
+  if (aIsLong || aOffset > 0) {
+    BT_LOGR("Unsupported long attribute read requests");
+    BluetoothGattResponse response;
+    memset(&response, 0, sizeof(BluetoothGattResponse));
+    sBluetoothGattInterface->SendResponse(
+      aConnId,
+      aTransId,
+      GATT_STATUS_REQUEST_NOT_SUPPORTED,
+      response,
+      new ServerSendResponseResultHandler(server));
+    return;
+  }
+
+  // Distribute a signal to gattServer
+  InfallibleTArray<BluetoothNamedValue> properties;
+
+  AppendNamedValue(properties, "TransId", aTransId);
+  AppendNamedValue(properties, "AttrHandle", aAttributeHandle);
+  AppendNamedValue(properties, "Address", nsString(aBdAddr));
+  AppendNamedValue(properties, "NeedResponse", true);
+  AppendNamedValue(properties, "Value", new nsTArray<uint8_t>());
+
+  bs->DistributeSignal(NS_LITERAL_STRING("ReadRequested"),
+                       server->mAppUuid,
+                       properties);
+}
+
+void
+BluetoothGattManager::RequestWriteNotification(
+  int aConnId,
+  int aTransId,
+  const nsAString& aBdAddr,
+  const BluetoothAttributeHandle& aAttributeHandle,
+  int aOffset,
+  int aLength,
+  const uint8_t* aValue,
+  bool aNeedResponse,
+  bool aIsPrepareWrite)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  NS_ENSURE_TRUE_VOID(aConnId);
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
+  size_t index = sServers->IndexOf(aConnId, 0 /* Start */, ConnIdComparator());
+  NS_ENSURE_TRUE_VOID(index != sServers->NoIndex);
+
+  nsRefPtr<BluetoothGattServer> server = (*sServers)[index];
+
+  // Send an error response for unsupported requests
+  if (aIsPrepareWrite || aOffset > 0) {
+    BT_LOGR("Unsupported prepare write or long attribute write requests");
+    if (aNeedResponse) {
+      BluetoothGattResponse response;
+      memset(&response, 0, sizeof(BluetoothGattResponse));
+      sBluetoothGattInterface->SendResponse(
+        aConnId,
+        aTransId,
+        GATT_STATUS_REQUEST_NOT_SUPPORTED,
+        response,
+        new ServerSendResponseResultHandler(server));
+    }
+    return;
+  }
+
+  // Distribute a signal to gattServer
+  InfallibleTArray<BluetoothNamedValue> properties;
+
+  AppendNamedValue(properties, "TransId", aTransId);
+  AppendNamedValue(properties, "AttrHandle", aAttributeHandle);
+  AppendNamedValue(properties, "Address", nsString(aBdAddr));
+  AppendNamedValue(properties, "NeedResponse", aNeedResponse);
+
+  nsTArray<uint8_t> value;
+  value.AppendElements(aValue, aLength);
+  AppendNamedValue(properties, "Value", value);
+
+  bs->DistributeSignal(NS_LITERAL_STRING("WrtieRequested"),
+                       server->mAppUuid,
+                       properties);
 }
 
 BluetoothGattManager::BluetoothGattManager()

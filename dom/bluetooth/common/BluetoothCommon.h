@@ -274,6 +274,13 @@ extern bool gBluetoothDebugFlag;
  */
 #define ATTRIBUTE_CHANGED_ID                 "attributechanged"
 
+/**
+ * When the local GATT server received attribute read/write requests, we'll
+ * dispatch an event.
+ */
+#define ATTRIBUTE_READ_REQUEST               "attributereadreq"
+#define ATTRIBUTE_WRITE_REQUEST              "attributewritereq"
+
 // Bluetooth address format: xx:xx:xx:xx:xx:xx (or xx_xx_xx_xx_xx_xx)
 #define BLUETOOTH_ADDRESS_LENGTH 17
 #define BLUETOOTH_ADDRESS_NONE   "00:00:00:00:00:00"
@@ -695,7 +702,8 @@ enum BluetoothGattAuthReq {
   GATT_AUTH_REQ_NO_MITM,
   GATT_AUTH_REQ_MITM,
   GATT_AUTH_REQ_SIGNED_NO_MITM,
-  GATT_AUTH_REQ_SIGNED_MITM
+  GATT_AUTH_REQ_SIGNED_MITM,
+  GATT_AUTH_REQ_END_GUARD
 };
 
 enum BluetoothGattWriteType {
@@ -821,30 +829,6 @@ struct BluetoothGattTestParam {
   uint16_t mU5;
 };
 
-struct BluetoothGattResponse {
-  uint16_t mHandle;
-  uint16_t mOffset;
-  uint16_t mLength;
-  BluetoothGattAuthReq mAuthReq;
-  uint8_t mValue[BLUETOOTH_GATT_MAX_ATTR_LEN];
-};
-
-/**
- * EIR Data Type, Advertising Data Type (AD Type) and OOB Data Type Definitions
- * Please refer to https://www.bluetooth.org/en-us/specification/\
- * assigned-numbers/generic-access-profile
- */
-enum BluetoothGapDataType {
-  GAP_INCOMPLETE_UUID16  = 0X02, // Incomplete List of 16-bit Service Class UUIDs
-  GAP_COMPLETE_UUID16    = 0X03, // Complete List of 16-bit Service Class UUIDs
-  GAP_INCOMPLETE_UUID32  = 0X04, // Incomplete List of 32-bit Service Class UUIDs
-  GAP_COMPLETE_UUID32    = 0X05, // Complete List of 32-bit Service Class UUIDs»
-  GAP_INCOMPLETE_UUID128 = 0X06, // Incomplete List of 128-bit Service Class UUIDs
-  GAP_COMPLETE_UUID128   = 0X07, // Complete List of 128-bit Service Class UUIDs
-  GAP_SHORTENED_NAME     = 0X08, // Shortened Local Name
-  GAP_COMPLETE_NAME      = 0X09, // Complete Local Name
-};
-
 struct BluetoothAttributeHandle {
   uint16_t mHandle;
 
@@ -856,6 +840,39 @@ struct BluetoothAttributeHandle {
   {
     return mHandle == aOther.mHandle;
   }
+};
+
+struct BluetoothGattResponse {
+  BluetoothAttributeHandle mHandle;
+  uint16_t mOffset;
+  uint16_t mLength;
+  BluetoothGattAuthReq mAuthReq;
+  uint8_t mValue[BLUETOOTH_GATT_MAX_ATTR_LEN];
+
+  bool operator==(const BluetoothGattResponse& aOther) const
+  {
+    return mHandle == aOther.mHandle &&
+           mOffset == aOther.mOffset &&
+           mLength == aOther.mLength &&
+           mAuthReq == aOther.mAuthReq &&
+           !memcmp(mValue, aOther.mValue, mLength);
+  }
+};
+
+/**
+ * EIR Data Type, Advertising Data Type (AD Type) and OOB Data Type Definitions
+ * Please refer to https://www.bluetooth.org/en-us/specification/\
+ * assigned-numbers/generic-access-profile
+ */
+enum BluetoothGapDataType {
+  GAP_INCOMPLETE_UUID16  = 0X02, // Incomplete List of 16-bit Service Class UUIDs
+  GAP_COMPLETE_UUID16    = 0X03, // Complete List of 16-bit Service Class UUIDs
+  GAP_INCOMPLETE_UUID32  = 0X04, // Incomplete List of 32-bit Service Class UUIDs
+  GAP_COMPLETE_UUID32    = 0X05, // Complete List of 32-bit Service Class UUIDs
+  GAP_INCOMPLETE_UUID128 = 0X06, // Incomplete List of 128-bit Service Class UUIDs
+  GAP_COMPLETE_UUID128   = 0X07, // Complete List of 128-bit Service Class UUIDs
+  GAP_SHORTENED_NAME     = 0X08, // Shortened Local Name
+  GAP_COMPLETE_NAME      = 0X09, // Complete Local Name
 };
 
 END_BLUETOOTH_NAMESPACE
