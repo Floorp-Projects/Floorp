@@ -6,22 +6,22 @@
 
   "content_scripts": [
     {
-      "matches": ["http://mochi.test/*/file_sample.html"],
+      "matches": ["http://mochi.test/tests/toolkit/components/extensions/test/mochitest/file_contentscript_*.html"],
       "js": ["content_script_start.js"],
       "run_at": "document_start"
     },
     {
-      "matches": ["http://mochi.test/*/file_sample.html"],
+      "matches": ["http://mochi.test/tests/toolkit/components/extensions/test/mochitest/file_contentscript_*.html"],
       "js": ["content_script_end.js"],
       "run_at": "document_end"
     },
     {
-      "matches": ["http://mochi.test/*/file_sample.html"],
+      "matches": ["http://mochi.test/tests/toolkit/components/extensions/test/mochitest/file_contentscript_*.html"],
       "js": ["content_script_idle.js"],
       "run_at": "document_idle"
     },
     {
-      "matches": ["http://mochi.test/*/file_sample.html"],
+      "matches": ["http://mochi.test/tests/toolkit/components/extensions/test/mochitest/file_contentscript_*.html"],
       "js": ["content_script.js"],
       "run_at": "document_idle"
     }

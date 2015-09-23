@@ -45,11 +45,7 @@ extensions.registerAPI((extension, context) => {
       },
 
       getCurrent: function(getInfo, callback) {
-        if (!callback) {
-          callback = getInfo;
-          getInfo = {};
-        }
-        let window = currentWindow(context);
+        let window = context.contentWindow;
         runSafe(context, callback, WindowManager.convert(extension, window, getInfo));
       },
 
@@ -69,9 +65,7 @@ extensions.registerAPI((extension, context) => {
         let windows = [];
         while (e.hasMoreElements()) {
           let window = e.getNext();
-          if (window.document.readyState == "complete") {
-            windows.push(WindowManager.convert(extension, window, getInfo));
-          }
+          windows.push(WindowManager.convert(extension, window, getInfo));
         }
         runSafe(context, callback, windows);
       },

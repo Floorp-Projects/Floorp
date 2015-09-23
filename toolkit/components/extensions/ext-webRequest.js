@@ -10,7 +10,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebRequest",
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   SingletonEventManager,
-  runSafeSync,
+  runSafe,
 } = ExtensionUtils;
 
 // EventManager-like class specifically for WebRequest. Inherits from
@@ -53,7 +53,7 @@ function WebRequestEventManager(context, eventName)
         }
       }
 
-      return runSafeSync(context, callback, data2);
+      return runSafe(context, callback, data2);
     };
 
     let filter2 = {};

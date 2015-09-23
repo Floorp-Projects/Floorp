@@ -573,7 +573,7 @@ SpecialPowersObserverAPI.prototype = {
             resourceURI: uri
           });
         } else {
-          extension = Extension.generate(id, ext);
+          extension = Extension.generate(ext);
         }
 
         let resultListener = (...args) => {
