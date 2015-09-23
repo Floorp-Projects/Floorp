@@ -1421,6 +1421,7 @@ static const JSClass XPCOutParamClass = {
     nullptr,   /* enumerate */
     nullptr,   /* resolve */
     nullptr,   /* mayResolve */
+    nullptr,   /* convert */
     FinalizeStub,
     nullptr,   /* call */
     nullptr,   /* hasInstance */

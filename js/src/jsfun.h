@@ -636,7 +636,8 @@ IdToFunctionName(JSContext* cx, HandleId id);
 extern JSFunction*
 DefineFunction(JSContext* cx, HandleObject obj, HandleId id, JSNative native,
                unsigned nargs, unsigned flags,
-               gc::AllocKind allocKind = gc::AllocKind::FUNCTION);
+               gc::AllocKind allocKind = gc::AllocKind::FUNCTION,
+               NewObjectKind newKind = GenericObject);
 
 bool
 FunctionHasResolveHook(const JSAtomState& atomState, jsid id);

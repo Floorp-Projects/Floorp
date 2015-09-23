@@ -646,6 +646,7 @@ const Class MappedArgumentsObject::class_ = {
     MappedArgumentsObject::obj_enumerate,
     MappedArgumentsObject::obj_resolve,
     nullptr,                 /* mayResolve  */
+    nullptr,                 /* convert     */
     ArgumentsObject::finalize,
     nullptr,                 /* call        */
     nullptr,                 /* hasInstance */
@@ -671,6 +672,7 @@ const Class UnmappedArgumentsObject::class_ = {
     UnmappedArgumentsObject::obj_enumerate,
     UnmappedArgumentsObject::obj_resolve,
     nullptr,                 /* mayResolve  */
+    nullptr,                 /* convert     */
     ArgumentsObject::finalize,
     nullptr,                 /* call        */
     nullptr,                 /* hasInstance */
