@@ -90,8 +90,8 @@
 .tab-icon-overlay {
   width: 16px;
   height: 16px;
-  margin-top: -12px;
-  -moz-margin-start: -16px;
+  margin-top: -8px;
+  margin-inline-start: -15px;
   position: relative;
 }
 
@@ -101,7 +101,7 @@
 
 .tab-icon-overlay[soundplaying],
 .tab-icon-overlay[muted]:not([crashed]) {
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 .tab-icon-overlay[soundplaying]:hover,
