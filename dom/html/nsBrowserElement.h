@@ -112,6 +112,8 @@ public:
                                                   const dom::BrowserElementExecuteScriptOptions& aOptions,
                                                   ErrorResult& aRv);
 
+  already_AddRefed<dom::DOMRequest> GetStructuredData(ErrorResult& aRv);
+
   void SetNFCFocus(bool isFocus,
                    ErrorResult& aRv);
 
