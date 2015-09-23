@@ -24,8 +24,7 @@ function test() {
 
   Services.obs.addObserver(observer, "browser-search-engine-modified", false);
   gSS.addEngine("http://mochi.test:8888/browser/browser/components/search/test/483086-1.xml",
-                Ci.nsISearchEngine.DATA_XML, "data:image/x-icon;%00",
-                false);
+                null, "data:image/x-icon;%00", false);
 }
 
 function test2() {
@@ -37,7 +36,7 @@ function test2() {
         is(engine.searchForm, "http://example.com", "SearchForm is correct");
         gSS.removeEngine(engine);
         break;
-      case "engine-removed":  
+      case "engine-removed":
         Services.obs.removeObserver(observer, "browser-search-engine-modified");
         finish();
         break;
@@ -46,6 +45,5 @@ function test2() {
 
   Services.obs.addObserver(observer, "browser-search-engine-modified", false);
   gSS.addEngine("http://mochi.test:8888/browser/browser/components/search/test/483086-2.xml",
-                Ci.nsISearchEngine.DATA_XML, "data:image/x-icon;%00",
-                false);
+                null, "data:image/x-icon;%00", false);
 }
