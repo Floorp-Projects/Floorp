@@ -606,7 +606,7 @@ CreateWindowOffscreenContext()
     return glContext.forget();
 }
 
-/*static*/ already_AddRefed<GLContext>
+already_AddRefed<GLContext>
 GLContextProviderWGL::CreateHeadless(CreateContextFlags)
 {
     if (!sWGLLib.EnsureInitialized()) {
@@ -639,24 +639,24 @@ GLContextProviderWGL::CreateHeadless(CreateContextFlags)
     return retGL.forget();
 }
 
-/*static*/ already_AddRefed<GLContext>
+already_AddRefed<GLContext>
 GLContextProviderWGL::CreateOffscreen(const IntSize& size,
-                                      const SurfaceCaps& minCaps,
+                                      const SurfaceCaps& caps,
                                       CreateContextFlags flags)
 {
-    RefPtr<GLContext> gl = CreateHeadless(flags);
-    if (!gl)
+    nsRefPtr<GLContext> glContext = CreateHeadless(flags);
+    if (!glContext)
         return nullptr;
 
-    if (!gl->InitOffscreen(size, minCaps))
+    if (!glContext->InitOffscreen(size, caps))
         return nullptr;
 
-    return gl.forget();
+    return glContext.forget();
 }
 
 static nsRefPtr<GLContextWGL> gGlobalContext;
 
-/*static*/ GLContext*
+GLContext *
 GLContextProviderWGL::GetGlobalContext()
 {
     if (!sWGLLib.EnsureInitialized()) {
@@ -684,7 +684,7 @@ GLContextProviderWGL::GetGlobalContext()
     return static_cast<GLContext*>(gGlobalContext);
 }
 
-/*static*/ void
+void
 GLContextProviderWGL::Shutdown()
 {
     gGlobalContext = nullptr;

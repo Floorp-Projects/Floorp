@@ -100,7 +100,7 @@ public:
       LOCAL_EGL_NONE, LOCAL_EGL_NONE
     };
 
-    EGLContext eglContext = static_cast<GLContextEGL*>(mGLContext.get())->mContext;
+    EGLContext eglContext = static_cast<GLContextEGL*>(mGLContext.get())->GetEGLContext();
     EGLImage eglImage = sEGLLibrary.fCreateImage(EGL_DISPLAY(), eglContext,
                                                  LOCAL_EGL_GL_TEXTURE_2D_KHR,
                                                  (EGLClientBuffer)tex, attribs);
