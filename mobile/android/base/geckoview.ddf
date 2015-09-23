@@ -46,7 +46,6 @@ show allResults
 
 [middle] = \
   org.mozilla.gecko.prompts.* \
-  org.mozilla.gecko.AlertNotification \
   org.mozilla.gecko.FormAssistPopup \
   org.mozilla.gecko.GeckoActivity \
   org.mozilla.gecko.GeckoApp \
