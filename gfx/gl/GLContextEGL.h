@@ -92,12 +92,16 @@ public:
     // for the lifetime of this context.
     void HoldSurface(gfxASurface *aSurf);
 
-    EGLSurface GetEGLSurface() const {
+    EGLContext GetEGLContext() {
+        return mContext;
+    }
+
+    EGLSurface GetEGLSurface() {
         return mSurface;
     }
 
-    EGLDisplay GetEGLDisplay() const {
-        return sEGLLibrary.Display();
+    EGLDisplay GetEGLDisplay() {
+        return EGL_DISPLAY();
     }
 
     bool BindTex2DOffscreen(GLContext *aOffscreen);
@@ -108,20 +112,15 @@ public:
     CreateEGLPixmapOffscreenContext(const gfx::IntSize& size);
 
     static already_AddRefed<GLContextEGL>
-    CreateEGLPBufferOffscreenContext(const gfx::IntSize& size,
-                                     const SurfaceCaps& minCaps);
+    CreateEGLPBufferOffscreenContext(const gfx::IntSize& size);
 
 protected:
     friend class GLContextProviderEGL;
 
-public:
-    const EGLConfig  mConfig;
-protected:
+    EGLConfig  mConfig;
     EGLSurface mSurface;
-public:
-    const EGLContext mContext;
-protected:
     EGLSurface mSurfaceOverride;
+    EGLContext mContext;
     nsRefPtr<gfxASurface> mThebesSurface;
     bool mBound;
 
