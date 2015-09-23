@@ -9,6 +9,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/BrowserUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gLangBundle", () =>
   Services.strings.createBundle("chrome://global/locale/languageNames.properties"));
@@ -189,7 +190,7 @@ var gTranslationExceptions = {
   onSiteDeleted: function() {
     let removedSites = this._siteTree.getSelectedItems();
     for (let origin of removedSites) {
-      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
+      let principal = BrowserUtils.principalFromOrigin(origin);
       Services.perms.removeFromPrincipal(principal, kPermissionType);
     }
   },
@@ -202,7 +203,7 @@ var gTranslationExceptions = {
     this._siteTree.boxObject.rowCountChanged(0, -removedSites.length);
 
     for (let origin of removedSites) {
-      let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
+      let principal = BrowserUtils.principalFromOrigin(origin);
       Services.perms.removeFromPrincipal(principal, kPermissionType);
     }
 

@@ -106,8 +106,6 @@ private:
     enum EErrorType {
       ERROR_MANIFEST_VERIFIED_FAILED,
       ERROR_RESOURCE_VERIFIED_FAILED,
-      ERROR_GET_INSTALLER_FAILED,
-      ERROR_INSTALL_RESOURCE_FAILED,
     };
 
   public:
@@ -174,7 +172,7 @@ private:
 
     // Handle all tasks about app installation like permission and system message
     // registration.
-    void InstallSignedPackagedApp(const ResourceCacheInfo* aInfo);
+    void InstallSignedPackagedApp();
 
     // Calls all the callbacks registered for the given URI.
     // aURI is the full URI of a subresource, composed of packageURI + !// + subresourcePath
@@ -213,15 +211,6 @@ private:
     // If you need the origin with the signity taken into account, use
     // PackagedAppVerifier::GetPackageOrigin().
     nsCString mPackageOrigin;
-
-    //The app id of the package loaded from the LoadContextInfo
-    uint32_t mAppId;
-
-    // A flag to indicate if we are processing the first request.
-    bool mProcessingFirstRequest;
-
-    // A in-memory copy of the manifest content.
-    nsCString mManifestContent;
   };
 
   // Intercepts OnStartRequest, OnDataAvailable*, OnStopRequest method calls
