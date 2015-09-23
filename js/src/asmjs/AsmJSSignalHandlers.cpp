@@ -201,6 +201,7 @@ class AutoSetHandlingSignal
 #elif defined(XP_DARWIN)
 # define EIP_sig(p) ((p)->uc_mcontext->__ss.__eip)
 # define RIP_sig(p) ((p)->uc_mcontext->__ss.__rip)
+# define R15_sig(p) ((p)->uc_mcontext->__ss.__pc)
 #else
 # error "Don't know how to read/write to the thread state via the mcontext_t."
 #endif
@@ -320,12 +321,20 @@ struct macos_x64_context {
     x86_float_state64_t float_;
 };
 #  define EMULATOR_CONTEXT macos_x64_context
-# else
+# elif defined(JS_CODEGEN_X86)
 struct macos_x86_context {
     x86_thread_state_t thread;
     x86_float_state_t float_;
 };
 #  define EMULATOR_CONTEXT macos_x86_context
+# elif defined(JS_CODEGEN_ARM)
+struct macos_arm_context {
+    arm_thread_state_t thread;
+    arm_neon_state_t float_;
+};
+#  define EMULATOR_CONTEXT macos_arm_context
+# else
+#  error Unsupported architecture
 # endif
 #else
 # define EMULATOR_CONTEXT CONTEXT
@@ -803,10 +812,16 @@ ContextToPC(EMULATOR_CONTEXT* context)
     static_assert(sizeof(context->thread.__rip) == sizeof(void*),
                   "stored IP should be compile-time pointer-sized");
     return reinterpret_cast<uint8_t**>(&context->thread.__rip);
-# else
+# elif defined(JS_CPU_X86)
     static_assert(sizeof(context->thread.uts.ts32.__eip) == sizeof(void*),
                   "stored IP should be compile-time pointer-sized");
     return reinterpret_cast<uint8_t**>(&context->thread.uts.ts32.__eip);
+# elif defined(JS_CPU_ARM)
+    static_assert(sizeof(context->thread.__pc) == sizeof(void*),
+                  "stored IP should be compile-time pointer-sized");
+    return reinterpret_cast<uint8_t**>(&context->thread.__pc);
+# else
+#  error Unsupported architecture
 # endif
 }
 
@@ -852,11 +867,18 @@ HandleMachException(JSRuntime* rt, const ExceptionRequest& request)
     unsigned int float_state_count = x86_FLOAT_STATE64_COUNT;
     int thread_state = x86_THREAD_STATE64;
     int float_state = x86_FLOAT_STATE64;
-# else
+# elif defined(JS_CODEGEN_X86)
     unsigned int thread_state_count = x86_THREAD_STATE_COUNT;
     unsigned int float_state_count = x86_FLOAT_STATE_COUNT;
     int thread_state = x86_THREAD_STATE;
     int float_state = x86_FLOAT_STATE;
+# elif defined(JS_CODEGEN_ARM)
+    unsigned int thread_state_count = ARM_THREAD_STATE_COUNT;
+    unsigned int float_state_count = ARM_NEON_STATE_COUNT;
+    int thread_state = ARM_THREAD_STATE;
+    int float_state = ARM_NEON_STATE;
+# else
+#  error Unsupported architecture
 # endif
     kern_return_t kret;
     kret = thread_get_state(rtThread, thread_state,

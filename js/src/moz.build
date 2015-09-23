@@ -438,6 +438,11 @@ elif CONFIG['JS_CODEGEN_ARM']:
         UNIFIED_SOURCES += [
             'jit/arm/Simulator-arm.cpp'
         ]
+    elif CONFIG['OS_ARCH'] == 'Darwin':
+        SOURCES += [
+            'jit/arm/llvm-compiler-rt/arm/aeabi_idivmod.S',
+            'jit/arm/llvm-compiler-rt/arm/aeabi_uidivmod.S',
+        ]
 elif CONFIG['JS_CODEGEN_ARM64']:
     UNIFIED_SOURCES += [
         'jit/arm64/Architecture-arm64.cpp',
