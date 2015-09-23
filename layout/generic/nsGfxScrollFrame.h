@@ -81,6 +81,8 @@ public:
                            bool                    aCreateLayer,
                            bool                    aPositioned);
 
+  bool IsUsingDisplayPort(const nsDisplayListBuilder* aBuilder) const;
+
   bool GetBorderRadii(const nsSize& aFrameSize, const nsSize& aBorderArea,
                       Sides aSkipSides, nscoord aRadii[8]) const;
 
