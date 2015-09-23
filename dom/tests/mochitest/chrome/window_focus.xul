@@ -315,12 +315,12 @@ function mouseOnElement(element, expectedElement, focusChanged, testid)
   if (noFocusOnMouse) {
     // no focus so the last focus method will be 0
     gLastFocusMethod = 0;
-    expectFocusShift(function () synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView),
+    expectFocusShift(() => synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView),
                      expectedWindow, null, true, testid);
     gLastFocusMethod = fm.FLAG_BYMOUSE;
   }
   else {
-    expectFocusShift(function () synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView),
+    expectFocusShift(() => synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView),
                      element.ownerDocument.defaultView,
                      expectedElement, focusChanged, testid);
   }
@@ -333,7 +333,7 @@ function done()
   opener.wrappedJSObject.SimpleTest.finish();
 }
 
-var pressTab = function () synthesizeKey("VK_TAB", { });
+var pressTab = () => synthesizeKey("VK_TAB", { });
 
 function setFocusTo(id, fwindow)
 {
@@ -400,10 +400,10 @@ function startTest()
     }
     setFocusTo("last", window);
     expectFocusShift(pressTab, null, getById(partialTabList[0]), true, "partial tab key wrap to start");
-    expectFocusShift(function () synthesizeKey("VK_TAB", { shiftKey: true }),
+    expectFocusShift(() => synthesizeKey("VK_TAB", { shiftKey: true }),
                      null, getById("last"), true, "partial shift tab key wrap to end");
     for (var idx = partialTabList.length - 1; idx >= 0; idx--) {
-      expectFocusShift(function () synthesizeKey("VK_TAB", { shiftKey: true }),
+      expectFocusShift(() => synthesizeKey("VK_TAB", { shiftKey: true }),
                        null, getById(partialTabList[idx]), true, "partial tab key " + partialTabList[idx]);
     }
   }
@@ -416,13 +416,13 @@ function startTest()
     // wrapping around at end with TAB key
     setFocusTo("last", window);
     expectFocusShift(pressTab, null, getById("t1"), true, "tab key wrap to start");
-    expectFocusShift(function () synthesizeKey("VK_TAB", { shiftKey: true }),
+    expectFocusShift(() => synthesizeKey("VK_TAB", { shiftKey: true }),
                      null, getById("last"), true, "shift tab key wrap to end");
 
     // Shift+TAB key
     setFocusTo("o5", window);
     for (idx = kTabbableSteps; idx > 0; idx--) {
-      expectFocusShift(function () synthesizeKey("VK_TAB", { shiftKey: true }),
+      expectFocusShift(() => synthesizeKey("VK_TAB", { shiftKey: true }),
                        null, getById("t" + idx), true, "shift tab key t" + idx);
     }
   }
@@ -436,7 +436,7 @@ function startTest()
   var selectFired = false;
   function selectListener() { selectFired = true; }
   t19.addEventListener("select", selectListener, false); 
-  expectFocusShift(function() t19.select(),
+  expectFocusShift(() => t19.select(),
                    null, getById("t" + 19), true, "input.select()");
   t19.removeEventListener("select", selectListener, false); 
   ok(selectFired, "select event fires for input");
@@ -487,7 +487,7 @@ function startTest()
   if (idx == kOverflowElementIndex) {
     gLastFocusMethod = fm.FLAG_BYMOUSE;
     var element = getById("t" + idx);
-    expectFocusShift(function () synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView),
+    expectFocusShift(() => synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView),
                      window, null, true, "mouse on scrollable element");
   }
 
@@ -496,7 +496,7 @@ function startTest()
   for (idx = kTabbableSteps; idx >= 1; idx--) {
     if ((navigator.platform.indexOf("Mac") == 0) && (idx == kBeforeTabboxIndex + 1))
       continue;
-    expectFocusShift(function () getById("t" + idx).focus(),
+    expectFocusShift(() => getById("t" + idx).focus(),
                      null, getById("t" + idx), true, "focus method on element t" + idx);
   }
 
@@ -511,7 +511,7 @@ function startTest()
   // focus() method on elements that are not tabbable 
   for (idx = 1; idx <= kFocusSteps; idx++) {
     var expected = getById("o" + (idx % 2 ? idx : idx - 1));
-    expectFocusShift(function () getById("o" + idx).focus(),
+    expectFocusShift(() => getById("o" + idx).focus(),
                      expected.ownerDocument.defaultView,
                      expected, idx % 2, "focus method on non-tabbable element o" + idx);
   }
@@ -520,7 +520,7 @@ function startTest()
   // or are not focusable for other reasons (for instance, being disabled)
   for (idx = 1; idx <= kNoFocusSteps; idx++) {
     var expected = getById("o" + (idx % 2 ? idx : idx - 1));
-    expectFocusShift(function () getById("o" + idx).focus(),
+    expectFocusShift(() => getById("o" + idx).focus(),
                      expected.ownerDocument.defaultView,
                      expected, idx % 2, "focus method on unfocusable element n" + idx);
   }
@@ -530,11 +530,11 @@ function startTest()
   if (!gPartialTabbing) {
     gLastFocusMethod = fm.FLAG_BYMOVEFOCUS;
     var legend = getById("legend");
-    expectFocusShift(function () legend.focus(),
+    expectFocusShift(() => legend.focus(),
                      null, getById("t28"), true, "focus method on unfocusable legend");
     gLastFocusMethod = 0;
     legend.tabIndex = "0";
-    expectFocusShift(function () legend.focus(),
+    expectFocusShift(() => legend.focus(),
                      null, getById("legend"), true, "focus method on focusable legend");
     legend.tabIndex = "-1";
   }
@@ -560,7 +560,7 @@ function startTest()
       accessKeyDetails.altKey = isContent;
     }
 
-    expectFocusShift(function () synthesizeKey(key, accessKeyDetails),
+    expectFocusShift(() => synthesizeKey(key, accessKeyDetails),
                      null, getById(keys[k]), true, "accesskey " + key);
   }
 
@@ -569,27 +569,27 @@ function startTest()
   mouseOnElement(getById("ad"), getById("t29"), true, "mouse on html label with content inside");
   mouseOnElement(getById("ag"), getById("n6"), true, "mouse on html label with for attribute");
   gLastFocusMethod = 0;
-  expectFocusShift(function () synthesizeMouse(getById("aj"), 2, 2, { }),
+  expectFocusShift(() => synthesizeMouse(getById("aj"), 2, 2, { }),
                    null, getById("o9"), true, "mouse on xul label with content inside");
-  expectFocusShift(function () synthesizeMouse(getById("ak"), 2, 2, { }),
+  expectFocusShift(() => synthesizeMouse(getById("ak"), 2, 2, { }),
                    null, getById("n4"), true, "mouse on xul label with control attribute");
 
   // test accesskeys that shouldn't work
   k = "o".charCodeAt(0);
   while (k++ < "v".charCodeAt(0)) {
     var key = String.fromCharCode(k);
-    expectFocusShift(function () synthesizeKey(key, accessKeyDetails),
+    expectFocusShift(() => synthesizeKey(key, accessKeyDetails),
                      window, getById("n4"), false, "non accesskey " + key);
   }
   gLastFocusMethod = -1;
 
   // should focus the for element when using the focus method on a label as well
-  expectFocusShift(function () getById("ad").focus(),
+  expectFocusShift(() => getById("ad").focus(),
                    null, getById("t29"), true, "mouse on html label using focus method");
 
   // make sure that the text is selected when clicking a label associated with an input
   getById("ag").htmlFor = "t19";
-  expectFocusShift(function () synthesizeMouse(getById("ag"), 2, 2, { }, gChildWindow),
+  expectFocusShift(() => synthesizeMouse(getById("ag"), 2, 2, { }, gChildWindow),
                    null, getById("t19"), true, "mouse on html label with for attribute changed");
   is(t19.selectionStart, 0, "input focused from label, selectionStart");
   is(t19.selectionEnd, 5, "input focused from label, selectionEnd");
@@ -597,7 +597,7 @@ function startTest()
   // switch to another panel in a tabbox and ensure that tabbing moves between
   // elements on the new panel.
   $("tabbox").selectedIndex = 1;
-  expectFocusShift(function () getById("t" + kBeforeTabboxIndex).focus(),
+  expectFocusShift(() => getById("t" + kBeforeTabboxIndex).focus(),
                    null, getById("t" + kBeforeTabboxIndex), true, "focus method on element before tabbox");
 
   if (!gPartialTabbing) {
@@ -615,8 +615,8 @@ function startTest()
   var t3 = $("t3");
   var t17 = getById("t17");
   var t19 = getById("t19");
-  var shiftFocusParentDocument = function() o9.focus();
-  var shiftFocusChildDocument = function() t17.focus();
+  var shiftFocusParentDocument = () => o9.focus();
+  var shiftFocusChildDocument = () => t17.focus();
 
   var trapBlur = function (element, eventListener, blurFunction)
   {
@@ -628,8 +628,8 @@ function startTest()
   }
 
   var functions = [
-    function(element) element.focus(),
-    function(element) synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView)
+    element => element.focus(),
+    element => synthesizeMouse(element, 4, 4, { }, element.ownerDocument.defaultView)
   ];
 
   // first, check cases where the focus is adjusted during the blur event. Iterate twice,
@@ -642,25 +642,25 @@ function startTest()
     // element (t3) within the same document, yet the focus is shifted to a
     // third element (o9) in the same document during the blur event for the
     // first element.
-    trapBlur(o5, shiftFocusParentDocument, function () adjustFocus(t3));
+    trapBlur(o5, shiftFocusParentDocument, () => adjustFocus(t3));
     compareEvents("commandupdate: cu blur: o5 commandupdate: cu focus: o9",
                   window, o9, "change focus to sibling during element blur, attempted sibling" + mod);
 
     // similar, but the third element (t17) is in a child document
-    trapBlur(o9, shiftFocusChildDocument, function () adjustFocus(t3));
+    trapBlur(o9, shiftFocusChildDocument, () => adjustFocus(t3));
     compareEvents("commandupdate: cu blur: o9 blur: outer-document blur: outer-window " +
                   "focus: child-document focus: child-window commandupdate: cu focus: t17",
                   gChildWindow, t17, "change focus to child document during element blur, attempted sibling" + mod);
 
     // similar, but an attempt to switch focus within the same document, but the
     // third element (t17) is in a parent document
-    trapBlur(t17, shiftFocusParentDocument, function () adjustFocus(t19));
+    trapBlur(t17, shiftFocusParentDocument, () => adjustFocus(t19));
     compareEvents("commandupdate: cu blur: t17 blur: child-document blur: child-window " +
                   "focus: outer-document focus: outer-window commandupdate: cu focus: o9",
                   window, o9, "change focus to parent document during element blur, attempted sibling" + mod);
 
     // similar, but blur is called instead of switching focus
-    trapBlur(t3, shiftFocusParentDocument, function () t3.blur());
+    trapBlur(t3, shiftFocusParentDocument, () => t3.blur());
     compareEvents("commandupdate: cu blur: t3 commandupdate: cu focus: o9",
                   window, o9, "change focus to same document during clear focus" + mod);
 
@@ -669,7 +669,7 @@ function startTest()
     // child document. In this case, the focus in the parent document should be
     // what was set during the blur event, but the actual focus should still
     // move to the child document.
-    trapBlur(t3, shiftFocusParentDocument, function () adjustFocus(t17));
+    trapBlur(t3, shiftFocusParentDocument, () => adjustFocus(t17));
     compareEvents("commandupdate: cu blur: t3 commandupdate: cu focus: o9 " +
                   "blur: outer-document blur: outer-window " +
                   "focus: child-document focus: child-window commandupdate: cu focus: t17",
@@ -678,7 +678,7 @@ function startTest()
        "change focus to sibling during element blur, attempted child, focused in parent" + mod);
 
     // similar, but with a parent
-    trapBlur(t19, shiftFocusChildDocument, function () adjustFocus(t3));
+    trapBlur(t19, shiftFocusChildDocument, () => adjustFocus(t3));
     compareEvents("commandupdate: cu blur: t19 commandupdate: cu focus: t17 " +
                   "blur: child-document blur: child-window " +
                   "focus: outer-document focus: outer-window commandupdate: cu focus: t3",
@@ -687,13 +687,13 @@ function startTest()
        "change focus to sibling during element blur, attempted child, focused in child" + mod);
 
     // similar, with a child, but the blur event focuses a child element also
-    trapBlur(t3, shiftFocusChildDocument, function () adjustFocus(t19));
+    trapBlur(t3, shiftFocusChildDocument, () => adjustFocus(t19));
     compareEvents("commandupdate: cu blur: t3 blur: outer-document blur: outer-window " +
                   "focus: child-document focus: child-window commandupdate: cu focus: t17",
                   gChildWindow, t17, "change focus to child during element blur, attempted child" + mod);
 
     // similar, with a parent, where the blur event focuses a parent element also
-    trapBlur(t17, shiftFocusParentDocument, function () adjustFocus(t3));
+    trapBlur(t17, shiftFocusParentDocument, () => adjustFocus(t3));
     compareEvents("commandupdate: cu blur: t17 blur: child-document blur: child-window " +
                   "focus: outer-document focus: outer-window commandupdate: cu focus: o9",
                   window, o9, "change focus to parent during element blur, attempted parent" + mod);
@@ -733,7 +733,7 @@ function startTest()
                 window, o9, "change focus to parent document during element focus");
 
   // clear the focus during the focus event
-  trapFocus(t3, function () fm.clearFocus(window));
+  trapFocus(t3, () => fm.clearFocus(window));
   compareEvents("commandupdate: cu blur: o9 commandupdate: cu focus: t3 commandupdate: cu blur: t3",
                 window, null, "clear focus during focus event");
 
@@ -767,16 +767,16 @@ function startTest()
   gLastFocusMethod = 0;
   gEvents = "";
   // focus is being shifted in a child, so the focus should not change
-  expectFocusShift(function () fm.setFocus(getById("t20"), fm.FLAG_NOSWITCHFRAME),
+  expectFocusShift(() => fm.setFocus(getById("t20"), fm.FLAG_NOSWITCHFRAME),
                    window, getById("o5"), false, "no switch frame focus to child");
   setFocusTo("t20", gChildWindow);
 
   // here, however, focus is being shifted in a parent, which will have to blur
   // the child, so the focus will always change
-  expectFocusShift(function () fm.setFocus(getById("o5"), fm.FLAG_NOSWITCHFRAME),
+  expectFocusShift(() => fm.setFocus(getById("o5"), fm.FLAG_NOSWITCHFRAME),
                    window, getById("o5"), true, "no switch frame focus to parent");
 
-  expectFocusShift(function () fm.setFocus(getById("t1"), fm.FLAG_NOSWITCHFRAME),
+  expectFocusShift(() => fm.setFocus(getById("t1"), fm.FLAG_NOSWITCHFRAME),
                    window, getById("t1"), true, "no switch frame focus to same window");
 
   // ---- tests for focus and scrolling into view ----
@@ -804,19 +804,19 @@ function startTest()
   $("innerbox").appendChild(textbox2);
 
   gLastFocusMethod = 0;
-  expectFocusShift(function () textbox2.focus(),
+  expectFocusShift(() => textbox2.focus(),
                    null, textbox2.inputField, true, "focus on textbox");
   gLastFocusMethod = fm.FLAG_BYKEY;
-  expectFocusShift(function () synthesizeKey("VK_TAB", { shiftKey: true }),
+  expectFocusShift(() => synthesizeKey("VK_TAB", { shiftKey: true }),
                    null, textbox1.inputField, true, "shift+tab on textbox");
 
   textbox1.tabIndex = 2;
   textbox2.tabIndex = 2;
   gLastFocusMethod = 0;
-  expectFocusShift(function () textbox2.focus(),
+  expectFocusShift(() => textbox2.focus(),
                    null, textbox2.inputField, true, "focus on textbox with tabindex set");
   gLastFocusMethod = fm.FLAG_BYKEY;
-  expectFocusShift(function () synthesizeKey("VK_TAB", { shiftKey: true }),
+  expectFocusShift(() => synthesizeKey("VK_TAB", { shiftKey: true }),
                    null, textbox1.inputField, true, "shift+tab on textbox with tabindex set");
 
   // ---- test for bug 618907 which ensures that canceling the mousedown event still focuses the
@@ -826,7 +826,7 @@ function startTest()
   childContentFrame.style.MozUserFocus = "";
 
   var frab = childContentFrame.contentDocument.getElementById("fra-b");
-  var mouseDownListener = function(event) event.preventDefault();
+  var mouseDownListener = event => event.preventDefault();
   frab.addEventListener("mousedown", mouseDownListener, false);
 
   var childElementToFocus = childContentFrame.contentDocument.getElementById("fra");
@@ -838,7 +838,7 @@ function startTest()
   setFocusTo("t1", window);
 
   gLastFocusMethod = -1;
-  expectFocusShift(function () synthesizeMouse(frab, 5, 5, { }, childContentFrame.contentWindow),
+  expectFocusShift(() => synthesizeMouse(frab, 5, 5, { }, childContentFrame.contentWindow),
                    null, childElementToFocus, true,
                    "mousedown event canceled - chrome to content");
 
@@ -855,7 +855,7 @@ function startTest()
   // ---- test to check that refocusing an element during a blur event doesn't succeed
 
   var t1 = getById("t1");
-  t1.addEventListener("blur", function() t1.focus(), true);
+  t1.addEventListener("blur", () => t1.focus(), true);
   t1.focus();
   var t3 = getById("t3");
   synthesizeMouse(t3, 2, 2, { });
@@ -874,23 +874,23 @@ function doCommandDispatcherTests()
   gLastFocus = t19;
   gEvents = "";
 
-  expectFocusShift(function () document.commandDispatcher.focusedElement = getById("o9"),
+  expectFocusShift(() => document.commandDispatcher.focusedElement = getById("o9"),
                    null, getById("o9"), true, "command dispatcher set focusedElement");
-  expectFocusShift(function () document.commandDispatcher.advanceFocus(),
+  expectFocusShift(() => document.commandDispatcher.advanceFocus(),
                    null, getById("o13"), true, "command dispatcher advanceFocus");
-  expectFocusShift(function () document.commandDispatcher.rewindFocus(),
+  expectFocusShift(() => document.commandDispatcher.rewindFocus(),
                    null, getById("o9"), true, "command dispatcher rewindFocus");
-  expectFocusShift(function () document.commandDispatcher.focusedElement = null,
+  expectFocusShift(() => document.commandDispatcher.focusedElement = null,
                    null, null, true, "command dispatcher set focusedElement to null");
-  expectFocusShift(function () document.commandDispatcher.focusedWindow = gChildWindow,
+  expectFocusShift(() => document.commandDispatcher.focusedWindow = gChildWindow,
                    null, getById("t19"), true, "command dispatcher set focusedElement to null");
-  expectFocusShift(function () document.commandDispatcher.focusedElement = null,
+  expectFocusShift(() => document.commandDispatcher.focusedElement = null,
                    gChildWindow, null, true, "command dispatcher set focusedElement to null in child");
-  expectFocusShift(function () document.commandDispatcher.advanceFocusIntoSubtree(getById("t19")),
+  expectFocusShift(() => document.commandDispatcher.advanceFocusIntoSubtree(getById("t19")),
                    null, getById("t20"), true, "command dispatcher advanceFocusIntoSubtree child");
-  expectFocusShift(function () document.commandDispatcher.advanceFocusIntoSubtree(null),
+  expectFocusShift(() => document.commandDispatcher.advanceFocusIntoSubtree(null),
                    null, getById("t21"), true, "command dispatcher advanceFocusIntoSubtree null child");
-  expectFocusShift(function () document.commandDispatcher.advanceFocusIntoSubtree(getById("o9").parentNode),
+  expectFocusShift(() => document.commandDispatcher.advanceFocusIntoSubtree(getById("o9").parentNode),
                    null, getById("o9"), true, "command dispatcher advanceFocusIntoSubtree parent");
 }
 
@@ -925,11 +925,11 @@ function testMoveFocus()
   var newFocus;
   gLastFocusMethod = fm.FLAG_BYMOVEFOCUS;
   var expectedFirst = getById(gPartialTabbing ? "t3" : "t1");
-  expectFocusShift(function () newFocus = fm.moveFocus(null, null, fm.MOVEFOCUS_FIRST, 0),
+  expectFocusShift(() => newFocus = fm.moveFocus(null, null, fm.MOVEFOCUS_FIRST, 0),
                    window, expectedFirst, true, "moveFocus to first null window null content");
   is(newFocus, fm.focusedElement, "moveFocus to first null window null content return value");
 
-  expectFocusShift(function () newFocus = fm.moveFocus(null, null, fm.MOVEFOCUS_LAST, 0),
+  expectFocusShift(() => newFocus = fm.moveFocus(null, null, fm.MOVEFOCUS_LAST, 0),
                    window, getById("last"), true, "moveFocus to last null window null content");
   is(newFocus, fm.focusedElement, "moveFocus to last null window null content return value");
 
@@ -944,13 +944,13 @@ function testMoveFocus()
   gEvents = "";
   gLastFocus = null;
   gLastFocusMethod = fm.FLAG_BYMOVEFOCUS;
-  expectFocusShift(function () newFocus = fm.moveFocus(null, null, fm.MOVEFOCUS_FIRST, 0),
+  expectFocusShift(() => newFocus = fm.moveFocus(null, null, fm.MOVEFOCUS_FIRST, 0),
                    window, expectedFirst, true, "moveFocus to first null window null content no focus");
   is(newFocus, fm.focusedElement, "moveFocus to first null window null content no focus return value");
   fm.clearFocus(window);
   gEvents = "";
   gLastFocus = null;
-  expectFocusShift(function () newFocus = fm.moveFocus(null, null, fm.MOVEFOCUS_LAST, 0),
+  expectFocusShift(() => newFocus = fm.moveFocus(null, null, fm.MOVEFOCUS_LAST, 0),
                    window, getById("last"), true, "moveFocus to last null window null content no focus");
   is(newFocus, fm.focusedElement, "moveFocus to last null window null content no focus return value");
   fm.clearFocus(window);
@@ -964,14 +964,14 @@ function testMoveFocus()
   // moving focus from a specified element
   setFocusTo("t6", window);
   gLastFocusMethod = fm.FLAG_BYMOVEFOCUS;
-  expectFocusShift(function () newFocus = fm.moveFocus(null, getById("specialroot"), fm.MOVEFOCUS_FIRST, 0),
+  expectFocusShift(() => newFocus = fm.moveFocus(null, getById("specialroot"), fm.MOVEFOCUS_FIRST, 0),
                    window, getById("t3"), true, "moveFocus to first null window with content");
 // XXXndeakin P3 this doesn't work
-//  expectFocusShift(function () newFocus = fm.moveFocus(null, getById("specialroot"), fm.MOVEFOCUS_LAST, 0),
+//  expectFocusShift(() => newFocus = fm.moveFocus(null, getById("specialroot"), fm.MOVEFOCUS_LAST, 0),
 //                   window, getById("o3"), true, "moveFocus to last null window with content");
 
   // move focus to first in child window
-  expectFocusShift(function () newFocus = fm.moveFocus(gChildWindow, null, fm.MOVEFOCUS_FIRST, 0),
+  expectFocusShift(() => newFocus = fm.moveFocus(gChildWindow, null, fm.MOVEFOCUS_FIRST, 0),
                    gChildWindow, getById("t" + (kChildDocumentRootIndex + 1)), true,
                    "moveFocus to first child window null content");
   is(newFocus, getById("t" + (kChildDocumentRootIndex + 1)),
@@ -980,7 +980,7 @@ function testMoveFocus()
   // move focus to last in child window
   setFocusTo("t6", window);
   var expectedLast = getById(gPartialTabbing ? "t30" : "t" + (kBeforeTabboxIndex - 1));
-  expectFocusShift(function () newFocus = fm.moveFocus(gChildWindow, null, fm.MOVEFOCUS_LAST, 0),
+  expectFocusShift(() => newFocus = fm.moveFocus(gChildWindow, null, fm.MOVEFOCUS_LAST, 0),
                    gChildWindow, expectedLast, true,
                    "moveFocus to last child window null content");
   is(newFocus, getById(expectedLast),
@@ -1049,18 +1049,18 @@ function testMoveFocus()
     gLastFocusMethod = fm.FLAG_BYKEY;
 
     selection.selectAllChildren(getById("hiddenspan"));
-    expectFocusShift(function () synthesizeKey("VK_TAB", { }),
+    expectFocusShift(() => synthesizeKey("VK_TAB", { }),
                      gChildWindow, getById("t26"), true, "tab with selection on hidden content");
 
     setFocusTo($("o15"), window);
     $("o15").hidden = true;
     document.documentElement.getBoundingClientRect(); // flush after hiding
-    expectFocusShift(function () synthesizeKey("VK_TAB", { }),
+    expectFocusShift(() => synthesizeKey("VK_TAB", { }),
                      window, $("o17"), true, "tab with focus on hidden content");
 
     $("o17").hidden = true;
     document.documentElement.getBoundingClientRect();
-    expectFocusShift(function () synthesizeKey("VK_TAB", { shiftKey: true }),
+    expectFocusShift(() => synthesizeKey("VK_TAB", { shiftKey: true }),
                      window, $("o13"), true, "shift+tab with focus on hidden content");
   }
 
@@ -1071,7 +1071,7 @@ function testMoveFocus()
   setFocusTo("t18", gChildWindow);
 
   gLastFocusMethod = fm.FLAG_BYMOVEFOCUS;
-  expectFocusShift(function () newFocus = fm.moveFocus(null, null, fm.MOVEFOCUS_FORWARD, 0),
+  expectFocusShift(() => newFocus = fm.moveFocus(null, null, fm.MOVEFOCUS_FORWARD, 0),
                    gChildWindow, t19, true, "moveFocus to next textbox");
   is(t19.selectionStart, 0, "input focused after moveFocus selectionStart");
   is(t19.selectionEnd, 5, "input focused after moveFocus selectionEnd");
@@ -1079,7 +1079,7 @@ function testMoveFocus()
   t19.setSelectionRange(0, 0);
   setFocusTo("t18", gChildWindow);
   gLastFocusMethod = fm.FLAG_BYKEY;
-  expectFocusShift(function () newFocus = fm.moveFocus(null, null, fm.MOVEFOCUS_FORWARD, fm.FLAG_BYKEY),
+  expectFocusShift(() => newFocus = fm.moveFocus(null, null, fm.MOVEFOCUS_FORWARD, fm.FLAG_BYKEY),
                    gChildWindow, t19, true, "moveFocus to next textbox by key");
   is(t19.selectionStart, 0, "input focused after moveFocus by key selectionStart");
   is(t19.selectionEnd, 5, "input focused after moveFocus by key selectionEnd");
@@ -1187,43 +1187,43 @@ function framesetWindowLoaded(framesetWindow)
     gNewExpectedWindow = framesetWindow.frames[(idx - 1) >> 1];
     if (idx % 2)
       initEvents(gNewExpectedWindow);
-    expectFocusShift(function () synthesizeKey("VK_TAB", { }, framesetWindow),
+    expectFocusShift(() => synthesizeKey("VK_TAB", { }, framesetWindow),
                      gNewExpectedWindow, getById("f" + idx), true, "frameset tab key f" + idx);
     gMoveToFocusFrame = false;
     gOldExpectedWindow = gNewExpectedWindow;
   }
 
   gNewExpectedWindow = framesetWindow.frames[0];
-  expectFocusShift(function () synthesizeKey("VK_TAB", { }, framesetWindow),
+  expectFocusShift(() => synthesizeKey("VK_TAB", { }, framesetWindow),
                    gNewExpectedWindow, getById("f1"), true, "frameset tab key wrap to start");
   gOldExpectedWindow = gNewExpectedWindow;
   gNewExpectedWindow = framesetWindow.frames[3];
-  expectFocusShift(function () synthesizeKey("VK_TAB", { shiftKey: true }, framesetWindow),
+  expectFocusShift(() => synthesizeKey("VK_TAB", { shiftKey: true }, framesetWindow),
                    gNewExpectedWindow, getById("f8"), true, "frameset shift tab key wrap to end");
 
   for (idx = 7; idx >= 1; idx--) {
     gOldExpectedWindow = gNewExpectedWindow;
     gNewExpectedWindow = framesetWindow.frames[(idx - 1) >> 1];
-    expectFocusShift(function () synthesizeKey("VK_TAB", { shiftKey: true }, framesetWindow),
+    expectFocusShift(() => synthesizeKey("VK_TAB", { shiftKey: true }, framesetWindow),
                      gNewExpectedWindow, getById("f" + idx), true, "frameset shift tab key f" + idx);
   }
 
   // document shifting
   // XXXndeakin P3 ctrl+tab doesn't seem to be testable currently for some reason
   gNewExpectedWindow = framesetWindow.frames[1];
-  expectFocusShift(function () synthesizeKey("VK_F6", { ctrlKey: true }, framesetWindow),
+  expectFocusShift(() => synthesizeKey("VK_F6", { ctrlKey: true }, framesetWindow),
                    gNewExpectedWindow, getById("f3"), true, "switch document forward with f6");
   gOldExpectedWindow = gNewExpectedWindow;
   gNewExpectedWindow = framesetWindow.frames[2];
-  expectFocusShift(function () synthesizeKey("VK_F6", { }, framesetWindow),
+  expectFocusShift(() => synthesizeKey("VK_F6", { }, framesetWindow),
                    gNewExpectedWindow, getById("f5"), true, "switch document forward with ctrl+tab");
   gOldExpectedWindow = gNewExpectedWindow;
   gNewExpectedWindow = framesetWindow.frames[3];
-  expectFocusShift(function () synthesizeKey("VK_F6", { ctrlKey: true }, framesetWindow),
+  expectFocusShift(() => synthesizeKey("VK_F6", { ctrlKey: true }, framesetWindow),
                    gNewExpectedWindow, getById("f7"), true, "switch document forward with ctrl+f6");
   gOldExpectedWindow = gNewExpectedWindow;
   gNewExpectedWindow = framesetWindow.frames[0];
-  expectFocusShift(function () synthesizeKey("VK_F6", { ctrlKey: true }, framesetWindow),
+  expectFocusShift(() => synthesizeKey("VK_F6", { ctrlKey: true }, framesetWindow),
                    gNewExpectedWindow, getById("f1"), true, "switch document forward and wrap");
 
 // going backwards by document and wrapping doesn't currently work, but didn't work
@@ -1232,7 +1232,7 @@ function framesetWindowLoaded(framesetWindow)
 /*
   gOldExpectedWindow = gNewExpectedWindow;
   gNewExpectedWindow = framesetWindow.frames[3];
-  expectFocusShift(function () synthesizeKey("VK_F6", { ctrlKey: true, shiftKey: true }, framesetWindow),
+  expectFocusShift(() => synthesizeKey("VK_F6", { ctrlKey: true, shiftKey: true }, framesetWindow),
                    gNewExpectedWindow, getById("f7"), true, "switch document backward and wrap");
  */
 
@@ -1241,15 +1241,15 @@ function framesetWindowLoaded(framesetWindow)
 
   gOldExpectedWindow = gNewExpectedWindow;
   gNewExpectedWindow = framesetWindow.frames[2];
-  expectFocusShift(function () synthesizeKey("VK_F6", { ctrlKey: true, shiftKey: true }, framesetWindow),
+  expectFocusShift(() => synthesizeKey("VK_F6", { ctrlKey: true, shiftKey: true }, framesetWindow),
                    gNewExpectedWindow, getById("f5"), true, "switch document backward with f6");
   gOldExpectedWindow = gNewExpectedWindow;
   gNewExpectedWindow = framesetWindow.frames[1];
-  expectFocusShift(function () synthesizeKey("VK_F6", { ctrlKey: true, shiftKey: true }, framesetWindow),
+  expectFocusShift(() => synthesizeKey("VK_F6", { ctrlKey: true, shiftKey: true }, framesetWindow),
                    gNewExpectedWindow, getById("f3"), true, "switch document backward with ctrl+tab");
   gOldExpectedWindow = gNewExpectedWindow;
   gNewExpectedWindow = framesetWindow.frames[0];
-  expectFocusShift(function () synthesizeKey("VK_F6", { ctrlKey: true, shiftKey: true }, framesetWindow),
+  expectFocusShift(() => synthesizeKey("VK_F6", { ctrlKey: true, shiftKey: true }, framesetWindow),
                    gNewExpectedWindow, getById("f1"), true, "switch document backward with ctrl+f6");
 
   // skip the window switching tests for now on Linux, as raising and lowering
@@ -1282,13 +1282,13 @@ function switchWindowTest(otherWindow, framesetWindow)
   gOldExpectedWindow = otherWindow;
   gNewExpectedWindow = framesetWindow.frames[1];
 
-  expectFocusShift(function () gNewExpectedWindow.focus(),
+  expectFocusShift(() => gNewExpectedWindow.focus(),
                    gNewExpectedWindow, getById("f4"), true, "switch to frame in another window");
   is(fm.getFocusedElementForWindow(otherWindow, false, {}).id, "other", "inactive window has focused element");
 
   gOldExpectedWindow = framesetWindow.frames[1];
   gNewExpectedWindow = otherWindow;
-  expectFocusShift(function () otherWindow.focus(),
+  expectFocusShift(() => otherWindow.focus(),
                    gNewExpectedWindow, getById("other"), true, "switch to another window");
 
   var exh = false;
@@ -1321,13 +1321,13 @@ function switchWindowTest(otherWindow, framesetWindow)
 
   gOldExpectedWindow = otherWindow;
   gNewExpectedWindow = framesetWindow.frames[1];
-  expectFocusShift(function () fm.activeWindow = topWindow,
+  expectFocusShift(() => fm.activeWindow = topWindow,
                    gNewExpectedWindow, getById("f4"), true, "switch to frame activeWindow");
 
   fm.clearFocus(otherWindow);
   gOldExpectedWindow = gNewExpectedWindow;
   gNewExpectedWindow = otherWindow;
-  expectFocusShift(function () fm.setFocus(otherElement, fm.FLAG_RAISE),
+  expectFocusShift(() => fm.setFocus(otherElement, fm.FLAG_RAISE),
                    gNewExpectedWindow, getById("other"), true, "switch to window with raise");
 
   getTopWindow(framesetWindow).document.commandDispatcher.focusedWindow = gOldExpectedWindow;
