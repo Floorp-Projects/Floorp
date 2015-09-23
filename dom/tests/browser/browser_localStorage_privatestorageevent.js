@@ -13,7 +13,7 @@ function test() {
           return;
         }
         win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
-        executeSoon(function() callback(win));
+        executeSoon(() => callback(win));
       }, true);
       if (!options) {
         win.gBrowser.loadURI("about:blank");

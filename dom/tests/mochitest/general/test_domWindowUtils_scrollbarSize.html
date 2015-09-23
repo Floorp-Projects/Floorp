@@ -18,7 +18,7 @@
         return doc.getElementById("float").offsetWidth > 200;
       }
 
-      checkScrollbarSizeFlush(utils, function (w, h) w == 0 && h == 0,
+      checkScrollbarSizeFlush(utils, (w, h) => w == 0 && h == 0,
         "[overflow=hidden] corrrect scrollbar size after flushing");
 
       // Some platforms (esp. mobile) may have floating scrollbars that don't
@@ -27,17 +27,17 @@
         let body = doc.querySelector("body");
         body.style.overflowY = "scroll";
 
-        checkScrollbarSize(utils, function (w, h) w == 0 && h == 0,
+        checkScrollbarSize(utils, (w, h) => w == 0 && h == 0,
           "[overflowY=scroll] correct scrollbar size w/o flushing");
 
-        checkScrollbarSizeFlush(utils, function (w, h) w > 0 && h == 0,
+        checkScrollbarSizeFlush(utils, (w, h) => w > 0 && h == 0,
           "[overflowY=scroll] correct scrollbar size after flushing");
 
         body.style.overflowX = "scroll";
-        checkScrollbarSize(utils, function (w, h) w > 0 && h == 0,
+        checkScrollbarSize(utils, (w, h) => w > 0 && h == 0,
           "[overflowXY=scroll] correct scrollbar size w/o flushing");
 
-        checkScrollbarSizeFlush(utils, function (w, h) w > 0 && h > 0,
+        checkScrollbarSizeFlush(utils, (w, h) => w > 0 && h > 0,
           "[overflowXY=scroll] correct scrollbar size after flushing");
       }
 
