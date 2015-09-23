@@ -409,7 +409,6 @@ gbjar.sources += [
     'OrderedBroadcastHelper.java',
     'OuterLayout.java',
     'preferences/AlignRightLinkPreference.java',
-    'preferences/AndroidDistributionPreferencesImport.java',
     'preferences/AndroidImport.java',
     'preferences/AndroidImportPreference.java',
     'preferences/ClearOnShutdownPref.java',
