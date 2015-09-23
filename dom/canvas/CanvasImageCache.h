@@ -33,7 +33,7 @@ public:
                               dom::HTMLCanvasElement* aCanvas,
                               imgIRequest* aRequest,
                               SourceSurface* aSource,
-                              const gfxIntSize& aSize);
+                              const gfx::IntSize& aSize);
 
   /**
    * Check whether aImage has recently been drawn into aCanvas. If we return

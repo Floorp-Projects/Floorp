@@ -983,8 +983,8 @@ protected:
                                      int32_t aAppUnitsPerDevPixel,
                                      nscoord aBlurRadius,
                                      nscoord aSpreadRadius,
-                                     gfxIntSize& aOutBlurRadius,
-                                     gfxIntSize& aOutSpreadRadius,
+                                     mozilla::gfx::IntSize& aOutBlurRadius,
+                                     mozilla::gfx::IntSize& aOutSpreadRadius,
                                      bool aConstrainSpreadRadius = true);
 
   gfxAlphaBoxBlur mAlphaBoxBlur;
