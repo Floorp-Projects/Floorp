@@ -106,6 +106,14 @@ public:
     mAudioParamStream = true;
   }
 
+  /*
+   * Resume stream after updating its concept of current time by aAdvance.
+   * Main thread.  Used only from AudioDestinationNode when resuming a stream
+   * suspended to save running the MediaStreamGraph when there are no other
+   * nodes in the AudioContext.
+   */
+  void AdvanceAndResume(StreamTime aAdvance);
+
   virtual AudioNodeStream* AsAudioNodeStream() override { return this; }
   virtual void AddInput(MediaInputPort* aPort) override;
   virtual void RemoveInput(MediaInputPort* aPort) override;
@@ -185,6 +193,8 @@ public:
   void CheckForInactive();
 
 protected:
+  class AdvanceAndResumeMessage;
+
   virtual void DestroyImpl() override;
 
   void AdvanceOutputSegment();
