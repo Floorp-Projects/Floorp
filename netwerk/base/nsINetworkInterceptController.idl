@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsIContentPolicyBase.idl"
 
 interface nsIChannel;
 interface nsIOutputStream;
@@ -26,7 +27,7 @@ class ChannelInfo;
  * which do not implement nsIChannel.
  */
 
-[scriptable, uuid(40851f73-f799-4a22-a69b-05e0371ee373)]
+[scriptable, uuid(91d430cc-7e04-4df1-a3c0-879fa30f7ab9)]
 interface nsIInterceptedChannel : nsISupports
 {
     /**
@@ -81,6 +82,12 @@ interface nsIInterceptedChannel : nsISupports
      */
     [noscript]
     void setChannelInfo(in ChannelInfo channelInfo);
+
+    /**
+     * Get the internal load type from the underlying channel.
+     */
+    [noscript]
+    readonly attribute nsContentPolicyType internalContentPolicyType;
 };
 
 /**
@@ -105,7 +112,7 @@ interface nsIFetchEventDispatcher : nsISupports
  * request should be intercepted before any network request is initiated.
  */
 
-[scriptable, uuid(0a7aa192-0520-4995-88a3-225ed1a0930d)]
+[scriptable, uuid(7157fe12-20e3-45db-b09e-68fdf6d0614f)]
 interface nsINetworkInterceptController : nsISupports
 {
     /**
@@ -115,7 +122,7 @@ interface nsINetworkInterceptController : nsISupports
      * @param aURI the URI being requested by a channel
      * @param aIsNavigate True if the request is for a navigation, false for a fetch.
      */
-    bool shouldPrepareForIntercept(in nsIURI aURI, in bool aIsNavigate);
+    bool shouldPrepareForIntercept(in nsIURI aURI, in bool aIsNavigate, in nsContentPolicyType aType);
 
     /**
      * Notification when a given intercepted channel is prepared to accept a synthesized

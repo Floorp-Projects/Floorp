@@ -10,4 +10,8 @@ const char* const nsCSSProps::kIDLNameTable[eCSSProperty_COUNT] = {
 ${idl_names}
 };
 
+const int32_t nsCSSProps::kIDLNameSortPositionTable[eCSSProperty_COUNT] = {
+${idl_name_positions}
+};
+
 ${assertions}

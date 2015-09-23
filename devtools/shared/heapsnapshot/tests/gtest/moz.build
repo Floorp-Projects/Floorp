@@ -21,7 +21,9 @@ UNIFIED_SOURCES = [
     'UniqueStringHashPolicy.cpp',
 ]
 
-# XXX: We should fix these warnings.
-ALLOW_COMPILER_WARNINGS = True
+# THE MOCK_METHOD2 macro from gtest triggers this clang warning and it's hard
+# to work around, so we just ignore it.
+if CONFIG['CLANG_CXX']:
+  CXXFLAGS += ['-Wno-error=inconsistent-missing-override']
 
 FINAL_LIBRARY = 'xul-gtest'

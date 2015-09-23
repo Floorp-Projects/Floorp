@@ -108,6 +108,9 @@ class JitCode : public gc::TenuredCell
     size_t bufferSize() const {
         return bufferSize_;
     }
+    size_t headerSize() const {
+        return headerSize_;
+    }
 
     void traceChildren(JSTracer* trc);
     void finalize(FreeOp* fop);
@@ -779,6 +782,12 @@ namespace ubi {
 template<>
 struct Concrete<js::jit::JitCode> : TracerConcrete<js::jit::JitCode> {
     CoarseType coarseType() const final { return CoarseType::Script; }
+    Size size(mozilla::MallocSizeOf mallocSizeOf) const override {
+        Size size = js::gc::Arena::thingSize(get().asTenured().getAllocKind());
+        size += get().bufferSize();
+        size += get().headerSize();
+        return size;
+    }
 
   protected:
     explicit Concrete(js::jit::JitCode *ptr) : TracerConcrete<js::jit::JitCode>(ptr) { }

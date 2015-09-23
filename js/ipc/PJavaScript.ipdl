@@ -38,7 +38,7 @@ both:
     prio(high) sync IsExtensible(uint64_t objId) returns (ReturnStatus rs, bool result);
     prio(high) sync CallOrConstruct(uint64_t objId, JSParam[] argv, bool construct) returns (ReturnStatus rs, JSVariant result, JSParam[] outparams);
     prio(high) sync HasInstance(uint64_t objId, JSVariant v) returns (ReturnStatus rs, bool has);
-    prio(high) sync ObjectClassIs(uint64_t objId, uint32_t classValue) returns (bool result);
+    prio(high) sync GetBuiltinClass(uint64_t objId) returns (ReturnStatus rs, uint32_t classValue);
     prio(high) sync IsArray(uint64_t objId) returns (ReturnStatus rs, uint32_t ans);
     prio(high) sync ClassName(uint64_t objId) returns (nsCString name);
     prio(high) sync GetPrototype(uint64_t objId) returns (ReturnStatus rs, ObjectOrNullVariant result);

@@ -783,12 +783,18 @@ XPCWrappedNativeScope::UpdateInterpositionWhitelist(JSContext* cx,
     {
         JSAutoCompartment ac(cx, whitelistObj);
 
-        uint32_t length;
-        if (!JS_IsArrayObject(cx, whitelistObj) ||
-            !JS_GetArrayLength(cx, whitelistObj, &length)) {
+        bool isArray;
+        if (!JS_IsArrayObject(cx, whitelistObj, &isArray))
+            return false;
+
+        if (!isArray) {
             JS_ReportError(cx, "Whitelist must be an array.");
             return false;
         }
+
+        uint32_t length;
+        if (!JS_GetArrayLength(cx, whitelistObj, &length))
+            return false;
 
         for (uint32_t i = 0; i < length; i++) {
             RootedValue idval(cx);

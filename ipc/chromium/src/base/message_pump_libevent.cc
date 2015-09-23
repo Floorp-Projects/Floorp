@@ -18,6 +18,19 @@
 #include "third_party/libevent/event.h"
 #include "mozilla/UniquePtr.h"
 
+// This macro checks that the _EVENT_SIZEOF_* constants defined in
+// ipc/chromiume/src/third_party/<platform>/event2/event-config.h are correct.
+#define CHECK_EVENT_SIZEOF(TYPE, type) \
+    static_assert(_EVENT_SIZEOF_##TYPE == sizeof(type), \
+    "bad _EVENT_SIZEOF_"#TYPE);
+
+CHECK_EVENT_SIZEOF(LONG,      long);
+CHECK_EVENT_SIZEOF(LONG_LONG, long long);
+CHECK_EVENT_SIZEOF(PTHREAD_T, pthread_t);
+CHECK_EVENT_SIZEOF(SHORT,     short);
+CHECK_EVENT_SIZEOF(SIZE_T,    size_t);
+CHECK_EVENT_SIZEOF(VOID_P,    void*);
+
 // Lifecycle of struct event
 // Libevent uses two main data structures:
 // struct event_base (of which there is one per message pump), and
