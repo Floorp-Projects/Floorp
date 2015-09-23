@@ -1013,7 +1013,8 @@ js::Execute(JSContext* cx, HandleScript script, JSObject& scopeChainArg, Value* 
         return false;
     Value thisv = ObjectValue(*thisObj);
 
-    return ExecuteKernel(cx, script, *scopeChain, thisv, NullValue(), EXECUTE_GLOBAL,
+    ExecuteType type = script->module() ? EXECUTE_MODULE : EXECUTE_GLOBAL;
+    return ExecuteKernel(cx, script, *scopeChain, thisv, NullValue(), type,
                          NullFramePtr() /* evalInFrame */, rval);
 }
 
