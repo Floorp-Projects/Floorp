@@ -8,7 +8,7 @@ function test() {
 
   let onLoad = function (tvwin) {
     win = tvwin;
-    registerCleanupFunction(function () win.close());
+    registerCleanupFunction(() => win.close());
     win.gBrowser.pinTab(win.gBrowser.tabs[0]);
     win.gBrowser.loadOneTab("about:blank", {inBackground: true});
   };

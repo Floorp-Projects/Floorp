@@ -64,7 +64,7 @@ function test() {
   }
 
   function createGroup(win) {
-    registerCleanupFunction(function() win.close());
+    registerCleanupFunction(() => win.close());
     let cw = win.TabView.getContentWindow();
     let group = createGroupItemWithTabs(win, 400, 430, 100, [
       "about:blank#0", "about:blank#1", "about:blank#2", "about:blank#3",

@@ -20,7 +20,7 @@ function test() {
         newTab.linkedBrowser.loadURI(urlBase + "dummy_page.html");
 
         newWindowWithTabView(function(win) {
-          registerCleanupFunction(function() win.close());
+          registerCleanupFunction(() => win.close());
 
           let contentWindow = win.TabView.getContentWindow();
 

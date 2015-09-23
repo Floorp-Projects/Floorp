@@ -8,7 +8,7 @@ function test() {
 }
 
 function part1(win) {
-  registerCleanupFunction(function() win.close());
+  registerCleanupFunction(() => win.close());
 
   let contentWindow = win.TabView.getContentWindow();
   is(contentWindow.GroupItems.groupItems.length, 1, "Has only one group");
@@ -61,7 +61,7 @@ function part1(win) {
 }
 
 function part2(win) {
-  registerCleanupFunction(function() win.close());
+  registerCleanupFunction(() => win.close());
 
   let newTab = win.gBrowser.loadOneTab("about:blank", {inBackground: true});
   hideTabView(function() {

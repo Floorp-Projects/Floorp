@@ -8,10 +8,10 @@ function test() {
   waitForExplicitFinish();
 
   let panelSelected = false;
-  registerCleanupFunction(function () ok(panelSelected, "panel is selected"));
+  registerCleanupFunction(() => ok(panelSelected, "panel is selected"));
 
   let onLoad = function (win) {
-    registerCleanupFunction(function () win.close());
+    registerCleanupFunction(() => win.close());
 
     newWin = win;
 

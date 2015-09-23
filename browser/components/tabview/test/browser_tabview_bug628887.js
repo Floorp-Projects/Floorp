@@ -5,7 +5,7 @@ function test() {
   waitForExplicitFinish();
 
   newWindowWithTabView(function(win) {
-    registerCleanupFunction(function() win.close());
+    registerCleanupFunction(() => win.close());
 
     let cw = win.TabView.getContentWindow();
     let groupItemOne = cw.GroupItems.groupItems[0];

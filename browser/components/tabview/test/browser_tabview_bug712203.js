@@ -44,7 +44,7 @@ function test() {
   };
 
   newWindowWithState(newState, function(win) {
-    registerCleanupFunction(function () win.close());
+    registerCleanupFunction(() => win.close());
 
     let selectedTab = win.gBrowser.selectedTab;
 
