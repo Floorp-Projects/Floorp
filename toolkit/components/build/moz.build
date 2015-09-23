@@ -37,3 +37,6 @@ if CONFIG['NIGHTLY_BUILD']:
     LOCAL_INCLUDES += [
         '../perfmonitoring',
     ]
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']

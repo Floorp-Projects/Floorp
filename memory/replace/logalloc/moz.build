@@ -38,3 +38,6 @@ if CONFIG['OS_TARGET'] == 'Android':
 DIRS += [
     'replay',
 ]
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']
