@@ -96,9 +96,7 @@ function test() {
 
   Services.obs.addObserver(observer, "browser-search-engine-modified", false);
   Services.search.addEngine("http://mochi.test:8888/browser/browser/components/search/test/testEngine.xml",
-                            Ci.nsISearchEngine.DATA_XML,
-                            "data:image/x-icon,%00",
-                            false);
+                            null, "data:image/x-icon,%00", false);
 
 }
 

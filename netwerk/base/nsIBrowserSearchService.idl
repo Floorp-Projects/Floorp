@@ -22,7 +22,7 @@ interface nsISearchSubmission : nsISupports
   readonly attribute nsIURI uri;
 };
 
-[scriptable, uuid(65fd517b-6bda-4bac-bbe1-42de1b3a7df6)]
+[scriptable, uuid(620bd920-0491-48c8-99a8-d6047e64802d)]
 interface nsISearchEngine : nsISupports
 {
   /**
@@ -116,19 +116,6 @@ interface nsISearchEngine : nsISupports
   void speculativeConnect(in jsval options);
 
   /**
-   * Supported search engine types.
-   */
-  const unsigned long TYPE_MOZSEARCH     = 1;
-  const unsigned long TYPE_SHERLOCK      = 2;
-  const unsigned long TYPE_OPENSEARCH    = 3;
-
-  /**
-   * Supported search engine data types.
-   */
-  const unsigned long DATA_XML     = 1;
-  const unsigned long DATA_TEXT    = 2;
-
-  /**
    * An optional shortcut alias for the engine.
    * When non-null, this is a unique identifier.
    */
@@ -158,11 +145,6 @@ interface nsISearchEngine : nsISupports
    * A URL string pointing to the engine's search form.
    */
   readonly attribute AString searchForm;
-
-  /**
-   * The search engine type.
-   */
-  readonly attribute long type;
 
   /**
    * An optional unique identifier for this search engine within the context of
@@ -314,8 +296,8 @@ interface nsIBrowserSearchService : nsISupports
    *        addition is complete, or if the addition fails. It will not be
    *        called if addEngine throws an exception.
    *
-   * @throws NS_ERROR_FAILURE if the type is invalid, or if the description
-   *         file cannot be successfully loaded.
+   * @throws NS_ERROR_FAILURE if the description file cannot be successfully
+   *         loaded.
    */
   void addEngine(in AString engineURL, in long dataType, in AString iconURL,
                  in boolean confirm, [optional] in nsISearchInstallCallback callback);
