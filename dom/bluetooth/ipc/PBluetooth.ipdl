@@ -359,6 +359,15 @@ struct GattServerStopServiceRequest
   BluetoothAttributeHandle serviceHandle;
 };
 
+struct GattServerSendResponseRequest
+{
+  nsString appUuid;
+  nsString address;
+  uint16_t status;
+  int32_t requestId;
+  BluetoothGattResponse response;
+};
+
 union Request
 {
   GetAdaptersRequest;
@@ -419,6 +428,7 @@ union Request
   GattServerRemoveServiceRequest;
   GattServerStartServiceRequest;
   GattServerStopServiceRequest;
+  GattServerSendResponseRequest;
 };
 
 protocol PBluetooth

@@ -10,6 +10,9 @@
 #include "BluetoothService.h"
 #include "BluetoothUtils.h"
 #include "mozilla/dom/BluetoothStatusChangedEvent.h"
+#include "mozilla/dom/bluetooth/BluetoothGattAttributeEvent.h"
+#include "mozilla/dom/bluetooth/BluetoothGattCharacteristic.h"
+#include "mozilla/dom/bluetooth/BluetoothGattService.h"
 #include "mozilla/dom/Promise.h"
 
 using namespace mozilla;
@@ -177,6 +180,69 @@ BluetoothGattServer::HandleDescriptorHandleUpdated(
 }
 
 void
+BluetoothGattServer::HandleReadWriteRequest(const BluetoothValue& aValue,
+                                            const nsAString& aEventName)
+{
+  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
+  const InfallibleTArray<BluetoothNamedValue>& arr =
+    aValue.get_ArrayOfBluetoothNamedValue();
+
+  MOZ_ASSERT(arr.Length() == 5 &&
+    arr[0].value().type() == BluetoothValue::Tint32_t &&
+    arr[1].value().type() == BluetoothValue::TBluetoothAttributeHandle &&
+    arr[2].value().type() == BluetoothValue::TnsString &&
+    arr[3].value().type() == BluetoothValue::Tbool &&
+    arr[4].value().type() == BluetoothValue::TArrayOfuint8_t);
+
+  int32_t requestId = arr[0].value().get_int32_t();
+  BluetoothAttributeHandle handle =
+    arr[1].value().get_BluetoothAttributeHandle();
+  nsString address = arr[2].value().get_nsString();
+  bool needResponse = arr[3].value().get_bool();
+  nsTArray<uint8_t> value;
+  value = arr[4].value().get_ArrayOfuint8_t();
+
+  // Find the target characteristic or descriptor from the given handle
+  nsRefPtr<BluetoothGattCharacteristic> characteristic = nullptr;
+  nsRefPtr<BluetoothGattDescriptor> descriptor = nullptr;
+  for (uint32_t i = 0; i < mServices.Length(); i++) {
+    for (uint32_t j = 0; j < mServices[i]->mCharacteristics.Length(); j++) {
+      nsRefPtr<BluetoothGattCharacteristic> currentChar =
+        mServices[i]->mCharacteristics[j];
+
+      if (handle == currentChar->GetCharacteristicHandle()) {
+        characteristic = currentChar;
+        break;
+      }
+
+      size_t index = currentChar->mDescriptors.IndexOf(handle);
+      if (index != currentChar->mDescriptors.NoIndex) {
+        descriptor = currentChar->mDescriptors[index];
+        break;
+      }
+    }
+  }
+
+  if (!(characteristic || descriptor)) {
+    BT_WARNING("Wrong handle: no matched characteristic or descriptor");
+    return;
+  }
+
+  // Save the request information for sending the response later
+  RequestData data(handle,
+                   characteristic,
+                   descriptor);
+  mRequestMap.Put(requestId, &data);
+
+  nsRefPtr<BluetoothGattAttributeEvent> event =
+    BluetoothGattAttributeEvent::Constructor(
+      this, aEventName, address, requestId, characteristic, descriptor,
+      &value, needResponse, false /* Bubble */, false /* Cancelable*/);
+
+  DispatchTrustedEvent(event);
+}
+
+void
 BluetoothGattServer::Notify(const BluetoothSignal& aData)
 {
   BT_LOGD("[GattServer] %s", NS_ConvertUTF16toUTF8(aData.name()).get());
@@ -195,6 +261,10 @@ BluetoothGattServer::Notify(const BluetoothSignal& aData)
     HandleCharacteristicHandleUpdated(v);
   } else if (aData.name().EqualsLiteral("DescriptorHandleUpdated")) {
     HandleDescriptorHandleUpdated(v);
+  } else if (aData.name().EqualsLiteral("ReadRequested")) {
+    HandleReadWriteRequest(v, NS_LITERAL_STRING(ATTRIBUTE_READ_REQUEST));
+  } else if (aData.name().EqualsLiteral("WriteRequested")) {
+    HandleReadWriteRequest(v, NS_LITERAL_STRING(ATTRIBUTE_WRITE_REQUEST));
   } else {
     BT_WARNING("Not handling GATT signal: %s",
                NS_ConvertUTF16toUTF8(aData.name()).get());
@@ -219,8 +289,9 @@ void
 BluetoothGattServer::Invalidate()
 {
   mValid = false;
-  mServices.Clear();
   mPendingService = nullptr;
+  mServices.Clear();
+  mRequestMap.Clear();
 
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE_VOID(bs);
@@ -705,6 +776,62 @@ BluetoothGattServer::RemoveService(BluetoothGattService& aService,
     mAppUuid, aService.GetServiceHandle(), new RemoveServiceTask(this,
                                                                  &aService,
                                                                  promise));
+
+  return promise.forget();
+}
+
+already_AddRefed<Promise>
+BluetoothGattServer::SendResponse(const nsAString& aAddress,
+                                  uint16_t aStatus,
+                                  int32_t aRequestId,
+                                  ErrorResult& aRv)
+{
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  BT_ENSURE_TRUE_REJECT(mValid, promise, NS_ERROR_NOT_AVAILABLE);
+
+  RequestData* requestData;
+  mRequestMap.Get(aRequestId, &requestData);
+  BT_ENSURE_TRUE_REJECT(requestData, promise, NS_ERROR_UNEXPECTED);
+
+  BluetoothGattResponse response;
+  memset(&response, 0, sizeof(response));
+  response.mHandle = requestData->mHandle;
+
+  if (requestData->mCharacteristic) {
+    const nsTArray<uint8_t>& value = requestData->mCharacteristic->GetValue();
+    response.mLength = value.Length();
+    memcpy(&response.mValue, value.Elements(), response.mLength);
+  } else if (requestData->mDescriptor) {
+    const nsTArray<uint8_t>& value = requestData->mDescriptor->GetValue();
+    response.mLength = value.Length();
+    memcpy(&response.mValue, value.Elements(), response.mLength);
+  } else {
+    MOZ_ASSERT_UNREACHABLE(
+      "There should be at least one characteristic or descriptor in the "
+      "request data.");
+
+    promise->MaybeReject(NS_ERROR_INVALID_ARG);
+    return promise.forget();
+  }
+
+  BluetoothService* bs = BluetoothService::Get();
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
+
+  bs->GattServerSendResponseInternal(
+    mAppUuid,
+    aAddress,
+    aStatus,
+    aRequestId,
+    response,
+    new BluetoothVoidReplyRunnable(nullptr, promise));
 
   return promise.forget();
 }

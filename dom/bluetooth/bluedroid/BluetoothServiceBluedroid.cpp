@@ -736,6 +736,26 @@ BluetoothServiceBluedroid::GattServerStopServiceInternal(
   gatt->ServerStopService(aAppUuid, aServiceHandle, aRunnable);
 }
 
+void
+BluetoothServiceBluedroid::GattServerSendResponseInternal(
+  const nsAString& aAppUuid,
+  const nsAString& aAddress,
+  uint16_t aStatus,
+  int32_t aRequestId,
+  const BluetoothGattResponse& aRsp,
+  BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->ServerSendResponse(
+    aAppUuid, aAddress, aStatus, aRequestId, aRsp, aRunnable);
+}
+
 nsresult
 BluetoothServiceBluedroid::GetAdaptersInternal(
   BluetoothReplyRunnable* aRunnable)

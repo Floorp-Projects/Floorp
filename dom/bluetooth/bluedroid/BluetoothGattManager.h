@@ -146,6 +146,14 @@ public:
     const BluetoothAttributeHandle& aServiceHandle,
     BluetoothReplyRunnable* aRunnable);
 
+  void ServerSendResponse(
+    const nsAString& aAppUuid,
+    const nsAString& aAddress,
+    uint16_t aStatus,
+    int32_t aRequestId,
+    const BluetoothGattResponse& aRsp,
+    BluetoothReplyRunnable* aRunnable);
+
 private:
   ~BluetoothGattManager();
 
@@ -179,6 +187,7 @@ private:
   class ServerRemoveDescriptorResultHandler;
   class ServerStartServiceResultHandler;
   class ServerStopServiceResultHandler;
+  class ServerSendResponseResultHandler;
 
   BluetoothGattManager();
 
@@ -324,6 +333,25 @@ private:
     BluetoothGattStatus aStatus,
     int aServerIf,
     const BluetoothAttributeHandle& aServiceHandle) override;
+
+  void
+  RequestReadNotification(int aConnId,
+                          int aTransId,
+                          const nsAString& aBdAddr,
+                          const BluetoothAttributeHandle& aAttributeHandle,
+                          int aOffset,
+                          bool aIsLong) override;
+
+  void
+  RequestWriteNotification(int aConnId,
+                           int aTransId,
+                           const nsAString& aBdAddr,
+                           const BluetoothAttributeHandle& aAttributeHandle,
+                           int aOffset,
+                           int aLength,
+                           const uint8_t* aValue,
+                           bool aNeedResponse,
+                           bool aIsPrepareWrite) override;
 
   static bool mInShutdown;
 };

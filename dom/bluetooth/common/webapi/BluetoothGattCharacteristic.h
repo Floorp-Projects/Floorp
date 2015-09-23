@@ -32,6 +32,7 @@ class BluetoothGattCharacteristic final : public nsISupports
                                         , public nsWrapperCache
                                         , public BluetoothSignalObserver
 {
+  friend class BluetoothGattServer;
   friend class BluetoothGattService;
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -113,6 +114,11 @@ public:
   }
 
   uint16_t GetHandleCount() const;
+
+  const nsTArray<uint8_t>& GetValue() const
+  {
+    return mValue;
+  }
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;

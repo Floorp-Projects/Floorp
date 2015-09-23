@@ -4502,3 +4502,14 @@ BluetoothDBusService::GattServerStopServiceInternal(
   BluetoothReplyRunnable* aRunnable)
 {
 }
+
+void
+BluetoothDBusService::GattServerSendResponseInternal(
+  const nsAString& aAppUuid,
+  const nsAString& aAddress,
+  uint16_t aStatus,
+  int32_t aRequestId,
+  const BluetoothGattResponse& aRsp,
+  BluetoothReplyRunnable* aRunnable)
+{
+}

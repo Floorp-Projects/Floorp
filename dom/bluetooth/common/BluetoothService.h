@@ -558,6 +558,15 @@ public:
     const BluetoothAttributeHandle& aServiceHandle,
     BluetoothReplyRunnable* aRunnable) = 0;
 
+  virtual void
+  GattServerSendResponseInternal(
+    const nsAString& aAppUuid,
+    const nsAString& aAddress,
+    uint16_t aStatus,
+    int32_t aRequestId,
+    const BluetoothGattResponse& aRsp,
+    BluetoothReplyRunnable* aRunnable) = 0;
+
   bool
   IsEnabled() const
   {
