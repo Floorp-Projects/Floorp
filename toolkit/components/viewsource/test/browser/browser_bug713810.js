@@ -2,27 +2,22 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-var source = '<html xmlns="http://www.w3.org/1999/xhtml"><body><p>This is a paragraph.</p></body></html>';
+const source = '<html xmlns="http://www.w3.org/1999/xhtml"><body><p>This is a paragraph.</p></body></html>';
 
-function test() {
-  waitForExplicitFinish();
-  testHTML();
-}
-
-function testHTML() {
-  openDocumentSelect("data:text/html," + source, "p", function(aWindow) {
-    is(aWindow.gBrowser.contentDocument.body.textContent,
-       "<p>This is a paragraph.</p>",
-       "Correct source for text/html");
-    closeViewSourceWindow(aWindow, testXHTML);
+add_task(function *() {
+  let viewSourceTab = yield* openDocumentSelect("data:text/html," + source, "p");
+  let text = yield ContentTask.spawn(viewSourceTab.linkedBrowser, { }, function* () {
+    return content.document.body.textContent;
   });
-}
+  is(text, "<p>This is a paragraph.</p>", "Correct source for text/html");
+  gBrowser.removeTab(viewSourceTab);
 
-function testXHTML() {
-  openDocumentSelect("data:application/xhtml+xml," + source, "p", function(aWindow) {
-    is(aWindow.gBrowser.contentDocument.body.textContent,
-       '<p xmlns="http://www.w3.org/1999/xhtml">This is a paragraph.</p>',
-       "Correct source for application/xhtml+xml");
-    closeViewSourceWindow(aWindow, finish);
+  viewSourceTab = yield* openDocumentSelect("data:application/xhtml+xml," + source, "p");
+  text = yield ContentTask.spawn(viewSourceTab.linkedBrowser, { }, function* () {
+    return content.document.body.textContent;
   });
-}
+  is(text, '<p xmlns="http://www.w3.org/1999/xhtml">This is a paragraph.</p>',
+     "Correct source for application/xhtml+xml");
+  gBrowser.removeTab(viewSourceTab);
+});
+
