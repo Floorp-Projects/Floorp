@@ -16,16 +16,19 @@ then be found in "include/event2/".
 "TAILQ_END(head)" is used, causing a linking error. Just replace all use of the
 "TAILQ_END(head)" macro with "NULL".
 
-3. Apply "add mac-arc4random-buf.patch", which removes some bad OS X
-compatibility code. This will allow libevent to compile on all supported
-versions of OS X.
+3. Apply the following patches from
+ipc/chromium/src/third_party/libevent/patches/:
 
-4. Apply "openbsd-no-arc4random_addrandom.patch", which fixes the build on
-OpenBSD (which doesnt provide arc4random_addrandom anymore, see #931354).
+- "mac-arc4random-buf.patch". This removes some bad OS X compatibility code.
+  This will allow libevent to compile on all supported versions of OS X.
 
-5. Apply "libevent-use-non-deprecated-syscalls.patch", which fixes the build on
-AArch64 architecture (which does not provide deprecated syscalls).
+- "openbsd-no-arc4random_addrandom.patch". This fixes the build on OpenBSD
+  (which doesn't provide arc4random_addrandom anymore, see #931354).
 
-6. Apply "libevent-dont-use-issetugid-on-android.patch", which fixes the build
-on Android L preview.
+- "use-non-deprecated-syscalls.patch". This fixes the build on AArch64
+  architecture (which does not provide deprecated syscalls).
 
+- "dont-use-issetugid-on-android.patch". This fixes the build on Android L
+  preview.
+
+- "avoid-empty-sighandler.patch". This fixes some OS X crashes.
