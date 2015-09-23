@@ -4,7 +4,6 @@
 
 include $(topsrcdir)/config/rules.mk
 
-JAVA_CLASSPATH := $(ANDROID_SDK)/android.jar
 include $(topsrcdir)/config/android-common.mk
 
 libs:: javaaddons-1.0.jar
