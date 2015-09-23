@@ -1412,6 +1412,27 @@ GetAccessibleInSubtree(DocAccessible* aDoc, uint32_t aID)
   }
 #endif
 
+static AccessibleWrap*
+GetProxiedAccessibleInSubtree(const DocAccessibleParent* aDoc, uint32_t aID)
+{
+  auto wrapper = static_cast<DocProxyAccessibleWrap*>(WrapperFor(aDoc));
+  AccessibleWrap* child = wrapper->GetAccessibleByID(aID);
+  if (child) {
+    return child;
+  }
+
+  size_t childDocs = aDoc->ChildDocCount();
+  for (size_t i = 0; i < childDocs; i++) {
+    const DocAccessibleParent* childDoc = aDoc->ChildDocAt(i);
+    child = GetProxiedAccessibleInSubtree(childDoc, aID);
+    if (child) {
+      return child;
+    }
+  }
+
+  return nullptr;
+}
+
 Accessible*
 AccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
 {
@@ -1435,38 +1456,92 @@ AccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild)
     }
   }
 
-  if (IsProxy()) {
-    // XXX Don't implement negative child ids for now because annoying, and
-    // doesn't seem to be speced.
-    return nullptr;
-  }
-
   // If lVal negative then it is treated as child ID and we should look for
   // accessible through whole accessible subtree including subdocuments.
   // Otherwise we treat lVal as index in parent.
   // Convert child ID to unique ID.
-  void* uniqueID = reinterpret_cast<void*>(-aVarChild.lVal);
+  // First handle the case that both this accessible and the id'd one are in
+  // this process.
+  if (!IsProxy()) {
+    void* uniqueID = reinterpret_cast<void*>(-aVarChild.lVal);
 
-  DocAccessible* document = Document();
-  Accessible* child =
+    DocAccessible* document = Document();
+    Accessible* child =
 #ifdef _WIN64
-    GetAccessibleInSubtree(document, static_cast<uint32_t>(aVarChild.lVal));
+      GetAccessibleInSubtree(document, static_cast<uint32_t>(aVarChild.lVal));
 #else
-    document->GetAccessibleByUniqueIDInSubtree(uniqueID);
+      document->GetAccessibleByUniqueIDInSubtree(uniqueID);
 #endif
 
-  // If it is a document then just return an accessible.
-  if (IsDoc())
-    return child;
-
-  // Otherwise check whether the accessible is a child (this path works for
-  // ARIA documents and popups).
-  Accessible* parent = child;
-  while (parent && parent != document) {
-    if (parent == this)
+    // If it is a document then just return an accessible.
+    if (IsDoc())
       return child;
 
-    parent = parent->Parent();
+    // Otherwise check whether the accessible is a child (this path works for
+    // ARIA documents and popups).
+    Accessible* parent = child;
+    while (parent && parent != document) {
+      if (parent == this)
+        return child;
+
+      parent = parent->Parent();
+    }
+  }
+
+  // Now see about the case that both this accessible and the target one are
+  // proxied.
+  uint32_t id = aVarChild.lVal;
+  if (IsProxy()) {
+    DocAccessibleParent* proxyDoc = Proxy()->Document();
+    AccessibleWrap* wrapper = GetProxiedAccessibleInSubtree(proxyDoc, id);
+    MOZ_ASSERT(wrapper->IsProxy());
+
+    ProxyAccessible* parent = wrapper->Proxy();
+    while (parent && parent != proxyDoc) {
+      if (parent == this->Proxy()) {
+        return wrapper;
+      }
+
+      parent = parent->Parent();
+    }
+
+    return nullptr;
+  }
+
+  // Finally we need to handle the case that this accessible is in the main
+  // process, but the target is proxied.  This is the case when the target
+  // accessible is in a child document of this one.
+  DocAccessibleParent* proxyDoc = nullptr;
+  DocAccessible* doc = Document();
+  const nsTArray<DocAccessibleParent*>* remoteDocs =
+    DocManager::TopLevelRemoteDocs();
+  if (!remoteDocs) {
+    return nullptr;
+  }
+
+  size_t docCount = remoteDocs->Length();
+  for (size_t i = 0; i < docCount; i++) {
+    Accessible* outerDoc = remoteDocs->ElementAt(i)->OuterDocOfRemoteBrowser();
+    if (!outerDoc) {
+      continue;
+    }
+
+    if (outerDoc->Document() != doc) {
+      continue;
+    }
+
+    Accessible* parent = outerDoc;
+    while (parent && parent != doc) {
+      if (parent == this) {
+        AccessibleWrap* proxyWrapper =
+          GetProxiedAccessibleInSubtree(remoteDocs->ElementAt(i), id);
+        if (proxyWrapper) {
+          return proxyWrapper;
+        }
+      }
+
+      parent = parent->Parent();
+    }
   }
 
   return nullptr;
