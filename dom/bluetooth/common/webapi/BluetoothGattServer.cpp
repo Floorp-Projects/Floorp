@@ -66,39 +66,6 @@ BluetoothGattServer::~BluetoothGattServer()
   Invalidate();
 }
 
-void BluetoothGattServer::HandleServerRegistered(const BluetoothValue& aValue)
-{
-  MOZ_ASSERT(aValue.type() == BluetoothValue::Tuint32_t);
-  mServerIf = aValue.get_uint32_t();
-}
-
-void BluetoothGattServer::HandleServerUnregistered(const BluetoothValue& aValue)
-{
-  mServerIf = 0;
-}
-
-void BluetoothGattServer::HandleConnectionStateChanged(
-  const BluetoothValue& aValue)
-{
-  MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
-  const InfallibleTArray<BluetoothNamedValue>& arr =
-    aValue.get_ArrayOfBluetoothNamedValue();
-
-  MOZ_ASSERT(arr.Length() == 2 &&
-             arr[0].value().type() == BluetoothValue::Tbool &&
-             arr[1].value().type() == BluetoothValue::TnsString);
-
-  BluetoothStatusChangedEventInit init;
-  init.mStatus = arr[0].value().get_bool();
-  init.mAddress = arr[1].value().get_nsString();
-
-  nsRefPtr<BluetoothStatusChangedEvent> event =
-    BluetoothStatusChangedEvent::Constructor(
-      this, NS_LITERAL_STRING(GATT_CONNECTION_STATE_CHANGED_ID), init);
-
-  DispatchTrustedEvent(event);
-}
-
 void
 BluetoothGattServer::HandleServiceHandleUpdated(const BluetoothValue& aValue)
 {
@@ -184,11 +151,28 @@ BluetoothGattServer::Notify(const BluetoothSignal& aData)
 
   BluetoothValue v = aData.value();
   if (aData.name().EqualsLiteral("ServerRegistered")) {
-    HandleServerRegistered(v);
+    MOZ_ASSERT(v.type() == BluetoothValue::Tuint32_t);
+    mServerIf = v.get_uint32_t();
   } else if (aData.name().EqualsLiteral("ServerUnregistered")) {
-    HandleServerUnregistered(v);
+    mServerIf = 0;
   } else if (aData.name().EqualsLiteral(GATT_CONNECTION_STATE_CHANGED_ID)) {
-    HandleConnectionStateChanged(v);
+    MOZ_ASSERT(v.type() == BluetoothValue::TArrayOfBluetoothNamedValue);
+    const InfallibleTArray<BluetoothNamedValue>& arr =
+      v.get_ArrayOfBluetoothNamedValue();
+
+    MOZ_ASSERT(arr.Length() == 2 &&
+               arr[0].value().type() == BluetoothValue::Tbool &&
+               arr[1].value().type() == BluetoothValue::TnsString);
+
+    BluetoothStatusChangedEventInit init;
+    init.mStatus = arr[0].value().get_bool();
+    init.mAddress = arr[1].value().get_nsString();
+
+    nsRefPtr<BluetoothStatusChangedEvent> event =
+      BluetoothStatusChangedEvent::Constructor(
+        this, NS_LITERAL_STRING(GATT_CONNECTION_STATE_CHANGED_ID), init);
+
+    DispatchTrustedEvent(event);
   } else if (aData.name().EqualsLiteral("ServiceHandleUpdated")) {
     HandleServiceHandleUpdated(v);
   } else if (aData.name().EqualsLiteral("CharacteristicHandleUpdated")) {
