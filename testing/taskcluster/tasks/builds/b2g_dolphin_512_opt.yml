@@ -18,3 +18,4 @@ task:
       build-dolphin-512-opt: /home/worker/workspace
     env:
       TARGET: 'dolphin-512'
+      TOOLTOOL_MANIFEST: 'b2g/config/dolphin-512/releng-dolphin-512.tt'
