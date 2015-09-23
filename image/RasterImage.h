@@ -324,8 +324,11 @@ private:
    * @param aMetadata The metadata to set on this image.
    * @param aFromMetadataDecode True if this metadata came from a metadata
    *                            decode; false if it came from a full decode.
+   * @return |true| unless a catastrophic failure was discovered. If |false| is
+   * returned, it indicates that the image is corrupt in a way that requires all
+   * surfaces to be discarded to recover.
    */
-  void SetMetadata(const ImageMetadata& aMetadata, bool aFromMetadataDecode);
+  bool SetMetadata(const ImageMetadata& aMetadata, bool aFromMetadataDecode);
 
   /**
    * In catastrophic circumstances like a GPU driver crash, the contents of our
