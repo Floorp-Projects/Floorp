@@ -1,6 +1,6 @@
 ---
 # For complete sample of all build and test jobs,
-# see <gecko>/testing/taskcluster/tasks/job_flags.yml
+# see <gecko>/testing/taskcluster/tasks/branches/base_job_flags.yml
 
 $inherits:
   from: tasks/branches/base_job_flags.yml
