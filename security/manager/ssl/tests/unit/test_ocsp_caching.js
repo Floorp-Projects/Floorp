@@ -25,7 +25,7 @@ function respondWithSHA1OCSP(request, response) {
   response.setHeader("Content-Type", "application/ocsp-response");
 
   let args = [ ["good-delegated", "default-ee", "delegatedSHA1Signer" ] ];
-  let responses = generateOCSPResponses(args, "tlsserver");
+  let responses = generateOCSPResponses(args, "ocsp_certs");
   response.write(responses[0]);
 }
 
@@ -38,7 +38,7 @@ function respondWithError(request, response) {
 
 function generateGoodOCSPResponse() {
   let args = [ ["good", "default-ee", "unused" ] ];
-  let responses = generateOCSPResponses(args, "tlsserver");
+  let responses = generateOCSPResponses(args, "ocsp_certs");
   return responses[0];
 }
 
@@ -62,7 +62,7 @@ function run_test() {
   do_get_profile();
   Services.prefs.setBoolPref("security.ssl.enable_ocsp_stapling", true);
   Services.prefs.setIntPref("security.OCSP.enabled", 1);
-  add_tls_server_setup("OCSPStaplingServer");
+  add_tls_server_setup("OCSPStaplingServer", "ocsp_certs");
 
   let ocspResponder = new HttpServer();
   ocspResponder.registerPrefixHandler("/", function(request, response) {
