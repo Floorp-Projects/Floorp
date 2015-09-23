@@ -195,10 +195,10 @@ const STORE_ID_PENDING_PREFIX = "#unknownID#";
 
 this.DOMApplicationRegistry = {
   // pseudo-constants for the different application kinds.
-  get kPackaged()       "packaged",
-  get kHosted()         "hosted",
-  get kHostedAppcache() "hosted-appcache",
-  get kAndroid()        "android-native",
+  get kPackaged()       { return "packaged"; },
+  get kHosted()         { return "hosted"; },
+  get kHostedAppcache() { return "hosted-appcache"; },
+  get kAndroid()        { return "android-native"; },
 
   // Path to the webapps.json file where we store the registry data.
   appsFile: null,
