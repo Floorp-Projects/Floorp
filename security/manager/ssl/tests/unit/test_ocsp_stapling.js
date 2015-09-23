@@ -75,7 +75,7 @@ function add_tests() {
   // the server's certificate.
   let certDB = Cc["@mozilla.org/security/x509certdb;1"]
                   .getService(Ci.nsIX509CertDB);
-  let otherTestCA = constructCertFromFile("tlsserver/other-test-ca.pem");
+  let otherTestCA = constructCertFromFile("ocsp_certs/other-test-ca.pem");
   add_test(function() {
     certDB.setCertTrust(otherTestCA, Ci.nsIX509Cert.CA_CERT,
                         Ci.nsIX509CertDB.UNTRUSTED);
@@ -198,7 +198,7 @@ function run_test() {
   });
   fakeOCSPResponder.start(8888);
 
-  add_tls_server_setup("OCSPStaplingServer");
+  add_tls_server_setup("OCSPStaplingServer", "ocsp_certs");
 
   add_tests();
 

@@ -18,10 +18,10 @@ function run_test() {
 
   // We don't actually make use of stapling in this test. This is just how we
   // get a TLS connection.
-  add_tls_server_setup("OCSPStaplingServer");
+  add_tls_server_setup("OCSPStaplingServer", "ocsp_certs");
 
   let args = [["bad-signature", "default-ee", "unused"]];
-  let ocspResponses = generateOCSPResponses(args, "tlsserver");
+  let ocspResponses = generateOCSPResponses(args, "ocsp_certs");
   let ocspResponseBadSignature = ocspResponses[0];
 
   let ocspResponder = new HttpServer();

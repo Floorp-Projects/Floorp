@@ -68,7 +68,7 @@ function check_telemetry() {
 
 function run_test() {
   Services.prefs.setIntPref("security.OCSP.enabled", 1);
-  add_tls_server_setup("BadCertServer");
+  add_tls_server_setup("BadCertServer", "bad_certs");
 
   let fakeOCSPResponder = new HttpServer();
   fakeOCSPResponder.registerPrefixHandler("/", function (request, response) {
@@ -127,8 +127,7 @@ function add_simple_tests() {
                          SSL_ERROR_BAD_CERT_DOMAIN);
 
   // A Microsoft IIS utility generates self-signed certificates with
-  // properties similar to the one this "host" will present (see
-  // tlsserver/generate_certs.sh).
+  // properties similar to the one this "host" will present.
   add_cert_override_test("selfsigned-inadequateEKU.example.com",
                          Ci.nsICertOverrideService.ERROR_UNTRUSTED,
                          SEC_ERROR_UNKNOWN_ISSUER);
@@ -142,7 +141,7 @@ function add_simple_tests() {
   // reporting that error, a non-overridable error is encountered. The
   // non-overridable error should be prioritized.
   add_test(function() {
-    let rootCert = constructCertFromFile("tlsserver/test-ca.pem");
+    let rootCert = constructCertFromFile("bad_certs/test-ca.pem");
     setCertTrust(rootCert, ",,");
     run_next_test();
   });
@@ -150,7 +149,7 @@ function add_simple_tests() {
                                    Ci.nsICertOverrideService.ERROR_UNTRUSTED,
                                    SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION);
   add_test(function() {
-    let rootCert = constructCertFromFile("tlsserver/test-ca.pem");
+    let rootCert = constructCertFromFile("bad_certs/test-ca.pem");
     setCertTrust(rootCert, "CTu,,");
     run_next_test();
   });
@@ -176,7 +175,7 @@ function add_simple_tests() {
     let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
                                 .getService(Ci.nsICertOverrideService);
     certOverrideService.clearValidityOverride("end-entity-issued-by-v1-cert.example.com", 8443);
-    let v1Cert = constructCertFromFile("tlsserver/v1Cert.pem");
+    let v1Cert = constructCertFromFile("bad_certs/v1Cert.pem");
     setCertTrust(v1Cert, "CTu,,");
     clearSessionCache();
     run_next_test();
@@ -185,7 +184,7 @@ function add_simple_tests() {
                       PRErrorCodeSuccess);
   // Reset the trust for that certificate.
   add_test(function() {
-    let v1Cert = constructCertFromFile("tlsserver/v1Cert.pem");
+    let v1Cert = constructCertFromFile("bad_certs/v1Cert.pem");
     setCertTrust(v1Cert, ",,");
     clearSessionCache();
     run_next_test();
@@ -252,13 +251,13 @@ function add_distrust_tests() {
   // Before we specifically distrust this certificate, it should be trusted.
   add_connection_test("untrusted.example.com", PRErrorCodeSuccess);
 
-  add_distrust_test("tlsserver/default-ee.pem", "untrusted.example.com",
+  add_distrust_test("bad_certs/default-ee.pem", "untrusted.example.com",
                     SEC_ERROR_UNTRUSTED_CERT);
 
-  add_distrust_test("tlsserver/other-test-ca.pem",
+  add_distrust_test("bad_certs/other-test-ca.pem",
                     "untrustedissuer.example.com", SEC_ERROR_UNTRUSTED_ISSUER);
 
-  add_distrust_test("tlsserver/test-ca.pem",
+  add_distrust_test("bad_certs/test-ca.pem",
                     "ca-used-as-end-entity.example.com",
                     SEC_ERROR_UNTRUSTED_ISSUER);
 }

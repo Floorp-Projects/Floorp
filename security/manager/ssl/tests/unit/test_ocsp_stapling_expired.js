@@ -37,7 +37,7 @@ var args = [["good", "default-ee", "unused"],
              ["revoked", "default-ee", "unused"],
              ["unknown", "default-ee", "unused"],
             ];
-var ocspResponses = generateOCSPResponses(args, "tlsserver");
+var ocspResponses = generateOCSPResponses(args, "ocsp_certs");
 // Fresh response, certificate is good.
 var ocspResponseGood = ocspResponses[0];
 // Expired response, certificate is good.
@@ -71,7 +71,7 @@ function run_test() {
     gOCSPRequestCount++;
   });
   ocspResponder.start(8888);
-  add_tls_server_setup("OCSPStaplingServer");
+  add_tls_server_setup("OCSPStaplingServer", "ocsp_certs");
 
   // In these tests, the OCSP stapling server gives us a stapled
   // response based on the host name ("ocsp-stapling-expired" or
