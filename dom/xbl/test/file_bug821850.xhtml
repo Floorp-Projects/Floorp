@@ -152,12 +152,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=821850
     is(window.primitiveExpando, 11, "Can see waived expandos");
     is(window.stringExpando, "stringExpando", "Can see waived expandos");
     is(typeof window.objectExpando, "object", "object expando exists");
-    checkThrows(function() window.objectExpando.foo);
+    checkThrows(() => window.objectExpando.foo);
     is(SpecialPowers.wrap(window.objectExpando).foo, 12, "SpecialPowers sees the right thing");
     is(typeof window.globalExpando, "object", "Can see global object");
-    checkThrows(function() window.globalExpando.win);
+    checkThrows(() => window.globalExpando.win);
     is(window.functionExpando(), "called", "XBL functions are callable");
-    checkThrows(function() window.functionExpando.prop);
+    checkThrows(() => window.functionExpando.prop);
 
     // Inspect the bound element.
     var bound = document.getElementById('bound');
