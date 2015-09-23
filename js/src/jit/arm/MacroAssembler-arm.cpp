@@ -51,8 +51,7 @@ MacroAssemblerARM::convertInt32ToDouble(Register src, FloatRegister dest_)
 {
     // Direct conversions aren't possible.
     VFPRegister dest = VFPRegister(dest_);
-    as_vxfer(src, InvalidReg, dest.sintOverlay(),
-             CoreToFloat);
+    as_vxfer(src, InvalidReg, dest.sintOverlay(), CoreToFloat);
     as_vcvt(dest, dest.sintOverlay());
 }
 
@@ -316,11 +315,9 @@ MacroAssemblerARM::alu_dbl(Register src1, Imm32 imm, Register dest, ALUOp op,
     return true;
 }
 
-
 void
 MacroAssemblerARM::ma_alu(Register src1, Imm32 imm, Register dest,
-                          ALUOp op,
-                          SBit s, Condition c)
+                          ALUOp op, SBit s, Condition c)
 {
     // As it turns out, if you ask for a compare-like instruction you *probably*
     // want it to set condition codes.
@@ -334,6 +331,7 @@ MacroAssemblerARM::ma_alu(Register src1, Imm32 imm, Register dest,
         as_alu(dest, src1, imm8, op, s, c);
         return;
     }
+
     // One instruction, negated:
     Imm32 negImm = imm;
     Register negDest;
@@ -567,21 +565,25 @@ MacroAssemblerARM::ma_lsl(Imm32 shift, Register src, Register dst)
 {
     as_mov(dst, lsl(src, shift.value));
 }
+
 void
 MacroAssemblerARM::ma_lsr(Imm32 shift, Register src, Register dst)
 {
     as_mov(dst, lsr(src, shift.value));
 }
+
 void
 MacroAssemblerARM::ma_asr(Imm32 shift, Register src, Register dst)
 {
     as_mov(dst, asr(src, shift.value));
 }
+
 void
 MacroAssemblerARM::ma_ror(Imm32 shift, Register src, Register dst)
 {
     as_mov(dst, ror(src, shift.value));
 }
+
 void
 MacroAssemblerARM::ma_rol(Imm32 shift, Register src, Register dst)
 {
@@ -594,21 +596,25 @@ MacroAssemblerARM::ma_lsl(Register shift, Register src, Register dst)
 {
     as_mov(dst, lsl(src, shift));
 }
+
 void
 MacroAssemblerARM::ma_lsr(Register shift, Register src, Register dst)
 {
     as_mov(dst, lsr(src, shift));
 }
+
 void
 MacroAssemblerARM::ma_asr(Register shift, Register src, Register dst)
 {
     as_mov(dst, asr(src, shift));
 }
+
 void
 MacroAssemblerARM::ma_ror(Register shift, Register src, Register dst)
 {
     as_mov(dst, ror(src, shift));
 }
+
 void
 MacroAssemblerARM::ma_rol(Register shift, Register src, Register dst)
 {
@@ -643,17 +649,20 @@ MacroAssemblerARM::ma_and(Register src, Register dest, SBit s, Assembler::Condit
 {
     ma_and(dest, src, dest);
 }
+
 void
 MacroAssemblerARM::ma_and(Register src1, Register src2, Register dest,
                           SBit s, Assembler::Condition c)
 {
     as_and(dest, src1, O2Reg(src2), s, c);
 }
+
 void
 MacroAssemblerARM::ma_and(Imm32 imm, Register dest, SBit s, Assembler::Condition c)
 {
     ma_alu(dest, imm, dest, OpAnd, s, c);
 }
+
 void
 MacroAssemblerARM::ma_and(Imm32 imm, Register src1, Register dest,
                           SBit s, Assembler::Condition c)
@@ -674,17 +683,20 @@ MacroAssemblerARM::ma_eor(Register src, Register dest, SBit s, Assembler::Condit
 {
     ma_eor(dest, src, dest, s, c);
 }
+
 void
 MacroAssemblerARM::ma_eor(Register src1, Register src2, Register dest,
                           SBit s, Assembler::Condition c)
 {
     as_eor(dest, src1, O2Reg(src2), s, c);
 }
+
 void
 MacroAssemblerARM::ma_eor(Imm32 imm, Register dest, SBit s, Assembler::Condition c)
 {
     ma_alu(dest, imm, dest, OpEor, s, c);
 }
+
 void
 MacroAssemblerARM::ma_eor(Imm32 imm, Register src1, Register dest,
        SBit s, Assembler::Condition c)
@@ -698,17 +710,20 @@ MacroAssemblerARM::ma_orr(Register src, Register dest, SBit s, Assembler::Condit
 {
     ma_orr(dest, src, dest, s, c);
 }
+
 void
 MacroAssemblerARM::ma_orr(Register src1, Register src2, Register dest,
                           SBit s, Assembler::Condition c)
 {
     as_orr(dest, src1, O2Reg(src2), s, c);
 }
+
 void
 MacroAssemblerARM::ma_orr(Imm32 imm, Register dest, SBit s, Assembler::Condition c)
 {
     ma_alu(dest, imm, dest, OpOrr, s, c);
 }
+
 void
 MacroAssemblerARM::ma_orr(Imm32 imm, Register src1, Register dest,
                           SBit s, Assembler::Condition c)
@@ -723,11 +738,13 @@ MacroAssemblerARM::ma_adc(Imm32 imm, Register dest, SBit s, Condition c)
 {
     ma_alu(dest, imm, dest, OpAdc, s, c);
 }
+
 void
 MacroAssemblerARM::ma_adc(Register src, Register dest, SBit s, Condition c)
 {
     as_alu(dest, dest, O2Reg(src), OpAdc, s, c);
 }
+
 void
 MacroAssemblerARM::ma_adc(Register src1, Register src2, Register dest, SBit s, Condition c)
 {
@@ -746,16 +763,19 @@ MacroAssemblerARM::ma_add(Register src1, Register dest, SBit s, Condition c)
 {
     ma_alu(dest, O2Reg(src1), dest, OpAdd, s, c);
 }
+
 void
 MacroAssemblerARM::ma_add(Register src1, Register src2, Register dest, SBit s, Condition c)
 {
     as_alu(dest, src1, O2Reg(src2), OpAdd, s, c);
 }
+
 void
 MacroAssemblerARM::ma_add(Register src1, Operand op, Register dest, SBit s, Condition c)
 {
     ma_alu(src1, op, dest, OpAdd, s, c);
 }
+
 void
 MacroAssemblerARM::ma_add(Register src1, Imm32 op, Register dest, SBit s, Condition c)
 {
@@ -768,11 +788,13 @@ MacroAssemblerARM::ma_sbc(Imm32 imm, Register dest, SBit s, Condition c)
 {
     ma_alu(dest, imm, dest, OpSbc, s, c);
 }
+
 void
 MacroAssemblerARM::ma_sbc(Register src1, Register dest, SBit s, Condition c)
 {
     as_alu(dest, dest, O2Reg(src1), OpSbc, s, c);
 }
+
 void
 MacroAssemblerARM::ma_sbc(Register src1, Register src2, Register dest, SBit s, Condition c)
 {
@@ -785,43 +807,50 @@ MacroAssemblerARM::ma_sub(Imm32 imm, Register dest, SBit s, Condition c)
 {
     ma_alu(dest, imm, dest, OpSub, s, c);
 }
+
 void
 MacroAssemblerARM::ma_sub(Register src1, Register dest, SBit s, Condition c)
 {
     ma_alu(dest, Operand(src1), dest, OpSub, s, c);
 }
+
 void
 MacroAssemblerARM::ma_sub(Register src1, Register src2, Register dest, SBit s, Condition c)
 {
     ma_alu(src1, Operand(src2), dest, OpSub, s, c);
 }
+
 void
 MacroAssemblerARM::ma_sub(Register src1, Operand op, Register dest, SBit s, Condition c)
 {
     ma_alu(src1, op, dest, OpSub, s, c);
 }
+
 void
 MacroAssemblerARM::ma_sub(Register src1, Imm32 op, Register dest, SBit s, Condition c)
 {
     ma_alu(src1, op, dest, OpSub, s, c);
 }
 
-// Severse subtract.
+// Reverse subtract.
 void
 MacroAssemblerARM::ma_rsb(Imm32 imm, Register dest, SBit s, Condition c)
 {
     ma_alu(dest, imm, dest, OpRsb, s, c);
 }
+
 void
 MacroAssemblerARM::ma_rsb(Register src1, Register dest, SBit s, Condition c)
 {
     as_alu(dest, dest, O2Reg(src1), OpAdd, s, c);
 }
+
 void
 MacroAssemblerARM::ma_rsb(Register src1, Register src2, Register dest, SBit s, Condition c)
 {
     as_alu(dest, src1, O2Reg(src2), OpRsb, s, c);
 }
+
 void
 MacroAssemblerARM::ma_rsb(Register src1, Imm32 op2, Register dest, SBit s, Condition c)
 {
@@ -834,11 +863,13 @@ MacroAssemblerARM::ma_rsc(Imm32 imm, Register dest, SBit s, Condition c)
 {
     ma_alu(dest, imm, dest, OpRsc, s, c);
 }
+
 void
 MacroAssemblerARM::ma_rsc(Register src1, Register dest, SBit s, Condition c)
 {
     as_alu(dest, dest, O2Reg(src1), OpRsc, s, c);
 }
+
 void
 MacroAssemblerARM::ma_rsc(Register src1, Register src2, Register dest, SBit s, Condition c)
 {
@@ -852,11 +883,13 @@ MacroAssemblerARM::ma_cmn(Register src1, Imm32 imm, Condition c)
 {
     ma_alu(src1, imm, InvalidReg, OpCmn, SetCC, c);
 }
+
 void
 MacroAssemblerARM::ma_cmn(Register src1, Register src2, Condition c)
 {
     as_alu(InvalidReg, src2, O2Reg(src1), OpCmn, SetCC, c);
 }
+
 void
 MacroAssemblerARM::ma_cmn(Register src1, Operand op, Condition c)
 {
@@ -883,6 +916,7 @@ MacroAssemblerARM::ma_cmp(Register src1, ImmGCPtr ptr, Condition c)
     ma_mov(ptr, scratch);
     ma_cmp(src1, scratch, c);
 }
+
 void
 MacroAssemblerARM::ma_cmp(Register src1, Operand op, Condition c)
 {
@@ -900,6 +934,7 @@ MacroAssemblerARM::ma_cmp(Register src1, Operand op, Condition c)
         MOZ_CRASH("trying to compare FP and integer registers");
     }
 }
+
 void
 MacroAssemblerARM::ma_cmp(Register src1, Register src2, Condition c)
 {
@@ -912,17 +947,18 @@ MacroAssemblerARM::ma_teq(Register src1, Imm32 imm, Condition c)
 {
     ma_alu(src1, imm, InvalidReg, OpTeq, SetCC, c);
 }
+
 void
 MacroAssemblerARM::ma_teq(Register src1, Register src2, Condition c)
 {
     as_tst(src1, O2Reg(src2), c);
 }
+
 void
 MacroAssemblerARM::ma_teq(Register src1, Operand op, Condition c)
 {
     as_teq(src1, op.toOp2(), c);
 }
-
 
 // Test (src1 & src2).
 void
@@ -930,11 +966,13 @@ MacroAssemblerARM::ma_tst(Register src1, Imm32 imm, Condition c)
 {
     ma_alu(src1, imm, InvalidReg, OpTst, SetCC, c);
 }
+
 void
 MacroAssemblerARM::ma_tst(Register src1, Register src2, Condition c)
 {
     as_tst(src1, O2Reg(src2), c);
 }
+
 void
 MacroAssemblerARM::ma_tst(Register src1, Operand op, Condition c)
 {
@@ -946,6 +984,7 @@ MacroAssemblerARM::ma_mul(Register src1, Register src2, Register dest)
 {
     as_mul(dest, src1, src2);
 }
+
 void
 MacroAssemblerARM::ma_mul(Register src1, Imm32 imm, Register dest)
 {
@@ -1096,12 +1135,14 @@ MacroAssemblerARM::ma_udiv(Register num, Register div, Register dest, Condition 
 {
     as_udiv(dest, num, div, cond);
 }
-// Miscelanous instructions
+
+// Miscellaneous instructions.
 void
 MacroAssemblerARM::ma_clz(Register src, Register dest, Condition cond)
 {
     as_clz(dest, src, cond);
 }
+
 // Memory.
 // Shortcut for when we know we're transferring 32 bits of data.
 void
@@ -1135,6 +1176,7 @@ MacroAssemblerARM::ma_str(Register rt, const Address& addr, Index mode, Conditio
 {
     ma_dtr(IsStore, rt, addr, mode, cc);
 }
+
 void
 MacroAssemblerARM::ma_strd(Register rt, DebugOnly<Register> rt2, EDtrAddr addr, Index mode, Condition cc)
 {
@@ -1148,6 +1190,7 @@ MacroAssemblerARM::ma_ldr(DTRAddr addr, Register rt, Index mode, Condition cc)
 {
     as_dtr(IsLoad, 32, mode, rt, addr, cc);
 }
+
 void
 MacroAssemblerARM::ma_ldr(const Address& addr, Register rt, Index mode, Condition cc)
 {
@@ -1171,11 +1214,13 @@ MacroAssemblerARM::ma_ldrh(EDtrAddr addr, Register rt, Index mode, Condition cc)
 {
     as_extdtr(IsLoad, 16, false, mode, rt, addr, cc);
 }
+
 void
 MacroAssemblerARM::ma_ldrsb(EDtrAddr addr, Register rt, Index mode, Condition cc)
 {
     as_extdtr(IsLoad, 8, true, mode, rt, addr, cc);
 }
+
 void
 MacroAssemblerARM::ma_ldrd(EDtrAddr addr, Register rt, DebugOnly<Register> rt2,
                            Index mode, Condition cc)
@@ -1184,6 +1229,7 @@ MacroAssemblerARM::ma_ldrd(EDtrAddr addr, Register rt, DebugOnly<Register> rt2,
     MOZ_ASSERT(rt2.value.code() == rt.code() + 1);
     as_extdtr(IsLoad, 64, true, mode, rt, addr, cc);
 }
+
 void
 MacroAssemblerARM::ma_strh(Register rt, EDtrAddr addr, Index mode, Condition cc)
 {
@@ -1200,7 +1246,7 @@ MacroAssemblerARM::ma_strb(Register rt, DTRAddr addr, Index mode, Condition cc)
 BufferOffset
 MacroAssemblerARM::ma_dataTransferN(LoadStore ls, int size, bool IsSigned,
                           Register rn, Register rm, Register rt,
-                                    Index mode, Assembler::Condition cc, unsigned shiftAmount)
+                          Index mode, Assembler::Condition cc, unsigned shiftAmount)
 {
     if (size == 32 || (size == 8 && !IsSigned))
         return as_dtr(ls, size, mode, rt, DTRAddr(rn, DtrRegImmShift(rm, LSL, shiftAmount)), cc);
@@ -1405,6 +1451,7 @@ MacroAssemblerARM::ma_pop(Register r)
 {
     ma_dtr(IsLoad, sp, Imm32(4), r, PostIndex);
 }
+
 void
 MacroAssemblerARM::ma_push(Register r)
 {
@@ -1426,6 +1473,7 @@ MacroAssemblerARM::ma_vpop(VFPRegister r)
     transferFloatReg(r);
     finishFloatTransfer();
 }
+
 void
 MacroAssemblerARM::ma_vpush(VFPRegister r)
 {
@@ -1443,6 +1491,7 @@ MacroAssemblerARM::ma_dmb(BarrierOption option)
     else
         as_dmb_trap();
 }
+
 void
 MacroAssemblerARM::ma_dsb(BarrierOption option)
 {
@@ -1666,16 +1715,19 @@ MacroAssemblerARM::ma_vcmp(FloatRegister src1, FloatRegister src2, Condition cc)
 {
     as_vcmp(VFPRegister(src1), VFPRegister(src2), cc);
 }
+
 void
 MacroAssemblerARM::ma_vcmp_f32(FloatRegister src1, FloatRegister src2, Condition cc)
 {
     as_vcmp(VFPRegister(src1).singleOverlay(), VFPRegister(src2).singleOverlay(), cc);
 }
+
 void
 MacroAssemblerARM::ma_vcmpz(FloatRegister src1, Condition cc)
 {
     as_vcmpz(VFPRegister(src1), cc);
 }
+
 void
 MacroAssemblerARM::ma_vcmpz_f32(FloatRegister src1, Condition cc)
 {
@@ -1689,6 +1741,7 @@ MacroAssemblerARM::ma_vcvt_F64_I32(FloatRegister src, FloatRegister dest, Condit
     MOZ_ASSERT(dest.isSInt());
     as_vcvt(dest, src, false, cc);
 }
+
 void
 MacroAssemblerARM::ma_vcvt_F64_U32(FloatRegister src, FloatRegister dest, Condition cc)
 {
@@ -1696,6 +1749,7 @@ MacroAssemblerARM::ma_vcvt_F64_U32(FloatRegister src, FloatRegister dest, Condit
     MOZ_ASSERT(dest.isUInt());
     as_vcvt(dest, src, false, cc);
 }
+
 void
 MacroAssemblerARM::ma_vcvt_I32_F64(FloatRegister src, FloatRegister dest, Condition cc)
 {
@@ -1703,6 +1757,7 @@ MacroAssemblerARM::ma_vcvt_I32_F64(FloatRegister src, FloatRegister dest, Condit
     MOZ_ASSERT(dest.isDouble());
     as_vcvt(dest, src, false, cc);
 }
+
 void
 MacroAssemblerARM::ma_vcvt_U32_F64(FloatRegister src, FloatRegister dest, Condition cc)
 {
@@ -1718,6 +1773,7 @@ MacroAssemblerARM::ma_vcvt_F32_I32(FloatRegister src, FloatRegister dest, Condit
     MOZ_ASSERT(dest.isSInt());
     as_vcvt(VFPRegister(dest).sintOverlay(), VFPRegister(src).singleOverlay(), false, cc);
 }
+
 void
 MacroAssemblerARM::ma_vcvt_F32_U32(FloatRegister src, FloatRegister dest, Condition cc)
 {
@@ -1725,6 +1781,7 @@ MacroAssemblerARM::ma_vcvt_F32_U32(FloatRegister src, FloatRegister dest, Condit
     MOZ_ASSERT(dest.isUInt());
     as_vcvt(VFPRegister(dest).uintOverlay(), VFPRegister(src).singleOverlay(), false, cc);
 }
+
 void
 MacroAssemblerARM::ma_vcvt_I32_F32(FloatRegister src, FloatRegister dest, Condition cc)
 {
@@ -1732,6 +1789,7 @@ MacroAssemblerARM::ma_vcvt_I32_F32(FloatRegister src, FloatRegister dest, Condit
     MOZ_ASSERT(dest.isSingle());
     as_vcvt(VFPRegister(dest).singleOverlay(), VFPRegister(src).sintOverlay(), false, cc);
 }
+
 void
 MacroAssemblerARM::ma_vcvt_U32_F32(FloatRegister src, FloatRegister dest, Condition cc)
 {
@@ -1829,11 +1887,13 @@ MacroAssemblerARM::ma_vldr(VFPAddr addr, VFPRegister dest, Condition cc)
 {
     return as_vdtr(IsLoad, dest, addr, cc);
 }
+
 BufferOffset
 MacroAssemblerARM::ma_vldr(const Address& addr, VFPRegister dest, Condition cc)
 {
     return ma_vdtr(IsLoad, addr, dest, cc);
 }
+
 BufferOffset
 MacroAssemblerARM::ma_vldr(VFPRegister src, Register base, Register index, int32_t shift, Condition cc)
 {
@@ -1853,6 +1913,7 @@ MacroAssemblerARM::ma_vstr(VFPRegister src, const Address& addr, Condition cc)
 {
     return ma_vdtr(IsStore, addr, src, cc);
 }
+
 BufferOffset
 MacroAssemblerARM::ma_vstr(VFPRegister src, Register base, Register index, int32_t shift,
                            int32_t offset, Condition cc)
@@ -1940,7 +2001,8 @@ MacroAssemblerARMCompat::move32(Imm32 imm, Register dest)
 }
 
 void
-MacroAssemblerARMCompat::move32(Register src, Register dest) {
+MacroAssemblerARMCompat::move32(Register src, Register dest)
+{
     ma_mov(src, dest);
 }
 
@@ -1949,21 +2011,25 @@ MacroAssemblerARMCompat::movePtr(Register src, Register dest)
 {
     ma_mov(src, dest);
 }
+
 void
 MacroAssemblerARMCompat::movePtr(ImmWord imm, Register dest)
 {
     ma_mov(Imm32(imm.value), dest);
 }
+
 void
 MacroAssemblerARMCompat::movePtr(ImmGCPtr imm, Register dest)
 {
     ma_mov(imm, dest);
 }
+
 void
 MacroAssemblerARMCompat::movePtr(ImmPtr imm, Register dest)
 {
     movePtr(ImmWord(uintptr_t(imm.value)), dest);
 }
+
 void
 MacroAssemblerARMCompat::movePtr(AsmJSImmPtr imm, Register dest)
 {
@@ -1976,6 +2042,7 @@ MacroAssemblerARMCompat::movePtr(AsmJSImmPtr imm, Register dest)
     append(AsmJSAbsoluteLink(CodeOffsetLabel(currentOffset()), imm.kind()));
     ma_movPatchable(Imm32(-1), dest, Always, rs);
 }
+
 void
 MacroAssemblerARMCompat::load8ZeroExtend(const Address& address, Register dest)
 {
@@ -2101,6 +2168,7 @@ MacroAssemblerARMCompat::load32(AbsoluteAddress address, Register dest)
 {
     loadPtr(address, dest);
 }
+
 void
 MacroAssemblerARMCompat::loadPtr(const Address& address, Register dest)
 {
@@ -2271,6 +2339,7 @@ MacroAssemblerARMCompat::store16(Imm32 imm, const BaseIndex& dest)
     ma_mov(imm, scratch2);
     store16(scratch2, dest);
 }
+
 void
 MacroAssemblerARMCompat::store16(Register src, const BaseIndex& address)
 {
@@ -2290,6 +2359,7 @@ MacroAssemblerARMCompat::store16(Register src, const BaseIndex& address)
     }
     ma_strh(src, EDtrAddr(address.base, EDtrOffReg(index)));
 }
+
 void
 MacroAssemblerARMCompat::store32(Register src, AbsoluteAddress address)
 {
@@ -2701,6 +2771,7 @@ MacroAssemblerARMCompat::testBoolean(Assembler::Condition cond, const ValueOpera
     ma_cmp(value.typeReg(), ImmType(JSVAL_TYPE_BOOLEAN));
     return cond;
 }
+
 Assembler::Condition
 MacroAssemblerARMCompat::testDouble(Assembler::Condition cond, const ValueOperand& value)
 {
@@ -3056,8 +3127,8 @@ MacroAssemblerARMCompat::testGCThing(Condition cond, const BaseIndex& address)
 }
 
 void
-MacroAssemblerARMCompat::branchTestValue(Condition cond, const ValueOperand& value, const Value& v,
-                                         Label* label)
+MacroAssemblerARMCompat::branchTestValue(Condition cond, const ValueOperand& value,
+                                         const Value& v, Label* label)
 {
     // If cond == NotEqual, branch when a.payload != b.payload || a.tag !=
     // b.tag. If the payloads are equal, compare the tags. If the payloads are
@@ -3246,7 +3317,8 @@ MacroAssemblerARMCompat::loadInt32OrDouble(const Address& src, FloatRegister des
 }
 
 void
-MacroAssemblerARMCompat::loadInt32OrDouble(Register base, Register index, FloatRegister dest, int32_t shift)
+MacroAssemblerARMCompat::loadInt32OrDouble(Register base, Register index,
+                                           FloatRegister dest, int32_t shift)
 {
     Label notInt32, end;
 
@@ -3283,7 +3355,6 @@ MacroAssemblerARMCompat::loadConstantDouble(double dp, FloatRegister dest)
 }
 
 // Treat the value as a boolean, and set condition codes accordingly.
-
 Assembler::Condition
 MacroAssemblerARMCompat::testInt32Truthy(bool truthy, const ValueOperand& operand)
 {
@@ -3330,8 +3401,8 @@ MacroAssemblerARMCompat::extractTag(const BaseIndex& address, Register scratch)
 
 template <typename T>
 void
-MacroAssemblerARMCompat::storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T& dest,
-                                           MIRType slotType)
+MacroAssemblerARMCompat::storeUnboxedValue(ConstantOrRegister value, MIRType valueType,
+                                           const T& dest, MIRType slotType)
 {
     if (valueType == MIRType_Double) {
         storeDouble(value.reg().typedReg().fpu(), dest);
@@ -3350,12 +3421,12 @@ MacroAssemblerARMCompat::storeUnboxedValue(ConstantOrRegister value, MIRType val
 }
 
 template void
-MacroAssemblerARMCompat::storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const Address& dest,
-                                           MIRType slotType);
+MacroAssemblerARMCompat::storeUnboxedValue(ConstantOrRegister value, MIRType valueType,
+                                           const Address& dest, MIRType slotType);
 
 template void
-MacroAssemblerARMCompat::storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const BaseIndex& dest,
-                                           MIRType slotType);
+MacroAssemblerARMCompat::storeUnboxedValue(ConstantOrRegister value, MIRType valueType,
+                                           const BaseIndex& dest, MIRType slotType);
 
 
 void
@@ -3383,6 +3454,7 @@ MacroAssemblerARMCompat::moveValue(const Value& val, Register type, Register dat
     else
         ma_mov(Imm32(jv.s.payload.i32), data);
 }
+
 void
 MacroAssemblerARMCompat::moveValue(const Value& val, const ValueOperand& dest)
 {
@@ -3477,20 +3549,11 @@ MacroAssemblerARMCompat::loadValue(Address src, ValueOperand val)
             // with one of LDM{DB, DA, IA, IB}
             DTMMode mode;
             switch (src.offset) {
-              case -8:
-                mode = DB;
-                break;
-              case -4:
-                mode = DA;
-                break;
-              case 0:
-                mode = IA;
-                break;
-              case 4:
-                mode = IB;
-                break;
-              default:
-                MOZ_CRASH("Bogus Offset for LoadValue as DTM");
+              case -8: mode = DB; break;
+              case -4: mode = DA; break;
+              case  0: mode = IA; break;
+              case  4: mode = IB; break;
+              default: MOZ_CRASH("Bogus Offset for LoadValue as DTM");
             }
             startDataTransferM(IsLoad, src.base, mode);
             transferReg(val.payloadReg());
@@ -3520,10 +3583,12 @@ MacroAssemblerARMCompat::tagValue(JSValueType type, Register payload, ValueOpera
 }
 
 void
-MacroAssemblerARMCompat::pushValue(ValueOperand val) {
+MacroAssemblerARMCompat::pushValue(ValueOperand val)
+{
     ma_push(val.typeReg());
     ma_push(val.payloadReg());
 }
+
 void
 MacroAssemblerARMCompat::pushValue(const Address& addr)
 {
@@ -3535,10 +3600,12 @@ MacroAssemblerARMCompat::pushValue(const Address& addr)
 }
 
 void
-MacroAssemblerARMCompat::popValue(ValueOperand val) {
+MacroAssemblerARMCompat::popValue(ValueOperand val)
+{
     ma_pop(val.payloadReg());
     ma_pop(val.typeReg());
 }
+
 void
 MacroAssemblerARMCompat::storePayload(const Value& val, const Address& dest)
 {
