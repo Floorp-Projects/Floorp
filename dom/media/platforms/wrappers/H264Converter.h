@@ -29,12 +29,12 @@ public:
                 MediaDataDecoderCallback* aCallback);
   virtual ~H264Converter();
 
-  virtual nsRefPtr<InitPromise> Init() override;
-  virtual nsresult Input(MediaRawData* aSample) override;
-  virtual nsresult Flush() override;
-  virtual nsresult Drain() override;
-  virtual nsresult Shutdown() override;
-  virtual bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
+  nsRefPtr<InitPromise> Init() override;
+  nsresult Input(MediaRawData* aSample) override;
+  nsresult Flush() override;
+  nsresult Drain() override;
+  nsresult Shutdown() override;
+  bool IsHardwareAccelerated(nsACString& aFailureReason) const override;
 
   // Return true if mimetype is H.264.
   static bool IsH264(const TrackInfo& aConfig);

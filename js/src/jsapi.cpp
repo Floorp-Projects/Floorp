@@ -3212,19 +3212,28 @@ JS_NewArrayObject(JSContext* cx, size_t length)
 }
 
 JS_PUBLIC_API(bool)
-JS_IsArrayObject(JSContext* cx, JS::HandleObject obj)
+JS_IsArrayObject(JSContext* cx, JS::HandleObject obj, bool* isArray)
 {
     assertSameCompartment(cx, obj);
-    return ObjectClassIs(obj, ESClass_Array, cx);
+
+    ESClassValue cls;
+    if (!GetBuiltinClass(cx, obj, &cls))
+        return false;
+
+    *isArray = cls == ESClass_Array;
+    return true;
 }
 
 JS_PUBLIC_API(bool)
-JS_IsArrayObject(JSContext* cx, JS::HandleValue value)
+JS_IsArrayObject(JSContext* cx, JS::HandleValue value, bool* isArray)
 {
-    if (!value.isObject())
-        return false;
+    if (!value.isObject()) {
+        *isArray = false;
+        return true;
+    }
+
     RootedObject obj(cx, &value.toObject());
-    return JS_IsArrayObject(cx, obj);
+    return JS_IsArrayObject(cx, obj, isArray);
 }
 
 JS_PUBLIC_API(bool)
@@ -5498,10 +5507,16 @@ JS::NewDateObject(JSContext* cx, JS::ClippedTime time)
 }
 
 JS_PUBLIC_API(bool)
-JS_ObjectIsDate(JSContext* cx, HandleObject obj)
+JS_ObjectIsDate(JSContext* cx, HandleObject obj, bool* isDate)
 {
     assertSameCompartment(cx, obj);
-    return ObjectClassIs(obj, ESClass_Date, cx);
+
+    ESClassValue cls;
+    if (!GetBuiltinClass(cx, obj, &cls))
+        return false;
+
+    *isDate = cls == ESClass_Date;
+    return true;
 }
 
 JS_PUBLIC_API(void)
@@ -5636,10 +5651,16 @@ JS_ExecuteRegExpNoStatics(JSContext* cx, HandleObject obj, char16_t* chars, size
 }
 
 JS_PUBLIC_API(bool)
-JS_ObjectIsRegExp(JSContext* cx, HandleObject obj)
+JS_ObjectIsRegExp(JSContext* cx, HandleObject obj, bool* isRegExp)
 {
     assertSameCompartment(cx, obj);
-    return ObjectClassIs(obj, ESClass_RegExp, cx);
+
+    ESClassValue cls;
+    if (!GetBuiltinClass(cx, obj, &cls))
+        return false;
+
+    *isRegExp = cls == ESClass_RegExp;
+    return true;
 }
 
 JS_PUBLIC_API(unsigned)

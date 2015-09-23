@@ -3258,14 +3258,22 @@ Element::MozRequestFullScreen(JSContext* aCx, JS::Handle<JS::Value> aOptions,
   // We need to check if options is convertible to a dict first before
   // trying to init fsOptions; otherwise Init() would throw, and we want to
   // silently ignore non-dictionary values
-  if (aCx && IsConvertibleToDictionary(aCx, aOptions)) {
-    if (!fsOptions.Init(aCx, aOptions)) {
+  if (aCx) {
+    bool convertible;
+    if (!IsConvertibleToDictionary(aCx, aOptions, &convertible)) {
       aError.Throw(NS_ERROR_FAILURE);
       return;
     }
 
-    if (fsOptions.mVrDisplay) {
-      request->mVRHMDDevice = fsOptions.mVrDisplay->GetHMD();
+    if (convertible) {
+      if (!fsOptions.Init(aCx, aOptions)) {
+        aError.Throw(NS_ERROR_FAILURE);
+        return;
+      }
+
+      if (fsOptions.mVrDisplay) {
+        request->mVRHMDDevice = fsOptions.mVrDisplay->GetHMD();
+      }
     }
   }
 

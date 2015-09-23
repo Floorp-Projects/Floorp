@@ -98,7 +98,6 @@ $(_DEST_DIR):
 
 # On Android only, include a release signed Robocop APK in the test package.
 ifeq ($(MOZ_BUILD_APP),mobile/android)
-JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
 include $(topsrcdir)/config/android-common.mk
 
 stage-package-android:

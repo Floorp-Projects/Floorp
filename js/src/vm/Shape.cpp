@@ -1649,3 +1649,23 @@ AutoRooterGetterSetter::Inner::trace(JSTracer* trc)
     if ((attrs & JSPROP_SETTER) && *psetter)
         TraceRoot(trc, (JSObject**) psetter, "AutoRooterGetterSetter setter");
 }
+
+JS::ubi::Node::Size
+JS::ubi::Concrete<js::Shape>::size(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    Size size = js::gc::Arena::thingSize(get().asTenured().getAllocKind());
+
+    if (get().hasTable())
+        size += get().table().sizeOfIncludingThis(mallocSizeOf);
+
+    if (!get().inDictionary() && get().kids.isHash())
+        size += get().kids.toHash()->sizeOfIncludingThis(mallocSizeOf);
+
+    return size;
+}
+
+JS::ubi::Node::Size
+JS::ubi::Concrete<js::BaseShape>::size(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    return js::gc::Arena::thingSize(get().asTenured().getAllocKind());
+}

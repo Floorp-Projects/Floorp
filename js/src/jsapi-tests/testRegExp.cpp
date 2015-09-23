@@ -8,13 +8,17 @@ BEGIN_TEST(testObjectIsRegExp)
 {
     JS::RootedValue val(cx);
 
+    bool isRegExp;
+
     EVAL("new Object", &val);
     JS::RootedObject obj(cx, val.toObjectOrNull());
-    CHECK(!JS_ObjectIsRegExp(cx, obj));
+    CHECK(JS_ObjectIsRegExp(cx, obj, &isRegExp));
+    CHECK(!isRegExp);
 
     EVAL("/foopy/", &val);
     obj = val.toObjectOrNull();
-    CHECK(JS_ObjectIsRegExp(cx, obj));
+    CHECK(JS_ObjectIsRegExp(cx, obj, &isRegExp));
+    CHECK(isRegExp);
 
     return true;
 }

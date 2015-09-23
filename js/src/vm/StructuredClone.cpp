@@ -752,7 +752,10 @@ JSStructuredCloneWriter::parseTransferable()
 
     JSContext* cx = context();
     RootedObject array(cx, &transferable.toObject());
-    if (!JS_IsArrayObject(cx, array))
+    bool isArray;
+    if (!JS_IsArrayObject(cx, array, &isArray))
+        return false;
+    if (!isArray)
         return reportErrorTransferable(JS_SCERR_TRANSFERABLE);
 
     uint32_t length;
@@ -964,7 +967,10 @@ JSStructuredCloneWriter::traverseObject(HandleObject obj)
     checkStack();
 
     /* Write the header for obj. */
-    return out.writePair(ObjectClassIs(obj, ESClass_Array, context()) ? SCTAG_ARRAY_OBJECT : SCTAG_OBJECT_OBJECT, 0);
+    ESClassValue cls;
+    if (!GetBuiltinClass(context(), obj, &cls))
+        return false;
+    return out.writePair(cls == ESClass_Array ? SCTAG_ARRAY_OBJECT : SCTAG_OBJECT_OBJECT, 0);
 }
 
 bool
@@ -1053,13 +1059,17 @@ JSStructuredCloneWriter::startWrite(HandleValue v)
         if (backref)
             return true;
 
-        if (ObjectClassIs(obj, ESClass_RegExp, context())) {
+        ESClassValue cls;
+        if (!GetBuiltinClass(context(), obj, &cls))
+            return false;
+
+        if (cls == ESClass_RegExp) {
             RegExpGuard re(context());
             if (!RegExpToShared(context(), obj, &re))
                 return false;
             return out.writePair(SCTAG_REGEXP_OBJECT, re->getFlags()) &&
                    writeString(SCTAG_STRING, re->getSource());
-        } else if (ObjectClassIs(obj, ESClass_Date, context())) {
+        } else if (cls == ESClass_Date) {
             RootedValue unboxed(context());
             if (!Unbox(context(), obj, &unboxed))
                 return false;
@@ -1074,28 +1084,28 @@ JSStructuredCloneWriter::startWrite(HandleValue v)
             return writeSharedTypedArray(obj);
         } else if (JS_IsSharedArrayBufferObject(obj)) {
             return writeSharedArrayBuffer(obj);
-        } else if (ObjectClassIs(obj, ESClass_Object, context())) {
+        } else if (cls == ESClass_Object) {
             return traverseObject(obj);
-        } else if (ObjectClassIs(obj, ESClass_Array, context())) {
+        } else if (cls == ESClass_Array) {
             return traverseObject(obj);
-        } else if (ObjectClassIs(obj, ESClass_Boolean, context())) {
+        } else if (cls == ESClass_Boolean) {
             RootedValue unboxed(context());
             if (!Unbox(context(), obj, &unboxed))
                 return false;
             return out.writePair(SCTAG_BOOLEAN_OBJECT, unboxed.toBoolean());
-        } else if (ObjectClassIs(obj, ESClass_Number, context())) {
+        } else if (cls == ESClass_Number) {
             RootedValue unboxed(context());
             if (!Unbox(context(), obj, &unboxed))
                 return false;
             return out.writePair(SCTAG_NUMBER_OBJECT, 0) && out.writeDouble(unboxed.toNumber());
-        } else if (ObjectClassIs(obj, ESClass_String, context())) {
+        } else if (cls == ESClass_String) {
             RootedValue unboxed(context());
             if (!Unbox(context(), obj, &unboxed))
                 return false;
             return writeString(SCTAG_STRING_OBJECT, unboxed.toString());
-        } else if (ObjectClassIs(obj, ESClass_Map, context())) {
+        } else if (cls == ESClass_Map) {
             return traverseMap(obj);
-        } else if (ObjectClassIs(obj, ESClass_Set, context())) {
+        } else if (cls == ESClass_Set) {
             return traverseSet(obj);
         }
 
@@ -1168,7 +1178,11 @@ JSStructuredCloneWriter::transferOwnership()
         MOZ_ASSERT(ownership == JS::SCTAG_TMO_UNFILLED);
 #endif
 
-        if (ObjectClassIs(obj, ESClass_ArrayBuffer, context())) {
+        ESClassValue cls;
+        if (!GetBuiltinClass(context(), obj, &cls))
+            return false;
+
+        if (cls == ESClass_ArrayBuffer) {
             // The current setup of the array buffer inheritance hierarchy doesn't
             // lend itself well to generic manipulation via proxies.
             Rooted<ArrayBufferObject*> arrayBuffer(context(), &CheckedUnwrap(obj)->as<ArrayBufferObject>());
@@ -1191,7 +1205,7 @@ JSStructuredCloneWriter::transferOwnership()
             else
                 ownership = JS::SCTAG_TMO_ALLOC_DATA;
             extraData = nbytes;
-        } else if (ObjectClassIs(obj, ESClass_SharedArrayBuffer, context())) {
+        } else if (cls == ESClass_SharedArrayBuffer) {
             Rooted<SharedArrayBufferObject*> sharedArrayBuffer(context(), &CheckedUnwrap(obj)->as<SharedArrayBufferObject>());
             SharedArrayRawBuffer* rawbuf = sharedArrayBuffer->rawBufferObject();
 
@@ -1238,7 +1252,11 @@ JSStructuredCloneWriter::write(HandleValue v)
             entries.popBack();
             checkStack();
 
-            if (ObjectClassIs(obj, ESClass_Map, context())) {
+            ESClassValue cls;
+            if (!GetBuiltinClass(context(), obj, &cls))
+                return false;
+
+            if (cls == ESClass_Map) {
                 counts.back()--;
                 RootedValue val(context(), entries.back());
                 entries.popBack();
@@ -1246,7 +1264,7 @@ JSStructuredCloneWriter::write(HandleValue v)
 
                 if (!startWrite(key) || !startWrite(val))
                     return false;
-            } else if (ObjectClassIs(obj, ESClass_Set, context())) {
+            } else if (cls == ESClass_Set) {
                 if (!startWrite(key))
                     return false;
             } else {

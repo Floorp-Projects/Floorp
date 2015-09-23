@@ -157,10 +157,10 @@ struct DevTools : public ::testing::Test {
 class MOZ_STACK_CLASS FakeNode
 {
 public:
-  JS::ubi::SimpleEdgeVector edges;
-  JSCompartment*            compartment;
-  JS::Zone*                 zone;
-  size_t                    size;
+  JS::ubi::EdgeVector edges;
+  JSCompartment*      compartment;
+  JS::Zone*           zone;
+  size_t              size;
 
   explicit FakeNode(JSContext* cx)
     : edges(cx),
@@ -221,7 +221,7 @@ void AddEdge(FakeNode& node, FakeNode& referent, const char16_t* edgeName = null
     ASSERT_NE(ownedEdgeName, nullptr);
   }
 
-  JS::ubi::SimpleEdge edge(ownedEdgeName, &referent);
+  JS::ubi::Edge edge(ownedEdgeName, &referent);
   ASSERT_TRUE(node.edges.append(mozilla::Move(edge)));
 }
 

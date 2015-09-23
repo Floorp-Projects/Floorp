@@ -1,0 +1,35 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sts=4 et sw=4 tw=99:
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+
+namespace mozilla {
+namespace devtools {
+
+struct OpenedFile
+{
+    nsString       path;
+    FileDescriptor descriptor;
+};
+
+union OpenHeapSnapshotTempFileResponse
+{
+    nsresult;
+    OpenedFile;
+};
+
+sync protocol PHeapSnapshotTempFileHelper
+{
+    manager PContent;
+
+parent:
+    sync OpenHeapSnapshotTempFile() returns (OpenHeapSnapshotTempFileResponse response);
+
+    __delete__();
+};
+
+} // namespace devtools
+} // namespace mozilla

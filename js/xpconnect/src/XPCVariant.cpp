@@ -191,7 +191,12 @@ XPCArrayHomogenizer::GetTypeForArray(JSContext* cx, HandleObject array,
         } else {
             MOZ_ASSERT(val.isObject(), "invalid type of jsval!");
             jsobj = &val.toObject();
-            if (JS_IsArrayObject(cx, jsobj))
+
+            bool isArray;
+            if (!JS_IsArrayObject(cx, jsobj, &isArray))
+                return false;
+
+            if (isArray)
                 type = tArr;
             else if (xpc_JSObjectIsID(cx, jsobj))
                 type = tID;
@@ -304,7 +309,14 @@ bool XPCVariant::InitializeData(JSContext* cx)
 
     uint32_t len;
 
-    if (JS_IsArrayObject(cx, jsobj) && JS_GetArrayLength(cx, jsobj, &len)) {
+    bool isArray;
+    if (!JS_IsArrayObject(cx, jsobj, &isArray) ||
+        (isArray && !JS_GetArrayLength(cx, jsobj, &len)))
+    {
+        return false;
+    }
+
+    if (isArray) {
         if (!len) {
             // Zero length array
             mData.SetToEmptyArray();

@@ -831,21 +831,11 @@ Valueify(const JSClass* c)
 enum ESClassValue {
     ESClass_Object, ESClass_Array, ESClass_Number, ESClass_String,
     ESClass_Boolean, ESClass_RegExp, ESClass_ArrayBuffer, ESClass_SharedArrayBuffer,
-    ESClass_Date, ESClass_Set, ESClass_Map
+    ESClass_Date, ESClass_Set, ESClass_Map,
+
+    // None of the above.
+    ESClass_Other
 };
-
-/*
- * Return whether the given object has the given [[Class]] internal property
- * value. Beware, this query says nothing about the js::Class of the JSObject
- * so the caller must not assume anything about obj's representation (e.g., obj
- * may be a proxy).
- */
-inline bool
-ObjectClassIs(JSObject& obj, ESClassValue classValue, JSContext* cx);
-
-/* Just a helper that checks v.isObject before calling ObjectClassIs. */
-inline bool
-IsObjectWithClass(const JS::Value& v, ESClassValue classValue, JSContext* cx);
 
 /* Fills |vp| with the unboxed value for boxed types, or undefined otherwise. */
 inline bool

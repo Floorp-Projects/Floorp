@@ -13,6 +13,11 @@
                         android:defaultValue="false"
                         android:persistent="false" />
 
+    <CheckBoxPreference android:key="android.not_a_preference.search.search_history.enabled"
+                        android:title="@string/pref_history_search_suggestions"
+                        android:defaultValue="true"
+                        android:persistent="true" />
+
     <org.mozilla.gecko.preferences.SearchPreferenceCategory
                         android:title="@string/pref_category_installed_search_engines"/>
 

@@ -24,7 +24,10 @@ const { CensusTreeNode } = require("devtools/shared/heapsnapshot/census-tree-nod
 
 // Always log packets when running tests. runxpcshelltests.py will throw
 // the output away anyway, unless you give it the --verbose flag.
-Services.prefs.setBoolPref("devtools.debugger.log", true);
+if (Services.appInfo &&
+    Services.appInfo.processType == Services.appInfo.PROCESS_TYPE_DEFAULT) {
+  Services.prefs.setBoolPref("devtools.debugger.log", true);
+}
 DevToolsUtils.dumpn.wantLogging = true;
 
 const SYSTEM_PRINCIPAL = Cc["@mozilla.org/systemprincipal;1"]
