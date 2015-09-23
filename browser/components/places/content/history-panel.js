@@ -94,6 +94,5 @@ function searchHistory(aInput)
 }
 
 window.addEventListener("SidebarFocused",
-                        function()
-                          gSearchBox.focus(),
+                        () => gSearchBox.focus(),
                         false);
