@@ -8760,6 +8760,10 @@ nsContentUtils::SerializeNodeToMarkup(nsINode* aRoot,
                                       bool aDescendentsOnly,
                                       nsAString& aOut)
 {
+  // If you pass in a DOCUMENT_NODE, you must pass aDescendentsOnly as true
+  MOZ_ASSERT(aDescendentsOnly ||
+             aRoot->NodeType() != nsIDOMNode::DOCUMENT_NODE);
+
   nsINode* current = aDescendentsOnly ?
     nsNodeUtils::GetFirstChildOfTemplateOrNode(aRoot) : aRoot;
 
