@@ -67,11 +67,11 @@ const standardParams = {
       manual: l10n.lookup("screenshotDelayManual")
     },
     {
-      name: "dpi",
+      name: "dpr",
       type: { name: "number", min: 0, allowFloat: true },
       defaultValue: 0,
-      description: l10n.lookup("screenshotDPIDesc"),
-      manual: l10n.lookup("screenshotDPIManual")
+      description: l10n.lookup("screenshotDPRDesc"),
+      manual: l10n.lookup("screenshotDPRManual")
     },
     {
       name: "fullpage",
@@ -293,7 +293,7 @@ function createScreenshotData(document, args) {
 
   const canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
   const ctx = canvas.getContext("2d");
-  const ratio = args.dpi ? args.dpi : window.devicePixelRatio;
+  const ratio = args.dpr ? args.dpr : window.devicePixelRatio;
   canvas.width = width * ratio;
   canvas.height = height * ratio;
   ctx.scale(ratio, ratio);
