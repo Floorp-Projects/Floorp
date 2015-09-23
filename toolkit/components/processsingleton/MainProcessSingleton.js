@@ -25,7 +25,7 @@ MainProcessSingleton.prototype = {
   },
 
   // Called when a webpage calls window.external.AddSearchProvider
-  addSearchEngine: function({ target: browser, data: { pageURL, engineURL, type } }) {
+  addSearchEngine: function({ target: browser, data: { pageURL, engineURL } }) {
     pageURL = NetUtil.newURI(pageURL);
     engineURL = NetUtil.newURI(engineURL, null, pageURL);
 
@@ -61,7 +61,7 @@ MainProcessSingleton.prototype = {
       if (status != Cr.NS_OK)
         return;
 
-      Services.search.addEngine(engineURL.spec, type, iconURL ? iconURL.spec : null, true);
+      Services.search.addEngine(engineURL.spec, null, iconURL ? iconURL.spec : null, true);
     })
   },
 

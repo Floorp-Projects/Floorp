@@ -296,8 +296,7 @@ interface nsIBrowserSearchService : nsISupports
    *        The URL to the search engine's description file.
    *
    * @param dataType
-   *        An integer representing the plugin file format. Must be one
-   *        of the supported search engine data types defined above.
+   *        Obsolete, the value is ignored.
    *
    * @param iconURL
    *        A URL string to an icon file to be used as the search engine's
