@@ -36,21 +36,18 @@ function run_test() {
 add_task(function* add_test_engines() {
   let getEngineData = {
     baseURL: gDataUrl,
-    engineType: Ci.nsISearchEngine.TYPE_OPENSEARCH,
     name: "GET suggestion engine",
     method: "GET",
   };
 
   let postEngineData = {
     baseURL: gDataUrl,
-    engineType: Ci.nsISearchEngine.TYPE_OPENSEARCH,
     name: "POST suggestion engine",
     method: "POST",
   };
 
   let unresolvableEngineData = {
     baseURL: "http://example.invalid/",
-    engineType: Ci.nsISearchEngine.TYPE_OPENSEARCH,
     name: "Offline suggestion engine",
     method: "GET",
   };

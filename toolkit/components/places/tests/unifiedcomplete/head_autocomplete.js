@@ -442,8 +442,7 @@ function* addTestEngine(basename, httpServer=undefined) {
     }, "browser-search-engine-modified", false);
 
     do_print("Adding engine from URL: " + dataUrl + basename);
-    Services.search.addEngine(dataUrl + basename,
-                              Ci.nsISearchEngine.DATA_XML, null, false);
+    Services.search.addEngine(dataUrl + basename, null, null, false);
   });
 }
 

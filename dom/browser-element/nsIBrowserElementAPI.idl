@@ -26,7 +26,7 @@ interface nsIBrowserElementNextPaintListener : nsISupports
  * Interface to the BrowserElementParent implementation. All methods
  * but setFrameLoader throw when the remote process is dead.
  */
-[scriptable, uuid(56bd3e12-4a8b-422a-89fc-6dc25aa30aa2)]
+[scriptable, uuid(9946695c-1ed3-4abb-bc60-6f8947fd5641)]
 interface nsIBrowserElementAPI : nsISupports
 {
   const long FIND_CASE_SENSITIVE = 0;
@@ -100,4 +100,16 @@ interface nsIBrowserElementAPI : nsISupports
   void setNFCFocus(in boolean isFocus);
 
   nsIDOMDOMRequest executeScript(in DOMString script, in jsval options);
+
+  /**
+   * Returns a JSON string representing Microdata objects on the page.
+   * Format is described at:
+   *   https://html.spec.whatwg.org/multipage/microdata.html#json
+   *
+   * Also contains hCard and hCalendar objects after converting them
+   * to equivalent Microdata objects described at:
+   *   https://html.spec.whatwg.org/multipage/microdata.html#vcard
+   *   https://html.spec.whatwg.org/multipage/microdata.html#vevent
+   */
+  nsIDOMDOMRequest getStructuredData();
 };

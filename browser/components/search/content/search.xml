@@ -446,13 +446,11 @@
         if (target.engine) {
           this.currentEngine = target.engine;
         } else if (target.classList.contains("addengine-item")) {
-          // We only detect OpenSearch files
-          var type = Ci.nsISearchEngine.DATA_XML;
           // Select the installed engine if the installation succeeds
           var installCallback = {
             onSuccess: engine => this.currentEngine = engine
           }
-          Services.search.addEngine(target.getAttribute("uri"), type,
+          Services.search.addEngine(target.getAttribute("uri"), null,
                                     target.getAttribute("src"), false,
                                     installCallback);
         }
@@ -1432,8 +1430,7 @@
               Components.utils.reportError("Error adding search engine: " + errorCode);
             }
           }
-          Services.search.addEngine(target.getAttribute("uri"),
-                                    Ci.nsISearchEngine.DATA_XML,
+          Services.search.addEngine(target.getAttribute("uri"), null,
                                     target.getAttribute("image"), false,
                                     installCallback);
         }

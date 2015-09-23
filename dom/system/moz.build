@@ -63,3 +63,6 @@ DEFINES['DLL_SUFFIX'] = '"%s"' % CONFIG['DLL_SUFFIX']
 
 MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']

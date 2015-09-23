@@ -235,8 +235,7 @@ public:
   // The number of frames consumed/produced depends on the amount of space
   // remaining in both the input and output buffer, and the playback rate (that
   // is, the ratio between the output samplerate and the input samplerate).
-  void CopyFromInputBufferWithResampling(AudioNodeStream* aStream,
-                                         AudioBlock* aOutput,
+  void CopyFromInputBufferWithResampling(AudioBlock* aOutput,
                                          uint32_t aChannels,
                                          uint32_t* aOffsetWithinBlock,
                                          uint32_t aAvailableInOutput,
@@ -368,8 +367,7 @@ public:
    * This function knows when it needs to allocate the output buffer, and also
    * optimizes the case where it can avoid memory allocations.
    */
-  void CopyFromBuffer(AudioNodeStream* aStream,
-                      AudioBlock* aOutput,
+  void CopyFromBuffer(AudioBlock* aOutput,
                       uint32_t aChannels,
                       uint32_t* aOffsetWithinBlock,
                       StreamTime* aCurrentPosition,
@@ -380,7 +378,7 @@ public:
       std::min<StreamTime>(WEBAUDIO_BLOCK_SIZE - *aOffsetWithinBlock,
                            mStop - *aCurrentPosition);
     if (mResampler) {
-      CopyFromInputBufferWithResampling(aStream, aOutput, aChannels,
+      CopyFromInputBufferWithResampling(aOutput, aChannels,
                                         aOffsetWithinBlock, availableInOutput,
                                         aCurrentPosition, aBufferMax);
       return;
@@ -434,7 +432,7 @@ public:
     return rate ? rate : mBufferSampleRate;
   }
 
-  void UpdateSampleRateIfNeeded(uint32_t aChannels)
+  void UpdateSampleRateIfNeeded(uint32_t aChannels, StreamTime aStreamPosition)
   {
     float playbackRate;
     float detune;
@@ -442,12 +440,12 @@ public:
     if (mPlaybackRateTimeline.HasSimpleValue()) {
       playbackRate = mPlaybackRateTimeline.GetValue();
     } else {
-      playbackRate = mPlaybackRateTimeline.GetValueAtTime(mSource->GetCurrentPosition());
+      playbackRate = mPlaybackRateTimeline.GetValueAtTime(aStreamPosition);
     }
     if (mDetuneTimeline.HasSimpleValue()) {
       detune = mDetuneTimeline.GetValue();
     } else {
-      detune = mDetuneTimeline.GetValueAtTime(mSource->GetCurrentPosition());
+      detune = mDetuneTimeline.GetValueAtTime(aStreamPosition);
     }
     if (playbackRate <= 0 || mozilla::IsNaN(playbackRate)) {
       playbackRate = 1.0f;
@@ -460,6 +458,7 @@ public:
   }
 
   virtual void ProcessBlock(AudioNodeStream* aStream,
+                            GraphTime aFrom,
                             const AudioBlock& aInput,
                             AudioBlock* aOutput,
                             bool* aFinished) override
@@ -470,7 +469,7 @@ public:
       return;
     }
 
-    StreamTime streamPosition = aStream->GetCurrentPosition();
+    StreamTime streamPosition = aStream->GraphTimeToStreamTime(aFrom);
     // We've finished if we've gone past mStop, or if we're past mDuration when
     // looping is disabled.
     if (streamPosition >= mStop ||
@@ -482,7 +481,7 @@ public:
 
     uint32_t channels = mBuffer ? mBuffer->GetChannels() : 0;
 
-    UpdateSampleRateIfNeeded(channels);
+    UpdateSampleRateIfNeeded(channels, streamPosition);
 
     uint32_t written = 0;
     while (written < WEBAUDIO_BLOCK_SIZE) {
@@ -503,10 +502,10 @@ public:
         if (mBufferPosition >= mLoopEnd) {
           mBufferPosition = mLoopStart;
         }
-        CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mLoopEnd);
+        CopyFromBuffer(aOutput, channels, &written, &streamPosition, mLoopEnd);
       } else {
         if (mBufferPosition < mBufferEnd || mRemainingResamplerTail) {
-          CopyFromBuffer(aStream, aOutput, channels, &written, &streamPosition, mBufferEnd);
+          CopyFromBuffer(aOutput, channels, &written, &streamPosition, mBufferEnd);
         } else {
           FillWithZeroes(aOutput, channels, &written, &streamPosition, STREAM_TIME_MAX);
         }

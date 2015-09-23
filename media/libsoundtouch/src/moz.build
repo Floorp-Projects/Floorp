@@ -44,6 +44,9 @@ else:
 
 ALLOW_COMPILER_WARNINGS = True
 
+if CONFIG['CLANG_CXX']:
+    CXXFLAGS += ['-Wshadow']
+
 FINAL_LIBRARY = 'lgpllibs'
 
 # Use abort() instead of exception in SoundTouch.

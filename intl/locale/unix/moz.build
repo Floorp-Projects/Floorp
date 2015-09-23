@@ -40,3 +40,6 @@ if CONFIG['OS_ARCH'] == 'Linux':
     DEFINES['_XOPEN_SOURCE'] = 500
 
 DEFINES['OSTYPE'] = '"%s"' % CONFIG['OS_CONFIG']
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']

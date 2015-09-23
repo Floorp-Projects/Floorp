@@ -265,6 +265,13 @@ public:
     return !(*this == other);
   }
 
+  bool ExactlyEquals(const Matrix& o) const
+  {
+    return _11 == o._11 && _12 == o._12 &&
+           _21 == o._21 && _22 == o._22 &&
+           _31 == o._31 && _32 == o._32;
+  }
+
   /* Verifies that the matrix contains no Infs or NaNs. */
   bool IsFinite() const
   {

@@ -930,6 +930,10 @@ loop.OTSdkDriver = (function() {
         this.dispatcher.dispatch(new sharedActions.ConnectionFailure({
           reason: FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA
         }));
+      } else if (event.code === OT.ExceptionCodes.UNABLE_TO_PUBLISH) {
+        // We need to log the message so that we can understand where the exception
+        // is coming from. Potentially a temporary addition.
+        this._notifyMetricsEvent("sdk.exception." + event.code + "." + event.message);
       } else {
         this._notifyMetricsEvent("sdk.exception." + event.code);
       }

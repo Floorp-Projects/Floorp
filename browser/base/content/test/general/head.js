@@ -1033,8 +1033,7 @@ function promiseNewSearchEngine(basename) {
   return new Promise((resolve, reject) => {
     info("Waiting for engine to be added: " + basename);
     let url = getRootDirectory(gTestPath) + basename;
-    Services.search.addEngine(url, Ci.nsISearchEngine.TYPE_MOZSEARCH, "",
-                              false, {
+    Services.search.addEngine(url, null, "", false, {
       onSuccess: function (engine) {
         info("Search engine added: " + basename);
         registerCleanupFunction(() => Services.search.removeEngine(engine));

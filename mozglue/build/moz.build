@@ -105,3 +105,6 @@ if CONFIG['OS_TARGET'] == 'Darwin':
     LDFLAGS += ['-Wl,-bind_at_load']
 
 DIST_INSTALL = True
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']

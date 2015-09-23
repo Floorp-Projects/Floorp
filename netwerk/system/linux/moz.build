@@ -10,3 +10,6 @@ if CONFIG['OS_ARCH'] == 'Linux':
     ]
 
 FINAL_LIBRARY = 'xul'
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']

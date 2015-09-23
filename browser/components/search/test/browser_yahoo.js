@@ -30,7 +30,6 @@ function test() {
     alias: null,
     description: "Yahoo Search",
     searchForm: "https://search.yahoo.com/yhs/search?p=&ei=UTF-8&hspart=mozilla",
-    type: Ci.nsISearchEngine.TYPE_MOZSEARCH,
     hidden: false,
     wrappedJSObject: {
       queryCharset: "UTF-8",

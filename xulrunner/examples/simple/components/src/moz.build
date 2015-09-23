@@ -16,3 +16,6 @@ EXTRA_COMPONENTS += [
 ]
 
 XPI_NAME = 'simple'
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']
