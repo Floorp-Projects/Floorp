@@ -134,7 +134,9 @@ AsyncResource.prototype = {
   //
   // Get and set the data encapulated in the resource.
   _data: null,
-  get data() this._data,
+  get data() {
+    return this._data;
+  },
   set data(value) {
     this._data = value;
   },

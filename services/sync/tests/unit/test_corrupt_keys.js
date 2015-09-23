@@ -51,7 +51,7 @@ add_task(function test_locally_changed_keys() {
                           }]}]};
     delete Svc.Session;
     Svc.Session = {
-      getBrowserState: function () JSON.stringify(myTabs)
+      getBrowserState: () => JSON.stringify(myTabs)
     };
 
     setBasicCredentials("johndoe", "password", passphrase);

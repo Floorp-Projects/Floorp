@@ -61,20 +61,40 @@ SyncScheduler.prototype = {
   },
 
   // nextSync is in milliseconds, but prefs can't hold that much
-  get nextSync() Svc.Prefs.get("nextSync", 0) * 1000,
-  set nextSync(value) Svc.Prefs.set("nextSync", Math.floor(value / 1000)),
+  get nextSync() {
+    return Svc.Prefs.get("nextSync", 0) * 1000;
+  },
+  set nextSync(value) {
+    Svc.Prefs.set("nextSync", Math.floor(value / 1000));
+  },
 
-  get syncInterval() Svc.Prefs.get("syncInterval", this.singleDeviceInterval),
-  set syncInterval(value) Svc.Prefs.set("syncInterval", value),
+  get syncInterval() {
+    return Svc.Prefs.get("syncInterval", this.singleDeviceInterval);
+  },
+  set syncInterval(value) {
+    Svc.Prefs.set("syncInterval", value);
+  },
 
-  get syncThreshold() Svc.Prefs.get("syncThreshold", SINGLE_USER_THRESHOLD),
-  set syncThreshold(value) Svc.Prefs.set("syncThreshold", value),
+  get syncThreshold() {
+    return Svc.Prefs.get("syncThreshold", SINGLE_USER_THRESHOLD);
+  },
+  set syncThreshold(value) {
+    Svc.Prefs.set("syncThreshold", value);
+  },
 
-  get globalScore() Svc.Prefs.get("globalScore", 0),
-  set globalScore(value) Svc.Prefs.set("globalScore", value),
+  get globalScore() {
+    return Svc.Prefs.get("globalScore", 0);
+  },
+  set globalScore(value) {
+    Svc.Prefs.set("globalScore", value);
+  },
 
-  get numClients() Svc.Prefs.get("numClients", 0),
-  set numClients(value) Svc.Prefs.set("numClients", value),
+  get numClients() {
+    return Svc.Prefs.get("numClients", 0);
+  },
+  set numClients(value) {
+    Svc.Prefs.set("numClients", value);
+  },
 
   init: function init() {
     this._log.level = Log.Level[Svc.Prefs.get("log.logger.service.main")];
