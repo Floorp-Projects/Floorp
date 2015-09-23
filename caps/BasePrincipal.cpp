@@ -6,6 +6,7 @@
 
 #include "mozilla/BasePrincipal.h"
 
+#include "nsDocShell.h"
 #include "nsIAddonPolicyService.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIObjectInputStream.h"
@@ -26,6 +27,28 @@
 namespace mozilla {
 
 using dom::URLParams;
+
+void OriginAttributes::InheritFromDocShellParent(const OriginAttributes& aParent)
+{
+  mAppId = aParent.mAppId;
+  mInBrowser = aParent.mInBrowser;
+  mUserContextId = aParent.mUserContextId;
+  mSignedPkg = aParent.mSignedPkg;
+}
+
+bool OriginAttributes::CopyFromLoadContext(nsILoadContext* aLoadContext)
+{
+  OriginAttributes attrs;
+  bool result = aLoadContext->GetOriginAttributes(attrs);
+  NS_ENSURE_TRUE(result, false);
+
+  mAppId = attrs.mAppId;
+  mInBrowser = attrs.mInBrowser;
+  mAddonId = attrs.mAddonId;
+  mUserContextId = attrs.mUserContextId;
+  mSignedPkg = attrs.mSignedPkg;
+  return true;
+}
 
 void
 OriginAttributes::CreateSuffix(nsACString& aStr) const
