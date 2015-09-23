@@ -22,29 +22,23 @@ nsSidebar.prototype = {
                     .getInterface(Ci.nsIContentFrameMessageManager);
   },
 
-  // The suggestedTitle and suggestedCategory parameters are ignored, but remain
-  // for backward compatibility.
+  // Deprecated, only left here to avoid breaking old browser-detection scripts.
   addSearchEngine: function(engineURL, iconURL, suggestedTitle, suggestedCategory) {
-    let dataType = SHERLOCK_FILE_EXT_REGEXP.test(engineURL) ?
-                   Ci.nsISearchEngine.DATA_TEXT :
-                   Ci.nsISearchEngine.DATA_XML;
+    if (SHERLOCK_FILE_EXT_REGEXP.test(engineURL)) {
+      Cu.reportError("Installing Sherlock search plugins is no longer supported.");
+      return;
+    }
 
-    this.mm.sendAsyncMessage("Search:AddEngine", {
-      pageURL: this.window.document.documentURIObject.spec,
-      engineURL,
-      type: dataType,
-      iconURL
-    });
+    this.AddSearchProvider(engineURL);
   },
 
-  // This function exists largely to implement window.external.AddSearchProvider(),
-  // to match other browsers' APIs.  The capitalization, although nonstandard here,
-  // is therefore important.
+  // This function implements window.external.AddSearchProvider().
+  // The capitalization, although nonstandard here, is to match other browsers'
+  // APIs and is therefore important.
   AddSearchProvider: function(engineURL) {
     this.mm.sendAsyncMessage("Search:AddEngine", {
       pageURL: this.window.document.documentURIObject.spec,
-      engineURL,
-      type: Ci.nsISearchEngine.DATA_XML
+      engineURL
     });
   },
 

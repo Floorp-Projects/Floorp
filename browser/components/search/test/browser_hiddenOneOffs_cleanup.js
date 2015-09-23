@@ -9,7 +9,7 @@ function promiseNewEngine(basename) {
     Services.search.init({
       onInitComplete: function() {
         let url = getRootDirectory(gTestPath) + basename;
-        Services.search.addEngine(url, Ci.nsISearchEngine.TYPE_MOZSEARCH, "", false, {
+        Services.search.addEngine(url, null, "", false, {
           onSuccess: function (engine) {
             info("Search engine added: " + basename);
             resolve(engine);
