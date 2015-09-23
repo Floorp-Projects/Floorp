@@ -14,6 +14,18 @@ export:: classes
 classes: $(call mkdir_deps,classes)
 endif #} JAVAFILES
 
+default_bootclasspath_jars := \
+  $(ANDROID_SDK)/android.jar \
+  $(NULL)
+
+default_classpath_jars := \
+  $(NULL)
+
+# Turn a possibly empty list of JAR files into a Java classpath, like a.jar:b.jar.
+# Arg 1: Possibly empty list of JAR files.
+define classpath_template
+$(subst $(NULL) ,:,$(strip $(1)))
+endef
 
 ifdef ANDROID_APK_NAME #{
 $(if $(ANDROID_APK_PACKAGE),,$(error Missing ANDROID_APK_PACKAGE with ANDROID_APK_NAME))
@@ -30,10 +42,12 @@ generated_r_java := generated/$(subst .,/,$(ANDROID_APK_PACKAGE))/R.java
 classes.dex: $(call mkdir_deps,classes)
 classes.dex: $(generated_r_java)
 classes.dex: $(ANDROID_APK_NAME).ap_
-classes.dex: $(ANDROID_EXTRA_JARS)
+classes.dex: $(default_classpath_jars) $(ANDROID_CLASSPATH_JARS)
+classes.dex: $(default_bootclasspath_jars) $(ANDROID_BOOTCLASSPATH_JARS) $(ANDROID_EXTRA_JARS)
 classes.dex: $(JAVAFILES)
 	$(JAVAC) $(JAVAC_FLAGS) -d classes $(filter %.java,$^) \
-		$(if $(strip $(ANDROID_EXTRA_JARS)),-classpath $(subst $(NULL) ,:,$(strip $(ANDROID_EXTRA_JARS))))
+		$(addprefix -bootclasspath ,$(call classpath_template,$(default_bootclasspath_jars) $(ANDROID_BOOTCLASSPATH_JARS))) \
+		$(addprefix -classpath ,$(call classpath_template,$(default_classpath_jars) $(ANDROID_CLASSPATH_JARS) $(ANDROID_EXTRA_JARS)))
 	$(DX) --dex --output=$@ classes $(ANDROID_EXTRA_JARS)
 
 # R.java and $(ANDROID_APK_NAME).ap_ are both produced by aapt.  To
@@ -93,8 +107,6 @@ GARBAGE += \
   $(ANDROID_APK_NAME).apk \
   $(NULL)
 
-JAVA_CLASSPATH := $(ANDROID_SDK)/android.jar
-
 # Include Android specific java flags, instead of what's in rules.mk.
 include $(topsrcdir)/config/android-common.mk
 endif #} ANDROID_APK_NAME
@@ -116,15 +128,16 @@ ifdef JAVA_JAR_TARGETS #{
 # existing jarfile-classes directory and start fresh.
 
 define java_jar_template
-$(1): $(2) $(3)
+$(1): $(2) $(3) $(default_bootclasspath_jars) $(default_classpath_jars)
 	$$(REPORT_BUILD)
 	@$$(RM) -rf $(1:.jar=)-classes
 	@$$(NSINSTALL) -D $(1:.jar=)-classes
 	@$$(if $$(filter-out .,$$(@D)),$$(NSINSTALL) -D $$(@D))
 	$$(JAVAC) $$(JAVAC_FLAGS)\
-    $(4)\
+		$(4)\
 		-d $(1:.jar=)-classes\
-		$(if $(strip $(3)),-classpath $(subst $(NULL) ,:,$(strip $(3))))\
+		$(addprefix -bootclasspath ,$(call classpath_template,$(default_bootclasspath_jars)))\
+		$(addprefix -classpath ,$(call classpath_template,$(default_classpath_jars) $(3)))\
 		$$(filter %.java,$$^)
 	$$(JAR) cMf $$@ -C $(1:.jar=)-classes .
 

@@ -8,9 +8,9 @@
 "unpack": true
 },
 {
-"size": 329217868,
-"visibility": "internal",
-"digest": "1cf54f12c271a2eea8f03caafa458207768ba12400cf53d742e3c4654a32b18fb75d8e0dece95e27691695751a6f6514ccb724b1a74958948c5f111c5c00da4f",
+"size": 408728104, 
+"visibility": "internal", 
+"digest": "f78e203a95d748ff74ad69e42ce11829417a2752306dd469bb81bbbc9e5dbaa26eccab92b9de5f30a3a045754e2ebddf6734b3bd9676bbb0aa4131a1c24f7613", 
 "algorithm": "sha512",
 "filename": "android-sdk-linux.tar.xz",
 "unpack": true
@@ -48,11 +48,11 @@
 "filename": "gcc.tar.xz"
 },
 {
-"size": 55391032,
+"size": 31013068,
 "visibility": "public",
-"digest": "a15fbba949fbb5039bef717f55370d40050a537a2b3a1ffe5e8b655ae90b54419020783c183bba72ce2610f35e3611e259df09b5844a72bd161b512fb54898fb",
+"digest": "e30a26f98a3448064857491aee1a7a26f98494f86a89113de9be17c37c8181ed60250706fed881ec1f035002fcdaf8b9b4a7d9ae70ce40acff2f1acfbb40f8d9",
 "algorithm": "sha512",
-"unpack": true,
-"filename": "java_home-7u79-2.5.5-0ubuntu0.14.04.2-amd64.tar.xz"
+"filename": "java_home-1.7.0-openjdk-1.7.0.85.x86_64.tar.xz",
+"unpack": true
 }
 ]

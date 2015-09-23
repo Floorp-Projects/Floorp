@@ -117,7 +117,8 @@ public:
     nsAutoTArray<nsRefPtr<Response>, 256> responseList;
     responseList.SetCapacity(mRequestList.Length());
 
-    if (NS_WARN_IF(!JS_IsArrayObject(aCx, aValue))) {
+    bool isArray;
+    if (NS_WARN_IF(!JS_IsArrayObject(aCx, aValue, &isArray) || !isArray)) {
       Fail();
       return;
     }

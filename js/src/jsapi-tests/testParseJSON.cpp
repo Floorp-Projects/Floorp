@@ -102,17 +102,21 @@ BEGIN_TEST(testParseJSON_success)
     JS::RootedValue v(cx), v2(cx);
     JS::RootedObject obj(cx);
 
+    bool isArray;
+
     CHECK(Parse(cx, "[]", &v));
     CHECK(v.isObject());
     obj = &v.toObject();
-    CHECK(JS_IsArrayObject(cx, obj));
+    CHECK(JS_IsArrayObject(cx, obj, &isArray));
+    CHECK(isArray);
     CHECK(JS_GetProperty(cx, obj, "length", &v2));
     CHECK(v2.isInt32(0));
 
     CHECK(Parse(cx, "[1]", &v));
     CHECK(v.isObject());
     obj = &v.toObject();
-    CHECK(JS_IsArrayObject(cx, obj));
+    CHECK(JS_IsArrayObject(cx, obj, &isArray));
+    CHECK(isArray);
     CHECK(JS_GetProperty(cx, obj, "0", &v2));
     CHECK(v2.isInt32(1));
     CHECK(JS_GetProperty(cx, obj, "length", &v2));
@@ -123,12 +127,14 @@ BEGIN_TEST(testParseJSON_success)
     CHECK(Parse(cx, "{}", &v));
     CHECK(v.isObject());
     obj = &v.toObject();
-    CHECK(!JS_IsArrayObject(cx, obj));
+    CHECK(JS_IsArrayObject(cx, obj, &isArray));
+    CHECK(!isArray);
 
     CHECK(Parse(cx, "{ \"f\": 17 }", &v));
     CHECK(v.isObject());
     obj = &v.toObject();
-    CHECK(!JS_IsArrayObject(cx, obj));
+    CHECK(JS_IsArrayObject(cx, obj, &isArray));
+    CHECK(!isArray);
     CHECK(JS_GetProperty(cx, obj, "f", &v2));
     CHECK(v2.isInt32(17));
 

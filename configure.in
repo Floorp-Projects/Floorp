@@ -4070,14 +4070,13 @@ WINNT|Darwin|Android)
 esac
 
 dnl ========================================================
-dnl Check Android SDK version depending on mobile target.
+dnl Ensure Android SDK and build-tools versions depending on
+dnl mobile target.
 dnl ========================================================
 
 if test -z "$gonkdir" ; then
-    # Minimum Android SDK API Level we require.
     case "$MOZ_BUILD_APP" in
     mobile/android | mobile/android/b2gdroid)
-        android_min_api_level=20
         case "$target" in
         *-android*|*-linuxandroid*)
             :
@@ -4087,10 +4086,10 @@ if test -z "$gonkdir" ; then
              See https://wiki.mozilla.org/Mobile/Fennec/Android#Setup_Fennec_mozconfig for more information about the necessary options])
             ;;
         esac
+
+        MOZ_ANDROID_SDK(22, 22.0.1)
         ;;
     esac
-
-    MOZ_ANDROID_SDK($android_min_api_level)
 fi
 
 dnl ========================================================
