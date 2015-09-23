@@ -3106,6 +3106,29 @@ ParseModule(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+SetModuleResolveHook(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() != 1) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                             JSMSG_MORE_ARGS_NEEDED, "setModuleResolveHook", "0", "s");
+        return false;
+    }
+
+    if (!args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
+        const char* typeName = InformalValueTypeName(args[0]);
+        JS_ReportError(cx, "expected hook function, got %s", typeName);
+        return false;
+    }
+
+    RootedFunction hook(cx, &args[0].toObject().as<JSFunction>());
+    Rooted<GlobalObject*> global(cx, cx->global());
+    global->setModuleResolveHook(hook);
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
 Parse(JSContext* cx, unsigned argc, Value* vp)
 {
     using namespace js::frontend;
@@ -4666,6 +4689,12 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("parseModule", ParseModule, 1, 0,
 "parseModule(code)",
 "  Parses source text as a module and returns a Module object."),
+
+    JS_FN_HELP("setModuleResolveHook", SetModuleResolveHook, 1, 0,
+"setModuleResolveHook(function(module, specifier) {})",
+"  Set the HostResolveImportedModule hook to |function|.\n"
+"  This hook is used to look up a previously loaded module object.  It should\n"
+"  be implemented by the module loader."),
 
     JS_FN_HELP("parse", Parse, 1, 0,
 "parse(code)",
