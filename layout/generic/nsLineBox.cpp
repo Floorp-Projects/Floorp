@@ -250,11 +250,8 @@ nsLineBox::List(FILE* out, const char* aPrefix, uint32_t aFlags) const
   str += nsPrintfCString("{%d,%d,%d,%d} ",
           bounds.x, bounds.y, bounds.width, bounds.height);
   if (mWritingMode.IsVertical() || !mWritingMode.IsBidiLTR()) {
-    str += nsPrintfCString("{%s-%s: %d,%d,%d,%d; cs=%d,%d} ",
-                           mWritingMode.IsVertical()
-                             ? mWritingMode.IsVerticalLR() ? "vlr" : "vrl"
-                             : "htb",
-                           mWritingMode.IsBidiLTR() ? "ltr" : "rtl",
+    str += nsPrintfCString("{%s: %d,%d,%d,%d; cs=%d,%d} ",
+                           mWritingMode.DebugString(),
                            IStart(), BStart(), ISize(), BSize(),
                            mContainerSize.width, mContainerSize.height);
   }
