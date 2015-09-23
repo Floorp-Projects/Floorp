@@ -38,6 +38,7 @@ public:
 
   // Return true if mimetype is H.264.
   static bool IsH264(const TrackInfo& aConfig);
+  nsresult GetLastError() const { return mLastError; }
 
 private:
   // Will create the required MediaDataDecoder if need AVCC and we have a SPS NAL.
