@@ -2841,8 +2841,11 @@ Navigator::RequestMediaKeySystemAccess(const nsAString& aKeySystem,
   EME_LOG(logMsg.get());
 
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
-  nsRefPtr<DetailedPromise> promise = DetailedPromise::Create(go, aRv,
-    NS_LITERAL_CSTRING("navigator.requestMediaKeySystemAccess"));
+  nsRefPtr<DetailedPromise> promise =
+    DetailedPromise::Create(go, aRv,
+      NS_LITERAL_CSTRING("navigator.requestMediaKeySystemAccess"),
+      Telemetry::VIDEO_EME_REQUEST_SUCCESS_LATENCY_MS,
+      Telemetry::VIDEO_EME_REQUEST_FAILURE_LATENCY_MS);
   if (aRv.Failed()) {
     return nullptr;
   }

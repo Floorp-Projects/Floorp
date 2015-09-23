@@ -16,12 +16,24 @@ DetailedPromise::DetailedPromise(nsIGlobalObject* aGlobal,
   : Promise(aGlobal)
   , mName(aName)
   , mResponded(false)
+  , mStartTime(TimeStamp::Now())
 {
+}
+
+DetailedPromise::DetailedPromise(nsIGlobalObject* aGlobal,
+                                 const nsACString& aName,
+                                 Telemetry::ID aSuccessLatencyProbe,
+                                 Telemetry::ID aFailureLatencyProbe)
+  : DetailedPromise(aGlobal, aName)
+{
+  mSuccessLatencyProbe.Construct(aSuccessLatencyProbe);
+  mFailureLatencyProbe.Construct(aFailureLatencyProbe);
 }
 
 DetailedPromise::~DetailedPromise()
 {
   MOZ_ASSERT(mResponded == IsPending());
+  MaybeReportTelemetry(Failed);
 }
 
 void
@@ -31,7 +43,7 @@ DetailedPromise::MaybeReject(nsresult aArg, const nsACString& aReason)
                       PromiseFlatCString(aReason).get());
   EME_LOG(msg.get());
 
-  mResponded = true;
+  MaybeReportTelemetry(Failed);
 
   LogToBrowserConsole(NS_ConvertUTF8toUTF16(msg));
 
@@ -54,6 +66,36 @@ DetailedPromise::Create(nsIGlobalObject* aGlobal,
   nsRefPtr<DetailedPromise> promise = new DetailedPromise(aGlobal, aName);
   promise->CreateWrapper(nullptr, aRv);
   return aRv.Failed() ? nullptr : promise.forget();
+}
+
+/* static */ already_AddRefed<DetailedPromise>
+DetailedPromise::Create(nsIGlobalObject* aGlobal,
+                        ErrorResult& aRv,
+                        const nsACString& aName,
+                        Telemetry::ID aSuccessLatencyProbe,
+                        Telemetry::ID aFailureLatencyProbe)
+{
+  nsRefPtr<DetailedPromise> promise = new DetailedPromise(aGlobal, aName, aSuccessLatencyProbe, aFailureLatencyProbe);
+  promise->CreateWrapper(nullptr, aRv);
+  return aRv.Failed() ? nullptr : promise.forget();
+}
+
+void
+DetailedPromise::MaybeReportTelemetry(Status aStatus)
+{
+  if (mResponded) {
+    return;
+  }
+  mResponded = true;
+  if (!mSuccessLatencyProbe.WasPassed() || !mFailureLatencyProbe.WasPassed()) {
+    return;
+  }
+  uint32_t latency = (TimeStamp::Now() - mStartTime).ToMilliseconds();
+  EME_LOG("%s %s latency %ums reported via telemetry", mName.get(),
+          ((aStatus == Succeeded) ? "succcess" : "failure"), latency);
+  Telemetry::ID tid = (aStatus == Succeeded) ? mSuccessLatencyProbe.Value()
+                                             : mFailureLatencyProbe.Value();
+  Telemetry::Accumulate(tid, latency);
 }
 
 } // namespace dom
