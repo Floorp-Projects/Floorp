@@ -1886,31 +1886,15 @@ JS_StringToId(JSContext* cx, JS::HandleString s, JS::MutableHandleId idp);
 extern JS_PUBLIC_API(bool)
 JS_IdToValue(JSContext* cx, jsid id, JS::MutableHandle<JS::Value> vp);
 
-namespace JS {
-
-/**
- * Convert obj to a primitive value. On success, store the result in vp and
- * return true.
- *
- * The hint argument must be JSTYPE_STRING, JSTYPE_NUMBER, or JSTYPE_VOID (no
- * hint).
- *
- * Implements: ES6 7.1.1 ToPrimitive(input, [PreferredType]).
+/*
+ * Invoke the [[DefaultValue]] hook (see ES5 8.6.2) with the provided hint on
+ * the specified object, computing a primitive default value for the object.
+ * The hint must be JSTYPE_STRING, JSTYPE_NUMBER, or JSTYPE_VOID (no hint).  On
+ * success the resulting value is stored in *vp.
  */
 extern JS_PUBLIC_API(bool)
-ToPrimitive(JSContext* cx, JS::HandleObject obj, JSType hint, JS::MutableHandleValue vp);
-
-/**
- * If args.get(0) is one of the strings "string", "number", or "default", set
- * *result to JSTYPE_STRING, JSTYPE_NUMBER, or JSTYPE_VOID accordingly and
- * return true. Otherwise, return false with a TypeError pending.
- *
- * This can be useful in implementing a @@toPrimitive method.
- */
-extern JS_PUBLIC_API(bool)
-GetFirstArgumentAsTypeHint(JSContext* cx, CallArgs args, JSType *result);
-
-} /* namespace JS */
+JS_DefaultValue(JSContext* cx, JS::Handle<JSObject*> obj, JSType hint,
+                JS::MutableHandle<JS::Value> vp);
 
 extern JS_PUBLIC_API(bool)
 JS_PropertyStub(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
@@ -2117,7 +2101,7 @@ struct JSFunctionSpec {
     JS_FNSPEC(name, call, nullptr, nargs, (flags) | JSFUN_STUB_GSOPS, nullptr)
 #define JS_INLINABLE_FN(name,call,nargs,flags,native)                         \
     JS_FNSPEC(name, call, &js::jit::JitInfo_##native, nargs, (flags) | JSFUN_STUB_GSOPS, nullptr)
-#define JS_SYM_FN(symbol,call,nargs,flags)                                    \
+#define JS_SYM_FN(name,call,nargs,flags)                                      \
     JS_SYM_FNSPEC(symbol, call, nullptr, nargs, (flags) | JSFUN_STUB_GSOPS, nullptr)
 #define JS_FNINFO(name,call,info,nargs,flags)                                 \
     JS_FNSPEC(name, call, info, nargs, flags, nullptr)
@@ -3128,22 +3112,19 @@ extern JS_PUBLIC_API(JSFunction*)
 JS_NewFunction(JSContext* cx, JSNative call, unsigned nargs, unsigned flags,
                const char* name);
 
+/*
+ * Create the function with the name given by the id. JSID_IS_STRING(id) must
+ * be true.
+ */
+extern JS_PUBLIC_API(JSFunction*)
+JS_NewFunctionById(JSContext* cx, JSNative call, unsigned nargs, unsigned flags,
+                   JS::Handle<jsid> id);
+
 namespace JS {
 
 extern JS_PUBLIC_API(JSFunction*)
-GetSelfHostedFunction(JSContext* cx, const char* selfHostedName, HandleId id,
+GetSelfHostedFunction(JSContext* cx, const char* selfHostedName, JS::Handle<jsid> id,
                       unsigned nargs);
-
-/**
- * Create a new function based on the given JSFunctionSpec, *fs.
- * id is the result of a successful call to
- * `PropertySpecNameToPermanentId(cx, fs->name, &id)`.
- *
- * Unlike JS_DefineFunctions, this does not treat fs as an array.
- * *fs must not be JS_FS_END.
- */
-extern JS_PUBLIC_API(JSFunction*)
-NewFunctionFromSpec(JSContext* cx, const JSFunctionSpec* fs, HandleId id);
 
 } /* namespace JS */
 
@@ -4386,16 +4367,15 @@ GetSymbolDescription(HandleSymbol symbol);
 
 /* Well-known symbols. */
 enum class SymbolCode : uint32_t {
-    iterator,                       // well-known symbols
-    match,
-    species,
-    toPrimitive,
+    iterator,                       // Symbol.iterator
+    match,                          // Symbol.match
+    species,                        // Symbol.species
     InSymbolRegistry = 0xfffffffe,  // created by Symbol.for() or JS::GetSymbolFor()
     UniqueSymbol = 0xffffffff       // created by Symbol() or JS::NewSymbol()
 };
 
 /* For use in loops that iterate over the well-known symbols. */
-const size_t WellKnownSymbolLimit = 4;
+const size_t WellKnownSymbolLimit = 3;
 
 /*
  * Return the SymbolCode telling what sort of symbol `symbol` is.

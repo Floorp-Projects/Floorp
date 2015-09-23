@@ -2757,6 +2757,18 @@ js::GetPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
 }
 
 bool
+js::ToPrimitive(JSContext* cx, HandleObject obj, JSType hint, MutableHandleValue vp)
+{
+    bool ok;
+    if (JSConvertOp op = obj->getClass()->convert)
+        ok = op(cx, obj, hint, vp);
+    else
+        ok = JS::OrdinaryToPrimitive(cx, obj, hint, vp);
+    MOZ_ASSERT_IF(ok, vp.isPrimitive());
+    return ok;
+}
+
+bool
 js::WatchGuts(JSContext* cx, JS::HandleObject origObj, JS::HandleId id, JS::HandleObject callable)
 {
     RootedObject obj(cx, GetInnerObject(origObj));
@@ -2860,16 +2872,13 @@ js::HasDataProperty(JSContext* cx, NativeObject* obj, jsid id, Value* vp)
     return false;
 }
 
-
-/*** ToPrimitive *************************************************************/
-
 /*
- * Gets |obj[id]|.  If that value's not callable, returns true and stores an
- * object value in *vp.  If it's callable, calls it with no arguments and |obj|
- * as |this|, returning the result in *vp.
+ * Gets |obj[id]|.  If that value's not callable, returns true and stores a
+ * non-primitive value in *vp.  If it's callable, calls it with no arguments
+ * and |obj| as |this|, returning the result in *vp.
  *
- * This is a mini-abstraction for ES6 draft rev 36 (2015 Mar 17),
- * 7.1.1, second algorithm (OrdinaryToPrimitive), steps 5.a-c.
+ * This is a mini-abstraction for ES5 8.12.8 [[DefaultValue]], either steps 1-2
+ * or steps 3-4.
  */
 static bool
 MaybeCallMethod(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp)
@@ -2881,29 +2890,6 @@ MaybeCallMethod(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue
         return true;
     }
     return Invoke(cx, ObjectValue(*obj), vp, 0, nullptr, vp);
-}
-
-static bool
-ReportCantConvert(JSContext* cx, unsigned errorNumber, HandleObject obj, JSType hint)
-{
-    const Class* clasp = obj->getClass();
-
-    // Avoid recursive death when decompiling in ReportValueError.
-    RootedString str(cx);
-    if (hint == JSTYPE_STRING) {
-        str = JS_AtomizeAndPinString(cx, clasp->name);
-        if (!str)
-            return false;
-    } else {
-        str = nullptr;
-    }
-
-    RootedValue val(cx, ObjectValue(*obj));
-    ReportValueError2(cx, errorNumber, JSDVG_SEARCH_STACK, val, str,
-                      hint == JSTYPE_VOID
-                      ? "primitive type"
-                      : hint == JSTYPE_STRING ? "string" : "number");
-    return false;
 }
 
 bool
@@ -2937,10 +2923,10 @@ JS::OrdinaryToPrimitive(JSContext* cx, HandleObject obj, JSType hint, MutableHan
         if (vp.isPrimitive())
             return true;
     } else {
-        id = NameToId(cx->names().valueOf);
 
         /* Optimize new String(...).valueOf(). */
         if (clasp == &StringObject::class_) {
+            id = NameToId(cx->names().valueOf);
             StringObject* nobj = &obj->as<StringObject>();
             if (ClassMethodIsNative(cx, nobj, &StringObject::class_, id, str_toString)) {
                 vp.setString(nobj->unbox());
@@ -2950,6 +2936,7 @@ JS::OrdinaryToPrimitive(JSContext* cx, HandleObject obj, JSType hint, MutableHan
 
         /* Optimize new Number(...).valueOf(). */
         if (clasp == &NumberObject::class_) {
+            id = NameToId(cx->names().valueOf);
             NumberObject* nobj = &obj->as<NumberObject>();
             if (ClassMethodIsNative(cx, nobj, &NumberObject::class_, id, num_valueOf)) {
                 vp.setNumber(nobj->unbox());
@@ -2957,6 +2944,7 @@ JS::OrdinaryToPrimitive(JSContext* cx, HandleObject obj, JSType hint, MutableHan
             }
         }
 
+        id = NameToId(cx->names().valueOf);
         if (!MaybeCallMethod(cx, obj, id, vp))
             return false;
         if (vp.isPrimitive())
@@ -2969,52 +2957,23 @@ JS::OrdinaryToPrimitive(JSContext* cx, HandleObject obj, JSType hint, MutableHan
             return true;
     }
 
-    return ReportCantConvert(cx, JSMSG_CANT_CONVERT_TO, obj, hint);
-}
-
-bool
-js::ToPrimitiveSlow(JSContext* cx, JSType preferredType, MutableHandleValue vp)
-{
-    // Step numbers refer to the first algorithm listed in ES6 draft rev 36
-    // (2015 Mar 17) 7.1.1 ToPrimitive.
-    MOZ_ASSERT(preferredType == JSTYPE_VOID ||
-               preferredType == JSTYPE_STRING ||
-               preferredType == JSTYPE_NUMBER);
-    RootedObject obj(cx, &vp.toObject());
-
-    // Steps 4-5.
-    RootedId id(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().toPrimitive));
-    RootedValue method(cx);
-    if (!GetProperty(cx, obj, obj, id, &method))
-        return false;
-
-    // Step 6.
-    if (!method.isUndefined()) {
-        // Step 6 of GetMethod. Invoke() below would do this check and throw a
-        // TypeError anyway, but this produces a better error message.
-        if (!IsCallable(method))
-            return ReportCantConvert(cx, JSMSG_TOPRIMITIVE_NOT_CALLABLE, obj, preferredType);
-
-        // Steps 1-3.
-        RootedValue hint(cx, StringValue(preferredType == JSTYPE_STRING ? cx->names().string :
-                                         preferredType == JSTYPE_NUMBER ? cx->names().number :
-                                         cx->names().default_));
-
-        // Steps 6.a-b.
-        if (!Invoke(cx, vp, method, 1, hint.address(), vp))
+    /* Avoid recursive death when decompiling in ReportValueError. */
+    RootedString str(cx);
+    if (hint == JSTYPE_STRING) {
+        str = JS_AtomizeAndPinString(cx, clasp->name);
+        if (!str)
             return false;
-
-        // Steps 6.c-d.
-        if (vp.isObject())
-            return ReportCantConvert(cx, JSMSG_TOPRIMITIVE_RETURNED_OBJECT, obj, preferredType);
-        return true;
+    } else {
+        str = nullptr;
     }
 
-    return OrdinaryToPrimitive(cx, obj, preferredType, vp);
+    RootedValue val(cx, ObjectValue(*obj));
+    ReportValueError2(cx, JSMSG_CANT_CONVERT_TO, JSDVG_SEARCH_STACK, val, str,
+                      hint == JSTYPE_VOID
+                      ? "primitive type"
+                      : hint == JSTYPE_STRING ? "string" : "number");
+    return false;
 }
-
-
-/* * */
 
 bool
 js::IsDelegate(JSContext* cx, HandleObject obj, const js::Value& v, bool* result)

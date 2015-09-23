@@ -182,4 +182,11 @@ OpaqueCrossCompartmentWrapper::fun_toString(JSContext* cx, HandleObject proxy,
     return nullptr;
 }
 
+bool
+OpaqueCrossCompartmentWrapper::defaultValue(JSContext* cx, HandleObject wrapper, JSType hint,
+                                            MutableHandleValue vp) const
+{
+    return OrdinaryToPrimitive(cx, wrapper, hint, vp);
+}
+
 const OpaqueCrossCompartmentWrapper OpaqueCrossCompartmentWrapper::singleton;

@@ -444,7 +444,6 @@ struct WellKnownSymbols
     js::ImmutableSymbolPtr iterator;
     js::ImmutableSymbolPtr match;
     js::ImmutableSymbolPtr species;
-    js::ImmutableSymbolPtr toPrimitive;
 
     const ImmutableSymbolPtr& get(size_t u) const {
         MOZ_ASSERT(u < JS::WellKnownSymbolLimit);

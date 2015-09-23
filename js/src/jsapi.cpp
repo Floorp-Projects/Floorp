@@ -1803,57 +1803,13 @@ JS_IdToValue(JSContext* cx, jsid id, MutableHandleValue vp)
 }
 
 JS_PUBLIC_API(bool)
-JS::ToPrimitive(JSContext* cx, HandleObject obj, JSType hint, MutableHandleValue vp)
+JS_DefaultValue(JSContext* cx, HandleObject obj, JSType hint, MutableHandleValue vp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     MOZ_ASSERT(obj != nullptr);
     MOZ_ASSERT(hint == JSTYPE_VOID || hint == JSTYPE_STRING || hint == JSTYPE_NUMBER);
-    vp.setObject(*obj);
-    return ToPrimitiveSlow(cx, hint, vp);
-}
-
-JS_PUBLIC_API(bool)
-JS::GetFirstArgumentAsTypeHint(JSContext* cx, CallArgs args, JSType *result)
-{
-    if (!args.get(0).isString()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                             "Symbol.toPrimitive",
-                             "\"string\", \"number\", or \"default\"",
-                             InformalValueTypeName(args.get(0)));
-        return false;
-    }
-
-    RootedString str(cx, args.get(0).toString());
-    bool match;
-
-    if (!EqualStrings(cx, str, cx->names().default_, &match))
-        return false;
-    if (match) {
-        *result = JSTYPE_VOID;
-        return true;
-    }
-
-    if (!EqualStrings(cx, str, cx->names().string, &match))
-        return false;
-    if (match) {
-        *result = JSTYPE_STRING;
-        return true;
-    }
-
-    if (!EqualStrings(cx, str, cx->names().number, &match))
-        return false;
-    if (match) {
-        *result = JSTYPE_NUMBER;
-        return true;
-    }
-
-    JSAutoByteString bytes;
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                         "Symbol.toPrimitive",
-                         "\"string\", \"number\", or \"default\"",
-                         ValueToSourceForError(cx, args.get(0), bytes));
-    return false;
+    return ToPrimitive(cx, obj, hint, vp);
 }
 
 JS_PUBLIC_API(bool)
@@ -3361,6 +3317,22 @@ JS_NewFunction(JSContext* cx, JSNative native, unsigned nargs, unsigned flags,
 }
 
 JS_PUBLIC_API(JSFunction*)
+JS_NewFunctionById(JSContext* cx, JSNative native, unsigned nargs, unsigned flags,
+                   HandleId id)
+{
+    MOZ_ASSERT(JSID_IS_STRING(id));
+    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
+    MOZ_ASSERT(native);
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+
+    RootedAtom name(cx, JSID_TO_ATOM(id));
+    return (flags & JSFUN_CONSTRUCTOR)
+           ? NewNativeConstructor(cx, native, nargs, name)
+           : NewNativeFunction(cx, native, nargs, name);
+}
+
+JS_PUBLIC_API(JSFunction*)
 JS::GetSelfHostedFunction(JSContext* cx, const char* selfHostedName, HandleId id, unsigned nargs)
 {
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
@@ -3379,52 +3351,6 @@ JS::GetSelfHostedFunction(JSContext* cx, const char* selfHostedName, HandleId id
     if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), shName, name, nargs, &funVal))
         return nullptr;
     return &funVal.toObject().as<JSFunction>();
-}
-
-JS_PUBLIC_API(JSFunction*)
-JS::NewFunctionFromSpec(JSContext* cx, const JSFunctionSpec* fs, HandleId id)
-{
-    // Delay cloning self-hosted functions until they are called. This is
-    // achieved by passing DefineFunction a nullptr JSNative which produces an
-    // interpreted JSFunction where !hasScript. Interpreted call paths then
-    // call InitializeLazyFunctionScript if !hasScript.
-    if (fs->selfHostedName) {
-        MOZ_ASSERT(!fs->call.op);
-        MOZ_ASSERT(!fs->call.info);
-
-        JSAtom* shAtom = Atomize(cx, fs->selfHostedName, strlen(fs->selfHostedName));
-        if (!shAtom)
-            return nullptr;
-        RootedPropertyName shName(cx, shAtom->asPropertyName());
-        RootedAtom name(cx, IdToFunctionName(cx, id));
-        if (!name)
-            return nullptr;
-        RootedValue funVal(cx);
-        if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), shName, name, fs->nargs,
-                                                 &funVal))
-        {
-            return nullptr;
-        }
-        return &funVal.toObject().as<JSFunction>();
-    }
-
-    RootedAtom atom(cx, IdToFunctionName(cx, id));
-    if (!atom)
-        return nullptr;
-
-    JSFunction* fun;
-    if (!fs->call.op)
-        fun = NewScriptedFunction(cx, fs->nargs, JSFunction::INTERPRETED_LAZY, atom);
-    else if (fs->flags & JSFUN_CONSTRUCTOR)
-        fun = NewNativeConstructor(cx, fs->call.op, fs->nargs, atom);
-    else
-        fun = NewNativeFunction(cx, fs->call.op, fs->nargs, atom);
-    if (!fun)
-        return nullptr;
-
-    if (fs->call.info)
-        fun->setJitInfo(fs->call.info);
-    return fun;
 }
 
 static bool
@@ -3651,59 +3577,6 @@ GenericNativeMethodDispatcher(JSContext* cx, unsigned argc, Value* vp)
     return fs->call.op(cx, argc, vp);
 }
 
-static bool
-DefineFunctionFromSpec(JSContext* cx, HandleObject obj, const JSFunctionSpec* fs, unsigned flags)
-{
-    GetterOp gop;
-    SetterOp sop;
-    if (flags & JSFUN_STUB_GSOPS) {
-        // JSFUN_STUB_GSOPS is a request flag only, not stored in fun->flags or
-        // the defined property's attributes.
-        flags &= ~JSFUN_STUB_GSOPS;
-        gop = nullptr;
-        sop = nullptr;
-    } else {
-        gop = obj->getClass()->getProperty;
-        sop = obj->getClass()->setProperty;
-        MOZ_ASSERT(gop != JS_PropertyStub);
-        MOZ_ASSERT(sop != JS_StrictPropertyStub);
-    }
-
-    RootedId id(cx);
-    if (!PropertySpecNameToId(cx, fs->name, &id))
-        return false;
-
-    // Define a generic arity N+1 static method for the arity N prototype
-    // method if flags contains JSFUN_GENERIC_NATIVE.
-    if (flags & JSFUN_GENERIC_NATIVE) {
-        // We require that any consumers using JSFUN_GENERIC_NATIVE stash
-        // the prototype and constructor in the global slots before invoking
-        // JS_DefineFunctions on the proto.
-        JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(obj->getClass());
-        MOZ_ASSERT(obj == &obj->global().getPrototype(key).toObject());
-        RootedObject ctor(cx, &obj->global().getConstructor(key).toObject());
-
-        flags &= ~JSFUN_GENERIC_NATIVE;
-        JSFunction* fun = DefineFunction(cx, ctor, id,
-                                         GenericNativeMethodDispatcher,
-                                         fs->nargs + 1, flags,
-                                         gc::AllocKind::FUNCTION_EXTENDED);
-        if (!fun)
-            return false;
-
-        // As jsapi.h notes, fs must point to storage that lives as long
-        // as fun->object lives.
-        fun->setExtendedSlot(0, PrivateValue(const_cast<JSFunctionSpec*>(fs)));
-    }
-
-    JSFunction* fun = NewFunctionFromSpec(cx, fs, id);
-    if (!fun)
-        return false;
-
-    RootedValue funVal(cx, ObjectValue(*fun));
-    return DefineProperty(cx, obj, id, funVal, gop, sop, flags & ~JSFUN_FLAGS_MASK);
-}
-
 JS_PUBLIC_API(bool)
 JS_DefineFunctions(JSContext* cx, HandleObject obj, const JSFunctionSpec* fs,
                    PropertyDefinitionBehavior behavior)
@@ -3713,7 +3586,11 @@ JS_DefineFunctions(JSContext* cx, HandleObject obj, const JSFunctionSpec* fs,
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
 
+    RootedId id(cx);
     for (; fs->name; fs++) {
+        if (!PropertySpecNameToId(cx, fs->name, &id))
+            return false;
+
         unsigned flags = fs->flags;
         switch (behavior) {
           case DefineAllProperties:
@@ -3727,9 +3604,67 @@ JS_DefineFunctions(JSContext* cx, HandleObject obj, const JSFunctionSpec* fs,
             if (flags & JSPROP_DEFINE_LATE)
                 continue;
         }
+        flags &= ~JSPROP_DEFINE_LATE;
 
-        if (!DefineFunctionFromSpec(cx, obj, fs, flags & ~JSPROP_DEFINE_LATE))
-            return false;
+        /*
+         * Define a generic arity N+1 static method for the arity N prototype
+         * method if flags contains JSFUN_GENERIC_NATIVE.
+         */
+        if (flags & JSFUN_GENERIC_NATIVE) {
+            // We require that any consumers using JSFUN_GENERIC_NATIVE stash
+            // the prototype and constructor in the global slots before invoking
+            // JS_DefineFunctions on the proto.
+            JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(obj->getClass());
+            MOZ_ASSERT(obj == &obj->global().getPrototype(key).toObject());
+            RootedObject ctor(cx, &obj->global().getConstructor(key).toObject());
+
+            flags &= ~JSFUN_GENERIC_NATIVE;
+            JSFunction* fun = DefineFunction(cx, ctor, id,
+                                             GenericNativeMethodDispatcher,
+                                             fs->nargs + 1, flags,
+                                             gc::AllocKind::FUNCTION_EXTENDED);
+            if (!fun)
+                return false;
+
+            /*
+             * As jsapi.h notes, fs must point to storage that lives as long
+             * as fun->object lives.
+             */
+            fun->setExtendedSlot(0, PrivateValue(const_cast<JSFunctionSpec*>(fs)));
+        }
+
+        /*
+         * Delay cloning self-hosted functions until they are called. This is
+         * achieved by passing DefineFunction a nullptr JSNative which
+         * produces an interpreted JSFunction where !hasScript. Interpreted
+         * call paths then call InitializeLazyFunctionScript if !hasScript.
+         */
+        if (fs->selfHostedName) {
+            MOZ_ASSERT(!fs->call.op);
+            MOZ_ASSERT(!fs->call.info);
+
+            JSAtom* shAtom = Atomize(cx, fs->selfHostedName, strlen(fs->selfHostedName));
+            if (!shAtom)
+                return false;
+            RootedPropertyName shName(cx, shAtom->asPropertyName());
+            RootedAtom name(cx, IdToFunctionName(cx, id));
+            if (!name)
+                return false;
+            RootedValue funVal(cx);
+            if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), shName, name, fs->nargs,
+                                                     &funVal))
+            {
+                return false;
+            }
+            if (!DefineProperty(cx, obj, id, funVal, nullptr, nullptr, flags))
+                return false;
+        } else {
+            JSFunction* fun = DefineFunction(cx, obj, id, fs->call.op, fs->nargs, flags);
+            if (!fun)
+                return false;
+            if (fs->call.info)
+                fun->setJitInfo(fs->call.info);
+        }
     }
     return true;
 }

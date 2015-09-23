@@ -716,6 +716,7 @@ IMPL_SHARED_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     nullptr,                 /* enumerate   */                                 \
     nullptr,                 /* resolve     */                                 \
     nullptr,                 /* mayResolve  */                                 \
+    nullptr,                 /* convert     */                                 \
     nullptr,                 /* finalize    */                                 \
     nullptr,                 /* call        */                                 \
     nullptr,                 /* hasInstance */                                 \
@@ -737,6 +738,7 @@ IMPL_SHARED_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     nullptr,                 /* enumerate   */                                 \
     nullptr,                 /* resolve     */                                 \
     nullptr,                 /* mayResolve  */                                 \
+    nullptr,                 /* convert     */                                 \
     nullptr,                 /* finalize    */                                 \
     nullptr,                 /* call        */                                 \
     nullptr,                 /* hasInstance */                                 \

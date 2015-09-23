@@ -31,6 +31,7 @@ const JSClass BarkWhenTracedClass::class_ = {
     nullptr,
     nullptr,
     nullptr,
+    nullptr,
     finalize,
     nullptr,
     nullptr,

@@ -821,6 +821,7 @@ const Class JSFunction::class_ = {
     fun_enumerate,
     fun_resolve,
     fun_mayResolve,
+    nullptr,                 /* convert     */
     nullptr,                 /* finalize    */
     nullptr,                 /* call        */
     fun_hasInstance,
@@ -2222,7 +2223,8 @@ js::IdToFunctionName(JSContext* cx, HandleId id)
 
 JSFunction*
 js::DefineFunction(JSContext* cx, HandleObject obj, HandleId id, Native native,
-                   unsigned nargs, unsigned flags, AllocKind allocKind /* = AllocKind::FUNCTION */)
+                   unsigned nargs, unsigned flags, AllocKind allocKind /* = AllocKind::FUNCTION */,
+                   NewObjectKind newKind /* = GenericObject */)
 {
     GetterOp gop;
     SetterOp sop;
@@ -2251,11 +2253,11 @@ js::DefineFunction(JSContext* cx, HandleObject obj, HandleId id, Native native,
     if (!native)
         fun = NewScriptedFunction(cx, nargs,
                                   JSFunction::INTERPRETED_LAZY, atom,
-                                  allocKind, GenericObject, obj);
+                                  allocKind, newKind, obj);
     else if (flags & JSFUN_CONSTRUCTOR)
-        fun = NewNativeConstructor(cx, native, nargs, atom, allocKind);
+        fun = NewNativeConstructor(cx, native, nargs, atom, allocKind, newKind);
     else
-        fun = NewNativeFunction(cx, native, nargs, atom, allocKind);
+        fun = NewNativeFunction(cx, native, nargs, atom, allocKind, newKind);
 
     if (!fun)
         return nullptr;

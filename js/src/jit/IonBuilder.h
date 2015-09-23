@@ -649,7 +649,6 @@ class IonBuilder
     bool jsop_pow();
     bool jsop_pos();
     bool jsop_neg();
-    bool jsop_tostring();
     bool jsop_setarg(uint32_t arg);
     bool jsop_defvar(uint32_t index);
     bool jsop_deffun(uint32_t index);

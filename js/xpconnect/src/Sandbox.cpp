@@ -441,6 +441,17 @@ sandbox_moved(JSObject* obj, const JSObject* old)
 }
 
 static bool
+sandbox_convert(JSContext* cx, HandleObject obj, JSType type, MutableHandleValue vp)
+{
+    if (type == JSTYPE_OBJECT) {
+        vp.setObject(*obj);
+        return true;
+    }
+
+    return OrdinaryToPrimitive(cx, obj, type, vp);
+}
+
+static bool
 writeToProto_setProperty(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
                          JS::MutableHandleValue vp, JS::ObjectOpResult& result)
 {
@@ -558,7 +569,7 @@ static const js::Class SandboxClass = {
     nullptr, nullptr, nullptr, nullptr,
     sandbox_enumerate, sandbox_resolve,
     nullptr,        /* mayResolve */
-    sandbox_finalize,
+    sandbox_convert,  sandbox_finalize,
     nullptr, nullptr, nullptr, JS_GlobalObjectTraceHook,
     JS_NULL_CLASS_SPEC,
     {
@@ -579,7 +590,7 @@ static const js::Class SandboxWriteToProtoClass = {
     sandbox_addProperty, nullptr, nullptr, nullptr,
     sandbox_enumerate, sandbox_resolve,
     nullptr,        /* mayResolve */
-    sandbox_finalize,
+    sandbox_convert,  sandbox_finalize,
     nullptr, nullptr, nullptr, JS_GlobalObjectTraceHook,
     JS_NULL_CLASS_SPEC,
     {
