@@ -63,27 +63,26 @@ function xhrDoc(idx) {
 // inputEncoding expected for that document.
 
 var tests = [
- [ frameDoc("one"), "windows-1252", "windows-1252" ],
- [ frameDoc("two"), "UTF-8", "UTF-8" ],
- [ frameDoc("three"), "windows-1252", "windows-1252" ],
- [ frameDoc("four"), "UTF-8", "UTF-8" ],
- [ frameDoc("five"), "UTF-8", "UTF-8" ],
- [ frameDoc("six"), "UTF-8", "UTF-8" ],
- [ frameDoc("seven"), "windows-1252", "windows-1252" ],
- [ createDoc, "UTF-8", null ],
- [ xhrDoc(4), "UTF-8", "UTF-8" ],
- [ xhrDoc(5), "UTF-8", "UTF-8" ],
- [ xhrDoc(6), "windows-1252", "windows-1252" ],
+ [ frameDoc("one"), "windows-1252" ],
+ [ frameDoc("two"), "UTF-8" ],
+ [ frameDoc("three"), "windows-1252" ],
+ [ frameDoc("four"), "UTF-8" ],
+ [ frameDoc("five"), "UTF-8" ],
+ [ frameDoc("six"), "UTF-8" ],
+ [ frameDoc("seven"), "windows-1252" ],
+ [ createDoc, "UTF-8" ],
+ [ xhrDoc(4), "UTF-8" ],
+ [ xhrDoc(5), "UTF-8" ],
+ [ xhrDoc(6), "windows-1252" ],
 ];
 
 function doTest(idx) {
-  var [docGetter, expectedCharacterSet,
-       expectedInputEncoding] = tests[idx];
+  var [docGetter, expectedCharacterSet] = tests[idx];
   var doc = docGetter();
 
   // Have to be careful here to catch null vs ""
   is(doc.characterSet, expectedCharacterSet, "Test " + idx + " characterSet");
-  is(doc.inputEncoding, expectedInputEncoding,
+  is(doc.inputEncoding, expectedCharacterSet,
      "Test " + idx + " inputEncoding");
 }
 
