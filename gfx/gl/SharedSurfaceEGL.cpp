@@ -220,7 +220,7 @@ SurfaceFactory_EGLImage::Create(GLContext* prodGL, const SurfaceCaps& caps,
                                 const RefPtr<layers::ISurfaceAllocator>& allocator,
                                 const layers::TextureFlags& flags)
 {
-    EGLContext context = GLContextEGL::Cast(prodGL)->mContext;
+    EGLContext context = GLContextEGL::Cast(prodGL)->GetEGLContext();
 
     typedef SurfaceFactory_EGLImage ptrT;
     UniquePtr<ptrT> ret;
