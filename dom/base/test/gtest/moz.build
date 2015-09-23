@@ -15,3 +15,6 @@ LOCAL_INCLUDES += [
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul-gtest'
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']

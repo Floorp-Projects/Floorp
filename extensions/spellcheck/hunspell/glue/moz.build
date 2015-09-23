@@ -33,3 +33,5 @@ EXPORTS.mozilla += [
      'RemoteSpellCheckEngineParent.h',
 ]
 
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']

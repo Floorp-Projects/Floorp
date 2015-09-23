@@ -16,3 +16,5 @@ LOCAL_INCLUDES += [
     '/dom/geolocation',
 ]
 
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']

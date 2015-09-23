@@ -33,3 +33,6 @@ if CONFIG['_MSC_VER']:
         # This further prevents the CRT name from getting into the .obj file,
         # by avoiding pulling in a bunch of string code that uses the CRT.
         DEFINES['mozilla_Char16_h'] = True
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']
