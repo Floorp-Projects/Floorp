@@ -693,8 +693,20 @@ DeviceStorageFile::CreateUnique(nsAString& aFileName,
   if (storageName.IsEmpty()) {
     nsDOMDeviceStorage::GetDefaultStorageName(storageType, storageName);
   }
+  return CreateUnique(storageType, storageName, storagePath,
+                      aFileType, aFileAttributes);
+}
+
+//static
+already_AddRefed<DeviceStorageFile>
+DeviceStorageFile::CreateUnique(const nsAString& aStorageType,
+                                const nsAString& aStorageName,
+                                nsAString& aFileName,
+                                uint32_t aFileType,
+                                uint32_t aFileAttributes)
+{
   nsRefPtr<DeviceStorageFile> dsf =
-    new DeviceStorageFile(storageType, storageName, storagePath);
+    new DeviceStorageFile(aStorageType, aStorageName, aFileName);
   if (!dsf->mFile) {
     return nullptr;
   }
@@ -1499,6 +1511,7 @@ DeviceStorageRequest::DeviceStorageRequest()
   : mId(DeviceStorageRequestManager::INVALID_ID)
   , mAccess(DEVICE_STORAGE_ACCESS_UNDEFINED)
   , mSendToParent(true)
+  , mUseMainThread(false)
   , mUseStreamTransport(false)
   , mCheckFile(false)
   , mCheckBlob(false)
@@ -1578,11 +1591,30 @@ DeviceStorageRequest::Cancel()
 nsresult
 DeviceStorageRequest::Allow()
 {
+  if (mUseMainThread && !NS_IsMainThread()) {
+    nsRefPtr<DeviceStorageRequest> self = this;
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self] () -> void
+    {
+      self->Allow();
+    });
+    return NS_DispatchToMainThread(r);
+  }
+
   nsresult rv = AllowInternal();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return Reject(rv == NS_ERROR_ILLEGAL_VALUE
-                  ? POST_ERROR_EVENT_ILLEGAL_TYPE
-                  : POST_ERROR_EVENT_UNKNOWN);
+    const char *reason;
+    switch (rv) {
+      case NS_ERROR_ILLEGAL_VALUE:
+        reason = POST_ERROR_EVENT_ILLEGAL_TYPE;
+        break;
+      case NS_ERROR_DOM_SECURITY_ERR:
+        reason = POST_ERROR_EVENT_PERMISSION_DENIED;
+        break;
+      default:
+        reason = POST_ERROR_EVENT_UNKNOWN;
+        break;
+    }
+    return Reject(reason);
   }
   return rv;
 }
@@ -1607,9 +1639,10 @@ DeviceStorageRequest::GetManager() const
   return mManager;
 }
 
-void
+nsresult
 DeviceStorageRequest::Prepare()
 {
+  return NS_OK;
 }
 
 nsresult
@@ -1623,7 +1656,11 @@ nsresult
 DeviceStorageRequest::AllowInternal()
 {
   MOZ_ASSERT(mManager->IsOwningThread() || NS_IsMainThread());
-  Prepare();
+
+  nsresult rv = Prepare();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   DeviceStorageTypeChecker* typeChecker
     = DeviceStorageTypeChecker::CreateOrGet();
@@ -1869,6 +1906,8 @@ class DeviceStorageCreateRequest final
   : public DeviceStorageRequest
 {
 public:
+  using DeviceStorageRequest::Initialize;
+
   DeviceStorageCreateRequest()
   {
     mAccess = DEVICE_STORAGE_ACCESS_CREATE;
@@ -1903,7 +1942,62 @@ public:
     return Resolve(fullPath);
   }
 
+  void Initialize(DeviceStorageRequestManager* aManager,
+                  DeviceStorageFile* aFile,
+                  uint32_t aRequest) override
+  {
+    DeviceStorageRequest::Initialize(aManager, aFile, aRequest);
+    mUseMainThread = aFile->mPath.IsEmpty();
+  }
+
 protected:
+  nsresult Prepare() override
+  {
+    if (!mFile->mPath.IsEmpty()) {
+      // Checks have already been performed when request was created
+      return NS_OK;
+    }
+
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsCOMPtr<nsIMIMEService> mimeSvc = do_GetService(NS_MIMESERVICE_CONTRACTID);
+    if (!mimeSvc) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // if mimeType or extension are null, the request will be rejected
+    // in DeviceStorageRequest::AllowInternal when the type checker
+    // verifies the file path
+    nsString mimeType;
+    mBlob->GetType(mimeType);
+
+    nsCString extension;
+    mimeSvc->GetPrimaryExtension(NS_LossyConvertUTF16toASCII(mimeType),
+                                 EmptyCString(), extension);
+
+    char buffer[32];
+    NS_MakeRandomString(buffer, ArrayLength(buffer) - 1);
+
+    nsAutoString path;
+    path.AssignLiteral(buffer);
+    path.Append('.');
+    path.AppendASCII(extension.get());
+
+    nsRefPtr<DeviceStorageFile> file
+      = DeviceStorageFile::CreateUnique(mFile->mStorageType,
+                                        mFile->mStorageName, path,
+                                        nsIFile::NORMAL_FILE_TYPE, 00600);
+    if (!file) {
+      return NS_ERROR_FAILURE;
+    }
+    if (!file->IsSafePath()) {
+      return NS_ERROR_DOM_SECURITY_ERR;
+    }
+
+    mFile = file.forget();
+    return NS_OK;
+  }
+
   nsresult CreateSendParams(DeviceStorageParams& aParams) override
   {
     BlobChild* actor
@@ -1986,6 +2080,7 @@ public:
 
   DeviceStorageOpenRequest()
   {
+    mUseMainThread = true;
     mUseStreamTransport = true;
     mCheckFile = true;
     DS_LOG_INFO("");
@@ -2019,10 +2114,11 @@ public:
   }
 
 protected:
-  void Prepare() override
+  nsresult Prepare() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     mFile->CalculateMimeType();
+    return NS_OK;
   }
 
   nsresult CreateSendParams(DeviceStorageParams& aParams) override
@@ -2926,45 +3022,18 @@ nsDOMDeviceStorage::IsAvailable()
 already_AddRefed<DOMRequest>
 nsDOMDeviceStorage::Add(Blob* aBlob, ErrorResult& aRv)
 {
-  if (!aBlob) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIMIMEService> mimeSvc = do_GetService(NS_MIMESERVICE_CONTRACTID);
-  if (!mimeSvc) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  // if mimeType isn't set, we will not get a correct
-  // extension, and AddNamed() will fail.  This will post an
-  // onerror to the requestee.
-  nsString mimeType;
-  aBlob->GetType(mimeType);
-
-  nsCString extension;
-  mimeSvc->GetPrimaryExtension(NS_LossyConvertUTF16toASCII(mimeType),
-                               EmptyCString(), extension);
-  // if extension is null here, we will ignore it for now.
-  // AddNamed() will check the file path and fail.  This
-  // will post an onerror to the requestee.
-
-  // possible race here w/ unique filename
-  char buffer[32];
-  NS_MakeRandomString(buffer, ArrayLength(buffer) - 1);
-
-  nsAutoCString path;
-  path.Assign(nsDependentCString(buffer));
-  path.Append('.');
-  path.Append(extension);
-
-  return AddNamed(aBlob, NS_ConvertASCIItoUTF16(path), aRv);
+  nsString path;
+  return AddOrAppendNamed(aBlob, path, true, aRv);
 }
 
 already_AddRefed<DOMRequest>
 nsDOMDeviceStorage::AddNamed(Blob* aBlob, const nsAString& aPath,
                              ErrorResult& aRv)
 {
+  if (aPath.IsEmpty()) {
+    aRv.Throw(NS_ERROR_ILLEGAL_VALUE);
+    return nullptr;
+  }
   return AddOrAppendNamed(aBlob, aPath, true, aRv);
 }
 
@@ -2972,6 +3041,10 @@ already_AddRefed<DOMRequest>
 nsDOMDeviceStorage::AppendNamed(Blob* aBlob, const nsAString& aPath,
                                 ErrorResult& aRv)
 {
+  if (aPath.IsEmpty()) {
+    aRv.Throw(NS_ERROR_ILLEGAL_VALUE);
+    return nullptr;
+  }
   return AddOrAppendNamed(aBlob, aPath, false, aRv);
 }
 
@@ -3017,16 +3090,10 @@ nsDOMDeviceStorage::AddOrAppendNamed(Blob* aBlob, const nsAString& aPath,
                                      bool aCreate, ErrorResult& aRv)
 {
   MOZ_ASSERT(IsOwningThread());
+  MOZ_ASSERT(aCreate || !aPath.IsEmpty());
 
   // if the blob is null here, bail
   if (!aBlob) {
-    return nullptr;
-  }
-
-  DeviceStorageTypeChecker* typeChecker
-    = DeviceStorageTypeChecker::CreateOrGet();
-  if (!typeChecker) {
-    aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
@@ -3048,25 +3115,25 @@ nsDOMDeviceStorage::AddOrAppendNamed(Blob* aBlob, const nsAString& aPath,
     return nullptr;
   }
 
-  nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(mStorageType,
-                                                          mStorageName,
-                                                          aPath);
-  if (!dsf->IsSafePath()) {
-    aRv = mManager->Reject(id, POST_ERROR_EVENT_PERMISSION_DENIED);
-  } else if (!typeChecker->Check(mStorageType, dsf->mFile) ||
-      !typeChecker->Check(mStorageType, aBlob->Impl())) {
-    aRv = mManager->Reject(id, POST_ERROR_EVENT_ILLEGAL_TYPE);
+  nsRefPtr<DeviceStorageFile> dsf;
+  if (aPath.IsEmpty()) {
+    dsf = new DeviceStorageFile(mStorageType, mStorageName);
   } else {
-    nsRefPtr<DeviceStorageRequest> request;
-    if (aCreate) {
-      request = new DeviceStorageCreateRequest();
-    } else {
-      request = new DeviceStorageAppendRequest();
+    dsf = new DeviceStorageFile(mStorageType, mStorageName, aPath);
+    if (!dsf->IsSafePath()) {
+      aRv = mManager->Reject(id, POST_ERROR_EVENT_PERMISSION_DENIED);
+      return domRequest.forget();
     }
-    request->Initialize(mManager, dsf, id, aBlob->Impl());
-    aRv = CheckPermission(request);
   }
 
+  nsRefPtr<DeviceStorageRequest> request;
+  if (aCreate) {
+    request = new DeviceStorageCreateRequest();
+  } else {
+    request = new DeviceStorageAppendRequest();
+  }
+  request->Initialize(mManager, dsf, id, aBlob->Impl());
+  aRv = CheckPermission(request);
   return domRequest.forget();
 }
 

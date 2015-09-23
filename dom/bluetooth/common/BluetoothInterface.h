@@ -569,48 +569,51 @@ public:
   ServiceAddedNotification(BluetoothGattStatus aStatus,
                            int aServerIf,
                            const BluetoothGattServiceId& aServiceId,
-                           int aServiceHandle);
+                           const BluetoothAttributeHandle& aServiceHandle);
 
   virtual void
-  IncludedServiceAddedNotification(BluetoothGattStatus aStatus,
-                                   int aServerIf,
-                                   int aServiceHandle,
-                                   int aIncludedServiceHandle);
+  IncludedServiceAddedNotification(
+    BluetoothGattStatus aStatus,
+    int aServerIf,
+    const BluetoothAttributeHandle& aServiceHandle,
+    const BluetoothAttributeHandle& aIncludedServiceHandle);
 
   virtual void
-  CharacteristicAddedNotification(BluetoothGattStatus aStatus,
-                                  int aServerIf,
-                                  const BluetoothUuid& aCharId,
-                                  int aServiceHandle,
-                                  int aCharacteristicHandle);
+  CharacteristicAddedNotification(
+    BluetoothGattStatus aStatus,
+    int aServerIf,
+    const BluetoothUuid& aCharId,
+    const BluetoothAttributeHandle& aServiceHandle,
+    const BluetoothAttributeHandle& aCharacteristicHandle);
 
   virtual void
-  DescriptorAddedNotification(BluetoothGattStatus aStatus,
-                              int aServerIf,
-                              const BluetoothUuid& aCharId,
-                              int aServiceHandle,
-                              int aDescriptorHandle);
+  DescriptorAddedNotification(
+    BluetoothGattStatus aStatus,
+    int aServerIf,
+    const BluetoothUuid& aCharId,
+    const BluetoothAttributeHandle& aServiceHandle,
+    const BluetoothAttributeHandle& aDescriptorHandle);
 
   virtual void
   ServiceStartedNotification(BluetoothGattStatus aStatus,
                              int aServerIf,
-                             int aServiceHandle);
+                             const BluetoothAttributeHandle& aServiceHandle);
 
   virtual void
   ServiceStoppedNotification(BluetoothGattStatus aStatus,
                              int aServerIf,
-                             int aServiceHandle);
+                             const BluetoothAttributeHandle& aServiceHandle);
 
   virtual void
   ServiceDeletedNotification(BluetoothGattStatus aStatus,
                              int aServerIf,
-                             int aServiceHandle);
+                             const BluetoothAttributeHandle& aServiceHandle);
 
   virtual void
   RequestReadNotification(int aConnId,
                           int aTransId,
                           const nsAString& aBdAddr,
-                          int aAttributeHandle,
+                          const BluetoothAttributeHandle& aAttributeHandle,
                           int aOffset,
                           bool aIsLong);
 
@@ -618,7 +621,7 @@ public:
   RequestWriteNotification(int aConnId,
                            int aTransId,
                            const nsAString& aBdAddr,
-                           int aAttributeHandle,
+                           const BluetoothAttributeHandle& aAttributeHandle,
                            int aOffset,
                            int aLength,
                            const uint8_t* aValue,
@@ -871,49 +874,50 @@ public:
   /* Add a services / a characteristic / a descriptor */
   virtual void AddService(int aServerIf,
                           const BluetoothGattServiceId& aServiceId,
-                          int aNumHandles,
+                          uint16_t aNumHandles,
                           BluetoothGattResultHandler* aRes) = 0;
-  virtual void AddIncludedService(int aServerIf,
-                                  int aServiceHandle,
-                                  int aIncludedServiceHandle,
-                                  BluetoothGattResultHandler* aRes) = 0;
+  virtual void AddIncludedService(
+    int aServerIf,
+    const BluetoothAttributeHandle& aServiceHandle,
+    const BluetoothAttributeHandle& aIncludedServiceHandle,
+    BluetoothGattResultHandler* aRes) = 0;
   virtual void AddCharacteristic(int aServerIf,
-                                 int aServiceHandle,
+                                 const BluetoothAttributeHandle& aServiceHandle,
                                  const BluetoothUuid& aUuid,
                                  BluetoothGattCharProp aProperties,
                                  BluetoothGattAttrPerm aPermissions,
                                  BluetoothGattResultHandler* aRes) = 0;
   virtual void AddDescriptor(int aServerIf,
-                             int aServiceHandle,
+                             const BluetoothAttributeHandle& aServiceHandle,
                              const BluetoothUuid& aUuid,
                              BluetoothGattAttrPerm aPermissions,
                              BluetoothGattResultHandler* aRes) = 0;
 
   /* Start / Stop / Delete a service */
   virtual void StartService(int aServerIf,
-                            int aServiceHandle,
+                            const BluetoothAttributeHandle& aServiceHandle,
                             BluetoothTransport aTransport,
                             BluetoothGattResultHandler* aRes) = 0;
   virtual void StopService(int aServerIf,
-                           int aServiceHandle,
+                           const BluetoothAttributeHandle& aServiceHandle,
                            BluetoothGattResultHandler* aRes) = 0;
   virtual void DeleteService(int aServerIf,
-                             int aServiceHandle,
+                             const BluetoothAttributeHandle& aServiceHandle,
                              BluetoothGattResultHandler* aRes) = 0;
 
   /* Send an indication or a notification */
-  virtual void SendIndication(int aServerIf,
-                              int aAttributeHandle,
-                              int aConnId,
-                              const nsTArray<uint8_t>& aValue,
-                              bool aConfirm, /* true: indication */
-                                             /* false: notification */
-                              BluetoothGattResultHandler* aRes) = 0;
+  virtual void SendIndication(
+    int aServerIf,
+    const BluetoothAttributeHandle& aCharacteristicHandle,
+    int aConnId,
+    const nsTArray<uint8_t>& aValue,
+    bool aConfirm, /* true: indication; false: notification */
+    BluetoothGattResultHandler* aRes) = 0;
 
   /* Send a response for an incoming indication */
   virtual void SendResponse(int aConnId,
                             int aTransId,
-                            BluetoothGattStatus aStatus,
+                            uint16_t aStatus,
                             const BluetoothGattResponse& aResponse,
                             BluetoothGattResultHandler* aRes) = 0;
 

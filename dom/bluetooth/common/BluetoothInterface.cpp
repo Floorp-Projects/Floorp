@@ -589,53 +589,60 @@ BluetoothGattNotificationHandler::ConnectionNotification(
 void
 BluetoothGattNotificationHandler::ServiceAddedNotification(
   BluetoothGattStatus aStatus, int aServerIf,
-  const BluetoothGattServiceId& aServiceId, int aServiceHandle)
+  const BluetoothGattServiceId& aServiceId,
+  const BluetoothAttributeHandle& aServiceHandle)
 { }
 
 void
 BluetoothGattNotificationHandler::IncludedServiceAddedNotification(
-  BluetoothGattStatus aStatus, int aServerIf, int aServiceHandle,
-  int aIncludedServiceHandle)
+  BluetoothGattStatus aStatus, int aServerIf,
+  const BluetoothAttributeHandle& aServiceHandle,
+  const BluetoothAttributeHandle& aIncludedServiceHandle)
 { }
 
 void
 BluetoothGattNotificationHandler::CharacteristicAddedNotification(
   BluetoothGattStatus aStatus, int aServerIf, const BluetoothUuid& aCharId,
-  int aServiceHandle, int aCharacteristicHandle)
+  const BluetoothAttributeHandle& aServiceHandle,
+  const BluetoothAttributeHandle& aCharacteristicHandle)
 { }
 
 void
 BluetoothGattNotificationHandler::DescriptorAddedNotification(
   BluetoothGattStatus aStatus, int aServerIf, const BluetoothUuid& aCharId,
-  int aServiceHandle, int aDescriptorHandle)
+  const BluetoothAttributeHandle& aServiceHandle,
+  const BluetoothAttributeHandle& aDescriptorHandle)
 { }
 
 void
 BluetoothGattNotificationHandler::ServiceStartedNotification(
-  BluetoothGattStatus aStatus, int aServerIf, int aServiceHandle)
+  BluetoothGattStatus aStatus, int aServerIf,
+  const BluetoothAttributeHandle& aServiceHandle)
 { }
 
 void
 BluetoothGattNotificationHandler::ServiceStoppedNotification(
-  BluetoothGattStatus aStatus, int aServerIf, int aServiceHandle)
+  BluetoothGattStatus aStatus, int aServerIf,
+  const BluetoothAttributeHandle& aServiceHandle)
 { }
 
 void
 BluetoothGattNotificationHandler::ServiceDeletedNotification(
-  BluetoothGattStatus aStatus, int aServerIf, int aServiceHandle)
+  BluetoothGattStatus aStatus, int aServerIf,
+  const BluetoothAttributeHandle& aServiceHandle)
 { }
 
 void
 BluetoothGattNotificationHandler::RequestReadNotification(
-  int aConnId, int aTransId, const nsAString& aBdAddr, int aAttributeHandle,
-  int aOffset, bool aIsLong)
+  int aConnId, int aTransId, const nsAString& aBdAddr,
+  const BluetoothAttributeHandle& aAttributeHandle, int aOffset, bool aIsLong)
 { }
 
 void
 BluetoothGattNotificationHandler::RequestWriteNotification(
-  int aConnId, int aTransId, const nsAString& aBdAddr, int aAttributeHandle,
-  int aOffset, int aLength, const uint8_t* aValue, bool aNeedResponse,
-  bool aIsPrepareWrite)
+  int aConnId, int aTransId, const nsAString& aBdAddr,
+  const BluetoothAttributeHandle& aAttributeHandle, int aOffset, int aLength,
+  const uint8_t* aValue, bool aNeedResponse, bool aIsPrepareWrite)
 { }
 
 void
