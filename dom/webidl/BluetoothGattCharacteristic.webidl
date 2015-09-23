@@ -48,6 +48,13 @@ interface BluetoothGattCharacteristic
   [Cached, Constant]
   readonly attribute GattCharacteristicProperties           properties;
 
+  /**
+   * Read or write the value of this characteristic.
+   *
+   * If this charactersitic is in the client role, the value will be
+   * read from or written to the remote GATT server. Otherwise, the local value
+   * will be read/written.
+   */
   [NewObject]
   Promise<ArrayBuffer>  readValue();
   [NewObject]

@@ -350,6 +350,11 @@ BluetoothGattCharacteristic::ReadValue(ErrorResult& aRv)
   nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
+  if (mAttRole == ATT_SERVER_ROLE) {
+    promise->MaybeResolve(mValue);
+    return promise.forget();
+  }
+
   BT_ENSURE_TRUE_REJECT(mProperties & GATT_CHAR_PROP_BIT_READ,
                         promise,
                         NS_ERROR_NOT_AVAILABLE);
@@ -377,14 +382,22 @@ BluetoothGattCharacteristic::WriteValue(const ArrayBuffer& aValue,
   nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
+  aValue.ComputeLengthAndData();
+
+  if (mAttRole == ATT_SERVER_ROLE) {
+    mValue.Clear();
+    mValue.AppendElements(aValue.Data(), aValue.Length());
+
+    promise->MaybeResolve(JS::UndefinedHandleValue);
+    return promise.forget();
+  }
+
   BT_ENSURE_TRUE_REJECT(mProperties &
                           (GATT_CHAR_PROP_BIT_WRITE_NO_RESPONSE |
                            GATT_CHAR_PROP_BIT_WRITE |
                            GATT_CHAR_PROP_BIT_SIGNED_WRITE),
                         promise,
                         NS_ERROR_NOT_AVAILABLE);
-
-  aValue.ComputeLengthAndData();
 
   nsTArray<uint8_t> value;
   value.AppendElements(aValue.Data(), aValue.Length());
