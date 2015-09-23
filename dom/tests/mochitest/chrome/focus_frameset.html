@@ -4,7 +4,7 @@
         src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 <script>
 if (opener)
-  SimpleTest.waitForFocus(function () opener.framesetWindowLoaded(window));
+  SimpleTest.waitForFocus(() => opener.framesetWindowLoaded(window));
 // Don't try to call finish() in this frame, since it will get upset that we
 // ran no tests.
 SimpleTest.waitForExplicitFinish();
