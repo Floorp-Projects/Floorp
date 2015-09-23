@@ -51,11 +51,11 @@ NS_IMPL_ISUPPORTS(OfflineCacheUpdateParent,
 // OfflineCacheUpdateParent <public>
 //-----------------------------------------------------------------------------
 
+// TODO: Bug 1191740 - Add OriginAttributes in TabContext
 OfflineCacheUpdateParent::OfflineCacheUpdateParent(uint32_t aAppId,
                                                    bool aIsInBrowser)
     : mIPCClosed(false)
-    , mIsInBrowserElement(aIsInBrowser)
-    , mAppId(aAppId)
+    , mOriginAttributes(aAppId, aIsInBrowser)
 {
     // Make sure the service has been initialized
     nsOfflineCacheUpdateService::EnsureService();
@@ -93,10 +93,8 @@ OfflineCacheUpdateParent::Schedule(const URIParams& aManifestURI,
 
     bool offlinePermissionAllowed = false;
 
-    // TODO: Bug 1165466 - use OriginAttributes
-    OriginAttributes attrs(mAppId, mIsInBrowserElement);
     nsCOMPtr<nsIPrincipal> principal =
-      BasePrincipal::CreateCodebasePrincipal(manifestURI, attrs);
+      BasePrincipal::CreateCodebasePrincipal(manifestURI, mOriginAttributes);
 
     nsresult rv = service->OfflineAppAllowed(
         principal, nullptr, &offlinePermissionAllowed);
@@ -112,7 +110,11 @@ OfflineCacheUpdateParent::Schedule(const URIParams& aManifestURI,
     if (!NS_SecurityCompareURIs(manifestURI, documentURI, false))
         return NS_ERROR_DOM_SECURITY_ERR;
 
-    service->FindUpdate(manifestURI, mAppId, mIsInBrowserElement, nullptr,
+    // TODO: Bug 1197093 - add originAttributes to nsIOfflineCacheUpdate
+    service->FindUpdate(manifestURI,
+                        mOriginAttributes.mAppId,
+                        mOriginAttributes.mInBrowser,
+                        nullptr,
                         getter_AddRefs(update));
     if (!update) {
         update = new nsOfflineCacheUpdate();
@@ -120,7 +122,7 @@ OfflineCacheUpdateParent::Schedule(const URIParams& aManifestURI,
         // Leave aDocument argument null. Only glues and children keep 
         // document instances.
         rv = update->Init(manifestURI, documentURI, nullptr, nullptr,
-                          mAppId, mIsInBrowserElement);
+                          mOriginAttributes.mAppId, mOriginAttributes.mInBrowser);
         NS_ENSURE_SUCCESS(rv, rv);
 
         rv = update->Schedule();
@@ -254,14 +256,25 @@ OfflineCacheUpdateParent::SetRemoteTabs(bool aUseRemoteTabs)
 NS_IMETHODIMP
 OfflineCacheUpdateParent::GetIsInBrowserElement(bool *aIsInBrowserElement)
 {
-    *aIsInBrowserElement = mIsInBrowserElement;
+    *aIsInBrowserElement = mOriginAttributes.mInBrowser;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 OfflineCacheUpdateParent::GetAppId(uint32_t *aAppId)
 {
-    *aAppId = mAppId;
+    *aAppId = mOriginAttributes.mAppId;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+OfflineCacheUpdateParent::GetOriginAttributes(JS::MutableHandleValue aAttrs)
+{
+    JSContext* cx = nsContentUtils::GetCurrentJSContext();
+    MOZ_ASSERT(cx);
+
+    bool ok = ToJSValue(cx, mOriginAttributes, aAttrs);
+    NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
     return NS_OK;
 }
 

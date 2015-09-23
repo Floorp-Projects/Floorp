@@ -14,6 +14,7 @@
 #include "mozilla/dom/ChromeUtilsBinding.h"
 
 class nsIContentSecurityPolicy;
+class nsILoadContext;
 class nsIObjectOutputStream;
 class nsIObjectInputStream;
 
@@ -43,6 +44,28 @@ public:
   {
     return !(*this == aOther);
   }
+
+  // The docshell often influences the origin attributes of content loaded
+  // inside of it, and in some cases also influences the origin attributes of
+  // content loaded in child docshells. We say that a given attribute "lives on
+  // the docshell" to indicate that this attribute is specified by the docshell
+  // (if any) associated with a given content document.
+  //
+  // In practice, this usually means that we need to store a copy of those
+  // attributes on each docshell, or provide methods on the docshell to compute
+  // them on-demand.
+  // We could track each of these attributes individually, but since the
+  // majority of the existing origin attributes currently live on the docshell,
+  // it's cleaner to simply store an entire OriginAttributes struct on each
+  // docshell, and selectively copy them to child docshells and content
+  // principals in a manner that implements our desired semantics.
+  //
+  // This method is used to propagate attributes from parent to child
+  // docshells.
+  void InheritFromDocShellParent(const OriginAttributes& aParent);
+
+  // Copy from the origin attributes of the nsILoadContext.
+  bool CopyFromLoadContext(nsILoadContext* aLoadContext);
 
   // Serializes/Deserializes non-default values into the suffix format, i.e.
   // |!key1=value1&key2=value2|. If there are no non-default attributes, this

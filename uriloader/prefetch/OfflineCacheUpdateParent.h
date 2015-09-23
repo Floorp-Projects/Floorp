@@ -7,6 +7,7 @@
 #define nsOfflineCacheUpdateParent_h
 
 #include "mozilla/docshell/POfflineCacheUpdateParent.h"
+#include "mozilla/BasePrincipal.h"
 #include "nsIOfflineCacheUpdate.h"
 
 #include "nsString.h"
@@ -45,14 +46,12 @@ public:
     OfflineCacheUpdateParent(uint32_t aAppId, bool aIsInBrowser);
 
     virtual void ActorDestroy(ActorDestroyReason aWhy) override;
-
 private:
     ~OfflineCacheUpdateParent();
 
     bool mIPCClosed;
 
-    bool     mIsInBrowserElement;
-    uint32_t mAppId;
+    mozilla::OriginAttributes mOriginAttributes;
 };
 
 } // namespace docshell
