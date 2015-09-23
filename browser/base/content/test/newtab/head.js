@@ -270,7 +270,7 @@ function fillHistory(aLinks, aCallback = TestRunner.next) {
     };
 
     PlacesUtils.asyncHistory.updatePlaces(place, {
-      handleError: function () ok(false, "couldn't add visit to history"),
+      handleError: () => ok(false, "couldn't add visit to history"),
       handleResult: function () {},
       handleCompletion: function () {
         if (--numLinks == 0 && aCallback)
