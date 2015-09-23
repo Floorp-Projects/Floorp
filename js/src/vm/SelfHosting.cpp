@@ -21,6 +21,7 @@
 
 #include "builtin/Intl.h"
 #include "builtin/MapObject.h"
+#include "builtin/ModuleObject.h"
 #include "builtin/Object.h"
 #include "builtin/Reflect.h"
 #include "builtin/SelfHostingDefines.h"
@@ -1244,6 +1245,33 @@ intrinsic_ConstructorForTypedArray(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+intrinsic_HostResolveImportedModule(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 2);
+    MOZ_ASSERT(args[0].toObject().is<ModuleObject>());
+    MOZ_ASSERT(args[1].isString());
+
+    RootedFunction moduleResolveHook(cx, cx->global()->moduleResolveHook());
+    if (!moduleResolveHook) {
+        JS_ReportError(cx, "Module resolve hook not set");
+        return false;
+    }
+
+    RootedValue result(cx);
+    if (!JS_CallFunction(cx, nullptr, moduleResolveHook, args, &result))
+        return false;
+
+    if (!result.isObject() || !result.toObject().is<ModuleObject>()) {
+        JS_ReportError(cx, "Module resolve hook did not return Module object");
+        return false;
+    }
+
+    args.rval().set(result);
+    return true;
+}
+
 // The self-hosting global isn't initialized with the normal set of builtins.
 // Instead, individual C++-implemented functions that're required by
 // self-hosted code are defined as global functions. Accessing these
@@ -1485,6 +1513,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("regexp_test_no_statics", regexp_test_no_statics, 2,0),
     JS_FN("regexp_construct_no_statics", regexp_construct_no_statics, 2,0),
 
+    JS_FN("HostResolveImportedModule", intrinsic_HostResolveImportedModule, 2, 0),
     JS_FS_END
 };
 
