@@ -9383,6 +9383,24 @@
     "releaseChannelCollection": "opt-out",
     "description": "Reason for reporting the Adobe CDM to be unsupported. (1 = NOT_WINDOWS; 2 = WINDOWS_VERSION)"
   },
+  "VIDEO_EME_REQUEST_SUCCESS_LATENCY_MS": {
+    "alert_emails": ["cpearce@mozilla.com"],
+    "expires_in_version": "50",
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 60,
+    "releaseChannelCollection": "opt-out",
+    "description": "Time spent waiting for a navigator.requestMediaKeySystemAccess call to succeed."
+  },
+  "VIDEO_EME_REQUEST_FAILURE_LATENCY_MS": {
+    "alert_emails": ["cpearce@mozilla.com"],
+    "expires_in_version": "50",
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 60,
+    "releaseChannelCollection": "opt-out",
+    "description": "Time spent waiting for a navigator.requestMediaKeySystemAccess call to fail."
+  },
   "FXA_CONFIGURED": {
     "alert_emails": ["fx-team@mozilla.com"],
     "expires_in_version": "45",
