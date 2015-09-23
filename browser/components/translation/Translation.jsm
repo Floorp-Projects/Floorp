@@ -129,7 +129,9 @@ function TranslationUI(aBrowser) {
 }
 
 TranslationUI.prototype = {
-  get browser() this._browser,
+  get browser() {
+    return this._browser;
+  },
   set browser(aBrowser) {
     if (this._browser)
       this._browser.messageManager.removeMessageListener("Translation:Finished", this);
@@ -201,7 +203,9 @@ TranslationUI.prototype = {
   },
 
   _state: 0,
-  get state() this._state,
+  get state() {
+    return this._state;
+  },
   set state(val) {
     let notif = this.notificationBox.getNotificationWithValue("translation");
     if (notif)
@@ -223,7 +227,9 @@ TranslationUI.prototype = {
     this.browser.messageManager.sendAsyncMessage("Translation:ShowTranslation");
   },
 
-  get notificationBox() this.browser.ownerGlobal.gBrowser.getNotificationBox(this.browser),
+  get notificationBox() {
+    return this.browser.ownerGlobal.gBrowser.getNotificationBox(this.browser);
+  },
 
   showTranslationInfoBar: function() {
     let notificationBox = this.notificationBox;
