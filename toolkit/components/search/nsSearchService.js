@@ -99,10 +99,6 @@ const SEARCH_SERVICE_CACHE_WRITTEN  = "write-cache-to-disk-complete";
 
 const SEARCH_TYPE_MOZSEARCH      = Ci.nsISearchEngine.TYPE_MOZSEARCH;
 const SEARCH_TYPE_OPENSEARCH     = Ci.nsISearchEngine.TYPE_OPENSEARCH;
-const SEARCH_TYPE_SHERLOCK       = Ci.nsISearchEngine.TYPE_SHERLOCK;
-
-const SEARCH_DATA_XML            = Ci.nsISearchEngine.DATA_XML;
-const SEARCH_DATA_TEXT           = Ci.nsISearchEngine.DATA_TEXT;
 
 // Delay for lazy serialization (ms)
 const LAZY_SERIALIZE_DELAY = 100;
@@ -1486,15 +1482,11 @@ EngineURL.prototype = {
  * @param aLocation
  *        A nsILocalFile or nsIURI object representing the location of the
  *        search engine data file.
- * @param aSourceDataType
- *        The data type of the file used to describe the engine. Must be either
- *        DATA_XML or DATA_TEXT.
  * @param aIsReadOnly
  *        Boolean indicating whether the engine should be treated as read-only.
  *        Read only engines cannot be serialized to file.
  */
-function Engine(aLocation, aSourceDataType, aIsReadOnly) {
-  this._dataType = aSourceDataType;
+function Engine(aLocation, aIsReadOnly) {
   this._readOnly = aIsReadOnly;
   this._urls = [];
 
@@ -1536,8 +1528,6 @@ Engine.prototype = {
   // The data describing the engine. Is either an array of bytes, for Sherlock
   // files, or an XML document element, for XML plugins.
   _data: null,
-  // The engine's data type. See data types (DATA_) defined above.
-  _dataType: null,
   // Whether or not the engine is readonly.
   _readOnly: true,
   // The engine's description
@@ -1618,10 +1608,8 @@ Engine.prototype = {
   _extensionID: null,
 
   /**
-   * Retrieves the data from the engine's file. If the engine's dataType is
-   * XML, the document element is placed in the engine's data field. For text
-   * engines, the data is just read directly from file and placed as an array
-   * of lines in the engine's data field.
+   * Retrieves the data from the engine's file.
+   * The document element is placed in the engine's data field.
    */
   _initFromFile: function SRCH_ENG_initFromFile() {
     if (!this._file || !this._file.exists())
@@ -1632,19 +1620,13 @@ Engine.prototype = {
 
     fileInStream.init(this._file, MODE_RDONLY, FileUtils.PERMS_FILE, false);
 
-    if (this._dataType == SEARCH_DATA_XML) {
-      var domParser = Cc["@mozilla.org/xmlextras/domparser;1"].
-                      createInstance(Ci.nsIDOMParser);
-      var doc = domParser.parseFromStream(fileInStream, "UTF-8",
-                                          this._file.fileSize,
-                                          "text/xml");
+    var domParser = Cc["@mozilla.org/xmlextras/domparser;1"].
+                    createInstance(Ci.nsIDOMParser);
+    var doc = domParser.parseFromStream(fileInStream, "UTF-8",
+                                        this._file.fileSize,
+                                        "text/xml");
 
-      this._data = doc.documentElement;
-    } else {
-      ERROR("Unsuppored engine _dataType in _initFromFile: \"" +
-            this._dataType + "\"",
-            Cr.NS_ERROR_UNEXPECTED);
-    }
+    this._data = doc.documentElement;
     fileInStream.close();
 
     // Now that the data is loaded, initialize the engine object
@@ -1652,8 +1634,8 @@ Engine.prototype = {
   },
 
   /**
-   * Retrieves the data from the engine's file asynchronously. If the engine's
-   * dataType is XML, the document element is placed in the engine's data field.
+   * Retrieves the data from the engine's file asynchronously.
+   * The document element is placed in the engine's data field.
    *
    * @returns {Promise} A promise, resolved successfully if initializing from
    * data succeeds, rejected if it fails.
@@ -1663,14 +1645,8 @@ Engine.prototype = {
       if (!this._file || !(yield OS.File.exists(this._file.path)))
         FAIL("File must exist before calling initFromFile!", Cr.NS_ERROR_UNEXPECTED);
 
-      if (this._dataType == SEARCH_DATA_XML) {
-        let fileURI = NetUtil.ioService.newFileURI(this._file);
-        yield this._retrieveSearchXMLData(fileURI.spec);
-      } else {
-        ERROR("Unsuppored engine _dataType in _initFromFile: \"" +
-              this._dataType + "\"",
-              Cr.NS_ERROR_UNEXPECTED);
-      }
+      let fileURI = NetUtil.ioService.newFileURI(this._file);
+      yield this._retrieveSearchXMLData(fileURI.spec);
 
       // Now that the data is loaded, initialize the engine object
       this._initFromData();
@@ -1880,21 +1856,10 @@ Engine.prototype = {
       aEngine._file = engineToUpdate._file;
     }
 
-    switch (aEngine._dataType) {
-      case SEARCH_DATA_XML:
-        var parser = Cc["@mozilla.org/xmlextras/domparser;1"].
-                     createInstance(Ci.nsIDOMParser);
-        var doc = parser.parseFromBuffer(aBytes, aBytes.length, "text/xml");
-        aEngine._data = doc.documentElement;
-        break;
-      case SEARCH_DATA_TEXT:
-        aEngine._data = aBytes;
-        break;
-      default:
-        promptError();
-        LOG("_onLoad: Bogus engine _dataType: \"" + this._dataType + "\"");
-        return;
-    }
+    var parser = Cc["@mozilla.org/xmlextras/domparser;1"].
+                 createInstance(Ci.nsIDOMParser);
+    var doc = parser.parseFromBuffer(aBytes, aBytes.length, "text/xml");
+    aEngine._data = doc.documentElement;
 
     try {
       // Initialize the engine from the obtained data
@@ -2134,35 +2099,24 @@ Engine.prototype = {
                 Cr.NS_ERROR_UNEXPECTED);
 
     // Find out what type of engine we are
-    switch (this._dataType) {
-      case SEARCH_DATA_XML:
-        if (checkNameSpace(this._data, [MOZSEARCH_LOCALNAME],
-            [MOZSEARCH_NS_10])) {
+    if (checkNameSpace(this._data, [MOZSEARCH_LOCALNAME],
+        [MOZSEARCH_NS_10])) {
 
-          LOG("_init: Initing MozSearch plugin from " + this._location);
+      LOG("_init: Initing MozSearch plugin from " + this._location);
 
-          this._type = SEARCH_TYPE_MOZSEARCH;
-          this._parseAsMozSearch();
+      this._type = SEARCH_TYPE_MOZSEARCH;
+      this._parseAsMozSearch();
 
-        } else if (checkNameSpace(this._data, [OPENSEARCH_LOCALNAME],
-                                  OPENSEARCH_NAMESPACES)) {
+    } else if (checkNameSpace(this._data, [OPENSEARCH_LOCALNAME],
+                              OPENSEARCH_NAMESPACES)) {
 
-          LOG("_init: Initing OpenSearch plugin from " + this._location);
+      LOG("_init: Initing OpenSearch plugin from " + this._location);
 
-          this._type = SEARCH_TYPE_OPENSEARCH;
-          this._parseAsOpenSearch();
+      this._type = SEARCH_TYPE_OPENSEARCH;
+      this._parseAsOpenSearch();
 
-        } else
-          FAIL(this._location + " is not a valid search plugin.", Cr.NS_ERROR_FAILURE);
-
-        break;
-      case SEARCH_DATA_TEXT:
-        LOG("_init: Initing Sherlock plugin from " + this._location);
-
-        // the only text-based format we support is Sherlock
-        this._type = SEARCH_TYPE_SHERLOCK;
-        this._parseAsSherlock();
-    }
+    } else
+      FAIL(this._location + " is not a valid search plugin.", Cr.NS_ERROR_FAILURE);
 
     // No need to keep a ref to our data (which in some cases can be a document
     // element) past this point
@@ -2761,8 +2715,6 @@ Engine.prototype = {
       json.type = this.type;
     if (this.queryCharset != DEFAULT_QUERY_CHARSET || !aFilter)
       json.queryCharset = this.queryCharset;
-    if (this._dataType != SEARCH_DATA_XML || !aFilter)
-      json._dataType = this._dataType;
     if (!this._readOnly || !aFilter)
       json._readOnly = this._readOnly;
     if (this._extensionID) {
@@ -4041,15 +3993,6 @@ SearchService.prototype = {
       // Schedule the engine's next update, if it isn't already.
       if (!engineMetadataService.getAttr(aEngine, "updateexpir"))
         engineUpdateService.scheduleNextUpdate(aEngine);
-
-      // We need to save the engine's _dataType, if this is the first time the
-      // engine is added to the dataStore, since ._dataType isn't persisted
-      // and will change on the next startup (since the engine will then be
-      // XML). We need this so that we know how to load any future updates from
-      // this engine.
-      if (!engineMetadataService.getAttr(aEngine, "updatedatatype"))
-        engineMetadataService.setAttr(aEngine, "updatedatatype",
-                                      aEngine._dataType);
     }
   },
 
@@ -4062,10 +4005,10 @@ SearchService.prototype = {
       try {
         let engine;
         if (json.filePath)
-          engine = new Engine({type: "filePath", value: json.filePath}, json._dataType,
+          engine = new Engine({type: "filePath", value: json.filePath},
                                json._readOnly);
         else if (json._url)
-          engine = new Engine({type: "uri", value: json._url}, json._dataType, json._readOnly);
+          engine = new Engine({type: "uri", value: json._url}, json._readOnly);
 
         engine._initWithJSON(json);
         this._addEngineToStore(engine);
@@ -4103,7 +4046,7 @@ SearchService.prototype = {
 
       var addedEngine = null;
       try {
-        addedEngine = new Engine(file, SEARCH_DATA_XML, !isWritable);
+        addedEngine = new Engine(file, !isWritable);
         addedEngine._initFromFile();
       } catch (ex) {
         LOG("_loadEnginesFromDir: Failed to load " + file.path + "!\n" + ex);
@@ -4151,7 +4094,7 @@ SearchService.prototype = {
         try {
           let file = new FileUtils.File(osfile.path);
           let isWritable = isInProfile;
-          addedEngine = new Engine(file, SEARCH_DATA_XML, !isWritable);
+          addedEngine = new Engine(file, !isWritable);
           yield checkForSyncCompletion(addedEngine._asyncInitFromFile());
         } catch (ex if ex.result != Cr.NS_ERROR_ALREADY_INITIALIZED) {
           LOG("_asyncLoadEnginesFromDir: Failed to load " + osfile.path + "!\n" + ex);
@@ -4168,7 +4111,7 @@ SearchService.prototype = {
       try {
         LOG("_loadFromChromeURLs: loading engine from chrome url: " + url);
 
-        let engine = new Engine(makeURI(url), SEARCH_DATA_XML, true);
+        let engine = new Engine(makeURI(url), true);
 
         engine._initFromURISync();
 
@@ -4193,7 +4136,7 @@ SearchService.prototype = {
       for (let url of aURLs) {
         try {
           LOG("_asyncLoadFromChromeURLs: loading engine from chrome url: " + url);
-          let engine = new Engine(NetUtil.newURI(url), SEARCH_DATA_XML, true);
+          let engine = new Engine(NetUtil.newURI(url), true);
           yield checkForSyncCompletion(engine._asyncInitFromURI());
           engines.push(engine);
         } catch (ex if ex.result != Cr.NS_ERROR_ALREADY_INITIALIZED) {
@@ -4640,7 +4583,7 @@ SearchService.prototype = {
     if (this._engines[aName])
       FAIL("An engine with that name already exists!", Cr.NS_ERROR_FILE_ALREADY_EXISTS);
 
-    var engine = new Engine(getSanitizedFile(aName), SEARCH_DATA_XML, false);
+    var engine = new Engine(getSanitizedFile(aName), false);
     engine._initFromMetadata(aName, aIconURL, aAlias, aDescription,
                              aMethod, aTemplate, aExtensionID);
     this._addEngineToStore(engine);
@@ -4652,7 +4595,7 @@ SearchService.prototype = {
     this._ensureInitialized();
     try {
       var uri = makeURI(aEngineURL);
-      var engine = new Engine(uri, aDataType, false);
+      var engine = new Engine(uri, false);
       if (aCallback) {
         engine._installCallback = function (errorCode) {
           try {
@@ -5542,14 +5485,8 @@ var engineUpdateService = {
         return;
       }
 
-      let dataType = engineMetadataService.getAttr(engine, "updatedatatype");
-      if (!dataType) {
-        ULOG("No loadtype to update engine!");
-        return;
-      }
-
       ULOG("updating " + engine.name + " from " + updateURI.spec);
-      testEngine = new Engine(updateURI, dataType, false);
+      testEngine = new Engine(updateURI, false);
       testEngine._engineToUpdate = engine;
       testEngine._initFromURIAndLoad();
     } else
