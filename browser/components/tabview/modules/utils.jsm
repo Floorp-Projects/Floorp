@@ -84,12 +84,16 @@ Rect.prototype = {
             this.width + "," + this.height + ")]";
   },
 
-  get right() this.left + this.width,
+  get right() {
+    return this.left + this.width;
+  },
   set right(value) {
     this.width = value - this.left;
   },
 
-  get bottom() this.top + this.height,
+  get bottom() {
+    return this.top + this.height;
+  },
   set bottom(value) {
     this.height = value - this.top;
   },
@@ -97,12 +101,16 @@ Rect.prototype = {
   // ----------
   // Variable: xRange
   // Gives you a new <Range> for the horizontal dimension.
-  get xRange() new Range(this.left, this.right),
+  get xRange() {
+    return new Range(this.left, this.right);
+  },
 
   // ----------
   // Variable: yRange
   // Gives you a new <Range> for the vertical dimension.
-  get yRange() new Range(this.top, this.bottom),
+  get yRange() {
+    return new Range(this.top, this.bottom);
+  },
 
   // ----------
   // Function: intersects
@@ -691,7 +699,7 @@ this.Utils = {
   // Function: merge
   // Merge two array-like objects into the first and return it.
   merge: function Utils_merge(first, second) {
-    Array.forEach(second, function(el) Array.push(first, el));
+    Array.forEach(second, el => Array.push(first, el));
     return first;
   },
 

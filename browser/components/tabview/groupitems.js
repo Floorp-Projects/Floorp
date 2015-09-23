@@ -1283,7 +1283,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       data.lastItemCount = itemCount;
 
       // unfreeze item size when tabview is hidden
-      data.onTabViewHidden = function () self._unfreezeItemSize();
+      data.onTabViewHidden = () => self._unfreezeItemSize();
       window.addEventListener('tabviewhidden', data.onTabViewHidden, false);
 
       // we don't need to observe mouse movement when expanded because the
@@ -1840,7 +1840,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // of the groupItem by the positions of their respective tabs in the
   // tab bar.
   reorderTabItemsBasedOnTabOrder: function GroupItem_reorderTabItemsBasedOnTabOrder() {
-    this._children.sort(function(a,b) a.tab._tPos - b.tab._tPos);
+    this._children.sort((a,b) => a.tab._tPos - b.tab._tPos);
 
     this.arrange({animate: false});
     // this.arrange calls this.save for us
@@ -1851,11 +1851,11 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // shown in the groupItem.
   reorderTabsBasedOnTabItemOrder: function GroupItem_reorderTabsBasedOnTabItemOrder() {
     let indices;
-    let tabs = this._children.map(function (tabItem) tabItem.tab);
+    let tabs = this._children.map(tabItem => tabItem.tab);
 
     tabs.forEach(function (tab, index) {
       if (!indices)
-        indices = tabs.map(function (tab) tab._tPos);
+        indices = tabs.map(tab => tab._tPos);
 
       let start = index ? indices[index - 1] + 1 : 0;
       let end = index + 1 < indices.length ? indices[index + 1] - 1 : Infinity;
@@ -2422,7 +2422,7 @@ var GroupItems = {
     Utils.assert(this._activeGroupItem, "There must be something to show in the tab bar!");
 
     let tabItems = this._activeGroupItem._children;
-    gBrowser.showOnlyTheseTabs(tabItems.map(function(item) item.tab));
+    gBrowser.showOnlyTheseTabs(tabItems.map(item => item.tab));
   },
 
   // ----------

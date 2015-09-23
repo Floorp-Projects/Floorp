@@ -646,7 +646,9 @@ iQClass.prototype = {
   // Binds the given function to the given event type. Also wraps the function
   // in a try/catch block that does a Utils.log on any errors.
   bind: function iQClass_bind(type, func) {
-    let handler = function(event) func.apply(this, [event]);
+    let handler = function(event) {
+      return func.apply(this, [event]);
+    };
 
     for (let i = 0; this[i] != null; i++) {
       let elem = this[i];

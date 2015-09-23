@@ -23,8 +23,12 @@ XPCOMUtils.defineLazyGetter(this, "tabbrowserBundle", function() {
     createBundle("chrome://browser/locale/tabbrowser.properties");
 });
 
-function tabviewString(name) tabviewBundle.GetStringFromName('tabview.' + name);
-function tabbrowserString(name) tabbrowserBundle.GetStringFromName(name);
+function tabviewString(name) {
+  return tabviewBundle.GetStringFromName('tabview.' + name);
+}
+function tabbrowserString(name) {
+  return tabbrowserBundle.GetStringFromName(name);
+}
 
 XPCOMUtils.defineLazyGetter(this, "gPrefBranch", function() {
   return Services.prefs.getBranch("browser.panorama.");
@@ -52,7 +56,7 @@ var AllTabs = {
   },
 
   get tabs() {
-    return Array.filter(gBrowser.tabs, function (tab) Utils.isValidXULTab(tab));
+    return Array.filter(gBrowser.tabs, tab => Utils.isValidXULTab(tab));
   },
 
   register: function AllTabs_register(eventName, callback) {
