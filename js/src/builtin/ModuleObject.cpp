@@ -347,13 +347,18 @@ js::InitModuleClass(JSContext* cx, HandleObject obj)
         JS_PS_END
     };
 
+    static const JSFunctionSpec protoFunctions[] = {
+        JS_SELF_HOSTED_FN("resolveExport", "ModuleResolveExport", 3, 0),
+        JS_FS_END
+    };
+
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
 
     RootedObject proto(cx, global->createBlankPrototype<PlainObject>(cx));
     if (!proto)
         return nullptr;
 
-    if (!DefinePropertiesAndFunctions(cx, proto, protoAccessors, nullptr))
+    if (!DefinePropertiesAndFunctions(cx, proto, protoAccessors, protoFunctions))
         return nullptr;
 
     global->setPrototype(JSProto_Module, ObjectValue(*proto));
