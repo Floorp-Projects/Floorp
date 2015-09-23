@@ -42,7 +42,7 @@ function test_asyncFetchBadCert() {
     channel.notificationCallbacks = {
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIProgressEventSink,
                                              Ci.nsIInterfaceRequestor]),
-      getInterface: function (aIID) this.QueryInterface(aIID),
+      getInterface: function (aIID) { return this.QueryInterface(aIID); },
       onProgress: function () {},
       onStatus: function () {}
     };
