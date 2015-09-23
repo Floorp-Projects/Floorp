@@ -28,19 +28,19 @@ USING_WORKERS_NAMESPACE
 SharedWorker::SharedWorker(nsPIDOMWindow* aWindow,
                            WorkerPrivate* aWorkerPrivate,
                            MessagePort* aMessagePort)
-: DOMEventTargetHelper(aWindow), mWorkerPrivate(aWorkerPrivate)
-, mMessagePort(aMessagePort)
-, mFrozen(false)
+  : DOMEventTargetHelper(aWindow)
+  , mWorkerPrivate(aWorkerPrivate)
+  , mMessagePort(aMessagePort)
+  , mFrozen(false)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aWorkerPrivate);
+  MOZ_ASSERT(aMessagePort);
 }
 
 SharedWorker::~SharedWorker()
 {
   AssertIsOnMainThread();
-  Close();
-  MOZ_ASSERT(!mWorkerPrivate);
 }
 
 // static
@@ -136,11 +136,7 @@ SharedWorker::Close()
 
   if (mMessagePort) {
     mMessagePort->Close();
-  }
-
-  if (mWorkerPrivate) {
-    AutoSafeJSContext cx;
-    NoteDeadWorker(cx);
+    mMessagePort = nullptr;
   }
 }
 
@@ -154,16 +150,6 @@ SharedWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
   MOZ_ASSERT(mMessagePort);
 
   mMessagePort->PostMessage(aCx, aMessage, aTransferable, aRv);
-}
-
-void
-SharedWorker::NoteDeadWorker(JSContext* aCx)
-{
-  AssertIsOnMainThread();
-  MOZ_ASSERT(mWorkerPrivate);
-
-  mWorkerPrivate->UnregisterSharedWorker(aCx, this);
-  mWorkerPrivate = nullptr;
 }
 
 NS_IMPL_ADDREF_INHERITED(SharedWorker, DOMEventTargetHelper)
@@ -182,7 +168,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(SharedWorker,
                                                 DOMEventTargetHelper)
-  tmp->Close();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMessagePort)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrozenEvents)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
