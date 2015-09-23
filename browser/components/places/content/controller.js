@@ -59,7 +59,9 @@ InsertionPoint.prototype = {
     return this._index = val;
   },
 
-  promiseGuid: function () PlacesUtils.promiseItemGuid(this.itemId),
+  promiseGuid: function () {
+    return PlacesUtils.promiseItemGuid(this.itemId);
+  },
 
   get index() {
     if (this.dropNearItemId > 0) {
@@ -71,7 +73,9 @@ InsertionPoint.prototype = {
     return this._index;
   },
 
-  get isTag() typeof(this.tagName) == "string"
+  get isTag() {
+    return typeof(this.tagName) == "string";
+  }
 };
 
 /**
@@ -1199,7 +1203,9 @@ PlacesController.prototype = {
   },
 
   _cutNodes: [],
-  get cutNodes() this._cutNodes,
+  get cutNodes() {
+    return this._cutNodes;
+  },
   set cutNodes(aNodes) {
     let self = this;
     function updateCutNodes(aValue) {
@@ -1268,7 +1274,7 @@ PlacesController.prototype = {
     [ PlacesUtils.TYPE_X_MOZ_PLACE,
       PlacesUtils.TYPE_X_MOZ_URL,
       PlacesUtils.TYPE_UNICODE,
-    ].forEach(function (type) xferable.addDataFlavor(type));
+    ].forEach(type => xferable.addDataFlavor(type));
 
     this.clipboard.getData(xferable, Ci.nsIClipboard.kGlobalClipboard);
 
@@ -1388,8 +1394,9 @@ PlacesController.prototype = {
    * @return true if there's a cached mozILivemarkInfo object for
    *         aNode, false otherwise.
    */
-  hasCachedLivemarkInfo: function PC_hasCachedLivemarkInfo(aNode)
-    this._cachedLivemarkInfoObjects.has(aNode),
+  hasCachedLivemarkInfo: function PC_hasCachedLivemarkInfo(aNode) {
+    return this._cachedLivemarkInfoObjects.has(aNode);
+  },
 
   /**
    * Returns the cached livemark info for a node, if set by cacheLivemarkInfo,
@@ -1398,8 +1405,9 @@ PlacesController.prototype = {
    *        a places result node.
    * @return the mozILivemarkInfo object for aNode, if set, null otherwise.
    */
-  getCachedLivemarkInfo: function PC_getCachedLivemarkInfo(aNode)
-    this._cachedLivemarkInfoObjects.get(aNode, null)
+  getCachedLivemarkInfo: function PC_getCachedLivemarkInfo(aNode) {
+    return this._cachedLivemarkInfoObjects.get(aNode, null);
+  }
 };
 
 /**
