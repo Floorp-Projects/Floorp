@@ -30,26 +30,6 @@ except ImportError:
     conditions = None
 
 
-def get_default_valgrind_suppression_files():
-    # We are trying to locate files in the source tree.  So if we
-    # don't know where the source tree is, we must give up.
-    if build_obj is None or build_obj.topsrcdir is None:
-        return []
-
-    supps_path = os.path.join(build_obj.topsrcdir, "build", "valgrind")
-
-    rv = []
-    if mozinfo.os == "linux":
-        if mozinfo.processor == "x86_64":
-            rv.append(os.path.join(supps_path, "x86_64-redhat-linux-gnu.sup"))
-            rv.append(os.path.join(supps_path, "cross-architecture.sup"))
-        elif mozinfo.processor == "x86":
-            rv.append(os.path.join(supps_path, "i386-redhat-linux-gnu.sup"))
-            rv.append(os.path.join(supps_path, "cross-architecture.sup"))
-
-    return rv
-
-
 class ArgumentContainer():
     __metaclass__ = ABCMeta
 
@@ -494,20 +474,6 @@ class MochitestArguments(ArgumentContainer):
          {"dest": "debuggerArgs",
           "default": None,
           "help": "Arguments to pass to the debugger.",
-          }],
-        [["--valgrind"],
-         {"default": None,
-          "help": "Valgrind binary to run tests with. Program name or path.",
-          }],
-        [["--valgrind-args"],
-         {"dest": "valgrindArgs",
-          "default": None,
-          "help": "Extra arguments to pass to Valgrind.",
-          }],
-        [["--valgrind-supp-files"],
-         {"dest": "valgrindSuppFiles",
-          "default": ",".join(get_default_valgrind_suppression_files()),
-          "help": "Comma-separated list of suppression files to pass to Valgrind.",
           }],
         [["--debugger-interactive"],
          {"action": "store_true",
