@@ -54,6 +54,8 @@ dictionary NetworkCommandOptions
   long gateway_long;                  // for "ifc_configure".
   long dns1_long;                     // for "ifc_configure".
   long dns2_long;                     // for "ifc_configure".
+
+  long mtu;                           // for "setMtu".
 };
 
 /**
