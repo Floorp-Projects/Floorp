@@ -44,7 +44,7 @@ function setFile(downloadLastDir, aURI, aValue) {
 
 function clearHistoryAndWait() {
   clearHistory();
-  executeSoon(function() executeSoon(moveAlong));
+  executeSoon(() => executeSoon(moveAlong));
 }
 
 /*
@@ -73,7 +73,7 @@ function runTest() {
   registerCleanupFunction(function () {
     Services.prefs.clearUserPref("browser.download.lastDir.savePerSite");
     Services.prefs.clearUserPref("browser.download.lastDir");
-    [dir1, dir2, dir3].forEach(function(dir) dir.remove(true));
+    [dir1, dir2, dir3].forEach(dir => dir.remove(true));
     win.close();
     pbWin.close();
   });

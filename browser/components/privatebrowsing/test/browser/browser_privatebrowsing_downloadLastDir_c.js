@@ -28,13 +28,13 @@ function test() {
   // cleanup function registration
   registerCleanupFunction(function () {
     Services.prefs.clearUserPref("browser.download.lastDir");
-    [dir1, dir2, dir3].forEach(function(dir) dir.remove(true));
+    [dir1, dir2, dir3].forEach(dir => dir.remove(true));
     MockFilePicker.cleanup();
     validateFileName = validateFileNameToRestore;
   });
 
   // Overwrite validateFileName to validate everything
-  validateFileName = function(foo) foo;
+  validateFileName = foo => foo;
 
   let params = {
     fileInfo: new FileInfo("test.txt", "test.txt", "test", "txt", "http://mozilla.org/test.txt"),
