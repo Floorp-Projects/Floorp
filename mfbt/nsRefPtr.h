@@ -591,4 +591,25 @@ do_AddRef(T*&& aObj)
   return ref.forget();
 }
 
+namespace mozilla {
+
+/**
+ * Helper function to be able to conveniently write things like:
+ *
+ *   already_AddRefed<T>
+ *   f(...)
+ *   {
+ *     return MakeAndAddRef<T>(...);
+ *   }
+ */
+template<typename T, typename... Args>
+already_AddRefed<T>
+MakeAndAddRef(Args&&... aArgs)
+{
+  nsRefPtr<T> p(new T(Forward<Args>(aArgs)...));
+  return p.forget();
+}
+
+} // namespace mozilla
+
 #endif /* mozilla_nsRefPtr_h */
