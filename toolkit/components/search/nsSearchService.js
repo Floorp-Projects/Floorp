@@ -1976,7 +1976,7 @@ Engine.prototype = {
       LOG("_init: Initing MozSearch plugin from " + this._location);
 
       this._type = SEARCH_TYPE_MOZSEARCH;
-      this._parseAsMozSearch();
+      this._parse();
 
     } else if (checkNameSpace(this._data, [OPENSEARCH_LOCALNAME],
                               OPENSEARCH_NAMESPACES)) {
@@ -1984,7 +1984,7 @@ Engine.prototype = {
       LOG("_init: Initing OpenSearch plugin from " + this._location);
 
       this._type = SEARCH_TYPE_OPENSEARCH;
-      this._parseAsOpenSearch();
+      this._parse();
 
     } else
       FAIL(this._location + " is not a valid search plugin.", Cr.NS_ERROR_FAILURE);
@@ -2137,16 +2137,11 @@ Engine.prototype = {
     this._setIcon(aElement.textContent, isPrefered, width, height);
   },
 
-  _parseAsMozSearch: function SRCH_ENG_parseAsMoz() {
-    //forward to the OpenSearch parser
-    this._parseAsOpenSearch();
-  },
-
   /**
    * Extract search engine information from the collected data to initialize
    * the engine object.
    */
-  _parseAsOpenSearch: function SRCH_ENG_parseAsOS() {
+  _parse: function SRCH_ENG_parse() {
     var doc = this._data;
 
     // The OpenSearch spec sets a default value for the input encoding.
@@ -2166,7 +2161,7 @@ Engine.prototype = {
             this._parseURL(child);
           } catch (ex) {
             // Parsing of the element failed, just skip it.
-            LOG("_parseAsOpenSearch: failed to parse URL child: " + ex);
+            LOG("_parse: failed to parse URL child: " + ex);
           }
           break;
         case "Image":
@@ -2191,13 +2186,13 @@ Engine.prototype = {
           break;
         case "ExtensionID":
           this._extensionID = child.textContent;
-          breakk;
+          break;
       }
     }
     if (!this.name || (this._urls.length == 0))
-      FAIL("_parseAsOpenSearch: No name, or missing URL!", Cr.NS_ERROR_FAILURE);
+      FAIL("_parse: No name, or missing URL!", Cr.NS_ERROR_FAILURE);
     if (!this.supportsResponseType(URLTYPE_SEARCH_HTML))
-      FAIL("_parseAsOpenSearch: No text/html result type!", Cr.NS_ERROR_FAILURE);
+      FAIL("_parse: No text/html result type!", Cr.NS_ERROR_FAILURE);
   },
 
   /**
