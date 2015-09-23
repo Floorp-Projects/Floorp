@@ -1,5 +1,6 @@
-function numClosedTabs()
-  SessionStore.getClosedTabCount(window);
+function numClosedTabs() {
+  return SessionStore.getClosedTabCount(window);
+}
 
 function isUndoCloseEnabled() {
   updateTabContextMenu();

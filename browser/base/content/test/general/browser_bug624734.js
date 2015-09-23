@@ -21,7 +21,7 @@ function test() {
     tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
 
     if (BookmarkingUI.status == BookmarkingUI.STATUS_UPDATING) {
-      waitForCondition(function() BookmarkingUI.status != BookmarkingUI.STATUS_UPDATING, finishTest, "BookmarkingUI was updating for too long");
+      waitForCondition(() => BookmarkingUI.status != BookmarkingUI.STATUS_UPDATING, finishTest, "BookmarkingUI was updating for too long");
     } else {
       finishTest();
     }
