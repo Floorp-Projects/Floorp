@@ -434,9 +434,9 @@ function todo_check_null(condition, stack=Components.stack.caller) {
  * do_check_matches([3,4,5], [3,4,5,6])   // fail; length doesn't match
  *
  * // functions in patterns get applied.
- * do_check_matches({foo:function (v) v.length == 2}, {foo:"hi"}) // pass
- * do_check_matches({foo:function (v) v.length == 2}, {bar:"hi"}) // fail
- * do_check_matches({foo:function (v) v.length == 2}, {foo:"hello"}) // fail
+ * do_check_matches({foo:v => v.length == 2}, {foo:"hi"}) // pass
+ * do_check_matches({foo:v => v.length == 2}, {bar:"hi"}) // fail
+ * do_check_matches({foo:v => v.length == 2}, {foo:"hello"}) // fail
  *
  * // We don't check constructors, prototypes, or classes. However, if
  * // pattern has a 'length' property, we require values to match that as
