@@ -4047,7 +4047,7 @@ MArrayState::MArrayState(MDefinition* arr)
     // This instruction is only used as a summary for bailout paths.
     setResultType(MIRType_Object);
     setRecoveredOnBailout();
-    numElements_ = arr->toNewArray()->length();
+    numElements_ = arr->toNewArray()->count();
 }
 
 bool
@@ -4087,10 +4087,10 @@ MArrayState::Copy(TempAllocator& alloc, MArrayState* state)
     return res;
 }
 
-MNewArray::MNewArray(CompilerConstraintList* constraints, uint32_t length, MConstant* templateConst,
+MNewArray::MNewArray(CompilerConstraintList* constraints, uint32_t count, MConstant* templateConst,
                      gc::InitialHeap initialHeap, jsbytecode* pc)
   : MUnaryInstruction(templateConst),
-    length_(length),
+    count_(count),
     initialHeap_(initialHeap),
     convertDoubleElements_(false),
     pc_(pc)
@@ -4112,16 +4112,16 @@ MNewArray::shouldUseVM() const
         return true;
 
     if (templateObject()->is<UnboxedArrayObject>()) {
-        MOZ_ASSERT(templateObject()->as<UnboxedArrayObject>().capacity() >= length());
+        MOZ_ASSERT(templateObject()->as<UnboxedArrayObject>().capacity() >= count());
         return !templateObject()->as<UnboxedArrayObject>().hasInlineElements();
     }
 
-    MOZ_ASSERT(length() < NativeObject::NELEMENTS_LIMIT);
+    MOZ_ASSERT(count() < NativeObject::NELEMENTS_LIMIT);
 
     size_t arraySlots =
         gc::GetGCKindSlots(templateObject()->asTenured().getAllocKind()) - ObjectElements::VALUES_PER_HEADER;
 
-    return length() > arraySlots;
+    return count() > arraySlots;
 }
 
 bool

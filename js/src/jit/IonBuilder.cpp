@@ -6922,7 +6922,7 @@ IonBuilder::compareTrySharedStub(bool* emitted, JSOp op, MDefinition* left, MDef
 }
 
 bool
-IonBuilder::jsop_newarray(uint32_t length)
+IonBuilder::jsop_newarray(uint32_t count)
 {
     JSObject* templateObject = inspector->getTemplateObject(pc);
     gc::InitialHeap heap;
@@ -6937,7 +6937,7 @@ IonBuilder::jsop_newarray(uint32_t length)
     }
     current->add(templateConst);
 
-    MNewArray* ins = MNewArray::New(alloc(), constraints(), length, templateConst, heap, pc);
+    MNewArray* ins = MNewArray::New(alloc(), constraints(), count, templateConst, heap, pc);
     current->add(ins);
     current->push(ins);
 
