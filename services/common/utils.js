@@ -314,8 +314,9 @@ this.CommonUtils = {
       }
 
       // Handle a left shift, restricted to bytes.
-      function left(octet, shift)
-        (octet << shift) & 0xff;
+      function left(octet, shift) {
+        return (octet << shift) & 0xff;
+      }
 
       advance();
       accumulate(left(val, 3));
