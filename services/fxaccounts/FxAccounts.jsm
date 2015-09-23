@@ -88,7 +88,9 @@ AccountState.prototype = {
   whenKeysReadyDeferred: null,
 
   // If the storage manager has been nuked then we are no longer current.
-  get isCurrent() this.storageManager != null,
+  get isCurrent() {
+    return this.storageManager != null;
+  },
 
   abort() {
     if (this.whenVerifiedDeferred) {
