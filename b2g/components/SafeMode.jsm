@@ -71,6 +71,7 @@ this.SafeMode = {
     return DOMApplicationRegistry.registryReady.then(() => {
       let shell = SafeMode.window.shell;
       let document = SafeMode.window.document;
+      SafeMode.window.screen.mozLockOrientation("portrait");
 
       let url = Services.io.newURI(shell.homeURL, null, null)
                            .resolve(kSafeModePage);

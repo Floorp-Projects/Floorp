@@ -32,7 +32,7 @@ public class FxAccountConstants {
   // Key for avatar URI in profile JSON.
   public static final String KEY_PROFILE_JSON_AVATAR = "avatar";
   // Key for username in profile JSON.
-  public static final String KEY_PROFILE_JSON_USERNAME = "username";
+  public static final String KEY_PROFILE_JSON_USERNAME = "displayName";
 
   // You must wait 15 minutes after failing an age check before trying to create a different account.
   public static final long MINIMUM_TIME_TO_WAIT_AFTER_AGE_CHECK_FAILED_IN_MILLISECONDS = 15 * 60 * 1000;
