@@ -149,7 +149,7 @@ function search(aFolderId, aSearchStr, aExpectedScopeButtonId) {
  * things off.  Add functions to the testCases array, and this will call them.
  */
 function onLibraryAvailable() {
-  testCases.forEach(function (aTest) aTest());
+  testCases.forEach(aTest => aTest());
 
   gLibrary.close();
   gLibrary = null;
