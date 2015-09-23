@@ -43,60 +43,42 @@ var gValues = {
   "border-style": ["solid", "dashed", "dotted", "double", "groove"],
 };
 
-// six unique overall writing modes
+// Six unique overall writing modes for property-mapping purposes.
+// Note that text-orientation does not affect these mappings, now that
+// the proposed sideways-left value no longer exists (superseded in CSS
+// Writing Modes by writing-mode: sideways-lr).
 var gWritingModes = [
   { style: [
-      "writing-mode: horizontal-tb; text-orientation: mixed; direction: ltr; ",
-      "writing-mode: horizontal-tb; text-orientation: upright; direction: ltr; ",
-      "writing-mode: horizontal-tb; text-orientation: sideways-right; direction: ltr; ",
-      // XXX See the todo()s below.
-      // "writing-mode: horizontal-tb; text-orientation: sideways-left; direction: ltr; ",
-      // "writing-mode: horizontal-tb; text-orientation: sideways; direction: ltr; ",
+      "writing-mode: horizontal-tb; direction: ltr; ",
     ],
     blockStart: "top", blockEnd: "bottom", inlineStart: "left", inlineEnd: "right",
     block: "vertical", inline: "horizontal" },
   { style: [
-      "writing-mode: horizontal-tb; text-orientation: mixed; direction: rtl; ",
-      "writing-mode: horizontal-tb; text-orientation: upright; direction: rtl; ",
-      "writing-mode: horizontal-tb; text-orientation: sideways-right; direction: rtl; ",
-      // "writing-mode: horizontal-tb; text-orientation: sideways-left; direction: rtl; ",
-      // "writing-mode: horizontal-tb; text-orientation: sideways; direction: rtl; ",
+      "writing-mode: horizontal-tb; direction: rtl; ",
     ],
     blockStart: "top", blockEnd: "bottom", inlineStart: "right", inlineEnd: "left",
     block: "vertical", inline: "horizontal" },
   { style: [
-      "writing-mode: vertical-rl; text-orientation: mixed; direction: rtl; ",
-      "writing-mode: vertical-rl; text-orientation: upright; direction: rtl; ",
-      "writing-mode: vertical-rl; text-orientation: sideways-right; direction: rtl; ",
-      // "writing-mode: vertical-rl; text-orientation: sideways-left; direction: ltr; ",
-      // "writing-mode: vertical-rl; text-orientation: sideways; direction: rtl; ",
+      "writing-mode: vertical-rl; direction: rtl; ",
+      "writing-mode: sideways-rl; direction: rtl; ",
     ],
     blockStart: "right", blockEnd: "left", inlineStart: "bottom", inlineEnd: "top",
     block: "horizontal", inline: "vertical" },
   { style: [
-      "writing-mode: vertical-rl; text-orientation: mixed; direction: ltr; ",
-      "writing-mode: vertical-rl; text-orientation: upright; direction: ltr; ",
-      "writing-mode: vertical-rl; text-orientation: sideways-right; direction: ltr; ",
-      // "writing-mode: vertical-rl; text-orientation: sideways-left; direction: rtl; ",
-      // "writing-mode: vertical-rl; text-orientation: sideways; direction: ltr; ",
+      "writing-mode: vertical-rl; direction: ltr; ",
+      "writing-mode: sideways-rl; direction: ltr; ",
     ],
     blockStart: "right", blockEnd: "left", inlineStart: "top", inlineEnd: "bottom",
     block: "horizontal", inline: "vertical" },
   { style: [
-      "writing-mode: vertical-lr; text-orientation: mixed; direction: rtl; ",
-      "writing-mode: vertical-lr; text-orientation: upright; direction: rtl; ",
-      "writing-mode: vertical-lr; text-orientation: sideways-right; direction: rtl; ",
-      // "writing-mode: vertical-lr; text-orientation: sideways-left; direction: ltr; ",
-      // "writing-mode: vertical-lr; text-orientation: sideways; direction: ltr; ",
+      "writing-mode: vertical-lr; direction: rtl; ",
+      // "writing-mode: sideways-lr; direction: ltr; ",
     ],
     blockStart: "left", blockEnd: "right", inlineStart: "bottom", inlineEnd: "top",
     block: "horizontal", inline: "vertical" },
   { style: [
-      "writing-mode: vertical-lr; text-orientation: mixed; direction: ltr; ",
-      "writing-mode: vertical-lr; text-orientation: upright; direction: ltr; ",
-      "writing-mode: vertical-lr; text-orientation: sideways-right; direction: ltr; ",
-      // "writing-mode: vertical-lr; text-orientation: sideways-left; direction: rtl; ",
-      // "writing-mode: vertical-lr; text-orientation: sideways; direction: rtl; ",
+      "writing-mode: vertical-lr; direction: ltr; ",
+      // "writing-mode: sideways-lr; direction: rtl; ",
     ],
     blockStart: "left", blockEnd: "right", inlineStart: "top", inlineEnd: "bottom",
     block: "horizontal", inline: "vertical" },
@@ -162,23 +144,16 @@ function init() {
     });
   });
 
-  // Assume that sideways-left and sideways keywords are still not parsed yet
-  // for text-orientation.  When we start supporting these keywords, the
-  // entries in the .style properties of the gWritingModes objects above
-  // should be uncommented.
+  // Assume that the sideways-lr keyword is not parsed yet for writing-mode.
+  // When we start supporting this keyword, the entries in the .style
+  // properties of the gWritingModes objects above should be uncommented.
   var s = document.createElement("style");
   document.body.appendChild(s);
 
   s.textContent = "div { }";
-  s.sheet.cssRules[0].style.textOrientation = "sideways-left";
-  todo(s.sheet.cssRules[0].style.textOrientation, "sideways-left",
-       "uncomment sideways-left cases from gWritingModes and " +
-       "remove this todo()!");
-
-  s.textContent = "div { }";
-  s.sheet.cssRules[0].style.textOrientation = "sideways";
-  todo(s.sheet.cssRules[0].style.textOrientation, "sideways",
-       "uncomment sideways cases from gWritingModes and " +
+  s.sheet.cssRules[0].style.writingMode = "sideways-lr";
+  todo(s.sheet.cssRules[0].style.writingMode, "sideways-lr",
+       "uncomment sideways-lr cases from gWritingModes and " +
        "remove this todo()!");
 
   s.remove();
