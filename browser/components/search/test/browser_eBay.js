@@ -30,7 +30,6 @@ function test() {
     alias: null,
     description: "eBay - Online auctions",
     searchForm: "http://search.ebay.com/",
-    type: Ci.nsISearchEngine.TYPE_MOZSEARCH,
     hidden: false,
     wrappedJSObject: {
       queryCharset: "ISO-8859-1",
