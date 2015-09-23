@@ -9,7 +9,6 @@
 #ifdef XP_MACOSX
 #include <QuartzCore/QuartzCore.h>
 #include <dlfcn.h>
-#include "mozilla/RefPtr.h"
 
 typedef CFTypeRef IOSurfacePtr;
 typedef IOSurfacePtr (*IOSurfaceCreateFunc) (CFDictionaryRef properties);
@@ -63,7 +62,7 @@ enum CGContextType {
 
 CGContextType GetContextType(CGContextRef ref);
 
-class MacIOSurface : public mozilla::RefCounted<MacIOSurface> {
+class MacIOSurface : public mozilla::external::AtomicRefCounted<MacIOSurface> {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(MacIOSurface)
   typedef mozilla::gfx::SourceSurface SourceSurface;
