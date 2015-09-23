@@ -10,6 +10,7 @@
 #include "base/message_loop.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/Vector.h"
 #include "FrameMetrics.h"
 #include "nsISupportsImpl.h"
 
