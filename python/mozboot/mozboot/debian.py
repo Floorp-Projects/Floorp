@@ -123,16 +123,16 @@ class DebianBootstrapper(BaseBootstrapper):
 
         # 2. The user may have an external Android SDK (in which case we save
         # them a lengthy download), or they may have already completed the
-        # download. We unpack to ~/.mozbuild/{android-sdk-linux, android-ndk-r8e}.
+        # download. We unpack to ~/.mozbuild/{android-sdk-linux, android-ndk-r10e}.
         mozbuild_path = os.environ.get('MOZBUILD_STATE_PATH', os.path.expanduser(os.path.join('~', '.mozbuild')))
         self.sdk_path = os.environ.get('ANDROID_SDK_HOME', os.path.join(mozbuild_path, 'android-sdk-linux'))
-        self.ndk_path = os.environ.get('ANDROID_NDK_HOME', os.path.join(mozbuild_path, 'android-ndk-r8e'))
+        self.ndk_path = os.environ.get('ANDROID_NDK_HOME', os.path.join(mozbuild_path, 'android-ndk-r10e'))
         self.sdk_url = 'https://dl.google.com/android/android-sdk_r24.0.1-linux.tgz'
         is_64bits = sys.maxsize > 2**32
         if is_64bits:
-            self.ndk_url = 'https://dl.google.com/android/ndk/android-ndk-r8e-linux-x86_64.tar.bz2'
+            self.ndk_url = 'https://dl.google.com/android/ndk/android-ndk-r10e-linux-x86_64.bin'
         else:
-            self.ndk_url = 'https://dl.google.com/android/ndk/android-ndk-r8e-linux-x86.tar.bz2'
+            self.ndk_url = 'https://dl.google.com/android/ndk/android-ndk-r10e-linux-x86.bin'
         android.ensure_android_sdk_and_ndk(path=mozbuild_path,
                                            sdk_path=self.sdk_path, sdk_url=self.sdk_url,
                                            ndk_path=self.ndk_path, ndk_url=self.ndk_url)
@@ -144,10 +144,7 @@ class DebianBootstrapper(BaseBootstrapper):
 
     def suggest_mobile_android_mozconfig(self):
         import android
-
-        # The SDK path that mozconfig wants includes platforms/android-21.
-        sdk_path = os.path.join(self.sdk_path, 'platforms', android.ANDROID_PLATFORM)
-        android.suggest_mozconfig(sdk_path=sdk_path,
+        android.suggest_mozconfig(sdk_path=self.sdk_path,
                                   ndk_path=self.ndk_path)
 
     def _update_package_manager(self):
