@@ -5,12 +5,18 @@ modifications.
 
 - linux/event2/event-config.h
 - mac/event2/event-config.h
+- bsd/event2/event-config.h
 - android/event2/event-config.h
 
 These files are taken from libevent-2.0.21-stable built on the development
 environment indicated by the first path component. You have to run
 "./configure" and "make" to get all of the pre-processing done. The file can
 then be found in "include/event2/".
+
+You then need to modify the _EVENT_SIZEOF_* constants in the generated linux,
+mac and bsd headers to be appropriate for both 32-bit and 64-bit platforms. Use
+__LP64__ to distinguish the two cases. If you get something wrong the
+CHECK_EVENT_SIZEOF static assertions in message_pump_libevent.cc will fail.
 
 2. This is ugly, prepare yourself. OS X has a weird problem with how the
 "TAILQ_END(head)" is used, causing a linking error. Just replace all use of the
