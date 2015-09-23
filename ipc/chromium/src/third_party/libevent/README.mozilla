@@ -1,19 +1,31 @@
-This is a clean copy of libevent-2.0.21-stable with the following modifications:
+This is a clean copy of libevent-2.0.21-stable with the following
+modifications.
 
 1. Add the following files:
 
-linux/event2/event-config.h
-mac/event2/event-config.h
-android/event2/event-config.h
+- linux/event2/event-config.h
+- mac/event2/event-config.h
+- android/event2/event-config.h
 
-These files are taken from libevent-2.0.21-stable built on the development environment indicated by the first path component. You have to run "./configure" and "make" to get all of the pre-processing done. The file can then be found in "include/event2/".
+These files are taken from libevent-2.0.21-stable built on the development
+environment indicated by the first path component. You have to run
+"./configure" and "make" to get all of the pre-processing done. The file can
+then be found in "include/event2/".
 
-2. This is ugly, prepare yourself. OS X has a weird problem with how the "TAILQ_END(head)" is used, causing a linking error. Just replace all use of the "TAILQ_END(head)" macro with "NULL".
+2. This is ugly, prepare yourself. OS X has a weird problem with how the
+"TAILQ_END(head)" is used, causing a linking error. Just replace all use of the
+"TAILQ_END(head)" macro with "NULL".
 
-3. Apply "add mac-arc4random-buf.patch", which removes some bad OS X compatibility code. This will allow libevent to compile on all supported versions of OS X.
+3. Apply "add mac-arc4random-buf.patch", which removes some bad OS X
+compatibility code. This will allow libevent to compile on all supported
+versions of OS X.
 
-4. Apply "openbsd-no-arc4random_addrandom.patch", which fixes the build on OpenBSD (which doesnt provide arc4random_addrandom anymore, see #931354)
+4. Apply "openbsd-no-arc4random_addrandom.patch", which fixes the build on
+OpenBSD (which doesnt provide arc4random_addrandom anymore, see #931354).
 
-5. Apply "libevent-use-non-deprecated-syscalls.patch", which fixes the build on AArch64 architecture (which does not provide deprecated syscalls)
+5. Apply "libevent-use-non-deprecated-syscalls.patch", which fixes the build on
+AArch64 architecture (which does not provide deprecated syscalls).
 
-6. Apply "libevent-dont-use-issetugid-on-android.patch'. which fixes the build on Android L preview
+6. Apply "libevent-dont-use-issetugid-on-android.patch", which fixes the build
+on Android L preview.
+
