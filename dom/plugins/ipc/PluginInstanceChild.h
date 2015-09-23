@@ -113,7 +113,7 @@ protected:
 
     virtual PPluginSurfaceChild*
     AllocPPluginSurfaceChild(const WindowsSharedMemoryHandle&,
-                             const gfxIntSize&, const bool&) override {
+                             const gfx::IntSize&, const bool&) override {
         return new PPluginSurfaceChild();
     }
 

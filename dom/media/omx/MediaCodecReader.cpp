@@ -744,7 +744,7 @@ MediaCodecReader::HandleResourceAllocated()
   VideoFrameContainer* container = mDecoder->GetVideoFrameContainer();
   if (container) {
     container->ClearCurrentFrame(
-      gfxIntSize(mInfo.mVideo.mDisplay.width, mInfo.mVideo.mDisplay.height));
+      gfx::IntSize(mInfo.mVideo.mDisplay.width, mInfo.mVideo.mDisplay.height));
   }
 
   nsRefPtr<MetadataHolder> metadata = new MetadataHolder();

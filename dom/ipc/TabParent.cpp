@@ -1979,7 +1979,7 @@ TabParent::RecvSetCustomCursor(const nsCString& aCursorData,
     }
 
     if (mTabSetsCursor) {
-      const gfxIntSize size(aWidth, aHeight);
+      const gfx::IntSize size(aWidth, aHeight);
 
       mozilla::RefPtr<gfx::DataSourceSurface> customCursor = new mozilla::gfx::SourceSurfaceRawData();
       mozilla::gfx::SourceSurfaceRawData* raw = static_cast<mozilla::gfx::SourceSurfaceRawData*>(customCursor.get());
