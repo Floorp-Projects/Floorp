@@ -29,3 +29,6 @@ else:
 FINAL_LIBRARY = 'xul'
 
 TEST_DIRS += ['tests']
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']

@@ -30,3 +30,5 @@ LOCAL_INCLUDES += [
     '/dom/fmradio',
 ]
 
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']

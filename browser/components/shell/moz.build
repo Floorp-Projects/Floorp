@@ -52,3 +52,6 @@ CXXFLAGS += CONFIG['TK_CFLAGS']
 
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'Shell Integration')
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']

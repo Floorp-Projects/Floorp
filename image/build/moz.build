@@ -21,3 +21,5 @@ LOCAL_INCLUDES += [
     '/image/encoders/png',
 ]
 
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']

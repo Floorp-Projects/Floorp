@@ -32,3 +32,6 @@ LOCAL_INCLUDES += [
 ]
 
 FINAL_LIBRARY = 'xul'
+
+if CONFIG['CLANG_CXX']:
+    CXXFLAGS += ['-Wshadow']

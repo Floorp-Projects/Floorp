@@ -16,3 +16,6 @@ LOCAL_INCLUDES = [
 ]
 
 FINAL_LIBRARY = 'xul-gtest'
+
+if CONFIG['CLANG_CXX']:
+    CXXFLAGS += ['-Wshadow']

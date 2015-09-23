@@ -14,3 +14,6 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../base',
 ]
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']
