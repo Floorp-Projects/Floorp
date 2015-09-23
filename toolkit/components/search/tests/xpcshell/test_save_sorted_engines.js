@@ -28,8 +28,7 @@ function run_test() {
 add_task(function* test_save_sorted_engines() {
   let [engine1, engine2] = yield addTestEngines([
     { name: "Test search engine", xmlFileName: "engine.xml" },
-    { name: "Sherlock test search engine", srcFileName: "engine.src",
-      iconFileName: "ico-size-16x16-png.ico" },
+    { name: "A second test engine", xmlFileName: "engine2.xml"},
   ]);
 
   let search = Services.search;
@@ -45,7 +44,7 @@ add_task(function* test_save_sorted_engines() {
   // Check that the entries are placed as specified correctly
   let json = getSearchMetadata();
   do_check_eq(json["[app]/test-search-engine.xml"].order, 1);
-  do_check_eq(json["[profile]/sherlock-test-search-engine.xml"].order, 2);
+  do_check_eq(json["[profile]/a-second-test-engine.xml"].order, 2);
 
   // Test removing an engine
   search.removeEngine(engine1);
@@ -54,7 +53,7 @@ add_task(function* test_save_sorted_engines() {
 
   // Check that the order of the remaining engine was updated correctly
   json = getSearchMetadata();
-  do_check_eq(json["[profile]/sherlock-test-search-engine.xml"].order, 1);
+  do_check_eq(json["[profile]/a-second-test-engine.xml"].order, 1);
 
   // Test adding a new engine
   search.addEngineWithDetails("foo", "", "foo", "", "GET",

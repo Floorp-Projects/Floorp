@@ -740,14 +740,9 @@ class B2GBuild(LocalesMixin, PurgeMixin,
                 if base_pattern in public_upload_patterns:
                     public_files.append(f)
 
-        device_name = self.config['target'].split('-')[0]
-        blobfree_zip = os.path.join(
-                        dirs['work_dir'],
-                        'out',
-                        'target',
-                        'product',
-                        device_name,
-                        device_name + '.blobfree-dist.zip')
+        device_name   = os.path.basename(output_dir)
+        blobfree_dist = device_name + '.blobfree-dist.zip'
+        blobfree_zip  = os.path.join(output_dir, blobfree_dist)
 
         if os.path.exists(blobfree_zip):
             public_files.append(blobfree_zip)

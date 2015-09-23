@@ -46,7 +46,6 @@ function test() {
     alias: null,
     description: "Google Search",
     searchForm: "https://www.google.com/search?q=&ie=utf-8&oe=utf-8",
-    type: Ci.nsISearchEngine.TYPE_MOZSEARCH,
     hidden: false,
     wrappedJSObject: {
       queryCharset: "UTF-8",
