@@ -4466,7 +4466,8 @@ ScrollFrameHelper::IsScrollingActive(nsDisplayListBuilder* aBuilder) const
 
   return mHasBeenScrolledRecently ||
         IsAlwaysActive() ||
-        mShouldBuildScrollableLayer;
+        mShouldBuildScrollableLayer ||
+        WillBuildScrollableLayer(aBuilder);
 }
 
 /**
