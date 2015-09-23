@@ -14,7 +14,9 @@
                  android:layout_gravity="center_vertical"/>
 
     <!-- The site security icon is misaligned with the page title so
-         we add a bottom margin to align their bottoms. -->
+         we add a bottom margin to align their bottoms.
+         Site security icon must have exact position and size as search icon in
+         edit layout -->
     <ImageButton android:id="@+id/site_security"
                  style="@style/UrlBar.ImageButton"
                  android:layout_width="@dimen/browser_toolbar_site_security_width"
