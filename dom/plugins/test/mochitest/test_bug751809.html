@@ -51,7 +51,7 @@
     var objLoadingContent = SpecialPowers.wrap(plugin);
 
     objLoadingContent.playPlugin();
-    var condition = function() plugin.setColor !== undefined;
+    var condition = () => plugin.setColor !== undefined;
     waitForCondition(condition, afterPluginActivation, "Waited too long for plugin to activate");
   }
     
@@ -76,7 +76,7 @@
     }
 
     synthesizeMouseAtCenter(plugin, {});
-    var condition = function() plugin.getMouseUpEventCount() > 0;
+    var condition = () => plugin.getMouseUpEventCount() > 0;
     waitForCondition(condition, afterFirstClick, "Waited too long for plugin to receive the mouse click");
   }
 
