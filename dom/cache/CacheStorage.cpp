@@ -81,7 +81,7 @@ IsTrusted(const PrincipalInfo& aPrincipalInfo, bool aTestingPrefEnabled)
   // worker.  We require exact knowledge of this information before allowing
   // the caller to touch the disk using the Cache API.
   if (NS_WARN_IF(aPrincipalInfo.type() != PrincipalInfo::TContentPrincipalInfo ||
-                 aPrincipalInfo.get_ContentPrincipalInfo().appId() ==
+                 aPrincipalInfo.get_ContentPrincipalInfo().attrs().mAppId ==
                  nsIScriptSecurityManager::UNKNOWN_APP_ID)) {
     return false;
   }
