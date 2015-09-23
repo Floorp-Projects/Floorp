@@ -710,8 +710,40 @@
         "url": "/html/semantics/forms/attributes-common-to-form-controls/dirname-rtl-manual.html"
       },
       {
+        "path": "html/semantics/forms/constraints/tooLong-input-email-delete-manual.html",
+        "url": "/html/semantics/forms/constraints/tooLong-input-email-delete-manual.html"
+      },
+      {
+        "path": "html/semantics/forms/constraints/tooLong-input-password-delete-manual.html",
+        "url": "/html/semantics/forms/constraints/tooLong-input-password-delete-manual.html"
+      },
+      {
+        "path": "html/semantics/forms/constraints/tooLong-input-search-delete-manual.html",
+        "url": "/html/semantics/forms/constraints/tooLong-input-search-delete-manual.html"
+      },
+      {
+        "path": "html/semantics/forms/constraints/tooLong-input-tel-delete-manual.html",
+        "url": "/html/semantics/forms/constraints/tooLong-input-tel-delete-manual.html"
+      },
+      {
+        "path": "html/semantics/forms/constraints/tooLong-input-text-delete-manual.html",
+        "url": "/html/semantics/forms/constraints/tooLong-input-text-delete-manual.html"
+      },
+      {
+        "path": "html/semantics/forms/constraints/tooLong-input-url-delete-manual.html",
+        "url": "/html/semantics/forms/constraints/tooLong-input-url-delete-manual.html"
+      },
+      {
+        "path": "html/semantics/forms/constraints/tooLong-textarea-delete-manual.html",
+        "url": "/html/semantics/forms/constraints/tooLong-textarea-delete-manual.html"
+      },
+      {
         "path": "html/semantics/forms/the-input-element/file-manual.html",
         "url": "/html/semantics/forms/the-input-element/file-manual.html"
+      },
+      {
+        "path": "html/semantics/forms/the-optgroup-element/optgroup-disabled-manual.html",
+        "url": "/html/semantics/forms/the-optgroup-element/optgroup-disabled-manual.html"
       },
       {
         "path": "html/semantics/forms/the-option-element/option-disabled-manual.html",
@@ -732,6 +764,10 @@
       {
         "path": "html/semantics/grouping-content/the-li-element/grouping-li-novalue-manual.html",
         "url": "/html/semantics/grouping-content/the-li-element/grouping-li-novalue-manual.html"
+      },
+      {
+        "path": "html/webappapis/scripting/event-loops/task_microtask_ordering-manual.html",
+        "url": "/html/webappapis/scripting/event-loops/task_microtask_ordering-manual.html"
       },
       {
         "path": "html/webappapis/system-state-and-capabilities/the-navigator-object/get-navigatorlanguage-manual.html",
@@ -10324,10 +10360,6 @@
         "url": "/DOMEvents/tests/approved/stopPropagation.deferred.effect.html"
       },
       {
-        "path": "DOMEvents/tests/approved/stopPropagation.dispatchEvent.html",
-        "url": "/DOMEvents/tests/approved/stopPropagation.dispatchEvent.html"
-      },
-      {
         "path": "DOMEvents/tests/submissions/Microsoft/converted/DOM.event.flow.html",
         "url": "/DOMEvents/tests/submissions/Microsoft/converted/DOM.event.flow.html"
       },
@@ -10366,10 +10398,6 @@
       {
         "path": "DOMEvents/tests/submissions/Microsoft/converted/stopPropagation.deferred.effect.html",
         "url": "/DOMEvents/tests/submissions/Microsoft/converted/stopPropagation.deferred.effect.html"
-      },
-      {
-        "path": "DOMEvents/tests/submissions/Microsoft/converted/stopPropagation.dispatchEvent.html",
-        "url": "/DOMEvents/tests/submissions/Microsoft/converted/stopPropagation.dispatchEvent.html"
       },
       {
         "path": "DOMEvents/throwing-in-listener-and-window-error-event.html",
@@ -12232,6 +12260,10 @@
         "url": "/content-security-policy/blink-contrib-2/scripthash-basic-blocked.sub.html"
       },
       {
+        "path": "content-security-policy/blink-contrib-2/scripthash-default-src.sub.html",
+        "url": "/content-security-policy/blink-contrib-2/scripthash-default-src.sub.html"
+      },
+      {
         "path": "content-security-policy/blink-contrib-2/scripthash-ignore-unsafeinline.sub.html",
         "url": "/content-security-policy/blink-contrib-2/scripthash-ignore-unsafeinline.sub.html"
       },
@@ -12396,6 +12428,22 @@
         "url": "/content-security-policy/blink-contrib/filesystem-urls-match-filesystem.sub.html"
       },
       {
+        "path": "content-security-policy/blink-contrib/frame-src-about-blank-allowed-by-default.sub.html",
+        "url": "/content-security-policy/blink-contrib/frame-src-about-blank-allowed-by-default.sub.html"
+      },
+      {
+        "path": "content-security-policy/blink-contrib/frame-src-about-blank-allowed-by-scheme.sub.html",
+        "url": "/content-security-policy/blink-contrib/frame-src-about-blank-allowed-by-scheme.sub.html"
+      },
+      {
+        "path": "content-security-policy/blink-contrib/frame-src-allowed.sub.html",
+        "url": "/content-security-policy/blink-contrib/frame-src-allowed.sub.html"
+      },
+      {
+        "path": "content-security-policy/blink-contrib/frame-src-blocked.sub.html",
+        "url": "/content-security-policy/blink-contrib/frame-src-blocked.sub.html"
+      },
+      {
         "path": "content-security-policy/blink-contrib/frame-src-cross-origin-load.sub.html",
         "url": "/content-security-policy/blink-contrib/frame-src-cross-origin-load.sub.html"
       },
@@ -12528,6 +12576,10 @@
         "url": "/content-security-policy/blink-contrib/script-src-overrides-default-src.sub.html"
       },
       {
+        "path": "content-security-policy/blink-contrib/self-doesnt-match-blob.sub.html",
+        "url": "/content-security-policy/blink-contrib/self-doesnt-match-blob.sub.html"
+      },
+      {
         "path": "content-security-policy/blink-contrib/shared-worker-connect-src-allowed.sub.html",
         "url": "/content-security-policy/blink-contrib/shared-worker-connect-src-allowed.sub.html"
       },
@@ -12542,6 +12594,10 @@
       {
         "path": "content-security-policy/blink-contrib/srcdoc-doesnt-bypass-script-src.sub.html",
         "url": "/content-security-policy/blink-contrib/srcdoc-doesnt-bypass-script-src.sub.html"
+      },
+      {
+        "path": "content-security-policy/blink-contrib/star-doesnt-match-blob.sub.html",
+        "url": "/content-security-policy/blink-contrib/star-doesnt-match-blob.sub.html"
       },
       {
         "path": "content-security-policy/blink-contrib/style-allowed.sub.html",
@@ -12564,6 +12620,10 @@
         "url": "/content-security-policy/blink-contrib/worker-eval-blocked.sub.html"
       },
       {
+        "path": "content-security-policy/blink-contrib/worker-from-guid.sub.html",
+        "url": "/content-security-policy/blink-contrib/worker-from-guid.sub.html"
+      },
+      {
         "path": "content-security-policy/blink-contrib/worker-function-function-blocked.sub.html",
         "url": "/content-security-policy/blink-contrib/worker-function-function-blocked.sub.html"
       },
@@ -12578,6 +12638,38 @@
       {
         "path": "content-security-policy/blink-contrib/worker-set-timeout-blocked.sub.html",
         "url": "/content-security-policy/blink-contrib/worker-set-timeout-blocked.sub.html"
+      },
+      {
+        "path": "content-security-policy/child-src/child-src-about-blank-allowed-by-default.sub.html",
+        "url": "/content-security-policy/child-src/child-src-about-blank-allowed-by-default.sub.html"
+      },
+      {
+        "path": "content-security-policy/child-src/child-src-about-blank-allowed-by-scheme.sub.html",
+        "url": "/content-security-policy/child-src/child-src-about-blank-allowed-by-scheme.sub.html"
+      },
+      {
+        "path": "content-security-policy/child-src/child-src-allowed.sub.html",
+        "url": "/content-security-policy/child-src/child-src-allowed.sub.html"
+      },
+      {
+        "path": "content-security-policy/child-src/child-src-blocked.sub.html",
+        "url": "/content-security-policy/child-src/child-src-blocked.sub.html"
+      },
+      {
+        "path": "content-security-policy/child-src/child-src-conflicting-frame-src.sub.html",
+        "url": "/content-security-policy/child-src/child-src-conflicting-frame-src.sub.html"
+      },
+      {
+        "path": "content-security-policy/child-src/child-src-cross-origin-load.sub.html",
+        "url": "/content-security-policy/child-src/child-src-cross-origin-load.sub.html"
+      },
+      {
+        "path": "content-security-policy/child-src/child-src-worker-allowed.sub.html",
+        "url": "/content-security-policy/child-src/child-src-worker-allowed.sub.html"
+      },
+      {
+        "path": "content-security-policy/child-src/child-src-worker-blocked.sub.html",
+        "url": "/content-security-policy/child-src/child-src-worker-blocked.sub.html"
       },
       {
         "path": "content-security-policy/frame-ancestors/deep-allows-none.sub.html",
@@ -12670,6 +12762,14 @@
       {
         "path": "content-security-policy/media-src/media-src-7_3_2.html",
         "url": "/content-security-policy/media-src/media-src-7_3_2.html"
+      },
+      {
+        "path": "content-security-policy/meta/meta-img-src.html",
+        "url": "/content-security-policy/meta/meta-img-src.html"
+      },
+      {
+        "path": "content-security-policy/meta/meta-modified.html",
+        "url": "/content-security-policy/meta/meta-modified.html"
       },
       {
         "path": "content-security-policy/script-src/script-src-1_1.html",
@@ -12802,10 +12902,6 @@
       {
         "path": "cors/status.htm",
         "url": "/cors/status.htm"
-      },
-      {
-        "path": "csp/csp-inline-script.html",
-        "url": "/csp/csp-inline-script.html"
       },
       {
         "path": "custom-elements/concepts/custom-elements-type-allowed-chars-first-char.html",
@@ -13070,6 +13166,10 @@
       {
         "path": "dom/events/Event-dispatch-omitted-capture.html",
         "url": "/dom/events/Event-dispatch-omitted-capture.html"
+      },
+      {
+        "path": "dom/events/Event-dispatch-propagation-stopped.html",
+        "url": "/dom/events/Event-dispatch-propagation-stopped.html"
       },
       {
         "path": "dom/events/Event-dispatch-redispatch.html",
@@ -14612,6 +14712,10 @@
         "url": "/html/browsers/history/the-location-interface/location_protocol.html"
       },
       {
+        "path": "html/browsers/history/the-location-interface/location_reload.html",
+        "url": "/html/browsers/history/the-location-interface/location_reload.html"
+      },
+      {
         "path": "html/browsers/history/the-location-interface/location_replace.html",
         "url": "/html/browsers/history/the-location-interface/location_replace.html"
       },
@@ -15550,6 +15654,10 @@
       {
         "path": "html/infrastructure/urls/terminology-0/multiple-base.sub.html",
         "url": "/html/infrastructure/urls/terminology-0/multiple-base.sub.html"
+      },
+      {
+        "path": "html/obsolete/requirements-for-implementations/other-elements-attributes-and-apis/document-all.html",
+        "url": "/html/obsolete/requirements-for-implementations/other-elements-attributes-and-apis/document-all.html"
       },
       {
         "path": "html/obsolete/requirements-for-implementations/other-elements-attributes-and-apis/document-color-01.html",
@@ -17852,6 +17960,10 @@
         "url": "/html/webappapis/atob/base64.html"
       },
       {
+        "path": "html/webappapis/scripting/event-loops/task_microtask_ordering.html",
+        "url": "/html/webappapis/scripting/event-loops/task_microtask_ordering.html"
+      },
+      {
         "path": "html/webappapis/scripting/events/body-onload.html",
         "url": "/html/webappapis/scripting/events/body-onload.html"
       },
@@ -18106,10 +18218,6 @@
       {
         "path": "js/builtins/WeakMap.prototype-properties.html",
         "url": "/js/builtins/WeakMap.prototype-properties.html"
-      },
-      {
-        "path": "media-source/SourceBuffer-abort-readyState.html",
-        "url": "/media-source/SourceBuffer-abort-readyState.html"
       },
       {
         "path": "media-source/SourceBuffer-abort-removed.html",
@@ -28818,6 +28926,11 @@
         "url": "/html/syntax/parsing/html5lib_webkit02.html?run_type=write_single"
       },
       {
+        "path": "media-source/SourceBuffer-abort-readyState.html",
+        "timeout": "long",
+        "url": "/media-source/SourceBuffer-abort-readyState.html"
+      },
+      {
         "path": "media-source/mediasource-redundant-seek.html",
         "timeout": "long",
         "url": "/media-source/mediasource-redundant-seek.html"
@@ -29106,13 +29219,6 @@
     "deleted": [],
     "items": {
       "testharness": {
-        "media-source/SourceBuffer-abort-readyState.html": [
-          {
-            "path": "media-source/SourceBuffer-abort-readyState.html",
-            "timeout": "long",
-            "url": "/media-source/SourceBuffer-abort-readyState.html"
-          }
-        ],
         "webaudio/the-audio-api/the-audioparam-interface/retrospective-setValueAtTime.html": [
           {
             "path": "webaudio/the-audio-api/the-audioparam-interface/retrospective-setValueAtTime.html",
@@ -31738,18 +31844,6 @@
           ]
         ],
         "url": "/html/semantics/text-level-semantics/the-br-element/br-bidi.html"
-      }
-    ],
-    "html/semantics/text-level-semantics/the-wbr-element/wbr-element-ref.html": [
-      {
-        "path": "html/semantics/text-level-semantics/the-wbr-element/wbr-element-ref.html",
-        "references": [
-          [
-            "/html/semantics/text-level-semantics/the-wbr-element/wbr-element-notref.html",
-            "!="
-          ]
-        ],
-        "url": "/html/semantics/text-level-semantics/the-wbr-element/wbr-element-ref.html"
       }
     ],
     "html/semantics/text-level-semantics/the-wbr-element/wbr-element.html": [
@@ -34525,7 +34619,7 @@
       }
     ]
   },
-  "rev": "3f82dd41c8e3697bfe5fa5c57321c842b65ba2aa",
+  "rev": "2869a58fd81da41f9f904441ff39f9398fba53bc",
   "url_base": "/",
   "version": 2
 }
