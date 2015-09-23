@@ -114,7 +114,8 @@ static RedirEntry kRedirMap[] = {
   {
     "srcdoc", "about:blank",
     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
-      nsIAboutModule::HIDE_FROM_ABOUTABOUT
+      nsIAboutModule::HIDE_FROM_ABOUTABOUT |
+      nsIAboutModule::URI_CAN_LOAD_IN_CHILD
   }
 };
 static const int kRedirTotal = mozilla::ArrayLength(kRedirMap);
