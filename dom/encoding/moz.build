@@ -45,3 +45,6 @@ MOCHITEST_MANIFESTS += [
 ]
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']

@@ -126,6 +126,42 @@ interface CSSLexer
   readonly attribute unsigned long columnNumber;
 
   /**
+   * When EOF is reached, the last token might be unterminated in some
+   * ways.  This method takes an input string and appends the needed
+   * terminators.  In particular:
+   *
+   * 1. If EOF occurs mid-string, this will append the correct quote.
+   * 2. If EOF occurs in a url token, this will append the close paren.
+   * 3. If EOF occurs in a comment this will append the comment closer.
+   *
+   * A trailing backslash might also have been present in the input
+   * string.  This is handled in different ways, depending on the
+   * context and arguments.
+   *
+   * If preserveBackslash is true, then the existing backslash at the
+   * end of inputString is preserved, and a new backslash is appended.
+   * That is, the input |\| is transformed to |\\|, and the
+   * input |'\| is transformed to |'\\'|.
+   *
+   * Otherwise, preserveBackslash is false:
+   * If the backslash appears in a string context, then the trailing
+   * backslash is dropped from inputString.  That is, |"\| is
+   * transformed to |""|.
+   * If the backslash appears outside of a string context, then
+   * U+FFFD is appended.  That is, |\| is transformed to a string
+   * with two characters: backslash followed by U+FFFD.
+   *
+   * Passing false for preserveBackslash makes the result conform to
+   * the CSS Syntax specification.  However, passing true may give
+   * somewhat more intuitive behavior.
+   *
+   * @param inputString the input string
+   * @param preserveBackslash how to handle trailing backslashes
+   * @return the input string with the termination characters appended
+   */
+  DOMString performEOFFixup(DOMString inputString, boolean preserveBackslash);
+
+  /**
    * Return the next token, or null at EOF.
    */
   CSSToken? nextToken();

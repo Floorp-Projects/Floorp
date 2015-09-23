@@ -20,6 +20,7 @@
 #include "nsURIHashKey.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CORSMode.h"
+#include "mozilla/CSSStyleSheet.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/net/ReferrerPolicy.h"
 
@@ -30,7 +31,6 @@ class nsMediaList;
 class nsIStyleSheetLinkingElement;
 
 namespace mozilla {
-class CSSStyleSheet;
 namespace dom {
 class Element;
 } // namespace dom
@@ -130,6 +130,47 @@ namespace css {
 
 class SheetLoadData;
 class ImportRule;
+
+/*********************
+ * Style sheet reuse *
+ *********************/
+
+class MOZ_RAII LoaderReusableStyleSheets
+{
+public:
+  LoaderReusableStyleSheets()
+  {
+  }
+
+  /**
+   * Look for a reusable sheet (see AddReusableSheet) matching the
+   * given URL.  If found, set aResult, remove the reused sheet from
+   * the internal list, and return true.  If not found, return false;
+   * in this case, aResult is not modified.
+   *
+   * @param aURL the url to match
+   * @param aResult [out] the style sheet which can be reused
+   */
+  bool FindReusableStyleSheet(nsIURI* aURL, nsRefPtr<CSSStyleSheet>& aResult);
+
+  /**
+   * Indicate that a certain style sheet is available for reuse if its
+   * URI matches the URI of an @import.  Sheets should be added in the
+   * opposite order in which they are intended to be reused.
+   *
+   * @param aSheet the sheet which can be reused
+   */
+  void AddReusableSheet(CSSStyleSheet* aSheet) {
+    mReusableSheets.AppendElement(aSheet);
+  }
+
+private:
+  LoaderReusableStyleSheets(const LoaderReusableStyleSheets&) = delete;
+  LoaderReusableStyleSheets& operator=(const LoaderReusableStyleSheets&) = delete;
+
+  // The sheets that can be reused.
+  nsTArray<nsRefPtr<CSSStyleSheet>> mReusableSheets;
+};
 
 /***********************************************************************
  * Enum that describes the state of the sheet returned by CreateSheet. *
@@ -242,11 +283,14 @@ public:
    * @param aMedia the already-parsed media list for the child sheet
    * @param aRule the @import rule importing this child.  This is used to
    *              properly order the child sheet list of aParentSheet.
+   * @param aSavedSheets any saved style sheets which could be reused
+   *              for this load
    */
   nsresult LoadChildSheet(CSSStyleSheet* aParentSheet,
                           nsIURI* aURL,
                           nsMediaList* aMedia,
-                          ImportRule* aRule);
+                          ImportRule* aRule,
+                          LoaderReusableStyleSheets* aSavedSheets);
 
   /**
    * Synchronously load and return the stylesheet at aURL.  Any child sheets

@@ -8,5 +8,5 @@
 -agc none
 -cmn current
 -varnorm no
--cmninit 40,3,-1
+-cmninit 30.09,0.49,5.51,7.43,-2.39,-1.64,-4.71,0.03,-5.11,0.20,4.84,6.14,0.35
 -model ptm

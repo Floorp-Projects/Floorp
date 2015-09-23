@@ -558,6 +558,7 @@ TextureClient::KeepUntilFullDeallocation(UniquePtr<KeepAlive> aKeep, bool aMainT
 void TextureClient::ForceRemove(bool sync)
 {
   if (mValid && mActor) {
+    FinalizeOnIPDLThread();
     if (sync || GetFlags() & TextureFlags::DEALLOCATE_CLIENT) {
       MOZ_PERFORMANCE_WARNING("gfx", "TextureClient/Host pair requires synchronous deallocation");
       if (mActor->IPCOpen()) {

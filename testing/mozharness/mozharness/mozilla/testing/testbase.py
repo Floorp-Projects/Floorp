@@ -24,6 +24,7 @@ from mozharness.base.python import (
 from mozharness.mozilla.buildbot import BuildbotMixin, TBPL_WARNING
 from mozharness.mozilla.proxxy import Proxxy
 from mozharness.mozilla.structuredlog import StructuredOutputParser
+from mozharness.mozilla.taskcluster_helper import TaskClusterArtifactFinderMixin
 from mozharness.mozilla.testing.unittest import DesktopUnittestOutputParser
 from mozharness.mozilla.testing.try_tools import TryToolsMixin
 from mozharness.mozilla.tooltool import TooltoolMixin
@@ -86,8 +87,8 @@ testing_config_options = [
 
 
 # TestingMixin {{{1
-class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin, TooltoolMixin,
-                   TryToolsMixin):
+class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
+                   TaskClusterArtifactFinderMixin, TooltoolMixin, TryToolsMixin):
     """
     The steps to identify + download the proper bits for [browser] unit
     tests and Talos.
@@ -196,10 +197,11 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin, Tool
                     return new_url
             return url
 
-        assert c["installer_url"], "You must use --installer-url with developer_config.py"
+        if c.get("installer_url") is None:
+            self.exception("You must use --installer-url with developer_config.py")
         if c.get("require_test_zip"):
             if not c.get('test_url') and not c.get('test_packages_url'):
-                raise AssertionError("You must use --test-url or --test-packages-url with developer_config.py")
+                self.exception("You must use --test-url or --test-packages-url with developer_config.py")
 
         c["installer_url"] = _replace_url(c["installer_url"], c["replace_urls"])
         if c.get("test_url"):
@@ -246,6 +248,48 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin, Tool
 
     # read_buildbot_config is in BuildbotMixin.
 
+    def find_artifacts_from_buildbot_changes(self):
+        c = self.config
+        try:
+            files = self.buildbot_config['sourcestamp']['changes'][-1]['files']
+            buildbot_prop_branch = self.buildbot_config['properties']['branch']
+
+            # Bug 868490 - Only require exactly two files if require_test_zip;
+            # otherwise accept either 1 or 2, since we'll be getting a
+            # test_zip url that we don't need.
+            expected_length = [1, 2, 3]
+            if c.get("require_test_zip") and not self.test_url:
+                expected_length = [2, 3]
+            if buildbot_prop_branch.startswith('gaia-try'):
+                expected_length = range(1, 1000)
+            actual_length = len(files)
+            if actual_length not in expected_length:
+                self.fatal("Unexpected number of files in buildbot config %s.\nExpected these number(s) of files: %s, but got: %d" %
+                           (c['buildbot_json_path'], str(expected_length), actual_length))
+            for f in files:
+                if f['name'].endswith('tests.zip'):  # yuk
+                    if not self.test_url:
+                        # str() because of unicode issues on mac
+                        self.test_url = str(f['name'])
+                        self.info("Found test url %s." % self.test_url)
+                elif f['name'].endswith('crashreporter-symbols.zip'):  # yuk
+                    self.symbols_url = str(f['name'])
+                    self.info("Found symbols url %s." % self.symbols_url)
+                elif f['name'].endswith('test_packages.json'):
+                    self.test_packages_url = str(f['name'])
+                    self.info("Found a test packages url %s." % self.test_packages_url)
+                elif not any(f['name'].endswith(s) for s in ('code-coverage-gcno.zip',)):
+                    if not self.installer_url:
+                        self.installer_url = str(f['name'])
+                        self.info("Found installer url %s." % self.installer_url)
+        except IndexError, e:
+            self.error(str(e))
+
+    def find_artifacts_from_taskcluster(self):
+        self.info("Finding installer, test and symbols from parent task. ")
+        task_id = self.buildbot_config['properties']['taskId']
+        self.set_parent_artifacts(task_id)
+
     def postflight_read_buildbot_config(self):
         """
         Determine which files to download from the buildprops.json file
@@ -260,40 +304,17 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin, Tool
                 self.test_url = c['test_url']
             if c.get("test_packages_url"):
                 self.test_packages_url = c['test_packages_url']
-            try:
-                files = self.buildbot_config['sourcestamp']['changes'][-1]['files']
-                buildbot_prop_branch = self.buildbot_config['properties']['branch']
 
-                # Bug 868490 - Only require exactly two files if require_test_zip;
-                # otherwise accept either 1 or 2, since we'll be getting a
-                # test_zip url that we don't need.
-                expected_length = [1, 2, 3]
-                if c.get("require_test_zip") and not self.test_url:
-                    expected_length = [2, 3]
-                if buildbot_prop_branch.startswith('gaia-try'):
-                    expected_length = range(1, 1000)
-                actual_length = len(files)
-                if actual_length not in expected_length:
-                    self.fatal("Unexpected number of files in buildbot config %s.\nExpected these number(s) of files: %s, but got: %d" %
-                               (c['buildbot_json_path'], str(expected_length), actual_length))
-                for f in files:
-                    if f['name'].endswith('tests.zip'):  # yuk
-                        if not self.test_url:
-                            # str() because of unicode issues on mac
-                            self.test_url = str(f['name'])
-                            self.info("Found test url %s." % self.test_url)
-                    elif f['name'].endswith('crashreporter-symbols.zip'):  # yuk
-                        self.symbols_url = str(f['name'])
-                        self.info("Found symbols url %s." % self.symbols_url)
-                    elif f['name'].endswith('test_packages.json'):
-                        self.test_packages_url = str(f['name'])
-                        self.info("Found a test packages url %s." % self.test_packages_url)
-                    elif not any(f['name'].endswith(s) for s in ('code-coverage-gcno.zip',)):
-                        if not self.installer_url:
-                            self.installer_url = str(f['name'])
-                            self.info("Found installer url %s." % self.installer_url)
-            except IndexError, e:
-                self.error(str(e))
+            if self.buildbot_config['sourcestamp']['changes']:
+                self.find_artifacts_from_buildbot_changes()
+            elif 'taskId' in self.buildbot_config['properties']:
+                self.find_artifacts_from_taskcluster()
+            else:
+                self.exception(
+                    "We have not been able to determine which artifacts "
+                    "to use in order to run the tests."
+                )
+
             missing = []
             if not self.installer_url:
                 missing.append("installer_url")

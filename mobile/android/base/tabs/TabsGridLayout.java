@@ -271,9 +271,9 @@ class TabsGridLayout extends GridView
         post(new Runnable() {
             @Override
             public void run() {
-                final int displayCount = getChildCount();
+                final int displayCount = tabsAdapter.getCount();
 
-                for (int i = getFirstVisiblePosition(); i <= getLastVisiblePosition(); i++) {
+                for (int i = 0; i < displayCount; i++) {
                     final Tab tab = tabsAdapter.getItem(i);
                     final boolean checked = displayCount == 1 || i == selected;
                     final View tabView = getViewForTab(tab);

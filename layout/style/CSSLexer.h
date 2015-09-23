@@ -24,6 +24,8 @@ public:
 
   uint32_t LineNumber();
   uint32_t ColumnNumber();
+  void PerformEOFFixup(const nsAString& aInputString, bool aPreserveBackslash,
+                       nsAString& aResult);
   void NextToken(Nullable<CSSToken>& aResult);
 
 private:
