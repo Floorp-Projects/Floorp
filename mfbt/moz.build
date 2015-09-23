@@ -67,6 +67,7 @@ EXPORTS.mozilla = [
     'Range.h',
     'RangedArray.h',
     'RangedPtr.h',
+    'RefCounted.h',
     'RefCountType.h',
     'ReentrancyGuard.h',
     'RefPtr.h',
