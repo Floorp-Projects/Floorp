@@ -172,42 +172,22 @@ HTMLStyleElement::UnbindFromTree(bool aDeep, bool aNullParent)
 }
 
 nsresult
-HTMLStyleElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
-                          nsIAtom* aPrefix, const nsAString& aValue,
-                          bool aNotify)
+HTMLStyleElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                               const nsAttrValue* aValue, bool aNotify)
 {
-  nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
-                                              aValue, aNotify);
-  if (NS_SUCCEEDED(rv) && aNameSpaceID == kNameSpaceID_None) {
+  if (aNameSpaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::title ||
         aName == nsGkAtoms::media ||
         aName == nsGkAtoms::type) {
       UpdateStyleSheetInternal(nullptr, nullptr, true);
     } else if (aName == nsGkAtoms::scoped) {
-      UpdateStyleSheetScopedness(true);
+      bool isScoped = aValue;
+      UpdateStyleSheetScopedness(isScoped);
     }
   }
 
-  return rv;
-}
-
-nsresult
-HTMLStyleElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
-                            bool aNotify)
-{
-  nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute,
-                                                aNotify);
-  if (NS_SUCCEEDED(rv) && aNameSpaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::title ||
-        aAttribute == nsGkAtoms::media ||
-        aAttribute == nsGkAtoms::type) {
-      UpdateStyleSheetInternal(nullptr, nullptr, true);
-    } else if (aAttribute == nsGkAtoms::scoped) {
-      UpdateStyleSheetScopedness(false);
-    }
-  }
-
-  return rv;
+  return nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue,
+                                            aNotify);
 }
 
 NS_IMETHODIMP
