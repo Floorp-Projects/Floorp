@@ -112,7 +112,6 @@ private:
   bool mAudioChannelAgentPlaying;
 
   TimeStamp mStartedBlockingDueToBeingOnlyNode;
-  StreamTime mExtraCurrentTime;
   StreamTime mExtraCurrentTimeSinceLastStartedBlocking;
   bool mExtraCurrentTimeUpdatedSinceLastStableState;
   bool mCaptured;

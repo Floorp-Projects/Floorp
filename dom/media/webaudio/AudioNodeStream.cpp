@@ -377,6 +377,31 @@ AudioNodeStream::ComputedNumberOfChannels(uint32_t aInputChannelCount)
   }
 }
 
+class AudioNodeStream::AdvanceAndResumeMessage final : public ControlMessage {
+public:
+  AdvanceAndResumeMessage(AudioNodeStream* aStream, StreamTime aAdvance) :
+    ControlMessage(aStream), mAdvance(aAdvance) {}
+  virtual void Run() override
+  {
+    auto ns = static_cast<AudioNodeStream*>(mStream);
+    ns->mBufferStartTime -= mAdvance;
+
+    StreamBuffer::Track* track = ns->EnsureTrack(AUDIO_TRACK);
+    track->Get<AudioSegment>()->AppendNullData(mAdvance);
+
+    ns->GraphImpl()->DecrementSuspendCount(mStream);
+  }
+private:
+  StreamTime mAdvance;
+};
+
+void
+AudioNodeStream::AdvanceAndResume(StreamTime aAdvance)
+{
+  mMainThreadCurrentTime += aAdvance;
+  GraphImpl()->AppendMessage(new AdvanceAndResumeMessage(this, aAdvance));
+}
+
 void
 AudioNodeStream::ObtainInputBlock(AudioBlock& aTmpChunk,
                                   uint32_t aPortIndex)
