@@ -318,7 +318,7 @@ function EngineStore() {
   this._defaultEngines = Services.search.getDefaultEngines().map(this._cloneEngine, this);
 
   // check if we need to disable the restore defaults button
-  var someHidden = this._defaultEngines.some(function (e) e.hidden);
+  var someHidden = this._defaultEngines.some(e => e.hidden);
   gSearchPane.showRestoreDefaults(someHidden);
 }
 EngineStore.prototype = {
