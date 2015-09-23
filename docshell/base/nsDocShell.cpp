@@ -9388,17 +9388,7 @@ nsresult
 nsDocShell::CreatePrincipalFromReferrer(nsIURI* aReferrer,
                                         nsIPrincipal** aResult)
 {
-  nsresult rv;
-
-  uint32_t appId;
-  rv = GetAppId(&appId);
-  NS_ENSURE_SUCCESS(rv, rv);
-  bool isInBrowserElement;
-  rv = GetIsInBrowserElement(&isInBrowserElement);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // TODO: Bug 1165466 - Pass mOriginAttributes directly.
-  OriginAttributes attrs(appId, isInBrowserElement);
+  OriginAttributes attrs = GetOriginAttributes();
   nsCOMPtr<nsIPrincipal> prin =
     BasePrincipal::CreateCodebasePrincipal(aReferrer, attrs);
   prin.forget(aResult);
@@ -13713,6 +13703,38 @@ nsDocShell::GetAppId(uint32_t* aAppId)
   }
 
   return parent->GetAppId(aAppId);
+}
+
+OriginAttributes
+nsDocShell::GetOriginAttributes()
+{
+  OriginAttributes attrs;
+  nsRefPtr<nsDocShell> parent = GetParentDocshell();
+  if (parent) {
+    attrs.InheritFromDocShellParent(parent->GetOriginAttributes());
+  }
+
+  if (mOwnOrContainingAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID) {
+    attrs.mAppId = mOwnOrContainingAppId;
+  }
+
+  if (mFrameType == eFrameTypeBrowser) {
+    attrs.mInBrowser = true;
+  }
+
+  return attrs;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetOriginAttributes(JS::MutableHandle<JS::Value> aVal)
+{
+  JSContext* cx = nsContentUtils::GetCurrentJSContext();
+  MOZ_ASSERT(cx);
+
+  OriginAttributes attrs = GetOriginAttributes();
+  bool ok = ToJSValue(cx, attrs, aVal);
+  NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
