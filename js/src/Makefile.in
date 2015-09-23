@@ -291,6 +291,7 @@ selfhosting_srcs := \
   $(srcdir)/builtin/IntlData.js \
   $(srcdir)/builtin/Iterator.js \
   $(srcdir)/builtin/Map.js \
+  $(srcdir)/builtin/Module.js \
   $(srcdir)/builtin/Number.js \
   $(srcdir)/builtin/Object.js \
   $(srcdir)/builtin/Reflect.js \
