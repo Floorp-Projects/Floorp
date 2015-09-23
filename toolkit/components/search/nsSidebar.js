@@ -38,8 +38,7 @@ nsSidebar.prototype = {
   AddSearchProvider: function(engineURL) {
     this.mm.sendAsyncMessage("Search:AddEngine", {
       pageURL: this.window.document.documentURIObject.spec,
-      engineURL,
-      type: Ci.nsISearchEngine.DATA_XML
+      engineURL
     });
   },
 
