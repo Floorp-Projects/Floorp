@@ -41,14 +41,13 @@ public class ExternalIntentDuringPrivateBrowsingPromptFragment extends DialogFra
         final CharSequence matchingApplicationName = args.getCharSequence(KEY_APPLICATION_NAME);
         final Intent intent = args.getParcelable(KEY_INTENT);
 
-        final Context context = getActivity();
-        final String promptMessage = context.getString(R.string.intent_uri_private_browsing_prompt, matchingApplicationName);
-
+        final String promptMessage = getString(R.string.intent_uri_private_browsing_prompt, matchingApplicationName);
         final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setMessage(promptMessage)
                 .setTitle(intent.getDataString())
                 .setPositiveButton(R.string.button_yes, new DialogInterface.OnClickListener() {
                     public void onClick(final DialogInterface dialog, final int id) {
+                        final Context context = getActivity();
                         context.startActivity(intent);
                     }
                 })
@@ -80,9 +79,14 @@ public class ExternalIntentDuringPrivateBrowsingPromptFragment extends DialogFra
             // We don't know the results of the user interaction with the fragment so just return true.
             return true;
         } else if (matchingActivities.size() > 1) {
-            // Android chooser dialog will be shown, which should make the users
-            // aware they're entering a new application from private browsing.
-            return ActivityHandlerHelper.startIntentAndCatch(context, intent);
+            // We want to show the Android Intent Chooser. However, we have no way of distinguishing regular tabs from
+            // private tabs to the chooser. Thus, if a user chooses "Always" in regular browsing mode, the chooser will
+            // not be shown and the URL will be opened. Therefore we explicitly show the chooser (which notably does not
+            // have an "Always" option).
+            final String androidChooserTitle =
+                    context.getResources().getString(R.string.intent_uri_private_browsing_multiple_match_title);
+            final Intent chooserIntent = Intent.createChooser(intent, androidChooserTitle);
+            return ActivityHandlerHelper.startIntentAndCatch(context, chooserIntent);
         } else {
             // Normally, we show about:neterror when an Intent does not resolve
             // but we don't have the references here to do that so log instead.
