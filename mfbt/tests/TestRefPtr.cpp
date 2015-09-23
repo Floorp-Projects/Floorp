@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/RefPtr.h"
+#include "mozilla/RefCounted.h"
 
 using mozilla::RefCounted;
 using mozilla::RefPtr;
