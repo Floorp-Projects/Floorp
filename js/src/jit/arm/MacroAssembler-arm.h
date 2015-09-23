@@ -347,9 +347,8 @@ class MacroAssemblerARM : public Assembler
 
     // Branches when done from within arm-specific code.
     BufferOffset ma_b(Label* dest, Condition c = Always);
+    void ma_b(void* target, Condition c = Always);
     void ma_bx(Register dest, Condition c = Always);
-
-    void ma_b(void* target, Relocation::Kind reloc, Condition c = Always);
 
     // This is almost NEVER necessary, we'll basically never be calling a label
     // except, possibly in the crazy bailout-table case.
