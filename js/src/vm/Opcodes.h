@@ -847,10 +847,10 @@
      * This opcode takes the final length, which is preallocated.
      *   Category: Literals
      *   Type: Array
-     *   Operands: uint32_t length
+     *   Operands: uint24_t length
      *   Stack: => obj
      */ \
-    macro(JSOP_NEWARRAY,  90, "newarray",   NULL,         5,  0,  1, JOF_UINT32) \
+    macro(JSOP_NEWARRAY,  90, "newarray",   NULL,         4,  0,  1, JOF_UINT24) \
     /*
      * Pushes newly created object onto the stack.
      *
@@ -920,10 +920,10 @@
      * property of 'obj' as 'val', pushes 'obj' onto the stack.
      *   Category: Literals
      *   Type: Array
-     *   Operands: uint32_t index
+     *   Operands: uint24_t index
      *   Stack: obj, val => obj
      */ \
-    macro(JSOP_INITELEM_ARRAY,96, "initelem_array", NULL, 5,  2,  1,  JOF_UINT32|JOF_ELEM|JOF_SET|JOF_DETECTING) \
+    macro(JSOP_INITELEM_ARRAY,96, "initelem_array", NULL, 4,  2,  1,  JOF_UINT24|JOF_ELEM|JOF_SET|JOF_DETECTING) \
     \
     /*
      * Initialize a getter in an object literal.
@@ -1277,12 +1277,13 @@
      * the same semantics as JSOP_NEWARRAY, but is distinguished to avoid
      * using unboxed arrays in spread calls, which would make compiling spread
      * calls in baseline more complex.
+     *
      *   Category: Literals
      *   Type: Array
-     *   Operands: uint32_t length
+     *   Operands: uint24_t length
      *   Stack: => obj
      */ \
-    macro(JSOP_SPREADCALLARRAY, 126, "spreadcallarray", NULL, 5,  0,  1, JOF_UINT32) \
+    macro(JSOP_SPREADCALLARRAY, 126, "spreadcallarray", NULL, 4,  0,  1, JOF_UINT24) \
     \
     /*
      * Defines the given function on the current scope.
