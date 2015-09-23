@@ -77,10 +77,10 @@
             "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5o.manifest"
         },
         "g3": {
-            "tests": ["dromaeo_dom"],
+            "tests": ["dromaeo_dom"]
         },
         "g3-e10s": {
-            "tests": ["dromaeo_dom"],
+            "tests": ["dromaeo_dom"]
         },
         "svgr": {
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "cart"]
