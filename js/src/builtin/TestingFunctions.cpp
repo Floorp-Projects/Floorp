@@ -1111,6 +1111,7 @@ static const JSClass FinalizeCounterClass = {
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
+    nullptr, /* convert */
     finalize_counter_finalize
 };
 
@@ -1803,6 +1804,7 @@ const Class CloneBufferObject::class_ = {
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
+    nullptr, /* convert */
     Finalize
 };
 

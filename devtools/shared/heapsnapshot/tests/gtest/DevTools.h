@@ -102,7 +102,7 @@ struct DevTools : public ::testing::Test {
       "global", JSCLASS_GLOBAL_FLAGS,
       nullptr, nullptr, nullptr, nullptr,
       nullptr, nullptr, nullptr, nullptr,
-      nullptr, nullptr, nullptr,
+      nullptr, nullptr, nullptr, nullptr,
       JS_GlobalObjectTraceHook
     };
     return &globalClass;
