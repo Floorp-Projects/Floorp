@@ -26,7 +26,7 @@ class DomainPolicyClone;
 [ptr] native JSObjectPtr(JSObject);
 [ptr] native DomainPolicyClonePtr(mozilla::dom::DomainPolicyClone);
 
-[scriptable, uuid(b7ae2310-576e-11e5-a837-0800200c9a66)]
+[scriptable, uuid(6e8a4d1e-d9c6-4d86-bf53-d73f58f36148)]
 interface nsIScriptSecurityManager : nsISupports
 {
     /**
@@ -196,13 +196,6 @@ interface nsIScriptSecurityManager : nsISupports
      */
     [implicit_jscontext]
     nsIPrincipal createCodebasePrincipal(in nsIURI uri, in jsval originAttributes);
-
-    /**
-     * Returns a principal whose origin is the one we pass in.
-     * See nsIPrincipal.idl for a description of origin attributes, and
-     * ChromeUtils.webidl for a list of origin attributes and their defaults.
-     */
-    nsIPrincipal createCodebasePrincipalFromOrigin(in ACString origin);
 
     /**
      * Returns a unique nonce principal with |originAttributes|.

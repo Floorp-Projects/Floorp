@@ -19,6 +19,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
+                                  "resource://gre/modules/BrowserUtils.jsm");
 
 this.EXPORTED_SYMBOLS = ["PushRecord"];
 
@@ -216,7 +218,7 @@ Object.defineProperties(PushRecord.prototype, {
           // Allow tests to omit origin attributes.
           url += this.originAttributes;
         }
-        principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(url);
+        principal = BrowserUtils.principalFromOrigin(url);
         principals.set(this, principal);
       }
       return principal;

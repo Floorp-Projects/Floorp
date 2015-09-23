@@ -67,7 +67,6 @@
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
 #include "nsILoadInfo.h"
-#include "nsXPCOMStrings.h"
 
 // This should be probably defined on some other place... but I couldn't find it
 #define WEBAPPS_PERM_NAME "webapps-manage"
@@ -1040,23 +1039,6 @@ nsScriptSecurityManager::CreateCodebasePrincipal(nsIURI* aURI, JS::Handle<JS::Va
       return NS_ERROR_INVALID_ARG;
   }
   nsCOMPtr<nsIPrincipal> prin = BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
-  prin.forget(aPrincipal);
-  return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::CreateCodebasePrincipalFromOrigin(const nsACString& aOrigin,
-                                                           nsIPrincipal** aPrincipal)
-{
-  if (StringBeginsWith(aOrigin, NS_LITERAL_CSTRING("["))) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  if (StringBeginsWith(aOrigin, NS_LITERAL_CSTRING(NS_NULLPRINCIPAL_SCHEME ":"))) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsCOMPtr<nsIPrincipal> prin = BasePrincipal::CreateCodebasePrincipal(aOrigin);
   prin.forget(aPrincipal);
   return *aPrincipal ? NS_OK : NS_ERROR_FAILURE;
 }
