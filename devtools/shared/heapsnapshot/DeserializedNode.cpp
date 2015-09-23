@@ -100,8 +100,8 @@ Concrete<DeserializedNode>::size(mozilla::MallocSizeOf mallocSizeof) const
 
 class DeserializedEdgeRange : public EdgeRange
 {
-  SimpleEdgeVector edges;
-  size_t           i;
+  EdgeVector edges;
+  size_t     i;
 
   void settle() {
     front_ = i < edges.length() ? &edges[i] : nullptr;
@@ -132,7 +132,7 @@ public:
       }
 
       auto referent = node.getEdgeReferent(*edgep);
-      edges.infallibleAppend(mozilla::Move(SimpleEdge(name, referent)));
+      edges.infallibleAppend(mozilla::Move(Edge(name, referent)));
     }
 
     settle();

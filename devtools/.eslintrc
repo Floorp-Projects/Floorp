@@ -146,7 +146,7 @@
     // which is a valid use case.
     "no-empty": 2,
     // Disallow the use of empty character classes in regular expressions.
-    "no-empty-class": 2,
+    "no-empty-character-class": 2,
     // Disallow use of labels for anything other then loops and switches.
     "no-empty-label": 2,
     // Disallow use of eval(). We have other APIs to evaluate code in content.
@@ -320,7 +320,7 @@
     // Deprecated, will be removed in 1.0.
     "space-unary-word-ops": 0,
     // Require a space immediately following the // in a line comment.
-    "spaced-line-comment": [1, "always"],
+    "spaced-comment": [1, "always"],
     // Require "use strict" to be defined globally in the script.
     "strict": [2, "global"],
     // Disallow comparisons with the value NaN.

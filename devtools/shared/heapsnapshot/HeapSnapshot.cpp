@@ -17,13 +17,14 @@
 #include "mozilla/devtools/AutoMemMap.h"
 #include "mozilla/devtools/CoreDump.pb.h"
 #include "mozilla/devtools/DeserializedNode.h"
+#include "mozilla/devtools/FileDescriptorOutputStream.h"
+#include "mozilla/devtools/HeapSnapshotTempFileHelperChild.h"
 #include "mozilla/devtools/ZeroCopyNSIOutputStream.h"
 #include "mozilla/dom/ChromeUtils.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/HeapSnapshotBinding.h"
 #include "mozilla/RangedPtr.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/TimeStamp.h"
-#include "mozilla/UniquePtr.h"
 
 #include "jsapi.h"
 #include "nsCycleCollectionParticipant.h"
@@ -810,13 +811,6 @@ WriteHeapGraph(JSContext* cx,
   return ok;
 }
 
-} // namespace devtools
-
-namespace dom {
-
-using namespace JS;
-using namespace devtools;
-
 static unsigned long
 msSinceProcessCreation(const TimeStamp& now)
 {
@@ -825,10 +819,10 @@ msSinceProcessCreation(const TimeStamp& now)
   return (unsigned long) duration.ToMilliseconds();
 }
 
-// Creates the `$TEMP_DIR/XXXXXX-XXX.fxsnapshot` core dump file that heap
-// snapshots are serialized into.
-static already_AddRefed<nsIFile>
-createUniqueCoreDumpFile(ErrorResult& rv, const TimeStamp& now, nsAString& outFilePath)
+/* static */ already_AddRefed<nsIFile>
+HeapSnapshot::CreateUniqueCoreDumpFile(ErrorResult& rv,
+                                       const TimeStamp& now,
+                                       nsAString& outFilePath)
 {
   nsCOMPtr<nsIFile> file;
   rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(file));
@@ -851,6 +845,92 @@ createUniqueCoreDumpFile(ErrorResult& rv, const TimeStamp& now, nsAString& outFi
   return file.forget();
 }
 
+// Deletion policy for cleaning up PHeapSnapshotTempFileHelperChild pointers.
+class DeleteHeapSnapshotTempFileHelperChild
+{
+public:
+  MOZ_CONSTEXPR DeleteHeapSnapshotTempFileHelperChild() { }
+
+  void operator()(PHeapSnapshotTempFileHelperChild* ptr) const {
+    NS_WARN_IF(!HeapSnapshotTempFileHelperChild::Send__delete__(ptr));
+  }
+};
+
+// A UniquePtr alias to automatically manage PHeapSnapshotTempFileHelperChild
+// pointers.
+using UniqueHeapSnapshotTempFileHelperChild = UniquePtr<PHeapSnapshotTempFileHelperChild,
+                                                        DeleteHeapSnapshotTempFileHelperChild>;
+
+// Get an nsIOutputStream that we can write the heap snapshot to. In non-e10s
+// and in the e10s parent process, open a file directly and create an output
+// stream for it. In e10s child processes, we are sandboxed without access to
+// the filesystem. Use IPDL to request a file descriptor from the parent
+// process.
+static already_AddRefed<nsIOutputStream>
+getCoreDumpOutputStream(ErrorResult& rv, TimeStamp& start, nsAString& outFilePath)
+{
+  if (XRE_IsParentProcess()) {
+    // Create the file and open the output stream directly.
+
+    nsCOMPtr<nsIFile> file = HeapSnapshot::CreateUniqueCoreDumpFile(rv,
+                                                                    start,
+                                                                    outFilePath);
+    if (NS_WARN_IF(rv.Failed()))
+      return nullptr;
+
+    nsCOMPtr<nsIOutputStream> outputStream;
+    rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), file,
+                                     PR_WRONLY, -1, 0);
+    if (NS_WARN_IF(rv.Failed()))
+      return nullptr;
+
+    return outputStream.forget();
+  } else {
+    // Request a file descriptor from the parent process over IPDL.
+
+    auto cc = ContentChild::GetSingleton();
+    if (!cc) {
+      rv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+
+    UniqueHeapSnapshotTempFileHelperChild helper(
+      cc->SendPHeapSnapshotTempFileHelperConstructor());
+    if (NS_WARN_IF(!helper)) {
+      rv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+
+    OpenHeapSnapshotTempFileResponse response;
+    if (!helper->SendOpenHeapSnapshotTempFile(&response)) {
+      rv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+    if (response.type() == OpenHeapSnapshotTempFileResponse::Tnsresult) {
+      rv.Throw(response.get_nsresult());
+      return nullptr;
+    }
+
+    auto opened = response.get_OpenedFile();
+    outFilePath = opened.path();
+    nsCOMPtr<nsIOutputStream> outputStream =
+      FileDescriptorOutputStream::Create(opened.descriptor());
+    if (NS_WARN_IF(!outputStream)) {
+      rv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+
+    return outputStream.forget();
+  }
+}
+
+} // namespace devtools
+
+namespace dom {
+
+using namespace JS;
+using namespace devtools;
+
 /* static */ void
 ThreadSafeChromeUtils::SaveHeapSnapshot(GlobalObject& global,
                                         JSContext* cx,
@@ -865,14 +945,7 @@ ThreadSafeChromeUtils::SaveHeapSnapshot(GlobalObject& global,
   uint32_t nodeCount = 0;
   uint32_t edgeCount = 0;
 
-  nsCOMPtr<nsIFile> file = createUniqueCoreDumpFile(rv, start, outFilePath);
-  if (NS_WARN_IF(rv.Failed()))
-    return;
-
-  nsCOMPtr<nsIOutputStream> outputStream;
-  rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), file,
-                                   PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
-                                   -1, 0);
+  nsCOMPtr<nsIOutputStream> outputStream = getCoreDumpOutputStream(rv, start, outFilePath);
   if (NS_WARN_IF(rv.Failed()))
     return;
 

@@ -36,6 +36,18 @@ InterceptedJARChannel::GetIsNavigation(bool* aIsNavigation)
 }
 
 NS_IMETHODIMP
+InterceptedJARChannel::GetInternalContentPolicyType(nsContentPolicyType* aPolicyType)
+{
+  NS_ENSURE_ARG(aPolicyType);
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  nsresult rv = mChannel->GetLoadInfo(getter_AddRefs(loadInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  *aPolicyType = loadInfo->InternalContentPolicyType();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 InterceptedJARChannel::GetChannel(nsIChannel** aChannel)
 {
   NS_IF_ADDREF(*aChannel = mChannel);
