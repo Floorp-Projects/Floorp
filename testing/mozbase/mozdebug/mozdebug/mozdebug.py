@@ -11,8 +11,7 @@ from distutils.spawn import find_executable
 
 __all__ = ['get_debugger_info',
            'get_default_debugger_name',
-           'DebuggerSearch',
-           'get_default_valgrind_args']
+           'DebuggerSearch']
 
 '''
 Map of debugging programs to information about them, like default arguments
@@ -50,6 +49,20 @@ _DEBUGGER_INFO = {
     'wdexpress.exe': {
         'interactive': True,
         'args': ['-debugexe']
+    },
+
+    # valgrind doesn't explain much about leaks unless you set the
+    # '--leak-check=full' flag. But there are a lot of objects that are
+    # semi-deliberately leaked, so we set '--show-possibly-lost=no' to avoid
+    # uninteresting output from those objects. We set '--smc-check==all-non-file'
+    # and '--vex-iropt-register-updates=allregs-at-mem-access' so that valgrind
+    # deals properly with JIT'd JavaScript code.
+    'valgrind': {
+        'interactive': False,
+        'args': ['--leak-check=full',
+                '--show-possibly-lost=no',
+                '--smc-check=all-non-file',
+                '--vex-iropt-register-updates=allregs-at-mem-access']
     }
 }
 
@@ -153,67 +166,3 @@ def get_default_debugger_name(search=DebuggerSearch.OnlyFirst):
             return None
 
     return None
-
-# Defines default values for Valgrind flags.
-#
-# --smc-check=all-non-file is required to deal with code generation and
-#   patching by the various JITS.  Note that this is only necessary on
-#   x86 and x86_64, but not on ARM.  This flag is only necessary for
-#   Valgrind versions prior to 3.11.
-#
-# --vex-iropt-register-updates=allregs-at-mem-access is required so that
-#   Valgrind generates correct register values whenever there is a
-#   segfault that is caught and handled.  In particular OdinMonkey
-#   requires this.  More recent Valgrinds (3.11 and later) provide
-#   --px-default=allregs-at-mem-access and
-#   --px-file-backed=unwindregs-at-mem-access
-#   which provide a significantly cheaper alternative, by restricting the
-#   precise exception behaviour to JIT generated code only.
-#
-# --trace-children=yes is required to get Valgrind to follow into
-#   content and other child processes.  The resulting output can be
-#   difficult to make sense of, and --child-silent-after-fork=yes
-#   helps by causing Valgrind to be silent for the child in the period
-#   after fork() but before its subsequent exec().
-#
-# --trace-children-skip lists processes that we are not interested
-#   in tracing into.
-#
-# --leak-check=full requests full stack traces for all leaked blocks
-#   detected at process exit.
-#
-# --show-possibly-lost=no requests blocks for which only an interior
-#   pointer was found to be considered not leaked.
-#
-#
-# TODO: pass in the user supplied args for V (--valgrind-args=) and
-# use this to detect if a different tool has been selected.  If so
-# adjust tool-specific args appropriately.
-#
-# TODO: pass in the path to the Valgrind to be used (--valgrind=), and
-# check what flags it accepts.  Possible args that might be beneficial:
-#
-# --num-transtab-sectors=24   [reduces re-jitting overheads in long runs]
-# --px-default=allregs-at-mem-access
-# --px-file-backed=unwindregs-at-mem-access
-#                             [these reduce PX overheads as described above]
-#
-def get_default_valgrind_args():
-    return (['--fair-sched=yes',
-             '--smc-check=all-non-file',
-             '--vex-iropt-register-updates=allregs-at-mem-access',
-             '--trace-children=yes',
-             '--child-silent-after-fork=yes',
-             '--leak-check=full',
-             '--show-possibly-lost=no',
-             ('--trace-children-skip='
-              + '/usr/bin/hg,/bin/rm,*/bin/certutil,*/bin/pk12util,'
-              + '*/bin/ssltunnel,*/bin/uname,*/bin/which,*/bin/ps,'
-              + '*/bin/grep,*/bin/java'),
-            ]
-            + get_default_valgrind_tool_specific_args())
-
-def get_default_valgrind_tool_specific_args():
-    return [
-            '--partial-loads-ok=yes'
-    ]
