@@ -403,7 +403,7 @@ HandlerInfoWrapper.prototype = {
     var disabledPluginTypes = this._getDisabledPluginTypes();
 
     var type = this.type;
-    disabledPluginTypes = disabledPluginTypes.filter(function(v) v != type);
+    disabledPluginTypes = disabledPluginTypes.filter(v => v != type);
 
     this._prefSvc.setCharPref(PREF_DISABLED_PLUGIN_TYPES,
                               disabledPluginTypes.join(","));
@@ -1549,7 +1549,7 @@ var gApplicationsPane = {
       case Ci.nsIHandlerInfo.useHelperApp:
         if (preferredApp)
           menu.selectedItem = 
-            possibleAppMenuItems.filter(function(v) v.handlerApp.equals(preferredApp))[0];
+            possibleAppMenuItems.filter(v => v.handlerApp.equals(preferredApp))[0];
         break;
       case kActionUsePlugin:
         menu.selectedItem = pluginMenuItem;
