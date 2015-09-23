@@ -477,7 +477,7 @@ class JSFunction : public js::NativeObject
         // Note: createScriptForLazilyInterpretedFunction triggers a barrier on
         // lazy script before it is overwritten here.
         MOZ_ASSERT(isInterpretedLazy());
-        if (!lazyScript()->maybeScript())
+        if (lazyScriptOrNull() && !lazyScript()->maybeScript())
             lazyScript()->initScript(script);
         flags_ &= ~INTERPRETED_LAZY;
         flags_ |= INTERPRETED;
