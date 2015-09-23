@@ -78,7 +78,7 @@ function doTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(function() setTimeout(doTest, 0));
+addLoadEvent(() => setTimeout(doTest, 0));
 
 ]]></script>
 

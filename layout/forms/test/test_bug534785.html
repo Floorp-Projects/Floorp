@@ -61,15 +61,15 @@ SimpleTest.waitForFocus(function() {
     [textAreaWithValue, inputWithValue].forEach(function (elem) {
       is(elem.value, "test", "Value should persist correctly");
     });
-    [inputWithoutValue, inputWithValue].forEach(function (elem) elem.type = "submit");
+    [inputWithoutValue, inputWithValue].forEach(elem => elem.type = "submit");
     document.body.offsetWidth;
     is(inputWithoutValue.value, "", "Value should persist correctly");
     is(inputWithValue.value, "test", "Value should persist correctly");
-    [inputWithoutValue, inputWithValue].forEach(function (elem) elem.type = "text");
+    [inputWithoutValue, inputWithValue].forEach(elem => elem.type = "text");
     document.body.offsetWidth;
     is(inputWithoutValue.value, "", "Value should persist correctly");
     is(inputWithValue.value, "test", "Value should persist correctly");
-    [inputWithoutValue, inputWithValue].forEach(function (elem) elem.focus()); // initialze the editor
+    [inputWithoutValue, inputWithValue].forEach(elem => elem.focus()); // initialze the editor
     reframeDiv.style.display = "none";
     document.body.offsetWidth;
     reframeDiv.style.display = "";
