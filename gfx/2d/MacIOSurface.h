@@ -9,7 +9,6 @@
 #ifdef XP_MACOSX
 #include <QuartzCore/QuartzCore.h>
 #include <dlfcn.h>
-#include "mozilla/RefPtr.h"
 
 typedef CFTypeRef IOSurfacePtr;
 typedef IOSurfacePtr (*IOSurfaceCreateFunc) (CFDictionaryRef properties);
@@ -63,7 +62,7 @@ enum CGContextType {
 
 CGContextType GetContextType(CGContextRef ref);
 
-class MacIOSurface : public mozilla::RefCounted<MacIOSurface> {
+class MacIOSurface final : public mozilla::external::AtomicRefCounted<MacIOSurface> {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(MacIOSurface)
   typedef mozilla::gfx::SourceSurface SourceSurface;
@@ -83,7 +82,7 @@ public:
   explicit MacIOSurface(const void *aIOSurfacePtr,
                         double aContentsScaleFactor = 1.0,
                         bool aHasAlpha = true);
-  virtual ~MacIOSurface();
+  ~MacIOSurface();
   IOSurfaceID GetIOSurfaceID();
   void *GetBaseAddress();
   void *GetBaseAddressOfPlane(size_t planeIndex);
@@ -126,9 +125,9 @@ private:
   bool mHasAlpha;
 };
 
-class MacIOSurfaceLib: public MacIOSurface {
+class MacIOSurfaceLib {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(MacIOSurfaceLib)
+  MacIOSurfaceLib() = delete;
   static void                        *sIOSurfaceFramework;
   static void                        *sOpenGLFramework;
   static void                        *sCoreGraphicsFramework;

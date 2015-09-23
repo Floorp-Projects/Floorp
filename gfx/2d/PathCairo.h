@@ -80,11 +80,12 @@ public:
 
   void AppendPathToBuilder(PathBuilderCairo *aBuilder, const Matrix *aTransform = nullptr) const;
 private:
-  void EnsureContainingContext() const;
+  void EnsureContainingContext(const Matrix &aTransform) const;
 
   FillRule mFillRule;
   std::vector<cairo_path_data_t> mPathData;
   mutable cairo_t *mContainingContext;
+  mutable Matrix mContainingTransform;
   Point mCurrentPoint;
 };
 

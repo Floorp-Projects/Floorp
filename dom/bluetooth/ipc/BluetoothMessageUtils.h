@@ -45,6 +45,14 @@ struct ParamTraits<mozilla::dom::bluetooth::BluetoothGattWriteType>
 { };
 
 template <>
+struct ParamTraits<mozilla::dom::bluetooth::BluetoothGattAuthReq>
+  : public ContiguousEnumSerializer<
+             mozilla::dom::bluetooth::BluetoothGattAuthReq,
+             mozilla::dom::bluetooth::GATT_AUTH_REQ_NONE,
+             mozilla::dom::bluetooth::GATT_AUTH_REQ_END_GUARD>
+{ };
+
+template <>
 struct ParamTraits<mozilla::dom::bluetooth::BluetoothUuid>
 {
   typedef mozilla::dom::bluetooth::BluetoothUuid paramType;
@@ -136,6 +144,60 @@ struct ParamTraits<mozilla::dom::bluetooth::BluetoothGattCharAttribute>
   }
 };
 
+template <>
+struct ParamTraits<mozilla::dom::bluetooth::BluetoothAttributeHandle>
+{
+  typedef mozilla::dom::bluetooth::BluetoothAttributeHandle paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mHandle);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &(aResult->mHandle))) {
+      return false;
+    }
+
+    return true;
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::dom::bluetooth::BluetoothGattResponse>
+{
+  typedef mozilla::dom::bluetooth::BluetoothGattResponse paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mHandle);
+    WriteParam(aMsg, aParam.mOffset);
+    WriteParam(aMsg, aParam.mLength);
+    WriteParam(aMsg, aParam.mAuthReq);
+    for (uint16_t i = 0; i < aParam.mLength; i++) {
+      WriteParam(aMsg, aParam.mValue[i]);
+    }
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &(aResult->mHandle)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mOffset)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mLength)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mAuthReq))) {
+      return false;
+    }
+
+    for (uint16_t i = 0; i < aResult->mLength; i++) {
+      if (!ReadParam(aMsg, aIter, &(aResult->mValue[i]))) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+};
 } // namespace IPC
 
 #endif // mozilla_dom_bluetooth_ipc_BluetoothMessageUtils_h

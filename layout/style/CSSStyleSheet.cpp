@@ -2268,7 +2268,7 @@ CSSStyleSheet::StyleSheetLoaded(CSSStyleSheet* aSheet,
 }
 
 nsresult
-CSSStyleSheet::ParseSheet(const nsAString& aInput)
+CSSStyleSheet::ReparseSheet(const nsAString& aInput)
 {
   // Not doing this if the sheet is not complete!
   if (!mInner->mComplete) {
@@ -2290,21 +2290,37 @@ CSSStyleSheet::ParseSheet(const nsAString& aInput)
   WillDirty();
 
   // detach existing rules (including child sheets via import rules)
+  css::LoaderReusableStyleSheets reusableSheets;
   int ruleCount;
   while ((ruleCount = mInner->mOrderedRules.Count()) != 0) {
     nsRefPtr<css::Rule> rule = mInner->mOrderedRules.ObjectAt(ruleCount - 1);
     mInner->mOrderedRules.RemoveObjectAt(ruleCount - 1);
     rule->SetStyleSheet(nullptr);
+    if (rule->GetType() == css::Rule::IMPORT_RULE) {
+      nsCOMPtr<nsIDOMCSSImportRule> importRule(do_QueryInterface(rule));
+      NS_ASSERTION(importRule, "GetType lied");
+
+      nsCOMPtr<nsIDOMCSSStyleSheet> childSheet;
+      importRule->GetStyleSheet(getter_AddRefs(childSheet));
+
+      nsRefPtr<CSSStyleSheet> cssSheet = do_QueryObject(childSheet);
+      if (cssSheet && cssSheet->GetOriginalURI()) {
+        reusableSheets.AddReusableSheet(cssSheet);
+      }
+    }
     if (mDocument) {
       mDocument->StyleRuleRemoved(this, rule);
     }
   }
 
   // nuke child sheets list and current namespace map
-  for (CSSStyleSheet* child = mInner->mFirstChild; child; child = child->mNext) {
+  for (CSSStyleSheet* child = mInner->mFirstChild; child; ) {
     NS_ASSERTION(child->mParent == this, "Child sheet is not parented to this!");
+    CSSStyleSheet* next = child->mNext;
     child->mParent = nullptr;
     child->mDocument = nullptr;
+    child->mNext = nullptr;
+    child = next;
   }
   mInner->mFirstChild = nullptr;
   mInner->mNameSpaceMap = nullptr;
@@ -2323,7 +2339,7 @@ CSSStyleSheet::ParseSheet(const nsAString& aInput)
   nsCSSParser parser(loader, this);
   nsresult rv = parser.ParseSheet(aInput, mInner->mSheetURI, mInner->mBaseURI,
                                   mInner->mPrincipal, lineNumber,
-                                  allowUnsafeRules);
+                                  allowUnsafeRules, &reusableSheets);
   DidDirty(); // we are always 'dirty' here since we always remove rules first
   NS_ENSURE_SUCCESS(rv, rv);
 

@@ -801,6 +801,20 @@ NetworkService.prototype = {
       });
     });
   },
+
+  setMtu: function (aInterfaceName, aMtu, aCallback) {
+    debug("Set MTU on " + aInterfaceName + ": " + aMtu);
+
+    let params = {
+      cmd: "setMtu",
+      ifname: aInterfaceName,
+      mtu: aMtu
+    };
+
+    this.controlMessage(params, function(aResult) {
+      aCallback.nativeCommandResult(!aResult.error);
+    });
+  }
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([NetworkService]);

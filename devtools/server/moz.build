@@ -35,3 +35,6 @@ DevToolsModules(
     'protocol.js',
     'worker.js'
 )
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']

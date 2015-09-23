@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+    https://bugzilla.mozilla.org/show_bug.cgi?id=1202095
+-->
+  <head>
+    <title>Test for Bug 1202095</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <style>
+      @import url('bug1202095.css');
+      @import url('bug1202095-2.css');
+    </style>
+  </head>
+  <body>
+    <script type="application/javascript">
+var domUtils = SpecialPowers.Cc["@mozilla.org/inspector/dom-utils;1"]
+               .getService(SpecialPowers.Ci.inIDOMUtils);
+
+function do_test() {
+  var sheet = document.styleSheets[1];
+  var importRule = sheet.cssRules[0];
+  is(importRule.type, SpecialPowers.Ci.nsIDOMCSSRule.IMPORT_RULE,
+     "initial sheet has @import rule");
+
+  var importedSheet = importRule.styleSheet;
+  importedSheet.deleteRule(0);
+  is(importedSheet.cssRules.length, 0, "imported sheet now has no rules");
+
+  // "suffixed" refers to the "-2".
+  var suffixedSheet = sheet.cssRules[1].styleSheet;
+  domUtils.parseStyleSheet(suffixedSheet, "");
+  is(suffixedSheet.cssRules.length, 0, "second imported sheet now has no rules");
+
+  // Re-parse the style sheet, preserving the imports.
+  domUtils.parseStyleSheet(sheet, "@import url('bug1202095.css');" +
+                           "@import url('bug1202095-2.css');");
+  is(sheet.cssRules[0].type, SpecialPowers.Ci.nsIDOMCSSRule.IMPORT_RULE,
+     "re-parsed sheet has @import rule");
+  is(sheet.cssRules[0].styleSheet, importedSheet,
+     "imported sheet has not changed");
+  is(sheet.cssRules[1].styleSheet, suffixedSheet,
+     "second imported sheet has not changed");
+
+  // Re-parse the style sheet, preserving both imports, but changing
+  // the order.
+  domUtils.parseStyleSheet(sheet, "@import url('bug1202095-2.css');" +
+                           "@import url('bug1202095.css');");
+  is(sheet.cssRules[0].styleSheet, suffixedSheet,
+     "reordering preserved suffixed style sheet");
+  is(sheet.cssRules[1].styleSheet, importedSheet,
+     "reordering preserved unsuffixed style sheet");
+
+  // Re-parse the style sheet, removing the imports.
+  domUtils.parseStyleSheet(sheet, "");
+  is(sheet.cssRules.length, 0, "style sheet now has no rules");
+
+  // Re-parse the style sheet, adding one import back.  This should
+  // not allow reuse.
+  domUtils.parseStyleSheet(sheet, "@import url('bug1202095.css');");
+  is(sheet.cssRules[0].type, SpecialPowers.Ci.nsIDOMCSSRule.IMPORT_RULE,
+     "re-re-re-parsed sheet has @import rule");
+  isnot(sheet.cssRules[0].styleSheet, importedSheet,
+     "imported sheet has changed now");
+
+  // Re-parse the style sheet, importing the same URL twice.
+  // The style sheet should be reused once, but not two times.
+  importedSheet = sheet.cssRules[0].styleSheet;
+  domUtils.parseStyleSheet(sheet, "@import url('bug1202095.css');" +
+     "@import url('bug1202095.css');");
+  is(sheet.cssRules[0].styleSheet, importedSheet,
+     "first imported sheet is reused");
+  isnot(sheet.cssRules[1].styleSheet, importedSheet,
+     "second imported sheet is reused");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(do_test);
+    </script>
+  </body>
+</html>

@@ -410,9 +410,16 @@ ClientTiledPaintedLayer::RenderLayer()
     ClientManager()->GetPaintedLayerCallback();
   void *data = ClientManager()->GetPaintedLayerCallbackData();
 
+  IntSize layerSize = mVisibleRegion.GetBounds().Size();
+  if (mContentClient && !mContentClient->SupportsLayerSize(layerSize, ClientManager())) {
+    ClearCachedResources();
+    MOZ_ASSERT(!mContentClient);
+  }
+
   if (!mContentClient) {
 #if defined(MOZ_B2G) || defined(XP_MACOSX)
-    if (mCreationHint == LayerManager::NONE) {
+    if (mCreationHint == LayerManager::NONE &&
+        SingleTiledContentClient::ClientSupportsLayerSize(layerSize, ClientManager())) {
       mContentClient = new SingleTiledContentClient(this, ClientManager());
     } else
 #endif

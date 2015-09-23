@@ -11,3 +11,6 @@ SOURCES += [
 ]
 
 DISABLE_STL_WRAPPING = True
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']

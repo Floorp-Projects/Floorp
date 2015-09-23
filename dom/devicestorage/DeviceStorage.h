@@ -87,6 +87,13 @@ public:
                uint32_t aFileType,
                uint32_t aFileAttributes);
 
+  static already_AddRefed<DeviceStorageFile>
+  CreateUnique(const nsAString& aStorageType,
+               const nsAString& aStorageName,
+               nsAString& aFileName,
+               uint32_t aFileType,
+               uint32_t aFileAttributes);
+
   NS_DECL_THREADSAFE_ISUPPORTS
 
   bool IsAvailable();
