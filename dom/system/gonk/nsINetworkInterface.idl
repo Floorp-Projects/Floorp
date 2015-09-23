@@ -80,7 +80,7 @@ interface nsINetworkInfo : nsISupports
                 [array, size_is(count), retval] out wstring dnses);
 };
 
-[scriptable, uuid(9a025351-8684-4ab5-a0c1-f21a9f83d405)]
+[scriptable, uuid(8b1345fa-b34c-41b3-8d21-09f961bf8887)]
 interface nsINetworkInterface : nsISupports
 {
   /**
@@ -97,4 +97,9 @@ interface nsINetworkInterface : nsISupports
    * The port number of the http proxy server.
    */
   readonly attribute long httpProxyPort;
+
+  /*
+   * The Maximun Transmit Unit for this network interface, -1 if not set.
+   */
+  readonly attribute long mtu;
 };

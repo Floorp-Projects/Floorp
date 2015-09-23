@@ -30,8 +30,6 @@ add_task(function* test_parseSubmissionURL() {
                                         "GET", "http://www.xn--bcher-kva.ch/search"] },
     // The following engines cannot identify the search parameter.
     { name: "A second test engine", xmlFileName: "engine2.xml" },
-    { name: "Sherlock test search engine", srcFileName: "engine.src",
-      iconFileName: "ico-size-16x16-png.ico" },
     { name: "bacon", details: ["", "bacon", "Search Bacon", "GET",
                                "http://www.bacon.moz/search?q={searchTerms}"] },
   ]);
@@ -106,12 +104,6 @@ add_task(function* test_parseSubmissionURL() {
                               "https://duckduckgo.com?q=test").engine, null);
   do_check_eq(Services.search.parseSubmissionURL(
                               "https://duckduckgo.com/?q=test").engine, null);
-
-  // Sherlock engines are not supported.
-  do_check_eq(Services.search.parseSubmissionURL(
-                              "http://getfirefox.com?q=test").engine, null);
-  do_check_eq(Services.search.parseSubmissionURL(
-                              "http://getfirefox.com/?q=test").engine, null);
 
   // HTTP and HTTPS schemes are interchangeable.
   url = "https://www.google.com/search?q=caff%C3%A8";

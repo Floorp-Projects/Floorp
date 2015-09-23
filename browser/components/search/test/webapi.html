@@ -4,14 +4,10 @@
 <head>
 <script>
 function installEngine() {
-  var query = window.location.search.substring(1).split(":");
-  var func = query[0];
-  var args = JSON.parse(decodeURIComponent(query[1]));
+  var query = window.location.search.substring(1);
+  var args = JSON.parse(decodeURIComponent(query));
 
-  if (func == "AddSearchProvider")
-    window.external.AddSearchProvider(...args);
-  else if (func == "addSearchEngine")
-    window.sidebar.addSearchEngine(...args);
+  window.external.AddSearchProvider(...args);
 }
 </script>
 </head>

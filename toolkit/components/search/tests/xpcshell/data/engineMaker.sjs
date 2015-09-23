@@ -17,21 +17,12 @@ function handleRequest(request, response) {
     return;
   }
 
-  engineData.engineType = engineData.engineType || Ci.nsISearchEngine.TYPE_OPENSEARCH;
   engineData.name = engineData.name || "Generated test engine";
   engineData.description = engineData.description || "Generated test engine description";
   engineData.method = engineData.method || "GET";
 
   response.setStatusLine(request.httpVersion, 200, "OK");
-
-  switch (engineData.engineType) {
-    case Ci.nsISearchEngine.TYPE_OPENSEARCH:
-      createOpenSearchEngine(response, engineData);
-      break;
-    default:
-      response.setStatusLine(request.httpVersion, 404, "Unsupported engine type");
-      break;
-  }
+  createOpenSearchEngine(response, engineData);
 }
 
 /**

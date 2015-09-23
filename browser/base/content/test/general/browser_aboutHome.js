@@ -275,7 +275,7 @@ var gTests = [
       Services.obs.removeObserver(searchObserver, "browser-search-engine-modified");
     });
     Services.search.addEngine("http://test:80/browser/browser/base/content/test/general/POSTSearchEngine.xml",
-                              Ci.nsISearchEngine.DATA_XML, null, false);
+                              null, null, false);
     return deferred.promise;
   }
 },
@@ -659,7 +659,7 @@ function promiseNewEngine(basename) {
   info("Waiting for engine to be added: " + basename);
   let addDeferred = Promise.defer();
   let url = getRootDirectory(gTestPath) + basename;
-  Services.search.addEngine(url, Ci.nsISearchEngine.TYPE_MOZSEARCH, "", false, {
+  Services.search.addEngine(url, null, "", false, {
     onSuccess: function (engine) {
       info("Search engine added: " + basename);
       registerCleanupFunction(() => {

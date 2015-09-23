@@ -317,7 +317,7 @@ function waitForNewEngine(basename, numImages) {
   // Wait for addEngine().
   let addDeferred = Promise.defer();
   let url = getRootDirectory(gTestPath) + basename;
-  Services.search.addEngine(url, Ci.nsISearchEngine.TYPE_MOZSEARCH, "", false, {
+  Services.search.addEngine(url, null, "", false, {
     onSuccess: function (engine) {
       info("Search engine added: " + basename);
       addDeferred.resolve(engine);
