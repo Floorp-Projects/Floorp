@@ -756,6 +756,30 @@ BluetoothServiceBluedroid::GattServerSendResponseInternal(
     aAppUuid, aAddress, aStatus, aRequestId, aRsp, aRunnable);
 }
 
+void
+BluetoothServiceBluedroid::GattServerSendIndicationInternal(
+  const nsAString& aAppUuid,
+  const nsAString& aAddress,
+  const BluetoothAttributeHandle& aCharacteristicHandle,
+  bool aConfirm,
+  const nsTArray<uint8_t>& aValue,
+  BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->ServerSendIndication(aAppUuid,
+                             aAddress,
+                             aCharacteristicHandle,
+                             aConfirm,
+                             aValue,
+                             aRunnable);
+}
+
 nsresult
 BluetoothServiceBluedroid::GetAdaptersInternal(
   BluetoothReplyRunnable* aRunnable)

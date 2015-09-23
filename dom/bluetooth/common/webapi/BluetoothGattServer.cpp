@@ -781,6 +781,41 @@ BluetoothGattServer::RemoveService(BluetoothGattService& aService,
 }
 
 already_AddRefed<Promise>
+BluetoothGattServer::NotifyCharacteristicChanged(
+  const nsAString& aAddress,
+  BluetoothGattCharacteristic& aCharacteristic,
+  bool aConfirm,
+  ErrorResult& aRv)
+{
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  BT_ENSURE_TRUE_REJECT(mValid, promise, NS_ERROR_NOT_AVAILABLE);
+
+  BluetoothService* bs = BluetoothService::Get();
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
+
+  nsRefPtr<BluetoothGattService> service = aCharacteristic.Service();
+  BT_ENSURE_TRUE_REJECT(service, promise, NS_ERROR_NOT_AVAILABLE);
+  BT_ENSURE_TRUE_REJECT(mServices.Contains(service),
+                        promise,
+                        NS_ERROR_NOT_AVAILABLE);
+
+  bs->GattServerSendIndicationInternal(
+    mAppUuid, aAddress, aCharacteristic.GetCharacteristicHandle(), aConfirm,
+    aCharacteristic.GetValue(),
+    new BluetoothVoidReplyRunnable(nullptr, promise));
+
+  return promise.forget();
+}
+
+already_AddRefed<Promise>
 BluetoothGattServer::SendResponse(const nsAString& aAddress,
                                   uint16_t aStatus,
                                   int32_t aRequestId,
