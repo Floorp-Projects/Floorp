@@ -61,6 +61,11 @@ public:
                                        ErrorResult& aRv);
   already_AddRefed<Promise> RemoveService(BluetoothGattService& aService,
                                           ErrorResult& aRv);
+  already_AddRefed<Promise> NotifyCharacteristicChanged(
+    const nsAString& aAddress,
+    BluetoothGattCharacteristic& aCharacteristic,
+    bool aConfirm,
+    ErrorResult& aRv);
 
   already_AddRefed<Promise> SendResponse(const nsAString& aAddress,
                                          uint16_t aStatus,

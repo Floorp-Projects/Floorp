@@ -292,6 +292,7 @@ public:
   nsRefPtr<BluetoothReplyRunnable> mStartServiceRunnable;
   nsRefPtr<BluetoothReplyRunnable> mStopServiceRunnable;
   nsRefPtr<BluetoothReplyRunnable> mSendResponseRunnable;
+  nsRefPtr<BluetoothReplyRunnable> mSendIndicationRunnable;
 
   // Map connection id from device address
   nsDataHashtable<nsStringHashKey, int> mConnectionMap;
@@ -2296,6 +2297,96 @@ BluetoothGattManager::ServerSendResponse(const nsAString& aAppUuid,
     aStatus,
     aRsp,
     new ServerSendResponseResultHandler(server));
+}
+
+class BluetoothGattManager::ServerSendIndicationResultHandler final
+  : public BluetoothGattResultHandler
+{
+public:
+  ServerSendIndicationResultHandler(BluetoothGattServer* aServer)
+  : mServer(aServer)
+  {
+    MOZ_ASSERT(mServer);
+  }
+
+  void SendIndication() override
+  {
+    if (mServer->mSendIndicationRunnable) {
+      DispatchReplySuccess(mServer->mSendIndicationRunnable);
+      mServer->mSendIndicationRunnable = nullptr;
+    }
+  }
+
+  void OnError(BluetoothStatus aStatus) override
+  {
+    BT_WARNING("BluetoothGattServerInterface::NotifyCharacteristicChanged"
+               "failed: %d", (int)aStatus);
+
+    // Reject the send indication request
+    if (mServer->mSendIndicationRunnable) {
+      DispatchReplyError(mServer->mSendIndicationRunnable,
+                         NS_LITERAL_STRING("Send GATT indication failed"));
+      mServer->mSendIndicationRunnable = nullptr;
+    }
+  }
+
+private:
+  nsRefPtr<BluetoothGattServer> mServer;
+};
+
+void
+BluetoothGattManager::ServerSendIndication(
+  const nsAString& aAppUuid,
+  const nsAString& aAddress,
+  const BluetoothAttributeHandle& aCharacteristicHandle,
+  bool aConfirm,
+  const nsTArray<uint8_t>& aValue,
+  BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aRunnable);
+
+  ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
+
+  size_t index = sServers->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  // Reject the request if the server has not been registered yet.
+  if (index == sServers->NoIndex) {
+    DispatchReplyError(aRunnable, STATUS_NOT_READY);
+    return;
+  }
+  nsRefPtr<BluetoothGattServer> server = sServers->ElementAt(index);
+
+  // Reject the request if the server has not been registered successfully.
+  if (!server->mServerIf) {
+    DispatchReplyError(aRunnable, STATUS_NOT_READY);
+    return;
+  }
+  // Reject the request if there is an ongoing send indication request.
+  if (server->mSendIndicationRunnable) {
+    DispatchReplyError(aRunnable, STATUS_BUSY);
+    return;
+  }
+
+  int connId = 0;
+  if (!server->mConnectionMap.Get(aAddress, &connId)) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
+  if (!connId) {
+    DispatchReplyError(aRunnable, STATUS_NOT_READY);
+    return;
+  }
+
+  server->mSendIndicationRunnable = aRunnable;
+
+  sBluetoothGattInterface->SendIndication(
+    server->mServerIf,
+    aCharacteristicHandle,
+    connId,
+    aValue,
+    aConfirm,
+    new ServerSendIndicationResultHandler(server));
 }
 
 //

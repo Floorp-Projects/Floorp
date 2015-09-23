@@ -729,6 +729,23 @@ BluetoothServiceChildProcess::GattServerSendResponseInternal(
       nsString(aAppUuid), nsString(aAddress), aStatus, aRequestId, aRsp));
 }
 
+void
+BluetoothServiceChildProcess::GattServerSendIndicationInternal(
+  const nsAString& aAppUuid,
+  const nsAString& aAddress,
+  const BluetoothAttributeHandle& aCharacteristicHandle,
+  bool aConfirm,
+  const nsTArray<uint8_t>& aValue,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+    GattServerSendIndicationRequest(nsString(aAppUuid),
+                                    nsString(aAddress),
+                                    aCharacteristicHandle,
+                                    aConfirm,
+                                    aValue));
+}
+
 nsresult
 BluetoothServiceChildProcess::HandleStartup()
 {
