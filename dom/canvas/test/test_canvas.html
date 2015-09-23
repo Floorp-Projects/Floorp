@@ -7468,25 +7468,25 @@ var _thrown = undefined; try {
   ctx.createImageData(Infinity, Infinity);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.createImageData({valueOf:function() Infinity}, 10);
+  ctx.createImageData({valueOf:() => Infinity}, 10);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.createImageData({valueOf:function() -Infinity}, 10);
+  ctx.createImageData({valueOf:() => -Infinity}, 10);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.createImageData({valueOf:function() NaN}, 10);
+  ctx.createImageData({valueOf:() => NaN}, 10);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.createImageData(10, {valueOf:function() Infinity});
+  ctx.createImageData(10, {valueOf:() => Infinity});
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.createImageData(10, {valueOf:function() -Infinity});
+  ctx.createImageData(10, {valueOf:() => -Infinity});
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.createImageData(10, {valueOf:function() NaN});
+  ctx.createImageData(10, {valueOf:() => NaN});
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.createImageData({valueOf:function() Infinity}, {valueOf:function() Infinity});
+  ctx.createImageData({valueOf:() => Infinity}, {valueOf:() => Infinity});
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 
 
@@ -7774,73 +7774,73 @@ var _thrown = undefined; try {
   ctx.getImageData(10, 10, Infinity, Infinity);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData({valueOf:function() Infinity}, 10, 10, 10);
+  ctx.getImageData({valueOf:() => Infinity}, 10, 10, 10);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData({valueOf:function() -Infinity}, 10, 10, 10);
+  ctx.getImageData({valueOf:() => -Infinity}, 10, 10, 10);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData({valueOf:function() NaN}, 10, 10, 10);
+  ctx.getImageData({valueOf:() => NaN}, 10, 10, 10);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData(10, {valueOf:function() Infinity}, 10, 10);
+  ctx.getImageData(10, {valueOf:() => Infinity}, 10, 10);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData(10, {valueOf:function() -Infinity}, 10, 10);
+  ctx.getImageData(10, {valueOf:() => -Infinity}, 10, 10);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData(10, {valueOf:function() NaN}, 10, 10);
+  ctx.getImageData(10, {valueOf:() => NaN}, 10, 10);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData(10, 10, {valueOf:function() Infinity}, 10);
+  ctx.getImageData(10, 10, {valueOf:() => Infinity}, 10);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData(10, 10, {valueOf:function() -Infinity}, 10);
+  ctx.getImageData(10, 10, {valueOf:() => -Infinity}, 10);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData(10, 10, {valueOf:function() NaN}, 10);
+  ctx.getImageData(10, 10, {valueOf:() => NaN}, 10);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData(10, 10, 10, {valueOf:function() Infinity});
+  ctx.getImageData(10, 10, 10, {valueOf:() => Infinity});
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData(10, 10, 10, {valueOf:function() -Infinity});
+  ctx.getImageData(10, 10, 10, {valueOf:() => -Infinity});
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData(10, 10, 10, {valueOf:function() NaN});
+  ctx.getImageData(10, 10, 10, {valueOf:() => NaN});
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData({valueOf:function() Infinity}, {valueOf:function() Infinity}, 10, 10);
+  ctx.getImageData({valueOf:() => Infinity}, {valueOf:() => Infinity}, 10, 10);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData({valueOf:function() Infinity}, {valueOf:function() Infinity}, {valueOf:function() Infinity}, 10);
+  ctx.getImageData({valueOf:() => Infinity}, {valueOf:() => Infinity}, {valueOf:() => Infinity}, 10);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData({valueOf:function() Infinity}, {valueOf:function() Infinity}, {valueOf:function() Infinity}, {valueOf:function() Infinity});
+  ctx.getImageData({valueOf:() => Infinity}, {valueOf:() => Infinity}, {valueOf:() => Infinity}, {valueOf:() => Infinity});
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData({valueOf:function() Infinity}, {valueOf:function() Infinity}, 10, {valueOf:function() Infinity});
+  ctx.getImageData({valueOf:() => Infinity}, {valueOf:() => Infinity}, 10, {valueOf:() => Infinity});
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData({valueOf:function() Infinity}, 10, {valueOf:function() Infinity}, 10);
+  ctx.getImageData({valueOf:() => Infinity}, 10, {valueOf:() => Infinity}, 10);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData({valueOf:function() Infinity}, 10, {valueOf:function() Infinity}, {valueOf:function() Infinity});
+  ctx.getImageData({valueOf:() => Infinity}, 10, {valueOf:() => Infinity}, {valueOf:() => Infinity});
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData({valueOf:function() Infinity}, 10, 10, {valueOf:function() Infinity});
+  ctx.getImageData({valueOf:() => Infinity}, 10, 10, {valueOf:() => Infinity});
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData(10, {valueOf:function() Infinity}, {valueOf:function() Infinity}, 10);
+  ctx.getImageData(10, {valueOf:() => Infinity}, {valueOf:() => Infinity}, 10);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData(10, {valueOf:function() Infinity}, {valueOf:function() Infinity}, {valueOf:function() Infinity});
+  ctx.getImageData(10, {valueOf:() => Infinity}, {valueOf:() => Infinity}, {valueOf:() => Infinity});
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData(10, {valueOf:function() Infinity}, 10, {valueOf:function() Infinity});
+  ctx.getImageData(10, {valueOf:() => Infinity}, 10, {valueOf:() => Infinity});
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 var _thrown = undefined; try {
-  ctx.getImageData(10, 10, {valueOf:function() Infinity}, {valueOf:function() Infinity});
+  ctx.getImageData(10, 10, {valueOf:() => Infinity}, {valueOf:() => Infinity});
 } catch (e) { _thrown = e }; ok(_thrown && _thrown instanceof TypeError, "should throw TypeError");
 
 
