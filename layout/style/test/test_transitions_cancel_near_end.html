@@ -66,10 +66,10 @@ window.addEventListener('load', function() {
     }, false);
   });
 
-  cases.forEach(function(aCase) aCase.className = 'another' );
+  cases.forEach(aCase => aCase.className = 'another' );
 
-  window.setTimeout(function() cases[0].className = '', 500);
-  window.setTimeout(function() cases[1].className = cases[2].className = '', 250);
+  window.setTimeout(() => cases[0].className = '', 500);
+  window.setTimeout(() => cases[1].className = cases[2].className = '', 250);
 
 }, false);
 
