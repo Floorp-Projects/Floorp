@@ -373,6 +373,15 @@ public:
     const BluetoothGattResponse& aRsp,
     BluetoothReplyRunnable* aRunnable) override;
 
+  virtual void
+  GattServerSendIndicationInternal(
+    const nsAString& aAppUuid,
+    const nsAString& aAddress,
+    const BluetoothAttributeHandle& aCharacteristicHandle,
+    bool aConfirm,
+    const nsTArray<uint8_t>& aValue,
+    BluetoothReplyRunnable* aRunnable) override;
+
 protected:
   BluetoothServiceChildProcess();
   virtual ~BluetoothServiceChildProcess();

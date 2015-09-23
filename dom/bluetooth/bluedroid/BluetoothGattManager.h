@@ -154,6 +154,14 @@ public:
     const BluetoothGattResponse& aRsp,
     BluetoothReplyRunnable* aRunnable);
 
+  void ServerSendIndication(
+    const nsAString& aAppUuid,
+    const nsAString& aAddress,
+    const BluetoothAttributeHandle& aCharacteristicHandle,
+    bool aConfirm,
+    const nsTArray<uint8_t>& aValue,
+    BluetoothReplyRunnable* aRunnable);
+
 private:
   ~BluetoothGattManager();
 
@@ -188,6 +196,7 @@ private:
   class ServerStartServiceResultHandler;
   class ServerStopServiceResultHandler;
   class ServerSendResponseResultHandler;
+  class ServerSendIndicationResultHandler;
 
   BluetoothGattManager();
 

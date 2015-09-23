@@ -47,6 +47,16 @@ interface BluetoothGattServer : EventTarget
   Promise<void> removeService(BluetoothGattService service);
 
   /**
+   * Notify the remote BLE device that the value of a characteristic has been
+   * changed.
+   */
+  [NewObject]
+  Promise<void> notifyCharacteristicChanged(
+    DOMString address,
+    BluetoothGattCharacteristic characteristic,
+    boolean confirm);
+
+  /**
    * Send a read/write response to a remote BLE client
    */
   [NewObject]
