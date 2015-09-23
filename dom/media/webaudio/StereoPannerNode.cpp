@@ -109,6 +109,7 @@ public:
   }
 
   virtual void ProcessBlock(AudioNodeStream* aStream,
+                            GraphTime aFrom,
                             const AudioBlock& aInput,
                             AudioBlock* aOutput,
                             bool *aFinished) override
@@ -146,7 +147,7 @@ public:
       bool onLeft[WEBAUDIO_BLOCK_SIZE];
 
       float values[WEBAUDIO_BLOCK_SIZE];
-      StreamTime tick = aStream->GetCurrentPosition();
+      StreamTime tick = aStream->GraphTimeToStreamTime(aFrom);
       mPan.GetValuesAtTime(tick, values, WEBAUDIO_BLOCK_SIZE);
 
       for (size_t counter = 0; counter < WEBAUDIO_BLOCK_SIZE; ++counter) {

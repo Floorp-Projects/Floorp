@@ -2953,31 +2953,6 @@ WorkerPrivateParent<Derived>::RegisterSharedWorker(JSContext* aCx,
 
 template <class Derived>
 void
-WorkerPrivateParent<Derived>::UnregisterSharedWorker(
-                                                    JSContext* aCx,
-                                                    SharedWorker* aSharedWorker)
-{
-  AssertIsOnMainThread();
-  MOZ_ASSERT(aSharedWorker);
-  MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
-  MOZ_ASSERT(mSharedWorkers.Contains(aSharedWorker));
-
-  mSharedWorkers.RemoveElement(aSharedWorker);
-
-  // If there are still SharedWorker objects attached to this worker then they
-  // may all be frozen and this worker would need to be frozen. Otherwise,
-  // if that was the last SharedWorker then it's time to cancel this worker.
-  if (!mSharedWorkers.IsEmpty()) {
-    if (!Freeze(aCx, nullptr)) {
-      JS_ReportPendingException(aCx);
-    }
-  } else if (!Cancel(aCx)) {
-    JS_ReportPendingException(aCx);
-  }
-}
-
-template <class Derived>
-void
 WorkerPrivateParent<Derived>::BroadcastErrorToSharedWorkers(
                                                     JSContext* aCx,
                                                     const nsAString& aMessage,
@@ -3123,19 +3098,55 @@ WorkerPrivateParent<Derived>::CloseSharedWorkersForWindow(
   MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
   MOZ_ASSERT(aWindow);
 
-  nsAutoTArray<nsRefPtr<SharedWorker>, 10> sharedWorkers;
+  bool someRemoved = false;
 
-  for (uint32_t i = 0; i < mSharedWorkers.Length(); ++i) {
+  for (uint32_t i = 0; i < mSharedWorkers.Length();) {
     if (mSharedWorkers[i]->GetOwner() == aWindow) {
-      sharedWorkers.AppendElement(mSharedWorkers[i]);
+      mSharedWorkers[i]->Close();
+      mSharedWorkers.RemoveElementAt(i);
+      someRemoved = true;
     } else {
       MOZ_ASSERT(!SameCOMIdentity(mSharedWorkers[i]->GetOwner(),
                                   aWindow));
+      ++i;
     }
   }
 
-  for (uint32_t index = 0; index < sharedWorkers.Length(); index++) {
-    sharedWorkers[index]->Close();
+  if (!someRemoved) {
+    return;
+  }
+
+  // If there are still SharedWorker objects attached to this worker then they
+  // may all be frozen and this worker would need to be frozen. Otherwise,
+  // if that was the last SharedWorker then it's time to cancel this worker.
+
+  AutoSafeJSContext cx;
+
+  if (!mSharedWorkers.IsEmpty()) {
+    if (!Freeze(cx, nullptr)) {
+      JS_ReportPendingException(cx);
+    }
+  } else if (!Cancel(cx)) {
+    JS_ReportPendingException(cx);
+  }
+}
+
+template <class Derived>
+void
+WorkerPrivateParent<Derived>::CloseAllSharedWorkers()
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
+
+  for (uint32_t i = 0; i < mSharedWorkers.Length(); ++i) {
+    mSharedWorkers[i]->Close();
+  }
+
+  mSharedWorkers.Clear();
+
+  AutoSafeJSContext cx;
+  if (!Cancel(cx)) {
+    JS_ReportPendingException(cx);
   }
 }
 

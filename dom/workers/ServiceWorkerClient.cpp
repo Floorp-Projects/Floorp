@@ -10,6 +10,8 @@
 
 #include "mozilla/dom/MessageEvent.h"
 #include "mozilla/dom/Navigator.h"
+#include "mozilla/dom/ServiceWorkerMessageEvent.h"
+#include "mozilla/dom/ServiceWorkerMessageEventBinding.h"
 #include "nsGlobalWindow.h"
 #include "nsIDocument.h"
 #include "WorkerPrivate.h"
@@ -124,19 +126,25 @@ private:
       return NS_ERROR_FAILURE;
     }
 
-    nsRefPtr<MessageEvent> event = new MessageEvent(aTargetContainer,
-                                                    nullptr, nullptr);
-    rv = event->InitMessageEvent(NS_LITERAL_STRING("message"),
-                                 false /* non-bubbling */,
-                                 false /* not cancelable */,
-                                 messageData,
-                                 EmptyString(),
-                                 EmptyString(),
-                                 nullptr);
-    if (NS_WARN_IF(rv.Failed())) {
-      xpc::Throw(aCx, rv.StealNSResult());
-      return NS_ERROR_FAILURE;
+    RootedDictionary<ServiceWorkerMessageEventInit> init(aCx);
+
+    init.mData = messageData;
+    init.mOrigin.Construct(EmptyString());
+    init.mLastEventId.Construct(EmptyString());
+    init.mPorts.Construct();
+    init.mPorts.Value().SetNull();
+
+    nsRefPtr<ServiceWorker> serviceWorker = aTargetContainer->GetController();
+    init.mSource.Construct();
+    if (serviceWorker) {
+      init.mSource.Value().SetValue().SetAsServiceWorker() = serviceWorker;
+    } else {
+      init.mSource.Value().SetNull();
     }
+
+    nsRefPtr<ServiceWorkerMessageEvent> event =
+      ServiceWorkerMessageEvent::Constructor(aTargetContainer,
+                                             NS_LITERAL_STRING("message"), init, rv);
 
     nsTArray<nsRefPtr<MessagePort>> ports = TakeTransferredPorts();
 

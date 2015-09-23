@@ -285,6 +285,8 @@ public:
   }
 
 private:
+  virtual void FinalizeOnIPDLThread() override;
+
   RefPtr<IDirect3DDevice9> mDevice;
   RefPtr<IDirect3DTexture9> mTexture;
   gfx::SurfaceFormat mFormat;

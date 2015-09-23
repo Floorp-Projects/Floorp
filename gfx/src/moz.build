@@ -90,3 +90,6 @@ if CONFIG['MOZ_WIDGET_GTK']:
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     CXXFLAGS += CONFIG['MOZ_QT_CFLAGS']
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']

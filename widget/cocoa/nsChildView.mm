@@ -6111,13 +6111,13 @@ PanGestureTypeForEvent(NSEvent* aEvent)
 
   // Declare the pasteboard types.
   unsigned int typeCount = [pasteboardOutputDict count];
-  NSMutableArray * types = [NSMutableArray arrayWithCapacity:typeCount];
-  [types addObjectsFromArray:[pasteboardOutputDict allKeys]];
-  [pboard declareTypes:types owner:nil];
+  NSMutableArray* declaredTypes = [NSMutableArray arrayWithCapacity:typeCount];
+  [declaredTypes addObjectsFromArray:[pasteboardOutputDict allKeys]];
+  [pboard declareTypes:declaredTypes owner:nil];
 
   // Write the data to the pasteboard.
   for (unsigned int i = 0; i < typeCount; i++) {
-    NSString* currentKey = [types objectAtIndex:i];
+    NSString* currentKey = [declaredTypes objectAtIndex:i];
     id currentValue = [pasteboardOutputDict valueForKey:currentKey];
 
     if (currentKey == NSStringPboardType ||

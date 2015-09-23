@@ -144,6 +144,7 @@ public:
     COPY_OPT_FIELD(mGateway_long, 0)
     COPY_OPT_FIELD(mDns1_long, 0)
     COPY_OPT_FIELD(mDns2_long, 0)
+    COPY_OPT_FIELD(mMtu, 0)
 
     mLoopIndex = 0;
 
@@ -196,6 +197,7 @@ public:
   long mGateway_long;
   long mDns1_long;
   long mDns2_long;
+  long mMtu;
 
   // Auxiliary information required to carry accros command chain.
   int mNetId; // A locally defined id per interface.
@@ -312,6 +314,7 @@ private:
   CommandResult createNetwork(NetworkParams& aOptions);
   CommandResult destroyNetwork(NetworkParams& aOptions);
   CommandResult getNetId(NetworkParams& aOptions);
+  CommandResult setMtu(NetworkParams& aOptions);
 
   CommandResult addHostRouteLegacy(NetworkParams& aOptions);
   CommandResult removeHostRouteLegacy(NetworkParams& aOptions);
@@ -402,6 +405,7 @@ private:
   static void modifyRouteOnInterface(PARAMS, bool aDoAdd);
   static void enableIpv6(PARAMS);
   static void disableIpv6(PARAMS);
+  static void setMtu(PARAMS);
   static void setIpv6Enabled(PARAMS, bool aEnabled);
   static void addRouteToSecondaryTable(PARAMS);
   static void removeRouteFromSecondaryTable(PARAMS);

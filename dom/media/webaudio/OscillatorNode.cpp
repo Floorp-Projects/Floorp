@@ -286,13 +286,14 @@ public:
   }
 
   virtual void ProcessBlock(AudioNodeStream* aStream,
+                            GraphTime aFrom,
                             const AudioBlock& aInput,
                             AudioBlock* aOutput,
                             bool* aFinished) override
   {
     MOZ_ASSERT(mSource == aStream, "Invalid source stream");
 
-    StreamTime ticks = aStream->GetCurrentPosition();
+    StreamTime ticks = aStream->GraphTimeToStreamTime(aFrom);
     if (mStart == -1) {
       ComputeSilence(aOutput);
       return;
