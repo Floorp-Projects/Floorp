@@ -97,5 +97,5 @@ DEF_TEST(DeserializedNodeUbiNodes, {
       .Times(1)
       .WillOnce(Return(JS::ubi::Node(referent3.get())));
 
-    ubi.edges(cx);
+    ubi.edges(JS_GetRuntime(cx));
   });
