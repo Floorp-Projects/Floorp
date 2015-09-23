@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsIAppsService.h"
+#include "nsIDocument.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
@@ -11,6 +13,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "AudioChannelManager.h"
 #include "mozilla/dom/AudioChannelManagerBinding.h"
+#include "mozilla/dom/nsBrowserElement.h"
 #include "mozilla/Services.h"
 
 using namespace mozilla::hal;
@@ -147,6 +150,70 @@ AudioChannelManager::HandleEvent(nsIDOMEvent* aEvent)
     NotifyVolumeControlChannelChanged();
   }
   return NS_OK;
+}
+
+void
+AudioChannelManager::GetAllowedAudioChannels(
+                 nsTArray<nsRefPtr<BrowserElementAudioChannel>>& aAudioChannels,
+                 ErrorResult& aRv)
+{
+  MOZ_ASSERT(aAudioChannels.IsEmpty());
+
+  // Only main process is supported.
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> window = GetOwner();
+  if (NS_WARN_IF(!window)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+  if (NS_WARN_IF(!doc)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
+  MOZ_ASSERT(principal);
+
+  uint16_t status;
+  if (NS_WARN_IF(NS_FAILED(principal->GetAppStatus(&status)))) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  if (status != nsIPrincipal::APP_STATUS_CERTIFIED) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  uint32_t appId;
+  aRv = principal->GetAppId(&appId);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  nsCOMPtr<nsIAppsService> appsService =
+    do_GetService("@mozilla.org/AppsService;1");
+  if (NS_WARN_IF(!appsService)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  nsAutoString manifestURL;
+  aRv = appsService->GetManifestURLByLocalId(appId, manifestURL);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+
+  nsBrowserElement::GenerateAllowedAudioChannels(window, nullptr, nullptr,
+                                                 manifestURL, aAudioChannels,
+                                                 aRv);
+  NS_WARN_IF(aRv.Failed());
 }
 
 } // namespace system
