@@ -76,7 +76,7 @@ function test() {
   waitForExplicitFinish();
 
   newWindowWithTabView(function (aWin) {
-    registerCleanupFunction(function () aWin.close());
+    registerCleanupFunction(() => aWin.close());
 
     win = aWin;
     cw = win.TabView.getContentWindow();

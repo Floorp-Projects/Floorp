@@ -59,7 +59,7 @@ function addTest(contentWindow, groupOneId, groupTwoId, originalTab) {
        "The number of children in group two is increased by 1");
 
     closeGroupItem(groupOne, function () {
-      closeGroupItem(groupTwo, function () hideTabView(finish));
+      closeGroupItem(groupTwo, () => hideTabView(finish));
     });
   }
 

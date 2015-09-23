@@ -9,7 +9,7 @@ function test() {
 
   let onLoad = function (tvwin) {
     win = tvwin;
-    registerCleanupFunction(function () win.close());
+    registerCleanupFunction(() => win.close());
     win.gBrowser.loadOneTab("http://mochi.test:8888/", {inBackground: true});
   };
 

@@ -36,7 +36,7 @@ function testOne() {
       win.close();
     },
     function(win) {
-      registerCleanupFunction(function() win.close());
+      registerCleanupFunction(() => win.close());
       is(win.document.getElementById("tabviewGroupsNumber").getAttribute("groups"),
          "1", "There is one group");
     });
@@ -44,7 +44,7 @@ function testOne() {
 
 function testTwo() {
   newWindowWithState(state, function(win) {
-    registerCleanupFunction(function() win.close());
+    registerCleanupFunction(() => win.close());
 
     is(win.document.getElementById("tabviewGroupsNumber").getAttribute("groups"),
        "2", "There are two groups");

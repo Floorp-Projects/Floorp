@@ -7,7 +7,7 @@ function test() {
   let callCount = 0;
 
   newWindow(function (win) {
-    registerCleanupFunction(function () win.close());
+    registerCleanupFunction(() => win.close());
 
     win.TabView._initFrame(function () {
       is(callCount++, 0, "call count is zero");
