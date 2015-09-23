@@ -589,47 +589,40 @@ BluetoothGattNotificationHandler::ConnectionNotification(
 void
 BluetoothGattNotificationHandler::ServiceAddedNotification(
   BluetoothGattStatus aStatus, int aServerIf,
-  const BluetoothGattServiceId& aServiceId,
-  const BluetoothAttributeHandle& aServiceHandle)
+  const BluetoothGattServiceId& aServiceId, int aServiceHandle)
 { }
 
 void
 BluetoothGattNotificationHandler::IncludedServiceAddedNotification(
-  BluetoothGattStatus aStatus, int aServerIf,
-  const BluetoothAttributeHandle& aServiceHandle,
-  const BluetoothAttributeHandle& aIncludedServiceHandle)
+  BluetoothGattStatus aStatus, int aServerIf, int aServiceHandle,
+  int aIncludedServiceHandle)
 { }
 
 void
 BluetoothGattNotificationHandler::CharacteristicAddedNotification(
   BluetoothGattStatus aStatus, int aServerIf, const BluetoothUuid& aCharId,
-  const BluetoothAttributeHandle& aServiceHandle,
-  const BluetoothAttributeHandle& aCharacteristicHandle)
+  int aServiceHandle, int aCharacteristicHandle)
 { }
 
 void
 BluetoothGattNotificationHandler::DescriptorAddedNotification(
   BluetoothGattStatus aStatus, int aServerIf, const BluetoothUuid& aCharId,
-  const BluetoothAttributeHandle& aServiceHandle,
-  const BluetoothAttributeHandle& aDescriptorHandle)
+  int aServiceHandle, int aDescriptorHandle)
 { }
 
 void
 BluetoothGattNotificationHandler::ServiceStartedNotification(
-  BluetoothGattStatus aStatus, int aServerIf,
-  const BluetoothAttributeHandle& aServiceHandle)
+  BluetoothGattStatus aStatus, int aServerIf, int aServiceHandle)
 { }
 
 void
 BluetoothGattNotificationHandler::ServiceStoppedNotification(
-  BluetoothGattStatus aStatus, int aServerIf,
-  const BluetoothAttributeHandle& aServiceHandle)
+  BluetoothGattStatus aStatus, int aServerIf, int aServiceHandle)
 { }
 
 void
 BluetoothGattNotificationHandler::ServiceDeletedNotification(
-  BluetoothGattStatus aStatus, int aServerIf,
-  const BluetoothAttributeHandle& aServiceHandle)
+  BluetoothGattStatus aStatus, int aServerIf, int aServiceHandle)
 { }
 
 void

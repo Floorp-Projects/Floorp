@@ -199,9 +199,6 @@ nsresult
 Convert(uint8_t aIn, BluetoothStatus& aOut);
 
 nsresult
-Convert(int32_t aIn, BluetoothAttributeHandle& aOut);
-
-nsresult
 Convert(int32_t aIn, BluetoothGattStatus& aOut);
 
 nsresult
@@ -221,9 +218,6 @@ Convert(BluetoothAclState aIn, bool& aOut);
 
 nsresult
 Convert(const BluetoothAddress& aIn, nsAString& aOut);
-
-nsresult
-Convert(const BluetoothAttributeHandle& aIn, int32_t& aOut);
 
 nsresult
 Convert(BluetoothAvrcpEvent aIn, uint8_t& aOut);
@@ -303,9 +297,6 @@ Convert(nsresult aIn, BluetoothStatus& aOut);
 
 nsresult
 PackPDU(const BluetoothAddress& aIn, DaemonSocketPDU& aPDU);
-
-nsresult
-PackPDU(const BluetoothAttributeHandle& aIn, DaemonSocketPDU& aPDU);
 
 nsresult
 PackPDU(const BluetoothAvrcpAttributeTextPairs& aIn,
@@ -438,9 +429,6 @@ UnpackPDU(DaemonSocketPDU& aPDU, BluetoothAddress& aOut)
 {
   return aPDU.Read(aOut.mAddr, sizeof(aOut.mAddr));
 }
-
-nsresult
-UnpackPDU(DaemonSocketPDU& aPDU, BluetoothAttributeHandle& aOut);
 
 nsresult
 UnpackPDU(DaemonSocketPDU& aPDU, BluetoothAvrcpEvent& aOut);
