@@ -86,3 +86,59 @@ function ModuleResolveExport(exportName, resolveSet = [], exportStarSet = [])
 
     return starResolution;
 }
+
+// 15.2.1.16.4 ModuleDeclarationInstantiation()
+function ModuleDeclarationInstantiation()
+{
+    if (!IsObject(this) || !IsModule(this))
+        return callFunction(CallModuleMethodIfWrapped, this, "ModuleDeclarationInstantiation");
+
+    // Step 1
+    let module = this;
+
+    // Step 5
+    if (module.environment !== undefined)
+        return;
+
+    // Step 7
+    CreateModuleEnvironment(module);
+    let env = module.environment;
+
+    // Step 8
+    let requestedModules = module.requestedModules;
+    for (let i = 0; i < requestedModules.length; i++) {
+        let required = requestedModules[i];
+        let requiredModule = HostResolveImportedModule(module, required);
+        requiredModule.declarationInstantiation();
+    }
+
+    // Step 9
+    let indirectExportEntries = module.indirectExportEntries;
+    for (let i = 0; i < indirectExportEntries.length; i++) {
+        let e = indirectExportEntries[i];
+        let resolution = module.resolveExport(e.exportName);
+        if (resolution === null)
+            ThrowSyntaxError(JSMSG_MISSING_INDIRECT_EXPORT);
+        if (resolution === "ambiguous")
+            ThrowSyntaxError(JSMSG_AMBIGUOUS_INDIRECT_EXPORT);
+    }
+
+    // Step 12
+    let importEntries = module.importEntries;
+    for (let i = 0; i < importEntries.length; i++) {
+        let imp = importEntries[i];
+        let importedModule = HostResolveImportedModule(module, imp.moduleRequest);
+        if (imp.importName === "*") {
+            // TODO
+            // let namespace = GetModuleNamespace(importedModule);
+            // CreateNamespaceBinding(module.environment, imp.localName, namespace);
+        } else {
+            let resolution = importedModule.resolveExport(imp.importName);
+            if (resolution === null)
+                ThrowSyntaxError(JSMSG_MISSING_IMPORT);
+            if (resolution === "ambiguous")
+                ThrowSyntaxError(JSMSG_AMBIGUOUS_IMPORT);
+            CreateImportBinding(env, imp.localName, resolution.module, resolution.bindingName);
+        }
+    }
+}

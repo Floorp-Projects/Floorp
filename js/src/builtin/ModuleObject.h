@@ -8,6 +8,7 @@
 #define builtin_ModuleObject_h
 
 #include "jsapi.h"
+#include "jsatom.h"
 
 #include "js/TraceableVector.h"
 
@@ -70,6 +71,15 @@ class ExportEntryObject : public NativeObject
     JSAtom* localName();
 };
 
+struct IndirectBinding
+{
+    IndirectBinding(Handle<ModuleEnvironmentObject*> environment, HandleId localName);
+    RelocatablePtr<ModuleEnvironmentObject*> environment;
+    RelocatableId localName;
+};
+
+typedef HashMap<jsid, IndirectBinding, JsidHasher, SystemAllocPolicy> IndirectBindingMap;
+
 class ModuleObject : public NativeObject
 {
   public:
@@ -77,11 +87,13 @@ class ModuleObject : public NativeObject
     {
         ScriptSlot = 0,
         InitialEnvironmentSlot,
+        EnvironmentSlot,
         RequestedModulesSlot,
         ImportEntriesSlot,
         LocalExportEntriesSlot,
         IndirectExportEntriesSlot,
         StarExportEntriesSlot,
+        ImportBindingsSlot,
         SlotCount
     };
 
@@ -100,15 +112,20 @@ class ModuleObject : public NativeObject
 
     JSScript* script() const;
     ModuleEnvironmentObject& initialEnvironment() const;
+    ModuleEnvironmentObject* environment() const;
     ArrayObject& requestedModules() const;
     ArrayObject& importEntries() const;
     ArrayObject& localExportEntries() const;
     ArrayObject& indirectExportEntries() const;
     ArrayObject& starExportEntries() const;
     JSObject* enclosingStaticScope() const;
+    IndirectBindingMap& importBindings();
+
+    void createEnvironment();
 
   private:
     static void trace(JSTracer* trc, JSObject* obj);
+    static void finalize(js::FreeOp* fop, JSObject* obj);
 
     bool hasScript() const;
 };
