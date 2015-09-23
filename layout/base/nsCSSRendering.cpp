@@ -4784,7 +4784,7 @@ nsImageRenderer::ComputeIntrinsicSize()
         }
       } else {
         NS_ASSERTION(mImageElementSurface.mSourceSurface, "Surface should be ready.");
-        gfxIntSize surfaceSize = mImageElementSurface.mSize;
+        IntSize surfaceSize = mImageElementSurface.mSize;
         result.SetSize(
           nsSize(nsPresContext::CSSPixelsToAppUnits(surfaceSize.width),
                  nsPresContext::CSSPixelsToAppUnits(surfaceSize.height)));
@@ -5018,7 +5018,7 @@ nsImageRenderer::DrawableForElement(const nsRect& aImageRect,
     int32_t appUnitsPerDevPixel = mForFrame->PresContext()->AppUnitsPerDevPixel();
     nsRect destRect = aImageRect - aImageRect.TopLeft();
     nsIntSize roundedOut = destRect.ToOutsidePixels(appUnitsPerDevPixel).Size();
-    gfxIntSize imageSize(roundedOut.width, roundedOut.height);
+    IntSize imageSize(roundedOut.width, roundedOut.height);
     nsRefPtr<gfxDrawable> drawable =
       nsSVGIntegrationUtils::DrawableFromPaintServer(
         mPaintServerFrame, mForFrame, mSize, imageSize,
@@ -5277,7 +5277,7 @@ static inline gfxPoint ComputeBlurStdDev(nscoord aBlurRadius,
                            gfxFloat(MAX_BLUR_RADIUS)) / 2.0);
 }
 
-static inline gfxIntSize
+static inline IntSize
 ComputeBlurRadius(nscoord aBlurRadius,
                   int32_t aAppUnitsPerDevPixel,
                   gfxFloat aScaleX = 1.0,
@@ -5306,8 +5306,8 @@ nsContextBoxBlur::Init(const nsRect& aRect, nscoord aSpreadRadius,
     return nullptr;
   }
 
-  gfxIntSize blurRadius;
-  gfxIntSize spreadRadius;
+  IntSize blurRadius;
+  IntSize spreadRadius;
   GetBlurAndSpreadRadius(aDestinationCtx, aAppUnitsPerDevPixel,
                          aBlurRadius, aSpreadRadius,
                          blurRadius, spreadRadius);
@@ -5379,7 +5379,7 @@ nsContextBoxBlur::GetContext()
 nsContextBoxBlur::GetBlurRadiusMargin(nscoord aBlurRadius,
                                       int32_t aAppUnitsPerDevPixel)
 {
-  gfxIntSize blurRadius = ComputeBlurRadius(aBlurRadius, aAppUnitsPerDevPixel);
+  IntSize blurRadius = ComputeBlurRadius(aBlurRadius, aAppUnitsPerDevPixel);
 
   nsMargin result;
   result.top = result.bottom = blurRadius.height * aAppUnitsPerDevPixel;
@@ -5462,8 +5462,8 @@ nsContextBoxBlur::GetBlurAndSpreadRadius(gfxContext* aDestinationCtx,
                                          int32_t aAppUnitsPerDevPixel,
                                          nscoord aBlurRadius,
                                          nscoord aSpreadRadius,
-                                         gfxIntSize& aOutBlurRadius,
-                                         gfxIntSize& aOutSpreadRadius,
+                                         IntSize& aOutBlurRadius,
+                                         IntSize& aOutSpreadRadius,
                                          bool aConstrainSpreadRadius)
 {
   gfxFloat scaleX = 1;
@@ -5484,8 +5484,8 @@ nsContextBoxBlur::GetBlurAndSpreadRadius(gfxContext* aDestinationCtx,
   // compute a large or smaller blur radius
   aOutBlurRadius = ComputeBlurRadius(aBlurRadius, aAppUnitsPerDevPixel, scaleX, scaleY);
   aOutSpreadRadius =
-      gfxIntSize(int32_t(aSpreadRadius * scaleX / aAppUnitsPerDevPixel),
-                 int32_t(aSpreadRadius * scaleY / aAppUnitsPerDevPixel));
+      IntSize(int32_t(aSpreadRadius * scaleX / aAppUnitsPerDevPixel),
+              int32_t(aSpreadRadius * scaleY / aAppUnitsPerDevPixel));
 
 
   if (aConstrainSpreadRadius) {
@@ -5511,8 +5511,8 @@ nsContextBoxBlur::InsetBoxBlur(gfxContext* aDestinationCtx,
     return false;
   }
 
-  gfxIntSize blurRadius;
-  gfxIntSize spreadRadius;
+  IntSize blurRadius;
+  IntSize spreadRadius;
   // Convert the blur and spread radius to device pixels
   bool constrainSpreadRadius = false;
   GetBlurAndSpreadRadius(aDestinationCtx, aAppUnitsPerDevPixel,

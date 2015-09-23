@@ -174,10 +174,10 @@ struct BlurCacheKey : public PLDHashEntryHdr {
 
   // Only used for inset blurs
   bool mHasBorderRadius;
-  gfxIntSize mSpreadRadius;
+  IntSize mSpreadRadius;
   IntSize mInnerMinSize;
 
-  BlurCacheKey(IntSize aMinSize, gfxIntSize aBlurRadius,
+  BlurCacheKey(IntSize aMinSize, IntSize aBlurRadius,
                RectCornerRadii* aCornerRadii, gfxRGBA aShadowColor,
                BackendType aBackendType)
     : BlurCacheKey(aMinSize, IntSize(0, 0),
@@ -199,7 +199,7 @@ struct BlurCacheKey : public PLDHashEntryHdr {
   { }
 
   explicit BlurCacheKey(IntSize aOuterMinSize, IntSize aInnerMinSize,
-                        gfxIntSize aBlurRadius, gfxIntSize aSpreadRadius,
+                        IntSize aBlurRadius, IntSize aSpreadRadius,
                         const RectCornerRadii* aCornerRadii, gfxRGBA aShadowColor,
                         bool aIsInset,
                         bool aHasBorderRadius, BackendType aBackendType)
@@ -316,7 +316,7 @@ class BlurCache final : public nsExpirationTracker<BlurCacheData,4>
     }
 
     BlurCacheData* Lookup(const IntSize aMinSize,
-                          const gfxIntSize& aBlurRadius,
+                          const IntSize& aBlurRadius,
                           RectCornerRadii* aCornerRadii,
                           const gfxRGBA& aShadowColor,
                           BackendType aBackendType)
@@ -334,8 +334,8 @@ class BlurCache final : public nsExpirationTracker<BlurCacheData,4>
 
     BlurCacheData* LookupInsetBoxShadow(const IntSize aOuterMinSize,
                                         const IntSize aInnerMinSize,
-                                        const gfxIntSize& aBlurRadius,
-                                        const gfxIntSize& aSpreadRadius,
+                                        const IntSize& aBlurRadius,
+                                        const IntSize& aSpreadRadius,
                                         const RectCornerRadii* aCornerRadii,
                                         const gfxRGBA& aShadowColor,
                                         const bool& aHasBorderRadius,
@@ -383,7 +383,7 @@ static BlurCache* gBlurCache = nullptr;
 
 static IntSize
 ComputeMinSizeForShadowShape(RectCornerRadii* aCornerRadii,
-                             gfxIntSize aBlurRadius,
+                             IntSize aBlurRadius,
                              IntMargin& aSlice,
                              const IntSize& aRectSize)
 {
@@ -430,7 +430,7 @@ ComputeMinSizeForShadowShape(RectCornerRadii* aCornerRadii,
 void
 CacheBlur(DrawTarget& aDT,
           const IntSize& aMinSize,
-          const gfxIntSize& aBlurRadius,
+          const IntSize& aBlurRadius,
           RectCornerRadii* aCornerRadii,
           const gfxRGBA& aShadowColor,
           IntMargin aExtendDest,
@@ -447,7 +447,7 @@ CacheBlur(DrawTarget& aDT,
 static already_AddRefed<SourceSurface>
 CreateBlurMask(const IntSize& aRectSize,
                RectCornerRadii* aCornerRadii,
-               gfxIntSize aBlurRadius,
+               IntSize aBlurRadius,
                IntMargin& aExtendDestBy,
                IntMargin& aSliceBorder,
                DrawTarget& aDestDrawTarget)
@@ -458,7 +458,7 @@ CreateBlurMask(const IntSize& aRectSize,
     ComputeMinSizeForShadowShape(aCornerRadii, aBlurRadius, slice, aRectSize);
   IntRect minRect(IntPoint(), minSize);
 
-  gfxContext* blurCtx = blur.Init(ThebesRect(Rect(minRect)), gfxIntSize(),
+  gfxContext* blurCtx = blur.Init(ThebesRect(Rect(minRect)), IntSize(),
                                   aBlurRadius, nullptr, nullptr);
 
   if (!blurCtx) {
@@ -512,7 +512,7 @@ CreateBoxShadow(SourceSurface* aBlurMask, const gfxRGBA& aShadowColor)
 static SourceSurface*
 GetBlur(DrawTarget& aDT,
         const IntSize& aRectSize,
-        const gfxIntSize& aBlurRadius,
+        const IntSize& aBlurRadius,
         RectCornerRadii* aCornerRadii,
         const gfxRGBA& aShadowColor,
         IntMargin& aExtendDestBy,
@@ -785,15 +785,15 @@ GetBoxShadowInsetPath(DrawTarget* aDrawTarget,
 }
 
 static void
-ComputeRectsForInsetBoxShadow(gfxIntSize aBlurRadius,
-                              gfxIntSize aSpreadRadius,
+ComputeRectsForInsetBoxShadow(IntSize aBlurRadius,
+                              IntSize aSpreadRadius,
                               Rect& aOutOuterRect,
                               Rect& aOutInnerRect,
                               Margin& aOutPathMargins,
                               const Rect& aDestRect,
                               const Rect& aShadowClipRect)
 {
-  gfxIntSize marginSize = aBlurRadius + aSpreadRadius;
+  IntSize marginSize = aBlurRadius + aSpreadRadius;
   aOutPathMargins.SizeTo(marginSize.height, marginSize.width, marginSize.height, marginSize.width);
   aOutPathMargins += aOutPathMargins;
 
@@ -847,8 +847,8 @@ FillDestinationPath(gfxContext* aDestinationCtx,
 void
 CacheInsetBlur(const IntSize aMinOuterSize,
                const IntSize aMinInnerSize,
-               const gfxIntSize& aBlurRadius,
-               const gfxIntSize& aSpreadRadius,
+               const IntSize& aBlurRadius,
+               const IntSize& aSpreadRadius,
                const RectCornerRadii* aCornerRadii,
                const gfxRGBA& aShadowColor,
                const bool& aHasBorderRadius,
@@ -869,8 +869,8 @@ CacheInsetBlur(const IntSize aMinOuterSize,
 already_AddRefed<mozilla::gfx::SourceSurface>
 gfxAlphaBoxBlur::GetInsetBlur(Rect& aOuterRect,
                               Rect& aInnerRect,
-                              const gfxIntSize& aBlurRadius,
-                              const gfxIntSize& aSpreadRadius,
+                              const IntSize& aBlurRadius,
+                              const IntSize& aSpreadRadius,
                               const RectCornerRadii& aInnerClipRadii,
                               const Color& aShadowColor,
                               const bool& aHasBorderRadius,
@@ -882,8 +882,8 @@ gfxAlphaBoxBlur::GetInsetBlur(Rect& aOuterRect,
     gBlurCache = new BlurCache();
   }
 
-  gfxIntSize outerRectSize = RoundedToInt(aOuterRect).Size();
-  gfxIntSize innerRectSize = RoundedToInt(aInnerRect).Size();
+  IntSize outerRectSize = RoundedToInt(aOuterRect).Size();
+  IntSize innerRectSize = RoundedToInt(aInnerRect).Size();
   DrawTarget* destDrawTarget = aDestinationCtx->GetDrawTarget();
 
   BlurCacheData* cached =
@@ -903,7 +903,7 @@ gfxAlphaBoxBlur::GetInsetBlur(Rect& aOuterRect,
   // Dirty rect and skip rect are null for the min inset shadow.
   // When rendering inset box shadows, we respect the spread radius by changing
   //  the shape of the unblurred shadow, and can pass a spread radius of zero here.
-  gfxIntSize zeroSpread(0, 0);
+  IntSize zeroSpread(0, 0);
   gfxContext* minGfxContext = Init(ThebesRect(aOuterRect), zeroSpread, aBlurRadius, nullptr, nullptr);
   if (!minGfxContext) {
     return nullptr;
@@ -951,8 +951,8 @@ void
 gfxAlphaBoxBlur::BlurInsetBox(gfxContext* aDestinationCtx,
                               const Rect aDestinationRect,
                               const Rect aShadowClipRect,
-                              const gfxIntSize aBlurRadius,
-                              const gfxIntSize aSpreadRadius,
+                              const IntSize aBlurRadius,
+                              const IntSize aSpreadRadius,
                               const Color& aShadowColor,
                               bool aHasBorderRadius,
                               const RectCornerRadii& aInnerClipRadii,
