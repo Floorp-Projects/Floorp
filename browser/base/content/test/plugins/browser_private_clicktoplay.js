@@ -119,7 +119,7 @@ function test2a() {
   promiseShown.then(() => {
     PopupNotifications.panel.firstChild._secondaryButton.click();
 
-    let condition = function() objLoadingContent.activated;
+    let condition = () => objLoadingContent.activated;
     waitForCondition(condition, test2b, "Test 2a, Waited too long for plugin to activate");
   });
 }
@@ -169,7 +169,7 @@ function test3a() {
   promiseShown.then(() => {
     PopupNotifications.panel.firstChild._secondaryButton.click();
 
-    let condition = function() objLoadingContent.activated;
+    let condition = () => objLoadingContent.activated;
     waitForCondition(condition, test3b, "Test 3a, Waited too long for plugin to activate");
   });
 }
