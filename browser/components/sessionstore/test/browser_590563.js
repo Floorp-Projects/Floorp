@@ -17,7 +17,7 @@ function test() {
   waitForExplicitFinish();
 
   newWindowWithState(state, function (win) {
-    registerCleanupFunction(function () win.close());
+    registerCleanupFunction(() => win.close());
 
     is(gBrowser.tabs.length, 1, "The total number of tabs should be 1");
     is(gBrowser.visibleTabs.length, 1, "The total number of visible tabs should be 1");

@@ -436,7 +436,7 @@ function test() {
       }
 
       if (iteration < NOTIFICATIONS_EXPECTED - 1) {
-        executeSoon(function() testMacNotifications(nextFn, ++iteration));
+        executeSoon(() => testMacNotifications(nextFn, ++iteration));
       }
       else {
         executeSoon(nextFn);
