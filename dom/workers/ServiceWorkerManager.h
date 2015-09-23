@@ -320,6 +320,7 @@ public:
                     nsIDocument* aDoc,
                     nsIInterceptedChannel* aChannel,
                     bool aIsReload,
+                     bool aIsSubresourceLoad,
                     ErrorResult& aRv);
 
   void

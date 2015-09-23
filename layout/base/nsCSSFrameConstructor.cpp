@@ -994,14 +994,6 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
 
 nsFrameConstructorState::~nsFrameConstructorState()
 {
-  // Frame order comparison functions only work properly when the placeholders
-  // have been inserted into the frame tree. So for example if we have a new float
-  // containing the placeholder for a new abs-pos frame, and we process the abs-pos
-  // insertion first, then we won't be able to find the right place to insert in
-  // in the abs-pos list. So put floats in first, because they can contain placeholders
-  // for abs-pos and fixed-pos items whose containing blocks are outside the floats.
-  // Then put abs-pos frames in, because they can contain placeholders for fixed-pos
-  // items whose containing block is outside the abs-pos frames.
   MOZ_COUNT_DTOR(nsFrameConstructorState);
   ProcessFrameInsertions(mFloatedItems, nsIFrame::kFloatList);
   ProcessFrameInsertions(mAbsoluteItems, nsIFrame::kAbsoluteList);
@@ -1270,6 +1262,11 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
     } else {
       containingBlock->SetInitialChildList(aChildListID, aFrameItems);
     }
+  } else if (aChildListID == nsIFrame::kFixedList ||
+             aChildListID == nsIFrame::kAbsoluteList) {
+    // The order is not important for abs-pos/fixed-pos frame list, just
+    // append the frame items to the list directly.
+    mFrameManager->AppendFrames(containingBlock, aChildListID, aFrameItems);
   } else {
     // Note that whether the frame construction context is doing an append or
     // not is not helpful here, since it could be appending to some frame in
