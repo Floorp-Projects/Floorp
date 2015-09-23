@@ -27,19 +27,23 @@ function run_test() {
       this._locked = false;
     },
 
-    func: function() this._lock("Test utils lock",
-    function() {
-      rightThis = this == obj;
-      didCall = true;
-      return 5;
-    })(),
+    func: function() {
+      return this._lock("Test utils lock",
+                        function() {
+                          rightThis = this == obj;
+                          didCall = true;
+                          return 5;
+                        })();
+    },
 
-    throwy: function() this._lock("Test utils lock throwy",
-    function() {
-      rightThis = this == obj;
-      didCall = true;
-      this.throwy();
-    })()
+    throwy: function() {
+      return this._lock("Test utils lock throwy",
+                        function() {
+                          rightThis = this == obj;
+                          didCall = true;
+                          this.throwy();
+                        })();
+    }
   };
 
   _("Make sure a normal call will call and return");
