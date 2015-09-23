@@ -139,7 +139,7 @@
 
         <!-- Active Mixed Content Blocking Disabled -->
         <description when-mixedcontent="active-loaded">&identity.description.activeLoaded;</description>
-        <description when-mixedcontent="active-loaded">&identity.description.activeLoaded2;</description>
+        <description when-mixedcontent="active-loaded">&identity.description.activeLoaded2; <label observes="identity-popup-mcb-learn-more"/></description>
 
         <!-- Buttons to enable/disable mixed content blocking. -->
         <button when-mixedcontent="active-blocked"
