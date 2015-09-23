@@ -18,6 +18,13 @@ interface BluetoothGattDescriptor
   [Cached, Constant]
   readonly attribute GattPermissions                        permissions;
 
+  /**
+   * Read or write the value of this descriptor.
+   *
+   * If this descriptor is in the client role, the value will be read from or
+   * written to the remote GATT server. Otherwise, the local value will be
+   * read/written.
+   */
   [NewObject]
   Promise<ArrayBuffer>  readValue();
   [NewObject]
