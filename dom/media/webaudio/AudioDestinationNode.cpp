@@ -665,14 +665,17 @@ AudioDestinationNode::ScheduleStableStateNotification()
   nsContentUtils::RunInStableState(event.forget());
 }
 
-double
+StreamTime
 AudioDestinationNode::ExtraCurrentTime()
 {
   if (!mStartedBlockingDueToBeingOnlyNode.IsNull() &&
       !mExtraCurrentTimeUpdatedSinceLastStableState) {
     mExtraCurrentTimeUpdatedSinceLastStableState = true;
-    mExtraCurrentTimeSinceLastStartedBlocking =
+    // Round to nearest processing block.
+    double seconds =
       (TimeStamp::Now() - mStartedBlockingDueToBeingOnlyNode).ToSeconds();
+    mExtraCurrentTimeSinceLastStartedBlocking = WEBAUDIO_BLOCK_SIZE *
+      StreamTime(seconds * Context()->SampleRate() / WEBAUDIO_BLOCK_SIZE + 0.5);
     ScheduleStableStateNotification();
   }
   return mExtraCurrentTime + mExtraCurrentTimeSinceLastStartedBlocking;
