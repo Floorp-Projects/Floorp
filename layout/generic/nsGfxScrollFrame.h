@@ -82,6 +82,8 @@ public:
                            bool                    aPositioned);
 
   bool IsUsingDisplayPort(const nsDisplayListBuilder* aBuilder) const;
+  bool WillUseDisplayPort(const nsDisplayListBuilder* aBuilder) const;
+  bool WillBuildScrollableLayer(const nsDisplayListBuilder* aBuilder) const;
 
   bool GetBorderRadii(const nsSize& aFrameSize, const nsSize& aBorderArea,
                       Sides aSkipSides, nscoord aRadii[8]) const;
