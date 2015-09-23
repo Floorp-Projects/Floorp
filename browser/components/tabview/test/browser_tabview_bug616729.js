@@ -52,14 +52,14 @@ function test() {
         items[items.length-1].close();
 
       let orig = cw.Utils.copy(items);
-      items.sort(function (a, b) test.indexOf(a) - test.indexOf(b));
+      items.sort((a, b) => test.indexOf(a) - test.indexOf(b));
 
       // order and check
       groupItem.reorderTabsBasedOnTabItemOrder();
       assertCorrectItemOrder(items);
 
       // revert to original item order
-      items.sort(function (a, b) orig.indexOf(a) - orig.indexOf(b));
+      items.sort((a, b) => orig.indexOf(a) - orig.indexOf(b));
       groupItem.reorderTabsBasedOnTabItemOrder();
     }
 

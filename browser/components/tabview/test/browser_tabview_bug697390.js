@@ -26,7 +26,7 @@ function test() {
   waitForExplicitFinish();
 
   newWindowWithState(state, function(win) {
-    registerCleanupFunction(function() win.close());
+    registerCleanupFunction(() => win.close());
 
     win.gBrowser.addTab();
 

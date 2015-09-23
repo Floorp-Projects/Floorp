@@ -12,7 +12,7 @@ function test() {
 
 // Open a new tab when the active tab item belongs to a group item.
 function test1() {
-  registerCleanupFunction(function () TabView.hide());
+  registerCleanupFunction(() => TabView.hide());
 
   showTabView(function() {
     ok(origTab._tabViewTabItem.parent, "The original tab belongs to a group");
@@ -69,7 +69,7 @@ function testCreateTabAndThen(callback) {
       tabItem = tab._tabViewTabItem;
       ok(tabItem, "Tab item is available after tab open");
 
-      registerCleanupFunction(function () gBrowser.removeTab(tab))
+      registerCleanupFunction(() => gBrowser.removeTab(tab))
 
       tabItem.addSubscriber("zoomedIn", function onZoomedIn() {
         tabItem.removeSubscriber("zoomedIn", onZoomedIn);

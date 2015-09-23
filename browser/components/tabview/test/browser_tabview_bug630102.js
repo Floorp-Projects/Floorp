@@ -31,7 +31,7 @@ function test() {
 
   let onLoad = function (tvwin) {
     win = tvwin;
-    registerCleanupFunction(function () win.close());
+    registerCleanupFunction(() => win.close());
 
     for (let i = 0; i < 2; i++)
       win.gBrowser.loadOneTab("about:blank", {inBackground: true});
