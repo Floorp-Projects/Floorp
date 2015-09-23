@@ -154,7 +154,7 @@ function checkPopUpNotification() {
 function reloadedTabAfterDisablingMCB() {
   var expected = "Mixed Content Blocker disabled";
   waitForCondition(
-    function() gTestWin.content.document.getElementById('mctestdiv').innerHTML == expected,
+    () => gTestWin.content.document.getElementById('mctestdiv').innerHTML == expected,
     makeSureMCBisDisabled, "Error: Waited too long for mixed script to run in " + curTestName + "!");
 }
 
