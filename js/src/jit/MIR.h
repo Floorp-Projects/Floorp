@@ -2905,8 +2905,8 @@ class MNewArray
     public NoTypePolicy::Data
 {
   private:
-    // Number of elements to allocate for the array.
-    uint32_t length_;
+    // Number of space to allocate for the array.
+    uint32_t count_;
 
     // Heap where the array should be allocated.
     gc::InitialHeap initialHeap_;
@@ -2916,21 +2916,21 @@ class MNewArray
 
     jsbytecode* pc_;
 
-    MNewArray(CompilerConstraintList* constraints, uint32_t length, MConstant* templateConst,
+    MNewArray(CompilerConstraintList* constraints, uint32_t count, MConstant* templateConst,
               gc::InitialHeap initialHeap, jsbytecode* pc);
 
   public:
     INSTRUCTION_HEADER(NewArray)
 
     static MNewArray* New(TempAllocator& alloc, CompilerConstraintList* constraints,
-                          uint32_t length, MConstant* templateConst,
+                          uint32_t count, MConstant* templateConst,
                           gc::InitialHeap initialHeap, jsbytecode* pc)
     {
-        return new(alloc) MNewArray(constraints, length, templateConst, initialHeap, pc);
+        return new(alloc) MNewArray(constraints, count, templateConst, initialHeap, pc);
     }
 
-    uint32_t length() const {
-        return length_;
+    uint32_t count() const {
+        return count_;
     }
 
     JSObject* templateObject() const {
