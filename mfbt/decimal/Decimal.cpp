@@ -123,8 +123,8 @@ Decimal SpecialValueHandler::value() const
 // This class is used for 128 bit unsigned integer arithmetic.
 class UInt128 {
 public:
-    UInt128(uint64_t low, uint64_t high)
-        : m_high(high), m_low(low)
+    UInt128(uint64_t aLow, uint64_t aHigh)
+        : m_high(aHigh), m_low(aLow)
     {
     }
 
@@ -229,41 +229,41 @@ static uint64_t scaleUp(uint64_t x, int n)
 
 using namespace DecimalPrivate;
 
-Decimal::EncodedData::EncodedData(Sign sign, FormatClass formatClass)
+Decimal::EncodedData::EncodedData(Sign aSign, FormatClass aFormatClass)
     : m_coefficient(0)
     , m_exponent(0)
-    , m_formatClass(formatClass)
-    , m_sign(sign)
+    , m_formatClass(aFormatClass)
+    , m_sign(aSign)
 {
 }
 
-Decimal::EncodedData::EncodedData(Sign sign, int exponent, uint64_t coefficient)
-    : m_formatClass(coefficient ? ClassNormal : ClassZero)
-    , m_sign(sign)
+Decimal::EncodedData::EncodedData(Sign aSign, int aExponent, uint64_t aCoefficient)
+    : m_formatClass(aCoefficient ? ClassNormal : ClassZero)
+    , m_sign(aSign)
 {
-    if (exponent >= ExponentMin && exponent <= ExponentMax) {
-        while (coefficient > MaxCoefficient) {
-            coefficient /= 10;
-            ++exponent;
+    if (aExponent >= ExponentMin && aExponent <= ExponentMax) {
+        while (aCoefficient > MaxCoefficient) {
+            aCoefficient /= 10;
+            ++aExponent;
         }
     }
 
-    if (exponent > ExponentMax) {
+    if (aExponent > ExponentMax) {
         m_coefficient = 0;
         m_exponent = 0;
         m_formatClass = ClassInfinity;
         return;
     }
 
-    if (exponent < ExponentMin) {
+    if (aExponent < ExponentMin) {
         m_coefficient = 0;
         m_exponent = 0;
         m_formatClass = ClassZero;
         return;
     }
 
-    m_coefficient = coefficient;
-    m_exponent = static_cast<int16_t>(exponent);
+    m_coefficient = aCoefficient;
+    m_exponent = static_cast<int16_t>(aExponent);
 }
 
 bool Decimal::EncodedData::operator==(const EncodedData& another) const
@@ -279,8 +279,8 @@ Decimal::Decimal(int32_t i32)
 {
 }
 
-Decimal::Decimal(Sign sign, int exponent, uint64_t coefficient)
-    : m_data(sign, coefficient ? exponent : 0, coefficient)
+Decimal::Decimal(Sign aSign, int aExponent, uint64_t aCoefficient)
+    : m_data(aSign, aCoefficient ? aExponent : 0, aCoefficient)
 {
 }
 
@@ -484,22 +484,22 @@ Decimal Decimal::operator/(const Decimal& rhs) const
     if (lhs.isZero())
         return Decimal(resultSign, resultExponent, 0);
 
-    uint64_t remainder = lhs.m_data.coefficient();
+    uint64_t lhsRemainder = lhs.m_data.coefficient();
     const uint64_t divisor = rhs.m_data.coefficient();
     uint64_t result = 0;
     while (result < MaxCoefficient / 100) {
-        while (remainder < divisor) {
-            remainder *= 10;
+        while (lhsRemainder < divisor) {
+            lhsRemainder *= 10;
             result *= 10;
             --resultExponent;
         }
-        result += remainder / divisor;
-        remainder %= divisor;
-        if (!remainder)
+        result += lhsRemainder / divisor;
+        lhsRemainder %= divisor;
+        if (!lhsRemainder)
             break;
     }
 
-    if (remainder > divisor / 2)
+    if (lhsRemainder > divisor / 2)
         ++result;
 
     return Decimal(resultSign, resultExponent, result);
