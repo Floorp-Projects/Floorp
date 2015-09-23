@@ -389,13 +389,20 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             }
 
             let loadCurrent = () => {
-              openUILinkIn(url, "current", {
-                allowThirdPartyFixup: true,
-                disallowInheritPrincipal: !mayInheritPrincipal,
-                allowPinnedTabHostChange: true,
-                postData: postData,
-                allowPopups: url.startsWith("javascript:"),
-              });
+              try {
+                openUILinkIn(url, "current", {
+                  allowThirdPartyFixup: true,
+                  disallowInheritPrincipal: !mayInheritPrincipal,
+                  allowPinnedTabHostChange: true,
+                  postData: postData,
+                  allowPopups: url.startsWith("javascript:"),
+                });
+              } catch (ex) {
+                // This load can throw an exception in certain cases, which means
+                // we'll want to replace the URL with the loaded URL:
+                this.handleRevert();
+              }
+
               // Ensure the start of the URL is visible for UX reasons:
               this.selectionStart = this.selectionEnd = 0;
             };
