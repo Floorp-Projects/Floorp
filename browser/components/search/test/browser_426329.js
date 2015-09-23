@@ -99,8 +99,7 @@ function* promiseSetEngine() {
 
   Services.obs.addObserver(observer, "browser-search-engine-modified", false);
   ss.addEngine("http://mochi.test:8888/browser/browser/components/search/test/426329.xml",
-               Ci.nsISearchEngine.DATA_XML, "data:image/x-icon,%00",
-               false);
+               null, "data:image/x-icon,%00", false);
 
   return deferred.promise;
 }
