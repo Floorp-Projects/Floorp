@@ -613,7 +613,7 @@ public:
   RequestReadNotification(int aConnId,
                           int aTransId,
                           const nsAString& aBdAddr,
-                          int aAttributeHandle,
+                          const BluetoothAttributeHandle& aAttributeHandle,
                           int aOffset,
                           bool aIsLong);
 
@@ -621,7 +621,7 @@ public:
   RequestWriteNotification(int aConnId,
                            int aTransId,
                            const nsAString& aBdAddr,
-                           int aAttributeHandle,
+                           const BluetoothAttributeHandle& aAttributeHandle,
                            int aOffset,
                            int aLength,
                            const uint8_t* aValue,
@@ -917,7 +917,7 @@ public:
   /* Send a response for an incoming indication */
   virtual void SendResponse(int aConnId,
                             int aTransId,
-                            BluetoothGattStatus aStatus,
+                            uint16_t aStatus,
                             const BluetoothGattResponse& aResponse,
                             BluetoothGattResultHandler* aRes) = 0;
 

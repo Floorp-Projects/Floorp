@@ -298,7 +298,7 @@ public:
   /* Send a response for an incoming indication */
   nsresult ServerSendResponseCmd(int aConnId,
                                  int aTransId,
-                                 BluetoothGattStatus aStatus,
+                                 uint16_t aStatus,
                                  const BluetoothGattResponse& aResponse,
                                  BluetoothGattResultHandler* aRes);
   // TODO: Add L support
@@ -655,14 +655,16 @@ protected:
 
   typedef mozilla::ipc::DaemonNotificationRunnable6<
     NotificationHandlerWrapper, void,
-    int, int, nsString, int, int, bool,
-    int, int, const nsAString&, int, int, bool>
+    int, int, nsString, BluetoothAttributeHandle, int, bool,
+    int, int, const nsAString&, const BluetoothAttributeHandle&, int, bool>
     ServerRequestReadNotification;
 
   typedef mozilla::ipc::DaemonNotificationRunnable9<
     NotificationHandlerWrapper, void,
-    int, int, nsString, int, int, int, nsAutoArrayPtr<uint8_t>, bool, bool,
-    int, int, const nsAString&, int, int, int, const uint8_t*, bool, bool>
+    int, int, nsString, BluetoothAttributeHandle, int, int,
+    nsAutoArrayPtr<uint8_t>, bool, bool,
+    int, int, const nsAString&, const BluetoothAttributeHandle&, int, int,
+    const uint8_t*, bool, bool>
     ServerRequestWriteNotification;
 
   typedef mozilla::ipc::DaemonNotificationRunnable4<
@@ -986,7 +988,7 @@ public:
   /* Send a response for an incoming indication */
   void SendResponse(int aConnId,
                     int aTransId,
-                    BluetoothGattStatus aStatus,
+                    uint16_t aStatus,
                     const BluetoothGattResponse& aResponse,
                     BluetoothGattResultHandler* aRes) override;
 
