@@ -167,6 +167,9 @@ public:
     virtual PHalChild* AllocPHalChild() override;
     virtual bool DeallocPHalChild(PHalChild*) override;
 
+    virtual PHeapSnapshotTempFileHelperChild* AllocPHeapSnapshotTempFileHelperChild() override;
+    virtual bool DeallocPHeapSnapshotTempFileHelperChild(PHeapSnapshotTempFileHelperChild*) override;
+
     PIccChild*
     SendPIccConstructor(PIccChild* aActor, const uint32_t& aServiceId);
     virtual PIccChild*

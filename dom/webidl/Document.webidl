@@ -27,6 +27,10 @@ interface Document : Node {
   readonly attribute DOMString compatMode;
   [Pure]
   readonly attribute DOMString characterSet;
+  [Pure,BinaryName="characterSet"]
+  readonly attribute DOMString charset; // legacy alias of .characterSet
+  [Pure,BinaryName="characterSet"]
+  readonly attribute DOMString inputEncoding; // legacy alias of .characterSet
   [Pure]
   readonly attribute DOMString contentType;
 
@@ -86,8 +90,6 @@ interface Document : Node {
   Attr createAttribute(DOMString name);
   [NewObject, Throws]
   Attr createAttributeNS(DOMString? namespace, DOMString name);
-  [Pure]
-  readonly attribute DOMString? inputEncoding;
 };
 
 // http://www.whatwg.org/specs/web-apps/current-work/#the-document-object

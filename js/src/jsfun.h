@@ -319,17 +319,22 @@ class JSFunction : public js::NativeObject
 
     void setEnvironment(JSObject* obj) {
         MOZ_ASSERT(isInterpreted() && !isBeingParsed());
-        *(js::HeapPtrObject*)&u.i.env_ = obj;
+        *reinterpret_cast<js::HeapPtrObject*>(&u.i.env_) = obj;
     }
 
     void initEnvironment(JSObject* obj) {
         MOZ_ASSERT(isInterpreted() && !isBeingParsed());
-        ((js::HeapPtrObject*)&u.i.env_)->init(obj);
+        reinterpret_cast<js::HeapPtrObject*>(&u.i.env_)->init(obj);
+    }
+
+    void unsetEnvironment() {
+        setEnvironment(nullptr);
     }
 
   private:
     void setFunctionBox(js::frontend::FunctionBox* funbox) {
         MOZ_ASSERT(isInterpreted());
+        MOZ_ASSERT_IF(!isBeingParsed(), !environment());
         flags_ |= BEING_PARSED;
         u.i.funbox_ = funbox;
     }

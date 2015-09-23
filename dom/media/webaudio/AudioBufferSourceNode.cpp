@@ -715,8 +715,14 @@ AudioBufferSourceNode::SendOffsetAndDurationParametersToStream(AudioNodeStream* 
   }
 
   if (mDuration != std::numeric_limits<double>::min()) {
-    bufferEnd = std::min(bufferEnd,
-                         offsetSamples + NS_lround(mDuration * rate));
+    MOZ_ASSERT(mDuration >= 0.0); // provided by Start()
+    MOZ_ASSERT(rate >= 0.0f); // provided by AudioBuffer::Create()
+    static_assert(std::numeric_limits<double>::digits >=
+                  std::numeric_limits<decltype(bufferEnd)>::digits,
+                  "bufferEnd should be represented exactly by double");
+    // + 0.5 rounds mDuration to nearest sample when assigned to bufferEnd.
+    bufferEnd = std::min<double>(bufferEnd,
+                                 offsetSamples + mDuration * rate + 0.5);
   }
   aStream->SetInt32Parameter(BUFFEREND, bufferEnd);
 

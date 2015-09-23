@@ -72,15 +72,15 @@ public:
 
   ~GonkMediaDataDecoder();
 
-  virtual nsRefPtr<InitPromise> Init() override;
+  nsRefPtr<InitPromise> Init() override;
 
-  virtual nsresult Input(MediaRawData* aSample) override;
+  nsresult Input(MediaRawData* aSample) override;
 
-  virtual nsresult Flush() override;
+  nsresult Flush() override;
 
-  virtual nsresult Drain() override;
+  nsresult Drain() override;
 
-  virtual nsresult Shutdown() override;
+  nsresult Shutdown() override;
 
 private:
 

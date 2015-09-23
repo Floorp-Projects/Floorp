@@ -180,9 +180,7 @@ SyncViewsAndInvalidateDescendants(nsIFrame* aFrame,
 
   nsIFrame::ChildListIterator lists(aFrame);
   for (; !lists.IsDone(); lists.Next()) {
-    nsFrameList::Enumerator childFrames(lists.CurrentList());
-    for (; !childFrames.AtEnd(); childFrames.Next()) {
-      nsIFrame* child = childFrames.get();
+    for (nsIFrame* child : lists.CurrentList()) {
       if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
         // only do frames that don't have placeholders
         if (nsGkAtoms::placeholderFrame == child->GetType()) {
@@ -637,9 +635,7 @@ RestyleManager::AddSubtreeToOverflowTracker(nsIFrame* aFrame)
       OverflowChangedTracker::CHILDREN_CHANGED);
   nsIFrame::ChildListIterator lists(aFrame);
   for (; !lists.IsDone(); lists.Next()) {
-    nsFrameList::Enumerator childFrames(lists.CurrentList());
-    for (; !childFrames.AtEnd(); childFrames.Next()) {
-      nsIFrame* child = childFrames.get();
+    for (nsIFrame* child : lists.CurrentList()) {
       AddSubtreeToOverflowTracker(child);
     }
   }
@@ -658,9 +654,7 @@ FrameHasPositionedPlaceholderDescendants(nsIFrame* aFrame, uint32_t aPositionMas
                                     nsIFrame::kFixedList);
   for (nsIFrame::ChildListIterator lists(aFrame); !lists.IsDone(); lists.Next()) {
     if (!skip.Contains(lists.CurrentID())) {
-      for (nsFrameList::Enumerator childFrames(lists.CurrentList());
-           !childFrames.AtEnd(); childFrames.Next()) {
-        nsIFrame* f = childFrames.get();
+      for (nsIFrame* f : lists.CurrentList()) {
         if (f->GetType() == nsGkAtoms::placeholderFrame) {
           nsIFrame* outOfFlow = nsPlaceholderFrame::GetRealFrameForPlaceholder(f);
           // If SVG text frames could appear here, they could confuse us since
@@ -2070,9 +2064,7 @@ VerifyStyleTree(nsPresContext* aPresContext, nsIFrame* aFrame,
 
   nsIFrame::ChildListIterator lists(aFrame);
   for (; !lists.IsDone(); lists.Next()) {
-    nsFrameList::Enumerator childFrames(lists.CurrentList());
-    for (; !childFrames.AtEnd(); childFrames.Next()) {
-      nsIFrame* child = childFrames.get();
+    for (nsIFrame* child : lists.CurrentList()) {
       if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
         // only do frames that are in flow
         if (nsGkAtoms::placeholderFrame == child->GetType()) {
@@ -2462,9 +2454,7 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
 
       nsIFrame::ChildListIterator lists(aFrame);
       for (; !lists.IsDone(); lists.Next()) {
-        nsFrameList::Enumerator childFrames(lists.CurrentList());
-        for (; !childFrames.AtEnd(); childFrames.Next()) {
-          nsIFrame* child = childFrames.get();
+        for (nsIFrame* child : lists.CurrentList()) {
           // only do frames that are in flow
           if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
               child != providerChild) {
@@ -2883,9 +2873,7 @@ ElementRestyler::ConditionallyRestyleContentChildren(nsIFrame* aFrame,
        f = GetNextContinuationWithSameStyle(f, f->StyleContext())) {
     nsIFrame::ChildListIterator lists(f);
     for (; !lists.IsDone(); lists.Next()) {
-      nsFrameList::Enumerator childFrames(lists.CurrentList());
-      for (; !childFrames.AtEnd(); childFrames.Next()) {
-        nsIFrame* child = childFrames.get();
+      for (nsIFrame* child : lists.CurrentList()) {
         // Out-of-flows are reached through their placeholders.  Continuations
         // and block-in-inline splits are reached through those chains.
         if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
@@ -3091,9 +3079,7 @@ ElementRestyler::MoveStyleContextsForContentChildren(
 {
   nsIFrame::ChildListIterator lists(aParent);
   for (; !lists.IsDone(); lists.Next()) {
-    nsFrameList::Enumerator childFrames(lists.CurrentList());
-    for (; !childFrames.AtEnd(); childFrames.Next()) {
-      nsIFrame* child = childFrames.get();
+    for (nsIFrame* child : lists.CurrentList()) {
       // Bail out if we have out-of-flow frames.
       // FIXME: It might be safe to just continue here instead of bailing out.
       if (child->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
@@ -4330,9 +4316,7 @@ ElementRestyler::RestyleChildrenOfDisplayContentsElement(
     // XXX ContentIsDescendantOf check below)
     nsIFrame::ChildListIterator lists(aParentFrame);
     for ( ; !lists.IsDone(); lists.Next()) {
-      nsFrameList::Enumerator childFrames(lists.CurrentList());
-      for (; !childFrames.AtEnd(); childFrames.Next()) {
-        nsIFrame* f = childFrames.get();
+      for (nsIFrame* f : lists.CurrentList()) {
         if (nsContentUtils::ContentIsDescendantOf(f->GetContent(), mContent) &&
             !f->GetPrevContinuation()) {
           if (!(f->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
@@ -4719,9 +4703,7 @@ ElementRestyler::RestyleContentChildren(nsIFrame* aParent,
     ancestorPusher.PushAncestorAndStyleScope(mContent);
   }
   for (; !lists.IsDone(); lists.Next()) {
-    nsFrameList::Enumerator childFrames(lists.CurrentList());
-    for (; !childFrames.AtEnd(); childFrames.Next()) {
-      nsIFrame* child = childFrames.get();
+    for (nsIFrame* child : lists.CurrentList()) {
       // Out-of-flows are reached through their placeholders.  Continuations
       // and block-in-inline splits are reached through those chains.
       if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&

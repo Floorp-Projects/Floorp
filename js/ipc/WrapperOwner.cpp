@@ -125,8 +125,8 @@ class CPOWProxyHandler : public BaseProxyHandler
                                               AutoIdVector& props) const override;
     virtual bool hasInstance(JSContext* cx, HandleObject proxy,
                              MutableHandleValue v, bool* bp) const override;
-    virtual bool objectClassIs(HandleObject obj, js::ESClassValue classValue,
-                               JSContext* cx) const override;
+    virtual bool getBuiltinClass(JSContext* cx, HandleObject obj,
+                                 js::ESClassValue* classValue) const override;
     virtual bool isArray(JSContext* cx, HandleObject obj,
                          IsArrayAnswer* answer) const override;
     virtual const char* className(JSContext* cx, HandleObject proxy) const override;
@@ -722,25 +722,27 @@ WrapperOwner::hasInstance(JSContext* cx, HandleObject proxy, MutableHandleValue 
 }
 
 bool
-CPOWProxyHandler::objectClassIs(HandleObject proxy, js::ESClassValue classValue, JSContext* cx) const
+CPOWProxyHandler::getBuiltinClass(JSContext* cx, HandleObject proxy,
+                                  js::ESClassValue* classValue) const
 {
-    FORWARD(objectClassIs, (cx, proxy, classValue));
+    FORWARD(getBuiltinClass, (cx, proxy, classValue));
 }
 
 bool
-WrapperOwner::objectClassIs(JSContext* cx, HandleObject proxy, js::ESClassValue classValue)
+WrapperOwner::getBuiltinClass(JSContext* cx, HandleObject proxy,
+                              js::ESClassValue* classValue)
 {
     ObjectId objId = idOf(proxy);
 
-    // This function is assumed infallible, so we just return false if the IPC
-    // channel fails.
-    bool result;
-    if (!SendObjectClassIs(objId, classValue, &result))
-        return false;
+    uint32_t cls = ESClass_Other;
+    ReturnStatus status;
+    if (!SendGetBuiltinClass(objId, &status, &cls))
+        return ipcfail(cx);
+    *classValue = ESClassValue(cls);
 
     LOG_STACK();
 
-    return result;
+    return ok(cx, status);
 }
 
 bool

@@ -1374,14 +1374,14 @@ DocAccessible::ProcessInvalidationList()
     }
 
     {
+      AutoTreeMutation mut(owner);
+      owner->AppendChild(child);
+
       nsRefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(owner);
       nsRefPtr<AccMutationEvent> showEvent =
         new AccShowEvent(child, child->GetContent());
       FireDelayedEvent(showEvent);
       reorderEvent->AddSubMutationEvent(showEvent);
-
-      AutoTreeMutation mut(owner);
-      owner->AppendChild(child);
 
       MaybeNotifyOfValueChange(owner);
       FireDelayedEvent(reorderEvent);

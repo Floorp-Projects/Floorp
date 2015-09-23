@@ -393,8 +393,6 @@ XULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
 
     mChannel = aChannel;
 
-    mHaveInputEncoding = true;
-
     // Get the URI.  Note that this should match nsDocShell::OnLoadingSite
     nsresult rv =
         NS_GetFinalChannelURI(aChannel, getter_AddRefs(mDocumentURI));

@@ -154,11 +154,11 @@ DirectProxyHandler::isExtensible(JSContext* cx, HandleObject proxy, bool* extens
 }
 
 bool
-DirectProxyHandler::objectClassIs(HandleObject proxy, ESClassValue classValue,
-                                  JSContext* cx) const
+DirectProxyHandler::getBuiltinClass(JSContext* cx, HandleObject proxy,
+                                    ESClassValue* classValue) const
 {
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return ObjectClassIs(target, classValue, cx);
+    return GetBuiltinClass(cx, target, classValue);
 }
 
 bool
