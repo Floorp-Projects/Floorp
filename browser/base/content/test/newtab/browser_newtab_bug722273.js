@@ -38,7 +38,7 @@ function addFakeVisits() {
     visits: visits
   };
   PlacesUtils.asyncHistory.updatePlaces(place, {
-    handleError: function () ok(false, "couldn't add visit"),
+    handleError: () => ok(false, "couldn't add visit"),
     handleResult: function () {},
     handleCompletion: function () {
       NewTabUtils.links.populateCache(function () {
