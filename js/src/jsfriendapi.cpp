@@ -262,9 +262,37 @@ JS_DefineFunctionsWithHelp(JSContext* cx, HandleObject obj, const JSFunctionSpec
 }
 
 JS_FRIEND_API(bool)
-js::ObjectClassIs(JSContext* cx, HandleObject obj, ESClassValue classValue)
+js::GetBuiltinClass(JSContext* cx, HandleObject obj, ESClassValue* classValue)
 {
-    return ObjectClassIs(obj, classValue, cx);
+    if (MOZ_UNLIKELY(obj->is<ProxyObject>()))
+        return Proxy::getBuiltinClass(cx, obj, classValue);
+
+    if (obj->is<PlainObject>() || obj->is<UnboxedPlainObject>())
+        *classValue = ESClass_Object;
+    else if (obj->is<ArrayObject>() || obj->is<UnboxedArrayObject>())
+        *classValue = ESClass_Array;
+    else if (obj->is<NumberObject>())
+        *classValue = ESClass_Number;
+    else if (obj->is<StringObject>())
+        *classValue = ESClass_String;
+    else if (obj->is<BooleanObject>())
+        *classValue = ESClass_Boolean;
+    else if (obj->is<RegExpObject>())
+        *classValue = ESClass_RegExp;
+    else if (obj->is<ArrayBufferObject>())
+        *classValue = ESClass_ArrayBuffer;
+    else if (obj->is<SharedArrayBufferObject>())
+        *classValue = ESClass_SharedArrayBuffer;
+    else if (obj->is<DateObject>())
+        *classValue = ESClass_Date;
+    else if (obj->is<SetObject>())
+        *classValue = ESClass_Set;
+    else if (obj->is<MapObject>())
+        *classValue = ESClass_Map;
+    else
+        *classValue = ESClass_Other;
+
+    return true;
 }
 
 JS_FRIEND_API(const char*)

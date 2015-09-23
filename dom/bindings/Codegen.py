@@ -4226,9 +4226,6 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
     # they really should be!
     if exceptionCode is None:
         exceptionCode = "return false;\n"
-    # We often want exceptionCode to be indented, since it often appears in an
-    # if body.
-    exceptionCodeIndented = CGIndenter(CGGeneric(exceptionCode))
 
     # Unfortunately, .capitalize() on a string will lowercase things inside the
     # string, which we do not want.
@@ -5177,12 +5174,18 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             if type.isUSVString():
                 normalizeCode = "NormalizeUSVString(cx, %s);\n" % varName
 
-            conversionCode = (
-                "if (!ConvertJSValueToString(cx, ${val}, %s, %s, %s)) {\n"
-                "%s"
-                "}\n"
-                "%s" % (nullBehavior, undefinedBehavior, varName,
-                        exceptionCodeIndented.define(), normalizeCode))
+            conversionCode = fill("""
+                if (!ConvertJSValueToString(cx, $${val}, ${nullBehavior}, ${undefinedBehavior}, ${varName})) {
+                  $*{exceptionCode}
+                }
+                $*{normalizeCode}
+                """
+                ,
+                nullBehavior=nullBehavior,
+                undefinedBehavior=undefinedBehavior,
+                varName=varName,
+                exceptionCode=exceptionCode,
+                normalizeCode=normalizeCode)
 
             if defaultValue is None:
                 return conversionCode
@@ -5225,10 +5228,14 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
 
         nullable = toStringBool(type.nullable())
 
-        conversionCode = (
-            "if (!ConvertJSValueToByteString(cx, ${val}, %s, ${declName})) {\n"
-            "%s"
-            "}\n" % (nullable, exceptionCodeIndented.define()))
+        conversionCode = fill("""
+            if (!ConvertJSValueToByteString(cx, $${val}, ${nullable}, $${declName})) {
+              $*{exceptionCode}
+            }
+            """,
+            nullable=nullable,
+            exceptionCode=exceptionCode)
+
         # ByteString arguments cannot have a default value.
         assert defaultValue is None
 
@@ -5431,27 +5438,47 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         else:
             val = "${val}"
 
+        dictLoc = "${declName}"
+        if type.nullable():
+            dictLoc += ".SetValue()"
+
+        conversionCode = fill("""
+            if (!${dictLoc}.Init(cx, ${val},  "${desc}", $${passedToJSImpl})) {
+              $*{exceptionCode}
+            }
+            """,
+            dictLoc=dictLoc,
+            val=val,
+            desc=firstCap(sourceDescription),
+            exceptionCode=exceptionCode)
+
         if failureCode is not None:
             if isDefinitelyObject:
                 dictionaryTest = "IsObjectValueConvertibleToDictionary"
             else:
                 dictionaryTest = "IsConvertibleToDictionary"
-            # Check that the value we have can in fact be converted to
-            # a dictionary, and return failureCode if not.
-            template = CGIfWrapper(
-                CGGeneric(failureCode),
-                "!%s(cx, ${val})" % dictionaryTest).define() + "\n"
+
+            template = fill("""
+                { // scope for isConvertible
+                  bool isConvertible;
+                  if (!${testConvertible}(cx, ${val}, &isConvertible)) {
+                    $*{exceptionCode}
+                  }
+                  if (!isConvertible) {
+                    $*{failureCode}
+                  }
+
+                  $*{conversionCode}
+                }
+
+                """,
+                testConvertible=dictionaryTest,
+                val=val,
+                exceptionCode=exceptionCode,
+                failureCode=failureCode,
+                conversionCode=conversionCode)
         else:
-            template = ""
-
-        dictLoc = "${declName}"
-        if type.nullable():
-            dictLoc += ".SetValue()"
-
-        template += ('if (!%s.Init(cx, %s, "%s", ${passedToJSImpl})) {\n'
-                     "%s"
-                     "}\n" % (dictLoc, val, firstCap(sourceDescription),
-                              exceptionCodeIndented.define()))
+            template = conversionCode
 
         if type.nullable():
             declType = CGTemplatedType("Nullable", declType)
@@ -5499,11 +5526,20 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         conversion = fill(
             """
             JS::Rooted<JSObject*> possibleDateObject(cx, &$${val}.toObject());
-            if (!JS_ObjectIsDate(cx, possibleDateObject) ||
-                !${dateVal}.SetTimeStamp(cx, possibleDateObject)) {
-              $*{notDate}
+            { // scope for isDate
+              bool isDate;
+              if (!JS_ObjectIsDate(cx, possibleDateObject, &isDate)) {
+                $*{exceptionCode}
+              }
+              if (!isDate) {
+                $*{notDate}
+              }
+              if (!${dateVal}.SetTimeStamp(cx, possibleDateObject)) {
+                $*{exceptionCode}
+              }
             }
             """,
+            exceptionCode=exceptionCode,
             dateVal=dateVal,
             notDate=notDate)
 
@@ -5533,23 +5569,32 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         nullCondition = "${val}.isNullOrUndefined()"
         if defaultValue is not None and isinstance(defaultValue, IDLNullValue):
             nullCondition = "!(${haveValue}) || " + nullCondition
-        template = (
-            "if (%s) {\n"
-            "  ${declName}.SetNull();\n"
-            "} else if (!ValueToPrimitive<%s, %s>(cx, ${val}, &%s)) {\n"
-            "%s"
-            "}\n" % (nullCondition, typeName, conversionBehavior,
-                     writeLoc, exceptionCodeIndented.define()))
+        template = fill("""
+            if (${nullCondition}) {
+              $${declName}.SetNull();
+            } else if (!ValueToPrimitive<${typeName}, ${conversionBehavior}>(cx, $${val}, &${writeLoc})) {
+              $*{exceptionCode}
+            }
+            """,
+            nullCondition=nullCondition,
+            typeName=typeName,
+            conversionBehavior=conversionBehavior,
+            writeLoc=writeLoc,
+            exceptionCode=exceptionCode)
     else:
         assert(defaultValue is None or
                not isinstance(defaultValue, IDLNullValue))
         writeLoc = "${declName}"
         readLoc = writeLoc
-        template = (
-            "if (!ValueToPrimitive<%s, %s>(cx, ${val}, &%s)) {\n"
-            "%s"
-            "}\n" % (typeName, conversionBehavior, writeLoc,
-                     exceptionCodeIndented.define()))
+        template = fill("""
+            if (!ValueToPrimitive<${typeName}, ${conversionBehavior}>(cx, $${val}, &${writeLoc})) {
+              $*{exceptionCode}
+            }
+            """,
+            typeName=typeName,
+            conversionBehavior=conversionBehavior,
+            writeLoc=writeLoc,
+            exceptionCode=exceptionCode)
         declType = CGGeneric(typeName)
 
     if type.isFloat() and not type.isUnrestricted():
@@ -5558,12 +5603,12 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         else:
             nonFiniteCode = ('ThrowErrorMessage(cx, MSG_NOT_FINITE, "%s");\n'
                              "%s" % (firstCap(sourceDescription), exceptionCode))
+
+        # We're appending to an if-block brace, so strip trailing whitespace
+        # and add an extra space before the else.
         template = template.rstrip()
-        template += fill(
-            """
+        template += fill("""
              else if (!mozilla::IsFinite(${readLoc})) {
-              // Note: mozilla::IsFinite will do the right thing
-              //       when passed a non-finite float too.
               $*{nonFiniteCode}
             }
             """,
@@ -11895,15 +11940,20 @@ class CGDictionary(CGThing):
                 if (!${dictName}::Init(cx, val)) {
                   return false;
                 }
-                MOZ_ASSERT(IsConvertibleToDictionary(cx, val));
 
                 """,
                 dictName=self.makeClassName(self.dictionary.parent))
         else:
             body += dedent(
                 """
-                if (!IsConvertibleToDictionary(cx, val)) {
-                  return ThrowErrorMessage(cx, MSG_NOT_DICTIONARY, sourceDescription);
+                { // scope for isConvertible
+                  bool isConvertible;
+                  if (!IsConvertibleToDictionary(cx, val, &isConvertible)) {
+                    return false;
+                  }
+                  if (!isConvertible) {
+                    return ThrowErrorMessage(cx, MSG_NOT_DICTIONARY, sourceDescription);
+                  }
                 }
 
                 """)

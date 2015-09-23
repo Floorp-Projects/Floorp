@@ -1102,10 +1102,11 @@ ScriptedDirectProxyHandler::hasInstance(JSContext* cx, HandleObject proxy, Mutab
 }
 
 bool
-ScriptedDirectProxyHandler::objectClassIs(HandleObject proxy, ESClassValue classValue,
-                                          JSContext* cx) const
+ScriptedDirectProxyHandler::getBuiltinClass(JSContext* cx, HandleObject proxy,
+                                            ESClassValue* classValue) const
 {
-    return false;
+    *classValue = ESClass_Other;
+    return true;
 }
 
 bool

@@ -2100,8 +2100,14 @@ class MOZ_STACK_CLASS StringRegExpGuard
     /* init must succeed in order to call tryFlatMatch or normalizeRegExp. */
     bool init(JSContext* cx, const CallArgs& args, bool convertVoid = false)
     {
-        if (args.length() != 0 && IsObjectWithClass(args[0], ESClass_RegExp, cx))
-            return initRegExp(cx, &args[0].toObject());
+        if (args.length() != 0) {
+            ESClassValue cls;
+            if (!GetClassOfValue(cx, args[0], &cls))
+                return false;
+
+            if (cls == ESClass_RegExp)
+                return initRegExp(cx, &args[0].toObject());
+        }
 
         if (convertVoid && !args.hasDefined(0)) {
             fm.pat_ = cx->runtime()->emptyString;
@@ -2121,9 +2127,6 @@ class MOZ_STACK_CLASS StringRegExpGuard
 
     bool initRegExp(JSContext* cx, JSObject* regexp) {
         obj_ = regexp;
-
-        MOZ_ASSERT(ObjectClassIs(obj_, ESClass_RegExp, cx));
-
         return RegExpToShared(cx, obj_, &re_);
     }
 
@@ -3861,7 +3864,11 @@ js::str_split(JSContext* cx, unsigned argc, Value* vp)
     RootedLinearString sepstr(cx);
     bool sepDefined = args.hasDefined(0);
     if (sepDefined) {
-        if (IsObjectWithClass(args[0], ESClass_RegExp, cx)) {
+        ESClassValue cls;
+        if (!GetClassOfValue(cx, args[0], &cls))
+            return false;
+
+        if (cls == ESClass_RegExp) {
             RootedObject obj(cx, &args[0].toObject());
             if (!RegExpToShared(cx, obj, &re))
                 return false;
