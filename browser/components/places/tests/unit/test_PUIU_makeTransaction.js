@@ -15,10 +15,12 @@ function waitForBookmarkNotification(aNotification, aCallback, aProperty)
 
     // nsINavBookmarkObserver
     QueryInterface: XPCOMUtils.generateQI([Ci.nsINavBookmarkObserver]),
-    onBeginUpdateBatch: function onBeginUpdateBatch()
-      this.validate(arguments.callee.name, arguments),
-    onEndUpdateBatch: function onEndUpdateBatch()
-      this.validate(arguments.callee.name, arguments),
+    onBeginUpdateBatch: function onBeginUpdateBatch() {
+      return this.validate(arguments.callee.name, arguments);
+    },
+    onEndUpdateBatch: function onEndUpdateBatch() {
+      return this.validate(arguments.callee.name, arguments);
+    },
     onItemAdded: function onItemAdded(aItemId, aParentId, aIndex, aItemType,
                                       aURI, aTitle)
     {
@@ -28,24 +30,32 @@ function waitForBookmarkNotification(aNotification, aCallback, aProperty)
                                                     url: aURI ? aURI.spec : null,
                                                     title: aTitle });
     },
-    onItemRemoved: function onItemRemoved()
-      this.validate(arguments.callee.name, arguments),
+    onItemRemoved: function onItemRemoved() {
+      return this.validate(arguments.callee.name, arguments);
+    },
     onItemChanged: function onItemChanged(aItemId, aProperty, aIsAnno,
                                           aNewValue, aLastModified, aItemType)
     {
       return this.validate(arguments.callee.name,
                            { id: aItemId,
-                             get index() PlacesUtils.bookmarks.getItemIndex(this.id),
+                             get index() {
+                               return PlacesUtils.bookmarks.getItemIndex(this.id);
+                             },
                              type: aItemType,
                              property: aProperty,
-                             get url() aItemType == PlacesUtils.bookmarks.TYPE_BOOKMARK ?
-                                                PlacesUtils.bookmarks.getBookmarkURI(this.id).spec :
-                                                null,
-                             get title() PlacesUtils.bookmarks.getItemTitle(this.id),
+                             get url() {
+                               return aItemType == PlacesUtils.bookmarks.TYPE_BOOKMARK ?
+                                      PlacesUtils.bookmarks.getBookmarkURI(this.id).spec :
+                                      null;
+                             },
+                             get title() {
+                               return PlacesUtils.bookmarks.getItemTitle(this.id);
+                             },
                            });
     },
-    onItemVisited: function onItemVisited()
-      this.validate(arguments.callee.name, arguments),
+    onItemVisited: function onItemVisited() {
+      return this.validate(arguments.callee.name, arguments);
+    },
     onItemMoved: function onItemMoved(aItemId, aOldParentId, aOldIndex,
                                       aNewParentId, aNewIndex, aItemType)
     {
