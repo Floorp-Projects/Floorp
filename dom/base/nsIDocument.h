@@ -2834,10 +2834,6 @@ protected:
   // True if DisallowBFCaching has been called on this document.
   bool mBFCacheDisallowed : 1;
 
-  // If true, we have an input encoding.  If this is false, then the
-  // document was created entirely in memory
-  bool mHaveInputEncoding : 1;
-
   bool mHasHadDefaultView : 1;
 
   // Whether style sheet change events will be dispatched for this document

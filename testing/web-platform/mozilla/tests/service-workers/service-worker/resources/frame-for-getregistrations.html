@@ -6,7 +6,7 @@ var script = 'empty-worker.js';
 var registration;
 
 navigator.serviceWorker.register(script, { scope: scope })
-  .then(function(r) { registration = r; });
+  .then(function(r) { registration = r; window.parent.postMessage('ready', '*'); })
 
 self.onmessage = function(e) {
   if (e.data == 'unregister') {

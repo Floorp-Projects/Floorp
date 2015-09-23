@@ -9,10 +9,10 @@ UNIFIED_SOURCES += [
     'TestAccessibleCaretManager.cpp',
 ]
 
-# XXX: Allow -Winconsistent-missing-override for TestAccessibleCaretManager.cpp
-# that stub virtual methods have 'override' keyword while mocked methods by
-# MOCK_METHOD macro does not. (See 1169974)
-ALLOW_COMPILER_WARNINGS = True
+# THE MOCK_METHOD2 macro from gtest triggers this clang warning and it's hard
+# to work around, so we just ignore it.
+if CONFIG['CLANG_CXX']:
+  CXXFLAGS += ['-Wno-error=inconsistent-missing-override']
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
