@@ -1,0 +1,171 @@
+diff --git a/mfbt/decimal/Decimal.cpp b/mfbt/decimal/Decimal.cpp
+--- a/mfbt/decimal/Decimal.cpp
++++ b/mfbt/decimal/Decimal.cpp
+@@ -118,18 +118,18 @@ Decimal SpecialValueHandler::value() con
+         ASSERT_NOT_REACHED();
+         return m_lhs;
+     }
+ }
+ 
+ // This class is used for 128 bit unsigned integer arithmetic.
+ class UInt128 {
+ public:
+-    UInt128(uint64_t low, uint64_t high)
+-        : m_high(high), m_low(low)
++    UInt128(uint64_t aLow, uint64_t aHigh)
++        : m_high(aHigh), m_low(aLow)
+     {
+     }
+ 
+     UInt128& operator/=(uint32_t);
+ 
+     uint64_t high() const { return m_high; }
+     uint64_t low() const { return m_low; }
+ 
+@@ -224,68 +224,68 @@ static uint64_t scaleUp(uint64_t x, int 
+         z = z * z;
+     }
+ }
+ 
+ } // namespace DecimalPrivate
+ 
+ using namespace DecimalPrivate;
+ 
+-Decimal::EncodedData::EncodedData(Sign sign, FormatClass formatClass)
++Decimal::EncodedData::EncodedData(Sign aSign, FormatClass aFormatClass)
+     : m_coefficient(0)
+     , m_exponent(0)
+-    , m_formatClass(formatClass)
+-    , m_sign(sign)
++    , m_formatClass(aFormatClass)
++    , m_sign(aSign)
+ {
+ }
+ 
+-Decimal::EncodedData::EncodedData(Sign sign, int exponent, uint64_t coefficient)
+-    : m_formatClass(coefficient ? ClassNormal : ClassZero)
+-    , m_sign(sign)
++Decimal::EncodedData::EncodedData(Sign aSign, int aExponent, uint64_t aCoefficient)
++    : m_formatClass(aCoefficient ? ClassNormal : ClassZero)
++    , m_sign(aSign)
+ {
+-    if (exponent >= ExponentMin && exponent <= ExponentMax) {
+-        while (coefficient > MaxCoefficient) {
+-            coefficient /= 10;
+-            ++exponent;
++    if (aExponent >= ExponentMin && aExponent <= ExponentMax) {
++        while (aCoefficient > MaxCoefficient) {
++            aCoefficient /= 10;
++            ++aExponent;
+         }
+     }
+ 
+-    if (exponent > ExponentMax) {
++    if (aExponent > ExponentMax) {
+         m_coefficient = 0;
+         m_exponent = 0;
+         m_formatClass = ClassInfinity;
+         return;
+     }
+ 
+-    if (exponent < ExponentMin) {
++    if (aExponent < ExponentMin) {
+         m_coefficient = 0;
+         m_exponent = 0;
+         m_formatClass = ClassZero;
+         return;
+     }
+ 
+-    m_coefficient = coefficient;
+-    m_exponent = static_cast<int16_t>(exponent);
++    m_coefficient = aCoefficient;
++    m_exponent = static_cast<int16_t>(aExponent);
+ }
+ 
+ bool Decimal::EncodedData::operator==(const EncodedData& another) const
+ {
+     return m_sign == another.m_sign
+         && m_formatClass == another.m_formatClass
+         && m_exponent == another.m_exponent
+         && m_coefficient == another.m_coefficient;
+ }
+ 
+ Decimal::Decimal(int32_t i32)
+     : m_data(i32 < 0 ? Negative : Positive, 0, i32 < 0 ? static_cast<uint64_t>(-static_cast<int64_t>(i32)) : static_cast<uint64_t>(i32))
+ {
+ }
+ 
+-Decimal::Decimal(Sign sign, int exponent, uint64_t coefficient)
+-    : m_data(sign, coefficient ? exponent : 0, coefficient)
++Decimal::Decimal(Sign aSign, int aExponent, uint64_t aCoefficient)
++    : m_data(aSign, aCoefficient ? aExponent : 0, aCoefficient)
+ {
+ }
+ 
+ Decimal::Decimal(const EncodedData& data)
+     : m_data(data)
+ {
+ }
+ 
+@@ -479,32 +479,32 @@ Decimal Decimal::operator/(const Decimal
+     if (rhs.isZero())
+         return lhs.isZero() ? nan() : infinity(resultSign);
+ 
+     int resultExponent = lhs.exponent() - rhs.exponent();
+ 
+     if (lhs.isZero())
+         return Decimal(resultSign, resultExponent, 0);
+ 
+-    uint64_t remainder = lhs.m_data.coefficient();
++    uint64_t lhsRemainder = lhs.m_data.coefficient();
+     const uint64_t divisor = rhs.m_data.coefficient();
+     uint64_t result = 0;
+     while (result < MaxCoefficient / 100) {
+-        while (remainder < divisor) {
+-            remainder *= 10;
++        while (lhsRemainder < divisor) {
++            lhsRemainder *= 10;
+             result *= 10;
+             --resultExponent;
+         }
+-        result += remainder / divisor;
+-        remainder %= divisor;
+-        if (!remainder)
++        result += lhsRemainder / divisor;
++        lhsRemainder %= divisor;
++        if (!lhsRemainder)
+             break;
+     }
+ 
+-    if (remainder > divisor / 2)
++    if (lhsRemainder > divisor / 2)
+         ++result;
+ 
+     return Decimal(resultSign, resultExponent, result);
+ }
+ 
+ bool Decimal::operator==(const Decimal& rhs) const
+ {
+     if (isNaN() || rhs.isNaN())
+diff --git a/mfbt/decimal/Decimal.h b/mfbt/decimal/Decimal.h
+--- a/mfbt/decimal/Decimal.h
++++ b/mfbt/decimal/Decimal.h
+@@ -88,17 +88,17 @@ public:
+         int countDigits() const;
+         int exponent() const { return m_exponent; }
+         bool isFinite() const { return !isSpecial(); }
+         bool isInfinity() const { return m_formatClass == ClassInfinity; }
+         bool isNaN() const { return m_formatClass == ClassNaN; }
+         bool isSpecial() const { return m_formatClass == ClassInfinity || m_formatClass == ClassNaN; }
+         bool isZero() const { return m_formatClass == ClassZero; }
+         Sign sign() const { return m_sign; }
+-        void setSign(Sign sign) { m_sign = sign; }
++        void setSign(Sign aSign) { m_sign = aSign; }
+ 
+     private:
+         enum FormatClass {
+             ClassInfinity,
+             ClassNormal,
+             ClassNaN,
+             ClassZero,
+         };
