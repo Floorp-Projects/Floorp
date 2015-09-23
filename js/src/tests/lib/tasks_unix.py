@@ -18,7 +18,7 @@ class Task(object):
         self.out = []
         self.err = []
 
-def spawn_test(test, prefix, env, passthrough=False):
+def spawn_test(test, prefix, passthrough=False):
     """Spawn one child, return a task struct."""
     if not passthrough:
         (rout, wout) = os.pipe()
@@ -40,7 +40,7 @@ def spawn_test(test, prefix, env, passthrough=False):
         os.dup2(werr, 2)
 
     cmd = test.get_command(prefix)
-    os.execvpe(cmd[0], cmd, env)
+    os.execvp(cmd[0], cmd)
 
 def total_seconds(td):
     """
@@ -191,17 +191,13 @@ def run_all_tests(tests, prefix, results, options):
     # The set of currently running tests.
     tasks = []
 
-    # Add any needed environment variables.
-    env = os.environ.copy()
-    env['XRE_NO_WINDOWS_CRASH_DIALOG'] = '1'
-
     while len(tests) or len(tasks):
         while len(tests) and len(tasks) < options.worker_count:
             test = tests.pop()
             if not test.enable and not options.run_skipped:
                 yield NullTestOutput(test)
             else:
-                tasks.append(spawn_test(test, prefix, env, options.passthrough))
+                tasks.append(spawn_test(test, prefix, options.passthrough))
 
         timeout = get_max_wait(tasks, options.timeout)
         read_input(tasks, timeout)
