@@ -8,10 +8,10 @@
 #include "DevTools.h"
 
 DEF_TEST(SerializesEverythingInHeapGraphOnce, {
-    FakeNode nodeA(cx);
-    FakeNode nodeB(cx);
-    FakeNode nodeC(cx);
-    FakeNode nodeD(cx);
+    FakeNode nodeA;
+    FakeNode nodeB;
+    FakeNode nodeC;
+    FakeNode nodeD;
 
     AddEdge(nodeA, nodeB);
     AddEdge(nodeB, nodeC);

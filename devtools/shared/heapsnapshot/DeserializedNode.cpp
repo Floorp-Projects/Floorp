@@ -108,8 +108,8 @@ class DeserializedEdgeRange : public EdgeRange
   }
 
 public:
-  explicit DeserializedEdgeRange(JSContext* cx)
-    : edges(cx)
+  explicit DeserializedEdgeRange()
+    : edges()
     , i(0)
   {
     settle();
@@ -160,10 +160,10 @@ Concrete<DeserializedNode>::allocationStack() const
 
 
 UniquePtr<EdgeRange>
-Concrete<DeserializedNode>::edges(JSContext* cx, bool) const
+Concrete<DeserializedNode>::edges(JSRuntime* rt, bool) const
 {
   UniquePtr<DeserializedEdgeRange, JS::DeletePolicy<DeserializedEdgeRange>> range(
-    js_new<DeserializedEdgeRange>(cx));
+    js_new<DeserializedEdgeRange>());
 
   if (!range || !range->init(get()))
     return nullptr;

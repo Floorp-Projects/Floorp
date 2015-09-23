@@ -162,8 +162,8 @@ public:
   JS::Zone*           zone;
   size_t              size;
 
-  explicit FakeNode(JSContext* cx)
-    : edges(cx),
+  explicit FakeNode()
+    : edges(),
     compartment(nullptr),
     zone(nullptr),
     size(1)
@@ -182,8 +182,8 @@ class Concrete<FakeNode> : public Base
     return concreteTypeName;
   }
 
-  UniquePtr<EdgeRange> edges(JSContext* cx, bool wantNames) const override {
-    return UniquePtr<EdgeRange>(js_new<PreComputedEdgeRange>(cx, get().edges));
+  UniquePtr<EdgeRange> edges(JSRuntime* rt, bool wantNames) const override {
+    return UniquePtr<EdgeRange>(js_new<PreComputedEdgeRange>(get().edges));
   }
 
   Size size(mozilla::MallocSizeOf) const override {
@@ -233,8 +233,8 @@ void AddEdge(FakeNode& node, FakeNode& referent, const char16_t* edgeName = null
 namespace testing {
 
 // Ensure that given node has the expected number of edges.
-MATCHER_P2(EdgesLength, cx, expectedLength, "") {
-  auto edges = arg.edges(cx);
+MATCHER_P2(EdgesLength, rt, expectedLength, "") {
+  auto edges = arg.edges(rt);
   if (!edges)
     return false;
 
@@ -247,8 +247,8 @@ MATCHER_P2(EdgesLength, cx, expectedLength, "") {
 }
 
 // Get the nth edge and match it with the given matcher.
-MATCHER_P3(Edge, cx, n, matcher, "") {
-  auto edges = arg.edges(cx);
+MATCHER_P3(Edge, rt, n, matcher, "") {
+  auto edges = arg.edges(rt);
   if (!edges)
     return false;
 

@@ -13,8 +13,8 @@ using testing::Property;
 using testing::Return;
 
 DEF_TEST(SerializesEdgeNames, {
-    FakeNode node(cx);
-    FakeNode referent(cx);
+    FakeNode node;
+    FakeNode referent;
 
     const char16_t edgeName[] = MOZ_UTF16("edge name");
     const char16_t emptyStr[] = MOZ_UTF16("");
@@ -28,12 +28,12 @@ DEF_TEST(SerializesEdgeNames, {
     // Should get the node with edges once.
     EXPECT_CALL(
       writer,
-      writeNode(AllOf(EdgesLength(cx, 3),
-                      Edge(cx, 0, Field(&JS::ubi::Edge::name,
+      writeNode(AllOf(EdgesLength(rt, 3),
+                      Edge(rt, 0, Field(&JS::ubi::Edge::name,
                                         UTF16StrEq(edgeName))),
-                      Edge(cx, 1, Field(&JS::ubi::Edge::name,
+                      Edge(rt, 1, Field(&JS::ubi::Edge::name,
                                         UTF16StrEq(emptyStr))),
-                      Edge(cx, 2, Field(&JS::ubi::Edge::name,
+                      Edge(rt, 2, Field(&JS::ubi::Edge::name,
                                         IsNull()))),
                 _)
     )
