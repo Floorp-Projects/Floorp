@@ -30,7 +30,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
-  runSafeSyncWithoutClone,
+  runSafeWithoutClone,
   MessageBroker,
   Messenger,
   ignoreEvent,
@@ -51,10 +51,6 @@ function isWhenBeforeOrSame(when1, when2)
 var api = context => { return {
   runtime: {
     connect: function(extensionId, connectInfo) {
-      if (!connectInfo) {
-        connectInfo = extensionId;
-        extensionId = null;
-      }
       let name = connectInfo && connectInfo.name || "";
       let recipient = extensionId ? {extensionId} : {extensionId: context.extensionId};
       return context.messenger.connect(context.messageManager, name, recipient);
@@ -64,7 +60,7 @@ var api = context => { return {
       return context.extension.getManifest();
     },
 
-    getURL: function(url) {
+    getURL: function(path) {
       return context.extension.baseURI.resolve(url);
     },
 
@@ -88,7 +84,7 @@ var api = context => { return {
   },
 
   extension: {
-    getURL: function(url) {
+    getURL: function(path) {
       return context.extension.baseURI.resolve(url);
     },
 
@@ -141,12 +137,12 @@ Script.prototype = {
 
       for (let url of this.css) {
         url = extension.baseURI.resolve(url);
-        runSafeSyncWithoutClone(winUtils.loadSheetUsingURIString, url, winUtils.AUTHOR_SHEET);
+        runSafeWithoutClone(winUtils.loadSheetUsingURIString, url, winUtils.AUTHOR_SHEET);
       }
 
       if (this.options.cssCode) {
         let url = "data:text/css;charset=utf-8," + encodeURIComponent(this.options.cssCode);
-        runSafeSyncWithoutClone(winUtils.loadSheetUsingURIString, url, winUtils.AUTHOR_SHEET);
+        runSafeWithoutClone(winUtils.loadSheetUsingURIString, url, winUtils.AUTHOR_SHEET);
       }
     }
 
@@ -166,7 +162,7 @@ Script.prototype = {
           charset: "UTF-8",
           async: AppConstants.platform == "gonk"
         }
-        runSafeSyncWithoutClone(Services.scriptloader.loadSubScriptWithOptions, url, options);
+        Services.scriptloader.loadSubScriptWithOptions(url, options);
       }
 
       if (this.options.jsCode) {
@@ -197,8 +193,6 @@ function ExtensionContext(extensionId, contentWindow)
   this.extension = ExtensionManager.get(extensionId);
   this.extensionId = extensionId;
   this.contentWindow = contentWindow;
-
-  this.onClose = new Set();
 
   let utils = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
@@ -234,6 +228,8 @@ function ExtensionContext(extensionId, contentWindow)
   // reason. However, we waive here anyway in case that changes.
   Cu.waiveXrays(this.sandbox).chrome = Cu.waiveXrays(this.sandbox).browser;
   injectAPI(api(this), chromeObj);
+
+  this.onClose = new Set();
 }
 
 ExtensionContext.prototype = {
@@ -487,7 +483,6 @@ var ExtensionManager = {
         extension = new BrowserExtensionContent(data);
         this.extensions.set(data.id, extension);
         DocumentManager.startupExtension(data.id);
-        Services.cpmm.sendAsyncMessage("Extension:StartupComplete");
         break;
       }
 

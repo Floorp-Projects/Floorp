@@ -278,9 +278,7 @@ var GlobalManager = {
 
     if (this.docShells.has(docShell)) {
       let {extension, context} = this.docShells.get(docShell);
-      if (context) {
-        inject(extension, context);
-      }
+      inject(extension, context);
       return;
     }
 
@@ -369,7 +367,7 @@ this.Extension = function(addonData)
  * To make things easier, the value of "background" and "files"[] can
  * be a function, which is converted to source that is run.
  */
-this.Extension.generate = function(id, data)
+this.Extension.generate = function(data)
 {
   let manifest = data.manifest;
   if (!manifest) {
@@ -394,7 +392,9 @@ this.Extension.generate = function(id, data)
     }
   }
 
-  provide(manifest, ["applications", "gecko", "id"], id);
+  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+  let uuid = uuidGenerator.generateUUID().number;
+  provide(manifest, ["applications", "gecko", "id"], uuid);
 
   provide(manifest, ["name"], "Generated extension");
   provide(manifest, ["manifest_version"], 2);
@@ -458,7 +458,7 @@ this.Extension.generate = function(id, data)
   let jarURI = Services.io.newURI("jar:" + fileURI.spec + "!/", null, null);
 
   return new Extension({
-    id,
+    id: uuid,
     resourceURI: jarURI,
     cleanupFile: file
   });
@@ -638,20 +638,6 @@ Extension.prototype = {
     return {};
   },
 
-  broadcast(msg, data) {
-    return new Promise(resolve => {
-      let count = Services.ppmm.childCount;
-      Services.ppmm.addMessageListener(msg + "Complete", function listener() {
-        count--;
-        if (count == 0) {
-          Services.ppmm.removeMessageListener(msg + "Complete", listener);
-          resolve();
-        }
-      });
-      Services.ppmm.broadcastAsyncMessage(msg, data);
-    });
-  },
-
   runManifest(manifest) {
     let permissions = manifest.permissions || [];
     let webAccessibleResources = manifest.web_accessible_resources || [];
@@ -682,8 +668,7 @@ Extension.prototype = {
     }
     let serial = this.serialize();
     data["Extension:Extensions"].push(serial);
-
-    return this.broadcast("Extension:Startup", serial);
+    Services.ppmm.broadcastAsyncMessage("Extension:Startup", serial);
   },
 
   callOnClose(obj) {
@@ -713,7 +698,7 @@ Extension.prototype = {
 
       Management.emit("startup", this);
 
-      return this.runManifest(manifest);
+      this.runManifest(manifest);
     }).catch(e => {
       dump(`Extension error: ${e} ${e.fileName}:${e.lineNumber}\n`);
       Cu.reportError(e);
@@ -731,13 +716,19 @@ Extension.prototype = {
 
     Services.obs.removeObserver(this, "xpcom-shutdown");
 
-    this.broadcast("Extension:FlushJarCache", {path: file.path}).then(() => {
-      // We can't delete this file until everyone using it has
-      // closed it (because Windows is dumb). So we wait for all the
-      // child processes (including the parent) to flush their JAR
-      // caches. These caches may keep the file open.
-      file.remove(false);
+    let count = Services.ppmm.childCount;
+
+    Services.ppmm.addMessageListener("Extension:FlushJarCacheComplete", function listener() {
+      count--;
+      if (count == 0) {
+        // We can't delete this file until everyone using it has
+        // closed it (because Windows is dumb). So we wait for all the
+        // child processes (including the parent) to flush their JAR
+        // caches. These caches may keep the file open.
+        file.remove(false);
+      }
     });
+    Services.ppmm.broadcastAsyncMessage("Extension:FlushJarCache", {path: file.path});
   },
 
   shutdown() {

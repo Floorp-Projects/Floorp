@@ -15,39 +15,14 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 // Run a function and report exceptions.
-function runSafeSyncWithoutClone(f, ...args)
+function runSafeWithoutClone(f, ...args)
 {
   try {
     return f(...args);
   } catch (e) {
-    dump(`Extension error: ${e} ${e.fileName} ${e.lineNumber}\n[[Exception stack\n${e.stack}Current stack\n${Error().stack}]]\n`);
+    dump(`Extension error: ${e} ${e.fileName} ${e.lineNumber}\n${e.stack}\n${Error().stack}`);
     Cu.reportError(e);
   }
-}
-
-// Run a function and report exceptions.
-function runSafeWithoutClone(f, ...args)
-{
-  if (typeof(f) != "function") {
-    dump(`Extension error: expected function\n${Error().stack}`);
-    return;
-  }
-
-  Services.tm.currentThread.dispatch(function() {
-    runSafeSyncWithoutClone(f, ...args);
-  }, Ci.nsIEventTarget.DISPATCH_NORMAL);
-}
-
-// Run a function, cloning arguments into context.cloneScope, and
-// report exceptions. |f| is expected to be in context.cloneScope.
-function runSafeSync(context, f, ...args)
-{
-  try {
-    args = Cu.cloneInto(args, context.cloneScope);
-  } catch (e) {
-    dump(`runSafe failure\n${context.cloneScope}\n${Error().stack}`);
-  }
-  return runSafeSyncWithoutClone(f, ...args);
 }
 
 // Run a function, cloning arguments into context.cloneScope, and
@@ -121,11 +96,6 @@ function EventManager(context, name, register)
 
 EventManager.prototype = {
   addListener(callback) {
-    if (typeof(callback) != "function") {
-      dump(`Expected function\n${Error().stack}`);
-      return;
-    }
-
     if (!this.registered) {
       this.context.callOnClose(this);
 
@@ -162,7 +132,7 @@ EventManager.prototype = {
 
   fireWithoutClone(...args) {
     for (let callback of this.callbacks) {
-      runSafeSyncWithoutClone(callback, ...args);
+      runSafeWithoutClone(callback, ...args);
     }
   },
 
@@ -370,9 +340,6 @@ function Port(context, messageManager, name, id, sender)
   this.disconnectName = `Extension:Disconnect-${this.id}`;
   this.sender = sender;
   this.disconnected = false;
-
-  this.messageManager.addMessageListener(this.disconnectName, this, true);
-  this.disconnectListeners = new Set();
 }
 
 Port.prototype = {
@@ -400,9 +367,9 @@ Port.prototype = {
           }
         };
 
-        this.disconnectListeners.add(listener);
+        this.messageManager.addMessageListener(this.disconnectName, listener, true);
         return () => {
-          this.disconnectListeners.delete(listener);
+          this.messageManager.removeMessageListener(this.disconnectName, listener);
         };
       }).api(),
       onMessage: new EventManager(this.context, "Port.onMessage", fire => {
@@ -427,31 +394,9 @@ Port.prototype = {
     return portObj;
   },
 
-  handleDisconnection() {
-    this.messageManager.removeMessageListener(this.disconnectName, this);
-    this.context.forgetOnClose(this);
-    this.disconnected = true;
-  },
-
-  receiveMessage(msg) {
-    if (msg.name == this.disconnectName) {
-      if (this.disconnected) {
-        return;
-      }
-
-      for (let listener of this.disconnectListeners) {
-        listener();
-      }
-
-      this.handleDisconnection();
-    }
-  },
-
   disconnect() {
-    if (this.disconnected) {
-      throw "Attempt to disconnect() a disconnected port";
-    }
-    this.handleDisconnection();
+    this.context.forgetOnClose(this);
+    this.disconnect = true;
     this.messageManager.sendAsyncMessage(this.disconnectName);
   },
 
@@ -517,7 +462,7 @@ Messenger.prototype = {
   },
 
   onMessage(name) {
-    return new SingletonEventManager(this.context, name, callback => {
+    return new EventManager(this.context, name, fire => {
       let listener = (type, target, message, sender, recipient) => {
         message = Cu.cloneInto(message, this.context.cloneScope);
         if (this.delegate) {
@@ -538,12 +483,12 @@ Messenger.prototype = {
         };
         sendResponse = Cu.exportFunction(sendResponse, this.context.cloneScope);
 
-        let result = runSafeSyncWithoutClone(callback, message, sender, sendResponse);
+        let result = fire.withoutClone(message, sender, sendResponse);
         if (result !== true) {
           valid = false;
-          if (!sent) {
-            mm.sendAsyncMessage(replyName, {gotData: false});
-          }
+        }
+        if (!sent) {
+          mm.sendAsyncMessage(replyName, {gotData: false});
         }
       };
 
@@ -589,9 +534,7 @@ function flushJarCache(jarFile)
 
 this.ExtensionUtils = {
   runSafeWithoutClone,
-  runSafeSyncWithoutClone,
   runSafe,
-  runSafeSync,
   DefaultWeakMap,
   EventManager,
   SingletonEventManager,
