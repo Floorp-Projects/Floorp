@@ -253,12 +253,12 @@ var tests = {
       let port1 = openChat(Social.providers[1], function() {
         let port2 = openChat(Social.providers[2], function() {
           let chats = document.getElementById("pinnedchats");
-          waitForCondition(function() chats.children.length == Social.providers.length,
+          waitForCondition(() => chats.children.length == Social.providers.length,
             function() {
               ok(true, "one chat window per provider opened");
               // test logout of a single provider
               port2.postMessage({topic: "test-logout"});
-              waitForCondition(function() chats.children.length == Social.providers.length - 1,
+              waitForCondition(() => chats.children.length == Social.providers.length - 1,
                 function() {
                   Task.spawn(closeAllChats).then(next);
                 },
@@ -288,7 +288,7 @@ var tests = {
           ok(true, "got a chat window opened");
           if (opened) {
             port.postMessage({topic: "test-logout"});
-            waitForCondition(function() document.getElementById("pinnedchats").firstChild == null,
+            waitForCondition(() => document.getElementById("pinnedchats").firstChild == null,
                              function() {
                               next();
                              },
