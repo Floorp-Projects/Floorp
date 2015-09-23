@@ -660,7 +660,9 @@ DownloadsDataCtor.prototype = {
    * Iterator for all the available Download objects. This is empty until the
    * data has been loaded using the JavaScript API for downloads.
    */
-  get downloads() this.oldDownloadStates.keys(),
+  get downloads() {
+    return this.oldDownloadStates.keys();
+  },
 
   /**
    * True if there are finished downloads that can be removed from the list.
