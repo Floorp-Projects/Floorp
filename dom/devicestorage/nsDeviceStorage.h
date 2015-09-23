@@ -378,7 +378,7 @@ protected:
   }
 
   virtual ~DeviceStorageRequest();
-  virtual void Prepare();
+  virtual nsresult Prepare();
   virtual nsresult CreateSendParams(mozilla::dom::DeviceStorageParams& aParams);
   nsresult AllowInternal();
   nsresult SendToParentProcess();
@@ -390,6 +390,7 @@ protected:
   nsRefPtr<DeviceStorageFileDescriptor> mDSFileDescriptor;
   DeviceStorageAccessType mAccess;
   bool mSendToParent;
+  bool mUseMainThread;
   bool mUseStreamTransport;
   bool mCheckFile;
   bool mCheckBlob;

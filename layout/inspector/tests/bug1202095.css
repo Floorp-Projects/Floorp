@@ -1,0 +1,7 @@
+/*
+ * Bug 1202095 - parseStyleSheet should not re-load @imports
+ */
+
+body {
+  background-color: purple;
+}

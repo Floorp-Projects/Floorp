@@ -3020,6 +3020,25 @@ nsLayoutUtils::CalculateAndSetDisplayPortMargins(nsIScrollableFrame* aScrollFram
 }
 
 bool
+nsLayoutUtils::WantDisplayPort(const nsDisplayListBuilder* aBuilder,
+                               nsIFrame* aScrollFrame)
+{
+  nsIScrollableFrame* scrollableFrame = do_QueryFrame(aScrollFrame);
+  if (!scrollableFrame) {
+    return false;
+  }
+
+  // We perform an optimization where we ensure that at least one
+  // async-scrollable frame (i.e. one that WantAsyncScroll()) has a displayport.
+  // If that's not the case yet, and we are async-scrollable, we will get a
+  // displayport.
+  return aBuilder->IsPaintingToWindow() &&
+         nsLayoutUtils::AsyncPanZoomEnabled(aScrollFrame) &&
+         !aBuilder->HaveScrollableDisplayPort() &&
+         scrollableFrame->WantAsyncScroll();
+}
+
+bool
 nsLayoutUtils::GetOrMaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
                                            nsIFrame* aScrollFrame,
                                            nsRect aDisplayPortBase,
@@ -3037,17 +3056,7 @@ nsLayoutUtils::GetOrMaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
 
   bool haveDisplayPort = GetDisplayPort(content, aOutDisplayport);
 
-  // We perform an optimization where we ensure that at least one
-  // async-scrollable frame (i.e. one that WantsAsyncScroll()) has a displayport.
-  // If that's not the case yet, and we are async-scrollable, we will get a
-  // displayport.
-  // Note: we only do this in processes where we do subframe scrolling to
-  //       begin with (i.e., not in the parent process on B2G).
-  if (aBuilder.IsPaintingToWindow() &&
-      nsLayoutUtils::AsyncPanZoomEnabled(aScrollFrame) &&
-      !aBuilder.HaveScrollableDisplayPort() &&
-      scrollableFrame->WantAsyncScroll()) {
-
+  if (WantDisplayPort(&aBuilder, aScrollFrame)) {
     // If we don't already have a displayport, calculate and set one.
     if (!haveDisplayPort) {
       CalculateAndSetDisplayPortMargins(scrollableFrame, nsLayoutUtils::RepaintMode::DoNotRepaint);
@@ -3105,7 +3114,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   bool usingDisplayPort = false;
   nsRect displayport;
   if (rootScrollFrame && !aFrame->GetParent() &&
-      (aFlags & (PAINT_WIDGET_LAYERS | PAINT_TO_WINDOW)) &&
+      builder.IsPaintingToWindow() &&
       gfxPrefs::LayoutUseContainersForRootFrames()) {
     nsRect displayportBase(
         nsPoint(0,0),
@@ -3115,7 +3124,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   }
 
   nsDisplayList hoistedScrollItemStorage;
-  if (aFlags & (PAINT_WIDGET_LAYERS | PAINT_TO_WINDOW)) {
+  if (builder.IsPaintingToWindow()) {
     builder.SetCommittedScrollInfoItemList(&hoistedScrollItemStorage);
   }
 

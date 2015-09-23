@@ -112,8 +112,19 @@ public:
                                                   const dom::BrowserElementExecuteScriptOptions& aOptions,
                                                   ErrorResult& aRv);
 
+  already_AddRefed<dom::DOMRequest> GetStructuredData(ErrorResult& aRv);
+
   void SetNFCFocus(bool isFocus,
                    ErrorResult& aRv);
+
+  // Helper
+  static void GenerateAllowedAudioChannels(
+                 nsPIDOMWindow* aWindow,
+                 nsIFrameLoader* aFrameLoader,
+                 nsIBrowserElementAPI* aAPI,
+                 const nsAString& aManifestURL,
+                 nsTArray<nsRefPtr<dom::BrowserElementAudioChannel>>& aAudioChannels,
+                 ErrorResult& aRv);
 
 protected:
   NS_IMETHOD_(already_AddRefed<nsFrameLoader>) GetFrameLoader() = 0;

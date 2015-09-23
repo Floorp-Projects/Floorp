@@ -5,6 +5,7 @@
 #ifndef mozilla_dom_system_AudioChannelManager_h
 #define mozilla_dom_system_AudioChannelManager_h
 
+#include "mozilla/dom/BrowserElementAudioChannel.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/Hal.h"
 #include "mozilla/HalTypes.h"
@@ -64,6 +65,10 @@ public:
   bool GetVolumeControlChannel(nsAString& aChannel);
 
   IMPL_EVENT_HANDLER(headphoneschange)
+
+  void GetAllowedAudioChannels(
+            nsTArray<nsRefPtr<mozilla::dom::BrowserElementAudioChannel>>& aAudioChannels,
+            mozilla::ErrorResult& aRv);
 
 protected:
   virtual ~AudioChannelManager();

@@ -64,6 +64,10 @@ const kEventConstructors = {
                                                           return new BluetoothDeviceEvent(aName, aProps);
                                                        },
                                              },
+  BluetoothGattAttributeEvent:               { create: function (aName, aProps) {
+                                                          return new BluetoothGattAttributeEvent(aName, aProps);
+                                                       },
+                                             },
   BluetoothGattCharacteristicEvent:          { create: function (aName, aProps) {
                                                           return new BluetoothGattCharacteristicEvent(aName, aProps);
                                                        },
@@ -423,6 +427,13 @@ const kEventConstructors = {
                                                                                aProps.view, aProps.details,
                                                                                aProps.x || 0.0, aProps.y || 0.0,
                                                                                aProps.width || 0.0, aProps.height || 0.0);
+                                                         return e;
+                                                       },
+                                             },
+  ServiceWorkerMessageEvent:                 { create: function (aName, aProps) {
+                                                         var e = new ServiceWorkerMessageEvent("serviceworkermessageevent", { bubbles: aProps.bubbles,
+                                                             cancelable: aProps.cancelable, data: aProps.data, origin: aProps.origin,
+                                                             lastEventId: aProps.lastEventId, source: aProps.source });
                                                          return e;
                                                        },
                                              },

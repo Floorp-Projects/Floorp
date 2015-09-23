@@ -2655,6 +2655,12 @@ public:
                                                 RepaintMode aRepaintMode);
 
   /**
+   * Return true if GetOrMaybeCreateDisplayPort would create a displayport.
+   */
+  static bool WantDisplayPort(const nsDisplayListBuilder* aBuilder,
+                              nsIFrame* aScrollFrame);
+
+  /**
    * Get the display port for |aScrollFrame|'s content. If |aScrollFrame|
    * WantsAsyncScroll() and we don't have a scrollable displayport yet (as
    * tracked by |aBuilder|), calculate and set a display port. Returns true if

@@ -20,3 +20,6 @@ SharedLibrary('jsctypes-test')
 LOCAL_INCLUDES += [
     '/js/src/ctypes',
 ]
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']

@@ -513,12 +513,6 @@ AudioNodeStream::UpMixDownMixChunk(const AudioBlock* aChunk,
 void
 AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
 {
-  if (!mFinished) {
-    EnsureTrack(AUDIO_TRACK);
-  }
-  // No more tracks will be coming
-  mBuffer.AdvanceKnownTracksTime(STREAM_TIME_MAX);
-
   uint16_t outputCount = mLastChunks.Length();
   MOZ_ASSERT(outputCount == std::max(uint16_t(1), mEngine->OutputCount()));
 
@@ -547,7 +541,8 @@ AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
       mLastChunks[0] = mInputChunks[0];
     } else {
       if (maxInputs <= 1 && outputCount <= 1) {
-        mEngine->ProcessBlock(this, mInputChunks[0], &mLastChunks[0], &finished);
+        mEngine->ProcessBlock(this, aFrom,
+                              mInputChunks[0], &mLastChunks[0], &finished);
       } else {
         mEngine->ProcessBlocksOnPorts(this, mInputChunks, mLastChunks, &finished);
       }
@@ -570,12 +565,17 @@ AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
 
   if (!mFinished) {
     // Don't output anything while finished
-    AdvanceOutputSegment();
+    if (mFlags & EXTERNAL_OUTPUT) {
+      AdvanceOutputSegment();
+    }
     if (mMarkAsFinishedAfterThisBlock && (aFlags & ALLOW_FINISH)) {
       // This stream was finished the last time that we looked at it, and all
       // of the depending streams have finished their output as well, so now
       // it's time to mark this stream as finished.
-      FinishOutput();
+      if (mFlags & EXTERNAL_OUTPUT) {
+        FinishOutput();
+      }
+      FinishOnGraphThread();
     }
   }
 }
@@ -592,7 +592,7 @@ AudioNodeStream::ProduceOutputBeforeInput(GraphTime aFrom)
   if (!mIsActive) {
     mLastChunks[0].SetNull(WEBAUDIO_BLOCK_SIZE);
   } else {
-    mEngine->ProduceBlockBeforeInput(&mLastChunks[0]);
+    mEngine->ProduceBlockBeforeInput(aFrom, &mLastChunks[0]);
     NS_ASSERTION(mLastChunks[0].GetDuration() == WEBAUDIO_BLOCK_SIZE,
                  "Invalid WebAudio chunk size");
     if (mDisabledTrackIDs.Contains(static_cast<TrackID>(AUDIO_TRACK))) {
@@ -605,9 +605,12 @@ void
 AudioNodeStream::AdvanceOutputSegment()
 {
   StreamBuffer::Track* track = EnsureTrack(AUDIO_TRACK);
+  // No more tracks will be coming
+  mBuffer.AdvanceKnownTracksTime(STREAM_TIME_MAX);
+
   AudioSegment* segment = track->Get<AudioSegment>();
 
-  if (mFlags & EXTERNAL_OUTPUT) {
+  if (!mLastChunks[0].IsNull()) {
     segment->AppendAndConsumeChunk(mLastChunks[0].AsMutableChunk());
   } else {
     segment->AppendNullData(mLastChunks[0].GetDuration());
@@ -623,23 +626,11 @@ AudioNodeStream::AdvanceOutputSegment()
   }
 }
 
-StreamTime
-AudioNodeStream::GetCurrentPosition()
-{
-  NS_ASSERTION(!mFinished, "Don't create another track after finishing");
-  return EnsureTrack(AUDIO_TRACK)->Get<AudioSegment>()->GetDuration();
-}
-
 void
 AudioNodeStream::FinishOutput()
 {
-  if (IsFinishedOnGraphThread()) {
-    return;
-  }
-
   StreamBuffer::Track* track = EnsureTrack(AUDIO_TRACK);
   track->SetEnded();
-  FinishOnGraphThread();
 
   for (uint32_t j = 0; j < mListeners.Length(); ++j) {
     MediaStreamListener* l = mListeners[j];

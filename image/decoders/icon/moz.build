@@ -33,3 +33,6 @@ if CONFIG['OS_TARGET'] == 'Android':
 
 if platform:
     LOCAL_INCLUDES += [platform]
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']

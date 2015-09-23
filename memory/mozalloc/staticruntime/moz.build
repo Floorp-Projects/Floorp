@@ -28,3 +28,6 @@ DEFINES['IMPL_MFBT'] = True
 USE_STATIC_LIBS = True
 
 Library('mozalloc_staticruntime')
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']
