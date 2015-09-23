@@ -5,7 +5,6 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -31,7 +30,13 @@ add_task(function* test_contentscript()
 
   let chromeNamespacePromise = extension.awaitMessage("chrome-namespace-ok");
 
-  let win = window.open("file_sample.html");
+  yield new Promise(resolve => { setTimeout(resolve, 0); });
+
+  let win = window.open();
+
+  win.location = "file_contentscript_page1.html";
+
+  ok(true, "page loaded");
 
   yield Promise.all([waitForLoad(win), completePromise, chromeNamespacePromise]);
   info("test page loaded");
@@ -45,6 +50,15 @@ add_task(function* test_contentscript()
   yield extension.unload();
   info("extension unloaded");
 });
+
+function waitForLoad(win) {
+  return new Promise(resolve => {
+    win.addEventListener("load", function listener() {
+      win.removeEventListener("load", listener, true);
+      resolve();
+    }, true);
+  });
+}
 </script>
 
 </body>

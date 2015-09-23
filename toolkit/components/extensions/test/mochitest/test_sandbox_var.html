@@ -1,11 +1,10 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>WebExtension test</title>
+  <title>Test for content script</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
-  <script type="text/javascript" src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -14,42 +13,23 @@
 "use strict";
 
 function backgroundScript() {
-  browser.runtime.onMessage.addListener((msg, sender, sendReply) => {
-    browser.test.assertTrue(sender.tab.url.endsWith("file_sample.html"), "sender url correct");
-
-    if (msg == 0) {
-      sendReply("reply1");
-    } else if (msg == 1) {
-      window.setTimeout(function() {
-        sendReply("reply2");
-      }, 0);
-      return true;
-    } else if (msg == 2) {
-      browser.test.notifyPass("sendmessage_reply");
-    }
+  browser.runtime.onMessage.addListener(result => {
+    browser.test.assertEq(result, 12, "x is 12");
+    browser.test.notifyPass("background test passed");
   });
 }
 
 function contentScript() {
-  browser.runtime.sendMessage(0, function(resp1) {
-    if (resp1 != "reply1") {
-      return; // test failed
-    }
-    browser.runtime.sendMessage(1, function(resp2) {
-      if (resp2 != "reply2") {
-        return; // test failed
-      }
-      browser.runtime.sendMessage(2);
-    });
-  });
+  window.x = 12;
+  browser.runtime.onMessage.addListener(function() {});
+  browser.runtime.sendMessage(window.x);
 }
 
 let extensionData = {
   background: "(" + backgroundScript.toString() + ")()",
   manifest: {
-    "permissions": ["tabs"],
     "content_scripts": [{
-      "matches": ["http://mochi.test/*/file_sample.html"],
+      "matches": ["http://mochi.test/tests/toolkit/components/extensions/test/mochitest/file_contentscript_*.html"],
       "js": ["content_script.js"],
       "run_at": "document_start"
     }]
@@ -65,15 +45,28 @@ add_task(function* test_contentscript() {
   yield extension.startup();
   info("extension loaded");
 
-  let win = window.open("file_sample.html");
+  yield new Promise(resolve => { setTimeout(resolve, 0); });
 
-  yield Promise.all([waitForLoad(win), extension.awaitFinish("sendmessage_reply")]);
+  let win = window.open();
+
+  win.location = "file_contentscript_page1.html";
+
+  yield Promise.all([waitForLoad(win), extension.awaitFinish()]);
 
   win.close();
 
   yield extension.unload();
   info("extension unloaded");
 });
+
+function waitForLoad(win) {
+  return new Promise(resolve => {
+    win.addEventListener("load", function listener() {
+      win.removeEventListener("load", listener, true);
+      resolve();
+    }, true);
+  });
+}
 </script>
 
 </body>

@@ -9,7 +9,7 @@ var {
 // WeakMap[Extension -> Set[Alarm]]
 var alarmsMap = new WeakMap();
 
-// WeakMap[Extension -> Set[callback]]
+// WeakMap[Extension -> callback]
 var alarmCallbacksMap = new WeakMap();
 
 // Manages an alarm created by the extension (alarms API).
@@ -46,8 +46,8 @@ Alarm.prototype = {
   },
 
   observe(subject, topic, data) {
-    for (let callback in alarmCallbacksMap.get(this.extension)) {
-      callback(this);
+    if (alarmCallbacksMap.has(this.extension)) {
+      alarmCallbacksMap.get(this.extension)(this);
     }
     if (this.canceled) {
       return;
@@ -74,7 +74,6 @@ Alarm.prototype = {
 
 extensions.on("startup", (type, extension) => {
   alarmsMap.set(extension, new Set());
-  alarmCallbacksMap.set(extension, new Set());
 });
 
 extensions.on("shutdown", (type, extension) => {
@@ -82,7 +81,6 @@ extensions.on("shutdown", (type, extension) => {
     alarm.clear();
   }
   alarmsMap.delete(extension);
-  alarmCallbacksMap.delete(extension);
 });
 
 extensions.registerAPI((extension, context) => {
@@ -162,9 +160,9 @@ extensions.registerAPI((extension, context) => {
           fire(alarm.data);
         };
 
-        alarmCallbacksMap.get(extension).add(callback);
+        alarmCallbacksMap.set(extension, callback);
         return () => {
-          alarmCallbacksMap.get(extension).delete(callback);
+          alarmCallbacksMap.delete(extension);
         };
       }).api(),
     },
