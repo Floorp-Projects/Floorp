@@ -124,13 +124,13 @@
     }
     browserTest.prototype = {
       get passCount() {
-        return this.results.filter(function (t) !t.info && !t.todo && t.pass).length;
+        return this.results.filter(t => !t.info && !t.todo && t.pass).length;
       },
       get todoCount() {
-        return this.results.filter(function (t) !t.info && t.todo && t.pass).length;
+        return this.results.filter(t => !t.info && t.todo && t.pass).length;
       },
       get failCount() {
-        return this.results.filter(function (t) !t.info && !t.pass).length;
+        return this.results.filter(t => !t.info && !t.pass).length;
       },
 
       addResult: function addResult(result) {
@@ -289,9 +289,9 @@
 
       var log = "";
 
-      var passCount = aTests.map(function (f) f.passCount).reduce(sum);
-      var failCount = aTests.map(function (f) f.failCount).reduce(sum);
-      var todoCount = aTests.map(function (f) f.todoCount).reduce(sum);
+      var passCount = aTests.map(f => f.passCount).reduce(sum);
+      var failCount = aTests.map(f => f.failCount).reduce(sum);
+      var todoCount = aTests.map(f => f.todoCount).reduce(sum);
       log += "<div id=\"summary\" class=\"";
       log += failCount != 0 ? "failure" :
                passCount == 0 ? "todo" : "success";
