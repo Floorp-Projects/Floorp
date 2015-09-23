@@ -1,0 +1,54 @@
+From d196359810da4b3fb11517b1b3d28dd0a9fcdf39 Mon Sep 17 00:00:00 2001
+From: Stephanie Ouillon <arroway@mozilla.com>
+Date: Fri, 18 Sep 2015 15:22:47 +0200
+Subject: [PATCH] 1st round test
+
+---
+ dom/newapps/test/xpcshell/test_install.js | 22 ++++++++++++++++------
+ 1 file changed, 16 insertions(+), 6 deletions(-)
+
+diff --git a/dom/newapps/test/xpcshell/test_install.js b/dom/newapps/test/xpcshell/test_install.js
+index b9073a0..53b4a26 100644
+--- a/dom/newapps/test/xpcshell/test_install.js
++++ b/dom/newapps/test/xpcshell/test_install.js
+@@ -15,21 +15,31 @@ const mod = Cc['@mozilla.org/newapps/installpackagedwebapp;1']
+ function run_test() {
+ 
+   let manifest = {
+-    start_url: "start.html",
+-    launch_path: "other.html"
+-  };
++    name: "Test App",
++    launch_path: "/index.html",
++    permissions: {
++      alarms: { },
++      wifi-manage: { },
++      tcp-socket: { },
++      browser: { },
++      desktop-notification: { },
++      geolocation: { },
++    },
++  }
+ 
+   //trigger error at install
+   let aOrigin = "";
+   let aManifestURL = "";
+   let manifestString = "boum"
+-  let appId = 123456789;
+-  let res = mod.installPackagedWebapp(manifestString, aOrigin, aManifestURL, appId);
++  let res = mod.installPackagedWebapp(manifestString, aOrigin, aManifestURL);
+   equal(res, false);
+ 
+   aOrigin = "http://test.com";
+   aManifestURL = "http://test.com/manifest.json";
+   manifestString = JSON.stringify(manifest);
+-  res = mod.installPackagedWebapp(manifestString, aOrigin, aManifestURL, appId);
++  res = mod.installPackagedWebapp(manifestString, aOrigin, aManifestURL);
+   equal(res, true);
++
++  //test permissions are set
++  //try modifying permissions r/w
+ }
+-- 
+1.9.1
+
