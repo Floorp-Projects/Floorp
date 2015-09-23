@@ -10,7 +10,7 @@ function test() {
   waitForExplicitFinish();
 
   newWindowWithState(state, function (win) {
-    registerCleanupFunction(function () win.close());
+    registerCleanupFunction(() => win.close());
 
     is(win.gBrowser.tabs.length, 2, "two tabs were restored");
     is(win.gBrowser.visibleTabs.length, 1, "one tab is visible");
