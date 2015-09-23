@@ -178,7 +178,7 @@ private:
 
   // Only touched on the parent thread (currently this is always the main
   // thread as SharedWorkers are always top-level).
-  nsTArray<SharedWorker*> mSharedWorkers;
+  nsTArray<nsRefPtr<SharedWorker>> mSharedWorkers;
 
   uint64_t mBusyCount;
   Status mParentStatus;
@@ -367,9 +367,6 @@ public:
   bool
   RegisterSharedWorker(JSContext* aCx, SharedWorker* aSharedWorker,
                        MessagePort* aPort);
-
-  void
-  UnregisterSharedWorker(JSContext* aCx, SharedWorker* aSharedWorker);
 
   void
   BroadcastErrorToSharedWorkers(JSContext* aCx,
@@ -769,6 +766,9 @@ public:
 
   void
   CloseSharedWorkersForWindow(nsPIDOMWindow* aWindow);
+
+  void
+  CloseAllSharedWorkers();
 
   void
   UpdateOverridenLoadGroup(nsILoadGroup* aBaseLoadGroup);
