@@ -54,5 +54,5 @@ function whenChildCount(aEntry, aChildCount, aCallback) {
   if (aEntry.childCount == aChildCount)
     aCallback();
   else
-    setTimeout(function () whenChildCount(aEntry, aChildCount, aCallback), 100);
+    setTimeout(() => whenChildCount(aEntry, aChildCount, aCallback), 100);
 }

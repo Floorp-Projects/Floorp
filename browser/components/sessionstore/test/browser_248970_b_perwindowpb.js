@@ -54,7 +54,7 @@ function test() {
     else if (typeof aValue == "number")
       node.selectedIndex = aValue;
     else
-      Array.forEach(node.options, function(aOpt, aIx)
+      Array.forEach(node.options, (aOpt, aIx) =>
         (aOpt.selected = aValue.indexOf(aIx) > -1));
   }
 
@@ -69,7 +69,7 @@ function test() {
       return aValue == node.value;
     if (!node.multiple)
       return aValue == node.selectedIndex;
-    return Array.every(node.options, function(aOpt, aIx)
+    return Array.every(node.options, (aOpt, aIx) =>
             (aValue.indexOf(aIx) > -1) == aOpt.selected);
   }
 
@@ -117,7 +117,7 @@ function test() {
          "getClosedTabCount has increased after closing a tab");
 
       // verify tab: (A), in undo list
-      let tab_A_restored = test(function() ss.undoCloseTab(aWin, 0));
+      let tab_A_restored = test(() => ss.undoCloseTab(aWin, 0));
       ok(tab_A_restored, "a tab is in undo list");
       promiseTabRestored(tab_A_restored).then(() => {
         is(testURL, tab_A_restored.linkedBrowser.currentURI.spec,

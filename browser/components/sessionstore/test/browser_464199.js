@@ -47,8 +47,9 @@ function test() {
   ] }] };
   let remember_count = 5;
 
-  function countByTitle(aClosedTabList, aTitle)
-    aClosedTabList.filter(function(aData) aData.title == aTitle).length;
+  function countByTitle(aClosedTabList, aTitle) {
+    return aClosedTabList.filter(aData => aData.title == aTitle).length;
+  }
 
   // open a window and add the above closed tab list
   let newWin = openDialog(location, "", "chrome,all,dialog=no");

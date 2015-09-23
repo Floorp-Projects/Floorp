@@ -40,7 +40,7 @@ function checkOSX34Generator(num) {
     expectedState[0].tabs.shift();
     // size attributes are stripped out in _prepDataForDeferredRestore in nsSessionStore.
     // This isn't the best approach, but neither is comparing JSON strings
-    WINDOW_ATTRIBUTES.forEach(function (attr) delete expectedState[0][attr]);
+    WINDOW_ATTRIBUTES.forEach(attr => delete expectedState[0][attr]);
 
     is(aCurState, JSON.stringify(expectedState),
        "test #" + num + ": closedWindowState is as expected");
