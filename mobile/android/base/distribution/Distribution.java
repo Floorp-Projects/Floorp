@@ -166,6 +166,13 @@ public class Distribution {
         return instance;
     }
 
+    public static class DistributionAndroidPreferences {
+        public JSONObject preferences;
+
+        public DistributionAndroidPreferences(JSONObject obj) {
+            preferences = obj;
+        }
+    }
     @RobocopTarget
     public static class DistributionDescriptor {
         public final boolean valid;
@@ -364,6 +371,34 @@ public class Distribution {
             }
 
             return new DistributionDescriptor(all.getJSONObject("Global"));
+
+        } catch (IOException e) {
+            Log.e(LOGTAG, "Error getting distribution descriptor file.", e);
+            Telemetry.addToHistogram(HISTOGRAM_CODE_CATEGORY, CODE_CATEGORY_MALFORMED_DISTRIBUTION);
+            return null;
+        } catch (JSONException e) {
+            Log.e(LOGTAG, "Error parsing preferences.json", e);
+            Telemetry.addToHistogram(HISTOGRAM_CODE_CATEGORY, CODE_CATEGORY_MALFORMED_DISTRIBUTION);
+            return null;
+        }
+    }
+
+    public DistributionAndroidPreferences getAndroidPreferences() {
+        File descFile = getDistributionFile("preferences.json");
+        if (descFile == null) {
+            // Logging and existence checks are handled in getDistributionFile.
+            return null;
+        }
+
+        try {
+            JSONObject all = new JSONObject(FileUtils.getFileContents(descFile));
+
+            if (!all.has("AndroidPreferences")) {
+                Log.e(LOGTAG, "Distribution preferences.json has no AndroidPreferences entry!");
+                return null;
+            }
+
+            return new DistributionAndroidPreferences(all.getJSONObject("AndroidPreferences"));
 
         } catch (IOException e) {
             Log.e(LOGTAG, "Error getting distribution descriptor file.", e);
