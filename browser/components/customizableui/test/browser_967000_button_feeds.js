@@ -33,7 +33,7 @@ add_task(function() {
 
   yield PanelUI.show();
 
-  yield waitForCondition(function() !feedButton.hasAttribute("disabled"));
+  yield waitForCondition(() => !feedButton.hasAttribute("disabled"));
   ok(!feedButton.hasAttribute("disabled"), "The Subscribe button gets enabled");
 
   feedButton.click();

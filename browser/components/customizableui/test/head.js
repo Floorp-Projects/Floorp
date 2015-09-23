@@ -374,7 +374,7 @@ function waitForCondition(aConditionFn, aMaxTries=50, aCheckInterval=100) {
 
 function waitFor(aTimeout=100) {
   let deferred = Promise.defer();
-  setTimeout(function() deferred.resolve(), aTimeout);
+  setTimeout(() => deferred.resolve(), aTimeout);
   return deferred.promise;
 }
 
