@@ -63,4 +63,4 @@ patch -p3 < zero-serialization.patch
 patch -p3 < comparison-with-nan.patch
 patch -p3 < mfbt-abi-markers.patch
 patch -p3 < to-moz-dependencies.patch
-
+patch -p3 < fix-wshadow-warnings.patch
