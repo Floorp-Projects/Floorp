@@ -304,6 +304,7 @@ ModuleObject::init(HandleScript script)
 {
     MOZ_ASSERT(!script->enclosingStaticScope());
     initReservedSlot(ScriptSlot, PrivateValue(script));
+    initReservedSlot(EvaluatedSlot, BooleanValue(false));
 }
 
 void
@@ -338,6 +339,12 @@ JSScript*
 ModuleObject::script() const
 {
     return static_cast<JSScript*>(getReservedSlot(ScriptSlot).toPrivate());
+}
+
+bool
+ModuleObject::evaluated() const
+{
+    return getReservedSlot(EvaluatedSlot).toBoolean();
 }
 
 ModuleEnvironmentObject&
@@ -386,8 +393,23 @@ ModuleObject::createEnvironment()
     setReservedSlot(EnvironmentSlot, getReservedSlot(InitialEnvironmentSlot));
 }
 
+void
+ModuleObject::setEvaluated()
+{
+    MOZ_ASSERT(!evaluated());
+    setReservedSlot(EvaluatedSlot, TrueHandleValue);
+}
+
+bool
+ModuleObject::evaluate(JSContext* cx, MutableHandleValue rval)
+{
+    RootedScript script(cx, this->script());
+    return JS_ExecuteScript(cx, script, rval);
+}
+
 DEFINE_GETTER_FUNCTIONS(ModuleObject, initialEnvironment, InitialEnvironmentSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, environment, EnvironmentSlot)
+DEFINE_GETTER_FUNCTIONS(ModuleObject, evaluated, EvaluatedSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, requestedModules, RequestedModulesSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, importEntries, ImportEntriesSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, localExportEntries, LocalExportEntriesSlot)
@@ -400,6 +422,7 @@ js::InitModuleClass(JSContext* cx, HandleObject obj)
     static const JSPropertySpec protoAccessors[] = {
         JS_PSG("initialEnvironment", ModuleObject_initialEnvironmentGetter, 0),
         JS_PSG("environment", ModuleObject_environmentGetter, 0),
+        JS_PSG("evaluated", ModuleObject_evaluatedGetter, 0),
         JS_PSG("requestedModules", ModuleObject_requestedModulesGetter, 0),
         JS_PSG("importEntries", ModuleObject_importEntriesGetter, 0),
         JS_PSG("localExportEntries", ModuleObject_localExportEntriesGetter, 0),
@@ -411,6 +434,7 @@ js::InitModuleClass(JSContext* cx, HandleObject obj)
     static const JSFunctionSpec protoFunctions[] = {
         JS_SELF_HOSTED_FN("resolveExport", "ModuleResolveExport", 3, 0),
         JS_SELF_HOSTED_FN("declarationInstantiation", "ModuleDeclarationInstantiation", 0, 0),
+        JS_SELF_HOSTED_FN("evaluation", "ModuleEvaluation", 0, 0),
         JS_FS_END
     };
 

@@ -1320,6 +1320,26 @@ intrinsic_CreateImportBinding(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+intrinsic_SetModuleEvaluated(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+    module->setEvaluated();
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
+intrinsic_EvaluateModule(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+    return module->evaluate(cx, args.rval());
+}
+
 // The self-hosting global isn't initialized with the normal set of builtins.
 // Instead, individual C++-implemented functions that're required by
 // self-hosted code are defined as global functions. Accessing these
@@ -1568,6 +1588,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("HostResolveImportedModule", intrinsic_HostResolveImportedModule, 2, 0),
     JS_FN("CreateModuleEnvironment", intrinsic_CreateModuleEnvironment, 2, 0),
     JS_FN("CreateImportBinding", intrinsic_CreateImportBinding, 4, 0),
+    JS_FN("SetModuleEvaluated", intrinsic_SetModuleEvaluated, 1, 0),
+    JS_FN("EvaluateModule", intrinsic_EvaluateModule, 1, 0),
 
     JS_FS_END
 };

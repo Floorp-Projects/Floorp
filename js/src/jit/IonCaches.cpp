@@ -4691,6 +4691,9 @@ IsCacheableNameReadSlot(HandleObject scopeChain, HandleObject obj,
         if (!IsCacheableGetPropReadSlotForIon(obj, holder, shape) &&
             !IsCacheableNoProperty(obj, holder, shape, pc, output))
             return false;
+    } else if (obj->is<ModuleEnvironmentObject>()) {
+        // We don't yet support lookups in a module environment.
+        return false;
     } else if (obj->is<CallObject>()) {
         MOZ_ASSERT(obj == holder);
         if (!shape->hasDefaultGetter())

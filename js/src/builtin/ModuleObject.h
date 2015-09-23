@@ -88,6 +88,7 @@ class ModuleObject : public NativeObject
         ScriptSlot = 0,
         InitialEnvironmentSlot,
         EnvironmentSlot,
+        EvaluatedSlot,
         RequestedModulesSlot,
         ImportEntriesSlot,
         LocalExportEntriesSlot,
@@ -113,6 +114,7 @@ class ModuleObject : public NativeObject
     JSScript* script() const;
     ModuleEnvironmentObject& initialEnvironment() const;
     ModuleEnvironmentObject* environment() const;
+    bool evaluated() const;
     ArrayObject& requestedModules() const;
     ArrayObject& importEntries() const;
     ArrayObject& localExportEntries() const;
@@ -122,6 +124,9 @@ class ModuleObject : public NativeObject
     IndirectBindingMap& importBindings();
 
     void createEnvironment();
+
+    void setEvaluated();
+    bool evaluate(JSContext*cx, MutableHandleValue rval);
 
   private:
     static void trace(JSTracer* trc, JSObject* obj);
@@ -152,6 +157,7 @@ class MOZ_STACK_CLASS ModuleBuilder
 
     JSContext* cx_;
     RootedAtomVector requestedModules_;
+
     RootedAtomVector importedBoundNames_;
     RootedImportEntryVector importEntries_;
     RootedExportEntryVector exportEntries_;

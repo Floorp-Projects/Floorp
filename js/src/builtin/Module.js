@@ -142,3 +142,30 @@ function ModuleDeclarationInstantiation()
         }
     }
 }
+
+// 15.2.1.16.5 ModuleEvaluation()
+function ModuleEvaluation()
+{
+    if (!IsObject(this) || !IsModule(this))
+        return callFunction(CallModuleMethodIfWrapped, this, "ModuleEvaluation");
+
+    // Step 1
+    let module = this;
+
+    // Step 4
+    if (module.evaluated)
+        return undefined;
+
+    // Step 5
+    SetModuleEvaluated(this);
+
+    // Step 6
+    let requestedModules = module.requestedModules;
+    for (let i = 0; i < requestedModules.length; i++) {
+        let required = requestedModules[i];
+        let requiredModule = HostResolveImportedModule(module, required);
+        requiredModule.evaluation();
+    }
+
+    return EvaluateModule(module);
+}
