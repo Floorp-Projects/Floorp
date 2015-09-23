@@ -538,7 +538,9 @@ WeaveCrypto.prototype = {
         }
     },
 
-    generateRandomIV : function() this.generateRandomBytes(this.ivLength),
+    generateRandomIV : function() {
+      return this.generateRandomBytes(this.ivLength);
+    },
 
     generateRandomBytes : function(byteCount) {
         this.log("generateRandomBytes() called");
