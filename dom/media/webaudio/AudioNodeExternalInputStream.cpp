@@ -131,7 +131,6 @@ AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
   // Handle that.
   if (!IsEnabled() || mInputs.IsEmpty() || mPassThrough) {
     mLastChunks[0].SetNull(WEBAUDIO_BLOCK_SIZE);
-    AdvanceOutputSegment();
     return;
   }
 
@@ -205,9 +204,6 @@ AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
   if (accumulateIndex == 0) {
     mLastChunks[0].SetNull(WEBAUDIO_BLOCK_SIZE);
   }
-
-  // Using AudioNodeStream's AdvanceOutputSegment to push the media stream graph along with null data.
-  AdvanceOutputSegment();
 }
 
 bool

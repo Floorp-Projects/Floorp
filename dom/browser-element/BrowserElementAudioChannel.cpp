@@ -45,6 +45,24 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(BrowserElementAudioChannel,
                                    mTabParent,
                                    mBrowserElementAPI)
 
+/* static */ already_AddRefed<BrowserElementAudioChannel>
+BrowserElementAudioChannel::Create(nsPIDOMWindow* aWindow,
+                                   nsIFrameLoader* aFrameLoader,
+                                   nsIBrowserElementAPI* aAPI,
+                                   AudioChannel aAudioChannel,
+                                   ErrorResult& aRv)
+{
+  nsRefPtr<BrowserElementAudioChannel> ac =
+    new BrowserElementAudioChannel(aWindow, aFrameLoader, aAPI, aAudioChannel);
+
+  aRv = ac->Initialize();
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  return ac.forget();
+}
+
 BrowserElementAudioChannel::BrowserElementAudioChannel(
                                                    nsPIDOMWindow* aWindow,
                                                    nsIFrameLoader* aFrameLoader,
@@ -58,7 +76,6 @@ BrowserElementAudioChannel::BrowserElementAudioChannel(
 {
   MOZ_ASSERT(NS_IsMainThread());
   AssertIsInMainProcess();
-  MOZ_ASSERT(mFrameLoader);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -94,6 +111,20 @@ BrowserElementAudioChannel::~BrowserElementAudioChannel()
 nsresult
 BrowserElementAudioChannel::Initialize()
 {
+  if (!mFrameLoader) {
+    nsCOMPtr<nsPIDOMWindow> window = GetOwner();
+    if (!window) {
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIDOMWindow> topWindow;
+    window->GetScriptableTop(getter_AddRefs(topWindow));
+
+    mFrameWindow = do_QueryInterface(topWindow);
+    mFrameWindow = mFrameWindow->GetOuterWindow();
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIDocShell> docShell;
   nsresult rv = mFrameLoader->GetDocShell(getter_AddRefs(docShell));
   if (NS_WARN_IF(NS_FAILED(rv))) {

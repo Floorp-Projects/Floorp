@@ -20,3 +20,6 @@ DEFINES['LIBRARY_FILENAME'] = '%s%s%s' % (
     LIBRARY_NAME,
     CONFIG['DLL_SUFFIX']
 )
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']

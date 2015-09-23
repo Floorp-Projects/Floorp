@@ -1,0 +1,18 @@
+<html>
+<head>
+</head>
+<body>
+<h1>This example is taken from <a href="https://html.spec.whatwg.org/multipage/microdata.html">https://html.spec.whatwg.org/multipage/microdata.html</a>, and modified.</h1>
+
+<div itemscope id="amanda" itemref="a b"></div>
+<p id="a">Name: <span itemprop="name">Amanda</span></p>
+<div id="b" itemprop="band" itemscope itemref="c"></div>
+<div id="c">
+ <p>Band: <span itemprop="name">Jazz Band</span></p>
+ <p>Size: <span itemprop="size">12</span> players</p>
+ <span itemprop="cycle" itemscope itemref="b">This is an error.</span>
+</div>
+
+</body>
+</html>
+

@@ -261,6 +261,28 @@ function runTest()
   isWithAbsTolerance(nonScalingStrokedLine3Bounds.height, rect.height, 0.1,
                      "nonScalingStrokedLine3.getBoundingClientRect().height");
 
+  var shapeWithMarker1Bounds =
+    doc.getElementById("shapeWithMarker1").getBoundingClientRect();
+  isWithAbsTolerance(shapeWithMarker1Bounds.left, 160, 0.1,
+    "shapeWithMarker1Bounds.left");
+  isWithAbsTolerance(shapeWithMarker1Bounds.top, 120, 0.1,
+    "shapeWithMarker1Bounds.top");
+  isWithAbsTolerance(shapeWithMarker1Bounds.width, 10 + Math.SQRT2 * 50, 0.1,
+    "shapeWithMarker1Bounds.width");
+  isWithAbsTolerance(shapeWithMarker1Bounds.height, 20, 0.1,
+    "shapeWithMarker1Bounds.height");
+
+  var rotatedLine1Bounds =
+    doc.getElementById("rotatedLine1").getBoundingClientRect();
+  isWithAbsTolerance(rotatedLine1Bounds.left, 160, 0.1,
+    "rotatedLine1Bounds.left");
+  isWithAbsTolerance(rotatedLine1Bounds.top, 145, 0.1,
+    "rotatedLine1Bounds.top");
+  isWithAbsTolerance(rotatedLine1Bounds.width, Math.SQRT2 * 20, 0.1,
+    "rotatedLine1Bounds.width");
+  isWithAbsTolerance(rotatedLine1Bounds.height, 10, 0.1,
+    "rotatedLine1Bounds.height");
+
   SimpleTest.finish();
 }
 

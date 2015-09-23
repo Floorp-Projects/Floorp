@@ -102,11 +102,45 @@ function test_lexer_linecol(domutils, cssText, locations) {
   equal(i, locations.length);
 }
 
+function test_lexer_eofchar(domutils, cssText, argText, expectedAppend,
+                            expectedNoAppend) {
+  let lexer = domutils.getCSSLexer(cssText);
+  while (lexer.nextToken()) {
+    // Nothing.
+  }
+
+  do_print("EOF char test, input = " + cssText);
+
+  let result = lexer.performEOFFixup(argText, true);
+  equal(result, expectedAppend);
+
+  result = lexer.performEOFFixup(argText, false);
+  equal(result, expectedNoAppend);
+}
+
 var LINECOL_TESTS = [
   ["simple", ["ident:0:0", ":0:6"]],
   ["\n    stuff", ["whitespace:0:0", "ident:1:4", ":1:9"]],
   ['"string with \\\nnewline"    \r\n', ["string:0:0", "whitespace:1:8",
                                          ":2:0"]]
+];
+
+var EOFCHAR_TESTS = [
+  ["hello", "hello"],
+  ["hello \\", "hello \\\\", "hello \\\uFFFD"],
+  ["'hello", "'hello'"],
+  ["\"hello", "\"hello\""],
+  ["'hello\\", "'hello\\\\'", "'hello'"],
+  ["\"hello\\", "\"hello\\\\\"", "\"hello\""],
+  ["/*hello", "/*hello*/"],
+  ["/*hello*", "/*hello*/"],
+  ["/*hello\\", "/*hello\\*/"],
+  ["url(hello", "url(hello)"],
+  ["url('hello", "url('hello')"],
+  ["url(\"hello", "url(\"hello\")"],
+  ["url(hello\\", "url(hello\\\\)", "url(hello\\\uFFFD)"],
+  ["url('hello\\", "url('hello\\\\')", "url('hello')"],
+  ["url(\"hello\\", "url(\"hello\\\\\")", "url(\"hello\")"],
 ];
 
 function run_test()
@@ -122,4 +156,16 @@ function run_test()
   for ([text, result] of LINECOL_TESTS) {
     test_lexer_linecol(domutils, text, result);
   }
+
+  for ([text, expectedAppend, expectedNoAppend] of EOFCHAR_TESTS) {
+    if (!expectedNoAppend) {
+      expectedNoAppend = expectedAppend;
+    }
+    test_lexer_eofchar(domutils, text, text, expectedAppend, expectedNoAppend);
+  }
+
+  // Ensure that passing a different inputString to performEOFFixup
+  // doesn't cause an assertion trying to strip a backslash from the
+  // end of an empty string.
+  test_lexer_eofchar(domutils, "'\\", "", "\\'", "'");
 }

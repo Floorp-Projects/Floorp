@@ -138,6 +138,7 @@ public:
   }
 
   virtual void ProcessBlock(AudioNodeStream* aStream,
+                            GraphTime aFrom,
                             const AudioBlock& aInput,
                             AudioBlock* aOutput,
                             bool* aFinished) override
@@ -186,7 +187,7 @@ public:
     uint32_t numberOfChannels = mBiquads.Length();
     aOutput->AllocateChannels(numberOfChannels);
 
-    StreamTime pos = aStream->GetCurrentPosition();
+    StreamTime pos = aStream->GraphTimeToStreamTime(aFrom);
 
     double freq = mFrequency.GetValueAtTime(pos);
     double q = mQ.GetValueAtTime(pos);
