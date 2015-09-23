@@ -69,7 +69,9 @@ function FxaMock() {
 FxaMock.prototype = {
   currentAccountState: {
     profile: null,
-    get isCurrent() true,
+    get isCurrent() {
+      return true;
+    }
   },
 
   getSignedInUser: function () {
