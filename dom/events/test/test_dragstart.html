@@ -37,17 +37,17 @@ function afterDragTests()
   ok(gDataTransfer instanceof DataTransfer, "DataTransfer after dragstart event");
   checkTypes(gDataTransfer, [], 0, "after dragstart event");
 
-  expectError(function() gDataTransfer.setData("text/plain", "Some Text"),
+  expectError(() => gDataTransfer.setData("text/plain", "Some Text"),
               "NoModificationAllowedError", "setData when read only");
-  expectError(function() gDataTransfer.clearData("text/plain"),
+  expectError(() => gDataTransfer.clearData("text/plain"),
               "NoModificationAllowedError", "clearData when read only");
-  expectError(function() gDataTransfer.mozSetDataAt("text/plain", "Some Text", 0),
+  expectError(() => gDataTransfer.mozSetDataAt("text/plain", "Some Text", 0),
               "NoModificationAllowedError", "setDataAt when read only");
-  expectError(function() gDataTransfer.mozClearDataAt("text/plain", 0),
+  expectError(() => gDataTransfer.mozClearDataAt("text/plain", 0),
               "NoModificationAllowedError", "clearDataAt when read only");
-  expectError(function() gDataTransfer.setDragImage(draggable, 10, 10),
+  expectError(() => gDataTransfer.setDragImage(draggable, 10, 10),
               "NoModificationAllowedError", "setDragImage when read only");
-  expectError(function() gDataTransfer.addElement(draggable),
+  expectError(() => gDataTransfer.addElement(draggable),
               "NoModificationAllowedError", "addElement when read only");
 
   var evt = document.createEvent("dragevent");
@@ -153,7 +153,7 @@ function test_DataTransfer(dt)
   is(dt.getData("text/plain"), "", "empty data is empty");
 
   // calling setDataAt requires an index that is 0 <= index <= dt.itemCount
-  expectError(function() dt.mozSetDataAt("text/plain", "Some Text", 1),
+  expectError(() => dt.mozSetDataAt("text/plain", "Some Text", 1),
               "IndexSizeError", "setDataAt index too high");
 
   is(dt.mozUserCancelled, false, "userCancelled");
@@ -171,9 +171,9 @@ function test_DataTransfer(dt)
   is(dt.mozGetDataAt("", 0), null, "invalid type getDataAt"),
 
   // similar with clearDataAt and getDataAt
-  expectError(function() dt.mozGetDataAt("text/plain", 1),
+  expectError(() => dt.mozGetDataAt("text/plain", 1),
               "IndexSizeError", "getDataAt index too high");
-  expectError(function() dt.mozClearDataAt("text/plain", 1),
+  expectError(() => dt.mozClearDataAt("text/plain", 1),
               "IndexSizeError", "clearDataAt index too high");
 
   dt.setData("text/plain", "Sample Text");
@@ -284,7 +284,7 @@ function test_DataTransfer(dt)
   dt.clearData();
   dt.mozSetDataAt("text/plain", "First Item", 0);
   dt.mozSetDataAt("text/plain", "Second Item", 1);
-  expectError(function() dt.mozSetDataAt("text/plain", "Some Text", 3),
+  expectError(() => dt.mozSetDataAt("text/plain", "Some Text", 3),
               "IndexSizeError", "setDataAt index too high with two items");
   is(dt.mozItemCount, 2, "setDataAt item itemCount");
   checkOneDataItem(dt, ["text/plain"], ["First Item"], 0, "setDataAt item at index 0");
@@ -328,7 +328,7 @@ function test_DataTransfer(dt)
   checkOneDataItem(dt, ["text/plain", "text/html"],
                    ["First Item", "Changed with setData"], 0, "clearDataAt last type at index 0");
   checkOneDataItem(dt, ["application/-moz-node"], [draggable], 1, "clearDataAt last type item at index 2");
-  expectError(function() dt.mozGetDataAt("text/plain", 2),
+  expectError(() => dt.mozGetDataAt("text/plain", 2),
               "IndexSizeError", "getDataAt after item removed index too high");
 
   dt.mozSetDataAt("text/unknown", "Unknown type", 2);
@@ -355,7 +355,7 @@ function test_DataTransfer(dt)
   checkOneDataItem(dt, ["text/unknown"],
                    ["Unknown type"], 1, "clearData type that does not exist item at index 1");
 
-  expectError(function() dt.mozClearDataAt("text/plain", 3),
+  expectError(() => dt.mozClearDataAt("text/plain", 3),
               "IndexSizeError", "clearData index too high with two items");
 
   // ensure that clearData() removes all data associated with the first item
