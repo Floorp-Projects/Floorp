@@ -23,6 +23,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProcessHangMonitorIPC.h"
+#include "mozilla/devtools/HeapSnapshotTempFileHelperChild.h"
 #include "mozilla/docshell/OfflineCacheUpdateChild.h"
 #include "mozilla/dom/ContentBridgeChild.h"
 #include "mozilla/dom/ContentBridgeParent.h"
@@ -1450,6 +1451,20 @@ bool
 ContentChild::DeallocPHalChild(PHalChild* aHal)
 {
     delete aHal;
+    return true;
+}
+
+devtools::PHeapSnapshotTempFileHelperChild*
+ContentChild::AllocPHeapSnapshotTempFileHelperChild()
+{
+    return devtools::HeapSnapshotTempFileHelperChild::Create();
+}
+
+bool
+ContentChild::DeallocPHeapSnapshotTempFileHelperChild(
+    devtools::PHeapSnapshotTempFileHelperChild* aHeapSnapshotHelper)
+{
+    delete aHeapSnapshotHelper;
     return true;
 }
 

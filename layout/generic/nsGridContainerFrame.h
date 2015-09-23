@@ -232,14 +232,15 @@ protected:
   };
 
   /**
-   * Return aLine if it's inside the aMin..aMax range (inclusive),
-   * otherwise return kAutoLine.
+   * Return aLine if it's inside the aMin..aMax range (inclusive), otherwise
+   * return kAutoLine.  If the range is empty (aMin == aMax, i.e. there are
+   * no tracks in the grid) then aLine is outside.
    */
   static int32_t
   AutoIfOutside(int32_t aLine, int32_t aMin, int32_t aMax)
   {
     MOZ_ASSERT(aMin <= aMax);
-    if (aLine < aMin || aLine > aMax) {
+    if (aLine < aMin || aLine > aMax || aMin == aMax) {
       return kAutoLine;
     }
     return aLine;

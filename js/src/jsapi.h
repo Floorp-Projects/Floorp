@@ -2956,11 +2956,21 @@ JS_NewArrayObject(JSContext* cx, const JS::HandleValueArray& contents);
 extern JS_PUBLIC_API(JSObject*)
 JS_NewArrayObject(JSContext* cx, size_t length);
 
+// Returns true and sets |*isArray| indicating whether |value| is an Array
+// object or a wrapper around one, otherwise returns false on failure.
+//
+// This method returns true with |*isArray == false| when passed a proxy whose
+// target is an Array, or when passed a revoked proxy.
 extern JS_PUBLIC_API(bool)
-JS_IsArrayObject(JSContext* cx, JS::HandleValue value);
+JS_IsArrayObject(JSContext* cx, JS::HandleValue value, bool* isArray);
 
+// Returns true and sets |*isArray| indicating whether |obj| is an Array object
+// or a wrapper around one, otherwise returns false on failure.
+//
+// This method returns true with |*isArray == false| when passed a proxy whose
+// target is an Array, or when passed a revoked proxy.
 extern JS_PUBLIC_API(bool)
-JS_IsArrayObject(JSContext* cx, JS::HandleObject obj);
+JS_IsArrayObject(JSContext* cx, JS::HandleObject obj, bool* isArray);
 
 extern JS_PUBLIC_API(bool)
 JS_GetArrayLength(JSContext* cx, JS::Handle<JSObject*> obj, uint32_t* lengthp);
@@ -4722,11 +4732,13 @@ SetForEach(JSContext *cx, HandleObject obj, HandleValue callbackFn, HandleValue 
 extern JS_PUBLIC_API(JSObject*)
 JS_NewDateObject(JSContext* cx, int year, int mon, int mday, int hour, int min, int sec);
 
-/*
- * Infallible predicate to test whether obj is a date object.
- */
+// Returns true and sets |*isDate| indicating whether |obj| is a Date object or
+// a wrapper around one, otherwise returns false on failure.
+//
+// This method returns true with |*isDate == false| when passed a proxy whose
+// target is a Date, or when passed a revoked proxy.
 extern JS_PUBLIC_API(bool)
-JS_ObjectIsDate(JSContext* cx, JS::HandleObject obj);
+JS_ObjectIsDate(JSContext* cx, JS::HandleObject obj, bool* isDate);
 
 /*
  * Clears the cache of calculated local time from each Date object.
@@ -4777,8 +4789,13 @@ extern JS_PUBLIC_API(bool)
 JS_ExecuteRegExpNoStatics(JSContext* cx, JS::HandleObject reobj, char16_t* chars, size_t length,
                           size_t* indexp, bool test, JS::MutableHandleValue rval);
 
+// Returns true and sets |*isRegExp| indicating whether |obj| is a RegExp
+// object or a wrapper around one, otherwise returns false on failure.
+//
+// This method returns true with |*isRegExp == false| when passed a proxy whose
+// target is a RegExp, or when passed a revoked proxy.
 extern JS_PUBLIC_API(bool)
-JS_ObjectIsRegExp(JSContext* cx, JS::HandleObject obj);
+JS_ObjectIsRegExp(JSContext* cx, JS::HandleObject obj, bool* isRegExp);
 
 extern JS_PUBLIC_API(unsigned)
 JS_GetRegExpFlags(JSContext* cx, JS::HandleObject obj);

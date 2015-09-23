@@ -13,6 +13,10 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
 
+#include "jsarray.h"
+#include "jscntxt.h"
+#include "jsnum.h"
+
 #include "js/Conversions.h"
 #include "js/Value.h"
 

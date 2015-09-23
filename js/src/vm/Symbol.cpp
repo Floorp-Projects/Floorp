@@ -152,3 +152,13 @@ js::ToSymbolPrimitive(Value v)
     MOZ_ASSERT(IsSymbolOrSymbolWrapper(v));
     return v.isSymbol() ? v.toSymbol() : v.toObject().as<SymbolObject>().unbox();
 }
+
+
+JS::ubi::Node::Size
+JS::ubi::Concrete<JS::Symbol>::size(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    // If we start allocating symbols in the nursery, we will need to update
+    // this method.
+    MOZ_ASSERT(get().isTenured());
+    return js::gc::Arena::thingSize(get().asTenured().getAllocKind());
+}

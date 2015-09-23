@@ -26,7 +26,7 @@ public:
   virtual ~EMEDecoderModule();
 
   // Decode thread.
-  virtual already_AddRefed<MediaDataDecoder>
+  already_AddRefed<MediaDataDecoder>
   CreateVideoDecoder(const VideoInfo& aConfig,
                     layers::LayersBackend aLayersBackend,
                     layers::ImageContainer* aImageContainer,
@@ -34,12 +34,12 @@ public:
                     MediaDataDecoderCallback* aCallback) override;
 
   // Decode thread.
-  virtual already_AddRefed<MediaDataDecoder>
+  already_AddRefed<MediaDataDecoder>
   CreateAudioDecoder(const AudioInfo& aConfig,
                      FlushableTaskQueue* aAudioTaskQueue,
                      MediaDataDecoderCallback* aCallback) override;
 
-  virtual ConversionRequired
+  ConversionRequired
   DecoderNeedsConversion(const TrackInfo& aConfig) const override;
 
 private:

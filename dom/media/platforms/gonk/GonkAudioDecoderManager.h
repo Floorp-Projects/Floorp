@@ -26,16 +26,16 @@ public:
 
   virtual ~GonkAudioDecoderManager() override;
 
-  virtual nsRefPtr<InitPromise> Init(MediaDataDecoderCallback* aCallback) override;
+  nsRefPtr<InitPromise> Init(MediaDataDecoderCallback* aCallback) override;
 
-  virtual nsresult Input(MediaRawData* aSample) override;
+  nsresult Input(MediaRawData* aSample) override;
 
-  virtual nsresult Output(int64_t aStreamOffset,
+  nsresult Output(int64_t aStreamOffset,
                           nsRefPtr<MediaData>& aOutput) override;
 
-  virtual nsresult Flush() override;
+  nsresult Flush() override;
 
-  virtual bool HasQueuedSample() override;
+  bool HasQueuedSample() override;
 
 private:
   bool InitMediaCodecProxy(MediaDataDecoderCallback* aCallback);

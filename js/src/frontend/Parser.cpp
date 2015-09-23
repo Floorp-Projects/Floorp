@@ -54,6 +54,7 @@ JSFunction::AutoParseUsingFunctionBox::AutoParseUsingFunctionBox(ExclusiveContex
   : fun_(cx, funbox->function()),
     oldEnv_(cx, fun_->environment())
 {
+    fun_->unsetEnvironment();
     fun_->setFunctionBox(funbox);
     funbox->computeAllowSyntax(fun_);
     funbox->computeInWith(fun_);
@@ -62,7 +63,7 @@ JSFunction::AutoParseUsingFunctionBox::AutoParseUsingFunctionBox(ExclusiveContex
 JSFunction::AutoParseUsingFunctionBox::~AutoParseUsingFunctionBox()
 {
     fun_->unsetFunctionBox();
-    fun_->setEnvironment(oldEnv_);
+    fun_->initEnvironment(oldEnv_);
 }
 
 namespace js {
@@ -4866,13 +4867,13 @@ Parser<FullParseHandler>::exportDeclaration()
             if (!moduleSpec)
                 return null();
 
-            if (!MatchOrInsertSemicolon(tokenStream))
+            if (!MatchOrInsertSemicolon(tokenStream, TokenStream::Operand))
                 return null();
 
             return handler.newExportFromDeclaration(begin, kid, moduleSpec);
-        } else {
-            tokenStream.ungetToken();
         }
+
+        tokenStream.ungetToken();
 
         if (!MatchOrInsertSemicolon(tokenStream, TokenStream::Operand))
             return null();
@@ -4894,28 +4895,24 @@ Parser<FullParseHandler>::exportDeclaration()
 
         if (!tokenStream.getToken(&tt))
             return null();
-        if (tt == TOK_NAME && tokenStream.currentName() == context->names().from) {
-            if (!checkUnescapedName())
-                return null();
-
-            MUST_MATCH_TOKEN(TOK_STRING, JSMSG_MODULE_SPEC_AFTER_FROM);
-
-            Node moduleSpec = stringLiteral();
-            if (!moduleSpec)
-                return null();
-
-            if (!MatchOrInsertSemicolon(tokenStream))
-                return null();
-
-            return handler.newExportFromDeclaration(begin, kid, moduleSpec);
-        } else {
+        if (tt != TOK_NAME || tokenStream.currentName() != context->names().from) {
             report(ParseError, false, null(), JSMSG_FROM_AFTER_EXPORT_STAR);
             return null();
         }
 
-        if (!MatchOrInsertSemicolon(tokenStream))
+        if (!checkUnescapedName())
             return null();
-        break;
+
+        MUST_MATCH_TOKEN(TOK_STRING, JSMSG_MODULE_SPEC_AFTER_FROM);
+
+        Node moduleSpec = stringLiteral();
+        if (!moduleSpec)
+            return null();
+
+        if (!MatchOrInsertSemicolon(tokenStream, TokenStream::Operand))
+            return null();
+
+        return handler.newExportFromDeclaration(begin, kid, moduleSpec);
       }
 
       case TOK_FUNCTION:

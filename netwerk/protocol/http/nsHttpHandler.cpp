@@ -493,22 +493,24 @@ nsHttpHandler::IsAcceptableEncoding(const char *enc, bool isSecure)
     if (!enc)
         return false;
 
-    // HTTP 1.1 allows servers to send x-gzip and x-compress instead
-    // of gzip and compress, for example.  So, we'll always strip off
-    // an "x-" prefix before matching the encoding to one we claim
-    // to accept.
-    if (!PL_strncasecmp(enc, "x-", 2))
-        enc += 2;
-
+    // we used to accept x-foo anytime foo was acceptable, but that's just
+    // continuing bad behavior.. so limit it to known x-* patterns
+    bool rv;
+    if (isSecure) {
+        rv = nsHttp::FindToken(mHttpsAcceptEncodings.get(), enc, HTTP_LWS ",") != nullptr;
+    } else {
+        rv = nsHttp::FindToken(mHttpAcceptEncodings.get(), enc, HTTP_LWS ",") != nullptr;
+    }
     // gzip and deflate are inherently acceptable in modern HTTP - always
     // process them if a stream converter can also be found.
-    if (!PL_strcasecmp(enc, "gzip") || !PL_strcasecmp(enc, "deflate"))
-        return true;
-
-    if (isSecure) {
-        return nsHttp::FindToken(mHttpsAcceptEncodings.get(), enc, HTTP_LWS ",") != nullptr;
+    if (!rv &&
+        (!PL_strcasecmp(enc, "gzip") || !PL_strcasecmp(enc, "deflate") ||
+         !PL_strcasecmp(enc, "x-gzip") || !PL_strcasecmp(enc, "x-deflate"))) {
+        rv = true;
     }
-    return nsHttp::FindToken(mHttpAcceptEncodings.get(), enc, HTTP_LWS ",") != nullptr;
+    LOG(("nsHttpHandler::IsAceptableEncoding %s https=%d %d\n",
+         enc, isSecure, rv));
+    return rv;
 }
 
 nsresult

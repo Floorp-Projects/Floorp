@@ -67,6 +67,10 @@ class Symbol : public js::gc::TenuredCell
             thing->asTenured().writeBarrierPre(thing);
     }
 
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+        return mallocSizeOf(this);
+    }
+
 #ifdef DEBUG
     void dump(FILE* fp = stderr);
 #endif

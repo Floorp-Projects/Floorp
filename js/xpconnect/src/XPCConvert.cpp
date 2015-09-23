@@ -1509,7 +1509,8 @@ XPCConvert::JSArray2Native(void** d, HandleValue s,
         return JSTypedArray2Native(d, jsarray, count, type, pErr);
     }
 
-    if (!JS_IsArrayObject(cx, jsarray)) {
+    bool isArray;
+    if (!JS_IsArrayObject(cx, jsarray, &isArray) || !isArray) {
         if (pErr)
             *pErr = NS_ERROR_XPC_CANT_CONVERT_OBJECT_TO_ARRAY;
         return false;
