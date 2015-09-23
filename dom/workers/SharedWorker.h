@@ -98,10 +98,6 @@ private:
   PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
               const Optional<Sequence<JS::Value>>& aTransferable,
               ErrorResult& aRv);
-
-  // Only called by RuntimeService.
-  void
-  NoteDeadWorker(JSContext* aCx);
 };
 
 END_WORKERS_NAMESPACE
