@@ -791,23 +791,23 @@ NewObjectWithGroup(ExclusiveContext* cx, HandleObjectGroup group,
 }
 
 /*
- * As for gc::GetGCObjectKind, where numElements is a guess at the final size of
+ * As for gc::GetGCObjectKind, where numSlots is a guess at the final size of
  * the object, zero if the final size is unknown. This should only be used for
  * objects that do not require any fixed slots.
  */
 static inline gc::AllocKind
-GuessObjectGCKind(size_t numElements)
+GuessObjectGCKind(size_t numSlots)
 {
-    if (numElements)
-        return gc::GetGCObjectKind(numElements);
+    if (numSlots)
+        return gc::GetGCObjectKind(numSlots);
     return gc::AllocKind::OBJECT4;
 }
 
 static inline gc::AllocKind
-GuessArrayGCKind(size_t numElements)
+GuessArrayGCKind(size_t numSlots)
 {
-    if (numElements)
-        return gc::GetGCArrayKind(numElements);
+    if (numSlots)
+        return gc::GetGCArrayKind(numSlots);
     return gc::AllocKind::OBJECT8;
 }
 
