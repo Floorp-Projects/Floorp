@@ -331,8 +331,12 @@ var PermissionDefaults = {
     let value = (aValue != this.DENY);
     Services.prefs.setBoolPref("dom.push.enabled", value);
   },
-  get camera() this.UNKNOWN,
-  get microphone() this.UNKNOWN
+  get camera() {
+    return this.UNKNOWN;
+  },
+  get microphone() {
+    return this.UNKNOWN;
+  }
 };
 
 /**
