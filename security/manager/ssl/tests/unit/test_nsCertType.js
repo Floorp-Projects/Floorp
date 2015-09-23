@@ -18,7 +18,7 @@
 
 function run_test() {
   do_get_profile();
-  add_tls_server_setup("BadCertServer");
+  add_tls_server_setup("BadCertServer", "bad_certs");
   add_connection_test("nsCertTypeNotCritical.example.com", PRErrorCodeSuccess);
   add_connection_test("nsCertTypeCriticalWithExtKeyUsage.example.com",
                       PRErrorCodeSuccess);

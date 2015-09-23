@@ -9,16 +9,16 @@ function build_cert_chain(certNames) {
   let certList = Cc["@mozilla.org/security/x509certlist;1"]
                    .createInstance(Ci.nsIX509CertList);
   certNames.forEach(function(certName) {
-    let cert = constructCertFromFile("tlsserver/" + certName + ".pem");
+    let cert = constructCertFromFile("bad_certs/" + certName + ".pem");
     certList.addCert(cert);
   });
   return certList;
 }
 
 function test_cert_equals() {
-  let certA = constructCertFromFile("tlsserver/default-ee.pem");
-  let certB = constructCertFromFile("tlsserver/default-ee.pem");
-  let certC = constructCertFromFile("tlsserver/expired-ee.pem");
+  let certA = constructCertFromFile("bad_certs/default-ee.pem");
+  let certB = constructCertFromFile("bad_certs/default-ee.pem");
+  let certC = constructCertFromFile("bad_certs/expired-ee.pem");
 
   ok(certA != certB,
      "Cert objects constructed from the same file should not be equal" +
@@ -68,7 +68,7 @@ function test_security_info_serialization(securityInfo, expectedErrorCode) {
 
 function run_test() {
   do_get_profile();
-  add_tls_server_setup("BadCertServer");
+  add_tls_server_setup("BadCertServer", "bad_certs");
 
   // Test nsIX509Cert.equals
   add_test(function() {

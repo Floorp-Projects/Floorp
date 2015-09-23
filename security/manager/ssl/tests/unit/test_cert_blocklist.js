@@ -94,13 +94,13 @@ var blocklist_contents =
     "<serialNumber>and serial</serialNumber></certItem>" +
     // some mixed
     // In this case, the issuer name and the valid serialNumber correspond
-    // to test-int.pem in tlsserver/
+    // to test-int.pem in bad_certs/
     "<certItem issuerName='MBIxEDAOBgNVBAMMB1Rlc3QgQ0E='>" +
     "<serialNumber>oops! more nonsense.</serialNumber>" +
     "<serialNumber>Y1HQqXGtw7ek2v/QAqBL8jf6rbA=</serialNumber></certItem>" +
     // ... and some good
     // In this case, the issuer name and the valid serialNumber correspond
-    // to other-test-ca.pem in tlsserver/ (for testing root revocation)
+    // to other-test-ca.pem in bad_certs/ (for testing root revocation)
     "<certItem issuerName='MBgxFjAUBgNVBAMMDU90aGVyIHRlc3QgQ0E='>" +
     "<serialNumber>Szin5enUEn9TnVq29c4IMPNFuqE=</serialNumber></certItem>" +
     // This item corresponds to an entry in sample_revocations.txt where:
@@ -142,7 +142,7 @@ function verify_cert(file, expectedError) {
 }
 
 function load_cert(cert, trust) {
-  let file = "tlsserver/" + cert + ".pem";
+  let file = "bad_certs/" + cert + ".pem";
   addCertFromFile(certDB, file, trust);
 }
 
@@ -204,17 +204,17 @@ function run_test() {
   // Soon we'll load a blocklist which revokes test-int.pem, which issued
   // test-int-ee.pem.
   // Check the cert validates before we load the blocklist
-  let file = "tlsserver/test-int-ee.pem";
+  let file = "test_onecrl/test-int-ee.pem";
   verify_cert(file, PRErrorCodeSuccess);
 
   // The blocklist also revokes other-test-ca.pem, which issued other-ca-ee.pem.
   // Check the cert validates before we load the blocklist
-  file = "tlsserver/other-issuer-ee.pem";
+  file = "bad_certs/other-issuer-ee.pem";
   verify_cert(file, PRErrorCodeSuccess);
 
   // The blocklist will revoke same-issuer-ee.pem via subject / pubKeyHash.
   // Check the cert validates before we load the blocklist
-  file = "tlsserver/same-issuer-ee.pem";
+  file = "test_onecrl/same-issuer-ee.pem";
   verify_cert(file, PRErrorCodeSuccess);
 
   // blocklist load is async so we must use add_test from here
@@ -283,23 +283,23 @@ function run_test() {
     equal(contents, expected, "revocations.txt should be as expected");
 
     // Check the blocklisted intermediate now causes a failure
-    let file = "tlsserver/test-int-ee.pem";
+    let file = "test_onecrl/test-int-ee.pem";
     verify_cert(file, SEC_ERROR_REVOKED_CERTIFICATE);
 
     // Check the ee with the blocklisted root also causes a failure
-    file = "tlsserver/other-issuer-ee.pem";
+    file = "bad_certs/other-issuer-ee.pem";
     verify_cert(file, SEC_ERROR_REVOKED_CERTIFICATE);
 
     // Check the ee blocked by subject / pubKey causes a failure
-    file = "tlsserver/same-issuer-ee.pem";
+    file = "test_onecrl/same-issuer-ee.pem";
     verify_cert(file, SEC_ERROR_REVOKED_CERTIFICATE);
 
     // Check a non-blocklisted chain still validates OK
-    file = "tlsserver/default-ee.pem";
+    file = "bad_certs/default-ee.pem";
     verify_cert(file, PRErrorCodeSuccess);
 
     // Check a bad cert is still bad (unknown issuer)
-    file = "tlsserver/unknownissuer.pem";
+    file = "bad_certs/unknownissuer.pem";
     verify_cert(file, SEC_ERROR_UNKNOWN_ISSUER);
 
     // check that save with no further update is a no-op
