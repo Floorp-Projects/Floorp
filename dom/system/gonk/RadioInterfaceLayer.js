@@ -393,7 +393,8 @@ DataCall.prototype = {
   addreses: null,
   dnses: null,
   gateways: null,
-  pcscf: null
+  pcscf: null,
+  mtu: -1
 };
 
 function RadioInterfaceLayer() {

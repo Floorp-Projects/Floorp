@@ -4,7 +4,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(88f18811-8f19-4902-a9b8-2a6430c71c94)]
+[scriptable, uuid(6b66446a-7000-438f-8e1b-b56b4cbf4fa9)]
 interface nsIDataCall : nsISupports
 {
   /**
@@ -61,6 +61,11 @@ interface nsIDataCall : nsISupports
    * IMS client.
    */
   readonly attribute DOMString pcscf;
+
+  /**
+   * MTU received from network, -1 if not set or invalid.
+   */
+  readonly attribute long mtu;
 };
 
 [scriptable, uuid(e119c54b-9354-4ad6-a1ee-18608bde9320)]

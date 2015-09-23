@@ -627,6 +627,125 @@ BluetoothServiceChildProcess::UnregisterGattServerInternal(
   SendRequest(aRunnable, UnregisterGattServerRequest(aServerIf));
 }
 
+void
+BluetoothServiceChildProcess::GattServerAddServiceInternal(
+  const nsAString& aAppUuid,
+  const BluetoothGattServiceId& aServiceId,
+  uint16_t aHandleCount,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+    GattServerAddServiceRequest(nsString(aAppUuid), aServiceId, aHandleCount));
+}
+
+void
+BluetoothServiceChildProcess::GattServerAddIncludedServiceInternal(
+  const nsAString& aAppUuid,
+  const BluetoothAttributeHandle& aServiceHandle,
+  const BluetoothAttributeHandle& aIncludedServiceHandle,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+    GattServerAddIncludedServiceRequest(nsString(aAppUuid),
+                                        aServiceHandle,
+                                        aIncludedServiceHandle));
+}
+
+void
+BluetoothServiceChildProcess::GattServerAddCharacteristicInternal(
+  const nsAString& aAppUuid,
+  const BluetoothAttributeHandle& aServiceHandle,
+  const BluetoothUuid& aCharacteristicUuid,
+  BluetoothGattAttrPerm aPermissions,
+  BluetoothGattCharProp aProperties,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+    GattServerAddCharacteristicRequest(nsString(aAppUuid),
+                                       aServiceHandle,
+                                       aCharacteristicUuid,
+                                       aPermissions,
+                                       aProperties));
+}
+
+void
+BluetoothServiceChildProcess::GattServerAddDescriptorInternal(
+  const nsAString& aAppUuid,
+  const BluetoothAttributeHandle& aServiceHandle,
+  const BluetoothAttributeHandle& aCharacteristicHandle,
+  const BluetoothUuid& aDescriptorUuid,
+  BluetoothGattAttrPerm aPermissions,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+    GattServerAddDescriptorRequest(nsString(aAppUuid),
+                                   aServiceHandle,
+                                   aCharacteristicHandle,
+                                   aDescriptorUuid,
+                                   aPermissions));
+}
+
+void
+BluetoothServiceChildProcess::GattServerRemoveServiceInternal(
+  const nsAString& aAppUuid,
+  const BluetoothAttributeHandle& aServiceHandle,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+    GattServerRemoveServiceRequest(nsString(aAppUuid), aServiceHandle));
+}
+
+void
+BluetoothServiceChildProcess::GattServerStartServiceInternal(
+  const nsAString& aAppUuid,
+  const BluetoothAttributeHandle& aServiceHandle,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+    GattServerStartServiceRequest(nsString(aAppUuid), aServiceHandle));
+}
+
+void
+BluetoothServiceChildProcess::GattServerStopServiceInternal(
+  const nsAString& aAppUuid,
+  const BluetoothAttributeHandle& aServiceHandle,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+    GattServerStopServiceRequest(nsString(aAppUuid), aServiceHandle));
+}
+
+void
+BluetoothServiceChildProcess::GattServerSendResponseInternal(
+  const nsAString& aAppUuid,
+  const nsAString& aAddress,
+  uint16_t aStatus,
+  int32_t aRequestId,
+  const BluetoothGattResponse& aRsp,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+    GattServerSendResponseRequest(
+      nsString(aAppUuid), nsString(aAddress), aStatus, aRequestId, aRsp));
+}
+
+void
+BluetoothServiceChildProcess::GattServerSendIndicationInternal(
+  const nsAString& aAppUuid,
+  const nsAString& aAddress,
+  const BluetoothAttributeHandle& aCharacteristicHandle,
+  bool aConfirm,
+  const nsTArray<uint8_t>& aValue,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+    GattServerSendIndicationRequest(nsString(aAppUuid),
+                                    nsString(aAddress),
+                                    aCharacteristicHandle,
+                                    aConfirm,
+                                    aValue));
+}
+
 nsresult
 BluetoothServiceChildProcess::HandleStartup()
 {
