@@ -547,6 +547,21 @@ public:
 
   uint8_t GetBits() const { return mWritingMode; }
 
+#ifdef DEBUG
+  const char* DebugString() const {
+    return IsVertical()
+      ? IsVerticalLR()
+        ? IsBidiLTR()
+          ? IsSideways() ? "sw-lr-ltr" : "v-lr-ltr"
+          : IsSideways() ? "sw-lr-rtl" : "v-lr-rtl"
+        : IsBidiLTR()
+          ? IsSideways() ? "sw-rl-ltr" : "v-rl-ltr"
+          : IsSideways() ? "sw-rl-rtl" : "v-rl-rtl"
+      : IsBidiLTR() ? "h-ltr" : "h-rtl"
+      ;
+  }
+#endif
+
 private:
   friend class LogicalPoint;
   friend class LogicalSize;
