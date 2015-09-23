@@ -30,7 +30,6 @@ function test() {
     alias: null,
     description: "Amazon.com Search",
     searchForm: "https://www.amazon.com/exec/obidos/external-search/?field-keywords=&mode=blended&tag=mozilla-20&sourceid=Mozilla-search",
-    type: Ci.nsISearchEngine.TYPE_MOZSEARCH,
     hidden: false,
     wrappedJSObject: {
       queryCharset: "UTF-8",

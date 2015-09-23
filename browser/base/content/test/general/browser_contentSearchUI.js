@@ -194,32 +194,32 @@ add_task(function* cycleSuggestions() {
       shiftKey: true,
       accelKey: true,
     };
-  
+
     let state = yield msg("key", { key: "VK_DOWN", modifiers: modifiers });
     checkState(state, "xfoo", ["xfoo", "xbar"], 0, aSelectedButtonIndex);
-  
+
     state = yield msg("key", { key: "VK_DOWN", modifiers: modifiers });
     checkState(state, "xbar", ["xfoo", "xbar"], 1, aSelectedButtonIndex);
-  
+
     state = yield msg("key", { key: "VK_DOWN", modifiers: modifiers });
     checkState(state, "x", ["xfoo", "xbar"], -1, aSelectedButtonIndex);
-  
+
     state = yield msg("key", { key: "VK_DOWN", modifiers: modifiers });
     checkState(state, "xfoo", ["xfoo", "xbar"], 0, aSelectedButtonIndex);
-  
+
     state = yield msg("key", { key: "VK_UP", modifiers: modifiers });
     checkState(state, "x", ["xfoo", "xbar"], -1, aSelectedButtonIndex);
-  
+
     state = yield msg("key", { key: "VK_UP", modifiers: modifiers });
     checkState(state, "xbar", ["xfoo", "xbar"], 1, aSelectedButtonIndex);
-  
+
     state = yield msg("key", { key: "VK_UP", modifiers: modifiers });
     checkState(state, "xfoo", ["xfoo", "xbar"], 0, aSelectedButtonIndex);
-  
+
     state = yield msg("key", { key: "VK_UP", modifiers: modifiers });
     checkState(state, "x", ["xfoo", "xbar"], -1, aSelectedButtonIndex);
   });
-  
+
   yield cycle();
 
   // Repeat with a one-off selected.
@@ -689,7 +689,7 @@ function checkState(actualState, expectedInputVal, expectedSuggestions,
   if (expectedSelectedIdx == -1 && expectedSelectedButtonIdx != undefined) {
     expectedSelectedIdx = expectedSuggestions.length + expectedSelectedButtonIdx;
   }
-  
+
   let expectedState = {
     selectedIndex: expectedSelectedIdx,
     numSuggestions: expectedSuggestions.length,
@@ -759,34 +759,15 @@ function setUpEngines() {
     let currentEngineName = Services.search.currentEngine.name;
     let currentEngines = Services.search.getVisibleEngines();
     info("Adding test search engines");
-    let engine1 = yield promiseNewEngine(TEST_ENGINE_BASENAME);
-    let engine2 = yield promiseNewEngine(TEST_ENGINE_2_BASENAME);
+    let engine1 = yield promiseNewSearchEngine(TEST_ENGINE_BASENAME);
+    let engine2 = yield promiseNewSearchEngine(TEST_ENGINE_2_BASENAME);
     Services.search.currentEngine = engine1;
     for (let engine of currentEngines) {
       Services.search.removeEngine(engine);
     }
     registerCleanupFunction(() => {
       Services.search.restoreDefaultEngines();
-      Services.search.removeEngine(engine1);
-      Services.search.removeEngine(engine2);
       Services.search.currentEngine = Services.search.getEngineByName(currentEngineName);
     });
   });
-}
-
-function promiseNewEngine(basename) {
-  info("Waiting for engine to be added: " + basename);
-  let addDeferred = Promise.defer();
-  let url = getRootDirectory(gTestPath) + basename;
-  Services.search.addEngine(url, Ci.nsISearchEngine.TYPE_MOZSEARCH, "", false, {
-    onSuccess: function (engine) {
-      info("Search engine added: " + basename);
-      addDeferred.resolve(engine);
-    },
-    onError: function (errCode) {
-      ok(false, "addEngine failed with error code " + errCode);
-      addDeferred.reject();
-    },
-  });
-  return addDeferred.promise;
 }

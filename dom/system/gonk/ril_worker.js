@@ -4536,6 +4536,11 @@ RilObject.prototype.readDataCall = function(options, version) {
     options.pcscf = Buf.readString();
   }
 
+  if (version >= 11) {
+    let mtu = Buf.readInt32();
+    options.mtu = (mtu > 0) ? mtu : -1 ;
+  }
+
   return options;
 };
 

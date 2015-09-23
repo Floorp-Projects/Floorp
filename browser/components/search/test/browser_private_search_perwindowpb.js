@@ -51,8 +51,7 @@ function test() {
         ok(false, "failed to install engine: " + errorCode);
       }
     };
-    Services.search.addEngine(engineURL + "426329.xml",
-                              Ci.nsISearchEngine.DATA_XML,
+    Services.search.addEngine(engineURL + "426329.xml", null,
                               "data:image/x-icon,%00", false, installCallback);
   }
 

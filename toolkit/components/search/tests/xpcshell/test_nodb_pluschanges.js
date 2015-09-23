@@ -31,8 +31,7 @@ function run_test() {
 add_task(function* test_nodb_pluschanges() {
   let [engine1, engine2] = yield addTestEngines([
     { name: "Test search engine", xmlFileName: "engine.xml" },
-    { name: "Sherlock test search engine", srcFileName: "engine.src",
-      iconFileName: "ico-size-16x16-png.ico" },
+    { name: "A second test engine", xmlFileName: "engine2.xml"},
   ]);
 
   let search = Services.search;
@@ -54,7 +53,7 @@ add_task(function* test_nodb_pluschanges() {
   // Check that the entries are placed as specified correctly
   let json = getSearchMetadata();
   do_check_eq(json["[app]/test-search-engine.xml"].order, 1);
-  do_check_eq(json["[profile]/sherlock-test-search-engine.xml"].order, 2);
+  do_check_eq(json["[profile]/a-second-test-engine.xml"].order, 2);
 
   do_print("Cleaning up");
   removeMetadata();
