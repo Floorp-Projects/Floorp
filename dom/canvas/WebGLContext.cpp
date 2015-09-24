@@ -217,6 +217,7 @@ WebGLContext::WebGLContext()
     , mBypassShaderValidation(false)
     , mGLMaxSamples(1)
     , mNeedsFakeNoAlpha(false)
+    , mNeedsFakeNoDepth(false)
     , mNeedsFakeNoStencil(false)
 {
     mGeneration = 0;
@@ -253,6 +254,7 @@ WebGLContext::WebGLContext()
     mDitherEnabled = 1;
     mRasterizerDiscardEnabled = 0; // OpenGL ES 3.0 spec p244
     mScissorTestEnabled = 0;
+    mDepthTestEnabled = 0;
     mStencilTestEnabled = 0;
 
     // initialize some GL values: we're going to get them from the GL and use them as the sizes of arrays,
@@ -543,107 +545,9 @@ HasAcceleratedLayers(const nsCOMPtr<nsIGfxInfo>& gfxInfo)
     return false;
 }
 
-static already_AddRefed<GLContext>
-CreateHeadlessNativeGL(CreateContextFlags flags, const nsCOMPtr<nsIGfxInfo>& gfxInfo,
-                       WebGLContext* webgl)
-{
-    if (!(flags & CreateContextFlags::FORCE_ENABLE_HARDWARE) &&
-        IsFeatureInBlacklist(gfxInfo, nsIGfxInfo::FEATURE_WEBGL_OPENGL))
-    {
-        webgl->GenerateWarning("Refused to create native OpenGL context"
-                               " because of blacklisting.");
-        return nullptr;
-    }
-
-    nsRefPtr<GLContext> gl = gl::GLContextProvider::CreateHeadless(flags);
-    if (!gl) {
-        webgl->GenerateWarning("Error during native OpenGL init.");
-        return nullptr;
-    }
-    MOZ_ASSERT(!gl->IsANGLE());
-
-    return gl.forget();
-}
-
-// Note that we have a separate call for ANGLE and EGL, even though
-// right now, we get ANGLE implicitly by using EGL on Windows.
-// Eventually, we want to be able to pick ANGLE-EGL or native EGL.
-static already_AddRefed<GLContext>
-CreateHeadlessANGLE(CreateContextFlags flags, const nsCOMPtr<nsIGfxInfo>& gfxInfo,
-                    WebGLContext* webgl)
-{
-    nsRefPtr<GLContext> gl;
-
-#ifdef XP_WIN
-    gl = gl::GLContextProviderEGL::CreateHeadless(flags);
-    if (!gl) {
-        webgl->GenerateWarning("Error during ANGLE OpenGL init.");
-        return nullptr;
-    }
-    MOZ_ASSERT(gl->IsANGLE());
-#endif
-
-    return gl.forget();
-}
-
-static already_AddRefed<GLContext>
-CreateHeadlessEGL(CreateContextFlags flags, WebGLContext* webgl)
-{
-    nsRefPtr<GLContext> gl;
-
-#ifdef ANDROID
-    gl = gl::GLContextProviderEGL::CreateHeadless(flags);
-    if (!gl) {
-        webgl->GenerateWarning("Error during EGL OpenGL init.");
-        return nullptr;
-    }
-    MOZ_ASSERT(!gl->IsANGLE());
-#endif
-
-    return gl.forget();
-}
-
-static already_AddRefed<GLContext>
-CreateHeadlessGL(CreateContextFlags flags, const nsCOMPtr<nsIGfxInfo>& gfxInfo,
-                 WebGLContext* webgl)
-{
-    bool preferEGL = PR_GetEnv("MOZ_WEBGL_PREFER_EGL");
-    bool disableANGLE = Preferences::GetBool("webgl.disable-angle", false);
-
-    if (PR_GetEnv("MOZ_WEBGL_FORCE_OPENGL"))
-        disableANGLE = true;
-
-    if (!webgl->IsWebGL2()) {
-        flags |= CreateContextFlags::REQUIRE_COMPAT_PROFILE;
-    }
-
-    nsRefPtr<GLContext> gl;
-
-    if (preferEGL)
-        gl = CreateHeadlessEGL(flags, webgl);
-
-    if (!gl && !disableANGLE) {
-        gl = CreateHeadlessANGLE(flags, gfxInfo, webgl);
-    }
-
-    if (!gl) {
-        gl = CreateHeadlessNativeGL(flags, gfxInfo, webgl);
-    }
-
-    return gl.forget();
-}
-
-// Try to create a dummy offscreen with the given caps.
-static bool
-CreateOffscreenWithCaps(GLContext* gl, const SurfaceCaps& caps)
-{
-    gfx::IntSize dummySize(16, 16);
-    return gl->InitOffscreen(dummySize, caps);
-}
-
 static void
-PopulateCapFallbackQueue(const SurfaceCaps& baseCaps,
-                         std::queue<SurfaceCaps>* out_fallbackCaps)
+PopulateCapFallbackQueue(const gl::SurfaceCaps& baseCaps,
+                         std::queue<gl::SurfaceCaps>* out_fallbackCaps)
 {
     out_fallbackCaps->push(baseCaps);
 
@@ -651,7 +555,7 @@ PopulateCapFallbackQueue(const SurfaceCaps& baseCaps,
     // The user basically doesn't have to handle if this fails, they
     // just get reduced quality.
     if (baseCaps.antialias) {
-        SurfaceCaps nextCaps(baseCaps);
+        gl::SurfaceCaps nextCaps(baseCaps);
         nextCaps.antialias = false;
         PopulateCapFallbackQueue(nextCaps, out_fallbackCaps);
     }
@@ -660,25 +564,22 @@ PopulateCapFallbackQueue(const SurfaceCaps& baseCaps,
     // depth. However, the client app will need to handle if this
     // doesn't work.
     if (baseCaps.stencil) {
-        SurfaceCaps nextCaps(baseCaps);
+        gl::SurfaceCaps nextCaps(baseCaps);
         nextCaps.stencil = false;
         PopulateCapFallbackQueue(nextCaps, out_fallbackCaps);
     }
 
     if (baseCaps.depth) {
-        SurfaceCaps nextCaps(baseCaps);
+        gl::SurfaceCaps nextCaps(baseCaps);
         nextCaps.depth = false;
         PopulateCapFallbackQueue(nextCaps, out_fallbackCaps);
     }
 }
 
-static bool
-CreateOffscreen(GLContext* gl, const WebGLContextOptions& options,
-                const nsCOMPtr<nsIGfxInfo>& gfxInfo, WebGLContext* webgl,
-                layers::LayersBackend layersBackend,
-                layers::ISurfaceAllocator* surfAllocator)
+static gl::SurfaceCaps
+BaseCaps(const WebGLContextOptions& options, WebGLContext* webgl)
 {
-    SurfaceCaps baseCaps;
+    gl::SurfaceCaps baseCaps;
 
     baseCaps.color = true;
     baseCaps.alpha = options.alpha;
@@ -691,29 +592,36 @@ CreateOffscreen(GLContext* gl, const WebGLContextOptions& options,
     if (!baseCaps.alpha)
         baseCaps.premultAlpha = true;
 
-    if (gl->IsANGLE() ||
-        (gl->GetContextType() == GLContextType::GLX &&
-         layersBackend == LayersBackend::LAYERS_OPENGL))
-    {
-        // We can't use no-alpha formats on ANGLE yet because of:
-        // https://code.google.com/p/angleproject/issues/detail?id=764
-        // GLX only supports GL_RGBA pixmaps as well. Since we can't blit from
-        // an RGB FB to GLX's RGBA FB, force RGBA when surface sharing.
-        baseCaps.alpha = true;
-    }
-
     // we should really have this behind a
     // |gfxPlatform::GetPlatform()->GetScreenDepth() == 16| check, but
     // for now it's just behind a pref for testing/evaluation.
     baseCaps.bpp16 = Preferences::GetBool("webgl.prefer-16bpp", false);
 
 #ifdef MOZ_WIDGET_GONK
-    baseCaps.surfaceAllocator = surfAllocator;
+    do {
+        auto canvasElement = webgl->GetCanvas();
+        auto ownerDoc = canvasElement->OwnerDoc();
+        nsIWidget* docWidget = nsContentUtils::WidgetForDocument(ownerDoc);
+        if (!docWidget)
+            break;
+
+        layers::LayerManager* layerManager = docWidget->GetLayerManager();
+        if (!layerManager)
+            break;
+
+        // XXX we really want "AsSurfaceAllocator" here for generality
+        layers::ShadowLayerForwarder* forwarder = layerManager->AsShadowForwarder();
+        if (!forwarder)
+            break;
+
+        baseCaps.surfaceAllocator = static_cast<layers::ISurfaceAllocator*>(forwarder);
+    } while (false);
 #endif
 
     // Done with baseCaps construction.
 
     bool forceAllowAA = Preferences::GetBool("webgl.msaa-force", false);
+    nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
     if (!forceAllowAA &&
         IsFeatureInBlacklist(gfxInfo, nsIGfxInfo::FEATURE_WEBGL_MSAA))
     {
@@ -722,62 +630,149 @@ CreateOffscreen(GLContext* gl, const WebGLContextOptions& options,
         baseCaps.antialias = false;
     }
 
-    std::queue<SurfaceCaps> fallbackCaps;
+    return baseCaps;
+}
+
+////////////////////////////////////////
+
+static already_AddRefed<gl::GLContext>
+CreateGLWithEGL(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
+                WebGLContext* webgl)
+{
+    RefPtr<GLContext> gl;
+#ifndef XP_MACOSX // Mac doesn't have GLContextProviderEGL.
+    gfx::IntSize dummySize(16, 16);
+    gl = gl::GLContextProviderEGL::CreateOffscreen(dummySize, caps,
+                                                                     flags);
+    if (!gl) {
+        webgl->GenerateWarning("Error during EGL OpenGL init.");
+        return nullptr;
+    }
+
+    if (gl->IsANGLE())
+        return nullptr;
+#endif // XP_MACOSX
+    return gl.forget();
+}
+
+static already_AddRefed<GLContext>
+CreateGLWithANGLE(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
+                  WebGLContext* webgl)
+{
+    RefPtr<GLContext> gl;
+
+#ifdef XP_WIN
+    gfx::IntSize dummySize(16, 16);
+    gl = gl::GLContextProviderEGL::CreateOffscreen(dummySize, caps, flags);
+    if (!gl) {
+        webgl->GenerateWarning("Error during ANGLE OpenGL init.");
+        return nullptr;
+    }
+
+    if (!gl->IsANGLE())
+        return nullptr;
+#endif
+
+    return gl.forget();
+}
+
+static already_AddRefed<gl::GLContext>
+CreateGLWithDefault(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
+                    WebGLContext* webgl)
+{
+    nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+
+    if (!(flags & CreateContextFlags::FORCE_ENABLE_HARDWARE) &&
+        IsFeatureInBlacklist(gfxInfo, nsIGfxInfo::FEATURE_WEBGL_OPENGL))
+    {
+        webgl->GenerateWarning("Refused to create native OpenGL context because of"
+                               " blacklisting.");
+        return nullptr;
+    }
+
+    gfx::IntSize dummySize(16, 16);
+    RefPtr<GLContext> gl = gl::GLContextProvider::CreateOffscreen(dummySize, caps, flags);
+    if (!gl) {
+        webgl->GenerateWarning("Error during native OpenGL init.");
+        return nullptr;
+    }
+
+    if (gl->IsANGLE())
+        return nullptr;
+
+    return gl.forget();
+}
+
+////////////////////////////////////////
+
+bool
+WebGLContext::CreateAndInitGLWith(FnCreateGL_T fnCreateGL,
+                                  const gl::SurfaceCaps& baseCaps,
+                                  gl::CreateContextFlags flags)
+{
+    MOZ_ASSERT(!gl);
+
+    std::queue<gl::SurfaceCaps> fallbackCaps;
     PopulateCapFallbackQueue(baseCaps, &fallbackCaps);
 
-    bool created = false;
+    gl = nullptr;
     while (!fallbackCaps.empty()) {
-        SurfaceCaps& caps = fallbackCaps.front();
+        gl::SurfaceCaps& caps = fallbackCaps.front();
 
-        created = CreateOffscreenWithCaps(gl, caps);
-        if (created)
+        gl = fnCreateGL(caps, flags, this);
+        if (gl)
             break;
 
         fallbackCaps.pop();
     }
+    if (!gl)
+        return false;
 
-    return created;
+    if (!InitAndValidateGL()) {
+        gl = nullptr;
+        return false;
+    }
+
+    return true;
 }
 
 bool
-WebGLContext::CreateOffscreenGL(bool forceEnabled)
+WebGLContext::CreateAndInitGL(bool forceEnabled)
 {
-    nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+    bool preferEGL = PR_GetEnv("MOZ_WEBGL_PREFER_EGL");
+    bool disableANGLE = Preferences::GetBool("webgl.disable-angle", false);
 
-    layers::ISurfaceAllocator* surfAllocator = nullptr;
-#ifdef MOZ_WIDGET_GONK
-    nsIWidget* docWidget = nsContentUtils::WidgetForDocument(mCanvasElement->OwnerDoc());
-    if (docWidget) {
-        layers::LayerManager* layerManager = docWidget->GetLayerManager();
-        if (layerManager) {
-            // XXX we really want "AsSurfaceAllocator" here for generality
-            layers::ShadowLayerForwarder* forwarder = layerManager->AsShadowForwarder();
-            if (forwarder)
-                surfAllocator = static_cast<layers::ISurfaceAllocator*>(forwarder);
-        }
+    if (PR_GetEnv("MOZ_WEBGL_FORCE_OPENGL"))
+        disableANGLE = true;
+
+    gl::CreateContextFlags flags = gl::CreateContextFlags::NONE;
+    if (forceEnabled) flags |= gl::CreateContextFlags::FORCE_ENABLE_HARDWARE;
+    if (!IsWebGL2())  flags |= gl::CreateContextFlags::REQUIRE_COMPAT_PROFILE;
+
+    const gl::SurfaceCaps baseCaps = BaseCaps(mOptions, this);
+
+    MOZ_ASSERT(!gl);
+
+    if (preferEGL) {
+        if (CreateAndInitGLWith(CreateGLWithEGL, baseCaps, flags))
+            return true;
     }
-#endif
 
-    CreateContextFlags flags = forceEnabled ? CreateContextFlags::FORCE_ENABLE_HARDWARE :
-                                              CreateContextFlags::NONE;
+    MOZ_ASSERT(!gl);
 
-    gl = CreateHeadlessGL(flags, gfxInfo, this);
+    if (!disableANGLE) {
+        if (CreateAndInitGLWith(CreateGLWithANGLE, baseCaps, flags))
+            return true;
+    }
 
-    do {
-        if (!gl)
-            break;
+    MOZ_ASSERT(!gl);
 
-        if (!CreateOffscreen(gl, mOptions, gfxInfo, this,
-                             GetCompositorBackendType(), surfAllocator))
-            break;
-
-        if (!InitAndValidateGL())
-            break;
-
+    if (CreateAndInitGLWith(CreateGLWithDefault, baseCaps, flags))
         return true;
-    } while (false);
 
+    MOZ_ASSERT(!gl);
     gl = nullptr;
+
     return false;
 }
 
@@ -941,11 +936,14 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
     bool forceEnabled = Preferences::GetBool("webgl.force-enabled", false);
     ScopedGfxFeatureReporter reporter("WebGL", forceEnabled);
 
-    if (!CreateOffscreenGL(forceEnabled)) {
+    MOZ_ASSERT(!gl);
+    if (!CreateAndInitGL(forceEnabled)) {
         GenerateWarning("WebGL creation failed.");
         return NS_ERROR_FAILURE;
     }
     MOZ_ASSERT(gl);
+
+    MOZ_ASSERT_IF(mOptions.alpha, gl->Caps().alpha);
 
     if (!ResizeBackbuffer(width, height)) {
         GenerateWarning("Initializing WebGL backbuffer failed.");
@@ -965,14 +963,20 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
         if (!mOptions.alpha && gl->Caps().alpha)
             mNeedsFakeNoAlpha = true;
 
-        // ANGLE doesn't quite handle this properly.
-        if (gl->Caps().depth && !gl->Caps().stencil && gl->IsANGLE())
+        if (!mOptions.depth && gl->Caps().depth)
+            mNeedsFakeNoDepth = true;
+
+        if (!mOptions.stencil && gl->Caps().stencil)
             mNeedsFakeNoStencil = true;
     }
 
     // Update mOptions.
-    mOptions.depth = gl->Caps().depth;
-    mOptions.stencil = gl->Caps().stencil;
+    if (!gl->Caps().depth)
+        mOptions.depth = false;
+
+    if (!gl->Caps().stencil)
+        mOptions.stencil = false;
+
     mOptions.antialias = gl->Caps().antialias;
 
     MakeContextCurrent();
@@ -998,10 +1002,16 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
     mShouldPresent = true;
 
     MOZ_ASSERT(gl->Caps().color);
+
     MOZ_ASSERT_IF(!mNeedsFakeNoAlpha, gl->Caps().alpha == mOptions.alpha);
     MOZ_ASSERT_IF(mNeedsFakeNoAlpha, !mOptions.alpha && gl->Caps().alpha);
-    MOZ_ASSERT(gl->Caps().depth == mOptions.depth);
-    MOZ_ASSERT(gl->Caps().stencil == mOptions.stencil);
+
+    MOZ_ASSERT_IF(!mNeedsFakeNoDepth, gl->Caps().depth == mOptions.depth);
+    MOZ_ASSERT_IF(mNeedsFakeNoDepth, !mOptions.depth && gl->Caps().depth);
+
+    MOZ_ASSERT_IF(!mNeedsFakeNoStencil, gl->Caps().stencil == mOptions.stencil);
+    MOZ_ASSERT_IF(mNeedsFakeNoStencil, !mOptions.stencil && gl->Caps().stencil);
+
     MOZ_ASSERT(gl->Caps().antialias == mOptions.antialias);
     MOZ_ASSERT(gl->Caps().preserve == mOptions.preserveDrawingBuffer);
 
@@ -1876,6 +1886,7 @@ RoundedToNextMultipleOf(CheckedUint32 x, CheckedUint32 y)
 WebGLContext::ScopedMaskWorkaround::ScopedMaskWorkaround(WebGLContext& webgl)
     : mWebGL(webgl)
     , mFakeNoAlpha(ShouldFakeNoAlpha(webgl))
+    , mFakeNoDepth(ShouldFakeNoDepth(webgl))
     , mFakeNoStencil(ShouldFakeNoStencil(webgl))
 {
     if (mFakeNoAlpha) {
@@ -1883,6 +1894,9 @@ WebGLContext::ScopedMaskWorkaround::ScopedMaskWorkaround(WebGLContext& webgl)
                               mWebGL.mColorWriteMask[1],
                               mWebGL.mColorWriteMask[2],
                               false);
+    }
+    if (mFakeNoDepth) {
+        mWebGL.gl->fDisable(LOCAL_GL_DEPTH_TEST);
     }
     if (mFakeNoStencil) {
         mWebGL.gl->fDisable(LOCAL_GL_STENCIL_TEST);
@@ -1896,6 +1910,9 @@ WebGLContext::ScopedMaskWorkaround::~ScopedMaskWorkaround()
                               mWebGL.mColorWriteMask[1],
                               mWebGL.mColorWriteMask[2],
                               mWebGL.mColorWriteMask[3]);
+    }
+    if (mFakeNoDepth) {
+        mWebGL.gl->fEnable(LOCAL_GL_DEPTH_TEST);
     }
     if (mFakeNoStencil) {
         mWebGL.gl->fEnable(LOCAL_GL_STENCIL_TEST);
