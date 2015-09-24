@@ -721,10 +721,11 @@ public class BrowserSearch extends HomeFragment
                         mList.clearAnimation();
                         mSuggestionsOptInPrompt = null;
 
-                        if (enabled) {
-                            // Reset the view height
-                            mView.getLayoutParams().height = LayoutParams.MATCH_PARENT;
+                        // Reset the view height
+                        mView.getLayoutParams().height = LayoutParams.MATCH_PARENT;
 
+                        // Show search suggestions and update them
+                        if (enabled) {
                             mSuggestionsEnabled = enabled;
                             mAnimateSuggestions = true;
                             mAdapter.notifyDataSetChanged();
