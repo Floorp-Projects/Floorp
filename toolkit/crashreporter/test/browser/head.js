@@ -94,7 +94,7 @@ function add_fake_crashes(crD, count) {
   }
   // we want them sorted newest to oldest, since that's the order
   // that about:crashes lists them in
-  results.sort(function(a,b) b.date - a.date);
+  results.sort((a,b) => b.date - a.date);
   return results;
 }
 
