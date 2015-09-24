@@ -34,6 +34,7 @@ flags:
     - aries-dogfood
     - android-api-11
     - linux64
+    - linux64-st-an
     - macosx64
 
   tests:
