@@ -6807,6 +6807,11 @@ function AddonWrapper(aAddon) {
     return val;
   });
 
+  this.__defineGetter__("hidden", function AddonWrapper_hidden() {
+    return (aAddon._installLocation.name == KEY_APP_SYSTEM_DEFAULTS ||
+            aAddon._installLocation.name == KEY_APP_SYSTEM_ADDONS);
+  });
+
   this.isCompatibleWith = function AddonWrapper_isCompatiblewith(aAppVersion, aPlatformVersion) {
     return aAddon.isCompatibleWith(aAppVersion, aPlatformVersion);
   };
