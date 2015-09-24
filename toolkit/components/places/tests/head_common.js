@@ -82,7 +82,9 @@ clearDB();
  * @param aSpec
  *        URLString of the uri.
  */
-function uri(aSpec) NetUtil.newURI(aSpec);
+function uri(aSpec) {
+  return NetUtil.newURI(aSpec);
+}
 
 
 /**
@@ -730,11 +732,11 @@ function do_compare_arrays(a1, a2, sorted)
     return false;
 
   if (sorted) {
-    return a1.every(function (e, i) e == a2[i]);
+    return a1.every((e, i) => e == a2[i]);
   }
   else {
-    return a1.filter(function (e) a2.indexOf(e) == -1).length == 0 &&
-           a2.filter(function (e) a1.indexOf(e) == -1).length == 0;
+    return a1.filter(e => a2.indexOf(e) == -1).length == 0 &&
+           a2.filter(e => a1.indexOf(e) == -1).length == 0;
   }
 }
 

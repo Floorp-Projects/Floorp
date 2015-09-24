@@ -76,7 +76,7 @@ function promiseSearchEntries(terms, params)
   let deferred = Promise.defer();
   let results = [];
   FormHistory.search(terms, params,
-                     { handleResult: function(result) results.push(result),
+                     { handleResult: result => results.push(result),
                        handleError: function (error) {
                          do_throw("Error occurred searching form history: " + error);
                          deferred.reject(error);
@@ -165,7 +165,7 @@ add_task(function ()
   // and here a search should be done explicity for null.
   deferred = Promise.defer();
   yield FormHistory.count({ fieldname: null, value: null },
-                          { handleResult: function(result) checkNotExists(result),
+                          { handleResult: result => checkNotExists(result),
                             handleError: function (error) {
                               do_throw("Error occurred searching form history: " + error);
                             },
@@ -269,7 +269,7 @@ add_task(function ()
   do_check_eq(1, timesUsed);
   do_check_true(firstUsed > 0);
   do_check_true(lastUsed > 0);
-  yield promiseCountEntries(null, null, function(num) do_check_eq(num, 1));
+  yield promiseCountEntries(null, null, num => do_check_eq(num, 1));
 
   // ===== 11 =====
   // Add another single entry
@@ -277,7 +277,7 @@ add_task(function ()
   yield promiseUpdateEntry("add", "field1", "value1b");
   yield promiseCountEntries("field1", "value1", checkExists);
   yield promiseCountEntries("field1", "value1b", checkExists);
-  yield promiseCountEntries(null, null, function(num) do_check_eq(num, 2));
+  yield promiseCountEntries(null, null, num => do_check_eq(num, 2));
 
   // ===== 12 =====
   // Update a single entry
@@ -290,7 +290,7 @@ add_task(function ()
   yield promiseCountEntries("field1", "modifiedValue", checkExists);
   yield promiseCountEntries("field1", "value1", checkNotExists);
   yield promiseCountEntries("field1", "value1b", checkExists);
-  yield promiseCountEntries(null, null, function(num) do_check_eq(num, 2));
+  yield promiseCountEntries(null, null, num => do_check_eq(num, 2));
 
   // ===== 13 =====
   // Add a single entry with times
@@ -305,7 +305,7 @@ add_task(function ()
   do_check_eq(20, timesUsed);
   do_check_eq(100, firstUsed);
   do_check_eq(500, lastUsed);
-  yield promiseCountEntries(null, null, function(num) do_check_eq(num, 3));
+  yield promiseCountEntries(null, null, num => do_check_eq(num, 3));
 
   // ===== 14 =====
   // Bump an entry, which updates its lastUsed field
@@ -318,7 +318,7 @@ add_task(function ()
   do_check_eq(21, timesUsed);
   do_check_eq(100, firstUsed);
   do_check_true(lastUsed > 500);
-  yield promiseCountEntries(null, null, function(num) do_check_eq(num, 3));
+  yield promiseCountEntries(null, null, num => do_check_eq(num, 3));
 
   // ===== 15 =====
   // Bump an entry that does not exist
@@ -331,7 +331,7 @@ add_task(function ()
   do_check_eq(10, timesUsed);
   do_check_eq(50, firstUsed);
   do_check_eq(400, lastUsed);
-  yield promiseCountEntries(null, null, function(num) do_check_eq(num, 4));
+  yield promiseCountEntries(null, null, num => do_check_eq(num, 4));
 
   // ===== 16 =====
   // Bump an entry with a guid
@@ -345,7 +345,7 @@ add_task(function ()
   do_check_eq(11, timesUsed);
   do_check_eq(50, firstUsed);
   do_check_true(lastUsed > 400);
-  yield promiseCountEntries(null, null, function(num) do_check_eq(num, 4));
+  yield promiseCountEntries(null, null, num => do_check_eq(num, 4));
 
   // ===== 17 =====
   // Remove an entry
@@ -358,17 +358,17 @@ add_task(function ()
   yield promiseUpdate({ op : "remove", guid: guid});
   yield promiseCountEntries("field1", "modifiedValue", checkExists);
   yield promiseCountEntries("field1", "value1b", checkNotExists);
-  yield promiseCountEntries(null, null, function(num) do_check_eq(num, 3));
+  yield promiseCountEntries(null, null, num => do_check_eq(num, 3));
 
   yield countDeletedEntries(8);
-  yield checkTimeDeleted(guid, function (timeDeleted) do_check_true(timeDeleted > 10000));
+  yield checkTimeDeleted(guid, timeDeleted => do_check_true(timeDeleted > 10000));
 
   // ===== 18 =====
   // Add yet another single entry
   testnum++;
   yield promiseUpdate({ op : "add", fieldname: "field4", value: "value4",
                         timesUsed: 5, firstUsed: 230, lastUsed: 600 });
-  yield promiseCountEntries(null, null, function(num) do_check_eq(num, 4));
+  yield promiseCountEntries(null, null, num => do_check_eq(num, 4));
 
   // ===== 19 =====
   // Remove an entry by time
@@ -378,7 +378,7 @@ add_task(function ()
   yield promiseCountEntries("field2", "value2", checkNotExists);
   yield promiseCountEntries("field3", "value3", checkExists);
   yield promiseCountEntries("field4", "value4", checkNotExists);
-  yield promiseCountEntries(null, null, function(num) do_check_eq(num, 2));
+  yield promiseCountEntries(null, null, num => do_check_eq(num, 2));
   yield countDeletedEntries(10);
 
   // ===== 20 =====
@@ -389,7 +389,7 @@ add_task(function ()
                          timesUsed: 5, firstUsed: 230, lastUsed: 600 },
                        { op : "add", fieldname: "field6", value: "value6",
                          timesUsed: 12, firstUsed: 430, lastUsed: 700 }]);
-  yield promiseCountEntries(null, null, function(num) do_check_eq(num, 4));
+  yield promiseCountEntries(null, null, num => do_check_eq(num, 4));
 
   yield promiseUpdate([
                        { op : "bump", fieldname: "field5", value: "value5" },
@@ -403,7 +403,7 @@ add_task(function ()
   do_check_true(results[2].lastUsed > 600);
   do_check_true(results[3].lastUsed > 700);
 
-  yield promiseCountEntries(null, null, function(num) do_check_eq(num, 4));
+  yield promiseCountEntries(null, null, num => do_check_eq(num, 4));
 
   } catch (e) {
     throw "FAILED in test #" + testnum + " -- " + e;
@@ -414,4 +414,6 @@ add_task(function ()
   }
 });
 
-function run_test() run_next_test();
+function run_test() {
+  return run_next_test();
+}

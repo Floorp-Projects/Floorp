@@ -36,7 +36,7 @@ function test() {
         new nsLoginInfo(urls[8], urls[8], null, "my user name", "mozilla", "u9", "p9"),
         new nsLoginInfo(urls[9], urls[9], null, "my username", "mozilla.com", "u10", "p10"),
     ];
-    logins.forEach(function (login) pwmgr.addLogin(login));
+    logins.forEach(login => pwmgr.addLogin(login));
 
     // Open the password manager dialog
     const PWMGR_DLG = "chrome://passwordmgr/content/passwordManager.xul";

@@ -288,10 +288,10 @@ var obssvc = Cc["@mozilla.org/observer-service;1"].
  * Adds some bookmarks for the URIs in |uris|.
  */
 function addBookmarks() {
-  uris.forEach(function (u) bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder,
-                                                 uri(u),
-                                                 bmsvc.DEFAULT_INDEX,
-                                                 u));
+  uris.forEach(u => bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder,
+                                         uri(u),
+                                         bmsvc.DEFAULT_INDEX,
+                                         u));
   checkBookmarksExist();
 }
 
