@@ -4543,6 +4543,17 @@ js::DuplicateString(js::ExclusiveContext* cx, const char16_t* s)
     return ret;
 }
 
+UniquePtr<char16_t[], JS::FreePolicy>
+js::DuplicateString(const char16_t* s)
+{
+    size_t n = js_strlen(s) + 1;
+    UniquePtr<char16_t[], JS::FreePolicy> ret(js_pod_malloc<char16_t>(n));
+    if (!ret)
+        return nullptr;
+    PodCopy(ret.get(), s, n);
+    return ret;
+}
+
 template <typename CharT>
 const CharT*
 js_strchr_limit(const CharT* s, char16_t c, const CharT* limit)

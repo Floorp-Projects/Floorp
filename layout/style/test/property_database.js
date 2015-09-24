@@ -4577,12 +4577,24 @@ function logical_axis_prop_get_computed(cs, property)
   var orientation = writingMode.substring(0, writingMode.indexOf("-"));
 
   var mappings = {
-    "block-size":      { horizontal: "height",     vertical: "width"      },
-    "inline-size":     { horizontal: "width",      vertical: "height"     },
-    "max-block-size":  { horizontal: "max-height", vertical: "max-width"  },
-    "max-inline-size": { horizontal: "max-width",  vertical: "max-height" },
-    "min-block-size":  { horizontal: "min-height", vertical: "min-width"  },
-    "min-inline-size": { horizontal: "min-width",  vertical: "min-height" },
+    "block-size":      { horizontal: "height",
+                         vertical:   "width",
+                         sideways:   "width"      },
+    "inline-size":     { horizontal: "width",
+                         vertical:   "height",
+                         sideways:   "height"     },
+    "max-block-size":  { horizontal: "max-height",
+                         vertical:   "max-width",
+                         sideways:   "max-width"  },
+    "max-inline-size": { horizontal: "max-width",
+                         vertical:   "max-height",
+                         sideways:   "max-height" },
+    "min-block-size":  { horizontal: "min-height",
+                         vertical:   "min-width",
+                         sideways:   "min-width"  },
+    "min-inline-size": { horizontal: "min-width",
+                         vertical:   "min-height",
+                         sideways:   "min-height" },
   };
 
   if (!mappings[property]) {
@@ -4601,51 +4613,42 @@ function logical_box_prop_get_computed(cs, property)
 {
   // http://dev.w3.org/csswg/css-writing-modes-3/#logical-to-physical
 
-  // Use defaults for these two properties in case the vertical text
-  // pref (which they live behind) is turned off.
+  // Use default for writing-mode in case the vertical text
+  // pref (which it lives behind) is turned off.
   var writingMode = cs.getPropertyValue("writing-mode") || "horizontal-tb";
-  var textOrientation = cs.getPropertyValue("text-orientation") || "mixed";
 
   var direction = cs.getPropertyValue("direction");
-
-  // We only need to distinguish between text-orientation values of
-  // sideways-left and {mixed,upright,sideways-right} (which we will
-  // call "others").
-
-  if (textOrientation == "sideways") {
-    // text-orientation does not contribute to the logical to physical
-    // mapping when writing-mode is horizontal-tb, so it doesn't matter
-    // that we convert it to sideways-left in that case.
-    textOrientation = writingMode == "vertical-rl" ? "others" : "sideways-left";
-  } else if (textOrientation != "sideways-left") {
-    textOrientation = "others";
-  }
 
   // keys in blockMappings are writing-mode values
   var blockMappings = {
     "horizontal-tb": { "start": "top",   "end": "bottom" },
     "vertical-rl":   { "start": "right", "end": "left"   },
     "vertical-lr":   { "start": "left",  "end": "right"  },
+    "sideways-rl":   { "start": "right", "end": "left"   },
+    "sideways-lr":   { "start": "left",  "end": "right"  },
   };
 
   // keys in inlineMappings are regular expressions that match against
-  // a {writing-mode,text-orientation,direction} triple as a space-
-  // separated string
+  // a {writing-mode,direction} pair as a space-separated string
   var inlineMappings = {
-    "horizontal-tb \\S+ ltr":        { "start": "left",   "end": "right"  },
-    "horizontal-tb \\S+ rtl":        { "start": "right",  "end": "left"   },
-    "vertical-.. sideways-left ltr": { "start": "bottom", "end": "top"    },
-    "vertical-.. sideways-left rtl": { "start": "top",    "end": "bottom" },
-    "vertical-.. others ltr":        { "start": "top",    "end": "bottom" },
-    "vertical-.. others rtl":        { "start": "bottom", "end": "top"    },
+    "horizontal-tb ltr": { "start": "left",   "end": "right"  },
+    "horizontal-tb rtl": { "start": "right",  "end": "left"   },
+    "vertical-.. ltr":   { "start": "bottom", "end": "top"    },
+    "vertical-.. rtl":   { "start": "top",    "end": "bottom" },
+    "vertical-.. ltr":   { "start": "top",    "end": "bottom" },
+    "vertical-.. rtl":   { "start": "bottom", "end": "top"    },
+    "sideways-lr ltr":   { "start": "bottom", "end": "top"    },
+    "sideways-lr rtl":   { "start": "top",    "end": "bottom" },
+    "sideways-rl ltr":   { "start": "top",    "end": "bottom" },
+    "sideways-rl rtl":   { "start": "bottom", "end": "top"    },
   };
 
   var blockMapping = blockMappings[writingMode];
   var inlineMapping;
 
   // test each regular expression in inlineMappings against the
-  // {writing-mode,text-orientation,direction} triple
-  var key = `${writingMode} ${textOrientation} ${direction}`;
+  // {writing-mode,direction} pair
+  var key = `${writingMode} ${direction}`;
   for (var k in inlineMappings) {
     if (new RegExp(k).test(key)) {
       inlineMapping = inlineMappings[k];
@@ -4728,16 +4731,16 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
       inherited: true,
       type: CSS_TYPE_LONGHAND,
       initial_values: [ "horizontal-tb", "lr", "lr-tb", "rl", "rl-tb" ],
-      other_values: [ "vertical-lr", "vertical-rl", "tb", "tb-rl" ],
-      invalid_values: [ "10px", "30%", "justify", "auto", "1em" ]
+      other_values: [ "vertical-lr", "vertical-rl", "sideways-rl", "tb", "tb-rl" ],
+      invalid_values: [ "10px", "30%", "justify", "auto", "1em", "sideways-lr" ] /* sideways-lr not yet supported */
     },
     "text-orientation": {
       domProp: "textOrientation",
       inherited: true,
       type: CSS_TYPE_LONGHAND,
       initial_values: [ "mixed" ],
-      other_values: [ "upright", "sideways-right" ],
-      invalid_values: [ "none", "3em", "sideways", "sideways-left" ] /* sideways, sideways-left not yet supported */
+      other_values: [ "upright", "sideways", "sideways-right" ], /* sideways-right alias for backward compatibility */
+      invalid_values: [ "none", "3em", "sideways-left" ] /* sideways-left removed from CSS Writing Modes */
     },
     "border-block-end": {
       domProp: "borderBlockEnd",

@@ -28,6 +28,9 @@ class StaticWithObject;
 class StaticEvalObject;
 class StaticNonSyntacticScopeObjects;
 
+class ModuleObject;
+typedef Handle<ModuleObject*> HandleModuleObject;
+
 /*****************************************************************************/
 
 /*
@@ -384,7 +387,26 @@ class ModuleEnvironmentObject : public CallObject
     static const Class class_;
 
     static ModuleEnvironmentObject* create(ExclusiveContext* cx, HandleModuleObject module);
-    ModuleObject& module() const;
+    ModuleObject& module();
+    IndirectBindingMap& importBindings();
+
+    bool createImportBinding(JSContext* cx, HandleAtom importName, HandleModuleObject module,
+                             HandleAtom exportName);
+
+  private:
+    static bool lookupProperty(JSContext* cx, HandleObject obj, HandleId id,
+                               MutableHandleObject objp, MutableHandleShape propp);
+    static bool hasProperty(JSContext* cx, HandleObject obj, HandleId id, bool* foundp);
+    static bool getProperty(JSContext* cx, HandleObject obj, HandleValue receiver, HandleId id,
+                            MutableHandleValue vp);
+    static bool setProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue v,
+                            HandleValue receiver, JS::ObjectOpResult& result);
+    static bool getOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
+                                         MutableHandle<JSPropertyDescriptor> desc);
+    static bool deleteProperty(JSContext* cx, HandleObject obj, HandleId id,
+                               ObjectOpResult& result);
+    static bool enumerate(JSContext* cx, HandleObject obj, AutoIdVector& properties,
+                          bool enumerableOnly);
 };
 
 typedef Rooted<ModuleEnvironmentObject*> RootedModuleEnvironmentObject;

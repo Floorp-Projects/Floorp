@@ -9,6 +9,8 @@
 #include "xptcstubs_x86_64_darwin.cpp"
 #elif defined(__ppc__)
 #include "xptcstubs_ppc_rhapsody.cpp"
+#elif defined(__arm__)
+#include "xptcstubs_arm.cpp"
 #else
 #error unknown cpu architecture
 #endif
