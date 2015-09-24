@@ -9773,5 +9773,11 @@
     "kind": "count",
     "keyed": true,
     "description": "Counts number of times a certain plugin has been activated."
+  },
+  "YOUTUBE_EMBED_SEEN": {
+    "alert_emails": ["cpeterson@mozilla.com"],
+    "expires_in_version": "48",
+    "kind": "flag",
+    "description": "Flag activated whenever a youtube flash embed is seen during a session."
   }
 }
