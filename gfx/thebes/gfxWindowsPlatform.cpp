@@ -2485,11 +2485,7 @@ gfxWindowsPlatform::InitializeD2D1()
 already_AddRefed<ID3D11Device>
 gfxWindowsPlatform::CreateD3D11DecoderDevice()
 {
-  nsModuleHandle d3d11Module(LoadLibrarySystem32(L"d3d11.dll"));
-  decltype(D3D11CreateDevice)* d3d11CreateDevice = (decltype(D3D11CreateDevice)*)
-    GetProcAddress(d3d11Module, "D3D11CreateDevice");
-
-   if (!d3d11CreateDevice) {
+   if (!sD3D11CreateDeviceFn) {
     // We should just be on Windows Vista or XP in this case.
     return nullptr;
   }
@@ -2505,10 +2501,12 @@ gfxWindowsPlatform::CreateD3D11DecoderDevice()
   RefPtr<ID3D11Device> device;
 
   MOZ_SEH_TRY{
-    hr = d3d11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
-                           D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
-                           mFeatureLevels.Elements(), mFeatureLevels.Length(),
-                           D3D11_SDK_VERSION, byRef(device), nullptr, nullptr);
+    hr = sD3D11CreateDeviceFn(adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
+                              D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
+                              mFeatureLevels.Elements(),
+                              mFeatureLevels.Length(),
+                              D3D11_SDK_VERSION, byRef(device),
+                              nullptr, nullptr);
   } MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
     return nullptr;
   }
