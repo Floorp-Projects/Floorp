@@ -77,8 +77,7 @@ function compareLists(list1, list2, kind)
 function* test_once()
 {
   let extension = ExtensionTestUtils.loadExtension("webrequest");
-  yield extension.startup();
-  yield extension.awaitMessage("ready");
+  yield Promise.all([extension.startup(), extension.awaitMessage("ready")]);
   info("webrequest extension loaded");
 
   yield new Promise(resolve => { setTimeout(resolve, 0); });
