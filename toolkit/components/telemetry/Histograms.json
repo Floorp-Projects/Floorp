@@ -9766,5 +9766,12 @@
     "expires_in_version": "55",
     "kind": "count",
     "description": "Attempt to notify ServiceWorker of push notification resubscription."
+  },
+  "PLUGIN_ACTIVATION_COUNT": {
+    "alert_emails": ["cpeterson@mozilla.com"],
+    "expires_in_version": "48",
+    "kind": "count",
+    "keyed": true,
+    "description": "Counts number of times a certain plugin has been activated."
   }
 }
