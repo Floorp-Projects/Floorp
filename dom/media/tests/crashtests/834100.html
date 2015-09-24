@@ -3,8 +3,8 @@
     <script language="javascript">
 
 function start() {
-  remotePC = new mozRTCPeerConnection();
-  var cand = new mozRTCIceCandidate(
+  remotePC = new RTCPeerConnection();
+  var cand = new RTCIceCandidate(
                 {candidate: "1 1 UDP 1 127.0.0.1 34567 type host",
                  sdpMid: "helloworld",
                  sdbMid: "helloworld", // Mis-spelt attribute for bug 833948 compatibility.

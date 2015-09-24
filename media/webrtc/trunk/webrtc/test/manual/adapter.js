@@ -6,7 +6,7 @@ if (navigator.mozGetUserMedia) {
   console.log("This appears to be Firefox");
 
   // The RTCPeerConnection object.
-  RTCPeerConnection = mozRTCPeerConnection;
+  RTCPeerConnection = RTCPeerConnection || mozRTCPeerConnection;
 
   // Get UserMedia (only difference is the prefix).
   // Code from Adam Barth.
