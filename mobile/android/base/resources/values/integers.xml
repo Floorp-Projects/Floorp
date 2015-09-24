@@ -10,5 +10,7 @@
     <integer name="max_icon_grid_columns">4</integer>
     <integer name="panel_icon_grid_view_columns">3</integer>
     <integer name="number_of_inline_share_devices">2</integer>
+    <integer name="max_search_suggestions">2</integer>
+    <integer name="max_saved_suggestions">2</integer>
 
 </resources>
