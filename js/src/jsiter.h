@@ -208,6 +208,9 @@ extern JSObject*
 CreateItrResultObject(JSContext* cx, HandleValue value, bool done);
 
 extern JSObject*
+InitStopIterationClass(JSContext* cx, HandleObject obj);
+
+extern JSObject*
 InitIteratorClasses(JSContext* cx, HandleObject obj);
 
 } /* namespace js */
