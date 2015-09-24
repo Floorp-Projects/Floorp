@@ -1224,7 +1224,7 @@ HBUnicodeDecompose(hb_unicode_funcs_t *ufuncs,
 #endif
 }
 
-static PLDHashOperator
+static void
 AddOpenTypeFeature(const uint32_t& aTag, uint32_t& aValue, void *aUserArg)
 {
     nsTArray<hb_feature_t>* features = static_cast<nsTArray<hb_feature_t>*> (aUserArg);
@@ -1233,7 +1233,6 @@ AddOpenTypeFeature(const uint32_t& aTag, uint32_t& aValue, void *aUserArg)
     feat.tag = aTag;
     feat.value = aValue;
     features->AppendElement(feat);
-    return PL_DHASH_NEXT;
 }
 
 /*
