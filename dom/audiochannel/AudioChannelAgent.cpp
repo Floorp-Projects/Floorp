@@ -104,7 +104,7 @@ AudioChannelAgent::InitInternal(nsIDOMWindow* aWindow, int32_t aChannelType,
   }
 
   if (NS_WARN_IF(!aWindow)) {
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsPIDOMWindow> pInnerWindow = do_QueryInterface(aWindow);
@@ -113,10 +113,6 @@ AudioChannelAgent::InitInternal(nsIDOMWindow* aWindow, int32_t aChannelType,
 
   nsCOMPtr<nsIDOMWindow> topWindow;
   aWindow->GetScriptableTop(getter_AddRefs(topWindow));
-  if (NS_WARN_IF(!topWindow)) {
-    return NS_OK;
-  }
-
   mWindow = do_QueryInterface(topWindow);
   if (mWindow) {
     mWindow = mWindow->GetOuterWindow();
