@@ -66,6 +66,10 @@ config = {
             'ignore_projects': ['gecko'],
             'ignore_groups': ['darwin'],
         },
+        'nexus-4-kk': {
+            'ignore_projects': ['gecko'],
+            'ignore_groups': ['darwin'],
+        },
         'nexus-5-l': {
             'ignore_projects': ['gecko'],
             'ignore_groups': ['darwin'],
