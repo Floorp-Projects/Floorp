@@ -111,7 +111,7 @@ private:
   AudioContextState mNewState;
 };
 
-enum AudioContextOperation { Suspend, Resume, Close };
+enum class AudioContextOperation { Suspend, Resume, Close };
 
 class AudioContext final : public DOMEventTargetHelper,
                            public nsIMemoryReporter
