@@ -731,10 +731,10 @@ MockProvider.prototype = {
    *         The add-on to add
    */
   addAddon: function MP_addAddon(aAddon) {
-    var oldAddons = this.addons.filter(function(aOldAddon) aOldAddon.id == aAddon.id);
+    var oldAddons = this.addons.filter(aOldAddon => aOldAddon.id == aAddon.id);
     var oldAddon = oldAddons.length > 0 ? oldAddons[0] : null;
 
-    this.addons = this.addons.filter(function(aOldAddon) aOldAddon.id != aAddon.id);
+    this.addons = this.addons.filter(aOldAddon => aOldAddon.id != aAddon.id);
 
     this.addons.push(aAddon);
     aAddon._provider = this;
@@ -1361,21 +1361,21 @@ MockInstall.prototype = {
 
 
   addListener: function(aListener) {
-    if (!this.listeners.some(function(i) i == aListener))
+    if (!this.listeners.some(i => i == aListener))
       this.listeners.push(aListener);
   },
 
   removeListener: function(aListener) {
-    this.listeners = this.listeners.filter(function(i) i != aListener);
+    this.listeners = this.listeners.filter(i => i != aListener);
   },
 
   addTestListener: function(aListener) {
-    if (!this.testListeners.some(function(i) i == aListener))
+    if (!this.testListeners.some(i => i == aListener))
       this.testListeners.push(aListener);
   },
 
   removeTestListener: function(aListener) {
-    this.testListeners = this.testListeners.filter(function(i) i != aListener);
+    this.testListeners = this.testListeners.filter(i => i != aListener);
   },
 
   callListeners: function(aMethod) {

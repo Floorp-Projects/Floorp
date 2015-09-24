@@ -23,7 +23,9 @@ function mockAddonProvider(name) {
       callback(null);
     },
 
-    get name() name,
+    get name() {
+      return name;
+    },
   };
 
   return mockProvider;

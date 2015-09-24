@@ -159,10 +159,10 @@ function do_content_crash(setup, callback)
     do_test_finished();
   };
 
-  sendCommand("load(\"" + headfile.path.replace(/\\/g, "/") + "\");", function()
-    sendCommand(setup, function()
-      sendCommand("load(\"" + tailfile.path.replace(/\\/g, "/") + "\");",
-        function() do_execute_soon(handleCrash)
+  sendCommand("load(\"" + headfile.path.replace(/\\/g, "/") + "\");", () =>
+    sendCommand(setup, () =>
+      sendCommand("load(\"" + tailfile.path.replace(/\\/g, "/") + "\");", () =>
+        do_execute_soon(handleCrash)
       )
     )
   );

@@ -469,12 +469,12 @@ function run_test_1() {
     initiallyUndefined: true,
     preference:         PREF_GETADDONS_BROWSEADDONS,
     urlTests:           urlTests,
-    getURL:             function() AddonRepository.homepageURL
+    getURL:             () => AddonRepository.homepageURL
   }, {
     initiallyUndefined: true,
     preference:         PREF_GETADDONS_BROWSERECOMMENDED,
     urlTests:           urlTests,
-    getURL:             function() AddonRepository.getRecommendedURL()
+    getURL:             () => AddonRepository.getRecommendedURL()
   }, {
     initiallyUndefined: false,
     preference:         PREF_GETADDONS_BROWSESEARCHRESULTS,

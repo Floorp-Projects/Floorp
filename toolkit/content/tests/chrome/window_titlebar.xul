@@ -103,7 +103,7 @@ function test_titlebar()
   origoldx = window.screenX;
   origoldy = window.screenY;
 
-  var mousedownListener = function (event) mouseDownTarget = event.originalTarget;
+  var mousedownListener = event => mouseDownTarget = event.originalTarget;
   window.addEventListener("mousedown", mousedownListener, false);
   synthesizeMouse(label, 2, 2, { type: "mousedown" });
   SimpleTest.is(mouseDownTarget, titlebar, "movedown on titlebar");
