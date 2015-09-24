@@ -47,11 +47,16 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin, SelfServeMix
             "default": "ffxbld <release@mozilla.com>",
             "help": "Specify what user to use to commit to hg.",
         }],
+        [['--balrog-api-root', ], {
+            "action": "store",
+            "dest": "balrog_api_root",
+            "type": "string",
+            "help": "Specify Balrog API root URL.",
+        }],
         [['--balrog-username', ], {
             "action": "store",
             "dest": "balrog_username",
             "type": "string",
-            "default": "ffxbld",
             "help": "Specify what user to connect to Balrog with.",
         }],
         [['--balrog-credentials-file', ], {
