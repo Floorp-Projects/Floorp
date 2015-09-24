@@ -106,6 +106,11 @@ void nsMenuGroupOwnerX::AttributeWillChange(nsIDocument* aDocument,
 {
 }
 
+void nsMenuGroupOwnerX::NativeAnonymousChildListChange(nsIDocument* aDocument,
+                                                       nsIContent* aContent,
+                                                       bool aIsRemove)
+{
+}
 
 void nsMenuGroupOwnerX::AttributeChanged(nsIDocument* aDocument,
                                          dom::Element* aElement,
