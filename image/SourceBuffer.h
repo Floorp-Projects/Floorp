@@ -17,6 +17,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/RefCounted.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/nsRefPtr.h"
 #include "nsTArray.h"

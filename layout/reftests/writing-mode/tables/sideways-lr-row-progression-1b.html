@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<title>CSS Test: sideways-lr Table Row/Rowgroup/Cell Ordering</title>
+<link rel="author" title="Jonathan Kew" href="mailto:jfkthame@gmail.com">
+<meta name="assert" content="This test checks that sideways-lr tables order rows/rowgroups left to right and cells top-to-bottom (RTL) per 'direction'.">
+<link rel="help" href="http://www.w3.org/TR/css-writing-modes-3/#writing-mode">
+<!-- based on vertical-rl Table Row/Rowgroup/Cell Ordering tests by Elika J. Etemad -->
+
+<style>
+  .test {
+    writing-mode: sideways-lr;
+    direction: rtl;
+  }
+
+  table {
+    border-spacing: 0;
+    margin: 1em;
+  }
+  td {
+    width: 1em;
+    height: 1em;
+    border: solid gray;
+  }
+
+  .a { background: navy}
+  .b { background: blue }
+  .c { background: aqua }
+  .d { background: teal }
+  .e { background: purple }
+  .f { background: fuchsia }
+  .g { background: yellow }
+  .h { background: orange }
+</style>
+
+<table class="test">
+  <thead>
+    <tr>
+      <td colspan=2>
+      <td class="b">
+      <td class="a">
+    </tr>
+  </thead>
+  <tfoot>
+    <tr>
+      <td class="d">
+      <td class="c">
+      <td colspan=2>
+    </tr>
+  </tfoot>
+  <tbody>
+    <tr>
+      <td class="e">
+      <td colspan=2>
+      <td rowspan=3>
+    </tr>
+    <tr>
+      <td rowspan=2 colspan=2>
+      <td class="f">
+    </tr>
+    <tr>
+      <td class="g">
+    </tr>
+  </tbody>
+  <tbody>
+    <tr>
+      <td colspan=3>
+      <td class="h">
+    </tr>
+  </tbody>
+</table>

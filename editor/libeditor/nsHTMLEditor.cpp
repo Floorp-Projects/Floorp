@@ -3531,7 +3531,7 @@ nsHTMLEditor::SelectAll()
   nsCOMPtr<nsIDOMNode> rootElement = do_QueryInterface(rootContent, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  Maybe<mozilla::dom::Selection::AutoApplyUserSelectStyle> userSelection;
+  Maybe<mozilla::dom::Selection::AutoUserInitiated> userSelection;
   if (!rootContent->IsEditable()) {
     userSelection.emplace(selection);
   }

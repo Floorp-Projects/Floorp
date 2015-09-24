@@ -57,7 +57,8 @@ templates variables:
 
 By convention build tasks are stored in `tasks/builds/` the location of
 each particular type of build is specified in `job_flags.yml` (and more
-locations in the future)
+locations in the future), which is located in the appropriate subdirectory
+of `branches/`.
 
 #### Task format
 
