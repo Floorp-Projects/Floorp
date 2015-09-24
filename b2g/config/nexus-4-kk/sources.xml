@@ -126,15 +126,23 @@
   <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="2da3a2d5100f8afa1229bb50aa2a29ea0aaf8417"/>
   <project name="platform_system_core" path="system/core" remote="b2g" revision="8586f55fe4b015911b48e731b69c592ad82a0807"/>
   <default remote="caf" revision="refs/tags/android-4.4.2_r1" sync-j="4"/>
-  <!-- Emulator specific things -->
+  <!-- Nexus 4 specific things -->
+  <project name="device-mako" path="device/lge/mako" remote="b2g" revision="aea6908cd694b4ef9e7ad64a930d52eab6ab1e17"/>
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="72ffdf71c68a96309212eb13d63560d66db14c9e"/>
-  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="8d4018ebd33ac3f1a043b2d54bc578028656a659"/>
-  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="e002268b30ce69725e60fdc827a19d729cce7396"/>
+  <project name="device_lge_mako-kernel" path="device/lge/mako-kernel" remote="b2g" revision="a49f2c34bc50a07b02f010a53d80477542209a81"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="f37bd545063039e30a92f2550ae78c0e6e4e2d08"/>
-  <project name="platform_external_wpa_supplicant_8" path="external/wpa_supplicant_8" remote="b2g" revision="0c6a6547cd1fd302fa2b0f6e375654df36bf0ec4"/>
-  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="7132bc11fbc68acfebcd509095562ca04fad5584"/>
+  <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="694cecf256122d0cb3b6a1a4efb4b5c7401db223"/>
+  <project name="platform/hardware/broadcom/wlan" path="hardware/broadcom/wlan" revision="5eb5fb95dbc095c554686bdded852c46f1299e37"/>
+  <project name="platform/hardware/qcom/audio" path="hardware/qcom/audio" revision="e168f3dc6c821239497e7358a968b99da6d9df5b"/>
+  <project name="platform/hardware/qcom/bt" path="hardware/qcom/bt" revision="9c274df08174e762523ca0c84249c875c76f0cc2"/>
+  <project name="platform/hardware/qcom/camera" path="hardware/qcom/camera" revision="b951a32c1afaec2547b082c2c1c56d79f6797426"/>
+  <project name="platform/hardware/qcom/display" path="hardware/qcom/display" revision="2a1a2869b7d8e512c0fe4d74e03cb00ea4722629"/>
+  <project name="platform/hardware/qcom/keymaster" path="hardware/qcom/keymaster" revision="584f1e418478f412b0d47bbaab35e34fca38ade7"/>
+  <project name="platform/hardware/qcom/media" path="hardware/qcom/media" revision="eef7d1a3d4b1584e62424ce06fee4c70f2edf9bb"/>
+  <project name="platform/hardware/qcom/msm8960" path="hardware/qcom/msm8960" revision="8f23611b843eacc3177b31987f3708b4c3b33621"/>
+  <project name="platform/hardware/qcom/power" path="hardware/qcom/power" revision="f8c9e51bd67c04ce4c19bf0515204118ea6b322a"/>
+  <project name="platform/hardware/qcom/sensors" path="hardware/qcom/sensors" revision="ef6ad16db4e9f796da493edfba600b9073b72eeb"/>
+  <project name="platform/hardware/qcom/wlan" path="hardware/qcom/wlan" revision="40d2275d17714cd524503b7080ff7bfcde134752"/>
+  <project name="platform/hardware/ril" path="hardware/ril" revision="321468d7cf1fa5c56422243d857a73d4f23f7574"/>
   <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="5f4b68c799927b6e078f987b12722c3a6ccd4a45"/>
-  <project name="platform/development" path="development" revision="5968ff4e13e0d696ad8d972281fc27ae5a12829b"/>
-  <project name="android-sdk" path="sdk" remote="b2g" revision="0951179277915335251c5e11d242e4e1a8c2236f"/>
-  <project name="darwinstreamingserver" path="system/darwinstreamingserver" remote="b2g" revision="cf85968c7f85e0ec36e72c87ceb4837a943b8af6"/>
 </manifest>
