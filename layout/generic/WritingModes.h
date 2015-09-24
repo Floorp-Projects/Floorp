@@ -234,9 +234,7 @@ public:
 
   /**
    * True if line-over/line-under are inverted from block-start/block-end.
-   * This is true when
-   *   - writing-mode is vertical-rl && text-orientation is sideways-left
-   *   - writing-mode is vertical-lr && text-orientation is not sideways-left
+   * This is true only when writing-mode is vertical-lr.
    */
   bool IsLineInverted() const { return !!(mWritingMode & eLineOrientMask); }
 
@@ -323,23 +321,27 @@ public:
     //   bit 1 = the eInlineFlowMask value
     //   bit 2 = the eBlockFlowMask value
     //   bit 3 = the eLineOrientMask value
+    // Not all of these combinations can actually be specified via CSS: there
+    // is no horizontal-bt writing-mode, and no text-orientation value that
+    // produces "inverted" text. (The former 'sideways-left' value, no longer
+    // in the spec, would have produced this in vertical-rl mode.)
     static const mozilla::css::Side kLogicalInlineSides[][2] = {
-      { NS_SIDE_LEFT,   NS_SIDE_RIGHT  },  // horizontal-tb                  ltr
-      { NS_SIDE_TOP,    NS_SIDE_BOTTOM },  // vertical-rl                    ltr
-      { NS_SIDE_RIGHT,  NS_SIDE_LEFT   },  // horizontal-tb                  rtl
-      { NS_SIDE_BOTTOM, NS_SIDE_TOP    },  // vertical-rl                    rtl
-      { NS_SIDE_RIGHT,  NS_SIDE_LEFT   },  // (horizontal-bt)  (inverted)    ltr
-      { NS_SIDE_TOP,    NS_SIDE_BOTTOM },  // vertical-lr      sideways-left rtl
-      { NS_SIDE_LEFT,   NS_SIDE_RIGHT  },  // (horizontal-bt)  (inverted)    rtl
-      { NS_SIDE_BOTTOM, NS_SIDE_TOP    },  // vertical-lr      sideways-left ltr
-      { NS_SIDE_LEFT,   NS_SIDE_RIGHT  },  // horizontal-tb    (inverted)    rtl
-      { NS_SIDE_TOP,    NS_SIDE_BOTTOM },  // vertical-rl      sideways-left rtl
-      { NS_SIDE_RIGHT,  NS_SIDE_LEFT   },  // horizontal-tb    (inverted)    ltr
-      { NS_SIDE_BOTTOM, NS_SIDE_TOP    },  // vertical-rl      sideways-left ltr
-      { NS_SIDE_LEFT,   NS_SIDE_RIGHT  },  // (horizontal-bt)                ltr
-      { NS_SIDE_TOP,    NS_SIDE_BOTTOM },  // vertical-lr                    ltr
-      { NS_SIDE_RIGHT,  NS_SIDE_LEFT   },  // (horizontal-bt)                rtl
-      { NS_SIDE_BOTTOM, NS_SIDE_TOP    },  // vertical-lr                    rtl
+      { NS_SIDE_LEFT,   NS_SIDE_RIGHT  },  // horizontal-tb               ltr
+      { NS_SIDE_TOP,    NS_SIDE_BOTTOM },  // vertical-rl                 ltr
+      { NS_SIDE_RIGHT,  NS_SIDE_LEFT   },  // horizontal-tb               rtl
+      { NS_SIDE_BOTTOM, NS_SIDE_TOP    },  // vertical-rl                 rtl
+      { NS_SIDE_RIGHT,  NS_SIDE_LEFT   },  // (horizontal-bt)  (inverted) ltr
+      { NS_SIDE_TOP,    NS_SIDE_BOTTOM },  // sideways-lr                 rtl
+      { NS_SIDE_LEFT,   NS_SIDE_RIGHT  },  // (horizontal-bt)  (inverted) rtl
+      { NS_SIDE_BOTTOM, NS_SIDE_TOP    },  // sideways-lr                 ltr
+      { NS_SIDE_LEFT,   NS_SIDE_RIGHT  },  // horizontal-tb    (inverted) rtl
+      { NS_SIDE_TOP,    NS_SIDE_BOTTOM },  // vertical-rl      (inverted) rtl
+      { NS_SIDE_RIGHT,  NS_SIDE_LEFT   },  // horizontal-tb    (inverted) ltr
+      { NS_SIDE_BOTTOM, NS_SIDE_TOP    },  // vertical-rl      (inverted) ltr
+      { NS_SIDE_LEFT,   NS_SIDE_RIGHT  },  // (horizontal-bt)             ltr
+      { NS_SIDE_TOP,    NS_SIDE_BOTTOM },  // vertical-lr                 ltr
+      { NS_SIDE_RIGHT,  NS_SIDE_LEFT   },  // (horizontal-bt)             rtl
+      { NS_SIDE_BOTTOM, NS_SIDE_TOP    },  // vertical-lr                 rtl
     };
 
     // Inline axis sides depend on all three of writing-mode, text-orientation
