@@ -33,6 +33,7 @@ import org.mozilla.gecko.util.GeckoEventListener;
 
 import org.mozilla.b2gdroid.ScreenStateObserver;
 import org.mozilla.b2gdroid.Apps;
+import org.mozilla.b2gdroid.SettingsMapper;
 
 public class Launcher extends Activity
                       implements GeckoEventListener, ContextGetter {
@@ -41,6 +42,7 @@ public class Launcher extends Activity
     private ContactService      mContactService;
     private ScreenStateObserver mScreenStateObserver;
     private Apps                mApps;
+    private SettingsMapper      mSettings;
 
     /** ContextGetter */
     public Context getContext() {
@@ -58,6 +60,7 @@ public class Launcher extends Activity
         GeckoBatteryManager.getInstance().start(this);
         mContactService = new ContactService(EventDispatcher.getInstance(), this);
         mApps = new Apps(this);
+        mSettings = new SettingsMapper(this, null);
     }
 
     private void hideSplashScreen() {
@@ -116,6 +119,7 @@ public class Launcher extends Activity
 
         mContactService.destroy();
         mApps.destroy();
+        mSettings.destroy();
     }
 
     @Override
