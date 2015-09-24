@@ -117,6 +117,17 @@ LoadInfo::~LoadInfo()
 
 NS_IMPL_ISUPPORTS(LoadInfo, nsILoadInfo)
 
+already_AddRefed<nsILoadInfo>
+LoadInfo::Clone() const
+{
+  nsRefPtr<LoadInfo> copy(new LoadInfo(*this));
+  // Reset the fields that should be cleared out.
+  copy->mEnforceSecurity = false;
+  copy->mInitialSecurityCheckDone = false;
+  copy->mRedirectChain.Clear();
+  return copy.forget();
+}
+
 NS_IMETHODIMP
 LoadInfo::GetLoadingPrincipal(nsIPrincipal** aLoadingPrincipal)
 {
