@@ -20,6 +20,7 @@ from MozZipFile import ZipFile
 from cStringIO import StringIO
 
 from mozbuild.util import (
+    ensureParentDir,
     lock_file,
     PushbackIter,
 )
@@ -200,6 +201,7 @@ class JarMaker(object):
         with the given chrome base path, and updates the given manifest file.
         '''
 
+        ensureParentDir(manifestPath)
         lock = lock_file(manifestPath + '.lck')
         try:
             myregister = dict.fromkeys(map(lambda s: s.replace('%',
