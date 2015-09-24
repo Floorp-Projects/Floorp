@@ -104,6 +104,16 @@ CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
       break;
     }
 #endif
+
+    case SurfaceDescriptor::TSurfaceDescriptorSharedGLTexture: {
+      const auto& desc = aDesc.get_SurfaceDescriptorSharedGLTexture();
+      result = new GLTextureHost(aFlags, desc.texture(),
+                                 desc.target(),
+                                 (GLsync)desc.fence(),
+                                 desc.size(),
+                                 desc.hasAlpha());
+      break;
+    }
     default: return nullptr;
   }
   return result.forget();
@@ -640,6 +650,77 @@ EGLImageTextureHost::SetCompositor(Compositor* aCompositor)
 
 gfx::SurfaceFormat
 EGLImageTextureHost::GetFormat() const
+{
+  MOZ_ASSERT(mTextureSource);
+  return mTextureSource->GetFormat();
+}
+
+//
+
+GLTextureHost::GLTextureHost(TextureFlags aFlags,
+                             GLuint aTextureHandle,
+                             GLenum aTarget,
+                             GLsync aSync,
+                             gfx::IntSize aSize,
+                             bool aHasAlpha)
+  : TextureHost(aFlags)
+  , mTexture(aTextureHandle)
+  , mTarget(aTarget)
+  , mSync(aSync)
+  , mSize(aSize)
+  , mHasAlpha(aHasAlpha)
+  , mCompositor(nullptr)
+{}
+
+GLTextureHost::~GLTextureHost()
+{}
+
+gl::GLContext*
+GLTextureHost::gl() const
+{
+  return mCompositor ? mCompositor->gl() : nullptr;
+}
+
+bool
+GLTextureHost::Lock()
+{
+  if (!mCompositor) {
+    return false;
+  }
+
+  if (mSync) {
+    gl()->MakeCurrent();
+    gl()->fWaitSync(mSync, 0, LOCAL_GL_TIMEOUT_IGNORED);
+    gl()->fDeleteSync(mSync);
+    mSync = 0;
+  }
+
+  if (!mTextureSource) {
+    gfx::SurfaceFormat format = mHasAlpha ? gfx::SurfaceFormat::R8G8B8A8
+                                          : gfx::SurfaceFormat::R8G8B8X8;
+    mTextureSource = new GLTextureSource(mCompositor,
+                                         mTexture,
+                                         mTarget,
+                                         mSize,
+                                         format,
+                                         false /* owned by the client */);
+  }
+
+  return true;
+}
+void
+GLTextureHost::SetCompositor(Compositor* aCompositor)
+{
+  MOZ_ASSERT(aCompositor);
+  CompositorOGL* glCompositor = static_cast<CompositorOGL*>(aCompositor);
+  mCompositor = glCompositor;
+  if (mTextureSource) {
+    mTextureSource->SetCompositor(glCompositor);
+  }
+}
+
+gfx::SurfaceFormat
+GLTextureHost::GetFormat() const
 {
   MOZ_ASSERT(mTextureSource);
   return mTextureSource->GetFormat();

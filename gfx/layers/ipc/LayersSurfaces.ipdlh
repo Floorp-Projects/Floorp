@@ -82,6 +82,14 @@ struct EGLImageDescriptor {
   bool hasAlpha;
 };
 
+struct SurfaceDescriptorSharedGLTexture {
+  uint32_t texture;
+  uint32_t target;
+  uintptr_t fence;
+  IntSize size;
+  bool hasAlpha;
+};
+
 struct NewSurfaceDescriptorGralloc {
   MaybeMagicGrallocBufferHandle buffer;
   bool isOpaque;
@@ -116,6 +124,7 @@ union SurfaceDescriptor {
   EGLImageDescriptor;
   SurfaceDescriptorMacIOSurface;
   NewSurfaceDescriptorGralloc;
+  SurfaceDescriptorSharedGLTexture;
   null_t;
 };
 
