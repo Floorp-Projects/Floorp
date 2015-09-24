@@ -206,7 +206,7 @@ private:
   void SubmitWaitingJobs();
 
   std::vector<Job*> mWaitingJobs;
-  Mutex mMutex; // for concurrent access to mWaintingJobs
+  CriticalSection mWaitingJobsSection; // for concurrent access to mWaintingJobs
   Atomic<int32_t> mSignals;
 
 #ifdef DEBUG
@@ -216,15 +216,6 @@ private:
 
   friend class Job;
   friend class JobScheduler;
-};
-
-
-/// RAII helper.
-struct MutexAutoLock {
-    MutexAutoLock(Mutex* aMutex) : mMutex(aMutex) { mMutex->Lock(); }
-    ~MutexAutoLock() { mMutex->Unlock(); }
-protected:
-    Mutex* mMutex;
 };
 
 /// Base class for worker threads.
