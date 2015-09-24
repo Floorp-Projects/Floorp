@@ -174,7 +174,7 @@ var Harness = {
     this.runningInstalls = null;
 
     if (callback)
-      callback(count);
+      executeSoon(() => callback(count));
   },
 
   // Window open handling

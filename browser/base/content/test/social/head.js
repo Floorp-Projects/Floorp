@@ -416,7 +416,7 @@ function loadIntoTab(tab, url, callback) {
 
 function ensureBrowserTabClosed(tab) {
   let promise = ensureEventFired(gBrowser.tabContainer, "TabClose");
-  gBrowser.removeTab(tab);
+  gBrowser.removeTab(tab, {skipPermitUnload: true});
   return promise;
 }
 
