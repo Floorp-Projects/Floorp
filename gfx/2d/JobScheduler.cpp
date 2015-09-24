@@ -184,7 +184,7 @@ SyncObject::Signal()
 void
 SyncObject::AddWaitingJob(Job* aJob)
 {
-  MutexAutoLock lock(&mMutex);
+  CriticalSectionAutoEnter lock(&mWaitingJobsSection);
   mWaitingJobs.push_back(aJob);
 }
 
@@ -199,7 +199,7 @@ void SyncObject::SubmitWaitingJobs()
     // hold a strong ref to prevent that!
     RefPtr<SyncObject> kungFuDeathGrip(this);
 
-    MutexAutoLock lock(&mMutex);
+    CriticalSectionAutoEnter lock(&mWaitingJobsSection);
     tasksToSubmit = Move(mWaitingJobs);
     mWaitingJobs.clear();
   }
