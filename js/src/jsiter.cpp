@@ -1406,42 +1406,42 @@ GlobalObject::initStringIteratorProto(JSContext* cx, Handle<GlobalObject*> globa
     return true;
 }
 
-/* static */ bool
-GlobalObject::initIteratorClasses(JSContext* cx, Handle<GlobalObject*> global)
+JSObject*
+js::InitIteratorClass(JSContext* cx, HandleObject obj)
 {
+    Handle<GlobalObject*> global = obj.as<GlobalObject>();
+
+    if (global->getPrototype(JSProto_Iterator).isObject())
+        return &global->getPrototype(JSProto_Iterator).toObject();
+
     RootedObject iteratorProto(cx);
-    Value iteratorProtoVal = global->getPrototype(JSProto_Iterator);
-    if (iteratorProtoVal.isObject()) {
-        iteratorProto = &iteratorProtoVal.toObject();
-    } else {
-        iteratorProto = global->createBlankPrototype(cx, &PropertyIteratorObject::class_);
-        if (!iteratorProto)
-            return false;
+    iteratorProto = global->createBlankPrototype(cx, &PropertyIteratorObject::class_);
+    if (!iteratorProto)
+        return nullptr;
 
-        AutoIdVector blank(cx);
-        NativeIterator* ni = NativeIterator::allocateIterator(cx, 0, blank);
-        if (!ni)
-            return false;
-        ni->init(nullptr, nullptr, 0 /* flags */, 0, 0);
+    AutoIdVector blank(cx);
+    NativeIterator* ni = NativeIterator::allocateIterator(cx, 0, blank);
+    if (!ni)
+        return nullptr;
+    ni->init(nullptr, nullptr, 0 /* flags */, 0, 0);
 
-        iteratorProto->as<PropertyIteratorObject>().setNativeIterator(ni);
+    iteratorProto->as<PropertyIteratorObject>().setNativeIterator(ni);
 
-        Rooted<JSFunction*> ctor(cx);
-        ctor = global->createConstructor(cx, IteratorConstructor, cx->names().Iterator, 2);
-        if (!ctor)
-            return false;
-        if (!LinkConstructorAndPrototype(cx, ctor, iteratorProto))
-            return false;
-        if (!DefinePropertiesAndFunctions(cx, iteratorProto, nullptr, iterator_methods))
-            return false;
-        if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_Iterator,
-                                                  ctor, iteratorProto))
-        {
-            return false;
-        }
+    Rooted<JSFunction*> ctor(cx);
+    ctor = global->createConstructor(cx, IteratorConstructor, cx->names().Iterator, 2);
+    if (!ctor)
+        return nullptr;
+    if (!LinkConstructorAndPrototype(cx, ctor, iteratorProto))
+        return nullptr;
+    if (!DefinePropertiesAndFunctions(cx, iteratorProto, nullptr, iterator_methods))
+        return nullptr;
+    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_Iterator,
+                                              ctor, iteratorProto))
+    {
+        return nullptr;
     }
 
-    return true;
+    return &global->getPrototype(JSProto_Iterator).toObject();
 }
 
 JSObject*
@@ -1467,7 +1467,7 @@ JSObject*
 js::InitIteratorClasses(JSContext* cx, HandleObject obj)
 {
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
-    if (!GlobalObject::initIteratorClasses(cx, global))
+    if (!InitIteratorClass(cx, global))
         return nullptr;
     if (!GlobalObject::initGeneratorClasses(cx, global))
         return nullptr;
