@@ -3221,24 +3221,8 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
 
     aFrame->BuildDisplayListForStackingContext(&builder, dirtyRect, &list);
   }
-  const bool paintAllContinuations = aFlags & PAINT_ALL_CONTINUATIONS;
-  NS_ASSERTION(!paintAllContinuations || !aFrame->GetPrevContinuation(),
-               "If painting all continuations, the frame must be "
-               "first-continuation");
 
   nsIAtom* frameType = aFrame->GetType();
-
-  if (paintAllContinuations) {
-    nsIFrame* currentFrame = aFrame;
-    while ((currentFrame = currentFrame->GetNextContinuation()) != nullptr) {
-      PROFILER_LABEL("nsLayoutUtils", "PaintFrame::ContinuationsBuildDisplayList",
-        js::ProfileEntry::Category::GRAPHICS);
-
-      nsRect frameDirty = dirtyRect - builder.ToReferenceFrame(currentFrame);
-      currentFrame->BuildDisplayListForStackingContext(&builder,
-                                                       frameDirty, &list);
-    }
-  }
 
   // For the viewport frame in print preview/page layout we want to paint
   // the grey background behind the page, not the canvas color.
