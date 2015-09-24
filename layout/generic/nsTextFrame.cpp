@@ -5311,6 +5311,7 @@ nsTextFrame::DrawSelectionDecorations(gfxContext* aContext,
                                       const gfxFont::Metrics& aFontMetrics,
                                       DrawPathCallbacks* aCallbacks,
                                       bool aVertical,
+                                      gfxFloat aDecorationOffsetDir,
                                       uint8_t aDecoration)
 {
   gfxPoint pt(aPt);
@@ -5417,8 +5418,8 @@ nsTextFrame::DrawSelectionDecorations(gfxContext* aContext,
   size.height *= relativeSize;
   PaintDecorationLine(aContext, aDirtyRect, color, nullptr, pt,
     (aVertical ? (pt.y - aPt.y) : (pt.x - aPt.x)) + aICoordInFrame,
-    size, aAscent, offset, aDecoration, style, eSelectionDecoration,
-    aCallbacks, aVertical, descentLimit);
+    size, aAscent, offset * aDecorationOffsetDir, aDecoration, style,
+    eSelectionDecoration, aCallbacks, aVertical, descentLimit);
 }
 
 /* static */
@@ -5919,6 +5920,7 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
   }
   gfxRect dirtyRect(aDirtyRect.x / app, aDirtyRect.y / app,
                     aDirtyRect.width / app, aDirtyRect.height / app);
+  gfxFloat decorationOffsetDir = mTextRun->IsSidewaysLeft() ? -1.0 : 1.0;
   SelectionType type;
   TextRangeStyle selectedStyle;
   while (iterator.GetNextSegment(&iOffset, &offset, &length, &hyphenWidth,
@@ -5928,17 +5930,18 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
     if (type == aSelectionType) {
       if (verticalRun) {
         pt.y = (aFramePt.y + iOffset -
-               (mTextRun->IsRightToLeft() ? advance : 0)) / app;
+               (mTextRun->IsInlineReversed() ? advance : 0)) / app;
       } else {
         pt.x = (aFramePt.x + iOffset -
-               (mTextRun->IsRightToLeft() ? advance : 0)) / app;
+               (mTextRun->IsInlineReversed() ? advance : 0)) / app;
       }
       gfxFloat width = Abs(advance) / app;
       gfxFloat xInFrame = pt.x - (aFramePt.x / app);
       DrawSelectionDecorations(aCtx, dirtyRect, aSelectionType,
                                aTextPaintStyle, selectedStyle, pt, xInFrame,
                                width, mAscent / app, decorationMetrics,
-                               aCallbacks, verticalRun, kDecoration);
+                               aCallbacks, verticalRun, decorationOffsetDir,
+                               kDecoration);
     }
     iterator.UpdateWithAdvance(advance);
   }
@@ -6433,6 +6436,10 @@ nsTextFrame::DrawTextRunAndDecorations(
     nscoord inflationMinFontSize =
       nsLayoutUtils::InflationMinFontSizeFor(this);
 
+    // The decoration-line offsets need to be reversed for sideways-lr mode,
+    // so we will multiply the values from metrics by this factor.
+    gfxFloat decorationOffsetDir = mTextRun->IsSidewaysLeft() ? -1.0 : 1.0;
+
     // Underlines
     for (uint32_t i = aDecorations.mUnderlines.Length(); i-- > 0; ) {
       const LineDecoration& dec = aDecorations.mUnderlines[i];
@@ -6451,7 +6458,8 @@ nsTextFrame::DrawTextRunAndDecorations(
 
       PaintDecorationLine(aCtx, dirtyRect, dec.mColor,
         aDecorationOverrideColor, decPt, 0.0, decSize, ascent,
-        metrics.underlineOffset, NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
+        decorationOffsetDir * metrics.underlineOffset,
+        NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
         dec.mStyle, eNormalDecoration, aCallbacks, verticalRun);
     }
     // Overlines
@@ -6472,7 +6480,8 @@ nsTextFrame::DrawTextRunAndDecorations(
 
       PaintDecorationLine(aCtx, dirtyRect, dec.mColor,
         aDecorationOverrideColor, decPt, 0.0, decSize, ascent,
-        metrics.maxAscent, NS_STYLE_TEXT_DECORATION_LINE_OVERLINE, dec.mStyle,
+        decorationOffsetDir * metrics.maxAscent,
+        NS_STYLE_TEXT_DECORATION_LINE_OVERLINE, dec.mStyle,
         eNormalDecoration, aCallbacks, verticalRun);
     }
 
@@ -6499,7 +6508,8 @@ nsTextFrame::DrawTextRunAndDecorations(
 
       PaintDecorationLine(aCtx, dirtyRect, dec.mColor,
         aDecorationOverrideColor, decPt, 0.0, decSize, ascent,
-        metrics.strikeoutOffset, NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH,
+        decorationOffsetDir * metrics.strikeoutOffset,
+        NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH,
         dec.mStyle, eNormalDecoration, aCallbacks, verticalRun);
     }
 }
