@@ -373,11 +373,27 @@
         // browser property
         if (this.getAttribute("browserid"))
           setTimeout(function(aSelf) { aSelf.browser = aSelf.browser; }, 0, this);
+
+        if (typeof gBrowser !== 'undefined')
+          gBrowser.tabContainer.addEventListener("TabRemotenessChange", this);
       ]]></constructor>
 
       <destructor><![CDATA[
         this.destroy();
       ]]></destructor>
+
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          switch(aEvent.type) {
+            case "onRemotenessChange":
+              // Reinitializing browser to re-attach listeners.
+              this.browser._lastSearchString = this._findField.value;
+              this.browser = this.browser;
+              break;
+          }
+        ]]></body>
+      </method>
 
       <!-- This is necessary because the destructor isn't called when
            we are removed from a document that is not destroyed. This
@@ -402,6 +418,9 @@
 
           // Clear all timers that might still be running.
           this._cancelTimers();
+
+          if (typeof gBrowser !== 'undefined')
+            gBrowser.tabContainer.removeEventListener("TabRemotenessChange", this);
         ]]></body>
       </method>
 

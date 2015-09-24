@@ -1367,8 +1367,6 @@ pref("devtools.command-button-rulers.enabled", false);
 pref("devtools.inspector.enabled", true);
 // What was the last active sidebar in the inspector
 pref("devtools.inspector.activeSidebar", "ruleview");
-// Enable the markup preview
-pref("devtools.inspector.markupPreview", false);
 pref("devtools.inspector.remote", false);
 // Collapse pseudo-elements by default in the rule-view
 pref("devtools.inspector.show_pseudo_elements", false);

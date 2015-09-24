@@ -167,5 +167,17 @@ var FeedHandler = {
         clearTimeout(this._updateFeedTimeout);
       this._updateFeedTimeout = setTimeout(this.updateFeeds.bind(this), 100);
     }
-  }
+  },
+
+  init() {
+    window.messageManager.addMessageListener("FeedWriter:ShownFirstRun", this);
+  },
+
+  receiveMessage(msg) {
+    switch (msg.name) {
+      case "FeedWriter:ShownFirstRun":
+        Services.prefs.setBoolPref("browser.feeds.showFirstRunUI", false);
+        break;
+    }
+  },
 };
