@@ -1042,7 +1042,7 @@ public:
     MOZ_ASSERT_IF(isAtRoot, mContainerReferenceFrame == mBuilder->RootReferenceFrame());
     mContainerAnimatedGeometryRoot = isAtRoot
       ? mContainerReferenceFrame
-      : nsLayoutUtils::GetAnimatedGeometryRootFor(aContainerItem, aBuilder);
+      : aContainerItem->AnimatedGeometryRoot();
     MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(mBuilder->RootReferenceFrame(),
                                                       mContainerAnimatedGeometryRoot));
     NS_ASSERTION(!aContainerItem || !aContainerItem->ShouldFixToViewport(mBuilder),
@@ -2103,8 +2103,7 @@ ContainerState::GetLayerCreationHint(const nsIFrame* aAnimatedGeometryRoot)
   nsIFrame* fParent;
   for (const nsIFrame* f = aAnimatedGeometryRoot;
        f != mContainerAnimatedGeometryRoot;
-       f = nsLayoutUtils::GetAnimatedGeometryRootForFrame(mBuilder,
-           fParent, mContainerAnimatedGeometryRoot)) {
+       f = nsLayoutUtils::GetAnimatedGeometryRootForFrame(mBuilder, fParent)) {
     fParent = nsLayoutUtils::GetCrossDocParentFrame(f);
     if (!fParent) {
       break;
@@ -2785,7 +2784,7 @@ PaintedLayerDataTree::GetParentAnimatedGeometryRoot(const nsIFrame* aAnimatedGeo
   }
 
   nsIFrame* agr = Builder()->FindAnimatedGeometryRootFor(
-    const_cast<nsIFrame*>(aAnimatedGeometryRoot), Builder()->RootReferenceFrame());
+    const_cast<nsIFrame*>(aAnimatedGeometryRoot));
   MOZ_ASSERT_IF(agr, nsLayoutUtils::IsAncestorFrameCrossDoc(Builder()->RootReferenceFrame(), agr));
   if (agr != aAnimatedGeometryRoot) {
     return agr;
@@ -2796,7 +2795,7 @@ PaintedLayerDataTree::GetParentAnimatedGeometryRoot(const nsIFrame* aAnimatedGeo
   if (!parent) {
     return nullptr;
   }
-  return Builder()->FindAnimatedGeometryRootFor(parent, Builder()->RootReferenceFrame());
+  return Builder()->FindAnimatedGeometryRootFor(parent);
 }
 
 void
@@ -3698,8 +3697,7 @@ ContainerState::ChooseAnimatedGeometryRoot(const nsDisplayList& aList,
 
     // Try using the actual active scrolled root of the backmost item, as that
     // should result in the least invalidation when scrolling.
-    *aAnimatedGeometryRoot =
-      nsLayoutUtils::GetAnimatedGeometryRootFor(item, mBuilder);
+    *aAnimatedGeometryRoot = item->AnimatedGeometryRoot();
     return true;
   }
   return false;
@@ -3774,7 +3772,7 @@ GetScrollClipIntersection(nsDisplayListBuilder* aBuilder, const nsIFrame* aAnima
   for (const nsIFrame* f = aAnimatedGeometryRoot;
        f != aStopAtAnimatedGeometryRoot;
        f = nsLayoutUtils::GetAnimatedGeometryRootForFrame(aBuilder,
-           fParent, aStopAtAnimatedGeometryRoot)) {
+           fParent)) {
     fParent = nsLayoutUtils::GetCrossDocParentFrame(f);
     if (!fParent) {
       // This means aStopAtAnimatedGeometryRoot was not an ancestor
@@ -3875,8 +3873,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     bool forceInactive;
     const nsIFrame* animatedGeometryRoot;
     const nsIFrame* animatedGeometryRootForScrollMetadata = nullptr;
-    const nsIFrame* realAnimatedGeometryRootOfItem =
-      nsLayoutUtils::GetAnimatedGeometryRootFor(item, mBuilder);
+    const nsIFrame* realAnimatedGeometryRootOfItem = item->AnimatedGeometryRoot();
     if (mFlattenToSingleLayer) {
       forceInactive = true;
       animatedGeometryRoot = lastAnimatedGeometryRoot;
@@ -3888,7 +3885,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         // take ShouldFixToViewport() into account, so it will return something different
         // for fixed background items.
         animatedGeometryRootForScrollMetadata = nsLayoutUtils::GetAnimatedGeometryRootForFrame(
-            mBuilder, item->Frame(), item->ReferenceFrame());
+            mBuilder, item->Frame());
       } else {
         // For inactive layer subtrees, splitting content into PaintedLayers
         // based on animated geometry roots is pointless. It's more efficient
@@ -4699,8 +4696,7 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
   nsIFrame* fParent;
   for (const nsIFrame* f = aEntry->mAnimatedGeometryRootForScrollMetadata;
        f != mContainerAnimatedGeometryRoot;
-       f = nsLayoutUtils::GetAnimatedGeometryRootForFrame(this->mBuilder,
-           fParent, mContainerAnimatedGeometryRoot)) {
+       f = nsLayoutUtils::GetAnimatedGeometryRootForFrame(this->mBuilder, fParent)) {
     fParent = nsLayoutUtils::GetCrossDocParentFrame(f);
     if (!fParent) {
       // This means mContainerAnimatedGeometryRoot was not an ancestor
@@ -4844,8 +4840,7 @@ ContainerState::PostprocessRetainedLayers(nsIntRegion* aOpaqueRegionForContainer
     if (!e->mOpaqueRegion.IsEmpty()) {
       const nsIFrame* animatedGeometryRootToCover = animatedGeometryRootForOpaqueness;
       if (e->mOpaqueForAnimatedGeometryRootParent &&
-          nsLayoutUtils::GetAnimatedGeometryRootForFrame(mBuilder, e->mAnimatedGeometryRoot->GetParent(),
-                                                         mContainerAnimatedGeometryRoot)
+          nsLayoutUtils::GetAnimatedGeometryRootForFrame(mBuilder, e->mAnimatedGeometryRoot->GetParent())
             == mContainerAnimatedGeometryRoot) {
         animatedGeometryRootToCover = mContainerAnimatedGeometryRoot;
         data = FindOpaqueRegionEntry(opaqueRegions,

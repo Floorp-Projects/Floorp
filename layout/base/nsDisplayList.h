@@ -257,7 +257,7 @@ public:
    * Returns the nearest ancestor frame to aFrame that is considered to have
    * (or will have) animated geometry. This can return aFrame.
    */
-  nsIFrame* FindAnimatedGeometryRootFor(nsIFrame* aFrame, const nsIFrame* aStopAtAncestor = nullptr);
+  nsIFrame* FindAnimatedGeometryRootFor(nsIFrame* aFrame);
 
   /**
    * @return the root of the display list's frame (sub)tree, whose origin
@@ -635,11 +635,11 @@ public:
           aBuilder->mCurrentAnimatedGeometryRoot = aForChild;
         }
       } else {
-        // Stop at the previous animated geometry root to help cases that
-        // aren't immediate descendents.
         aBuilder->mCurrentAnimatedGeometryRoot =
-          aBuilder->FindAnimatedGeometryRootFor(aForChild, aBuilder->mCurrentAnimatedGeometryRoot);
+          aBuilder->FindAnimatedGeometryRootFor(aForChild);
       }
+      MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(aBuilder->RootReferenceFrame(),
+                                                        aBuilder->mCurrentAnimatedGeometryRoot), "Bad");
       aBuilder->mCurrentFrame = aForChild;
       aBuilder->mDirtyRect = aDirtyRect;
       aBuilder->mIsAtRootOfPseudoStackingContext = aIsRoot;
@@ -957,7 +957,6 @@ public:
    * true if the cache was hit. Return false if the cache was not hit.
    */
   bool GetCachedAnimatedGeometryRoot(const nsIFrame* aFrame,
-                                     const nsIFrame* aStopAtAncestor,
                                      nsIFrame** aOutResult);
 
   void SetCommittedScrollInfoItemList(nsDisplayList* aScrollInfoItemStorage) {
@@ -1089,27 +1088,8 @@ private:
   // The animated geometry root for mCurrentFrame.
   nsIFrame*                      mCurrentAnimatedGeometryRoot;
 
-  struct AnimatedGeometryRootLookup {
-    const nsIFrame* mFrame;
-    const nsIFrame* mStopAtFrame;
-
-    AnimatedGeometryRootLookup(const nsIFrame* aFrame, const nsIFrame* aStopAtFrame)
-      : mFrame(aFrame)
-      , mStopAtFrame(aStopAtFrame)
-    {
-    }
-
-    PLDHashNumber Hash() const {
-      return mozilla::HashBytes(this, sizeof(this));
-    }
-
-    bool operator==(const AnimatedGeometryRootLookup& aOther) const {
-      return mFrame == aOther.mFrame && mStopAtFrame == aOther.mStopAtFrame;
-    }
-  };
   // Cache for storing animated geometry roots for arbitrary frames
-  nsDataHashtable<nsGenericHashKey<AnimatedGeometryRootLookup>, nsIFrame*>
-                                 mAnimatedGeometryRootCache;
+  nsDataHashtable<nsPtrHashKey<nsIFrame>, nsIFrame*> mAnimatedGeometryRootCache;
   // will-change budget tracker
   nsDataHashtable<nsPtrHashKey<nsPresContext>, DocumentWillChangeBudget>
                                  mWillChangeBudget;
@@ -1225,6 +1205,7 @@ public:
     : mFrame(aFrame)
     , mClip(nullptr)
     , mReferenceFrame(nullptr)
+    , mAnimatedGeometryRoot(nullptr)
 #ifdef MOZ_DUMP_PAINTING
     , mPainted(false)
 #endif
@@ -1671,6 +1652,11 @@ public:
    */
   virtual const nsIFrame* ReferenceFrameForChildren() const { return mReferenceFrame; }
 
+  nsIFrame* AnimatedGeometryRoot() const {
+    MOZ_ASSERT(mAnimatedGeometryRoot, "Must have cached AGR before accessing it!");
+    return mAnimatedGeometryRoot;
+  }
+
   /**
    * Checks if this display item (or any children) contains content that might
    * be rendered with component alpha (e.g. subpixel antialiasing). Returns the
@@ -1730,6 +1716,7 @@ protected:
   const DisplayItemClip* mClip;
   // Result of FindReferenceFrameFor(mFrame), if mFrame is non-null
   const nsIFrame* mReferenceFrame;
+  nsIFrame* mAnimatedGeometryRoot;
   // Result of ToReferenceFrame(mFrame), if mFrame is non-null
   nsPoint   mToReferenceFrame;
   // This is the rectangle that needs to be painted.
