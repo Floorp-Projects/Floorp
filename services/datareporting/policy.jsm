@@ -25,7 +25,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/utils.js");
-Cu.import("resource://gre/modules/UpdateChannel.jsm");
+Cu.import("resource://gre/modules/UpdateUtils.jsm");
 
 // The current policy version number. If the version number stored in the prefs
 // is smaller than this, data upload will be disabled until the user is re-notified
@@ -388,7 +388,7 @@ this.DataReportingPolicy.prototype = Object.freeze({
    */
   get minimumPolicyVersion() {
     // First check if the current channel has an ove
-    let channel = UpdateChannel.get(false);
+    let channel = UpdateUtils.getUpdateChannel(false);
     let channelPref = this._prefs.get("minimumPolicyVersion.channel-" + channel);
     return channelPref !== undefined ?
            channelPref : this._prefs.get("minimumPolicyVersion", 1);

@@ -286,12 +286,10 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
   const TELEMETRY_TEST_COUNT = "TELEMETRY_TEST_COUNT";
   const TELEMETRY_TEST_KEYED_FLAG = "TELEMETRY_TEST_KEYED_FLAG";
   const TELEMETRY_TEST_KEYED_COUNT = "TELEMETRY_TEST_KEYED_COUNT";
-  const READ_SAVED_PING_SUCCESS = "READ_SAVED_PING_SUCCESS";
 
   if (successfulPings > 0) {
     Assert.ok(TELEMETRY_PING in payload.histograms);
   }
-  Assert.ok(READ_SAVED_PING_SUCCESS in payload.histograms);
   Assert.ok(TELEMETRY_TEST_FLAG in payload.histograms);
   Assert.ok(TELEMETRY_TEST_COUNT in payload.histograms);
 
@@ -345,9 +343,6 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
     let tc = payload.histograms[TELEMETRY_SUCCESS];
     Assert.equal(uneval(tc), uneval(expected_tc));
   }
-
-  let h = payload.histograms[READ_SAVED_PING_SUCCESS];
-  Assert.equal(h.values[0], 1);
 
   // The ping should include data from memory reporters.  We can't check that
   // this data is correct, because we can't control the values returned by the
@@ -485,17 +480,6 @@ add_task(function* test_expiredHistogram() {
 
   do_check_eq(TelemetrySession.getPayload()["histograms"][histogram_id], undefined);
   do_check_eq(TelemetrySession.getPayload()["histograms"]["TELEMETRY_TEST_EXPIRED"], undefined);
-});
-
-// Checks that an invalid histogram file is deleted if TelemetryStorage fails to parse it.
-add_task(function* test_runInvalidJSON() {
-  let pingFile = getSavedPingFile("invalid-histograms.dat");
-
-  writeStringToFile(pingFile, "this.is.invalid.JSON");
-  do_check_true(pingFile.exists());
-
-  yield TelemetryStorage.testLoadHistograms(pingFile);
-  do_check_false(pingFile.exists());
 });
 
 // Sends a ping to a non existing server. If we remove this test, we won't get
