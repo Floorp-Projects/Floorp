@@ -395,13 +395,13 @@ class Dumper:
     symbol files--|copy_debug|, mostly useful for creating a
     Microsoft Symbol Server from the resulting output.
 
-    You don't want to use this directly if you intend to call
-    ProcessDir.  Instead, call GetPlatformSpecificDumper to
-    get an instance of a subclass.
- 
+    You don't want to use this directly if you intend to process files.
+    Instead, call GetPlatformSpecificDumper to get an instance of a
+    subclass.
+
     Processing is performed asynchronously via worker processes; in
     order to wait for processing to finish and cleanup correctly, you
-    must call Finish after all Process/ProcessDir calls have been made.
+    must call Finish after all ProcessFiles calls have been made.
     You must also call Dumper.GlobalInit before creating or using any
     instances."""
     def __init__(self, dump_syms, symbol_path,
@@ -555,26 +555,40 @@ class Dumper:
         if stop_pool:
             JobPool.shutdown()
 
-    def Process(self, file_or_dir):
-        """Process a file or all the (valid) files in a directory; processing is performed
-        asynchronously, and Finish must be called to wait for it complete and cleanup."""
-        if os.path.isdir(file_or_dir) and not self.ShouldSkipDir(file_or_dir):
-            self.ProcessDir(file_or_dir)
-        elif os.path.isfile(file_or_dir):
-            self.ProcessFiles((file_or_dir,))
+    def Process(self, *args):
+        """Process files recursively in args."""
+        # We collect all files to process first then sort by size to schedule
+        # larger files first because larger files tend to take longer and we
+        # don't like long pole stragglers.
+        files = set()
+        for arg in args:
+            for f in self.get_files_to_process(arg):
+                files.add(f)
 
-    def ProcessDir(self, dir):
-        """Process all the valid files in this directory.  Valid files
-        are determined by calling ShouldProcess; processing is performed
-        asynchronously, and Finish must be called to wait for it complete and cleanup."""
-        for root, dirs, files in os.walk(dir):
+        for f in sorted(files, key=os.path.getsize, reverse=True):
+            self.ProcessFiles((f,))
+
+    def get_files_to_process(self, file_or_dir):
+        """Generate the files to process from an input."""
+        if os.path.isdir(file_or_dir) and not self.ShouldSkipDir(file_or_dir):
+            for f in self.get_files_to_process_in_dir(file_or_dir):
+                yield f
+        elif os.path.isfile(file_or_dir):
+            yield file_or_dir
+
+    def get_files_to_process_in_dir(self, path):
+        """Generate the files to process in a directory.
+
+        Valid files are are determined by calling ShouldProcess.
+        """
+        for root, dirs, files in os.walk(path):
             for d in dirs[:]:
                 if self.ShouldSkipDir(d):
                     dirs.remove(d)
             for f in files:
                 fullpath = os.path.join(root, f)
                 if self.ShouldProcess(fullpath):
-                    self.ProcessFiles((fullpath,))
+                    yield fullpath
 
     def SubmitJob(self, file_key, func_name, args, callback):
         """Submits a job to the pool of workers"""
@@ -1011,8 +1025,8 @@ to canonical locations in the source repository. Specify
                                        exclude=options.exclude,
                                        repo_manifest=options.repo_manifest,
                                        file_mapping=file_mapping)
-    for arg in args[2:]:
-        dumper.Process(arg)
+
+    dumper.Process(*args[2:])
     dumper.Finish()
 
 # run main if run directly
