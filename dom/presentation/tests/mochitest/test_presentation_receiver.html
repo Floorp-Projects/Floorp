@@ -93,18 +93,8 @@ function testIncomingSessionRequest() {
       info("Trying to launch receiver page.");
 
       ok(navigator.presentation, "navigator.presentation should be available in in-process pages.");
-
-      navigator.presentation.getSessions().then(
-        function(aSessions) {
-          is(aSessions.length, 0, "Non-receiving in-process pages shouldn't get a predefined presentation session instance.");
-          aResolve();
-        },
-        function(aError) {
-          ok(false, "Error occurred when getting sessions: " + aError);
-          teardown();
-          aReject();
-        }
-      );
+      ok(!navigator.presentation.receiver, "Non-receiving in-process pages shouldn't get a presentation receiver instance.");
+      aResolve();
     });
 
     gScript.sendAsyncMessage('trigger-incoming-session-request', receiverUrl);

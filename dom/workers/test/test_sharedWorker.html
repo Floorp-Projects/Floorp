@@ -17,8 +17,6 @@
       <script class="testbody">
         "use strict";
 
-        const swPref = "dom.workers.sharedWorkers.enabled";
-
         const href = window.location.href;
         const filename = "sharedWorker_sharedWorker.js";
         const sentMessage = "ping";
@@ -27,49 +25,43 @@
         const errorLine = 86;
         const errorColumn = 0;
 
-        if (!SpecialPowers.getBoolPref(swPref)) {
-          ok(!("SharedWorker" in window), "No SharedWorker without pref set");
-        }
+        var worker = new SharedWorker(filename);
 
-        SpecialPowers.pushPrefEnv({ set: [[swPref, true]] }, function() {
-          var worker = new SharedWorker(filename);
+        ok(worker instanceof SharedWorker, "Got SharedWorker instance");
+        ok(!("postMessage" in worker), "SharedWorker has no 'postMessage'");
+        ok(worker.port instanceof MessagePort,
+          "Shared worker has MessagePort");
 
-          ok(worker instanceof SharedWorker, "Got SharedWorker instance");
-          ok(!("postMessage" in worker), "SharedWorker has no 'postMessage'");
-          ok(worker.port instanceof MessagePort,
-            "Shared worker has MessagePort");
+        var receivedMessage;
+        var receivedError;
 
-          var receivedMessage;
-          var receivedError;
+        worker.port.onmessage = function(event) {
+          ok(event instanceof MessageEvent, "Got a MessageEvent");
+          ok(event.target === worker.port,
+             "MessageEvent has correct 'target' property");
+          is(event.data, sentMessage, "Got correct message");
+          ok(receivedMessage === undefined, "Haven't gotten message yet");
+          receivedMessage = event.data;
+          if (receivedError) {
+            SimpleTest.finish();
+          }
+        };
 
-          worker.port.onmessage = function(event) {
-            ok(event instanceof MessageEvent, "Got a MessageEvent");
-            ok(event.target === worker.port,
-               "MessageEvent has correct 'target' property");
-            is(event.data, sentMessage, "Got correct message");
-            ok(receivedMessage === undefined, "Haven't gotten message yet");
-            receivedMessage = event.data;
-            if (receivedError) {
-              SimpleTest.finish();
-            }
-          };
+        worker.onerror = function(event) {
+          ok(event instanceof ErrorEvent, "Got an ErrorEvent");
+          is(event.message, "Error: " + sentMessage, "Got correct error");
+          is(event.filename, errorFilename, "Got correct filename");
+          is(event.lineno, errorLine, "Got correct lineno");
+          is(event.colno, errorColumn, "Got correct column");
+          ok(receivedError === undefined, "Haven't gotten error yet");
+          receivedError = event.message;
+          event.preventDefault();
+          if (receivedMessage) {
+            SimpleTest.finish();
+          }
+        };
 
-          worker.onerror = function(event) {
-            ok(event instanceof ErrorEvent, "Got an ErrorEvent");
-            is(event.message, "Error: " + sentMessage, "Got correct error");
-            is(event.filename, errorFilename, "Got correct filename");
-            is(event.lineno, errorLine, "Got correct lineno");
-            is(event.colno, errorColumn, "Got correct column");
-            ok(receivedError === undefined, "Haven't gotten error yet");
-            receivedError = event.message;
-            event.preventDefault();
-            if (receivedMessage) {
-              SimpleTest.finish();
-            }
-          };
-
-          worker.port.postMessage(sentMessage);
-        });
+        worker.port.postMessage(sentMessage);
 
         SimpleTest.waitForExplicitFinish();
 

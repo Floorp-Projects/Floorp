@@ -673,7 +673,7 @@ class GCRuntime
     bool onBackgroundThread() { return helperState.onBackgroundThread(); }
 
     bool currentThreadOwnsGCLock() {
-        return lockOwner == PR_GetCurrentThread();
+        return lockOwner.value == PR_GetCurrentThread();
     }
 
 #endif // DEBUG
@@ -684,15 +684,17 @@ class GCRuntime
 
     void lockGC() {
         PR_Lock(lock);
-        MOZ_ASSERT(!lockOwner);
 #ifdef DEBUG
-        lockOwner = PR_GetCurrentThread();
+        MOZ_ASSERT(!lockOwner.value);
+        lockOwner.value = PR_GetCurrentThread();
 #endif
     }
 
     void unlockGC() {
-        MOZ_ASSERT(lockOwner == PR_GetCurrentThread());
-        lockOwner = nullptr;
+#ifdef DEBUG
+        MOZ_ASSERT(lockOwner.value == PR_GetCurrentThread());
+        lockOwner.value = nullptr;
+#endif
         PR_Unlock(lock);
     }
 
@@ -1298,7 +1300,7 @@ class GCRuntime
 
     /* Synchronize GC heap access between main thread and GCHelperState. */
     PRLock* lock;
-    mozilla::DebugOnly<PRThread*> lockOwner;
+    mozilla::DebugOnly<mozilla::Atomic<PRThread*>> lockOwner;
 
     BackgroundAllocTask allocTask;
     GCHelperState helperState;

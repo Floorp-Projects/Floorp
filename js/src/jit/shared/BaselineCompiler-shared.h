@@ -123,6 +123,10 @@ class BaselineCompilerShared
         return script->functionNonDelazifying();
     }
 
+    ModuleObject* module() const {
+        return script->module();
+    }
+
     PCMappingSlotInfo getStackTopSlotInfo() {
         MOZ_ASSERT(frame.numUnsyncedSlots() <= 2);
         switch (frame.numUnsyncedSlots()) {

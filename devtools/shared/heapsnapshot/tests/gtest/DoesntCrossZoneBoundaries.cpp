@@ -29,9 +29,9 @@ DEF_TEST(DoesntCrossZoneBoundaries, {
     ASSERT_TRUE(targetZones.init());
     ASSERT_TRUE(targetZones.put(zone));
 
-    FakeNode nodeA(cx);
-    FakeNode nodeB(cx);
-    FakeNode nodeC(cx);
+    FakeNode nodeA;
+    FakeNode nodeB;
+    FakeNode nodeC;
 
     nodeA.zone = zone;
     nodeB.zone = nullptr;

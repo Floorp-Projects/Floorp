@@ -15,8 +15,9 @@
 #include "js/Utility.h"
 
 // GCC versions 4.6 and above define __ARM_PCS_VFP to denote a hard-float
-// ABI target.
-#if defined(__ARM_PCS_VFP)
+// ABI target. The iOS toolchain doesn't define anything specific here,
+// but iOS always supports VFP.
+#if defined(__ARM_PCS_VFP) || defined(XP_IOS)
 #define JS_CODEGEN_ARM_HARDFP
 #endif
 
@@ -109,7 +110,12 @@ class Registers
         (1 << r0) |
         (1 << r1) |
         (1 << Registers::r2) |
-        (1 << Registers::r3);
+        (1 << Registers::r3)
+#if defined(XP_IOS)
+        // per https://developer.apple.com/library/ios/documentation/Xcode/Conceptual/iPhoneOSABIReference/Articles/ARMv6FunctionCallingConventions.html#//apple_ref/doc/uid/TP40009021-SW4
+        | (1 << Registers::r9)
+#endif
+              ;
 
     static const SetType NonVolatileMask =
         (1 << Registers::r4) |
@@ -117,7 +123,9 @@ class Registers
         (1 << Registers::r6) |
         (1 << Registers::r7) |
         (1 << Registers::r8) |
+#if !defined(XP_IOS)
         (1 << Registers::r9) |
+#endif
         (1 << Registers::r10) |
         (1 << Registers::r11) |
         (1 << Registers::r12) |
