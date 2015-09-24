@@ -832,6 +832,7 @@ protected:
  * This is very useful for creating drop shadows or silhouettes.
  */
 class nsContextBoxBlur {
+  typedef mozilla::gfx::Color Color;
   typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
 
 public:
@@ -941,7 +942,7 @@ public:
                             int32_t aAppUnitsPerDevPixel,
                             RectCornerRadii* aCornerRadii,
                             nscoord aBlurRadius,
-                            const gfxRGBA& aShadowColor,
+                            const Color& aShadowColor,
                             const nsRect& aDirtyRect,
                             const gfxRect& aSkipRect);
 
