@@ -2494,15 +2494,6 @@ gfxWindowsPlatform::CreateD3D11DecoderDevice()
     return nullptr;
   }
 
-  nsTArray<D3D_FEATURE_LEVEL> featureLevels;
-  if (IsWin8OrLater()) {
-    featureLevels.AppendElement(D3D_FEATURE_LEVEL_11_1);
-  }
-  featureLevels.AppendElement(D3D_FEATURE_LEVEL_11_0);
-  featureLevels.AppendElement(D3D_FEATURE_LEVEL_10_1);
-  featureLevels.AppendElement(D3D_FEATURE_LEVEL_10_0);
-  featureLevels.AppendElement(D3D_FEATURE_LEVEL_9_3);
-
   RefPtr<IDXGIAdapter1> adapter = GetDXGIAdapter();
 
   if (!adapter) {
@@ -2516,7 +2507,7 @@ gfxWindowsPlatform::CreateD3D11DecoderDevice()
   MOZ_SEH_TRY{
     hr = d3d11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
                            D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
-                           featureLevels.Elements(), featureLevels.Length(),
+                           mFeatureLevels.Elements(), mFeatureLevels.Length(),
                            D3D11_SDK_VERSION, byRef(device), nullptr, nullptr);
   } MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
     return nullptr;
