@@ -6917,20 +6917,13 @@ class CGPerSignatureCall(CGThing):
                     }
                     """)))
 
-        if idlNode.getExtendedAttribute("Deprecated"):
+        deprecated = (idlNode.getExtendedAttribute("Deprecated") or
+                      (static and descriptor.interface.getExtendedAttribute("Deprecated")))
+        if deprecated:
             cgThings.append(CGGeneric(dedent(
                 """
-                {
-                  GlobalObject global(cx, obj);
-                  if (global.Failed()) {
-                    return false;
-                  }
-                  nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(global.GetAsSupports());
-                  if (pWindow && pWindow->GetExtantDoc()) {
-                    pWindow->GetExtantDoc()->WarnOnceAbout(nsIDocument::e%s);
-                  }
-                }
-                """ % idlNode.getExtendedAttribute("Deprecated")[0])))
+                DeprecationWarning(cx, obj, nsIDocument::e%s);
+                """ % deprecated[0])))
 
         lenientFloatCode = None
         if idlNode.getExtendedAttribute('LenientFloat') is not None:
