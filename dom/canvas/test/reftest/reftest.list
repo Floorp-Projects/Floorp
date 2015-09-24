@@ -159,4 +159,4 @@ pref(canvas.customfocusring.enabled,true) skip-if(B2G) skip-if(Android&&AndroidV
 # Check that captureStream() displays in a local video element
 skip-if(winWidget&&layersGPUAccelerated&&d2d) == capturestream.html wrapper.html?green.png
 
-fuzzy-if(Android,3,40) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,1) == 1177726-text-stroke-bounds.html 1177726-text-stroke-bounds-ref.html
+fuzzy-if(azureSkiaGL,1,2) fuzzy-if(Android,3,40) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,1) == 1177726-text-stroke-bounds.html 1177726-text-stroke-bounds-ref.html
