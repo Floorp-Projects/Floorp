@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function test() {
+add_task(function*() {
   is(gBrowser.tabs.length, 1, "one tab is open initially");
 
   // Add several new tabs in sequence, interrupted by selecting a
@@ -10,26 +10,29 @@ function test() {
   // returning a list of opened tabs for verifying the expected order.
   // The new tab behaviour is documented in bug 465673
   let tabs = [];
+  let promises = [];
   function addTab(aURL, aReferrer) {
-    tabs.push(gBrowser.addTab(aURL, {referrerURI: aReferrer}));
+    let tab = gBrowser.addTab(aURL, {referrerURI: aReferrer});
+    tabs.push(tab);
+    return BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   }
 
-  addTab("http://mochi.test:8888/#0");
+  yield addTab("http://mochi.test:8888/#0");
   gBrowser.selectedTab = tabs[0];
-  addTab("http://mochi.test:8888/#1");
-  addTab("http://mochi.test:8888/#2", gBrowser.currentURI);
-  addTab("http://mochi.test:8888/#3", gBrowser.currentURI);
+  yield addTab("http://mochi.test:8888/#1");
+  yield addTab("http://mochi.test:8888/#2", gBrowser.currentURI);
+  yield addTab("http://mochi.test:8888/#3", gBrowser.currentURI);
   gBrowser.selectedTab = tabs[tabs.length - 1];
   gBrowser.selectedTab = tabs[0];
-  addTab("http://mochi.test:8888/#4", gBrowser.currentURI);
+  yield addTab("http://mochi.test:8888/#4", gBrowser.currentURI);
   gBrowser.selectedTab = tabs[3];
-  addTab("http://mochi.test:8888/#5", gBrowser.currentURI);
+  yield addTab("http://mochi.test:8888/#5", gBrowser.currentURI);
   gBrowser.removeTab(tabs.pop());
-  addTab("about:blank", gBrowser.currentURI);
+  yield addTab("about:blank", gBrowser.currentURI);
   gBrowser.moveTabTo(gBrowser.selectedTab, 1);
-  addTab("http://mochi.test:8888/#6", gBrowser.currentURI);
-  addTab();
-  addTab("http://mochi.test:8888/#7");
+  yield addTab("http://mochi.test:8888/#6", gBrowser.currentURI);
+  yield addTab();
+  yield addTab("http://mochi.test:8888/#7");
 
   function testPosition(tabNum, expectedPosition, msg) {
     is(Array.indexOf(gBrowser.tabs, tabs[tabNum]), expectedPosition, msg);
@@ -46,4 +49,4 @@ function test() {
   testPosition(8, 9, "tab without referrer opens at the end");
 
   tabs.forEach(gBrowser.removeTab, gBrowser);
-}
+});
