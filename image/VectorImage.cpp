@@ -497,14 +497,23 @@ NS_IMETHODIMP
 VectorImage::GetWidth(int32_t* aWidth)
 {
   if (mError || !mIsFullyLoaded) {
-    *aWidth = -1;
-  } else {
-    SVGSVGElement* rootElem = mSVGDocumentWrapper->GetRootSVGElem();
-    MOZ_ASSERT(rootElem, "Should have a root SVG elem, since we finished "
-                         "loading without errors");
-    *aWidth = rootElem->GetIntrinsicWidth();
+    // XXXdholbert Technically we should leave outparam untouched when we
+    // fail. But since many callers don't check for failure, we set it to 0 on
+    // failure, for sane/predictable results.
+    *aWidth = 0;
+    return NS_ERROR_FAILURE;
   }
-  return *aWidth >= 0 ? NS_OK : NS_ERROR_FAILURE;
+
+  SVGSVGElement* rootElem = mSVGDocumentWrapper->GetRootSVGElem();
+  MOZ_ASSERT(rootElem, "Should have a root SVG elem, since we finished "
+             "loading without errors");
+  int32_t rootElemWidth = rootElem->GetIntrinsicWidth();
+  if (rootElemWidth < 0) {
+    *aWidth = 0;
+    return NS_ERROR_FAILURE;
+  }
+  *aWidth = rootElemWidth;
+  return NS_OK;
 }
 
 //******************************************************************************
@@ -561,14 +570,23 @@ NS_IMETHODIMP
 VectorImage::GetHeight(int32_t* aHeight)
 {
   if (mError || !mIsFullyLoaded) {
-    *aHeight = -1;
-  } else {
-    SVGSVGElement* rootElem = mSVGDocumentWrapper->GetRootSVGElem();
-    MOZ_ASSERT(rootElem, "Should have a root SVG elem, since we finished "
-                         "loading without errors");
-    *aHeight = rootElem->GetIntrinsicHeight();
+    // XXXdholbert Technically we should leave outparam untouched when we
+    // fail. But since many callers don't check for failure, we set it to 0 on
+    // failure, for sane/predictable results.
+    *aHeight = 0;
+    return NS_ERROR_FAILURE;
   }
-  return *aHeight >= 0 ? NS_OK : NS_ERROR_FAILURE;
+
+  SVGSVGElement* rootElem = mSVGDocumentWrapper->GetRootSVGElem();
+  MOZ_ASSERT(rootElem, "Should have a root SVG elem, since we finished "
+             "loading without errors");
+  int32_t rootElemHeight = rootElem->GetIntrinsicHeight();
+  if (rootElemHeight < 0) {
+    *aHeight = 0;
+    return NS_ERROR_FAILURE;
+  }
+  *aHeight = rootElemHeight;
+  return NS_OK;
 }
 
 //******************************************************************************

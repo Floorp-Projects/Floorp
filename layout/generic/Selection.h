@@ -103,7 +103,7 @@ public:
   nsresult      SubtractRange(RangeData* aRange, nsRange* aSubtract,
                               nsTArray<RangeData>* aOutput);
   /**
-   * AddItem adds aRange to this Selection.  If mApplyUserSelectStyle is true,
+   * AddItem adds aRange to this Selection.  If mUserInitiated is true,
    * then aRange is first scanned for -moz-user-select:none nodes and split up
    * into multiple ranges to exclude those before adding the resulting ranges
    * to this Selection.
@@ -219,15 +219,15 @@ public:
 
   nsresult     NotifySelectionListeners();
 
-  friend struct AutoApplyUserSelectStyle;
-  struct MOZ_RAII AutoApplyUserSelectStyle
+  friend struct AutoUserInitiated;
+  struct MOZ_RAII AutoUserInitiated
   {
-    explicit AutoApplyUserSelectStyle(Selection* aSelection
-                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mSavedValue(aSelection->mApplyUserSelectStyle)
+    explicit AutoUserInitiated(Selection* aSelection
+                               MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mSavedValue(aSelection->mUserInitiated)
     {
       MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-      aSelection->mApplyUserSelectStyle = true;
+      aSelection->mUserInitiated = true;
     }
     AutoRestore<bool> mSavedValue;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
@@ -321,7 +321,7 @@ private:
    * It determines whether we exclude -moz-user-select:none nodes or not,
    * as well as whether selectstart events will be fired.
    */
-  bool mApplyUserSelectStyle;
+  bool mUserInitiated;
 
   // Non-zero if we don't want any changes we make to the selection to be
   // visible to content. If non-zero, content won't be notified about changes.

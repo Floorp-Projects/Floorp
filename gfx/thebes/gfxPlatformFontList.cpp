@@ -237,18 +237,9 @@ gfxPlatformFontList::GenerateFontListKey(const nsAString& aKeyName, nsAString& a
     ToLowerCase(aResult);
 }
 
-struct InitOtherNamesData {
-    InitOtherNamesData(gfxPlatformFontList *aFontList,
-                       TimeStamp aStartTime)
-        : mFontList(aFontList), mStartTime(aStartTime), mTimedOut(false)
-    {}
+#define OTHERNAMES_TIMEOUT 200
 
-    gfxPlatformFontList *mFontList;
-    TimeStamp mStartTime;
-    bool mTimedOut;
-};
-
-void 
+void
 gfxPlatformFontList::InitOtherFamilyNames()
 {
     if (mOtherFamilyNamesInitialized) {
@@ -256,14 +247,19 @@ gfxPlatformFontList::InitOtherFamilyNames()
     }
 
     TimeStamp start = TimeStamp::Now();
+    bool timedOut = false;
 
-    // iterate over all font families and read in other family names
-    InitOtherNamesData otherNamesData(this, start);
+    for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
+        nsRefPtr<gfxFontFamily>& family = iter.Data();
+        family->ReadOtherFamilyNames(this);
+        TimeDuration elapsed = TimeStamp::Now() - start;
+        if (elapsed.ToMilliseconds() > OTHERNAMES_TIMEOUT) {
+            timedOut = true;
+            break;
+        }
+    }
 
-    mFontFamilies.Enumerate(gfxPlatformFontList::InitOtherFamilyNamesProc,
-                            &otherNamesData);
-
-    if (!otherNamesData.mTimedOut) {
+    if (!timedOut) {
         mOtherFamilyNamesInitialized = true;
     }
     TimeStamp end = TimeStamp::Now();
@@ -274,55 +270,44 @@ gfxPlatformFontList::InitOtherFamilyNames()
         TimeDuration elapsed = end - start;
         LOG_FONTINIT(("(fontinit) InitOtherFamilyNames took %8.2f ms %s",
                       elapsed.ToMilliseconds(),
-                      (otherNamesData.mTimedOut ? "timeout" : "")));
+                      (timedOut ? "timeout" : "")));
     }
 }
 
-#define OTHERNAMES_TIMEOUT 200
-
-PLDHashOperator
-gfxPlatformFontList::InitOtherFamilyNamesProc(nsStringHashKey::KeyType aKey,
-                                              nsRefPtr<gfxFontFamily>& aFamilyEntry,
-                                              void* userArg)
-{
-    InitOtherNamesData *data = static_cast<InitOtherNamesData*>(userArg);
-
-    aFamilyEntry->ReadOtherFamilyNames(data->mFontList);
-    TimeDuration elapsed = TimeStamp::Now() - data->mStartTime;
-    if (elapsed.ToMilliseconds() > OTHERNAMES_TIMEOUT) {
-        data->mTimedOut = true;
-        return PL_DHASH_STOP;
-    }
-    return PL_DHASH_NEXT;
-}
- 
-struct ReadFaceNamesData {
-    ReadFaceNamesData(gfxPlatformFontList *aFontList, TimeStamp aStartTime)
-        : mFontList(aFontList), mStartTime(aStartTime), mTimedOut(false),
-          mFirstChar(0)
-    {}
-
-    gfxPlatformFontList *mFontList;
-    TimeStamp mStartTime;
-    bool mTimedOut;
-
-    // if mFirstChar is not 0, only load facenames for families
-    // that start with this character
-    char16_t mFirstChar;
-};
+// time limit for loading facename lists (ms)
+#define NAMELIST_TIMEOUT  200
 
 gfxFontEntry*
 gfxPlatformFontList::SearchFamiliesForFaceName(const nsAString& aFaceName)
 {
     TimeStamp start = TimeStamp::Now();
+    bool timedOut = false;
+    // if mFirstChar is not 0, only load facenames for families
+    // that start with this character
+    char16_t firstChar = 0;
     gfxFontEntry *lookup = nullptr;
 
-    ReadFaceNamesData faceNameListsData(this, start);
-
     // iterate over familes starting with the same letter
-    faceNameListsData.mFirstChar = ToLowerCase(aFaceName.CharAt(0));
-    mFontFamilies.Enumerate(gfxPlatformFontList::ReadFaceNamesProc,
-                            &faceNameListsData);
+    firstChar = ToLowerCase(aFaceName.CharAt(0));
+
+    for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
+        nsStringHashKey::KeyType key = iter.Key();
+        nsRefPtr<gfxFontFamily>& family = iter.Data();
+
+        // when filtering, skip names that don't start with the filter character
+        if (firstChar && ToLowerCase(key.CharAt(0)) != firstChar) {
+            continue;
+        }
+
+        family->ReadFaceNames(this, NeedFullnamePostscriptNames());
+
+        TimeDuration elapsed = TimeStamp::Now() - start;
+        if (elapsed.ToMilliseconds() > NAMELIST_TIMEOUT) {
+           timedOut = true;
+           break;
+        }
+    }
+
     lookup = FindFaceName(aFaceName);
 
     TimeStamp end = TimeStamp::Now();
@@ -333,36 +318,10 @@ gfxPlatformFontList::SearchFamiliesForFaceName(const nsAString& aFaceName)
         LOG_FONTINIT(("(fontinit) SearchFamiliesForFaceName took %8.2f ms %s %s",
                       elapsed.ToMilliseconds(),
                       (lookup ? "found name" : ""),
-                      (faceNameListsData.mTimedOut ? "timeout" : "")));
+                      (timedOut ? "timeout" : "")));
     }
 
     return lookup;
-}
-
-// time limit for loading facename lists (ms)
-#define NAMELIST_TIMEOUT  200
-
-PLDHashOperator
-gfxPlatformFontList::ReadFaceNamesProc(nsStringHashKey::KeyType aKey,
-                                       nsRefPtr<gfxFontFamily>& aFamilyEntry,
-                                       void* userArg)
-{
-    ReadFaceNamesData *data = static_cast<ReadFaceNamesData*>(userArg);
-    gfxPlatformFontList *fc = data->mFontList;
-
-    // when filtering, skip names that don't start with the filter character
-    if (data->mFirstChar && ToLowerCase(aKey.CharAt(0)) != data->mFirstChar) {
-        return PL_DHASH_NEXT;
-    }
-
-    aFamilyEntry->ReadFaceNames(fc, fc->NeedFullnamePostscriptNames());
-
-    TimeDuration elapsed = TimeStamp::Now() - data->mStartTime;
-    if (elapsed.ToMilliseconds() > NAMELIST_TIMEOUT) {
-        data->mTimedOut = true;
-        return PL_DHASH_STOP;
-    }
-    return PL_DHASH_NEXT;
 }
 
 gfxFontEntry*
@@ -449,84 +408,49 @@ gfxPlatformFontList::UpdateFontList()
     RebuildLocalFonts();
 }
 
-struct FontListData {
-    FontListData(nsIAtom *aLangGroup,
-                 const nsACString& aGenericFamily,
-                 nsTArray<nsString>& aListOfFonts) :
-        mLangGroup(aLangGroup), mGenericFamily(aGenericFamily),
-        mListOfFonts(aListOfFonts) {}
-    nsIAtom *mLangGroup;
-    const nsACString& mGenericFamily;
-    nsTArray<nsString>& mListOfFonts;
-};
-
-PLDHashOperator
-gfxPlatformFontList::HashEnumFuncForFamilies(nsStringHashKey::KeyType aKey,
-                                             nsRefPtr<gfxFontFamily>& aFamilyEntry,
-                                             void *aUserArg)
-{
-    FontListData *data = static_cast<FontListData*>(aUserArg);
-
-    // use the first variation for now.  This data should be the same
-    // for all the variations and should probably be moved up to
-    // the Family
-    gfxFontStyle style;
-    style.language = data->mLangGroup;
-    bool needsBold;
-    nsRefPtr<gfxFontEntry> aFontEntry = aFamilyEntry->FindFontForStyle(style, needsBold);
-    NS_ASSERTION(aFontEntry, "couldn't find any font entry in family");
-    if (!aFontEntry)
-        return PL_DHASH_NEXT;
-
-    /* skip symbol fonts */
-    if (aFontEntry->IsSymbolFont())
-        return PL_DHASH_NEXT;
-
-    if (aFontEntry->SupportsLangGroup(data->mLangGroup) &&
-        aFontEntry->MatchesGenericFamily(data->mGenericFamily)) {
-        nsAutoString localizedFamilyName;
-        aFamilyEntry->LocalizedName(localizedFamilyName);
-        data->mListOfFonts.AppendElement(localizedFamilyName);
-    }
-
-    return PL_DHASH_NEXT;
-}
-
 void
 gfxPlatformFontList::GetFontList(nsIAtom *aLangGroup,
                                  const nsACString& aGenericFamily,
                                  nsTArray<nsString>& aListOfFonts)
 {
-    FontListData data(aLangGroup, aGenericFamily, aListOfFonts);
+    for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
+        nsRefPtr<gfxFontFamily>& family = iter.Data();
+        // use the first variation for now.  This data should be the same
+        // for all the variations and should probably be moved up to
+        // the Family
+        gfxFontStyle style;
+        style.language = aLangGroup;
+        bool needsBold;
+        nsRefPtr<gfxFontEntry> fontEntry = family->FindFontForStyle(style, needsBold);
+        NS_ASSERTION(fontEntry, "couldn't find any font entry in family");
+        if (!fontEntry) {
+            continue;
+        }
 
-    mFontFamilies.Enumerate(gfxPlatformFontList::HashEnumFuncForFamilies, &data);
+        /* skip symbol fonts */
+        if (fontEntry->IsSymbolFont()) {
+            continue;
+        }
+
+        if (fontEntry->SupportsLangGroup(aLangGroup) &&
+            fontEntry->MatchesGenericFamily(aGenericFamily)) {
+            nsAutoString localizedFamilyName;
+            family->LocalizedName(localizedFamilyName);
+            aListOfFonts.AppendElement(localizedFamilyName);
+        }
+    }
 
     aListOfFonts.Sort();
     aListOfFonts.Compact();
 }
 
-struct FontFamilyListData {
-    explicit FontFamilyListData(nsTArray<nsRefPtr<gfxFontFamily> >& aFamilyArray) 
-        : mFamilyArray(aFamilyArray)
-    {}
-
-    static PLDHashOperator AppendFamily(nsStringHashKey::KeyType aKey,
-                                        nsRefPtr<gfxFontFamily>& aFamilyEntry,
-                                        void *aUserArg)
-    {
-        FontFamilyListData *data = static_cast<FontFamilyListData*>(aUserArg);
-        data->mFamilyArray.AppendElement(aFamilyEntry);
-        return PL_DHASH_NEXT;
-    }
-
-    nsTArray<nsRefPtr<gfxFontFamily> >& mFamilyArray;
-};
-
 void
 gfxPlatformFontList::GetFontFamilyList(nsTArray<nsRefPtr<gfxFontFamily> >& aFamilyArray)
 {
-    FontFamilyListData data(aFamilyArray);
-    mFontFamilies.Enumerate(FontFamilyListData::AppendFamily, &data);
+    for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
+        nsRefPtr<gfxFontFamily>& family = iter.Data();
+        aFamilyArray.AppendElement(family);
+    }
 }
 
 gfxFontEntry*
@@ -616,18 +540,6 @@ gfxPlatformFontList::SystemFindFontForChar(uint32_t aCh, uint32_t aNextCh,
     return fontEntry;
 }
 
-PLDHashOperator 
-gfxPlatformFontList::FindFontForCharProc(nsStringHashKey::KeyType aKey, nsRefPtr<gfxFontFamily>& aFamilyEntry,
-     void *userArg)
-{
-    GlobalFontMatch *data = static_cast<GlobalFontMatch*>(userArg);
-
-    // evaluate all fonts in this family for a match
-    aFamilyEntry->FindFontForChar(data);
-
-    return PL_DHASH_NEXT;
-}
-
 #define NUM_FALLBACK_FONTS        8
 
 gfxFontEntry*
@@ -677,7 +589,11 @@ gfxPlatformFontList::GlobalFontFallback(const uint32_t aCh,
     GlobalFontMatch data(aCh, aRunScript, aMatchStyle);
 
     // iterate over all font families to find a font that support the character
-    mFontFamilies.Enumerate(gfxPlatformFontList::FindFontForCharProc, &data);
+    for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
+      nsRefPtr<gfxFontFamily>& family = iter.Data();
+      // evaluate all fonts in this family for a match
+      family->FindFontForChar(&data);
+    }
 
     aCmapCount = data.mCmapsTested;
     *aMatchedFamily = data.mMatchedFamily;
@@ -885,22 +801,16 @@ gfxPlatformFontList::RemoveCmap(const gfxCharacterMap* aCharMap)
     }
 }
 
-static PLDHashOperator AppendFamilyToList(nsStringHashKey::KeyType aKey,
-                                          nsRefPtr<gfxFontFamily>& aFamilyEntry,
-                                          void *aUserArg)
-{
-    nsTArray<nsString> *familyNames = static_cast<nsTArray<nsString> *>(aUserArg);
-    familyNames->AppendElement(aFamilyEntry->Name());
-    return PL_DHASH_NEXT;
-}
-
 void
 gfxPlatformFontList::GetFontFamilyNames(nsTArray<nsString>& aFontFamilyNames)
 {
-    mFontFamilies.Enumerate(AppendFamilyToList, &aFontFamilyNames);
+    for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
+        nsRefPtr<gfxFontFamily>& family = iter.Data();
+        aFontFamilyNames.AppendElement(family->Name());
+    }
 }
 
-void 
+void
 gfxPlatformFontList::InitLoader()
 {
     GetFontFamilyNames(mFontInfo->mFontFamiliesToLoad);

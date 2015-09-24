@@ -16,6 +16,7 @@ const APP_TRUSTED_ROOTS= ["AppMarketplaceProdPublicRoot",
                           "AppMarketplaceDevPublicRoot",
                           "AppMarketplaceDevReviewersRoot",
                           "AppMarketplaceStageRoot",
+                          "PrivilegedPackageRoot",
                           "AppXPCShellRoot"];
 
 this.TrustedRootCertificate = {
