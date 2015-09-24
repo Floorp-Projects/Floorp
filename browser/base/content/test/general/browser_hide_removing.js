@@ -7,6 +7,12 @@
 function test() {
   waitForExplicitFinish();
 
+  // Ensure TabView has been initialized already. Otherwise it could
+  // activate at an unexpected time and show/hide tabs.
+  TabView._initFrame(runTest);
+}
+
+function runTest() {
   // Add a tab that will get removed and hidden
   let testTab = gBrowser.addTab("about:blank", {skipAnimation: true});
   is(gBrowser.visibleTabs.length, 2, "just added a tab, so 2 tabs");
