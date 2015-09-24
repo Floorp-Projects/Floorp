@@ -403,28 +403,6 @@ BasePrincipal::CreateCodebasePrincipal(nsIURI* aURI, OriginAttributes& aAttrs)
   return codebase.forget();
 }
 
-already_AddRefed<BasePrincipal>
-BasePrincipal::CreateCodebasePrincipal(const nsACString& aOrigin)
-{
-  MOZ_ASSERT(!StringBeginsWith(aOrigin, NS_LITERAL_CSTRING("[")),
-             "CreateCodebasePrincipal does not support System and Expanded principals");
-
-  MOZ_ASSERT(!StringBeginsWith(aOrigin, NS_LITERAL_CSTRING(NS_NULLPRINCIPAL_SCHEME ":")),
-             "CreateCodebasePrincipal does not support nsNullPrincipal");
-
-  nsAutoCString originNoSuffix;
-  mozilla::OriginAttributes attrs;
-  if (!attrs.PopulateFromOrigin(aOrigin, originNoSuffix)) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), originNoSuffix);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  return BasePrincipal::CreateCodebasePrincipal(uri, attrs);
-}
-
 bool
 BasePrincipal::AddonAllowsLoad(nsIURI* aURI)
 {

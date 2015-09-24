@@ -29,7 +29,7 @@ function importPrefBranch(aPrefBranch, aPermission, aAction) {
     for (let origin of origins) {
       let principals = [];
       try {
-        principals = [ Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin) ];
+        principals = [ BrowserUtils.principalFromOrigin(origin) ];
       } catch (e) {
         // This preference used to contain a list of hosts. For back-compat
         // reasons, we convert these hosts into http:// and https:// permissions
