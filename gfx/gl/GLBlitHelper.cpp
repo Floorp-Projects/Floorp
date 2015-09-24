@@ -900,10 +900,8 @@ GLBlitHelper::BlitImageToTexture(layers::Image* srcImage,
                                  OriginPos destOrigin)
 {
     ScopedFramebufferForTexture autoFBForTex(mGL, destTex, destTarget);
-
-    if (!autoFBForTex.IsComplete()) {
-        MOZ_CRASH("ScopedFramebufferForTexture failed.");
-    }
+    if (!autoFBForTex.IsComplete())
+        return false;
 
     return BlitImageToFramebuffer(srcImage, destSize, autoFBForTex.FB(), destOrigin);
 }
