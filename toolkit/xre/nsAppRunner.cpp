@@ -193,17 +193,6 @@
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
 #include "nsIPrefService.h"
 #include "nsIMemoryInfoDumper.h"
-
-// Provide MOZ_ReportMozCrashToCrashReporter for reporting MOZ_CRASH errors
-// See /mfbt/Assertions.h for more information
-extern "C" {
-void
-MOZ_ReportMozCrashToCrashReporter(const char* aStr)
-{
-  nsDependentCString msg(aStr);
-  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("MOZ_CRASH"), msg);
-}
-}
 #endif
 
 #include "base/command_line.h"
