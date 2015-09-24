@@ -514,7 +514,7 @@
         else {
           let isVertical = event.axis == event.VERTICAL_AXIS;
 
-          if (this._prevMouseScrolls.every(function(prev) prev == isVertical))
+          if (this._prevMouseScrolls.every(prev => prev == isVertical))
             this.scrollByIndex(isVertical && this._isRTLScrollbox ? -event.detail :
                                                                     event.detail);
 

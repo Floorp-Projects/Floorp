@@ -567,7 +567,7 @@
         ({
           _autocomplete: this,
           _kGlobalClipboard: Components.interfaces.nsIClipboard.kGlobalClipboard,
-          supportsCommand: function(aCommand) aCommand == "cmd_paste",
+          supportsCommand: aCommand => aCommand == "cmd_paste",
           doCommand: function(aCommand) {
             this._autocomplete._valueIsPasted = true;
             this._autocomplete.editor.paste(this._kGlobalClipboard);

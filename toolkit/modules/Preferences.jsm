@@ -50,7 +50,7 @@ this.Preferences =
  */
 Preferences.get = function(prefName, defaultValue, valueType = Ci.nsISupportsString) {
   if (Array.isArray(prefName))
-    return prefName.map(function(v) this.get(v, defaultValue), this);
+    return prefName.map(v => this.get(v, defaultValue));
 
   return this._get(prefName, defaultValue, valueType);
 };
@@ -204,7 +204,7 @@ Preferences.modified = function(prefName) { return this.isSet(prefName) },
 
 Preferences.reset = function(prefName) {
   if (Array.isArray(prefName)) {
-    prefName.map(function(v) this.reset(v), this);
+    prefName.map(v => this.reset(v));
     return;
   }
 
@@ -312,9 +312,9 @@ Preferences.ignore = function(prefName, callback, thisObject) {
   // make it.  We could index by fullBranch, but we can't index by callback
   // or thisObject, as far as I know, since the keys to JavaScript hashes
   // (a.k.a. objects) can apparently only be primitive values.
-  let [observer] = observers.filter(function(v) v.prefName   == fullPrefName &&
-                                                v.callback   == callback &&
-                                                v.thisObject == thisObject);
+  let [observer] = observers.filter(v => v.prefName   == fullPrefName &&
+                                         v.callback   == callback &&
+                                         v.thisObject == thisObject);
 
   if (observer) {
     Preferences._prefBranch.removeObserver(fullPrefName, observer);

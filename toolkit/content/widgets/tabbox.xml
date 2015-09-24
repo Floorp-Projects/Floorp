@@ -812,7 +812,7 @@
           // '-moz-user-focus' so that tabs can be focused by keyboard again.
           if (!isTabFocused) {
             this.setAttribute("ignorefocus", "true");
-            setTimeout(function (tab) tab.removeAttribute("ignorefocus"), 0, this);
+            setTimeout(tab => tab.removeAttribute("ignorefocus"), 0, this);
           }
 
           if (stopwatchid) {
