@@ -487,3 +487,18 @@ add_task(function* test_match_current() {
 
   yield promiseShutdownManager();
 });
+
+// Tests that a set with a minor change doesn't re-download existing files
+add_task(function* test_match_current() {
+  yield setup_conditions(TEST_CONDITIONS.withBothSets);
+
+  // The missing file here is unneeded since there is a local version already
+  yield install_system_addons(yield build_xml([
+    { id: "system2@tests.mozilla.org", version: "2.0", path: "missing.xpi" },
+    { id: "system4@tests.mozilla.org", version: "1.0", path: "system4_1.xpi" }
+  ]));
+
+  yield verify_state([true, null, "2.0", null, "1.0", null]);
+
+  yield promiseShutdownManager();
+});
