@@ -507,9 +507,12 @@ status_t MPEG4Extractor::readMetaData() {
     CHECK_NE(err, (status_t)NO_INIT);
 
     // copy pssh data into file metadata
-    int psshsize = 0;
+    uint64_t psshsize = 0;
     for (size_t i = 0; i < mPssh.Length(); i++) {
         psshsize += 20 + mPssh[i].datalen;
+    }
+    if (psshsize > kMAX_ALLOCATION) {
+        return ERROR_MALFORMED;
     }
     if (psshsize) {
         char *buf = (char*)malloc(psshsize);
