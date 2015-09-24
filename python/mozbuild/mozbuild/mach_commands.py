@@ -561,9 +561,8 @@ class Build(MachCommandBase):
     @CommandArgument('-b', '--backend', nargs='+',
         choices=['RecursiveMake', 'AndroidEclipse', 'CppEclipse',
                  'VisualStudio', 'FasterMake'],
-        default=['RecursiveMake'],
-        help='Which backend to build (default: RecursiveMake).')
-    def build_backend(self, backend='RecursiveMake', diff=False):
+        help='Which backend to build.')
+    def build_backend(self, backend, diff=False):
         python = self.virtualenv_manager.python_path
         config_status = os.path.join(self.topobjdir, 'config.status')
 
@@ -573,7 +572,10 @@ class Build(MachCommandBase):
                   % backend)
             return 1
 
-        args = [python, config_status, '--backend'] + backend
+        args = [python, config_status]
+        if backend:
+            args.append('--backend')
+            args.extend(backend)
         if diff:
             args.append('--diff')
 

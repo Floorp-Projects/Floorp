@@ -222,3 +222,15 @@ MOZ_RUN_CONFIG_STATUS()],
 define([AC_CONFIG_HEADER],
 [m4_fatal([Use CONFIGURE_DEFINE_FILES in moz.build files to produce header files.])
 ])
+
+define([MOZ_BUILD_BACKEND],
+[
+BUILD_BACKENDS="RecursiveMake"
+
+MOZ_ARG_ENABLE_STRING(build-backend,
+[  --enable-build-backend={AndroidEclipse,CppEclipse,VisualStudio,FasterMake}
+                         Enable additional build backends],
+[ BUILD_BACKENDS="RecursiveMake `echo $enableval | sed 's/,/ /g'`"])
+
+AC_SUBST_LIST([BUILD_BACKENDS])
+])

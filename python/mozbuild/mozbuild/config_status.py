@@ -88,6 +88,15 @@ def config_status(topobjdir='.', topsrcdir='.',
         raise Exception('topsrcdir must be defined as an absolute directory: '
             '%s' % topsrcdir)
 
+    default_backends = ['RecursiveMake']
+    # We have a chicken/egg problem, where we only have a dict for substs after
+    # creating the ConfigEnvironment, which requires argument parsing to have
+    # occurred.
+    for name, value in substs:
+        if name == 'BUILD_BACKENDS':
+            default_backends = value
+            break
+
     parser = ArgumentParser()
     parser.add_argument('--recheck', dest='recheck', action='store_true',
                         help='update config.status by reconfiguring in the same conditions')
@@ -100,8 +109,9 @@ def config_status(topobjdir='.', topsrcdir='.',
     parser.add_argument('-b', '--backend', nargs='+',
                         choices=['RecursiveMake', 'AndroidEclipse', 'CppEclipse',
                                  'VisualStudio', 'FasterMake'],
-                        default=['RecursiveMake'],
-                        help='what backend to build (default: RecursiveMake).')
+                        default=default_backends,
+                        help='what backend to build (default: %s).' %
+                        ' '.join(default_backends))
     options = parser.parse_args()
 
     # Without -n, the current directory is meant to be the top object directory
