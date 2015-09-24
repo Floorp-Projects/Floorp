@@ -68,9 +68,12 @@ class SearchEngineRow extends AnimatedHeightLayout {
     // Selected suggestion view
     private int mSelectedView;
 
-    // Maximums for suggestions based on form factor
-    private static final int TABLET_MAX = 4;
-    private static final int PHONE_MAX = 2;
+    // Maximums for suggestions
+    private int mMaxSavedSuggestions;
+    private int mMaxSearchSuggestions;
+
+    // Remove this default limit value in Bug 1201325
+    private static final int SUGGESTIONS_MAX = 4;
 
     public SearchEngineRow(Context context) {
         this(context, null);
@@ -132,6 +135,10 @@ class SearchEngineRow extends AnimatedHeightLayout {
         mUserEnteredView.setOnClickListener(mClickListener);
 
         mUserEnteredTextView = (TextView) findViewById(R.id.suggestion_text);
+
+        // Suggestion limits
+        mMaxSavedSuggestions = getResources().getInteger(R.integer.max_saved_suggestions);
+        mMaxSearchSuggestions = getResources().getInteger(R.integer.max_search_suggestions);
     }
 
     private void setDescriptionOnSuggestion(View v, String suggestion) {
@@ -262,14 +269,14 @@ class SearchEngineRow extends AnimatedHeightLayout {
         if (!AppConstants.NIGHTLY_BUILD) {
             return null;
         }
+
         final ContentResolver cr = getContext().getContentResolver();
 
         String[] columns = new String[] { SearchHistory.QUERY };
         String actualQuery = SearchHistory.QUERY + " LIKE ?";
         String[] queryArgs = new String[] { '%' + searchTerm + '%' };
-        final int limit = HardwareUtils.isTablet() ? TABLET_MAX : PHONE_MAX;
 
-        String sortOrderAndLimit = SearchHistory.DATE +" DESC LIMIT "+limit;
+        String sortOrderAndLimit = SearchHistory.DATE +" DESC LIMIT " + mMaxSavedSuggestions;
         return cr.query(SearchHistory.CONTENT_URI, columns, actualQuery, queryArgs, sortOrderAndLimit);
     }
 
@@ -278,25 +285,26 @@ class SearchEngineRow extends AnimatedHeightLayout {
      *
      * @param animate whether or not to animate suggestions for visual polish
      * @param recycledSuggestionCount How many suggestion "button" views we could recycle from previous calls
-     * @param savedCount how many saved searches this searchTerm has
+     * @param savedSuggestionCount how many saved searches this searchTerm has
      * @return the global count of how many suggestions have been bound/shown in the search engine row
      */
-    private int updateFromSearchEngine(boolean animate, int recycledSuggestionCount, int savedCount) {
-
+    private int updateFromSearchEngine(boolean animate, int recycledSuggestionCount, int savedSuggestionCount) {
         // Remove this default limit value in Bug 1201325
-        int limit = TABLET_MAX;
+        int maxSuggestions = SUGGESTIONS_MAX;
         if (AppConstants.NIGHTLY_BUILD) {
-            limit = HardwareUtils.isTablet() ? TABLET_MAX : PHONE_MAX;
+            maxSuggestions = mMaxSearchSuggestions;
             // If there are less than max saved searches on phones, fill the space with more search engine suggestions
-            if (!HardwareUtils.isTablet() && savedCount < PHONE_MAX) {
-                    limit += PHONE_MAX - savedCount;
+            if (!HardwareUtils.isTablet() && savedSuggestionCount < mMaxSavedSuggestions) {
+                maxSuggestions += mMaxSavedSuggestions - savedSuggestionCount;
             }
         }
+
         int suggestionCounter = 0;
         for (String suggestion : mSearchEngine.getSuggestions()) {
-            if (suggestionCounter == limit) {
+            if (suggestionCounter == maxSuggestions) {
                 break;
             }
+
             // Since the search engine suggestions are listed first, we can use suggestionCounter to get their relative positions for telemetry
             String telemetryTag = "engine." + suggestionCounter;
             bindSuggestionView(suggestion, animate, recycledSuggestionCount, suggestionCounter, false, telemetryTag);
