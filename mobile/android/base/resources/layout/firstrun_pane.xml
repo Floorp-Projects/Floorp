@@ -16,13 +16,12 @@
                     android:layout_height="match_parent"
                     android:background="@color/firstrun_pager_background">
 
-        <org.mozilla.gecko.home.HomePagerTabStrip android:id="@+id/firstrun_tab_strip"
-                           android:layout_width="match_parent"
-                           android:layout_height="40dp"
-                           android:layout_gravity="top"
-                           android:gravity="center_vertical"
-                           android:background="@color/firstrun_tabstrip"
-                           gecko:tabIndicatorColor="@color/fennec_ui_orange"
-                           android:textColor="@color/android:white"/>
+        <org.mozilla.gecko.home.TabMenuStrip android:layout_width="match_parent"
+                                             android:layout_height="@dimen/tabs_strip_height"
+                                             android:background="@color/firstrun_tabstrip"
+                                             android:visibility="visible"
+                                             android:layout_gravity="top"
+                                             gecko:strip="@drawable/home_tab_menu_strip"/>
+
     </org.mozilla.gecko.firstrun.FirstrunPager>
 </org.mozilla.gecko.firstrun.FirstrunPane>
