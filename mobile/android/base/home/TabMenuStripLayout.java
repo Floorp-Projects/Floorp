@@ -27,7 +27,7 @@ import android.widget.TextView;
 class TabMenuStripLayout extends LinearLayout
                          implements View.OnFocusChangeListener {
 
-    private HomePager.OnTitleClickListener onTitleClickListener;
+    private TabMenuStrip.OnTitleClickListener onTitleClickListener;
     private Drawable strip;
     private TextView selectedView;
 
@@ -209,7 +209,7 @@ class TabMenuStripLayout extends LinearLayout
         }
     }
 
-    void setOnTitleClickListener(HomePager.OnTitleClickListener onTitleClickListener) {
+    void setOnTitleClickListener(TabMenuStrip.OnTitleClickListener onTitleClickListener) {
         this.onTitleClickListener = onTitleClickListener;
     }
 

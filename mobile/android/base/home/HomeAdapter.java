@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-class HomeAdapter extends FragmentStatePagerAdapter {
+public class HomeAdapter extends FragmentStatePagerAdapter {
 
     private final Context mContext;
     private final ArrayList<PanelInfo> mPanelInfos;
@@ -29,8 +29,8 @@ class HomeAdapter extends FragmentStatePagerAdapter {
 
     private OnAddPanelListener mAddPanelListener;
 
-    interface OnAddPanelListener {
-        public void onAddPanel(String title);
+    public interface OnAddPanelListener {
+        void onAddPanel(String title);
     }
 
     public HomeAdapter(Context context, FragmentManager fm) {
