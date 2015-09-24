@@ -6663,10 +6663,9 @@ nsLayoutUtils::GetTextRunOrientFlagsForStyle(nsStyleContext* aStyleContext)
       return 0;
     }
 
-  /* not yet implemented:
   case NS_STYLE_WRITING_MODE_SIDEWAYS_LR:
     return gfxTextRunFactory::TEXT_ORIENT_VERTICAL_SIDEWAYS_LEFT;
-  */
+
   case NS_STYLE_WRITING_MODE_SIDEWAYS_RL:
     return gfxTextRunFactory::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
 
