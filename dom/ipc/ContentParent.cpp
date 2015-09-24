@@ -114,6 +114,7 @@
 #include "nsIClipboard.h"
 #include "nsContentPermissionHelper.h"
 #include "nsICycleCollectorListener.h"
+#include "nsIDocShellTreeOwner.h"
 #include "nsIDocument.h"
 #include "nsIDOMGeoGeolocation.h"
 #include "nsIDOMGeoPositionError.h"
@@ -124,6 +125,7 @@
 #include "nsIFormProcessor.h"
 #include "nsIGfxInfo.h"
 #include "nsIIdleService.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIMemoryInfoDumper.h"
 #include "nsIMemoryReporter.h"
 #include "nsIMozBrowserFrame.h"
@@ -1234,7 +1236,18 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
                                   constructorSender->ChildID());
         }
         if (constructorSender) {
+            nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+            docShell->GetTreeOwner(getter_AddRefs(treeOwner));
+            if (!treeOwner) {
+                return nullptr;
+            }
+
+            nsCOMPtr<nsIWebBrowserChrome> wbc = do_GetInterface(treeOwner);
+            if (!wbc) {
+                return nullptr;
+            }
             uint32_t chromeFlags = 0;
+            wbc->GetChromeFlags(&chromeFlags);
 
             nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
             if (loadContext && loadContext->UsePrivateBrowsing()) {
@@ -2189,7 +2202,7 @@ ContentParent::StartForceKillTimer()
         return;
     }
 
-    int32_t timeoutSecs = Preferences::GetInt("dom.ipc.tabs.shutdownTimeoutSecs", 0);
+    int32_t timeoutSecs = Preferences::GetInt("dom.ipc.tabs.shutdownTimeoutSecs", 5);
     if (timeoutSecs > 0) {
         mForceKillTimer = do_CreateInstance("@mozilla.org/timer;1");
         MOZ_ASSERT(mForceKillTimer);
@@ -3471,6 +3484,14 @@ ContentParent::DeallocPRemoteSpellcheckEngineParent(PRemoteSpellcheckEngineParen
 /* static */ void
 ContentParent::ForceKillTimerCallback(nsITimer* aTimer, void* aClosure)
 {
+#ifdef ENABLE_TESTS
+    // We don't want to time out the content process during XPCShell tests. This
+    // is the easiest way to ensure that.
+    if (PR_GetEnv("XPCSHELL_TEST_PROFILE_DIR")) {
+        return;
+    }
+#endif
+
     auto self = static_cast<ContentParent*>(aClosure);
     self->KillHard("ShutDownKill");
 }

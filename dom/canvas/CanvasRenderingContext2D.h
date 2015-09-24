@@ -718,6 +718,9 @@ protected:
   bool mResetLayer;
   // This is needed for drawing in drawAsyncXULElement
   bool mIPC;
+  // True if the current DrawTarget is using skia-gl, used so we can avoid
+  // requesting the DT from mBufferProvider to check.
+  bool mIsSkiaGL;
 
   nsTArray<CanvasRenderingContext2DUserData*> mUserDatas;
 

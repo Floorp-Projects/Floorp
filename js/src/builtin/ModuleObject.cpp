@@ -212,6 +212,13 @@ ExportEntryObject::create(JSContext* cx,
 }
 
 ///////////////////////////////////////////////////////////////////////////
+// IndirectBinding
+
+IndirectBinding::IndirectBinding(Handle<ModuleEnvironmentObject*> environment, HandleId localName)
+  : environment(environment), localName(localName)
+{}
+
+///////////////////////////////////////////////////////////////////////////
 // ModuleObject
 
 /* static */ const Class
@@ -228,7 +235,7 @@ ModuleObject::class_ = {
     nullptr,        /* resolve     */
     nullptr,        /* mayResolve  */
     nullptr,        /* convert     */
-    nullptr,        /* finalize    */
+    ModuleObject::finalize,
     nullptr,        /* call        */
     nullptr,        /* hasInstance */
     nullptr,        /* construct   */
@@ -257,7 +264,39 @@ ModuleObject::isInstance(HandleValue value)
 /* static */ ModuleObject*
 ModuleObject::create(ExclusiveContext* cx)
 {
-    return NewBuiltinClassInstance<ModuleObject>(cx, TenuredObject);
+    Rooted<ModuleObject*> self(cx, NewBuiltinClassInstance<ModuleObject>(cx, TenuredObject));
+
+    IndirectBindingMap* bindings = cx->new_<IndirectBindingMap>();
+    if (!bindings || !bindings->init()) {
+        ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
+    self->setReservedSlot(ImportBindingsSlot, PrivateValue(bindings));
+
+    return self;
+}
+
+/* static */ void
+ModuleObject::finalize(js::FreeOp* fop, JSObject* obj)
+{
+    fop->delete_(&obj->as<ModuleObject>().importBindings());
+}
+
+ModuleEnvironmentObject*
+ModuleObject::environment() const
+{
+    Value value = getReservedSlot(EnvironmentSlot);
+    if (value.isUndefined())
+        return nullptr;
+
+    return &value.toObject().as<ModuleEnvironmentObject>();
+}
+
+IndirectBindingMap&
+ModuleObject::importBindings()
+{
+    return *static_cast<IndirectBindingMap*>(getReservedSlot(ImportBindingsSlot).toPrivate());
 }
 
 void
@@ -265,6 +304,7 @@ ModuleObject::init(HandleScript script)
 {
     MOZ_ASSERT(!script->enclosingStaticScope());
     initReservedSlot(ScriptSlot, PrivateValue(script));
+    initReservedSlot(EvaluatedSlot, BooleanValue(false));
 }
 
 void
@@ -301,6 +341,12 @@ ModuleObject::script() const
     return static_cast<JSScript*>(getReservedSlot(ScriptSlot).toPrivate());
 }
 
+bool
+ModuleObject::evaluated() const
+{
+    return getReservedSlot(EvaluatedSlot).toBoolean();
+}
+
 ModuleEnvironmentObject&
 ModuleObject::initialEnvironment() const
 {
@@ -325,9 +371,45 @@ ModuleObject::trace(JSTracer* trc, JSObject* obj)
         TraceManuallyBarrieredEdge(trc, &script, "Module script");
         module.setReservedSlot(ScriptSlot, PrivateValue(script));
     }
+
+    IndirectBindingMap& bindings = module.importBindings();
+    for (IndirectBindingMap::Enum e(bindings); !e.empty(); e.popFront()) {
+        IndirectBinding& b = e.front().value();
+        TraceEdge(trc, &b.environment, "module import environment");
+        TraceEdge(trc, &b.localName, "module import local name");
+        jsid bindingName = e.front().key();
+        TraceManuallyBarrieredEdge(trc, &bindingName, "module import binding name");
+        MOZ_ASSERT(bindingName == e.front().key());
+    }
+}
+
+void
+ModuleObject::createEnvironment()
+{
+    // The environment has already been created, we just neet to set it in the
+    // right slot.
+    MOZ_ASSERT(!getReservedSlot(InitialEnvironmentSlot).isUndefined());
+    MOZ_ASSERT(getReservedSlot(EnvironmentSlot).isUndefined());
+    setReservedSlot(EnvironmentSlot, getReservedSlot(InitialEnvironmentSlot));
+}
+
+void
+ModuleObject::setEvaluated()
+{
+    MOZ_ASSERT(!evaluated());
+    setReservedSlot(EvaluatedSlot, TrueHandleValue);
+}
+
+bool
+ModuleObject::evaluate(JSContext* cx, MutableHandleValue rval)
+{
+    RootedScript script(cx, this->script());
+    return JS_ExecuteScript(cx, script, rval);
 }
 
 DEFINE_GETTER_FUNCTIONS(ModuleObject, initialEnvironment, InitialEnvironmentSlot)
+DEFINE_GETTER_FUNCTIONS(ModuleObject, environment, EnvironmentSlot)
+DEFINE_GETTER_FUNCTIONS(ModuleObject, evaluated, EvaluatedSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, requestedModules, RequestedModulesSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, importEntries, ImportEntriesSlot)
 DEFINE_GETTER_FUNCTIONS(ModuleObject, localExportEntries, LocalExportEntriesSlot)
@@ -339,6 +421,8 @@ js::InitModuleClass(JSContext* cx, HandleObject obj)
 {
     static const JSPropertySpec protoAccessors[] = {
         JS_PSG("initialEnvironment", ModuleObject_initialEnvironmentGetter, 0),
+        JS_PSG("environment", ModuleObject_environmentGetter, 0),
+        JS_PSG("evaluated", ModuleObject_evaluatedGetter, 0),
         JS_PSG("requestedModules", ModuleObject_requestedModulesGetter, 0),
         JS_PSG("importEntries", ModuleObject_importEntriesGetter, 0),
         JS_PSG("localExportEntries", ModuleObject_localExportEntriesGetter, 0),
@@ -347,13 +431,20 @@ js::InitModuleClass(JSContext* cx, HandleObject obj)
         JS_PS_END
     };
 
+    static const JSFunctionSpec protoFunctions[] = {
+        JS_SELF_HOSTED_FN("resolveExport", "ModuleResolveExport", 3, 0),
+        JS_SELF_HOSTED_FN("declarationInstantiation", "ModuleDeclarationInstantiation", 0, 0),
+        JS_SELF_HOSTED_FN("evaluation", "ModuleEvaluation", 0, 0),
+        JS_FS_END
+    };
+
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
 
     RootedObject proto(cx, global->createBlankPrototype<PlainObject>(cx));
     if (!proto)
         return nullptr;
 
-    if (!DefinePropertiesAndFunctions(cx, proto, protoAccessors, nullptr))
+    if (!DefinePropertiesAndFunctions(cx, proto, protoAccessors, protoFunctions))
         return nullptr;
 
     global->setPrototype(JSProto_Module, ObjectValue(*proto));

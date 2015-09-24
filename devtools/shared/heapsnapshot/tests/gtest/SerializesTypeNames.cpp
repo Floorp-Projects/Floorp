@@ -11,7 +11,7 @@ using testing::Property;
 using testing::Return;
 
 DEF_TEST(SerializesTypeNames, {
-    FakeNode node(cx);
+    FakeNode node;
 
     ::testing::NiceMock<MockWriter> writer;
     EXPECT_CALL(writer, writeNode(Property(&JS::ubi::Node::typeName,

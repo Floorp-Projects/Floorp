@@ -2127,9 +2127,9 @@ struct FindPathHandler {
     typedef BackEdge NodeData;
     typedef JS::ubi::BreadthFirst<FindPathHandler> Traversal;
 
-    FindPathHandler(JS::ubi::Node start, JS::ubi::Node target,
+    FindPathHandler(JSContext*cx, JS::ubi::Node start, JS::ubi::Node target,
                     AutoValueVector& nodes, Vector<EdgeName>& edges)
-      : start(start), target(target), foundPath(false),
+      : cx(cx), start(start), target(target), foundPath(false),
         nodes(nodes), edges(edges) { }
 
     bool
@@ -2143,7 +2143,7 @@ struct FindPathHandler {
 
         // Record how we reached this node. This is the last edge on a
         // shortest path to this node.
-        EdgeName edgeName = DuplicateString(traversal.cx, edge.name);
+        EdgeName edgeName = DuplicateString(cx, edge.name);
         if (!edgeName)
             return false;
         *backEdge = mozilla::Move(BackEdge(origin, Move(edgeName)));
@@ -2179,6 +2179,8 @@ struct FindPathHandler {
 
         return true;
     }
+
+    JSContext* cx;
 
     // The node we're starting from.
     JS::ubi::Node start;
@@ -2238,8 +2240,8 @@ FindPath(JSContext* cx, unsigned argc, Value* vp)
 
         JS::ubi::Node start(args[0]), target(args[1]);
 
-        heaptools::FindPathHandler handler(start, target, nodes, edges);
-        heaptools::FindPathHandler::Traversal traversal(cx, handler, autoCannotGC);
+        heaptools::FindPathHandler handler(cx, start, target, nodes, edges);
+        heaptools::FindPathHandler::Traversal traversal(cx->runtime(), handler, autoCannotGC);
         if (!traversal.init() || !traversal.addStart(start))
             return false;
 

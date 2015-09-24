@@ -22,15 +22,31 @@ add_task(function* () {
     background: function() {
       browser.runtime.onMessage.addListener(msg => {
         browser.test.assertEq(msg, "from-popup", "correct message received");
-        browser.test.notifyPass("browser_action.simple");
+        browser.test.sendMessage("popup");
       });
     },
   });
 
   yield extension.startup();
 
-  // FIXME: Should really test opening the popup here.
+  let widgetId = makeWidgetId(extension.id) + "-browser-action";
+  let node = CustomizableUI.getWidget(widgetId).forWindow(window).node;
 
-  yield extension.awaitFinish("browser_action.simple");
+  // Do this a few times to make sure the pop-up is reloaded each time.
+  for (let i = 0; i < 3; i++) {
+    let evt = new CustomEvent("command", {
+      bubbles: true,
+      cancelable: true
+    });
+    node.dispatchEvent(evt);
+
+    yield extension.awaitMessage("popup");
+
+    let panel = node.querySelector("panel");
+    if (panel) {
+      panel.hidePopup();
+    }
+  }
+
   yield extension.unload();
 });

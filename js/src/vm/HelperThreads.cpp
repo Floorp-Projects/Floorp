@@ -492,9 +492,6 @@ GlobalHelperThreadState::GlobalHelperThreadState()
    threads(nullptr),
    asmJSCompilationInProgress(false),
    helperLock(nullptr),
-#ifdef DEBUG
-   lockOwner(nullptr),
-#endif
    consumerWakeup(nullptr),
    producerWakeup(nullptr),
    pauseWakeup(nullptr),
@@ -545,7 +542,7 @@ GlobalHelperThreadState::lock()
     AssertCurrentThreadCanLock(HelperThreadStateLock);
     PR_Lock(helperLock);
 #ifdef DEBUG
-    lockOwner = PR_GetCurrentThread();
+    lockOwner.value = PR_GetCurrentThread();
 #endif
 }
 
@@ -554,7 +551,7 @@ GlobalHelperThreadState::unlock()
 {
     MOZ_ASSERT(isLocked());
 #ifdef DEBUG
-    lockOwner = nullptr;
+    lockOwner.value = nullptr;
 #endif
     PR_Unlock(helperLock);
 }
@@ -563,7 +560,7 @@ GlobalHelperThreadState::unlock()
 bool
 GlobalHelperThreadState::isLocked()
 {
-    return lockOwner == PR_GetCurrentThread();
+    return lockOwner.value == PR_GetCurrentThread();
 }
 #endif
 
@@ -572,14 +569,14 @@ GlobalHelperThreadState::wait(CondVar which, uint32_t millis)
 {
     MOZ_ASSERT(isLocked());
 #ifdef DEBUG
-    lockOwner = nullptr;
+    lockOwner.value = nullptr;
 #endif
     DebugOnly<PRStatus> status =
         PR_WaitCondVar(whichWakeup(which),
                        millis ? PR_MillisecondsToInterval(millis) : PR_INTERVAL_NO_TIMEOUT);
     MOZ_ASSERT(status == PR_SUCCESS);
 #ifdef DEBUG
-    lockOwner = PR_GetCurrentThread();
+    lockOwner.value = PR_GetCurrentThread();
 #endif
 }
 

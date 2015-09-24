@@ -88,12 +88,12 @@ private:
 - (void)widgetDestroyed;
 // Tear down this ChildView
 - (void)delayedTearDown;
-- (void)sendMouseEvent:(int) aType point:(LayoutDeviceIntPoint)aPoint widget:(nsWindow*)aWindow;
+- (void)sendMouseEvent:(EventMessage) aType point:(LayoutDeviceIntPoint)aPoint widget:(nsWindow*)aWindow;
 - (void)handleTap:(UITapGestureRecognizer *)sender;
 - (BOOL)isUsingMainThreadOpenGL;
 - (void)drawUsingOpenGL;
 - (void)drawUsingOpenGLCallback;
-- (void)sendTouchEvent:(int) aType touches:(NSSet*)aTouches widget:(nsWindow*)aWindow;
+- (void)sendTouchEvent:(EventMessage) aType touches:(NSSet*)aTouches widget:(nsWindow*)aWindow;
 // Event handling (UIResponder)
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event;
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event;
@@ -138,7 +138,7 @@ private:
   [self release];
 }
 
-- (void)sendMouseEvent:(int) aType point:(LayoutDeviceIntPoint)aPoint widget:(nsWindow*)aWindow
+- (void)sendMouseEvent:(EventMessage) aType point:(LayoutDeviceIntPoint)aPoint widget:(nsWindow*)aWindow
 {
     WidgetMouseEvent event(true, aType, aWindow,
                            WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
@@ -164,7 +164,7 @@ private:
     }
 }
 
-- (void)sendTouchEvent:(int) aType touches:(NSSet*)aTouches widget:(nsWindow*)aWindow
+- (void)sendTouchEvent:(EventMessage) aType touches:(NSSet*)aTouches widget:(nsWindow*)aWindow
 {
     WidgetTouchEvent event(true, aType, aWindow);
     //XXX: I think nativeEvent.timestamp * 1000 is probably usable here but
