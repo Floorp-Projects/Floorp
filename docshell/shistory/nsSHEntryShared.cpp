@@ -333,13 +333,6 @@ nsSHEntryShared::AttributeWillChange(nsIDocument* aDocument,
 }
 
 void
-nsSHEntryShared::NativeAnonymousChildListChange(nsIDocument* aDocument,
-                                                nsIContent* aContent,
-                                                bool aIsRemove)
-{
-}
-
-void
 nsSHEntryShared::AttributeChanged(nsIDocument* aDocument,
                                   dom::Element* aElement,
                                   int32_t aNameSpaceID,

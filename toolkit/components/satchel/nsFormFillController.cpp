@@ -195,13 +195,6 @@ nsFormFillController::AttributeWillChange(nsIDocument* aDocument,
 }
 
 void
-nsFormFillController::NativeAnonymousChildListChange(nsIDocument* aDocument,
-                                                     nsIContent* aContent,
-                                                     bool aIsRemove)
-{
-}
-
-void
 nsFormFillController::ParentChainChanged(nsIContent* aContent)
 {
 }
