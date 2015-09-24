@@ -322,7 +322,6 @@ class Simulator : public DecoderVisitor {
   ~Simulator();
 
   // Moz changes.
-  explicit Simulator();
   void init(Decoder* decoder, FILE* stream);
   static Simulator* Current();
   static Simulator* Create();
@@ -975,6 +974,14 @@ class Simulator : public DecoderVisitor {
   // Indicates whether the exclusive-access warning has been printed.
   bool print_exclusive_access_warning_;
   void PrintExclusiveAccessWarning();
+
+  // Indicates that the simulator ran out of memory at some point.
+  // Data structures may not be fully allocated.
+  bool oom_;
+
+ public:
+  // True if the simulator ran out of memory during or after construction.
+  bool oom() const { return oom_; }
 
  protected:
   // Moz: Synchronizes access between main thread and compilation threads.
