@@ -391,15 +391,15 @@ protected:
   }
 };
 
-// A resolved color stop --- with a specific position along the gradient line,
-// and a Thebes color
+// A resolved color stop, with a specific position along the gradient line and
+// a color.
 struct ColorStop {
   ColorStop(): mPosition(0), mIsMidpoint(false) {}
-  ColorStop(double aPosition, bool aIsMidPoint, gfxRGBA aColor) :
+  ColorStop(double aPosition, bool aIsMidPoint, const Color& aColor) :
     mPosition(aPosition), mIsMidpoint(aIsMidPoint), mColor(aColor) {}
   double mPosition; // along the gradient line; 0=start, 1=end
   bool mIsMidpoint;
-  gfxRGBA mColor;
+  Color mColor;
 };
 
 /* Local functions */
@@ -2189,14 +2189,14 @@ static float Interpolate(float aF1, float aF2, float aFrac)
 // Returns aFrac*aC2 + (1 - aFrac)*C1. The interpolation is done
 // in unpremultiplied space, which is what SVG gradients and cairo
 // gradients expect.
-static gfxRGBA
-InterpolateColor(const gfxRGBA& aC1, const gfxRGBA& aC2, double aFrac)
+static Color
+InterpolateColor(const Color& aC1, const Color& aC2, float aFrac)
 {
   double other = 1 - aFrac;
-  return gfxRGBA(aC2.r*aFrac + aC1.r*other,
-                 aC2.g*aFrac + aC1.g*other,
-                 aC2.b*aFrac + aC1.b*other,
-                 aC2.a*aFrac + aC1.a*other);
+  return Color(aC2.r*aFrac + aC1.r*other,
+               aC2.g*aFrac + aC1.g*other,
+               aC2.b*aFrac + aC1.b*other,
+               aC2.a*aFrac + aC1.a*other);
 }
 
 static nscoord
@@ -2241,7 +2241,7 @@ RectIsBeyondLinearGradientEdge(const gfxRect& aRect,
                                const nsTArray<ColorStop>& aStops,
                                const gfxPoint& aGradientStart,
                                const gfxPoint& aGradientEnd,
-                               gfxRGBA* aOutEdgeColor)
+                               Color* aOutEdgeColor)
 {
   gfxFloat topLeft = LinearGradientStopPositionForPoint(
     aGradientStart, aGradientEnd, aPatternMatrix.Transform(aRect.TopLeft()));
@@ -2277,8 +2277,8 @@ static void ResolveMidpoints(nsTArray<ColorStop>& stops)
       continue;
     }
 
-    gfxRGBA color1 = stops[x-1].mColor;
-    gfxRGBA color2 = stops[x+1].mColor;
+    Color color1 = stops[x-1].mColor;
+    Color color2 = stops[x+1].mColor;
     float offset1 = stops[x-1].mPosition;
     float offset2 = stops[x+1].mPosition;
     float offset = stops[x].mPosition;
@@ -2333,13 +2333,13 @@ static void ResolveMidpoints(nsTArray<ColorStop>& stops)
       // in luminance of the end points.
       float relativeOffset = (newStops[y].mPosition - offset1) / (offset2 - offset1);
       float multiplier = powf(relativeOffset, logf(.5f) / logf(midpoint));
-      
-      gfxFloat red = color1.r + multiplier * (color2.r - color1.r);
-      gfxFloat green = color1.g + multiplier * (color2.g - color1.g);
-      gfxFloat blue = color1.b + multiplier * (color2.b - color1.b);
-      gfxFloat alpha = color1.a + multiplier * (color2.a - color1.a);
 
-      newStops[y].mColor = gfxRGBA(red, green, blue, alpha);
+      gfx::Float red = color1.r + multiplier * (color2.r - color1.r);
+      gfx::Float green = color1.g + multiplier * (color2.g - color1.g);
+      gfx::Float blue = color1.b + multiplier * (color2.b - color1.b);
+      gfx::Float alpha = color1.a + multiplier * (color2.a - color1.a);
+
+      newStops[y].mColor = Color(red, green, blue, alpha);
     }
 
     stops.ReplaceElementsAt(x, 1, newStops, 9);
@@ -2347,22 +2347,24 @@ static void ResolveMidpoints(nsTArray<ColorStop>& stops)
   }
 }
 
-static gfxRGBA
-Premultiply(const gfxRGBA& aColor)
+static Color
+Premultiply(const Color& aColor)
 {
-  gfxFloat a = aColor.a;
-  return gfxRGBA(aColor.r * a, aColor.g * a, aColor.b * a, a);
+  gfx::Float a = aColor.a;
+  return Color(aColor.r * a, aColor.g * a, aColor.b * a, a);
 }
 
-static gfxRGBA
-Unpremultiply(const gfxRGBA& aColor)
+static Color
+Unpremultiply(const Color& aColor)
 {
-  gfxFloat a = aColor.a;
-  return (a > 0.0) ? gfxRGBA(aColor.r / a, aColor.g / a, aColor.b / a, a) : aColor;
+  gfx::Float a = aColor.a;
+  return (a > 0.f)
+       ? Color(aColor.r / a, aColor.g / a, aColor.b / a, a)
+       : aColor;
 }
 
-static gfxRGBA
-TransparentColor(gfxRGBA aColor) {
+static Color
+TransparentColor(Color aColor) {
   aColor.a = 0;
   return aColor;
 }
@@ -2403,10 +2405,10 @@ ResolvePremultipliedAlpha(nsTArray<ColorStop>& aStops)
 
     // Now handle cases where one or both of the stops are partially transparent.
     if (leftStop.mColor.a != 1.0f || rightStop.mColor.a != 1.0f) {
-      gfxRGBA premulLeftColor = Premultiply(leftStop.mColor);
-      gfxRGBA premulRightColor = Premultiply(rightStop.mColor);
+      Color premulLeftColor = Premultiply(leftStop.mColor);
+      Color premulRightColor = Premultiply(rightStop.mColor);
       // Calculate how many extra steps. We do a step per 10% transparency.
-      size_t stepCount = NSToIntFloor(fabs(leftStop.mColor.a - rightStop.mColor.a) / kAlphaIncrementPerGradientStep);
+      size_t stepCount = NSToIntFloor(fabsf(leftStop.mColor.a - rightStop.mColor.a) / kAlphaIncrementPerGradientStep);
       for (size_t y = 1; y < stepCount; y++) {
         float frac = static_cast<float>(y) / stepCount;
         ColorStop newStop(Interpolate(leftStop.mPosition, rightStop.mPosition, frac), false,
@@ -2485,7 +2487,8 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
         if (firstUnsetPosition < 0) {
           firstUnsetPosition = i;
         }
-        stops.AppendElement(ColorStop(0, stop.mIsInterpolationHint, stop.mColor));
+        stops.AppendElement(ColorStop(0, stop.mIsInterpolationHint,
+                                      Color::FromABGR(stop.mColor)));
         continue;
       }
       break;
@@ -2512,7 +2515,8 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
       // to the previous stop position, if necessary
       position = std::max(position, stops[i - 1].mPosition);
     }
-    stops.AppendElement(ColorStop(position, stop.mIsInterpolationHint, stop.mColor));
+    stops.AppendElement(ColorStop(position, stop.mIsInterpolationHint,
+                                  Color::FromABGR(stop.mColor)));
     if (firstUnsetPosition > 0) {
       // Interpolate positions for all stops that didn't have a specified position
       double p = stops[firstUnsetPosition - 1].mPosition;
@@ -2569,7 +2573,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
               // between pos and nextPos.
               // XXX Color interpolation (in cairo, too) should use the
               // CSS 'color-interpolation' property!
-              double frac = (0.0 - pos)/(nextPos - pos);
+              float frac = float((0.0 - pos)/(nextPos - pos));
               stops[i].mColor =
                 InterpolateColor(stops[i].mColor, stops[i + 1].mColor, frac);
             }
@@ -2702,8 +2706,8 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
     // Repeating gradient with all stops in the same place, or radial
     // gradient with radius of 0 -> just paint the last stop color.
     // We use firstStop offset to keep |stops| with same units (will later normalize to 0).
-    gfxRGBA firstColor(stops[0].mColor);
-    gfxRGBA lastColor(stops.LastElement().mColor);
+    Color firstColor(stops[0].mColor);
+    Color lastColor(stops.LastElement().mColor);
     stops.Clear();
 
     if (!aGradient->mRepeating && !zeroRadius) {
@@ -2727,7 +2731,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
   nsTArray<gfx::GradientStop> rawStops(stops.Length());
   rawStops.SetLength(stops.Length());
   for(uint32_t i = 0; i < stops.Length(); i++) {
-    rawStops[i].color = gfx::Color(stops[i].mColor.r, stops[i].mColor.g, stops[i].mColor.b, stops[i].mColor.a);
+    rawStops[i].color = stops[i].mColor;
     rawStops[i].offset = stopScale * (stops[i].mPosition - stopOrigin);
   }
   mozilla::RefPtr<mozilla::gfx::GradientStops> gs =
@@ -2799,7 +2803,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
 
       gfxRect dirtyFillRect = fillRect.Intersect(dirtyAreaToFill);
       gfxRect fillRectRelativeToTile = dirtyFillRect - tileRect.TopLeft();
-      gfxRGBA edgeColor;
+      Color edgeColor;
       if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR && !isRepeat &&
           RectIsBeyondLinearGradientEdge(fillRectRelativeToTile, matrix, stops,
                                          gradientStart, gradientEnd, &edgeColor)) {
