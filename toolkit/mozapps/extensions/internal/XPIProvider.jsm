@@ -290,6 +290,7 @@ function loadLazyObjects() {
     recordAddonTelemetry,
     applyBlocklistChanges,
     flushStartupCache,
+    canRunInSafeMode,
   }
 
   for (let key of Object.keys(shared))
@@ -632,6 +633,21 @@ function applyBlocklistChanges(aOldAddon, aNewAddon, aOldAppVersion,
 }
 
 /**
+ * Evaluates whether an add-on is allowed to run in safe mode.
+ *
+ * @param  aAddon
+ *         The add-on to check
+ * @return true if the add-on should run in safe mode
+ */
+function canRunInSafeMode(aAddon) {
+  // Even though the updated system add-ons aren't generally run in safe mode we
+  // include them here so their uninstall functions get called when switching
+  // back to the default set.
+  return aAddon._installLocation.name == KEY_APP_SYSTEM_DEFAULTS ||
+         aAddon._installLocation.name == KEY_APP_SYSTEM_ADDONS;
+}
+
+/**
  * Calculates whether an add-on should be appDisabled or not.
  *
  * @param  aAddon
@@ -703,7 +719,8 @@ function createAddonDetails(id, aAddon) {
     id: id || aAddon.id,
     type: aAddon.type,
     version: aAddon.version,
-    multiprocessCompatible: aAddon.multiprocessCompatible
+    multiprocessCompatible: aAddon.multiprocessCompatible,
+    runInSafeMode: aAddon.runInSafeMode,
   };
 }
 
@@ -2792,6 +2809,10 @@ this.XPIProvider = {
   },
 
   updateSystemAddons: Task.async(function XPI_updateSystemAddons() {
+    // Don't do anything in safe mode
+    if (Services.appinfo.inSafeMode)
+      return;
+
     // Download the list of system add-ons
     let url = Preferences.get(PREF_SYSTEM_ADDON_UPDATE_URL, null);
     if (!url)
@@ -4171,16 +4192,20 @@ this.XPIProvider = {
    *         The type for the add-on
    * @param  aMultiprocessCompatible
    *         Boolean indicating whether the add-on is compatible with electrolysis.
+   * @param  aRunInSafeMode
+   *         Boolean indicating whether the add-on can run in safe mode.
    * @return a JavaScript scope
    */
   loadBootstrapScope: function XPI_loadBootstrapScope(aId, aFile, aVersion, aType,
-                                                      aMultiprocessCompatible) {
+                                                      aMultiprocessCompatible,
+                                                      aRunInSafeMode) {
     // Mark the add-on as active for the crash reporter before loading
     this.bootstrappedAddons[aId] = {
       version: aVersion,
       type: aType,
       descriptor: aFile.persistentDescriptor,
-      multiprocessCompatible: aMultiprocessCompatible
+      multiprocessCompatible: aMultiprocessCompatible,
+      runInSafeMode: aRunInSafeMode,
     };
     this.persistBootstrappedAddons();
     this.addAddonsToCrashReporter();
@@ -4301,14 +4326,15 @@ this.XPIProvider = {
    *         the params argument
    */
   callBootstrapMethod: function XPI_callBootstrapMethod(aAddon, aFile, aMethod, aReason, aExtraParams) {
-    // Never call any bootstrap methods in safe mode
-    if (Services.appinfo.inSafeMode)
-      return;
-
     if (!aAddon.id || !aAddon.version || !aAddon.type) {
       logger.error(new Error("aAddon must include an id, version, and type"));
       return;
     }
+
+    // Only run in safe mode if allowed to
+    let runInSafeMode = "runInSafeMode" in aAddon ? aAddon.runInSafeMode : canRunInSafeMode(aAddon);
+    if (Services.appinfo.inSafeMode && !runInSafeMode)
+      return;
 
     let timeStart = new Date();
     if (CHROME_TYPES.has(aAddon.type) && aMethod == "startup") {
@@ -4318,9 +4344,11 @@ this.XPIProvider = {
 
     try {
       // Load the scope if it hasn't already been loaded
-      if (!(aAddon.id in this.bootstrapScopes))
+      if (!(aAddon.id in this.bootstrapScopes)) {
         this.loadBootstrapScope(aAddon.id, aFile, aAddon.version, aAddon.type,
-                                aAddon.multiprocessCompatible || false);
+                                aAddon.multiprocessCompatible || false,
+                                runInSafeMode);
+      }
 
       // Nothing to call for locales
       if (aAddon.type == "locale")
@@ -6814,9 +6842,11 @@ function AddonWrapper(aAddon) {
   });
 
   this.__defineGetter__("isActive", function AddonWrapper_isActiveGetter() {
-    if (Services.appinfo.inSafeMode)
+    if (!aAddon.active)
       return false;
-    return aAddon.active;
+    if (!Services.appinfo.inSafeMode)
+      return true;
+    return aAddon.bootstrap && canRunInSafeMode(aAddon);
   });
 
   this.__defineGetter__("userDisabled", function AddonWrapper_userDisabledGetter() {
@@ -7525,6 +7555,10 @@ Object.assign(SystemAddonInstallLocation.prototype, {
   },
 
   getAddonLocations: function() {
+    // Updated system add-ons are ignored in safe mode
+    if (Services.appinfo.inSafeMode)
+      return new Map();
+
     let addons = DirectoryInstallLocation.prototype.getAddonLocations.call(this);
 
     // Strip out any unexpected add-ons from the list
