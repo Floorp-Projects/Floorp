@@ -814,9 +814,10 @@ class IonBuilder
     InliningStatus inlineStrCharAt(CallInfo& callInfo);
     InliningStatus inlineStrReplace(CallInfo& callInfo);
 
-    // RegExp natives.
-    InliningStatus inlineRegExpExec(CallInfo& callInfo);
-    InliningStatus inlineRegExpTest(CallInfo& callInfo);
+    // RegExp intrinsics.
+    InliningStatus inlineRegExpMatcher(CallInfo& callInfo);
+    InliningStatus inlineRegExpTester(CallInfo& callInfo);
+    InliningStatus inlineIsRegExpObject(CallInfo& callInfo);
 
     // Object natives and intrinsics.
     InliningStatus inlineObjectCreate(CallInfo& callInfo);
