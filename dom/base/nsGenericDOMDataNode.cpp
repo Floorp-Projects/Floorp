@@ -514,6 +514,8 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     }
   }
 
+  bool hadParent = !!GetParentNode();
+
   // Set parent
   if (aParent) {
     if (!GetParent()) {
@@ -548,6 +550,9 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   }
 
   nsNodeUtils::ParentChainChanged(this);
+  if (!hadParent && IsRootOfNativeAnonymousSubtree()) {
+    nsNodeUtils::NativeAnonymousChildListChange(this, false);
+  }
 
   UpdateEditableState(false);
 
@@ -570,6 +575,9 @@ nsGenericDOMDataNode::UnbindFromTree(bool aDeep, bool aNullParent)
     HasFlag(NODE_FORCE_XBL_BINDINGS) ? OwnerDoc() : GetComposedDoc();
 
   if (aNullParent) {
+    if (this->IsRootOfNativeAnonymousSubtree()) {
+      nsNodeUtils::NativeAnonymousChildListChange(this, true);
+    }
     if (GetParent()) {
       NS_RELEASE(mParent);
     } else {
