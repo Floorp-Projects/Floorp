@@ -8,7 +8,10 @@ HOST_SOURCES += [
     'dump_syms_tool.cc',
 ]
 
-HostProgram('dump_syms')
+HOST_CXXFLAGS += [
+    '-O2',
+    '-g',
+]
 
 # Order matters here, but HOST_USE_LIBS must be sorted.
 HOST_USE_LIBS += [
@@ -18,6 +21,10 @@ HOST_USE_LIBS += [
     'host_breakpad_common_s',
     'host_breakpad_dwarf_s',
 ]
+
+# The HostProgram template may append 'host_stdc++compat' to
+# HOST_USE_LIBS, which needs to appear after the entries above.
+HostProgram('dump_syms')
 
 LOCAL_INCLUDES += [
     '../../..',
