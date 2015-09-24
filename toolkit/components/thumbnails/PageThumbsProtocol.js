@@ -40,12 +40,16 @@ Protocol.prototype = {
   /**
    * The scheme used by this protocol.
    */
-  get scheme() PageThumbs.scheme,
+  get scheme() {
+    return PageThumbs.scheme;
+  },
 
   /**
    * The default port for this protocol (we don't support ports).
    */
-  get defaultPort() -1,
+  get defaultPort() {
+    return -1;
+  },
 
   /**
    * The flags specific to this protocol implementation.
@@ -92,7 +96,7 @@ Protocol.prototype = {
    * Decides whether to allow a blacklisted port.
    * @return Always false, we'll never allow ports.
    */
-  allowPort: function () false,
+  allowPort: () => false,
 
   classID: Components.ID("{5a4ae9b5-f475-48ae-9dce-0b4c1d347884}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIProtocolHandler])

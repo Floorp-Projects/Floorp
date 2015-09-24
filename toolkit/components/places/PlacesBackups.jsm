@@ -91,7 +91,9 @@ this.PlacesBackups = {
    *  3: contents hash
    *  4: file extension
    */
-  get filenamesRegex() filenamesRegex,
+  get filenamesRegex() {
+    return filenamesRegex;
+  },
 
   get folder() {
     Deprecated.warning(
@@ -133,7 +135,9 @@ this.PlacesBackups = {
     }.bind(this));
   },
 
-  get profileRelativeFolderPath() "bookmarkbackups",
+  get profileRelativeFolderPath() {
+    return "bookmarkbackups";
+  },
 
   /**
    * Cache current backups in a sorted (by date DESC) array.
