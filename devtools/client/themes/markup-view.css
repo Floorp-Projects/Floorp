@@ -52,49 +52,6 @@
   padding-left: 2px;
 }
 
-/* Preview */
-
-#previewbar {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 90px;
-  background: black;
-  border-left: 1px solid;
-  border-bottom: 1px solid;
-  overflow: hidden;
-}
-
-#previewbar {
-  background: var(--theme-tab-toolbar-background);
-  border-color: var(--theme-splitter-color);
-}
-
-#preview {
-  position: absolute;
-  top: 0;
-  right: 5px;
-  width: 80px;
-  height: 100%;
-  background-image: -moz-element(#root);
-  background-repeat: no-repeat;
-}
-
-#previewbar.hide,
-#previewbar.disabled {
-  display: none;
-}
-
-#viewbox {
-  position: absolute;
-  top: 0;
-  right: 5px;
-  width: 80px;
-  border: 1px dashed #888;
-  background: rgba(205,205,255,0.2);
-  outline: 1px solid transparent;
-}
-
 /* Events */
 .markupview-events {
   font-size: 8px;
