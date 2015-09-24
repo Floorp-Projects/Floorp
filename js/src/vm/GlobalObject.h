@@ -534,12 +534,9 @@ class GlobalObject : public NativeObject
         return &global->getSlot(slot).toObject().as<NativeObject>();
     }
 
-    static NativeObject* getOrCreateArrayIteratorPrototype(JSContext* cx,
-                                                           Handle<GlobalObject*> global)
+    static NativeObject* getOrCreateArrayIteratorPrototype(JSContext* cx, Handle<GlobalObject*> global)
     {
-        if (!ensureConstructor(cx, global, JSProto_Iterator))
-            return nullptr;
-        return &global->getSlot(ARRAY_ITERATOR_PROTO).toObject().as<NativeObject>();
+        return MaybeNativeObject(global->getOrCreateObject(cx, ARRAY_ITERATOR_PROTO, initArrayIteratorProto));
     }
 
     static NativeObject* getOrCreateStringIteratorPrototype(JSContext* cx,
@@ -707,6 +704,7 @@ class GlobalObject : public NativeObject
     bool valueIsEval(Value val);
 
     // Implemented in jsiter.cpp.
+    static bool initArrayIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
     static bool initIteratorClasses(JSContext* cx, Handle<GlobalObject*> global);
 
     // Implemented in vm/GeneratorObject.cpp.

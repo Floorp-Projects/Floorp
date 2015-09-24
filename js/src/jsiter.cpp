@@ -1373,6 +1373,25 @@ const Class StopIterationObject::class_ = {
 };
 
 /* static */ bool
+GlobalObject::initArrayIteratorProto(JSContext* cx, Handle<GlobalObject*> global)
+{
+    if (global->getReservedSlot(ARRAY_ITERATOR_PROTO).isObject())
+        return true;
+
+    RootedObject iteratorProto(cx, GlobalObject::getOrCreateIteratorPrototype(cx, global));
+    if (!iteratorProto)
+        return false;
+
+    const Class* cls = &ArrayIteratorPrototypeClass;
+    RootedObject proto(cx, global->createBlankPrototypeInheriting(cx, cls, iteratorProto));
+    if (!proto || !DefinePropertiesAndFunctions(cx, proto, nullptr, array_iterator_methods))
+        return false;
+
+    global->setReservedSlot(ARRAY_ITERATOR_PROTO, ObjectValue(*proto));
+    return true;
+}
+
+/* static */ bool
 GlobalObject::initIteratorClasses(JSContext* cx, Handle<GlobalObject*> global)
 {
     RootedObject iteratorProto(cx);
@@ -1408,14 +1427,6 @@ GlobalObject::initIteratorClasses(JSContext* cx, Handle<GlobalObject*> global)
     }
 
     RootedObject proto(cx);
-    if (global->getSlot(ARRAY_ITERATOR_PROTO).isUndefined()) {
-        const Class* cls = &ArrayIteratorPrototypeClass;
-        proto = global->createBlankPrototypeInheriting(cx, cls, iteratorProto);
-        if (!proto || !DefinePropertiesAndFunctions(cx, proto, nullptr, array_iterator_methods))
-            return false;
-        global->setReservedSlot(ARRAY_ITERATOR_PROTO, ObjectValue(*proto));
-    }
-
     if (global->getSlot(STRING_ITERATOR_PROTO).isUndefined()) {
         const Class* cls = &StringIteratorPrototypeClass;
         proto = global->createBlankPrototype(cx, cls);
