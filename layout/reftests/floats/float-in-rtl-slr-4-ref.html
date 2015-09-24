@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+.slr {
+  writing-mode: sideways-lr;
+  direction: rtl;
+}
+</style>
+</head>
+<body>
+ <div>
+  <div style="height:0px;width:0px;overflow:visible">
+    <div style="height:100px;width:120px;background:rgba(0,255,0,0.8);display:inline-block;margin-top:0"></div>
+  </div>
+  <div style="height:0px;width:0px;overflow:visible">
+    <div style="height:100px;width:150px;background:rgba(255,0,0,0.8);display:inline-block;margin-top:100px"></div>
+  </div>
+  <div class="slr" style="background:silver; height: calc(100vh - 16px);">
+    <div style="height: calc(100vh - 216px); margin-top: 200px">This text should appear BELOW the red and green blocks.</div>
+  </div>
+ </div>
+</body>
+</html>
