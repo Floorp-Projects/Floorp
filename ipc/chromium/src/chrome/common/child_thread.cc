@@ -32,7 +32,6 @@ ChildThread::~ChildThread() {
 bool ChildThread::Run() {
   bool r = StartWithOptions(options_);
 #ifdef MOZ_NUWA_PROCESS
-  NS_ASSERTION(NuwaMarkCurrentThread, "NuwaMarkCurrentThread is not defined!");
   if (IsNuwaProcess()) {
       message_loop()->PostTask(FROM_HERE,
                                NewRunnableFunction(&ChildThread::MarkThread));
