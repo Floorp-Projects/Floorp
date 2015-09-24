@@ -13,6 +13,7 @@
  */
 #include "cairo-win32.h"
 
+#include "gfxCrashReporterUtils.h"
 #include "gfxFontUtils.h"
 #include "gfxWindowsSurface.h"
 #include "gfxFont.h"
@@ -251,6 +252,9 @@ public:
 
     // Create a D3D11 device to be used for DXVA decoding.
     already_AddRefed<ID3D11Device> CreateD3D11DecoderDevice();
+    bool CreateD3D11DecoderDeviceHelper(
+      IDXGIAdapter1* aAdapter, mozilla::RefPtr<ID3D11Device>& aDevice,
+      HRESULT& aResOut);
 
     mozilla::layers::ReadbackManagerD3D11* GetReadbackManager();
 
@@ -319,10 +323,21 @@ private:
     mozilla::gfx::FeatureStatus CheckD3D11Support(bool* aCanUseHardware);
     mozilla::gfx::FeatureStatus CheckD2DSupport();
     mozilla::gfx::FeatureStatus CheckD2D1Support();
+
     mozilla::gfx::FeatureStatus AttemptD3D11DeviceCreation();
+    bool AttemptD3D11DeviceCreationHelper(
+        IDXGIAdapter1* aAdapter, HRESULT& aResOut);
+
     mozilla::gfx::FeatureStatus AttemptWARPDeviceCreation();
+    bool AttemptWARPDeviceCreationHelper(
+        mozilla::ScopedGfxFeatureReporter& aReporterWARP, HRESULT& aResOut);
+
     mozilla::gfx::FeatureStatus AttemptD3D11ImageBridgeDeviceCreation();
+
     mozilla::gfx::FeatureStatus AttemptD3D11ContentDeviceCreation();
+    bool gfxWindowsPlatform::AttemptD3D11ContentDeviceCreationHelper(
+        IDXGIAdapter1* aAdapter, HRESULT& aResOut);
+
     bool CanUseD3D11ImageBridge();
     bool ContentAdapterIsParentAdapter(ID3D11Device* device);
 
