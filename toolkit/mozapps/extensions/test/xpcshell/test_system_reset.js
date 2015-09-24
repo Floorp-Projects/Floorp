@@ -8,20 +8,20 @@ Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, true);
 const featureDir = FileUtils.getDir("ProfD", ["features"]);
 
 // Build the test sets
-let dir = FileUtils.getDir("ProfD", ["sysfeatures", "app1", "features"], true);
+let dir = FileUtils.getDir("ProfD", ["sysfeatures", "app1"], true);
 do_get_file("data/system_addons/system1_1.xpi").copyTo(dir, "system1@tests.mozilla.org.xpi");
 do_get_file("data/system_addons/system2_1.xpi").copyTo(dir, "system2@tests.mozilla.org.xpi");
 
-dir = FileUtils.getDir("ProfD", ["sysfeatures", "app2", "features"], true);
+dir = FileUtils.getDir("ProfD", ["sysfeatures", "app2"], true);
 do_get_file("data/system_addons/system1_2.xpi").copyTo(dir, "system1@tests.mozilla.org.xpi");
 do_get_file("data/system_addons/system3_1.xpi").copyTo(dir, "system3@tests.mozilla.org.xpi");
 
-dir = FileUtils.getDir("ProfD", ["sysfeatures", "app3", "features"], true);
+dir = FileUtils.getDir("ProfD", ["sysfeatures", "app3"], true);
 do_get_file("data/system_addons/system1_1_badcert.xpi").copyTo(dir, "system1@tests.mozilla.org.xpi");
 do_get_file("data/system_addons/system3_1.xpi").copyTo(dir, "system3@tests.mozilla.org.xpi");
 
 const distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "app0"], true);
-registerDirectory("XREAppDist", distroDir);
+registerDirectory("XREAppFeat", distroDir);
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "0");
 
@@ -32,14 +32,7 @@ function makeUUID() {
 }
 
 function* check_installed(inProfile, ...versions) {
-  let expectedDir;
-  if (inProfile) {
-    expectedDir = featureDir;
-  }
-  else {
-    expectedDir = distroDir.clone();
-    expectedDir.append("features");
-  }
+  let expectedDir = inProfile ? featureDir : distroDir;
 
   for (let i = 0; i < versions.length; i++) {
     let id = "system" + (i + 1) + "@tests.mozilla.org";

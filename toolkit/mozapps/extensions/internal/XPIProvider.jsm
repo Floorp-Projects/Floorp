@@ -135,6 +135,7 @@ const KEY_PROFILEDIR                  = "ProfD";
 const KEY_APPDIR                      = "XCurProcD";
 const KEY_TEMPDIR                     = "TmpD";
 const KEY_APP_DISTRIBUTION            = "XREAppDist";
+const KEY_APP_FEATURES                = "XREAppFeat";
 
 const KEY_APP_PROFILE                 = "app-profile";
 const KEY_APP_SYSTEM_ADDONS           = "app-system-addons";
@@ -2445,9 +2446,8 @@ this.XPIProvider = {
                                     [DIR_SYSTEM_ADDONS],
                                     AddonManager.SCOPE_PROFILE);
 
-      addDirectoryInstallLocation(KEY_APP_SYSTEM_DEFAULTS, KEY_APP_DISTRIBUTION,
-                                  [DIR_SYSTEM_ADDONS],
-                                  AddonManager.SCOPE_PROFILE, true);
+      addDirectoryInstallLocation(KEY_APP_SYSTEM_DEFAULTS, KEY_APP_FEATURES,
+                                  [], AddonManager.SCOPE_PROFILE, true);
 
       if (enabledScopes & AddonManager.SCOPE_USER) {
         addDirectoryInstallLocation(KEY_APP_SYSTEM_USER, "XREUSysExt",
