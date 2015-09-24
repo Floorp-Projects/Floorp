@@ -1323,7 +1323,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
     else
       shadowColor = aForFrame->StyleColor()->mColor;
 
-    gfxRGBA gfxShadowColor(shadowColor);
+    Color gfxShadowColor(Color::FromABGR(shadowColor));
     gfxShadowColor.a *= aOpacity;
 
     if (nativeTheme) {
@@ -5397,7 +5397,7 @@ nsContextBoxBlur::BlurRectangle(gfxContext* aDestinationCtx,
                                 int32_t aAppUnitsPerDevPixel,
                                 RectCornerRadii* aCornerRadii,
                                 nscoord aBlurRadius,
-                                const gfxRGBA& aShadowColor,
+                                const Color& aShadowColor,
                                 const nsRect& aDirtyRect,
                                 const gfxRect& aSkipRect)
 {
