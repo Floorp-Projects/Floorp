@@ -213,9 +213,6 @@ InitIteratorClass(JSContext* cx, HandleObject obj);
 extern JSObject*
 InitStopIterationClass(JSContext* cx, HandleObject obj);
 
-extern JSObject*
-InitIteratorClasses(JSContext* cx, HandleObject obj);
-
 } /* namespace js */
 
 #endif /* jsiter_h */
