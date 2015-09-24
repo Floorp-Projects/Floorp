@@ -12,6 +12,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/gfx/CriticalSection.h"
 #include <windows.h>
+#include <synchapi.h>
 #include <list>
 
 namespace mozilla {
