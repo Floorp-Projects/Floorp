@@ -22,6 +22,8 @@ flags:
     - flame-kk-spark-eng
     - nexus-4
     - nexus-4-eng
+    - nexus-4-kk
+    - nexus-4-kk-eng
     - nexus-5l
     - nexus-5l-eng
     - dolphin
