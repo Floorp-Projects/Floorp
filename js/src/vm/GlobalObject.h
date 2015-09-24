@@ -542,9 +542,7 @@ class GlobalObject : public NativeObject
     static NativeObject* getOrCreateStringIteratorPrototype(JSContext* cx,
                                                             Handle<GlobalObject*> global)
     {
-        if (!ensureConstructor(cx, global, JSProto_Iterator))
-            return nullptr;
-        return &global->getSlot(STRING_ITERATOR_PROTO).toObject().as<NativeObject>();
+        return MaybeNativeObject(global->getOrCreateObject(cx, STRING_ITERATOR_PROTO, initStringIteratorProto));
     }
 
     static NativeObject* getOrCreateLegacyGeneratorObjectPrototype(JSContext* cx,
@@ -705,6 +703,7 @@ class GlobalObject : public NativeObject
 
     // Implemented in jsiter.cpp.
     static bool initArrayIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
+    static bool initStringIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
     static bool initIteratorClasses(JSContext* cx, Handle<GlobalObject*> global);
 
     // Implemented in vm/GeneratorObject.cpp.
