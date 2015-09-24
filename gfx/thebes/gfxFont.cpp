@@ -428,7 +428,7 @@ gfxFontShaper::MergeFontFeatures(
     bool aDisableLigatures,
     const nsAString& aFamilyName,
     bool aAddSmallCaps,
-    PLDHashOperator (*aHandleFeature)(const uint32_t&, uint32_t&, void*),
+    void (*aHandleFeature)(const uint32_t&, uint32_t&, void*),
     void* aHandleFeatureData)
 {
     uint32_t numAlts = aStyle->alternateValues.Length();
@@ -530,7 +530,9 @@ gfxFontShaper::MergeFontFeatures(
     }
 
     if (mergedFeatures.Count() != 0) {
-        mergedFeatures.Enumerate(aHandleFeature, aHandleFeatureData);
+        for (auto iter = mergedFeatures.Iter(); !iter.Done(); iter.Next()) {
+            aHandleFeature(iter.Key(), iter.Data(), aHandleFeatureData);
+        }
     }
 }
 

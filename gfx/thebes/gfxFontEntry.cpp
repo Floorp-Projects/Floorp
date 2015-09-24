@@ -146,13 +146,6 @@ gfxFontEntry::gfxFontEntry(const nsAString& aName, bool aIsStandardFace) :
     memset(&mNonDefaultSubSpaceFeatures, 0, sizeof(mNonDefaultSubSpaceFeatures));
 }
 
-static PLDHashOperator
-DestroyHBSet(const uint32_t& aTag, hb_set_t*& aSet, void *aUserArg)
-{
-    hb_set_destroy(aSet);
-    return PL_DHASH_NEXT;
-}
-
 gfxFontEntry::~gfxFontEntry()
 {
     if (mCOLR) {
@@ -170,7 +163,10 @@ gfxFontEntry::~gfxFontEntry()
     }
 
     if (mFeatureInputs) {
-        mFeatureInputs->Enumerate(DestroyHBSet, nullptr);
+        for (auto iter = mFeatureInputs->Iter(); !iter.Done(); iter.Next()) {
+            hb_set_t*& set = iter.Data();
+            hb_set_destroy(set);
+        }
     }
 
     // By the time the entry is destroyed, all font instances that were
