@@ -2748,15 +2748,7 @@ public class BrowserApp extends GeckoApp
         // prevents this issue.
         fm.executePendingTransactions();
 
-        Fragment f = fm.findFragmentById(R.id.search_container);
-
-        // checking if fragment is already present
-        if (f != null) {
-            fm.beginTransaction().show(f).commitAllowingStateLoss();
-        } else {
-            // add fragment if not already present
-            fm.beginTransaction().add(R.id.search_container, mBrowserSearch, BROWSER_SEARCH_TAG).commitAllowingStateLoss();
-        }
+        fm.beginTransaction().add(R.id.search_container, mBrowserSearch, BROWSER_SEARCH_TAG).commitAllowingStateLoss();
         mBrowserSearch.setUserVisibleHint(true);
 
         // We want to adjust the window size when the keyboard appears to bring the
@@ -2782,7 +2774,7 @@ public class BrowserApp extends GeckoApp
         mBrowserSearchContainer.setVisibility(View.INVISIBLE);
 
         getSupportFragmentManager().beginTransaction()
-                .hide(mBrowserSearch).commitAllowingStateLoss();
+                .remove(mBrowserSearch).commitAllowingStateLoss();
         mBrowserSearch.setUserVisibleHint(false);
 
         getWindow().setBackgroundDrawable(null);
