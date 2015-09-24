@@ -486,8 +486,15 @@ GLScreenBuffer::Swap(const gfx::IntSize& size)
         //uint32_t srcPixel = ReadPixel(src);
         //uint32_t destPixel = ReadPixel(dest);
         //printf_stderr("Before: src: 0x%08x, dest: 0x%08x\n", srcPixel, destPixel);
+#ifdef DEBUG
+        GLContext::LocalErrorScope errorScope(*mGL);
+#endif
 
         SharedSurface::ProdCopy(src, dest, mFactory.get());
+
+#ifdef DEBUG
+        MOZ_ASSERT(!errorScope.GetError());
+#endif
 
         //srcPixel = ReadPixel(src);
         //destPixel = ReadPixel(dest);
