@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Compositor opacity blending should work correctly (and the same as canvas)</title>
+<html class="reftest-wait">
+<head>
+<script>
+    function load() {
+        var one = document.getElementById("one").getContext("2d");
+
+        one.fillStyle = "rgba(255,0,0,0.5)";
+        one.fillRect(0, 0, 200, 200);
+        one.fillStyle = "rgba(0,255,0,0.5)";
+        one.fillRect(0, 0, 200, 200);
+
+        document.documentElement.removeAttribute("class");
+    }
+</script>
+</head>
+<body onload="load()">
+
+<div style="opacity:0.8">
+    <canvas id="one" style="position:absolute; left:0px;"></canvas>
+</div>
+</body>
+</html>
