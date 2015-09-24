@@ -20,6 +20,7 @@ const RSYNC_STATE_ENABLED = "enabled";
 const RSYNC_STATE_DISABLED = "disabled";
 const RSYNC_STATE_WIFIONLY = "wifiOnly";
 
+Cu.import("resource://gre/modules/BrowserUtils.jsm");
 Cu.import('resource://gre/modules/IndexedDBHelper.jsm');
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -174,7 +175,7 @@ this.RequestSyncService = {
     let dbKeys = [];
 
     for (let key in this._registrations) {
-      let prin = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(key);
+      let prin = BrowserUtils.principalFromOrigin(key);
       if (!ChromeUtils.originAttributesMatchPattern(prin.originAttributes, pattern)) {
         continue;
       }
