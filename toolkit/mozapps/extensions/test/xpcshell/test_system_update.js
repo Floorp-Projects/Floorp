@@ -138,6 +138,7 @@ function* check_installed(inProfile, ...versions) {
       do_check_eq(addon.version, versions[i]);
       do_check_true(addon.isActive);
       do_check_false(addon.foreignInstall);
+      go_check_true(addon.hidden);
 
       // Verify the add-ons file is in the right place
       let uri = addon.getResourceURI(null);
