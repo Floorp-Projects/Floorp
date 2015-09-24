@@ -2989,7 +2989,7 @@ void
 nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
                                 nsRenderingContext* aCtx)
 {
-  if (mColor == NS_RGBA(0, 0, 0, 0)) {
+  if (mColor == Color()) {
     return;
   }
 
@@ -3043,7 +3043,7 @@ nsDisplayBackgroundColor::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
 bool
 nsDisplayBackgroundColor::IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor)
 {
-  *aColor = NS_RGBA_FROM_GFXRGBA(mColor);
+  *aColor = mColor.ToABGR();
   return true;
 }
 

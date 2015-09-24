@@ -2647,13 +2647,15 @@ protected:
 
 class nsDisplayBackgroundColor : public nsDisplayItem
 {
+  typedef mozilla::gfx::Color Color;
+
 public:
   nsDisplayBackgroundColor(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                            const nsStyleBackground* aBackgroundStyle,
                            nscolor aColor)
     : nsDisplayItem(aBuilder, aFrame)
     , mBackgroundStyle(aBackgroundStyle)
-    , mColor(gfxRGBA(aColor))
+    , mColor(Color::FromABGR(aColor))
   { }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) override;
@@ -2677,8 +2679,7 @@ public:
 
   virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override
   {
-    return new nsDisplaySolidColorGeometry(this, aBuilder,
-                                           NS_RGBA_FROM_GFXRGBA(mColor));
+    return new nsDisplaySolidColorGeometry(this, aBuilder, mColor.ToABGR());
   }
 
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
@@ -2686,7 +2687,7 @@ public:
                                          nsRegion* aInvalidRegion) override
   {
     const nsDisplaySolidColorGeometry* geometry = static_cast<const nsDisplaySolidColorGeometry*>(aGeometry);
-    if (NS_RGBA_FROM_GFXRGBA(mColor) != geometry->mColor) {
+    if (mColor.ToABGR() != geometry->mColor) {
       bool dummy;
       aInvalidRegion->Or(geometry->mBounds, GetBounds(aBuilder, &dummy));
       return;
@@ -2699,7 +2700,7 @@ public:
 
 protected:
   const nsStyleBackground* mBackgroundStyle;
-  gfxRGBA mColor;
+  mozilla::gfx::Color mColor;
 };
 
 class nsDisplayClearBackground : public nsDisplayItem
