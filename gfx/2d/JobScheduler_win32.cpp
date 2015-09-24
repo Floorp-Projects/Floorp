@@ -50,7 +50,7 @@ MultiThreadedJobQueue::PopJob(Job*& aOutJob, AccessType aAccess)
   for (;;) {
     while (aAccess == BLOCKING && mJobs.empty()) {
       {
-        MutexAutoLock lock(&mMutex);
+        CriticalSectionAutoEnter lock(&mSection);
         if (mShuttingDown) {
           return false;
         }
@@ -60,7 +60,7 @@ MultiThreadedJobQueue::PopJob(Job*& aOutJob, AccessType aAccess)
       ::WaitForMultipleObjects(2, handles, FALSE, INFINITE);
     }
 
-    MutexAutoLock lock(&mMutex);
+    CriticalSectionAutoEnter lock(&mSection);
 
     if (mShuttingDown) {
       return false;
@@ -91,7 +91,7 @@ void
 MultiThreadedJobQueue::SubmitJob(Job* aJob)
 {
   MOZ_ASSERT(aJob);
-  MutexAutoLock lock(&mMutex);
+  CriticalSectionAutoEnter lock(&mSection);
   mJobs.push_back(aJob);
   ::SetEvent(mAvailableEvent);
 }
@@ -100,7 +100,7 @@ void
 MultiThreadedJobQueue::ShutDown()
 {
   {
-    MutexAutoLock lock(&mMutex);
+    CriticalSectionAutoEnter lock(&mSection);
     mShuttingDown = true;
   }
   while (mThreadsCount) {
@@ -112,14 +112,14 @@ MultiThreadedJobQueue::ShutDown()
 size_t
 MultiThreadedJobQueue::NumJobs()
 {
-  MutexAutoLock lock(&mMutex);
+  CriticalSectionAutoEnter lock(&mSection);
   return mJobs.size();
 }
 
 bool
 MultiThreadedJobQueue::IsEmpty()
 {
-  MutexAutoLock lock(&mMutex);
+  CriticalSectionAutoEnter lock(&mSection);
   return mJobs.empty();
 }
 
@@ -132,7 +132,7 @@ MultiThreadedJobQueue::RegisterThread()
 void
 MultiThreadedJobQueue::UnregisterThread()
 {
-  MutexAutoLock lock(&mMutex);
+  CriticalSectionAutoEnter lock(&mSection);
   mThreadsCount -= 1;
   if (mThreadsCount == 0) {
     ::SetEvent(mShutdownEvent);
