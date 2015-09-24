@@ -5792,7 +5792,7 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
         mTextRun->GetAdvanceWidth(offset, length, &aProvider);
       if (NS_GET_A(background) > 0) {
         gfxRect bgRect;
-        gfxFloat offs = iOffset - (mTextRun->IsRightToLeft() ? advance : 0);
+        gfxFloat offs = iOffset - (mTextRun->IsInlineReversed() ? advance : 0);
         if (vertical) {
           bgRect = gfxRect(aFramePt.x, aFramePt.y + offs,
                            GetSize().width, advance);
@@ -5829,7 +5829,7 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
     GetSelectionTextShadow(this, type, aTextPaintStyle, &shadow);
     if (shadow) {
       nscoord startEdge = iOffset;
-      if (mTextRun->IsRightToLeft()) {
+      if (mTextRun->IsInlineReversed()) {
         startEdge -= mTextRun->GetAdvanceWidth(offset, length, &aProvider) +
             hyphenWidth;
       }
@@ -6246,7 +6246,7 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
   provider.InitializeForDisplay(!IsSelected());
 
   gfxContext* ctx = aRenderingContext->ThebesContext();
-  const bool rtl = mTextRun->IsRightToLeft();
+  const bool reversed = mTextRun->IsInlineReversed();
   const bool verticalRun = mTextRun->IsVertical();
   WritingMode wm = GetWritingMode();
   const nscoord frameWidth = GetSize().width;
@@ -6261,10 +6261,11 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
         nsLayoutUtils::GetSnappedBaselineX(this, ctx, aPt.x + frameWidth,
                                            -mAscent);
     }
-    textBaselinePt.y = rtl ? aPt.y + GetSize().height : aPt.y;
+    textBaselinePt.y = reversed ? aPt.y + GetSize().height : aPt.y;
   } else {
-    textBaselinePt = gfxPoint(rtl ? gfxFloat(aPt.x + frameWidth) : framePt.x,
-             nsLayoutUtils::GetSnappedBaselineY(this, ctx, aPt.y, mAscent));
+    textBaselinePt =
+      gfxPoint(reversed ? gfxFloat(aPt.x + frameWidth) : framePt.x,
+               nsLayoutUtils::GetSnappedBaselineY(this, ctx, aPt.y, mAscent));
   }
   uint32_t startOffset = provider.GetStart().GetSkippedOffset();
   uint32_t maxLength = ComputeTransformedLength(provider);
@@ -6274,9 +6275,9 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
     return;
   }
   if (verticalRun) {
-    textBaselinePt.y += rtl ? -snappedEndEdge : snappedStartEdge;
+    textBaselinePt.y += reversed ? -snappedEndEdge : snappedStartEdge;
   } else {
-    textBaselinePt.x += rtl ? -snappedEndEdge : snappedStartEdge;
+    textBaselinePt.x += reversed ? -snappedEndEdge : snappedStartEdge;
   }
   nsCharClipDisplayItem::ClipEdges clipEdges(aItem, snappedStartEdge,
                                              snappedEndEdge);
@@ -6631,9 +6632,9 @@ nsTextFrame::GetCharacterOffsetAtFramePointInternal(nsPoint aPoint,
   PropertyProvider provider(this, iter, nsTextFrame::eInflated);
   // Trim leading but not trailing whitespace if possible
   provider.InitializeForDisplay(false);
-  gfxFloat width = mTextRun->IsVertical() ?
-    (mTextRun->IsRightToLeft() ? mRect.height - aPoint.y : aPoint.y) :
-    (mTextRun->IsRightToLeft() ? mRect.width - aPoint.x : aPoint.x);
+  gfxFloat width = mTextRun->IsVertical()
+    ? (mTextRun->IsInlineReversed() ? mRect.height - aPoint.y : aPoint.y)
+    : (mTextRun->IsInlineReversed() ? mRect.width - aPoint.x : aPoint.x);
   gfxFloat fitWidth;
   uint32_t skippedLength = ComputeTransformedLength(provider);
 
@@ -6860,13 +6861,13 @@ nsTextFrame::GetPointFromOffset(int32_t inOffset,
   nscoord iSize = NSToCoordCeilClamped(advance);
 
   if (mTextRun->IsVertical()) {
-    if (mTextRun->IsRightToLeft()) {
+    if (mTextRun->IsInlineReversed()) {
       outPoint->y = mRect.height - iSize;
     } else {
       outPoint->y = iSize;
     }
   } else {
-    if (mTextRun->IsRightToLeft()) {
+    if (mTextRun->IsInlineReversed()) {
       outPoint->x = mRect.width - iSize;
     } else {
       outPoint->x = iSize;
