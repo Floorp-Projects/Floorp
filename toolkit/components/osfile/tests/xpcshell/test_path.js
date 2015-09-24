@@ -44,7 +44,7 @@ function run_test()
   do_check_eq(Win.normalize("\\a\\b\\c\\\\\\"), "\\a\\b\\c");
   do_check_eq(Win.normalize("\\a\\b\\c\\..\\..\\..\\d\\e\\f"), "\\d\\e\\f");
   do_check_eq(Win.normalize("a\\b\\c\\..\\..\\..\\d\\e\\f"), "d\\e\\f");
-  do_check_fail(function() Win.normalize("\\a\\b\\c\\..\\..\\..\\..\\d\\e\\f"));
+  do_check_fail(() => Win.normalize("\\a\\b\\c\\..\\..\\..\\..\\d\\e\\f"));
 
   do_check_eq(Win.join("\\tmp", "foo", "bar"), "\\tmp\\foo\\bar", "join \\tmp,foo,bar");
   do_check_eq(Win.join("\\tmp", "\\foo", "bar"), "\\foo\\bar", "join \\tmp,\\foo,bar");
@@ -78,7 +78,7 @@ function run_test()
   do_check_eq(Win.normalize("c:\\a\\b\\c\\\\\\"), "c:\\a\\b\\c");
   do_check_eq(Win.normalize("c:\\a\\b\\c\\..\\..\\..\\d\\e\\f"), "c:\\d\\e\\f");
   do_check_eq(Win.normalize("c:a\\b\\c\\..\\..\\..\\d\\e\\f"), "c:\\d\\e\\f");
-  do_check_fail(function() Win.normalize("c:\\a\\b\\c\\..\\..\\..\\..\\d\\e\\f"));
+  do_check_fail(() => Win.normalize("c:\\a\\b\\c\\..\\..\\..\\..\\d\\e\\f"));
 
   do_check_eq(Win.join("c:\\", "foo"), "c:\\foo", "join c:\,foo");
   do_check_eq(Win.join("c:\\tmp", "foo", "bar"), "c:\\tmp\\foo\\bar", "join c:\\tmp,foo,bar");
@@ -120,7 +120,7 @@ function run_test()
   do_check_eq(Win.normalize("\\\\a\\b\\\\\\\\c"), "\\\\a\\b\\c");
   do_check_eq(Win.normalize("\\\\a\\b\\c\\\\\\"), "\\\\a\\b\\c");
   do_check_eq(Win.normalize("\\\\a\\b\\c\\..\\..\\d\\e\\f"), "\\\\a\\d\\e\\f");
-  do_check_fail(function() Win.normalize("\\\\a\\b\\c\\..\\..\\..\\d\\e\\f"));
+  do_check_fail(() => Win.normalize("\\\\a\\b\\c\\..\\..\\..\\d\\e\\f"));
 
   do_check_eq(Win.join("\\\\a\\tmp", "foo", "bar"), "\\\\a\\tmp\\foo\\bar");
   do_check_eq(Win.join("\\\\a\\tmp", "\\foo", "bar"), "\\\\a\\foo\\bar");
@@ -143,7 +143,7 @@ function run_test()
   do_check_eq(Unix.normalize("/a/b/c///"), "/a/b/c");
   do_check_eq(Unix.normalize("/a/b/c/../../../d/e/f"), "/d/e/f");
   do_check_eq(Unix.normalize("a/b/c/../../../d/e/f"), "d/e/f");
-  do_check_fail(function() Unix.normalize("/a/b/c/../../../../d/e/f"));
+  do_check_fail(() => Unix.normalize("/a/b/c/../../../../d/e/f"));
 
   do_check_eq(Unix.join("/tmp", "foo", "bar"), "/tmp/foo/bar", "join /tmp,foo,bar");
   do_check_eq(Unix.join("/tmp", "/foo", "bar"), "/foo/bar", "join /tmp,/foo,bar");

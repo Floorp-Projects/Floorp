@@ -95,7 +95,7 @@ function test() {
     let win = OpenBrowserWindow({private: aIsPrivate});
     win.addEventListener("load", function onLoad() {
       win.removeEventListener("load", onLoad, false);
-      executeSoon(function() aCallback(win));
+      executeSoon(() => aCallback(win));
     }, false);
   }
 
@@ -103,7 +103,7 @@ function test() {
     let browser = aWin.gBrowser.selectedBrowser;
     browser.addEventListener("load", function onLoad() {
       browser.removeEventListener("load", onLoad, true);
-      executeSoon(function() aCallback(browser.contentDocument));
+      executeSoon(() => aCallback(browser.contentDocument));
     }, true);
     browser.loadURI(aURL);
   }

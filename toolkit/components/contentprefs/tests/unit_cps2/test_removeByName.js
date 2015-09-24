@@ -77,9 +77,9 @@ var tests = [
   },
 
   function erroneous() {
-    do_check_throws(function () cps.removeByName("", null));
-    do_check_throws(function () cps.removeByName(null, null));
-    do_check_throws(function () cps.removeByName("foo", null, "bogus"));
+    do_check_throws(() => cps.removeByName("", null));
+    do_check_throws(() => cps.removeByName(null, null));
+    do_check_throws(() => cps.removeByName("foo", null, "bogus"));
     yield true;
   },
 

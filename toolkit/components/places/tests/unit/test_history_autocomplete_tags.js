@@ -101,7 +101,7 @@ function ensure_tag_results(uris, searchTerm)
       do_check_eq(controller.getStyleAt(i), "tag");
     }
     // Sort the results then check if we have the right items
-    vals.sort().forEach(function(val, i) do_check_eq(val, uris[i].spec))
+    vals.sort().forEach((val, i) => do_check_eq(val, uris[i].spec))
    
     if (current_test < (tests.length - 1)) {
       current_test++;
@@ -122,30 +122,30 @@ var uri5 = uri("http://site.tld/5/aaa");
 var uri6 = uri("http://site.tld/6/bbb");
   
 var tests = [
-  function() ensure_tag_results([uri1, uri4, uri6], "foo"), 
-  function() ensure_tag_results([uri1], "foo aaa"), 
-  function() ensure_tag_results([uri4, uri6], "foo bbb"), 
-  function() ensure_tag_results([uri2, uri4, uri5, uri6], "bar"), 
-  function() ensure_tag_results([uri5], "bar aaa"), 
-  function() ensure_tag_results([uri2, uri4, uri6], "bar bbb"), 
-  function() ensure_tag_results([uri3, uri5, uri6], "cheese"), 
-  function() ensure_tag_results([uri3, uri5], "chees aaa"), 
-  function() ensure_tag_results([uri6], "chees bbb"), 
-  function() ensure_tag_results([uri4, uri6], "fo bar"), 
-  function() ensure_tag_results([], "fo bar aaa"), 
-  function() ensure_tag_results([uri4, uri6], "fo bar bbb"), 
-  function() ensure_tag_results([uri4, uri6], "ba foo"), 
-  function() ensure_tag_results([], "ba foo aaa"), 
-  function() ensure_tag_results([uri4, uri6], "ba foo bbb"), 
-  function() ensure_tag_results([uri5, uri6], "ba chee"), 
-  function() ensure_tag_results([uri5], "ba chee aaa"), 
-  function() ensure_tag_results([uri6], "ba chee bbb"), 
-  function() ensure_tag_results([uri5, uri6], "cheese bar"), 
-  function() ensure_tag_results([uri5], "cheese bar aaa"), 
-  function() ensure_tag_results([uri6], "chees bar bbb"), 
-  function() ensure_tag_results([uri6], "cheese bar foo"),
-  function() ensure_tag_results([], "foo bar cheese aaa"),
-  function() ensure_tag_results([uri6], "foo bar cheese bbb"),
+  () => ensure_tag_results([uri1, uri4, uri6], "foo"),
+  () => ensure_tag_results([uri1], "foo aaa"),
+  () => ensure_tag_results([uri4, uri6], "foo bbb"),
+  () => ensure_tag_results([uri2, uri4, uri5, uri6], "bar"),
+  () => ensure_tag_results([uri5], "bar aaa"),
+  () => ensure_tag_results([uri2, uri4, uri6], "bar bbb"),
+  () => ensure_tag_results([uri3, uri5, uri6], "cheese"),
+  () => ensure_tag_results([uri3, uri5], "chees aaa"),
+  () => ensure_tag_results([uri6], "chees bbb"),
+  () => ensure_tag_results([uri4, uri6], "fo bar"),
+  () => ensure_tag_results([], "fo bar aaa"),
+  () => ensure_tag_results([uri4, uri6], "fo bar bbb"),
+  () => ensure_tag_results([uri4, uri6], "ba foo"),
+  () => ensure_tag_results([], "ba foo aaa"),
+  () => ensure_tag_results([uri4, uri6], "ba foo bbb"),
+  () => ensure_tag_results([uri5, uri6], "ba chee"),
+  () => ensure_tag_results([uri5], "ba chee aaa"),
+  () => ensure_tag_results([uri6], "ba chee bbb"),
+  () => ensure_tag_results([uri5, uri6], "cheese bar"),
+  () => ensure_tag_results([uri5], "cheese bar aaa"),
+  () => ensure_tag_results([uri6], "chees bar bbb"),
+  () => ensure_tag_results([uri6], "cheese bar foo"),
+  () => ensure_tag_results([], "foo bar cheese aaa"),
+  () => ensure_tag_results([uri6], "foo bar cheese bbb"),
 ];
 
 /**
