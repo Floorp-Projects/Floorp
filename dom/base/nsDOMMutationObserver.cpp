@@ -115,38 +115,6 @@ nsMutationReceiver::Disconnect(bool aRemoveFromObserver)
 }
 
 void
-nsMutationReceiver::NativeAnonymousChildListChange(nsIDocument* aDocument,
-                                                   nsIContent* aContent,
-                                                   bool aIsRemove) {
-  if (!NativeAnonymousChildList()) {
-    return;
-  }
-
-  nsINode* parent = aContent->GetParentNode();
-  if (!parent ||
-      (!Subtree() && Target() != parent) ||
-      (Subtree() && RegisterTarget()->SubtreeRoot() != parent->SubtreeRoot())) {
-    return;
-  }
-
-  nsDOMMutationRecord* m =
-    Observer()->CurrentRecord(nsGkAtoms::nativeAnonymousChildList);
-
-  if (m->mTarget) {
-    return;
-  }
-  m->mTarget = parent;
-
-  if (aIsRemove) {
-    m->mRemovedNodes = new nsSimpleContentList(parent);
-    m->mRemovedNodes->AppendElement(aContent);
-  } else {
-    m->mAddedNodes = new nsSimpleContentList(parent);
-    m->mAddedNodes->AppendElement(aContent);
-  }
-}
-
-void
 nsMutationReceiver::AttributeWillChange(nsIDocument* aDocument,
                                         mozilla::dom::Element* aElement,
                                         int32_t aNameSpaceID,
@@ -618,8 +586,6 @@ nsDOMMutationObserver::Observe(nsINode& aTarget,
   bool attributeOldValue =
     aOptions.mAttributeOldValue.WasPassed() &&
     aOptions.mAttributeOldValue.Value();
-  bool nativeAnonymousChildList = aOptions.mNativeAnonymousChildList &&
-    nsContentUtils::ThreadsafeIsCallerChrome();
   bool characterDataOldValue =
     aOptions.mCharacterDataOldValue.WasPassed() &&
     aOptions.mCharacterDataOldValue.Value();
@@ -639,8 +605,7 @@ nsDOMMutationObserver::Observe(nsINode& aTarget,
     characterData = true;
   }
 
-  if (!(childList || attributes || characterData || animations ||
-        nativeAnonymousChildList)) {
+  if (!(childList || attributes || characterData || animations)) {
     aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
     return;
   }
@@ -690,7 +655,6 @@ nsDOMMutationObserver::Observe(nsINode& aTarget,
   r->SetSubtree(subtree);
   r->SetAttributeOldValue(attributeOldValue);
   r->SetCharacterDataOldValue(characterDataOldValue);
-  r->SetNativeAnonymousChildList(nativeAnonymousChildList);
   r->SetAttributeFilter(filters);
   r->SetAllAttributes(allAttrs);
   r->SetAnimations(animations);
@@ -751,7 +715,6 @@ nsDOMMutationObserver::GetObservingInfo(
     info.mSubtree = mr->Subtree();
     info.mAttributeOldValue.Construct(mr->AttributeOldValue());
     info.mCharacterDataOldValue.Construct(mr->CharacterDataOldValue());
-    info.mNativeAnonymousChildList = mr->NativeAnonymousChildList();
     info.mAnimations.Construct(mr->Animations());
     nsCOMArray<nsIAtom>& filters = mr->AttributeFilter();
     if (filters.Count()) {

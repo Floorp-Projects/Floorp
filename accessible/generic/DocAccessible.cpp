@@ -739,13 +739,6 @@ DocAccessible::AttributeWillChange(nsIDocument* aDocument,
 }
 
 void
-DocAccessible::NativeAnonymousChildListChange(nsIDocument* aDocument,
-                                              nsIContent* aContent,
-                                              bool aIsRemove)
-{
-}
-
-void
 DocAccessible::AttributeChanged(nsIDocument* aDocument,
                                 dom::Element* aElement,
                                 int32_t aNameSpaceID, nsIAtom* aAttribute,

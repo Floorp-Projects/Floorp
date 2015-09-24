@@ -172,16 +172,6 @@ public:
     mCharacterDataOldValue = aOldValue;
   }
 
-  bool NativeAnonymousChildList()
-  {
-    return mParent ? mParent->NativeAnonymousChildList() : mNativeAnonymousChildList;
-  }
-  void SetNativeAnonymousChildList(bool aOldValue)
-  {
-    NS_ASSERTION(!mParent, "Shouldn't have parent");
-    mNativeAnonymousChildList = aOldValue;
-  }
-
   bool Attributes() { return mParent ? mParent->Attributes() : mAttributes; }
   void SetAttributes(bool aAttributes)
   {
@@ -308,7 +298,6 @@ private:
   bool                               mChildList;
   bool                               mCharacterData;
   bool                               mCharacterDataOldValue;
-  bool                               mNativeAnonymousChildList;
   bool                               mAttributes;
   bool                               mAllAttributes;
   bool                               mAttributeOldValue;
@@ -373,7 +362,6 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTEWILLCHANGE
-  NS_DECL_NSIMUTATIONOBSERVER_NATIVEANONYMOUSCHILDLISTCHANGE
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATAWILLCHANGE
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
