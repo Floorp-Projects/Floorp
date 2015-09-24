@@ -1424,26 +1424,26 @@ GlobalObject::initIteratorClasses(JSContext* cx, Handle<GlobalObject*> global)
         global->setReservedSlot(STRING_ITERATOR_PROTO, ObjectValue(*proto));
     }
 
-    return GlobalObject::initStopIterationClass(cx, global);
+    return true;
 }
 
-/* static */ bool
-GlobalObject::initStopIterationClass(JSContext* cx, Handle<GlobalObject*> global)
+JSObject*
+js::InitStopIterationClass(JSContext* cx, HandleObject obj)
 {
-    if (!global->getPrototype(JSProto_StopIteration).isUndefined())
-        return true;
+    Handle<GlobalObject*> global = obj.as<GlobalObject>();
+    if (!global->getPrototype(JSProto_StopIteration).isObject()) {
+        RootedObject proto(cx, global->createBlankPrototype(cx, &StopIterationObject::class_));
+        if (!proto || !FreezeObject(cx, proto))
+            return nullptr;
 
-    RootedObject proto(cx, global->createBlankPrototype(cx, &StopIterationObject::class_));
-    if (!proto || !FreezeObject(cx, proto))
-        return false;
+        // This should use a non-JSProtoKey'd slot, but this is easier for now.
+        if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_StopIteration, proto, proto))
+            return nullptr;
 
-    // This should use a non-JSProtoKey'd slot, but this is easier for now.
-    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_StopIteration, proto, proto))
-        return false;
+        global->setConstructor(JSProto_StopIteration, ObjectValue(*proto));
+    }
 
-    global->setConstructor(JSProto_StopIteration, ObjectValue(*proto));
-
-    return true;
+    return &global->getPrototype(JSProto_StopIteration).toObject();
 }
 
 JSObject*
