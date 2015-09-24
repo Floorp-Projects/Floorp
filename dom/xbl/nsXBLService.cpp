@@ -734,7 +734,8 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
   if (!docInfo)
     return NS_ERROR_FAILURE;
 
-  nsXBLPrototypeBinding* protoBinding = docInfo->GetPrototypeBinding(ref);
+  WeakPtr<nsXBLPrototypeBinding> protoBinding =
+    docInfo->GetPrototypeBinding(ref);
 
   if (!protoBinding) {
 #ifdef DEBUG
@@ -785,7 +786,7 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIURI> baseBindingURI;
-  nsXBLPrototypeBinding* baseProto = protoBinding->GetBasePrototype();
+  WeakPtr<nsXBLPrototypeBinding> baseProto = protoBinding->GetBasePrototype();
   if (baseProto) {
     baseBindingURI = baseProto->BindingURI();
   }
@@ -830,7 +831,6 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
 
   if (!aPeekOnly) {
     // Make a new binding
-    protoBinding = docInfo->GetPrototypeBinding(ref);
     NS_ENSURE_STATE(protoBinding);
     nsXBLBinding *newBinding = new nsXBLBinding(protoBinding);
 
