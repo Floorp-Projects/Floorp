@@ -352,7 +352,7 @@ nsGNOMEShellService::GetShouldSkipCheckDefaultBrowser(bool* aResult)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  if (defaultBrowserCheckCount < 3) {
+  if (defaultBrowserCheckCount < 4) {
     *aResult = false;
     return prefs->SetIntPref(PREF_DEFAULTBROWSERCHECKCOUNT,
                              defaultBrowserCheckCount + 1);
