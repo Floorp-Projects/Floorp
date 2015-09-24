@@ -23,7 +23,7 @@ bool JobScheduler::Init(uint32_t aNumThreads, uint32_t aNumQueues)
   }
 
   for (uint32_t i = 0; i < aNumThreads; ++i) {
-    sSingleton->mWorkerThreads.push_back(new WorkerThread(sSingleton->mDrawingQueues[i%aNumQueues]));
+    sSingleton->mWorkerThreads.push_back(WorkerThread::Create(sSingleton->mDrawingQueues[i%aNumQueues]));
   }
   return true;
 }
@@ -230,6 +230,34 @@ SyncObject::AddPrerequisite(Job* aJob)
 void
 SyncObject::AddSubsequent(Job* aJob)
 {
+}
+
+WorkerThread::WorkerThread(MultiThreadedJobQueue* aJobQueue)
+: mQueue(aJobQueue)
+{
+  aJobQueue->RegisterThread();
+}
+
+void
+WorkerThread::Run()
+{
+  SetName("gfx worker");
+
+  for (;;) {
+    Job* commands = nullptr;
+    if (!mQueue->WaitForJob(commands)) {
+      mQueue->UnregisterThread();
+      return;
+    }
+
+    JobStatus status = JobScheduler::ProcessJob(commands);
+
+    if (status == JobStatus::Error) {
+      // Don't try to handle errors for now, but that's open to discussions.
+      // I expect errors to be mostly OOM issues.
+      MOZ_CRASH();
+    }
+  }
 }
 
 } //namespace
