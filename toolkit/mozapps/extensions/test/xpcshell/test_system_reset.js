@@ -53,6 +53,7 @@ function* check_installed(inProfile, ...versions) {
       do_check_false(addon.foreignInstall);
       do_check_false(hasFlag(addon.permissions, AddonManager.PERM_CAN_UPGRADE));
       do_check_false(hasFlag(addon.permissions, AddonManager.PERM_CAN_UNINSTALL));
+      do_check_true(addon.hidden);
 
       // Verify the add-ons file is in the right place
       let file = expectedDir.clone();
