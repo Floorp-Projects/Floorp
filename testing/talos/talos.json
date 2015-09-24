@@ -46,22 +46,14 @@
             "tests": ["tp5o_scroll", "glterrain"],
             "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
             "pagesets_parent_dir_path": "talos/page_load_test/",
-            "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5o.manifest",
-            "plugins": {
-                "32": "http://talos-bundles.pvt.build.mozilla.org/zips/flash32_10_3_183_5.zip",
-                "64": "http://talos-bundles.pvt.build.mozilla.org/zips/flash64_11_0_d1_98.zip"
-            }
+            "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5o.manifest"
         },
         "g1-e10s": {
             "tests": ["tp5o_scroll", "glterrain"],
             "talos_options": ["--e10s"],
             "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
             "pagesets_parent_dir_path": "talos/page_load_test/",
-            "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5o.manifest",
-            "plugins": {
-                "32": "http://talos-bundles.pvt.build.mozilla.org/zips/flash32_10_3_183_5.zip",
-                "64": "http://talos-bundles.pvt.build.mozilla.org/zips/flash64_11_0_d1_98.zip"
-            }
+            "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5o.manifest"
         },
         "g2": {
             "tests": ["damp", "tps"],
@@ -93,32 +85,20 @@
             "tests": ["tp5o"],
             "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
             "pagesets_parent_dir_path": "talos/page_load_test/",
-            "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5o.manifest",
-            "plugins": {
-                "32": "http://talos-bundles.pvt.build.mozilla.org/zips/flash32_10_3_183_5.zip",
-                "64": "http://talos-bundles.pvt.build.mozilla.org/zips/flash64_11_0_d1_98.zip"
-            }
+            "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5o.manifest"
         },
         "tp5o-e10s": {
             "tests": ["tp5o"],
             "talos_options": ["--e10s"],
             "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
             "pagesets_parent_dir_path": "talos/page_load_test/",
-            "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5o.manifest",
-            "plugins": {
-                "32": "http://talos-bundles.pvt.build.mozilla.org/zips/flash32_10_3_183_5.zip",
-                "64": "http://talos-bundles.pvt.build.mozilla.org/zips/flash64_11_0_d1_98.zip"
-            }
+            "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5o.manifest"
         },
         "xperf": {
             "tests": ["tp5n"],
             "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
             "pagesets_parent_dir_path": "talos/page_load_test/",
             "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5n.manifest",
-            "plugins": {
-                "32": "http://talos-bundles.pvt.build.mozilla.org/zips/flash32_10_3_183_5.zip",
-                "64": "http://talos-bundles.pvt.build.mozilla.org/zips/flash64_11_0_d1_98.zip"
-            },
             "talos_options": [
                 "--xperf_path",
                 "\"c:/Program Files/Microsoft Windows Performance Toolkit/xperf.exe\""
@@ -129,10 +109,6 @@
             "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
             "pagesets_parent_dir_path": "talos/page_load_test/",
             "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5n.manifest",
-            "plugins": {
-                "32": "http://talos-bundles.pvt.build.mozilla.org/zips/flash32_10_3_183_5.zip",
-                "64": "http://talos-bundles.pvt.build.mozilla.org/zips/flash64_11_0_d1_98.zip"
-            },
             "talos_options": [
                 "--e10s",
                 "--xperf_path",
