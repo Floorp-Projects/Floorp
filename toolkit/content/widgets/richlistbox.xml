@@ -556,7 +556,7 @@
             const XULNS =
               "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
             return Array.map(this.getElementsByTagNameNS(XULNS, "label"),
-                             function (label) label.value)
+                             label => label.value)
                         .join(" ");
           ]]>
         </getter>

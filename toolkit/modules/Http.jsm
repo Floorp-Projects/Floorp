@@ -9,8 +9,9 @@ const {classes: Cc, interfaces: Ci} = Components;
 // Strictly follow RFC 3986 when encoding URI components.
 // Accepts a unescaped string and returns the URI encoded string for use in
 // an HTTP request.
-function percentEncode(aString)
-  encodeURIComponent(aString).replace(/[!'()]/g, escape).replace(/\*/g, "%2A");
+function percentEncode(aString) {
+  return encodeURIComponent(aString).replace(/[!'()]/g, escape).replace(/\*/g, "%2A");
+}
 
 /*
  * aOptions can have a variety of fields:
@@ -86,7 +87,7 @@ function httpRequest(aUrl, aOptions) {
   if (POSTData && Array.isArray(POSTData)) {
     xhr.setRequestHeader("Content-Type",
                          "application/x-www-form-urlencoded; charset=utf-8");
-    POSTData = POSTData.map(function(p) p[0] + "=" + percentEncode(p[1]))
+    POSTData = POSTData.map(p => p[0] + "=" + percentEncode(p[1]))
                        .join("&");
   }
 

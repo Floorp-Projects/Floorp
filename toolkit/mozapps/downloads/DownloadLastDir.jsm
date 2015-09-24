@@ -106,7 +106,7 @@ DownloadLastDir.prototype = {
     return this.fakeContext.usePrivateBrowsing;
   },
   // compat shims
-  get file() this._getLastFile(),
+  get file() { return this._getLastFile(); },
   set file(val) { this.setFile(null, val); },
   cleanupPrivateFile: function () {
     gDownloadLastDirFile = null;
@@ -146,7 +146,7 @@ DownloadLastDir.prototype = {
   getFileAsync: function(aURI, aCallback) {
     let plainPrefFile = this._getLastFile();
     if (!aURI || !isContentPrefEnabled()) {
-      Services.tm.mainThread.dispatch(function() aCallback(plainPrefFile),
+      Services.tm.mainThread.dispatch(() => aCallback(plainPrefFile),
                                       Components.interfaces.nsIThread.DISPATCH_NORMAL);
       return;
     }
@@ -156,7 +156,7 @@ DownloadLastDir.prototype = {
                          .getService(Components.interfaces.nsIContentPrefService2);
     let result = null;
     cps2.getByDomainAndName(uri, LAST_DIR_PREF, this.fakeContext, {
-      handleResult: function(aResult) result = aResult,
+      handleResult: aResult => result = aResult,
       handleCompletion: function(aReason) {
         let file = plainPrefFile;
         if (aReason == Components.interfaces.nsIContentPrefCallback2.COMPLETE_OK &&

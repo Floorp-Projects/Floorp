@@ -273,7 +273,7 @@ this.DownloadUtils = {
       return [gBundle.GetStringFromName(gStr.timeUnknown), aLastSec];
 
     // Try to find a cached lastSec for the given second
-    aLastSec = gCachedLast.reduce(function(aResult, aItem)
+    aLastSec = gCachedLast.reduce((aResult, aItem) =>
       aItem[0] == aSeconds ? aItem[1] : aResult, aLastSec);
 
     // Add the current second/lastSec pair unless we have too many
