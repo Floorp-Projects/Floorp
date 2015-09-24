@@ -14,18 +14,21 @@
 #include "nsICryptoHash.h"
 #include "nsIPackagedAppVerifier.h"
 #include "mozilla/LinkedList.h"
+#include "nsIPackagedAppUtils.h"
 
 namespace mozilla {
 namespace net {
 
 class PackagedAppVerifier final
   : public nsIPackagedAppVerifier
+  , public nsIVerificationCallback
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIPACKAGEDAPPVERIFIER
+  NS_DECL_NSIVERIFICATIONCALLBACK
 
 public:
   enum EState {
@@ -120,15 +123,20 @@ private:
   //
   void ProcessResourceCache(const ResourceCacheInfo* aInfo);
 
+  // Callback for nsIInputStream::ReadSegment() to read manifest
+  static NS_METHOD WriteManifest(nsIInputStream* aStream,
+                                void* aManifest,
+                                const char* aFromRawSegment,
+                                uint32_t aToOffset,
+                                uint32_t aCount,
+                                uint32_t* aWriteCount);
+
   // This two functions would call the actual verifier.
   void VerifyManifest(const ResourceCacheInfo* aInfo);
   void VerifyResource(const ResourceCacheInfo* aInfo);
 
   void OnManifestVerified(bool aSuccess);
   void OnResourceVerified(bool aSuccess);
-
-  // Fire a async event to notify the verification result.
-  void FireVerifiedEvent(bool aForManifest, bool aSuccess);
 
   // To notify that either manifest or resource check is done.
   nsCOMPtr<nsIPackagedAppVerifierListener> mListener;
@@ -141,6 +149,12 @@ private:
 
   // The signature of the package.
   nsCString mSignature;
+
+  // The app manfiest of the package
+  nsCString mManifest;
+
+  // Whether we're processing the first resource, which is the manfiest
+  bool mIsFirstResource;
 
   // Whether this package app is signed.
   bool mIsPackageSigned;
@@ -158,6 +172,9 @@ private:
   // The last computed hash value for a resource. It will be set on every
   // |EndResourceHash| call.
   nsCString mLastComputedResourceHash;
+
+  // This will help to verify manifests and resource integrity
+  nsCOMPtr<nsIPackagedAppUtils> mPackagedAppUtils;
 
   // A list of pending resource that is downloaded but not verified yet.
   mozilla::LinkedList<ResourceCacheInfo> mPendingResourceCacheInfoList;
