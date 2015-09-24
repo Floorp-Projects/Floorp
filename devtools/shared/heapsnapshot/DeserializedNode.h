@@ -265,7 +265,7 @@ public:
 
   // We ignore the `bool wantNames` parameter because we can't control whether
   // the core dump was serialized with edge names or not.
-  UniquePtr<EdgeRange> edges(JSContext* cx, bool) const override;
+  UniquePtr<EdgeRange> edges(JSRuntime* rt, bool) const override;
 };
 
 template<>

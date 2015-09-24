@@ -64,6 +64,7 @@ private:
   bool mActorDestroyed;
   nsCOMPtr<nsIPresentationService> mService;
   nsTArray<nsString> mSessionIds;
+  nsTArray<uint64_t> mWindowIds;
 };
 
 class PresentationRequestParent final : public PPresentationRequestParent

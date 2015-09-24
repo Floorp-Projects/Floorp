@@ -78,13 +78,13 @@ template<typename Handler>
 struct BreadthFirst {
 
     // Construct a breadth-first traversal object that reports the nodes it
-    // reaches to |handler|. The traversal object reports OOM on |cx|, and
-    // asserts that no GC happens in |cx|'s runtime during its lifetime.
+    // reaches to |handler|. The traversal asserts that no GC happens in its
+    // runtime during its lifetime.
     //
     // We do nothing with noGC, other than require it to exist, with a lifetime
     // that encloses our own.
-    BreadthFirst(JSContext* cx, Handler& handler, const JS::AutoCheckCannotGC& noGC)
-      : wantNames(true), cx(cx), visited(cx), handler(handler), pending(cx),
+    BreadthFirst(JSRuntime* rt, Handler& handler, const JS::AutoCheckCannotGC& noGC)
+      : wantNames(true), rt(rt), visited(), handler(handler), pending(),
         traversalBegun(false), stopRequested(false), abandonRequested(false)
     { }
 
@@ -126,7 +126,7 @@ struct BreadthFirst {
             pending.popFront();
 
             // Get a range containing all origin's outgoing edges.
-            auto range = origin.edges(cx, wantNames);
+            auto range = origin.edges(rt, wantNames);
             if (!range)
                 return false;
 
@@ -181,13 +181,14 @@ struct BreadthFirst {
     // Other edges *to* that referent will still be traversed.
     void abandonReferent() { abandonRequested = true; }
 
-    // The context with which we were constructed.
-    JSContext* cx;
+    // The runtime with which we were constructed.
+    JSRuntime* rt;
 
     // A map associating each node N that we have reached with a
     // Handler::NodeData, for |handler|'s use. This is public, so that
     // |handler| can access it to see the traversal thus far.
-    typedef js::HashMap<Node, typename Handler::NodeData> NodeMap;
+    using NodeMap = js::HashMap<Node, typename Handler::NodeData, js::DefaultHasher<Node>,
+                                js::SystemAllocPolicy>;
     NodeMap visited;
 
   private:
@@ -199,10 +200,10 @@ struct BreadthFirst {
     // current population.
     template <typename T>
     class Queue {
-        js::Vector<T, 0> head, tail;
+        js::Vector<T, 0, js::SystemAllocPolicy> head, tail;
         size_t frontIndex;
       public:
-        explicit Queue(JSContext* cx) : head(cx), tail(cx), frontIndex(0) { }
+        Queue() : head(), tail(), frontIndex(0) { }
         bool empty() { return frontIndex >= head.length(); }
         T& front() {
             MOZ_ASSERT(!empty());

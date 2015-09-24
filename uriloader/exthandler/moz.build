@@ -24,10 +24,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     LOCAL_INCLUDES += ['win']
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     osdir = 'win'
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    osdir = 'android'
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    osdir = 'gonk'
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk', 'uikit'):
+    osdir = CONFIG['MOZ_WIDGET_TOOLKIT']
 else:
     osdir = 'unix'
 
@@ -64,6 +62,12 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'mac/nsLocalHandlerAppMac.mm',
         'mac/nsMIMEInfoMac.mm',
         'mac/nsOSHelperAppService.mm',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'uikit':
+    UNIFIED_SOURCES += [
+        'uikit/nsLocalHandlerAppUIKit.mm',
+        'uikit/nsMIMEInfoUIKit.mm',
+        'uikit/nsOSHelperAppService.mm',
     ]
 else:
     # These files can't be built in unified mode because they redefine LOG.

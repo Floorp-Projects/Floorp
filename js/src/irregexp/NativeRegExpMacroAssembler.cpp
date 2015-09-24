@@ -133,6 +133,14 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
         pushedNonVolatileRegisters++;
     }
 
+#if defined(XP_IOS) && defined(JS_CODEGEN_ARM)
+    // The stack is 4-byte aligned on iOS, force 8-byte alignment.
+    masm.movePtr(StackPointer, temp0);
+    masm.andPtr(Imm32(~7), StackPointer);
+    masm.push(temp0);
+    masm.push(temp0);
+#endif
+
 #ifndef JS_CODEGEN_X86
     // The InputOutputData* is stored as an argument, save it on the stack
     // above the frame.
@@ -367,6 +375,11 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
     masm.freeStack(frameSize + sizeof(void*));
 #else
     masm.freeStack(frameSize);
+#endif
+
+#if defined(XP_IOS) && defined(JS_CODEGEN_ARM)
+    masm.pop(temp0);
+    masm.movePtr(temp0, StackPointer);
 #endif
 
     // Restore non-volatile registers which were saved on entry.

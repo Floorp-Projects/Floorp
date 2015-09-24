@@ -6,7 +6,7 @@
 
 #include "jit/arm/Architecture-arm.h"
 
-#ifndef JS_SIMULATOR_ARM
+#if !defined(JS_ARM_SIMULATOR) && !defined(__APPLE__)
 #include <elf.h>
 #endif
 
@@ -243,6 +243,15 @@ InitARMFlags()
 #if defined(__ARM_ARCH_7__) || defined (__ARM_ARCH_7A__)
     // Compiled to use ARMv7 instructions so assume the ARMv7 arch.
     flags |= HWCAP_ARMv7;
+#endif
+
+#if defined(__APPLE__)
+    #if defined(__ARM_NEON__)
+        flags |= HWCAP_NEON;
+    #endif
+    #if defined(__ARMVFPV3__)
+        flags |= HWCAP_VFPv3 | HWCAP_VFPD32
+    #endif
 #endif
 
 #endif // JS_SIMULATOR_ARM

@@ -569,7 +569,7 @@ class Base {
     //
     // If wantNames is true, compute names for edges. Doing so can be expensive
     // in time and memory.
-    virtual UniquePtr<EdgeRange> edges(JSContext* cx, bool wantNames) const = 0;
+    virtual UniquePtr<EdgeRange> edges(JSRuntime* rt, bool wantNames) const = 0;
 
     // Return the Zone to which this node's referent belongs, or nullptr if the
     // referent is not of a type allocated in SpiderMonkey Zones.
@@ -756,8 +756,8 @@ class Node {
         return base()->size(mallocSizeof);
     }
 
-    UniquePtr<EdgeRange> edges(JSContext* cx, bool wantNames = true) const {
-        return base()->edges(cx, wantNames);
+    UniquePtr<EdgeRange> edges(JSRuntime* rt, bool wantNames = true) const {
+        return base()->edges(rt, wantNames);
     }
 
     bool hasAllocationStack() const { return base()->hasAllocationStack(); }
@@ -868,7 +868,7 @@ class EdgeRange {
 };
 
 
-typedef mozilla::Vector<Edge, 8, js::TempAllocPolicy> EdgeVector;
+typedef mozilla::Vector<Edge, 8, js::SystemAllocPolicy> EdgeVector;
 
 // An EdgeRange concrete class that holds a pre-existing vector of
 // Edges. A PreComputedEdgeRange does not take ownership of its
@@ -883,7 +883,7 @@ class PreComputedEdgeRange : public EdgeRange {
     }
 
   public:
-    explicit PreComputedEdgeRange(JSContext* cx, EdgeVector& edges)
+    explicit PreComputedEdgeRange(EdgeVector& edges)
       : edges(edges),
         i(0)
     {
@@ -916,7 +916,7 @@ class PreComputedEdgeRange : public EdgeRange {
 //
 //    {
 //        mozilla::Maybe<JS::AutoCheckCannotGC> maybeNoGC;
-//        JS::ubi::RootList rootList(cx, maybeNoGC);
+//        JS::ubi::RootList rootList(rt, maybeNoGC);
 //        if (!rootList.init())
 //            return false;
 //
@@ -929,13 +929,13 @@ class PreComputedEdgeRange : public EdgeRange {
 //    }
 class MOZ_STACK_CLASS RootList {
     Maybe<AutoCheckCannotGC>& noGC;
-    JSContext*               cx;
 
   public:
+    JSRuntime* rt;
     EdgeVector edges;
     bool       wantNames;
 
-    RootList(JSContext* cx, Maybe<AutoCheckCannotGC>& noGC, bool wantNames = false);
+    RootList(JSRuntime* rt, Maybe<AutoCheckCannotGC>& noGC, bool wantNames = false);
 
     // Find all GC roots.
     bool init();
@@ -959,7 +959,7 @@ class MOZ_STACK_CLASS RootList {
 
 template<>
 struct Concrete<RootList> : public Base {
-    UniquePtr<EdgeRange> edges(JSContext* cx, bool wantNames) const override;
+    UniquePtr<EdgeRange> edges(JSRuntime* rt, bool wantNames) const override;
     const char16_t* typeName() const override { return concreteTypeName; }
 
   protected:
@@ -976,7 +976,7 @@ struct Concrete<RootList> : public Base {
 template<typename Referent>
 class TracerConcrete : public Base {
     const char16_t* typeName() const override { return concreteTypeName; }
-    UniquePtr<EdgeRange> edges(JSContext*, bool wantNames) const override;
+    UniquePtr<EdgeRange> edges(JSRuntime* rt, bool wantNames) const override;
     JS::Zone* zone() const override;
 
   protected:
@@ -1069,7 +1069,7 @@ template<>
 class Concrete<void> : public Base {
     const char16_t* typeName() const override;
     Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
-    UniquePtr<EdgeRange> edges(JSContext* cx, bool wantNames) const override;
+    UniquePtr<EdgeRange> edges(JSRuntime* rt, bool wantNames) const override;
     JS::Zone* zone() const override;
     JSCompartment* compartment() const override;
     CoarseType coarseType() const final;

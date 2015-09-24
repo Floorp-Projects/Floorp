@@ -66,7 +66,7 @@ private:
             case NS_STYLE_TEXT_ORIENTATION_UPRIGHT:
                 flags |= gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT;
                 break;
-            case NS_STYLE_TEXT_ORIENTATION_SIDEWAYS_RIGHT:
+            case NS_STYLE_TEXT_ORIENTATION_SIDEWAYS:
                 flags |= gfxTextRunFactory::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT;
                 break;
             }

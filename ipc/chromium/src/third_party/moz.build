@@ -1,0 +1,59 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+libevent_path_prefix = '.'
+include(libevent_path_prefix + '/libeventcommon.mozbuild')
+
+if os_win:
+    error('should not reach here on Windows')
+
+if CONFIG['MOZ_NATIVE_LIBEVENT']:
+    error('should not reach here if we are using a native libevent')
+
+UNIFIED_SOURCES += [
+    'libevent/buffer.c',
+    'libevent/bufferevent.c',
+    'libevent/bufferevent_ratelim.c',
+    'libevent/bufferevent_sock.c',
+    'libevent/event.c',
+    'libevent/event_tagging.c',
+    'libevent/evmap.c',
+    'libevent/evrpc.c',
+    'libevent/evthread.c',
+    'libevent/evthread_pthread.c',
+    'libevent/evutil.c',
+    'libevent/evutil_rand.c',
+    'libevent/http.c',
+    'libevent/listener.c',
+    'libevent/log.c',
+    'libevent/poll.c',
+    'libevent/select.c',
+    'libevent/signal.c',
+    'libevent/strlcpy.c',
+]
+SOURCES += [
+    # This file cannot be built in unified mode because of strtotimeval
+    # symbol clash.
+    'libevent/evdns.c',
+]
+
+if os_macosx or os_bsd:
+    UNIFIED_SOURCES += [
+        'libevent/kqueue.c',
+    ]
+
+if os_linux:
+    SOURCES += [
+        'libevent/epoll.c',
+    ]
+    if CONFIG['OS_TARGET'] != 'Android':
+        SOURCES += [
+            'libevent/epoll_sub.c',
+        ]
+
+ALLOW_COMPILER_WARNINGS = True
+
+FINAL_LIBRARY = 'xul'

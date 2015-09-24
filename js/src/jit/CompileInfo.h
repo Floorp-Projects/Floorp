@@ -247,6 +247,9 @@ class CompileInfo
     JSFunction* funMaybeLazy() const {
         return fun_;
     }
+    ModuleObject* module() const {
+        return script_->module();
+    }
     bool constructing() const {
         return constructing_;
     }
