@@ -11,6 +11,52 @@ using namespace std;
 namespace mozilla {
 namespace gfx {
 
+void* ThreadCallback(void* threadData);
+
+class WorkerThreadPosix : public WorkerThread {
+public:
+  explicit WorkerThreadPosix(MultiThreadedJobQueue* aJobQueue)
+  : WorkerThread(aJobQueue)
+  {
+    pthread_create(&mThread, nullptr, ThreadCallback, static_cast<WorkerThread*>(this));
+  }
+
+  ~WorkerThreadPosix()
+  {
+    pthread_join(mThread, nullptr);
+  }
+
+  virtual void SetName(const char* aName) override
+  {
+    // Call this from the thread itself because of Mac.
+#ifdef XP_MACOSX
+    pthread_setname_np(aName);
+#elif defined(__DragonFly__) || defined(__FreeBSD__) || defined(__OpenBSD__)
+    pthread_set_name_np(mThread, aName);
+#elif defined(__NetBSD__)
+    pthread_setname_np(mThread, "%s", (void*)aName);
+#else
+    pthread_setname_np(mThread, aName);
+#endif
+  }
+
+protected:
+  pthread_t mThread;
+};
+
+void* ThreadCallback(void* threadData)
+{
+  WorkerThread* thread = static_cast<WorkerThread*>(threadData);
+  thread->Run();
+  return nullptr;
+}
+
+WorkerThread*
+WorkerThread::Create(MultiThreadedJobQueue* aJobQueue)
+{
+  return new WorkerThreadPosix(aJobQueue);
+}
+
 MultiThreadedJobQueue::MultiThreadedJobQueue()
 : mThreadsCount(0)
 , mShuttingDown(false)
@@ -105,62 +151,6 @@ MultiThreadedJobQueue::UnregisterThread()
   mThreadsCount -= 1;
   if (mThreadsCount == 0) {
     mShutdownCondvar.Broadcast();
-  }
-}
-
-void* ThreadCallback(void* threadData)
-{
-  WorkerThread* thread = (WorkerThread*)threadData;
-  thread->Run();
-  return nullptr;
-}
-
-WorkerThread::WorkerThread(MultiThreadedJobQueue* aJobQueue)
-: mQueue(aJobQueue)
-{
-  aJobQueue->RegisterThread();
-  pthread_create(&mThread, nullptr, ThreadCallback, this);
-}
-
-WorkerThread::~WorkerThread()
-{
-  pthread_join(mThread, nullptr);
-}
-
-void
-WorkerThread::SetName(const char* aName)
-{
-  // Call this from the thread itself because of Mac.
-#ifdef XP_MACOSX
-  pthread_setname_np(aName);
-#elif defined(__DragonFly__) || defined(__FreeBSD__) || defined(__OpenBSD__)
-  pthread_set_name_np(mThread, aName);
-#elif defined(__NetBSD__)
-  pthread_setname_np(mThread, "%s", (void*)aName);
-#else
-  pthread_setname_np(mThread, aName);
-#endif
-}
-
-void
-WorkerThread::Run()
-{
-  SetName("gfx worker");
-
-  for (;;) {
-    Job* commands = nullptr;
-    if (!mQueue->WaitForJob(commands)) {
-      mQueue->UnregisterThread();
-      return;
-    }
-
-    JobStatus status = JobScheduler::ProcessJob(commands);
-
-    if (status == JobStatus::Error) {
-      // Don't try to handle errors for now, but that's open to discussions.
-      // I expect errors to be mostly OOM issues.
-      MOZ_CRASH();
-    }
   }
 }
 
