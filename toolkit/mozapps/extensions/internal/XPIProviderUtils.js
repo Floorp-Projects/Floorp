@@ -1126,6 +1126,18 @@ this.XPIDatabase = {
   },
 
   /**
+   * Asynchronously get all the add-ons in a particular install location.
+   *
+   * @param  aLocation
+   *         The name of the install location
+   * @param  aCallback
+   *         A callback to pass the array of DBAddonInternals to
+   */
+  getAddonsInLocation: function XPIDB_getAddonsInLocation(aLocation, aCallback) {
+    this.getAddonList(aAddon => aAddon._installLocation.name == aLocation, aCallback);
+  },
+
+  /**
    * Asynchronously gets the add-on with the specified ID that is visible.
    *
    * @param  aId
