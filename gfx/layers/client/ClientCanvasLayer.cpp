@@ -92,7 +92,7 @@ ClientCanvasLayer::Initialize(const Data& aData)
 #elif defined(MOZ_WIDGET_GONK)
         factory = MakeUnique<SurfaceFactory_Gralloc>(mGLContext, caps, forwarder, mFlags);
 #elif defined(GL_PROVIDER_GLX)
-        if (sGLXLibrary.UseTextureFromPixmap())
+        if (sGLXLibrary.UseSurfaceSharing())
           factory = SurfaceFactory_GLXDrawable::Create(mGLContext, caps, forwarder, mFlags);
 #else
         if (mGLContext->GetContextType() == GLContextType::EGL) {
