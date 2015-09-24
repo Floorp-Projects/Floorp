@@ -485,7 +485,7 @@ CSS_KEY(sepia, sepia)
 CSS_KEY(serif, serif)
 CSS_KEY(show, show)
 CSS_KEY(sideways, sideways)
-/*CSS_KEY(sideways-lr, sideways_lr)*/
+CSS_KEY(sideways-lr, sideways_lr)
 CSS_KEY(sideways-right, sideways_right) /* alias for 'sideways' */
 CSS_KEY(sideways-rl, sideways_rl)
 CSS_KEY(simp-chinese-formal, simp_chinese_formal)

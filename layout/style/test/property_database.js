@@ -4731,8 +4731,8 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
       inherited: true,
       type: CSS_TYPE_LONGHAND,
       initial_values: [ "horizontal-tb", "lr", "lr-tb", "rl", "rl-tb" ],
-      other_values: [ "vertical-lr", "vertical-rl", "sideways-rl", "tb", "tb-rl" ],
-      invalid_values: [ "10px", "30%", "justify", "auto", "1em", "sideways-lr" ] /* sideways-lr not yet supported */
+      other_values: [ "vertical-lr", "vertical-rl", "sideways-rl", "sideways-lr", "tb", "tb-rl" ],
+      invalid_values: [ "10px", "30%", "justify", "auto", "1em" ]
     },
     "text-orientation": {
       domProp: "textOrientation",
