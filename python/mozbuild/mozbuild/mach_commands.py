@@ -558,10 +558,10 @@ class Build(MachCommandBase):
         help='Show a diff of changes.')
     # It would be nice to filter the choices below based on
     # conditions, but that is for another day.
-    @CommandArgument('-b', '--backend',
+    @CommandArgument('-b', '--backend', nargs='+',
         choices=['RecursiveMake', 'AndroidEclipse', 'CppEclipse',
                  'VisualStudio', 'FasterMake'],
-        default='RecursiveMake',
+        default=['RecursiveMake'],
         help='Which backend to build (default: RecursiveMake).')
     def build_backend(self, backend='RecursiveMake', diff=False):
         python = self.virtualenv_manager.python_path
@@ -573,7 +573,7 @@ class Build(MachCommandBase):
                   % backend)
             return 1
 
-        args = [python, config_status, '--backend=%s' % backend]
+        args = [python, config_status, '--backend'] + backend
         if diff:
             args.append('--diff')
 
