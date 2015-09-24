@@ -925,7 +925,8 @@ nsCaret::ComputeCaretRects(nsIFrame* aFrame, int32_t aFrameOffset,
 {
   NS_ASSERTION(aFrame, "Should have a frame here");
 
-  bool isVertical = aFrame->GetWritingMode().IsVertical();
+  WritingMode wm = aFrame->GetWritingMode();
+  bool isVertical = wm.IsVertical();
 
   nscoord bidiIndicatorSize;
   *aCaretRect = GetGeometryForFrame(aFrame, aFrameOffset, &bidiIndicatorSize);
@@ -957,11 +958,20 @@ nsCaret::ComputeCaretRects(nsIFrame* aFrame, int32_t aFrameOffset,
     }
     bool isCaretRTL = caretBidiLevel % 2;
     if (isVertical) {
-      aHookRect->SetRect(aCaretRect->XMost() - bidiIndicatorSize,
-                         aCaretRect->y + (isCaretRTL ? bidiIndicatorSize * -1 :
-                                                       aCaretRect->height),
-                         aCaretRect->height,
-                         bidiIndicatorSize);
+      bool isSidewaysLR = wm.IsVerticalLR() && !wm.IsLineInverted();
+      if (isSidewaysLR) {
+        aHookRect->SetRect(aCaretRect->x + bidiIndicatorSize,
+                           aCaretRect->y + (!isCaretRTL ? bidiIndicatorSize * -1 :
+                                                          aCaretRect->height),
+                           aCaretRect->height,
+                           bidiIndicatorSize);
+      } else {
+        aHookRect->SetRect(aCaretRect->XMost() - bidiIndicatorSize,
+                           aCaretRect->y + (isCaretRTL ? bidiIndicatorSize * -1 :
+                                                         aCaretRect->height),
+                           aCaretRect->height,
+                           bidiIndicatorSize);
+      }
     } else {
       aHookRect->SetRect(aCaretRect->x + (isCaretRTL ? bidiIndicatorSize * -1 :
                                                        aCaretRect->width),

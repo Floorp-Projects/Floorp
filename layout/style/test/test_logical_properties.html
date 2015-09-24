@@ -72,13 +72,13 @@ var gWritingModes = [
     block: "horizontal", inline: "vertical" },
   { style: [
       "writing-mode: vertical-lr; direction: rtl; ",
-      // "writing-mode: sideways-lr; direction: ltr; ",
+      "writing-mode: sideways-lr; direction: ltr; ",
     ],
     blockStart: "left", blockEnd: "right", inlineStart: "bottom", inlineEnd: "top",
     block: "horizontal", inline: "vertical" },
   { style: [
       "writing-mode: vertical-lr; direction: ltr; ",
-      // "writing-mode: sideways-lr; direction: rtl; ",
+      "writing-mode: sideways-lr; direction: rtl; ",
     ],
     blockStart: "left", blockEnd: "right", inlineStart: "top", inlineEnd: "bottom",
     block: "horizontal", inline: "vertical" },
@@ -143,20 +143,6 @@ function init() {
         make_declaration(gCSSProperties[`${aPrefix}height`].prerequisites)
     });
   });
-
-  // Assume that the sideways-lr keyword is not parsed yet for writing-mode.
-  // When we start supporting this keyword, the entries in the .style
-  // properties of the gWritingModes objects above should be uncommented.
-  var s = document.createElement("style");
-  document.body.appendChild(s);
-
-  s.textContent = "div { }";
-  s.sheet.cssRules[0].style.writingMode = "sideways-lr";
-  todo(s.sheet.cssRules[0].style.writingMode, "sideways-lr",
-       "uncomment sideways-lr cases from gWritingModes and " +
-       "remove this todo()!");
-
-  s.remove();
 }
 
 function test_computed_values(aTestName, aRules, aExpectedValues) {

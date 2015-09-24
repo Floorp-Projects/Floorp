@@ -21,6 +21,7 @@
 #include "nsIAuthPromptProvider.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "nsINetworkInterceptController.h"
+#include "nsIDeprecationWarner.h"
 
 class nsICacheEntry;
 class nsIAssociatedContentSecurity;
@@ -43,6 +44,7 @@ class HttpChannelParent final : public PHttpChannelParent
                               , public ADivertableParentChannel
                               , public nsIAuthPromptProvider
                               , public nsINetworkInterceptController
+                              , public nsIDeprecationWarner
                               , public DisconnectableParent
                               , public HttpChannelSecurityWarningReporter
 {
@@ -58,6 +60,7 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIAUTHPROMPTPROVIDER
   NS_DECL_NSINETWORKINTERCEPTCONTROLLER
+  NS_DECL_NSIDEPRECATIONWARNER
 
   HttpChannelParent(const dom::PBrowserOrId& iframeEmbedding,
                     nsILoadContext* aLoadContext,

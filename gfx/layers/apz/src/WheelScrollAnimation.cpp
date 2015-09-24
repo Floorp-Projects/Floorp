@@ -6,6 +6,10 @@
 
 #include "WheelScrollAnimation.h"
 
+#include "AsyncPanZoomController.h"
+#include "gfxPrefs.h"
+#include "nsPoint.h"
+
 namespace mozilla {
 namespace layers {
 

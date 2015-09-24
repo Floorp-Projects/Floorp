@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<body>
+</body>
+<script>
+  function createImage(loadHandler) {
+    var newImage = new Image;
+    newImage.id = "thepreviewimage";
+    newImage.setAttribute("src", "unsized-svg.svg");
+    if (loadHandler) {
+      newImage.onload = loadHandler;
+    }
+
+    // Query width & height, and display them in document:
+    physWidth = newImage.width;
+    physHeight = newImage.height;
+    document.documentElement.innerHTML +=
+      physWidth + " x " + physHeight + "<br>";
+  }
+
+  function part2() {
+    // Load image again:
+    createImage();
+
+    // End the crashtest.
+    document.documentElement.removeAttribute("class");
+  }
+
+  function startTest() {
+    // Trigger image load, and call part2() when it's loaded:
+    createImage(part2);
+  }
+
+  startTest();
+</script>
+</html>
