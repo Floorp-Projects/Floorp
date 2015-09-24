@@ -28,6 +28,7 @@ import org.mozilla.gecko.GeckoBatteryManager;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.IntentHelper;
+import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.GeckoEventListener;
 
 import org.mozilla.b2gdroid.ScreenStateObserver;
@@ -85,6 +86,8 @@ public class Launcher extends Activity
         initGecko();
 
         GeckoAppShell.setGeckoInterface(new BaseGeckoInterface(this));
+
+        UpdateServiceHelper.registerForUpdates(this);
 
         EventDispatcher.getInstance().registerGeckoThreadListener(this,
             "Launcher:Ready");

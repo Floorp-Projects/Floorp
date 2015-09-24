@@ -21,6 +21,8 @@ JAVAFILES := \
 # org.mozilla.gecko.R itself.
 jars_dir := $(DEPTH)/mobile/android/base
 ANDROID_EXTRA_JARS := $(filter-out %gecko-R.jar,$(wildcard $(jars_dir)/*.jar))
+# Needed for the UpdateService
+ANDROID_EXTRA_JARS += $(ANDROID_COMPAT_LIB)
 
 # The GeckoView consuming APK depends on the GeckoView resources.  This hacks a
 # type of poor man's AAR support.
