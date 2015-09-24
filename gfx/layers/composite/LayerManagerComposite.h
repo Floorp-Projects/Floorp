@@ -172,10 +172,8 @@ public:
    * Restricts the shadow visible region of layers that are covered with
    * opaque content. aOpaqueRegion is the region already known to be covered
    * with opaque content, in the post-transform coordinate space of aLayer.
-   * aClipFromAncestors is an optional clip rect.
    */
-  void ApplyOcclusionCulling(Layer* aLayer, nsIntRegion& aOpaqueRegion,
-                             const Maybe<ParentLayerIntRect>& aClipFromAncestors);
+  void ApplyOcclusionCulling(Layer* aLayer, nsIntRegion& aOpaqueRegion);
 
   /**
    * RAII helper class to add a mask effect with the compositable from aMaskLayer
