@@ -37,7 +37,7 @@ function checkContents(pset, prefixes) {
   outset = pset.getPrefixes(outcount);
   let inset = prefixes;
   do_check_eq(inset.length, outset.length);
-  inset.sort(function(x,y) x - y);
+  inset.sort((x,y) => x - y);
   for (let i = 0; i < inset.length; i++) {
     do_check_eq(inset[i], outset[i]);
   }
@@ -149,7 +149,7 @@ function testLoadSaveLargeSet() {
     arr.push(randInt);
   }
 
-  arr.sort(function(x,y) x - y);
+  arr.sort((x,y) => x - y);
 
   let pset = newPset();
   pset.setPrefixes(arr, arr.length);

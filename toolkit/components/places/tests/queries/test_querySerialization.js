@@ -503,7 +503,7 @@ function cartProd(aSequences, aCallback)
 
   // For each sequence in aSequences, we maintain a pointer (an array index,
   // really) to the element we're currently enumerating in that sequence
-  var seqEltPtrs = aSequences.map(function (i) 0);
+  var seqEltPtrs = aSequences.map(i => 0);
 
   var numProds = 0;
   var done = false;
@@ -574,7 +574,7 @@ function choose(aSet, aHowMany, aCallback)
   var done = false;
   while (!done) {
     numFound++;
-    aCallback(ptrs.map(function (p) aSet[p]));
+    aCallback(ptrs.map(p => aSet[p]));
 
     // The next subset to be chosen differs from the current one by just a
     // single element.  Determine which element that is.  Advance the "rightmost"

@@ -308,7 +308,7 @@ callback.prototype = {
 
           completion._completed = true;
 
-          if (this._completion.completions.every(function(x) x._completed))
+          if (this._completion.completions.every(x => x._completed))
             this._completed = true;
 
           break;

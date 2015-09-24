@@ -109,30 +109,28 @@ var tests = [
   },
 
   function set_erroneous() {
-    do_check_throws(function () cps.set(null, "foo", 1, null));
-    do_check_throws(function () cps.set("", "foo", 1, null));
-    do_check_throws(function () cps.set("a.com", "", 1, null));
-    do_check_throws(function () cps.set("a.com", null, 1, null));
-    do_check_throws(function () cps.set("a.com", "foo", undefined, null));
-    do_check_throws(function () cps.set("a.com", "foo", 1, null, "bogus"));
-    do_check_throws(function () cps.setGlobal("", 1, null));
-    do_check_throws(function () cps.setGlobal(null, 1, null));
-    do_check_throws(function () cps.setGlobal("foo", undefined, null));
-    do_check_throws(function () cps.setGlobal("foo", 1, null, "bogus"));
+    do_check_throws(() => cps.set(null, "foo", 1, null));
+    do_check_throws(() => cps.set("", "foo", 1, null));
+    do_check_throws(() => cps.set("a.com", "", 1, null));
+    do_check_throws(() => cps.set("a.com", null, 1, null));
+    do_check_throws(() => cps.set("a.com", "foo", undefined, null));
+    do_check_throws(() => cps.set("a.com", "foo", 1, null, "bogus"));
+    do_check_throws(() => cps.setGlobal("", 1, null));
+    do_check_throws(() => cps.setGlobal(null, 1, null));
+    do_check_throws(() => cps.setGlobal("foo", undefined, null));
+    do_check_throws(() => cps.setGlobal("foo", 1, null, "bogus"));
     yield true;
   },
 
   function get_erroneous() {
-    do_check_throws(function () cps.getByDomainAndName(null, "foo", null, {}));
-    do_check_throws(function () cps.getByDomainAndName("", "foo", null, {}));
-    do_check_throws(function () cps.getByDomainAndName("a.com", "", null, {}));
-    do_check_throws(function ()
-                    cps.getByDomainAndName("a.com", null, null, {}));
-    do_check_throws(function ()
-                    cps.getByDomainAndName("a.com", "foo", null, null));
-    do_check_throws(function () cps.getGlobal("", null, {}));
-    do_check_throws(function () cps.getGlobal(null, null, {}));
-    do_check_throws(function () cps.getGlobal("foo", null, null));
+    do_check_throws(() => cps.getByDomainAndName(null, "foo", null, {}));
+    do_check_throws(() => cps.getByDomainAndName("", "foo", null, {}));
+    do_check_throws(() => cps.getByDomainAndName("a.com", "", null, {}));
+    do_check_throws(() => cps.getByDomainAndName("a.com", null, null, {}));
+    do_check_throws(() => cps.getByDomainAndName("a.com", "foo", null, null));
+    do_check_throws(() => cps.getGlobal("", null, {}));
+    do_check_throws(() => cps.getGlobal(null, null, {}));
+    do_check_throws(() => cps.getGlobal("foo", null, null));
     yield true;
   },
 
