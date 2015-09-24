@@ -287,7 +287,6 @@ xpcshell-tests:
 	  --build-info-json=$(DEPTH)/mozinfo.json \
 	  --no-logfiles \
 	  --test-plugin-path='$(DIST)/plugins' \
-	  --tests-root-dir=$(abspath _tests/xpcshell) \
 	  --testing-modules-dir=$(abspath _tests/modules) \
           $(SYMBOLS_PATH) \
 	  $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS) \

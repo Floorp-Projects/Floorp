@@ -787,9 +787,10 @@ struct OverUseDetectorOptions {
 };
 
 enum CPULoadState {
-  kLoadRelaxed,
+  kLoadRelaxed = 0,
   kLoadNormal,
-  kLoadStressed
+  kLoadStressed,
+  kLoadLast,
 };
 
 class CPULoadStateObserver {

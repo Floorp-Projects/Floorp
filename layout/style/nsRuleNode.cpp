@@ -7641,6 +7641,8 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
       break;
     case NS_STYLE_WRITING_MODE_VERTICAL_RL:
     case NS_STYLE_WRITING_MODE_VERTICAL_LR:
+    case NS_STYLE_WRITING_MODE_SIDEWAYS_RL:
+    case NS_STYLE_WRITING_MODE_SIDEWAYS_LR:
       vertical = true;
       break;
   }

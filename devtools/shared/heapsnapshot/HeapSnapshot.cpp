@@ -384,7 +384,7 @@ HeapSnapshot::TakeCensus(JSContext* cx, JS::HandleObject options,
   {
     JS::AutoCheckCannotGC nogc;
 
-    JS::ubi::CensusTraversal traversal(cx, handler, nogc);
+    JS::ubi::CensusTraversal traversal(JS_GetRuntime(cx), handler, nogc);
     if (NS_WARN_IF(!traversal.init())) {
       rv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return;
@@ -684,7 +684,7 @@ public:
     }
 
     if (includeEdges) {
-      auto edges = ubiNode.edges(cx, wantNames);
+      auto edges = ubiNode.edges(JS_GetRuntime(cx), wantNames);
       if (NS_WARN_IF(!edges))
         return false;
 
@@ -795,7 +795,7 @@ WriteHeapGraph(JSContext* cx,
   // core dump.
 
   HeapSnapshotHandler handler(writer, zones);
-  HeapSnapshotHandler::Traversal traversal(cx, handler, noGC);
+  HeapSnapshotHandler::Traversal traversal(JS_GetRuntime(cx), handler, noGC);
   if (!traversal.init())
     return false;
   traversal.wantNames = wantNames;
@@ -960,7 +960,7 @@ ThreadSafeChromeUtils::SaveHeapSnapshot(GlobalObject& global,
 
   {
     Maybe<AutoCheckCannotGC> maybeNoGC;
-    ubi::RootList rootList(cx, maybeNoGC, wantNames);
+    ubi::RootList rootList(JS_GetRuntime(cx), maybeNoGC, wantNames);
     if (!EstablishBoundaries(cx, rv, boundaries, rootList, zones))
       return;
 

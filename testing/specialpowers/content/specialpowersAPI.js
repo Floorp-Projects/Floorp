@@ -2060,6 +2060,8 @@ SpecialPowersAPI.prototype = {
 
     let sp = this;
     let extension = {
+      id,
+
       startup() {
         sp._sendAsyncMessage("SPStartupExtension", {id});
         return startupPromise;
@@ -2096,6 +2098,10 @@ SpecialPowersAPI.prototype = {
 
     this._addMessageListener("SPExtensionMessage", listener);
     return extension;
+  },
+
+  invalidateExtensionStorageCache: function() {
+    this.notifyObserversInParentProcess(null, "extension-invalidate-storage-cache", "");
   },
 };
 

@@ -5758,10 +5758,7 @@ nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix, uint32_t aFlags) con
 
   mozilla::WritingMode wm = GetWritingMode();
   if (wm.IsVertical() || !wm.IsBidiLTR()) {
-    aTo += nsPrintfCString(" wm=%s-%s: logical size={%d,%d}",
-                           wm.IsVertical() ? wm.IsVerticalLR() ? "vlr" : "vrl"
-                                           : "htb",
-                           wm.IsBidiLTR() ? "ltr" : "rtl",
+    aTo += nsPrintfCString(" wm=%s: logical size={%d,%d}", wm.DebugString(),
                            ISize(), BSize());
   }
 
@@ -5771,12 +5768,9 @@ nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix, uint32_t aFlags) con
     if (pWM.IsVertical() || !pWM.IsBidiLTR()) {
       nsSize containerSize = parent->mRect.Size();
       LogicalRect lr(pWM, mRect, containerSize);
-      aTo += nsPrintfCString(" parent wm=%s-%s, cs={%d,%d}, "
+      aTo += nsPrintfCString(" parent wm=%s, cs={%d,%d}, "
                              " logicalRect={%d,%d,%d,%d}",
-                             pWM.IsVertical() ? pWM.IsVerticalLR()
-                                                ? "vlr" : "vrl"
-                                              : "htb",
-                             wm.IsBidiLTR() ? "ltr" : "rtl",
+                             pWM.DebugString(),
                              containerSize.width, containerSize.height,
                              lr.IStart(pWM), lr.BStart(pWM),
                              lr.ISize(pWM), lr.BSize(pWM));

@@ -14,10 +14,6 @@
             "tests": ["tresize", "tcanvasmark"],
             "talos_options": ["--e10s"]
         },
-        "chromez-osx-e10s": {
-            "tests": ["tresize", "tcanvasmark"],
-            "talos_options": ["--e10s"]
-        },
         "dromaeojs": {
             "tests": ["dromaeo_css", "kraken", "v8_7"]
         },
@@ -29,10 +25,6 @@
             "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore"]
         },
         "other-e10s": {
-            "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore"],
-            "talos_options": ["--e10s"]
-        },
-        "other-osx-e10s": {
             "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore"],
             "talos_options": ["--e10s"]
         },
@@ -71,10 +63,6 @@
                 "64": "http://talos-bundles.pvt.build.mozilla.org/zips/flash64_11_0_d1_98.zip"
             }
         },
-        "g1-osx-e10s": {
-            "tests": ["tp5o_scroll", "glterrain"],
-            "talos_options": ["--e10s"]
-        },
         "g2": {
             "tests": ["damp", "tps"],
             "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
@@ -88,21 +76,16 @@
             "pagesets_parent_dir_path": "talos/page_load_test/",
             "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5o.manifest"
         },
-        "g2-osx-e10s": {
-            "tests": ["damp", "tps"],
-            "talos_options": ["--e10s"],
-            "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
-            "pagesets_parent_dir_path": "talos/page_load_test/",
-            "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5o.manifest"
+        "g3": {
+            "tests": ["dromaeo_dom"]
+        },
+        "g3-e10s": {
+            "tests": ["dromaeo_dom"]
         },
         "svgr": {
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "cart"]
         },
         "svgr-e10s": {
-            "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "cart"],
-            "talos_options": ["--e10s"]
-        },
-        "svgr-osx-e10s": {
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "cart"],
             "talos_options": ["--e10s"]
         },
@@ -117,17 +100,6 @@
             }
         },
         "tp5o-e10s": {
-            "tests": ["tp5o"],
-            "talos_options": ["--e10s"],
-            "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",
-            "pagesets_parent_dir_path": "talos/page_load_test/",
-            "pagesets_manifest_path": "talos/page_load_test/tp5n/tp5o.manifest",
-            "plugins": {
-                "32": "http://talos-bundles.pvt.build.mozilla.org/zips/flash32_10_3_183_5.zip",
-                "64": "http://talos-bundles.pvt.build.mozilla.org/zips/flash64_11_0_d1_98.zip"
-            }
-        },
-        "tp5o-osx-e10s": {
             "tests": ["tp5o"],
             "talos_options": ["--e10s"],
             "pagesets_url": "http://talos-bundles.pvt.build.mozilla.org/zips/tp5n.zip",

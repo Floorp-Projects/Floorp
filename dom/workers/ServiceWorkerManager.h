@@ -520,10 +520,8 @@ private:
                    const nsACString& aPath,
                    RegistrationDataPerPrincipal** aData, nsACString& aMatch);
 
-#ifdef DEBUG
   static bool
   HasScope(nsIPrincipal* aPrincipal, const nsACString& aScope);
-#endif
 
   static void
   RemoveScopeAndRegistration(ServiceWorkerRegistrationInfo* aRegistration);

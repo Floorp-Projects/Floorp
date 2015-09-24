@@ -9,6 +9,8 @@
 #include "xptcinvoke_x86_64_unix.cpp"
 #elif defined(__ppc__)
 #include "xptcinvoke_ppc_rhapsody.cpp"
+#elif defined(__arm__)
+#include "xptcinvoke_arm.cpp"
 #else
 #error unknown cpu architecture
 #endif

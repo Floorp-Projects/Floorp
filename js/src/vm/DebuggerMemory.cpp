@@ -540,18 +540,23 @@ DebuggerMemory::takeCensus(JSContext* cx, unsigned argc, Value* vp)
 
     {
         Maybe<JS::AutoCheckCannotGC> maybeNoGC;
-        JS::ubi::RootList rootList(cx, maybeNoGC);
-        if (!rootList.init(dbgObj))
+        JS::ubi::RootList rootList(cx->runtime(), maybeNoGC);
+        if (!rootList.init(dbgObj)) {
+            ReportOutOfMemory(cx);
             return false;
+        }
 
-        JS::ubi::CensusTraversal traversal(cx, handler, maybeNoGC.ref());
-        if (!traversal.init())
+        JS::ubi::CensusTraversal traversal(cx->runtime(), handler, maybeNoGC.ref());
+        if (!traversal.init()) {
+            ReportOutOfMemory(cx);
             return false;
+        }
         traversal.wantNames = false;
 
         if (!traversal.addStart(JS::ubi::Node(&rootList)) ||
             !traversal.traverse())
         {
+            ReportOutOfMemory(cx);
             return false;
         }
     }
