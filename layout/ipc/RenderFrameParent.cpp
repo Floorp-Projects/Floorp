@@ -34,6 +34,10 @@
 #include "ClientLayerManager.h"
 #include "FrameLayerBuilder.h"
 
+#ifdef MOZ_ANDROID_APZ
+#include "AndroidBridge.h"
+#endif
+
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
@@ -218,8 +222,12 @@ public:
 
   virtual void PostDelayedTask(Task* aTask, int aDelayMs) override
   {
+#ifdef MOZ_ANDROID_APZ
+    AndroidBridge::Bridge()->PostTaskToUiThread(aTask, aDelayMs);
+#else
     (MessageLoop::current() ? MessageLoop::current() : mUILoop)->
        PostDelayedTask(FROM_HERE, aTask, aDelayMs);
+#endif
   }
 
   virtual bool GetTouchSensitiveRegion(CSSRect* aOutRegion) override
