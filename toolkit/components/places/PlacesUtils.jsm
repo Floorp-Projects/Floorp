@@ -71,8 +71,12 @@ function QI_node(aNode, aIID) {
   }
   return result;
 }
-function asContainer(aNode) QI_node(aNode, Ci.nsINavHistoryContainerResultNode);
-function asQuery(aNode) QI_node(aNode, Ci.nsINavHistoryQueryResultNode);
+function asContainer(aNode) {
+  return QI_node(aNode, Ci.nsINavHistoryContainerResultNode);
+}
+function asQuery(aNode) {
+  return QI_node(aNode, Ci.nsINavHistoryQueryResultNode);
+}
 
 /**
  * Sends a bookmarks notification through the given observers.
@@ -241,8 +245,8 @@ this.PlacesUtils = {
   TOPIC_BOOKMARKS_RESTORE_SUCCESS: "bookmarks-restore-success",
   TOPIC_BOOKMARKS_RESTORE_FAILED: "bookmarks-restore-failed",
 
-  asContainer: function(aNode) asContainer(aNode),
-  asQuery: function(aNode) asQuery(aNode),
+  asContainer: aNode => asContainer(aNode),
+  asQuery: aNode => asQuery(aNode),
 
   endl: NEWLINE,
 
@@ -2539,45 +2543,61 @@ function TransactionItemCache()
 }
 
 TransactionItemCache.prototype = {
-  set id(v)
-    this._id = (parseInt(v) > 0 ? v : null),
-  get id()
-    this._id || -1,
-  set parentId(v)
-    this._parentId = (parseInt(v) > 0 ? v : null),
-  get parentId()
-    this._parentId || -1,
+  set id(v) {
+    this._id = (parseInt(v) > 0 ? v : null);
+  },
+  get id() {
+    return this._id || -1;
+  },
+  set parentId(v) {
+    this._parentId = (parseInt(v) > 0 ? v : null);
+  },
+  get parentId() {
+    return this._parentId || -1;
+  },
   keyword: null,
   title: null,
   dateAdded: null,
   lastModified: null,
   postData: null,
   itemType: null,
-  set uri(v)
-    this._uri = (v instanceof Ci.nsIURI ? v.clone() : null),
-  get uri()
-    this._uri || null,
-  set feedURI(v)
-    this._feedURI = (v instanceof Ci.nsIURI ? v.clone() : null),
-  get feedURI()
-    this._feedURI || null,
-  set siteURI(v)
-    this._siteURI = (v instanceof Ci.nsIURI ? v.clone() : null),
-  get siteURI()
-    this._siteURI || null,
-  set index(v)
-    this._index = (parseInt(v) >= 0 ? v : null),
+  set uri(v) {
+    this._uri = (v instanceof Ci.nsIURI ? v.clone() : null);
+  },
+  get uri() {
+    return this._uri || null;
+  },
+  set feedURI(v) {
+    this._feedURI = (v instanceof Ci.nsIURI ? v.clone() : null);
+  },
+  get feedURI() {
+    return this._feedURI || null;
+  },
+  set siteURI(v) {
+    this._siteURI = (v instanceof Ci.nsIURI ? v.clone() : null);
+  },
+  get siteURI() {
+    return this._siteURI || null;
+  },
+  set index(v) {
+    this._index = (parseInt(v) >= 0 ? v : null);
+  },
   // Index can be 0.
-  get index()
-    this._index != null ? this._index : PlacesUtils.bookmarks.DEFAULT_INDEX,
-  set annotations(v)
-    this._annotations = Array.isArray(v) ? Cu.cloneInto(v, {}) : null,
-  get annotations()
-    this._annotations || null,
-  set tags(v)
-    this._tags = (v && Array.isArray(v) ? Array.slice(v) : null),
-  get tags()
-    this._tags || null,
+  get index() {
+    return this._index != null ? this._index : PlacesUtils.bookmarks.DEFAULT_INDEX;
+  },
+  set annotations(v) {
+    this._annotations = Array.isArray(v) ? Cu.cloneInto(v, {}) : null;
+  },
+  get annotations() {
+    return this._annotations || null;
+  },
+  set tags(v) {
+    this._tags = (v && Array.isArray(v) ? Array.slice(v) : null);
+  },
+  get tags() {
+    return this._tags || null;
+  },
 };
 
 
@@ -2592,15 +2612,23 @@ function BaseTransaction()
 
 BaseTransaction.prototype = {
   name: null,
-  set childTransactions(v)
-    this._childTransactions = (Array.isArray(v) ? Array.slice(v) : null),
-  get childTransactions()
-    this._childTransactions || null,
+  set childTransactions(v) {
+    this._childTransactions = (Array.isArray(v) ? Array.slice(v) : null);
+  },
+  get childTransactions() {
+    return this._childTransactions || null;
+  },
   doTransaction: function BTXN_doTransaction() {},
-  redoTransaction: function BTXN_redoTransaction() this.doTransaction(),
+  redoTransaction: function BTXN_redoTransaction() {
+    return this.doTransaction();
+  },
   undoTransaction: function BTXN_undoTransaction() {},
-  merge: function BTXN_merge() false,
-  get isTransient() false,
+  merge: function BTXN_merge() {
+    return false;
+  },
+  get isTransient() {
+    return false;
+  },
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsITransaction
   ]),

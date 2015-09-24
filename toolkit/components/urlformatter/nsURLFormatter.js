@@ -87,9 +87,9 @@ nsURLFormatterService.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIURLFormatter]),
 
   _defaults: {
-    LOCALE:           function() Cc["@mozilla.org/chrome/chrome-registry;1"].
-                                 getService(Ci.nsIXULChromeRegistry).
-                                 getSelectedLocale('global'),
+    LOCALE:           () => Cc["@mozilla.org/chrome/chrome-registry;1"].
+                            getService(Ci.nsIXULChromeRegistry).
+                            getSelectedLocale('global'),
     REGION:           function() {
       try {
         // When the geoip lookup failed to identify the region, we fallback to
@@ -99,27 +99,27 @@ nsURLFormatterService.prototype = {
         return "ZZ";
       }
     },
-    VENDOR:           function() this.appInfo.vendor,
-    NAME:             function() this.appInfo.name,
-    ID:               function() this.appInfo.ID,
-    VERSION:          function() this.appInfo.version,
-    APPBUILDID:       function() this.appInfo.appBuildID,
-    PLATFORMVERSION:  function() this.appInfo.platformVersion,
-    PLATFORMBUILDID:  function() this.appInfo.platformBuildID,
-    APP:              function() this.appInfo.name.toLowerCase().replace(/ /, ""),
-    OS:               function() this.appInfo.OS,
-    XPCOMABI:         function() this.ABI,
-    BUILD_TARGET:     function() this.appInfo.OS + "_" + this.ABI,
-    OS_VERSION:       function() this.OSVersion,
-    CHANNEL:          function() UpdateUtils.UpdateChannel,
-    MOZILLA_API_KEY:   function() "@MOZ_MOZILLA_API_KEY@",
-    GOOGLE_API_KEY:   function() "@MOZ_GOOGLE_API_KEY@",
-    GOOGLE_OAUTH_API_CLIENTID:function() "@MOZ_GOOGLE_OAUTH_API_CLIENTID@",
-    GOOGLE_OAUTH_API_KEY:     function() "@MOZ_GOOGLE_OAUTH_API_KEY@",
-    BING_API_CLIENTID:function() "@MOZ_BING_API_CLIENTID@",
-    BING_API_KEY:     function() "@MOZ_BING_API_KEY@",
-    DISTRIBUTION:     function() this.distribution.id,
-    DISTRIBUTION_VERSION: function() this.distribution.version
+    VENDOR:           function() { return this.appInfo.vendor; },
+    NAME:             function() { return this.appInfo.name; },
+    ID:               function() { return this.appInfo.ID; },
+    VERSION:          function() { return this.appInfo.version; },
+    APPBUILDID:       function() { return this.appInfo.appBuildID; },
+    PLATFORMVERSION:  function() { return this.appInfo.platformVersion; },
+    PLATFORMBUILDID:  function() { return this.appInfo.platformBuildID; },
+    APP:              function() { return this.appInfo.name.toLowerCase().replace(/ /, ""); },
+    OS:               function() { return this.appInfo.OS; },
+    XPCOMABI:         function() { return this.ABI; },
+    BUILD_TARGET:     function() { return this.appInfo.OS + "_" + this.ABI; },
+    OS_VERSION:       function() { return this.OSVersion; },
+    CHANNEL:          () => UpdateUtils.UpdateChannel,
+    MOZILLA_API_KEY:  () => "@MOZ_MOZILLA_API_KEY@",
+    GOOGLE_API_KEY:   () => "@MOZ_GOOGLE_API_KEY@",
+    GOOGLE_OAUTH_API_CLIENTID:() => "@MOZ_GOOGLE_OAUTH_API_CLIENTID@",
+    GOOGLE_OAUTH_API_KEY:     () => "@MOZ_GOOGLE_OAUTH_API_KEY@",
+    BING_API_CLIENTID:() => "@MOZ_BING_API_CLIENTID@",
+    BING_API_KEY:     () => "@MOZ_BING_API_KEY@",
+    DISTRIBUTION:     function() { return this.distribution.id; },
+    DISTRIBUTION_VERSION: function() { return this.distribution.version; }
   },
 
   formatURL: function uf_formatURL(aFormat) {

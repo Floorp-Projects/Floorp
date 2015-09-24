@@ -453,7 +453,9 @@ function Livemark(aLivemarkInfo)
 }
 
 Livemark.prototype = {
-  get status() this._status,
+  get status() {
+    return this._status;
+  },
   set status(val) {
     if (this._status != val) {
       this._status = val;
@@ -553,7 +555,9 @@ Livemark.prototype = {
     this.updateChildren(aForceUpdate);
   },
 
-  get children() this._children,
+  get children() {
+    return this._children;
+  },
   set children(val) {
     this._children = val;
 
@@ -591,23 +595,48 @@ Livemark.prototype = {
         // The QueryInterface is needed cause aContainerNode is a jsval.
         // This is required to avoid issues with scriptable wrappers that would
         // not allow the view to correctly set expandos.
-        get parent()
-          aContainerNode.QueryInterface(Ci.nsINavHistoryContainerResultNode),
-        get parentResult() this.parent.parentResult,
-        get uri() localChild.uri.spec,
-        get type() Ci.nsINavHistoryResultNode.RESULT_TYPE_URI,
-        get title() localChild.title,
-        get accessCount()
-          Number(livemark._isURIVisited(NetUtil.newURI(this.uri))),
-        get time() 0,
-        get icon() "",
-        get indentLevel() this.parent.indentLevel + 1,
-        get bookmarkIndex() -1,
-        get itemId() -1,
-        get dateAdded() now,
-        get lastModified() now,
-        get tags()
-          PlacesUtils.tagging.getTagsForURI(NetUtil.newURI(this.uri)).join(", "),
+        get parent() {
+          return aContainerNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
+        },
+        get parentResult() {
+          return this.parent.parentResult;
+        },
+        get uri() {
+          return localChild.uri.spec;
+        },
+        get type() {
+          return Ci.nsINavHistoryResultNode.RESULT_TYPE_URI;
+        },
+        get title() {
+          return localChild.title;
+        },
+        get accessCount() {
+          return Number(livemark._isURIVisited(NetUtil.newURI(this.uri)));
+        },
+        get time() {
+          return 0;
+        },
+        get icon() {
+          return "";
+        },
+        get indentLevel() {
+          return this.parent.indentLevel + 1;
+        },
+        get bookmarkIndex() {
+            return -1;
+        },
+        get itemId() {
+            return -1;
+        },
+        get dateAdded() {
+          return now;
+        },
+        get lastModified() {
+          return now;
+        },
+        get tags() {
+          return PlacesUtils.tagging.getTagsForURI(NetUtil.newURI(this.uri)).join(", ");
+        },
         QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryResultNode])
       };
       nodes.push(node);
