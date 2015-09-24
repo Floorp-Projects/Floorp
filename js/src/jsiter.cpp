@@ -1462,14 +1462,3 @@ js::InitStopIterationClass(JSContext* cx, HandleObject obj)
 
     return &global->getPrototype(JSProto_StopIteration).toObject();
 }
-
-JSObject*
-js::InitIteratorClasses(JSContext* cx, HandleObject obj)
-{
-    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
-    if (!InitIteratorClass(cx, global))
-        return nullptr;
-    if (!GlobalObject::initGeneratorClasses(cx, global))
-        return nullptr;
-    return global->getIteratorPrototype();
-}

@@ -93,6 +93,7 @@
     macro(frame, frame, "frame") \
     macro(from, from, "from") \
     macro(gcCycleNumber, gcCycleNumber, "gcCycleNumber") \
+    macro(GeneratorFunction, GeneratorFunction, "GeneratorFunction") \
     macro(get, get, "get") \
     macro(getInternals, getInternals, "getInternals") \
     macro(getOwnPropertyDescriptor, getOwnPropertyDescriptor, "getOwnPropertyDescriptor") \
