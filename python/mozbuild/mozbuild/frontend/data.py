@@ -36,12 +36,6 @@ from ..testing import (
 class TreeMetadata(object):
     """Base class for all data being captured."""
 
-    def __init__(self):
-        self._ack = False
-
-    def ack(self):
-        self._ack = True
-
 
 class ContextDerived(TreeMetadata):
     """Build object derived from a single Context instance.
