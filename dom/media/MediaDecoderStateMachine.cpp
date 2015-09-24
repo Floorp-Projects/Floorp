@@ -932,8 +932,10 @@ MediaDecoderStateMachine::OnVideoDecoded(MediaData* aVideoSample)
           // in this case, we'll just decode forward. Bug 1026330.
           mCurrentSeek.mTarget.mType = SeekTarget::Accurate;
         }
-        if (mCurrentSeek.mTarget.mType == SeekTarget::PrevSyncPoint) {
-          // Non-precise seek; we can stop the seek at the first sample.
+        if (mCurrentSeek.mTarget.mType == SeekTarget::PrevSyncPoint ||
+            mPendingSeek.Exists()) {
+          // Non-precise seek; or a pending seek exists ; we can stop the seek
+          // at the first sample.
           Push(video, MediaData::VIDEO_DATA);
         } else {
           // We're doing an accurate seek. We still need to discard
