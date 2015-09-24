@@ -256,7 +256,7 @@ config = {
         },
     },
     "all_cppunittest_suites": {
-        "cppunittest": {"tests": ["tests/cppunittest"]}
+        "cppunittest": ["tests/cppunittest"]
     },
     "all_gtest_suites": {
         "gtest": []

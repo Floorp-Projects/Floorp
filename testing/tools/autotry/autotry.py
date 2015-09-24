@@ -2,172 +2,30 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import argparse
-import itertools
-import os
-import re
-import subprocess
 import sys
+import os
+import itertools
+import subprocess
 import which
 
 from collections import defaultdict
 
-import ConfigParser
 
-
-def arg_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('paths', nargs='*', help='Paths to search for tests to run on try.')
-    parser.add_argument('-b', dest='builds', default='do',
-                        help='Build types to run (d for debug, o for optimized).')
-    parser.add_argument('-p', dest='platforms', action="append",
-                        help='Platforms to run (required if not found in the environment).')
-    parser.add_argument('-u', dest='tests', action="append",
-                        help='Test suites to run in their entirety.')
-    parser.add_argument('-t', dest="talos", action="append",
-                        help='Talos suites to run.')
-    parser.add_argument('--tag', dest='tags', action='append',
-                        help='Restrict tests to the given tag (may be specified multiple times).')
-    parser.add_argument('--and', action='store_true', dest="intersection",
-                        help='When -u and paths are supplied run only the intersection of the tests specified by the two arguments.')
-    parser.add_argument('--no-push', dest='push', action='store_false',
-                        help='Do not push to try as a result of running this command (if '
-                        'specified this command will only print calculated try '
-                        'syntax and selection info).')
-    parser.add_argument('--save', dest="save", action='store',
-                        help="Save the command line arguments for future use with --preset.")
-    parser.add_argument('--preset', dest="load", action='store',
-                        help="Load a saved set of arguments. Additional arguments will override saved ones.")
-    parser.add_argument('extra_args', nargs=argparse.REMAINDER,
-                        help='Extra arguments to put in the try push.')
-    parser.add_argument('-v', "--verbose", dest='verbose', action='store_true', default=False,
-                        help='Print detailed information about the resulting test selection '
-                        'and commands performed.')
-    return parser
-
-class TryArgumentTokenizer(object):
-    symbols = [("seperator", ","),
-               ("list_start", "\["),
-               ("list_end", "\]"),
-               ("item", "([^,\[\]\s][^,\[\]]+)"),
-               ("space", "\s+")]
-    token_re = re.compile("|".join("(?P<%s>%s)" % item for item in symbols))
-
-    def tokenize(self, data):
-        for match in self.token_re.finditer(data):
-            symbol = match.lastgroup
-            data = match.group(symbol)
-            if symbol == "space":
-                pass
-            else:
-                yield symbol, data
-
-class TryArgumentParser(object):
-    """Simple three-state parser for handling expressions
-    of the from "foo[sub item, another], bar,baz". This takes
-    input from the TryArgumentTokenizer and runs through a small
-    state machine, returning a dictionary of {top-level-item:[sub_items]}
-    i.e. the above would result in
-    {"foo":["sub item", "another"], "bar": [], "baz": []}
-    In the case of invalid input a ValueError is raised."""
-
-    EOF = object()
-
-    def __init__(self):
-        self.reset()
-
-    def reset(self):
-        self.tokens = None
-        self.current_item = None
-        self.data = {}
-        self.token = None
-        self.state = None
-
-    def parse(self, tokens):
-        self.reset()
-        self.tokens = tokens
-        self.consume()
-        self.state = self.item_state
-        while self.token[0] != self.EOF:
-            self.state()
-        return self.data
-
-    def consume(self):
-        try:
-            self.token = self.tokens.next()
-        except StopIteration:
-            self.token = (self.EOF, None)
-
-    def expect(self, *types):
-        if self.token[0] not in types:
-            raise ValueError("Error parsing try string, unexpected %s" % (self.token[0]))
-
-    def item_state(self):
-        self.expect("item")
-        value = self.token[1].strip()
-        if value not in self.data:
-            self.data[value] = []
-        self.current_item = value
-        self.consume()
-        if self.token[0] == "seperator":
-            self.consume()
-        elif self.token[0] == "list_start":
-            self.consume()
-            self.state = self.subitem_state
-        elif self.token[0] == self.EOF:
-            pass
-        else:
-            raise ValueError
-
-    def subitem_state(self):
-        self.expect("item")
-        value = self.token[1].strip()
-        self.data[self.current_item].append(value)
-        self.consume()
-        if self.token[0] == "seperator":
-            self.consume()
-        elif self.token[0] == "list_end":
-            self.consume()
-            self.state = self.after_list_end_state
-        else:
-            raise ValueError
-
-    def after_list_end_state(self):
-        self.expect("seperator")
-        self.consume()
-        self.state = self.item_state
-
-def parse_arg(arg):
-    tokenizer = TryArgumentTokenizer()
-    parser = TryArgumentParser()
-    return parser.parse(tokenizer.tokenize(arg))
+TRY_SYNTAX_TMPL = """
+try: -b %s -p %s -u %s -t none %s %s
+"""
 
 class AutoTry(object):
 
-    # Maps from flavors to the job names needed to run that flavour
-    flavor_jobs = {
-        'mochitest': ['mochitest-1', 'mochitest-e10s-1'],
-        'xpcshell': ['xpcshell'],
-        'chrome': ['mochitest-o'],
-        'browser-chrome': ['mochitest-browser-chrome-1',
-                           'mochitest-e10s-browser-chrome-1'],
-        'devtools-chrome': ['mochitest-dt',
-                            'mochitest-e10s-devtools-chrome'],
-        'crashtest': ['crashtest', 'crashtest-e10s'],
-        'reftest': ['reftest', 'reftest-e10s'],
-        'web-platform-tests': ['web-platform-tests-1'],
-    }
-
-    flavor_suites = {
-        "mochitest": "mochitests",
-        "xpcshell": "xpcshell",
-        "chrome": "mochitest-o",
-        "browser-chrome": "mochitest-bc",
-        "devtools-chrome": "mochitest-dt",
-        "crashtest": "crashtest",
-        "reftest": "reftest",
-        "web-platform-tests": "web-platform-tests",
-    }
+    test_flavors = [
+        'browser-chrome',
+        'chrome',
+        'devtools-chrome',
+        'mochitest',
+        'xpcshell',
+        'reftest',
+        'crashtest',
+    ]
 
     def __init__(self, topsrcdir, resolver, mach_context):
         self.topsrcdir = topsrcdir
@@ -179,107 +37,57 @@ class AutoTry(object):
         else:
             self._use_git = True
 
-    @property
-    def config_path(self):
-        return os.path.join(self.mach_context.state_dir, "autotry.ini")
-
-    def load_config(self, name):
-        config = ConfigParser.RawConfigParser()
-        success = config.read([self.config_path])
-        if not success:
-            return None
-
-        try:
-            data = config.get("try", name)
-        except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
-            return None
-
-        kwargs = vars(arg_parser().parse_args(data.split()))
-
-        return kwargs
-
-    def save_config(self, name, data):
-        assert data.startswith("try: ")
-        data = data[len("try: "):]
-
-        parser = ConfigParser.RawConfigParser()
-        parser.read([self.config_path])
-
-        if not parser.has_section("try"):
-            parser.add_section("try")
-
-        parser.set("try", name, data)
-
-        with open(self.config_path, "w") as f:
-            parser.write(f)
-
-    def paths_by_flavor(self, paths=None, tags=None):
-        paths_by_flavor = defaultdict(set)
-
+    def resolve_manifests(self, paths=None, tags=None):
         if not (paths or tags):
-            return dict(paths_by_flavor)
+            return {}
 
-        tests = list(self.resolver.resolve_tests(paths=paths,
-                                                 tags=tags))
+        tests = list(self.resolver.resolve_tests(tags=tags,
+                                                 paths=paths,
+                                                 cwd=self.mach_context.cwd))
+        manifests_by_flavor = defaultdict(set)
 
         for t in tests:
-            if t['flavor'] in self.flavor_suites:
+            if t['flavor'] in AutoTry.test_flavors:
                 flavor = t['flavor']
                 if 'subsuite' in t and t['subsuite'] == 'devtools':
                     flavor = 'devtools-chrome'
+                manifest = os.path.relpath(t['manifest'], self.topsrcdir)
+                manifests_by_flavor[flavor].add(manifest)
 
-                for path in paths:
-                    if flavor in ["crashtest", "reftest"]:
-                        manifest_relpath = os.path.relpath(t['manifest'], self.topsrcdir)
-                        if manifest_relpath.startswith(path):
-                            paths_by_flavor[flavor].add(manifest_relpath)
-                    else:
-                        if t['file_relpath'].startswith(path):
-                            paths_by_flavor[flavor].add(path)
+        return dict(manifests_by_flavor)
 
-        return dict(paths_by_flavor)
+    def calc_try_syntax(self, platforms, flavors, tests, extra_tests, builds,
+                        manifests, tags):
 
-    def remove_duplicates(self, paths_by_flavor, tests):
-        rv = {}
-        for item in paths_by_flavor:
-            if self.flavor_suites[item] not in tests:
-                rv[item] = paths_by_flavor[item].copy()
-        return rv
-
-    def calc_try_syntax(self, platforms, tests, talos, builds, paths_by_flavor, tags,
-                        extra_args, intersection):
-        parts = ["try:", "-b", builds, "-p", ",".join(platforms)]
-
-        suites = tests if not intersection else {}
-        paths = set()
-        for flavor, flavor_tests in paths_by_flavor.iteritems():
-            suite = self.flavor_suites[flavor]
-            if suite not in suites and (not intersection or suite in tests):
-                for job_name in self.flavor_jobs[flavor]:
-                    for test in flavor_tests:
-                        paths.add("%s:%s" % (flavor, test))
-                    suites[job_name] = tests.get(suite, [])
-
-        if not suites:
-            raise ValueError("No tests found matching filters")
-
-        parts.append("-u")
-        parts.append(",".join("%s%s" % (k, "[%s]" % ",".join(v) if v else "")
-                              for k,v in sorted(suites.items())) if suites else "none")
-
-        parts.append("-t")
-        parts.append(",".join(talos) if talos else "none")
+        # Maps from flavors to the try syntax snippets implied by that flavor.
+        # TODO: put selected tests under their own builder/label to avoid
+        # confusion reading results on treeherder.
+        flavor_suites = {
+            'mochitest': ['mochitest-1', 'mochitest-e10s-1'],
+            'xpcshell': ['xpcshell'],
+            'chrome': ['mochitest-o'],
+            'browser-chrome': ['mochitest-browser-chrome-1',
+                               'mochitest-e10s-browser-chrome-1'],
+            'devtools-chrome': ['mochitest-dt',
+                                'mochitest-e10s-devtools-chrome'],
+            'crashtest': ['crashtest', 'crashtest-e10s'],
+            'reftest': ['reftest', 'reftest-e10s'],
+        }
 
         if tags:
-            parts.append(' '.join('--tag %s' % t for t in tags))
+            tags = ' '.join('--tag %s' % t for t in tags)
+        else:
+            tags = ''
 
-        if extra_args is not None:
-            parts.extend(extra_args)
+        if not tests:
+            tests = ','.join(itertools.chain(*(flavor_suites[f] for f in flavors)))
+            if extra_tests:
+                tests += ',%s' % (extra_tests)
 
-        if paths:
-            parts.append("--try-test-paths %s" % " ".join(sorted(paths)))
-
-        return " ".join(parts)
+        manifests = ' '.join(manifests)
+        if manifests:
+            manifests = '--try-test-paths %s' % manifests
+        return TRY_SYNTAX_TMPL % (builds, platforms, tests, manifests, tags)
 
     def _run_git(self, *args):
         args = ['git'] + list(args)
