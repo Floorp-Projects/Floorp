@@ -370,7 +370,7 @@ include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 
 PKG_STAGE = $(DIST)/test-stage
 
-package-tests: \
+stage-all: \
   stage-config \
   stage-mach \
   stage-mochitest \
@@ -391,7 +391,7 @@ package-tests: \
   test-packages-manifest-tc \
   $(NULL)
 ifdef MOZ_WEBRTC
-package-tests: stage-steeplechase
+stage-all: stage-steeplechase
 endif
 
 TEST_PKGS := \
@@ -424,7 +424,7 @@ test-packages-manifest:
       $(call PKG_ARG,common) \
       $(foreach pkg,$(TEST_PKGS),$(call PKG_ARG,$(pkg)))
 
-package-tests:
+package-tests: stage-all
 	@rm -f '$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)'
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 # Exclude harness specific directories when generating the common zip.
@@ -439,16 +439,16 @@ package-tests:
                                 $(name) -x \*/.mkdir.done \*.pyc ;)
 
 ifeq ($(MOZ_BUILD_APP),mobile/android)
-package-tests: stage-android
-package-tests: stage-instrumentation-tests
+stage-all: stage-android
+stage-all: stage-instrumentation-tests
 endif
 
 ifeq ($(MOZ_BUILD_APP),mobile/android/b2gdroid)
-package-tests: stage-android
+stage-all: stage-android
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
-package-tests: stage-b2g
+stage-all: stage-b2g
 endif
 
 make-stage-dir:
@@ -606,6 +606,7 @@ stage-instrumentation-tests: make-stage-dir
   jstestbrowser \
   package-tests \
   make-stage-dir \
+  stage-all \
   stage-b2g \
   stage-config \
   stage-mochitest \
