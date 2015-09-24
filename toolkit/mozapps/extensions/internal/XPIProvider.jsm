@@ -2854,7 +2854,26 @@ this.XPIProvider = {
     // Bug 1204158: If we already have some of these locally then just use those
     let downloadAddon = Task.async(function*(item) {
       try {
-        item.path = yield ProductAddonChecker.downloadAddon(item.spec);
+        let sourceAddon = updatedAddons.get(item.spec.id);
+        if (sourceAddon && sourceAddon.version == item.spec.version) {
+          // Copying the file to a temporary location has some benefits. If the
+          // file is locked and cannot be read then we'll fall back to
+          // downloading a fresh copy. It also means we don't have to remember
+          // whether to delete the temporary copy later.
+          try {
+            let path = OS.Path.join(OS.Constants.Path.tmpDir, "tmpaddon");
+            let unique = yield OS.File.openUnique(path);
+            unique.file.close();
+            yield OS.File.copy(sourceAddon._sourceBundle.path, unique.path);
+            item.path = unique.path;
+          }
+          catch (e) {
+            logger.warn(`Failed make temporary copy of ${sourceAddon._sourceBundle.path}.`, e);
+          }
+        }
+        if (!item.path) {
+          item.path = yield ProductAddonChecker.downloadAddon(item.spec);
+        }
         item.addon = yield loadManifestFromFile(nsIFile(item.path), systemAddonLocation);
       }
       catch (e) {
@@ -2872,7 +2891,7 @@ this.XPIProvider = {
       }
 
       if (item.spec.version != item.addon.version) {
-        logger.warn(`Expected system add-on ${item.spec.id} to be version ${item.version} but was ${item.addon.version}.`);
+        logger.warn(`Expected system add-on ${item.spec.id} to be version ${item.spec.version} but was ${item.addon.version}.`);
         return false;
       }
 
