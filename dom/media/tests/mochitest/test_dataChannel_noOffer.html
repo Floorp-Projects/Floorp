@@ -12,7 +12,7 @@
   });
 
   runNetworkTest(function () {
-    var pc = new mozRTCPeerConnection();
+    var pc = new RTCPeerConnection();
 
     // necessary to circumvent bug 864109
     var options = { offerToReceiveAudio: true };

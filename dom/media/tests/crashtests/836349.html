@@ -9,7 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=836349
   <script type="application/javascript">
     function crash()
     {
-      var pc = new mozRTCPeerConnection();
+      var pc = new RTCPeerConnection();
       var ld = pc.localDescription;
       dump(ld.sdp);
     }
