@@ -203,6 +203,7 @@ public:
   int32_t mHeight;
   int32_t mFPS;
   int32_t mMinFPS;
+  int32_t mFreq; // for test tones (fake:true)
 
   // mWidth and/or mHeight may be zero (=adaptive default), so use functions.
 
