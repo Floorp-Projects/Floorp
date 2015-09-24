@@ -255,7 +255,7 @@ public:
      * Set a solid color to use for drawing.  This color is in the device color space
      * and is not transformed.
      */
-    void SetDeviceColor(const gfxRGBA& c);
+    void SetDeviceColor(const mozilla::gfx::Color& aColor);
 
     /**
      * Gets the current color.  It's returned in the device color space.
