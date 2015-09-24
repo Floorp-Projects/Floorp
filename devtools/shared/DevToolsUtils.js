@@ -12,6 +12,7 @@ var promise = require("promise");
 
 loader.lazyRequireGetter(this, "FileUtils",
                          "resource://gre/modules/FileUtils.jsm", true);
+loader.lazyRequireGetter(this, "setTimeout", "Timer", true);
 
 /**
  * Turn the error |aError| into a string, without fail.
@@ -133,6 +134,18 @@ exports.entries = function entries(obj) {
 }
 
 /**
+ * Takes an array of 2-element arrays as key/values pairs and
+ * constructs an object using them.
+ */
+exports.toObject = function(arr) {
+  const obj = {};
+  for(let pair of arr) {
+    obj[pair[0]] = pair[1];
+  }
+  return obj;
+}
+
+/**
  * Composes the given functions into a single function, which will
  * apply the results of each function right-to-left, starting with
  * applying the given arguments to the right-most function.
@@ -186,7 +199,7 @@ exports.waitForTick = function waitForTick() {
  */
 exports.waitForTime = function waitForTime(aDelay) {
   let deferred = promise.defer();
-  require("Timer").setTimeout(deferred.resolve, aDelay);
+  setTimeout(deferred.resolve, aDelay);
   return deferred.promise;
 };
 
