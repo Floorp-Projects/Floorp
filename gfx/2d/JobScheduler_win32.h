@@ -10,16 +10,20 @@
 #define NOT_IMPLEMENTED MOZ_CRASH("Not implemented")
 
 #include "mozilla/RefPtr.h"
-#include "mozilla/gfx/CriticalSection.h"
-#include <windows.h>
-#include <synchapi.h>
-#include <list>
 
 namespace mozilla {
 namespace gfx {
 
 class WorkerThread;
 class Job;
+
+class Mutex {
+public:
+  Mutex() { NOT_IMPLEMENTED; }
+  ~Mutex() { NOT_IMPLEMENTED; }
+  void Lock() { NOT_IMPLEMENTED; }
+  void Unlock() { NOT_IMPLEMENTED; }
+};
 
 // The public interface of this class must remain identical to its equivalent
 // in JobScheduler_posix.h
@@ -30,43 +34,14 @@ public:
     NON_BLOCKING
   };
 
-  MultiThreadedJobQueue()
-  : mThreadsCount(0)
-  , mShuttingDown(false)
-  {
-    mAvailableEvent = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
-    mShutdownEvent = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
-  }
-
-  ~MultiThreadedJobQueue()
-  {
-    ::CloseHandle(mAvailableEvent);
-    ::CloseHandle(mShutdownEvent);
-  }
-
-  bool WaitForJob(Job*& aOutJob) { return PopJob(aOutJob, BLOCKING); }
-
-  bool PopJob(Job*& aOutJob, AccessType aAccess);
-
-  void SubmitJob(Job* aJob);
-
-  void ShutDown();
-
-  size_t NumJobs();
-
-  bool IsEmpty();
-
-  void RegisterThread();
-
-  void UnregisterThread();
-
-protected:
-  std::list<Job*> mJobs;
-  CriticalSection mSection;
-  HANDLE mAvailableEvent;
-  HANDLE mShutdownEvent;
-  int32_t mThreadsCount;
-  bool mShuttingDown;
+  bool WaitForJob(Job*& aOutCommands) { NOT_IMPLEMENTED; }
+  bool PopJob(Job*& aOutCommands, AccessType aAccess) { NOT_IMPLEMENTED; }
+  void SubmitJob(Job* aCommands) { NOT_IMPLEMENTED; }
+  void ShutDown() { NOT_IMPLEMENTED; }
+  size_t NumJobs() { NOT_IMPLEMENTED;  }
+  bool IsEmpty() { NOT_IMPLEMENTED; }
+  void RegisterThread() { NOT_IMPLEMENTED; }
+  void UnregisterThread() { NOT_IMPLEMENTED; }
 
   friend class WorkerThread;
 };
@@ -79,18 +54,19 @@ class EventObject : public external::AtomicRefCounted<EventObject>
 public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(EventObject)
 
-  EventObject() { mEvent = ::CreateEvent(nullptr, TRUE, FALSE, nullptr); }
+  EventObject() { NOT_IMPLEMENTED; }
+  ~EventObject() { NOT_IMPLEMENTED; }
+  void Wait() { NOT_IMPLEMENTED; }
+  bool Peak() { NOT_IMPLEMENTED; }
+  void Set() { NOT_IMPLEMENTED; }
+};
 
-  ~EventObject() { ::CloseHandle(mEvent); }
-
-  void Wait() { ::WaitForSingleObject(mEvent, INFINITE); }
-
-  bool Peak() { return ::WaitForSingleObject(mEvent, 0) == WAIT_OBJECT_0; }
-
-  void Set() { ::SetEvent(mEvent); }
-protected:
-  // TODO: it's expensive to create events so we should try to reuse them
-  HANDLE mEvent;
+// The public interface of this class must remain identical to its equivalent
+// in JobScheduler_posix.h
+class WorkerThread {
+public:
+  explicit WorkerThread(MultiThreadedJobQueue* aJobQueue) { NOT_IMPLEMENTED; }
+  void Run();
 };
 
 } // namespace
