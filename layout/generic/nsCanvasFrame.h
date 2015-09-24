@@ -249,7 +249,7 @@ public:
     mFrame->Properties().Delete(nsIFrame::CachedBackgroundImageDT());
   }
 
-  virtual bool ShouldFixToViewport(LayerManager* aManager) override
+  virtual bool ShouldFixToViewport(nsDisplayListBuilder* aBuilder) override
   {
     // Put background-attachment:fixed canvas background images in their own
     // compositing layer. Since we know their background painting area can't
