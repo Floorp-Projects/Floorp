@@ -725,17 +725,16 @@ gfxContext::SetDeviceColor(const Color& aColor)
 }
 
 bool
-gfxContext::GetDeviceColor(gfxRGBA& c)
+gfxContext::GetDeviceColor(Color& aColorOut)
 {
   if (CurrentState().sourceSurface) {
     return false;
   }
   if (CurrentState().pattern) {
-    gfxRGBA color;
-    return CurrentState().pattern->GetSolidColor(c);
+    return CurrentState().pattern->GetSolidColor(aColorOut);
   }
 
-  c = ThebesRGBA(CurrentState().color);
+  aColorOut = CurrentState().color;
   return true;
 }
 
