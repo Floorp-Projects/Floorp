@@ -506,8 +506,9 @@ XPCOMUtils.defineLazyGetter(this, "Prefs", () => {
  *        The text to unescape and modify.
  * @return the modified spec.
  */
-function fixupSearchText(spec)
-  textURIService.unEscapeURIForUI("UTF-8", stripPrefix(spec));
+function fixupSearchText(spec) {
+  return textURIService.unEscapeURIForUI("UTF-8", stripPrefix(spec));
+}
 
 /**
  * Generates the tokens used in searching from a given string.
@@ -519,8 +520,9 @@ function fixupSearchText(spec)
  *       empty string.  We don't want that, as it'll break our logic, so return
  *       an empty array then.
  */
-function getUnfilteredSearchTokens(searchString)
-  searchString.length ? searchString.split(REGEXP_SPACES) : [];
+function getUnfilteredSearchTokens(searchString) {
+  return searchString.length ? searchString.split(REGEXP_SPACES) : [];
+}
 
 /**
  * Strip prefixes from the URI that we don't care about for searching.
@@ -1572,18 +1574,20 @@ Search.prototype = {
    * @return an array consisting of the correctly optimized query to search the
    *         database with and an object containing the params to bound.
    */
-  get _switchToTabQuery() [
-    SQL_SWITCHTAB_QUERY,
-    {
-      query_type: QUERYTYPE_FILTERED,
-      matchBehavior: this._matchBehavior,
-      searchBehavior: this._behavior,
-      // We only want to search the tokens that we are left with - not the
-      // original search string.
-      searchString: this._searchTokens.join(" "),
-      maxResults: Prefs.maxRichResults
-    }
-  ],
+  get _switchToTabQuery() {
+    return [
+      SQL_SWITCHTAB_QUERY,
+      {
+        query_type: QUERYTYPE_FILTERED,
+        matchBehavior: this._matchBehavior,
+        searchBehavior: this._behavior,
+        // We only want to search the tokens that we are left with - not the
+        // original search string.
+        searchString: this._searchTokens.join(" "),
+        maxResults: Prefs.maxRichResults
+      }
+    ];
+  },
 
   /**
    * Obtains the query to search for adaptive results.
@@ -1591,16 +1595,18 @@ Search.prototype = {
    * @return an array consisting of the correctly optimized query to search the
    *         database with and an object containing the params to bound.
    */
-  get _adaptiveQuery() [
-    SQL_ADAPTIVE_QUERY,
-    {
-      parent: PlacesUtils.tagsFolderId,
-      search_string: this._searchString,
-      query_type: QUERYTYPE_FILTERED,
-      matchBehavior: this._matchBehavior,
-      searchBehavior: this._behavior
-    }
-  ],
+  get _adaptiveQuery() {
+    return [
+      SQL_ADAPTIVE_QUERY,
+      {
+        parent: PlacesUtils.tagsFolderId,
+        search_string: this._searchString,
+        query_type: QUERYTYPE_FILTERED,
+        matchBehavior: this._matchBehavior,
+        searchBehavior: this._behavior
+      }
+    ];
+  },
 
   /**
    * Whether we should try to autoFill.
