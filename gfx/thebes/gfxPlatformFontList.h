@@ -212,10 +212,6 @@ protected:
 
     static gfxPlatformFontList *sPlatformFontList;
 
-    static PLDHashOperator FindFontForCharProc(nsStringHashKey::KeyType aKey,
-                                               nsRefPtr<gfxFontFamily>& aFamilyEntry,
-                                               void* userArg);
-
     // Lookup family name in global family list without substitutions or
     // localized family name lookup. Used for common font fallback families.
     gfxFontFamily* FindFamilyByCanonicalName(const nsAString& aFamily) {
@@ -251,20 +247,10 @@ protected:
     // initialize localized family names
     void InitOtherFamilyNames();
 
-    static PLDHashOperator
-    InitOtherFamilyNamesProc(nsStringHashKey::KeyType aKey,
-                             nsRefPtr<gfxFontFamily>& aFamilyEntry,
-                             void* userArg);
-
     // search through font families, looking for a given name, initializing
     // facename lists along the way. first checks all families with names
     // close to face name, then searchs all families if not found.
     gfxFontEntry* SearchFamiliesForFaceName(const nsAString& aFaceName);
-
-    static PLDHashOperator
-    ReadFaceNamesProc(nsStringHashKey::KeyType aKey,
-                      nsRefPtr<gfxFontFamily>& aFamilyEntry,
-                      void* userArg);
 
     // helper method for finding fullname/postscript names in facename lists
     gfxFontEntry* FindFaceName(const nsAString& aFaceName);

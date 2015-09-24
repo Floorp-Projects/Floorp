@@ -636,8 +636,8 @@ public:
                       bool aDisableLigatures,
                       const nsAString& aFamilyName,
                       bool aAddSmallCaps,
-                      PLDHashOperator (*aHandleFeature)(const uint32_t&,
-                                                        uint32_t&, void*),
+                      void (*aHandleFeature)(const uint32_t&,
+                                             uint32_t&, void*),
                       void* aHandleFeatureData);
 
 protected:

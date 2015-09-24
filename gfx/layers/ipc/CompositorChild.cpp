@@ -178,22 +178,17 @@ CompositorChild::AllocPLayerTransactionChild(const nsTArray<LayersBackend>& aBac
   return c;
 }
 
-/*static*/ PLDHashOperator
-CompositorChild::RemoveSharedMetricsForLayersId(const uint64_t& aKey,
-                                                nsAutoPtr<SharedFrameMetricsData>& aData,
-                                                void* aLayerTransactionChild)
-{
-  uint64_t childId = static_cast<LayerTransactionChild*>(aLayerTransactionChild)->GetId();
-  if (aData->GetLayersId() == childId) {
-    return PLDHashOperator::PL_DHASH_REMOVE;
-  }
-  return PLDHashOperator::PL_DHASH_NEXT;
-}
-
 bool
 CompositorChild::DeallocPLayerTransactionChild(PLayerTransactionChild* actor)
 {
-  mFrameMetricsTable.Enumerate(RemoveSharedMetricsForLayersId, actor);
+  uint64_t childId = static_cast<LayerTransactionChild*>(actor)->GetId();
+
+  for (auto iter = mFrameMetricsTable.Iter(); !iter.Done(); iter.Next()) {
+    nsAutoPtr<SharedFrameMetricsData>& data = iter.Data();
+    if (data->GetLayersId() == childId) {
+      iter.Remove();
+    }
+  }
   static_cast<LayerTransactionChild*>(actor)->ReleaseIPDLReference();
   return true;
 }
