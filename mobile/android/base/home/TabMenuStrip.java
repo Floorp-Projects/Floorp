@@ -41,6 +41,10 @@ public class TabMenuStrip extends HorizontalScrollView
     private final Paint shadowPaint;
     private final int shadowSize;
 
+    public interface OnTitleClickListener {
+        void onTitleClicked(int index);
+    }
+
     public TabMenuStrip(Context context, AttributeSet attrs) {
         super(context, attrs);
 
@@ -117,7 +121,7 @@ public class TabMenuStrip extends HorizontalScrollView
     }
 
     @Override
-    public void setOnTitleClickListener(HomePager.OnTitleClickListener onTitleClickListener) {
+    public void setOnTitleClickListener(OnTitleClickListener onTitleClickListener) {
         layout.setOnTitleClickListener(onTitleClickListener);
     }
 }
