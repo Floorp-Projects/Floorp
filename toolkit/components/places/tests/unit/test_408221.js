@@ -98,7 +98,7 @@ function ensure_tag_results(uris, searchTerm)
       do_check_eq(controller.getStyleAt(i), "tag");
     }
     // Sort the results then check if we have the right items
-    vals.sort().forEach(function(val, i) do_check_eq(val, uris[i].spec))
+    vals.sort().forEach((val, i) => do_check_eq(val, uris[i].spec))
    
     if (current_test < (tests.length - 1)) {
       current_test++;

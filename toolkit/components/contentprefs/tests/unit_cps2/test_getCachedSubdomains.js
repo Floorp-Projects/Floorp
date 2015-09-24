@@ -177,14 +177,10 @@ var tests = [
   },
 
   function erroneous() {
-    do_check_throws(function ()
-                    cps.getCachedBySubdomainAndName(null, "foo", null));
-    do_check_throws(function ()
-                    cps.getCachedBySubdomainAndName("", "foo", null));
-    do_check_throws(function ()
-                    cps.getCachedBySubdomainAndName("a.com", "", null));
-    do_check_throws(function ()
-                    cps.getCachedBySubdomainAndName("a.com", null, null));
+    do_check_throws(() => cps.getCachedBySubdomainAndName(null, "foo", null));
+    do_check_throws(() => cps.getCachedBySubdomainAndName("", "foo", null));
+    do_check_throws(() => cps.getCachedBySubdomainAndName("a.com", "", null));
+    do_check_throws(() => cps.getCachedBySubdomainAndName("a.com", null, null));
     yield true;
   },
 ];

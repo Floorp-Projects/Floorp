@@ -97,7 +97,7 @@ function loadNextTest() {
   else
     observer.expectURL(prefix + subtests[0]);
 
-  waitForTrue(function() observer.resolved, function() {
+  waitForTrue(() => observer.resolved, function() {
     // And the nodes get notified after the "link-visited" topic, so
     // we need to execute soon...
     SimpleTest.executeSoon(handleLoad);
