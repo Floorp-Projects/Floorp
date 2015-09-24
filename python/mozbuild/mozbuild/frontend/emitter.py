@@ -159,8 +159,6 @@ class TreeMetadataEmitter(LoggingMixin):
             for o in objs:
                 self._object_count += 1
                 yield o
-                if not o._ack:
-                    raise Exception('Unhandled object of type %s' % type(o))
 
         for out in output:
             # Nothing in sub-contexts is currently of interest to us. Filter
