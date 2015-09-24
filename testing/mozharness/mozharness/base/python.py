@@ -578,16 +578,24 @@ class InfluxRecordingMixin(object):
             self.post = requests.post
 
             auth = os.path.join(os.getcwd(), self.config['influx_credentials_file'])
+            if not os.path.exists(auth):
+                self.warning("Unable to start influxdb recording: %s not found" % (auth,))
+                return
             credentials = {}
             execfile(auth, credentials)
-            self.posturl = credentials['influxdb_credentials']
+            if 'influxdb_credentials' in credentials:
+                self.posturl = credentials['influxdb_credentials']
+                self.recording = True
+            else:
+                self.warning("Unable to start influxdb recording: no credentials")
+                return
 
-            self.recording = True
         except Exception:
             # The exact reason for failing to start stats doesn't really matter.
             # If anything fails, we just won't record stats for this job.
             self.warning("Unable to start influxdb recording: %s" %
                          traceback.format_exc())
+            return
 
     @PreScriptAction
     def influxdb_recording_pre_action(self, action):
