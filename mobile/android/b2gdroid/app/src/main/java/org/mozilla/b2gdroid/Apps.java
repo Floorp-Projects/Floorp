@@ -76,17 +76,7 @@ class Apps extends BroadcastReceiver
                 (appInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0;
 
             obj.put("removable", removable);
-
-            // For now, create a data: url for the icon, since we need additional
-            // android:// protocol support for icons. Once it's there we'll do
-            // something like: obj.put("icon", "android:icon/" + info.packageName);
-            Drawable d = pm.getApplicationIcon(info.packageName);
-            Bitmap bitmap = ((BitmapDrawable)d).getBitmap();
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
-            byte[] byteArray = byteArrayOutputStream.toByteArray();
-            String encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
-            obj.put("icon", "data:image/png;base64," + encoded);
+            obj.put("icon", "android://icon/" + appInfo.packageName);
         } catch(Exception ex) {
             Log.wtf(LOGTAG, "Error building ActivityInfo JSON", ex);
         }

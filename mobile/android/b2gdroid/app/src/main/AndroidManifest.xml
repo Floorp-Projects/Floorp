@@ -49,6 +49,9 @@
     <!-- Needed to disable the default lockscreen -->
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
 
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <uses-permission android:name="android.permission.SET_WALLPAPER" />
+
     <application android:label="@string/b2g"
                  android:icon="@drawable/b2g"
                  android:logo="@drawable/b2g"
@@ -108,6 +111,12 @@
                 <action android:name="android.intent.action.SEARCH" />
             </intent-filter>
         </activity>
+
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.updater.UpdateService"
+            android:process="org.mozilla.b2gdroid.UpdateService">
+        </service>
 
     </application>
 
