@@ -71,6 +71,31 @@ class HelperMixin(object):
                 os.makedirs(d)
             writer(f)
 
+class TestSizeOrder(HelperMixin, unittest.TestCase):
+    def test_size_order(self):
+        """
+        Test that files are processed ordered by size on disk.
+        """
+        processed = []
+        def mock_process_file(filenames):
+            for filename in filenames:
+                processed.append((filename[len(self.test_dir):] if filename.startswith(self.test_dir) else filename).replace('\\', '/'))
+            return True
+        for f, size in (('a/one', 10), ('b/c/two', 30), ('c/three', 20)):
+            f = os.path.join(self.test_dir, f)
+            d = os.path.dirname(f)
+            if d and not os.path.exists(d):
+                os.makedirs(d)
+            open(f, 'wb').write('x' * size)
+        d = symbolstore.GetPlatformSpecificDumper(dump_syms="dump_syms",
+                                                  symbol_path="symbol_path")
+        d.ShouldProcess = lambda f: True
+        d.ProcessFiles = mock_process_file
+        d.Process(self.test_dir)
+        d.Finish(stop_pool=False)
+        self.assertEqual(processed, ['b/c/two', 'c/three', 'a/one'])
+
+
 class TestExclude(HelperMixin, unittest.TestCase):
     def test_exclude_wildcard(self):
         """
@@ -93,6 +118,7 @@ class TestExclude(HelperMixin, unittest.TestCase):
         expected.sort()
         self.assertEqual(processed, expected)
 
+
     def test_exclude_filenames(self):
         """
         Test that excluding a filename without a wildcard works.
@@ -113,6 +139,7 @@ class TestExclude(HelperMixin, unittest.TestCase):
         expected = add_extension(["bar", "abc/bar", "def/bar"])
         expected.sort()
         self.assertEqual(processed, expected)
+
 
 def mock_dump_syms(module_id, filename, extra=[]):
     return ["MODULE os x86 %s %s" % (module_id, filename)
