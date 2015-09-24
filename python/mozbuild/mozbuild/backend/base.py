@@ -117,7 +117,8 @@ class BuildBackend(LoggingMixin):
         """
         for obj in objs:
             obj_start = time.time()
-            self.consume_object(obj)
+            if not self.consume_object(obj):
+                raise Exception('Unhandled object of type %s' % type(obj))
             self._execution_time += time.time() - obj_start
 
             if isinstance(obj, ContextDerived):

@@ -39,10 +39,6 @@ class FasterMakeBackend(CommonBackend):
         self._install_manifests = OrderedDefaultDict(InstallManifest)
 
     def consume_object(self, obj):
-        # We currently ignore a lot of object types, so just acknowledge
-        # everything.
-        obj.ack()
-
         if not isinstance(obj, Defines) and isinstance(obj, ContextDerived):
             defines = self._defines.get(obj.objdir, [])
             if defines:
@@ -167,9 +163,12 @@ class FasterMakeBackend(CommonBackend):
                 self._preprocess_files[dest] = (obj.srcdir, f, defines)
 
         else:
-            return
+            # We currently ignore a lot of object types, so just acknowledge
+            # everything.
+            return True
 
         self._seen_directories.add(obj.objdir)
+        return True
 
     def consume_finished(self):
         mk = Makefile()

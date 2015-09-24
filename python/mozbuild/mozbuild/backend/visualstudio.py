@@ -110,9 +110,6 @@ class VisualStudioBackend(CommonBackend):
             path=os.path.join(self._out_dir, 'mozilla.sln'))
 
     def consume_object(self, obj):
-        # Just acknowledge everything.
-        obj.ack()
-
         reldir = getattr(obj, 'relativedir', None)
 
         if hasattr(obj, 'config') and reldir not in self._paths_to_configs:
@@ -146,6 +143,9 @@ class VisualStudioBackend(CommonBackend):
                 includes.append(os.path.join('$(TopSrcDir)', p[1:]))
             else:
                 includes.append(os.path.join('$(TopSrcDir)', reldir, p))
+
+        # Just acknowledge everything.
+        return True
 
     def _add_sources(self, reldir, obj):
         s = self._paths_to_sources.setdefault(reldir, set())

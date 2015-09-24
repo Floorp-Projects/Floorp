@@ -55,20 +55,18 @@ class AndroidEclipseBackend(CommonBackend):
         """Write out Android Eclipse project files."""
 
         if not isinstance(obj, ContextDerived):
-            return
+            return False
 
-        CommonBackend.consume_object(self, obj)
+        if CommonBackend.consume_object(self, obj):
+            # If CommonBackend acknowledged the object, we're done with it.
+            return True
 
-        # If CommonBackend acknowledged the object, we're done with it.
-        if obj._ack:
-            return
-
-        # We don't want to handle most things, so we just acknowledge all objects...
-        obj.ack()
-
-        # ... and handle the one case we care about specially.
+        # Handle the one case we care about specially.
         if isinstance(obj, ContextWrapped) and isinstance(obj.wrapped, AndroidEclipseProjectData):
             self._process_android_eclipse_project_data(obj.wrapped, obj.srcdir, obj.objdir)
+
+        # We don't want to handle most things, so we just acknowledge all objects
+        return True
 
     def consume_finished(self):
         """The common backend handles WebIDL and test files. We don't handle
