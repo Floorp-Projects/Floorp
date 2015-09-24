@@ -180,7 +180,7 @@ Assembler::immPool(ARMRegister dest, uint8_t* value, vixl::LoadLiteralOp op, ARM
     const size_t numInst = 1;
     const unsigned sizeOfPoolEntryInBytes = 4;
     const unsigned numPoolEntries = sizeof(value) / sizeOfPoolEntryInBytes;
-    return armbuffer_.allocEntry(numInst, numPoolEntries, (uint8_t*)&inst, value, pe);
+    return allocEntry(numInst, numPoolEntries, (uint8_t*)&inst, value, pe);
 }
 
 BufferOffset
@@ -202,7 +202,7 @@ Assembler::fImmPool(ARMFPRegister dest, uint8_t* value, vixl::LoadLiteralOp op)
     const size_t numInst = 1;
     const unsigned sizeOfPoolEntryInBits = 32;
     const unsigned numPoolEntries = dest.size() / sizeOfPoolEntryInBits;
-    return armbuffer_.allocEntry(numInst, numPoolEntries, (uint8_t*)&inst, value);
+    return allocEntry(numInst, numPoolEntries, (uint8_t*)&inst, value);
 }
 
 BufferOffset

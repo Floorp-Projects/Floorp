@@ -88,6 +88,31 @@ class MozBaseAssembler : public js::jit::AssemblerShared {
   }
 
  protected:
+  // Get the buffer offset of the next inserted instruction. This may flush
+  // constant pools.
+  BufferOffset nextInstrOffset() {
+    return armbuffer_.nextInstrOffset();
+  }
+
+  // Get the next usable buffer offset. Note that a constant pool may be placed
+  // here before the next instruction is emitted.
+  BufferOffset nextOffset() const {
+    return armbuffer_.nextOffset();
+  }
+
+  // Allocate memory in the buffer by forwarding to armbuffer_.
+  // Propagate OOM errors.
+  BufferOffset allocEntry(size_t numInst, unsigned numPoolEntries,
+                          uint8_t* inst, uint8_t* data,
+                          ARMBuffer::PoolEntry* pe = nullptr,
+                          bool markAsBranch = false)
+  {
+    BufferOffset offset = armbuffer_.allocEntry(numInst, numPoolEntries, inst,
+                                                data, pe, markAsBranch);
+    propagateOOM(offset.assigned());
+    return offset;
+  }
+
   // Emit the instruction, returning its offset.
   BufferOffset Emit(Instr instruction, bool isBranch = false) {
     JS_STATIC_ASSERT(sizeof(instruction) == kInstructionSize);

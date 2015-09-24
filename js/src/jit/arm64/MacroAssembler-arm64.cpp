@@ -94,8 +94,8 @@ MacroAssemblerCompat::movePatchablePtr(ImmPtr ptr, Register dest)
 
     // Add the entry to the pool, fix up the LDR imm19 offset,
     // and add the completed instruction to the buffer.
-    return armbuffer_.allocEntry(numInst, numPoolEntries,
-                                 (uint8_t*)&instructionScratch, literalAddr);
+    return allocEntry(numInst, numPoolEntries, (uint8_t*)&instructionScratch,
+                      literalAddr);
 }
 
 BufferOffset
@@ -120,8 +120,8 @@ MacroAssemblerCompat::movePatchablePtr(ImmWord ptr, Register dest)
 
     // Add the entry to the pool, fix up the LDR imm19 offset,
     // and add the completed instruction to the buffer.
-    return armbuffer_.allocEntry(numInst, numPoolEntries,
-                                 (uint8_t*)&instructionScratch, literalAddr);
+    return allocEntry(numInst, numPoolEntries, (uint8_t*)&instructionScratch,
+                      literalAddr);
 }
 
 void
