@@ -192,8 +192,8 @@
     _(OsrReturnValue)               \
     _(OsrArgumentsObject)           \
     _(RegExp)                       \
-    _(RegExpExec)                   \
-    _(RegExpTest)                   \
+    _(RegExpMatcher)                \
+    _(RegExpTester)                 \
     _(RegExpReplace)                \
     _(StringReplace)                \
     _(Substr)                       \

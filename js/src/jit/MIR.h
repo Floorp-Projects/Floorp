@@ -7514,32 +7514,45 @@ class MRegExp : public MNullaryInstruction
     }
 };
 
-class MRegExpExec
-  : public MBinaryInstruction,
-    public MixPolicy<ConvertToStringPolicy<0>, ObjectPolicy<1> >::Data
+class MRegExpMatcher
+  : public MAryInstruction<4>,
+    public NoTypePolicy::Data
 {
   private:
 
-    MRegExpExec(MDefinition* regexp, MDefinition* string)
-      : MBinaryInstruction(string, regexp)
+    MRegExpMatcher(MDefinition* regexp, MDefinition* string, MDefinition* lastIndex,
+                   MDefinition* sticky)
+      : MAryInstruction<4>()
     {
+        initOperand(0, regexp);
+        initOperand(1, string);
+        initOperand(2, lastIndex);
+        initOperand(3, sticky);
+
         // May be object or null.
         setResultType(MIRType_Value);
     }
 
   public:
-    INSTRUCTION_HEADER(RegExpExec)
+    INSTRUCTION_HEADER(RegExpMatcher)
 
-    static MRegExpExec* New(TempAllocator& alloc, MDefinition* regexp, MDefinition* string) {
-        return new(alloc) MRegExpExec(regexp, string);
-    }
-
-    MDefinition* string() const {
-        return getOperand(0);
+    static MRegExpMatcher* New(TempAllocator& alloc, MDefinition* regexp, MDefinition* string,
+                               MDefinition* lastIndex, MDefinition* sticky)
+    {
+        return new(alloc) MRegExpMatcher(regexp, string, lastIndex, sticky);
     }
 
     MDefinition* regexp() const {
+        return getOperand(0);
+    }
+    MDefinition* string() const {
         return getOperand(1);
+    }
+    MDefinition* lastIndex() const {
+        return getOperand(2);
+    }
+    MDefinition* sticky() const {
+        return getOperand(3);
     }
 
     bool writeRecoverData(CompactBufferWriter& writer) const override;
@@ -7556,30 +7569,44 @@ class MRegExpExec
     }
 };
 
-class MRegExpTest
-  : public MBinaryInstruction,
-    public MixPolicy<ObjectPolicy<1>, ConvertToStringPolicy<0> >::Data
+class MRegExpTester
+  : public MAryInstruction<4>,
+    public NoTypePolicy::Data
 {
   private:
 
-    MRegExpTest(MDefinition* regexp, MDefinition* string)
-      : MBinaryInstruction(string, regexp)
+    MRegExpTester(MDefinition* regexp, MDefinition* string, MDefinition* lastIndex,
+                  MDefinition* sticky)
+      : MAryInstruction<4>()
     {
-        setResultType(MIRType_Boolean);
+        initOperand(0, regexp);
+        initOperand(1, string);
+        initOperand(2, lastIndex);
+        initOperand(3, sticky);
+
+        setResultType(MIRType_Int32);
     }
 
   public:
-    INSTRUCTION_HEADER(RegExpTest)
+    INSTRUCTION_HEADER(RegExpTester)
 
-    static MRegExpTest* New(TempAllocator& alloc, MDefinition* regexp, MDefinition* string) {
-        return new(alloc) MRegExpTest(regexp, string);
+    static MRegExpTester* New(TempAllocator& alloc, MDefinition* regexp, MDefinition* string,
+                              MDefinition* lastIndex, MDefinition* sticky)
+    {
+        return new(alloc) MRegExpTester(regexp, string, lastIndex, sticky);
     }
 
-    MDefinition* string() const {
+    MDefinition* regexp() const {
         return getOperand(0);
     }
-    MDefinition* regexp() const {
+    MDefinition* string() const {
         return getOperand(1);
+    }
+    MDefinition* lastIndex() const {
+        return getOperand(2);
+    }
+    MDefinition* sticky() const {
+        return getOperand(3);
     }
 
     bool possiblyCalls() const override {
@@ -7588,7 +7615,7 @@ class MRegExpTest
 
     bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
-        // RegExpTest has a side-effect on the regexp object's lastIndex
+        // RegExpTester has a side-effect on the regexp object's lastIndex
         // when sticky or global flags are set.
         // Return false unless we are sure it's not the case.
         // XXX: always return false for now, to work around bug 1132128.
