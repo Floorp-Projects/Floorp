@@ -14,6 +14,7 @@ UNIFIED_SOURCES += [
     'TestCompositor.cpp',
     'TestGfxPrefs.cpp',
     'TestGfxWidgets.cpp',
+    'TestJobScheduler.cpp',
     'TestLayers.cpp',
     'TestMoz2D.cpp',
     'TestQcms.cpp',
