@@ -13,6 +13,13 @@ const { computeHash } = Components.utils.import("resource://gre/modules/addons/P
 
 const featureDir = FileUtils.getDir("ProfD", ["features"]);
 
+function getCurrentFeatureDir() {
+  let dir = featureDir.clone();
+  let set = JSON.parse(Services.prefs.getCharPref(PREF_SYSTEM_ADDON_SET));
+  dir.append(set.directory);
+  return dir;
+}
+
 // Build the test sets
 let dir = FileUtils.getDir("ProfD", ["features", "prefilled"], true);
 do_get_file("data/system_addons/system2_2.xpi").copyTo(dir, "system2@tests.mozilla.org.xpi");
@@ -35,16 +42,16 @@ const prefilledSet = {
   }
 };
 
-dir = FileUtils.getDir("ProfD", ["sysfeatures", "hidden", "features"], true);
+dir = FileUtils.getDir("ProfD", ["sysfeatures", "hidden"], true);
 do_get_file("data/system_addons/system1_1.xpi").copyTo(dir, "system1@tests.mozilla.org.xpi");
 do_get_file("data/system_addons/system2_1.xpi").copyTo(dir, "system2@tests.mozilla.org.xpi");
 
-dir = FileUtils.getDir("ProfD", ["sysfeatures", "prefilled", "features"], true);
+dir = FileUtils.getDir("ProfD", ["sysfeatures", "prefilled"], true);
 do_get_file("data/system_addons/system2_2.xpi").copyTo(dir, "system2@tests.mozilla.org.xpi");
 do_get_file("data/system_addons/system3_2.xpi").copyTo(dir, "system3@tests.mozilla.org.xpi");
 
 const distroDir = FileUtils.getDir("ProfD", ["sysfeatures", "empty"], true);
-registerDirectory("XREAppDist", distroDir);
+registerDirectory("XREAppFeat", distroDir);
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2");
 
@@ -128,6 +135,8 @@ function* build_xml(addons) {
 }
 
 function* check_installed(inProfile, ...versions) {
+  let expectedDir = inProfile ? getCurrentFeatureDir() : distroDir;
+
   for (let i = 0; i < versions.length; i++) {
     let id = "system" + (i + 1) + "@tests.mozilla.org";
     let addon = yield promiseAddonByID(id);
@@ -141,21 +150,14 @@ function* check_installed(inProfile, ...versions) {
       go_check_true(addon.hidden);
 
       // Verify the add-ons file is in the right place
+      let file = expectedDir.clone();
+      file.append(id + ".xpi");
+      do_check_true(file.exists());
+      do_check_true(file.isFile());
+
       let uri = addon.getResourceURI(null);
       do_check_true(uri instanceof AM_Ci.nsIFileURL);
-
-      let file = uri.file.parent;
-      if (inProfile) {
-        file = file.parent;
-        do_check_eq(file.leafName, "features");
-        file = file.parent;
-        do_check_eq(file.path, gProfD.path);
-      }
-      else {
-        do_check_eq(file.leafName, "features");
-        file = file.parent;
-        do_check_eq(file.path, distroDir.path);
-      }
+      do_check_eq(uri.file.path, file.path);
 
       //do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_SYSTEM);
 
