@@ -424,19 +424,32 @@ test-packages-manifest:
       $(call PKG_ARG,common) \
       $(foreach pkg,$(TEST_PKGS),$(call PKG_ARG,$(pkg)))
 
-package-tests: stage-all
+package-tests-prepare-dest:
 	@rm -f '$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)'
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
-# Exclude harness specific directories when generating the common zip.
-	$(MKDIR) -p $(abspath $(DIST))/$(PKG_PATH) && \
+
+package-tests-mozharness: stage-all package-tests-prepare-dest
 	cd $(topsrcdir)/testing/ && \
-	  zip -rq9D $(abspath $(DIST))/$(PKG_PATH)mozharness.zip mozharness && \
+	  zip -rq9D $(abspath $(DIST))/$(PKG_PATH)mozharness.zip mozharness
+package-tests: package-tests-mozharness
+
+package-tests-common: stage-all package-tests-prepare-dest
 	cd $(abspath $(PKG_STAGE)) && \
 	  zip -rq9D '$(abspath $(DIST))/$(PKG_PATH)$(TEST_PACKAGE)' \
-	  * -x \*/.mkdir.done \*.pyc $(foreach name,$(TEST_PKGS),$(name)\*) && \
-	$(foreach name,$(TEST_PKGS),rm -f '$(DIST)/$(PKG_PATH)$(PKG_BASENAME).'$(name)'.tests.zip' && \
-                                zip -rq9D '$(abspath $(DIST))/$(PKG_PATH)$(PKG_BASENAME).'$(name)'.tests.zip' \
-                                $(name) -x \*/.mkdir.done \*.pyc ;)
+	  * -x \*/.mkdir.done \*.pyc $(foreach name,$(TEST_PKGS),$(name)\*)
+package-tests: package-tests-common
+
+define package_archive
+package-tests-$(1): stage-all package-tests-prepare-dest
+	rm -f '$$(DIST)/$$(PKG_PATH)$$(PKG_BASENAME).$(1).tests.zip' && \
+		cd $$(abspath $(PKG_STAGE)) && \
+		zip -rq9D '$$(abspath $$(DIST))/$$(PKG_PATH)$$(PKG_BASENAME).$(1).tests.zip' \
+		$(1) -x \*/.mkdir.done \*.pyc ;
+.PHONY += package-tests-$(1)
+package-tests: package-tests-$(1)
+endef
+
+$(foreach name,$(TEST_PKGS),$(eval $(call package_archive,$(name))))
 
 ifeq ($(MOZ_BUILD_APP),mobile/android)
 stage-all: stage-android
@@ -605,6 +618,9 @@ stage-instrumentation-tests: make-stage-dir
   xpcshell-tests \
   jstestbrowser \
   package-tests \
+  package-tests-prepare-dest \
+  package-tests-mozharness \
+  package-tests-common \
   make-stage-dir \
   stage-all \
   stage-b2g \
