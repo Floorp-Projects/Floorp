@@ -90,16 +90,16 @@ function test()
   }
 
   function continueTest(win) {
-    let $ = function(aId) win.document.getElementById(aId);
+    let $ = aId => win.document.getElementById(aId);
     let downloadView = $("downloadView");
 
     // Default test/check for invocations
     let invokeCount = 0;
-    let counter = function() invokeCount++;
+    let counter = () => invokeCount++;
 
     // Accessors for returning a value for various properties
-    let getItems = function() downloadView.itemCount;
-    let getSelected = function() downloadView.selectedCount;
+    let getItems = () => downloadView.itemCount;
+    let getSelected = () => downloadView.selectedCount;
     let getClipboard = function() {
       let clip = Cc["@mozilla.org/widget/clipboard;1"].
                  getService(Ci.nsIClipboard);

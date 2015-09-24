@@ -34,7 +34,7 @@ add_task(function* test_setTimeout() {
 });
 
 add_task(function* test_setInterval() {
-  let interval1 = imported.setInterval(function() do_throw("Should not be called!"), 100);
+  let interval1 = imported.setInterval(() => do_throw("Should not be called!"), 100);
   do_check_eq(typeof interval1, "number", "setInterval returns a number");
   do_check_true(interval1 > 0, "setTimeout returns a positive number");
 

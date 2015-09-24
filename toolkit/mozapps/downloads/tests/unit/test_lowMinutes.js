@@ -18,7 +18,7 @@ Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
  * @usage _("Hello World") -> prints "Hello World"
  * @usage _(1, 2, 3) -> prints "1 2 3"
  */
-var _ = function(some, debug, text, to) print(Array.slice(arguments).join(" "));
+var _ = (some, debug, text, to) => print(Array.slice(arguments).join(" "));
 
 _("Make an array of time lefts and expected string to be shown for that time");
 var expectedTimes = [

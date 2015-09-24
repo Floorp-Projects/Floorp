@@ -83,7 +83,7 @@ function test() {
 
   info("Registering custom chrome-like protocol.");
   CustomChromeProtocol.factory.register();
-  registerCleanupFunction(function () CustomChromeProtocol.factory.unregister());
+  registerCleanupFunction(() => CustomChromeProtocol.factory.unregister());
 
   const ADDONS_LIST = [
     { id: "test1@tests.mozilla.org",

@@ -28,7 +28,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
  */
 function promiseResolvedLater(aValue) {
   let deferred = Promise.defer();
-  Services.tm.mainThread.dispatch(function () deferred.resolve(aValue),
+  Services.tm.mainThread.dispatch(() => deferred.resolve(aValue),
                                   Ci.nsIThread.DISPATCH_NORMAL);
   return deferred.promise;
 }

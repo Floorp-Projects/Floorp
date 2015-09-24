@@ -238,7 +238,7 @@ function checkPanelPosition(panel)
   // are not, so flip the expected label side and anchor edge.
   var isRTL = (window.getComputedStyle(panel).direction == "rtl");
   if (isRTL) {
-    var flipLeftRight = function (val) val == "left" ? "right" : "left";
+    var flipLeftRight = val => val == "left" ? "right" : "left";
     expectedAnchorEdge = expectedAnchorEdge.replace(/(left|right)/, flipLeftRight);
     expectedSide = expectedSide.replace(/(left|right)/, flipLeftRight);
   }
