@@ -704,7 +704,6 @@ class GlobalObject : public NativeObject
     // Implemented in jsiter.cpp.
     static bool initArrayIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
     static bool initStringIteratorProto(JSContext* cx, Handle<GlobalObject*> global);
-    static bool initIteratorClasses(JSContext* cx, Handle<GlobalObject*> global);
 
     // Implemented in vm/GeneratorObject.cpp.
     static bool initGeneratorClasses(JSContext* cx, Handle<GlobalObject*> global);

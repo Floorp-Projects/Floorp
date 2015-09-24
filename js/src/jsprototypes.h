@@ -76,7 +76,7 @@
     real(SyntaxError,           16,     InitViaClassSpec,       ERROR_CLASP(JSEXN_SYNTAXERR)) \
     real(TypeError,             17,     InitViaClassSpec,       ERROR_CLASP(JSEXN_TYPEERR)) \
     real(URIError,              18,     InitViaClassSpec,       ERROR_CLASP(JSEXN_URIERR)) \
-    real(Iterator,              19,     InitIteratorClasses,    OCLASP(PropertyIterator)) \
+    real(Iterator,              19,     InitIteratorClass,      OCLASP(PropertyIterator)) \
     real(StopIteration,         20,     InitStopIterationClass, OCLASP(StopIteration)) \
     real(ArrayBuffer,           21,     InitArrayBufferClass,   &js::ArrayBufferObject::protoClass) \
     real(Int8Array,             22,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Int8)) \
