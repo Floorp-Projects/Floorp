@@ -217,20 +217,6 @@ class PandaTest(TestingMixin, MercurialScript, BlobUploadMixin, MozpoolMixin, Bu
                                  if self._query_specified_suites(cat) is not None]
         super(PandaTest, self).download_and_extract(suite_categories=target_categories)
 
-    def _query_try_flavor(self, category, suite):
-        flavors = {
-            "mochitest": [("plain.*", "mochitest"),
-                          ("browser-chrome.*", "browser-chrome"),
-                          ("mochitest-devtools-chrome.*", "devtools-chrome"),
-                          ("chrome", "chrome")],
-            "xpcshell": [("xpcshell", "xpcshell")],
-            "reftest": [("reftest", "reftest"),
-                        ("crashtest", "crashtest")]
-        }
-        for suite_pattern, flavor in flavors.get(category, []):
-            if re.compile(suite_pattern).match(suite):
-                return flavor
-
     def _run_category_suites(self, suite_category, preflight_run_method=None):
         """run suite(s) to a specific category"""
 
@@ -260,13 +246,11 @@ class PandaTest(TestingMixin, MercurialScript, BlobUploadMixin, MozpoolMixin, Bu
                 if should_install_app:
                     self._install_app()
                 cmd = abs_base_cmd[:]
+                replace_dict = {}
+                for arg in suites[suite]:
+                    cmd.append(arg % replace_dict)
 
-                flavor = self._query_try_flavor(suite_category, suite)
-                try_options, try_tests = self.try_args(flavor)
-
-                cmd.extend(self.query_options(suites[suite],
-                                              try_options))
-                cmd.extend(self.query_tests_args(try_tests))
+                cmd = self.append_harness_extra_args(cmd)
 
                 tests = self.config["suite_definitions"][suite_category].get("tests", [])
                 cmd += tests
