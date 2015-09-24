@@ -26,7 +26,7 @@
 #include "YuvStamper.h"
 #endif
 
-#define AUDIO_RATE 16000
+#define AUDIO_RATE mozilla::MediaEngine::DEFAULT_SAMPLE_RATE
 #define AUDIO_FRAME_LENGTH ((AUDIO_RATE * MediaEngine::DEFAULT_AUDIO_TIMER_MS) / 1000)
 namespace mozilla {
 

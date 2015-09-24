@@ -137,6 +137,7 @@ public:
     , mChannel(-1)
     , mInitDone(false)
     , mStarted(false)
+    , mSampleFrequency(MediaEngine::DEFAULT_SAMPLE_RATE)
     , mEchoOn(false), mAgcOn(false), mNoiseOn(false)
     , mEchoCancel(webrtc::kEcDefault)
     , mAGC(webrtc::kAgcDefault)
@@ -225,6 +226,7 @@ private:
   nsString mDeviceName;
   nsCString mDeviceUUID;
 
+  uint32_t mSampleFrequency;
   bool mEchoOn, mAgcOn, mNoiseOn;
   webrtc::EcModes  mEchoCancel;
   webrtc::AgcModes mAGC;

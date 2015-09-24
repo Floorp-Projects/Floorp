@@ -54,6 +54,12 @@ public:
   static const int DEFAULT_169_VIDEO_HEIGHT = 720;
   static const int DEFAULT_AUDIO_TIMER_MS = 10;
 
+#ifndef MOZ_B2G
+  static const int DEFAULT_SAMPLE_RATE = 32000;
+#else
+  static const int DEFAULT_SAMPLE_RATE = 16000;
+#endif
+
   /* Populate an array of video sources in the nsTArray. Also include devices
    * that are currently unavailable. */
   virtual void EnumerateVideoDevices(dom::MediaSourceEnum,
