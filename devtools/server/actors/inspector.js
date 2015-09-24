@@ -326,6 +326,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
     let observer = new node.defaultView.MutationObserver(callback);
     observer.mergeAttributeRecords = true;
     observer.observe(node, {
+      nativeAnonymousChildList: true,
       attributes: true,
       characterData: true,
       childList: true,
@@ -2810,25 +2811,26 @@ var WalkerActor = protocol.ActorClass({
         continue;
       }
       let targetNode = change.target;
+      let type = change.type;
       let mutation = {
-        type: change.type,
+        type: type,
         target: targetActor.actorID,
       };
 
-      if (mutation.type === "attributes") {
+      if (type === "attributes") {
         mutation.attributeName = change.attributeName;
         mutation.attributeNamespace = change.attributeNamespace || undefined;
         mutation.newValue = targetNode.hasAttribute(mutation.attributeName) ?
                             targetNode.getAttribute(mutation.attributeName)
                             : null;
-      } else if (mutation.type === "characterData") {
+      } else if (type === "characterData") {
         if (targetNode.nodeValue.length > gValueSummaryLength) {
           mutation.newValue = targetNode.nodeValue.substring(0, gValueSummaryLength);
           mutation.incompleteValue = true;
         } else {
           mutation.newValue = targetNode.nodeValue;
         }
-      } else if (mutation.type === "childList") {
+      } else if (type === "childList" || type === "nativeAnonymousChildList") {
         // Get the list of removed and added actors that the client has seen
         // so that it can keep its ownership tree up to date.
         let removedActors = [];
@@ -3330,7 +3332,7 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
 
         let emittedMutation = object.merge(change, { target: targetFront });
 
-        if (change.type === "childList") {
+        if (change.type === "childList" || change.type === "nativeAnonymousChildList") {
           // Update the ownership tree according to the mutation record.
           let addedFronts = [];
           let removedFronts = [];
