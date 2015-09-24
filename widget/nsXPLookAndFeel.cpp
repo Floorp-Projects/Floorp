@@ -246,6 +246,7 @@ int32_t nsXPLookAndFeel::sCachedColorBits[COLOR_CACHE_SIZE] = {0};
 
 bool nsXPLookAndFeel::sInitialized = false;
 bool nsXPLookAndFeel::sUseNativeColors = true;
+bool nsXPLookAndFeel::sUseStandinsForNativeColors = false;
 
 nsLookAndFeel* nsXPLookAndFeel::sInstance = nullptr;
 bool nsXPLookAndFeel::sShutdown = false;
@@ -457,10 +458,12 @@ nsXPLookAndFeel::Init()
     InitColorFromPref(i);
   }
 
-  bool val;
-  if (NS_SUCCEEDED(Preferences::GetBool("ui.use_native_colors", &val))) {
-    sUseNativeColors = val;
-  }
+  Preferences::AddBoolVarCache(&sUseNativeColors,
+                               "ui.use_native_colors",
+                               sUseNativeColors);
+  Preferences::AddBoolVarCache(&sUseStandinsForNativeColors,
+                               "ui.use_standins_for_native_colors",
+                               sUseStandinsForNativeColors);
 
   if (XRE_IsContentProcess()) {
     mozilla::dom::ContentChild* cc =
@@ -509,6 +512,153 @@ nsXPLookAndFeel::IsSpecialColor(ColorID aID, nscolor &aColor)
   return false;
 }
 
+bool
+nsXPLookAndFeel::ColorIsNotCSSAccessible(ColorID aID)
+{
+  bool result = false;
+
+  switch (aID) {
+    case eColorID_WindowBackground:
+    case eColorID_WindowForeground:
+    case eColorID_WidgetBackground:
+    case eColorID_WidgetForeground:
+    case eColorID_WidgetSelectBackground:
+    case eColorID_WidgetSelectForeground:
+    case eColorID_Widget3DHighlight:
+    case eColorID_Widget3DShadow:
+    case eColorID_TextBackground:
+    case eColorID_TextForeground:
+    case eColorID_TextSelectBackground:
+    case eColorID_TextSelectForeground:
+    case eColorID_TextSelectBackgroundDisabled:
+    case eColorID_TextSelectBackgroundAttention:
+    case eColorID_TextHighlightBackground:
+    case eColorID_TextHighlightForeground:
+    case eColorID_IMERawInputBackground:
+    case eColorID_IMERawInputForeground:
+    case eColorID_IMERawInputUnderline:
+    case eColorID_IMESelectedRawTextBackground:
+    case eColorID_IMESelectedRawTextForeground:
+    case eColorID_IMESelectedRawTextUnderline:
+    case eColorID_IMEConvertedTextBackground:
+    case eColorID_IMEConvertedTextForeground:
+    case eColorID_IMEConvertedTextUnderline:
+    case eColorID_IMESelectedConvertedTextBackground:
+    case eColorID_IMESelectedConvertedTextForeground:
+    case eColorID_IMESelectedConvertedTextUnderline:
+    case eColorID_SpellCheckerUnderline:
+      result = true;
+      break;
+    default:
+      break;
+  }
+
+  return result;
+}
+
+nscolor
+nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID)
+{
+  nscolor result = NS_RGB(0xFF, 0xFF, 0xFF);
+
+  // The stand-in colors are taken from the Windows 7 Aero theme
+  // except Mac-specific colors which are taken from Mac OS 10.7.
+  switch (aID) {
+    // CSS 2 colors:
+    case eColorID_activeborder:      result = NS_RGB(0xB4, 0xB4, 0xB4); break;
+    case eColorID_activecaption:     result = NS_RGB(0x99, 0xB4, 0xD1); break;
+    case eColorID_appworkspace:      result = NS_RGB(0xAB, 0xAB, 0xAB); break;
+    case eColorID_background:        result = NS_RGB(0x00, 0x00, 0x00); break;
+    case eColorID_buttonface:        result = NS_RGB(0xF0, 0xF0, 0xF0); break;
+    case eColorID_buttonhighlight:   result = NS_RGB(0xFF, 0xFF, 0xFF); break;
+    case eColorID_buttonshadow:      result = NS_RGB(0xA0, 0xA0, 0xA0); break;
+    case eColorID_buttontext:        result = NS_RGB(0x00, 0x00, 0x00); break;
+    case eColorID_captiontext:       result = NS_RGB(0x00, 0x00, 0x00); break;
+    case eColorID_graytext:          result = NS_RGB(0x6D, 0x6D, 0x6D); break;
+    case eColorID_highlight:         result = NS_RGB(0x33, 0x99, 0xFF); break;
+    case eColorID_highlighttext:     result = NS_RGB(0xFF, 0xFF, 0xFF); break;
+    case eColorID_inactiveborder:    result = NS_RGB(0xF4, 0xF7, 0xFC); break;
+    case eColorID_inactivecaption:   result = NS_RGB(0xBF, 0xCD, 0xDB); break;
+    case eColorID_inactivecaptiontext:
+      result = NS_RGB(0x43, 0x4E, 0x54); break;
+    case eColorID_infobackground:    result = NS_RGB(0xFF, 0xFF, 0xE1); break;
+    case eColorID_infotext:          result = NS_RGB(0x00, 0x00, 0x00); break;
+    case eColorID_menu:              result = NS_RGB(0xF0, 0xF0, 0xF0); break;
+    case eColorID_menutext:          result = NS_RGB(0x00, 0x00, 0x00); break;
+    case eColorID_scrollbar:         result = NS_RGB(0xC8, 0xC8, 0xC8); break;
+    case eColorID_threeddarkshadow:  result = NS_RGB(0x69, 0x69, 0x69); break;
+    case eColorID_threedface:        result = NS_RGB(0xF0, 0xF0, 0xF0); break;
+    case eColorID_threedhighlight:   result = NS_RGB(0xFF, 0xFF, 0xFF); break;
+    case eColorID_threedlightshadow: result = NS_RGB(0xE3, 0xE3, 0xE3); break;
+    case eColorID_threedshadow:      result = NS_RGB(0xA0, 0xA0, 0xA0); break;
+    case eColorID_window:            result = NS_RGB(0xFF, 0xFF, 0xFF); break;
+    case eColorID_windowframe:       result = NS_RGB(0x64, 0x64, 0x64); break;
+    case eColorID_windowtext:        result = NS_RGB(0x00, 0x00, 0x00); break;
+    case eColorID__moz_buttondefault:
+      result = NS_RGB(0x69, 0x69, 0x69); break;
+    case eColorID__moz_field:        result = NS_RGB(0xFF, 0xFF, 0xFF); break;
+    case eColorID__moz_fieldtext:    result = NS_RGB(0x00, 0x00, 0x00); break;
+    case eColorID__moz_dialog:       result = NS_RGB(0xF0, 0xF0, 0xF0); break;
+    case eColorID__moz_dialogtext:   result = NS_RGB(0x00, 0x00, 0x00); break;
+    case eColorID__moz_dragtargetzone:
+      result = NS_RGB(0xFF, 0xFF, 0xFF); break;
+    case eColorID__moz_cellhighlight:
+      result = NS_RGB(0xF0, 0xF0, 0xF0); break;
+    case eColorID__moz_cellhighlighttext:
+      result = NS_RGB(0x00, 0x00, 0x00); break;
+    case eColorID__moz_html_cellhighlight:
+      result = NS_RGB(0x33, 0x99, 0xFF); break;
+    case eColorID__moz_html_cellhighlighttext:
+      result = NS_RGB(0xFF, 0xFF, 0xFF); break;
+    case eColorID__moz_buttonhoverface:
+      result = NS_RGB(0xF0, 0xF0, 0xF0); break;
+    case eColorID__moz_buttonhovertext:
+      result = NS_RGB(0x00, 0x00, 0x00); break;
+    case eColorID__moz_menuhover:
+      result = NS_RGB(0x33, 0x99, 0xFF); break;
+    case eColorID__moz_menuhovertext:
+      result = NS_RGB(0x00, 0x00, 0x00); break;
+    case eColorID__moz_menubartext:
+      result = NS_RGB(0x00, 0x00, 0x00); break;
+    case eColorID__moz_menubarhovertext:
+      result = NS_RGB(0x00, 0x00, 0x00); break;
+    case eColorID__moz_oddtreerow:
+      result = NS_RGB(0xFF, 0xFF, 0xFF); break;
+    case eColorID__moz_mac_chrome_active:
+      result = NS_RGB(0xB2, 0xB2, 0xB2); break;
+    case eColorID__moz_mac_chrome_inactive:
+      result = NS_RGB(0xE1, 0xE1, 0xE1); break;
+    case eColorID__moz_mac_focusring:
+      result = NS_RGB(0x60, 0x9D, 0xD7); break;
+    case eColorID__moz_mac_menuselect:
+      result = NS_RGB(0x38, 0x75, 0xD7); break;
+    case eColorID__moz_mac_menushadow:
+      result = NS_RGB(0xA3, 0xA3, 0xA3); break;
+    case eColorID__moz_mac_menutextdisable:
+      result = NS_RGB(0x88, 0x88, 0x88); break;
+    case eColorID__moz_mac_menutextselect:
+      result = NS_RGB(0xFF, 0xFF, 0xFF); break;
+    case eColorID__moz_mac_disabledtoolbartext:
+      result = NS_RGB(0x3F, 0x3F, 0x3F); break;
+    case eColorID__moz_mac_secondaryhighlight:
+      result = NS_RGB(0xD4, 0xD4, 0xD4); break;
+    case eColorID__moz_win_mediatext:
+      result = NS_RGB(0xFF, 0xFF, 0xFF); break;
+    case eColorID__moz_win_communicationstext:
+      result = NS_RGB(0xFF, 0xFF, 0xFF); break;
+    case eColorID__moz_nativehyperlinktext:
+      result = NS_RGB(0x00, 0x66, 0xCC); break;
+    case eColorID__moz_comboboxtext:
+      result = NS_RGB(0x00, 0x00, 0x00); break;
+    case eColorID__moz_combobox:
+      result = NS_RGB(0xFF, 0xFF, 0xFF); break;
+    default:
+      break;
+  }
+
+  return result;
+}
+
 //
 // All these routines will return NS_OK if they have a value,
 // in which case the nsLookAndFeel should use that value;
@@ -516,7 +666,8 @@ nsXPLookAndFeel::IsSpecialColor(ColorID aID, nscolor &aColor)
 // platform-specific nsLookAndFeel should use its own values instead.
 //
 nsresult
-nsXPLookAndFeel::GetColorImpl(ColorID aID, nscolor &aResult)
+nsXPLookAndFeel::GetColorImpl(ColorID aID, bool aUseStandinsForNativeColors,
+                              nscolor &aResult)
 {
   if (!sInitialized)
     Init();
@@ -602,7 +753,12 @@ nsXPLookAndFeel::GetColorImpl(ColorID aID, nscolor &aResult)
   }
 #endif // DEBUG_SYSTEM_COLOR_USE
 
-  if (IS_COLOR_CACHED(aID)) {
+  if (aUseStandinsForNativeColors &&
+      (ColorIsNotCSSAccessible(aID) || !sUseStandinsForNativeColors)) {
+    aUseStandinsForNativeColors = false;
+  }
+
+  if (!aUseStandinsForNativeColors && IS_COLOR_CACHED(aID)) {
     aResult = sCachedColors[aID];
     return NS_OK;
   }
@@ -633,6 +789,11 @@ nsXPLookAndFeel::GetColorImpl(ColorID aID, nscolor &aResult)
     // The foreground color for the matched text in findbar highlighting
     // Used with nsISelectionController::SELECTION_FIND
     aResult = NS_RGB(0xff, 0xff, 0xff);
+    return NS_OK;
+  }
+
+  if (sUseNativeColors && aUseStandinsForNativeColors) {
+    aResult = GetStandinForNativeColor(aID);
     return NS_OK;
   }
 
@@ -732,7 +893,15 @@ namespace mozilla {
 nsresult
 LookAndFeel::GetColor(ColorID aID, nscolor* aResult)
 {
-  return nsLookAndFeel::GetInstance()->GetColorImpl(aID, *aResult);
+  return nsLookAndFeel::GetInstance()->GetColorImpl(aID, false, *aResult);
+}
+
+nsresult
+LookAndFeel::GetColor(ColorID aID, bool aUseStandinsForNativeColors,
+                      nscolor* aResult)
+{
+  return nsLookAndFeel::GetInstance()->GetColorImpl(aID,
+                                       aUseStandinsForNativeColors, *aResult);
 }
 
 // static
