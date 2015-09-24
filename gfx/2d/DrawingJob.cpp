@@ -70,7 +70,7 @@ DrawingJob::Run()
 {
   while (mCursor < mCommandOffsets.size()) {
 
-    DrawingCommand* cmd = mCommandBuffer->GetDrawingCommand(mCommandOffsets[mCursor]);
+    const DrawingCommand* cmd = mCommandBuffer->GetDrawingCommand(mCommandOffsets[mCursor]);
 
     if (!cmd) {
       return JobStatus::Error;
@@ -89,7 +89,7 @@ DrawingJob::~DrawingJob()
   Clear();
 }
 
-DrawingCommand*
+const DrawingCommand*
 CommandBuffer::GetDrawingCommand(ptrdiff_t aId)
 {
   return static_cast<DrawingCommand*>(mStorage.GetStorage(aId));
