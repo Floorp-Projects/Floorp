@@ -262,7 +262,7 @@ public:
      * returns false if there is something other than a color
      *         set as the current source (pattern, surface, etc)
      */
-    bool GetDeviceColor(gfxRGBA& c);
+    bool GetDeviceColor(mozilla::gfx::Color& aColorOut);
 
     /**
      * Set a solid color in the sRGB color space to use for drawing.
