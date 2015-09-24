@@ -3376,7 +3376,6 @@ ServiceWorkerManager::FindScopeForPath(const nsACString& aScopeKey,
   return false;
 }
 
-#ifdef DEBUG
 /* static */ bool
 ServiceWorkerManager::HasScope(nsIPrincipal* aPrincipal,
                                const nsACString& aScope)
@@ -3397,7 +3396,6 @@ ServiceWorkerManager::HasScope(nsIPrincipal* aPrincipal,
 
   return data->mOrderedScopes.Contains(aScope);
 }
-#endif
 
 /* static */ void
 ServiceWorkerManager::RemoveScopeAndRegistration(ServiceWorkerRegistrationInfo* aRegistration)
@@ -4636,7 +4634,8 @@ ServiceWorkerManager::MaybeRemoveRegistration(ServiceWorkerRegistrationInfo* aRe
 {
   MOZ_ASSERT(aRegistration);
   nsRefPtr<ServiceWorkerInfo> newest = aRegistration->Newest();
-  if (!newest) {
+  if (!newest && HasScope(aRegistration->mPrincipal, aRegistration->mScope)) {
+    aRegistration->Clear();
     RemoveRegistration(aRegistration);
   }
 }

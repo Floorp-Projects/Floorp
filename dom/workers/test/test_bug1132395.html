@@ -16,23 +16,21 @@
 // This test is full of dummy debug messages. This is because I need to follow
 // an hard-to-reproduce timeout failure.
 
-SpecialPowers.pushPrefEnv({ set: [["dom.workers.sharedWorkers.enabled", true]] }, function() {
-  info("test started");
-  var sw = new SharedWorker('bug1132395_sharedWorker.js');
-  sw.port.onmessage = function(event) {
-    info("sw.onmessage received");
-    ok(true, "We didn't crash.");
-    SimpleTest.finish();
-  }
+info("test started");
+var sw = new SharedWorker('bug1132395_sharedWorker.js');
+sw.port.onmessage = function(event) {
+  info("sw.onmessage received");
+  ok(true, "We didn't crash.");
+  SimpleTest.finish();
+}
 
-  sw.onerror = function(event) {
-    ok(false, "Failed to create a ServiceWorker");
-    SimpleTest.finish();
-  }
+sw.onerror = function(event) {
+  ok(false, "Failed to create a ServiceWorker");
+  SimpleTest.finish();
+}
 
-  info("sw.postmessage called");
-  sw.port.postMessage('go');
-});
+info("sw.postmessage called");
+sw.port.postMessage('go');
 
 SimpleTest.waitForExplicitFinish();
 

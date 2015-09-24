@@ -9,17 +9,7 @@
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-console-workers.html";
 
-function pushPrefEnv() {
-  let deferred = promise.defer();
-  let options = {
-    set: [["dom.workers.sharedWorkers.enabled", true]]
-  };
-  SpecialPowers.pushPrefEnv(options, deferred.resolve);
-  return deferred.promise;
-}
-
 var test = asyncTest(function*() {
-  yield pushPrefEnv();
   yield loadTab(TEST_URI);
 
   let hud = yield openConsole();

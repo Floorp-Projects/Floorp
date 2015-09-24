@@ -4,36 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-os_win = 0
-os_posix = 0
-os_macosx = 0
-os_dragonfly = 0
-os_freebsd = 0
-os_netbsd = 0
-os_openbsd = 0
-os_bsd = 0
-os_linux = 0
-
-if CONFIG['OS_ARCH'] == 'WINNT':
-    os_win = 1
-else:
-    os_posix = 1
-    if CONFIG['OS_ARCH'] == 'Darwin':
-        os_macosx = 1
-    elif CONFIG['OS_ARCH'] == 'DragonFly':
-        os_dragonfly = 1
-        os_bsd = 1
-    elif CONFIG['OS_ARCH'] in ['FreeBSD', 'GNU_kFreeBSD']:
-        os_freebsd = 1
-        os_bsd = 1
-    elif CONFIG['OS_ARCH'] == 'NetBSD':
-        os_netbsd = 1
-        os_bsd = 1
-    elif CONFIG['OS_ARCH'] == 'OpenBSD':
-        os_openbsd = 1
-        os_bsd = 1
-    else:
-        os_linux = 1
+libevent_path_prefix = 'src/third_party'
+include(libevent_path_prefix + '/libeventcommon.mozbuild')
 
 UNIFIED_SOURCES += [
     'src/base/at_exit.cc',
@@ -102,36 +74,7 @@ if os_win:
         'src/chrome/common/transport_dib_win.cc',
     ]
 elif not CONFIG['MOZ_NATIVE_LIBEVENT']:
-    UNIFIED_SOURCES += [
-        'src/third_party/libevent/buffer.c',
-        'src/third_party/libevent/bufferevent.c',
-        'src/third_party/libevent/bufferevent_ratelim.c',
-        'src/third_party/libevent/bufferevent_sock.c',
-        'src/third_party/libevent/event.c',
-        'src/third_party/libevent/event_tagging.c',
-        'src/third_party/libevent/evmap.c',
-        'src/third_party/libevent/evrpc.c',
-        'src/third_party/libevent/evthread.c',
-        'src/third_party/libevent/evthread_pthread.c',
-        'src/third_party/libevent/evutil.c',
-        'src/third_party/libevent/evutil_rand.c',
-        'src/third_party/libevent/http.c',
-        'src/third_party/libevent/listener.c',
-        'src/third_party/libevent/log.c',
-        'src/third_party/libevent/poll.c',
-        'src/third_party/libevent/select.c',
-        'src/third_party/libevent/signal.c',
-        'src/third_party/libevent/strlcpy.c',
-    ]
-    SOURCES += [
-        # This file cannot be built in unified mode because of strtotimeval symbol clash.
-        'src/third_party/libevent/evdns.c',
-    ]
-    DEFINES['HAVE_CONFIG_H'] = True
-    LOCAL_INCLUDES += [
-        'src/third_party/libevent',
-        'src/third_party/libevent/include',
-    ]
+    DIRS += ['src/third_party']
 
 if os_posix:
     UNIFIED_SOURCES += [
@@ -156,12 +99,6 @@ if os_posix:
         'src/chrome/common/ipc_channel_posix.cc',
         'src/chrome/common/process_watcher_posix_sigchld.cc',
     ]
-    if CONFIG['OS_TARGET'] == 'Android':
-        UNIFIED_SOURCES += [
-            'src/base/message_pump_android.cc',
-        ]
-        DEFINES['ANDROID'] = True
-        DEFINES['_POSIX_MONOTONIC_CLOCK'] = 0
 
 if os_macosx:
     UNIFIED_SOURCES += [
@@ -180,43 +117,10 @@ if os_macosx:
         'src/chrome/common/transport_dib_mac.cc',
     ]
     SOURCES += [
-        # This file cannot be built in unified mode because of the redefinition of NoOp.
+        # This file cannot be built in unified mode because of the redefinition
+        # of NoOp.
         'src/base/platform_thread_mac.mm',
     ]
-    if not CONFIG['MOZ_NATIVE_LIBEVENT']:
-        UNIFIED_SOURCES += [
-            'src/third_party/libevent/kqueue.c',
-        ]
-        LOCAL_INCLUDES += ['src/third_party/libevent/mac']
-
-if os_linux:
-    SOURCES += [
-        'src/base/atomicops_internals_x86_gcc.cc',
-        'src/base/idle_timer_none.cc',
-        'src/base/process_util_linux.cc',
-        'src/base/time_posix.cc',
-    ]
-    if CONFIG['MOZ_WIDGET_GTK']:
-        SOURCES += [
-            'src/base/message_pump_glib.cc',
-        ]
-    if CONFIG['MOZ_ENABLE_QT']:
-        SOURCES += [
-            '!moc_message_pump_qt.cc',
-            'src/base/message_pump_qt.cc',
-        ]
-    if not CONFIG['MOZ_NATIVE_LIBEVENT']:
-        if CONFIG['OS_TARGET'] != 'Android':
-            SOURCES += [
-                'src/third_party/libevent/epoll_sub.c',
-            ]
-        SOURCES += [
-            'src/third_party/libevent/epoll.c',
-        ]
-        if CONFIG['OS_TARGET'] == 'Android':
-            LOCAL_INCLUDES += ['src/third_party/libevent/android']
-        else:
-            LOCAL_INCLUDES += ['src/third_party/libevent/linux']
 
 if os_bsd:
     SOURCES += [
@@ -231,6 +135,22 @@ if os_bsd:
         SOURCES += [
             'src/base/process_util_bsd.cc'
         ]
+
+if os_linux:
+    SOURCES += [
+        'src/base/atomicops_internals_x86_gcc.cc',
+        'src/base/idle_timer_none.cc',
+        'src/base/process_util_linux.cc',
+        'src/base/time_posix.cc',
+    ]
+    if CONFIG['OS_TARGET'] == 'Android':
+        UNIFIED_SOURCES += [
+            'src/base/message_pump_android.cc',
+        ]
+        DEFINES['ANDROID'] = True
+        DEFINES['_POSIX_MONOTONIC_CLOCK'] = 0
+
+if os_bsd or os_linux:
     if CONFIG['MOZ_WIDGET_GTK']:
         SOURCES += [
             'src/base/message_pump_glib.cc',
@@ -240,11 +160,6 @@ if os_bsd:
             '!moc_message_pump_qt.cc',
             'src/base/message_pump_qt.cc',
         ]
-    if not CONFIG['MOZ_NATIVE_LIBEVENT']:
-        SOURCES += [
-            'src/third_party/libevent/kqueue.c',
-        ]
-        LOCAL_INCLUDES += ['src/third_party/libevent/bsd']
 
 ost = CONFIG['OS_TEST']
 if '86' not in ost and 'arm' not in ost and 'mips' not in ost:

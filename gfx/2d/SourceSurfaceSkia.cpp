@@ -106,7 +106,7 @@ SourceSurfaceSkia::InitFromTexture(DrawTargetSkia* aOwner,
   mSize.width = skiaTexGlue.fWidth = aSize.width;
   mSize.height = skiaTexGlue.fHeight = aSize.height;
   skiaTexGlue.fFlags = kNone_GrBackendTextureFlag;
-  skiaTexGlue.fOrigin = kBottomLeft_GrSurfaceOrigin;
+  skiaTexGlue.fOrigin = kTopLeft_GrSurfaceOrigin;
   skiaTexGlue.fConfig = GfxFormatToGrConfig(aFormat);
   skiaTexGlue.fSampleCnt = 0;
   skiaTexGlue.fTextureHandle = aTexture;

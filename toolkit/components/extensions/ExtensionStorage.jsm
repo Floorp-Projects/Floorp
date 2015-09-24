@@ -95,7 +95,13 @@ this.ExtensionStorage = {
   remove(extensionId, items) {
     return this.read(extensionId).then(extData => {
       let changes = {};
-      for (let prop in items) {
+      if (Array.isArray(items)) {
+        for (let prop of items) {
+          changes[prop] = {oldValue: extData[prop]};
+          delete extData[prop];
+        }
+      } else {
+        let prop = items;
         changes[prop] = {oldValue: extData[prop]};
         delete extData[prop];
       }
@@ -116,7 +122,7 @@ this.ExtensionStorage = {
       let result = {};
       if (keys === null) {
         Object.assign(result, extData);
-      } else if (typeof(keys) == "object") {
+      } else if (typeof(keys) == "object" && !Array.isArray(keys)) {
         for (let prop in keys) {
           if (prop in extData) {
             result[prop] = extData[prop];
@@ -125,10 +131,15 @@ this.ExtensionStorage = {
           }
         }
       } else if (typeof(keys) == "string") {
-        result[prop] = extData[prop] || undefined;
+        let prop = keys;
+        if (prop in extData) {
+          result[prop] = extData[prop];
+        }
       } else {
         for (let prop of keys) {
-          result[prop] = extData[prop] || undefined;
+          if (prop in extData) {
+            result[prop] = extData[prop];
+          }
         }
       }
 
@@ -146,4 +157,20 @@ this.ExtensionStorage = {
     let listeners = this.listeners.get(extensionId);
     listeners.delete(listener);
   },
+
+  init() {
+    Services.obs.addObserver(this, "extension-invalidate-storage-cache", false);
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
+  },
+
+  observe(subject, topic, data) {
+    if (topic == "xpcom-shutdown") {
+      Services.obs.removeObserver(this, "extension-invalidate-storage-cache");
+      Services.obs.removeObserver(this, "xpcom-shutdown");
+    } else if (topic == "extension-invalidate-storage-cache") {
+      this.cache.clear();
+    }
+  },
 };
+
+ExtensionStorage.init();

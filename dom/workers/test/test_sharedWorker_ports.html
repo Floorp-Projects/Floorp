@@ -12,28 +12,25 @@
   <body>
     <script class="testbody" type="text/javascript">
 
-SpecialPowers.pushPrefEnv({ set: [["dom.workers.sharedWorkers.enabled", true]]},
-function() {
-  var sw1 = new SharedWorker('sharedWorker_ports.js');
-  sw1.port.onmessage = function(event) {
-    if (event.data.type == "connected") {
-      ok(true, "The SharedWorker is alive.");
+var sw1 = new SharedWorker('sharedWorker_ports.js');
+sw1.port.onmessage = function(event) {
+  if (event.data.type == "connected") {
+    ok(true, "The SharedWorker is alive.");
 
-      var sw2 = new SharedWorker('sharedWorker_ports.js');
-      sw1.port.postMessage("Port from the main-thread!", [sw2.port]);
-      return;
-    }
-
-    if (event.data.type == "status") {
-      ok(event.data.test, event.data.msg);
-      return;
-    }
-
-    if (event.data.type == "finish") {
-      SimpleTest.finish();
-    }
+    var sw2 = new SharedWorker('sharedWorker_ports.js');
+    sw1.port.postMessage("Port from the main-thread!", [sw2.port]);
+    return;
   }
-});
+
+  if (event.data.type == "status") {
+    ok(event.data.test, event.data.msg);
+    return;
+  }
+
+  if (event.data.type == "finish") {
+    SimpleTest.finish();
+  }
+}
 
 SimpleTest.waitForExplicitFinish();
     </script>
