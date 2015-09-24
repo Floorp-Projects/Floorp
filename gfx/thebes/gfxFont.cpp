@@ -1742,7 +1742,8 @@ gfxFont::DrawGlyphs(gfxShapedText            *aShapedText,
     gfxFloat& inlineCoord = aFontParams.isVerticalFont ? aPt->y : aPt->x;
 
     if (aRunParams.spacing) {
-        inlineCoord += aRunParams.direction * aRunParams.spacing[0].mBefore;
+        inlineCoord += aRunParams.isRTL ? -aRunParams.spacing[0].mBefore
+                                        : aRunParams.spacing[0].mBefore;
     }
 
     const gfxShapedText::CompressedGlyph *glyphData =
@@ -1821,7 +1822,7 @@ gfxFont::DrawGlyphs(gfxShapedText            *aShapedText,
                                      buffer, &emittedGlyphs);
                     }
 
-                    inlineCoord += aRunParams.direction * advance;
+                    inlineCoord += aRunParams.isRTL ? -advance : advance;
                 }
             }
         }
@@ -1831,7 +1832,7 @@ gfxFont::DrawGlyphs(gfxShapedText            *aShapedText,
             if (i + 1 < aCount) {
                 space += aRunParams.spacing[i + 1].mBefore;
             }
-            inlineCoord += aRunParams.direction * space;
+            inlineCoord += aRunParams.isRTL ? -space : space;
         }
     }
 
@@ -1874,10 +1875,15 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
         const Metrics& metrics = GetMetrics(eHorizontal);
         // Get a matrix we can use to draw the (horizontally-shaped) textrun
         // with 90-degree CW rotation.
-        gfxMatrix mat = aRunParams.context->CurrentMatrix().
-            Translate(p).       // translate origin for rotation
-            Rotate(M_PI / 2.0). // turn 90deg clockwise
-            Translate(-p);      // undo the translation
+        const gfxFloat
+            rotation = (aOrientation ==
+                        gfxTextRunFactory::TEXT_ORIENT_VERTICAL_SIDEWAYS_LEFT)
+                       ? -M_PI / 2.0 : M_PI / 2.0;
+        gfxMatrix mat =
+            aRunParams.context->CurrentMatrix().
+            Translate(p).     // translate origin for rotation
+            Rotate(rotation). // turn 90deg CCW (sideways-left) or CW (*-right)
+            Translate(-p);    // undo the translation
 
         // If we're drawing rotated horizontal text for an element styled
         // text-orientation:mixed, the dominant baseline will be vertical-
@@ -1987,7 +1993,14 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
 
     if (sideways) {
         aRunParams.context->Restore();
-        *aPt = gfxPoint(origPt.x, origPt.y + (aPt->x - origPt.x));
+        // adjust updated aPt to account for the transform we were using
+        gfxFloat advance = aPt->x - origPt.x;
+        if (aOrientation ==
+            gfxTextRunFactory::TEXT_ORIENT_VERTICAL_SIDEWAYS_LEFT) {
+            *aPt = gfxPoint(origPt.x, origPt.y - advance);
+        } else {
+            *aPt = gfxPoint(origPt.x, origPt.y + advance);
+        }
     }
 }
 
