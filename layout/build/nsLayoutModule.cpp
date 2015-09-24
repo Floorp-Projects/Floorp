@@ -263,7 +263,7 @@ static void Shutdown();
 #include "GMPService.h"
 
 #include "mozilla/dom/PresentationDeviceManager.h"
-#include "mozilla/dom/PresentationSessionTransport.h"
+#include "mozilla/dom/PresentationTCPSessionTransport.h"
 
 #include "mozilla/TextInputProcessor.h"
 
@@ -298,7 +298,7 @@ using mozilla::dom::NotificationTelemetryService;
 #define PRESENTATION_DEVICE_MANAGER_CID \
 { 0xe1e79dec, 0x4085, 0x4994, { 0xac, 0x5b, 0x74, 0x4b, 0x01, 0x66, 0x97, 0xe6 } }
 
-#define PRESENTATION_SESSION_TRANSPORT_CID \
+#define PRESENTATION_TCP_SESSION_TRANSPORT_CID \
 { 0xc9d023f4, 0x6228, 0x4c07, { 0x8b, 0x1d, 0x9c, 0x19, 0x57, 0x3f, 0xaa, 0x27 } }
 
 already_AddRefed<nsIPresentationService> NS_CreatePresentationService();
@@ -405,7 +405,7 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(FakeInputPortService,
 NS_GENERIC_FACTORY_CONSTRUCTOR(InputPortData)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIPresentationService,
                                          NS_CreatePresentationService)
-NS_GENERIC_FACTORY_CONSTRUCTOR(PresentationSessionTransport)
+NS_GENERIC_FACTORY_CONSTRUCTOR(PresentationTCPSessionTransport)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(NotificationTelemetryService, Init)
 
 #ifndef MOZ_SIMPLEPUSH
@@ -872,7 +872,7 @@ NS_DEFINE_NAMED_CID(GECKO_MEDIA_PLUGIN_SERVICE_CID);
 
 NS_DEFINE_NAMED_CID(PRESENTATION_SERVICE_CID);
 NS_DEFINE_NAMED_CID(PRESENTATION_DEVICE_MANAGER_CID);
-NS_DEFINE_NAMED_CID(PRESENTATION_SESSION_TRANSPORT_CID);
+NS_DEFINE_NAMED_CID(PRESENTATION_TCP_SESSION_TRANSPORT_CID);
 
 NS_DEFINE_NAMED_CID(TEXT_INPUT_PROCESSOR_CID);
 
@@ -1171,7 +1171,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kTV_PROGRAM_DATA_CID, false, nullptr, TVProgramDataConstructor },
   { &kPRESENTATION_SERVICE_CID, false, nullptr, nsIPresentationServiceConstructor },
   { &kPRESENTATION_DEVICE_MANAGER_CID, false, nullptr, PresentationDeviceManagerConstructor },
-  { &kPRESENTATION_SESSION_TRANSPORT_CID, false, nullptr, PresentationSessionTransportConstructor },
+  { &kPRESENTATION_TCP_SESSION_TRANSPORT_CID, false, nullptr, PresentationTCPSessionTransportConstructor },
   { &kTEXT_INPUT_PROCESSOR_CID, false, nullptr, TextInputProcessorConstructor },
   { &kFAKE_INPUTPORT_SERVICE_CID, false, nullptr, FakeInputPortServiceConstructor },
   { &kINPUTPORT_DATA_CID, false, nullptr, InputPortDataConstructor },
@@ -1340,7 +1340,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_VOICEMAIL_SERVICE_CONTRACTID, &kNS_VOICEMAIL_SERVICE_CID },
   { PRESENTATION_SERVICE_CONTRACTID, &kPRESENTATION_SERVICE_CID },
   { PRESENTATION_DEVICE_MANAGER_CONTRACTID, &kPRESENTATION_DEVICE_MANAGER_CID },
-  { PRESENTATION_SESSION_TRANSPORT_CONTRACTID, &kPRESENTATION_SESSION_TRANSPORT_CID },
+  { PRESENTATION_TCP_SESSION_TRANSPORT_CONTRACTID, &kPRESENTATION_TCP_SESSION_TRANSPORT_CID },
   { "@mozilla.org/text-input-processor;1", &kTEXT_INPUT_PROCESSOR_CID },
   { FAKE_INPUTPORT_SERVICE_CONTRACTID, &kFAKE_INPUTPORT_SERVICE_CID },
   { INPUTPORT_DATA_CONTRACTID, &kINPUTPORT_DATA_CID },

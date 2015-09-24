@@ -18,6 +18,7 @@
 #include "nsIPresentationListener.h"
 #include "nsIPresentationService.h"
 #include "nsIPresentationSessionTransport.h"
+#include "nsIPresentationSessionTransportBuilder.h"
 #include "nsIServerSocket.h"
 #include "nsITimer.h"
 #include "nsString.h"
@@ -28,10 +29,12 @@ namespace dom {
 
 class PresentationSessionInfo : public nsIPresentationSessionTransportCallback
                               , public nsIPresentationControlChannelListener
+                              , public nsIPresentationSessionTransportBuilderListener
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRESENTATIONSESSIONTRANSPORTCALLBACK
+  NS_DECL_NSIPRESENTATIONSESSIONTRANSPORTBUILDERLISTENER
 
   PresentationSessionInfo(const nsAString& aUrl,
                           const nsAString& aSessionId,
@@ -184,6 +187,7 @@ class PresentationPresentingInfo final : public PresentationSessionInfo
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIPRESENTATIONCONTROLCHANNELLISTENER
+  NS_DECL_NSIPRESENTATIONSESSIONTRANSPORTBUILDERLISTENER
   NS_DECL_NSITIMERCALLBACK
 
   PresentationPresentingInfo(const nsAString& aUrl,
