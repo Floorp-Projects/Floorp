@@ -35,7 +35,6 @@ XPIDL_MODULE = 'dom_system_gonk'
 EXPORTS += [
     'GeolocationUtil.h',
     'GonkGPSGeolocationProvider.h',
-    'mozstumbler/MozStumbler.h',
     'nsVolume.h',
     'nsVolumeService.h',
 ]
@@ -49,10 +48,6 @@ UNIFIED_SOURCES += [
     'MozMtpDatabase.cpp',
     'MozMtpServer.cpp',
     'MozMtpStorage.cpp',
-    'mozstumbler/MozStumbler.cpp',
-    'mozstumbler/StumblerLogging.cpp',
-    'mozstumbler/UploadStumbleRunnable.cpp',
-    'mozstumbler/WriteStumbleOnThread.cpp',
     'NetIdManager.cpp',
     'NetworkUtils.cpp',
     'NetworkWorker.cpp',
@@ -93,6 +88,15 @@ EXTRA_JS_MODULES += [
 ]
 
 if CONFIG['MOZ_B2G_RIL']:
+    EXPORTS += [
+         'mozstumbler/MozStumbler.h',
+    ]
+    UNIFIED_SOURCES += [
+          'mozstumbler/MozStumbler.cpp',
+          'mozstumbler/StumblerLogging.cpp',
+          'mozstumbler/UploadStumbleRunnable.cpp',
+          'mozstumbler/WriteStumbleOnThread.cpp'
+    ]
     XPIDL_SOURCES += [
         'nsIDataCallInterfaceService.idl',
         'nsIDataCallManager.idl',
