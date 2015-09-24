@@ -20,8 +20,8 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/AsyncShutdown.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
-                                  "resource://gre/modules/UpdateChannel.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
+                                  "resource://gre/modules/UpdateUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManagerPrivate",
@@ -275,7 +275,7 @@ Experiments.Policy.prototype = {
   },
 
   updatechannel: function () {
-    return UpdateChannel.get();
+    return UpdateUtils.UpdateChannel;
   },
 
   locale: function () {

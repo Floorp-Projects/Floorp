@@ -124,8 +124,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ContentSearch",
                                   "resource:///modules/ContentSearch.jsm");
 
 #ifdef E10S_TESTING_ONLY
-XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
-                                  "resource://gre/modules/UpdateChannel.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
+                                  "resource://gre/modules/UpdateUtils.jsm");
 #endif
 
 #ifdef MOZ_CRASHREPORTER
@@ -2977,7 +2977,7 @@ var E10SUINotification = {
   checkStatus: function() {
     let skipE10sChecks = false;
     try {
-      let updateChannel = UpdateChannel.get();
+      let updateChannel = UpdateUtils.UpdateChannel;
       let channelAuthorized = updateChannel == "nightly" || updateChannel == "aurora";
 
       skipE10sChecks = !channelAuthorized ||

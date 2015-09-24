@@ -25,8 +25,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 const PREF_APP_DISTRIBUTION           = "distribution.id";
 const PREF_APP_DISTRIBUTION_VERSION   = "distribution.version";
 
-XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
-                                  "resource://gre/modules/UpdateChannel.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
+                                  "resource://gre/modules/UpdateUtils.jsm");
 
 function nsURLFormatterService() {
   XPCOMUtils.defineLazyGetter(this, "appInfo", function UFS_appInfo() {
@@ -111,7 +111,7 @@ nsURLFormatterService.prototype = {
     XPCOMABI:         function() this.ABI,
     BUILD_TARGET:     function() this.appInfo.OS + "_" + this.ABI,
     OS_VERSION:       function() this.OSVersion,
-    CHANNEL:          function() UpdateChannel.get(),
+    CHANNEL:          function() UpdateUtils.UpdateChannel,
     MOZILLA_API_KEY:   function() "@MOZ_MOZILLA_API_KEY@",
     GOOGLE_API_KEY:   function() "@MOZ_GOOGLE_API_KEY@",
     GOOGLE_OAUTH_API_CLIENTID:function() "@MOZ_GOOGLE_OAUTH_API_CLIENTID@",

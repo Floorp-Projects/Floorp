@@ -42,6 +42,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserToolboxProcess",
                                   "resource:///modules/devtools/client/framework/ToolboxProcess.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ConsoleAPI",
                                   "resource://gre/modules/devtools/shared/Console.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ProductAddonChecker",
+                                  "resource://gre/modules/addons/ProductAddonChecker.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
+                                  "resource://gre/modules/UpdateUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "Blocklist",
                                    "@mozilla.org/extensions/blocklist;1",
@@ -99,6 +103,7 @@ const PREF_BRANCH_INSTALLED_ADDON     = "extensions.installedDistroAddon.";
 const PREF_SHOWN_SELECTION_UI         = "extensions.shownSelectionUI";
 const PREF_INTERPOSITION_ENABLED      = "extensions.interposition.enabled";
 const PREF_SYSTEM_ADDON_SET           = "extensions.systemAddonSet";
+const PREF_SYSTEM_ADDON_UPDATE_URL    = "extensions.systemAddon.update.url";
 
 const PREF_EM_MIN_COMPAT_APP_VERSION      = "extensions.minCompatibleAppVersion";
 const PREF_EM_MIN_COMPAT_PLATFORM_VERSION = "extensions.minCompatiblePlatformVersion";
@@ -309,6 +314,25 @@ LAZY_OBJECTS.forEach(name => {
   });
 });
 
+
+// Behaves like Promise.all except waits for all promises to resolve/reject
+// before resolving/rejecting itself
+function waitForAllPromises(promises) {
+  return new Promise((resolve, reject) => {
+    let shouldReject = false;
+    let rejectValue = null;
+
+    let newPromises = [
+      for (p of promises)
+        p.catch(value => {
+          shouldReject = true;
+          rejectValue = value;
+        })
+    ]
+    Promise.all(newPromises)
+           .then((results) => shouldReject ? reject(rejectValue) : resolve(results));
+  });
+}
 
 function findMatchingStaticBlocklistItem(aAddon) {
   for (let item of STATIC_BLOCKLIST_PATTERNS) {
@@ -2758,6 +2782,91 @@ this.XPIProvider = {
     Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS,
                                !XPIDatabase.writeAddonsList());
   },
+
+  updateSystemAddons: Task.async(function XPI_updateSystemAddons() {
+    // Download the list of system add-ons
+    let url = Preferences.get(PREF_SYSTEM_ADDON_UPDATE_URL, null);
+    if (!url)
+      return;
+
+    url = UpdateUtils.formatUpdateURL(url);
+
+    logger.info(`Starting system add-on update check from ${url}.`);
+    let addonList = yield ProductAddonChecker.getProductAddonList(url);
+
+    // If there was no list then do nothing.
+    if (!addonList) {
+      logger.info("No system add-ons list was returned.");
+      return;
+    }
+
+    addonList = [for (spec of addonList) { spec, path: null, addon: null }];
+
+    // Bug 1204159: If this matches the current set in the profile or app locations
+    // then just switch to those
+
+    let systemAddonLocation = XPIProvider.installLocationsByName[KEY_APP_SYSTEM_ADDONS];
+
+    // Download all the add-ons
+    // Bug 1204158: If we already have some of these locally then just use those
+    let downloadAddon = Task.async(function*(item) {
+      try {
+        item.path = yield ProductAddonChecker.downloadAddon(item.spec);
+        item.addon = yield loadManifestFromFile(nsIFile(item.path), systemAddonLocation);
+      }
+      catch (e) {
+        logger.error(`Failed to download system add-on ${item.spec.id}`, e);
+      }
+    });
+    yield Promise.all([for (item of addonList) downloadAddon(item)]);
+
+    // The download promises all resolve regardless, now check if they all
+    // succeeded
+    let validateAddon = (item) => {
+      if (item.spec.id != item.addon.id) {
+        logger.warn(`Downloaded system add-on expected to be ${item.spec.id} but was ${item.addon.id}.`);
+        return false;
+      }
+
+      if (item.spec.version != item.addon.version) {
+        logger.warn(`Expected system add-on ${item.spec.id} to be version ${item.version} but was ${item.addon.version}.`);
+        return false;
+      }
+
+      if (!systemAddonLocation.isValidAddon(item.addon))
+        return false;
+
+      return true;
+    }
+
+    try {
+      if (!addonList.every(item => item.path && item.addon && validateAddon(item))) {
+        throw new Error("Rejecting updated system add-on set that either could not " +
+                        "be downloaded or contained unusable add-ons.");
+      }
+
+      // Install into the install location
+      logger.info("Installing new system add-on set");
+      yield systemAddonLocation.installAddonSet([for (item of addonList) item.addon]);
+
+      // Bug 1204156: Switch to the new system add-ons without requiring a restart
+    }
+    finally {
+      // Delete the temporary files
+      logger.info("Deleting temporary files");
+      for (let item of addonList) {
+        // If this item downloaded delete the temporary file.
+        if (item.path) {
+          try {
+            yield OS.File.remove(item.path);
+          }
+          catch (e) {
+            logger.warn(`Failed to remove temporary file ${item.path}.`, e);
+          }
+        }
+      }
+    }
+  }),
 
   /**
    * Verifies that all installed add-ons are still correctly signed.
@@ -7356,40 +7465,110 @@ Object.assign(SystemAddonInstallLocation.prototype, {
     return this._directory != null;
   },
 
+  isValidAddon: function(aAddon) {
+    if (aAddon.appDisabled) {
+      logger.warn(`System add-on ${aAddon.id} isn't compatible with the application.`);
+      return false;
+    }
+
+    if (aAddon.unpack) {
+      logger.warn(`System add-on ${aAddon.id} isn't a packed add-on.`);
+      return false;
+    }
+
+    if (!aAddon.bootstrap) {
+      logger.warn(`System add-on ${aAddon.id} isn't restartless.`);
+      return false;
+    }
+
+    return true;
+  },
+
   /**
    * Tests whether the loaded add-on information matches what is expected.
    */
   isValid: function(aAddons) {
     for (let id of Object.keys(this._addonSet.addons)) {
       if (!aAddons.has(id)) {
-        logger.warn("Expected add-on " + id + " is missing from the system add-on location.");
+        logger.warn(`Expected add-on ${id} is missing from the system add-on location.`);
         return false;
       }
 
       let addon = aAddons.get(id);
-      if (addon.appDisabled) {
-        logger.warn("System add-on " + id + " isn't compatible with the application.");
-        return false;
-      }
-
-      if (addon.unpack) {
-        logger.warn("System add-on " + id + " isn't a packed add-on.");
-        return false;
-      }
-
-      if (!addon.bootstrap) {
-        logger.warn("System add-on " + id + " isn't restartless.");
-        return false;
-      }
-
       if (addon.version != this._addonSet.addons[id].version) {
-        logger.warn("System add-on " + id + " wasn't the correct version.");
+        logger.warn(`Expected system add-on ${id} to be version ${this._addonSet.addons[id].version} but was ${addon.version}.`);
         return false;
       }
+
+      if (!this.isValidAddon(addon))
+        return false;
     }
 
     return true;
   },
+
+  /**
+   * Installs a new set of system add-ons into the location and updates the
+   * add-on set in prefs. We wait to switch state until a restart.
+   */
+  installAddonSet: Task.async(function(aAddons) {
+    // Make sure the base dir exists
+    yield OS.File.makeDir(this._baseDir.path, { ignoreExisting: true });
+
+    let newDir = this._baseDir.clone();
+
+    let uuidGen = Cc["@mozilla.org/uuid-generator;1"].
+                  getService(Ci.nsIUUIDGenerator);
+    newDir.append("blank");
+
+    while (true) {
+      newDir.leafName = uuidGen.generateUUID().toString();
+
+      try {
+        yield OS.File.makeDir(newDir.path, { ignoreExisting: false });
+        break;
+      }
+      catch (e) {
+        // Directory already exists, pick another
+      }
+    }
+
+    let copyAddon = Task.async(function*(addon) {
+      let target = OS.Path.join(newDir.path, addon.id + ".xpi");
+      logger.info(`Copying ${addon.id} from ${addon._sourceBundle.path} to ${target}.`);
+      try {
+        yield OS.File.copy(addon._sourceBundle.path, target);
+      }
+      catch (e) {
+        logger.error(`Failed to copy ${addon.id} from ${addon._sourceBundle.path} to ${target}.`, e);
+        throw e;
+      }
+      addon._sourceBundle = new nsIFile(target);
+    });
+
+    try {
+      yield waitForAllPromises([for (addon of aAddons) copyAddon(addon)]);
+    }
+    catch (e) {
+      try {
+        yield OS.File.removeDir(newDir.path, { ignorePermissions: true });
+      }
+      catch (e) {
+        logger.warn(`Failed to remove new system add-on directory ${newDir.path}.`, e);
+      }
+      throw e;
+    }
+
+    // All add-ons in position, create the new state and store it in prefs
+    let state = { schema: 1, directory: newDir.leafName, addons: {} };
+    for (let addon of aAddons) {
+      state.addons[addon.id] = {
+        version: addon.version
+      }
+    }
+
+    this._saveAddonSet(state);
+  }),
 });
 
 #ifdef XP_WIN

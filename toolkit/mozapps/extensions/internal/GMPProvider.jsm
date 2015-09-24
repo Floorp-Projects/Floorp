@@ -19,6 +19,7 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/GMPUtils.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/UpdateUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(
   this, "GMPInstallManager", "resource://gre/modules/GMPInstallManager.jsm");
@@ -490,8 +491,8 @@ GMPWrapper.prototype = {
       return { installed: false, valid: true };
     }
 
-    let abi = GMPPrefs.get(GMPPrefs.KEY_PLUGIN_ABI, GMPUtils.ABI(), this._plugin.id);
-    if (abi != GMPUtils.ABI()) {
+    let abi = GMPPrefs.get(GMPPrefs.KEY_PLUGIN_ABI, UpdateUtils.ABI, this._plugin.id);
+    if (abi != UpdateUtils.ABI) {
       // ABI doesn't match. Possibly this is a profile migrated across platforms
       // or from 32 -> 64 bit.
       return {

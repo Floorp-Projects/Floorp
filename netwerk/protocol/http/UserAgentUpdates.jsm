@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyModuleGetter(
   this, "Promise", "resource://gre/modules/Promise.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(
-  this, "UpdateChannel", "resource://gre/modules/UpdateChannel.jsm");
+  this, "UpdateUtils", "resource://gre/modules/UpdateUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(
   this, "gUpdateTimer", "@mozilla.org/updates/timer-manager;1", "nsIUpdateTimerManager");
@@ -192,7 +192,7 @@ this.UserAgentUpdates = {
       "%APP_VERSION%": function() { return gApp.version; },
       "%BUILD_ID%": function() { return gApp.appBuildID; },
       "%OS%": function() { return gApp.OS; },
-      "%CHANNEL%": function() { return UpdateChannel.get(); },
+      "%CHANNEL%": function() { return UpdateUtils.UpdateChannel; },
       "%DISTRIBUTION%": function() { return this._getPref(PREF_APP_DISTRIBUTION, ""); },
       "%DISTRIBUTION_VERSION%": function() { return this._getPref(PREF_APP_DISTRIBUTION_VERSION, ""); },
     };
