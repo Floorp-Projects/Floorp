@@ -12,7 +12,6 @@ Author: Armen Zambrano G.
 import copy
 import os
 import pprint
-import re
 import sys
 import urllib
 
@@ -72,6 +71,7 @@ class ReleaseFirefoxUIUpdateTests(FirefoxUIUpdateTests):
             'clobber',
             'checkout',
             'create-virtualenv',
+            'query_minidump_stackwalk',
             'read-release-update-config',
             'run-tests',
         ]
@@ -92,26 +92,6 @@ class ReleaseFirefoxUIUpdateTests(FirefoxUIUpdateTests):
         # This will be a list containing one item per release based on configs
         # from tools/release/updates/*cfg
         self.releases = None
-
-    def _modify_url(self, rel_info):
-        # This is a temporary hack to find crash symbols. It should be replaced
-        # with something that doesn't make wild guesses about where symbol
-        # packages are.
-        # We want this:
-        # https://ftp.mozilla.org/pub/mozilla.org/firefox/candidates/40.0b1-candidates/build1/mac/en-US/Firefox%2040.0b1.crashreporter-symbols.zip
-        # https://ftp.mozilla.org/pub/mozilla.org//firefox/releases/40.0b1/mac/en-US/Firefox%2040.0b1.crashreporter-symbols.zip
-        installer_from = rel_info['from']
-        version = (re.search('/firefox/releases/(%s.*)\/.*\/.*\/.*' % rel_info['release'],
-                             installer_from)).group(1)
-
-        temp_from = installer_from.replace(version, '%s-candidates/build%s' % (
-                                           version, self.config['build_number']),
-                                           1).replace('releases', 'candidates')
-        temp_url = rel_info['ftp_server_from'] + urllib.quote(temp_from.replace('%locale%',
-                                                                                'en-US'))
-        self.info('Installer url under stage/candidates dir: {}'.format(temp_url))
-
-        return temp_url
 
     def checkout(self):
         """
@@ -253,12 +233,6 @@ class ReleaseFirefoxUIUpdateTests(FirefoxUIUpdateTests):
                 if self.config['dry_run']:
                     continue
 
-                # Safe temporary hack to determine symbols URL from en-US
-                # build1 in the candidates dir
-                ftp_candidates_installer_url = self._modify_url(rel_info)
-                symbols_url = self._query_symbols_url(
-                    installer_url=ftp_candidates_installer_url)
-
                 # Determine from where to download the file
                 installer_url = '{server}/{fragment}'.format(
                     server=rel_info['ftp_server_from'],
@@ -275,7 +249,6 @@ class ReleaseFirefoxUIUpdateTests(FirefoxUIUpdateTests):
                     installer_path=installer_path,
                     script_name=self.cli_script,
                     env=self.query_env(avoid_host_env=True),
-                    symbols_url=symbols_url,
                     marionette_port=marionette_port,
                 )
 
@@ -293,8 +266,8 @@ class ReleaseFirefoxUIUpdateTests(FirefoxUIUpdateTests):
                     for config in self.config['config_files']:
                         base_cmd += ' --cfg {}'.format(config)
 
-                    if symbols_url:
-                        base_cmd += ' --symbols-path {}'.format(symbols_url)
+                    if self.symbols_url:
+                        base_cmd += ' --symbols-path {}'.format(self.symbols_url)
 
                     base_cmd += ' --installer-url {}'.format(installer_url)
 
