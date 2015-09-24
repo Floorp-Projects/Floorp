@@ -83,6 +83,21 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   }
 }
 
+LoadInfo::LoadInfo(const LoadInfo& rhs)
+  : mLoadingPrincipal(rhs.mLoadingPrincipal)
+  , mTriggeringPrincipal(rhs.mTriggeringPrincipal)
+  , mLoadingContext(rhs.mLoadingContext)
+  , mSecurityFlags(rhs.mSecurityFlags)
+  , mContentPolicyType(rhs.mContentPolicyType)
+  , mUpgradeInsecureRequests(rhs.mUpgradeInsecureRequests)
+  , mInnerWindowID(rhs.mInnerWindowID)
+  , mOuterWindowID(rhs.mOuterWindowID)
+  , mParentOuterWindowID(rhs.mParentOuterWindowID)
+  , mEnforceSecurity(false)
+  , mInitialSecurityCheckDone(false)
+{
+}
+
 LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    nsIPrincipal* aTriggeringPrincipal,
                    nsSecurityFlags aSecurityFlags,
@@ -116,6 +131,13 @@ LoadInfo::~LoadInfo()
 }
 
 NS_IMPL_ISUPPORTS(LoadInfo, nsILoadInfo)
+
+already_AddRefed<nsILoadInfo>
+LoadInfo::Clone() const
+{
+  nsRefPtr<LoadInfo> copy(new LoadInfo(*this));
+  return copy.forget();
+}
 
 NS_IMETHODIMP
 LoadInfo::GetLoadingPrincipal(nsIPrincipal** aLoadingPrincipal)
