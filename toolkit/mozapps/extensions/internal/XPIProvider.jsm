@@ -347,6 +347,12 @@ function findMatchingStaticBlocklistItem(aAddon) {
   return null;
 }
 
+/**
+ * Converts an iterable of addon objects into a map with the add-on's ID as key.
+ */
+function addonMap(addons) {
+  return new Map([for (a of addons) [a.id, a]]);
+}
 
 /**
  * Sets permissions on a file
@@ -2802,12 +2808,47 @@ this.XPIProvider = {
       return;
     }
 
-    addonList = [for (spec of addonList) { spec, path: null, addon: null }];
+    addonList = new Map([for (spec of addonList) [spec.id, { spec, path: null, addon: null }]]);
 
-    // Bug 1204159: If this matches the current set in the profile or app locations
-    // then just switch to those
+    let getAddonsInLocation = (location) => {
+      return new Promise(resolve => {
+        XPIDatabase.getAddonsInLocation(location, resolve);
+      });
+    };
+
+    let setMatches = (wanted, existing) => {
+      if (wanted.size != existing.size)
+        return false;
+
+      for (let [id, addon] of existing) {
+        let wantedInfo = wanted.get(id);
+
+        if (!wantedInfo)
+          return false;
+        if (wantedInfo.spec.version != addon.version)
+          return false;
+      }
+
+      return true;
+    };
 
     let systemAddonLocation = XPIProvider.installLocationsByName[KEY_APP_SYSTEM_ADDONS];
+
+    // If this matches the current set in the profile location then do nothing.
+    let updatedAddons = addonMap(yield getAddonsInLocation(KEY_APP_SYSTEM_ADDONS));
+    if (setMatches(addonList, updatedAddons)) {
+      logger.info("Retaining existing updated system add-ons.");
+      return;
+    }
+
+    // If this matches the current set in the default location then reset the
+    // updated set.
+    let defaultAddons = addonMap(yield getAddonsInLocation(KEY_APP_SYSTEM_DEFAULTS));
+    if (setMatches(addonList, defaultAddons)) {
+      logger.info("Resetting system add-ons.");
+      systemAddonLocation.resetAddonSet();
+      return;
+    }
 
     // Download all the add-ons
     // Bug 1204158: If we already have some of these locally then just use those
@@ -2820,7 +2861,7 @@ this.XPIProvider = {
         logger.error(`Failed to download system add-on ${item.spec.id}`, e);
       }
     });
-    yield Promise.all([for (item of addonList) downloadAddon(item)]);
+    yield Promise.all([for (item of addonList.values()) downloadAddon(item)]);
 
     // The download promises all resolve regardless, now check if they all
     // succeeded
@@ -2842,21 +2883,21 @@ this.XPIProvider = {
     }
 
     try {
-      if (!addonList.every(item => item.path && item.addon && validateAddon(item))) {
+      if (!Array.from(addonList.values()).every(item => item.path && item.addon && validateAddon(item))) {
         throw new Error("Rejecting updated system add-on set that either could not " +
                         "be downloaded or contained unusable add-ons.");
       }
 
       // Install into the install location
       logger.info("Installing new system add-on set");
-      yield systemAddonLocation.installAddonSet([for (item of addonList) item.addon]);
+      yield systemAddonLocation.installAddonSet([for (item of addonList.values()) item.addon]);
 
       // Bug 1204156: Switch to the new system add-ons without requiring a restart
     }
     finally {
       // Delete the temporary files
       logger.info("Deleting temporary files");
-      for (let item of addonList) {
+      for (let item of addonList.values()) {
         // If this item downloaded delete the temporary file.
         if (item.path) {
           try {
@@ -7414,13 +7455,10 @@ Object.assign(MutableDirectoryInstallLocation.prototype, {
 function SystemAddonInstallLocation(aName, aDirectory, aScope, aResetSet) {
   this._baseDir = aDirectory;
 
-  if (aResetSet) {
-    this._addonSet = { schema: 1, addons: {} };
-    this._saveAddonSet(this._addonSet);
-  }
-  else {
-    this._addonSet = this._loadAddonSet();
-  }
+  if (aResetSet)
+    this.resetAddonSet();
+
+  this._addonSet = this._loadAddonSet();
 
   this._directory = null;
   if (this._addonSet.directory) {
@@ -7523,6 +7561,13 @@ Object.assign(SystemAddonInstallLocation.prototype, {
     }
 
     return true;
+  },
+
+  /**
+   * Resets the add-on set so on the next startup the default set will be used.
+   */
+  resetAddonSet: function() {
+    this._saveAddonSet({ schema: 1, addons: {} });
   },
 
   /**
