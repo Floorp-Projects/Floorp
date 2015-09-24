@@ -605,9 +605,6 @@ SendStreamAudio(DecodedStreamData* aStream, int64_t aStartTime,
                 MediaData* aData, AudioSegment* aOutput,
                 uint32_t aRate, double aVolume)
 {
-  // The amount of audio frames that is used to fuzz rounding errors.
-  static const int64_t AUDIO_FUZZ_FRAMES = 1;
-
   MOZ_ASSERT(aData);
   AudioData* audio = aData->As<AudioData>();
   // This logic has to mimic AudioSink closely to make sure we write
@@ -619,11 +616,11 @@ SendStreamAudio(DecodedStreamData* aStream, int64_t aStartTime,
   if (!audioWrittenOffset.isValid() ||
       !frameOffset.isValid() ||
       // ignore packet that we've already processed
-      frameOffset.value() < audioWrittenOffset.value()) {
+      frameOffset.value() + audio->mFrames <= audioWrittenOffset.value()) {
     return;
   }
 
-  if (audioWrittenOffset.value() + AUDIO_FUZZ_FRAMES < frameOffset.value()) {
+  if (audioWrittenOffset.value() < frameOffset.value()) {
     int64_t silentFrames = frameOffset.value() - audioWrittenOffset.value();
     // Write silence to catch up
     AudioSegment silence;
@@ -633,17 +630,20 @@ SendStreamAudio(DecodedStreamData* aStream, int64_t aStartTime,
     aOutput->AppendFrom(&silence);
   }
 
-  // Always write the whole sample without truncation to be consistent with
-  // DecodedAudioDataSink::PlayFromAudioQueue()
+  MOZ_ASSERT(audioWrittenOffset.value() >= frameOffset.value());
+
+  int64_t offset = audioWrittenOffset.value() - frameOffset.value();
+  size_t framesToWrite = audio->mFrames - offset;
+
   audio->EnsureAudioBuffer();
   nsRefPtr<SharedBuffer> buffer = audio->mAudioBuffer;
   AudioDataValue* bufferData = static_cast<AudioDataValue*>(buffer->Data());
   nsAutoTArray<const AudioDataValue*, 2> channels;
   for (uint32_t i = 0; i < audio->mChannels; ++i) {
-    channels.AppendElement(bufferData + i * audio->mFrames);
+    channels.AppendElement(bufferData + i * audio->mFrames + offset);
   }
-  aOutput->AppendFrames(buffer.forget(), channels, audio->mFrames);
-  aStream->mAudioFramesWritten += audio->mFrames;
+  aOutput->AppendFrames(buffer.forget(), channels, framesToWrite);
+  aStream->mAudioFramesWritten += framesToWrite;
   aOutput->ApplyVolume(aVolume);
 
   aStream->mNextAudioTime = audio->GetEndTime();
