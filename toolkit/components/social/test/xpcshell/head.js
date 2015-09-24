@@ -76,7 +76,7 @@ function initApp() {
 
 function AsyncRunner() {
   do_test_pending();
-  do_register_cleanup((function () this.destroy()).bind(this));
+  do_register_cleanup(() => this.destroy());
 
   this._callbacks = {
     done: do_test_finished,

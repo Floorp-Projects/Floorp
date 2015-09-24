@@ -225,7 +225,7 @@ function promiseAddVisitsAndRepopulateNewTabLinks(aPlaceInfo) {
 function whenFileExists(aURL, aCallback = next) {
   let callback = aCallback;
   if (!thumbnailExists(aURL)) {
-    callback = function () whenFileExists(aURL, aCallback);
+    callback = () => whenFileExists(aURL, aCallback);
   }
 
   executeSoon(callback);
@@ -242,7 +242,7 @@ function whenFileExists(aURL, aCallback = next) {
 function whenFileRemoved(aFile, aCallback) {
   let callback = aCallback;
   if (aFile.exists()) {
-    callback = function () whenFileRemoved(aFile, aCallback);
+    callback = () => whenFileRemoved(aFile, aCallback);
   }
 
   executeSoon(callback || next);
@@ -316,7 +316,9 @@ function bgAddCrashObserver() {
     }
   }, 'ipc:content-shutdown', false);
   return {
-    get crashed() crashed
+    get crashed() {
+      return crashed;
+    }
   };
 }
 
