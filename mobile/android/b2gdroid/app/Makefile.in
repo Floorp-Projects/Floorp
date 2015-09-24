@@ -25,6 +25,12 @@ ANDROID_EXTRA_JARS := $(filter-out %gecko-R.jar,$(wildcard $(jars_dir)/*.jar))
 # Needed for the UpdateService
 ANDROID_EXTRA_JARS += $(ANDROID_COMPAT_LIB)
 
+ANDROID_EXTRA_JARS += \
+	$(ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB) \
+	$(ANDROID_SUPPORT_V4_AAR_LIB) \
+	$(ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB) \
+	$(NULL)
+
 # The GeckoView consuming APK depends on the GeckoView resources.  This hacks a
 # type of poor man's AAR support.
 .aapt.deps: .geckoview_resources.deps
