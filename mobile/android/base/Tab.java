@@ -614,8 +614,8 @@ public class Tab {
         return mEnteringReaderMode;
     }
 
-    public void doReload() {
-        GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:Reload", "");
+    public void doReload(boolean bypassCache) {
+        GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:Reload", "{\"bypassCache\":" + String.valueOf(bypassCache) + "}");
         GeckoAppShell.sendEventToGecko(e);
     }
 
