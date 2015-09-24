@@ -269,7 +269,6 @@ public:
      * If CMS is not enabled, the color is treated as a device-space color
      * and this call is identical to SetDeviceColor().
      */
-    void SetColor(const gfxRGBA& aColor);
     void SetColor(const mozilla::gfx::Color& aColor);
 
     /**
