@@ -670,7 +670,7 @@ public class BrowserApp extends GeckoApp
                     return true;
 
                 case KeyEvent.KEYCODE_R:
-                    tab.doReload();
+                    tab.doReload(false);
                     return true;
 
                 case KeyEvent.KEYCODE_PERIOD:
@@ -3390,7 +3390,7 @@ public class BrowserApp extends GeckoApp
         if (itemId == R.id.reload) {
             tab = Tabs.getInstance().getSelectedTab();
             if (tab != null)
-                tab.doReload();
+                tab.doReload(false);
             return true;
         }
 
@@ -3505,6 +3505,21 @@ public class BrowserApp extends GeckoApp
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public boolean onMenuItemLongClick(MenuItem item) {
+        if (item.getItemId() == R.id.reload) {
+            Tab tab = Tabs.getInstance().getSelectedTab();
+            if (tab != null) {
+                tab.doReload(true);
+
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, "reload_force");
+            }
+            return true;
+        }
+
+        return super.onMenuItemLongClick(item);
     }
 
     public void showGuestModeDialog(final GuestModeDialog type) {
