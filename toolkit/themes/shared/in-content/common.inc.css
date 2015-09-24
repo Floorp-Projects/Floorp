@@ -295,6 +295,7 @@ xul|*.help-button > xul|*.button-box > xul|*.button-text {
 }
 
 xul|*.spinbuttons-button {
+  min-height: initial;
   -moz-margin-start: 10px !important;
   -moz-margin-end: 2px !important;
 }
