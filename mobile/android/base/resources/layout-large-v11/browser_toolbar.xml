@@ -109,11 +109,20 @@
                         android:layout_marginRight="16dp"
                         android:background="@drawable/tabs_count"/>
 
+    <!-- Bug 1144707. Use clickable View instead of menu button margin to prevent
+         edit mode actiivation when user clicks on the edge of the screen. -->
+    <View android:id="@id/menu_margin"
+          android:layout_width="6dp"
+          android:layout_height="match_parent"
+          android:layout_alignParentRight="true"
+          android:clickable="true"
+          android:visibility="gone"/>
+
     <org.mozilla.gecko.widget.themed.ThemedFrameLayout
             android:id="@+id/menu"
             style="@style/UrlBar.ImageButton"
-            android:layout_alignParentRight="true"
-            android:layout_marginRight="6dp"
+            android:layout_toLeftOf="@id/menu_margin"
+            android:layout_alignWithParentIfMissing="true"
             android:contentDescription="@string/menu"
             android:background="@drawable/browser_toolbar_action_bar_button"
             android:visibility="gone">
