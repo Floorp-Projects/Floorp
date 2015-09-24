@@ -24,22 +24,40 @@ function AutoCompleteInput(aSearches) {
 AutoCompleteInput.prototype = {
   constructor: AutoCompleteInput,
 
-  get minResultsForPopup() 0,
-  get timeout() 10,
-  get searchParam() "",
-  get textValue() "",
-  get disableAutoComplete() false,
-  get completeDefaultIndex() false,
+  get minResultsForPopup() {
+    return 0;
+  },
+  get timeout() {
+    return 10;
+  },
+  get searchParam() {
+    return "";
+  },
+  get textValue() {
+    return "";
+  },
+  get disableAutoComplete() {
+    return false;
+  },
+  get completeDefaultIndex() {
+    return false;
+  },
 
-  get searchCount() this.searches.length,
-  getSearchAt: function (aIndex) this.searches[aIndex],
+  get searchCount() {
+    return this.searches.length;
+  },
+  getSearchAt: function (aIndex) {
+    return this.searches[aIndex];
+  },
 
   onSearchBegin: function () {},
   onSearchComplete: function() {},
 
-  get popupOpen() false,
+  get popupOpen() {
+    return false;
+  },
   popup: {
-    set selectedIndex(aIndex) aIndex,
+    set selectedIndex(aIndex) {},
     invalidate: function () {},
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompletePopup])
   },
@@ -94,11 +112,17 @@ function task_setCountRank(aURI, aCount, aRank, aSearch, aBookmark)
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput,
                                            Ci.nsIAutoCompletePopup,
                                            Ci.nsIAutoCompleteController]),
-    get popup() thing,
-    get controller() thing,
+    get popup() {
+      return thing;
+    },
+    get controller() {
+      return thing;
+    },
     popupOpen: true,
     selectedIndex: 0,
-    getValueAt: function() aURI.spec,
+    getValueAt: function() {
+      return aURI.spec;
+    },
     searchString: aSearch
   };
 

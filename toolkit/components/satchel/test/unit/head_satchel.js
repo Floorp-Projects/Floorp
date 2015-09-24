@@ -39,7 +39,7 @@ const isGUID = /[A-Za-z0-9\+\/]{16}/;
 // Find form history entries.
 function searchEntries(terms, params, iter) {
   let results = [];
-  FormHistory.search(terms, params, { handleResult: function (result) results.push(result),
+  FormHistory.search(terms, params, { handleResult: result => results.push(result),
                                       handleError: function (error) {
                                         do_throw("Error occurred searching form history: " + error);
                                       },
@@ -57,7 +57,7 @@ function countEntries(name, value, then) {
     obj.value = value;
 
   let count = 0;
-  FormHistory.count(obj, { handleResult: function (result) count = result,
+  FormHistory.count(obj, { handleResult: result => count = result,
                            handleError: function (error) {
                              do_throw("Error occurred searching form history: " + error);
                            },
