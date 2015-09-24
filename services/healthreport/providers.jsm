@@ -46,8 +46,8 @@ Cu.import("resource://services-common/utils.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
-                                  "resource://gre/modules/UpdateChannel.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
+                                  "resource://gre/modules/UpdateUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesDBUtils",
                                   "resource://gre/modules/PlacesDBUtils.jsm");
 
@@ -333,7 +333,7 @@ AppInfoProvider.prototype = Object.freeze({
     }
 
     try {
-      yield m.setLastText("updateChannel", UpdateChannel.get());
+      yield m.setLastText("updateChannel", UpdateUtils.UpdateChannel);
     } catch (ex) {
       this._log.warn("Could not obtain update channel: " +
                      CommonUtils.exceptionStr(ex));

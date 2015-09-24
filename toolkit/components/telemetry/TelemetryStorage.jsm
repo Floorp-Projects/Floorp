@@ -375,19 +375,6 @@ this.TelemetryStorage = {
   },
 
   /**
-   * Add a ping from an existing file to the saved pings directory so that it gets saved
-   * and sent along with other pings.
-   * Note: that the original ping file will not be modified.
-   *
-   * @param {String} pingPath The path to the ping file that needs to be added to the
-   *                           saved pings directory.
-   * @return {Promise} A promise resolved when the ping is saved to the pings directory.
-   */
-  addPendingPingFromFile: function(pingPath) {
-    return TelemetryStorageImpl.addPendingPingFromFile(pingPath);
-  },
-
-  /**
    * Remove the file for a ping
    *
    * @param {object} ping The ping.
@@ -398,24 +385,10 @@ this.TelemetryStorage = {
   },
 
   /**
-   * Load the histograms from a file.
-   *
-   * @param {string} file The file to load.
-   * @returns {promise}
-   */
-  loadHistograms: function loadHistograms(file) {
-    return TelemetryStorageImpl.loadHistograms(file);
-  },
-
-  /**
    * The number of pending pings on disk.
    */
   get pendingPingCount() {
     return TelemetryStorageImpl.pendingPingCount;
-  },
-
-  testLoadHistograms: function(file) {
-    return TelemetryStorageImpl.testLoadHistograms(file);
   },
 
   /**
@@ -1176,26 +1149,6 @@ var TelemetryStorageImpl = {
   }),
 
   /**
-   * Add a ping from an existing file to the saved pings directory so that it gets saved
-   * and sent along with other pings.
-   * Note: that the original ping file will not be modified.
-   *
-   * @param {String} pingPath The path to the ping file that needs to be added to the
-   *                           saved pings directory.
-   * @return {Promise} A promise resolved when the ping is saved to the pings directory.
-   */
-  addPendingPingFromFile: function(pingPath) {
-    // Pings in the saved ping directory need to have the ping id or slug (old format) as
-    // the file name. We load the ping content, check that it is valid, and use it to save
-    // the ping file with the correct file name.
-    return this.loadPingFile(pingPath).then(ping => {
-      // Since we read a ping successfully, update the related histogram.
-      Telemetry.getHistogramById("READ_SAVED_PING_SUCCESS").add(1);
-      return this.addPendingPing(ping);
-    });
-  },
-
-  /**
    * Add a ping to the saved pings directory so that it gets saved
    * and sent along with other pings.
    * Note: that the original ping file will not be modified.
@@ -1395,35 +1348,8 @@ var TelemetryStorageImpl = {
     return list;
   },
 
-  /**
-   * Load the histograms from a file.
-   *
-   * Once loaded, the saved pings can be accessed (destructively only)
-   * through |popPendingPings|.
-   *
-   * @param {string} file The file to load.
-   * @returns {promise}
-   */
-  loadHistograms: Task.async(function*(file) {
-    let success = true;
-    try {
-      const ping = yield this.loadPingfile(file);
-      return ping;
-    } catch (ex) {
-      success = false;
-      yield OS.File.remove(file);
-    } finally {
-      const success_histogram = Telemetry.getHistogramById("READ_SAVED_PING_SUCCESS");
-      success_histogram.add(success);
-    }
-  }),
-
   get pendingPingCount() {
     return this._pendingPings.size;
-  },
-
-  testLoadHistograms: function(file) {
-    return this.loadHistograms(file.path);
   },
 
   /**
