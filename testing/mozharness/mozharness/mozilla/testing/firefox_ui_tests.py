@@ -12,14 +12,15 @@ Author: Armen Zambrano G.
 import copy
 import os
 import sys
-import urllib2
+import urlparse
 
 from mozharness.base.python import (
     PreScriptAction,
-    VirtualenvMixin,
-    virtualenv_config_options,
 )
-from mozharness.mozilla.testing.testbase import (INSTALLER_SUFFIXES)
+from mozharness.mozilla.testing.testbase import (
+    TestingMixin,
+    testing_config_options,
+)
 from mozharness.mozilla.vcstools import VCSToolsScript
 
 
@@ -44,15 +45,7 @@ firefox_ui_tests_config_options = [
         'help': 'absolute path to directory containing breakpad '
                 'symbols, or the url of a zip file containing symbols.',
     }],
-    [['--installer-url'], {
-        'dest': 'installer_url',
-        'help': 'Point to an installer to download and test against.',
-    }],
-    [['--installer-path'], {
-        'dest': 'installer_path',
-        'help': 'Point to an installer to test against.',
-    }],
-] + copy.deepcopy(virtualenv_config_options)
+] + copy.deepcopy(testing_config_options)
 
 # Command line arguments for update tests
 firefox_ui_update_harness_config_options = [
@@ -94,7 +87,7 @@ firefox_ui_update_config_options = firefox_ui_update_harness_config_options \
     + copy.deepcopy(firefox_ui_tests_config_options)
 
 
-class FirefoxUITests(VCSToolsScript, VirtualenvMixin):
+class FirefoxUITests(TestingMixin, VCSToolsScript):
 
     cli_script = 'firefox-ui-tests'
 
@@ -106,15 +99,15 @@ class FirefoxUITests(VCSToolsScript, VirtualenvMixin):
             'clobber',
             'checkout',
             'create-virtualenv',
+            'query_minidump_stackwalk',
             'run-tests',
         ]
 
-        VCSToolsScript.__init__(self,
-                                config_options=config_options,
-                                all_actions=all_actions or actions,
-                                default_actions=default_actions or actions,
-                                *args, **kwargs)
-        VirtualenvMixin.__init__(self)
+        super(FirefoxUITests, self).__init__(
+            config_options=config_options,
+            all_actions=all_actions or actions,
+            default_actions=default_actions or actions,
+            *args, **kwargs)
 
         self.firefox_ui_repo = self.config['firefox_ui_repo']
         self.firefox_ui_branch = self.config.get('firefox_ui_branch')
@@ -124,15 +117,12 @@ class FirefoxUITests(VCSToolsScript, VirtualenvMixin):
                 'Please specify --firefox-ui-branch. Valid values can be found '
                 'in here https://github.com/mozilla/firefox-ui-tests/branches')
 
+        # As long as we don't run on buildbot the installers are not handled by TestingMixin
         self.installer_url = self.config.get('installer_url')
         self.installer_path = self.config.get('installer_path')
 
         if self.installer_path:
             self.installer_path = os.path.abspath(self.installer_path)
-
-            if not os.path.exists(self.installer_path):
-                self.critical('Please make sure that the path to the installer exists.')
-                sys.exit(1)
 
     @PreScriptAction('create-virtualenv')
     def _pre_create_virtualenv(self, action):
@@ -149,28 +139,6 @@ class FirefoxUITests(VCSToolsScript, VirtualenvMixin):
                 self.register_virtualenv_module(module)
 
         self.register_virtualenv_module('firefox-ui-tests', url=dirs['fx_ui_dir'])
-
-    def _query_symbols_url(self, installer_url):
-        for suffix in INSTALLER_SUFFIXES:
-            if installer_url.endswith(suffix):
-                symbols_url = installer_url[:-len(suffix)] + '.crashreporter-symbols.zip'
-                continue
-
-        if symbols_url:
-            self.info('Symbols_url: {}'.format(symbols_url))
-            if not symbols_url.startswith('http'):
-                return symbols_url
-
-            try:
-                # Let's see if the symbols are available
-                urllib2.urlopen(symbols_url)
-                return symbols_url
-
-            except urllib2.HTTPError, e:
-                self.warning('{} - {}'.format(str(e), symbols_url))
-                return None
-        else:
-            self.fatal('Can\'t find symbols_url from installer_url: {}!'.format(installer_url))
 
     @PreScriptAction('checkout')
     def _pre_checkout(self, action):
@@ -212,7 +180,32 @@ class FirefoxUITests(VCSToolsScript, VirtualenvMixin):
         """
         return []
 
-    def run_test(self, installer_path, script_name, env=None, symbols_url=None,
+    def query_minidump_stackwalk(self):
+        """We don't have an extracted test package available to get the manifest file.
+
+        So we have to explicitely download the latest version of the manifest from the
+        mozilla-central repository and feed it into the query_minidump_stackwalk() method.
+
+        We can remove this whole method once our tests are part of the tree.
+
+        """
+        manifest_path = None
+
+        if self.config.get('download_minidump_stackwalk'):
+            tooltool_manifest = self.query_minidump_tooltool_manifest()
+            url_base = 'https://hg.mozilla.org/mozilla-central/raw-file/default/testing/'
+
+            dirs = self.query_abs_dirs()
+            manifest_path = os.path.join(dirs['abs_work_dir'], 'releng.manifest')
+            try:
+                self.download_file(urlparse.urljoin(url_base, tooltool_manifest),
+                                   manifest_path)
+            except Exception as e:
+                self.fatal('Download of tooltool manifest file failed: %s' % e.message)
+
+        super(FirefoxUITests, self).query_minidump_stackwalk(manifest=manifest_path)
+
+    def run_test(self, installer_path, script_name, env=None,
                  cleanup=True, marionette_port=2828):
         """All required steps for running the tests against an installer."""
         dirs = self.query_abs_dirs()
@@ -233,11 +226,16 @@ class FirefoxUITests(VCSToolsScript, VirtualenvMixin):
             '--workspace', dirs['abs_work_dir'],
         ]
 
-        if symbols_url:
-            cmd += ['--symbols-path', symbols_url]
-
         # Collect all pass-through harness options to the script
         cmd.extend(self.query_extra_cmd_args())
+
+        # Set further environment settings
+        env = env or self.query_env()
+        if self.minidump_stackwalk_path:
+            env['MINIDUMP_STACKWALK'] = self.minidump_stackwalk_path
+
+            if self.query_symbols_url():
+                cmd += ['--symbols-path', self.symbols_url]
 
         return_code = self.run_command(cmd, cwd=dirs['abs_work_dir'],
                                        output_timeout=300, env=env)
@@ -279,13 +277,10 @@ class FirefoxUITests(VCSToolsScript, VirtualenvMixin):
                 parent_dir=dirs['abs_work_dir']
             )
 
-        symbols_url = self._query_symbols_url(installer_url=self.installer_path)
-
         return self.run_test(
             installer_path=self.installer_path,
             script_name=self.cli_script,
             env=self.query_env(),
-            symbols_url=symbols_url,
             cleanup=False,
         )
 
