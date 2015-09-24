@@ -303,6 +303,7 @@ nsXMLHttpRequest::nsXMLHttpRequest()
     mUploadTransferred(0), mUploadTotal(0), mUploadComplete(true),
     mProgressSinceLastProgressEvent(false),
     mRequestSentTime(0), mTimeoutMilliseconds(0),
+    mErrorStatus(NS_OK),
     mErrorLoad(false), mWaitingForOnStopRequest(false),
     mProgressTimerIsActive(false),
     mIsHtml(false),
@@ -1166,6 +1167,15 @@ nsXMLHttpRequest::Status()
   }
 
   return status;
+}
+
+uint32_t
+nsXMLHttpRequest::InternalErrorCode() {
+  if (IsDeniedCrossSiteRequest()) {
+    return 0;
+  }
+
+  return (uint32_t)mErrorStatus;
 }
 
 IMPL_CSTRING_GETTER(GetStatusText)
@@ -2218,6 +2228,8 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
     // Can this still happen?
     return NS_OK;
   }
+
+  mErrorStatus = status;
 
   mWaitingForOnStopRequest = false;
 
