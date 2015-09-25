@@ -62,7 +62,6 @@ public:
 
     // none, repeat, reflect
     void SetExtend(GraphicsExtend extend);
-    GraphicsExtend Extend() const;
 
     int CairoStatus();
 
