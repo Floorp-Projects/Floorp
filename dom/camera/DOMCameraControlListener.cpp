@@ -311,7 +311,7 @@ DOMCameraControlListener::OnNewPreviewFrame(layers::Image* aImage, uint32_t aWid
 {
   DOM_CAMERA_LOGI("OnNewPreviewFrame: got %d x %d frame\n", aWidth, aHeight);
 
-  mStream->SetCurrentFrame(gfxIntSize(aWidth, aHeight), aImage);
+  mStream->SetCurrentFrame(gfx::IntSize(aWidth, aHeight), aImage);
   return true;
 }
 

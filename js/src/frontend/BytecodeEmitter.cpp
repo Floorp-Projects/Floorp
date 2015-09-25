@@ -5780,6 +5780,7 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
         if (!JSFunction::setTypeForScriptedFunction(cx, fun, singleton))
             return false;
 
+        SharedContext* outersc = sc;
         if (fun->isInterpretedLazy()) {
             if (!fun->lazyScript()->sourceObject()) {
                 JSObject* scope = innermostStaticScope();
@@ -5789,7 +5790,6 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             if (emittingRunOnceLambda)
                 fun->lazyScript()->setTreatAsRunOnce();
         } else {
-            SharedContext* outersc = sc;
 
             if (outersc->isFunctionBox() && outersc->asFunctionBox()->mightAliasLocals())
                 funbox->setMightAliasLocals();      // inherit mightAliasLocals from parent
@@ -5827,6 +5827,8 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             if (funbox->usesArguments && funbox->usesApply && funbox->usesThis)
                 script->setUsesArgumentsApplyAndThis();
         }
+        if (outersc->isFunctionBox())
+            outersc->asFunctionBox()->function()->nonLazyScript()->setHasInnerFunctions(true);
     } else {
         MOZ_ASSERT(IsAsmJSModuleNative(fun->native()));
     }

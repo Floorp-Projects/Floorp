@@ -12,7 +12,7 @@
 #include "js/Debug.h"
 #include "js/TypeDecls.h"
 #include "js/UbiNodeCensus.h"
-#include "js/UbiNodeTraverse.h"
+#include "js/UbiNodeBreadthFirst.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/devtools/AutoMemMap.h"
 #include "mozilla/devtools/CoreDump.pb.h"

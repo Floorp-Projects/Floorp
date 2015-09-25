@@ -539,7 +539,7 @@ imgFrame::SurfaceForDrawing(bool               aDoPadding,
   aContext->Multiply(gfxMatrix::Translation(paddingTopLeft));
   aImageRect = gfxRect(0, 0, mSize.width, mSize.height);
 
-  gfxIntSize availableSize(mDecoded.width, mDecoded.height);
+  IntSize availableSize(mDecoded.width, mDecoded.height);
   return SurfaceWithFormat(new gfxSurfaceDrawable(aSurface, availableSize),
                            mFormat);
 }

@@ -51,7 +51,7 @@ public:
     mozilla::UniquePtr<Natives> mNatives;
 
     static void OnGlobalAndroidEvent(mozilla::AndroidGeckoEvent *ae);
-    static gfxIntSize GetAndroidScreenBounds();
+    static mozilla::gfx::IntSize GetAndroidScreenBounds();
     static nsWindow* TopWindow();
 
     bool OnContextmenuEvent(mozilla::AndroidGeckoEvent *ae);
@@ -62,7 +62,7 @@ public:
     void OnKeyEvent(mozilla::AndroidGeckoEvent *ae);
     void OnIMEEvent(mozilla::AndroidGeckoEvent *ae);
 
-    void OnSizeChanged(const gfxIntSize& aSize);
+    void OnSizeChanged(const mozilla::gfx::IntSize& aSize);
 
     void InitEvent(mozilla::WidgetGUIEvent& event, nsIntPoint* aPoint = 0);
 

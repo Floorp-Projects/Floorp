@@ -46,6 +46,7 @@ public class TabMenuStrip extends HorizontalScrollView
 
         // Disable the scroll bar.
         setHorizontalScrollBarEnabled(false);
+        setFillViewport(true);
 
         final Resources res = getResources();
 

@@ -2587,7 +2587,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
       aFrameRect.width  != pluginSurface->Width() ||
       aFrameRect.height != pluginSurface->Height()) {
 
-    pluginSurface = new gfxImageSurface(gfxIntSize(aFrameRect.width, aFrameRect.height),
+    pluginSurface = new gfxImageSurface(gfx::IntSize(aFrameRect.width, aFrameRect.height),
                                         gfxImageFormat::ARGB32);
     if (!pluginSurface)
       return;

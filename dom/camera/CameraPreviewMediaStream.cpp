@@ -137,7 +137,7 @@ CameraPreviewMediaStream::RateLimit(bool aLimit)
 }
 
 void
-CameraPreviewMediaStream::SetCurrentFrame(const gfxIntSize& aIntrinsicSize, Image* aImage)
+CameraPreviewMediaStream::SetCurrentFrame(const gfx::IntSize& aIntrinsicSize, Image* aImage)
 {
   {
     MutexAutoLock lock(mMutex);

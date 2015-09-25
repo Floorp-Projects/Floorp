@@ -116,7 +116,8 @@ class BalrogMixin(object):
         c = self.config
         dirs = self.query_abs_dirs()
         submitter_script = os.path.join(
-            dirs["abs_tools_dir"], "scripts", "updates", "balrog-nightly-locker.py"
+            dirs["abs_tools_dir"], "scripts", "updates",
+            "balrog-nightly-locker.py"
         )
         credentials_file = os.path.join(
             dirs["base_work_dir"], c["balrog_credentials_file"]
@@ -126,6 +127,8 @@ class BalrogMixin(object):
             self.query_exe("python"),
             submitter_script,
             "--credentials-file", credentials_file,
+            "--api-root", c["balrog_api_root"],
+            "--username", c["balrog_username"],
         ]
         for r in rule_ids:
             cmd.extend(["-r", str(r)])
@@ -133,26 +136,8 @@ class BalrogMixin(object):
         if self._log_level_at_least(INFO):
             cmd.append("--verbose")
 
-        return_codes = []
-        for server in self.config["balrog_servers"]:
+        cmd.append("lock")
 
-            server_args = [
-                "--api-root", server["balrog_api_root"],
-                "--username", self._query_balrog_username(server)
-            ]
-
-            cmd.append("lock")
-
-            self.info("Calling Balrog rule locking script.")
-            return_code = self.retry(
-                self.run_command, attempts=5,
-                args=(cmd + server_args + ['lock'],),
-            )
-            if server["ignore_failures"]:
-                self.info("Ignoring result, ignore_failures set to True")
-            else:
-                return_codes.append(return_code)
-
-        # use the worst (max) code
-        if max(return_codes) != 0:
-            self.return_code = 1
+        self.info("Calling Balrog rule locking script.")
+        self.retry(self.run_command, attempts=5, args=cmd,
+                   kwargs={"halt_on_failure": True})

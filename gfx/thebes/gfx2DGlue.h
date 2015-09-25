@@ -40,7 +40,7 @@ inline Color ToColor(const gfxRGBA &aRGBA)
                Float(aRGBA.b), Float(aRGBA.a));
 }
 
-inline gfxRGBA ThebesColor(Color &aColor)
+inline gfxRGBA ThebesColor(const Color &aColor)
 {
   return gfxRGBA(aColor.r, aColor.g, aColor.b, aColor.a);
 }

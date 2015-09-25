@@ -59,40 +59,10 @@ MediaKeys::MediaKeys(nsPIDOMWindow* aParent,
           this, NS_ConvertUTF16toUTF8(mKeySystem).get());
 }
 
-static PLDHashOperator
-RejectPromises(const uint32_t& aKey,
-               nsRefPtr<dom::DetailedPromise>& aPromise,
-               void* aClosure)
-{
-  aPromise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
-                        NS_LITERAL_CSTRING("Promise still outstanding at MediaKeys shutdown"));
-  ((MediaKeys*)aClosure)->Release();
-  return PL_DHASH_NEXT;
-}
-
 MediaKeys::~MediaKeys()
 {
   Shutdown();
   EME_LOG("MediaKeys[%p] destroyed", this);
-}
-
-static PLDHashOperator
-CopySessions(const nsAString& aKey,
-             nsRefPtr<MediaKeySession>& aSession,
-             void* aClosure)
-{
-  KeySessionHashMap* p = static_cast<KeySessionHashMap*>(aClosure);
-  p->Put(aSession->GetSessionId(), aSession);
-  return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
-CloseSessions(const nsAString& aKey,
-              nsRefPtr<MediaKeySession>& aSession,
-              void* aClosure)
-{
-  aSession->OnClosed();
-  return PL_DHASH_NEXT;
 }
 
 void
@@ -102,8 +72,14 @@ MediaKeys::Terminated()
 
   KeySessionHashMap keySessions;
   // Remove entries during iteration will screw it. Make a copy first.
-  mKeySessions.Enumerate(&CopySessions, &keySessions);
-  keySessions.Enumerate(&CloseSessions, nullptr);
+  for (auto iter = mKeySessions.Iter(); !iter.Done(); iter.Next()) {
+    nsRefPtr<MediaKeySession>& session = iter.Data();
+    keySessions.Put(session->GetSessionId(), session);
+  }
+  for (auto iter = keySessions.Iter(); !iter.Done(); iter.Next()) {
+    nsRefPtr<MediaKeySession>& session = iter.Data();
+    session->OnClosed();
+  }
   keySessions.Clear();
   MOZ_ASSERT(mKeySessions.Count() == 0);
 
@@ -125,7 +101,12 @@ MediaKeys::Shutdown()
 
   nsRefPtr<MediaKeys> kungFuDeathGrip = this;
 
-  mPromises.Enumerate(&RejectPromises, this);
+  for (auto iter = mPromises.Iter(); !iter.Done(); iter.Next()) {
+    nsRefPtr<dom::DetailedPromise>& promise = iter.Data();
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+                         NS_LITERAL_CSTRING("Promise still outstanding at MediaKeys shutdown"));
+    Release();
+  }
   mPromises.Clear();
 }
 

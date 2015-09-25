@@ -357,7 +357,7 @@ TaskbarPreview::UpdateTooltip() {
 void
 TaskbarPreview::DrawBitmap(uint32_t width, uint32_t height, bool isPreview) {
   nsresult rv;
-  nsRefPtr<gfxWindowsSurface> surface = new gfxWindowsSurface(gfxIntSize(width, height), gfxImageFormat::ARGB32);
+  nsRefPtr<gfxWindowsSurface> surface = new gfxWindowsSurface(gfx::IntSize(width, height), gfxImageFormat::ARGB32);
 
   nsCOMPtr<nsIDocShell> shell = do_QueryReferent(mDocShell);
 

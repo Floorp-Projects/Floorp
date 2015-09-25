@@ -46,7 +46,7 @@ static void DrawDebugOverlay(mozilla::gfx::DrawTarget* dt, int x, int y, int wid
 
   // Draw border
   c.NewPath();
-  c.SetDeviceColor(gfxRGBA(0.0, 0.0, 0.0, 1.0));
+  c.SetDeviceColor(Color(0.f, 0.f, 0.f));
   c.Rectangle(gfxRect(0, 0, width, height));
   c.Stroke();
 
@@ -63,12 +63,12 @@ static void DrawDebugOverlay(mozilla::gfx::DrawTarget* dt, int x, int y, int wid
   int textWidth = extents.width + 6;
 
   c.NewPath();
-  c.SetDeviceColor(gfxRGBA(0.0, 0.0, 0.0, 1.0));
+  c.SetDeviceColor(Color(0.f, 0.f, 0.f));
   c.Rectangle(gfxRect(gfxPoint(2,2),gfxSize(textWidth, 30)));
   c.Fill();
 
   c.NewPath();
-  c.SetDeviceColor(gfxRGBA(1.0, 0.0, 0.0, 1.0));
+  c.SetDeviceColor(Color(1.0, 0.0, 0.0));
   c.Rectangle(gfxRect(gfxPoint(2,2),gfxSize(textWidth, 30)));
   c.Stroke();
 

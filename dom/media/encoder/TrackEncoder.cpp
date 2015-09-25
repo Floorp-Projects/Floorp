@@ -197,7 +197,7 @@ VideoTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
       VideoChunk chunk = *iter;
       if (!chunk.IsNull()) {
         gfx::IntSize imgsize = chunk.mFrame.GetImage()->GetSize();
-        gfxIntSize intrinsicSize = chunk.mFrame.GetIntrinsicSize();
+        gfx::IntSize intrinsicSize = chunk.mFrame.GetIntrinsicSize();
         nsresult rv = Init(imgsize.width, imgsize.height,
                            intrinsicSize.width, intrinsicSize.height,
                            aGraph->GraphRate());
