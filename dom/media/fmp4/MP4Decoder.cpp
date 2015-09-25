@@ -269,7 +269,7 @@ CreateTestH264Decoder(layers::LayersBackend aBackend,
   PlatformDecoderModule::Init();
 
   nsRefPtr<PlatformDecoderModule> platform = PlatformDecoderModule::Create();
-  if (!platform) {
+  if (!platform || !platform->SupportsMimeType(NS_LITERAL_CSTRING("video/mp4"))) {
     return nullptr;
   }
 
@@ -327,7 +327,7 @@ CreateTestAACDecoder(AudioInfo& aConfig)
   PlatformDecoderModule::Init();
 
   nsRefPtr<PlatformDecoderModule> platform = PlatformDecoderModule::Create();
-  if (!platform) {
+  if (!platform || !platform->SupportsMimeType(NS_LITERAL_CSTRING("audio/mp4a-latm"))) {
     return nullptr;
   }
 
