@@ -8,6 +8,7 @@ JAVAFILES := \
   src/main/java/org/mozilla/b2gdroid/Apps.java \
   src/main/java/org/mozilla/b2gdroid/Launcher.java \
   src/main/java/org/mozilla/b2gdroid/ScreenStateObserver.java \
+  src/main/java/org/mozilla/b2gdroid/SettingsMapper.java \
   $(NULL)
 
 # The GeckoView consuming APK depends on the GeckoView JAR files.  There are two
@@ -21,6 +22,14 @@ JAVAFILES := \
 # org.mozilla.gecko.R itself.
 jars_dir := $(DEPTH)/mobile/android/base
 ANDROID_EXTRA_JARS := $(filter-out %gecko-R.jar,$(wildcard $(jars_dir)/*.jar))
+# Needed for the UpdateService
+ANDROID_EXTRA_JARS += $(ANDROID_COMPAT_LIB)
+
+ANDROID_EXTRA_JARS += \
+	$(ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB) \
+	$(ANDROID_SUPPORT_V4_AAR_LIB) \
+	$(ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB) \
+	$(NULL)
 
 # The GeckoView consuming APK depends on the GeckoView resources.  This hacks a
 # type of poor man's AAR support.

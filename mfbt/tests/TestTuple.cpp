@@ -27,6 +27,12 @@ using mozilla::UniquePtr;
 using mozilla::unused;
 using std::pair;
 
+#if (_MSC_VER == 1800)
+// Optimizations in VS2013 on Windows 10 cause an internal compiler error
+// with this file.
+#pragma optimize("", off)
+#endif
+
 #define CHECK(c) \
   do { \
     bool cond = !!(c); \
