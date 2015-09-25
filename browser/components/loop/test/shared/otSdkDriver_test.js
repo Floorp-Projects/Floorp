@@ -113,6 +113,19 @@ describe("loop.OTSdkDriver", function () {
         new loop.OTSdkDriver({dispatcher: dispatcher});
       }).to.Throw(/sdk/);
     });
+
+    it("should set the metrics to zero", function() {
+      driver = new loop.OTSdkDriver({
+        dispatcher: dispatcher,
+        sdk: sdk
+      });
+
+      expect(driver._metrics).eql({
+        connections: 0,
+        sendStreams: 0,
+        recvStreams: 0
+      });
+    });
   });
 
   describe("#setupStreamElements", function() {
@@ -472,6 +485,22 @@ describe("loop.OTSdkDriver", function () {
       driver.disconnectSession();
 
       expect(subscribedEvents).eql([]);
+    });
+
+    it("should reset the metrics to zero", function() {
+      driver._metrics = {
+        connections: 1,
+        sendStreams: 2,
+        recvStreams: 3
+      };
+
+      driver.disconnectSession();
+
+      expect(driver._metrics).eql({
+        connections: 0,
+        sendStreams: 0,
+        recvStreams: 0
+      });
     });
 
     it("should dispatch a DataChannelsAvailable action with available = false", function() {
