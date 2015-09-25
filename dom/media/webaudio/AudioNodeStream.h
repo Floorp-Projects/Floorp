@@ -14,7 +14,7 @@ namespace mozilla {
 
 namespace dom {
 struct ThreeDPoint;
-class AudioParamTimeline;
+struct AudioTimelineEvent;
 class AudioContext;
 } // namespace dom
 
@@ -85,9 +85,10 @@ public:
                               double aStreamTime);
   void SetDoubleParameter(uint32_t aIndex, double aValue);
   void SetInt32Parameter(uint32_t aIndex, int32_t aValue);
-  void SetTimelineParameter(uint32_t aIndex, const dom::AudioParamTimeline& aValue);
   void SetThreeDPointParameter(uint32_t aIndex, const dom::ThreeDPoint& aValue);
   void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList>&& aBuffer);
+  // This sends a single event to the timeline on the MSG thread side.
+  void SendTimelineEvent(uint32_t aIndex, const dom::AudioTimelineEvent& aEvent);
   // This consumes the contents of aData.  aData will be emptied after this returns.
   void SetRawArrayData(nsTArray<float>& aData);
   void SetChannelMixingParameters(uint32_t aNumberOfChannels,
