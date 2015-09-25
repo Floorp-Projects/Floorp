@@ -398,6 +398,8 @@ private:
 
     void SetPushedStream(Http2PushedStream *stream);
 
+    void MaybeWarnAboutAppCache();
+
 private:
     nsCOMPtr<nsICancelable>           mProxyRequest;
 

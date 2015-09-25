@@ -50,6 +50,23 @@ ToSurfaceFlags(uint32_t aFlags)
   return flags;
 }
 
+/**
+ * Given a set of SurfaceFlags, returns a set of imgIContainer FLAG_* flags with
+ * the corresponding flags set.
+ */
+inline uint32_t
+FromSurfaceFlags(SurfaceFlags aFlags)
+{
+  uint32_t flags = imgIContainer::DECODE_FLAGS_DEFAULT;
+  if (aFlags & SurfaceFlags::NO_PREMULTIPLY_ALPHA) {
+    flags |= imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
+  }
+  if (aFlags & SurfaceFlags::NO_COLORSPACE_CONVERSION) {
+    flags |= imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION;
+  }
+  return flags;
+}
+
 } // namespace image
 } // namespace mozilla
 

@@ -154,6 +154,9 @@ child:
   // Tell child to delete channel (all IPDL deletes must be done from child to
   // avoid races: see bug 591708).
   DeleteSelf();
+
+  // Tell the child to issue a deprecation warning.
+  IssueDeprecationWarning(uint32_t warning, bool asError);
 };
 
 

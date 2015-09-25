@@ -10,6 +10,7 @@
 #include "platform.h"
 #include "ProfileJSONWriter.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/RefCounted.h"
 
 class ProfileBuffer : public mozilla::RefCounted<ProfileBuffer> {
 public:

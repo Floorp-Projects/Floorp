@@ -1207,7 +1207,7 @@ MNewArray::writeRecoverData(CompactBufferWriter& writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
     writer.writeUnsigned(uint32_t(RInstruction::Recover_NewArray));
-    writer.writeUnsigned(count());
+    writer.writeUnsigned(length());
     return true;
 }
 

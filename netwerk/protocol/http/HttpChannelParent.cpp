@@ -153,7 +153,8 @@ NS_IMPL_ISUPPORTS(HttpChannelParent,
                   nsIParentChannel,
                   nsIAuthPromptProvider,
                   nsIParentRedirectingChannel,
-                  nsINetworkInterceptController)
+                  nsINetworkInterceptController,
+                  nsIDeprecationWarner)
 
 NS_IMETHODIMP
 HttpChannelParent::ShouldPrepareForIntercept(nsIURI* aURI, bool aIsNavigate,
@@ -1576,6 +1577,13 @@ HttpChannelParent::ReportSecurityMessage(const nsAString& aMessageTag,
                                             nsString(aMessageCategory)))) {
     return NS_ERROR_UNEXPECTED;
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpChannelParent::IssueWarning(uint32_t aWarning, bool aAsError)
+{
+  unused << SendIssueDeprecationWarning(aWarning, aAsError);
   return NS_OK;
 }
 
