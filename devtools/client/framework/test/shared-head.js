@@ -3,12 +3,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // This shared-head.js file is used for multiple directories in devtools.
+
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
-const {gDevTools} = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
-const {console} = Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
-const {ScratchpadManager} = Cu.import("resource:///modules/devtools/client/scratchpad/scratchpad-manager.jsm", {});
-const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+
+function scopedCuImport(path) {
+  const scope = {};
+  Cu.import(path, scope);
+  return scope;
+}
+
+const {Services} = scopedCuImport("resource://gre/modules/Services.jsm");
+const {gDevTools} = scopedCuImport("resource:///modules/devtools/client/framework/gDevTools.jsm");
+const {console} = scopedCuImport("resource://gre/modules/devtools/shared/Console.jsm");
+const {ScratchpadManager} = scopedCuImport("resource:///modules/devtools/client/scratchpad/scratchpad-manager.jsm");
+const {require} = scopedCuImport("resource://gre/modules/devtools/shared/Loader.jsm");
+
 const {TargetFactory} = require("devtools/client/framework/target");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const promise = require("promise");
@@ -67,6 +76,25 @@ function addTab(url) {
   }, true);
 
   return def.promise;
+}
+
+/**
+ * Remove the given tab.
+ * @param {Object} tab The tab to be removed.
+ * @return Promise<undefined> resolved when the tab is successfully removed.
+ */
+function removeTab(tab) {
+  info("Removing tab.");
+  return new Promise(resolve => {
+    let tabContainer = gBrowser.tabContainer;
+    tabContainer.addEventListener("TabClose", function onClose(aEvent) {
+      tabContainer.removeEventListener("TabClose", onClose, false);
+      info("Tab removed and finished closing.");
+      resolve();
+    }, false);
+
+    gBrowser.removeTab(tab);
+  });
 }
 
 function synthesizeKeyFromKeyTag(aKeyId, document) {
