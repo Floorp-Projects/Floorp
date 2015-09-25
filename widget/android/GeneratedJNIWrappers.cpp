@@ -956,6 +956,14 @@ constexpr char GeckoView::Window::DisposeNative_t::signature[];
 constexpr char GeckoView::Window::Open_t::name[];
 constexpr char GeckoView::Window::Open_t::signature[];
 
+constexpr char PrefsHelper::name[];
+
+constexpr char PrefsHelper::GetPrefsById_t::name[];
+constexpr char PrefsHelper::GetPrefsById_t::signature[];
+
+constexpr char PrefsHelper::RemovePrefsObserver_t::name[];
+constexpr char PrefsHelper::RemovePrefsObserver_t::signature[];
+
 constexpr char RestrictedProfiles::name[];
 
 constexpr char RestrictedProfiles::IsAllowed_t::name[];

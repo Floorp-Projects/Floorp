@@ -2312,6 +2312,58 @@ public:
     template<class Impl> class Natives;
 };
 
+class PrefsHelper : public mozilla::jni::Class<PrefsHelper>
+{
+public:
+    typedef mozilla::jni::Ref<PrefsHelper> Ref;
+    typedef mozilla::jni::LocalRef<PrefsHelper> LocalRef;
+    typedef mozilla::jni::GlobalRef<PrefsHelper> GlobalRef;
+    typedef const mozilla::jni::Param<PrefsHelper>& Param;
+
+    static constexpr char name[] =
+            "org/mozilla/gecko/PrefsHelper";
+
+protected:
+    PrefsHelper(jobject instance) : Class(instance) {}
+
+public:
+    struct GetPrefsById_t {
+        typedef PrefsHelper Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                mozilla::jni::ObjectArray::Param,
+                bool> Args;
+        static constexpr char name[] = "getPrefsById";
+        static constexpr char signature[] =
+                "(I[Ljava/lang/String;Z)V";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct RemovePrefsObserver_t {
+        typedef PrefsHelper Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t> Args;
+        static constexpr char name[] = "removePrefsObserver";
+        static constexpr char signature[] =
+                "(I)V";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    template<class Impl> class Natives;
+};
+
 class RestrictedProfiles : public mozilla::jni::Class<RestrictedProfiles>
 {
 public:
