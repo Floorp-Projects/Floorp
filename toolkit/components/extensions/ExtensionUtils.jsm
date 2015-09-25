@@ -133,6 +133,7 @@ EventManager.prototype = {
       let fireWithoutClone = this.fireWithoutClone.bind(this);
       fireFunc.withoutClone = fireWithoutClone;
       this.unregister = this.register(fireFunc);
+      this.registered = true;
     }
     this.callbacks.add(callback);
   },
@@ -601,4 +602,3 @@ this.ExtensionUtils = {
   Messenger,
   flushJarCache,
 };
-
