@@ -30,6 +30,9 @@ import org.json.JSONObject;
 public class TabQueueHelper {
     private static final String LOGTAG = "Gecko" + TabQueueHelper.class.getSimpleName();
 
+    // Disable Tab Queue for API level 10 (GB) - Bug 1206055
+    public static final boolean TAB_QUEUE_ENABLED = AppConstants.Versions.feature11Plus && AppConstants.MOZ_ANDROID_TAB_QUEUE;
+
     public static final String FILE_NAME = "tab_queue_url_list.json";
     public static final String LOAD_URLS_ACTION = "TAB_QUEUE_LOAD_URLS_ACTION";
     public static final int TAB_QUEUE_NOTIFICATION_ID = R.id.tabQueueNotification;
