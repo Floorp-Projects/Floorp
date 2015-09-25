@@ -7,6 +7,7 @@
 #include "GLReadTexImageHelper.h"
 
 #include "gfx2DGlue.h"
+#include "gfxColor.h"
 #include "gfxTypes.h"
 #include "GLContext.h"
 #include "OGLShaderProgram.h"

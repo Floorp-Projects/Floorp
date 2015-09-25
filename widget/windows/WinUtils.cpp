@@ -42,7 +42,6 @@
 #include "imgIEncoder.h"
 #include "nsIThread.h"
 #include "MainThreadUtils.h"
-#include "gfxColor.h"
 #include "nsLookAndFeel.h"
 
 #ifdef NS_ENABLE_TSF

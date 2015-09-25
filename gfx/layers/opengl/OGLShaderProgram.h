@@ -20,8 +20,6 @@
 
 #include <string>
 
-struct gfxRGBA;
-
 namespace mozilla {
 namespace layers {
 
@@ -435,10 +433,6 @@ public:
     SetUniform(KnownUniform::MaskTexture, aUnit);
   }
 
-  void SetRenderColor(const gfxRGBA& aColor) {
-    SetUniform(KnownUniform::RenderColor, aColor);
-  }
-
   void SetRenderColor(const gfx::Color& aColor) {
     SetUniform(KnownUniform::RenderColor, aColor);
   }
@@ -504,17 +498,6 @@ protected:
     KnownUniform& ku(mProfile.mUniforms[aKnownUniform]);
     if (ku.UpdateUniform(aFloatValue)) {
       mGL->fUniform1f(ku.mLocation, aFloatValue);
-    }
-  }
-
-  void SetUniform(KnownUniform::KnownUniformName aKnownUniform, const gfxRGBA& aColor)
-  {
-    ASSERT_THIS_PROGRAM;
-    NS_ASSERTION(aKnownUniform >= 0 && aKnownUniform < KnownUniform::KnownUniformCount, "Invalid known uniform");
-
-    KnownUniform& ku(mProfile.mUniforms[aKnownUniform]);
-    if (ku.UpdateUniform(aColor.r, aColor.g, aColor.b, aColor.a)) {
-      mGL->fUniform4fv(ku.mLocation, 1, ku.mValue.f16v);
     }
   }
 

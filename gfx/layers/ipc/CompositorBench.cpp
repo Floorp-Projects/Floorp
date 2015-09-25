@@ -10,7 +10,6 @@
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/Effects.h"
 #include "mozilla/TimeStamp.h"
-#include "gfxColor.h"
 #include "gfxPrefs.h"
 #include <math.h>
 #include "GeckoProfiler.h"
