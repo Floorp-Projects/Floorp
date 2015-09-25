@@ -548,6 +548,8 @@ public:
 
 protected:
   virtual ~DOMLocalMediaStream();
+
+  void StopImpl();
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DOMLocalMediaStream,
