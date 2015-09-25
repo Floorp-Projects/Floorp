@@ -560,7 +560,7 @@ class Build(MachCommandBase):
     # conditions, but that is for another day.
     @CommandArgument('-b', '--backend', nargs='+',
         choices=['RecursiveMake', 'AndroidEclipse', 'CppEclipse',
-                 'VisualStudio', 'FasterMake'],
+                 'VisualStudio', 'FasterMake', 'CompileDB'],
         help='Which backend to build.')
     def build_backend(self, backend, diff=False):
         python = self.virtualenv_manager.python_path

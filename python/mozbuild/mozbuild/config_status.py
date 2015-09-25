@@ -108,7 +108,7 @@ def config_status(topobjdir='.', topsrcdir='.',
                         help='print diffs of changed files.')
     parser.add_argument('-b', '--backend', nargs='+',
                         choices=['RecursiveMake', 'AndroidEclipse', 'CppEclipse',
-                                 'VisualStudio', 'FasterMake'],
+                                 'VisualStudio', 'FasterMake', 'CompileDB'],
                         default=default_backends,
                         help='what backend to build (default: %s).' %
                         ' '.join(default_backends))
@@ -145,6 +145,9 @@ def config_status(topobjdir='.', topsrcdir='.',
         elif backend == 'FasterMake':
             from mozbuild.backend.fastermake import FasterMakeBackend
             backends_cls.append(FasterMakeBackend)
+        elif backend == 'CompileDB':
+            from mozbuild.compilation.database import CompileDBBackend
+            backends_cls.append(CompileDBBackend)
         else:
             backends_cls.append(RecursiveMakeBackend)
 
