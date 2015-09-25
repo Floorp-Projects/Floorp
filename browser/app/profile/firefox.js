@@ -1945,10 +1945,3 @@ pref("view_source.tab", false);
 #else
 pref("view_source.tab", true);
 #endif
-
-// Enable ServiceWorkers for Push API consumers.
-// Interception is still disabled.
-pref("dom.serviceWorkers.enabled", true);
-
-// Enable Push API.
-pref("dom.push.enabled", true);
