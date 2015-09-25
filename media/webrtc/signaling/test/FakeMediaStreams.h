@@ -74,6 +74,7 @@ protected:
   virtual ~Fake_VideoSink() {}
 };
 
+class Fake_MediaStream;
 class Fake_SourceMediaStream;
 
 class Fake_MediaStreamListener
@@ -85,7 +86,9 @@ public:
   virtual void NotifyQueuedTrackChanges(mozilla::MediaStreamGraph* aGraph, mozilla::TrackID aID,
                                         mozilla::StreamTime aTrackOffset,
                                         uint32_t aTrackEvents,
-                                        const mozilla::MediaSegment& aQueuedMedia)  = 0;
+                                        const mozilla::MediaSegment& aQueuedMedia,
+                                        Fake_MediaStream* aInputStream,
+                                        mozilla::TrackID aInputTrackID) = 0;
   virtual void NotifyPull(mozilla::MediaStreamGraph* aGraph, mozilla::StreamTime aDesiredTime) = 0;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Fake_MediaStreamListener)
