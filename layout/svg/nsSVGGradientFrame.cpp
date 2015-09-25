@@ -278,11 +278,11 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
 
   uint16_t aSpread = GetSpreadMethod();
   if (aSpread == SVG_SPREADMETHOD_PAD)
-    gradient->SetExtend(gfxPattern::EXTEND_PAD);
+    gradient->SetExtend(ExtendMode::CLAMP);
   else if (aSpread == SVG_SPREADMETHOD_REFLECT)
-    gradient->SetExtend(gfxPattern::EXTEND_REFLECT);
+    gradient->SetExtend(ExtendMode::REFLECT);
   else if (aSpread == SVG_SPREADMETHOD_REPEAT)
-    gradient->SetExtend(gfxPattern::EXTEND_REPEAT);
+    gradient->SetExtend(ExtendMode::REPEAT);
 
   gradient->SetMatrix(patternMatrix);
 
