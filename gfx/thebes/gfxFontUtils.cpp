@@ -7,7 +7,6 @@
 #include "mozilla/BinarySearch.h"
 
 #include "gfxFontUtils.h"
-#include "gfxColor.h"
 
 #include "nsServiceManagerUtils.h"
 

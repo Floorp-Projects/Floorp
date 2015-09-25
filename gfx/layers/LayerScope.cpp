@@ -21,7 +21,6 @@
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/TextureHostOGL.h"
 
-#include "gfxColor.h"
 #include "gfxContext.h"
 #include "gfxUtils.h"
 #include "gfxPrefs.h"

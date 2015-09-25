@@ -14,7 +14,6 @@
 #include "nsContentUtils.h"
 #include "nsSVGEffects.h"
 #include "nsSVGAnimatedTransformList.h"
-#include "gfxColor.h"
 
 // XXX Tight coupling with content classes ahead!
 
