@@ -83,7 +83,8 @@ class TestMetadata(object):
         returned (there may be multiple configurations for a single file). If
         an entry is a directory, or a prefix of a directory containing tests,
         all tests in that directory are returned. If the string appears in a
-        known test file, that test file is considered.
+        known test file, that test file is considered. If the path contains
+        a wildcard pattern, tests matching that pattern are returned.
 
         If ``under_path`` is a string, it will be used to filter out tests that
         aren't in the specified path prefix relative to topsrcdir or the
@@ -132,6 +133,11 @@ class TestMetadata(object):
         for path in sorted(paths):
             if path is None:
                 candidate_paths |= set(self._tests_by_path.keys())
+                continue
+
+            if '*' in path:
+                candidate_paths |= {p for p in self._tests_by_path
+                                    if mozpath.match(p, path)}
                 continue
 
             # If the path is a directory, or the path is a prefix of a directory
