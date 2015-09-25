@@ -86,7 +86,9 @@ void
 CaptureTask::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
                                       StreamTime aTrackOffset,
                                       uint32_t aTrackEvents,
-                                      const MediaSegment& aQueuedMedia)
+                                      const MediaSegment& aQueuedMedia,
+                                      MediaStream* aInputStream,
+                                      TrackID aInputTrackID)
 {
   if (mImageGrabbedOrTrackEnd) {
     return;

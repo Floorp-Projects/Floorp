@@ -161,11 +161,16 @@ public:
    * aTrackEvents can be any combination of TRACK_EVENT_CREATED and
    * TRACK_EVENT_ENDED. aQueuedMedia is the data being added to the track
    * at aTrackOffset (relative to the start of the stream).
+   * aInputStream and aInputTrackID will be set if the changes originated
+   * from an input stream's track. In practice they will only be used for
+   * ProcessedMediaStreams.
    */
   virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
                                         StreamTime aTrackOffset,
                                         uint32_t aTrackEvents,
-                                        const MediaSegment& aQueuedMedia) {}
+                                        const MediaSegment& aQueuedMedia,
+                                        MediaStream* aInputStream = nullptr,
+                                        TrackID aInputTrackID = TRACK_INVALID) {}
 
   /**
    * Notify that all new tracks this iteration have been created.
