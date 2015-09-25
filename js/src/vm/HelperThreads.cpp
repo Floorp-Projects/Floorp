@@ -929,8 +929,7 @@ GlobalHelperThreadState::finishParseTask(JSContext* maybecx, JSRuntime* rt, void
         !EnsureConstructor(cx, global, JSProto_Function) ||
         !EnsureConstructor(cx, global, JSProto_RegExp) ||
         !EnsureConstructor(cx, global, JSProto_Iterator) ||
-        !GlobalObject::initLegacyGeneratorProto(cx, global) ||
-        !GlobalObject::initStarGenerators(cx, global))
+        !EnsureConstructor(cx, global, JSProto_GeneratorFunction))
     {
         LeaveParseTaskZone(rt, parseTask);
         return nullptr;
@@ -966,17 +965,6 @@ GlobalHelperThreadState::finishParseTask(JSContext* maybecx, JSRuntime* rt, void
     return script;
 }
 
-JSObject*
-GlobalObject::transliterateStarGeneratorFunctionPrototype(JSObject* proto)
-{
-    JSObject* genFuncProto =
-        &proto->global().getReservedSlot(STAR_GENERATOR_FUNCTION_PROTO).toObject();
-    if (proto != genFuncProto)
-        return nullptr;
-
-    return &getReservedSlot(STAR_GENERATOR_FUNCTION_PROTO).toObject();
-}
-
 void
 GlobalHelperThreadState::mergeParseTaskCompartment(JSRuntime* rt, ParseTask* parseTask,
                                                    Handle<GlobalObject*> global,
@@ -1004,24 +992,22 @@ GlobalHelperThreadState::mergeParseTaskCompartment(JSRuntime* rt, ParseTask* par
         if (!proto.isObject())
             continue;
 
-        JSObject* protoObj = proto.toObject();
-
-        // Generator functions don't have Function.prototype as prototype but a
-        // different function object, so IdentifyStandardPrototype won't work.
-        // Just special-case it here.
-        JSObject* newProto = global->transliterateStarGeneratorFunctionPrototype(protoObj);
-        if (!newProto) {
-            JSProtoKey key = JS::IdentifyStandardPrototype(protoObj);
-            if (key == JSProto_Null)
+        JSProtoKey key = JS::IdentifyStandardPrototype(proto.toObject());
+        if (key == JSProto_Null) {
+            // Generator functions don't have Function.prototype as prototype
+            // but a different function object, so IdentifyStandardPrototype
+            // doesn't work. Just special-case it here.
+            if (IsStandardPrototype(proto.toObject(), JSProto_GeneratorFunction))
+                key = JSProto_GeneratorFunction;
+            else
                 continue;
-
-            MOZ_ASSERT(key == JSProto_Object || key == JSProto_Array ||
-                       key == JSProto_Function || key == JSProto_RegExp ||
-                       key == JSProto_Iterator);
-
-            newProto = GetBuiltinPrototypePure(global, key);
-            MOZ_ASSERT(newProto);
         }
+        MOZ_ASSERT(key == JSProto_Object || key == JSProto_Array ||
+                   key == JSProto_Function || key == JSProto_RegExp ||
+                   key == JSProto_Iterator || key == JSProto_GeneratorFunction);
+
+        JSObject* newProto = GetBuiltinPrototypePure(global, key);
+        MOZ_ASSERT(newProto);
 
         group->setProtoUnchecked(TaggedProto(newProto));
     }
