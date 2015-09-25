@@ -524,6 +524,7 @@ public:
     const nsTArray<int>& ToolTypes() { return mToolTypes; }
     const nsTArray<float>& Orientations() { return mOrientations; }
     const nsTArray<nsIntPoint>& PointRadii() { return mPointRadii; }
+    const nsTArray<nsString>& PrefNames() { return mPrefNames; }
     double X() { return mX; }
     double Y() { return mY; }
     double Z() { return mZ; }
@@ -620,6 +621,7 @@ protected:
     float mGamepadButtonValue;
     nsTArray<float> mGamepadValues;
     nsCOMPtr<nsIObserver> mObserver;
+    nsTArray<nsString> mPrefNames;
     MultiTouchInput mApzInput;
     mozilla::layers::ScrollableLayerGuid mApzGuid;
     uint64_t mApzInputBlockId;
@@ -689,6 +691,7 @@ protected:
     static jfieldID jRangeBackColorField;
     static jfieldID jRangeLineColorField;
     static jfieldID jLocationField;
+    static jfieldID jPrefNamesField;
 
     static jfieldID jConnectionTypeField;
     static jfieldID jIsWifiField;
@@ -742,6 +745,9 @@ public:
         NETWORK_LINK_CHANGE = 36,
         TELEMETRY_HISTOGRAM_ADD = 37,
         ADD_OBSERVER = 38,
+        PREFERENCES_OBSERVE = 39,
+        PREFERENCES_GET = 40,
+        PREFERENCES_REMOVE_OBSERVERS = 41,
         TELEMETRY_UI_SESSION_START = 42,
         TELEMETRY_UI_SESSION_STOP = 43,
         TELEMETRY_UI_EVENT = 44,

@@ -97,6 +97,9 @@ public class GeckoEvent {
         LOW_MEMORY(35),
         NETWORK_LINK_CHANGE(36),
         TELEMETRY_HISTOGRAM_ADD(37),
+        PREFERENCES_OBSERVE(39),
+        PREFERENCES_GET(40),
+        PREFERENCES_REMOVE_OBSERVERS(41),
         TELEMETRY_UI_SESSION_START(42),
         TELEMETRY_UI_SESSION_STOP(43),
         TELEMETRY_UI_EVENT(44),
@@ -221,6 +224,8 @@ public class GeckoEvent {
     private boolean mGamepadButtonPressed;
     private float mGamepadButtonValue;
     private float[] mGamepadValues;
+
+    private String[] mPrefNames;
 
     private Object mObject;
 
@@ -759,6 +764,29 @@ public class GeckoEvent {
     public static GeckoEvent createRemoveObserverEvent(String observerKey) {
         GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.REMOVE_OBSERVER);
         event.mCharacters = observerKey;
+        return event;
+    }
+
+    @RobocopTarget
+    public static GeckoEvent createPreferencesObserveEvent(int requestId, String[] prefNames) {
+        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.PREFERENCES_OBSERVE);
+        event.mCount = requestId;
+        event.mPrefNames = prefNames;
+        return event;
+    }
+
+    @RobocopTarget
+    public static GeckoEvent createPreferencesGetEvent(int requestId, String[] prefNames) {
+        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.PREFERENCES_GET);
+        event.mCount = requestId;
+        event.mPrefNames = prefNames;
+        return event;
+    }
+
+    @RobocopTarget
+    public static GeckoEvent createPreferencesRemoveObserversEvent(int requestId) {
+        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.PREFERENCES_REMOVE_OBSERVERS);
+        event.mCount = requestId;
         return event;
     }
 
