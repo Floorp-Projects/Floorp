@@ -1,5 +1,6 @@
 $inherits:
-  from: 'tasks/builds/opt_linux64.yml'
+  # inherit clobber since we want to use a different workspace cache
+  from: 'tasks/builds/opt_linux64_clobber.yml'
   variables:
     build_name: 'linux64-st-an'
 task:
@@ -7,11 +8,16 @@ task:
       name: '[TC] Linux64 Static Analysis Opt'
       description: 'Linux64 Static Analysis Opt'
 
+  scopes:
+    - 'docker-worker:cache:build-linux64-st-an-workspace'
+
   routes:
     - 'index.buildbot.branches.{{project}}.linux64-st-an'
     - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux64-st-an'
 
   payload:
+    cache:
+      build-linux64-st-an-workspace: '/home/worker/workspace'
     env:
       MOZHARNESS_SCRIPT: 'mozharness/scripts/fx_desktop_build.py'
       MOZHARNESS_CONFIG: 'builds/releng_sub_linux_configs/64_stat_and_opt.py balrog/production.py'
