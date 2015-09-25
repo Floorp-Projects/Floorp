@@ -19,7 +19,6 @@ namespace mozilla {
 typedef int32_t TrackID;
 const TrackID TRACK_NONE = 0;
 const TrackID TRACK_INVALID = -1;
-const TrackID TRACK_ANY = -2;
 
 inline TrackTicks RateConvertTicksRoundDown(TrackRate aOutRate,
                                             TrackRate aInRate,

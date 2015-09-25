@@ -13,7 +13,7 @@ namespace mozilla {
 namespace dom {
 
 MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID)
-  : mOwningStream(aStream), mTrackID(aTrackID), mEnded(false), mEnabled(true)
+  : mStream(aStream), mTrackID(aTrackID), mEnded(false), mEnabled(true)
 {
 
   nsresult rv;
@@ -36,7 +36,7 @@ MediaStreamTrack::~MediaStreamTrack()
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaStreamTrack, DOMEventTargetHelper,
-                                   mOwningStream)
+                                   mStream)
 
 NS_IMPL_ADDREF_INHERITED(MediaStreamTrack, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(MediaStreamTrack, DOMEventTargetHelper)
@@ -53,20 +53,20 @@ void
 MediaStreamTrack::SetEnabled(bool aEnabled)
 {
   mEnabled = aEnabled;
-  mOwningStream->SetTrackEnabled(mTrackID, aEnabled);
+  mStream->SetTrackEnabled(mTrackID, aEnabled);
 }
 
 void
 MediaStreamTrack::Stop()
 {
-  mOwningStream->StopTrack(mTrackID);
+  mStream->StopTrack(mTrackID);
 }
 
 already_AddRefed<Promise>
 MediaStreamTrack::ApplyConstraints(const MediaTrackConstraints& aConstraints,
                                    ErrorResult &aRv)
 {
-  return GetStream()->ApplyConstraintsToTrack(mTrackID, aConstraints, aRv);
+  return mStream->ApplyConstraintsToTrack(mTrackID, aConstraints, aRv);
 }
 
 } // namespace dom

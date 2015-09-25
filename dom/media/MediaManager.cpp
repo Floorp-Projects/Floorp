@@ -637,7 +637,7 @@ class nsDOMUserMediaStream : public DOMLocalMediaStream
 {
 public:
   static already_AddRefed<nsDOMUserMediaStream>
-  CreateSourceStream(nsIDOMWindow* aWindow,
+  CreateTrackUnionStream(nsIDOMWindow* aWindow,
                          GetUserMediaCallbackMediaStreamListener* aListener,
                          AudioDevice* aAudioDevice,
                          VideoDevice* aVideoDevice,
@@ -646,7 +646,7 @@ public:
     nsRefPtr<nsDOMUserMediaStream> stream = new nsDOMUserMediaStream(aListener,
                                                                      aAudioDevice,
                                                                      aVideoDevice);
-    stream->InitSourceStream(aWindow, aMSG);
+    stream->InitTrackUnionStream(aWindow, aMSG);
     return stream.forget();
   }
 
@@ -675,15 +675,18 @@ public:
   {
     Stop();
 
-    if (GetSourceStream()) {
-      GetSourceStream()->Destroy();
+    if (mPort) {
+      mPort->Destroy();
+    }
+    if (mSourceStream) {
+      mSourceStream->Destroy();
     }
   }
 
   virtual void Stop() override
   {
-    if (GetSourceStream()) {
-      GetSourceStream()->EndAllTrackAndFinish();
+    if (mSourceStream) {
+      mSourceStream->EndAllTrackAndFinish();
     }
   }
 
@@ -693,14 +696,14 @@ public:
   // XXX This will not handle more complex cases well.
   virtual void StopTrack(TrackID aTrackID) override
   {
-    if (GetSourceStream()) {
-      GetSourceStream()->EndTrack(aTrackID);
+    if (mSourceStream) {
+      mSourceStream->EndTrack(aTrackID);
       // We could override NotifyMediaStreamTrackEnded(), and maybe should, but it's
       // risky to do late in a release since that will affect all track ends, and not
       // just StopTrack()s.
-      nsRefPtr<dom::MediaStreamTrack> ownedTrack = FindOwnedDOMTrack(mOwnedStream, aTrackID);
-      if (ownedTrack) {
-        mListener->StopTrack(aTrackID, !!ownedTrack->AsAudioStreamTrack());
+      if (GetDOMTrackFor(aTrackID)) {
+        mListener->StopTrack(aTrackID,
+                             !!GetDOMTrackFor(aTrackID)->AsAudioStreamTrack());
       } else {
         LOG(("StopTrack(%d) on non-existent track", aTrackID));
       }
@@ -723,7 +726,7 @@ public:
       promise->MaybeReject(error);
       return promise.forget();
     }
-    if (!GetSourceStream()) {
+    if (!mSourceStream) {
       nsRefPtr<MediaStreamError> error = new MediaStreamError(window,
           NS_LITERAL_STRING("InternalError"),
           NS_LITERAL_STRING("No stream."));
@@ -731,7 +734,7 @@ public:
       return promise.forget();
     }
 
-    nsRefPtr<dom::MediaStreamTrack> track = FindOwnedDOMTrack(mOwnedStream, aTrackID);
+    nsRefPtr<dom::MediaStreamTrack> track = GetDOMTrackFor(aTrackID);
     if (!track) {
       LOG(("ApplyConstraintsToTrack(%d) on non-existent track", aTrackID));
       nsRefPtr<MediaStreamError> error = new MediaStreamError(window,
@@ -771,8 +774,8 @@ public:
   // Allow getUserMedia to pass input data directly to PeerConnection/MediaPipeline
   virtual bool AddDirectListener(MediaStreamDirectListener *aListener) override
   {
-    if (GetSourceStream()) {
-      GetSourceStream()->AddDirectListener(aListener);
+    if (mSourceStream) {
+      mSourceStream->AddDirectListener(aListener);
       return true; // application should ignore NotifyQueuedTrackData
     }
     return false;
@@ -795,9 +798,20 @@ public:
 
   virtual void RemoveDirectListener(MediaStreamDirectListener *aListener) override
   {
-    if (GetSourceStream()) {
-      GetSourceStream()->RemoveDirectListener(aListener);
+    if (mSourceStream) {
+      mSourceStream->RemoveDirectListener(aListener);
     }
+  }
+
+  // let us intervene for direct listeners when someone does track.enabled = false
+  virtual void SetTrackEnabled(TrackID aTrackID, bool aEnabled) override
+  {
+    // We encapsulate the SourceMediaStream and TrackUnion into one entity, so
+    // we can handle the disabling at the SourceMediaStream
+
+    // We need to find the input track ID for output ID aTrackID, so we let the TrackUnion
+    // forward the request to the source and translate the ID
+    GetStream()->AsProcessedStream()->ForwardTrackEnabled(aTrackID, aEnabled);
   }
 
   virtual DOMLocalMediaStream* AsDOMLocalMediaStream() override
@@ -819,14 +833,10 @@ public:
     return nullptr;
   }
 
-  SourceMediaStream* GetSourceStream()
-  {
-    if (GetInputStream()) {
-      return GetInputStream()->AsSourceStream();
-    }
-    return nullptr;
-  }
-
+  // The actual MediaStream is a TrackUnionStream. But these resources need to be
+  // explicitly destroyed too.
+  nsRefPtr<SourceMediaStream> mSourceStream;
+  nsRefPtr<MediaInputPort> mPort;
   nsRefPtr<GetUserMediaCallbackMediaStreamListener> mListener;
   nsRefPtr<AudioDevice> mAudioDevice; // so we can turn on AEC
   nsRefPtr<VideoDevice> mVideoDevice;
@@ -917,7 +927,7 @@ public:
 
       // Start currentTime from the point where this stream was successfully
       // returned.
-      aStream->SetLogicalStreamStartTime(aStream->GetPlaybackStream()->GetCurrentTime());
+      aStream->SetLogicalStreamStartTime(aStream->GetStream()->GetCurrentTime());
 
       // This is safe since we're on main-thread, and the windowlist can only
       // be invalidated from the main-thread (see OnNavigation)
@@ -989,8 +999,9 @@ public:
       MediaStreamGraph::GetInstance(graphDriverType,
                                     dom::AudioChannel::Normal);
 
+    nsRefPtr<SourceMediaStream> stream = msg->CreateSourceStream(nullptr);
+
     nsRefPtr<DOMLocalMediaStream> domStream;
-    nsRefPtr<SourceMediaStream> stream;
     // AudioCapture is a special case, here, in the sense that we're not really
     // using the audio source and the SourceMediaStream, which acts as
     // placeholders. We re-route a number of stream internaly in the MSG and mix
@@ -1001,33 +1012,38 @@ public:
       // It should be possible to pipe the capture stream to anything. CORS is
       // not a problem here, we got explicit user content.
       domStream->SetPrincipal(window->GetExtantDoc()->NodePrincipal());
-      stream = msg->CreateSourceStream(nullptr); // Placeholder
       msg->RegisterCaptureStreamForWindow(
-            mWindowID, domStream->GetInputStream()->AsProcessedStream());
+            mWindowID, domStream->GetStream()->AsProcessedStream());
       window->SetAudioCapture(true);
     } else {
       // Normal case, connect the source stream to the track union stream to
       // avoid us blocking
-      domStream = nsDOMUserMediaStream::CreateSourceStream(window, mListener,
-                                                           mAudioDevice, mVideoDevice,
-                                                           msg);
-
-      if (mAudioDevice) {
-        domStream->CreateOwnDOMTrack(kAudioTrack, MediaSegment::AUDIO);
-      }
-      if (mVideoDevice) {
-        domStream->CreateOwnDOMTrack(kVideoTrack, MediaSegment::VIDEO);
-      }
+      nsRefPtr<nsDOMUserMediaStream> trackunion =
+        nsDOMUserMediaStream::CreateTrackUnionStream(window, mListener,
+                                                     mAudioDevice, mVideoDevice,
+                                                     msg);
+      trackunion->GetStream()->AsProcessedStream()->SetAutofinish(true);
+      nsRefPtr<MediaInputPort> port = trackunion->GetStream()->AsProcessedStream()->
+        AllocateInputPort(stream);
+      trackunion->mSourceStream = stream;
+      trackunion->mPort = port.forget();
+      // Log the relationship between SourceMediaStream and TrackUnion stream
+      // Make sure logger starts before capture
+      AsyncLatencyLogger::Get(true);
+      LogLatency(AsyncLatencyLogger::MediaStreamCreate,
+          reinterpret_cast<uint64_t>(stream.get()),
+          reinterpret_cast<int64_t>(trackunion->GetStream()));
 
       nsCOMPtr<nsIPrincipal> principal;
       if (mPeerIdentity) {
         principal = nsNullPrincipal::Create();
-        domStream->SetPeerIdentity(mPeerIdentity.forget());
+        trackunion->SetPeerIdentity(mPeerIdentity.forget());
       } else {
         principal = window->GetExtantDoc()->NodePrincipal();
       }
-      domStream->CombineWithPrincipal(principal);
-      stream = domStream->GetInputStream()->AsSourceStream();
+      trackunion->CombineWithPrincipal(principal);
+
+      domStream = trackunion.forget();
     }
 
     if (!domStream || sInShutdown) {
@@ -1049,7 +1065,6 @@ public:
     // Activate our listener. We'll call Start() on the source when get a callback
     // that the MediaStream has started consuming. The listener is freed
     // when the page is invalidated (on navigation or close).
-    MOZ_ASSERT(stream);
     mListener->Activate(stream.forget(), mAudioDevice, mVideoDevice);
 
     // Note: includes JS callbacks; must be released on MainThread
@@ -1063,7 +1078,7 @@ public:
 
     // Dispatch to the media thread to ask it to start the sources,
     // because that can take a while.
-    // Pass ownership of domStream to the MediaOperationTask
+    // Pass ownership of trackunion to the MediaOperationTask
     // to ensure it's kept alive until the MediaOperationTask runs (at least).
     MediaManager::PostTask(FROM_HERE,
         new MediaOperationTask(MEDIA_START, mListener, domStream,

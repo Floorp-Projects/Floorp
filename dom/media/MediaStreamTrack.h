@@ -35,18 +35,10 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaStreamTrack,
                                            DOMEventTargetHelper)
 
-  DOMMediaStream* GetParentObject() const { return mOwningStream; }
+  DOMMediaStream* GetParentObject() const { return mStream; }
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override = 0;
 
-  /**
-   * Returns the DOMMediaStream owning this track.
-   */
-  DOMMediaStream* GetStream() const { return mOwningStream; }
-
-  /**
-   * Returns the TrackID this stream has in its owning DOMMediaStream's Owned
-   * stream.
-   */
+  DOMMediaStream* GetStream() const { return mStream; }
   TrackID GetTrackID() const { return mTrackID; }
   virtual AudioStreamTrack* AsAudioStreamTrack() { return nullptr; }
   virtual VideoStreamTrack* AsVideoStreamTrack() { return nullptr; }
@@ -71,7 +63,7 @@ public:
 protected:
   virtual ~MediaStreamTrack();
 
-  nsRefPtr<DOMMediaStream> mOwningStream;
+  nsRefPtr<DOMMediaStream> mStream;
   TrackID mTrackID;
   nsString mID;
   bool mEnded;

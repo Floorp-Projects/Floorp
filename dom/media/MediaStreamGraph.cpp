@@ -1601,7 +1601,7 @@ MediaStream::MediaStream(DOMMediaStream* aWrapper)
   // aWrapper should not already be connected to a MediaStream! It needs
   // to be hooked up to this stream, and since this stream is only just
   // being created now, aWrapper must not be connected to anything.
-  NS_ASSERTION(!aWrapper || !aWrapper->GetPlaybackStream(),
+  NS_ASSERTION(!aWrapper || !aWrapper->GetStream(),
                "Wrapper already has another media stream hooked up to it!");
 }
 
@@ -2430,39 +2430,8 @@ MediaInputPort::SetGraphImpl(MediaStreamGraphImpl* aGraph)
   mGraph = aGraph;
 }
 
-void
-MediaInputPort::BlockTrackIdImpl(TrackID aTrackId)
-{
-  mBlockedTracks.AppendElement(aTrackId);
-}
-
-void
-MediaInputPort::BlockTrackId(TrackID aTrackId)
-{
-  class Message : public ControlMessage {
-  public:
-    explicit Message(MediaInputPort* aPort, TrackID aTrackId)
-      : ControlMessage(aPort->GetDestination()),
-        mPort(aPort), mTrackId(aTrackId) {}
-    virtual void Run()
-    {
-      mPort->BlockTrackIdImpl(mTrackId);
-    }
-    virtual void RunDuringShutdown()
-    {
-      Run();
-    }
-    nsRefPtr<MediaInputPort> mPort;
-    TrackID mTrackId;
-  };
-
-  MOZ_ASSERT(aTrackId != TRACK_NONE && aTrackId != TRACK_INVALID && aTrackId != TRACK_ANY,
-             "Only explicit TrackID is allowed");
-  GraphImpl()->AppendMessage(new Message(this, aTrackId));
-}
-
 already_AddRefed<MediaInputPort>
-ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, TrackID aTrackID,
+ProcessedMediaStream::AllocateInputPort(MediaStream* aStream,
                                         uint16_t aInputNumber, uint16_t aOutputNumber)
 {
   // This method creates two references to the MediaInputPort: one for
@@ -2485,10 +2454,7 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, TrackID aTrackID,
     }
     nsRefPtr<MediaInputPort> mPort;
   };
-
-  MOZ_ASSERT(aTrackID != TRACK_NONE && aTrackID != TRACK_INVALID,
-             "Only TRACK_ANY and explicit ID are allowed");
-  nsRefPtr<MediaInputPort> port = new MediaInputPort(aStream, aTrackID, this,
+  nsRefPtr<MediaInputPort> port = new MediaInputPort(aStream, this,
                                                      aInputNumber, aOutputNumber);
   port->SetGraphImpl(GraphImpl());
   GraphImpl()->AppendMessage(new Message(port));
@@ -2799,10 +2765,9 @@ MediaStreamGraph::CreateTrackUnionStream(DOMMediaStream* aWrapper)
 }
 
 ProcessedMediaStream*
-MediaStreamGraph::CreateAudioCaptureStream(DOMMediaStream* aWrapper,
-                                           TrackID aTrackId)
+MediaStreamGraph::CreateAudioCaptureStream(DOMMediaStream* aWrapper)
 {
-  AudioCaptureStream* stream = new AudioCaptureStream(aWrapper, aTrackId);
+  AudioCaptureStream* stream = new AudioCaptureStream(aWrapper);
   AddStream(stream);
   return stream;
 }

@@ -540,7 +540,8 @@ private:
     mTrackUnionStream->SetAutofinish(true);
 
     // Bind this Track Union Stream with Source Media.
-    mInputPort = mTrackUnionStream->AllocateInputPort(mRecorder->GetSourceMediaStream());
+    mInputPort = mTrackUnionStream->AllocateInputPort(mRecorder->GetSourceMediaStream(),
+                                                      0);
 
     DOMMediaStream* domStream = mRecorder->Stream();
     if (domStream) {
@@ -799,7 +800,7 @@ MediaRecorder::MediaRecorder(AudioNode& aSrcAudioNode,
     AudioNodeStream* ns = aSrcAudioNode.GetStream();
     if (ns) {
       mInputPort = mPipeStream->AllocateInputPort(aSrcAudioNode.GetStream(),
-                                                  TRACK_ANY, 0, aSrcOutput);
+                                                  0, aSrcOutput);
     }
   }
   mAudioNode = &aSrcAudioNode;
@@ -1173,7 +1174,7 @@ MediaStream*
 MediaRecorder::GetSourceMediaStream()
 {
   if (mDOMStream != nullptr) {
-    return mDOMStream->GetPlaybackStream();
+    return mDOMStream->GetStream();
   }
   MOZ_ASSERT(mAudioNode != nullptr);
   return mPipeStream ? mPipeStream.get() : mAudioNode->GetStream();

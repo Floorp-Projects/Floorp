@@ -142,10 +142,6 @@ AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
   for (StreamBuffer::TrackIter tracks(source->mBuffer, MediaSegment::AUDIO);
        !tracks.IsEnded(); tracks.Next()) {
     const StreamBuffer::Track& inputTrack = *tracks;
-    if (!mInputs[0]->PassTrackThrough(tracks->GetID())) {
-      continue;
-    }
-
     const AudioSegment& inputSegment =
         *static_cast<AudioSegment*>(inputTrack.GetSegment());
     if (inputSegment.IsNull()) {
