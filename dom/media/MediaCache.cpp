@@ -454,7 +454,7 @@ void MediaCacheStream::BlockList::RemoveBlock(int32_t aBlock)
     mEntries.GetEntry(entry->mNextBlock)->mPrevBlock = entry->mPrevBlock;
     mEntries.GetEntry(entry->mPrevBlock)->mNextBlock = entry->mNextBlock;
   }
-  mEntries.RemoveEntry(aBlock);
+  mEntries.RemoveEntry(entry);
   --mCount;
 }
 
