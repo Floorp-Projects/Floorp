@@ -41,9 +41,7 @@ MediaEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
                                        TrackID aID,
                                        StreamTime aTrackOffset,
                                        uint32_t aTrackEvents,
-                                       const MediaSegment& aQueuedMedia,
-                                       MediaStream* aInputStream,
-                                       TrackID aInputTrackID)
+                                       const MediaSegment& aQueuedMedia)
 {
   // Process the incoming raw track data from MediaStreamGraph, called on the
   // thread of MediaStreamGraph.

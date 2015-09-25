@@ -74,7 +74,6 @@ protected:
   virtual ~Fake_VideoSink() {}
 };
 
-class Fake_MediaStream;
 class Fake_SourceMediaStream;
 
 class Fake_MediaStreamListener
@@ -86,9 +85,7 @@ public:
   virtual void NotifyQueuedTrackChanges(mozilla::MediaStreamGraph* aGraph, mozilla::TrackID aID,
                                         mozilla::StreamTime aTrackOffset,
                                         uint32_t aTrackEvents,
-                                        const mozilla::MediaSegment& aQueuedMedia,
-                                        Fake_MediaStream* aInputStream,
-                                        mozilla::TrackID aInputTrackID) = 0;
+                                        const mozilla::MediaSegment& aQueuedMedia)  = 0;
   virtual void NotifyPull(mozilla::MediaStreamGraph* aGraph, mozilla::StreamTime aDesiredTime) = 0;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Fake_MediaStreamListener)
@@ -366,9 +363,6 @@ public:
   virtual bool AddDirectListener(Fake_MediaStreamListener *aListener) { return false; }
   virtual void RemoveDirectListener(Fake_MediaStreamListener *aListener) {}
 
-  Fake_MediaStream *GetInputStream() { return mMediaStream; }
-  Fake_MediaStream *GetOwnedStream() { return mMediaStream; }
-  Fake_MediaStream *GetPlaybackStream() { return mMediaStream; }
   Fake_MediaStream *GetStream() { return mMediaStream; }
   std::string GetId() const { return mID; }
   void AssignId(const std::string& id) { mID = id; }
@@ -413,22 +407,6 @@ public:
   }
 
   void SetTrackEnabled(mozilla::TrackID aTrackID, bool aEnabled) {}
-
-  Fake_MediaStreamTrack*
-  CreateOwnDOMTrack(mozilla::TrackID aTrackID, mozilla::MediaSegment::Type aType)
-  {
-    switch(aType) {
-      case mozilla::MediaSegment::AUDIO: {
-        return mAudioTrack;
-      }
-      case mozilla::MediaSegment::VIDEO: {
-        return mVideoTrack;
-      }
-      default: {
-        MOZ_CRASH("Unkown media type");
-      }
-    }
-  }
 
   class PrincipalChangeObserver
   {

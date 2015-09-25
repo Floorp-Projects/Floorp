@@ -21,8 +21,6 @@
 extern PRLogModuleInfo* GetSpeechSynthLog();
 #define LOG(type, msg) MOZ_LOG(GetSpeechSynthLog(), type, msg)
 
-#define AUDIO_TRACK 1
-
 namespace mozilla {
 namespace dom {
 
@@ -195,7 +193,7 @@ nsSpeechTask::Setup(nsISpeechTaskCallback* aCallback,
   mChannels = aChannels;
 
   AudioSegment* segment = new AudioSegment();
-  mStream->AddAudioTrack(AUDIO_TRACK, aRate, 0, segment);
+  mStream->AddAudioTrack(1, aRate, 0, segment);
   mStream->AddAudioOutput(this);
   mStream->SetAudioOutputVolume(this, mVolume);
 
