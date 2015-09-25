@@ -1881,7 +1881,7 @@ pref("browser.tabs.remote.autostart.2", true);
 #endif
 
 #ifdef NIGHTLY_BUILD
-#if defined(XP_MACOSX) || defined(XP_WIN)
+#ifndef MOZ_MULET
 pref("layers.async-pan-zoom.enabled", true);
 #endif
 #endif
