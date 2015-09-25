@@ -94,7 +94,7 @@ def dromaeo(series):
     dromaeo: https://wiki.mozilla.org/Dromaeo, pull the internal calculation
     out
       * This is for 'runs/s' based tests, not 'ms' tests.
-      * chunksize: defined in dromaeo: page_load_test/dromaeo/webrunner.js#l8
+      * chunksize: defined in dromaeo: tests/dromaeo/webrunner.js#l8
     """
     means = []
     chunksize = 5
