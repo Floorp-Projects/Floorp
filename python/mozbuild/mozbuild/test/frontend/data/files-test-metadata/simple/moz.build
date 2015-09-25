@@ -1,0 +1,22 @@
+with Files('src/*'):
+    IMPACTED_TESTS.files += [
+        'tests/test_general.html',
+    ]
+
+with Files('src/module.jsm'):
+    IMPACTED_TESTS.files += [
+        'browser/**.js',
+    ]
+
+with Files('base.cpp'):
+    IMPACTED_TESTS.files += [
+        '/default/tests/xpcshell/test_default_mod.js',
+        'tests/*',
+    ]
+
+
+MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+BROWSER_CHROME_MANIFESTS += ['browser/browser.ini']
+
+UNIFIED_SOURCES += ['base.cpp']
+DIRS += ['src']
