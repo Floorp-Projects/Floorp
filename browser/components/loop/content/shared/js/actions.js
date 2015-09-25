@@ -451,32 +451,21 @@ loop.shared.actions = (function() {
     }),
 
     /**
-     * Sets up the room information when it is received.
-     * XXX: should move to some roomActions module - refs bug 1079284
-     *
-     * @see https://wiki.mozilla.org/Loop/Architecture/Rooms#GET_.2Frooms.2F.7Btoken.7D
-     */
-    SetupRoomInfo: Action.define("setupRoomInfo", {
-      // roomContextUrls: Array - Optional.
-      // roomDescription: String - Optional.
-      // roomName: String - Optional.
-      roomToken: String,
-      roomUrl: String,
-      socialShareProviders: Array
-    }),
-
-    /**
      * Updates the room information when it is received.
      * XXX: should move to some roomActions module - refs bug 1079284
      *
      * @see https://wiki.mozilla.org/Loop/Architecture/Rooms#GET_.2Frooms.2F.7Btoken.7D
      */
     UpdateRoomInfo: Action.define("updateRoomInfo", {
-      // description: String - Optional.
-      // roomName: String - Optional.
-      roomUrl: String
-      // urls: Array - Optional.
+      // participants: Array - Optional.
+      // roomContextUrls: Array - Optional.
       // See https://wiki.mozilla.org/Loop/Architecture/Context#Format_of_context.value
+      // roomDescription: String - Optional.
+      // roomInfoFailure: String - Optional.
+      // roomName: String - Optional.
+      // roomState: String - Optional.
+      roomUrl: String
+      // socialShareProviders: Array - Optional.
     }),
 
     /**
