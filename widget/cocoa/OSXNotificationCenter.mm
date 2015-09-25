@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,9 +7,11 @@
 #import <AppKit/AppKit.h>
 #include "imgIRequest.h"
 #include "imgIContainer.h"
+#include "nsIStringBundle.h"
 #include "nsNetUtil.h"
 #include "imgLoader.h"
 #import "nsCocoaUtils.h"
+#include "nsContentUtils.h"
 #include "nsObjCExceptions.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
@@ -26,9 +28,20 @@ static NSString * const NSUserNotificationDefaultSoundName = @"DefaultSoundName"
 enum {
   NSUserNotificationActivationTypeNone = 0,
   NSUserNotificationActivationTypeContentsClicked = 1,
-  NSUserNotificationActivationTypeActionButtonClicked = 2
+  NSUserNotificationActivationTypeActionButtonClicked = 2,
 };
-typedef NSInteger NSUserNotificationActivationType;
+#endif
+
+#if !defined(MAC_OS_X_VERSION_10_9) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_9)
+enum {
+  NSUserNotificationActivationTypeReplied = 3,
+};
+#endif
+
+#if !defined(MAC_OS_X_VERSION_10_10) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_10)
+enum {
+  NSUserNotificationActivationTypeAdditionalActionClicked = 4
+};
 #endif
 
 @protocol FakeNSUserNotification <NSObject>
@@ -90,7 +103,10 @@ typedef NSInteger NSUserNotificationActivationType;
 - (void)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
        didActivateNotification:(id<FakeNSUserNotification>)notification
 {
-  mOSXNC->OnClick([[notification userInfo] valueForKey:@"name"]);
+  NSNumber *alternateActionIndex = [(NSObject*)notification valueForKey:@"_alternateActionIndex"];
+  mOSXNC->OnActivate([[notification userInfo] valueForKey:@"name"],
+                     notification.activationType,
+                     [alternateActionIndex unsignedLongLongValue]);
 }
 
 - (BOOL)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
@@ -110,9 +126,21 @@ typedef NSInteger NSUserNotificationActivationType;
   }
 }
 
+// This is an undocumented method that we need to be notified if a user clicks the close button.
+- (void)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
+  didDismissAlert:(id<FakeNSUserNotification>)notification
+{
+  NSString *name = [[notification userInfo] valueForKey:@"name"];
+  mOSXNC->CloseAlertCocoaString(name);
+}
+
 @end
 
 namespace mozilla {
+
+enum {
+  OSXNotificationActionDisable = 0
+};
 
 class OSXNotificationInfo {
 private:
@@ -217,6 +245,33 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
                                                          length:aAlertText.Length()];
   notification.soundName = NSUserNotificationDefaultSoundName;
   notification.hasActionButton = NO;
+
+  // If this is not an application/extension alert, show additional actions dealing with permissions.
+  if (!nsContentUtils::IsSystemOrExpandedPrincipal(aPrincipal)
+      && !aPrincipal->GetIsNullPrincipal()) {
+    nsCOMPtr<nsIStringBundleService> sbs = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+    nsCOMPtr<nsIStringBundle> bundle;
+    nsresult rv = sbs->CreateBundle("chrome://alerts/locale/alert.properties", getter_AddRefs(bundle));
+    if (NS_SUCCEEDED(rv)) {
+      nsXPIDLString closeButtonTitle, actionButtonTitle, disableButtonTitle;
+      bundle->GetStringFromName(NS_LITERAL_STRING("closeButton.title").get(),
+                                getter_Copies(closeButtonTitle));
+      bundle->GetStringFromName(NS_LITERAL_STRING("actionButton.label").get(),
+                                getter_Copies(actionButtonTitle));
+      bundle->GetStringFromName(NS_LITERAL_STRING("webActions.disable.label").get(),
+                                getter_Copies(disableButtonTitle));
+
+      notification.hasActionButton = YES;
+      notification.otherButtonTitle = nsCocoaUtils::ToNSString(closeButtonTitle);
+      notification.actionButtonTitle = nsCocoaUtils::ToNSString(actionButtonTitle);
+      [(NSObject*)notification setValue:@(YES) forKey:@"_showsButtons"];
+      [(NSObject*)notification setValue:@(YES) forKey:@"_alwaysShowAlternateActionMenu"];
+      [(NSObject*)notification setValue:@[
+                                          nsCocoaUtils::ToNSString(disableButtonTitle)
+                                          ]
+                               forKey:@"_alternateActionButtonTitles"];
+    }
+  }
   NSString *alertName = [NSString stringWithCharacters:(const unichar *)aAlertName.BeginReading() length:aAlertName.Length()];
   if (!alertName) {
     return NS_ERROR_FAILURE;
@@ -318,7 +373,9 @@ OSXNotificationCenter::CloseAlertCocoaString(NSString *aAlertName)
 }
 
 void
-OSXNotificationCenter::OnClick(NSString *aAlertName)
+OSXNotificationCenter::OnActivate(NSString *aAlertName,
+                                  NSUserNotificationActivationType aActivationType,
+                                  unsigned long long aAdditionalActionIndex)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -330,7 +387,22 @@ OSXNotificationCenter::OnClick(NSString *aAlertName)
     OSXNotificationInfo *osxni = mActiveAlerts[i];
     if ([aAlertName isEqualToString:osxni->mName]) {
       if (osxni->mObserver) {
-        osxni->mObserver->Observe(nullptr, "alertclickcallback", osxni->mCookie.get());
+        switch (aActivationType) {
+          case NSUserNotificationActivationTypeAdditionalActionClicked:
+          case NSUserNotificationActivationTypeActionButtonClicked:
+            switch (aAdditionalActionIndex) {
+              case OSXNotificationActionDisable:
+                osxni->mObserver->Observe(nullptr, "alertdisablecallback", osxni->mCookie.get());
+                break;
+              default:
+                NS_WARNING("Unknown NSUserNotification additional action clicked");
+                break;
+            }
+            break;
+          default:
+            osxni->mObserver->Observe(nullptr, "alertclickcallback", osxni->mCookie.get());
+            break;
+        }
       }
       return;
     }
