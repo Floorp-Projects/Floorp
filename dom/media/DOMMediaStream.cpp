@@ -308,7 +308,10 @@ DOMMediaStream::InitAudioCaptureStream(nsIDOMWindow* aWindow,
 {
   mWindow = aWindow;
 
-  InitStreamCommon(aGraph->CreateAudioCaptureStream(this));
+  const TrackID AUDIO_TRACK = 1;
+
+  InitStreamCommon(aGraph->CreateAudioCaptureStream(this, AUDIO_TRACK));
+  CreateDOMTrack(AUDIO_TRACK, MediaSegment::AUDIO);
 }
 
 void
