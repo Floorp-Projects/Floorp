@@ -1256,9 +1256,11 @@ class JSPurpleBuffer;
 
 class nsCycleCollector : public nsIMemoryReporter
 {
+public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER
 
+private:
   bool mActivelyCollecting;
   bool mFreeingSnowWhite;
   // mScanInProgress should be false when we're collecting white objects.
