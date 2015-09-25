@@ -3099,7 +3099,7 @@ already_AddRefed<Layer>
 ContainerState::PrepareColorLayer(PaintedLayerData* aData)
 {
   nsRefPtr<ColorLayer> colorLayer = CreateOrRecycleColorLayer(aData->mLayer);
-  colorLayer->SetColor(aData->mSolidColor);
+  colorLayer->SetColor(Color::FromABGR(aData->mSolidColor));
 
   // Copy transform
   colorLayer->SetBaseTransform(aData->mLayer->GetBaseTransform());
