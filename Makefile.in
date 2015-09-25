@@ -132,6 +132,9 @@ endif
 $(addprefix install-,$(filter dist/%,$(install_manifests))): install-dist/%: $(install_manifest_depends)
 	$(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )$(DIST)/$* _build_manifests/install/dist_$*)
 
+# Dummy wrapper rule to allow the faster backend to piggy back
+install-dist_%: install-dist/% ;
+
 install-_tests: $(install_manifest_depends)
 	$(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )_tests _build_manifests/install/tests)
 
