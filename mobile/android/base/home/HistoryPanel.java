@@ -319,6 +319,10 @@ public class HistoryPanel extends HomeFragment {
                 emptyHint.setVisibility(View.VISIBLE);
             }
 
+            if (!RestrictedProfiles.isAllowed(getActivity(), Restriction.DISALLOW_PRIVATE_BROWSING)) {
+                emptyHint.setVisibility(View.GONE);
+            }
+
             mList.setEmptyView(mEmptyView);
         }
     }
