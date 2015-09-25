@@ -20,14 +20,14 @@
 using namespace mozilla::gfx;
 
 gfxPattern::gfxPattern(const Color& aColor)
-  : mExtend(EXTEND_NONE)
+  : mExtend(ExtendMode::CLAMP)
 {
   mGfxPattern.InitColorPattern(ToDeviceColor(aColor));
 }
 
 // linear
 gfxPattern::gfxPattern(gfxFloat x0, gfxFloat y0, gfxFloat x1, gfxFloat y1)
-  : mExtend(EXTEND_NONE)
+  : mExtend(ExtendMode::CLAMP)
 {
   mGfxPattern.InitLinearGradientPattern(Point(x0, y0), Point(x1, y1), nullptr);
 }
@@ -35,7 +35,7 @@ gfxPattern::gfxPattern(gfxFloat x0, gfxFloat y0, gfxFloat x1, gfxFloat y1)
 // radial
 gfxPattern::gfxPattern(gfxFloat cx0, gfxFloat cy0, gfxFloat radius0,
                        gfxFloat cx1, gfxFloat cy1, gfxFloat radius1)
-  : mExtend(EXTEND_NONE)
+  : mExtend(ExtendMode::CLAMP)
 {
   mGfxPattern.InitRadialGradientPattern(Point(cx0, cy0), Point(cx1, cy1),
                                         radius0, radius1, nullptr);
@@ -44,9 +44,9 @@ gfxPattern::gfxPattern(gfxFloat cx0, gfxFloat cy0, gfxFloat radius0,
 // Azure
 gfxPattern::gfxPattern(SourceSurface *aSurface, const Matrix &aPatternToUserSpace)
   : mPatternToUserSpace(aPatternToUserSpace)
-  , mExtend(EXTEND_NONE)
+  , mExtend(ExtendMode::CLAMP)
 {
-  mGfxPattern.InitSurfacePattern(aSurface, ToExtendMode(mExtend), Matrix(), // matrix is overridden in GetPattern()
+  mGfxPattern.InitSurfacePattern(aSurface, mExtend, Matrix(), // matrix is overridden in GetPattern()
                                  mozilla::gfx::Filter::GOOD);
 }
 
@@ -75,8 +75,7 @@ gfxPattern::SetColorStops(GradientStops* aStops)
 void
 gfxPattern::CacheColorStops(const DrawTarget *aDT)
 {
-  mStops = gfxGradientCache::GetOrCreateGradientStops(aDT, mStopsList,
-                                                      ToExtendMode(mExtend));
+  mStops = gfxGradientCache::GetOrCreateGradientStops(aDT, mStopsList, mExtend);
 }
 
 void
@@ -132,15 +131,14 @@ gfxPattern::GetPattern(const DrawTarget *aTarget,
   if (!mStops &&
       !mStopsList.IsEmpty()) {
     mStops = aTarget->CreateGradientStops(mStopsList.Elements(),
-                                          mStopsList.Length(),
-                                          ToExtendMode(mExtend));
+                                          mStopsList.Length(), mExtend);
   }
 
   switch (mGfxPattern.GetPattern()->GetType()) {
   case PatternType::SURFACE: {
     SurfacePattern* surfacePattern = static_cast<SurfacePattern*>(mGfxPattern.GetPattern());
     surfacePattern->mMatrix = patternToUser;
-    surfacePattern->mExtendMode = ToExtendMode(mExtend);
+    surfacePattern->mExtendMode = mExtend;
     break;
   }
   case PatternType::LINEAR_GRADIENT: {
@@ -164,9 +162,9 @@ gfxPattern::GetPattern(const DrawTarget *aTarget,
 }
 
 void
-gfxPattern::SetExtend(GraphicsExtend extend)
+gfxPattern::SetExtend(ExtendMode aExtend)
 {
-  mExtend = extend;
+  mExtend = aExtend;
   mStops = nullptr;
 }
 

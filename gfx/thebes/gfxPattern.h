@@ -60,8 +60,8 @@ public:
         EXTEND_PAD
     };
 
-    // none, repeat, reflect
-    void SetExtend(GraphicsExtend extend);
+    // clamp, repeat, reflect
+    void SetExtend(mozilla::gfx::ExtendMode aExtend);
 
     int CairoStatus();
 
@@ -80,7 +80,7 @@ private:
     mozilla::gfx::Matrix mPatternToUserSpace;
     mozilla::RefPtr<mozilla::gfx::GradientStops> mStops;
     nsTArray<mozilla::gfx::GradientStop> mStopsList;
-    GraphicsExtend mExtend;
+    mozilla::gfx::ExtendMode mExtend;
 };
 
 #endif /* GFX_PATTERN_H */
