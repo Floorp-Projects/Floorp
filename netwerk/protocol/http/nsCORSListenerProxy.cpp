@@ -41,7 +41,6 @@
 #include "nsINetworkInterceptController.h"
 #include "nsNullPrincipal.h"
 #include "nsICorsPreflightCallback.h"
-#include "mozilla/LoadInfo.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -1311,14 +1310,11 @@ nsCORSListenerProxy::StartCORSPreflight(nsIChannel* aRequestChannel,
   nsresult rv = NS_GetFinalChannelURI(aRequestChannel, getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsILoadInfo> originalLoadInfo = aRequestChannel->GetLoadInfo();
-  MOZ_ASSERT(originalLoadInfo, "can not perform CORS preflight without a loadInfo");
-  if (!originalLoadInfo) {
+  nsCOMPtr<nsILoadInfo> loadInfo = aRequestChannel->GetLoadInfo();
+  MOZ_ASSERT(loadInfo, "can not perform CORS preflight without a loadInfo");
+  if (!loadInfo) {
     return NS_ERROR_FAILURE;
   }
-
-  nsCOMPtr<nsILoadInfo> loadInfo = static_cast<mozilla::LoadInfo*>
-    (originalLoadInfo.get())->Clone();
 
   nsSecurityFlags securityMode = loadInfo->GetSecurityMode();
 
