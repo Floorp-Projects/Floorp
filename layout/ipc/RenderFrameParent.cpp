@@ -290,7 +290,6 @@ RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader,
   : mLayersId(0)
   , mFrameLoader(aFrameLoader)
   , mFrameLoaderDestroyed(false)
-  , mBackgroundColor(gfxRGBA(1, 1, 1))
   , mAsyncPanZoomEnabled(false)
 {
   *aId = 0;
