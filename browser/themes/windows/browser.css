@@ -33,7 +33,7 @@
   --toolbarbutton-active-bordercolor: rgba(0,0,0,.15);
   --toolbarbutton-active-boxshadow: 0 0 0 1px rgba(0,0,0,.15) inset;
 
-  --toolbarbutton-checkedhover-backgroundcolor: rgba(0,0,0,.15);
+  --toolbarbutton-checkedhover-backgroundcolor: rgba(0,0,0,.1);
 
   --identity-box-verified-background-color: #fff;
 
@@ -59,6 +59,8 @@
   --toolbarbutton-active-background: rgba(255,255,255,.3);
   --toolbarbutton-active-bordercolor: rgba(255,255,255,.3);
   --toolbarbutton-active-boxshadow: 0 0 0 1px rgba(255,255,255,.3) inset;
+
+  --toolbarbutton-checkedhover-backgroundcolor: rgba(255,255,255,.2);
 }
 
 #menubar-items {
