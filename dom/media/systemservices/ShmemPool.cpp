@@ -94,6 +94,13 @@ mozilla::ShmemBuffer ShmemPool::Get(T* aInstance, size_t aSize)
   }
 
   mPoolFree--;
+#ifdef DEBUG
+  size_t poolUse = mShmemPool.Length() - mPoolFree;
+  if (poolUse > mMaxPoolUse) {
+    mMaxPoolUse = poolUse;
+    LOG(("Maximum ShmemPool use increased: %d buffers", mMaxPoolUse));
+  }
+#endif
   return res;
 }
 
