@@ -80,6 +80,9 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     COULD_NOT_CONNECT: "reason-could-not-connect",
     NETWORK_DISCONNECTED: "reason-network-disconnected",
     EXPIRED_OR_INVALID: "reason-expired-or-invalid",
+    // TOS_FAILURE reflects the sdk error code 1026:
+    // https://tokbox.com/developer/sdks/js/reference/ExceptionEvent.html
+    TOS_FAILURE: "reason-tos-failure",
     UNKNOWN: "reason-unknown"
   };
 
