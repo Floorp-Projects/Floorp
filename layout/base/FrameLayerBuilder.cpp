@@ -3268,7 +3268,9 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
     // its clip in ProcessDisplayItems() and saved it to set on the layer instead.
     // Set the clip on the layer now.
     if (data->mSingleItemFixedToViewport && data->mItemClip.HasClip()) {
-      data->mLayer->SetClipRect(Some(ViewAs<ParentLayerPixel>(ScaleToNearestPixels(data->mItemClip.GetClipRect()))));
+      nsIntRect layerClipRect = ScaleToNearestPixels(data->mItemClip.GetClipRect());
+      layerClipRect.MoveBy(mParameters.mOffset);
+      data->mLayer->SetClipRect(Some(ViewAs<ParentLayerPixel>(layerClipRect)));
       // There is only one item, so all of the clips are in common to all items.
       // data->mCommonClipCount will be zero because we removed the clip from
       // the display item. (It could also be -1 if we're inside an inactive
