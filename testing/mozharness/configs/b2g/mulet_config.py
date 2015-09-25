@@ -20,8 +20,8 @@ config = {
                 "--this-chunk=%(this_chunk)s",
                 "--symbols-path=%(symbols_path)s",
                 "--enable-oop",
+                "%(test_manifest)s"
             ],
-            "tests": ["%(test_manifest)s"]
         }
     },
     "run_file_names": {

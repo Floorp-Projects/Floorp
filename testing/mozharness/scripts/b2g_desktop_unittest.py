@@ -139,7 +139,6 @@ class B2GDesktopTest(BlobUploadMixin, TestingMixin, MercurialScript):
                                     '%s_raw.log' % suite)
         error_summary_file = os.path.join(dirs['abs_blob_upload_dir'],
                                           '%s_errorsummary.log' % suite)
-
         str_format_values = {
             'application': self.binary_path,
             'test_manifest': self.test_manifest,
@@ -157,15 +156,16 @@ class B2GDesktopTest(BlobUploadMixin, TestingMixin, MercurialScript):
         if suite not in self.config["suite_definitions"]:
             self.fatal("'%s' not defined in the config!" % suite)
 
-        try_options, try_tests = self.try_args(suite)
+        options = self.config["suite_definitions"][suite]["options"]
+        if options:
+            for option in options:
+                option = option % str_format_values
+                if not option.endswith('None'):
+                    cmd.append(option)
 
-        cmd.extend(self.query_options(self.config["suite_definitions"][suite]["options"],
-                                      try_options,
-                                      str_format_values=str_format_values))
-
-        cmd.extend(self.query_tests_args(self.config["suite_definitions"][suite].get("tests"),
-                                         try_tests,
-                                         str_format_values=str_format_values))
+        tests = self.config["suite_definitions"][suite].get("tests")
+        if tests:
+            cmd.extend(tests)
 
         return cmd
 
@@ -200,6 +200,7 @@ class B2GDesktopTest(BlobUploadMixin, TestingMixin, MercurialScript):
             self.fatal("Don't know how to run --test-suite '%s'!" % suite)
 
         cmd = self._query_abs_base_cmd(suite)
+        cmd = self.append_harness_extra_args(cmd)
 
         cwd = dirs['abs_%s_dir' % suite]
 
