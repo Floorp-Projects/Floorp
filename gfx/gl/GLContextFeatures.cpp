@@ -548,6 +548,20 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
+        // Do we have separate DRAW and READ framebuffer bind points?
+        "split_framebuffer",
+        GLVersion::GL3,
+        GLESVersion::ES3,
+        GLContext::ARB_framebuffer_object,
+        {
+            GLContext::ANGLE_framebuffer_blit,
+            GLContext::APPLE_framebuffer_multisample,
+            GLContext::EXT_framebuffer_blit,
+            GLContext::NV_framebuffer_blit,
+            GLContext::Extensions_End
+        }
+    },
+    {
         "standard_derivatives",
         GLVersion::GL2,
         GLESVersion::ES3,

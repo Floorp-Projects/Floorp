@@ -62,7 +62,7 @@ ScopedGLState::UnwrapImpl()
 void
 ScopedBindFramebuffer::Init()
 {
-    if (mGL->IsSupported(GLFeature::framebuffer_blit)) {
+    if (mGL->IsSupported(GLFeature::split_framebuffer)) {
         mOldReadFB = mGL->GetReadFB();
         mOldDrawFB = mGL->GetDrawFB();
     } else {
