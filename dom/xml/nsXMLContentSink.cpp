@@ -96,7 +96,8 @@ NS_NewXMLContentSink(nsIXMLContentSink** aResult,
 }
 
 nsXMLContentSink::nsXMLContentSink()
-  : mPrettyPrintXML(true)
+  : mConstrainSize(true),
+    mPrettyPrintXML(true)
 {
 }
 
@@ -474,6 +475,7 @@ nsXMLContentSink::CreateElement(const char16_t** aAtts, uint32_t aAttsCount,
     nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(content);
     sele->SetScriptLineNumber(aLineNumber);
     sele->SetCreatorParser(GetParser());
+    mConstrainSize = false;
   }
 
   // XHTML needs some special attention
@@ -550,6 +552,7 @@ nsXMLContentSink::CloseElement(nsIContent* aContent)
   if (nodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XHTML)
       || nodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_SVG)
     ) {
+    mConstrainSize = true;
     nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(aContent);
 
     if (mPreventScriptExecution) {
@@ -775,19 +778,26 @@ nsXMLContentSink::FlushText(bool aReleaseTextNode)
 
   if (mTextLength != 0) {
     if (mLastTextNode) {
-      bool notify = HaveNotifiedForCurrentContent();
-      // We could probably always increase mInNotification here since
-      // if AppendText doesn't notify it shouldn't trigger evil code.
-      // But just in case it does, we don't want to mask any notifications.
-      if (notify) {
-        ++mInNotification;
-      }
-      rv = mLastTextNode->AppendText(mText, mTextLength, notify);
-      if (notify) {
-        --mInNotification;
-      }
+      if ((mLastTextNodeSize + mTextLength) > mTextSize && !mXSLTProcessor) {
+        mLastTextNodeSize = 0;
+        mLastTextNode = nullptr;
+        FlushText(aReleaseTextNode);
+      } else {
+        bool notify = HaveNotifiedForCurrentContent();
+        // We could probably always increase mInNotification here since
+        // if AppendText doesn't notify it shouldn't trigger evil code.
+        // But just in case it does, we don't want to mask any notifications.
+        if (notify) {
+          ++mInNotification;
+        }
+        rv = mLastTextNode->AppendText(mText, mTextLength, notify);
+        if (notify) {
+          --mInNotification;
+        }
 
-      mTextLength = 0;
+        mLastTextNodeSize += mTextLength;
+        mTextLength = 0;
+      }
     } else {
       nsRefPtr<nsTextNode> textContent = new nsTextNode(mNodeInfoManager);
 
@@ -795,6 +805,7 @@ nsXMLContentSink::FlushText(bool aReleaseTextNode)
 
       // Set the text in the text node
       textContent->SetText(mText, mTextLength, false);
+      mLastTextNodeSize += mTextLength;
       mTextLength = 0;
 
       // Add text to its parent
@@ -803,6 +814,7 @@ nsXMLContentSink::FlushText(bool aReleaseTextNode)
   }
 
   if (aReleaseTextNode) {
+    mLastTextNodeSize = 0;
     mLastTextNode = nullptr;
   }
 
@@ -1434,20 +1446,40 @@ nsXMLContentSink::AddText(const char16_t* aText,
     mTextSize = NS_ACCUMULATION_BUFFER_SIZE;
   }
 
-  // Copy data from string into our buffer, resizing the buffer if
-  // it's not big enough.
-  int32_t availableSpace = mTextSize - mTextLength;
-  if (availableSpace < aLength) {
-    mTextSize = mTextLength + aLength;
-    mText = (char16_t *) PR_REALLOC(mText, sizeof(char16_t) * mTextSize);
-    if (nullptr == mText) {
-      mTextSize = 0;
+  // Copy data from string into our buffer; flush buffer when it fills up
+  int32_t offset = 0;
+  while (0 != aLength) {
+    int32_t amount = mTextSize - mTextLength;
+    if (0 == amount) {
+      // XSLT wants adjacent textnodes merged.
+      if (mConstrainSize && !mXSLTProcessor) {
+        nsresult rv = FlushText();
+        if (NS_OK != rv) {
+          return rv;
+        }
 
-      return NS_ERROR_OUT_OF_MEMORY;
+        amount = mTextSize - mTextLength;
+      }
+      else {
+        mTextSize += aLength;
+        mText = (char16_t *) PR_REALLOC(mText, sizeof(char16_t) * mTextSize);
+        if (nullptr == mText) {
+          mTextSize = 0;
+
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        amount = aLength;
+      }
     }
+    if (amount > aLength) {
+      amount = aLength;
+    }
+    memcpy(&mText[mTextLength], &aText[offset], sizeof(char16_t) * amount);
+    mTextLength += amount;
+    offset += amount;
+    aLength -= amount;
   }
-  memcpy(&mText[mTextLength], aText, sizeof(char16_t) * aLength);
-  mTextLength += aLength;
 
   return NS_OK;
 }
