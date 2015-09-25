@@ -1594,10 +1594,5 @@ Color ToDeviceColor(nscolor aColor)
   return ToDeviceColor(Color::FromABGR(aColor));
 }
 
-Color ToDeviceColor(const gfxRGBA& aColor)
-{
-  return ToDeviceColor(ToColor(aColor));
-}
-
 } // namespace gfx
 } // namespace mozilla
