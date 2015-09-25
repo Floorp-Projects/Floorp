@@ -97,15 +97,14 @@ gfxSurfaceDrawable::DrawInternal(gfxContext* aContext,
     Rect fillRect = ToRect(aFillRect);
     DrawTarget* dt = aContext->GetDrawTarget();
 
-    if (aContext->CurrentOperator() == gfxContext::OPERATOR_SOURCE &&
+    if (aContext->CurrentOp() == CompositionOp::OP_SOURCE &&
         aOpacity == 1.0) {
         // Emulate cairo operator source which is bound by mask!
         dt->ClearRect(fillRect);
         dt->FillRect(fillRect, pattern);
     } else {
         dt->FillRect(fillRect, pattern,
-                     DrawOptions(aOpacity,
-                                 CompositionOpForOp(aContext->CurrentOperator()),
+                     DrawOptions(aOpacity, aContext->CurrentOp(),
                                  aContext->CurrentAntialiasMode()));
     }
 }

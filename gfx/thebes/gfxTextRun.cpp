@@ -556,7 +556,7 @@ struct BufferAlphaColor {
     {
         // pop the text, using the color alpha as the opacity
         mContext->PopGroupToSource();
-        mContext->SetOperator(gfxContext::OPERATOR_OVER);
+        mContext->SetOp(CompositionOp::OP_OVER);
         mContext->Paint(mAlpha);
         mContext->Restore();
     }
