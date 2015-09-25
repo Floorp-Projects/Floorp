@@ -313,11 +313,18 @@ var gFxAccounts = {
           this.panelUILabel.setAttribute("label", profile.displayName);
         }
         if (profile.avatar) {
+          this.panelUIFooter.setAttribute("fxaprofileimage", "set");
+          let bgImage = "url(\"" + profile.avatar + "\")";
+          this.panelUIAvatar.style.listStyleImage = bgImage;
+
           let img = new Image();
-          // Make sure the image is available before attempting to display it
-          img.onload = () => {
-            this.panelUIFooter.setAttribute("fxaprofileimage", "set");
-            this.panelUIAvatar.style.listStyleImage = "url('" + profile.avatar + "')";
+          img.onerror = () => {
+            // Clear the image if it has trouble loading. Since this callback is asynchronous
+            // we check to make sure the image is still the same before we clear it.
+            if (this.panelUIAvatar.style.listStyleImage === bgImage) {
+              this.panelUIFooter.removeAttribute("fxaprofileimage");
+              this.panelUIAvatar.style.removeProperty("list-style-image");
+            }
           };
           img.src = profile.avatar;
         }
