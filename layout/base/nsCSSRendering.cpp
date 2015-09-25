@@ -3006,10 +3006,10 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
         nsBackgroundLayerState state = PrepareBackgroundLayer(aPresContext, aForFrame,
             aFlags, paintBorderArea, clipState.mBGClipArea, layer);
         if (!state.mFillArea.IsEmpty()) {
-          if (state.mCompositingOp != gfxContext::OPERATOR_OVER) {
-            NS_ASSERTION(ctx->CurrentOperator() == gfxContext::OPERATOR_OVER,
-                         "It is assumed the initial operator is OPERATOR_OVER, when it is restored later");
-            ctx->SetOperator(state.mCompositingOp);
+          if (state.mCompositionOp != CompositionOp::OP_OVER) {
+            NS_ASSERTION(ctx->CurrentOp() == CompositionOp::OP_OVER,
+                         "It is assumed the initial op is OP_OVER, when it is restored later");
+            ctx->SetOp(state.mCompositionOp);
           }
 
           DrawResult resultForLayer =
@@ -3022,8 +3022,8 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
             result = resultForLayer;
           }
 
-          if (state.mCompositingOp != gfxContext::OPERATOR_OVER) {
-            ctx->SetOperator(gfxContext::OPERATOR_OVER);
+          if (state.mCompositionOp != CompositionOp::OP_OVER) {
+            ctx->SetOp(CompositionOp::OP_OVER);
           }
         }
       }
@@ -3327,7 +3327,7 @@ nsCSSRendering::PrepareBackgroundLayer(nsPresContext* aPresContext,
   }
   state.mFillArea.IntersectRect(state.mFillArea, bgClipRect);
 
-  state.mCompositingOp = GetGFXBlendMode(aLayer.mBlendMode);
+  state.mCompositionOp = GetGFXBlendMode(aLayer.mBlendMode);
 
   return state;
 }
@@ -4987,10 +4987,10 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
       }
 
       gfxContext* ctx = aRenderingContext.ThebesContext();
-      gfxContext::GraphicsOperator op = ctx->CurrentOperator();
-      if (op != gfxContext::OPERATOR_OVER) {
+      CompositionOp op = ctx->CurrentOp();
+      if (op != CompositionOp::OP_OVER) {
         ctx->PushGroup(gfxContentType::COLOR_ALPHA);
-        ctx->SetOperator(gfxContext::OPERATOR_OVER);
+        ctx->SetOp(CompositionOp::OP_OVER);
       }
 
       nsCOMPtr<imgIContainer> image(ImageOps::CreateFromDrawable(drawable));
@@ -4999,7 +4999,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
                                filter, aDest, aFill, aAnchor, aDirtyRect,
                                ConvertImageRendererToDrawFlags(mFlags));
 
-      if (op != gfxContext::OPERATOR_OVER) {
+      if (op != CompositionOp::OP_OVER) {
         ctx->PopGroupToSource();
         ctx->Paint();
       }
