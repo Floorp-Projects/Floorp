@@ -9,6 +9,7 @@ var gContentWindow;
 
 function test() {
   UITourTest();
+  requestLongerTimeout(2);
 }
 
 function getHeartbeatNotification(aId, aChromeWindow = window) {
