@@ -26,7 +26,7 @@ class AudioParam final : public nsWrapperCache,
   virtual ~AudioParam();
 
 public:
-  typedef void (*CallbackType)(AudioNode*);
+  typedef void (*CallbackType)(AudioNode* aNode, const AudioTimelineEvent&);
 
   AudioParam(AudioNode* aNode,
              CallbackType aCallback,
@@ -58,68 +58,86 @@ public:
       return;
     }
     aValues.ComputeLengthAndData();
-    AudioParamTimeline::SetValueCurveAtTime(aValues.Data(), aValues.Length(),
-                                            DOMTimeToStreamTime(aStartTime), aDuration, aRv);
-    mCallback(mNode);
+
+    EventInsertionHelper(aRv, AudioTimelineEvent::SetValueCurve,
+                         aStartTime, 0.0f, 0.0f, aDuration, aValues.Data(),
+                         aValues.Length());
   }
 
-  // We override the rest of the mutating AudioParamTimeline methods in order to make
-  // sure that the callback is called every time that this object gets mutated.
   void SetValue(float aValue)
   {
-    // Optimize away setting the same value on an AudioParam
-    if (HasSimpleValue() &&
-        WebAudioUtils::FuzzyEqual(GetValue(), aValue)) {
+    AudioTimelineEvent event(AudioTimelineEvent::SetValue, 0.0f, aValue);
+
+    ErrorResult rv;
+    if (!ValidateEvent(event, rv)) {
+      MOZ_ASSERT(false, "This should not happen, "
+                        "setting the value should always work");
       return;
     }
+
     AudioParamTimeline::SetValue(aValue);
-    mCallback(mNode);
+
+    mCallback(mNode, event);
   }
+
   void SetValueAtTime(float aValue, double aStartTime, ErrorResult& aRv)
   {
     if (!WebAudioUtils::IsTimeValid(aStartTime)) {
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
       return;
     }
-    AudioParamTimeline::SetValueAtTime(aValue, DOMTimeToStreamTime(aStartTime), aRv);
-    mCallback(mNode);
+    EventInsertionHelper(aRv, AudioTimelineEvent::SetValueAtTime,
+                         aStartTime, aValue);
   }
+
   void LinearRampToValueAtTime(float aValue, double aEndTime, ErrorResult& aRv)
   {
     if (!WebAudioUtils::IsTimeValid(aEndTime)) {
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
       return;
     }
-    AudioParamTimeline::LinearRampToValueAtTime(aValue, DOMTimeToStreamTime(aEndTime), aRv);
-    mCallback(mNode);
+    EventInsertionHelper(aRv, AudioTimelineEvent::LinearRamp, aEndTime, aValue);
   }
+
   void ExponentialRampToValueAtTime(float aValue, double aEndTime, ErrorResult& aRv)
   {
     if (!WebAudioUtils::IsTimeValid(aEndTime)) {
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
       return;
     }
-    AudioParamTimeline::ExponentialRampToValueAtTime(aValue, DOMTimeToStreamTime(aEndTime), aRv);
-    mCallback(mNode);
+    EventInsertionHelper(aRv, AudioTimelineEvent::ExponentialRamp,
+                         aEndTime, aValue);
   }
-  void SetTargetAtTime(float aTarget, double aStartTime, double aTimeConstant, ErrorResult& aRv)
+
+  void SetTargetAtTime(float aTarget, double aStartTime,
+                       double aTimeConstant, ErrorResult& aRv)
   {
     if (!WebAudioUtils::IsTimeValid(aStartTime) ||
         !WebAudioUtils::IsTimeValid(aTimeConstant)) {
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
       return;
     }
-    AudioParamTimeline::SetTargetAtTime(aTarget, DOMTimeToStreamTime(aStartTime), aTimeConstant, aRv);
-    mCallback(mNode);
+    EventInsertionHelper(aRv, AudioTimelineEvent::SetTarget,
+                         aStartTime, aTarget,
+                         aTimeConstant);
   }
+
   void CancelScheduledValues(double aStartTime, ErrorResult& aRv)
   {
     if (!WebAudioUtils::IsTimeValid(aStartTime)) {
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
       return;
     }
-    AudioParamTimeline::CancelScheduledValues(DOMTimeToStreamTime(aStartTime));
-    mCallback(mNode);
+
+    double streamTime = DOMTimeToStreamTime(aStartTime);
+
+    // Remove some events on the main thread copy.
+    AudioEventTimeline::CancelScheduledValues(streamTime);
+
+    AudioTimelineEvent event(AudioTimelineEvent::Cancel,
+                             streamTime, 0.0f);
+
+    mCallback(mNode, event);
   }
 
   uint32_t ParentNodeId()
@@ -188,6 +206,27 @@ protected:
   NS_DECL_OWNINGTHREAD
 
 private:
+  void EventInsertionHelper(ErrorResult& aRv,
+                            AudioTimelineEvent::Type aType,
+                            double aTime, float aValue,
+                            double aTimeConstant = 0.0,
+                            float aDuration = 0.0,
+                            const float* aCurve = nullptr,
+                            uint32_t aCurveLength = 0)
+  {
+    AudioTimelineEvent event(aType,
+                             DOMTimeToStreamTime(aTime), aValue,
+                             aTimeConstant, aDuration, aCurve, aCurveLength);
+
+    if (!ValidateEvent(event, aRv)) {
+      return;
+    }
+
+    AudioEventTimeline::InsertEvent<double>(event);
+
+    mCallback(mNode, event);
+  }
+
   nsRefPtr<AudioNode> mNode;
   // For every InputNode, there is a corresponding entry in mOutputParams of the
   // InputNode's mInputNode.

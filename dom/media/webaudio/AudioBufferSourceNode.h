@@ -129,8 +129,10 @@ private:
   void SendLoopParametersToStream();
   void SendBufferParameterToStream(JSContext* aCx);
   void SendOffsetAndDurationParametersToStream(AudioNodeStream* aStream);
-  static void SendPlaybackRateToStream(AudioNode* aNode);
-  static void SendDetuneToStream(AudioNode* aNode);
+  static void SendPlaybackRateToStream(AudioNode* aNode,
+                                       const AudioTimelineEvent& aEvent);
+  static void SendDetuneToStream(AudioNode* aNode,
+                                 const AudioTimelineEvent& aEvent);
 
 private:
   double mLoopStart;
