@@ -2617,7 +2617,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
 
   mInstance->HandleEvent(&event, nullptr);
 
-  aContext->SetOperator(gfxContext::OPERATOR_SOURCE);
+  aContext->SetOp(gfx::CompositionOp::OP_SOURCE);
   aContext->SetSource(pluginSurface, gfxPoint(aFrameRect.x, aFrameRect.y));
   aContext->Clip(aFrameRect);
   aContext->Paint();

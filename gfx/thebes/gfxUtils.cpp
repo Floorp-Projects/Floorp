@@ -397,20 +397,17 @@ IsSafeImageTransformComponent(gfxFloat aValue)
  * alpha channel or their alpha channel is uniformly opaque.
  * This differs per render mode.
  */
-static gfxContext::GraphicsOperator
-OptimalFillOperator()
+static CompositionOp
+OptimalFillOp()
 {
 #ifdef XP_WIN
     if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
         gfxWindowsPlatform::RENDER_DIRECT2D) {
         // D2D -really- hates operator source.
-        return gfxContext::OPERATOR_OVER;
-    } else {
-#endif
-        return gfxContext::OPERATOR_SOURCE;
-#ifdef XP_WIN
+        return CompositionOp::OP_OVER;
     }
 #endif
+    return CompositionOp::OP_SOURCE;
 }
 
 // EXTEND_PAD won't help us here; we have to create a temporary surface to hold
@@ -455,7 +452,7 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
     }
 
     nsRefPtr<gfxContext> tmpCtx = new gfxContext(target);
-    tmpCtx->SetOperator(OptimalFillOperator());
+    tmpCtx->SetOp(OptimalFillOp());
     aDrawable->Draw(tmpCtx, needed - needed.TopLeft(), true,
                     GraphicsFilter::FILTER_FAST, 1.0, gfxMatrix::Translation(needed.TopLeft()));
     RefPtr<SourceSurface> surface = target->Snapshot();
@@ -506,7 +503,7 @@ struct MOZ_STACK_CLASS AutoCairoPixmanBugWorkaround
         mContext->Clip(bounds);
         mContext->SetMatrix(currentMatrix);
         mContext->PushGroup(gfxContentType::COLOR_ALPHA);
-        mContext->SetOperator(gfxContext::OPERATOR_OVER);
+        mContext->SetOp(CompositionOp::OP_OVER);
 
         mPushedGroup = true;
     }
@@ -694,9 +691,8 @@ PrescaleAndTileDrawable(gfxDrawable* aDrawable,
     withoutScale.PreScale(1.0 / scaleFactor.width, 1.0 / scaleFactor.height);
     aContext->SetMatrix(ThebesMatrix(withoutScale));
 
-    DrawOptions drawOptions(aOpacity,
-        CompositionOpForOp(aContext->CurrentOperator()),
-        aContext->CurrentAntialiasMode());
+    DrawOptions drawOptions(aOpacity, aContext->CurrentOp(),
+                            aContext->CurrentAntialiasMode());
 
     SurfacePattern scaledImagePattern(scaledImage, ExtendMode::REPEAT,
                                       Matrix(), ToFilter(aFilter));

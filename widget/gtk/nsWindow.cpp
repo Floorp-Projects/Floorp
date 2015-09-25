@@ -2237,7 +2237,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 
                 UpdateAlpha(pattern, boundsRect);
 
-                ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+                ctx->SetOp(CompositionOp::OP_SOURCE);
                 ctx->SetPattern(pattern);
                 ctx->Paint();
             }
