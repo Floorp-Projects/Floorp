@@ -46,6 +46,7 @@ class ContextDerivedValue(object):
     """Classes deriving from this one receive a special treatment in a
     Context. See Context documentation.
     """
+    __slots__ = ()
 
 
 class Context(KeyedDefaultDict):
@@ -487,6 +488,38 @@ def ContextDerivedTypedListWithItems(type, base_class=List):
 
     return _TypedListWithItems
 
+
+@memoize
+def ContextDerivedTypedRecord(*fields):
+    """Factory for objects with certain properties and dynamic
+    type checks.
+
+    This API is extremely similar to the TypedNamedTuple API,
+    except that properties may be mutated. This supports syntax like:
+
+    VARIABLE_NAME.property += [
+      'item1',
+      'item2',
+    ]
+    """
+
+    class _TypedRecord(ContextDerivedValue):
+        __slots__ = tuple([name for name, _ in fields])
+
+        def __init__(self, context):
+            for fname, ftype in self._fields.items():
+                if issubclass(ftype, ContextDerivedValue):
+                    setattr(self, fname, self._fields[fname](context))
+                else:
+                    setattr(self, fname, self._fields[fname]())
+
+        def __setattr__(self, name, value):
+            if name in self._fields and not isinstance(value, self._fields[name]):
+                value = self._fields[name](value)
+            object.__setattr__(self, name, value)
+
+    _TypedRecord._fields = dict(fields)
+    return _TypedRecord
 
 BugzillaComponent = TypedNamedTuple('BugzillaComponent',
                         [('product', unicode), ('component', unicode)])
