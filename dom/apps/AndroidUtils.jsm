@@ -57,7 +57,8 @@ this.AndroidUtils = {
     // We put the version with the normal case as part of the manifest url.
     let [origin, manifestURL] =
       this.getOriginAndManifestURL(aApp.packagename);
-    // TODO: Bug 1204557 to improve the icons support.
+    // We choose 96 as an arbitrary size since we can only get one icon
+    // from Android.
     let manifest = {
       name: aApp.name,
       icons: { "96": aApp.icon }
