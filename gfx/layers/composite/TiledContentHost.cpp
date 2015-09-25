@@ -408,7 +408,7 @@ TiledContentHost::Composite(LayerComposite* aLayer,
   // already has some opacity, we want to skip this behaviour. Otherwise
   // we end up changing the expected overall transparency of the content,
   // and it just looks wrong.
-  gfxRGBA backgroundColor(0);
+  Color backgroundColor;
   if (aOpacity == 1.0f && gfxPrefs::LowPrecisionOpacity() < 1.0f) {
     // Background colors are only stored on scrollable layers. Grab
     // the one from the nearest scrollable ancestor layer.
@@ -511,7 +511,7 @@ TiledContentHost::RenderTile(TileHost& aTile,
 
 void
 TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
-                                    const gfxRGBA* aBackgroundColor,
+                                    const Color* aBackgroundColor,
                                     EffectChain& aEffectChain,
                                     float aOpacity,
                                     const gfx::Filter& aFilter,
@@ -569,7 +569,7 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
     nsIntRegion backgroundRegion = compositeRegion;
     backgroundRegion.ScaleRoundOut(resolution, resolution);
     EffectChain effect;
-    effect.mPrimaryEffect = new EffectSolidColor(ToColor(*aBackgroundColor));
+    effect.mPrimaryEffect = new EffectSolidColor(*aBackgroundColor);
     nsIntRegionRectIterator it(backgroundRegion);
     for (const IntRect* rect = it.Next(); rect != nullptr; rect = it.Next()) {
       Rect graphicsRect(rect->x, rect->y, rect->width, rect->height);
