@@ -311,7 +311,6 @@ namespace gfx {
  */
 Color ToDeviceColor(Color aColor);
 Color ToDeviceColor(nscolor aColor);
-Color ToDeviceColor(const gfxRGBA& aColor);
 
 /* These techniques are suggested by "Bit Twiddling Hacks"
  */
