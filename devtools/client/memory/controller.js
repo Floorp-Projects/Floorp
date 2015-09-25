@@ -19,10 +19,10 @@ var gToolbox, gTarget, gFront;
  */
 const MemoryController = {
   initialize: Task.async(function *() {
-    yield gFront.attach();
+
   }),
 
   destroy: Task.async(function *() {
-    yield gFront.detach();
+
   })
 };
