@@ -248,7 +248,7 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
   notification.hasActionButton = NO;
 
   // If this is not an application/extension alert, show additional actions dealing with permissions.
-  if (!nsContentUtils::IsSystemOrExpandedPrincipal(aPrincipal)
+  if (aPrincipal && !nsContentUtils::IsSystemOrExpandedPrincipal(aPrincipal)
       && !aPrincipal->GetIsNullPrincipal()) {
     nsCOMPtr<nsIStringBundleService> sbs = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
     nsCOMPtr<nsIStringBundle> bundle;
