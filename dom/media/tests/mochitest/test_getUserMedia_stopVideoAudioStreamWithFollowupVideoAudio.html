@@ -21,7 +21,7 @@
         var testVideo = createMediaElement('video', 'testVideo');
         var streamPlayback = new LocalMediaStreamPlayback(testVideo, stream);
 
-        return streamPlayback.playMediaWithDeprecatedStreamStop(false)
+        return streamPlayback.playMediaWithStreamStop(false)
           .then(() => getUserMedia({video: true, audio: true}))
           .then(secondStream => {
             streamPlayback.mediaStream = secondStream;

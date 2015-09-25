@@ -18,7 +18,7 @@
         var testVideo = createMediaElement('video', 'testVideo');
         var playback = new LocalMediaStreamPlayback(testVideo, stream);
 
-        return playback.playMediaWithDeprecatedStreamStop(false);
+        return playback.playMediaWithStreamStop(false);
       });
   });
 
