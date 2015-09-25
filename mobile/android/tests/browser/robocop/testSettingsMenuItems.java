@@ -152,7 +152,6 @@ public class testSettingsMenuItems extends PixelTest {
         // Waiting for page title to appear to be sure that is fully loaded before opening the menu
         mAsserter.ok(mSolo.waitForText(mStringHelper.TITLE_PLACE_HOLDER), "about:home did not load",
                 mStringHelper.TITLE_PLACE_HOLDER);
-        verifyUrl(mStringHelper.ABOUT_HOME_URL);
 
         selectMenuItem(mStringHelper.SETTINGS_LABEL);
         mAsserter.ok(mSolo.waitForText(mStringHelper.SETTINGS_LABEL),
