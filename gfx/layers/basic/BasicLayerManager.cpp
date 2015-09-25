@@ -811,15 +811,7 @@ BasicLayerManager::PaintSelfOrChildren(PaintLayerContext& aPaintContext,
     nsAutoTArray<Layer*, 12> children;
     container->SortChildrenBy3DZOrder(children);
     for (uint32_t i = 0; i < children.Length(); i++) {
-      Layer* layer = children.ElementAt(i);
-      if (layer->IsBackfaceHidden()) {
-        continue;
-      }
-      if (!layer->AsContainerLayer() && !layer->IsVisible()) {
-        continue;
-      }
-
-      PaintLayer(aGroupTarget, layer, aPaintContext.mCallback,
+      PaintLayer(aGroupTarget, children.ElementAt(i), aPaintContext.mCallback,
           aPaintContext.mCallbackData);
       if (mTransactionIncomplete)
         break;
@@ -851,41 +843,6 @@ BasicLayerManager::FlushGroup(PaintLayerContext& aPaintContext, bool aNeedsClipT
     PaintWithMask(aPaintContext.mTarget, aPaintContext.mLayer->GetEffectiveOpacity(),
                   aPaintContext.mLayer->GetMaskLayer());
   }
-}
-
-/**
- * Install the clip applied to the layer on the given gfxContext.  The
- * given gfxContext is the buffer that the layer will be painted to.
- */
-static void
-InstallLayerClipPreserves3D(gfxContext* aTarget, Layer* aLayer)
-{
-  const Maybe<ParentLayerIntRect> &clipRect = aLayer->GetEffectiveClipRect();
-
-  if (!clipRect) {
-    return;
-  }
-
-  Layer* parent = aLayer->GetParent();
-  Matrix4x4 transform3d =
-    parent && parent->Extend3DContext() ?
-    parent->GetEffectiveTransform() :
-    Matrix4x4();
-  Matrix transform;
-  if (!transform3d.CanDraw2D(&transform)) {
-    MOZ_CRASH("We should not have a 3D transform that CanDraw2D() is false!");
-    return;
-  }
-  gfxMatrix oldTransform = aTarget->CurrentMatrix();
-  transform *= ToMatrix(oldTransform);
-  aTarget->SetMatrix(ThebesMatrix(transform));
-
-  aTarget->NewPath();
-  aTarget->SnappedRectangle(gfxRect(clipRect->x, clipRect->y,
-                                    clipRect->width, clipRect->height));
-  aTarget->Clip();
-
-  aTarget->SetMatrix(oldTransform);
 }
 
 void
@@ -927,24 +884,17 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
   gfxMatrix transform;
   // Will return an identity matrix for 3d transforms, and is handled separately below.
   bool is2D = paintLayerContext.Setup2DTransform();
-  MOZ_ASSERT(is2D || needsGroup || !container ||
-             container->Extend3DContext() ||
-             container->Is3DContextLeaf(),
-             "Must PushGroup for 3d transforms!");
+  MOZ_ASSERT(is2D || needsGroup || !container, "Must PushGroup for 3d transforms!");
 
-  Layer* parent = aLayer->GetParent();
-  bool inPreserves3DChain = parent && parent->Extend3DContext();
   bool needsSaveRestore =
-    needsGroup || clipRect || needsClipToVisibleRegion || !is2D ||
-    inPreserves3DChain;
+    needsGroup || clipRect || needsClipToVisibleRegion || !is2D;
   if (needsSaveRestore) {
     contextSR.SetContext(aTarget);
 
-    // The clips on ancestors on the preserved3d chain should be
-    // installed on the aTarget before painting the layer.
-    InstallLayerClipPreserves3D(aTarget, aLayer);
-    for (Layer* l = parent; l && l->Extend3DContext(); l = l->GetParent()) {
-      InstallLayerClipPreserves3D(aTarget, l);
+    if (clipRect) {
+      aTarget->NewPath();
+      aTarget->SnappedRectangle(gfxRect(clipRect->x, clipRect->y, clipRect->width, clipRect->height));
+      aTarget->Clip();
     }
   }
 
@@ -979,11 +929,6 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
       PaintSelfOrChildren(paintLayerContext, aTarget);
     }
   } else {
-    if (!needsGroup && container) {
-      PaintSelfOrChildren(paintLayerContext, aTarget);
-      return;
-    }
-
     const IntRect& bounds = visibleRegion.GetBounds();
     RefPtr<DrawTarget> untransformedDT =
       gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(IntSize(bounds.width, bounds.height),

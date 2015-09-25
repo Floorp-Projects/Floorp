@@ -1659,7 +1659,7 @@ skip-if(Android||B2G||Mulet) random-if(winWidget) == 632781-verybig.html 632781-
 fuzzy-if(d2d&&/^Windows\x20NT\x206\.2/.test(http.oscpu),1,559) == 633344-1.html 633344-1-ref.html # bug 1103623
 == 634232-1.html 634232-1-ref.html
 fails-if(Android&&AndroidVersion<17&&AndroidVersion!=10) == 635302-1.html 635302-1-ref.html
-fuzzy(1,68) fuzzy-if(gtkWidget,1,70) skip-if(B2G||Mulet) fails-if(Android) == 635373-1.html 635373-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy(1,68) skip-if(B2G||Mulet) fails-if(Android) == 635373-1.html 635373-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) random-if(d2d) fails-if(Android) fuzzy-if(winWidget&&!d2d,1,61) == 635373-2.html 635373-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) random-if(d2d) fails-if(Android) fuzzy-if(winWidget&&!d2d,1,60) == 635373-3.html 635373-3-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 HTTP(..) == 635639-1.html 635639-1-ref.html
@@ -1885,7 +1885,7 @@ skip-if(!B2G) == 1133905-2-v.html 1133905-ref-v.html
 skip-if(!B2G) == 1133905-3-v.html 1133905-ref-v.html
 skip-if(!B2G) == 1133905-4-v.html 1133905-ref-v.html
 skip-if(!B2G) fuzzy-if(B2G,61,336) == 1133905-5-v.html 1133905-ref-v.html
-skip-if(!B2G) fuzzy-if(B2G,77,287) == 1133905-6-v.html 1133905-ref-v.html
+skip-if(!B2G) fuzzy-if(B2G,61,480) == 1133905-6-v.html 1133905-ref-v.html
 skip-if(!B2G) == 1133905-1-h.html 1133905-ref-h.html
 skip-if(!B2G) == 1133905-2-h.html 1133905-ref-h.html
 skip-if(!B2G) == 1133905-3-h.html 1133905-ref-h.html
@@ -1897,31 +1897,31 @@ skip-if(!B2G) == 1133905-2-vh.html 1133905-ref-vh.html
 skip-if(!B2G) == 1133905-3-vh.html 1133905-ref-vh.html
 skip-if(!B2G) == 1133905-4-vh.html 1133905-ref-vh.html
 skip-if(!B2G) fuzzy-if(B2G,102,720) == 1133905-5-vh.html 1133905-ref-vh.html
-skip-if(!B2G) fuzzy-if(B2G,102,945) == 1133905-6-vh.html 1133905-ref-vh.html
+skip-if(!B2G) fuzzy-if(B2G,101,1138) == 1133905-6-vh.html 1133905-ref-vh.html
 skip-if(!B2G) == 1133905-1-rtl.html 1133905-ref-rtl.html
 skip-if(!B2G) == 1133905-2-rtl.html 1133905-ref-rtl.html
 skip-if(!B2G) == 1133905-3-rtl.html 1133905-ref-rtl.html
 skip-if(!B2G) == 1133905-4-rtl.html 1133905-ref-rtl.html
 skip-if(!B2G) == 1133905-5-rtl.html 1133905-ref-rtl.html
 skip-if(!B2G) == 1133905-6-rtl.html 1133905-ref-rtl.html
-skip-if(!B2G) fuzzy-if(B2G,20,177) == 1133905-1-v-rtl.html 1133905-ref-v-rtl.html
-skip-if(!B2G) fuzzy-if(B2G,20,174) == 1133905-2-v-rtl.html 1133905-ref-v-rtl.html
+skip-if(!B2G) fuzzy-if(B2G,23,175) == 1133905-1-v-rtl.html 1133905-ref-v-rtl.html
+skip-if(!B2G) fuzzy-if(B2G,18,175) == 1133905-2-v-rtl.html 1133905-ref-v-rtl.html
 skip-if(!B2G) fuzzy-if(B2G,64,181) == 1133905-3-v-rtl.html 1133905-ref-v-rtl.html
 skip-if(!B2G) == 1133905-4-v-rtl.html 1133905-ref-v-rtl.html
 skip-if(!B2G) fuzzy-if(B2G,33,180) == 1133905-5-v-rtl.html 1133905-ref-v-rtl.html
-skip-if(!B2G) fuzzy-if(B2G,77,219) == 1133905-6-v-rtl.html 1133905-ref-v-rtl.html
+skip-if(!B2G) fuzzy-if(B2G,62,222) == 1133905-6-v-rtl.html 1133905-ref-v-rtl.html
 skip-if(!B2G) == 1133905-1-h-rtl.html 1133905-ref-h-rtl.html
 skip-if(!B2G) == 1133905-2-h-rtl.html 1133905-ref-h-rtl.html
 skip-if(!B2G) == 1133905-3-h-rtl.html 1133905-ref-h-rtl.html
 skip-if(!B2G) == 1133905-4-h-rtl.html 1133905-ref-h-rtl.html
 skip-if(!B2G) == 1133905-5-h-rtl.html 1133905-ref-h-rtl.html
 skip-if(!B2G) == 1133905-6-h-rtl.html 1133905-ref-h-rtl.html
-skip-if(!B2G) fuzzy-if(B2G,20,177) == 1133905-1-vh-rtl.html 1133905-ref-vh-rtl.html
-skip-if(!B2G) fuzzy-if(B2G,62,176) == 1133905-2-vh-rtl.html 1133905-ref-vh-rtl.html
+skip-if(!B2G) fuzzy-if(B2G,23,175) == 1133905-1-vh-rtl.html 1133905-ref-vh-rtl.html
+skip-if(!B2G) fuzzy-if(B2G,62,175) == 1133905-2-vh-rtl.html 1133905-ref-vh-rtl.html
 skip-if(!B2G) fuzzy-if(B2G,23,176) == 1133905-3-vh-rtl.html 1133905-ref-vh-rtl.html
 skip-if(!B2G) == 1133905-4-vh-rtl.html 1133905-ref-vh-rtl.html
 skip-if(!B2G) fuzzy-if(B2G,102,577) == 1133905-5-vh-rtl.html 1133905-ref-vh-rtl.html
-skip-if(!B2G) fuzzy-if(B2G,102,877) == 1133905-6-vh-rtl.html 1133905-ref-vh-rtl.html
+skip-if(!B2G) fuzzy-if(B2G,101,887) == 1133905-6-vh-rtl.html 1133905-ref-vh-rtl.html
 skip-if(B2G||Mulet) == 1150021-1.xul 1150021-1-ref.xul
 == 1151145-1.html 1151145-1-ref.html
 == 1151306-1.html 1151306-1-ref.html

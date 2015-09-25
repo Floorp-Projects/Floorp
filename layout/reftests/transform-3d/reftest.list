@@ -11,16 +11,16 @@
 == rotatex-perspective-1c.html rotatex-1-ref.html
 == rotatex-perspective-3a.html rotatex-perspective-3-ref.html
 == scalez-1a.html scalez-1-ref.html
-fuzzy-if(gtkWidget||winWidget,8,376) fuzzy-if(Android,8,441) fuzzy-if(cocoaWidget,17,4) == preserve3d-1a.html preserve3d-1-ref.html
+fuzzy-if(cocoaWidget,17,4) == preserve3d-1a.html preserve3d-1-ref.html
 == preserve3d-1b.html about:blank
 == preserve3d-clipped.html about:blank
 == preserve3d-2a.html preserve3d-2-ref.html
 == preserve3d-2b.html preserve3d-2-ref.html
 == preserve3d-2c.html preserve3d-2-ref.html
 == preserve3d-2d.html preserve3d-2-ref.html
-fuzzy(4,100) == preserve3d-3a.html preserve3d-3-ref.html
+== preserve3d-3a.html preserve3d-3-ref.html
 skip-if(B2G||Mulet) == preserve3d-4a.html green-rect.html # Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(gtkWidget,4,200) fuzzy-if(Android&&AndroidVersion>=15,4,300) == preserve3d-5a.html preserve3d-5-ref.html
+fuzzy-if(Android&&AndroidVersion>=15,4,300) == preserve3d-5a.html preserve3d-5-ref.html
 == scale3d-z.html scalez-1-ref.html
 fuzzy-if(winWidget,102,580) fuzzy-if(d2d,143,681) fuzzy-if(OSX>=1008,224,924) == scale3d-all.html scale3d-1-ref.html # subpixel AA
 fuzzy-if(winWidget,102,580) fuzzy-if(d2d,143,681) fuzzy-if(OSX>=1008,224,924) == scale3d-all-separate.html scale3d-1-ref.html # subpixel AA
@@ -64,7 +64,6 @@ fuzzy(3,99) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccele
 fuzzy(3,99) == animate-cube-degrees.html animate-cube-degrees-ref.html # subpixel AA
 == animate-cube-degrees-zoom.html animate-cube-degrees-zoom-ref.html
 != animate-cube-degrees-ref.html animate-cube-degrees-zoom-ref.html
-fuzzy-if(B2G,15,100) fuzzy-if(Android,100,100) fuzzy-if(winWidget,90,200) fuzzy-if(B2G,88,100) fuzzy-if(cocoaWidget,90,100) fuzzy-if(gtkWidget,80,200) == preserves3d-nested.html preserves3d-nested-ref.html
 fuzzy-if(cocoaWidget,128,9) == animate-preserve3d-parent.html animate-preserve3d-ref.html # intermittently fuzzy on Mac
 fuzzy-if(cocoaWidget,128,9) == animate-preserve3d-child.html animate-preserve3d-ref.html # intermittently fuzzy on Mac
 == animate-backface-hidden.html about:blank
