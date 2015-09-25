@@ -514,7 +514,7 @@ private:
     // Paint plugin content rectangle to surface with bg color filling
     void PaintRectToSurface(const nsIntRect& aRect,
                             gfxASurface* aSurface,
-                            const gfxRGBA& aColor);
+                            const gfx::Color& aColor);
 
     // Render plugin content to surface using
     // white/black image alpha extraction algorithm
