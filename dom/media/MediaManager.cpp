@@ -314,8 +314,10 @@ public:
             mVideoDevice->GetSource()->Stop(source, kVideoTrack);
             mVideoDevice->GetSource()->Deallocate();
           }
-          // Do this after stopping all tracks with EndTrack()
-          if (mBool) {
+          // We consider ourselves finished if all tracks have been stopped, as
+          // there is no way to restart them from the JS APIs.
+          if (mBool || ((!mAudioDevice || mAudioDevice->GetSource()->IsAvailable()) &&
+                        (!mVideoDevice || mVideoDevice->GetSource()->IsAvailable()))) {
             source->Finish();
           }
 
