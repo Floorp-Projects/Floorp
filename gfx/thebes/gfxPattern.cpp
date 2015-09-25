@@ -183,12 +183,6 @@ gfxPattern::IsOpaque()
   return false;
 }
 
-gfxPattern::GraphicsExtend
-gfxPattern::Extend() const
-{
-  return mExtend;
-}
-
 void
 gfxPattern::SetFilter(GraphicsFilter filter)
 {
