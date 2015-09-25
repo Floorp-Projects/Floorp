@@ -10,8 +10,6 @@ import unittest
 from mozunit import main
 
 from mozbuild.base import MozbuildObject
-from mozpack.files import FileFinder
-from mozbuild.frontend.context import Files
 from mozbuild.frontend.reader import (
     BuildReader,
     EmptyConfig,
@@ -67,35 +65,6 @@ class TestMozbuildReading(unittest.TestCase):
         self.assertEqual(set(paths.keys()), all_paths)
         self.assertGreaterEqual(len(contexts), len(paths))
 
-    def test_orphan_file_patterns(self):
-        mb = MozbuildObject.from_environment(detect_virtualenv_mozinfo=False)
-        config = mb.config_environment
-        reader = BuildReader(config)
-        all_paths = self._mozbuilds(reader)
-        _, contexts = reader.read_relevant_mozbuilds(all_paths)
-
-        finder = FileFinder(config.topsrcdir, find_executables=False,
-                            ignore=['obj*'])
-
-        def pattern_exists(pat):
-            return [p for p in finder.find(pat)] != []
-
-        for ctx in contexts:
-            if not isinstance(ctx, Files):
-                continue
-            relsrcdir = ctx.relsrcdir
-            if not pattern_exists(os.path.join(relsrcdir, ctx.pattern)):
-                self.fail("The pattern '%s' in a Files() entry in "
-                          "'%s' corresponds to no files in the tree.\n"
-                          "Please update this entry." %
-                          (ctx.pattern, ctx.main_path))
-            test_files = ctx['IMPACTED_TESTS'].files
-            for p in test_files:
-                if not pattern_exists(os.path.relpath(p.full_path, config.topsrcdir)):
-                    self.fail("The pattern '%s' in a dependent tests entry "
-                              "in '%s' corresponds to no files in the tree.\n"
-                              "Please update this entry." %
-                              (p, ctx.main_path))
 
 if __name__ == '__main__':
     main()
