@@ -128,6 +128,7 @@ public:
   static already_AddRefed<Volume> GetVolume(VolumeArray::index_type aIndex);
   static already_AddRefed<Volume> FindVolumeByName(const nsCSubstring& aName);
   static already_AddRefed<Volume> FindAddVolumeByName(const nsCSubstring& aName);
+  static bool RemoveVolumeByName(const nsCSubstring& aName);
   static void InitConfig();
 
   static void       PostCommand(VolumeCommand* aCommand);
