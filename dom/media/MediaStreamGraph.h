@@ -910,6 +910,10 @@ protected:
  * We make these refcounted so that stream-related messages with MediaInputPort*
  * pointers can be sent to the main thread safely.
  *
+ * A port can be locked to a specific track in the source stream, in which case
+ * only this track will be forwarded to the destination stream. TRACK_ANY
+ * can used to signal that all tracks shall be forwarded.
+ *
  * When a port's source or destination stream dies, the stream's DestroyImpl
  * calls MediaInputPort::Disconnect to disconnect the port from
  * the source and destination streams.
@@ -925,9 +929,11 @@ class MediaInputPort final
 {
 private:
   // Do not call this constructor directly. Instead call aDest->AllocateInputPort.
-  MediaInputPort(MediaStream* aSource, ProcessedMediaStream* aDest,
+  MediaInputPort(MediaStream* aSource, TrackID& aSourceTrack,
+                 ProcessedMediaStream* aDest,
                  uint16_t aInputNumber, uint16_t aOutputNumber)
     : mSource(aSource)
+    , mSourceTrack(aSourceTrack)
     , mDest(aDest)
     , mInputNumber(aInputNumber)
     , mOutputNumber(aOutputNumber)
@@ -960,7 +966,21 @@ public:
 
   // Any thread
   MediaStream* GetSource() { return mSource; }
+  TrackID GetSourceTrackId() { return mSourceTrack; }
   ProcessedMediaStream* GetDestination() { return mDest; }
+
+  // Block aTrackId in the port. Consumers will interpret this track as ended.
+  void BlockTrackId(TrackID aTrackId);
+private:
+  void BlockTrackIdImpl(TrackID aTrackId);
+
+public:
+  // Returns true if aTrackId has not been blocked and this port has not
+  // been locked to another track.
+  bool PassTrackThrough(TrackID aTrackId) {
+    return !mBlockedTracks.Contains(aTrackId) &&
+           (mSourceTrack == TRACK_ANY || mSourceTrack == aTrackId);
+  }
 
   uint16_t InputNumber() const { return mInputNumber; }
   uint16_t OutputNumber() const { return mOutputNumber; }
@@ -1007,11 +1027,13 @@ private:
   friend class ProcessedMediaStream;
   // Never modified after Init()
   MediaStream* mSource;
+  TrackID mSourceTrack;
   ProcessedMediaStream* mDest;
   // The input and output numbers are optional, and are currently only used by
   // Web Audio.
   const uint16_t mInputNumber;
   const uint16_t mOutputNumber;
+  nsTArray<TrackID> mBlockedTracks;
 
   // Our media stream graph
   MediaStreamGraphImpl* mGraph;
@@ -1033,8 +1055,13 @@ public:
   /**
    * Allocates a new input port attached to source aStream.
    * This stream can be removed by calling MediaInputPort::Remove().
+   * The input port is tied to aTrackID in the source stream.
+   * aTrackID can be set to TRACK_ANY to automatically forward all tracks from
+   * aStream. To end a track in the destination stream forwarded with TRACK_ANY,
+   * it can be blocked in the input port through MediaInputPort::BlockTrackId().
    */
   already_AddRefed<MediaInputPort> AllocateInputPort(MediaStream* aStream,
+                                                     TrackID aTrackID = TRACK_ANY,
                                                      uint16_t aInputNumber = 0,
                                                      uint16_t aOutputNumber = 0);
   /**
@@ -1181,7 +1208,8 @@ public:
   /**
    * Create a stream that will mix all its audio input.
    */
-  ProcessedMediaStream* CreateAudioCaptureStream(DOMMediaStream* aWrapper);
+  ProcessedMediaStream* CreateAudioCaptureStream(DOMMediaStream* aWrapper,
+                                                 TrackID aTrackId);
 
   enum {
     ADD_STREAM_SUSPENDED = 0x01
