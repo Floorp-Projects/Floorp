@@ -2188,7 +2188,7 @@ TelemetryImpl::UnregisterAddonHistograms(const nsACString &id)
     // will be deleted if and when the addon registers histograms with
     // the same names.
     delete addonEntry->mData;
-    mAddonMap.RemoveEntry(id);
+    mAddonMap.RemoveEntry(addonEntry);
   }
 
   return NS_OK;
