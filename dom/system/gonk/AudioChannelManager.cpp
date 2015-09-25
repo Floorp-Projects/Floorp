@@ -16,8 +16,6 @@
 #include "mozilla/dom/nsBrowserElement.h"
 #include "mozilla/Services.h"
 
-using namespace mozilla::hal;
-
 namespace mozilla {
 namespace dom {
 namespace system {
@@ -30,12 +28,12 @@ NS_IMPL_RELEASE_INHERITED(AudioChannelManager, DOMEventTargetHelper)
 AudioChannelManager::AudioChannelManager()
   : mVolumeChannel(-1)
 {
-  RegisterSwitchObserver(SWITCH_HEADPHONES, this);
+  hal::RegisterSwitchObserver(hal::SWITCH_HEADPHONES, this);
 }
 
 AudioChannelManager::~AudioChannelManager()
 {
-  UnregisterSwitchObserver(SWITCH_HEADPHONES, this);
+  hal::UnregisterSwitchObserver(hal::SWITCH_HEADPHONES, this);
 
   nsCOMPtr<EventTarget> target = do_QueryInterface(GetOwner());
   NS_ENSURE_TRUE_VOID(target);
@@ -67,7 +65,7 @@ AudioChannelManager::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
 }
 
 void
-AudioChannelManager::Notify(const SwitchEvent& aEvent)
+AudioChannelManager::Notify(const hal::SwitchEvent& aEvent)
 {
   mState = Some(aEvent.status());
 
