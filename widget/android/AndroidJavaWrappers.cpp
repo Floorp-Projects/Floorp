@@ -70,6 +70,7 @@ jfieldID AndroidGeckoEvent::jGamepadButtonField = 0;
 jfieldID AndroidGeckoEvent::jGamepadButtonPressedField = 0;
 jfieldID AndroidGeckoEvent::jGamepadButtonValueField = 0;
 jfieldID AndroidGeckoEvent::jGamepadValuesField = 0;
+jfieldID AndroidGeckoEvent::jPrefNamesField = 0;
 jfieldID AndroidGeckoEvent::jObjectField = 0;
 
 jclass AndroidPoint::jPointClass = 0;
@@ -178,6 +179,7 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jGamepadButtonPressedField = geckoEvent.getField("mGamepadButtonPressed", "Z");
     jGamepadButtonValueField = geckoEvent.getField("mGamepadButtonValue", "F");
     jGamepadValuesField = geckoEvent.getField("mGamepadValues", "[F");
+    jPrefNamesField = geckoEvent.getField("mPrefNames", "[Ljava/lang/String;");
     jObjectField = geckoEvent.getField("mObject", "Ljava/lang/Object;");
 }
 
@@ -604,6 +606,18 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
                 mCount = jenv->GetIntField(jobj, jCountField);
                 ReadFloatArray(mGamepadValues, jenv, jGamepadValuesField, mCount);
             }
+            break;
+        }
+
+        case PREFERENCES_OBSERVE:
+        case PREFERENCES_GET: {
+            ReadStringArray(mPrefNames, jenv, jPrefNamesField);
+            mCount = jenv->GetIntField(jobj, jCountField);
+            break;
+        }
+
+        case PREFERENCES_REMOVE_OBSERVERS: {
+            mCount = jenv->GetIntField(jobj, jCountField);
             break;
         }
 
