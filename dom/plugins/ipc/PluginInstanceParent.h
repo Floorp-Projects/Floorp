@@ -169,7 +169,7 @@ public:
 
     virtual PPluginSurfaceParent*
     AllocPPluginSurfaceParent(const WindowsSharedMemoryHandle& handle,
-                              const gfxIntSize& size,
+                              const mozilla::gfx::IntSize& size,
                               const bool& transparent) override;
 
     virtual bool

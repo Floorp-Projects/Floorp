@@ -30,7 +30,7 @@ public:
   typedef mozilla::layers::Image Image;
 #endif
 
-  VideoFrame(already_AddRefed<Image>& aImage, const gfxIntSize& aIntrinsicSize);
+  VideoFrame(already_AddRefed<Image>& aImage, const gfx::IntSize& aIntrinsicSize);
   VideoFrame();
   ~VideoFrame();
 
@@ -48,13 +48,13 @@ public:
   Image* GetImage() const { return mImage; }
   void SetForceBlack(bool aForceBlack) { mForceBlack = aForceBlack; }
   bool GetForceBlack() const { return mForceBlack; }
-  const gfxIntSize& GetIntrinsicSize() const { return mIntrinsicSize; }
+  const gfx::IntSize& GetIntrinsicSize() const { return mIntrinsicSize; }
   void SetNull();
   void TakeFrom(VideoFrame* aFrame);
 
 #if !defined(MOZILLA_XPCOMRT_API)
   // Create a planar YCbCr black image.
-  static already_AddRefed<Image> CreateBlackImage(const gfxIntSize& aSize);
+  static already_AddRefed<Image> CreateBlackImage(const gfx::IntSize& aSize);
 #endif // !defined(MOZILLA_XPCOMRT_API)
 
 protected:
@@ -62,7 +62,7 @@ protected:
   // still have an intrinsic size in this case.
   nsRefPtr<Image> mImage;
   // The desired size to render the video frame at.
-  gfxIntSize mIntrinsicSize;
+  gfx::IntSize mIntrinsicSize;
   bool mForceBlack;
 };
 

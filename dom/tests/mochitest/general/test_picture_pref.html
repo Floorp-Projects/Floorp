@@ -71,6 +71,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=870022
 
   function runTest(iframe) {
     var doc = iframe.contentDocument;
+    var win = iframe.contentWindow;
     var img = doc.querySelector("img");
     var source = doc.querySelector("source");
 
@@ -78,9 +79,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=870022
     is(source.sizes, undefined, "sizes should not be visible on <source>");
     is(source.srcset, undefined, "srcset should not be visible on <source>");
 
-    var imgSizesDesc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, "sizes");
-    var sourceSizesDesc = Object.getOwnPropertyDescriptor(HTMLSourceElement.prototype, "sizes");
-    var sourceSrcsetDesc = Object.getOwnPropertyDescriptor(HTMLSourceElement.prototype, "srcset");
+    var imgSizesDesc = Object.getOwnPropertyDescriptor(win.HTMLImageElement.prototype, "sizes");
+    var sourceSizesDesc = Object.getOwnPropertyDescriptor(win.HTMLSourceElement.prototype, "sizes");
+    var sourceSrcsetDesc = Object.getOwnPropertyDescriptor(win.HTMLSourceElement.prototype, "srcset");
     is(imgSizesDesc, undefined, "HTMLImageElement should know nothing of sizes");
     is(sourceSizesDesc, undefined, "HTMLSourceElement should know nothing of sizes");
     is(sourceSrcsetDesc, undefined, "HTMLSourceElement should know nothing of srcset");

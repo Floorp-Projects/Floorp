@@ -232,7 +232,7 @@ protected:
 };
 
 static inline AccessibleWrap*
-WrapperFor(ProxyAccessible* aProxy)
+WrapperFor(const ProxyAccessible* aProxy)
 {
   return reinterpret_cast<AccessibleWrap*>(aProxy->GetWrapper());
 }

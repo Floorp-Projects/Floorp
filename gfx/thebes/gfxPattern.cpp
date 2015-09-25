@@ -209,10 +209,10 @@ gfxPattern::Filter() const
 }
 
 bool
-gfxPattern::GetSolidColor(gfxRGBA& aColor)
+gfxPattern::GetSolidColor(Color& aColorOut)
 {
   if (mGfxPattern.GetPattern()->GetType() == PatternType::COLOR) {
-    aColor = ThebesColor(static_cast<ColorPattern*>(mGfxPattern.GetPattern())->mColor);
+    aColorOut = static_cast<ColorPattern*>(mGfxPattern.GetPattern())->mColor;
     return true;
   }
 
