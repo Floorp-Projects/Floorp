@@ -723,27 +723,6 @@ nsAppShell::LegacyGeckoEvent::Run()
         nsAppShell::gAppShell->AddObserver(curEvent->Characters(), curEvent->Observer());
         break;
 
-    case AndroidGeckoEvent::PREFERENCES_GET:
-    case AndroidGeckoEvent::PREFERENCES_OBSERVE: {
-        const nsTArray<nsString> &prefNames = curEvent->PrefNames();
-        size_t count = prefNames.Length();
-        nsAutoArrayPtr<const char16_t*> prefNamePtrs(new const char16_t*[count]);
-        for (size_t i = 0; i < count; ++i) {
-            prefNamePtrs[i] = prefNames[i].get();
-        }
-
-        if (curEvent->Type() == AndroidGeckoEvent::PREFERENCES_GET) {
-            nsAppShell::gAppShell->mBrowserApp->GetPreferences(curEvent->RequestId(), prefNamePtrs, count);
-        } else {
-            nsAppShell::gAppShell->mBrowserApp->ObservePreferences(curEvent->RequestId(), prefNamePtrs, count);
-        }
-        break;
-    }
-
-    case AndroidGeckoEvent::PREFERENCES_REMOVE_OBSERVERS:
-        nsAppShell::gAppShell->mBrowserApp->RemovePreferenceObservers(curEvent->RequestId());
-        break;
-
     case AndroidGeckoEvent::LOW_MEMORY:
         // TODO hook in memory-reduction stuff for different levels here
         if (curEvent->MetaState() >= AndroidGeckoEvent::MEMORY_PRESSURE_MEDIUM) {
