@@ -378,6 +378,16 @@ this.DataReportingPolicy.prototype = Object.freeze({
     this._prefs.set("dataSubmissionEnabled", !!value);
   },
 
+  /**
+   * Whether submission of data is allowed for v2.
+   *
+   * This is used to gently turn off data submission for FHR v2 in Firefox 42+.
+   */
+  get dataSubmissionEnabledV2() {
+    // Default is true because we are opt-out.
+    return this._prefs.get("dataSubmissionEnabled.v2", true);
+  },
+
   get currentPolicyVersion() {
     return this._prefs.get("currentPolicyVersion", DATAREPORTING_POLICY_VERSION);
   },
@@ -648,7 +658,7 @@ this.DataReportingPolicy.prototype = Object.freeze({
     // If the master data submission kill switch is toggled, we have nothing
     // to do. We don't notify about data policies because this would have
     // no effect.
-    if (!this.dataSubmissionEnabled) {
+    if (!this.dataSubmissionEnabled || !this.dataSubmissionEnabledV2) {
       this._log.debug("Data submission is disabled. Doing nothing.");
       return;
     }
