@@ -673,10 +673,17 @@ public:
 
   virtual ~nsDOMUserMediaStream()
   {
-    StopImpl();
+    Stop();
 
     if (GetSourceStream()) {
       GetSourceStream()->Destroy();
+    }
+  }
+
+  virtual void Stop() override
+  {
+    if (GetSourceStream()) {
+      GetSourceStream()->EndAllTrackAndFinish();
     }
   }
 

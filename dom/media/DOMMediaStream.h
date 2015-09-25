@@ -182,31 +182,11 @@ class DOMMediaStream : public DOMEventTargetHelper
   typedef dom::VideoTrack VideoTrack;
   typedef dom::AudioTrackList AudioTrackList;
   typedef dom::VideoTrackList VideoTrackList;
+  typedef dom::MediaTrackListListener MediaTrackListListener;
 
 public:
   typedef dom::MediaTrackConstraints MediaTrackConstraints;
-
-  class TrackListener {
-    NS_INLINE_DECL_REFCOUNTING(TrackListener)
-
-  public:
-    /**
-     * Called when the DOMMediaStream has a new track added, either by
-     * JS (addTrack()) or the source creating one.
-     */
-    virtual void
-    NotifyTrackAdded(const nsRefPtr<MediaStreamTrack>& aTrack) {};
-
-    /**
-     * Called when the DOMMediaStream removes a track, either by
-     * JS (removeTrack()) or the source ending it.
-     */
-    virtual void
-    NotifyTrackRemoved(const nsRefPtr<MediaStreamTrack>& aTrack) {};
-
-  protected:
-    virtual ~TrackListener() {}
-  };
+  typedef uint8_t TrackTypeHints;
 
   DOMMediaStream();
 
@@ -230,8 +210,6 @@ public:
   void GetAudioTracks(nsTArray<nsRefPtr<AudioStreamTrack> >& aTracks);
   void GetVideoTracks(nsTArray<nsRefPtr<VideoStreamTrack> >& aTracks);
   void GetTracks(nsTArray<nsRefPtr<MediaStreamTrack> >& aTracks);
-  void AddTrack(MediaStreamTrack& aTrack);
-  void RemoveTrack(MediaStreamTrack& aTrack);
 
   // NON-WebIDL
 
@@ -254,11 +232,6 @@ public:
    * Returns the corresponding MediaStreamTrack if it's in our mPlaybackStream.
    */
   MediaStreamTrack* FindPlaybackDOMTrack(MediaStream* aOwningStream, TrackID aTrackID) const;
-
-  /**
-   * Returns the TrackPort connecting mOwnedStream to mPlaybackStream for aTrack.
-   */
-  TrackPort* FindPlaybackTrackPort(const MediaStreamTrack& aTrack) const;
 
   MediaStream* GetInputStream() const { return mInputStream; }
   ProcessedMediaStream* GetOwnedStream() const { return mOwnedStream; }
@@ -414,8 +387,23 @@ public:
     }
   }
 
-  void RegisterTrackListener(TrackListener* aListener);
-  void UnregisterTrackListener(TrackListener* aListener);
+  /**
+   * If loading and playing a MediaStream in a media element, for each
+   * MediaStreamTrack in the MediaStream, create a corresponding AudioTrack or
+   * VideoTrack during the phase of resource fetching.
+   */
+  void ConstructMediaTracks(AudioTrackList* aAudioTrackList,
+                            VideoTrackList* aVideoTrackList);
+
+  /**
+   * MUST call this before the AudioTrackList or VideoTrackList go away
+   */
+  void DisconnectTrackListListeners(const AudioTrackList* aAudioTrackList,
+                                    const VideoTrackList* aVideoTrackList);
+
+  virtual void NotifyMediaStreamTrackCreated(MediaStreamTrack* aTrack);
+
+  virtual void NotifyMediaStreamTrackEnded(MediaStreamTrack* aTrack);
 
 protected:
   virtual ~DOMMediaStream();
@@ -425,18 +413,14 @@ protected:
   void InitTrackUnionStream(nsIDOMWindow* aWindow, MediaStreamGraph* aGraph);
   void InitAudioCaptureStream(nsIDOMWindow* aWindow, MediaStreamGraph* aGraph);
   void InitStreamCommon(MediaStream* aStream, MediaStreamGraph* aGraph);
-
-  void CheckTracksAvailable();
+  already_AddRefed<AudioTrack> CreateAudioTrack(AudioStreamTrack* aStreamTrack);
+  already_AddRefed<VideoTrack> CreateVideoTrack(VideoStreamTrack* aStreamTrack);
 
   // Called when MediaStreamGraph has finished an iteration where tracks were
   // created.
-  void NotifyTracksCreated();
+  void TracksCreated();
 
-  // Dispatches NotifyTrackAdded() to all registered track listeners.
-  void NotifyTrackAdded(const nsRefPtr<MediaStreamTrack>& aTrack);
-
-  // Dispatches NotifyTrackRemoved() to all registered track listeners.
-  void NotifyTrackRemoved(const nsRefPtr<MediaStreamTrack>& aTrack);
+  void CheckTracksAvailable();
 
   class OwnedStreamListener;
   friend class OwnedStreamListener;
@@ -497,8 +481,9 @@ protected:
 
   bool mNotifiedOfMediaStreamGraphShutdown;
 
-  // The track listeners subscribe to changes in this stream's track set.
-  nsTArray<nsRefPtr<TrackListener>> mTrackListeners;
+  // Send notifications to AudioTrackList or VideoTrackList, if this MediaStream
+  // is consumed by a HTMLMediaElement.
+  nsTArray<MediaTrackListListener> mMediaTrackListListeners;
 
 private:
   void NotifyPrincipalChanged();
@@ -530,7 +515,7 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  void Stop();
+  virtual void Stop();
 
   virtual MediaEngineSource* GetMediaEngine(TrackID aTrackID) { return nullptr; }
 
@@ -556,8 +541,6 @@ public:
 
 protected:
   virtual ~DOMLocalMediaStream();
-
-  void StopImpl();
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(DOMLocalMediaStream,
