@@ -60,6 +60,7 @@
 #endif
 
 #include "ANRReporter.h"
+#include "PrefsHelper.h"
 
 #ifdef DEBUG_ANDROID_EVENTS
 #define EVLOG(args...)  ALOG(args)
@@ -196,6 +197,7 @@ nsAppShell::nsAppShell()
         AndroidBridge::ConstructBridge();
         GeckoThreadNatives::Init();
         mozilla::ANRReporter::Init();
+        mozilla::PrefsHelper::Init();
         nsWindow::InitNatives();
 
         widget::GeckoThread::SetState(widget::GeckoThread::State::JNI_READY());
