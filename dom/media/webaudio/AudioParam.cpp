@@ -114,7 +114,8 @@ AudioParam::Stream()
   // Setup the AudioParam's stream as an input to the owner AudioNode's stream
   AudioNodeStream* nodeStream = mNode->GetStream();
   if (nodeStream) {
-    mNodeStreamPort = nodeStream->AllocateInputPort(mStream);
+    mNodeStreamPort =
+      nodeStream->AllocateInputPort(mStream, AudioNodeStream::AUDIO_TRACK);
   }
 
   // Let the MSG's copy of AudioParamTimeline know about the change in the stream

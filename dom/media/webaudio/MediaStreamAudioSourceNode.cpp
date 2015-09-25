@@ -8,6 +8,7 @@
 #include "mozilla/dom/MediaStreamAudioSourceNodeBinding.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeExternalInputStream.h"
+#include "AudioStreamTrack.h"
 #include "nsIDocument.h"
 #include "mozilla/CORSMode.h"
 

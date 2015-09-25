@@ -29,8 +29,8 @@ namespace mozilla
 // We are mixing to mono until PeerConnection can accept stereo
 static const uint32_t MONO = 1;
 
-AudioCaptureStream::AudioCaptureStream(DOMMediaStream* aWrapper)
-  : ProcessedMediaStream(aWrapper), mTrackCreated(false)
+AudioCaptureStream::AudioCaptureStream(DOMMediaStream* aWrapper, TrackID aTrackId)
+  : ProcessedMediaStream(aWrapper), mTrackId(aTrackId), mTrackCreated(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_COUNT_CTOR(AudioCaptureStream);
@@ -48,14 +48,14 @@ AudioCaptureStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
                                  uint32_t aFlags)
 {
   uint32_t inputCount = mInputs.Length();
-  StreamBuffer::Track* track = EnsureTrack(AUDIO_TRACK);
+  StreamBuffer::Track* track = EnsureTrack(mTrackId);
   // Notify the DOM everything is in order.
   if (!mTrackCreated) {
     for (uint32_t i = 0; i < mListeners.Length(); i++) {
       MediaStreamListener* l = mListeners[i];
       AudioSegment tmp;
       l->NotifyQueuedTrackChanges(
-        Graph(), AUDIO_TRACK, 0, MediaStreamListener::TRACK_EVENT_CREATED, tmp);
+        Graph(), mTrackId, 0, MediaStreamListener::TRACK_EVENT_CREATED, tmp);
       l->NotifyFinishedTrackCreation(Graph());
     }
     mTrackCreated = true;
@@ -127,6 +127,6 @@ AudioCaptureStream::MixerCallback(AudioDataValue* aMixedBuffer,
   }
 
   // Now we have mixed data, simply append it to out track.
-  EnsureTrack(AUDIO_TRACK)->Get<AudioSegment>()->AppendAndConsumeChunk(&chunk);
+  EnsureTrack(mTrackId)->Get<AudioSegment>()->AppendAndConsumeChunk(&chunk);
 }
 }
