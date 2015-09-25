@@ -462,26 +462,12 @@ addMessageListener("UpdateCharacterSet", function (aMessage) {
  * Remote thumbnail request handler for PageThumbs thumbnails.
  */
 addMessageListener("Browser:Thumbnail:Request", function (aMessage) {
-  let thumbnail = content.document.createElementNS(PageThumbUtils.HTML_NAMESPACE,
-                                                   "canvas");
-  thumbnail.mozOpaque = true;
-  thumbnail.mozImageSmoothingEnabled = true;
+  let snapshotWidth = aMessage.data.canvasWidth;
+  let snapshotHeight = aMessage.data.canvasHeight;
+  let canvas = PageThumbUtils.createCanvas(content, snapshotWidth, snapshotHeight);
+  let snapshot = PageThumbUtils.createSnapshotThumbnail(content, canvas);
 
-  thumbnail.width = aMessage.data.canvasWidth;
-  thumbnail.height = aMessage.data.canvasHeight;
-
-  let [width, height, scale] =
-    PageThumbUtils.determineCropSize(content, thumbnail);
-
-  let ctx = thumbnail.getContext("2d");
-  ctx.save();
-  ctx.scale(scale, scale);
-  ctx.drawWindow(content, 0, 0, width, height,
-                 aMessage.data.background,
-                 ctx.DRAWWINDOW_DO_NOT_FLUSH);
-  ctx.restore();
-
-  thumbnail.toBlob(function (aBlob) {
+  snapshot.toBlob(function (aBlob) {
     sendAsyncMessage("Browser:Thumbnail:Response", {
       thumbnail: aBlob,
       id: aMessage.data.id
