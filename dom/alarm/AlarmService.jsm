@@ -252,6 +252,18 @@ this.AlarmService = {
     debug("_onAlarmFired()");
 
     if (this._currentAlarm) {
+      let currentAlarmTime = this._getAlarmTime(this._currentAlarm);
+
+      // If a alarm fired before the actual time that the current
+      // alarm should occur, we reset this current alarm.
+      if (currentAlarmTime > Date.now()) {
+        let currentAlarm = this._currentAlarm;
+        this._currentAlarm = currentAlarm;
+
+        this._debugCurrentAlarm();
+        return;
+      }
+
       this._removeAlarmFromDb(this._currentAlarm.id, null);
       this._notifyAlarmObserver(this._currentAlarm);
       this._currentAlarm = null;
@@ -414,6 +426,16 @@ this.AlarmService = {
         // the non-serializable callback to the in-memory object.
         aNewAlarm['alarmFiredCb'] = aAlarmFiredCb;
 
+        // If the new alarm already expired at this moment, we directly
+        // notify this alarm
+        let aNewAlarmTime = this._getAlarmTime(aNewAlarm);
+        if (aNewAlarmTime < Date.now()) {
+          aSuccessCb(aNewId);
+          this._removeAlarmFromDb(aNewAlarm.id, null);
+          this._notifyAlarmObserver(aNewAlarm);
+          return;
+        }
+
         // If there is no alarm being set in system, set the new alarm.
         if (this._currentAlarm == null) {
           this._currentAlarm = aNewAlarm;
@@ -425,7 +447,6 @@ this.AlarmService = {
         // If the new alarm is earlier than the current alarm, swap them and
         // push the previous alarm back to the queue.
         let alarmQueue = this._alarmQueue;
-        let aNewAlarmTime = this._getAlarmTime(aNewAlarm);
         let currentAlarmTime = this._getAlarmTime(this._currentAlarm);
         if (aNewAlarmTime < currentAlarmTime) {
           alarmQueue.unshift(this._currentAlarm);

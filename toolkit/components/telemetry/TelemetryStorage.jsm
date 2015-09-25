@@ -1463,7 +1463,7 @@ var TelemetryStorageImpl = {
     } catch (ex if ex.becauseNoSuchFile) {
       this._log.trace("loadAbortedSessionPing - no such file");
     } catch (ex) {
-      this._log.error("loadAbortedSessionPing - error removing ping", ex)
+      this._log.error("loadAbortedSessionPing - error loading ping", ex)
     }
     return ping;
   }),

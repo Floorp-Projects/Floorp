@@ -410,6 +410,8 @@
 @RESPATH@/components/AlarmsManager.manifest
 @RESPATH@/components/FeedProcessor.manifest
 @RESPATH@/components/FeedProcessor.js
+@RESPATH@/components/PackagedAppUtils.manifest
+@RESPATH@/components/PackagedAppUtils.js
 @RESPATH@/components/BrowserFeeds.manifest
 @RESPATH@/components/FeedConverter.js
 @RESPATH@/components/FeedWriter.js

@@ -174,10 +174,6 @@ private:
     uint32_t mAPZCId;
   };
 
-  static PLDHashOperator RemoveSharedMetricsForLayersId(const uint64_t& aKey,
-                                                        nsAutoPtr<SharedFrameMetricsData>& aData,
-                                                        void* aLayerTransactionChild);
-
   nsRefPtr<ClientLayerManager> mLayerManager;
   // When not multi-process, hold a reference to the CompositorParent to keep it
   // alive. This reference should be null in multi-process.

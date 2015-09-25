@@ -148,6 +148,9 @@ protected:
   bool RecvReportSecurityMessage(const nsString& messageTag,
                                  const nsString& messageCategory) override;
 
+  bool RecvIssueDeprecationWarning(const uint32_t& warning,
+                                   const bool& asError) override;
+
   bool GetAssociatedContentSecurity(nsIAssociatedContentSecurity** res = nullptr);
   virtual void DoNotifyListenerCleanup() override;
 
