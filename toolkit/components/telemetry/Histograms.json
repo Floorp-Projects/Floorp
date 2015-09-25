@@ -6541,6 +6541,52 @@
     "n_buckets": "25",
     "description": "Percentage of time spent in the Stressed load state in calls 5-30 seconds."
   },
+  "WEBRTC_RENEGOTIATIONS": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "21",
+    "n_buckets": "20",
+    "description": "Number of Renegotiations during each call"
+  },
+  "WEBRTC_MAX_VIDEO_SEND_TRACK": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "10",
+    "n_buckets": "9",
+    "description": "Number of Video tracks sent simultaneously"
+  },
+  "WEBRTC_MAX_VIDEO_RECEIVE_TRACK": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "20",
+    "n_buckets": "19",
+    "description": "Number of Video tracks received simultaneously"
+  },
+  "WEBRTC_MAX_AUDIO_SEND_TRACK": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "20",
+    "n_buckets": "19",
+    "description": "Number of Audio tracks sent simultaneously"
+  },
+  "WEBRTC_MAX_AUDIO_RECEIVE_TRACK": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "30",
+    "n_buckets": "29",
+    "description": "Number of Audio tracks received simultaneously"
+  },
+  "WEBRTC_DATACHANNEL_NEGOTIATED": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Was DataChannels negotiated"
+  },
+  "WEBRTC_CALL_TYPE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": "8",
+    "description": "Type of call: (Bitmask) Audio = 1, Video = 2, DataChannels = 4"
+  },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_TRACERDETACH_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -9386,6 +9432,52 @@
     "kind": "enumerated",
     "n_values": 8,
     "description": "Type for media in getUserMedia calls (0=Camera, 1=Screen, 2=Application, 3=Window, 4=Browser, 5=Microphone, 6=AudioCapture, 7=Other)"
+  },
+  "LOOP_RENEGOTIATIONS": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "21",
+    "n_buckets": "20",
+    "description": "Number of Renegotiations during each call"
+  },
+  "LOOP_MAX_VIDEO_SEND_TRACK": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "10",
+    "n_buckets": "9",
+    "description": "Number of Video tracks sent simultaneously"
+  },
+  "LOOP_MAX_VIDEO_RECEIVE_TRACK": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "20",
+    "n_buckets": "19",
+    "description": "Number of Video tracks received simultaneously"
+  },
+  "LOOP_MAX_AUDIO_SEND_TRACK": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "20",
+    "n_buckets": "19",
+    "description": "Number of Audio tracks sent simultaneously"
+  },
+  "LOOP_MAX_AUDIO_RECEIVE_TRACK": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "30",
+    "n_buckets": "29",
+    "description": "Number of Audio tracks received simultaneously"
+  },
+  "LOOP_DATACHANNEL_NEGOTIATED": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Was DataChannels negotiated"
+  },
+  "LOOP_CALL_TYPE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": "8",
+    "description": "Type of call: (Bitmask) Audio = 1, Video = 2, DataChannels = 4"
   },
   "PERF_MONITORING_TEST_CPU_RESCHEDULING_PROPORTION_MOVED": {
     "alert_emails": ["dteller@mozilla.com"],
