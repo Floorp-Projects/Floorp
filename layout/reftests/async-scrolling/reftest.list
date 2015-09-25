@@ -6,6 +6,7 @@ skip-if(!asyncPan) == bg-fixed-child.html bg-fixed-child-ref.html
 skip-if(!asyncPan) == bg-fixed-child-clip-1.html bg-fixed-child-clip-ref.html
 skip-if(!asyncPan) == bg-fixed-child-clip-2.html bg-fixed-child-clip-ref.html
 skip-if(!asyncPan) fuzzy(1,246) == bg-fixed-child-mask.html bg-fixed-child-mask-ref.html
+skip-if(!asyncPan) == bg-fixed-child-no-culling.html bg-fixed-child-no-culling-ref.html
 skip-if(!asyncPan) == element-1.html element-1-ref.html
 pref(layers.force-active,true) skip-if(!asyncPan) == iframe-1.html iframe-1-ref.html
 skip-if(!asyncPan) == nested-1.html nested-1-ref.html
