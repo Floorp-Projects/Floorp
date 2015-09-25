@@ -7,8 +7,8 @@ const URL = "http://mochi.test:8888/browser/toolkit/components/thumbnails/" +
 function isRedThumbnailFuzz(r, g, b, expectedR, expectedB, expectedG, aFuzz)
 {
   return (Math.abs(r - expectedR) <= aFuzz) &&
-         (Math.abs(r - expectedR) <= aFuzz) &&
-         (Math.abs(r - expectedR) <= aFuzz);
+         (Math.abs(g - expectedG) <= aFuzz) &&
+         (Math.abs(b - expectedB) <= aFuzz);
 }
 
 // Test for black borders caused by scrollbars.
