@@ -291,20 +291,22 @@ GlobalObject::initGeneratorClasses(JSContext* cx, Handle<GlobalObject*> global)
 {
     if (global->getSlot(LEGACY_GENERATOR_OBJECT_PROTO).isUndefined()) {
         RootedObject proto(cx, NewSingletonObjectWithObjectPrototype(cx, global));
-        if (!proto || !DefinePropertiesAndFunctions(cx, proto, nullptr, legacy_generator_methods))
+        if (!proto || !proto->setDelegate(cx))
+            return false;
+        if (!DefinePropertiesAndFunctions(cx, proto, nullptr, legacy_generator_methods))
             return false;
         global->setReservedSlot(LEGACY_GENERATOR_OBJECT_PROTO, ObjectValue(*proto));
     }
 
     if (global->getSlot(STAR_GENERATOR_OBJECT_PROTO).isUndefined()) {
         RootedObject genObjectProto(cx, NewSingletonObjectWithObjectPrototype(cx, global));
-        if (!genObjectProto)
+        if (!genObjectProto || !genObjectProto->setDelegate(cx))
             return false;
         if (!DefinePropertiesAndFunctions(cx, genObjectProto, nullptr, star_generator_methods))
             return false;
 
         RootedObject genFunctionProto(cx, NewSingletonObjectWithFunctionPrototype(cx, global));
-        if (!genFunctionProto)
+        if (!genFunctionProto || !genFunctionProto->setDelegate(cx))
             return false;
         if (!LinkConstructorAndPrototype(cx, genFunctionProto, genObjectProto))
             return false;
