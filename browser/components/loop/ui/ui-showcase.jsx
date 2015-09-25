@@ -27,6 +27,7 @@
   var DesktopPendingConversationView = loop.conversationViews.PendingConversationView;
   var OngoingConversationView = loop.conversationViews.OngoingConversationView;
   var DirectCallFailureView = loop.conversationViews.DirectCallFailureView;
+  var DesktopRoomEditContextView = loop.roomViews.DesktopRoomEditContextView;
   var RoomFailureView = loop.roomViews.RoomFailureView;
   var DesktopRoomConversationView = loop.roomViews.DesktopRoomConversationView;
 
@@ -1392,6 +1393,23 @@
                   onCallTerminated={function(){}}
                   roomState={ROOM_STATES.INIT}
                   roomStore={invitationRoomStore} />
+              </div>
+            </FramedExample>
+
+            <FramedExample height={278.6}
+                           onContentsRendered={invitationRoomStore.activeRoomStore.forcedUpdate}
+                           summary="Desktop room Edit Context w/Error"
+                           width={298}>
+              <div className="fx-embedded room-invitation-overlay">
+                <DesktopRoomEditContextView
+                  dispatcher={dispatcher}
+                  error={{}}
+                  mozLoop={navigator.mozLoop}
+                  onClose={function(){}}
+                  roomData={{}}
+                  savingContext={false}
+                  show={true}
+                  />
               </div>
             </FramedExample>
 
