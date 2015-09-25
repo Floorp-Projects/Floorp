@@ -275,6 +275,15 @@ add_task(function* test_execute_invalid_statement() {
   yield c.close();
 });
 
+add_task(function* test_incorrect_like_bindings() {
+  let c = yield getDummyDatabase("incorrect_like_bindings");
+
+  let sql = "select * from dirs where path LIKE 'non%'";
+  Assert.throws(() => c.execute(sql), /Please enter a LIKE clause/);
+  Assert.throws(() => c.executeCached(sql), /Please enter a LIKE clause/);
+
+  yield c.close();
+});
 add_task(function* test_on_row_exception_ignored() {
   let c = yield getDummyDatabase("on_row_exception_ignored");
 

@@ -2087,7 +2087,7 @@ AndroidBridge::SetPresentationSurface(EGLSurface aPresentationSurface)
 Object::LocalRef AndroidBridge::ChannelCreate(Object::Param stream) {
     JNIEnv* const env = GetEnvForThread();
     auto rv = Object::LocalRef::Adopt(env, env->CallStaticObjectMethod(
-            sBridge->jReadableByteChannel, sBridge->jChannelCreate, stream.Get()));
+            sBridge->jChannels, sBridge->jChannelCreate, stream.Get()));
     HandleUncaughtException(env);
     return rv;
 }

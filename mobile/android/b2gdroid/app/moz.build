@@ -25,6 +25,10 @@ ANDROID_ASSETS_DIRS += [
 # will not induce accesses to other package's resources at runtime.
 ANDROID_EXTRA_PACKAGES += ['org.mozilla.gecko']
 
+if CONFIG['ANDROID_SUPPORT_V4_AAR']:
+    ANDROID_EXTRA_PACKAGES += ['android.support.v4']
+    ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_SUPPORT_V4_AAR_RES']]
+
 JS_PREFERENCE_FILES += [
      'b2gdroid.js',
 ]
