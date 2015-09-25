@@ -158,19 +158,20 @@ Fake_VideoStreamSource::Notify(nsITimer* aTimer)
 
   mozilla::layers::PlanarYCbCrData data;
   data.mYChannel = frame;
-  data.mYSize = gfxIntSize(WIDTH, HEIGHT);
+  data.mYSize = mozilla::gfx::IntSize(WIDTH, HEIGHT);
   data.mYStride = WIDTH * lumaBpp / 8.0;
   data.mCbCrStride = WIDTH * chromaBpp / 8.0;
   data.mCbChannel = frame + HEIGHT * data.mYStride;
   data.mCrChannel = data.mCbChannel + HEIGHT * data.mCbCrStride / 2;
-  data.mCbCrSize = gfxIntSize(WIDTH / 2, HEIGHT / 2);
+  data.mCbCrSize = mozilla::gfx::IntSize(WIDTH / 2, HEIGHT / 2);
   data.mPicX = 0;
   data.mPicY = 0;
-  data.mPicSize = gfxIntSize(WIDTH, HEIGHT);
+  data.mPicSize = mozilla::gfx::IntSize(WIDTH, HEIGHT);
   data.mStereoMode = mozilla::layers::StereoMode::MONO;
 
   mozilla::VideoSegment segment;
-  segment.AppendFrame(image.forget(), USECS_PER_S / FPS, gfxIntSize(WIDTH, HEIGHT));
+  segment.AppendFrame(image.forget(), USECS_PER_S / FPS,
+                      mozilla::gfx::IntSize(WIDTH, HEIGHT));
 
   // TODO(ekr@rtfm.com): are we leaking?
 #endif

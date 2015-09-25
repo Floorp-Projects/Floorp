@@ -195,6 +195,47 @@ public:
   static bool     ThreadsafeIsCallerChrome();
   static bool     IsCallerContentXBL();
 
+  // In the traditional Gecko architecture, both C++ code and untrusted JS code
+  // needed to rely on the same XPCOM method/getter/setter to get work done.
+  // This required lots of security checks in the various exposed methods, which
+  // in turn created difficulty in determining whether the caller was script
+  // (whose access needed to be checked) and internal C++ platform code (whose
+  // access did not need to be checked). To address this problem, Gecko had a
+  // convention whereby the absence of script on the stack was interpretted as
+  // "System Caller" and always granted unfettered access.
+  //
+  // Unfortunately, this created a bunch of footguns. For example, when the
+  // implementation of a DOM method wanted to perform a privileged
+  // sub-operation, it needed to "hide" the presence of script on the stack in
+  // order for that sub-operation to be allowed. Additionally, if script could
+  // trigger an API entry point to be invoked in some asynchronous way without
+  // script on the stack, it could potentially perform privilege escalation.
+  //
+  // In the modern world, untrusted script should interact with the platform
+  // exclusively over WebIDL APIs, and platform code has a lot more flexibility
+  // in deciding whether or not to use XPCOM. This gives us the flexibility to
+  // do something better.
+  //
+  // Going forward, APIs should be designed such that any security checks that
+  // ask the question "is my caller allowed to do this?" should live in WebIDL
+  // API entry points, with a separate method provided for internal callers
+  // that just want to get the job done.
+  //
+  // To enforce this and catch bugs, nsContentUtils::SubjectPrincipal will crash
+  // if it is invoked without script on the stack. To land that transition, it
+  // was necessary to go through and whitelist a bunch of callers that were
+  // depending on the old behavior. Those callers should be fixed up, and these
+  // methods should not be used by new code without review from bholley or bz.
+  static bool     LegacyIsCallerNativeCode() { return !GetCurrentJSContext(); }
+  static bool     LegacyIsCallerChromeOrNativeCode() { return LegacyIsCallerNativeCode() || IsCallerChrome(); }
+  static nsIPrincipal* SubjectPrincipalOrSystemIfNativeCaller()
+  {
+    if (!GetCurrentJSContext()) {
+      return GetSystemPrincipal();
+    }
+    return SubjectPrincipal();
+  }
+
   static bool     IsImageSrcSetDisabled();
 
   static bool LookupBindingMember(JSContext* aCx, nsIContent *aContent,

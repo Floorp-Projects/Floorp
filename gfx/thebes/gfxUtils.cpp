@@ -663,8 +663,8 @@ PrescaleAndTileDrawable(gfxDrawable* aDrawable,
     return false;
   }
 
-  gfxIntSize scaledImageSize((int32_t)scaledImageRect.width,
-                             (int32_t)scaledImageRect.height);
+  IntSize scaledImageSize((int32_t)scaledImageRect.width,
+                          (int32_t)scaledImageRect.height);
   if (scaledImageSize.width != scaledImageRect.width ||
       scaledImageSize.height != scaledImageRect.height) {
     // If the scaled image isn't pixel aligned, we'll get artifacts

@@ -4787,7 +4787,7 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
 {
   // protect against too-large surfaces that will cause allocation
   // or overflow issues
-  if (!gfxASurface::CheckSurfaceSize(gfxIntSize(int32_t(w), int32_t(h)),
+  if (!gfxASurface::CheckSurfaceSize(gfx::IntSize(int32_t(w), int32_t(h)),
                                      0xffff)) {
     error.Throw(NS_ERROR_FAILURE);
     return;
@@ -4976,7 +4976,7 @@ CanvasRenderingContext2D::AsyncDrawXULElement(nsXULElement& elem,
 
   // protect against too-large surfaces that will cause allocation
   // or overflow issues
-  if (!gfxASurface::CheckSurfaceSize(gfxIntSize(w, h), 0xffff)) {
+  if (!gfxASurface::CheckSurfaceSize(gfx::IntSize(w, h), 0xffff)) {
     error.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -5401,7 +5401,7 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t x, int32_t y, uint32_t w
 
   uint32_t copyWidth = dirtyRect.Width();
   uint32_t copyHeight = dirtyRect.Height();
-  nsRefPtr<gfxImageSurface> imgsurf = new gfxImageSurface(gfxIntSize(copyWidth, copyHeight),
+  nsRefPtr<gfxImageSurface> imgsurf = new gfxImageSurface(gfx::IntSize(copyWidth, copyHeight),
                                                           gfxImageFormat::ARGB32,
                                                           false);
   if (!imgsurf || imgsurf->CairoStatus()) {

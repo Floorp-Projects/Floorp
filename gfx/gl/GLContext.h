@@ -7,12 +7,13 @@
 #ifndef GLCONTEXT_H_
 #define GLCONTEXT_H_
 
-#include <stdio.h>
-#include <stdint.h>
-#include <ctype.h>
-#include <map>
 #include <bitset>
+#include <ctype.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <map>
 #include <queue>
+#include <stack>
 
 #ifdef DEBUG
 #include <string.h>
@@ -619,7 +620,7 @@ public:
     class LocalErrorScope;
 
 private:
-    LocalErrorScope* mLocalErrorScope;
+    std::stack<const LocalErrorScope*> mLocalErrorScopeStack;
 
 public:
     class LocalErrorScope {
@@ -632,8 +633,7 @@ public:
             : mGL(gl)
             , mHasBeenChecked(false)
         {
-            MOZ_ASSERT(!mGL.mLocalErrorScope);
-            mGL.mLocalErrorScope = this;
+            mGL.mLocalErrorScopeStack.push(this);
 
             mGL.FlushErrors();
 
@@ -653,10 +653,10 @@ public:
 
             MOZ_ASSERT(mGL.fGetError() == LOCAL_GL_NO_ERROR);
 
-            mGL.mTopError = mOldTop;
+            MOZ_ASSERT(mGL.mLocalErrorScopeStack.top() == this);
+            mGL.mLocalErrorScopeStack.pop();
 
-            MOZ_ASSERT(mGL.mLocalErrorScope == this);
-            mGL.mLocalErrorScope = nullptr;
+            mGL.mTopError = mOldTop;
         }
     };
 
@@ -738,7 +738,7 @@ private:
             }
 
             if (err != LOCAL_GL_NO_ERROR &&
-                !mLocalErrorScope)
+                !mLocalErrorScopeStack.size())
             {
                 printf_stderr("[gl:%p] %s: Generated unexpected %s error."
                               " (0x%04x)\n", this, funcName,

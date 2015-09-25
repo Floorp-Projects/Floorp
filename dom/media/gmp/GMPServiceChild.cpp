@@ -311,20 +311,16 @@ GMPServiceChild::GetBridgedGMPContentParent(ProcessId aOtherPid,
   mContentParents.Get(aOtherPid, aGMPContentParent);
 }
 
-static PLDHashOperator
-FindAndRemoveGMPContentParent(const uint64_t& aKey,
-                              nsRefPtr<GMPContentParent>& aData,
-                              void* aUserArg)
-{
-  return aData == aUserArg ?
-         (PLDHashOperator)(PL_DHASH_STOP | PL_DHASH_REMOVE) :
-         PL_DHASH_NEXT;
-}
-
 void
 GMPServiceChild::RemoveGMPContentParent(GMPContentParent* aGMPContentParent)
 {
-  mContentParents.Enumerate(FindAndRemoveGMPContentParent, aGMPContentParent);
+  for (auto iter = mContentParents.Iter(); !iter.Done(); iter.Next()) {
+    nsRefPtr<GMPContentParent>& parent = iter.Data();
+    if (parent == aGMPContentParent) {
+      iter.Remove();
+      break;
+    }
+  }
 }
 
 static PLDHashOperator

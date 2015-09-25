@@ -87,6 +87,9 @@ public:
    */
   static void RemoteDocAdded(DocAccessibleParent* aDoc);
 
+  static const nsTArray<DocAccessibleParent*>* TopLevelRemoteDocs()
+    { return sRemoteDocuments; }
+
 #ifdef DEBUG
   bool IsProcessingRefreshDriverNotification() const;
 #endif

@@ -53,7 +53,7 @@ struct ImageCacheEntryData {
   // Value
   nsCOMPtr<imgIRequest> mRequest;
   RefPtr<SourceSurface> mSourceSurface;
-  gfxIntSize mSize;
+  IntSize mSize;
   nsExpirationState mState;
 };
 
@@ -237,7 +237,7 @@ CanvasImageCache::NotifyDrawImage(Element* aImage,
                                   HTMLCanvasElement* aCanvas,
                                   imgIRequest* aRequest,
                                   SourceSurface* aSource,
-                                  const gfxIntSize& aSize)
+                                  const IntSize& aSize)
 {
   if (!gImageCache) {
     gImageCache = new ImageCache();

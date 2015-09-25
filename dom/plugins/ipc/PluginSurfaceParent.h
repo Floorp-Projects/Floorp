@@ -23,7 +23,7 @@ class PluginSurfaceParent : public PPluginSurfaceParent
 {
 public:
   PluginSurfaceParent(const WindowsSharedMemoryHandle& handle,
-                      const gfxIntSize& size,
+                      const gfx::IntSize& size,
                       const bool transparent);
   ~PluginSurfaceParent();
 

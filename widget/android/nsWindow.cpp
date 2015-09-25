@@ -83,8 +83,8 @@ using namespace mozilla::layers;
 NS_IMPL_ISUPPORTS_INHERITED0(nsWindow, nsBaseWidget)
 
 // The dimensions of the current android view
-static gfxIntSize gAndroidBounds = gfxIntSize(0, 0);
-static gfxIntSize gAndroidScreenBounds;
+static gfx::IntSize gAndroidBounds = gfx::IntSize(0, 0);
+static gfx::IntSize gAndroidScreenBounds;
 
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/CompositorParent.h"
@@ -623,7 +623,7 @@ nsWindow::Resize(double aX,
     mBounds.height = NSToIntRound(aHeight);
 
     if (needSizeDispatch)
-        OnSizeChanged(gfxIntSize(aWidth, aHeight));
+        OnSizeChanged(gfx::IntSize(aWidth, aHeight));
 
     // Should we skip honoring aRepaint here?
     if (aRepaint && FindTopLevel() == nsWindow::TopWindow())
@@ -1045,7 +1045,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 }
 
 void
-nsWindow::OnSizeChanged(const gfxIntSize& aSize)
+nsWindow::OnSizeChanged(const gfx::IntSize& aSize)
 {
     ALOG("nsWindow: %p OnSizeChanged [%d %d]", (void*)this, aSize.width, aSize.height);
 
@@ -1071,7 +1071,7 @@ nsWindow::InitEvent(WidgetGUIEvent& event, nsIntPoint* aPoint)
     event.time = PR_Now() / 1000;
 }
 
-gfxIntSize
+gfx::IntSize
 nsWindow::GetAndroidScreenBounds()
 {
     if (XRE_IsContentProcess()) {

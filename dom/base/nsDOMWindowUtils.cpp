@@ -410,7 +410,7 @@ nsDOMWindowUtils::SetDisplayPortMarginsForElement(float aLeftMargin,
                                                   nsIDOMElement* aElement,
                                                   uint32_t aPriority)
 {
-  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+  MOZ_RELEASE_ASSERT(nsContentUtils::LegacyIsCallerChromeOrNativeCode());
 
   nsIPresShell* presShell = GetPresShell();
   if (!presShell) {
@@ -481,7 +481,7 @@ nsDOMWindowUtils::SetDisplayPortBaseForElement(int32_t aX,
 NS_IMETHODIMP
 nsDOMWindowUtils::SetResolution(float aResolution)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
+  if (!nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
@@ -547,7 +547,7 @@ nsDOMWindowUtils::GetIsResolutionSet(bool* aIsResolutionSet) {
 NS_IMETHODIMP
 nsDOMWindowUtils::SetIsFirstPaint(bool aIsFirstPaint)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
+  if (!nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
@@ -562,7 +562,7 @@ nsDOMWindowUtils::SetIsFirstPaint(bool aIsFirstPaint)
 NS_IMETHODIMP
 nsDOMWindowUtils::GetIsFirstPaint(bool *aIsFirstPaint)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
+  if (!nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
@@ -577,7 +577,7 @@ nsDOMWindowUtils::GetIsFirstPaint(bool *aIsFirstPaint)
 NS_IMETHODIMP
 nsDOMWindowUtils::GetPresShellId(uint32_t *aPresShellId)
 {
-  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+  MOZ_RELEASE_ASSERT(nsContentUtils::LegacyIsCallerChromeOrNativeCode());
 
   nsIPresShell* presShell = GetPresShell();
   if (presShell) {
@@ -1036,7 +1036,7 @@ nsDOMWindowUtils::SendNativeKeyEvent(int32_t aNativeKeyboardLayout,
                                      const nsAString& aUnmodifiedCharacters,
                                      nsIObserver* aObserver)
 {
-  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+  MOZ_RELEASE_ASSERT(nsContentUtils::LegacyIsCallerChromeOrNativeCode());
 
   // get the widget to send the event to
   nsCOMPtr<nsIWidget> widget = GetWidget();
@@ -1722,7 +1722,9 @@ nsDOMWindowUtils::GetBoundsWithoutFlushing(nsIDOMElement *aElement,
 NS_IMETHODIMP
 nsDOMWindowUtils::GetRootBounds(nsIDOMClientRect** aResult)
 {
-  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+  // Unfortunately, this is called from AndroidBridge.cpp and the logic here is
+  // nontrivial, so we need to allow non-scripted callers.
+  MOZ_RELEASE_ASSERT(nsContentUtils::LegacyIsCallerChromeOrNativeCode());
 
   nsIDocument* doc = GetDocument();
   NS_ENSURE_STATE(doc);
@@ -3150,7 +3152,7 @@ nsDOMWindowUtils::GetPlugins(JSContext* cx, JS::MutableHandle<JS::Value> aPlugin
 NS_IMETHODIMP
 nsDOMWindowUtils::SetScrollPositionClampingScrollPortSize(float aWidth, float aHeight)
 {
-  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+  MOZ_RELEASE_ASSERT(nsContentUtils::LegacyIsCallerChromeOrNativeCode());
 
   if (!(aWidth >= 0.0 && aHeight >= 0.0)) {
     return NS_ERROR_ILLEGAL_VALUE;

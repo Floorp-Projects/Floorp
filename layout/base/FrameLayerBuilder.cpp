@@ -1576,7 +1576,7 @@ FrameLayerBuilder::FlashPaint(gfxContext *aContext)
   float r = float(rand()) / RAND_MAX;
   float g = float(rand()) / RAND_MAX;
   float b = float(rand()) / RAND_MAX;
-  aContext->SetColor(gfxRGBA(r, g, b, 0.4));
+  aContext->SetColor(Color(r, g, b, 0.4f));
   aContext->Paint();
 }
 

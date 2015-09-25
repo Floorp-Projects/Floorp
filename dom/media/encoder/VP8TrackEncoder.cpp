@@ -251,7 +251,7 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
   nsRefPtr<Image> img;
   if (aChunk.mFrame.GetForceBlack() || aChunk.IsNull()) {
     if (!mMuteFrame) {
-      mMuteFrame = VideoFrame::CreateBlackImage(gfxIntSize(mFrameWidth, mFrameHeight));
+      mMuteFrame = VideoFrame::CreateBlackImage(gfx::IntSize(mFrameWidth, mFrameHeight));
       MOZ_ASSERT(mMuteFrame);
     }
     img = mMuteFrame;
