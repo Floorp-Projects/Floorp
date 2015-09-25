@@ -320,10 +320,13 @@ AsyncExecuteStatements::executeAndProcessStatement(sqlite3_stmt *aStatement,
     }
   } while (hasResults);
 
-#ifdef DEBUG
-  // Check to make sure that this statement was smart about what it did.
-  checkAndLogStatementPerformance(aStatement);
+#ifndef MOZ_STORAGE_SORTWARNING_SQL_DUMP
+  if (MOZ_LOG_TEST(gStorageLog, LogLevel::Warning))
 #endif
+  {
+    // Check to make sure that this statement was smart about what it did.
+    checkAndLogStatementPerformance(aStatement);
+  }
 
   // If we are done, we need to set our state accordingly while we still hold
   // our mutex.  We would have already returned if we were canceled or had
