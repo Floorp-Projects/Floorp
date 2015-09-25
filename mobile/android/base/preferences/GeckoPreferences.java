@@ -39,6 +39,7 @@ import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.healthreport.HealthReportConstants;
 import org.mozilla.gecko.db.BrowserContract.SuggestedSites;
 import org.mozilla.gecko.restrictions.Restriction;
+import org.mozilla.gecko.tabqueue.TabQueueHelper;
 import org.mozilla.gecko.updater.UpdateService;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.GeckoEventListener;
@@ -693,8 +694,7 @@ OnSharedPreferenceChangeListener
                 } else if (pref instanceof PanelsPreferenceCategory) {
                     mPanelsPreferenceCategory = (PanelsPreferenceCategory) pref;
                 }
-                if(AppConstants.MOZ_ANDROID_TAB_QUEUE && PREFS_CUSTOMIZE_SCREEN.equals(key)) {
-                    // Only change the customize pref screen summary on nightly builds with the tab queue build flag.
+                if(TabQueueHelper.TAB_QUEUE_ENABLED && PREFS_CUSTOMIZE_SCREEN.equals(key)) {
                     pref.setSummary(getString(R.string.pref_category_customize_alt_summary));
                 }
                 if (getResources().getString(R.string.pref_category_input_options).equals(key)) {
@@ -847,7 +847,7 @@ OnSharedPreferenceChangeListener
                     }
                 } else if (PREFS_TAB_QUEUE.equals(key)) {
                     // Only show tab queue pref on nightly builds with the tab queue build flag.
-                    if (!AppConstants.MOZ_ANDROID_TAB_QUEUE) {
+                    if (!TabQueueHelper.TAB_QUEUE_ENABLED) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
