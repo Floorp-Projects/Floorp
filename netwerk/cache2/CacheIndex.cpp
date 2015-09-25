@@ -862,7 +862,7 @@ CacheIndex::RemoveEntry(const SHA1Sum::Hash *aHash)
       } else {
         if (entry) {
           if (!entry->IsDirty() && entry->IsFileEmpty()) {
-            index->mIndex.RemoveEntry(*aHash);
+            index->mIndex.RemoveEntry(entry);
             entry = nullptr;
           } else {
             entry->MarkRemoved();
