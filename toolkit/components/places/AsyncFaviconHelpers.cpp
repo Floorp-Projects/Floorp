@@ -399,7 +399,7 @@ AsyncFetchAndSetIconForPage::start(nsIURI* aFaviconURI,
 
   if (iconKey) {
     icon = iconKey->iconData;
-    favicons->mUnassociatedIcons.RemoveEntry(aFaviconURI);
+    favicons->mUnassociatedIcons.RemoveEntry(iconKey);
   } else {
     icon.fetchMode = aFetchMode;
     rv = aFaviconURI->GetSpec(icon.spec);
