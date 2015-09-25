@@ -13,7 +13,6 @@ import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.tabs.TabHistoryController;
 import org.mozilla.gecko.menu.MenuItemActionBar;
 import org.mozilla.gecko.util.ColorUtils;
-import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.widget.themed.ThemedTextView;
 
 import android.content.Context;
@@ -41,8 +40,6 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
     protected final BackButton backButton;
     protected final ForwardButton forwardButton;
 
-    protected final View menuButtonMarginView;
-
     private final PorterDuffColorFilter privateBrowsingTabletMenuItemColorFilter;
 
     protected abstract void animateForwardButton(ForwardButtonAnimation animation);
@@ -66,11 +63,6 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
 
         privateBrowsingTabletMenuItemColorFilter = new PorterDuffColorFilter(
                 ColorUtils.getColor(context, R.color.tabs_tray_icon_grey), PorterDuff.Mode.SRC_IN);
-
-        menuButtonMarginView = findViewById(R.id.menu_margin);
-        if (menuButtonMarginView != null && !HardwareUtils.hasMenuButton()) {
-            menuButtonMarginView.setVisibility(View.VISIBLE);
-        }
     }
 
     private void initButtonListeners() {
