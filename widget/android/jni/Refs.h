@@ -8,7 +8,6 @@
 
 #include "nsError.h" // for nsresult
 #include "nsString.h"
-#include "nsTArray.h"
 
 namespace mozilla {
 namespace jni {
@@ -542,76 +541,6 @@ public:
 };
 
 
-// Ref specialization for jobjectArray.
-template<>
-class Ref<ObjectArray> : public RefBase<ObjectArray, jobjectArray>
-{
-    friend class RefBase<ObjectArray, jobjectArray>;
-    friend class detail::TypeAdapter<Ref<ObjectArray>>;
-
-    typedef RefBase<ObjectArray, jobjectArray> Base;
-
-protected:
-    Ref(jobject instance) : Base(instance) {}
-
-    Ref(const Ref& ref) : Base(ref.mInstance) {}
-
-public:
-    MOZ_IMPLICIT Ref(decltype(nullptr)) : Base(nullptr) {}
-
-    // Get the length of the object array.
-    size_t Length() const
-    {
-        MOZ_ASSERT(ObjectArray::mInstance);
-        JNIEnv* const env = GetEnvForThread();
-        const size_t ret = env->GetArrayLength(jarray(ObjectArray::mInstance));
-        HandleUncaughtException(env);
-        return ret;
-    }
-
-    Object::LocalRef GetElement(size_t index) const
-    {
-        MOZ_ASSERT(ObjectArray::mInstance);
-        JNIEnv* const env = GetEnvForThread();
-        auto ret = Object::LocalRef::Adopt(env, env->GetObjectArrayElement(
-                jobjectArray(ObjectArray::mInstance), jsize(index)));
-        HandleUncaughtException(env);
-        return ret;
-    }
-
-    nsTArray<Object::LocalRef> GetElements() const
-    {
-        MOZ_ASSERT(ObjectArray::mInstance);
-        JNIEnv* const env = GetEnvForThread();
-        const jsize len = size_t(env->GetArrayLength(
-                jarray(ObjectArray::mInstance)));
-
-        nsTArray<Object::LocalRef> array((size_t(len)));
-        for (jsize i = 0; i < len; i++) {
-            array.AppendElement(Object::LocalRef::Adopt(
-                    env, env->GetObjectArrayElement(
-                            jobjectArray(ObjectArray::mInstance), i)));
-            HandleUncaughtException(env);
-        }
-        return array;
-    }
-
-    operator nsTArray<Object::LocalRef>() const
-    {
-        return GetElements();
-    }
-
-    void SetElement(size_t index, Object::Param element) const
-    {
-        MOZ_ASSERT(ObjectArray::mInstance);
-        JNIEnv* const env = GetEnvForThread();
-        env->SetObjectArrayElement(jobjectArray(ObjectArray::mInstance),
-                                   jsize(index), element.Get());
-        HandleUncaughtException(env);
-    }
-};
-
-
 // Ref specialization for jstring.
 template<>
 class Ref<String> : public RefBase<String, jstring>
@@ -619,7 +548,7 @@ class Ref<String> : public RefBase<String, jstring>
     friend class RefBase<String, jstring>;
     friend struct detail::TypeAdapter<Ref<String>>;
 
-    typedef RefBase<String, jstring> Base;
+    typedef RefBase<TypedObject<jstring>, jstring> Base;
 
 protected:
     Ref(jobject instance) : Base(instance) {}
