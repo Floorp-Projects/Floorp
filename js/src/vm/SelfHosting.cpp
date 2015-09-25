@@ -159,8 +159,9 @@ static bool
 intrinsic_OwnPropertyKeys(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return GetOwnPropertyKeys(cx, args,
-                              JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS);
+    MOZ_ASSERT(args[0].isObject());
+    MOZ_ASSERT(args[1].isInt32());
+    return GetOwnPropertyKeys(cx, args, args[1].toInt32());
 }
 
 static void
