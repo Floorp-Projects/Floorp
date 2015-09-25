@@ -86,6 +86,25 @@ template<class Impl>
 constexpr JNINativeMethod GeckoView::Window::Natives<Impl>::methods[];
 
 template<class Impl>
+class PrefsHelper::Natives : public mozilla::jni::NativeImpl<PrefsHelper, Impl>
+{
+public:
+    static constexpr JNINativeMethod methods[] = {
+
+        mozilla::jni::MakeNativeMethod<PrefsHelper::GetPrefsById_t>(
+                mozilla::jni::NativeStub<PrefsHelper::GetPrefsById_t, Impl>
+                ::template Wrap<&Impl::GetPrefsById>),
+
+        mozilla::jni::MakeNativeMethod<PrefsHelper::RemovePrefsObserver_t>(
+                mozilla::jni::NativeStub<PrefsHelper::RemovePrefsObserver_t, Impl>
+                ::template Wrap<&Impl::RemovePrefsObserver>)
+    };
+};
+
+template<class Impl>
+constexpr JNINativeMethod PrefsHelper::Natives<Impl>::methods[];
+
+template<class Impl>
 class NativeJSContainer::Natives : public mozilla::jni::NativeImpl<NativeJSContainer, Impl>
 {
 public:
