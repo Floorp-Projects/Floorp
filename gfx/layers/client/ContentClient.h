@@ -88,10 +88,6 @@ public:
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
-  virtual void Dump(std::stringstream& aStream,
-                    const char* aPrefix="",
-                    bool aDumpHtml=false) {};
-
   virtual void Clear() = 0;
   virtual RotatedContentBuffer::PaintState BeginPaintBuffer(PaintedLayer* aLayer,
                                                             uint32_t aFlags) = 0;
