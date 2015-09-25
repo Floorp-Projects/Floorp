@@ -18,6 +18,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Handler;
 import android.provider.Settings.System;
+import android.telephony.TelephonyManager;
 import android.util.Base64;
 import android.util.Log;
 
@@ -164,7 +165,8 @@ class SettingsMapper extends ContentObserver implements GeckoEventListener {
         mContext = context;
         EventDispatcher.getInstance()
                        .registerGeckoThreadListener(this,
-                                                    "Settings:Change");
+                                                    "Settings:Change",
+                                                    "Android:GetIMEI");
 
         mContext.getContentResolver()
                 .registerContentObserver(System.CONTENT_URI,
@@ -194,7 +196,8 @@ class SettingsMapper extends ContentObserver implements GeckoEventListener {
     void destroy() {
         EventDispatcher.getInstance()
                        .unregisterGeckoThreadListener(this,
-                                                      "Settings:Change");
+                                                      "Settings:Change",
+                                                      "Android:GetIMEI");
         mGeckoSettings.clear();
         mGeckoSettings = null;
         mAndroidSettings.clear();
@@ -205,17 +208,30 @@ class SettingsMapper extends ContentObserver implements GeckoEventListener {
     public void handleMessage(String event, JSONObject message) {
         Log.w(LOGTAG, "Received " + event);
 
-        try {
-            String setting = message.getString("setting");
-            BaseMapping mapping = mGeckoSettings.get(setting);
-            if (mapping != null) {
-                Log.d(LOGTAG, "Changing gecko setting " + setting);
-                mapping.onGeckoChange(setting, message);
-            } else {
-                Log.d(LOGTAG, "No gecko mapping registered for " + setting);
+        if ("Settings:Change".equals(event)) {
+            try {
+                String setting = message.getString("setting");
+                BaseMapping mapping = mGeckoSettings.get(setting);
+                if (mapping != null) {
+                    Log.d(LOGTAG, "Changing gecko setting " + setting);
+                    mapping.onGeckoChange(setting, message);
+                } else {
+                    Log.d(LOGTAG, "No gecko mapping registered for " + setting);
+                }
+            } catch(Exception ex) {
+                Log.d(LOGTAG, "Error getting setting name", ex);
             }
-        } catch(Exception ex) {
-            Log.d(LOGTAG, "Error getting setting name", ex);
+        } else if ("Android:GetIMEI".equals(event)) {
+            TelephonyManager telManager =
+            (TelephonyManager)mContext.getSystemService(Context.TELEPHONY_SERVICE);
+            JSONObject ret = new JSONObject();
+            Log.d(LOGTAG, "Getting IMEI: " + telManager.getDeviceId());
+            try {
+                ret.put("imei", telManager.getDeviceId());
+            } catch(Exception jsonEx) {
+                Log.wtf(LOGTAG, "Error getting IMEI", jsonEx);
+            }
+            EventDispatcher.sendResponse(message, ret);
         }
     }
 
