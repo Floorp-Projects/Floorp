@@ -15,7 +15,6 @@
 
 class gfxContext;
 struct gfxRect;
-struct gfxRGBA;
 
 namespace mozilla {
   namespace gfx {
