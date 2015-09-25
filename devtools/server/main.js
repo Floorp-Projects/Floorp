@@ -413,11 +413,6 @@ var DebuggerServer = {
       constructor: "DirectorRegistryActor",
       type: { global: true }
     });
-    this.registerModule("devtools/server/actors/heap-snapshot-file", {
-      prefix: "heapSnapshotFile",
-      constructor: "HeapSnapshotFileActor",
-      type: { global: true }
-    });
   },
 
   /**
