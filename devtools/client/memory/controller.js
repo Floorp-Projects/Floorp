@@ -3,26 +3,26 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+const { loader, require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
+
 const { Task } = require("resource://gre/modules/Task.jsm");
-const Store = require("./store");
+const { Heritage, ViewHelpers, WidgetMethods } = require("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
 
 /**
  * The current target, toolbox and MemoryFront, set by this tool's host.
  */
 var gToolbox, gTarget, gFront;
 
-const REDUX_METHODS_TO_PIPE = ["dispatch", "subscribe", "getState"];
+/**
+ * Initializes the profiler controller and views.
+ */
+const MemoryController = {
+  initialize: Task.async(function *() {
+    yield gFront.attach();
+  }),
 
-const MemoryController = exports.MemoryController = function ({ toolbox, target, front }) {
-  this.store = Store();
-  this.toolbox = toolbox;
-  this.target = target;
-  this.front = front;
-};
-
-REDUX_METHODS_TO_PIPE.map(m =>
-  MemoryController.prototype[m] = function (...args) { return this.store[m](...args); });
-
-MemoryController.prototype.destroy = function () {
-  this.store = this.toolbox = this.target = this.front = null;
+  destroy: Task.async(function *() {
+    yield gFront.detach();
+  })
 };

@@ -32,8 +32,8 @@ MemoryPanel.prototype = {
                                            this.target.form,
                                            rootForm);
 
-    yield this.panelWin.gFront.attach();
-    return this._opening = this.panelWin.initialize().then(() => {
+    console.log(this.panelWin, this.panelWin.MemoryController);
+    this._opening = this.panelWin.MemoryController.initialize().then(() => {
       this.isReady = true;
       this.emit("ready");
       return this;
@@ -47,30 +47,21 @@ MemoryPanel.prototype = {
     return this._toolbox.target;
   },
 
-  destroy: Task.async(function *() {
+  destroy: function () {
     // Make sure this panel is not already destroyed.
     if (this._destroyer) {
       return this._destroyer;
     }
 
-<<<<<<< HEAD
     this._destroyer = this.panelWin.MemoryController.destroy().then(() => {
-=======
-    yield this.panelWin.gFront.detach();
-    return this._destroyer = this.panelWin.destroy().then(() => {
->>>>>>> bug 1201949
       // Destroy front to ensure packet handler is removed from client
       this.panelWin.gFront.destroy();
       this.panelWin = null;
       this.emit("destroyed");
       return this;
     });
-<<<<<<< HEAD
     return this._destroyer;
   }
-=======
-  })
->>>>>>> bug 1201949
 };
 
 exports.MemoryPanel = MemoryPanel;
