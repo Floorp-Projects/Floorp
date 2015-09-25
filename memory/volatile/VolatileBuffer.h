@@ -9,6 +9,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/RefCounted.h"
 
 /* VolatileBuffer
  *

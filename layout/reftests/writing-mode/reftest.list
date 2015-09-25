@@ -152,6 +152,14 @@ test-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLin
 == 1175789-underline-overline-1.html 1175789-underline-overline-1-ref.html
 == 1188061-1-nsChangeHint_ClearAncestorIntrinsics.html 1188061-1-nsChangeHint_ClearAncestorIntrinsics-ref.html
 == 1188061-2-nsChangeHint_UpdateComputedBSize.html 1188061-2-nsChangeHint_UpdateComputedBSize-ref.html
+
+# tests involving sideways-lr mode
+== 1193519-sideways-lr-1.html 1193519-sideways-lr-1-ref.html
+== 1193519-sideways-lr-2.html 1193519-sideways-lr-2-ref.html
+== 1193519-sideways-lr-3.html 1193519-sideways-lr-3-ref.html
+== 1193519-sideways-lr-4.html 1193519-sideways-lr-4-ref.html
+fuzzy-if(gtkWidget||B2G,255,6) fuzzy-if(cocoaWidget,65,69) == 1193519-sideways-lr-decoration-1.html 1193519-sideways-lr-decoration-1-ref.html
+
 == 1196887-1-computed-display-inline-block.html 1196887-1-computed-display-inline-block-ref.html
 == 1205787-legacy-svg-values-1.html 1205787-legacy-svg-values-1-ref.html
 

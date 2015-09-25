@@ -87,3 +87,7 @@ fuzzy-if(cocoaWidget,23,162) == border-collapse-bevels-1e.html border-collapse-b
 
 == vertical-rl-row-progression-1a.html vertical-rl-row-progression-1-ref.html
 == vertical-rl-row-progression-1b.html vertical-rl-row-progression-1-ref.html
+== sideways-lr-row-progression-1a.html sideways-lr-row-progression-1-ref.html
+== sideways-lr-row-progression-1b.html sideways-lr-row-progression-1-ref.html
+== sideways-rl-row-progression-1a.html sideways-rl-row-progression-1-ref.html
+== sideways-rl-row-progression-1b.html sideways-rl-row-progression-1-ref.html

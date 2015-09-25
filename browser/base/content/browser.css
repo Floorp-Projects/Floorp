@@ -599,16 +599,13 @@ toolbar[mode="text"] #bookmarks-menu-button > .toolbarbutton-menubutton-button >
 menupopup[emptyplacesresult="true"] > .hide-if-empty-places-result {
   display: none;
 }
-
 menuitem.spell-suggestion {
   font-weight: bold;
 }
-
 /* apply Fitts' law to the notification bar's close button */
-window[sizemode="maximized"] #content .notification-inner {
-  border-right: 0px !important;
+window:not([sizemode="normal"]) .notification-inner {
+  -moz-border-end-width: 0 !important;
 }
-
 /* Hide extension toolbars that neglected to set the proper class */
 window[chromehidden~="location"][chromehidden~="toolbar"] toolbar:not(.chromeclass-menubar),
 window[chromehidden~="toolbar"] toolbar:not(#nav-bar):not(#TabsToolbar):not(#print-preview-toolbar):not(.chromeclass-menubar) {

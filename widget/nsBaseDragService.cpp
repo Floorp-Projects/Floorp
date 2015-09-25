@@ -432,8 +432,8 @@ nsBaseDragService::DragMoved(int32_t aX, int32_t aY)
     nsIFrame* frame = mDragPopup->GetPrimaryFrame();
     if (frame && frame->GetType() == nsGkAtoms::menuPopupFrame) {
       nsPresContext* presContext = frame->PresContext();
-      int32_t x = presContext->DevPixelsToIntCSSPixels(aX - mImageX);
-      int32_t y = presContext->DevPixelsToIntCSSPixels(aY - mImageY);
+      int32_t x = presContext->DevPixelsToIntCSSPixels(aX) - mImageX;
+      int32_t y = presContext->DevPixelsToIntCSSPixels(aY) - mImageY;
       (static_cast<nsMenuPopupFrame *>(frame))->MoveTo(x, y, true);
     }
   }
