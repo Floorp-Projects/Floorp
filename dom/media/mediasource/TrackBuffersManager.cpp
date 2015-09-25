@@ -1897,29 +1897,34 @@ TrackBuffersManager::Seek(TrackInfo::TrackType aTrack,
   MOZ_ASSERT(OnTaskQueue());
   auto& trackBuffer = GetTracksData(aTrack);
   const TrackBuffersManager::TrackBuffer& track = GetTrackBuffer(aTrack);
-  TimeUnit lastKeyFrameTime;
+  Maybe<TimeUnit> lastKeyFrameTime;
   TimeUnit lastKeyFrameTimecode;
   uint32_t lastKeyFrameIndex = 0;
   for (uint32_t i = 0; i < track.Length(); i++) {
     const nsRefPtr<MediaRawData>& sample = track[i];
     TimeUnit sampleTime = TimeUnit::FromMicroseconds(sample->mTime);
-    if (sampleTime > aTime) {
+    if (sampleTime > aTime && lastKeyFrameTime.isSome()) {
       break;
     }
     if (sample->mKeyframe) {
       lastKeyFrameTimecode = TimeUnit::FromMicroseconds(sample->mTimecode);
-      lastKeyFrameTime = sampleTime;
+      lastKeyFrameTime = Some(sampleTime);
       lastKeyFrameIndex = i;
     }
-    if (sampleTime == aTime) {
+    if (sampleTime == aTime ||
+        (sampleTime > aTime && lastKeyFrameTime.isSome())) {
       break;
     }
   }
+  MSE_DEBUG("Keyframe %s found at %lld",
+            lastKeyFrameTime.isSome() ? "" : "not",
+            lastKeyFrameTime.refOr(TimeUnit()).ToMicroseconds());
+
   trackBuffer.mNextGetSampleIndex = Some(lastKeyFrameIndex);
   trackBuffer.mNextSampleTimecode = lastKeyFrameTimecode;
-  trackBuffer.mNextSampleTime = lastKeyFrameTime;
+  trackBuffer.mNextSampleTime = lastKeyFrameTime.refOr(TimeUnit());
 
-  return lastKeyFrameTime;
+  return lastKeyFrameTime.refOr(TimeUnit());
 }
 
 uint32_t
