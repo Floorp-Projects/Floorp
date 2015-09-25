@@ -387,8 +387,6 @@ parent:
                     uint32_t stride, uint8_t format,
                     uint32_t hotspotX, uint32_t hotspotY, bool force);
 
-    SetBackgroundColor(nscolor color);
-
     /**
      * Used to set the current text of the status tooltip.
      * Nowadays this is mainly used for link locations on hover.
