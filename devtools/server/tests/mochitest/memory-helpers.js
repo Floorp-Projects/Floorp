@@ -36,7 +36,7 @@ function startServerAndGetSelectedTabMemory() {
         }
 
         var form = response.tabs[response.selected];
-        var memory = MemoryFront(client, form, response);
+        var memory = MemoryFront(client, form);
 
         resolve({ memory, client });
       });

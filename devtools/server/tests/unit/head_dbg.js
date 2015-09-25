@@ -52,21 +52,10 @@ function makeMemoryActorTest(testGeneratorFunction) {
   return function run_test() {
     do_test_pending();
     startTestDebuggerServer(TEST_GLOBAL_NAME).then(client => {
-      DebuggerServer.registerModule("devtools/server/actors/heap-snapshot-file", {
-        prefix: "heapSnapshotFile",
-        constructor: "HeapSnapshotFileActor",
-        type: { global: true }
-      });
-
-      getTestTab(client, TEST_GLOBAL_NAME, function (tabForm, rootForm) {
-        if (!tabForm || !rootForm) {
-          ok(false, "Could not attach to test tab: " + TEST_GLOBAL_NAME);
-          return;
-        }
-
+      getTestTab(client, TEST_GLOBAL_NAME, function (tabForm) {
         Task.spawn(function* () {
           try {
-            const memoryFront = new MemoryFront(client, tabForm, rootForm);
+            const memoryFront = new MemoryFront(client, tabForm);
             yield memoryFront.attach();
             yield* testGeneratorFunction(client, memoryFront);
             yield memoryFront.detach();
@@ -305,7 +294,7 @@ function getTestTab(aClient, aTitle, aCallback) {
   aClient.listTabs(function (aResponse) {
     for (let tab of aResponse.tabs) {
       if (tab.title === aTitle) {
-        aCallback(tab, aResponse);
+        aCallback(tab);
         return;
       }
     }
