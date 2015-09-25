@@ -696,7 +696,7 @@ class IonBuilder
     bool jsop_setprop(PropertyName* name);
     bool jsop_delprop(PropertyName* name);
     bool jsop_delelem();
-    bool jsop_newarray(uint32_t count);
+    bool jsop_newarray(uint32_t length);
     bool jsop_newarray_copyonwrite();
     bool jsop_newobject();
     bool jsop_initelem();

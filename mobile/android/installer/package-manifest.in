@@ -311,6 +311,8 @@
 @BINPATH@/components/BrowserElementParent.js
 @BINPATH@/components/FeedProcessor.manifest
 @BINPATH@/components/FeedProcessor.js
+@BINPATH@/components/PackagedAppUtils.manifest
+@BINPATH@/components/PackagedAppUtils.js
 @BINPATH@/components/BrowserFeeds.manifest
 @BINPATH@/components/FeedConverter.js
 @BINPATH@/components/FeedWriter.js

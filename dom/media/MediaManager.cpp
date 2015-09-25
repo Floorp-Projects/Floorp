@@ -1485,6 +1485,7 @@ MediaManager::MediaManager()
   : mMediaThread(nullptr)
   , mMutex("mozilla::MediaManager")
   , mBackend(nullptr) {
+  mPrefs.mFreq   = 1000; // 1KHz test tone
   mPrefs.mWidth  = 0; // adaptive default
   mPrefs.mHeight = 0; // adaptive default
   mPrefs.mFPS    = MediaEngine::DEFAULT_VIDEO_FPS;
@@ -1497,8 +1498,8 @@ MediaManager::MediaManager()
       GetPrefs(branch, nullptr);
     }
   }
-  LOG(("%s: default prefs: %dx%d @%dfps (min %d)", __FUNCTION__,
-       mPrefs.mWidth, mPrefs.mHeight, mPrefs.mFPS, mPrefs.mMinFPS));
+  LOG(("%s: default prefs: %dx%d @%dfps (min %d), %dHz test tones", __FUNCTION__,
+       mPrefs.mWidth, mPrefs.mHeight, mPrefs.mFPS, mPrefs.mMinFPS, mPrefs.mFreq));
 }
 
 NS_IMPL_ISUPPORTS(MediaManager, nsIMediaManagerService, nsIObserver)
@@ -2512,6 +2513,7 @@ MediaManager::GetPrefs(nsIPrefBranch *aBranch, const char *aData)
   GetPref(aBranch, "media.navigator.video.default_height", aData, &mPrefs.mHeight);
   GetPref(aBranch, "media.navigator.video.default_fps", aData, &mPrefs.mFPS);
   GetPref(aBranch, "media.navigator.video.default_minfps", aData, &mPrefs.mMinFPS);
+  GetPref(aBranch, "media.navigator.audio.fake_frequency", aData, &mPrefs.mFreq);
 }
 
 nsresult
@@ -2544,6 +2546,7 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
       prefs->RemoveObserver("media.navigator.video.default_height", this);
       prefs->RemoveObserver("media.navigator.video.default_fps", this);
       prefs->RemoveObserver("media.navigator.video.default_minfps", this);
+      prefs->RemoveObserver("media.navigator.audio.fake_frequency", this);
     }
 
     // Close off any remaining active windows.
