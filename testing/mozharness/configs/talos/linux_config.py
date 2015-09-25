@@ -35,8 +35,6 @@ config = {
         "install",
         "run-tests",
     ],
-    "python_webserver": False,
-    "webroot": '%s/../talos-data' % os.getcwd(),
     "default_blob_upload_servers": [
         "https://blobupload.elasticbeanstalk.com",
     ],

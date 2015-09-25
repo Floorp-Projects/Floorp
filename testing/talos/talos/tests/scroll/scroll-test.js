@@ -122,11 +122,3 @@ function testScroll(target, stepSize, opt_reportFunc, opt_numSteps)
   }, 260);
 }
 // End scroll test - End duplicated code
-
-// This code below here is unique to tscroll.js inside of pageloader
-function handleMessageFromChrome(message) {
-  var payload = message.data.details;
-  testScroll(payload.target, payload.stepSize, 'PageLoader:RecordTime', payload.opt_numSteps);
-}
-
-addMessageListener("PageLoader:ScrollTest", handleMessageFromChrome);

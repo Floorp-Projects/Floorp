@@ -98,12 +98,11 @@ def create_parser(mach_interface=False):
             metavar="PREF=VALUE",
             help="defines an extra user preference")
     add_arg('--webServer', dest='webserver',
-            help="address of the webserver hosting the talos files")
+            help="DEPRECATED")
     if not mach_interface:
         add_arg('--develop', action='store_true', default=False,
                 help="useful for running tests on a developer machine."
-                     " Creates a local webserver and doesn't upload to the"
-                     " graph servers.")
+                     " Doesn't upload to the graph servers.")
     add_arg('--responsiveness', action='store_true',
             help="turn on responsiveness collection")
     add_arg("--cycles", type=int,

@@ -1,0 +1,4 @@
+# opacity tests
+
+http://localhost/tests/svg_opacity/big-optimizable-group-opacity-2500.svg
+http://localhost/tests/svg_opacity/small-group-opacity-2500.svg
