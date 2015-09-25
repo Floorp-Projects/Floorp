@@ -25,6 +25,7 @@ class nsRenderingContext;
 namespace mozilla {
 
 namespace gfx {
+struct Color;
 class DrawTarget;
 } // namespace gfx
 
@@ -944,7 +945,48 @@ public:
                             const nsRect& aDirtyRect,
                             const gfxRect& aSkipRect);
 
+  /**
+   * Draws a blurred inset box shadow shape onto the destination surface.
+   * Like BlurRectangle, this is equivalent to calling Init(),
+   * drawing a rectangle onto the returned surface
+   * and then calling DoPaint, but may let us optimize better in the
+   * backend.
+   *
+   * @param aDestinationCtx      The destination to blur to.
+   * @param aDestinationRect     The rectangle to blur in app units.
+   * @param aShadowClipRect      The inside clip rect that creates the path.
+   * @param aShadowColor         The color of the blur
+   * @param aBlurRadiusAppUnits  The blur radius in app units
+   * @param aSpreadRadiusAppUnits The spread radius in app units.
+   * @param aAppUnitsPerDevPixel The number of app units in a device pixel,
+   *                             for conversion.  Most of the time you'll
+   *                             pass this from the current PresContext if
+   *                             available.
+   * @param aHasBorderRadius     If this inset box blur has a border radius
+   * @param aInnerClipRectRadii  The clip rect radii used for the inside rect's path.
+   * @param aSkipRect            An area in device pixels (NOT app units!) to avoid
+   *                             blurring over, to prevent unnecessary work.
+   */
+  bool InsetBoxBlur(gfxContext* aDestinationCtx,
+                    mozilla::gfx::Rect aDestinationRect,
+                    mozilla::gfx::Rect aShadowClipRect,
+                    mozilla::gfx::Color& aShadowColor,
+                    nscoord aBlurRadiusAppUnits,
+                    nscoord aSpreadRadiusAppUnits,
+                    int32_t aAppUnitsPerDevPixel,
+                    bool aHasBorderRadius,
+                    RectCornerRadii& aInnerClipRectRadii,
+                    mozilla::gfx::Rect aSkipRect);
+
 protected:
+  static void GetBlurAndSpreadRadius(gfxContext* aContext,
+                                     int32_t aAppUnitsPerDevPixel,
+                                     nscoord aBlurRadius,
+                                     nscoord aSpreadRadius,
+                                     mozilla::gfx::IntSize& aOutBlurRadius,
+                                     mozilla::gfx::IntSize& aOutSpreadRadius,
+                                     bool aConstrainSpreadRadius = true);
+
   gfxAlphaBoxBlur mAlphaBoxBlur;
   nsRefPtr<gfxContext> mContext;
   gfxContext* mDestinationCtx;
@@ -952,7 +994,6 @@ protected:
   /* This is true if the blur already has it's content transformed
    * by mDestinationCtx's transform */
   bool mPreTransformed;
-
 };
 
 #endif /* nsCSSRendering_h___ */

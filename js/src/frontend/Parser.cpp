@@ -6705,10 +6705,15 @@ Parser<ParseHandler>::statement(YieldHandling yieldHandling, bool canHaveDirecti
         return expressionStatement(yieldHandling);
 
       case TOK_YIELD: {
+        // Don't use a ternary operator here due to obscure linker issues
+        // around using static consts in the arms of a ternary.
+        TokenStream::Modifier modifier;
+        if (yieldExpressionsSupported())
+            modifier = TokenStream::Operand;
+        else
+            modifier = TokenStream::None;
+
         TokenKind next;
-        TokenStream::Modifier modifier = yieldExpressionsSupported()
-                                         ? TokenStream::Operand
-                                         : TokenStream::None;
         if (!tokenStream.peekToken(&next, modifier))
             return null();
         if (next == TOK_COLON) {

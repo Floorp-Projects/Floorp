@@ -29,34 +29,81 @@ class LocalesMixin(ChunkingMixin):
         self.abs_dirs = None
         self.locales = None
         self.gecko_locale_revisions = None
+        self.l10n_revisions = {}
 
     def query_locales(self):
         if self.locales is not None:
             return self.locales
         c = self.config
-        locales = c.get("locales", None)
         ignore_locales = c.get("ignore_locales", [])
         additional_locales = c.get("additional_locales", [])
+        # List of locales can be set by using different methods in the
+        # following order:
+        # 1. "locales" buildbot property: a string of locale:revision separated
+        # by space
+        # 2. "MOZ_LOCALES" env variable: a string of locale:revision separated
+        # by space
+        # 3. self.config["locales"] which can be either coming from the config
+        # or from --locale command line argument
+        # 4. using self.config["locales_file"] l10n changesets file
+        locales = None
 
-        if locales is None:
-            locales = []
-            if 'locales_file' in c:
-                # Best way to get abs/relative path to this?
-                locales_file = os.path.join(c['base_work_dir'], c['work_dir'],
-                                            c['locales_file'])
-                locales = self.parse_locales_file(locales_file)
-            else:
-                self.fatal("No way to determine locales!")
+        # Buildbot property
+        if hasattr(self, 'read_buildbot_config'):
+            self.read_buildbot_config()
+            if self.buildbot_config:
+                locales = self.buildbot_config.get("locales")
+            if locales:
+                self.info("Using locales from buildbot: %s" % locales)
+                locales = locales.split()
+        else:
+            self.info("'read_buildbot_config()' is missing, ignoring buildbot"
+                      " properties")
+
+        # Environment variable
+        if not locales and "MOZ_LOCALES" in os.environ:
+            self.debug("Using locales from environment: %s" %
+                       os.environ["MOZ_LOCALES"])
+            locales = os.environ["MOZ_LOCALES"].split()
+
+        # Command line or config
+        if not locales and c.get("locales", None):
+            locales = c["locales"]
+            self.debug("Using locales from config/CLI: %s" % locales)
+
+        # parse locale:revision if set
+        if locales:
+            for l in locales:
+                if ":" in l:
+                    # revision specified in locale string
+                    locale, revision = l.split(":", 1)
+                    self.debug("Using %s:%s" % (locale, revision))
+                    self.l10n_revisions[locale] = revision
+            # clean up locale by removing revisions
+            locales = [l.split(":")[0] for l in locales]
+
+        if not locales and 'locales_file' in c:
+            locales_file = os.path.join(c['base_work_dir'], c['work_dir'],
+                                        c['locales_file'])
+            locales = self.parse_locales_file(locales_file)
+
+        if not locales:
+            self.fatal("No locales set!")
+
         for locale in ignore_locales:
             if locale in locales:
                 self.debug("Ignoring locale %s." % locale)
                 locales.remove(locale)
+                if locale in self.l10n_revisions:
+                    del self.l10n_revisions[locale]
+
         for locale in additional_locales:
             if locale not in locales:
                 self.debug("Adding locale %s." % locale)
                 locales.append(locale)
-        if locales is None:
-            return
+
+        if not locales:
+            return None
         if 'total_locale_chunks' and 'this_locale_chunk' in c:
             self.debug("Pre-chunking locale list: %s" % str(locales))
             locales = self.query_chunked_list(locales,
@@ -79,15 +126,14 @@ class LocalesMixin(ChunkingMixin):
 
         if locales_file.endswith('json'):
             locales_json = parse_config_file(locales_file)
-            self.locale_dict = {}
             for locale in locales_json.keys():
                 if isinstance(locales_json[locale], dict):
                     if platform and platform not in locales_json[locale]['platforms']:
                         continue
-                    self.locale_dict[locale] = locales_json[locale]['revision']
+                    self.l10n_revisions[locale] = locales_json[locale]['revision']
                 else:
                     # some other way of getting this?
-                    self.locale_dict[locale] = 'default'
+                    self.l10n_revisions[locale] = 'default'
                 locales.append(locale)
         else:
             locales = self.read_from_file(locales_file).split()
@@ -177,8 +223,8 @@ class LocalesMixin(ChunkingMixin):
             hg_l10n_base = hg_l10n_base % {"user_repo_override": c["user_repo_override"]}
         for locale in locales:
             tag = c.get('hg_l10n_tag', 'default')
-            if hasattr(self, 'locale_dict'):
-                tag = self.locale_dict[locale]
+            if self.l10n_revisions.get(locale):
+                tag = self.l10n_revisions[locale]
             locale_repos.append({
                 'repo': "%s/%s" % (hg_l10n_base, locale),
                 'tag': tag,

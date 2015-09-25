@@ -317,16 +317,17 @@ GLContextProviderCGL::CreateHeadless(CreateContextFlags flags)
 
 already_AddRefed<GLContext>
 GLContextProviderCGL::CreateOffscreen(const IntSize& size,
-                                      const SurfaceCaps& caps,
+                                      const SurfaceCaps& minCaps,
                                       CreateContextFlags flags)
 {
-    nsRefPtr<GLContext> glContext = CreateHeadless(flags);
-    if (!glContext->InitOffscreen(size, caps)) {
-        NS_WARNING("Failed during InitOffscreen.");
+    RefPtr<GLContext> gl = CreateHeadless(flags);
+    if (!gl)
         return nullptr;
-    }
 
-    return glContext.forget();
+    if (!gl->InitOffscreen(size, minCaps))
+        return nullptr;
+
+    return gl.forget();
 }
 
 static nsRefPtr<GLContext> gGlobalContext;

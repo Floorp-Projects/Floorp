@@ -610,7 +610,7 @@ class PaintFrameCallback : public gfxDrawingCallback {
 public:
   PaintFrameCallback(nsIFrame* aFrame,
                      const nsSize aPaintServerSize,
-                     const gfxIntSize aRenderSize,
+                     const IntSize aRenderSize,
                      uint32_t aFlags)
    : mFrame(aFrame)
    , mPaintServerSize(aPaintServerSize)
@@ -624,7 +624,7 @@ public:
 private:
   nsIFrame* mFrame;
   nsSize mPaintServerSize;
-  gfxIntSize mRenderSize;
+  IntSize mRenderSize;
   uint32_t mFlags;
 };
 
@@ -695,7 +695,7 @@ PaintFrameCallback::operator()(gfxContext* aContext,
 nsSVGIntegrationUtils::DrawableFromPaintServer(nsIFrame*         aFrame,
                                                nsIFrame*         aTarget,
                                                const nsSize&     aPaintServerSize,
-                                               const gfxIntSize& aRenderSize,
+                                               const IntSize& aRenderSize,
                                                const DrawTarget* aDrawTarget,
                                                const gfxMatrix&  aContextMatrix,
                                                uint32_t          aFlags)

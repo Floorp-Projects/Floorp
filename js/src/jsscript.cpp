@@ -600,6 +600,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
         TreatAsRunOnce,
         HasLazyScript,
         HasNonSyntacticScope,
+        HasInnerFunctions,
     };
 
     uint32_t length, lineno, column, nslots;
@@ -735,6 +736,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
             scriptBits |= (1 << HasLazyScript);
         if (script->hasNonSyntacticScope())
             scriptBits |= (1 << HasNonSyntacticScope);
+        if (script->hasInnerFunctions())
+            scriptBits |= (1 << HasInnerFunctions);
     }
 
     if (!xdr->codeUint32(&prologueLength))
@@ -869,6 +872,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
             script->treatAsRunOnce_ = true;
         if (scriptBits & (1 << HasNonSyntacticScope))
             script->hasNonSyntacticScope_ = true;
+        if (scriptBits & (1 << HasInnerFunctions))
+            script->hasInnerFunctions_ = true;
 
         if (scriptBits & (1 << IsLegacyGenerator)) {
             MOZ_ASSERT(!(scriptBits & (1 << IsStarGenerator)));
@@ -3372,6 +3377,7 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
     dst->funHasAnyAliasedFormal_ = src->funHasAnyAliasedFormal();
     dst->hasSingletons_ = src->hasSingletons();
     dst->treatAsRunOnce_ = src->treatAsRunOnce();
+    dst->hasInnerFunctions_ = src->hasInnerFunctions();
     dst->isGeneratorExp_ = src->isGeneratorExp();
     dst->setGeneratorKind(src->generatorKind());
 

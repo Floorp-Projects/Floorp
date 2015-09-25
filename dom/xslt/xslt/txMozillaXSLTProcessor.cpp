@@ -598,7 +598,8 @@ txMozillaXSLTProcessor::ImportStylesheet(nsIDOMNode *aStyle)
     NS_ENSURE_TRUE(!mStylesheetDocument && !mStylesheet,
                    NS_ERROR_NOT_IMPLEMENTED);
 
-    if (!nsContentUtils::CanCallerAccess(aStyle)) {
+    nsCOMPtr<nsINode> node = do_QueryInterface(aStyle);
+    if (!node || !nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller()->Subsumes(node->NodePrincipal())) {
         return NS_ERROR_DOM_SECURITY_ERR;
     }
     
@@ -713,8 +714,13 @@ txMozillaXSLTProcessor::TransformToFragment(nsIDOMNode *aSource,
     NS_ENSURE_ARG_POINTER(aResult);
     NS_ENSURE_SUCCESS(mCompileResult, mCompileResult);
 
-    if (!nsContentUtils::CanCallerAccess(aSource) ||
-        !nsContentUtils::CanCallerAccess(aOutput)) {
+    nsCOMPtr<nsINode> node = do_QueryInterface(aSource);
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aOutput);
+    NS_ENSURE_TRUE(node && doc, NS_ERROR_DOM_SECURITY_ERR);
+    nsIPrincipal* subject = nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller();
+    if (!subject->Subsumes(node->NodePrincipal()) ||
+        !subject->Subsumes(doc->NodePrincipal()))
+    {
         return NS_ERROR_DOM_SECURITY_ERR;
     }
 

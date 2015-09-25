@@ -1417,7 +1417,7 @@ HTMLInputElement::GetValueInternal(nsAString& aValue) const
       return NS_OK;
 
     case VALUE_MODE_FILENAME:
-      if (nsContentUtils::IsCallerChrome()) {
+      if (nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
 #ifndef MOZ_CHILD_PERMISSIONS
         aValue.Assign(mFirstFilePath);
 #else
@@ -2994,7 +2994,7 @@ HTMLInputElement::DispatchSelectEvent(nsPresContext* aPresContext)
 
   // If already handling select event, don't dispatch a second.
   if (!mHandlingSelectEvent) {
-    WidgetEvent event(nsContentUtils::IsCallerChrome(), eFormSelect);
+    WidgetEvent event(nsContentUtils::LegacyIsCallerChromeOrNativeCode(), eFormSelect);
 
     mHandlingSelectEvent = true;
     EventDispatcher::Dispatch(static_cast<nsIContent*>(this),

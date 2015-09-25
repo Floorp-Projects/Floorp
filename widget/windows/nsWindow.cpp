@@ -2629,7 +2629,7 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
 
   HCURSOR cursor;
   // No scaling
-  gfxIntSize size(0, 0);
+  IntSize size(0, 0);
   rv = nsWindowGfx::CreateIcon(aCursor, true, aHotspotX, aHotspotY, size, &cursor);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -6986,7 +6986,7 @@ void nsWindow::ResizeTranslucentWindow(int32_t aNewWidth, int32_t aNewHeight, bo
     return;
 
   nsRefPtr<gfxWindowsSurface> newSurface =
-    new gfxWindowsSurface(gfxIntSize(aNewWidth, aNewHeight), gfxImageFormat::ARGB32);
+    new gfxWindowsSurface(IntSize(aNewWidth, aNewHeight), gfxImageFormat::ARGB32);
   mTransparentSurface = newSurface;
   mMemoryDC = newSurface->GetDC();
 }

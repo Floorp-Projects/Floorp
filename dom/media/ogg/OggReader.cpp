@@ -240,7 +240,7 @@ void OggReader::SetupTargetTheora(TheoraState* aTheoraState)
 
     VideoFrameContainer* container = mDecoder->GetVideoFrameContainer();
     if (container) {
-      container->ClearCurrentFrame(gfxIntSize(displaySize.width, displaySize.height));
+      container->ClearCurrentFrame(IntSize(displaySize.width, displaySize.height));
     }
 
     // Copy Theora info data for time computations on other threads.

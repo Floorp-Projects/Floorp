@@ -126,7 +126,7 @@ protected:
     nsWindow* mParent;
     InputContext         mInputContext;
 
-    void OnSizeChanged(const gfxIntSize& aSize);
+    void OnSizeChanged(const mozilla::gfx::IntSize& aSize);
 
     static void DumpWindows();
     static void DumpWindows(const nsTArray<nsWindow*>& wins, int indent = 0);

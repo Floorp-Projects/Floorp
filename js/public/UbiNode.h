@@ -856,7 +856,8 @@ class EdgeRange {
     // The front edge of this range. This is owned by the EdgeRange, and is
     // only guaranteed to live until the next call to popFront, or until
     // the EdgeRange is destructed.
-    const Edge& front() { return *front_; }
+    const Edge& front() const { return *front_; }
+    Edge& front() { return *front_; }
 
     // Remove the front edge from this range. This should only be called if
     // !empty().
