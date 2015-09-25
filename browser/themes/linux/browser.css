@@ -29,7 +29,7 @@
   --toolbarbutton-active-bordercolor: rgb(154,154,154);
   --toolbarbutton-active-background: rgba(154,154,154,.5) linear-gradient(hsla(0,0%,100%,.7), hsla(0,0%,100%,.4));
 
-  --toolbarbutton-checkedhover-backgroundcolor: rgba(90%,90%,90%,.4);
+  --toolbarbutton-checkedhover-backgroundcolor: rgba(154,154,154,.15);
 
   --identity-box-verified-background-color: #fff;
 
