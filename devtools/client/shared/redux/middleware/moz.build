@@ -6,7 +6,6 @@
 
 DevToolsModules(
     'log.js',
-    'promise.js',
     'thunk.js',
     'wait-service.js',
 )
