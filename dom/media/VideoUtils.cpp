@@ -188,6 +188,23 @@ int DownmixAudioToStereo(mozilla::AudioDataValue* buffer,
   return outChannels;
 }
 
+void DownmixStereoToMono(mozilla::AudioDataValue* aBuffer,
+                         uint32_t aFrames)
+{
+  MOZ_ASSERT(aBuffer);
+  const int channels = 2;
+  for (uint32_t fIdx = 0; fIdx < aFrames; ++fIdx) {
+#ifdef MOZ_SAMPLE_TYPE_FLOAT32
+    float sample = 0.0;
+#else
+    int sample = 0;
+#endif
+    // The sample of the buffer would be interleaved.
+    sample = (aBuffer[fIdx*channels] + aBuffer[fIdx*channels + 1]) * 0.5;
+    aBuffer[fIdx*channels] = aBuffer[fIdx*channels + 1] = sample;
+  }
+}
+
 bool
 IsVideoContentType(const nsCString& aContentType)
 {
