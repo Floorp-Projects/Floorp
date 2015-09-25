@@ -182,11 +182,31 @@ class DOMMediaStream : public DOMEventTargetHelper
   typedef dom::VideoTrack VideoTrack;
   typedef dom::AudioTrackList AudioTrackList;
   typedef dom::VideoTrackList VideoTrackList;
-  typedef dom::MediaTrackListListener MediaTrackListListener;
 
 public:
   typedef dom::MediaTrackConstraints MediaTrackConstraints;
-  typedef uint8_t TrackTypeHints;
+
+  class TrackListener {
+    NS_INLINE_DECL_REFCOUNTING(TrackListener)
+
+  public:
+    /**
+     * Called when the DOMMediaStream has a new track added, either by
+     * JS (addTrack()) or the source creating one.
+     */
+    virtual void
+    NotifyTrackAdded(const nsRefPtr<MediaStreamTrack>& aTrack) {};
+
+    /**
+     * Called when the DOMMediaStream removes a track, either by
+     * JS (removeTrack()) or the source ending it.
+     */
+    virtual void
+    NotifyTrackRemoved(const nsRefPtr<MediaStreamTrack>& aTrack) {};
+
+  protected:
+    virtual ~TrackListener() {}
+  };
 
   DOMMediaStream();
 
@@ -394,23 +414,8 @@ public:
     }
   }
 
-  /**
-   * If loading and playing a MediaStream in a media element, for each
-   * MediaStreamTrack in the MediaStream, create a corresponding AudioTrack or
-   * VideoTrack during the phase of resource fetching.
-   */
-  void ConstructMediaTracks(AudioTrackList* aAudioTrackList,
-                            VideoTrackList* aVideoTrackList);
-
-  /**
-   * MUST call this before the AudioTrackList or VideoTrackList go away
-   */
-  void DisconnectTrackListListeners(const AudioTrackList* aAudioTrackList,
-                                    const VideoTrackList* aVideoTrackList);
-
-  virtual void NotifyMediaStreamTrackCreated(MediaStreamTrack* aTrack);
-
-  virtual void NotifyMediaStreamTrackEnded(MediaStreamTrack* aTrack);
+  void RegisterTrackListener(TrackListener* aListener);
+  void UnregisterTrackListener(TrackListener* aListener);
 
 protected:
   virtual ~DOMMediaStream();
@@ -420,14 +425,18 @@ protected:
   void InitTrackUnionStream(nsIDOMWindow* aWindow, MediaStreamGraph* aGraph);
   void InitAudioCaptureStream(nsIDOMWindow* aWindow, MediaStreamGraph* aGraph);
   void InitStreamCommon(MediaStream* aStream, MediaStreamGraph* aGraph);
-  already_AddRefed<AudioTrack> CreateAudioTrack(AudioStreamTrack* aStreamTrack);
-  already_AddRefed<VideoTrack> CreateVideoTrack(VideoStreamTrack* aStreamTrack);
+
+  void CheckTracksAvailable();
 
   // Called when MediaStreamGraph has finished an iteration where tracks were
   // created.
-  void TracksCreated();
+  void NotifyTracksCreated();
 
-  void CheckTracksAvailable();
+  // Dispatches NotifyTrackAdded() to all registered track listeners.
+  void NotifyTrackAdded(const nsRefPtr<MediaStreamTrack>& aTrack);
+
+  // Dispatches NotifyTrackRemoved() to all registered track listeners.
+  void NotifyTrackRemoved(const nsRefPtr<MediaStreamTrack>& aTrack);
 
   class OwnedStreamListener;
   friend class OwnedStreamListener;
@@ -488,9 +497,8 @@ protected:
 
   bool mNotifiedOfMediaStreamGraphShutdown;
 
-  // Send notifications to AudioTrackList or VideoTrackList, if this MediaStream
-  // is consumed by a HTMLMediaElement.
-  nsTArray<MediaTrackListListener> mMediaTrackListListeners;
+  // The track listeners subscribe to changes in this stream's track set.
+  nsTArray<nsRefPtr<TrackListener>> mTrackListeners;
 
 private:
   void NotifyPrincipalChanged();
