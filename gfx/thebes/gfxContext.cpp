@@ -772,7 +772,7 @@ gfxContext::GetPattern()
   } else if (state.sourceSurface) {
     NS_ASSERTION(false, "Ugh, this isn't good.");
   } else {
-    pat = new gfxPattern(ThebesRGBA(state.color));
+    pat = new gfxPattern(state.color);
   }
   return pat.forget();
 }
