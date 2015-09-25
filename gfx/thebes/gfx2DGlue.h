@@ -82,30 +82,6 @@ inline GraphicsFilter ThebesFilter(Filter aFilter)
   }
 }
 
-inline ExtendMode ToExtendMode(gfxPattern::GraphicsExtend aExtend)
-{
-  switch (aExtend) {
-  case gfxPattern::EXTEND_REPEAT:
-    return ExtendMode::REPEAT;
-  case gfxPattern::EXTEND_REFLECT:
-    return ExtendMode::REFLECT;
-  default:
-    return ExtendMode::CLAMP;
-  }
-}
-
-inline gfxPattern::GraphicsExtend ThebesExtend(ExtendMode aExtend)
-{
-  switch (aExtend) {
-  case ExtendMode::REPEAT:
-    return gfxPattern::EXTEND_REPEAT;
-  case ExtendMode::REFLECT:
-    return gfxPattern::EXTEND_REFLECT;
-  default:
-    return gfxPattern::EXTEND_PAD;
-  }
-}
-
 inline gfxPoint ThebesPoint(const Point &aPoint)
 {
   return gfxPoint(aPoint.x, aPoint.y);
