@@ -69,30 +69,51 @@ const MIN_PROPORTION_FOR_NOTICEABLE_IMPACT = .1;
 const MODE_GLOBAL = "global";
 const MODE_RECENT = "recent";
 
-/**
- * Find the <xul:tab> for a window id.
- *
- * This is useful e.g. for reloading or closing tabs.
- *
- * @return null If the xul:tab could not be found, e.g. if the
- * windowId is that of a chrome window.
- * @return {{tabbrowser: <xul:tabbrowser>, tab: <xul.tab>}} The
- * tabbrowser and tab if the latter could be found.
- */
-function findTabFromWindow(windowIds) {
-  let windows = Services.wm.getEnumerator("navigator:browser");
-  while (windows.hasMoreElements()) {
-    let win = windows.getNext();
-    let tabbrowser = win.gBrowser;
-    for (let windowId of windowIds) {
-      let foundBrowser = tabbrowser.getBrowserForOuterWindowID(windowId);
-      if (foundBrowser) {
-        return {tabbrowser, tab: tabbrowser.getTabForBrowser(foundBrowser)};
+let tabFinder = {
+  update: function() {
+    this._map = new Map();
+    let windows = Services.wm.getEnumerator("navigator:browser");
+    while (windows.hasMoreElements()) {
+      let win = windows.getNext();
+      let tabbrowser = win.gBrowser;
+      for (let browser of tabbrowser.browsers) {
+        let id = browser.outerWindowID; // May be `null` if the browser isn't loaded yet
+        if (id != null) {
+          this._map.set(id, browser);
+        }
       }
     }
+  },
+
+  /**
+   * Find the <xul:tab> for a window id.
+   *
+   * This is useful e.g. for reloading or closing tabs.
+   *
+   * @return null If the xul:tab could not be found, e.g. if the
+   * windowId is that of a chrome window.
+   * @return {{tabbrowser: <xul:tabbrowser>, tab: <xul.tab>}} The
+   * tabbrowser and tab if the latter could be found.
+   */
+  get: function(id) {
+    let browser = this._map.get(id);
+    if (!browser) {
+      return null;
+    }
+    let tabbrowser = browser.getTabBrowser();
+    return {tabbrowser, tab:tabbrowser.getTabForBrowser(browser)};
+  },
+
+  getAny: function(ids) {
+    for (let id of ids) {
+      let result = this.get(id);
+      if (result) {
+        return result;
+      }
+    }
+    return null;
   }
-  return null;
-}
+};
 
 function wait(ms = 0) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -225,22 +246,13 @@ Delta.prototype = {
   },
   _initWebpage: function() {
     this._initialized = true;
-    if (!this.diff.title) {
+    let found = tabFinder.getAny(this.diff.windowIds);
+    if (!found || found.tab.linkedBrowser.contentTitle == null) {
       // Either this is not a real page or the page isn't restored yet.
       return;
     }
 
-    // Wallpaper hack. For some reason, about:performance (and only about:performance)
-    // appears twice in the list. Only one of them is a window.
-
-    if (this.diff.title == document.title) {
-      if (!findTabFromWindow(this.diff.windowIds)) {
-        // Not a real page.
-        return;
-      }
-    }
-
-    this.readableName = this.diff.title;
+    this.readableName = found.tab.linkedBrowser.contentTitle;
     this.fullName = this.diff.names.join(", ");
     this._show = true;
   },
@@ -439,6 +451,7 @@ var State = {
       throw new TypeError();
     }
 
+    tabFinder.update();
     // We rebuild the maps during each iteration to make sure that
     // we do not maintain references to groups that has been removed
     // (e.g. pages that have been closed).
@@ -773,7 +786,7 @@ var View = {
         eltSpan.appendChild(eltCloseTab);
         let windowIds = delta.diff.windowIds;
         eltCloseTab.addEventListener("click", () => {
-          let found = findTabFromWindow(windowIds);
+          let found = tabFinder.getAny(windowIds);
           if (!found) {
             // Cannot find the tab. Maybe it is closed already?
             return;
@@ -786,7 +799,7 @@ var View = {
         eltReloadTab.textContent = "Reload tab";
         eltSpan.appendChild(eltReloadTab);
         eltReloadTab.addEventListener("click", () => {
-          let found = findTabFromWindow(windowIds);
+          let found = tabFinder.getAny(windowIds);
           if (!found) {
             // Cannot find the tab. Maybe it is closed already?
             return;
@@ -829,7 +842,7 @@ var Control = {
   },
   update: Task.async(function*() {
     let mode = this._displayMode;
-    if (this._autoRefreshInterval) {
+    if (this._autoRefreshInterval || !State._buffer[0]) {
       // Update the state only if we are not on pause.
       yield State.update();
     }
@@ -853,6 +866,7 @@ var Control = {
     Services.obs.notifyObservers(null, UPDATE_COMPLETE_TOPIC, mode);
   }),
   _setOptions: function(options) {
+    dump(`about:performance _setOptions ${JSON.stringify(options)}\n`);
     let eltRefresh = document.getElementById("check-autorefresh");
     if ((options.autoRefresh > 0) != eltRefresh.checked) {
       eltRefresh.click();
