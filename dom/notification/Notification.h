@@ -102,7 +102,7 @@ class Notification : public DOMEventTargetHelper
   friend class CloseNotificationRunnable;
   friend class NotificationTask;
   friend class NotificationPermissionRequest;
-  friend class NotificationObserver;
+  friend class MainThreadNotificationObserver;
   friend class NotificationStorageCallback;
   friend class ServiceWorkerNotificationObserver;
   friend class WorkerGetRunnable;
