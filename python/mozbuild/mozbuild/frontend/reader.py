@@ -25,7 +25,6 @@ import os
 import sys
 import textwrap
 import time
-import tokenize
 import traceback
 import types
 
@@ -39,6 +38,12 @@ from mozbuild.util import (
     EmptyValue,
     memoize,
     ReadOnlyDefaultDict,
+)
+
+from mozbuild.testing import (
+    TEST_MANIFESTS,
+    REFTEST_FLAVORS,
+    WEB_PATFORM_TESTS_FLAVORS,
 )
 
 from mozbuild.backend.configenvironment import ConfigEnvironment
@@ -1328,6 +1333,7 @@ class BuildReader(object):
         paths, _ = self.read_relevant_mozbuilds(paths)
 
         r = {}
+        test_ctx_reader = TestContextReader(self.config)
 
         for path, ctxs in paths.items():
             flags = Files(Context())
@@ -1346,6 +1352,62 @@ class BuildReader(object):
                         ('*' in pattern and mozpath.match(relpath, pattern)):
                     flags += ctx
 
+            if not any([flags.test_tags, flags.test_files, flags.test_flavors]):
+                flags += test_ctx_reader.test_defaults_for_path(path, ctxs)
+
             r[path] = flags
 
         return r
+
+
+class TestContextReader(object):
+    """Helper to extract test patterns defaults from moz.build files.
+
+    Given paths of interest and relevant contexts, populates a Files
+    object with patterns matching all tests mentioned in the given
+    contexts.
+    """
+    def __init__(self, config):
+        self.config = config
+
+        # This names the context keys that will end up emitting a test
+        # manifest.
+        self._test_manifest_contexts = set(
+            ['%s_MANIFESTS' % key for key in TEST_MANIFESTS] +
+            ['%s_MANIFESTS' % flavor.upper() for flavor in REFTEST_FLAVORS] +
+            ['%s_MANIFESTS' % flavor.upper().replace('-', '_') for flavor in WEB_PATFORM_TESTS_FLAVORS] +
+            # The emitter requires JAR_MANIFESTS in contexts if they exist on
+            # disk, so include them here.
+            ['JAR_MANIFESTS']
+        )
+
+
+    def test_defaults_for_path(self, path, ctxs):
+        # Using the emitter here creates a circular import (and crosses some
+        # abstraction boundaries), but it's a convenient way to get the build
+        # system's view of tests.
+        # Bug 1203266 tracks features that would allow improving this situation
+        # and removing this abuse of the TreeMetadataEmitter
+        from .emitter import TreeMetadataEmitter, TestManifest
+        emitter = TreeMetadataEmitter(self.config)
+
+        result_context = Files(Context())
+
+        for ctx in ctxs:
+            test_context = Context(VARIABLES, self.config)
+            test_context.main_path = ctx.main_path
+
+            # Clone just the keys that will result in test manifests.
+            manifest_keys = [key for key in ctx if key in self._test_manifest_contexts]
+            for key in manifest_keys:
+                test_context[key] = ctx[key]
+            for obj in emitter.emit_from_context(test_context):
+                if isinstance(obj, TestManifest):
+                    for t in obj.tests:
+                        if 'relpath' not in t:
+                            # wpt manifests do not generate relpaths (bug 1207678).
+                            t['relpath'] = mozpath.relpath(t['path'],
+                                                           self.config.topsrcdir)
+                        # Pull in the entire directory of tests.
+                        result_context.test_files.add(mozpath.dirname(t['relpath']) + '/**')
+        return result_context
