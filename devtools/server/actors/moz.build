@@ -26,7 +26,6 @@ DevToolsModules(
     'eventlooplag.js',
     'framerate.js',
     'gcli.js',
-    'heap-snapshot-file.js',
     'highlighters.css',
     'highlighters.js',
     'inspector.js',
