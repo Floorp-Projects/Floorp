@@ -623,17 +623,14 @@ ContentSearchUIController.prototype = {
       return;
     }
     let searchWithHeader = document.getElementById("contentSearchSearchWithHeader");
-    while (searchWithHeader.firstChild) {
-      searchWithHeader.firstChild.remove();
-    }
     if (this.input.value) {
-      let html = "<span class='contentSearchSearchWithHeaderSearchText'>" +
-                 this.input.value + "</span>";
+      let html = "<span class='contentSearchSearchWithHeaderSearchText'></span>";
       html = this._strings.searchForKeywordsWith.replace("%S", html);
       searchWithHeader.innerHTML = html;
-      return;
+      searchWithHeader.querySelector('.contentSearchSearchWithHeaderSearchText').textContent = this.input.value;
+    } else {
+      searchWithHeader.textContent = this._strings.searchWithHeader;
     }
-    searchWithHeader.appendChild(document.createTextNode(this._strings.searchWithHeader));
   },
 
   _speculativeConnect: function () {
