@@ -53,6 +53,9 @@ default: $(TOPOBJDIR)/dist/bin/greprefs.js
 default: $(TOPOBJDIR)/dist/bin/platform.ini
 default: $(TOPOBJDIR)/dist/bin/webapprt/webapprt.ini
 
+# Targets from the recursive make backend to be built for a default build
+default: $(TOPOBJDIR)/config/makefiles/xpidl/xpidl
+
 .PHONY: FORCE
 
 # Extra define to trigger some workarounds. We should strive to limit the
@@ -198,3 +201,7 @@ $(TOPOBJDIR)/dist/bin/application.ini: defines += \
 $(TOPOBJDIR)/dist/bin/greprefs.js: $(TOPOBJDIR)/modules/libpref/greprefs.js
 $(TOPOBJDIR)/dist/bin/platform.ini: $(TOPOBJDIR)/toolkit/xre/platform.ini
 $(TOPOBJDIR)/dist/bin/webapprt/webapprt.ini: $(TOPOBJDIR)/webapprt/webapprt.ini
+
+# The xpidl target in config/makefiles/xpidl requires the install manifest for
+# dist/idl to have been processed.
+$(TOPOBJDIR)/config/makefiles/xpidl/xpidl: $(TOPOBJDIR)/install-dist_idl
