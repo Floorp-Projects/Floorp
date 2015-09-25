@@ -48,7 +48,6 @@
 
 using namespace mozilla::dom::gonk;
 using namespace android;
-using namespace mozilla::hal;
 using namespace mozilla;
 using namespace mozilla::dom::bluetooth;
 
@@ -187,11 +186,11 @@ AudioManager::HandleAudioFlingerDied()
   }
 
   if (mHeadsetState & AUDIO_DEVICE_OUT_WIRED_HEADSET) {
-    UpdateHeadsetConnectionState(SWITCH_STATE_HEADSET);
+    UpdateHeadsetConnectionState(hal::SWITCH_STATE_HEADSET);
   } else if (mHeadsetState & AUDIO_DEVICE_OUT_WIRED_HEADPHONE) {
-    UpdateHeadsetConnectionState(SWITCH_STATE_HEADPHONE);
+    UpdateHeadsetConnectionState(hal::SWITCH_STATE_HEADPHONE);
   } else {
-    UpdateHeadsetConnectionState(SWITCH_STATE_OFF);
+    UpdateHeadsetConnectionState(hal::SWITCH_STATE_OFF);
   }
 
   int32_t phoneState = nsIAudioManager::PHONE_STATE_INVALID;
@@ -313,15 +312,15 @@ void
 AudioManager::UpdateHeadsetConnectionState(hal::SwitchState aState)
 {
 #if ANDROID_VERSION >= 15
-  if (aState == SWITCH_STATE_HEADSET) {
+  if (aState == hal::SWITCH_STATE_HEADSET) {
     AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_WIRED_HEADSET,
                                           AUDIO_POLICY_DEVICE_STATE_AVAILABLE, "");
     mHeadsetState |= AUDIO_DEVICE_OUT_WIRED_HEADSET;
-  } else if (aState == SWITCH_STATE_HEADPHONE) {
+  } else if (aState == hal::SWITCH_STATE_HEADPHONE) {
     AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_WIRED_HEADPHONE,
                                           AUDIO_POLICY_DEVICE_STATE_AVAILABLE, "");
     mHeadsetState |= AUDIO_DEVICE_OUT_WIRED_HEADPHONE;
-  } else if (aState == SWITCH_STATE_OFF) {
+  } else if (aState == hal::SWITCH_STATE_OFF) {
     if (mHeadsetState & AUDIO_DEVICE_OUT_WIRED_HEADSET) {
       AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_WIRED_HEADSET,
                                             AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE, "");
@@ -510,15 +509,15 @@ AudioManager::Observe(nsISupports* aSubject,
 }
 
 static void
-NotifyHeadphonesStatus(SwitchState aState)
+NotifyHeadphonesStatus(hal::SwitchState aState)
 {
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
-    if (aState == SWITCH_STATE_HEADSET) {
+    if (aState == hal::SWITCH_STATE_HEADSET) {
       obs->NotifyObservers(nullptr, HEADPHONES_STATUS_CHANGED, HEADPHONES_STATUS_HEADSET);
-    } else if (aState == SWITCH_STATE_HEADPHONE) {
+    } else if (aState == hal::SWITCH_STATE_HEADPHONE) {
       obs->NotifyObservers(nullptr, HEADPHONES_STATUS_CHANGED, HEADPHONES_STATUS_HEADPHONE);
-    } else if (aState == SWITCH_STATE_OFF) {
+    } else if (aState == hal::SWITCH_STATE_OFF) {
       obs->NotifyObservers(nullptr, HEADPHONES_STATUS_CHANGED, HEADPHONES_STATUS_OFF);
     } else {
       obs->NotifyObservers(nullptr, HEADPHONES_STATUS_CHANGED, HEADPHONES_STATUS_UNKNOWN);
@@ -526,7 +525,7 @@ NotifyHeadphonesStatus(SwitchState aState)
   }
 }
 
-class HeadphoneSwitchObserver : public SwitchObserver
+class HeadphoneSwitchObserver : public hal::SwitchObserver
 {
 public:
   void Notify(const hal::SwitchEvent& aEvent) {
@@ -541,7 +540,7 @@ AudioManager::HandleHeadphoneSwitchEvent(const hal::SwitchEvent& aEvent)
 {
   NotifyHeadphonesStatus(aEvent.status());
   // When user pulled out the headset, a delay of routing here can avoid the leakage of audio from speaker.
-  if (aEvent.status() == SWITCH_STATE_OFF && mSwitchDone) {
+  if (aEvent.status() == hal::SWITCH_STATE_OFF && mSwitchDone) {
 
     nsRefPtr<AudioManager> self = this;
     nsCOMPtr<nsIRunnable> runnable =
@@ -549,14 +548,14 @@ AudioManager::HandleHeadphoneSwitchEvent(const hal::SwitchEvent& aEvent)
         if (self->mSwitchDone) {
           return;
         }
-        self->UpdateHeadsetConnectionState(SWITCH_STATE_OFF);
+        self->UpdateHeadsetConnectionState(hal::SWITCH_STATE_OFF);
         self->mSwitchDone = true;
     });
     MessageLoop::current()->PostDelayedTask(FROM_HERE, new RunnableCallTask(runnable), 1000);
 
     SwitchProfileData(DEVICE_HEADSET, false);
     mSwitchDone = false;
-  } else if (aEvent.status() != SWITCH_STATE_OFF) {
+  } else if (aEvent.status() != hal::SWITCH_STATE_OFF) {
     UpdateHeadsetConnectionState(aEvent.status());
     SwitchProfileData(DEVICE_HEADSET, true);
     mSwitchDone = true;
@@ -565,7 +564,7 @@ AudioManager::HandleHeadphoneSwitchEvent(const hal::SwitchEvent& aEvent)
 #if ANDROID_VERSION >= 17
   int32_t forceUse = 0;
   GetForceForUse(AUDIO_POLICY_FORCE_FOR_MEDIA, &forceUse);
-  if (aEvent.status() != SWITCH_STATE_OFF && mBluetoothA2dpEnabled) {
+  if (aEvent.status() != hal::SWITCH_STATE_OFF && mBluetoothA2dpEnabled) {
     SetForceForUse(AUDIO_POLICY_FORCE_FOR_MEDIA, AUDIO_POLICY_FORCE_NO_BT_A2DP);
   } else if (forceUse == AUDIO_POLICY_FORCE_NO_BT_A2DP) {
     SetForceForUse(AUDIO_POLICY_FORCE_FOR_MEDIA, AUDIO_POLICY_FORCE_NONE);
@@ -588,10 +587,10 @@ AudioManager::AudioManager()
   , mMuteCallToRIL(false)
 #endif
 {
-  RegisterSwitchObserver(SWITCH_HEADPHONES, mObserver);
+  hal::RegisterSwitchObserver(hal::SWITCH_HEADPHONES, mObserver);
 
-  UpdateHeadsetConnectionState(GetCurrentSwitchState(SWITCH_HEADPHONES));
-  NotifyHeadphonesStatus(GetCurrentSwitchState(SWITCH_HEADPHONES));
+  UpdateHeadsetConnectionState(hal::GetCurrentSwitchState(hal::SWITCH_HEADPHONES));
+  NotifyHeadphonesStatus(hal::GetCurrentSwitchState(hal::SWITCH_HEADPHONES));
 
   for (uint32_t loop = 0; loop < AUDIO_STREAM_CNT; ++loop) {
     AudioSystem::initStreamVolume(static_cast<audio_stream_type_t>(loop), 0,
@@ -642,7 +641,7 @@ AudioManager::AudioManager()
 }
 
 AudioManager::~AudioManager() {
-  UnregisterSwitchObserver(SWITCH_HEADPHONES, mObserver);
+  hal::UnregisterSwitchObserver(hal::SWITCH_HEADPHONES, mObserver);
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   NS_ENSURE_TRUE_VOID(obs);
@@ -795,7 +794,7 @@ AudioManager::SetFmRadioAudioEnabled(bool aFmRadioAudioEnabled)
   AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_FM,
     aFmRadioAudioEnabled ? AUDIO_POLICY_DEVICE_STATE_AVAILABLE :
     AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE, "");
-  UpdateHeadsetConnectionState(GetCurrentSwitchState(SWITCH_HEADPHONES));
+  UpdateHeadsetConnectionState(hal::GetCurrentSwitchState(hal::SWITCH_HEADPHONES));
   // AUDIO_STREAM_FM is not used on recent gonk.
   // AUDIO_STREAM_MUSIC is used for FM radio volume control.
 #if ANDROID_VERSION < 19
