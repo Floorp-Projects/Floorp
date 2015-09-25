@@ -71,6 +71,7 @@
 #include "MediaSourceDecoder.h"
 #include "AudioStreamTrack.h"
 #include "VideoStreamTrack.h"
+#include "MediaTrackList.h"
 
 #include "AudioChannelService.h"
 
@@ -2105,6 +2106,7 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mPlayingThroughTheAudioChannel(false),
     mDisableVideo(false),
     mPlayBlockedBecauseHidden(false),
+    mMediaStreamTrackListener(nullptr),
     mElementInTreeState(ELEMENT_NOT_INTREE),
     mHasUserInteraction(false)
 {
@@ -3100,8 +3102,32 @@ public:
 
     mElement->NotifyMediaStreamTracksAvailable(aStream);
   }
+
 private:
   HTMLMediaElement* mElement;
+};
+
+class HTMLMediaElement::MediaStreamTrackListener :
+  public DOMMediaStream::TrackListener
+{
+public:
+  explicit MediaStreamTrackListener(HTMLMediaElement* aElement):
+      mElement(aElement) {}
+
+  void NotifyTrackAdded(const nsRefPtr<MediaStreamTrack>& aTrack) override
+  {
+    mElement->NotifyMediaStreamTrackAdded(aTrack);
+  }
+
+  void NotifyTrackRemoved(const nsRefPtr<MediaStreamTrack>& aTrack) override
+  {
+    mElement->NotifyMediaStreamTrackRemoved(aTrack);
+  }
+
+protected:
+  ~MediaStreamTrackListener() {}
+
+  HTMLMediaElement* const mElement;
 };
 
 void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags)
@@ -3198,14 +3224,14 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
 
   UpdateSrcMediaStreamPlaying();
 
-  // Note: we must call DisconnectTrackListListeners(...)  before dropping
-  // mSrcStream.
   // If we pause this media element, track changes in the underlying stream
   // will continue to fire events at this element and alter its track list.
   // That's simpler than delaying the events, but probably confusing...
-  mSrcStream->ConstructMediaTracks(AudioTracks(), VideoTracks());
+  ConstructMediaTracks();
 
   mSrcStream->OnTracksAvailable(new MediaStreamTracksAvailableCallback(this));
+  mMediaStreamTrackListener = new MediaStreamTrackListener(this);
+  mSrcStream->RegisterTrackListener(mMediaStreamTrackListener);
 
   ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_IDLE);
   ChangeDelayLoadStatus(false);
@@ -3220,10 +3246,115 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback()
 
   UpdateSrcMediaStreamPlaying(REMOVING_SRC_STREAM);
 
-  mSrcStream->DisconnectTrackListListeners(AudioTracks(), VideoTracks());
+  mSrcStream->UnregisterTrackListener(mMediaStreamTrackListener);
+  mMediaStreamTrackListener = nullptr;
 
   mSrcStream = nullptr;
 }
+
+static already_AddRefed<AudioTrack>
+CreateAudioTrack(AudioStreamTrack* aStreamTrack)
+{
+  nsAutoString id;
+  nsAutoString label;
+  aStreamTrack->GetId(id);
+  aStreamTrack->GetLabel(label);
+
+  return MediaTrackList::CreateAudioTrack(id, NS_LITERAL_STRING("main"),
+                                          label, EmptyString(),
+                                          aStreamTrack->Enabled());
+}
+
+static already_AddRefed<VideoTrack>
+CreateVideoTrack(VideoStreamTrack* aStreamTrack)
+{
+  nsAutoString id;
+  nsAutoString label;
+  aStreamTrack->GetId(id);
+  aStreamTrack->GetLabel(label);
+
+  return MediaTrackList::CreateVideoTrack(id, NS_LITERAL_STRING("main"),
+                                          label, EmptyString());
+}
+
+void HTMLMediaElement::ConstructMediaTracks()
+{
+  nsTArray<nsRefPtr<MediaStreamTrack>> tracks;
+  mSrcStream->GetTracks(tracks);
+
+  int firstEnabledVideo = -1;
+  for (const nsRefPtr<MediaStreamTrack>& track : tracks) {
+    if (track->Ended()) {
+      continue;
+    }
+
+    if (AudioStreamTrack* t = track->AsAudioStreamTrack()) {
+      nsRefPtr<AudioTrack> audioTrack = CreateAudioTrack(t);
+      AudioTracks()->AddTrack(audioTrack);
+    } else if (VideoStreamTrack* t = track->AsVideoStreamTrack()) {
+      nsRefPtr<VideoTrack> videoTrack = CreateVideoTrack(t);
+      VideoTracks()->AddTrack(videoTrack);
+      firstEnabledVideo = (t->Enabled() && firstEnabledVideo < 0)
+                          ? (VideoTracks()->Length() - 1)
+                          : firstEnabledVideo;
+    }
+  }
+
+  if (VideoTracks()->Length() > 0) {
+    // If media resource does not indicate a particular set of video tracks to
+    // enable, the one that is listed first in the element's videoTracks object
+    // must be selected.
+    int index = firstEnabledVideo >= 0 ? firstEnabledVideo : 0;
+    (*VideoTracks())[index]->SetEnabledInternal(true, MediaTrack::FIRE_NO_EVENTS);
+  }
+}
+
+void
+HTMLMediaElement::NotifyMediaStreamTrackAdded(const nsRefPtr<MediaStreamTrack>& aTrack)
+{
+  MOZ_ASSERT(aTrack);
+
+#ifdef DEBUG
+  nsString id;
+  aTrack->GetId(id);
+
+  LOG(LogLevel::Debug, ("%p, Adding MediaTrack with id %s",
+                        this, NS_ConvertUTF16toUTF8(id).get()));
+#endif
+
+  if (AudioStreamTrack* t = aTrack->AsAudioStreamTrack()) {
+    nsRefPtr<AudioTrack> audioTrack = CreateAudioTrack(t);
+    AudioTracks()->AddTrack(audioTrack);
+  } else if (VideoStreamTrack* t = aTrack->AsVideoStreamTrack()) {
+    nsRefPtr<VideoTrack> videoTrack = CreateVideoTrack(t);
+    VideoTracks()->AddTrack(videoTrack);
+  }
+}
+
+void
+HTMLMediaElement::NotifyMediaStreamTrackRemoved(const nsRefPtr<MediaStreamTrack>& aTrack)
+{
+  MOZ_ASSERT(aTrack);
+
+  nsAutoString id;
+  aTrack->GetId(id);
+
+  LOG(LogLevel::Debug, ("%p, Removing MediaTrack with id %s",
+                        this, NS_ConvertUTF16toUTF8(id).get()));
+
+  if (MediaTrack* t = AudioTracks()->GetTrackById(id)) {
+    AudioTracks()->RemoveTrack(t);
+  } else if (MediaTrack* t = VideoTracks()->GetTrackById(id)) {
+    VideoTracks()->RemoveTrack(t);
+  } else {
+    // XXX Uncomment this when DOMMediaStream doesn't call NotifyTrackRemoved
+    // multiple times for the same track, i.e., when it implements the
+    // "addtrack" and "removetrack" events.
+    // NS_ASSERTION(false, "MediaStreamTrack ended but did not exist in track lists");
+    return;
+  }
+}
+
 
 void HTMLMediaElement::ProcessMediaFragmentURI()
 {
