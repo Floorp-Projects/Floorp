@@ -40,7 +40,6 @@
 #include "VolumeManager.h"
 #include "nsIStatusReporter.h"
 
-using namespace mozilla::hal;
 USING_MTP_NAMESPACE
 
 /**************************************************************************
@@ -115,9 +114,9 @@ static void SetAutoMounterStatus(int32_t aStatus);
 
 /***************************************************************************/
 
-inline const char* SwitchStateStr(const SwitchEvent& aEvent)
+inline const char* SwitchStateStr(const hal::SwitchEvent& aEvent)
 {
-  return aEvent.status() == SWITCH_STATE_ON ? "plugged" : "unplugged";
+  return aEvent.status() == hal::SWITCH_STATE_ON ? "plugged" : "unplugged";
 }
 
 /***************************************************************************/
@@ -128,7 +127,7 @@ IsUsbCablePluggedIn()
 #if 0
   // Use this code when bug 745078 gets fixed (or use whatever the
   // appropriate method is)
-  return GetCurrentSwitchEvent(SWITCH_USB) == SWITCH_STATE_ON;
+  return GetCurrentSwitchEvent(SWITCH_USB) == hal::SWITCH_STATE_ON;
 #else
   // Until then, just go read the file directly
   if (access(ICS_SYS_USB_STATE, F_OK) == 0) {
@@ -1371,11 +1370,11 @@ UsbCableEventIOThread()
 *
 **************************************************************************/
 
-class UsbCableObserver final : public SwitchObserver
+class UsbCableObserver final : public hal::SwitchObserver
 {
   ~UsbCableObserver()
   {
-    UnregisterSwitchObserver(SWITCH_USB, this);
+    hal::UnregisterSwitchObserver(hal::SWITCH_USB, this);
   }
 
 public:
@@ -1383,10 +1382,10 @@ public:
 
   UsbCableObserver()
   {
-    RegisterSwitchObserver(SWITCH_USB, this);
+    hal::RegisterSwitchObserver(hal::SWITCH_USB, this);
   }
 
-  virtual void Notify(const SwitchEvent& aEvent)
+  virtual void Notify(const hal::SwitchEvent& aEvent)
   {
     DBG("UsbCable switch device: %d state: %s\n",
         aEvent.device(), SwitchStateStr(aEvent));
