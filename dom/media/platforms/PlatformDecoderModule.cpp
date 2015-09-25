@@ -173,11 +173,9 @@ PlatformDecoderModule::CreatePDM()
   return m.forget();
 #endif
 #ifdef MOZ_FFMPEG
-  if (sFFmpegDecoderEnabled) {
-    nsRefPtr<PlatformDecoderModule> m = FFmpegRuntimeLinker::CreateDecoderModule();
-    if (m) {
-      return m.forget();
-    }
+  nsRefPtr<PlatformDecoderModule> mffmpeg = FFmpegRuntimeLinker::CreateDecoderModule();
+  if (mffmpeg) {
+    return mffmpeg.forget();
   }
 #endif
 #ifdef MOZ_APPLEMEDIA
