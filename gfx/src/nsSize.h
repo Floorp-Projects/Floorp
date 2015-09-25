@@ -14,7 +14,6 @@
 #define NS_MAXSIZE nscoord_MAX
 
 typedef mozilla::gfx::IntSize nsIntSize;
-typedef nsIntSize gfxIntSize;
 
 struct nsSize : public mozilla::gfx::BaseSize<nscoord, nsSize> {
   typedef mozilla::gfx::BaseSize<nscoord, nsSize> Super;

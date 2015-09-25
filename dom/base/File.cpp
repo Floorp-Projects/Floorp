@@ -705,7 +705,7 @@ BlobImplBase::GetMozFullPath(nsAString& aFileName, ErrorResult& aRv) const
   aFileName.Truncate();
 
   if (NS_IsMainThread()) {
-    if (nsContentUtils::IsCallerChrome()) {
+    if (nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
       GetMozFullPathInternal(aFileName, aRv);
     }
 

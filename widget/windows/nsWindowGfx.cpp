@@ -70,7 +70,7 @@ using namespace mozilla::plugins;
  **************************************************************/
 
 static nsAutoPtr<uint8_t>  sSharedSurfaceData;
-static gfxIntSize          sSharedSurfaceSize;
+static IntSize             sSharedSurfaceSize;
 
 struct IconMetrics {
   int32_t xMetric;
@@ -137,9 +137,9 @@ nsIntRegion nsWindow::GetRegionToPaint(bool aForceFullRepaint,
 
 #define WORDSSIZE(x) ((x).width * (x).height)
 static bool
-EnsureSharedSurfaceSize(gfxIntSize size)
+EnsureSharedSurfaceSize(IntSize size)
 {
-  gfxIntSize screenSize;
+  IntSize screenSize;
   screenSize.height = GetSystemMetrics(SM_CYSCREEN);
   screenSize.width = GetSystemMetrics(SM_CXSCREEN);
 
@@ -341,8 +341,8 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
               (IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH32) ||
                IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24)))
           {
-            gfxIntSize surfaceSize(ps.rcPaint.right - ps.rcPaint.left,
-                                   ps.rcPaint.bottom - ps.rcPaint.top);
+            IntSize surfaceSize(ps.rcPaint.right - ps.rcPaint.left,
+                                ps.rcPaint.bottom - ps.rcPaint.top);
 
             if (!EnsureSharedSurfaceSize(surfaceSize)) {
               NS_ERROR("Couldn't allocate a shared image surface!");
@@ -425,7 +425,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
             if (IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH24) ||
                 IsRenderMode(gfxWindowsPlatform::RENDER_IMAGE_STRETCH32))
             {
-              gfxIntSize surfaceSize = targetSurfaceImage->GetSize();
+              IntSize surfaceSize = targetSurfaceImage->GetSize();
 
               // Just blit this directly
               BITMAPINFOHEADER bi;
@@ -560,7 +560,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
   return result;
 }
 
-gfxIntSize nsWindowGfx::GetIconMetrics(IconSizeType aSizeType) {
+IntSize nsWindowGfx::GetIconMetrics(IconSizeType aSizeType) {
   int32_t width = ::GetSystemMetrics(sIconMetrics[aSizeType].xMetric);
   int32_t height = ::GetSystemMetrics(sIconMetrics[aSizeType].yMetric);
 
@@ -568,14 +568,14 @@ gfxIntSize nsWindowGfx::GetIconMetrics(IconSizeType aSizeType) {
     width = height = sIconMetrics[aSizeType].defaultSize;
   }
 
-  return gfxIntSize(width, height);
+  return IntSize(width, height);
 }
 
 nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
                                   bool aIsCursor,
                                   uint32_t aHotspotX,
                                   uint32_t aHotspotY,
-                                  gfxIntSize aScaledSize,
+                                  IntSize aScaledSize,
                                   HICON *aIcon) {
 
   MOZ_ASSERT((aScaledSize.width > 0 && aScaledSize.height > 0) ||

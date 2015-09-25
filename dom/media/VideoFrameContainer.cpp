@@ -29,7 +29,7 @@ VideoFrameContainer::VideoFrameContainer(dom::HTMLMediaElement* aElement,
 VideoFrameContainer::~VideoFrameContainer()
 {}
 
-void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
+void VideoFrameContainer::SetCurrentFrame(const gfx::IntSize& aIntrinsicSize,
                                           Image* aImage,
                                           const TimeStamp& aTargetTime)
 {
@@ -44,14 +44,14 @@ void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
   }
 }
 
-void VideoFrameContainer::SetCurrentFrames(const gfxIntSize& aIntrinsicSize,
+void VideoFrameContainer::SetCurrentFrames(const gfx::IntSize& aIntrinsicSize,
                                            const nsTArray<ImageContainer::NonOwningImage>& aImages)
 {
   MutexAutoLock lock(mMutex);
   SetCurrentFramesLocked(aIntrinsicSize, aImages);
 }
 
-void VideoFrameContainer::SetCurrentFramesLocked(const gfxIntSize& aIntrinsicSize,
+void VideoFrameContainer::SetCurrentFramesLocked(const gfx::IntSize& aIntrinsicSize,
                                                  const nsTArray<ImageContainer::NonOwningImage>& aImages)
 {
   mMutex.AssertCurrentThreadOwns();

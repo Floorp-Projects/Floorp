@@ -46,7 +46,7 @@ TrapShmError(Display* aDisplay, XErrorEvent* aEvent)
 #endif
 
 already_AddRefed<nsShmImage>
-nsShmImage::Create(const gfxIntSize& aSize,
+nsShmImage::Create(const IntSize& aSize,
                    Display* aDisplay, Visual* aVisual, unsigned int aDepth)
 {
     nsRefPtr<nsShmImage> shm = new nsShmImage();
@@ -180,7 +180,7 @@ nsShmImage::Put(QWindow* aWindow, QRect& aRect)
 #endif
 
 already_AddRefed<DrawTarget>
-nsShmImage::EnsureShmImage(const gfxIntSize& aSize,
+nsShmImage::EnsureShmImage(const IntSize& aSize,
                            Display* aDisplay, Visual* aVisual, unsigned int aDepth,
                            nsRefPtr<nsShmImage>& aImage)
 {
