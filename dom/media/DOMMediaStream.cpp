@@ -6,9 +6,7 @@
 #include "DOMMediaStream.h"
 #include "nsContentUtils.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIScriptError.h"
 #include "nsIUUIDGenerator.h"
-#include "nsPIDOMWindow.h"
 #include "mozilla/dom/MediaStreamBinding.h"
 #include "mozilla/dom/LocalMediaStreamBinding.h"
 #include "mozilla/dom/AudioNode.h"
@@ -113,17 +111,6 @@ public:
 
   MediaInputPort* GetInputPort() const { return mInputPort; }
   MediaStreamTrack* GetTrack() const { return mTrack; }
-
-  /**
-   * Blocks aTrackId from going into mInputPort unless the port has been
-   * destroyed.
-   */
-  void BlockTrackId(TrackID aTrackId)
-  {
-    if (mInputPort) {
-      mInputPort->BlockTrackId(aTrackId);
-    }
-  }
 
 private:
   nsRefPtr<MediaInputPort> mInputPort;
@@ -467,69 +454,10 @@ DOMMediaStream::GetTracks(nsTArray<nsRefPtr<MediaStreamTrack> >& aTracks)
   }
 }
 
-void
-DOMMediaStream::AddTrack(MediaStreamTrack& aTrack)
-{
-  RefPtr<ProcessedMediaStream> dest = mPlaybackStream->AsProcessedStream();
-  MOZ_ASSERT(dest);
-  if (!dest) {
-    return;
-  }
-
-  LOG(LogLevel::Info, ("DOMMediaStream %p Adding track %p (from stream %p with ID %d)",
-                       this, &aTrack, aTrack.GetStream(), aTrack.GetTrackID()));
-
-  if (HasTrack(aTrack)) {
-    LOG(LogLevel::Debug, ("DOMMediaStream %p already contains track %p", this, &aTrack));
-    return;
-  }
-
-  RefPtr<DOMMediaStream> addedDOMStream = aTrack.GetStream();
-  MOZ_RELEASE_ASSERT(addedDOMStream);
-
-  RefPtr<MediaStream> owningStream = addedDOMStream->GetOwnedStream();
-  MOZ_RELEASE_ASSERT(owningStream);
-
-  CombineWithPrincipal(addedDOMStream->mPrincipal);
-
-  // Hook up the underlying track with our underlying playback stream.
-  nsRefPtr<MediaInputPort> inputPort =
-    GetPlaybackStream()->AllocateInputPort(owningStream, aTrack.GetTrackID());
-  nsRefPtr<TrackPort> trackPort =
-    new TrackPort(inputPort, &aTrack, TrackPort::InputPortOwnership::OWNED);
-  mTracks.AppendElement(trackPort.forget());
-  NotifyTrackAdded(&aTrack);
-
-  LOG(LogLevel::Debug, ("DOMMediaStream %p Added track %p", this, &aTrack));
-}
-
-void
-DOMMediaStream::RemoveTrack(MediaStreamTrack& aTrack)
-{
-  LOG(LogLevel::Info, ("DOMMediaStream %p Removing track %p (from stream %p with ID %d)",
-                       this, &aTrack, aTrack.GetStream(), aTrack.GetTrackID()));
-
-  nsRefPtr<TrackPort> toRemove = FindPlaybackTrackPort(aTrack);
-  if (!toRemove) {
-    LOG(LogLevel::Debug, ("DOMMediaStream %p does not contain track %p", this, &aTrack));
-    return;
-  }
-
-  // If the track comes from a TRACK_ANY input port (i.e., mOwnedPort), we need
-  // to block it in the port. Doing this for a locked track is still OK as it
-  // will first block the track, then destroy the port. Both cause the track to
-  // end.
-  toRemove->BlockTrackId(aTrack.GetTrackID());
-
-  DebugOnly<bool> removed = mTracks.RemoveElement(toRemove);
-  MOZ_ASSERT(removed);
-  LOG(LogLevel::Debug, ("DOMMediaStream %p Removed track %p", this, &aTrack));
-}
-
 bool
 DOMMediaStream::HasTrack(const MediaStreamTrack& aTrack) const
 {
-  return !!FindPlaybackTrackPort(aTrack);
+  return !!FindPlaybackDOMTrack(aTrack.GetStream()->GetOwnedStream(), aTrack.GetTrackID());
 }
 
 bool
@@ -729,7 +657,7 @@ DOMMediaStream::CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType)
     new TrackPort(mPlaybackPort, track, TrackPort::InputPortOwnership::EXTERNAL);
   mTracks.AppendElement(playbackTrackPort.forget());
 
-  NotifyTrackAdded(track);
+  NotifyMediaStreamTrackCreated(track);
   return track;
 }
 
@@ -770,17 +698,6 @@ DOMMediaStream::FindPlaybackDOMTrack(MediaStream* aInputStream, TrackID aInputTr
   return nullptr;
 }
 
-DOMMediaStream::TrackPort*
-DOMMediaStream::FindPlaybackTrackPort(const MediaStreamTrack& aTrack) const
-{
-  for (const nsRefPtr<TrackPort>& info : mTracks) {
-    if (info->GetTrack() == &aTrack) {
-      return info;
-    }
-  }
-  return nullptr;
-}
-
 void
 DOMMediaStream::NotifyMediaStreamGraphShutdown()
 {
@@ -788,7 +705,7 @@ DOMMediaStream::NotifyMediaStreamGraphShutdown()
   // to prevent leaks.
   mNotifiedOfMediaStreamGraphShutdown = true;
   mRunOnTracksAvailable.Clear();
-  mTrackListeners.Clear();
+
   mConsumersToKeepAlive.Clear();
 }
 
@@ -812,7 +729,7 @@ DOMMediaStream::OnTracksAvailable(OnTracksAvailableCallback* aRunnable)
 }
 
 void
-DOMMediaStream::NotifyTracksCreated()
+DOMMediaStream::TracksCreated()
 {
   mTracksCreated = true;
   CheckTracksAvailable();
@@ -833,49 +750,6 @@ DOMMediaStream::CheckTracksAvailable()
 }
 
 void
-DOMMediaStream::RegisterTrackListener(TrackListener* aListener)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (mNotifiedOfMediaStreamGraphShutdown) {
-    // No more tracks will ever be added, so just do nothing.
-    return;
-  }
-  mTrackListeners.AppendElement(aListener);
-}
-
-void
-DOMMediaStream::UnregisterTrackListener(TrackListener* aListener)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  mTrackListeners.RemoveElement(aListener);
-}
-
-void
-DOMMediaStream::NotifyTrackAdded(
-    const nsRefPtr<MediaStreamTrack>& aTrack)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  for (int32_t i = mTrackListeners.Length() - 1; i >= 0; --i) {
-    const nsRefPtr<TrackListener>& listener = mTrackListeners[i];
-    listener->NotifyTrackAdded(aTrack);
-  }
-}
-
-void
-DOMMediaStream::NotifyTrackRemoved(
-    const nsRefPtr<MediaStreamTrack>& aTrack)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  for (int32_t i = mTrackListeners.Length() - 1; i >= 0; --i) {
-    const nsRefPtr<TrackListener>& listener = mTrackListeners[i];
-    listener->NotifyTrackRemoved(aTrack);
-  }
-}
-
-void
 DOMMediaStream::CreateAndAddPlaybackStreamListener(MediaStream* aStream)
 {
   MOZ_ASSERT(GetCameraStream(), "I'm a hack. Only DOMCameraControl may use me.");
@@ -883,11 +757,109 @@ DOMMediaStream::CreateAndAddPlaybackStreamListener(MediaStream* aStream)
   aStream->AddListener(mPlaybackListener);
 }
 
+already_AddRefed<AudioTrack>
+DOMMediaStream::CreateAudioTrack(AudioStreamTrack* aStreamTrack)
+{
+  nsAutoString id;
+  nsAutoString label;
+  aStreamTrack->GetId(id);
+  aStreamTrack->GetLabel(label);
+
+  return MediaTrackList::CreateAudioTrack(id, NS_LITERAL_STRING("main"),
+                                          label, EmptyString(),
+                                          aStreamTrack->Enabled());
+}
+
+already_AddRefed<VideoTrack>
+DOMMediaStream::CreateVideoTrack(VideoStreamTrack* aStreamTrack)
+{
+  nsAutoString id;
+  nsAutoString label;
+  aStreamTrack->GetId(id);
+  aStreamTrack->GetLabel(label);
+
+  return MediaTrackList::CreateVideoTrack(id, NS_LITERAL_STRING("main"),
+                                          label, EmptyString());
+}
+
+void
+DOMMediaStream::ConstructMediaTracks(AudioTrackList* aAudioTrackList,
+                                     VideoTrackList* aVideoTrackList)
+{
+  MediaTrackListListener audioListener(aAudioTrackList);
+  mMediaTrackListListeners.AppendElement(audioListener);
+  MediaTrackListListener videoListener(aVideoTrackList);
+  mMediaTrackListListeners.AppendElement(videoListener);
+
+  int firstEnabledVideo = -1;
+  for (const nsRefPtr<TrackPort>& info : mTracks) {
+    if (AudioStreamTrack* t = info->GetTrack()->AsAudioStreamTrack()) {
+      nsRefPtr<AudioTrack> track = CreateAudioTrack(t);
+      aAudioTrackList->AddTrack(track);
+    } else if (VideoStreamTrack* t = info->GetTrack()->AsVideoStreamTrack()) {
+      nsRefPtr<VideoTrack> track = CreateVideoTrack(t);
+      aVideoTrackList->AddTrack(track);
+      firstEnabledVideo = (t->Enabled() && firstEnabledVideo < 0)
+                          ? (aVideoTrackList->Length() - 1)
+                          : firstEnabledVideo;
+    }
+  }
+
+  if (aVideoTrackList->Length() > 0) {
+    // If media resource does not indicate a particular set of video tracks to
+    // enable, the one that is listed first in the element's videoTracks object
+    // must be selected.
+    int index = firstEnabledVideo >= 0 ? firstEnabledVideo : 0;
+    (*aVideoTrackList)[index]->SetEnabledInternal(true, MediaTrack::FIRE_NO_EVENTS);
+  }
+}
+
+void
+DOMMediaStream::DisconnectTrackListListeners(const AudioTrackList* aAudioTrackList,
+                                             const VideoTrackList* aVideoTrackList)
+{
+  for (auto i = mMediaTrackListListeners.Length(); i > 0; ) { // unsigned!
+    --i; // 0 ... Length()-1 range
+    if (mMediaTrackListListeners[i].mMediaTrackList == aAudioTrackList ||
+        mMediaTrackListListeners[i].mMediaTrackList == aVideoTrackList) {
+      mMediaTrackListListeners.RemoveElementAt(i);
+    }
+  }
+}
+
+void
+DOMMediaStream::NotifyMediaStreamTrackCreated(MediaStreamTrack* aTrack)
+{
+  MOZ_ASSERT(aTrack);
+
+  for (uint32_t i = 0; i < mMediaTrackListListeners.Length(); ++i) {
+    if (AudioStreamTrack* t = aTrack->AsAudioStreamTrack()) {
+      nsRefPtr<AudioTrack> track = CreateAudioTrack(t);
+      mMediaTrackListListeners[i].NotifyMediaTrackCreated(track);
+    } else if (VideoStreamTrack* t = aTrack->AsVideoStreamTrack()) {
+      nsRefPtr<VideoTrack> track = CreateVideoTrack(t);
+      mMediaTrackListListeners[i].NotifyMediaTrackCreated(track);
+    }
+  }
+}
+
+void
+DOMMediaStream::NotifyMediaStreamTrackEnded(MediaStreamTrack* aTrack)
+{
+  MOZ_ASSERT(aTrack);
+
+  nsAutoString id;
+  aTrack->GetId(id);
+  for (uint32_t i = 0; i < mMediaTrackListListeners.Length(); ++i) {
+    mMediaTrackListListeners[i].NotifyMediaTrackEnded(id);
+  }
+}
+
 DOMLocalMediaStream::~DOMLocalMediaStream()
 {
   if (mInputStream) {
     // Make sure Listeners of this stream know it's going away
-    StopImpl();
+    Stop();
   }
 }
 
@@ -899,20 +871,6 @@ DOMLocalMediaStream::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
 
 void
 DOMLocalMediaStream::Stop()
-{
-  nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(GetParentObject());
-  nsIDocument* document = pWindow ? pWindow->GetExtantDoc() : nullptr;
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  NS_LITERAL_CSTRING("Media"),
-                                  document,
-                                  nsContentUtils::eDOM_PROPERTIES,
-                                  "MediaStreamStopDeprecatedWarning");
-
-  StopImpl();
-}
-
-void
-DOMLocalMediaStream::StopImpl()
 {
   if (mInputStream && mInputStream->AsSourceStream()) {
     mInputStream->AsSourceStream()->EndAllTrackAndFinish();

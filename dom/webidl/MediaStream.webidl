@@ -27,23 +27,17 @@ dictionary MediaStreamConstraints {
     DOMString? peerIdentity = null;
 };
 
-// [Exposed=Window,
-//  Constructor,
-//  Constructor (MediaStream stream),
-//  Constructor (sequence<MediaStreamTrack> tracks)]
 interface MediaStream : EventTarget {
-    readonly    attribute DOMString    id;
-    sequence<AudioStreamTrack> getAudioTracks ();
-    sequence<VideoStreamTrack> getVideoTracks ();
-    sequence<MediaStreamTrack> getTracks ();
-    // MediaStreamTrack?          getTrackById (DOMString trackId);
-    void                       addTrack (MediaStreamTrack track);
-    void                       removeTrack (MediaStreamTrack track);
-    // MediaStream                clone ();
-    // readonly    attribute boolean      active;
-    //             attribute EventHandler onactive;
-    //             attribute EventHandler oninactive;
-    //             attribute EventHandler onaddtrack;
-    //             attribute EventHandler onremovetrack;
-    readonly attribute double currentTime;
+    readonly attribute DOMString    id;
+    sequence<AudioStreamTrack> getAudioTracks();
+    sequence<VideoStreamTrack> getVideoTracks();
+    sequence<MediaStreamTrack> getTracks();
+    // MediaStreamTrack           getTrackById (DOMString trackId);
+    // void                       addTrack (MediaStreamTrack track);
+    // void                       removeTrack (MediaStreamTrack track);
+    //         attribute boolean      ended;
+    //         attribute EventHandler onended;
+    //         attribute EventHandler onaddtrack;
+    //         attribute EventHandler onremovetrack;
+	readonly attribute double currentTime;
 };
