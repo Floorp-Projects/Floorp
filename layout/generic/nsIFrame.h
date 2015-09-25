@@ -1247,22 +1247,18 @@ public:
                                 Matrix *aFromParentTransforms = nullptr) const;
 
   /**
-   * Returns whether this frame will attempt to extend the 3d transforms of its
+   * Returns whether this frame will attempt to preserve the 3d transforms of its
    * children. This requires transform-style: preserve-3d, as well as no clipping
    * or svg effects.
    */
-  bool Extend3DContext() const;
+  bool Preserves3DChildren() const;
 
   /**
-   * Returns whether this frame has a parent that Extend3DContext() and has
+   * Returns whether this frame has a parent that Preserves3DChildren() and has
    * its own transform (or hidden backface) to be combined with the parent's
    * transform.
    */
-  bool Combines3DTransformWithAncestors() const;
-
-  bool IsPreserve3DLeaf() const {
-    return Combines3DTransformWithAncestors() && !Extend3DContext();
-  }
+  bool Preserves3D() const;
 
   bool HasPerspective() const;
 
@@ -3033,10 +3029,6 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
    * or nullptr if there is no such anonymous content.
    */
   virtual mozilla::dom::Element* GetPseudoElement(nsCSSPseudoElements::Type aType);
-
-  bool BackfaceIsHidden() {
-    return StyleDisplay()->BackfaceIsHidden();
-  }
 
 protected:
   // Members
