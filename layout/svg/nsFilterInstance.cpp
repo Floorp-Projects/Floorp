@@ -531,7 +531,7 @@ nsFilterInstance::OutputFilterSpaceBounds() const
   nsIntRect bounds =
     mPrimitiveDescriptions[numPrimitives - 1].PrimitiveSubregion();
   bool overflow;
-  gfxIntSize surfaceSize =
+  IntSize surfaceSize =
     nsSVGUtils::ConvertToSurfaceSize(bounds.Size(), &overflow);
   bounds.SizeTo(surfaceSize);
   return bounds;

@@ -2066,7 +2066,7 @@ public:
     DirectDrawInfo mDrawInfo;
 
     /* The size of the surface */
-    gfxIntSize mSize;
+    mozilla::gfx::IntSize mSize;
     /* The principal associated with the element whose surface was returned.
        If there is a surface, this will never be null. */
     nsCOMPtr<nsIPrincipal> mPrincipal;

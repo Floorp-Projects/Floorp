@@ -77,10 +77,6 @@ private:
 
   void UpdateRequests(MediaSystemResourceType aResourceType);
 
-  static PLDHashOperator ReleaseResourceForKey(const uint32_t& aKey,
-                                               nsAutoPtr<MediaSystemResource>& aData,
-                                               void* aClosure);
-
   bool mDestroyed;
 
   nsClassHashtable<nsUint32HashKey, MediaSystemResource> mResources;

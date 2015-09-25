@@ -51,7 +51,7 @@ class TooltoolMixin(object):
         """docstring for tooltool_fetch"""
         tooltool = self.query_exe('tooltool.py', return_type='list')
 
-        if self.config.get("developer_mode"):
+        if self.config.get("download_tooltool"):
             tooltool = [bin for bin in tooltool if os.path.exists(bin)]
             if tooltool:
                 cmd = [tooltool[0]]

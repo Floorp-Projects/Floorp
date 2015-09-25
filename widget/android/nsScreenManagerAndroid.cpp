@@ -29,7 +29,7 @@ nsScreenAndroid::GetId(uint32_t *outId)
 NS_IMETHODIMP
 nsScreenAndroid::GetRect(int32_t *outLeft, int32_t *outTop, int32_t *outWidth, int32_t *outHeight)
 {
-    gfxIntSize sz = nsWindow::GetAndroidScreenBounds();
+    gfx::IntSize sz = nsWindow::GetAndroidScreenBounds();
 
     *outLeft = 0;
     *outTop = 0;

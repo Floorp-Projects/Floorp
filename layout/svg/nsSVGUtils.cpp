@@ -802,11 +802,11 @@ nsSVGUtils::TransformFrameRectToOuterSVG(const nsRect& aRect,
     aMatrix.TransformBounds(r), aPresContext->AppUnitsPerDevPixel());
 }
 
-gfxIntSize
+IntSize
 nsSVGUtils::ConvertToSurfaceSize(const gfxSize& aSize,
                                  bool *aResultOverflows)
 {
-  gfxIntSize surfaceSize(ClampToInt(ceil(aSize.width)), ClampToInt(ceil(aSize.height)));
+  IntSize surfaceSize(ClampToInt(ceil(aSize.width)), ClampToInt(ceil(aSize.height)));
 
   *aResultOverflows = surfaceSize.width != ceil(aSize.width) ||
     surfaceSize.height != ceil(aSize.height);

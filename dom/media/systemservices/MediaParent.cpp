@@ -83,26 +83,21 @@ class OriginKeyStore : public nsISupports
       return NS_OK;
     }
 
-    static PLDHashOperator
-    HashCleaner(const nsACString& aOrigin, nsAutoPtr<OriginKey>& aOriginKey,
-                void *aUserArg)
-    {
-      OriginKey* since = static_cast<OriginKey*>(aUserArg);
-
-      LOG((((aOriginKey->mSecondsStamp >= since->mSecondsStamp)?
-            "%s: REMOVE %lld >= %lld" :
-            "%s: KEEP   %lld < %lld"),
-            __FUNCTION__, aOriginKey->mSecondsStamp, since->mSecondsStamp));
-
-      return (aOriginKey->mSecondsStamp >= since->mSecondsStamp)?
-          PL_DHASH_REMOVE : PL_DHASH_NEXT;
-    }
-
     void Clear(int64_t aSinceWhen)
     {
       // Avoid int64_t* <-> void* casting offset
       OriginKey since(nsCString(), aSinceWhen  / PR_USEC_PER_SEC);
-      mKeys.Enumerate(HashCleaner, &since);
+      for (auto iter = mKeys.Iter(); !iter.Done(); iter.Next()) {
+        nsAutoPtr<OriginKey>& originKey = iter.Data();
+        LOG((((originKey->mSecondsStamp >= since.mSecondsStamp)?
+              "%s: REMOVE %lld >= %lld" :
+              "%s: KEEP   %lld < %lld"),
+              __FUNCTION__, originKey->mSecondsStamp, since.mSecondsStamp));
+
+        if (originKey->mSecondsStamp >= since.mSecondsStamp) {
+          iter.Remove();
+        }
+      }
       mPersistCount = 0;
     }
 

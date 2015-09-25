@@ -2727,7 +2727,7 @@ ContentParent::RecvSetClipboard(const IPCDataTransfer& aDataTransfer,
             item.flavor().EqualsLiteral(kPNGImageMime) ||
             item.flavor().EqualsLiteral(kGIFImageMime)) {
           const IPCDataTransferImage& imageDetails = item.imageDetails();
-          const gfxIntSize size(imageDetails.width(), imageDetails.height());
+          const gfx::IntSize size(imageDetails.width(), imageDetails.height());
           if (!size.width || !size.height) {
             return true;
           }
