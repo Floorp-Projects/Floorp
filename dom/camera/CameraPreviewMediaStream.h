@@ -42,7 +42,6 @@ class CameraPreviewMediaStream : public MediaStream
 public:
   explicit CameraPreviewMediaStream(DOMMediaStream* aWrapper);
 
-  virtual CameraPreviewMediaStream* AsCameraPreviewStream() override { return this; };
   virtual void AddAudioOutput(void* aKey) override;
   virtual void SetAudioOutputVolume(void* aKey, float aVolume) override;
   virtual void RemoveAudioOutput(void* aKey) override;
