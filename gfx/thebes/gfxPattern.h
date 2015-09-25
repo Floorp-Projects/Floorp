@@ -53,13 +53,6 @@ public:
                                       mozilla::gfx::Matrix *aOriginalUserToDevice = nullptr);
     bool IsOpaque();
 
-    enum GraphicsExtend {
-        EXTEND_NONE,
-        EXTEND_REPEAT,
-        EXTEND_REFLECT,
-        EXTEND_PAD
-    };
-
     // clamp, repeat, reflect
     void SetExtend(mozilla::gfx::ExtendMode aExtend);
 
