@@ -437,9 +437,6 @@
                                     currentColor calc(100% - 4px),
                                     transparent calc(100% - 4px));
   opacity: 0.2;
-  content: "";
-  display: -moz-box;
-  visibility: hidden;
 }
 
 #TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-tab::before,
@@ -451,7 +448,8 @@
 #tabbrowser-tabs[movingtab] > .tabbrowser-tab[beforeselected]:not([last-visible-tab])::after,
 .tabbrowser-tab:not([visuallyselected]):not([afterselected-visible]):not([afterhovered]):not([first-visible-tab]):not(:hover)::before,
 #tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([visuallyselected]):not([beforehovered]):not(:hover)::after {
-  visibility: visible;
+  content: "";
+  display: -moz-box;
 }
 
 /* New tab button */
