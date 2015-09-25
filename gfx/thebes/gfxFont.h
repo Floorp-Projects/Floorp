@@ -636,8 +636,8 @@ public:
                       bool aDisableLigatures,
                       const nsAString& aFamilyName,
                       bool aAddSmallCaps,
-                      PLDHashOperator (*aHandleFeature)(const uint32_t&,
-                                                        uint32_t&, void*),
+                      void (*aHandleFeature)(const uint32_t&,
+                                             uint32_t&, void*),
                       void* aHandleFeatureData);
 
 protected:
@@ -965,8 +965,19 @@ public:
         return (GetFlags() & gfxTextRunFactory::TEXT_IS_RTL) != 0;
     }
 
+    bool IsSidewaysLeft() const {
+        return (GetFlags() & gfxTextRunFactory::TEXT_ORIENT_MASK) ==
+               gfxTextRunFactory::TEXT_ORIENT_VERTICAL_SIDEWAYS_LEFT;
+    }
+
+    // Return true if the logical inline direction is reversed compared to
+    // normal physical coordinates (i.e. if it is leftwards or upwards)
+    bool IsInlineReversed() const {
+        return IsSidewaysLeft() != IsRightToLeft();
+    }
+
     gfxFloat GetDirection() const {
-        return IsRightToLeft() ? -1.0f : 1.0f;
+        return IsInlineReversed() ? -1.0f : 1.0f;
     }
 
     bool DisableLigatures() const {

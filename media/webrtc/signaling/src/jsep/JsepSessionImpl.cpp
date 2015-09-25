@@ -2006,13 +2006,27 @@ void
 JsepSessionImpl::SetupDefaultCodecs()
 {
   // Supported audio codecs.
+  // Per jmspeex on IRC:
+  // For 32KHz sampling, 28 is ok, 32 is good, 40 should be really good
+  // quality.  Note that 1-2Kbps will be wasted on a stereo Opus channel
+  // with mono input compared to configuring it for mono.
+  // If we reduce bitrate enough Opus will low-pass us; 16000 will kill a
+  // 9KHz tone.  This should be adaptive when we're at the low-end of video
+  // bandwidth (say <100Kbps), and if we're audio-only, down to 8 or
+  // 12Kbps.
   mSupportedCodecs.values.push_back(new JsepAudioCodecDescription(
       "109",
       "opus",
       48000,
       2,
       960,
-      16000));
+#ifdef WEBRTC_GONK
+      // TODO Move this elsewhere to be adaptive to rate - Bug 1207925
+      16000 // B2G uses lower capture sampling rate
+#else
+      40000
+#endif
+      ));
 
   mSupportedCodecs.values.push_back(new JsepAudioCodecDescription(
       "9",

@@ -3889,13 +3889,8 @@ BytecodeEmitter::emitDestructuringOpsArrayHelper(ParseNode* pattern, VarEmitOpti
 
         if (elem->isKind(PNK_SPREAD)) {
             /* Create a new array with the rest of the iterator */
-            ptrdiff_t off;
-            if (!emitN(JSOP_NEWARRAY, 3, &off))                   // ... OBJ? ITER ARRAY
+            if (!emitUint32Operand(JSOP_NEWARRAY, 0))             // ... OBJ? ITER ARRAY
                 return false;
-            checkTypeSet(JSOP_NEWARRAY);
-            jsbytecode* pc = code(off);
-            SET_UINT24(pc, 0);
-
             if (!emitNumberOp(0))                                 // ... OBJ? ITER ARRAY INDEX
                 return false;
             if (!emitSpread())                                    // ... OBJ? ARRAY INDEX
@@ -7214,29 +7209,35 @@ BytecodeEmitter::emitArray(ParseNode* pn, uint32_t count, JSOp op)
      */
     MOZ_ASSERT(op == JSOP_NEWARRAY || op == JSOP_SPREADCALLARRAY);
 
-    int32_t nspread = 0;
+    uint32_t nspread = 0;
     for (ParseNode* elt = pn; elt; elt = elt->pn_next) {
         if (elt->isKind(PNK_SPREAD))
             nspread++;
     }
 
-    ptrdiff_t off;
-    if (!emitN(op, 3, &off))                                        // ARRAY
-        return false;
-    checkTypeSet(op);
-    jsbytecode* pc = code(off);
+    // Array literal's length is limited to NELEMENTS_LIMIT in parser.
+    static_assert(NativeObject::MAX_DENSE_ELEMENTS_COUNT <= INT32_MAX,
+                  "array literals' maximum length must not exceed limits "
+                  "required by BaselineCompiler::emit_JSOP_NEWARRAY, "
+                  "BaselineCompiler::emit_JSOP_INITELEM_ARRAY, "
+                  "and DoSetElemFallback's handling of JSOP_INITELEM_ARRAY");
+    MOZ_ASSERT(count >= nspread);
+    MOZ_ASSERT(count <= NativeObject::MAX_DENSE_ELEMENTS_COUNT,
+               "the parser must throw an error if the array exceeds maximum "
+               "length");
 
     // For arrays with spread, this is a very pessimistic allocation, the
     // minimum possible final size.
-    SET_UINT24(pc, count - nspread);
+    if (!emitUint32Operand(op, count - nspread))                    // ARRAY
+        return false;
 
     ParseNode* pn2 = pn;
-    jsatomid atomIndex;
+    uint32_t index;
     bool afterSpread = false;
-    for (atomIndex = 0; pn2; atomIndex++, pn2 = pn2->pn_next) {
+    for (index = 0; pn2; index++, pn2 = pn2->pn_next) {
         if (!afterSpread && pn2->isKind(PNK_SPREAD)) {
             afterSpread = true;
-            if (!emitNumberOp(atomIndex))                           // ARRAY INDEX
+            if (!emitNumberOp(index))                               // ARRAY INDEX
                 return false;
         }
         if (!updateSourceCoordNotes(pn2->pn_pos.begin))
@@ -7262,12 +7263,11 @@ BytecodeEmitter::emitArray(ParseNode* pn, uint32_t count, JSOp op)
             if (!emit1(JSOP_INITELEM_INC))
                 return false;
         } else {
-            if (!emitN(JSOP_INITELEM_ARRAY, 3, &off))
+            if (!emitUint32Operand(JSOP_INITELEM_ARRAY, index))
                 return false;
-            SET_UINT24(code(off), atomIndex);
         }
     }
-    MOZ_ASSERT(atomIndex == count);
+    MOZ_ASSERT(index == count);
     if (afterSpread) {
         if (!emit1(JSOP_POP))                                            // ARRAY
             return false;

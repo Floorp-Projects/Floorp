@@ -113,3 +113,8 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/netwerk/base',
 ]
+
+EXTRA_COMPONENTS += [
+    'PackagedAppUtils.js',
+    'PackagedAppUtils.manifest',
+]

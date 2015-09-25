@@ -13,6 +13,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
+import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -2592,6 +2595,55 @@ public class GeckoAppShell
         return connection.getInputStream();
     }
 
+    private static class BitmapConnection extends URLConnection {
+        private Bitmap bitmap;
+
+        BitmapConnection(Bitmap b) throws MalformedURLException, IOException {
+            super(null);
+            bitmap = b;
+        }
+
+        @Override
+        public void connect() {}
+
+        @Override
+        public InputStream getInputStream() throws IOException {
+            return new BitmapInputStream();
+        }
+
+        @Override
+        public String getContentType() {
+            return "image/png";
+        }
+
+        private final class BitmapInputStream extends PipedInputStream {
+            private boolean mHaveConnected = false;
+
+            @Override
+            public synchronized int read(byte[] buffer, int byteOffset, int byteCount)
+                                    throws IOException {
+                if (mHaveConnected) {
+                    return super.read(buffer, byteOffset, byteCount);
+                }
+
+                final PipedOutputStream output = new PipedOutputStream();
+                connect(output);
+                ThreadUtils.postToBackgroundThread(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                bitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
+                                output.close();
+                            } catch (IOException ioe) {}
+                        }
+                    });
+                mHaveConnected = true;
+                return super.read(buffer, byteOffset, byteCount);
+            }
+        }
+    }
+
     @WrapForJNI(allowMultithread = true, narrowChars = true)
     static URLConnection getConnection(String url) {
         try {
@@ -2600,6 +2652,23 @@ public class GeckoAppShell
                 spec = url.substring(10);
             } else {
                 spec = url.substring(8);
+            }
+
+            // Check if we are loading a package icon.
+            try {
+                if (spec.startsWith("icon/")) {
+                    String[] splits = spec.split("/");
+                    if (splits.length != 2) {
+                        return null;
+                    }
+                    final String pkg = splits[1];
+                    final PackageManager pm = getContext().getPackageManager();
+                    final Drawable d = pm.getApplicationIcon(pkg);
+                    final Bitmap bitmap = BitmapUtils.getBitmapFromDrawable(d);
+                    return new BitmapConnection(bitmap);
+                }
+            } catch(Exception ex) {
+                Log.e(LOGTAG, "error", ex);
             }
 
             // if the colon got stripped, put it back
