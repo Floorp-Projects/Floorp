@@ -227,7 +227,8 @@ class RemoteCPPUnittestOptions(cppunittests.CPPUnittestOptions):
         self.add_option("--with-b2g-emulator", action = "store",
                     type = "string", dest = "with_b2g_emulator",
                     help = "Start B2G Emulator (specify path to b2g home)")
-
+        self.add_option("--emulator", default="arm", choices=["x86", "arm"],
+                    help = "Architecture of emulator to use: x86 or arm")
         self.add_option("--addEnv", action = "append",
                     type = "string", dest = "add_env",
                     help = "additional remote environment variable definitions (eg. --addEnv \"somevar=something\")")
@@ -238,7 +239,7 @@ class RemoteCPPUnittestOptions(cppunittests.CPPUnittestOptions):
 def run_test_harness(options, args):
     if options.with_b2g_emulator:
         from mozrunner import B2GEmulatorRunner
-        runner = B2GEmulatorRunner(b2g_home=options.with_b2g_emulator)
+        runner = B2GEmulatorRunner(arch=options.emulator, b2g_home=options.with_b2g_emulator)
         runner.start()
     if options.dm_trans == "adb":
         if options.with_b2g_emulator:

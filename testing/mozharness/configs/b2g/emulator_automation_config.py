@@ -55,6 +55,7 @@ config = {
                 "--addEnv",
                 "LD_LIBRARY_PATH=/vendor/lib:/system/lib:/system/b2g",
                 "--with-b2g-emulator=%(b2gpath)s",
+                 "--emulator=%(emulator)s",
                 "."
             ],
             "run_filename": "remotecppunittests.py",
