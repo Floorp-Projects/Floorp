@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.tabqueue.TabQueueHelper;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.InputOptionsUtils;
 
@@ -197,7 +198,7 @@ public class testSettingsMenuItems extends PixelTest {
         }
 
         // Tab Queue
-        if (AppConstants.MOZ_ANDROID_TAB_QUEUE) {
+        if (TabQueueHelper.TAB_QUEUE_ENABLED) {
             final String[] tabQueue = { mStringHelper.TAB_QUEUE_LABEL, mStringHelper.TAB_QUEUE_SUMMARY };
             settingsMap.get(PATH_CUSTOMIZE).add(tabQueue);
         }
