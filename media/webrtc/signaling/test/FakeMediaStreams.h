@@ -366,6 +366,9 @@ public:
   virtual bool AddDirectListener(Fake_MediaStreamListener *aListener) { return false; }
   virtual void RemoveDirectListener(Fake_MediaStreamListener *aListener) {}
 
+  Fake_MediaStream *GetInputStream() { return mMediaStream; }
+  Fake_MediaStream *GetOwnedStream() { return mMediaStream; }
+  Fake_MediaStream *GetPlaybackStream() { return mMediaStream; }
   Fake_MediaStream *GetStream() { return mMediaStream; }
   std::string GetId() const { return mID; }
   void AssignId(const std::string& id) { mID = id; }
@@ -410,6 +413,22 @@ public:
   }
 
   void SetTrackEnabled(mozilla::TrackID aTrackID, bool aEnabled) {}
+
+  Fake_MediaStreamTrack*
+  CreateOwnDOMTrack(mozilla::TrackID aTrackID, mozilla::MediaSegment::Type aType)
+  {
+    switch(aType) {
+      case mozilla::MediaSegment::AUDIO: {
+        return mAudioTrack;
+      }
+      case mozilla::MediaSegment::VIDEO: {
+        return mVideoTrack;
+      }
+      default: {
+        MOZ_CRASH("Unkown media type");
+      }
+    }
+  }
 
   class PrincipalChangeObserver
   {
