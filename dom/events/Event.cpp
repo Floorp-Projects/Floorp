@@ -904,7 +904,7 @@ Event::GetScreenCoords(nsPresContext* aPresContext,
                        WidgetEvent* aEvent,
                        LayoutDeviceIntPoint aPoint)
 {
-  if (!nsContentUtils::IsCallerChrome() &&
+  if (!nsContentUtils::LegacyIsCallerChromeOrNativeCode() &&
       nsContentUtils::ResistFingerprinting()) {
     // When resisting fingerprinting, return client coordinates instead.
     CSSIntPoint clientCoords = GetClientCoords(aPresContext, aEvent, aPoint, CSSIntPoint(0, 0));

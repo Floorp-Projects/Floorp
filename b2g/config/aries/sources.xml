@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="8d83715f08b7849f16a0dfc88f78d5c3a89c0a54">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="f1cb3089ee2a77dd779408ca86dbb5e4ed5af0b3"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="5a0a1bb1a863b07528ebc1a04652ed656d8333b3"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="9465d16f95ab87636b2ae07538ee88e5aeff2d7d"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
@@ -126,7 +126,7 @@
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="1bb28abbc215f45220620af5cd60a8ac1be93722"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="2501e5940ba69ece7654ff85611c76ae5bda299c"/>
   <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="d620691cad7aee780018e98159ff03bf99840317"/>
-  <project name="init_sh" path="external/init_sh" remote="b2g" revision="0634405632190765881347500a982221b86a1766"/>
+  <project name="init_sh" path="external/init_sh" remote="b2g" revision="feb58d2b397e45ead9b904d5c4d9255df408db56"/>
   <project name="platform_external_bluetooth_bluedroid" path="external/bluetooth/bluedroid" remote="b2g" revision="70f536bd97d901b96b94669ae1aa2fd0fb54b258"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="0a01977f34d6e86fe23d6c0ec75e96ba988bbebb"/>
   <project name="platform_external_libnfc-pn547" path="external/libnfc-pn547" remote="b2g" revision="5bb999b84b8adc14f6bea004d523ba258dea8188"/>

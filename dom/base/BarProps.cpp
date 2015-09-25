@@ -276,7 +276,7 @@ ScrollbarsProp::GetVisible(ErrorResult& aRv)
 void
 ScrollbarsProp::SetVisible(bool aVisible, ErrorResult& aRv)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
+  if (!nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
     return;
   }
 

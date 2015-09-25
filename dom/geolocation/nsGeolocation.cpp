@@ -1419,7 +1419,7 @@ Geolocation::GetCurrentPosition(GeoPositionCallback& callback,
     return NS_OK;
   }
 
-  if (!mOwner && !nsContentUtils::IsCallerChrome()) {
+  if (!mOwner && !nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1442,7 +1442,7 @@ Geolocation::GetCurrentPositionReady(nsGeolocationRequest* aRequest)
     return NS_OK;
   }
 
-  if (!nsContentUtils::IsCallerChrome()) {
+  if (!nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1513,7 +1513,7 @@ Geolocation::WatchPosition(GeoPositionCallback& aCallback,
     return NS_OK;
   }
 
-  if (!mOwner && !nsContentUtils::IsCallerChrome()) {
+  if (!mOwner && !nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1535,7 +1535,7 @@ Geolocation::WatchPositionReady(nsGeolocationRequest* aRequest)
     return NS_OK;
   }
 
-  if (!nsContentUtils::IsCallerChrome()) {
+  if (!nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
     return NS_ERROR_FAILURE;
   }
 

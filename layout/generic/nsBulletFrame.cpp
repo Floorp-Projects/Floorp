@@ -410,7 +410,7 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
   default:
     {
       aRenderingContext.ThebesContext()->SetColor(
-                          nsLayoutUtils::GetColor(this, eCSSProperty_color));
+        Color::FromABGR(nsLayoutUtils::GetColor(this, eCSSProperty_color)));
 
       nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
                                             GetFontSizeInflation());

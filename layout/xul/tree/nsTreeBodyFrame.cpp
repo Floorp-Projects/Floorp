@@ -3695,7 +3695,7 @@ nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
     ctx->PushGroup(gfxContentType::COLOR_ALPHA);
   }
 
-  ctx->SetColor(textContext->StyleColor()->mColor);
+  ctx->SetColor(Color::FromABGR(textContext->StyleColor()->mColor));
   nsLayoutUtils::DrawString(this, *fontMet, &aRenderingContext, text.get(),
                             text.Length(),
                             textRect.TopLeft() + nsPoint(0, baseline),
