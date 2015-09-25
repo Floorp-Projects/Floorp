@@ -361,7 +361,7 @@ public class StringHelper {
 
         // Import strings
         IMPORT = res.getString(R.string.bookmarkhistory_button_import);
-        BOOKMARKS = res.getString(R.string.bookmark);
+        BOOKMARKS = res.getString(R.string.bookmarks_title);
 
         // Settings menu strings
         // Section labels - ordered as found in the settings menu
