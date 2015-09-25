@@ -2085,7 +2085,7 @@ nsGlobalWindow::SetInitialPrincipalToSubject()
   MOZ_ASSERT(IsOuterWindow());
 
   // First, grab the subject principal.
-  nsCOMPtr<nsIPrincipal> newWindowPrincipal = nsContentUtils::SubjectPrincipal();
+  nsCOMPtr<nsIPrincipal> newWindowPrincipal = nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller();
 
   // Now, if we're about to use the system principal or an nsExpandedPrincipal,
   // make sure we're not using it for a content docshell.
@@ -4549,7 +4549,7 @@ nsGlobalWindow::GetOpenerWindowOuter()
   nsGlobalWindow* win = static_cast<nsGlobalWindow*>(opener.get());
 
   // First, check if we were called from a privileged chrome script
-  if (nsContentUtils::IsCallerChrome()) {
+  if (nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
     // Catch the case where we're chrome but the opener is not...
     if (GetPrincipal() == nsContentUtils::GetSystemPrincipal() &&
         win->GetPrincipal() != nsContentUtils::GetSystemPrincipal()) {
@@ -6513,7 +6513,7 @@ nsGlobalWindow::SetFullscreenInternal(FullscreenReason aReason,
 
   // Only chrome can change our fullscreen mode. Otherwise, the state
   // can only be changed for DOM fullscreen.
-  if (aReason == eForFullscreenMode && !nsContentUtils::IsCallerChrome()) {
+  if (aReason == eForFullscreenMode && !nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
     return NS_OK;
   }
 
@@ -8249,7 +8249,7 @@ bool
 nsGlobalWindow::CanSetProperty(const char *aPrefName)
 {
   // Chrome can set any property.
-  if (nsContentUtils::IsCallerChrome()) {
+  if (nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
     return true;
   }
 
@@ -10054,6 +10054,7 @@ nsGlobalWindow::AddSystemEventListener(const nsAString& aType,
                "explicit by making optional_argc non-zero.");
 
   if (IsOuterWindow() && mInnerWindow &&
+      !nsContentUtils::LegacyIsCallerNativeCode() &&
       !nsContentUtils::CanCallerAccess(mInnerWindow)) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
@@ -12181,7 +12182,7 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
               nsIPrincipal::APP_STATUS_INSTALLED;
   }
 
-  const bool checkForPopup = !nsContentUtils::IsCallerChrome() &&
+  const bool checkForPopup = !nsContentUtils::LegacyIsCallerChromeOrNativeCode() &&
     !isApp && !aDialog && !WindowExists(aName, !aCalledNoScript);
 
   // Note: it's very important that this be an nsXPIDLCString, since we want

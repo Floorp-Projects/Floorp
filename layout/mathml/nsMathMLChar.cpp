@@ -2136,7 +2136,7 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
     fgColor = LookAndFeel::GetColor(LookAndFeel::eColorID_TextSelectForeground,
                                     fgColor);
   }
-  thebesContext->SetColor(fgColor);
+  thebesContext->SetColor(Color::FromABGR(fgColor));
   thebesContext->Save();
   nsRect r = mRect + aPt;
   ApplyTransforms(thebesContext, aPresContext->AppUnitsPerDevPixel(), r);

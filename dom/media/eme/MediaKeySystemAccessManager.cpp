@@ -78,18 +78,13 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
 static bool
 ShouldTrialCreateGMP(const nsAString& aKeySystem)
 {
-  // Trial create where the CDM has a decoder;
-  // * ClearKey and Primetime on Windows Vista and later.
-  // * Primetime on MacOSX Lion and later.
-  return
-    Preferences::GetBool("media.gmp.trial-create.enabled", false) &&
+  // Trial create where the CDM has a Windows Media Foundation decoder.
 #ifdef XP_WIN
-    IsVistaOrLater();
-#elif defined(XP_MACOSX)
-    aKeySystem.EqualsLiteral("com.adobe.primetime") &&
-    nsCocoaFeatures::OnLionOrLater();
+  return Preferences::GetBool("media.gmp.trial-create.enabled", false) &&
+         aKeySystem.EqualsLiteral("org.w3.clearkey") &&
+         IsVistaOrLater();
 #else
-    false;
+  return false;
 #endif
 }
 

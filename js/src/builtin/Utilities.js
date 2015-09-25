@@ -49,7 +49,6 @@ var std_Map_iterator_next = MapIteratorNext;
 
 /********** List specification type **********/
 
-
 /* Spec: ECMAScript Language Specification, 5.1 edition, 8.8 */
 function List() {
     this.length = 0;
@@ -192,4 +191,11 @@ function SpeciesConstructor(obj, defaultConstructor) {
 
     // Step 10.
     ThrowTypeError(JSMSG_NOT_CONSTRUCTOR, "@@species property of object's constructor");
+}
+
+/*************************************** Testing functions ***************************************/
+function outer() {
+    return function inner() {
+        return "foo";
+    }
 }

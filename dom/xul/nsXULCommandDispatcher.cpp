@@ -135,7 +135,8 @@ nsXULCommandDispatcher::GetFocusedElement(nsIDOMElement** aElement)
     CallQueryInterface(focusedContent, aElement);
 
     // Make sure the caller can access the focused element.
-    if (!nsContentUtils::CanCallerAccess(*aElement)) {
+    nsCOMPtr<nsINode> node = do_QueryInterface(*aElement);
+    if (!node || !nsContentUtils::SubjectPrincipalOrSystemIfNativeCaller()->Subsumes(node->NodePrincipal())) {
       // XXX This might want to return null, but we use that return value
       // to mean "there is no focused element," so to be clear, throw an
       // exception.

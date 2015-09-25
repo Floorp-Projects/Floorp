@@ -4,12 +4,53 @@
 
 #include "builtin/TestingFunctions.h"
 #include "js/UbiNode.h"
+#include "js/UbiNodePostOrder.h"
 #include "jsapi-tests/tests.h"
 #include "vm/SavedFrame.h"
 
 using JS::RootedObject;
 using JS::RootedScript;
 using JS::RootedString;
+
+// A helper JS::ubi::Node concrete implementation that can be used to make mock
+// graphs for testing traversals with.
+struct FakeNode
+{
+    char                name;
+    JS::ubi::EdgeVector edges;
+
+    explicit FakeNode(char name) : name(name), edges() { }
+
+    bool addEdgeTo(FakeNode& referent) {
+        JS::ubi::Node node(&referent);
+        return edges.emplaceBack(nullptr, node);
+    }
+};
+
+namespace JS {
+namespace ubi {
+
+template<>
+struct Concrete<FakeNode> : public Base
+{
+    static const char16_t concreteTypeName[];
+    const char16_t* typeName() const { return concreteTypeName; }
+
+    UniquePtr<EdgeRange> edges(JSRuntime* rt, bool wantNames) const {
+        return UniquePtr<EdgeRange>(js_new<PreComputedEdgeRange>(get().edges));
+    }
+
+    static void construct(void* storage, FakeNode* ptr) { new (storage) Concrete(ptr); }
+
+  protected:
+    explicit Concrete(FakeNode* ptr) : Base(ptr) { }
+    FakeNode& get() const { return *static_cast<FakeNode*>(ptr); }
+};
+
+const char16_t Concrete<FakeNode>::concreteTypeName[] = MOZ_UTF16("FakeNode");
+
+} // namespace ubi
+} // namespace JS
 
 // ubi::Node::zone works
 BEGIN_TEST(test_ubiNodeZone)
@@ -223,3 +264,84 @@ BEGIN_TEST(test_ubiCoarseType)
     return true;
 }
 END_TEST(test_ubiCoarseType)
+
+BEGIN_TEST(test_ubiPostOrder)
+{
+    // Construct the following graph:
+    //
+    //                          .-----.
+    //                          |     |
+    //                  .-------|  r  |---------------.
+    //                  |       |     |               |
+    //                  |       '-----'               |
+    //                  |                             |
+    //               .--V--.                       .--V--.
+    //               |     |                       |     |
+    //        .------|  a  |------.           .----|  e  |----.
+    //        |      |     |      |           |    |     |    |
+    //        |      '--^--'      |           |    '-----'    |
+    //        |         |         |           |               |
+    //     .--V--.      |      .--V--.     .--V--.         .--V--.
+    //     |     |      |      |     |     |     |         |     |
+    //     |  b  |      '------|  c  |----->  f  |--------->  g  |
+    //     |     |             |     |     |     |         |     |
+    //     '-----'             '-----'     '-----'         '-----'
+    //        |                   |
+    //        |      .-----.      |
+    //        |      |     |      |
+    //        '------>  d  <------'
+    //               |     |
+    //               '-----'
+    //
+
+    FakeNode r('r');
+    FakeNode a('a');
+    FakeNode b('b');
+    FakeNode c('c');
+    FakeNode d('d');
+    FakeNode e('e');
+    FakeNode f('f');
+    FakeNode g('g');
+
+    r.addEdgeTo(a);
+    r.addEdgeTo(e);
+    a.addEdgeTo(b);
+    a.addEdgeTo(c);
+    b.addEdgeTo(d);
+    c.addEdgeTo(a);
+    c.addEdgeTo(d);
+    c.addEdgeTo(f);
+    e.addEdgeTo(f);
+    e.addEdgeTo(g);
+    f.addEdgeTo(g);
+
+    js::Vector<char, 8, js::SystemAllocPolicy> visited;
+    {
+        // Do a PostOrder traversal, starting from r. Accumulate the names of
+        // the nodes we visit in `visited`.
+        JS::AutoCheckCannotGC nogc(rt);
+        JS::ubi::PostOrder traversal(rt, nogc);
+        CHECK(traversal.init());
+        CHECK(traversal.addStart(&r));
+        CHECK(traversal.traverse([&](const JS::ubi::Node& node) {
+            return visited.append(node.as<FakeNode>()->name);
+        }));
+    }
+
+    fprintf(stderr, "visited.length() = %lu\n", (unsigned long) visited.length());
+    for (size_t i = 0; i < visited.length(); i++)
+        fprintf(stderr, "visited[%lu] = '%c'\n", (unsigned long) i, visited[i]);
+
+    CHECK(visited.length() == 8);
+    CHECK(visited[0] == 'g');
+    CHECK(visited[1] == 'f');
+    CHECK(visited[2] == 'e');
+    CHECK(visited[3] == 'd');
+    CHECK(visited[4] == 'c');
+    CHECK(visited[5] == 'b');
+    CHECK(visited[6] == 'a');
+    CHECK(visited[7] == 'r');
+
+    return true;
+}
+END_TEST(test_ubiPostOrder)
