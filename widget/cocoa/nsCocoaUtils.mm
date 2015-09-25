@@ -475,8 +475,7 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, ui
 
   // Render a vector image at the correct resolution on a retina display
   if (aImage->GetType() == imgIContainer::TYPE_VECTOR && scaleFactor != 1.0f) {
-    gfxIntSize scaledSize(ceil(width * scaleFactor),
-                          ceil(height * scaleFactor));
+    IntSize scaledSize(ceil(width * scaleFactor), ceil(height * scaleFactor));
 
     RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
       CreateOffscreenContentDrawTarget(scaledSize, SurfaceFormat::B8G8R8A8);

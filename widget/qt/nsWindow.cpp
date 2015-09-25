@@ -817,8 +817,8 @@ nsWindow::StartRemoteDrawing()
     Screen* screen = DefaultScreenOfDisplay(dpy);
     Visual* defaultVisual = DefaultVisualOfScreen(screen);
     gfxASurface* surf = new gfxXlibSurface(dpy, mWidget->winId(), defaultVisual,
-                                           gfxIntSize(mWidget->width(),
-                                                      mWidget->height()));
+                                           IntSize(mWidget->width(),
+                                                   mWidget->height()));
 
     IntSize size(surf->GetSize().width, surf->GetSize().height);
     if (size.width <= 0 || size.height <= 0) {

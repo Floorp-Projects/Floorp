@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef js_UbiNodeTraverse_h
-#define js_UbiNodeTraverse_h
+#ifndef js_UbiNodeBreadthFirst_h
+#define js_UbiNodeBreadthFirst_h
 
 #include "js/UbiNode.h"
 #include "js/Utility.h"
@@ -241,4 +241,4 @@ struct BreadthFirst {
 } // namespace ubi
 } // namespace JS
 
-#endif // js_UbiNodeTraverse.h
+#endif // js_UbiNodeBreadthFirst_h

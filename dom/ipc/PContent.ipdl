@@ -84,7 +84,7 @@ using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
 using mozilla::dom::quota::PersistenceType from "mozilla/dom/quota/PersistenceType.h";
 using mozilla::hal::ProcessPriority from "mozilla/HalTypes.h";
-using gfxIntSize from "nsSize.h";
+using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
 using struct LookAndFeelInt from "mozilla/widget/WidgetMessageUtils.h";
@@ -546,7 +546,7 @@ child:
     // nsIPermissionManager messages
     AddPermission(Permission permission);
 
-    ScreenSizeChanged(gfxIntSize size);
+    ScreenSizeChanged(IntSize size);
 
     Volumes(VolumeInfo[] volumes);
 

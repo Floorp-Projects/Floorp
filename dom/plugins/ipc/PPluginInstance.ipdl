@@ -22,7 +22,7 @@ using NPCoordinateSpace from "npapi.h";
 using NPNVariable from "npapi.h";
 using mozilla::plugins::NativeWindowHandle from "mozilla/plugins/PluginMessageUtils.h";
 using gfxSurfaceType from "gfxTypes.h";
-using gfxIntSize from "nsSize.h";
+using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 using mozilla::plugins::WindowsSharedMemoryHandle from "mozilla/plugins/PluginMessageUtils.h";
 using mozilla::layers::SurfaceDescriptorX11 from "gfxipc/ShadowLayerUtils.h";
@@ -189,7 +189,7 @@ parent:
     returns (SurfaceDescriptor prevSurface);
 
   async PPluginSurface(WindowsSharedMemoryHandle handle,
-                       gfxIntSize size,
+                       IntSize size,
                        bool transparent);
 
   intr NPN_PushPopupsEnabledState(bool aState);

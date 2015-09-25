@@ -517,14 +517,13 @@ HasSyntheticBold(gfxTextRun *aRun, uint32_t aStart, uint32_t aLength)
 // returns true if color is non-opaque (i.e. alpha != 1.0) or completely transparent, false otherwise
 // if true, color is set on output
 static bool
-HasNonOpaqueColor(gfxContext *aContext, gfxRGBA& aCurrentColor)
+HasNonOpaqueColor(gfxContext *aContext, Color& aCurrentColorOut)
 {
-    if (aContext->GetDeviceColor(aCurrentColor)) {
-        if (aCurrentColor.a < 1.0 && aCurrentColor.a > 0.0) {
+    if (aContext->GetDeviceColor(aCurrentColorOut)) {
+        if (0.0 < aCurrentColorOut.a && aCurrentColorOut.a < 1.0) {
             return true;
         }
     }
-        
     return false;
 }
 
@@ -539,7 +538,7 @@ struct BufferAlphaColor {
 
     ~BufferAlphaColor() {}
 
-    void PushSolidColor(const gfxRect& aBounds, const gfxRGBA& aAlphaColor, uint32_t appsPerDevUnit)
+    void PushSolidColor(const gfxRect& aBounds, const Color& aAlphaColor, uint32_t appsPerDevUnit)
     {
         mContext->Save();
         mContext->NewPath();
@@ -548,7 +547,7 @@ struct BufferAlphaColor {
                     aBounds.Width() / appsPerDevUnit,
                     aBounds.Height() / appsPerDevUnit), true);
         mContext->Clip();
-        mContext->SetColor(gfxRGBA(aAlphaColor.r, aAlphaColor.g, aAlphaColor.b));
+        mContext->SetColor(Color(aAlphaColor.r, aAlphaColor.g, aAlphaColor.b));
         mContext->PushGroup(gfxContentType::COLOR_ALPHA);
         mAlpha = aAlphaColor.a;
     }
@@ -582,7 +581,7 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
 
     bool skipDrawing = mSkipDrawing;
     if (aDrawMode == DrawMode::GLYPH_FILL) {
-        gfxRGBA currentColor;
+        Color currentColor;
         if (aContext->GetDeviceColor(currentColor) && currentColor.a == 0) {
             skipDrawing = true;
         }
@@ -607,7 +606,7 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
     // synthetic bolding draws glyphs twice ==> colors with opacity won't draw
     // correctly unless first drawn without alpha
     BufferAlphaColor syntheticBoldBuffer(aContext);
-    gfxRGBA currentColor;
+    Color currentColor;
     bool needToRestore = false;
 
     if (aDrawMode == DrawMode::GLYPH_FILL &&
