@@ -1759,18 +1759,10 @@ pref("plain_text.wrap_long_lines", true);
 pref("dom.debug.propagate_gesture_events_through_content", false);
 
 // The request URL of the GeoLocation backend.
-#ifdef RELEASE_BUILD
-pref("geo.wifi.uri", "https://www.googleapis.com/geolocation/v1/geolocate?key=%GOOGLE_API_KEY%");
-#else
 pref("geo.wifi.uri", "https://location.services.mozilla.com/v1/geolocate?key=%MOZILLA_API_KEY%");
-#endif
 
 #ifdef XP_MACOSX
-#ifdef RELEASE_BUILD
-pref("geo.provider.use_corelocation", false);
-#else
 pref("geo.provider.use_corelocation", true);
-#endif
 #endif
 
 #ifdef XP_WIN
