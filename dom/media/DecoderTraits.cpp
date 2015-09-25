@@ -349,8 +349,7 @@ IsMP4SupportedType(const nsACString& aType,
 {
   // MP4Decoder/Reader is currently used for MSE and mp4 files local playback.
   bool haveAAC, haveMP3, haveH264;
-  return Preferences::GetBool("media.fragmented-mp4.exposed", false) &&
-         MP4Decoder::CanHandleMediaType(aType, aCodecs, haveAAC, haveH264, haveMP3);
+  return MP4Decoder::CanHandleMediaType(aType, aCodecs, haveAAC, haveH264, haveMP3);
 }
 #endif
 
