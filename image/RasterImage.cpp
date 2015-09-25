@@ -811,14 +811,14 @@ RasterImage::OnAddedFrame(uint32_t aNewFrameCount,
   }
 }
 
-void
+bool
 RasterImage::SetMetadata(const ImageMetadata& aMetadata,
                          bool aFromMetadataDecode)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mError) {
-    return;
+    return true;
   }
 
   if (aMetadata.HasSize()) {
@@ -826,7 +826,7 @@ RasterImage::SetMetadata(const ImageMetadata& aMetadata,
     if (size.width < 0 || size.height < 0) {
       NS_WARNING("Image has negative intrinsic size");
       DoError();
-      return;
+      return true;
     }
 
     MOZ_ASSERT(aMetadata.HasOrientation());
@@ -837,7 +837,7 @@ RasterImage::SetMetadata(const ImageMetadata& aMetadata,
       NS_WARNING("Image changed size or orientation on redecode! "
                  "This should not happen!");
       DoError();
-      return;
+      return true;
     }
 
     // Set the size and flag that we have it.
@@ -859,7 +859,7 @@ RasterImage::SetMetadata(const ImageMetadata& aMetadata,
       // discovered that it actually was during the full decode. This is a
       // rare failure that only occurs for corrupt images. To recover, we need
       // to discard all existing surfaces and redecode.
-      RecoverFromInvalidFrames(mSize, DECODE_FLAGS_DEFAULT);
+      return false;
     }
   }
 
@@ -881,6 +881,8 @@ RasterImage::SetMetadata(const ImageMetadata& aMetadata,
     Set("hotspotX", intwrapx);
     Set("hotspotY", intwrapy);
   }
+
+  return true;
 }
 
 NS_IMETHODIMP
@@ -1732,7 +1734,18 @@ RasterImage::FinalizeDecoder(Decoder* aDecoder)
   }
 
   // Record all the metadata the decoder gathered about this image.
-  SetMetadata(aDecoder->GetImageMetadata(), wasMetadata);
+  bool metadataOK = SetMetadata(aDecoder->GetImageMetadata(), wasMetadata);
+  if (!metadataOK) {
+    // This indicates a serious error that requires us to discard all existing
+    // surfaces and redecode to recover. We'll drop the results from this
+    // decoder on the floor, since they aren't valid.
+    aDecoder->TakeProgress();
+    aDecoder->TakeInvalidRect();
+    RecoverFromInvalidFrames(mSize,
+                             FromSurfaceFlags(aDecoder->GetSurfaceFlags()));
+    return;
+  }
+
   MOZ_ASSERT(mError || mHasSize || !aDecoder->HasSize(),
              "SetMetadata should've gotten a size");
 

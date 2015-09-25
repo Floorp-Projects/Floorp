@@ -5118,9 +5118,11 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
       scale = gfxSize(1.0, 1.0);
     }
     // If this is a transform container layer, then pre-rendering might
-    // mean we try render a layer bigger than the max texture size. Apply
-    // clmaping to prevent this.
-    if (aTransform) {
+    // mean we try render a layer bigger than the max texture size. If we have
+    // tiling, that's not a problem, since we'll automatically choose a tiled
+    // layer for layers of that size. If not, we need to apply clamping to
+    // prevent this.
+    if (aTransform && !gfxPrefs::LayersTilesEnabled()) {
       RestrictScaleToMaxLayerSize(scale, aVisibleRect, aContainerFrame, aLayer);
     }
   } else {

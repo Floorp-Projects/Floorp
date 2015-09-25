@@ -48,6 +48,9 @@
 
 #include "logging.h"
 
+// Should come from MediaEngineWebRTC.h, but that's a pain to include here
+#define DEFAULT_SAMPLE_RATE 32000
+
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
@@ -1332,7 +1335,7 @@ void GenericReceiveListener::AddSelf(MediaSegment* segment) {
 MediaPipelineReceiveAudio::PipelineListener::PipelineListener(
     SourceMediaStream * source, TrackID track_id,
     const RefPtr<MediaSessionConduit>& conduit, bool queue_track)
-  : GenericReceiveListener(source, track_id, 16000, queue_track), // XXX rate assumption
+  : GenericReceiveListener(source, track_id, DEFAULT_SAMPLE_RATE, queue_track), // XXX rate assumption
     conduit_(conduit)
 {
   MOZ_ASSERT(track_rate_%100 == 0);
