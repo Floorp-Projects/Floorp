@@ -129,20 +129,10 @@ const backgroundPageThumbsContent = {
 
     let canvasDrawDate = new Date();
 
-    let canvas = PageThumbUtils.createCanvas(content);
-    let [sw, sh, scale] = PageThumbUtils.determineCropSize(content, canvas);
-
-    let ctx = canvas.getContext("2d");
-    ctx.save();
-    ctx.scale(scale, scale);
-    ctx.drawWindow(content, 0, 0, sw, sh,
-                   PageThumbUtils.THUMBNAIL_BG_COLOR,
-                   ctx.DRAWWINDOW_DO_NOT_FLUSH);
-    ctx.restore();
-
+    let finalCanvas = PageThumbUtils.createSnapshotThumbnail(content);
     capture.canvasDrawTime = new Date() - canvasDrawDate;
 
-    canvas.toBlob(blob => {
+    finalCanvas.toBlob(blob => {
       capture.imageBlob = new Blob([blob]);
       // Load about:blank to finish the capture and wait for onStateChange.
       this._loadAboutBlank();
