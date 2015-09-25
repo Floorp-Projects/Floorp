@@ -40,7 +40,7 @@ typedef mozilla::dom::Element Element;
 
 mozilla::gfx::UserDataKey gfxTextContextPaint::sUserDataKey;
 
-const gfxRGBA SimpleTextContextPaint::sZero = gfxRGBA(0.0f, 0.0f, 0.0f, 0.0f);
+/* static */ const Color SimpleTextContextPaint::sZero = Color();
 
 gfxSVGGlyphs::gfxSVGGlyphs(hb_blob_t *aSVGTable, gfxFontEntry *aFontEntry)
     : mSVGData(aSVGTable)
