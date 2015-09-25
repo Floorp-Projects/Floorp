@@ -9,14 +9,18 @@ task:
     - 'docker-worker:cache:workspace-emulator-ics-debug'
     - 'docker-worker:cache:workspace-emulator-ics-debug-objdir-gecko-{{project}}'
   metadata:
-    name: '[TC] B2G Emulator ICS Debug'
+    name: '[TC] B2G Emulator ICS (Debug)'
   extra:
+    treeherderEnv:
+      - production
+      - staging
     treeherder:
+      # Disable "TC" prefix...
+      groupSymbol: "?"
       collection:
         debug: true
       machine:
         platform: b2g-emu-ics
-
 
   payload:
     cache:
