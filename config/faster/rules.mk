@@ -189,15 +189,6 @@ jar-browser-themes-%-jar.mn: \
 	$(TOPOBJDIR)/browser/themes/%/tab-selected-end.svg \
 	$(TOPOBJDIR)/browser/themes/%/tab-selected-start.svg
 
-# These files are manually generated from
-# toolkit/components/urlformatter/Makefile.in and are force-included so that
-# the corresponding defines don't end up in the command lines.
-KEYS = mozilla_api_key google_api_key google_oauth_api_key bing_api_key
-$(TOPOBJDIR)/dist/bin/components/nsURLFormatter.js: \
-	$(addprefix $(TOPOBJDIR)/toolkit/components/urlformatter/, $(KEYS))
-$(TOPOBJDIR)/dist/bin/components/nsURLFormatter.js: defines += \
-	$(addprefix -I $(TOPOBJDIR)/toolkit/components/urlformatter/,$(KEYS))
-
 # Extra dependencies and/or definitions for preprocessed files.
 $(TOPOBJDIR)/dist/bin/application.ini: $(TOPOBJDIR)/config/buildid
 $(TOPOBJDIR)/dist/bin/application.ini: defines += \
