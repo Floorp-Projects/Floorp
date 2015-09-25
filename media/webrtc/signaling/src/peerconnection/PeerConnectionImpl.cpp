@@ -410,6 +410,8 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
   mAllowIceLinkLocal = Preferences::GetBool(
     "media.peerconnection.ice.link_local", false);
 #endif
+  memset(mMaxReceiving, 0, sizeof(mMaxReceiving));
+  memset(mMaxSending, 0, sizeof(mMaxSending));
 }
 
 PeerConnectionImpl::~PeerConnectionImpl()
@@ -2486,6 +2488,57 @@ PeerConnectionImpl::PluginCrash(uint32_t aPluginID,
   return true;
 }
 
+void
+PeerConnectionImpl::RecordEndOfCallTelemetry() const
+{
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  // Bitmask used for WEBRTC/LOOP_CALL_TYPE telemetry reporting
+  static const uint32_t kAudioTypeMask = 1;
+  static const uint32_t kVideoTypeMask = 2;
+  static const uint32_t kDataChannelTypeMask = 4;
+
+  // Report end-of-call Telemetry
+  if (mJsepSession->GetNegotiations() > 0) {
+    Telemetry::Accumulate(mIsLoop ? Telemetry::LOOP_RENEGOTIATIONS :
+                          Telemetry::WEBRTC_RENEGOTIATIONS,
+                          mJsepSession->GetNegotiations()-1);
+  }
+  Telemetry::Accumulate(mIsLoop ? Telemetry::LOOP_MAX_VIDEO_SEND_TRACK :
+                        Telemetry::WEBRTC_MAX_VIDEO_SEND_TRACK,
+                        mMaxSending[SdpMediaSection::MediaType::kVideo]);
+  Telemetry::Accumulate(mIsLoop ? Telemetry::LOOP_MAX_VIDEO_RECEIVE_TRACK :
+                        Telemetry::WEBRTC_MAX_VIDEO_RECEIVE_TRACK,
+                        mMaxReceiving[SdpMediaSection::MediaType::kVideo]);
+  Telemetry::Accumulate(mIsLoop ? Telemetry::LOOP_MAX_AUDIO_SEND_TRACK :
+                        Telemetry::WEBRTC_MAX_AUDIO_SEND_TRACK,
+                        mMaxSending[SdpMediaSection::MediaType::kAudio]);
+  Telemetry::Accumulate(mIsLoop ? Telemetry::LOOP_MAX_AUDIO_RECEIVE_TRACK :
+                        Telemetry::WEBRTC_MAX_AUDIO_RECEIVE_TRACK,
+                        mMaxReceiving[SdpMediaSection::MediaType::kAudio]);
+  // DataChannels appear in both Sending and Receiving
+  Telemetry::Accumulate(mIsLoop ? Telemetry::LOOP_DATACHANNEL_NEGOTIATED :
+                        Telemetry::WEBRTC_DATACHANNEL_NEGOTIATED,
+                        mMaxSending[SdpMediaSection::MediaType::kApplication]);
+  // Enumerated/bitmask: 1 = Audio, 2 = Video, 4 = DataChannel
+  // A/V = 3, A/V/D = 7, etc
+  uint32_t type = 0;
+  if (mMaxSending[SdpMediaSection::MediaType::kAudio] ||
+      mMaxReceiving[SdpMediaSection::MediaType::kAudio]) {
+    type = kAudioTypeMask;
+  }
+  if (mMaxSending[SdpMediaSection::MediaType::kVideo] ||
+      mMaxReceiving[SdpMediaSection::MediaType::kVideo]) {
+    type |= kVideoTypeMask;
+  }
+  if (mMaxSending[SdpMediaSection::MediaType::kApplication]) {
+    type |= kDataChannelTypeMask;
+  }
+  Telemetry::Accumulate(mIsLoop ? Telemetry::LOOP_CALL_TYPE :
+                        Telemetry::WEBRTC_CALL_TYPE,
+                        type);
+#endif
+}
+
 nsresult
 PeerConnectionImpl::CloseInt()
 {
@@ -2496,6 +2549,7 @@ PeerConnectionImpl::CloseInt()
   // transitioned to connected. As a bonus, this allows us to detect race
   // conditions where a stats dispatch happens right as the PC closes.
   RecordLongtermICEStatistics();
+  RecordEndOfCallTelemetry();
   CSFLogInfo(logTag, "%s: Closing PeerConnectionImpl %s; "
              "ending call", __FUNCTION__, mHandle.c_str());
   if (mJsepSession) {
@@ -2585,6 +2639,23 @@ PeerConnectionImpl::SetSignalingState_m(PCImplSignalingState aSignalingState,
         fireNegotiationNeeded = true;
       }
     }
+
+    // Telemetry: record info on the current state of streams/renegotiations/etc
+    // Note: this code gets run on rollbacks as well!
+
+    // Update the max channels used with each direction for each type
+    uint16_t receiving[SdpMediaSection::kMediaTypes];
+    uint16_t sending[SdpMediaSection::kMediaTypes];
+    mJsepSession->CountTracks(receiving, sending);
+    for (size_t i = 0; i < SdpMediaSection::kMediaTypes; i++) {
+      if (mMaxReceiving[i] < receiving[i]) {
+        mMaxReceiving[i] = receiving[i];
+      }
+      if (mMaxSending[i] < sending[i]) {
+        mMaxSending[i] = sending[i];
+      }
+    }
+
   } else {
     mShouldSuppressNegotiationNeeded = true;
   }
