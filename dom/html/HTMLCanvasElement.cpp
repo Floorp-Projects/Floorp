@@ -542,7 +542,7 @@ HTMLCanvasElement::CaptureStream(const Optional<double>& aFrameRate,
     return nullptr;
   }
 
-  stream->CreateOwnDOMTrack(videoTrackId, MediaSegment::VIDEO);
+  stream->CreateDOMTrack(videoTrackId, MediaSegment::VIDEO);
   RegisterFrameCaptureListener(stream->FrameCaptureListener());
   return stream.forget();
 }

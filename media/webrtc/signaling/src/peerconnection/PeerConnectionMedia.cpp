@@ -1304,7 +1304,7 @@ RemoteSourceStreamInfo::StartReceiving()
 
   mReceiving = true;
 
-  SourceMediaStream* source = GetMediaStream()->GetInputStream()->AsSourceStream();
+  SourceMediaStream* source = GetMediaStream()->GetStream()->AsSourceStream();
   source->FinishAddTracks();
   source->SetPullEnabled(true);
   // AdvanceKnownTracksTicksTime(HEAT_DEATH_OF_UNIVERSE) means that in
