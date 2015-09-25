@@ -242,7 +242,7 @@ public:
       // Start currentTime from the point where this stream was successfully
       // returned.
       aStream->SetLogicalStreamStartTime(
-          aStream->GetStream()->GetCurrentTime());
+          aStream->GetPlaybackStream()->GetCurrentTime());
 
       JSErrorResult rv;
       CSFLogInfo(logTag, "Calling OnAddStream(%s)", streamId.c_str());
@@ -469,7 +469,7 @@ PeerConnectionImpl::MakeMediaStream()
   }
 #endif
 
-  CSFLogDebug(logTag, "Created media stream %p, inner: %p", stream.get(), stream->GetStream());
+  CSFLogDebug(logTag, "Created media stream %p, inner: %p", stream.get(), stream->GetInputStream());
 
   return stream.forget();
 }
