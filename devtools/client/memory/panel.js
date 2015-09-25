@@ -26,14 +26,19 @@ MemoryPanel.prototype = {
 
     this.panelWin.gToolbox = this._toolbox;
     this.panelWin.gTarget = this.target;
-    this.panelWin.gFront = new MemoryFront(this.target.client, this.target.form);
+
+    const rootForm = yield this.target.root;
+    this.panelWin.gFront = new MemoryFront(this.target.client,
+                                           this.target.form,
+                                           rootForm);
 
     console.log(this.panelWin, this.panelWin.MemoryController);
-    return this._opening = this.panelWin.MemoryController.initialize().then(() => {
+    this._opening = this.panelWin.MemoryController.initialize().then(() => {
       this.isReady = true;
       this.emit("ready");
       return this;
     });
+    return this._opening;
   }),
 
   // DevToolPanel API
@@ -48,12 +53,14 @@ MemoryPanel.prototype = {
       return this._destroyer;
     }
 
-    return this._destroyer = this.panelWin.MemoryController.destroy().then(() => {
+    this._destroyer = this.panelWin.MemoryController.destroy().then(() => {
       // Destroy front to ensure packet handler is removed from client
       this.panelWin.gFront.destroy();
+      this.panelWin = null;
       this.emit("destroyed");
       return this;
     });
+    return this._destroyer;
   }
 };
 
