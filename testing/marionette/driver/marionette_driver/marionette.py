@@ -688,8 +688,8 @@ class Marionette(object):
             if self.instance and not hasattr(self.instance, 'detached'):
                 # If we've launched the binary we've connected to, wait
                 # for it to shut down.
-                returncode = self.instance.runner.wait()
-                raise IOError("process died with returncode %d" % returncode)
+                returncode = self.instance.runner.wait(timeout=self.DEFAULT_STARTUP_TIMEOUT)
+                raise IOError("process died with returncode %s" % returncode)
             raise
         except socket.timeout:
             self.session = None
