@@ -34,6 +34,7 @@ from mozharness.mozilla.testing.testbase import TestingMixin, testing_config_opt
 
 SUITE_CATEGORIES = ['gtest', 'cppunittest', 'jittest', 'mochitest', 'reftest', 'xpcshell', 'mozbase', 'mozmill', 'webapprt']
 
+
 # DesktopUnittest {{{1
 class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMixin, CodeCoverageMixin):
     config_options = [
@@ -298,6 +299,32 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         self.symbols_url = symbols_url
         return self.symbols_url
 
+    def get_webapprt_path(self, res_dir, mochitest_dir):
+        """Get the path to the webapp runtime binary.
+        On Mac, we copy the stub from the resources dir to the test app bundle,
+        since we have to run it from the executable directory of a bundle
+        in order for its windows to appear.  Ideally, the build system would do
+        this for us at build time, and we should find a way for it to do that.
+        """
+        exe_suffix = self.config.get('exe_suffix', '')
+        app_name = 'webapprt-stub' + exe_suffix
+        app_path = os.path.join(res_dir, app_name)
+        if self._is_darwin():
+            mac_dir_name = os.path.join(
+                mochitest_dir,
+                'webapprtChrome',
+                'webapprt',
+                'test',
+                'chrome',
+                'TestApp.app',
+                'Contents',
+                'MacOS')
+            mac_app_name = 'webapprt' + exe_suffix
+            mac_app_path = os.path.join(mac_dir_name, mac_app_name)
+            self.copyfile(app_path, mac_app_path, copystat=True)
+            return mac_app_path
+        return app_path
+
     def _query_abs_base_cmd(self, suite_category, suite):
         if self.binary_path:
             c = self.config
@@ -308,11 +335,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             abs_app_dir = self.query_abs_app_dir()
             abs_res_dir = self.query_abs_res_dir()
 
-            webapprt_path = os.path.join(os.path.dirname(self.binary_path),
-                                         'webapprt-stub')
-            if c.get('exe_suffix'):
-                webapprt_path += c['exe_suffix']
-
             raw_log_file = os.path.join(dirs['abs_blob_upload_dir'],
                                         '%s_raw.log' % suite)
 
@@ -322,7 +344,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 'binary_path': self.binary_path,
                 'symbols_path': self._query_symbols_url(),
                 'abs_app_dir': abs_app_dir,
-                'app_path': webapprt_path,
+                'abs_res_dir': abs_res_dir,
                 'raw_log_file': raw_log_file,
                 'error_summary_file': error_summary_file,
                 'gtest_dir': os.path.join(dirs['abs_test_install_dir'],
@@ -333,6 +355,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
             # self.symbols_path when downloading/extracting.
             if self.symbols_path:
                 str_format_values['symbols_path'] = self.symbols_path
+
+            if suite_category == 'webapprt':
+                str_format_values['app_path'] = self.get_webapprt_path(abs_res_dir, dirs['abs_mochitest_dir'])
 
             if c['e10s']:
                 base_cmd.append('--e10s')
@@ -373,14 +398,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                              "please make sure they are specified in your "
                              "config under %s_options" %
                              (suite_category, suite_category))
-
-
-            for option in options:
-                option = option % str_format_values
-                if not option.endswith('None'):
-                    base_cmd.append(option)
-
-            return base_cmd
+                return base_cmd
         else:
             self.fatal("'binary_path' could not be determined.\n This should "
                        "be like '/path/build/application/firefox/firefox'"
@@ -415,20 +433,6 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 suites = all_suites
 
         return suites
-
-    def _query_try_flavor(self, category, suite):
-        flavors = {
-            "mochitest": [("plain.*", "mochitest"),
-                          ("browser-chrome.*", "browser-chrome"),
-                          ("mochitest-devtools-chrome.*", "devtools-chrome"),
-                          ("chrome", "chrome")],
-            "xpcshell": [("xpcshell", "xpcshell")],
-            "reftest": [("reftest", "reftest"),
-                        ("crashtest", "crashtest")]
-        }
-        for suite_pattern, flavor in flavors.get(category, []):
-            if re.compile(suite_pattern).match(suite):
-                return flavor
 
     # Actions {{{2
 
@@ -584,22 +588,15 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 options_list = []
                 env = {}
                 if isinstance(suites[suite], dict):
-                    options_list = suites[suite].get('options', [])
-                    tests_list = suites[suite].get('tests', [])
+                    options_list = suites[suite]['options'] + suites[suite].get("tests", [])
                     env = copy.deepcopy(suites[suite].get('env', {}))
                 else:
                     options_list = suites[suite]
-                    tests_list = []
 
-                flavor = self._query_try_flavor(suite_category, suite)
-                try_options, try_tests = self.try_args(flavor)
+                for arg in options_list:
+                    cmd.append(arg % replace_dict)
 
-                cmd.extend(self.query_options(options_list,
-                                              try_options,
-                                              str_format_values=replace_dict))
-                cmd.extend(self.query_tests_args(tests_list,
-                                                 try_tests,
-                                                 str_format_values=replace_dict))
+                cmd = self.append_harness_extra_args(cmd)
 
                 suite_name = suite_category + '-' + suite
                 tbpl_status, log_level = None, None
