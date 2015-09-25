@@ -28,6 +28,7 @@ class AudioBufferSourceNode;
 class AudioParam;
 class AudioParamTimeline;
 struct ThreeDPoint;
+struct AudioTimelineEvent;
 
 /**
  * The DOM object representing a Web Audio AudioNode.
@@ -223,8 +224,8 @@ protected:
   void SendInt32ParameterToStream(uint32_t aIndex, int32_t aValue);
   void SendThreeDPointParameterToStream(uint32_t aIndex, const ThreeDPoint& aValue);
   void SendChannelMixingParametersToStream();
-  static void SendTimelineParameterToStream(AudioNode* aNode, uint32_t aIndex,
-                                            const AudioParamTimeline& aValue);
+  static void SendTimelineEventToStream(AudioNode* aNode, uint32_t aIndex,
+                                        const dom::AudioTimelineEvent& aEvent);
 
 private:
   nsRefPtr<AudioContext> mContext;

@@ -12,28 +12,34 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
 
+#include "MainThreadUtils.h"
 #include "nsTArray.h"
 #include "math.h"
 #include "WebAudioUtils.h"
 
 namespace mozilla {
 
+class MediaStream;
+
 namespace dom {
 
-// This is an internal helper class and should not be used outside of this header.
 struct AudioTimelineEvent final
 {
   enum Type : uint32_t
   {
     SetValue,
+    SetValueAtTime,
     LinearRamp,
     ExponentialRamp,
     SetTarget,
-    SetValueCurve
+    SetValueCurve,
+    Stream,
+    Cancel
   };
 
   AudioTimelineEvent(Type aType, double aTime, float aValue, double aTimeConstant = 0.0,
-                     float aDuration = 0.0, const float* aCurve = nullptr, uint32_t aCurveLength = 0)
+                     float aDuration = 0.0, const float* aCurve = nullptr,
+                     uint32_t aCurveLength = 0)
     : mType(aType)
     , mTimeConstant(aTimeConstant)
     , mDuration(aDuration)
@@ -49,11 +55,23 @@ struct AudioTimelineEvent final
     }
   }
 
+  explicit AudioTimelineEvent(MediaStream* aStream)
+    : mType(Stream)
+    , mStream(aStream)
+#ifdef DEBUG
+    , mTimeIsInTicks(false)
+#endif
+  {
+  }
+
   AudioTimelineEvent(const AudioTimelineEvent& rhs)
   {
     PodCopy(this, &rhs, 1);
+
     if (rhs.mType == AudioTimelineEvent::SetValueCurve) {
       SetCurveParams(rhs.mCurve, rhs.mCurveLength);
+    } else if (rhs.mType == AudioTimelineEvent::Stream) {
+      new (&mStream) decltype(mStream)(rhs.mStream);
     }
   }
 
@@ -62,30 +80,6 @@ struct AudioTimelineEvent final
     if (mType == AudioTimelineEvent::SetValueCurve) {
       delete[] mCurve;
     }
-  }
-
-  bool IsValid() const
-  {
-    if (mType == AudioTimelineEvent::SetValueCurve) {
-      if (!mCurve || !mCurveLength) {
-        return false;
-      }
-      for (uint32_t i = 0; i < mCurveLength; ++i) {
-        if (!IsValid(mCurve[i])) {
-          return false;
-        }
-      }
-    }
-
-    if (mType == AudioTimelineEvent::SetTarget &&
-        WebAudioUtils::FuzzyEqual(mTimeConstant, 0.0)) {
-      return false;
-    }
-
-    return IsValid(mTime) &&
-           IsValid(mValue) &&
-           IsValid(mTimeConstant) &&
-           IsValid(mDuration);
   }
 
   template <class TimeType>
@@ -114,6 +108,22 @@ struct AudioTimelineEvent final
     float mValue;
     uint32_t mCurveLength;
   };
+  // mCurve contains a buffer of SetValueCurve samples.  We sample the
+  // values in the buffer depending on how far along we are in time.
+  // If we're at time T and the event has started as time T0 and has a
+  // duration of D, we sample the buffer at floor(mCurveLength*(T-T0)/D)
+  // if T<T0+D, and just take the last sample in the buffer otherwise.
+  float* mCurve;
+  nsRefPtr<MediaStream> mStream;
+  double mTimeConstant;
+  double mDuration;
+#ifdef DEBUG
+  bool mTimeIsInTicks;
+#endif
+
+private:
+  // This member is accessed using the `Time` method, for safety.
+  //
   // The time for an event can either be in absolute value or in ticks.
   // Initially the time of the event is always in absolute value.
   // In order to convert it to ticks, call SetTimeInTicks.  Once this
@@ -123,23 +133,6 @@ struct AudioTimelineEvent final
     double mTime;
     int64_t mTimeInTicks;
   };
-  // mCurve contains a buffer of SetValueCurve samples.  We sample the
-  // values in the buffer depending on how far along we are in time.
-  // If we're at time T and the event has started as time T0 and has a
-  // duration of D, we sample the buffer at floor(mCurveLength*(T-T0)/D)
-  // if T<T0+D, and just take the last sample in the buffer otherwise.
-  float* mCurve;
-  double mTimeConstant;
-  double mDuration;
-#ifdef DEBUG
-  bool mTimeIsInTicks;
-#endif
-
-private:
-  static bool IsValid(double value)
-  {
-    return mozilla::IsFinite(value);
-  }
 };
 
 template <>
@@ -152,6 +145,7 @@ inline double AudioTimelineEvent::Time<double>() const
 template <>
 inline int64_t AudioTimelineEvent::Time<int64_t>() const
 {
+  MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(mTimeIsInTicks);
   return mTimeInTicks;
 }
@@ -171,7 +165,119 @@ public:
     : mValue(aDefaultValue),
       mComputedValue(aDefaultValue),
       mLastComputedValue(aDefaultValue)
+  { }
+
+  bool ValidateEvent(AudioTimelineEvent& aEvent,
+                     ErrorResult& aRv)
   {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    // Validate the event itself
+    if (!WebAudioUtils::IsTimeValid(aEvent.template Time<double>()) ||
+        !WebAudioUtils::IsTimeValid(aEvent.mTimeConstant)) {
+      aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+      return false;
+    }
+
+    if (aEvent.mType == AudioTimelineEvent::SetValueCurve) {
+      if (!aEvent.mCurve || !aEvent.mCurveLength) {
+        aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+        return false;
+      }
+      for (uint32_t i = 0; i < aEvent.mCurveLength; ++i) {
+        if (!IsValid(aEvent.mCurve[i])) {
+          aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+          return false;
+        }
+      }
+    }
+
+    if (aEvent.mType == AudioTimelineEvent::SetTarget &&
+        WebAudioUtils::FuzzyEqual(aEvent.mTimeConstant, 0.0)) {
+      aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+      return false;
+    }
+
+    bool timeAndValueValid = IsValid(aEvent.mValue) &&
+                             IsValid(aEvent.mDuration);
+    if (!timeAndValueValid) {
+      aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+      return false;
+    }
+
+    // Make sure that non-curve events don't fall within the duration of a
+    // curve event.
+    for (unsigned i = 0; i < mEvents.Length(); ++i) {
+      if (mEvents[i].mType == AudioTimelineEvent::SetValueCurve &&
+          mEvents[i].template Time<double>() <= aEvent.template Time<double>() &&
+          (mEvents[i].template Time<double>() + mEvents[i].mDuration) >= aEvent.template Time<double>()) {
+        aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+        return false;
+      }
+    }
+
+    // Make sure that curve events don't fall in a range which includes other
+    // events.
+    if (aEvent.mType == AudioTimelineEvent::SetValueCurve) {
+      for (unsigned i = 0; i < mEvents.Length(); ++i) {
+        if (mEvents[i].template Time<double>() > aEvent.template Time<double>() &&
+            mEvents[i].template Time<double>() < (aEvent.template Time<double>() + aEvent.mDuration)) {
+          aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+          return false;
+        }
+      }
+    }
+
+    // Make sure that invalid values are not used for exponential curves
+    if (aEvent.mType == AudioTimelineEvent::ExponentialRamp) {
+      if (aEvent.mValue <= 0.f) {
+        aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+        return false;
+      }
+      const AudioTimelineEvent* previousEvent = GetPreviousEvent(aEvent.template Time<double>());
+      if (previousEvent) {
+        if (previousEvent->mValue <= 0.f) {
+          aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+          return false;
+        }
+      } else {
+        if (mValue <= 0.f) {
+          aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  template<typename TimeType>
+  void InsertEvent(const AudioTimelineEvent& aEvent)
+  {
+    for (unsigned i = 0; i < mEvents.Length(); ++i) {
+      if (aEvent.template Time<TimeType>() == mEvents[i].template Time<TimeType>()) {
+        if (aEvent.mType == mEvents[i].mType) {
+          // If times and types are equal, replace the event
+          mEvents.ReplaceElementAt(i, aEvent);
+        } else {
+          // Otherwise, place the element after the last event of another type
+          do {
+            ++i;
+          } while (i < mEvents.Length() &&
+                   aEvent.mType != mEvents[i].mType &&
+                   aEvent.template Time<TimeType>() == mEvents[i].template Time<TimeType>());
+          mEvents.InsertElementAt(i, aEvent);
+        }
+        return;
+      }
+      // Otherwise, place the event right after the latest existing event
+      if (aEvent.template Time<TimeType>() < mEvents[i].template Time<TimeType>()) {
+        mEvents.InsertElementAt(i, aEvent);
+        return;
+      }
+    }
+
+    // If we couldn't find a place for the event, just append it to the list
+    mEvents.AppendElement(aEvent);
   }
 
   bool HasSimpleValue() const
@@ -202,38 +308,58 @@ public:
 
   void SetValueAtTime(float aValue, double aStartTime, ErrorResult& aRv)
   {
-    InsertEvent(AudioTimelineEvent(AudioTimelineEvent::SetValue, aStartTime, aValue), aRv);
+    AudioTimelineEvent event(AudioTimelineEvent::SetValueAtTime, aStartTime, aValue);
+
+    if (ValidateEvent(event, aRv)) {
+      InsertEvent<double>(event);
+    }
   }
 
   void LinearRampToValueAtTime(float aValue, double aEndTime, ErrorResult& aRv)
   {
-    InsertEvent(AudioTimelineEvent(AudioTimelineEvent::LinearRamp, aEndTime, aValue), aRv);
+    AudioTimelineEvent event(AudioTimelineEvent::LinearRamp, aEndTime, aValue);
+
+    if (ValidateEvent(event, aRv)) {
+      InsertEvent<double>(event);
+    }
   }
 
   void ExponentialRampToValueAtTime(float aValue, double aEndTime, ErrorResult& aRv)
   {
-    InsertEvent(AudioTimelineEvent(AudioTimelineEvent::ExponentialRamp, aEndTime, aValue), aRv);
+    AudioTimelineEvent event(AudioTimelineEvent::ExponentialRamp, aEndTime, aValue);
+
+    if (ValidateEvent(event, aRv)) {
+      InsertEvent<double>(event);
+    }
   }
 
   void SetTargetAtTime(float aTarget, double aStartTime, double aTimeConstant, ErrorResult& aRv)
   {
-    InsertEvent(AudioTimelineEvent(AudioTimelineEvent::SetTarget, aStartTime, aTarget, aTimeConstant), aRv);
+    AudioTimelineEvent event(AudioTimelineEvent::SetTarget, aStartTime, aTarget, aTimeConstant);
+
+    if (ValidateEvent(event, aRv)) {
+      InsertEvent<double>(event);
+    }
   }
 
   void SetValueCurveAtTime(const float* aValues, uint32_t aValuesLength, double aStartTime, double aDuration, ErrorResult& aRv)
   {
-    InsertEvent(AudioTimelineEvent(AudioTimelineEvent::SetValueCurve, aStartTime, 0.0f, 0.0f, aDuration, aValues, aValuesLength), aRv);
+    AudioTimelineEvent event(AudioTimelineEvent::SetValueCurve, aStartTime, 0.0f, 0.0f, aDuration, aValues, aValuesLength);
+    if (ValidateEvent(event, aRv)) {
+      InsertEvent<double>(event);
+    }
   }
 
-  void CancelScheduledValues(double aStartTime)
+  template<typename TimeType>
+  void CancelScheduledValues(TimeType aStartTime)
   {
     for (unsigned i = 0; i < mEvents.Length(); ++i) {
-      if (mEvents[i].mTime >= aStartTime) {
+      if (mEvents[i].template Time<TimeType>() >= aStartTime) {
 #ifdef DEBUG
         // Sanity check: the array should be sorted, so all of the following
         // events should have a time greater than aStartTime too.
         for (unsigned j = i + 1; j < mEvents.Length(); ++j) {
-          MOZ_ASSERT(mEvents[j].mTime >= aStartTime);
+          MOZ_ASSERT(mEvents[j].template Time<TimeType>() >= aStartTime);
         }
 #endif
         mEvents.TruncateLength(i);
@@ -298,7 +424,7 @@ public:
 
 #ifdef DEBUG
         const AudioTimelineEvent* current = &mEvents[lastEventId];
-        MOZ_ASSERT(current->mType == AudioTimelineEvent::SetValue ||
+        MOZ_ASSERT(current->mType == AudioTimelineEvent::SetValueAtTime ||
                    current->mType == AudioTimelineEvent::SetTarget ||
                    current->mType == AudioTimelineEvent::LinearRamp ||
                    current->mType == AudioTimelineEvent::ExponentialRamp ||
@@ -393,17 +519,6 @@ public:
     return aCurve[uint32_t(aCurveLength * ratio)];
   }
 
-  void ConvertEventTimesToTicks(int64_t (*aConvertor)(double aTime, void* aClosure), void* aClosure,
-                                int32_t aSampleRate)
-  {
-    for (unsigned i = 0; i < mEvents.Length(); ++i) {
-      mEvents[i].SetTimeInTicks(aConvertor(mEvents[i].template Time<double>(), aClosure));
-      mEvents[i].mTimeConstant *= aSampleRate;
-      mEvents[i].mDuration *= aSampleRate;
-    }
-  }
-
-private:
   template<class TimeType>
   float GetValuesAtTimeHelperInternal(TimeType aTime,
                                       const AudioTimelineEvent* aPrevious,
@@ -433,17 +548,21 @@ private:
     // If the requested time is after all of the existing events
     if (!aNext) {
       switch (aPrevious->mType) {
-      case AudioTimelineEvent::SetValue:
-      case AudioTimelineEvent::LinearRamp:
-      case AudioTimelineEvent::ExponentialRamp:
-        // The value will be constant after the last event
-        return aPrevious->mValue;
-      case AudioTimelineEvent::SetValueCurve:
-        return ExtractValueFromCurve(aPrevious->template Time<TimeType>(),
-                                     aPrevious->mCurve, aPrevious->mCurveLength,
-                                     aPrevious->mDuration, aTime);
-      case AudioTimelineEvent::SetTarget:
-        MOZ_ASSERT(false, "unreached");
+        case AudioTimelineEvent::SetValueAtTime:
+        case AudioTimelineEvent::LinearRamp:
+        case AudioTimelineEvent::ExponentialRamp:
+          // The value will be constant after the last event
+          return aPrevious->mValue;
+        case AudioTimelineEvent::SetValueCurve:
+          return ExtractValueFromCurve(aPrevious->template Time<TimeType>(),
+                                       aPrevious->mCurve, aPrevious->mCurveLength,
+                                       aPrevious->mDuration, aTime);
+        case AudioTimelineEvent::SetTarget:
+          MOZ_ASSERT(false, "unreached");
+        case AudioTimelineEvent::SetValue:
+        case AudioTimelineEvent::Cancel:
+        case AudioTimelineEvent::Stream:
+          MOZ_ASSERT(false, "Should have been handled earlier.");
       }
       MOZ_ASSERT(false, "unreached");
     }
@@ -464,15 +583,19 @@ private:
                                     aNext->template Time<TimeType>(),
                                     aNext->mValue, aTime);
 
-    case AudioTimelineEvent::SetValue:
+    case AudioTimelineEvent::SetValueAtTime:
     case AudioTimelineEvent::SetTarget:
     case AudioTimelineEvent::SetValueCurve:
       break;
+    case AudioTimelineEvent::SetValue:
+    case AudioTimelineEvent::Cancel:
+    case AudioTimelineEvent::Stream:
+      MOZ_ASSERT(false, "Should have been handled earlier.");
     }
 
     // Now handle all other cases
     switch (aPrevious->mType) {
-    case AudioTimelineEvent::SetValue:
+    case AudioTimelineEvent::SetValueAtTime:
     case AudioTimelineEvent::LinearRamp:
     case AudioTimelineEvent::ExponentialRamp:
       // If the next event type is neither linear or exponential ramp, the
@@ -484,6 +607,10 @@ private:
                                    aPrevious->mDuration, aTime);
     case AudioTimelineEvent::SetTarget:
       MOZ_ASSERT(false, "unreached");
+    case AudioTimelineEvent::SetValue:
+    case AudioTimelineEvent::Cancel:
+    case AudioTimelineEvent::Stream:
+      MOZ_ASSERT(false, "Should have been handled earlier.");
     }
 
     MOZ_ASSERT(false, "unreached");
@@ -498,22 +625,22 @@ private:
     bool bailOut = false;
     for (unsigned i = 0; !bailOut && i < mEvents.Length(); ++i) {
       switch (mEvents[i].mType) {
-      case AudioTimelineEvent::SetValue:
+      case AudioTimelineEvent::SetValueAtTime:
       case AudioTimelineEvent::SetTarget:
       case AudioTimelineEvent::LinearRamp:
       case AudioTimelineEvent::ExponentialRamp:
       case AudioTimelineEvent::SetValueCurve:
-        if (aTime == mEvents[i].mTime) {
+        if (aTime == mEvents[i].template Time<double>()) {
           // Find the last event with the same time
           do {
             ++i;
           } while (i < mEvents.Length() &&
-                   aTime == mEvents[i].mTime);
+                   aTime == mEvents[i].template Time<double>());
           return &mEvents[i - 1];
         }
         previous = next;
         next = &mEvents[i];
-        if (aTime < mEvents[i].mTime) {
+        if (aTime < mEvents[i].template Time<double>()) {
           bailOut = true;
         }
         break;
@@ -528,85 +655,12 @@ private:
 
     return previous;
   }
-
-  void InsertEvent(const AudioTimelineEvent& aEvent, ErrorResult& aRv)
+private:
+  static bool IsValid(double value)
   {
-    if (!aEvent.IsValid()) {
-      aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-      return;
-    }
-
-    // Make sure that non-curve events don't fall within the duration of a
-    // curve event.
-    for (unsigned i = 0; i < mEvents.Length(); ++i) {
-      if (mEvents[i].mType == AudioTimelineEvent::SetValueCurve &&
-          mEvents[i].mTime <= aEvent.mTime &&
-          (mEvents[i].mTime + mEvents[i].mDuration) >= aEvent.mTime) {
-        aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-        return;
-      }
-    }
-
-    // Make sure that curve events don't fall in a range which includes other
-    // events.
-    if (aEvent.mType == AudioTimelineEvent::SetValueCurve) {
-      for (unsigned i = 0; i < mEvents.Length(); ++i) {
-        if (mEvents[i].mTime > aEvent.mTime &&
-            mEvents[i].mTime < (aEvent.mTime + aEvent.mDuration)) {
-          aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-          return;
-        }
-      }
-    }
-
-    // Make sure that invalid values are not used for exponential curves
-    if (aEvent.mType == AudioTimelineEvent::ExponentialRamp) {
-      if (aEvent.mValue <= 0.f) {
-        aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-        return;
-      }
-      const AudioTimelineEvent* previousEvent = GetPreviousEvent(aEvent.mTime);
-      if (previousEvent) {
-        if (previousEvent->mValue <= 0.f) {
-          aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-          return;
-        }
-      } else {
-        if (mValue <= 0.f) {
-          aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-          return;
-        }
-      }
-    }
-
-    for (unsigned i = 0; i < mEvents.Length(); ++i) {
-      if (aEvent.mTime == mEvents[i].mTime) {
-        if (aEvent.mType == mEvents[i].mType) {
-          // If times and types are equal, replace the event
-          mEvents.ReplaceElementAt(i, aEvent);
-        } else {
-          // Otherwise, place the element after the last event of another type
-          do {
-            ++i;
-          } while (i < mEvents.Length() &&
-                   aEvent.mType != mEvents[i].mType &&
-                   aEvent.mTime == mEvents[i].mTime);
-          mEvents.InsertElementAt(i, aEvent);
-        }
-        return;
-      }
-      // Otherwise, place the event right after the latest existing event
-      if (aEvent.mTime < mEvents[i].mTime) {
-        mEvents.InsertElementAt(i, aEvent);
-        return;
-      }
-    }
-
-    // If we couldn't find a place for the event, just append it to the list
-    mEvents.AppendElement(aEvent);
+    return mozilla::IsFinite(value);
   }
 
-private:
   // This is a sorted array of the events in the timeline.  Queries of this
   // data structure should probably be more frequent than modifications to it,
   // and that is the reason why we're using a simple array as the data structure.

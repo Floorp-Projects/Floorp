@@ -50,6 +50,24 @@ public:
     return GetValueAtTime(aTime, 0);
   }
 
+  template<typename TimeType>
+  void InsertEvent(const AudioTimelineEvent& aEvent)
+  {
+    if (aEvent.mType == AudioTimelineEvent::Cancel) {
+      CancelScheduledValues(aEvent.template Time<TimeType>());
+      return;
+    }
+    if (aEvent.mType == AudioTimelineEvent::Stream) {
+      mStream = aEvent.mStream;
+      return;
+    }
+    if (aEvent.mType == AudioTimelineEvent::SetValue) {
+      AudioEventTimeline::SetValue(aEvent.mValue);
+      return;
+    }
+    AudioEventTimeline::InsertEvent<TimeType>(aEvent);
+  }
+
   // Get the value of the AudioParam at time aTime + aCounter.
   // aCounter here is an offset to aTime if we try to get the value in ticks,
   // otherwise it should always be zero.  aCounter is meant to be used when

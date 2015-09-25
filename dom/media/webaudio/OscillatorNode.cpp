@@ -57,21 +57,23 @@ public:
     START,
     STOP,
   };
-  void SetTimelineParameter(uint32_t aIndex,
-                            const AudioParamTimeline& aValue,
-                            TrackRate aSampleRate) override
+  void RecvTimelineEvent(uint32_t aIndex,
+                         AudioTimelineEvent& aEvent) override
   {
     mRecomputeParameters = true;
+
+    MOZ_ASSERT(mSource && mDestination);
+
+    WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent,
+                                                    mSource,
+                                                    mDestination);
+
     switch (aIndex) {
     case FREQUENCY:
-      MOZ_ASSERT(mSource && mDestination);
-      mFrequency = aValue;
-      WebAudioUtils::ConvertAudioParamToTicks(mFrequency, mSource, mDestination);
+      mFrequency.InsertEvent<int64_t>(aEvent);
       break;
     case DETUNE:
-      MOZ_ASSERT(mSource && mDestination);
-      mDetune = aValue;
-      WebAudioUtils::ConvertAudioParamToTicks(mDetune, mSource, mDestination);
+      mDetune.InsertEvent<int64_t>(aEvent);
       break;
     default:
       NS_ERROR("Bad OscillatorNodeEngine TimelineParameter");
@@ -440,23 +442,23 @@ OscillatorNode::DestroyMediaStream()
 }
 
 void
-OscillatorNode::SendFrequencyToStream(AudioNode* aNode)
+OscillatorNode::SendFrequencyToStream(AudioNode* aNode, const AudioTimelineEvent& aEvent)
 {
   OscillatorNode* This = static_cast<OscillatorNode*>(aNode);
   if (!This->mStream) {
     return;
   }
-  SendTimelineParameterToStream(This, OscillatorNodeEngine::FREQUENCY, *This->mFrequency);
+  SendTimelineEventToStream(This, OscillatorNodeEngine::FREQUENCY, aEvent);
 }
 
 void
-OscillatorNode::SendDetuneToStream(AudioNode* aNode)
+OscillatorNode::SendDetuneToStream(AudioNode* aNode, const AudioTimelineEvent& aEvent)
 {
   OscillatorNode* This = static_cast<OscillatorNode*>(aNode);
   if (!This->mStream) {
     return;
   }
-  SendTimelineParameterToStream(This, OscillatorNodeEngine::DETUNE, *This->mDetune);
+  SendTimelineEventToStream(This, OscillatorNodeEngine::DETUNE, aEvent);
 }
 
 void

@@ -203,29 +203,29 @@ AudioNodeStream::SetInt32Parameter(uint32_t aIndex, int32_t aValue)
 }
 
 void
-AudioNodeStream::SetTimelineParameter(uint32_t aIndex,
-                                      const AudioParamTimeline& aValue)
+AudioNodeStream::SendTimelineEvent(uint32_t aIndex,
+                                   const AudioTimelineEvent& aEvent)
 {
   class Message final : public ControlMessage
   {
   public:
     Message(AudioNodeStream* aStream, uint32_t aIndex,
-            const AudioParamTimeline& aValue)
+            const AudioTimelineEvent& aEvent)
       : ControlMessage(aStream),
-        mValue(aValue),
+        mEvent(aEvent),
         mSampleRate(aStream->SampleRate()),
         mIndex(aIndex)
     {}
     virtual void Run() override
     {
       static_cast<AudioNodeStream*>(mStream)->Engine()->
-          SetTimelineParameter(mIndex, mValue, mSampleRate);
+          RecvTimelineEvent(mIndex, mEvent);
     }
-    AudioParamTimeline mValue;
+    AudioTimelineEvent mEvent;
     TrackRate mSampleRate;
     uint32_t mIndex;
   };
-  GraphImpl()->AppendMessage(new Message(this, aIndex, aValue));
+  GraphImpl()->AppendMessage(new Message(this, aIndex, aEvent));
 }
 
 void
