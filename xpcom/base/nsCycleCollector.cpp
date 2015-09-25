@@ -868,10 +868,9 @@ public:
   }
 #endif
 
-  PtrToNodeEntry* FindNodeEntry(void* aPtr);
   PtrInfo* FindNode(void* aPtr);
   PtrToNodeEntry* AddNodeToMap(void* aPtr);
-  void RemoveNodeFromMap(PtrToNodeEntry* aPtr);
+  void RemoveObjectFromMap(void* aObject);
 
   uint32_t MapCount() const
   {
@@ -893,14 +892,13 @@ public:
 
     return n;
   }
-};
 
-PtrToNodeEntry*
-CCGraph::FindNodeEntry(void* aPtr)
-{
-  return
-    static_cast<PtrToNodeEntry*>(mPtrToNodeMap.Search(aPtr));
-}
+private:
+  PtrToNodeEntry* FindNodeEntry(void* aPtr)
+  {
+    return static_cast<PtrToNodeEntry*>(mPtrToNodeMap.Search(aPtr));
+  }
+};
 
 PtrInfo*
 CCGraph::FindNode(void* aPtr)
@@ -927,9 +925,16 @@ CCGraph::AddNodeToMap(void* aPtr)
 }
 
 void
-CCGraph::RemoveNodeFromMap(PtrToNodeEntry* aEntry)
+CCGraph::RemoveObjectFromMap(void* aObj)
 {
-  mPtrToNodeMap.RemoveEntry(aEntry);
+  PtrToNodeEntry* e = FindNodeEntry(aObj);
+  PtrInfo* pinfo = e ? e->mNode : nullptr;
+  if (pinfo) {
+    mPtrToNodeMap.RemoveEntry(e);
+
+    pinfo->mPointer = nullptr;
+    pinfo->mParticipant = nullptr;
+  }
 }
 
 
@@ -3844,14 +3849,7 @@ nsCycleCollector::RemoveObjectFromGraph(void* aObj)
     return;
   }
 
-  PtrToNodeEntry* e = mGraph.FindNodeEntry(aObj);
-  PtrInfo* pinfo = e ? e->mNode : nullptr;
-  if (pinfo) {
-    mGraph.RemoveNodeFromMap(e);
-
-    pinfo->mPointer = nullptr;
-    pinfo->mParticipant = nullptr;
-  }
+  mGraph.RemoveObjectFromMap(aObj);
 }
 
 void
