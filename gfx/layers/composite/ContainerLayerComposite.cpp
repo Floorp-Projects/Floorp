@@ -196,18 +196,14 @@ ContainerRenderVR(ContainerT* aContainer,
     Layer* layer = layerToRender->GetLayer();
     uint32_t contentFlags = layer->GetContentFlags();
 
-    if (layer->IsBackfaceHidden()) {
+    if (layer->GetEffectiveVisibleRegion().IsEmpty() &&
+        !layer->AsContainerLayer()) {
       continue;
     }
 
-    if (!layer->IsVisible() && !layer->AsContainerLayer()) {
-      continue;
-    }
-
-    // We flip between pre-rendered and Gecko-rendered VR based on
-    // whether the child layer of this VR container layer has
-    // CONTENT_EXTEND_3D_CONTEXT or not.
-    if ((contentFlags & Layer::CONTENT_EXTEND_3D_CONTEXT) == 0) {
+    // We flip between pre-rendered and Gecko-rendered VR based on whether
+    // the child layer of this VR container layer has PRESERVE_3D or not.
+    if ((contentFlags & Layer::CONTENT_PRESERVE_3D) == 0) {
       // This layer is native VR
       DUMP("%p Switching to pre-rendered VR\n", aContainer);
 
@@ -356,14 +352,10 @@ ContainerPrepare(ContainerT* aContainer,
     RenderTargetIntRect clipRect = layerToRender->GetLayer()->
         CalculateScissorRect(aClipRect);
 
-    if (layerToRender->GetLayer()->IsBackfaceHidden()) {
-      continue;
-    }
-
     // We don't want to skip container layers because otherwise their mPrepared
     // may be null which is not allowed.
     if (!layerToRender->GetLayer()->AsContainerLayer()) {
-      if (!layerToRender->GetLayer()->IsVisible()) {
+      if (layerToRender->GetLayer()->GetEffectiveVisibleRegion().IsEmpty()) {
         CULLING_LOG("Sublayer %p has no effective visible region\n", layerToRender->GetLayer());
         continue;
       }
