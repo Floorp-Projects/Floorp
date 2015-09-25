@@ -550,6 +550,8 @@ public:
   bool PluginCrash(uint32_t aPluginID,
                    const nsAString& aPluginName);
 
+  void RecordEndOfCallTelemetry() const;
+
   nsresult InitializeDataChannel();
 
   NS_IMETHODIMP_TO_ERRORRESULT_RETREF(nsDOMDataChannel,
@@ -795,6 +797,10 @@ private:
   bool mTrickle;
 
   bool mShouldSuppressNegotiationNeeded;
+
+  // storage for Telemetry data
+  uint16_t mMaxReceiving[SdpMediaSection::kMediaTypes];
+  uint16_t mMaxSending[SdpMediaSection::kMediaTypes];
 
 public:
   //these are temporary until the DataChannel Listen/Connect API is removed
