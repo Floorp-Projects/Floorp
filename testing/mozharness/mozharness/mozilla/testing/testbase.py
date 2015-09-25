@@ -642,7 +642,7 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?""")
         else:
             self.fatal('could not determine minidump filename')
 
-    def query_minidump_stackwalk(self):
+    def query_minidump_stackwalk(self, manifest=None):
         if self.minidump_stackwalk_path:
             return self.minidump_stackwalk_path
         c = self.config
@@ -650,13 +650,17 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?""")
 
         if c.get('download_minidump_stackwalk'):
             minidump_stackwalk_path = self.query_minidump_filename()
-            tooltool_manifest_path = self.query_minidump_tooltool_manifest()
+
+            if not manifest:
+                tooltool_manifest_path = self.query_minidump_tooltool_manifest()
+                manifest = os.path.join(dirs.get('abs_test_install_dir',
+                                                 os.path.join(dirs['abs_work_dir'], 'tests')),
+                                        tooltool_manifest_path),
+
             self.info('grabbing minidump binary from tooltool')
             try:
                 self.tooltool_fetch(
-                    manifest=os.path.join(dirs.get('abs_test_install_dir',
-                                                   os.path.join(dirs['abs_work_dir'], 'tests')),
-                                          tooltool_manifest_path),
+                    manifest=manifest,
                     output_dir=dirs['abs_work_dir'],
                     cache=c.get('tooltool_cache')
                 )
