@@ -401,6 +401,9 @@ loop.conversationViews = (function(mozL10n) {
         case FAILURE_DETAILS.NO_MEDIA:
         case FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA:
           return mozL10n.get("no_media_failure_message");
+        case FAILURE_DETAILS.TOS_FAILURE:
+          return mozL10n.get("tos_failure_message",
+            { clientShortname: mozL10n.get("clientShortname2") });
         default:
           return mozL10n.get("generic_failure_message");
       }

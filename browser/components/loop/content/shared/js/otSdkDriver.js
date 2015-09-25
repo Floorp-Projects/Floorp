@@ -917,25 +917,38 @@ loop.OTSdkDriver = (function() {
     },
 
     _onOTException: function(event) {
-      if (event.code === OT.ExceptionCodes.UNABLE_TO_PUBLISH &&
-          event.message === "GetUserMedia") {
-        // We free up the publisher here in case the store wants to try
-        // grabbing the media again.
-        if (this.publisher) {
-          this.publisher.off("accessAllowed accessDenied accessDialogOpened streamCreated");
-          this.publisher.destroy();
-          delete this.publisher;
-          delete this._mockPublisherEl;
-        }
-        this.dispatcher.dispatch(new sharedActions.ConnectionFailure({
-          reason: FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA
-        }));
-      } else if (event.code === OT.ExceptionCodes.UNABLE_TO_PUBLISH) {
-        // We need to log the message so that we can understand where the exception
-        // is coming from. Potentially a temporary addition.
-        this._notifyMetricsEvent("sdk.exception." + event.code + "." + event.message);
-      } else {
-        this._notifyMetricsEvent("sdk.exception." + event.code);
+      switch (event.code) {
+        case OT.ExceptionCodes.UNABLE_TO_PUBLISH:
+          if (event.message === "GetUserMedia") {
+            // We free up the publisher here in case the store wants to try
+            // grabbing the media again.
+            if (this.publisher) {
+              this.publisher.off("accessAllowed accessDenied accessDialogOpened streamCreated");
+              this.publisher.destroy();
+              delete this.publisher;
+              delete this._mockPublisherEl;
+            }
+            this.dispatcher.dispatch(new sharedActions.ConnectionFailure({
+              reason: FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA
+            }));
+            // No exception logging as this is a handled event.
+          } else {
+            // We need to log the message so that we can understand where the exception
+            // is coming from. Potentially a temporary addition.
+            this._notifyMetricsEvent("sdk.exception." + event.code + "." + event.message);
+          }
+          break;
+        case OT.ExceptionCodes.TERMS_OF_SERVICE_FAILURE:
+          this.dispatcher.dispatch(new sharedActions.ConnectionFailure({
+            reason: FAILURE_DETAILS.TOS_FAILURE
+          }));
+          // We still need to log the exception so that the server knows why this
+          // attempt failed.
+          this._notifyMetricsEvent("sdk.exception." + event.code);
+          break;
+        default:
+          this._notifyMetricsEvent("sdk.exception." + event.code);
+          break;
       }
     },
 

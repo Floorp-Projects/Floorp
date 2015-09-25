@@ -17,7 +17,7 @@ describe("loop.standaloneRoomViews", function() {
   var fixtures = document.querySelector("#fixtures");
 
   var sandbox, dispatcher, activeRoomStore, dispatch;
-  var clock, fakeWindow;
+  var clock, fakeWindow, view;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
@@ -63,6 +63,7 @@ describe("loop.standaloneRoomViews", function() {
     sandbox.restore();
     clock.restore();
     React.unmountComponentAtNode(fixtures);
+    view = null;
   });
 
   describe("StandaloneRoomHeader", function() {
@@ -75,7 +76,7 @@ describe("loop.standaloneRoomViews", function() {
     }
 
     it("should dispatch a RecordClick action when the support link is clicked", function() {
-      var view = mountTestComponent();
+      view = mountTestComponent();
 
       TestUtils.Simulate.click(view.getDOMNode().querySelector("a"));
 
@@ -87,13 +88,93 @@ describe("loop.standaloneRoomViews", function() {
     });
   });
 
+  describe("StandaloneRoomFailureView", function() {
+    function mountTestComponent(extraProps) {
+      var props = _.extend({
+        dispatcher: dispatcher
+      }, extraProps);
+      return TestUtils.renderIntoDocument(
+        React.createElement(
+          loop.standaloneRoomViews.StandaloneRoomFailureView, props));
+    }
+
+    beforeEach(function() {
+      activeRoomStore.setStoreState({ roomState: ROOM_STATES.FAILED });
+    });
+
+    it("should display a status error message if not reason is supplied", function() {
+      view = mountTestComponent();
+
+      expect(view.getDOMNode().querySelector(".failed-room-message").textContent)
+        .eql("status_error");
+    });
+
+    it("should display a denied message on MEDIA_DENIED", function() {
+      view = mountTestComponent({ failureReason: FAILURE_DETAILS.MEDIA_DENIED });
+
+      expect(view.getDOMNode().querySelector(".failed-room-message").textContent)
+        .eql("rooms_media_denied_message");
+    });
+
+    it("should display a denied message on NO_MEDIA", function() {
+      view = mountTestComponent({ failureReason: FAILURE_DETAILS.NO_MEDIA });
+
+      expect(view.getDOMNode().querySelector(".failed-room-message").textContent)
+        .eql("rooms_media_denied_message");
+    });
+
+    it("should display an unavailable message on EXPIRED_OR_INVALID", function() {
+      view = mountTestComponent({ failureReason: FAILURE_DETAILS.EXPIRED_OR_INVALID });
+
+      expect(view.getDOMNode().querySelector(".failed-room-message").textContent)
+        .eql("rooms_unavailable_notification_message");
+    });
+
+    it("should display an tos failure message on TOS_FAILURE", function() {
+      view = mountTestComponent({ failureReason: FAILURE_DETAILS.TOS_FAILURE });
+
+      expect(view.getDOMNode().querySelector(".failed-room-message").textContent)
+        .eql("tos_failure_message");
+    });
+
+    it("should not display a retry button when the failure reason is expired or invalid", function() {
+      view = mountTestComponent({ failureReason: FAILURE_DETAILS.EXPIRED_OR_INVALID });
+
+      expect(view.getDOMNode().querySelector(".btn-info")).eql(null);
+    });
+
+    it("should not display a retry button when the failure reason is tos failure", function() {
+      view = mountTestComponent({ failureReason: FAILURE_DETAILS.TOS_FAILURE });
+
+      expect(view.getDOMNode().querySelector(".btn-info")).eql(null);
+    });
+
+    it("should display a retry button for any other reason", function() {
+      view = mountTestComponent({ failureReason: FAILURE_DETAILS.NO_MEDIA });
+
+      expect(view.getDOMNode().querySelector(".btn-info")).not.eql(null);
+    });
+
+    it("should dispatch a RetryAfterRoomFailure action when the retry button is pressed", function() {
+      view = mountTestComponent({ failureReason: FAILURE_DETAILS.NO_MEDIA });
+
+      var button = view.getDOMNode().querySelector(".btn-info");
+
+      TestUtils.Simulate.click(button);
+
+      sinon.assert.calledOnce(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.RetryAfterRoomFailure());
+    });
+  });
+
   describe("StandaloneRoomInfoArea in fixture", function() {
     it("should dispatch a RecordClick action when the tile is clicked", function(done) {
       // Point the iframe to a page that will auto-"click"
       loop.config.tilesIframeUrl = "data:text/html,<script>parent.postMessage('tile-click', '*');</script>";
 
       // Render the iframe into the fixture to cause it to load
-      var view = React.render(
+      view = React.render(
         React.createElement(
           loop.standaloneRoomViews.StandaloneRoomInfoArea, {
             activeRoomStore: activeRoomStore,
@@ -135,7 +216,7 @@ describe("loop.standaloneRoomViews", function() {
       }));
     }
 
-    function expectActionDispatched(view) {
+    function expectActionDispatched() {
       sinon.assert.calledOnce(dispatch);
       sinon.assert.calledWithExactly(dispatch,
         sinon.match.instanceOf(sharedActions.SetupStreamElements));
@@ -144,7 +225,7 @@ describe("loop.standaloneRoomViews", function() {
     describe("#componentWillUpdate", function() {
       it("should set document.title to roomName and brand name when the READY state is dispatched", function() {
         activeRoomStore.setStoreState({roomName: "fakeName", roomState: ROOM_STATES.INIT});
-        var view = mountTestComponent();
+        view = mountTestComponent();
         activeRoomStore.setStoreState({roomState: ROOM_STATES.READY});
 
         expect(fakeWindow.document.title).to.equal("fakeName — clientShortname2");
@@ -153,7 +234,7 @@ describe("loop.standaloneRoomViews", function() {
       it("should dispatch a `SetupStreamElements` action when the MEDIA_WAIT state " +
         "is entered", function() {
           activeRoomStore.setStoreState({roomState: ROOM_STATES.READY});
-          var view = mountTestComponent();
+          view = mountTestComponent();
 
           activeRoomStore.setStoreState({roomState: ROOM_STATES.MEDIA_WAIT});
 
@@ -163,7 +244,7 @@ describe("loop.standaloneRoomViews", function() {
       it("should dispatch a `SetupStreamElements` action on MEDIA_WAIT state is " +
         "re-entered", function() {
           activeRoomStore.setStoreState({roomState: ROOM_STATES.ENDED});
-          var view = mountTestComponent();
+          view = mountTestComponent();
 
           activeRoomStore.setStoreState({roomState: ROOM_STATES.MEDIA_WAIT});
 
@@ -172,8 +253,6 @@ describe("loop.standaloneRoomViews", function() {
     });
 
     describe("#componentDidUpdate", function() {
-      var view;
-
       beforeEach(function() {
         view = mountTestComponent();
         activeRoomStore.setStoreState({roomState: ROOM_STATES.JOINING});
@@ -223,8 +302,6 @@ describe("loop.standaloneRoomViews", function() {
     });
 
     describe("#componentWillReceiveProps", function() {
-      var view;
-
       beforeEach(function() {
         view = mountTestComponent();
 
@@ -280,8 +357,6 @@ describe("loop.standaloneRoomViews", function() {
     });
 
     describe("#publishStream", function() {
-      var view;
-
       beforeEach(function() {
         view = mountTestComponent();
         view.setState({
@@ -314,8 +389,6 @@ describe("loop.standaloneRoomViews", function() {
     });
 
     describe("#render", function() {
-      var view;
-
       beforeEach(function() {
         view = mountTestComponent();
         activeRoomStore.setStoreState({roomState: ROOM_STATES.JOINING});
@@ -424,35 +497,11 @@ describe("loop.standaloneRoomViews", function() {
       });
 
       describe("Failed room message", function() {
-        beforeEach(function() {
+        it("should display the StandaloneRoomFailureView", function() {
           activeRoomStore.setStoreState({ roomState: ROOM_STATES.FAILED });
-        });
 
-        it("should display a failed room message on FAILED", function() {
-          expect(view.getDOMNode().querySelector(".failed-room-message"))
-            .not.eql(null);
-        });
-
-        it("should display a retry button", function() {
-          expect(view.getDOMNode().querySelector(".btn-info")).not.eql(null);
-        });
-
-        it("should not display a retry button when the failure reason is expired or invalid", function() {
-          activeRoomStore.setStoreState({
-            failureReason: FAILURE_DETAILS.EXPIRED_OR_INVALID
-          });
-
-          expect(view.getDOMNode().querySelector(".btn-info")).eql(null);
-        });
-
-        it("should dispatch a RetryAfterRoomFailure action when the retry button is pressed", function() {
-          var button = view.getDOMNode().querySelector(".btn-info");
-
-          TestUtils.Simulate.click(button);
-
-          sinon.assert.calledOnce(dispatcher.dispatch);
-          sinon.assert.calledWithExactly(dispatcher.dispatch,
-            new sharedActions.RetryAfterRoomFailure());
+          TestUtils.findRenderedComponentWithType(view,
+            loop.standaloneRoomViews.StandaloneRoomFailureView);
         });
       });
 
