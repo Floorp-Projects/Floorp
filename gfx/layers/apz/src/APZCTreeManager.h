@@ -134,6 +134,17 @@ public:
                             uint32_t aPaintSequenceNumber);
 
   /**
+   * Do any per-layers-id setup needed. This will be called on the main thread,
+   * and may be called multiple times for the same layers id.
+   */
+  void InitializeForLayersId(uint64_t aLayersId);
+
+  /**
+   * Move any per-layers-id state from the old APZCTreeManager to this one.
+   */
+  void AdoptLayersId(uint64_t aLayersId, APZCTreeManager* aOldManager);
+
+  /**
    * Walk the tree of APZCs and flushes the repaint requests for all the APZCS
    * corresponding to the given layers id. Finally, sends a flush complete
    * notification to the GeckoContentController for the layers id.

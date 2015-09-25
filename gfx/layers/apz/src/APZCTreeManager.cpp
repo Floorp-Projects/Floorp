@@ -203,6 +203,32 @@ APZCTreeManager::UpdateHitTestingTree(CompositorParent* aCompositor,
 #endif
 }
 
+void
+APZCTreeManager::InitializeForLayersId(uint64_t aLayersId)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  auto throttlerInsertResult = mPaintThrottlerMap.insert(
+    std::make_pair(aLayersId, nsRefPtr<TaskThrottler>()));
+  if (throttlerInsertResult.second) {
+    throttlerInsertResult.first->second = new TaskThrottler(
+      GetFrameTime(), TimeDuration::FromMilliseconds(500));
+  }
+}
+
+void
+APZCTreeManager::AdoptLayersId(uint64_t aLayersId, APZCTreeManager* aOldManager)
+{
+  MOZ_ASSERT(aOldManager);
+  if (aOldManager == this) {
+    return;
+  }
+  auto iter = aOldManager->mPaintThrottlerMap.find(aLayersId);
+  if (iter != aOldManager->mPaintThrottlerMap.end()) {
+    mPaintThrottlerMap[aLayersId] = iter->second;
+    aOldManager->mPaintThrottlerMap.erase(iter);
+  }
+}
+
 // Compute the clip region to be used for a layer with an APZC. This function
 // is only called for layers which actually have scrollable metrics and an APZC.
 static ParentLayerIntRegion
@@ -423,15 +449,10 @@ APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
     if (newApzc) {
       // Look up the paint throttler for this layers id, or create it if
       // this is the first APZC for this layers id.
-      auto throttlerInsertResult = mPaintThrottlerMap.insert(
-          std::make_pair(aLayersId, nsRefPtr<TaskThrottler>()));
-      if (throttlerInsertResult.second) {
-        throttlerInsertResult.first->second = new TaskThrottler(
-            GetFrameTime(), TimeDuration::FromMilliseconds(500));
-      }
+      nsRefPtr<TaskThrottler> throttler = mPaintThrottlerMap[aLayersId];
+      MOZ_ASSERT(throttler);
 
-      apzc = NewAPZCInstance(aLayersId, state->mController,
-                             throttlerInsertResult.first->second);
+      apzc = NewAPZCInstance(aLayersId, state->mController, throttler);
       apzc->SetCompositorParent(aState.mCompositor);
       if (state->mCrossProcessParent != nullptr) {
         apzc->ShareFrameMetricsAcrossProcesses();
