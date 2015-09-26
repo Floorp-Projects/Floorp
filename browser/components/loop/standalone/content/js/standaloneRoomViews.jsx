@@ -43,6 +43,9 @@ loop.standaloneRoomViews = (function(mozL10n) {
           return mozL10n.get("rooms_media_denied_message");
         case FAILURE_DETAILS.EXPIRED_OR_INVALID:
           return mozL10n.get("rooms_unavailable_notification_message");
+        case FAILURE_DETAILS.TOS_FAILURE:
+          return mozL10n.get("tos_failure_message",
+            { clientShortname: mozL10n.get("clientShortname2") });
         default:
           return mozL10n.get("status_error");
       }
@@ -52,7 +55,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
      * This renders a retry button if one is necessary.
      */
     renderRetryButton: function() {
-      if (this.props.failureReason === FAILURE_DETAILS.EXPIRED_OR_INVALID) {
+      if (this.props.failureReason === FAILURE_DETAILS.EXPIRED_OR_INVALID ||
+          this.props.failureReason === FAILURE_DETAILS.TOS_FAILURE) {
         return null;
       }
 
@@ -593,6 +597,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
   });
 
   return {
+    StandaloneRoomFailureView: StandaloneRoomFailureView,
     StandaloneRoomFooter: StandaloneRoomFooter,
     StandaloneRoomHeader: StandaloneRoomHeader,
     StandaloneRoomInfoArea: StandaloneRoomInfoArea,
