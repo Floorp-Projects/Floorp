@@ -6,6 +6,27 @@ var {
   ignoreEvent,
 } = ExtensionUtils;
 
+function processRuntimeConnectParams(...args) {
+  let extensionId, connectInfo;
+
+  // connect("...") and connect("...", { ... })
+  if (typeof args[0] == "string") {
+    extensionId = args.shift();
+  }
+
+  // connect({ ... }) and connect("...", { ... })
+  if (!!args[0] && typeof args[0] == "object") {
+    connectInfo = args.shift();
+  }
+
+  // raise errors on unexpected connect params (but connect() is ok)
+  if (args.length > 0) {
+    throw Error("invalid arguments to runtime.connect");
+  }
+
+  return { extensionId, connectInfo };
+}
+
 extensions.registerAPI((extension, context) => {
   return {
     runtime: {
@@ -22,11 +43,9 @@ extensions.registerAPI((extension, context) => {
 
       onConnect: context.messenger.onConnect("runtime.onConnect"),
 
-      connect: function(extensionId, connectInfo) {
-        if (!connectInfo) {
-          connectInfo = extensionId;
-          extensionId = null;
-        }
+      connect: function(...args) {
+        let { extensionId, connectInfo } = processRuntimeConnectParams(...args);
+
         let name = connectInfo && connectInfo.name || "";
         let recipient = extensionId ? {extensionId} : {extensionId: extension.id};
 
