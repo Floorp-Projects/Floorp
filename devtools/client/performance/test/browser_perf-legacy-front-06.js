@@ -20,7 +20,7 @@ function* spawnTest() {
   yield profileStart;
 
   yield gDevTools.showToolbox(target, "performance");
-  let panel = toolbox.getCurrentPanel();
+  let panel = yield toolbox.getCurrentPanel().open();
   let { panelWin: { PerformanceController, RecordingsView }} = panel;
 
   yield waitUntil(() => PerformanceController.getRecordings().length === 2);

@@ -157,6 +157,30 @@
       <!-- Recording contents and general notice messages -->
       <deck id="performance-view" flex="1">
 
+        <!-- A default notice, shown while initially opening the tool.
+             Keep this element the first child of #performance-view. -->
+        <hbox id="tool-loading-notice"
+              class="notice-container"
+              flex="1">
+        </hbox>
+
+        <!-- "Unavailable" notice, shown when the entire tool is disabled,
+             for example, when in private browsing mode. -->
+        <vbox id="unavailable-notice"
+              class="notice-container"
+              align="center"
+              pack="center"
+              flex="1">
+          <hbox class="devtools-toolbarbutton-group"
+                pack="center">
+            <toolbarbutton class="devtools-toolbarbutton record-button"
+                           label="&performanceUI.startRecording;"
+                           standalone="true"/>
+          </hbox>
+          <label class="tool-disabled-message"
+                 value="&performanceUI.unavailableNoticePB;"/>
+        </vbox>
+
         <!-- "Empty" notice, shown when there's no recordings available -->
         <hbox id="empty-notice"
               class="notice-container"

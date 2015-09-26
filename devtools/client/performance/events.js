@@ -30,6 +30,9 @@ module.exports = {
   // When a new recording is being tracked in the panel.
   NEW_RECORDING: "Performance:NewRecording",
 
+  // When a new recording can't be successfully created when started.
+  NEW_RECORDING_FAILED: "Performance:NewRecordingFailed",
+
   // When a recording is started or stopped or stopping via the PerformanceController
   RECORDING_STATE_CHANGE: "Performance:RecordingStateChange",
 
