@@ -98,6 +98,18 @@ builds:
     types:
       opt:
         task: tasks/builds/b2g_nexus_4_eng.yml
+  nexus-4-kk:
+    platforms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_nexus_4_kk_user.yml
+  nexus-4-kk-eng:
+    platforms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_nexus_4_kk_eng.yml
   nexus-5l:
     platforms:
       - b2g
