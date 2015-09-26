@@ -168,6 +168,11 @@ int DownmixAudioToStereo(mozilla::AudioDataValue* buffer,
                          int channels,
                          uint32_t frames);
 
+// Downmix Stereo audio samples to Mono.
+// Input are the buffer contains stereo data and the number of frames.
+void DownmixStereoToMono(mozilla::AudioDataValue* aBuffer,
+                         uint32_t aFrames);
+
 bool IsVideoContentType(const nsCString& aContentType);
 
 // Returns true if it's safe to use aPicture as the picture to be
