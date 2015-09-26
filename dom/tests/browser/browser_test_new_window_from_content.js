@@ -49,6 +49,8 @@ const kSameTab = "same tab";
 const kNewWin = "new window";
 const kNewTab = "new tab";
 
+SpecialPowers.pushPrefEnv({"set": [["dom.require_user_interaction_for_beforeunload", false]]});
+
 requestLongerTimeout(2);
 
 // The following "matrices" represent the result of content attempting to
