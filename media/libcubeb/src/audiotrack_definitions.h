@@ -52,9 +52,7 @@ enum event_type {
 };
 
 /**
- * From https://android.googlesource.com/platform/frameworks/base/+/android-2.2.3_r2.1/include/media/AudioSystem.h
- * and 
- * https://android.googlesource.com/platform/system/core/+/android-4.2.2_r1/include/system/audio.h
+ * From https://android.googlesource.com/platform/system/core/+/android-4.2.2_r1/include/system/audio.h
  */
 
 #define AUDIO_STREAM_TYPE_MUSIC 3
@@ -65,13 +63,6 @@ enum {
   AUDIO_CHANNEL_OUT_MONO_ICS     = AUDIO_CHANNEL_OUT_FRONT_LEFT_ICS,
   AUDIO_CHANNEL_OUT_STEREO_ICS   = (AUDIO_CHANNEL_OUT_FRONT_LEFT_ICS | AUDIO_CHANNEL_OUT_FRONT_RIGHT_ICS)
 } AudioTrack_ChannelMapping_ICS;
-
-enum {
-  AUDIO_CHANNEL_OUT_FRONT_LEFT_Froyo = 0x4,
-  AUDIO_CHANNEL_OUT_FRONT_RIGHT_Froyo = 0x8,
-  AUDIO_CHANNEL_OUT_MONO_Froyo = AUDIO_CHANNEL_OUT_FRONT_LEFT_Froyo,
-  AUDIO_CHANNEL_OUT_STEREO_Froyo = (AUDIO_CHANNEL_OUT_FRONT_LEFT_Froyo | AUDIO_CHANNEL_OUT_FRONT_RIGHT_Froyo)
-} AudioTrack_ChannelMapping_Froyo;
 
 typedef enum {
   AUDIO_FORMAT_PCM = 0x00000000,
