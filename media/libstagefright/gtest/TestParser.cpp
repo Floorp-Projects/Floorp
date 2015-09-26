@@ -156,62 +156,70 @@ ReadTestFile(const char* aFilename)
   return buffer;
 }
 
+static const char* testFiles[] = {
+  "test_case_1187067.mp4"
+};
+
 TEST(stagefright_MPEG4Metadata, test_case_mp4)
 {
-  nsTArray<uint8_t> buffer = ReadTestFile("test_case_1187067.mp4");
-  ASSERT_FALSE(buffer.IsEmpty());
-  nsRefPtr<Stream> stream = new TestStream(buffer.Elements(), buffer.Length());
+  for (size_t test = 0; test < ArrayLength(testFiles); ++test) {
+    nsTArray<uint8_t> buffer = ReadTestFile(testFiles[test]);
+    ASSERT_FALSE(buffer.IsEmpty());
+    nsRefPtr<Stream> stream = new TestStream(buffer.Elements(), buffer.Length());
 
-  EXPECT_TRUE(MP4Metadata::HasCompleteMetadata(stream));
-  nsRefPtr<MediaByteBuffer> metadataBuffer = MP4Metadata::Metadata(stream);
-  EXPECT_TRUE(metadataBuffer);
+    EXPECT_TRUE(MP4Metadata::HasCompleteMetadata(stream));
+    nsRefPtr<MediaByteBuffer> metadataBuffer = MP4Metadata::Metadata(stream);
+    EXPECT_TRUE(metadataBuffer);
 
-  MP4Metadata metadata(stream);
-  EXPECT_EQ(0u, metadata.GetNumberTracks(TrackInfo::kUndefinedTrack));
-  EXPECT_EQ(0u, metadata.GetNumberTracks(TrackInfo::kAudioTrack));
-  EXPECT_EQ(1u, metadata.GetNumberTracks(TrackInfo::kVideoTrack));
-  EXPECT_EQ(0u, metadata.GetNumberTracks(TrackInfo::kTextTrack));
-  EXPECT_EQ(0u, metadata.GetNumberTracks(static_cast<TrackInfo::TrackType>(-1)));
-  EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kUndefinedTrack, 0));
-  EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kAudioTrack, 0));
-  UniquePtr<TrackInfo> track = metadata.GetTrackInfo(TrackInfo::kVideoTrack, 0);
-  EXPECT_TRUE(!!track);
-  EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kTextTrack, 0));
-  EXPECT_FALSE(metadata.GetTrackInfo(static_cast<TrackInfo::TrackType>(-1), 0));
-  // We can see anywhere in any MPEG4.
-  EXPECT_TRUE(metadata.CanSeek());
-  EXPECT_FALSE(metadata.Crypto().valid);
+    MP4Metadata metadata(stream);
+    EXPECT_EQ(0u, metadata.GetNumberTracks(TrackInfo::kUndefinedTrack));
+    EXPECT_EQ(0u, metadata.GetNumberTracks(TrackInfo::kAudioTrack));
+    EXPECT_EQ(1u, metadata.GetNumberTracks(TrackInfo::kVideoTrack));
+    EXPECT_EQ(0u, metadata.GetNumberTracks(TrackInfo::kTextTrack));
+    EXPECT_EQ(0u, metadata.GetNumberTracks(static_cast<TrackInfo::TrackType>(-1)));
+    EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kUndefinedTrack, 0));
+    EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kAudioTrack, 0));
+    UniquePtr<TrackInfo> track = metadata.GetTrackInfo(TrackInfo::kVideoTrack, 0);
+    EXPECT_TRUE(!!track);
+    EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kTextTrack, 0));
+    EXPECT_FALSE(metadata.GetTrackInfo(static_cast<TrackInfo::TrackType>(-1), 0));
+    // We can see anywhere in any MPEG4.
+    EXPECT_TRUE(metadata.CanSeek());
+    EXPECT_FALSE(metadata.Crypto().valid);
+  }
 }
 
 TEST(stagefright_MPEG4Metadata, test_case_mp4_skimming)
 {
   static const size_t step = 1u;
-  nsTArray<uint8_t> buffer = ReadTestFile("test_case_1187067.mp4");
-  ASSERT_FALSE(buffer.IsEmpty());
-  ASSERT_LE(step, buffer.Length());
-  // Just exercizing the parser starting at different points through the file,
-  // making sure it doesn't crash.
-  // No checks because results would differ for each position.
-  for (size_t offset = 0; offset < buffer.Length() - step; offset += step) {
-    size_t size = buffer.Length() - offset;
-    while (size > 0) {
-      nsRefPtr<TestStream> stream =
-        new TestStream(buffer.Elements() + offset, size);
+  for (size_t test = 0; test < ArrayLength(testFiles); ++test) {
+    nsTArray<uint8_t> buffer = ReadTestFile(testFiles[test]);
+    ASSERT_FALSE(buffer.IsEmpty());
+    ASSERT_LE(step, buffer.Length());
+    // Just exercizing the parser starting at different points through the file,
+    // making sure it doesn't crash.
+    // No checks because results would differ for each position.
+    for (size_t offset = 0; offset < buffer.Length() - step; offset += step) {
+      size_t size = buffer.Length() - offset;
+      while (size > 0) {
+        nsRefPtr<TestStream> stream =
+          new TestStream(buffer.Elements() + offset, size);
 
-      MP4Metadata::HasCompleteMetadata(stream);
-      nsRefPtr<MediaByteBuffer> metadataBuffer = MP4Metadata::Metadata(stream);
-      MP4Metadata metadata(stream);
+        MP4Metadata::HasCompleteMetadata(stream);
+        nsRefPtr<MediaByteBuffer> metadataBuffer = MP4Metadata::Metadata(stream);
+        MP4Metadata metadata(stream);
 
-      if (stream->mHighestSuccessfulEndOffset <= 0) {
-        // No successful reads -> Cutting down the size won't change anything.
-        break;
-      }
-      if (stream->mHighestSuccessfulEndOffset < size) {
-        // Read up to a point before the end -> Resize down to that point.
-        size = stream->mHighestSuccessfulEndOffset;
-      } else {
-        // Read up to the end (or after?!) -> Just cut 1 byte.
-        size -= 1;
+        if (stream->mHighestSuccessfulEndOffset <= 0) {
+          // No successful reads -> Cutting down the size won't change anything.
+          break;
+        }
+        if (stream->mHighestSuccessfulEndOffset < size) {
+          // Read up to a point before the end -> Resize down to that point.
+          size = stream->mHighestSuccessfulEndOffset;
+        } else {
+          // Read up to the end (or after?!) -> Just cut 1 byte.
+          size -= 1;
+        }
       }
     }
   }
@@ -219,68 +227,72 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4_skimming)
 
 TEST(stagefright_MoofParser, test_case_mp4)
 {
-  nsTArray<uint8_t> buffer = ReadTestFile("test_case_1187067.mp4");
-  ASSERT_FALSE(buffer.IsEmpty());
-  nsRefPtr<Stream> stream = new TestStream(buffer.Elements(), buffer.Length());
+  for (size_t test = 0; test < ArrayLength(testFiles); ++test) {
+    nsTArray<uint8_t> buffer = ReadTestFile(testFiles[test]);
+    ASSERT_FALSE(buffer.IsEmpty());
+    nsRefPtr<Stream> stream = new TestStream(buffer.Elements(), buffer.Length());
 
-  Monitor monitor("MP4Metadata::HasCompleteMetadata");
-  MonitorAutoLock mon(monitor);
-  MoofParser parser(stream, 0, false, &monitor);
-  EXPECT_EQ(0u, parser.mOffset);
-  EXPECT_FALSE(parser.ReachedEnd());
+    Monitor monitor("MP4Metadata::HasCompleteMetadata");
+    MonitorAutoLock mon(monitor);
+    MoofParser parser(stream, 0, false, &monitor);
+    EXPECT_EQ(0u, parser.mOffset);
+    EXPECT_FALSE(parser.ReachedEnd());
 
-  nsTArray<MediaByteRange> byteRanges;
-  byteRanges.AppendElement(MediaByteRange(0, 0));
-  EXPECT_FALSE(parser.RebuildFragmentedIndex(byteRanges));
+    nsTArray<MediaByteRange> byteRanges;
+    byteRanges.AppendElement(MediaByteRange(0, 0));
+    EXPECT_FALSE(parser.RebuildFragmentedIndex(byteRanges));
 
-  EXPECT_TRUE(parser.GetCompositionRange(byteRanges).IsNull());
-  EXPECT_TRUE(parser.mInitRange.IsNull());
-  EXPECT_EQ(0u, parser.mOffset);
-  EXPECT_FALSE(parser.ReachedEnd());
-  EXPECT_TRUE(parser.HasMetadata());
-  nsRefPtr<MediaByteBuffer> metadataBuffer = parser.Metadata();
-  EXPECT_TRUE(metadataBuffer);
-  EXPECT_TRUE(parser.FirstCompleteMediaSegment().IsNull());
-  EXPECT_TRUE(parser.FirstCompleteMediaHeader().IsNull());
+    EXPECT_TRUE(parser.GetCompositionRange(byteRanges).IsNull());
+    EXPECT_TRUE(parser.mInitRange.IsNull());
+    EXPECT_EQ(0u, parser.mOffset);
+    EXPECT_FALSE(parser.ReachedEnd());
+    EXPECT_TRUE(parser.HasMetadata());
+    nsRefPtr<MediaByteBuffer> metadataBuffer = parser.Metadata();
+    EXPECT_TRUE(metadataBuffer);
+    EXPECT_TRUE(parser.FirstCompleteMediaSegment().IsNull());
+    EXPECT_TRUE(parser.FirstCompleteMediaHeader().IsNull());
+  }
 }
 
 TEST(stagefright_MoofParser, test_case_mp4_skimming)
 {
   const size_t step = 1u;
-  nsTArray<uint8_t> buffer = ReadTestFile("test_case_1187067.mp4");
-  ASSERT_FALSE(buffer.IsEmpty());
-  ASSERT_LE(step, buffer.Length());
-  Monitor monitor("MP4Metadata::HasCompleteMetadata");
-  MonitorAutoLock mon(monitor);
-  // Just exercizing the parser starting at different points through the file,
-  // making sure it doesn't crash.
-  // No checks because results would differ for each position.
-  for (size_t offset = 0; offset < buffer.Length() - step; offset += step) {
-    size_t size = buffer.Length() - offset;
-    while (size > 0) {
-      nsRefPtr<TestStream> stream =
-        new TestStream(buffer.Elements() + offset, size);
+  for (size_t test = 0; test < ArrayLength(testFiles); ++test) {
+    nsTArray<uint8_t> buffer = ReadTestFile(testFiles[test]);
+    ASSERT_FALSE(buffer.IsEmpty());
+    ASSERT_LE(step, buffer.Length());
+    Monitor monitor("MP4Metadata::HasCompleteMetadata");
+    MonitorAutoLock mon(monitor);
+    // Just exercizing the parser starting at different points through the file,
+    // making sure it doesn't crash.
+    // No checks because results would differ for each position.
+    for (size_t offset = 0; offset < buffer.Length() - step; offset += step) {
+      size_t size = buffer.Length() - offset;
+      while (size > 0) {
+        nsRefPtr<TestStream> stream =
+          new TestStream(buffer.Elements() + offset, size);
 
-      MoofParser parser(stream, 0, false, &monitor);
-      nsTArray<MediaByteRange> byteRanges;
-      byteRanges.AppendElement(MediaByteRange(0, 0));
-      EXPECT_FALSE(parser.RebuildFragmentedIndex(byteRanges));
-      parser.GetCompositionRange(byteRanges);
-      parser.HasMetadata();
-      nsRefPtr<MediaByteBuffer> metadataBuffer = parser.Metadata();
-      parser.FirstCompleteMediaSegment();
-      parser.FirstCompleteMediaHeader();
+        MoofParser parser(stream, 0, false, &monitor);
+        nsTArray<MediaByteRange> byteRanges;
+        byteRanges.AppendElement(MediaByteRange(0, 0));
+        EXPECT_FALSE(parser.RebuildFragmentedIndex(byteRanges));
+        parser.GetCompositionRange(byteRanges);
+        parser.HasMetadata();
+        nsRefPtr<MediaByteBuffer> metadataBuffer = parser.Metadata();
+        parser.FirstCompleteMediaSegment();
+        parser.FirstCompleteMediaHeader();
 
-      if (stream->mHighestSuccessfulEndOffset <= 0) {
-        // No successful reads -> Cutting down the size won't change anything.
-        break;
-      }
-      if (stream->mHighestSuccessfulEndOffset < size) {
-        // Read up to a point before the end -> Resize down to that point.
-        size = stream->mHighestSuccessfulEndOffset;
-      } else {
-        // Read up to the end (or after?!) -> Just cut 1 byte.
-        size -= 1;
+        if (stream->mHighestSuccessfulEndOffset <= 0) {
+          // No successful reads -> Cutting down the size won't change anything.
+          break;
+        }
+        if (stream->mHighestSuccessfulEndOffset < size) {
+          // Read up to a point before the end -> Resize down to that point.
+          size = stream->mHighestSuccessfulEndOffset;
+        } else {
+          // Read up to the end (or after?!) -> Just cut 1 byte.
+          size -= 1;
+        }
       }
     }
   }
