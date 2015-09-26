@@ -293,7 +293,7 @@ nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
   }
 
   if (mDownscaler) {
-    rv = mDownscaler->BeginFrame(frameRect.Size(), mImageData,
+    rv = mDownscaler->BeginFrame(frameRect.Size(), Nothing(), mImageData,
                                  mGIFStruct.is_transparent);
   }
 
