@@ -46,6 +46,9 @@ export HOST_LDFLAGS="-g"
 ac_add_options --target=x86_64-apple-darwin
 ac_add_options --with-macos-private-frameworks=$CROSS_PRIVATE_FRAMEWORKS
 
+# Enable static analysis checks by default on OSX cross builds.
+ac_add_options --enable-clang-plugin
+
 . "$topsrcdir/build/mozconfig.cache"
 
 export SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE=/builds/crash-stats-api.token
