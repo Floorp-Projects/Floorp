@@ -156,14 +156,22 @@ ReadTestFile(const char* aFilename)
   return buffer;
 }
 
-static const char* testFiles[] = {
-  "test_case_1187067.mp4"
+struct TestFileData
+{
+  const char* mFilename;
+  uint32_t mNumberVideoTracks;
+  int32_t mWidth;
+  int32_t mHeight;
+};
+static const TestFileData testFiles[] = {
+  { "test_case_1187067.mp4", 1, 160, 90 },
+  { "test_case_1200326.mp4", 0, 0, 0 }
 };
 
 TEST(stagefright_MPEG4Metadata, test_case_mp4)
 {
   for (size_t test = 0; test < ArrayLength(testFiles); ++test) {
-    nsTArray<uint8_t> buffer = ReadTestFile(testFiles[test]);
+    nsTArray<uint8_t> buffer = ReadTestFile(testFiles[test].mFilename);
     ASSERT_FALSE(buffer.IsEmpty());
     nsRefPtr<Stream> stream = new TestStream(buffer.Elements(), buffer.Length());
 
@@ -174,13 +182,30 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
     MP4Metadata metadata(stream);
     EXPECT_EQ(0u, metadata.GetNumberTracks(TrackInfo::kUndefinedTrack));
     EXPECT_EQ(0u, metadata.GetNumberTracks(TrackInfo::kAudioTrack));
-    EXPECT_EQ(1u, metadata.GetNumberTracks(TrackInfo::kVideoTrack));
+    EXPECT_EQ(testFiles[test].mNumberVideoTracks,
+              metadata.GetNumberTracks(TrackInfo::kVideoTrack));
     EXPECT_EQ(0u, metadata.GetNumberTracks(TrackInfo::kTextTrack));
     EXPECT_EQ(0u, metadata.GetNumberTracks(static_cast<TrackInfo::TrackType>(-1)));
     EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kUndefinedTrack, 0));
     EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kAudioTrack, 0));
-    UniquePtr<TrackInfo> track = metadata.GetTrackInfo(TrackInfo::kVideoTrack, 0);
-    EXPECT_TRUE(!!track);
+    UniquePtr<TrackInfo> trackInfo = metadata.GetTrackInfo(TrackInfo::kVideoTrack, 0);
+    if (testFiles[test].mNumberVideoTracks == 0) {
+      EXPECT_TRUE(!trackInfo);
+    } else {
+      EXPECT_TRUE(!!trackInfo);
+      if (trackInfo) {
+        const VideoInfo* videoInfo = trackInfo->GetAsVideoInfo();
+        EXPECT_TRUE(!!videoInfo);
+        if (videoInfo) {
+          EXPECT_TRUE(videoInfo->IsValid());
+          EXPECT_TRUE(videoInfo->IsVideo());
+          EXPECT_EQ(testFiles[test].mWidth, videoInfo->mDisplay.width);
+          EXPECT_EQ(testFiles[test].mHeight, videoInfo->mDisplay.height);
+          FallibleTArray<mp4_demuxer::Index::Indice> indices;
+          EXPECT_TRUE(metadata.ReadTrackIndex(indices, videoInfo->mTrackId));
+        }
+      }
+    }
     EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kTextTrack, 0));
     EXPECT_FALSE(metadata.GetTrackInfo(static_cast<TrackInfo::TrackType>(-1), 0));
     // We can see anywhere in any MPEG4.
@@ -189,11 +214,11 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
   }
 }
 
-TEST(stagefright_MPEG4Metadata, test_case_mp4_skimming)
+TEST(stagefright_MPEG4Metadata, test_case_mp4_subsets)
 {
   static const size_t step = 1u;
   for (size_t test = 0; test < ArrayLength(testFiles); ++test) {
-    nsTArray<uint8_t> buffer = ReadTestFile(testFiles[test]);
+    nsTArray<uint8_t> buffer = ReadTestFile(testFiles[test].mFilename);
     ASSERT_FALSE(buffer.IsEmpty());
     ASSERT_LE(step, buffer.Length());
     // Just exercizing the parser starting at different points through the file,
@@ -228,7 +253,7 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4_skimming)
 TEST(stagefright_MoofParser, test_case_mp4)
 {
   for (size_t test = 0; test < ArrayLength(testFiles); ++test) {
-    nsTArray<uint8_t> buffer = ReadTestFile(testFiles[test]);
+    nsTArray<uint8_t> buffer = ReadTestFile(testFiles[test].mFilename);
     ASSERT_FALSE(buffer.IsEmpty());
     nsRefPtr<Stream> stream = new TestStream(buffer.Elements(), buffer.Length());
 
@@ -254,11 +279,11 @@ TEST(stagefright_MoofParser, test_case_mp4)
   }
 }
 
-TEST(stagefright_MoofParser, test_case_mp4_skimming)
+TEST(stagefright_MoofParser, test_case_mp4_subsets)
 {
   const size_t step = 1u;
   for (size_t test = 0; test < ArrayLength(testFiles); ++test) {
-    nsTArray<uint8_t> buffer = ReadTestFile(testFiles[test]);
+    nsTArray<uint8_t> buffer = ReadTestFile(testFiles[test].mFilename);
     ASSERT_FALSE(buffer.IsEmpty());
     ASSERT_LE(step, buffer.Length());
     Monitor monitor("MP4Metadata::HasCompleteMetadata");
