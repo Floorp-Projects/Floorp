@@ -13,10 +13,64 @@
 using namespace mozilla;
 using namespace mp4_demuxer;
 
+class TestStream : public Stream
+{
+public:
+  TestStream(const uint8_t* aBuffer, size_t aSize)
+    : mHighestSuccessfulEndOffset(0)
+    , mBuffer(aBuffer)
+    , mSize(aSize)
+  {
+  }
+  bool ReadAt(int64_t aOffset, void* aData, size_t aLength,
+              size_t* aBytesRead) override
+  {
+    if (aOffset < 0 || aOffset > static_cast<int64_t>(mSize)) {
+      return false;
+    }
+    // After the test, 0 <= aOffset <= mSize <= SIZE_MAX, so it's safe to cast to size_t.
+    size_t offset = static_cast<size_t>(aOffset);
+    // Don't read past the end (but it's not an error to try).
+    if (aLength > mSize - offset) {
+      aLength = mSize - offset;
+    }
+    // Now, 0 <= offset <= offset + aLength <= mSize <= SIZE_MAX.
+    *aBytesRead = aLength;
+    memcpy(aData, mBuffer + offset, aLength);
+    if (mHighestSuccessfulEndOffset < offset + aLength)
+    {
+      mHighestSuccessfulEndOffset = offset + aLength;
+    }
+    return true;
+  }
+  bool CachedReadAt(int64_t aOffset, void* aData, size_t aLength,
+                    size_t* aBytesRead) override
+  {
+    return ReadAt(aOffset, aData, aLength, aBytesRead);
+  }
+  bool Length(int64_t* aLength) override
+  {
+    *aLength = mSize;
+    return true;
+  }
+  void DiscardBefore(int64_t aOffset) override
+  {
+  }
+
+  // Offset past the last character ever read. 0 when nothing read yet.
+  size_t mHighestSuccessfulEndOffset;
+protected:
+  virtual ~TestStream()
+  {
+  }
+
+  const uint8_t* mBuffer;
+  size_t mSize;
+};
+
 TEST(stagefright_MP4Metadata, EmptyStream)
 {
-  nsRefPtr<MediaByteBuffer> buffer = new MediaByteBuffer(0);
-  nsRefPtr<BufferStream> stream = new BufferStream(buffer);
+  nsRefPtr<Stream> stream = new TestStream(nullptr, 0);
 
   EXPECT_FALSE(MP4Metadata::HasCompleteMetadata(stream));
   nsRefPtr<MediaByteBuffer> metadataBuffer = MP4Metadata::Metadata(stream);
@@ -40,8 +94,7 @@ TEST(stagefright_MP4Metadata, EmptyStream)
 
 TEST(stagefright_MoofParser, EmptyStream)
 {
-  nsRefPtr<MediaByteBuffer> buffer = new MediaByteBuffer(0);
-  nsRefPtr<BufferStream> stream = new BufferStream(buffer);
+  nsRefPtr<Stream> stream = new TestStream(nullptr, 0);
 
   Monitor monitor("MP4Metadata::gtest");
   MonitorAutoLock mon(monitor);
@@ -64,40 +117,40 @@ TEST(stagefright_MoofParser, EmptyStream)
   EXPECT_TRUE(parser.FirstCompleteMediaHeader().IsNull());
 }
 
-nsRefPtr<MediaByteBuffer>
+nsTArray<uint8_t>
 ReadTestFile(const char* aFilename)
 {
   if (!aFilename) {
-    return nullptr;
+    return {};
   }
   FILE* f = fopen(aFilename, "rb");
   if (!f) {
-    return nullptr;
+    return {};
    }
 
   if (fseek(f, 0, SEEK_END) != 0) {
     fclose(f);
-    return nullptr;
+    return {};
   }
   long position = ftell(f);
   // I know EOF==-1, so this test is made obsolete by '<0', but I don't want
   // the code to rely on that.
   if (position == 0 || position == EOF || position < 0) {
     fclose(f);
-    return nullptr;
+    return {};
   }
   if (fseek(f, 0, SEEK_SET) != 0) {
     fclose(f);
-    return nullptr;
+    return {};
   }
 
   size_t len = static_cast<size_t>(position);
-  nsRefPtr<MediaByteBuffer> buffer = new MediaByteBuffer(len);
-  buffer->SetLength(len);
-  size_t read = fread(buffer->Elements(), 1, len, f);
+  nsTArray<uint8_t> buffer(len);
+  buffer.SetLength(len);
+  size_t read = fread(buffer.Elements(), 1, len, f);
   fclose(f);
   if (read != len) {
-    return nullptr;
+    return {};
   }
 
   return buffer;
@@ -105,9 +158,9 @@ ReadTestFile(const char* aFilename)
 
 TEST(stagefright_MPEG4Metadata, test_case_mp4)
 {
-  nsRefPtr<MediaByteBuffer> buffer = ReadTestFile("test_case_1187067.mp4");
-  ASSERT_TRUE(buffer);
-  nsRefPtr<BufferStream> stream = new BufferStream(buffer);
+  nsTArray<uint8_t> buffer = ReadTestFile("test_case_1187067.mp4");
+  ASSERT_FALSE(buffer.IsEmpty());
+  nsRefPtr<Stream> stream = new TestStream(buffer.Elements(), buffer.Length());
 
   EXPECT_TRUE(MP4Metadata::HasCompleteMetadata(stream));
   nsRefPtr<MediaByteBuffer> metadataBuffer = MP4Metadata::Metadata(stream);
@@ -132,28 +185,43 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
 
 TEST(stagefright_MPEG4Metadata, test_case_mp4_skimming)
 {
-  static const size_t step = 4u;
-  nsRefPtr<MediaByteBuffer> buffer = ReadTestFile("test_case_1187067.mp4");
-  ASSERT_TRUE(buffer);
-  for (size_t offset = 0; offset < buffer->Length() - step; offset += step) {
-    nsRefPtr<BufferStream> stream = new BufferStream(buffer);
+  static const size_t step = 1u;
+  nsTArray<uint8_t> buffer = ReadTestFile("test_case_1187067.mp4");
+  ASSERT_FALSE(buffer.IsEmpty());
+  ASSERT_LE(step, buffer.Length());
+  // Just exercizing the parser starting at different points through the file,
+  // making sure it doesn't crash.
+  // No checks because results would differ for each position.
+  for (size_t offset = 0; offset < buffer.Length() - step; offset += step) {
+    size_t size = buffer.Length() - offset;
+    while (size > 0) {
+      nsRefPtr<TestStream> stream =
+        new TestStream(buffer.Elements() + offset, size);
 
-    // Just exercizing the parser starting at different points through the file,
-    // making sure it doesn't crash.
-    // No checks because results would differ for each position.
-    MP4Metadata::HasCompleteMetadata(stream);
-    nsRefPtr<MediaByteBuffer> metadataBuffer = MP4Metadata::Metadata(stream);
-    MP4Metadata metadata(stream);
+      MP4Metadata::HasCompleteMetadata(stream);
+      nsRefPtr<MediaByteBuffer> metadataBuffer = MP4Metadata::Metadata(stream);
+      MP4Metadata metadata(stream);
 
-    buffer->RemoveElementsAt(0, step);
+      if (stream->mHighestSuccessfulEndOffset <= 0) {
+        // No successful reads -> Cutting down the size won't change anything.
+        break;
+      }
+      if (stream->mHighestSuccessfulEndOffset < size) {
+        // Read up to a point before the end -> Resize down to that point.
+        size = stream->mHighestSuccessfulEndOffset;
+      } else {
+        // Read up to the end (or after?!) -> Just cut 1 byte.
+        size -= 1;
+      }
+    }
   }
 }
 
 TEST(stagefright_MoofParser, test_case_mp4)
 {
-  nsRefPtr<MediaByteBuffer> buffer = ReadTestFile("test_case_1187067.mp4");
-  ASSERT_TRUE(buffer);
-  nsRefPtr<BufferStream> stream = new BufferStream(buffer);
+  nsTArray<uint8_t> buffer = ReadTestFile("test_case_1187067.mp4");
+  ASSERT_FALSE(buffer.IsEmpty());
+  nsRefPtr<Stream> stream = new TestStream(buffer.Elements(), buffer.Length());
 
   Monitor monitor("MP4Metadata::HasCompleteMetadata");
   MonitorAutoLock mon(monitor);
@@ -178,28 +246,43 @@ TEST(stagefright_MoofParser, test_case_mp4)
 
 TEST(stagefright_MoofParser, test_case_mp4_skimming)
 {
-  const size_t step = 4u;
-  nsRefPtr<MediaByteBuffer> buffer = ReadTestFile("test_case_1187067.mp4");
-  ASSERT_TRUE(buffer);
+  const size_t step = 1u;
+  nsTArray<uint8_t> buffer = ReadTestFile("test_case_1187067.mp4");
+  ASSERT_FALSE(buffer.IsEmpty());
+  ASSERT_LE(step, buffer.Length());
   Monitor monitor("MP4Metadata::HasCompleteMetadata");
   MonitorAutoLock mon(monitor);
-  for (size_t offset = 0; offset < buffer->Length() - step; offset += step) {
-    nsRefPtr<BufferStream> stream = new BufferStream(buffer);
+  // Just exercizing the parser starting at different points through the file,
+  // making sure it doesn't crash.
+  // No checks because results would differ for each position.
+  for (size_t offset = 0; offset < buffer.Length() - step; offset += step) {
+    size_t size = buffer.Length() - offset;
+    while (size > 0) {
+      nsRefPtr<TestStream> stream =
+        new TestStream(buffer.Elements() + offset, size);
 
-    // Just exercizing the parser starting at different points through the file,
-    // making sure it doesn't crash.
-    // No checks because results would differ for each position.
-    MoofParser parser(stream, 0, false, &monitor);
-    nsTArray<MediaByteRange> byteRanges;
-    byteRanges.AppendElement(MediaByteRange(0, 0));
-    EXPECT_FALSE(parser.RebuildFragmentedIndex(byteRanges));
-    parser.GetCompositionRange(byteRanges);
-    parser.HasMetadata();
-    nsRefPtr<MediaByteBuffer> metadataBuffer = parser.Metadata();
-    parser.FirstCompleteMediaSegment();
-    parser.FirstCompleteMediaHeader();
+      MoofParser parser(stream, 0, false, &monitor);
+      nsTArray<MediaByteRange> byteRanges;
+      byteRanges.AppendElement(MediaByteRange(0, 0));
+      EXPECT_FALSE(parser.RebuildFragmentedIndex(byteRanges));
+      parser.GetCompositionRange(byteRanges);
+      parser.HasMetadata();
+      nsRefPtr<MediaByteBuffer> metadataBuffer = parser.Metadata();
+      parser.FirstCompleteMediaSegment();
+      parser.FirstCompleteMediaHeader();
 
-    buffer->RemoveElementsAt(0, step);
+      if (stream->mHighestSuccessfulEndOffset <= 0) {
+        // No successful reads -> Cutting down the size won't change anything.
+        break;
+      }
+      if (stream->mHighestSuccessfulEndOffset < size) {
+        // Read up to a point before the end -> Resize down to that point.
+        size = stream->mHighestSuccessfulEndOffset;
+      } else {
+        // Read up to the end (or after?!) -> Just cut 1 byte.
+        size -= 1;
+      }
+    }
   }
 }
 
