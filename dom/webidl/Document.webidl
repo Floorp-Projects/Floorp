@@ -392,6 +392,12 @@ partial interface Document {
   void removeAnonymousContent(AnonymousContent aContent);
 };
 
+// Extension to give chrome JS the ability to determine whether
+// the user has interacted with the document or not.
+partial interface Document {
+  [ChromeOnly] readonly attribute boolean userHasInteracted;
+};
+
 Document implements XPathEvaluator;
 Document implements GlobalEventHandlers;
 Document implements TouchEventHandlers;
