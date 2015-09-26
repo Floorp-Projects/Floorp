@@ -12,9 +12,9 @@
 #ifndef mozilla_image_Downscaler_h
 #define mozilla_image_Downscaler_h
 
+#include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 #include "nsRect.h"
-
 
 namespace skia {
   class ConvolutionFilter1D;
@@ -64,6 +64,9 @@ public:
    * Begins a new frame and reinitializes the Downscaler.
    *
    * @param aOriginalSize The original size of this frame, before scaling.
+   * @param aFrameRect The region of  the original image which has data.
+   *                   Every pixel outside @aFrameRect is considered blank and
+   *                   has zero alpha.
    * @param aOutputBuffer The buffer to which the Downscaler should write its
    *                      output; this is the same buffer where the Decoder
    *                      would write its output when not downscaling during
@@ -75,12 +78,16 @@ public:
    *                        the way they are stored in some image formats.
    */
   nsresult BeginFrame(const nsIntSize& aOriginalSize,
+                      const Maybe<nsIntRect>& aFrameRect,
                       uint8_t* aOutputBuffer,
                       bool aHasAlpha,
                       bool aFlipVertically = false);
 
   /// Retrieves the buffer into which the Decoder should write each row.
-  uint8_t* RowBuffer() { return mRowBuffer.get(); }
+  uint8_t* RowBuffer()
+  {
+    return mRowBuffer.get() + mFrameRect.x * sizeof(uint32_t);
+  }
 
   /// Clears the current row buffer (optionally starting at @aStartingAtCol).
   void ClearRow(uint32_t aStartingAtCol = 0);
@@ -104,9 +111,11 @@ public:
 private:
   void DownscaleInputLine();
   void ReleaseWindow();
+  void SkipToRow(int32_t aRow);
 
   nsIntSize mOriginalSize;
   nsIntSize mTargetSize;
+  nsIntRect mFrameRect;
   gfxSize mScale;
 
   uint8_t* mOutputBuffer;

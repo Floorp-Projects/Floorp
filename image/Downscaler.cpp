@@ -57,6 +57,7 @@ Downscaler::ReleaseWindow()
 
 nsresult
 Downscaler::BeginFrame(const nsIntSize& aOriginalSize,
+                       const Maybe<nsIntRect>& aFrameRect,
                        uint8_t* aOutputBuffer,
                        bool aHasAlpha,
                        bool aFlipVertically /* = false */)
@@ -71,6 +72,17 @@ Downscaler::BeginFrame(const nsIntSize& aOriginalSize,
   MOZ_ASSERT(aOriginalSize.width > 0 && aOriginalSize.height > 0,
              "Invalid original size");
 
+  mFrameRect = aFrameRect.valueOr(nsIntRect(nsIntPoint(), aOriginalSize));
+  MOZ_ASSERT(mFrameRect.x >= 0 && mFrameRect.y >= 0 &&
+             mFrameRect.width > 0 && mFrameRect.height > 0,
+             "Frame rect must have positive components");
+  MOZ_ASSERT(nsIntRect(0, 0, aOriginalSize.width, aOriginalSize.height)
+               .Contains(mFrameRect),
+             "Frame rect must fit inside image");
+  MOZ_ASSERT_IF(!nsIntRect(0, 0, aOriginalSize.width, aOriginalSize.height)
+                  .IsEqualEdges(mFrameRect),
+                aHasAlpha);
+
   mOriginalSize = aOriginalSize;
   mScale = gfxSize(double(mOriginalSize.width) / mTargetSize.width,
                    double(mOriginalSize.height) / mTargetSize.height);
@@ -78,7 +90,6 @@ Downscaler::BeginFrame(const nsIntSize& aOriginalSize,
   mHasAlpha = aHasAlpha;
   mFlipVertically = aFlipVertically;
 
-  ResetForNextProgressivePass();
   ReleaseWindow();
 
   auto resizeMethod = skia::ImageOperations::RESIZE_LANCZOS3;
@@ -124,7 +135,20 @@ Downscaler::BeginFrame(const nsIntSize& aOriginalSize,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  ResetForNextProgressivePass();
+
   return NS_OK;
+}
+
+void
+Downscaler::SkipToRow(int32_t aRow)
+{
+  if (mCurrentInLine < aRow) {
+    ClearRow();
+    do {
+      CommitRow();
+    } while (mCurrentInLine < aRow);
+  }
 }
 
 void
@@ -134,6 +158,9 @@ Downscaler::ResetForNextProgressivePass()
   mCurrentOutLine = 0;
   mCurrentInLine = 0;
   mLinesInBuffer = 0;
+
+  // If we have a vertical offset, commit rows to shift us past it.
+  SkipToRow(mFrameRect.y);
 }
 
 static void
@@ -193,6 +220,12 @@ Downscaler::CommitRow()
   }
 
   mCurrentInLine += 1;
+
+  // If we're at the end of the part of the original image that has data, commit
+  // rows to shift us to the end.
+  if (mCurrentInLine == (mFrameRect.y + mFrameRect.height)) {
+    SkipToRow(mOriginalSize.height - 1);
+  }
 }
 
 bool
