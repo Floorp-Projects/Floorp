@@ -14,27 +14,30 @@ var PerformanceView = {
   // that the server has support for determining buffer status.
   _bufferStatusSupported: false,
 
-  // Mapping of state to selectors for different panes
-  // of the main profiler view. Used in `PerformanceView.setState()`
+  // Mapping of state to selectors for different properties and their values,
+  // from the main profiler view. Used in `PerformanceView.setState()`
   states: {
-    empty: [
-      { deck: "#performance-view", pane: "#empty-notice" }
+    "unavailable": [
+      { sel: "#performance-view", opt: "selectedPanel", val: () => $("#unavailable-notice") },
     ],
-    recording: [
-      { deck: "#performance-view", pane: "#performance-view-content" },
-      { deck: "#details-pane-container", pane: "#recording-notice" }
+    "empty": [
+      { sel: "#performance-view", opt: "selectedPanel", val: () => $("#empty-notice") }
+    ],
+    "recording": [
+      { sel: "#performance-view", opt: "selectedPanel", val: () => $("#performance-view-content") },
+      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#recording-notice") }
     ],
     "console-recording": [
-      { deck: "#performance-view", pane: "#performance-view-content" },
-      { deck: "#details-pane-container", pane: "#console-recording-notice" }
+      { sel: "#performance-view", opt: "selectedPanel", val: () => $("#performance-view-content") },
+      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#console-recording-notice") }
     ],
-    recorded: [
-      { deck: "#performance-view", pane: "#performance-view-content" },
-      { deck: "#details-pane-container", pane: "#details-pane" }
+    "recorded": [
+      { sel: "#performance-view", opt: "selectedPanel", val: () => $("#performance-view-content") },
+      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#details-pane") }
     ],
-    loading: [
-      { deck: "#performance-view", pane: "#performance-view-content" },
-      { deck: "#details-pane-container", pane: "#loading-notice" }
+    "loading": [
+      { sel: "#performance-view", opt: "selectedPanel", val: () => $("#performance-view-content") },
+      { sel: "#details-pane-container", opt: "selectedPanel", val: () => $("#loading-notice") }
     ]
   },
 
@@ -52,6 +55,7 @@ var PerformanceView = {
     this._onRecordingSelected = this._onRecordingSelected.bind(this);
     this._onProfilerStatusUpdated = this._onProfilerStatusUpdated.bind(this);
     this._onRecordingStateChange = this._onRecordingStateChange.bind(this);
+    this._onNewRecordingFailed = this._onNewRecordingFailed.bind(this);
 
     for (let button of $$(".record-button")) {
       button.addEventListener("click", this._onRecordButtonClick);
@@ -64,8 +68,13 @@ var PerformanceView = {
     PerformanceController.on(EVENTS.PROFILER_STATUS_UPDATED, this._onProfilerStatusUpdated);
     PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStateChange);
     PerformanceController.on(EVENTS.NEW_RECORDING, this._onRecordingStateChange);
+    PerformanceController.on(EVENTS.NEW_RECORDING_FAILED, this._onNewRecordingFailed);
 
-    this.setState("empty");
+    if (yield PerformanceController.canCurrentlyRecord()) {
+      this.setState("empty");
+    } else {
+      this.setState("unavailable");
+    }
 
     // Initialize the ToolbarView first, because other views may need access
     // to the OptionsView via the controller, to read prefs.
@@ -89,6 +98,7 @@ var PerformanceView = {
     PerformanceController.off(EVENTS.PROFILER_STATUS_UPDATED, this._onProfilerStatusUpdated);
     PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE, this._onRecordingStateChange);
     PerformanceController.off(EVENTS.NEW_RECORDING, this._onRecordingStateChange);
+    PerformanceController.off(EVENTS.NEW_RECORDING_FAILED, this._onNewRecordingFailed);
 
     yield ToolbarView.destroy();
     yield RecordingsView.destroy();
@@ -97,16 +107,18 @@ var PerformanceView = {
   }),
 
   /**
-   * Sets the state of the profiler view. Possible options are "empty",
-   * "recording", "console-recording", "recorded".
+   * Sets the state of the profiler view. Possible options are "unavailable",
+   * "empty", "recording", "console-recording", "recorded".
    */
   setState: function (state) {
     let viewConfig = this.states[state];
     if (!viewConfig) {
       throw new Error(`Invalid state for PerformanceView: ${state}`);
     }
-    for (let { deck, pane } of viewConfig) {
-      $(deck).selectedPanel = $(pane);
+    for (let { sel, opt, val } of viewConfig) {
+      for (let el of $$(sel)) {
+        el[opt] = val();
+      }
     }
 
     this._state = state;
@@ -114,6 +126,7 @@ var PerformanceView = {
     if (state === "console-recording") {
       let recording = PerformanceController.getCurrentRecording();
       let label = recording.getLabel() || "";
+
       // Wrap the label in quotes if it exists for the commands.
       label = label ? `"${label}"` : "";
 
@@ -192,7 +205,7 @@ var PerformanceView = {
    *
    * @param {boolean} activate
    */
-  _activateRecordButtons: function (activate) {
+  _toggleRecordButtons: function (activate) {
     for (let button of $$(".record-button")) {
       if (activate) {
         button.setAttribute("checked", "true");
@@ -209,7 +222,7 @@ var PerformanceView = {
     let currentRecording = PerformanceController.getCurrentRecording();
     let recordings = PerformanceController.getRecordings();
 
-    this._activateRecordButtons(recordings.find(r => !r.isConsole() && r.isRecording()));
+    this._toggleRecordButtons(recordings.find(r => !r.isConsole() && r.isRecording()));
     this._lockRecordButtons(recordings.find(r => !r.isConsole() && r.isFinalizing()));
 
     if (currentRecording && currentRecording.isFinalizing()) {
@@ -221,6 +234,14 @@ var PerformanceView = {
     if (currentRecording && currentRecording.isRecording()) {
       this.updateBufferStatus();
     }
+  },
+
+  /**
+   * When starting a recording has failed.
+   */
+  _onNewRecordingFailed: function (e) {
+    this._lockRecordButtons(false);
+    this._toggleRecordButtons(false);
   },
 
   /**
@@ -238,7 +259,7 @@ var PerformanceView = {
       this.emit(EVENTS.UI_STOP_RECORDING);
     } else {
       this._lockRecordButtons(true);
-      this._activateRecordButtons(true);
+      this._toggleRecordButtons(true);
       this.emit(EVENTS.UI_START_RECORDING);
     }
   },
