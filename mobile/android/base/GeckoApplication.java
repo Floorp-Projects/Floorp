@@ -4,8 +4,6 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.AdjustConstants;
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.LocalBrowserDB;
@@ -155,10 +153,6 @@ public class GeckoApplication extends Application
         });
 
         super.onCreate();
-
-        if (AppConstants.MOZ_INSTALL_TRACKING) {
-            AdjustConstants.getAdjustHelper().onCreate(this, AdjustConstants.MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN);
-        }
     }
 
     public boolean isApplicationInBackground() {
