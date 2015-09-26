@@ -52,7 +52,7 @@ var gGrid = {
     this._createSiteFragment();
 
     gLinks.populateCache(() => {
-      this.refresh();
+      this._refreshGrid();
       this._ready = true;
 
       // If fetching links took longer than loading the page itself then
@@ -109,9 +109,20 @@ var gGrid = {
   },
 
   /**
+   * Renders and resizes the gird. _resizeGrid() call is needed to ensure
+   * that scrollbar disappears when the bottom row becomes empty following
+   * the block action, or tile display is turmed off via cog menu
+   */
+
+  refresh() {
+    this._refreshGrid();
+    this._resizeGrid();
+  },
+
+  /**
    * Renders the grid, including cells and sites.
    */
-  refresh() {
+  _refreshGrid() {
     let cell = document.createElementNS(HTML_NAMESPACE, "div");
     cell.classList.add("newtab-cell");
 
