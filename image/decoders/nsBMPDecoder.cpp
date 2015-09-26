@@ -461,7 +461,8 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
       if (mDownscaler) {
         // BMPs store their rows in reverse order, so the downscaler needs to
         // reverse them again when writing its output.
-        rv = mDownscaler->BeginFrame(GetSize(), mImageData, hasTransparency,
+        rv = mDownscaler->BeginFrame(GetSize(), Nothing(),
+                                     mImageData, hasTransparency,
                                      /* aFlipVertically = */ true);
         if (NS_FAILED(rv)) {
           return;
