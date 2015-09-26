@@ -1,5 +1,7 @@
 "use strict";
 
+SpecialPowers.pushPrefEnv({"set": [["dom.require_user_interaction_for_beforeunload", false]]});
+
 const FIRST_TAB = getRootDirectory(gTestPath) + "close_beforeunload_opens_second_tab.html";
 const SECOND_TAB = getRootDirectory(gTestPath) + "close_beforeunload.html";
 
