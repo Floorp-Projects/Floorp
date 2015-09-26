@@ -372,11 +372,14 @@ this.BrowserTestUtils = {
    *  event has fired and completed. Instead of a window, a browser is required
    *  to be passed to this function.
    *
-   * @param {string} target
-   *        A selector that identifies the element to target. The syntax is as
-   *        for querySelector. This may also be a CPOW element for easier
-   *        test-conversion. If this is null, then the offset is from the
-   *        content document's edge.
+   * @param target
+   *        One of the following:
+   *        - a selector string that identifies the element to target. The syntax is as
+   *        for querySelector.
+   *        - a CPOW element (for easier test-conversion).
+   *        - a function to be run in the content process that returns the element to
+   *        target
+   *        - null, in which case the offset is from the content document's edge.
    * @param {integer} offsetX
    *        x offset from target's left bounding edge
    * @param {integer} offsetY
@@ -399,13 +402,17 @@ this.BrowserTestUtils = {
       });
 
       let cpowObject = null;
-      if (typeof target != "string") {
+      let targetFn = null;
+      if (typeof target == "function") {
+        targetFn = target.toString();
+        target = null;
+      } else if (typeof target != "string") {
         cpowObject = target;
         target = null;
       }
 
       mm.sendAsyncMessage("Test:SynthesizeMouse",
-                          {target, target, x: offsetX, y: offsetY, event: event},
+                          {target, targetFn, x: offsetX, y: offsetY, event: event},
                           {object: cpowObject});
     });
   },
