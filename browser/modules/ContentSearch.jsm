@@ -114,7 +114,7 @@ this.ContentSearch = {
     }
     this._searchSuggestionUIStrings = {};
     let searchBundle = Services.strings.createBundle("chrome://browser/locale/search.properties");
-    let stringNames = ["searchHeader", "searchPlaceholder", "searchForKeywordsWith",
+    let stringNames = ["searchHeader", "searchPlaceholder", "searchForSomethingWith",
                        "searchWithHeader", "searchSettings"];
     for (let name of stringNames) {
       this._searchSuggestionUIStrings[name] = searchBundle.GetStringFromName(name);
