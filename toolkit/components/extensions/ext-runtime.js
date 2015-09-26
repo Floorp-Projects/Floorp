@@ -22,6 +22,17 @@ extensions.registerAPI((extension, context) => {
 
       onConnect: context.messenger.onConnect("runtime.onConnect"),
 
+      connect: function(extensionId, connectInfo) {
+        if (!connectInfo) {
+          connectInfo = extensionId;
+          extensionId = null;
+        }
+        let name = connectInfo && connectInfo.name || "";
+        let recipient = extensionId ? {extensionId} : {extensionId: extension.id};
+
+        return context.messenger.connect(Services.cpmm, name, recipient);
+      },
+
       sendMessage: function(...args) {
         let extensionId, message, options, responseCallback;
         if (args.length == 1) {
