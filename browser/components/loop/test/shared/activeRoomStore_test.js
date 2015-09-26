@@ -326,19 +326,29 @@ describe("loop.store.ActiveRoomStore", function () {
       );
     });
 
-    it("should set the state to `GATHER`",
-      function() {
-        store.setupWindowData(new sharedActions.SetupWindowData({
-          windowId: "42",
-          type: "room",
-          roomToken: fakeToken
-        }));
+    it("should set the state to `GATHER`", function() {
+      store.setupWindowData(new sharedActions.SetupWindowData({
+        windowId: "42",
+        type: "room",
+        roomToken: fakeToken
+      }));
 
-        expect(store.getStoreState()).to.have.property(
-          "roomState", ROOM_STATES.GATHER);
-      });
+      expect(store.getStoreState()).to.have.property(
+        "roomState", ROOM_STATES.GATHER);
+    });
 
-    it("should dispatch an SetupRoomInfo action if the get is successful",
+    it("should store the room token and window id", function() {
+      store.setupWindowData(new sharedActions.SetupWindowData({
+        windowId: "42",
+        type: "room",
+        roomToken: fakeToken
+      }));
+
+      expect(store.getStoreState().windowId).eql("42");
+      expect(store.getStoreState().roomToken).eql(fakeToken);
+    });
+
+    it("should dispatch an UpdateRoomInfo action if the get is successful",
       function() {
         store.setupWindowData(new sharedActions.SetupWindowData({
           windowId: "42",
@@ -348,12 +358,12 @@ describe("loop.store.ActiveRoomStore", function () {
 
         sinon.assert.calledTwice(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
-          new sharedActions.SetupRoomInfo({
+          new sharedActions.UpdateRoomInfo({
             roomContextUrls: undefined,
             roomDescription: undefined,
             participants: [],
-            roomToken: fakeToken,
             roomName: fakeRoomData.decryptedContext.roomName,
+            roomState: ROOM_STATES.READY,
             roomUrl: fakeRoomData.roomUrl,
             socialShareProviders: []
           }));
@@ -551,8 +561,11 @@ describe("loop.store.ActiveRoomStore", function () {
         store.fetchServerData(fetchServerAction);
 
         var expectedData = _.extend({
+          roomContextUrls: roomContext.urls,
+          roomDescription: roomContext.description,
+          roomName: roomContext.roomName,
           roomState: ROOM_STATES.READY
-        }, roomContext, expectedDetails);
+        }, expectedDetails);
 
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
@@ -586,47 +599,18 @@ describe("loop.store.ActiveRoomStore", function () {
     });
   });
 
-  describe("#setupRoomInfo", function() {
-    var fakeRoomInfo;
-
-    beforeEach(function() {
-      fakeRoomInfo = {
-        roomName: "Its a room",
-        roomToken: "fakeToken",
-        roomUrl: "http://invalid",
-        socialShareProviders: []
-      };
-    });
-
-    it("should set the state to READY", function() {
-      store.setupRoomInfo(new sharedActions.SetupRoomInfo(fakeRoomInfo));
-
-      expect(store._storeState.roomState).eql(ROOM_STATES.READY);
-    });
-
-    it("should save the room information", function() {
-      store.setupRoomInfo(new sharedActions.SetupRoomInfo(fakeRoomInfo));
-
-      var state = store.getStoreState();
-      expect(state.roomName).eql(fakeRoomInfo.roomName);
-      expect(state.roomToken).eql(fakeRoomInfo.roomToken);
-      expect(state.roomUrl).eql(fakeRoomInfo.roomUrl);
-      expect(state.socialShareProviders).eql([]);
-    });
-  });
-
   describe("#updateRoomInfo", function() {
     var fakeRoomInfo;
 
     beforeEach(function() {
       fakeRoomInfo = {
-        roomName: "Its a room",
-        roomUrl: "http://invalid",
-        urls: [{
+        roomContextUrls: [{
           description: "fake site",
           location: "http://invalid.com",
           thumbnail: "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
-        }]
+        }],
+        roomName: "Its a room",
+        roomUrl: "http://invalid"
       };
     });
 
@@ -636,7 +620,7 @@ describe("loop.store.ActiveRoomStore", function () {
       var state = store.getStoreState();
       expect(state.roomName).eql(fakeRoomInfo.roomName);
       expect(state.roomUrl).eql(fakeRoomInfo.roomUrl);
-      expect(state.roomContextUrls).eql(fakeRoomInfo.urls);
+      expect(state.roomContextUrls).eql(fakeRoomInfo.roomContextUrls);
     });
   });
 
@@ -1602,11 +1586,10 @@ describe("loop.store.ActiveRoomStore", function () {
   describe("Events", function() {
     describe("update:{roomToken}", function() {
       beforeEach(function() {
-        store.setupRoomInfo(new sharedActions.SetupRoomInfo({
-          roomName: "Its a room",
+        store.setupWindowData(new sharedActions.SetupWindowData({
           roomToken: "fakeToken",
-          roomUrl: "http://invalid",
-          socialShareProviders: []
+          type: "room",
+          windowId: "42"
         }));
       });
 
@@ -1667,11 +1650,11 @@ describe("loop.store.ActiveRoomStore", function () {
       };
 
       beforeEach(function() {
-        store.setupRoomInfo(new sharedActions.SetupRoomInfo(
-          _.extend(fakeRoomData, {
-            socialShareProviders: []
-          })
-        ));
+        store.setupWindowData(new sharedActions.SetupWindowData({
+          roomToken: "fakeToken",
+          type: "room",
+          windowId: "42"
+        }));
       });
 
       it("should disconnect all room connections", function() {

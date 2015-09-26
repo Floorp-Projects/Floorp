@@ -307,6 +307,16 @@ describe("loop.conversationViews", function () {
       expect(message.textContent).eql("contact_unavailable_title");
     });
 
+    it("should display a ToS failure message for the ToS failure reason", function() {
+      view = mountTestComponent({
+        failureReason: FAILURE_DETAILS.TOS_FAILURE
+      });
+
+      var message = view.getDOMNode().querySelector(".failure-info-message");
+
+      expect(message.textContent).eql("tos_failure_message");
+    });
+
     it("should display a generic unavailable message if the contact doesn't have a display name", function() {
       view = mountTestComponent({
         contact: {

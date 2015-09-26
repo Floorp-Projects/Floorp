@@ -1,0 +1,28 @@
+[
+{
+"size": i13096,
+"digest": "674475286c1639379079dca3cd14bfb9cc2a7e23733cd0f96e20296b2ee6dc0cdb9fccdc8635bef0475add156e085c17b946ec2c4254c83d3bef95d027e03537",
+"algorithm": "sha512",
+"filename": "broadcom-mako-kot49h-18b58457.tgz"
+},
+{
+"size": 17661109,
+"digest": "a5fcd2fda9fec1d24bb15e160f0ac2627a2b65e411f737c6cac48e777847c5a9eef3251af7deb535af89643a05e9889b857d1f60bf11df18fa270fd7b2db16db",
+"algorithm": "sha512",
+"filename": "qcom-mako-kot49h-e7a74920.tgz"
+},
+{
+"size": 163277,
+"digest": "e58aad76e6395a1a82fe886783842c4676c12d065e2f65bce6ce19cab2488be767aaea27fa2f46f48a0bf8d9714a6b453b474d2f9df5de158c49e6cbde0a359e",
+"algorithm": "sha512",
+"filename": "lge-mako-kot49h-f59c98be.tgz"
+},
+{
+"size": 80458572,
+"digest": "e5101f9dee1e462f6cbd3897ea57eede41d23981825c7b20d91d23ab461875d54d3dfc24999aa58a31e8b01f49fb3140e05ffe5af2957ef1d1afb89fd0dfe1ad",
+"algorithm": "sha512",
+"filename": "gcc.tar.xz",
+"unpack": "True"
+}
+]
+
