@@ -690,8 +690,9 @@ Cookies.prototype = {
           host = "." + host;
       }
 
-      // Fallback: expire in 1h
-      let expireTime = (Date.now() + 3600 * 1000) * 1000;
+      // Fallback: expire in 1h (NB: time is in seconds since epoch, so we have
+      // to divide the result of Date.now() (which is in milliseconds) by 1000).
+      let expireTime = Math.floor(Date.now() / 1000) + 3600;
       try {
         expireTime = this.ctypesKernelHelpers.fileTimeToSecondsSinceEpoch(Number(expireTimeHi),
                                                                           Number(expireTimeLo));
@@ -755,10 +756,14 @@ function getTypedURLs(registryKeyPath) {
           try {
             let hi = parseInt(urlTimeHex.slice(0, 4).join(''), 16);
             let lo = parseInt(urlTimeHex.slice(4, 8).join(''), 16);
+            // Convert to seconds since epoch:
             timeTyped = cTypes.fileTimeToSecondsSinceEpoch(hi, lo);
             // Callers expect PRTime, which is microseconds since epoch:
             timeTyped *= 1000 * 1000;
-          } catch (ex) {}
+          } catch (ex) {
+            // Ignore conversion exceptions. Callers will have to deal
+            // with the fallback value (0).
+          }
         }
       }
       typedURLs.set(url, timeTyped);
@@ -866,9 +871,16 @@ WindowsVaultFormPasswords.prototype = {
           }
 
           let password = credential.contents.pAuthenticatorElement.contents.itemValue.readString();
-          let creation = ctypesKernelHelpers.
+          let creation = Date.now();
+          try {
+            // login manager wants time in milliseconds since epoch, so convert
+            // to seconds since epoch and multiply to get milliseconds:
+            creation = ctypesKernelHelpers.
                          fileTimeToSecondsSinceEpoch(item.contents.highLastModified,
                                                      item.contents.lowLastModified) * 1000;
+          } catch (ex) {
+            // Ignore exceptions in the dates and just create the login for right now.
+          }
           // create a new login
           let login = {
             username, password,
