@@ -2805,7 +2805,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 #TabsToolbar .toolbarbutton-1 {
-  margin-bottom: var(--navbar-tab-toolbar-highlight-overlap);
+  margin-bottom: var(--tab-toolbar-navbar-overlap);
 }
 
 #TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {

@@ -29,7 +29,7 @@
   --toolbarbutton-active-bordercolor: rgb(154,154,154);
   --toolbarbutton-active-background: rgba(154,154,154,.5) linear-gradient(hsla(0,0%,100%,.7), hsla(0,0%,100%,.4));
 
-  --toolbarbutton-checkedhover-backgroundcolor: rgba(90%,90%,90%,.4);
+  --toolbarbutton-checkedhover-backgroundcolor: rgba(154,154,154,.15);
 
   --identity-box-verified-background-color: #fff;
 
@@ -1598,7 +1598,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 #TabsToolbar .toolbarbutton-1 {
-  margin-bottom: var(--navbar-tab-toolbar-highlight-overlap);
+  margin-bottom: var(--tab-toolbar-navbar-overlap);
 }
 
 #alltabs-button {
