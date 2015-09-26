@@ -28,7 +28,7 @@ function* spawnTest() {
     "performance tab is no longer highlighted when console.profile recording finishes");
 
   yield gDevTools.showToolbox(target, "performance");
-  let panel = toolbox.getCurrentPanel();
+  let panel = yield toolbox.getCurrentPanel().open();
   let { panelWin: { PerformanceController, RecordingsView }} = panel;
 
   yield startRecording(panel);
