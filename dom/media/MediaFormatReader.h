@@ -17,6 +17,8 @@
 
 namespace mozilla {
 
+class CDMProxy;
+
 class MediaFormatReader final : public MediaDecoderReader
 {
   typedef TrackInfo::TrackType TrackType;
@@ -92,6 +94,10 @@ public:
   {
     return mTrackDemuxersMayBlock;
   }
+
+#ifdef MOZ_EME
+  void SetCDMProxy(CDMProxy* aProxy) override;
+#endif
 
 private:
   bool InitDemuxer();
