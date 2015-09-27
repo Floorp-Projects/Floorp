@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<title>Test of block formatting context displacement by floats</title>
+<style>
+
+.contain {
+  border: medium solid;
+  width: 400px;
+  height: 400px;
+  background: yellow;
+}
+
+.float {
+  float: left;
+  height: 20px;
+  background: blue;
+}
+
+.bfc {
+  float: left;
+  width: 200px;
+  height: 15px;
+  background: fuchsia;
+}
+
+</style>
+
+
+<div class="contain">
+  <div class="float" style="width: 200px"></div>
+  <div class="bfc"></div>
+</div>
