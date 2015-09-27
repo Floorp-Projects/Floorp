@@ -1249,6 +1249,13 @@ private:
   MediaEventListener mAudioQueueListener;
   MediaEventListener mVideoQueueListener;
 
+#ifdef MOZ_EME
+  void OnCDMProxyReady(nsRefPtr<CDMProxy> aProxy);
+  void OnCDMProxyNotReady();
+  nsRefPtr<CDMProxy> mCDMProxy;
+  MozPromiseRequestHolder<MediaDecoder::CDMProxyPromise> mCDMProxyPromise;
+#endif
+
 private:
   // The buffered range. Mirrored from the decoder thread.
   Mirror<media::TimeIntervals> mBuffered;
