@@ -601,7 +601,7 @@ function dbClose(aShutdown) {
   dbStmts = new Map();
 
   let closed = false;
-  _dbConnection.asyncClose(() => closed = true);
+  _dbConnection.asyncClose(function () closed = true);
 
   if (!aShutdown) {
     let thread = Services.tm.currentThread;
@@ -773,9 +773,7 @@ function expireOldEntriesVacuum(aExpireTime, aBeginningCount) {
 }
 
 this.FormHistory = {
-  get enabled() {
-    return Prefs.enabled;
-  },
+  get enabled() Prefs.enabled,
 
   search : function formHistorySearch(aSelectTerms, aSearchData, aCallbacks) {
     // if no terms selected, select everything

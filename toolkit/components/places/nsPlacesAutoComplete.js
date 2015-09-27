@@ -721,9 +721,8 @@ nsPlacesAutoComplete.prototype = {
   //////////////////////////////////////////////////////////////////////////////
   //// nsPlacesAutoComplete
 
-  get _databaseInitialized() {
-    return Object.getOwnPropertyDescriptor(this, "_db").value !== undefined;
-  },
+  get _databaseInitialized()
+    Object.getOwnPropertyDescriptor(this, "_db").value !== undefined,
 
   /**
    * Generates the tokens used in searching from a given string.

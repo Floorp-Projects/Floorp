@@ -51,21 +51,15 @@ this.Downloads = {
   /**
    * Work on downloads that were not started from a private browsing window.
    */
-  get PUBLIC() {
-    return "{Downloads.PUBLIC}";
-  },
+  get PUBLIC() "{Downloads.PUBLIC}",
   /**
    * Work on downloads that were started from a private browsing window.
    */
-  get PRIVATE() {
-    return "{Downloads.PRIVATE}";
-  },
+  get PRIVATE() "{Downloads.PRIVATE}",
   /**
    * Work on both Downloads.PRIVATE and Downloads.PUBLIC downloads.
    */
-  get ALL() {
-    return "{Downloads.ALL}";
-  },
+  get ALL() "{Downloads.ALL}",
 
   /**
    * Creates a new Download object.
