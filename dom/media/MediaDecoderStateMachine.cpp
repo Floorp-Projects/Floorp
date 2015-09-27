@@ -302,6 +302,13 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mMetadataManager.Connect(mReader->TimedMetadataEvent(), OwnerThread());
 
   mMediaSink = CreateAudioSink();
+
+#ifdef MOZ_EME
+  mCDMProxyPromise.Begin(mDecoder->RequestCDMProxy()->Then(
+    OwnerThread(), __func__, this,
+    &MediaDecoderStateMachine::OnCDMProxyReady,
+    &MediaDecoderStateMachine::OnCDMProxyNotReady));
+#endif
 }
 
 MediaDecoderStateMachine::~MediaDecoderStateMachine()
@@ -1317,6 +1324,10 @@ void MediaDecoderStateMachine::Shutdown()
   mPendingSeek.RejectIfExists(__func__);
   mCurrentSeek.RejectIfExists(__func__);
 
+#ifdef MOZ_EME
+  mCDMProxyPromise.DisconnectIfExists();
+#endif
+
   if (IsPlaying()) {
     StopPlayback();
   }
@@ -1405,9 +1416,6 @@ MediaDecoderStateMachine::NotifyWaitingForResourcesStatusChanged()
     // Try again.
     SetState(DECODER_STATE_DECODING_NONE);
     ScheduleStateMachine();
-  } else if (mState == DECODER_STATE_WAIT_FOR_CDM &&
-             !mReader->IsWaitingOnCDMResource()) {
-    StartDecoding();
   }
 }
 
@@ -2002,12 +2010,18 @@ MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
   // feeding in the CDM, which we need to decode the first frame (and
   // thus get the metadata). We could fix this if we could compute the start
   // time by demuxing without necessaring decoding.
-  mNotifyMetadataBeforeFirstFrame = mDuration.Ref().isSome() || mReader->IsWaitingOnCDMResource();
+  bool waitingForCDM =
+#ifdef MOZ_EME
+    mInfo.IsEncrypted() && !mCDMProxy;
+#else
+    false;
+#endif
+  mNotifyMetadataBeforeFirstFrame = mDuration.Ref().isSome() || waitingForCDM;
   if (mNotifyMetadataBeforeFirstFrame) {
     EnqueueLoadedMetadataEvent();
   }
 
-  if (mReader->IsWaitingOnCDMResource()) {
+  if (waitingForCDM) {
     // Metadata parsing was successful but we're still waiting for CDM caps
     // to become available so that we can build the correct decryptor/decoder.
     SetState(DECODER_STATE_WAIT_FOR_CDM);
@@ -3040,6 +3054,27 @@ void MediaDecoderStateMachine::OnMediaSinkError()
   // no sense to play an audio-only file without sound output.
   DecodeError();
 }
+
+#ifdef MOZ_EME
+void
+MediaDecoderStateMachine::OnCDMProxyReady(nsRefPtr<CDMProxy> aProxy)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  mCDMProxyPromise.Complete();
+  mCDMProxy = aProxy;
+  mReader->SetCDMProxy(aProxy);
+  if (mState == DECODER_STATE_WAIT_FOR_CDM) {
+    StartDecoding();
+  }
+}
+
+void
+MediaDecoderStateMachine::OnCDMProxyNotReady()
+{
+  MOZ_ASSERT(OnTaskQueue());
+  mCDMProxyPromise.Complete();
+}
+#endif
 
 void
 MediaDecoderStateMachine::SetAudioCaptured(bool aCaptured)
