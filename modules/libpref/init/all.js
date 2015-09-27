@@ -2379,9 +2379,6 @@ pref("layout.css.scroll-snap.enabled", true);
 // Is support for document.fonts enabled?
 pref("layout.css.font-loading-api.enabled", true);
 
-// Are the MouseEvent.offsetX/Y properties enabled?
-pref("dom.mouseEvent.offsetXY.enabled", true);
-
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
 // 1 = end-side in document/content direction
