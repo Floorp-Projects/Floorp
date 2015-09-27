@@ -319,9 +319,9 @@ public:
    * care about (which need not be its current mBCoord)
    */
   struct ReplacedElementISizeToClear {
-    nscoord marginIStart, borderBoxISize, marginIEnd;
-    nscoord MarginBoxISize() const
-      { return marginIStart + borderBoxISize + marginIEnd; }
+    // Note that we care about the inline-start margin but can ignore
+    // the inline-end margin.
+    nscoord marginIStart, borderBoxISize;
   };
   static ReplacedElementISizeToClear
     ISizeToClearPastFloats(const nsBlockReflowState& aState,
