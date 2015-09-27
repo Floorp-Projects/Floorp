@@ -34,7 +34,6 @@ FFmpegH264Decoder<LIBAV_VER>::FFmpegH264Decoder(
   , mPictureHeight(aConfig.mImage.height)
   , mDisplayWidth(aConfig.mDisplay.width)
   , mDisplayHeight(aConfig.mDisplay.height)
-  , mCodecParser(nullptr)
 {
   MOZ_COUNT_CTOR(FFmpegH264Decoder);
   // Use a new MediaByteBuffer as the object will be modified during initialization.
@@ -80,19 +79,11 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
   uint8_t* inputData = const_cast<uint8_t*>(aSample->Data());
   size_t inputSize = aSample->Size();
 
-  if (inputSize && (mCodecID == AV_CODEC_ID_VP8
+  if (inputSize && mCodecParser && (mCodecID == AV_CODEC_ID_VP8
 #if LIBAVCODEC_VERSION_MAJOR >= 55
       || mCodecID == AV_CODEC_ID_VP9
 #endif
       )) {
-    if (!mCodecParser) {
-      mCodecParser = av_parser_init(mCodecID);
-      if (!mCodecParser) {
-        mCallback->Error();
-        return DecodeResult::DECODE_ERROR;
-      }
-      mCodecParser->flags |= PARSER_FLAG_COMPLETE_FRAMES;
-    }
     bool gotFrame = false;
     while (inputSize) {
       uint8_t* data;
@@ -361,10 +352,6 @@ FFmpegH264Decoder<LIBAV_VER>::ProcessDrain()
 FFmpegH264Decoder<LIBAV_VER>::~FFmpegH264Decoder()
 {
   MOZ_COUNT_DTOR(FFmpegH264Decoder);
-  if (mCodecParser) {
-    av_parser_close(mCodecParser);
-    mCodecParser = nullptr;
-  }
 }
 
 AVCodecID

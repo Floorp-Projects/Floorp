@@ -66,7 +66,6 @@ private:
   uint32_t mPictureHeight;
   uint32_t mDisplayWidth;
   uint32_t mDisplayHeight;
-  AVCodecParserContext* mCodecParser;
 };
 
 } // namespace mozilla
