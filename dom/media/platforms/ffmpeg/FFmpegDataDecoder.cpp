@@ -32,6 +32,7 @@ FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(FlushableTaskQueue* aTaskQueue,
   , mCodecID(aCodecID)
   , mMonitor("FFMpegaDataDecoder")
   , mIsFlushing(false)
+  , mCodecParser(nullptr)
 {
   MOZ_COUNT_CTOR(FFmpegDataDecoder);
 }
@@ -39,6 +40,10 @@ FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(FlushableTaskQueue* aTaskQueue,
 FFmpegDataDecoder<LIBAV_VER>::~FFmpegDataDecoder()
 {
   MOZ_COUNT_DTOR(FFmpegDataDecoder);
+  if (mCodecParser) {
+    av_parser_close(mCodecParser);
+    mCodecParser = nullptr;
+  }
 }
 
 /**
@@ -130,6 +135,11 @@ FFmpegDataDecoder<LIBAV_VER>::InitDecoder()
       mCodecContext->sample_fmt != AV_SAMPLE_FMT_S16P) {
     NS_WARNING("FFmpeg audio decoder outputs unsupported audio format.");
     return NS_ERROR_FAILURE;
+  }
+
+  mCodecParser = av_parser_init(mCodecID);
+  if (mCodecParser) {
+    mCodecParser->flags |= PARSER_FLAG_COMPLETE_FRAMES;
   }
 
   FFMPEG_LOG("FFmpeg init successful.");

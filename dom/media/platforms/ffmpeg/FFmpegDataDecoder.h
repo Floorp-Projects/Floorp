@@ -59,6 +59,7 @@ protected:
   // not required and so input samples on mTaskQueue need not be processed.
   // Cleared on mTaskQueue in ProcessDrain().
   Atomic<bool> mIsFlushing;
+  AVCodecParserContext* mCodecParser;
 
 private:
   static bool sFFmpegInitDone;
