@@ -519,7 +519,8 @@ DataTransfer::GetMozSourceNode()
   nsCOMPtr<nsIDOMNode> sourceNode;
   dragSession->GetSourceNode(getter_AddRefs(sourceNode));
   nsCOMPtr<nsINode> node = do_QueryInterface(sourceNode);
-  if (node && !nsContentUtils::CanCallerAccess(node)) {
+  if (node && !nsContentUtils::LegacyIsCallerNativeCode()
+      && !nsContentUtils::CanCallerAccess(node)) {
     return nullptr;
   }
 
