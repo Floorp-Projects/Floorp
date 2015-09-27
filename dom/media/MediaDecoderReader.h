@@ -95,8 +95,6 @@ public:
   // on failure.
   virtual nsresult Init(MediaDecoderReader* aCloneDonor) = 0;
 
-  // True if this reader is waiting media resource allocation
-  virtual bool IsWaitingMediaResources() { return false; }
   // Release media resources they should be released in dormant state
   // The reader can be made usable again by calling ReadMetadata().
   virtual void ReleaseMediaResources() {};
