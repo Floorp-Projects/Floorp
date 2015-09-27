@@ -44,7 +44,6 @@ UNIFIED_SOURCES += [
     'nsDNSService2.cpp',
     'nsIDNService.cpp',
     'punycode.c',
-    'race.c',
 ]
 
 IPDL_SOURCES = [
