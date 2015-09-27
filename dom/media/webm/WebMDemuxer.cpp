@@ -289,7 +289,7 @@ WebMDemuxer::ReadMetadata()
       return NS_ERROR_FAILURE;
     }
     int type = nestegg_track_type(mContext, track);
-    if (type == NESTEGG_TRACK_VIDEO) {
+    if (type == NESTEGG_TRACK_VIDEO && !mHasVideo) {
       nestegg_video_params params;
       r = nestegg_track_video_params(mContext, track, &params);
       if (r == -1) {
@@ -364,7 +364,7 @@ WebMDemuxer::ReadMetadata()
       if (!r) {
         mInfo.mVideo.mDuration = media::TimeUnit::FromNanoseconds(duration).ToMicroseconds();
       }
-    } else if (type == NESTEGG_TRACK_AUDIO) {
+    } else if (type == NESTEGG_TRACK_AUDIO && !mHasAudio) {
       nestegg_audio_params params;
       r = nestegg_track_audio_params(mContext, track, &params);
       if (r == -1) {
