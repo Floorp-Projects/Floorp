@@ -85,6 +85,7 @@
 #include "jscompartmentinlines.h"
 #include "jsobjinlines.h"
 
+#include "vm/ErrorObject-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/Stack-inl.h"
 
@@ -5138,6 +5139,41 @@ CreateLastWarningObject(JSContext* cx, JSErrorReport* report)
     return true;
 }
 
+static bool
+PrintStackTrace(JSContext* cx, HandleValue exn)
+{
+    if (!exn.isObject())
+        return false;
+
+    Maybe<JSAutoCompartment> ac;
+    RootedObject exnObj(cx, &exn.toObject());
+    if (IsCrossCompartmentWrapper(exnObj)) {
+        exnObj = UncheckedUnwrap(exnObj);
+        ac.emplace(cx, exnObj);
+    }
+
+    // Ignore non-ErrorObject thrown by |throw| statement.
+    if (!exnObj->is<ErrorObject>())
+        return true;
+
+    RootedObject stackObj(cx, exnObj->as<ErrorObject>().stack());
+    if (!stackObj)
+        return false;
+
+    RootedString stackStr(cx);
+    if (!BuildStackString(cx, stackObj, &stackStr, 2))
+        return false;
+
+    UniquePtr<char[], JS::FreePolicy> stack(JS_EncodeStringToUTF8(cx, stackStr));
+    if (!stack)
+        return false;
+
+    fputs("Stack:\n", gErrFile);
+    fputs(stack.get(), gErrFile);
+
+    return true;
+}
+
 void
 js::shell::my_ErrorReporter(JSContext* cx, const char* message, JSErrorReport* report)
 {
@@ -5150,7 +5186,19 @@ js::shell::my_ErrorReporter(JSContext* cx, const char* message, JSErrorReport* r
         savedExc.restore();
     }
 
+    // Get exception object before printing and clearing exception.
+    RootedValue exn(cx);
+    if (JS_IsExceptionPending(cx))
+        (void) JS_GetPendingException(cx, &exn);
+
     gGotError = PrintError(cx, gErrFile, message, report, reportWarnings);
+    if (!exn.isUndefined()) {
+        JS::AutoSaveExceptionState savedExc(cx);
+        if (!PrintStackTrace(cx, exn))
+            fputs("(Unable to print stack trace)\n", gOutFile);
+        savedExc.restore();
+    }
+
     if (report->exnType != JSEXN_NONE && !JSREPORT_IS_WARNING(report->flags)) {
         if (report->errorNumber == JSMSG_OUT_OF_MEMORY) {
             gExitCode = EXITCODE_OUT_OF_MEMORY;
