@@ -50,6 +50,7 @@ protected:
   virtual ~MediaOmxCommonDecoder();
   void PauseStateMachine();
   void ResumeStateMachine();
+  void DisableStateMachineAudioOffloading();
 
   MediaOmxCommonReader* mReader;
 

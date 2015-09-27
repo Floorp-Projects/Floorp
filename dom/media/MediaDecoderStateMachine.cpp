@@ -223,6 +223,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mSentPlaybackEndedEvent(false),
   mStreamSink(new DecodedStream(mTaskQueue, mAudioQueue, mVideoQueue)),
   mResource(aDecoder->GetResource()),
+  mAudioOffloading(false),
   mBuffered(mTaskQueue, TimeIntervals(),
             "MediaDecoderStateMachine::mBuffered (Mirror)"),
   mEstimatedDuration(mTaskQueue, NullableTimeUnit(),
@@ -1088,15 +1089,13 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
   }
 
   bool playStatePermits = mPlayState == MediaDecoder::PLAY_STATE_PLAYING;
-  if (!playStatePermits || mIsAudioPrerolling || mIsVideoPrerolling) {
+  if (!playStatePermits || mIsAudioPrerolling ||
+      mIsVideoPrerolling || mAudioOffloading) {
     DECODER_LOG("Not starting playback [playStatePermits: %d, "
-                "mIsAudioPrerolling: %d, mIsVideoPrerolling: %d]",
-                (int) playStatePermits, (int) mIsAudioPrerolling, (int) mIsVideoPrerolling);
-    return;
-  }
-
-  if (mDecoder->CheckDecoderCanOffloadAudio()) {
-    DECODER_LOG("Offloading playback");
+                "mIsAudioPrerolling: %d, mIsVideoPrerolling: %d, "
+                "mAudioOffloading: %d]",
+                (int)playStatePermits, (int)mIsAudioPrerolling,
+                (int)mIsVideoPrerolling, (int)mAudioOffloading);
     return;
   }
 
