@@ -188,9 +188,8 @@ this.PlacesDBUtils = {
    * @param [optional] aTasks
    *        Tasks object to execute.
    */
-  _checkIntegritySkipReindex: function PDBU__checkIntegritySkipReindex(aTasks) {
-    return this.checkIntegrity(aTasks, true);
-  },
+  _checkIntegritySkipReindex: function PDBU__checkIntegritySkipReindex(aTasks)
+    this.checkIntegrity(aTasks, true),
 
   /**
    * Checks integrity and tries to fix the database through a reindex.
@@ -278,7 +277,7 @@ this.PlacesDBUtils = {
         PlacesDBUtils._executeTasks(tasks);
       }
     });
-    stmts.forEach(aStmt => aStmt.finalize());
+    stmts.forEach(function (aStmt) aStmt.finalize());
   },
 
   _getBoundCoherenceStatements: function PDBU__getBoundCoherenceStatements()
@@ -1121,10 +1120,7 @@ Tasks.prototype = {
    *
    * @return next task or undefined if no task is left.
    */
-  pop: function T_pop()
-  {
-    return this._list.shift();
-  },
+  pop: function T_pop() this._list.shift(),
 
   /**
    * Removes all tasks.
@@ -1137,10 +1133,7 @@ Tasks.prototype = {
   /**
    * Returns array of tasks ordered from the next to be run to the latest.
    */
-  get list()
-  {
-    return this._list.slice(0, this._list.length);
-  },
+  get list() this._list.slice(0, this._list.length),
 
   /**
    * Adds a message to the log.
@@ -1156,8 +1149,5 @@ Tasks.prototype = {
   /**
    * Returns array of log messages ordered from oldest to newest.
    */
-  get messages()
-  {
-    return this._log.slice(0, this._log.length);
-  },
+  get messages() this._log.slice(0, this._log.length),
 }

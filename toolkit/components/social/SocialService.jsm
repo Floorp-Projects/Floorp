@@ -34,9 +34,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "etld",
 
 // Internal helper methods and state
 var SocialServiceInternal = {
-  get enabled() {
-    return this.providerArray.length > 0;
-  },
+  get enabled() this.providerArray.length > 0,
 
   get providerArray() {
     return [p for ([, p] of Iterator(this.providers))];
@@ -124,7 +122,7 @@ var SocialServiceInternal = {
           // all enabled providers get sorted even with frecency zero.
           let providerList = SocialServiceInternal.providerArray;
           // reverse sort
-          aCallback(providerList.sort((a, b) => b.frecency - a.frecency));
+          aCallback(providerList.sort(function(a, b) b.frecency - a.frecency));
         }
       });
     } finally {

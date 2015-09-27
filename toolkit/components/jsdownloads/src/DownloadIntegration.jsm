@@ -159,9 +159,7 @@ this.DownloadIntegration = {
   /**
    * Gets and sets test mode
    */
-  get testMode() {
-    return this._testMode;
-  },
+  get testMode() this._testMode,
   set testMode(mode) {
     this._downloadsDirectory = null;
     return (this._testMode = mode);
