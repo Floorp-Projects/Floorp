@@ -557,7 +557,6 @@ public:
 
   uint8_t GetBits() const { return mWritingMode; }
 
-#ifdef DEBUG
   const char* DebugString() const {
     return IsVertical()
       ? IsVerticalLR()
@@ -570,7 +569,6 @@ public:
       : IsBidiLTR() ? "h-ltr" : "h-rtl"
       ;
   }
-#endif
 
 private:
   friend class LogicalPoint;
