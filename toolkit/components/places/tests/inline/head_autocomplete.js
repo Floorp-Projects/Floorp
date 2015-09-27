@@ -54,8 +54,8 @@ AutoCompleteInput.prototype = {
     this._selEnd = aEnd;
   },
 
-  onTextEntered: () => false,
-  onTextReverted: () => false,
+  onTextEntered: function() false,
+  onTextReverted: function() false,
 
   get searchCount() {
     return this.searches.length;
