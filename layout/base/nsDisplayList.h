@@ -3589,20 +3589,28 @@ class nsDisplayTransform: public nsDisplayItem
   public:
     StoreList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
               nsDisplayList* aList) :
-      nsDisplayWrapList(aBuilder, aFrame, aList) {}
+      nsDisplayWrapList(aBuilder, aFrame, aList),
+      mHasBounds(false) {}
     StoreList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
               nsDisplayItem* aItem) :
-      nsDisplayWrapList(aBuilder, aFrame, aItem) {}
+      nsDisplayWrapList(aBuilder, aFrame, aItem),
+      mHasBounds(false) {}
     virtual ~StoreList() {}
 
     virtual void UpdateBounds(nsDisplayListBuilder* aBuilder) override {}
     virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                              bool* aSnap) override {
-      // The bounds should not be computed until now, because we don't
-      // get accmulated transform before.
-      nsDisplayWrapList::UpdateBounds(aBuilder);
+      if (!mHasBounds) {
+        // The bounds should not be computed until now, because we don't
+        // get accmulated transform before.
+        nsDisplayWrapList::UpdateBounds(aBuilder);
+        mHasBounds = true;
+      }
       return nsDisplayWrapList::GetBounds(aBuilder, aSnap);
     }
+
+  private:
+    bool mHasBounds;
   };
 
 public:
