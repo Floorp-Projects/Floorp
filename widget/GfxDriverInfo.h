@@ -91,6 +91,7 @@ enum DeviceFamily {
   Bug1137716,
   Bug1116812,
   Bug1155608,
+  Bug1207665,
   DeviceFamilyMax
 };
 
