@@ -385,13 +385,7 @@ MediaFormatReader::EnsureDecodersCreated()
       // even if EME is disabled, so that if script tries and fails to create
       // a CDM, we can detect that and notify chrome and show some UI
       // explaining that we failed due to EME being disabled.
-      {
-        MOZ_ASSERT(mCDMProxy);
-        CDMCaps::AutoLock caps(mCDMProxy->Capabilites());
-        mInfo.mVideo.mIsRenderedExternally = caps.CanRenderVideo();
-        mInfo.mAudio.mIsRenderedExternally = caps.CanRenderAudio();
-      }
-
+      MOZ_ASSERT(mCDMProxy);
       mPlatform = PlatformDecoderModule::CreateCDMWrapper(mCDMProxy);
       NS_ENSURE_TRUE(mPlatform, false);
 #else
