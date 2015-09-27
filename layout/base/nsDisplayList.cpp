@@ -4759,7 +4759,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder,
   Init(aBuilder);
 }
 
-/* Returns the delta specified by the -transform-origin property.
+/* Returns the delta specified by the transform-origin property.
  * This is a positive delta, meaning that it indicates the direction to move
  * to get from (0, 0) of the frame to the transform origin.  This function is
  * called off the main thread.
@@ -4779,7 +4779,7 @@ nsDisplayTransform::GetDeltaToTransformOrigin(const nsIFrame* aFrame,
     return Point3D();
   }
 
-  /* For both of the coordinates, if the value of -transform is a
+  /* For both of the coordinates, if the value of transform is a
    * percentage, it's relative to the size of the frame.  Otherwise, if it's
    * a distance, it's already computed for us!
    */
@@ -4803,7 +4803,7 @@ nsDisplayTransform::GetDeltaToTransformOrigin(const nsIFrame* aFrame,
     { &TransformReferenceBox::X, &TransformReferenceBox::Y };
 
   for (uint8_t index = 0; index < 2; ++index) {
-    /* If the -transform-origin specifies a percentage, take the percentage
+    /* If the transform-origin specifies a percentage, take the percentage
      * of the size of the box.
      */
     const nsStyleCoord &coord = display->mTransformOrigin[index];
@@ -4878,7 +4878,7 @@ nsDisplayTransform::GetDeltaToPerspectiveOrigin(const nsIFrame* aFrame,
     { &TransformReferenceBox::Width, &TransformReferenceBox::Height };
 
   for (uint8_t index = 0; index < 2; ++index) {
-    /* If the -transform-origin specifies a percentage, take the percentage
+    /* If the transform-origin specifies a percentage, take the percentage
      * of the size of the box.
      */
     const nsStyleCoord &coord = display->mPerspectiveOrigin[index];
@@ -4930,7 +4930,7 @@ nsDisplayTransform::FrameTransformProperties::FrameTransformProperties(const nsI
   }
 }
 
-/* Wraps up the -transform matrix in a change-of-basis matrix pair that
+/* Wraps up the transform matrix in a change-of-basis matrix pair that
  * translates from local coordinate space to transform coordinate space, then
  * hands it back.
  */
@@ -5043,7 +5043,7 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     result = result * perspective;
   }
 
-  /* Account for the -transform-origin property by translating the
+  /* Account for the transform-origin property by translating the
    * coordinate space to the new origin.
    */
   Point3D newOrigin =
