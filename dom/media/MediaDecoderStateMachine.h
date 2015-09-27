@@ -174,10 +174,6 @@ public:
     mReader->DispatchNotifyDataArrived(aLength, aOffset, aThrottleUpdates);
   }
 
-  // Called when the reader may have acquired the hardware resources required
-  // to begin decoding.
-  void DispatchWaitingForResourcesStatusChanged();
-
   // Notifies the state machine that should minimize the number of samples
   // decoded we preroll, until playback starts. The first time playback starts
   // the state machine is free to return to prerolling normally. Note
@@ -255,8 +251,6 @@ private:
   void SetDormant(bool aDormant);
 
   void SetAudioCaptured(bool aCaptured);
-
-  void NotifyWaitingForResourcesStatusChanged();
 
   nsRefPtr<MediaDecoder::SeekPromise> Seek(SeekTarget aTarget);
 
