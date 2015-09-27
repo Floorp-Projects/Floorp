@@ -51,25 +51,6 @@ MediaDecoderStateMachine* MP4Decoder::CreateStateMachine()
   return new MediaDecoderStateMachine(this, reader);
 }
 
-#ifdef MOZ_EME
-nsresult
-MP4Decoder::SetCDMProxy(CDMProxy* aProxy)
-{
-  nsresult rv = MediaDecoder::SetCDMProxy(aProxy);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (aProxy) {
-    // The MediaFormatReader can't decrypt EME content until it has a CDMProxy,
-    // and the CDMProxy knows the capabilities of the CDM. The MediaFormatReader
-    // remains in "waiting for resources" state until then.
-    CDMCaps::AutoLock caps(aProxy->Capabilites());
-    nsCOMPtr<nsIRunnable> task(
-      NS_NewRunnableMethod(this, &MediaDecoder::NotifyWaitingForResourcesStatusChanged));
-    caps.CallOnMainThreadWhenCapsAvailable(task);
-  }
-  return NS_OK;
-}
-#endif
-
 static bool
 IsSupportedAudioCodec(const nsAString& aCodec,
                       bool& aOutContainsAAC,
