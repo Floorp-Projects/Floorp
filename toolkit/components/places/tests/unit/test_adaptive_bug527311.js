@@ -116,7 +116,7 @@ function addAdaptiveFeedback(aUrl, aSearch, aCallback) {
     get controller() { return thing; },
     popupOpen: true,
     selectedIndex: 0,
-    getValueAt: () => aUrl,
+    getValueAt: function() aUrl,
     searchString: aSearch
   };
 

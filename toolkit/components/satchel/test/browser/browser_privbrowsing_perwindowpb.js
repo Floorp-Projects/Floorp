@@ -57,7 +57,7 @@ function test() {
   function testOnWindow(aOptions, aCallback) {
     whenNewWindowLoaded(aOptions, function(aWin) {
       windowsToClose.push(aWin);
-      executeSoon(() => aCallback(aWin));
+      executeSoon(function() aCallback(aWin));
     });
   };
 
