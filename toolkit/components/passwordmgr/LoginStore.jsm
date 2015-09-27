@@ -281,10 +281,7 @@ LoginStore.prototype = {
   /**
    * Called when the data changed, this triggers asynchronous serialization.
    */
-  saveSoon: function ()
-  {
-    return this._saver.arm();
-  },
+  saveSoon: function () this._saver.arm(),
 
   /**
    * DeferredTask that handles the save operation.
