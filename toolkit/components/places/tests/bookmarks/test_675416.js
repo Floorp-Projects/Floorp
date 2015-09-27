@@ -12,8 +12,8 @@ function run_test() {
   }
 
   let observer = {
-    onBeginUpdateBatch: () => forceBookmarkCaching(itemId1),
-    onEndUpdateBatch: () => forceBookmarkCaching(itemId1),
+    onBeginUpdateBatch: function() forceBookmarkCaching(itemId1),
+    onEndUpdateBatch: function() forceBookmarkCaching(itemId1),
     onItemAdded: forceBookmarkCaching,
     onItemChanged: forceBookmarkCaching,
     onItemMoved: forceBookmarkCaching,
