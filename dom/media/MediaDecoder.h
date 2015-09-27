@@ -670,11 +670,7 @@ public:
   // rejected when this decoder is about to shut down.
   nsRefPtr<CDMProxyPromise> RequestCDMProxy() const;
 
-  // This takes the decoder monitor.
-  virtual nsresult SetCDMProxy(CDMProxy* aProxy) override;
-
-  // Decoder monitor must be held.
-  virtual CDMProxy* GetCDMProxy() override;
+  void SetCDMProxy(CDMProxy* aProxy);
 #endif
 
 #ifdef MOZ_RAW
@@ -824,7 +820,6 @@ private:
   ReentrantMonitor mReentrantMonitor;
 
 #ifdef MOZ_EME
-  nsRefPtr<CDMProxy> mProxy;
   MozPromiseHolder<CDMProxyPromise> mCDMProxyPromiseHolder;
   nsRefPtr<CDMProxyPromise> mCDMProxyPromise;
 #endif

@@ -1441,7 +1441,7 @@ MediaDecoder::RequestCDMProxy() const
   return mCDMProxyPromise;
 }
 
-nsresult
+void
 MediaDecoder::SetCDMProxy(CDMProxy* aProxy)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1455,18 +1455,10 @@ MediaDecoder::SetCDMProxy(CDMProxy* aProxy)
         self->mCDMProxyPromiseHolder.ResolveIfExists(proxy, __func__);
       });
       caps.CallOnMainThreadWhenCapsAvailable(r);
-      return NS_OK;
+      return;
     }
   }
   mCDMProxyPromiseHolder.ResolveIfExists(proxy, __func__);
-  return NS_OK;
-}
-
-CDMProxy*
-MediaDecoder::GetCDMProxy()
-{
-  GetReentrantMonitor().AssertCurrentThreadIn();
-  return mProxy;
 }
 #endif
 
