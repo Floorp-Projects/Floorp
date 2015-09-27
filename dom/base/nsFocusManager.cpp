@@ -1343,7 +1343,7 @@ nsFocusManager::SetFocusInner(nsIContent* aNewContent, int32_t aFlags,
       nsCOMPtr<nsIDocShell> docShell = newWindow->GetDocShell();
 
       nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
-      if (presShell)
+      if (presShell && presShell->DidInitialize())
         ScrollIntoView(presShell, contentToFocus, aFlags);
     }
 
