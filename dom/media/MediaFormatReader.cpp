@@ -226,7 +226,9 @@ MediaFormatReader::SetCDMProxy(CDMProxy* aProxy)
 }
 #endif // MOZ_EME
 
-bool MediaFormatReader::IsWaitingOnCDMResource() {
+bool
+MediaFormatReader::IsWaitingOnCDMResource() {
+  MOZ_ASSERT(OnTaskQueue());
 #ifdef MOZ_EME
   return IsEncrypted() && !mCDMProxy;
 #else

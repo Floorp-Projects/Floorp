@@ -97,9 +97,6 @@ public:
 
   // True if this reader is waiting media resource allocation
   virtual bool IsWaitingMediaResources() { return false; }
-  // True if this reader is waiting for a Content Decryption Module to become
-  // available.
-  virtual bool IsWaitingOnCDMResource() { return false; }
   // Release media resources they should be released in dormant state
   // The reader can be made usable again by calling ReadMetadata().
   virtual void ReleaseMediaResources() {};

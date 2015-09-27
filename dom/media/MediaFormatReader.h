@@ -88,8 +88,6 @@ public:
   bool IsWaitForDataSupported() override { return true; }
   nsRefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType) override;
 
-  bool IsWaitingOnCDMResource() override;
-
   bool UseBufferingHeuristics() override
   {
     return mTrackDemuxersMayBlock;
@@ -100,6 +98,8 @@ public:
 #endif
 
 private:
+  bool IsWaitingOnCDMResource();
+
   bool InitDemuxer();
   // Notify the demuxer that new data has been received.
   // The next queued task calling GetBuffered() is guaranteed to have up to date
@@ -397,10 +397,6 @@ private:
   {
     return mIsEncrypted;
   }
-  // Accessed from multiple thread, in particular the MediaDecoderStateMachine,
-  // however the value doesn't currently change after reading the metadata.
-  // TODO handle change of encryption half-way. The above assumption will then
-  // become incorrect.
   bool mIsEncrypted;
 
   // Set to true if any of our track buffers may be blocking.
