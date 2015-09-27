@@ -1396,22 +1396,6 @@ void MediaDecoderStateMachine::StartDecoding()
   ScheduleStateMachine();
 }
 
-void
-MediaDecoderStateMachine::DispatchWaitingForResourcesStatusChanged()
-{
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(
-    this, &MediaDecoderStateMachine::NotifyWaitingForResourcesStatusChanged);
-  OwnerThread()->Dispatch(r.forget());
-}
-
-void
-MediaDecoderStateMachine::NotifyWaitingForResourcesStatusChanged()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  DECODER_LOG("NotifyWaitingForResourcesStatusChanged");
-}
-
 void MediaDecoderStateMachine::PlayStateChanged()
 {
   MOZ_ASSERT(OnTaskQueue());
