@@ -213,29 +213,22 @@ private:
   nsTArray<uint8_t> mInitData;
   nsString mInitDataType;
 };
+
+void
+MediaFormatReader::SetCDMProxy(CDMProxy* aProxy)
+{
+  nsRefPtr<CDMProxy> proxy = aProxy;
+  nsRefPtr<MediaFormatReader> self = this;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
+    self->mCDMProxy = proxy;
+  });
+  OwnerThread()->DispatchDirectTask(r.forget());
+}
 #endif // MOZ_EME
 
 bool MediaFormatReader::IsWaitingOnCDMResource() {
 #ifdef MOZ_EME
-  nsRefPtr<CDMProxy> proxy;
-  {
-    if (!IsEncrypted()) {
-      // Not encrypted, no need to wait for CDMProxy.
-      return false;
-    }
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    proxy = mDecoder->GetCDMProxy();
-    if (!proxy) {
-      // We're encrypted, we need a CDMProxy to decrypt file.
-      return true;
-    }
-  }
-  // We'll keep waiting if the CDM hasn't informed Gecko of its capabilities.
-  {
-    CDMCaps::AutoLock caps(proxy->Capabilites());
-    LOG("capsKnown=%d", caps.AreCapsKnown());
-    return !caps.AreCapsKnown();
-  }
+  return IsEncrypted() && !mCDMProxy;
 #else
   return false;
 #endif
@@ -392,18 +385,14 @@ MediaFormatReader::EnsureDecodersCreated()
       // even if EME is disabled, so that if script tries and fails to create
       // a CDM, we can detect that and notify chrome and show some UI
       // explaining that we failed due to EME being disabled.
-      nsRefPtr<CDMProxy> proxy;
       {
-        ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-        proxy = mDecoder->GetCDMProxy();
-        MOZ_ASSERT(proxy);
-
-        CDMCaps::AutoLock caps(proxy->Capabilites());
+        MOZ_ASSERT(mCDMProxy);
+        CDMCaps::AutoLock caps(mCDMProxy->Capabilites());
         mInfo.mVideo.mIsRenderedExternally = caps.CanRenderVideo();
         mInfo.mAudio.mIsRenderedExternally = caps.CanRenderAudio();
       }
 
-      mPlatform = PlatformDecoderModule::CreateCDMWrapper(proxy);
+      mPlatform = PlatformDecoderModule::CreateCDMWrapper(mCDMProxy);
       NS_ENSURE_TRUE(mPlatform, false);
 #else
       // EME not supported.
