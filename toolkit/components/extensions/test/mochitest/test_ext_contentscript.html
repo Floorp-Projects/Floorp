@@ -15,7 +15,69 @@
 
 add_task(function* test_contentscript()
 {
-  let extension = ExtensionTestUtils.loadExtension("content_script");
+  function backgroundScript() {
+    browser.runtime.onMessage.addListener(([msg, expectedState, readyState], sender) => {
+      if (msg == "chrome-namespace-ok") {
+        browser.test.sendMessage(msg);
+        return;
+      }
+
+      browser.test.assertEq(msg, "script-run", "message type is correct");
+      browser.test.assertEq(readyState, expectedState, "readyState is correct");
+      browser.test.sendMessage("script-run-" + expectedState);
+    });
+  }
+
+  function contentScriptStart() {
+    browser.runtime.sendMessage(["script-run", "loading", document.readyState]);
+  }
+  function contentScriptEnd() {
+    browser.runtime.sendMessage(["script-run", "interactive", document.readyState]);
+  }
+  function contentScriptIdle() {
+    browser.runtime.sendMessage(["script-run", "complete", document.readyState]);
+  }
+
+  function contentScript() {
+    chrome.runtime.sendMessage(["chrome-namespace-ok"]);
+  }
+
+  let extensionData = {
+    manifest: {
+      content_scripts: [
+        {
+          "matches": ["http://mochi.test/*/file_sample.html"],
+          "js": ["content_script_start.js"],
+          "run_at": "document_start"
+        },
+        {
+          "matches": ["http://mochi.test/*/file_sample.html"],
+          "js": ["content_script_end.js"],
+          "run_at": "document_end"
+        },
+        {
+          "matches": ["http://mochi.test/*/file_sample.html"],
+          "js": ["content_script_idle.js"],
+          "run_at": "document_idle"
+        },
+        {
+          "matches": ["http://mochi.test/*/file_sample.html"],
+          "js": ["content_script.js"],
+          "run_at": "document_idle"
+        }
+      ],
+    },
+    background: "(" + backgroundScript.toString() + ")()",
+
+    files: {
+      "content_script_start.js": "(" + contentScriptStart.toString() + ")()",
+      "content_script_end.js": "(" + contentScriptEnd.toString() + ")()",
+      "content_script_idle.js": "(" + contentScriptIdle.toString() + ")()",
+      "content_script.js": "(" + contentScript.toString() + ")()",
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
 
   let loadingCount = 0;
   let interactiveCount = 0;
