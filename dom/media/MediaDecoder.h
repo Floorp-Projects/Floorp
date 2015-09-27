@@ -664,6 +664,12 @@ public:
   MediaDecoderOwner* GetOwner() override;
 
 #ifdef MOZ_EME
+  typedef MozPromise<nsRefPtr<CDMProxy>, bool /* aIgnored */, /* IsExclusive = */ true> CDMProxyPromise;
+
+  // Resolved when a CDMProxy is available and the capabilities are known or
+  // rejected when this decoder is about to shut down.
+  nsRefPtr<CDMProxyPromise> RequestCDMProxy() const;
+
   // This takes the decoder monitor.
   virtual nsresult SetCDMProxy(CDMProxy* aProxy) override;
 
@@ -819,6 +825,8 @@ private:
 
 #ifdef MOZ_EME
   nsRefPtr<CDMProxy> mProxy;
+  MozPromiseHolder<CDMProxyPromise> mCDMProxyPromiseHolder;
+  nsRefPtr<CDMProxyPromise> mCDMProxyPromise;
 #endif
 
 protected:

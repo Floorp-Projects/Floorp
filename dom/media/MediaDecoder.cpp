@@ -356,6 +356,9 @@ MediaDecoder::MediaDecoder() :
   mLogicalPosition(0.0),
   mDuration(std::numeric_limits<double>::quiet_NaN()),
   mReentrantMonitor("media.decoder"),
+#ifdef MOZ_EME
+  mCDMProxyPromise(mCDMProxyPromiseHolder.Ensure(__func__)),
+#endif
   mIgnoreProgressData(false),
   mInfiniteStream(false),
   mOwner(nullptr),
@@ -462,6 +465,10 @@ MediaDecoder::Shutdown()
     return;
 
   mShuttingDown = true;
+
+#ifdef MOZ_EME
+  mCDMProxyPromiseHolder.RejectIfExists(true, __func__);
+#endif
 
   // This changes the decoder state to SHUTDOWN and does other things
   // necessary to unblock the state machine thread if it's blocked, so
@@ -1428,14 +1435,30 @@ MediaDecoder::CanPlayThrough()
 }
 
 #ifdef MOZ_EME
+nsRefPtr<MediaDecoder::CDMProxyPromise>
+MediaDecoder::RequestCDMProxy() const
+{
+  return mCDMProxyPromise;
+}
+
 nsresult
 MediaDecoder::SetCDMProxy(CDMProxy* aProxy)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-  mProxy = aProxy;
-  // Awaken any readers waiting for the proxy.
-  NotifyWaitingForResourcesStatusChanged();
+
+  nsRefPtr<CDMProxy> proxy = aProxy;
+  {
+    CDMCaps::AutoLock caps(aProxy->Capabilites());
+    if (!caps.AreCapsKnown()) {
+      nsRefPtr<MediaDecoder> self = this;
+      nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
+        self->mCDMProxyPromiseHolder.ResolveIfExists(proxy, __func__);
+      });
+      caps.CallOnMainThreadWhenCapsAvailable(r);
+      return NS_OK;
+    }
+  }
+  mCDMProxyPromiseHolder.ResolveIfExists(proxy, __func__);
   return NS_OK;
 }
 
