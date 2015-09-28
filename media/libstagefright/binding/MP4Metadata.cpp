@@ -119,12 +119,14 @@ MP4Metadata::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
     }
     switch (aType) {
       case mozilla::TrackInfo::kAudioTrack:
-        if (!strncmp(mimeType, "audio/", 6)) {
+        if (!strncmp(mimeType, "audio/", 6) &&
+            CheckTrack(mimeType, metaData.get(), i)) {
           total++;
         }
         break;
       case mozilla::TrackInfo::kVideoTrack:
-        if (!strncmp(mimeType, "video/", 6)) {
+        if (!strncmp(mimeType, "video/", 6) &&
+            CheckTrack(mimeType, metaData.get(), i)) {
           total++;
         }
         break;
@@ -156,12 +158,14 @@ MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
     }
     switch (aType) {
       case mozilla::TrackInfo::kAudioTrack:
-        if (!strncmp(mimeType, "audio/", 6)) {
+        if (!strncmp(mimeType, "audio/", 6) &&
+            CheckTrack(mimeType, metaData.get(), i)) {
           index++;
         }
         break;
       case mozilla::TrackInfo::kVideoTrack:
-        if (!strncmp(mimeType, "video/", 6)) {
+        if (!strncmp(mimeType, "video/", 6) &&
+            CheckTrack(mimeType, metaData.get(), i)) {
           index++;
         }
         break;
@@ -177,33 +181,8 @@ MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
     return nullptr;
   }
 
-  sp<MediaSource> track = mPrivate->mMetadataExtractor->getTrack(index);
-  if (!track.get() || track->start() != OK) {
-    return nullptr;
-  }
+  UniquePtr<mozilla::TrackInfo> e = CheckTrack(mimeType, metaData.get(), index);
 
-  UniquePtr<mozilla::TrackInfo> e;
-
-  switch (aType) {
-    case mozilla::TrackInfo::kAudioTrack:
-    {
-      auto info = mozilla::MakeUnique<MP4AudioInfo>();
-      info->Update(metaData.get(), mimeType);
-      e = Move(info);
-    }
-      break;
-    case mozilla::TrackInfo::kVideoTrack:
-    {
-      auto info = mozilla::MakeUnique<MP4VideoInfo>();
-      info->Update(metaData.get(), mimeType);
-      e = Move(info);
-    }
-      break;
-    default:
-      break;
-  }
-
-  track->stop();
   if (e) {
     metaData = mPrivate->mMetadataExtractor->getMetaData();
     int64_t movieDuration;
@@ -215,6 +194,36 @@ MP4Metadata::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
   }
 
   return e;
+}
+
+mozilla::UniquePtr<mozilla::TrackInfo>
+MP4Metadata::CheckTrack(const char* aMimeType,
+                        stagefright::MetaData* aMetaData,
+                        int32_t aIndex) const
+{
+  sp<MediaSource> track = mPrivate->mMetadataExtractor->getTrack(aIndex);
+  if (!track.get() || track->start() != OK) {
+    return nullptr;
+  }
+
+  UniquePtr<mozilla::TrackInfo> e;
+
+  if (!strncmp(aMimeType, "audio/", 6)) {
+    auto info = mozilla::MakeUnique<MP4AudioInfo>();
+    info->Update(aMetaData, aMimeType);
+    e = Move(info);
+  } else if (!strncmp(aMimeType, "video/", 6)) {
+    auto info = mozilla::MakeUnique<MP4VideoInfo>();
+    info->Update(aMetaData, aMimeType);
+    e = Move(info);
+  }
+
+  track->stop();
+
+  if (e && e->IsValid()) {
+    return e;
+  }
+  return nullptr;
 }
 
 bool
