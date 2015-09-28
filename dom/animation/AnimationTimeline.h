@@ -83,8 +83,13 @@ public:
 
   virtual TimeStamp ToTimeStamp(const TimeDuration& aTimelineTime) const = 0;
 
-  void AddAnimation(Animation& aAnimation);
-  void RemoveAnimation(Animation& aAnimation);
+  /**
+   * Inform this timeline that |aAnimation| which is or was observing the
+   * timeline, has been updated. This serves as both the means to associate
+   * AND disassociate animations with a timeline. The timeline itself will
+   * determine if it needs to begin, continue or stop tracking this animation.
+   */
+  virtual void NotifyAnimationUpdated(Animation& aAnimation);
 
 protected:
   nsCOMPtr<nsIGlobalObject> mWindow;
