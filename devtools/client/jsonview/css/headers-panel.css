@@ -1,0 +1,79 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/******************************************************************************/
+/* Headers Panel */
+
+.headersPanelBox {
+  height: 100%;
+  font-family: Lucida Grande, Tahoma, sans-serif;
+  font-size: 11px;
+}
+
+.headersPanelBox .netInfoHeadersTable {
+  overflow: auto;
+  height: 100%;
+  line-height: 12px;
+}
+
+.headersPanelBox .netHeadersGroup {
+  padding: 10px;
+}
+
+.headersPanelBox .netInfoHeadersGroup {
+  margin-bottom: 10px;
+  border-bottom: 1px solid #D7D7D7;
+  padding-top: 8px;
+  padding-bottom: 4px;
+  font-family: Lucida Grande, Tahoma, sans-serif;
+  font-weight: bold;
+  color: #565656;
+}
+
+.headersPanelBox .netHeader.twisty {
+  background-image: url(twisty-open.svg);
+  background-repeat: no-repeat;
+  min-height: 12px;
+  background-position: 2px 50%;
+}
+
+.headersPanelBox .netHeader {
+  cursor: pointer;
+  padding-left: 17px;
+  position: static;
+  -moz-user-select: none;
+}
+
+.headersPanelBox .netInfoParamValue code {
+  display: block;
+  color: #18191A;
+  font-size: 11px;
+  word-wrap: break-word;
+}
+
+.headersPanelBox .netInfoParamName {
+  padding: 2px 10px 0 0;
+  font-family: Lucida Grande, Tahoma, sans-serif;
+  font-weight: bold;
+  vertical-align: top;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/******************************************************************************/
+/* Dark Theme */
+
+
+.theme-dark .headersPanelBox .netInfoParamName {
+  color: var(--theme-highlight-blue);
+}
+
+.theme-dark .headersPanelBox .netInfoParamValue code {
+  color: var(--theme-highlight-orange);
+}
+
+.theme-dark .headersPanelBox .netInfoHeadersGroup {
+  color: var(--theme-body-color-alt);
+}
