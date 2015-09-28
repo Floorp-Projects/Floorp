@@ -9,8 +9,8 @@
 <body>
 
 <p id="display"></p>
-<div id="sc" style="margin: 0px; padding: 0px; overflow: scroll; width:250px; height: 250px;">
-  <div id="sd" style="margin: 0px; padding: 0px; width: 1250px; height: 1250px;"></div>
+<div id="sc" style="margin: 0px; padding: 0px; overflow: scroll; width: 500px; height: 250px;">
+  <div id="sd" style="margin: 0px; padding: 0px; width: 1500px; height: 1250px;"></div>
 </div>
 
 <pre id="test">
@@ -574,7 +574,7 @@ var testCases = [
   },
 
   {
-    "description"             : "Ensure that when paging down/up that the farthest snap point before the destination is selected and prioritized over a snap point that is past the destination, even if the snap point past the destination is closer to the destination.  Setup - two snap points between current position and destination and one snap point past the destination which is closer than any of the other points. Scrollable rect size is 250px. (Page Down)",
+    "description"             : "Ensure that when paging down/up that the farthest snap point before the destination is selected and prioritized over a snap point that is past the destination, even if the snap point past the destination is closer to the destination.  Setup - two snap points between current position and destination and one snap point past the destination which is closer than any of the other points. Scrollable rect size is 500px. (Page Down)",
     "scrollSnapType"          : "mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
@@ -589,7 +589,7 @@ var testCases = [
   },
 
   {
-    "description"             : "Ensure that when paging down/up that the farthest snap point before the destination is selected and prioritized over a snap point that is past the destination, even if the snap point past the destination is closer to the destination.  Setup - two snap points between current position and destination and one snap point past the destination which is closer than any of the other points. Scrollable rect size is 250px. (Page Up)",
+    "description"             : "Ensure that when paging down/up that the farthest snap point before the destination is selected and prioritized over a snap point that is past the destination, even if the snap point past the destination is closer to the destination.  Setup - two snap points between current position and destination and one snap point past the destination which is closer than any of the other points. Scrollable rect size is 500px. (Page Up)",
     "scrollSnapType"          : "mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
@@ -604,7 +604,7 @@ var testCases = [
   },
 
   {
-    "description"             : "Ensure that when paging down/up that the closest snap point past the destination is selected when no snap points exist between the starting position and the destination.  Additionally, a snap point closer to the destination than the one past the snap point, but not in the scrolling direction, must not be selected.  Setup - Two snap points beyond the destination and one snap point in the opposite direction of scrolling which is closest to the destination. Scrollable rect size is 250px. (Page Down)",
+    "description"             : "Ensure that when paging down/up that the closest snap point past the destination is selected when no snap points exist between the starting position and the destination.  Additionally, a snap point closer to the destination than the one past the snap point, but not in the scrolling direction, must not be selected.  Setup - Two snap points beyond the destination and one snap point in the opposite direction of scrolling which is closest to the destination. Scrollable rect size is 500px. (Page Down)",
     "scrollSnapType"          : "mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
@@ -619,7 +619,7 @@ var testCases = [
   },
 
   {
-    "description"             : "Ensure that when paging down/up that the closest snap point past the destination is selected when no snap points exist between the starting position and the destination.  Additionally, a snap point closer to the destination than the one past the snap point, but not in the scrolling direction, must not be selected.  Setup - Two snap points beyond the destination and one snap point in the opposite direction of scrolling which is closest to the destination. Scrollable rect size is 250px. (Page Up)",
+    "description"             : "Ensure that when paging down/up that the closest snap point past the destination is selected when no snap points exist between the starting position and the destination.  Additionally, a snap point closer to the destination than the one past the snap point, but not in the scrolling direction, must not be selected.  Setup - Two snap points beyond the destination and one snap point in the opposite direction of scrolling which is closest to the destination. Scrollable rect size is 500px. (Page Up)",
     "scrollSnapType"          : "mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
@@ -687,6 +687,25 @@ var lastScrollTop;
 var lastScrollLeft;
 var stopFrameCount;
 
+// The tests should work the same way when all the values for the scroll
+// container are provided in percentages. To assert that, we just duplicate all
+// the test cases and replace the pixel values related to the scroll container
+// with percentage values, based on its clientWidth/Height sespectively.
+function addPercentageTests() {
+  var width = sc.clientWidth;
+  var height = sc.clientHeight;
+  var pxRegexp = /(\d+)px/;
+  var rewriteW = (_, w) => (parseInt(w, 10) / width * 100) + "%";
+  var rewriteH = (_, h) => (parseInt(h, 10) / height * 100) + "%";
+  testCases = testCases.concat(testCases.map(testCase => Object.assign({}, testCase, {
+    description: "With Percentages: " + testCase.description,
+    scrollSnapPointsX: testCase.scrollSnapPointsX.replace(pxRegexp, rewriteW),
+    scrollSnapPointsY: testCase.scrollSnapPointsY.replace(pxRegexp, rewriteH),
+    scrollSnapDestination: testCase.scrollSnapDestination
+      .replace(pxRegexp, rewriteW).replace(pxRegexp, rewriteH),
+  })));
+}
+
 function initTest() {
   var testCase = testCases[step];
   sc.style.scrollSnapType = testCase.scrollSnapType;
@@ -725,6 +744,8 @@ function waitForScrollStop() {
 function testScrollSnapping() {
   sc = document.getElementById("sc");
   sd = document.getElementById("sd");
+
+  addPercentageTests();
 
   initTest();
 }
