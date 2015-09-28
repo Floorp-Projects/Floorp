@@ -26,18 +26,20 @@ public:
     pthread_join(mThread, nullptr);
   }
 
-  virtual void SetName(const char* aName) override
+  virtual void SetName(const char*) override
   {
-    // Call this from the thread itself because of Mac.
-#ifdef XP_MACOSX
-    pthread_setname_np(aName);
-#elif defined(__DragonFly__) || defined(__FreeBSD__) || defined(__OpenBSD__)
-    pthread_set_name_np(mThread, aName);
-#elif defined(__NetBSD__)
-    pthread_setname_np(mThread, "%s", (void*)aName);
-#else
-    pthread_setname_np(mThread, aName);
-#endif
+// XXX - temporarily disabled, see bug 1209039
+//
+//    // Call this from the thread itself because of Mac.
+//#ifdef XP_MACOSX
+//    pthread_setname_np(aName);
+//#elif defined(__DragonFly__) || defined(__FreeBSD__) || defined(__OpenBSD__)
+//    pthread_set_name_np(mThread, aName);
+//#elif defined(__NetBSD__)
+//    pthread_setname_np(mThread, "%s", (void*)aName);
+//#else
+//    pthread_setname_np(mThread, aName);
+//#endif
   }
 
 protected:
