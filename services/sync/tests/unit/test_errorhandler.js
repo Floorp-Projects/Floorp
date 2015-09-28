@@ -184,7 +184,10 @@ add_identity_test(this, function test_401_logout() {
       let errorCount = sumHistogram("WEAVE_STORAGE_AUTH_ERRORS", { key: "info/collections" });
       do_check_eq(errorCount, 2);
 
-      do_check_eq(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
+      let expected = isConfiguredWithLegacyIdentity() ?
+                     LOGIN_FAILED_LOGIN_REJECTED : LOGIN_FAILED_NETWORK_ERROR;
+
+      do_check_eq(Status.login, expected);
       do_check_false(Service.isLoggedIn);
 
       // Clean up.

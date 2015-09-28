@@ -692,6 +692,10 @@ this.BrowserIDManager.prototype = {
   _getAuthenticationHeader: function(httpObject, method) {
     let cb = Async.makeSpinningCallback();
     this._ensureValidToken().then(cb, cb);
+    // Note that in failure states we return null, causing the request to be
+    // made without authorization headers, thereby presumably causing a 401,
+    // which causes Sync to log out. If we throw, this may not happen as
+    // expected.
     try {
       cb.wait();
     } catch (ex if !Async.isShutdownException(ex)) {
@@ -730,8 +734,17 @@ this.BrowserIDManager.prototype = {
 
   createClusterManager: function(service) {
     return new BrowserIDClusterManager(service);
-  }
+  },
 
+  // Tell Sync what the login status should be if it saw a 401 fetching
+  // info/collections as part of login verification (typically immediately
+  // after login.)
+  // In our case, it almost certainly means a transient error fetching a token
+  // (and hitting this will cause us to logout, which will correctly handle an
+  // authoritative login issue.)
+  loginStatusFromVerification404() {
+    return LOGIN_FAILED_NETWORK_ERROR;
+  },
 };
 
 /* An implementation of the ClusterManager for this identity
@@ -777,7 +790,7 @@ BrowserIDClusterManager.prototype = {
           // it's likely a 401 was received using the existing token - in which
           // case we just discard the existing token and fetch a new one.
           if (this.service.clusterURL) {
-            log.debug("_findCluster found existing clusterURL, so discarding the current token");
+            log.debug("_findCluster has a pre-existing clusterURL, so discarding the current token");
             this.identity._token = null;
           }
           return this.identity._ensureValidToken();
