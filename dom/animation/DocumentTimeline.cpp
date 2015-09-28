@@ -95,6 +95,22 @@ void
 DocumentTimeline::WillRefresh(mozilla::TimeStamp aTime)
 {
   MOZ_ASSERT(mIsObservingRefreshDriver);
+
+  bool needsTicks = false;
+
+  for (auto iter = mAnimations.Iter(); !iter.Done(); iter.Next()) {
+    Animation* animation = iter.Get()->GetKey();
+    needsTicks |= animation->NeedsTicks();
+  }
+
+  if (!needsTicks) {
+    // If another refresh driver observer destroys the nsPresContext,
+    // nsRefreshDriver will detect it and we won't be called.
+    MOZ_ASSERT(GetRefreshDriver(),
+               "Refresh driver should still be valid inside WillRefresh");
+    GetRefreshDriver()->RemoveRefreshObserver(this, Flush_Style);
+    mIsObservingRefreshDriver = false;
+  }
 }
 
 TimeStamp
