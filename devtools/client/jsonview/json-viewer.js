@@ -89,6 +89,12 @@ var onResize = event => {
 window.addEventListener("resize", onResize);
 onResize();
 
+// Send notification event to the window. Can be useful for
+// tests as well as extensions.
+var event = new CustomEvent("JSONViewInitialized", {});
+window.jsonViewInitialized = true;
+window.dispatchEvent(event);
+
 // End of json-viewer.js
 });
 
