@@ -829,7 +829,7 @@ nsPerformanceStatsService::CommitGroup(uint64_t iteration,
   group->data.mTotalCPOWTime += cpowTimeDelta;
   group->data.mTicks += ticksDelta;
 
-  const uint64_t totalTimeDelta = userTimeDelta + systemTimeDelta;
+  const uint64_t totalTimeDelta = userTimeDelta + systemTimeDelta + cpowTimeDelta;
   uint64_t duration = 1000;   // 1ms in µs
   for (size_t i = 0;
        i < mozilla::ArrayLength(group->data.mDurations) && duration < totalTimeDelta;
