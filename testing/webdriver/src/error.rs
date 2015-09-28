@@ -98,7 +98,7 @@ pub type WebDriverResult<T> = Result<T, WebDriverError>;
 
 #[derive(Debug)]
 pub struct WebDriverError {
-    pub status: ErrorStatus,
+    pub error: ErrorStatus,
     pub message: String,
     delete_session: bool
 }
@@ -110,20 +110,20 @@ impl fmt::Display for WebDriverError {
 }
 
 impl WebDriverError {
-    pub fn new(status: ErrorStatus, message: &str) -> WebDriverError {
+    pub fn new(error: ErrorStatus, message: &str) -> WebDriverError {
         WebDriverError {
-            status: status,
+            error: error,
             message: message.to_string(),
             delete_session: false
         }
     }
 
     pub fn status_code(&self) -> &'static str {
-        self.status.status_code()
+        self.error.status_code()
     }
 
     pub fn http_status(&self) -> StatusCode {
-        self.status.http_status()
+        self.error.http_status()
     }
 
     pub fn to_json_string(&self) -> String {
@@ -142,7 +142,7 @@ impl WebDriverError {
 impl ToJson for WebDriverError {
     fn to_json(&self) -> Json {
         let mut data = BTreeMap::new();
-        data.insert("status".to_string(), self.status_code().to_json());
+        data.insert("error".to_string(), self.status_code().to_json());
         data.insert("message".to_string(), self.message.to_json());
         Json::Object(data)
     }
