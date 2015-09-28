@@ -9,15 +9,9 @@ interface nsIEditor;
 interface nsITextServicesFilter;
 interface nsIEditorSpellCheckCallback;
 
-[scriptable, uuid(dd32ef3b-a7d8-43d1-9617-5f2dddbe29eb)]
+[scriptable, uuid(a171c25f-e4a8-4d08-adef-b797e6377bdc)]
 interface nsIEditorSpellCheck : nsISupports
 {
-
-  /**
-   * Call this on any change in installed dictionaries to ensure that the spell
-   * checker is not using a current dictionary which is no longer available.
-   */
-  void checkCurrentDictionary();
 
  /**
    * Returns true if we can enable spellchecking. If there are no available
