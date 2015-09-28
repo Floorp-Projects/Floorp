@@ -6,20 +6,12 @@
 
 "use strict";
 
-const { Cu, Ci, Cc } = require("chrome");
+const {Cu, Ci, Cc} = require("chrome");
 const JsonViewUtils = require("devtools/client/jsonview/utils");
 
-Cu.import("resource://gre/modules/Services.jsm");
-
-const { makeInfallible } = require("devtools/shared/DevToolsUtils");
-
-const globalMessageManager = Cc["@mozilla.org/globalmessagemanager;1"].
-  getService(Ci.nsIMessageListenerManager);
-const parentProcessMessageManager = Cc["@mozilla.org/parentprocessmessagemanager;1"].
-  getService(Ci.nsIMessageBroadcaster);
-
 // Constants
-const JSON_VIEW_PREF = "devtools.jsonview.enabled";
+const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+const {makeInfallible} = require("devtools/shared/DevToolsUtils");
 
 /**
  * Singleton object that represents the JSON View in-content tool.
@@ -28,31 +20,24 @@ const JSON_VIEW_PREF = "devtools.jsonview.enabled";
  */
 var JsonView = {
   initialize: makeInfallible(function() {
-    // Only the DevEdition has this feature available by default.
-    // Users need to manually flip 'devtools.jsonview.enabled' preference
-    // to have it available in other distributions.
-    if (Services.prefs.getBoolPref(JSON_VIEW_PREF)) {
-      // Load JSON converter module. This converter is responsible
-      // for handling 'application/json' documents and converting
-      // them into a simple web-app that allows easy inspection
-      // of the JSON data.
-      globalMessageManager.loadFrameScript(
-        "resource:///modules/devtools/client/jsonview/converter-child.js",
-        true);
+    // Load JSON converter module. This converter is responsible
+    // for handling 'application/json' documents and converting
+    // them into a simple web-app that allows easy inspection
+    // of the JSON data.
+    Services.ppmm.loadProcessScript(
+      "resource:///modules/devtools/client/jsonview/converter-observer.js",
+      true);
 
-      this.onSaveListener = this.onSave.bind(this);
+    this.onSaveListener = this.onSave.bind(this);
 
-      // Register for messages coming from the child process.
-      parentProcessMessageManager.addMessageListener(
-        "devtools:jsonview:save", this.onSaveListener);
-    }
+    // Register for messages coming from the child process.
+    Services.ppmm.addMessageListener(
+      "devtools:jsonview:save", this.onSaveListener);
   }),
 
   destroy: makeInfallible(function() {
-    if (this.onSaveListener) {
-      parentProcessMessageManager.removeMessageListener(
-        "devtools:jsonview:save", this.onSaveListener);
-    }
+    Services.ppmm.removeMessageListener(
+      "devtools:jsonview:save", this.onSaveListener);
   }),
 
   // Message handlers for events from child processes
