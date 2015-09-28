@@ -8,12 +8,12 @@
  */
 
 dictionary RTCPeerConnectionIceEventInit : EventInit {
-  RTCIceCandidate? candidate = null;
+  mozRTCIceCandidate? candidate = null;
 };
 
 [Pref="media.peerconnection.enabled",
  Constructor(DOMString type,
              optional RTCPeerConnectionIceEventInit eventInitDict)]
 interface RTCPeerConnectionIceEvent : Event {
-  readonly attribute RTCIceCandidate? candidate;
+  readonly attribute mozRTCIceCandidate? candidate;
 };

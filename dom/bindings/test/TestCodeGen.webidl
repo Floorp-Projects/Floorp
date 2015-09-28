@@ -1156,8 +1156,3 @@ interface TestCppKeywordNamedMethodsInterface {
   long volatile();
 };
 
-[Deprecated="GetAttributeNode", Constructor()]
-interface TestDeprecatedInterface {
-  static void alsoDeprecated();
-};
-

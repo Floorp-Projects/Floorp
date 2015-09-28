@@ -983,7 +983,7 @@ var MozLoopServiceInternal = {
           }
         };
 
-        let pc_static = new window.RTCPeerConnectionStatic();
+        let pc_static = new window.mozRTCPeerConnectionStatic();
         pc_static.registerPeerConnectionLifecycleCallback(onPCLifecycleChange);
 
         UITour.notify("Loop:ChatWindowOpened");
