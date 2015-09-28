@@ -229,6 +229,10 @@ browser.jar:
   skin/classic/browser/tabview/stack-expander.png           (tabview/stack-expander.png)
   skin/classic/browser/tabview/tabview.png                  (tabview/tabview.png)
   skin/classic/browser/tabview/tabview.css                  (tabview/tabview.css)
+  skin/classic/browser/usercontext/personal.svg             (../shared/usercontext/personal.svg)
+  skin/classic/browser/usercontext/work.svg                 (../shared/usercontext/work.svg)
+  skin/classic/browser/usercontext/banking.svg              (../shared/usercontext/banking.svg)
+  skin/classic/browser/usercontext/shopping.svg             (../shared/usercontext/shopping.svg)
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/sync-16.png
   skin/classic/browser/sync-32.png

@@ -1,0 +1,17 @@
+/* User Context UI browser styles */
+
+#menu_newUserContextTabPersonal {
+  list-style-image: url("chrome://browser/skin/usercontext/personal.svg");
+}
+
+#menu_newUserContextTabWork {
+  list-style-image: url("chrome://browser/skin/usercontext/work.svg");
+}
+
+#menu_newUserContextTabBanking {
+  list-style-image: url("chrome://browser/skin/usercontext/banking.svg");
+}
+
+#menu_newUserContextTabShopping {
+  list-style-image: url("chrome://browser/skin/usercontext/shopping.svg");
+}
