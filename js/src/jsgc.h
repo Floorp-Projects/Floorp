@@ -1189,7 +1189,7 @@ struct IsForwardedFunctor : public BoolDefaultAdaptor<Value, false> {
 inline bool
 IsForwarded(const JS::Value& value)
 {
-    return DispatchValueTyped(IsForwardedFunctor(), value);
+    return DispatchTyped(IsForwardedFunctor(), value);
 }
 
 template <typename T>
@@ -1210,7 +1210,7 @@ struct ForwardedFunctor : public IdentityDefaultAdaptor<Value> {
 inline Value
 Forwarded(const JS::Value& value)
 {
-    return DispatchValueTyped(ForwardedFunctor(), value);
+    return DispatchTyped(ForwardedFunctor(), value);
 }
 
 template <typename T>
@@ -1246,7 +1246,7 @@ struct CheckValueAfterMovingGCFunctor : public VoidDefaultAdaptor<Value> {
 inline void
 CheckValueAfterMovingGC(const JS::Value& value)
 {
-    DispatchValueTyped(CheckValueAfterMovingGCFunctor(), value);
+    DispatchTyped(CheckValueAfterMovingGCFunctor(), value);
 }
 
 #endif // JSGC_HASH_TABLE_CHECKS

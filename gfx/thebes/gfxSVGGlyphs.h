@@ -229,7 +229,7 @@ private:
 class SimpleTextContextPaint : public gfxTextContextPaint
 {
 private:
-    static const gfxRGBA sZero;
+    static const mozilla::gfx::Color sZero;
 
 public:
     static gfxMatrix SetupDeviceToPatternMatrix(gfxPattern *aPattern,

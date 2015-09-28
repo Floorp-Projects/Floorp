@@ -22,7 +22,7 @@ const FILE_DATABASE = "addons.json";
 const ADDON_NAMES = ["test_AddonRepository_1",
                      "test_AddonRepository_2",
                      "test_AddonRepository_3"];
-const ADDON_IDS = ADDON_NAMES.map(function(aName) aName + "@tests.mozilla.org");
+const ADDON_IDS = ADDON_NAMES.map(aName => aName + "@tests.mozilla.org");
 const ADDON_FILES = ADDON_NAMES.map(do_get_addon);
 
 const PREF_ADDON0_CACHE_ENABLED = "extensions." + ADDON_IDS[0] + ".getAddons.cache.enabled";

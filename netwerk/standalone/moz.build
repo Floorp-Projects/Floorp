@@ -30,7 +30,6 @@ netwerk_dns_src = [
     'nsDNSService2.cpp',
     'nsIDNService.cpp',
     'punycode.c',
-    'race.c',
 ]
 src_list += [
     '/netwerk/dns/%s' % s for s in netwerk_dns_src

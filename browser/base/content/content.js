@@ -753,6 +753,14 @@ addMessageListener("ContextMenu:SearchFieldBookmarkData", (message) => {
                    { spec, title, description, postData, charset });
 });
 
+addMessageListener("Bookmarks:GetPageDetails", (message) => {
+  let doc = content.document;
+  let isErrorPage = /^about:(neterror|certerror|blocked)/.test(doc.documentURI);
+  sendAsyncMessage("Bookmarks:GetPageDetails:Result",
+                   { isErrorPage: isErrorPage,
+                     description: PlacesUIUtils.getDescriptionFromDocument(doc) });
+});
+
 var LightWeightThemeWebInstallListener = {
   _previewWindow: null,
 

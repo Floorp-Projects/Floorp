@@ -17,7 +17,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
 
 const PanelUI = {
   /** Panel events that we listen for. **/
-  get kEvents() ["popupshowing", "popupshown", "popuphiding", "popuphidden"],
+  get kEvents() {
+    return ["popupshowing", "popupshown", "popuphiding", "popuphidden"];
+  },
   /**
    * Used for lazily getting and memoizing elements from the document. Lazy
    * getters are set in init, and memoizing happens after the first retrieval.

@@ -290,7 +290,6 @@ RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader,
   : mLayersId(0)
   , mFrameLoader(aFrameLoader)
   , mFrameLoaderDestroyed(false)
-  , mBackgroundColor(gfxRGBA(1, 1, 1))
   , mAsyncPanZoomEnabled(false)
 {
   *aId = 0;
@@ -339,7 +338,11 @@ RenderFrameParent::GetApzcTreeManager()
   // created and the static getter knows which CompositorParent is
   // instantiated with this layers ID. That's why try to fetch it when
   // we first need it and cache the result.
-  if (!mApzcTreeManager && mAsyncPanZoomEnabled) {
+  // Note: the IsParentProcess check is to deal with nested content process
+  // scenarios, since in those cases we can have RenderFrameParent instances
+  // in a child process, but the APZC machinery is not in that process. Bug
+  // 1020199 should fix this more comprehensively.
+  if (!mApzcTreeManager && mAsyncPanZoomEnabled && XRE_IsParentProcess()) {
     mApzcTreeManager = CompositorParent::GetAPZCTreeManager(mLayersId);
   }
   return mApzcTreeManager.get();

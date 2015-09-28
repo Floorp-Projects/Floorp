@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode",
   "resource://gre/modules/ReaderMode.jsm");
 
 var Pocket = {
-  get site() Services.prefs.getCharPref("browser.pocket.site"),
+  get site() { return Services.prefs.getCharPref("browser.pocket.site"); },
   get listURL() { return "https://" + Pocket.site + "/?src=ff_ext"; },
 
   /**

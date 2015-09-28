@@ -51,6 +51,7 @@
 
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
     <application android:label="@string/b2g"
                  android:icon="@drawable/b2g"

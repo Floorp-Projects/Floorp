@@ -80,9 +80,14 @@ from .data import (
 
 from .reader import SandboxValidationError
 
+from ..testing import (
+    TEST_MANIFESTS,
+    REFTEST_FLAVORS,
+    WEB_PATFORM_TESTS_FLAVORS,
+)
+
 from .context import (
     Context,
-    AbsolutePath,
     SourcePath,
     ObjDirPath,
     Path,
@@ -980,51 +985,21 @@ class TreeMetadataEmitter(LoggingMixin):
                     else 'USE_LIBS'))
 
     def _process_test_manifests(self, context):
-        # While there are multiple test manifests, the behavior is very similar
-        # across them. We enforce this by having common handling of all
-        # manifests and outputting a single class type with the differences
-        # described inside the instance.
-        #
-        # Keys are variable prefixes and values are tuples describing how these
-        # manifests should be handled:
-        #
-        #    (flavor, install_prefix, package_tests)
-        #
-        # flavor identifies the flavor of this test.
-        # install_prefix is the path prefix of where to install the files in
-        #     the tests directory.
-        # package_tests indicates whether to package test files into the test
-        #     package; suites that compile the test files should not install
-        #     them into the test package.
-        #
-        test_manifests = dict(
-            A11Y=('a11y', 'testing/mochitest', 'a11y', True),
-            BROWSER_CHROME=('browser-chrome', 'testing/mochitest', 'browser', True),
-            ANDROID_INSTRUMENTATION=('instrumentation', 'instrumentation', '.', False),
-            JETPACK_PACKAGE=('jetpack-package', 'testing/mochitest', 'jetpack-package', True),
-            JETPACK_ADDON=('jetpack-addon', 'testing/mochitest', 'jetpack-addon', False),
-            METRO_CHROME=('metro-chrome', 'testing/mochitest', 'metro', True),
-            MOCHITEST=('mochitest', 'testing/mochitest', 'tests', True),
-            MOCHITEST_CHROME=('chrome', 'testing/mochitest', 'chrome', True),
-            MOCHITEST_WEBAPPRT_CONTENT=('webapprt-content', 'testing/mochitest', 'webapprtContent', True),
-            MOCHITEST_WEBAPPRT_CHROME=('webapprt-chrome', 'testing/mochitest', 'webapprtChrome', True),
-            WEBRTC_SIGNALLING_TEST=('steeplechase', 'steeplechase', '.', True),
-            XPCSHELL_TESTS=('xpcshell', 'xpcshell', '.', True),
-        )
 
-        for prefix, info in test_manifests.items():
+        for prefix, info in TEST_MANIFESTS.items():
             for path in context.get('%s_MANIFESTS' % prefix, []):
                 for obj in self._process_test_manifest(context, info, path):
                     yield obj
 
-        for flavor in ('crashtest', 'reftest'):
+        for flavor in REFTEST_FLAVORS:
             for path in context.get('%s_MANIFESTS' % flavor.upper(), []):
                 for obj in self._process_reftest_manifest(context, flavor, path):
                     yield obj
 
-        for path in context.get("WEB_PLATFORM_TESTS_MANIFESTS", []):
-            for obj in self._process_web_platform_tests_manifest(context, path):
-                yield obj
+        for flavor in WEB_PATFORM_TESTS_FLAVORS:
+            for path in context.get("%s_MANIFESTS" % flavor.upper().replace('-', '_'), []):
+                for obj in self._process_web_platform_tests_manifest(context, path):
+                    yield obj
 
     def _process_test_manifest(self, context, info, manifest_path):
         flavor, install_root, install_subdir, package_tests = info
@@ -1290,6 +1265,7 @@ class TreeMetadataEmitter(LoggingMixin):
 
         # Some paths have a subconfigure, yet also have a moz.build. Those
         # shouldn't end up in self._external_paths.
-        self._external_paths -= { o.relobjdir }
+        if o.objdir:
+            self._external_paths -= { o.relobjdir }
 
         yield o

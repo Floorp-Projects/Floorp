@@ -376,8 +376,6 @@
 @BINPATH@/components/@DLL_PREFIX@browsercomps@DLL_SUFFIX@
 @BINPATH@/components/txEXSLTRegExFunctions.manifest
 @BINPATH@/components/txEXSLTRegExFunctions.js
-@BINPATH@/components/nsDefaultCLH.manifest
-@BINPATH@/components/nsDefaultCLH.js
 @BINPATH@/components/nsContentPrefService.manifest
 @BINPATH@/components/nsContentPrefService.js
 @BINPATH@/components/nsContentDispatchChooser.manifest

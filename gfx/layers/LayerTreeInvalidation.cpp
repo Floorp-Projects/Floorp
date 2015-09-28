@@ -382,7 +382,7 @@ struct ColorLayerProperties : public LayerPropertiesBase
     return result;
   }
 
-  gfxRGBA mColor;
+  Color mColor;
   IntRect mBounds;
 };
 

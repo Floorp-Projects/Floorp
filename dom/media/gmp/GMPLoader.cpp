@@ -135,6 +135,17 @@ GetStackAfterCurrentFrame(uint8_t** aOutTop, uint8_t** aOutBottom)
 }
 #endif
 
+#ifdef HASH_NODE_ID_WITH_DEVICE_ID
+static void SecureMemset(void* start, uint8_t value, size_t size)
+{
+  // Inline instructions equivalent to RtlSecureZeroMemory().
+  for (size_t i = 0; i < size; ++i) {
+    volatile uint8_t* p = static_cast<volatile uint8_t*>(start) + i;
+    *p = value;
+  }
+}
+#endif
+
 // The RAII variable holding the activation context that we create before
 // lowering the sandbox is getting optimized out.
 #if defined(_MSC_VER)
@@ -168,10 +179,10 @@ GMPLoaderImpl::Load(const char* aUTF8LibPath,
     // Overwrite all data involved in calculation as it could potentially
     // identify the user, so there's no chance a GMP can read it and use
     // it for identity tracking.
-    memset(&ctx, 0, sizeof(ctx));
-    memset(aOriginSalt, 0, aOriginSaltLen);
-    volumeId = 0;
-    memset(&deviceId[0], '*', sizeof(string16::value_type) * deviceId.size());
+    SecureMemset(&ctx, 0, sizeof(ctx));
+    SecureMemset(aOriginSalt, 0, aOriginSaltLen);
+    SecureMemset(&volumeId, 0, sizeof(volumeId));
+    SecureMemset(&deviceId[0], '*', sizeof(string16::value_type) * deviceId.size());
     deviceId = L"";
 
     if (!rlz_lib::BytesToString(digest, SHA256_LENGTH, &nodeId)) {

@@ -37,6 +37,14 @@ this.MessagesBridge = {
     Services.obs.addObserver(this.onAndroidSetting, "Android:Setting", false);
     Services.obs.addObserver(this.onSettingChange, "mozsettings-changed", false);
     Services.obs.addObserver(this, "xpcom-shutdown", false);
+
+    // Send a request to get the device's IMEI.
+    Messaging.sendRequestForResult({ type: "Android:GetIMEI" })
+    .then(aData => {
+      debug("Got IMEI: " + aData.imei);
+      let lock = settings.createLock();
+      lock.set("deviceinfo.imei", aData.imei, null);
+    });
   },
 
   onAndroidMessage: function(aSubject, aTopic, aData) {

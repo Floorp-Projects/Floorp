@@ -57,7 +57,8 @@ class LayerTransactionParent;
 
 struct ScopedLayerTreeRegistration
 {
-  ScopedLayerTreeRegistration(uint64_t aLayersId,
+  ScopedLayerTreeRegistration(APZCTreeManager* aApzctm,
+                              uint64_t aLayersId,
                               Layer* aRoot,
                               GeckoContentController* aController);
   ~ScopedLayerTreeRegistration();

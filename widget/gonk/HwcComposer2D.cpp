@@ -624,7 +624,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
             LOGD("Color layer has semitransparency which is unsupported");
             return false;
         }
-        hwcLayer.transform = colorLayer->GetColor().Packed();
+        hwcLayer.transform = colorLayer->GetColor().ToABGR();
     }
 
     mHwcLayerMap.AppendElement(static_cast<LayerComposite*>(aLayer->ImplData()));

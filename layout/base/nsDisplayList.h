@@ -191,6 +191,8 @@ public:
     mMode = PLUGIN_GEOMETRY;
   }
 
+  mozilla::layers::LayerManager* GetWidgetLayerManager(nsView** aView = nullptr, bool* aAllowRetaining = nullptr);
+
   /**
    * @return true if the display is being built in order to determine which
    * frame is under the mouse position.
@@ -255,7 +257,7 @@ public:
    * Returns the nearest ancestor frame to aFrame that is considered to have
    * (or will have) animated geometry. This can return aFrame.
    */
-  nsIFrame* FindAnimatedGeometryRootFor(nsIFrame* aFrame, const nsIFrame* aStopAtAncestor = nullptr);
+  nsIFrame* FindAnimatedGeometryRootFor(nsIFrame* aFrame);
 
   /**
    * @return the root of the display list's frame (sub)tree, whose origin
@@ -633,11 +635,11 @@ public:
           aBuilder->mCurrentAnimatedGeometryRoot = aForChild;
         }
       } else {
-        // Stop at the previous animated geometry root to help cases that
-        // aren't immediate descendents.
         aBuilder->mCurrentAnimatedGeometryRoot =
-          aBuilder->FindAnimatedGeometryRootFor(aForChild, aBuilder->mCurrentAnimatedGeometryRoot);
+          aBuilder->FindAnimatedGeometryRootFor(aForChild);
       }
+      MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(aBuilder->RootReferenceFrame(),
+                                                        aBuilder->mCurrentAnimatedGeometryRoot), "Bad");
       aBuilder->mCurrentFrame = aForChild;
       aBuilder->mDirtyRect = aDirtyRect;
       aBuilder->mIsAtRootOfPseudoStackingContext = aIsRoot;
@@ -955,7 +957,6 @@ public:
    * true if the cache was hit. Return false if the cache was not hit.
    */
   bool GetCachedAnimatedGeometryRoot(const nsIFrame* aFrame,
-                                     const nsIFrame* aStopAtAncestor,
                                      nsIFrame** aOutResult);
 
   void SetCommittedScrollInfoItemList(nsDisplayList* aScrollInfoItemStorage) {
@@ -1087,27 +1088,8 @@ private:
   // The animated geometry root for mCurrentFrame.
   nsIFrame*                      mCurrentAnimatedGeometryRoot;
 
-  struct AnimatedGeometryRootLookup {
-    const nsIFrame* mFrame;
-    const nsIFrame* mStopAtFrame;
-
-    AnimatedGeometryRootLookup(const nsIFrame* aFrame, const nsIFrame* aStopAtFrame)
-      : mFrame(aFrame)
-      , mStopAtFrame(aStopAtFrame)
-    {
-    }
-
-    PLDHashNumber Hash() const {
-      return mozilla::HashBytes(this, sizeof(this));
-    }
-
-    bool operator==(const AnimatedGeometryRootLookup& aOther) const {
-      return mFrame == aOther.mFrame && mStopAtFrame == aOther.mStopAtFrame;
-    }
-  };
   // Cache for storing animated geometry roots for arbitrary frames
-  nsDataHashtable<nsGenericHashKey<AnimatedGeometryRootLookup>, nsIFrame*>
-                                 mAnimatedGeometryRootCache;
+  nsDataHashtable<nsPtrHashKey<nsIFrame>, nsIFrame*> mAnimatedGeometryRootCache;
   // will-change budget tracker
   nsDataHashtable<nsPtrHashKey<nsPresContext>, DocumentWillChangeBudget>
                                  mWillChangeBudget;
@@ -1223,6 +1205,7 @@ public:
     : mFrame(aFrame)
     , mClip(nullptr)
     , mReferenceFrame(nullptr)
+    , mAnimatedGeometryRoot(nullptr)
 #ifdef MOZ_DUMP_PAINTING
     , mPainted(false)
 #endif
@@ -1442,7 +1425,7 @@ public:
    * @return true if the contents of this item are rendered fixed relative
    * to the nearest viewport.
    */
-  virtual bool ShouldFixToViewport(LayerManager* aManager)
+  virtual bool ShouldFixToViewport(nsDisplayListBuilder* aBuilder)
   { return false; }
 
   virtual bool ClearsBackground()
@@ -1669,6 +1652,11 @@ public:
    */
   virtual const nsIFrame* ReferenceFrameForChildren() const { return mReferenceFrame; }
 
+  nsIFrame* AnimatedGeometryRoot() const {
+    MOZ_ASSERT(mAnimatedGeometryRoot, "Must have cached AGR before accessing it!");
+    return mAnimatedGeometryRoot;
+  }
+
   /**
    * Checks if this display item (or any children) contains content that might
    * be rendered with component alpha (e.g. subpixel antialiasing). Returns the
@@ -1728,6 +1716,7 @@ protected:
   const DisplayItemClip* mClip;
   // Result of FindReferenceFrameFor(mFrame), if mFrame is non-null
   const nsIFrame* mReferenceFrame;
+  nsIFrame* mAnimatedGeometryRoot;
   // Result of ToReferenceFrame(mFrame), if mFrame is non-null
   nsPoint   mToReferenceFrame;
   // This is the rectangle that needs to be painted.
@@ -2560,7 +2549,7 @@ public:
   static nsRegion GetInsideClipRegion(nsDisplayItem* aItem, nsPresContext* aPresContext, uint8_t aClip,
                                       const nsRect& aRect, bool* aSnap);
 
-  virtual bool ShouldFixToViewport(LayerManager* aManager) override;
+  virtual bool ShouldFixToViewport(nsDisplayListBuilder* aBuilder) override;
 
 protected:
   typedef class mozilla::layers::ImageContainer ImageContainer;
@@ -2647,13 +2636,15 @@ protected:
 
 class nsDisplayBackgroundColor : public nsDisplayItem
 {
+  typedef mozilla::gfx::Color Color;
+
 public:
   nsDisplayBackgroundColor(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                            const nsStyleBackground* aBackgroundStyle,
                            nscolor aColor)
     : nsDisplayItem(aBuilder, aFrame)
     , mBackgroundStyle(aBackgroundStyle)
-    , mColor(gfxRGBA(aColor))
+    , mColor(Color::FromABGR(aColor))
   { }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) override;
@@ -2677,8 +2668,7 @@ public:
 
   virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override
   {
-    return new nsDisplaySolidColorGeometry(this, aBuilder,
-                                           NS_RGBA_FROM_GFXRGBA(mColor));
+    return new nsDisplaySolidColorGeometry(this, aBuilder, mColor.ToABGR());
   }
 
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
@@ -2686,7 +2676,7 @@ public:
                                          nsRegion* aInvalidRegion) override
   {
     const nsDisplaySolidColorGeometry* geometry = static_cast<const nsDisplaySolidColorGeometry*>(aGeometry);
-    if (NS_RGBA_FROM_GFXRGBA(mColor) != geometry->mColor) {
+    if (mColor.ToABGR() != geometry->mColor) {
       bool dummy;
       aInvalidRegion->Or(geometry->mBounds, GetBounds(aBuilder, &dummy));
       return;
@@ -2699,7 +2689,7 @@ public:
 
 protected:
   const nsStyleBackground* mBackgroundStyle;
-  gfxRGBA mColor;
+  mozilla::gfx::Color mColor;
 };
 
 class nsDisplayClearBackground : public nsDisplayItem

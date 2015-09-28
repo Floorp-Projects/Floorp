@@ -54,7 +54,7 @@ DistributionCustomizer.prototype = {
       // Unable to parse INI.
       Cu.reportError("Unable to parse distribution.ini");
     }
-    this.__defineGetter__("_ini", function() ini);
+    this.__defineGetter__("_ini", () => ini);
     return this._ini;
   },
 
@@ -66,27 +66,27 @@ DistributionCustomizer.prototype = {
     catch (e) {
       locale = "en-US";
     }
-    this.__defineGetter__("_locale", function() locale);
+    this.__defineGetter__("_locale", () => locale);
     return this._locale;
   },
 
   get _prefSvc() {
     let svc = Cc["@mozilla.org/preferences-service;1"].
               getService(Ci.nsIPrefService);
-    this.__defineGetter__("_prefSvc", function() svc);
+    this.__defineGetter__("_prefSvc", () => svc);
     return this._prefSvc;
   },
 
   get _prefs() {
     let branch = this._prefSvc.getBranch(null);
-    this.__defineGetter__("_prefs", function() branch);
+    this.__defineGetter__("_prefs", () => branch);
     return this._prefs;
   },
 
   get _ioSvc() {
     let svc = Cc["@mozilla.org/network/io-service;1"].
               getService(Ci.nsIIOService);
-    this.__defineGetter__("_ioSvc", function() svc);
+    this.__defineGetter__("_ioSvc", () => svc);
     return this._ioSvc;
   },
 

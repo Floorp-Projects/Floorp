@@ -239,16 +239,14 @@ NS_NewXULDocument(nsIXULDocument** result)
     if (! result)
         return NS_ERROR_NULL_POINTER;
 
-    XULDocument* doc = new XULDocument();
-    NS_ADDREF(doc);
+    nsRefPtr<XULDocument> doc = new XULDocument();
 
     nsresult rv;
     if (NS_FAILED(rv = doc->Init())) {
-        NS_RELEASE(doc);
         return rv;
     }
 
-    *result = doc;
+    doc.forget(result);
     return NS_OK;
 }
 
@@ -2645,11 +2643,10 @@ XULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
         // Add an observer to the parser; this'll get called when
         // Necko fires its On[Start|Stop]Request() notifications,
         // and will let us recover from a missing overlay.
-        ParserObserver* parserObserver =
+        nsRefPtr<ParserObserver> parserObserver =
             new ParserObserver(this, mCurrentPrototype);
-        NS_ADDREF(parserObserver);
         parser->Parse(aURI, parserObserver);
-        NS_RELEASE(parserObserver);
+        parserObserver = nullptr;
 
         nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
         nsCOMPtr<nsIChannel> channel;

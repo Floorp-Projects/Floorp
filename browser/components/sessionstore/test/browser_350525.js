@@ -18,19 +18,19 @@ add_task(function* () {
   let value = "Unique value: " + Math.random();
 
   // test adding
-  ok(test(function() ss.setWindowValue(window, key, value)), "set a window value");
+  ok(test(() => ss.setWindowValue(window, key, value)), "set a window value");
 
   // test retrieving
   is(ss.getWindowValue(window, key), value, "stored window value matches original");
 
   // test deleting
-  ok(test(function() ss.deleteWindowValue(window, key)), "delete the window value");
+  ok(test(() => ss.deleteWindowValue(window, key)), "delete the window value");
 
   // value should not exist post-delete
   is(ss.getWindowValue(window, key), "", "window value was deleted");
 
   // test deleting a non-existent value
-  ok(test(function() ss.deleteWindowValue(window, key)), "delete non-existent window value");
+  ok(test(() => ss.deleteWindowValue(window, key)), "delete non-existent window value");
 
   /////////////////////////
   // setTabValue, et al. //
@@ -41,19 +41,19 @@ add_task(function* () {
   tab.linkedBrowser.stop();
 
   // test adding
-  ok(test(function() ss.setTabValue(tab, key, value)), "store a tab value");
+  ok(test(() => ss.setTabValue(tab, key, value)), "store a tab value");
 
   // test retrieving
   is(ss.getTabValue(tab, key), value, "stored tab value match original");
 
   // test deleting
-  ok(test(function() ss.deleteTabValue(tab, key)), "delete the tab value");
+  ok(test(() => ss.deleteTabValue(tab, key)), "delete the tab value");
 
   // value should not exist post-delete
   is(ss.getTabValue(tab, key), "", "tab value was deleted");
 
   // test deleting a non-existent value
-  ok(test(function() ss.deleteTabValue(tab, key)), "delete non-existent tab value");
+  ok(test(() => ss.deleteTabValue(tab, key)), "delete non-existent tab value");
 
   // clean up
   yield promiseRemoveTab(tab);
@@ -85,7 +85,7 @@ add_task(function* () {
   ok(newcount > count, "after closing a tab, getClosedTabCount has been incremented");
 
   // undoCloseTab
-  tab = test(function() ss.undoCloseTab(window, 0));
+  tab = test(() => ss.undoCloseTab(window, 0));
   ok(tab, "undoCloseTab doesn't throw")
 
   yield promiseTabRestored(tab);

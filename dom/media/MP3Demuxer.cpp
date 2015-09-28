@@ -688,7 +688,7 @@ FrameParser::FrameHeader::Private() const {
 
 uint8_t
 FrameParser::FrameHeader::RawChannelMode() const {
-  return 0xF & mRaw[frame_header::CHANNELMODE_MODEEXT_COPY_ORIG_EMPH] >> 4;
+  return 0x3 & mRaw[frame_header::CHANNELMODE_MODEEXT_COPY_ORIG_EMPH] >> 6;
 }
 
 int32_t

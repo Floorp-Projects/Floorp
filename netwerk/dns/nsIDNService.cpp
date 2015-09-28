@@ -23,11 +23,12 @@ using namespace mozilla::unicode;
 //-----------------------------------------------------------------------------
 // RFC 1034 - 3.1. Name space specifications and terminology
 static const uint32_t kMaxDNSNodeLen = 63;
+// RFC 3490 - 5.   ACE prefix
+static const char kACEPrefix[] = "xn--";
+#define kACEPrefixLen 4
 
 //-----------------------------------------------------------------------------
 
-#define NS_NET_PREF_IDNTESTBED      "network.IDN_testbed"
-#define NS_NET_PREF_IDNPREFIX       "network.IDN_prefix"
 #define NS_NET_PREF_IDNBLACKLIST    "network.IDN.blacklist_chars"
 #define NS_NET_PREF_SHOWPUNYCODE    "network.IDN_show_punycode"
 #define NS_NET_PREF_IDNWHITELIST    "network.IDN.whitelist."
@@ -59,8 +60,6 @@ nsresult nsIDNService::Init()
 
   nsCOMPtr<nsIPrefBranch> prefInternal(do_QueryInterface(prefs));
   if (prefInternal) {
-    prefInternal->AddObserver(NS_NET_PREF_IDNTESTBED, this, true); 
-    prefInternal->AddObserver(NS_NET_PREF_IDNPREFIX, this, true); 
     prefInternal->AddObserver(NS_NET_PREF_IDNBLACKLIST, this, true);
     prefInternal->AddObserver(NS_NET_PREF_SHOWPUNYCODE, this, true);
     prefInternal->AddObserver(NS_NET_PREF_IDNRESTRICTION, this, true);
@@ -85,17 +84,6 @@ NS_IMETHODIMP nsIDNService::Observe(nsISupports *aSubject,
 
 void nsIDNService::prefsChanged(nsIPrefBranch *prefBranch, const char16_t *pref)
 {
-  if (!pref || NS_LITERAL_STRING(NS_NET_PREF_IDNTESTBED).Equals(pref)) {
-    bool val;
-    if (NS_SUCCEEDED(prefBranch->GetBoolPref(NS_NET_PREF_IDNTESTBED, &val)))
-      mMultilingualTestBed = val;
-  }
-  if (!pref || NS_LITERAL_STRING(NS_NET_PREF_IDNPREFIX).Equals(pref)) {
-    nsXPIDLCString prefix;
-    nsresult rv = prefBranch->GetCharPref(NS_NET_PREF_IDNPREFIX, getter_Copies(prefix));
-    if (NS_SUCCEEDED(rv) && prefix.Length() <= kACEPrefixLen)
-      PL_strncpyz(nsIDNService::mACEPrefix, prefix.get(), kACEPrefixLen + 1);
-  }
   if (!pref || NS_LITERAL_STRING(NS_NET_PREF_IDNBLACKLIST).Equals(pref)) {
     nsCOMPtr<nsISupportsString> blacklist;
     nsresult rv = prefBranch->GetComplexValue(NS_NET_PREF_IDNBLACKLIST,
@@ -135,12 +123,6 @@ void nsIDNService::prefsChanged(nsIPrefBranch *prefBranch, const char16_t *pref)
 
 nsIDNService::nsIDNService()
 {
-  // initialize to the official prefix (RFC 3490 "5. ACE prefix")
-  const char kIDNSPrefix[] = "xn--";
-  strcpy(mACEPrefix, kIDNSPrefix);
-
-  mMultilingualTestBed = false;
-
   if (idn_success != idn_nameprep_create(nullptr, &mNamePrepHandle))
     mNamePrepHandle = nullptr;
 
@@ -197,9 +179,6 @@ nsresult nsIDNService::UTF8toACE(const nsACString & input, nsACString & ace, boo
     }
   }
 
-  // add extra node for multilingual test bed
-  if (mMultilingualTestBed)
-    ace.AppendLiteral("mltbd.");
   // encode the last node if non ASCII
   if (len) {
     rv = stringPrepAndACE(Substring(ustr, offset, len), encodedBuf,
@@ -277,7 +256,7 @@ NS_IMETHODIMP nsIDNService::IsACE(const nsACString & input, bool *_retval)
   // at the beginning of any segment in the domain name.  for
   // example: "www.xn--ENCODED.com"
 
-  const char *p = PL_strncasestr(data, mACEPrefix, dataLen);
+  const char *p = PL_strncasestr(data, kACEPrefix, dataLen);
 
   *_retval = p && (p == data || *(p - 1) == '.');
   return NS_OK;
@@ -444,7 +423,7 @@ static void ucs4toUtf16(const uint32_t *in, nsAString& out)
   }
 }
 
-static nsresult punycode(const char* prefix, const nsAString& in, nsACString& out)
+static nsresult punycode(const nsAString& in, nsACString& out)
 {
   uint32_t ucs4Buf[kMaxDNSNodeLen + 1];
   uint32_t ucs4Len;
@@ -468,42 +447,9 @@ static nsresult punycode(const char* prefix, const nsAString& in, nsACString& ou
     return NS_ERROR_FAILURE;
 
   encodedBuf[encodedLength] = '\0';
-  out.Assign(nsDependentCString(prefix) + nsDependentCString(encodedBuf));
+  out.Assign(nsDependentCString(kACEPrefix) + nsDependentCString(encodedBuf));
 
   return rv;
-}
-
-static nsresult encodeToRACE(const char* prefix, const nsAString& in, nsACString& out)
-{
-  // need maximum 20 bits to encode 16 bit Unicode character
-  // (include null terminator)
-  const uint32_t kEncodedBufSize = kMaxDNSNodeLen * 20 / 8 + 1 + 1;  
-
-  // set up a work buffer for RACE encoder
-  char16_t temp[kMaxDNSNodeLen + 2];
-  temp[0] = 0xFFFF;   // set a place holder (to be filled by get_compress_mode)
-  temp[in.Length() + 1] = (char16_t)'\0';
-
-  nsAString::const_iterator start, end;
-  in.BeginReading(start); 
-  in.EndReading(end);
-  
-  for (uint32_t i = 1; start != end; i++)
-    temp[i] = *start++;
-
-  // encode nodes if non ASCII
-
-  char encodedBuf[kEncodedBufSize];
-  idn_result_t result = race_compress_encode((const unsigned short *) temp, 
-                                             get_compress_mode((unsigned short *) temp + 1), 
-                                             encodedBuf, kEncodedBufSize);
-  if (idn_success != result)
-    return NS_ERROR_FAILURE;
-
-  out.Assign(prefix);
-  out.Append(encodedBuf);
-
-  return NS_OK;
 }
 
 // RFC 3454
@@ -584,16 +530,6 @@ nsresult nsIDNService::stringPrep(const nsAString& in, nsAString& out,
   return rv;
 }
 
-nsresult nsIDNService::encodeToACE(const nsAString& in, nsACString& out)
-{
-  // RACE encode is supported for existing testing environment
-  if (!strcmp("bq--", mACEPrefix))
-    return encodeToRACE(mACEPrefix, in, out);
-  
-  // use punycoce
-  return punycode(mACEPrefix, in, out);
-}
-
 nsresult nsIDNService::stringPrepAndACE(const nsAString& in, nsACString& out,
                                         bool allowUnassigned,
                                         bool convertAllLabels)
@@ -618,7 +554,7 @@ nsresult nsIDNService::stringPrepAndACE(const nsAString& in, nsACString& out,
       if (IsASCII(strPrep))
         LossyCopyUTF16toASCII(strPrep, out);
       else
-        rv = encodeToACE(strPrep, out);
+        rv = punycode(strPrep, out);
     }
     // Check that the encoded output isn't larger than the maximum length of an
     // DNS node per RFC 1034.

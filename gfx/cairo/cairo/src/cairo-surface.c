@@ -2569,7 +2569,7 @@ _cairo_surface_get_extents (cairo_surface_t         *surface,
     cairo_bool_t bounded;
 
     bounded = FALSE;
-    if (surface->backend->get_extents != NULL)
+    if (! surface->status && surface->backend->get_extents != NULL)
 	bounded = surface->backend->get_extents (surface, extents);
 
     if (! bounded)
