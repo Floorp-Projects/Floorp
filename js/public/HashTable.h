@@ -653,6 +653,8 @@ class HashMapEntry
     template <class> friend class detail::HashTableEntry;
     template <class, class, class, class> friend class HashMap;
 
+    Key & mutableKey() { return key_; }
+
   public:
     template<typename KeyInput, typename ValueInput>
     HashMapEntry(KeyInput&& k, ValueInput&& v)
@@ -668,10 +670,9 @@ class HashMapEntry
     typedef Key KeyType;
     typedef Value ValueType;
 
-    const Key& key() const { return key_; }
-    Key& mutableKey() { return key_; }
-    const Value& value() const { return value_; }
-    Value& value() { return value_; }
+    const Key & key() const { return key_; }
+    const Value & value() const { return value_; }
+    Value & value() { return value_; }
 
   private:
     HashMapEntry(const HashMapEntry&) = delete;
