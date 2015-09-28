@@ -28,15 +28,20 @@ const childProcessMessageManager =
 // Must be power of 2. Used to copy the data stream in onStopRequest.
 const SEGMENT_SIZE = Math.pow(2, 17);
 
+const JSON_VIEW_MIME_TYPE = "application/vnd.mozilla.json.view";
+const CONTRACT_ID = "@mozilla.org/streamconv;1?from=" + JSON_VIEW_MIME_TYPE + "&to=*/*";
+const CLASS_ID = "{d8c9acee-dec5-11e4-8c75-1681e6b88ec1}";
+
 // Localization
 var jsonViewStrings = Services.strings.createBundle(
   "chrome://browser/locale/devtools/jsonview.properties");
 
 /**
- * This object detects application/json content type and converts it
- * into a JSON Viewer application that allows simple JSON inspection.
+ * This object detects 'application/vnd.mozilla.json.view' content type
+ * and converts it into a JSON Viewer application that allows simple
+ * JSON inspection.
  *
- * Based on JSON View: https://github.com/bhollis/jsonview/
+ * Inspired by JSON View: https://github.com/bhollis/jsonview/
  */
 var Converter = Class({
   extends: Unknown,
@@ -274,9 +279,6 @@ var Converter = Class({
 });
 
 // Stream converter component definition
-const CONTRACT_ID = "@mozilla.org/streamconv;1?from=application/json&to=*/*";
-const CLASS_ID = "{d8c9acee-dec5-11e4-8c75-1681e6b88ec1}";
-
 var service = xpcom.Service({
   id: components.ID(CLASS_ID),
   contract: CONTRACT_ID,
@@ -290,7 +292,6 @@ function register() {
     xpcom.register(service);
     return true;
   }
-
   return false;
 }
 
@@ -299,7 +300,6 @@ function unregister() {
     xpcom.unregister(service);
     return true;
   }
-
   return false;
 }
 
