@@ -106,21 +106,6 @@ inline ExtendMode ToExtendMode(gfxPattern::GraphicsExtend aExtend)
   }
 }
 
-inline gfxPattern::GraphicsPatternType
-ThebesPatternType(PatternType aType)
-{
-  switch (aType) {
-  case PatternType::SURFACE:
-    return gfxPattern::PATTERN_SURFACE;
-  case PatternType::LINEAR_GRADIENT:
-    return gfxPattern::PATTERN_LINEAR;
-  case PatternType::RADIAL_GRADIENT:
-    return gfxPattern::PATTERN_RADIAL;
-  default:
-    return gfxPattern::PATTERN_SOLID;
-  }
-}
-
 inline gfxPattern::GraphicsExtend ThebesExtend(ExtendMode aExtend)
 {
   switch (aExtend) {
