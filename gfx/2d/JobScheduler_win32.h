@@ -7,12 +7,11 @@
 #ifndef MOZILLA_GFX_TASKSCHEDULER_WIN32_H_
 #define MOZILLA_GFX_TASKSCHEDULER_WIN32_H_
 
-#define NOT_IMPLEMENTED MOZ_CRASH("Not implemented")
+#include <windows.h>
+#include <list>
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/gfx/CriticalSection.h"
-#include <windows.h>
-#include <list>
 
 namespace mozilla {
 namespace gfx {
@@ -33,8 +32,8 @@ public:
   : mThreadsCount(0)
   , mShuttingDown(false)
   {
-    mAvailableEvent = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
-    mShutdownEvent = ::CreateEvent(nullptr, TRUE, FALSE, nullptr);
+    mAvailableEvent = ::CreateEventW(nullptr, TRUE, FALSE, nullptr);
+    mShutdownEvent = ::CreateEventW(nullptr, TRUE, FALSE, nullptr);
   }
 
   ~MultiThreadedJobQueue()
@@ -78,7 +77,7 @@ class EventObject : public external::AtomicRefCounted<EventObject>
 public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(EventObject)
 
-  EventObject() { mEvent = ::CreateEvent(nullptr, TRUE, FALSE, nullptr); }
+  EventObject() { mEvent = ::CreateEventW(nullptr, TRUE, FALSE, nullptr); }
 
   ~EventObject() { ::CloseHandle(mEvent); }
 
