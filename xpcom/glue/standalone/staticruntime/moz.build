@@ -30,6 +30,7 @@ DEFINES['XPCOM_GLUE'] = True
 
 LOCAL_INCLUDES += [
     '../../../build',
+    '../../../threads',
 ]
 
 # Statically link to the CRT on Windows

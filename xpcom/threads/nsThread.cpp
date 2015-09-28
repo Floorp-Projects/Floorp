@@ -36,6 +36,7 @@
 #include "nsXPCOMPrivate.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/TimeStamp.h"
+#include "LeakRefPtr.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsServiceManagerUtils.h"
@@ -541,6 +542,9 @@ nsThread::PutEvent(nsIRunnable* aEvent, nsNestedEventTarget* aTarget)
 nsresult
 nsThread::PutEvent(already_AddRefed<nsIRunnable>&& aEvent, nsNestedEventTarget* aTarget)
 {
+  // We want to leak the reference when we fail to dispatch it, so that
+  // we won't release the event in a wrong thread.
+  LeakRefPtr<nsIRunnable> event(Move(aEvent));
   nsCOMPtr<nsIThreadObserver> obs;
 
 #ifdef MOZ_NUWA_PROCESS
@@ -554,11 +558,9 @@ nsThread::PutEvent(already_AddRefed<nsIRunnable>&& aEvent, nsNestedEventTarget* 
     nsChainedEventQueue* queue = aTarget ? aTarget->mQueue : &mEventsRoot;
     if (!queue || (queue == &mEventsRoot && mEventsAreDoomed)) {
       NS_WARNING("An event was posted to a thread that will never run it (rejected)");
-      nsCOMPtr<nsIRunnable> temp(aEvent);
-      nsIRunnable* temp2 = temp.forget().take(); // can't use unused << aEvent here due to Windows (boo)
-      return temp2 ? NS_ERROR_UNEXPECTED : NS_ERROR_UNEXPECTED; // to make compiler not bletch on us
+      return NS_ERROR_UNEXPECTED;
     }
-    queue->PutEvent(Move(aEvent), lock);
+    queue->PutEvent(event.take(), lock);
 
     // Make sure to grab the observer before dropping the lock, otherwise the
     // event that we just placed into the queue could run and eventually delete
