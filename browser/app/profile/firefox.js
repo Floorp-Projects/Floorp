@@ -1872,6 +1872,9 @@ pref("privacy.trackingprotection.ui.enabled", false);
 pref("privacy.trackingprotection.introCount", 0);
 pref("privacy.trackingprotection.introURL", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/tracking-protection/start/");
 
+// Enable Contextual Identity Containers
+pref("privacy.userContext.enabled", false);
+
 #ifndef RELEASE_BUILD
 // At the moment, autostart.2 is used, while autostart.1 is unused.
 // We leave it here set to false to reset users' defaults and allow
