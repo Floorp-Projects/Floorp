@@ -194,18 +194,6 @@ var gData = [
     },
     test: [ "child-has-different-eo", "child-has-different-appstatus", "child-has-same-appid" ],
   },
-  // app inside a browser is an app.
-  {
-    src: "http://example.org/",
-    isapp: false,
-    browser: true,
-    child: {
-      app: "http://example.org/manifest.webapp",
-      src: "http://example.org/chrome/",
-      isapp: true,
-    },
-    test: [ "child-has-different-eo", "child-has-different-appstatus", "child-has-different-appid" ],
-  },
   // browser inside a browser are two browsers
   {
     src: "http://example.org/",

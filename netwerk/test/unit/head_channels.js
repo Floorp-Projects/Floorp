@@ -211,6 +211,10 @@ ChannelEventSink.prototype = {
 function LoadContextCallback(appId, inBrowserElement, isPrivate, isContent) {
   this.appId = appId;
   this.isInBrowserElement = inBrowserElement;
+  this.originAttributes = {
+    appId: appId,
+    inBrowser: inBrowserElement
+  };
   this.usePrivateBrowsing = isPrivate;
   this.isContent = isContent;
 }

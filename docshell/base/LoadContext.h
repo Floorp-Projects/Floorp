@@ -9,6 +9,7 @@
 
 #include "SerializedLoadContext.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/BasePrincipal.h"
 #include "nsIWeakReferenceUtils.h"
 #include "mozilla/dom/Element.h"
 #include "nsIInterfaceRequestor.h"
@@ -42,14 +43,13 @@ public:
   // by child process.
   LoadContext(const IPC::SerializedLoadContext& aToCopy,
               dom::Element* aTopFrameElement,
-              uint32_t aAppId, bool aInBrowser)
+              OriginAttributes& aAttrs)
     : mTopFrameElement(do_GetWeakReference(aTopFrameElement))
     , mNestedFrameId(0)
-    , mAppId(aAppId)
     , mIsContent(aToCopy.mIsContent)
     , mUsePrivateBrowsing(aToCopy.mUsePrivateBrowsing)
     , mUseRemoteTabs(aToCopy.mUseRemoteTabs)
-    , mIsInBrowserElement(aInBrowser)
+    , mOriginAttributes(aAttrs)
 #ifdef DEBUG
     , mIsNotNull(aToCopy.mIsNotNull)
 #endif
@@ -60,14 +60,13 @@ public:
   // by child process.
   LoadContext(const IPC::SerializedLoadContext& aToCopy,
               uint64_t aNestedFrameId,
-              uint32_t aAppId, bool aInBrowser)
+              OriginAttributes& aAttrs)
     : mTopFrameElement(nullptr)
     , mNestedFrameId(aNestedFrameId)
-    , mAppId(aAppId)
     , mIsContent(aToCopy.mIsContent)
     , mUsePrivateBrowsing(aToCopy.mUsePrivateBrowsing)
     , mUseRemoteTabs(aToCopy.mUseRemoteTabs)
-    , mIsInBrowserElement(aInBrowser)
+    , mOriginAttributes(aAttrs)
 #ifdef DEBUG
     , mIsNotNull(aToCopy.mIsNotNull)
 #endif
@@ -75,18 +74,16 @@ public:
   }
 
   LoadContext(dom::Element* aTopFrameElement,
-              uint32_t aAppId,
               bool aIsContent,
               bool aUsePrivateBrowsing,
               bool aUseRemoteTabs,
-              bool aIsInBrowserElement)
+              OriginAttributes& aAttrs)
     : mTopFrameElement(do_GetWeakReference(aTopFrameElement))
     , mNestedFrameId(0)
-    , mAppId(aAppId)
     , mIsContent(aIsContent)
     , mUsePrivateBrowsing(aUsePrivateBrowsing)
     , mUseRemoteTabs(aUseRemoteTabs)
-    , mIsInBrowserElement(aIsInBrowserElement)
+    , mOriginAttributes(aAttrs)
 #ifdef DEBUG
     , mIsNotNull(true)
 #endif
@@ -97,11 +94,10 @@ public:
   explicit LoadContext(uint32_t aAppId)
     : mTopFrameElement(nullptr)
     , mNestedFrameId(0)
-    , mAppId(aAppId)
     , mIsContent(false)
     , mUsePrivateBrowsing(false)
     , mUseRemoteTabs(false)
-    , mIsInBrowserElement(false)
+    , mOriginAttributes(aAppId, false)
 #ifdef DEBUG
     , mIsNotNull(true)
 #endif
@@ -118,11 +114,10 @@ private:
 
   nsWeakPtr mTopFrameElement;
   uint64_t mNestedFrameId;
-  uint32_t mAppId;
   bool mIsContent;
   bool mUsePrivateBrowsing;
   bool mUseRemoteTabs;
-  bool mIsInBrowserElement;
+  OriginAttributes mOriginAttributes;
 #ifdef DEBUG
   bool mIsNotNull;
 #endif

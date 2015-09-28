@@ -75,10 +75,10 @@ CookieServiceParent::GetAppInfoFromParams(const IPC::SerializedLoadContext &aLoa
   aIsInBrowserElement = false;
   aIsPrivate = false;
 
+  OriginAttributes attrs;
   const char* error = NeckoParent::GetValidatedAppInfo(aLoadContext,
                                                        Manager()->Manager(),
-                                                       &aAppId,
-                                                       &aIsInBrowserElement);
+                                                       attrs);
   if (error) {
     NS_WARNING(nsPrintfCString("CookieServiceParent: GetAppInfoFromParams: "
                                "FATAL error: %s: KILLING CHILD PROCESS\n",
@@ -86,6 +86,8 @@ CookieServiceParent::GetAppInfoFromParams(const IPC::SerializedLoadContext &aLoa
     return false;
   }
 
+  aAppId = attrs.mAppId;
+  aIsInBrowserElement = attrs.mInBrowser;
   if (aLoadContext.IsPrivateBitValid()) {
     aIsPrivate = aLoadContext.mUsePrivateBrowsing;
   }
