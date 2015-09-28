@@ -936,7 +936,7 @@ describe("loop.standaloneRoomViews", function() {
 
     it("should not display anything if it is not known if Firefox can handle the room", function() {
       activeRoomStore.setStoreState({
-        firefoxHandlesRoom: undefined
+        userAgentHandlesRoom: undefined
       });
 
       view = mountTestComponent();
@@ -946,7 +946,7 @@ describe("loop.standaloneRoomViews", function() {
 
     it("should render StandaloneHandleUserAgentView if Firefox can handle the room", function() {
       activeRoomStore.setStoreState({
-        firefoxHandlesRoom: true
+        userAgentHandlesRoom: true
       });
 
       view = mountTestComponent();
@@ -957,7 +957,7 @@ describe("loop.standaloneRoomViews", function() {
 
     it("should render StandaloneRoomView if Firefox cannot handle the room", function() {
       activeRoomStore.setStoreState({
-        firefoxHandlesRoom: false
+        userAgentHandlesRoom: false
       });
 
       view = mountTestComponent();
