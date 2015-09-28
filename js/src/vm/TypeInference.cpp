@@ -335,7 +335,7 @@ TemporaryTypeSet::TemporaryTypeSet(LifoAlloc* alloc, Type type)
 }
 
 bool
-TypeSet::mightBeMIRType(jit::MIRType type)
+TypeSet::mightBeMIRType(jit::MIRType type) const
 {
     if (unknown())
         return true;

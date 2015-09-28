@@ -568,7 +568,8 @@ public:
      */
     static PRLogModuleInfo* GetLog(eGfxLog aWhichLog);
 
-    virtual int GetScreenDepth() const;
+    int GetScreenDepth() const { return mScreenDepth; }
+    mozilla::gfx::IntSize GetScreenSize() const { return mScreenSize; }
 
     /**
      * Return the layer debugging options to use browser-wide.
@@ -777,6 +778,11 @@ private:
      */
     void ComputeTileSize();
 
+    /**
+     * This uses nsIScreenManager to determine the screen size and color depth
+     */
+    void PopulateScreenInfo();
+
     nsRefPtr<gfxASurface> mScreenReferenceSurface;
     nsTArray<uint32_t> mCJKPrefLangs;
     nsCOMPtr<nsIObserver> mSRGBOverrideObserver;
@@ -804,6 +810,9 @@ private:
     // Backend that we are compositing with. NONE, if no compositor has been
     // created yet.
     mozilla::layers::LayersBackend mCompositorBackend;
+
+    int32_t mScreenDepth;
+    mozilla::gfx::IntSize mScreenSize;
 };
 
 #endif /* GFX_PLATFORM_H */

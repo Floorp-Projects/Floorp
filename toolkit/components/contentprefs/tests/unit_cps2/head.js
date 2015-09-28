@@ -226,7 +226,7 @@ function getGlobalOK(args, expectedVal) {
 function getOKEx(methodName, args, expectedPrefs, strict, context) {
   let actualPrefs = [];
   args.push(makeCallback({
-    handleResult: function (pref) actualPrefs.push(pref)
+    handleResult: pref => actualPrefs.push(pref)
   }));
   yield cps[methodName].apply(cps, args);
   arraysOfArraysOK([actualPrefs], [expectedPrefs], function (actual, expected) {
@@ -343,7 +343,7 @@ function dbOK(expectedRows) {
     handleResult: function (results) {
       let row = null;
       while (row = results.getNextRow()) {
-        actualRows.push(cols.map(function (c) row.getResultByName(c)));
+        actualRows.push(cols.map(c => row.getResultByName(c)));
       }
     },
     handleError: function (err) {
@@ -368,7 +368,7 @@ function on(event, names, dontRemove) {
   names.forEach(function (name) {
     let obs = {};
     ["onContentPrefSet", "onContentPrefRemoved"].forEach(function (meth) {
-      obs[meth] = function () do_throw(meth + " should not be called");
+      obs[meth] = () => do_throw(meth + " should not be called");
     });
     obs["onContentPref" + event] = function () {
       args[name].push(Array.slice(arguments));
@@ -381,7 +381,7 @@ function on(event, names, dontRemove) {
 
   do_execute_soon(function () {
     if (!dontRemove)
-      names.forEach(function (n) cps.removeObserverForName(n, observers[n]));
+      names.forEach(n => cps.removeObserverForName(n, observers[n]));
     next(args);
   });
 }

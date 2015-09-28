@@ -1,0 +1,18 @@
+$inherits:
+  from: 'tasks/builds/linux32_clobber.yml'
+  variables:
+    build_name: 'linux32'
+    build_type: 'opt'
+task:
+  metadata:
+      name: '[TC] Linux32 Opt'
+      description: 'Linux32 Opt'
+
+  workerType: opt-linux32
+
+  extra:
+    treeherder:
+      groupSymbol: tc
+      groupName: Submitted by taskcluster
+      symbol: B
+

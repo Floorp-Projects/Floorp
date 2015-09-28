@@ -150,13 +150,13 @@ var tests = [
   },
 
   function erroneous() {
-    do_check_throws(function () cps.removeByDomain(null, null));
-    do_check_throws(function () cps.removeByDomain("", null));
-    do_check_throws(function () cps.removeByDomain("a.com", null, "bogus"));
-    do_check_throws(function () cps.removeBySubdomain(null, null));
-    do_check_throws(function () cps.removeBySubdomain("", null));
-    do_check_throws(function () cps.removeBySubdomain("a.com", null, "bogus"));
-    do_check_throws(function () cps.removeAllGlobals(null, "bogus"));
+    do_check_throws(() => cps.removeByDomain(null, null));
+    do_check_throws(() => cps.removeByDomain("", null));
+    do_check_throws(() => cps.removeByDomain("a.com", null, "bogus"));
+    do_check_throws(() => cps.removeBySubdomain(null, null));
+    do_check_throws(() => cps.removeBySubdomain("", null));
+    do_check_throws(() => cps.removeBySubdomain("a.com", null, "bogus"));
+    do_check_throws(() => cps.removeAllGlobals(null, "bogus"));
     yield true;
   },
 
