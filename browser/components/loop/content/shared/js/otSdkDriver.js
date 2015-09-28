@@ -38,13 +38,9 @@ loop.OTSdkDriver = (function() {
 
     this.connections = {};
 
-    // Metrics object to keep track of the number of connections we have
+    // Setup the metrics object to keep track of the number of connections we have
     // and the amount of streams.
-    this._metrics = {
-      connections: 0,
-      sendStreams: 0,
-      recvStreams: 0
-    };
+    this._resetMetrics();
 
     this.dispatcher.register(this, [
       "setupStreamElements",
@@ -105,6 +101,17 @@ loop.OTSdkDriver = (function() {
           // channel.
           text: {}
         }
+      };
+    },
+
+    /**
+     * Resets the metrics for the driver.
+     */
+    _resetMetrics: function() {
+      this._metrics = {
+        connections: 0,
+        sendStreams: 0,
+        recvStreams: 0
       };
     },
 
@@ -292,6 +299,9 @@ loop.OTSdkDriver = (function() {
         this.publisher.destroy();
         delete this.publisher;
       }
+
+      // Now reset the metrics as well.
+      this._resetMetrics();
 
       this._noteConnectionLengthIfNeeded(this._getTwoWayMediaStartTime(), performance.now());
 
