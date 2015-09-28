@@ -113,6 +113,30 @@ DocumentTimeline::WillRefresh(mozilla::TimeStamp aTime)
   }
 }
 
+void
+DocumentTimeline::NotifyRefreshDriverCreated(nsRefreshDriver* aDriver)
+{
+  MOZ_ASSERT(!mIsObservingRefreshDriver,
+             "Timeline should not be observing the refresh driver before"
+             " it is created");
+
+  if (mAnimations.Count()) {
+    aDriver->AddRefreshObserver(this, Flush_Style);
+    mIsObservingRefreshDriver = true;
+  }
+}
+
+void
+DocumentTimeline::NotifyRefreshDriverDestroying(nsRefreshDriver* aDriver)
+{
+  if (!mIsObservingRefreshDriver) {
+    return;
+  }
+
+  aDriver->RemoveRefreshObserver(this, Flush_Style);
+  mIsObservingRefreshDriver = false;
+}
+
 TimeStamp
 DocumentTimeline::ToTimeStamp(const TimeDuration& aTimeDuration) const
 {

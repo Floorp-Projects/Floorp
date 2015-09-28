@@ -163,6 +163,7 @@
 #include "Layers.h"
 #include "LayerTreeInvalidation.h"
 #include "mozilla/css/ImageLoader.h"
+#include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "nsCanvasFrame.h"
@@ -972,6 +973,9 @@ PresShell::Init(nsIDocument* aDocument,
     animCtrl->NotifyRefreshDriverCreated(GetPresContext()->RefreshDriver());
   }
 
+  mDocument->Timeline()->NotifyRefreshDriverCreated(GetPresContext()->
+                                                      RefreshDriver());
+
   // Get our activeness from the docShell.
   QueryIsActive();
 
@@ -1261,6 +1265,8 @@ PresShell::Destroy()
     if (mDocument->HasAnimationController()) {
       mDocument->GetAnimationController()->NotifyRefreshDriverDestroying(rd);
     }
+
+    mDocument->Timeline()->NotifyRefreshDriverDestroying(rd);
   }
 
   if (mPresContext) {
