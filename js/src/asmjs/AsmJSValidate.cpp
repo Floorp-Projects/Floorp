@@ -8182,7 +8182,11 @@ CheckModule(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList,
 static bool
 Warn(AsmJSParser& parser, int errorNumber, const char* str)
 {
-    parser.reportNoOffset(ParseWarning, /* strict = */ false, errorNumber, str ? str : "");
+    ParseReportKind reportKind = parser.options().throwOnAsmJSValidationFailureOption &&
+                                 errorNumber == JSMSG_USE_ASM_TYPE_FAIL
+                                 ? ParseError
+                                 : ParseWarning;
+    parser.reportNoOffset(reportKind, /* strict = */ false, errorNumber, str ? str : "");
     return false;
 }
 
