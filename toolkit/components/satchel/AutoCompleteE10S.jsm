@@ -56,7 +56,9 @@ var AutoCompleteE10SView = {
   getColumnProperties: function(column) { return ""; },
 
   // nsIAutoCompleteController
-  get matchCount() this.rowCount,
+  get matchCount() {
+    return this.rowCount;
+  },
 
   handleEnter: function(aIsPopupSelection) {
     AutoCompleteE10S.handleEnter(aIsPopupSelection);

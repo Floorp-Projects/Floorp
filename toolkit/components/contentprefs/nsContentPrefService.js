@@ -59,7 +59,7 @@ ContentPrefService.prototype = {
       Ci.nsIContentPrefService,
       Ci.nsISupports,
     ];
-    if (supportedIIDs.some(function (i) iid.equals(i)))
+    if (supportedIIDs.some(i => iid.equals(i)))
       return this;
     if (iid.equals(Ci.nsIContentPrefService2)) {
       if (!this._contentPrefService2) {

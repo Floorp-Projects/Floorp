@@ -1631,6 +1631,9 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   }
 
   nsNodeUtils::ParentChainChanged(this);
+  if (!hadParent && IsRootOfNativeAnonymousSubtree()) {
+    nsNodeUtils::NativeAnonymousChildListChange(this, false);
+  }
 
   if (HasID()) {
     AddToIdTable(DoGetID());
@@ -1743,6 +1746,10 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
           parent = parent->GetParent();
         }
       }
+    }
+
+    if (this->IsRootOfNativeAnonymousSubtree()) {
+      nsNodeUtils::NativeAnonymousChildListChange(this, true);
     }
 
     if (GetParent()) {

@@ -5,36 +5,28 @@
 
 #include "mozSpellI18NManager.h"
 #include "mozEnglishWordUtils.h"
-#include "mozGenericWordUtils.h"
 #include "nsString.h"
+#include "mozilla/nsRefPtr.h"
 
 NS_IMPL_ISUPPORTS(mozSpellI18NManager, mozISpellI18NManager)
 
 mozSpellI18NManager::mozSpellI18NManager()
 {
-  /* member initializers and constructor code */
 }
 
 mozSpellI18NManager::~mozSpellI18NManager()
 {
-  /* destructor code */
 }
 
 NS_IMETHODIMP mozSpellI18NManager::GetUtil(const char16_t *aLanguage, mozISpellI18NUtil **_retval)
 {
- if( nullptr == _retval) {
+ if (!_retval) {
    return NS_ERROR_NULL_POINTER;
  }
- *_retval = nullptr;
- nsAutoString lang;
- lang.Assign(aLanguage);
- if(lang.EqualsLiteral("en")){
-   *_retval = new mozEnglishWordUtils;
- }
- else{
-   *_retval = new mozEnglishWordUtils;   
- }
 
- NS_IF_ADDREF(*_retval);
+ // XXX TODO Actually handle multiple languages.
+ nsRefPtr<mozEnglishWordUtils> utils = new mozEnglishWordUtils;
+ utils.forget(_retval);
+
  return NS_OK;
 }

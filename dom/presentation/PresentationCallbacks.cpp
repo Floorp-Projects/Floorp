@@ -105,7 +105,7 @@ PresentationResponderLoadingCallback::Init(nsIDocShell* aDocShell)
     return rv;
   }
 
-  if ((busyFlags & nsIDocShell::BUSY_FLAGS_NONE) ||
+  if ((busyFlags == nsIDocShell::BUSY_FLAGS_NONE) ||
       (busyFlags & nsIDocShell::BUSY_FLAGS_PAGE_LOADING)) {
     // The docshell has finished loading or is receiving data (|STATE_TRANSFERRING|
     // has already been fired), so the page is ready for presentation use.
