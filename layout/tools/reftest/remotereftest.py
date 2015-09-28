@@ -310,7 +310,8 @@ class RemoteReftest(RefTest):
 
     def runApp(self, profile, binary, cmdargs, env,
                timeout=None, debuggerInfo=None,
-               symbolsPath=None, options=None):
+               symbolsPath=None, options=None,
+               valgrindPath=None, valgrindArgs=None, valgrindSuppFiles=None):
         status = self.automation.runApp(None, env,
                                         binary,
                                         profile.profile,

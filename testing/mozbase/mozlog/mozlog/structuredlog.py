@@ -362,6 +362,11 @@ class StructuredLogger(object):
 
         self._log_data("crash", data)
 
+    @log_action(Unicode("primary", default=None),
+                List("secondary", Unicode, default=None))
+    def valgrind_error(self, data):
+        self._log_data("valgrind_error", data)
+
     @log_action(Unicode("process"),
                 Unicode("command", default=None, optional=True))
     def process_start(self, data):
