@@ -26,6 +26,9 @@ EXPORTS.mozilla.gfx += [
     'Helpers.h',
     'HelpersCairo.h',
     'IterableArena.h',
+    'JobScheduler.h',
+    'JobScheduler_posix.h',
+    'JobScheduler_win32.h',
     'Logging.h',
     'Matrix.h',
     'NumericTools.h',
@@ -70,6 +73,11 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'SourceSurfaceD2DTarget.cpp',
     ]
     DEFINES['WIN32'] = True
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'windows':
+    SOURCES += [
+        'JobScheduler_posix.cpp',
+    ]
 
 if CONFIG['MOZ_ENABLE_SKIA']:
     UNIFIED_SOURCES += [
@@ -130,6 +138,7 @@ UNIFIED_SOURCES += [
     'FilterProcessing.cpp',
     'FilterProcessingScalar.cpp',
     'ImageScaling.cpp',
+    'JobScheduler.cpp',
     'Matrix.cpp',
     'Path.cpp',
     'PathCairo.cpp',
