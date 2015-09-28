@@ -58,6 +58,59 @@ loop.standaloneRoomViews = (function(mozL10n) {
     }
   });
 
+  var StandaloneHandleUserAgentView = React.createClass({
+    mixins: [
+      loop.store.StoreMixin("activeRoomStore")
+    ],
+
+    propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
+    },
+
+    getInitialState: function() {
+      return this.getStoreState();
+    },
+
+    handleJoinButton: function() {
+      this.props.dispatcher.dispatch(new sharedActions.JoinRoom());
+    },
+
+    render: function() {
+      var buttonMessage = this.state.roomState === ROOM_STATES.JOINED ?
+        mozL10n.get("rooms_room_joined_own_conversation_label") :
+        mozL10n.get("rooms_room_join_label");
+
+      var buttonClasses = React.addons.classSet({
+        btn: true,
+        "btn-info": true,
+        disabled: this.state.roomState === ROOM_STATES.JOINED
+      });
+
+      // The extra scroller div here is for providing a scroll view for shorter
+      // screens, as the common.css specifies overflow:hidden for the body which
+      // we need in some places.
+      return (
+        <div className="handle-user-agent-view-scroller">
+          <div className="handle-user-agent-view">
+            <div className="info-panel">
+              <p className="loop-logo-text" title={ mozL10n.get("clientShortname2") }></p>
+              <p className="roomName">{ this.state.roomName }</p>
+              <p className="loop-logo" />
+              <button
+                className={buttonClasses}
+                onClick={this.handleJoinButton}>
+                {buttonMessage}
+              </button>
+            </div>
+            <ToSView
+              dispatcher={this.props.dispatcher} />
+            <p className="mozilla-logo" />
+          </div>
+        </div>
+      );
+    }
+  });
+
   /**
    * Handles display of failures, determining the correct messages and
    * displaying the retry button at appropriate times.
@@ -611,7 +664,45 @@ loop.standaloneRoomViews = (function(mozL10n) {
     }
   });
 
+  var StandaloneRoomControllerView = React.createClass({
+    mixins: [
+      loop.store.StoreMixin("activeRoomStore")
+    ],
+
+    propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      isFirefox: React.PropTypes.bool.isRequired
+    },
+
+    getInitialState: function() {
+      return this.getStoreState();
+    },
+
+    render: function() {
+      // If we don't know yet, don't display anything.
+      if (this.state.firefoxHandlesRoom === undefined) {
+        return null;
+      }
+
+      if (this.state.firefoxHandlesRoom) {
+        return (
+          <StandaloneHandleUserAgentView
+            dispatcher={this.props.dispatcher} />
+        );
+      }
+
+      return (
+        <StandaloneRoomView
+          activeRoomStore={this.getStore()}
+          dispatcher={this.props.dispatcher}
+          isFirefox={this.props.isFirefox} />
+      );
+    }
+  });
+
   return {
+    StandaloneHandleUserAgentView: StandaloneHandleUserAgentView,
+    StandaloneRoomControllerView: StandaloneRoomControllerView,
     StandaloneRoomFailureView: StandaloneRoomFailureView,
     StandaloneRoomFooter: StandaloneRoomFooter,
     StandaloneRoomHeader: StandaloneRoomHeader,
