@@ -1,0 +1,152 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.domTable {
+  font-size: 11px;
+  font-family: Lucida Grande, Tahoma, sans-serif;
+  line-height: 15px;
+  width: 100%;
+}
+
+.domTable > tbody > tr > td {
+  border-bottom: 1px solid #EFEFEF;
+}
+
+.hidden {
+  display: none;
+}
+
+.memberLabelCell {
+  padding: 2px 0 2px 0px;
+  vertical-align: top;
+}
+
+.memberValueCell {
+  padding: 2px 0 2px 5px;
+  overflow: hidden;
+}
+
+.memberLabel {
+  cursor: default;
+  overflow: hidden;
+  padding-left: 18px;
+  white-space: nowrap;
+}
+
+.memberLabelPrefix {
+  color: gray;
+  margin-right: 3px;
+  font-weight: normal;
+}
+
+.memberValueIcon > div {
+  width: 15px;
+}
+
+/******************************************************************************/
+/* Read Only Properties */
+
+.memberValueCell.readOnly {
+  opacity: 0.5;
+}
+
+.memberValueIcon.readOnly {
+  background: url("read-only-prop.svg") no-repeat;
+  background-position: 4px 4px;
+  background-size: 10px 10px;
+}
+
+/******************************************************************************/
+
+.memberRow.hasChildren > .memberLabelCell > .memberLabel:hover,
+.memberRow.cropped > .memberLabelCell > .memberLabel:hover {
+  cursor: pointer;
+  color: blue;
+  text-decoration: underline;
+}
+
+.memberRow:hover {
+  background-color: #EFEFEF;
+}
+
+.panelNode-dom .memberRow td,
+.panelNode-domSide .memberRow td {
+  border-bottom: 1px solid #EFEFEF;
+}
+
+/******************************************************************************/
+
+.userLabel,
+.userClassLabel,
+.userFunctionLabel {
+  font-weight: bold;
+}
+
+.userLabel {
+  color: #000000;
+}
+
+.userClassLabel {
+  color: #E90000;
+}
+
+.userFunctionLabel {
+  color: #025E2A;
+}
+
+.domLabel {
+  color: #000000;
+}
+
+.domClassLabel {
+  color: #E90000;
+}
+
+.domFunctionLabel {
+  color: #025E2A;
+}
+
+.ordinalLabel {
+  color: SlateBlue;
+  font-weight: bold;
+}
+
+/******************************************************************************/
+/* Twisties */
+
+.memberRow.hasChildren > .memberLabelCell > .memberLabel,
+.memberRow.cropped > .memberLabelCell > .memberLabel {
+  background-image: url(twisty-closed.svg);
+  background-repeat: no-repeat;
+  background-position: 2px calc(0.5em - 3px);
+  min-height: 12px;
+}
+
+.memberRow.hasChildren.opened > .memberLabelCell > .memberLabel,
+.memberRow.cropped.opened > .memberLabelCell > .memberLabel {
+  background-image: url(twisty-open.svg);
+  background-repeat: no-repeat;
+  min-height: 12px;
+}
+
+/******************************************************************************/
+/* Layout support */
+
+.memberChildren {
+  padding-left: 16px;
+}
+
+.memberLabelCell,
+.memberValueCell {
+  display: table-cell;
+}
+
+.memberLabelCell {
+  min-width: 30px;
+}
+
+.memberRow:hover {
+  background-color: transparent !important;
+}

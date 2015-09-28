@@ -1,0 +1,94 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/******************************************************************************/
+/* Toolbar */
+
+.toolbar {
+  line-height: 20px;
+  font-size: 12px;
+  height: 22px;
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  padding: 4px 0 3px 0;
+}
+
+.toolbar .btn {
+  margin-left: 5px;
+  background-color: #E6E6E6;
+  border: 1px solid rgb(204, 204, 204);
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  -moz-user-select: none;
+  padding: 0 2px 1px 2px;
+}
+
+.toolbar .btn::-moz-focus-inner {
+  border: 1px solid transparent;
+}
+
+/******************************************************************************/
+/* Firebug Theme */
+
+.theme-firebug .toolbar {
+  border-bottom: 1px solid rgb(170, 188, 207);
+  background-color: rgb(219, 234, 249) !important;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.2));
+}
+
+.theme-firebug .toolbar .btn {
+  border-radius: 2px;
+  color: #141414;
+  background-color: white;
+}
+
+.theme-firebug .toolbar .btn:hover {
+  color: #333;
+  background-color: #e6e6e6;
+  border-color: #adadad;
+}
+
+.theme-firebug .toolbar .btn:active {
+  background-image: none;
+  outline: 0;
+  box-shadow: inset 0 3px 5px rgba(0, 0, 0, .125);
+}
+
+/******************************************************************************/
+/* Light Theme & Dark Theme*/
+
+.theme-dark .toolbar,
+.theme-light .toolbar {
+  background-color: var(--theme-toolbar-background);
+  border-bottom: 1px solid var(--theme-splitter-color);
+  padding: 1px;
+  padding-left: 2px;
+}
+
+.theme-dark .toolbar .btn,
+.theme-light .toolbar .btn {
+  min-width: 78px;
+  min-height: 18px;
+  color: var(--theme-content-color1);
+  text-shadow: none;
+  margin: 1px 2px 1px 2px;
+  border: none;
+  border-radius: 0;
+  background-color: rgba(170, 170, 170, .2); /* Splitter */
+  transition: background 0.05s ease-in-out;
+}
+
+.theme-dark .toolbar .btn:hover,
+.theme-light .toolbar .btn:hover {
+  background: rgba(170, 170, 170, .3); /* Splitters */
+}
+
+.theme-dark .toolbar .btn:not([disabled]):hover:active,
+.theme-light .toolbar .btn:not([disabled]):hover:active {
+  background: rgba(170, 170, 170, .4); /* Splitters */
+}
