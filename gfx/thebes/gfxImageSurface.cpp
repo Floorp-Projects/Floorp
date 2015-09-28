@@ -190,9 +190,7 @@ gfxImageSurface::ComputeStride(const IntSize& aSize, gfxImageFormat aFormat)
         stride = aSize.width * 2;
     else if (aFormat == gfxImageFormat::A8)
         stride = aSize.width;
-    else if (aFormat == gfxImageFormat::A1) {
-        stride = (aSize.width + 7) / 8;
-    } else {
+    else {
         NS_WARNING("Unknown format specified to gfxImageSurface!");
         stride = aSize.width * 4;
     }

@@ -52,7 +52,6 @@ enum class gfxImageFormat {
   ARGB32, ///< ARGB data in native endianness, using premultiplied alpha
   RGB24,  ///< xRGB data in native endianness
   A8,     ///< Only an alpha channel
-  A1,     ///< Packed transparency information (one byte refers to 8 pixels)
   RGB16_565,  ///< RGB_565 data in native endianness
   Unknown
 };
