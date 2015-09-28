@@ -971,7 +971,7 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   NPError err = pluginInstanceInit(instanceData);
   if (err != NPERR_NO_ERROR) {
     NPN_ReleaseObject(scriptableObject);
-    free(instanceData);
+    delete instanceData;
     return err;
   }
 
