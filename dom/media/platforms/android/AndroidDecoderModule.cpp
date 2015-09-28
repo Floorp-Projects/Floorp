@@ -86,8 +86,10 @@ public:
   }
 
   bool WantCopy() {
-    // Allocating a texture is incredibly slow on PowerVR
-    return mGLContext->Vendor() != GLVendor::Imagination;
+    // Allocating a texture is incredibly slow on PowerVR and may fail on
+    // emulators, see bug 1190379.
+    return mGLContext->Vendor() != GLVendor::Imagination &&
+           mGLContext->Renderer() != GLRenderer::AndroidEmulator;
   }
 
   EGLImage CopySurface(layers::Image* img) {
