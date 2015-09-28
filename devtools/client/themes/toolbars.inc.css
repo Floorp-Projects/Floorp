@@ -768,6 +768,10 @@
   background-image: url("chrome://devtools/skin/themes/images/command-rulers.png");
 }
 
+#command-button-measure > image {
+  background-image: url("chrome://devtools/skin/themes/images/command-measure.png");
+}
+
 @media (min-resolution: 1.1dppx) {
   #command-button-paintflashing > image {
     background-image: url("chrome://devtools/skin/themes/images/command-paintflashing@2x.png");
@@ -807,6 +811,10 @@
 
   #command-button-rulers > image {
     background-image: url("chrome://devtools/skin/themes/images/command-rulers@2x.png");
+  }
+
+  #command-button-measure > image {
+    background-image: url("chrome://devtools/skin/themes/images/command-measure@2x.png");
   }
 }
 
