@@ -22,7 +22,7 @@ dictionary RTCSessionDescriptionInit {
 [Pref="media.peerconnection.enabled",
  JSImplementation="@mozilla.org/dom/rtcsessiondescription;1",
  Constructor(optional RTCSessionDescriptionInit descriptionInitDict)]
-interface RTCSessionDescription {
+interface mozRTCSessionDescription {
   attribute RTCSdpType? type;
   attribute DOMString? sdp;
 

@@ -19,14 +19,14 @@ var failure = function(x) {
 var TabMirror = function(deviceId, window) {
 
   this.deviceId = deviceId;
-  // Save RTCSessionDescription and RTCIceCandidate for later when the window object is not available.
-  this.RTCSessionDescription = window.RTCSessionDescription;
-  this.RTCIceCandidate = window.RTCIceCandidate;
+  // Save mozRTCSessionDescription and mozRTCIceCandidate for later when the window object is not available.
+  this.RTCSessionDescription = window.mozRTCSessionDescription;
+  this.RTCIceCandidate = window.mozRTCIceCandidate;
 
   Services.obs.addObserver((aSubject, aTopic, aData) => this._processMessage(aData), "MediaPlayer:Response", false);
   this._sendMessage({ start: true });
   this._window = window;
-  this._pc = new window.RTCPeerConnection(CONFIG, {});
+  this._pc = new window.mozRTCPeerConnection(CONFIG, {});
   if (!this._pc) {
     throw "Failure creating Webrtc object";
   }
