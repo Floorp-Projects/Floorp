@@ -9,7 +9,6 @@
 #include <algorithm> // For <std::stable_sort>
 #include "nsIStyleRuleProcessor.h"
 #include "nsIStyleRule.h"
-#include "nsRefreshDriver.h"
 #include "nsChangeHint.h"
 #include "nsCSSProperty.h"
 #include "nsDisplayList.h" // For nsDisplayItem::Type
@@ -40,8 +39,7 @@ struct AnimationCollection;
 
 bool IsGeometricProperty(nsCSSProperty aProperty);
 
-class CommonAnimationManager : public nsIStyleRuleProcessor,
-                               public nsARefreshObserver {
+class CommonAnimationManager : public nsIStyleRuleProcessor {
 public:
   explicit CommonAnimationManager(nsPresContext *aPresContext);
 
@@ -63,9 +61,6 @@ public:
     const MOZ_MUST_OVERRIDE override;
   virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
     const MOZ_MUST_OVERRIDE override;
-
-  // nsARefreshObserver
-  void WillRefresh(TimeStamp aTime) override;
 
   // NOTE:  This can return null after Disconnect().
   nsPresContext* PresContext() const { return mPresContext; }
@@ -118,31 +113,21 @@ public:
     nsChangeHint mChangeHint;
   };
 
+  virtual bool IsAnimationManager() {
+    return false;
+  }
+
 protected:
   virtual ~CommonAnimationManager();
 
-  // For ElementCollectionRemoved
-  friend struct AnimationCollection;
-
   void AddElementCollection(AnimationCollection* aCollection);
-  void ElementCollectionRemoved() { MaybeStartOrStopObservingRefreshDriver(); }
   void RemoveAllElementCollections();
 
-  // We should normally only call MaybeStartOrStopObservingRefreshDriver in
-  // situations where we will also queue events since otherwise we may stop
-  // getting refresh driver ticks before we queue the necessary events.
-  void MaybeStartObservingRefreshDriver();
-  void MaybeStartOrStopObservingRefreshDriver();
   bool NeedsRefresh() const;
 
   virtual nsIAtom* GetAnimationsAtom() = 0;
   virtual nsIAtom* GetAnimationsBeforeAtom() = 0;
   virtual nsIAtom* GetAnimationsAfterAtom() = 0;
-
-  virtual bool IsAnimationManager() {
-    return false;
-  }
-
 
 public:
   // Return an AnimationCollection* if we have an animation for
@@ -167,7 +152,6 @@ public:
 protected:
   LinkedList<AnimationCollection> mElementCollections;
   nsPresContext *mPresContext; // weak (non-null from ctor to Disconnect)
-  bool mIsObservingRefreshDriver;
 };
 
 /**
@@ -243,7 +227,6 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
                "must call destructor through element property dtor");
     MOZ_COUNT_DTOR(AnimationCollection);
     remove();
-    mManager->ElementCollectionRemoved();
   }
 
   void Destroy()
