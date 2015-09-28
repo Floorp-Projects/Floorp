@@ -680,11 +680,11 @@ loop.standaloneRoomViews = (function(mozL10n) {
 
     render: function() {
       // If we don't know yet, don't display anything.
-      if (this.state.firefoxHandlesRoom === undefined) {
+      if (this.state.userAgentHandlesRoom === undefined) {
         return null;
       }
 
-      if (this.state.firefoxHandlesRoom) {
+      if (this.state.userAgentHandlesRoom) {
         return (
           React.createElement(StandaloneHandleUserAgentView, {
             dispatcher: this.props.dispatcher})

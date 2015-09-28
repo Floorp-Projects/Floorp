@@ -195,6 +195,7 @@ html[dir="rtl"] .rooms-footer .footer-logo {
   background-color: #EBEBEB;
   border-color: #EBEBEB;
   color: #B2B0B3;
+  font-weight: normal;
 }
 
 /* Room wrapper layout */
