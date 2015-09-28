@@ -776,9 +776,7 @@ nsPluginFrame::GetRemoteTabChromeOffset()
       if (topWindow) {
         dom::TabChild* tc = dom::TabChild::GetFrom(topWindow);
         if (tc) {
-          LayoutDeviceIntPoint chromeOffset;
-          tc->SendGetTabOffset(&chromeOffset);
-          offset -= chromeOffset;
+          offset += tc->GetChromeDisplacement();
         }
       }
     }
