@@ -14,12 +14,25 @@
 
 /* global require */
 
-require("script!shared/libs/sdk.js");
+// The OpenTok SDK tries to do some heuristic detection of require and
+// assumes a node environment if it's present, which confuses webpack, so
+// we turn that off by forcing require to false in that context.
+require("imports?require=>false!shared/libs/sdk.js");
 
 require("script!./libs/l10n-gaia-02ca67948fe8.js");
-require("script!shared/libs/react-0.12.2.js");
-require("script!shared/libs/lodash-3.9.3.js");
+
+// Ultimately, we'll likely want to pull the vendor libraries from npm, as that
+// makes upgrading easier, and it's generally better practice to minify the
+// "source" versions of libraries rather than built artifacts.  We probably do
+// want to minify them ourselves since this allows for better dead-code
+// elimination, but that can be a bit of judgement call.
+require("exports?_!shared/libs/lodash-3.9.3.js");
+
+// Note that anything that uses the script loader doesn't get minified, so
+// these need to be shimmed to use to other loaders (easiest first cut) or
+// turned into real modules:
 require("script!shared/libs/backbone-1.2.1.js");
+require("script!shared/libs/react-0.12.2.js");
 
 require("script!shared/js/utils.js");
 require("script!shared/js/crypto.js");

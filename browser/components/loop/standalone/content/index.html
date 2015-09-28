@@ -43,6 +43,8 @@
        */
       function require(url) {
         var devTimeUrl = url.replace(/^script!/, '');
+        var devTimeUrl = devTimeUrl.replace(/^imports.*!/, '');
+        var devTimeUrl = devTimeUrl.replace(/^exports.*!/, '');
         insertScript(devTimeUrl, true);
       }
 

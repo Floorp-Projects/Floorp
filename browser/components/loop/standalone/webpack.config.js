@@ -4,6 +4,7 @@
 // functionality in other script logic whenever practical.
 
 var path = require("path");
+var webpack = require("webpack");
 
 function getSharedDir() {
   "use strict";
@@ -51,5 +52,23 @@ module.exports = {
     // Reduce false-positive warnings when viewing in editors which read
     // our eslint config files (which disallows tabs).
     sourcePrefix: "  "
-  }
+  },
+
+  plugins: [
+    new webpack.optimize.UglifyJsPlugin({
+      compress: {
+        // XXX I'd _like_ to only suppress the warnings for vendor code, since
+        // we're not likely to fix those.  However, since:
+        //
+        //   * this seems to be hard
+        //   * the consensus seems to be that these warnings are
+        //     aren't terribly high value
+        //   * training people to ignore warnings is pretty much always a bad
+        //     plan
+        //
+        // we suppress them everywhere
+        warnings: false
+      }
+    })
+  ]
 };

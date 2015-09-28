@@ -12,6 +12,11 @@
 var express = require("express");
 var app = express();
 
+// make dev-server performance more similar to the production server by using
+// gzip compression
+var compression = require("compression");
+app.use(compression());
+
 var path = require("path");
 
 var port = process.env.PORT || 3000;
