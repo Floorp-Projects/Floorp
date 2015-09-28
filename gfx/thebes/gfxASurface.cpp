@@ -468,7 +468,6 @@ gfxASurface::ContentFromFormat(gfxImageFormat format)
         case gfxImageFormat::RGB16_565:
             return gfxContentType::COLOR;
         case gfxImageFormat::A8:
-        case gfxImageFormat::A1:
             return gfxContentType::ALPHA;
 
         case gfxImageFormat::Unknown:
@@ -675,8 +674,6 @@ gfxASurface::BytesPerPixel(gfxImageFormat aImageFormat)
       return 2;
     case gfxImageFormat::A8:
       return 1;
-    case gfxImageFormat::A1:
-      return 1; // Close enough
     case gfxImageFormat::Unknown:
     default:
       NS_NOTREACHED("Not really sure what you want me to say here");
