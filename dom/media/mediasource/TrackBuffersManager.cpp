@@ -1890,17 +1890,58 @@ TrackBuffersManager::GetTrackBuffer(TrackInfo::TrackType aTrack)
   return GetTracksData(aTrack).mBuffers.LastElement();
 }
 
+uint32_t TrackBuffersManager::FindSampleIndex(const TrackBuffer& aTrackBuffer,
+                                              const TimeInterval& aInterval)
+{
+  TimeUnit target = aInterval.mStart - aInterval.mFuzz;
+
+  for (uint32_t i = 0; i < aTrackBuffer.Length(); i++) {
+    const nsRefPtr<MediaRawData>& sample = aTrackBuffer[i];
+    if (sample->mTime >= target.ToMicroseconds() ||
+        sample->GetEndTime() > target.ToMicroseconds()) {
+      return i;
+    }
+  }
+  NS_ASSERTION(false, "FindSampleIndex called with invalid arguments");
+
+  return 0;
+}
+
 TimeUnit
 TrackBuffersManager::Seek(TrackInfo::TrackType aTrack,
-                          const TimeUnit& aTime)
+                          const TimeUnit& aTime,
+                          const TimeUnit& aFuzz)
 {
   MOZ_ASSERT(OnTaskQueue());
   auto& trackBuffer = GetTracksData(aTrack);
   const TrackBuffersManager::TrackBuffer& track = GetTrackBuffer(aTrack);
+
+  if (!track.Length()) {
+    // This a reset. It will be followed by another valid seek.
+    trackBuffer.mNextGetSampleIndex = Some(uint32_t(0));
+    trackBuffer.mNextSampleTimecode = TimeUnit();
+    trackBuffer.mNextSampleTime = TimeUnit();
+    return TimeUnit();
+  }
+
+  uint32_t i = 0;
+
+  if (aTime != TimeUnit()) {
+    // Determine the interval of samples we're attempting to seek to.
+    TimeIntervals buffered = trackBuffer.mBufferedRanges;
+    TimeIntervals::IndexType index = buffered.Find(aTime);
+    buffered.SetFuzz(aFuzz);
+    index = buffered.Find(aTime);
+    MOZ_ASSERT(index != TimeIntervals::NoIndex);
+
+    TimeInterval target = buffered[index];
+    i = FindSampleIndex(track, target);
+  }
+
   Maybe<TimeUnit> lastKeyFrameTime;
   TimeUnit lastKeyFrameTimecode;
   uint32_t lastKeyFrameIndex = 0;
-  for (uint32_t i = 0; i < track.Length(); i++) {
+  for (; i < track.Length(); i++) {
     const nsRefPtr<MediaRawData>& sample = track[i];
     TimeUnit sampleTime = TimeUnit::FromMicroseconds(sample->mTime);
     if (sampleTime > aTime && lastKeyFrameTime.isSome()) {
