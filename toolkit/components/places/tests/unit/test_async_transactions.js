@@ -1250,7 +1250,9 @@ add_task(function* test_annotate_multiple() {
     this.expires = Ci.nsIAnnotationService.EXPIRE_NEVER;
   }
 
-  function annos(a = null, b = null) [new AnnoObj("A", a), new AnnoObj("B", b)]
+  function annos(a = null, b = null) {
+    return [new AnnoObj("A", a), new AnnoObj("B", b)];
+  }
 
   function verifyAnnoValues(a = null, b = null) {
     let currentAnnos = PlacesUtils.getAnnotationsForItem(itemId);

@@ -58,16 +58,11 @@ var tests = [
   },
 
   function erroneous() {
-    do_check_throws(function ()
-                    cps.getBySubdomainAndName(null, "foo", null, {}));
-    do_check_throws(function ()
-                    cps.getBySubdomainAndName("", "foo", null, {}));
-    do_check_throws(function ()
-                    cps.getBySubdomainAndName("a.com", "", null, {}));
-    do_check_throws(function ()
-                    cps.getBySubdomainAndName("a.com", null, null, {}));
-    do_check_throws(function ()
-                    cps.getBySubdomainAndName("a.com", "foo", null, null));
+    do_check_throws(() => cps.getBySubdomainAndName(null, "foo", null, {}));
+    do_check_throws(() => cps.getBySubdomainAndName("", "foo", null, {}));
+    do_check_throws(() => cps.getBySubdomainAndName("a.com", "", null, {}));
+    do_check_throws(() => cps.getBySubdomainAndName("a.com", null, null, {}));
+    do_check_throws(() => cps.getBySubdomainAndName("a.com", "foo", null, null));
     yield true;
   },
 ];
