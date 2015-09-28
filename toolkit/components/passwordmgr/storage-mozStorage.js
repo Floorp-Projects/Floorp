@@ -501,7 +501,7 @@ LoginManagerStorage_mozStorage.prototype = {
     // Build query
     let query = "SELECT * FROM moz_logins";
     if (conditions.length) {
-      conditions = conditions.map(function(c) "(" + c + ")");
+      conditions = conditions.map(c => "(" + c + ")");
       query += " WHERE " + conditions.join(" AND ");
     }
 
@@ -713,7 +713,7 @@ LoginManagerStorage_mozStorage.prototype = {
 
       let query = "SELECT COUNT(1) AS numLogins FROM moz_logins";
       if (conditions.length) {
-        conditions = conditions.map(function(c) "(" + c + ")");
+        conditions = conditions.map(c => "(" + c + ")");
         query += " WHERE " + conditions.join(" AND ");
       }
 

@@ -6,5 +6,7 @@
 <resources>
 
     <integer name="number_of_inline_share_devices">3</integer>
+    <integer name="max_search_suggestions">4</integer>
+    <integer name="max_saved_suggestions">4</integer>
 
 </resources>

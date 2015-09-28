@@ -393,6 +393,14 @@ auto GeckoAppShell::GetScreenOrientationWrapper() -> int16_t
     return mozilla::jni::Method<GetScreenOrientationWrapper_t>::Call(nullptr, nullptr);
 }
 
+constexpr char GeckoAppShell::GetScreenSize_t::name[];
+constexpr char GeckoAppShell::GetScreenSize_t::signature[];
+
+auto GeckoAppShell::GetScreenSize() -> mozilla::jni::Object::LocalRef
+{
+    return mozilla::jni::Method<GetScreenSize_t>::Call(nullptr, nullptr);
+}
+
 constexpr char GeckoAppShell::GetShowPasswordSetting_t::name[];
 constexpr char GeckoAppShell::GetShowPasswordSetting_t::signature[];
 
@@ -955,6 +963,14 @@ constexpr char GeckoView::Window::DisposeNative_t::signature[];
 
 constexpr char GeckoView::Window::Open_t::name[];
 constexpr char GeckoView::Window::Open_t::signature[];
+
+constexpr char PrefsHelper::name[];
+
+constexpr char PrefsHelper::GetPrefsById_t::name[];
+constexpr char PrefsHelper::GetPrefsById_t::signature[];
+
+constexpr char PrefsHelper::RemovePrefsObserver_t::name[];
+constexpr char PrefsHelper::RemovePrefsObserver_t::signature[];
 
 constexpr char RestrictedProfiles::name[];
 
