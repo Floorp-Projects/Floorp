@@ -71,6 +71,18 @@ MouseInput::MouseInput(const WidgetMouseEventBase& aMouseEvent)
   }
 }
 
+bool
+MouseInput::TransformToLocal(const gfx::Matrix4x4& aTransform)
+{
+  Maybe<ParentLayerPoint> point = UntransformTo<ParentLayerPixel>(aTransform, mOrigin);
+  if (!point) {
+    return false;
+  }
+  mLocalOrigin = *point;
+
+  return true;
+}
+
 MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
   : InputData(MULTITOUCH_INPUT, aTouchEvent.time, aTouchEvent.timeStamp,
               aTouchEvent.modifiers)
