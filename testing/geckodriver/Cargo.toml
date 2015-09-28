@@ -14,7 +14,7 @@ mozprofile = "0.1.0"
 mozrunner = "0.1.0"
 rustc-serialize = "0.3.14"
 uuid = "0.1.17"
-webdriver = "0.3.1"
+webdriver = "0.4.0"
 regex="0.1.41"
 
 [dependencies.argparse]
