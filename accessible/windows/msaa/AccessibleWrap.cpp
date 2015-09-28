@@ -1294,8 +1294,12 @@ AccessibleWrap::GetChildIDFor(Accessible* aAccessible)
   // so that the 3rd party application can call back and get the IAccessible
   // the event occurred on.
 
+  if (!aAccessible) {
+    return 0;
+  }
+
 #ifdef _WIN64
-  if (!aAccessible || (!aAccessible->Document() && !aAccessible->IsProxy()))
+  if (!aAccessible->Document() && !aAccessible->IsProxy())
     return 0;
 
   uint32_t* id = & static_cast<AccessibleWrap*>(aAccessible)->mID;
