@@ -148,8 +148,8 @@ AudioNodeStream::SetStreamTimeParameter(uint32_t aIndex, AudioContext* aContext,
   };
 
   GraphImpl()->AppendMessage(new Message(this, aIndex,
-      aContext->DestinationStream(),
-      aContext->DOMTimeToStreamTime(aStreamTime)));
+                                         aContext->DestinationStream(),
+                                         aStreamTime));
 }
 
 void
