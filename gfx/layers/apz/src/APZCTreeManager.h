@@ -41,6 +41,7 @@ enum AllowedTouchBehavior {
 };
 
 class Layer;
+class AsyncDragMetrics;
 class AsyncPanZoomController;
 class CompositorParent;
 class OverscrollHandoffChain;
@@ -96,6 +97,7 @@ class APZCTreeManager {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(APZCTreeManager)
 
   typedef mozilla::layers::AllowedTouchBehavior AllowedTouchBehavior;
+  typedef mozilla::layers::AsyncDragMetrics AsyncDragMetrics;
 
   // Helper struct to hold some state while we build the hit-testing tree. The
   // sole purpose of this struct is to shorten the argument list to
@@ -297,6 +299,12 @@ public:
   static float GetDPI() { return sDPI; }
 
   /**
+   * Find the hit testing node for the scrollbar thumb that matches these
+   * drag metrics.
+   */
+  nsRefPtr<HitTestingTreeNode> FindScrollNode(const AsyncDragMetrics& aDragMetrics);
+
+  /**
    * Sets allowed touch behavior values for current touch-session for specific
    * input block (determined by aInputBlock).
    * Should be invoked by the widget. Each value of the aValues arrays
@@ -429,6 +437,8 @@ private:
   HitTestingTreeNode* FindTargetNode(HitTestingTreeNode* aNode,
                                      const ScrollableLayerGuid& aGuid,
                                      GuidComparator aComparator);
+  HitTestingTreeNode* FindScrollNode(HitTestingTreeNode* aNode,
+                                     const AsyncDragMetrics& aDragMetrics);
   AsyncPanZoomController* GetAPZCAtPoint(HitTestingTreeNode* aNode,
                                          const ParentLayerPoint& aHitTestPoint,
                                          HitTestResult* aOutHitResult);
