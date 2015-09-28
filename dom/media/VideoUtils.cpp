@@ -373,9 +373,10 @@ void
 SimpleTimer::Cancel() {
   if (mTimer) {
 #ifdef DEBUG
-    nsCOMPtr<nsIThread> target;
+    nsCOMPtr<nsIEventTarget> target;
     mTimer->GetTarget(getter_AddRefs(target));
-    MOZ_ASSERT(NS_GetCurrentThread() == target);
+    nsCOMPtr<nsIThread> thread(do_QueryInterface(target));
+    MOZ_ASSERT(NS_GetCurrentThread() == thread);
 #endif
     mTimer->Cancel();
     mTimer = nullptr;
