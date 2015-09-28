@@ -40,7 +40,7 @@ is(logins.length, 0, "ensure no remaining logins");
 // Remove any disabled hosts
 var disabledHosts = pwmgr.getAllDisabledHosts();
 ok(disabledHosts != null, "getAllDisabledHosts()");
-disabledHosts.forEach(function(host) pwmgr.setLoginSavingEnabled(host, true));
+disabledHosts.forEach(host => pwmgr.setLoginSavingEnabled(host, true));
 
 disabledHosts = pwmgr.getAllDisabledHosts();
 ok(disabledHosts != null, "getAllDisabledHosts()");

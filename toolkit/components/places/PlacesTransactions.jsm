@@ -196,7 +196,9 @@ TransactionsHistory.__proto__ = {
   // The index of the first undo entry (if any) - See the documentation
   // at the top of this file.
   _undoPosition: 0,
-  get undoPosition() this._undoPosition,
+  get undoPosition() {
+    return this._undoPosition;
+  },
 
   // Handy shortcuts
   get topUndoEntry() {

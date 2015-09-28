@@ -162,7 +162,7 @@ add_task(function test_sort_date_site_grouping()
     testData.push(visit);
     leveledTestData[i][j].push(oldLength);
     compareArrayToResult(leveledTestData[i][j].
-                         map(function(x) testData[x]), roots[i][j]);
+                         map(x => testData[x]), roots[i][j]);
   });
 
   for (let i = 0; i < roots.length; i++) {
@@ -219,7 +219,7 @@ function checkSecondLevel(index, secondIndex, child, roots) {
     // results.
     root.containerOpen = true;
     compareArrayToResult(leveledTestData[index][secondIndex].
-                         map(function(x) testData[x]), root);
+                         map(x => testData[x]), root);
     // We close |root|'s container later so that we can test live
     // updates into it.
 }

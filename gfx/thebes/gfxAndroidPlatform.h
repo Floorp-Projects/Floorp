@@ -80,8 +80,6 @@ public:
 
     FT_Library GetFTLibrary();
 
-    virtual int GetScreenDepth() const;
-
     virtual bool CanRenderContentToDataSurface() const override {
       return true;
     }

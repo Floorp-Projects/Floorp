@@ -1333,7 +1333,7 @@ LoginManagerPrompter.prototype = {
   promptToChangePasswordWithUsernames : function (logins, count, aNewLogin) {
     const buttonFlags = Ci.nsIPrompt.STD_YES_NO_BUTTONS;
 
-    var usernames = logins.map(function (l) l.username);
+    var usernames = logins.map(l => l.username);
     var dialogText  = this._getLocalizedString("userSelectText");
     var dialogTitle = this._getLocalizedString("passwordChangeTitle");
     var selectedIndex = { value: null };

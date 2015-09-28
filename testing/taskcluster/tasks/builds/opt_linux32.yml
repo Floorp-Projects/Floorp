@@ -1,0 +1,10 @@
+$inherits:
+  from: 'tasks/builds/opt_linux32_clobber.yml'
+task:
+  # same as clobber, but with a cached workspace
+  scopes:
+    - 'docker-worker:cache:build-linux32-c6-workspace'
+
+  payload:
+    cache:
+      build-linux32-c6-workspace: '/home/worker/workspace'
