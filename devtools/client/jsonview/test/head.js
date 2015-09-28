@@ -8,6 +8,15 @@
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/framework/test/head.js", this);
 
+const JSON_VIEW_PREF = "devtools.jsonview.enabled";
+
+// Enable JSON View for the test
+Services.prefs.setBoolPref(JSON_VIEW_PREF, true);
+
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref(JSON_VIEW_PREF);
+});
+
 // XXX move some API into devtools/framework/test/shared-head.js
 
 /**
