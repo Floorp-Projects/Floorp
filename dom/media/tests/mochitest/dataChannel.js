@@ -168,9 +168,24 @@ var commandsCheckDataChannel = [
   }
 ];
 
+var commandsCheckLargeXfer = [
+  function SEND_BIG_BUFFER(test) {
+    var size = 512*1024; // SCTP internal buffer is 256K, so we'll have ~256K queued
+    var buffer = new ArrayBuffer(size);
+    // note: type received is always blob for binary data
+    var options = {};
+    options.bufferedAmountLowThreshold = 64*1024;
+    return test.send(buffer, options).then(result => {
+      ok(result.data instanceof Blob, "Received data is of instance Blob");
+      is(result.data.size, size, "Received data has the correct size.");
+    });
+  },
+];
+
 function addInitialDataChannel(chain) {
   chain.insertBefore('PC_LOCAL_CREATE_OFFER', commandsCreateDataChannel);
   chain.insertBefore('PC_LOCAL_CHECK_MEDIA_TRACKS', commandsWaitForDataChannel);
   chain.removeAfter('PC_REMOTE_CHECK_ICE_CONNECTIONS');
+  chain.append(commandsCheckLargeXfer);
   chain.append(commandsCheckDataChannel);
 }

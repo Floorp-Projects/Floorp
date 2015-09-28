@@ -214,11 +214,21 @@ PeerConnectionTest.prototype.send = function(data, options) {
            this.pcLocal.dataChannels[this.pcLocal.dataChannels.length - 1];
   var target = options.targetChannel ||
            this.pcRemote.dataChannels[this.pcRemote.dataChannels.length - 1];
+  var bufferedamount = options.bufferedAmountLowThreshold || 0;
+  var bufferlow_fired = true; // to make testing later easier
+  if (bufferedamount != 0) {
+    source.bufferedAmountLowThreshold = bufferedamount;
+    bufferlow_fired = false;
+    source.onbufferedamountlow = function() {
+      bufferlow_fired = true;
+    };
+  }
 
   return new Promise(resolve => {
     // Register event handler for the target channel
-    target.onmessage = e => {
-      resolve({ channel: target, data: e.data });
+      target.onmessage = e => {
+        ok(bufferlow_fired, "bufferedamountlow event fired");
+	resolve({ channel: target, data: e.data });
     };
 
     source.send(data);
@@ -563,6 +573,7 @@ function DataChannelWrapper(dataChannel, peerConnectionWrapper) {
   createOneShotEventWrapper(this, this._channel, 'close');
   createOneShotEventWrapper(this, this._channel, 'error');
   createOneShotEventWrapper(this, this._channel, 'message');
+  createOneShotEventWrapper(this, this._channel, 'bufferedamountlow');
 
   this.opened = timerGuard(new Promise(resolve => {
     this._channel.onopen = () => {
@@ -638,6 +649,16 @@ DataChannelWrapper.prototype = {
    */
   get readyState() {
     return this._channel.readyState;
+  },
+
+  /**
+   * Sets the bufferlowthreshold of the channel
+   *
+   * @param {integer} amoutn
+   *        The new threshold for the chanel
+   */
+  set bufferedAmountLowThreshold(amount) {
+    this._channel.bufferedAmountLowThreshold = amount;
   },
 
   /**
