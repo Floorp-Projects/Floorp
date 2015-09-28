@@ -391,6 +391,7 @@ public:
         ANGLE_timer_query,
         APPLE_client_storage,
         APPLE_framebuffer_multisample,
+        APPLE_sync,
         APPLE_texture_range,
         APPLE_vertex_array_object,
         ARB_ES2_compatibility,

@@ -153,7 +153,7 @@ SharedSurface_GLTexture::ProducerReleaseImpl()
 {
     mGL->MakeCurrent();
 
-    if (mGL->IsExtensionSupported(GLContext::ARB_sync)) {
+    if (mGL->IsSupported(GLFeature::sync)) {
         if (mSync) {
             mGL->fDeleteSync(mSync);
             mSync = 0;
