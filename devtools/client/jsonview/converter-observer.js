@@ -12,32 +12,31 @@ const Ci = Components.interfaces;
 
 const {XPCOMUtils} = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 const {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+const {devtools} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 
-const categoryManager = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
-
-// Load JsonView service module (converter-child.js) as soon as required.
+// Load JsonView services lazily.
 XPCOMUtils.defineLazyGetter(this, "JsonViewService", function() {
-  const {devtools} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
   const {JsonViewService} = devtools.require("devtools/client/jsonview/converter-child");
   return JsonViewService;
 });
 
-const JSON_TYPE = "application/json";
-const GECKO_VIEWER = "Gecko-Content-Viewers";
+XPCOMUtils.defineLazyGetter(this, "JsonViewSniffer", function() {
+  const {JsonViewSniffer} = devtools.require("devtools/client/jsonview/converter-sniffer");
+  return JsonViewSniffer;
+});
+
+// Constants
 const JSON_VIEW_PREF = "devtools.jsonview.enabled";
-const GECKO_TYPE_MAPPING = "ext-to-type-mapping";
 
 /**
  * Listen for 'devtools.jsonview.enabled' preference changes and
- * register/unregister the JSON View XPCOM service as appropriate.
+ * register/unregister the JSON View XPCOM services as appropriate.
  */
 function ConverterObserver() {
 }
 
 ConverterObserver.prototype = {
   initialize: function() {
-    this.geckoViewer = categoryManager.getCategoryEntry(GECKO_VIEWER, JSON_TYPE);
-
     // Only the DevEdition has this feature available by default.
     // Users need to manually flip 'devtools.jsonview.enabled' preference
     // to have it available in other distributions.
@@ -74,29 +73,13 @@ ConverterObserver.prototype = {
   },
 
   register: function() {
-    if (JsonViewService.register()) {
-      // Delete default JSON viewer (text)
-      categoryManager.deleteCategoryEntry(GECKO_VIEWER, JSON_TYPE, false);
-
-      // Append new *.json -> application/json type mapping
-      this.geckoMapping = categoryManager.addCategoryEntry(GECKO_TYPE_MAPPING,
-        "json", JSON_TYPE, false, true);
-    }
+    JsonViewSniffer.register();
+    JsonViewService.register();
   },
 
   unregister: function() {
-    if (JsonViewService.unregister()) {
-      categoryManager.addCategoryEntry(GECKO_VIEWER, JSON_TYPE,
-        this.geckoViewer, false, false);
-
-      if (this.geckoMapping) {
-        categoryManager.addCategoryEntry(GECKO_TYPE_MAPPING, "json",
-          this.geckoMapping, false, true);
-      } else {
-        categoryManager.deleteCategoryEntry(GECKO_TYPE_MAPPING,
-          JSON_TYPE, false)
-      }
-    }
+    JsonViewSniffer.unregister();
+    JsonViewService.unregister();
   },
 
   isEnabled: function() {
