@@ -319,18 +319,25 @@
                   handleCtrlTab="false">
             <tabs>
               <tab id="headers-tab"
+                   crop="end"
                    label="&netmonitorUI.tab.headers;"/>
               <tab id="cookies-tab"
+                   crop="end"
                    label="&netmonitorUI.tab.cookies;"/>
               <tab id="params-tab"
+                   crop="end"
                    label="&netmonitorUI.tab.params;"/>
               <tab id="response-tab"
+                   crop="end"
                    label="&netmonitorUI.tab.response;"/>
               <tab id="timings-tab"
+                   crop="end"
                    label="&netmonitorUI.tab.timings;"/>
               <tab id="security-tab"
+                   crop="end"
                    label="&netmonitorUI.tab.security;"/>
               <tab id="preview-tab"
+                   crop="end"
                    label="&netmonitorUI.tab.preview;"/>
             </tabs>
             <tabpanels flex="1">
