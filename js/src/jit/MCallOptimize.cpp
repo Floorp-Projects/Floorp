@@ -2272,6 +2272,19 @@ IonBuilder::inlineIsPossiblyWrappedTypedArray(CallInfo& callInfo)
     return inlineIsTypedArrayHelper(callInfo, AllowWrappedTypedArrays);
 }
 
+static bool
+IsTypedArrayObject(CompilerConstraintList* constraints, MDefinition* def)
+{
+    MOZ_ASSERT(def->type() == MIRType_Object);
+
+    TemporaryTypeSet* types = def->resultTypeSet();
+    if (!types)
+        return false;
+
+    return types->forAllClasses(constraints, IsTypedArrayClass) ==
+           TemporaryTypeSet::ForAllResult::ALL_TRUE;
+}
+
 IonBuilder::InliningStatus
 IonBuilder::inlineTypedArrayLength(CallInfo& callInfo)
 {
@@ -2282,8 +2295,10 @@ IonBuilder::inlineTypedArrayLength(CallInfo& callInfo)
     if (getInlineReturnType() != MIRType_Int32)
         return InliningStatus_NotInlined;
 
-    // We assume that when calling this function we always
-    // have a TypedArray. The native asserts that as well.
+    // Note that the argument we see here is not necessarily a typed array.
+    // If it's not, this call should be unreachable though.
+    if (!IsTypedArrayObject(constraints(), callInfo.getArg(0)))
+        return InliningStatus_NotInlined;
 
     MInstruction* length = addTypedArrayLength(callInfo.getArg(0));
     current->push(length);
@@ -2317,19 +2332,10 @@ IonBuilder::inlineSetDisjointTypedElements(CallInfo& callInfo)
     // Only attempt to optimize if |target| and |sourceTypedArray| are both
     // definitely typed arrays.  (The former always is.  The latter is not,
     // necessarily, because of wrappers.)
-
-    MDefinition* arrays[] = { target, sourceTypedArray };
-
-    for (MDefinition* def : arrays) {
-        TemporaryTypeSet* types = def->resultTypeSet();
-        if (!types)
-            return InliningStatus_NotInlined;
-
-        if (types->forAllClasses(constraints(), IsTypedArrayClass) !=
-            TemporaryTypeSet::ForAllResult::ALL_TRUE)
-        {
-            return InliningStatus_NotInlined;
-        }
+    if (!IsTypedArrayObject(constraints(), target) ||
+        !IsTypedArrayObject(constraints(), sourceTypedArray))
+    {
+        return InliningStatus_NotInlined;
     }
 
     auto sets = MSetDisjointTypedElements::New(alloc(), target, targetOffset, sourceTypedArray);
