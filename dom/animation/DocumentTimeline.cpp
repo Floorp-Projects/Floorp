@@ -91,6 +91,11 @@ DocumentTimeline::ToTimelineTime(const TimeStamp& aTimeStamp) const
   return result;
 }
 
+void
+DocumentTimeline::WillRefresh(mozilla::TimeStamp aTime)
+{
+}
+
 TimeStamp
 DocumentTimeline::ToTimeStamp(const TimeDuration& aTimeDuration) const
 {
