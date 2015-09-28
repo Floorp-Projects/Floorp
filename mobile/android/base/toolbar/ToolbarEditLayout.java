@@ -7,6 +7,7 @@ package org.mozilla.gecko.toolbar;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.speech.RecognizerIntent;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -24,6 +25,8 @@ import org.mozilla.gecko.toolbar.BrowserToolbar.OnDismissListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.OnFilterListener;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
 import org.mozilla.gecko.util.ActivityResultHandler;
+import org.mozilla.gecko.util.DrawableUtil;
+import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.InputOptionsUtils;
 import org.mozilla.gecko.widget.themed.ThemedLinearLayout;
@@ -33,6 +36,7 @@ import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ImageView;
 
 import java.util.List;
 
@@ -43,6 +47,12 @@ import java.util.List;
 * current type of text in the entry.
 */
 public class ToolbarEditLayout extends ThemedLinearLayout {
+
+    public interface OnSearchStateChangeListener {
+        public void onSearchStateChange(boolean isActive);
+    }
+
+    private final ImageView mSearchIcon;
 
     private final ToolbarEditText mEditText;
 
@@ -59,6 +69,8 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
         setOrientation(HORIZONTAL);
 
         LayoutInflater.from(context).inflate(R.layout.toolbar_edit_layout, this);
+        mSearchIcon = (ImageView) findViewById(R.id.search_icon);
+
         mEditText = (ToolbarEditText) findViewById(R.id.url_edit_text);
 
         mVoiceInput = (ImageButton) findViewById(R.id.mic);
@@ -67,6 +79,10 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
 
     @Override
     public void onAttachedToWindow() {
+        if (HardwareUtils.isTablet()) {
+            mSearchIcon.setVisibility(View.VISIBLE);
+        }
+
         mEditText.setOnFocusChangeListener(new OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
@@ -91,6 +107,13 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
             }
         });
 
+        mEditText.setOnSearchStateChangeListener(new OnSearchStateChangeListener() {
+            @Override
+            public void onSearchStateChange(boolean isActive) {
+                updateSearchIcon(isActive);
+            }
+        });
+
         mVoiceInput.setOnClickListener(new Button.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -104,6 +127,37 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
                 launchQRCodeReader();
             }
         });
+
+        // Set an inactive search icon on tablet devices when in editing mode
+        updateSearchIcon(false);
+    }
+
+    /**
+     * Update the search icon at the left of the edittext based
+     * on its state.
+     *
+     * @param isActive The state of the edittext. Active is when the initialized
+     *         text has changed and is not empty.
+     */
+    void updateSearchIcon(boolean isActive) {
+        if (!HardwareUtils.isTablet()) {
+            return;
+        }
+
+        // When on tablet show a magnifying glass in editing mode
+        final int searchDrawableId = R.drawable.search_icon_active;
+        final Drawable searchDrawable;
+        if (!isActive) {
+            searchDrawable = DrawableUtil.tintDrawable(getContext(), searchDrawableId, R.color.placeholder_grey);
+        } else {
+            if (isPrivateMode()) {
+                searchDrawable = DrawableUtil.tintDrawable(getContext(), searchDrawableId, R.color.tabs_tray_icon_grey);
+            } else {
+                searchDrawable = getResources().getDrawable(searchDrawableId);
+            }
+        }
+
+        mSearchIcon.setImageDrawable(searchDrawable);
     }
 
     @Override

@@ -153,7 +153,7 @@ loop.webapp = (function(_, OT, mozL10n) {
         }
         case "room": {
           return (
-            React.createElement(loop.standaloneRoomViews.StandaloneRoomView, {
+            React.createElement(loop.standaloneRoomViews.StandaloneRoomControllerView, {
               activeRoomStore: this.props.activeRoomStore, 
               dispatcher: this.props.dispatcher, 
               isFirefox: this.state.isFirefox})

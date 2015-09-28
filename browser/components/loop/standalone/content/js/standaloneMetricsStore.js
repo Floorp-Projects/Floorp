@@ -44,7 +44,7 @@ loop.store.StandaloneMetricsStore = (function() {
       "connectedToSdkServers",
       "connectionFailure",
       "gotMediaPermission",
-      "joinRoom",
+      "metricsLogJoinRoom",
       "joinedRoom",
       "leaveRoom",
       "mediaConnected",
@@ -144,10 +144,20 @@ loop.store.StandaloneMetricsStore = (function() {
 
     /**
      * Handles the user clicking the join room button.
+     *
+     * @param {sharedActions.MetricsLogJoinRoom} actionData
      */
-    joinRoom: function() {
-      this._storeEvent(METRICS_GA_CATEGORY.general, METRICS_GA_ACTIONS.button,
-        "Join the conversation");
+    metricsLogJoinRoom: function(actionData) {
+      var label;
+
+      if (actionData.userAgentHandledRoom) {
+        label = actionData.ownRoom ? "Joined own room in Firefox" :
+          "Joined in Firefox";
+      } else {
+        label = "Join the conversation";
+      }
+
+      this._storeEvent(METRICS_GA_CATEGORY.general, METRICS_GA_ACTIONS.button, label);
     },
 
     /**

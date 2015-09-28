@@ -86,15 +86,6 @@ describe("loop.store.StandaloneMetricsStore", function() {
         "Media granted");
     });
 
-    it("should log an event on JoinRoom", function() {
-      store.joinRoom();
-
-      sinon.assert.calledOnce(window.ga);
-      sinon.assert.calledWithExactly(window.ga,
-        "send", "event", METRICS_GA_CATEGORY.general, METRICS_GA_ACTIONS.button,
-        "Join the conversation");
-    });
-
     it("should log an event on JoinedRoom", function() {
       store.joinedRoom();
 
@@ -149,6 +140,43 @@ describe("loop.store.StandaloneMetricsStore", function() {
       sinon.assert.calledWithExactly(window.ga,
         "send", "event", METRICS_GA_CATEGORY.general, METRICS_GA_ACTIONS.button,
         "Retry failed room");
+    });
+
+    describe("MetricsLogJoinRoom", function() {
+      it("should log a 'Join the conversation' event if not joined by Firefox", function() {
+        store.metricsLogJoinRoom({
+          userAgentHandledRoom: false
+        });
+
+        sinon.assert.calledOnce(window.ga);
+        sinon.assert.calledWithExactly(window.ga,
+          "send", "event", METRICS_GA_CATEGORY.general, METRICS_GA_ACTIONS.button,
+          "Join the conversation");
+      });
+
+      it("should log a 'Joined own room in Firefox' event if joining the own room in Firefox", function() {
+        store.metricsLogJoinRoom({
+          userAgentHandledRoom: true,
+          ownRoom: true
+        });
+
+        sinon.assert.calledOnce(window.ga);
+        sinon.assert.calledWithExactly(window.ga,
+          "send", "event", METRICS_GA_CATEGORY.general, METRICS_GA_ACTIONS.button,
+          "Joined own room in Firefox");
+      });
+
+      it("should log a 'Joined in Firefox' event if joining a non-own room in Firefox", function() {
+        store.metricsLogJoinRoom({
+          userAgentHandledRoom: true,
+          ownRoom: false
+        });
+
+        sinon.assert.calledOnce(window.ga);
+        sinon.assert.calledWithExactly(window.ga,
+          "send", "event", METRICS_GA_CATEGORY.general, METRICS_GA_ACTIONS.button,
+          "Joined in Firefox");
+      });
     });
   });
 
