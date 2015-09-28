@@ -6,8 +6,6 @@
  * also console recordings that have finished before it was opened.
  */
 
-var WAIT_TIME = 10;
-
 function* spawnTest() {
   let { target, toolbox, console } = yield initConsole(SIMPLE_URL);
   let front = toolbox.performance;
@@ -25,7 +23,7 @@ function* spawnTest() {
   yield profileStart;
 
   yield gDevTools.showToolbox(target, "performance");
-  let panel = toolbox.getCurrentPanel();
+  let panel = yield toolbox.getCurrentPanel().open();
   let { panelWin: { PerformanceController, RecordingsView }} = panel;
 
   yield waitUntil(() => PerformanceController.getRecordings().length === 2);

@@ -105,6 +105,29 @@ registerCleanupFunction(() => {
   Cu.forceGC();
 });
 
+
+function whenDelayedStartupFinished(aWindow, aCallback) {
+  Services.obs.addObserver(function observer(aSubject, aTopic) {
+    if (aWindow == aSubject) {
+      Services.obs.removeObserver(observer, aTopic);
+      executeSoon(aCallback);
+    }
+  }, "browser-delayed-startup-finished", false);
+}
+
+function addWindow(windowOptions) {
+  let deferred = Promise.defer();
+  let win = OpenBrowserWindow(windowOptions);
+
+  whenDelayedStartupFinished(win, () => {
+    executeSoon(() => {
+      deferred.resolve(win);
+    });
+  });
+
+  return deferred.promise;
+}
+
 function addTab(aUrl, aWindow) {
   info("Adding tab: " + aUrl);
 
@@ -233,6 +256,8 @@ function initPerformance(aUrl, tool="performance", targetOps={}) {
     // Wait for the performance tool to be spun up
     yield toolbox.initPerformance();
 
+    // Panel is already initialized after `showToolbox` and `initPerformance`,
+    // no need to wait for `open` here.
     let panel = toolbox.getCurrentPanel();
     return { target, panel, toolbox };
   });
@@ -276,12 +301,12 @@ function consoleExecute (console, method, val) {
   return promise;
 }
 
-function* teardown(panel) {
+function* teardown(panel, win = window) {
   info("Destroying the performance tool.");
 
   let tab = panel.target.tab;
   yield panel._toolbox.destroy();
-  yield removeTab(tab);
+  yield removeTab(tab, win);
 }
 
 function idleWait(time) {
