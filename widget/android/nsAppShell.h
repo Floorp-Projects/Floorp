@@ -115,22 +115,26 @@ protected:
 
     nsresult AddObserver(const nsAString &aObserverKey, nsIObserver *aObserver);
 
-    void ScheduleNativeEventCallback() override
+    class NativeCallbackEvent : public Event
     {
         // Capturing the nsAppShell instance is safe because if the app
         // shell is detroyed, this lambda will not be called either.
-        PostEvent([this] {
-            NativeEventCallback();
-        });
+        nsAppShell* const appShell;
+
+    public:
+        NativeCallbackEvent(nsAppShell* as) : appShell(as) {}
+        void Run() override { appShell->NativeEventCallback(); }
+    };
+
+    void ScheduleNativeEventCallback() override
+    {
+        mEventQueue.Post(mozilla::MakeUnique<NativeCallbackEvent>(this));
     }
 
     class Queue
     {
-    public:
-        // XXX need to be public for the mQueuedViewportEvent ugliness.
-        mozilla::Monitor mMonitor;
-
     private:
+        mozilla::Monitor mMonitor;
         mozilla::LinkedList<Event> mQueue;
 
     public:
@@ -169,7 +173,6 @@ protected:
 
     } mEventQueue;
 
-    Event* mQueuedViewportEvent;
     bool mAllowCoalescingTouches;
 
     nsCOMPtr<nsIAndroidBrowserApp> mBrowserApp;

@@ -24,30 +24,220 @@ install sed
 install tar
 install util-linux
 install autoconf213
-install zlib-devel
 install perl-Test-Simple
 install perl-Config-General
-install xorg-x11-font*  # fonts required for PGO
-install dbus-x11
-install libstdc++
+
+# fonts required for PGO
+install xorg-x11-font*
+
+# lots of required packages that we build against.  We need the i686 and x86_64
+# versions of each, along with -devel packages, and yum does a poor job of
+# figuring out the interdependencies so we list all four.
+
+install alsa-lib-devel.i686
+install alsa-lib-devel.x86_64
+install alsa-lib.i686
+install alsa-lib.x86_64
+install atk-devel.i686
+install atk-devel.x86_64
+install atk.i686
+install atk.x86_64
+install cairo-devel.i686
+install cairo-devel.x86_64
+install cairo.i686
+install cairo.x86_64
+install check-devel.i686
+install check-devel.x86_64
+install check.i686
+install check.x86_64
+install dbus-glib-devel.i686
+install dbus-glib-devel.x86_64
+install dbus-glib.i686
+install dbus-glib.x86_64
+install fontconfig-devel.i686
+install fontconfig-devel.x86_64
+install fontconfig.i686
+install fontconfig.x86_64
+install freetype-devel.i686
+install freetype-devel.x86_64
+install freetype.i686
+install freetype.x86_64
+install GConf2-devel.i686
+install GConf2-devel.x86_64
+install GConf2.i686
+install GConf2.x86_64
+install glib2-devel.i686
+install glib2-devel.x86_64
+install glib2.i686
+install glib2.x86_64
+install glibc-devel.i686
+install glibc-devel.x86_64
+install glibc.i686
+install glibc.x86_64
+install gnome-vfs2-devel.i686
+install gnome-vfs2-devel.x86_64
+install gnome-vfs2.i686
+install gnome-vfs2.x86_64
+install gstreamer-devel.i686
+install gstreamer-devel.x86_64
+install gstreamer.i686
+install gstreamer-plugins-base-devel.i686
+install gstreamer-plugins-base-devel.x86_64
+install gstreamer-plugins-base.i686
+install gstreamer-plugins-base.x86_64
+install gstreamer.x86_64
+install gtk2-devel.i686
+install gtk2-devel.x86_64
+install gtk2.i686
+install gtk2.x86_64
+install libcurl-devel.i686
+install libcurl-devel.x86_64
+install libcurl.i686
+install libcurl.x86_64
+install libdrm-devel.i686
+install libdrm-devel.x86_64
+install libdrm.i686
+install libdrm.x86_64
+install libICE-devel.i686
+install libICE-devel.x86_64
+install libICE.i686
+install libICE.x86_64
+install libIDL-devel.i686
+install libIDL-devel.x86_64
+install libIDL.i686
+install libIDL.x86_64
+install libidn-devel.i686
+install libidn-devel.x86_64
+install libidn.i686
+install libidn.x86_64
+install libnotify-devel.i686
+install libnotify-devel.x86_64
+install libnotify.i686
+install libnotify.x86_64
+install libpng-devel.i686
+install libpng-devel.x86_64
+install libpng.i686
+install libpng.x86_64
+install libSM-devel.i686
+install libSM-devel.x86_64
+install libSM.i686
+install libSM.x86_64
+install libstdc++-devel.i686
+install libstdc++-devel.x86_64
 install libstdc++.i686
+install libstdc++.x86_64
+install libX11-devel.i686
+install libX11-devel.x86_64
+install libX11.i686
+install libX11.x86_64
+install libXau-devel.i686
+install libXau-devel.x86_64
+install libXau.i686
+install libXau.x86_64
+install libxcb-devel.i686
+install libxcb-devel.x86_64
+install libxcb.i686
+install libxcb.x86_64
+install libXcomposite-devel.i686
+install libXcomposite-devel.x86_64
+install libXcomposite.i686
+install libXcomposite.x86_64
+install libXcursor-devel.i686
+install libXcursor-devel.x86_64
+install libXcursor.i686
+install libXcursor.x86_64
+install libXdamage-devel.i686
+install libXdamage-devel.x86_64
+install libXdamage.i686
+install libXdamage.x86_64
+install libXdmcp-devel.i686
+install libXdmcp-devel.x86_64
+install libXdmcp.i686
+install libXdmcp.x86_64
+install libXext-devel.i686
+install libXext-devel.x86_64
+install libXext.i686
+install libXext.x86_64
+install libXfixes-devel.i686
+install libXfixes-devel.x86_64
+install libXfixes.i686
+install libXfixes.x86_64
+install libXft-devel.i686
+install libXft-devel.x86_64
+install libXft.i686
+install libXft.x86_64
+install libXi-devel.i686
+install libXi-devel.x86_64
+install libXi.i686
+install libXinerama-devel.i686
+install libXinerama-devel.x86_64
+install libXinerama.i686
+install libXinerama.x86_64
+install libXi.x86_64
+install libxml2-devel.i686
+install libxml2-devel.x86_64
+install libxml2.i686
+install libxml2.x86_64
+install libXrandr-devel.i686
+install libXrandr-devel.x86_64
+install libXrandr.i686
+install libXrandr.x86_64
+install libXrender-devel.i686
+install libXrender-devel.x86_64
+install libXrender.i686
+install libXrender.x86_64
+install libXt-devel.i686
+install libXt-devel.x86_64
+install libXt.i686
+install libXt.x86_64
+install libXxf86vm-devel.i686
+install libXxf86vm-devel.x86_64
+install libXxf86vm.i686
+install libXxf86vm.x86_64
+install mesa-libGL-devel.i686
+install mesa-libGL-devel.x86_64
+install mesa-libGL.i686
+install mesa-libGL.x86_64
+install ORBit2-devel.i686
+install ORBit2-devel.x86_64
+install ORBit2.i686
+install ORBit2.x86_64
+install pango-devel.i686
+install pango-devel.x86_64
+install pango.i686
+install pango.x86_64
+install pixman-devel.i686
+install pixman-devel.x86_64
+install pixman.i686
+install pixman.x86_64
+install pulseaudio-libs-devel.i686
+install pulseaudio-libs-devel.x86_64
+install pulseaudio-libs.i686
+install pulseaudio-libs.x86_64
+install wireless-tools-devel.i686
+install wireless-tools-devel.x86_64
+install wireless-tools.i686
+install wireless-tools.x86_64
+install zlib-devel.i686
+install zlib-devel.x86_64
+install zlib.i686
+install zlib.x86_64
 
-# lots of required -devel packages
-install libnotify-devel
-install alsa-lib-devel
-install libcurl-devel
-install wireless-tools-devel
-install libX11-devel
-install libXt-devel
-install mesa-libGL-devel
-install GConf2-devel
-install pulseaudio-libs-devel
-install gstreamer-devel
-install gstreamer-plugins-base-devel
+# x86_64 only packages
+install hal-devel.x86_64
+install hal.x86_64
+install perl-devel.x86_64
+install perl.x86_64
+install dbus-x11.x86_64
 
-# Prerequisites for GNOME that are not included in tooltool
-install libpng-devel
-install libXrandr-devel
+# glibc-static has no -devel
+install glibc-static.i686
+install glibc-static.x86_64
+
+# dbus-devel comes in two architectures, although dbus does not
+install dbus-devel.i686
+install dbus-devel.x86_64
+install dbus.x86_64
 
 # required for the Python build, below
 install bzip2-devel
@@ -57,6 +247,7 @@ install sqlite-devel
 
 # required for the git build, below
 install autoconf
+install perl-devel
 install perl-ExtUtils-MakeMaker
 install gettext-devel
 
@@ -76,6 +267,7 @@ install patch
 install libuuid-devel
 install openssl-static
 install cmake
+install subversion
 run
 EOF
 
@@ -106,18 +298,6 @@ cd $BUILD
 tooltool_fetch <<'EOF'
 [
 {
-    "size": 383372,
-    "digest": "486c34aeb01d2d083fdccd043fb8e3af93efddc7c185f38b5d7e90199733424c538ac2a7dfc19999c82ff00b84de5df75aa6f891e622cf1a86d698ed0bee16e2",
-    "algorithm": "sha512",
-    "filename": "freetype-2.4.12-6.el6.1.x86_64.rpm"
-},
-{
-    "size": 397772,
-    "digest": "79c7ddc943394509b96593f3aeac8946acd9c9dc10a3c248a783cb282781cbc9e4e7c47b98121dd7849d39aa3bd29313234ae301ab80f769010c2bacf41e6d40",
-    "algorithm": "sha512",
-    "filename": "freetype-devel-2.4.12-6.el6.1.x86_64.rpm"
-},
-{
     "size": 17051332,
     "digest": "57c816a6df9731aa5f34678abb59ea560bbdb5abd01df3f3a001dc94a3695d3190b1121caba483f8d8c4a405f4e53fde63a628527aca73f05652efeaec9621c4",
     "algorithm": "sha512",
@@ -131,11 +311,10 @@ tooltool_fetch <<'EOF'
 }
 ]
 EOF
-yum install -y freetype-*.rpm
 yum install -y valgrind-*.rpm
 yum install -y yasm-*.rpm
 
-# The source RPMs for some of those; not used here, but included for reference
+# The source RPM for valgrind; not used here, but included for reference
 : <<'EOF'
 [
 {
@@ -143,12 +322,6 @@ yum install -y yasm-*.rpm
     "digest": "d435897b602f7bdf77fabf1c80bbd06ba4f7288ad0ef31d19a863546d4651172421b45f2f090bad3c3355c9fa2a00352066f18d99bf994838579b768b90553d3",
     "algorithm": "sha512",
     "filename": "valgrind-3.10.0-1.src.rpm"
-},
-{
-    "size": 1906249,
-    "digest": "c3811c74e4ca3c342e6625cdb80a62903a14c56436774149754de67f41f79ee63248c71d039dd9341d22bdf4ef8b7dc8c90fe63dd9a3df44197d38a2d3d8f4a2",
-    "algorithm": "sha512",
-    "filename": "freetype-2.4.12-6.el6.1.src.rpm"
 }
 ]
 EOF
@@ -271,6 +444,7 @@ remove autoconf
 remove perl-ExtUtils-MakeMaker
 remove gettext-devel
 remove sqlite-devel
+remove perl-devel
 EOF
 
 # clean up caches from all that downloading and building

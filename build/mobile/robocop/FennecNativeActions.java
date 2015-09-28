@@ -191,15 +191,15 @@ public class FennecNativeActions implements Actions {
     }
 
     public void sendPreferencesGetEvent(int requestId, String[] prefNames) {
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createPreferencesGetEvent(requestId, prefNames));
+        PrefsHelper.getPrefsById(requestId, prefNames, /* observe */ false);
     }
 
     public void sendPreferencesObserveEvent(int requestId, String[] prefNames) {
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createPreferencesObserveEvent(requestId, prefNames));
+        PrefsHelper.getPrefsById(requestId, prefNames, /* observe */ true);
     }
 
     public void sendPreferencesRemoveObserversEvent(int requestId) {
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createPreferencesRemoveObserversEvent(requestId));
+        PrefsHelper.removePrefsObserver(requestId);
     }
 
     class PaintExpecter implements RepeatedEventExpecter {

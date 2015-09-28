@@ -177,18 +177,18 @@ var tests = [
   },
 
   function erroneous() {
-    do_check_throws(function () cps.removeByDomainAndName(null, "foo", null));
-    do_check_throws(function () cps.removeByDomainAndName("", "foo", null));
-    do_check_throws(function () cps.removeByDomainAndName("a.com", "foo", null,
-                                                          "bogus"));
-    do_check_throws(function () cps.removeBySubdomainAndName(null, "foo",
-                                                             null));
-    do_check_throws(function () cps.removeBySubdomainAndName("", "foo", null));
-    do_check_throws(function () cps.removeBySubdomainAndName("a.com", "foo",
-                                                             null, "bogus"));
-    do_check_throws(function () cps.removeGlobal("", null));
-    do_check_throws(function () cps.removeGlobal(null, null));
-    do_check_throws(function () cps.removeGlobal("foo", null, "bogus"));
+    do_check_throws(() => cps.removeByDomainAndName(null, "foo", null));
+    do_check_throws(() => cps.removeByDomainAndName("", "foo", null));
+    do_check_throws(() => cps.removeByDomainAndName("a.com", "foo", null,
+                                                    "bogus"));
+    do_check_throws(() => cps.removeBySubdomainAndName(null, "foo",
+                                                       null));
+    do_check_throws(() => cps.removeBySubdomainAndName("", "foo", null));
+    do_check_throws(() => cps.removeBySubdomainAndName("a.com", "foo",
+                                                       null, "bogus"));
+    do_check_throws(() => cps.removeGlobal("", null));
+    do_check_throws(() => cps.removeGlobal(null, null));
+    do_check_throws(() => cps.removeGlobal("foo", null, "bogus"));
     yield true;
   },
 

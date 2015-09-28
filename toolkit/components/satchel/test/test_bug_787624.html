@@ -70,7 +70,7 @@ function setupFormHistory() {
     { op : "remove" },
     { op : "add", fieldname : "field1", value : "value1" },
     { op : "add", fieldname : "field1", value : "value2" },
-  ], function() runTest(1));
+  ], () => runTest(1));
 }
 
 function checkForm(expectedValue) {
