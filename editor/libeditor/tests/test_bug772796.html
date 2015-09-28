@@ -1,0 +1,223 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=772796
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 772796</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style> .pre { white-space: pre } </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=772796">Mozilla Bug 772796</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<div id="editable" contenteditable></div>
+
+<pre id="test">
+
+  <script type="application/javascript">
+    var tests = [
+/*00*/[ "<div>test</div><pre>foobar\nbaz</pre>",                  "<div>testfoobar\n</div><pre>baz</pre>" ],
+/*01*/[ "<div>test</div><pre><b>foobar\nbaz</b></pre>",           "<div>test<b>foobar\n</b></div><pre><b>baz</b></pre>" ],
+/*02*/[ "<div>test</div><pre><b>foo</b>bar\nbaz</pre>",           "<div>test<b>foo</b>bar\n</div><pre>baz</pre>" ],
+/*03*/[ "<div>test</div><pre><b>foo</b>\nbar</pre>",              "<div>test<b>foo</b>\n</div><pre>bar</pre>" ],
+/*04*/[ "<div>test</div><pre><b>foo\n</b>bar\nbaz</pre>",         "<div>test<b>foo\n</b></div><pre>bar\nbaz</pre>" ],
+      /* The <br> after the foobar is unfortunate but is behaviour that hasn't changed in bug 772796. */
+/*05*/[ "<div>test</div><pre>foobar<br>baz</pre>",                "<div>testfoobar<br></div><pre>baz</pre>" ],
+/*06*/[ "<div>test</div><pre><b>foobar<br>baz</b></pre>",         "<div>test<b>foobar</b><br></div><pre><b>baz</b></pre>" ],
+
+      /*
+       * Some tests with block elements.
+       * Tests 07, 09 and 11 don't use "MoveBlock", they use "JoinNodesSmart".
+       * Test 11 is a pain: <div>foo\bar</div> is be joined to "test", losing the visible line break.
+       */
+/*07*/[ "<div>test</div><pre><div>foobar</div>baz</pre>",         "<div>testfoobar</div><pre>baz</pre>" ],
+/*08*/[ "<div>test</div><pre>foobar<div>baz</div></pre>",         "<div>testfoobar</div><pre><div>baz</div></pre>" ],
+/*09*/[ "<div>test</div><pre><div>foobar</div>baz\nfred</pre>",   "<div>testfoobar</div><pre>baz\nfred</pre>" ],
+/*10*/[ "<div>test</div><pre>foobar<div>baz</div>\nfred</pre>",   "<div>testfoobar</div><pre><div>baz</div>\nfred</pre>" ],
+/*11*/[ "<div>test</div><pre><div>foo\nbar</div>baz\nfred</pre>", "<div>testfoo\nbar</div><pre>baz\nfred</pre>" ], // BAD
+/*12*/[ "<div>test</div><pre>foo<div>bar</div>baz\nfred</pre>",   "<div>testfoo</div><pre><div>bar</div>baz\nfred</pre>" ],
+
+      /*
+       * Repeating all tests above with the <pre> on a new line.
+       * We know that backspace doesn't work (bug 1190161). Third argument shows the current outcome.
+       */
+/*13-00*/[ "<div>test</div>\n<pre>foobar\nbaz</pre>",                  "<div>testfoobar\n</div><pre>baz</pre>",
+                                                                       "<div>test</div>foobar\n<pre>baz</pre>" ],
+/*14-01*/[ "<div>test</div>\n<pre><b>foobar\nbaz</b></pre>",           "<div>test<b>foobar\n</b></div><pre><b>baz</b></pre>",
+                                                                       "<div>test</div><b>foobar\n</b><pre><b>baz</b></pre>" ],
+/*15-02*/[ "<div>test</div>\n<pre><b>foo</b>bar\nbaz</pre>",           "<div>test<b>foo</b>bar\n</div><pre>baz</pre>",
+                                                                       "<div>test</div><b>foo</b>bar\n<pre>baz</pre>" ],
+/*16-03*/[ "<div>test</div>\n<pre><b>foo</b>\nbar</pre>",              "<div>test<b>foo</b>\n</div><pre>bar</pre>",
+                                                                       "<div>test</div><b>foo</b>\n<pre>bar</pre>" ],
+/*17-04*/[ "<div>test</div>\n<pre><b>foo\n</b>bar\nbaz</pre>",         "<div>test<b>foo\n</b></div><pre>bar\nbaz</pre>",
+                                                                       "<div>test</div><b>foo\n</b><pre>bar\nbaz</pre>" ],
+/*18-05*/[ "<div>test</div>\n<pre>foobar<br>baz</pre>",                "<div>testfoobar<br></div><pre>baz</pre>",
+                                                                       "<div>test</div>foobar<br><pre>baz</pre>" ],
+/*19-06*/[ "<div>test</div>\n<pre><b>foobar<br>baz</b></pre>",         "<div>test<b>foobar</b><br></div><pre><b>baz</b></pre>",
+                                                                       "<div>test</div><b>foobar</b><br><pre><b>baz</b></pre>" ],
+/*20-07*/[ "<div>test</div>\n<pre><div>foobar</div>baz</pre>",         "<div>testfoobar</div><pre>baz</pre>",
+                                                                       "<div>test</div>foobar<pre>baz</pre>" ],
+/*21-08*/[ "<div>test</div>\n<pre>foobar<div>baz</div></pre>",         "<div>testfoobar</div><pre><div>baz</div></pre>",
+                                                                       "<div>test</div>foobar<pre><div>baz</div></pre>" ],
+/*22-09*/[ "<div>test</div>\n<pre><div>foobar</div>baz\nfred</pre>",   "<div>testfoobar</div><pre>baz\nfred</pre>",
+                                                                       "<div>test</div>foobar<pre>baz\nfred</pre>" ],
+/*23-10*/[ "<div>test</div>\n<pre>foobar<div>baz</div>\nfred</pre>",   "<div>testfoobar</div><pre><div>baz</div>\nfred</pre>",
+                                                                       "<div>test</div>foobar<pre><div>baz</div>\nfred</pre>" ],
+/*24-11*/[ "<div>test</div>\n<pre><div>foo\nbar</div>baz\nfred</pre>", "<div>testfoo\nbar</div><pre>baz\nfred</pre>", // BAD
+                                                                       "<div>test</div>foo\n<pre><div>bar</div>baz\nfred</pre>" ],
+/*25-12*/[ "<div>test</div>\n<pre>foo<div>bar</div>baz\nfred</pre>",   "<div>testfoo</div><pre><div>bar</div>baz\nfred</pre>",
+                                                                       "<div>test</div>foo<pre><div>bar</div>baz\nfred</pre>" ],
+
+      /* Some tests without <div>. These exercise the MoveBlock "right in left" */
+/*26-00*/[ "test<pre>foobar\nbaz</pre>",                  "testfoobar\n<pre>baz</pre>" ],
+/*27-01*/[ "test<pre><b>foobar\nbaz</b></pre>",           "test<b>foobar\n</b><pre><b>baz</b></pre>" ],
+/*28-02*/[ "test<pre><b>foo</b>bar\nbaz</pre>",           "test<b>foo</b>bar\n<pre>baz</pre>" ],
+/*29-03*/[ "test<pre><b>foo</b>\nbar</pre>",              "test<b>foo</b>\n<pre>bar</pre>" ],
+/*30-04*/[ "test<pre><b>foo\n</b>bar\nbaz</pre>",         "test<b>foo\n</b><pre>bar\nbaz</pre>" ],
+/*31-05*/[ "test<pre>foobar<br>baz</pre>",                "testfoobar<br><pre>baz</pre>" ],
+/*32-06*/[ "test<pre><b>foobar<br>baz</b></pre>",         "test<b>foobar</b><br><pre><b>baz</b></pre>" ],
+/*33-07*/[ "test<pre><div>foobar</div>baz</pre>",         "testfoobar<pre>baz</pre>" ],
+/*34-08*/[ "test<pre>foobar<div>baz</div></pre>",         "testfoobar<pre><div>baz</div></pre>" ],
+/*35-09*/[ "test<pre><div>foobar</div>baz\nfred</pre>",   "testfoobar<pre>baz\nfred</pre>" ],
+/*36-10*/[ "test<pre>foobar<div>baz</div>\nfred</pre>",   "testfoobar<pre><div>baz</div>\nfred</pre>" ],
+/*37-11*/[ "test<pre><div>foo\nbar</div>baz\nfred</pre>", "testfoo\n<pre><div>bar</div>baz\nfred</pre>" ],
+/*38-12*/[ "test<pre>foo<div>bar</div>baz\nfred</pre>",   "testfoo<pre><div>bar</div>baz\nfred</pre>" ],
+
+      /*
+       * Some tests with <span class="pre">. Again 07, 09 and 11 use "JoinNodesSmart".
+       * All these exercise MoveBlock "left in right". The "right" is the surrounding "contenteditable" div.
+       */
+/*39-00*/[ "<div>test</div><span class=\"pre\">foobar\nbaz</span>",                  "<div>test<span class=\"pre\">foobar\n</span></div><span class=\"pre\">baz</span>" ],
+/*40-01*/[ "<div>test</div><span class=\"pre\"><b>foobar\nbaz</b></span>",           "<div>test<span class=\"pre\"><b>foobar\n</b></span></div><span class=\"pre\"><b>baz</b></span>" ],
+/*41-02*/[ "<div>test</div><span class=\"pre\"><b>foo</b>bar\nbaz</span>",           "<div>test<span class=\"pre\"><b>foo</b>bar\n</span></div><span class=\"pre\">baz</span>" ],
+/*42-03*/[ "<div>test</div><span class=\"pre\"><b>foo</b>\nbar</span>",              "<div>test<span class=\"pre\"><b>foo</b>\n</span></div><span class=\"pre\">bar</span>" ],
+/*43-04*/[ "<div>test</div><span class=\"pre\"><b>foo\n</b>bar\nbaz</span>",         "<div>test<span class=\"pre\"><b>foo\n</b></span></div><span class=\"pre\">bar\nbaz</span>" ],
+/*44-05*/[ "<div>test</div><span class=\"pre\">foobar<br>baz</span>",                "<div>test<span class=\"pre\">foobar</span><br><span class=\"pre\"></span></div><span class=\"pre\">baz</span>" ],
+/*45-06*/[ "<div>test</div><span class=\"pre\"><b>foobar<br>baz</b></span>",         "<div>test<span class=\"pre\"><b>foobar</b></span><br><span class=\"pre\"></span></div><span class=\"pre\"><b>baz</b></span>" ],
+/*46-07*/[ "<div>test</div><span class=\"pre\"><div>foobar</div>baz</span>",         "<div>testfoobar</div><span class=\"pre\">baz</span>" ],
+/*47-08*/[ "<div>test</div><span class=\"pre\">foobar<div>baz</div></span>",         "<div>test<span class=\"pre\">foobar</span></div><span class=\"pre\"><div>baz</div></span>" ],
+/*48-09*/[ "<div>test</div><span class=\"pre\"><div>foobar</div>baz\nfred</span>",   "<div>testfoobar</div><span class=\"pre\">baz\nfred</span>" ],
+/*49-10*/[ "<div>test</div><span class=\"pre\">foobar<div>baz</div>\nfred</span>",   "<div>test<span class=\"pre\">foobar</span></div><span class=\"pre\"><div>baz</div>\nfred</span>" ],
+/*50-11*/[ "<div>test</div><span class=\"pre\"><div>foo\nbar</div>baz\nfred</span>", "<div>testfoo\nbar</div><span class=\"pre\">baz\nfred</span>" ], // BAD
+/*51-12*/[ "<div>test</div><span class=\"pre\">foo<div>bar</div>baz\nfred</span>",   "<div>test<span class=\"pre\">foo</span></div><span class=\"pre\"><div>bar</div>baz\nfred</span>" ],
+
+      /* Some tests with <div class="pre">. */
+      /*
+       * The results are pretty ugly, since joining two <divs> sadly carrys the properties of the right to the left,
+       * but not in all cases: 07, 09, 11 are actually right. All cases use "JoinNodesSmart".
+       * Here we merely document the ugly behaviour. See bug 1191875 for more information.
+       */
+/*52-00*/[ "<div>test</div><div class=\"pre\">foobar\nbaz</div>",                  "<div class=\"pre\">testfoobar\nbaz</div>" ],
+/*53-01*/[ "<div>test</div><div class=\"pre\"><b>foobar\nbaz</b></div>",           "<div class=\"pre\">test<b>foobar\nbaz</b></div>" ],
+/*54-02*/[ "<div>test</div><div class=\"pre\"><b>foo</b>bar\nbaz</div>",           "<div class=\"pre\">test<b>foo</b>bar\nbaz</div>" ],
+/*55-03*/[ "<div>test</div><div class=\"pre\"><b>foo</b>\nbar</div>",              "<div class=\"pre\">test<b>foo</b>\nbar</div>" ],
+/*56-04*/[ "<div>test</div><div class=\"pre\"><b>foo\n</b>bar\nbaz</div>",         "<div class=\"pre\">test<b>foo\n</b>bar\nbaz</div>" ],
+/*57-05*/[ "<div>test</div><div class=\"pre\">foobar<br>baz</div>",                "<div class=\"pre\">testfoobar<br>baz</div>" ],
+/*58-06*/[ "<div>test</div><div class=\"pre\"><b>foobar<br>baz</b></div>",         "<div class=\"pre\">test<b>foobar<br>baz</b></div>" ],
+/*59-07*/[ "<div>test</div><div class=\"pre\"><div>foobar</div>baz</div>",         "<div>testfoobar</div><div class=\"pre\">baz</div>" ],
+/*60-08*/[ "<div>test</div><div class=\"pre\">foobar<div>baz</div></div>",         "<div class=\"pre\">testfoobar<div>baz</div></div>" ],
+/*61-09*/[ "<div>test</div><div class=\"pre\"><div>foobar</div>baz\nfred</div>",   "<div>testfoobar</div><div class=\"pre\">baz\nfred</div>" ],
+/*62-10*/[ "<div>test</div><div class=\"pre\">foobar<div>baz</div>\nfred</div>",   "<div class=\"pre\">testfoobar<div>baz</div>\nfred</div>" ],
+/*63-11*/[ "<div>test</div><div class=\"pre\"><div>foo\nbar</div>baz\nfred</div>", "<div>testfoo\nbar</div><div class=\"pre\">baz\nfred</div>" ], // BAD
+/*64-12*/[ "<div>test</div><div class=\"pre\">foo<div>bar</div>baz\nfred</div>",   "<div class=\"pre\">testfoo<div>bar</div>baz\nfred</div>" ],
+
+      /* Some tests with lists. These exercise the MoveBlock "left in right". */
+/*65*/[ "<ul><pre><li>test</li>foobar\nbaz</pre></ul>",          "<ul><pre><li>testfoobar\n</li>baz</pre></ul>" ],
+/*66*/[ "<ul><pre><li>test</li><b>foobar\nbaz</b></pre></ul>",   "<ul><pre><li>test<b>foobar\n</b></li><b>baz</b></pre></ul>" ],
+/*67*/[ "<ul><pre><li>test</li><b>foo</b>bar\nbaz</pre></ul>",   "<ul><pre><li>test<b>foo</b>bar\n</li>baz</pre></ul>" ],
+/*68*/[ "<ul><pre><li>test</li><b>foo</b>\nbar</pre></ul>",      "<ul><pre><li>test<b>foo</b>\n</li>bar</pre></ul>" ],
+/*69*/[ "<ul><pre><li>test</li><b>foo\n</b>bar\nbaz</pre></ul>", "<ul><pre><li>test<b>foo\n</b></li>bar\nbaz</pre></ul>" ],
+
+      /* Last not least, some simple edge case tests. */
+/*70*/[ "<div>test</div><pre>foobar\n</pre>baz", "<div>testfoobar\n</div>baz" ],
+/*71*/[ "<div>test</div><pre>\nfoo\nbar</pre>", "<div>testfoo\n</div><pre>bar</pre>" ],
+/*72*/[ "<div>test</div><pre>\n\nfoo\nbar</pre>", "<div>test\n</div><pre>foo\nbar</pre>" ],
+    ];
+
+    /** Test for Bug 772796 **/
+
+    SimpleTest.waitForExplicitFinish();
+
+    SimpleTest.waitForFocus(function() {
+
+      var sel = window.getSelection();
+      var theEdit = document.getElementById("editable");
+      var testName;
+      var theDiv;
+
+      for (i = 0; i < tests.length; i++) {
+        testName = "test" + i.toString();
+        dump (testName+"\n");
+        dump (tests[i][0]+"\n");
+
+        /* Set up the selection. */
+        theEdit.innerHTML = "<div id=\"" + testName + "\">" + tests[i][0] + "</div>";
+        theDiv = document.getElementById(testName);
+        theDiv.focus();
+        sel.collapse(theDiv, 0);
+        synthesizeMouse(theDiv, 100, 2, {}); /* click behind and down */
+
+        /** First round: Forward delete. **/
+        synthesizeKey("VK_DELETE", {});
+        is(theDiv.innerHTML, tests[i][1], "delete(collapsed): inner HTML for " + testName);
+
+        /* Set up the selection. */
+        theEdit.innerHTML = "<div id=\"" + testName + "\">" + tests[i][0] + "</div>";
+        theDiv = document.getElementById(testName);
+        theDiv.focus();
+        sel.collapse(theDiv, 0);
+        synthesizeMouse(theDiv, 100, 2, {}); /* click behind and down */
+
+        /** Second round: Backspace. **/
+        synthesizeKey("VK_RIGHT", {});
+        synthesizeKey("VK_BACK_SPACE", {});
+        if (tests[i].length == 2) {
+          is(theDiv.innerHTML, tests[i][1], "backspace: inner HTML for " + testName);
+        } else {
+          todo_is(theDiv.innerHTML, tests[i][1], "backspace(should be): inner HTML for " + testName);
+          is(theDiv.innerHTML, tests[i][2], "backspace(currently is): inner HTML for " + testName);
+        }
+
+        /* Set up the selection. */
+        theEdit.innerHTML = "<div id=\"" + testName + "\">" + tests[i][0] + "</div>";
+        theDiv = document.getElementById(testName);
+        theDiv.focus();
+        sel.collapse(theDiv, 0);
+        synthesizeMouse(theDiv, 100, 2, {}); /* click behind and down */
+
+        /** Third round: Delete with non-collapsed selection. **/
+        if (i == 72) {
+          // This test doesn't work, since we can't select only one newline using the right arrow key.
+          continue;
+        }
+        synthesizeKey("VK_LEFT", {});
+        /* Strangely enough we need to hit "right arrow" three times to select two characters. */
+        synthesizeKey("VK_RIGHT", {shiftKey:true});
+        synthesizeKey("VK_RIGHT", {shiftKey:true});
+        synthesizeKey("VK_RIGHT", {shiftKey:true});
+        synthesizeKey("VK_DELETE", {});
+
+        /* We always expect to the delete the "tf" in "testfoo". */
+        var expected = tests[i][1].replace("testfoo", "tesoo")
+                                  .replace("test<b>foo", "tes<b>oo")
+                                  .replace("test<span class=\"pre\">foo", "tes<span class=\"pre\">oo")
+                                  .replace("test<span class=\"pre\"><b>foo", "tes<span class=\"pre\"><b>oo");
+        is(theDiv.innerHTML, expected, "delete(non-collapsed): inner HTML for " + testName);
+      }
+
+      SimpleTest.finish();
+
+    });
+
+  </script>
+
+</pre>
+</body>
+</html>

@@ -353,7 +353,11 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
 
     LayerRenderState state = aLayer->GetRenderState();
 
-    if (!state.mSurface.get()) {
+#if ANDROID_VERSION >= 21
+    if (!state.GetGrallocBuffer() && !state.GetSidebandStream()) {
+#else
+    if (!state.GetGrallocBuffer()) {
+#endif
         if (aLayer->AsColorLayer() && mColorFill) {
             fillColor = true;
         } else {
@@ -445,7 +449,18 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     HwcLayer& hwcLayer = mList->hwLayers[current];
     hwcLayer.displayFrame = displayFrame;
     mHal->SetCrop(hwcLayer, sourceCrop);
-    buffer_handle_t handle = fillColor ? nullptr : state.mSurface->getNativeBuffer()->handle;
+    buffer_handle_t handle = nullptr;
+#if ANDROID_VERSION >= 21
+    if (state.GetSidebandStream()) {
+        handle = state.GetSidebandStream()->handle();
+    } else if (state.GetGrallocBuffer()) {
+        handle = state.GetGrallocBuffer()->getNativeBuffer()->handle;
+    }
+#else
+    if (state.GetGrallocBuffer()) {
+        handle = state.GetGrallocBuffer()->getNativeBuffer()->handle;
+    }
+#endif
     hwcLayer.handle = handle;
 
     hwcLayer.flags = 0;
@@ -453,7 +468,11 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     hwcLayer.blending = isOpaque ? HWC_BLENDING_NONE : HWC_BLENDING_PREMULT;
 #if ANDROID_VERSION >= 17
     hwcLayer.compositionType = HWC_FRAMEBUFFER;
-
+#if ANDROID_VERSION >= 21
+    if (state.GetSidebandStream()) {
+        hwcLayer.compositionType = HWC_SIDEBAND;
+    }
+#endif
     hwcLayer.acquireFenceFd = -1;
     hwcLayer.releaseFenceFd = -1;
 #if ANDROID_VERSION >= 18

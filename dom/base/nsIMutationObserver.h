@@ -22,8 +22,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IMUTATION_OBSERVER_IID \
-{ 0xdd74f0cc, 0x2849, 0x4d05, \
-  { 0x9c, 0xe3, 0xb0, 0x95, 0x3e, 0xc2, 0xfd, 0x44 } }
+{ 0x6d674c17, 0x0fbc, 0x4633, \
+  { 0x8f, 0x46, 0x73, 0x4e, 0x87, 0xeb, 0xf0, 0xc7 } }
 
 /**
  * Information details about a characterdata change.  Basically, we
@@ -201,6 +201,18 @@ public:
                                 const nsAttrValue* aOldValue) = 0;
 
   /**
+   * Notification that the root of a native anonymous has been added
+   * or removed.
+   *
+   * @param aDocument    Owner doc of aContent
+   * @param aContent     Anonymous node that's been added or removed
+   * @param aIsRemove    True if it's a removal, false if an addition
+   */
+  virtual void NativeAnonymousChildListChange(nsIDocument* aDocument,
+                                              nsIContent* aContent,
+                                              bool aIsRemove) {}
+
+  /**
    * Notification that an attribute of an element has been
    * set to the value it already had.
    *
@@ -346,6 +358,11 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIMutationObserver, NS_IMUTATION_OBSERVER_IID)
                                      int32_t aModType,                       \
                                      const nsAttrValue* aNewValue) override;
 
+#define NS_DECL_NSIMUTATIONOBSERVER_NATIVEANONYMOUSCHILDLISTCHANGE           \
+    virtual void NativeAnonymousChildListChange(nsIDocument* aDocument,      \
+                                                nsIContent* aContent,        \
+                                                bool aIsRemove) override;
+
 #define NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED                         \
     virtual void AttributeChanged(nsIDocument* aDocument,                    \
                                   mozilla::dom::Element* aElement,           \
@@ -383,6 +400,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIMutationObserver, NS_IMUTATION_OBSERVER_IID)
     NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATAWILLCHANGE                      \
     NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED                         \
     NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTEWILLCHANGE                          \
+    NS_DECL_NSIMUTATIONOBSERVER_NATIVEANONYMOUSCHILDLISTCHANGE               \
     NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED                             \
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED                              \
     NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED                              \
@@ -416,6 +434,12 @@ _class::AttributeWillChange(nsIDocument* aDocument,                       \
                             nsIAtom* aAttribute,                          \
                             int32_t aModType,                             \
                             const nsAttrValue* aNewValue)                 \
+{                                                                         \
+}                                                                         \
+void                                                                      \
+_class::NativeAnonymousChildListChange(nsIDocument* aDocument,            \
+                                       nsIContent* aContent,              \
+                                       bool aIsRemove)                    \
 {                                                                         \
 }                                                                         \
 void                                                                      \

@@ -36,6 +36,7 @@
   var UnsupportedBrowserView  = loop.webapp.UnsupportedBrowserView;
   var UnsupportedDeviceView   = loop.webapp.UnsupportedDeviceView;
   var StandaloneRoomView      = loop.standaloneRoomViews.StandaloneRoomView;
+  var StandaloneHandleUserAgentView = loop.standaloneRoomViews.StandaloneHandleUserAgentView;
 
   // 3. Shared components
   var ConversationToolbar = loop.shared.views.ConversationToolbar;
@@ -1511,6 +1512,21 @@
                   onCallTerminated={function(){}}
                   remotePosterUrl="sample-img/video-screen-remote.png"
                   roomStore={desktopRemoteFaceMuteRoomStore} />
+              </div>
+            </FramedExample>
+          </Section>
+
+          <Section name="StandaloneHandleUserAgentView">
+            <FramedExample
+              cssClass="standalone"
+              dashed={true}
+              height={483}
+              summary="Standalone Room Handle Join in Firefox"
+              width={644} >
+              <div className="standalone">
+                <StandaloneHandleUserAgentView
+                  activeRoomStore={readyRoomStore}
+                  dispatcher={dispatcher} />
               </div>
             </FramedExample>
           </Section>

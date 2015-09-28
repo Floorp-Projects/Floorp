@@ -1013,8 +1013,9 @@ function sanitizeName(aName) {
  * @param prefName
  *        The name of the pref.
  **/
-function getMozParamPref(prefName)
-  Services.prefs.getCharPref(BROWSER_SEARCH_PREF + "param." + prefName);
+function getMozParamPref(prefName) {
+  return Services.prefs.getCharPref(BROWSER_SEARCH_PREF + "param." + prefName);
+}
 
 /**
  * Notifies watchers of SEARCH_ENGINE_TOPIC about changes to an engine or to
@@ -1241,8 +1242,9 @@ EngineURL.prototype = {
     return queryParam ? queryParam.name : "";
   },
 
-  _hasRelation: function SRC_EURL__hasRelation(aRel)
-    this.rels.some(function(e) e == aRel.toLowerCase()),
+  _hasRelation: function SRC_EURL__hasRelation(aRel) {
+    return this.rels.some(e => e == aRel.toLowerCase());
+  },
 
   _initWithJSON: function SRC_EURL__initWithJSON(aJson, aEngine) {
     if (!aJson.params)
@@ -1285,8 +1287,9 @@ EngineURL.prototype = {
     if (this.method != "GET")
       json.method = this.method;
 
-    function collapseMozParams(aParam)
-      this.mozparams[aParam.name] || aParam;
+    function collapseMozParams(aParam) {
+      return this.mozparams[aParam.name] || aParam;
+    }
     json.params = this.params.map(collapseMozParams, this);
 
     return json;
@@ -3194,10 +3197,12 @@ SearchService.prototype = {
               cache.directories[aDir.path].lastModifiedTime != aDir.lastModifiedTime);
     }
 
-    function notInCachePath(aPathToLoad)
-      cachePaths.indexOf(aPathToLoad.path) == -1;
-    function notInCacheVisibleEngines(aEngineName)
-      cache.visibleDefaultEngines.indexOf(aEngineName) == -1;
+    function notInCachePath(aPathToLoad) {
+      return cachePaths.indexOf(aPathToLoad.path) == -1;
+    }
+    function notInCacheVisibleEngines(aEngineName) {
+      return cache.visibleDefaultEngines.indexOf(aEngineName) == -1;
+    }
 
     let buildID = Services.appinfo.platformBuildID;
     let cachePaths = [path for (path in cache.directories)];
@@ -3316,10 +3321,12 @@ SearchService.prototype = {
         });
       }
 
-      function notInCachePath(aPathToLoad)
-        cachePaths.indexOf(aPathToLoad.path) == -1;
-      function notInCacheVisibleEngines(aEngineName)
-        cache.visibleDefaultEngines.indexOf(aEngineName) == -1;
+      function notInCachePath(aPathToLoad) {
+        return cachePaths.indexOf(aPathToLoad.path) == -1;
+      }
+      function notInCacheVisibleEngines(aEngineName) {
+        return cache.visibleDefaultEngines.indexOf(aEngineName) == -1;
+      }
 
       let buildID = Services.appinfo.platformBuildID;
       let cachePaths = [path for (path in cache.directories)];
@@ -3748,7 +3755,7 @@ SearchService.prototype = {
 
   _parseListTxt: function SRCH_SVC_parseListTxt(list, jarPackaging,
                                                 chromeFiles, uris) {
-    let names = list.split("\n").filter(function (n) !!n);
+    let names = list.split("\n").filter(n => !!n);
     // This maps the names of our built-in engines to a boolean
     // indicating whether it should be hidden by default.
     let jarNames = new Map();
@@ -4913,8 +4920,10 @@ var engineMetadataService = {
   /**
    * Flush any waiting write.
    */
-  finalize: function () this._lazyWriter ? this._lazyWriter.finalize()
-                                         : Promise.resolve(),
+  finalize: function () {
+    return this._lazyWriter ? this._lazyWriter.finalize()
+                            : Promise.resolve();
+  },
 
   /**
    * Commit changes to disk, asynchronously.

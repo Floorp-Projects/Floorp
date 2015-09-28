@@ -260,6 +260,11 @@ class RemoteReftest(RefTest):
         # Disable skia-gl: see bug 907351
         prefs["gfx.canvas.azure.accelerated"] = False
 
+        # Debug reftests have problems with large tile size on pandaboards
+        if mozinfo.info['debug'] and self._devicemanager.shellCheckOutput(['getprop', 'ro.product.name']) == 'pandaboard':
+            prefs["layers.tiles.adjust"] = False
+            prefs["layers.single-tile.enabled"] = False
+
         # Set the extra prefs.
         profile.set_preferences(prefs)
 
@@ -310,7 +315,8 @@ class RemoteReftest(RefTest):
 
     def runApp(self, profile, binary, cmdargs, env,
                timeout=None, debuggerInfo=None,
-               symbolsPath=None, options=None):
+               symbolsPath=None, options=None,
+               valgrindPath=None, valgrindArgs=None, valgrindSuppFiles=None):
         status = self.automation.runApp(None, env,
                                         binary,
                                         profile.profile,

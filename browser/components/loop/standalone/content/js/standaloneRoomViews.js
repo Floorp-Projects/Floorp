@@ -14,6 +14,103 @@ loop.standaloneRoomViews = (function(mozL10n) {
   var sharedUtils = loop.shared.utils;
   var sharedViews = loop.shared.views;
 
+  var ToSView = React.createClass({displayName: "ToSView",
+    propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
+    },
+
+    _getContent: function() {
+      // We use this technique of static markup as it means we get
+      // just one overall string for L10n to define the structure of
+      // the whole item.
+      return mozL10n.get("legal_text_and_links", {
+        "clientShortname": mozL10n.get("clientShortname2"),
+        "terms_of_use_url": React.renderToStaticMarkup(
+          React.createElement("a", {href: loop.config.legalWebsiteUrl, rel: "noreferrer", target: "_blank"}, 
+            mozL10n.get("terms_of_use_link_text")
+          )
+        ),
+        "privacy_notice_url": React.renderToStaticMarkup(
+          React.createElement("a", {href: loop.config.privacyWebsiteUrl, rel: "noreferrer", target: "_blank"}, 
+            mozL10n.get("privacy_notice_link_text")
+          )
+        )
+      });
+    },
+
+    recordClick: function(event) {
+      // Check for valid href, as this is clicking on the paragraph -
+      // so the user may be clicking on the text rather than the link.
+      if (event.target && event.target.href) {
+        this.props.dispatcher.dispatch(new sharedActions.RecordClick({
+          linkInfo: event.target.href
+        }));
+      }
+    },
+
+    render: function() {
+      return (
+        React.createElement("p", {
+          className: "terms-service", 
+          dangerouslySetInnerHTML: {__html: this._getContent()}, 
+          onClick: this.recordClick})
+      );
+    }
+  });
+
+  var StandaloneHandleUserAgentView = React.createClass({displayName: "StandaloneHandleUserAgentView",
+    mixins: [
+      loop.store.StoreMixin("activeRoomStore")
+    ],
+
+    propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
+    },
+
+    getInitialState: function() {
+      return this.getStoreState();
+    },
+
+    handleJoinButton: function() {
+      this.props.dispatcher.dispatch(new sharedActions.JoinRoom());
+    },
+
+    render: function() {
+      var buttonMessage = this.state.roomState === ROOM_STATES.JOINED ?
+        mozL10n.get("rooms_room_joined_own_conversation_label") :
+        mozL10n.get("rooms_room_join_label");
+
+      var buttonClasses = React.addons.classSet({
+        btn: true,
+        "btn-info": true,
+        disabled: this.state.roomState === ROOM_STATES.JOINED
+      });
+
+      // The extra scroller div here is for providing a scroll view for shorter
+      // screens, as the common.css specifies overflow:hidden for the body which
+      // we need in some places.
+      return (
+        React.createElement("div", {className: "handle-user-agent-view-scroller"}, 
+          React.createElement("div", {className: "handle-user-agent-view"}, 
+            React.createElement("div", {className: "info-panel"}, 
+              React.createElement("p", {className: "loop-logo-text", title:  mozL10n.get("clientShortname2") }), 
+              React.createElement("p", {className: "roomName"},  this.state.roomName), 
+              React.createElement("p", {className: "loop-logo"}), 
+              React.createElement("button", {
+                className: buttonClasses, 
+                onClick: this.handleJoinButton}, 
+                buttonMessage
+              )
+            ), 
+            React.createElement(ToSView, {
+              dispatcher: this.props.dispatcher}), 
+            React.createElement("p", {className: "mozilla-logo"})
+          )
+        )
+      );
+    }
+  });
+
   /**
    * Handles display of failures, determining the correct messages and
    * displaying the retry button at appropriate times.
@@ -306,41 +403,12 @@ loop.standaloneRoomViews = (function(mozL10n) {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
     },
 
-    _getContent: function() {
-      // We use this technique of static markup as it means we get
-      // just one overall string for L10n to define the structure of
-      // the whole item.
-      return mozL10n.get("legal_text_and_links", {
-        "clientShortname": mozL10n.get("clientShortname2"),
-        "terms_of_use_url": React.renderToStaticMarkup(
-          React.createElement("a", {href: loop.config.legalWebsiteUrl, rel: "noreferrer", target: "_blank"}, 
-            mozL10n.get("terms_of_use_link_text")
-          )
-        ),
-        "privacy_notice_url": React.renderToStaticMarkup(
-          React.createElement("a", {href: loop.config.privacyWebsiteUrl, rel: "noreferrer", target: "_blank"}, 
-            mozL10n.get("privacy_notice_link_text")
-          )
-        )
-      });
-    },
-
-    recordClick: function(event) {
-      // Check for valid href, as this is clicking on the paragraph -
-      // so the user may be clicking on the text rather than the link.
-      if (event.target && event.target.href) {
-        this.props.dispatcher.dispatch(new sharedActions.RecordClick({
-          linkInfo: event.target.href
-        }));
-      }
-    },
-
     render: function() {
       return (
         React.createElement("footer", {className: "rooms-footer"}, 
           React.createElement("div", {className: "footer-logo"}), 
-          React.createElement("p", {dangerouslySetInnerHTML: {__html: this._getContent()}, 
-             onClick: this.recordClick})
+          React.createElement(ToSView, {
+            dispatcher: this.props.dispatcher})
         )
       );
     }
@@ -596,11 +664,50 @@ loop.standaloneRoomViews = (function(mozL10n) {
     }
   });
 
+  var StandaloneRoomControllerView = React.createClass({displayName: "StandaloneRoomControllerView",
+    mixins: [
+      loop.store.StoreMixin("activeRoomStore")
+    ],
+
+    propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      isFirefox: React.PropTypes.bool.isRequired
+    },
+
+    getInitialState: function() {
+      return this.getStoreState();
+    },
+
+    render: function() {
+      // If we don't know yet, don't display anything.
+      if (this.state.userAgentHandlesRoom === undefined) {
+        return null;
+      }
+
+      if (this.state.userAgentHandlesRoom) {
+        return (
+          React.createElement(StandaloneHandleUserAgentView, {
+            dispatcher: this.props.dispatcher})
+        );
+      }
+
+      return (
+        React.createElement(StandaloneRoomView, {
+          activeRoomStore: this.getStore(), 
+          dispatcher: this.props.dispatcher, 
+          isFirefox: this.props.isFirefox})
+      );
+    }
+  });
+
   return {
+    StandaloneHandleUserAgentView: StandaloneHandleUserAgentView,
+    StandaloneRoomControllerView: StandaloneRoomControllerView,
     StandaloneRoomFailureView: StandaloneRoomFailureView,
     StandaloneRoomFooter: StandaloneRoomFooter,
     StandaloneRoomHeader: StandaloneRoomHeader,
     StandaloneRoomInfoArea: StandaloneRoomInfoArea,
-    StandaloneRoomView: StandaloneRoomView
+    StandaloneRoomView: StandaloneRoomView,
+    ToSView: ToSView
   };
 })(navigator.mozL10n);

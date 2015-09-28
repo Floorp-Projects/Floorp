@@ -2604,7 +2604,8 @@ EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     PRThread* thread = PR_CreateThread(PR_USER_THREAD, WorkerMain, input,
-                                       PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
+                                       PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD,
+                                       gMaxStackSize + 128 * 1024);
     if (!thread || !workerThreads.append(thread))
         return false;
 
@@ -6129,6 +6130,8 @@ SetWorkerRuntimeOptions(JSRuntime* rt)
     if (*gZealStr)
         rt->gc.parseAndSetZeal(gZealStr);
 #endif
+
+    JS_SetNativeStackQuota(rt, gMaxStackSize);
 }
 
 static int

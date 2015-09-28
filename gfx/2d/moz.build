@@ -20,11 +20,16 @@ EXPORTS.mozilla.gfx += [
     'Blur.h',
     'BorrowedContext.h',
     'Coord.h',
+    'CriticalSection.h',
     'DataSurfaceHelpers.h',
     'DrawTargetTiled.h',
     'Filters.h',
     'Helpers.h',
     'HelpersCairo.h',
+    'IterableArena.h',
+    'JobScheduler.h',
+    'JobScheduler_posix.h',
+    'JobScheduler_win32.h',
     'Logging.h',
     'Matrix.h',
     'NumericTools.h',
@@ -60,6 +65,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'DrawTargetD2D1.cpp',
         'ExtendInputEffectD2D1.cpp',
         'FilterNodeD2D1.cpp',
+        'JobScheduler_win32.cpp',
         'PathD2D.cpp',
         'RadialGradientEffectD2D1.cpp',
         'ScaledFontDWrite.cpp',
@@ -69,6 +75,11 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'SourceSurfaceD2DTarget.cpp',
     ]
     DEFINES['WIN32'] = True
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'windows':
+    SOURCES += [
+        'JobScheduler_posix.cpp',
+    ]
 
 if CONFIG['MOZ_ENABLE_SKIA']:
     UNIFIED_SOURCES += [
@@ -118,6 +129,7 @@ UNIFIED_SOURCES += [
     'DataSourceSurface.cpp',
     'DataSurfaceHelpers.cpp',
     'DrawEventRecorder.cpp',
+    'DrawingJob.cpp',
     'DrawTarget.cpp',
     'DrawTargetCairo.cpp',
     'DrawTargetCapture.cpp',
@@ -129,6 +141,7 @@ UNIFIED_SOURCES += [
     'FilterProcessing.cpp',
     'FilterProcessingScalar.cpp',
     'ImageScaling.cpp',
+    'JobScheduler.cpp',
     'Matrix.cpp',
     'Path.cpp',
     'PathCairo.cpp',

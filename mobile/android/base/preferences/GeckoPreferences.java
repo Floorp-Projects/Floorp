@@ -133,6 +133,7 @@ OnSharedPreferenceChangeListener
     private static final String PREFS_DEVTOOLS = NON_PREF_PREFIX + "devtools.enabled";
     private static final String PREFS_DISPLAY = NON_PREF_PREFIX + "display.enabled";
     private static final String PREFS_CUSTOMIZE_HOME = NON_PREF_PREFIX + "customize_home";
+    private static final String PREFS_CUSTOMIZE_IMAGE_BLOCKING = "browser.image_blocking.enabled";
     private static final String PREFS_TRACKING_PROTECTION_PRIVATE_BROWSING = "privacy.trackingprotection.pbmode.enabled";
     private static final String PREFS_TRACKING_PROTECTION_LEARN_MORE = NON_PREF_PREFIX + "trackingprotection.learn_more";
     private static final String PREFS_CATEGORY_PRIVATE_DATA = NON_PREF_PREFIX + "category_private_data";
@@ -882,6 +883,13 @@ OnSharedPreferenceChangeListener
                     }
                 } else if (PREFS_MP_ENABLED.equals(key)) {
                     if (!RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_MASTER_PASSWORD)) {
+                        preferences.removePreference(pref);
+                        i--;
+                        continue;
+                    }
+                } else if (PREFS_CUSTOMIZE_IMAGE_BLOCKING.equals(key)) {
+                    // Only enable the ZoomedView / magnifying pref on Nightly.
+                    if (!AppConstants.NIGHTLY_BUILD) {
                         preferences.removePreference(pref);
                         i--;
                         continue;

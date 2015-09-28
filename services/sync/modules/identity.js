@@ -590,4 +590,13 @@ IdentityManager.prototype = {
     // Do nothing for Sync 1.1.
     return {accepted: true};
   },
+
+  // Tell Sync what the login status should be if it saw a 401 fetching
+  // info/collections as part of login verification (typically immediately
+  // after login.)
+  // In our case it means an authoritative "password is incorrect".
+  loginStatusFromVerification404() {
+    return LOGIN_FAILED_LOGIN_REJECTED;
+  }
+
 };
