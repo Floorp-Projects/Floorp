@@ -309,7 +309,7 @@ MediaSourceTrackDemuxer::Reset()
   nsRefPtr<MediaSourceTrackDemuxer> self = this;
   nsCOMPtr<nsIRunnable> task =
     NS_NewRunnableFunction([self] () {
-      self->mManager->Seek(self->mType, TimeUnit());
+      self->mManager->Seek(self->mType, TimeUnit(), TimeUnit());
       {
         MonitorAutoLock mon(self->mMonitor);
         self->mNextRandomAccessPoint =
@@ -364,7 +364,8 @@ MediaSourceTrackDemuxer::DoSeek(media::TimeUnit aTime)
     return SeekPromise::CreateAndReject(DemuxerFailureReason::WAITING_FOR_DATA,
                                         __func__);
   }
-  TimeUnit seekTime = mManager->Seek(mType, aTime);
+  TimeUnit seekTime =
+    mManager->Seek(mType, aTime, TimeUnit::FromMicroseconds(EOS_FUZZ_US));
   {
     MonitorAutoLock mon(mMonitor);
     mNextRandomAccessPoint = mManager->GetNextRandomAccessPoint(mType);
