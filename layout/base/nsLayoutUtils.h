@@ -558,7 +558,8 @@ public:
    * aStopAtAncestor if no closer ancestor is found.
    */
   static nsIFrame* GetAnimatedGeometryRootForFrame(nsDisplayListBuilder* aBuilder,
-                                                   nsIFrame* aFrame);
+                                                   nsIFrame* aFrame,
+                                                   const nsIFrame* aStopAtAncestor);
 
   /**
     * GetScrollableFrameFor returns the scrollable frame for a scrolled frame
