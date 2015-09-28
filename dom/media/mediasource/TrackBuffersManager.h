@@ -263,6 +263,8 @@ private:
     nsRefPtr<SharedTrackInfo> mLastInfo;
 
     // If set, position of the next sample to be retrieved by GetSample().
+    // If the position is equal to the TrackBuffer's length, it indicates that
+    // we've reached EOS.
     Maybe<uint32_t> mNextGetSampleIndex;
     // Approximation of the next sample's decode timestamp.
     media::TimeUnit mNextSampleTimecode;
