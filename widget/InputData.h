@@ -30,6 +30,7 @@ class Matrix4x4;
 enum InputType
 {
   MULTITOUCH_INPUT,
+  MOUSE_INPUT,
   PANGESTURE_INPUT,
   PINCHGESTURE_INPUT,
   TAPGESTURE_INPUT,
@@ -37,6 +38,7 @@ enum InputType
 };
 
 class MultiTouchInput;
+class MouseInput;
 class PanGestureInput;
 class PinchGestureInput;
 class TapGestureInput;
@@ -76,6 +78,7 @@ public:
   Modifiers modifiers;
 
   INPUTDATA_AS_CHILD_TYPE(MultiTouchInput, MULTITOUCH_INPUT)
+  INPUTDATA_AS_CHILD_TYPE(MouseInput, MOUSE_INPUT)
   INPUTDATA_AS_CHILD_TYPE(PanGestureInput, PANGESTURE_INPUT)
   INPUTDATA_AS_CHILD_TYPE(PinchGestureInput, PINCHGESTURE_INPUT)
   INPUTDATA_AS_CHILD_TYPE(TapGestureInput, TAPGESTURE_INPUT)
@@ -243,6 +246,47 @@ public:
 
   MultiTouchType mType;
   nsTArray<SingleTouchData> mTouches;
+};
+
+class MouseInput : public InputData
+{
+public:
+  enum MouseType
+  {
+    MOUSE_MOVE,
+    MOUSE_DOWN,
+    MOUSE_UP,
+    MOUSE_DRAG_START,
+    MOUSE_DRAG_END,
+  };
+
+  enum ButtonType
+  {
+    LEFT_BUTTON,
+    MIDDLE_BUTTON,
+    RIGHT_BUTTON,
+    NONE
+  };
+
+  MouseInput(MouseType aType, ButtonType aButtonType, uint32_t aTime,
+             TimeStamp aTimeStamp, Modifiers aModifiers)
+    : InputData(MOUSE_INPUT, aTime, aTimeStamp, aModifiers)
+    , mType(aType)
+    , mButtonType(aButtonType)
+  {}
+
+  MouseInput()
+    : InputData(MOUSE_INPUT)
+  {}
+
+  explicit MouseInput(const WidgetMouseEventBase& aMouseEvent);
+
+  bool IsLeftButton() const { return mButtonType == LEFT_BUTTON; }
+
+  MouseType mType;
+  ButtonType mButtonType;
+  ScreenPoint mOrigin;
+  ParentLayerPoint mLocalOrigin;
 };
 
 /**
