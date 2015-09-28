@@ -5,7 +5,7 @@ function test() {
   waitForExplicitFinish();
 
   function onLoad(win) {
-    registerCleanupFunction(function () win.close());
+    registerCleanupFunction(() => win.close());
 
     let tab = win.gBrowser.addTab();
     win.gBrowser.pinTab(tab);

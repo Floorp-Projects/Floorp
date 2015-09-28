@@ -43,6 +43,7 @@ fails == 345369-2.html 345369-2-ref.html
 == bfc-displace-2b.html bfc-displace-2b-ref.html
 == bfc-displace-3a.html bfc-displace-3a-ref.html
 == bfc-displace-3b.html bfc-displace-3b-ref.html
+== bfc-displace-4.html bfc-displace-4-ref.html
 == bfc-shrink-1.html bfc-shrink-1-ref.html
 
 # Testcases that involve vertical writing mode.

@@ -84,7 +84,7 @@ public:
    * temporary results to aContext and then overpainting them with final
    * results, by using a temporary buffer when necessary. In BUFFERED
    * mode we always completely overwrite the contents of aContext's
-   * destination surface (within the clip region) using OPERATOR_SOURCE.
+   * destination surface (within the clip region) using OP_SOURCE.
    */
   void SetDefaultTarget(gfxContext* aContext);
   virtual void SetDefaultTargetConfiguration(BufferMode aDoubleBuffering, ScreenRotation aRotation);

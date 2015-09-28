@@ -156,9 +156,7 @@ let extensionData = {
 
 add_task(function* test_contentscript() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  yield extension.startup();
-  info("extension loaded");
-  yield extension.awaitMessage("invalidate");
+  yield Promise.all([extension.startup(), extension.awaitMessage("invalidate")]);
   SpecialPowers.invalidateExtensionStorageCache();
   extension.sendMessage("invalidated");
   yield extension.awaitFinish("storage");

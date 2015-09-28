@@ -113,7 +113,7 @@ ReadbackProcessor::BuildUpdatesForLayer(ReadbackLayer* aLayer)
     if (aLayer->mBackgroundColor != colorLayer->GetColor()) {
       aLayer->mBackgroundLayer = nullptr;
       aLayer->mBackgroundColor = colorLayer->GetColor();
-      NS_ASSERTION(aLayer->mBackgroundColor.a == 1.0,
+      NS_ASSERTION(aLayer->mBackgroundColor.a == 1.f,
                    "Color layer said it was opaque!");
       nsRefPtr<gfxContext> ctx =
           aLayer->mSink->BeginUpdate(aLayer->GetRect(),
@@ -135,7 +135,7 @@ ReadbackProcessor::BuildUpdatesForLayer(ReadbackLayer* aLayer)
         offset != aLayer->mBackgroundLayerOffset) {
       aLayer->mBackgroundLayer = paintedLayer;
       aLayer->mBackgroundLayerOffset = offset;
-      aLayer->mBackgroundColor = gfxRGBA(0,0,0,0);
+      aLayer->mBackgroundColor = Color();
       paintedLayer->SetUsedForReadback(true);
     } else {
       nsIntRegion invalid;

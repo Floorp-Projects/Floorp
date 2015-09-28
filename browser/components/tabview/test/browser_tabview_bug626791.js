@@ -92,7 +92,7 @@ function test() {
   let testDragToCreateOrphan = function (tab) {
     if (!tab) {
       let tab = win.gBrowser.loadOneTab('about:blank', {inBackground: true});
-      afterAllTabsLoaded(function () testDragToCreateOrphan(tab), win);
+      afterAllTabsLoaded(() => testDragToCreateOrphan(tab), win);
       return;
     }
 

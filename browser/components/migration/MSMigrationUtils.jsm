@@ -325,9 +325,13 @@ function Bookmarks(migrationType) {
 Bookmarks.prototype = {
   type: MigrationUtils.resourceTypes.BOOKMARKS,
 
-  get exists() !!this._favoritesFolder,
+  get exists() {
+    return !!this._favoritesFolder;
+  },
 
-  get importedAppLabel() this._migrationType == MSMigrationUtils.MIGRATION_TYPE_IE ? "IE" : "Edge",
+  get importedAppLabel() {
+    return this._migrationType == MSMigrationUtils.MIGRATION_TYPE_IE ? "IE" : "Edge";
+  },
 
   __favoritesFolder: null,
   get _favoritesFolder() {

@@ -23,7 +23,7 @@ function onTabViewWindowLoaded() {
   contentWindow.UI.setActive(group1);
   let tab1 = gBrowser.loadOneTab("about:blank#1", {inBackground: true});
   let tab1Item = tab1._tabViewTabItem;
-  ok(group1.getChildren().some(function(child) child == tab1Item), "The tab was made in our new group");
+  ok(group1.getChildren().some(child => child == tab1Item), "The tab was made in our new group");
   is(group1.getChildren().length, 1, "Only one tab in the first group");
 
   group1.addSubscriber("close", function onClose() {

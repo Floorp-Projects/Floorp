@@ -111,7 +111,7 @@ var gSetBackground = {
 
   _rgbToHex: function (aR, aG, aB)
   {
-    return "#" + [aR, aG, aB].map(function(aInt) aInt.toString(16).replace(/^(.)$/, "0$1"))
+    return "#" + [aR, aG, aB].map(aInt => aInt.toString(16).replace(/^(.)$/, "0$1"))
                              .join("").toUpperCase();
   },
 #else

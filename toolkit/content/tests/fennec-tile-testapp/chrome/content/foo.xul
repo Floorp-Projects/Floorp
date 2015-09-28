@@ -119,7 +119,7 @@ function onKeyPress(e) {
   case t:
     let ijstrs = window.prompt('row,col plz').split(' ');
     for each (let ijstr in ijstrs) {
-      let [i, j] = ijstr.split(',').map(function (x) parseInt(x));
+      let [i, j] = ijstr.split(',').map(x => parseInt(x));
       debugTile(i, j);
     }
 

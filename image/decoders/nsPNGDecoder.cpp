@@ -209,7 +209,8 @@ nsPNGDecoder::CreateFrame(png_uint_32 aXOffset, png_uint_32 aYOffset,
 
   if (mDownscaler) {
     bool hasAlpha = aFormat != SurfaceFormat::B8G8R8X8;
-    rv = mDownscaler->BeginFrame(frameRect.Size(), mImageData, hasAlpha);
+    rv = mDownscaler->BeginFrame(frameRect.Size(), Nothing(),
+                                 mImageData, hasAlpha);
     if (NS_FAILED(rv)) {
       return rv;
     }

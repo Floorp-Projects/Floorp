@@ -553,7 +553,7 @@ nsICODecoder::PrepareForMask()
                  mDownscaler->TargetSize().height *
                  sizeof(uint32_t));
     mMaskBuffer = MakeUnique<uint8_t[]>(bmpDecoder->GetImageDataLength());
-    nsresult rv = mDownscaler->BeginFrame(GetRealSize(),
+    nsresult rv = mDownscaler->BeginFrame(GetRealSize(), Nothing(),
                                           mMaskBuffer.get(),
                                           /* aHasAlpha = */ true,
                                           /* aFlipVertically = */ true);

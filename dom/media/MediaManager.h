@@ -180,6 +180,7 @@ public:
   {
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
     return mVideoDevice && !mStopped &&
+           !mVideoDevice->GetSource()->IsAvailable() &&
            mVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Camera &&
            (!mVideoDevice->GetSource()->IsFake() ||
             Preferences::GetBool("media.navigator.permission.fake"));
@@ -188,6 +189,7 @@ public:
   {
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
     return mAudioDevice && !mStopped &&
+           !mAudioDevice->GetSource()->IsAvailable() &&
            (!mAudioDevice->GetSource()->IsFake() ||
             Preferences::GetBool("media.navigator.permission.fake"));
   }

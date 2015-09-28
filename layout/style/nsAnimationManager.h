@@ -339,6 +339,10 @@ public:
   void StopAnimationsForElement(mozilla::dom::Element* aElement,
                                 nsCSSPseudoElements::Type aPseudoType);
 
+  bool IsAnimationManager() override {
+    return true;
+  }
+
 protected:
   virtual ~nsAnimationManager() {}
 
@@ -350,9 +354,6 @@ protected:
   }
   virtual nsIAtom* GetAnimationsAfterAtom() override {
     return nsGkAtoms::animationsOfAfterProperty;
-  }
-  virtual bool IsAnimationManager() override {
-    return true;
   }
 
   mozilla::DelayedEventDispatcher<mozilla::AnimationEventInfo> mEventDispatcher;
