@@ -49,8 +49,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=863929
     }
 
     function start() {
-      pc1 = new mozRTCPeerConnection();
-      pc2 = new mozRTCPeerConnection();
+      pc1 = new RTCPeerConnection();
+      pc2 = new RTCPeerConnection();
       navigator.mozGetUserMedia({audio:true, video:true, fake:true}, function(s) {
         pc1.addStream(s);
           navigator.mozGetUserMedia({audio:true, video:true, fake:true}, function(s) {

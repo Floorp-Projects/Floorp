@@ -12,8 +12,8 @@
   });
 
   runNetworkTest(function () {
-    var pc1 = new mozRTCPeerConnection();
-    var pc2 = new mozRTCPeerConnection();
+    var pc1 = new RTCPeerConnection();
+    var pc2 = new RTCPeerConnection();
 
     pc1.createOffer({ offerToReceiveAudio: true }).then(offer => {
       // The whole point of this test is not to wait for the
