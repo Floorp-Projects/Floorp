@@ -12,9 +12,9 @@ import sys
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 
-from mozharness.mozilla.testing.firefox_ui_tests import FirefoxUIUpdateTests
+from mozharness.mozilla.testing.firefox_ui_tests import FirefoxUITests
 
 
 if __name__ == '__main__':
-    myScript = FirefoxUIUpdateTests()
+    myScript = FirefoxUITests()
     myScript.run_and_exit()
