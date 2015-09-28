@@ -921,7 +921,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, uint8_t aWidgetType,
       } else {
         if (GetCheckedOrSelected(aFrame, !isCheckbox)) {
           inputState = CHECKED;
-        } else (isCheckbox && GetIndeterminate(aFrame)) {
+        } if (isCheckbox && GetIndeterminate(aFrame)) {
           inputState = INDETERMINATE;
         }
 
