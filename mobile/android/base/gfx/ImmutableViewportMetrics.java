@@ -219,6 +219,17 @@ public class ImmutableViewportMetrics {
             zoomFactor, isRTL);
     }
 
+    public ImmutableViewportMetrics setPageRectFrom(ImmutableViewportMetrics aMetrics) {
+        if (aMetrics.cssPageRectLeft == cssPageRectLeft &&
+            aMetrics.cssPageRectTop == cssPageRectTop &&
+            aMetrics.cssPageRectRight == cssPageRectRight &&
+            aMetrics.cssPageRectBottom == cssPageRectBottom) {
+            return this;
+        }
+        RectF css = aMetrics.getCssPageRect();
+        return setPageRect(RectUtils.scale(css, zoomFactor), css);
+    }
+
     public ImmutableViewportMetrics setIsRTL(boolean aIsRTL) {
         if (isRTL == aIsRTL) {
             return this;
