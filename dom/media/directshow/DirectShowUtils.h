@@ -115,11 +115,6 @@ RefTimeToSeconds(const REFERENCE_TIME aRefTime)
 const char*
 GetDirectShowGuidName(const GUID& aGuid);
 
-// Returns true if we can instantiate an MP3 demuxer and decoder filters.
-// Use this to detect whether MP3 support is installed.
-bool
-CanDecodeMP3UsingDirectShow();
-
 } // namespace mozilla
 
 #endif
