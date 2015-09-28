@@ -469,6 +469,13 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Notifies if the user agent will handle the room or not.
+     */
+    UserAgentHandlesRoom: Action.define("userAgentHandlesRoom", {
+      handlesRoom: Boolean
+    }),
+
+    /**
      * Updates the Social API information when it is received.
      * XXX: should move to some roomActions module - refs bug 1079284
      */
@@ -481,6 +488,16 @@ loop.shared.actions = (function() {
      * XXX: should move to some roomActions module - refs bug 1079284
      */
     JoinRoom: Action.define("joinRoom", {
+    }),
+
+    /**
+     * A special action for metrics logging to define what type of join
+     * occurred when JoinRoom was activated.
+     * XXX: should move to some roomActions module - refs bug 1079284
+     */
+    MetricsLogJoinRoom: Action.define("metricsLogJoinRoom", {
+      userAgentHandledRoom: Boolean
+      // ownRoom: Boolean - Optional. Expected if firefoxHandledRoom is true.
     }),
 
     /**
