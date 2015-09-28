@@ -8,10 +8,11 @@
 #include "mozilla/dom/DocumentTimelineBinding.h"
 #include "AnimationUtils.h"
 #include "nsContentUtils.h"
+#include "nsDOMMutationObserver.h"
+#include "nsDOMNavigationTiming.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsRefreshDriver.h"
-#include "nsDOMNavigationTiming.h"
 
 namespace mozilla {
 namespace dom {
@@ -113,15 +114,26 @@ DocumentTimeline::WillRefresh(mozilla::TimeStamp aTime)
   bool needsTicks = false;
   AnimationArray animationsToKeep(mAnimationOrder.Length());
 
+  nsAutoAnimationMutationBatch mb(mDocument);
+
   for (Animation* animation : mAnimationOrder) {
-    if (animation->GetTimeline() != this ||
-        (!animation->IsRelevant() && !animation->NeedsTicks())) {
+    // Skip any animations that are longer need associated with this timeline.
+    if (animation->GetTimeline() != this) {
       mAnimations.RemoveEntry(animation);
       continue;
     }
 
     needsTicks |= animation->NeedsTicks();
-    animationsToKeep.AppendElement(animation);
+    // Even if |animation| doesn't need future ticks, we should still
+    // Tick it this time around since it might just need a one-off tick in
+    // order to dispatch events.
+    animation->Tick();
+
+    if (animation->IsRelevant() || animation->NeedsTicks()) {
+      animationsToKeep.AppendElement(animation);
+    } else {
+      mAnimations.RemoveEntry(animation);
+    }
   }
 
   mAnimationOrder.SwapElements(animationsToKeep);

@@ -427,13 +427,6 @@ CommonAnimationManager::WillRefresh(TimeStamp aTime)
     return;
   }
 
-  nsAutoAnimationMutationBatch mb(mPresContext->Document());
-
-  for (AnimationCollection* collection = mElementCollections.getFirst();
-       collection; collection = collection->getNext()) {
-    collection->Tick();
-  }
-
   MaybeStartOrStopObservingRefreshDriver();
 }
 
