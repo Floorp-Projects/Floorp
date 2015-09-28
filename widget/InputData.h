@@ -283,6 +283,8 @@ public:
 
   bool IsLeftButton() const { return mButtonType == LEFT_BUTTON; }
 
+  bool TransformToLocal(const gfx::Matrix4x4& aTransform);
+
   MouseType mType;
   ButtonType mButtonType;
   ScreenPoint mOrigin;

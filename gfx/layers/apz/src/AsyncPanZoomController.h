@@ -40,6 +40,7 @@ class SharedMemoryBasic;
 
 namespace layers {
 
+class AsyncDragMetrics;
 struct ScrollableLayerGuid;
 class CompositorParent;
 class GestureEventListener;
@@ -265,6 +266,9 @@ public:
    * *** The monitor must be held while calling this.
    */
   void SendAsyncScrollEvent();
+
+  nsEventStatus HandleDragEvent(const MouseInput& aEvent,
+                                const AsyncDragMetrics& aDragMetrics);
 
   /**
    * Handler for events which should not be intercepted by the touch listener.

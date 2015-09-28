@@ -13,6 +13,7 @@
 #include "Compositor.h"                 // for Compositor
 #include "FrameMetrics.h"               // for FrameMetrics, etc
 #include "GestureEventListener.h"       // for GestureEventListener
+#include "HitTestingTreeNode.h"         // for HitTestingTreeNode
 #include "InputData.h"                  // for MultiTouchInput, etc
 #include "InputBlockState.h"            // for InputBlockState, TouchBlockState
 #include "InputQueue.h"                 // for InputQueue
@@ -952,6 +953,95 @@ AsyncPanZoomController::ArePointerEventsConsumable(TouchBlockState* aBlock, uint
   return true;
 }
 
+template <typename T>
+static float GetAxisStart(AsyncDragMetrics::DragDirection aDir, T aValue) {
+  if (aDir == AsyncDragMetrics::HORIZONTAL) {
+    return aValue.x;
+  } else {
+    return aValue.y;
+  }
+}
+
+template <typename T>
+static float GetAxisEnd(AsyncDragMetrics::DragDirection aDir, T aValue) {
+  if (aDir == AsyncDragMetrics::HORIZONTAL) {
+    return aValue.x + aValue.width;
+  } else {
+    return aValue.y + aValue.height;
+  }
+}
+
+template <typename T>
+static float GetAxisSize(AsyncDragMetrics::DragDirection aDir, T aValue) {
+  if (aDir == AsyncDragMetrics::HORIZONTAL) {
+    return aValue.width;
+  } else {
+    return aValue.height;
+  }
+}
+
+template <typename T>
+static float GetAxisScale(AsyncDragMetrics::DragDirection aDir, T aValue) {
+  if (aDir == AsyncDragMetrics::HORIZONTAL) {
+    return aValue.xScale;
+  } else {
+    return aValue.yScale;
+  }
+}
+
+nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
+                                                      const AsyncDragMetrics& aDragMetrics)
+{
+  nsRefPtr<HitTestingTreeNode> node =
+    GetApzcTreeManager()->FindScrollNode(aDragMetrics);
+  if (!node) {
+    return nsEventStatus_eConsumeNoDefault;
+  }
+
+  CSSPoint scrollFramePoint = aEvent.mLocalOrigin / GetFrameMetrics().GetZoom();
+  // The scrollbar can be transformed with the frame but the pres shell
+  // resolution is only applied to the scroll frame.
+  CSSPoint scrollbarPoint = scrollFramePoint * GetFrameMetrics().GetPresShellResolution();
+  CSSRect cssCompositionBound = GetFrameMetrics().GetCompositionBounds() / GetFrameMetrics().GetZoom();
+
+  float mousePosition = GetAxisStart(aDragMetrics.mDirection, scrollbarPoint) -
+                        aDragMetrics.mScrollbarDragOffset -
+                        GetAxisStart(aDragMetrics.mDirection, cssCompositionBound) -
+                        GetAxisStart(aDragMetrics.mDirection, aDragMetrics.mScrollTrack);
+
+  float scrollMax = GetAxisEnd(aDragMetrics.mDirection, aDragMetrics.mScrollTrack);
+  scrollMax -= node->GetScrollSize() /
+               GetAxisScale(aDragMetrics.mDirection, GetFrameMetrics().GetZoom()) *
+               GetFrameMetrics().GetPresShellResolution();
+
+  float scrollPercent = mousePosition / scrollMax;
+
+  float minScrollPosition =
+    GetAxisStart(aDragMetrics.mDirection, GetFrameMetrics().GetScrollableRect().TopLeft());
+  float maxScrollPosition =
+    GetAxisSize(aDragMetrics.mDirection, GetFrameMetrics().GetScrollableRect()) -
+    GetAxisSize(aDragMetrics.mDirection, GetFrameMetrics().GetCompositionBounds());
+  float scrollPosition = scrollPercent * maxScrollPosition;
+
+  scrollPosition = std::max(scrollPosition, minScrollPosition);
+  scrollPosition = std::min(scrollPosition, maxScrollPosition);
+
+  CSSPoint scrollOffset;
+  if (aDragMetrics.mDirection == AsyncDragMetrics::HORIZONTAL) {
+    scrollOffset = CSSPoint(scrollPosition, 0);
+  } else {
+    scrollOffset = CSSPoint(0, scrollPosition);
+  }
+  mFrameMetrics.SetScrollOffset(scrollOffset);
+  ScheduleCompositeAndMaybeRepaint();
+  UpdateSharedCompositorFrameMetrics();
+
+  // Here we consume the events. This means that the content scrollbars
+  // will only see the initial mouse down and the final mouse up.
+  // APZ will still update the scroll position.
+  return nsEventStatus_eConsumeNoDefault;
+}
+
 nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent,
                                                        const Matrix4x4& aTransformToApzc) {
   APZThreadUtils::AssertOnControllerThread();
@@ -961,7 +1051,7 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent,
   switch (aEvent.mInputType) {
   case MULTITOUCH_INPUT: {
     MultiTouchInput multiTouchInput = aEvent.AsMultiTouchInput();
-    if (!multiTouchInput.TransformToLocal(aTransformToApzc)) { 
+    if (!multiTouchInput.TransformToLocal(aTransformToApzc)) {
       return rv;
     }
 
@@ -999,6 +1089,16 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent,
       case PanGestureInput::PANGESTURE_MOMENTUMEND: rv = OnPanMomentumEnd(panGestureInput); break;
       default: NS_WARNING("Unhandled pan gesture"); break;
     }
+    break;
+  }
+  case MOUSE_INPUT: {
+    ScrollWheelInput scrollInput = aEvent.AsScrollWheelInput();
+    if (!scrollInput.TransformToLocal(aTransformToApzc)) { 
+      return rv;
+    }
+
+    // TODO Need to implement blocks to properly handle this.
+    //rv = HandleDragEvent(scrollInput, dragMetrics);
     break;
   }
   case SCROLLWHEEL_INPUT: {
@@ -2951,6 +3051,9 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
 
   bool smoothScrollRequested = aLayerMetrics.GetDoSmoothScroll()
        && (aLayerMetrics.GetScrollGeneration() != mFrameMetrics.GetScrollGeneration());
+
+  // TODO if we're in a drag and scrollOffsetUpdated is set then we want to
+  // ignore it
 
   if (aIsFirstPaint || isDefault) {
     // Initialize our internal state to something sane when the content
