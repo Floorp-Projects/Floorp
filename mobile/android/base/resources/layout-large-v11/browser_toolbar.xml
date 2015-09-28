@@ -68,7 +68,6 @@
 
     <org.mozilla.gecko.toolbar.ToolbarEditLayout android:id="@+id/edit_layout"
                   style="@style/UrlBar.Button"
-                  android:paddingLeft="10dp"
                   android:paddingRight="12dp"
                   android:visibility="gone"
                   android:orientation="horizontal"

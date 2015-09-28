@@ -465,7 +465,7 @@ public class GeckoView extends LayerView
         public void reload() {
             Tab tab = Tabs.getInstance().getTab(mId);
             if (tab != null) {
-                tab.doReload();
+                tab.doReload(true);
             }
         }
 

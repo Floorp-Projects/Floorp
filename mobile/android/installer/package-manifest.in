@@ -2,7 +2,7 @@
 ; License, v. 2.0. If a copy of the MPL was not distributed with this
 ; file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-; Package file for the Fennec build. 
+; Package file for the Fennec build.
 ;
 ; File format:
 ;
@@ -522,7 +522,7 @@
 @BINPATH@/defaults/profile/prefs.js
 
 ; [Layout Engine Resources]
-; Style Sheets, Graphics and other Resources used by the layout engine. 
+; Style Sheets, Graphics and other Resources used by the layout engine.
 @BINPATH@/res/EditorOverride.css
 @BINPATH@/res/contenteditable.css
 @BINPATH@/res/designmode.css
@@ -620,6 +620,7 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/components/ColorPicker.js
 @BINPATH@/components/ContentDispatchChooser.js
 @BINPATH@/components/ContentPermissionPrompt.js
+@BINPATH@/components/ImageBlockingPolicy.js
 @BINPATH@/components/DirectoryProvider.js
 @BINPATH@/components/FilePicker.js
 @BINPATH@/components/HelperAppDialog.js
@@ -647,7 +648,7 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/components/browsercomps.xpt
 
 #ifdef ENABLE_MARIONETTE
-@BINPATH@/chrome/marionette@JAREXT@ 
+@BINPATH@/chrome/marionette@JAREXT@
 @BINPATH@/chrome/marionette.manifest
 @BINPATH@/components/MarionetteComponents.manifest
 @BINPATH@/components/marionettecomponent.js

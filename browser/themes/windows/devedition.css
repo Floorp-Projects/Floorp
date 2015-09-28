@@ -285,4 +285,22 @@
   :root[devtoolstheme="dark"] #titlebar-close {
     list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-white);
   }
+
+  /* ... and normal ones for the light theme on Windows 10 */
+  :root[devtoolstheme="light"] #titlebar-min {
+    list-style-image: url(chrome://browser/skin/caption-buttons.svg#minimize);
+  }
+  :root[devtoolstheme="light"] #titlebar-max {
+    list-style-image: url(chrome://browser/skin/caption-buttons.svg#maximize);
+  }
+  #main-window[devtoolstheme="light"][sizemode="maximized"] #titlebar-max {
+    list-style-image: url(chrome://browser/skin/caption-buttons.svg#restore);
+  }
+  :root[devtoolstheme="light"] #titlebar-close {
+    list-style-image: url(chrome://browser/skin/caption-buttons.svg#close);
+  }
+
+  :root[devtoolstheme="light"] #titlebar-close:hover {
+    list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-white);
+  }
 }

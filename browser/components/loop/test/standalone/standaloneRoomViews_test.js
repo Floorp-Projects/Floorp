@@ -49,6 +49,8 @@ describe("loop.standaloneRoomViews", function() {
       switch(key) {
         case "standalone_title_with_room_name":
           return args.roomName + " — " + args.clientShortname;
+        case "legal_text_and_links":
+          return args.terms_of_use_url + " " + args.privacy_notice_url;
         default:
           return key;
       }
@@ -64,6 +66,123 @@ describe("loop.standaloneRoomViews", function() {
     clock.restore();
     React.unmountComponentAtNode(fixtures);
     view = null;
+  });
+
+
+  describe("TosView", function() {
+    var origConfig, node;
+
+    function mountTestComponent() {
+      return TestUtils.renderIntoDocument(
+        React.createElement(
+          loop.standaloneRoomViews.ToSView, {
+            dispatcher: dispatcher
+          }));
+    }
+
+    beforeEach(function() {
+      origConfig = loop.config;
+      loop.config = {
+        legalWebsiteUrl: "http://fakelegal/",
+        privacyWebsiteUrl: "http://fakeprivacy/"
+      };
+
+      view = mountTestComponent();
+      node = view.getDOMNode();
+    });
+
+    afterEach(function() {
+      loop.config = origConfig;
+    });
+
+    it("should dispatch a link click action when the ToS link is clicked", function() {
+      // [0] is the first link, the legal one.
+      var link = node.querySelectorAll("a")[0];
+
+      TestUtils.Simulate.click(node, { target: link });
+
+      sinon.assert.calledOnce(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.RecordClick({
+          linkInfo: loop.config.legalWebsiteUrl
+        }));
+    });
+
+    it("should dispatch a link click action when the Privacy link is clicked", function() {
+      // [0] is the first link, the legal one.
+      var link = node.querySelectorAll("a")[1];
+
+      TestUtils.Simulate.click(node, { target: link });
+
+      sinon.assert.calledOnce(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.RecordClick({
+          linkInfo: loop.config.privacyWebsiteUrl
+        }));
+    });
+
+    it("should not dispatch an action when the text is clicked", function() {
+      TestUtils.Simulate.click(node, { target: node });
+
+      sinon.assert.notCalled(dispatcher.dispatch);
+    });
+  });
+
+  describe("StandaloneHandleUserAgentView", function() {
+    function mountTestComponent() {
+      return TestUtils.renderIntoDocument(
+        React.createElement(
+          loop.standaloneRoomViews.StandaloneHandleUserAgentView, {
+            dispatcher: dispatcher
+          }));
+    }
+
+    it("should display a join room button if the state is not ROOM_JOINED", function() {
+      activeRoomStore.setStoreState({
+        roomState: ROOM_STATES.READY
+      });
+
+      view = mountTestComponent();
+      var button = view.getDOMNode().querySelector(".info-panel > button");
+
+      expect(button.textContent).eql("rooms_room_join_label");
+    });
+
+    it("should dispatch a JoinRoom action when the join room button is clicked", function() {
+      activeRoomStore.setStoreState({
+        roomState: ROOM_STATES.READY
+      });
+
+      view = mountTestComponent();
+      var button = view.getDOMNode().querySelector(".info-panel > button");
+
+      TestUtils.Simulate.click(button);
+
+      sinon.assert.calledOnce(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch, new sharedActions.JoinRoom());
+    });
+
+    it("should display a enjoy your conversation button if the state is ROOM_JOINED", function() {
+      activeRoomStore.setStoreState({
+        roomState: ROOM_STATES.JOINED
+      });
+
+      view = mountTestComponent();
+      var button = view.getDOMNode().querySelector(".info-panel > button");
+
+      expect(button.textContent).eql("rooms_room_joined_own_conversation_label");
+    });
+
+    it("should disable the enjoy your conversation button if the state is ROOM_JOINED", function() {
+      activeRoomStore.setStoreState({
+        roomState: ROOM_STATES.JOINED
+      });
+
+      view = mountTestComponent();
+      var button = view.getDOMNode().querySelector(".info-panel > button");
+
+      expect(button.classList.contains("disabled")).eql(true);
+    });
   });
 
   describe("StandaloneRoomHeader", function() {
@@ -802,6 +921,49 @@ describe("loop.standaloneRoomViews", function() {
               null);
           });
       });
+    });
+  });
+
+  describe("StandaloneRoomControllerView", function() {
+    function mountTestComponent() {
+      return TestUtils.renderIntoDocument(
+        React.createElement(
+          loop.standaloneRoomViews.StandaloneRoomControllerView, {
+        dispatcher: dispatcher,
+        isFirefox: true
+      }));
+    }
+
+    it("should not display anything if it is not known if Firefox can handle the room", function() {
+      activeRoomStore.setStoreState({
+        userAgentHandlesRoom: undefined
+      });
+
+      view = mountTestComponent();
+
+      expect(view.getDOMNode()).eql(null);
+    });
+
+    it("should render StandaloneHandleUserAgentView if Firefox can handle the room", function() {
+      activeRoomStore.setStoreState({
+        userAgentHandlesRoom: true
+      });
+
+      view = mountTestComponent();
+
+      TestUtils.findRenderedComponentWithType(view,
+        loop.standaloneRoomViews.StandaloneHandleUserAgentView);
+    });
+
+    it("should render StandaloneRoomView if Firefox cannot handle the room", function() {
+      activeRoomStore.setStoreState({
+        userAgentHandlesRoom: false
+      });
+
+      view = mountTestComponent();
+
+      TestUtils.findRenderedComponentWithType(view,
+        loop.standaloneRoomViews.StandaloneRoomView);
     });
   });
 });

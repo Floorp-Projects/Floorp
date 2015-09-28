@@ -21,6 +21,7 @@ EXTRA_COMPONENTS += [
     'DirectoryProvider.js',
     'FilePicker.js',
     'HelperAppDialog.js',
+    'ImageBlockingPolicy.js',
     'LoginManagerPrompter.js',
     'NSSDialogService.js',
     'SiteSpecificUserAgent.js',

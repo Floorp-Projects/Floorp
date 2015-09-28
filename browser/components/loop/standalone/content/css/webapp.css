@@ -25,6 +25,27 @@ body,
   background: #000;
 }
 
+/* Logos */
+
+.loop-logo-text {
+  background: url("../img/hello-logo-text.svg") no-repeat;
+  width: 200px;
+  height: 36px;
+}
+
+.loop-logo {
+  background: url("../shared/img/helloicon.svg") no-repeat;
+  width: 100px;
+  height: 100px;
+}
+
+.mozilla-logo {
+  background: url("../img/mozilla-logo.svg#logo") no-repeat;
+  background-size: contain;
+  width: 100px;
+  height: 30px;
+}
+
 .room-conversation-wrapper > .beta-logo {
   position: fixed;
   top: 0;
@@ -43,7 +64,7 @@ body,
   margin: 0 auto;
   height: 30px;
   background-size: contain;
-  background-image: url("../shared/img/mozilla-logo.png");
+  background-image: url("../img/mozilla-logo.svg#logo-white");
   background-repeat: no-repeat;
 }
 
@@ -136,6 +157,45 @@ html[dir="rtl"] .rooms-footer .footer-logo {
 .btn-unsupported-device {
   width: 80%;
   line-height: 24px;
+}
+
+/**
+ * Handle in Firefox views
+ */
+
+.handle-user-agent-view-scroller {
+  height: 100%;
+  overflow: scroll;
+}
+
+.handle-user-agent-view {
+  margin: 2rem auto;
+  width: 500px;
+}
+
+.handle-user-agent-view > .info-panel {
+  padding-bottom: 40px;
+  font-size: 1.6rem;
+}
+
+.handle-user-agent-view > p,
+.handle-user-agent-view > .info-panel > p {
+  margin-top: 0;
+  margin: 2rem auto;
+}
+
+.handle-user-agent-view > .info-panel > button {
+  width: 80%;
+  height: 4rem;
+  font-size: 1.6rem;
+  font-weight: bold;
+}
+
+.handle-user-agent-view > .info-panel > button.disabled {
+  background-color: #EBEBEB;
+  border-color: #EBEBEB;
+  color: #B2B0B3;
+  font-weight: normal;
 }
 
 /* Room wrapper layout */
