@@ -140,6 +140,12 @@ public:
   virtual void CancelFromStyle() { DoCancel(); }
 
   virtual void Tick();
+  bool NeedsTicks() const
+  {
+    AnimationPlayState playState = PlayState();
+    return playState == AnimationPlayState::Running ||
+           playState == AnimationPlayState::Pending;
+  }
 
   /**
    * Set the time to use for starting or pausing a pending animation.
