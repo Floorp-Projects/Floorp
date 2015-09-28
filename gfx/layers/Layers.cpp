@@ -1621,18 +1621,6 @@ static void PrintInfo(std::stringstream& aStream, LayerComposite* aLayerComposit
 
 #ifdef MOZ_DUMP_PAINTING
 template <typename T>
-void WriteSnapshotLinkToDumpFile(T* aObj, std::stringstream& aStream)
-{
-  if (!aObj) {
-    return;
-  }
-  nsCString string(aObj->Name());
-  string.Append('-');
-  string.AppendInt((uint64_t)aObj);
-  aStream << nsPrintfCString("href=\"javascript:ViewImage('%s')\"", string.BeginReading()).get();
-}
-
-template <typename T>
 void WriteSnapshotToDumpFile_internal(T* aObj, DataSourceSurface* aSurf)
 {
   nsCString string(aObj->Name());
@@ -2257,17 +2245,10 @@ LayerManager::Dump(std::stringstream& aStream, const char* aPrefix, bool aDumpHt
 {
 #ifdef MOZ_DUMP_PAINTING
   if (aDumpHtml) {
-    aStream << "<ul><li><a ";
-    WriteSnapshotLinkToDumpFile(this, aStream);
-    aStream << ">";
+    aStream << "<ul><li>";
   }
 #endif
   DumpSelf(aStream, aPrefix);
-#ifdef MOZ_DUMP_PAINTING
-  if (aDumpHtml) {
-    aStream << "</a>";
-  }
-#endif
 
   nsAutoCString pfx(aPrefix);
   pfx += "  ";
