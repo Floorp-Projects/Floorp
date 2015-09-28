@@ -92,7 +92,8 @@ const ToolboxButtons = exports.ToolboxButtons = [
   { id: "command-button-scratchpad" },
   { id: "command-button-eyedropper" },
   { id: "command-button-screenshot" },
-  { id: "command-button-rulers"}
+  { id: "command-button-rulers" },
+  { id: "command-button-measure" }
 ];
 
 /**
