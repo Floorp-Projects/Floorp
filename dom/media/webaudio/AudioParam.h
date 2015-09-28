@@ -42,11 +42,6 @@ public:
     return mNode->Context();
   }
 
-  double DOMTimeToStreamTime(double aTime) const
-  {
-    return mNode->Context()->DOMTimeToStreamTime(aTime);
-  }
-
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // We override SetValueCurveAtTime to convert the Float32Array to the wrapper
@@ -129,13 +124,10 @@ public:
       return;
     }
 
-    double streamTime = DOMTimeToStreamTime(aStartTime);
-
     // Remove some events on the main thread copy.
-    AudioEventTimeline::CancelScheduledValues(streamTime);
+    AudioEventTimeline::CancelScheduledValues(aStartTime);
 
-    AudioTimelineEvent event(AudioTimelineEvent::Cancel,
-                             streamTime, 0.0f);
+    AudioTimelineEvent event(AudioTimelineEvent::Cancel, aStartTime, 0.0f);
 
     mCallback(mNode, event);
   }
@@ -214,8 +206,7 @@ private:
                             const float* aCurve = nullptr,
                             uint32_t aCurveLength = 0)
   {
-    AudioTimelineEvent event(aType,
-                             DOMTimeToStreamTime(aTime), aValue,
+    AudioTimelineEvent event(aType, aTime, aValue,
                              aTimeConstant, aDuration, aCurve, aCurveLength);
 
     if (!ValidateEvent(event, aRv)) {
