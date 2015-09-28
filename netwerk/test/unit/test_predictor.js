@@ -38,7 +38,9 @@ LoadContext.prototype = {
     }
 
     throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  },
+
+  originAttributes: {}
 };
 
 var load_context = new LoadContext();

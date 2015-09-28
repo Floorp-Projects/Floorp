@@ -9,12 +9,21 @@
 interface nsIDOMWindow;
 interface nsIDOMElement;
 
+%{C++
+#ifdef MOZILLA_INTERNAL_API
+#include "mozilla/BasePrincipal.h" // for OriginAttributes
+#include "mozilla/dom/ScriptSettings.h" // for AutoJSAPI
+#include "xpcpublic.h" // for PrivilegedJunkScope
+#include "nsContentUtils.h" // for IsSystemPrincipal
+#endif
+%}
+
 /**
  * An nsILoadContext represents the context of a load.  This interface
  * can be queried for various information about where the load is
  * happening.
  */
-[scriptable, uuid(6ec837fa-af93-4350-bbb8-0985d54c74ca)]
+[scriptable, uuid(1220e340-b337-4c35-aaa1-f51362763621)]
 interface nsILoadContext : nsISupports
 {
   /**
@@ -120,4 +129,39 @@ interface nsILoadContext : nsISupports
    */
   readonly attribute unsigned long appId;
 
+  /**
+   * A dictionary of the non-default origin attributes associated with this
+   * nsILoadContext.
+   */
+  readonly attribute jsval originAttributes;
+
+%{C++
+#ifdef MOZILLA_INTERNAL_API
+  /**
+   * The C++ getter for origin attributes.
+   */
+  bool GetOriginAttributes(mozilla::OriginAttributes& aAttrs)
+  {
+    mozilla::dom::AutoJSAPI jsapi;
+    bool ok = jsapi.Init(xpc::PrivilegedJunkScope());
+    NS_ENSURE_TRUE(ok, false);
+    JS::Rooted<JS::Value> v(jsapi.cx());
+    nsresult rv = GetOriginAttributes(&v);
+    NS_ENSURE_SUCCESS(rv, false);
+    MOZ_ASSERT(v.isObject());
+    JS::Rooted<JSObject*> obj(jsapi.cx(), &v.toObject());
+
+    // If we're JS-implemented, the object will be left in a different (System-Principaled)
+    // scope, so we may need to enter its compartment.
+    MOZ_ASSERT(nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(obj)));
+    JSAutoCompartment ac(jsapi.cx(), obj);
+
+    mozilla::OriginAttributes attrs;
+    ok = attrs.Init(jsapi.cx(), v);
+    NS_ENSURE_TRUE(ok, false);
+    aAttrs = attrs;
+    return true;
+  }
+#endif
+%}
 };

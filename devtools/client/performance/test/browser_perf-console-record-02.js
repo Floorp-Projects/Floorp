@@ -6,8 +6,6 @@
  * when it is opened.
  */
 
-var WAIT_TIME = 10;
-
 function* spawnTest() {
   let { target, toolbox, console } = yield initConsole(SIMPLE_URL);
   let front = toolbox.performance;
@@ -15,12 +13,13 @@ function* spawnTest() {
   let profileStart = once(front, "recording-started");
   console.profile("rust");
   yield profileStart;
+
   profileStart = once(front, "recording-started");
   console.profile("rust2");
   yield profileStart;
 
   yield gDevTools.showToolbox(target, "performance");
-  let panel = toolbox.getCurrentPanel();
+  let panel = yield toolbox.getCurrentPanel().open();
   let { panelWin: { PerformanceController, RecordingsView }} = panel;
 
   yield waitUntil(() => PerformanceController.getRecordings().length === 2);
@@ -39,6 +38,7 @@ function* spawnTest() {
   let profileEnd = once(front, "recording-stopped");
   console.profileEnd("rust");
   yield profileEnd;
+
   profileEnd = once(front, "recording-stopped");
   console.profileEnd("rust2");
   yield profileEnd;

@@ -1702,7 +1702,7 @@ function getAddonsAndInstalls(aType, aCallback) {
   let types = (aType != null) ? [aType] : null;
 
   AddonManager.getAddonsByTypes(types, function getAddonsAndInstalls_getAddonsByTypes(aAddonsList) {
-    addons = aAddonsList;
+    addons = aAddonsList.filter(a => !a.hidden);
     if (installs != null)
       aCallback(addons, installs);
   });
@@ -2765,6 +2765,9 @@ var gListView = {
     if (aExistingAddon)
       return;
 
+    if (aAddon.hidden)
+      return;
+
     this.addItem(aAddon);
   },
 
@@ -3557,7 +3560,7 @@ var gUpdatesView = {
       var elements = [];
       let threshold = Date.now() - UPDATES_RECENT_TIMESPAN;
       for (let addon of aAddonsList) {
-        if (!addon.updateDate || addon.updateDate.getTime() < threshold)
+        if (addon.hidden || !addon.updateDate || addon.updateDate.getTime() < threshold)
           continue;
 
         elements.push(createItem(addon));

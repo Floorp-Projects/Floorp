@@ -71,6 +71,13 @@ nsProfiler::Observe(nsISupports *aSubject,
 }
 
 NS_IMETHODIMP
+nsProfiler::CanProfile(bool *aCanProfile)
+{
+  *aCanProfile = !mLockedForPrivateBrowsing;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
                           const char** aFeatures, uint32_t aFeatureCount,
                           const char** aThreadNameFilters, uint32_t aFilterCount)
