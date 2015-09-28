@@ -1474,6 +1474,37 @@ nsObjectLoadingContent::CheckJavaCodebase()
 }
 
 bool
+nsObjectLoadingContent::IsYoutubeEmbed()
+{
+  nsCOMPtr<nsIContent> thisContent =
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  NS_ASSERTION(thisContent, "Must be an instance of content");
+
+  // We're only interested in switching out embed tags
+  if (!thisContent->NodeInfo()->Equals(nsGkAtoms::embed)) {
+    return false;
+  }
+  nsCOMPtr<nsIEffectiveTLDService> tldService =
+    do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+  // If we can't analyze the URL, just pass on through.
+  if(!tldService) {
+    NS_WARNING("Could not get TLD service!");
+    return false;
+  }
+  nsAutoCString currentBaseDomain;
+  bool ok = NS_SUCCEEDED(tldService->GetBaseDomain(mURI, 0, currentBaseDomain));
+  if (!ok) {
+    NS_WARNING("Could not parse plugin domain!");
+    return false;
+  }
+  nsAutoCString domain("youtube.com");
+  if (StringEndsWith(domain, currentBaseDomain)) {
+    return true;
+  }
+  return false;
+}
+
+bool
 nsObjectLoadingContent::CheckLoadPolicy(int16_t *aContentPolicy)
 {
   if (!aContentPolicy || !mURI) {
@@ -2120,6 +2151,11 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
     // have originated from OnStartRequest
     NS_NOTREACHED("Loading with a channel, but state doesn't make sense");
     return NS_OK;
+  }
+
+  // Check whether this is a youtube embed.
+  if (IsYoutubeEmbed()) {
+    Telemetry::Accumulate(Telemetry::YOUTUBE_EMBED_SEEN, 1);
   }
 
   //
