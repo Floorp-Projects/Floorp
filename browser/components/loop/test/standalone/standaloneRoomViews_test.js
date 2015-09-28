@@ -128,6 +128,63 @@ describe("loop.standaloneRoomViews", function() {
     });
   });
 
+  describe("StandaloneHandleUserAgentView", function() {
+    function mountTestComponent() {
+      return TestUtils.renderIntoDocument(
+        React.createElement(
+          loop.standaloneRoomViews.StandaloneHandleUserAgentView, {
+            dispatcher: dispatcher
+          }));
+    }
+
+    it("should display a join room button if the state is not ROOM_JOINED", function() {
+      activeRoomStore.setStoreState({
+        roomState: ROOM_STATES.READY
+      });
+
+      view = mountTestComponent();
+      var button = view.getDOMNode().querySelector(".info-panel > button");
+
+      expect(button.textContent).eql("rooms_room_join_label");
+    });
+
+    it("should dispatch a JoinRoom action when the join room button is clicked", function() {
+      activeRoomStore.setStoreState({
+        roomState: ROOM_STATES.READY
+      });
+
+      view = mountTestComponent();
+      var button = view.getDOMNode().querySelector(".info-panel > button");
+
+      TestUtils.Simulate.click(button);
+
+      sinon.assert.calledOnce(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch, new sharedActions.JoinRoom());
+    });
+
+    it("should display a enjoy your conversation button if the state is ROOM_JOINED", function() {
+      activeRoomStore.setStoreState({
+        roomState: ROOM_STATES.JOINED
+      });
+
+      view = mountTestComponent();
+      var button = view.getDOMNode().querySelector(".info-panel > button");
+
+      expect(button.textContent).eql("rooms_room_joined_own_conversation_label");
+    });
+
+    it("should disable the enjoy your conversation button if the state is ROOM_JOINED", function() {
+      activeRoomStore.setStoreState({
+        roomState: ROOM_STATES.JOINED
+      });
+
+      view = mountTestComponent();
+      var button = view.getDOMNode().querySelector(".info-panel > button");
+
+      expect(button.classList.contains("disabled")).eql(true);
+    });
+  });
+
   describe("StandaloneRoomHeader", function() {
     function mountTestComponent() {
       return TestUtils.renderIntoDocument(
@@ -864,6 +921,49 @@ describe("loop.standaloneRoomViews", function() {
               null);
           });
       });
+    });
+  });
+
+  describe("StandaloneRoomControllerView", function() {
+    function mountTestComponent() {
+      return TestUtils.renderIntoDocument(
+        React.createElement(
+          loop.standaloneRoomViews.StandaloneRoomControllerView, {
+        dispatcher: dispatcher,
+        isFirefox: true
+      }));
+    }
+
+    it("should not display anything if it is not known if Firefox can handle the room", function() {
+      activeRoomStore.setStoreState({
+        firefoxHandlesRoom: undefined
+      });
+
+      view = mountTestComponent();
+
+      expect(view.getDOMNode()).eql(null);
+    });
+
+    it("should render StandaloneHandleUserAgentView if Firefox can handle the room", function() {
+      activeRoomStore.setStoreState({
+        firefoxHandlesRoom: true
+      });
+
+      view = mountTestComponent();
+
+      TestUtils.findRenderedComponentWithType(view,
+        loop.standaloneRoomViews.StandaloneHandleUserAgentView);
+    });
+
+    it("should render StandaloneRoomView if Firefox cannot handle the room", function() {
+      activeRoomStore.setStoreState({
+        firefoxHandlesRoom: false
+      });
+
+      view = mountTestComponent();
+
+      TestUtils.findRenderedComponentWithType(view,
+        loop.standaloneRoomViews.StandaloneRoomView);
     });
   });
 });
