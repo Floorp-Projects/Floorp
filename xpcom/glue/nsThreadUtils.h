@@ -106,6 +106,8 @@ extern NS_METHOD NS_GetCurrentThread(nsIThread** aResult);
  *   If event is null.
  */
 extern NS_METHOD NS_DispatchToCurrentThread(nsIRunnable* aEvent);
+extern NS_METHOD
+NS_DispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent);
 
 /**
  * Dispatch the given event to the main thread.

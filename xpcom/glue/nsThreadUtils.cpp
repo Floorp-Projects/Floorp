@@ -142,13 +142,11 @@ NS_IsMainThread()
 }
 #endif
 
-// It is common to call NS_DispatchToCurrentThread with a newly
-// allocated runnable with a refcount of zero. To keep us from leaking
-// the runnable if the dispatch method fails, we take a death grip.
 NS_METHOD
-NS_DispatchToCurrentThread(nsIRunnable* aEvent)
+NS_DispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent)
 {
-  nsCOMPtr<nsIRunnable> deathGrip = aEvent;
+  nsresult rv;
+  nsCOMPtr<nsIRunnable> event(aEvent);
 #ifdef MOZILLA_INTERNAL_API
   nsIThread* thread = NS_GetCurrentThread();
   if (!thread) {
@@ -156,12 +154,32 @@ NS_DispatchToCurrentThread(nsIRunnable* aEvent)
   }
 #else
   nsCOMPtr<nsIThread> thread;
-  nsresult rv = NS_GetCurrentThread(getter_AddRefs(thread));
+  rv = NS_GetCurrentThread(getter_AddRefs(thread));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 #endif
-  return thread->Dispatch(aEvent, NS_DISPATCH_NORMAL);
+  // To keep us from leaking the runnable if dispatch method fails,
+  // we grab the reference on failures and release it.
+  nsIRunnable* temp = event.get();
+  rv = thread->Dispatch(event.forget(), NS_DISPATCH_NORMAL);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    // Dispatch() leaked the reference to the event, but due to caller's
+    // assumptions, we shouldn't leak here. And given we are on the same
+    // thread as the dispatch target, it's mostly safe to do it here.
+    NS_RELEASE(temp);
+  }
+  return rv;
+}
+
+// It is common to call NS_DispatchToCurrentThread with a newly
+// allocated runnable with a refcount of zero. To keep us from leaking
+// the runnable if the dispatch method fails, we take a death grip.
+NS_METHOD
+NS_DispatchToCurrentThread(nsIRunnable* aEvent)
+{
+  nsCOMPtr<nsIRunnable> event(aEvent);
+  return NS_DispatchToCurrentThread(event.forget());
 }
 
 NS_METHOD
