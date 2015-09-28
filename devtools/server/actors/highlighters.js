@@ -703,3 +703,7 @@ exports.GeometryEditorHighlighter = GeometryEditorHighlighter;
 const { RulersHighlighter } = require("./highlighters/rulers");
 register(RulersHighlighter);
 exports.RulersHighlighter = RulersHighlighter;
+
+const { MeasuringToolHighlighter } = require("./highlighters/measuring-tool");
+register(MeasuringToolHighlighter);
+exports.MeasuringToolHighlighter = MeasuringToolHighlighter;
