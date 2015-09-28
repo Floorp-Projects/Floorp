@@ -319,6 +319,7 @@ public:
   NS_IMETHOD Notify(nsITimer *timer) override;
 
 private:
+  ~SimpleTimer() {}
   nsresult Init(nsIRunnable* aTask, uint32_t aTimeoutMs, nsIThread* aTarget);
 
   nsRefPtr<nsIRunnable> mTask;
