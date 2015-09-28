@@ -351,6 +351,21 @@ GetEventRegionsOverride(HitTestingTreeNode* aParent,
   return result;
 }
 
+void
+APZCTreeManager::StartScrollbarDrag(const ScrollableLayerGuid& aGuid,
+                                    const AsyncDragMetrics& aDragMetrics)
+{
+
+  nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid);
+  if (!apzc) {
+    return;
+  }
+
+  // TODO Confirm the input block
+  //uint64_t inputBlockId = aDragMetrics.mDragStartSequenceNumber;
+  //mInputQueue->SetConfirmedMouseBlock(inputBlockId, apzc, aDragMetrics);
+}
+
 HitTestingTreeNode*
 APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
                                      const FrameMetrics& aMetrics,
@@ -618,6 +633,18 @@ WillHandleWheelEvent(WidgetWheelEvent* aEvent)
          !EventStateManager::WheelEventNeedsDeltaMultipliers(aEvent);
 }
 
+static bool
+WillHandleMouseEvent(const WidgetMouseEventBase& aEvent)
+{
+  if (!gfxPrefs::APZDragEnabled()) {
+    return false;
+  }
+
+  return aEvent.mMessage == eMouseMove ||
+         aEvent.mMessage == eMouseDown ||
+         aEvent.mMessage == eMouseUp;
+}
+
 template<typename PanGestureOrScrollWheelInput>
 static bool
 WillHandleInput(const PanGestureOrScrollWheelInput& aPanInput)
@@ -662,6 +689,28 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
     case MULTITOUCH_INPUT: {
       MultiTouchInput& touchInput = aEvent.AsMultiTouchInput();
       result = ProcessTouchInput(touchInput, aOutTargetGuid, aOutInputBlockId);
+      break;
+    } case MOUSE_INPUT: {
+      MouseInput& mouseInput = aEvent.AsMouseInput();
+
+      nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(mouseInput.mOrigin,
+                                                            &hitResult);
+      if (apzc) {
+        result = mInputQueue->ReceiveInputEvent(
+          apzc,
+          /* aTargetConfirmed = */ false,
+          mouseInput, aOutInputBlockId);
+
+        // Update the out-parameters so they are what the caller expects.
+        apzc->GetGuid(aOutTargetGuid);
+
+        // TODO Dagging on a scrollbar probably behaves differently from
+        // the other input types in that the gecko coordinates are the same
+        // as the screen coordinates even though the async transform on the APZC
+        // is changing. I'm not really sure at this point and it'll take some
+        // though to figure out properly.
+        //mouseInput.mOrigin = untransformedOrigin;
+      }
       break;
     } case SCROLLWHEEL_INPUT: {
       FlushRepaintsToClearScreenToGeckoTransform();
@@ -988,6 +1037,21 @@ APZCTreeManager::ProcessEvent(WidgetInputEvent& aEvent,
 }
 
 nsEventStatus
+APZCTreeManager::ProcessMouseEvent(WidgetMouseEventBase& aEvent,
+                                   ScrollableLayerGuid* aOutTargetGuid,
+                                   uint64_t* aOutInputBlockId)
+{
+  MouseInput input(aEvent);
+  input.mOrigin = ScreenPoint(aEvent.refPoint.x, aEvent.refPoint.y);
+
+  nsEventStatus status = ReceiveInputEvent(input, aOutTargetGuid, aOutInputBlockId);
+
+  aEvent.refPoint.x = input.mOrigin.x;
+  aEvent.refPoint.y = input.mOrigin.y;
+  return status;
+}
+
+nsEventStatus
 APZCTreeManager::ProcessWheelEvent(WidgetWheelEvent& aEvent,
                                    ScrollableLayerGuid* aOutTargetGuid,
                                    uint64_t* aOutInputBlockId)
@@ -1033,6 +1097,13 @@ APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent,
   }
 
   switch (aEvent.mClass) {
+    case eMouseEventClass: {
+      WidgetMouseEventBase& mouseEvent = *aEvent.AsMouseEventBase();
+      if (WillHandleMouseEvent(mouseEvent)) {
+        return ProcessMouseEvent(mouseEvent, aOutTargetGuid, aOutInputBlockId);
+      }
+      return ProcessEvent(aEvent, aOutTargetGuid, aOutInputBlockId);
+    }
     case eTouchEventClass: {
       WidgetTouchEvent& touchEvent = *aEvent.AsTouchEvent();
       MultiTouchInput touchInput(touchEvent);
