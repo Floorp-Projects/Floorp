@@ -519,6 +519,8 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      */
     nsPluginFrame* GetExistingFrame();
 
+    bool IsYoutubeEmbed();
+
     // Helper class for SetupProtoChain
     class SetupProtoChainRunner final : public nsIRunnable
     {
