@@ -1072,3 +1072,34 @@ function isSecurityState(expectedState) {
 
   is(expectedState, actualState, "Expected state " + expectedState + " and the actual state is " + actualState + ".");
 }
+
+/**
+ * Resolves when a bookmark with the given uri is added.
+ */
+function promiseOnBookmarkItemAdded(aExpectedURI) {
+  return new Promise((resolve, reject) => {
+    let bookmarksObserver = {
+      onItemAdded: function (aItemId, aFolderId, aIndex, aItemType, aURI) {
+        info("Added a bookmark to " + aURI.spec);
+        PlacesUtils.bookmarks.removeObserver(bookmarksObserver);
+        if (aURI.equals(aExpectedURI)) {
+          resolve();
+        }
+        else {
+          reject(new Error("Added an unexpected bookmark"));
+        }
+      },
+      onBeginUpdateBatch: function () {},
+      onEndUpdateBatch: function () {},
+      onItemRemoved: function () {},
+      onItemChanged: function () {},
+      onItemVisited: function () {},
+      onItemMoved: function () {},
+      QueryInterface: XPCOMUtils.generateQI([
+        Ci.nsINavBookmarkObserver,
+      ])
+    };
+    info("Waiting for a bookmark to be added");
+    PlacesUtils.bookmarks.addObserver(bookmarksObserver, false);
+  });
+}

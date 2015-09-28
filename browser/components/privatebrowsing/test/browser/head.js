@@ -57,7 +57,7 @@ function clearHistory() {
 function _initTest() {
   // Don't use about:home as the homepage for new windows
   Services.prefs.setIntPref("browser.startup.page", 0);
-  registerCleanupFunction(function() Services.prefs.clearUserPref("browser.startup.page"));
+  registerCleanupFunction(() => Services.prefs.clearUserPref("browser.startup.page"));
 }
 
 _initTest();

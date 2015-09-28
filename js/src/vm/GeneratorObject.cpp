@@ -287,45 +287,54 @@ NewSingletonObjectWithFunctionPrototype(JSContext* cx, Handle<GlobalObject*> glo
 }
 
 /* static */ bool
-GlobalObject::initGeneratorClasses(JSContext* cx, Handle<GlobalObject*> global)
+GlobalObject::initLegacyGeneratorProto(JSContext* cx, Handle<GlobalObject*> global)
 {
-    if (global->getSlot(LEGACY_GENERATOR_OBJECT_PROTO).isUndefined()) {
-        RootedObject proto(cx, NewSingletonObjectWithObjectPrototype(cx, global));
-        if (!proto || !DefinePropertiesAndFunctions(cx, proto, nullptr, legacy_generator_methods))
-            return false;
-        global->setReservedSlot(LEGACY_GENERATOR_OBJECT_PROTO, ObjectValue(*proto));
-    }
+    if (global->getReservedSlot(LEGACY_GENERATOR_OBJECT_PROTO).isObject())
+        return true;
 
-    if (global->getSlot(STAR_GENERATOR_OBJECT_PROTO).isUndefined()) {
-        RootedObject genObjectProto(cx, NewSingletonObjectWithObjectPrototype(cx, global));
-        if (!genObjectProto)
-            return false;
-        if (!DefinePropertiesAndFunctions(cx, genObjectProto, nullptr, star_generator_methods))
-            return false;
+    RootedObject proto(cx, NewSingletonObjectWithObjectPrototype(cx, global));
+    if (!proto || !proto->setDelegate(cx))
+        return false;
+    if (!DefinePropertiesAndFunctions(cx, proto, nullptr, legacy_generator_methods))
+        return false;
 
-        RootedObject genFunctionProto(cx, NewSingletonObjectWithFunctionPrototype(cx, global));
-        if (!genFunctionProto)
-            return false;
-        if (!LinkConstructorAndPrototype(cx, genFunctionProto, genObjectProto))
-            return false;
+    global->setReservedSlot(LEGACY_GENERATOR_OBJECT_PROTO, ObjectValue(*proto));
+    return true;
+}
 
-        RootedValue function(cx, global->getConstructor(JSProto_Function));
-        if (!function.toObjectOrNull())
-            return false;
-        RootedObject proto(cx, &function.toObject());
-        RootedAtom name(cx, cx->names().GeneratorFunction);
-        RootedObject genFunction(cx, NewFunctionWithProto(cx, Generator, 1,
-                                                          JSFunction::NATIVE_CTOR, nullptr, name,
-                                                          proto));
-        if (!genFunction)
-            return false;
-        if (!LinkConstructorAndPrototype(cx, genFunction, genFunctionProto))
-            return false;
+/* static */ bool
+GlobalObject::initStarGenerators(JSContext* cx, Handle<GlobalObject*> global)
+{
+    if (global->getReservedSlot(STAR_GENERATOR_OBJECT_PROTO).isObject())
+        return true;
 
-        global->setSlot(STAR_GENERATOR_OBJECT_PROTO, ObjectValue(*genObjectProto));
-        global->setConstructor(JSProto_GeneratorFunction, ObjectValue(*genFunction));
-        global->setPrototype(JSProto_GeneratorFunction, ObjectValue(*genFunctionProto));
-    }
+    RootedObject genObjectProto(cx, NewSingletonObjectWithObjectPrototype(cx, global));
+    if (!genObjectProto || !genObjectProto->setDelegate(cx))
+        return false;
+    if (!DefinePropertiesAndFunctions(cx, genObjectProto, nullptr, star_generator_methods))
+        return false;
 
+    RootedObject genFunctionProto(cx, NewSingletonObjectWithFunctionPrototype(cx, global));
+    if (!genFunctionProto || !genFunctionProto->setDelegate(cx))
+        return false;
+    if (!LinkConstructorAndPrototype(cx, genFunctionProto, genObjectProto))
+        return false;
+
+    RootedValue function(cx, global->getConstructor(JSProto_Function));
+    if (!function.toObjectOrNull())
+        return false;
+    RootedObject proto(cx, &function.toObject());
+    RootedAtom name(cx, cx->names().GeneratorFunction);
+    RootedObject genFunction(cx, NewFunctionWithProto(cx, Generator, 1,
+                                                      JSFunction::NATIVE_CTOR, nullptr, name,
+                                                      proto));
+    if (!genFunction)
+        return false;
+    if (!LinkConstructorAndPrototype(cx, genFunction, genFunctionProto))
+        return false;
+
+    global->setReservedSlot(STAR_GENERATOR_OBJECT_PROTO, ObjectValue(*genObjectProto));
+    global->setReservedSlot(STAR_GENERATOR_FUNCTION, ObjectValue(*genFunction));
+    global->setReservedSlot(STAR_GENERATOR_FUNCTION_PROTO, ObjectValue(*genFunctionProto));
     return true;
 }

@@ -669,8 +669,8 @@ double
 AudioContext::CurrentTime() const
 {
   MediaStream* stream = Destination()->Stream();
-  return StreamTimeToDOMTime(stream->
-                             StreamTimeToSeconds(stream->GetCurrentTime()));
+  return stream->StreamTimeToSeconds(stream->GetCurrentTime() +
+                                     Destination()->ExtraCurrentTime());
 }
 
 void
@@ -1092,12 +1092,6 @@ AudioContext::CollectReports(nsIHandleReportCallback* aHandleReport,
   int64_t amount = SizeOfIncludingThis(MallocSizeOf);
   return MOZ_COLLECT_REPORT("explicit/webaudio/audiocontext", KIND_HEAP, UNITS_BYTES,
                             amount, "Memory used by AudioContext objects (Web Audio).");
-}
-
-double
-AudioContext::ExtraCurrentTime() const
-{
-  return mDestination->ExtraCurrentTime();
 }
 
 BasicWaveFormCache*

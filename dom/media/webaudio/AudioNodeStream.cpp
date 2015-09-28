@@ -203,29 +203,29 @@ AudioNodeStream::SetInt32Parameter(uint32_t aIndex, int32_t aValue)
 }
 
 void
-AudioNodeStream::SetTimelineParameter(uint32_t aIndex,
-                                      const AudioParamTimeline& aValue)
+AudioNodeStream::SendTimelineEvent(uint32_t aIndex,
+                                   const AudioTimelineEvent& aEvent)
 {
   class Message final : public ControlMessage
   {
   public:
     Message(AudioNodeStream* aStream, uint32_t aIndex,
-            const AudioParamTimeline& aValue)
+            const AudioTimelineEvent& aEvent)
       : ControlMessage(aStream),
-        mValue(aValue),
+        mEvent(aEvent),
         mSampleRate(aStream->SampleRate()),
         mIndex(aIndex)
     {}
     virtual void Run() override
     {
       static_cast<AudioNodeStream*>(mStream)->Engine()->
-          SetTimelineParameter(mIndex, mValue, mSampleRate);
+          RecvTimelineEvent(mIndex, mEvent);
     }
-    AudioParamTimeline mValue;
+    AudioTimelineEvent mEvent;
     TrackRate mSampleRate;
     uint32_t mIndex;
   };
-  GraphImpl()->AppendMessage(new Message(this, aIndex, aValue));
+  GraphImpl()->AppendMessage(new Message(this, aIndex, aEvent));
 }
 
 void
@@ -375,6 +375,31 @@ AudioNodeStream::ComputedNumberOfChannels(uint32_t aInputChannelCount)
     // Nothing to do here, just shut up the compiler warning.
     return aInputChannelCount;
   }
+}
+
+class AudioNodeStream::AdvanceAndResumeMessage final : public ControlMessage {
+public:
+  AdvanceAndResumeMessage(AudioNodeStream* aStream, StreamTime aAdvance) :
+    ControlMessage(aStream), mAdvance(aAdvance) {}
+  virtual void Run() override
+  {
+    auto ns = static_cast<AudioNodeStream*>(mStream);
+    ns->mBufferStartTime -= mAdvance;
+
+    StreamBuffer::Track* track = ns->EnsureTrack(AUDIO_TRACK);
+    track->Get<AudioSegment>()->AppendNullData(mAdvance);
+
+    ns->GraphImpl()->DecrementSuspendCount(mStream);
+  }
+private:
+  StreamTime mAdvance;
+};
+
+void
+AudioNodeStream::AdvanceAndResume(StreamTime aAdvance)
+{
+  mMainThreadCurrentTime += aAdvance;
+  GraphImpl()->AppendMessage(new AdvanceAndResumeMessage(this, aAdvance));
 }
 
 void

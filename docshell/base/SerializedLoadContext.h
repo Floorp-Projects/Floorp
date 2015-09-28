@@ -9,6 +9,7 @@
 
 #include "base/basictypes.h"
 #include "ipc/IPCMessageUtils.h"
+#include "mozilla/BasePrincipal.h"
 
 class nsILoadContext;
 
@@ -48,8 +49,7 @@ public:
   bool mIsContent;
   bool mUsePrivateBrowsing;
   bool mUseRemoteTabs;
-  bool mIsInBrowserElement;
-  uint32_t mAppId;
+  mozilla::OriginAttributes mOriginAttributes;
 };
 
 // Function to serialize over IPDL
@@ -60,26 +60,29 @@ struct ParamTraits<SerializedLoadContext>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
+    nsAutoCString suffix;
+    aParam.mOriginAttributes.CreateSuffix(suffix);
+
     WriteParam(aMsg, aParam.mIsNotNull);
     WriteParam(aMsg, aParam.mIsContent);
     WriteParam(aMsg, aParam.mIsPrivateBitValid);
     WriteParam(aMsg, aParam.mUsePrivateBrowsing);
     WriteParam(aMsg, aParam.mUseRemoteTabs);
-    WriteParam(aMsg, aParam.mAppId);
-    WriteParam(aMsg, aParam.mIsInBrowserElement);
+    WriteParam(aMsg, suffix);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
+    nsAutoCString suffix;
     if (!ReadParam(aMsg, aIter, &aResult->mIsNotNull) ||
         !ReadParam(aMsg, aIter, &aResult->mIsContent) ||
         !ReadParam(aMsg, aIter, &aResult->mIsPrivateBitValid) ||
         !ReadParam(aMsg, aIter, &aResult->mUsePrivateBrowsing) ||
         !ReadParam(aMsg, aIter, &aResult->mUseRemoteTabs) ||
-        !ReadParam(aMsg, aIter, &aResult->mAppId) ||
-        !ReadParam(aMsg, aIter, &aResult->mIsInBrowserElement)) {
+        !ReadParam(aMsg, aIter, &suffix)) {
       return false;
     }
+    aResult->mOriginAttributes.PopulateFromSuffix(suffix);
 
     return true;
   }

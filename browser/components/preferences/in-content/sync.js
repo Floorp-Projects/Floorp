@@ -406,13 +406,17 @@ var gSyncPane = {
             displayNameLabel.textContent = data.displayName;
           }
           if (data.avatar) {
-            // Make sure the image is available before displaying it,
-            // as we don't want to overwrite the default profile image
-            // with a broken/unavailable image
+            let bgImage = "url(\"" + data.avatar + "\")";
+            let profileImageElement = document.getElementById("fxaProfileImage");
+            profileImageElement.style.listStyleImage = bgImage;
+
             let img = new Image();
-            img.onload = () => {
-              let bgImage = "url('" + data.avatar + "')";
-              document.getElementById("fxaProfileImage").style.listStyleImage = bgImage;
+            img.onerror = () => {
+              // Clear the image if it has trouble loading. Since this callback is asynchronous
+              // we check to make sure the image is still the same before we clear it.
+              if (profileImageElement.style.listStyleImage === bgImage) {
+                profileImageElement.style.removeProperty("list-style-image");
+              }
             };
             img.src = data.avatar;
           }

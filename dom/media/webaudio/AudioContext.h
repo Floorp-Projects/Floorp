@@ -111,7 +111,7 @@ private:
   AudioContextState mNewState;
 };
 
-enum AudioContextOperation { Suspend, Resume, Close };
+enum class AudioContextOperation { Suspend, Resume, Close };
 
 class AudioContext final : public DOMEventTargetHelper,
                            public nsIMemoryReporter
@@ -306,12 +306,12 @@ public:
 
   double DOMTimeToStreamTime(double aTime) const
   {
-    return aTime - ExtraCurrentTime();
+    return aTime;
   }
 
   double StreamTimeToDOMTime(double aTime) const
   {
-    return aTime + ExtraCurrentTime();
+    return aTime;
   }
 
   void OnStateChanged(void* aPromise, AudioContextState aNewState);
@@ -322,15 +322,6 @@ public:
   IMPL_EVENT_HANDLER(mozinterruptend)
 
 private:
-  /**
-   * Returns the amount of extra time added to the current time of the
-   * AudioDestinationNode's MediaStream to get this AudioContext's currentTime.
-   * Must be subtracted from all DOM API parameter times that are on the same
-   * timeline as AudioContext's currentTime to get times we can pass to the
-   * MediaStreamGraph.
-   */
-  double ExtraCurrentTime() const;
-
   void RemoveFromDecodeQueue(WebAudioDecodeJob* aDecodeJob);
   void ShutdownDecoder();
 

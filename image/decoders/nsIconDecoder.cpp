@@ -93,7 +93,7 @@ nsIconDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
         MOZ_ASSERT(mImageData, "Should have a buffer now");
 
         if (mDownscaler) {
-          nsresult rv = mDownscaler->BeginFrame(GetSize(),
+          nsresult rv = mDownscaler->BeginFrame(GetSize(), Nothing(),
                                                 mImageData,
                                                 /* aHasAlpha = */ true);
           if (NS_FAILED(rv)) {

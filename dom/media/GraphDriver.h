@@ -13,7 +13,6 @@
 #include "AudioSegment.h"
 #include "SelfRef.h"
 #include "mozilla/Atomics.h"
-#include "AudioContext.h"
 
 struct cubeb_stream;
 

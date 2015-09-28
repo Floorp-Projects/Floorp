@@ -57,7 +57,7 @@
         <![CDATA[
           var closedNotification = this._closedNotification;
           var notifications = this.getElementsByTagName('notification');
-          return Array.filter(notifications, function(n) n != closedNotification);
+          return Array.filter(notifications, n => n != closedNotification);
         ]]>
         </getter>
       </property>

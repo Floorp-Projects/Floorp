@@ -46,7 +46,7 @@ function test() {
   };
 
   newWindowWithState(newState, function(win) {
-    registerCleanupFunction(function () win.close());
+    registerCleanupFunction(() => win.close());
 
     whenTabViewIsShown(function() {
       let contentWindow = win.TabView.getContentWindow();

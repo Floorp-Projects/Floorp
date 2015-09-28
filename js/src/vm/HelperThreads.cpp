@@ -313,6 +313,42 @@ js::OffThreadParsingMustWaitForGC(JSRuntime* rt)
     return rt->activeGCInAtomsZone();
 }
 
+static bool
+EnsureConstructor(JSContext* cx, Handle<GlobalObject*> global, JSProtoKey key)
+{
+    if (!GlobalObject::ensureConstructor(cx, global, key))
+        return false;
+
+    MOZ_ASSERT(global->getPrototype(key).toObject().isDelegate(),
+               "standard class prototype wasn't a delegate from birth");
+    return true;
+}
+
+// Initialize all classes potentially created during parsing for use in parser
+// data structures, template objects, &c.
+static bool
+EnsureParserCreatedClasses(JSContext* cx)
+{
+    Handle<GlobalObject*> global = cx->global();
+
+    if (!EnsureConstructor(cx, global, JSProto_Function))
+        return false; // needed by functions, also adds object literals' proto
+
+    if (!EnsureConstructor(cx, global, JSProto_Array))
+        return false; // needed by array literals
+
+    if (!EnsureConstructor(cx, global, JSProto_RegExp))
+        return false; // needed by regular expression literals
+
+    if (!EnsureConstructor(cx, global, JSProto_Iterator))
+        return false; // needed by ???
+
+    if (!GlobalObject::initStarGenerators(cx, global))
+        return false; // needed by function*() {} and generator comprehensions
+
+    return true;
+}
+
 bool
 js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& options,
                               const char16_t* chars, size_t length,
@@ -337,27 +373,15 @@ js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& optio
 
     JS_SetCompartmentPrincipals(global->compartment(), cx->compartment()->principals());
 
-    RootedObject obj(cx);
-
-    // Initialize all classes needed for parsing while we are still on the main
-    // thread. Do this for both the target and the new global so that prototype
+    // Initialize all classes required for parsing while still on the main
+    // thread, for both the target and the new global so that prototype
     // pointers can be changed infallibly after parsing finishes.
-    if (!GetBuiltinConstructor(cx, JSProto_Function, &obj) ||
-        !GetBuiltinConstructor(cx, JSProto_Array, &obj) ||
-        !GetBuiltinConstructor(cx, JSProto_RegExp, &obj) ||
-        !GetBuiltinConstructor(cx, JSProto_Iterator, &obj))
-    {
+    if (!EnsureParserCreatedClasses(cx))
         return false;
-    }
     {
         AutoCompartment ac(cx, global);
-        if (!GetBuiltinConstructor(cx, JSProto_Function, &obj) ||
-            !GetBuiltinConstructor(cx, JSProto_Array, &obj) ||
-            !GetBuiltinConstructor(cx, JSProto_RegExp, &obj) ||
-            !GetBuiltinConstructor(cx, JSProto_Iterator, &obj))
-        {
+        if (!EnsureParserCreatedClasses(cx))
             return false;
-        }
     }
 
     ScopedJSDeletePtr<ExclusiveContext> helpercx(
@@ -884,15 +908,6 @@ LeaveParseTaskZone(JSRuntime* rt, ParseTask* task)
     rt->clearUsedByExclusiveThread(task->cx->zone());
 }
 
-static bool
-EnsureConstructor(JSContext* cx, Handle<GlobalObject*> global, JSProtoKey key)
-{
-    if (!GlobalObject::ensureConstructor(cx, global, key))
-        return false;
-
-    return global->getPrototype(key).toObject().setDelegate(cx);
-}
-
 JSScript*
 GlobalHelperThreadState::finishParseTask(JSContext* maybecx, JSRuntime* rt, void* token)
 {
@@ -924,13 +939,7 @@ GlobalHelperThreadState::finishParseTask(JSContext* maybecx, JSRuntime* rt, void
     // Make sure we have all the constructors we need for the prototype
     // remapping below, since we can't GC while that's happening.
     Rooted<GlobalObject*> global(cx, &cx->global()->as<GlobalObject>());
-    if (!EnsureConstructor(cx, global, JSProto_Object) ||
-        !EnsureConstructor(cx, global, JSProto_Array) ||
-        !EnsureConstructor(cx, global, JSProto_Function) ||
-        !EnsureConstructor(cx, global, JSProto_RegExp) ||
-        !EnsureConstructor(cx, global, JSProto_Iterator) ||
-        !EnsureConstructor(cx, global, JSProto_GeneratorFunction))
-    {
+    if (!EnsureParserCreatedClasses(cx)) {
         LeaveParseTaskZone(rt, parseTask);
         return nullptr;
     }
@@ -965,6 +974,13 @@ GlobalHelperThreadState::finishParseTask(JSContext* maybecx, JSRuntime* rt, void
     return script;
 }
 
+JSObject*
+GlobalObject::getStarGeneratorFunctionPrototype()
+{
+    const Value& v = getReservedSlot(STAR_GENERATOR_FUNCTION_PROTO);
+    return v.isObject() ? &v.toObject() : nullptr;
+}
+
 void
 GlobalHelperThreadState::mergeParseTaskCompartment(JSRuntime* rt, ParseTask* parseTask,
                                                    Handle<GlobalObject*> global,
@@ -979,37 +995,45 @@ GlobalHelperThreadState::mergeParseTaskCompartment(JSRuntime* rt, ParseTask* par
 
     LeaveParseTaskZone(rt, parseTask);
 
-    // Point the prototypes of any objects in the script's compartment to refer
-    // to the corresponding prototype in the new compartment. This will briefly
-    // create cross compartment pointers, which will be fixed by the
-    // MergeCompartments call below.
-    for (gc::ZoneCellIter iter(parseTask->cx->zone(), gc::AllocKind::OBJECT_GROUP);
-         !iter.done();
-         iter.next())
     {
-        ObjectGroup* group = iter.get<ObjectGroup>();
-        TaggedProto proto(group->proto());
-        if (!proto.isObject())
-            continue;
+        gc::ZoneCellIter iter(parseTask->cx->zone(), gc::AllocKind::OBJECT_GROUP);
 
-        JSProtoKey key = JS::IdentifyStandardPrototype(proto.toObject());
-        if (key == JSProto_Null) {
-            // Generator functions don't have Function.prototype as prototype
-            // but a different function object, so IdentifyStandardPrototype
-            // doesn't work. Just special-case it here.
-            if (IsStandardPrototype(proto.toObject(), JSProto_GeneratorFunction))
-                key = JSProto_GeneratorFunction;
-            else
+        // Generator functions don't have Function.prototype as prototype but a
+        // different function object, so the IdentifyStandardPrototype trick
+        // below won't work.  Just special-case it.
+        JSObject* parseTaskStarGenFunctionProto =
+            parseTask->exclusiveContextGlobal->as<GlobalObject>().getStarGeneratorFunctionPrototype();
+
+        // Point the prototypes of any objects in the script's compartment to refer
+        // to the corresponding prototype in the new compartment. This will briefly
+        // create cross compartment pointers, which will be fixed by the
+        // MergeCompartments call below.
+        for (; !iter.done(); iter.next()) {
+            ObjectGroup* group = iter.get<ObjectGroup>();
+            TaggedProto proto(group->proto());
+            if (!proto.isObject())
                 continue;
+
+            JSObject* protoObj = proto.toObject();
+
+            JSObject* newProto;
+            if (protoObj == parseTaskStarGenFunctionProto) {
+                newProto = global->getStarGeneratorFunctionPrototype();
+            } else {
+                JSProtoKey key = JS::IdentifyStandardPrototype(protoObj);
+                if (key == JSProto_Null)
+                    continue;
+
+                MOZ_ASSERT(key == JSProto_Object || key == JSProto_Array ||
+                           key == JSProto_Function || key == JSProto_RegExp ||
+                           key == JSProto_Iterator);
+
+                newProto = GetBuiltinPrototypePure(global, key);
+            }
+
+            MOZ_ASSERT(newProto);
+            group->setProtoUnchecked(TaggedProto(newProto));
         }
-        MOZ_ASSERT(key == JSProto_Object || key == JSProto_Array ||
-                   key == JSProto_Function || key == JSProto_RegExp ||
-                   key == JSProto_Iterator || key == JSProto_GeneratorFunction);
-
-        JSObject* newProto = GetBuiltinPrototypePure(global, key);
-        MOZ_ASSERT(newProto);
-
-        group->setProtoUnchecked(TaggedProto(newProto));
     }
 
     // Move the parsed script and all its contents into the desired compartment.

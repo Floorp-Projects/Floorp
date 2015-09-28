@@ -67,7 +67,7 @@ function continueTest(win)
   search.value = "download manager escape test";
 
   // Send the escape key to the download manager UI window
-  let sendEscape = function() synthesizeKey("VK_ESCAPE", {}, win);
+  let sendEscape = () => synthesizeKey("VK_ESCAPE", {}, win);
 
   // Escape from search box
   sendEscape();

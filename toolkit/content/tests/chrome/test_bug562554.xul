@@ -46,16 +46,16 @@ function test() {
 
 let tests = [
   // Click on the toolbarbutton itself - should call popupshowing
-  function() synthesizeMouse($("toolbarmenu"), 10, 50, {}, window),
+  () => synthesizeMouse($("toolbarmenu"), 10, 50, {}, window),
 
   // Click on button1 which has allowevents="true" - should call clickbutton1
-  function() synthesizeMouse($("toolbarmenu"), 10, 15, {}, window),
+  () => synthesizeMouse($("toolbarmenu"), 10, 15, {}, window),
 
   // Click on button2 where it intersects with button1 - should call popupshowing
-  function() synthesizeMouse($("toolbarmenu"), 85, 15, {}, window),
+  () => synthesizeMouse($("toolbarmenu"), 85, 15, {}, window),
 
   // Click on button2 outside of intersection - should call popupshowing
-  function() synthesizeMouse($("toolbarmenu"), 150, 15, {}, window)
+  () => synthesizeMouse($("toolbarmenu"), 150, 15, {}, window)
 ];
 
 function nextTest() {

@@ -521,13 +521,11 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     }
 
     if (setChooseApplicationCache) {
-      bool inBrowser = false;
+      OriginAttributes attrs;
       if (mLoadContext) {
-        mLoadContext->GetIsInBrowserElement(&inBrowser);
+        attrs.CopyFromLoadContext(mLoadContext);
       }
 
-      // TODO: Bug 1165466 - use originAttribute in nsILoadContext.
-      OriginAttributes attrs(appId, inBrowser);
       nsCOMPtr<nsIPrincipal> principal =
         BasePrincipal::CreateCodebasePrincipal(uri, attrs);
 

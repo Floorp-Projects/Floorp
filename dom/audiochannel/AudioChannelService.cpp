@@ -359,9 +359,9 @@ AudioChannelService::GetState(nsPIDOMWindow* aWindow, uint32_t aAudioChannel,
 bool
 AudioChannelService::TelephonyChannelIsActive()
 {
-  nsTObserverArray<nsAutoPtr<AudioChannelWindow>>::ForwardIterator iter(mWindows);
-  while (iter.HasMore()) {
-    AudioChannelWindow* next = iter.GetNext();
+  nsTObserverArray<nsAutoPtr<AudioChannelWindow>>::ForwardIterator windowsIter(mWindows);
+  while (windowsIter.HasMore()) {
+    AudioChannelWindow* next = windowsIter.GetNext();
     if (next->mChannels[(uint32_t)AudioChannel::Telephony].mNumberOfAgents != 0 &&
         !next->mChannels[(uint32_t)AudioChannel::Telephony].mMuted) {
       return true;
@@ -370,9 +370,9 @@ AudioChannelService::TelephonyChannelIsActive()
 
   if (IsParentProcess()) {
     nsTObserverArray<nsAutoPtr<AudioChannelChildStatus>>::ForwardIterator
-      iter(mPlayingChildren);
-    while (iter.HasMore()) {
-      AudioChannelChildStatus* child = iter.GetNext();
+      childrenIter(mPlayingChildren);
+    while (childrenIter.HasMore()) {
+      AudioChannelChildStatus* child = childrenIter.GetNext();
       if (child->mActiveTelephonyChannel) {
         return true;
       }

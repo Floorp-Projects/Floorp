@@ -48,6 +48,7 @@ namespace mozilla {
  */
 class gfxAlphaBoxBlur
 {
+    typedef mozilla::gfx::Color Color;
     typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
 
 public:
@@ -130,7 +131,7 @@ public:
                               const gfxRect& aRect,
                               RectCornerRadii* aCornerRadii,
                               const gfxPoint& aBlurStdDev,
-                              const gfxRGBA& aShadowColor,
+                              const Color& aShadowColor,
                               const gfxRect& aDirtyRect,
                               const gfxRect& aSkipRect);
 

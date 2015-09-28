@@ -3,7 +3,7 @@
 
 function test() {
   function onLoad(win) {
-    registerCleanupFunction(function () win.close());
+    registerCleanupFunction(() => win.close());
     win.gBrowser.addTab();
   }
 

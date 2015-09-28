@@ -10,8 +10,7 @@ add_task(function* test_simple() {
 add_task(function* test_background() {
   let extension = ExtensionTestUtils.loadExtension("background");
   info("load complete");
-  yield extension.startup();
-  let x = yield extension.awaitMessage("running");
+  let [, x] = yield Promise.all([extension.startup(), extension.awaitMessage("running")]);
   is(x, 1, "got correct value from extension");
   info("startup complete");
   extension.sendMessage(10, 20);

@@ -33,7 +33,9 @@ LoadContext.prototype = {
     if (iid.equals(Ci.nsILoadContext))
       return this;
     throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  },
+
+  originAttributes: {}
 };
 
 PrivateBrowsingLoadContext = new LoadContext(true);

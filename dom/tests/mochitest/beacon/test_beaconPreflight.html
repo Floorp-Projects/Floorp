@@ -17,7 +17,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=936340
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var beaconUrl = "http://mochi.test:8888/tests/dom/tests/mochitest/beacon/beacon-handler.sjs";
+var beaconUrl = "http://example.com/tests/dom/tests/mochitest/beacon/beacon-preflight-handler.sjs?beacon";
+
+var intervalID = null;
+
+function queryIfBeaconSucceeded() {
+  clearInterval(intervalID);
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "beacon-preflight-handler.sjs?verify", true);
+  xhr.onload = function() {
+    is(xhr.responseText, "green", "SendBeacon should have succeeded after preflight!");
+    SimpleTest.finish();
+  };
+  xhr.onerror = function() {
+    ok(false, "xhr request returned error");
+    SimpleTest.finish();
+  };
+  xhr.send();
+}
 
 // not enabled by default yet.
 SimpleTest.waitForExplicitFinish();
@@ -26,8 +43,11 @@ SpecialPowers.pushPrefEnv({'set': [["beacon.enabled", true]]}, beginTest);
 function beginTest() {
   var abv = new Uint8Array([0,1,2,3]);
   var sent = navigator.sendBeacon(beaconUrl, abv);
-  ok(sent, "non-standard content type allowed after pre-flight");
-  SimpleTest.finish();
+  ok(sent, "sending the beacon should start successfully");
+
+  // we have to make sure sending the beacon did not fail, so
+  // we have to wait for 2 seconds before we can query the result.
+  intervalID = setInterval(queryIfBeaconSucceeded, 2000);
 }
 
 </script>

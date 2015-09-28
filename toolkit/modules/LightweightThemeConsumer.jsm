@@ -176,5 +176,5 @@ function _setImage(aElement, aActive, aURL) {
 function _parseRGB(aColorString) {
   var rgb = aColorString.match(/^rgba?\((\d+), (\d+), (\d+)/);
   rgb.shift();
-  return rgb.map(function (x) parseInt(x));
+  return rgb.map(x => parseInt(x));
 }

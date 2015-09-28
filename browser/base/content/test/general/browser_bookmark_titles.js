@@ -19,30 +19,19 @@ var tests = [
      'https://untrusted.example.com/somepage.html']
 ];
 
-function generatorTest() {
+add_task(function* () {
     gBrowser.selectedTab = gBrowser.addTab();
     let browser = gBrowser.selectedBrowser;
     browser.stop(); // stop the about:blank load.
 
-    browser.addEventListener("DOMContentLoaded", event => {
-        if (event.originalTarget != browser.contentDocument ||
-            event.target.location.href == "about:blank") {
-            info("skipping spurious load event");
-            return;
-        }
-        nextStep();
-    }, true);
-    registerCleanupFunction(function () {
-        browser.removeEventListener("DOMContentLoaded", nextStep, true);
-        gBrowser.removeCurrentTab();
-    });
-
     // Test that a bookmark of each URI gets the corresponding default title.
     for (let i = 0; i < tests.length; ++i) {
         let [uri, title] = tests[i];
+
+        let promiseLoaded = promisePageLoaded(browser);
         content.location = uri;
-        yield undefined;
-        checkBookmark(uri, title);
+        yield promiseLoaded;
+        yield checkBookmark(uri, title);
     }
 
     // Network failure test: now that dummy_page.html is in history, bookmarking
@@ -62,20 +51,28 @@ function generatorTest() {
     Services.cache2.clear();
 
     let [uri, title] = tests[0];
+
+    let promiseLoaded = promisePageLoaded(browser);
     content.location = uri;
-    yield undefined;
+    yield promiseLoaded;
+
     // The offline mode test is only good if the page failed to load.
     is(content.document.documentURI.substring(0, 14), 'about:neterror',
         "Offline mode successfully simulated network outage.");
-    checkBookmark(uri, title);
-}
+    yield checkBookmark(uri, title);
+
+    gBrowser.removeCurrentTab();
+});
 
 // Bookmark the current page and confirm that the new bookmark has the expected
 // title. (Then delete the bookmark.)
-function checkBookmark(uri, expected_title) {
+function* checkBookmark(uri, expected_title) {
     is(gBrowser.selectedBrowser.currentURI.spec, uri,
        "Trying to bookmark the expected uri");
+
+    let promiseBookmark = promiseOnBookmarkItemAdded(gBrowser.selectedBrowser.currentURI);
     PlacesCommandHook.bookmarkCurrentPage(false);
+    yield promiseBookmark;
 
     let id = PlacesUtils.getMostRecentBookmarkForURI(PlacesUtils._uri(uri));
     ok(id > 0, "Found the expected bookmark");
@@ -83,4 +80,22 @@ function checkBookmark(uri, expected_title) {
     is(title, expected_title, "Bookmark got a good default title.");
 
     PlacesUtils.bookmarks.removeItem(id);
+}
+
+// BrowserTestUtils.browserLoaded doesn't work for the about pages, so use a
+// custom page load listener.
+function promisePageLoaded(browser)
+{
+  return new Promise(resolve => {
+    browser.addEventListener("DOMContentLoaded", function pageLoaded(event) {
+      browser.removeEventListener("DOMContentLoaded", pageLoaded, true);
+
+      if (event.originalTarget != browser.contentDocument ||
+          event.target.location.href == "about:blank") {
+          info("skipping spurious load event");
+          return;
+      }
+      resolve();
+    }, true);
+  });
 }

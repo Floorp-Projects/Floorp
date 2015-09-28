@@ -43,15 +43,17 @@ public:
   enum Parameters {
     GAIN
   };
-  void SetTimelineParameter(uint32_t aIndex,
-                            const AudioParamTimeline& aValue,
-                            TrackRate aSampleRate) override
+  void RecvTimelineEvent(uint32_t aIndex,
+                         AudioTimelineEvent& aEvent) override
   {
+    MOZ_ASSERT(mSource && mDestination);
+    WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent,
+                                                    mSource,
+                                                    mDestination);
+
     switch (aIndex) {
     case GAIN:
-      MOZ_ASSERT(mSource && mDestination);
-      mGain = aValue;
-      WebAudioUtils::ConvertAudioParamToTicks(mGain, mSource, mDestination);
+      mGain.InsertEvent<int64_t>(aEvent);
       break;
     default:
       NS_ERROR("Bad GainNodeEngine TimelineParameter");
@@ -159,10 +161,10 @@ GainNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 void
-GainNode::SendGainToStream(AudioNode* aNode)
+GainNode::SendGainToStream(AudioNode* aNode, const AudioTimelineEvent& aEvent)
 {
   GainNode* This = static_cast<GainNode*>(aNode);
-  SendTimelineParameterToStream(This, GainNodeEngine::GAIN, *This->mGain);
+  SendTimelineEventToStream(This, GainNodeEngine::GAIN, aEvent);
 }
 
 } // namespace dom

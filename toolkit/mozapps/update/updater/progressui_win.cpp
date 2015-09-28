@@ -134,7 +134,7 @@ InitDialog(HWND hDlg)
 
   // Get the control's font for calculating the new size for the control
   HDC hDCInfo = GetDC(hWndInfo);
-  HFONT hInfoFont, hOldFont;
+  HFONT hInfoFont, hOldFont = NULL;
   hInfoFont = (HFONT)SendMessage(hWndInfo, WM_GETFONT, 0, 0);
 
   if (hInfoFont)

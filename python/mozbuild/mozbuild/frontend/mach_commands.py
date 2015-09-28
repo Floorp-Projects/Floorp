@@ -131,6 +131,34 @@ class MozbuildFileCommands(MachCommandBase):
             print(e.message)
             return 1
 
+    @SubCommand('file-info', 'dep-tests',
+                'Show test files marked as dependencies of these source files.')
+    @CommandArgument('-r', '--rev',
+                     help='Version control revision to look up info from')
+    @CommandArgument('paths', nargs='+',
+                     help='Paths whose data to query')
+    def file_info_test_deps(self, paths, rev=None):
+        try:
+            for p, m in self._get_files_info(paths, rev=rev).items():
+                print('%s:' % mozpath.relpath(p, self.topsrcdir))
+                if m.test_files:
+                    print('\tTest file patterns:')
+                    for p in m.test_files:
+                        print('\t\t%s' % p)
+                if m.test_tags:
+                    print('\tRelevant tags:')
+                    for p in m.test_tags:
+                        print('\t\t%s' % p)
+                if m.test_flavors:
+                    print('\tRelevant flavors:')
+                    for p in m.test_flavors:
+                        print('\t\t%s' % p)
+
+        except InvalidPathException as e:
+            print(e.message)
+            return 1
+
+
     def _get_reader(self, finder):
         from mozbuild.frontend.reader import (
             BuildReader,

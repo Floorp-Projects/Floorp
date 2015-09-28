@@ -76,8 +76,8 @@
     real(SyntaxError,           16,     InitViaClassSpec,       ERROR_CLASP(JSEXN_SYNTAXERR)) \
     real(TypeError,             17,     InitViaClassSpec,       ERROR_CLASP(JSEXN_TYPEERR)) \
     real(URIError,              18,     InitViaClassSpec,       ERROR_CLASP(JSEXN_URIERR)) \
-    real(Iterator,              19,     InitIteratorClasses,    OCLASP(PropertyIterator)) \
-    real(StopIteration,         20,     InitIteratorClasses,    OCLASP(StopIteration)) \
+    real(Iterator,              19,     InitIteratorClass,      OCLASP(PropertyIterator)) \
+    real(StopIteration,         20,     InitStopIterationClass, OCLASP(StopIteration)) \
     real(ArrayBuffer,           21,     InitArrayBufferClass,   &js::ArrayBufferObject::protoClass) \
     real(Int8Array,             22,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Int8)) \
     real(Uint8Array,            23,     InitViaClassSpec,       TYPED_ARRAY_CLASP(Uint8)) \
@@ -97,7 +97,7 @@
 IF_SAB(real,imaginary)(SharedArrayBuffer,       37,     InitSharedArrayBufferClass, &js::SharedArrayBufferObject::protoClass) \
 IF_INTL(real,imaginary) (Intl,                  38,     InitIntlClass,          CLASP(Intl)) \
 IF_BDATA(real,imaginary)(TypedObject,           39,     InitTypedObjectModuleObject,   OCLASP(TypedObjectModule)) \
-    imaginary(GeneratorFunction,     40,     InitIteratorClasses, dummy) \
+    real(Reflect,               40,     InitReflect,            nullptr) \
 IF_BDATA(real,imaginary)(SIMD,                  41,     InitSIMDClass, OCLASP(SIMD)) \
     real(WeakSet,               42,     InitWeakSetClass,       OCLASP(WeakSet)) \
 IF_SAB(real,imaginary)(SharedInt8Array,         43,     InitViaClassSpec,       SHARED_TYPED_ARRAY_CLASP(Int8)) \
@@ -112,10 +112,9 @@ IF_SAB(real,imaginary)(SharedUint8ClampedArray, 51,     InitViaClassSpec,       
     real(TypedArray,            52,      InitViaClassSpec,      &js::TypedArrayObject::sharedTypedArrayPrototypeClass) \
 IF_SAB(real,imaginary)(Atomics,                 53,     InitAtomicsClass, OCLASP(Atomics)) \
     real(SavedFrame,            54,      InitViaClassSpec,      &js::SavedFrame::class_) \
-    real(Reflect,               55,      InitReflect,           nullptr) \
-    real(Module,                56,      InitModuleClass,       OCLASP(Module)) \
-    real(ImportEntry,           57,      InitImportEntryClass,  OCLASP(ImportEntry)) \
-    real(ExportEntry,           58,      InitExportEntryClass,  OCLASP(ExportEntry)) \
+    real(Module,                55,      InitModuleClass,       OCLASP(Module)) \
+    real(ImportEntry,           56,      InitImportEntryClass,  OCLASP(ImportEntry)) \
+    real(ExportEntry,           57,      InitExportEntryClass,  OCLASP(ExportEntry)) \
 
 #define JS_FOR_EACH_PROTOTYPE(macro) JS_FOR_PROTOTYPES(macro,macro)
 

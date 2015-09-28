@@ -130,6 +130,12 @@
   overflow: hidden;
 }
 
+/***
+ * If you change the sizes here, change them in newTab.css
+ * and the preference values:
+ * toolkit.pageThumbs.minWidth
+ * toolkit.pageThumbs.minHeight
+ */
 /* THUMBNAILS */
 .newtab-thumbnail {
   background-origin: padding-box;

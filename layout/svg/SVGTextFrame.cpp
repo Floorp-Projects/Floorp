@@ -3096,16 +3096,16 @@ SVGTextContextPaint::Paint::GetPattern(const DrawTarget* aDrawTarget,
 
   switch (mPaintType) {
   case eStyleSVGPaintType_None:
-    pattern = new gfxPattern(gfxRGBA(0.0f, 0.0f, 0.0f, 0.0f));
+    pattern = new gfxPattern(Color());
     mPatternMatrix = gfxMatrix();
     break;
-  case eStyleSVGPaintType_Color:
-    pattern = new gfxPattern(gfxRGBA(NS_GET_R(mPaintDefinition.mColor) / 255.0,
-                                     NS_GET_G(mPaintDefinition.mColor) / 255.0,
-                                     NS_GET_B(mPaintDefinition.mColor) / 255.0,
-                                     NS_GET_A(mPaintDefinition.mColor) / 255.0 * aOpacity));
+  case eStyleSVGPaintType_Color: {
+    Color color = Color::FromABGR(mPaintDefinition.mColor);
+    color.a *= aOpacity;
+    pattern = new gfxPattern(color);
     mPatternMatrix = gfxMatrix();
     break;
+  }
   case eStyleSVGPaintType_Server:
     pattern = mPaintDefinition.mPaintServerFrame->GetPaintServerPattern(mFrame,
                                                                         aDrawTarget,

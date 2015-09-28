@@ -188,9 +188,6 @@ class ReftestResolver(object):
                 manifests[manifest].add(filter_str)
 
         for key in manifests.iterkeys():
-            if os.path.split(key)[1] != self.defaultManifest(suite):
-                print >> sys.stderr, "Invalid manifest for suite %s, %s" %(options.suite, key)
-                sys.exit(1)
             if None in manifests[key]:
                 manifests[key] = None
             else:

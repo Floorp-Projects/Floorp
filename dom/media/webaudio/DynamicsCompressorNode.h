@@ -74,11 +74,16 @@ protected:
   virtual ~DynamicsCompressorNode();
 
 private:
-  static void SendThresholdToStream(AudioNode* aNode);
-  static void SendKneeToStream(AudioNode* aNode);
-  static void SendRatioToStream(AudioNode* aNode);
-  static void SendAttackToStream(AudioNode* aNode);
-  static void SendReleaseToStream(AudioNode* aNode);
+  static void SendThresholdToStream(AudioNode* aNode,
+                                    const AudioTimelineEvent& aEvent);
+  static void SendKneeToStream(AudioNode* aNode,
+                               const AudioTimelineEvent& aEvent);
+  static void SendRatioToStream(AudioNode* aNode,
+                                const AudioTimelineEvent& aEvent);
+  static void SendAttackToStream(AudioNode* aNode,
+                                 const AudioTimelineEvent& aEvent);
+  static void SendReleaseToStream(AudioNode* aNode,
+                                  const AudioTimelineEvent& aEvent);
 
 private:
   nsRefPtr<AudioParam> mThreshold;

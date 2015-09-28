@@ -1105,7 +1105,7 @@ var AddonManagerInternal = {
     this.pendingProviders.delete(aProvider);
 
     for (let type in this.types) {
-      this.types[type].providers = this.types[type].providers.filter(function filterProvider(p) p != aProvider);
+      this.types[type].providers = this.types[type].providers.filter(p => p != aProvider);
       if (this.types[type].providers.length == 0) {
         let oldType = this.types[type].type;
         delete this.types[type];
@@ -1696,8 +1696,7 @@ var AddonManagerInternal = {
     if (!(aType in this.startupChanges))
       return;
 
-    this.startupChanges[aType] = this.startupChanges[aType].filter(
-                                 function filterItem(aItem) aItem != aID);
+    this.startupChanges[aType] = this.startupChanges[aType].filter(aItem => aItem != aID);
   },
 
   /**

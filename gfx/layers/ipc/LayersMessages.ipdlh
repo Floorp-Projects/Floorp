@@ -18,7 +18,7 @@ include "mozilla/GfxMessageUtils.h";
 include "ImageLayers.h";
 
 using mozilla::GraphicsFilterType from "mozilla/GfxMessageUtils.h";
-using struct gfxRGBA from "gfxColor.h";
+using struct mozilla::gfx::Color from "mozilla/gfx/2D.h";
 using struct mozilla::gfx::Point3D from "mozilla/gfx/Point.h";
 using mozilla::gfx::IntPoint from "mozilla/gfx/Point.h";
 using class mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
@@ -101,7 +101,7 @@ struct CSSAngle {
   int unit; // an nsCSSUnit that is valid for angles
 };
 
-struct LayerColor { gfxRGBA value; };
+struct LayerColor { Color value; };
 struct Perspective { float value; };
 struct RotationX { CSSAngle angle; };
 struct RotationY { CSSAngle angle; };

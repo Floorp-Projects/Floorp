@@ -288,6 +288,22 @@ class TestTestResolver(Base):
         self.assertEqual(len(tests), 1)
         self.assertEqual(tests[0]['name'], 'src/common/TestAndroidLogWriters.java')
 
+    def test_wildcard_patterns(self):
+        """Test matching paths by wildcard."""
+
+        r = self._get_resolver()
+
+        tests = list(r.resolve_tests(paths=['mobile/**']))
+        self.assertEqual(len(tests), 2)
+        for t in tests:
+            self.assertTrue(t['file_relpath'].startswith('mobile'))
+
+        tests = list(r.resolve_tests(paths=['**/**.js', 'accessible/**']))
+        self.assertEqual(len(tests), 7)
+        for t in tests:
+            path = t['file_relpath']
+            self.assertTrue(path.startswith('accessible') or path.endswith('.js'))
+
 
 if __name__ == '__main__':
     main()
