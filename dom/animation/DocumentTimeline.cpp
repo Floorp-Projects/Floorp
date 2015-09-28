@@ -92,6 +92,20 @@ DocumentTimeline::ToTimelineTime(const TimeStamp& aTimeStamp) const
 }
 
 void
+DocumentTimeline::NotifyAnimationUpdated(Animation& aAnimation)
+{
+  AnimationTimeline::NotifyAnimationUpdated(aAnimation);
+
+  if (!mIsObservingRefreshDriver) {
+    nsRefreshDriver* refreshDriver = GetRefreshDriver();
+    if (refreshDriver) {
+      refreshDriver->AddRefreshObserver(this, Flush_Style);
+      mIsObservingRefreshDriver = true;
+    }
+  }
+}
+
+void
 DocumentTimeline::WillRefresh(mozilla::TimeStamp aTime)
 {
   MOZ_ASSERT(mIsObservingRefreshDriver);
@@ -100,6 +114,14 @@ DocumentTimeline::WillRefresh(mozilla::TimeStamp aTime)
 
   for (auto iter = mAnimations.Iter(); !iter.Done(); iter.Next()) {
     Animation* animation = iter.Get()->GetKey();
+
+    // Drop any animations which no longer need to be tracked by this timeline.
+    if (animation->GetTimeline() != this ||
+        (!animation->IsRelevant() && !animation->NeedsTicks())) {
+      iter.Remove();
+      continue;
+    }
+
     needsTicks |= animation->NeedsTicks();
   }
 
