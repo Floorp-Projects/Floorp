@@ -16,6 +16,7 @@ DIRS += [
     'fontinspector',
     'framework',
     'inspector',
+    'jsonview',
     'layoutview',
     'markupview',
     'memory',
