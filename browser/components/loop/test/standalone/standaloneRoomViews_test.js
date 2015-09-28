@@ -49,6 +49,8 @@ describe("loop.standaloneRoomViews", function() {
       switch(key) {
         case "standalone_title_with_room_name":
           return args.roomName + " — " + args.clientShortname;
+        case "legal_text_and_links":
+          return args.terms_of_use_url + " " + args.privacy_notice_url;
         default:
           return key;
       }
@@ -64,6 +66,66 @@ describe("loop.standaloneRoomViews", function() {
     clock.restore();
     React.unmountComponentAtNode(fixtures);
     view = null;
+  });
+
+
+  describe("TosView", function() {
+    var origConfig, node;
+
+    function mountTestComponent() {
+      return TestUtils.renderIntoDocument(
+        React.createElement(
+          loop.standaloneRoomViews.ToSView, {
+            dispatcher: dispatcher
+          }));
+    }
+
+    beforeEach(function() {
+      origConfig = loop.config;
+      loop.config = {
+        legalWebsiteUrl: "http://fakelegal/",
+        privacyWebsiteUrl: "http://fakeprivacy/"
+      };
+
+      view = mountTestComponent();
+      node = view.getDOMNode();
+    });
+
+    afterEach(function() {
+      loop.config = origConfig;
+    });
+
+    it("should dispatch a link click action when the ToS link is clicked", function() {
+      // [0] is the first link, the legal one.
+      var link = node.querySelectorAll("a")[0];
+
+      TestUtils.Simulate.click(node, { target: link });
+
+      sinon.assert.calledOnce(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.RecordClick({
+          linkInfo: loop.config.legalWebsiteUrl
+        }));
+    });
+
+    it("should dispatch a link click action when the Privacy link is clicked", function() {
+      // [0] is the first link, the legal one.
+      var link = node.querySelectorAll("a")[1];
+
+      TestUtils.Simulate.click(node, { target: link });
+
+      sinon.assert.calledOnce(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.RecordClick({
+          linkInfo: loop.config.privacyWebsiteUrl
+        }));
+    });
+
+    it("should not dispatch an action when the text is clicked", function() {
+      TestUtils.Simulate.click(node, { target: node });
+
+      sinon.assert.notCalled(dispatcher.dispatch);
+    });
   });
 
   describe("StandaloneRoomHeader", function() {

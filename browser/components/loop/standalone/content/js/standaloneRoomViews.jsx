@@ -14,6 +14,50 @@ loop.standaloneRoomViews = (function(mozL10n) {
   var sharedUtils = loop.shared.utils;
   var sharedViews = loop.shared.views;
 
+  var ToSView = React.createClass({
+    propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
+    },
+
+    _getContent: function() {
+      // We use this technique of static markup as it means we get
+      // just one overall string for L10n to define the structure of
+      // the whole item.
+      return mozL10n.get("legal_text_and_links", {
+        "clientShortname": mozL10n.get("clientShortname2"),
+        "terms_of_use_url": React.renderToStaticMarkup(
+          <a href={loop.config.legalWebsiteUrl} rel="noreferrer" target="_blank">
+            {mozL10n.get("terms_of_use_link_text")}
+          </a>
+        ),
+        "privacy_notice_url": React.renderToStaticMarkup(
+          <a href={loop.config.privacyWebsiteUrl} rel="noreferrer" target="_blank">
+            {mozL10n.get("privacy_notice_link_text")}
+          </a>
+        )
+      });
+    },
+
+    recordClick: function(event) {
+      // Check for valid href, as this is clicking on the paragraph -
+      // so the user may be clicking on the text rather than the link.
+      if (event.target && event.target.href) {
+        this.props.dispatcher.dispatch(new sharedActions.RecordClick({
+          linkInfo: event.target.href
+        }));
+      }
+    },
+
+    render: function() {
+      return (
+        <p
+          className="terms-service"
+          dangerouslySetInnerHTML={{__html: this._getContent()}}
+          onClick={this.recordClick}></p>
+      );
+    }
+  });
+
   /**
    * Handles display of failures, determining the correct messages and
    * displaying the retry button at appropriate times.
@@ -306,41 +350,12 @@ loop.standaloneRoomViews = (function(mozL10n) {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
     },
 
-    _getContent: function() {
-      // We use this technique of static markup as it means we get
-      // just one overall string for L10n to define the structure of
-      // the whole item.
-      return mozL10n.get("legal_text_and_links", {
-        "clientShortname": mozL10n.get("clientShortname2"),
-        "terms_of_use_url": React.renderToStaticMarkup(
-          <a href={loop.config.legalWebsiteUrl} rel="noreferrer" target="_blank">
-            {mozL10n.get("terms_of_use_link_text")}
-          </a>
-        ),
-        "privacy_notice_url": React.renderToStaticMarkup(
-          <a href={loop.config.privacyWebsiteUrl} rel="noreferrer" target="_blank">
-            {mozL10n.get("privacy_notice_link_text")}
-          </a>
-        )
-      });
-    },
-
-    recordClick: function(event) {
-      // Check for valid href, as this is clicking on the paragraph -
-      // so the user may be clicking on the text rather than the link.
-      if (event.target && event.target.href) {
-        this.props.dispatcher.dispatch(new sharedActions.RecordClick({
-          linkInfo: event.target.href
-        }));
-      }
-    },
-
     render: function() {
       return (
         <footer className="rooms-footer">
           <div className="footer-logo" />
-          <p dangerouslySetInnerHTML={{__html: this._getContent()}}
-             onClick={this.recordClick}></p>
+          <ToSView
+            dispatcher={this.props.dispatcher} />
         </footer>
       );
     }
@@ -601,6 +616,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
     StandaloneRoomFooter: StandaloneRoomFooter,
     StandaloneRoomHeader: StandaloneRoomHeader,
     StandaloneRoomInfoArea: StandaloneRoomInfoArea,
-    StandaloneRoomView: StandaloneRoomView
+    StandaloneRoomView: StandaloneRoomView,
+    ToSView: ToSView
   };
 })(navigator.mozL10n);
