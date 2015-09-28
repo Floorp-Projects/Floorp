@@ -4,7 +4,7 @@
 
 "use strict";
 
-const URI = "chrome://mochitests/content/browser/devtools/client/sourceeditor/test/codemirror.html";
+const URI = "chrome://mochitests/content/browser/devtools/client/sourceeditor/test/codemirror/codemirror.html";
 loadHelperScript("helper_codemirror_runner.js");
 
 function test() {

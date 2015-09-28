@@ -6,6 +6,9 @@
  */
 
 function* spawnTest() {
+  // This test seems to take a long time to cleanup on Ubuntu VMs.
+  requestLongerTimeout(2);
+
   let { target, panel } = yield initPerformance(SIMPLE_URL);
   let { $, $$, EVENTS, PerformanceController, OverviewView, WaterfallView, DetailsView } = panel.panelWin;
   let { WATERFALL_MARKER_SIDEBAR_SAFE_BOUNDS } = require("devtools/client/performance/modules/widgets/marker-view");

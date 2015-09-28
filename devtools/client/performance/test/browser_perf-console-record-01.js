@@ -22,7 +22,7 @@ function* spawnTest() {
   yield profileEnd;
 
   yield gDevTools.showToolbox(target, "performance");
-  let panel = toolbox.getCurrentPanel();
+  let panel = yield toolbox.getCurrentPanel().open();
   let { panelWin: { PerformanceController, RecordingsView }} = panel;
 
   let recordings = PerformanceController.getRecordings();

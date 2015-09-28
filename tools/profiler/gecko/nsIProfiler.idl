@@ -2,7 +2,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 #include "nsISupports.idl"
 
 %{C++
@@ -12,9 +12,10 @@ class nsCString;
 
 [ref] native StringArrayRef(const nsTArray<nsCString>);
 
-[scriptable, uuid(921e1223-b1ea-4906-bb26-a846e6b6835b)]
+[scriptable, uuid(ff398a14-df1c-4966-9ab2-772ea6a6da6c)]
 interface nsIProfiler : nsISupports
 {
+  boolean CanProfile();
   void StartProfiler(in uint32_t aEntries, in double aInterval,
                       [array, size_is(aFeatureCount)] in string aFeatures,
                       in uint32_t aFeatureCount,
