@@ -13,6 +13,7 @@ DIRS += [
 DevToolsModules(
     'converter-child.js',
     'converter-observer.js',
+    'converter-sniffer.js',
     'json-viewer.js',
     'main.js',
     'utils.js',
