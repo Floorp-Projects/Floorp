@@ -209,9 +209,17 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
     }
 
     case nsIContentPolicy::TYPE_WEBSOCKET:
-    case nsIContentPolicy::TYPE_CSP_REPORT:
-    case nsIContentPolicy::TYPE_XSLT: {
+    case nsIContentPolicy::TYPE_CSP_REPORT: {
       MOZ_ASSERT(false, "contentPolicyType not supported yet");
+      break;
+    }
+
+    case nsIContentPolicy::TYPE_XSLT: {
+      mimeTypeGuess = NS_LITERAL_CSTRING("application/xml");
+      requestingContext = aLoadInfo->LoadingNode();
+      MOZ_ASSERT(!requestingContext ||
+                 requestingContext->NodeType() == nsIDOMNode::DOCUMENT_NODE,
+                 "type_xslt requires requestingContext of type Document");
       break;
     }
 
