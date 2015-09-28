@@ -6,16 +6,24 @@
  * This file includes all the deprecated mozRTC prefixed interfaces.
  *
  * The declaration of each should match the declaration of the real, unprefixed
- * interface.
+ * interface.  These aliases will be removed at some point (Bug 1155923).
  */
 
-[NoInterfaceObject]
-interface WebrtcDeprecated
-{
-  [Deprecated="WebrtcDeprecatedPrefix", Pref="media.peerconnection.enabled"]
-  readonly attribute object mozRTCIceCandidate;
-  [Deprecated="WebrtcDeprecatedPrefix", Pref="media.peerconnection.enabled"]
-  readonly attribute object mozRTCPeerConnection;
-  [Deprecated="WebrtcDeprecatedPrefix", Pref="media.peerconnection.enabled"]
-  readonly attribute object mozRTCSessionDescription;
-};
+[Deprecated="WebrtcDeprecatedPrefix",
+ Pref="media.peerconnection.enabled",
+ JSImplementation="@mozilla.org/dom/rtcicecandidate;1",
+ Constructor(optional RTCIceCandidateInit candidateInitDict)]
+interface mozRTCIceCandidate : RTCIceCandidate {};
+
+[Deprecated="WebrtcDeprecatedPrefix",
+ Pref="media.peerconnection.enabled",
+ JSImplementation="@mozilla.org/dom/peerconnection;1",
+ Constructor (optional RTCConfiguration configuration,
+              optional object? constraints)]
+interface mozRTCPeerConnection : RTCPeerConnection {};
+
+[Deprecated="WebrtcDeprecatedPrefix",
+ Pref="media.peerconnection.enabled",
+ JSImplementation="@mozilla.org/dom/rtcsessiondescription;1",
+ Constructor(optional RTCSessionDescriptionInit descriptionInitDict)]
+interface mozRTCSessionDescription : RTCSessionDescription {};
