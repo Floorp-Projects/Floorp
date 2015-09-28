@@ -239,11 +239,7 @@ public:
   nsDisplayCanvasBackgroundImage(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                                  uint32_t aLayer, const nsStyleBackground* aBg)
     : nsDisplayBackgroundImage(aBuilder, aFrame, aLayer, aBg)
-  {
-    if (ShouldFixToViewport(aBuilder)) {
-      mAnimatedGeometryRoot = nsLayoutUtils::GetAnimatedGeometryRootFor(this, aBuilder);
-    }
-  }
+  {}
 
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) override;
 
