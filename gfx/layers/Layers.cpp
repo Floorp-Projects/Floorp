@@ -1705,6 +1705,11 @@ Layer::Dump(std::stringstream& aStream, const char* aPrefix, bool aDumpHtml)
 
   if (aDumpHtml) {
     aStream << "</a>";
+#ifdef MOZ_DUMP_PAINTING
+    if (dumpClientTexture) {
+      aStream << nsPrintfCString("<br><img id=\"%s\">\n", layerId.BeginReading()).get();
+    }
+#endif
   }
 
   if (Layer* mask = GetMaskLayer()) {
