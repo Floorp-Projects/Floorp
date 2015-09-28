@@ -6,6 +6,10 @@
 #ifndef MOZILLA_GFX_DRAWCOMMAND_H_
 #define MOZILLA_GFX_DRAWCOMMAND_H_
 
+
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 #include "2D.h"
 #include "Filters.h"
 #include <vector>
@@ -31,7 +35,8 @@ enum class CommandType : int8_t {
   PUSHCLIP,
   PUSHCLIPRECT,
   POPCLIP,
-  SETTRANSFORM
+  SETTRANSFORM,
+  FLUSH
 };
 
 class DrawingCommand
@@ -39,7 +44,9 @@ class DrawingCommand
 public:
   virtual ~DrawingCommand() {}
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix& aTransform) = 0;
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aTransform = nullptr) const = 0;
+
+  virtual bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform) const { return false; }
 
 protected:
   explicit DrawingCommand(CommandType aType)
@@ -130,7 +137,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->DrawSurface(mSurface, mDest, mSource, mSurfOptions, mOptions);
   }
@@ -154,7 +161,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->DrawFilter(mFilter, mSourceRect, mDestPoint, mOptions);
   }
@@ -175,7 +182,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->ClearRect(mRect);
   }
@@ -197,11 +204,13 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix& aTransform)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aTransform) const
   {
-    MOZ_ASSERT(!aTransform.HasNonIntegerTranslation());
+    MOZ_ASSERT(!aTransform || !aTransform->HasNonIntegerTranslation());
     Point dest(Float(mDestination.x), Float(mDestination.y));
-    dest = aTransform * dest;
+    if (aTransform) {
+      dest = (*aTransform) * dest;
+    }
     aDT->CopySurface(mSurface, mSourceRect, IntPoint(uint32_t(dest.x), uint32_t(dest.y)));
   }
 
@@ -224,9 +233,15 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->FillRect(mRect, mPattern, mOptions);
+  }
+
+  bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform) const
+  {
+    aDeviceRect = aTransform.TransformBounds(mRect);
+    return true;
   }
 
 private:
@@ -248,9 +263,14 @@ public:
     , mStrokeOptions(aStrokeOptions)
     , mOptions(aOptions)
   {
+    if (aStrokeOptions.mDashLength) {
+      mDashes.resize(aStrokeOptions.mDashLength);
+      mStrokeOptions.mDashPattern = &mDashes.front();
+      memcpy(&mDashes.front(), aStrokeOptions.mDashPattern, mStrokeOptions.mDashLength * sizeof(Float));
+    }
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->StrokeRect(mRect, mPattern, mStrokeOptions, mOptions);
   }
@@ -260,6 +280,7 @@ private:
   StoredPattern mPattern;
   StrokeOptions mStrokeOptions;
   DrawOptions mOptions;
+  std::vector<Float> mDashes;
 };
 
 class StrokeLineCommand : public DrawingCommand
@@ -279,7 +300,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->StrokeLine(mStart, mEnd, mPattern, mStrokeOptions, mOptions);
   }
@@ -305,9 +326,15 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->Fill(mPath, mPattern, mOptions);
+  }
+
+  bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform) const
+  {
+    aDeviceRect = mPath->GetBounds(aTransform);
+    return true;
   }
 
 private:
@@ -315,6 +342,41 @@ private:
   StoredPattern mPattern;
   DrawOptions mOptions;
 };
+
+#ifndef M_SQRT2
+#define M_SQRT2 1.41421356237309504880
+#endif
+
+#ifndef M_SQRT1_2
+#define M_SQRT1_2 0.707106781186547524400844362104849039
+#endif
+
+// The logic for this comes from _cairo_stroke_style_max_distance_from_path
+static Rect
+PathExtentsToMaxStrokeExtents(const StrokeOptions &aStrokeOptions,
+                              const Rect &aRect,
+                              const Matrix &aTransform)
+{
+  double styleExpansionFactor = 0.5f;
+
+  if (aStrokeOptions.mLineCap == CapStyle::SQUARE) {
+    styleExpansionFactor = M_SQRT1_2;
+  }
+
+  if (aStrokeOptions.mLineJoin == JoinStyle::MITER &&
+      styleExpansionFactor < M_SQRT2 * aStrokeOptions.mMiterLimit) {
+    styleExpansionFactor = M_SQRT2 * aStrokeOptions.mMiterLimit;
+  }
+
+  styleExpansionFactor *= aStrokeOptions.mLineWidth;
+
+  double dx = styleExpansionFactor * hypot(aTransform._11, aTransform._21);
+  double dy = styleExpansionFactor * hypot(aTransform._22, aTransform._12);
+
+  Rect result = aRect;
+  result.Inflate(dx, dy);
+  return result;
+}
 
 class StrokeCommand : public DrawingCommand
 {
@@ -329,11 +391,22 @@ public:
     , mStrokeOptions(aStrokeOptions)
     , mOptions(aOptions)
   {
+    if (aStrokeOptions.mDashLength) {
+      mDashes.resize(aStrokeOptions.mDashLength);
+      mStrokeOptions.mDashPattern = &mDashes.front();
+      memcpy(&mDashes.front(), aStrokeOptions.mDashPattern, mStrokeOptions.mDashLength * sizeof(Float));
+    }
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->Stroke(mPath, mPattern, mStrokeOptions, mOptions);
+  }
+
+  bool GetAffectedRect(Rect& aDeviceRect, const Matrix& aTransform) const
+  {
+    aDeviceRect = PathExtentsToMaxStrokeExtents(mStrokeOptions, mPath->GetBounds(aTransform), aTransform);
+    return true;
   }
 
 private:
@@ -341,6 +414,7 @@ private:
   StoredPattern mPattern;
   StrokeOptions mStrokeOptions;
   DrawOptions mOptions;
+  std::vector<Float> mDashes;
 };
 
 class FillGlyphsCommand : public DrawingCommand
@@ -361,7 +435,7 @@ public:
     memcpy(&mGlyphs.front(), aBuffer.mGlyphs, sizeof(Glyph) * aBuffer.mNumGlyphs);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     GlyphBuffer buf;
     buf.mNumGlyphs = mGlyphs.size();
@@ -390,7 +464,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->Mask(mSource, mMask, mOptions);
   }
@@ -416,7 +490,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->MaskSurface(mSource, mMask, mOffset, mOptions);
   }
@@ -437,7 +511,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->PushClip(mPath);
   }
@@ -455,7 +529,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->PushClipRect(mRect);
   }
@@ -472,7 +546,7 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix&)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
   {
     aDT->PopClip();
   }
@@ -487,15 +561,31 @@ public:
   {
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix& aMatrix)
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix* aMatrix) const
   {
-    Matrix transform = mTransform;
-    transform *= aMatrix;
-    aDT->SetTransform(transform);
+    if (aMatrix) {
+      aDT->SetTransform(mTransform * (*aMatrix));
+    } else {
+      aDT->SetTransform(mTransform);
+    }
   }
 
 private:
   Matrix mTransform;
+};
+
+class FlushCommand : public DrawingCommand
+{
+public:
+  explicit FlushCommand()
+    : DrawingCommand(CommandType::FLUSH)
+  {
+  }
+
+  virtual void ExecuteOnDT(DrawTarget* aDT, const Matrix*) const
+  {
+    aDT->Flush();
+  }
 };
 
 } // namespace gfx

@@ -6,22 +6,22 @@
 Components.utils.import("resource://gre/modules/PlacesDBUtils.jsm");
 
 var histograms = {
-  PLACES_PAGES_COUNT: function (val) do_check_eq(val, 1),
-  PLACES_BOOKMARKS_COUNT: function (val) do_check_eq(val, 1),
-  PLACES_TAGS_COUNT: function (val) do_check_eq(val, 1),
-  PLACES_KEYWORDS_COUNT: function (val) do_check_eq(val, 1),
-  PLACES_SORTED_BOOKMARKS_PERC: function (val) do_check_eq(val, 100),
-  PLACES_TAGGED_BOOKMARKS_PERC: function (val) do_check_eq(val, 100),
-  PLACES_DATABASE_FILESIZE_MB: function (val) do_check_true(val > 0),
-  PLACES_DATABASE_PAGESIZE_B: function (val) do_check_eq(val, 32768),
-  PLACES_DATABASE_SIZE_PER_PAGE_B: function (val) do_check_true(val > 0),
-  PLACES_EXPIRATION_STEPS_TO_CLEAN2: function (val) do_check_true(val > 1),
-  //PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS:  function (val) do_check_true(val > 1),
-  PLACES_IDLE_FRECENCY_DECAY_TIME_MS: function (val) do_check_true(val > 0),
-  PLACES_IDLE_MAINTENANCE_TIME_MS: function (val) do_check_true(val > 0),
-  PLACES_ANNOS_BOOKMARKS_COUNT: function (val) do_check_eq(val, 1),
-  PLACES_ANNOS_PAGES_COUNT: function (val) do_check_eq(val, 1),
-  PLACES_MAINTENANCE_DAYSFROMLAST: function (val) do_check_true(val >= 0),
+  PLACES_PAGES_COUNT: val => do_check_eq(val, 1),
+  PLACES_BOOKMARKS_COUNT: val => do_check_eq(val, 1),
+  PLACES_TAGS_COUNT: val => do_check_eq(val, 1),
+  PLACES_KEYWORDS_COUNT: val => do_check_eq(val, 1),
+  PLACES_SORTED_BOOKMARKS_PERC: val => do_check_eq(val, 100),
+  PLACES_TAGGED_BOOKMARKS_PERC: val => do_check_eq(val, 100),
+  PLACES_DATABASE_FILESIZE_MB: val => do_check_true(val > 0),
+  PLACES_DATABASE_PAGESIZE_B: val => do_check_eq(val, 32768),
+  PLACES_DATABASE_SIZE_PER_PAGE_B: val => do_check_true(val > 0),
+  PLACES_EXPIRATION_STEPS_TO_CLEAN2: val => do_check_true(val > 1),
+  //PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS:  val => do_check_true(val > 1),
+  PLACES_IDLE_FRECENCY_DECAY_TIME_MS: val => do_check_true(val > 0),
+  PLACES_IDLE_MAINTENANCE_TIME_MS: val => do_check_true(val > 0),
+  PLACES_ANNOS_BOOKMARKS_COUNT: val => do_check_eq(val, 1),
+  PLACES_ANNOS_PAGES_COUNT: val => do_check_eq(val, 1),
+  PLACES_MAINTENANCE_DAYSFROMLAST: val => do_check_true(val >= 0),
 }
 
 function run_test()
@@ -97,7 +97,7 @@ add_task(function test_execute()
     onSearchComplete: function() {},
     setSelectedIndex: function() {},
     get searchCount() { return this.searches.length; },
-    getSearchAt: function(aIndex) this.searches[aIndex],
+    getSearchAt: function(aIndex) { return this.searches[aIndex]; },
     QueryInterface: XPCOMUtils.generateQI([
       Ci.nsIAutoCompleteInput,
       Ci.nsIAutoCompletePopup,
@@ -121,7 +121,7 @@ add_task(function test_execute()
     let validate = histograms[histogramId];
     let snapshot = Services.telemetry.getHistogramById(histogramId).snapshot();
     validate(snapshot.sum);
-    do_check_true(snapshot.counts.reduce(function(a, b) a + b) > 0);
+    do_check_true(snapshot.counts.reduce((a, b) => a + b) > 0);
   }
 });
 

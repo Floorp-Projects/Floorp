@@ -23,9 +23,9 @@ var gTests = [
   ["1: plain search",
    "url", [0]],
   ["2: search disabled",
-   "url", [], function() setSearch(0)],
+   "url", [], () => setSearch(0)],
   ["3: resume normal search",
-   "url", [0], function() setSearch(1)],
+   "url", [0], () => setSearch(1)],
 ];
 
 function setSearch(aSearch) {

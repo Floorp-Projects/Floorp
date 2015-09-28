@@ -568,7 +568,7 @@ function* task_cleanDatabase(aCallback) {
  *        The query's tagsAreNot property will be set to this
  */
 function checkQueryURI(aTags, aTagsAreNot) {
-  var pairs = (aTags || []).sort().map(function (t) QUERY_KEY_TAG + "=" + encodeTag(t));
+  var pairs = (aTags || []).sort().map(t => QUERY_KEY_TAG + "=" + encodeTag(t));
   if (aTagsAreNot)
     pairs.push(QUERY_KEY_NOT_TAGS + "=1");
   var expURI = "place:" + pairs.join("&");
@@ -627,7 +627,7 @@ function* task_doWithVisit(aTags, aCallback) {
 function encodeTag(aTag) {
   return encodeURIComponent(aTag).
          replace(/[-_.!~*'()]/g, //'
-                 function (s) "%" + s.charCodeAt(0).toString(16));
+                 s => "%" + s.charCodeAt(0).toString(16));
 }
 
 /**
@@ -735,8 +735,8 @@ function setsAreEqual(aArr1, aArr2, aIsOrdered) {
     }
   }
   else {
-    aArr1.forEach(function (u) do_check_true(aArr2.indexOf(u) >= 0));
-    aArr2.forEach(function (u) do_check_true(aArr1.indexOf(u) >= 0));
+    aArr1.forEach(u => do_check_true(aArr2.indexOf(u) >= 0));
+    aArr2.forEach(u => do_check_true(aArr1.indexOf(u) >= 0));
   }
 }
 

@@ -102,8 +102,8 @@ AutoCompleteInput.prototype = {
   onSearchBegin: function () {},
   onSearchComplete: function () {},
 
-  onTextEntered: function() false,
-  onTextReverted: function() false,
+  onTextEntered: () => false,
+  onTextReverted: () => false,
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput])
 }

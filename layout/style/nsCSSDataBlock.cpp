@@ -262,6 +262,15 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
             nsCSSValue* target = aRuleData->ValueFor(iProp);
             if (target->GetUnit() == eCSSUnit_Null) {
                 const nsCSSValue *val = ValueAtIndex(i);
+                // In order for variable resolution to have the right information
+                // about the stylesheet level of a value, that level needs to be
+                // stored on the token stream. We can't do that at creation time
+                // because the CSS parser (which creates the object) has no idea
+                // about the stylesheet level, so we do it here instead, where
+                // the rule walking will have just updated aRuleData.
+                if (val->GetUnit() == eCSSUnit_TokenStream) {
+                  val->GetTokenStreamValue()->mLevel = aRuleData->mLevel;
+                }
                 MapSinglePropertyInto(iProp, val, target, aRuleData);
             }
         }

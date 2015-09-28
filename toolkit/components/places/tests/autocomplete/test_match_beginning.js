@@ -26,7 +26,7 @@ var gTests = [
   // Tests after this one will match at the beginning
   ["0: Match at the beginning of titles",
    "a", [0],
-   function() setBehavior(3)],
+   () => setBehavior(3)],
   ["1: Match at the beginning of titles",
    "b", [1]],
   ["2: Match at the beginning of urls",
@@ -37,7 +37,7 @@ var gTests = [
   // Tests after this one will match against word boundaries and anywhere
   ["4: Sanity check that matching anywhere finds more",
    "a", [0,1],
-   function() setBehavior(1)],
+   () => setBehavior(1)],
 ];
 
 function setBehavior(aType) {

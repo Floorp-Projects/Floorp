@@ -313,7 +313,7 @@ function SignonMatchesFilter(aSignon, aFilterValue) {
 
 function FilterPasswords(aFilterValue, view) {
   aFilterValue = aFilterValue.toLowerCase();
-  return signons.filter(function (s) SignonMatchesFilter(s, aFilterValue));
+  return signons.filter(s => SignonMatchesFilter(s, aFilterValue));
 }
 
 function SignonSaveState() {

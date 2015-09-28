@@ -59,11 +59,11 @@ build() {
 
   if [ -f $folder/build.sh ]; then
     shift
-    $folder/build.sh -t $tag $*
+    $folder/build.sh -t $tag $* || exit 1
   else
     # use --no-cache so that we always get the latest updates from yum
     # and use the latest version of system-setup.sh
-    docker build --no-cache -t $tag $folder
+    docker build --no-cache -t $tag $folder || exit 1
   fi
 
   echo "Success built $folder and tagged with $tag"

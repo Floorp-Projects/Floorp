@@ -95,7 +95,7 @@ function cartProd(aSequences, aCallback)
 
   // For each sequence in aSequences, we maintain a pointer (an array index,
   // really) to the element we're currently enumerating in that sequence
-  var seqEltPtrs = aSequences.map(function (i) 0);
+  var seqEltPtrs = aSequences.map(i => 0);
 
   var numProds = 0;
   var done = false;
@@ -396,7 +396,7 @@ add_task(function test_containersQueries_sorting()
   var visitCount = 0;
   var dayOffset = 0;
   var visits = [];
-  pages.forEach(function (aPageUrl) visits.push(
+  pages.forEach(aPageUrl => visits.push(
     { isVisit: true,
       isBookmark: true,
       transType: Ci.nsINavHistoryService.TRANSITION_TYPED,
