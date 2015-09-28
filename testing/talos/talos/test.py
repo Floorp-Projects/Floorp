@@ -1,5 +1,5 @@
 import os
-from talos import filter
+from talos import filter, utils
 
 """
 test definitions for Talos
@@ -257,6 +257,10 @@ class tps(PageloaderTest):
                                                      'tests',
                                                      'tp5o.html'),
         'addon.test.tabswitch.webserver': '${webserver}',
+        # limit the page set number for winxp as we have issues.
+        # see https://bugzilla.mozilla.org/show_bug.cgi?id=1195288
+        'addon.test.tabswitch.maxurls':
+            45 if utils.PLATFORM_TYPE == 'win_' else -1,
     }
 
 
