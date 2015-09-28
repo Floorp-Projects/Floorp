@@ -839,15 +839,12 @@ BrowserElementParent.prototype = {
         debug('Malformed referrer -- ' + e);
       }
 
-      // TODO Bug 1165466: use originAttributes from nsILoadContext.
-      let attrs = {appId: this._frameLoader.loadContext.appId,
-                   inBrowser: this._frameLoader.loadContext.isInBrowserElement};
       // This simply returns null if there is no principal available
       // for the requested uri. This is an acceptable fallback when
       // calling newChannelFromURI2.
       principal =
         Services.scriptSecurityManager.createCodebasePrincipal(
-          referrer, attrs);
+          referrer, this._frameLoader.loadContext.originAttributes);
     }
 
     debug('Using principal? ' + !!principal);

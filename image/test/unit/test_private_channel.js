@@ -46,7 +46,8 @@ NotificationCallbacks.prototype = {
     if (iid.equals(Ci.nsILoadContext))
       return this;
     throw Cr.NS_ERROR_NO_INTERFACE;
-  }
+  },
+  originAttributes: {}
 };
 
 var gImgPath = 'http://localhost:' + server.identity.primaryPort + '/image.png';

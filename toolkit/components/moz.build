@@ -103,7 +103,8 @@ if CONFIG['NIGHTLY_BUILD']: # Bug 1136927 - Performance Monitoring is not ready 
 
 DIRS += ['build']
 
-EXTRA_COMPONENTS += [
-    'nsDefaultCLH.js',
-    'nsDefaultCLH.manifest',
-]
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
+    EXTRA_COMPONENTS += [
+        'nsDefaultCLH.js',
+        'nsDefaultCLH.manifest',
+    ]

@@ -22,6 +22,7 @@ Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/TelemetrySend.jsm", this);
 Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 const Utils = TelemetryUtils;
 
@@ -1305,12 +1306,13 @@ var Impl = {
 
   getSessionPayload: function getSessionPayload(reason, clearSubsession) {
     this._log.trace("getSessionPayload - reason: " + reason + ", clearSubsession: " + clearSubsession);
-#if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
-    clearSubsession = false;
-    const isSubsession = false;
-#else
-    const isSubsession = !this._isClassicReason(reason);
-#endif
+
+    const isMobile = ["gonk", "android"].indexOf(AppConstants.platform) !== -1;
+    const isSubsession = isMobile ? false : !this._isClassicReason(reason);
+
+    if (isMobile) {
+      clearSubsession = false;
+    }
 
     let measurements =
       this.getSimpleMeasurements(reason == REASON_SAVED_SESSION, isSubsession, clearSubsession);
@@ -1415,9 +1417,9 @@ var Impl = {
                                       () => this._getState());
 
     Services.obs.addObserver(this, "sessionstore-windows-restored", false);
-#ifdef MOZ_WIDGET_ANDROID
-    Services.obs.addObserver(this, "application-background", false);
-#endif
+    if (AppConstants.platform === "android") {
+      Services.obs.addObserver(this, "application-background", false);
+    }
     Services.obs.addObserver(this, "xul-window-visible", false);
     this._hasWindowRestoredObserver = true;
     this._hasXulWindowVisibleObserver = true;
@@ -1627,9 +1629,9 @@ var Impl = {
       Services.obs.removeObserver(this, "xul-window-visible");
       this._hasXulWindowVisibleObserver = false;
     }
-#ifdef MOZ_WIDGET_ANDROID
-    Services.obs.removeObserver(this, "application-background", false);
-#endif
+    if (AppConstants.platform === "android") {
+      Services.obs.removeObserver(this, "application-background", false);
+    }
   },
 
   getPayload: function getPayload(reason, clearSubsession) {
@@ -1730,23 +1732,25 @@ var Impl = {
       }).bind(this), Ci.nsIThread.DISPATCH_NORMAL);
       break;
 
-#ifdef MOZ_WIDGET_ANDROID
-    // On Android, we can get killed without warning once we are in the background,
-    // but we may also submit data and/or come back into the foreground without getting
-    // killed. To deal with this, we save the current session data to file when we are
-    // put into the background. This handles the following post-backgrounding scenarios:
-    // 1) We are killed immediately. In this case the current session data (which we
-    //    save to a file) will be loaded and submitted on a future run.
-    // 2) We submit the data while in the background, and then are killed. In this case
-    //    the file that we saved will be deleted by the usual process in
-    //    finishPingRequest after it is submitted.
-    // 3) We submit the data, and then come back into the foreground. Same as case (2).
-    // 4) We do not submit the data, but come back into the foreground. In this case
-    //    we have the option of either deleting the file that we saved (since we will either
-    //    send the live data while in the foreground, or create the file again on the next
-    //    backgrounding), or not (in which case we will delete it on submit, or overwrite
-    //    it on the next backgrounding). Not deleting it is faster, so that's what we do.
     case "application-background":
+      if (AppConstants.platform !== "android") {
+        break;
+      }
+      // On Android, we can get killed without warning once we are in the background,
+      // but we may also submit data and/or come back into the foreground without getting
+      // killed. To deal with this, we save the current session data to file when we are
+      // put into the background. This handles the following post-backgrounding scenarios:
+      // 1) We are killed immediately. In this case the current session data (which we
+      //    save to a file) will be loaded and submitted on a future run.
+      // 2) We submit the data while in the background, and then are killed. In this case
+      //    the file that we saved will be deleted by the usual process in
+      //    finishPingRequest after it is submitted.
+      // 3) We submit the data, and then come back into the foreground. Same as case (2).
+      // 4) We do not submit the data, but come back into the foreground. In this case
+      //    we have the option of either deleting the file that we saved (since we will either
+      //    send the live data while in the foreground, or create the file again on the next
+      //    backgrounding), or not (in which case we will delete it on submit, or overwrite
+      //    it on the next backgrounding). Not deleting it is faster, so that's what we do.
       if (Telemetry.isOfficialTelemetry) {
         let payload = this.getSessionPayload(REASON_SAVED_SESSION, false);
         let options = {
@@ -1757,7 +1761,6 @@ var Impl = {
         TelemetryController.addPendingPing(getPingType(payload), payload, options);
       }
       break;
-#endif
     }
   },
 
