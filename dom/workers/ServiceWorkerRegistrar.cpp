@@ -332,9 +332,8 @@ ServiceWorkerRegistrar::ReadData()
     }
 
     GET_LINE(line);
-    nsCString signedPkg = NS_ConvertUTF16toUTF8(attrs.mSignedPkg);
     entry->principal() =
-      mozilla::ipc::ContentPrincipalInfo(attrs.mAppId, attrs.mInBrowser, line, signedPkg);
+      mozilla::ipc::ContentPrincipalInfo(attrs, line);
 
     GET_LINE(entry->scope());
     GET_LINE(entry->scriptSpec());
@@ -549,9 +548,8 @@ ServiceWorkerRegistrar::WriteData()
     const mozilla::ipc::ContentPrincipalInfo& cInfo =
       info.get_ContentPrincipalInfo();
 
-    OriginAttributes attrs(cInfo.appId(), cInfo.isInBrowserElement());
     nsAutoCString suffix;
-    attrs.CreateSuffix(suffix);
+    cInfo.attrs().CreateSuffix(suffix);
 
     buffer.Truncate();
     buffer.Append(suffix.get());

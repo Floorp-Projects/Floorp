@@ -44,6 +44,7 @@ UNIFIED_SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
+    '/docshell/base',
     '/dom/base',
     '/js/xpconnect/src',
 ]
