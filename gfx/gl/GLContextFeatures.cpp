@@ -575,8 +575,10 @@ static const FeatureInfo sFeatureInfoArr[] = {
         "sync",
         GLVersion::GL3_2,
         GLESVersion::ES3,
-        GLContext::ARB_sync,
+        GLContext::Extension_None,
         {
+            GLContext::ARB_sync,
+            GLContext::APPLE_sync,
             GLContext::Extensions_End
         }
     },
