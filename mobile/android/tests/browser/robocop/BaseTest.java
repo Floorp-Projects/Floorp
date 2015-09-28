@@ -959,6 +959,7 @@ abstract class BaseTest extends BaseRobocopTest {
      * Set the preference and wait for it to change before proceeding with the test.
      */
     public void setPreferenceAndWaitForChange(final JSONObject jsonPref) {
+        blockForGeckoReady();
         mActions.sendGeckoEvent("Preferences:Set", jsonPref.toString());
 
         // Get the preference name from the json and store it in an array. This array

@@ -32,6 +32,9 @@ const PREF_LOG_LEVEL = "services.common.log.logger.tokenserverclient";
 this.TokenServerClientError = function TokenServerClientError(message) {
   this.name = "TokenServerClientError";
   this.message = message || "Client error.";
+  // Without explicitly setting .stack, all stacks from these errors will point
+  // to the "new Error()" call a few lines down, which isn't helpful.
+  this.stack = Error().stack;
 }
 TokenServerClientError.prototype = new Error();
 TokenServerClientError.prototype.constructor = TokenServerClientError;
@@ -52,6 +55,7 @@ this.TokenServerClientNetworkError =
  function TokenServerClientNetworkError(error) {
   this.name = "TokenServerClientNetworkError";
   this.error = error;
+  this.stack = Error().stack;
 }
 TokenServerClientNetworkError.prototype = new TokenServerClientError();
 TokenServerClientNetworkError.prototype.constructor =
@@ -96,6 +100,7 @@ this.TokenServerClientServerError =
   this.name = "TokenServerClientServerError";
   this.message = message || "Server error.";
   this.cause = cause;
+  this.stack = Error().stack;
 }
 TokenServerClientServerError.prototype = new TokenServerClientError();
 TokenServerClientServerError.prototype.constructor =

@@ -11,6 +11,11 @@ SOURCES += [
     'TestParser.cpp',
 ]
 
+TEST_HARNESS_FILES.gtest += [
+    'test_case_1187067.mp4',
+    'test_case_1200326.mp4',
+]
+
 if CONFIG['MOZ_RUST']:
     UNIFIED_SOURCES += ['TestMP4Rust.cpp',]
     TEST_HARNESS_FILES.gtest += [

@@ -74,7 +74,7 @@ function testGetProviderList(manifests, next) {
   let providers = yield SocialService.getProviderList(next);
   do_check_true(providers.length >= manifests.length);
   for (let i = 0; i < manifests.length; i++) {
-    let providerIdx = providers.map(function (p) p.origin).indexOf(manifests[i].origin);
+    let providerIdx = providers.map(p => p.origin).indexOf(manifests[i].origin);
     let provider = providers[providerIdx];
     do_check_true(!!provider);
     do_check_false(provider.enabled);

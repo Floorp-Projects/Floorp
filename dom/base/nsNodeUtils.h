@@ -97,6 +97,15 @@ public:
                               int32_t aNewIndexInContainer);
 
   /**
+   * Send NativeAnonymousChildList notifications to nsIMutationObservers
+   * @param aContent             Anonymous node that's been added or removed
+   * @param aIsRemove            True if it's a removal, false if an addition
+   * @see nsIMutationObserver::NativeAnonymousChildListChange
+   */
+  static void NativeAnonymousChildListChange(nsIContent* aContent,
+                                             bool aIsRemove);
+
+  /**
    * Send ContentInserted notifications to nsIMutationObservers
    * @param aContainer        Node into which new child was inserted
    * @param aChild            Newly inserted child

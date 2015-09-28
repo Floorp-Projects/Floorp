@@ -28,7 +28,9 @@ AbstractPort.prototype = {
     return "MessagePort(portType='" + this._portType + "', portId="
            + this._portid + (this._closed ? ", closed=true" : "") + ")";
   },
-  _JSONParse: function fw_AbstractPort_JSONParse(data) JSON.parse(data),
+  _JSONParse: function fw_AbstractPort_JSONParse(data) {
+    return JSON.parse(data);
+  },
 
  _postControlMessage: function fw_AbstractPort_postControlMessage(topic, data) {
     let postData = {

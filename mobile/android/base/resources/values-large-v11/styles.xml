@@ -48,14 +48,11 @@
         <item name="drawableTintList">@color/action_bar_menu_item_colors</item>
         <item name="android:scaleType">center</item>
 
-        <!-- layout_width/height doesn't work here, likely because it's
-             an ImageButton, so we use padding instead.
+        <!-- layout_width/height doesn't work here, likely because it's only
+             added programmatically, so we use padding for the width instead.
+             layout_height is set to MATCH_PARENT programmatically in
+             org.mozilla.gecko.toolbar.BrowserToolbarTabletBase.addActionItem(View) -->
 
-             Notes:
-                 * The bookmarks star is larger than the reload button
-                 * The reload button contains whitespace at the top of the image to lower it -->
-        <item name="android:paddingTop">19dp</item>
-        <item name="android:paddingBottom">21dp</item>
         <item name="android:paddingLeft">@dimen/tablet_browser_toolbar_menu_item_padding_horizontal</item>
         <item name="android:paddingRight">@dimen/tablet_browser_toolbar_menu_item_padding_horizontal</item>
     </style>

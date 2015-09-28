@@ -168,6 +168,15 @@ nsNodeUtils::ContentAppended(nsIContent* aContainer,
 }
 
 void
+nsNodeUtils::NativeAnonymousChildListChange(nsIContent* aContent,
+                                            bool aIsRemove)
+{
+  nsIDocument* doc = aContent->OwnerDoc();
+  IMPL_MUTATION_NOTIFICATION(NativeAnonymousChildListChange, aContent,
+                            (doc, aContent, aIsRemove));
+}
+
+void
 nsNodeUtils::ContentInserted(nsINode* aContainer,
                              nsIContent* aChild,
                              int32_t aIndexInContainer)

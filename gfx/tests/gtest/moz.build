@@ -8,11 +8,13 @@ UNIFIED_SOURCES += [
     'gfxSurfaceRefCountTest.cpp',
     # Disabled on suspicion of causing bug 904227
     #'gfxWordCacheTest.cpp',
+    'TestArena.cpp',
     'TestBufferRotation.cpp',
     'TestColorNames.cpp',
     'TestCompositor.cpp',
     'TestGfxPrefs.cpp',
     'TestGfxWidgets.cpp',
+    'TestJobScheduler.cpp',
     'TestLayers.cpp',
     'TestMoz2D.cpp',
     'TestQcms.cpp',

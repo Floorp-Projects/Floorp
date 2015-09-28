@@ -7,7 +7,6 @@
 include('/ipc/chromium/chromium-config.mozbuild')
 SOURCES += [
     'mozEnglishWordUtils.cpp',
-    'mozGenericWordUtils.cpp',
     'mozInlineSpellChecker.cpp',
     'mozInlineSpellWordUtil.cpp',
     'mozPersonalDictionary.cpp',
