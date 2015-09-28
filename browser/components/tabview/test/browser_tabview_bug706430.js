@@ -39,7 +39,7 @@ function test() {
   waitForExplicitFinish();
 
   newWindowWithState(state1, function (win) {
-    registerCleanupFunction(function () win.close());
+    registerCleanupFunction(() => win.close());
 
     showTabView(function () {
       let cw = win.TabView.getContentWindow();

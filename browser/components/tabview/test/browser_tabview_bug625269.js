@@ -7,7 +7,7 @@ function test() {
 }
 
 function onTabViewShown(win) {
-  registerCleanupFunction(function () win.close());
+  registerCleanupFunction(() => win.close());
 
   let contentWindow = win.TabView.getContentWindow();
   let currentGroup = contentWindow.GroupItems.getActiveGroupItem();

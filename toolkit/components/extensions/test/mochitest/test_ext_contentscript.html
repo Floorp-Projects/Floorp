@@ -16,8 +16,6 @@
 add_task(function* test_contentscript()
 {
   let extension = ExtensionTestUtils.loadExtension("content_script");
-  yield extension.startup();
-  info("extension loaded");
 
   let loadingCount = 0;
   let interactiveCount = 0;
@@ -30,6 +28,9 @@ add_task(function* test_contentscript()
   });
 
   let chromeNamespacePromise = extension.awaitMessage("chrome-namespace-ok");
+
+  yield extension.startup();
+  info("extension loaded");
 
   let win = window.open("file_sample.html");
 

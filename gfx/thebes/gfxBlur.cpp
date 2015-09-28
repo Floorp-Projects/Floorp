@@ -167,7 +167,7 @@ struct BlurCacheKey : public PLDHashEntryHdr {
 
   IntSize mMinSize;
   IntSize mBlurRadius;
-  gfxRGBA mShadowColor;
+  Color mShadowColor;
   BackendType mBackend;
   RectCornerRadii mCornerRadii;
   bool mIsInset;
@@ -178,7 +178,7 @@ struct BlurCacheKey : public PLDHashEntryHdr {
   IntSize mInnerMinSize;
 
   BlurCacheKey(IntSize aMinSize, IntSize aBlurRadius,
-               RectCornerRadii* aCornerRadii, gfxRGBA aShadowColor,
+               RectCornerRadii* aCornerRadii, const Color& aShadowColor,
                BackendType aBackendType)
     : BlurCacheKey(aMinSize, IntSize(0, 0),
                    aBlurRadius, IntSize(0, 0),
@@ -200,8 +200,8 @@ struct BlurCacheKey : public PLDHashEntryHdr {
 
   explicit BlurCacheKey(IntSize aOuterMinSize, IntSize aInnerMinSize,
                         IntSize aBlurRadius, IntSize aSpreadRadius,
-                        const RectCornerRadii* aCornerRadii, gfxRGBA aShadowColor,
-                        bool aIsInset,
+                        const RectCornerRadii* aCornerRadii,
+                        const Color& aShadowColor, bool aIsInset,
                         bool aHasBorderRadius, BackendType aBackendType)
     : mMinSize(aOuterMinSize)
     , mBlurRadius(aBlurRadius)
@@ -221,10 +221,14 @@ struct BlurCacheKey : public PLDHashEntryHdr {
     hash = AddToHash(hash, aKey->mMinSize.width, aKey->mMinSize.height);
     hash = AddToHash(hash, aKey->mBlurRadius.width, aKey->mBlurRadius.height);
 
-    hash = AddToHash(hash, HashBytes(&aKey->mShadowColor.r, sizeof(gfxFloat)));
-    hash = AddToHash(hash, HashBytes(&aKey->mShadowColor.g, sizeof(gfxFloat)));
-    hash = AddToHash(hash, HashBytes(&aKey->mShadowColor.b, sizeof(gfxFloat)));
-    hash = AddToHash(hash, HashBytes(&aKey->mShadowColor.a, sizeof(gfxFloat)));
+    hash = AddToHash(hash, HashBytes(&aKey->mShadowColor.r,
+                                     sizeof(aKey->mShadowColor.r)));
+    hash = AddToHash(hash, HashBytes(&aKey->mShadowColor.g,
+                                     sizeof(aKey->mShadowColor.g)));
+    hash = AddToHash(hash, HashBytes(&aKey->mShadowColor.b,
+                                     sizeof(aKey->mShadowColor.b)));
+    hash = AddToHash(hash, HashBytes(&aKey->mShadowColor.a,
+                                     sizeof(aKey->mShadowColor.a)));
 
     for (int i = 0; i < 4; i++) {
       hash = AddToHash(hash, aKey->mCornerRadii[i].width, aKey->mCornerRadii[i].height);
@@ -318,7 +322,7 @@ class BlurCache final : public nsExpirationTracker<BlurCacheData,4>
     BlurCacheData* Lookup(const IntSize aMinSize,
                           const IntSize& aBlurRadius,
                           RectCornerRadii* aCornerRadii,
-                          const gfxRGBA& aShadowColor,
+                          const Color& aShadowColor,
                           BackendType aBackendType)
     {
       BlurCacheData* blur =
@@ -337,7 +341,7 @@ class BlurCache final : public nsExpirationTracker<BlurCacheData,4>
                                         const IntSize& aBlurRadius,
                                         const IntSize& aSpreadRadius,
                                         const RectCornerRadii* aCornerRadii,
-                                        const gfxRGBA& aShadowColor,
+                                        const Color& aShadowColor,
                                         const bool& aHasBorderRadius,
                                         BackendType aBackendType)
     {
@@ -432,7 +436,7 @@ CacheBlur(DrawTarget& aDT,
           const IntSize& aMinSize,
           const IntSize& aBlurRadius,
           RectCornerRadii* aCornerRadii,
-          const gfxRGBA& aShadowColor,
+          const Color& aShadowColor,
           IntMargin aExtendDest,
           SourceSurface* aBoxShadow)
 {
@@ -493,7 +497,7 @@ CreateBlurMask(const IntSize& aRectSize,
 }
 
 static already_AddRefed<SourceSurface>
-CreateBoxShadow(SourceSurface* aBlurMask, const gfxRGBA& aShadowColor)
+CreateBoxShadow(SourceSurface* aBlurMask, const Color& aShadowColor)
 {
   IntSize blurredSize = aBlurMask->GetSize();
   gfxPlatform* platform = gfxPlatform::GetPlatform();
@@ -514,7 +518,7 @@ GetBlur(DrawTarget& aDT,
         const IntSize& aRectSize,
         const IntSize& aBlurRadius,
         RectCornerRadii* aCornerRadii,
-        const gfxRGBA& aShadowColor,
+        const Color& aShadowColor,
         IntMargin& aExtendDestBy,
         IntMargin& aSlice)
 {
@@ -682,7 +686,7 @@ gfxAlphaBoxBlur::BlurRectangle(gfxContext* aDestinationCtx,
                                const gfxRect& aRect,
                                RectCornerRadii* aCornerRadii,
                                const gfxPoint& aBlurStdDev,
-                               const gfxRGBA& aShadowColor,
+                               const Color& aShadowColor,
                                const gfxRect& aDirtyRect,
                                const gfxRect& aSkipRect)
 {
@@ -834,7 +838,7 @@ FillDestinationPath(gfxContext* aDestinationCtx,
 {
   // When there is no blur radius, fill the path onto the destination
   // surface.
-  aDestinationCtx->SetColor(ThebesColor(aShadowColor));
+  aDestinationCtx->SetColor(aShadowColor);
   DrawTarget* destDrawTarget = aDestinationCtx->GetDrawTarget();
   RefPtr<Path> shadowPath = GetBoxShadowInsetPath(destDrawTarget, aDestinationRect,
                                                   aShadowClipRect, aHasBorderRadius,
@@ -850,7 +854,7 @@ CacheInsetBlur(const IntSize aMinOuterSize,
                const IntSize& aBlurRadius,
                const IntSize& aSpreadRadius,
                const RectCornerRadii* aCornerRadii,
-               const gfxRGBA& aShadowColor,
+               const Color& aShadowColor,
                const bool& aHasBorderRadius,
                BackendType aBackendType,
                IntMargin aExtendBy,
@@ -888,7 +892,7 @@ gfxAlphaBoxBlur::GetInsetBlur(Rect& aOuterRect,
 
   BlurCacheData* cached =
       gBlurCache->LookupInsetBoxShadow(outerRectSize, innerRectSize, aBlurRadius, aSpreadRadius,
-                                       &aInnerClipRadii, ThebesColor(aShadowColor),
+                                       &aInnerClipRadii, aShadowColor,
                                        aHasBorderRadius, destDrawTarget->GetBackendType());
 
   if (cached) {
@@ -914,7 +918,7 @@ gfxAlphaBoxBlur::GetInsetBlur(Rect& aOuterRect,
                                                 aInnerRect, aHasBorderRadius,
                                                 aInnerClipRadii);
 
-  minGfxContext->SetColor(ThebesColor(aShadowColor));
+  minGfxContext->SetColor(aShadowColor);
   minGfxContext->SetPath(maskPath);
   minGfxContext->Fill();
 
@@ -923,7 +927,7 @@ gfxAlphaBoxBlur::GetInsetBlur(Rect& aOuterRect,
     return nullptr;
   }
 
-  RefPtr<SourceSurface> minInsetBlur = CreateBoxShadow(minMask, ThebesColor(aShadowColor));
+  RefPtr<SourceSurface> minInsetBlur = CreateBoxShadow(minMask, aShadowColor);
   if (!minInsetBlur) {
     return nullptr;
   }
@@ -931,7 +935,7 @@ gfxAlphaBoxBlur::GetInsetBlur(Rect& aOuterRect,
   IntMargin extendBy(aOutTopLeft.y, 0, 0, aOutTopLeft.x);
   CacheInsetBlur(outerRectSize, innerRectSize,
                  aBlurRadius, aSpreadRadius,
-                 &aInnerClipRadii, ThebesColor(aShadowColor),
+                 &aInnerClipRadii, aShadowColor,
                  aHasBorderRadius, destDrawTarget->GetBackendType(),
                  extendBy, minInsetBlur);
   return minInsetBlur.forget();

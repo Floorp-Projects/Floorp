@@ -10,7 +10,9 @@ var gOriginalMigrationVersion;
 const BROWSER_URL = getBrowserURL();
 
 var localStore = {
-  get xulStore() Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore),
+  get xulStore() {
+    return Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore);
+  },
 
   getValue: function getValue(aProperty)
   {

@@ -405,7 +405,7 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
 
     if (opacity != 1.0f || StyleDisplay()->mMixBlendMode != NS_STYLE_BLEND_NORMAL) {
       aContext.PopGroupToSource();
-      aContext.SetOperator(gfxContext::OPERATOR_OVER);
+      aContext.SetOp(CompositionOp::OP_OVER);
       aContext.Paint(opacity);
     }
     // gfxContextAutoSaveRestore goes out of scope & cleans up our gfxContext

@@ -196,7 +196,7 @@ function onTabViewWindowLoaded(win) {
       let originalTabItem = originalTab._tabViewTabItem;
 
       isnot(activeTab, originalTabItem, "But it's not what it was a moment ago.");
-      let someChildIsActive = group.getChildren().some(function(child)
+      let someChildIsActive = group.getChildren().some(child =>
                               child == activeTab);
       ok(someChildIsActive, "Now one of the children in the group is active.");
             
@@ -210,7 +210,7 @@ function onTabViewWindowLoaded(win) {
       
       isnot(win.gBrowser.selectedTab, originalTab, "We did not enter the original tab.");
 
-      let someChildIsSelected = group.getChildren().some(function(child)
+      let someChildIsSelected = group.getChildren().some(child =>
                                   child.tab == win.gBrowser.selectedTab);
       ok(someChildIsSelected, "Instead we're in one of the stack's children.");
       

@@ -70,7 +70,7 @@ function test() {
   waitForExplicitFinish();
 
   showTabView(function () {
-    registerCleanupFunction(function () TabView.hide());
+    registerCleanupFunction(() => TabView.hide());
     cw = TabView.getContentWindow();
     next();
   });

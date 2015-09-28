@@ -30,8 +30,7 @@ add_task(function* () {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("check");
+  yield Promise.all([extension.startup(), extension.awaitMessage("check")]);
 
   ok(gBrowser.selectedTab == tab2, "correct tab selected");
 

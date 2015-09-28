@@ -17,28 +17,28 @@ function test() {
   }
 
   // all of the following calls with illegal arguments should throw NS_ERROR_ILLEGAL_VALUE
-  ok(test(function() ss.getWindowState({})),
+  ok(test(() => ss.getWindowState({})),
      "Invalid window for getWindowState throws");
-  ok(test(function() ss.setWindowState({}, "", false)),
+  ok(test(() => ss.setWindowState({}, "", false)),
      "Invalid window for setWindowState throws");
-  ok(test(function() ss.getTabState({})),
+  ok(test(() => ss.getTabState({})),
      "Invalid tab for getTabState throws");
-  ok(test(function() ss.setTabState({}, "{}")),
+  ok(test(() => ss.setTabState({}, "{}")),
      "Invalid tab state for setTabState throws");
-  ok(test(function() ss.setTabState({}, JSON.stringify({ entries: [] }))),
+  ok(test(() => ss.setTabState({}, JSON.stringify({ entries: [] }))),
      "Invalid tab for setTabState throws");
-  ok(test(function() ss.duplicateTab({}, {})),
+  ok(test(() => ss.duplicateTab({}, {})),
      "Invalid tab for duplicateTab throws");
-  ok(test(function() ss.duplicateTab({}, gBrowser.selectedTab)),
+  ok(test(() => ss.duplicateTab({}, gBrowser.selectedTab)),
      "Invalid window for duplicateTab throws");
-  ok(test(function() ss.getClosedTabData({})),
+  ok(test(() => ss.getClosedTabData({})),
      "Invalid window for getClosedTabData throws");
-  ok(test(function() ss.undoCloseTab({}, 0)),
+  ok(test(() => ss.undoCloseTab({}, 0)),
      "Invalid window for undoCloseTab throws");
-  ok(test(function() ss.undoCloseTab(window, -1)),
+  ok(test(() => ss.undoCloseTab(window, -1)),
      "Invalid index for undoCloseTab throws");
-  ok(test(function() ss.getWindowValue({}, "")),
+  ok(test(() => ss.getWindowValue({}, "")),
      "Invalid window for getWindowValue throws");
-  ok(test(function() ss.setWindowValue({}, "", "")),
+  ok(test(() => ss.setWindowValue({}, "", "")),
      "Invalid window for setWindowValue throws");
 }

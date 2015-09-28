@@ -6,7 +6,7 @@ function test() {
 
   showTabView(function () {
     let tab = gBrowser.addTab();
-    registerCleanupFunction(function () gBrowser.removeTab(tab));
+    registerCleanupFunction(() => gBrowser.removeTab(tab));
 
     let cw = TabView.getContentWindow();
     whenAppTabIconAdded(cw.GroupItems.groupItems[0], function() {

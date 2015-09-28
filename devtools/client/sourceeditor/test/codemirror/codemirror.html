@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>CodeMirror: VIM/Emacs tests</title>
+    <title>CodeMirror: Basic Tests</title>
     <link rel="stylesheet" href="chrome://devtools/content/sourceeditor/codemirror/codemirror.css">
     <link rel="stylesheet" href="cm_mode_test.css">
     <!--<link rel="stylesheet" href="../doc/docs.css">-->
@@ -14,8 +14,8 @@
     <script src="chrome://devtools/content/sourceeditor/codemirror/comment/comment.js"></script>
     <script src="chrome://devtools/content/sourceeditor/codemirror/mode/javascript.js"></script>
     <script src="chrome://devtools/content/sourceeditor/codemirror/keymap/vim.js"></script>
-    <script src="chrome://devtools/content/sourceeditor/codemirror/keymap/sublime.js"></script>
     <script src="chrome://devtools/content/sourceeditor/codemirror/keymap/emacs.js"></script>
+    <script src="chrome://devtools/content/sourceeditor/codemirror/keymap/sublime.js"></script>
 
     <!--<script src="../addon/mode/overlay.js"></script>
     <script src="../addon/mode/multiplex.js"></script>
@@ -46,7 +46,7 @@
     </style>
   </head>
   <body>
-    <h1>CodeMirror: VIM/Emacs tests</h1>
+    <h1>CodeMirror: Basic Tests</h1>
 
     <p>A limited set of programmatic sanity tests for CodeMirror.</p>
 
@@ -58,22 +58,21 @@
 
     <div id=testground></div>
 
-    <script src="cm_driver.js"></script>
+    <script src="driver.js"></script>
+    <script src="test.js"></script>
+    <script src="comment_test.js"></script>
+    <script src="doc_test.js"></script>
+    <script src="driver.js"></script>
+    <script src="emacs_test.js"></script>
+    <script src="mode_test.js"></script>
+    <script src="mode/javascript/test.js"></script>
+    <script src="multi_test.js"></script>
+    <script src="search_test.js"></script>
+
+    <!-- VIM and Emacs mode tests are in vimemacs.html
     <script src="cm_sublime_test.js"></script>
     <script src="cm_vim_test.js"></script>
     <script src="cm_emacs_test.js"></script>
-
-    <!-- Basic tests are in codemirror.html
-    <script src="cm_driver.js"></script>
-    <script src="cm_test.js"></script>
-    <script src="cm_comment_test.js"></script>
-    <script src="cm_doc_test.js"></script>
-    <script src="cm_driver.js"></script>
-    <script src="cm_emacs_test.js"></script>
-    <script src="cm_mode_test.js"></script>
-    <script src="cm_mode_javascript_test.js"></script>
-    <script src="cm_multi_test.js"></script>
-    <script src="cm_search_test.js"></script>
     -->
 
     <!-- These modes/addons are not used by Editor

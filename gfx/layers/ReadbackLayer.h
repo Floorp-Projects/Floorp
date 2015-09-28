@@ -131,7 +131,7 @@ public:
 
   bool IsBackgroundKnown()
   {
-    return mBackgroundLayer || mBackgroundColor.a == 1.0;
+    return mBackgroundLayer || mBackgroundColor.a == 1.f;
   }
 
   void NotifyRemoved() {
@@ -157,7 +157,7 @@ public:
         mSink->SetUnknown(AllocateSequenceNumber());
       }
       mBackgroundLayer = nullptr;
-      mBackgroundColor = gfxRGBA(0,0,0,0);
+      mBackgroundColor = gfx::Color();
     }
   }
 
@@ -170,7 +170,7 @@ protected:
     mSize(0,0),
     mBackgroundLayer(nullptr),
     mBackgroundLayerOffset(0, 0),
-    mBackgroundColor(gfxRGBA(0,0,0,0))
+    mBackgroundColor(gfx::Color())
   {}
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
@@ -196,7 +196,7 @@ protected:
   // When mBackgroundColor is opaque, this is the color of the ColorLayer
   // that contained the contents we reported to mSink, which covered the
   // entire readback area.
-  gfxRGBA      mBackgroundColor;
+  gfx::Color   mBackgroundColor;
 };
 
 } // namespace layers

@@ -44,44 +44,44 @@ function test() {
     return w;
   }
   function closeCachedWindows () {
-    windowCache.forEach(function(w) w.close());
+    windowCache.forEach(w => w.close());
   }
 
   // Part 1: NON PRIVATE WINDOW -> PRIVATE WINDOW
   openWindow(window, {}, 1).
     then(cacheWindow).
     then(openSidebar).
-    then(function(win) openWindow(win, { private: true })).
+    then(win => openWindow(win, { private: true })).
     then(cacheWindow).
     then(function({ document }) {
       let sidebarBox = document.getElementById("sidebar-box");
       is(sidebarBox.hidden, true, 'Opening a private window from reg window does not open the sidebar');
     }).
     // Part 2: NON PRIVATE WINDOW -> NON PRIVATE WINDOW
-    then(function() openWindow(window)).
+    then(() => openWindow(window)).
     then(cacheWindow).
     then(openSidebar).
-    then(function(win) openWindow(win)).
+    then(win => openWindow(win)).
     then(cacheWindow).
     then(function({ document }) {
       let sidebarBox = document.getElementById("sidebar-box");
       is(sidebarBox.hidden, false, 'Opening a reg window from reg window does open the sidebar');
     }).
     // Part 3: PRIVATE WINDOW -> NON PRIVATE WINDOW
-    then(function() openWindow(window, { private: true })).
+    then(() => openWindow(window, { private: true })).
     then(cacheWindow).
     then(openSidebar).
-    then(function(win) openWindow(win)).
+    then(win => openWindow(win)).
     then(cacheWindow).
     then(function({ document }) {
       let sidebarBox = document.getElementById("sidebar-box");
       is(sidebarBox.hidden, true, 'Opening a reg window from a private window does not open the sidebar');
     }).
     // Part 4: PRIVATE WINDOW -> PRIVATE WINDOW
-    then(function() openWindow(window, { private: true })).
+    then(() => openWindow(window, { private: true })).
     then(cacheWindow).
     then(openSidebar).
-    then(function(win) openWindow(win, { private: true })).
+    then(win => openWindow(win, { private: true })).
     then(cacheWindow).
     then(function({ document }) {
       let sidebarBox = document.getElementById("sidebar-box");

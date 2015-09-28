@@ -23,7 +23,6 @@
 #include "nsAutoRef.h"
 #include <speex/speex_resampler.h>
 #include "DOMMediaStream.h"
-#include "AudioContext.h"
 
 class nsIRunnable;
 
@@ -37,6 +36,10 @@ class nsAutoRefTraits<SpeexResamplerState> : public nsPointerRefTraits<SpeexResa
 namespace mozilla {
 
 extern PRLogModuleInfo* gMediaStreamGraphLog;
+
+namespace dom {
+  enum class AudioContextOperation;
+}
 
 /*
  * MediaStreamGraph is a framework for synchronized audio/video processing

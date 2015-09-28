@@ -174,7 +174,7 @@ this.ForgetAboutSite = {
     let cps2 = Cc["@mozilla.org/content-pref/service;1"].
                getService(Ci.nsIContentPrefService2);
     cps2.removeBySubdomain(aDomain, null, {
-      handleCompletion: function() onContentPrefsRemovalFinished(),
+      handleCompletion: () => onContentPrefsRemovalFinished(),
       handleError: function() {}
     });
 

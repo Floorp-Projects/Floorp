@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,6 +14,10 @@
 #include "mozilla/RefPtr.h"
 
 @class mozNotificationCenterDelegate;
+
+#if !defined(MAC_OS_X_VERSION_10_8) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8)
+typedef NSInteger NSUserNotificationActivationType;
+#endif
 
 namespace mozilla {
 
@@ -33,7 +37,8 @@ public:
 
   nsresult Init();
   void CloseAlertCocoaString(NSString *aAlertName);
-  void OnClick(NSString *aAlertName);
+  void OnActivate(NSString *aAlertName, NSUserNotificationActivationType aActivationType,
+                  unsigned long long aAdditionalActionIndex);
   void ShowPendingNotification(OSXNotificationInfo *osxni);
 
 protected:

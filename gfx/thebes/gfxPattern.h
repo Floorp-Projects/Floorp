@@ -17,7 +17,6 @@
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
 
-struct gfxRGBA;
 typedef struct _cairo_pattern cairo_pattern_t;
 
 
@@ -25,7 +24,7 @@ class gfxPattern final{
     NS_INLINE_DECL_REFCOUNTING(gfxPattern)
 
 public:
-    explicit gfxPattern(const gfxRGBA& aColor);
+    explicit gfxPattern(const mozilla::gfx::Color& aColor);
     // linear
     gfxPattern(gfxFloat x0, gfxFloat y0, gfxFloat x1, gfxFloat y1); // linear
     gfxPattern(gfxFloat cx0, gfxFloat cy0, gfxFloat radius0,
@@ -33,7 +32,7 @@ public:
     gfxPattern(mozilla::gfx::SourceSurface *aSurface,
                const mozilla::gfx::Matrix &aPatternToUserSpace);
 
-    void AddColorStop(gfxFloat offset, const gfxRGBA& c);
+    void AddColorStop(gfxFloat offset, const mozilla::gfx::Color& c);
     void SetColorStops(mozilla::gfx::GradientStops* aStops);
 
     // This should only be called on a cairo pattern that we want to use with

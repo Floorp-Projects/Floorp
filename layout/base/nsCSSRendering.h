@@ -297,11 +297,16 @@ private:
  * See PrepareBackgroundLayer.
  */
 struct nsBackgroundLayerState {
+  typedef mozilla::gfx::CompositionOp CompositionOp;
+
   /**
    * @param aFlags some combination of nsCSSRendering::PAINTBG_* flags
    */
-  nsBackgroundLayerState(nsIFrame* aForFrame, const nsStyleImage* aImage, uint32_t aFlags)
-    : mImageRenderer(aForFrame, aImage, aFlags), mCompositingOp(gfxContext::OPERATOR_OVER) {}
+  nsBackgroundLayerState(nsIFrame* aForFrame, const nsStyleImage* aImage,
+                         uint32_t aFlags)
+    : mImageRenderer(aForFrame, aImage, aFlags)
+    , mCompositionOp(CompositionOp::OP_OVER)
+  {}
 
   /**
    * The nsImageRenderer that will be used to draw the background.
@@ -326,12 +331,13 @@ struct nsBackgroundLayerState {
    */
   nsPoint mAnchor;
   /**
-   * The compositing operation that the image should use
+   * The composition operation that the image should use.
    */
-  gfxContext::GraphicsOperator mCompositingOp;
+  CompositionOp mCompositionOp;
 };
 
 struct nsCSSRendering {
+  typedef mozilla::gfx::CompositionOp CompositionOp;
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::Float Float;
   typedef mozilla::gfx::Point Point;
@@ -756,28 +762,26 @@ struct nsCSSRendering {
                                       bool aVertical,
                                       const gfxFloat aDescentLimit = -1.0);
 
-  static gfxContext::GraphicsOperator GetGFXBlendMode(uint8_t mBlendMode) {
+  static CompositionOp GetGFXBlendMode(uint8_t mBlendMode) {
     switch (mBlendMode) {
-      case NS_STYLE_BLEND_NORMAL:      return gfxContext::OPERATOR_OVER;
-      case NS_STYLE_BLEND_MULTIPLY:    return gfxContext::OPERATOR_MULTIPLY;
-      case NS_STYLE_BLEND_SCREEN:      return gfxContext::OPERATOR_SCREEN;
-      case NS_STYLE_BLEND_OVERLAY:     return gfxContext::OPERATOR_OVERLAY;
-      case NS_STYLE_BLEND_DARKEN:      return gfxContext::OPERATOR_DARKEN;
-      case NS_STYLE_BLEND_LIGHTEN:     return gfxContext::OPERATOR_LIGHTEN;
-      case NS_STYLE_BLEND_COLOR_DODGE: return gfxContext::OPERATOR_COLOR_DODGE;
-      case NS_STYLE_BLEND_COLOR_BURN:  return gfxContext::OPERATOR_COLOR_BURN;
-      case NS_STYLE_BLEND_HARD_LIGHT:  return gfxContext::OPERATOR_HARD_LIGHT;
-      case NS_STYLE_BLEND_SOFT_LIGHT:  return gfxContext::OPERATOR_SOFT_LIGHT;
-      case NS_STYLE_BLEND_DIFFERENCE:  return gfxContext::OPERATOR_DIFFERENCE;
-      case NS_STYLE_BLEND_EXCLUSION:   return gfxContext::OPERATOR_EXCLUSION;
-      case NS_STYLE_BLEND_HUE:         return gfxContext::OPERATOR_HUE;
-      case NS_STYLE_BLEND_SATURATION:  return gfxContext::OPERATOR_SATURATION;
-      case NS_STYLE_BLEND_COLOR:       return gfxContext::OPERATOR_COLOR;
-      case NS_STYLE_BLEND_LUMINOSITY:  return gfxContext::OPERATOR_LUMINOSITY;
-      default:                         MOZ_ASSERT(false); return gfxContext::OPERATOR_OVER;
+      case NS_STYLE_BLEND_NORMAL:      return CompositionOp::OP_OVER;
+      case NS_STYLE_BLEND_MULTIPLY:    return CompositionOp::OP_MULTIPLY;
+      case NS_STYLE_BLEND_SCREEN:      return CompositionOp::OP_SCREEN;
+      case NS_STYLE_BLEND_OVERLAY:     return CompositionOp::OP_OVERLAY;
+      case NS_STYLE_BLEND_DARKEN:      return CompositionOp::OP_DARKEN;
+      case NS_STYLE_BLEND_LIGHTEN:     return CompositionOp::OP_LIGHTEN;
+      case NS_STYLE_BLEND_COLOR_DODGE: return CompositionOp::OP_COLOR_DODGE;
+      case NS_STYLE_BLEND_COLOR_BURN:  return CompositionOp::OP_COLOR_BURN;
+      case NS_STYLE_BLEND_HARD_LIGHT:  return CompositionOp::OP_HARD_LIGHT;
+      case NS_STYLE_BLEND_SOFT_LIGHT:  return CompositionOp::OP_SOFT_LIGHT;
+      case NS_STYLE_BLEND_DIFFERENCE:  return CompositionOp::OP_DIFFERENCE;
+      case NS_STYLE_BLEND_EXCLUSION:   return CompositionOp::OP_EXCLUSION;
+      case NS_STYLE_BLEND_HUE:         return CompositionOp::OP_HUE;
+      case NS_STYLE_BLEND_SATURATION:  return CompositionOp::OP_SATURATION;
+      case NS_STYLE_BLEND_COLOR:       return CompositionOp::OP_COLOR;
+      case NS_STYLE_BLEND_LUMINOSITY:  return CompositionOp::OP_LUMINOSITY;
+      default:      MOZ_ASSERT(false); return CompositionOp::OP_OVER;
     }
-
-    return gfxContext::OPERATOR_OVER;
   }
 
 protected:
@@ -832,6 +836,7 @@ protected:
  * This is very useful for creating drop shadows or silhouettes.
  */
 class nsContextBoxBlur {
+  typedef mozilla::gfx::Color Color;
   typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
 
 public:
@@ -941,7 +946,7 @@ public:
                             int32_t aAppUnitsPerDevPixel,
                             RectCornerRadii* aCornerRadii,
                             nscoord aBlurRadius,
-                            const gfxRGBA& aShadowColor,
+                            const Color& aShadowColor,
                             const nsRect& aDirtyRect,
                             const gfxRect& aSkipRect);
 

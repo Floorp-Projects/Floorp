@@ -17,11 +17,13 @@ function waitForClearHistory(aCallback) {
 function test() {
   waitForExplicitFinish();
   // utility functions
-  function countClosedTabsByTitle(aClosedTabList, aTitle)
-    aClosedTabList.filter(function (aData) aData.title == aTitle).length;
+  function countClosedTabsByTitle(aClosedTabList, aTitle) {
+    return aClosedTabList.filter(aData => aData.title == aTitle).length;
+  }
 
-  function countOpenTabsByTitle(aOpenTabList, aTitle)
-    aOpenTabList.filter(function (aData) aData.entries.some(function (aEntry) aEntry.title == aTitle)).length
+  function countOpenTabsByTitle(aOpenTabList, aTitle) {
+    return aOpenTabList.filter(aData => aData.entries.some(aEntry => aEntry.title == aTitle)).length;
+  }
 
   // backup old state
   let oldState = ss.getBrowserState();

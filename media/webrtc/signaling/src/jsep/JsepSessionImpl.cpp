@@ -1299,6 +1299,8 @@ JsepSessionImpl::HandleNegotiatedSession(const UniquePtr<Sdp>& local,
   mNegotiatedTrackPairs = trackPairs;
 
   mGeneratedLocalDescription.reset();
+
+  mNegotiations++;
   return NS_OK;
 }
 
