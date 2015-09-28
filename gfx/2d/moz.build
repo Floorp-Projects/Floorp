@@ -25,6 +25,7 @@ EXPORTS.mozilla.gfx += [
     'Filters.h',
     'Helpers.h',
     'HelpersCairo.h',
+    'IterableArena.h',
     'Logging.h',
     'Matrix.h',
     'NumericTools.h',
