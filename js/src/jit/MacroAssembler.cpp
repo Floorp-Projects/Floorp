@@ -153,7 +153,7 @@ MacroAssembler::guardObjectType(Register obj, const TypeSet* types,
 {
     MOZ_ASSERT(!types->unknown());
     MOZ_ASSERT(!types->hasType(TypeSet::AnyObjectType()));
-    MOZ_ASSERT(scratch != InvalidReg);
+    MOZ_ASSERT_IF(types->getObjectCount() > 0, scratch != InvalidReg);
 
     // Note: this method elides read barriers on values read from type sets, as
     // this may be called off the main thread during Ion compilation. This is
@@ -215,7 +215,6 @@ MacroAssembler::guardObjectType(Register obj, const TypeSet* types,
     lastBranch.emit(*this);
 
     bind(&matched);
-    return;
 }
 
 template void MacroAssembler::guardTypeSet(const Address& address, const TypeSet* types,
