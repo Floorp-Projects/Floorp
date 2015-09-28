@@ -7,7 +7,8 @@
                   android:title="@string/pref_category_home"
                   android:enabled="false">
 
-    <PreferenceCategory android:title="@string/pref_category_home_homepage">
+    <PreferenceCategory android:title="@string/pref_category_home_homepage"
+                        android:key="android.not_a_preference.category_homepage">
 
         <org.mozilla.gecko.preferences.SetHomepagePreference
                 android:key="android.not_a_preference.homepage"
