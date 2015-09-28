@@ -21,11 +21,13 @@ interface DataChannel : EventTarget
   readonly attribute boolean reliable;
   readonly attribute RTCDataChannelState readyState;
   readonly attribute unsigned long bufferedAmount;
+  attribute unsigned long bufferedAmountLowThreshold;
   attribute EventHandler onopen;
   attribute EventHandler onerror;
   attribute EventHandler onclose;
   void close();
   attribute EventHandler onmessage;
+  attribute EventHandler onbufferedamountlow;
   attribute RTCDataChannelType binaryType;
   [Throws]
   void send(DOMString data);
