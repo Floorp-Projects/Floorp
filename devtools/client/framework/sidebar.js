@@ -225,6 +225,7 @@ ToolSidebar.prototype = {
     this._tabbox.tabs.appendChild(tab);
     tab.setAttribute("label", ""); // Avoid showing "undefined" while the tab is loading
     tab.setAttribute("id", this.TAB_ID_PREFIX + id);
+    tab.setAttribute("crop", "end");
 
     // Add the tab to the allTabs menu if exists
     let allTabsItem = this._addItemToAllTabsMenu(id, tab, selected);
