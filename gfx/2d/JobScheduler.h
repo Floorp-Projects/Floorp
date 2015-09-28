@@ -109,9 +109,16 @@ public:
   WorkerThread* GetWorkerThread() { return mPinToThread; }
 
 protected:
+  // An intrusive linked list of tasks waiting for a sync object to enter the
+  // signaled state. When the task is not waiting for a sync object, mNextWaitingJob
+  // should be null. This is only accessed from the thread that owns the task.
+  Job* mNextWaitingJob;
+
   RefPtr<SyncObject> mStartSync;
   RefPtr<SyncObject> mCompletionSync;
   WorkerThread* mPinToThread;
+
+  friend class SyncObject;
 };
 
 class EventObject;
@@ -205,9 +212,8 @@ private:
 
   void SubmitWaitingJobs();
 
-  std::vector<Job*> mWaitingJobs;
-  CriticalSection mWaitingJobsSection; // for concurrent access to mWaintingJobs
   Atomic<int32_t> mSignals;
+  Atomic<Job*> mFirstWaitingJob;
 
 #ifdef DEBUG
   uint32_t mNumPrerequisites;
