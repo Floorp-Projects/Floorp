@@ -93,7 +93,9 @@ var _themeIDBeingDisabled = null;
 })();
 
 this.LightweightThemeManager = {
-  get name() "LightweightThemeManager",
+  get name() {
+    return "LightweightThemeManager";
+  },
 
   // Themes that can be added for an application.  They can't be removed, and
   // will always show up at the top of the list.
@@ -456,8 +458,12 @@ this.LightweightThemeManager = {
  * consumers of the AddonManager API.
  */
 function AddonWrapper(aTheme) {
-  this.__defineGetter__("id", function AddonWrapper_idGetter() aTheme.id + ID_SUFFIX);
-  this.__defineGetter__("type", function AddonWrapper_typeGetter() ADDON_TYPE);
+  this.__defineGetter__("id", function AddonWrapper_idGetter() {
+    return aTheme.id + ID_SUFFIX;
+  });
+  this.__defineGetter__("type", function AddonWrapper_typeGetter() {
+    return ADDON_TYPE;
+  });
   this.__defineGetter__("isActive", function AddonWrapper_isActiveGetter() {
     let current = LightweightThemeManager.currentTheme;
     if (current)
@@ -465,7 +471,9 @@ function AddonWrapper(aTheme) {
     return false;
   });
 
-  this.__defineGetter__("name", function AddonWrapper_nameGetter() aTheme.name);
+  this.__defineGetter__("name", function AddonWrapper_nameGetter() {
+    return aTheme.name;
+  });
   this.__defineGetter__("version", function AddonWrapper_versionGetter() {
     return "version" in aTheme ? aTheme.version : "";
   });
@@ -733,15 +741,20 @@ function _sanitizeTheme(aData, aBaseURI, aLocal) {
   return result;
 }
 
-function _usedThemesExceptId(aId)
-  LightweightThemeManager.usedThemes.filter(
-       function usedThemesExceptId_filterID(t) "id" in t && t.id != aId);
+function _usedThemesExceptId(aId) {
+  return LightweightThemeManager.usedThemes.filter(
+    function usedThemesExceptId_filterID(t) {
+      return "id" in t && t.id != aId;
+    });
+}
 
-function _version(aThemeData)
-  aThemeData.version || "";
+function _version(aThemeData) {
+  return aThemeData.version || "";
+}
 
-function _makeURI(aURL, aBaseURI)
-  Services.io.newURI(aURL, null, aBaseURI);
+function _makeURI(aURL, aBaseURI) {
+  return Services.io.newURI(aURL, null, aBaseURI);
+}
 
 function _updateUsedThemes(aList) {
   // Remove app-specific themes before saving them to the usedThemes pref.
@@ -794,15 +807,17 @@ function _prefObserver(aSubject, aTopic, aData) {
 }
 
 function _persistImages(aData, aCallback) {
-  function onSuccess(key) function () {
-    let current = LightweightThemeManager.currentTheme;
-    if (current && current.id == aData.id) {
-      _prefs.setBoolPref("persisted." + key, true);
-    }
-    if (--numFilesToPersist == 0 && aCallback) {
-      aCallback();
-    }
-  };
+  function onSuccess(key) {
+    return function () {
+      let current = LightweightThemeManager.currentTheme;
+      if (current && current.id == aData.id) {
+        _prefs.setBoolPref("persisted." + key, true);
+      }
+      if (--numFilesToPersist == 0 && aCallback) {
+        aCallback();
+      }
+    };
+  }
 
   let numFilesToPersist = 0;
   for (let key in PERSIST_FILES) {

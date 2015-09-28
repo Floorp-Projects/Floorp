@@ -111,12 +111,16 @@ function LinksStorage() {
 }
 
 LinksStorage.prototype = {
-  get _version() 1,
+  get _version() {
+    return 1;
+  },
 
-  get _prefs() Object.freeze({
-    pinnedLinks: "browser.newtabpage.pinned",
-    blockedLinks: "browser.newtabpage.blocked",
-  }),
+  get _prefs() {
+    return Object.freeze({
+      pinnedLinks: "browser.newtabpage.pinned",
+      blockedLinks: "browser.newtabpage.blocked",
+    });
+  },
 
   get _storedVersion() {
     if (this.__storedVersion === undefined) {
@@ -400,19 +404,17 @@ var PinnedLinks = {
    * Pins a link at the given position.
    * @param aLink The link to pin.
    * @param aIndex The grid index to pin the cell at.
+   * @return true if link changes, false otherwise
    */
   pin: function PinnedLinks_pin(aLink, aIndex) {
     // Clear the link's old position, if any.
     this.unpin(aLink);
 
     // change pinned link into a history link
-    // update all pages on link change
-    let updatePages = this._makeHistoryLink(aLink);
+    let changed = this._makeHistoryLink(aLink);
     this.links[aIndex] = aLink;
     this.save();
-    if (updatePages) {
-      AllPages.update();
-    }
+    return changed;
   },
 
   /**

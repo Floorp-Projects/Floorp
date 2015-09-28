@@ -11,7 +11,7 @@ function testOnWindow(options, callback) {
   win.addEventListener("load", function onLoad() {
     win.removeEventListener("load", onLoad, false);
     windowsToClose.push(win);
-    executeSoon(function() callback(win));
+    executeSoon(() => callback(win));
   }, false);
 }
 

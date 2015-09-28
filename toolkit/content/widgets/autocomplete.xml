@@ -219,6 +219,11 @@
           else
             this.removeAttribute("nomatch");
 
+          if (this.ignoreBlurWhileSearching && !this.focused) {
+            this.handleEnter();
+            this.detachController();
+          }
+
           if (this._searchCompleteHandler)
             this._searchCompleteHandler();
         ]]></body>
@@ -311,6 +316,12 @@
                 onset="this.setAttribute('tabscrolling', val); return val;"
                 onget="return this.getAttribute('tabscrolling') == 'true';"/>
 
+      <!-- option to completely ignore any blur events while searches are
+           still going on. -->
+      <property name="ignoreBlurWhileSearching"
+                onset="this.setAttribute('ignoreblurwhilesearching', val); return val;"
+                onget="return this.getAttribute('ignoreblurwhilesearching') == 'true';"/>
+
       <!-- disable key navigation handling in the popup results -->
       <property name="disableKeyNavigation"
                 onset="this.setAttribute('disablekeynavigation', val); return val;"
@@ -342,7 +353,8 @@
 
       <method name="openPopup">
         <body><![CDATA[
-          this.popup.openAutocompletePopup(this, this);
+          if (this.focused)
+            this.popup.openAutocompletePopup(this, this);
         ]]></body>
       </method>
 
@@ -567,7 +579,7 @@
         ({
           _autocomplete: this,
           _kGlobalClipboard: Components.interfaces.nsIClipboard.kGlobalClipboard,
-          supportsCommand: function(aCommand) aCommand == "cmd_paste",
+          supportsCommand: aCommand => aCommand == "cmd_paste",
           doCommand: function(aCommand) {
             this._autocomplete._valueIsPasted = true;
             this._autocomplete.editor.paste(this._kGlobalClipboard);
@@ -633,7 +645,8 @@
             }
             this.mController.handleEnter(false);
           }
-          this.detachController();
+          if (!this.ignoreBlurWhileSearching)
+            this.detachController();
         }
       ]]></handler>
     </handlers>

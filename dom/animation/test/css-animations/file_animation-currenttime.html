@@ -441,6 +441,24 @@ async_test(function(t) {
   animation.currentTime = currentTimeForAfterPhase(animation.timeline);
 }, 'Redundant change, after -> active, then back');
 
+async_test(function(t) {
+  var div = addDiv(t, {'class': 'animated-div'});
+  var eventWatcher = new EventWatcher(t, div, CSS_ANIM_EVENTS);
+  div.style.animation = ANIM_PROPERTY_VAL;
+  var animation = div.getAnimations()[0];
+
+  animation.pause();
+  animation.currentTime = currentTimeForAfterPhase(animation.timeline);
+
+  eventWatcher.wait_for(['animationstart',
+                         'animationend']).then(t.step_func(function() {
+    animation.currentTime = currentTimeForActivePhase(animation.timeline);
+    return eventWatcher.wait_for('animationstart');
+  })).then(t.step_func(function() {
+    t.done();
+  }));
+
+}, 'Seeking finished -> paused dispatches animationstart');
 
 async_test(function(t) {
   var div = addDiv(t, {'class': 'animated-div'});

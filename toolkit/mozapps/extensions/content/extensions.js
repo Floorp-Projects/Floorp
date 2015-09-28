@@ -79,7 +79,9 @@ document.addEventListener("load", initialize, true);
 window.addEventListener("unload", shutdown, false);
 
 var gPendingInitializations = 1;
-this.__defineGetter__("gIsInitializing", function gIsInitializingGetter() gPendingInitializations > 0);
+this.__defineGetter__("gIsInitializing", function gIsInitializingGetter() {
+  return gPendingInitializations > 0;
+});
 
 function initialize(event) {
   // XXXbz this listener gets _all_ load events for all nodes in the
@@ -830,7 +832,9 @@ var gViewController = {
     },
 
     cmd_restartApp: {
-      isEnabled: function cmd_restartApp_isEnabled() true,
+      isEnabled: function cmd_restartApp_isEnabled() {
+        return true;
+      },
       doCommand: function cmd_restartApp_doCommand() {
         let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].
                          createInstance(Ci.nsISupportsPRBool);
@@ -846,28 +850,36 @@ var gViewController = {
     },
 
     cmd_enableCheckCompatibility: {
-      isEnabled: function cmd_enableCheckCompatibility_isEnabled() true,
+      isEnabled: function cmd_enableCheckCompatibility_isEnabled() {
+        return true;
+      },
       doCommand: function cmd_enableCheckCompatibility_doCommand() {
         AddonManager.checkCompatibility = true;
       }
     },
 
     cmd_enableUpdateSecurity: {
-      isEnabled: function cmd_enableUpdateSecurity_isEnabled() true,
+      isEnabled: function cmd_enableUpdateSecurity_isEnabled() {
+        return true;
+      },
       doCommand: function cmd_enableUpdateSecurity_doCommand() {
         AddonManager.checkUpdateSecurity = true;
       }
     },
 
     cmd_pluginCheck: {
-      isEnabled: function cmd_pluginCheck_isEnabled() true,
+      isEnabled: function cmd_pluginCheck_isEnabled() {
+        return true;
+      },
       doCommand: function cmd_pluginCheck_doCommand() {
         openURL(Services.urlFormatter.formatURLPref("plugins.update.url"));
       }
     },
 
     cmd_toggleAutoUpdateDefault: {
-      isEnabled: function cmd_toggleAutoUpdateDefault_isEnabled() true,
+      isEnabled: function cmd_toggleAutoUpdateDefault_isEnabled() {
+        return true;
+      },
       doCommand: function cmd_toggleAutoUpdateDefault_doCommand() {
         if (!AddonManager.updateEnabled || !AddonManager.autoUpdateDefault) {
           // One or both of the prefs is false, i.e. the checkbox is not checked.
@@ -884,7 +896,9 @@ var gViewController = {
     },
 
     cmd_resetAddonAutoUpdate: {
-      isEnabled: function cmd_resetAddonAutoUpdate_isEnabled() true,
+      isEnabled: function cmd_resetAddonAutoUpdate_isEnabled() {
+        return true;
+      },
       doCommand: function cmd_resetAddonAutoUpdate_doCommand() {
         AddonManager.getAllAddons(function cmd_resetAddonAutoUpdate_getAllAddons(aAddonList) {
           for (let addon of aAddonList) {
@@ -905,14 +919,18 @@ var gViewController = {
     },
 
     cmd_goToRecentUpdates: {
-      isEnabled: function cmd_goToRecentUpdates_isEnabled() true,
+      isEnabled: function cmd_goToRecentUpdates_isEnabled() {
+        return true;
+      },
       doCommand: function cmd_goToRecentUpdates_doCommand() {
         gViewController.loadView("addons://updates/recent");
       }
     },
 
     cmd_goToAvailableUpdates: {
-      isEnabled: function cmd_goToAvailableUpdates_isEnabled() true,
+      isEnabled: function cmd_goToAvailableUpdates_isEnabled() {
+        return true;
+      },
       doCommand: function cmd_goToAvailableUpdates_doCommand() {
         gViewController.loadView("addons://updates/available");
       }
@@ -931,7 +949,9 @@ var gViewController = {
 
     cmd_findAllUpdates: {
       inProgress: false,
-      isEnabled: function cmd_findAllUpdates_isEnabled() !this.inProgress,
+      isEnabled: function cmd_findAllUpdates_isEnabled() {
+        return !this.inProgress;
+      },
       doCommand: function cmd_findAllUpdates_doCommand() {
         this.inProgress = true;
         gViewController.updateCommand("cmd_findAllUpdates");
@@ -1234,7 +1254,9 @@ var gViewController = {
     },
 
     cmd_installFromFile: {
-      isEnabled: function cmd_installFromFile_isEnabled() true,
+      isEnabled: function cmd_installFromFile_isEnabled() {
+        return true;
+      },
       doCommand: function cmd_installFromFile_doCommand() {
         const nsIFilePicker = Ci.nsIFilePicker;
         var fp = Cc["@mozilla.org/filepicker;1"]
@@ -1680,7 +1702,7 @@ function getAddonsAndInstalls(aType, aCallback) {
   let types = (aType != null) ? [aType] : null;
 
   AddonManager.getAddonsByTypes(types, function getAddonsAndInstalls_getAddonsByTypes(aAddonsList) {
-    addons = aAddonsList;
+    addons = aAddonsList.filter(a => !a.hidden);
     if (installs != null)
       aCallback(addons, installs);
   });
@@ -2280,7 +2302,9 @@ var gDiscoverView = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
                                          Ci.nsISupportsWeakReference]),
 
-  getSelectedAddon: function gDiscoverView_getSelectedAddon() null
+  getSelectedAddon: function gDiscoverView_getSelectedAddon() {
+    return null;
+  }
 };
 
 
@@ -2311,16 +2335,15 @@ var gSearchView = {
     if (!AddonManager.isInstallEnabled("application/x-xpinstall"))
       this._filter.hidden = true;
 
-    var self = this;
-    this._listBox.addEventListener("keydown", function listbox_onKeydown(aEvent) {
+    this._listBox.addEventListener("keydown", aEvent => {
       if (aEvent.keyCode == aEvent.DOM_VK_RETURN) {
-        var item = self._listBox.selectedItem;
+        var item = this._listBox.selectedItem;
         if (item)
           item.showInDetailView();
       }
     }, false);
 
-    this._filter.addEventListener("command", function filter_onCommand() self.updateView(), false);
+    this._filter.addEventListener("command", () => this.updateView(), false);
   },
 
   shutdown: function gSearchView_shutdown() {
@@ -2740,6 +2763,9 @@ var gListView = {
   onExternalInstall: function gListView_onExternalInstall(aAddon, aExistingAddon, aRequiresRestart) {
     // The existing list item will take care of upgrade installs
     if (aExistingAddon)
+      return;
+
+    if (aAddon.hidden)
       return;
 
     this.addItem(aAddon);
@@ -3534,7 +3560,7 @@ var gUpdatesView = {
       var elements = [];
       let threshold = Date.now() - UPDATES_RECENT_TIMESPAN;
       for (let addon of aAddonsList) {
-        if (!addon.updateDate || addon.updateDate.getTime() < threshold)
+        if (addon.hidden || !addon.updateDate || addon.updateDate.getTime() < threshold)
           continue;
 
         elements.push(createItem(addon));

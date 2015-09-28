@@ -66,18 +66,20 @@ public:
     mSource = aSource;
   }
 
-  virtual void SetTimelineParameter(uint32_t aIndex,
-                                    const dom::AudioParamTimeline& aValue,
-                                    TrackRate aSampleRate) override
+  virtual void RecvTimelineEvent(uint32_t aIndex,
+                                 dom::AudioTimelineEvent& aEvent) override
   {
+    MOZ_ASSERT(mSource && mDestination);
+    WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent,
+                                                    mSource,
+                                                    mDestination);
+
     switch (aIndex) {
     case AudioBufferSourceNode::PLAYBACKRATE:
-      mPlaybackRateTimeline = aValue;
-      WebAudioUtils::ConvertAudioParamToTicks(mPlaybackRateTimeline, mSource, mDestination);
+      mPlaybackRateTimeline.InsertEvent<int64_t>(aEvent);
       break;
     case AudioBufferSourceNode::DETUNE:
-      mDetuneTimeline = aValue;
-      WebAudioUtils::ConvertAudioParamToTicks(mDetuneTimeline, mSource, mDestination);
+      mDetuneTimeline.InsertEvent<int64_t>(aEvent);
       break;
     default:
       NS_ERROR("Bad AudioBufferSourceNodeEngine TimelineParameter");
@@ -785,23 +787,25 @@ AudioBufferSourceNode::NotifyMainThreadStreamFinished()
 }
 
 void
-AudioBufferSourceNode::SendPlaybackRateToStream(AudioNode* aNode)
+AudioBufferSourceNode::SendPlaybackRateToStream(AudioNode* aNode,
+                                                const AudioTimelineEvent& aEvent)
 {
   AudioBufferSourceNode* This = static_cast<AudioBufferSourceNode*>(aNode);
   if (!This->mStream) {
     return;
   }
-  SendTimelineParameterToStream(This, PLAYBACKRATE, *This->mPlaybackRate);
+  SendTimelineEventToStream(This, PLAYBACKRATE, aEvent);
 }
 
 void
-AudioBufferSourceNode::SendDetuneToStream(AudioNode* aNode)
+AudioBufferSourceNode::SendDetuneToStream(AudioNode* aNode,
+                                          const AudioTimelineEvent& aEvent)
 {
   AudioBufferSourceNode* This = static_cast<AudioBufferSourceNode*>(aNode);
   if (!This->mStream) {
     return;
   }
-  SendTimelineParameterToStream(This, DETUNE, *This->mDetune);
+  SendTimelineEventToStream(This, DETUNE, aEvent);
 }
 
 void

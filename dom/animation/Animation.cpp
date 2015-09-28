@@ -73,7 +73,7 @@ Animation::SetTimeline(AnimationTimeline* aTimeline)
   }
 
   if (mTimeline) {
-    mTimeline->RemoveAnimation(*this);
+    mTimeline->NotifyAnimationUpdated(*this);
   }
 
   mTimeline = aTimeline;
@@ -617,11 +617,9 @@ Animation::ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
   // immediately before updating the style rule and then restore it immediately
   // afterwards. This is purely to prevent visual flicker. Other behavior
   // such as dispatching events continues to rely on the regular timeline time.
+  bool updatedHoldTime = false;
   {
     AutoRestore<Nullable<TimeDuration>> restoreHoldTime(mHoldTime);
-    bool updatedHoldTime = false;
-
-    AnimationPlayState playState = PlayState();
 
     if (playState == AnimationPlayState::Pending &&
         mHoldTime.IsNull() &&
@@ -642,13 +640,16 @@ Animation::ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
     }
 
     mEffect->ComposeStyle(aStyleRule, aSetProperties);
-
-    if (updatedHoldTime) {
-      UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
-    }
-
-    mFinishedAtLastComposeStyle = (playState == AnimationPlayState::Finished);
   }
+
+  // Now that the hold time has been restored, update the effect
+  if (updatedHoldTime) {
+    UpdateEffect();
+  }
+
+  MOZ_ASSERT(playState == PlayState(),
+             "Play state should not change during the course of compositing");
+  mFinishedAtLastComposeStyle = (playState == AnimationPlayState::Finished);
 }
 
 void
@@ -842,39 +843,8 @@ Animation::UpdateTiming(SeekFlag aSeekFlag, SyncNotifyFlag aSyncNotifyFlag)
   UpdateFinishedState(aSeekFlag, aSyncNotifyFlag);
   UpdateEffect();
 
-  // Unconditionally Add/Remove from the timeline. This is ok because if the
-  // animation has already been added/removed (which will be true more often
-  // than not) the work done by AnimationTimeline/DocumentTimeline is still
-  // negligible and its easier than trying to detect whenever we are switching
-  // to/from being relevant.
-  //
-  // We need to do this after calling UpdateEffect since it updates some
-  // cached state used by IsRelevant.
-  //
-  // Note that we only store relevant animations on the timeline since they
-  // are the only ones that need ticks and are the only ones returned from
-  // AnimationTimeline::GetAnimations. Storing any more than that would mean
-  // that we fail to garbage collect irrelevant animations since the timeline
-  // keeps a strong reference to each animation.
-  //
-  // Once we tick animations from the their timeline, and once we expect
-  // timelines to go in and out of being inactive, we will also need to store
-  // non-idle animations that are waiting for their timeline to become active
-  // on their timeline (as otherwise once the timeline becomes active it will
-  // have no way of notifying its animations). For now, however, we can
-  // simply store just the relevant animations.
   if (mTimeline) {
-    // FIXME: Once we expect animations to go back and forth betweeen being
-    // inactive and active, we will need to store more than just relevant
-    // animations on the timeline. This is because an animation might be
-    // deemed irrelevant because its timeline is inactive. If it is removed
-    // from the timeline at that point the timeline will have no way of
-    // getting the animation to add itself again once it becomes active.
-    if (IsRelevant()) {
-      mTimeline->AddAnimation(*this);
-    } else {
-      mTimeline->RemoveAnimation(*this);
-    }
+    mTimeline->NotifyAnimationUpdated(*this);
   }
 }
 

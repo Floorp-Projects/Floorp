@@ -203,7 +203,7 @@ function popupHidden()
   else if (gTests[gTestIndex] == "context menu enough space below") {
     gContextMenuTests = true;
     moveWindowTo(window.screenX, screen.availTop + 10,
-      function () synthesizeMouse(document.getElementById("label"), 4, 4, { type: "contextmenu", button: 2 }));
+      () => synthesizeMouse(document.getElementById("label"), 4, 4, { type: "contextmenu", button: 2 }));
   }
   else if (gTests[gTestIndex] == "menu movement") {
     document.getElementById("popup").openPopup(

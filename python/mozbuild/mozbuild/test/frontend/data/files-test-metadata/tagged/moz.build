@@ -1,0 +1,15 @@
+with Files('src/submodule/**'):
+     IMPACTED_TESTS.tags += [
+         'submodule',
+     ]
+
+with Files('src/bar.jsm'):
+    IMPACTED_TESTS.flavors += [
+        'browser-chrome',
+    ]
+    IMPACTED_TESTS.files += [
+        '**.js',
+    ]
+
+MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']

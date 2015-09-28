@@ -452,10 +452,12 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                 continue
             cmd.append(arg)
 
-        if "tests" in self.test_suite_definitions[suite_name]:
-            cmd.extend(self.suite_definitions[suite_name]["tests"])
-        elif "tests" in c["suite_definitions"][suite_category]:
-            cmd.extend(self.config["suite_definitions"][suite_category]["tests"])
+        try_options, try_tests = self.try_args(suite_category)
+        cmd.extend(try_options)
+        cmd.extend(self.query_tests_args(
+            self.config["suite_definitions"][suite_category].get("tests"),
+            self.test_suite_definitions[suite_name].get("tests"),
+            try_tests))
 
         return cmd
 
@@ -477,7 +479,6 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
         """
         dirs = self.query_abs_dirs()
         cmd = self._build_command(self.emulators[emulator_index], suite_name)
-        cmd = self.append_harness_extra_args(cmd)
 
         try:
             cwd = self._query_tests_dir(suite_name)

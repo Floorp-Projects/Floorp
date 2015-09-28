@@ -526,6 +526,15 @@ public:
    */
   static nsresult GetColor(ColorID aID, nscolor* aResult);
 
+   /**
+   * This variant of GetColor() takes an extra Boolean parameter that allows
+   * the caller to ask that hard-coded color values be substituted for
+   * native colors (used when it is desireable to hide system colors to
+   * avoid system fingerprinting).
+   */
+  static nsresult GetColor(ColorID aID, bool aUseStandinsForNativeColors,
+                           nscolor* aResult);
+
   /**
    * GetInt() and GetFloat() return a int or float value for aID.  The result
    * might be distance, time, some flags or a int value which has particular

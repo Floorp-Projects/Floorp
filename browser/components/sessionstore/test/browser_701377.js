@@ -14,7 +14,7 @@ function test() {
     ok(tab.hidden, "the second tab is hidden");
 
     let tabShown = false;
-    let tabShowCallback = function () tabShown = true;
+    let tabShowCallback = () => tabShown = true;
     tab.addEventListener("TabShow", tabShowCallback, false);
 
     let tabState = ss.getTabState(tab);
@@ -32,10 +32,10 @@ function newWindowWithState(aState, aCallback) {
   let opts = "chrome,all,dialog=no,height=800,width=800";
   let win = window.openDialog(getBrowserURL(), "_blank", opts);
 
-  registerCleanupFunction(function () win.close());
+  registerCleanupFunction(() => win.close());
 
   whenWindowLoaded(win, function onWindowLoaded(aWin) {
     ss.setWindowState(aWin, JSON.stringify(aState), true);
-    executeSoon(function () aCallback(aWin));
+    executeSoon(() => aCallback(aWin));
   });
 }

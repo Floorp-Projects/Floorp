@@ -179,8 +179,7 @@ var gPrivacyPane = {
   initializeHistoryMode: function PPP_initializeHistoryMode()
   {
     let mode;
-    let getVal = function (aPref)
-      document.getElementById(aPref).value;
+    let getVal = aPref => document.getElementById(aPref).value;
 
     if (this._checkDefaultValues(this.prefsForDefault)) {
       if (getVal("browser.privatebrowsing.autostart"))

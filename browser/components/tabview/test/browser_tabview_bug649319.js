@@ -5,8 +5,8 @@ function test() {
   waitForExplicitFinish();
 
   newWindowWithTabView(function (win) {
-    registerCleanupFunction(function () win.close());
-    waitForFocus(function () testScenarios(win));
+    registerCleanupFunction(() => win.close());
+    waitForFocus(() => testScenarios(win));
   });
 }
 

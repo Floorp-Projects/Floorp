@@ -41,9 +41,7 @@ void
 ColorLayerComposite::GenEffectChain(EffectChain& aEffect)
 {
   aEffect.mLayerRef = this;
-  gfxRGBA color(GetColor());
-  aEffect.mPrimaryEffect = new EffectSolidColor(
-      Color(color.r, color.g, color.b, color.a));
+  aEffect.mPrimaryEffect = new EffectSolidColor(GetColor());
 }
 
 } // namespace layers

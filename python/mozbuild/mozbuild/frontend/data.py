@@ -28,6 +28,10 @@ from ..util import (
     group_unified_files,
 )
 
+from ..testing import (
+    all_test_flavors,
+)
+
 
 class TreeMetadata(object):
     """Base class for all data being captured."""
@@ -629,6 +633,8 @@ class TestManifest(ContextDerived):
     def __init__(self, context, path, manifest, flavor=None,
             install_prefix=None, relpath=None, dupe_manifest=False):
         ContextDerived.__init__(self, context)
+
+        assert flavor in all_test_flavors()
 
         self.path = path
         self.directory = mozpath.dirname(path)

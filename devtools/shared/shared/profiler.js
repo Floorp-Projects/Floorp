@@ -55,7 +55,10 @@ const ProfilerManager = (function () {
      * The nsIProfiler is target agnostic and interacts with the whole platform.
      * Therefore, special care needs to be given to make sure different profiler
      * consumers (i.e. "toolboxes") don't interfere with each other. Register
-     * the instance here.
+     * the profiler actor instances here.
+     *
+     * @param Profiler instance
+     *        A profiler actor class.
      */
     addInstance: function (instance) {
       consumers.add(instance);
@@ -64,6 +67,12 @@ const ProfilerManager = (function () {
       this.registerEventListeners();
     },
 
+    /**
+     * Remove the profiler actor instances here.
+     *
+     * @param Profiler instance
+     *        A profiler actor class.
+     */
     removeInstance: function (instance) {
       consumers.delete(instance);
 
@@ -101,25 +110,36 @@ const ProfilerManager = (function () {
       // interested in.
       let currentTime = nsIProfilerModule.getElapsedTime();
 
-      nsIProfilerModule.StartProfiler(
-        config.entries,
-        config.interval,
-        config.features,
-        config.features.length,
-        config.threadFilters,
-        config.threadFilters.length
-      );
-      let { position, totalSize, generation } = this.getBufferInfo();
+      try {
+        nsIProfilerModule.StartProfiler(
+          config.entries,
+          config.interval,
+          config.features,
+          config.features.length,
+          config.threadFilters,
+          config.threadFilters.length
+        );
+      } catch (e) {
+        // For some reason, the profiler couldn't be started. This could happen,
+        // for example, when in private browsing mode.
+        Cu.reportError(`Could not start the profiler module: ${e.message}`);
+        return { started: false, reason: e, currentTime };
+      }
 
       this._updateProfilerStatusPolling();
+
+      let { position, totalSize, generation } = this.getBufferInfo();
       return { started: true, position, totalSize, generation, currentTime };
     },
 
+    /**
+     * Attempts to stop the nsIProfiler module.
+     */
     stop: function () {
       // Actually stop the profiler only if the last client has stopped profiling.
-      // Since this is used as a root actor, and the profiler module interacts with the
-      // whole platform, we need to avoid a case in which the profiler is stopped
-      // when there might be other clients still profiling.
+      // Since this is used as a root actor, and the profiler module interacts
+      // with the whole platform, we need to avoid a case in which the profiler
+      // is stopped when there might be other clients still profiling.
       if (this.length <= 1) {
         nsIProfilerModule.StopProfiler();
       }
@@ -306,7 +326,8 @@ const ProfilerManager = (function () {
      */
     unregisterEventListeners: function () {
       if (this._eventsRegistered) {
-        PROFILER_SYSTEM_EVENTS.forEach(eventName => Services.obs.removeObserver(this, eventName));
+        PROFILER_SYSTEM_EVENTS.forEach(eventName =>
+          Services.obs.removeObserver(this, eventName));
         this._eventsRegistered = false;
       }
     },
@@ -481,6 +502,14 @@ var Profiler = exports.Profiler = Class({
     return { registered: response };
   },
 });
+
+/**
+ * Checks whether or not the profiler module can currently run.
+ * @return boolean
+ */
+Profiler.canProfile = function() {
+  return nsIProfilerModule.CanProfile();
+};
 
 /**
  * JSON.stringify callback used in Profiler.prototype.observe.

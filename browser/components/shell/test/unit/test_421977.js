@@ -20,7 +20,7 @@ function colorToHex(aColor) {
   var g = (aColor & gMask) >> 8;
   var b = (aColor & bMask);
 
-  return "#" + [r, g, b].map(function(aInt)
+  return "#" + [r, g, b].map(aInt =>
                               aInt.toString(16).replace(/^(.)$/, "0$1"))
                              .join("").toUpperCase();
 }

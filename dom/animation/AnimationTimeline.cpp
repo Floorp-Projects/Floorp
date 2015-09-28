@@ -10,7 +10,8 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AnimationTimeline, mWindow, mAnimations)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AnimationTimeline, mWindow,
+                                      mAnimationOrder)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(AnimationTimeline)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(AnimationTimeline)
@@ -31,13 +32,16 @@ AnimationTimeline::GetAnimations(AnimationSequence& aAnimations)
     }
   }
 
-  for (auto iter = mAnimations.Iter(); !iter.Done(); iter.Next()) {
-    Animation* animation = iter.Get()->GetKey();
+  aAnimations.SetCapacity(mAnimationOrder.Length());
 
-    MOZ_ASSERT(animation->IsRelevant(),
-               "Animations registered with a timeline should be relevant");
-    MOZ_ASSERT(animation->GetTimeline() == this,
-               "Animation should refer to this timeline");
+  for (Animation* animation : mAnimationOrder) {
+
+    // Skip animations which are no longer relevant or which have been
+    // associated with another timeline. These animations will be removed
+    // on the next tick.
+    if (!animation->IsRelevant() || animation->GetTimeline() != this) {
+      continue;
+    }
 
     // Bug 1174575: Until we implement a suitable PseudoElement interface we
     // don't have anything to return for the |target| attribute of
@@ -59,15 +63,14 @@ AnimationTimeline::GetAnimations(AnimationSequence& aAnimations)
 }
 
 void
-AnimationTimeline::AddAnimation(Animation& aAnimation)
+AnimationTimeline::NotifyAnimationUpdated(Animation& aAnimation)
 {
-  mAnimations.PutEntry(&aAnimation);
-}
+  if (mAnimations.Contains(&aAnimation)) {
+    return;
+  }
 
-void
-AnimationTimeline::RemoveAnimation(Animation& aAnimation)
-{
-  mAnimations.RemoveEntry(&aAnimation);
+  mAnimations.PutEntry(&aAnimation);
+  mAnimationOrder.AppendElement(&aAnimation);
 }
 
 } // namespace dom

@@ -40,12 +40,14 @@ mozilla::ShmemBuffer ShmemPool::GetIfAvailable(size_t aSize)
   ShmemBuffer& res = mShmemPool[mPoolFree - 1];
 
   if (!res.mInitialized) {
+    LOG(("No free preallocated Shmem"));
     return ShmemBuffer();
   }
 
   MOZ_ASSERT(res.mShmem.IsWritable(), "Pool in Shmem is not writable?");
 
   if (res.mShmem.Size<char>() < aSize) {
+    LOG(("Free Shmem but not of the right size"));
     return ShmemBuffer();
   }
 
@@ -71,30 +73,45 @@ mozilla::ShmemBuffer ShmemPool::Get(T* aInstance, size_t aSize)
     return ShmemBuffer();
   }
 
-  ShmemBuffer res = Move(mShmemPool[mPoolFree - 1]);
+  ShmemBuffer& res = mShmemPool[mPoolFree - 1];
 
   if (!res.mInitialized) {
-    LOG(("Initiaizing new Shmem in pool"));
-    aInstance->AllocShmem(aSize, SharedMemory::TYPE_BASIC, &res.mShmem);
+    LOG(("Initializing new Shmem in pool"));
+    if (!aInstance->AllocShmem(aSize, SharedMemory::TYPE_BASIC, &res.mShmem)) {
+      LOG(("Failure allocating new Shmem buffer"));
+      return ShmemBuffer();
+    }
     res.mInitialized = true;
   }
 
-  MOZ_ASSERT(res.mShmem.IsWritable(), "Pool in Shmem is not writable?");
+  MOZ_ASSERT(res.mShmem.IsWritable(), "Shmem in Pool is not writable?");
 
   // Prepare buffer, increase size if needed (we never shrink as we don't
   // maintain seperate sized pools and we don't want to keep reallocating)
   if (res.mShmem.Size<char>() < aSize) {
     LOG(("Size change/increase in Shmem Pool"));
     aInstance->DeallocShmem(res.mShmem);
+    res.mInitialized = false;
     // this may fail; always check return value
     if (!aInstance->AllocShmem(aSize, SharedMemory::TYPE_BASIC, &res.mShmem)) {
-      LOG(("Failure allocating new size Shmem buffer"));
+      LOG(("Failure allocating resized Shmem buffer"));
       return ShmemBuffer();
+    } else {
+      res.mInitialized = true;
     }
   }
 
+  MOZ_ASSERT(res.mShmem.IsWritable(), "Shmem in Pool is not writable post resize?");
+
   mPoolFree--;
-  return res;
+#ifdef DEBUG
+  size_t poolUse = mShmemPool.Length() - mPoolFree;
+  if (poolUse > mMaxPoolUse) {
+    mMaxPoolUse = poolUse;
+    LOG(("Maximum ShmemPool use increased: %d buffers", mMaxPoolUse));
+  }
+#endif
+  return Move(res);
 }
 
 void ShmemPool::Put(ShmemBuffer&& aShmem)
@@ -103,6 +120,12 @@ void ShmemPool::Put(ShmemBuffer&& aShmem)
   MOZ_ASSERT(mPoolFree < mShmemPool.Length());
   mShmemPool[mPoolFree] = Move(aShmem);
   mPoolFree++;
+#ifdef DEBUG
+  size_t poolUse = mShmemPool.Length() - mPoolFree;
+  if (poolUse > 0) {
+    LOG(("ShmemPool usage reduced to %d buffers", poolUse));
+  }
+#endif
 }
 
 template <class T>

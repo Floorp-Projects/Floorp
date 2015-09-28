@@ -579,6 +579,8 @@ var BrowserApp = {
         InitLater(() => ShumwayUtils.init(), window, "ShumwayUtils");
         InitLater(() => Telemetry.addData("TRACKING_PROTECTION_ENABLED",
             Services.prefs.getBoolPref("privacy.trackingprotection.enabled")));
+        InitLater(() => Telemetry.addData("TRACKING_PROTECTION_PBM_DISABLED",
+            !Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled")));
         InitLater(() => WebcompatReporter.init());
       }
 
