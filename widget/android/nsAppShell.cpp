@@ -183,7 +183,6 @@ public:
 };
 
 nsAppShell::nsAppShell()
-    : mQueuedViewportEvent(nullptr)
 {
     gAppShell = this;
 
@@ -544,11 +543,6 @@ nsAppShell::LegacyGeckoEvent::Run()
 
     case AndroidGeckoEvent::VIEWPORT:
     case AndroidGeckoEvent::BROADCAST: {
-        {
-            MonitorAutoLock lock(nsAppShell::gAppShell->mEventQueue.mMonitor);
-            nsAppShell::gAppShell->mQueuedViewportEvent = nullptr;
-        }
-
         if (curEvent->Characters().Length() == 0)
             break;
 
@@ -826,11 +820,6 @@ void
 nsAppShell::LegacyGeckoEvent::PostTo(mozilla::LinkedList<Event>& queue)
 {
     {
-        // set this to true when inserting events that we can coalesce
-        // viewport events across. this is effectively maintaining a whitelist
-        // of events that are unaffected by viewport changes.
-        bool allowCoalescingNextViewport = false;
-
         EVLOG("nsAppShell::PostEvent %p %d", ae, ae->Type());
         switch (ae->Type()) {
         case AndroidGeckoEvent::COMPOSITOR_CREATE:
@@ -858,16 +847,26 @@ nsAppShell::LegacyGeckoEvent::PostTo(mozilla::LinkedList<Event>& queue)
             break;
 
         case AndroidGeckoEvent::VIEWPORT:
-            if (nsAppShell::gAppShell->mQueuedViewportEvent) {
-                // drop the previous viewport event now that we have a new one
-                EVLOG("nsAppShell: Dropping old viewport event at %p in favour of new VIEWPORT event %p",
-                      nsAppShell::gAppShell->mQueuedViewportEvent, ae);
-                // Delete the event and remove from list.
-                delete nsAppShell::gAppShell->mQueuedViewportEvent;
+            // Coalesce a previous viewport event with this one, while
+            // allowing coalescing to happen across native callback events.
+            for (Event* event = queue.getLast(); event;
+                    event = event->getPrevious())
+            {
+                if (event->HasSameTypeAs(this) &&
+                        static_cast<LegacyGeckoEvent*>(event)->ae->Type()
+                            == AndroidGeckoEvent::VIEWPORT) {
+                    // Found a previous viewport event; remove it.
+                    delete event;
+                    break;
+                }
+                NativeCallbackEvent callbackEvent(nullptr);
+                if (event->HasSameTypeAs(&callbackEvent)) {
+                    // Allow coalescing viewport events across callback events.
+                    continue;
+                }
+                // End of search for viewport events to coalesce.
+                break;
             }
-            nsAppShell::gAppShell->mQueuedViewportEvent = this;
-            allowCoalescingNextViewport = true;
-
             queue.insertBack(this);
             break;
 
@@ -887,20 +886,9 @@ nsAppShell::LegacyGeckoEvent::PostTo(mozilla::LinkedList<Event>& queue)
             queue.insertBack(this);
             break;
 
-        case AndroidGeckoEvent::NATIVE_POKE:
-            allowCoalescingNextViewport = true;
-            // fall through
-
         default:
             queue.insertBack(this);
             break;
-        }
-
-        // if the event wasn't on our whitelist then reset mQueuedViewportEvent
-        // so that we don't coalesce future viewport events into the last viewport
-        // event we added
-        if (!allowCoalescingNextViewport) {
-            nsAppShell::gAppShell->mQueuedViewportEvent = nullptr;
         }
     }
 }
