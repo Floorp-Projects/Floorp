@@ -1,3 +1,6 @@
+// CodeMirror, copyright (c) by Marijn Haverbeke and others
+// Distributed under an MIT license: http://codemirror.net/LICENSE
+
 (function() {
   var mode = CodeMirror.getMode({indentUnit: 2}, "javascript");
   function MT(name) { test.mode(name, mode, Array.prototype.slice.call(arguments, 1)); }
@@ -14,25 +17,26 @@
      "  [[[variable-2 c], [variable y] ]] [operator =] [variable-2 c];",
      "})();");
 
+  MT("class_body",
+     "[keyword class] [variable Foo] {",
+     "  [property constructor]() {}",
+     "  [property sayName]() {",
+     "    [keyword return] [string-2 `foo${][variable foo][string-2 }oo`];",
+     "  }",
+     "}");
+
   MT("class",
      "[keyword class] [variable Point] [keyword extends] [variable SuperThing] {",
-     "  [[ [string-2 /expr/] ]]: [number 24],",
+     "  [property get] [property prop]() { [keyword return] [number 24]; }",
      "  [property constructor]([def x], [def y]) {",
      "    [keyword super]([string 'something']);",
      "    [keyword this].[property x] [operator =] [variable-2 x];",
      "  }",
      "}");
 
-  MT("module",
-     "[keyword module] [string 'foo'] {",
-     "  [keyword export] [keyword let] [def x] [operator =] [number 42];",
-     "  [keyword export] [keyword *] [keyword from] [string 'somewhere'];",
-     "}");
-
   MT("import",
      "[keyword function] [variable foo]() {",
      "  [keyword import] [def $] [keyword from] [string 'jquery'];",
-     "  [keyword module] [def crypto] [keyword from] [string 'crypto'];",
      "  [keyword import] { [def encrypt], [def decrypt] } [keyword from] [string 'crypto'];",
      "}");
 
@@ -49,6 +53,12 @@
      "  [keyword for]([keyword var] [def i] [operator =] [number 0]; [variable-2 i] [operator <] [variable-2 n]; [operator ++][variable-2 i])",
      "    [keyword yield] [variable-2 i];",
      "}");
+
+  MT("quotedStringAddition",
+     "[keyword let] [variable f] [operator =] [variable a] [operator +] [string 'fatarrow'] [operator +] [variable c];");
+
+  MT("quotedFatArrow",
+     "[keyword let] [variable f] [operator =] [variable a] [operator +] [string '=>'] [operator +] [variable c];");
 
   MT("fatArrow",
      "[variable array].[property filter]([def a] [operator =>] [variable-2 a] [operator +] [number 1]);",
@@ -69,6 +79,9 @@
 
   MT("quasi",
      "[variable re][string-2 `fofdlakj${][variable x] [operator +] ([variable re][string-2 `foo`]) [operator +] [number 1][string-2 }fdsa`] [operator +] [number 2]");
+
+  MT("quasi_no_function",
+     "[variable x] [operator =] [string-2 `fofdlakj${][variable x] [operator +] [string-2 `foo`] [operator +] [number 1][string-2 }fdsa`] [operator +] [number 2]");
 
   MT("indent_statement",
      "[keyword var] [variable x] [operator =] [number 10]",
@@ -104,12 +117,46 @@
      "  [keyword debugger];",
      "}");
 
+  MT("indent_else",
+     "[keyword for] (;;)",
+     "  [keyword if] ([variable foo])",
+     "    [keyword if] ([variable bar])",
+     "      [number 1];",
+     "    [keyword else]",
+     "      [number 2];",
+     "  [keyword else]",
+     "    [number 3];");
+
+  MT("indent_funarg",
+     "[variable foo]([number 10000],",
+     "    [keyword function]([def a]) {",
+     "  [keyword debugger];",
+     "};");
+
+  MT("indent_below_if",
+     "[keyword for] (;;)",
+     "  [keyword if] ([variable foo])",
+     "    [number 1];",
+     "[number 2];");
+
   MT("multilinestring",
      "[keyword var] [variable x] [operator =] [string 'foo\\]",
      "[string bar'];");
 
   MT("scary_regexp",
      "[string-2 /foo[[/]]bar/];");
+
+  MT("indent_strange_array",
+     "[keyword var] [variable x] [operator =] [[",
+     "  [number 1],,",
+     "  [number 2],",
+     "]];",
+     "[number 10];");
+
+  MT("param_default",
+     "[keyword function] [variable foo]([def x] [operator =] [string-2 `foo${][number 10][string-2 }bar`]) {",
+     "  [keyword return] [variable-2 x];",
+     "}");
 
   var jsonld_mode = CodeMirror.getMode(
     {indentUnit: 2},
