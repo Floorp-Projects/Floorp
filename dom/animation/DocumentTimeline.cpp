@@ -94,6 +94,7 @@ DocumentTimeline::ToTimelineTime(const TimeStamp& aTimeStamp) const
 void
 DocumentTimeline::WillRefresh(mozilla::TimeStamp aTime)
 {
+  MOZ_ASSERT(mIsObservingRefreshDriver);
 }
 
 TimeStamp
