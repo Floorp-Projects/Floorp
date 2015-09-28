@@ -82,17 +82,25 @@ function RunTest() {
       // select map dictionary
       setCurrentDictionary(editor, "maputf");
 
+      // Focus again, so the spelling gets updated.
+      textbox.blur();
+      textbox.focus();
+
       onSpellCheck(textbox, function () {
         // test that map dictionary is in use
-        is(getMisspelledWords(editor), "created" + "imply" + "tomorrow" + "qwertyu", "map misspellings");
+        is(getMisspelledWords(editor), "created" + "imply" + "tomorrow" + "qwertyu", "map misspellings (1)");
         is(getCurrentDictionary(editor), "maputf", "current dictionary");
 
         // uninstall map dictionary
         hunspell.removeDirectory(map);
 
+        // Focus again, so the spelling gets updated.
+        textbox.blur();
+        textbox.focus();
+
         onSpellCheck(textbox, function () {
           // test that map dictionary is not in use
-          isnot(getMisspelledWords(editor), "created" + "imply" + "tomorrow" + "qwertyu", "map misspellings");
+          isnot(getMisspelledWords(editor), "created" + "imply" + "tomorrow" + "qwertyu", "map misspellings (2)");
           isnot(getCurrentDictionary(editor), "maputf", "current dictionary");
 
           // test that base dictionary is available and map dictionary is unavailable
