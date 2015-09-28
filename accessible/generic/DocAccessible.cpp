@@ -2071,6 +2071,10 @@ DocAccessible::ValidateARIAOwned()
       nsIContent* childEl = childEls->ElementAt(idx);
       Accessible* child = GetAccessible(childEl);
       if (child && child->IsInDocument() && !child->GetFrame()) {
+        if (!child->Parent()) {
+          NS_ERROR("An element in the document doesn't have a parent?");
+          continue;
+        }
         UpdateTreeOnRemoval(child->Parent(), childEl);
       }
     }
