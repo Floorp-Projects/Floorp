@@ -2266,13 +2266,6 @@ TabParent::RecvEnableDisableCommands(const nsString& aAction,
   return true;
 }
 
-bool
-TabParent::RecvGetTabOffset(LayoutDeviceIntPoint* aPoint)
-{
-  *aPoint = GetChildProcessOffset();
-  return true;
-}
-
 NS_IMETHODIMP
 TabParent::GetChildProcessOffset(int32_t* aOutCssX, int32_t* aOutCssY)
 {
