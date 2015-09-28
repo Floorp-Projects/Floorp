@@ -13,6 +13,11 @@ SOURCES += [
 DISABLE_STL_WRAPPING = True
 NO_VISIBILITY_FLAGS = True
 
+# libc++ is required to build plugins against clang on OS X.
+if CONFIG['HOST_OS_ARCH'] == 'Darwin':
+    CXXFLAGS += ['-stdlib=libc++']
+    LDFLAGS += ['-lc++']
+
 DIRS += [
     'tests',
 ]
