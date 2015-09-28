@@ -1571,14 +1571,19 @@ bool TabParent::SendRealMouseEvent(WidgetMouseEvent& event)
     }
   }
 
+  ScrollableLayerGuid guid;
+  uint64_t blockId;
+  ApzAwareEventRoutingToChild(&guid, &blockId, nullptr);
+
   if (eMouseMove == event.mMessage) {
     if (event.reason == WidgetMouseEvent::eSynthesized) {
-      return SendSynthMouseMoveEvent(event);
+      return SendSynthMouseMoveEvent(event, guid, blockId);
     } else {
-      return SendRealMouseMoveEvent(event);
+      return SendRealMouseMoveEvent(event, guid, blockId);
     }
   }
-  return SendRealMouseButtonEvent(event);
+
+  return SendRealMouseButtonEvent(event, guid, blockId);
 }
 
 LayoutDeviceToCSSScale
