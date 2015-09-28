@@ -12,23 +12,21 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <link rel="stylesheet" href="chrome://browser/skin/" type="text/css"/>
-    <link rel="stylesheet" href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"/>
-    <link rel="stylesheet" href="chrome://devtools/skin/themes/common.css" type="text/css"/>
-    <link rel="stylesheet" href="chrome://devtools/skin/themes/widgets.css" type="text/css"/>
-    <link rel="stylesheet" href="chrome://devtools/skin/themes/memory.css" type="text/css"/>
+    <link rel="stylesheet" href="chrome://browser/content/devtools/widgets.css" type="text/css"/>
+    <link rel="stylesheet" href="chrome://browser/skin/devtools/common.css" type="text/css"/>
+    <link rel="stylesheet" href="chrome://browser/skin/devtools/widgets.css" type="text/css"/>
+    <link rel="stylesheet" href="chrome://browser/skin/devtools/memory.css" type="text/css"/>
 
     <script type="application/javascript;version=1.8"
-            src="chrome://devtools/content/shared/theme-switching.js"></script>
+            src="chrome://devtools/content/shared/theme-switching.js"/>
     <script type="application/javascript;version=1.8"
-            src="controller.js"></script>
+            src="initializer.js"></script>
   </head>
   <body class="theme-body">
-    <toolbar class="devtools-toolbar">
-      <toolbarbutton id="snapshot-button" class="devtools-toolbarbutton"
-                     tabindex="0"/>
-      <spacer flex="1"></spacer>
-    </toolbar>
-    <splitter class="devtools-horizontal-splitter"/>
+    <div class="devtools-toolbar">
+      <div id="snapshot-button" class="devtools-toolbarbutton" />
+    </div>
+    <div class="devtools-horizontal-splitter"></div>
     <div id="memory-content"
          class="devtools-responsive-container"
          flex="1">

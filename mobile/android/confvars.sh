@@ -119,5 +119,7 @@ if test "$NIGHTLY_BUILD"; then
   MOZ_SWITCHBOARD=1
 fi
 
-# Use native Firefox Accounts UI regardless of channel.
+# Use native Firefox Accounts UI after Nightly.
+if ! test "$NIGHTLY_BUILD"; then
 MOZ_ANDROID_NATIVE_ACCOUNT_UI=1
+fi

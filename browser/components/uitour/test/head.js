@@ -251,6 +251,7 @@ function UITourTest() {
   });
 
   function done() {
+    info("== Done test, doing shared checks before teardown ==");
     executeSoon(() => {
       if (gTestTab)
         gBrowser.removeTab(gTestTab);
@@ -267,12 +268,14 @@ function UITourTest() {
       isnot(PanelUI.panel.state, "open", "The panel shouldn't be open");
       is(document.getElementById("PanelUI-menu-button").hasAttribute("open"), false, "Menu button should know that the menu is closed");
 
+      info("Done shared checks");
       executeSoon(nextTest);
     });
   }
 
   function nextTest() {
     if (tests.length == 0) {
+      info("finished tests in this file");
       finish();
       return;
     }

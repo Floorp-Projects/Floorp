@@ -107,10 +107,19 @@ var PerformanceActor = exports.PerformanceActor = protocol.ActorClass({
     response: RetVal("json")
   }),
 
+  canCurrentlyRecord: method(function() {
+    return this.bridge.canCurrentlyRecord();
+  }, {
+    response: { value: RetVal("json") }
+  }),
+
   startRecording: method(Task.async(function *(options={}) {
+    if (!this.bridge.canCurrentlyRecord().success) {
+      return null;
+    }
+
     let normalizedOptions = normalizePerformanceFeatures(options, this.traits.features);
     let recording = yield this.bridge.startRecording(normalizedOptions);
-
     this.manage(recording);
 
     return recording;
@@ -118,14 +127,18 @@ var PerformanceActor = exports.PerformanceActor = protocol.ActorClass({
     request: {
       options: Arg(0, "nullable:json"),
     },
-    response: RetVal("performance-recording"),
+    response: {
+      recording: RetVal("nullable:performance-recording")
+    }
   }),
 
   stopRecording: actorBridge("stopRecording", {
     request: {
       options: Arg(0, "performance-recording"),
     },
-    response: RetVal("performance-recording"),
+    response: {
+      recording: RetVal("performance-recording")
+    }
   }),
 
   isRecording: actorBridge("isRecording", {
