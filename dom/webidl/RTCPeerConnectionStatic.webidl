@@ -8,7 +8,7 @@
   Right now, it is not possible to add static functions to a JS implemented
   interface (see bug 863952), so we need to create a simple interface with a
   trivial constructor and no data to hold these functions that really ought to
-  be static in RTCPeerConnection.
+  be static in mozRTCPeerConnection.
   TODO(bcampen@mozilla.com) Merge this code into RTCPeerConnection once this
   limitation is gone. (Bug 1017082)
 */
@@ -19,7 +19,7 @@ enum RTCLifecycleEvent {
     "iceconnectionstatechange"
 };
 
-callback PeerConnectionLifecycleCallback = void (RTCPeerConnection pc,
+callback PeerConnectionLifecycleCallback = void (mozRTCPeerConnection pc,
                                                  unsigned long long windowId,
                                                  RTCLifecycleEvent eventType);
 
@@ -27,7 +27,7 @@ callback PeerConnectionLifecycleCallback = void (RTCPeerConnection pc,
  Pref="media.peerconnection.enabled",
  JSImplementation="@mozilla.org/dom/peerconnectionstatic;1",
  Constructor()]
-interface RTCPeerConnectionStatic {
+interface mozRTCPeerConnectionStatic {
 
   /* One slot per window (the window in which the register call is made),
      automatically unregistered when window goes away.

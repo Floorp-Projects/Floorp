@@ -8,11 +8,11 @@
 <script type="application/javascript">
   createHTML({
     bug: "822674",
-    title: "RTCPeerConnection isn't a true javascript object as it should be"
+    title: "mozRTCPeerConnection isn't a true javascript object as it should be"
   });
 
   runNetworkTest(function () {
-    var pc = new RTCPeerConnection();
+    var pc = new mozRTCPeerConnection();
 
     pc.thereIsNeverGoingToBeAPropertyWithThisNameOnThisInterface = 1;
     is(pc.thereIsNeverGoingToBeAPropertyWithThisNameOnThisInterface, 1,
