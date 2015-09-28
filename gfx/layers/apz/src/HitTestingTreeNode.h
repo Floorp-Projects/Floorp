@@ -9,14 +9,16 @@
 
 #include "APZUtils.h"                       // for HitTestResult
 #include "FrameMetrics.h"                   // for ScrollableLayerGuid
+#include "Layers.h"
 #include "mozilla/gfx/Matrix.h"             // for Matrix4x4
 #include "mozilla/layers/LayersTypes.h"     // for EventRegions
 #include "mozilla/Maybe.h"                  // for Maybe
-#include "mozilla/nsRefPtr.h"                       // for nsRefPtr
+#include "mozilla/nsRefPtr.h"               // for nsRefPtr
 
 namespace mozilla {
 namespace layers {
 
+class AsyncDragMetrics;
 class AsyncPanZoomController;
 
 /**
@@ -87,6 +89,13 @@ public:
                       const Maybe<ParentLayerIntRegion>& aClipRegion,
                       const EventRegionsOverride& aOverride);
   bool IsOutsideClip(const ParentLayerPoint& aPoint) const;
+
+  /* Scrollbar info */
+
+  void SetScrollbarData(FrameMetrics::ViewID aScrollViewId, Layer::ScrollDirection aDir, int32_t aScrollSize);
+  bool MatchesScrollDragMetrics(const AsyncDragMetrics& aDragMetrics) const;
+  int32_t GetScrollSize() const;
+
   /* Convert aPoint into the LayerPixel space for the layer corresponding to
    * this node. */
   Maybe<LayerPoint> Untransform(const ParentLayerPoint& aPoint) const;
@@ -110,6 +119,10 @@ private:
   bool mIsPrimaryApzcHolder;
 
   uint64_t mLayersId;
+
+  FrameMetrics::ViewID mScrollViewId;
+  Layer::ScrollDirection mScrollDir;
+  int32_t mScrollSize;
 
   /* Let {L,M} be the {layer, scrollable metrics} pair that this node
    * corresponds to in the layer tree. mEventRegions contains the event regions
