@@ -111,7 +111,7 @@ function test() {
 
   waitForExplicitFinish();
   testOnWindow(false, function(publicWindow) {
-    registerCleanupFunction(function () publicWindow.TabView.hide());
+    registerCleanupFunction(() => publicWindow.TabView.hide());
     assertValidPrerequisites(publicWindow, 'start');
 
     showTabView(function () {

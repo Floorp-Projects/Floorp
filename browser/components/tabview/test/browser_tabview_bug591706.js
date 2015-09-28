@@ -23,9 +23,9 @@ function onTabViewWindowLoaded() {
   let firstTab = gBrowser.loadOneTab("about:blank#1", {inBackground: true});
   let firstTabItem = firstTab._tabViewTabItem;
   let currentGroup = contentWindow.GroupItems.getActiveGroupItem();
-  ok(currentGroup.getChildren().some(function(child) child == firstTabItem),"The first tab was made in the current group");
+  ok(currentGroup.getChildren().some(child => child == firstTabItem),"The first tab was made in the current group");
   contentWindow.GroupItems.getActiveGroupItem().remove(firstTabItem);
-  ok(!currentGroup.getChildren().some(function(child) child == firstTabItem),"The first tab was orphaned");
+  ok(!currentGroup.getChildren().some(child => child == firstTabItem),"The first tab was orphaned");
 
   // Create a group and make it active
   let box = new contentWindow.Rect(10, 10, 300, 300);
@@ -36,7 +36,7 @@ function onTabViewWindowLoaded() {
   // Create a second tab in this new group
   let secondTab = gBrowser.loadOneTab("about:blank#2", {inBackground: true});
   let secondTabItem = secondTab._tabViewTabItem;
-  ok(group.getChildren().some(function(child) child == secondTabItem),"The second tab was made in our new group");
+  ok(group.getChildren().some(child => child == secondTabItem),"The second tab was made in our new group");
   is(group.getChildren().length, 1, "Only one tab in the first group");
   isnot(firstTab.linkedBrowser.currentURI.spec, secondTab.linkedBrowser.currentURI.spec, "The two tabs must have different locations");
 

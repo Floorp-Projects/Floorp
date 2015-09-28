@@ -64,7 +64,7 @@ var tests = [
          "The pref should be absent because it's blacklisted.");
       ok(!("network.proxy.troubleshoot" in p),
          "The pref should be absent because it's blacklisted.");
-      prefs.forEach(function (p) Services.prefs.deleteBranch(p));
+      prefs.forEach(p => Services.prefs.deleteBranch(p));
       done();
     });
   },
@@ -490,7 +490,7 @@ function validateObject_array(array, schema) {
   if (typeof(schema.items) != "object")
     // Don't care what the array's elements are.
     return;
-  array.forEach(function (elt) validateObject(elt, schema.items));
+  array.forEach(elt => validateObject(elt, schema.items));
 }
 
 function validateObject_string(str, schema) {}

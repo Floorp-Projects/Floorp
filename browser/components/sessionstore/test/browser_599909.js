@@ -101,7 +101,9 @@ function checkAutocompleteResults(aExpected, aCallback) {
     },
     setSelectedIndex: function() {},
     get searchCount() { return this.searches.length; },
-    getSearchAt: function(aIndex) this.searches[aIndex],
+    getSearchAt: function(aIndex) {
+      return this.searches[aIndex];
+    },
     QueryInterface: XPCOMUtils.generateQI([
       Ci.nsIAutoCompleteInput,
       Ci.nsIAutoCompletePopup,

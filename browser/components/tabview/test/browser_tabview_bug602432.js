@@ -16,7 +16,7 @@ function test() {
   waitForExplicitFinish();
 
   newWindowWithTabView(function (win) {
-    registerCleanupFunction(function () win.close());
+    registerCleanupFunction(() => win.close());
 
     let numTabsToUpdate = 10;
     let groupItem = createGroupItemWithBlankTabs(win, 150, 150, 100, numTabsToUpdate, false);

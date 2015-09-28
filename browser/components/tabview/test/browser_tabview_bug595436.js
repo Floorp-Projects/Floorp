@@ -36,7 +36,7 @@ function test() {
   waitForExplicitFinish();
 
   newWindowWithTabView(function (win) {
-    registerCleanupFunction(function () win.close());
+    registerCleanupFunction(() => win.close());
 
     cw = win.TabView.getContentWindow();
     search = cw.document.getElementById("search");

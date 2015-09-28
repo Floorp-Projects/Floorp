@@ -6,37 +6,21 @@
 
 #include "WebAudioUtils.h"
 #include "AudioNodeStream.h"
-#include "AudioParamTimeline.h"
 #include "blink/HRTFDatabaseLoader.h"
 
 namespace mozilla {
 
 namespace dom {
 
-struct ConvertTimeToTickHelper
-{
-  AudioNodeStream* mSourceStream;
-  AudioNodeStream* mDestinationStream;
-
-  static int64_t Convert(double aTime, void* aClosure)
-  {
-    ConvertTimeToTickHelper* This = static_cast<ConvertTimeToTickHelper*> (aClosure);
-    MOZ_ASSERT(This->mSourceStream->SampleRate() == This->mDestinationStream->SampleRate());
-    return This->mSourceStream->
-      TicksFromDestinationTime(This->mDestinationStream, aTime);
-  }
-};
-
-void
-WebAudioUtils::ConvertAudioParamToTicks(AudioParamTimeline& aParam,
-                                        AudioNodeStream* aSource,
-                                        AudioNodeStream* aDest)
+void WebAudioUtils::ConvertAudioTimelineEventToTicks(AudioTimelineEvent& aEvent,
+                                                     AudioNodeStream* aSource,
+                                                     AudioNodeStream* aDest)
 {
   MOZ_ASSERT(!aSource || aSource->SampleRate() == aDest->SampleRate());
-  ConvertTimeToTickHelper ctth;
-  ctth.mSourceStream = aSource;
-  ctth.mDestinationStream = aDest;
-  aParam.ConvertEventTimesToTicks(ConvertTimeToTickHelper::Convert, &ctth, aDest->SampleRate());
+  aEvent.SetTimeInTicks(
+      aSource->TicksFromDestinationTime(aDest, aEvent.Time<double>()));
+  aEvent.mTimeConstant *= aSource->SampleRate();
+  aEvent.mDuration *= aSource->SampleRate();
 }
 
 void

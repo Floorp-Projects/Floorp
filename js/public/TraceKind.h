@@ -125,7 +125,7 @@ DispatchTraceKindTyped(F f, JS::TraceKind traceKind, Args&&... args)
 template <typename F, typename... Args>
 auto
 DispatchTraceKindTyped(F f, void* thing, JS::TraceKind traceKind, Args&&... args)
-  -> decltype(f(reinterpret_cast<JSObject*>(0), mozilla::Forward<Args>(args)...))
+  -> decltype(f(static_cast<JSObject*>(nullptr), mozilla::Forward<Args>(args)...))
 {
     switch (traceKind) {
 #define JS_EXPAND_DEF(name, type, _) \

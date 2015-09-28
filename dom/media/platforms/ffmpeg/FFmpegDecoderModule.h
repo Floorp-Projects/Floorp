@@ -21,7 +21,13 @@ public:
   static already_AddRefed<PlatformDecoderModule>
   Create()
   {
+    uint32_t major, minor;
+    GetVersion(major, minor);
+    if (major < 54 && !sFFmpegDecoderEnabled) {
+      return nullptr;
+    }
     nsRefPtr<PlatformDecoderModule> pdm = new FFmpegDecoderModule();
+
     return pdm.forget();
   }
 

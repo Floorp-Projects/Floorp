@@ -2000,15 +2000,6 @@ TabParent::RecvSetCustomCursor(const nsCString& aCursorData,
   return true;
 }
 
-bool
-TabParent::RecvSetBackgroundColor(const nscolor& aColor)
-{
-  if (RenderFrameParent* frame = GetRenderFrame()) {
-    frame->SetBackgroundColor(aColor);
-  }
-  return true;
-}
-
 nsIXULBrowserWindow*
 TabParent::GetXULBrowserWindow()
 {

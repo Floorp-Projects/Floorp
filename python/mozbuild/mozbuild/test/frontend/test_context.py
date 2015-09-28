@@ -10,6 +10,7 @@ from mozunit import main
 from mozbuild.frontend.context import (
     AbsolutePath,
     Context,
+    ContextDerivedTypedRecord,
     ContextDerivedTypedList,
     ContextDerivedTypedListWithItems,
     Files,
@@ -578,6 +579,36 @@ class TestPaths(unittest.TestCase):
             self.assertEqual(p_path, Path(ctxt1, p_str))
             self.assertEqual(l[p_str].foo, True)
             self.assertEqual(l[p_path].foo, True)
+
+class TestTypedRecord(unittest.TestCase):
+
+    def test_fields(self):
+        T = ContextDerivedTypedRecord(('field1', unicode),
+                                      ('field2', list))
+        inst = T(None)
+        self.assertEqual(inst.field1, '')
+        self.assertEqual(inst.field2, [])
+
+        inst.field1 = 'foo'
+        inst.field2 += ['bar']
+
+        self.assertEqual(inst.field1, 'foo')
+        self.assertEqual(inst.field2, ['bar'])
+
+        with self.assertRaises(AttributeError):
+            inst.field3 = []
+
+    def test_coercion(self):
+        T = ContextDerivedTypedRecord(('field1', unicode),
+                                      ('field2', list))
+        inst = T(None)
+        inst.field1 = 3
+        inst.field2 += ('bar',)
+        self.assertEqual(inst.field1, '3')
+        self.assertEqual(inst.field2, ['bar'])
+
+        with self.assertRaises(TypeError):
+            inst.field2 = object()
 
 
 class TestFiles(unittest.TestCase):
