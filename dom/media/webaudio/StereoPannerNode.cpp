@@ -49,15 +49,17 @@ public:
   enum Parameters {
     PAN
   };
-  void SetTimelineParameter(uint32_t aIndex,
-                            const AudioParamTimeline& aValue,
-                            TrackRate aSampleRate) override
+  void RecvTimelineEvent(uint32_t aIndex,
+                         AudioTimelineEvent& aEvent) override
   {
+    MOZ_ASSERT(mSource && mDestination);
+    WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent,
+                                                    mSource,
+                                                    mDestination);
+
     switch (aIndex) {
     case PAN:
-      MOZ_ASSERT(mSource && mDestination);
-      mPan = aValue;
-      WebAudioUtils::ConvertAudioParamToTicks(mPan, mSource, mDestination);
+      mPan.InsertEvent<int64_t>(aEvent);
       break;
     default:
       NS_ERROR("Bad StereoPannerNode TimelineParameter");
@@ -212,10 +214,10 @@ StereoPannerNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 void
-StereoPannerNode::SendPanToStream(AudioNode* aNode)
+StereoPannerNode::SendPanToStream(AudioNode* aNode, const AudioTimelineEvent& aEvent)
 {
   StereoPannerNode* This = static_cast<StereoPannerNode*>(aNode);
-  SendTimelineParameterToStream(This, StereoPannerNodeEngine::PAN, *This->mPan);
+  SendTimelineEventToStream(This, StereoPannerNodeEngine::PAN, aEvent);
 }
 
 } // namespace dom

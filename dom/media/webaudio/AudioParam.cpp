@@ -117,8 +117,10 @@ AudioParam::Stream()
     mNodeStreamPort = nodeStream->AllocateInputPort(mStream);
   }
 
-  // Let the MSG's copy of AudioParamTimeline know about the change in the stream
-  mCallback(mNode);
+  // Send the stream to the timeline on the MSG side.
+  AudioTimelineEvent event(mStream);
+
+  mCallback(mNode, event);
 
   return mStream;
 }

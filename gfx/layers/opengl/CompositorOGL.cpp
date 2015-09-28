@@ -243,7 +243,7 @@ CompositorOGL::Initialize()
     mGLContext->IsExtensionSupported(gl::GLContext::EXT_bgra);
 
   mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
-                                 LOCAL_GL_ONE, LOCAL_GL_ONE);
+                                 LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA);
   mGLContext->fEnable(LOCAL_GL_BLEND);
 
   // initialise a common shader to check that we can actually compile a shader
@@ -661,7 +661,7 @@ CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   // Default blend function implements "OVER"
   mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
-                                 LOCAL_GL_ONE, LOCAL_GL_ONE);
+                                 LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA);
   mGLContext->fEnable(LOCAL_GL_BLEND);
 
   // Make sure SCISSOR is enabled before setting the render target, since the RT
@@ -905,7 +905,7 @@ static bool SetBlendMode(GLContext* aGL, gfx::CompositionOp aBlendMode, bool aIs
   GLenum srcBlend;
   GLenum dstBlend;
   GLenum srcAlphaBlend = LOCAL_GL_ONE;
-  GLenum dstAlphaBlend = LOCAL_GL_ONE;
+  GLenum dstAlphaBlend = LOCAL_GL_ONE_MINUS_SRC_ALPHA;
 
   switch (aBlendMode) {
     case gfx::CompositionOp::OP_OVER:
@@ -988,12 +988,16 @@ CompositorOGL::DrawQuad(const Rect& aRect,
     return;
   }
 
+  IntPoint offset = mCurrentRenderTarget->GetOrigin();
+  Rect renderBound = mRenderBound;
+  renderBound.IntersectRect(renderBound, aClipRect);
+  renderBound.MoveBy(offset);
+
+  Rect destRect = aTransform.TransformAndClipBounds(aRect, renderBound);
+
   // XXX: This doesn't handle 3D transforms. It also doesn't handled rotated
   //      quads. Fix me.
-  Rect destRect = aTransform.TransformAndClipBounds(aRect, aClipRect);
   mPixelsFilled += destRect.width * destRect.height;
-
-  IntPoint offset = mCurrentRenderTarget->GetOrigin();
 
   // Do a simple culling if this rect is out of target buffer.
   // Inflate a small size to avoid some numerical imprecision issue.
@@ -1384,7 +1388,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
                                      effectComponentAlpha->mOnBlack);
 
       mGLContext->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
-                                     LOCAL_GL_ONE, LOCAL_GL_ONE);
+                                     LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA);
     }
     break;
   default:
@@ -1394,7 +1398,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
 
   if (didSetBlendMode) {
     gl()->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
-                             LOCAL_GL_ONE, LOCAL_GL_ONE);
+                             LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA);
   }
 
   // in case rendering has used some other GL context

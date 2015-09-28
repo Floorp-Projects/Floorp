@@ -5,7 +5,7 @@ function test() {
   waitForExplicitFinish();
 
   newWindowWithTabView(function (win) {
-    registerCleanupFunction(function () win.close());
+    registerCleanupFunction(() => win.close());
 
     for (let i = 0; i < 4; i++)
       win.gBrowser.loadOneTab("about:blank", {inBackground: true});

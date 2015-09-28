@@ -2911,9 +2911,15 @@ MediaStreamGraphImpl::AudioContextOperationCompleted(MediaStream* aStream,
 
   AudioContextState state;
   switch (aOperation) {
-    case Suspend: state = AudioContextState::Suspended; break;
-    case Resume: state = AudioContextState::Running; break;
-    case Close: state = AudioContextState::Closed; break;
+    case AudioContextOperation::Suspend:
+      state = AudioContextState::Suspended;
+      break;
+    case AudioContextOperation::Resume:
+      state = AudioContextState::Running;
+      break;
+    case AudioContextOperation::Close:
+      state = AudioContextState::Closed;
+      break;
     default: MOZ_CRASH("Not handled.");
   }
 

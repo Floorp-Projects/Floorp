@@ -59,7 +59,7 @@ public:
 
     // Clip drawing in case we're using (unbounded) operator source.
     aDT->PushClipRect(snapped);
-    FillRectWithMask(aDT, aDeviceOffset, snapped, ToColor(mColor),
+    FillRectWithMask(aDT, aDeviceOffset, snapped, mColor,
                      DrawOptions(GetEffectiveOpacity(), GetEffectiveOperator(this)),
                      aMaskLayer);
     aDT->PopClip();

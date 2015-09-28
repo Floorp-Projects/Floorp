@@ -93,7 +93,7 @@ function test() {
 
   waitForExplicitFinish();
   assertTabViewIsHidden();
-  registerCleanupFunction(function () TabView.hide());
+  registerCleanupFunction(() => TabView.hide());
 
   showTabView(function () {
     cw = TabView.getContentWindow();

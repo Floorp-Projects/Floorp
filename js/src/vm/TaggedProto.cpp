@@ -6,6 +6,11 @@
 
 #include "vm/TaggedProto.h"
 
+#include "jsfun.h"
+#include "jsobj.h"
+
+#include "gc/Barrier.h"
+
 namespace js {
 
 /* static */ void

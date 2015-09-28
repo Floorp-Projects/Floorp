@@ -52,7 +52,7 @@ function test() {
       groupItem.removeSubscriber("collapsed", onCollapsed);
 
       let secondGroup = cw.GroupItems.groupItems[1];
-      closeGroupItem(secondGroup, function () hideTabView(finishTest));
+      closeGroupItem(secondGroup, () => hideTabView(finishTest));
     });
 
     groupItem.expand();
@@ -69,7 +69,7 @@ function test() {
   waitForExplicitFinish();
 
   newWindowWithTabView(function (win) {
-    registerCleanupFunction(function () win.close());
+    registerCleanupFunction(() => win.close());
 
     cw = win.TabView.getContentWindow();
 

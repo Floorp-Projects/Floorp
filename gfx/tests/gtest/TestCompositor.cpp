@@ -240,19 +240,19 @@ TEST(Gfx, CompositorSimpleTree)
 
     { // background
       ColorLayer* colorLayer = layers[1]->AsColorLayer();
-      colorLayer->SetColor(gfxRGBA(1.f, 0.f, 1.f, 1.f));
+      colorLayer->SetColor(Color(1.f, 0.f, 1.f, 1.f));
       colorLayer->SetBounds(colorLayer->GetVisibleRegion().GetBounds());
     }
 
     {
       ColorLayer* colorLayer = layers[2]->AsColorLayer();
-      colorLayer->SetColor(gfxRGBA(1.f, 0.f, 0.f, 1.f));
+      colorLayer->SetColor(Color(1.f, 0.f, 0.f, 1.f));
       colorLayer->SetBounds(colorLayer->GetVisibleRegion().GetBounds());
     }
 
     {
       ColorLayer* colorLayer = layers[3]->AsColorLayer();
-      colorLayer->SetColor(gfxRGBA(0.f, 0.f, 1.f, 1.f));
+      colorLayer->SetColor(Color(0.f, 0.f, 1.f, 1.f));
       colorLayer->SetBounds(colorLayer->GetVisibleRegion().GetBounds());
     }
 

@@ -27,6 +27,6 @@ function newWindow(callback) {
 
   win.addEventListener("load", function onLoad() {
     win.removeEventListener("load", onLoad, false);
-    executeSoon(function () callback(win));
+    executeSoon(() => callback(win));
   }, false);
 }

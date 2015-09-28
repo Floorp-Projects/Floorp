@@ -206,17 +206,17 @@ nsGIFDecoder2::BeginGIF()
   PostSize(mGIFStruct.screen_width, mGIFStruct.screen_height);
 }
 
-void
+bool
 nsGIFDecoder2::CheckForTransparency(IntRect aFrameRect)
 {
   // Check if the image has a transparent color in its palette.
   if (mGIFStruct.is_transparent) {
     PostHasTransparency();
-    return;
+    return true;
   }
 
   if (mGIFStruct.images_decoded > 0) {
-    return;  // We only care about first frame padding below.
+    return false;  // We only care about first frame padding below.
   }
 
   // If we need padding on the first frame, that means we don't draw into part
@@ -224,7 +224,11 @@ nsGIFDecoder2::CheckForTransparency(IntRect aFrameRect)
   IntRect imageRect(0, 0, mGIFStruct.screen_width, mGIFStruct.screen_height);
   if (!imageRect.IsEqualEdges(aFrameRect)) {
     PostHasTransparency();
+    mSawTransparency = true;  // Make sure we don't optimize it away.
+    return true;
   }
+
+  return false;
 }
 
 //******************************************************************************
@@ -233,31 +237,23 @@ nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
 {
   MOZ_ASSERT(HasSize());
 
-  gfx::SurfaceFormat format;
-  if (mGIFStruct.is_transparent) {
-    format = gfx::SurfaceFormat::B8G8R8A8;
-  } else {
-    format = gfx::SurfaceFormat::B8G8R8X8;
-  }
-
   IntRect frameRect(mGIFStruct.x_offset, mGIFStruct.y_offset,
                     mGIFStruct.width, mGIFStruct.height);
 
-  CheckForTransparency(frameRect);
+  bool hasTransparency = CheckForTransparency(frameRect);
+  gfx::SurfaceFormat format = hasTransparency ? SurfaceFormat::B8G8R8A8
+                                              : SurfaceFormat::B8G8R8X8;
 
   // Make sure there's no animation if we're downscaling.
   MOZ_ASSERT_IF(mDownscaler, !GetImageMetadata().HasAnimation());
 
+  // Compute the target size and target frame rect. If we're downscaling,
+  // Downscaler will automatically strip out first-frame padding, so the target
+  // frame rect takes up the entire frame regardless.
   IntSize targetSize = mDownscaler ? mDownscaler->TargetSize()
                                    : GetSize();
-
-  // Rescale the frame rect for the target size.
-  IntRect targetFrameRect = frameRect;
-  if (mDownscaler) {
-    IntSize originalSize = GetSize();
-    targetFrameRect.ScaleRoundOut(double(targetSize.width) / originalSize.width,
-                                  double(targetSize.height) / originalSize.height);
-  }
+  IntRect targetFrameRect = mDownscaler ? IntRect(IntPoint(), targetSize)
+                                        : frameRect;
 
   // Use correct format, RGB for first frame, PAL for following frames
   // and include transparency to allow for optimization of opaque images
@@ -279,8 +275,8 @@ nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
   }
 
   if (mDownscaler) {
-    rv = mDownscaler->BeginFrame(frameRect.Size(), mImageData,
-                                 mGIFStruct.is_transparent);
+    rv = mDownscaler->BeginFrame(GetSize(), Some(frameRect), mImageData,
+                                 hasTransparency);
   }
 
   return rv;
@@ -318,7 +314,7 @@ nsGIFDecoder2::EndImageFrame()
     // should fix that. We can also mark it opaque unconditionally if we didn't
     // actually see any transparent pixels - this test is only valid for the
     // first frame.
-    if (!mGIFStruct.is_transparent || !mSawTransparency) {
+    if (!mGIFStruct.is_transparent && !mSawTransparency) {
       opacity = Opacity::OPAQUE;
     }
   }

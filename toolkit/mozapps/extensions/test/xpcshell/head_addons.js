@@ -191,8 +191,7 @@ function do_get_file_hash(aFile, aAlgorithm) {
   crypto.updateFromStream(fis, aFile.fileSize);
 
   // return the two-digit hexadecimal code for a byte
-  function toHexString(charCode)
-    ("0" + charCode.toString(16)).slice(-2);
+  let toHexString = charCode => ("0" + charCode.toString(16)).slice(-2);
 
   let binary = crypto.finish(false);
   return aAlgorithm + ":" + [toHexString(binary.charCodeAt(i)) for (i in binary)].join("")
@@ -563,7 +562,7 @@ function check_startup_changes(aType, aIds) {
   var ids = aIds.slice(0);
   ids.sort();
   var changes = AddonManager.getStartupChanges(aType);
-  changes = changes.filter(function(aEl) /@tests.mozilla.org$/.test(aEl));
+  changes = changes.filter(aEl => /@tests.mozilla.org$/.test(aEl));
   changes.sort();
 
   do_check_eq(JSON.stringify(ids), JSON.stringify(changes));
