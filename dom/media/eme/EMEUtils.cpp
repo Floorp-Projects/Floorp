@@ -7,7 +7,6 @@
 #include "mozilla/EMEUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIConsoleService.h"
-#include "nsThreadUtils.h"
 
 namespace mozilla {
 
@@ -114,13 +113,6 @@ ParseKeySystem(const nsAString& aInputKeySystem,
 void
 LogToBrowserConsole(const nsAString& aMsg)
 {
-  if (!NS_IsMainThread()) {
-    nsAutoString msg(aMsg);
-    nsCOMPtr<nsIRunnable> task =
-      NS_NewRunnableFunction([msg]() { LogToBrowserConsole(msg); });
-    NS_DispatchToMainThread(task.forget(), NS_DISPATCH_NORMAL);
-    return;
-  }
   nsCOMPtr<nsIConsoleService> console(
     do_GetService("@mozilla.org/consoleservice;1"));
   if (!console) {
