@@ -95,8 +95,17 @@ protected:
   nsCOMPtr<nsIGlobalObject> mWindow;
 
   // Animations observing this timeline
-  typedef nsTHashtable<nsRefPtrHashKey<dom::Animation>> AnimationSet;
-  AnimationSet mAnimations;
+  //
+  // We store them in (a) a hashset for quick lookup, and (b) an array
+  // to maintain a fixed sampling order.
+  //
+  // The array keeps a strong reference to each animation in order
+  // to save some addref/release traffic and because we never dereference
+  // the pointers in the hashset.
+  typedef nsTHashtable<nsPtrHashKey<dom::Animation>> AnimationSet;
+  typedef nsTArray<nsRefPtr<dom::Animation>>         AnimationArray;
+  AnimationSet   mAnimations;
+  AnimationArray mAnimationOrder;
 };
 
 } // namespace dom
