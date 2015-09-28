@@ -52,16 +52,23 @@ this.TabCrashReporter = {
     }
   },
 
-  submitCrashReport: function (aBrowser) {
+  submitCrashReport: function (aBrowser, aFormData) {
     let childID = this.browserMap.get(aBrowser.permanentKey);
     let dumpID = this.childMap.get(childID);
     if (!dumpID)
       return
 
-    if (CrashSubmit.submit(dumpID, { recordSubmission: true })) {
-      this.childMap.set(childID, null); // Avoid resubmission.
-      this.removeSubmitCheckboxesForSameCrash(childID);
-    }
+    CrashSubmit.submit(dumpID, {
+      recordSubmission: true,
+      extraExtraKeyVals: {
+        Comments: aFormData.comments,
+        Email: aFormData.email,
+        URL: aFormData.URL,
+      },
+    }).then(null, Cu.reportError);
+
+    this.childMap.set(childID, null); // Avoid resubmission.
+    this.removeSubmitCheckboxesForSameCrash(childID);
   },
 
   removeSubmitCheckboxesForSameCrash: function(childID) {
