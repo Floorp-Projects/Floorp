@@ -57,12 +57,12 @@ class BufferedMsg
 {
 public:
   BufferedMsg(struct sctp_sendv_spa &spa,const char *data,
-              uint32_t length);
+              size_t length);
   ~BufferedMsg();
 
   struct sctp_sendv_spa *mSpa;
   const char *mData;
-  uint32_t mLength;
+  size_t mLength;
 };
 
 // for queuing incoming data messages before the Open or
@@ -213,9 +213,9 @@ private:
                                  bool unordered, uint16_t prPolicy, uint32_t prValue);
   int32_t SendOpenAckMessage(uint16_t stream);
   int32_t SendMsgInternal(DataChannel *channel, const char *data,
-                          uint32_t length, uint32_t ppid);
+                          size_t length, uint32_t ppid);
   int32_t SendBinary(DataChannel *channel, const char *data,
-                     uint32_t len, uint32_t ppid_partial, uint32_t ppid_final);
+                     size_t len, uint32_t ppid_partial, uint32_t ppid_final);
   int32_t SendMsgCommon(uint16_t stream, const nsACString &aMsg, bool isBinary);
 
   void DeliverQueuedData(uint16_t stream);
@@ -328,6 +328,7 @@ public:
     , mPrValue(value)
     , mFlags(flags)
     , mIsRecvBinary(false)
+    , mBufferedThreshold(0) // default from spec
     {
       NS_ASSERTION(mConnection,"NULL connection");
     }
@@ -387,6 +388,10 @@ public:
   // Amount of data buffered to send
   uint32_t GetBufferedAmount();
 
+  // Trigger amount for generating BufferedAmountLow events
+  uint32_t GetBufferedAmountLowThreshold();
+  void SetBufferedAmountLowThreshold(uint32_t aThreshold);
+
   // Find out state
   uint16_t GetReadyState()
     {
@@ -429,6 +434,7 @@ private:
   uint32_t mFlags;
   uint32_t mId;
   bool mIsRecvBinary;
+  size_t mBufferedThreshold;
   nsCString mRecvBuffer;
   nsTArray<nsAutoPtr<BufferedMsg> > mBufferedData;
   nsTArray<nsCOMPtr<nsIRunnable> > mQueuedMessages;
@@ -448,6 +454,7 @@ public:
     ON_CHANNEL_CLOSED,
     ON_DATA,
     START_DEFER,
+    BUFFER_LOW_THRESHOLD,
   };  /* types */
 
   DataChannelOnMessageAvailable(int32_t     aType,
@@ -489,6 +496,7 @@ public:
       case ON_DATA:
       case ON_CHANNEL_OPEN:
       case ON_CHANNEL_CLOSED:
+      case BUFFER_LOW_THRESHOLD:
         {
           MutexAutoLock lock(mChannel->mListenerLock);
           if (!mChannel->mListener) {
@@ -509,6 +517,9 @@ public:
               break;
             case ON_CHANNEL_CLOSED:
               mChannel->mListener->OnChannelClosed(mChannel->mContext);
+              break;
+            case BUFFER_LOW_THRESHOLD:
+              mChannel->mListener->OnBufferLow(mChannel->mContext);
               break;
           }
           break;
