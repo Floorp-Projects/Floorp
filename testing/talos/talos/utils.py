@@ -19,6 +19,28 @@ import platform
 here = os.path.dirname(os.path.realpath(__file__))
 
 
+def _get_platform():
+    # get the platform we're interested in. Note that the values
+    # are used in TTest historically, this is why they are not really friendly.
+    # TODO: give some user friendly values
+    if platform.system() == "Linux":
+        return 'linux_'
+    elif platform.system() in ("Windows", "Microsoft"):
+        if '5.1' in platform.version():  # winxp
+            return 'win_'
+        elif '6.1' in platform.version():  # w7
+            return 'w7_'
+        elif '6.2' in platform.version():  # w8
+            return 'w8_'
+        else:
+            raise TalosError('unsupported windows version')
+    elif platform.system() == "Darwin":
+        return 'mac_'
+
+
+PLATFORM_TYPE = _get_platform()
+
+
 class Timer(object):
     def __init__(self):
         self._start_time = 0
