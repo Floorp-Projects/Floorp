@@ -6642,12 +6642,9 @@ nsHTMLEditRules::SplitParagraph(nsIDOMNode *aPara,
   NS_ENSURE_STATE(mHTMLEditor && rightParaNode);
   nsCOMPtr<nsIDOMNode> child =
     GetAsDOMNode(mHTMLEditor->GetLeftmostChild(rightParaNode, true));
-  NS_ENSURE_STATE(mHTMLEditor);
-  if (!mHTMLEditor ||
-      mHTMLEditor->IsTextNode(child) ||
+  if (mHTMLEditor->IsTextNode(child) ||
       mHTMLEditor->IsContainer(child))
   {
-    NS_ENSURE_STATE(mHTMLEditor);
     aSelection->Collapse(child,0);
   }
   else
@@ -7442,12 +7439,9 @@ nsHTMLEditRules::PinSelectionToNewBlock(Selection* aSelection)
     NS_ENSURE_STATE(mHTMLEditor);
     tmp = GetAsDOMNode(mHTMLEditor->GetLastEditableChild(*block));
     uint32_t endPoint;
-    NS_ENSURE_STATE(mHTMLEditor);
-    if (!mHTMLEditor ||
-        mHTMLEditor->IsTextNode(tmp) ||
+    if (mHTMLEditor->IsTextNode(tmp) ||
         mHTMLEditor->IsContainer(tmp))
     {
-      NS_ENSURE_STATE(mHTMLEditor);
       res = nsEditor::GetLengthOfDOMNode(tmp, endPoint);
       NS_ENSURE_SUCCESS(res, res);
     }
@@ -7462,16 +7456,13 @@ nsHTMLEditRules::PinSelectionToNewBlock(Selection* aSelection)
   {
     // selection is before block.  put at start of block.
     nsCOMPtr<nsIDOMNode> tmp = mNewBlock;
-    NS_ENSURE_STATE(mHTMLEditor);
     tmp = GetAsDOMNode(mHTMLEditor->GetFirstEditableChild(*block));
     int32_t offset;
-    if (mHTMLEditor &&
-        !(mHTMLEditor->IsTextNode(tmp) ||
-          mHTMLEditor->IsContainer(tmp)))
+    if (mHTMLEditor->IsTextNode(tmp) ||
+        mHTMLEditor->IsContainer(tmp))
     {
       tmp = nsEditor::GetNodeLocation(tmp, &offset);
     }
-    NS_ENSURE_STATE(mHTMLEditor);
     return aSelection->Collapse(tmp, 0);
   }
 }
