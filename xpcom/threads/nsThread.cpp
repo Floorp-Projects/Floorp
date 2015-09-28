@@ -581,7 +581,9 @@ nsresult
 nsThread::DispatchInternal(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFlags,
                            nsNestedEventTarget* aTarget)
 {
-  nsCOMPtr<nsIRunnable> event(aEvent);
+  // We want to leak the reference when we fail to dispatch it, so that
+  // we won't release the event in a wrong thread.
+  LeakRefPtr<nsIRunnable> event(Move(aEvent));
   if (NS_WARN_IF(!event)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -592,8 +594,9 @@ nsThread::DispatchInternal(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFla
   }
 
 #ifdef MOZ_TASK_TRACER
-  nsCOMPtr<nsIRunnable> tracedRunnable = CreateTracedRunnable(event.forget());
+  nsCOMPtr<nsIRunnable> tracedRunnable = CreateTracedRunnable(event.take());
   (static_cast<TracedRunnable*>(tracedRunnable.get()))->DispatchTask();
+  // XXX tracedRunnable will always leaked when we fail to disptch.
   event = tracedRunnable.forget();
 #endif
 
@@ -608,10 +611,14 @@ nsThread::DispatchInternal(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFla
     //     that to tell us when the event has been processed.
 
     nsRefPtr<nsThreadSyncDispatch> wrapper =
-      new nsThreadSyncDispatch(thread, event.forget());
+      new nsThreadSyncDispatch(thread, event.take());
     nsresult rv = PutEvent(wrapper, aTarget); // hold a ref
     // Don't wait for the event to finish if we didn't dispatch it...
     if (NS_FAILED(rv)) {
+      // PutEvent leaked the wrapper runnable object on failure, so we
+      // explicitly release this object once for that. Note that this
+      // object will be released again soon because it exits the scope.
+      wrapper.get()->Release();
       return rv;
     }
 
@@ -619,11 +626,13 @@ nsThread::DispatchInternal(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFla
     while (wrapper->IsPending()) {
       NS_ProcessNextEvent(thread, true);
     }
+    // NOTE that, unlike the behavior above, the event is not leaked by
+    // this place, while it is possible that the result is an error.
     return wrapper->Result();
   }
 
   NS_ASSERTION(aFlags == NS_DISPATCH_NORMAL, "unexpected dispatch flags");
-  return PutEvent(event.forget(), aTarget);
+  return PutEvent(event.take(), aTarget);
 }
 
 //-----------------------------------------------------------------------------
