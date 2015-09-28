@@ -98,6 +98,11 @@ function enFocus() {
     // Remove the fake de_DE dictionary again.
     hunspell.removeDirectory(de_DE);
 
+    // Focus again, so the spelling gets updated, but before we need to kill the focus handler.
+    elem_de.onfocus = null;
+    elem_de.blur();
+    elem_de.focus();
+
     // After removal, the de_DE editor should refresh the spelling with en-US.
     onSpellCheck(elem_de, function () {
       spellchecker = inlineSpellChecker.spellChecker;
