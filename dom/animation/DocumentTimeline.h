@@ -17,7 +17,9 @@ struct JSContext;
 namespace mozilla {
 namespace dom {
 
-class DocumentTimeline final : public AnimationTimeline
+class DocumentTimeline final
+  : public AnimationTimeline
+  , public nsARefreshObserver
 {
 public:
   explicit DocumentTimeline(nsIDocument* aDocument)
@@ -49,6 +51,9 @@ public:
   Nullable<TimeDuration> ToTimelineTime(const TimeStamp& aTimeStamp) const
                                                                      override;
   TimeStamp ToTimeStamp(const TimeDuration& aTimelineTime) const override;
+
+  // nsARefreshObserver methods
+  void WillRefresh(TimeStamp aTime) override;
 
 protected:
   TimeStamp GetCurrentTimeStamp() const;
