@@ -23,7 +23,9 @@ var FavIcons = {
     this._prefFavicons = Services.prefs.getBoolPref(this.PREF_CHROME_FAVICONS);
   },
 
-  get defaultFavicon() this._favIconService.defaultFavicon.spec,
+  get defaultFavicon() {
+    return this._favIconService.defaultFavicon.spec;
+  },
 
   init: function FavIcons_init() {
     XPCOMUtils.defineLazyServiceGetter(this, "_favIconService",

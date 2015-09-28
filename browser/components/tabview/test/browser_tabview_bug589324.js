@@ -58,7 +58,7 @@ function test() {
 
 function testTabSwitchAfterRestore(callback) {
   newWindowWithState(state, function (win) {
-    registerCleanupFunction(function () win.close());
+    registerCleanupFunction(() => win.close());
 
     let [firstTab, secondTab] = win.gBrowser.tabs;
     is(firstTab.linkedBrowser.currentURI.spec, DUMMY_PAGE_URL,

@@ -18,7 +18,9 @@ function mockAddonProvider(aName) {
     shutdownPromise: null,
     shutdownResolve: null,
 
-    get name() aName,
+    get name() {
+      return aName;
+    },
 
     shutdown() {
       this.shutdownResolve();

@@ -19,6 +19,10 @@ function makeChan(url, appId, inBrowser) {
   chan.notificationCallbacks = {
     appId: appId,
     isInBrowserElement: inBrowser,
+    originAttributes: {
+      appId: appId,
+      inBrowser: inBrowser,
+    },
     QueryInterface: function(iid) {
       if (iid.equals(Ci.nsILoadContext))
         return this;

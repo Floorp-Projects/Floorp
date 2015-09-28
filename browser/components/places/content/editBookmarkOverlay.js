@@ -712,7 +712,7 @@ var gEditItemOverlay = {
       this._folderMenuList.selectedItem = item;
       // XXXmano HACK: setTimeout 100, otherwise focus goes back to the
       // menulist right away
-      setTimeout(function(self) self.toggleFolderTreeVisibility(), 100, this);
+      setTimeout(() => this.toggleFolderTreeVisibility(), 100);
       return;
     }
 
@@ -906,7 +906,7 @@ var gEditItemOverlay = {
     let tags = this._element("tagsField").value;
     return tags.trim()
                .split(/\s*,\s*/) // Split on commas and remove spaces.
-               .filter(function (tag) tag.length > 0); // Kill empty tags.
+               .filter(tag => tag.length > 0); // Kill empty tags.
   },
 
   newFolder: Task.async(function* () {

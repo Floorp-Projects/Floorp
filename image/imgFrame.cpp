@@ -574,8 +574,7 @@ bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
     RefPtr<DrawTarget> dt = aContext->GetDrawTarget();
     dt->FillRect(ToRect(aRegion.Rect()),
                  ColorPattern(mSinglePixelColor),
-                 DrawOptions(1.0f,
-                             CompositionOpForOp(aContext->CurrentOperator())));
+                 DrawOptions(1.0f, aContext->CurrentOp()));
     return true;
   }
 

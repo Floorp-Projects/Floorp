@@ -474,7 +474,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, IntSize size,
     // would permit copying the background but not drawing direct.)
     bool matrixIsIntegerTranslation = !matrix.HasNonIntegerTranslation();
     bool canDrawOverBackground = matrixIsIntegerTranslation &&
-        ctx->CurrentOperator() == gfxContext::OPERATOR_OVER;
+         ctx->CurrentOp() == CompositionOp::OP_OVER;
 
     // The padding of 0.5 for non-pixel-exact transformations used here is
     // the same as what _cairo_pattern_analyze_filter uses.

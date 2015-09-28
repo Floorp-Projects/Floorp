@@ -288,7 +288,9 @@
         toolbar: this,
         contextMenu: null,
 
-        get active () !!this.contextMenu,
+        get active () {
+          return !!this.contextMenu;
+        },
 
         init: function (event) {
           let node = event.target;

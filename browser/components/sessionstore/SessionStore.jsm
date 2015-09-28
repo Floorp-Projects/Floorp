@@ -3312,8 +3312,8 @@ var SessionStoreInternal = {
    */
   _isCmdLineEmpty: function ssi_isCmdLineEmpty(aWindow, aState) {
     var pinnedOnly = aState.windows &&
-                     aState.windows.every(function (win)
-                       win.tabs.every(function (tab) tab.pinned));
+                     aState.windows.every(win =>
+                       win.tabs.every(tab => tab.pinned));
 
     let hasFirstArgument = aWindow.arguments && aWindow.arguments[0];
     if (!pinnedOnly) {

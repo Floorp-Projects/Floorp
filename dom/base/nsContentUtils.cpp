@@ -2710,7 +2710,7 @@ nsContentUtils::SubjectPrincipal()
   MOZ_ASSERT(NS_IsMainThread());
   JSContext* cx = GetCurrentJSContext();
   if (!cx) {
-    MOZ_CRASH("Accessing the Subject Principal without an AutoJSAPI on the stack is forbidden");
+    return GetSystemPrincipal();
   }
 
   JSCompartment *compartment = js::GetContextCompartment(cx);
@@ -6098,7 +6098,7 @@ nsContentTypeParser::GetParameter(const char* aParameterName, nsAString& aResult
 bool
 nsContentUtils::CanAccessNativeAnon()
 {
-  return IsCallerChrome() || IsCallerContentXBL();
+  return LegacyIsCallerChromeOrNativeCode() || IsCallerContentXBL();
 }
 
 /* static */ nsresult

@@ -31,7 +31,7 @@ function test() {
     win.addEventListener("load", function() {
       win.removeEventListener("load", arguments.callee, false);
 
-      executeSoon(function() bug523784_test1(win));
+      executeSoon(() => bug523784_test1(win));
     }, false);
   };
   Services.ww.registerNotification(windowObserver);

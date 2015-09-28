@@ -21,7 +21,9 @@ function PlacesTreeView(aFlatList, aOnOpenFlatContainer, aController) {
 }
 
 PlacesTreeView.prototype = {
-  get wrappedJSObject() this,
+  get wrappedJSObject() {
+    return this;
+  },
 
   __xulStore: null,
   get _xulStore() {
@@ -1067,7 +1069,9 @@ PlacesTreeView.prototype = {
     }
   },
 
-  get result() this._result,
+  get result() {
+    return this._result;
+  },
   set result(val) {
     if (this._result) {
       this._result.removeObserver(this);
@@ -1112,9 +1116,15 @@ PlacesTreeView.prototype = {
   },
 
   // nsITreeView
-  get rowCount() this._rows.length,
-  get selection() this._selection,
-  set selection(val) this._selection = val,
+  get rowCount() {
+    return this._rows.length;
+  },
+  get selection() {
+    return this._selection;
+  },
+  set selection(val) {
+    this._selection = val;
+  },
 
   getRowProperties: function() { return ""; },
 
@@ -1394,7 +1404,9 @@ PlacesTreeView.prototype = {
     return false;
   },
 
-  getLevel: function(aRow) this._getNodeForRow(aRow).indentLevel,
+  getLevel: function(aRow) {
+    return this._getNodeForRow(aRow).indentLevel;
+  },
 
   getImageSrc: function PTV_getImageSrc(aRow, aColumn) {
     // Only the title column has an image.

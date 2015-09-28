@@ -302,12 +302,12 @@ AudioNode::SendChannelMixingParametersToStream()
 }
 
 void
-AudioNode::SendTimelineParameterToStream(AudioNode* aNode, uint32_t aIndex,
-                                         const AudioParamTimeline& aValue)
+AudioNode::SendTimelineEventToStream(AudioNode* aNode, uint32_t aIndex,
+                                     const AudioTimelineEvent& aEvent)
 {
   AudioNodeStream* ns = aNode->mStream;
   MOZ_ASSERT(ns, "How come we don't have a stream here?");
-  ns->SetTimelineParameter(aIndex, aValue);
+  ns->SendTimelineEvent(aIndex, aEvent);
 }
 
 void

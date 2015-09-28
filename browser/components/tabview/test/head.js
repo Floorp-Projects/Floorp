@@ -113,7 +113,7 @@ function newWindowWithTabView(shownCallback, loadCallback, width, height) {
   });
 
   whenDelayedStartupFinished(win, function () {
-    showTabView(function () shownCallback(win), win);
+    showTabView(() => shownCallback(win), win);
   });
 }
 
@@ -365,7 +365,7 @@ function restoreTab(callback, index, win) {
   let tabItem = tab._tabViewTabItem;
 
   let finalize = function () {
-    afterAllTabsLoaded(function () callback(tab), win);
+    afterAllTabsLoaded(() => callback(tab), win);
   };
 
   if (tabItem._reconnected) {

@@ -408,12 +408,6 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
             src_manifest_file = os.path.join(c['webroot'], self.query_pagesets_manifest_path())
             dest_manifest_file = abs_pagesets_paths['pagesets_manifest']
             self.copyfile(src_manifest_file, dest_manifest_file, error_level=FATAL)
-        if 'suite' in c:
-            plugins_url = self.talos_json_config['suites'][c['suite']].get('plugins', {}).get(c['system_bits'])
-            if plugins_url:
-                self.info("Downloading plugin...")
-                # TODO add this path to talos.json ?
-                self._download_unzip(plugins_url, os.path.join(talos_webdir, 'base_profile'))
 
     # Action methods. {{{1
     # clobber defined in BaseScript

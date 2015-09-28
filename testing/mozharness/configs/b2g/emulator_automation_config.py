@@ -55,6 +55,7 @@ config = {
                 "--addEnv",
                 "LD_LIBRARY_PATH=/vendor/lib:/system/lib:/system/b2g",
                 "--with-b2g-emulator=%(b2gpath)s",
+                 "--emulator=%(emulator)s",
                 "."
             ],
             "run_filename": "remotecppunittests.py",
@@ -118,8 +119,8 @@ config = {
                 "--log-errorsummary=%(error_summary_file)s",
                 "--certificate-path=%(certificate_path)s",
                 "--screenshot-on-fail",
-                "%(test_path)s"
             ],
+            "tests": ["%(test_path)s"],
             "run_filename": "runtestsb2g.py",
             "testsdir": "mochitest"
         },
@@ -142,8 +143,8 @@ config = {
                 "--log-errorsummary=%(error_summary_file)s",
                 "--certificate-path=%(certificate_path)s",
                 "--screenshot-on-fail",
-                "%(test_path)s"
             ],
+            "tests": ["%(test_path)s"],
             "run_filename": "runtestsb2g.py",
             "testsdir": "mochitest"
         },

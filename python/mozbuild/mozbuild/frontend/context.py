@@ -35,9 +35,10 @@ from mozbuild.util import (
     TypedList,
     TypedNamedTuple,
 )
+
+from ..testing import all_test_flavors
 import mozpack.path as mozpath
 from types import FunctionType
-from UserString import UserString
 
 import itertools
 
@@ -46,6 +47,7 @@ class ContextDerivedValue(object):
     """Classes deriving from this one receive a special treatment in a
     Context. See Context documentation.
     """
+    __slots__ = ()
 
 
 class Context(KeyedDefaultDict):
@@ -488,12 +490,52 @@ def ContextDerivedTypedListWithItems(type, base_class=List):
     return _TypedListWithItems
 
 
+@memoize
+def ContextDerivedTypedRecord(*fields):
+    """Factory for objects with certain properties and dynamic
+    type checks.
+
+    This API is extremely similar to the TypedNamedTuple API,
+    except that properties may be mutated. This supports syntax like:
+
+    VARIABLE_NAME.property += [
+      'item1',
+      'item2',
+    ]
+    """
+
+    class _TypedRecord(ContextDerivedValue):
+        __slots__ = tuple([name for name, _ in fields])
+
+        def __init__(self, context):
+            for fname, ftype in self._fields.items():
+                if issubclass(ftype, ContextDerivedValue):
+                    setattr(self, fname, self._fields[fname](context))
+                else:
+                    setattr(self, fname, self._fields[fname]())
+
+        def __setattr__(self, name, value):
+            if name in self._fields and not isinstance(value, self._fields[name]):
+                value = self._fields[name](value)
+            object.__setattr__(self, name, value)
+
+    _TypedRecord._fields = dict(fields)
+    return _TypedRecord
+
 BugzillaComponent = TypedNamedTuple('BugzillaComponent',
                         [('product', unicode), ('component', unicode)])
 
 WebPlatformTestManifest = TypedNamedTuple("WebPlatformTestManifest",
                                           [("manifest_path", unicode),
                                            ("test_root", unicode)])
+
+OrderedSourceList = ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList)
+OrderedTestFlavorList = TypedList(Enum(*all_test_flavors()),
+                                  StrictOrderingOnAppendList)
+OrderedStringList = TypedList(unicode, StrictOrderingOnAppendList)
+DependentTestsEntry = ContextDerivedTypedRecord(('files', OrderedSourceList),
+                                                ('tags', OrderedStringList),
+                                                ('flavors', OrderedTestFlavorList))
 
 class Files(SubContext):
     """Metadata attached to files.
@@ -563,17 +605,79 @@ class Files(SubContext):
 
             See :ref:`mozbuild_files_metadata_finalizing` for more info.
             """, None),
+        'IMPACTED_TESTS': (DependentTestsEntry, list,
+            """File patterns, tags, and flavors for tests relevant to these files.
+
+            Maps source files to the tests potentially impacted by those files.
+            Tests can be specified by file pattern, tag, or flavor.
+
+            For example:
+
+            with Files('runtests.py'):
+               IMPACTED_TESTS.files += [
+                   '**',
+               ]
+
+            in testing/mochitest/moz.build will suggest that any of the tests
+            under testing/mochitest may be impacted by a change to runtests.py.
+
+            File patterns may be made relative to the topsrcdir with a leading
+            '/', so
+
+            with Files('httpd.js'):
+               IMPACTED_TESTS.files += [
+                   '/testing/mochitest/tests/Harness_sanity/**',
+               ]
+
+            in netwerk/test/httpserver/moz.build will suggest that any change to httpd.js
+            will be relevant to the mochitest sanity tests.
+
+            Tags and flavors are sorted string lists (flavors are limited to valid
+            values).
+
+            For example:
+
+            with Files('toolkit/devtools/*'):
+                IMPACTED_TESTS.tags += [
+                    'devtools',
+                ]
+
+            in the root moz.build would suggest that any test tagged 'devtools' would
+            potentially be impacted by a change to a file under toolkit/devtools, and
+
+            with Files('dom/base/nsGlobalWindow.cpp'):
+                IMPACTED_TESTS.flavors += [
+                    'mochitest',
+                ]
+
+            Would suggest that nsGlobalWindow.cpp is potentially relevant to
+            any plain mochitest.
+            """, None),
     }
 
     def __init__(self, parent, pattern=None):
         super(Files, self).__init__(parent)
         self.pattern = pattern
         self.finalized = set()
+        self.test_files = set()
+        self.test_tags = set()
+        self.test_flavors = set()
 
     def __iadd__(self, other):
         assert isinstance(other, Files)
 
+        self.test_files |= other.test_files
+        self.test_tags |= other.test_tags
+        self.test_flavors |= other.test_flavors
+
         for k, v in other.items():
+            if k == 'IMPACTED_TESTS':
+                self.test_files |= set(mozpath.relpath(e.full_path, e.context.config.topsrcdir)
+                                       for e in v.files)
+                self.test_tags |= set(v.tags)
+                self.test_flavors |= set(v.flavors)
+                continue
+
             # Ignore updates to finalized flags.
             if k in self.finalized:
                 continue

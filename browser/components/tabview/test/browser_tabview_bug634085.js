@@ -35,7 +35,7 @@ function test() {
     let groupItem = createGroupItemWithBlankTabs(window, 150, 150, 10, numChildren);
 
     registerCleanupFunction(function () {
-      closeGroupItem(groupItem, function () TabView.hide());
+      closeGroupItem(groupItem, () => TabView.hide());
     });
 
     testTopOfStack(groupItem.getChild(1), function () {

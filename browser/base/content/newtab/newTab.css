@@ -122,6 +122,12 @@ input[type=button] {
   pointer-events: none;
 }
 
+/*
+ * If you change the sizes here, make sure you
+ * change the preferences:
+ * toolkit.pageThumbs.minWidth
+ * toolkit.pageThumbs.minHeight
+ */
 /* CELLS */
 .newtab-cell,
 .newtab-intro-cell,

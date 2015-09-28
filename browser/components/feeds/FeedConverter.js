@@ -424,7 +424,8 @@ FeedResultService.prototype = {
           Cc["@mozilla.org/appshell/window-mediator;1"].
           getService(Ci.nsIWindowMediator);
       var topWindow = wm.getMostRecentWindow("navigator:browser");
-      topWindow.PlacesCommandHook.addLiveBookmark(spec, title, subtitle);
+      topWindow.PlacesCommandHook.addLiveBookmark(spec, title, subtitle)
+                                 .catch(Components.utils.reportError);
       break;
     }
   },

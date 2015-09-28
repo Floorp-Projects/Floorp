@@ -2395,10 +2395,25 @@ MFilterTypeSet::trySpecializeFloat32(TempAllocator& alloc)
 }
 
 bool
+MFilterTypeSet::canProduceFloat32() const
+{
+    // A FilterTypeSet should be a producer if the input is a producer too.
+    // Also, be overly conservative by marking as not float32 producer when the
+    // input is a phi, as phis can be cyclic (phiA -> FilterTypeSet -> phiB ->
+    // phiA) and FilterTypeSet doesn't belong in the Float32 phi analysis.
+    return !input()->isPhi() && input()->canProduceFloat32();
+}
+
+bool
 MFilterTypeSet::canConsumeFloat32(MUse* operand) const
 {
     MOZ_ASSERT(getUseFor(0) == operand);
-    return CheckUsesAreFloat32Consumers(this);
+    // A FilterTypeSet should be a consumer if all uses are consumer. See also
+    // comment below MFilterTypeSet::canProduceFloat32.
+    bool allConsumerUses = true;
+    for (MUseDefIterator use(this); allConsumerUses && use; use++)
+        allConsumerUses &= !use.def()->isPhi() && use.def()->canConsumeFloat32(use.use());
+    return allConsumerUses;
 }
 
 void

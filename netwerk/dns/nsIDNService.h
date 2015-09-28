@@ -20,8 +20,6 @@ class nsIPrefBranch;
 // nsIDNService
 //-----------------------------------------------------------------------------
 
-#define kACEPrefixLen 4 
-
 class nsIDNService final : public nsIIDNService,
                            public nsIObserver,
                            public nsSupportsWeakReference
@@ -42,7 +40,6 @@ private:
   void normalizeFullStops(nsAString& s);
   nsresult stringPrepAndACE(const nsAString& in, nsACString& out,
                             bool allowUnassigned, bool convertAllLabels);
-  nsresult encodeToACE(const nsAString& in, nsACString& out);
   nsresult stringPrep(const nsAString& in, nsAString& out,
                       bool allowUnassigned);
   nsresult decodeACE(const nsACString& in, nsACString& out,
@@ -58,10 +55,8 @@ private:
   bool isLabelSafe(const nsAString &label);
   bool illegalScriptCombo(int32_t script, int32_t& savedScript);
 
-  bool mMultilingualTestBed;  // if true generates extra node for multilingual testbed 
   idn_nameprep_t mNamePrepHandle;
   nsCOMPtr<nsIUnicodeNormalizer> mNormalizer;
-  char mACEPrefix[kACEPrefixLen+1];
   nsXPIDLString mIDNBlacklist;
   bool mShowPunycode;
   enum restrictionProfile {
