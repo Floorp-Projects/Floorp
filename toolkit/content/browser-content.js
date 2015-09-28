@@ -583,11 +583,11 @@ var FindBar = {
   FAYT_TEXT_KEY: "/".charCodeAt(0),
 
   _findMode: 0,
-  get _findAsYouType() {
-    return Services.prefs.getBoolPref("accessibility.typeaheadfind");
-  },
+  _findAsYouType: false,
 
   init() {
+    this._findAsYouType =
+      Services.prefs.getBoolPref("accessibility.typeaheadfind");
     addMessageListener("Findbar:UpdateState", this);
     Services.els.addSystemEventListener(global, "keypress", this, false);
     Services.els.addSystemEventListener(global, "mouseup", this, false);
