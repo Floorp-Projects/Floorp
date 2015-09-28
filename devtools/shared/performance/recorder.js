@@ -283,6 +283,25 @@ const PerformanceRecorder = exports.PerformanceRecorder = Class({
   },
 
   /**
+   * Checks whether or not recording is currently supported. At the moment,
+   * this is only influenced by private browsing mode and the profiler.
+   */
+  canCurrentlyRecord: function() {
+    let success = true;
+    let reasons = [];
+
+    if (!Profiler.canProfile()) {
+      success = false,
+      reasons.push("profiler-unavailable");
+    }
+
+    // Check other factors that will affect the possibility of successfully
+    // starting a recording here.
+
+    return { success, reasons };
+  },
+
+  /**
    * Begins a recording session
    *
    * @param boolean options.withMarkers

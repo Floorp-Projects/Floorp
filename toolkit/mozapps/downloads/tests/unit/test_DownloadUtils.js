@@ -128,7 +128,7 @@ function run_test()
 
   if (0) {
     // Help find some interesting test cases
-    let r = function() Math.floor(Math.random() * 10);
+    let r = () => Math.floor(Math.random() * 10);
     for (let i = 0; i < 100; i++) {
       testStatus(r(), r(), r());
     }

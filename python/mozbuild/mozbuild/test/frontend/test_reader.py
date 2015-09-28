@@ -29,6 +29,14 @@ data_path = mozpath.join(data_path, 'data')
 
 
 class TestBuildReader(unittest.TestCase):
+    def setUp(self):
+        self._old_env = dict(os.environ)
+        os.environ.pop('MOZ_OBJDIR', None)
+
+    def tearDown(self):
+        os.environ.clear()
+        os.environ.update(self._old_env)
+
     def config(self, name, **kwargs):
         path = mozpath.join(data_path, name)
 
@@ -377,6 +385,77 @@ class TestBuildReader(unittest.TestCase):
             BugzillaComponent('Core', 'Build Config'))
         self.assertEqual(v['bug_component/final/subcomponent/bar']['BUG_COMPONENT'],
             BugzillaComponent('Another', 'Component'))
+
+    def test_file_test_deps(self):
+        reader = self.reader('files-test-metadata')
+
+        expected = {
+            'simple/src/module.jsm': set(['simple/tests/test_general.html',
+                                          'simple/browser/**.js']),
+            'simple/base.cpp': set(['simple/tests/*',
+                                    'default/tests/xpcshell/test_default_mod.js']),
+        }
+
+        v = reader.files_info([
+            'simple/src/module.jsm',
+            'simple/base.cpp',
+        ])
+
+        for path, pattern_set in expected.items():
+            self.assertEqual(v[path].test_files,
+                             expected[path])
+
+    def test_file_test_deps_default(self):
+        reader = self.reader('files-test-metadata')
+        v = reader.files_info([
+            'default/module.js',
+        ])
+
+        expected = {
+            'default/module.js': set(['default/tests/xpcshell/**']),
+        }
+
+        for path, pattern_set in expected.items():
+            self.assertEqual(v[path].test_files,
+                             expected[path])
+
+    def test_file_test_deps_tags(self):
+        reader = self.reader('files-test-metadata')
+        v = reader.files_info([
+            'tagged/src/bar.jsm',
+            'tagged/src/submodule/foo.js',
+        ])
+
+        expected_patterns = {
+            'tagged/src/submodule/foo.js': set([]),
+            'tagged/src/bar.jsm': set(['tagged/**.js']),
+        }
+
+        for path, pattern_set in expected_patterns.items():
+            self.assertEqual(v[path].test_files,
+                             expected_patterns[path])
+
+        expected_tags = {
+            'tagged/src/submodule/foo.js': set(['submodule']),
+            'tagged/src/bar.jsm': set([]),
+        }
+        for path, pattern_set in expected_tags.items():
+            self.assertEqual(v[path].test_tags,
+                             expected_tags[path])
+
+        expected_flavors = {
+            'tagged/src/bar.jsm': set(['browser-chrome']),
+            'tagged/src/submodule/foo.js': set([]),
+        }
+        for path, pattern_set in expected_flavors.items():
+            self.assertEqual(v[path].test_flavors,
+                             expected_flavors[path])
+
+    def test_invalid_flavor(self):
+        reader = self.reader('invalid-files-flavor')
+
+        with self.assertRaises(BuildReaderError):
+            reader.files_info(['foo.js'])
 
 
 if __name__ == '__main__':

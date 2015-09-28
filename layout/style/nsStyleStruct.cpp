@@ -1059,7 +1059,7 @@ nsStyleClipPath::nsStyleClipPath(const nsStyleClipPath& aSource)
     SetURL(aSource.mURL);
   } else if (aSource.mType == NS_STYLE_CLIP_PATH_SHAPE) {
     SetBasicShape(aSource.mBasicShape, aSource.mSizingBox);
-  } else if (aSource.mType == NS_STYLE_CLIP_PATH_SHAPE) {
+  } else if (aSource.mType == NS_STYLE_CLIP_PATH_BOX) {
     SetSizingBox(aSource.mSizingBox);
   }
 }

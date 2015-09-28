@@ -23,6 +23,7 @@ Cu.import("resource://gre/modules/DeferredTask.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 const Utils = TelemetryUtils;
 
@@ -674,18 +675,18 @@ var Impl = {
     const isOptout = IS_UNIFIED_TELEMETRY && (!Policy.isUnifiedOptin() || this._isInOptoutSample());
     Telemetry.canRecordBase = enabled || isOptout;
 
-#ifdef MOZILLA_OFFICIAL
-    // Enable extended telemetry if:
-    //  * the telemetry preference is set and
-    //  * this is an official build or we are in test-mode
-    // We only do the latter check for official builds so that e.g. developer builds
-    // still enable Telemetry based on prefs.
-    Telemetry.canRecordExtended = enabled && (Telemetry.isOfficialTelemetry || this._testMode);
-#else
-    // Turn off extended telemetry recording if disabled by preferences or if base/telemetry
-    // telemetry recording is off.
-    Telemetry.canRecordExtended = enabled;
-#endif
+    if (AppConstants.MOZILLA_OFFICIAL) {
+      // Enable extended telemetry if:
+      //  * the telemetry preference is set and
+      //  * this is an official build or we are in test-mode
+      // We only do the latter check for official builds so that e.g. developer builds
+      // still enable Telemetry based on prefs.
+      Telemetry.canRecordExtended = enabled && (Telemetry.isOfficialTelemetry || this._testMode);
+    } else {
+      // Turn off extended telemetry recording if disabled by preferences or if base/telemetry
+      // telemetry recording is off.
+      Telemetry.canRecordExtended = enabled;
+    }
 
     this._log.config("enableTelemetryRecording - canRecordBase:" + Telemetry.canRecordBase +
                      ", canRecordExtended: " + Telemetry.canRecordExtended);

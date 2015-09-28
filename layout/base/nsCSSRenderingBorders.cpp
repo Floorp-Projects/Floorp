@@ -1690,7 +1690,7 @@ nsCSSBorderRenderer::DrawBorders()
   }
 
   // If we have composite colors -and- border radius,
-  // then use separate corners so we get OPERATOR_ADD for the corners.
+  // then use separate corners so we get OP_ADD for the corners.
   // Otherwise, we'll get artifacts as we draw stacked 1px-wide curves.
   if (allBordersSame && mCompositeColors[0] != nullptr && !mNoBorderRadius)
     forceSeparateCorners = true;
@@ -1798,7 +1798,7 @@ nsCSSBorderRenderer::DrawBorders()
         // but we weren't able to render just a solid block for the corner.
         DrawBorderSides(sideBits);
       } else {
-        // Sides are different.  We could draw using OPERATOR_ADD to
+        // Sides are different.  We could draw using OP_ADD to
         // get correct color blending behaviour at the seam.  We'd need
         // to do it in an offscreen surface to ensure that we're
         // always compositing on transparent black.  If the colors

@@ -56,7 +56,7 @@ function test() {
   };
 
   let onLoad = function (win) {
-    registerCleanupFunction(function () win.close());
+    registerCleanupFunction(() => win.close());
 
     for (let i = 0; i < 2; i++)
       win.gBrowser.addTab();

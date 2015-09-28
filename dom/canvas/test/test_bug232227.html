@@ -1,0 +1,151 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=232227
+-->
+<head>
+  <title>Test for Bug 232227</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=232227">Mozilla Bug 232227</a>
+<!-- CSS system colors -->
+<!--<table cellspacing=0 border=1>
+<caption>CSS system colors</caption>
+<canvas id=colorTestCanvas width=1 height=1 style="display:none"></canvas> -->
+<script type="application/javascript">
+
+/** Test for Bug 232227 **/
+
+function beginTest() {
+	var colorNames = [
+		[ "ActiveBorder", 0xB4, 0xB4, 0xB4 ],
+		[ "ActiveCaption", 0x99, 0xB4, 0xD1 ],
+		[ "AppWorkspace", 0xAB, 0xAB, 0xAB ],
+		[ "Background", 0x00, 0x00, 0x00 ],
+		[ "ButtonFace", 0xF0, 0xF0, 0xF0 ],
+		[ "ButtonHighlight", 0xFF, 0xFF, 0xFF ],
+		[ "ButtonShadow", 0xA0, 0xA0, 0xA0 ],
+		[ "ButtonText", 0x00, 0x00, 0x00 ],
+		[ "CaptionText", 0x00, 0x00, 0x00 ],
+		[ "GrayText", 0x6D, 0x6D, 0x6D ],
+		[ "Highlight", 0x33, 0x99, 0xFF ],
+		[ "HighlightText", 0xFF, 0xFF, 0xFF ],
+		[ "InactiveBorder", 0xF4, 0xF7, 0xFC ],
+		[ "InactiveCaption", 0xBF, 0xCD, 0xDB ],
+		[ "InactiveCaptionText", 0x43, 0x4E, 0x54 ],
+		[ "InfoBackground", 0xFF, 0xFF, 0xE1 ],
+		[ "InfoText", 0x00, 0x00, 0x00 ],
+		[ "Menu", 0xF0, 0xF0, 0xF0 ],
+		[ "MenuText", 0x00, 0x00, 0x00 ],
+		[ "Scrollbar", 0xC8, 0xC8, 0xC8 ],
+		[ "ThreeDDarkShadow", 0x69, 0x69, 0x69 ],
+		[ "ThreeDFace", 0xF0, 0xF0, 0xF0 ],
+		[ "ThreeDHighlight", 0xFF, 0xFF, 0xFF ],
+		[ "ThreeDLightShadow", 0xE3, 0xE3, 0xE3 ],
+		[ "ThreeDShadow", 0xA0, 0xA0, 0xA0 ],
+		[ "Window", 0xFF, 0xFF, 0xFF ],
+		[ "WindowFrame", 0x64, 0x64, 0x64 ],
+		[ "WindowText", 0x00, 0x00, 0x00 ],
+		[ "-moz-ButtonDefault", 0x69, 0x69, 0x69 ],
+		[ "-moz-ButtonHoverFace", 0xF0, 0xF0, 0xF0 ],
+    [ "-moz-ButtonHoverText", 0x00, 0x00, 0x00 ],
+		[ "-moz-CellHighlight", 0xF0, 0xF0, 0xF0 ],
+		[ "-moz-CellHighlightText", 0x00, 0x00, 0x00 ],
+		[ "-moz-Combobox", 0xFF, 0xFF, 0xFF ],
+		[ "-moz-ComboboxText", 0x00, 0x00, 0x00 ],
+		[ "-moz-Dialog", 0xF0, 0xF0, 0xF0 ],
+		[ "-moz-DialogText", 0x00, 0x00, 0x00 ],
+		[ "-moz-DragTargetZone", 0xFF, 0xFF, 0xFF ],
+		[ "-moz-EvenTreeRow", 0xFF, 0xFF, 0xFF ],
+		[ "-moz-Field", 0xFF, 0xFF, 0xFF ],
+		[ "-moz-FieldText", 0x00, 0x00, 0x00 ],
+		[ "-moz-MenuHover", 0x33, 0x99, 0xFF ],
+		[ "-moz-MenuHoverText", 0x00, 0x00, 0x00 ],
+		[ "-moz-MenubarText", 0x00, 0x00, 0x00 ],
+    [ "-moz-MenubarHoverText", 0x00, 0x00, 0x00 ],
+		[ "-moz-NativeHyperlinkText", 0x00, 0x66, 0xCC ],
+		[ "-moz-OddTreeRow", 0xFF, 0xFF, 0xFF ],
+		[ "-moz-html-CellHighlight", 0x33, 0x99, 0xFF ],
+		[ "-moz-html-CellHighlightText", 0xFF, 0xFF, 0xFF ],
+		[ "-moz-mac-chrome-active", 0xB2, 0xB2, 0xB2 ],
+		[ "-moz-mac-chrome-inactive", 0xE1, 0xE1, 0xE1 ],
+		[ "-moz-mac-focusring", 0x60, 0x9D, 0xD7 ],
+		[ "-moz-mac-menuselect", 0x38, 0x75, 0xD7 ],
+		[ "-moz-mac-menushadow", 0xA3, 0xA3, 0xA3 ],
+		[ "-moz-mac-menutextdisable", 0x88, 0x88, 0x88 ],
+		[ "-moz-mac-menutextselect", 0xFF, 0xFF, 0xFF ],
+		[ "-moz-mac-DisabledToolbarText", 0x3F, 0x3F, 0x3F ],
+		[ "-moz-mac-AlternatePrimaryHighlight", 0x3F, 0x3F, 0x3F ],
+		[ "-moz-mac-SecondaryHighlight", 0xD4, 0xD4, 0xD4 ],
+		[ "-moz-win-MediaText", 0xFF, 0xFF, 0xFF ],
+		[ "-moz-win-CommunicationsText", 0xFF, 0xFF, 0xFF ],
+
+		// These five are configured via Tools -> Options -> Content -> Colors.
+		//"-moz-ActiveHyperlinkText",
+		//"-moz-HyperLinkText",
+		//"-moz-VisitedHyperlinkText",
+		//"-moz-default-background-color",
+		//"-moz-default-color",
+	];
+
+  var colorTestCanvas = document.createElement("canvas");
+  colorTestCanvas.width = colorTestCanvas.height = 1;
+  colorTestCanvas = colorTestCanvas.getContext("2d");
+
+	var colorTestDiv = document.createElement("div");
+	document.body.appendChild(colorTestDiv); // ie
+
+	for (var i in colorNames) {
+		(function(colorName, r, g, b) {
+      // test value
+      var ctest = "rgb(" + r + ", " + g + ", " + b + ")";
+
+      // computed value
+      colorTestDiv.style.backgroundColor = "#FF00FE";
+      try {
+        colorTestDiv.style.backgroundColor = colorName;
+      } catch (ex) {} // ie
+      var c1;
+      if (window.getComputedStyle) {
+        c1 = getComputedStyle(colorTestDiv, null).backgroundColor;
+      } else { // ie
+        var range = document.body.createTextRange();
+        range.moveToElementText(colorTestDiv);
+        c1 = range.queryCommandValue("BackColor");
+        c1 = "rgb(" + (c1 & 0xFF) + ", " + ((c1 >> 8) & 0xFF) + ", " + ((c1 >> 16) & 0xFF) + ")";
+      }
+      if (c1 != "rgb(255, 0, 254)") {
+        is(c1, ctest, "Stand-in computed color: " + colorName + " is correct.");
+      }
+
+      // canvas
+      if (colorTestCanvas) {
+        colorTestCanvas.fillStyle = colorName;
+        colorTestCanvas.fillRect(0, 0, 1, 1);
+        var c2 = colorTestCanvas.getImageData(0, 0, 1, 1).data;
+        c2 = "rgb(" + c2[0] + ", " + c2[1] + ", " + c2[2] + ")";
+
+        // combine
+        if (c2 != c1 && c2 != "rgb(0, 0, 0)") {
+          is(c2, ctest, "Stand-in canvas color: " + colorName + " is correct.");
+        }
+      }
+    })(colorNames[i][0], colorNames[i][1], colorNames[i][2], colorNames[i][3]);
+  }
+  SimpleTest.finish();
+}
+
+var prefs = [
+  [ "ui.use_standins_for_native_colors", true ],
+  [ "ui.use_native_colors", true ],
+];
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({ "set" : prefs }, beginTest);
+
+</script>
+<!-- </table> -->
+</body>
+</html>

@@ -1,0 +1,4 @@
+DIRS += [
+  'default',
+  'simple',
+]

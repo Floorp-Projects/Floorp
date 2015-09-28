@@ -44,7 +44,9 @@ function History() {
 History.prototype = {
   type: MigrationUtils.resourceTypes.HISTORY,
 
-  get exists() true,
+  get exists() {
+    return true;
+  },
 
   migrate: function H_migrate(aCallback) {
     let places = [];
@@ -347,11 +349,13 @@ function Settings() {
 Settings.prototype = {
   type: MigrationUtils.resourceTypes.SETTINGS,
 
-  get exists() true,
+  get exists() {
+    return true;
+  },
 
   migrate: function S_migrate(aCallback) {
     // Converts from yes/no to a boolean.
-    function yesNoToBoolean(v) v == "yes";
+    let yesNoToBoolean = v => v == "yes";
 
     // Converts source format like "en-us,ar-kw;q=0.7,ar-om;q=0.3" into
     // destination format like "en-us, ar-kw, ar-om".
@@ -363,7 +367,7 @@ Settings.prototype = {
                 let qB = parseFloat(b.split(";q=")[1]) || 1.0;
                 return qA < qB ? 1 : qA == qB ? 0 : -1;
               })
-              .map(function(a) a.split(";")[0]);
+              .map(a => a.split(";")[0]);
     }
 
     // For reference on some of the available IE Registry settings:
@@ -395,7 +399,7 @@ Settings.prototype = {
     this._set(kMainKey,
               "Display Inline Images",
               "permissions.default.image",
-              function (v) yesNoToBoolean(v) ? 1 : 2);
+              v => yesNoToBoolean(v) ? 1 : 2);
     this._set(kMainKey,
               "Move System Caret",
               "accessibility.browsewithcaret",
@@ -403,11 +407,11 @@ Settings.prototype = {
     this._set("Software\\Microsoft\\Internet Explorer\\Settings",
               "Always Use My Colors",
               "browser.display.document_color_use",
-              function (v) !Boolean(v) ? 0 : 2);
+              v => !Boolean(v) ? 0 : 2);
     this._set("Software\\Microsoft\\Internet Explorer\\Settings",
               "Always Use My Font Face",
               "browser.display.use_document_fonts",
-              function (v) !Boolean(v));
+              v => !Boolean(v));
     this._set(kMainKey,
               "SmoothScroll",
               "general.smoothScroll",
@@ -419,7 +423,7 @@ Settings.prototype = {
     this._set("Software\\Microsoft\\Internet Explorer\\TabbedBrowsing\\",
               "OpenInForeground",
               "browser.tabs.loadInBackground",
-              function (v) !Boolean(v));
+              v => !Boolean(v));
 
     aCallback(true);
   },

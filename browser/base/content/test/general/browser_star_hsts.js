@@ -24,7 +24,7 @@ add_task(function* test_star_redirect() {
 
   yield promiseStarState(BookmarkingUI.STATUS_UNSTARRED);
 
-  let promiseBookmark = promiseOnItemAdded(gBrowser.currentURI);
+  let promiseBookmark = promiseOnBookmarkItemAdded(gBrowser.currentURI);
   BookmarkingUI.star.click();
   // This resolves on the next tick, so the star should have already been
   // updated at that point.
@@ -82,33 +82,4 @@ function promiseTabLoadEvent(aTab, aURL, aFinalURL)
   }, true, true);
   aTab.linkedBrowser.loadURI(aURL);
   return deferred.promise;
-}
-
-/**
- * Waits for a bookmark to be added for the given uri.
- */
-function promiseOnItemAdded(aExpectedURI) {
-  let defer = Promise.defer();
-  let bookmarksObserver = {
-    onItemAdded: function (aItemId, aFolderId, aIndex, aItemType, aURI) {
-      info("Added a bookmark to " + aURI.spec);
-      PlacesUtils.bookmarks.removeObserver(bookmarksObserver);
-      if (aURI.equals(aExpectedURI))
-        defer.resolve();
-      else
-        defer.reject(new Error("Added an unexpected bookmark"));
-    },
-    onBeginUpdateBatch: function () {},
-    onEndUpdateBatch: function () {},
-    onItemRemoved: function () {},
-    onItemChanged: function () {},
-    onItemVisited: function () {},
-    onItemMoved: function () {},
-    QueryInterface: XPCOMUtils.generateQI([
-      Ci.nsINavBookmarkObserver,
-    ])
-  };
-  info("Waiting for a bookmark to be added");
-  PlacesUtils.bookmarks.addObserver(bookmarksObserver, false);
-  return defer.promise;
 }

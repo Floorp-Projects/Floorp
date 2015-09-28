@@ -22,7 +22,7 @@ class AudioNodeStream;
 
 namespace dom {
 
-class AudioParamTimeline;
+struct AudioTimelineEvent;
 
 namespace WebAudioUtils {
   // 32 is the minimum required by the spec for createBuffer() and
@@ -55,17 +55,17 @@ namespace WebAudioUtils {
   }
 
   /**
-   * Converts AudioParamTimeline floating point time values to tick values
-   * with respect to a source and a destination AudioNodeStream.
+   * Converts an AudioTimelineEvent's floating point time values to tick values
+   * with respect to a destination AudioNodeStream.
    *
-   * This needs to be called for each AudioParamTimeline that gets sent to an
-   * AudioNodeEngine on the engine side where the AudioParamTimeline is
-   * received.  This means that such engines need to be aware of their source
-   * and destination streams as well.
+   * This needs to be called for each AudioTimelineEvent that gets sent to an
+   * AudioNodeEngine, on the engine side where the AudioTimlineEvent is
+   * received.  This means that such engines need to be aware of their
+   * destination streams as well.
    */
-  void ConvertAudioParamToTicks(AudioParamTimeline& aParam,
-                                AudioNodeStream* aSource,
-                                AudioNodeStream* aDest);
+  void ConvertAudioTimelineEventToTicks(AudioTimelineEvent& aEvent,
+                                        AudioNodeStream* aSource,
+                                        AudioNodeStream* aDest);
 
   /**
    * Converts a linear value to decibels.  Returns aMinDecibels if the linear

@@ -832,7 +832,7 @@ nsDefaultCommandLineHandler.prototype = {
         }
       }
 
-      var URLlist = urilist.filter(shouldLoadURI).map(function (u) u.spec);
+      var URLlist = urilist.filter(shouldLoadURI).map(u => u.spec);
       if (URLlist.length) {
         openWindow(null, gBrowserContentHandler.chromeURL, "_blank",
                    "chrome,dialog=no,all" + gBrowserContentHandler.getFeatures(cmdLine),

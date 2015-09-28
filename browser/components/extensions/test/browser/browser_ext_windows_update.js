@@ -40,8 +40,7 @@ add_task(function* () {
     },
   });
 
-  yield extension.startup();
-  yield extension.awaitMessage("check");
+  yield Promise.all([extension.startup(), extension.awaitMessage("check")]);
 
   yield promiseWaitForFocus(window1);
 

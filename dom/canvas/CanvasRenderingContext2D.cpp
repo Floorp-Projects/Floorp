@@ -674,7 +674,9 @@ CanvasGradient::AddColorStop(float offset, const nsAString& colorstr, ErrorResul
   }
 
   nscolor color;
-  if (!nsRuleNode::ComputeColor(value, nullptr, nullptr, color)) {
+  nsCOMPtr<nsIPresShell> presShell = mContext ? mContext->GetPresShell() : nullptr;
+  if (!nsRuleNode::ComputeColor(value, presShell ? presShell->GetPresContext() : nullptr,
+                                nullptr, color)) {
     rv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return;
   }

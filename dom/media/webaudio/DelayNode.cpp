@@ -60,15 +60,17 @@ public:
   enum Parameters {
     DELAY,
   };
-  void SetTimelineParameter(uint32_t aIndex,
-                            const AudioParamTimeline& aValue,
-                            TrackRate aSampleRate) override
+  void RecvTimelineEvent(uint32_t aIndex,
+                         AudioTimelineEvent& aEvent) override
   {
+    MOZ_ASSERT(mSource && mDestination);
+    WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent,
+                                                    mSource,
+                                                    mDestination);
+
     switch (aIndex) {
     case DELAY:
-      MOZ_ASSERT(mSource && mDestination);
-      mDelay = aValue;
-      WebAudioUtils::ConvertAudioParamToTicks(mDelay, mSource, mDestination);
+      mDelay.InsertEvent<int64_t>(aEvent);
       break;
     default:
       NS_ERROR("Bad DelayNodeEngine TimelineParameter");
@@ -237,10 +239,10 @@ DelayNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 void
-DelayNode::SendDelayToStream(AudioNode* aNode)
+DelayNode::SendDelayToStream(AudioNode* aNode, const AudioTimelineEvent& aEvent)
 {
   DelayNode* This = static_cast<DelayNode*>(aNode);
-  SendTimelineParameterToStream(This, DelayNodeEngine::DELAY, *This->mDelay);
+  SendTimelineEventToStream(This, DelayNodeEngine::DELAY, aEvent);
 }
 
 } // namespace dom

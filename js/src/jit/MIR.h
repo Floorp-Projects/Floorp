@@ -12371,7 +12371,7 @@ class MFilterTypeSet
     void computeRange(TempAllocator& alloc) override;
 
     bool isFloat32Commutative() const override { return true; }
-    bool canProduceFloat32() const override { return input()->canProduceFloat32(); }
+    bool canProduceFloat32() const override;
     bool canConsumeFloat32(MUse* operand) const override;
     void trySpecializeFloat32(TempAllocator& alloc) override;
 };

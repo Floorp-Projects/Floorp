@@ -464,11 +464,11 @@ html[dir="rtl"] .settings-menu.dropdown-menu {
   align-self: center;
 }
 
-.feedback-button-container button {
+.feedback-button-container > button {
   margin: 0 30px;
   padding: .5em 2em;
   border: none;
-  background: #4E92DF;
+  background: #00A9DC;
   color: #fff;
   cursor: pointer;
 }

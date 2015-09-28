@@ -414,7 +414,9 @@
         toolbar: this,
         contextMenu: null,
 
-        get active () !!this.contextMenu,
+        get active () {
+          return !!this.contextMenu;
+        },
 
         init: function (event) {
           var node = event.target;
