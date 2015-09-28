@@ -369,4 +369,78 @@ CreateFlushableMediaDecodeTaskQueue()
   return queue.forget();
 }
 
+void
+SimpleTimer::Cancel() {
+  if (mTimer) {
+#ifdef DEBUG
+    nsCOMPtr<nsIEventTarget> target;
+    mTimer->GetTarget(getter_AddRefs(target));
+    nsCOMPtr<nsIThread> thread(do_QueryInterface(target));
+    MOZ_ASSERT(NS_GetCurrentThread() == thread);
+#endif
+    mTimer->Cancel();
+    mTimer = nullptr;
+  }
+  mTask = nullptr;
+}
+
+NS_IMETHODIMP
+SimpleTimer::Notify(nsITimer *timer) {
+  nsRefPtr<SimpleTimer> deathGrip(this);
+  if (mTask) {
+    mTask->Run();
+    mTask = nullptr;
+  }
+  return NS_OK;
+}
+
+nsresult
+SimpleTimer::Init(nsIRunnable* aTask, uint32_t aTimeoutMs, nsIThread* aTarget)
+{
+  nsresult rv;
+
+  // Get target thread first, so we don't have to cancel the timer if it fails.
+  nsCOMPtr<nsIThread> target;
+  if (aTarget) {
+    target = aTarget;
+  } else {
+    rv = NS_GetMainThread(getter_AddRefs(target));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+  nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  // Note: set target before InitWithCallback in case the timer fires before
+  // we change the event target.
+  rv = timer->SetTarget(aTarget);
+  if (NS_FAILED(rv)) {
+    timer->Cancel();
+    return rv;
+  }
+  rv = timer->InitWithCallback(this, aTimeoutMs, nsITimer::TYPE_ONE_SHOT);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  mTimer = timer.forget();
+  mTask = aTask;
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(SimpleTimer, nsITimerCallback)
+
+already_AddRefed<SimpleTimer>
+SimpleTimer::Create(nsIRunnable* aTask, uint32_t aTimeoutMs, nsIThread* aTarget)
+{
+  nsRefPtr<SimpleTimer> t(new SimpleTimer());
+  if (NS_FAILED(t->Init(aTask, aTimeoutMs, aTarget))) {
+    return nullptr;
+  }
+  return t.forget();
+}
+
 } // end namespace mozilla
