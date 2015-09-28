@@ -364,6 +364,29 @@ public:
     return EventRegionsOverride::NoOverride;
   }
 
+  Layer::ScrollDirection GetScrollbarDirection() const
+  {
+    MOZ_ASSERT(IsValid());
+
+    return mLayer->GetScrollbarDirection();
+  }
+
+  FrameMetrics::ViewID GetScrollbarTargetContainerId() const
+  {
+    MOZ_ASSERT(IsValid());
+
+    return mLayer->GetScrollbarTargetContainerId();
+  }
+
+  int32_t GetScrollbarSize() const
+  {
+    if (GetScrollbarDirection() == Layer::VERTICAL) {
+      return mLayer->GetVisibleRegion().GetBounds().height;
+    } else {
+      return mLayer->GetVisibleRegion().GetBounds().width;
+    }
+  }
+
   // Expose an opaque pointer to the layer. Mostly used for printf
   // purposes. This is not intended to be a general-purpose accessor
   // for the underlying layer.
