@@ -1574,19 +1574,12 @@ gfxFontGroup::BuildFontList()
 
     // initialize fonts in the font family list
     nsAutoTArray<gfxFontFamily*,4> fonts;
-    const nsTArray<FontFamilyName>& fontlist = mFamilyList.GetFontlist();
     gfxPlatformFontList *pfl = gfxPlatformFontList::PlatformFontList();
 
     // lookup fonts in the fontlist
-    uint32_t i, numFonts = fontlist.Length();
-    for (i = 0; i < numFonts; i++) {
-        gfxFontFamily* family;
-        const FontFamilyName& name = fontlist[i];
+    for (const FontFamilyName& name : mFamilyList.GetFontlist()) {
         if (name.IsNamed()) {
-            family = FindPlatformFont(name.mName, true);
-            if (family) {
-                fonts.AppendElement(family);
-            }
+            AddPlatformFont(name.mName, fonts);
         } else {
             pfl->AddGenericFonts(name.mType, mStyle.language, fonts);
             if (mTextPerf) {
@@ -1606,36 +1599,36 @@ gfxFontGroup::BuildFontList()
     }
 
     // build the fontlist from the specified families
-    numFonts = fonts.Length();
-    for (i = 0; i < numFonts; i++) {
-        AddFamilyToFontList(fonts[i]);
+    for (gfxFontFamily* fontFamily : fonts) {
+        AddFamilyToFontList(fontFamily);
     }
 }
 
-gfxFontFamily*
-gfxFontGroup::FindPlatformFont(const nsAString& aName, bool aUseFontSet)
+void
+gfxFontGroup::AddPlatformFont(const nsAString& aName,
+                              nsTArray<gfxFontFamily*>& aFamilyList)
 {
-    gfxFontFamily *family = nullptr;
+    gfxFontFamily* family = nullptr;
 
-    if (aUseFontSet) {
-        // First, look up in the user font set...
-        // If the fontSet matches the family, we must not look for a platform
-        // font of the same name, even if we fail to actually get a fontEntry
-        // here; we'll fall back to the next name in the CSS font-family list.
-        if (mUserFontSet) {
-            // Add userfonts to the fontlist whether already loaded
-            // or not. Loading is initiated during font matching.
-            family = mUserFontSet->LookupFamily(aName);
-        }
+    // First, look up in the user font set...
+    // If the fontSet matches the family, we must not look for a platform
+    // font of the same name, even if we fail to actually get a fontEntry
+    // here; we'll fall back to the next name in the CSS font-family list.
+    if (mUserFontSet) {
+        // Add userfonts to the fontlist whether already loaded
+        // or not. Loading is initiated during font matching.
+        family = mUserFontSet->LookupFamily(aName);
     }
 
     // Not known in the user font set ==> check system fonts
     if (!family) {
-        gfxPlatformFontList *fontList = gfxPlatformFontList::PlatformFontList();
+        gfxPlatformFontList* fontList = gfxPlatformFontList::PlatformFontList();
         family = fontList->FindFamily(aName, mStyle.language, mStyle.systemFont);
     }
 
-    return family;
+    if (family) {
+        aFamilyList.AppendElement(family);
+    }
 }
 
 void
@@ -1646,9 +1639,7 @@ gfxFontGroup::AddFamilyToFontList(gfxFontFamily* aFamily)
     bool needsBold;
     aFamily->FindAllFontsForStyle(mStyle, fontEntryList, needsBold);
     // add these to the fontlist
-    uint32_t n = fontEntryList.Length();
-    for (uint32_t i = 0; i < n; i++) {
-        gfxFontEntry* fe = fontEntryList[i];
+    for (gfxFontEntry* fe : fontEntryList) {
         if (!HasFont(fe)) {
             FamilyFace ff(aFamily, fe, needsBold);
             if (fe->mIsUserFontContainer) {
@@ -3081,7 +3072,7 @@ gfxFontGroup::WhichPrefFontSupportsChar(uint32_t aCh)
         eFontPrefLang currentLang = prefLangs[i];
         mozilla::FontFamilyType defaultGeneric =
             pfl->GetDefaultGeneric(currentLang);
-        nsTArray<nsRefPtr<gfxFontFamily> >* families =
+        nsTArray<nsRefPtr<gfxFontFamily>>* families =
             pfl->GetPrefFontsLangGroup(defaultGeneric, currentLang);
         NS_ASSERTION(families, "no pref font families found");
 
