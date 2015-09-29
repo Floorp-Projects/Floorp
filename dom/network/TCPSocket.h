@@ -88,9 +88,12 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSITCPSOCKETCALLBACK
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  nsPIDOMWindow* GetParentObject() const
+  {
+    return GetOwner();
+  }
 
-  static bool ShouldTCPSocketExist(JSContext* aCx, JSObject* aGlobal);
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void GetHost(nsAString& aHost);
   uint32_t Port();

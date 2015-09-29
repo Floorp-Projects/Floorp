@@ -40,8 +40,9 @@ interface LegacyMozTCPSocket {
 };
 
 [Constructor(DOMString host, unsigned short port, optional SocketOptions options),
- Func="mozilla::dom::TCPSocket::ShouldTCPSocketExist",
- Exposed=(Window,System)]
+ Pref="dom.mozTCPSocket.enabled",
+ CheckAnyPermissions="tcp-socket",
+ Exposed=Window]
 interface TCPSocket : EventTarget {
   /**
    * Upgrade an insecure connection to use TLS. Throws if the ready state is not OPEN.
