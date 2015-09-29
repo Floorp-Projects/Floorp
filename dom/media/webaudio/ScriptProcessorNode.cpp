@@ -245,18 +245,12 @@ public:
                             uint32_t aBufferSize,
                             uint32_t aNumberOfInputChannels)
     : AudioNodeEngine(aNode)
-    , mSource(nullptr)
     , mDestination(aDestination->Stream())
+    , mSharedBuffers(new SharedBuffers(mDestination->SampleRate()))
     , mBufferSize(aBufferSize)
     , mInputChannelCount(aNumberOfInputChannels)
     , mInputWriteIndex(0)
   {
-  }
-
-  void SetSourceStream(AudioNodeStream* aSource)
-  {
-    mSource = aSource;
-    mSharedBuffers = new SharedBuffers(mSource->SampleRate());
   }
 
   SharedBuffers* GetSharedBuffers() const
@@ -345,7 +339,6 @@ public:
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     // Not owned:
-    // - mSource (probably)
     // - mDestination (probably)
     size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
     amount += mSharedBuffers->SizeOfIncludingThis(aMallocSizeOf);
@@ -477,9 +470,8 @@ private:
 
   friend class ScriptProcessorNode;
 
-  nsAutoPtr<SharedBuffers> mSharedBuffers;
-  AudioNodeStream* mSource;
   AudioNodeStream* mDestination;
+  nsAutoPtr<SharedBuffers> mSharedBuffers;
   nsRefPtr<ThreadSharedFloatArrayBufferList> mInputBuffer;
   const uint32_t mBufferSize;
   const uint32_t mInputChannelCount;
@@ -509,7 +501,6 @@ ScriptProcessorNode::ScriptProcessorNode(AudioContext* aContext,
                                   aNumberOfInputChannels);
   mStream = AudioNodeStream::Create(aContext, engine,
                                     AudioNodeStream::NO_STREAM_FLAGS);
-  engine->SetSourceStream(mStream);
 }
 
 ScriptProcessorNode::~ScriptProcessorNode()
