@@ -4,12 +4,12 @@
 
 var functionBodies;
 
-function findAllPoints(blockId)
+function findAllPoints(bodies, blockId)
 {
     var points = [];
     var body;
 
-    for (var xbody of functionBodies) {
+    for (var xbody of bodies) {
         if (sameBlockId(xbody.BlockId, blockId)) {
             assert(!body);
             body = xbody;
@@ -22,7 +22,7 @@ function findAllPoints(blockId)
     for (var edge of body.PEdge) {
         points.push([body, edge.Index[0]]);
         if (edge.Kind == "Loop")
-            Array.prototype.push.apply(points, findAllPoints(edge.BlockId));
+            Array.prototype.push.apply(points, findAllPoints(bodies, edge.BlockId));
     }
 
     return points;
@@ -55,7 +55,7 @@ function isMatchingDestructor(constructor, edge)
 // treat each instance separately, such as when different regions of a function
 // body were guarded by these constructors and you needed to do something
 // different with each.)
-function allRAIIGuardedCallPoints(body, isConstructor)
+function allRAIIGuardedCallPoints(bodies, body, isConstructor)
 {
     if (!("PEdge" in body))
         return [];
@@ -77,7 +77,7 @@ function allRAIIGuardedCallPoints(body, isConstructor)
         if (edge.PEdgeCallInstance.Exp.Kind != "Var")
             continue;
 
-        Array.prototype.push.apply(points, pointsInRAIIScope(body, edge));
+        Array.prototype.push.apply(points, pointsInRAIIScope(bodies, body, edge));
     }
 
     return points;
@@ -133,7 +133,7 @@ function findMatchingConstructor(destructorEdge, body)
     debugger;
 }
 
-function pointsInRAIIScope(body, constructorEdge) {
+function pointsInRAIIScope(bodies, body, constructorEdge) {
     var seen = {};
     var worklist = [constructorEdge.Index[1]];
     var points = [];
@@ -150,7 +150,7 @@ function pointsInRAIIScope(body, constructorEdge) {
             if (isMatchingDestructor(constructorEdge, nedge))
                 continue;
             if (nedge.Kind == "Loop")
-                Array.prototype.push.apply(points, findAllPoints(nedge.BlockId));
+                Array.prototype.push.apply(points, findAllPoints(bodies, nedge.BlockId));
             worklist.push(nedge.Index[1]);
         }
     }
