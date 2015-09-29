@@ -128,6 +128,8 @@ private:
   int64_t ProcessCachedData(int64_t aOffset);
 
   already_AddRefed<AbstractMediaDecoder> SafeGetDecoder();
+
+  NotifyDataArrivedFilter mFilter;
 };
 
 } // namespace mozilla
