@@ -163,8 +163,9 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   ASSERT_EQ(info0.type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) << "First principal must be content";
   const mozilla::ipc::ContentPrincipalInfo& cInfo0 = data[0].principal();
 
+  mozilla::OriginAttributes attrs0(cInfo0.appId(), cInfo0.isInBrowserElement());
   nsAutoCString suffix0;
-  cInfo0.attrs().CreateSuffix(suffix0);
+  attrs0.CreateSuffix(suffix0);
 
   ASSERT_STREQ("^appId=123&inBrowser=1", suffix0.get());
   ASSERT_STREQ("spec 0", cInfo0.spec().get());
@@ -178,8 +179,9 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   ASSERT_EQ(info1.type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) << "First principal must be content";
   const mozilla::ipc::ContentPrincipalInfo& cInfo1 = data[1].principal();
 
+  mozilla::OriginAttributes attrs1(cInfo1.appId(), cInfo1.isInBrowserElement());
   nsAutoCString suffix1;
-  cInfo1.attrs().CreateSuffix(suffix1);
+  attrs1.CreateSuffix(suffix1);
 
   ASSERT_STREQ("", suffix1.get());
   ASSERT_STREQ("spec 1", cInfo1.spec().get());
@@ -219,7 +221,7 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
 
       nsAutoCString spec;
       spec.AppendPrintf("spec write %d", i);
-      d->principal() = mozilla::ipc::ContentPrincipalInfo(mozilla::OriginAttributes(i, i % 2), spec);
+      d->principal() = mozilla::ipc::ContentPrincipalInfo(i, i % 2, spec, EmptyCString());
       d->scope().AppendPrintf("scope write %d", i);
       d->scriptSpec().AppendPrintf("scriptSpec write %d", i);
       d->currentWorkerURL().AppendPrintf("currentWorkerURL write %d", i);
@@ -245,12 +247,8 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
     ASSERT_EQ(data[i].principal().type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo);
     const mozilla::ipc::ContentPrincipalInfo& cInfo = data[i].principal();
 
-    mozilla::OriginAttributes attrs(i, i % 2);
-    nsAutoCString suffix, expectSuffix;
-    attrs.CreateSuffix(expectSuffix);
-    cInfo.attrs().CreateSuffix(suffix);
-
-    ASSERT_STREQ(expectSuffix.get(), suffix.get());
+    ASSERT_EQ((uint32_t)i, cInfo.appId());
+    ASSERT_EQ((uint32_t)(i % 2), (uint32_t)cInfo.isInBrowserElement());
 
     test.AppendPrintf("spec write %d", i);
     ASSERT_STREQ(test.get(), cInfo.spec().get());

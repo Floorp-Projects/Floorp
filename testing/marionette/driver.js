@@ -816,6 +816,9 @@ GeckoDriver.prototype.applyArgumentsToSandbox = function(win, sb, args) {
  *     True if the script is asynchronous.
  * @param {number} timeout
  *     When to interrupt script in milliseconds.
+ * @param {string} filename
+ *     Optional. URI or name of the file we are executing.
+ *     (Used to improve stack trace readability)
  */
 GeckoDriver.prototype.executeScriptInSandbox = function(
     resp,
@@ -823,7 +826,8 @@ GeckoDriver.prototype.executeScriptInSandbox = function(
     script,
     directInject,
     async,
-    timeout) {
+    timeout,
+    filename) {
   if (directInject && async && (timeout === null || timeout === 0)) {
     throw new TimeoutError("Please set a timeout");
   }
@@ -837,7 +841,7 @@ GeckoDriver.prototype.executeScriptInSandbox = function(
     script = data + script;
   }
 
-  let res = Cu.evalInSandbox(script, sandbox, "1.8", "dummy file", 0);
+  let res = Cu.evalInSandbox(script, sandbox, "1.8", filename ? filename : "dummy file", 0);
 
   if (directInject && !async &&
       (typeof res == "undefined" || typeof res.passed == "undefined")) {
@@ -945,7 +949,8 @@ GeckoDriver.prototype.execute = function(cmd, resp, directInject) {
         script,
         directInject,
         false /* async */,
-        scriptTimeout);
+        scriptTimeout,
+        filename);
   } catch (e) {
     throw new JavaScriptError(e, "execute_script", filename, line, script);
   }
@@ -1180,7 +1185,8 @@ GeckoDriver.prototype.executeWithCallback = function(cmd, resp, directInject) {
           script,
           directInject,
           true /* async */,
-          scriptTimeout);
+          scriptTimeout,
+          filename);
     } catch (e) {
       chromeAsyncError(e, "execute_async_script", filename, line, script);
     }

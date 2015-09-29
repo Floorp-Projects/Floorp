@@ -28,7 +28,9 @@ function BackChannel(uri) {
 
   this.channel.listen((id, data) => {
     if (this.pendingResolve) {
-      this.pendingResolve(data);
+      let resolve = this.pendingResolve;
+      this.pendingResolve = null;
+      resolve(data);
       return;
     }
 
@@ -54,7 +56,9 @@ var gBadBackChannel;
 function promiseNewChannelResponse(uri, channel, hash) {
   let waitForChannelPromise = new Promise((resolve, reject) => {
     if (channel.receivedData) {
-      resolve(channel.receivedData);
+      let data = channel.receivedData;
+      channel.receivedData = null;
+      resolve(data);
       return;
     }
 
@@ -113,12 +117,16 @@ add_task(function* test_loopRooms_webchannel_checkWillOpenRoom() {
 });
 
 add_task(function* test_loopRooms_webchannel_openRoom() {
- let openedUrl;
+  let openedUrl;
   Chat.open = function(contentWindow, origin, title, url) {
     openedUrl = url;
   };
+
+  MozLoopServiceInternal.mocks.isChatWindowOpen = false;
+
   registerCleanupFunction(() => {
     Chat.open = openChatOrig;
+    MozLoopServiceInternal.mocks.isChatWindowOpen = undefined;
   });
 
   // Test when the room doesn't exist
@@ -128,9 +136,13 @@ add_task(function* test_loopRooms_webchannel_openRoom() {
 
   Assert.ok(!openedUrl, "should not open a chat window");
   Assert.equal(got.message.response, false, "should have got a response of false");
+  Assert.equal(got.message.alreadyOpen, false, "should not indicate that its already open");
 
   // Now add a room & check it.
   LoopRooms._setRoomsCache(fakeRoomList);
+  registerCleanupFunction(() => {
+    LoopRooms._setRoomsCache();
+  });
 
   got = yield promiseNewChannelResponse(TEST_URI_GOOD, gGoodBackChannel, "openRoom");
 
@@ -144,4 +156,13 @@ add_task(function* test_loopRooms_webchannel_openRoom() {
   Assert.equal(windowData.roomToken, ROOM_TOKEN, "window data should have the roomToken");
 
   Assert.equal(got.message.response, true, "should have got a response of true");
+  Assert.equal(got.message.alreadyOpen, false, "should not indicate that its already open");
+
+  // Simulate a window already being open.
+  MozLoopServiceInternal.mocks.isChatWindowOpen = true;
+
+  got = yield promiseNewChannelResponse(TEST_URI_GOOD, gGoodBackChannel, "openRoom");
+
+  Assert.equal(got.message.response, true, "should have got a response of true");
+  Assert.equal(got.message.alreadyOpen, true, "should indicate the room is already open");
 });

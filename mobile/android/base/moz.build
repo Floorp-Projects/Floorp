@@ -48,6 +48,10 @@ if CONFIG['ANDROID_SUPPORT_V4_AAR']:
     ANDROID_EXTRA_PACKAGES += ['android.support.v4']
     ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_SUPPORT_V4_AAR_RES']]
     resjar.generated_sources += ['android/support/v4/R.java']
+if CONFIG['ANDROID_APPCOMPAT_V7_AAR']:
+    ANDROID_EXTRA_PACKAGES += ['android.support.v7.appcompat']
+    ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_APPCOMPAT_V7_AAR_RES']]
+    resjar.generated_sources += ['android/support/v7/appcompat/R.java']
 if CONFIG['ANDROID_RECYCLERVIEW_V7_AAR']:
     ANDROID_EXTRA_PACKAGES += ['android.support.v7.recyclerview']
     ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_RECYCLERVIEW_V7_AAR_RES']]
@@ -647,7 +651,6 @@ gbjar.extra_jars += [
 ]
 
 moz_native_devices_jars = [
-    CONFIG['ANDROID_APPCOMPAT_V7_AAR_LIB'],
     CONFIG['ANDROID_MEDIAROUTER_V7_AAR_LIB'],
     CONFIG['ANDROID_MEDIAROUTER_V7_AAR_INTERNAL_LIB'],
     CONFIG['ANDROID_PLAY_SERVICES_BASE_AAR_LIB'],
@@ -662,11 +665,6 @@ moz_native_devices_sources = [
 if CONFIG['MOZ_NATIVE_DEVICES']:
     gbjar.extra_jars += moz_native_devices_jars
     gbjar.sources += moz_native_devices_sources
-
-    if CONFIG['ANDROID_APPCOMPAT_V7_AAR']:
-        ANDROID_EXTRA_PACKAGES += ['android.support.v7.appcompat']
-        ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_APPCOMPAT_V7_AAR_RES']]
-        resjar.generated_sources += ['android/support/v7/appcompat/R.java']
 
     if CONFIG['ANDROID_MEDIAROUTER_V7_AAR']:
         ANDROID_EXTRA_PACKAGES += ['android.support.v7.mediarouter']
@@ -683,6 +681,7 @@ if CONFIG['MOZ_NATIVE_DEVICES']:
         ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_CAST_AAR_RES']]
         resjar.generated_sources += ['com/google/android/gms/cast/R.java']
 
+gbjar.extra_jars += [CONFIG['ANDROID_APPCOMPAT_V7_AAR_LIB']]
 gbjar.extra_jars += [CONFIG['ANDROID_RECYCLERVIEW_V7_AAR_LIB']]
 
 gbjar.javac_flags += ['-Xlint:all,-deprecation,-fallthrough', '-J-Xmx512m', '-J-Xms128m']
