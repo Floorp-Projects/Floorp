@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <mask id="fade_mask_both" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox">
+    <linearGradient id="fade_gradient_both" gradientUnits="objectBoundingBox" x2="0" y2="1">
+      <stop stop-color="white" stop-opacity="0" offset="0"></stop>
+      <stop stop-color="white" stop-opacity="1" offset="0.2"></stop>
+      <stop stop-color="white" stop-opacity="1" offset="0.8"></stop>
+      <stop stop-color="white" stop-opacity="0" offset="1"></stop>
+    </linearGradient>
+    <rect x="0" y="0" width="1" height="1" fill="url(#fade_gradient_both)"></rect>
+  </mask>
+</svg>
