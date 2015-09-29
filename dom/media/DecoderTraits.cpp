@@ -200,10 +200,10 @@ DecoderTraits::IsWebMType(const nsACString& aType)
 static bool
 IsGStreamerSupportedType(const nsACString& aMimeType)
 {
-  if (!MediaDecoder::IsGStreamerEnabled())
+  if (DecoderTraits::IsWebMType(aMimeType))
     return false;
 
-  if (DecoderTraits::IsWebMType(aMimeType) && !Preferences::GetBool("media.prefer-gstreamer", false))
+  if (!MediaDecoder::IsGStreamerEnabled())
     return false;
 
   if (IsOggType(aMimeType) && !Preferences::GetBool("media.prefer-gstreamer", false))
