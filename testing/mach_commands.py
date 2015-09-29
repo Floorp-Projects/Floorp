@@ -477,7 +477,7 @@ class PushToTry(MachCommandBase):
             tests = (self.normalise_list(kwargs["tests"], allow_subitems=True)
                      if kwargs["tests"] else {})
         except ValueError as e:
-            print("Error parsing -u argument:\n%s" % e.message)
+            print("Error parsing -u argument (%s):\n%s" % (kwargs["tests"], e.message))
             sys.exit(1)
 
         try:
