@@ -130,6 +130,7 @@ public:
   bool operator!=(const ComputedTimingFunction& aOther) const {
     return !(*this == aOther);
   }
+  void AppendToString(nsAString& aResult) const;
 
 private:
   Type mType;
