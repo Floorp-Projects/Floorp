@@ -41,10 +41,16 @@ if CONFIG['MOZ_WEBSPEECH']:
             'test/nsFakeSynthServices.cpp'
         ]
 
+    DIRS = []
+
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
-        DIRS = ['windows']
-    elif CONFIG['MOZ_SYNTH_PICO']:
-        DIRS = ['pico']
+        DIRS += ['windows']
+
+    if CONFIG['MOZ_SYNTH_SPEECHD']:
+        DIRS += ['speechd']
+
+    if CONFIG['MOZ_SYNTH_PICO']:
+        DIRS += ['pico']
 
 IPDL_SOURCES += [
     'ipc/PSpeechSynthesis.ipdl',
