@@ -25,7 +25,9 @@ static ContainsTemplate e; // expected-error {{variable of type 'ContainsTemplat
 static Template<Normal> f;
 
 template<class T>
-class MOZ_NEEDS_MEMMOVABLE_TYPE Mover { char mForceInstantiation[sizeof(T)]; }; // expected-error-re 5 {{Cannot instantiate 'Mover<{{.*}}>' with non-memmovable template argument '{{.*}}'}}
+class MOZ_NEEDS_MEMMOVABLE_TYPE Mover { // expected-error-re 8 {{Cannot instantiate 'Mover<{{.*}}>' with non-memmovable template argument '{{.*}}'}}
+  char mForceInstantiation[sizeof(T)];
+};
 class IndirectTemplatePointery : Template<Pointery> {}; // expected-note {{'IndirectTemplatePointery' is a non-memmove()able type because it inherits from a non-memmove()able type 'Template<Pointery>'}}
 class ContainsTemplatePointery { Template<Pointery> m; }; // expected-note {{'ContainsTemplatePointery' is a non-memmove()able type because member 'm' is a non-memmove()able type 'Template<Pointery>'}}
 
@@ -35,3 +37,10 @@ static Mover<Template<ContainsPointery>> p; // expected-note {{instantiation of 
 static Mover<IndirectTemplatePointery> q; // expected-note {{instantiation of 'Mover<IndirectTemplatePointery>' requested here}}
 static Mover<ContainsTemplatePointery> r; // expected-note {{instantiation of 'Mover<ContainsTemplatePointery>' requested here}}
 static Mover<Template<Normal>> s;
+
+template<class T, class... Ts>
+class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS ManyTs {}; // expected-note-re 3 {{'ManyTs<{{.*}}>' is a non-memmove()able type because it has a template argument non-memmove()able type '{{.*}}'}}
+
+static Mover<ManyTs<Pointery>> t; // expected-note {{instantiation of 'Mover<ManyTs<Pointery> >' requested here}}
+static Mover<ManyTs<Normal, Pointery>> u; // expected-note {{instantiation of 'Mover<ManyTs<Normal, Pointery> >' requested here}}
+static Mover<ManyTs<Normal, Normal, Pointery>> v; // expected-note {{instantiation of 'Mover<ManyTs<Normal, Normal, Pointery> >' requested here}}
