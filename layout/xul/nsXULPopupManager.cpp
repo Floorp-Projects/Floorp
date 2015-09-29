@@ -486,10 +486,9 @@ nsXULPopupManager::PopupMoved(nsIFrame* aFrame, nsIntPoint aPnt)
     menuPopupFrame->SetPopupPosition(nullptr, true, false);
   }
   else {
-    nsPresContext* presContext = menuPopupFrame->PresContext();
-    aPnt.x = presContext->DevPixelsToIntCSSPixels(aPnt.x);
-    aPnt.y = presContext->DevPixelsToIntCSSPixels(aPnt.y);
-    menuPopupFrame->MoveTo(aPnt.x, aPnt.y, false);
+    CSSPoint cssPos = LayoutDeviceIntPoint::FromUntyped(aPnt)
+                    / menuPopupFrame->PresContext()->CSSToDevPixelScale();
+    menuPopupFrame->MoveTo(RoundedToInt(cssPos), false);
   }
 }
 
