@@ -13,8 +13,10 @@
 #include "mozilla/dom/TVUtils.h"
 #include "nsISupportsPrimitives.h"
 #include "nsITVService.h"
+#include "nsITVSimulatorService.h"
 #include "nsServiceManagerUtils.h"
 #include "TVTuner.h"
+#include "mozilla/dom/HTMLVideoElement.h"
 
 namespace mozilla {
 namespace dom {
@@ -198,6 +200,12 @@ TVTuner::GetStream() const
 }
 
 nsresult
+TVTuner::ReloadMediaStream()
+{
+  return InitMediaStream();
+}
+
+nsresult
 TVTuner::InitMediaStream()
 {
   nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(GetOwner());
@@ -205,11 +213,7 @@ TVTuner::InitMediaStream()
   if (mStreamType == nsITVTunerData::TV_STREAM_TYPE_HW) {
     stream = DOMHwMediaStream::CreateHwStream(window);
   } else if (mStreamType == nsITVTunerData::TV_STREAM_TYPE_SIMULATOR) {
-    // Bug 1180589 : We should MediaStream from local file.
-    //               We should create the PART.2 patch.
-    //stream = CreateSimulatedMediaStream();
-
-    return NS_OK;
+    stream = CreateSimulatedMediaStream();
   }
 
   mStream = stream.forget();
@@ -219,7 +223,85 @@ TVTuner::InitMediaStream()
 already_AddRefed<DOMMediaStream>
 TVTuner::CreateSimulatedMediaStream()
 {
-  return nullptr;
+  ErrorResult error;
+
+  nsIDocument* doc = GetOwner()->GetExtantDoc();
+  if (NS_WARN_IF(!doc)) {
+    return nullptr;
+  }
+  nsRefPtr<Element> element = doc->CreateElement(VIDEO_TAG, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(element));
+  if (NS_WARN_IF(!content)) {
+    return nullptr;
+  }
+
+  HTMLMediaElement* mediaElement = static_cast<HTMLMediaElement*>(content.get());
+  if (NS_WARN_IF(!mediaElement)) {
+    return nullptr;
+  }
+
+  mediaElement->SetAutoplay(true, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return nullptr;
+  }
+
+  mediaElement->SetLoop(true, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(GetOwner()));
+  if (NS_WARN_IF(!domWin)) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsITVSimulatorService> simService(do_QueryInterface(mTVService));
+  if (NS_WARN_IF(!simService)) {
+    return nullptr;
+  }
+
+  if (NS_WARN_IF(!mCurrentSource)) {
+    return nullptr;
+  }
+
+  nsRefPtr<TVChannel> currentChannel = mCurrentSource->GetCurrentChannel();
+  if (NS_WARN_IF(!currentChannel)) {
+    return nullptr;
+  }
+
+  nsString currentChannelNumber;
+  currentChannel->GetNumber(currentChannelNumber);
+  if (currentChannelNumber.IsEmpty()) {
+    return nullptr;
+  }
+
+  nsString currentVideoBlobUrl;
+  nsresult rv = simService->GetSimulatorVideoBlobURL(mId,
+                                                     ToTVSourceTypeStr(mCurrentSource->Type()),
+                                                     currentChannelNumber,
+                                                     domWin,
+                                                     currentVideoBlobUrl);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  mediaElement->SetSrc(currentVideoBlobUrl, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return nullptr;
+  }
+
+  // See Media Capture from DOM Elements spec.
+  // http://www.w3.org/TR/mediacapture-fromelement/
+  nsRefPtr<DOMMediaStream> stream = mediaElement->MozCaptureStream(error);
+  if (NS_WARN_IF(error.Failed())) {
+    return nullptr;
+  }
+
+  return stream.forget();
 }
 
 nsresult
