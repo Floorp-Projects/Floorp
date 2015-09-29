@@ -1,5 +1,9 @@
 #! /bin/bash -e
 
+# Ensure all the scripts in this dir are on the path....
+DIRNAME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+PATH=$DIRNAME:$PATH
+
 gecko_dir=$1
 target=$2
 
