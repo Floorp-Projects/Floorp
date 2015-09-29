@@ -506,21 +506,33 @@ class RelocatablePtr : public BarrieredBase<T>
  * when the GC started. However, since this is a weak pointer, it isn't. So we
  * may collect the empty shape even though a live object points to it. To fix
  * this, we mark these empty shapes black whenever they get read out.
+ *
+ * Note that this class also has post-barriers, so is safe to use with nursery
+ * pointers. However, when used as a hashtable key, care must still be taken to
+ * insert manual post-barriers on the table for rekeying if the key is based in
+ * any way on the address of the object.
  */
 template <class T>
 class ReadBarriered
 {
     T value;
 
+    void read() const { InternalGCMethods<T>::readBarrier(value); }
+    void post(T prev, T next) { InternalGCMethods<T>::postBarrier(&value, prev, next); }
+
   public:
-    ReadBarriered() : value(nullptr) {}
-    explicit ReadBarriered(T value) : value(value) {}
-    explicit ReadBarriered(const Rooted<T>& rooted) : value(rooted) {}
+    ReadBarriered() : value(GCMethods<T>::initial()) {}
+    explicit ReadBarriered(T value) : value(value) {
+        post(GCMethods<T>::initial(), value);
+    }
+    ~ReadBarriered() {
+        post(value, GCMethods<T>::initial());
+    }
 
     T get() const {
         if (!InternalGCMethods<T>::isMarkable(value))
             return GCMethods<T>::initial();
-        InternalGCMethods<T>::readBarrier(value);
+        read();
         return value;
     }
 
@@ -530,13 +542,17 @@ class ReadBarriered
 
     operator T() const { return get(); }
 
-    T& operator*() const { return *get(); }
-    T operator->() const { return get(); }
+    const T& operator*() const { return *get(); }
+    const T operator->() const { return get(); }
 
     T* unsafeGet() { return &value; }
-    T const * unsafeGet() const { return &value; }
+    T const* unsafeGet() const { return &value; }
 
-    void set(T v) { value = v; }
+    void set(T v) {
+        T tmp = value;
+        value = v;
+        post(tmp, value);
+    }
 };
 
 // A pre- and post-barriered Value that is specialized to be aware that it
