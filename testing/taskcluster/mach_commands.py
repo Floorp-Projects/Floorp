@@ -412,12 +412,14 @@ class Graph(object):
                 build_parameters['build_slugid'],
                 build_task['task']['extra']['locations']['build']
             )
+            build_parameters['build_url'] = build_url
 
             # img_url is only necessary for device builds
             img_url = ARTIFACT_URL.format(
                 build_parameters['build_slugid'],
                 build_task['task']['extra']['locations'].get('img', '')
             )
+            build_parameters['img_url'] = img_url
 
             define_task = DEFINE_TASK.format(build_task['task']['workerType'])
 
@@ -459,8 +461,6 @@ class Graph(object):
             for test in build['dependents']:
                 test = test['allowed_build_tasks'][build['task']]
                 test_parameters = copy.copy(build_parameters)
-                test_parameters['build_url'] = build_url
-                test_parameters['img_url'] = img_url
                 if tests_url:
                     test_parameters['tests_url'] = tests_url
                 if test_packages_url:

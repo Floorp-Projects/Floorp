@@ -89,7 +89,7 @@ class Test1BrowserCall(MarionetteTestCase):
         self.marionette.set_context("content")
 
     def local_start_a_conversation(self):
-        button = self.marionette.find_element(By.CSS_SELECTOR, ".new-room-view .btn-info")
+        button = self.wait_for_element_displayed(By.CSS_SELECTOR, ".new-room-view .btn-info")
 
         self.wait_for_element_enabled(button, 120)
 

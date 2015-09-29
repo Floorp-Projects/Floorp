@@ -205,6 +205,8 @@ devtools.jar:
     skin/themes/images/command-eyedropper@2x.png (themes/images/command-eyedropper@2x.png)
     skin/themes/images/command-rulers.png (themes/images/command-rulers.png)
     skin/themes/images/command-rulers@2x.png (themes/images/command-rulers@2x.png)
+    skin/themes/images/command-measure.png (themes/images/command-measure.png)
+    skin/themes/images/command-measure@2x.png (themes/images/command-measure@2x.png)
     skin/themes/markup-view.css (themes/markup-view.css)
     skin/themes/images/editor-error.png (themes/images/editor-error.png)
     skin/themes/images/editor-breakpoint.png (themes/images/editor-breakpoint.png)

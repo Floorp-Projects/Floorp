@@ -183,6 +183,28 @@ describe("loop.standaloneRoomViews", function() {
 
       expect(button.classList.contains("disabled")).eql(true);
     });
+
+    it("should not display a join button if there is a failure reason", function() {
+      activeRoomStore.setStoreState({
+        failureReason: FAILURE_DETAILS.ROOM_ALREADY_OPEN
+      });
+
+      view = mountTestComponent();
+      var button = view.getDOMNode().querySelector(".info-panel > button");
+
+      expect(button).eql(null);
+    });
+
+    it("should display a room already joined message if opening failed", function() {
+      activeRoomStore.setStoreState({
+        failureReason: FAILURE_DETAILS.ROOM_ALREADY_OPEN
+      });
+
+      view = mountTestComponent();
+      var text = view.getDOMNode().querySelector(".failure");
+
+      expect(text.textContent).eql("rooms_already_joined");
+    });
   });
 
   describe("StandaloneRoomHeader", function() {
