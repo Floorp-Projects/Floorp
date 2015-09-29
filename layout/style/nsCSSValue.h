@@ -1493,6 +1493,7 @@ public:
     return mPropertyID == aOther.mPropertyID &&
            mShorthandPropertyID == aOther.mShorthandPropertyID &&
            mTokenStream.Equals(aOther.mTokenStream) &&
+           mLevel == aOther.mLevel &&
            (mBaseURI == aOther.mBaseURI ||
             (mBaseURI && aOther.mBaseURI &&
              NS_SUCCEEDED(mBaseURI->Equals(aOther.mBaseURI, &eq)) &&
@@ -1541,6 +1542,7 @@ public:
   // mozilla::CSSStyleSheet* mSheet;
   uint32_t mLineNumber;
   uint32_t mLineOffset;
+  uint16_t mLevel; // an nsStyleSet::sheetType
 
   // This table is used to hold a reference on to any ImageValue that results
   // from re-parsing this token stream at computed value time.  When properties
