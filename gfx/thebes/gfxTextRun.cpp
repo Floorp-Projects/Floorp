@@ -1588,7 +1588,7 @@ gfxFontGroup::BuildFontList()
                 fonts.AppendElement(family);
             }
         } else {
-            pfl->AddGenericFonts(name.mType, &mStyle, fonts);
+            pfl->AddGenericFonts(name.mType, mStyle.language, fonts);
             if (mTextPerf) {
                 mTextPerf->current.genericLookups++;
             }
@@ -1598,7 +1598,8 @@ gfxFontGroup::BuildFontList()
     // if necessary, append default generic onto the end
     if (mFamilyList.GetDefaultFontType() != eFamily_none &&
         !mFamilyList.HasDefaultGeneric()) {
-        pfl->AddGenericFonts(mFamilyList.GetDefaultFontType(), &mStyle, fonts);
+        pfl->AddGenericFonts(mFamilyList.GetDefaultFontType(),
+                             mStyle.language, fonts);
         if (mTextPerf) {
             mTextPerf->current.genericLookups++;
         }

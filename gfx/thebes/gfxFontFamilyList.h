@@ -29,7 +29,7 @@ enum FontFamilyType {
   eFamily_named_quoted,
 
   // generics
-  eFamily_serif,
+  eFamily_serif,         // pref font code relies on this ordering!!!
   eFamily_sans_serif,
   eFamily_monospace,
   eFamily_cursive,
