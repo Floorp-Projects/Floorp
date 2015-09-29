@@ -511,7 +511,7 @@ GeckoMediaPluginServiceParent::CrashPlugins()
 
   MutexAutoLock lock(mMutex);
   for (size_t i = 0; i < mPlugins.Length(); i++) {
-    mPlugins[i]->Crash();
+    mPlugins[i]->Crash(kPrefChange);
   }
 }
 
@@ -1221,6 +1221,19 @@ GeckoMediaPluginServiceParent::UpdateTrialCreateState(const nsAString& aKeySyste
 #endif
 }
 
+void
+GeckoMediaPluginServiceParent::CrashPluginNow(uint32_t aPluginId, GMPCrashReason aReason)
+{
+  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
+  MutexAutoLock lock(mMutex);
+  LOGD(("%s::%s(%u, %u)", __CLASS__, __FUNCTION__, aPluginId, aReason));
+  for (const auto& plugin : mPlugins) {
+    if (plugin->GetPluginId() == aPluginId) {
+      plugin->Crash(aReason);
+    }
+  }
+}
+
 static bool
 ExtractHostName(const nsACString& aOrigin, nsACString& aOutData)
 {
@@ -1553,6 +1566,14 @@ GMPServiceParent::~GMPServiceParent()
 {
   XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
                                    new DeleteTask<Transport>(GetTransport()));
+}
+
+bool
+GMPServiceParent::RecvCrashPluginNow(const uint32_t& aPluginId,
+                                     const GMPCrashReason& aReason)
+{
+  mService->CrashPluginNow(aPluginId, aReason);
+  return true;
 }
 
 bool
