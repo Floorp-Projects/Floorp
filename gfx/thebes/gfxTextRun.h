@@ -1118,17 +1118,14 @@ protected:
     // helper methods for looking up fonts
 
     // iterate over the fontlist, lookup names and expand generics
-    void EnumerateFontList(nsIAtom *aLanguage, void *aClosure = nullptr);
+    void EnumerateFontList(nsIAtom *aLanguage);
 
     // expand a generic to a list of specific names based on prefs
     void FindGenericFonts(mozilla::FontFamilyType aGenericType,
-                          nsIAtom *aLanguage,
-                          void *aClosure);
+                          nsIAtom *aLanguage);
 
     // lookup and add a font with a given name (i.e. *not* a generic!)
-    virtual void FindPlatformFont(const nsAString& aName,
-                                  bool aUseFontSet,
-                                  void *aClosure);
+    void FindPlatformFont(const nsAString& aName, bool aUseFontSet);
 
     static nsILanguageAtomService* gLangService;
 };
