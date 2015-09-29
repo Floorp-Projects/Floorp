@@ -5800,27 +5800,25 @@ nsComputedDOMStyle::AppendTimingFunction(nsDOMCSSValueList *aValueList,
   aValueList->AppendCSSValue(timingFunction);
 
   nsAutoString tmp;
-
-  if (aTimingFunction.mType == nsTimingFunction::Function) {
-    // set the value from the cubic-bezier control points
-    // (We could try to regenerate the keywords if we want.)
-    tmp.AppendLiteral("cubic-bezier(");
-    tmp.AppendFloat(aTimingFunction.mFunc.mX1);
-    tmp.AppendLiteral(", ");
-    tmp.AppendFloat(aTimingFunction.mFunc.mY1);
-    tmp.AppendLiteral(", ");
-    tmp.AppendFloat(aTimingFunction.mFunc.mX2);
-    tmp.AppendLiteral(", ");
-    tmp.AppendFloat(aTimingFunction.mFunc.mY2);
-    tmp.Append(')');
-  } else {
-    tmp.AppendLiteral("steps(");
-    tmp.AppendInt(aTimingFunction.mSteps);
-    if (aTimingFunction.mType == nsTimingFunction::StepStart) {
-      tmp.AppendLiteral(", start)");
-    } else {
-      tmp.AppendLiteral(", end)");
-    }
+  switch (aTimingFunction.mType) {
+    case nsTimingFunction::Type::CubicBezier:
+      nsStyleUtil::AppendCubicBezierTimingFunction(aTimingFunction.mFunc.mX1,
+                                                   aTimingFunction.mFunc.mY1,
+                                                   aTimingFunction.mFunc.mX2,
+                                                   aTimingFunction.mFunc.mY2,
+                                                   tmp);
+      break;
+    case nsTimingFunction::Type::StepStart:
+    case nsTimingFunction::Type::StepEnd:
+      nsStyleUtil::AppendStepsTimingFunction(aTimingFunction.mType,
+                                             aTimingFunction.mSteps,
+                                             aTimingFunction.mStepSyntax,
+                                             tmp);
+      break;
+    default:
+      nsStyleUtil::AppendCubicBezierKeywordTimingFunction(aTimingFunction.mType,
+                                                          tmp);
+      break;
   }
   timingFunction->SetString(tmp);
 }

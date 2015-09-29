@@ -6,6 +6,8 @@
 #ifndef nsCopySupport_h__
 #define nsCopySupport_h__
 
+#include "nsError.h"
+#include "nsIDocument.h"
 #include "mozilla/EventForwards.h"
 
 class nsINode;

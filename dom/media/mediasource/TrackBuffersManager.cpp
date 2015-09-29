@@ -1660,11 +1660,14 @@ TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
   }
 
   // Adjust our demuxing index if necessary.
-  if (trackBuffer.mNextGetSampleIndex.isSome() &&
-      (trackBuffer.mNextInsertionIndex.ref() < trackBuffer.mNextGetSampleIndex.ref() ||
-       (trackBuffer.mNextInsertionIndex.ref() == trackBuffer.mNextGetSampleIndex.ref() &&
-        aIntervals.GetEnd() < trackBuffer.mNextSampleTime))) {
-    trackBuffer.mNextGetSampleIndex.ref() += aSamples.Length();
+  if (trackBuffer.mNextGetSampleIndex.isSome()) {
+    if (trackBuffer.mNextInsertionIndex.ref() == trackBuffer.mNextGetSampleIndex.ref() &&
+        aIntervals.GetEnd() >= trackBuffer.mNextSampleTime) {
+      MSE_DEBUG("Next sample to be played got overwritten");
+      trackBuffer.mNextGetSampleIndex.reset();
+    } else if (trackBuffer.mNextInsertionIndex.ref() <= trackBuffer.mNextGetSampleIndex.ref()) {
+      trackBuffer.mNextGetSampleIndex.ref() += aSamples.Length();
+    }
   }
 
   TrackBuffer& data = trackBuffer.mBuffers.LastElement();
@@ -1890,36 +1893,82 @@ TrackBuffersManager::GetTrackBuffer(TrackInfo::TrackType aTrack)
   return GetTracksData(aTrack).mBuffers.LastElement();
 }
 
+uint32_t TrackBuffersManager::FindSampleIndex(const TrackBuffer& aTrackBuffer,
+                                              const TimeInterval& aInterval)
+{
+  TimeUnit target = aInterval.mStart - aInterval.mFuzz;
+
+  for (uint32_t i = 0; i < aTrackBuffer.Length(); i++) {
+    const nsRefPtr<MediaRawData>& sample = aTrackBuffer[i];
+    if (sample->mTime >= target.ToMicroseconds() ||
+        sample->GetEndTime() > target.ToMicroseconds()) {
+      return i;
+    }
+  }
+  NS_ASSERTION(false, "FindSampleIndex called with invalid arguments");
+
+  return 0;
+}
+
 TimeUnit
 TrackBuffersManager::Seek(TrackInfo::TrackType aTrack,
-                          const TimeUnit& aTime)
+                          const TimeUnit& aTime,
+                          const TimeUnit& aFuzz)
 {
   MOZ_ASSERT(OnTaskQueue());
   auto& trackBuffer = GetTracksData(aTrack);
   const TrackBuffersManager::TrackBuffer& track = GetTrackBuffer(aTrack);
-  TimeUnit lastKeyFrameTime;
+
+  if (!track.Length()) {
+    // This a reset. It will be followed by another valid seek.
+    trackBuffer.mNextGetSampleIndex = Some(uint32_t(0));
+    trackBuffer.mNextSampleTimecode = TimeUnit();
+    trackBuffer.mNextSampleTime = TimeUnit();
+    return TimeUnit();
+  }
+
+  uint32_t i = 0;
+
+  if (aTime != TimeUnit()) {
+    // Determine the interval of samples we're attempting to seek to.
+    TimeIntervals buffered = trackBuffer.mBufferedRanges;
+    TimeIntervals::IndexType index = buffered.Find(aTime);
+    buffered.SetFuzz(aFuzz);
+    index = buffered.Find(aTime);
+    MOZ_ASSERT(index != TimeIntervals::NoIndex);
+
+    TimeInterval target = buffered[index];
+    i = FindSampleIndex(track, target);
+  }
+
+  Maybe<TimeUnit> lastKeyFrameTime;
   TimeUnit lastKeyFrameTimecode;
   uint32_t lastKeyFrameIndex = 0;
-  for (uint32_t i = 0; i < track.Length(); i++) {
+  for (; i < track.Length(); i++) {
     const nsRefPtr<MediaRawData>& sample = track[i];
     TimeUnit sampleTime = TimeUnit::FromMicroseconds(sample->mTime);
-    if (sampleTime > aTime) {
+    if (sampleTime > aTime && lastKeyFrameTime.isSome()) {
       break;
     }
     if (sample->mKeyframe) {
       lastKeyFrameTimecode = TimeUnit::FromMicroseconds(sample->mTimecode);
-      lastKeyFrameTime = sampleTime;
+      lastKeyFrameTime = Some(sampleTime);
       lastKeyFrameIndex = i;
     }
-    if (sampleTime == aTime) {
+    if (sampleTime == aTime ||
+        (sampleTime > aTime && lastKeyFrameTime.isSome())) {
       break;
     }
   }
+  MSE_DEBUG("Keyframe %s found at %lld",
+            lastKeyFrameTime.isSome() ? "" : "not",
+            lastKeyFrameTime.refOr(TimeUnit()).ToMicroseconds());
+
   trackBuffer.mNextGetSampleIndex = Some(lastKeyFrameIndex);
   trackBuffer.mNextSampleTimecode = lastKeyFrameTimecode;
-  trackBuffer.mNextSampleTime = lastKeyFrameTime;
+  trackBuffer.mNextSampleTime = lastKeyFrameTime.refOr(TimeUnit());
 
-  return lastKeyFrameTime;
+  return lastKeyFrameTime.refOr(TimeUnit());
 }
 
 uint32_t

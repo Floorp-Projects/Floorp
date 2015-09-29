@@ -24,6 +24,7 @@ from ..frontend.data import (
 )
 from ..makeutil import Makefile
 from ..util import ensureParentDir
+from mozbuild.base import ExecutionSummary
 
 
 def pretty_print(element):
@@ -38,41 +39,34 @@ class AndroidEclipseBackend(CommonBackend):
     """Backend that generates Android Eclipse project files.
     """
 
-    def _init(self):
-        CommonBackend._init(self)
-
-        def detailed(summary):
-            s = 'Wrote {:d} Android Eclipse projects to {:s}; ' \
-                '{:d} created; {:d} updated'.format(
-                summary.created_count + summary.updated_count,
-                mozpath.join(self.environment.topobjdir, 'android_eclipse'),
-                summary.created_count,
-                summary.updated_count)
-
-            return s
-
-        # This is a little kludgy and could be improved with a better API.
-        self.summary.backend_detailed_summary = types.MethodType(detailed,
-            self.summary)
+    def summary(self):
+        return ExecutionSummary(
+            'AndroidEclipse backend executed in {execution_time:.2f}s\n'
+            'Wrote {projects:d} Android Eclipse projects to {path:s}; '
+            '{created:d} created; {updated:d} updated',
+            execution_time=self._execution_time,
+            projects=self._created_count + self._updated_count,
+            path=mozpath.join(self.environment.topobjdir, 'android_eclipse'),
+            created=self._created_count,
+            updated=self._updated_count,
+        )
 
     def consume_object(self, obj):
         """Write out Android Eclipse project files."""
 
         if not isinstance(obj, ContextDerived):
-            return
+            return False
 
-        CommonBackend.consume_object(self, obj)
+        if CommonBackend.consume_object(self, obj):
+            # If CommonBackend acknowledged the object, we're done with it.
+            return True
 
-        # If CommonBackend acknowledged the object, we're done with it.
-        if obj._ack:
-            return
-
-        # We don't want to handle most things, so we just acknowledge all objects...
-        obj.ack()
-
-        # ... and handle the one case we care about specially.
+        # Handle the one case we care about specially.
         if isinstance(obj, ContextWrapped) and isinstance(obj.wrapped, AndroidEclipseProjectData):
             self._process_android_eclipse_project_data(obj.wrapped, obj.srcdir, obj.objdir)
+
+        # We don't want to handle most things, so we just acknowledge all objects
+        return True
 
     def consume_finished(self):
         """The common backend handles WebIDL and test files. We don't handle
@@ -257,7 +251,7 @@ class AndroidEclipseBackend(CommonBackend):
 
         # When we re-create the build backend, we kill everything that was there.
         if os.path.isdir(project_directory):
-            self.summary.updated_count += 1
+            self._updated_count += 1
         else:
-            self.summary.created_count += 1
+            self._created_count += 1
         copier.copy(project_directory, skip_if_older=False, remove_unaccounted=True)

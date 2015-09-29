@@ -22,6 +22,8 @@
 #include "prtime.h"
 #include "AudioSampleFormat.h"
 #include "TimeUnits.h"
+#include "nsITimer.h"
+#include "nsCOMPtr.h"
 
 using mozilla::CheckedInt64;
 using mozilla::CheckedUint64;
@@ -300,6 +302,32 @@ nsRefPtr<GenericPromise> InvokeUntil(Work aWork, Condition aCondition) {
   Helper::Iteration(p, aWork, aCondition);
   return p.forget();
 }
+
+// Simple timer to run a runnable after a timeout.
+class SimpleTimer : public nsITimerCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  // Create a new timer to run aTask after aTimeoutMs milliseconds
+  // on thread aTarget. If aTarget is null, task is run on the main thread.
+  static already_AddRefed<SimpleTimer> Create(nsIRunnable* aTask,
+                                              uint32_t aTimeoutMs,
+                                              nsIThread* aTarget = nullptr);
+  void Cancel();
+
+  NS_IMETHOD Notify(nsITimer *timer) override;
+
+private:
+  virtual ~SimpleTimer() {}
+  nsresult Init(nsIRunnable* aTask, uint32_t aTimeoutMs, nsIThread* aTarget);
+
+  nsRefPtr<nsIRunnable> mTask;
+  nsCOMPtr<nsITimer> mTimer;
+};
+
+void
+LogToBrowserConsole(const nsAString& aMsg);
 
 } // end namespace mozilla
 

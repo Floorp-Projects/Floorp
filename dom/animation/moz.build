@@ -30,8 +30,11 @@ UNIFIED_SOURCES += [
     'PendingAnimationTracker.cpp',
 ]
 
-FINAL_LIBRARY = 'xul'
-
 LOCAL_INCLUDES += [
     '/dom/base',
 ]
+
+FINAL_LIBRARY = 'xul'
+
+if CONFIG['GNU_CXX']:
+    CXXFLAGS += ['-Wshadow']

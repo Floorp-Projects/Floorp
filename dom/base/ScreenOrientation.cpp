@@ -4,8 +4,17 @@
 
 #include "ScreenOrientation.h"
 #include "nsIDeviceSensors.h"
+#include "nsIDocShell.h"
+#include "nsIDocument.h"
+#include "nsGlobalWindow.h"
 #include "nsSandboxFlags.h"
 #include "nsScreen.h"
+
+#include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/Hal.h"
+#include "mozilla/Preferences.h"
+
+#include "mozilla/dom/Promise.h"
 
 using namespace mozilla::dom;
 
