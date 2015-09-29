@@ -28,7 +28,9 @@ function BackChannel(uri) {
 
   this.channel.listen((id, data) => {
     if (this.pendingResolve) {
-      this.pendingResolve(data);
+      let resolve = this.pendingResolve;
+      this.pendingResolve = null;
+      resolve(data);
       return;
     }
 
@@ -54,7 +56,9 @@ var gBadBackChannel;
 function promiseNewChannelResponse(uri, channel, hash) {
   let waitForChannelPromise = new Promise((resolve, reject) => {
     if (channel.receivedData) {
-      resolve(channel.receivedData);
+      let data = channel.receivedData;
+      channel.receivedData = null;
+      resolve(data);
       return;
     }
 
