@@ -94,7 +94,6 @@
 #define IMAGE_JPG                           "image/jpg"
 #define IMAGE_PJPEG                         "image/pjpeg"
 #define IMAGE_PNG                           "image/png"
-#define IMAGE_APNG                          "video/vnd.mozilla.apng"
 #define IMAGE_X_PNG                         "image/x-png"
 #define IMAGE_PPM                           "image/x-portable-pixmap"
 #define IMAGE_XBM                           "image/x-xbitmap"
