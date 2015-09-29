@@ -38,7 +38,6 @@ DEFINES['XPCOM_GLUE'] = True
 
 LOCAL_INCLUDES += [
     '../../build',
-    '../../threads',
 ]
 
 # Don't use STL wrappers here (i.e. wrapped <new>); they require mozalloc

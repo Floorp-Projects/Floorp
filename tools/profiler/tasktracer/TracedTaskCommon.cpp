@@ -90,9 +90,9 @@ TracedTaskCommon::ClearTLSTraceInfo()
 /**
  * Implementation of class TracedRunnable.
  */
-TracedRunnable::TracedRunnable(already_AddRefed<nsIRunnable>&& aOriginalObj)
+TracedRunnable::TracedRunnable(nsIRunnable* aOriginalObj)
   : TracedTaskCommon()
-  , mOriginalObj(Move(aOriginalObj))
+  , mOriginalObj(aOriginalObj)
 {
   Init();
   LogVirtualTablePtr(mTaskId, mSourceEventId, *(int**)(aOriginalObj));
@@ -148,9 +148,9 @@ TracedTask::Run()
  * nsIRunnable object, aRunnable.
  */
 already_AddRefed<nsIRunnable>
-CreateTracedRunnable(already_AddRefed<nsIRunnable>&& aRunnable)
+CreateTracedRunnable(nsIRunnable* aRunnable)
 {
-  nsCOMPtr<nsIRunnable> runnable = new TracedRunnable(Move(aRunnable));
+  nsCOMPtr<nsIRunnable> runnable = new TracedRunnable(aRunnable);
   return runnable.forget();
 }
 
