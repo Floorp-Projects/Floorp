@@ -142,10 +142,7 @@ BatteryManager::UpdateFromBatteryInfo(const hal::BatteryInformation& aBatteryInf
   if (!nsContentUtils::IsChromeDoc(doc) &&
       status != nsIPrincipal::APP_STATUS_CERTIFIED)
   {
-    mLevel = 0.292f;
-    printf_stderr("SNORP: battery level before rounding: %lf\n", mLevel);
     mLevel = lround(mLevel * 10.0) / 10.0;
-    printf_stderr("SNORP: battery level after rounding: %lf\n", mLevel);
   }
 
   mCharging = aBatteryInfo.charging();
