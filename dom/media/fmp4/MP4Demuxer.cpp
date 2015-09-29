@@ -9,11 +9,11 @@
 #include <stdint.h>
 
 #include "MP4Demuxer.h"
-#include "mp4_demuxer/Index.h"
 #include "mp4_demuxer/MoofParser.h"
 #include "mp4_demuxer/MP4Metadata.h"
 #include "mp4_demuxer/ResourceStream.h"
 #include "mp4_demuxer/BufferStream.h"
+#include "mp4_demuxer/Index.h"
 
 // Used for telemetry
 #include "mozilla/Telemetry.h"
@@ -29,6 +29,51 @@ PRLogModuleInfo* GetDemuxerLog() {
 }
 
 namespace mozilla {
+
+class MP4TrackDemuxer : public MediaTrackDemuxer
+{
+public:
+  MP4TrackDemuxer(MP4Demuxer* aParent,
+                  UniquePtr<TrackInfo>&& aInfo,
+                  const nsTArray<mp4_demuxer::Index::Indice>& indices);
+
+  virtual UniquePtr<TrackInfo> GetInfo() const override;
+
+  virtual nsRefPtr<SeekPromise> Seek(media::TimeUnit aTime) override;
+
+  virtual nsRefPtr<SamplesPromise> GetSamples(int32_t aNumSamples = 1) override;
+
+  virtual void Reset() override;
+
+  virtual nsresult GetNextRandomAccessPoint(media::TimeUnit* aTime) override;
+
+  nsRefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold) override;
+
+  virtual media::TimeIntervals GetBuffered() override;
+
+  virtual void BreakCycles() override;
+
+private:
+  friend class MP4Demuxer;
+  void NotifyDataArrived();
+  void UpdateSamples(nsTArray<nsRefPtr<MediaRawData>>& aSamples);
+  void EnsureUpToDateIndex();
+  void SetNextKeyFrameTime();
+  nsRefPtr<MP4Demuxer> mParent;
+  nsRefPtr<mp4_demuxer::ResourceStream> mStream;
+  UniquePtr<TrackInfo> mInfo;
+  // We do not actually need a monitor, however MoofParser (in mIndex) will
+  // assert if a monitor isn't held.
+  Monitor mMonitor;
+  nsRefPtr<mp4_demuxer::Index> mIndex;
+  UniquePtr<mp4_demuxer::SampleIterator> mIterator;
+  Maybe<media::TimeUnit> mNextKeyframeTime;
+  // Queued samples extracted by the demuxer, but not yet returned.
+  nsRefPtr<MediaRawData> mQueuedSample;
+  bool mNeedReIndex;
+  bool mNeedSPSForTelemetry;
+};
+
 
 // Returns true if no SPS was found and search for it should continue.
 bool
@@ -120,8 +165,15 @@ MP4Demuxer::GetTrackDemuxer(TrackInfo::TrackType aType, uint32_t aTrackNumber)
   if (mMetadata->GetNumberTracks(aType) <= aTrackNumber) {
     return nullptr;
   }
-  nsRefPtr<MP4TrackDemuxer> e =
-    new MP4TrackDemuxer(this, aType, aTrackNumber);
+  UniquePtr<TrackInfo> info = mMetadata->GetTrackInfo(aType, aTrackNumber);
+  if (!info) {
+    return nullptr;
+  }
+  FallibleTArray<mp4_demuxer::Index::Indice> indices;
+  if (!mMetadata->ReadTrackIndex(indices, info->mTrackId)) {
+    return nullptr;
+  }
+  nsRefPtr<MP4TrackDemuxer> e = new MP4TrackDemuxer(this, Move(info), indices);
   mDemuxers.AppendElement(e);
 
   return e.forget();
@@ -174,27 +226,20 @@ MP4Demuxer::GetCrypto()
 }
 
 MP4TrackDemuxer::MP4TrackDemuxer(MP4Demuxer* aParent,
-                                 TrackInfo::TrackType aType,
-                                 uint32_t aTrackNumber)
+                                 UniquePtr<TrackInfo>&& aInfo,
+                                 const nsTArray<mp4_demuxer::Index::Indice>& indices)
   : mParent(aParent)
   , mStream(new mp4_demuxer::ResourceStream(mParent->mResource))
-  , mNeedReIndex(true)
+  , mInfo(Move(aInfo))
   , mMonitor("MP4TrackDemuxer")
-{
-  mInfo = mParent->mMetadata->GetTrackInfo(aType, aTrackNumber);
-
-  MOZ_ASSERT(mInfo);
-
-  FallibleTArray<mp4_demuxer::Index::Indice> indices;
-  if (!mParent->mMetadata->ReadTrackIndex(indices, mInfo->mTrackId)) {
-    MOZ_ASSERT(false);
-  }
-  mIndex = new mp4_demuxer::Index(indices,
+  , mIndex(new mp4_demuxer::Index(indices,
                                   mStream,
                                   mInfo->mTrackId,
                                   mInfo->IsAudio(),
-                                  &mMonitor);
-  mIterator = MakeUnique<mp4_demuxer::SampleIterator>(mIndex);
+                                  &mMonitor))
+  , mIterator(MakeUnique<mp4_demuxer::SampleIterator>(mIndex))
+  , mNeedReIndex(true)
+{
   EnsureUpToDateIndex(); // Force update of index
 
   // Collect telemetry from h264 AVCC SPS.
