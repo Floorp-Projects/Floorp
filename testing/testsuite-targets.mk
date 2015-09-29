@@ -422,12 +422,6 @@ package-tests-prepare-dest:
 	@rm -f '$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)'
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 
-package-tests-mozharness: package-tests-prepare-dest
-	$(call py_action,test_archive, \
-		mozharness \
-		$(abspath $(DIST))/$(PKG_PATH)/mozharness.zip)
-package-tests: package-tests-mozharness
-
 define package_archive
 package-tests-$(1): stage-all package-tests-prepare-dest
 	$$(call py_action,test_archive, \
@@ -565,7 +559,6 @@ stage-instrumentation-tests: make-stage-dir
   jstestbrowser \
   package-tests \
   package-tests-prepare-dest \
-  package-tests-mozharness \
   package-tests-common \
   make-stage-dir \
   stage-all \
