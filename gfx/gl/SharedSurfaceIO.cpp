@@ -182,6 +182,31 @@ SharedSurface_IOSurface::ToSurfaceDescriptor(layers::SurfaceDescriptor* const ou
     return true;
 }
 
+bool
+SharedSurface_IOSurface::ReadbackBySharedHandle(gfx::DataSourceSurface* out_surface)
+{
+    MOZ_ASSERT(out_surface);
+    mIOSurf->Lock();
+    size_t bytesPerRow = mIOSurf->GetBytesPerRow();
+    size_t ioWidth = mIOSurf->GetDevicePixelWidth();
+    size_t ioHeight = mIOSurf->GetDevicePixelHeight();
+
+    const unsigned char* ioData = (unsigned char*)mIOSurf->GetBaseAddress();
+    gfx::DataSourceSurface::ScopedMap map(out_surface, gfx::DataSourceSurface::WRITE);
+    if (!map.IsMapped()) {
+        mIOSurf->Unlock();
+        return false;
+    }
+
+    for (size_t i = 0; i < ioHeight; i++) {
+        memcpy(map.GetData() + i * map.GetStride(),
+               ioData + i * bytesPerRow, ioWidth * 4);
+    }
+
+    mIOSurf->Unlock();
+    return true;
+}
+
 ////////////////////////////////////////////////////////////////////////
 // SurfaceFactory_IOSurface
 

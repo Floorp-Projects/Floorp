@@ -32,6 +32,8 @@ public:
     virtual void UnlockProdImpl() override;
 
     virtual bool ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor) override;
+
+    virtual bool ReadbackBySharedHandle(gfx::DataSourceSurface* out_surface) override;
 private:
     SharedSurface_GLXDrawable(GLContext* gl,
                               const gfx::IntSize& size,
