@@ -82,6 +82,7 @@ private:
   MP3FrameParser mMP3FrameParser;
 
   MediaResourceIndex mResource;
+  NotifyDataArrivedFilter mFilter;
 };
 
 } // namespace mozilla
