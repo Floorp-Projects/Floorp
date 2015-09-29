@@ -6,35 +6,27 @@
 
 // Simple checks for the AnimationsActor
 
-const {AnimationsFront} = require("devtools/server/actors/animation");
-const {InspectorFront} = require("devtools/server/actors/inspector");
-
 add_task(function*() {
-  let doc = yield addTab("data:text/html;charset=utf-8,<title>test</title><div></div>");
+  let {client, walker, animations} = yield initAnimationsFrontForUrl(
+    "data:text/html;charset=utf-8,<title>test</title><div></div>");
 
-  initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
-  let inspector = InspectorFront(client, form);
-  let walker = yield inspector.getWalker();
-  let front = AnimationsFront(client, form);
-
-  ok(front, "The AnimationsFront was created");
-  ok(front.getAnimationPlayersForNode, "The getAnimationPlayersForNode method exists");
-  ok(front.toggleAll, "The toggleAll method exists");
-  ok(front.playAll, "The playAll method exists");
-  ok(front.pauseAll, "The pauseAll method exists");
+  ok(animations, "The AnimationsFront was created");
+  ok(animations.getAnimationPlayersForNode,
+     "The getAnimationPlayersForNode method exists");
+  ok(animations.toggleAll, "The toggleAll method exists");
+  ok(animations.playAll, "The playAll method exists");
+  ok(animations.pauseAll, "The pauseAll method exists");
 
   let didThrow = false;
   try {
-    yield front.getAnimationPlayersForNode(null);
+    yield animations.getAnimationPlayersForNode(null);
   } catch (e) {
     didThrow = true;
   }
   ok(didThrow, "An exception was thrown for a missing NodeActor");
 
   let invalidNode = yield walker.querySelector(walker.rootNode, "title");
-  let players = yield front.getAnimationPlayersForNode(invalidNode);
+  let players = yield animations.getAnimationPlayersForNode(invalidNode);
   ok(Array.isArray(players), "An array of players was returned");
   is(players.length, 0, "0 players have been returned for the invalid node");
 
