@@ -91,14 +91,14 @@ void Simulator::init(Decoder* decoder, FILE* stream) {
   decoder_->AppendVisitor(this);
 
   stream_ = stream;
-  print_disasm_ = new PrintDisassembler(stream_);
+  print_disasm_ = js_new<PrintDisassembler>(stream_);
   set_coloured_trace(false);
   trace_parameters_ = LOG_NONE;
 
   ResetState();
 
   // Allocate and set up the simulator stack.
-  stack_ = new byte[stack_size_];
+  stack_ = (byte*)js_malloc(stack_size_);
   stack_limit_ = stack_ + stack_protection_size_;
   // Configure the starting stack pointer.
   //  - Find the top of the stack.
@@ -110,7 +110,7 @@ void Simulator::init(Decoder* decoder, FILE* stream) {
   set_sp(tos);
 
   // Set the sample period to 10, as the VIXL examples and tests are short.
-  instrumentation_ = new Instrument("vixl_stats.csv", 10);
+  instrumentation_ = js_new<Instrument>("vixl_stats.csv", 10);
 
   // Print a warning about exclusive-access instructions, but only the first
   // time they are encountered. This warning can be silenced using
@@ -120,7 +120,9 @@ void Simulator::init(Decoder* decoder, FILE* stream) {
   lock_ = PR_NewLock();
   if (!lock_)
     MOZ_CRASH("Could not allocate simulator lock.");
+#ifdef DEBUG
   lockOwner_ = nullptr;
+#endif
   redirection_ = nullptr;
 }
 

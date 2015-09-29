@@ -21,7 +21,6 @@
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/TextureHostOGL.h"
 
-#include "gfxColor.h"
 #include "gfxContext.h"
 #include "gfxUtils.h"
 #include "gfxPrefs.h"
@@ -599,12 +598,12 @@ protected:
 class DebugGLColorData final: public DebugGLData {
 public:
     DebugGLColorData(void* layerRef,
-                     const gfxRGBA& color,
+                     const Color& color,
                      int width,
                      int height)
         : DebugGLData(Packet::COLOR),
           mLayerRef(reinterpret_cast<uint64_t>(layerRef)),
-          mColor(color.Packed()),
+          mColor(color.ToABGR()),
           mSize(width, height)
     { }
 
@@ -902,7 +901,7 @@ public:
 // Sender private functions
 private:
     static void SendColor(void* aLayerRef,
-                          const gfxRGBA& aColor,
+                          const Color& aColor,
                           int aWidth,
                           int aHeight);
     static void SendTextureSource(GLContext* aGLContext,
@@ -1004,7 +1003,7 @@ SenderHelper::SendLayer(LayerComposite* aLayer,
 
 void
 SenderHelper::SendColor(void* aLayerRef,
-                        const gfxRGBA& aColor,
+                        const Color& aColor,
                         int aWidth,
                         int aHeight)
 {
@@ -1179,11 +1178,8 @@ SenderHelper::SendEffectChain(GLContext* aGLContext,
         case EffectTypes::SOLID_COLOR: {
             const EffectSolidColor* solidColorEffect =
                 static_cast<const EffectSolidColor*>(primaryEffect);
-            gfxRGBA color(solidColorEffect->mColor.r,
-                          solidColorEffect->mColor.g,
-                          solidColorEffect->mColor.b,
-                          solidColorEffect->mColor.a);
-            SendColor(aEffectChain.mLayerRef, color, aWidth, aHeight);
+            SendColor(aEffectChain.mLayerRef, solidColorEffect->mColor,
+                      aWidth, aHeight);
             break;
         }
         case EffectTypes::COMPONENT_ALPHA:

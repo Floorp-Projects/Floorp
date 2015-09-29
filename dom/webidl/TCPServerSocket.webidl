@@ -14,9 +14,8 @@ dictionary ServerSocketOptions {
 };
 
 [Constructor(unsigned short port, optional ServerSocketOptions options, optional unsigned short backlog = 0),
- Pref="dom.mozTCPSocket.enabled",
- CheckAnyPermissions="tcp-socket",
- Exposed=Window]
+ Func="mozilla::dom::TCPSocket::ShouldTCPSocketExist",
+ Exposed=(Window,System)]
 interface TCPServerSocket : EventTarget {
   /**
    * The port of this server socket object.

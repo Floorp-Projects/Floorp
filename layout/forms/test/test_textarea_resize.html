@@ -17,7 +17,7 @@
 
 /** Test for textbox resizing **/
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(function() SimpleTest.executeSoon(doTheTest));
+addLoadEvent(() => SimpleTest.executeSoon(doTheTest));
 
 // -1 means use the default value which is 'both', then test explicitly
 // setting each possible value.
