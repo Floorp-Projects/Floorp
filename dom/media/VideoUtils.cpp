@@ -18,6 +18,9 @@
 #include "mozilla/SharedThreadPool.h"
 #include "nsIRandomGenerator.h"
 #include "nsIServiceManager.h"
+#include "nsServiceManagerUtils.h"
+#include "nsIConsoleService.h"
+#include "nsThreadUtils.h"
 
 #include <stdint.h>
 
@@ -441,6 +444,26 @@ SimpleTimer::Create(nsIRunnable* aTask, uint32_t aTimeoutMs, nsIThread* aTarget)
     return nullptr;
   }
   return t.forget();
+}
+
+void
+LogToBrowserConsole(const nsAString& aMsg)
+{
+  if (!NS_IsMainThread()) {
+    nsAutoString msg(aMsg);
+    nsCOMPtr<nsIRunnable> task =
+      NS_NewRunnableFunction([msg]() { LogToBrowserConsole(msg); });
+    NS_DispatchToMainThread(task.forget(), NS_DISPATCH_NORMAL);
+    return;
+  }
+  nsCOMPtr<nsIConsoleService> console(
+    do_GetService("@mozilla.org/consoleservice;1"));
+  if (!console) {
+    NS_WARNING("Failed to log message to console.");
+    return;
+  }
+  nsAutoString msg(aMsg);
+  console->LogStringMessage(msg.get());
 }
 
 } // end namespace mozilla
