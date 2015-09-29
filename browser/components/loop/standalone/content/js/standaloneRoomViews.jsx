@@ -75,7 +75,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
       this.props.dispatcher.dispatch(new sharedActions.JoinRoom());
     },
 
-    render: function() {
+    _renderJoinButton: function() {
       var buttonMessage = this.state.roomState === ROOM_STATES.JOINED ?
         mozL10n.get("rooms_room_joined_own_conversation_label") :
         mozL10n.get("rooms_room_join_label");
@@ -86,6 +86,22 @@ loop.standaloneRoomViews = (function(mozL10n) {
         disabled: this.state.roomState === ROOM_STATES.JOINED
       });
 
+      return (
+        <button
+          className={buttonClasses}
+          onClick={this.handleJoinButton}>
+          {buttonMessage}
+        </button>
+      );
+    },
+
+    _renderFailureText: function() {
+      return (
+        <p className="failure">{ mozL10n.get("rooms_already_joined") }</p>
+      );
+    },
+
+    render: function() {
       // The extra scroller div here is for providing a scroll view for shorter
       // screens, as the common.css specifies overflow:hidden for the body which
       // we need in some places.
@@ -96,11 +112,11 @@ loop.standaloneRoomViews = (function(mozL10n) {
               <p className="loop-logo-text" title={ mozL10n.get("clientShortname2") }></p>
               <p className="roomName">{ this.state.roomName }</p>
               <p className="loop-logo" />
-              <button
-                className={buttonClasses}
-                onClick={this.handleJoinButton}>
-                {buttonMessage}
-              </button>
+              {
+                this.state.failureReason ?
+                  this._renderFailureText() :
+                  this._renderJoinButton()
+              }
             </div>
             <ToSView
               dispatcher={this.props.dispatcher} />
