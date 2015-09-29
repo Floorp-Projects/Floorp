@@ -201,9 +201,6 @@ nsresult
 Convert(int32_t aIn, BluetoothGattStatus& aOut);
 
 nsresult
-Convert(const nsAString& aIn, BluetoothAddress& aOut);
-
-nsresult
 Convert(const nsAString& aIn, BluetoothPinCode& aOut);
 
 nsresult
@@ -214,9 +211,6 @@ Convert(const nsAString& aIn, BluetoothServiceName& aOut);
 
 nsresult
 Convert(BluetoothAclState aIn, bool& aOut);
-
-nsresult
-Convert(const BluetoothAddress& aIn, nsAString& aOut);
 
 nsresult
 Convert(const BluetoothAttributeHandle& aIn, int32_t& aOut);
