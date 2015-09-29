@@ -10,35 +10,41 @@
 <script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.requestFlakyTimeout(
-  "This test needs to wait until AudioDestinationNode has started has " +
-  "accumulated some 'extra' time.");
 
 var context = new AudioContext();
 const delay = 0.1;
 
-setTimeout(
-  function() {
-    const processorBufferLength = 256;
-    // |currentTime| may include double precision floating point
-    // rounding errors, so round to nearest integer sample to ignore these.
-    var minimumPlaybackSample =
-      Math.round(context.currentTime * context.sampleRate) +
-      processorBufferLength;
-    var sp = context.createScriptProcessor(processorBufferLength);
-    sp.connect(context.destination);
-    sp.onaudioprocess =
-      function(e) {
-        is(e.inputBuffer.length, processorBufferLength,
-           "expected buffer length");
-        var playbackSample = Math.round(e.playbackTime * context.sampleRate)
-        ok(playbackSample >= minimumPlaybackSample,
-           "playbackSample " + playbackSample +
-           " beyond expected minimum " + minimumPlaybackSample);
-        sp.onaudioprocess = null;
-        SimpleTest.finish();
-      };
-  }, 1000 * delay);
+function doTest() {
+  const processorBufferLength = 256;
+  // |currentTime| may include double precision floating point
+  // rounding errors, so round to nearest integer sample to ignore these.
+  var minimumPlaybackSample =
+    Math.round(context.currentTime * context.sampleRate) +
+    processorBufferLength;
+  var sp = context.createScriptProcessor(processorBufferLength);
+  sp.connect(context.destination);
+  sp.onaudioprocess =
+    function(e) {
+      is(e.inputBuffer.length, processorBufferLength,
+         "expected buffer length");
+      var playbackSample = Math.round(e.playbackTime * context.sampleRate)
+      ok(playbackSample >= minimumPlaybackSample,
+         "playbackSample " + playbackSample +
+         " beyond expected minimum " + minimumPlaybackSample);
+      sp.onaudioprocess = null;
+      SimpleTest.finish();
+    };
+}
+
+// Wait until AudioDestinationNode has accumulated enough 'extra' time so that
+// a failure would be easily detected.
+(function waitForExtraTime() {
+  if (context.currentTime < delay) {
+    SimpleTest.executeSoon(waitForExtraTime);
+  } else {
+    doTest();
+  }
+})();
 
 </script>
 </pre>
