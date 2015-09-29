@@ -268,6 +268,66 @@ IntervalOverlap(gfxFloat aTranslation, gfxFloat aMin, gfxFloat aMax)
   }
 }
 
+/**
+ * Finds the metrics on |aLayer| with scroll id |aScrollId|, and returns a
+ * LayerMetricsWrapper representing the (layer, metrics) pair, or the null
+ * LayerMetricsWrapper if no matching metrics could be found.
+ */
+static LayerMetricsWrapper
+FindMetricsWithScrollId(Layer* aLayer, FrameMetrics::ViewID aScrollId)
+{
+  for (uint64_t i = 0; i < aLayer->GetFrameMetricsCount(); ++i) {
+    if (aLayer->GetFrameMetrics(i).GetScrollId() == aScrollId) {
+      return LayerMetricsWrapper(aLayer, i);
+    }
+  }
+  return LayerMetricsWrapper();
+}
+
+/**
+ * Checks whether the (layer, metrics) pair (aTransformedLayer, aTransformedMetrics)
+ * is on the path from |aFixedLayer| to the metrics with scroll id
+ * |aFixedWithRespectTo|, inclusive.
+ */
+static bool
+AsyncTransformShouldBeUnapplied(Layer* aFixedLayer,
+                                FrameMetrics::ViewID aFixedWithRespectTo,
+                                Layer* aTransformedLayer,
+                                FrameMetrics::ViewID aTransformedMetrics)
+{
+  LayerMetricsWrapper transformed = FindMetricsWithScrollId(aTransformedLayer, aTransformedMetrics);
+  if (!transformed.IsValid()) {
+    return false;
+  }
+  // It's important to start at the bottom, because the fixed layer itself
+  // could have the transformed metrics, and they can be at the bottom.
+  LayerMetricsWrapper current(aFixedLayer, LayerMetricsWrapper::StartAt::BOTTOM);
+  bool encounteredTransformedLayer = false;
+  // The transformed layer is on the path from |aFixedLayer| to the fixed-to
+  // layer if as we walk up the (layer, metrics) tree starting from
+  // |aFixedLayer|, we *first* encounter the transformed layer, and *then* (or
+  // at the same time) the fixed-to layer.
+  while (current) {
+    if (!encounteredTransformedLayer && current == transformed) {
+      encounteredTransformedLayer = true;
+    }
+    if (current.Metrics().GetScrollId() == aFixedWithRespectTo) {
+      return encounteredTransformedLayer;
+    }
+    current = current.GetParent();
+    // It's possible that we reach a layers id boundary before we reach an
+    // ancestor with the scroll id |aFixedWithRespectTo| (this could happen
+    // e.g. if the scroll frame with that scroll id uses containerless
+    // scrolling). In such a case, stop the walk, as a new layers id could
+    // have a different layer with scroll id |aFixedWithRespectTo| which we
+    // don't intend to match.
+    if (current && current.AsRefLayer() != nullptr) {
+      break;
+    }
+  }
+  return false;
+}
+
 void
 AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
                                                    Layer* aTransformedSubtreeRoot,
@@ -276,18 +336,27 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
                                                    const Matrix4x4& aCurrentTransformForRoot,
                                                    const ScreenMargin& aFixedLayerMargins)
 {
-  bool isRootFixedForSubtree = aLayer->GetIsFixedPosition() &&
-    aLayer->GetFixedPositionScrollContainerId() == aTransformScrollId &&
+  FrameMetrics::ViewID fixedTo;  // the scroll id of the scroll frame we are fixed/sticky to
+  bool isRootOfFixedSubtree = aLayer->GetIsFixedPosition() &&
     !aLayer->GetParent()->GetIsFixedPosition();
-  bool isStickyForSubtree = aLayer->GetIsStickyPosition() &&
-    aLayer->GetStickyScrollContainerId() == aTransformScrollId;
-  bool isFixedOrSticky = (isRootFixedForSubtree || isStickyForSubtree);
+  if (isRootOfFixedSubtree) {
+    fixedTo = aLayer->GetFixedPositionScrollContainerId();
+  }
+  bool isSticky = aLayer->GetIsStickyPosition();
+  if (isSticky) {
+    fixedTo = aLayer->GetStickyScrollContainerId();
+  }
+  bool needsAsyncTransformUnapplied = false;
+  if (isRootOfFixedSubtree || isSticky) {
+    needsAsyncTransformUnapplied = AsyncTransformShouldBeUnapplied(aLayer,
+        fixedTo, aTransformedSubtreeRoot, aTransformScrollId);
+  }
 
-  // We want to process all the fixed and sticky children of
-  // aTransformedSubtreeRoot. Once we do encounter such a child, we don't
+  // We want to process all the fixed and sticky descendants of
+  // aTransformedSubtreeRoot. Once we do encounter such a descendant, we don't
   // need to recurse any deeper because the adjustment to the fixed or sticky
   // layer will apply to its subtree.
-  if (!isFixedOrSticky) {
+  if (!needsAsyncTransformUnapplied) {
     for (Layer* child = aLayer->GetFirstChild(); child; child = child->GetNextSibling()) {
       AlignFixedAndStickyLayers(child, aTransformedSubtreeRoot, aTransformScrollId,
                                 aPreviousTransformForRoot,
