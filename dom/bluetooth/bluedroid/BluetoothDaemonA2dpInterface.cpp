@@ -52,14 +52,15 @@ BluetoothDaemonA2dpModule::HandleSvc(const DaemonSocketPDUHeader& aHeader,
 
 nsresult
 BluetoothDaemonA2dpModule::ConnectCmd(
-  const BluetoothAddress& aRemoteAddr, BluetoothA2dpResultHandler* aRes)
+  const nsAString& aRemoteAddr, BluetoothA2dpResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(SERVICE_ID,
-                                                     OPCODE_CONNECT,
-                                                     6)); // Address
-  nsresult rv = PackPDU(aRemoteAddr, *pdu);
+                                                           OPCODE_CONNECT,
+                                                           6)); // Address
+  nsresult rv = PackPDU(
+    PackConversion<nsAString, BluetoothAddress>(aRemoteAddr), *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -73,14 +74,15 @@ BluetoothDaemonA2dpModule::ConnectCmd(
 
 nsresult
 BluetoothDaemonA2dpModule::DisconnectCmd(
-  const BluetoothAddress& aRemoteAddr, BluetoothA2dpResultHandler* aRes)
+  const nsAString& aRemoteAddr, BluetoothA2dpResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsAutoPtr<DaemonSocketPDU> pdu(new DaemonSocketPDU(SERVICE_ID,
-                                                     OPCODE_DISCONNECT,
-                                                     6)); // Address
-  nsresult rv = PackPDU(aRemoteAddr, *pdu);
+                                                           OPCODE_DISCONNECT,
+                                                           6)); // Address
+  nsresult rv = PackPDU(
+    PackConversion<nsAString, BluetoothAddress>(aRemoteAddr), *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -180,8 +182,7 @@ public:
   { }
 
   nsresult
-  operator () (BluetoothA2dpConnectionState& aArg1,
-               BluetoothAddress& aArg2) const
+  operator () (BluetoothA2dpConnectionState& aArg1, nsString& aArg2) const
   {
     DaemonSocketPDU& pdu = GetPDU();
 
@@ -192,7 +193,8 @@ public:
     }
 
     /* Read address */
-    rv = UnpackPDU(pdu, aArg2);
+    rv = UnpackPDU(
+      pdu, UnpackConversion<BluetoothAddress, nsAString>(aArg2));
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -221,7 +223,7 @@ public:
 
   nsresult
   operator () (BluetoothA2dpAudioState& aArg1,
-               BluetoothAddress& aArg2) const
+               nsString& aArg2) const
   {
     DaemonSocketPDU& pdu = GetPDU();
 
@@ -232,7 +234,8 @@ public:
     }
 
     /* Read address */
-    rv = UnpackPDU(pdu, aArg2);
+    rv = UnpackPDU(
+      pdu, UnpackConversion<BluetoothAddress, nsAString>(aArg2));
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -260,12 +263,13 @@ public:
   { }
 
   nsresult
-  operator () (BluetoothAddress& aArg1, uint32_t aArg2, uint8_t aArg3) const
+  operator () (nsString& aArg1, uint32_t aArg2, uint8_t aArg3) const
   {
     DaemonSocketPDU& pdu = GetPDU();
 
     /* Read address */
-    nsresult rv = UnpackPDU(pdu, aArg1);
+    nsresult rv = UnpackPDU(
+      pdu, UnpackConversion<BluetoothAddress, nsAString>(aArg1));
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -442,7 +446,7 @@ BluetoothDaemonA2dpInterface::Cleanup(
 
 void
 BluetoothDaemonA2dpInterface::Connect(
-  const BluetoothAddress& aBdAddr, BluetoothA2dpResultHandler* aRes)
+  const nsAString& aBdAddr, BluetoothA2dpResultHandler* aRes)
 {
   MOZ_ASSERT(mModule);
 
@@ -454,7 +458,7 @@ BluetoothDaemonA2dpInterface::Connect(
 
 void
 BluetoothDaemonA2dpInterface::Disconnect(
-  const BluetoothAddress& aBdAddr, BluetoothA2dpResultHandler* aRes)
+  const nsAString& aBdAddr, BluetoothA2dpResultHandler* aRes)
 {
   MOZ_ASSERT(mModule);
 

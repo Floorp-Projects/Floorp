@@ -60,9 +60,9 @@ private:
   void NotifyConnectionStatusChanged();
 
   void ConnectionStateNotification(BluetoothA2dpConnectionState aState,
-                                   const BluetoothAddress& aBdAddr) override;
+                                   const nsAString& aBdAddr) override;
   void AudioStateNotification(BluetoothA2dpAudioState aState,
-                              const BluetoothAddress& aBdAddr) override;
+                              const nsAString& aBdAddr) override;
 
   nsString mDeviceAddress;
   nsRefPtr<BluetoothProfileController> mController;
