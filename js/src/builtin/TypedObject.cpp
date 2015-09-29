@@ -1468,7 +1468,7 @@ OutlineTypedObject::setOwnerAndData(JSObject* owner, uint8_t* data)
     // Trigger a post barrier when attaching an object outside the nursery to
     // one that is inside it.
     if (owner && !IsInsideNursery(this) && IsInsideNursery(owner))
-        runtimeFromMainThread()->gc.storeBuffer.putWholeCellFromMainThread(this);
+        runtimeFromMainThread()->gc.storeBuffer.putWholeCell(this);
 }
 
 /*static*/ OutlineTypedObject*
@@ -2224,7 +2224,7 @@ InlineTransparentTypedObject::getOrCreateBuffer(JSContext* cx)
     if (IsInsideNursery(this)) {
         // Make sure the buffer is traced by the next generational collection,
         // so that its data pointer is updated after this typed object moves.
-        cx->runtime()->gc.storeBuffer.putWholeCellFromMainThread(buffer);
+        cx->runtime()->gc.storeBuffer.putWholeCell(buffer);
     }
 
     return buffer;
