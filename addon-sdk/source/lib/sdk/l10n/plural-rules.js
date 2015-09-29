@@ -185,8 +185,12 @@ const LOCALES_TO_RULES = {
 };
 
 // Utility functions for plural rules methods
-function isIn(n, list) list.indexOf(n) !== -1;
-function isBetween(n, start, end) start <= n && n <= end;
+function isIn(n, list) {
+  return list.indexOf(n) !== -1;
+}
+function isBetween(n, start, end) {
+  return start <= n && n <= end;
+}
 
 // List of all plural rules methods, that maps an integer to the plural form name to use
 const RULES = {

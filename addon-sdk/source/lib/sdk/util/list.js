@@ -27,12 +27,16 @@ const listOptions = {
    * Number of elements in this list.
    * @type {Number}
    */
-  get length() listNS(this).keyValueMap.length,
+  get length() {
+    return listNS(this).keyValueMap.length;
+  },
    /**
     * Returns a string representing this list.
     * @returns {String}
     */
-  toString: function toString() 'List(' + listNS(this).keyValueMap + ')',
+  toString: function toString() {
+    return 'List(' + listNS(this).keyValueMap + ')';
+  },
   /**
    * Custom iterator providing `List`s enumeration behavior.
    * We cant reuse `_iterator` that is defined by `Iterable` since it provides

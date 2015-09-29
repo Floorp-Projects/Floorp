@@ -31,8 +31,8 @@ exports.testValidateOptionsNonempty = function (assert) {
 
 exports.testValidateOptionsMap = function (assert) {
   let val = apiUtils.validateOptions({ foo: 3, bar: 2 }, {
-    foo: { map: function (v) v * v },
-    bar: { map: function (v) undefined }
+    foo: { map: v => v * v },
+    bar: { map: v => undefined }
   });
   assert.deepEqual(val, { foo: 9, bar: undefined });
 };
@@ -46,21 +46,21 @@ exports.testValidateOptionsMapException = function (assert) {
 
 exports.testValidateOptionsOk = function (assert) {
   let val = apiUtils.validateOptions({ foo: 3, bar: 2, baz: 1 }, {
-    foo: { ok: function (v) v },
-    bar: { ok: function (v) v }
+    foo: { ok: v => v },
+    bar: { ok: v => v }
   });
   assert.deepEqual(val, { foo: 3, bar: 2 });
 
   assert.throws(
-    function () apiUtils.validateOptions({ foo: 2, bar: 2 }, {
-      bar: { ok: function (v) v > 2 }
+    () => apiUtils.validateOptions({ foo: 2, bar: 2 }, {
+      bar: { ok: v => v > 2 }
     }),
     /^The option "bar" is invalid/,
     "ok should raise exception on invalid option"
   );
 
   assert.throws(
-    function () apiUtils.validateOptions(null, { foo: { ok: function (v) v }}),
+    () => apiUtils.validateOptions(null, { foo: { ok: v => v }}),
     /^The option "foo" is invalid/,
     "ok should raise exception on invalid option"
   );
@@ -92,7 +92,7 @@ exports.testValidateOptionsIs = function (assert) {
   assert.deepEqual(val, opts);
 
   assert.throws(
-    function () apiUtils.validateOptions(null, {
+    () => apiUtils.validateOptions(null, {
       foo: { is: ["object", "number"] }
     }),
     /^The option "foo" must be one of the following types: object, number/,
@@ -223,9 +223,9 @@ exports.testValidateOptionsMapIsOk = function (assert) {
   let [map, is, ok] = [false, false, false];
   let val = apiUtils.validateOptions({ foo: 1337 }, {
     foo: {
-      map: function (v) v.toString(),
+      map: v => v.toString(),
       is: ["string"],
-      ok: function (v) v.length > 0
+      ok: v => v.length > 0
     }
   });
   assert.deepEqual(val, { foo: "1337" });
@@ -233,11 +233,11 @@ exports.testValidateOptionsMapIsOk = function (assert) {
   let requirements = {
     foo: {
       is: ["object"],
-      ok: function () assert.fail("is should have caused us to throw by now")
+      ok: () => assert.fail("is should have caused us to throw by now")
     }
   };
   assert.throws(
-    function () apiUtils.validateOptions(null, requirements),
+    () => apiUtils.validateOptions(null, requirements),
     /^The option "foo" must be one of the following types: object/,
     "is should be used before ok is called"
   );
@@ -245,8 +245,8 @@ exports.testValidateOptionsMapIsOk = function (assert) {
 
 exports.testValidateOptionsErrorMsg = function (assert) {
   assert.throws(
-    function () apiUtils.validateOptions(null, {
-      foo: { ok: function (v) v, msg: "foo!" }
+    () => apiUtils.validateOptions(null, {
+      foo: { ok: v => v, msg: "foo!" }
     }),
     /^foo!/,
     "ok should raise exception with customized message"
@@ -256,14 +256,14 @@ exports.testValidateOptionsErrorMsg = function (assert) {
 exports.testValidateMapWithMissingKey = function (assert) {
   let val = apiUtils.validateOptions({ }, {
     foo: {
-      map: function (v) v || "bar"
+      map: v => v || "bar"
     }
   });
   assert.deepEqual(val, { foo: "bar" });
 
   val = apiUtils.validateOptions({ }, {
     foo: {
-      map: function (v) { throw "bar" }
+      map: v => { throw "bar" }
     }
   });
   assert.deepEqual(val, { });
@@ -275,7 +275,7 @@ exports.testValidateMapWithMissingKeyAndThrown = function (assert) {
       map: function(v) { throw "bar" }
     },
     baz: {
-      map: function(v) "foo"
+      map: v => "foo"
     }
   });
   assert.deepEqual(val, { baz: "foo" });

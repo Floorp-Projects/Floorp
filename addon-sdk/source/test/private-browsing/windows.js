@@ -75,7 +75,7 @@ exports.testIsPrivateOnWindowOpenFromPrivate = function(assert, done) {
         url: 'about:blank',
         onOpen: function(w) {
           assert.equal(isPrivate(w), false, 'new test window is not private');
-          w.close(function() resolve(window));
+          w.close(() => resolve(window));
         }
       });
 

@@ -634,8 +634,12 @@ exports["test Prototype Inheritance"] = createProxyTest("", function (helper) {
 
 exports["test Functions"] = createProxyTest("", function (helper) {
 
-  helper.rawWindow.callFunction = function callFunction(f) f();
-  helper.rawWindow.isEqual = function isEqual(a, b) a == b;
+  helper.rawWindow.callFunction = function callFunction(f) {
+    return f();
+  };
+  helper.rawWindow.isEqual = function isEqual(a, b) {
+    return a == b;
+  };
   // bug 784116: workaround in order to allow proxy code to cache proxies on
   // these functions:
   helper.rawWindow.callFunction.__exposedProps__ = {__proxy: 'rw'};

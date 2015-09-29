@@ -175,13 +175,13 @@ exports.testFromFilename = function(assert) {
 
 exports.testURL = function(assert) {
   assert.ok(URL('h:foo') instanceof URL, 'instance is of correct type');
-  assert.throws(function() URL(),
+  assert.throws(() => URL(),
                     /malformed URI: undefined/i,
                     'url.URL should throw on undefined');
-  assert.throws(function() URL(''),
+  assert.throws(() => URL(''),
                     /malformed URI: /i,
                     'url.URL should throw on empty string');
-  assert.throws(function() URL('foo'),
+  assert.throws(() => URL('foo'),
                     /malformed URI: foo/i,
                     'url.URL should throw on invalid URI');
   assert.ok(URL('h:foo').scheme, 'has scheme');
@@ -193,7 +193,7 @@ exports.testURL = function(assert) {
                    'http://foo/mypath',
                    'relative URL resolved to base');
   // test relative + no base
-  assert.throws(function() URL('path').toString(),
+  assert.throws(() => URL('path').toString(),
                     /malformed URI: path/i,
                     'no base for relative URI should throw');
 
@@ -343,7 +343,7 @@ exports.testWindowLocationMatch = function (assert, done) {
             assert.equal(urlObject[prop], loc[prop], prop + ' matches');
           }
 
-          tab.close(function() server.stop(done));
+          tab.close(() => server.stop(done));
         },
         contentScript: '(' + function () {
           let res = {};

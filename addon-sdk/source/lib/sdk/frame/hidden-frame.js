@@ -48,7 +48,7 @@ FrameOptions.validator = {
     ok: function(v) {
       if (getTypeOf(v) === "array") {
         // make sure every item is a function
-        return v.every(function (item) typeof(item) === "function")
+        return v.every(item => typeof(item) === "function")
       }
       return true;
     }
@@ -112,4 +112,4 @@ function removeHiddenFrame(frame) {
 }
 exports.remove = removeHiddenFrame;
 
-unload(function() fromIterator(cache).forEach(removeHiddenFrame));
+unload(() => fromIterator(cache).forEach(removeHiddenFrame));

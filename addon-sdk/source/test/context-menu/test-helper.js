@@ -272,7 +272,9 @@ TestHelper.prototype = {
     }
     else {
       this.delayedEventListener(this.contextMenuPopup, "popuphidden",
-                                function () closeBrowserWindow.call(this),
+                                function () {
+                                  return closeBrowserWindow.call(this);
+                                },
                                 false);
       this.contextMenuPopup.hidePopup();
     }

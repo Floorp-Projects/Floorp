@@ -71,7 +71,9 @@ exports['test no side-effects in emit'] = function(assert) {
 
 exports['test can remove next listener'] = function(assert) {
   let target = { name: 'target' };
-  function fail() assert.fail('Listener should be removed');
+  function fail() {
+    return assert.fail('Listener should be removed');
+  };
 
   on(target, 'data', function() {
     assert.pass('first litener called');

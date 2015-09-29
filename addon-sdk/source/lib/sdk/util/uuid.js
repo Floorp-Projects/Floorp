@@ -14,4 +14,6 @@ const { generateUUID } = Cc['@mozilla.org/uuid-generator;1'].
 
 // Returns `uuid`. If `id` is passed then it's parsed to `uuid` and returned
 // if not then new one is generated.
-exports.uuid = function uuid(id) id ? parseUUID(id) : generateUUID()
+exports.uuid = function uuid(id) {
+  return id ? parseUUID(id) : generateUUID();
+};

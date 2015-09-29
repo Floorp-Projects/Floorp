@@ -49,9 +49,9 @@ var opened = windows(null, { includePrivate: true });
 var state = merge(opened.map(streamEventsFrom));
 
 
-var futureReady = filter(windowEvents, function({type})
+var futureReady = filter(windowEvents, ({type}) =>
                                         type === "DOMContentLoaded");
-var futureWindows = map(futureReady, function({target}) target);
+var futureWindows = map(futureReady, ({target}) => target);
 var futureState = expand(futureWindows, streamEventsFrom);
 
 exports.events = merge([insert, create, state, futureState]);

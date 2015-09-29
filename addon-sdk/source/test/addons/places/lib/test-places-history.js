@@ -95,7 +95,7 @@ exports.testSearchTimeRange = function (assert, done) {
   ]).then(searchP).then(results => {
     firstTime = results[0].time;
     var deferred = defer();
-    setTimeout(function () deferred.resolve(), 1000);
+    setTimeout(() => deferred.resolve(), 1000);
     return deferred.promise;
   }).then(() => {
     return addVisits(['http://newvisit.org', 'http://newvisit.org/whoawhoa.html']);
