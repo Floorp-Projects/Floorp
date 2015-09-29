@@ -414,6 +414,20 @@ var AnimationPlayerActor = ActorClass({
       currentTime: Arg(0, "number")
     },
     response: {}
+  }),
+
+  /**
+   * Get data about the keyframes of this animation player.
+   * @return {Object} Returns a list of frames, each frame containing the list
+   * animated properties as well as the frame's offset.
+   */
+  getFrames: method(function() {
+    return this.player.effect.getFrames();
+  }, {
+    request: {},
+    response: {
+      frames: RetVal("json")
+    }
   })
 });
 
