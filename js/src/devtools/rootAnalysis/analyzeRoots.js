@@ -527,7 +527,9 @@ function unsafeVariableAddressTaken(suppressed, variable)
     return null;
 }
 
-function computePrintedLines(functionName)
+// Read out the brief (non-JSON, semi-human-readable) CFG description for the
+// given function and store it.
+function loadPrintedLines(functionName)
 {
     assert(!os.system("xdbfind src_body.xdb '" + functionName + "' > " + tmpfile));
     var lines = snarf(tmpfile).split('\n');
@@ -583,7 +585,7 @@ function printEntryTrace(functionName, entry)
     var gcPoint = entry.gcInfo ? entry.gcInfo.ppoint : 0;
 
     if (!functionBodies[0].lines)
-        computePrintedLines(functionName);
+        loadPrintedLines(functionName);
 
     while (entry) {
         var ppoint = entry.ppoint;
@@ -598,8 +600,8 @@ function printEntryTrace(functionName, entry)
                 var table = {};
                 entry.body.edgeTable = table;
                 for (var line of entry.body.lines) {
-                    if (match = /\((\d+),(\d+),/.exec(line))
-                        table[match[1] + "," + match[2]] = line; // May be multiple?
+                    if (match = /\((\d+,\d+),/.exec(line))
+                        table[match[1]] = line; // May be multiple?
                 }
             }
 
