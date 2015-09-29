@@ -37,6 +37,10 @@ it ought not to introduce security holes, so in principle it could be made
 available to content as well; but it is hard to justify the security risks
 of the additional attack surface.
 
+The `Debugger` API cannot currently observe self-hosted JavaScript. This is not
+inherent in the API's design, but simply that the self-hosting infrastructure
+isn't prepared for the kind of invasions the `Debugger` API can perform.
+
 
 ## Debugger Instances and Shadow Objects
 
