@@ -1559,14 +1559,13 @@ gfxFontGroup::~gfxFontGroup()
 
 void
 gfxFontGroup::FindGenericFonts(FontFamilyType aGenericType,
-                               nsIAtom *aLanguage,
-                               void *aClosure)
+                               nsIAtom *aLanguage)
 {
     nsAutoTArray<nsString, 5> resolvedGenerics;
     ResolveGenericFontNames(aGenericType, aLanguage, resolvedGenerics);
     uint32_t g = 0, numGenerics = resolvedGenerics.Length();
     for (g = 0; g < numGenerics; g++) {
-        FindPlatformFont(resolvedGenerics[g], false, aClosure);
+        FindPlatformFont(resolvedGenerics[g], false);
     }
 }
 
@@ -1664,7 +1663,7 @@ gfxFontGroup::ResolveGenericFontNames(FontFamilyType aGenericType,
 #endif
 }
 
-void gfxFontGroup::EnumerateFontList(nsIAtom *aLanguage, void *aClosure)
+void gfxFontGroup::EnumerateFontList(nsIAtom *aLanguage)
 {
     // initialize fonts in the font family list
     const nsTArray<FontFamilyName>& fontlist = mFamilyList.GetFontlist();
@@ -1674,9 +1673,9 @@ void gfxFontGroup::EnumerateFontList(nsIAtom *aLanguage, void *aClosure)
     for (i = 0; i < numFonts; i++) {
         const FontFamilyName& name = fontlist[i];
         if (name.IsNamed()) {
-            FindPlatformFont(name.mName, true, aClosure);
+            FindPlatformFont(name.mName, true);
         } else {
-            FindGenericFonts(name.mType, aLanguage, aClosure);
+            FindGenericFonts(name.mType, aLanguage);
         }
     }
 
@@ -1684,8 +1683,7 @@ void gfxFontGroup::EnumerateFontList(nsIAtom *aLanguage, void *aClosure)
     if (mFamilyList.GetDefaultFontType() != eFamily_none &&
         !mFamilyList.HasDefaultGeneric()) {
         FindGenericFonts(mFamilyList.GetDefaultFontType(),
-                         aLanguage,
-                         aClosure);
+                         aLanguage);
     }
 }
 
@@ -1706,9 +1704,7 @@ gfxFontGroup::BuildFontList()
 }
 
 void
-gfxFontGroup::FindPlatformFont(const nsAString& aName,
-                               bool aUseFontSet,
-                               void *aClosure)
+gfxFontGroup::FindPlatformFont(const nsAString& aName, bool aUseFontSet)
 {
     bool needsBold;
     gfxFontFamily *family = nullptr;
