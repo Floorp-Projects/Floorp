@@ -140,6 +140,10 @@ public class FirstrunPager extends ViewPager {
             for (FirstrunPagerConfig.FirstrunPanelConfig panel : panels) {
                 mDecor.onAddPagerView(context.getString(panel.getTitleRes()));
             }
+
+            if (panels.size() > 0) {
+                mDecor.onPageSelected(0);
+            }
         }
 
         @Override
