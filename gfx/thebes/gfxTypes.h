@@ -57,6 +57,18 @@ enum class gfxImageFormat {
   Unknown
 };
 
+// XXX: temporary
+// This works because the gfxImageFormat enum is defined so as to match the
+// _cairo_format enum.
+#define gfxCairoFormatToImageFormat(aFormat) \
+    ((gfxImageFormat)aFormat)
+
+// XXX: temporary
+// This works because the gfxImageFormat enum is defined so as to match the
+// _cairo_format enum.
+#define gfxImageFormatToCairoFormat(aFormat) \
+    ((cairo_format_t)aFormat)
+
 enum class gfxSurfaceType {
   Image,
   PDF,

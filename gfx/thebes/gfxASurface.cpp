@@ -424,7 +424,8 @@ gfxASurface::CheckSurfaceSize(const IntSize& sz, int32_t limit)
 int32_t
 gfxASurface::FormatStrideForWidth(gfxImageFormat format, int32_t width)
 {
-    return cairo_format_stride_for_width((cairo_format_t)(int)format, (int)width);
+    cairo_format_t cformat = gfxImageFormatToCairoFormat(format);
+    return cairo_format_stride_for_width(cformat, (int)width);
 }
 
 nsresult
