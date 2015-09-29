@@ -472,15 +472,24 @@ var gTests = [
   })
 },
 {
-  desc: "Sync button should open about:accounts page with `abouthome` entrypoint",
+  desc: "Sync button should open about:preferences#sync",
   setup: function () {},
   run: Task.async(function* () {
     let syncButton = gBrowser.selectedBrowser.contentDocument.getElementById("sync");
+    let oldOpenPrefs = window.openPreferences;
+    let openPrefsPromise = new Promise(resolve => {
+      window.openPreferences = function (pane, params) {
+        resolve({ pane: pane, params: params });
+      };
+    });
+
     yield EventUtils.synthesizeMouseAtCenter(syncButton, {}, gBrowser.contentWindow);
 
-    yield promiseTabLoadEvent(gBrowser.selectedTab, null, "load");
-    is(gBrowser.currentURI.spec, "about:accounts?entrypoint=abouthome",
-      "Entry point should be `abouthome`.");
+    let result = yield openPrefsPromise;
+    window.openPreferences = oldOpenPrefs;
+
+    is(result.pane, "paneSync", "openPreferences should be called with paneSync");
+    is(result.params.urlParams.entrypoint, "abouthome", "openPreferences should be called with abouthome entrypoint");
   })
 }
 
