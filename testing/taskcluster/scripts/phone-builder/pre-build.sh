@@ -37,8 +37,5 @@ if echo $backup_file | grep '\.tar\.bz2'; then
     aws s3 cp s3://b2g-phone-backups/$TARGET/$backup_file .
     tar -xjf $backup_file -C $WORKSPACE/B2G
     rm -f $backup_file
-else
-    echo "The backup file is either invalid or missing! Are the AWS credentials ok?"
-    exit 1
 fi
 
