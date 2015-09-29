@@ -311,7 +311,6 @@ SurfaceFactory::SurfaceFactory(SharedSurfaceType type, GLContext* gl,
     , mAllocator(allocator)
     , mFlags(flags)
     , mFormats(gl->ChooseGLFormats(caps))
-    , mMutex("SurfaceFactor::mMutex")
 {
     ChooseBufferBits(mCaps, &mDrawCaps, &mReadCaps);
 }
@@ -369,7 +368,6 @@ SurfaceFactory::StartRecycling(layers::SharedSurfaceTextureClient* tc)
 void
 SurfaceFactory::StopRecycling(layers::SharedSurfaceTextureClient* tc)
 {
-    MutexAutoLock autoLock(mMutex);
     // Must clear before releasing ref.
     tc->ClearRecycleCallback();
 
@@ -381,8 +379,11 @@ SurfaceFactory::StopRecycling(layers::SharedSurfaceTextureClient* tc)
 /*static*/ void
 SurfaceFactory::RecycleCallback(layers::TextureClient* rawTC, void* rawFactory)
 {
+    MOZ_ASSERT(NS_IsMainThread());
+
     RefPtr<layers::SharedSurfaceTextureClient> tc;
     tc = static_cast<layers::SharedSurfaceTextureClient*>(rawTC);
+
     SurfaceFactory* factory = static_cast<SurfaceFactory*>(rawFactory);
 
     if (tc->mSurf->mCanRecycle) {
@@ -398,7 +399,6 @@ bool
 SurfaceFactory::Recycle(layers::SharedSurfaceTextureClient* texClient)
 {
     MOZ_ASSERT(texClient);
-    MutexAutoLock autoLock(mMutex);
 
     if (mRecycleFreePool.size() >= 2) {
         return false;

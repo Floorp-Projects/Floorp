@@ -13,11 +13,6 @@
 #include "mozilla/layers/CompositorTypes.h"  // for TextureInfo, etc
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/layers/TextureClient.h"  // for TextureClient, etc
-
-// Fix X11 header brain damage that conflicts with MaybeOneOf::None
-#undef None
-#include "mozilla/MaybeOneOf.h"
-
 #include "mozilla/mozalloc.h"           // for operator delete
 
 #include "mozilla/gfx/Point.h"          // for IntSize
@@ -26,10 +21,8 @@
 namespace mozilla {
 namespace layers {
 
-class AsyncCanvasRenderer;
 class ClientCanvasLayer;
 class CompositableForwarder;
-class ShadowableLayer;
 class SharedSurfaceTextureClient;
 
 /**
@@ -38,8 +31,6 @@ class SharedSurfaceTextureClient;
 class CanvasClient : public CompositableClient
 {
 public:
-  typedef MaybeOneOf<ClientCanvasLayer*, AsyncCanvasRenderer*> Renderer;
-
   /**
    * Creates, configures, and returns a new canvas client. If necessary, a
    * message will be sent to the compositor to create a corresponding image
@@ -49,7 +40,6 @@ public:
     CanvasClientSurface,
     CanvasClientGLContext,
     CanvasClientTypeShSurf,
-    CanvasClientAsync, // webgl on workers
   };
   static already_AddRefed<CanvasClient> CreateCanvasClient(CanvasClientType aType,
                                                        CompositableForwarder* aFwd,
@@ -57,7 +47,6 @@ public:
 
   CanvasClient(CompositableForwarder* aFwd, TextureFlags aFlags)
     : CompositableClient(aFwd, aFlags)
-    , mFrameID(0)
   {
     mTextureFlags = aFlags;
   }
@@ -68,18 +57,7 @@ public:
 
   virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer) = 0;
 
-  virtual bool AddTextureClient(TextureClient* aTexture) override
-  {
-    ++mFrameID;
-    return CompositableClient::AddTextureClient(aTexture);
-  }
-
-  virtual void UpdateAsync(AsyncCanvasRenderer* aRenderer) {}
-
   virtual void Updated() { }
-
-protected:
-  int32_t mFrameID;
 };
 
 // Used for 2D canvases and WebGL canvas on non-GL systems where readback is requried.
@@ -107,7 +85,7 @@ public:
   virtual bool AddTextureClient(TextureClient* aTexture) override
   {
     MOZ_ASSERT((mTextureFlags & aTexture->GetFlags()) == mTextureFlags);
-    return CanvasClient::AddTextureClient(aTexture);
+    return CompositableClient::AddTextureClient(aTexture);
   }
 
   virtual void OnDetach() override
@@ -133,7 +111,6 @@ private:
   RefPtr<SharedSurfaceTextureClient> mShSurfClient;
   RefPtr<TextureClient> mReadbackClient;
   RefPtr<TextureClient> mFront;
-  RefPtr<TextureClient> mNewFront;
 
   void ClearSurfaces();
 
@@ -153,52 +130,10 @@ public:
 
   virtual void Update(gfx::IntSize aSize,
                       ClientCanvasLayer* aLayer) override;
-  void UpdateRenderer(gfx::IntSize aSize, Renderer& aRenderer);
-
-  virtual void UpdateAsync(AsyncCanvasRenderer* aRenderer) override;
-
-  virtual void Updated() override;
 
   virtual void OnDetach() override {
     ClearSurfaces();
   }
-};
-
-/**
- * Used for OMT<canvas> uploads using the image bridge protocol.
- * Actual CanvasClient is on the ImageBridgeChild thread, so we
- * only forward its AsyncID here
- */
-class CanvasClientBridge final : public CanvasClient
-{
-public:
-  CanvasClientBridge(CompositableForwarder* aLayerForwarder,
-                     TextureFlags aFlags)
-    : CanvasClient(aLayerForwarder, aFlags)
-    , mAsyncID(0)
-    , mLayer(nullptr)
-  {
-  }
-
-  TextureInfo GetTextureInfo() const override
-  {
-    return TextureInfo(CompositableType::IMAGE);
-  }
-
-  virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer) override
-  {
-  }
-
-  virtual void UpdateAsync(AsyncCanvasRenderer* aRenderer) override;
-
-  void SetLayer(ShadowableLayer* aLayer)
-  {
-    mLayer = aLayer;
-  }
-
-protected:
-  uint64_t mAsyncID;
-  ShadowableLayer* mLayer;
 };
 
 } // namespace layers

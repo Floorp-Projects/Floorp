@@ -21,7 +21,6 @@
 #include "mozilla/ipc/MessageChannel.h" // for MessageChannel, etc
 #include "mozilla/ipc/Transport.h"      // for Transport
 #include "mozilla/gfx/Point.h"          // for IntSize
-#include "mozilla/layers/AsyncCanvasRenderer.h"
 #include "mozilla/media/MediaSystemResourceManager.h" // for MediaSystemResourceManager
 #include "mozilla/media/MediaSystemResourceManagerChild.h" // for MediaSystemResourceManagerChild
 #include "mozilla/layers/CompositableClient.h"  // for CompositableChild, etc
@@ -232,19 +231,6 @@ static void CreateImageClientSync(RefPtr<ImageClient>* result,
   barrier->NotifyAll();
 }
 
-// dispatched function
-static void CreateCanvasClientSync(ReentrantMonitor* aBarrier,
-                                   CanvasClient::CanvasClientType aType,
-                                   TextureFlags aFlags,
-                                   RefPtr<CanvasClient>* const outResult,
-                                   bool* aDone)
-{
-  ReentrantMonitorAutoEnter autoMon(*aBarrier);
-  *outResult = sImageBridgeChildSingleton->CreateCanvasClientNow(aType, aFlags);
-  *aDone = true;
-  aBarrier->NotifyAll();
-}
-
 static void ConnectImageBridge(ImageBridgeChild * child, ImageBridgeParent * parent)
 {
   MessageLoop *parentMsgLoop = parent->GetMessageLoop();
@@ -283,14 +269,9 @@ ImageBridgeChild::Connect(CompositableClient* aCompositable,
   MOZ_ASSERT(aCompositable);
   MOZ_ASSERT(!mShuttingDown);
   uint64_t id = 0;
-
-  PImageContainerChild* imageContainerChild = nullptr;
-  if (aImageContainer)
-    imageContainerChild = aImageContainer->GetPImageContainerChild();
-
   PCompositableChild* child =
     SendPCompositableConstructor(aCompositable->GetTextureInfo(),
-                                 imageContainerChild, &id);
+                                 aImageContainer->GetPImageContainerChild(), &id);
   MOZ_ASSERT(child);
   aCompositable->InitIPDLActor(child, id);
 }
@@ -393,35 +374,6 @@ void ImageBridgeChild::DispatchReleaseImageClient(ImageClient* aClient,
     NewRunnableFunction(&ReleaseImageClientNow, aClient, aChild));
 }
 
-static void ReleaseCanvasClientNow(CanvasClient* aClient)
-{
-  MOZ_ASSERT(InImageBridgeChildThread());
-  aClient->Release();
-}
-
-// static
-void ImageBridgeChild::DispatchReleaseCanvasClient(CanvasClient* aClient)
-{
-  if (!aClient) {
-    return;
-  }
-
-  if (!IsCreated()) {
-    // CompositableClient::Release should normally happen in the ImageBridgeChild
-    // thread because it usually generate some IPDL messages.
-    // However, if we take this branch it means that the ImageBridgeChild
-    // has already shut down, along with the CompositableChild, which means no
-    // message will be sent and it is safe to run this code from any thread.
-    MOZ_ASSERT(aClient->GetIPDLActor() == nullptr);
-    aClient->Release();
-    return;
-  }
-
-  sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
-    FROM_HERE,
-    NewRunnableFunction(&ReleaseCanvasClientNow, aClient));
-}
-
 static void ReleaseTextureClientNow(TextureClient* aClient)
 {
   MOZ_ASSERT(InImageBridgeChildThread());
@@ -460,7 +412,7 @@ static void UpdateImageClientNow(ImageClient* aClient, ImageContainer* aContaine
   sImageBridgeChildSingleton->EndTransaction();
 }
 
-// static
+//static
 void ImageBridgeChild::DispatchImageClientUpdate(ImageClient* aClient,
                                                  ImageContainer* aContainer)
 {
@@ -480,51 +432,6 @@ void ImageBridgeChild::DispatchImageClientUpdate(ImageClient* aClient,
       nsRefPtr<ImageContainer> >(&UpdateImageClientNow, aClient, aContainer));
 }
 
-static void UpdateAsyncCanvasRendererSync(AsyncCanvasRenderer* aWrapper,
-                                          ReentrantMonitor* aBarrier,
-                                          bool* const outDone)
-{
-  ImageBridgeChild::UpdateAsyncCanvasRendererNow(aWrapper);
-
-  ReentrantMonitorAutoEnter autoMon(*aBarrier);
-  *outDone = true;
-  aBarrier->NotifyAll();
-}
-
-// static
-void ImageBridgeChild::UpdateAsyncCanvasRenderer(AsyncCanvasRenderer* aWrapper)
-{
-  aWrapper->GetCanvasClient()->UpdateAsync(aWrapper);
-
-  if (InImageBridgeChildThread()) {
-    UpdateAsyncCanvasRendererNow(aWrapper);
-    return;
-  }
-
-  ReentrantMonitor barrier("UpdateAsyncCanvasRenderer Lock");
-  ReentrantMonitorAutoEnter autoMon(barrier);
-  bool done = false;
-
-  sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
-    FROM_HERE,
-    NewRunnableFunction(&UpdateAsyncCanvasRendererSync, aWrapper, &barrier, &done));
-
-  // should stop the thread until the CanvasClient has been created on
-  // the other thread
-  while (!done) {
-    barrier.Wait();
-  }
-}
-
-// static
-void ImageBridgeChild::UpdateAsyncCanvasRendererNow(AsyncCanvasRenderer* aWrapper)
-{
-  MOZ_ASSERT(aWrapper);
-  sImageBridgeChildSingleton->BeginTransaction();
-  aWrapper->GetCanvasClient()->Updated();
-  sImageBridgeChildSingleton->EndTransaction();
-}
-
 static void FlushAllImagesSync(ImageClient* aClient, ImageContainer* aContainer,
                                AsyncTransactionWaiter* aWaiter)
 {
@@ -542,7 +449,7 @@ static void FlushAllImagesSync(ImageClient* aClient, ImageContainer* aContainer,
   aWaiter->DecrementWaitCount();
 }
 
-// static
+//static
 void ImageBridgeChild::FlushAllImages(ImageClient* aClient,
                                       ImageContainer* aContainer)
 {
@@ -794,42 +701,6 @@ ImageBridgeChild::CreateImageClientNow(CompositableType aType,
   MOZ_ASSERT(client, "failed to create ImageClient");
   if (client) {
     client->Connect(aImageContainer);
-  }
-  return client.forget();
-}
-
-already_AddRefed<CanvasClient>
-ImageBridgeChild::CreateCanvasClient(CanvasClient::CanvasClientType aType,
-                                     TextureFlags aFlag)
-{
-  if (InImageBridgeChildThread()) {
-    return CreateCanvasClientNow(aType, aFlag);
-  }
-  ReentrantMonitor barrier("CreateCanvasClient Lock");
-  ReentrantMonitorAutoEnter autoMon(barrier);
-  bool done = false;
-
-  RefPtr<CanvasClient> result = nullptr;
-  GetMessageLoop()->PostTask(FROM_HERE,
-                             NewRunnableFunction(&CreateCanvasClientSync,
-                                 &barrier, aType, aFlag, &result, &done));
-  // should stop the thread until the CanvasClient has been created on the
-  // other thread
-  while (!done) {
-    barrier.Wait();
-  }
-  return result.forget();
-}
-
-already_AddRefed<CanvasClient>
-ImageBridgeChild::CreateCanvasClientNow(CanvasClient::CanvasClientType aType,
-                                        TextureFlags aFlag)
-{
-  RefPtr<CanvasClient> client
-    = CanvasClient::CreateCanvasClient(aType, this, aFlag);
-  MOZ_ASSERT(client, "failed to create CanvasClient");
-  if (client) {
-    client->Connect();
   }
   return client.forget();
 }
