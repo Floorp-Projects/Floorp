@@ -19,5 +19,8 @@ interface KeyframeEffectReadOnly : AnimationEffectReadOnly {
   // readonly attribute CompositeOperation          composite;
   // readonly attribute DOMString                   spacing;
   // KeyframeEffect             clone();
-  // sequence<ComputedKeyframe> getFrames ();
+
+  // We use object instead of ComputedKeyframe so that we can put the
+  // property-value pairs on the object.
+  [Throws] sequence<object> getFrames();
 };
