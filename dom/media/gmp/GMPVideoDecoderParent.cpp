@@ -50,6 +50,7 @@ GMPVideoDecoderParent::GMPVideoDecoderParent(GMPContentParent* aPlugin)
   , mCallback(nullptr)
   , mVideoHost(this)
   , mPluginId(aPlugin->GetPluginId())
+  , mFrameCount(0)
 {
   MOZ_ASSERT(mPlugin);
 }
@@ -157,6 +158,7 @@ GMPVideoDecoderParent::Decode(GMPUniquePtr<GMPVideoEncodedFrame> aInputFrame,
                   aRenderTimeMs)) {
     return NS_ERROR_FAILURE;
   }
+  mFrameCount++;
 
   // Async IPC, we don't have access to a return value.
   return NS_OK;
@@ -180,14 +182,33 @@ GMPVideoDecoderParent::Reset()
 
   mIsAwaitingResetComplete = true;
 
+  nsRefPtr<GMPVideoDecoderParent> self(this);
+  nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction([self]() -> void
+  {
+    LOGD(("GMPVideoDecoderParent[%p]::ResetCompleteTimeout() timed out waiting for ResetComplete", self.get()));
+    self->mResetCompleteTimeout = nullptr;
+    LogToBrowserConsole(NS_LITERAL_STRING("GMPVideoDecoderParent timed out waiting for ResetComplete()"));
+  });
+  CancelResetCompleteTimeout();
+  mResetCompleteTimeout = SimpleTimer::Create(task, 5000, mPlugin->GMPThread());
+
   // Async IPC, we don't have access to a return value.
   return NS_OK;
+}
+
+void
+GMPVideoDecoderParent::CancelResetCompleteTimeout()
+{
+  if (mResetCompleteTimeout) {
+    mResetCompleteTimeout->Cancel();
+    mResetCompleteTimeout = nullptr;
+  }
 }
 
 nsresult
 GMPVideoDecoderParent::Drain()
 {
-  LOGD(("GMPVideoDecoderParent[%p]::Drain()", this));
+  LOGD(("GMPVideoDecoderParent[%p]::Drain() frameCount=%d", this, mFrameCount));
 
   if (!mIsOpen) {
     NS_WARNING("Trying to use an dead GMP video decoder");
@@ -280,8 +301,9 @@ GMPVideoDecoderParent::ActorDestroy(ActorDestroyReason aWhy)
 bool
 GMPVideoDecoderParent::RecvDecoded(const GMPVideoi420FrameData& aDecodedFrame)
 {
-  LOGV(("GMPVideoDecoderParent[%p]::RecvDecoded() timestamp=%lld",
-        this, aDecodedFrame.mTimestamp()));
+  --mFrameCount;
+  LOGV(("GMPVideoDecoderParent[%p]::RecvDecoded() timestamp=%lld frameCount=%d",
+    this, aDecodedFrame.mTimestamp(), mFrameCount));
 
   if (!mCallback) {
     return false;
@@ -345,8 +367,11 @@ GMPVideoDecoderParent::RecvInputDataExhausted()
 bool
 GMPVideoDecoderParent::RecvDrainComplete()
 {
-  LOGD(("GMPVideoDecoderParent[%p]::RecvDrainComplete()", this));
-
+  LOGD(("GMPVideoDecoderParent[%p]::RecvDrainComplete() frameCount=%d", this, mFrameCount));
+  nsAutoString msg;
+  msg.AppendLiteral("GMPVideoDecoderParent::RecvDrainComplete() outstanding frames=");
+  msg.AppendInt(mFrameCount);
+  LogToBrowserConsole(msg);
   if (!mCallback) {
     return false;
   }
@@ -367,6 +392,8 @@ GMPVideoDecoderParent::RecvResetComplete()
 {
   LOGD(("GMPVideoDecoderParent[%p]::RecvResetComplete()", this));
 
+  CancelResetCompleteTimeout();
+
   if (!mCallback) {
     return false;
   }
@@ -375,6 +402,7 @@ GMPVideoDecoderParent::RecvResetComplete()
     return true;
   }
   mIsAwaitingResetComplete = false;
+  mFrameCount = 0;
 
   // Ignore any return code. It is OK for this to fail without killing the process.
   mCallback->ResetComplete();
@@ -457,7 +485,9 @@ GMPVideoDecoderParent::Recv__delete__()
 void
 GMPVideoDecoderParent::UnblockResetAndDrain()
 {
-  LOGD(("GMPVideoDecoderParent[%p]::UnblockResetAndDrain()", this));
+  LOGD(("GMPVideoDecoderParent[%p]::UnblockResetAndDrain() "
+        "awaitingResetComplete=%d awaitingDrainComplete=%d",
+       this, mIsAwaitingResetComplete, mIsAwaitingDrainComplete));
 
   if (!mCallback) {
     MOZ_ASSERT(!mIsAwaitingResetComplete);
@@ -472,6 +502,7 @@ GMPVideoDecoderParent::UnblockResetAndDrain()
     mIsAwaitingDrainComplete = false;
     mCallback->DrainComplete();
   }
+  CancelResetCompleteTimeout();
 }
 
 } // namespace gmp
