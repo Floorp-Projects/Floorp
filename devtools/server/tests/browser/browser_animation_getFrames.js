@@ -7,24 +7,15 @@
 // Check that the AnimationPlayerActor exposes a getFrames method that returns
 // the list of keyframes in the animation.
 
-const {AnimationsFront} = require("devtools/server/actors/animation");
-const {InspectorFront} = require("devtools/server/actors/inspector");
-
 const URL = MAIN_DOMAIN + "animation.html";
 
 add_task(function*() {
-  yield addTab(MAIN_DOMAIN + "animation.html");
-
-  initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
-  let inspector = InspectorFront(client, form);
-  let walker = yield inspector.getWalker();
-  let front = AnimationsFront(client, form);
+  let {client, walker, animations} =
+    yield initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   info("Get the test node and its animation front");
   let node = yield walker.querySelector(walker.rootNode, ".simple-animation");
-  let [player] = yield front.getAnimationPlayersForNode(node);
+  let [player] = yield animations.getAnimationPlayersForNode(node);
 
   ok(player.getFrames, "The front has the getFrames method");
 

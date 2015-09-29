@@ -6,58 +6,58 @@
 
 // Check the output of getAnimationPlayersForNode
 
-const {AnimationsFront} = require("devtools/server/actors/animation");
-const {InspectorFront} = require("devtools/server/actors/inspector");
-
 add_task(function*() {
-  let doc = yield addTab(MAIN_DOMAIN + "animation.html");
+  let {client, walker, animations} =
+    yield initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
-  initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
-  let inspector = InspectorFront(client, form);
-  let walker = yield inspector.getWalker();
-  let front = AnimationsFront(client, form);
-
-  yield theRightNumberOfPlayersIsReturned(walker, front);
-  yield playersCanBePausedAndResumed(walker, front);
+  yield theRightNumberOfPlayersIsReturned(walker, animations);
+  yield playersCanBePausedAndResumed(walker, animations);
 
   yield closeDebuggerClient(client);
   gBrowser.removeCurrentTab();
 });
 
-function* theRightNumberOfPlayersIsReturned(walker, front) {
+function* theRightNumberOfPlayersIsReturned(walker, animations) {
   let node = yield walker.querySelector(walker.rootNode, ".not-animated");
-  let players = yield front.getAnimationPlayersForNode(node);
-  is(players.length, 0, "0 players were returned for the unanimated node");
+  let players = yield animations.getAnimationPlayersForNode(node);
+  is(players.length, 0,
+     "0 players were returned for the unanimated node");
 
   node = yield walker.querySelector(walker.rootNode, ".simple-animation");
-  players = yield front.getAnimationPlayersForNode(node);
-  is(players.length, 1, "One animation player was returned");
+  players = yield animations.getAnimationPlayersForNode(node);
+  is(players.length, 1,
+     "One animation player was returned");
 
   node = yield walker.querySelector(walker.rootNode, ".multiple-animations");
-  players = yield front.getAnimationPlayersForNode(node);
-  is(players.length, 2, "Two animation players were returned");
+  players = yield animations.getAnimationPlayersForNode(node);
+  is(players.length, 2,
+     "Two animation players were returned");
 
   node = yield walker.querySelector(walker.rootNode, ".transition");
-  players = yield front.getAnimationPlayersForNode(node);
-  is(players.length, 1, "One animation player was returned for the transitioned node");
+  players = yield animations.getAnimationPlayersForNode(node);
+  is(players.length, 1,
+     "One animation player was returned for the transitioned node");
 }
 
-function* playersCanBePausedAndResumed(walker, front) {
+function* playersCanBePausedAndResumed(walker, animations) {
   let node = yield walker.querySelector(walker.rootNode, ".simple-animation");
-  let [player] = yield front.getAnimationPlayersForNode(node);
+  let [player] = yield animations.getAnimationPlayersForNode(node);
   yield player.ready();
 
-  ok(player.initialState, "The player has an initialState");
-  ok(player.getCurrentState, "The player has the getCurrentState method");
-  is(player.initialState.playState, "running", "The animation is currently running");
+  ok(player.initialState,
+     "The player has an initialState");
+  ok(player.getCurrentState,
+     "The player has the getCurrentState method");
+  is(player.initialState.playState, "running",
+     "The animation is currently running");
 
   yield player.pause();
   let state = yield player.getCurrentState();
-  is(state.playState, "paused", "The animation is now paused");
+  is(state.playState, "paused",
+     "The animation is now paused");
 
   yield player.play();
   state = yield player.getCurrentState();
-  is(state.playState, "running", "The animation is now running again");
+  is(state.playState, "running",
+     "The animation is now running again");
 }
