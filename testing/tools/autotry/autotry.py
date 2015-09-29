@@ -195,9 +195,12 @@ class AutoTry(object):
         except (ConfigParser.NoSectionError, ConfigParser.NoOptionError):
             return None
 
-        kwargs = vars(arg_parser().parse_args(data.split()))
+        kwargs = vars(arg_parser().parse_args(self.split_try_string(data)))
 
         return kwargs
+
+    def split_try_string(self, data):
+        return re.findall(r'(?:\[.*?\]|\S)+', data)
 
     def save_config(self, name, data):
         assert data.startswith("try: ")
