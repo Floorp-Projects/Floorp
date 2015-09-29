@@ -528,7 +528,7 @@ class RelocatablePtr : public WriteBarrieredBase<T>
     }
 };
 
-// Base class for barriered pointer types that intercept only reads.
+// Base class for barriered pointer types that intercept reads and writes.
 template <typename T>
 class ReadBarrieredBase : public BarrieredBase<T>
 {
@@ -538,6 +538,7 @@ class ReadBarrieredBase : public BarrieredBase<T>
 
   protected:
     void read() const { InternalGCMethods<T>::readBarrier(this->value); }
+    void post(T prev, T next) { InternalGCMethods<T>::postBarrier(&this->value, prev, next); }
 };
 
 // Incremental GC requires that weak pointers have read barriers. This is mostly
@@ -548,12 +549,22 @@ class ReadBarrieredBase : public BarrieredBase<T>
 // when the GC started. However, since this is a weak pointer, it isn't. So we
 // may collect the empty shape even though a live object points to it. To fix
 // this, we mark these empty shapes black whenever they get read out.
-template <class T>
+//
+// Note that this class also has post-barriers, so is safe to use with nursery
+// pointers. However, when used as a hashtable key, care must still be taken to
+// insert manual post-barriers on the table for rekeying if the key is based in
+// any way on the address of the object.
+template <typename T>
 class ReadBarriered : public ReadBarrieredBase<T>
 {
   public:
     ReadBarriered() : ReadBarrieredBase<T>(GCMethods<T>::initial()) {}
-    explicit ReadBarriered(const T& v) : ReadBarrieredBase<T>(v) {}
+    explicit ReadBarriered(const T& v) : ReadBarrieredBase<T>(v) {
+        this->post(GCMethods<T>::initial(), v);
+    }
+    ~ReadBarriered() {
+        this->post(this->value, GCMethods<T>::initial());
+    }
 
     const T get() const {
         if (!InternalGCMethods<T>::isMarkable(this->value))
@@ -568,12 +579,16 @@ class ReadBarriered : public ReadBarrieredBase<T>
 
     operator const T() const { return get(); }
 
-    const T& operator*() const { return *get(); }
     const T operator->() const { return get(); }
 
     T const* unsafeGet() const { return &this->value; }
 
-    void set(const T& v) { this->value = v; }
+    void set(const T& v)
+    {
+        T tmp = this->value;
+        this->value = v;
+        this->post(tmp, v);
+    }
 };
 
 // Add Value operations to all Barrier types. Note, this must be defined before
