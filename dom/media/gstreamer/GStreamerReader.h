@@ -265,6 +265,7 @@ private:
   int fpsDen;
 
   MediaResourceIndex mResource;
+  NotifyDataArrivedFilter mFilter;
 };
 
 } // namespace mozilla
