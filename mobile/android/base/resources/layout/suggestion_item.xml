@@ -3,14 +3,17 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
+<!-- For reasons unknown, the minHeight attribute is required to keep suggestion_user_entered the same size as all other
+     search suggestion buttons-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
+              android:layout_height="32dp"
+              android:minHeight="32dp"
               android:orientation="horizontal"
-              android:background="@drawable/suggestion_selector"
+              android:background="@drawable/search_suggestion_button"
               android:gravity="center_vertical"
               android:clickable="true"
-              android:padding="7dp">
+              android:padding="5dp">
 
     <ImageView android:id="@+id/suggestion_item_icon"
                android:src="@drawable/icon_most_recent_empty"
@@ -22,7 +25,7 @@
     <TextView android:id="@+id/suggestion_text"
               android:layout_width="wrap_content"
               android:layout_height="wrap_content"
-              android:textColor="@color/placeholder_active_grey"
+              android:textColor="@color/text_and_tabs_tray_grey"
               android:textSize="14sp"
               android:gravity="center_vertical"
               android:layout_gravity="center_vertical"/>

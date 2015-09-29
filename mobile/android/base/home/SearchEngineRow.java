@@ -15,6 +15,7 @@ import org.mozilla.gecko.home.BrowserSearch.OnEditSuggestionListener;
 import org.mozilla.gecko.home.BrowserSearch.OnSearchListener;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.preferences.GeckoPreferences;
+import org.mozilla.gecko.util.DrawableUtil;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.widget.AnimatedHeightLayout;
@@ -25,6 +26,7 @@ import android.database.Cursor;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -67,6 +69,9 @@ class SearchEngineRow extends AnimatedHeightLayout {
 
     // Selected suggestion view
     private int mSelectedView;
+
+    // android:backgroundTint only works in Android 21 and higher so we can't do this statically in the xml
+    private Drawable mSearchHistorySuggestionIcon;
 
     // Maximums for suggestions
     private int mMaxSavedSuggestions;
@@ -135,6 +140,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
         mUserEnteredView.setOnClickListener(mClickListener);
 
         mUserEnteredTextView = (TextView) findViewById(R.id.suggestion_text);
+        mSearchHistorySuggestionIcon = DrawableUtil.tintDrawable(getContext(), R.drawable.icon_most_recent_empty, R.color.tabs_tray_icon_grey);
 
         // Suggestion limits
         mMaxSavedSuggestions = getResources().getInteger(R.integer.max_saved_suggestions);
@@ -153,7 +159,12 @@ class SearchEngineRow extends AnimatedHeightLayout {
 
     private void setSuggestionOnView(View v, String suggestion, boolean isUserSavedSearch) {
         final ImageView historyIcon = (ImageView) v.findViewById(R.id.suggestion_item_icon);
-        historyIcon.setVisibility(isUserSavedSearch ? View.VISIBLE : View.GONE);
+        if (isUserSavedSearch) {
+            historyIcon.setImageDrawable(mSearchHistorySuggestionIcon);
+            historyIcon.setVisibility(View.VISIBLE);
+        } else {
+            historyIcon.setVisibility(View.GONE);
+        }
 
         final TextView suggestionText = (TextView) v.findViewById(R.id.suggestion_text);
         suggestionText.setText(suggestion);
