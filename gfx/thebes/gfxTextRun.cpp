@@ -1564,6 +1564,9 @@ gfxFontGroup::FindGenericFonts(FontFamilyType aGenericType,
     nsAutoTArray<nsString, 5> resolvedGenerics;
     ResolveGenericFontNames(aGenericType, aLanguage, resolvedGenerics);
     uint32_t g = 0, numGenerics = resolvedGenerics.Length();
+    if (mTextPerf) {
+        mTextPerf->current.genericLookups++;
+    }
     for (g = 0; g < numGenerics; g++) {
         FindPlatformFont(resolvedGenerics[g], false);
     }
