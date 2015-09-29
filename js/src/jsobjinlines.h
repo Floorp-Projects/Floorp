@@ -76,7 +76,6 @@ JSObject::finalize(js::FreeOp* fop)
         MOZ_ASSERT(CurrentThreadCanAccessRuntime(fop->runtime()));
     }
 #endif
-
     const js::Class* clasp = getClass();
     if (clasp->finalize)
         clasp->finalize(fop, this);

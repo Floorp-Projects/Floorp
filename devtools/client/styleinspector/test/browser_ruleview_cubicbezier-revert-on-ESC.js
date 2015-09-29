@@ -49,7 +49,7 @@ function* testPressingEscapeRevertsChanges(view) {
   yield ruleEditor.rule._applyingModifications;
 
   yield waitForComputedStyleProperty("body", null, "animation-timing-function",
-    "cubic-bezier(0, 0, 1, 1)");
+    "linear");
   is(propEditor.valueSpan.textContent, "linear",
     "Got expected property value.");
 }

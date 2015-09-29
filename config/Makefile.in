@@ -45,7 +45,9 @@ ifndef JS_STANDALONE
 ifndef MOZ_PROFILE_USE
 # Generate a new buildid every time we "export" in config... that's only
 # supposed to be once per-build!
-export::
+export:: buildid
+
+buildid: FORCE
 ifdef MOZ_BUILD_DATE
 	printf '%s' $(MOZ_BUILD_DATE) > buildid
 else

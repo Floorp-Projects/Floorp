@@ -225,7 +225,7 @@ child:
   prio(high) sync MaxValue(uint64_t aID) returns(double aValue);
   prio(high) sync Step(uint64_t aID) returns(double aStep);
 
-  prio(high) sync TakeFocus(uint64_t aID);
+  async TakeFocus(uint64_t aID);
   prio(high) sync EmbeddedChildCount(uint64_t aID) returns(uint32_t aCount);
   prio(high) sync IndexOfEmbeddedChild(uint64_t aID, uint64_t aChildID)
     returns(uint32_t childIdx);

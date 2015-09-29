@@ -213,11 +213,23 @@ nsDOMDataChannel::BufferedAmount() const
   return mDataChannel->GetBufferedAmount();
 }
 
+uint32_t
+nsDOMDataChannel::BufferedAmountLowThreshold() const
+{
+  return mDataChannel->GetBufferedAmountLowThreshold();
+}
+
 NS_IMETHODIMP
 nsDOMDataChannel::GetBufferedAmount(uint32_t* aBufferedAmount)
 {
   *aBufferedAmount = BufferedAmount();
   return NS_OK;
+}
+
+void
+nsDOMDataChannel::SetBufferedAmountLowThreshold(uint32_t aThreshold)
+{
+  mDataChannel->SetBufferedAmountLowThreshold(aThreshold);
 }
 
 NS_IMETHODIMP nsDOMDataChannel::GetBinaryType(nsAString & aBinaryType)
@@ -466,6 +478,14 @@ nsDOMDataChannel::OnChannelClosed(nsISupports* aContext)
   LOG(("%p(%p): %s - Dispatching\n",this,(void*)mDataChannel,__FUNCTION__));
 
   return OnSimpleEvent(aContext, NS_LITERAL_STRING("close"));
+}
+
+nsresult
+nsDOMDataChannel::OnBufferLow(nsISupports* aContext)
+{
+  LOG(("%p(%p): %s - Dispatching\n",this,(void*)mDataChannel,__FUNCTION__));
+
+  return OnSimpleEvent(aContext, NS_LITERAL_STRING("bufferedamountlow"));
 }
 
 void

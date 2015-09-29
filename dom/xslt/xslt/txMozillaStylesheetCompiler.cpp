@@ -90,7 +90,8 @@ public:
 
 private:
     nsRefPtr<txStylesheetCompiler> mCompiler;
-    nsCOMPtr<nsIStreamListener> mListener;
+    nsCOMPtr<nsIStreamListener>    mListener;
+    nsCOMPtr<nsIParser>            mParser;
     bool mCheckedForXML;
 
 protected:
@@ -102,8 +103,9 @@ protected:
 
 txStylesheetSink::txStylesheetSink(txStylesheetCompiler* aCompiler,
                                    nsIParser* aParser)
-    : mCompiler(aCompiler),
-      mCheckedForXML(false)
+    : mCompiler(aCompiler)
+    , mParser(aParser)
+    , mCheckedForXML(false)
 {
     mListener = do_QueryInterface(aParser);
 }
@@ -227,9 +229,8 @@ txStylesheetSink::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
                                   uint64_t aOffset, uint32_t aCount)
 {
     if (!mCheckedForXML) {
-        nsCOMPtr<nsIParser> parser = do_QueryInterface(aContext);
         nsCOMPtr<nsIDTD> dtd;
-        parser->GetDTD(getter_AddRefs(dtd));
+        mParser->GetDTD(getter_AddRefs(dtd));
         if (dtd) {
             mCheckedForXML = true;
             if (!(dtd->GetType() & NS_IPARSER_FLAG_XML)) {
@@ -244,7 +245,7 @@ txStylesheetSink::OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
         }
     }
 
-    return mListener->OnDataAvailable(aRequest, aContext, aInputStream,
+    return mListener->OnDataAvailable(aRequest, mParser, aInputStream,
                                       aOffset, aCount);
 }
 
@@ -268,8 +269,7 @@ txStylesheetSink::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
       charset.AssignLiteral("UTF-8");
     }
 
-    nsCOMPtr<nsIParser> parser = do_QueryInterface(aContext);
-    parser->SetDocumentCharset(charset, charsetSource);
+    mParser->SetDocumentCharset(charset, charsetSource);
 
     nsAutoCString contentType;
     channel->GetContentType(contentType);
@@ -289,7 +289,7 @@ txStylesheetSink::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
             rv = serv->AsyncConvertData(UNKNOWN_CONTENT_TYPE,
                                         "*/*",
                                         mListener,
-                                        aContext,
+                                        mParser,
                                         getter_AddRefs(converter));
             if (NS_SUCCEEDED(rv)) {
                 mListener = converter;
@@ -297,7 +297,7 @@ txStylesheetSink::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
         }
     }
 
-    return mListener->OnStartRequest(aRequest, aContext);
+    return mListener->OnStartRequest(aRequest, mParser);
 }
 
 NS_IMETHODIMP
@@ -319,9 +319,8 @@ txStylesheetSink::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
         result = NS_ERROR_XSLT_NETWORK_ERROR;
     }
     else if (!mCheckedForXML) {
-        nsCOMPtr<nsIParser> parser = do_QueryInterface(aContext);
         nsCOMPtr<nsIDTD> dtd;
-        parser->GetDTD(getter_AddRefs(dtd));
+        mParser->GetDTD(getter_AddRefs(dtd));
         if (dtd && !(dtd->GetType() & NS_IPARSER_FLAG_XML)) {
             result = NS_ERROR_XSLT_WRONG_MIME_TYPE;
         }
@@ -334,8 +333,9 @@ txStylesheetSink::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
         mCompiler->cancel(result, nullptr, spec.get());
     }
 
-    nsresult rv = mListener->OnStopRequest(aRequest, aContext, aStatusCode);
+    nsresult rv = mListener->OnStopRequest(aRequest, mParser, aStatusCode);
     mListener = nullptr;
+    mParser = nullptr;
     return rv;
 }
 
@@ -422,20 +422,6 @@ txCompileObserver::loadURI(const nsAString& aUri,
                                  getter_AddRefs(referrerPrincipal));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Content Policy
-    int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_INTERNAL_STYLESHEET,
-                                   uri,
-                                   referrerPrincipal,
-                                   mLoaderDocument,
-                                   NS_LITERAL_CSTRING("application/xml"),
-                                   nullptr,
-                                   &shouldLoad);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (NS_CP_REJECTED(shouldLoad)) {
-        return NS_ERROR_DOM_BAD_URI;
-    }
-
     return startLoad(uri, aCompiler, referrerPrincipal, aReferrerPolicy);
 }
 
@@ -469,7 +455,7 @@ txCompileObserver::startLoad(nsIURI* aUri, txStylesheetCompiler* aCompiler,
                     aUri,
                     mLoaderDocument,
                     aReferrerPrincipal, // triggeringPrincipal
-                    nsILoadInfo::SEC_NORMAL,
+                    nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS,
                     nsIContentPolicy::TYPE_XSLT,
                     loadGroup);
 
@@ -502,13 +488,7 @@ txCompileObserver::startLoad(nsIURI* aUri, txStylesheetCompiler* aCompiler,
     parser->SetContentSink(sink);
     parser->Parse(aUri);
 
-    // Always install in case of redirects
-    nsRefPtr<nsCORSListenerProxy> listener =
-        new nsCORSListenerProxy(sink, aReferrerPrincipal, false);
-    rv = listener->Init(channel, DataURIHandling::Disallow);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return channel->AsyncOpen(listener, parser);
+    return channel->AsyncOpen2(sink);
 }
 
 nsresult
@@ -520,21 +500,6 @@ TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
     nsAutoCString spec;
     aUri->GetSpec(spec);
     MOZ_LOG(txLog::xslt, LogLevel::Info, ("TX_LoadSheet: %s\n", spec.get()));
-
-    // Content Policy
-    int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-    nsresult rv =
-        NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_INTERNAL_STYLESHEET,
-                                  aUri,
-                                  principal,
-                                  aLoaderDocument,
-                                  NS_LITERAL_CSTRING("application/xml"),
-                                  nullptr,
-                                  &shouldLoad);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (NS_CP_REJECTED(shouldLoad)) {
-        return NS_ERROR_DOM_BAD_URI;
-    }
 
     nsRefPtr<txCompileObserver> observer =
         new txCompileObserver(aProcessor, aLoaderDocument);
