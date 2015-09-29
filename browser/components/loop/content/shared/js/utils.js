@@ -75,6 +75,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
   var FAILURE_DETAILS = {
     MEDIA_DENIED: "reason-media-denied",
     NO_MEDIA: "reason-no-media",
+    ROOM_ALREADY_OPEN: "reason-room-already-open",
     UNABLE_TO_PUBLISH_MEDIA: "unable-to-publish-media",
     USER_UNAVAILABLE: "reason-user-unavailable",
     COULD_NOT_CONNECT: "reason-could-not-connect",
@@ -108,6 +109,12 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     // Pending is when the user is being prompted, aka gUM in progress.
     PENDING: "ss-pending",
     ACTIVE: "ss-active"
+  };
+
+  var CHAT_CONTENT_TYPES = {
+    CONTEXT: "chat-context",
+    TEXT: "chat-text",
+    ROOM_NAME: "room-name"
   };
 
   /**
@@ -775,6 +782,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
 
   this.utils = {
     CALL_TYPES: CALL_TYPES,
+    CHAT_CONTENT_TYPES: CHAT_CONTENT_TYPES,
     FAILURE_DETAILS: FAILURE_DETAILS,
     REST_ERRNOS: REST_ERRNOS,
     WEBSOCKET_REASONS: WEBSOCKET_REASONS,

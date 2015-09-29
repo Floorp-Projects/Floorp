@@ -297,7 +297,6 @@ if test -n "$MOZ_NATIVE_DEVICES" ; then
 
     MOZ_ANDROID_AAR(play-services-base, 7.8.0, google, com/google/android/gms)
     MOZ_ANDROID_AAR(play-services-cast, 7.8.0, google, com/google/android/gms)
-    MOZ_ANDROID_AAR(appcompat-v7, 22.2.1, android, com/android/support)
     MOZ_ANDROID_AAR(mediarouter-v7, 22.2.1, android, com/android/support, REQUIRED_INTERNAL_IMPL)
 fi
 
@@ -398,8 +397,9 @@ case "$target" in
     AC_SUBST(ANDROID_SDK)
     AC_SUBST(ANDROID_TOOLS)
 
-    MOZ_ANDROID_AAR(support-v4, 22.2.1, android, com/android/support, REQUIRED_INTERNAL_IMPL)
+    MOZ_ANDROID_AAR(appcompat-v7, 22.2.1, android, com/android/support)
     MOZ_ANDROID_AAR(recyclerview-v7, 22.2.1, android, com/android/support)
+    MOZ_ANDROID_AAR(support-v4, 22.2.1, android, com/android/support, REQUIRED_INTERNAL_IMPL)
 
     ANDROID_SUPPORT_ANNOTATIONS_JAR="$ANDROID_SDK_ROOT/extras/android/m2repository/com/android/support/support-annotations/22.2.1/support-annotations-22.2.1.jar"
     AC_MSG_CHECKING([for support-annotations JAR])

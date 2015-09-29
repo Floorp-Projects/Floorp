@@ -77,6 +77,17 @@ describe("loop.store.StandaloneMetricsStore", function() {
         "No media");
     });
 
+    it("should log an event on connection failure if the room was already open", function() {
+      store.connectionFailure(new sharedActions.ConnectionFailure({
+        reason: FAILURE_DETAILS.ROOM_ALREADY_OPEN
+      }));
+
+      sinon.assert.calledOnce(window.ga);
+      sinon.assert.calledWithExactly(window.ga,
+        "send", "event", METRICS_GA_CATEGORY.general, METRICS_GA_ACTIONS.failed,
+        "Room already open");
+    });
+
     it("should log an event on GotMediaPermission", function() {
       store.gotMediaPermission();
 

@@ -842,8 +842,9 @@ var NodeFront = protocol.FrontClass(NodeActor, {
           break;
         }
       }
-      // This is a new attribute.
-      if (!found)  {
+      // This is a new attribute. The null check is because of Bug 1192270,
+      // in the case of a newly added then removed attribute
+      if (!found && change.newValue !== null)  {
         this.attributes.push({
           name: change.attributeName,
           namespace: change.attributeNamespace,
