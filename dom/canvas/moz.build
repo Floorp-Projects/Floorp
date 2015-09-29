@@ -28,10 +28,12 @@ EXPORTS.mozilla.dom += [
     'CanvasPath.h',
     'CanvasPattern.h',
     'CanvasRenderingContext2D.h',
+    'CanvasRenderingContextHelper.h',
     'CanvasUtils.h',
     'ImageBitmap.h',
     'ImageBitmapSource.h',
     'ImageData.h',
+    'OffscreenCanvas.h',
     'TextMetrics.h',
     'WebGLVertexArrayObject.h',
 ]
@@ -40,11 +42,13 @@ EXPORTS.mozilla.dom += [
 UNIFIED_SOURCES += [
     'CanvasImageCache.cpp',
     'CanvasRenderingContext2D.cpp',
+    'CanvasRenderingContextHelper.cpp',
     'CanvasUtils.cpp',
     'DocumentRendererChild.cpp',
     'DocumentRendererParent.cpp',
     'ImageBitmap.cpp',
     'ImageData.cpp',
+    'OffscreenCanvas.cpp',
 ]
 
 # WebGL Sources
@@ -150,6 +154,7 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/html',
     '/dom/svg',
+    '/dom/workers',
     '/dom/xul',
     '/gfx/gl',
     '/image',
