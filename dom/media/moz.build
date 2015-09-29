@@ -58,9 +58,6 @@ if CONFIG['MOZ_ANDROID_OMX']:
 if CONFIG['MOZ_FMP4']:
     DIRS += ['fmp4']
 
-if CONFIG['MOZ_APPLEMEDIA']:
-    DIRS += ['apple']
-
 if CONFIG['MOZ_WEBRTC']:
     DIRS += ['bridge']
 
