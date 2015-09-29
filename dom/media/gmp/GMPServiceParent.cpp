@@ -80,6 +80,7 @@ NS_IMPL_ISUPPORTS_INHERITED(GeckoMediaPluginServiceParent,
 
 static int32_t sMaxAsyncShutdownWaitMs = 0;
 static bool sHaveSetTimeoutPrefCache = false;
+static bool sKillHungPlugins = true;
 
 GeckoMediaPluginServiceParent::GeckoMediaPluginServiceParent()
   : mShuttingDown(false)
@@ -95,6 +96,9 @@ GeckoMediaPluginServiceParent::GeckoMediaPluginServiceParent()
     Preferences::AddIntVarCache(&sMaxAsyncShutdownWaitMs,
                                 "media.gmp.async-shutdown-timeout",
                                 GMP_DEFAULT_ASYNC_SHUTDONW_TIMEOUT);
+    Preferences::AddBoolVarCache(&sKillHungPlugins,
+                                "media.gmp.kill-hung-plugins",
+                                true);
   }
 }
 
@@ -1206,8 +1210,13 @@ void
 GeckoMediaPluginServiceParent::CrashPluginNow(uint32_t aPluginId, GMPCrashReason aReason)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
-  MutexAutoLock lock(mMutex);
+  if (aReason == kGmpApiTimeout && !sKillHungPlugins) {
+    LOGD(("%s::%s(%u, %u) but killing hung plugins disabled.",
+          __CLASS__, __FUNCTION__, aPluginId, aReason));
+    return;
+  }
   LOGD(("%s::%s(%u, %u)", __CLASS__, __FUNCTION__, aPluginId, aReason));
+  MutexAutoLock lock(mMutex);
   for (const auto& plugin : mPlugins) {
     if (plugin->GetPluginId() == aPluginId) {
       plugin->Crash(aReason);
