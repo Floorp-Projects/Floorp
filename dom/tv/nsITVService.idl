@@ -20,19 +20,9 @@ interface nsIArray;
  * and then uses the setter functions to adjust the properties of the object
  * before passing it.
  */
-[scriptable, builtinclass, uuid(c6d39e86-022b-4db5-b0df-602abfbeac69)]
+[scriptable, builtinclass, uuid(608d3f7e-f9f1-4b3c-82c2-3eb60b1d3de8)]
 interface nsITVTunerData : nsISupports
 {
-  /**
-   * Switch TVTuner.stream type.
-   *  TV_STREAM_TYPE_SIMULATOR : Simulate the MediaStream. This MediaStream load from Profile Directory.
-   *  TV_STREAM_TYPE_HW        : Get from real device
-   */
-  const unsigned short TV_STREAM_TYPE_SIMULATOR = 0;
-  const unsigned short TV_STREAM_TYPE_HW = 1;
-
-  attribute unsigned short streamType;
-
   attribute DOMString id;
 
   /**
@@ -148,7 +138,7 @@ interface nsITVProgramData : nsISupports
                             [array, size_is(count)] in string languages);
 };
 
-[scriptable, builtinclass, uuid(47746633-1b77-4df4-9424-d315bde3d455)]
+[builtinclass, uuid(c3fd7a8c-21e4-11e4-97e8-74d02b97e723)]
 interface nsITVSourceListener : nsISupports
 {
   /**
@@ -208,7 +198,7 @@ interface nsITVSourceListener : nsISupports
                             in unsigned long count);
 };
 
-[scriptable, builtinclass, uuid(01582a11-4707-455d-8d2a-2c8de8227dad)]
+[builtinclass, uuid(a19e6e7e-2293-11e4-b335-74d02b97e723)]
 interface nsITVServiceCallback : nsISupports
 {
   const unsigned short TV_ERROR_OK = 0;
@@ -268,7 +258,7 @@ interface nsITVServiceCallback : nsISupports
  *   new TVServiceNotifyRunnable(callback, dataList, optional errorCode);
  * return NS_DispatchToCurrentThread(runnable);
  */
-[scriptable, uuid(e52f93f1-6071-468b-a198-d8e6bc5ca348)]
+[uuid(1b17e3cc-1c84-11e4-a4d4-74d02b97e723)]
 interface nsITVService : nsISupports
 {
   attribute nsITVSourceListener sourceListener;
@@ -390,4 +380,3 @@ interface nsITVService : nsISupports
   void getOverlayId(in DOMString tunerId,
                     in nsITVServiceCallback callback);
 };
-

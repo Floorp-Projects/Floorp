@@ -133,14 +133,6 @@ TVSource::SetCurrentChannel(nsITVChannelData* aChannelData)
   mCurrentChannel = TVChannel::Create(GetOwner(), this, aChannelData);
   NS_ENSURE_TRUE(mCurrentChannel, NS_ERROR_DOM_ABORT_ERR);
 
-  nsRefPtr<TVSource> currentSource = mTuner->GetCurrentSource();
-  if (currentSource && mType == currentSource->Type()) {
-    rv = mTuner->ReloadMediaStream();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
   return DispatchCurrentChannelChangedEvent(mCurrentChannel);
 }
 

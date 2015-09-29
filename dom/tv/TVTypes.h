@@ -26,7 +26,6 @@ private:
   nsString mId;
   char** mSupportedSourceTypes;
   uint32_t mCount;
-  uint16_t mStreamType;
 };
 
 class TVChannelData final : public nsITVChannelData
