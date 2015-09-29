@@ -2937,5 +2937,52 @@ GLContext::IsDrawingToDefaultFramebuffer()
     return Screen()->IsDrawFramebufferDefault();
 }
 
+GLuint
+CreateTexture(GLContext* aGL, GLenum aInternalFormat, GLenum aFormat,
+              GLenum aType, const gfx::IntSize& aSize, bool linear)
+{
+    GLuint tex = 0;
+    aGL->fGenTextures(1, &tex);
+    ScopedBindTexture autoTex(aGL, tex);
+
+    aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D,
+                        LOCAL_GL_TEXTURE_MIN_FILTER, linear ? LOCAL_GL_LINEAR
+                                                            : LOCAL_GL_NEAREST);
+    aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D,
+                        LOCAL_GL_TEXTURE_MAG_FILTER, linear ? LOCAL_GL_LINEAR
+                                                            : LOCAL_GL_NEAREST);
+    aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S,
+                        LOCAL_GL_CLAMP_TO_EDGE);
+    aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T,
+                        LOCAL_GL_CLAMP_TO_EDGE);
+
+    aGL->fTexImage2D(LOCAL_GL_TEXTURE_2D,
+                     0,
+                     aInternalFormat,
+                     aSize.width, aSize.height,
+                     0,
+                     aFormat,
+                     aType,
+                     nullptr);
+
+    return tex;
+}
+
+GLuint
+CreateTextureForOffscreen(GLContext* aGL, const GLFormats& aFormats,
+                          const gfx::IntSize& aSize)
+{
+    MOZ_ASSERT(aFormats.color_texInternalFormat);
+    MOZ_ASSERT(aFormats.color_texFormat);
+    MOZ_ASSERT(aFormats.color_texType);
+
+    return CreateTexture(aGL,
+                         aFormats.color_texInternalFormat,
+                         aFormats.color_texFormat,
+                         aFormats.color_texType,
+                         aSize);
+}
+
+
 } /* namespace gl */
 } /* namespace mozilla */
