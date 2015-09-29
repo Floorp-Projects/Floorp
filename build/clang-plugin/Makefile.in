@@ -17,11 +17,11 @@ DSO_LDOPTS := -shared
 ifeq ($(HOST_OS_ARCH)_$(OS_ARCH),Linux_Darwin)
 # Use the host compiler instead of the target compiler.
 CXX := $(HOST_CXX)
-# Don't use --uselist with expandlibs_exec.py.
-EXPAND_MKSHLIB_ARGS :=
 # expandlibs doesn't know the distinction between host and target toolchains,
 # and on cross linux/darwin builds, the options to give to the linker for file
 # lists differ between both, so don't use file lists.
+EXPAND_MKSHLIB_ARGS :=
+# Don't pass OSX linker arguments.
 MOZ_FIX_LINK_PATHS :=
 endif
 
