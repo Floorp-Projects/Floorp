@@ -872,9 +872,11 @@ NS_IMPL_ISUPPORTS(DebugDataSender::SendTask, nsIRunnable);
  * 2. SendEffectChain
  *   1. SendTexturedEffect
  *      -> SendTextureSource
- *   2. SendYCbCrEffect
+ *   2. SendMaskEffect
  *      -> SendTextureSource
- *   3. SendColor
+ *   3. SendYCbCrEffect
+ *      -> SendTextureSource
+ *   4. SendColor
  */
 class SenderHelper
 {
@@ -918,6 +920,9 @@ private:
     static void SendTexturedEffect(GLContext* aGLContext,
                                    void* aLayerRef,
                                    const TexturedEffect* aEffect);
+    static void SendMaskEffect(GLContext* aGLContext,
+                                   void* aLayerRef,
+                                   const EffectMask* aEffect);
     static void SendYCbCrEffect(GLContext* aGLContext,
                                 void* aLayerRef,
                                 const EffectYCbCr* aEffect);
@@ -1124,6 +1129,24 @@ SenderHelper::SendTexturedEffect(GLContext* aGLContext,
 }
 
 void
+SenderHelper::SendMaskEffect(GLContext* aGLContext,
+                                 void* aLayerRef,
+                                 const EffectMask* aEffect)
+{
+    TextureSourceOGL* source = aEffect->mMaskTexture->AsSourceOGL();
+    if (!source) {
+        return;
+    }
+
+    GLuint texID = GetTextureID(aGLContext, source);
+    if (IsTextureIdContainsInList(texID)) {
+        return;
+    }
+
+    SendTextureSource(aGLContext, aLayerRef, source, texID, false);
+}
+
+void
 SenderHelper::SendYCbCrEffect(GLContext* aGLContext,
                               void* aLayerRef,
                               const EffectYCbCr* aEffect)
@@ -1188,8 +1211,11 @@ SenderHelper::SendEffectChain(GLContext* aGLContext,
             break;
     }
 
-    //const Effect* secondaryEffect = aEffectChain.mSecondaryEffects[EffectTypes::MASK];
-    // TODO:
+    if (aEffectChain.mSecondaryEffects[EffectTypes::MASK]) {
+        const EffectMask* effectMask =
+            static_cast<const EffectMask*>(aEffectChain.mSecondaryEffects[EffectTypes::MASK].get());
+        SendMaskEffect(aGLContext, aEffectChain.mLayerRef, effectMask);
+    }
 }
 
 void
