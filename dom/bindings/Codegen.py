@@ -2827,6 +2827,19 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             chromeProperties=chromeProperties,
             name='"' + self.descriptor.interface.identifier.name + '"' if needInterfaceObject else "nullptr")
 
+        # If we fail after here, we must clear interface and prototype caches
+        # using this code: intermediate failure must not expose the interface in
+        # partially-constructed state.  Note that every case after here needs an
+        # interface prototype object.
+        failureCode = dedent(
+            """
+            *protoCache = nullptr;
+            if (interfaceCache) {
+              *interfaceCache = nullptr;
+            }
+            return;
+            """)
+
         aliasedMembers = [m for m in self.descriptor.interface.members if m.isMethod() and m.aliases]
         if aliasedMembers:
             assert needInterfacePrototypeObject
@@ -2846,17 +2859,18 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                     prop = '"%s"' % alias
                 return CGList([
                     getSymbolJSID,
-                    # XXX If we ever create non-enumerate properties that can be
-                    #     aliased, we should consider making the aliases match
-                    #     the enumerability of the property being aliased.
+                    # XXX If we ever create non-enumerable properties that can
+                    #     be aliased, we should consider making the aliases
+                    #     match the enumerability of the property being aliased.
                     CGGeneric(fill(
                         """
                         if (!${defineFn}(aCx, proto, ${prop}, aliasedVal, JSPROP_ENUMERATE)) {
-                          return;
+                          $*{failureCode}
                         }
                         """,
                         defineFn=defineFn,
-                        prop=prop))
+                        prop=prop,
+                        failureCode=failureCode))
                 ], "\n")
 
             def defineAliasesFor(m):
@@ -2864,21 +2878,23 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
                     CGGeneric(fill(
                         """
                         if (!JS_GetProperty(aCx, proto, \"${prop}\", &aliasedVal)) {
-                          return;
+                          $*{failureCode}
                         }
                         """,
+                        failureCode=failureCode,
                         prop=m.identifier.name))
                 ] + [defineAlias(alias) for alias in sorted(m.aliases)])
 
             defineAliases = CGList([
-                CGGeneric(dedent("""
+                CGGeneric(fill("""
                     // Set up aliases on the interface prototype object we just created.
                     JS::Handle<JSObject*> proto = GetProtoObjectHandle(aCx, aGlobal);
                     if (!proto) {
-                      return;
+                      $*{failureCode}
                     }
 
-                    """)),
+                    """,
+                    failureCode=failureCode)),
                 CGGeneric("JS::Rooted<JS::Value> aliasedVal(aCx);\n\n")
             ] + [defineAliasesFor(m) for m in sorted(aliasedMembers)])
         else:
@@ -2904,14 +2920,6 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
             else:
                 holderClass = "Class.ToJSClass()"
                 holderProto = "*protoCache"
-            failureCode = dedent(
-                """
-                *protoCache = nullptr;
-                if (interfaceCache) {
-                  *interfaceCache = nullptr;
-                }
-                return;
-                """)
             createUnforgeableHolder = CGGeneric(fill(
                 """
                 JS::Rooted<JSObject*> unforgeableHolder(aCx);
