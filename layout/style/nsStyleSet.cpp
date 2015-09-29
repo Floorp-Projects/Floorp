@@ -389,6 +389,8 @@ SortStyleSheetsByScope(nsTArray<CSSStyleSheet*>& aSheets)
 nsresult
 nsStyleSet::GatherRuleProcessors(sheetType aType)
 {
+  NS_ENSURE_FALSE(mInShutdown, NS_ERROR_FAILURE);
+
   // We might be in GatherRuleProcessors because we are dropping a sheet,
   // resulting in an nsCSSSelector being destroyed.  Tell the
   // RestyleManager for each document we're used in so that they can
