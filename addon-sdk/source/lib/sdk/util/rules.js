@@ -19,22 +19,28 @@ const Rules = Class({
     EventTarget,
     List
   ],
-  add: function(...rules) [].concat(rules).forEach(function onAdd(rule) {
-    addListItem(this, rule);
-    emit(this, 'add', rule);
-  }, this),
-  remove: function(...rules) [].concat(rules).forEach(function onRemove(rule) {
-    removeListItem(this, rule);
-    emit(this, 'remove', rule);
-  }, this),
+  add: function(...rules) {
+    return [].concat(rules).forEach(function onAdd(rule) {
+      addListItem(this, rule);
+      emit(this, 'add', rule);
+    }, this);
+  },
+  remove: function(...rules) {
+    return [].concat(rules).forEach(function onRemove(rule) {
+      removeListItem(this, rule);
+      emit(this, 'remove', rule);
+    }, this);
+  },
   get: function(rule) {
     let found = false;
     for (let i in this) if (this[i] === rule) found = true;
     return found;
   },
   // Returns true if uri matches atleast one stored rule
-  matchesAny: function(uri) !!filterMatches(this, uri).length,
-  toString: function() '[object Rules]'
+  matchesAny: function(uri) {
+    return !!filterMatches(this, uri).length;
+  },
+  toString: () => '[object Rules]'
 });
 exports.Rules = Rules;
 

@@ -22,7 +22,7 @@ function newURI (uri) {
 exports.newURI = newURI;
 
 var getURL = method('sdk/url:getURL');
-getURL.define(String, function (url) url);
+getURL.define(String, url => url);
 getURL.define(function (object) {
   return null;
 });

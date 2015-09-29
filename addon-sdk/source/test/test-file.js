@@ -233,7 +233,7 @@ exports.testMkpathExistingNondirectory = function (assert) {
   var fname = file.join(profilePath, 'conflict.txt');
   file.open(fname, "w").close();
   assert.ok(file.exists(fname), "File should exist");
-  assert.throws(function() file.mkpath(fname),
+  assert.throws(() => file.mkpath(fname),
                     /^The path already exists and is not a directory: .+$/,
                     "mkpath on file should raise error");
   file.remove(fname);
@@ -248,7 +248,7 @@ exports.testRmdirNondirectory = function (assert) {
   }, ERRORS.NOT_A_DIRECTORY, "rmdir on file should raise error");
   file.remove(fname);
   assert.ok(!file.exists(fname), "File should not exist");
-  assert.throws(function () file.rmdir(fname),
+  assert.throws(() => file.rmdir(fname),
                     ERRORS.FILE_NOT_FOUND,
                     "rmdir on non-existing file should raise error");
 };
@@ -263,7 +263,7 @@ exports.testRmdirNonempty = function (assert) {
   file.open(filePath, "w").close();
   assert.ok(file.exists(filePath),
               "Sanity check: path should exist: " + filePath);
-  assert.throws(function () file.rmdir(path),
+  assert.throws(() => file.rmdir(path),
                     /^The directory is not empty: .+$/,
                     "rmdir on non-empty directory should raise error");
   file.remove(filePath);

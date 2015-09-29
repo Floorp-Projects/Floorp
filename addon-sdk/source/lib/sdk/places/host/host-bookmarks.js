@@ -63,8 +63,9 @@ function typeMap (type) {
   }
 }
 
-function getBookmarkLastUpdated ({id})
-  resolve(bmsrv.getItemLastModified(id))
+function getBookmarkLastUpdated ({id}) {
+  return resolve(bmsrv.getItemLastModified(id));
+}
 exports.getBookmarkLastUpdated;
 
 function createBookmarkItem (data) {

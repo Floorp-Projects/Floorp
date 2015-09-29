@@ -63,14 +63,22 @@ exports.validationAttributes = valid;
  * @param {Object} validation
  *    validation rule passed to `api-utils`
  */
-function validate(suspect, validation) validateOptions(
-  { $: suspect },
-  { $: validation }
-).$
+function validate(suspect, validation) {
+  return validateOptions(
+    { $: suspect },
+    { $: validation }
+  ).$;
+}
 
-function Allow(script) ({
-  get script() script,
-  set script(value) script = !!value
-})
+function Allow(script) {
+  return {
+    get script() {
+      return script;
+    },
+    set script(value) {
+      script = !!value;
+    }
+  };
+}
 
 exports.contract = contract(valid);

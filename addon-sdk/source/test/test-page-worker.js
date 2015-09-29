@@ -68,9 +68,9 @@ exports.testUnwrappedDOM = function(assert, done) {
   let page = Page({
     allow: { script: true },
     contentURL: "data:text/html;charset=utf-8,<script>document.getElementById=3;window.scrollTo=3;</script>",
-    contentScript: "window.addEventListener('load', function () " +
-                   "self.postMessage([typeof(unsafeWindow.document.getElementById), " +
-                   "typeof(unsafeWindow.scrollTo)]), true)",
+    contentScript: "window.addEventListener('load', function () {" +
+                   "return self.postMessage([typeof(unsafeWindow.document.getElementById), " +
+                   "typeof(unsafeWindow.scrollTo)]); }, true)",
     onMessage: function (message) {
       assert.equal(message[0],
                        "number",
@@ -95,7 +95,7 @@ exports.testPageProperties = function(assert) {
     assert.ok(prop in page, prop + " property is defined on page.");
   }
 
-  assert.ok(function () page.postMessage("foo") || true,
+  assert.ok(() => page.postMessage("foo") || true,
               "postMessage doesn't throw exception on page.");
 }
 
@@ -151,13 +151,13 @@ exports.testAutoDestructor = function(assert, done) {
 
 exports.testValidateOptions = function(assert) {
   assert.throws(
-    function () Page({ contentURL: 'home' }),
+    () => Page({ contentURL: 'home' }),
     /The `contentURL` option must be a valid URL\./,
     "Validation correctly denied a non-URL contentURL"
   );
 
   assert.throws(
-    function () Page({ onMessage: "This is not a function."}),
+    () => Page({ onMessage: "This is not a function."}),
     /The option "onMessage" must be one of the following types: function/,
     "Validation correctly denied a non-function onMessage."
   );
@@ -345,7 +345,7 @@ exports.testGetActiveViewAndDestroy = function(assert) {
 exports.testPingPong = function(assert, done) {
   let page = Page({
     contentURL: 'data:text/html;charset=utf-8,ping-pong',
-    contentScript: 'self.on("message", function(message) self.postMessage("pong"));'
+    contentScript: 'self.on("message", message => self.postMessage("pong"));'
       + 'self.postMessage("ready");',
     onMessage: function(message) {
       if ('ready' == message) {

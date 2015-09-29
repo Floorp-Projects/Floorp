@@ -71,7 +71,9 @@ const ActionButton = Class({
     unregister(this);
   },
 
-  get id() this.state().id,
+  get id() {
+    return this.state().id;
+  },
 
   click: function click() { view.click(toWidgetId(this.id)) }
 });

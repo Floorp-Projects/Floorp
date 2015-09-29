@@ -62,7 +62,7 @@ const Bookmark = Class({
     merge(this, bookmarkContract(extend(defaults, options)));
   },
   type: 'bookmark',
-  toString: function () '[object Bookmark]'
+  toString: () => '[object Bookmark]'
 });
 exports.Bookmark = Bookmark;
 
@@ -78,7 +78,7 @@ const Group = Class({
       merge(this, groupContract(extend(defaults, options)));
   },
   type: 'group',
-  toString: function () '[object Group]'
+  toString: () => '[object Group]'
 });
 exports.Group = Group;
 
@@ -90,7 +90,7 @@ const Separator = Class({
     merge(this, separatorContract(extend(defaults, options)));
   },
   type: 'separator',
-  toString: function () '[object Separator]'
+  toString: () => '[object Separator]'
 });
 exports.Separator = Separator;
 

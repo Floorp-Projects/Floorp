@@ -82,11 +82,19 @@ var nsIBinaryOutputStream = accessor();
 // needs to be read.
 const ALL = new String("Read all of the file");
 
-function isWritable(mode) !!(mode & PR_WRONLY || mode & PR_RDWR)
-function isReadable(mode) !!(mode & PR_RDONLY || mode & PR_RDWR)
+function isWritable(mode) {
+  return !!(mode & PR_WRONLY || mode & PR_RDWR);
+}
+function isReadable(mode) {
+  return !!(mode & PR_RDONLY || mode & PR_RDWR);
+}
 
-function isString(value) typeof(value) === "string"
-function isFunction(value) typeof(value) === "function"
+function isString(value) {
+  return typeof(value) === "string";
+}
+function isFunction(value) {
+  return typeof(value) === "function";
+}
 
 function toArray(enumerator) {
   let value = [];
@@ -95,7 +103,9 @@ function toArray(enumerator) {
   return value
 }
 
-function getFileName(file) file.QueryInterface(Ci.nsIFile).leafName
+function getFileName(file) {
+  return file.QueryInterface(Ci.nsIFile).leafName;
+}
 
 
 function remove(path, recursive) {
@@ -249,33 +259,67 @@ const Stats = Class({
     if (!file.exists()) throw FSError("stat", "ENOENT", 34, path);
     nsIFile(this, file);
   },
-  isDirectory: function() nsIFile(this).isDirectory(),
-  isFile: function() nsIFile(this).isFile(),
-  isSymbolicLink: function() nsIFile(this).isSymlink(),
-  get mode() nsIFile(this).permissions,
-  get size() nsIFile(this).fileSize,
-  get mtime() nsIFile(this).lastModifiedTime,
-  isBlockDevice: function() nsIFile(this).isSpecial(),
-  isCharacterDevice: function() nsIFile(this).isSpecial(),
-  isFIFO: function() nsIFile(this).isSpecial(),
-  isSocket: function() nsIFile(this).isSpecial(),
+  isDirectory: function() {
+    return nsIFile(this).isDirectory();
+  },
+  isFile: function() {
+    return nsIFile(this).isFile();
+  },
+  isSymbolicLink: function() {
+    return nsIFile(this).isSymlink();
+  },
+  get mode() {
+    return nsIFile(this).permissions;
+  },
+  get size() {
+    return nsIFile(this).fileSize;
+  },
+  get mtime() {
+    return nsIFile(this).lastModifiedTime;
+  },
+  isBlockDevice: function() {
+    return nsIFile(this).isSpecial();
+  },
+  isCharacterDevice: function() {
+    return nsIFile(this).isSpecial();
+  },
+  isFIFO: function() {
+    return nsIFile(this).isSpecial();
+  },
+  isSocket: function() {
+    return nsIFile(this).isSpecial();
+  },
   // non standard
-  get exists() nsIFile(this).exists(),
-  get hidden() nsIFile(this).isHidden(),
-  get writable() nsIFile(this).isWritable(),
-  get readable() nsIFile(this).isReadable()
+  get exists() {
+    return nsIFile(this).exists();
+  },
+  get hidden() {
+    return nsIFile(this).isHidden();
+  },
+  get writable() {
+    return nsIFile(this).isWritable();
+  },
+  get readable() {
+    return nsIFile(this).isReadable();
+  }
 });
 exports.Stats = Stats;
 
 const LStats = Class({
   extends: Stats,
-  get size() this.isSymbolicLink() ? nsIFile(this).fileSizeOfLink :
-                                     nsIFile(this).fileSize,
-  get mtime() this.isSymbolicLink() ? nsIFile(this).lastModifiedTimeOfLink :
-                                      nsIFile(this).lastModifiedTime,
+  get size() {
+    return this.isSymbolicLink() ? nsIFile(this).fileSizeOfLink :
+                                   nsIFile(this).fileSize;
+  },
+  get mtime() {
+    return this.isSymbolicLink() ? nsIFile(this).lastModifiedTimeOfLink :
+                                   nsIFile(this).lastModifiedTime;
+  },
   // non standard
-  get permissions() this.isSymbolicLink() ? nsIFile(this).permissionsOfLink :
-                                            nsIFile(this).permissions
+  get permissions() {
+    return this.isSymbolicLink() ? nsIFile(this).permissionsOfLink :
+                                   nsIFile(this).permissions;
+  }
 });
 
 const FStat = Class({

@@ -39,10 +39,18 @@ const readyEventNames = [
   'load'
 ];
 
-function workerFor(page) workers.get(page)
-function pageFor(view) pages.get(view)
-function viewFor(page) views.get(page)
-function isDisposed (page) !views.get(page, false)
+function workerFor(page) {
+  return workers.get(page);
+}
+function pageFor(view) {
+  return pages.get(view);
+}
+function viewFor(page) {
+  return views.get(page);
+}
+function isDisposed (page) {
+  return !views.get(page, false);
+}
 
 var pageContract = contract(merge({
   allow: {
@@ -82,7 +90,9 @@ function injectWorker ({page}) {
     attach(worker, view.contentWindow);
 }
 
-function isValidURL(page, url) !page.rules || page.rules.matchesAny(url)
+function isValidURL(page, url) {
+  return !page.rules || page.rules.matchesAny(url);
+}
 
 const Page = Class({
   implements: [

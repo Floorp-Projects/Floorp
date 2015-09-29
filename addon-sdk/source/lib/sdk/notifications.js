@@ -70,7 +70,7 @@ exports.notify = function notifications_notify(options) {
 function notifyUsingConsole(iconURL, title, text) {
   title = title ? "[" + title + "]" : "";
   text = text || "";
-  let str = [title, text].filter(function (s) s).join(" ");
+  let str = [title, text].filter(s => s).join(" ");
   console.log(str);
 }
 
