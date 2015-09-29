@@ -23,11 +23,46 @@
 
 #include "CanvasUtils.h"
 #include "mozilla/gfx/Matrix.h"
+#include "WebGL2Context.h"
 
 using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace CanvasUtils {
+
+bool
+GetCanvasContextType(const nsAString& str, dom::CanvasContextType* const out_type)
+{
+  if (str.EqualsLiteral("2d")) {
+    *out_type = dom::CanvasContextType::Canvas2D;
+    return true;
+  }
+
+  if (str.EqualsLiteral("experimental-webgl")) {
+    *out_type = dom::CanvasContextType::WebGL1;
+    return true;
+  }
+
+#ifdef MOZ_WEBGL_CONFORMANT
+  if (str.EqualsLiteral("webgl")) {
+    /* WebGL 1.0, $2.1 "Context Creation":
+     *   If the user agent supports both the webgl and experimental-webgl
+     *   canvas context types, they shall be treated as aliases.
+     */
+    *out_type = dom::CanvasContextType::WebGL1;
+    return true;
+  }
+#endif
+
+  if (WebGL2Context::IsSupported()) {
+    if (str.EqualsLiteral("webgl2")) {
+      *out_type = dom::CanvasContextType::WebGL2;
+      return true;
+    }
+  }
+
+  return false;
+}
 
 /**
  * This security check utility might be called from an source that never taints
