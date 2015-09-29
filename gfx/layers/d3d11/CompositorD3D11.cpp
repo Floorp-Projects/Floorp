@@ -23,6 +23,7 @@
 #include "mozilla/Services.h"
 
 #include "mozilla/EnumeratedArray.h"
+#include "mozilla/Telemetry.h"
 
 #include <dxgi1_2.h>
 
@@ -1365,7 +1366,10 @@ DeviceAttachmentsD3D11::InitSyncObject()
   if (FAILED(hr) || !mSyncHandle) {
     gfxCriticalError() << "Failed to get SharedHandle for sync texture. Result: "
                        << hexa(hr);
-    MOZ_CRASH();
+    NS_DispatchToMainThread(NS_NewRunnableFunction([] () -> void {
+      Accumulate(Telemetry::D3D11_SYNC_HANDLE_FAILURE, 1);
+    }));
+    return false;
   }
 
   return true;
