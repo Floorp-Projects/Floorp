@@ -33,10 +33,9 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
 
     template <typename T1, typename T2>
     void bailoutCmp32(Assembler::Condition c, T1 lhs, T2 rhs, LSnapshot* snapshot) {
-        Label skip;
-        masm.branch32(Assembler::InvertCondition(c), lhs, rhs, &skip);
-        bailout(snapshot);
-        masm.bind(&skip);
+        Label bail;
+        masm.branch32(c, lhs, rhs, &bail);
+        bailoutFrom(&bail, snapshot);
     }
     template<typename T>
     void bailoutCmp32(Assembler::Condition c, Operand lhs, T rhs, LSnapshot* snapshot) {
@@ -55,10 +54,9 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
     }
     template <typename T1, typename T2>
     void bailoutCmpPtr(Assembler::Condition c, T1 lhs, T2 rhs, LSnapshot* snapshot) {
-        Label skip;
-        masm.branchPtr(Assembler::InvertCondition(c), lhs, rhs, &skip);
-        bailout(snapshot);
-        masm.bind(&skip);
+        Label bail;
+        masm.branchPtr(c, lhs, rhs, &bail);
+        bailoutFrom(&bail, snapshot);
     }
     void bailoutTestPtr(Assembler::Condition c, Register lhs, Register rhs, LSnapshot* snapshot) {
         Label bail;
