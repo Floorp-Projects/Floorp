@@ -21,6 +21,7 @@
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/gfx/Rect.h"
+#include "mozilla/layers/AsyncCanvasRenderer.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
@@ -250,6 +251,10 @@ HTMLCanvasElement::~HTMLCanvasElement()
   ResetPrintCallback();
   if (mRequestedFrameRefreshObserver) {
     mRequestedFrameRefreshObserver->DetachFromRefreshDriver();
+  }
+
+  if (mAsyncCanvasRenderer) {
+    mAsyncCanvasRenderer->mHTMLCanvasElement = nullptr;
   }
 }
 
@@ -1234,6 +1239,39 @@ HTMLCanvasElement::GetSurfaceSnapshot(bool* aPremultAlpha)
     return nullptr;
 
   return mCurrentContext->GetSurfaceSnapshot(aPremultAlpha);
+}
+
+AsyncCanvasRenderer*
+HTMLCanvasElement::GetAsyncCanvasRenderer()
+{
+  if (!mAsyncCanvasRenderer) {
+    mAsyncCanvasRenderer = new AsyncCanvasRenderer();
+    mAsyncCanvasRenderer->mHTMLCanvasElement = this;
+  }
+
+  return mAsyncCanvasRenderer;
+}
+
+/* static */ void
+HTMLCanvasElement::SetAttrFromAsyncCanvasRenderer(AsyncCanvasRenderer *aRenderer)
+{
+  HTMLCanvasElement *element = aRenderer->mHTMLCanvasElement;
+  if (!element) {
+    return;
+  }
+
+  gfx::IntSize asyncCanvasSize = aRenderer->GetSize();
+
+  ErrorResult rv;
+  element->SetUnsignedIntAttr(nsGkAtoms::width, asyncCanvasSize.width, rv);
+  if (rv.Failed()) {
+    NS_WARNING("Failed to set width attribute to a canvas element asynchronously.");
+  }
+
+  element->SetUnsignedIntAttr(nsGkAtoms::height, asyncCanvasSize.height, rv);
+  if (rv.Failed()) {
+    NS_WARNING("Failed to set height attribute to a canvas element asynchronously.");
+  }
 }
 
 } // namespace dom

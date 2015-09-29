@@ -74,6 +74,7 @@ namespace layers {
 
 class Animation;
 class AnimationData;
+class AsyncCanvasRenderer;
 class AsyncPanZoomController;
 class ClientLayerManager;
 class Layer;
@@ -2392,16 +2393,16 @@ public:
     ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
   }
 
+  bool GetIsAsyncRenderer() const
+  {
+    return !!mAsyncRenderer;
+  }
+
+  void SetAsyncRenderer(AsyncCanvasRenderer *aAsyncRenderer);
+
 protected:
-  CanvasLayer(LayerManager* aManager, void* aImplData)
-    : Layer(aManager, aImplData)
-    , mPreTransCallback(nullptr)
-    , mPreTransCallbackData(nullptr)
-    , mPostTransCallback(nullptr)
-    , mPostTransCallbackData(nullptr)
-    , mFilter(GraphicsFilter::FILTER_GOOD)
-    , mDirty(false)
-  {}
+  CanvasLayer(LayerManager* aManager, void* aImplData);
+  virtual ~CanvasLayer();
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
@@ -2423,6 +2424,7 @@ protected:
   DidTransactionCallback mPostTransCallback;
   void* mPostTransCallbackData;
   GraphicsFilter mFilter;
+  nsRefPtr<AsyncCanvasRenderer> mAsyncRenderer;
 
 private:
   /**
