@@ -88,7 +88,8 @@ public:
     return mEnded;
   }
   media::TimeUnit Seek(TrackInfo::TrackType aTrack,
-                       const media::TimeUnit& aTime);
+                       const media::TimeUnit& aTime,
+                       const media::TimeUnit& aFuzz);
   uint32_t SkipToNextRandomAccessPoint(TrackInfo::TrackType aTrack,
                                        const media::TimeUnit& aTimeThreadshold,
                                        bool& aFound);
@@ -262,6 +263,8 @@ private:
     nsRefPtr<SharedTrackInfo> mLastInfo;
 
     // If set, position of the next sample to be retrieved by GetSample().
+    // If the position is equal to the TrackBuffer's length, it indicates that
+    // we've reached EOS.
     Maybe<uint32_t> mNextGetSampleIndex;
     // Approximation of the next sample's decode timestamp.
     media::TimeUnit mNextSampleTimecode;
@@ -290,6 +293,9 @@ private:
   void RemoveFrames(const media::TimeIntervals& aIntervals,
                     TrackData& aTrackData,
                     uint32_t aStartIndex);
+  // Find index of sample. Return a negative value if not found.
+  uint32_t FindSampleIndex(const TrackBuffer& aTrackBuffer,
+                           const media::TimeInterval& aInterval);
   void UpdateBufferedRanges();
   void RejectProcessing(nsresult aRejectValue, const char* aName);
   void ResolveProcessing(bool aResolveValue, const char* aName);

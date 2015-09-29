@@ -1415,6 +1415,7 @@
             var aSkipAnimation;
             var aForceNotRemote;
             var aNoReferrer;
+            var aUserContextId;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
                 !(arguments[1] instanceof Ci.nsIURI)) {
@@ -1431,6 +1432,7 @@
               aSkipAnimation        = params.skipAnimation;
               aForceNotRemote       = params.forceNotRemote;
               aNoReferrer           = params.noReferrer;
+              aUserContextId        = params.userContextId;
             }
 
             var bgLoad = (aLoadInBackground != null) ? aLoadInBackground :
@@ -1448,7 +1450,8 @@
                                   skipAnimation: aSkipAnimation,
                                   allowMixedContent: aAllowMixedContent,
                                   forceNotRemote: aForceNotRemote,
-                                  noReferrer: aNoReferrer });
+                                  noReferrer: aNoReferrer,
+                                  userContextId: aUserContextId });
             if (!bgLoad)
               this.selectedTab = tab;
 
@@ -1690,6 +1693,7 @@
             let remote = aParams && aParams.remote;
             let uriIsAboutBlank = aParams && aParams.uriIsAboutBlank;
             let isPreloadBrowser = aParams && aParams.isPreloadBrowser;
+            let userContextId = aParams && aParams.userContextId;
 
             let b = document.createElementNS(NS_XUL, "browser");
             b.permanentKey = {};
@@ -1698,6 +1702,9 @@
             b.setAttribute("messagemanagergroup", "browsers");
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
+
+            if (userContextId)
+              b.setAttribute("usercontextid", userContextId);
 
             if (remote)
               b.setAttribute("remote", "true");
@@ -1767,6 +1774,7 @@
             var aAllowMixedContent;
             var aForceNotRemote;
             var aNoReferrer;
+            var aUserContextId;
             if (arguments.length == 2 &&
                 typeof arguments[1] == "object" &&
                 !(arguments[1] instanceof Ci.nsIURI)) {
@@ -1783,6 +1791,7 @@
               aAllowMixedContent    = params.allowMixedContent;
               aForceNotRemote       = params.forceNotRemote;
               aNoReferrer           = params.noReferrer;
+              aUserContextId        = params.userContextId;
             }
 
             // if we're adding tabs, we're past interrupt mode, ditch the owner
@@ -1831,16 +1840,18 @@
             let b;
             let usingPreloadedContent = false;
 
-            // If we open a new tab with the newtab URL,
-            // check if there is a preloaded browser ready.
-            if (aURI == BROWSER_NEW_TAB_URL) {
+            // If we open a new tab with the newtab URL in the default
+            // userContext, check if there is a preloaded browser ready.
+            if (aURI == BROWSER_NEW_TAB_URL && !aUserContextId) {
               b = this._getPreloadedBrowser();
               usingPreloadedContent = !!b;
             }
 
             if (!b) {
               // No preloaded browser found, create one.
-              b = this._createBrowser({remote, uriIsAboutBlank});
+              b = this._createBrowser({remote: remote,
+                                       uriIsAboutBlank: uriIsAboutBlank,
+                                       userContextId: aUserContextId});
             }
 
             let notificationbox = this.getNotificationBox(b);
@@ -2485,6 +2496,11 @@
             // Can't swap between chrome and content processes.
             if (ourBrowser.isRemoteBrowser != otherBrowser.isRemoteBrowser)
               return;
+
+            // Keep the userContextId if set on other browser
+            if (otherBrowser.hasAttribute("usercontextid")) {
+              ourBrowser.setAttribute("usercontextid", otherBrowser.getAttribute("usercontextid"));
+            }
 
             // That's gBrowser for the other window, not the tab's browser!
             var remoteBrowser = aOtherTab.ownerDocument.defaultView.gBrowser;

@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/FileList.h"
 #include "mozilla/dom/FileListBinding.h"
+#include "mozilla/dom/File.h"
 
 namespace mozilla {
 namespace dom {

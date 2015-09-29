@@ -606,6 +606,7 @@ Editor.prototype = {
     let cm = editors.get(this);
     this.alignLine(line, align);
     cm.setCursor({line: line, ch: ch});
+    this.emit("cursorActivity");
   },
 
   /**
@@ -1024,6 +1025,7 @@ Editor.prototype = {
       this.setupAutoCompletion();
     } else {
       cm.setOption(o, v);
+      this.config[o] = v;
     }
 
     if (o === "enableCodeFolding") {

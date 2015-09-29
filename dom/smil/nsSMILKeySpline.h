@@ -57,6 +57,13 @@ public:
   bool operator!=(const nsSMILKeySpline& aOther) const {
     return !(*this == aOther);
   }
+  int32_t Compare(const nsSMILKeySpline& aRhs) const {
+    if (mX1 != aRhs.mX1) return mX1 < aRhs.mX1 ? -1 : 1;
+    if (mY1 != aRhs.mY1) return mY1 < aRhs.mY1 ? -1 : 1;
+    if (mX2 != aRhs.mX2) return mX2 < aRhs.mX2 ? -1 : 1;
+    if (mY2 != aRhs.mY2) return mY2 < aRhs.mY2 ? -1 : 1;
+    return 0;
+  }
 
 private:
   void

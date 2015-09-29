@@ -129,14 +129,6 @@ builds:
     types:
       opt:
         task: tasks/builds/android_api_11.yml
-  linux64:
-    platforms:
-      - Linux64
-    types:
-      opt:
-        task: tasks/builds/opt_linux64_clobber.yml
-      debug:
-        task: tasks/builds/dbg_linux64_clobber.yml
   linux:
     platforms:
       - Linux
@@ -145,12 +137,6 @@ builds:
         task: tasks/builds/opt_linux32_clobber.yml
       debug:
         task: tasks/builds/dbg_linux32_clobber.yml
-  macosx64:
-    platforms:
-      - MacOSX64
-    types:
-      debug:
-        task: tasks/builds/dbg_macosx64.yml
   sm-plain:
     platforms:
       - Linux64
