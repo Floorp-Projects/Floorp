@@ -1062,7 +1062,8 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
                    (array->Item(i).GetIntValue() ==
                      NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START ||
                     array->Item(i).GetIntValue() ==
-                     NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END),
+                     NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END ||
+                    array->Item(i).GetIntValue() == -1),
                    "unexpected value");
         if (array->Item(i).GetIntValue() ==
               NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START) {

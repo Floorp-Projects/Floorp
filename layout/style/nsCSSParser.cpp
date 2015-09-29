@@ -14687,12 +14687,11 @@ CSSParserImpl::ParseTransitionStepTimingFunctionValues(nsCSSValue& aValue)
     return false;
   }
 
-  int32_t type = NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END;
+  int32_t type = -1;  // indicates an implicit end value
   if (ExpectSymbol(',', true)) {
     if (!GetToken(true)) {
       return false;
     }
-    type = -1;
     if (mToken.mType == eCSSToken_Ident) {
       if (mToken.mIdent.LowerCaseEqualsLiteral("start")) {
         type = NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START;
