@@ -273,9 +273,8 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
             (!menuPopupFrame->IsAnchored() ||
              menuPopupFrame->PopupLevel() != ePopupLevelParent)) {
 
-          rect.x = aPresContext->DevPixelsToIntCSSPixels(rect.x);
-          rect.y = aPresContext->DevPixelsToIntCSSPixels(rect.y);
-          menuPopupFrame->MoveTo(rect.x, rect.y, true);
+          CSSPoint cssPos = rect.TopLeft() / aPresContext->CSSToDevPixelScale();
+          menuPopupFrame->MoveTo(RoundedToInt(cssPos), true);
         }
       }
       else {

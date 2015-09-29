@@ -130,7 +130,7 @@ PopupBoxObject::MoveTo(int32_t aLeft, int32_t aTop)
 {
   nsMenuPopupFrame *menuPopupFrame = mContent ? do_QueryFrame(mContent->GetPrimaryFrame()) : nullptr;
   if (menuPopupFrame) {
-    menuPopupFrame->MoveTo(aLeft, aTop, true);
+    menuPopupFrame->MoveTo(CSSIntPoint(aLeft, aTop), true);
   }
 }
 
