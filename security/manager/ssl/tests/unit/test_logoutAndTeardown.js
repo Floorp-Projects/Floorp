@@ -55,7 +55,7 @@ function connect_and_teardown() {
 }
 
 function run_test() {
-  add_tls_server_setup("OCSPStaplingServer");
+  add_tls_server_setup("OCSPStaplingServer", "ocsp_certs");
   add_test(connect_and_teardown);
   run_next_test();
 }

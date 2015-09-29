@@ -31,6 +31,7 @@
 #include "nsICategoryManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsXPCOM.h"
+#include "nsISimpleEnumerator.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIXPConnect.h"
 #include "xptcall.h"

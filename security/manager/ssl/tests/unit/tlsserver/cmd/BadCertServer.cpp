@@ -27,7 +27,7 @@ struct BadCertHost
 // Hostname, cert nickname pairs.
 const BadCertHost sBadCertHosts[] =
 {
-  { "expired.example.com", "expired" },
+  { "expired.example.com", "expired-ee" },
   { "notyetvalid.example.com", "notYetValid" },
   { "before-epoch.example.com", "beforeEpoch" },
   { "selfsigned.example.com", "selfsigned" },
@@ -38,7 +38,7 @@ const BadCertHost sBadCertHosts[] =
   { "notyetvalidissuer.example.com", "notYetValidIssuer" },
   { "before-epoch-issuer.example.com", "beforeEpochIssuer" },
   { "md5signature.example.com", "md5signature" },
-  { "untrusted.example.com", "localhostAndExampleCom" },
+  { "untrusted.example.com", "default-ee" },
   { "untrustedissuer.example.com", "untrustedissuer" },
   { "mismatch-expired.example.com", "mismatch-expired" },
   { "mismatch-notYetValid.example.com", "mismatch-notYetValid" },
@@ -46,23 +46,23 @@ const BadCertHost sBadCertHosts[] =
   { "untrusted-expired.example.com", "untrusted-expired" },
   { "md5signature-expired.example.com", "md5signature-expired" },
   { "mismatch-untrusted-expired.example.com", "mismatch-untrusted-expired" },
-  { "inadequatekeyusage.example.com", "inadequatekeyusage" },
+  { "inadequatekeyusage.example.com", "inadequatekeyusage-ee" },
   { "selfsigned-inadequateEKU.example.com", "selfsigned-inadequateEKU" },
   { "self-signed-end-entity-with-cA-true.example.com", "self-signed-EE-with-cA-true" },
   { "ca-used-as-end-entity.example.com", "ca-used-as-end-entity" },
   { "ca-used-as-end-entity-name-mismatch.example.com", "ca-used-as-end-entity" },
   // All of include-subdomains.pinning.example.com is pinned to End Entity
-  // Test Cert with nick localhostAndExampleCom. Any other nick will only
+  // Test Cert with nick default-ee. Any other nick will only
   // pass pinning when security.cert_pinning.enforcement.level != strict and
   // otherCA is added as a user-specified trust anchor. See StaticHPKPins.h.
-  { "include-subdomains.pinning.example.com", "localhostAndExampleCom" },
-  { "good.include-subdomains.pinning.example.com", "localhostAndExampleCom" },
-  { "bad.include-subdomains.pinning.example.com", "otherIssuerEE" },
-  { "bad.include-subdomains.pinning.example.com.", "otherIssuerEE" },
-  { "bad.include-subdomains.pinning.example.com..", "otherIssuerEE" },
-  { "exclude-subdomains.pinning.example.com", "localhostAndExampleCom" },
-  { "sub.exclude-subdomains.pinning.example.com", "otherIssuerEE" },
-  { "test-mode.pinning.example.com", "otherIssuerEE" },
+  { "include-subdomains.pinning.example.com", "default-ee" },
+  { "good.include-subdomains.pinning.example.com", "default-ee" },
+  { "bad.include-subdomains.pinning.example.com", "other-issuer-ee" },
+  { "bad.include-subdomains.pinning.example.com.", "other-issuer-ee" },
+  { "bad.include-subdomains.pinning.example.com..", "other-issuer-ee" },
+  { "exclude-subdomains.pinning.example.com", "default-ee" },
+  { "sub.exclude-subdomains.pinning.example.com", "other-issuer-ee" },
+  { "test-mode.pinning.example.com", "other-issuer-ee" },
   { "unknownissuer.include-subdomains.pinning.example.com", "unknownissuer" },
   { "unknownissuer.test-mode.pinning.example.com", "unknownissuer" },
   { "nsCertTypeNotCritical.example.com", "nsCertTypeNotCritical" },
@@ -78,13 +78,37 @@ const BadCertHost sBadCertHosts[] =
 };
 
 int32_t
-DoSNISocketConfig(PRFileDesc *aFd, const SECItem *aSrvNameArr,
-                  uint32_t aSrvNameArrSize, void *aArg)
+DoSNISocketConfigBySubjectCN(PRFileDesc* aFd, const SECItem* aSrvNameArr,
+                             uint32_t aSrvNameArrSize)
 {
-  const BadCertHost *host = GetHostForSNI(aSrvNameArr, aSrvNameArrSize,
+  for (uint32_t i = 0; i < aSrvNameArrSize; i++) {
+    ScopedPORTString name((char*)PORT_ZAlloc(aSrvNameArr[i].len + 1));
+    if (name) {
+      PORT_Memcpy(name, aSrvNameArr[i].data, aSrvNameArr[i].len);
+      if (SECSuccess == ConfigSecureServerWithNamedCert(aFd, name,
+                                                        nullptr, nullptr)) {
+        return 0;
+      }
+    }
+  }
+
+  return SSL_SNI_SEND_ALERT;
+}
+
+int32_t
+DoSNISocketConfig(PRFileDesc* aFd, const SECItem* aSrvNameArr,
+                  uint32_t aSrvNameArrSize, void* aArg)
+{
+  const BadCertHost* host = GetHostForSNI(aSrvNameArr, aSrvNameArrSize,
                                           sBadCertHosts);
   if (!host) {
-    return SSL_SNI_SEND_ALERT;
+    // No static cert <-> hostname mapping found. This happens when we use a
+    // collection of certificates in a given directory and build a cert DB at
+    // runtime, rather than using an NSS cert DB populated at build time.
+    // (This will be the default in the future.)
+    // For all given server names, check if the runtime-built cert DB contains
+    // a certificate with a matching subject CN.
+    return DoSNISocketConfigBySubjectCN(aFd, aSrvNameArr, aSrvNameArrSize);
   }
 
   if (gDebugLevel >= DEBUG_VERBOSE) {

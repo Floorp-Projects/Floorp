@@ -8,6 +8,7 @@
 
 #include "nsIDOMDocument.h"
 #include "nsNetUtil.h"
+#include "nsIStreamListener.h"
 #include "nsStringStream.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsCRT.h"

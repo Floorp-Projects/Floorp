@@ -503,6 +503,8 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         mouseEvent->mMessage != eMouseEnterIntoWidget &&
         mouseEvent->mMessage != eMouseExitFromWidget) ||
        aEvent->mClass == eWheelEventClass ||
+       aEvent->mClass == ePointerEventClass ||
+       aEvent->mClass == eTouchEventClass ||
        aEvent->mClass == eKeyboardEventClass)) {
     if (gMouseOrKeyboardEventCounter == 0) {
       nsCOMPtr<nsIObserverService> obs =
@@ -513,6 +515,20 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       }
     }
     ++gMouseOrKeyboardEventCounter;
+
+
+    nsCOMPtr<nsINode> node = do_QueryInterface(aTargetContent);
+    if (node &&
+        (aEvent->mMessage == eKeyUp || aEvent->mMessage == eMouseUp ||
+         aEvent->mMessage == eWheel || aEvent->mMessage == eTouchEnd ||
+         aEvent->mMessage == ePointerUp)) {
+      nsIDocument* doc = node->OwnerDoc();
+      while (doc && !doc->UserHasInteracted()) {
+        doc->SetUserHasInteracted(true);
+        doc = nsContentUtils::IsChildOfSameType(doc) ?
+          doc->GetParentDocument() : nullptr;
+      }
+    }
   }
 
   WheelTransaction::OnEvent(aEvent);

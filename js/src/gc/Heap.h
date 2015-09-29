@@ -294,9 +294,6 @@ class TenuredCell : public Cell
 #endif
 };
 
-/* Cells are aligned to CellShift, so the largest tagged null pointer is: */
-const uintptr_t LargestTaggedNullCellPointer = (1 << CellShift) - 1;
-
 /*
  * The mark bitmap has one bit per each GC cell. For multi-cell GC things this
  * wastes space but allows to avoid expensive devisions by thing's size when
@@ -809,17 +806,6 @@ ArenaHeader::getThingSize() const
  */
 struct ChunkTrailer
 {
-    /* Construct a Nursery ChunkTrailer. */
-    ChunkTrailer(JSRuntime* rt, StoreBuffer* sb)
-      : location(gc::ChunkLocationBitNursery), storeBuffer(sb), runtime(rt)
-    {}
-
-    /* Construct a Tenured heap ChunkTrailer. */
-    explicit ChunkTrailer(JSRuntime* rt)
-      : location(gc::ChunkLocationBitTenuredHeap), storeBuffer(nullptr), runtime(rt)
-    {}
-
-  public:
     /* The index the chunk in the nursery, or LocationTenuredHeap. */
     uint32_t        location;
     uint32_t        padding;
@@ -827,12 +813,11 @@ struct ChunkTrailer
     /* The store buffer for writes to things in this chunk or nullptr. */
     StoreBuffer*    storeBuffer;
 
-    /* This provides quick access to the runtime from absolutely anywhere. */
     JSRuntime*      runtime;
 };
 
-static_assert(sizeof(ChunkTrailer) == ChunkTrailerSize,
-              "ChunkTrailer size must match the API defined size.");
+static_assert(sizeof(ChunkTrailer) == 2 * sizeof(uintptr_t) + sizeof(uint64_t),
+              "ChunkTrailer size is incorrect.");
 
 /* The chunk header (located at the end of the chunk to preserve arena alignment). */
 struct ChunkInfo
@@ -1021,16 +1006,13 @@ struct Chunk
         return reinterpret_cast<Chunk*>(addr);
     }
 
-    static bool withinValidRange(uintptr_t addr) {
+    static bool withinArenasRange(uintptr_t addr) {
         uintptr_t offset = addr & ChunkMask;
-        return Chunk::fromAddress(addr)->isNurseryChunk()
-               ? offset < ChunkSize - sizeof(ChunkTrailer)
-               : offset < ArenasPerChunk * ArenaSize;
+        return offset < ArenasPerChunk * ArenaSize;
     }
 
     static size_t arenaIndex(uintptr_t addr) {
-        MOZ_ASSERT(!Chunk::fromAddress(addr)->isNurseryChunk());
-        MOZ_ASSERT(withinValidRange(addr));
+        MOZ_ASSERT(withinArenasRange(addr));
         return (addr & ChunkMask) >> ArenaShift;
     }
 
@@ -1046,10 +1028,6 @@ struct Chunk
 
     bool hasAvailableArenas() const {
         return info.numArenasFree != 0;
-    }
-
-    bool isNurseryChunk() const {
-        return info.trailer.storeBuffer;
     }
 
     ArenaHeader* allocateArena(JSRuntime* rt, JS::Zone* zone, AllocKind kind,
@@ -1151,7 +1129,7 @@ ArenaHeader::address() const
     uintptr_t addr = reinterpret_cast<uintptr_t>(this);
     MOZ_ASSERT(addr);
     MOZ_ASSERT(!(addr & ArenaMask));
-    MOZ_ASSERT(Chunk::withinValidRange(addr));
+    MOZ_ASSERT(Chunk::withinArenasRange(addr));
     return addr;
 }
 
@@ -1320,7 +1298,7 @@ Cell::address() const
 {
     uintptr_t addr = uintptr_t(this);
     MOZ_ASSERT(addr % CellSize == 0);
-    MOZ_ASSERT(Chunk::withinValidRange(addr));
+    MOZ_ASSERT(Chunk::withinArenasRange(addr));
     return addr;
 }
 
