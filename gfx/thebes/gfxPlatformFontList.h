@@ -14,10 +14,12 @@
 #include "gfxFontInfoLoader.h"
 #include "gfxFont.h"
 #include "gfxPlatform.h"
+#include "gfxFontFamilyList.h"
 
 #include "nsIMemoryReporter.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
+#include "nsILanguageAtomService.h"
 
 class CharMapHashKey : public PLDHashEntryHdr
 {
@@ -199,6 +201,10 @@ public:
         aLoaderState = (uint32_t) mState;
     }
 
+    virtual void
+    AddGenericFonts(mozilla::FontFamilyType aGenericType, gfxFontStyle* aStyle,
+                    nsTArray<gfxFontFamily*>& aFamilyList);
+
 protected:
     class MemoryReporter final : public nsIMemoryReporter
     {
@@ -287,6 +293,11 @@ protected:
 
     void RebuildLocalFonts();
 
+    void
+    ResolveGenericFontNames(mozilla::FontFamilyType aGenericType,
+                            nsIAtom *aLanguage,
+                            nsTArray<nsString>& aGenericFamilies);
+
     typedef nsRefPtrHashtable<nsStringHashKey, gfxFontFamily> FontFamilyTable;
     typedef nsRefPtrHashtable<nsStringHashKey, gfxFontEntry> FontEntryTable;
 
@@ -360,6 +371,8 @@ protected:
     uint32_t mFontlistInitCount; // num times InitFontList called
 
     nsTHashtable<nsPtrHashKey<gfxUserFontSet> > mUserFontSetList;
+
+    nsCOMPtr<nsILanguageAtomService> mLangService;
 };
 
 #endif /* GFXPLATFORMFONTLIST_H_ */
