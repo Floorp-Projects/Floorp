@@ -109,19 +109,23 @@ class ComputedTimingFunction
 {
 public:
   typedef nsTimingFunction::Type Type;
+  typedef nsTimingFunction::StepSyntax StepSyntax;
   void Init(const nsTimingFunction &aFunction);
   double GetValue(double aPortion) const;
   const nsSMILKeySpline* GetFunction() const {
-    NS_ASSERTION(mType == nsTimingFunction::Function, "Type mismatch");
+    NS_ASSERTION(HasSpline(), "Type mismatch");
     return &mTimingFunction;
   }
   Type GetType() const { return mType; }
+  bool HasSpline() const { return nsTimingFunction::IsSplineType(mType); }
   uint32_t GetSteps() const { return mSteps; }
+  StepSyntax GetStepSyntax() const { return mStepSyntax; }
   bool operator==(const ComputedTimingFunction& aOther) const {
     return mType == aOther.mType &&
-           (mType == nsTimingFunction::Function ?
+           (HasSpline() ?
             mTimingFunction == aOther.mTimingFunction :
-            mSteps == aOther.mSteps);
+            (mSteps == aOther.mSteps &&
+             mStepSyntax == aOther.mStepSyntax));
   }
   bool operator!=(const ComputedTimingFunction& aOther) const {
     return !(*this == aOther);
@@ -131,6 +135,7 @@ private:
   Type mType;
   nsSMILKeySpline mTimingFunction;
   uint32_t mSteps;
+  StepSyntax mStepSyntax;
 };
 
 struct AnimationPropertySegment

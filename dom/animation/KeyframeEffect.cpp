@@ -17,11 +17,12 @@ void
 ComputedTimingFunction::Init(const nsTimingFunction &aFunction)
 {
   mType = aFunction.mType;
-  if (mType == nsTimingFunction::Function) {
+  if (nsTimingFunction::IsSplineType(mType)) {
     mTimingFunction.Init(aFunction.mFunc.mX1, aFunction.mFunc.mY1,
                          aFunction.mFunc.mX2, aFunction.mFunc.mY2);
   } else {
     mSteps = aFunction.mSteps;
+    mStepSyntax = aFunction.mStepSyntax;
   }
 }
 
@@ -36,23 +37,20 @@ StepEnd(uint32_t aSteps, double aPortion)
 double
 ComputedTimingFunction::GetValue(double aPortion) const
 {
-  switch (mType) {
-    case nsTimingFunction::Function:
-      return mTimingFunction.GetSplineValue(aPortion);
-    case nsTimingFunction::StepStart:
-      // There are diagrams in the spec that seem to suggest this check
-      // and the bounds point should not be symmetric with StepEnd, but
-      // should actually step up at rather than immediately after the
-      // fraction points.  However, we rely on rounding negative values
-      // up to zero, so we can't do that.  And it's not clear the spec
-      // really meant it.
-      return 1.0 - StepEnd(mSteps, 1.0 - aPortion);
-    default:
-      MOZ_ASSERT(false, "bad type");
-      // fall through
-    case nsTimingFunction::StepEnd:
-      return StepEnd(mSteps, aPortion);
+  if (HasSpline()) {
+    return mTimingFunction.GetSplineValue(aPortion);
   }
+  if (mType == nsTimingFunction::Type::StepStart) {
+    // There are diagrams in the spec that seem to suggest this check
+    // and the bounds point should not be symmetric with StepEnd, but
+    // should actually step up at rather than immediately after the
+    // fraction points.  However, we rely on rounding negative values
+    // up to zero, so we can't do that.  And it's not clear the spec
+    // really meant it.
+    return 1.0 - StepEnd(mSteps, 1.0 - aPortion);
+  }
+  MOZ_ASSERT(mType == nsTimingFunction::Type::StepEnd, "bad type");
+  return StepEnd(mSteps, aPortion);
 }
 
 // In the Web Animations model, the iteration progress can be outside the range
