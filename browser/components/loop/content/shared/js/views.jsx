@@ -203,11 +203,48 @@ loop.shared.views = (function(_, mozL10n) {
     },
 
     /**
-     * Show or hide the settings menu
+     * Reposition Menu if cropped
+     *
+     * Added to reposition the menu if it is cropped on the left side because of
+     * a long text string. This function measures how much the menu is cropped
+     * on the left or right and adjusts the coordinates so the menu isn't cropped.
+     * Also, sets the left style to auto, to prevent complexity in calculations
+     *
+     * The dropdownmenu mixin needs to be revamped, along with all components
+     * using dropdown menus. Components should be utilizing a global function
+     * for menu positions and it should be consistent throughout.
+     *
      */
-    handleClick: function(event) {
-      event.preventDefault();
-      this.toggleDropdownMenu();
+    _repositionMenu: function() {
+      if (this.refs.menu && this.state.showMenu) {
+        var menuNode = this.refs.menu && this.refs.menu.getDOMNode();
+
+        if (menuNode) {
+          // Amount of pixels that the dropdown needs to stay away from the edges
+          // of the page body. Copied from the mixin.
+          var boundOffset = 4;
+          var menuNodeRect = menuNode.getBoundingClientRect();
+          var menuComputedStyle = window.getComputedStyle(menuNode);
+          var documentBody = this.getDOMNode().ownerDocument.body;
+          var bodyRect = documentBody.getBoundingClientRect();
+          var menuLeft = parseFloat(menuNodeRect.left);
+          var menuRight = parseFloat(menuNodeRect.right);
+          var bodyRight = parseFloat(bodyRect.right);
+
+          menuNode.style.left = "auto";
+
+          // If menu is too close or cropped on left, move right
+          if (menuLeft < -boundOffset) {
+            menuNode.style.right =
+              (parseFloat(menuComputedStyle.right) + menuLeft - boundOffset) + "px";
+          }
+          // If menu is too close or cropped on right, move left
+          if (menuRight > bodyRight - boundOffset) {
+            menuNode.style.right =
+              (parseFloat(menuComputedStyle.right) + (menuRight - bodyRight) + boundOffset) + "px";
+          }
+        }
+      }
     },
 
     /**
