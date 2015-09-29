@@ -19,6 +19,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/AnimationEffectReadOnly.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/KeyframeBinding.h"
 #include "mozilla/dom/Nullable.h"
 #include "nsSMILKeySpline.h"
 #include "nsStyleStruct.h" // for nsTimingFunction
@@ -109,28 +110,35 @@ class ComputedTimingFunction
 {
 public:
   typedef nsTimingFunction::Type Type;
+  typedef nsTimingFunction::StepSyntax StepSyntax;
   void Init(const nsTimingFunction &aFunction);
   double GetValue(double aPortion) const;
   const nsSMILKeySpline* GetFunction() const {
-    NS_ASSERTION(mType == nsTimingFunction::Function, "Type mismatch");
+    NS_ASSERTION(HasSpline(), "Type mismatch");
     return &mTimingFunction;
   }
   Type GetType() const { return mType; }
+  bool HasSpline() const { return nsTimingFunction::IsSplineType(mType); }
   uint32_t GetSteps() const { return mSteps; }
+  StepSyntax GetStepSyntax() const { return mStepSyntax; }
   bool operator==(const ComputedTimingFunction& aOther) const {
     return mType == aOther.mType &&
-           (mType == nsTimingFunction::Function ?
+           (HasSpline() ?
             mTimingFunction == aOther.mTimingFunction :
-            mSteps == aOther.mSteps);
+            (mSteps == aOther.mSteps &&
+             mStepSyntax == aOther.mStepSyntax));
   }
   bool operator!=(const ComputedTimingFunction& aOther) const {
     return !(*this == aOther);
   }
+  int32_t Compare(const ComputedTimingFunction& aRhs) const;
+  void AppendToString(nsAString& aResult) const;
 
 private:
   Type mType;
   nsSMILKeySpline mTimingFunction;
   uint32_t mSteps;
+  StepSyntax mStepSyntax;
 };
 
 struct AnimationPropertySegment
@@ -225,6 +233,9 @@ public:
                " pseudo-element is not yet supported.");
     return mTarget;
   }
+  void GetFrames(JSContext*& aCx,
+                 nsTArray<JSObject*>& aResult,
+                 ErrorResult& aRv);
 
   // Temporary workaround to return both the target element and pseudo-type
   // until we implement PseudoElement (bug 1174575).

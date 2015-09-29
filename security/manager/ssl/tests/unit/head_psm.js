@@ -267,7 +267,7 @@ function clearSessionCache() {
 
 function run_test() {
   do_get_profile();
-  add_tls_server_setup("<test-server-name>");
+  add_tls_server_setup("<test-server-name>", "<path-to-certificate-directory>");
 
   add_connection_test("<test-name-1>.example.com",
                       SEC_ERROR_xxx,
@@ -279,11 +279,11 @@ function run_test() {
 
   run_next_test();
 }
-
 */
-function add_tls_server_setup(serverBinName) {
+
+function add_tls_server_setup(serverBinName, certsPath) {
   add_test(function() {
-    _setupTLSServerTest(serverBinName);
+    _setupTLSServerTest(serverBinName, certsPath);
   });
 }
 
@@ -430,12 +430,12 @@ function _getBinaryUtil(binaryUtilName) {
 }
 
 // Do not call this directly; use add_tls_server_setup
-function _setupTLSServerTest(serverBinName)
+function _setupTLSServerTest(serverBinName, certsPath)
 {
   let certdb = Cc["@mozilla.org/security/x509certdb;1"]
                   .getService(Ci.nsIX509CertDB);
   // The trusted CA that is typically used for "good" certificates.
-  addCertFromFile(certdb, "tlsserver/test-ca.der", "CTu,u,u");
+  addCertFromFile(certdb, `${certsPath}/test-ca.pem`, "CTu,u,u");
 
   const CALLBACK_PORT = 8444;
 
@@ -468,8 +468,8 @@ function _setupTLSServerTest(serverBinName)
   let process = Cc["@mozilla.org/process/util;1"].createInstance(Ci.nsIProcess);
   process.init(serverBin);
   let certDir = directoryService.get("CurWorkD", Ci.nsILocalFile);
-  certDir.append("tlsserver");
-  Assert.ok(certDir.exists(), "tlsserver folder should exist");
+  certDir.append(`${certsPath}`);
+  Assert.ok(certDir.exists(), `certificate folder (${certsPath}) should exist`);
   // Using "sql:" causes the SQL DB to be used so we can run tests on Android.
   process.run(false, [ "sql:" + certDir.path ], 1);
 
@@ -639,9 +639,8 @@ FakeSSLStatus.prototype = {
 
 // Utility functions for adding tests relating to certificate error overrides
 
-// Helper function for add_cert_override_test and
-// add_prevented_cert_override_test. Probably doesn't need to be called
-// directly.
+// Helper function for add_cert_override_test. Probably doesn't need to be
+// called directly.
 function add_cert_override(aHost, aExpectedBits, aSecurityInfo) {
   let sslstatus = aSecurityInfo.QueryInterface(Ci.nsISSLStatusProvider)
                                .SSLStatus;
@@ -668,6 +667,28 @@ function add_cert_override_test(aHost, aExpectedBits, aExpectedError) {
   add_connection_test(aHost, PRErrorCodeSuccess);
 }
 
+// Helper function for add_prevented_cert_override_test. This is much like
+// add_cert_override except it may not be the case that the connection has an
+// SSLStatus set on it. In this case, the error was not overridable anyway, so
+// we consider it a success.
+function attempt_adding_cert_override(aHost, aExpectedBits, aSecurityInfo) {
+  let sslstatus = aSecurityInfo.QueryInterface(Ci.nsISSLStatusProvider)
+                               .SSLStatus;
+  if (sslstatus) {
+    let bits =
+      (sslstatus.isUntrusted ? Ci.nsICertOverrideService.ERROR_UNTRUSTED : 0) |
+      (sslstatus.isDomainMismatch ? Ci.nsICertOverrideService.ERROR_MISMATCH : 0) |
+      (sslstatus.isNotValidAtThisTime ? Ci.nsICertOverrideService.ERROR_TIME : 0);
+    Assert.equal(bits, aExpectedBits,
+                 "Actual and expected override bits should match");
+    let cert = sslstatus.serverCert;
+    let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
+                                .getService(Ci.nsICertOverrideService);
+    certOverrideService.rememberValidityOverride(aHost, 8443, cert, aExpectedBits,
+                                                 true);
+  }
+}
+
 // Given a host, expected error bits (see nsICertOverrideService.idl), and
 // an expected error code, tests that an initial connection to the host fails
 // with the expected errors and that adding an override does not result in a
@@ -676,6 +697,6 @@ function add_cert_override_test(aHost, aExpectedBits, aExpectedError) {
 // overridable, even if an entry is added to the override service.
 function add_prevented_cert_override_test(aHost, aExpectedBits, aExpectedError) {
   add_connection_test(aHost, aExpectedError, null,
-                      add_cert_override.bind(this, aHost, aExpectedBits));
+                      attempt_adding_cert_override.bind(this, aHost, aExpectedBits));
   add_connection_test(aHost, aExpectedError);
 }

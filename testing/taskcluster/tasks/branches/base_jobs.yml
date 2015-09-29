@@ -122,6 +122,14 @@ builds:
     types:
       opt:
         task: tasks/builds/b2g_nexus_5l_eng.yml
+  linux:
+    platforms:
+      - Linux
+    types:
+      opt:
+        task: tasks/builds/opt_linux32.yml
+      debug:
+        task: tasks/builds/dbg_linux32.yml
   linux64:
     platforms:
       - Linux64
