@@ -449,6 +449,30 @@ gfx::PointTyped<dst> operator/(const gfx::PointTyped<src>& aPoint, const gfx::Sc
 }
 
 template<class src, class dst>
+gfx::PointTyped<dst> operator*(const gfx::IntPointTyped<src>& aPoint, const gfx::ScaleFactor<src, dst>& aScale) {
+  return gfx::PointTyped<dst>(float(aPoint.x) * aScale.scale,
+                              float(aPoint.y) * aScale.scale);
+}
+
+template<class src, class dst>
+gfx::PointTyped<dst> operator/(const gfx::IntPointTyped<src>& aPoint, const gfx::ScaleFactor<dst, src>& aScale) {
+  return gfx::PointTyped<dst>(float(aPoint.x) / aScale.scale,
+                              float(aPoint.y) / aScale.scale);
+}
+
+template<class src, class dst>
+gfx::PointTyped<dst> operator*(const gfx::IntPointTyped<src>& aPoint, const gfx::ScaleFactors2D<src, dst>& aScale) {
+  return gfx::PointTyped<dst>(float(aPoint.x) * aScale.xScale,
+                              float(aPoint.y) * aScale.yScale);
+}
+
+template<class src, class dst>
+gfx::PointTyped<dst> operator/(const gfx::IntPointTyped<src>& aPoint, const gfx::ScaleFactors2D<dst, src>& aScale) {
+  return gfx::PointTyped<dst>(float(aPoint.x) / aScale.xScale,
+                              float(aPoint.y) / aScale.yScale);
+}
+
+template<class src, class dst>
 gfx::RectTyped<dst> operator*(const gfx::RectTyped<src>& aRect, const gfx::ScaleFactor<src, dst>& aScale) {
   return gfx::RectTyped<dst>(aRect.x * aScale.scale,
                              aRect.y * aScale.scale,
