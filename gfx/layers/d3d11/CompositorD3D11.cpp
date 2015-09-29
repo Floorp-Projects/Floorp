@@ -47,11 +47,13 @@ const FLOAT sBlendFactor[] = { 0, 0, 0, 0 };
 struct DeviceAttachmentsD3D11
 {
   DeviceAttachmentsD3D11(ID3D11Device* device)
-   : mDevice(device),
+   : mSyncHandle(0),
+     mDevice(device),
      mInitOkay(true)
   {}
 
   bool CreateShaders();
+  bool InitSyncObject();
 
   typedef EnumeratedArray<MaskType, MaskType::NumMaskTypes, RefPtr<ID3D11VertexShader>>
           VertexShaderArray;
@@ -80,6 +82,7 @@ struct DeviceAttachmentsD3D11
   RefPtr<ID3D11BlendState> mComponentBlendState;
   RefPtr<ID3D11BlendState> mDisabledBlendState;
   RefPtr<IDXGIResource> mSyncTexture;
+  HANDLE mSyncHandle;
 
   //
   // VR pieces
@@ -360,24 +363,8 @@ CompositorD3D11::Initialize()
       return false;
     }
 
-    if (!gfxWindowsPlatform::GetPlatform()->IsWARP()) {
-      // It's okay to do this on Windows 8. But for now we'll just bail
-      // whenever we're using WARP.
-      CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, 1, 1, 1, 1,
-                                 D3D11_BIND_SHADER_RESOURCE |
-                                 D3D11_BIND_RENDER_TARGET);
-      desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
-
-      RefPtr<ID3D11Texture2D> texture;
-      hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(texture));
-      if (FAILED(hr)) {
-        return false;
-      }
-
-      hr = texture->QueryInterface((IDXGIResource**)byRef(mAttachments->mSyncTexture));
-      if (FAILED(hr)) {
-        return false;
-      }
+    if (!mAttachments->InitSyncObject()) {
+      return false;
     }
     
     //
@@ -474,14 +461,7 @@ CompositorD3D11::GetTextureFactoryIdentifier()
   ident.mMaxTextureSize = GetMaxTextureSize();
   ident.mParentProcessId = XRE_GetProcessType();
   ident.mParentBackend = LayersBackend::LAYERS_D3D11;
-  if (mAttachments->mSyncTexture) {
-    HRESULT hr = mAttachments->mSyncTexture->GetSharedHandle(&ident.mSyncHandle);
-    if (FAILED(hr) || !ident.mSyncHandle) {
-      gfxCriticalError() << "Failed to get SharedHandle for sync texture. Result: "
-                         << hexa(hr);
-      MOZ_CRASH();
-    }
-  }
+  ident.mSyncHandle = mAttachments->mSyncHandle;
   ident.mSupportedBlendModes += gfx::CompositionOp::OP_SCREEN;
   ident.mSupportedBlendModes += gfx::CompositionOp::OP_MULTIPLY;
   return ident;
@@ -1345,6 +1325,42 @@ CompositorD3D11::UpdateRenderTarget()
 
   mDefaultRT = new CompositingRenderTargetD3D11(backBuf, IntPoint(0, 0));
   mDefaultRT->SetSize(mSize);
+}
+
+bool
+DeviceAttachmentsD3D11::InitSyncObject()
+{
+  // Sync object is not supported on WARP.
+  if (gfxWindowsPlatform::GetPlatform()->IsWARP()) {
+    return true;
+  }
+
+  // It's okay to do this on Windows 8. But for now we'll just bail
+  // whenever we're using WARP.
+  CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, 1, 1, 1, 1,
+                             D3D11_BIND_SHADER_RESOURCE |
+                             D3D11_BIND_RENDER_TARGET);
+  desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+
+  RefPtr<ID3D11Texture2D> texture;
+  HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(texture));
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  hr = texture->QueryInterface((IDXGIResource**)byRef(mSyncTexture));
+  if (FAILED(hr)) {
+    return false;
+  }
+
+  hr = mSyncTexture->GetSharedHandle(&mSyncHandle);
+  if (FAILED(hr) || !mSyncHandle) {
+    gfxCriticalError() << "Failed to get SharedHandle for sync texture. Result: "
+                       << hexa(hr);
+    MOZ_CRASH();
+  }
+
+  return true;
 }
 
 bool
