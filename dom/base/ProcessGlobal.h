@@ -17,7 +17,9 @@
 #include "nsIRunnable.h"
 #include "nsIGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
+#include "nsServiceManagerUtils.h"
 #include "nsWeakReference.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla {
 namespace dom {

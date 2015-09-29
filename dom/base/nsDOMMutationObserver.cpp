@@ -19,6 +19,7 @@
 #include "nsTextFragment.h"
 #include "nsThreadUtils.h"
 
+using mozilla::dom::TreeOrderComparator;
 using mozilla::dom::Animation;
 
 nsAutoTArray<nsRefPtr<nsDOMMutationObserver>, 4>*

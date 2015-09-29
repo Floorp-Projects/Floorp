@@ -8,6 +8,7 @@
 
 #include "MessageEvent.h"
 #include "mozilla/dom/BlobBinding.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/FileList.h"
 #include "mozilla/dom/FileListBinding.h"
 #include "mozilla/dom/MessagePort.h"
