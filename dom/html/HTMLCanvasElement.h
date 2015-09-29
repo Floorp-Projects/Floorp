@@ -22,6 +22,7 @@ class nsITimerCallback;
 namespace mozilla {
 
 namespace layers {
+class AsyncCanvasRenderer;
 class CanvasLayer;
 class Image;
 class LayerManager;
@@ -91,6 +92,7 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
     DEFAULT_CANVAS_HEIGHT = 150
   };
 
+  typedef layers::AsyncCanvasRenderer AsyncCanvasRenderer;
   typedef layers::CanvasLayer CanvasLayer;
   typedef layers::LayerManager LayerManager;
 
@@ -282,6 +284,8 @@ public:
 
   nsresult GetContext(const nsAString& aContextId, nsISupports** aContext);
 
+  static void SetAttrFromAsyncCanvasRenderer(AsyncCanvasRenderer *aRenderer);
+
 protected:
   virtual ~HTMLCanvasElement();
 
@@ -307,6 +311,8 @@ protected:
                             nsISupports** aResult);
   void CallPrintCallback();
 
+  AsyncCanvasRenderer* GetAsyncCanvasRenderer();
+
   CanvasContextType mCurrentContextType;
   nsRefPtr<HTMLCanvasElement> mOriginalCanvas;
   nsRefPtr<PrintCallback> mPrintCallback;
@@ -314,6 +320,7 @@ protected:
   nsRefPtr<HTMLCanvasPrintState> mPrintState;
   nsTArray<WeakPtr<FrameCaptureListener>> mRequestedFrameListeners;
   nsRefPtr<RequestedFrameRefreshObserver> mRequestedFrameRefreshObserver;
+  nsRefPtr<AsyncCanvasRenderer> mAsyncCanvasRenderer;
 
 public:
   // Record whether this canvas should be write-only or not.

@@ -80,6 +80,10 @@ CopyableCanvasLayer::IsDataValid(const Data& aData)
 void
 CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
 {
+  if (!mBufferProvider && !mGLContext) {
+    return;
+  }
+
   if (mBufferProvider) {
     mSurface = mBufferProvider->GetSnapshot();
   }
@@ -98,8 +102,6 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
   if (mBufferProvider) {
     return;
   }
-
-  MOZ_ASSERT(mGLContext);
 
   SharedSurface* frontbuffer = nullptr;
   if (mGLFrontbuffer) {
