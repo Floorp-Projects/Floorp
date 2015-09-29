@@ -10,18 +10,32 @@
 #include "GLContext.h"
 #include "GLBlitHelper.h"
 #include "GLReadTexImageHelper.h"
+#include "SharedSurfaceEGL.h"
 #include "SharedSurfaceGL.h"
+#include "ScopedGLHelpers.h"
+#include "gfx2DGlue.h"
+#include "../layers/ipc/ShadowLayers.h"
+#include "mozilla/layers/CompositableForwarder.h"
+#include "mozilla/layers/TextureClientSharedSurface.h"
+
+#ifdef XP_WIN
+#include "SharedSurfaceANGLE.h"       // for SurfaceFactory_ANGLEShareHandle
+#include "gfxWindowsPlatform.h"
+#endif
+
 #ifdef MOZ_WIDGET_GONK
 #include "SharedSurfaceGralloc.h"
 #include "nsXULAppAPI.h"
 #endif
+
 #ifdef XP_MACOSX
 #include "SharedSurfaceIO.h"
 #endif
-#include "ScopedGLHelpers.h"
-#include "gfx2DGlue.h"
-#include "../layers/ipc/ShadowLayers.h"
-#include "mozilla/layers/TextureClientSharedSurface.h"
+
+#ifdef GL_PROVIDER_GLX
+#include "GLXLibrary.h"
+#include "SharedSurfaceGLX.h"
+#endif
 
 namespace mozilla {
 namespace gl {
@@ -49,6 +63,53 @@ GLScreenBuffer::Create(GLContext* gl,
 
     ret.reset( new GLScreenBuffer(gl, caps, Move(factory)) );
     return Move(ret);
+}
+
+/* static */ UniquePtr<SurfaceFactory>
+GLScreenBuffer::CreateFactory(GLContext* gl,
+                              const SurfaceCaps& caps,
+                              const RefPtr<layers::CompositableForwarder>& forwarder,
+                              const layers::TextureFlags& flags)
+{
+    UniquePtr<SurfaceFactory> factory = nullptr;
+    if (!gfxPrefs::WebGLForceLayersReadback()) {
+        switch (forwarder->GetCompositorBackendType()) {
+            case mozilla::layers::LayersBackend::LAYERS_OPENGL: {
+#if defined(XP_MACOSX)
+                factory = SurfaceFactory_IOSurface::Create(gl, caps, forwarder, flags);
+#elif defined(MOZ_WIDGET_GONK)
+                factory = MakeUnique<SurfaceFactory_Gralloc>(gl, caps, forwarder, flags);
+#elif defined(GL_PROVIDER_GLX)
+                if (sGLXLibrary.UseSurfaceSharing())
+                  factory = SurfaceFactory_GLXDrawable::Create(gl, caps, forwarder, flags);
+#else
+                if (gl->GetContextType() == GLContextType::EGL) {
+                    if (XRE_IsParentProcess()) {
+                        factory = SurfaceFactory_EGLImage::Create(gl, caps, forwarder, flags);
+                    }
+                }
+#endif
+                break;
+            }
+            case mozilla::layers::LayersBackend::LAYERS_D3D11: {
+#ifdef XP_WIN
+                // Enable surface sharing only if ANGLE and compositing devices
+                // are both WARP or both not WARP
+                if (gl->IsANGLE() &&
+                    (gl->IsWARP() == gfxWindowsPlatform::GetPlatform()->IsWARP()) &&
+                    gfxWindowsPlatform::GetPlatform()->CompositorD3D11TextureSharingWorks())
+                {
+                    factory = SurfaceFactory_ANGLEShareHandle::Create(gl, caps, forwarder, flags);
+                }
+#endif
+              break;
+            }
+            default:
+              break;
+        }
+    }
+
+    return factory;
 }
 
 GLScreenBuffer::GLScreenBuffer(GLContext* gl,
