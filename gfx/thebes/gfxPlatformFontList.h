@@ -20,6 +20,7 @@
 #include "nsIMemoryReporter.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/RangedArray.h"
 #include "nsILanguageAtomService.h"
 
 class CharMapHashKey : public PLDHashEntryHdr
@@ -204,7 +205,7 @@ public:
                     nsIAtom* aLanguage,
                     nsTArray<gfxFontFamily*>& aFamilyList);
 
-    nsTArray<nsRefPtr<gfxFontFamily> >*
+    nsTArray<nsRefPtr<gfxFontFamily>>*
     GetPrefFontsLangGroup(mozilla::FontFamilyType aGenericType,
                           eFontPrefLang aPrefLang);
 
@@ -330,7 +331,7 @@ protected:
     void
     ResolveGenericFontNames(mozilla::FontFamilyType aGenericType,
                             eFontPrefLang aPrefLang,
-                            nsTArray<nsRefPtr<gfxFontFamily> >* aGenericFamilies);
+                            nsTArray<nsRefPtr<gfxFontFamily>>* aGenericFamilies);
 
     typedef nsRefPtrHashtable<nsStringHashKey, gfxFontFamily> FontFamilyTable;
     typedef nsRefPtrHashtable<nsStringHashKey, gfxFontEntry> FontEntryTable;
@@ -377,7 +378,13 @@ protected:
     // localized family names missed when face name loading takes a long time
     nsAutoPtr<nsTHashtable<nsStringHashKey> > mOtherNamesMissed;
 
-    nsTArray<nsTArray<nsRefPtr<gfxFontFamily> >* > mLangGroupPrefFonts;
+    typedef nsTArray<nsRefPtr<gfxFontFamily>> PrefFontList;
+    typedef mozilla::RangedArray<nsAutoPtr<PrefFontList>,
+                                 mozilla::eFamily_generic_first,
+                                 mozilla::eFamily_generic_count> PrefFontsForLangGroup;
+    mozilla::RangedArray<PrefFontsForLangGroup,
+                         eFontPrefLang_First,
+                         eFontPrefLang_Count> mLangGroupPrefFonts;
 
     // when system-wide font lookup fails for a character, cache it to skip future searches
     gfxSparseBitSet mCodepointsWithNoFonts;

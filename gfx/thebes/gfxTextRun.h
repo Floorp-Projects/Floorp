@@ -1113,7 +1113,8 @@ protected:
     // helper methods for looking up fonts
 
     // lookup and add a font with a given name (i.e. *not* a generic!)
-    gfxFontFamily* FindPlatformFont(const nsAString& aName, bool aUseFontSet);
+    void AddPlatformFont(const nsAString& aName,
+                         nsTArray<gfxFontFamily*>& aFamilyList);
 
     // do style selection and add entries to list
     void AddFamilyToFontList(gfxFontFamily* aFamily);
