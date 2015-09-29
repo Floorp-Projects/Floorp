@@ -2021,8 +2021,10 @@ nsresult mozInlineSpellChecker::CurrentDictionaryUpdated()
     currentDictionary.Truncate();
   }
 
-  nsresult rv = SpellCheckRange(nullptr);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!mPreviousDictionary.Equals(currentDictionary)) {
+    nsresult rv = SpellCheckRange(nullptr);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }

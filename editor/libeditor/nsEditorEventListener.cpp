@@ -1114,6 +1114,8 @@ nsEditorEventListener::Focus(nsIDOMEvent* aEvent)
     }
   }
 
+  mEditor->StartWatchingDictionaryChanges();
+
   mEditor->OnFocus(target);
 
   nsCOMPtr<nsIPresShell> ps = GetPresShell();
@@ -1129,6 +1131,8 @@ nsresult
 nsEditorEventListener::Blur(nsIDOMEvent* aEvent)
 {
   NS_ENSURE_TRUE(aEvent, NS_OK);
+
+  mEditor->StopWatchingDictionaryChanges();
 
   // check if something else is focused. If another element is focused, then
   // we should not change the selection.
