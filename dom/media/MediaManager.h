@@ -127,6 +127,8 @@ public:
     : mMediaThread(aThread)
     , mWindowID(aWindowID)
     , mStopped(false)
+    , mAudioStopped(false)
+    , mVideoStopped(false)
     , mFinished(false)
     , mLock("mozilla::GUMCMSL")
     , mRemoved(false) {}
@@ -300,6 +302,14 @@ private:
   uint64_t mWindowID;
 
   bool mStopped; // MainThread only
+
+  // true if we have sent MEDIA_STOP or MEDIA_STOP_TRACK for mAudioDevice.
+  // MainThread only.
+  bool mAudioStopped;
+
+  // true if we have sent MEDIA_STOP or MEDIA_STOP_TRACK for mAudioDevice.
+  // MainThread only.
+  bool mVideoStopped;
 
   // Set at Activate on MainThread
 
