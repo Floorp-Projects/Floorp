@@ -31,20 +31,7 @@ from talos.cmanager import CounterManagement
 
 
 class TTest(object):
-
-    if platform.system() == "Linux":
-        platform_type = 'linux_'
-    elif platform.system() in ("Windows", "Microsoft"):
-        if '5.1' in platform.version():  # winxp
-            platform_type = 'win_'
-        elif '6.1' in platform.version():  # w7
-            platform_type = 'w7_'
-        elif '6.2' in platform.version():  # w8
-            platform_type = 'w8_'
-        else:
-            raise TalosError('unsupported windows version')
-    elif platform.system() == "Darwin":
-        platform_type = 'mac_'
+    platform_type = utils.PLATFORM_TYPE
 
     def check_for_crashes(self, browser_config, profile_dir, test_name):
         # check for minidumps

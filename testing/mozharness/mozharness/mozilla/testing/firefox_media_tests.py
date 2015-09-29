@@ -157,15 +157,14 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
     @PreScriptAction('create-virtualenv')
     def _pre_create_virtualenv(self, action):
         dirs = self.query_abs_dirs()
-        # cwd is $workspace/build
+        requirements_file = os.path.join(dirs['firefox_media_dir'],
+                                         'requirements.txt')
+        if os.path.isfile(requirements_file):
+            self.register_virtualenv_module(requirements=[requirements_file])
         self.register_virtualenv_module(name='firefox-ui-tests',
-                                        url=dirs['firefox_ui_dir'],
-                                        method='pip',
-                                        editable='true')
+                                        url=dirs['firefox_ui_dir'])
         self.register_virtualenv_module(name='firefox-media-tests',
-                                        url=dirs['firefox_media_dir'],
-                                        method='pip',
-                                        editable='true')
+                                        url=dirs['firefox_media_dir'])
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -209,7 +208,12 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
         if not self.binary_path:
             self.fatal("Binary path could not be determined. "
                        "Should be set by default during 'install' action.")
-        cmd = ['firefox-media-tests']
+        dirs = self.query_abs_dirs()
+        venv_python_path = self.query_python_path()
+        runner_script = os.path.join(dirs['firefox_media_dir'],
+                                     'media_test_harness',
+                                     'runtests.py')
+        cmd = [venv_python_path, runner_script]
         cmd += ['--binary', self.binary_path]
         if self.symbols_path:
             cmd += ['--symbols-path', self.symbols_path]

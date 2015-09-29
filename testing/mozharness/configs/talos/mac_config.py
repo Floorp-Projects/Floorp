@@ -38,8 +38,6 @@ config = {
         "install",
         "run-tests",
     ],
-    "python_webserver": False,
-    "webroot": '%s/../talos-data' % os.getcwd(),
     "run_cmd_checks_enabled": True,
     "preflight_run_cmd_suites": [
         SCREEN_RESOLUTION_CHECK,

@@ -355,6 +355,8 @@ LoadRuntimeOptions(const char* aPrefName, void* /* aClosure */)
   // Runtime options.
   JS::RuntimeOptions runtimeOptions;
   runtimeOptions.setAsmJS(GetWorkerPref<bool>(NS_LITERAL_CSTRING("asmjs")))
+                .setThrowOnAsmJSValidationFailure(GetWorkerPref<bool>(
+                      NS_LITERAL_CSTRING("throw_on_asmjs_validation_failure")))
                 .setBaseline(GetWorkerPref<bool>(NS_LITERAL_CSTRING("baselinejit")))
                 .setIon(GetWorkerPref<bool>(NS_LITERAL_CSTRING("ion")))
                 .setNativeRegExp(GetWorkerPref<bool>(NS_LITERAL_CSTRING("native_regexp")))

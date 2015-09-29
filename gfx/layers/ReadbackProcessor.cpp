@@ -9,7 +9,6 @@
 #include "ReadbackLayer.h"              // for ReadbackLayer, ReadbackSink
 #include "UnitTransforms.h"             // for ViewAs
 #include "Units.h"                      // for ParentLayerIntRect
-#include "gfxColor.h"                   // for gfxRGBA
 #include "gfxContext.h"                 // for gfxContext
 #include "gfxUtils.h"
 #include "gfxRect.h"                    // for gfxRect

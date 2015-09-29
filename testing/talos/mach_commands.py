@@ -45,7 +45,6 @@ class TalosRunner(MozbuildObject):
 
     def init_variables(self, talos_args):
         self.talos_dir = os.path.join(self.topsrcdir, 'testing', 'talos')
-        self.talos_webroot = os.path.join(self.topobjdir, 'testing', 'talos')
         self.mozharness_dir = os.path.join(self.topsrcdir, 'testing',
                                            'mozharness')
         self.config_dir = os.path.join(self.mozharness_dir, 'configs', 'talos')
@@ -79,16 +78,13 @@ class TalosRunner(MozbuildObject):
                 'create-virtualenv',
                 'run-tests',
             ],
-            'python_webserver': False,
             'talos_extra_options': ['--develop'] + self.talos_args,
         }
 
     def make_args(self):
         self.args = {
-            'config': {
-                'webroot': self.talos_webroot,
-            },
-           'initial_config_file': self.config_file_path,
+            'config': {},
+            'initial_config_file': self.config_file_path,
        }
 
     def write_config(self):
