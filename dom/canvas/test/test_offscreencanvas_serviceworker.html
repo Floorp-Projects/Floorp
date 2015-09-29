@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>WebGL in OffscreenCanvas</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  window.onmessage = function(evt) {
+    var msg = evt.data || {};
+    if (msg.type == "test") {
+      ok(msg.result, msg.name);
+    }
+    if (msg.type == "finish") {
+      SimpleTest.finish();
+    }
+  }
+
+  navigator.serviceWorker.register('offscreencanvas.js', { scope: "."})
+    // Wait until the service worker is active.
+    .then(navigator.serviceWorker.ready)
+    // ...and then show the interface for the commands once it's ready.
+    .then(function() {
+      iframe = document.createElement("iframe");
+      iframe.setAttribute('src', "offscreencanvas_serviceworker_inner.html");
+      document.body.appendChild(iframe);
+    })
+}
+
+SpecialPowers.pushPrefEnv({'set': [
+  ['gfx.offscreencanvas.enabled', true],
+  ['webgl.force-enabled', true],
+  ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+  ["dom.serviceWorkers.interception.enabled", true],
+  ["dom.serviceWorkers.enabled", true],
+  ["dom.serviceWorkers.testing.enabled", true]
+]}, runTest);
+
+</script>
+</body>
+</html>
