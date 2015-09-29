@@ -1054,22 +1054,21 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
              eCSSProperty_transition_timing_function != aProperty) ||
             unit == eCSSUnit_Symbols)
           aResult.Append(' ');
-        else
+        else if (unit != eCSSUnit_Steps)
           aResult.AppendLiteral(", ");
       }
       if (unit == eCSSUnit_Steps && i == 1) {
-        MOZ_ASSERT(array->Item(i).GetUnit() == eCSSUnit_Enumerated &&
-                   (array->Item(i).GetIntValue() ==
-                     NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START ||
-                    array->Item(i).GetIntValue() ==
-                     NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END ||
-                    array->Item(i).GetIntValue() == -1),
+        MOZ_ASSERT(array->Item(i).GetUnit() == eCSSUnit_Enumerated,
                    "unexpected value");
-        if (array->Item(i).GetIntValue() ==
-              NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START) {
-          aResult.AppendLiteral("start");
-        } else {
-          aResult.AppendLiteral("end");
+        int32_t side = array->Item(i).GetIntValue();
+        MOZ_ASSERT(side == NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START ||
+                   side == NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END ||
+                   side == -1,
+                   "unexpected value");
+        if (side == NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START) {
+          aResult.AppendLiteral(", start");
+        } else if (side == NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END) {
+          aResult.AppendLiteral(", end");
         }
         continue;
       }
