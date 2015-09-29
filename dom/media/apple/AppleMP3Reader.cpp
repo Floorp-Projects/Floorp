@@ -521,20 +521,23 @@ AppleMP3Reader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
     return;
   }
 
-  nsRefPtr<MediaByteBuffer> bytes =
-    mDecoder->GetResource()->MediaReadAt(aOffset, aLength);
-  NS_ENSURE_TRUE_VOID(bytes);
-  mMP3FrameParser.Parse(bytes->Elements(), aLength, aOffset);
-  if (!mMP3FrameParser.IsMP3()) {
-    return;
-  }
+  IntervalSet<int64_t> intervals = mFilter.NotifyDataArrived(aLength, aOffset);
+  for (const auto& interval : intervals) {
+    nsRefPtr<MediaByteBuffer> bytes =
+      mResource.MediaReadAt(interval.mStart, interval.Length());
+    NS_ENSURE_TRUE_VOID(bytes);
+    mMP3FrameParser.Parse(bytes->Elements(), interval.Length(), interval.mStart);
+    if (!mMP3FrameParser.IsMP3()) {
+      return;
+    }
 
-  uint64_t duration = mMP3FrameParser.GetDuration();
-  if (duration != mDuration) {
-    LOGD("Updating media duration to %lluus\n", duration);
-    MOZ_ASSERT(mDecoder);
-    mDuration = duration;
-    mDecoder->DispatchUpdateEstimatedMediaDuration(duration);
+    uint64_t duration = mMP3FrameParser.GetDuration();
+    if (duration != mDuration) {
+      LOGD("Updating media duration to %lluus\n", duration);
+      MOZ_ASSERT(mDecoder);
+      mDuration = duration;
+      mDecoder->DispatchUpdateEstimatedMediaDuration(duration);
+    }
   }
 }
 

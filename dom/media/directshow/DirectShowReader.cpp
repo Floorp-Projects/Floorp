@@ -408,18 +408,22 @@ DirectShowReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
     return;
   }
 
-  nsRefPtr<MediaByteBuffer> bytes = mDecoder->GetResource()->MediaReadAt(aOffset, aLength);
-  NS_ENSURE_TRUE_VOID(bytes);
-  mMP3FrameParser.Parse(bytes->Elements(), aLength, aOffset);
-  if (!mMP3FrameParser.IsMP3()) {
-    return;
-  }
+  IntervalSet<int64_t> intervals = mFilter.NotifyDataArrived(aLength, aOffset);
+  for (const auto& interval : intervals) {
+    nsRefPtr<MediaByteBuffer> bytes =
+      mDecoder->GetResource()->MediaReadAt(interval.mStart, interval.Length());
+    NS_ENSURE_TRUE_VOID(bytes);
+    mMP3FrameParser.Parse(bytes->Elements(), interval.Length(), interval.mStart);
+    if (!mMP3FrameParser.IsMP3()) {
+      return;
+    }
 
-  int64_t duration = mMP3FrameParser.GetDuration();
-  if (duration != mDuration) {
-    MOZ_ASSERT(mDecoder);
-    mDuration = duration;
-    mDecoder->DispatchUpdateEstimatedMediaDuration(mDuration);
+    int64_t duration = mMP3FrameParser.GetDuration();
+    if (duration != mDuration) {
+      MOZ_ASSERT(mDecoder);
+      mDuration = duration;
+      mDecoder->DispatchUpdateEstimatedMediaDuration(mDuration);
+    }
   }
 }
 
