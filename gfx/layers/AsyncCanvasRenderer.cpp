@@ -46,7 +46,7 @@ AsyncCanvasRenderer::NotifyElementAboutAttributesChanged()
   class Runnable final : public nsRunnable
   {
   public:
-    Runnable(AsyncCanvasRenderer* aRenderer)
+    explicit Runnable(AsyncCanvasRenderer* aRenderer)
       : mRenderer(aRenderer)
     {}
 
@@ -81,7 +81,7 @@ AsyncCanvasRenderer::NotifyElementAboutInvalidation()
   class Runnable final : public nsRunnable
   {
   public:
-    Runnable(AsyncCanvasRenderer* aRenderer)
+    explicit Runnable(AsyncCanvasRenderer* aRenderer)
       : mRenderer(aRenderer)
     {}
 
