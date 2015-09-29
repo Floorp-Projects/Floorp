@@ -6,7 +6,6 @@ from __future__ import absolute_import, unicode_literals
 
 import gyp
 import sys
-import time
 import os
 import mozpack.path as mozpath
 from mozpack.files import FileFinder
@@ -82,8 +81,6 @@ def read_from_gyp(config, path, output, vars, non_unified_sources = set()):
     dependencies will be, and vars a dict of variables to pass to the gyp
     processor.
     """
-
-    time_start = time.time()
 
     # gyp expects plain str instead of unicode. The frontend code gives us
     # unicode strings, so convert them.
@@ -234,6 +231,4 @@ def read_from_gyp(config, path, output, vars, non_unified_sources = set()):
             context['DEFINES']['_UNICODE'] = True
         context['DISABLE_STL_WRAPPING'] = True
 
-        context.execution_time = time.time() - time_start
         yield context
-        time_start = time.time()

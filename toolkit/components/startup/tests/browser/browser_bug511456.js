@@ -6,6 +6,8 @@
 
 const TEST_URL = "http://example.com/browser/toolkit/components/startup/tests/browser/beforeunload.html";
 
+SpecialPowers.pushPrefEnv({"set": [["dom.require_user_interaction_for_beforeunload", false]]});
+
 function test() {
   waitForExplicitFinish();
   ignoreAllUncaughtExceptions();

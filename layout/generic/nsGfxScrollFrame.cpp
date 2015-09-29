@@ -5713,7 +5713,7 @@ ScrollFrameHelper::GetSnapPointForDestination(nsIScrollableFrame::ScrollUnit aUn
   }
   if (styles.mScrollSnapPointsY.GetUnit() != eStyleUnit_None) {
     nscoord interval = nsRuleNode::ComputeCoordPercentCalc(styles.mScrollSnapPointsY,
-                                                           scrollPortSize.width);
+                                                           scrollPortSize.height);
     calcSnapPoints.AddHorizontalEdgeInterval(scrollRange, interval, destPos.y);
   }
 

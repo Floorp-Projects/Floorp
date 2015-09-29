@@ -1532,7 +1532,8 @@ nsIDocument::nsIDocument()
     mGetUserFontSetCalled(false),
     mPostedFlushUserFontSet(false),
     mPartID(0),
-    mDidFireDOMContentLoaded(true)
+    mDidFireDOMContentLoaded(true),
+    mUserHasInteracted(false)
 {
   SetInDocument();
 

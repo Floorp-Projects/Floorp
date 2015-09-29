@@ -11,8 +11,9 @@ from __future__ import absolute_import, print_function
 import logging
 import os
 import sys
+import time
 
-from optparse import OptionParser
+from argparse import ArgumentParser
 
 from mach.logging import LoggingManager
 from mozbuild.backend.configenvironment import ConfigEnvironment
@@ -21,6 +22,7 @@ from mozbuild.base import MachCommandConditions
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import BuildReader
 from mozbuild.mozinfo import write_mozinfo
+from itertools import chain
 
 
 log_manager = LoggingManager()
@@ -86,20 +88,31 @@ def config_status(topobjdir='.', topsrcdir='.',
         raise Exception('topsrcdir must be defined as an absolute directory: '
             '%s' % topsrcdir)
 
-    parser = OptionParser()
-    parser.add_option('--recheck', dest='recheck', action='store_true',
-                      help='update config.status by reconfiguring in the same conditions')
-    parser.add_option('-v', '--verbose', dest='verbose', action='store_true',
-                      help='display verbose output')
-    parser.add_option('-n', dest='not_topobjdir', action='store_true',
-                      help='do not consider current directory as top object directory')
-    parser.add_option('-d', '--diff', action='store_true',
-                      help='print diffs of changed files.')
-    parser.add_option('-b', '--backend',
-                      choices=['RecursiveMake', 'AndroidEclipse', 'CppEclipse', 'VisualStudio'],
-                      default='RecursiveMake',
-                      help='what backend to build (default: RecursiveMake).')
-    options, args = parser.parse_args()
+    default_backends = ['RecursiveMake']
+    # We have a chicken/egg problem, where we only have a dict for substs after
+    # creating the ConfigEnvironment, which requires argument parsing to have
+    # occurred.
+    for name, value in substs:
+        if name == 'BUILD_BACKENDS':
+            default_backends = value
+            break
+
+    parser = ArgumentParser()
+    parser.add_argument('--recheck', dest='recheck', action='store_true',
+                        help='update config.status by reconfiguring in the same conditions')
+    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true',
+                        help='display verbose output')
+    parser.add_argument('-n', dest='not_topobjdir', action='store_true',
+                        help='do not consider current directory as top object directory')
+    parser.add_argument('-d', '--diff', action='store_true',
+                        help='print diffs of changed files.')
+    parser.add_argument('-b', '--backend', nargs='+',
+                        choices=['RecursiveMake', 'AndroidEclipse', 'CppEclipse',
+                                 'VisualStudio', 'FasterMake', 'CompileDB'],
+                        default=default_backends,
+                        help='what backend to build (default: %s).' %
+                        ' '.join(default_backends))
+    options = parser.parse_args()
 
     # Without -n, the current directory is meant to be the top object directory
     if not options.not_topobjdir:
@@ -114,22 +127,34 @@ def config_status(topobjdir='.', topsrcdir='.',
         write_mozinfo(os.path.join(topobjdir, 'mozinfo.json'), env, os.environ)
 
     # Make an appropriate backend instance, defaulting to RecursiveMakeBackend.
-    backend_cls = RecursiveMakeBackend
-    if options.backend == 'AndroidEclipse':
-        from mozbuild.backend.android_eclipse import AndroidEclipseBackend
-        if not MachCommandConditions.is_android(env):
-            raise Exception('The Android Eclipse backend is not available with this configuration.')
-        backend_cls = AndroidEclipseBackend
-    elif options.backend == 'CppEclipse':
-        from mozbuild.backend.cpp_eclipse import CppEclipseBackend
-        backend_cls = CppEclipseBackend
-        if os.name == 'nt':
-          raise Exception('Eclipse is not supported on Windows. Consider using Visual Studio instead.')
-    elif options.backend == 'VisualStudio':
-        from mozbuild.backend.visualstudio import VisualStudioBackend
-        backend_cls = VisualStudioBackend
+    backends_cls = []
+    for backend in options.backend:
+        if backend == 'AndroidEclipse':
+            from mozbuild.backend.android_eclipse import AndroidEclipseBackend
+            if not MachCommandConditions.is_android(env):
+                raise Exception('The Android Eclipse backend is not available with this configuration.')
+            backends_cls.append(AndroidEclipseBackend)
+        elif backend == 'CppEclipse':
+            from mozbuild.backend.cpp_eclipse import CppEclipseBackend
+            backends_cls.append(CppEclipseBackend)
+            if os.name == 'nt':
+              raise Exception('Eclipse is not supported on Windows. Consider using Visual Studio instead.')
+        elif backend == 'VisualStudio':
+            from mozbuild.backend.visualstudio import VisualStudioBackend
+            backends_cls.append(VisualStudioBackend)
+        elif backend == 'FasterMake':
+            from mozbuild.backend.fastermake import FasterMakeBackend
+            backends_cls.append(FasterMakeBackend)
+        elif backend == 'CompileDB':
+            from mozbuild.compilation.database import CompileDBBackend
+            backends_cls.append(CompileDBBackend)
+        else:
+            backends_cls.append(RecursiveMakeBackend)
 
-    the_backend = backend_cls(env)
+    cpu_start = time.clock()
+    time_start = time.time()
+
+    backends = [cls(env) for cls in backends_cls]
 
     reader = BuildReader(env)
     emitter = TreeMetadataEmitter(env)
@@ -146,20 +171,40 @@ def config_status(topobjdir='.', topsrcdir='.',
     log_manager.enable_unstructured()
 
     print('Reticulating splines...', file=sys.stderr)
-    summary = the_backend.consume(definitions)
+    if len(backends) > 1:
+        definitions = list(definitions)
 
-    for line in summary.summaries():
-        print(line, file=sys.stderr)
+    for the_backend in backends:
+        the_backend.consume(definitions)
+
+    execution_time = 0.0
+    for obj in chain((reader, emitter), backends):
+        summary = obj.summary()
+        print(summary, file=sys.stderr)
+        execution_time += summary.execution_time
+
+    cpu_time = time.clock() - cpu_start
+    wall_time = time.time() - time_start
+    efficiency = cpu_time / wall_time if wall_time else 100
+    untracked = wall_time - execution_time
+
+    print(
+        'Total wall time: {:.2f}s; CPU time: {:.2f}s; Efficiency: '
+        '{:.0%}; Untracked: {:.2f}s'.format(
+            wall_time, cpu_time, efficiency, untracked),
+        file=sys.stderr
+    )
 
     if options.diff:
-        for path, diff in sorted(summary.file_diffs.items()):
-            print('\n'.join(diff))
+        for the_backend in backends:
+            for path, diff in sorted(the_backend.file_diffs.items()):
+                print('\n'.join(diff))
 
     # Advertise Visual Studio if appropriate.
-    if os.name == 'nt' and options.backend == 'RecursiveMake':
+    if os.name == 'nt' and 'VisualStudio' not in options.backend:
         print(VISUAL_STUDIO_ADVERTISEMENT)
 
     # Advertise Eclipse if it is appropriate.
     if MachCommandConditions.is_android(env):
-        if options.backend == 'RecursiveMake':
+        if 'AndroidEclipse' not in options.backend:
             print(ANDROID_IDE_ADVERTISEMENT)

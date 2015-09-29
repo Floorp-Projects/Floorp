@@ -27,7 +27,6 @@ from mozbuild.frontend.data import (
     JsPreferenceFile,
     LocalInclude,
     Program,
-    ReaderSummary,
     Resources,
     SimpleProgram,
     Sources,
@@ -73,21 +72,12 @@ class TestEmitterBasic(unittest.TestCase):
 
     def read_topsrcdir(self, reader, filter_common=True):
         emitter = TreeMetadataEmitter(reader.config)
-        def ack(obj):
-            obj.ack()
-            return obj
-
-        objs = list(ack(o) for o in emitter.emit(reader.read_topsrcdir()))
+        objs = list(emitter.emit(reader.read_topsrcdir()))
         self.assertGreater(len(objs), 0)
-        self.assertIsInstance(objs[-1], ReaderSummary)
 
         filtered = []
         for obj in objs:
             if filter_common and isinstance(obj, DirectoryTraversal):
-                continue
-
-            # Always filter ReaderSummary because it's asserted above.
-            if isinstance(obj, ReaderSummary):
                 continue
 
             filtered.append(obj)

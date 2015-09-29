@@ -173,6 +173,7 @@ function whereToOpenLink( e, ignoreButton, ignoreAlt )
  *   skipTabAnimation     (boolean)
  *   allowPinnedTabHostChange (boolean)
  *   allowPopups          (boolean)
+ *   userContextId        (unsigned int)
  */
 function openUILinkIn(url, where, aAllowThirdPartyFixup, aPostData, aReferrerURI) {
   var params;
@@ -216,6 +217,7 @@ function openLinkIn(url, where, params) {
   var aAllowPinnedTabHostChange = !!params.allowPinnedTabHostChange;
   var aNoReferrer           = params.noReferrer;
   var aAllowPopups          = !!params.allowPopups;
+  var aUserContextId        = params.userContextId;
 
   if (where == "save") {
     if (!aInitiatingDoc) {
@@ -357,7 +359,8 @@ function openLinkIn(url, where, params) {
       relatedToCurrent: aRelatedToCurrent,
       skipAnimation: aSkipTabAnimation,
       allowMixedContent: aAllowMixedContent,
-      noReferrer: aNoReferrer
+      noReferrer: aNoReferrer,
+      userContextId: aUserContextId
     });
     break;
   }

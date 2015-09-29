@@ -6,6 +6,8 @@
 const TEST_URL = 'data:text/html,<script>window.onbeforeunload=' +
                  'function(e){e.returnValue="?"}</script>';
 
+SpecialPowers.pushPrefEnv({"set": [["dom.require_user_interaction_for_beforeunload", false]]});
+
 function test() {
   waitForExplicitFinish();
   showTabView(onTabViewShown);

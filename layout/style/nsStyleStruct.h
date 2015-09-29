@@ -1874,7 +1874,31 @@ struct nsStyleVisibility {
 };
 
 struct nsTimingFunction {
-  enum Type { Function, StepStart, StepEnd };
+
+  enum class Type {
+    Ease,         // ease
+    Linear,       // linear
+    EaseIn,       // ease-in
+    EaseOut,      // ease-out
+    EaseInOut,    // ease-in-out
+    StepStart,    // step-start and steps(..., start)
+    StepEnd,      // step-end, steps(..., end) and steps(...)
+    CubicBezier,  // cubic-bezier()
+  };
+
+  enum class StepSyntax {
+    Keyword,                     // step-start and step-end
+    FunctionalWithoutKeyword,    // steps(...)
+    FunctionalWithStartKeyword,  // steps(..., start)
+    FunctionalWithEndKeyword,    // steps(..., end)
+  };
+
+  // Whether the timing function type is represented by a spline,
+  // and thus will have mFunc filled in.
+  static bool IsSplineType(Type aType)
+  {
+    return aType != Type::StepStart && aType != Type::StepEnd;
+  }
 
   explicit nsTimingFunction(int32_t aTimingFunctionType
                               = NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE)
@@ -1883,7 +1907,7 @@ struct nsTimingFunction {
   }
 
   nsTimingFunction(float x1, float y1, float x2, float y2)
-    : mType(Function)
+    : mType(Type::CubicBezier)
   {
     mFunc.mX1 = x1;
     mFunc.mY1 = y1;
@@ -1891,11 +1915,23 @@ struct nsTimingFunction {
     mFunc.mY2 = y2;
   }
 
-  nsTimingFunction(Type aType, uint32_t aSteps)
+  enum class Keyword { Implicit, Explicit };
+
+  nsTimingFunction(Type aType, uint32_t aSteps, Keyword aKeyword)
     : mType(aType)
   {
-    MOZ_ASSERT(mType == StepStart || mType == StepEnd, "wrong type");
+    MOZ_ASSERT(mType == Type::StepStart || mType == Type::StepEnd,
+               "wrong type");
     mSteps = aSteps;
+    if (mType == Type::StepStart) {
+      MOZ_ASSERT(aKeyword == Keyword::Explicit,
+                 "only StepEnd can have an implicit keyword");
+      mStepSyntax = StepSyntax::FunctionalWithStartKeyword;
+    } else {
+      mStepSyntax = aKeyword == Keyword::Explicit ?
+                      StepSyntax::FunctionalWithEndKeyword :
+                      StepSyntax::FunctionalWithoutKeyword;
+    }
   }
 
   nsTimingFunction(const nsTimingFunction& aOther)
@@ -1911,7 +1947,10 @@ struct nsTimingFunction {
       float mX2;
       float mY2;
     } mFunc;
-    uint32_t mSteps;
+    struct {
+      StepSyntax mStepSyntax;
+      uint32_t mSteps;
+    };
   };
 
   nsTimingFunction&
@@ -1922,13 +1961,14 @@ struct nsTimingFunction {
 
     mType = aOther.mType;
 
-    if (mType == Function) {
+    if (HasSpline()) {
       mFunc.mX1 = aOther.mFunc.mX1;
       mFunc.mY1 = aOther.mFunc.mY1;
       mFunc.mX2 = aOther.mFunc.mX2;
       mFunc.mY2 = aOther.mFunc.mY2;
     } else {
       mSteps = aOther.mSteps;
+      mStepSyntax = aOther.mStepSyntax;
     }
 
     return *this;
@@ -1939,17 +1979,20 @@ struct nsTimingFunction {
     if (mType != aOther.mType) {
       return false;
     }
-    if (mType == Function) {
+    if (HasSpline()) {
       return mFunc.mX1 == aOther.mFunc.mX1 && mFunc.mY1 == aOther.mFunc.mY1 &&
              mFunc.mX2 == aOther.mFunc.mX2 && mFunc.mY2 == aOther.mFunc.mY2;
     }
-    return mSteps == aOther.mSteps;
+    return mSteps == aOther.mSteps &&
+           mStepSyntax == aOther.mStepSyntax;
   }
 
   bool operator!=(const nsTimingFunction& aOther) const
   {
     return !(*this == aOther);
   }
+
+  bool HasSpline() const { return IsSplineType(mType); }
 
 private:
   void AssignFromKeyword(int32_t aTimingFunctionType);

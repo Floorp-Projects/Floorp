@@ -38,10 +38,9 @@ export OTOOL=${TOOLCHAIN_PREFIX}otool
 export GENISOIMAGE=$topsrcdir/genisoimage/genisoimage
 export DMG_TOOL=$topsrcdir/dmg/dmg
 
-# The system gcc installed on CentOS 6 is 4.4, which our
-# build system rejects.
-export HOST_CC="$topsrcdir/gcc/bin/gcc"
-export HOST_CXX="$topsrcdir/gcc/bin/g++"
+export HOST_CC="$topsrcdir/clang/bin/clang"
+export HOST_CXX="$topsrcdir/clang/bin/clang++"
+export HOST_CPP="$topsrcdir/clang/bin/clang -E"
 export HOST_LDFLAGS="-g"
 
 ac_add_options --target=x86_64-apple-darwin
