@@ -30,6 +30,7 @@ export AR=${TOOLCHAIN_PREFIX}ar
 export RANLIB=${TOOLCHAIN_PREFIX}ranlib
 export STRIP=${TOOLCHAIN_PREFIX}strip
 export OTOOL=${TOOLCHAIN_PREFIX}otool
+export DSYMUTIL=$topsrcdir/clang/bin/llvm-dsymutil
 export GENISOIMAGE=$topsrcdir/genisoimage/genisoimage
 export DMG_TOOL=$topsrcdir/dmg/dmg
 
