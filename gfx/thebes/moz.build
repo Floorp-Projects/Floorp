@@ -272,7 +272,6 @@ GENERATED_FILES = [
 ]
 
 LOCAL_INCLUDES += [
-    '/dom/workers',
     '/dom/xml',
 ]
 

@@ -2054,7 +2054,7 @@ JS_StructuredClone(JSContext* cx, HandleValue value, MutableHandleValue vp,
 JSAutoStructuredCloneBuffer::JSAutoStructuredCloneBuffer(JSAutoStructuredCloneBuffer&& other)
 {
     ownTransferables_ = other.ownTransferables_;
-    other.steal(&data_, &nbytes_, &version_, &callbacks_, &closure_);
+    other.steal(&data_, &nbytes_, &version_);
 }
 
 JSAutoStructuredCloneBuffer&
@@ -2063,7 +2063,7 @@ JSAutoStructuredCloneBuffer::operator=(JSAutoStructuredCloneBuffer&& other)
     MOZ_ASSERT(&other != this);
     clear();
     ownTransferables_ = other.ownTransferables_;
-    other.steal(&data_, &nbytes_, &version_, &callbacks_, &closure_);
+    other.steal(&data_, &nbytes_, &version_);
     return *this;
 }
 
@@ -2088,9 +2088,7 @@ JSAutoStructuredCloneBuffer::clear(const JSStructuredCloneCallbacks* optionalCal
 }
 
 bool
-JSAutoStructuredCloneBuffer::copy(const uint64_t* srcData, size_t nbytes, uint32_t version,
-                                  const JSStructuredCloneCallbacks* callbacks,
-                                  void* closure)
+JSAutoStructuredCloneBuffer::copy(const uint64_t* srcData, size_t nbytes, uint32_t version)
 {
     // transferable objects cannot be copied
     if (StructuredCloneHasTransferObjects(data_, nbytes_))
@@ -2106,45 +2104,31 @@ JSAutoStructuredCloneBuffer::copy(const uint64_t* srcData, size_t nbytes, uint32
     data_ = newData;
     nbytes_ = nbytes;
     version_ = version;
-    callbacks_ = callbacks;
-    closure_ = closure;
     ownTransferables_ = NoTransferables;
     return true;
 }
 
 void
-JSAutoStructuredCloneBuffer::adopt(uint64_t* data, size_t nbytes, uint32_t version,
-                                   const JSStructuredCloneCallbacks* callbacks,
-                                   void* closure)
+JSAutoStructuredCloneBuffer::adopt(uint64_t* data, size_t nbytes, uint32_t version)
 {
     clear();
     data_ = data;
     nbytes_ = nbytes;
     version_ = version;
-    callbacks_ = callbacks;
-    closure_ = closure;
     ownTransferables_ = OwnsTransferablesIfAny;
 }
 
 void
-JSAutoStructuredCloneBuffer::steal(uint64_t** datap, size_t* nbytesp, uint32_t* versionp,
-                                   const JSStructuredCloneCallbacks** callbacks,
-                                   void** closure)
+JSAutoStructuredCloneBuffer::steal(uint64_t** datap, size_t* nbytesp, uint32_t* versionp)
 {
     *datap = data_;
     *nbytesp = nbytes_;
     if (versionp)
         *versionp = version_;
-    if (callbacks)
-        *callbacks = callbacks_;
-    if (closure)
-        *closure = closure_;
 
     data_ = nullptr;
     nbytes_ = 0;
     version_ = 0;
-    callbacks_ = 0;
-    closure_ = 0;
     ownTransferables_ = NoTransferables;
 }
 
