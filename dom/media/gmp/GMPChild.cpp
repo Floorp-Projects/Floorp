@@ -606,10 +606,21 @@ GMPChild::GetGMPStorage()
   return mStorage;
 }
 
-bool
-GMPChild::RecvCrashPluginNow()
+static MOZ_NEVER_INLINE void
+CrashForApiTimeout()
 {
-  MOZ_CRASH();
+  // Never inline so that crash reports are distinctive.
+  MOZ_CRASH("Bug 1209385; GMP API actor failed to respond.");
+}
+
+bool
+GMPChild::RecvCrashPluginNow(const GMPCrashReason& aReason)
+{
+  if (aReason == kGmpApiTimeout) {
+    CrashForApiTimeout();
+  } else {
+    MOZ_CRASH();
+  }
   return true;
 }
 
