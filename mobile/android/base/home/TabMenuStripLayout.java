@@ -5,8 +5,10 @@
 
 package org.mozilla.gecko.home;
 
+import android.widget.LinearLayout;
+
+import android.content.res.ColorStateList;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.util.ColorUtils;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -17,7 +19,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.accessibility.AccessibilityEvent;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 /**
@@ -41,6 +42,8 @@ class TabMenuStripLayout extends LinearLayout
     // This variable is used to predict the direction of scroll.
     private float prevProgress;
     private int tabContentStart;
+    private int activeTextColor;
+    private ColorStateList inactiveTextColor;
 
     TabMenuStripLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -48,6 +51,8 @@ class TabMenuStripLayout extends LinearLayout
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TabMenuStrip);
         final int stripResId = a.getResourceId(R.styleable.TabMenuStrip_strip, -1);
         tabContentStart = a.getDimensionPixelSize(R.styleable.TabMenuStrip_tabContentStart, 0);
+        activeTextColor = a.getColor(R.styleable.TabMenuStrip_activeTextColor, R.color.text_and_tabs_tray_grey);
+        inactiveTextColor = a.getColorStateList(R.styleable.TabMenuStrip_inactiveTextColor);
         a.recycle();
 
         if (stripResId != -1) {
@@ -60,7 +65,7 @@ class TabMenuStripLayout extends LinearLayout
     void onAddPagerView(String title) {
         final TextView button = (TextView) LayoutInflater.from(getContext()).inflate(R.layout.tab_menu_strip, this, false);
         button.setText(title.toUpperCase());
-        button.setTextColor(getResources().getColorStateList(R.color.tab_text_color));
+        button.setTextColor(inactiveTextColor);
 
         if (getChildCount() == 0) {
             button.setPadding(button.getPaddingLeft() + tabContentStart,
@@ -76,11 +81,11 @@ class TabMenuStripLayout extends LinearLayout
 
     void onPageSelected(final int position) {
         if (selectedView != null) {
-            selectedView.setTextColor(getResources().getColorStateList(R.color.tab_text_color));
+            selectedView.setTextColor(inactiveTextColor);
         }
 
         selectedView = (TextView) getChildAt(position);
-        selectedView.setTextColor(ColorUtils.getColor(getContext(), R.color.placeholder_grey));
+        selectedView.setTextColor(activeTextColor);
 
         // Callback to measure and draw the strip after the view is visible.
         ViewTreeObserver vto = selectedView.getViewTreeObserver();
