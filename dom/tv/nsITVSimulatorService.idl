@@ -4,25 +4,28 @@
 
 #include "nsISupports.idl"
 #include "nsITVService.idl"
+#include "nsIDOMWindow.idl"
 
 %{C++
 #define TV_SIMULATOR_SERVICE_CONTRACTID\
   "@mozilla.org/tv/simulatorservice;1"
 %}
 
-[scriptable, uuid(f0ab9850-24b4-4f5d-83dd-0fea0c249ca1)]
+[scriptable, uuid(8ecae67d-a959-4f8a-a786-14dc12bd8d3c)]
 interface nsITVSimulatorService : nsITVService
 {
   /*
-   * Get the simulate movie file.The path is full location path.
-   * e.g. /home/user/simulator/gaia/profile/dummy/tv-movie1.ogv
+   * Get the URL of simulated video blob.
    *
    * @param tunerId       The ID of the tuner.
    * @param sourceType    The source type to be used.
    * @param channelNumber The LCN (Logical Channel Number) of the channel.
+   * @param window        The window object of content.
+   * @return blobUrl      The URL of created blob from local video file.
    */
-  void getSimulatorVideoFilePath(in DOMString tunerId,
-                                 in DOMString sourceType,
-                                 in DOMString channelNumber,
-                                 [retval] out string filePath);
+  void getSimulatorVideoBlobURL(in DOMString tunerId,
+                                in DOMString sourceType,
+                                in DOMString channelNumber,
+                                in nsIDOMWindow window,
+                                [retval] out DOMString blobUrl);
 };
