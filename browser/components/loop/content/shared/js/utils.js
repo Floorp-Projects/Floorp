@@ -110,6 +110,12 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     ACTIVE: "ss-active"
   };
 
+  var CHAT_CONTENT_TYPES = {
+    CONTEXT: "chat-context",
+    TEXT: "chat-text",
+    ROOM_NAME: "room-name"
+  };
+
   /**
    * Format a given date into an l10n-friendly string.
    *
@@ -775,6 +781,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
 
   this.utils = {
     CALL_TYPES: CALL_TYPES,
+    CHAT_CONTENT_TYPES: CHAT_CONTENT_TYPES,
     FAILURE_DETAILS: FAILURE_DETAILS,
     REST_ERRNOS: REST_ERRNOS,
     WEBSOCKET_REASONS: WEBSOCKET_REASONS,
