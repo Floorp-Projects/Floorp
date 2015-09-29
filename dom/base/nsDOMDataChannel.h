@@ -54,11 +54,14 @@ public:
   bool Reliable() const;
   mozilla::dom::RTCDataChannelState ReadyState() const;
   uint32_t BufferedAmount() const;
+  uint32_t BufferedAmountLowThreshold() const;
+  void SetBufferedAmountLowThreshold(uint32_t aThreshold);
   IMPL_EVENT_HANDLER(open)
   IMPL_EVENT_HANDLER(error)
   IMPL_EVENT_HANDLER(close)
   // Uses XPIDL Close.
   IMPL_EVENT_HANDLER(message)
+  IMPL_EVENT_HANDLER(bufferedamountlow)
   mozilla::dom::RTCDataChannelType BinaryType() const
   {
     return static_cast<mozilla::dom::RTCDataChannelType>(
@@ -96,6 +99,9 @@ public:
 
   virtual nsresult
   OnChannelClosed(nsISupports* aContext) override;
+
+  virtual nsresult
+  OnBufferLow(nsISupports* aContext) override;
 
   virtual void
   AppReady();

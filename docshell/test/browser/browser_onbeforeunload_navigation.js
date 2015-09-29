@@ -6,6 +6,8 @@ var stayingOnPage = true;
 var TEST_PAGE = "http://mochi.test:8888/browser/docshell/test/browser/file_bug1046022.html";
 var TARGETED_PAGE = "data:text/html," + encodeURIComponent("<body>Shouldn't be seeing this</body>");
 
+SpecialPowers.pushPrefEnv({"set": [["dom.require_user_interaction_for_beforeunload", false]]});
+
 var loadExpected = TEST_PAGE;
 var testTab;
 

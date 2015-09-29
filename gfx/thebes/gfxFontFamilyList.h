@@ -29,7 +29,7 @@ enum FontFamilyType {
   eFamily_named_quoted,
 
   // generics
-  eFamily_serif,
+  eFamily_serif,         // pref font code relies on this ordering!!!
   eFamily_sans_serif,
   eFamily_monospace,
   eFamily_cursive,
@@ -37,7 +37,11 @@ enum FontFamilyType {
 
   // special
   eFamily_moz_variable,
-  eFamily_moz_fixed
+  eFamily_moz_fixed,
+
+  eFamily_generic_first = eFamily_serif,
+  eFamily_generic_last = eFamily_fantasy,
+  eFamily_generic_count = (eFamily_fantasy - eFamily_serif + 1)
 };
 
 enum QuotedName { eQuotedName, eUnquotedName };

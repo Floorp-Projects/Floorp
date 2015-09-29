@@ -14,6 +14,17 @@ OS_COMPILE_CXXFLAGS :=
 OS_LDFLAGS := $(LLVM_LDFLAGS) $(CLANG_LDFLAGS)
 DSO_LDOPTS := -shared
 
+ifeq ($(HOST_OS_ARCH)_$(OS_ARCH),Linux_Darwin)
+# Use the host compiler instead of the target compiler.
+CXX := $(HOST_CXX)
+# expandlibs doesn't know the distinction between host and target toolchains,
+# and on cross linux/darwin builds, the options to give to the linker for file
+# lists differ between both, so don't use file lists.
+EXPAND_MKSHLIB_ARGS :=
+# Don't pass OSX linker arguments.
+MOZ_FIX_LINK_PATHS :=
+endif
+
 # Use the default OS X deployment target to enable using the libc++ headers
 # correctly.  Note that the binary produced here is a host tool and doesn't need
 # to be distributed.

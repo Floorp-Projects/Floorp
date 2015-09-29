@@ -296,6 +296,12 @@ public:
     static bool sDumpPaintingIntermediate;
     static bool sDumpPaintingToFile;
     static bool sDumpPaintItems;
+    // TODO: Dumping compositor textures is broken pretty badly. For example,
+    //       on Linux it crashes because TextureHost::GetAsSurface() returns
+    //       null. Expect to have to fix things like this if you turn it on.
+    //       Meanwhile, content-side texture dumping (conditioned on
+    //       sDumpPainting) is a good replacement.
+    static bool sDumpCompositorTextures;
     static FILE* sDumpPaintFile;
 };
 
