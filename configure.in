@@ -6306,9 +6306,6 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c gio` -ne 0; then
 fi
 AC_SUBST(MOZ_GIO_COMPONENT)
 
-dnl Remove dupes
-MOZ_EXTENSIONS=`$PYTHON ${srcdir}/build/unix/uniq.py ${MOZ_EXTENSIONS}`
-
 dnl Ensure every extension exists, to avoid mostly-inscrutable error messages
 dnl when trying to build a nonexistent extension.
 for extension in $MOZ_EXTENSIONS; do
@@ -8379,8 +8376,6 @@ MOZ_ARG_ENABLE_STRING(necko-protocols,
     fi
 done],
     NECKO_PROTOCOLS="$NECKO_PROTOCOLS_DEFAULT")
-dnl Remove dupes
-NECKO_PROTOCOLS=`$PYTHON ${srcdir}/build/unix/uniq.py ${NECKO_PROTOCOLS}`
 AC_SUBST_SET(NECKO_PROTOCOLS)
 for p in $NECKO_PROTOCOLS; do
     AC_DEFINE_UNQUOTED(NECKO_PROTOCOL_$p)
@@ -8564,7 +8559,7 @@ AC_SUBST(MOZ_DEBUG_ENABLE_DEFS)
 AC_SUBST(MOZ_DEBUG_DISABLE_DEFS)
 AC_SUBST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST(WARNINGS_AS_ERRORS)
-AC_SUBST(MOZ_EXTENSIONS)
+AC_SUBST_SET(MOZ_EXTENSIONS)
 AC_SUBST(MOZ_ENABLE_PROFILER_SPS)
 AC_SUBST(MOZ_JPROF)
 AC_SUBST(MOZ_INSTRUMENTS)
