@@ -27,3 +27,6 @@ content/shared/js/views.js
 standalone/content/js/standaloneRoomViews.js
 standalone/content/js/webapp.js
 ui/ui-showcase.js
+# Don't need to check the built tree
+standalone/dist
+

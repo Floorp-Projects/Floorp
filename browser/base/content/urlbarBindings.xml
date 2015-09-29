@@ -1141,7 +1141,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
   <binding id="urlbar-rich-result-popup" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-rich-result-popup">
 
     <content ignorekeys="true" level="top" consumeoutsideclicks="never"
-             aria-owns="search-suggestions-notification richlistbox">
+             aria-owns="richlistbox">
       <xul:hbox anonid="search-suggestions-notification"
                 align="center"
                 role="alert"

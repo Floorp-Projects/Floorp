@@ -8,8 +8,8 @@
     <org.mozilla.gecko.widget.FaviconView android:id="@+id/suggestion_icon"
                                           android:layout_width="@dimen/favicon_bg"
                                           android:layout_height="@dimen/favicon_bg"
-                                          android:layout_marginLeft="10dip"
-                                          android:layout_marginRight="10dip"
+                                          android:layout_marginLeft="16dip"
+                                          android:layout_marginRight="16dip"
                                           android:layout_centerVertical="true"
                                           android:minWidth="@dimen/favicon_bg"
                                           android:minHeight="@dimen/favicon_bg"/>
@@ -19,7 +19,6 @@
                                          android:layout_centerVertical="true"
                                          android:layout_width="wrap_content"
                                          android:layout_height="wrap_content"
-                                         android:layout_marginRight="10dip"
                                          android:duplicateParentState="true">
 
         <include layout="@layout/suggestion_item"
