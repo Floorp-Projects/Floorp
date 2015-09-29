@@ -1,0 +1,76 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript;version=1.7">
+
+SimpleTest.waitForExplicitFinish();
+
+Components.utils.import("resource://gre/modules/Task.jsm");
+
+var windowUtils = SpecialPowers.getDOMWindowUtils(window);
+
+function pressKey(isShift)
+{
+  return new Promise(resolve => {
+    synthesizeKey(" ", { shiftKey: isShift });
+    windowUtils.advanceTimeAndRefresh(100);
+    SimpleTest.executeSoon(resolve);
+  });
+}
+
+function initTest()
+{
+  SpecialPowers.pushPrefEnv({"set":[["general.smoothScroll", false]]}, runTest);
+}
+
+function runTest()
+{
+  Task.async(function () {
+    yield pressKey(false);
+
+    ok(window.scrollY > 0, "Space with no focus" + window.scrollY);
+    yield pressKey(true);
+    is(window.scrollY, 0, "Shift+Space with no focus");
+
+    let checkbox = document.getElementById("checkbox");
+    checkbox.focus();
+    yield pressKey(false);
+
+    is(window.scrollY, 0, "Space with checkbox focused");
+    ok(checkbox.checked, "Space with checkbox focused, checked");
+    yield pressKey(true);
+    is(window.scrollY, 0, "Shift+Space with checkbox focused");
+    ok(!checkbox.checked, "Space with checkbox focused, unchecked");
+
+    let input = document.getElementById("input");
+    input.focus();
+    yield pressKey(false);
+    is(window.scrollY, 0, "Space with input focused");
+    is(input.value, " ", "Space with input focused, value");
+    yield pressKey(true);
+    is(window.scrollY, 0, "Shift+Space with input focused");
+    is(input.value, "  ", "Space with input focused, value");
+
+    windowUtils.restoreNormalRefresh();
+    SimpleTest.finish();
+  })();
+}
+
+  </script>
+</head>
+<body onload="SimpleTest.waitForFocus(initTest)">
+
+<input id="checkbox" type="checkbox">Checkbox
+<input id="input">
+<p style="height: 4000px">Text</p>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
