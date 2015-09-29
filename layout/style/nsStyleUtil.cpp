@@ -565,14 +565,36 @@ nsStyleUtil::AppendSerializedFontSrc(const nsCSSValue& aValue,
 /* static */ void
 nsStyleUtil::AppendStepsTimingFunction(nsTimingFunction::Type aType,
                                        uint32_t aSteps,
+                                       nsTimingFunction::StepSyntax aSyntax,
                                        nsAString& aResult)
 {
+  MOZ_ASSERT(aType == nsTimingFunction::Type::StepStart ||
+             aType == nsTimingFunction::Type::StepEnd);
+
+  if (aSyntax == nsTimingFunction::StepSyntax::Keyword) {
+    if (aType == nsTimingFunction::Type::StepStart) {
+      aResult.AppendLiteral("step-start");
+    } else {
+      aResult.AppendLiteral("step-end");
+    }
+    return;
+  }
+
   aResult.AppendLiteral("steps(");
   aResult.AppendInt(aSteps);
-  if (aType == nsTimingFunction::Type::StepStart) {
-    aResult.AppendLiteral(", start)");
-  } else {
-    aResult.AppendLiteral(", end)");
+  switch (aSyntax) {
+    case nsTimingFunction::StepSyntax::Keyword:
+      // handled above
+      break;
+    case nsTimingFunction::StepSyntax::FunctionalWithStartKeyword:
+      aResult.AppendLiteral(", start)");
+      break;
+    case nsTimingFunction::StepSyntax::FunctionalWithEndKeyword:
+      aResult.AppendLiteral(", end)");
+      break;
+    case nsTimingFunction::StepSyntax::FunctionalWithoutKeyword:
+      aResult.Append(')');
+      break;
   }
 }
 
@@ -592,6 +614,30 @@ nsStyleUtil::AppendCubicBezierTimingFunction(float aX1, float aY1,
   aResult.AppendLiteral(", ");
   aResult.AppendFloat(aY2);
   aResult.Append(')');
+}
+
+/* static */ void
+nsStyleUtil::AppendCubicBezierKeywordTimingFunction(
+    nsTimingFunction::Type aType,
+    nsAString& aResult)
+{
+  switch (aType) {
+    case nsTimingFunction::Type::Ease:
+    case nsTimingFunction::Type::Linear:
+    case nsTimingFunction::Type::EaseIn:
+    case nsTimingFunction::Type::EaseOut:
+    case nsTimingFunction::Type::EaseInOut: {
+      nsCSSKeyword keyword = nsCSSProps::ValueToKeywordEnum(
+          static_cast<int32_t>(aType),
+          nsCSSProps::kTransitionTimingFunctionKTable);
+      AppendASCIItoUTF16(nsCSSKeywords::GetStringValue(keyword),
+                         aResult);
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("unexpected aType");
+      break;
+  }
 }
 
 /* static */ float
