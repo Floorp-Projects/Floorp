@@ -203,7 +203,8 @@ var MozLoopServiceInternal = {
   pushURLs: new Map(),
 
   mocks: {
-    pushHandler: undefined
+    pushHandler: undefined,
+    isChatWindowOpen: undefined
   },
 
   /**
@@ -872,6 +873,22 @@ var MozLoopServiceInternal = {
   },
 
   /**
+   * Determines if a chat window is already open for a given window id.
+   *
+   * @param  {String}  chatWindowId The window id.
+   * @return {Boolean}              True if the window is opened.
+   */
+  isChatWindowOpen: function(chatWindowId) {
+    if (this.mocks.isChatWindowOpen !== undefined) {
+      return this.mocks.isChatWindowOpen;
+    }
+
+    let chatUrl = this.getChatURL(chatWindowId);
+
+    return [...Chat.chatboxes].some(chatbox => chatbox.src == chatUrl);
+  },
+
+  /**
    * Opens the chat window
    *
    * @param {Object} conversationWindowData The data to be obtained by the
@@ -1375,6 +1392,16 @@ this.MozLoopService = {
    */
   openChatWindow: function(conversationWindowData) {
     return MozLoopServiceInternal.openChatWindow(conversationWindowData);
+  },
+
+  /**
+   * Determines if a chat window is already open for a given window id.
+   *
+   * @param  {String}  chatWindowId The window id.
+   * @return {Boolean}              True if the window is opened.
+   */
+  isChatWindowOpen: function(chatWindowId) {
+    return MozLoopServiceInternal.isChatWindowOpen(chatWindowId);
   },
 
   /**
