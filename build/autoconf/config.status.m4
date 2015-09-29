@@ -239,5 +239,5 @@ MOZ_ARG_ENABLE_STRING(build-backend,
                          Enable additional build backends],
 [ BUILD_BACKENDS="RecursiveMake `echo $enableval | sed 's/,/ /g'`"])
 
-AC_SUBST_LIST([BUILD_BACKENDS])
+AC_SUBST_SET([BUILD_BACKENDS])
 ])
