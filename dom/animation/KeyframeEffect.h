@@ -19,6 +19,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/AnimationEffectReadOnly.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/KeyframeBinding.h"
 #include "mozilla/dom/Nullable.h"
 #include "nsSMILKeySpline.h"
 #include "nsStyleStruct.h" // for nsTimingFunction
@@ -130,6 +131,7 @@ public:
   bool operator!=(const ComputedTimingFunction& aOther) const {
     return !(*this == aOther);
   }
+  int32_t Compare(const ComputedTimingFunction& aRhs) const;
   void AppendToString(nsAString& aResult) const;
 
 private:
@@ -231,6 +233,9 @@ public:
                " pseudo-element is not yet supported.");
     return mTarget;
   }
+  void GetFrames(JSContext*& aCx,
+                 nsTArray<JSObject*>& aResult,
+                 ErrorResult& aRv);
 
   // Temporary workaround to return both the target element and pseudo-type
   // until we implement PseudoElement (bug 1174575).

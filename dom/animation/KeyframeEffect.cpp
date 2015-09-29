@@ -54,6 +54,31 @@ ComputedTimingFunction::GetValue(double aPortion) const
   return StepEnd(mSteps, aPortion);
 }
 
+int32_t
+ComputedTimingFunction::Compare(const ComputedTimingFunction& aRhs) const
+{
+  if (mType != aRhs.mType) {
+    return int32_t(mType) - int32_t(aRhs.mType);
+  }
+
+  if (mType == nsTimingFunction::Type::CubicBezier) {
+    int32_t order = mTimingFunction.Compare(aRhs.mTimingFunction);
+    if (order != 0) {
+      return order;
+    }
+  } else if (mType == nsTimingFunction::Type::StepStart ||
+             mType == nsTimingFunction::Type::StepEnd) {
+    if (mSteps != aRhs.mSteps) {
+      return int32_t(mSteps) - int32_t(aRhs.mSteps);
+    }
+    if (mStepSyntax != aRhs.mStepSyntax) {
+      return int32_t(mStepSyntax) - int32_t(aRhs.mStepSyntax);
+    }
+  }
+
+  return 0;
+}
+
 void
 ComputedTimingFunction::AppendToString(nsAString& aResult) const
 {
@@ -474,6 +499,117 @@ KeyframeEffectReadOnly::ResetIsRunningOnCompositor()
 {
   for (bool& isPropertyRunningOnCompositor : mIsPropertyRunningOnCompositor) {
     isPropertyRunningOnCompositor = false;
+  }
+}
+
+struct KeyframeValueEntry
+{
+  float mOffset;
+  nsCSSProperty mProperty;
+  nsString mValue;
+  const ComputedTimingFunction* mTimingFunction;
+
+  bool operator==(const KeyframeValueEntry& aRhs) const
+  {
+    NS_ASSERTION(mOffset != aRhs.mOffset || mProperty != aRhs.mProperty,
+                 "shouldn't have duplicate (offset, property) pairs");
+    return false;
+  }
+
+  bool operator<(const KeyframeValueEntry& aRhs) const
+  {
+    NS_ASSERTION(mOffset != aRhs.mOffset || mProperty != aRhs.mProperty,
+                 "shouldn't have duplicate (offset, property) pairs");
+
+    // First, sort by offset.
+    if (mOffset != aRhs.mOffset) {
+      return mOffset < aRhs.mOffset;
+    }
+
+    // Second, by timing function.
+    int32_t order = mTimingFunction->Compare(*aRhs.mTimingFunction);
+    if (order != 0) {
+      return order < 0;
+    }
+
+    // Last, by property IDL name.
+    return nsCSSProps::PropertyIDLNameSortPosition(mProperty) <
+           nsCSSProps::PropertyIDLNameSortPosition(aRhs.mProperty);
+  }
+};
+
+void
+KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
+                                  nsTArray<JSObject*>& aResult,
+                                  ErrorResult& aRv)
+{
+  // Collect tuples of the form (offset, property, value, easing) from
+  // mProperties, then sort them so we can generate one ComputedKeyframe per
+  // offset/easing pair.  We sort secondarily by property IDL name so that we
+  // have a uniform order that we set properties on the ComputedKeyframe
+  // object.
+  nsAutoTArray<KeyframeValueEntry,4> entries;
+  for (const AnimationProperty& property : mProperties) {
+    if (property.mSegments.IsEmpty()) {
+      continue;
+    }
+    for (size_t i = 0, n = property.mSegments.Length(); i < n; i++) {
+      const AnimationPropertySegment& segment = property.mSegments[i];
+      KeyframeValueEntry* entry = entries.AppendElement();
+      entry->mOffset = segment.mFromKey;
+      entry->mProperty = property.mProperty;
+      entry->mTimingFunction = &segment.mTimingFunction;
+      StyleAnimationValue::UncomputeValue(property.mProperty,
+                                          segment.mFromValue,
+                                          entry->mValue);
+    }
+    const AnimationPropertySegment& segment = property.mSegments.LastElement();
+    KeyframeValueEntry* entry = entries.AppendElement();
+    entry->mOffset = segment.mToKey;
+    entry->mProperty = property.mProperty;
+    // We don't have the an appropriate animation-timing-function value to use,
+    // either from the element or from the 100% keyframe, so we just set it to
+    // the animation-timing-value value used on the previous segment.
+    entry->mTimingFunction = &segment.mTimingFunction;
+    StyleAnimationValue::UncomputeValue(property.mProperty,
+                                        segment.mToValue,
+                                        entry->mValue);
+  }
+  entries.Sort();
+
+  for (size_t i = 0, n = entries.Length(); i < n; ) {
+    // Create a JS object with the explicit ComputedKeyframe dictionary members.
+    ComputedKeyframe keyframeDict;
+    keyframeDict.mOffset.SetValue(entries[i].mOffset);
+    keyframeDict.mComputedOffset.Construct(entries[i].mOffset);
+    keyframeDict.mEasing.Truncate();
+    entries[i].mTimingFunction->AppendToString(keyframeDict.mEasing);
+    keyframeDict.mComposite.SetValue(CompositeOperation::Replace);
+
+    JS::Rooted<JS::Value> keyframeValue(aCx);
+    if (!ToJSValue(aCx, keyframeDict, &keyframeValue)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+
+    JS::Rooted<JSObject*> keyframe(aCx, &keyframeValue.toObject());
+
+    // Set the property name/value pairs on the JS object.
+    do {
+      const KeyframeValueEntry& entry = entries[i];
+      const char* name = nsCSSProps::PropertyIDLName(entry.mProperty);
+      JS::Rooted<JS::Value> value(aCx);
+      if (!ToJSValue(aCx, entry.mValue, &value) ||
+          !JS_DefineProperty(aCx, keyframe, name, value, JSPROP_ENUMERATE)) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return;
+      }
+      ++i;
+    } while (i < n &&
+             entries[i].mOffset == entries[i - 1].mOffset &&
+             *entries[i].mTimingFunction == *entries[i - 1].mTimingFunction);
+
+    aResult.AppendElement(keyframe);
   }
 }
 
