@@ -189,9 +189,8 @@ protected:
   class NotificationHandlerWrapper;
 
   typedef mozilla::ipc::DaemonNotificationRunnable2<
-    NotificationHandlerWrapper, void,
-    BluetoothAddress, unsigned long,
-    const BluetoothAddress&>
+    NotificationHandlerWrapper, void, nsString, unsigned long,
+    const nsAString&>
     RemoteFeatureNotification;
 
   typedef mozilla::ipc::DaemonNotificationRunnable0<

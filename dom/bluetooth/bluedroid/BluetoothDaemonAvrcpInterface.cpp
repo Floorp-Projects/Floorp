@@ -483,12 +483,13 @@ public:
   { }
 
   nsresult
-  operator () (BluetoothAddress& aArg1, unsigned long& aArg2) const
+  operator () (nsString& aArg1, unsigned long& aArg2) const
   {
     DaemonSocketPDU& pdu = GetPDU();
 
     /* Read address */
-    nsresult rv = UnpackPDU(pdu, aArg1);
+    nsresult rv = UnpackPDU(
+      pdu, UnpackConversion<BluetoothAddress, nsAString>(aArg1));
     if (NS_FAILED(rv)) {
       return rv;
     }

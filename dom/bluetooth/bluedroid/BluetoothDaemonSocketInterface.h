@@ -44,7 +44,7 @@ public:
                      int aChannel, bool aEncrypt, bool aAuth,
                      BluetoothSocketResultHandler* aRes);
 
-  nsresult ConnectCmd(const BluetoothAddress& aBdAddr,
+  nsresult ConnectCmd(const nsAString& aBdAddr,
                       BluetoothSocketType aType,
                       const BluetoothUuid& aServiceUuid,
                       int aChannel, bool aEncrypt, bool aAuth,
@@ -69,27 +69,22 @@ private:
   // Responses
   //
 
-  typedef mozilla::ipc::DaemonResultRunnable3<
-    BluetoothSocketResultHandler, void, int, BluetoothAddress, int, int,
-    const BluetoothAddress&, int>
-    AcceptResultRunnable;
+  typedef mozilla::ipc::DaemonResultRunnable0<
+    BluetoothSocketResultHandler, void>
+    ResultRunnable;
 
-  typedef mozilla::ipc::DaemonResultRunnable3<
-    BluetoothSocketResultHandler, void, int, BluetoothAddress, int, int,
-    const BluetoothAddress&, int>
-    ConnectResultRunnable;
+  typedef mozilla::ipc::DaemonResultRunnable1<
+    BluetoothSocketResultHandler, void, int, int>
+    IntResultRunnable;
 
   typedef mozilla::ipc::DaemonResultRunnable1<
     BluetoothSocketResultHandler, void, BluetoothStatus, BluetoothStatus>
     ErrorRunnable;
 
-  typedef mozilla::ipc::DaemonResultRunnable1<
-    BluetoothSocketResultHandler, void, int, int>
-    ListenResultRunnable;
-
-  typedef mozilla::ipc::DaemonResultRunnable0<
-    BluetoothSocketResultHandler, void>
-    ResultRunnable;
+  typedef mozilla::ipc::DaemonResultRunnable3<
+    BluetoothSocketResultHandler, void, int, nsString, int, int,
+    const nsAString_internal&, int>
+    IntStringIntResultRunnable;
 
   void ErrorRsp(const DaemonSocketPDUHeader& aHeader,
                 DaemonSocketPDU& aPDU,
@@ -117,7 +112,7 @@ public:
               int aChannel, bool aEncrypt, bool aAuth,
               BluetoothSocketResultHandler* aRes) override;
 
-  void Connect(const BluetoothAddress& aBdAddr,
+  void Connect(const nsAString& aBdAddr,
                BluetoothSocketType aType,
                const BluetoothUuid& aServiceUuid,
                int aChannel, bool aEncrypt, bool aAuth,

@@ -207,18 +207,18 @@ private:
                                   const BluetoothUuid& aAppUuid) override;
 
   void ScanResultNotification(
-    const BluetoothAddress& aBdAddr, int aRssi,
+    const nsAString& aBdAddr, int aRssi,
     const BluetoothGattAdvData& aAdvData) override;
 
   void ConnectNotification(int aConnId,
                            BluetoothGattStatus aStatus,
                            int aClientIf,
-                           const BluetoothAddress& aBdAddr) override;
+                           const nsAString& aBdAddr) override;
 
   void DisconnectNotification(int aConnId,
                               BluetoothGattStatus aStatus,
                               int aClientIf,
-                              const BluetoothAddress& aBdAddr) override;
+                              const nsAString& aBdAddr) override;
 
   void SearchCompleteNotification(int aConnId,
                                   BluetoothGattStatus aStatus) override;
@@ -276,7 +276,7 @@ private:
                                 BluetoothGattStatus aStatus) override;
 
   void ReadRemoteRssiNotification(int aClientIf,
-                                  const BluetoothAddress& aBdAddr,
+                                  const nsAString& aBdAddr,
                                   int aRssi,
                                   BluetoothGattStatus aStatus) override;
 
@@ -293,7 +293,7 @@ private:
   void ConnectionNotification(int aConnId,
                               int aServerIf,
                               bool aConnected,
-                              const BluetoothAddress& aBdAddr) override;
+                              const nsAString& aBdAddr) override;
 
   void
   ServiceAddedNotification(
@@ -346,7 +346,7 @@ private:
   void
   RequestReadNotification(int aConnId,
                           int aTransId,
-                          const BluetoothAddress& aBdAddr,
+                          const nsAString& aBdAddr,
                           const BluetoothAttributeHandle& aAttributeHandle,
                           int aOffset,
                           bool aIsLong) override;
@@ -354,7 +354,7 @@ private:
   void
   RequestWriteNotification(int aConnId,
                            int aTransId,
-                           const BluetoothAddress& aBdAddr,
+                           const nsAString& aBdAddr,
                            const BluetoothAttributeHandle& aAttributeHandle,
                            int aOffset,
                            int aLength,

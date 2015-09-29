@@ -62,21 +62,21 @@ public:
 
   /* Remote Device Properties */
 
-  void GetRemoteDeviceProperties(const BluetoothAddress& aRemoteAddr,
+  void GetRemoteDeviceProperties(const nsAString& aRemoteAddr,
                                  BluetoothResultHandler* aRes) override;
-  void GetRemoteDeviceProperty(const BluetoothAddress& aRemoteAddr,
+  void GetRemoteDeviceProperty(const nsAString& aRemoteAddr,
                                const nsAString& aName,
                                BluetoothResultHandler* aRes) override;
-  void SetRemoteDeviceProperty(const BluetoothAddress& aRemoteAddr,
+  void SetRemoteDeviceProperty(const nsAString& aRemoteAddr,
                                const BluetoothNamedValue& aProperty,
                                BluetoothResultHandler* aRes) override;
 
   /* Remote Services */
 
-  void GetRemoteServiceRecord(const BluetoothAddress& aRemoteAddr,
+  void GetRemoteServiceRecord(const nsAString& aRemoteAddr,
                               const BluetoothUuid& aUuid,
                               BluetoothResultHandler* aRes) override;
-  void GetRemoteServices(const BluetoothAddress& aRemoteAddr,
+  void GetRemoteServices(const nsAString& aRemoteAddr,
                          BluetoothResultHandler* aRes) override;
 
   /* Discovery */
@@ -86,27 +86,25 @@ public:
 
   /* Bonds */
 
-  void CreateBond(const BluetoothAddress& aBdAddr,
-                  BluetoothTransport aTransport,
+  void CreateBond(const nsAString& aBdAddr, BluetoothTransport aTransport,
                   BluetoothResultHandler* aRes) override;
-  void RemoveBond(const BluetoothAddress& aBdAddr,
+  void RemoveBond(const nsAString& aBdAddr,
                   BluetoothResultHandler* aRes) override;
-  void CancelBond(const BluetoothAddress& aBdAddr,
+  void CancelBond(const nsAString& aBdAddr,
                   BluetoothResultHandler* aRes) override;
 
   /* Connection */
 
-  void GetConnectionState(const BluetoothAddress& aBdAddr,
+  void GetConnectionState(const nsAString& aBdAddr,
                           BluetoothResultHandler* aRes) override;
 
   /* Authentication */
 
-  void PinReply(const BluetoothAddress& aBdAddr, bool aAccept,
+  void PinReply(const nsAString& aBdAddr, bool aAccept,
                 const nsAString& aPinCode,
                 BluetoothResultHandler* aRes) override;
 
-  void SspReply(const BluetoothAddress& aBdAddr,
-                BluetoothSspVariant aVariant,
+  void SspReply(const nsAString& aBdAddr, BluetoothSspVariant aVariant,
                 bool aAccept, uint32_t aPasskey,
                 BluetoothResultHandler* aRes) override;
 
