@@ -49,20 +49,6 @@ TVTunerData::SetId(const nsAString& aId)
 }
 
 /* virtual */ NS_IMETHODIMP
-TVTunerData::GetStreamType(uint16_t* aStreamType)
-{
-  *aStreamType = mStreamType;
-  return NS_OK;
-}
-
-/* virtual */ NS_IMETHODIMP
-TVTunerData::SetStreamType(const uint16_t aStreamType)
-{
-  mStreamType = aStreamType;
-  return NS_OK;
-}
-
-/* virtual */ NS_IMETHODIMP
 TVTunerData::GetSupportedSourceTypes(uint32_t* aCount,
                                      char*** aSourceTypes)
 {
