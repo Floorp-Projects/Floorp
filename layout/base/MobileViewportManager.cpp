@@ -118,8 +118,8 @@ MobileViewportManager::UpdateResolution(const nsViewportInfo& aViewportInfo,
                                         const CSSSize& aViewport,
                                         const Maybe<float>& aDisplayWidthChangeRatio)
 {
-  CSSToLayoutDeviceScale cssToDev((float)nsPresContext::AppUnitsPerCSSPixel()
-    / mPresShell->GetPresContext()->AppUnitsPerDevPixel());
+  CSSToLayoutDeviceScale cssToDev =
+      mPresShell->GetPresContext()->CSSToDevPixelScale();
   LayoutDeviceToLayerScale res(nsLayoutUtils::GetResolution(mPresShell));
 
   if (mIsFirstPaint) {
