@@ -11566,7 +11566,12 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
   // FireOnLocationChange(...) breaks security UI.
   if (!equalURIs) {
     document->SetDocumentURI(newURI);
-    SetCurrentURI(newURI, nullptr, true, LOCATION_CHANGE_SAME_DOCUMENT);
+    // We can't trust SetCurrentURI to do always fire locationchange events
+    // when we expect it to, so we hack around that by doing it ourselves...
+    SetCurrentURI(newURI, nullptr, false, LOCATION_CHANGE_SAME_DOCUMENT);
+    if (mLoadType != LOAD_ERROR_PAGE) {
+      FireDummyOnLocationChange();
+    }
 
     AddURIVisit(newURI, oldURI, oldURI, 0);
 
