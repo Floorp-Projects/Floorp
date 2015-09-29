@@ -140,7 +140,7 @@ function isReturningImmobileValue(edge, variable)
 //
 function edgeUsesVariable(edge, variable, body)
 {
-    if (ignoreEdgeUse(edge, variable))
+    if (ignoreEdgeUse(edge, variable, body))
         return 0;
 
     if (variable.Kind == "Return" && body.Index[1] == edge.Index[1] && body.BlockId.Kind == "Function")
@@ -192,9 +192,9 @@ function expressionIsVariableAddress(exp, variable)
     return exp.Kind == "Var" && sameVariable(exp.Variable, variable);
 }
 
-function edgeTakesVariableAddress(edge, variable)
+function edgeTakesVariableAddress(edge, variable, body)
 {
-    if (ignoreEdgeUse(edge, variable))
+    if (ignoreEdgeUse(edge, variable, body))
         return false;
     if (ignoreEdgeAddressTaken(edge))
         return false;
@@ -492,7 +492,7 @@ function unsafeVariableAddressTaken(suppressed, variable)
         if (!("PEdge" in body))
             continue;
         for (var edge of body.PEdge) {
-            if (edgeTakesVariableAddress(edge, variable)) {
+            if (edgeTakesVariableAddress(edge, variable, body)) {
                 if (edge.Kind == "Assign" || (!suppressed && edgeCanGC(edge)))
                     return {body:body, ppoint:edge.Index[0]};
             }
