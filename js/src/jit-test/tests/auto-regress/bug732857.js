@@ -1,9 +1,13 @@
 // Binary: cache/js-dbg-32-1fd6c40d3852-linux
 // Flags: --ion-eager
 //
+load(libdir + "immutable-prototype.js");
 
 function TestCase(n, d, e, a) {};
+
+if (globalPrototypeChainIsMutable())
   this.__proto__ = [];
+
 var msPerDay =   86400000;
 var TIME_1900  = -2208988800000;
 function TimeFromYear( y ) {

@@ -12,21 +12,18 @@ var expect = '';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-var save__proto__ = __proto__;
-
+var obj;
 try
 {
   Function.prototype.prototype = function() { return 42; }
-  __proto__ = Function();
-  prototype = prototype;
+  obj = Object.create(Function());
+  obj.prototype = obj.prototype;
 }
 catch(ex)
 {
 }
 
 expect = 'object';
-actual = typeof prototype;
-
-__proto__ = save__proto__;
+actual = typeof obj.prototype;
 
 reportCompare(expect, actual, summary);
