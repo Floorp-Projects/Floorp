@@ -71,6 +71,9 @@ nsresult AnnotateCrashReport(const nsACString& key, const nsACString& data);
 nsresult RemoveCrashReportAnnotation(const nsACString& key);
 nsresult AppendAppNotesToCrashReport(const nsACString& data);
 
+// NOTE: If you change this definition, also change the definition in Assertions.h
+// as it is intended to be defining this same function.
+void AnnotateMozCrashReason(const char* aReason);
 void AnnotateOOMAllocationSize(size_t size);
 nsresult SetGarbageCollecting(bool collecting);
 void SetEventloopNestingLevel(uint32_t level);
