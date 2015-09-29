@@ -562,6 +562,38 @@ nsStyleUtil::AppendSerializedFontSrc(const nsCSSValue& aValue,
   aResult.Truncate(aResult.Length() - 2); // remove the last comma-space
 }
 
+/* static */ void
+nsStyleUtil::AppendStepsTimingFunction(nsTimingFunction::Type aType,
+                                       uint32_t aSteps,
+                                       nsAString& aResult)
+{
+  aResult.AppendLiteral("steps(");
+  aResult.AppendInt(aSteps);
+  if (aType == nsTimingFunction::Type::StepStart) {
+    aResult.AppendLiteral(", start)");
+  } else {
+    aResult.AppendLiteral(", end)");
+  }
+}
+
+/* static */ void
+nsStyleUtil::AppendCubicBezierTimingFunction(float aX1, float aY1,
+                                             float aX2, float aY2,
+                                             nsAString& aResult)
+{
+  // set the value from the cubic-bezier control points
+  // (We could try to regenerate the keywords if we want.)
+  aResult.AppendLiteral("cubic-bezier(");
+  aResult.AppendFloat(aX1);
+  aResult.AppendLiteral(", ");
+  aResult.AppendFloat(aY1);
+  aResult.AppendLiteral(", ");
+  aResult.AppendFloat(aX2);
+  aResult.AppendLiteral(", ");
+  aResult.AppendFloat(aY2);
+  aResult.Append(')');
+}
+
 /* static */ float
 nsStyleUtil::ColorComponentToFloat(uint8_t aAlpha)
 {
