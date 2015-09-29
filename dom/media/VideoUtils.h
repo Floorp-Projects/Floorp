@@ -321,6 +321,9 @@ private:
   nsCOMPtr<nsITimer> mTimer;
 };
 
+void
+LogToBrowserConsole(const nsAString& aMsg);
+
 } // end namespace mozilla
 
 #endif
