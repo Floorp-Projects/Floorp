@@ -153,6 +153,11 @@ PresentationDeviceManager::GetAvailableDevices(nsIArray** aRetVal)
   NS_ENSURE_ARG_POINTER(aRetVal);
   MOZ_ASSERT(NS_IsMainThread());
 
+  // Bug 1194049: some providers may discontinue discovery after timeout.
+  // Call |ForceDiscovery()| here to make sure device lists are updated.
+  NS_DispatchToMainThread(
+      NS_NewRunnableMethod(this, &PresentationDeviceManager::ForceDiscovery));
+
   nsCOMPtr<nsIMutableArray> devices = do_CreateInstance(NS_ARRAY_CONTRACTID);
   for (uint32_t i = 0; i < mDevices.Length(); ++i) {
     devices->AppendElement(mDevices[i], false);
