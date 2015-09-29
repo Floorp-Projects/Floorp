@@ -463,9 +463,11 @@ Layer::SetAnimations(const AnimationArray& aAnimations)
           NS_ASSERTION(tf.type() == TimingFunction::TStepFunction,
                        "Function must be bezier or step");
           StepFunction sf = tf.get_StepFunction();
-          nsTimingFunction::Type type = sf.type() == 1 ? nsTimingFunction::StepStart
-                                                       : nsTimingFunction::StepEnd;
-          ctf->Init(nsTimingFunction(type, sf.steps()));
+          nsTimingFunction::Type type = sf.type() == 1 ?
+                                          nsTimingFunction::Type::StepStart :
+                                          nsTimingFunction::Type::StepEnd;
+          ctf->Init(nsTimingFunction(type, sf.steps(),
+                                     nsTimingFunction::Keyword::Explicit));
           break;
         }
       }
