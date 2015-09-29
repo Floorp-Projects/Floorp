@@ -6,6 +6,7 @@
 include protocol PGMP;
 
 using base::ProcessId from "base/process.h";
+using mozilla::GMPCrashReason from "GMPUtils.h";
 
 namespace mozilla {
 namespace gmp {
@@ -21,6 +22,8 @@ parent:
   sync GetGMPNodeId(nsString origin, nsString topLevelOrigin,
                     bool inPrivateBrowsing)
     returns (nsCString id);
+
+  async CrashPluginNow(uint32_t pluginId, GMPCrashReason aReason);
 };
 
 } // namespace gmp

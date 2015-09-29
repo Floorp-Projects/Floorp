@@ -9,6 +9,7 @@
 #include "mozilla/gmp/PGMPContentParent.h"
 #include "GMPSharedMemManager.h"
 #include "nsISupportsImpl.h"
+#include "GMPUtils.h"
 
 namespace mozilla {
 namespace gmp {
@@ -60,6 +61,8 @@ public:
   {
     return mPluginId;
   }
+
+  void CrashPluginNow(GMPCrashReason aReason);
 
 private:
   ~GMPContentParent();
