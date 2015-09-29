@@ -153,20 +153,18 @@ function defer() {
 
 
 function* test_basics() {
-  if (enablePrefsAndPermissions()) {
-    // Enable our use of TCPSocket
-    let prefDeferred = defer();
-    SpecialPowers.pushPrefEnv(
-      { set: [ ['dom.mozTCPSocket.enabled', true] ] },
-      prefDeferred.resolve);
-    yield prefDeferred.promise;
+  // Enable our use of TCPSocket
+  let prefDeferred = defer();
+  SpecialPowers.pushPrefEnv(
+    { set: [ ['dom.mozTCPSocket.enabled', true] ] },
+    prefDeferred.resolve);
+  yield prefDeferred.promise;
 
-    let permDeferred = defer();
-    SpecialPowers.pushPermissions(
-      [ { type: 'tcp-socket', allow: true, context: document } ],
-      permDeferred.resolve);
-    yield permDeferred.promise;
-  }
+  let permDeferred = defer();
+  SpecialPowers.pushPermissions(
+    [ { type: 'tcp-socket', allow: true, context: document } ],
+    permDeferred.resolve);
+  yield permDeferred.promise;
 
   // See bug 903830; in e10s mode we never get to find out the localPort if we
   // let it pick a free port by choosing 0.  This is the same port the xpcshell
@@ -174,15 +172,15 @@ function* test_basics() {
   let serverPort = 8085;
 
   // - Start up a listening socket.
-  let listeningServer = createServer(serverPort,
-                                     { binaryType: 'arraybuffer' },
-                                     SERVER_BACKLOG);
+  let listeningServer = new TCPServerSocket(serverPort,
+                                            { binaryType: 'arraybuffer' },
+                                            SERVER_BACKLOG);
 
   let connectedPromise = waitForConnection(listeningServer);
 
   // -- Open a connection to the server
-  let clientSocket = createSocket('127.0.0.1', serverPort,
-                                  { binaryType: 'arraybuffer' });
+  let clientSocket = new TCPSocket('127.0.0.1', serverPort,
+                                   { binaryType: 'arraybuffer' });
   let clientQueue = listenForEventsOnSocket(clientSocket, 'client');
 
   // (the client connects)
@@ -288,8 +286,8 @@ function* test_basics() {
 
   // -- Re-establish connection
   connectedPromise = waitForConnection(listeningServer);
-  clientSocket = createSocket('127.0.0.1', serverPort,
-                              { binaryType: 'arraybuffer' });
+  clientSocket = new TCPSocket('127.0.0.1', serverPort,
+                               { binaryType: 'arraybuffer' });
   clientQueue = listenForEventsOnSocket(clientSocket, 'client');
   is((yield clientQueue.waitForEvent()).type, 'open', 'got open event');
 
@@ -315,8 +313,8 @@ function* test_basics() {
 
   // -- Re-establish connection
   connectedPromise = waitForConnection(listeningServer);
-  clientSocket = createSocket('127.0.0.1', serverPort,
-                              { binaryType: 'arraybuffer' });
+  clientSocket = new TCPSocket('127.0.0.1', serverPort,
+                               { binaryType: 'arraybuffer' });
   clientQueue = listenForEventsOnSocket(clientSocket, 'client');
   is((yield clientQueue.waitForEvent()).type, 'open', 'got open event');
 
@@ -349,8 +347,8 @@ function* test_basics() {
 
   // -- Re-establish connection
   connectedPromise = waitForConnection(listeningServer);
-  clientSocket = createSocket('127.0.0.1', serverPort,
-                              { binaryType: 'string' });
+  clientSocket = new TCPSocket('127.0.0.1', serverPort,
+                               { binaryType: 'string' });
   clientQueue = listenForEventsOnSocket(clientSocket, 'client');
   is((yield clientQueue.waitForEvent()).type, 'open', 'got open event');
 
@@ -377,8 +375,8 @@ function* test_basics() {
   listeningServer.close();
 
   // - try and connect, get an error
-  clientSocket = createSocket('127.0.0.1', serverPort,
-                              { binaryType: 'arraybuffer' });
+  clientSocket = new TCPSocket('127.0.0.1', serverPort,
+                               { binaryType: 'arraybuffer' });
   clientQueue = listenForEventsOnSocket(clientSocket, 'client');
   is((yield clientQueue.waitForEvent()).type, 'error', 'fail to connect');
   is(clientSocket.readyState, 'closed',

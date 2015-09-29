@@ -4,8 +4,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 [Constructor(DOMString type, optional TCPServerSocketEventInit eventInitDict),
- Func="mozilla::dom::TCPSocket::ShouldTCPSocketExist",
- Exposed=(Window,System)]
+ Pref="dom.mozTCPSocket.enabled",
+ CheckAnyPermissions="tcp-socket",
+ Exposed=Window]
 interface TCPServerSocketEvent : Event {
   readonly attribute TCPSocket socket;
 };
