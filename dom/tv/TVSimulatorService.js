@@ -24,7 +24,7 @@ function TVSimulatorService() {
 }
 
 TVSimulatorService.prototype = {
-  classID: Components.ID("{f0ab9850-24b4-4f5d-83dd-0fea0c249ca1}"),
+  classID: Components.ID("{94b065ad-d45a-436a-b394-6dabc3cf110f}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsITVSimulatorService,
                                          Ci.nsITVService,
                                          Ci.nsITimerCallback]),
@@ -36,14 +36,10 @@ TVSimulatorService.prototype = {
 
     // Load the setting file from local JSON file.
     // Synchrhronous File Reading.
-    let dsFile = Cc["@mozilla.org/file/directory_service;1"]
-                   .getService(Ci.nsIProperties)
-                   .get("ProfD", Ci.nsIFile);
-    dsFile.append(TV_SIMULATOR_DUMMY_DIRECTORY);
-    dsFile.append(TV_SIMULATOR_DUMMY_FILE);
     let file = Cc["@mozilla.org/file/local;1"]
                  .createInstance(Ci.nsILocalFile);
-    file.initWithPath(dsFile.path);
+
+    file.initWithPath(this._getFilePath(TV_SIMULATOR_DUMMY_FILE));
 
     let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
                     .createInstance(Ci.nsIFileInputStream);
@@ -97,7 +93,7 @@ TVSimulatorService.prototype = {
        *          "number" :            The LCN (Logical Channel Number) of the channel,
        *          "isEmergency" :       Whether this channel is emergency status,
        *          "isFree":             Whether this channel is free or not,
-       *          "videoFilePath":      "The path of the fake movie file",
+       *          "videoFilePath":      "The path of the fake video file",
        *          "programs":[{
        *            "eventId":          "The ID of this program event",
        *            "title" :           "This program's title",
@@ -222,8 +218,6 @@ TVSimulatorService.prototype = {
     if (!wrapTunerData) {
       return aCallback.notifyError(Ci.nsITVServiceCallback.TV_ERROR_FAILURE);
     }
-
-    // Bug 1180589 : We should change video source.
     return aCallback.notifySuccess(null);
   },
 
@@ -399,13 +393,24 @@ TVSimulatorService.prototype = {
       return this._sourceListener;
   },
 
-  getSimulatorVideoFilePath: function TVSimGetSimulatorVideoFilePath(aTunerId, aSourceType, aChannelNumber) {
+  getSimulatorVideoBlobURL: function TVSimGetSimulatorVideoBlob(aTunerId,
+                                                                aSourceType,
+                                                                aChannelNumber,
+                                                                aWin) {
     let wrapTunerData = this._getWrapTunerData(aTunerId, aSourceType);
-    if (!wrapTunerData || !wrapTunerData.channels || wrapTunerData.channels.size <= 0) {
-      return null;
+    if (!wrapTunerData || !wrapTunerData.channels) {
+      return "";
     }
 
-    return wrapTunerData.channels.get(aChannelNumber).videoFilePath;
+    let wrapChannelData = wrapTunerData.channels.get(aChannelNumber);
+    if (!wrapChannelData) {
+      return "";
+    }
+
+    let videoFile = new File(this._getFilePath(wrapChannelData.videoFilePath));
+    let videoBlobURL = aWin.URL.createObjectURL(videoFile);
+
+    return videoBlobURL;
   },
 
   _getTunerMapKey: function TVSimGetTunerMapKey(aTunerId, aSourceType) {
@@ -417,7 +422,17 @@ TVSimulatorService.prototype = {
       return null;
     }
     return this._internalTuners.get(this._getTunerMapKey(aTunerId, aSourceType));
-  }
+  },
+
+  _getFilePath: function TVSimGetFilePathFromDummyDirectory(fileName) {
+    let dsFile = Cc["@mozilla.org/file/directory_service;1"]
+                   .getService(Ci.nsIProperties)
+                   .get("ProfD", Ci.nsIFile);
+    dsFile.append(TV_SIMULATOR_DUMMY_DIRECTORY);
+    dsFile.append(fileName);
+
+    return dsFile.path;
+  },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TVSimulatorService]);
