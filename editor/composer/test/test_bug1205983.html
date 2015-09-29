@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1205983
+-->
+<head>
+  <title>Test for Bug 1205983</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1205983">Mozilla Bug 1205983</a>
+<p id="display"></p>
+</div>
+
+<div contenteditable id="de-DE" lang="de-DE" onfocus="deFocus()">German heute ist ein guter Tag</div>
+<textarea id="en-US" lang="en-US" onfocus="enFocus()">Nogoodword today is a nice day</textarea>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function getMisspelledWords(editor) {
+  return editor.selectionController.getSelection(Components.interfaces.nsISelectionController.SELECTION_SPELLCHECK).toString();
+}
+
+var elem_de;
+var editor_de;
+var selcon_de;
+var de_DE;
+var hunspell;
+
+/** Test for Bug 1205983 **/
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  Components.utils.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm");
+
+  var dir = Components.classes["@mozilla.org/file/directory_service;1"]
+                      .getService(Components.interfaces.nsIProperties)
+                      .get("CurWorkD", Components.interfaces.nsIFile);
+  dir.append("tests");
+  dir.append("editor");
+  dir.append("composer");
+  dir.append("test");
+
+  hunspell = Components.classes["@mozilla.org/spellchecker/engine;1"]
+                       .getService(Components.interfaces.mozISpellCheckingEngine);
+
+  // Install de-DE dictionary.
+  de_DE = dir.clone();
+  de_DE.append("de-DE");
+  is(de_DE.exists(), true, "true expected (de_DE directory should exist)");
+  hunspell.addDirectory(de_DE);
+
+  document.getElementById('de-DE').focus();
+});
+
+function deFocus() {
+  elem_de = document.getElementById('de-DE');
+
+  onSpellCheck(elem_de, function () {
+    var Ci = Components.interfaces;
+    var editingSession = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIWebNavigation)
+                               .QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIEditingSession);
+    editor_de = editingSession.getEditorForWindow(window);
+    selcon_de = editor_de.selectionController;
+    var sel = selcon_de.getSelection(selcon_de.SELECTION_SPELLCHECK);
+
+    // Check that we spelled in German, so there is only one misspelled word.
+    is(sel.toString(), "German", "one misspelled word expected: German");
+
+    // Now focus the textarea, which requires English spelling.
+    document.getElementById('en-US').focus();
+  });
+}
+
+function enFocus() {
+  var elem_en = document.getElementById('en-US');
+  var editor_en = elem_en.QueryInterface(Components.interfaces.nsIDOMNSEditableElement).editor;
+  editor_en.setSpellcheckUserOverride(true);
+  var inlineSpellChecker = editor_en.getInlineSpellChecker(true);
+
+  onSpellCheck(elem_en, function () {
+    var spellchecker = inlineSpellChecker.spellChecker;
+    try {
+      currentDictonary = spellchecker.GetCurrentDictionary();
+    } catch(e) {}
+
+    // Check that the English dictionary is loaded and that the spell check has worked.
+    is(currentDictonary, "en-US", "expected en-US");
+    is(getMisspelledWords(editor_en), "Nogoodword", "one misspelled word expected: Nogoodword");
+
+    // So far all was boring. The important thing is whether the spell check result
+    // in the de-DE editor is still the same. After losing focus, no spell check
+    // updates should take place there.
+    var sel = selcon_de.getSelection(selcon_de.SELECTION_SPELLCHECK);
+    is(sel.toString(), "German", "one misspelled word expected: German");
+
+    // Remove the fake de_DE dictionary again.
+    hunspell.removeDirectory(de_DE);
+
+    // Focus again, so the spelling gets updated, but before we need to kill the focus handler.
+    elem_de.onfocus = null;
+    elem_de.blur();
+    elem_de.focus();
+
+    // After removal, the de_DE editor should refresh the spelling with en-US.
+    onSpellCheck(elem_de, function () {
+      var sel = selcon_de.getSelection(selcon_de.SELECTION_SPELLCHECK);
+      is(sel.toString(), "heute" + "ist" + "ein" + "guter",
+         "some misspelled words expected: heute ist ein guter");
+
+      // If we don't reset this, we cause massive leaks.
+      selcon_de = null;
+      editor_de = null;
+
+      SimpleTest.finish();
+    });
+  });
+}
+
+</script>
+</pre>
+</body>
+</html>
