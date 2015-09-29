@@ -172,25 +172,13 @@
     // Test
     ////////////////////////////////////////////////////////////////////////////
 
-    gA11yEventDumpToConsole = true;
-    enableLogging("tree"); // debug stuff
+    //gA11yEventDumpToConsole = true;
+    //enableLogging("tree"); // debug stuff
 
     var gQueue = null;
 
     function doTest()
     {
-      // nested and recursive aria-owns
-      var tree =
-        { SECTION: [ // container
-          { SECTION: [ // child
-            { SECTION: [ // mid div
-              { SECTION: [] } // grandchild
-            ] }
-          ] }
-        ] };
-      testAccessibleTree("container", tree);
-
-      // dynamic tests
       gQueue = new eventQueue();
 
       gQueue.push(new removeARIAOwns());
@@ -213,12 +201,6 @@
   <div id="content" style="display: none"></div>
   <pre id="test">
   </pre>
-
-  <div id="container" aria-owns="child" aria-label="container"></div>
-  <div id="child" aria-label="child">
-    <div aria-owns="grandchild" aria-label="midchild"></div>
-  </div>
-  <div id="grandchild" aria-owns="container" aria-label="grandchild"></div>
 
   <div id="container2" aria-owns="t2_checkbox t2_button">
     <div role="button" id="t2_button"></div>
