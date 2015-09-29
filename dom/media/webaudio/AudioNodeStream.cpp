@@ -617,7 +617,7 @@ AudioNodeStream::ProduceOutputBeforeInput(GraphTime aFrom)
   if (!mIsActive) {
     mLastChunks[0].SetNull(WEBAUDIO_BLOCK_SIZE);
   } else {
-    mEngine->ProduceBlockBeforeInput(aFrom, &mLastChunks[0]);
+    mEngine->ProduceBlockBeforeInput(this, aFrom, &mLastChunks[0]);
     NS_ASSERTION(mLastChunks[0].GetDuration() == WEBAUDIO_BLOCK_SIZE,
                  "Invalid WebAudio chunk size");
     if (mDisabledTrackIDs.Contains(static_cast<TrackID>(AUDIO_TRACK))) {
