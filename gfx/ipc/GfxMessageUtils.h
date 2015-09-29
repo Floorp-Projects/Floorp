@@ -892,51 +892,6 @@ struct ParamTraits<mozilla::layers::EventRegions>
   }
 };
 
-struct MessageAndAttributeMap
-{
-  Message* msg;
-  const mozilla::gfx::AttributeMap& map;
-};
-
-static bool
-WriteAttribute(mozilla::gfx::AttributeName aName,
-               mozilla::gfx::AttributeType aType,
-               void* aUserData)
-{
-  MessageAndAttributeMap* msgAndMap =
-    static_cast<MessageAndAttributeMap*>(aUserData);
-
-  WriteParam(msgAndMap->msg, aType);
-  WriteParam(msgAndMap->msg, aName);
-
-  switch (aType) {
-
-#define HANDLE_TYPE(typeName)                                          \
-    case mozilla::gfx::AttributeType::e##typeName:                     \
-      WriteParam(msgAndMap->msg, msgAndMap->map.Get##typeName(aName)); \
-      break;
-
-    HANDLE_TYPE(Bool)
-    HANDLE_TYPE(Uint)
-    HANDLE_TYPE(Float)
-    HANDLE_TYPE(Size)
-    HANDLE_TYPE(IntSize)
-    HANDLE_TYPE(IntPoint)
-    HANDLE_TYPE(Matrix)
-    HANDLE_TYPE(Matrix5x4)
-    HANDLE_TYPE(Point3D)
-    HANDLE_TYPE(Color)
-    HANDLE_TYPE(AttributeMap)
-    HANDLE_TYPE(Floats)
-
-#undef HANDLE_TYPE
-
-    default:
-      MOZ_CRASH("unhandled attribute type");
-  }
-  return true;
-}
-
 template <>
 struct ParamTraits<mozilla::gfx::AttributeMap>
 {
@@ -945,8 +900,41 @@ struct ParamTraits<mozilla::gfx::AttributeMap>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, aParam.Count());
-    MessageAndAttributeMap msgAndMap = { aMsg, aParam };
-    aParam.EnumerateRead(WriteAttribute, &msgAndMap);
+    for (auto iter = aParam.ConstIter(); !iter.Done(); iter.Next()) {
+      mozilla::gfx::AttributeName name =
+        mozilla::gfx::AttributeName(iter.Key());
+      mozilla::gfx::AttributeType type =
+        mozilla::gfx::AttributeMap::GetType(iter.UserData());
+
+      WriteParam(aMsg, type);
+      WriteParam(aMsg, name);
+
+      switch (type) {
+
+#define CASE_TYPE(typeName)                                          \
+    case mozilla::gfx::AttributeType::e##typeName:                     \
+      WriteParam(aMsg, aParam.Get##typeName(name)); \
+      break;
+
+    CASE_TYPE(Bool)
+    CASE_TYPE(Uint)
+    CASE_TYPE(Float)
+    CASE_TYPE(Size)
+    CASE_TYPE(IntSize)
+    CASE_TYPE(IntPoint)
+    CASE_TYPE(Matrix)
+    CASE_TYPE(Matrix5x4)
+    CASE_TYPE(Point3D)
+    CASE_TYPE(Color)
+    CASE_TYPE(AttributeMap)
+    CASE_TYPE(Floats)
+
+#undef CASE_TYPE
+
+        default:
+          MOZ_CRASH("unhandled attribute type");
+      }
+    }
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
