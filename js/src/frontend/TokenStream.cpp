@@ -772,7 +772,10 @@ TokenStream::reportAsmJSError(uint32_t offset, unsigned errorNumber, ...)
 {
     va_list args;
     va_start(args, errorNumber);
-    reportCompileErrorNumberVA(offset, JSREPORT_WARNING, errorNumber, args);
+    unsigned flags = options().throwOnAsmJSValidationFailureOption
+                     ? JSREPORT_ERROR
+                     : JSREPORT_WARNING;
+    reportCompileErrorNumberVA(offset, flags, errorNumber, args);
     va_end(args);
 }
 

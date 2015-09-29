@@ -576,6 +576,7 @@ function executeScript(msg, directInject) {
 
   asyncTestCommandId = msg.json.command_id;
   let script = msg.json.script;
+  let filename = msg.json.filename;
   sandboxName = msg.json.sandboxName;
 
   if (msg.json.newSandbox ||
@@ -602,7 +603,7 @@ function executeScript(msg, directInject) {
         stream.close();
         script = data + script;
       }
-      let res = Cu.evalInSandbox(script, sandbox, "1.8", "dummy file" ,0);
+      let res = Cu.evalInSandbox(script, sandbox, "1.8", filename ? filename : "dummy file" ,0);
       sendSyncMessage("Marionette:shareData",
                       {log: elementManager.wrapValue(marionetteLogObj.getLogs())});
       marionetteLogObj.clearLogs();
@@ -633,7 +634,7 @@ function executeScript(msg, directInject) {
         stream.close();
         script = data + script;
       }
-      let res = Cu.evalInSandbox(script, sandbox, "1.8", "dummy file", 0);
+      let res = Cu.evalInSandbox(script, sandbox, "1.8", filename ? filename : "dummy file", 0);
       sendSyncMessage("Marionette:shareData",
                       {log: elementManager.wrapValue(marionetteLogObj.getLogs())});
       marionetteLogObj.clearLogs();
@@ -724,6 +725,7 @@ function executeWithCallback(msg, useFinish) {
   }
 
   let script = msg.json.script;
+  let filename = msg.json.filename;
   asyncTestCommandId = msg.json.command_id;
   sandboxName = msg.json.sandboxName;
 
@@ -788,7 +790,7 @@ function executeWithCallback(msg, useFinish) {
       stream.close();
       scriptSrc = data + scriptSrc;
     }
-    Cu.evalInSandbox(scriptSrc, sandbox, "1.8", "dummy file", 0);
+    Cu.evalInSandbox(scriptSrc, sandbox, "1.8", filename ? filename : "dummy file", 0);
   } catch (e) {
     let err = new JavaScriptError(
         e,

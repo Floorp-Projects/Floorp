@@ -14,8 +14,6 @@
 #include "Layers.h"
 #include "GLContext.h"
 
-struct gfxRGBA;
-
 namespace mozilla {
 namespace layers {
 

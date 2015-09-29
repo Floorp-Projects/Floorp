@@ -8,9 +8,8 @@
 
 #include <stdint.h>                     // for uint64_t
 #include "Layers.h"                     // for Layer, etc
-#include "gfxColor.h"                   // for gfxRGBA
-#include "mozilla/gfx/Rect.h"                    // for gfxRect
-#include "mozilla/gfx/Point.h"                    // for gfxRect
+#include "mozilla/gfx/Rect.h"           // for gfxRect
+#include "mozilla/gfx/Point.h"          // for IntPoint
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsAutoPtr.h"                  // for nsAutoPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed

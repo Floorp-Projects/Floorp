@@ -62,9 +62,9 @@ this.Observers = {
     // we can make it.  We could index by topic, but we can't index by callback
     // or thisObject, as far as I know, since the keys to JavaScript hashes
     // (a.k.a. objects) can apparently only be primitive values.
-    let [observer] = this._cache.filter(function(v) v.topic      == topic    &&
-                                                    v.callback   == callback &&
-                                                    v.thisObject == thisObject);
+    let [observer] = this._cache.filter(v => v.topic      == topic    &&
+                                             v.callback   == callback &&
+                                             v.thisObject == thisObject);
     if (observer) {
       this._service.removeObserver(observer, topic);
       this._cache.splice(this._cache.indexOf(observer), 1);

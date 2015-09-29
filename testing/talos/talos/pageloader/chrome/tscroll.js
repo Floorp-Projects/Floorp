@@ -1,5 +1,5 @@
 // Note: The content from here upto '// End scroll test' is duplicated at:
-//       - talos/page_load_test/scroll/scroll-test.js
+//       - talos/tests/scroll/scroll-test.js
 //       - inside talos/pageloader/chrome/tscroll.js
 //
 // - Please keep these copies in sync.

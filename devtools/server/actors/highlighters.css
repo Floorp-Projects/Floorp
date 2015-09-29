@@ -273,3 +273,62 @@
   transform: rotate(-90deg);
   text-anchor: end;
 }
+
+/* Measuring Tool highlighter */
+
+:-moz-native-anonymous .measuring-tool-highlighter-root {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: auto;
+  cursor: crosshair;
+}
+
+:-moz-native-anonymous .measuring-tool-highlighter-root path {
+  shape-rendering: crispEdges;
+  fill: rgba(135, 206, 235, 0.6);
+  stroke: #08c;
+  pointer-events: none;
+}
+
+:-moz-native-anonymous .dragging path {
+  fill: rgba(135, 206, 235, 0.6);
+  stroke: #08c;
+  opacity: 0.45;
+}
+
+:-moz-native-anonymous .measuring-tool-highlighter-label-size,
+:-moz-native-anonymous .measuring-tool-highlighter-label-position {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-block;
+  border-radius: 4px;
+  padding: 4px;
+  white-space: pre-line;
+  font: message-box;
+  font-size: 10px;
+  pointer-events: none;
+  -moz-user-select: none;
+  box-sizing: border-box;
+}
+
+:-moz-native-anonymous .measuring-tool-highlighter-label-position {
+  color: #fff;
+  background: hsla(214, 13%, 24%, 0.8);
+}
+
+:-moz-native-anonymous .measuring-tool-highlighter-label-size {
+  color: hsl(216, 33%, 97%);
+  background: hsl(214, 13%, 24%);
+  line-height: 1.5em;
+}
+
+:-moz-native-anonymous .measuring-tool-highlighter-guide-top,
+:-moz-native-anonymous .measuring-tool-highlighter-guide-right,
+:-moz-native-anonymous .measuring-tool-highlighter-guide-bottom,
+:-moz-native-anonymous .measuring-tool-highlighter-guide-left {
+  stroke: #08c;
+  stroke-dasharray: 5 3;
+  shape-rendering: crispEdges;
+}

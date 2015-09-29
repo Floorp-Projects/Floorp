@@ -425,14 +425,15 @@ StructuredCloneHelper::ReadFullySerializableObjects(JSContext* aCx,
     } else if (aTag == SCTAG_DOM_NULL_PRINCIPAL) {
       info = mozilla::ipc::NullPrincipalInfo();
     } else {
-      uint32_t suffixLength, specLength;
-      if (!JS_ReadUint32Pair(aReader, &suffixLength, &specLength)) {
+      uint32_t appId = aIndex;
+
+      uint32_t isInBrowserElement, specLength;
+      if (!JS_ReadUint32Pair(aReader, &isInBrowserElement, &specLength)) {
         return nullptr;
       }
 
-      nsAutoCString suffix;
-      suffix.SetLength(suffixLength);
-      if (!JS_ReadBytes(aReader, suffix.BeginWriting(), suffixLength)) {
+      uint32_t signedPkgLength, dummy;
+      if (!JS_ReadUint32Pair(aReader, &signedPkgLength, &dummy)) {
         return nullptr;
       }
 
@@ -442,9 +443,14 @@ StructuredCloneHelper::ReadFullySerializableObjects(JSContext* aCx,
         return nullptr;
       }
 
-      OriginAttributes attrs;
-      attrs.PopulateFromSuffix(suffix);
-      info = mozilla::ipc::ContentPrincipalInfo(attrs, spec);
+      nsAutoCString signedPkg;
+      signedPkg.SetLength(signedPkgLength);
+      if (!JS_ReadBytes(aReader, signedPkg.BeginWriting(), signedPkgLength)) {
+        return nullptr;
+      }
+
+      info = mozilla::ipc::ContentPrincipalInfo(appId, isInBrowserElement,
+                                                spec, signedPkg);
     }
 
     nsresult rv;
@@ -571,12 +577,13 @@ StructuredCloneHelper::WriteFullySerializableObjects(JSContext* aCx,
 
       MOZ_ASSERT(info.type() == mozilla::ipc::PrincipalInfo::TContentPrincipalInfo);
       const mozilla::ipc::ContentPrincipalInfo& cInfo = info;
-      nsAutoCString suffix;
-      cInfo.attrs().CreateSuffix(suffix);
-      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_CONTENT_PRINCIPAL, 0) &&
-             JS_WriteUint32Pair(aWriter, suffix.Length(), cInfo.spec().Length()) &&
-             JS_WriteBytes(aWriter, suffix.get(), suffix.Length()) &&
-             JS_WriteBytes(aWriter, cInfo.spec().get(), cInfo.spec().Length());
+      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_CONTENT_PRINCIPAL,
+                                cInfo.appId()) &&
+             JS_WriteUint32Pair(aWriter, cInfo.isInBrowserElement(),
+                                cInfo.spec().Length()) &&
+             JS_WriteUint32Pair(aWriter, cInfo.signedPkg().Length(), 0) &&
+             JS_WriteBytes(aWriter, cInfo.spec().get(), cInfo.spec().Length()) &&
+             JS_WriteBytes(aWriter, cInfo.signedPkg().get(), cInfo.signedPkg().Length());
     }
   }
 

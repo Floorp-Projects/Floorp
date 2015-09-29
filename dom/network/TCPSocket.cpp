@@ -493,7 +493,7 @@ TCPSocket::FireEvent(const nsAString& aType)
   }
 
   AutoJSAPI api;
-  if (NS_WARN_IF(!api.Init(GetOwner()))) {
+  if (NS_WARN_IF(!api.Init(GetOwnerGlobal()))) {
     return NS_ERROR_FAILURE;
   }
   JS::Rooted<JS::Value> val(api.cx());
@@ -505,7 +505,7 @@ TCPSocket::FireDataArrayEvent(const nsAString& aType,
                               const InfallibleTArray<uint8_t>& buffer)
 {
   AutoJSAPI api;
-  if (NS_WARN_IF(!api.Init(GetOwner()))) {
+  if (NS_WARN_IF(!api.Init(GetOwnerGlobal()))) {
     return NS_ERROR_FAILURE;
   }
   JSContext* cx = api.cx();
@@ -523,7 +523,7 @@ TCPSocket::FireDataStringEvent(const nsAString& aType,
                                const nsACString& aString)
 {
   AutoJSAPI api;
-  if (NS_WARN_IF(!api.Init(GetOwner()))) {
+  if (NS_WARN_IF(!api.Init(GetOwnerGlobal()))) {
     return NS_ERROR_FAILURE;
   }
   JSContext* cx = api.cx();
@@ -1034,7 +1034,7 @@ TCPSocket::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext, nsIInput
     }
 
     AutoJSAPI api;
-    if (!api.Init(GetOwner())) {
+    if (!api.Init(GetOwnerGlobal())) {
       return NS_ERROR_FAILURE;
     }
     JSContext* cx = api.cx();
@@ -1057,7 +1057,7 @@ TCPSocket::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext, nsIInput
   }
 
   AutoJSAPI api;
-  if (!api.Init(GetOwner())) {
+  if (!api.Init(GetOwnerGlobal())) {
     return NS_ERROR_FAILURE;
   }
   JSContext* cx = api.cx();
@@ -1188,4 +1188,18 @@ TCPSocket::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aD
   }
 
   return NS_OK;
+}
+
+/* static */
+bool
+TCPSocket::ShouldTCPSocketExist(JSContext* aCx, JSObject* aGlobal)
+{
+  JS::Rooted<JSObject*> global(aCx, aGlobal);
+  if (nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(global))) {
+    return true;
+  }
+
+  const char* const perms[] = { "tcp-socket", nullptr };
+  return Preferences::GetBool("dom.mozTCPSocket.enabled") &&
+      CheckAnyPermissions(aCx, global, perms);
 }

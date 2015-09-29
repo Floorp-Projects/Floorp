@@ -54,7 +54,6 @@
 #include "ImageContainer.h"
 #include "mozilla/Telemetry.h"
 #include "gfxUtils.h"
-#include "gfxColor.h"
 #include "gfxGradientCache.h"
 #include "GraphicsFilter.h"
 #include "nsInlineFrame.h"
