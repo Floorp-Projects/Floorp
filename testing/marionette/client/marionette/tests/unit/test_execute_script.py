@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import urllib
+import os
 
 from marionette_driver import By, errors
 from marionette.marionette_test import MarionetteTestCase, skip_if_b2g
@@ -16,7 +17,18 @@ elements = inline("<p>foo</p> <p>bar</p>")
 
 
 class TestExecuteContent(MarionetteTestCase):
-    def test_stack_trace(self):
+    def test_execute_js_script_stack_trace(self):
+        try:
+            self.marionette.execute_js_script("""
+                let a = 1;
+                throwHere();
+                """, filename="file.js")
+            self.assertFalse(True)
+        except errors.JavascriptException as inst:
+            self.assertIn('throwHere is not defined', inst.msg)
+            self.assertIn('@file.js:2', inst.stacktrace)
+
+    def test_execute_script_stack_trace(self):
         try:
             self.marionette.execute_script("""
                 let a = 1;
@@ -24,7 +36,10 @@ class TestExecuteContent(MarionetteTestCase):
                 """)
             self.assertFalse(True)
         except errors.JavascriptException as inst:
-            self.assertTrue('return b' in inst.stacktrace)
+            # By default execute_script pass the name of the python file
+            self.assertIn(os.path.basename(__file__.replace(".pyc", ".py")), inst.stacktrace)
+            self.assertIn('b is not defined', inst.msg)
+            self.assertIn('return b', inst.stacktrace)
 
     def test_execute_simple(self):
         self.assertEqual(1, self.marionette.execute_script("return 1;"))

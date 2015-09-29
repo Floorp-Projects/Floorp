@@ -114,6 +114,7 @@ nsScriptLoadRequestList::Contains(nsScriptLoadRequest* aElem)
 nsScriptLoader::nsScriptLoader(nsIDocument *aDocument)
   : mDocument(aDocument),
     mBlockerCount(0),
+    mNumberOfProcessors(0),
     mEnabled(true),
     mDeferEnabled(false),
     mDocumentParsingDone(false),
@@ -1503,6 +1504,18 @@ nsScriptLoader::ContinueParserAsync(nsScriptLoadRequest* aParserBlockingRequest)
   aParserBlockingRequest->mElement->ContinueParserAsync();
 }
 
+uint32_t
+nsScriptLoader::NumberOfProcessors()
+{
+  if (mNumberOfProcessors > 0)
+    return mNumberOfProcessors;
+
+  int32_t numProcs = PR_GetNumberOfProcessors();
+  if (numProcs > 0)
+    mNumberOfProcessors = numProcs;
+  return mNumberOfProcessors;
+}
+
 nsresult
 nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
                                      nsIStreamLoader* aLoader,
@@ -1589,7 +1602,7 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
   aRequest->mProgress = nsScriptLoadRequest::Progress_DoneLoading;
 
   // If this is currently blocking the parser, attempt to compile it off-main-thread.
-  if (aRequest == mParserBlockingRequest && (PR_GetNumberOfProcessors() > 1)) {
+  if (aRequest == mParserBlockingRequest && (NumberOfProcessors() > 1)) {
     nsresult rv = AttemptAsyncScriptCompile(aRequest);
     if (rv == NS_OK) {
       NS_ASSERTION(aRequest->mProgress == nsScriptLoadRequest::Progress_Compiling,

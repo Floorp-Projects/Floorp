@@ -12,8 +12,8 @@ import sys
 import time
 import traceback
 import urllib
-import urlparse
 import utils
+import mozhttpd
 
 from talos.results import TalosResults
 from talos.ttest import TTest
@@ -68,28 +68,10 @@ def buildCommandLine(test):
 
 def setup_webserver(webserver):
     """use mozhttpd to setup a webserver"""
+    logging.info("starting webserver on %r" % webserver)
 
-    scheme = "http://"
-    if (webserver.startswith('http://') or
-        webserver.startswith('chrome://') or
-        webserver.startswith('file:///')):  # noqa
-
-        scheme = ""
-    elif '://' in webserver:
-        print "Unable to parse user defined webserver: '%s'" % (webserver)
-        sys.exit(2)
-
-    url = urlparse.urlparse('%s%s' % (scheme, webserver))
-    port = url.port
-
-    if port:
-        import mozhttpd
-        return mozhttpd.MozHttpd(host=url.hostname, port=int(port),
-                                 docroot=here)
-    else:
-        print ("WARNING: unable to start web server without custom port"
-               " configured")
-        return None
+    host, port = webserver.split(':')
+    return mozhttpd.MozHttpd(host=host, port=int(port), docroot=here)
 
 
 def run_tests(config, browser_config):
@@ -120,6 +102,8 @@ def run_tests(config, browser_config):
         test['cleanup'] = utils.interpolate(test['cleanup'])
 
     # pass --no-remote to firefox launch, if --develop is specified
+    # we do that to allow locally the user to have another running firefox
+    # instance
     if browser_config['develop']:
         browser_config['extra_args'] = '--no-remote'
 
@@ -195,51 +179,40 @@ def run_tests(config, browser_config):
         )
     talos_results.check_output_formats(results_urls)
 
-    # setup a webserver, if --develop is specified
-    httpd = None
-    if browser_config['develop']:
-        httpd = setup_webserver(browser_config['webserver'])
-        if httpd:
-            httpd.start()
+    httpd = setup_webserver(browser_config['webserver'])
+    httpd.start()
 
-    # run the tests
-    timer = utils.Timer()
-    logging.info("Starting test suite %s", title)
-    for test in tests:
-        testname = test['name']
-        testtimer = utils.Timer()
-        logging.info("Starting test %s", testname)
+    testname = None
+    try:
+        # run the tests
+        timer = utils.Timer()
+        logging.info("Starting test suite %s", title)
+        for test in tests:
+            testname = test['name']
+            testtimer = utils.Timer()
+            logging.info("Starting test %s", testname)
 
-        try:
             mytest = TTest()
-            if mytest:
-                talos_results.add(mytest.runTest(browser_config, test))
-            else:
-                logging.error("Error found while running %s", testname)
-        except TalosRegression:
-            logging.error("Detected a regression for %s", testname)
-            if httpd:
-                httpd.stop()
-            # by returning 1, we report an orange to buildbot
-            # http://docs.buildbot.net/latest/developer/results.html
-            return 1
-        except (TalosCrash, TalosError):
-            # NOTE: if we get into this condition, talos has an internal
-            # problem and cannot continue
-            #       this will prevent future tests from running
-            traceback.print_exception(*sys.exc_info())
-            if httpd:
-                httpd.stop()
-            # indicate a failure to buildbot, turn the job red
-            return 2
+            talos_results.add(mytest.runTest(browser_config, test))
 
-        logging.info("Completed test %s (%s)", testname, testtimer.elapsed())
+            logging.info("Completed test %s (%s)", testname, testtimer.elapsed())
+
+    except TalosRegression:
+        logging.error("Detected a regression for %s", testname)
+        # by returning 1, we report an orange to buildbot
+        # http://docs.buildbot.net/latest/developer/results.html
+        return 1
+    except (TalosCrash, TalosError):
+        # NOTE: if we get into this condition, talos has an internal
+        # problem and cannot continue
+        #       this will prevent future tests from running
+        traceback.print_exception(*sys.exc_info())
+        # indicate a failure to buildbot, turn the job red
+        return 2
+    finally:
+        httpd.stop()
 
     logging.info("Completed test suite (%s)", timer.elapsed())
-
-    # stop the webserver if running
-    if httpd:
-        httpd.stop()
 
     # output results
     if results_urls:

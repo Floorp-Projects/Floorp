@@ -13,7 +13,6 @@
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/2D.h"
-#include "gfxColor.h"
 
 namespace mozilla {
 namespace gfx {
@@ -32,17 +31,6 @@ inline RectDouble ToRectDouble(const gfxRect &aRect)
 inline Rect ToRect(const IntRect &aRect)
 {
   return Rect(aRect.x, aRect.y, aRect.width, aRect.height);
-}
-
-inline Color ToColor(const gfxRGBA &aRGBA)
-{
-  return Color(Float(aRGBA.r), Float(aRGBA.g),
-               Float(aRGBA.b), Float(aRGBA.a));
-}
-
-inline gfxRGBA ThebesColor(const Color &aColor)
-{
-  return gfxRGBA(aColor.r, aColor.g, aColor.b, aColor.a);
 }
 
 inline Matrix ToMatrix(const gfxMatrix &aMatrix)
@@ -136,11 +124,6 @@ inline gfxRect ThebesRect(const Rect &aRect)
 inline gfxRect ThebesRect(const RectDouble &aRect)
 {
   return gfxRect(aRect.x, aRect.y, aRect.width, aRect.height);
-}
-
-inline gfxRGBA ThebesRGBA(const Color &aColor)
-{
-  return gfxRGBA(aColor.r, aColor.g, aColor.b, aColor.a);
 }
 
 inline gfxImageFormat SurfaceFormatToImageFormat(SurfaceFormat aFormat)

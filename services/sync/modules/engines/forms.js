@@ -109,7 +109,9 @@ FormEngine.prototype = {
 
   syncPriority: 6,
 
-  get prefName() "history",
+  get prefName() {
+    return "history";
+  },
 
   _findDupe: function _findDupe(item) {
     return FormWrapper.getGUID(item.name, item.value);

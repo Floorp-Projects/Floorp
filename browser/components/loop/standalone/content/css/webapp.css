@@ -184,6 +184,14 @@ html[dir="rtl"] .rooms-footer .footer-logo {
   margin: 2rem auto;
 }
 
+.handle-user-agent-view > .info-panel > .failure {
+  color: red;
+  font-weight: bold;
+  /* Add padding to match the height of the button. */
+  padding: 1.15rem 0;
+  margin: 0;
+}
+
 .handle-user-agent-view > .info-panel > button {
   width: 80%;
   height: 4rem;

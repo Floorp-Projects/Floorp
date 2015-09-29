@@ -79,7 +79,9 @@ Sync11Service.prototype = {
   metaURL: null,
   cryptoKeyURL: null,
 
-  get serverURL() Svc.Prefs.get("serverURL"),
+  get serverURL() {
+    return Svc.Prefs.get("serverURL");
+  },
   set serverURL(value) {
     if (!value.endsWith("/")) {
       value += "/";
@@ -94,7 +96,9 @@ Sync11Service.prototype = {
     Svc.Prefs.reset("clusterURL");
   },
 
-  get clusterURL() Svc.Prefs.get("clusterURL", ""),
+  get clusterURL() {
+    return Svc.Prefs.get("clusterURL", "");
+  },
   set clusterURL(value) {
     Svc.Prefs.set("clusterURL", value);
     this._updateCachedURLs();

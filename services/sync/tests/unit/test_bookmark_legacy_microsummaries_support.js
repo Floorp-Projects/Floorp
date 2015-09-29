@@ -85,12 +85,12 @@ function run_test() {
   do_check_eq(PlacesUtils.bookmarks.getKeywordForBookmark(id), null);
 
   do_check_throws(
-    function () PlacesUtils.annotations.getItemAnnotation(id, GENERATORURI_ANNO),
+    () => PlacesUtils.annotations.getItemAnnotation(id, GENERATORURI_ANNO),
     Cr.NS_ERROR_NOT_AVAILABLE
   );
 
   do_check_throws(
-    function () PlacesUtils.annotations.getItemAnnotation(id, STATICTITLE_ANNO),
+    () => PlacesUtils.annotations.getItemAnnotation(id, STATICTITLE_ANNO),
     Cr.NS_ERROR_NOT_AVAILABLE
   );
 

@@ -60,7 +60,7 @@ add_test(function v4_upgrade() {
                           }]}]};
     delete Svc.Session;
     Svc.Session = {
-      getBrowserState: function () JSON.stringify(myTabs)
+      getBrowserState: () => JSON.stringify(myTabs)
     };
 
     Service.status.resetSync();
@@ -229,7 +229,7 @@ add_test(function v5_upgrade() {
                           }]}]};
     delete Svc.Session;
     Svc.Session = {
-      getBrowserState: function () JSON.stringify(myTabs)
+      getBrowserState: () => JSON.stringify(myTabs)
     };
 
     Service.status.resetSync();

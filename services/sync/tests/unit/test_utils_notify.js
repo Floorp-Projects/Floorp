@@ -9,17 +9,21 @@ function run_test() {
       trace: function() {}
     },
 
-    func: function() this.notify("bar", "baz", function() {
-      rightThis = this == obj;
-      didCall = true;
-      return 5;
-    })(),
+    func: function() {
+      return this.notify("bar", "baz", function() {
+        rightThis = this == obj;
+        didCall = true;
+        return 5;
+      })();
+    },
 
-    throwy: function() this.notify("bad", "one", function() {
-      rightThis = this == obj;
-      didCall = true;
-      throw 10;
-    })()
+    throwy: function() {
+      return this.notify("bad", "one", function() {
+        rightThis = this == obj;
+        didCall = true;
+        throw 10;
+      })();
+    }
   };
 
   let state = 0;
