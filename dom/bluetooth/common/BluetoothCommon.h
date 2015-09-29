@@ -910,7 +910,7 @@ struct BluetoothGattWriteParam {
 };
 
 struct BluetoothGattNotifyParam {
-  nsString mBdAddr;
+  BluetoothAddress mBdAddr;
   BluetoothGattServiceId mServiceId;
   BluetoothGattId mCharId;
   uint16_t mLength;
@@ -919,7 +919,7 @@ struct BluetoothGattNotifyParam {
 };
 
 struct BluetoothGattTestParam {
-  nsString mBdAddr;
+  BluetoothAddress mBdAddr;
   BluetoothUuid mUuid;
   uint16_t mU1;
   uint16_t mU2;
