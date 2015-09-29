@@ -13,6 +13,7 @@
 #include "gfxFontUtils.h"
 #include "gfxFontInfoLoader.h"
 #include "gfxFont.h"
+#include "gfxFontConstants.h"
 #include "gfxPlatform.h"
 #include "gfxFontFamilyList.h"
 
@@ -205,6 +206,41 @@ public:
     AddGenericFonts(mozilla::FontFamilyType aGenericType, gfxFontStyle* aStyle,
                     nsTArray<gfxFontFamily*>& aFamilyList);
 
+    // in some situations, need to make decisions about ambiguous characters, may need to look at multiple pref langs
+    void GetLangPrefs(eFontPrefLang aPrefLangs[], uint32_t &aLen, eFontPrefLang aCharLang, eFontPrefLang aPageLang);
+
+    /**
+     * Iterate over pref fonts given a list of lang groups.  For a single lang
+     * group, multiple pref fonts are possible.  If error occurs, returns false,
+     * true otherwise.  Callback returns false to abort process.
+     */
+    typedef bool (*PrefFontCallback) (eFontPrefLang aLang, const nsAString& aName,
+                                        void *aClosure);
+    static bool ForEachPrefFont(eFontPrefLang aLangArray[], uint32_t aLangArrayLen,
+                                  PrefFontCallback aCallback,
+                                  void *aClosure);
+
+    // convert a lang group to enum constant (i.e. "zh-TW" ==> eFontPrefLang_ChineseTW)
+    static eFontPrefLang GetFontPrefLangFor(const char* aLang);
+
+    // convert a lang group atom to enum constant
+    static eFontPrefLang GetFontPrefLangFor(nsIAtom *aLang);
+
+    // convert an enum constant to a lang group atom
+    static nsIAtom* GetLangGroupForPrefLang(eFontPrefLang aLang);
+
+    // convert a enum constant to lang group string (i.e. eFontPrefLang_ChineseTW ==> "zh-TW")
+    static const char* GetPrefLangName(eFontPrefLang aLang);
+
+    // map a Unicode range (based on char code) to a font language for Preferences
+    static eFontPrefLang GetFontPrefLangFor(uint8_t aUnicodeRange);
+
+    // returns true if a pref lang is CJK
+    static bool IsLangCJK(eFontPrefLang aLang);
+
+    // helper method to add a pref lang to an array, if not already in array
+    static void AppendPrefLang(eFontPrefLang aPrefLangs[], uint32_t& aLen, eFontPrefLang aAddLang);
+
 protected:
     class MemoryReporter final : public nsIMemoryReporter
     {
@@ -246,6 +282,9 @@ protected:
     // whether system-based font fallback is used or not
     // if system fallback is used, no need to load all cmaps
     virtual bool UsesSystemFallback() { return false; }
+
+    void AppendCJKPrefLangs(eFontPrefLang aPrefLangs[], uint32_t &aLen,
+                            eFontPrefLang aCharLang, eFontPrefLang aPageLang);
 
     // verifies that a family contains a non-zero font count
     gfxFontFamily* CheckFamily(gfxFontFamily *aFamily);
@@ -373,6 +412,7 @@ protected:
     nsTHashtable<nsPtrHashKey<gfxUserFontSet> > mUserFontSetList;
 
     nsCOMPtr<nsILanguageAtomService> mLangService;
+    nsTArray<uint32_t> mCJKPrefLangs;
 };
 
 #endif /* GFXPLATFORMFONTLIST_H_ */

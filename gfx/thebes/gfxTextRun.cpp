@@ -1543,7 +1543,7 @@ gfxFontGroup::gfxFontGroup(const FontFamilyList& aFontFamilyList,
     , mHyphenWidth(-1)
     , mUserFontSet(aUserFontSet)
     , mTextPerf(aTextPerf)
-    , mPageLang(gfxPlatform::GetFontPrefLangFor(aStyle->language))
+    , mPageLang(gfxPlatformFontList::GetFontPrefLangFor(aStyle->language))
     , mSkipDrawing(false)
     , mSkipUpdateUserFonts(false)
 {
@@ -3043,7 +3043,7 @@ struct PrefFontCallbackData {
         PrefFontCallbackData *prefFontData = static_cast<PrefFontCallbackData*>(aClosure);
 
         // map pref lang to langGroup for language-sensitive lookups
-        nsIAtom* lang = gfxPlatform::GetLangGroupForPrefLang(aLang);
+        nsIAtom* lang = gfxPlatformFontList::GetLangGroupForPrefLang(aLang);
         gfxFontFamily *family =
             gfxPlatformFontList::PlatformFontList()->FindFamily(aName, lang);
         if (family) {
@@ -3060,7 +3060,7 @@ gfxFontGroup::WhichPrefFontSupportsChar(uint32_t aCh)
 
     // get the pref font list if it hasn't been set up already
     uint32_t unicodeRange = FindCharUnicodeRange(aCh);
-    eFontPrefLang charLang = gfxPlatform::GetPlatform()->GetFontPrefLangFor(unicodeRange);
+    eFontPrefLang charLang = gfxPlatformFontList::PlatformFontList()->GetFontPrefLangFor(unicodeRange);
 
     // if the last pref font was the first family in the pref list, no need to recheck through a list of families
     if (mLastPrefFont && charLang == mLastPrefLang &&
@@ -3073,7 +3073,7 @@ gfxFontGroup::WhichPrefFontSupportsChar(uint32_t aCh)
     eFontPrefLang prefLangs[kMaxLenPrefLangList];
     uint32_t i, numLangs = 0;
 
-    gfxPlatform::GetPlatform()->GetLangPrefs(prefLangs, numLangs, charLang, mPageLang);
+    gfxPlatformFontList::PlatformFontList()->GetLangPrefs(prefLangs, numLangs, charLang, mPageLang);
 
     for (i = 0; i < numLangs; i++) {
         nsAutoTArray<nsRefPtr<gfxFontFamily>, 5> families;
@@ -3085,7 +3085,7 @@ gfxFontGroup::WhichPrefFontSupportsChar(uint32_t aCh)
         if (!fontList->GetPrefFontFamilyEntries(currentLang, &families)) {
             eFontPrefLang prefLangsToSearch[1] = { currentLang };
             PrefFontCallbackData prefFontData(families);
-            gfxPlatform::ForEachPrefFont(prefLangsToSearch, 1, PrefFontCallbackData::AddFontFamilyEntry,
+            gfxPlatformFontList::ForEachPrefFont(prefLangsToSearch, 1, PrefFontCallbackData::AddFontFamilyEntry,
                                            &prefFontData);
             fontList->SetPrefFontFamilyEntries(currentLang, families);
         }
