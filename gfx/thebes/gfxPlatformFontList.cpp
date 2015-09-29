@@ -105,6 +105,9 @@ static const char *gPrefLangNames[] = {
     #undef FONT_PREF_LANG
 };
 
+static_assert(MOZ_ARRAY_LENGTH(gPrefLangNames) == uint32_t(eFontPrefLang_Count),
+              "size of pref lang name array doesn't match pref lang enum size");
+
 class gfxFontListPrefObserver final : public nsIObserver {
     ~gfxFontListPrefObserver() {}
 public:
@@ -231,14 +234,7 @@ gfxPlatformFontList::InitFontList()
         mExtraNames->mPostscriptNames.Clear();
     }
     mFaceNameListsInitialized = false;
-    if (mLangGroupPrefFonts.IsEmpty()) {
-        size_t numPrefLangNames = ArrayLength(gPrefLangNames) * kNumGenerics;
-        mLangGroupPrefFonts.AppendElements(numPrefLangNames);
-        ::memset(mLangGroupPrefFonts.Elements(), 0,
-                 numPrefLangNames * sizeof(mLangGroupPrefFonts[0]));
-    } else {
-        ClearLangGroupPrefFonts();
-    }
+    ClearLangGroupPrefFonts();
     mReplacementCharFallbackFamily = nullptr;
     CancelLoader();
 
@@ -815,7 +811,7 @@ void
 gfxPlatformFontList::ResolveGenericFontNames(
     FontFamilyType aGenericType,
     eFontPrefLang aPrefLang,
-    nsTArray<nsRefPtr<gfxFontFamily> >* aGenericFamilies
+    nsTArray<nsRefPtr<gfxFontFamily>>* aGenericFamilies
 )
 {
     const char* langGroupStr = GetPrefLangName(aPrefLang);
@@ -873,19 +869,17 @@ gfxPlatformFontList::ResolveGenericFontNames(
     prefFontListName.Append(langGroupStr);
     gfxFontUtils::AppendPrefsFontList(prefFontListName.get(), genericFamilies);
 
-    nsIAtom *langGroup = GetLangGroupForPrefLang(aPrefLang);
+    nsIAtom* langGroup = GetLangGroupForPrefLang(aPrefLang);
     NS_ASSERTION(langGroup, "null lang group for pref lang");
 
     // lookup and add platform fonts uniquely
-    uint32_t numFamilyNames = genericFamilies.Length();
-    for (uint32_t g = 0; g < numFamilyNames; g++) {
+    for (const nsString& genericFamily : genericFamilies) {
         nsRefPtr<gfxFontFamily> family =
-            FindFamily(genericFamilies[g], langGroup, false);
+            FindFamily(genericFamily, langGroup, false);
         if (family) {
             bool notFound = true;
-            uint32_t numFamilies = aGenericFamilies->Length();
-            for (uint32_t v = 0; v < numFamilies; v++) {
-                if ((*aGenericFamilies)[v].get() == family) {
+            for (const gfxFontFamily* f : *aGenericFamilies) {
+                if (f == family) {
                     notFound = false;
                     break;
                 }
@@ -906,25 +900,7 @@ gfxPlatformFontList::ResolveGenericFontNames(
 #endif
 }
 
-PR_STATIC_ASSERT((uint32_t(eFamily_fantasy) - uint32_t(eFamily_serif) + 1) == \
-                 kNumGenerics);
-
-static inline uint32_t
-GenericPrefFontIndex(mozilla::FontFamilyType aGenericType,
-                     eFontPrefLang aPrefLang)
-{
-    NS_ASSERTION(aGenericType >= eFamily_serif &&
-                 aGenericType <= eFamily_fantasy,
-                 "incorrect generic font type");
-
-    if (aGenericType < eFamily_serif || aGenericType > eFamily_fantasy) {
-        return 0; // default to x-western serif in error case
-    }
-    uint32_t offset = uint32_t(aGenericType) - uint32_t(eFamily_serif);
-    return uint32_t(aPrefLang) * kNumGenerics + offset;
-}
-
-nsTArray<nsRefPtr<gfxFontFamily> >*
+nsTArray<nsRefPtr<gfxFontFamily>>*
 gfxPlatformFontList::GetPrefFontsLangGroup(mozilla::FontFamilyType aGenericType,
                                            eFontPrefLang aPrefLang)
 {
@@ -933,13 +909,11 @@ gfxPlatformFontList::GetPrefFontsLangGroup(mozilla::FontFamilyType aGenericType,
         aGenericType = eFamily_monospace;
     }
 
-    NS_ASSERTION(mLangGroupPrefFonts.Length(), "pref fonts not set up correctly");
-    uint32_t index = GenericPrefFontIndex(aGenericType, aPrefLang);
-    nsTArray<nsRefPtr<gfxFontFamily> >* prefFonts = mLangGroupPrefFonts[index];
+    PrefFontList* prefFonts = mLangGroupPrefFonts[aPrefLang][aGenericType];
     if (MOZ_UNLIKELY(!prefFonts)) {
-        prefFonts = new nsTArray<nsRefPtr<gfxFontFamily> >;
+        prefFonts = new PrefFontList;
         ResolveGenericFontNames(aGenericType, aPrefLang, prefFonts);
-        mLangGroupPrefFonts[index] = prefFonts;
+        mLangGroupPrefFonts[aPrefLang][aGenericType] = prefFonts;
     }
     return prefFonts;
 }
@@ -968,7 +942,7 @@ gfxPlatformFontList::AddGenericFonts(mozilla::FontFamilyType aGenericType,
     eFontPrefLang prefLang = GetFontPrefLangFor(langGroup);
 
     // lookup pref fonts
-    nsTArray<nsRefPtr<gfxFontFamily> >* prefFonts =
+    nsTArray<nsRefPtr<gfxFontFamily>>* prefFonts =
         GetPrefFontsLangGroup(aGenericType, prefLang);
 
     if (!prefFonts->IsEmpty()) {
@@ -1400,12 +1374,12 @@ gfxPlatformFontList::RebuildLocalFonts()
 void
 gfxPlatformFontList::ClearLangGroupPrefFonts()
 {
-    uint32_t n = mLangGroupPrefFonts.Length();
-    for (uint32_t i = 0; i < n; i++) {
-        nsTArray<nsRefPtr<gfxFontFamily> >* prefFonts = mLangGroupPrefFonts[i];
-        if (prefFonts) {
-            delete prefFonts;
-            mLangGroupPrefFonts[i] = nullptr;
+    for (uint32_t i = eFontPrefLang_First;
+         i < eFontPrefLang_First + eFontPrefLang_Count; i++) {
+        auto& prefFontsLangGroup = mLangGroupPrefFonts[i];
+        for (uint32_t j = eFamily_generic_first;
+             j < eFamily_generic_first + eFamily_generic_count; j++) {
+            prefFontsLangGroup[j] = nullptr;
         }
     }
 }
@@ -1464,6 +1438,19 @@ gfxPlatformFontList::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
         aSizes->mFontListSize +=
             SizeOfFontEntryTableExcludingThis(mExtraNames->mPostscriptNames,
                                               aMallocSizeOf);
+    }
+
+    for (uint32_t i = eFontPrefLang_First;
+         i < eFontPrefLang_First + eFontPrefLang_Count; i++) {
+        auto& prefFontsLangGroup = mLangGroupPrefFonts[i];
+        for (uint32_t j = eFamily_generic_first;
+             j < eFamily_generic_first + eFamily_generic_count; j++) {
+            PrefFontList* pf = prefFontsLangGroup[j];
+            if (pf) {
+                aSizes->mFontListSize +=
+                    pf->ShallowSizeOfExcludingThis(aMallocSizeOf);
+            }
+        }
     }
 
     aSizes->mFontListSize +=
