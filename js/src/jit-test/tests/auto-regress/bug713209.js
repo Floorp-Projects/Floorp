@@ -1,9 +1,12 @@
 // Binary: cache/js-dbg-32-c5b90ea7e475-linux
 // Flags: -m -n -a
 //
+load(libdir + "immutable-prototype.js");
 
 var save__proto__ = __proto__;
-__proto__ = save__proto__;
+if (globalPrototypeChainIsMutable())
+  __proto__ = save__proto__;
+
 function bar(x, y) {
   return x + y;
 }

@@ -1,4 +1,6 @@
 // |jit-test| error: 42
+load(libdir + "immutable-prototype.js");
+
 function f(y) {}
 for each(let e in newGlobal()) {
     if (e.name === "quit" || e.name == "readline" || e.name == "terminate" ||
@@ -10,18 +12,22 @@ for each(let e in newGlobal()) {
     } catch (r) {}
 }
 (function() {
-    arguments.__proto__.__proto__ = newGlobal()
+    arguments;
+    if (globalPrototypeChainIsMutable())
+        Object.prototype.__proto__ = newGlobal()
     function f(y) {
         y()
     }
-    for each(b in []) {
-	if (b.name === "quit" || b.name == "readline" || b.name == "terminate" ||
-	    b.name == "nestedShell")
-	    continue;
-        try {
-            f(b)
-        } catch (e) {}
-    }
+    var arr = [];
+    arr.__proto__ = newGlobal();
+    for each (b in arr) {
+        if (b.name === "quit" || b.name == "readline" || b.name == "terminate" ||
+            b.name == "nestedShell")
+            continue;
+       try {
+           f(b)
+       } catch (e) {}
+   }
 })();
 
 throw 42;
