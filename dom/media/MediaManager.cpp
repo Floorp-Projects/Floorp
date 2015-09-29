@@ -3028,6 +3028,15 @@ GetUserMediaCallbackMediaStreamListener::Invalidate()
   }
   mStopped = true;
 
+  AudioDevice* audioDevice = nullptr;
+  VideoDevice* videoDevice = nullptr;
+  if (!mAudioStopped) {
+    audioDevice = mAudioDevice.get();
+  }
+  if (!mVideoStopped) {
+    videoDevice = mVideoDevice.get();
+  }
+
   // We can't take a chance on blocking here, so proxy this to another
   // thread.
   // Pass a ref to us (which is threadsafe) so it can query us for the
@@ -3035,8 +3044,10 @@ GetUserMediaCallbackMediaStreamListener::Invalidate()
   MediaManager::PostTask(FROM_HERE,
     new MediaOperationTask(MEDIA_STOP,
                            this, nullptr, nullptr,
-                           mAudioDevice, mVideoDevice,
+                           audioDevice, videoDevice,
                            mFinished, mWindowID, nullptr));
+  mAudioStopped = !!audioDevice;
+  mVideoStopped = !!videoDevice;
 }
 
 // Doesn't kill audio
@@ -3052,12 +3063,13 @@ GetUserMediaCallbackMediaStreamListener::StopSharing()
     // Stop the whole stream if there's no audio; just the video track if we have both
     if (!mAudioDevice) {
       Invalidate();
-    } else {
+    } else if (!mVideoStopped) {
       MediaManager::PostTask(FROM_HERE,
         new MediaOperationTask(MEDIA_STOP_TRACK,
                                this, nullptr, nullptr,
                                nullptr, mVideoDevice,
                                mFinished, mWindowID, nullptr));
+      mVideoStopped = true;
     }
   } else if (mAudioDevice &&
              mAudioDevice->GetMediaSource() == dom::MediaSourceEnum::AudioCapture) {
@@ -3176,12 +3188,15 @@ GetUserMediaCallbackMediaStreamListener::StopTrack(TrackID aTrackID, bool aIsAud
   {
     // XXX to support multiple tracks of a type in a stream, this should key off
     // the TrackID and not just the type
+    AudioDevice* audioDevice = aIsAudio  && !mAudioStopped ? mAudioDevice.get() : nullptr;
+    VideoDevice* videoDevice = !aIsAudio && !mVideoStopped ? mVideoDevice.get() : nullptr;
     MediaManager::PostTask(FROM_HERE,
       new MediaOperationTask(MEDIA_STOP_TRACK,
                              this, nullptr, nullptr,
-                             aIsAudio  ? mAudioDevice.get() : nullptr,
-                             !aIsAudio ? mVideoDevice.get() : nullptr,
+                             audioDevice, videoDevice,
                              mFinished, mWindowID, nullptr));
+    mAudioStopped = !!audioDevice;
+    mVideoStopped = !!videoDevice;
   } else {
     LOG(("gUM track %d ended, but we don't have type %s",
          aTrackID, aIsAudio ? "audio" : "video"));
