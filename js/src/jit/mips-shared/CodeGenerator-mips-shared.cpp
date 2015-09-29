@@ -1094,9 +1094,9 @@ CodeGeneratorMIPSShared::visitCeilF(LCeilF* lir)
     Label performCeil, done;
 
     // If x < -1 or x > 0 then perform ceil.
-    masm.loadConstantFloat32(0, scratch);
+    masm.loadConstantFloat32(0.0f, scratch);
     masm.branchFloat(Assembler::DoubleGreaterThan, input, scratch, &performCeil);
-    masm.loadConstantFloat32(-1, scratch);
+    masm.loadConstantFloat32(-1.0f, scratch);
     masm.branchFloat(Assembler::DoubleLessThanOrEqual, input, scratch, &performCeil);
 
     // If binary value is not zero, the input was not 0, so we bail.
