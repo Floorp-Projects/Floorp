@@ -385,6 +385,8 @@ SortStyleSheetsByScope(nsTArray<CSSStyleSheet*>& aSheets)
 nsresult
 nsStyleSet::GatherRuleProcessors(sheetType aType)
 {
+  NS_ENSURE_FALSE(mInShutdown, NS_ERROR_FAILURE);
+
   nsCOMPtr<nsIStyleRuleProcessor> oldRuleProcessor(mRuleProcessors[aType]);
   nsTArray<nsCOMPtr<nsIStyleRuleProcessor>> oldScopedDocRuleProcessors;
   if (aType == eAgentSheet || aType == eUserSheet) {
