@@ -506,8 +506,10 @@ struct BluetoothProperty {
   /* Value
    */
 
+  /* PROPERTY_BDADDR */
+  BluetoothAddress mBdAddress;
+
   /* PROPERTY_BDNAME
-     PROPERTY_BDADDR
      PROPERTY_REMOTE_FRIENDLY_NAME */
   nsString mString;
 
@@ -515,7 +517,7 @@ struct BluetoothProperty {
   nsTArray<BluetoothUuid> mUuidArray;
 
   /* PROPERTY_ADAPTER_BONDED_DEVICES */
-  nsTArray<nsString> mStringArray;
+  nsTArray<BluetoothAddress> mBdAddressArray;
 
   /* PROPERTY_CLASS_OF_DEVICE
      PROPERTY_ADAPTER_DISCOVERY_TIMEOUT */

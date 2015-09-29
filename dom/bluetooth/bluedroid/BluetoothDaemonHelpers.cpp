@@ -1629,8 +1629,7 @@ UnpackPDU(DaemonSocketPDU& aPDU, BluetoothProperty& aOut)
       }
       break;
     case PROPERTY_BDADDR:
-      rv = UnpackPDU<BluetoothAddress>(
-        aPDU, UnpackConversion<BluetoothAddress, nsAString>(aOut.mString));
+      rv = UnpackPDU(aPDU, aOut.mBdAddress);
       break;
     case PROPERTY_UUIDS: {
         size_t numUuids = len / MAX_UUID_SIZE;
@@ -1655,17 +1654,8 @@ UnpackPDU(DaemonSocketPDU& aPDU, BluetoothProperty& aOut)
     case PROPERTY_ADAPTER_BONDED_DEVICES: {
         /* unpack addresses */
         size_t numAddresses = len / BLUETOOTH_ADDRESS_BYTES;
-        nsAutoArrayPtr<BluetoothAddress> addresses;
-        UnpackArray<BluetoothAddress> addressArray(addresses, numAddresses);
-        rv = UnpackPDU(aPDU, addressArray);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-        /* convert addresses to strings */
-        aOut.mStringArray.SetLength(numAddresses);
-        ConvertArray<BluetoothAddress> convertArray(addressArray.mData,
-                                                    addressArray.mLength);
-        rv = Convert(convertArray, aOut.mStringArray);
+        aOut.mBdAddressArray.SetLength(numAddresses);
+        rv = UnpackPDU(aPDU, aOut.mBdAddressArray);
       }
       break;
     case PROPERTY_REMOTE_RSSI: {
