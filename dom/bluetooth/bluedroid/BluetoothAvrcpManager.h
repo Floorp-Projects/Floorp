@@ -101,7 +101,7 @@ private:
     BluetoothAvrcpEvent aEvent, uint32_t aParam) override;
 
   void RemoteFeatureNotification(
-    const nsAString& aBdAddr, unsigned long aFeatures) override;
+    const BluetoothAddress& aBdAddr, unsigned long aFeatures) override;
 
   void VolumeChangeNotification(uint8_t aVolume, uint8_t aCType) override;
 
