@@ -1,0 +1,73 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="../testcommon.js"></script>
+<body>
+<script>
+'use strict';
+
+function getFrames(e) {
+  return e.getAnimations()[0].effect.getFrames();
+}
+
+function assert_frames_equal(a, b, name) {
+  assert_equals(Object.keys(a).sort().toString(),
+                Object.keys(b).sort().toString(),
+                "properties on " + name);
+  for (var p in a) {
+    assert_equals(a[p], b[p], "value for '" + p + "' on " + name);
+  }
+}
+
+test(function(t) {
+  var div = addDiv(t);
+
+  div.style.left = '0px';
+  window.getComputedStyle(div).transitionProperty;
+  div.style.transition = 'left 100s';
+  div.style.left = '100px';
+
+  var frames = getFrames(div);
+  
+  assert_equals(frames.length, 2, "number of frames");
+
+  var expected = [
+    { offset: 0, computedOffset: 0, easing: "ease", composite: "replace",
+      left: "0px" },
+    { offset: 1, computedOffset: 1, easing: "ease", composite: "replace",
+      left: "100px" },
+  ];
+
+  for (var i = 0; i < frames.length; i++) {
+    assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
+  }
+}, 'KeyframeEffectReadOnly.getFrames() returns expected frames for a simple ' +
+   'transition');
+
+test(function(t) {
+  var div = addDiv(t);
+
+  div.style.left = '0px';
+  window.getComputedStyle(div).transitionProperty;
+  div.style.transition = 'left 100s steps(2,end)';
+  div.style.left = '100px';
+
+  var frames = getFrames(div);
+  
+  assert_equals(frames.length, 2, "number of frames");
+
+  var expected = [
+    { offset: 0, computedOffset: 0, easing: "steps(2, end)", composite: "replace",
+      left: "0px" },
+    { offset: 1, computedOffset: 1, easing: "steps(2, end)", composite: "replace",
+      left: "100px" },
+  ];
+
+  for (var i = 0; i < frames.length; i++) {
+    assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
+  }
+}, 'KeyframeEffectReadOnly.getFrames() returns expected frames for a simple ' +
+   'transition with a non-default easing function');
+
+done();
+</script>
+</body>
