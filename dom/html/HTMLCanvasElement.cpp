@@ -1235,7 +1235,7 @@ HTMLCanvasElement::OnVisibilityChange()
     class Runnable final : public nsCancelableRunnable
     {
     public:
-      Runnable(AsyncCanvasRenderer* aRenderer)
+      explicit Runnable(AsyncCanvasRenderer* aRenderer)
         : mRenderer(aRenderer)
       {}
 
@@ -1277,7 +1277,7 @@ HTMLCanvasElement::OnMemoryPressure()
     class Runnable final : public nsCancelableRunnable
     {
     public:
-      Runnable(AsyncCanvasRenderer* aRenderer)
+      explicit Runnable(AsyncCanvasRenderer* aRenderer)
         : mRenderer(aRenderer)
       {}
 
