@@ -1,0 +1,28 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsITVService.idl"
+
+%{C++
+#define TV_SIMULATOR_SERVICE_CONTRACTID\
+  "@mozilla.org/tv/simulatorservice;1"
+%}
+
+[scriptable, uuid(f0ab9850-24b4-4f5d-83dd-0fea0c249ca1)]
+interface nsITVSimulatorService : nsITVService
+{
+  /*
+   * Get the simulate movie file.The path is full location path.
+   * e.g. /home/user/simulator/gaia/profile/dummy/tv-movie1.ogv
+   *
+   * @param tunerId       The ID of the tuner.
+   * @param sourceType    The source type to be used.
+   * @param channelNumber The LCN (Logical Channel Number) of the channel.
+   */
+  void getSimulatorVideoFilePath(in DOMString tunerId,
+                                 in DOMString sourceType,
+                                 in DOMString channelNumber,
+                                 [retval] out string filePath);
+};
