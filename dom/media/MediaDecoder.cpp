@@ -1505,14 +1505,6 @@ MediaDecoder::IsAndroidMediaEnabled()
 }
 #endif
 
-#ifdef MOZ_APPLEMEDIA
-bool
-MediaDecoder::IsAppleMP3Enabled()
-{
-  return Preferences::GetBool("media.apple.mp3.enabled");
-}
-#endif
-
 NS_IMETHODIMP
 MediaMemoryTracker::CollectReports(nsIHandleReportCallback* aHandleReport,
                                    nsISupports* aData, bool aAnonymize)
