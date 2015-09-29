@@ -54,7 +54,7 @@ BluetoothDaemonSocketModule::ListenCmd(BluetoothSocketType aType,
 }
 
 nsresult
-BluetoothDaemonSocketModule::ConnectCmd(const BluetoothAddress& aBdAddr,
+BluetoothDaemonSocketModule::ConnectCmd(const nsAString& aBdAddr,
                                         BluetoothSocketType aType,
                                         const BluetoothUuid& aServiceUuid,
                                         int aChannel, bool aEncrypt,
@@ -68,7 +68,7 @@ BluetoothDaemonSocketModule::ConnectCmd(const BluetoothAddress& aBdAddr,
                         0));
 
   nsresult rv = PackPDU(
-    aBdAddr,
+    PackConversion<nsAString, BluetoothAddress>(aBdAddr),
     aType,
     aServiceUuid,
     PackConversion<int, int32_t>(aChannel),
@@ -121,11 +121,10 @@ public:
   void Proceed(BluetoothStatus aStatus) override
   {
     if (aStatus == STATUS_SUCCESS) {
-      AcceptResultRunnable::Dispatch(
+      IntStringIntResultRunnable::Dispatch(
         GetResultHandler(), &BluetoothSocketResultHandler::Accept,
-        ConstantInitOp3<int, BluetoothAddress, int>(GetClientFd(),
-                                                    GetBdAddress(),
-                                                    GetConnectionStatus()));
+        ConstantInitOp3<int, nsString, int>(GetClientFd(), GetBdAddress(),
+                                            GetConnectionStatus()));
     } else {
       ErrorRunnable::Dispatch(GetResultHandler(),
                               &BluetoothSocketResultHandler::OnError,
@@ -236,7 +235,7 @@ BluetoothDaemonSocketModule::ListenRsp(const DaemonSocketPDUHeader& aHeader,
                                        DaemonSocketPDU& aPDU,
                                        BluetoothSocketResultHandler* aRes)
 {
-  ListenResultRunnable::Dispatch(
+  IntResultRunnable::Dispatch(
     aRes, &BluetoothSocketResultHandler::Listen, ListenInitOp(aPDU));
 }
 
@@ -256,11 +255,10 @@ public:
   void Proceed(BluetoothStatus aStatus) override
   {
     if (aStatus == STATUS_SUCCESS) {
-      ConnectResultRunnable::Dispatch(
+      IntStringIntResultRunnable::Dispatch(
         GetResultHandler(), &BluetoothSocketResultHandler::Connect,
-        ConstantInitOp3<int, BluetoothAddress, int>(GetFd(),
-                                                    GetBdAddress(),
-                                                    GetConnectionStatus()));
+        ConstantInitOp3<int, nsString, int>(GetFd(), GetBdAddress(),
+                                            GetConnectionStatus()));
     } else {
       ErrorRunnable::Dispatch(GetResultHandler(),
                               &BluetoothSocketResultHandler::OnError,
@@ -322,7 +320,7 @@ BluetoothDaemonSocketInterface::Listen(BluetoothSocketType aType,
 }
 
 void
-BluetoothDaemonSocketInterface::Connect(const BluetoothAddress& aBdAddr,
+BluetoothDaemonSocketInterface::Connect(const nsAString& aBdAddr,
                                         BluetoothSocketType aType,
                                         const BluetoothUuid& aServiceUuid,
                                         int aChannel, bool aEncrypt,
