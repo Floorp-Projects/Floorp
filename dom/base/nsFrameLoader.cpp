@@ -14,6 +14,7 @@
 #include "prenv.h"
 
 #include "mozIApplication.h"
+#include "nsDocShell.h"
 #include "nsIDOMHTMLIFrameElement.h"
 #include "nsIDOMHTMLFrameElement.h"
 #include "nsIDOMMozBrowserFrame.h"
