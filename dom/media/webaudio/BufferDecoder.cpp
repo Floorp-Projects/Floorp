@@ -16,8 +16,7 @@ extern PRLogModuleInfo* gMediaDecoderLog;
 NS_IMPL_ISUPPORTS0(BufferDecoder)
 
 BufferDecoder::BufferDecoder(MediaResource* aResource)
-  : mReentrantMonitor("BufferDecoder")
-  , mResource(aResource)
+  : mResource(aResource)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_COUNT_CTOR(BufferDecoder);
@@ -37,12 +36,6 @@ BufferDecoder::BeginDecoding(TaskQueue* aTaskQueueIdentity)
 {
   MOZ_ASSERT(!mTaskQueueIdentity && aTaskQueueIdentity);
   mTaskQueueIdentity = aTaskQueueIdentity;
-}
-
-ReentrantMonitor&
-BufferDecoder::GetReentrantMonitor()
-{
-  return mReentrantMonitor;
 }
 
 bool
