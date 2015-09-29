@@ -117,29 +117,29 @@ public:
   //
 
   void ConnectionStateNotification(BluetoothHandsfreeConnectionState aState,
-                                   const nsAString& aBdAddress) override;
+                                   const BluetoothAddress& aBdAddress) override;
   void AudioStateNotification(BluetoothHandsfreeAudioState aState,
-                              const nsAString& aBdAddress) override;
-  void AnswerCallNotification(const nsAString& aBdAddress) override;
-  void HangupCallNotification(const nsAString& aBdAddress) override;
+                              const BluetoothAddress& aBdAddress) override;
+  void AnswerCallNotification(const BluetoothAddress& aBdAddress) override;
+  void HangupCallNotification(const BluetoothAddress& aBdAddress) override;
   void VolumeNotification(BluetoothHandsfreeVolumeType aType,
                           int aVolume,
-                          const nsAString& aBdAddress) override;
+                          const BluetoothAddress& aBdAddress) override;
   void DtmfNotification(char aDtmf,
-                        const nsAString& aBdAddress) override;
+                        const BluetoothAddress& aBdAddress) override;
   void NRECNotification(BluetoothHandsfreeNRECState aNrec,
-                        const nsAString& aBdAddr) override;
+                        const BluetoothAddress& aBdAddr) override;
   void CallHoldNotification(BluetoothHandsfreeCallHoldType aChld,
-                            const nsAString& aBdAddress) override;
+                            const BluetoothAddress& aBdAddress) override;
   void DialCallNotification(const nsAString& aNumber,
-                            const nsAString& aBdAddress) override;
-  void CnumNotification(const nsAString& aBdAddress) override;
-  void CindNotification(const nsAString& aBdAddress) override;
-  void CopsNotification(const nsAString& aBdAddress) override;
-  void ClccNotification(const nsAString& aBdAddress) override;
+                            const BluetoothAddress& aBdAddress) override;
+  void CnumNotification(const BluetoothAddress& aBdAddress) override;
+  void CindNotification(const BluetoothAddress& aBdAddress) override;
+  void CopsNotification(const BluetoothAddress& aBdAddress) override;
+  void ClccNotification(const BluetoothAddress& aBdAddress) override;
   void UnknownAtNotification(const nsACString& aAtString,
-                             const nsAString& aBdAddress) override;
-  void KeyPressedNotification(const nsAString& aBdAddress) override;
+                             const BluetoothAddress& aBdAddress) override;
+  void KeyPressedNotification(const BluetoothAddress& aBdAddress) override;
 
 protected:
   virtual ~BluetoothHfpManager();
