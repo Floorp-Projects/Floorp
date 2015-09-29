@@ -4,8 +4,8 @@
 // found in the LICENSE file.
 //
 
-#ifndef COMPILER_UTIL_H
-#define COMPILER_UTIL_H
+#ifndef COMPILER_TRANSLATOR_UTIL_H_
+#define COMPILER_TRANSLATOR_UTIL_H_
 
 #include <stack>
 
@@ -14,15 +14,15 @@
 
 #include "compiler/translator/Types.h"
 
-// atof_clamp is like atof but
+// strtof_clamp is like strtof but
 //   1. it forces C locale, i.e. forcing '.' as decimal point.
 //   2. it clamps the value to -FLT_MAX or FLT_MAX if overflow happens.
 // Return false if overflow happens.
-extern bool atof_clamp(const char *str, float *value);
+bool strtof_clamp(const std::string &str, float *value);
 
 // If overflow happens, clamp the value to INT_MIN or INT_MAX.
 // Return false if overflow happens.
-extern bool atoi_clamp(const char *str, int *value);
+bool atoi_clamp(const char *str, int *value);
 
 class TSymbolTable;
 
@@ -37,7 +37,7 @@ bool IsVarying(TQualifier qualifier);
 InterpolationType GetInterpolationType(TQualifier qualifier);
 TString ArrayString(const TType &type);
 
-class GetVariableTraverser
+class GetVariableTraverser : angle::NonCopyable
 {
   public:
     GetVariableTraverser(const TSymbolTable &symbolTable);
@@ -57,10 +57,8 @@ class GetVariableTraverser
         const TType &type, const TString &name, VarT *variable) {}
 
     const TSymbolTable &mSymbolTable;
-
-    DISALLOW_COPY_AND_ASSIGN(GetVariableTraverser);
 };
 
 }
 
-#endif // COMPILER_UTIL_H
+#endif // COMPILER_TRANSLATOR_UTIL_H_

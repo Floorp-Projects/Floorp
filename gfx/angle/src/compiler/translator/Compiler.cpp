@@ -4,15 +4,17 @@
 // found in the LICENSE file.
 //
 
-#include "compiler/translator/BuiltInFunctionEmulator.h"
+#include "compiler/translator/Cache.h"
 #include "compiler/translator/Compiler.h"
-#include "compiler/translator/DetectCallDepth.h"
+#include "compiler/translator/CallDAG.h"
 #include "compiler/translator/ForLoopUnroll.h"
 #include "compiler/translator/Initialize.h"
 #include "compiler/translator/InitializeParseContext.h"
 #include "compiler/translator/InitializeVariables.h"
 #include "compiler/translator/ParseContext.h"
+#include "compiler/translator/PruneEmptyDeclarations.h"
 #include "compiler/translator/RegenerateStructNames.h"
+#include "compiler/translator/RemovePow.h"
 #include "compiler/translator/RenameFunction.h"
 #include "compiler/translator/ScalarizeVecAndMatConstructorArgs.h"
 #include "compiler/translator/UnfoldShortCircuitAST.h"
@@ -32,6 +34,20 @@ bool IsWebGLBasedSpec(ShShaderSpec spec)
     return (spec == SH_WEBGL_SPEC ||
             spec == SH_CSS_SHADERS_SPEC ||
             spec == SH_WEBGL2_SPEC);
+}
+
+bool IsGLSL130OrNewer(ShShaderOutput output)
+{
+    return (output == SH_GLSL_130_OUTPUT ||
+            output == SH_GLSL_140_OUTPUT ||
+            output == SH_GLSL_150_CORE_OUTPUT ||
+            output == SH_GLSL_330_CORE_OUTPUT ||
+            output == SH_GLSL_400_CORE_OUTPUT ||
+            output == SH_GLSL_410_CORE_OUTPUT ||
+            output == SH_GLSL_420_CORE_OUTPUT ||
+            output == SH_GLSL_430_CORE_OUTPUT ||
+            output == SH_GLSL_440_CORE_OUTPUT ||
+            output == SH_GLSL_450_CORE_OUTPUT);
 }
 
 size_t GetGlobalMaxTokenSize(ShShaderSpec spec)
@@ -126,7 +142,8 @@ TCompiler::TCompiler(sh::GLenum type, ShShaderSpec spec, ShShaderOutput output)
       maxCallStackDepth(0),
       fragmentPrecisionHigh(false),
       clampingStrategy(SH_CLAMP_WITH_CLAMP_INTRINSIC),
-      builtInFunctionEmulator(type)
+      builtInFunctionEmulator(),
+      mSourcePath(NULL)
 {
 }
 
@@ -159,34 +176,42 @@ bool TCompiler::Init(const ShBuiltInResources& resources)
     return true;
 }
 
-bool TCompiler::compile(const char* const shaderStrings[],
-                        size_t numStrings,
-                        int compileOptions)
+TIntermNode *TCompiler::compileTreeForTesting(const char* const shaderStrings[],
+    size_t numStrings, int compileOptions)
 {
-    TScopedPoolAllocator scopedAlloc(&allocator);
+    return compileTreeImpl(shaderStrings, numStrings, compileOptions);
+}
+
+TIntermNode *TCompiler::compileTreeImpl(const char* const shaderStrings[],
+    size_t numStrings, int compileOptions)
+{
     clearResults();
 
-    if (numStrings == 0)
-        return true;
+    ASSERT(numStrings > 0);
+    ASSERT(GetGlobalPoolAllocator());
+
+    // Reset the extension behavior for each compilation unit.
+    ResetExtensionBehavior(extensionBehavior);
 
     // If compiling for WebGL, validate loop and indexing as well.
     if (IsWebGLBasedSpec(shaderSpec))
         compileOptions |= SH_VALIDATE_LOOP_INDEXING;
 
     // First string is path of source file if flag is set. The actual source follows.
-    const char* sourcePath = NULL;
     size_t firstSource = 0;
     if (compileOptions & SH_SOURCE_PATH)
     {
-        sourcePath = shaderStrings[0];
+        mSourcePath = shaderStrings[0];
         ++firstSource;
     }
 
+    bool debugShaderPrecision = getResources().WEBGL_debug_shader_precision == 1;
     TIntermediate intermediate(infoSink);
     TParseContext parseContext(symbolTable, extensionBehavior, intermediate,
                                shaderType, shaderSpec, compileOptions, true,
-                               sourcePath, infoSink);
-    parseContext.fragmentPrecisionHigh = fragmentPrecisionHigh;
+                               infoSink, debugShaderPrecision);
+
+    parseContext.setFragmentPrecisionHigh(fragmentPrecisionHigh);
     SetGlobalParseContext(&parseContext);
 
     // We preserve symbols at the built-in level from compile-to-compile.
@@ -195,8 +220,8 @@ bool TCompiler::compile(const char* const shaderStrings[],
 
     // Parse shader.
     bool success =
-        (PaParseStrings(numStrings - firstSource, &shaderStrings[firstSource], NULL, &parseContext) == 0) &&
-        (parseContext.treeRoot != NULL);
+        (PaParseStrings(numStrings - firstSource, &shaderStrings[firstSource], nullptr, &parseContext) == 0) &&
+        (parseContext.getTreeRoot() != nullptr);
 
     shaderVersion = parseContext.getShaderVersion();
     if (success && MapSpecToShaderVersion(shaderSpec) < shaderVersion)
@@ -206,6 +231,8 @@ bool TCompiler::compile(const char* const shaderStrings[],
         success = false;
     }
 
+    TIntermNode *root = nullptr;
+
     if (success)
     {
         mPragma = parseContext.pragma();
@@ -214,15 +241,34 @@ bool TCompiler::compile(const char* const shaderStrings[],
             symbolTable.setGlobalInvariant();
         }
 
-        TIntermNode* root = parseContext.treeRoot;
+        root = parseContext.getTreeRoot();
         success = intermediate.postProcess(root);
 
         // Disallow expressions deemed too complex.
         if (success && (compileOptions & SH_LIMIT_EXPRESSION_COMPLEXITY))
             success = limitExpressionComplexity(root);
 
+        // Create the function DAG and check there is no recursion
         if (success)
-            success = detectCallDepth(root, infoSink, (compileOptions & SH_LIMIT_CALL_STACK_DEPTH) != 0);
+            success = initCallDag(root);
+
+        if (success && (compileOptions & SH_LIMIT_CALL_STACK_DEPTH))
+            success = checkCallDepth();
+
+        // Checks which functions are used and if "main" exists
+        if (success)
+        {
+            functionMetadata.clear();
+            functionMetadata.resize(mCallDag.size());
+            success = tagUsedFunctions();
+        }
+
+        if (success && !(compileOptions & SH_DONT_PRUNE_UNUSED_FUNCTIONS))
+            success = pruneUnusedFunctions(root);
+
+        // Prune empty declarations to work around driver bugs and to keep declaration output simple.
+        if (success)
+            PruneEmptyDeclarations(root);
 
         if (success && shaderVersion == 300 && shaderType == GL_FRAGMENT_SHADER)
             success = validateOutputs(root);
@@ -255,8 +301,11 @@ bool TCompiler::compile(const char* const shaderStrings[],
         }
 
         // Built-in function emulation needs to happen after validateLimitations pass.
-        if (success && (compileOptions & SH_EMULATE_BUILT_IN_FUNCTIONS))
+        if (success)
+        {
+            initBuiltInFunctionEmulator(&builtInFunctionEmulator, compileOptions);
             builtInFunctionEmulator.MarkBuiltInFunctionsForEmulation(root);
+        }
 
         // Clamping uniform array bounds needs to happen after validateLimitations pass.
         if (success && (compileOptions & SH_CLAMP_INDIRECT_ARRAY_BOUNDS))
@@ -270,6 +319,11 @@ bool TCompiler::compile(const char* const shaderStrings[],
             UnfoldShortCircuitAST unfoldShortCircuit;
             root->traverse(&unfoldShortCircuit);
             unfoldShortCircuit.updateTree();
+        }
+
+        if (success && (compileOptions & SH_REMOVE_POW_WITH_CONSTANT_EXPONENT))
+        {
+            RemovePow(root);
         }
 
         if (success && (compileOptions & SH_VARIABLES))
@@ -301,18 +355,37 @@ bool TCompiler::compile(const char* const shaderStrings[],
             RegenerateStructNames gen(symbolTable, shaderVersion);
             root->traverse(&gen);
         }
-
-        if (success && (compileOptions & SH_INTERMEDIATE_TREE))
-            intermediate.outputTree(root);
-
-        if (success && (compileOptions & SH_OBJECT_CODE))
-            translate(root);
     }
 
-    // Cleanup memory.
-    intermediate.remove(parseContext.treeRoot);
     SetGlobalParseContext(NULL);
-    return success;
+    if (success)
+        return root;
+
+    return NULL;
+}
+
+bool TCompiler::compile(const char* const shaderStrings[],
+    size_t numStrings, int compileOptions)
+{
+    if (numStrings == 0)
+        return true;
+
+    TScopedPoolAllocator scopedAlloc(&allocator);
+    TIntermNode *root = compileTreeImpl(shaderStrings, numStrings, compileOptions);
+
+    if (root)
+    {
+        if (compileOptions & SH_INTERMEDIATE_TREE)
+            TIntermediate::outputTree(root, infoSink.info);
+
+        if (compileOptions & SH_OBJECT_CODE)
+            translate(root, compileOptions);
+
+        // The IntermNode tree doesn't need to be deleted here, since the
+        // memory will be freed in a big chunk by the PoolAllocator.
+        return true;
+    }
+    return false;
 }
 
 bool TCompiler::InitBuiltInSymbolTable(const ShBuiltInResources &resources)
@@ -390,11 +463,15 @@ void TCompiler::setResourceString()
               << ":MaxCallStackDepth:" << compileResources.MaxCallStackDepth
               << ":EXT_frag_depth:" << compileResources.EXT_frag_depth
               << ":EXT_shader_texture_lod:" << compileResources.EXT_shader_texture_lod
+              << ":EXT_shader_framebuffer_fetch:" << compileResources.EXT_shader_framebuffer_fetch
+              << ":NV_shader_framebuffer_fetch:" << compileResources.NV_shader_framebuffer_fetch
+              << ":ARM_shader_framebuffer_fetch:" << compileResources.ARM_shader_framebuffer_fetch
               << ":MaxVertexOutputVectors:" << compileResources.MaxVertexOutputVectors
               << ":MaxFragmentInputVectors:" << compileResources.MaxFragmentInputVectors
               << ":MinProgramTexelOffset:" << compileResources.MinProgramTexelOffset
               << ":MaxProgramTexelOffset:" << compileResources.MaxProgramTexelOffset
-              << ":NV_draw_buffers:" << compileResources.NV_draw_buffers;
+              << ":NV_draw_buffers:" << compileResources.NV_draw_buffers
+              << ":WEBGL_debug_shader_precision:" << compileResources.WEBGL_debug_shader_precision;
 
     builtInResourcesString = strstream.str();
 }
@@ -416,32 +493,169 @@ void TCompiler::clearResults()
     builtInFunctionEmulator.Cleanup();
 
     nameMap.clear();
+
+    mSourcePath = NULL;
 }
 
-bool TCompiler::detectCallDepth(TIntermNode* root, TInfoSink& infoSink, bool limitCallStackDepth)
+bool TCompiler::initCallDag(TIntermNode *root)
 {
-    DetectCallDepth detect(infoSink, limitCallStackDepth, maxCallStackDepth);
-    root->traverse(&detect);
-    switch (detect.detectCallDepth())
+    mCallDag.clear();
+
+    switch (mCallDag.init(root, &infoSink.info))
     {
-      case DetectCallDepth::kErrorNone:
+      case CallDAG::INITDAG_SUCCESS:
         return true;
-      case DetectCallDepth::kErrorMissingMain:
-        infoSink.info.prefix(EPrefixError);
-        infoSink.info << "Missing main()";
-        return false;
-      case DetectCallDepth::kErrorRecursion:
+      case CallDAG::INITDAG_RECURSION:
         infoSink.info.prefix(EPrefixError);
         infoSink.info << "Function recursion detected";
         return false;
-      case DetectCallDepth::kErrorMaxDepthExceeded:
+      case CallDAG::INITDAG_UNDEFINED:
         infoSink.info.prefix(EPrefixError);
-        infoSink.info << "Function call stack too deep";
-        return false;
-      default:
-        UNREACHABLE();
+        infoSink.info << "Unimplemented function detected";
         return false;
     }
+
+    UNREACHABLE();
+    return true;
+}
+
+bool TCompiler::checkCallDepth()
+{
+    std::vector<int> depths(mCallDag.size());
+
+    for (size_t i = 0; i < mCallDag.size(); i++)
+    {
+        int depth = 0;
+        auto &record = mCallDag.getRecordFromIndex(i);
+
+        for (auto &calleeIndex : record.callees)
+        {
+            depth = std::max(depth, depths[calleeIndex] + 1);
+        }
+
+        depths[i] = depth;
+
+        if (depth >= maxCallStackDepth)
+        {
+            // Trace back the function chain to have a meaningful info log.
+            infoSink.info.prefix(EPrefixError);
+            infoSink.info << "Call stack too deep (larger than " << maxCallStackDepth
+                          << ") with the following call chain: " << record.name;
+
+            int currentFunction = i;
+            int currentDepth = depth;
+
+            while (currentFunction != -1)
+            {
+                infoSink.info << " -> " << mCallDag.getRecordFromIndex(currentFunction).name;
+
+                int nextFunction = -1;
+                for (auto& calleeIndex : mCallDag.getRecordFromIndex(currentFunction).callees)
+                {
+                    if (depths[calleeIndex] == currentDepth - 1)
+                    {
+                        currentDepth--;
+                        nextFunction = calleeIndex;
+                    }
+                }
+
+                currentFunction = nextFunction;
+            }
+
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool TCompiler::tagUsedFunctions()
+{
+    // Search from main, starting from the end of the DAG as it usually is the root.
+    for (int i = mCallDag.size(); i-- > 0;)
+    {
+        if (mCallDag.getRecordFromIndex(i).name == "main(")
+        {
+            internalTagUsedFunction(i);
+            return true;
+        }
+    }
+
+    infoSink.info.prefix(EPrefixError);
+    infoSink.info << "Missing main()";
+    return false;
+}
+
+void TCompiler::internalTagUsedFunction(size_t index)
+{
+    if (functionMetadata[index].used)
+    {
+        return;
+    }
+
+    functionMetadata[index].used = true;
+
+    for (int calleeIndex : mCallDag.getRecordFromIndex(index).callees)
+    {
+        internalTagUsedFunction(calleeIndex);
+    }
+}
+
+// A predicate for the stl that returns if a top-level node is unused
+class TCompiler::UnusedPredicate
+{
+  public:
+    UnusedPredicate(const CallDAG *callDag, const std::vector<FunctionMetadata> *metadatas)
+        : mCallDag(callDag),
+          mMetadatas(metadatas)
+    {
+    }
+
+    bool operator ()(TIntermNode *node)
+    {
+        const TIntermAggregate *asAggregate = node->getAsAggregate();
+
+        if (asAggregate == nullptr)
+        {
+            return false;
+        }
+
+        if (!(asAggregate->getOp() == EOpFunction || asAggregate->getOp() == EOpPrototype))
+        {
+            return false;
+        }
+
+        size_t callDagIndex = mCallDag->findIndex(asAggregate);
+        if (callDagIndex == CallDAG::InvalidIndex)
+        {
+            // This happens only for unimplemented prototypes which are thus unused
+            ASSERT(asAggregate->getOp() == EOpPrototype);
+            return true;
+        }
+
+        ASSERT(callDagIndex < mMetadatas->size());
+        return !(*mMetadatas)[callDagIndex].used;
+    }
+
+  private:
+    const CallDAG *mCallDag;
+    const std::vector<FunctionMetadata> *mMetadatas;
+};
+
+bool TCompiler::pruneUnusedFunctions(TIntermNode *root)
+{
+    TIntermAggregate *rootNode = root->getAsAggregate();
+    ASSERT(rootNode != nullptr);
+
+    UnusedPredicate isUnused(&mCallDag, &functionMetadata);
+    TIntermSequence *sequence = rootNode->getSequence();
+
+    if (!sequence->empty())
+    {
+        sequence->erase(std::remove_if(sequence->begin(), sequence->end(), isUnused), sequence->end());
+    }
+
+    return true;
 }
 
 bool TCompiler::validateOutputs(TIntermNode* root)
@@ -592,6 +806,11 @@ void TCompiler::initializeVaryingsWithoutStaticUse(TIntermNode* root)
 const TExtensionBehavior& TCompiler::getExtensionBehavior() const
 {
     return extensionBehavior;
+}
+
+const char *TCompiler::getSourcePath() const
+{
+    return mSourcePath;
 }
 
 const ShBuiltInResources& TCompiler::getResources() const

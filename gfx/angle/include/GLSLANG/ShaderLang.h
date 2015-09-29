@@ -3,8 +3,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
-#ifndef _COMPILER_INTERFACE_INCLUDED_
-#define _COMPILER_INTERFACE_INCLUDED_
+#ifndef GLSLANG_SHADERLANG_H_
+#define GLSLANG_SHADERLANG_H_
 
 #if defined(COMPONENT_BUILD) && !defined(ANGLE_TRANSLATOR_STATIC)
 #if defined(_WIN32) || defined(_WIN64)
@@ -48,7 +48,7 @@ typedef unsigned int GLenum;
 
 // Version number for shader translation API.
 // It is incremented every time the API changes.
-#define ANGLE_SH_VERSION 132
+#define ANGLE_SH_VERSION 138
 
 typedef enum {
   SH_GLES2_SPEC = 0x8B40,
@@ -81,11 +81,29 @@ typedef enum {
 } ShShaderSpec;
 
 typedef enum {
-  SH_ESSL_OUTPUT   = 0x8B45,
-  SH_GLSL_OUTPUT   = 0x8B46,
-  SH_HLSL_OUTPUT   = 0x8B47,
-  SH_HLSL9_OUTPUT  = 0x8B47,
-  SH_HLSL11_OUTPUT = 0x8B48
+  SH_ESSL_OUTPUT               = 0x8B45,
+  // SH_GLSL_OUTPUT is deprecated. This is to not break the build.
+  SH_GLSL_OUTPUT               = 0x8B46,
+  SH_GLSL_COMPATIBILITY_OUTPUT = 0x8B46,
+  // SH_GLSL_CORE_OUTPUT is deprecated.
+  SH_GLSL_CORE_OUTPUT          = 0x8B47,
+  //Note: GL introduced core profiles in 1.5. However, for compatiblity with Chromium, we treat SH_GLSL_CORE_OUTPUT as GLSL_130_OUTPUT.
+  //TODO: Remove SH_GLSL_CORE_OUTPUT
+  SH_GLSL_130_OUTPUT           = 0x8B47,
+  SH_GLSL_140_OUTPUT           = 0x8B80,
+  SH_GLSL_150_CORE_OUTPUT      = 0x8B81,
+  SH_GLSL_330_CORE_OUTPUT      = 0x8B82,
+  SH_GLSL_400_CORE_OUTPUT      = 0x8B83,
+  SH_GLSL_410_CORE_OUTPUT      = 0x8B84,
+  SH_GLSL_420_CORE_OUTPUT      = 0x8B85,
+  SH_GLSL_430_CORE_OUTPUT      = 0x8B86,
+  SH_GLSL_440_CORE_OUTPUT      = 0x8B87,
+  SH_GLSL_450_CORE_OUTPUT      = 0x8B88,
+
+  // HLSL output only supported in some configurations.
+  SH_HLSL_OUTPUT   = 0x8B48,
+  SH_HLSL9_OUTPUT  = 0x8B48,
+  SH_HLSL11_OUTPUT = 0x8B49
 } ShShaderOutput;
 
 // Compile options.
@@ -107,7 +125,7 @@ typedef enum {
   // This is needed only as a workaround for certain OpenGL driver bugs.
   SH_EMULATE_BUILT_IN_FUNCTIONS = 0x0100,
 
-  // This is an experimental flag to enforce restrictions that aim to prevent 
+  // This is an experimental flag to enforce restrictions that aim to prevent
   // timing attacks.
   // It generates compilation errors for shaders that could expose sensitive
   // texture information via the timing channel.
@@ -172,6 +190,15 @@ typedef enum {
   // It is intended as a workaround for drivers that do not handle
   // struct scopes correctly, including all Mac drivers and Linux AMD.
   SH_REGENERATE_STRUCT_NAMES = 0x80000,
+
+  // This flag makes the compiler not prune unused function early in the
+  // compilation process. Pruning coupled with SH_LIMIT_CALL_STACK_DEPTH
+  // helps avoid bad shaders causing stack overflows.
+  SH_DONT_PRUNE_UNUSED_FUNCTIONS = 0x100000,
+
+  // This flag works around a bug in NVIDIA 331 series drivers related
+  // to pow(x, y) where y is a constant vector.
+  SH_REMOVE_POW_WITH_CONSTANT_EXPONENT = 0x200000,
 } ShCompileOptions;
 
 // Defines alternate strategies for implementing array index clamping.
@@ -223,6 +250,10 @@ typedef struct
     int EXT_draw_buffers;
     int EXT_frag_depth;
     int EXT_shader_texture_lod;
+    int WEBGL_debug_shader_precision;
+    int EXT_shader_framebuffer_fetch;
+    int NV_shader_framebuffer_fetch;
+    int ARM_shader_framebuffer_fetch;
 
     // Set to 1 to enable replacing GL_EXT_draw_buffers #extension directives
     // with GL_NV_draw_buffers in ESSL output. This flag can be used to emulate
@@ -290,7 +321,8 @@ COMPILER_EXPORT const std::string &ShGetBuiltInResourcesString(const ShHandle ha
 // spec: Specifies the language spec the compiler must conform to -
 //       SH_GLES2_SPEC or SH_WEBGL_SPEC.
 // output: Specifies the output code type - SH_ESSL_OUTPUT, SH_GLSL_OUTPUT,
-//         SH_HLSL9_OUTPUT or SH_HLSL11_OUTPUT.
+//         SH_HLSL9_OUTPUT or SH_HLSL11_OUTPUT. Note: HLSL output is only
+//         supported in some configurations.
 // resources: Specifies the built-in resources.
 COMPILER_EXPORT ShHandle ShConstructCompiler(
     sh::GLenum type,
@@ -328,6 +360,9 @@ COMPILER_EXPORT bool ShCompile(
     const char * const shaderStrings[],
     size_t numStrings,
     int compileOptions);
+
+// Clears the results from the previous compilation.
+COMPILER_EXPORT void ShClearResults(const ShHandle handle);
 
 // Return the version of the shader language.
 COMPILER_EXPORT int ShGetShaderVersion(const ShHandle handle);
@@ -408,4 +443,4 @@ COMPILER_EXPORT bool ShGetUniformRegister(const ShHandle handle,
                                           const std::string &uniformName,
                                           unsigned int *indexOut);
 
-#endif // _COMPILER_INTERFACE_INCLUDED_
+#endif // GLSLANG_SHADERLANG_H_

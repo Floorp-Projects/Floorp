@@ -4,8 +4,8 @@
 // found in the LICENSE file.
 //
 
-#ifndef COMPILER_TRANSLATOR_DEPGRAPH_DEPENDENCY_GRAPH_BUILDER_H
-#define COMPILER_TRANSLATOR_DEPGRAPH_DEPENDENCY_GRAPH_BUILDER_H
+#ifndef COMPILER_TRANSLATOR_DEPGRAPH_DEPENDENCYGRAPHBUILDER_H_
+#define COMPILER_TRANSLATOR_DEPGRAPH_DEPENDENCYGRAPHBUILDER_H_
 
 #include "compiler/translator/depgraph/DependencyGraph.h"
 
@@ -104,7 +104,7 @@ class TDependencyGraphBuilder : public TIntermTraverser
     // An instance of this class pushes a new node set when instantiated.
     // When the instance goes out of scope, it and pops the node set.
     //
-    class TNodeSetMaintainer
+    class TNodeSetMaintainer : angle::NonCopyable
     {
       public:
         TNodeSetMaintainer(TDependencyGraphBuilder *factory)
@@ -122,7 +122,7 @@ class TDependencyGraphBuilder : public TIntermTraverser
     // When the instance goes out of scope, it and pops the top node set and adds
     // its contents to the new top node set.
     //
-    class TNodeSetPropagatingMaintainer
+    class TNodeSetPropagatingMaintainer : angle::NonCopyable
     {
       public:
         TNodeSetPropagatingMaintainer(TDependencyGraphBuilder *factory)
@@ -147,7 +147,7 @@ class TDependencyGraphBuilder : public TIntermTraverser
     // kRightSubtree will never be replaced by a real symbol because we are tracking
     // the leftmost symbol.
     //
-    class TLeftmostSymbolMaintainer
+    class TLeftmostSymbolMaintainer : angle::NonCopyable
     {
       public:
         TLeftmostSymbolMaintainer(
@@ -196,4 +196,4 @@ class TDependencyGraphBuilder : public TIntermTraverser
     TSymbolStack mLeftmostSymbols;
 };
 
-#endif  // COMPILER_TRANSLATOR_DEPGRAPH_DEPENDENCY_GRAPH_BUILDER_H
+#endif  // COMPILER_TRANSLATOR_DEPGRAPH_DEPENDENCYGRAPHBUILDER_H_

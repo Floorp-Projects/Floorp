@@ -661,7 +661,13 @@ CreateRenderbuffersForOffscreen(GLContext* aGL, const GLFormats& aFormats,
         MOZ_ASSERT(aFormats.samples > 0);
         MOZ_ASSERT(aFormats.color_rbFormat);
 
-        *aColorMSRB = CreateRenderbuffer(aGL, aFormats.color_rbFormat, samples, aSize);
+        GLenum colorFormat = aFormats.color_rbFormat;
+        if (aGL->IsANGLE()) {
+            MOZ_ASSERT(colorFormat == LOCAL_GL_RGBA8);
+            colorFormat = LOCAL_GL_BGRA8_EXT;
+        }
+
+        *aColorMSRB = CreateRenderbuffer(aGL, colorFormat, samples, aSize);
     }
 
     if (aDepthRB &&
