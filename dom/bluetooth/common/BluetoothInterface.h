@@ -469,7 +469,7 @@ public:
                              const BluetoothUuid& aAppUuid);
 
   virtual void
-  ScanResultNotification(const nsAString& aBdAddr,
+  ScanResultNotification(const BluetoothAddress& aBdAddr,
                          int aRssi,
                          const BluetoothGattAdvData& aAdvData);
 
@@ -477,13 +477,13 @@ public:
   ConnectNotification(int aConnId,
                       BluetoothGattStatus aStatus,
                       int aClientIf,
-                      const nsAString& aBdAddr);
+                      const BluetoothAddress& aBdAddr);
 
   virtual void
   DisconnectNotification(int aConnId,
                          BluetoothGattStatus aStatus,
                          int aClientIf,
-                         const nsAString& aBdAddr);
+                         const BluetoothAddress& aBdAddr);
 
   virtual void
   SearchCompleteNotification(int aConnId, BluetoothGattStatus aStatus);
@@ -548,7 +548,7 @@ public:
 
   virtual void
   ReadRemoteRssiNotification(int aClientIf,
-                             const nsAString& aBdAddr,
+                             const BluetoothAddress& aBdAddr,
                              int aRssi,
                              BluetoothGattStatus aStatus);
 
@@ -564,7 +564,7 @@ public:
   ConnectionNotification(int aConnId,
                          int aServerIf,
                          bool aConnected,
-                         const nsAString& aBdAddr);
+                         const BluetoothAddress& aBdAddr);
 
   virtual void
   ServiceAddedNotification(BluetoothGattStatus aStatus,
@@ -613,7 +613,7 @@ public:
   virtual void
   RequestReadNotification(int aConnId,
                           int aTransId,
-                          const nsAString& aBdAddr,
+                          const BluetoothAddress& aBdAddr,
                           const BluetoothAttributeHandle& aAttributeHandle,
                           int aOffset,
                           bool aIsLong);
@@ -621,7 +621,7 @@ public:
   virtual void
   RequestWriteNotification(int aConnId,
                            int aTransId,
-                           const nsAString& aBdAddr,
+                           const BluetoothAddress& aBdAddr,
                            const BluetoothAttributeHandle& aAttributeHandle,
                            int aOffset,
                            int aLength,
@@ -632,7 +632,7 @@ public:
   virtual void
   RequestExecuteWriteNotification(int aConnId,
                                   int aTransId,
-                                  const nsAString& aBdAddr,
+                                  const BluetoothAddress& aBdAddr,
                                   bool aExecute); /* true: execute */
                                                   /* false: cancel */
 
@@ -739,12 +739,12 @@ public:
 
   /* Connect / Disconnect */
   virtual void Connect(int aClientIf,
-                       const nsAString& aBdAddr,
+                       const BluetoothAddress& aBdAddr,
                        bool aIsDirect, /* auto connect */
                        BluetoothTransport aTransport,
                        BluetoothGattResultHandler* aRes) = 0;
   virtual void Disconnect(int aClientIf,
-                          const nsAString& aBdAddr,
+                          const BluetoothAddress& aBdAddr,
                           int aConnId,
                           BluetoothGattResultHandler* aRes) = 0;
 
@@ -755,7 +755,7 @@ public:
 
   /* Clear the attribute cache for a given device*/
   virtual void Refresh(int aClientIf,
-                       const nsAString& aBdAddr,
+                       const BluetoothAddress& aBdAddr,
                        BluetoothGattResultHandler* aRes) = 0;
 
   /* Enumerate Attributes */
@@ -817,22 +817,22 @@ public:
   /* Register / Deregister Characteristic Notifications or Indications */
   virtual void RegisterNotification(
     int aClientIf,
-    const nsAString& aBdAddr,
+    const BluetoothAddress& aBdAddr,
     const BluetoothGattServiceId& aServiceId,
     const BluetoothGattId& aCharId,
     BluetoothGattResultHandler* aRes) = 0;
   virtual void DeregisterNotification(
     int aClientIf,
-    const nsAString& aBdAddr,
+    const BluetoothAddress& aBdAddr,
     const BluetoothGattServiceId& aServiceId,
     const BluetoothGattId& aCharId,
     BluetoothGattResultHandler* aRes) = 0;
 
   virtual void ReadRemoteRssi(int aClientIf,
-                              const nsAString& aBdAddr,
+                              const BluetoothAddress& aBdAddr,
                               BluetoothGattResultHandler* aRes) = 0;
 
-  virtual void GetDeviceType(const nsAString& aBdAddr,
+  virtual void GetDeviceType(const BluetoothAddress& aBdAddr,
                              BluetoothGattResultHandler* aRes) = 0;
 
   /* Set advertising data or scan response data */
@@ -863,12 +863,12 @@ public:
 
   /* Connect / Disconnect */
   virtual void ConnectPeripheral(int aServerIf,
-                                 const nsAString& aBdAddr,
+                                 const BluetoothAddress& aBdAddr,
                                  bool aIsDirect, /* auto connect */
                                  BluetoothTransport aTransport,
                                  BluetoothGattResultHandler* aRes) = 0;
   virtual void DisconnectPeripheral(int aServerIf,
-                                    const nsAString& aBdAddr,
+                                    const BluetoothAddress& aBdAddr,
                                     int aConnId,
                                     BluetoothGattResultHandler* aRes) = 0;
 
