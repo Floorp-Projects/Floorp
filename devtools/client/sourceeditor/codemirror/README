@@ -5,7 +5,7 @@ code, and optionally help with indentation.
 
 # Upgrade
 
-Currently used version is 4.2.0. To upgrade, download a new version of
+Currently used version is 5.7.0. To upgrade, download a new version of
 CodeMirror from the project's page [1] and replace all JavaScript and
 CSS files inside the codemirror directory [2].
 
@@ -41,73 +41,40 @@ below.
 
 # License
 
-The following files in this directory are licensed according to the contents
-in the LICENSE file:
-
- * codemirror.css
- * codemirror.js
- * comment/comment.js
- * comment/continue-comment.js
- * activeline.js
- * dialog/dialog.css
- * dialog/dialog.js
- * edit/closebrackets.js
- * edit/closetag.js
- * edit/continuelist.js
- * edit/matchbrackets.js
- * edit/matchtags.js
- * edit/trailingspace.js
- * fold/foldcode.js
- * fold/brace-fold.js
- * fold/comment-fold.js
- * fold/xml-fold.js
- * fold/foldgutter.js
- * hint/show-hint.js
- * keymap/emacs.js
- * keymap/sublime.js
- * keymap/vim.js
- * mode/xml.js
- * mode/css.js
- * mode/javascript.js
- * mode/clike.js
- * mode/htmlmixed.js
- * search/match-highlighter.js
- * search/search.js
- * search/searchcursor.js
- * tern/tern.js
- * tern/tern.css
- * test/codemirror.html
- * test/cm_comment_test.js
- * test/cm_doc_test.js
- * test/cm_driver.js
- * test/cm_mode_javascript_test.js
- * test/cm_mode_test.css
- * test/cm_mode_test.js
- * test/cm_multi_test.js
- * test/cm_search_test.js
- * test/cm_test.js
- * test/cm_sublime_test.js
- * test/cm_vim_test.js
- * test/cm_emacs_test.js
+The following files in this directory and devtools/client/sourceeditor/test/codemirror/
+are licensed according to the contents in the LICENSE file.
 
 # Localization patches
 
-diff --git a/devtools/client/sourceeditor/codemirror/search/search.js b/devtools/client/sourceeditor/codemirror/search/search.js
---- a/devtools/client/sourceeditor/codemirror/search/search.js
-+++ b/devtools/client/sourceeditor/codemirror/search/search.js
-@@ -62,19 +62,31 @@
-     if (isRE) {
-       query = new RegExp(isRE[1], isRE[2].indexOf("i") == -1 ? "" : "i");
-       if (query.test("")) query = /x^/;
-     } else if (query == "") {
-       query = /x^/;
+diff --git a/devtools/client/sourceeditor/codemirror/addon/search/search.js b/devtools/client/sourceeditor/codemirror/addon/search/search.js
+--- a/devtools/client/sourceeditor/codemirror/addon/search/search.js
++++ b/devtools/client/sourceeditor/codemirror/addon/search/search.js
+@@ -92,32 +92,47 @@
+     } else {
+       query = parseString(query)
      }
+     if (typeof query == "string" ? query == "" : query.test(""))
+       query = /x^/;
      return query;
    }
+
 -  var queryDialog =
--    'Search: <input type="text" style="width: 10em"/> <span style="color: #888">(Use /re/ syntax for regexp search)</span>';
+-    'Search: <input type="text" style="width: 10em" class="CodeMirror-search-field"/> <span style="color: #888" class="CodeMirror-search-hint">(Use /re/ syntax for regexp search)</span>';
 +  var queryDialog;
-   function doSearch(cm, rev) {
+
+   function startSearch(cm, state, query) {
+     state.queryText = query;
+     state.query = parseQuery(query);
+     cm.removeOverlay(state.overlay, queryCaseInsensitive(state.query));
+     state.overlay = searchOverlay(state.query, queryCaseInsensitive(state.query));
+     cm.addOverlay(state.overlay);
+     if (cm.showMatchesOnScrollbar) {
+       if (state.annotate) { state.annotate.clear(); state.annotate = null; }
+       state.annotate = cm.showMatchesOnScrollbar(state.query, queryCaseInsensitive(state.query));
+     }
+   }
+
+   function doSearch(cm, rev, persistent) {
 +    if (!queryDialog) {
 +      let doc = cm.getWrapperElement().ownerDocument;
 +      let inp = doc.createElement("input");
@@ -123,14 +90,15 @@ diff --git a/devtools/client/sourceeditor/codemirror/search/search.js b/devtools
 +      queryDialog.appendChild(inp);
 +      queryDialog.style.display = "flex";
 +    }
++
      var state = getSearchState(cm);
      if (state.query) return findNext(cm, rev);
-     dialog(cm, queryDialog, "Search for:", cm.getSelection(), function(query) {
-       cm.operation(function() {
-         if (!query || state.query) return;
-         state.query = parseQuery(query);
-         cm.removeOverlay(state.overlay, queryCaseInsensitive(state.query));
-         state.overlay = searchOverlay(state.query, queryCaseInsensitive(state.query));
+     var q = cm.getSelection() || state.lastQuery;
+     if (persistent && cm.openDialog) {
+       var hiding = null
+       persistentDialog(cm, queryDialog, q, function(query, event) {
+         CodeMirror.e_stop(event);
+         if (!query) return;
 
 # Footnotes
 

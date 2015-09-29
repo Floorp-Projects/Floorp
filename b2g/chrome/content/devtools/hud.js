@@ -190,7 +190,7 @@ var developerHUD = {
  * metrics, and how to notify the front-end when metrics have changed.
  */
 function Target(frame, actor) {
-  this._frame = frame;
+  this.frame = frame;
   this.actor = actor;
   this.metrics = new Map();
   this._appName = null;
@@ -198,15 +198,8 @@ function Target(frame, actor) {
 
 Target.prototype = {
 
-  get frame() {
-    let frame = this._frame;
-    let systemapp = document.querySelector('#systemapp');
-
-    return (frame === systemapp ? getContentWindow() : frame);
-  },
-
   get manifest() {
-    return this._frame.appManifestURL;
+    return this.frame.appManifestURL;
   },
 
   get appName() {

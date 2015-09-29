@@ -13,8 +13,10 @@ this.EXPORTED_SYMBOLS = ['SystemAppProxy'];
 
 var SystemAppProxy = {
   _frame: null,
+  _isLoaded: false,
   _isReady: false,
-  _pendingEvents: [],
+  _pendingLoadedEvents: [],
+  _pendingReadyEvents: [],
   _pendingListeners: [],
 
   // To call when a new system app iframe is created
@@ -34,18 +36,38 @@ var SystemAppProxy = {
     return this._frame;
   },
 
+  // To call when the load event of the System app document is triggered.
+  // i.e. everything that is not lazily loaded are run and done.
+  setIsLoaded: function () {
+    if (this._isLoaded) {
+      Cu.reportError('SystemApp has already been declared as being loaded.');
+    }
+    this._isLoaded = true;
+
+    // Dispatch all events being queued while the system app was still loading
+    this._pendingLoadedEvents
+        .forEach(([type, details]) =>
+                 this._sendCustomEvent(type, details, true));
+    this._pendingLoadedEvents = [];
+  },
+
   // To call when it is ready to receive events
+  // i.e. when system-message-listener-ready mozContentEvent is sent.
   setIsReady: function () {
+    if (!this._isLoaded) {
+      Cu.reportError('SystemApp.setIsLoaded() should be called before setIsReady().');
+    }
+
     if (this._isReady) {
       Cu.reportError('SystemApp has already been declared as being ready.');
     }
     this._isReady = true;
 
-    // Dispatch all events being queued while the system app was still loading
-    this._pendingEvents
+    // Dispatch all events being queued while the system app was still not ready
+    this._pendingReadyEvents
         .forEach(([type, details]) =>
                  this._sendCustomEvent(type, details));
-    this._pendingEvents = [];
+    this._pendingReadyEvents = [];
   },
 
   /*
@@ -62,6 +84,9 @@ var SystemAppProxy = {
    *   @param details   The event details.
    *   @param noPending Set to true to emit this event even before the system
    *                    app is ready.
+   *                    Event is always pending if the app is not loaded yet.
+   *
+   *   @returns event?  Dispatched event, or null if the event is pending.
    */
   _sendCustomEvent: function systemApp_sendCustomEvent(type,
                                                        details,
@@ -69,10 +94,22 @@ var SystemAppProxy = {
                                                        target) {
     let content = this._frame ? this._frame.contentWindow : null;
 
+    // If the system app isn't loaded yet,
+    // queue events until someone calls setIsLoaded
+    if (!content || !this._isLoaded) {
+      if (noPending) {
+        this._pendingLoadedEvents.push([type, details]);
+      } else {
+        this._pendingReadyEvents.push([type, details]);
+      }
+
+      return null;
+    }
+
     // If the system app isn't ready yet,
     // queue events until someone calls setIsReady
-    if (!content || (!this._isReady && !noPending)) {
-      this._pendingEvents.push([type, details]);
+    if (!this._isReady && !noPending) {
+      this._pendingReadyEvents.push([type, details]);
       return null;
     }
 
@@ -85,6 +122,10 @@ var SystemAppProxy = {
       payload = details;
     } else {
       payload = details ? Cu.cloneInto(details, content) : {};
+    }
+
+    if ((target || content) === this._frame.contentWindow) {
+      dump('XXX FIXME : Dispatch a ' + type + ': ' + details.type + "\n");
     }
 
     event.initCustomEvent(type, true, false, payload);

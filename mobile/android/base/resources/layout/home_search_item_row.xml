@@ -8,5 +8,5 @@
                                         android:layout_height="wrap_content"
                                         android:minHeight="@dimen/search_row_height"
                                         android:duplicateParentState="true"
-                                        android:paddingTop="7dp"
-                                        android:paddingBottom="7dp"/>
+                                        android:paddingTop="5dp"
+                                        android:paddingBottom="5dp"/>
