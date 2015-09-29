@@ -480,3 +480,57 @@ function dispatchCommandEvent(node) {
                                 false, false, null);
   node.dispatchEvent(commandEvent);
 }
+
+/**
+ * Encapsulate some common operations for highlighter's tests, to have
+ * the tests cleaner, without exposing directly `inspector`, `highlighter`, and
+ * `testActor` if not needed.
+ *
+ * @param  {String}
+ *    The highlighter's type
+ * @return
+ *    A generator function that takes an object with `inspector` and `testActor`
+ *    properties. (see `openInspector`)
+ */
+const getHighlighterHelperFor = (type) => Task.async(
+  function*({inspector, testActor}) {
+    let front = inspector.inspector;
+    let highlighter = yield front.getHighlighterByType(type);
+
+    let prefix = "";
+
+    return {
+      set prefix(value) {
+        prefix = value;
+      },
+
+      show: function*(selector = ":root") {
+        let node = yield getNodeFront(selector, inspector);
+        yield highlighter.show(node);
+      },
+
+      isElementHidden: function*(id) {
+        return (yield testActor.getHighlighterNodeAttribute(
+          prefix + id, "hidden", highlighter)) === "true";
+      },
+
+      getElementTextContent: function*(id) {
+        return yield testActor.getHighlighterNodeTextContent(
+          prefix + id, highlighter);
+      },
+
+      getElementAttribute: function*(id, name) {
+        return yield testActor.getHighlighterNodeAttribute(
+          prefix + id, name, highlighter);
+      },
+
+      synthesizeMouse: function*(options) {
+        yield testActor.synthesizeMouse(options);
+      },
+
+      finalize: function*() {
+        yield highlighter.finalize();
+      }
+    };
+  }
+);

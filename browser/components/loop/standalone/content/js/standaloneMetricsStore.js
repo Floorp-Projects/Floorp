@@ -125,12 +125,19 @@ loop.store.StandaloneMetricsStore = (function() {
      * @param {sharedActions.ConnectionFailure} actionData
      */
     connectionFailure: function(actionData) {
-      if (actionData.reason === FAILURE_DETAILS.MEDIA_DENIED) {
-        this._storeEvent(METRICS_GA_CATEGORY.general, METRICS_GA_ACTIONS.failed,
-          "Media denied");
-      } else if (actionData.reason === FAILURE_DETAILS.NO_MEDIA) {
-        this._storeEvent(METRICS_GA_CATEGORY.general, METRICS_GA_ACTIONS.failed,
-          "No media");
+      switch(actionData.reason) {
+        case FAILURE_DETAILS.MEDIA_DENIED:
+          this._storeEvent(METRICS_GA_CATEGORY.general, METRICS_GA_ACTIONS.failed,
+            "Media denied");
+          break;
+        case FAILURE_DETAILS.NO_MEDIA:
+          this._storeEvent(METRICS_GA_CATEGORY.general, METRICS_GA_ACTIONS.failed,
+            "No media");
+          break;
+        case FAILURE_DETAILS.ROOM_ALREADY_OPEN:
+          this._storeEvent(METRICS_GA_CATEGORY.general, METRICS_GA_ACTIONS.failed,
+            "Room already open");
+          break;
       }
     },
 
