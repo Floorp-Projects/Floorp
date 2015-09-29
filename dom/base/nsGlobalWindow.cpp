@@ -3942,7 +3942,7 @@ nsGlobalWindow::GetContentOuter(JSContext* aCx,
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
-  nsCOMPtr<nsIDOMWindow> content = GetContentInternal(aError, !nsContentUtils::IsCallerChrome());
+  nsCOMPtr<nsIDOMWindow> content = GetContentInternal(aError);
   if (aError.Failed()) {
     return;
   }
@@ -3971,7 +3971,7 @@ nsGlobalWindow::GetContent(JSContext* aCx,
 }
 
 already_AddRefed<nsIDOMWindow>
-nsGlobalWindow::GetContentInternal(ErrorResult& aError, bool aUnprivilegedCaller)
+nsGlobalWindow::GetContentInternal(ErrorResult& aError)
 {
   MOZ_ASSERT(IsOuterWindow());
 
@@ -3989,7 +3989,7 @@ nsGlobalWindow::GetContentInternal(ErrorResult& aError, bool aUnprivilegedCaller
   }
 
   nsCOMPtr<nsIDocShellTreeItem> primaryContent;
-  if (aUnprivilegedCaller) {
+  if (!nsContentUtils::IsCallerChrome()) {
     // If we're called by non-chrome code, make sure we don't return
     // the primary content window if the calling tab is hidden. In
     // such a case we return the same-type root in the hidden tab,
@@ -4022,6 +4022,17 @@ nsGlobalWindow::GetContentInternal(ErrorResult& aError, bool aUnprivilegedCaller
 
   domWindow = primaryContent->GetWindow();
   return domWindow.forget();
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::GetContent(nsIDOMWindow** aContent)
+{
+  FORWARD_TO_OUTER(GetContent, (aContent), NS_ERROR_UNEXPECTED);
+
+  ErrorResult rv;
+  *aContent = GetContentInternal(rv).take();
+
+  return rv.StealNSResult();
 }
 
 MozSelfSupport*
