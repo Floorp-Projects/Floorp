@@ -21,7 +21,9 @@
                                              android:background="@color/firstrun_tabstrip"
                                              android:visibility="visible"
                                              android:layout_gravity="top"
-                                             gecko:strip="@drawable/home_tab_menu_strip"/>
+                                             gecko:strip="@drawable/home_tab_menu_strip"
+                                             gecko:activeTextColor="@android:color/white"
+                                             gecko:inactiveTextColor="@color/divider_light" />
 
     </org.mozilla.gecko.firstrun.FirstrunPager>
 </org.mozilla.gecko.firstrun.FirstrunPane>
