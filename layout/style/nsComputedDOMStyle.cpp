@@ -5800,27 +5800,16 @@ nsComputedDOMStyle::AppendTimingFunction(nsDOMCSSValueList *aValueList,
   aValueList->AppendCSSValue(timingFunction);
 
   nsAutoString tmp;
-
   if (aTimingFunction.HasSpline()) {
-    // set the value from the cubic-bezier control points
-    // (We could try to regenerate the keywords if we want.)
-    tmp.AppendLiteral("cubic-bezier(");
-    tmp.AppendFloat(aTimingFunction.mFunc.mX1);
-    tmp.AppendLiteral(", ");
-    tmp.AppendFloat(aTimingFunction.mFunc.mY1);
-    tmp.AppendLiteral(", ");
-    tmp.AppendFloat(aTimingFunction.mFunc.mX2);
-    tmp.AppendLiteral(", ");
-    tmp.AppendFloat(aTimingFunction.mFunc.mY2);
-    tmp.Append(')');
+    nsStyleUtil::AppendCubicBezierTimingFunction(aTimingFunction.mFunc.mX1,
+                                                 aTimingFunction.mFunc.mY1,
+                                                 aTimingFunction.mFunc.mX2,
+                                                 aTimingFunction.mFunc.mY2,
+                                                 tmp);
   } else {
-    tmp.AppendLiteral("steps(");
-    tmp.AppendInt(aTimingFunction.mSteps);
-    if (aTimingFunction.mType == nsTimingFunction::Type::StepStart) {
-      tmp.AppendLiteral(", start)");
-    } else {
-      tmp.AppendLiteral(", end)");
-    }
+    nsStyleUtil::AppendStepsTimingFunction(aTimingFunction.mType,
+                                           aTimingFunction.mSteps,
+                                           tmp);
   }
   timingFunction->SetString(tmp);
 }
