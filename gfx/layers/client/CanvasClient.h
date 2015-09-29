@@ -57,6 +57,7 @@ public:
 
   CanvasClient(CompositableForwarder* aFwd, TextureFlags aFlags)
     : CompositableClient(aFwd, aFlags)
+    , mFrameID(0)
   {
     mTextureFlags = aFlags;
   }
@@ -67,9 +68,18 @@ public:
 
   virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer) = 0;
 
+  virtual bool AddTextureClient(TextureClient* aTexture) override
+  {
+    ++mFrameID;
+    return CompositableClient::AddTextureClient(aTexture);
+  }
+
   virtual void UpdateAsync(AsyncCanvasRenderer* aRenderer) {}
 
   virtual void Updated() { }
+
+protected:
+  int32_t mFrameID;
 };
 
 // Used for 2D canvases and WebGL canvas on non-GL systems where readback is requried.
@@ -97,7 +107,7 @@ public:
   virtual bool AddTextureClient(TextureClient* aTexture) override
   {
     MOZ_ASSERT((mTextureFlags & aTexture->GetFlags()) == mTextureFlags);
-    return CompositableClient::AddTextureClient(aTexture);
+    return CanvasClient::AddTextureClient(aTexture);
   }
 
   virtual void OnDetach() override
