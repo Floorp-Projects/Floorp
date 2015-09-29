@@ -125,9 +125,6 @@ public:
   // Set by Reader if the current audio track can be offloaded
   virtual void SetPlatformCanOffloadAudio(bool aCanOffloadAudio) {}
 
-  // Called by Decoder/State machine to check audio offload condtions are met
-  virtual bool CheckDecoderCanOffloadAudio() { return false; }
-
   // Called from HTMLMediaElement when owner document activity changes
   virtual void SetElementVisibility(bool aIsVisible) {}
 
