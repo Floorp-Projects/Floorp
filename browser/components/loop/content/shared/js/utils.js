@@ -75,6 +75,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
   var FAILURE_DETAILS = {
     MEDIA_DENIED: "reason-media-denied",
     NO_MEDIA: "reason-no-media",
+    ROOM_ALREADY_OPEN: "reason-room-already-open",
     UNABLE_TO_PUBLISH_MEDIA: "unable-to-publish-media",
     USER_UNAVAILABLE: "reason-user-unavailable",
     COULD_NOT_CONNECT: "reason-could-not-connect",
