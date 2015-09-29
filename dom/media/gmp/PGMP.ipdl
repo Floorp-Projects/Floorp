@@ -9,6 +9,7 @@ include protocol PGMPTimer;
 include protocol PGMPStorage;
 
 using mozilla::dom::NativeThreadId from "mozilla/dom/TabMessageUtils.h";
+using mozilla::GMPCrashReason from "GMPUtils.h";
 
 namespace mozilla {
 namespace gmp {
@@ -33,7 +34,7 @@ parent:
 
 child:
   async BeginAsyncShutdown();
-  async CrashPluginNow();
+  async CrashPluginNow(GMPCrashReason aReason);
   intr StartPlugin();
   async SetNodeId(nsCString nodeId);
   async CloseActive();

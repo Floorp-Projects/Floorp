@@ -22,6 +22,7 @@
 #include "nsTArray.h"
 #include "nsIFile.h"
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
+#include "GMPUtils.h"
 
 class nsIThread;
 
@@ -79,7 +80,7 @@ public:
   nsresult Init(GeckoMediaPluginServiceParent* aService, nsIFile* aPluginDir);
   nsresult CloneFrom(const GMPParent* aOther);
 
-  void Crash();
+  void Crash(GMPCrashReason aReason);
 
   nsresult LoadProcess();
 
