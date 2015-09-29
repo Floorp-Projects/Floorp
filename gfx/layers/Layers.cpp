@@ -25,7 +25,6 @@
 #include "mozilla/gfx/2D.h"             // for DrawTarget
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
-#include "mozilla/layers/AsyncCanvasRenderer.h"
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite
@@ -2104,19 +2103,6 @@ ColorLayer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
   layer->set_type(LayersPacket::Layer::ColorLayer);
   layer->set_color(mColor.ToABGR());
 }
-
-CanvasLayer::CanvasLayer(LayerManager* aManager, void* aImplData)
-  : Layer(aManager, aImplData)
-  , mPreTransCallback(nullptr)
-  , mPreTransCallbackData(nullptr)
-  , mPostTransCallback(nullptr)
-  , mPostTransCallbackData(nullptr)
-  , mFilter(GraphicsFilter::FILTER_GOOD)
-  , mDirty(false)
-{}
-
-CanvasLayer::~CanvasLayer()
-{}
 
 void
 CanvasLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
