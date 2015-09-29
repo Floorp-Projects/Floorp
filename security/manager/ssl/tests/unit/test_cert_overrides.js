@@ -19,7 +19,7 @@ function check_telemetry() {
                     .getHistogramById("SSL_CERT_ERROR_OVERRIDES")
                     .snapshot();
   equal(histogram.counts[ 0], 0, "Should have 0 unclassified counts");
-  equal(histogram.counts[ 2], 7,
+  equal(histogram.counts[ 2], 8,
         "Actual and expected SEC_ERROR_UNKNOWN_ISSUER counts should match");
   equal(histogram.counts[ 3], 1,
         "Actual and expected SEC_ERROR_CA_CERT_INVALID counts should match");
@@ -60,13 +60,47 @@ function check_telemetry() {
         "Actual and expected successful verifications of 2048-bit keys should match");
   equal(keySizeHistogram.counts[2], 0,
         "Actual and expected successful verifications of 1024-bit keys should match");
-  equal(keySizeHistogram.counts[3], 54,
-        "Actual and expected key size verification failures should match");
+  equal(keySizeHistogram.counts[3], 56,
+        "Actual and expected verification failures unrelated to key size should match");
 
   run_next_test();
 }
 
+// Internally, specifying "port" -1 is the same as port 443. This tests that.
+function run_port_equivalency_test(inPort, outPort) {
+  Assert.ok((inPort == 443 && outPort == -1) || (inPort == -1 && outPort == 443),
+            "The two specified ports must be -1 and 443 (in any order)");
+  let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
+                              .getService(Ci.nsICertOverrideService);
+  let cert = constructCertFromFile("bad_certs/default-ee.pem");
+  let expectedBits = Ci.nsICertOverrideService.ERROR_UNTRUSTED
+  let expectedTemporary = true;
+  certOverrideService.rememberValidityOverride("example.com", inPort, cert,
+                                               expectedBits, expectedTemporary);
+  let actualBits = {};
+  let actualTemporary = {};
+  Assert.ok(certOverrideService.hasMatchingOverride("example.com", outPort,
+                                                    cert, actualBits,
+                                                    actualTemporary),
+            `override set on port ${inPort} should match port ${outPort}`);
+  equal(actualBits.value, expectedBits,
+        "input override bits should match output bits");
+  equal(actualTemporary.value, expectedTemporary,
+        "input override temporary value should match output temporary value");
+  Assert.ok(!certOverrideService.hasMatchingOverride("example.com", 563,
+                                                     cert, {}, {}),
+            `override set on port ${inPort} should not match port 563`);
+  certOverrideService.clearValidityOverride("example.com", inPort);
+  Assert.ok(!certOverrideService.hasMatchingOverride("example.com", outPort,
+                                                     cert, actualBits, {}),
+            `override cleared on port ${inPort} should match port ${outPort}`);
+  equal(actualBits.value, 0, "should have no bits set if there is no override");
+}
+
 function run_test() {
+  run_port_equivalency_test(-1, 443);
+  run_port_equivalency_test(443, -1);
+
   Services.prefs.setIntPref("security.OCSP.enabled", 1);
   add_tls_server_setup("BadCertServer", "bad_certs");
 
@@ -211,6 +245,23 @@ function add_simple_tests() {
   add_cert_override_test("badSubjectAltNames.example.com",
                          Ci.nsICertOverrideService.ERROR_MISMATCH,
                          SSL_ERROR_BAD_CERT_DOMAIN);
+
+  add_cert_override_test("bug413909.xn--hxajbheg2az3al.xn--jxalpdlp",
+                         Ci.nsICertOverrideService.ERROR_UNTRUSTED,
+                         SEC_ERROR_UNKNOWN_ISSUER);
+  add_test(function() {
+    // At this point, the override for bug413909.xn--hxajbheg2az3al.xn--jxalpdlp
+    // is still valid. Do some additional tests relating to IDN handling.
+    let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
+                                .getService(Ci.nsICertOverrideService);
+    let uri = Services.io.newURI("https://bug413909.xn--hxajbheg2az3al.xn--jxalpdlp", null, null);
+    let cert = constructCertFromFile("bad_certs/idn-certificate.pem");
+    Assert.ok(certOverrideService.hasMatchingOverride(uri.asciiHost, 8443, cert, {}, {}),
+              "IDN certificate should have matching override using ascii host");
+    Assert.ok(!certOverrideService.hasMatchingOverride(uri.host, 8443, cert, {}, {}),
+              "IDN certificate should not have matching override using (non-ascii) host");
+    run_next_test();
+  });
 }
 
 function add_combo_tests() {
