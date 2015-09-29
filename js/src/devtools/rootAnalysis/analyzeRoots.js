@@ -331,31 +331,57 @@ function edgeCanGC(edge)
 //
 //  - 'gcInfo': a direct pointer to the GC call edge
 //
-function findGCBeforeVariableUse(suppressed, variable, worklist)
+function findGCBeforeVariableUse(start_body, start_point, suppressed, variable)
 {
     // Scan through all edges preceding an unrooted variable use, using an
     // explicit worklist, looking for a GC call. A worklist contains an
     // incoming edge together with a description of where it or one of its
     // successors GC'd (if any).
 
+    var bodies_visited = new Map();
+
+    let worklist = [{body: start_body, ppoint: start_point, gcInfo: null, why: null}];
     while (worklist.length) {
+        // Grab an entry off of the worklist, representing a point within the
+        // CFG identified by <body,ppoint>. If this point has a descendant
+        // later in the CFG that can GC, gcInfo will be set to the information
+        // about that GC call.
+
         var entry = worklist.pop();
         var { body, ppoint, gcInfo } = entry;
 
-        if (body.seen) {
-            if (ppoint in body.seen) {
-                var seenEntry = body.seen[ppoint];
-                if (!gcInfo || seenEntry.gcInfo)
-                    continue;
-            }
-        } else {
-            body.seen = [];
-        }
-        body.seen[ppoint] = {body: body, gcInfo: gcInfo};
+        // Handle the case where there are multiple ways to reach this point
+        // (traversing backwards).
+        var visited = bodies_visited.get(body);
+        if (!visited)
+            bodies_visited.set(body, visited = new Map());
+        if (visited.has(ppoint)) {
+            var seenEntry = visited.get(ppoint);
 
+            // This point already knows how to GC through some other path, so
+            // we have nothing new to learn. (The other path will consider the
+            // predecessors.)
+            if (seenEntry.gcInfo)
+                continue;
+
+            // If this worklist's entry doesn't know of any way to GC, then
+            // there's no point in continuing the traversal through it. Perhaps
+            // another edge will be found that *can* GC; otherwise, the first
+            // route to the point will traverse through predecessors.
+            //
+            // Note that this means we may visit a point more than once, if the
+            // first time we visit we don't have a known reachable GC call and
+            // the second time we do.
+            if (!gcInfo)
+                continue;
+        }
+        visited.set(ppoint, {body: body, gcInfo: gcInfo});
+
+        // Check for hitting the entry point of the current body (which may be
+        // the outer function or a loop within it.)
         if (ppoint == body.Index[0]) {
             if (body.BlockId.Kind == "Loop") {
-                // propagate to parents that enter the loop body.
+                // Propagate to outer body parents that enter the loop body.
                 if ("BlockPPoint" in body) {
                     for (var parent of body.BlockPPoint) {
                         var found = false;
@@ -399,11 +425,10 @@ function findGCBeforeVariableUse(suppressed, variable, worklist)
                 // to a use after the GC call that proves its live range
                 // extends at least that far.
                 if (gcInfo)
-                    return {gcInfo: gcInfo, why: {body: body, ppoint: source, gcInfo: gcInfo, why: entry } }
+                    return {gcInfo: gcInfo, why: {body: body, ppoint: source, gcInfo: gcInfo, why: entry } };
 
-                // Otherwise, we want to continue searching for the true
-                // minimumUse, for use in reporting unnecessary rooting, but we
-                // truncate this particular branch of the search at this edge.
+                // Otherwise, keep searching through the graph, but truncate
+                // this particular branch of the search at this edge.
                 continue;
             }
 
@@ -415,7 +440,10 @@ function findGCBeforeVariableUse(suppressed, variable, worklist)
 
             if (edge_uses) {
                 // The live range starts at least this far back, so we're done
-                // for the same reason as with edge_kills.
+                // for the same reason as with edge_kills. The only difference
+                // is that a GC on this edge indicates a hazard, whereas if
+                // we're killing a live range in the GC call then it's not live
+                // *across* the call.
                 if (gcInfo)
                     return {gcInfo:gcInfo, why:entry};
             }
@@ -446,13 +474,12 @@ function findGCBeforeVariableUse(suppressed, variable, worklist)
 
 function variableLiveAcrossGC(suppressed, variable)
 {
-    // A variable is live across a GC if (1) it is used by an edge, and (2) it
-    // is used after a GC in a successor edge.
+    // A variable is live across a GC if (1) it is used by an edge (as in, it
+    // was at least initialized), and (2) it is used after a GC in a successor
+    // edge.
 
-    for (var body of functionBodies) {
-        body.seen = null;
+    for (var body of functionBodies)
         body.minimumUse = 0;
-    }
 
     for (var body of functionBodies) {
         if (!("PEdge" in body))
@@ -467,8 +494,7 @@ function variableLiveAcrossGC(suppressed, variable)
             //
             if (usePoint && !edgeKillsVariable(edge, variable)) {
                 // Found a use, possibly after a GC.
-                var worklist = [{body:body, ppoint:usePoint, gcInfo:null, why:null}];
-                var call = findGCBeforeVariableUse(suppressed, variable, worklist);
+                var call = findGCBeforeVariableUse(body, usePoint, suppressed, variable);
                 if (!call)
                     continue;
 
