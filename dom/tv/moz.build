@@ -34,12 +34,6 @@ UNIFIED_SOURCES += [
 
 XPIDL_SOURCES += [
     'nsITVService.idl',
-    'nsITVSimulatorService.idl',
-]
-
-EXTRA_COMPONENTS += [
-    'TVSimulatorService.js',
-    'TVSimulatorService.manifest',
 ]
 
 XPIDL_MODULE = 'dom_tv'
