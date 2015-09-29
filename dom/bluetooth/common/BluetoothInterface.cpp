@@ -861,8 +861,8 @@ BluetoothNotificationHandler::AdapterPropertiesNotification(
 
 void
 BluetoothNotificationHandler::RemoteDevicePropertiesNotification(
-  BluetoothStatus aStatus, const nsAString& aBdAddr, int aNumProperties,
-  const BluetoothProperty* aProperties)
+  BluetoothStatus aStatus, const BluetoothAddress& aBdAddr,
+  int aNumProperties, const BluetoothProperty* aProperties)
 { }
 
 void
@@ -876,24 +876,25 @@ BluetoothNotificationHandler::DiscoveryStateChangedNotification(bool aState)
 
 void
 BluetoothNotificationHandler::PinRequestNotification(
-  const nsAString& aRemoteBdAddr, const nsAString& aBdName, uint32_t aCod)
+  const BluetoothAddress& aRemoteBdAddr, const nsAString& aBdName,
+  uint32_t aCod)
 { }
 
 void
 BluetoothNotificationHandler::SspRequestNotification(
-  const nsAString& aRemoteBdAddr, const nsAString& aBdName, uint32_t aCod,
-  BluetoothSspVariant aPairingVariant, uint32_t aPassKey)
+  const BluetoothAddress& aRemoteBdAddr, const nsAString& aBdName,
+  uint32_t aCod, BluetoothSspVariant aPairingVariant, uint32_t aPassKey)
 { }
 
 void
 BluetoothNotificationHandler::BondStateChangedNotification(
-  BluetoothStatus aStatus, const nsAString& aRemoteBdAddr,
+  BluetoothStatus aStatus, const BluetoothAddress& aRemoteBdAddr,
   BluetoothBondState aState)
 { }
 
 void
 BluetoothNotificationHandler::AclStateChangedNotification(
-  BluetoothStatus aStatus, const nsAString& aRemoteBdAddr, bool aState)
+  BluetoothStatus aStatus, const BluetoothAddress& aRemoteBdAddr, bool aState)
 { }
 
 void
