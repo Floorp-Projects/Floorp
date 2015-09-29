@@ -4,7 +4,15 @@
 
 "use strict";
 
+const {Ci} = require("chrome");
 const l10n = require("gcli/l10n");
+
+function getContentViewer(context) {
+  let {window} = context.environment;
+  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIDocShell)
+               .contentViewer;
+}
 
 exports.items = [
   {
@@ -13,7 +21,7 @@ exports.items = [
   },
   {
     item: "command",
-    runAt: "client",
+    runAt: "server",
     name: "media emulate",
     description: l10n.lookup("mediaEmulateDesc"),
     manual: l10n.lookup("mediaEmulateManual"),
@@ -22,29 +30,27 @@ exports.items = [
         name: "type",
         description: l10n.lookup("mediaEmulateType"),
         type: {
-           name: "selection",
-           data: [
-             "braille", "embossed", "handheld", "print", "projection",
-             "screen", "speech", "tty", "tv"
-           ]
+          name: "selection",
+          data: [
+            "braille", "embossed", "handheld", "print", "projection",
+            "screen", "speech", "tty", "tv"
+          ]
         }
       }
     ],
     exec: function(args, context) {
-      let markupDocumentViewer = context.environment.chromeWindow
-                                        .gBrowser.markupDocumentViewer;
-      markupDocumentViewer.emulateMedium(args.type);
+      let contentViewer = getContentViewer(context);
+      contentViewer.emulateMedium(args.type);
     }
   },
   {
     item: "command",
-    runAt: "client",
+    runAt: "server",
     name: "media reset",
     description: l10n.lookup("mediaResetDesc"),
     exec: function(args, context) {
-      let markupDocumentViewer = context.environment.chromeWindow
-                                        .gBrowser.markupDocumentViewer;
-      markupDocumentViewer.stopEmulatingMedium();
+      let contentViewer = getContentViewer(context);
+      contentViewer.stopEmulatingMedium();
     }
   }
 ];
