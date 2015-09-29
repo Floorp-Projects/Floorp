@@ -21,8 +21,22 @@ Std140PaddingHelper::Std140PaddingHelper(const std::map<TString, int> &structEle
                                          unsigned *uniqueCounter)
     : mPaddingCounter(uniqueCounter),
       mElementIndex(0),
-      mStructElementIndexes(structElementIndexes)
+      mStructElementIndexes(&structElementIndexes)
 {}
+
+Std140PaddingHelper::Std140PaddingHelper(const Std140PaddingHelper &other)
+    : mPaddingCounter(other.mPaddingCounter),
+      mElementIndex(other.mElementIndex),
+      mStructElementIndexes(other.mStructElementIndexes)
+{}
+
+Std140PaddingHelper &Std140PaddingHelper::operator=(const Std140PaddingHelper &other)
+{
+    mPaddingCounter = other.mPaddingCounter;
+    mElementIndex = other.mElementIndex;
+    mStructElementIndexes = other.mStructElementIndexes;
+    return *this;
+}
 
 TString Std140PaddingHelper::next()
 {
@@ -107,7 +121,7 @@ TString Std140PaddingHelper::postPaddingString(const TType &type, bool useHLSLRo
     {
         const TString &structName = QualifiedStructNameString(*structure,
                                                               useHLSLRowMajorPacking, true);
-        numComponents = mStructElementIndexes.find(structName)->second;
+        numComponents = mStructElementIndexes->find(structName)->second;
 
         if (numComponents == 0)
         {
@@ -274,9 +288,9 @@ void StructureHLSL::addConstructor(const TType &type, const TString &name, const
 
     for (unsigned int parameter = 0; parameter < ctorParameters.size(); parameter++)
     {
-        const TType &type = ctorParameters[parameter];
+        const TType &paramType = ctorParameters[parameter];
 
-        constructor += TypeString(type) + " x" + str(parameter) + ArrayString(type);
+        constructor += TypeString(paramType) + " x" + str(parameter) + ArrayString(paramType);
 
         if (parameter < ctorParameters.size() - 1)
         {

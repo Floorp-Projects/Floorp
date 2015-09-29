@@ -8,7 +8,7 @@
 
 #include <sstream>
 
-#include "compiler/translator/compilerdebug.h"
+#include "common/debug.h"
 #include "compiler/translator/Diagnostics.h"
 
 static TBehavior getBehavior(const std::string& str)
@@ -27,10 +27,12 @@ static TBehavior getBehavior(const std::string& str)
 
 TDirectiveHandler::TDirectiveHandler(TExtensionBehavior& extBehavior,
                                      TDiagnostics& diagnostics,
-                                     int& shaderVersion)
+                                     int& shaderVersion,
+                                     bool debugShaderPrecisionSupported)
     : mExtensionBehavior(extBehavior),
       mDiagnostics(diagnostics),
-      mShaderVersion(shaderVersion)
+      mShaderVersion(shaderVersion),
+      mDebugShaderPrecisionSupported(debugShaderPrecisionSupported)
 {
 }
 
@@ -65,6 +67,7 @@ void TDirectiveHandler::handlePragma(const pp::SourceLocation& loc,
     {
         const char kOptimize[] = "optimize";
         const char kDebug[] = "debug";
+        const char kDebugShaderPrecision[] = "webgl_debug_shader_precision";
         const char kOn[] = "on";
         const char kOff[] = "off";
 
@@ -81,6 +84,12 @@ void TDirectiveHandler::handlePragma(const pp::SourceLocation& loc,
             else if (value == kOff) mPragma.debug = false;
             else invalidValue = true;
         }
+        else if (name == kDebugShaderPrecision && mDebugShaderPrecisionSupported)
+        {
+            if (value == kOn) mPragma.debugShaderPrecision = true;
+            else if (value == kOff) mPragma.debugShaderPrecision = false;
+            else invalidValue = true;
+        }
         else
         {
             mDiagnostics.report(pp::Diagnostics::PP_UNRECOGNIZED_PRAGMA, loc, name);
@@ -89,9 +98,8 @@ void TDirectiveHandler::handlePragma(const pp::SourceLocation& loc,
 
         if (invalidValue)
         {
-            mDiagnostics.writeInfo(pp::Diagnostics::PP_ERROR, loc,
-                                   "invalid pragma value", value,
-                                   "'on' or 'off' expected");
+            mDiagnostics.report(pp::Diagnostics::PP_INVALID_PRAGMA_VALUE, loc, value);
+            return;
         }
     }
 }
