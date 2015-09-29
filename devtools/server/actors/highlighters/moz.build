@@ -13,6 +13,7 @@ DevToolsModules(
     'box-model.js',
     'css-transform.js',
     'geometry-editor.js',
+    'measuring-tool.js',
     'rect.js',
     'rulers.js',
     'selector.js',
