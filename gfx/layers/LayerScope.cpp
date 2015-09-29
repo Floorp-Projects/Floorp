@@ -435,12 +435,14 @@ public:
     DebugGLGraphicBuffer(void *layerRef,
                          GLenum target,
                          GLuint name,
-                         const LayerRenderState &aState)
+                         const LayerRenderState &aState,
+                         bool aIsMask)
         : DebugGLData(Packet::TEXTURE),
           mLayerRef(reinterpret_cast<uint64_t>(layerRef)),
           mTarget(target),
           mName(name),
-          mState(aState)
+          mState(aState),
+          mIsMask(aIsMask)
     {
     }
 
@@ -457,6 +459,7 @@ public:
         tp->set_layerref(mLayerRef);
         tp->set_name(mName);
         tp->set_target(mTarget);
+        tp->set_ismask(mIsMask);
 
         int pFormat = buffer->getPixelFormat();
         if (HAL_PIXEL_FORMAT_RGBA_8888 != pFormat &&
@@ -513,6 +516,7 @@ private:
     GLenum mTarget;
     GLuint mName;
     const LayerRenderState &mState;
+    bool mIsMask;
     Packet mPacket;
 };
 #endif
@@ -523,13 +527,15 @@ public:
                        void* layerRef,
                        GLenum target,
                        GLuint name,
-                       DataSourceSurface* img)
+                       DataSourceSurface* img,
+                       bool aIsMask)
         : DebugGLData(Packet::TEXTURE),
           mLayerRef(reinterpret_cast<uint64_t>(layerRef)),
           mTarget(target),
           mName(name),
           mContextAddress(reinterpret_cast<intptr_t>(cx)),
-          mDatasize(0)
+          mDatasize(0),
+          mIsMask(aIsMask)
     {
         // pre-packing
         // DataSourceSurface may have locked buffer,
@@ -552,6 +558,7 @@ private:
         tp->set_target(mTarget);
         tp->set_dataformat(LOCAL_GL_RGBA);
         tp->set_glcontext(static_cast<uint64_t>(mContextAddress));
+        tp->set_ismask(mIsMask);
 
         if (aImage) {
             tp->set_width(aImage->GetSize().width);
@@ -590,6 +597,7 @@ protected:
     GLuint mName;
     intptr_t mContextAddress;
     uint32_t mDatasize;
+    bool mIsMask;
 
     // Packet data
     Packet mPacket;
@@ -909,12 +917,14 @@ private:
     static void SendTextureSource(GLContext* aGLContext,
                                   void* aLayerRef,
                                   TextureSourceOGL* aSource,
-                                  bool aFlipY);
+                                  bool aFlipY,
+                                  bool aIsMask);
 #ifdef MOZ_WIDGET_GONK
     static bool SendGraphicBuffer(GLContext* aGLContext,
                                   void* aLayerRef,
                                   TextureSourceOGL* aSource,
-                                  const TexturedEffect* aEffect);
+                                  const TexturedEffect* aEffect,
+                                  bool aIsMask);
 #endif
     static void SendTexturedEffect(GLContext* aGLContext,
                                    void* aLayerRef,
@@ -1029,7 +1039,8 @@ void
 SenderHelper::SendTextureSource(GLContext* aGLContext,
                                 void* aLayerRef,
                                 TextureSourceOGL* aSource,
-                                bool aFlipY)
+                                bool aFlipY,
+                                bool aIsMask)
 {
     MOZ_ASSERT(aGLContext);
     if (!aGLContext) {
@@ -1055,7 +1066,7 @@ SenderHelper::SendTextureSource(GLContext* aGLContext,
                                                          shaderConfig, aFlipY);
     gLayerScopeManager.GetSocketManager()->AppendDebugData(
         new DebugGLTextureData(aGLContext, aLayerRef, textureTarget,
-                               texID, img));
+                               texID, img, aIsMask));
 
     sSentTextureIds.push_back(texID);
     gLayerScopeManager.CurrentSession().mTexIDs.push_back(texID);
@@ -1067,7 +1078,8 @@ bool
 SenderHelper::SendGraphicBuffer(GLContext* aGLContext,
                                 void* aLayerRef,
                                 TextureSourceOGL* aSource,
-                                const TexturedEffect* aEffect) {
+                                const TexturedEffect* aEffect,
+                                bool aIsMask) {
     GLuint texID = GetTextureID(aGLContext, aSource);
     if (HasTextureIdBeenSent(texID)) {
         return false;
@@ -1078,7 +1090,7 @@ SenderHelper::SendGraphicBuffer(GLContext* aGLContext,
 
     GLenum target = aSource->GetTextureTarget();
     mozilla::UniquePtr<DebugGLGraphicBuffer> package =
-        MakeUnique<DebugGLGraphicBuffer>(aLayerRef, target, texID, aEffect->mState);
+        MakeUnique<DebugGLGraphicBuffer>(aLayerRef, target, texID, aEffect->mState, aIsMask);
 
     // The texure content in this TexureHost is not altered,
     // we don't need to send it again.
@@ -1110,13 +1122,13 @@ SenderHelper::SendTexturedEffect(GLContext* aGLContext,
     }
 
 #ifdef MOZ_WIDGET_GONK
-    if (SendGraphicBuffer(aGLContext, aLayerRef, source, aEffect)) {
+    if (SendGraphicBuffer(aGLContext, aLayerRef, source, aEffect, false)) {
         return;
     }
 #endif
     // Fallback texture sending path.
     // Render to texture and read pixels back.
-    SendTextureSource(aGLContext, aLayerRef, source, false);
+    SendTextureSource(aGLContext, aLayerRef, source, false, false);
 }
 
 void
@@ -1129,7 +1141,7 @@ SenderHelper::SendMaskEffect(GLContext* aGLContext,
         return;
     }
 
-    SendTextureSource(aGLContext, aLayerRef, source, false);
+    SendTextureSource(aGLContext, aLayerRef, source, false, true);
 }
 
 void
@@ -1146,9 +1158,9 @@ SenderHelper::SendYCbCrEffect(GLContext* aGLContext,
     TextureSourceOGL* sourceCb = sourceYCbCr->GetSubSource(Cb)->AsSourceOGL();
     TextureSourceOGL* sourceCr = sourceYCbCr->GetSubSource(Cr)->AsSourceOGL();
 
-    SendTextureSource(aGLContext, aLayerRef, sourceY, false);
-    SendTextureSource(aGLContext, aLayerRef, sourceCb, false);
-    SendTextureSource(aGLContext, aLayerRef, sourceCr, false);
+    SendTextureSource(aGLContext, aLayerRef, sourceY, false, false);
+    SendTextureSource(aGLContext, aLayerRef, sourceCb, false, false);
+    SendTextureSource(aGLContext, aLayerRef, sourceCr, false, false);
 }
 
 void
