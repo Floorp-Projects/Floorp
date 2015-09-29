@@ -1,6 +1,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+// This mixin should be deprecated and a new solution implemented for
+// processing menus and taking care of menu positioning globally. This
+// new implementation should ensure all menus are positioned using the
+// same method of positioning
 
 var loop = loop || {};
 loop.shared = loop.shared || {};
@@ -228,6 +232,11 @@ loop.shared.mixins = (function() {
           menu.style.marginTop = "auto";
         }
 
+        // Added call to _repositionMenu() if it exists, to allow a component to
+        // add specific repositioning to a menu.
+        if (this._repositionMenu) {
+          this._repositionMenu();
+        }
         menu.style.visibility = "visible";
       },
 
