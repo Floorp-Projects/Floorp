@@ -647,13 +647,13 @@ JSObject::writeBarrierPost(void* cellp, JSObject* prev, JSObject* next)
         // via a different store buffer.
         if (prev && prev->storeBuffer())
             return;
-        buffer->putCellFromAnyThread(static_cast<js::gc::Cell**>(cellp));
+        buffer->putCell(static_cast<js::gc::Cell**>(cellp));
         return;
     }
 
     // Remove the prev entry if the new value does not need it.
     if (prev && (buffer = prev->storeBuffer()))
-        buffer->unputCellFromAnyThread(static_cast<js::gc::Cell**>(cellp));
+        buffer->unputCell(static_cast<js::gc::Cell**>(cellp));
 }
 
 namespace js {
