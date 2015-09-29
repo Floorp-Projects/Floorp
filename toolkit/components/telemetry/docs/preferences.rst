@@ -71,6 +71,10 @@ Data-choices notification
 
   This is the data submission master kill switch. If disabled, no policy is shown or upload takes place, ever.
 
+``datareporting.policy.dataSubmissionEnabled.v2``
+
+  If disabled, FHR v2 data will not be sent to Mozilla servers. Telemetry v4 data submission will not be affected. This is like ``datareporting.policy.dataSubmissionEnabled``, but only affects FHR - Telemetry upload will not be disabled.
+
 ``datareporting.policy.dataSubmissionPolicyNotifiedTime``
 
   Records the date user was shown the policy. This preference is also used on Android.

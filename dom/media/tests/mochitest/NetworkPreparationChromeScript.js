@@ -38,9 +38,6 @@ function disableRadio() {
 }
 
 addMessageListener('prepare-network', function(message) {
-  //RIL DOM events will be pending until RIL receiveing system-message-listener-ready event.
-  Services.obs.notifyObservers(null, 'system-message-listener-ready', null);
-
   connection.addEventListener('datachange', function onDataChange() {
     if (connection.data.connected) {
       connection.removeEventListener('datachange', onDataChange);

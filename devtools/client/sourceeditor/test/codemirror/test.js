@@ -3,7 +3,7 @@ var Pos = CodeMirror.Pos;
 CodeMirror.defaults.rtlMoveVisually = true;
 
 function forEach(arr, f) {
-  for (var i = 0, e = arr.length; i < e; ++i) f(arr[i]);
+  for (var i = 0, e = arr.length; i < e; ++i) f(arr[i], i);
 }
 
 function addDoc(cm, width, height) {
@@ -359,6 +359,15 @@ testCM("undoSelectionAsBefore", function(cm) {
   eq(cm.getSelection(), "abc");
 });
 
+testCM("selectionChangeConfusesHistory", function(cm) {
+  cm.replaceSelection("abc", null, "dontmerge");
+  cm.operation(function() {
+    cm.setCursor(Pos(0, 0));
+    cm.replaceSelection("abc", null, "dontmerge");
+  });
+  eq(cm.historySize().undo, 2);
+});
+
 testCM("markTextSingleLine", function(cm) {
   forEach([{a: 0, b: 1, c: "", f: 2, t: 5},
            {a: 0, b: 4, c: "", f: 0, t: 2},
@@ -507,6 +516,17 @@ testCM("deleteSpanCollapsedInclusiveLeft", function(cm) {
   cm.replaceRange("", from, to);
 }, {value: "abc\nX\ndef"});
 
+testCM("markTextCSS", function(cm) {
+  function present() {
+    var spans = cm.display.lineDiv.getElementsByTagName("span");
+    for (var i = 0; i < spans.length; i++)
+      if (spans[i].style.color == "cyan" && span[i].textContent == "cdefg") return true;
+  }
+  var m = cm.markText(Pos(0, 2), Pos(0, 6), {css: "color: cyan"});
+  m.clear();
+  is(!present());
+}, {value: "abcdefgh"});
+
 testCM("bookmark", function(cm) {
   function p(v) { return v && Pos(v[0], v[1]); }
   forEach([{a: [1, 0], b: [1, 1], c: "", d: [1, 4]},
@@ -591,6 +611,14 @@ testCM("getAllMarks", function(cm) {
   eq(cm.getAllMarks().length, 2);
 });
 
+testCM("setValueClears", function(cm) {
+  cm.addLineClass(0, "wrap", "foo");
+  var mark = cm.markText(Pos(0, 0), Pos(1, 1), {inclusiveLeft: true, inclusiveRight: true});
+  cm.setValue("foo");
+  is(!cm.lineInfo(0).wrapClass);
+  is(!mark.find());
+}, {value: "a\nb"});
+
 testCM("bug577", function(cm) {
   cm.setValue("a\nb");
   cm.clearHistory();
@@ -653,7 +681,7 @@ testCM("selectAllNoScroll", function(cm) {
 });
 
 testCM("selectionPos", function(cm) {
-  if (phantom) return;
+  if (phantom || cm.getOption("inputStyle") != "textarea") return;
   cm.setSize(100, 100);
   addDoc(cm, 200, 100);
   cm.setSelection(Pos(1, 100), Pos(98, 100));
@@ -783,6 +811,7 @@ testCM("collapsedRangeCoordsChar", function(cm) {
 }, {value: "123456\nabcdef\nghijkl\nmnopqr\n"});
 
 testCM("collapsedRangeBetweenLinesSelected", function(cm) {
+  if (cm.getOption("inputStyle") != "textarea") return;
   var widget = document.createElement("span");
   widget.textContent = "\u2194";
   cm.markText(Pos(0, 3), Pos(1, 0), {replacedWith: widget});
@@ -975,6 +1004,14 @@ testCM("wrappingInlineWidget", function(cm) {
   eq(curR.bottom, cur1.bottom);
 }, {value: "1 2 3 xxx 4", lineWrapping: true});
 
+testCM("showEmptyWidgetSpan", function(cm) {
+  var marker = cm.markText(Pos(0, 2), Pos(0, 2), {
+    clearWhenEmpty: false,
+    replacedWith: document.createTextNode("X")
+  });
+  eq(cm.display.view[0].text.textContent, "abXc");
+}, {value: "abc"});
+
 testCM("changedInlineWidget", function(cm) {
   cm.setSize("10em");
   var w = document.createElement("span");
@@ -1063,6 +1100,7 @@ testCM("measureEndOfLine", function(cm) {
 }, {mode: "text/html", value: "<!-- foo barrr -->", lineWrapping: true}, ie_lt8 || opera_lt10);
 
 testCM("scrollVerticallyAndHorizontally", function(cm) {
+  if (cm.getOption("inputStyle") != "textarea") return;
   cm.setSize(100, 100);
   addDoc(cm, 40, 40);
   cm.setCursor(39);
@@ -1291,10 +1329,11 @@ testCM("verticalMovementCommandsWrapping", function(cm) {
     lineWrapping: true});
 
 testCM("rtlMovement", function(cm) {
+  if (cm.getOption("inputStyle") != "textarea") return;
   forEach(["خحج", "خحabcخحج", "abخحخحجcd", "abخde", "abخح2342خ1حج", "خ1ح2خح3حxج",
            "خحcd", "1خحcd", "abcdeح1ج", "خمرحبها مها!", "foobarر", "خ ة ق",
-           "<img src=\"/בדיקה3.jpg\">"], function(line) {
-    var inv = line.charAt(0) == "خ";
+           "<img src=\"/בדיקה3.jpg\">", "يتم السحب في 05 فبراير 2014"], function(line) {
+    var inv = line.charCodeAt(0) > 128;
     cm.setValue(line + "\n"); cm.execCommand(inv ? "goLineEnd" : "goLineStart");
     var cursors = byClassName(cm.getWrapperElement(), "CodeMirror-cursors")[0];
     var cursor = cursors.firstChild;
@@ -1360,7 +1399,7 @@ testCM("lineChangeEvents", function(cm) {
 });
 
 testCM("scrollEntirelyToRight", function(cm) {
-  if (phantom) return;
+  if (phantom || cm.getOption("inputStyle") != "textarea") return;
   addDoc(cm, 500, 2);
   cm.setCursor(Pos(0, 500));
   var wrap = cm.getWrapperElement(), cur = byClassName(wrap, "CodeMirror-cursor")[0];
@@ -1407,27 +1446,79 @@ testCM("lineWidgetCautiousRedraw", function(cm) {
   is(!redrawn);
 }, {value: "123\n456"});
 
+
+var knownScrollbarWidth;
+function scrollbarWidth(measure) {
+  if (knownScrollbarWidth != null) return knownScrollbarWidth;
+  var div = document.createElement('div');
+  div.style.cssText = "width: 50px; height: 50px; overflow-x: scroll";
+  document.body.appendChild(div);
+  knownScrollbarWidth = div.offsetHeight - div.clientHeight;
+  document.body.removeChild(div);
+  return knownScrollbarWidth || 0;
+}
+
 testCM("lineWidgetChanged", function(cm) {
   addDoc(cm, 2, 300);
-  cm.setSize(null, cm.defaultTextHeight() * 50);
+  var halfScrollbarWidth = scrollbarWidth(cm.display.measure)/2;
+  cm.setOption('lineNumbers', true);
+  cm.setSize(600, cm.defaultTextHeight() * 50);
   cm.scrollTo(null, cm.heightAtLine(125, "local"));
+
+  var expectedWidgetHeight = 60;
+  var expectedLinesInWidget = 3;
   function w() {
     var node = document.createElement("div");
-    node.style.cssText = "background: yellow; height: 50px;";
+    // we use these children with just under half width of the line to check measurements are made with correct width
+    // when placed in the measure div.
+    // If the widget is measured at a width much narrower than it is displayed at, the underHalf children will span two lines and break the test.
+    // If the widget is measured at a width much wider than it is displayed at, the overHalf children will combine and break the test.
+    // Note that this test only checks widgets where coverGutter is true, because these require extra styling to get the width right.
+    // It may also be worthwhile to check this for non-coverGutter widgets.
+    // Visually:
+    // Good:
+    // | ------------- display width ------------- |
+    // | ------- widget-width when measured ------ |
+    // | | -- under-half -- | | -- under-half -- | |
+    // | | --- over-half --- |                     |
+    // | | --- over-half --- |                     |
+    // Height: measured as 3 lines, same as it will be when actually displayed
+
+    // Bad (too narrow):
+    // | ------------- display width ------------- |
+    // | ------ widget-width when measured ----- |  < -- uh oh
+    // | | -- under-half -- |                    |
+    // | | -- under-half -- |                    |  < -- when measured, shoved to next line
+    // | | --- over-half --- |                   |
+    // | | --- over-half --- |                   |
+    // Height: measured as 4 lines, more than expected . Will be displayed as 3 lines!
+
+    // Bad (too wide):
+    // | ------------- display width ------------- |
+    // | -------- widget-width when measured ------- | < -- uh oh
+    // | | -- under-half -- | | -- under-half -- |   |
+    // | | --- over-half --- | | --- over-half --- | | < -- when measured, combined on one line
+    // Height: measured as 2 lines, less than expected. Will be displayed as 3 lines!
+
+    var barelyUnderHalfWidthHtml = '<div style="display: inline-block; height: 1px; width: '+(285 - halfScrollbarWidth)+'px;"></div>';
+    var barelyOverHalfWidthHtml = '<div style="display: inline-block; height: 1px; width: '+(305 - halfScrollbarWidth)+'px;"></div>';
+    node.innerHTML = new Array(3).join(barelyUnderHalfWidthHtml) + new Array(3).join(barelyOverHalfWidthHtml);
+    node.style.cssText = "background: yellow;font-size:0;line-height: " + (expectedWidgetHeight/expectedLinesInWidget) + "px;";
     return node;
   }
   var info0 = cm.getScrollInfo();
-  var w0 = cm.addLineWidget(0, w());
-  var w150 = cm.addLineWidget(150, w());
-  var w300 = cm.addLineWidget(300, w());
+  var w0 = cm.addLineWidget(0, w(), { coverGutter: true });
+  var w150 = cm.addLineWidget(150, w(), { coverGutter: true });
+  var w300 = cm.addLineWidget(300, w(), { coverGutter: true });
   var info1 = cm.getScrollInfo();
-  eq(info0.height + 150, info1.height);
-  eq(info0.top + 50, info1.top);
-  w0.node.style.height = w150.node.style.height = w300.node.style.height = "10px";
+  eq(info0.height + (3 * expectedWidgetHeight), info1.height);
+  eq(info0.top + expectedWidgetHeight, info1.top);
+  expectedWidgetHeight = 12;
+  w0.node.style.lineHeight = w150.node.style.lineHeight = w300.node.style.lineHeight = (expectedWidgetHeight/expectedLinesInWidget) + "px";
   w0.changed(); w150.changed(); w300.changed();
   var info2 = cm.getScrollInfo();
-  eq(info0.height + 30, info2.height);
-  eq(info0.top + 10, info2.top);
+  eq(info0.height + (3 * expectedWidgetHeight), info2.height);
+  eq(info0.top + expectedWidgetHeight, info2.top);
 });
 
 testCM("getLineNumber", function(cm) {
@@ -1472,33 +1563,48 @@ testCM("jumpTheGap", function(cm) {
 }, {lineWrapping: true, value: "abc\ndef\nghi\njkl\n"});
 
 testCM("addLineClass", function(cm) {
-  function cls(line, text, bg, wrap) {
+  function cls(line, text, bg, wrap, gutter) {
     var i = cm.lineInfo(line);
     eq(i.textClass, text);
     eq(i.bgClass, bg);
     eq(i.wrapClass, wrap);
+    if (typeof i.handle.gutterClass !== 'undefined') {
+        eq(i.handle.gutterClass, gutter);
+    }
   }
   cm.addLineClass(0, "text", "foo");
   cm.addLineClass(0, "text", "bar");
   cm.addLineClass(1, "background", "baz");
   cm.addLineClass(1, "wrap", "foo");
-  cls(0, "foo bar", null, null);
-  cls(1, null, "baz", "foo");
+  cm.addLineClass(1, "gutter", "gutter-class");
+  cls(0, "foo bar", null, null, null);
+  cls(1, null, "baz", "foo", "gutter-class");
   var lines = cm.display.lineDiv;
   eq(byClassName(lines, "foo").length, 2);
   eq(byClassName(lines, "bar").length, 1);
   eq(byClassName(lines, "baz").length, 1);
+  eq(byClassName(lines, "gutter-class").length, 2); // Gutter classes are reflected in 2 nodes
   cm.removeLineClass(0, "text", "foo");
-  cls(0, "bar", null, null);
+  cls(0, "bar", null, null, null);
   cm.removeLineClass(0, "text", "foo");
-  cls(0, "bar", null, null);
+  cls(0, "bar", null, null, null);
   cm.removeLineClass(0, "text", "bar");
   cls(0, null, null, null);
+
   cm.addLineClass(1, "wrap", "quux");
-  cls(1, null, "baz", "foo quux");
+  cls(1, null, "baz", "foo quux", "gutter-class");
   cm.removeLineClass(1, "wrap");
-  cls(1, null, "baz", null);
-}, {value: "hohoho\n"});
+  cls(1, null, "baz", null, "gutter-class");
+  cm.removeLineClass(1, "gutter", "gutter-class");
+  eq(byClassName(lines, "gutter-class").length, 0);
+  cls(1, null, "baz", null, null);
+
+  cm.addLineClass(1, "gutter", "gutter-class");
+  cls(1, null, "baz", null, "gutter-class");
+  cm.removeLineClass(1, "gutter", "gutter-class");
+  cls(1, null, "baz", null, null);
+
+}, {value: "hohoho\n", lineNumbers: true});
 
 testCM("atomicMarker", function(cm) {
   addDoc(cm, 10, 10);
@@ -1558,8 +1664,18 @@ testCM("selectionBias", function(cm) {
   eqPos(cm.getCursor(), Pos(0, 1));
   cm.setCursor(Pos(0, 4));
   cm.setCursor(Pos(0, 2), null, {bias: 1});
-  eqPos(cm.getCursor(), Pos(0, 3), "A");
+  eqPos(cm.getCursor(), Pos(0, 3));
 }, {value: "12345"});
+
+testCM("selectionHomeEnd", function(cm) {
+  cm.markText(Pos(1, 0), Pos(1, 1), {atomic: true, inclusiveLeft: true});
+  cm.markText(Pos(1, 3), Pos(1, 4), {atomic: true, inclusiveRight: true});
+  cm.setCursor(Pos(1, 2));
+  cm.execCommand("goLineStart");
+  eqPos(cm.getCursor(), Pos(1, 1));
+  cm.execCommand("goLineEnd");
+  eqPos(cm.getCursor(), Pos(1, 3));
+}, {value: "ab\ncdef\ngh"});
 
 testCM("readOnlyMarker", function(cm) {
   function mark(ll, cl, lr, cr, at) {
@@ -1904,6 +2020,18 @@ testCM("alwaysMergeSelEventWithChangeOrigin", function(cm) {
   eq(cm.getValue(), "Va");
 }, {value: "a"});
 
+testCM("getTokenAt", function(cm) {
+  var tokPlus = cm.getTokenAt(Pos(0, 2));
+  eq(tokPlus.type, "operator");
+  eq(tokPlus.string, "+");
+  var toks = cm.getLineTokens(0);
+  eq(toks.length, 3);
+  forEach([["number", "1"], ["operator", "+"], ["number", "2"]], function(expect, i) {
+    eq(toks[i].type, expect[0]);
+    eq(toks[i].string, expect[1]);
+  });
+}, {value: "1+2", mode: "javascript"});
+
 testCM("getTokenTypeAt", function(cm) {
   eq(cm.getTokenTypeAt(Pos(0, 0)), "number");
   eq(cm.getTokenTypeAt(Pos(0, 6)), "string");
@@ -1916,3 +2044,99 @@ testCM("getTokenTypeAt", function(cm) {
   eq(byClassName(cm.getWrapperElement(), "cm-foo").length, 1);
   eq(cm.getTokenTypeAt(Pos(0, 6)), "string");
 }, {value: "1 + 'foo'", mode: "javascript"});
+
+testCM("resizeLineWidget", function(cm) {
+  addDoc(cm, 200, 3);
+  var widget = document.createElement("pre");
+  widget.innerHTML = "imwidget";
+  widget.style.background = "yellow";
+  cm.addLineWidget(1, widget, {noHScroll: true});
+  cm.setSize(40);
+  is(widget.parentNode.offsetWidth < 42);
+});
+
+testCM("combinedOperations", function(cm) {
+  var place = document.getElementById("testground");
+  var other = CodeMirror(place, {value: "123"});
+  try {
+    cm.operation(function() {
+      cm.addLineClass(0, "wrap", "foo");
+      other.addLineClass(0, "wrap", "foo");
+    });
+    eq(byClassName(cm.getWrapperElement(), "foo").length, 1);
+    eq(byClassName(other.getWrapperElement(), "foo").length, 1);
+    cm.operation(function() {
+      cm.removeLineClass(0, "wrap", "foo");
+      other.removeLineClass(0, "wrap", "foo");
+    });
+    eq(byClassName(cm.getWrapperElement(), "foo").length, 0);
+    eq(byClassName(other.getWrapperElement(), "foo").length, 0);
+  } finally {
+    place.removeChild(other.getWrapperElement());
+  }
+}, {value: "abc"});
+
+testCM("eventOrder", function(cm) {
+  var seen = [];
+  cm.on("change", function() {
+    if (!seen.length) cm.replaceSelection(".");
+    seen.push("change");
+  });
+  cm.on("cursorActivity", function() {
+    cm.replaceSelection("!");
+    seen.push("activity");
+  });
+  cm.replaceSelection("/");
+  eq(seen.join(","), "change,change,activity,change");
+});
+
+testCM("splitSpaces_nonspecial", function(cm) {
+  eq(byClassName(cm.getWrapperElement(), "cm-invalidchar").length, 0);
+}, {
+  specialChars: /[\u00a0]/,
+  value: "spaces ->            <- between"
+});
+
+test("core_rmClass", function() {
+  var node = document.createElement("div");
+  node.className = "foo-bar baz-quux yadda";
+  CodeMirror.rmClass(node, "quux");
+  eq(node.className, "foo-bar baz-quux yadda");
+  CodeMirror.rmClass(node, "baz-quux");
+  eq(node.className, "foo-bar yadda");
+  CodeMirror.rmClass(node, "yadda");
+  eq(node.className, "foo-bar");
+  CodeMirror.rmClass(node, "foo-bar");
+  eq(node.className, "");
+  node.className = " foo ";
+  CodeMirror.rmClass(node, "foo");
+  eq(node.className, "");
+});
+
+test("core_addClass", function() {
+  var node = document.createElement("div");
+  CodeMirror.addClass(node, "a");
+  eq(node.className, "a");
+  CodeMirror.addClass(node, "a");
+  eq(node.className, "a");
+  CodeMirror.addClass(node, "b");
+  eq(node.className, "a b");
+  CodeMirror.addClass(node, "a");
+  CodeMirror.addClass(node, "b");
+  eq(node.className, "a b");
+});
+
+testCM("lineSeparator", function(cm) {
+  eq(cm.lineCount(), 3);
+  eq(cm.getLine(1), "bar\r");
+  eq(cm.getLine(2), "baz\rquux");
+  cm.setOption("lineSeparator", "\r");
+  eq(cm.lineCount(), 5);
+  eq(cm.getLine(4), "quux");
+  eq(cm.getValue(), "foo\rbar\r\rbaz\rquux");
+  eq(cm.getValue("\n"), "foo\nbar\n\nbaz\nquux");
+  cm.setOption("lineSeparator", null);
+  cm.setValue("foo\nbar\r\nbaz\rquux");
+  eq(cm.lineCount(), 4);
+}, {value: "foo\nbar\r\nbaz\rquux",
+    lineSeparator: "\n"});

@@ -1732,7 +1732,7 @@ var Scratchpad = {
       this._onPaste = WebConsoleUtils.pasteHandlerGen(this.editor.container.contentDocument.body,
                                                       document.querySelector('#scratchpad-notificationbox'),
                                                       msg, okstring);
-      editorElement.addEventListener("paste", this._onPaste);
+      editorElement.addEventListener("paste", this._onPaste, true);
       editorElement.addEventListener("drop", this._onPaste);
       this.editor.on("saveRequested", () => this.saveFile());
       this.editor.focus();
@@ -1808,7 +1808,7 @@ var Scratchpad = {
     CloseObserver.uninit();
     if (this._onPaste) {
       let editorElement = document.querySelector("#scratchpad-editor");
-      editorElement.removeEventListener("paste", this._onPaste);
+      editorElement.removeEventListener("paste", this._onPaste, true);
       editorElement.removeEventListener("drop", this._onPaste);
       this._onPaste = null;
     }

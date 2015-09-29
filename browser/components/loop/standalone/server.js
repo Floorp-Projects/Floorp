@@ -12,6 +12,11 @@
 var express = require("express");
 var app = express();
 
+// make dev-server performance more similar to the production server by using
+// gzip compression
+var compression = require("compression");
+app.use(compression());
+
 var path = require("path");
 
 var port = process.env.PORT || 3000;
@@ -19,6 +24,10 @@ var feedbackApiUrl = process.env.LOOP_FEEDBACK_API_URL ||
                      "https://input.allizom.org/api/v1/feedback";
 var feedbackProductName = process.env.LOOP_FEEDBACK_PRODUCT_NAME || "Loop";
 var loopServerUrl = process.env.LOOP_SERVER_URL || "http://localhost:5000";
+
+// This is typically overridden with "dist" so that it's possible to test the
+// optimized version, once it's been built to the "dist" directory
+var standaloneContentDir = process.env.LOOP_CONTENT_DIR || "content";
 
 // Remove trailing slashes as double slashes in the url can confuse the server
 // responses.
@@ -70,10 +79,11 @@ app.use("/standalone/content", express.static(path.join(__dirname, "content")));
 // does what we need for running in the github loop-client context, the second one
 // handles running in the hg repo under mozilla-central and is used so that the shared
 // files are in the right location.
-app.use("/content", express.static(path.join(__dirname, "content")));
+app.use("/content", express.static(path.join(__dirname, standaloneContentDir)));
 app.use("/content", express.static(path.join(__dirname, "..", "content")));
 // These two are based on the above, but handle call urls, that have a /c/ in them.
-app.use("/content/c", express.static(path.join(__dirname, "content")));
+app.use("/content/c", express.static(path.join(__dirname,
+  standaloneContentDir)));
 app.use("/content/c", express.static(path.join(__dirname, "..", "content")));
 
 // Two lines for the same reason as /content above.
@@ -85,7 +95,7 @@ app.use("/test", express.static(path.join(__dirname, "..", "test")));
 function serveIndex(req, res) {
   "use strict";
 
-  return res.sendfile(path.join(__dirname, "content", "index.html"));
+  return res.sendFile(path.join(__dirname, standaloneContentDir, "index.html"));
 }
 
 app.get(/^\/content\/[\w\-]+$/, serveIndex);
