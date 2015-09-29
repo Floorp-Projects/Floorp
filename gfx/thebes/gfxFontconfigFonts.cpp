@@ -25,6 +25,9 @@
 #include "gfxFontconfigUtils.h"
 #include "gfxUserFontSet.h"
 #include "gfxFontConstants.h"
+#include "nsGkAtoms.h"
+#include "nsILanguageAtomService.h"
+#include "nsServiceManagerUtils.h"
 
 #include <cairo.h>
 #include <cairo-ft.h>
@@ -1281,9 +1284,140 @@ gfxPangoFontGroup::Copy(const gfxFontStyle *aStyle)
 }
 
 void
-gfxPangoFontGroup::FindPlatformFont(const nsAString& fontName,
-                                    bool aUseFontSet,
-                                    void *aClosure)
+gfxPangoFontGroup::FindGenericFontsPFG(FontFamilyType aGenericType,
+                                       nsIAtom *aLanguage,
+                                       void *aClosure)
+{
+    nsAutoTArray<nsString, 5> resolvedGenerics;
+    ResolveGenericFontNamesPFG(aGenericType, aLanguage, resolvedGenerics);
+    uint32_t g = 0, numGenerics = resolvedGenerics.Length();
+    for (g = 0; g < numGenerics; g++) {
+        FindPlatformFontPFG(resolvedGenerics[g], false, aClosure);
+    }
+}
+
+/* static */ void
+gfxPangoFontGroup::ResolveGenericFontNamesPFG(FontFamilyType aGenericType,
+                                              nsIAtom *aLanguage,
+                                              nsTArray<nsString>& aGenericFamilies)
+{
+    static const char kGeneric_serif[] = "serif";
+    static const char kGeneric_sans_serif[] = "sans-serif";
+    static const char kGeneric_monospace[] = "monospace";
+    static const char kGeneric_cursive[] = "cursive";
+    static const char kGeneric_fantasy[] = "fantasy";
+
+    // treat -moz-fixed as monospace
+    if (aGenericType == eFamily_moz_fixed) {
+        aGenericType = eFamily_monospace;
+    }
+
+    // type should be standard generic type at this point
+    NS_ASSERTION(aGenericType >= eFamily_serif &&
+                 aGenericType <= eFamily_fantasy,
+                 "standard generic font family type required");
+
+    // create the lang string
+    nsIAtom *langGroupAtom = nullptr;
+    nsAutoCString langGroupString;
+    if (aLanguage) {
+        if (!gLangService) {
+            CallGetService(NS_LANGUAGEATOMSERVICE_CONTRACTID, &gLangService);
+        }
+        if (gLangService) {
+            nsresult rv;
+            langGroupAtom = gLangService->GetLanguageGroup(aLanguage, &rv);
+        }
+    }
+    if (!langGroupAtom) {
+        langGroupAtom = nsGkAtoms::Unicode;
+    }
+    langGroupAtom->ToUTF8String(langGroupString);
+
+    // map generic type to string
+    const char *generic = nullptr;
+    switch (aGenericType) {
+        case eFamily_serif:
+            generic = kGeneric_serif;
+            break;
+        case eFamily_sans_serif:
+            generic = kGeneric_sans_serif;
+            break;
+        case eFamily_monospace:
+            generic = kGeneric_monospace;
+            break;
+        case eFamily_cursive:
+            generic = kGeneric_cursive;
+            break;
+        case eFamily_fantasy:
+            generic = kGeneric_fantasy;
+            break;
+        default:
+            break;
+    }
+
+    if (!generic) {
+        return;
+    }
+
+    aGenericFamilies.Clear();
+
+    // load family for "font.name.generic.lang"
+    nsAutoCString prefFontName("font.name.");
+    prefFontName.Append(generic);
+    prefFontName.Append('.');
+    prefFontName.Append(langGroupString);
+    gfxFontUtils::AppendPrefsFontList(prefFontName.get(),
+                                      aGenericFamilies);
+
+    // if lang has pref fonts, also load fonts for "font.name-list.generic.lang"
+    if (!aGenericFamilies.IsEmpty()) {
+        nsAutoCString prefFontListName("font.name-list.");
+        prefFontListName.Append(generic);
+        prefFontListName.Append('.');
+        prefFontListName.Append(langGroupString);
+        gfxFontUtils::AppendPrefsFontList(prefFontListName.get(),
+                                          aGenericFamilies);
+    }
+
+#if 0  // dump out generic mappings
+    printf("%s ===> ", prefFontName.get());
+    for (uint32_t k = 0; k < aGenericFamilies.Length(); k++) {
+        if (k > 0) printf(", ");
+        printf("%s", NS_ConvertUTF16toUTF8(aGenericFamilies[k]).get());
+    }
+    printf("\n");
+#endif
+}
+
+void gfxPangoFontGroup::EnumerateFontListPFG(nsIAtom *aLanguage, void *aClosure)
+{
+    // initialize fonts in the font family list
+    const nsTArray<FontFamilyName>& fontlist = mFamilyList.GetFontlist();
+
+    // lookup fonts in the fontlist
+    uint32_t i, numFonts = fontlist.Length();
+    for (i = 0; i < numFonts; i++) {
+        const FontFamilyName& name = fontlist[i];
+        if (name.IsNamed()) {
+            FindPlatformFontPFG(name.mName, true, aClosure);
+        } else {
+            FindGenericFontsPFG(name.mType, aLanguage, aClosure);
+        }
+    }
+
+    // if necessary, append default generic onto the end
+    if (mFamilyList.GetDefaultFontType() != eFamily_none &&
+        !mFamilyList.HasDefaultGeneric()) {
+        FindGenericFontsPFG(mFamilyList.GetDefaultFontType(),
+                            aLanguage, aClosure);
+    }
+}
+
+void
+gfxPangoFontGroup::FindPlatformFontPFG(const nsAString& fontName,
+                                       bool aUseFontSet,
+                                       void *aClosure)
 {
     nsTArray<nsString> *list = static_cast<nsTArray<nsString>*>(aClosure);
 
@@ -1360,8 +1494,8 @@ gfxPangoFontGroup::MakeFontSet(PangoLanguage *aLang, gfxFloat aSizeAdjustFactor,
     }
 
     nsAutoTArray<nsString, 20> fcFamilyList;
-    EnumerateFontList(langGroup ? langGroup.get() : mStyle.language.get(),
-                      &fcFamilyList);
+    EnumerateFontListPFG(langGroup ? langGroup.get() : mStyle.language.get(),
+                         &fcFamilyList);
 
     // To consider: A fontset cache here could be helpful.
 

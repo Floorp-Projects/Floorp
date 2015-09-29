@@ -94,9 +94,27 @@ private:
         return mSizeAdjustFactor;
     }
 
-    virtual void FindPlatformFont(const nsAString& aName,
-                                  bool aUseFontSet,
-                                  void *aClosure);
+    // old helper methods from gfxFontGroup, moved here so that those methods
+    // can be revamped without affecting the legacy code here
+
+    // iterate over the fontlist, lookup names and expand generics
+    void EnumerateFontListPFG(nsIAtom *aLanguage, void *aClosure);
+
+    // expand a generic to a list of specific names based on prefs
+    void FindGenericFontsPFG(mozilla::FontFamilyType aGenericType,
+                             nsIAtom *aLanguage,
+                             void *aClosure);
+
+    // lookup and add a font with a given name (i.e. *not* a generic!)
+    void FindPlatformFontPFG(const nsAString& aName,
+                             bool aUseFontSet,
+                             void *aClosure);
+
+    static void
+    ResolveGenericFontNamesPFG(mozilla::FontFamilyType aGenericType,
+                               nsIAtom *aLanguage,
+                               nsTArray<nsString>& aGenericFamilies);
+
 
     friend class gfxSystemFcFontEntry;
     static FT_Library GetFTLibrary();
