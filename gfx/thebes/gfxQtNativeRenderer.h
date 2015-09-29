@@ -6,7 +6,6 @@
 #ifndef GFXQTNATIVERENDER_H_
 #define GFXQTNATIVERENDER_H_
 
-#include "gfxColor.h"
 #include "gfxContext.h"
 #include "gfxXlibSurface.h"
 #include "mozilla/gfx/Rect.h"

@@ -1,0 +1,58 @@
+# This tasks takes a mulet build, pull gaia and craft a xpi file for FxOS simulator addon
+---
+taskId: {{taskId}}
+
+task:
+  created: '{{now}}'
+  deadline: '{{#from_now}}24 hours{{/from_now}}'
+  metadata:
+    source: https://hg.mozilla.org/mozilla-central/file/tip/b2g/simulator
+    owner: apoirot@mozilla.com
+    name: '[TC] FxOS Simulator'
+    description: 'Firefox OS Simulator addon'
+  tags:
+    createdForUser: {{owner}}
+
+  workerType: b2gbuild
+  provisionerId: aws-provisioner-v1
+  schedulerId: task-graph-scheduler
+
+  scopes:
+    - 'docker-worker:cache:tc-vcs'
+    - 'docker-worker:image:{{#docker_image}}builder{{/docker_image}}'
+    - 'queue:define-task:aws-provisioner-v1/build-c4-2xlarge'
+    - 'queue:create-task:aws-provisioner-v1/build-c4-2xlarge'
+
+  payload:
+    image: '{{#docker_image}}builder{{/docker_image}}'
+
+    maxRunTime: 600
+
+    command:
+      - /bin/bash
+      - -exc
+      - >
+        tc-vcs checkout ./gecko {{base_repository}} {{head_repository}} {{head_rev}} {{head_ref}} &&
+        ./gecko/testing/taskcluster/scripts/builder/pull-gaia.sh ./gecko ./gaia &&
+        ./gecko/testing/taskcluster/scripts/builder/build-simulator.sh ./gecko ./gaia {{build_url}}
+
+    artifacts:
+      'public/build':
+        type: directory
+        path: '/home/worker/artifacts/'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+
+    env:
+      GECKO_BASE_REPOSITORY: '{{base_repository}}'
+      GECKO_HEAD_REPOSITORY: '{{head_repository}}'
+      GECKO_HEAD_REV: '{{head_rev}}'
+      GECKO_HEAD_REF: '{{head_ref}}'
+
+  extra:
+    treeherderEnv:
+      - production
+      - staging
+    treeherder:
+      groupSymbol: tc-Sim
+      groupName: Simulator build
+      symbol: 'S'

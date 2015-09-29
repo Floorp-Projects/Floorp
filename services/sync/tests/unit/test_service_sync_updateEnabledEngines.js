@@ -41,7 +41,9 @@ function StirlingEngine() {
 StirlingEngine.prototype = {
   __proto__: SteamEngine.prototype,
   // This engine's enabled state is the same as the SteamEngine's.
-  get prefName() "steam"
+  get prefName() {
+    return "steam";
+  }
 };
 Service.engineManager.register(StirlingEngine);
 

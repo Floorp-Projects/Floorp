@@ -126,13 +126,19 @@ function testQueuedMutations() {
   attrNode.removeAttribute("data-newattr3");
   attrNode.setAttribute("data-newattr3", "3");
 
+  // This shouldn't be added in the attribute set, since it's a new
+  // attribute that's been added and removed.
+  attrNode.setAttribute("data-newattr4", "4");
+  attrNode.removeAttribute("data-newattr4");
+
   gWalker.once("mutations", mutations => {
-    is(mutations.length, 3, "Only one mutation each is sent for multiple queued attribute changes");
+    is(mutations.length, 4, "Only one mutation each is sent for multiple queued attribute changes");
     is(attrFront.attributes.length, 3, "Should have id, data-newattr2, and data-newattr3.");
 
     is(attrFront.getAttribute("data-newattr2"), "1000", "Node front should still have the correct value");
     is(attrFront.getAttribute("data-newattr3"), "3", "Node front should still have the correct value");
     ok(!attrFront.hasAttribute("data-newattr"), "Attribute value should be removed.");
+    ok(!attrFront.hasAttribute("data-newattr4"), "Attribute value should be removed.");
 
     runNextTest();
   })
