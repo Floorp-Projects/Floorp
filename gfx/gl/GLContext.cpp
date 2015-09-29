@@ -2976,11 +2976,18 @@ CreateTextureForOffscreen(GLContext* aGL, const GLFormats& aFormats,
     MOZ_ASSERT(aFormats.color_texFormat);
     MOZ_ASSERT(aFormats.color_texType);
 
-    return CreateTexture(aGL,
-                         aFormats.color_texInternalFormat,
-                         aFormats.color_texFormat,
-                         aFormats.color_texType,
-                         aSize);
+    GLenum internalFormat = aFormats.color_texInternalFormat;
+    GLenum unpackFormat = aFormats.color_texFormat;
+    GLenum unpackType = aFormats.color_texType;
+    if (aGL->IsANGLE()) {
+        MOZ_ASSERT(internalFormat == LOCAL_GL_RGBA);
+        MOZ_ASSERT(unpackFormat == LOCAL_GL_RGBA);
+        MOZ_ASSERT(unpackType == LOCAL_GL_UNSIGNED_BYTE);
+        internalFormat = LOCAL_GL_BGRA_EXT;
+        unpackFormat = LOCAL_GL_BGRA_EXT;
+    }
+
+    return CreateTexture(aGL, internalFormat, unpackFormat, unpackType, aSize);
 }
 
 

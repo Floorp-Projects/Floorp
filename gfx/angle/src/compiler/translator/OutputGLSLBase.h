@@ -4,8 +4,8 @@
 // found in the LICENSE file.
 //
 
-#ifndef CROSSCOMPILERGLSL_OUTPUTGLSLBASE_H_
-#define CROSSCOMPILERGLSL_OUTPUTGLSLBASE_H_
+#ifndef COMPILER_TRANSLATOR_OUTPUTGLSLBASE_H_
+#define COMPILER_TRANSLATOR_OUTPUTGLSLBASE_H_
 
 #include <set>
 
@@ -21,7 +21,13 @@ class TOutputGLSLBase : public TIntermTraverser
                     ShHashFunction64 hashFunction,
                     NameMap &nameMap,
                     TSymbolTable& symbolTable,
-                    int shaderVersion);
+                    int shaderVersion,
+                    ShShaderOutput output);
+
+    ShShaderOutput getShaderOutput() const
+    {
+        return mOutput;
+    }
 
   protected:
     TInfoSinkBase &objSink() { return mObjSink; }
@@ -29,7 +35,8 @@ class TOutputGLSLBase : public TIntermTraverser
     void writeVariableType(const TType &type);
     virtual bool writeVariablePrecision(TPrecision precision) = 0;
     void writeFunctionParameters(const TIntermSequence &args);
-    const ConstantUnion *writeConstantUnion(const TType &type, const ConstantUnion *pConstUnion);
+    const TConstantUnion *writeConstantUnion(const TType &type, const TConstantUnion *pConstUnion);
+    void writeConstructorTriplet(Visit visit, const TType &type, const char *constructorBaseType);
     TString getTypeName(const TType &type);
 
     virtual void visitSymbol(TIntermSymbol *node);
@@ -37,6 +44,8 @@ class TOutputGLSLBase : public TIntermTraverser
     virtual bool visitBinary(Visit visit, TIntermBinary *node);
     virtual bool visitUnary(Visit visit, TIntermUnary *node);
     virtual bool visitSelection(Visit visit, TIntermSelection *node);
+    virtual bool visitSwitch(Visit visit, TIntermSwitch *node);
+    virtual bool visitCase(Visit visit, TIntermCase *node);
     virtual bool visitAggregate(Visit visit, TIntermAggregate *node);
     virtual bool visitLoop(Visit visit, TIntermLoop *node);
     virtual bool visitBranch(Visit visit, TIntermBranch *node);
@@ -78,6 +87,8 @@ class TOutputGLSLBase : public TIntermTraverser
     TSymbolTable &mSymbolTable;
 
     const int mShaderVersion;
+
+    ShShaderOutput mOutput;
 };
 
-#endif  // CROSSCOMPILERGLSL_OUTPUTGLSLBASE_H_
+#endif  // COMPILER_TRANSLATOR_OUTPUTGLSLBASE_H_
