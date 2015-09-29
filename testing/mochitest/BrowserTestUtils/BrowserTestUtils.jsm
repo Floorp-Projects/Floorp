@@ -22,6 +22,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://testing-common/TestUtils.jsm");
+Cu.import("resource://gre/modules/KeyValueParser.jsm");
 
 Cc["@mozilla.org/globalmessagemanager;1"]
   .getService(Ci.nsIMessageListenerManager)
@@ -458,5 +459,139 @@ this.BrowserTestUtils = {
         tab.ownerDocument.defaultView.gBrowser.removeTab(tab);
       }
     });
-  }
+  },
+
+  /**
+   * Crashes a remote browser tab and cleans up the generated minidumps.
+   * Resolves with the data from the .extra file (the crash annotations).
+   *
+   * @param (Browser) browser
+   *        A remote <xul:browser> element. Must not be null.
+   *
+   * @returns (Promise)
+   * @resolves An Object with key-value pairs representing the data from the
+   *           crash report's extra file (if applicable).
+   */
+  crashBrowser: Task.async(function*(browser) {
+    let extra = {};
+
+    if (!browser.isRemoteBrowser) {
+      throw new Error("<xul:browser> needs to be remote in order to crash");
+    }
+
+    /**
+     * Returns the directory where crash dumps are stored.
+     *
+     * @return nsIFile
+     */
+    function getMinidumpDirectory() {
+      let dir = Services.dirsvc.get('ProfD', Ci.nsIFile);
+      dir.append("minidumps");
+      return dir;
+    }
+
+    /**
+     * Removes a file from a directory. This is a no-op if the file does not
+     * exist.
+     *
+     * @param directory
+     *        The nsIFile representing the directory to remove from.
+     * @param filename
+     *        A string for the file to remove from the directory.
+     */
+    function removeFile(directory, filename) {
+      let file = directory.clone();
+      file.append(filename);
+      if (file.exists()) {
+        file.remove(false);
+      }
+    }
+
+    // This frame script is injected into the remote browser, and used to
+    // intentionally crash the tab. We crash by using js-ctypes and dereferencing
+    // a bad pointer. The crash should happen immediately upon loading this
+    // frame script.
+    let frame_script = () => {
+      const Cu = Components.utils;
+      Cu.import("resource://gre/modules/ctypes.jsm");
+
+      let dies = function() {
+        privateNoteIntentionalCrash();
+        let zero = new ctypes.intptr_t(8);
+        let badptr = ctypes.cast(zero, ctypes.PointerType(ctypes.int32_t));
+        badptr.contents
+      };
+
+      dump("\nEt tu, Brute?\n");
+      dies();
+    }
+
+    let crashCleanupPromise = new Promise((resolve, reject) => {
+      let observer = (subject, topic, data) => {
+        if (topic != "ipc:content-shutdown") {
+          return reject("Received incorrect observer topic: " + topic);
+        }
+        if (!(subject instanceof Ci.nsIPropertyBag2)) {
+          return reject("Subject did not implement nsIPropertyBag2");
+        }
+        // we might see this called as the process terminates due to previous tests.
+        // We are only looking for "abnormal" exits...
+        if (!subject.hasKey("abnormal")) {
+          dump("\nThis is a normal termination and isn't the one we are looking for...\n");
+          return;
+        }
+
+        let dumpID;
+        if ('nsICrashReporter' in Ci) {
+          dumpID = subject.getPropertyAsAString('dumpID');
+          if (!dumpID) {
+            return reject("dumpID was not present despite crash reporting " +
+                          "being enabled");
+          }
+        }
+
+        if (dumpID) {
+          let minidumpDirectory = getMinidumpDirectory();
+          let extrafile = minidumpDirectory.clone();
+          extrafile.append(dumpID + '.extra');
+          if (extrafile.exists()) {
+            dump(`\nNo .extra file for dumpID: ${dumpID}\n`);
+            extra = parseKeyValuePairsFromFile(extrafile);
+          }
+
+          removeFile(minidumpDirectory, dumpID + '.dmp');
+          removeFile(minidumpDirectory, dumpID + '.extra');
+        }
+
+        Services.obs.removeObserver(observer, 'ipc:content-shutdown');
+        dump("\nCrash cleaned up\n");
+        resolve();
+      };
+
+      Services.obs.addObserver(observer, 'ipc:content-shutdown', false);
+    });
+
+    let aboutTabCrashedLoadPromise = new Promise((resolve, reject) => {
+      browser.addEventListener("AboutTabCrashedLoad", function onCrash() {
+        browser.removeEventListener("AboutTabCrashedLoad", onCrash, false);
+        dump("\nabout:tabcrashed loaded\n");
+        resolve();
+      }, false, true);
+    });
+
+    // This frame script will crash the remote browser as soon as it is
+    // evaluated.
+    let mm = browser.messageManager;
+    mm.loadFrameScript("data:,(" + frame_script.toString() + ")();", false);
+
+    yield Promise.all([crashCleanupPromise, aboutTabCrashedLoadPromise]);
+
+    let gBrowser = browser.ownerDocument.defaultView.gBrowser;
+    let tab = gBrowser.getTabForBrowser(browser);
+    if (tab.getAttribute("crashed") != "true") {
+      throw new Error("Tab should be marked as crashed");
+    }
+
+    return extra;
+  }),
 };
