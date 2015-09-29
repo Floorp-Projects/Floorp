@@ -157,11 +157,6 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
         self.talos_json_config = self.config.get("talos_json_config")
         self.tests = None
         self.pagesets_url = None
-        self.pagesets_parent_dir_path = None
-        self.pagesets_manifest_path = None
-        self.abs_pagesets_paths = None
-        self.pagesets_manifest_filename = None
-        self.pagesets_manifest_parent_path = None
         self.sps_profile = self.config.get('sps_profile')
         self.sps_profile_interval = self.config.get('sps_profile_interval')
 
@@ -270,62 +265,6 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
             self.pagesets_url = self.talos_json_config['suites'][self.config['suite']].get('pagesets_url')
             return self.pagesets_url
 
-    def query_pagesets_parent_dir_path(self):
-        """ We have to copy the pageset into the webroot separately.
-
-        Helper method to avoid hardcodes.
-        """
-        if self.pagesets_parent_dir_path:
-            return self.pagesets_parent_dir_path
-        if self.query_talos_json_config():
-            self.pagesets_parent_dir_path = self.talos_json_config['suites'][self.config['suite']].get('pagesets_parent_dir_path')
-            return self.pagesets_parent_dir_path
-
-    def query_pagesets_manifest_path(self):
-        """ We have to copy the tp manifest from webroot to talos root when
-        those two directories aren't the same, until bug 795172 is fixed.
-
-        Helper method to avoid hardcodes.
-        """
-        if self.pagesets_manifest_path:
-            return self.pagesets_manifest_path
-        if self.query_talos_json_config():
-            self.pagesets_manifest_path = self.talos_json_config['suites'][self.config['suite']].get('pagesets_manifest_path')
-            return self.pagesets_manifest_path
-
-    def query_pagesets_manifest_filename(self):
-        if self.pagesets_manifest_filename:
-            return self.pagesets_manifest_filename
-        else:
-            manifest_path = self.query_pagesets_manifest_path()
-            self.pagesets_manifest_filename = os.path.basename(manifest_path)
-            return self.pagesets_manifest_filename
-
-    def query_pagesets_manifest_parent_path(self):
-        if self.pagesets_manifest_parent_path:
-            return self.pagesets_manifest_parent_path
-        if self.query_talos_json_config():
-            manifest_path = self.query_pagesets_manifest_path()
-            self.pagesets_manifest_parent_path = os.path.dirname(manifest_path)
-            return self.pagesets_manifest_parent_path
-
-    def query_abs_pagesets_paths(self):
-        """ Returns a bunch of absolute pagesets directory paths.
-        We need this to make the dir and copy the manifest to the local dir.
-        """
-        if self.abs_pagesets_paths:
-            return self.abs_pagesets_paths
-        else:
-            paths = {}
-            manifest_parent_path = self.query_pagesets_manifest_parent_path()
-            paths['pagesets_manifest_parent'] = os.path.join(self.talos_path, manifest_parent_path)
-
-            manifest_path = self.query_pagesets_manifest_path()
-            paths['pagesets_manifest'] = os.path.join(self.talos_path, manifest_path)
-
-            self.abs_pagesets_paths = paths
-            return self.abs_pagesets_paths
-
     def talos_options(self, args=None, **kw):
         """return options to talos"""
         # binary path
@@ -335,8 +274,6 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
 
         # talos options
         options = []
-        if self.config.get('python_webserver', True):
-            options.append('--develop')
         # talos can't gather data if the process name ends with '.exe'
         if binary_path.endswith('.exe'):
             binary_path = binary_path[:-4]
@@ -376,12 +313,6 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
     def populate_webroot(self):
         """Populate the production test slaves' webroots"""
         c = self.config
-        if not c.get('webroot'):
-            self.fatal("webroot need to be set to populate_webroot!")
-        self.info("Populating webroot %s..." % c['webroot'])
-        talos_webdir = os.path.join(c['webroot'], 'talos')
-        self.mkdir_p(c['webroot'], error_level=FATAL)
-        self.rmtree(talos_webdir, error_level=FATAL)
 
         self.talos_path = os.path.join(
             self.query_abs_dirs()['abs_work_dir'], 'tests', 'talos'
@@ -389,25 +320,12 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
         if c.get('run_local'):
             self.talos_path = os.path.dirname(self.talos_json)
 
-        # the apache server needs the talos directory (talos/talos)
-        # to be in the webroot
         src_talos_webdir = os.path.join(self.talos_path, 'talos')
-        self.copytree(src_talos_webdir, talos_webdir)
 
         if self.query_pagesets_url():
             self.info("Downloading pageset...")
-            pagesets_path = os.path.join(c['webroot'], self.query_pagesets_parent_dir_path())
-            self._download_unzip(self.pagesets_url, pagesets_path)
-
-            # mkdir for the missing manifest directory in talos_repo/talos/page_load_test directory
-            abs_pagesets_paths = self.query_abs_pagesets_paths()
-            abs_manifest_parent_path = abs_pagesets_paths['pagesets_manifest_parent']
-            self.mkdir_p(abs_manifest_parent_path, error_level=FATAL)
-
-            # copy all the manifest file from unzipped zip file into the manifest dir
-            src_manifest_file = os.path.join(c['webroot'], self.query_pagesets_manifest_path())
-            dest_manifest_file = abs_pagesets_paths['pagesets_manifest']
-            self.copyfile(src_manifest_file, dest_manifest_file, error_level=FATAL)
+            src_talos_pageset = os.path.join(src_talos_webdir, 'tests')
+            self._download_unzip(self.pagesets_url, src_talos_pageset)
 
     # Action methods. {{{1
     # clobber defined in BaseScript
@@ -451,20 +369,6 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
             requirements=[os.path.join(self.talos_path,
                                        'requirements.txt')]
         )
-
-    def postflight_create_virtualenv(self):
-        """ This belongs in download_and_install() but requires the
-        virtualenv to be set up :(
-
-        The real fix here may be a --tpmanifest option for PerfConfigurator.
-        """
-        c = self.config
-        if not c.get('python_webserver', True) and self.query_pagesets_url():
-            pagesets_path = self.query_pagesets_manifest_path()
-            manifest_source = os.path.join(c['webroot'], pagesets_path)
-            manifest_target = os.path.join(self.query_python_site_packages_path(), pagesets_path)
-            self.mkdir_p(os.path.dirname(manifest_target))
-            self.copyfile(manifest_source, manifest_target)
 
     def run_tests(self, args=None, **kw):
         """run Talos tests"""
