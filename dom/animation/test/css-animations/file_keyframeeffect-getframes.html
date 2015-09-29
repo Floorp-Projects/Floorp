@@ -1,0 +1,455 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="../testcommon.js"></script>
+<style>
+@keyframes anim-empty { }
+
+@keyframes anim-empty-frames {
+  from { }
+  to   { }
+}
+
+@keyframes anim-only-timing {
+  from { animation-timing-function: linear; }
+  to   { }
+}
+
+@keyframes anim-only-non-animatable {
+  from { display: none; }
+  to   { display: inline; }
+}
+
+@keyframes anim-simple {
+  from { color: black; }
+  to   { color: white; }
+}
+
+@keyframes anim-simple-timing {
+  from { color: black; animation-timing-function: linear; }
+  50%  { color: blue;  animation-timing-function: ease-in-out; }
+  to   { color: white; animation-timing-function: step-end; }
+}
+
+@keyframes anim-simple-timing-some {
+  from { color: black; animation-timing-function: linear; }
+  50%  { color: blue; }
+  to   { color: white; }
+}
+
+@keyframes anim-simple-shorthand {
+  from { margin: 8px; }
+  to   { margin: 16px; }
+}
+
+@keyframes anim-omit-to {
+  from { color: blue; }
+}
+
+@keyframes anim-omit-from {
+  to   { color: blue; }
+}
+
+@keyframes anim-omit-from-to {
+  50%  { color: blue; }
+}
+
+@keyframes anim-different-props {
+  from { color: black; margin-top: 8px; }
+  25%  { color: blue; }
+  75%  { margin-top: 12px; }
+  to   { color: white; margin-top: 16px }
+}
+
+@keyframes anim-different-props-and-easing {
+  from { color: black; margin-top: 8px; animation-timing-function: linear; }
+  25%  { color: blue; animation-timing-function: step-end; }
+  75%  { margin-top: 12px; animation-timing-function: ease-in; }
+  to   { color: white; margin-top: 16px }
+}
+
+@keyframes anim-merge-offset {
+  from { color: black; }
+  to   { color: white; }
+  from { margin-top: 8px; }
+  to   { margin-top: 16px; }
+}
+
+@keyframes anim-merge-offset-and-easing {
+  from { color: black; animation-timing-function: step-end; }
+  to   { color: white; }
+  from { margin-top: 8px; animation-timing-function: linear; }
+  to   { margin-top: 16px; }
+  from { font-size: 16px; animation-timing-function: step-end; }
+  to   { font-size: 32px; }
+  from { padding-left: 2px; animation-timing-function: linear; }
+  to   { padding-left: 4px; }
+}
+
+@keyframes anim-no-merge-equiv-easing {
+  from { margin-top: 0px; animation-timing-function: steps(1, end); }
+  from { margin-right: 0px; animation-timing-function: step-end; }
+  from { margin-bottom: 0px; animation-timing-function: steps(1); }
+  50%  { margin-top: 10px; animation-timing-function: step-end; }
+  50%  { margin-right: 10px; animation-timing-function: step-end; }
+  50%  { margin-bottom: 10px; animation-timing-function: step-end; }
+  to   { margin-top: 20px; margin-right: 20px; margin-bottom: 20px; }
+}
+</style>
+<body>
+<script>
+"use strict";
+
+function getFrames(e) {
+  return e.getAnimations()[0].effect.getFrames();
+}
+
+function assert_frames_equal(a, b, name) {
+  assert_equals(Object.keys(a).sort().toString(),
+                Object.keys(b).sort().toString(),
+                "properties on " + name);
+  for (var p in a) {
+    assert_equals(a[p], b[p], "value for '" + p + "' on " + name);
+  }
+}
+
+// animation-timing-function values to test with, where the value
+// is exactly the same as its serialization, sorted by the order
+// getFrames() will group frames with the same easing function
+// together (by nsTimingFunction::Compare).
+const kTimingFunctionValues = [
+  "ease",
+  "linear",
+  "ease-in",
+  "ease-out",
+  "ease-in-out",
+  "step-start",
+  "steps(1, start)",
+  "steps(2, start)",
+  "step-end",
+  "steps(1)",
+  "steps(1, end)",
+  "steps(2)",
+  "steps(2, end)",
+  "cubic-bezier(0, 0, 1, 1)",
+  "cubic-bezier(0, 0.25, 0.75, 1)",
+];
+
+test(function(t) {
+  var div = addDiv(t);
+  var frames;
+
+  div.style.animation = 'anim-empty 100s';
+  assert_equals(getFrames(div).length, 0,
+                "number of frames with empty @keyframes");
+
+  div.style.animation = 'anim-empty-frames 100s';
+  assert_equals(getFrames(div).length, 0,
+                "number of frames when @keyframes has empty keyframes");
+
+  div.style.animation = 'anim-only-timing 100s';
+  assert_equals(getFrames(div).length, 0,
+                "number of frames when @keyframes only has keyframes with " +
+                "animation-timing-function");
+
+  div.style.animation = 'anim-only-non-animatable 100s';
+  assert_equals(getFrames(div).length, 0,
+                "number of frames when @keyframes only has frames with " +
+                "non-animatable properties");
+}, 'KeyframeEffectReadOnly.getFrames() returns no frames for various kinds ' +
+   'of empty enimations');
+
+test(function(t) {
+  var div = addDiv(t);
+
+  div.style.animation = 'anim-simple 100s';
+  var frames = getFrames(div);
+
+  assert_equals(frames.length, 2, "number of frames");
+
+  var expected = [
+    { offset: 0, computedOffset: 0, easing: "ease", composite: "replace",
+      color: "rgb(0, 0, 0)" },
+    { offset: 1, computedOffset: 1, easing: "ease", composite: "replace",
+      color: "rgb(255, 255, 255)" },
+  ];
+
+  for (var i = 0; i < frames.length; i++) {
+    assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
+  }
+}, 'KeyframeEffectReadOnly.getFrames() returns expected frames for a simple ' +
+   'animation');
+
+test(function(t) {
+  kTimingFunctionValues.forEach(function(easing) {
+    var div = addDiv(t);
+
+    div.style.animation = 'anim-simple 100s ' + easing;
+    var frames = getFrames(div);
+
+    assert_equals(frames.length, 2, "number of frames");
+
+    for (var i = 0; i < frames.length; i++) {
+      assert_equals(frames[i].easing, easing,
+                    "value for 'easing' on ComputedKeyframe #" + i);
+    }
+  });
+}, 'KeyframeEffectReadOnly.getFrames() returns frames with expected easing ' +
+   'values, when the easing comes from animation-timing-function on the ' +
+   'element');
+
+test(function(t) {
+  var div = addDiv(t);
+
+  div.style.animation = 'anim-simple-timing 100s';
+  var frames = getFrames(div);
+
+  assert_equals(frames.length, 3, "number of frames");
+  assert_equals(frames[0].easing, "linear",
+                "value of 'easing' on ComputedKeyframe #0");
+  assert_equals(frames[1].easing, "ease-in-out",
+                "value of 'easing' on ComputedKeyframe #1");
+  assert_equals(frames[2].easing, "ease-in-out",
+                "value of 'easing' on ComputedKeyframe #2");
+}, 'KeyframeEffectReadOnly.getFrames() returns frames with expected easing ' +
+   'values, when the easing is specified on each keyframe');
+
+test(function(t) {
+  var div = addDiv(t);
+
+  div.style.animation = 'anim-simple-timing-some 100s step-start';
+  var frames = getFrames(div);
+
+  assert_equals(frames.length, 3, "number of frames");
+  assert_equals(frames[0].easing, "linear",
+                "value of 'easing' on ComputedKeyframe #0");
+  assert_equals(frames[1].easing, "step-start",
+                "value of 'easing' on ComputedKeyframe #1");
+  assert_equals(frames[2].easing, "step-start",
+                "value of 'easing' on ComputedKeyframe #2");
+}, 'KeyframeEffectReadOnly.getFrames() returns frames with expected easing ' +
+   'values, when the easing is specified on some keyframes');
+
+test(function(t) {
+  var div = addDiv(t);
+
+  div.style.animation = 'anim-simple-shorthand 100s';
+  var frames = getFrames(div);
+
+  assert_equals(frames.length, 2, "number of frames");
+
+  var expected = [
+    { offset: 0, computedOffset: 0, easing: "ease", composite: "replace",
+      marginTop: "8px", marginRight: "8px",
+      marginBottom: "8px", marginLeft: "8px" },
+    { offset: 1, computedOffset: 1, easing: "ease", composite: "replace",
+      marginTop: "16px", marginRight: "16px",
+      marginBottom: "16px", marginLeft: "16px" },
+  ];
+
+  for (var i = 0; i < frames.length; i++) {
+    assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
+  }
+}, 'KeyframeEffectReadOnly.getFrames() returns expected frames for a simple ' +
+   'animation that specifies a single shorthand property');
+
+test(function(t) {
+  var div = addDiv(t);
+
+  div.style.animation = 'anim-omit-to 100s';
+  div.style.color = 'white';
+  var frames = getFrames(div);
+
+  assert_equals(frames.length, 2, "number of frames");
+
+  var expected = [
+    { offset: 0, computedOffset: 0, easing: "ease", composite: "replace",
+      color: "rgb(0, 0, 255)" },
+    { offset: 1, computedOffset: 1, easing: "ease", composite: "replace",
+      color: "rgb(255, 255, 255)" },
+  ];
+
+  for (var i = 0; i < frames.length; i++) {
+    assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
+  }
+}, 'KeyframeEffectReadOnly.getFrames() returns expected frames for an ' +
+   'animation with a 0% keyframe and no 100% keyframe');
+
+test(function(t) {
+  var div = addDiv(t);
+
+  div.style.animation = 'anim-omit-from 100s';
+  div.style.color = 'white';
+  var frames = getFrames(div);
+
+  assert_equals(frames.length, 2, "number of frames");
+
+  var expected = [
+    { offset: 0, computedOffset: 0, easing: "ease", composite: "replace",
+      color: "rgb(255, 255, 255)" },
+    { offset: 1, computedOffset: 1, easing: "ease", composite: "replace",
+      color: "rgb(0, 0, 255)" },
+  ];
+
+  for (var i = 0; i < frames.length; i++) {
+    assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
+  }
+}, 'KeyframeEffectReadOnly.getFrames() returns expected frames for an ' +
+   'animation with a 100% keyframe and no 0% keyframe');
+
+test(function(t) {
+  var div = addDiv(t);
+
+  div.style.animation = 'anim-omit-from-to 100s';
+  div.style.color = 'white';
+  var frames = getFrames(div);
+
+  assert_equals(frames.length, 3, "number of frames");
+
+  var expected = [
+    { offset: 0, computedOffset: 0, easing: "ease", composite: "replace",
+      color: "rgb(255, 255, 255)" },
+    { offset: 0.5, computedOffset: 0.5, easing: "ease", composite: "replace",
+      color: "rgb(0, 0, 255)" },
+    { offset: 1, computedOffset: 1, easing: "ease", composite: "replace",
+      color: "rgb(255, 255, 255)" },
+  ];
+
+  for (var i = 0; i < frames.length; i++) {
+    assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
+  }
+}, 'KeyframeEffectReadOnly.getFrames() returns expected frames for an ' +
+   'animation with no 0% or 100% keyframe but with a 50% keyframe');
+
+test(function(t) {
+  var div = addDiv(t);
+
+  div.style.animation = 'anim-different-props 100s';
+  var frames = getFrames(div);
+
+  assert_equals(frames.length, 4, "number of frames");
+
+  var expected = [
+    { offset: 0, computedOffset: 0, easing: "ease", composite: "replace",
+      color: "rgb(0, 0, 0)", marginTop: "8px" },
+    { offset: 0.25, computedOffset: 0.25, easing: "ease", composite: "replace",
+      color: "rgb(0, 0, 255)" },
+    { offset: 0.75, computedOffset: 0.75, easing: "ease", composite: "replace",
+      marginTop: "12px" },
+    { offset: 1, computedOffset: 1, easing: "ease", composite: "replace",
+      color: "rgb(255, 255, 255)", marginTop: "16px" },
+  ];
+
+  for (var i = 0; i < frames.length; i++) {
+    assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
+  }
+}, 'KeyframeEffectReadOnly.getFrames() returns expected frames for an ' +
+   'animation with different properties on different keyframes, all ' +
+   'with the same easing function');
+
+test(function(t) {
+  var div = addDiv(t);
+
+  div.style.animation = 'anim-different-props-and-easing 100s';
+  var frames = getFrames(div);
+
+  assert_equals(frames.length, 5, "number of frames");
+
+  var expected = [
+    { offset: 0, computedOffset: 0, easing: "linear", composite: "replace",
+      color: "rgb(0, 0, 0)", marginTop: "8px" },
+    { offset: 0.25, computedOffset: 0.25, easing: "step-end", composite: "replace",
+      color: "rgb(0, 0, 255)" },
+    { offset: 0.75, computedOffset: 0.75, easing: "ease-in", composite: "replace",
+      marginTop: "12px" },
+    { offset: 1, computedOffset: 1, easing: "ease-in", composite: "replace",
+      marginTop: "16px" },
+    { offset: 1, computedOffset: 1, easing: "step-end", composite: "replace",
+      color: "rgb(255, 255, 255)", },
+  ];
+
+  for (var i = 0; i < frames.length; i++) {
+    assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
+  }
+}, 'KeyframeEffectReadOnly.getFrames() returns expected frames for an ' +
+   'animation with different properties on different keyframes, with ' +
+   'a different easing function on each');
+
+test(function(t) {
+  var div = addDiv(t);
+
+  div.style.animation = 'anim-merge-offset 100s';
+  var frames = getFrames(div);
+
+  assert_equals(frames.length, 2, "number of frames");
+
+  var expected = [
+    { offset: 0, computedOffset: 0, easing: "ease", composite: "replace",
+      color: "rgb(0, 0, 0)", marginTop: "8px" },
+    { offset: 1, computedOffset: 1, easing: "ease", composite: "replace",
+      color: "rgb(255, 255, 255)", marginTop: "16px" },
+  ];
+
+  for (var i = 0; i < frames.length; i++) {
+    assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
+  }
+}, 'KeyframeEffectReadOnly.getFrames() returns expected frames for an ' +
+   'animation with multiple keyframes for the same time, and all with ' +
+   'the same easing function');
+
+test(function(t) {
+  var div = addDiv(t);
+
+  div.style.animation = 'anim-merge-offset-and-easing 100s';
+  var frames = getFrames(div);
+
+  assert_equals(frames.length, 4, "number of frames");
+
+  var expected = [
+    { offset: 0, computedOffset: 0, easing: "linear", composite: "replace",
+      marginTop: "8px", paddingLeft: "2px" },
+    { offset: 0, computedOffset: 0, easing: "step-end", composite: "replace",
+      color: "rgb(0, 0, 0)", fontSize: "16px" },
+    { offset: 1, computedOffset: 1, easing: "linear", composite: "replace",
+      marginTop: "16px", paddingLeft: "4px" },
+    { offset: 1, computedOffset: 1, easing: "step-end", composite: "replace",
+      color: "rgb(255, 255, 255)", fontSize: "32px" },
+  ];
+
+  for (var i = 0; i < frames.length; i++) {
+    assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
+  }
+}, 'KeyframeEffectReadOnly.getFrames() returns expected frames for an ' +
+   'animation with multiple keyframes for the same time and with ' +
+   'different easing functions');
+
+test(function(t) {
+  var div = addDiv(t);
+
+  div.style.animation = 'anim-no-merge-equiv-easing 100s';
+  var frames = getFrames(div);
+
+  assert_equals(frames.length, 5, "number of frames");
+
+  var expected = [
+    { offset: 0, computedOffset: 0, easing: "step-end", composite: "replace",
+      marginRight: "0px" },
+    { offset: 0, computedOffset: 0, easing: "steps(1)", composite: "replace",
+      marginBottom: "0px" },
+    { offset: 0, computedOffset: 0, easing: "steps(1, end)", composite: "replace",
+      marginTop: "0px" },
+    { offset: 0.5, computedOffset: 0.5, easing: "step-end", composite: "replace",
+      marginTop: "10px", marginRight: "10px", marginBottom: "10px" },
+    { offset: 1, computedOffset: 1, easing: "step-end", composite: "replace",
+      marginTop: "20px", marginRight: "20px", marginBottom: "20px" },
+  ];
+
+  for (var i = 0; i < frames.length; i++) {
+    assert_frames_equal(frames[i], expected[i], "ComputedKeyframe #" + i);
+  }
+}, 'KeyframeEffectReadOnly.getFrames() returns expected frames for an ' +
+   'animation with multiple keyframes for the same time and with ' +
+   'different but equivalent easing functions');
+
+done();
+</script>
+</body>

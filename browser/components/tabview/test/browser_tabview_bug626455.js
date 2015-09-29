@@ -15,6 +15,8 @@ const TEST_URL = 'data:text/html,<script>window.onbeforeunload=' +
 var contentWindow;
 var activeGroup;
 
+SpecialPowers.pushPrefEnv({"set": [["dom.require_user_interaction_for_beforeunload", false]]});
+
 Components.utils.import("resource://gre/modules/Promise.jsm", this);
 
 function test() {

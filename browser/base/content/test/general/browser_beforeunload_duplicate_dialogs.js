@@ -18,6 +18,7 @@ function onTabModalDialogLoaded(node) {
   }
 }
 
+SpecialPowers.pushPrefEnv({"set": [["dom.require_user_interaction_for_beforeunload", false]]});
 
 // Listen for the dialog being created
 Services.obs.addObserver(onTabModalDialogLoaded, "tabmodal-dialog-loaded", false);

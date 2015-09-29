@@ -28,7 +28,7 @@ function run_test() {
   do_get_profile();
   Services.prefs.setIntPref("security.OCSP.enabled", 1);
 
-  add_tls_server_setup("OCSPStaplingServer");
+  add_tls_server_setup("OCSPStaplingServer", "ocsp_certs");
 
   let socket = Cc["@mozilla.org/network/server-socket;1"]
                  .createInstance(Ci.nsIServerSocket);

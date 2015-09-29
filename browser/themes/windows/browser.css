@@ -2842,3 +2842,5 @@ chatbox {
 .browser-action-panel > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 0;
 }
+
+%include ../shared/usercontext/usercontext.inc.css

@@ -39,7 +39,7 @@ if test -n "$ENABLE_CLANG_PLUGIN"; then
     LLVM_LDFLAGS=`$LLVMCONFIG --system-libs | xargs`
     LLVM_LDFLAGS="$LLVM_LDFLAGS `$LLVMCONFIG --ldflags --libs core mc analysis asmparser mcparser bitreader option | xargs`"
 
-    if test "${OS_ARCH}" = "Darwin"; then
+    if test "${HOST_OS_ARCH}" = "Darwin"; then
         CLANG_LDFLAGS="-lclangFrontend -lclangDriver -lclangSerialization"
         CLANG_LDFLAGS="$CLANG_LDFLAGS -lclangParse -lclangSema -lclangAnalysis"
         CLANG_LDFLAGS="$CLANG_LDFLAGS -lclangEdit -lclangAST -lclangLex"

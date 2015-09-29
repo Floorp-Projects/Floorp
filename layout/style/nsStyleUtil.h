@@ -10,6 +10,7 @@
 #include "nsString.h"
 #include "nsTArrayForwardDeclare.h"
 #include "gfxFontFamilyList.h"
+#include "nsStyleStruct.h"
 
 class nsCSSValue;
 class nsStringComparator;
@@ -20,7 +21,6 @@ class nsIURI;
 struct gfxFontFeature;
 struct gfxAlternateValue;
 struct nsCSSValueList;
-struct nsStylePosition;
 
 // Style utility functions
 class nsStyleUtil {
@@ -71,6 +71,17 @@ public:
   {
     aResult.AppendFloat(aNumber);
   }
+
+  static void AppendStepsTimingFunction(nsTimingFunction::Type aType,
+                                        uint32_t aSteps,
+                                        nsTimingFunction::StepSyntax aSyntax,
+                                        nsAString& aResult);
+  static void AppendCubicBezierTimingFunction(float aX1, float aY1,
+                                              float aX2, float aY2,
+                                              nsAString& aResult);
+  static void AppendCubicBezierKeywordTimingFunction(
+      nsTimingFunction::Type aType,
+      nsAString& aResult);
 
   static void AppendSerializedFontSrc(const nsCSSValue& aValue,
                                       nsAString& aResult);

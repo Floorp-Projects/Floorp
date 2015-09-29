@@ -219,12 +219,6 @@ gfxPattern::GetSolidColor(Color& aColorOut)
  return false;
 }
 
-gfxPattern::GraphicsPatternType
-gfxPattern::GetType() const
-{
-  return ThebesPatternType(mGfxPattern.GetPattern()->GetType());
-}
-
 int
 gfxPattern::CairoStatus()
 {

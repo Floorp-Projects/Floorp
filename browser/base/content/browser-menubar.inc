@@ -11,12 +11,44 @@
                 style="border:0px;padding:0px;margin:0px;-moz-appearance:none">
             <menu id="file-menu" label="&fileMenu.label;"
                   accesskey="&fileMenu.accesskey;">
-              <menupopup id="menu_FilePopup">
+              <menupopup id="menu_FilePopup"
+                         onpopupshowing="updateUserContextUIVisibility();">
                 <menuitem id="menu_newNavigatorTab"
                           label="&tabCmd.label;"
                           command="cmd_newNavigatorTab"
                           key="key_newNavigatorTab"
                           accesskey="&tabCmd.accesskey;"/>
+                <menu id="menu_newUserContext"
+                      label="&newUserContext.label;"
+                      accesskey="&newUserContext.accesskey;"
+                      hidden="true">
+                  <menupopup>
+                    <menuitem id="menu_newUserContextTabPersonal"
+                              usercontextid="1"
+                              class="menuitem-iconic"
+                              label="&userContextPersonal.label;"
+                              command="Browser:NewUserContextTab"
+                              accesskey="&userContextPersonal.accesskey;"/>
+                    <menuitem id="menu_newUserContextTabWork"
+                              usercontextid="2"
+                              class="menuitem-iconic"
+                              label="&userContextWork.label;"
+                              command="Browser:NewUserContextTab"
+                              accesskey="&userContextWork.accesskey;"/>
+                    <menuitem id="menu_newUserContextTabBanking"
+                              usercontextid="3"
+                              class="menuitem-iconic"
+                              label="&userContextBanking.label;"
+                              command="Browser:NewUserContextTab"
+                              accesskey="&userContextBanking.accesskey;"/>
+                    <menuitem id="menu_newUserContextTabShopping"
+                              usercontextid="4"
+                              class="menuitem-iconic"
+                              label="&userContextShopping.label;"
+                              command="Browser:NewUserContextTab"
+                              accesskey="&userContextShopping.accesskey;"/>
+                  </menupopup>
+                </menu>
                 <menuitem id="menu_newNavigator"
                           label="&newNavigatorCmd.label;"
                           accesskey="&newNavigatorCmd.accesskey;"

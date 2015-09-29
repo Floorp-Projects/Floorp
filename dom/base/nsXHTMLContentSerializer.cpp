@@ -31,6 +31,7 @@
 #include "nsContentUtils.h"
 #include "nsLWBrkCIID.h"
 #include "nsIScriptElement.h"
+#include "nsStubMutationObserver.h"
 #include "nsAttrName.h"
 #include "nsParserConstants.h"
 #include "nsComputedDOMStyle.h"

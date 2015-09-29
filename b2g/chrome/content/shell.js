@@ -82,10 +82,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "SafeMode",
 
 window.performance.measure('gecko-shell-jsm-loaded', 'gecko-shell-loadstart');
 
-function getContentWindow() {
-  return shell.contentBrowser.contentWindow;
-}
-
 function debug(str) {
   dump(' -*- Shell.js: ' + str + '\n');
 }
@@ -388,7 +384,7 @@ var shell = {
     CaptivePortalLoginHelper.init();
 
     this.contentBrowser.src = homeURL;
-    this.isHomeLoaded = false;
+    this._isEventListenerReady = false;
 
     window.performance.mark('gecko-shell-system-frame-set');
 
@@ -479,6 +475,13 @@ var shell = {
         } else {
           this.contentBrowser.setVisible(true);
         }
+        break;
+      case 'load':
+        if (content.document.location == 'about:blank') {
+          return;
+        }
+        content.removeEventListener('load', this, true);
+        this.notifyContentWindowLoaded();
         break;
       case 'mozbrowserloadstart':
         if (content.document.location == 'about:blank') {
@@ -586,9 +589,12 @@ var shell = {
         break;
       case 'MozAfterPaint':
         window.removeEventListener('MozAfterPaint', this);
-        this.sendChromeEvent({
+        // This event should be sent before System app returns with
+        // system-message-listener-ready mozContentEvent, because it's on
+        // the critical launch path of the app.
+        SystemAppProxy._sendCustomEvent('mozChromeEvent', {
           type: 'system-first-paint'
-        });
+        }, /* noPending */ true);
         break;
       case 'unload':
         this.stop();
@@ -610,6 +616,14 @@ var shell = {
 
   // Send an event to a specific window, document or element.
   sendEvent: function shell_sendEvent(target, type, details) {
+    if (target === this.contentBrowser) {
+      // We must ask SystemAppProxy to send the event in this case so
+      // that event would be dispatched from frame.contentWindow instead of
+      // on the System app frame.
+      SystemAppProxy._sendCustomEvent(type, details);
+      return;
+    }
+
     let doc = target.document || target.ownerDocument || target;
     let event = doc.createEvent('CustomEvent');
     event.initCustomEvent(type, true, true, details ? details : {});
@@ -617,21 +631,10 @@ var shell = {
   },
 
   sendCustomEvent: function shell_sendCustomEvent(type, details) {
-    let target = getContentWindow();
-    let payload = details ? Cu.cloneInto(details, target) : {};
-    this.sendEvent(target, type, payload);
+    SystemAppProxy._sendCustomEvent(type, details);
   },
 
   sendChromeEvent: function shell_sendChromeEvent(details) {
-    if (!this.isHomeLoaded) {
-      if (!('pendingChromeEvents' in this)) {
-        this.pendingChromeEvents = [];
-      }
-
-      this.pendingChromeEvents.push(details);
-      return;
-    }
-
     this.sendCustomEvent("mozChromeEvent", details);
   },
 
@@ -672,6 +675,7 @@ var shell = {
     this.contentBrowser.removeEventListener('mozbrowserlocationchange', this, true);
 
     let content = this.contentBrowser.contentWindow;
+    content.addEventListener('load', this, true);
 
     this.reportCrash(true);
 
@@ -685,28 +689,7 @@ var shell = {
     Cu.import('resource://gre/modules/OperatorApps.jsm');
 #endif
 
-    content.addEventListener('load', function shell_homeLoaded() {
-      content.removeEventListener('load', shell_homeLoaded);
-      shell.isHomeLoaded = true;
-
-      if (Services.prefs.getBoolPref('b2g.orientation.animate')) {
-        Cu.import('resource://gre/modules/OrientationChangeHandler.jsm');
-      }
-
-#ifdef MOZ_WIDGET_GONK
-      libcutils.property_set('sys.boot_completed', '1');
-#endif
-
-      Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
-
-      SystemAppProxy.setIsReady();
-      if ('pendingChromeEvents' in shell) {
-        shell.pendingChromeEvents.forEach((shell.sendChromeEvent).bind(shell));
-      }
-      delete shell.pendingChromeEvents;
-    });
-
-    shell.handleCmdLine();
+    this.handleCmdLine();
   },
 
   handleCmdLine: function shell_handleCmdLine() {
@@ -727,6 +710,38 @@ var shell = {
     }
 #endif
   },
+
+  // This gets called when window.onload fires on the System app content window,
+  // which means things in <html> are parsed and statically referenced <script>s
+  // and <script defer>s are loaded and run.
+  notifyContentWindowLoaded: function shell_notifyContentWindowLoaded() {
+#ifdef MOZ_WIDGET_GONK
+    libcutils.property_set('sys.boot_completed', '1');
+#endif
+
+    // This will cause Gonk Widget to remove boot animation from the screen
+    // and reveals the page.
+    Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
+
+    SystemAppProxy.setIsLoaded();
+  },
+
+  // This gets called when the content sends us system-message-listener-ready
+  // mozContentEvent, OR when an observer message tell us we should consider
+  // the content as ready.
+  notifyEventListenerReady: function shell_notifyEventListenerReady() {
+    if (this._isEventListenerReady) {
+      Cu.reportError('shell.js: SystemApp has already been declared as being ready.');
+      return;
+    }
+    this._isEventListenerReady = true;
+
+    if (Services.prefs.getBoolPref('b2g.orientation.animate')) {
+      Cu.import('resource://gre/modules/OrientationChangeHandler.jsm');
+    }
+
+    SystemAppProxy.setIsReady();
+  }
 };
 
 Services.obs.addObserver(function onFullscreenOriginChange(subject, topic, data) {
@@ -734,11 +749,13 @@ Services.obs.addObserver(function onFullscreenOriginChange(subject, topic, data)
                           fullscreenorigin: data });
 }, "fullscreen-origin-change", false);
 
-DOMApplicationRegistry.registryStarted.then(function () {
-  shell.sendChromeEvent({ type: 'webapps-registry-start' });
-});
 DOMApplicationRegistry.registryReady.then(function () {
-  shell.sendChromeEvent({ type: 'webapps-registry-ready' });
+  // This event should be sent before System app returns with
+  // system-message-listener-ready mozContentEvent, because it's on
+  // the critical launch path of the app.
+  SystemAppProxy._sendCustomEvent('mozChromeEvent', {
+    type: 'webapps-registry-ready'
+  }, /* noPending */ true);
 });
 
 Services.obs.addObserver(function onBluetoothVolumeChange(subject, topic, data) {
@@ -751,6 +768,10 @@ Services.obs.addObserver(function onBluetoothVolumeChange(subject, topic, data) 
 Services.obs.addObserver(function(subject, topic, data) {
   shell.sendCustomEvent('mozmemorypressure');
 }, 'memory-pressure', false);
+
+Services.obs.addObserver(function(subject, topic, data) {
+  shell.notifyEventListenerReady();
+}, 'system-message-listener-ready', false);
 
 var permissionMap = new Map([
   ['unknown', Services.perms.UNKNOWN_ACTION],
