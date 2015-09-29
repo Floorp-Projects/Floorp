@@ -408,7 +408,7 @@ struct AsVariantTemporary
  *     };
  */
 template<typename... Ts>
-class Variant
+class MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS Variant
 {
   using Impl = detail::VariantImplementation<0, Ts...>;
   using RawData = AlignedStorage<detail::MaxSizeOf<Ts...>::size>;
