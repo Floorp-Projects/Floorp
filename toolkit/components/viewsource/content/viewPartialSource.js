@@ -16,7 +16,7 @@ function onLoadViewPartialSource() {
           .setAttribute("checked",
                         Services.prefs.getBoolPref("view_source.syntax_highlight"));
 
-  let args = window.arguments;
+  let args = window.arguments[0];
   viewSourceChrome.loadViewSourceFromSelection(args.URI, args.drawSelection, args.baseURI);
   window.content.focus();
 }
