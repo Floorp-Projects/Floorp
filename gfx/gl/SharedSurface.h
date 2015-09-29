@@ -34,6 +34,7 @@ class nsIThread;
 
 namespace mozilla {
 namespace gfx {
+class DataSourceSurface;
 class DrawTarget;
 } // namespace gfx
 
@@ -200,6 +201,10 @@ public:
     }
 
     virtual bool ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor) = 0;
+
+    virtual bool ReadbackBySharedHandle(gfx::DataSourceSurface* out_surface) {
+        return false;
+    }
 };
 
 template<typename T>

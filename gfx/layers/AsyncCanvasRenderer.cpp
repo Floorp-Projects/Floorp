@@ -12,6 +12,7 @@
 #include "GLScreenBuffer.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/layers/CanvasClient.h"
+#include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureClientSharedSurface.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "nsIRunnable.h"
@@ -142,18 +143,119 @@ AsyncCanvasRenderer::GetActiveThread()
   return result.forget();
 }
 
+void
+AsyncCanvasRenderer::CopyFromTextureClient(TextureClient* aTextureClient)
+{
+  MutexAutoLock lock(mMutex);
+  RefPtr<BufferTextureClient> buffer = static_cast<BufferTextureClient*>(aTextureClient);
+  if (!buffer->Lock(layers::OpenMode::OPEN_READ)) {
+    return;
+  }
+
+  const gfx::IntSize& size = aTextureClient->GetSize();
+  // This buffer would be used later for content rendering. So we choose
+  // B8G8R8A8 format here.
+  const gfx::SurfaceFormat format = gfx::SurfaceFormat::B8G8R8A8;
+  // Avoid to create buffer every time.
+  if (!mSurfaceForBasic ||
+      size != mSurfaceForBasic->GetSize() ||
+      format != mSurfaceForBasic->GetFormat())
+  {
+    uint32_t stride = gfx::GetAlignedStride<8>(size.width * BytesPerPixel(format));
+    mSurfaceForBasic = gfx::Factory::CreateDataSourceSurfaceWithStride(size, format, stride);
+  }
+
+  const uint8_t* lockedBytes = buffer->GetLockedData();
+  gfx::DataSourceSurface::ScopedMap map(mSurfaceForBasic,
+                                        gfx::DataSourceSurface::MapType::WRITE);
+  if (!map.IsMapped()) {
+    buffer->Unlock();
+    return;
+  }
+
+  memcpy(map.GetData(), lockedBytes, map.GetStride() * mSurfaceForBasic->GetSize().height);
+  buffer->Unlock();
+
+  if (mSurfaceForBasic->GetFormat() == gfx::SurfaceFormat::R8G8B8A8 ||
+      mSurfaceForBasic->GetFormat() == gfx::SurfaceFormat::R8G8B8X8) {
+    gl::SwapRAndBComponents(mSurfaceForBasic);
+  }
+}
+
 already_AddRefed<gfx::DataSourceSurface>
 AsyncCanvasRenderer::UpdateTarget()
 {
-  // This function will be implemented in a later patch.
-  return nullptr;
+  if (!mGLContext) {
+    return nullptr;
+  }
+
+  gl::SharedSurface* frontbuffer = nullptr;
+  gl::GLScreenBuffer* screen = mGLContext->Screen();
+  const auto& front = screen->Front();
+  if (front) {
+    frontbuffer = front->Surf();
+  }
+
+  if (!frontbuffer) {
+    return nullptr;
+  }
+
+  if (frontbuffer->mType == gl::SharedSurfaceType::Basic) {
+    return nullptr;
+  }
+
+  const gfx::IntSize& size = frontbuffer->mSize;
+  // This buffer would be used later for content rendering. So we choose
+  // B8G8R8A8 format here.
+  const gfx::SurfaceFormat format = gfx::SurfaceFormat::B8G8R8A8;
+  uint32_t stride = gfx::GetAlignedStride<8>(size.width * BytesPerPixel(format));
+  RefPtr<gfx::DataSourceSurface> surface =
+    gfx::Factory::CreateDataSourceSurfaceWithStride(size, format, stride);
+
+
+  if (NS_WARN_IF(!surface)) {
+    return nullptr;
+  }
+
+  if (!frontbuffer->ReadbackBySharedHandle(surface)) {
+    return nullptr;
+  }
+
+  bool needsPremult = frontbuffer->mHasAlpha && !mIsAlphaPremultiplied;
+  if (needsPremult) {
+    gfxUtils::PremultiplyDataSurface(surface, surface);
+  }
+
+  return surface.forget();
 }
 
 already_AddRefed<gfx::DataSourceSurface>
 AsyncCanvasRenderer::GetSurface()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return UpdateTarget();
+  MutexAutoLock lock(mMutex);
+  if (mSurfaceForBasic) {
+    // Since SourceSurface isn't thread-safe, we need copy to a new SourceSurface.
+    RefPtr<gfx::DataSourceSurface> result =
+      gfx::Factory::CreateDataSourceSurfaceWithStride(mSurfaceForBasic->GetSize(),
+                                                      mSurfaceForBasic->GetFormat(),
+                                                      mSurfaceForBasic->Stride());
+
+    gfx::DataSourceSurface::ScopedMap srcMap(mSurfaceForBasic, gfx::DataSourceSurface::READ);
+    gfx::DataSourceSurface::ScopedMap dstMap(result, gfx::DataSourceSurface::WRITE);
+
+    if (NS_WARN_IF(!srcMap.IsMapped()) ||
+        NS_WARN_IF(!dstMap.IsMapped())) {
+      return nullptr;
+    }
+
+    memcpy(dstMap.GetData(),
+           srcMap.GetData(),
+           srcMap.GetStride() * mSurfaceForBasic->GetSize().height);
+    return result.forget();
+  } else {
+    return UpdateTarget();
+  }
 }
 
 nsresult

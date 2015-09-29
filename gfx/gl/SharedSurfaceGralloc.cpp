@@ -283,5 +283,58 @@ SharedSurface_Gralloc::ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_
     return mTextureClient->ToSurfaceDescriptor(*out_descriptor);
 }
 
+bool
+SharedSurface_Gralloc::ReadbackBySharedHandle(gfx::DataSourceSurface* out_surface)
+{
+    MOZ_ASSERT(out_surface);
+    sp<GraphicBuffer> buffer = mTextureClient->GetGraphicBuffer();
+
+    const uint8_t* grallocData = nullptr;
+    auto result = buffer->lock(
+        GRALLOC_USAGE_SW_READ_OFTEN | GRALLOC_USAGE_SW_WRITE_NEVER,
+        const_cast<void**>(reinterpret_cast<const void**>(&grallocData))
+    );
+
+    if (result == BAD_VALUE) {
+        return false;
+    }
+
+    gfx::DataSourceSurface::ScopedMap map(out_surface, gfx::DataSourceSurface::WRITE);
+    if (!map.IsMapped()) {
+        buffer->unlock();
+        return false;
+    }
+
+    uint32_t stride = buffer->getStride() * android::bytesPerPixel(buffer->getPixelFormat());
+    uint32_t height = buffer->getHeight();
+    uint32_t width = buffer->getWidth();
+    for (uint32_t i = 0; i < height; i++) {
+        memcpy(map.GetData() + i * map.GetStride(),
+               grallocData + i * stride, width * 4);
+    }
+
+    buffer->unlock();
+
+    android::PixelFormat srcFormat = buffer->getPixelFormat();
+    MOZ_ASSERT(srcFormat == PIXEL_FORMAT_RGBA_8888 ||
+               srcFormat == PIXEL_FORMAT_BGRA_8888 ||
+               srcFormat == PIXEL_FORMAT_RGBX_8888);
+    bool isSrcRGB = srcFormat == PIXEL_FORMAT_RGBA_8888 ||
+                    srcFormat == PIXEL_FORMAT_RGBX_8888;
+
+    gfx::SurfaceFormat destFormat = out_surface->GetFormat();
+    MOZ_ASSERT(destFormat == gfx::SurfaceFormat::R8G8B8X8 ||
+               destFormat == gfx::SurfaceFormat::R8G8B8A8 ||
+               destFormat == gfx::SurfaceFormat::B8G8R8X8 ||
+               destFormat == gfx::SurfaceFormat::B8G8R8A8);
+    bool isDestRGB = destFormat == gfx::SurfaceFormat::R8G8B8X8 ||
+                     destFormat == gfx::SurfaceFormat::R8G8B8A8;
+
+    if (isSrcRGB != isDestRGB) {
+        SwapRAndBComponents(out_surface);
+    }
+    return true;
+}
+
 } // namespace gl
 } // namespace mozilla
