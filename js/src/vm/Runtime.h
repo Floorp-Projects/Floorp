@@ -1154,9 +1154,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     const js::DOMCallbacks* DOMcallbacks;
     JSDestroyPrincipalsOp destroyPrincipals;
 
-    /* Structured data callbacks are runtime-wide. */
-    const JSStructuredCloneCallbacks* structuredCloneCallbacks;
-
     /* Optional error reporter. */
     JSErrorReporter     errorReporter;
 
