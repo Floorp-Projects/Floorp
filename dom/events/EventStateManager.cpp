@@ -1977,10 +1977,11 @@ EventStateManager::GetContentViewer(nsIContentViewer** aCv)
   nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(focusedWindow);
   if(!ourWindow) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsPIDOMWindow> rootWindow = do_QueryInterface(ourWindow->GetPrivateRoot());
+  nsIDOMWindow *rootWindow = ourWindow->GetPrivateRoot();
   if(!rootWindow) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDOMWindow> contentWindow = nsGlobalWindow::Cast(rootWindow)->GetContent();
+  nsCOMPtr<nsIDOMWindow> contentWindow;
+  rootWindow->GetContent(getter_AddRefs(contentWindow));
   if(!contentWindow) return NS_ERROR_FAILURE;
 
   nsIDocument *doc = GetDocumentFromWindow(contentWindow);
