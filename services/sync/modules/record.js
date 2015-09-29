@@ -196,7 +196,9 @@ CryptoWrapper.prototype = {
   },
 
   // The custom setter below masks the parent's getter, so explicitly call it :(
-  get id() WBORecord.prototype.__lookupGetter__("id").call(this),
+  get id() {
+    return WBORecord.prototype.__lookupGetter__("id").call(this);
+  },
 
   // Keep both plaintext and encrypted versions of the id to verify integrity
   set id(val) {
@@ -356,8 +358,9 @@ CollectionKeyManager.prototype = {
   /**
    * Create a WBO for the current keys.
    */
-  asWBO: function(collection, id)
-    this._makeWBO(this._collections, this._default),
+  asWBO: function(collection, id) {
+    return this._makeWBO(this._collections, this._default);
+  },
 
   /**
    * Compute a new default key, and new keys for any specified collections.
@@ -560,14 +563,14 @@ Collection.prototype = {
   },
 
   // Apply the action to a certain set of ids
-  get ids() this._ids,
+  get ids() { return this._ids; },
   set ids(value) {
     this._ids = value;
     this._rebuildURL();
   },
 
   // Limit how many records to get
-  get limit() this._limit,
+  get limit() { return this._limit; },
   set limit(value) {
     this._limit = value;
     this._rebuildURL();

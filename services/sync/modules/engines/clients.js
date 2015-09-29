@@ -49,7 +49,9 @@ ClientEngine.prototype = {
   _trackerObj: ClientsTracker,
 
   // Always sync client data as it controls other sync behavior
-  get enabled() true,
+  get enabled() {
+    return true;
+  },
 
   get lastRecordUpload() {
     return Svc.Prefs.get(this.name + ".lastRecordUpload", 0);
@@ -102,7 +104,9 @@ ClientEngine.prototype = {
     let localID = Svc.Prefs.get("client.GUID", "");
     return localID == "" ? this.localID = Utils.makeGUID() : localID;
   },
-  set localID(value) Svc.Prefs.set("client.GUID", value),
+  set localID(value) {
+    Svc.Prefs.set("client.GUID", value);
+  },
 
   get brandName() {
     let brand = new StringBundle("chrome://branding/locale/brand.properties");
@@ -116,10 +120,16 @@ ClientEngine.prototype = {
 
     return this.localName = Utils.getDefaultDeviceName();
   },
-  set localName(value) Svc.Prefs.set("client.name", value),
+  set localName(value) {
+    Svc.Prefs.set("client.name", value);
+  },
 
-  get localType() Svc.Prefs.get("client.type", "desktop"),
-  set localType(value) Svc.Prefs.set("client.type", value),
+  get localType() {
+    return Svc.Prefs.get("client.type", "desktop");
+  },
+  set localType(value) {
+    Svc.Prefs.set("client.type", value);
+  },
 
   isMobile: function isMobile(id) {
     if (this._store._remoteClients[id])

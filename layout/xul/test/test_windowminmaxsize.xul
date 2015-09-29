@@ -207,8 +207,8 @@ function titledPanelWindowOpened(panelwindow)
 {
   var panel = panelwindow.document.documentElement.firstChild;
   panel.openPopup();
-  panel.addEventListener("popupshown", function() doTitledPanelTest(panel), false);
-  panel.addEventListener("popuphidden", function() done(panelwindow), false);
+  panel.addEventListener("popupshown", () => doTitledPanelTest(panel), false);
+  panel.addEventListener("popuphidden", () => done(panelwindow), false);
 }
 
 function doTitledPanelTest(panel)

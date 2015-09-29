@@ -1,0 +1,14 @@
+% http://localhost/tests/kraken/driver.html?testName=ai-astar
+% http://localhost/tests/kraken/driver.html?testName=audio-beat-detection
+% http://localhost/tests/kraken/driver.html?testName=audio-dft
+% http://localhost/tests/kraken/driver.html?testName=audio-fft
+% http://localhost/tests/kraken/driver.html?testName=audio-oscillator
+% http://localhost/tests/kraken/driver.html?testName=imaging-gaussian-blur
+% http://localhost/tests/kraken/driver.html?testName=imaging-darkroom
+% http://localhost/tests/kraken/driver.html?testName=imaging-desaturate
+% http://localhost/tests/kraken/driver.html?testName=json-parse-financial
+% http://localhost/tests/kraken/driver.html?testName=json-stringify-tinderbox
+% http://localhost/tests/kraken/driver.html?testName=stanford-crypto-aes
+% http://localhost/tests/kraken/driver.html?testName=stanford-crypto-ccm
+% http://localhost/tests/kraken/driver.html?testName=stanford-crypto-pbkdf2
+% http://localhost/tests/kraken/driver.html?testName=stanford-crypto-sha256-iterative
