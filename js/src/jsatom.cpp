@@ -498,7 +498,12 @@ js::ToAtom(ExclusiveContext* cx, typename MaybeRooted<Value, allowGC>::HandleTyp
     if (str->isAtom())
         return &str->asAtom();
 
-    return AtomizeString(cx, str);
+    JSAtom* atom = AtomizeString(cx, str);
+    if (!atom && !allowGC) {
+        MOZ_ASSERT_IF(cx->isJSContext(), cx->asJSContext()->isThrowingOutOfMemory());
+        cx->recoverFromOutOfMemory();
+    }
+    return atom;
 }
 
 template JSAtom*
