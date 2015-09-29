@@ -694,7 +694,7 @@ function process(name, json) {
     for (var body of functionBodies)
         body.suppressed = [];
     for (var body of functionBodies) {
-        for (var [pbody, id] of allRAIIGuardedCallPoints(body, isSuppressConstructor))
+        for (var [pbody, id] of allRAIIGuardedCallPoints(functionBodies, body, isSuppressConstructor))
             pbody.suppressed[id] = true;
     }
     processBodies(functionName);
