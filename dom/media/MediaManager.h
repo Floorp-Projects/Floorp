@@ -127,11 +127,10 @@ public:
     : mMediaThread(aThread)
     , mWindowID(aWindowID)
     , mStopped(false)
-    , mAudioStopped(false)
-    , mVideoStopped(false)
     , mFinished(false)
-    , mLock("mozilla::GUMCMSL")
-    , mRemoved(false) {}
+    , mRemoved(false)
+    , mAudioStopped(false)
+    , mVideoStopped(false) {}
 
   ~GetUserMediaCallbackMediaStreamListener()
   {
@@ -238,7 +237,6 @@ public:
     NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
     // allow calling even if inactive (!mStream) for easier cleanup
     // Caller holds strong reference to us, so no death grip required
-    MutexAutoLock lock(mLock); // protect access to mRemoved
     if (mStream && !mRemoved) {
       MM_LOG(("Listener removed on purpose, mFinished = %d", (int) mFinished));
       mRemoved = true; // RemoveListener is async, avoid races
@@ -250,7 +248,7 @@ public:
   }
 
   // Proxy NotifyPull() to sources
-  virtual void
+  void
   NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime) override
   {
     // Currently audio sources ignore NotifyPull, but they could
@@ -265,16 +263,18 @@ public:
     }
   }
 
-  virtual void
+  void
   NotifyEvent(MediaStreamGraph* aGraph,
               MediaStreamListener::MediaStreamGraphEvent aEvent) override
   {
     switch (aEvent) {
       case EVENT_FINISHED:
-        NotifyFinished(aGraph);
+        NS_DispatchToMainThread(
+          NS_NewRunnableMethod(this, &GetUserMediaCallbackMediaStreamListener::NotifyFinished));
         break;
       case EVENT_REMOVED:
-        NotifyRemoved(aGraph);
+        NS_DispatchToMainThread(
+          NS_NewRunnableMethod(this, &GetUserMediaCallbackMediaStreamListener::NotifyRemoved));
         break;
       case EVENT_HAS_DIRECT_LISTENERS:
         NotifyDirectListeners(aGraph, true);
@@ -287,13 +287,13 @@ public:
     }
   }
 
-  virtual void
-  NotifyFinished(MediaStreamGraph* aGraph);
+  void
+  NotifyFinished();
 
-  virtual void
-  NotifyRemoved(MediaStreamGraph* aGraph);
+  void
+  NotifyRemoved();
 
-  virtual void
+  void
   NotifyDirectListeners(MediaStreamGraph* aGraph, bool aHasListeners);
 
 private:
@@ -301,7 +301,16 @@ private:
   base::Thread* mMediaThread;
   uint64_t mWindowID;
 
-  bool mStopped; // MainThread only
+  // true after this listener has sent MEDIA_STOP. MainThread only.
+  bool mStopped;
+
+  // true after the stream this listener is listening to has finished in the
+  // MediaStreamGraph. MainThread only.
+  bool mFinished;
+
+  // true after this listener has been removed from its MediaStream.
+  // MainThread only.
+  bool mRemoved;
 
   // true if we have sent MEDIA_STOP or MEDIA_STOP_TRACK for mAudioDevice.
   // MainThread only.
@@ -318,11 +327,6 @@ private:
   nsRefPtr<AudioDevice> mAudioDevice; // threadsafe refcnt
   nsRefPtr<VideoDevice> mVideoDevice; // threadsafe refcnt
   nsRefPtr<SourceMediaStream> mStream; // threadsafe refcnt
-  bool mFinished;
-
-  // Accessed from MainThread and MSG thread
-  Mutex mLock; // protects mRemoved access from MainThread
-  bool mRemoved;
 };
 
 class GetUserMediaNotificationEvent: public nsRunnable
