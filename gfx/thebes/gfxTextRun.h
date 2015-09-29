@@ -872,12 +872,6 @@ public:
     gfxTextRun* GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel, uint32_t aFlags,
                                    LazyReferenceContextGetter& aRefContextGetter);
 
-    // helper method for resolving generic font families
-    static void
-    ResolveGenericFontNames(mozilla::FontFamilyType aGenericType,
-                            nsIAtom *aLanguage,
-                            nsTArray<nsString>& aGenericFamilies);
-
 protected:
     // search through pref fonts for a character, return nullptr if no matching pref font
     already_AddRefed<gfxFont> WhichPrefFontSupportsChar(uint32_t aCh);
@@ -1117,15 +1111,11 @@ protected:
 
     // helper methods for looking up fonts
 
-    // iterate over the fontlist, lookup names and expand generics
-    void EnumerateFontList(nsIAtom *aLanguage);
-
-    // expand a generic to a list of specific names based on prefs
-    void FindGenericFonts(mozilla::FontFamilyType aGenericType,
-                          nsIAtom *aLanguage);
-
     // lookup and add a font with a given name (i.e. *not* a generic!)
-    void FindPlatformFont(const nsAString& aName, bool aUseFontSet);
+    gfxFontFamily* FindPlatformFont(const nsAString& aName, bool aUseFontSet);
+
+    // do style selection and add entries to list
+    void AddFamilyToFontList(gfxFontFamily* aFamily);
 
     static nsILanguageAtomService* gLangService;
 };
