@@ -362,7 +362,7 @@ public:
                                    uint32_t aParam);
 
   virtual void
-  RemoteFeatureNotification(const nsAString& aBdAddr,
+  RemoteFeatureNotification(const BluetoothAddress& aBdAddr,
                             unsigned long aFeatures);
 
   virtual void
