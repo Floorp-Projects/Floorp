@@ -1066,32 +1066,8 @@ WebGLContext::GetImageBuffer(uint8_t** out_imageBuffer, int32_t* out_format)
 
     RefPtr<DataSourceSurface> dataSurface = snapshot->GetDataSurface();
 
-    DataSourceSurface::MappedSurface map;
-    if (!dataSurface->Map(DataSourceSurface::MapType::READ, &map))
-        return;
-
-    uint8_t* imageBuffer = new (fallible) uint8_t[mWidth * mHeight * 4];
-    if (!imageBuffer) {
-        dataSurface->Unmap();
-        return;
-    }
-    memcpy(imageBuffer, map.mData, mWidth * mHeight * 4);
-
-    dataSurface->Unmap();
-
-    int32_t format = imgIEncoder::INPUT_FORMAT_HOSTARGB;
-    if (!mOptions.premultipliedAlpha) {
-        // We need to convert to INPUT_FORMAT_RGBA, otherwise
-        // we are automatically considered premult, and unpremult'd.
-        // Yes, it is THAT silly.
-        // Except for different lossy conversions by color,
-        // we could probably just change the label, and not change the data.
-        gfxUtils::ConvertBGRAtoRGBA(imageBuffer, mWidth * mHeight * 4);
-        format = imgIEncoder::INPUT_FORMAT_RGBA;
-    }
-
-    *out_imageBuffer = imageBuffer;
-    *out_format = format;
+    return gfxUtils::GetImageBuffer(dataSurface, mOptions.premultipliedAlpha,
+                                    out_imageBuffer, out_format);
 }
 
 NS_IMETHODIMP
@@ -1103,20 +1079,18 @@ WebGLContext::GetInputStream(const char* mimeType,
     if (!gl)
         return NS_ERROR_FAILURE;
 
-    nsCString enccid("@mozilla.org/image/encoder;2?type=");
-    enccid += mimeType;
-    nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(enccid.get());
-    if (!encoder)
+    // Use GetSurfaceSnapshot() to make sure that appropriate y-flip gets applied
+    bool premult;
+    RefPtr<SourceSurface> snapshot =
+      GetSurfaceSnapshot(mOptions.premultipliedAlpha ? nullptr : &premult);
+    if (!snapshot)
         return NS_ERROR_FAILURE;
 
-    nsAutoArrayPtr<uint8_t> imageBuffer;
-    int32_t format = 0;
-    GetImageBuffer(getter_Transfers(imageBuffer), &format);
-    if (!imageBuffer)
-        return NS_ERROR_FAILURE;
+    MOZ_ASSERT(mOptions.premultipliedAlpha || !premult, "We must get unpremult when we ask for it!");
 
-    return ImageEncoder::GetInputStream(mWidth, mHeight, imageBuffer, format,
-                                        encoder, encoderOptions, out_stream);
+    RefPtr<DataSourceSurface> dataSurface = snapshot->GetDataSurface();
+    return gfxUtils::GetInputStream(dataSurface, mOptions.premultipliedAlpha, mimeType,
+                                    encoderOptions, out_stream);
 }
 
 void
@@ -1236,11 +1210,12 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* builder,
 layers::LayersBackend
 WebGLContext::GetCompositorBackendType() const
 {
-    nsIWidget* docWidget = nsContentUtils::WidgetForDocument(mCanvasElement->OwnerDoc());
-    if (docWidget) {
-        layers::LayerManager* layerManager = docWidget->GetLayerManager();
-        return layerManager->GetCompositorBackendType();
+    if (mCanvasElement) {
+        return mCanvasElement->GetCompositorBackendType();
+    } else if (mOffscreenCanvas) {
+        return mOffscreenCanvas->GetCompositorBackendType();
     }
+
     return LayersBackend::LAYERS_NONE;
 }
 

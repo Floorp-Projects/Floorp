@@ -17,6 +17,14 @@ function finish() {
   }
 }
 
+function drawCount(count) {
+  if (port) {
+    port.postMessage({type: "draw", count: count});
+  } else {
+    postMessage({type: "draw", count: count});
+  }
+}
+
 //--------------------------------------------------------------------
 // WebGL Drawing Functions
 //--------------------------------------------------------------------
@@ -144,6 +152,7 @@ function createDrawFunc(canvas) {
     preDraw(prefix);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     postDraw(prefix);
+    gl.commit();
     checkGLError(prefix);
   };
 }
@@ -182,6 +191,22 @@ function entryFunction(testStr, subtests, offscreenCanvas) {
         return;
       }
       draw("loop " +count);
+    }, 0);
+  }
+  //------------------------------------------------------------------------
+  // Test dynamic fallback
+  //------------------------------------------------------------------------
+  else if (test == "webgl_fallback") {
+    draw = createDrawFunc(canvas);
+    if (!draw) {
+      return;
+    }
+
+    var count = 0;
+    var iid = setInterval(function() {
+      ++count;
+      draw("loop " + count);
+      drawCount(count);
     }, 0);
   }
   //------------------------------------------------------------------------
