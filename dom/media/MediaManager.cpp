@@ -2396,6 +2396,7 @@ StopSharingCallback(MediaManager *aThis,
                     StreamListeners *aListeners,
                     void *aData)
 {
+  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
   if (aListeners) {
     auto length = aListeners->Length();
     for (size_t i = 0; i < length; ++i) {
@@ -3217,6 +3218,7 @@ GetUserMediaCallbackMediaStreamListener::ApplyConstraintsToTrack(
 void
 GetUserMediaCallbackMediaStreamListener::StopTrack(TrackID aTrackID, bool aIsAudio)
 {
+  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
   if (((aIsAudio && mAudioDevice) ||
        (!aIsAudio && mVideoDevice)) && !mStopped)
   {
@@ -3237,13 +3239,15 @@ GetUserMediaCallbackMediaStreamListener::StopTrack(TrackID aTrackID, bool aIsAud
   }
 }
 
-// Called from the MediaStreamGraph thread
 void
-GetUserMediaCallbackMediaStreamListener::NotifyFinished(MediaStreamGraph* aGraph)
+GetUserMediaCallbackMediaStreamListener::NotifyFinished()
 {
+  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
   mFinished = true;
   Invalidate(); // we know it's been activated
-  NS_DispatchToMainThread(do_AddRef(new GetUserMediaListenerRemove(mWindowID, this)));
+
+  nsRefPtr<MediaManager> manager(MediaManager::GetInstance());
+  manager->RemoveFromWindowList(mWindowID, this);
 }
 
 // Called from the MediaStreamGraph thread
@@ -3258,19 +3262,17 @@ GetUserMediaCallbackMediaStreamListener::NotifyDirectListeners(MediaStreamGraph*
                            aHasListeners, mWindowID, nullptr));
 }
 
-// Called from the MediaStreamGraph thread
 // this can be in response to our own RemoveListener() (via ::Remove()), or
 // because the DOM GC'd the DOMLocalMediaStream/etc we're attached to.
 void
-GetUserMediaCallbackMediaStreamListener::NotifyRemoved(MediaStreamGraph* aGraph)
+GetUserMediaCallbackMediaStreamListener::NotifyRemoved()
 {
-  {
-    MutexAutoLock lock(mLock); // protect access to mRemoved
-    MM_LOG(("Listener removed by DOM Destroy(), mFinished = %d", (int) mFinished));
-    mRemoved = true;
-  }
+  MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
+  MM_LOG(("Listener removed by DOM Destroy(), mFinished = %d", (int) mFinished));
+  mRemoved = true;
+
   if (!mFinished) {
-    NotifyFinished(aGraph);
+    NotifyFinished();
   }
 }
 
