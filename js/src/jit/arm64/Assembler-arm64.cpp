@@ -563,7 +563,7 @@ Assembler::FixupNurseryObjects(JSContext* cx, JitCode* code, CompactBufferReader
     }
 
     if (hasNurseryPointers)
-        cx->runtime()->gc.storeBuffer.putWholeCellFromMainThread(code);
+        cx->runtime()->gc.storeBuffer.putWholeCell(code);
 }
 
 int32_t
