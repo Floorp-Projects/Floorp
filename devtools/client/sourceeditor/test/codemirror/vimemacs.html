@@ -116,7 +116,8 @@
           running = false, // Flag that states tests are running
           quit = false, // Flag to quit tests ASAP
           verbose = false, // Adds message for *every* test to output
-          phantom = false;
+          phantom = false,
+          Pos = CodeMirror.Pos; // Required for VIM tests
 
       function runHarness(){
         if (running) {

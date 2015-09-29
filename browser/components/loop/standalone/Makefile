@@ -21,6 +21,24 @@ install: npm_install
 npm_install:
 	@npm install
 
+# build the dist dir, which contains a production version of the code and
+# assets
+.PHONY: dist
+dist:
+	cp -pr content dist
+	NODE_ENV="production" $(NODE_LOCAL_BIN)/webpack \
+		-p -v --display-errors
+	sed 's#webappEntryPoint.js#js/standalone.js#' \
+		< content/index.html > dist/index.html
+
+.PHONY: distclean
+distclean:
+	rm -fr dist
+
+.PHONY: distserver
+distserver: remove_old_config dist
+	LOOP_CONTENT_DIR=dist node server.js
+
 test:
 	@echo "Not implemented yet."
 

@@ -32,6 +32,9 @@ if (cm) {
 var SECURITY_PREF = "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
 Components.utils.import("resource://gre/modules/Services.jsm");
 Services.prefs.setBoolPref(SECURITY_PREF, true);
+// RIL DOM events and mozChromeEvents will be pending until
+// this observer message is sent.
+Services.obs.notifyObservers(null, 'system-message-listener-ready', null);
 
 function openWindow(aEvent) {
   var popupIframe = aEvent.detail.frameElement;
