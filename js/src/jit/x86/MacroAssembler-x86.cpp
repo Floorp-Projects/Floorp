@@ -30,9 +30,22 @@ MOZ_ALIGNED_DECL(static const uint64_t, 16) TO_DOUBLE[4] = {
     0x4530000000000000LL
 };
 
+static const double TO_DOUBLE_HIGH_SCALE = 0x100000000;
+
 void
 MacroAssemblerX86::convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest)
 {
+    // SUBPD needs SSE2, HADDPD needs SSE3.
+    if (!HasSSE3()) {
+        convertUInt32ToDouble(src.high, dest);
+        movePtr(ImmPtr(&TO_DOUBLE_HIGH_SCALE), temp);
+        loadDouble(Address(temp, 0), ScratchDoubleReg);
+        mulDouble(ScratchDoubleReg, dest);
+        convertUInt32ToDouble(src.low, ScratchDoubleReg);
+        addDouble(ScratchDoubleReg, dest);
+        return;
+    }
+
     // Following operation uses entire 128-bit of dest XMM register.
     // Currently higher 64-bit is free when we have access to lower 64-bit.
     MOZ_ASSERT(dest.size() == 8);

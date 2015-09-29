@@ -36,23 +36,6 @@ from ..testing import (
 class TreeMetadata(object):
     """Base class for all data being captured."""
 
-    def __init__(self):
-        self._ack = False
-
-    def ack(self):
-        self._ack = True
-
-
-class ReaderSummary(TreeMetadata):
-    """A summary of what the reader did."""
-
-    def __init__(self, total_file_count, total_sandbox_execution_time,
-        total_emitter_execution_time):
-        TreeMetadata.__init__(self)
-        self.total_file_count = total_file_count
-        self.total_sandbox_execution_time = total_sandbox_execution_time
-        self.total_emitter_execution_time = total_emitter_execution_time
-
 
 class ContextDerived(TreeMetadata):
     """Build object derived from a single Context instance.
@@ -87,6 +70,12 @@ class ContextDerived(TreeMetadata):
         self.objdir = context.objdir
 
         self.config = context.config
+
+        self._context = context
+
+    @property
+    def install_target(self):
+        return self._context['FINAL_TARGET']
 
     @property
     def relobjdir(self):
@@ -163,7 +152,6 @@ class XPIDLFile(ContextDerived):
     __slots__ = (
         'add_to_manifest',
         'basename',
-        'install_target',
         'source_path',
     )
 
@@ -174,8 +162,6 @@ class XPIDLFile(ContextDerived):
         self.basename = mozpath.basename(source)
         self.module = module
         self.add_to_manifest = add_to_manifest
-
-        self.install_target = context['FINAL_TARGET']
 
 class BaseDefines(ContextDerived):
     """Context derived container object for DEFINES/HOST_DEFINES,

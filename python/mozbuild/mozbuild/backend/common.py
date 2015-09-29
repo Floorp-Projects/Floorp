@@ -206,7 +206,7 @@ class CommonBackend(BuildBackend):
             # Do not handle ConfigFileSubstitution for Makefiles. Leave that
             # to other
             if mozpath.basename(obj.output_path) == 'Makefile':
-                return
+                return False
             with self._get_preprocessor(obj) as pp:
                 pp.do_include(obj.input_path)
             self.backend_input_files.add(obj.input_path)
@@ -251,9 +251,9 @@ class CommonBackend(BuildBackend):
             if hasattr(self, '_process_unified_sources'):
                 self._process_unified_sources(obj)
         else:
-            return
+            return False
 
-        obj.ack()
+        return True
 
     def consume_finished(self):
         if len(self._idl_manager.idls):

@@ -210,4 +210,16 @@ enum {
 #define NS_FONT_SUB_SUPER_SMALL_SIZE             (20.0)
 #define NS_FONT_SUB_SUPER_LARGE_SIZE             (45.0)
 
+// pref lang id's for font prefs
+enum eFontPrefLang {
+    #define FONT_PREF_LANG(enum_id_, str_, atom_id_) eFontPrefLang_ ## enum_id_
+    #include "gfxFontPrefLangList.h"
+    #undef FONT_PREF_LANG
+
+    , eFontPrefLang_CJKSet  // special code for CJK set
+    , eFontPrefLang_First = eFontPrefLang_Western
+    , eFontPrefLang_Last = eFontPrefLang_Others
+    , eFontPrefLang_Count = (eFontPrefLang_Last - eFontPrefLang_First + 1)
+};
+
 #endif
