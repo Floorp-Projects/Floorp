@@ -805,6 +805,9 @@ protected:
   // For preventing it to be called, we should put off notifying TSF of
   // anything until layout information becomes available.
   bool                         mDeferNotifyingTSF;
+  // Immediately after a call of Destroy(), mDestroyed becomes true.  If this
+  // is true, the instance shouldn't grant any requests from the TIP anymore.
+  bool                         mDestroyed;
 
 
   // TSF thread manager object for the current application
