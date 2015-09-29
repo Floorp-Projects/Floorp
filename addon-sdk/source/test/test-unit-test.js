@@ -47,8 +47,8 @@ exports.testATeardownAsyncTestPart2 = function(test) {
 exports.testWaitUntilInstant = function(test) {
   test.waitUntilDone();
 
-  test.waitUntil(function () true, "waitUntil with instant true pass")
-      .then(function () test.done());
+  test.waitUntil(() => true, "waitUntil with instant true pass")
+      .then(() => test.done());
 }
 
 exports.testWaitUntil = function(test) {
@@ -167,7 +167,7 @@ exports.testWaitUntilTimeoutInCallback = function(test) {
       name: "wait4ever",
       testFunction: function(test) {
         test.waitUntilDone(100);
-        test.waitUntil(function() false);
+        test.waitUntil(() => false);
       }
     },
     onDone: function() {}

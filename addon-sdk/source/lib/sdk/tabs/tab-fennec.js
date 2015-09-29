@@ -58,8 +58,12 @@ const Tab = Class({
    * Changing this property changes an actual title.
    * @type {String}
    */
-  get title() getTabTitle(tabNS(this).tab),
-  set title(title) setTabTitle(tabNS(this).tab, title),
+  get title() {
+    return getTabTitle(tabNS(this).tab);
+  },
+  set title(title) {
+    setTabTitle(tabNS(this).tab, title);
+  },
 
   /**
    * Location of the page currently loaded in this tab.
@@ -69,7 +73,9 @@ const Tab = Class({
   get url() {
     return tabNS(this).closed ? undefined : getTabURL(tabNS(this).tab);
   },
-  set url(url) setTabURL(tabNS(this).tab, url),
+  set url(url) {
+    setTabURL(tabNS(this).tab, url);
+  },
 
   getThumbnail: function() {
     // TODO: implement!
@@ -131,7 +137,9 @@ const Tab = Class({
    * rendered as.
    * @type {String}
    */
-  get contentType() getTabContentType(tabNS(this).tab),
+  get contentType() {
+    return getTabContentType(tabNS(this).tab);
+  },
 
   /**
    * Create a worker for this tab, first argument is options given to Worker.

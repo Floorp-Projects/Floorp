@@ -32,10 +32,10 @@ var when = curry(function(options, tab) {
   return promise;
 });
 
-var use = function(value) function() value;
+var use = use = value => () => value;
 
 
-var open = curry(function(url, window) openTab(window, url));
+var open = curry((url, window) => openTab(window, url));
 var close = function(tab) {
   let promise = when("pagehide", tab);
   closeTab(tab);

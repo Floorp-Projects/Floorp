@@ -323,7 +323,9 @@ Object.defineProperties(Buffer.prototype, {
  ['readUInt8', 'getUint8'],
  ['readInt8', 'getInt8']].forEach(([alias, name, littleEndian]) => {
   Object.defineProperty(Buffer.prototype, alias, {
-    value: function(offset) this.view[name](offset, littleEndian)
+    value: function(offset) {
+      return this.view[name](offset, littleEndian);
+    }
   });
 });
 
@@ -342,6 +344,8 @@ Object.defineProperties(Buffer.prototype, {
  ['writeUInt8', 'setUint8'],
  ['writeInt8', 'setInt8']].forEach(([alias, name, littleEndian]) => {
   Object.defineProperty(Buffer.prototype, alias, {
-    value: function(value, offset) this.view[name](offset, value, littleEndian)
+    value: function(value, offset) {
+      return this.view[name](offset, value, littleEndian);
+    }
   });
 });

@@ -32,14 +32,16 @@ var promised = (function() {
 
   // Utility function that does following:
   // execute([ f, self, args...]) => f.apply(self, args)
-  function execute (args) call.apply(call, args)
+  function execute (args) {
+    return call.apply(call, args);
+  }
 
   // Utility function that takes promise of `a` array and maybe promise `b`
   // as arguments and returns promise for `a.concat(b)`.
   function promisedConcat(promises, unknown) {
     return promises.then(function (values) {
       return resolve(unknown)
-        .then(function (value) values.concat([value]));
+        .then(value => values.concat([value]));
     });
   }
 

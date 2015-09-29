@@ -21,10 +21,10 @@ exports.testWriteRead = function (assert) {
   stream.write(str);
   stream.close();
   assert.ok(stream.closed, "stream.closed after close should be true");
-  assert.throws(function () stream.close(),
+  assert.throws(() => stream.close(),
                     STREAM_CLOSED_ERROR,
                     "stream.close after already closed should raise error");
-  assert.throws(function () stream.write("This shouldn't be written!"),
+  assert.throws(() => stream.write("This shouldn't be written!"),
                     STREAM_CLOSED_ERROR,
                     "stream.write after close should raise error");
 
@@ -37,10 +37,10 @@ exports.testWriteRead = function (assert) {
                    "stream.read at EOS should return empty string");
   stream.close();
   assert.ok(stream.closed, "stream.closed after close should be true");
-  assert.throws(function () stream.close(),
+  assert.throws(() => stream.close(),
                     STREAM_CLOSED_ERROR,
                     "stream.close after already closed should raise error");
-  assert.throws(function () stream.read(),
+  assert.throws(() => stream.read(),
                     STREAM_CLOSED_ERROR,
                     "stream.read after close should raise error");
 
@@ -116,10 +116,10 @@ exports.testWriteAsync = function (assert, done) {
     assert.equal(err, undefined,
                      "stream.writeAsync should not cause error");
     assert.ok(stream.closed, "stream.closed after write should be true");
-    assert.throws(function () stream.close(),
+    assert.throws(() => stream.close(),
                       STREAM_CLOSED_ERROR,
                       "stream.close after already closed should raise error");
-    assert.throws(function () stream.writeAsync("This shouldn't work!"),
+    assert.throws(() => stream.writeAsync("This shouldn't work!"),
                       STREAM_CLOSED_ERROR,
                       "stream.writeAsync after close should raise error");
 

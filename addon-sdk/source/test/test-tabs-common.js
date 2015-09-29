@@ -209,7 +209,7 @@ exports.testAttachOnMultipleDocuments_alt = function (assert, done) {
       if (onReadyCount == 1) {
         worker1 = tab.attach({
           contentScript: 'self.on("message", ' +
-                         '  function () self.postMessage(document.location.href)' +
+                         '  () => self.postMessage(document.location.href)' +
                          ');',
           onMessage: function (msg) {
             assert.equal(msg, firstLocation,
@@ -232,7 +232,7 @@ exports.testAttachOnMultipleDocuments_alt = function (assert, done) {
       else if (onReadyCount == 2) {
         worker2 = tab.attach({
           contentScript: 'self.on("message", ' +
-                         '  function () self.postMessage(document.location.href)' +
+                         '  () => self.postMessage(document.location.href)' +
                          ');',
           onMessage: function (msg) {
             assert.equal(msg, secondLocation,
@@ -288,7 +288,7 @@ exports.testAttachWrappers_alt = function (assert, done) {
         onMessage: function (msg) {
           assert.equal(msg, true, "Worker has wrapped objects ("+count+")");
           if (count++ == 1)
-            tab.close(function() done());
+            tab.close(() => done());
         }
       });
     }
@@ -325,11 +325,11 @@ exports.testActiveWindowActiveTabOnActivate_alt = function(assert, done) {
 
   tabs.open({
     url: URL.replace("#title#", "tabs.open1"),
-    onOpen: function(tab) newTabs.push(tab)
+    onOpen: tab => newTabs.push(tab)
   });
   tabs.open({
     url: URL.replace("#title#", "tabs.open2"),
-    onOpen: function(tab) newTabs.push(tab)
+    onOpen: tab => newTabs.push(tab)
   });
 };
 
@@ -454,7 +454,7 @@ exports.testTabReload = function(assert, done) {
           assert.pass("the tab was loaded again");
           assert.equal(tab.url, url, "the tab has the same URL");
 
-          tab.close(function() done());
+          tab.close(() => done());
         }
       );
 
@@ -498,8 +498,12 @@ exports.testOnPageShowEvent = function (assert, done) {
     }
   }
 
-  function onOpen () events.push('open');
-  function onReady () events.push('ready');
+  function onOpen () {
+    return events.push('open');
+  }
+  function onReady () {
+    return events.push('ready');
+  }
 
   tabs.on('pageshow', onPageShow);
   tabs.on('open', onOpen);
@@ -544,8 +548,12 @@ exports.testOnPageShowEventDeclarative = function (assert, done) {
     }
   }
 
-  function onOpen () events.push('open');
-  function onReady () events.push('ready');
+  function onOpen () {
+    return events.push('open');
+  }
+  function onReady () {
+    return events.push('ready');
+  }
 
   tabs.open({
     url: firstUrl,

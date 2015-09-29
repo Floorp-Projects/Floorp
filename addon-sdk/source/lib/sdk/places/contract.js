@@ -29,7 +29,7 @@ const validItem = {
   },
   index: {
     is: ['undefined', 'null', 'number'],
-    map: function (value) value == null ? -1 : value,
+    map: value => value == null ? -1 : value,
     msg: 'The `index` property must be a number.'
   },
   updated: {
@@ -55,7 +55,7 @@ const validURL = {
 const validTags = {
   tags: {
     is: ['object'],
-    ok: function (tags) tags instanceof Set,
+    ok: tags => tags instanceof Set,
     map: function (tags) {
       if (Array.isArray(tags))
         return new Set(tags);

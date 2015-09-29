@@ -218,7 +218,7 @@ exports["test PWPB Selection Listener"] = function(assert, done) {
       selection.once("select", function() {
         assert.equal(browserWindows.length, 2, "there should be only two windows open.");
         assert.equal(getTabs().length, 2, "there should be only two tabs open: '" +
-                     getTabs().map(function(tab) getTabTitle(tab)).join("', '") +
+                     getTabs().map(tab => getTabTitle(tab)).join("', '") +
                      "'."
         );
 
@@ -252,7 +252,7 @@ exports["test PWPB Textarea OnSelect Listener"] = function(assert, done) {
       selection.once("select", function() {
         assert.equal(browserWindows.length, 2, "there should be only two windows open.");
         assert.equal(getTabs().length, 2, "there should be only two tabs open: '" +
-                     getTabs().map(function(tab) getTabTitle(tab)).join("', '") +
+                     getTabs().map(tab => getTabTitle(tab)).join("', '") +
                      "'."
         );
 

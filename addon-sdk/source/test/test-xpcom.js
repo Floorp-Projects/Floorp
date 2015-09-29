@@ -57,7 +57,9 @@ exports['test implement xpcom interfaces'] = function(assert) {
 
 exports['test implement factory without contract'] = function(assert) {
   let actual = xpcom.Factory({
-    get wrappedJSObject() this,
+    get wrappedJSObject() {
+      return this;
+    },
   });
 
   assert.ok(isCIDRegistered(actual.id), 'factory is regiseterd');
@@ -69,7 +71,9 @@ exports['test implement xpcom factory'] = function(assert) {
   let Component = Class({
     extends: xpcom.Unknown,
     interfaces: [ 'nsIObserver' ],
-    get wrappedJSObject() this,
+    get wrappedJSObject() {
+      return this;
+    },
     observe: function() {}
   });
 
@@ -100,7 +104,9 @@ exports['test implement xpcom service'] = function(assert) {
     Component: Class({
       extends: xpcom.Unknown,
       interfaces: [ 'nsIObserver'],
-      get wrappedJSObject() this,
+      get wrappedJSObject() {
+        return this;
+      },
       observe: function() {},
       name: 'my-service'
     })
@@ -127,7 +133,9 @@ function testRegister(assert, text) {
     register: false,
     Component: Class({
       extends: xpcom.Unknown,
-      get wrappedJSObject() this,
+      get wrappedJSObject() {
+        return this;
+      },
       interfaces: [ 'nsIAboutModule' ],
       newChannel : function(aURI, aLoadInfo) {
         var ios = Cc["@mozilla.org/network/io-service;1"].

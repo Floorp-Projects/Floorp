@@ -135,10 +135,10 @@ function onTabOpen(event) {
 
   tabNS(tab).opened = true;
 
-  tab.on('ready', function() emit(gTabs, 'ready', tab));
+  tab.on('ready', () => emit(gTabs, 'ready', tab));
   tab.once('close', onTabClose);
 
-  tab.on('pageshow', function(_tab, persisted)
+  tab.on('pageshow', (_tab, persisted) =>
     emit(gTabs, 'pageshow', tab, persisted));
 
   emit(tab, 'open', tab);

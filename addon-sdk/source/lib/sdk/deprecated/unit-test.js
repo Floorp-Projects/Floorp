@@ -54,7 +54,9 @@ const TestRunner = function TestRunner(options) {
 };
 
 TestRunner.prototype = {
-  toString: function toString() "[object TestRunner]",
+  toString: function toString() {
+    return "[object TestRunner]";
+  },
 
   DEFAULT_PAUSE_TIMEOUT: (cfxArgs.parseable ? 300000 : 15000), //Five minutes (5*60*1000ms)
   PAUSE_DELAY: 500,
