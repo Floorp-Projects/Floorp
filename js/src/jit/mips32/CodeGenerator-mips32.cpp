@@ -135,7 +135,8 @@ CodeGeneratorMIPS::visitCompareAndBranch(LCompareAndBranch* comp)
         emitBranch(ToRegister(comp->left()), ToRegister(comp->right()), cond,
                    comp->ifTrue(), comp->ifFalse());
     } else {
-        emitBranch(ToRegister(comp->left()), ToAddress(comp->right()), cond,
+        masm.load32(ToAddress(comp->right()), ScratchRegister);
+        emitBranch(ToRegister(comp->left()), ScratchRegister, cond,
                    comp->ifTrue(), comp->ifFalse());
     }
 }
@@ -1744,7 +1745,7 @@ CodeGeneratorMIPS::visitGuardClass(LGuardClass* guard)
     Register tmp = ToRegister(guard->tempInt());
 
     masm.loadObjClass(obj, tmp);
-    bailoutCmpPtr(Assembler::NotEqual, tmp, Imm32((uint32_t)guard->mir()->getClass()),
+    bailoutCmpPtr(Assembler::NotEqual, tmp, ImmPtr(guard->mir()->getClass()),
                   guard->snapshot());
 }
 
@@ -2079,8 +2080,8 @@ CodeGeneratorMIPS::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins)
     Register out = ToRegister(ins->output());
     unsigned addr = mir->globalDataOffset() - AsmJSGlobalRegBias;
 
-    BaseIndex source(GlobalReg, index, TimesFour, addr);
-    masm.load32(source, out);
+    BaseIndex source(GlobalReg, index, ScalePointer, addr);
+    masm.loadPtr(source, out);
 }
 
 void
