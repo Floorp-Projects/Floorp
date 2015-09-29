@@ -15,31 +15,39 @@ function run_test() {
       }
     },
 
-    func: function() this.catch(function() {
-      rightThis = this == obj;
-      didCall = true;
-      return 5;
-    })(),
+    func: function() {
+      return this.catch(function() {
+        rightThis = this == obj;
+        didCall = true;
+        return 5;
+      })();
+    },
 
-    throwy: function() this.catch(function() {
-      rightThis = this == obj;
-      didCall = true;
-      throw 10;
-    })(),
+    throwy: function() {
+      return this.catch(function() {
+        rightThis = this == obj;
+        didCall = true;
+        throw 10;
+      })();
+    },
 
-    callbacky: function() this.catch(function() {
-      rightThis = this == obj;
-      didCall = true;
-      throw 10;
-    }, function(ex) {
-      wasTen = (ex == 10)
-    })(),
+    callbacky: function() {
+      return this.catch(function() {
+        rightThis = this == obj;
+        didCall = true;
+        throw 10;
+      }, function(ex) {
+        wasTen = (ex == 10)
+      })();
+    },
 
-    lockedy: function() this.catch(function() {
-      rightThis = this == obj;
-      didCall = true;
-      throw("Could not acquire lock.");
-    })()
+    lockedy: function() {
+      return this.catch(function() {
+        rightThis = this == obj;
+        didCall = true;
+        throw("Could not acquire lock.");
+      })();
+    }
   };
 
   _("Make sure a normal call will call and return");

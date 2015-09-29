@@ -2,8 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 _("Define some functions in well defined line positions for the test");
-function foo(v) bar(v + 1); // line 2
-function bar(v) baz(v + 1); // line 3
+function foo(v) { return bar(v + 1); } // line 2
+function bar(v) { return baz(v + 1); } // line 3
 function baz(v) { throw new Error(v + 1); } // line 4
 
 _("Make sure lazy constructor calling/assignment works");
