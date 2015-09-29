@@ -873,7 +873,7 @@ describe("loop.store.ActiveRoomStore", function () {
       });
     });
 
-    describe("Firefox Handles Room", function() {
+    describe("User Agent Handles Room", function() {
       var channelListener;
 
       beforeEach(function() {
@@ -951,7 +951,8 @@ describe("loop.store.ActiveRoomStore", function () {
           detail: {
             id: "loop-link-clicker",
             message: {
-              response: true
+              response: true,
+              alreadyOpen: false
             }
           }
         });
@@ -963,6 +964,28 @@ describe("loop.store.ActiveRoomStore", function () {
             sessionToken: "",
             sessionId: "",
             expires: 0
+          }));
+      });
+
+      it("should dispatch a ConnectionFailure action if the room was already opened", function() {
+        // Start the join.
+        store.joinRoom();
+
+        // Pretend Firefox calls back.
+        channelListener({
+          detail: {
+            id: "loop-link-clicker",
+            message: {
+              response: true,
+              alreadyOpen: true
+            }
+          }
+        });
+
+        sinon.assert.called(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.ConnectionFailure({
+            reason: FAILURE_DETAILS.ROOM_ALREADY_OPEN
           }));
       });
     });
@@ -1256,6 +1279,29 @@ describe("loop.store.ActiveRoomStore", function () {
       store.connectionFailure(connectionFailureAction);
 
       expect(store.getStoreState().roomState).eql(ROOM_STATES.FAILED);
+    });
+
+    it("should set the state to `FAILED` if the user agent is handling the room", function() {
+      store.setStoreState({
+        standalone: true,
+        userAgentHandlesRoom: true
+      });
+
+      store.connectionFailure(connectionFailureAction);
+
+      expect(store.getStoreState().roomState).eql(ROOM_STATES.FAILED);
+    });
+
+    it("should not do any other cleanup if the user agent is handling the room", function() {
+      store.setStoreState({
+        standalone: true,
+        userAgentHandlesRoom: true
+      });
+
+      store.connectionFailure(connectionFailureAction);
+
+      sinon.assert.notCalled(fakeMultiplexGum.reset);
+      sinon.assert.notCalled(fakeSdkDriver.disconnectSession);
     });
   });
 
