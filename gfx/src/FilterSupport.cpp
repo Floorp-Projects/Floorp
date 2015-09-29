@@ -2045,20 +2045,13 @@ AttributeMap::~AttributeMap()
 {
 }
 
-static PLDHashOperator
-CopyAttribute(const uint32_t& aAttributeName,
-              Attribute* aAttribute,
-              void* aAttributes)
-{
-  typedef nsClassHashtable<nsUint32HashKey, Attribute> Map;
-  Map* map = static_cast<Map*>(aAttributes);
-  map->Put(aAttributeName, new Attribute(*aAttribute));
-  return PL_DHASH_NEXT;
-}
-
 AttributeMap::AttributeMap(const AttributeMap& aOther)
 {
-  aOther.mMap.EnumerateRead(CopyAttribute, &mMap);
+  for (auto iter = aOther.mMap.Iter(); !iter.Done(); iter.Next()) {
+    const uint32_t& attributeName = iter.Key();
+    Attribute* attribute = iter.UserData();
+    mMap.Put(attributeName, new Attribute(*attribute));
+  }
 }
 
 AttributeMap&
@@ -2066,32 +2059,13 @@ AttributeMap::operator=(const AttributeMap& aOther)
 {
   if (this != &aOther) {
     mMap.Clear();
-    aOther.mMap.EnumerateRead(CopyAttribute, &mMap);
+    for (auto iter = aOther.mMap.Iter(); !iter.Done(); iter.Next()) {
+      const uint32_t& attributeName = iter.Key();
+      Attribute* attribute = iter.UserData();
+      mMap.Put(attributeName, new Attribute(*attribute));
+    }
   }
   return *this;
-}
-
-namespace {
-  struct MatchingMap {
-    typedef nsClassHashtable<nsUint32HashKey, Attribute> Map;
-    const Map& map;
-    bool matches;
-  };
-} // namespace
-
-static PLDHashOperator
-CheckAttributeEquality(const uint32_t& aAttributeName,
-                       Attribute* aAttribute,
-                       void* aMatchingMap)
-{
-  MatchingMap& matchingMap = *static_cast<MatchingMap*>(aMatchingMap);
-  Attribute* matchingAttribute = matchingMap.map.Get(aAttributeName);
-  if (!matchingAttribute ||
-      *matchingAttribute != *aAttribute) {
-    matchingMap.matches = false;
-    return PL_DHASH_STOP;
-  }
-  return PL_DHASH_NEXT;
 }
 
 bool
@@ -2101,43 +2075,34 @@ AttributeMap::operator==(const AttributeMap& aOther) const
     return false;
   }
 
-  MatchingMap matchingMap = { mMap, true };
-  aOther.mMap.EnumerateRead(CheckAttributeEquality, &matchingMap);
-  return matchingMap.matches;
-}
+  for (auto iter = aOther.mMap.Iter(); !iter.Done(); iter.Next()) {
+    const uint32_t& attributeName = iter.Key();
+    Attribute* attribute = iter.UserData();
+    Attribute* matchingAttribute = mMap.Get(attributeName);
+    if (!matchingAttribute || *matchingAttribute != *attribute) {
+      return false;
+    }
+  }
 
-namespace {
-  struct HandlerWithUserData
-  {
-    AttributeMap::AttributeHandleCallback handler;
-    void* userData;
-  };
-} // namespace
-
-static PLDHashOperator
-PassAttributeToHandleCallback(const uint32_t& aAttributeName,
-                              Attribute* aAttribute,
-                              void* aHandlerWithUserData)
-{
-  HandlerWithUserData* handlerWithUserData =
-    static_cast<HandlerWithUserData*>(aHandlerWithUserData);
-  return handlerWithUserData->handler(AttributeName(aAttributeName),
-                                      aAttribute->Type(),
-                                      handlerWithUserData->userData) ?
-    PL_DHASH_NEXT : PL_DHASH_STOP;
-}
-
-void
-AttributeMap::EnumerateRead(AttributeMap::AttributeHandleCallback aCallback, void* aUserData) const
-{
-  HandlerWithUserData handlerWithUserData = { aCallback, aUserData };
-  mMap.EnumerateRead(PassAttributeToHandleCallback, &handlerWithUserData);
+  return true;
 }
 
 uint32_t
 AttributeMap::Count() const
 {
   return mMap.Count();
+}
+
+nsClassHashtable<nsUint32HashKey, FilterAttribute>::Iterator
+AttributeMap::ConstIter() const
+{
+  return mMap.ConstIter();
+}
+
+/* static */ AttributeType
+AttributeMap::GetType(FilterAttribute* aAttribute)
+{
+  return aAttribute->Type();
 }
 
 #define MAKE_ATTRIBUTE_HANDLERS_BASIC(type, typeLabel, defaultValue) \
