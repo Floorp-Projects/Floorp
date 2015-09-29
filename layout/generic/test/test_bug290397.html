@@ -31,7 +31,7 @@ onhashchange = function() {
 };
 function runTest() {
   var image = document.getElementById("image");
-  SimpleTest.waitForFocus(function() synthesizeMouse(image, 10, 10, {}));
+  SimpleTest.waitForFocus(() => synthesizeMouse(image, 10, 10, {}));
 }
 addLoadEvent(runTest);
 </script>

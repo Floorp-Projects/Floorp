@@ -28,7 +28,6 @@
 #include "gfxFont.h"
 #include "nsSMILAnimationController.h"
 #include "gfxContext.h"
-#include "gfxColor.h"
 #include "harfbuzz/hb.h"
 
 #define SVG_CONTENT_TYPE NS_LITERAL_CSTRING("image/svg+xml")

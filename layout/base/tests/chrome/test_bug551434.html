@@ -69,7 +69,7 @@ function runTest()
 
   // key events should also be retargeted when the focus changes to an
   // element in a chrome document from a content document.
-  i4.addEventListener("keydown", function () $("i3").focus(), false);
+  i4.addEventListener("keydown", () => $("i3").focus(), false);
 
   synthesizeKey("c", { code: "KeyC", keyCode: KeyboardEvent.DOM_VK_C });
 

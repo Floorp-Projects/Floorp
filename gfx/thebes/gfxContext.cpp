@@ -14,7 +14,6 @@
 
 #include "gfxContext.h"
 
-#include "gfxColor.h"
 #include "gfxMatrix.h"
 #include "gfxUtils.h"
 #include "gfxASurface.h"

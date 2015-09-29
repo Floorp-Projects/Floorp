@@ -15,7 +15,9 @@ function fakeSvcWinMediator() {
     getEnumerator: function() {
       return {
         cnt: 2,
-        hasMoreElements: function() this.cnt-- > 0,
+        hasMoreElements: function() {
+          return this.cnt-- > 0;
+        },
         getNext: function() {
           let elt = {addTopics: [], remTopics: []};
           logs.push(elt);

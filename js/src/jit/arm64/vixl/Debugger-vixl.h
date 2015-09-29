@@ -30,7 +30,6 @@
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
-#include <vector>
 
 #include "jit/arm64/vixl/Constants-vixl.h"
 #include "jit/arm64/vixl/Globals-vixl.h"
