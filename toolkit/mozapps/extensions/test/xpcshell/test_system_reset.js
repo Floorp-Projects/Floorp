@@ -5,8 +5,6 @@ const PREF_SYSTEM_ADDON_SET = "extensions.systemAddonSet";
 // Enable signature checks for these tests
 Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, true);
 
-BootstrapMonitor.init();
-
 const featureDir = FileUtils.getDir("ProfD", ["features"]);
 
 // Build the test sets
@@ -63,7 +61,8 @@ function* check_installed(inProfile, ...versions) {
       do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_SYSTEM);
 
       // Verify the add-on actually started
-      BootstrapMonitor.checkAddonStarted(id, versions[i]);
+      let installed = Services.prefs.getCharPref("bootstraptest." + id + ".active_version");
+      do_check_eq(installed, versions[i]);
     }
     else {
       if (inProfile) {
@@ -75,12 +74,12 @@ function* check_installed(inProfile, ...versions) {
         do_check_true(!addon || !addon.isActive);
       }
 
-      BootstrapMonitor.checkAddonNotStarted(id);
-
-      if (addon)
-        BootstrapMonitor.checkAddonInstalled(id);
-      else
-        BootstrapMonitor.checkAddonNotInstalled(id);
+      try {
+        Services.prefs.getCharPref("bootstraptest." + id + ".active_version");
+        do_throw("Expected pref to be missing");
+      }
+      catch (e) {
+      }
     }
   }
 }
@@ -187,9 +186,6 @@ add_task(function* test_skips_additional() {
 add_task(function* test_revert() {
   manuallyUninstall(featureDir, "system2@tests.mozilla.org");
 
-  // With the add-on physically gone from disk we won't see uninstall events
-  BootstrapMonitor.clear("system2@tests.mozilla.org");
-
   startupManager(false);
 
   // With system add-on 2 gone the updated set is now invalid so it reverts to
@@ -262,7 +258,7 @@ add_task(function* test_bad_app_cert() {
   // Add-on will still be present just not active
   let addon = yield promiseAddonByID("system1@tests.mozilla.org");
   do_check_neq(addon, null);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_BROKEN);
+  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_SIGNED);
 
   yield check_installed(false, null, null, "1.0");
 
