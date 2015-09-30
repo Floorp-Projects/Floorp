@@ -16,4 +16,5 @@ task:
     env:
       VARIANT: userdebug
       B2G_DEBUG: 0
+      TOOLTOOL_MANIFEST: 'b2g/config/aries-spark-ota/releng-aries-spark-ota.tt'
 
