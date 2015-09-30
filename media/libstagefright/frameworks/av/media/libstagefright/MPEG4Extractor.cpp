@@ -2539,7 +2539,7 @@ sp<MediaSource> MPEG4Extractor::getTrack(size_t index) {
         return NULL;
     }
 
-    ALOGV("getTrack called, pssh: %d", mPssh.size());
+    ALOGV("getTrack called, pssh: %d", mPssh.Length());
 
     return new MPEG4Source(
             track->meta, mDataSource, track->timescale, track->sampleTable,
