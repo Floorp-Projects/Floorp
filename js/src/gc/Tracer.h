@@ -76,6 +76,13 @@ template <typename T>
 void
 TraceManuallyBarrieredEdge(JSTracer* trc, T* thingp, const char* name);
 
+// Visits a WeakRef, but does not trace its referents. If *thingp is not marked
+// at the end of marking, it is replaced by nullptr. This method records
+// thingp, so the edge location must not change after this function is called.
+template <typename T>
+void
+TraceWeakEdge(JSTracer* trc, WeakRef<T>* thingp, const char* name);
+
 // Trace all edges contained in the given array.
 template <typename T>
 void

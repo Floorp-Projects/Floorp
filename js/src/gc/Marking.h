@@ -186,6 +186,9 @@ class GCMarker : public JSTracer
     template <typename S, typename T> void traverseEdge(S source, T* target);
     template <typename S, typename T> void traverseEdge(S source, T target);
 
+    // Notes a weak graph edge for later sweeping.
+    template <typename T> void noteWeakEdge(T* edge);
+
     /*
      * Care must be taken changing the mark color from gray to black. The cycle
      * collector depends on the invariant that there are no black to gray edges
@@ -392,10 +395,6 @@ IsMarked(WriteBarrieredBase<T>* thingp);
 
 template <typename T>
 bool
-IsMarked(ReadBarrieredBase<T>* thingp);
-
-template <typename T>
-bool
 IsAboutToBeFinalizedUnbarriered(T* thingp);
 
 template <typename T>
@@ -405,6 +404,9 @@ IsAboutToBeFinalized(WriteBarrieredBase<T>* thingp);
 template <typename T>
 bool
 IsAboutToBeFinalized(ReadBarrieredBase<T>* thingp);
+
+bool
+IsAboutToBeFinalizedDuringSweep(TenuredCell& tenured);
 
 inline Cell*
 ToMarkable(const Value& v)
