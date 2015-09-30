@@ -89,87 +89,87 @@ BluetoothHandsfreeNotificationHandler::~BluetoothHandsfreeNotificationHandler()
 
 void
 BluetoothHandsfreeNotificationHandler::ConnectionStateNotification(
-  BluetoothHandsfreeConnectionState aState, const nsAString& aBdAddr)
+  BluetoothHandsfreeConnectionState aState, const BluetoothAddress& aBdAddr)
 { }
 
 void
 BluetoothHandsfreeNotificationHandler::AudioStateNotification(
-  BluetoothHandsfreeAudioState aState, const nsAString& aBdAddr)
+  BluetoothHandsfreeAudioState aState, const BluetoothAddress& aBdAddr)
 { }
 
 void
 BluetoothHandsfreeNotificationHandler::VoiceRecognitionNotification(
-  BluetoothHandsfreeVoiceRecognitionState aState, const nsAString& aBdAddr)
+  BluetoothHandsfreeVoiceRecognitionState aState, const BluetoothAddress& aBdAddr)
 { }
 
 void
 BluetoothHandsfreeNotificationHandler::AnswerCallNotification(
-  const nsAString& aBdAddr)
+  const BluetoothAddress& aBdAddr)
 { }
 
 void
 BluetoothHandsfreeNotificationHandler::HangupCallNotification(
-  const nsAString& aBdAddr)
+  const BluetoothAddress& aBdAddr)
 { }
 
 void
 BluetoothHandsfreeNotificationHandler::VolumeNotification(
-  BluetoothHandsfreeVolumeType aType, int aVolume, const nsAString& aBdAddr)
+  BluetoothHandsfreeVolumeType aType, int aVolume, const BluetoothAddress& aBdAddr)
 { }
 
 void
 BluetoothHandsfreeNotificationHandler::DialCallNotification(
-  const nsAString& aNumber, const nsAString& aBdAddr)
+  const nsAString& aNumber, const BluetoothAddress& aBdAddr)
 { }
 
 void
 BluetoothHandsfreeNotificationHandler::DtmfNotification(
-  char aDtmf, const nsAString& aBdAddr)
+  char aDtmf, const BluetoothAddress& aBdAddr)
 { }
 
 void
 BluetoothHandsfreeNotificationHandler::NRECNotification(
-  BluetoothHandsfreeNRECState aNrec, const nsAString& aBdAddr)
+  BluetoothHandsfreeNRECState aNrec, const BluetoothAddress& aBdAddr)
 { }
 
 void
 BluetoothHandsfreeNotificationHandler::WbsNotification(
-  BluetoothHandsfreeWbsConfig aWbs, const nsAString& aBdAddr)
+  BluetoothHandsfreeWbsConfig aWbs, const BluetoothAddress& aBdAddr)
 { }
 
 void
 BluetoothHandsfreeNotificationHandler::CallHoldNotification(
-  BluetoothHandsfreeCallHoldType aChld, const nsAString& aBdAddr)
+  BluetoothHandsfreeCallHoldType aChld, const BluetoothAddress& aBdAddr)
 { }
 
 void
 BluetoothHandsfreeNotificationHandler::CnumNotification(
-  const nsAString& aBdAddr)
+  const BluetoothAddress& aBdAddr)
 { }
 
 void
 BluetoothHandsfreeNotificationHandler::CindNotification(
-  const nsAString& aBdAddr)
+  const BluetoothAddress& aBdAddr)
 { }
 
 void
 BluetoothHandsfreeNotificationHandler::CopsNotification(
-  const nsAString& aBdAddr)
+  const BluetoothAddress& aBdAddr)
 { }
 
 void
 BluetoothHandsfreeNotificationHandler::ClccNotification(
-  const nsAString& aBdAddr)
+  const BluetoothAddress& aBdAddr)
 { }
 
 void
 BluetoothHandsfreeNotificationHandler::UnknownAtNotification(
-  const nsACString& aAtString, const nsAString& aBdAddr)
+  const nsACString& aAtString, const BluetoothAddress& aBdAddr)
 { }
 
 void
 BluetoothHandsfreeNotificationHandler::KeyPressedNotification(
-  const nsAString& aBdAddr)
+  const BluetoothAddress& aBdAddr)
 { }
 
 // Result handling
