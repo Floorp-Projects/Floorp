@@ -41,7 +41,7 @@ MediaStreamAudioDestinationNode::MediaStreamAudioDestinationNode(AudioContext* a
   AudioNodeEngine* engine = new AudioNodeEngine(this);
   mStream = AudioNodeStream::Create(aContext, engine,
                                     AudioNodeStream::EXTERNAL_OUTPUT);
-  mPort = outputStream->AllocateInputPort(mStream);
+  mPort = outputStream->AllocateInputPort(mStream, AudioNodeStream::AUDIO_TRACK);
 
   nsIDocument* doc = aContext->GetParentObject()->GetExtantDoc();
   if (doc) {
