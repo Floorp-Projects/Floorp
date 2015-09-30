@@ -2307,12 +2307,12 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
     GetRootFrame()->SetStyleContextWithoutNotification(sc);
   }
 
-  // Make sure to call PropagateScrollToViewport before
+  // Make sure to call UpdateViewportScrollbarStylesOverride before
   // SetUpDocElementContainingBlock, since it sets up our scrollbar state
   // properly.
   DebugOnly<nsIContent*> propagatedScrollFrom;
   if (nsPresContext* presContext = mPresShell->GetPresContext()) {
-    propagatedScrollFrom = presContext->PropagateScrollToViewport();
+    propagatedScrollFrom = presContext->UpdateViewportScrollbarStylesOverride();
   }
 
   SetUpDocElementContainingBlock(aDocElement);
@@ -4425,7 +4425,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay* aDisplay,
   if (aElement->IsHTMLElement(nsGkAtoms::body)) {
     if (nsPresContext* presContext = mPresShell->GetPresContext()) {
       propagatedScrollToViewport =
-        presContext->PropagateScrollToViewport() == aElement;
+        presContext->UpdateViewportScrollbarStylesOverride() == aElement;
     }
   }
 
