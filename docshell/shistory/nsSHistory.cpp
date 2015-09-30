@@ -1771,6 +1771,10 @@ nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry, nsIDocShell* aFrameDS,
   loadInfo->SetLoadType(aLoadType);
   loadInfo->SetSHEntry(aFrameEntry);
 
+  nsCOMPtr<nsIURI> originalURI;
+  aFrameEntry->GetOriginalURI(getter_AddRefs(originalURI));
+  loadInfo->SetOriginalURI(originalURI);
+
   nsCOMPtr<nsIURI> nextURI;
   aFrameEntry->GetURI(getter_AddRefs(nextURI));
   // Time   to initiate a document load
