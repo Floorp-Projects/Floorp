@@ -3011,15 +3011,6 @@ public:
         AFTER_GL_CALL;
     }
 
-    void fGetActiveUniformName(GLuint program, GLuint uniformIndex, GLsizei bufSize,
-                               GLsizei* length, GLchar* uniformName)
-    {
-        ASSERT_SYMBOL_PRESENT(fGetActiveUniformName);
-        BEFORE_GL_CALL;
-        mSymbols.fGetActiveUniformName(program, uniformIndex, bufSize, length, uniformName);
-        AFTER_GL_CALL;
-    }
-
     GLuint fGetUniformBlockIndex(GLuint program, const GLchar* uniformBlockName) {
         ASSERT_SYMBOL_PRESENT(fGetUniformBlockIndex);
         BEFORE_GL_CALL;
