@@ -33,7 +33,7 @@
 
     <CheckBoxPreference android:key="browser.image_blocking.enabled"
                         android:title="@string/pref_tap_to_load_images_title"
-                        android:summary="@string/pref_tap_to_load_images_summary"
+                        android:summary="@string/pref_tap_to_load_images_summary2"
                         android:defaultValue="false"/>
 
     <CheckBoxPreference android:key="android.not_a_preference.tab_queue"
