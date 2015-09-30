@@ -653,7 +653,10 @@ FxAccountsInternal.prototype = {
   },
 
   _signOutServer: function signOutServer(sessionToken) {
-    return this.fxAccountsClient.signOut(sessionToken);
+    // For now we assume the service being logged out from is Sync - we might
+    // need to revisit this when this FxA code is used in a context that
+    // isn't Sync.
+    return this.fxAccountsClient.signOut(sessionToken, {service: "sync"});
   },
 
   /**
