@@ -41,9 +41,9 @@ public:
   virtual void OnError(BluetoothStatus aStatus);
 
   virtual void Listen(int aSockFd);
-  virtual void Connect(int aSockFd, const nsAString& aBdAddress,
+  virtual void Connect(int aSockFd, const BluetoothAddress& aBdAddress,
                        int aConnectionState);
-  virtual void Accept(int aSockFd, const nsAString& aBdAddress,
+  virtual void Accept(int aSockFd, const BluetoothAddress& aBdAddress,
                       int aConnectionState);
 
 protected:
@@ -61,7 +61,7 @@ public:
                       int aChannel, bool aEncrypt, bool aAuth,
                       BluetoothSocketResultHandler* aRes) = 0;
 
-  virtual void Connect(const nsAString& aBdAddr,
+  virtual void Connect(const BluetoothAddress& aBdAddr,
                        BluetoothSocketType aType,
                        const BluetoothUuid& aServiceUuid,
                        int aChannel, bool aEncrypt, bool aAuth,
