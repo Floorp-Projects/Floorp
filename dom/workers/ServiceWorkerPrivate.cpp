@@ -94,12 +94,15 @@ namespace {
 
 class CheckScriptEvaluationWithCallback final : public WorkerRunnable
 {
+  nsMainThreadPtrHandle<KeepAliveToken> mKeepAliveToken;
   nsRefPtr<nsRunnable> mCallback;
 
 public:
   CheckScriptEvaluationWithCallback(WorkerPrivate* aWorkerPrivate,
+                                    KeepAliveToken* aKeepAliveToken,
                                     nsRunnable* aCallback)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
+    : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
+    , mKeepAliveToken(new nsMainThreadPtrHolder<KeepAliveToken>(aKeepAliveToken))
     , mCallback(aCallback)
   {
     AssertIsOnMainThread();
@@ -128,7 +131,9 @@ ServiceWorkerPrivate::ContinueOnSuccessfulScriptEvaluation(nsRunnable* aCallback
   nsresult rv = SpawnWorkerIfNeeded(LifeCycleEvent, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  MOZ_ASSERT(mKeepAliveToken);
   nsRefPtr<WorkerRunnable> r = new CheckScriptEvaluationWithCallback(mWorkerPrivate,
+                                                                     mKeepAliveToken,
                                                                      aCallback);
   AutoJSAPI jsapi;
   jsapi.Init();
