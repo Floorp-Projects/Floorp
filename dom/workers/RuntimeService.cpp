@@ -1514,7 +1514,7 @@ RuntimeService::RegisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     }
 
     if (isSharedWorker) {
-      const nsCString& sharedWorkerName = aWorkerPrivate->SharedWorkerName();
+      const nsCString& sharedWorkerName = aWorkerPrivate->WorkerName();
       nsAutoCString key;
       GenerateSharedWorkerKey(sharedWorkerScriptSpec, sharedWorkerName,
                               aWorkerPrivate->IsInPrivateBrowsing(), key);

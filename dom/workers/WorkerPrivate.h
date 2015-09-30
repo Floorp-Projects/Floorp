@@ -162,7 +162,9 @@ protected:
 private:
   WorkerPrivate* mParent;
   nsString mScriptURL;
-  nsCString mSharedWorkerName;
+  // This is the worker name for shared workers or the worker scope
+  // for service workers.
+  nsCString mWorkerName;
   LocationInfo mLocationInfo;
   // The lifetime of these objects within LoadInfo is managed explicitly;
   // they do not need to be cycle collected.
@@ -734,9 +736,10 @@ public:
   }
 
   const nsCString&
-  SharedWorkerName() const
+  WorkerName() const
   {
-    return mSharedWorkerName;
+    MOZ_ASSERT(IsServiceWorker() || IsSharedWorker());
+    return mWorkerName;
   }
 
   bool
