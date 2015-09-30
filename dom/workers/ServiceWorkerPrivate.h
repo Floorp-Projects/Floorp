@@ -16,6 +16,7 @@ namespace dom {
 namespace workers {
 
 class ServiceWorkerInfo;
+class KeepAliveToken;
 
 class LifeCycleEventCallback : public nsRunnable
 {
@@ -29,14 +30,35 @@ public:
 // service workers. It handles all event dispatching to the worker and ensures
 // the worker thread is running when needed.
 //
-// To spin up the worker thread we own a |WorkerPrivate| object which can be
-// cancelled if no events are received for a certain amount of time. Note
-// that, at the moment, we never close the worker due to inactivity.
+// Lifetime management: To spin up the worker thread we own a |WorkerPrivate|
+// object which can be cancelled if no events are received for a certain
+// amount of time. The worker is kept alive by holding a |KeepAliveToken|
+// reference.
+// Extendable events hold tokens for the duration of their handler execution
+// and until their waitUntil promise is resolved, while ServiceWorkerPrivate
+// will hold a token for |SERVICE_WORKER_IDLE_TIMEOUT| seconds after each
+// new event.
+//
+// Note: All timer events must be handled on the main thread because the
+// worker may block indefinitely the worker thread (e. g. infinite loop in the
+// script).
+//
+// There are 3 cases where we may ignore keep alive tokens:
+// 1. When ServiceWorkerPrivate's token expired, if there are still waitUntil
+// handlers holding tokens, we wait another |SERVICE_WORKER_WAITUNTIL_TIMEOUT|
+// seconds before forcibly terminating the worker.
+// 2. If the worker stopped controlling documents and it is not handling push
+// events.
+// 3. The content process is shutting down.
 //
 // Adding an API function for a new event requires calling |SpawnWorkerIfNeeded|
-// before any runnable is dispatched to the worker.
+// with an appropriate reason before any runnable is dispatched to the worker.
+// If the event is extendable then the runnable should inherit
+// ExtendableEventWorkerRunnable.
 class ServiceWorkerPrivate final
 {
+  friend class KeepAliveToken;
+
 public:
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerPrivate)
 
@@ -91,6 +113,12 @@ public:
   void
   TerminateWorker();
 
+  void
+  NoteDeadServiceWorkerInfo();
+
+  void
+  NoteStoppedControllingDocuments();
+
 private:
   enum WakeUpReason {
     FetchEvent = 0,
@@ -101,6 +129,22 @@ private:
     LifeCycleEvent
   };
 
+  // Timer callbacks
+  static void
+  NoteIdleWorkerCallback(nsITimer* aTimer, void* aPrivate);
+
+  static void
+  TerminateWorkerCallback(nsITimer* aTimer, void *aPrivate);
+
+  void
+  ResetIdleTimeout(WakeUpReason aWhy);
+
+  void
+  AddToken();
+
+  void
+  ReleaseToken();
+
   // |aLoadFailedRunnable| is a runnable dispatched to the main thread
   // if the script loader failed for some reason, but can be null.
   nsresult
@@ -108,18 +152,30 @@ private:
                       nsIRunnable* aLoadFailedRunnable,
                       nsILoadGroup* aLoadGroup = nullptr);
 
-  ~ServiceWorkerPrivate()
-  {
-    MOZ_ASSERT(!mWorkerPrivate);
-  }
+  ~ServiceWorkerPrivate();
 
-  // The info object owns us - this should never be null.
+  // The info object owns us. It is possible to outlive it for a brief period
+  // of time if there are pending waitUntil promises, in which case it
+  // will be null and |SpawnWorkerIfNeeded| will always fail.
   ServiceWorkerInfo* MOZ_NON_OWNING_REF mInfo;
 
   // The WorkerPrivate object can only be closed by this class or by the
   // RuntimeService class if gecko is shutting down. Closing the worker
   // multiple times is OK, since the second attempt will be a no-op.
   nsRefPtr<WorkerPrivate> mWorkerPrivate;
+
+  nsCOMPtr<nsITimer> mIdleWorkerTimer;
+
+  // We keep track if this worker received any push events since it was last
+  // woken up. The flag is reset to false every time a new WorkerPrivate
+  // is created.
+  bool mIsPushWorker;
+
+  // We keep a token for |SERVICE_WORKER_IDLE_TIMEOUT| seconds to give the
+  // worker a grace period after each event.
+  nsRefPtr<KeepAliveToken> mKeepAliveToken;
+
+  uint64_t mTokenCount;
 };
 
 } // namespace workers
