@@ -4,8 +4,8 @@
 // found in the LICENSE file.
 //
 
-#ifndef COMPILER_PREPROCESSOR_SOURCE_LOCATION_H_
-#define COMPILER_PREPROCESSOR_SOURCE_LOCATION_H_
+#ifndef COMPILER_PREPROCESSOR_SOURCELOCATION_H_
+#define COMPILER_PREPROCESSOR_SOURCELOCATION_H_
 
 namespace pp
 {
@@ -43,4 +43,5 @@ inline bool operator!=(const SourceLocation &lhs, const SourceLocation &rhs)
 }
 
 }  // namespace pp
-#endif  // COMPILER_PREPROCESSOR_SOURCE_LOCATION_H_
+
+#endif  // COMPILER_PREPROCESSOR_SOURCELOCATION_H_

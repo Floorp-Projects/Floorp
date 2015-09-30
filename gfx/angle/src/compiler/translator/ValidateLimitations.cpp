@@ -26,7 +26,11 @@ class ValidateConstIndexExpr : public TIntermTraverser
 {
   public:
     ValidateConstIndexExpr(TLoopStack& stack)
-        : mValid(true), mLoopStack(stack) {}
+        : TIntermTraverser(true, false, false),
+          mValid(true),
+          mLoopStack(stack)
+    {
+    }
 
     // Returns true if the parsed node represents a constant index expression.
     bool isValid() const { return mValid; }
@@ -47,98 +51,12 @@ class ValidateConstIndexExpr : public TIntermTraverser
     TLoopStack& mLoopStack;
 };
 
-const char *GetOperatorString(TOperator op)
-{
-    switch (op)
-    {
-      case EOpInitialize: return "=";
-      case EOpAssign: return "=";
-      case EOpAddAssign: return "+=";
-      case EOpSubAssign: return "-=";
-      case EOpDivAssign: return "/=";
-
-      // Fall-through.
-      case EOpMulAssign:
-      case EOpVectorTimesMatrixAssign:
-      case EOpVectorTimesScalarAssign:
-      case EOpMatrixTimesScalarAssign:
-      case EOpMatrixTimesMatrixAssign: return "*=";
-
-      // Fall-through.
-      case EOpIndexDirect:
-      case EOpIndexIndirect: return "[]";
-
-      case EOpIndexDirectStruct:
-      case EOpIndexDirectInterfaceBlock: return ".";
-      case EOpVectorSwizzle: return ".";
-      case EOpAdd: return "+";
-      case EOpSub: return "-";
-      case EOpMul: return "*";
-      case EOpDiv: return "/";
-      case EOpMod: UNIMPLEMENTED(); break;
-      case EOpEqual: return "==";
-      case EOpNotEqual: return "!=";
-      case EOpLessThan: return "<";
-      case EOpGreaterThan: return ">";
-      case EOpLessThanEqual: return "<=";
-      case EOpGreaterThanEqual: return ">=";
-
-      // Fall-through.
-      case EOpVectorTimesScalar:
-      case EOpVectorTimesMatrix:
-      case EOpMatrixTimesVector:
-      case EOpMatrixTimesScalar:
-      case EOpMatrixTimesMatrix: return "*";
-
-      case EOpLogicalOr: return "||";
-      case EOpLogicalXor: return "^^";
-      case EOpLogicalAnd: return "&&";
-      case EOpNegative: return "-";
-      case EOpPositive: return "+";
-      case EOpVectorLogicalNot: return "not";
-      case EOpLogicalNot: return "!";
-      case EOpPostIncrement: return "++";
-      case EOpPostDecrement: return "--";
-      case EOpPreIncrement: return "++";
-      case EOpPreDecrement: return "--";
-
-      case EOpRadians: return "radians";
-      case EOpDegrees: return "degrees";
-      case EOpSin: return "sin";
-      case EOpCos: return "cos";
-      case EOpTan: return "tan";
-      case EOpAsin: return "asin";
-      case EOpAcos: return "acos";
-      case EOpAtan: return "atan";
-      case EOpExp: return "exp";
-      case EOpLog: return "log";
-      case EOpExp2: return "exp2";
-      case EOpLog2: return "log2";
-      case EOpSqrt: return "sqrt";
-      case EOpInverseSqrt: return "inversesqrt";
-      case EOpAbs: return "abs";
-      case EOpSign: return "sign";
-      case EOpFloor: return "floor";
-      case EOpCeil: return "ceil";
-      case EOpFract: return "fract";
-      case EOpLength: return "length";
-      case EOpNormalize: return "normalize";
-      case EOpDFdx: return "dFdx";
-      case EOpDFdy: return "dFdy";
-      case EOpFwidth: return "fwidth";
-      case EOpAny: return "any";
-      case EOpAll: return "all";
-
-      default: break;
-    }
-    return "";
-}
-
 }  // namespace anonymous
 
 ValidateLimitations::ValidateLimitations(sh::GLenum shaderType,
                                          TInfoSinkBase &sink)
-    : mShaderType(shaderType),
+    : TIntermTraverser(true, false, false),
+      mShaderType(shaderType),
       mSink(sink),
       mNumErrors(0)
 {
@@ -476,13 +394,13 @@ bool ValidateLimitations::validateFunctionCall(TIntermAggregate *node)
 
     bool valid = true;
     TSymbolTable& symbolTable = GetGlobalParseContext()->symbolTable;
-    TSymbol* symbol = symbolTable.find(node->getName(), GetGlobalParseContext()->shaderVersion);
+    TSymbol* symbol = symbolTable.find(node->getName(), GetGlobalParseContext()->getShaderVersion());
     ASSERT(symbol && symbol->isFunction());
     TFunction *function = static_cast<TFunction *>(symbol);
     for (ParamIndex::const_iterator i = pIndex.begin();
          i != pIndex.end(); ++i)
     {
-        const TParameter &param = function->getParam(*i);
+        const TConstParameter &param = function->getParam(*i);
         TQualifier qual = param.type->getQualifier();
         if ((qual == EvqOut) || (qual == EvqInOut))
         {

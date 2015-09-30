@@ -5,6 +5,96 @@
 //
 
 #include "compiler/translator/IntermNode.h"
+#include "compiler/translator/InfoSink.h"
+
+void TIntermTraverser::pushParentBlock(TIntermAggregate *node)
+{
+    mParentBlockStack.push_back(ParentBlock(node, 0));
+}
+
+void TIntermTraverser::incrementParentBlockPos()
+{
+    ++mParentBlockStack.back().pos;
+}
+
+void TIntermTraverser::popParentBlock()
+{
+    ASSERT(!mParentBlockStack.empty());
+    mParentBlockStack.pop_back();
+}
+
+void TIntermTraverser::insertStatementsInParentBlock(const TIntermSequence &insertions)
+{
+    ASSERT(!mParentBlockStack.empty());
+    NodeInsertMultipleEntry insert(mParentBlockStack.back().node, mParentBlockStack.back().pos, insertions);
+    mInsertions.push_back(insert);
+}
+
+TIntermSymbol *TIntermTraverser::createTempSymbol(const TType &type, TQualifier qualifier)
+{
+    // Each traversal uses at most one temporary variable, so the index stays the same within a single traversal.
+    TInfoSinkBase symbolNameOut;
+    ASSERT(mTemporaryIndex != nullptr);
+    symbolNameOut << "s" << (*mTemporaryIndex);
+    TString symbolName = symbolNameOut.c_str();
+
+    TIntermSymbol *node = new TIntermSymbol(0, symbolName, type);
+    node->setInternal(true);
+    node->getTypePointer()->setQualifier(qualifier);
+    return node;
+}
+
+TIntermSymbol *TIntermTraverser::createTempSymbol(const TType &type)
+{
+    return createTempSymbol(type, EvqTemporary);
+}
+
+TIntermAggregate *TIntermTraverser::createTempDeclaration(const TType &type)
+{
+    TIntermAggregate *tempDeclaration = new TIntermAggregate(EOpDeclaration);
+    tempDeclaration->getSequence()->push_back(createTempSymbol(type));
+    return tempDeclaration;
+}
+
+TIntermAggregate *TIntermTraverser::createTempInitDeclaration(TIntermTyped *initializer, TQualifier qualifier)
+{
+    ASSERT(initializer != nullptr);
+    TIntermSymbol *tempSymbol = createTempSymbol(initializer->getType(), qualifier);
+    TIntermAggregate *tempDeclaration = new TIntermAggregate(EOpDeclaration);
+    TIntermBinary *tempInit = new TIntermBinary(EOpInitialize);
+    tempInit->setLeft(tempSymbol);
+    tempInit->setRight(initializer);
+    tempInit->setType(tempSymbol->getType());
+    tempDeclaration->getSequence()->push_back(tempInit);
+    return tempDeclaration;
+}
+
+TIntermAggregate *TIntermTraverser::createTempInitDeclaration(TIntermTyped *initializer)
+{
+    return createTempInitDeclaration(initializer, EvqTemporary);
+}
+
+TIntermBinary *TIntermTraverser::createTempAssignment(TIntermTyped *rightNode)
+{
+    ASSERT(rightNode != nullptr);
+    TIntermSymbol *tempSymbol = createTempSymbol(rightNode->getType());
+    TIntermBinary *assignment = new TIntermBinary(EOpAssign);
+    assignment->setLeft(tempSymbol);
+    assignment->setRight(rightNode);
+    assignment->setType(tempSymbol->getType());
+    return assignment;
+}
+
+void TIntermTraverser::useTemporaryIndex(unsigned int *temporaryIndex)
+{
+    mTemporaryIndex = temporaryIndex;
+}
+
+void TIntermTraverser::nextTemporaryIndex()
+{
+    ASSERT(mTemporaryIndex != nullptr);
+    ++(*mTemporaryIndex);
+}
 
 //
 // Traverse the intermediate representation tree, and
@@ -15,9 +105,6 @@
 // Nodes with children can have their whole subtree skipped
 // if preVisit is turned on and the type specific function
 // returns false.
-//
-// preVisit, postVisit, and rightToLeft control what order
-// nodes are visited in.
 //
 
 //
@@ -53,28 +140,14 @@ void TIntermBinary::traverse(TIntermTraverser *it)
     {
         it->incrementDepth(this);
 
-        if (it->rightToLeft)
-        {
-            if (mRight)
-                mRight->traverse(it);
+        if (mLeft)
+            mLeft->traverse(it);
 
-            if (it->inVisit)
-                visit = it->visitBinary(InVisit, this);
+        if (it->inVisit)
+            visit = it->visitBinary(InVisit, this);
 
-            if (visit && mLeft)
-                mLeft->traverse(it);
-        }
-        else
-        {
-            if (mLeft)
-                mLeft->traverse(it);
-
-            if (it->inVisit)
-                visit = it->visitBinary(InVisit, this);
-
-            if (visit && mRight)
-                mRight->traverse(it);
-        }
+        if (visit && mRight)
+            mRight->traverse(it);
 
         it->decrementDepth();
     }
@@ -119,38 +192,31 @@ void TIntermAggregate::traverse(TIntermTraverser *it)
 
     if (visit)
     {
+        if (mOp == EOpSequence)
+            it->pushParentBlock(this);
+
         it->incrementDepth(this);
 
-        if (it->rightToLeft)
+        for (TIntermSequence::iterator sit = mSequence.begin();
+                sit != mSequence.end(); sit++)
         {
-            for (TIntermSequence::reverse_iterator sit = mSequence.rbegin();
-                 sit != mSequence.rend(); sit++)
-            {
-                (*sit)->traverse(it);
+            (*sit)->traverse(it);
 
-                if (visit && it->inVisit)
-                {
-                    if (*sit != mSequence.front())
-                        visit = it->visitAggregate(InVisit, this);
-                }
+            if (visit && it->inVisit)
+            {
+                if (*sit != mSequence.back())
+                    visit = it->visitAggregate(InVisit, this);
             }
-        }
-        else
-        {
-            for (TIntermSequence::iterator sit = mSequence.begin();
-                 sit != mSequence.end(); sit++)
+            if (mOp == EOpSequence)
             {
-                (*sit)->traverse(it);
-
-                if (visit && it->inVisit)
-                {
-                    if (*sit != mSequence.back())
-                        visit = it->visitAggregate(InVisit, this);
-                }
+                it->incrementParentBlockPos();
             }
         }
 
         it->decrementDepth();
+
+        if (mOp == EOpSequence)
+            it->popParentBlock();
     }
 
     if (visit && it->postVisit)
@@ -170,27 +236,58 @@ void TIntermSelection::traverse(TIntermTraverser *it)
     if (visit)
     {
         it->incrementDepth(this);
-        if (it->rightToLeft)
-        {
-            if (mFalseBlock)
-                mFalseBlock->traverse(it);
-            if (mTrueBlock)
-                mTrueBlock->traverse(it);
-            mCondition->traverse(it);
-        }
-        else
-        {
-            mCondition->traverse(it);
-            if (mTrueBlock)
-                mTrueBlock->traverse(it);
-            if (mFalseBlock)
-                mFalseBlock->traverse(it);
-        }
+        mCondition->traverse(it);
+        if (mTrueBlock)
+            mTrueBlock->traverse(it);
+        if (mFalseBlock)
+            mFalseBlock->traverse(it);
         it->decrementDepth();
     }
 
     if (visit && it->postVisit)
         it->visitSelection(PostVisit, this);
+}
+
+//
+// Traverse a switch node.  Same comments in binary node apply here.
+//
+void TIntermSwitch::traverse(TIntermTraverser *it)
+{
+    bool visit = true;
+
+    if (it->preVisit)
+        visit = it->visitSwitch(PreVisit, this);
+
+    if (visit)
+    {
+        it->incrementDepth(this);
+        mInit->traverse(it);
+        if (it->inVisit)
+            visit = it->visitSwitch(InVisit, this);
+        if (visit && mStatementList)
+            mStatementList->traverse(it);
+        it->decrementDepth();
+    }
+
+    if (visit && it->postVisit)
+        it->visitSwitch(PostVisit, this);
+}
+
+//
+// Traverse a switch node.  Same comments in binary node apply here.
+//
+void TIntermCase::traverse(TIntermTraverser *it)
+{
+    bool visit = true;
+
+    if (it->preVisit)
+        visit = it->visitCase(PreVisit, this);
+
+    if (visit && mCondition)
+        mCondition->traverse(it);
+
+    if (visit && it->postVisit)
+        it->visitCase(PostVisit, this);
 }
 
 //
@@ -207,34 +304,17 @@ void TIntermLoop::traverse(TIntermTraverser *it)
     {
         it->incrementDepth(this);
 
-        if (it->rightToLeft)
-        {
-            if (mExpr)
-                mExpr->traverse(it);
+        if (mInit)
+            mInit->traverse(it);
 
-            if (mBody)
-                mBody->traverse(it);
+        if (mCond)
+            mCond->traverse(it);
 
-            if (mCond)
-                mCond->traverse(it);
+        if (mBody)
+            mBody->traverse(it);
 
-            if (mInit)
-                mInit->traverse(it);
-        }
-        else
-        {
-            if (mInit)
-                mInit->traverse(it);
-
-            if (mCond)
-                mCond->traverse(it);
-
-            if (mBody)
-                mBody->traverse(it);
-
-            if (mExpr)
-                mExpr->traverse(it);
-        }
+        if (mExpr)
+            mExpr->traverse(it);
 
         it->decrementDepth();
     }

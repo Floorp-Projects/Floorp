@@ -304,16 +304,6 @@ public:
   void RegisterNode(AudioNode* aNode);
   void UnregisterNode(AudioNode* aNode);
 
-  double DOMTimeToStreamTime(double aTime) const
-  {
-    return aTime;
-  }
-
-  double StreamTimeToDOMTime(double aTime) const
-  {
-    return aTime;
-  }
-
   void OnStateChanged(void* aPromise, AudioContextState aNewState);
 
   BasicWaveFormCache* GetBasicWaveFormCache();

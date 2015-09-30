@@ -13,14 +13,12 @@ namespace mozilla {
 namespace dom {
 
 void WebAudioUtils::ConvertAudioTimelineEventToTicks(AudioTimelineEvent& aEvent,
-                                                     AudioNodeStream* aSource,
                                                      AudioNodeStream* aDest)
 {
-  MOZ_ASSERT(!aSource || aSource->SampleRate() == aDest->SampleRate());
   aEvent.SetTimeInTicks(
-      aSource->TicksFromDestinationTime(aDest, aEvent.Time<double>()));
-  aEvent.mTimeConstant *= aSource->SampleRate();
-  aEvent.mDuration *= aSource->SampleRate();
+      aDest->SecondsToNearestStreamTime(aEvent.Time<double>()));
+  aEvent.mTimeConstant *= aDest->SampleRate();
+  aEvent.mDuration *= aDest->SampleRate();
 }
 
 void

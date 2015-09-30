@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <cmath>
 #include <limits>
 #include "BatteryManager.h"
 #include "Constants.h"
@@ -12,6 +13,7 @@
 #include "mozilla/dom/BatteryManagerBinding.h"
 #include "mozilla/Preferences.h"
 #include "nsIDOMClassInfo.h"
+#include "nsIDocument.h"
 
 /**
  * We have to use macros here because our leak analysis tool things we are
@@ -129,6 +131,20 @@ void
 BatteryManager::UpdateFromBatteryInfo(const hal::BatteryInformation& aBatteryInfo)
 {
   mLevel = aBatteryInfo.level();
+
+  // Round to the nearest ten percent for non-chrome and non-certified apps
+  nsIDocument* doc = GetOwner()->GetDoc();
+  uint16_t status = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
+  if (doc) {
+    doc->NodePrincipal()->GetAppStatus(&status);
+  }
+
+  if (!nsContentUtils::IsChromeDoc(doc) &&
+      status != nsIPrincipal::APP_STATUS_CERTIFIED)
+  {
+    mLevel = lround(mLevel * 10.0) / 10.0;
+  }
+
   mCharging = aBatteryInfo.charging();
   mRemainingTime = aBatteryInfo.remainingTime();
 

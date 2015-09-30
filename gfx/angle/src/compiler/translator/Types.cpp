@@ -46,9 +46,9 @@ const char* getBasicString(TBasicType t)
 }
 
 TType::TType(const TPublicType &p)
-    : type(p.type), precision(p.precision), qualifier(p.qualifier), layoutQualifier(p.layoutQualifier),
-      primarySize(p.primarySize), secondarySize(p.secondarySize), array(p.array), arraySize(p.arraySize),
-      interfaceBlock(0), structure(0)
+    : type(p.type), precision(p.precision), qualifier(p.qualifier), invariant(p.invariant),
+      layoutQualifier(p.layoutQualifier), primarySize(p.primarySize), secondarySize(p.secondarySize),
+      array(p.array), arraySize(p.arraySize), interfaceBlock(0), structure(0)
 {
     if (p.userDef)
         structure = p.userDef->getStruct();
@@ -142,7 +142,8 @@ TString TType::buildMangledName() const
         mangledName += interfaceBlock->mangledName();
         break;
       default:
-        UNREACHABLE();
+        // EbtVoid, EbtAddress and non types
+        break;
     }
 
     if (isMatrix())
@@ -178,11 +179,12 @@ size_t TType::getObjectSize() const
 
     if (isArray())
     {
-        size_t arraySize = getArraySize();
-        if (arraySize > INT_MAX / totalSize)
+        // TODO: getArraySize() returns an int, not a size_t
+        size_t currentArraySize = getArraySize();
+        if (currentArraySize > INT_MAX / totalSize)
             totalSize = INT_MAX;
         else
-            totalSize *= arraySize;
+            totalSize *= currentArraySize;
     }
 
     return totalSize;
@@ -194,6 +196,17 @@ bool TStructure::containsArrays() const
     {
         const TType *fieldType = (*mFields)[i]->type();
         if (fieldType->isArray() || fieldType->isStructureContainingArrays())
+            return true;
+    }
+    return false;
+}
+
+bool TStructure::containsSamplers() const
+{
+    for (size_t i = 0; i < mFields->size(); ++i)
+    {
+        const TType *fieldType = (*mFields)[i]->type();
+        if (IsSampler(fieldType->getBasicType()) || fieldType->isStructureContainingSamplers())
             return true;
     }
     return false;

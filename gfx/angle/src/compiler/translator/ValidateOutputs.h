@@ -4,6 +4,9 @@
 // found in the LICENSE file.
 //
 
+#ifndef COMPILER_TRANSLATOR_VALIDATEOUTPUTS_H_
+#define COMPILER_TRANSLATOR_VALIDATEOUTPUTS_H_
+
 #include "compiler/translator/IntermNode.h"
 
 #include <set>
@@ -31,3 +34,5 @@ class ValidateOutputs : public TIntermTraverser
 
     void error(TSourceLoc loc, const char *reason, const char* token);
 };
+
+#endif // COMPILER_TRANSLATOR_VALIDATEOUTPUTS_H_

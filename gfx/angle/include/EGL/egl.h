@@ -33,12 +33,12 @@ extern "C" {
 ** used to make the header, and the header can be found at
 **   http://www.opengl.org/registry/
 **
-** Khronos $Revision: 27018 $ on $Date: 2014-06-10 08:06:12 -0700 (Tue, 10 Jun 2014) $
+** Khronos $Revision: 29318 $ on $Date: 2015-01-02 03:16:10 -0800 (Fri, 02 Jan 2015) $
 */
 
 #include <EGL/eglplatform.h>
 
-/* Generated on date 20140610 */
+/* Generated on date 20150102 */
 
 /* Generated C header for:
  * API: egl
@@ -240,6 +240,7 @@ EGLAPI EGLContext EGLAPIENTRY eglGetCurrentContext (void);
 typedef void *EGLSync;
 typedef intptr_t EGLAttrib;
 typedef khronos_utime_nanoseconds_t EGLTime;
+typedef void *EGLImage;
 #define EGL_CONTEXT_MAJOR_VERSION         0x3098
 #define EGL_CONTEXT_MINOR_VERSION         0x30FB
 #define EGL_CONTEXT_OPENGL_PROFILE_MASK   0x30FD
@@ -281,10 +282,14 @@ typedef khronos_utime_nanoseconds_t EGLTime;
 #define EGL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y 0x30B6
 #define EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z 0x30B7
 #define EGL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z 0x30B8
+#define EGL_IMAGE_PRESERVED               0x30D2
+#define EGL_NO_IMAGE                      ((EGLImage)0)
 EGLAPI EGLSync EGLAPIENTRY eglCreateSync (EGLDisplay dpy, EGLenum type, const EGLAttrib *attrib_list);
 EGLAPI EGLBoolean EGLAPIENTRY eglDestroySync (EGLDisplay dpy, EGLSync sync);
 EGLAPI EGLint EGLAPIENTRY eglClientWaitSync (EGLDisplay dpy, EGLSync sync, EGLint flags, EGLTime timeout);
 EGLAPI EGLBoolean EGLAPIENTRY eglGetSyncAttrib (EGLDisplay dpy, EGLSync sync, EGLint attribute, EGLAttrib *value);
+EGLAPI EGLImage EGLAPIENTRY eglCreateImage (EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLAttrib *attrib_list);
+EGLAPI EGLBoolean EGLAPIENTRY eglDestroyImage (EGLDisplay dpy, EGLImage image);
 EGLAPI EGLDisplay EGLAPIENTRY eglGetPlatformDisplay (EGLenum platform, void *native_display, const EGLAttrib *attrib_list);
 EGLAPI EGLSurface EGLAPIENTRY eglCreatePlatformWindowSurface (EGLDisplay dpy, EGLConfig config, void *native_window, const EGLAttrib *attrib_list);
 EGLAPI EGLSurface EGLAPIENTRY eglCreatePlatformPixmapSurface (EGLDisplay dpy, EGLConfig config, void *native_pixmap, const EGLAttrib *attrib_list);

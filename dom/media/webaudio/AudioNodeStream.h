@@ -150,25 +150,6 @@ public:
   AudioNodeEngine* Engine() { return mEngine; }
   TrackRate SampleRate() const { return mSampleRate; }
 
-  /**
-   * Convert a time in seconds on the destination stream to ticks
-   * on this stream, including fractional position between ticks.
-   */
-  double FractionalTicksFromDestinationTime(AudioNodeStream* aDestination,
-                                            double aSeconds);
-  /**
-   * Convert a time in seconds on the destination stream to StreamTime
-   * on this stream.
-   */
-  StreamTime TicksFromDestinationTime(MediaStream* aDestination,
-                                      double aSeconds);
-  /**
-   * Get the destination stream time in seconds corresponding to a position on
-   * this stream.
-   */
-  double DestinationTimeFromTicks(AudioNodeStream* aDestination,
-                                  StreamTime aPosition);
-
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 

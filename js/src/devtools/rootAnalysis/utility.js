@@ -168,6 +168,9 @@ function* readFileLines_gen(filename)
   var linebuf = ctypes.char.array(4096)();
   var bufsize = ctypes.size_t(4096);
   var fp = libc.fopen(filename, "r");
+  if (fp.isNull())
+    throw "Unable to open '" + filename + "'"
+
   var bufp = ctypes.char.ptr(linebuf.addressOfElement(0));
   while (libc.getline(bufp.address(), bufsize.address(), fp) > 0)
     yield bufp.readString();

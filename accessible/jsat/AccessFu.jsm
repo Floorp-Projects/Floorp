@@ -744,6 +744,9 @@ var Input = {
       case 'tripletap3':
         Utils.dispatchChromeEvent('accessibility-control', 'toggle-shade');
         break;
+      case 'tap2':
+        Utils.dispatchChromeEvent('accessibility-control', 'toggle-pause');
+        break;
     }
   },
 

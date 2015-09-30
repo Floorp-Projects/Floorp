@@ -487,6 +487,12 @@ public:
     NS_ASSERTION(0 <= aTime && aTime <= STREAM_TIME_MAX, "Bad time");
     return (aTime*1000000)/mBuffer.GraphRate();
   }
+  StreamTime SecondsToNearestStreamTime(double aSeconds)
+  {
+    NS_ASSERTION(0 <= aSeconds && aSeconds <= TRACK_TICKS_MAX/TRACK_RATE_MAX,
+                 "Bad seconds");
+    return mBuffer.GraphRate() * aSeconds + 0.5;
+  }
   StreamTime MicrosecondsToStreamTimeRoundDown(int64_t aMicroseconds) {
     return (aMicroseconds*mBuffer.GraphRate())/1000000;
   }

@@ -4,8 +4,8 @@
 // found in the LICENSE file.
 //
 
-#ifndef COMPILER_TRANSLATOR_SCALARIZE_VEC_AND_MAT_CONSTRUCTOR_ARGS_H_
-#define COMPILER_TRANSLATOR_SCALARIZE_VEC_AND_MAT_CONSTRUCTOR_ARGS_H_
+#ifndef COMPILER_TRANSLATOR_SCALARIZEVECANDMATCONSTRUCTORARGS_H_
+#define COMPILER_TRANSLATOR_SCALARIZEVECANDMATCONSTRUCTORARGS_H_
 
 #include "compiler/translator/IntermNode.h"
 
@@ -14,7 +14,8 @@ class ScalarizeVecAndMatConstructorArgs : public TIntermTraverser
   public:
     ScalarizeVecAndMatConstructorArgs(sh::GLenum shaderType,
                                       bool fragmentPrecisionHigh)
-        : mTempVarCount(0),
+        : TIntermTraverser(true, false, false),
+          mTempVarCount(0),
           mShaderType(shaderType),
           mFragmentPrecisionHigh(fragmentPrecisionHigh) {}
 
@@ -44,4 +45,4 @@ class ScalarizeVecAndMatConstructorArgs : public TIntermTraverser
     bool mFragmentPrecisionHigh;
 };
 
-#endif  // COMPILER_TRANSLATOR_SCALARIZE_VEC_AND_MAT_CONSTRUCTOR_ARGS_H_
+#endif  // COMPILER_TRANSLATOR_SCALARIZEVECANDMATCONSTRUCTORARGS_H_

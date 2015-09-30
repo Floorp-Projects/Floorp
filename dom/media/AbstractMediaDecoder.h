@@ -163,11 +163,6 @@ public:
   // Observe and it should never be called directly.
   NS_IMETHOD Observe(nsISupports *aSubject, const char * aTopic, const char16_t * aData) override
   { MOZ_CRASH("Forbidden method"); return NS_OK; }
-
-#ifdef MOZ_EME
-  virtual nsresult SetCDMProxy(CDMProxy* aProxy) { return NS_ERROR_NOT_IMPLEMENTED; }
-  virtual CDMProxy* GetCDMProxy() { return nullptr; }
-#endif
 };
 
 class MetadataContainer

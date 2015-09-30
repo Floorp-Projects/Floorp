@@ -1370,7 +1370,7 @@
             <FramedExample
               dashed={true}
               height={254}
-              summary=""
+              summary="Desktop Room Failure View"
               width={298}>
               <div className="fx-embedded">
                 <RoomFailureView

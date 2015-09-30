@@ -33,17 +33,11 @@ public:
   StereoPannerNodeEngine(AudioNode* aNode,
                          AudioDestinationNode* aDestination)
     : AudioNodeEngine(aNode)
-    , mSource(nullptr)
     , mDestination(aDestination->Stream())
     // Keep the default value in sync with the default value in
     // StereoPannerNode::StereoPannerNode.
     , mPan(0.f)
   {
-  }
-
-  void SetSourceStream(AudioNodeStream* aSource)
-  {
-    mSource = aSource;
   }
 
   enum Parameters {
@@ -52,9 +46,8 @@ public:
   void RecvTimelineEvent(uint32_t aIndex,
                          AudioTimelineEvent& aEvent) override
   {
-    MOZ_ASSERT(mSource && mDestination);
+    MOZ_ASSERT(mDestination);
     WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent,
-                                                    mSource,
                                                     mDestination);
 
     switch (aIndex) {
@@ -116,8 +109,6 @@ public:
                             AudioBlock* aOutput,
                             bool *aFinished) override
   {
-    MOZ_ASSERT(mSource == aStream, "Invalid source stream");
-
     // The output of this node is always stereo, no matter what the inputs are.
     MOZ_ASSERT(aInput.ChannelCount() <= 2);
     aOutput->AllocateChannels(2);
@@ -149,7 +140,7 @@ public:
       bool onLeft[WEBAUDIO_BLOCK_SIZE];
 
       float values[WEBAUDIO_BLOCK_SIZE];
-      StreamTime tick = aStream->GraphTimeToStreamTime(aFrom);
+      StreamTime tick = mDestination->GraphTimeToStreamTime(aFrom);
       mPan.GetValuesAtTime(tick, values, WEBAUDIO_BLOCK_SIZE);
 
       for (size_t counter = 0; counter < WEBAUDIO_BLOCK_SIZE; ++counter) {
@@ -171,7 +162,6 @@ public:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  AudioNodeStream* mSource;
   AudioNodeStream* mDestination;
   AudioParamTimeline mPan;
 };
@@ -186,7 +176,6 @@ StereoPannerNode::StereoPannerNode(AudioContext* aContext)
   StereoPannerNodeEngine* engine = new StereoPannerNodeEngine(this, aContext->Destination());
   mStream = AudioNodeStream::Create(aContext, engine,
                                     AudioNodeStream::NO_STREAM_FLAGS);
-  engine->SetSourceStream(mStream);
 }
 
 StereoPannerNode::~StereoPannerNode()

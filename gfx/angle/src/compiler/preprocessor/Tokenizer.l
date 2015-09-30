@@ -23,6 +23,10 @@ IF YOU MODIFY THIS FILE YOU ALSO NEED TO RUN generate_parser.sh.
 }
 
 %{
+#if defined(_MSC_VER)
+#pragma warning(disable: 4005)
+#endif
+
 #include "Tokenizer.h"
 
 #include "DiagnosticsBase.h"
@@ -31,6 +35,15 @@ IF YOU MODIFY THIS FILE YOU ALSO NEED TO RUN generate_parser.sh.
 #if defined(__GNUC__)
 // Triggered by the auto-generated yy_fatal_error function.
 #pragma GCC diagnostic ignored "-Wmissing-noreturn"
+#elif defined(_MSC_VER)
+#pragma warning(disable: 4244)
+#endif
+
+// Workaround for flex using the register keyword, deprecated in C++11.
+#ifdef __cplusplus
+#if __cplusplus > 199711L
+#define register
+#endif
 #endif
 
 typedef std::string YYSTYPE;
@@ -93,7 +106,7 @@ FRACTIONAL_CONSTANT  ({DIGIT}*"."{DIGIT}+)|({DIGIT}+".")
 
     /* Block comment */
     /* Line breaks are just counted - not returned. */
-    /* The comment is replaced by a single space. */ 
+    /* The comment is replaced by a single space. */
 "/*" { BEGIN(COMMENT); }
 <COMMENT>[^*\r\n]+
 <COMMENT>"*"
@@ -267,7 +280,9 @@ FRACTIONAL_CONSTANT  ({DIGIT}*"."{DIGIT}+)|({DIGIT}+".")
 
 namespace pp {
 
-Tokenizer::Tokenizer(Diagnostics *diagnostics) : mHandle(0)
+Tokenizer::Tokenizer(Diagnostics *diagnostics)
+    : mHandle(0),
+      mMaxTokenSize(256)
 {
     mContext.diagnostics = diagnostics;
 }

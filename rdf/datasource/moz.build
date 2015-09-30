@@ -23,5 +23,3 @@ LOCAL_INCLUDES += [
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wshadow']
-else:
-    ALLOW_COMPILER_WARNINGS = True

@@ -279,6 +279,12 @@ operator|=(EventRegionsOverride& a, EventRegionsOverride b)
   return a;
 }
 
+// Flags used as an argument to functions that dump textures.
+enum TextureDumpMode {
+  Compress,      // dump texture with LZ4 compression
+  DoNotCompress  // dump texture uncompressed
+};
+
 } // namespace layers
 } // namespace mozilla
 

@@ -9,6 +9,7 @@
 
 #include "mozilla/ipc/FileDescriptorSetParent.h"
 #include "mozilla/net/HttpChannelParent.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/unused.h"
@@ -35,6 +36,9 @@
 #include "nsQueryObject.h"
 #include "mozilla/BasePrincipal.h"
 #include "nsCORSListenerProxy.h"
+#include "nsIPrompt.h"
+#include "nsIWindowWatcher.h"
+#include "nsIDocument.h"
 
 using mozilla::BasePrincipal;
 using mozilla::OriginAttributes;
@@ -290,6 +294,35 @@ HttpChannelParent::GetInterface(const nsIID& aIID, void **result)
     nsCOMPtr<nsILoadContext> copy = mLoadContext;
     copy.forget(result);
     return NS_OK;
+  }
+
+  if (mTabParent && aIID.Equals(NS_GET_IID(nsIPrompt))) {
+    nsCOMPtr<Element> frameElement = mTabParent->GetOwnerElement();
+    if (frameElement) {
+      nsresult rv;
+      nsCOMPtr<nsIDOMWindow> win =
+        do_QueryInterface(frameElement->OwnerDoc()->GetWindow(), &rv);
+
+      if (NS_WARN_IF(!NS_SUCCEEDED(rv))) {
+        return rv;
+      }
+
+      nsCOMPtr<nsIWindowWatcher> wwatch =
+        do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+
+      if (NS_WARN_IF(!NS_SUCCEEDED(rv))) {
+        return rv;
+      }
+
+      nsCOMPtr<nsIPrompt> prompt;
+      rv = wwatch->GetNewPrompter(win, getter_AddRefs(prompt));
+      if (NS_WARN_IF(!NS_SUCCEEDED(rv))) {
+        return rv;
+      }
+
+      prompt.forget(result);
+      return NS_OK;
+    }
   }
 
   return QueryInterface(aIID, result);

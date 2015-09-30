@@ -6,6 +6,7 @@
 
 #include "DirectiveParser.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cstdlib>
 #include <sstream>
@@ -210,10 +211,12 @@ DirectiveParser::DirectiveParser(Tokenizer *tokenizer,
                                  Diagnostics *diagnostics,
                                  DirectiveHandler *directiveHandler)
     : mPastFirstStatement(false),
+      mSeenNonPreprocessorToken(false),
       mTokenizer(tokenizer),
       mMacroSet(macroSet),
       mDiagnostics(diagnostics),
-      mDirectiveHandler(directiveHandler)
+      mDirectiveHandler(directiveHandler),
+      mShaderVersion(100)
 {
 }
 
@@ -227,6 +230,10 @@ void DirectiveParser::lex(Token *token)
         {
             parseDirective(token);
             mPastFirstStatement = true;
+        }
+        else if (!isEOD(token))
+        {
+            mSeenNonPreprocessorToken = true;
         }
 
         if (token->type == Token::LAST)
@@ -364,6 +371,14 @@ void DirectiveParser::parseDefine(Token *token)
             mTokenizer->lex(token);
             if (token->type != Token::IDENTIFIER)
                 break;
+
+            if (std::find(macro.parameters.begin(), macro.parameters.end(), token->text) != macro.parameters.end())
+            {
+                mDiagnostics->report(Diagnostics::PP_MACRO_DUPLICATE_PARAMETER_NAMES,
+                                     token->location, token->text);
+                return;
+            }
+
             macro.parameters.push_back(token->text);
 
             mTokenizer->lex(token);  // Get ','.
@@ -435,6 +450,12 @@ void DirectiveParser::parseUndef(Token *token)
     }
 
     mTokenizer->lex(token);
+    if (!isEOD(token))
+    {
+        mDiagnostics->report(Diagnostics::PP_UNEXPECTED_TOKEN,
+                             token->location, token->text);
+        skipUntilEOD(mTokenizer, token);
+    }
 }
 
 void DirectiveParser::parseIf(Token *token)
@@ -486,7 +507,7 @@ void DirectiveParser::parseElse(Token *token)
     block.skipGroup = block.foundValidGroup;
     block.foundValidGroup = true;
 
-    // Warn if there are extra tokens after #else.
+    // Check if there are extra tokens after #else.
     mTokenizer->lex(token);
     if (!isEOD(token))
     {
@@ -550,7 +571,7 @@ void DirectiveParser::parseEndif(Token *token)
 
     mConditionalStack.pop_back();
 
-    // Warn if there are tokens after #endif.
+    // Check if there are tokens after #endif.
     mTokenizer->lex(token);
     if (!isEOD(token))
     {
@@ -610,7 +631,8 @@ void DirectiveParser::parsePragma(Token *token)
             break;
           case PRAGMA_VALUE:
             value = token->text;
-            valid = valid && (token->type == Token::IDENTIFIER);
+            // Pragma value validation is handled in DirectiveHandler::handlePragma
+            // because the proper pragma value is dependent on the pragma name.
             break;
           case RIGHT_PAREN:
             valid = valid && (token->type == ')');
@@ -627,7 +649,7 @@ void DirectiveParser::parsePragma(Token *token)
                       (state == RIGHT_PAREN + 1));  // With value.
     if (!valid)
     {
-        mDiagnostics->report(Diagnostics::PP_UNRECOGNIZED_PRAGMA,
+        mDiagnostics->report(Diagnostics::PP_INVALID_PRAGMA,
                              token->location, name);
     }
     else if (state > PRAGMA_NAME)  // Do not notify for empty pragma.
@@ -698,6 +720,20 @@ void DirectiveParser::parseExtension(Token *token)
         mDiagnostics->report(Diagnostics::PP_INVALID_EXTENSION_DIRECTIVE,
                              token->location, token->text);
         valid = false;
+    }
+    if (valid && mSeenNonPreprocessorToken)
+    {
+        if (mShaderVersion >= 300)
+        {
+            mDiagnostics->report(Diagnostics::PP_NON_PP_TOKEN_BEFORE_EXTENSION_ESSL3,
+                                 token->location, token->text);
+            valid = false;
+        }
+        else
+        {
+            mDiagnostics->report(Diagnostics::PP_NON_PP_TOKEN_BEFORE_EXTENSION_ESSL1,
+                                 token->location, token->text);
+        }
     }
     if (valid)
         mDirectiveHandler->handleExtension(token->location, name, behavior);
@@ -775,9 +811,17 @@ void DirectiveParser::parseVersion(Token *token)
         valid = false;
     }
 
+    if (valid && version >= 300 && token->location.line > 1)
+    {
+        mDiagnostics->report(Diagnostics::PP_VERSION_NOT_FIRST_LINE_ESSL3,
+                             token->location, token->text);
+        valid = false;
+    }
+
     if (valid)
     {
         mDirectiveHandler->handleVersion(token->location, version);
+        mShaderVersion = version;
     }
 }
 
@@ -918,7 +962,7 @@ int DirectiveParser::parseExpressionIf(Token *token)
     macroExpander.lex(token);
     expressionParser.parse(token, &expression);
 
-    // Warn if there are tokens after #if expression.
+    // Check if there are tokens after #if expression.
     if (!isEOD(token))
     {
         mDiagnostics->report(Diagnostics::PP_CONDITIONAL_UNEXPECTED_TOKEN,
@@ -946,7 +990,7 @@ int DirectiveParser::parseExpressionIfdef(Token *token)
     MacroSet::const_iterator iter = mMacroSet->find(token->text);
     int expression = iter != mMacroSet->end() ? 1 : 0;
 
-    // Warn if there are tokens after #ifdef expression.
+    // Check if there are tokens after #ifdef expression.
     mTokenizer->lex(token);
     if (!isEOD(token))
     {

@@ -4,8 +4,8 @@
 // found in the LICENSE file.
 //
 
-#ifndef COMPILIER_BUILT_IN_FUNCTION_EMULATOR_H_
-#define COMPILIER_BUILT_IN_FUNCTION_EMULATOR_H_
+#ifndef COMPILER_TRANSLATOR_BUILTINFUNCTIONEMULATOR_H_
+#define COMPILER_TRANSLATOR_BUILTINFUNCTIONEMULATOR_H_
 
 #include "compiler/translator/InfoSink.h"
 #include "compiler/translator/IntermNode.h"
@@ -13,88 +13,73 @@
 //
 // This class decides which built-in functions need to be replaced with the
 // emulated ones.
-// It's only a workaround for OpenGL driver bugs, and isn't needed in general.
+// It can be used to work around driver bugs or implement functions that are
+// not natively implemented on a specific platform.
 //
-class BuiltInFunctionEmulator {
-public:
-    BuiltInFunctionEmulator(sh::GLenum shaderType);
-    // Records that a function is called by the shader and might needs to be
-    // emulated.  If the function's group is not in mFunctionGroupFilter, this
-    // becomes an no-op.
-    // Returns true if the function call needs to be replaced with an emulated
-    // one.
-    bool SetFunctionCalled(TOperator op, const TType& param);
-    bool SetFunctionCalled(
-        TOperator op, const TType& param1, const TType& param2);
-    bool SetFunctionCalled(
-        TOperator op, const TType& param1, const TType& param2, const TType& param3);
+class BuiltInFunctionEmulator
+{
+  public:
+    BuiltInFunctionEmulator();
 
-    // Output function emulation definition.  This should be before any other
-    // shader source.
-    void OutputEmulatedFunctionDefinition(TInfoSinkBase& out, bool withPrecision) const;
-
-    void MarkBuiltInFunctionsForEmulation(TIntermNode* root);
+    void MarkBuiltInFunctionsForEmulation(TIntermNode *root);
 
     void Cleanup();
 
     // "name(" becomes "webgl_name_emu(".
-    static TString GetEmulatedFunctionName(const TString& name);
+    static TString GetEmulatedFunctionName(const TString &name);
 
-private:
-    //
-    // Built-in functions.
-    //
-    enum TBuiltInFunction {
-        TFunctionCos1 = 0,  // float cos(float);
-        TFunctionCos2,  // vec2 cos(vec2);
-        TFunctionCos3,  // vec3 cos(vec3);
-        TFunctionCos4,  // vec4 cos(vec4);
+    bool IsOutputEmpty() const;
 
-        TFunctionDistance1_1,  // float distance(float, float);
-        TFunctionDistance2_2,  // vec2 distance(vec2, vec2);
-        TFunctionDistance3_3,  // vec3 distance(vec3, vec3);
-        TFunctionDistance4_4,  // vec4 distance(vec4, vec4);
+    // Output function emulation definition. This should be before any other
+    // shader source.
+    void OutputEmulatedFunctions(TInfoSinkBase &out) const;
 
-        TFunctionDot1_1,  // float dot(float, float);
-        TFunctionDot2_2,  // vec2 dot(vec2, vec2);
-        TFunctionDot3_3,  // vec3 dot(vec3, vec3);
-        TFunctionDot4_4,  // vec4 dot(vec4, vec4);
+    // Add functions that need to be emulated.
+    void addEmulatedFunction(TOperator op, const TType *param, const char *emulatedFunctionDefinition);
+    void addEmulatedFunction(TOperator op, const TType *param1, const TType *param2,
+                             const char *emulatedFunctionDefinition);
+    void addEmulatedFunction(TOperator op, const TType *param1, const TType *param2, const TType *param3,
+                             const char *emulatedFunctionDefinition);
 
-        TFunctionLength1,  // float length(float);
-        TFunctionLength2,  // float length(vec2);
-        TFunctionLength3,  // float length(vec3);
-        TFunctionLength4,  // float length(vec4);
+  private:
+    class BuiltInFunctionEmulationMarker;
 
-        TFunctionNormalize1,  // float normalize(float);
-        TFunctionNormalize2,  // vec2 normalize(vec2);
-        TFunctionNormalize3,  // vec3 normalize(vec3);
-        TFunctionNormalize4,  // vec4 normalize(vec4);
+    // Records that a function is called by the shader and might need to be
+    // emulated. If the function is not in mEmulatedFunctions, this becomes a
+    // no-op. Returns true if the function call needs to be replaced with an
+    // emulated one.
+    bool SetFunctionCalled(TOperator op, const TType &param);
+    bool SetFunctionCalled(TOperator op, const TType &param1, const TType &param2);
+    bool SetFunctionCalled(TOperator op, const TType &param1, const TType &param2, const TType &param3);
 
-        TFunctionReflect1_1,  // float reflect(float, float);
-        TFunctionReflect2_2,  // vec2 reflect(vec2, vec2);
-        TFunctionReflect3_3,  // vec3 reflect(vec3, vec3);
-        TFunctionReflect4_4,  // vec4 reflect(vec4, vec4);
+    class FunctionId {
+      public:
+        FunctionId(TOperator op, const TType *param);
+        FunctionId(TOperator op, const TType *param1, const TType *param2);
+        FunctionId(TOperator op, const TType *param1, const TType *param2, const TType *param3);
 
-        TFunctionFaceForward1_1_1,  // float faceforward(float, float, float);
-        TFunctionFaceForward2_2_2,  // vec2 faceforward(vec2, vec2, vec2);
-        TFunctionFaceForward3_3_3,  // vec3 faceforward(vec3, vec3, vec3);
-        TFunctionFaceForward4_4_4,  // vec4 faceforward(vec4, vec4, vec4);
+        bool operator==(const FunctionId &other) const;
+        bool operator<(const FunctionId &other) const;
 
-        TFunctionUnknown
+        FunctionId getCopy() const;
+      private:
+        TOperator mOp;
+
+        // The memory that these TType objects use is freed by PoolAllocator. The BuiltInFunctionEmulator's lifetime
+        // can extend until after the memory pool is freed, but that's not an issue since this class never destructs
+        // these objects.
+        const TType *mParam1;
+        const TType *mParam2;
+        const TType *mParam3;
     };
 
-    TBuiltInFunction IdentifyFunction(TOperator op, const TType& param);
-    TBuiltInFunction IdentifyFunction(
-        TOperator op, const TType& param1, const TType& param2);
-    TBuiltInFunction IdentifyFunction(
-        TOperator op, const TType& param1, const TType& param2, const TType& param3);
+    bool SetFunctionCalled(const FunctionId &functionId);
 
-    bool SetFunctionCalled(TBuiltInFunction function);
+    // Map from function id to emulated function definition
+    std::map<FunctionId, std::string> mEmulatedFunctions;
 
-    std::vector<TBuiltInFunction> mFunctions;
-
-    const bool* mFunctionMask;  // a boolean flag for each function.
-    const char** mFunctionSource;
+    // Called function ids
+    std::vector<FunctionId> mFunctions;
 };
 
-#endif  // COMPILIER_BUILT_IN_FUNCTION_EMULATOR_H_
+#endif  // COMPILER_TRANSLATOR_BUILTINFUNCTIONEMULATOR_H_

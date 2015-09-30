@@ -4,8 +4,8 @@
 // found in the LICENSE file.
 //
 
-#ifndef COMPILER_TRANSLATOR_LOOP_INFO_H_
-#define COMPILER_TRANSLATOR_LOOP_INFO_H_
+#ifndef COMPILER_TRANSLATOR_LOOPINFO_H_
+#define COMPILER_TRANSLATOR_LOOPINFO_H_
 
 #include "compiler/translator/IntermNode.h"
 
@@ -76,5 +76,5 @@ class TLoopStack : public TVector<TLoopInfo>
     void pop();
 };
 
-#endif // COMPILER_TRANSLATOR_LOOP_INDEX_H_
+#endif // COMPILER_TRANSLATOR_LOOPINFO_H_
 

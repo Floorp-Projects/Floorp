@@ -148,15 +148,15 @@ AudioNodeStream::SetStreamTimeParameter(uint32_t aIndex, AudioContext* aContext,
   };
 
   GraphImpl()->AppendMessage(new Message(this, aIndex,
-      aContext->DestinationStream(),
-      aContext->DOMTimeToStreamTime(aStreamTime)));
+                                         aContext->DestinationStream(),
+                                         aStreamTime));
 }
 
 void
 AudioNodeStream::SetStreamTimeParameterImpl(uint32_t aIndex, MediaStream* aRelativeToStream,
                                             double aStreamTime)
 {
-  StreamTime ticks = TicksFromDestinationTime(aRelativeToStream, aStreamTime);
+  StreamTime ticks = aRelativeToStream->SecondsToNearestStreamTime(aStreamTime);
   mEngine->SetStreamTimeParameter(aIndex, ticks);
 }
 
@@ -617,7 +617,7 @@ AudioNodeStream::ProduceOutputBeforeInput(GraphTime aFrom)
   if (!mIsActive) {
     mLastChunks[0].SetNull(WEBAUDIO_BLOCK_SIZE);
   } else {
-    mEngine->ProduceBlockBeforeInput(aFrom, &mLastChunks[0]);
+    mEngine->ProduceBlockBeforeInput(this, aFrom, &mLastChunks[0]);
     NS_ASSERTION(mLastChunks[0].GetDuration() == WEBAUDIO_BLOCK_SIZE,
                  "Invalid WebAudio chunk size");
     if (mDisabledTrackIDs.Contains(static_cast<TrackID>(AUDIO_TRACK))) {
@@ -664,50 +664,6 @@ AudioNodeStream::FinishOutput()
                                 track->GetSegment()->GetDuration(),
                                 MediaStreamListener::TRACK_EVENT_ENDED, emptySegment);
   }
-}
-
-double
-AudioNodeStream::FractionalTicksFromDestinationTime(AudioNodeStream* aDestination,
-                                                    double aSeconds)
-{
-  MOZ_ASSERT(aDestination->SampleRate() == SampleRate());
-  MOZ_ASSERT(SampleRate() == GraphRate());
-
-  double destinationSeconds = std::max(0.0, aSeconds);
-  double destinationFractionalTicks = destinationSeconds * SampleRate();
-  MOZ_ASSERT(destinationFractionalTicks < STREAM_TIME_MAX);
-  StreamTime destinationStreamTime = destinationFractionalTicks; // round down
-  // MediaTime does not have the resolution of double
-  double offset = destinationFractionalTicks - destinationStreamTime;
-
-  GraphTime graphTime =
-    aDestination->StreamTimeToGraphTime(destinationStreamTime);
-  StreamTime thisStreamTime = GraphTimeToStreamTime(graphTime);
-  double thisFractionalTicks = thisStreamTime + offset;
-  return thisFractionalTicks;
-}
-
-StreamTime
-AudioNodeStream::TicksFromDestinationTime(MediaStream* aDestination,
-                                          double aSeconds)
-{
-  AudioNodeStream* destination = aDestination->AsAudioNodeStream();
-  MOZ_ASSERT(destination);
-
-  double thisSeconds =
-    FractionalTicksFromDestinationTime(destination, aSeconds);
-  return NS_round(thisSeconds);
-}
-
-double
-AudioNodeStream::DestinationTimeFromTicks(AudioNodeStream* aDestination,
-                                          StreamTime aPosition)
-{
-  MOZ_ASSERT(SampleRate() == aDestination->SampleRate());
-
-  GraphTime graphTime = StreamTimeToGraphTime(aPosition);
-  StreamTime destinationTime = aDestination->GraphTimeToStreamTime(graphTime);
-  return StreamTimeToSeconds(destinationTime);
 }
 
 void
