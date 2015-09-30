@@ -73,7 +73,7 @@ public:
   // When aIsOnlyNode is true, this is the only node for the AudioContext.
   void SetIsOnlyNodeForContext(bool aIsOnlyNode);
 
-  void CreateAudioChannelAgent();
+  nsresult CreateAudioChannelAgent();
   void DestroyAudioChannelAgent();
 
   virtual const char* NodeType() const override
