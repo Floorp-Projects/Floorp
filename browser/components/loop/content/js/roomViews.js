@@ -550,6 +550,7 @@ loop.roomViews = (function(mozL10n) {
     ],
 
     propTypes: {
+      chatWindowDetached: React.PropTypes.bool.isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       // The poster URLs are for UI-showcase testing and development.
       localPosterUrl: React.PropTypes.string,
@@ -788,6 +789,7 @@ loop.roomViews = (function(mozL10n) {
                   screenShare: screenShareData, 
                   settingsMenuItems: settingsMenuItems, 
                   show: !shouldRenderEditContextView, 
+                  showHangup: this.props.chatWindowDetached, 
                   video: {enabled: !this.state.videoMuted, visible: true}}), 
                 React.createElement(DesktopRoomInvitationView, {
                   dispatcher: this.props.dispatcher, 

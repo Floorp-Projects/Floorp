@@ -1220,6 +1220,7 @@
               <div className="fx-embedded">
                 <OngoingConversationView
                   audio={{ enabled: true, visible: true }}
+                  chatWindowDetached={false}
                   conversationStore={conversationStores[0]}
                   dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
@@ -1238,6 +1239,7 @@
               <div className="fx-embedded">
                 <OngoingConversationView
                   audio={{ enabled: true, visible: true }}
+                  chatWindowDetached={false}
                   conversationStore={conversationStores[1]}
                   dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
@@ -1255,6 +1257,7 @@
               <div className="fx-embedded">
                 <OngoingConversationView
                   audio={{ enabled: true, visible: true }}
+                  chatWindowDetached={false}
                   conversationStore={conversationStores[2]}
                   dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
@@ -1273,6 +1276,7 @@
               <div className="fx-embedded">
                 <OngoingConversationView
                   audio={{ enabled: true, visible: true }}
+                  chatWindowDetached={false}
                   conversationStore={conversationStores[3]}
                   dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
@@ -1291,6 +1295,7 @@
               <div className="fx-embedded">
                 <OngoingConversationView
                   audio={{ enabled: true, visible: true }}
+                  chatWindowDetached={false}
                   conversationStore={conversationStores[4]}
                   dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
@@ -1384,6 +1389,7 @@
                            width={298}>
               <div className="fx-embedded">
                 <DesktopRoomConversationView
+                  chatWindowDetached={false}
                   dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
                   mozLoop={navigator.mozLoop}
@@ -1402,6 +1408,7 @@
                scrollbars to appear */}
               <div className="fx-embedded overflow-hidden">
                 <DesktopRoomConversationView
+                  chatWindowDetached={false}
                   dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
                   mozLoop={navigator.mozLoop}
@@ -1419,6 +1426,7 @@
                            width={298}>
               <div className="fx-embedded">
                 <DesktopRoomConversationView
+                  chatWindowDetached={false}
                   dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
                   mozLoop={navigator.mozLoop}
@@ -1436,6 +1444,7 @@
                            width={602}>
               <div className="fx-embedded">
                 <DesktopRoomConversationView
+                  chatWindowDetached={false}
                   dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
                   mozLoop={navigator.mozLoop}
@@ -1453,6 +1462,7 @@
                            width={646}>
               <div className="fx-embedded">
                 <DesktopRoomConversationView
+                  chatWindowDetached={false}
                   dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
                   mozLoop={navigator.mozLoop}
@@ -1470,6 +1480,7 @@
                            width={298}>
               <div className="fx-embedded">
                 <DesktopRoomConversationView
+                  chatWindowDetached={false}
                   dispatcher={dispatcher}
                   mozLoop={navigator.mozLoop}
                   onCallTerminated={function(){}}
@@ -1485,6 +1496,7 @@
                            width={298} >
               <div className="fx-embedded">
                 <DesktopRoomConversationView
+                  chatWindowDetached={false}
                   dispatcher={dispatcher}
                   localPosterUrl="sample-img/video-screen-local.png"
                   mozLoop={navigator.mozLoop}
