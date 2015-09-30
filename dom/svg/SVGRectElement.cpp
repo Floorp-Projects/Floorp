@@ -143,6 +143,7 @@ SVGRectElement::GetGeometryBounds(Rect* aBounds,
   if (aStrokeOptions.mLineWidth > 0.f) {
     if (aToNonScalingStrokeSpace) {
       if (aToNonScalingStrokeSpace->IsRectilinear()) {
+        MOZ_ASSERT(!aToNonScalingStrokeSpace->IsSingular());
         rect = aToNonScalingStrokeSpace->TransformBounds(rect);
         // Note that, in principle, an author could cause the corners of the
         // rect to be beveled by specifying stroke-linejoin or setting

@@ -114,6 +114,7 @@ SVGEllipseElement::GetGeometryBounds(Rect* aBounds,
     if (aStrokeOptions.mLineWidth > 0.f) {
       if (aToNonScalingStrokeSpace) {
         if (aToNonScalingStrokeSpace->IsRectilinear()) {
+          MOZ_ASSERT(!aToNonScalingStrokeSpace->IsSingular());
           Rect userBounds(x - rx, y - ry, 2 * rx, 2 * ry);
           SVGContentUtils::RectilinearGetStrokeBounds(
             userBounds, aToBoundsSpace, *aToNonScalingStrokeSpace,
