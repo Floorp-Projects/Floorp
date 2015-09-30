@@ -6,13 +6,14 @@
 #ifndef mozilla_dom_presentation_provider_MulticastDNSDeviceProvider_h
 #define mozilla_dom_presentation_provider_MulticastDNSDeviceProvider_h
 
+#include "mozilla/nsRefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsICancelable.h"
 #include "nsIDNSServiceDiscovery.h"
 #include "nsIObserver.h"
 #include "nsIPresentationDeviceProvider.h"
 #include "nsITCPPresentationServer.h"
-#include "mozilla/nsRefPtr.h"
+#include "nsITimer.h"
 #include "nsString.h"
 #include "nsWeakPtr.h"
 
@@ -51,6 +52,7 @@ private:
   nsresult StopDiscovery(nsresult aReason);
 
   nsresult OnDiscoveryChanged(bool aEnabled);
+  nsresult OnDiscoveryTimeoutChanged(uint32_t aTimeoutMs);
   nsresult OnDiscoverableChanged(bool aEnabled);
   nsresult OnServiceNameChanged(const nsCString& aServiceName);
 
@@ -64,7 +66,11 @@ private:
   nsCOMPtr<nsICancelable> mRegisterRequest;
 
   bool mDiscoveryEnabled = false;
+  uint32_t mDiscveryTimeoutMs;
+  nsCOMPtr<nsITimer> mDiscoveryTimer;
+
   bool mDiscoverable = false;
+
   nsCString mServiceName;
   nsCString mRegisteredName;
 };
