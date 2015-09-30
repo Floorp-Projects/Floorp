@@ -52,13 +52,13 @@ public:
 
   bool IsComplete() const;
 
-  int      GetFd() const;
-  int32_t  GetChannel1() const;
-  int32_t  GetSize() const;
-  nsString GetBdAddress() const;
-  int32_t  GetChannel2() const;
-  int32_t  GetConnectionStatus() const;
-  int      GetClientFd() const;
+  int              GetFd() const;
+  int32_t          GetChannel1() const;
+  int32_t          GetSize() const;
+  BluetoothAddress GetBdAddress() const;
+  int32_t          GetChannel2() const;
+  int32_t          GetConnectionStatus() const;
+  int              GetClientFd() const;
 
   BluetoothSocketResultHandler* GetResultHandler() const;
 
@@ -71,7 +71,7 @@ private:
 
   int16_t ReadInt16(unsigned long aOffset) const;
   int32_t ReadInt32(unsigned long aOffset) const;
-  void    ReadBdAddress(unsigned long aOffset, nsAString& aBdAddress) const;
+  void    ReadBdAddress(unsigned long aOffset, BluetoothAddress& aBdAddress) const;
 
   MessageLoopForIO::FileDescriptorWatcher mWatcher;
   int mFd;

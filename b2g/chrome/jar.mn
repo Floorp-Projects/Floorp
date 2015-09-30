@@ -13,6 +13,8 @@ chrome.jar:
 * content/shell.html                    (content/shell.html)
 * content/shell.js                      (content/shell.js)
   content/shell.css                     (content/shell.css)
+  content/shell_remote.html             (content/shell_remote.html)
+  content/shell_remote.js               (content/shell_remote.js)
   content/blank.html                    (content/blank.html)
   content/blank.css                     (content/blank.css)
 #ifdef MOZ_WIDGET_GONK
