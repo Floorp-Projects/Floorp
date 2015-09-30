@@ -55,8 +55,10 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
 
   void TrackUnionStream::RemoveInput(MediaInputPort* aPort)
   {
+    STREAM_LOG(LogLevel::Debug, ("TrackUnionStream %p removing input %p", this, aPort));
     for (int32_t i = mTrackMap.Length() - 1; i >= 0; --i) {
       if (mTrackMap[i].mInputPort == aPort) {
+        STREAM_LOG(LogLevel::Debug, ("TrackUnionStream %p removing trackmap entry %d", this, i));
         EndTrack(i);
         mTrackMap.RemoveElementAt(i);
       }
@@ -218,6 +220,7 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
     StreamBuffer::Track* outputTrack = mBuffer.FindTrack(mTrackMap[aIndex].mOutputTrackID);
     if (!outputTrack || outputTrack->IsEnded())
       return;
+    STREAM_LOG(LogLevel::Debug, ("TrackUnionStream %p ending track %d", this, outputTrack->GetID()));
     for (uint32_t j = 0; j < mListeners.Length(); ++j) {
       MediaStreamListener* l = mListeners[j];
       StreamTime offset = outputTrack->GetSegment()->GetDuration();
