@@ -234,10 +234,14 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // Get the URL from the fixup service:
           let flags = Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
                       Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
-          let uriInfo = Services.uriFixup.getFixupURIInfo(value, flags);
+          let uriInfo;
+          try {
+            uriInfo = Services.uriFixup.getFixupURIInfo(value, flags);
+          } catch (ex) {}
           // Ignore if we couldn't make a URI out of this, the URI resulted in a search,
           // or the URI has a non-http(s)/ftp protocol.
-          if (!uriInfo.fixedURI ||
+          if (!uriInfo ||
+              !uriInfo.fixedURI ||
               uriInfo.keywordProviderName ||
               ["http", "https", "ftp"].indexOf(uriInfo.fixedURI.scheme) == -1) {
             return;

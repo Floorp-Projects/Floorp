@@ -21,6 +21,7 @@ function* performTest() {
   let parser = new OutputParser(doc);
   testParseCssProperty(doc, parser);
   testParseCssVar(doc, parser);
+  testParseURL(doc, parser);
 
   host.destroy();
 }
@@ -98,7 +99,7 @@ function testParseCssProperty(doc, parser) {
                    "url(red.svg#blue)\"><span>",
                    "blur(1px) drop-shadow(0 0 0 ",
                    {name: "blue", value: "#00F"},
-                   ") url(\"red.svg#blue\")</span></span>"]),
+                   ") url(red.svg#blue)</span></span>"]),
 
     makeColorTest("color", "currentColor", ["currentColor"]),
   ];
@@ -135,4 +136,75 @@ function testParseCssVar(doc, parser) {
      "CSS property correctly parsed");
 
   target.innerHTML = "";
+}
+
+function testParseURL(doc, parser) {
+  info("Test that URL parsing preserves quoting style");
+
+  const tests = [
+    {
+      desc: "simple test without quotes",
+      leader: "url(",
+      trailer: ")",
+    },
+    {
+      desc: "simple test with single quotes",
+      leader: "url('",
+      trailer: "')",
+    },
+    {
+      desc: "simple test with double quotes",
+      leader: "url(\"",
+      trailer: "\")",
+    },
+    {
+      desc: "test with single quotes and whitespace",
+      leader: "url( \t'",
+      trailer: "'\r\n\f)",
+    },
+    {
+      desc: "simple test with uppercase",
+      leader: "URL(",
+      trailer: ")",
+    },
+    {
+      desc: "bad url, missing paren",
+      leader: "url(",
+      trailer: "",
+      expectedTrailer: ")"
+    },
+    {
+      desc: "bad url, double quote, missing paren",
+      leader: "url(\"",
+      trailer: "\"",
+      expectedTrailer: "\")",
+    },
+    {
+      desc: "bad url, single quote, missing paren and quote",
+      leader: "url('",
+      trailer: "",
+      expectedTrailer: "')"
+    }
+  ];
+
+  for (let test of tests) {
+    let url = test.leader + "something.jpg" + test.trailer;
+    let frag = parser.parseCssProperty("background", url, {
+      urlClass: "test-urlclass"
+    });
+
+    let target = doc.querySelector("div");
+    target.appendChild(frag);
+
+    let expectedTrailer = test.expectedTrailer || test.trailer;
+
+    let expected = test.leader +
+        "<a href=\"something.jpg\" class=\"test-urlclass\" " +
+        "target=\"_blank\">something.jpg</a>" +
+        expectedTrailer;
+
+    is(target.innerHTML, expected, test.desc);
+
+    target.innerHTML = "";
+  }
 }

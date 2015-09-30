@@ -118,8 +118,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
                   this._renderJoinButton()
               }
             </div>
-            <ToSView
-              dispatcher={this.props.dispatcher} />
+            <ToSView dispatcher={this.props.dispatcher} />
             <p className="mozilla-logo" />
           </div>
         </div>
@@ -310,6 +309,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
                       onClick={this.props.joinRoom}>
                 {mozL10n.get("rooms_room_join_label")}
               </button>
+              <ToSView dispatcher={this.props.dispatcher} />
             </div>
           );
         }
@@ -423,8 +423,6 @@ loop.standaloneRoomViews = (function(mozL10n) {
       return (
         <footer className="rooms-footer">
           <div className="footer-logo" />
-          <ToSView
-            dispatcher={this.props.dispatcher} />
         </footer>
       );
     }

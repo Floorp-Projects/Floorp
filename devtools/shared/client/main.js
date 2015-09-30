@@ -159,6 +159,7 @@ const UnsolicitedNotifications = {
   "tabListChanged": "tabListChanged",
   "reflowActivity": "reflowActivity",
   "addonListChanged": "addonListChanged",
+  "workerListChanged": "workerListChanged",
   "tabNavigated": "tabNavigated",
   "frameUpdate": "frameUpdate",
   "pageError": "pageError",
@@ -1478,13 +1479,22 @@ RootClient.prototype = {
                                        { telemetry: "LISTADDONS" }),
 
   /**
+   * List the registered workers.
+   *
+   * @param function aOnResponse
+   *        Called with the response packet.
+   */
+  listWorkers: DebuggerClient.requester({ type: "listWorkers" },
+                                        { telemetry: "LISTWORKERS" }),
+
+  /**
    * List the running processes.
    *
    * @param function aOnResponse
    *        Called with the response packet.
    */
   listProcesses: DebuggerClient.requester({ type: "listProcesses" },
-                                       { telemetry: "LISTPROCESSES" }),
+                                          { telemetry: "LISTPROCESSES" }),
 
   /**
    * Fetch the TabActor for the currently selected tab, or for a specific

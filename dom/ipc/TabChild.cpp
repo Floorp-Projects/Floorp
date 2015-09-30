@@ -38,7 +38,6 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Move.h"
-#include "mozilla/PWebBrowserPersistDocumentChild.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextEvents.h"
@@ -103,7 +102,6 @@
 #include "nsIScriptError.h"
 #include "mozilla/EventForwards.h"
 #include "nsDeviceContext.h"
-#include "mozilla/WebBrowserPersistDocumentChild.h"
 
 #define BROWSER_ELEMENT_CHILD_SCRIPT \
     NS_LITERAL_STRING("chrome://global/content/BrowserElementChild.js")
@@ -3236,37 +3234,4 @@ TabChildGlobal::GetGlobalJSObject()
   nsCOMPtr<nsIXPConnectJSObjectHolder> ref = mTabChild->GetGlobal();
   NS_ENSURE_TRUE(ref, nullptr);
   return ref->GetJSObject();
-}
-
-PWebBrowserPersistDocumentChild*
-TabChild::AllocPWebBrowserPersistDocumentChild(const uint64_t& aOuterWindowID)
-{
-  return new WebBrowserPersistDocumentChild();
-}
-
-bool
-TabChild::RecvPWebBrowserPersistDocumentConstructor(PWebBrowserPersistDocumentChild *aActor,
-                                                    const uint64_t& aOuterWindowID)
-{
-  nsCOMPtr<nsIDocument> rootDoc = GetDocument();
-  nsCOMPtr<nsIDocument> foundDoc;
-  if (aOuterWindowID) {
-    foundDoc = nsContentUtils::GetSubdocumentWithOuterWindowId(rootDoc, aOuterWindowID);
-  } else {
-    foundDoc = rootDoc;
-  }
-
-  if (!foundDoc) {
-    aActor->SendInitFailure(NS_ERROR_NO_CONTENT);
-  } else {
-    static_cast<WebBrowserPersistDocumentChild*>(aActor)->Start(foundDoc);
-  }
-  return true;
-}
-
-bool
-TabChild::DeallocPWebBrowserPersistDocumentChild(PWebBrowserPersistDocumentChild* aActor)
-{
-  delete aActor;
-  return true;
 }
