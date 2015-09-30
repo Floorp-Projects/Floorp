@@ -87,6 +87,39 @@ function debug(str) {
   dump(' -*- Shell.js: ' + str + '\n');
 }
 
+const once = event => {
+  let target = shell.contentBrowser;
+  return new Promise((resolve, reject) => {
+    target.addEventListener(event, function gotEvent(evt) {
+      target.removeEventListener(event, gotEvent, false);
+      resolve(evt);
+    }, false);
+  });
+}
+
+function clearCache() {
+  let cache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
+                .getService(Ci.nsICacheStorageService);
+  cache.clear();
+}
+
+function clearCacheAndReload() {
+  // Reload the main frame with a cleared cache.
+  debug('Reloading ' + getContentWindow().location);
+  clearCache();
+  getContentWindow().location.reload(true);
+  once('mozbrowserlocationchange').then(
+    evt => {
+      shell.sendEvent(window, "ContentStart");
+    });
+}
+
+function restart() {
+  let appStartup = Cc['@mozilla.org/toolkit/app-startup;1']
+                     .getService(Ci.nsIAppStartup);
+  appStartup.quit(Ci.nsIAppStartup.eForceQuit | Ci.nsIAppStartup.eRestart);
+}
+
 #ifdef MOZ_CRASHREPORTER
 function debugCrashReport(aStr) {
   dump('Crash reporter : ' + aStr);
@@ -244,8 +277,32 @@ var shell = {
       let startManifestURL =
         Cc['@mozilla.org/commandlinehandler/general-startup;1?type=b2gbootstrap']
           .getService(Ci.nsISupports).wrappedJSObject.startManifestURL;
+
+#ifdef MOZ_GRAPHENE
+      // If --start-manifest hasn't been specified, we re-use the latest specified manifest.
+      // If it's the first launch, we will fallback to b2g.default.start_manifest_url
+      if (!startManifestURL) {
+        try {
+          startManifestURL = Services.prefs.getCharPref("b2g.system_manifest_url");
+        } catch(e) {}
+      }
+#endif
+
+      if (!startManifestURL) {
+        try {
+          startManifestURL = Services.prefs.getCharPref("b2g.default.start_manifest_url");
+        } catch(e) {}
+      }
+
       if (startManifestURL) {
         Cu.import('resource://gre/modules/Bootstraper.jsm');
+#ifdef MOZ_GRAPHENE
+        if (Bootstraper.isInstallRequired(startManifestURL)) {
+          // Installing the app my take some time. We don't want to keep the
+          // native window hidden.
+          showInstallScreen();
+        }
+#endif
         Bootstraper.ensureSystemAppInstall(startManifestURL)
                    .then(this.start.bind(this))
                    .catch(Bootstraper.bailout);
@@ -337,11 +394,14 @@ var shell = {
 #endif
     this.contentBrowser = container.appendChild(systemAppFrame);
 
-    systemAppFrame.contentWindow
-                  .QueryInterface(Ci.nsIInterfaceRequestor)
-                  .getInterface(Ci.nsIWebNavigation)
-                  .sessionHistory = Cc["@mozilla.org/browser/shistory;1"]
-                                      .createInstance(Ci.nsISHistory);
+    let webNav = systemAppFrame.contentWindow
+                               .QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIWebNavigation);
+    webNav.sessionHistory = Cc["@mozilla.org/browser/shistory;1"].createInstance(Ci.nsISHistory);
+
+#ifdef MOZ_GRAPHENE
+    webNav.QueryInterface(Ci.nsIDocShell).windowDraggingAllowed = true;
+#endif
 
     this.allowedAudioChannels = new Map();
     let audioChannels = systemAppFrame.allowedAudioChannels;
@@ -464,11 +524,34 @@ var shell = {
   visibleNormalAudioActive: false,
 
   handleEvent: function shell_handleEvent(evt) {
+    function checkReloadKey() {
+      if (evt.type !== 'keyup') {
+        return false;
+      }
+
+      try {
+        let key = JSON.parse(Services.prefs.getCharPref('b2g.reload_key'));
+        return (evt.keyCode  == key.key   &&
+                evt.ctrlKey  == key.ctrl  &&
+                evt.altKey   == key.alt   &&
+                evt.shiftKey == key.shift &&
+                evt.metaKey  == key.meta);
+      } catch(e) {
+        debug('Failed to get key: ' + e);
+      }
+
+      return false;
+    }
+
     let content = this.contentBrowser.contentWindow;
     switch (evt.type) {
       case 'keydown':
       case 'keyup':
-        this.broadcastHardwareKeys(evt);
+        if (checkReloadKey()) {
+          clearCacheAndReload();
+        } else {
+          this.broadcastHardwareKeys(evt);
+        }
         break;
       case 'sizemodechange':
         if (window.windowState == window.STATE_MINIMIZED && !this.visibleNormalAudioActive) {
@@ -690,24 +773,30 @@ var shell = {
     Cu.import('resource://gre/modules/OperatorApps.jsm');
 #endif
 
-    this.handleCmdLine();
+#ifdef MOZ_GRAPHENE
+    if (Services.prefs.getBoolPref("b2g.nativeWindowGeometry.fullscreen")) {
+      window.fullScreen = true;
+    }
+#endif
+
+    shell.handleCmdLine();
   },
 
-  handleCmdLine: function shell_handleCmdLine() {
+  handleCmdLine: function() {
   // This isn't supported on devices.
 #ifndef ANDROID
     let b2gcmds = Cc["@mozilla.org/commandlinehandler/general-startup;1?type=b2gcmds"]
                     .getService(Ci.nsISupports);
     let args = b2gcmds.wrappedJSObject.cmdLine;
     try {
-      // Returns null if -url is not present
+      // Returns null if -url is not present.
       let url = args.handleFlagWithParam("url", false);
       if (url) {
         this.sendChromeEvent({type: "mozbrowseropenwindow", url});
         args.preventDefault = true;
       }
     } catch(e) {
-      // Throws if -url is present with no params
+      // Throws if -url is present with no params.
     }
 #endif
   },
@@ -842,6 +931,29 @@ var CustomEventManager = {
         if (result !== permissionMapRev.get(detail.permission)) {
           evt.preventDefault();
         }
+        break;
+      case 'shutdown-application':
+        let appStartup = Cc['@mozilla.org/toolkit/app-startup;1']
+                           .getService(Ci.nsIAppStartup);
+        appStartup.quit(appStartup.eAttemptQuit);
+        break;
+      case 'toggle-fullscreen-native-window':
+        window.fullScreen = !window.fullScreen;
+        Services.prefs.setBoolPref("b2g.nativeWindowGeometry.fullscreen",
+                                   window.fullScreen);
+        break;
+      case 'minimize-native-window':
+        window.minimize();
+        break;
+      case 'clear-cache-and-reload':
+        clearCacheAndReload();
+        break;
+      case 'clear-cache-and-restart':
+        clearCache();
+        restart();
+        break;
+      case 'restart':
+        restart();
         break;
     }
   }
@@ -1361,3 +1473,64 @@ Services.obs.addObserver(function resetProfile(subject, topic, data) {
                      .getService(Ci.nsIAppStartup);
   appStartup.quit(Ci.nsIAppStartup.eForceQuit);
 }, 'b2g-reset-profile', false);
+
+#ifdef MOZ_GRAPHENE
+
+const restoreWindowGeometry = () => {
+  let screenX = Services.prefs.getIntPref("b2g.nativeWindowGeometry.screenX");
+  let screenY = Services.prefs.getIntPref("b2g.nativeWindowGeometry.screenY");
+  let width = Services.prefs.getIntPref("b2g.nativeWindowGeometry.width");
+  let height = Services.prefs.getIntPref("b2g.nativeWindowGeometry.height");
+
+  if (screenX == -1) {
+    // Center
+    screenX = (screen.width - width) / 2;
+    screenY = (screen.height - height) / 2;
+  }
+
+  moveTo(screenX, screenY);
+  resizeTo(width, height);
+}
+restoreWindowGeometry();
+
+const saveWindowGeometry = () => {
+  window.removeEventListener("unload", saveWindowGeometry);
+  Services.prefs.setIntPref("b2g.nativeWindowGeometry.screenX", screenX);
+  Services.prefs.setIntPref("b2g.nativeWindowGeometry.screenY", screenY);
+  Services.prefs.setIntPref("b2g.nativeWindowGeometry.width", outerWidth);
+  Services.prefs.setIntPref("b2g.nativeWindowGeometry.height", outerHeight);
+}
+window.addEventListener("unload", saveWindowGeometry);
+
+let baseWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIWebNavigation)
+                       .QueryInterface(Ci.nsIDocShellTreeItem)
+                       .treeOwner
+                       .QueryInterface(Ci.nsIInterfaceRequestor)
+                       .getInterface(Ci.nsIBaseWindow);
+
+const showNativeWindow = () => baseWindow.visibility = true;
+const hideNativeWindow = () => baseWindow.visibility = false;
+
+const showInstallScreen = () => {
+  const grapheneStrings =
+    Services.strings.createBundle('chrome://b2g-l10n/locale/graphene.properties');
+  document.querySelector('#installing > .message').textContent =
+    grapheneStrings.GetStringFromName('installing');
+  showNativeWindow();
+}
+
+const hideInstallScreen = () => {
+  document.body.classList.add('content-loaded');
+}
+
+window.addEventListener('ContentStart', () => {
+  shell.contentBrowser.contentWindow.addEventListener('load', () => {
+    hideInstallScreen();
+    showNativeWindow();
+  });
+});
+
+hideNativeWindow();
+
+#endif

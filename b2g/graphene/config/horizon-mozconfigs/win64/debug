@@ -1,0 +1,33 @@
+. "$topsrcdir/build/mozconfig.win-common"
+MOZ_AUTOMATION_L10N_CHECK=0
+. "$topsrcdir/b2g/graphene/config/horizon-mozconfigs/common"
+
+ac_add_options --target=x86_64-pc-mingw32
+ac_add_options --host=x86_64-pc-mingw32
+
+ac_add_options --enable-debug
+ac_add_options --enable-dmd
+ac_add_options --enable-profiling  # needed for --enable-dmd to work on Windows
+ac_add_options --enable-signmar
+
+if [ -f /c/builds/google-oauth-api.key ]; then
+  _google_oauth_api_keyfile=/c/builds/google-oauth-api.key
+else
+  _google_oauth_api_keyfile=/e/builds/google-oauth-api.key
+fi
+ac_add_options --with-google-oauth-api-keyfile=${_google_oauth_api_keyfile}
+
+# Needed to enable breakpad in application.ini
+export MOZILLA_OFFICIAL=1
+
+# Treat warnings as errors in directories with FAIL_ON_WARNINGS.
+ac_add_options --enable-warnings-as-errors
+
+# Package js shell.
+export MOZ_PACKAGE_JSSHELL=1
+
+. $topsrcdir/build/win64/mozconfig.vs2013
+
+. "$topsrcdir/build/mozconfig.cache"
+
+. "$topsrcdir/b2g/graphene/config/horizon-mozconfigs/common.override"

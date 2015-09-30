@@ -1,0 +1,26 @@
+. "$topsrcdir/b2g/graphene/config/mozconfigs/common"
+
+# Use sccache
+no_sccache=
+
+. $topsrcdir/build/macosx/mozconfig.common
+
+# Nightlies only since this has a cost in performance
+ac_add_options --enable-js-diagnostics
+
+# Needed to enable breakpad in application.ini
+export MOZILLA_OFFICIAL=1
+
+#ac_add_options --with-macbundlename-prefix=Firefox
+
+# Treat warnings as errors in directories with FAIL_ON_WARNINGS.
+ac_add_options --enable-warnings-as-errors
+
+# graphene Stuff
+ac_add_options --enable-debug-symbols
+ac_add_options --enable-debug
+ENABLE_MARIONETTE=1
+
+export CXXFLAGS=-DMOZ_ENABLE_JS_DUMP
+
+. "$topsrcdir/b2g/graphene/config/mozconfigs/common.override"

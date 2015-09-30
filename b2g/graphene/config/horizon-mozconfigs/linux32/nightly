@@ -1,0 +1,29 @@
+. "$topsrcdir/b2g/graphene/config/horizon-mozconfigs/common"
+. "$topsrcdir/build/unix/mozconfig.linux32"
+
+ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
+ac_add_options --enable-update-packaging
+ac_add_options --enable-signmar
+
+# Nightlies only since this has a cost in performance
+#ac_add_options --enable-js-diagnostics
+
+# This will overwrite the default of stripping everything and keep the symbol table.
+# This is useful for profiling and debugging and only increases the package size
+# by 2 MBs.
+STRIP_FLAGS="--strip-debug"
+
+# Needed to enable breakpad in application.ini
+export MOZILLA_OFFICIAL=1
+
+# Treat warnings as errors in directories with FAIL_ON_WARNINGS.
+ac_add_options --enable-warnings-as-errors
+
+# Use sccache
+no_sccache=
+. "$topsrcdir/build/mozconfig.cache"
+
+# graphene options
+export CXXFLAGS=-DMOZ_ENABLE_JS_DUMP
+
+. "$topsrcdir/b2g/graphene/config/horizon-mozconfigs/common.override"

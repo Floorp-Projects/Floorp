@@ -1,0 +1,24 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Disable the l10n-check target, which isn't relevant to b2g builds at all.
+# This needs to be set prior to the next include for it to take effect.
+MOZ_AUTOMATION_PACKAGE_TESTS=0
+MOZ_AUTOMATION_L10N_CHECK=0
+MOZ_AUTOMATION_SDK=0
+
+. "$topsrcdir/build/mozconfig.common"
+
+# Normally, we'd set this unconditionally, but this file is also used
+# for local builds and there is no other mozconfig in this tree that
+# is included on device builds.
+if test -d $topsrcdir/../gcc/bin; then
+    HOST_CC="$topsrcdir/../gcc/bin/gcc"
+    HOST_CXX="$topsrcdir/../gcc/bin/g++"
+    ac_add_options --enable-stdcxx-compat
+fi
+
+MOZ_HORIZON=1
+ac_add_options --with-branding=b2g/branding/horizon
+ac_add_options --enable-application=b2g/graphene
