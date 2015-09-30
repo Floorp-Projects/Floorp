@@ -297,14 +297,14 @@ loop.roomViews = (function(mozL10n) {
               }), 
               onClick: this.handleCopyButtonClick}, 
               React.createElement("img", {src: "loop/shared/img/svg/glyph-link-16x16.svg"}), 
-              React.createElement("p", null, mozL10n.get("invite_copy_" +
-                (this.state.copiedUrl ? "triggered" : "button")))
+              React.createElement("p", null, mozL10n.get(this.state.copiedUrl ?
+                "invite_copied_link_button" : "invite_copy_link_button"))
             ), 
             React.createElement("div", {className: "btn-email invite-button", 
               onClick: this.handleEmailButtonClick, 
               onMouseOver: this.resetTriggeredButtons}, 
               React.createElement("img", {src: "loop/shared/img/svg/glyph-email-16x16.svg"}), 
-              React.createElement("p", null, mozL10n.get("invite_email_button"))
+              React.createElement("p", null, mozL10n.get("invite_email_link_button"))
             )
           ), 
           React.createElement(SocialShareDropdown, {
