@@ -38,6 +38,8 @@
 
 #include "jsatominlines.h"
 
+#include "jit/AtomicOperations-inl.h"
+
 #include "vm/ArgumentsObject-inl.h"
 #include "vm/ArrayObject-inl.h"
 #include "vm/Interpreter-inl.h"
