@@ -69,9 +69,8 @@ public:
   virtual void RecvTimelineEvent(uint32_t aIndex,
                                  dom::AudioTimelineEvent& aEvent) override
   {
-    MOZ_ASSERT(mSource && mDestination);
+    MOZ_ASSERT(mDestination);
     WebAudioUtils::ConvertAudioTimelineEventToTicks(aEvent,
-                                                    mSource,
                                                     mDestination);
 
     switch (aIndex) {
@@ -98,8 +97,7 @@ public:
     switch (aIndex) {
     case AudioBufferSourceNode::START:
       MOZ_ASSERT(!mStart, "Another START?");
-      mStart =
-        mSource->FractionalTicksFromDestinationTime(mDestination, aParam);
+      mStart = mDestination->SecondsToNearestStreamTime(aParam);
       // Round to nearest
       mBeginProcessing = mStart + 0.5;
       break;
@@ -471,7 +469,7 @@ public:
       return;
     }
 
-    StreamTime streamPosition = aStream->GraphTimeToStreamTime(aFrom);
+    StreamTime streamPosition = mDestination->GraphTimeToStreamTime(aFrom);
     // We've finished if we've gone past mStop, or if we're past mDuration when
     // looping is disabled.
     if (streamPosition >= mStop ||
@@ -670,7 +668,7 @@ AudioBufferSourceNode::Start(double aWhen, double aOffset,
 
   // Don't set parameter unnecessarily
   if (aWhen > 0.0) {
-    ns->SetDoubleParameter(START, mContext->DOMTimeToStreamTime(aWhen));
+    ns->SetDoubleParameter(START, aWhen);
   }
 }
 

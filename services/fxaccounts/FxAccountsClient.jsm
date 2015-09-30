@@ -167,8 +167,12 @@ this.FxAccountsClient.prototype = {
    *        The session token encoded in hex
    * @return Promise
    */
-  signOut: function (sessionTokenHex) {
-    return this._request("/session/destroy", "POST",
+  signOut: function (sessionTokenHex, options = {}) {
+    let path = "/session/destroy";
+    if (options.service) {
+      path += "?service=" + options.service;
+    }
+    return this._request(path, "POST",
       deriveHawkCredentials(sessionTokenHex, "sessionToken"));
   },
 

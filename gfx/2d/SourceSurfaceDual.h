@@ -27,8 +27,12 @@ public:
   virtual IntSize GetSize() const { return mA->GetSize(); }
   virtual SurfaceFormat GetFormat() const { return mA->GetFormat(); }
 
-  /* Readback from this surface type is not supported! */
-  virtual already_AddRefed<DataSourceSurface> GetDataSurface() { return nullptr; }
+  // This is implemented for debugging purposes only (used by dumping
+  // client-side textures for paint dumps), for which we don't care about
+  // component alpha, so we just use the first of the two surfaces.
+  virtual already_AddRefed<DataSourceSurface> GetDataSurface() {
+    return mA->GetDataSurface();
+  }
 private:
   friend class DualSurface;
   friend class DualPattern;

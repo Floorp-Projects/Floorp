@@ -4,8 +4,8 @@
 // found in the LICENSE file.
 //
 
+#include "common/debug.h"
 #include "compiler/translator/RegenerateStructNames.h"
-#include "compiler/translator/compilerdebug.h"
 
 void RegenerateStructNames::visitSymbol(TIntermSymbol *symbol)
 {

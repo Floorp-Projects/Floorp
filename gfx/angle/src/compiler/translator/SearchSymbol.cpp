@@ -9,11 +9,12 @@
 #include "compiler/translator/SearchSymbol.h"
 
 #include "compiler/translator/InfoSink.h"
-#include "compiler/translator/OutputHLSL.h"
 
 namespace sh
 {
-SearchSymbol::SearchSymbol(const TString &symbol) : mSymbol(symbol)
+SearchSymbol::SearchSymbol(const TString &symbol)
+    : TIntermTraverser(true, false, false),
+      mSymbol(symbol)
 {
     match = false;
 }

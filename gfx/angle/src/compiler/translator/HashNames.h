@@ -4,8 +4,8 @@
 // found in the LICENSE file.
 //
 
-#ifndef COMPILER_HASH_NAMES_H_
-#define COMPILER_HASH_NAMES_H_
+#ifndef COMPILER_TRANSLATOR_HASHNAMES_H_
+#define COMPILER_TRANSLATOR_HASHNAMES_H_
 
 #include <map>
 
@@ -15,4 +15,4 @@
 
 typedef std::map<TPersistString, TPersistString> NameMap;
 
-#endif  // COMPILER_HASH_NAMES_H_
+#endif  // COMPILER_TRANSLATOR_HASHNAMES_H_
