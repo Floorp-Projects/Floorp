@@ -204,7 +204,10 @@ struct MOZ_RAII AutoEnterOOMUnsafeRegion
     }
 
     ~AutoEnterOOMUnsafeRegion() {
-        MOZ_ASSERT(OOM_maxAllocations == UINT32_MAX);
+        // TODO: This class is not thread safe.  If another thread has modified
+        // OOM_maxAllocations, don't try to restore it.
+        if (OOM_maxAllocations != UINT32_MAX)
+            return;
         if (oomEnabled_) {
             int64_t maxAllocations = OOM_counter + oomAfter_;
             MOZ_ASSERT(maxAllocations >= 0 && maxAllocations < UINT32_MAX);

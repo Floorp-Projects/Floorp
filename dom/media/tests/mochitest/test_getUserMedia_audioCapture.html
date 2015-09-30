@@ -83,7 +83,6 @@ scriptsReady
     var constraints = {audio: {mediaSource: "audioCapture"}};
 
     return getUserMedia(constraints).then((stream) => {
-      checkMediaStreamTracks(constraints, stream);
       window.grip = stream;
       var analyser = new AudioStreamAnalyser(ac, stream);
       analyser.enableDebugCanvas();

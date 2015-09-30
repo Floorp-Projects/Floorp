@@ -76,13 +76,13 @@ namespace {
 
 class ServiceWorkerClientPostMessageRunnable final
   : public nsRunnable
-  , public StructuredCloneHelper
+  , public StructuredCloneHolder
 {
   uint64_t mWindowId;
 
 public:
   explicit ServiceWorkerClientPostMessageRunnable(uint64_t aWindowId)
-    : StructuredCloneHelper(CloningSupported, TransferringSupported,
+    : StructuredCloneHolder(CloningSupported, TransferringSupported,
                             SameProcessDifferentThread)
     , mWindowId(aWindowId)
   {}

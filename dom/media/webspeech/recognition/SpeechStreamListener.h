@@ -27,7 +27,9 @@ public:
   virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
                                         StreamTime aTrackOffset,
                                         uint32_t aTrackEvents,
-                                        const MediaSegment& aQueuedMedia) override;
+                                        const MediaSegment& aQueuedMedia,
+                                        MediaStream* aInputStream,
+                                        TrackID aInputTrackID) override;
 
   virtual void NotifyEvent(MediaStreamGraph* aGraph,
                            MediaStreamListener::MediaStreamGraphEvent event) override;

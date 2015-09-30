@@ -10,12 +10,17 @@ html {
   font-size: 14px;
   background-color: @color_about_background@;
   -moz-text-size-adjust: none;
+  -moz-user-select: none;
   --icon-size: 1.8em;
   --icon-margin: 1.35em;
 }
 
 body {
   margin: 0;
+}
+
+input {
+  -moz-user-select: text;
 }
 
 .header {
