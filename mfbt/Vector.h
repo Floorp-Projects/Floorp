@@ -905,8 +905,14 @@ inline bool
 VectorBase<T, N, AP, TV>::reserve(size_t aRequest)
 {
   MOZ_REENTRANCY_GUARD_ET_AL;
-  if (aRequest > mCapacity && MOZ_UNLIKELY(!growStorageBy(aRequest - mLength))) {
-    return false;
+  if (aRequest > mCapacity) {
+    if (MOZ_UNLIKELY(!growStorageBy(aRequest - mLength))) {
+      return false;
+    }
+  } else if (aRequest > N) {
+    if (!allocPolicy().checkSimulatedOOM()) {
+      return false;
+    }
   }
 #ifdef DEBUG
   if (aRequest > mReserved) {
@@ -933,8 +939,14 @@ MOZ_ALWAYS_INLINE bool
 VectorBase<T, N, AP, TV>::growBy(size_t aIncr)
 {
   MOZ_REENTRANCY_GUARD_ET_AL;
-  if (aIncr > mCapacity - mLength && MOZ_UNLIKELY(!growStorageBy(aIncr))) {
-    return false;
+  if (aIncr > mCapacity - mLength) {
+    if (MOZ_UNLIKELY(!growStorageBy(aIncr))) {
+      return false;
+    }
+  } else if (aIncr + mLength > N) {
+    if (!allocPolicy().checkSimulatedOOM()) {
+      return false;
+    }
   }
   MOZ_ASSERT(mLength + aIncr <= mCapacity);
   T* newend = endNoCheck() + aIncr;
@@ -953,8 +965,14 @@ MOZ_ALWAYS_INLINE bool
 VectorBase<T, N, AP, TV>::growByUninitialized(size_t aIncr)
 {
   MOZ_REENTRANCY_GUARD_ET_AL;
-  if (aIncr > mCapacity - mLength && MOZ_UNLIKELY(!growStorageBy(aIncr))) {
-    return false;
+  if (aIncr > mCapacity - mLength) {
+    if (MOZ_UNLIKELY(!growStorageBy(aIncr))) {
+      return false;
+    }
+  } else if (aIncr + mLength > N) {
+    if (!allocPolicy().checkSimulatedOOM()) {
+      return false;
+    }
   }
   infallibleGrowByUninitialized(aIncr);
   return true;
@@ -1055,8 +1073,13 @@ MOZ_ALWAYS_INLINE bool
 VectorBase<T, N, AP, TV>::appendN(const T& aT, size_t aNeeded)
 {
   MOZ_REENTRANCY_GUARD_ET_AL;
-  if (mLength + aNeeded > mCapacity && MOZ_UNLIKELY(!growStorageBy(aNeeded))) {
-    return false;
+  if (mLength + aNeeded > mCapacity) {
+    if (MOZ_UNLIKELY(!growStorageBy(aNeeded))) {
+      return false;
+    }
+  } else if (mLength + aNeeded > N) {
+    if (!allocPolicy().checkSimulatedOOM())
+      return false;
   }
 #ifdef DEBUG
   if (mLength + aNeeded > mReserved) {
@@ -1137,8 +1160,13 @@ VectorBase<T, N, AP, TV>::append(const U* aInsBegin, const U* aInsEnd)
 {
   MOZ_REENTRANCY_GUARD_ET_AL;
   size_t aNeeded = PointerRangeSize(aInsBegin, aInsEnd);
-  if (mLength + aNeeded > mCapacity && MOZ_UNLIKELY(!growStorageBy(aNeeded))) {
-    return false;
+  if (mLength + aNeeded > mCapacity) {
+    if (MOZ_UNLIKELY(!growStorageBy(aNeeded))) {
+      return false;
+    }
+  } else if (mLength + aNeeded > N) {
+    if (!allocPolicy().checkSimulatedOOM())
+      return false;
   }
 #ifdef DEBUG
   if (mLength + aNeeded > mReserved) {
@@ -1166,8 +1194,13 @@ MOZ_ALWAYS_INLINE bool
 VectorBase<T, N, AP, TV>::append(U&& aU)
 {
   MOZ_REENTRANCY_GUARD_ET_AL;
-  if (mLength == mCapacity && MOZ_UNLIKELY(!growStorageBy(1))) {
-    return false;
+  if (mLength == mCapacity) {
+    if (MOZ_UNLIKELY(!growStorageBy(1))) {
+      return false;
+    }
+  } else if (mLength + 1 > N) {
+    if (!allocPolicy().checkSimulatedOOM())
+      return false;
   }
 #ifdef DEBUG
   if (mLength + 1 > mReserved) {
