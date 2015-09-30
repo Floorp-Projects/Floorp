@@ -119,20 +119,28 @@ this.Bootstraper = {
   },
 
   /**
+   * Check if we are already configured to run from this manifest url.
+   */
+  isInstallRequired: function(aManifestURL) {
+    try {
+      if (Services.prefs.getCharPref("b2g.system_manifest_url") == aManifestURL) {
+        return false;
+      }
+    } catch(e) { }
+    return true;
+  },
+
+  /**
     * Resolves once we have installed the app.
     */
   ensureSystemAppInstall: function(aManifestURL) {
     this._manifestURL = aManifestURL;
     debug("Installing app from " + this._manifestURL);
 
-    // Check if we are already configured to run from this manifest url, and
-    // skip reinstall if that's the case.
-    try {
-      if (Services.prefs.getCharPref("b2g.system_manifest_url") == this._manifestURL) {
-        debug("Already configured for " + this._manifestURL);
-        return Promise.resolve();
-      }
-    } catch(e) { }
+    if (!this.isInstallRequired(this._manifestURL)) {
+      debug("Already configured for " + this._manifestURL);
+      return Promise.resolve();
+    }
 
     return new Promise((aResolve, aReject) => {
       DOMApplicationRegistry.registryReady

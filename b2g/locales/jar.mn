@@ -11,6 +11,9 @@
 % override chrome://global/locale/appstrings.properties  chrome://b2g-l10n/locale/appstrings.properties
 * locale/@AB_CD@/b2g-l10n/aboutCertError.dtd       (%chrome/overrides/aboutCertError.dtd)
 * locale/@AB_CD@/b2g-l10n/appstrings.properties    (%chrome/overrides/appstrings.properties)
+#ifdef MOZ_GRAPHENE
+  locale/@AB_CD@/b2g-l10n/graphene.properties (%chrome/graphene.properties)
+#endif
 
 
 # overrides for toolkit l10n, also for en-US
