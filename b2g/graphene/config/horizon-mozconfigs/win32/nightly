@@ -1,0 +1,23 @@
+. "$topsrcdir/b2g/graphene/config/horizon-mozconfigs/common"
+
+ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
+ac_add_options --enable-update-packaging
+ac_add_options --enable-jemalloc
+ac_add_options --enable-signmar
+
+# Nightlies only since this has a cost in performance
+ac_add_options --enable-js-diagnostics
+
+# Needed to enable breakpad in application.ini
+export MOZILLA_OFFICIAL=1
+
+if test "$PROCESSOR_ARCHITECTURE" = "AMD64" -o "$PROCESSOR_ARCHITEW6432" = "AMD64"; then
+  . $topsrcdir/build/win32/mozconfig.vs2013-win64
+else
+  . $topsrcdir/build/win32/mozconfig.vs2010
+fi
+
+# graphene Options
+export CXXFLAGS=-DMOZ_ENABLE_JS_DUMP
+
+. "$topsrcdir/b2g/graphene/config/horizon-mozconfigs/common.override"
