@@ -117,14 +117,21 @@ AudioContext::AudioContext(nsPIDOMWindow* aWindow,
   }
 }
 
-void
+nsresult
 AudioContext::Init()
 {
   // We skip calling SetIsOnlyNodeForContext and the creation of the
   // audioChannelAgent during mDestination's constructor, because we can only
   // call them after mDestination has been set up.
-  mDestination->CreateAudioChannelAgent();
-  mDestination->SetIsOnlyNodeForContext(true);
+  if (!mIsOffline) {
+    nsresult rv = mDestination->CreateAudioChannelAgent();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+    mDestination->SetIsOnlyNodeForContext(true);
+  }
+
+  return NS_OK;
 }
 
 AudioContext::~AudioContext()
@@ -160,7 +167,10 @@ AudioContext::Constructor(const GlobalObject& aGlobal,
   nsRefPtr<AudioContext> object =
     new AudioContext(window, false,
                      AudioChannelService::GetDefaultAudioChannel());
-  object->Init();
+  aRv = object->Init();
+  if (NS_WARN_IF(aRv.Failed())) {
+     return nullptr;
+  }
 
   RegisterWeakMemoryReporter(object);
 
@@ -179,7 +189,10 @@ AudioContext::Constructor(const GlobalObject& aGlobal,
   }
 
   nsRefPtr<AudioContext> object = new AudioContext(window, false, aChannel);
-  object->Init();
+  aRv = object->Init();
+  if (NS_WARN_IF(aRv.Failed())) {
+     return nullptr;
+  }
 
   RegisterWeakMemoryReporter(object);
 
