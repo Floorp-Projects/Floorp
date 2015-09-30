@@ -402,21 +402,25 @@ ContentClientRemoteBuffer::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
 void
 ContentClientRemoteBuffer::Dump(std::stringstream& aStream,
                                 const char* aPrefix,
-                                bool aDumpHtml)
+                                bool aDumpHtml, TextureDumpMode aCompress)
 {
   // TODO We should combine the OnWhite/OnBlack here an just output a single image.
-  aStream << "\n" << aPrefix << "Surface: ";
-  CompositableClient::DumpTextureClient(aStream, mTextureClient);
+  if (!aDumpHtml) {
+    aStream << "\n" << aPrefix << "Surface: ";
+  }
+  CompositableClient::DumpTextureClient(aStream, mTextureClient, aCompress);
 }
 
 void
 ContentClientDoubleBuffered::Dump(std::stringstream& aStream,
-                                const char* aPrefix,
-                                bool aDumpHtml)
+                                  const char* aPrefix,
+                                  bool aDumpHtml, TextureDumpMode aCompress)
 {
   // TODO We should combine the OnWhite/OnBlack here an just output a single image.
-  aStream << "\n" << aPrefix << "Surface: ";
-  CompositableClient::DumpTextureClient(aStream, mFrontClient);
+  if (!aDumpHtml) {
+    aStream << "\n" << aPrefix << "Surface: ";
+  }
+  CompositableClient::DumpTextureClient(aStream, mFrontClient, aCompress);
 }
 
 void

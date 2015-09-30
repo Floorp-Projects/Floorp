@@ -654,6 +654,8 @@ private:
   // play time.
   bool NeedToSkipToNextKeyframe();
 
+  void AdjustAudioThresholds();
+
   // The decoder object that created this state machine. The state machine
   // holds a strong reference to the decoder to ensure that the decoder stays
   // alive once media element has started the decoder shutdown process, and has
@@ -1136,7 +1138,7 @@ private:
   // True if we shouldn't play our audio (but still write it to any capturing
   // streams). When this is true, the audio thread will never start again after
   // it has stopped.
-  bool mAudioCaptured;
+  Watchable<bool> mAudioCaptured;
 
   // True if the audio playback thread has finished. It is finished
   // when either all the audio frames have completed playing, or we've moved
@@ -1228,7 +1230,7 @@ private:
   // SetStartTime because the mStartTime already set before. Also we don't need
   // to decode any audio/video since the MediaDecoder will trigger a seek
   // operation soon.
-  bool mSentFirstFrameLoadedEvent;
+  Watchable<bool> mSentFirstFrameLoadedEvent;
 
   bool mSentPlaybackEndedEvent;
 
@@ -1246,6 +1248,13 @@ private:
 
   MediaEventListener mAudioQueueListener;
   MediaEventListener mVideoQueueListener;
+
+#ifdef MOZ_EME
+  void OnCDMProxyReady(nsRefPtr<CDMProxy> aProxy);
+  void OnCDMProxyNotReady();
+  nsRefPtr<CDMProxy> mCDMProxy;
+  MozPromiseRequestHolder<MediaDecoder::CDMProxyPromise> mCDMProxyPromise;
+#endif
 
 private:
   // The buffered range. Mirrored from the decoder thread.

@@ -28,11 +28,9 @@ LOCAL_INCLUDES += [
     '/netwerk/streamconv/converters',
 ]
 
-protocols = CONFIG['NECKO_PROTOCOLS'].copy()
-if 'about' in protocols:
-    protocols.remove('about')
+protocols = CONFIG['NECKO_PROTOCOLS']
 LOCAL_INCLUDES += sorted([
-    '/netwerk/protocol/%s' % d for d in protocols
+    '/netwerk/protocol/%s' % d for d in protocols if d != 'about'
 ])
 
 if CONFIG['OS_ARCH'] == 'WINNT':

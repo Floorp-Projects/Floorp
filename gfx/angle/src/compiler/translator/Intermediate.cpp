@@ -13,7 +13,6 @@
 #include <algorithm>
 
 #include "compiler/translator/Intermediate.h"
-#include "compiler/translator/RemoveTree.h"
 #include "compiler/translator/SymbolTable.h"
 
 ////////////////////////////////////////////////////////////////////////////
@@ -46,47 +45,6 @@ TIntermSymbol *TIntermediate::addSymbol(
 TIntermTyped *TIntermediate::addBinaryMath(
     TOperator op, TIntermTyped *left, TIntermTyped *right, const TSourceLoc &line)
 {
-    switch (op)
-    {
-      case EOpEqual:
-      case EOpNotEqual:
-        if (left->isArray())
-            return NULL;
-        break;
-      case EOpLessThan:
-      case EOpGreaterThan:
-      case EOpLessThanEqual:
-      case EOpGreaterThanEqual:
-        if (left->isMatrix() || left->isArray() || left->isVector() ||
-            left->getBasicType() == EbtStruct)
-        {
-            return NULL;
-        }
-        break;
-      case EOpLogicalOr:
-      case EOpLogicalXor:
-      case EOpLogicalAnd:
-        if (left->getBasicType() != EbtBool ||
-            left->isMatrix() || left->isArray() || left->isVector())
-        {
-            return NULL;
-        }
-        break;
-      case EOpAdd:
-      case EOpSub:
-      case EOpDiv:
-      case EOpMul:
-        if (left->getBasicType() == EbtStruct || left->getBasicType() == EbtBool)
-            return NULL;
-      default:
-        break;
-    }
-
-    if (left->getBasicType() != right->getBasicType())
-    {
-        return NULL;
-    }
-
     //
     // Need a new node holding things together then.  Make
     // one and promote it to the right type.
@@ -99,19 +57,10 @@ TIntermTyped *TIntermediate::addBinaryMath(
     if (!node->promote(mInfoSink))
         return NULL;
 
-    //
     // See if we can fold constants.
-    //
-    TIntermConstantUnion *leftTempConstant = left->getAsConstantUnion();
-    TIntermConstantUnion *rightTempConstant = right->getAsConstantUnion();
-    if (leftTempConstant && rightTempConstant)
-    {
-        TIntermTyped *typedReturnNode =
-            leftTempConstant->fold(node->getOp(), rightTempConstant, mInfoSink);
-
-        if (typedReturnNode)
-            return typedReturnNode;
-    }
+    TIntermTyped *foldedNode = node->fold(mInfoSink);
+    if (foldedNode)
+        return foldedNode;
 
     return node;
 }
@@ -169,66 +118,19 @@ TIntermTyped *TIntermediate::addIndex(
 // Returns the added node.
 //
 TIntermTyped *TIntermediate::addUnaryMath(
-    TOperator op, TIntermNode *childNode, const TSourceLoc &line)
+    TOperator op, TIntermTyped *child, const TSourceLoc &line, const TType *funcReturnType)
 {
-    TIntermUnary *node;
-    TIntermTyped *child = childNode->getAsTyped();
-
-    if (child == NULL)
-    {
-        mInfoSink.info.message(EPrefixInternalError, line,
-                               "Bad type in AddUnaryMath");
-        return NULL;
-    }
-
-    switch (op)
-    {
-      case EOpLogicalNot:
-        if (child->getType().getBasicType() != EbtBool ||
-            child->getType().isMatrix() ||
-            child->getType().isArray() ||
-            child->getType().isVector())
-        {
-            return NULL;
-        }
-        break;
-
-      case EOpPostIncrement:
-      case EOpPreIncrement:
-      case EOpPostDecrement:
-      case EOpPreDecrement:
-      case EOpNegative:
-      case EOpPositive:
-        if (child->getType().getBasicType() == EbtStruct ||
-            child->getType().isArray())
-        {
-            return NULL;
-        }
-      default:
-        break;
-    }
-
-    TIntermConstantUnion *childTempConstant = 0;
-    if (child->getAsConstantUnion())
-        childTempConstant = child->getAsConstantUnion();
-
     //
     // Make a new node for the operator.
     //
-    node = new TIntermUnary(op);
+    TIntermUnary *node = new TIntermUnary(op);
     node->setLine(line);
     node->setOperand(child);
+    node->promote(funcReturnType);
 
-    if (!node->promote(mInfoSink))
-        return 0;
-
-    if (childTempConstant)
-    {
-        TIntermTyped *newChild = childTempConstant->fold(op, 0, mInfoSink);
-
-        if (newChild)
-            return newChild;
-    }
+    TIntermTyped *foldedNode = node->fold(mInfoSink);
+    if (foldedNode)
+        return foldedNode;
 
     return node;
 }
@@ -327,6 +229,22 @@ TIntermAggregate *TIntermediate::makeAggregate(
     return aggNode;
 }
 
+// If the input node is nullptr, return nullptr.
+// If the input node is a sequence (block) node, return it.
+// If the input node is not a sequence node, put it inside a sequence node and return that.
+TIntermAggregate *TIntermediate::ensureSequence(TIntermNode *node)
+{
+    if (node == nullptr)
+        return nullptr;
+    TIntermAggregate *aggNode = node->getAsAggregate();
+    if (aggNode != nullptr && aggNode->getOp() == EOpSequence)
+        return aggNode;
+
+    aggNode = makeAggregate(node, node->getLine());
+    aggNode->setOp(EOpSequence);
+    return aggNode;
+}
+
 //
 // For "if" test nodes.  There are three children; a condition,
 // a true path, and a false path.  The two paths are in the
@@ -357,7 +275,7 @@ TIntermNode *TIntermediate::addSelection(
     }
 
     TIntermSelection *node = new TIntermSelection(
-        cond, nodePair.node1, nodePair.node2);
+        cond, ensureSequence(nodePair.node1), ensureSequence(nodePair.node2));
     node->setLine(line);
 
     return node;
@@ -386,22 +304,17 @@ TIntermTyped *TIntermediate::addComma(
 // a true path, and a false path.  The two paths are specified
 // as separate parameters.
 //
-// Returns the selection node created, or 0 if one could not be.
+// Returns the selection node created, or one of trueBlock and falseBlock if the expression could be folded.
 //
-TIntermTyped *TIntermediate::addSelection(
-    TIntermTyped *cond, TIntermTyped *trueBlock, TIntermTyped *falseBlock,
-    const TSourceLoc &line)
+TIntermTyped *TIntermediate::addSelection(TIntermTyped *cond, TIntermTyped *trueBlock, TIntermTyped *falseBlock,
+                                          const TSourceLoc &line)
 {
-    if (!cond || !trueBlock || !falseBlock ||
-        trueBlock->getType() != falseBlock->getType())
-    {
-        return NULL;
-    }
-
-    //
-    // See if all the operands are constant, then fold it otherwise not.
-    //
-
+    // Right now it's safe to fold ternary operators only when all operands
+    // are constant. If only the condition is constant, it's theoretically
+    // possible to fold the ternary operator, but that requires making sure
+    // that the node returned from here won't be treated as a constant
+    // expression in case the node that gets eliminated was not a constant
+    // expression.
     if (cond->getAsConstantUnion() &&
         trueBlock->getAsConstantUnion() &&
         falseBlock->getAsConstantUnion())
@@ -415,9 +328,26 @@ TIntermTyped *TIntermediate::addSelection(
     //
     // Make a selection node.
     //
-    TIntermSelection *node = new TIntermSelection(
-        cond, trueBlock, falseBlock, trueBlock->getType());
+    TIntermSelection *node = new TIntermSelection(cond, trueBlock, falseBlock, trueBlock->getType());
     node->getTypePointer()->setQualifier(EvqTemporary);
+    node->setLine(line);
+
+    return node;
+}
+
+TIntermSwitch *TIntermediate::addSwitch(
+    TIntermTyped *init, TIntermAggregate *statementList, const TSourceLoc &line)
+{
+    TIntermSwitch *node = new TIntermSwitch(init, statementList);
+    node->setLine(line);
+
+    return node;
+}
+
+TIntermCase *TIntermediate::addCase(
+    TIntermTyped *condition, const TSourceLoc &line)
+{
+    TIntermCase *node = new TIntermCase(condition);
     node->setLine(line);
 
     return node;
@@ -430,9 +360,9 @@ TIntermTyped *TIntermediate::addSelection(
 //
 
 TIntermConstantUnion *TIntermediate::addConstantUnion(
-    ConstantUnion *unionArrayPointer, const TType &t, const TSourceLoc &line)
+    TConstantUnion *constantUnion, const TType &type, const TSourceLoc &line)
 {
-    TIntermConstantUnion *node = new TIntermConstantUnion(unionArrayPointer, t);
+    TIntermConstantUnion *node = new TIntermConstantUnion(constantUnion, type);
     node->setLine(line);
 
     return node;
@@ -447,11 +377,11 @@ TIntermTyped *TIntermediate::addSwizzle(
     node->setLine(line);
     TIntermConstantUnion *constIntNode;
     TIntermSequence *sequenceVector = node->getSequence();
-    ConstantUnion *unionArray;
+    TConstantUnion *unionArray;
 
     for (int i = 0; i < fields.num; i++)
     {
-        unionArray = new ConstantUnion[1];
+        unionArray = new TConstantUnion[1];
         unionArray->setIConst(fields.offsets[i]);
         constIntNode = addConstantUnion(
             unionArray, TType(EbtInt, EbpUndefined, EvqConst), line);
@@ -468,7 +398,7 @@ TIntermNode *TIntermediate::addLoop(
     TLoopType type, TIntermNode *init, TIntermTyped *cond, TIntermTyped *expr,
     TIntermNode *body, const TSourceLoc &line)
 {
-    TIntermNode *node = new TIntermLoop(type, init, cond, expr, body);
+    TIntermNode *node = new TIntermLoop(type, init, cond, expr, ensureSequence(body));
     node->setLine(line);
 
     return node;
@@ -511,11 +441,38 @@ bool TIntermediate::postProcess(TIntermNode *root)
     return true;
 }
 
-//
-// This deletes the tree.
-//
-void TIntermediate::remove(TIntermNode *root)
+TIntermTyped *TIntermediate::foldAggregateBuiltIn(TIntermAggregate *aggregate)
 {
-    if (root)
-        RemoveAllTreeNodes(root);
+    switch (aggregate->getOp())
+    {
+      case EOpAtan:
+      case EOpPow:
+      case EOpMod:
+      case EOpMin:
+      case EOpMax:
+      case EOpClamp:
+      case EOpMix:
+      case EOpStep:
+      case EOpSmoothStep:
+      case EOpMul:
+      case EOpOuterProduct:
+      case EOpLessThan:
+      case EOpLessThanEqual:
+      case EOpGreaterThan:
+      case EOpGreaterThanEqual:
+      case EOpVectorEqual:
+      case EOpVectorNotEqual:
+      case EOpDistance:
+      case EOpDot:
+      case EOpCross:
+      case EOpFaceForward:
+      case EOpReflect:
+      case EOpRefract:
+        return aggregate->fold(mInfoSink);
+      default:
+        // Constant folding not supported for the built-in.
+        return nullptr;
+    }
+
+    return nullptr;
 }

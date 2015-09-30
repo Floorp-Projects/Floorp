@@ -105,7 +105,7 @@ add_task(function* ()
   yield* expectFocusOnF6(false, "html1", "html1",
                                 true, "basic focus content page with button focused");
 
-  return ContentTask.spawn(gBrowser.selectedBrowser, { }, function* () {
+  yield ContentTask.spawn(gBrowser.selectedBrowser, { }, function* () {
     return content.document.getElementById("button1").focus();
   });
 

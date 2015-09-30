@@ -66,10 +66,6 @@ public:
   void SetMediaSourceDuration(double aDuration, MSRangeRemovalAction aAction);
   double GetMediaSourceDuration();
 
-#ifdef MOZ_EME
-  virtual nsresult SetCDMProxy(CDMProxy* aProxy) override;
-#endif
-
   MediaSourceDemuxer* GetDemuxer()
   {
     return mDemuxer;

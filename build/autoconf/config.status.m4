@@ -28,7 +28,7 @@ define([AC_SUBST_SET],
 [ifdef([AC_SUBST_SET_$1], ,
 [define([AC_SUBST_SET_$1], )dnl
 AC_DIVERT_PUSH(MOZ_DIVERSION_SUBST)dnl
-    (''' $1 ''', set(r''' [$]$1 '''.split()))
+    (''' $1 ''', unique_list(r''' [$]$1 '''.split()))
 AC_DIVERT_POP()dnl
 ])])])])
 
@@ -128,6 +128,13 @@ if not os.path.isabs(topsrcdir):
 topsrcdir = os.path.normpath(topsrcdir)
 
 topobjdir = os.path.abspath(os.path.dirname(<<<__file__>>>))
+
+def unique_list(l):
+    result = []
+    for i in l:
+        if l not in result:
+            result.append(i)
+    return result
 
 dnl All defines and substs are stored with an additional space at the beginning
 dnl and at the end of the string, to avoid any problem with values starting or
@@ -232,5 +239,5 @@ MOZ_ARG_ENABLE_STRING(build-backend,
                          Enable additional build backends],
 [ BUILD_BACKENDS="RecursiveMake `echo $enableval | sed 's/,/ /g'`"])
 
-AC_SUBST_LIST([BUILD_BACKENDS])
+AC_SUBST_SET([BUILD_BACKENDS])
 ])

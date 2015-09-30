@@ -55,5 +55,5 @@ class Tokenizer : public Lexer
 };
 
 }  // namespace pp
-#endif  // COMPILER_PREPROCESSOR_TOKENIZER_H_
 
+#endif  // COMPILER_PREPROCESSOR_TOKENIZER_H_
