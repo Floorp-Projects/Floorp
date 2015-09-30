@@ -35,11 +35,9 @@ of the License or (at your option) any later version.
 #include "inc/FeatureVal.h"
 #include "inc/GlyphCache.h"
 #include "inc/GlyphFace.h"
-//#include "inc/Silf.h"
 #include "inc/Slot.h"
 #include "inc/Position.h"
 #include "inc/List.h"
-//#include "inc/Bidi.h"
 #include "inc/Collider.h"
 
 #define MAX_SEG_GROWTH_FACTOR  256
@@ -243,62 +241,6 @@ bool Segment::isWhitespace(const int cid) const
          + (cid == 0x205F)
          + (cid == 0x3000)) != 0;
 }
-
-//inline
-//bool Segment::isWhitespace(const int cid) const
-//{
-//    switch (cid >> 8)
-//    {
-//        case 0x00:
-//            switch (cid)
-//            {
-//            case 0x09:
-//            case 0x0A:
-//            case 0x0B:
-//            case 0x0C:
-//            case 0x0D:
-//            case 0x20:
-//                return true;
-//            default:
-//                break;
-//            }
-//            break;
-//        case 0x16:
-//            return cid == 0x1680;
-//            break;
-//        case 0x18:
-//            return cid == 0x180E;
-//            break;
-//        case 0x20:
-//            switch (cid)
-//            {
-//            case 0x00:
-//            case 0x01:
-//            case 0x02:
-//            case 0x03:
-//            case 0x04:
-//            case 0x05:
-//            case 0x06:
-//            case 0x07:
-//            case 0x08:
-//            case 0x09:
-//            case 0x0A:
-//            case 0x28:
-//            case 0x29:
-//            case 0x2F:
-//            case 0x5F:
-//                return true
-//            default:
-//                break;
-//            }
-//            break;
-//        case 0x30:
-//            return cid == 0x3000;
-//            break;
-//    }
-//
-//    return false;
-//}
 
 } // namespace graphite2
 

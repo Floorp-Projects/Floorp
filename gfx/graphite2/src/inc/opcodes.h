@@ -643,7 +643,7 @@ ENDOP
 
 STARTOP(temp_copy)
     slotref newSlot = seg.newSlot();
-    if (!newSlot) DIE;
+    if (!newSlot || !is) DIE;
     int16 *tempUserAttrs = newSlot->userAttrs();
     memcpy(newSlot, is, sizeof(Slot));
     memcpy(tempUserAttrs, is->userAttrs(), seg.numAttrs() * sizeof(uint16));

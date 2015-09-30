@@ -31,18 +31,6 @@ of the License or (at your option) any later version.
 #include <cstddef>
 #include <cstring>
 
-#include <iterator>
-
-#if ((defined GCC_VERSION && GCC_VERSION >= 302) || (defined __INTEL_COMPILER && __INTEL_COMPILER >= 800) || defined(__clang__))
-    #define expect(expr,value)    (__builtin_expect ((expr),(value)) )
-#else
-    #define expect(expr,value)    (expr)
-#endif
-
-#define likely(expr)     expect((expr) != 0, 1)
-#define unlikely(expr)   expect((expr) != 0, 0)
-
-
 namespace
 {
 
@@ -70,6 +58,12 @@ void unaligned_copy(void * d, void const * s) {
 inline
 size_t align(size_t p) {
     return (p + sizeof(unsigned long)-1) & ~(sizeof(unsigned long)-1);
+}
+
+inline 
+u8 * safe_copy(u8 * d, u8 const * s, size_t n) {
+    while (n--) *d++ = *s++;
+    return d;
 }
 
 inline
@@ -100,20 +94,9 @@ u8 * fast_copy(u8 * d, u8 const * s, size_t n) {
         s += WS;
     }
     n &= WS-1;
-    while (n--) {*d++ = *s++; }
-    
-    return d;
+    return safe_copy(d, s, n);
 }
 
-
-inline 
-u8 * copy(u8 * d, u8 const * s, size_t n) {
-    if (likely(d>s+sizeof(unsigned long)))
-        return overrun_copy(d,s,n);
-    else 
-        while (n--) *d++ = *s++;
-    return d;
-}
 
 } // end of anonymous namespace
 

@@ -130,7 +130,8 @@ bool Pass::readPass(const byte * const pass_start, size_t pass_length, size_t su
         return face.error(e);
 
     m_successStart = m_numStates - m_numSuccess;
-    if (e.test(p + numRanges * 6 - 4 > pass_end, E_BADPASSLENGTH)) return face.error(e);
+    // test for beyond end - 1 to account for reading uint16
+    if (e.test(p + numRanges * 6 - 2 > pass_end, E_BADPASSLENGTH)) return face.error(e);
     m_numGlyphs = be::peek<uint16>(p + numRanges * 6 - 4) + 1;
     // Calculate the start of various arrays.
     const byte * const ranges = p;
@@ -263,7 +264,11 @@ bool Pass::readRules(const byte * rule_map, const size_t num_entries,
     }
 
     byte * moved_progs = static_cast<byte *>(realloc(m_progs, prog_pool_free - m_progs));
-    if (e.test(!moved_progs, E_OUTOFMEM))   return face.error(e);
+    if (e.test(!moved_progs, E_OUTOFMEM))
+    {
+        if (prog_pool_free - m_progs == 0) m_progs = 0;
+        return face.error(e);
+    }
 
     if (moved_progs != m_progs)
     {
@@ -383,7 +388,11 @@ bool Pass::runGraphite(vm::Machine & m, FiniteStateMachine & fsm, bool reverse) 
 {
     Slot *s = m.slotMap().segment.first();
     if (!s || !testPassConstraint(m)) return true;
-    if (reverse) m.slotMap().segment.reverseSlots();
+    if (reverse)
+    {
+        m.slotMap().segment.reverseSlots();
+        s = m.slotMap().segment.first();
+    }
     if (m_numRules)
     {
         Slot *currHigh = s->next();
