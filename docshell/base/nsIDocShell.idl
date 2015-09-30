@@ -46,7 +46,7 @@ interface nsITabParent;
 
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(e534b6ee-c35d-4ee2-acce-1bcd08a91230)]
+[scriptable, builtinclass, uuid(df834cfd-5073-4053-96e4-4e5a4e508696)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -123,6 +123,9 @@ interface nsIDocShell : nsIDocShellTreeItem
    * of an nsIDocShellLoadInfo object...
    *
    * @param aURI            - The URI to load.
+   * @param aOriginalURI    - The URI to set as the originalURI on the channel
+   *                          that does the load. If null, aURI will be set as
+   *                          the originalURI.
    * @param aReferrer       - Referring URI
    * @param aReferrerPolicy - Referrer policy
    * @param aOwner          - Owner (security principal)
@@ -149,6 +152,7 @@ interface nsIDocShell : nsIDocShellTreeItem
    *                          in certain situations such as view-source.
    */
   [noscript]void internalLoad(in nsIURI aURI,
+                              in nsIURI aOriginalURI,
                               in nsIURI aReferrer,
                               in unsigned long aReferrerPolicy,
                               in nsISupports aOwner,

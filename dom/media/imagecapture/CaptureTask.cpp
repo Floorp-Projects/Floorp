@@ -57,7 +57,7 @@ CaptureTask::AttachStream()
   nsRefPtr<DOMMediaStream> domStream = track->GetStream();
   domStream->AddPrincipalChangeObserver(this);
 
-  nsRefPtr<MediaStream> stream = domStream->GetStream();
+  nsRefPtr<MediaStream> stream = domStream->GetPlaybackStream();
   stream->AddListener(this);
 }
 
@@ -71,7 +71,7 @@ CaptureTask::DetachStream()
   nsRefPtr<DOMMediaStream> domStream = track->GetStream();
   domStream->RemovePrincipalChangeObserver(this);
 
-  nsRefPtr<MediaStream> stream = domStream->GetStream();
+  nsRefPtr<MediaStream> stream = domStream->GetPlaybackStream();
   stream->RemoveListener(this);
 }
 
@@ -86,7 +86,9 @@ void
 CaptureTask::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
                                       StreamTime aTrackOffset,
                                       uint32_t aTrackEvents,
-                                      const MediaSegment& aQueuedMedia)
+                                      const MediaSegment& aQueuedMedia,
+                                      MediaStream* aInputStream,
+                                      TrackID aInputTrackID)
 {
   if (mImageGrabbedOrTrackEnd) {
     return;

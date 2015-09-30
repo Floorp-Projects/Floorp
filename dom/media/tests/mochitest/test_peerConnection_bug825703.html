@@ -14,12 +14,12 @@
 var makePC = (config, expected_error) => {
   var exception;
   try {
-    new mozRTCPeerConnection(config).close();
+    new RTCPeerConnection(config).close();
   } catch (e) {
     exception = e;
   }
   is((exception? exception.name : "success"), expected_error || "success",
-     "mozRTCPeerConnection(" + JSON.stringify(config) + ")");
+     "RTCPeerConnection(" + JSON.stringify(config) + ")");
 };
 
 // This is a test of the iceServers parsing code + readable errors
@@ -27,11 +27,11 @@ runNetworkTest(() => {
   var exception = null;
 
   try {
-    new mozRTCPeerConnection().close();
+    new RTCPeerConnection().close();
   } catch (e) {
     exception = e;
   }
-  ok(!exception, "mozRTCPeerConnection() succeeds");
+  ok(!exception, "RTCPeerConnection() succeeds");
   exception = null;
 
   makePC();
@@ -66,14 +66,14 @@ runNetworkTest(() => {
   makePC({ iceServers: [{ urls:"http:0.0.0.0" }] }, "SyntaxError");
 
   try {
-    new mozRTCPeerConnection({ iceServers: [{ url:"http:0.0.0.0" }] }).close();
+    new RTCPeerConnection({ iceServers: [{ url:"http:0.0.0.0" }] }).close();
   } catch (e) {
     ok(e.message.indexOf("http") > 0,
-       "mozRTCPeerConnection() constructor has readable exceptions");
+       "RTCPeerConnection() constructor has readable exceptions");
   }
 
   // Below tests are setting the about:config User preferences for default
-  // ice servers and checking the outputs when mozRTCPeerConnection() is
+  // ice servers and checking the outputs when RTCPeerConnection() is
   // invoked. See Bug 1167922 for more information.
   // Note - We use promises here since the SpecialPowers API will be
   // performed asynchronously.

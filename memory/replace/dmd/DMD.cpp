@@ -134,6 +134,28 @@ class InfallibleAllocPolicy
   static void ExitOnFailure(const void* aP);
 
 public:
+  template <typename T>
+  static T* maybe_pod_malloc(size_t aNumElems)
+  {
+    if (aNumElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
+      return nullptr;
+    return (T*)gMallocTable->malloc(aNumElems * sizeof(T));
+  }
+
+  template <typename T>
+  static T* maybe_pod_calloc(size_t aNumElems)
+  {
+    return (T*)gMallocTable->calloc(aNumElems, sizeof(T));
+  }
+
+  template <typename T>
+  static T* maybe_pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize)
+  {
+    if (aNewSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
+      return nullptr;
+    return (T*)gMallocTable->realloc(aPtr, aNewSize * sizeof(T));
+  }
+
   static void* malloc_(size_t aSize)
   {
     void* p = gMallocTable->malloc(aSize);
@@ -144,11 +166,9 @@ public:
   template <typename T>
   static T* pod_malloc(size_t aNumElems)
   {
-    if (aNumElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
-      return nullptr;
-    void* p = gMallocTable->malloc(aNumElems * sizeof(T));
+    T* p = maybe_pod_malloc<T>(aNumElems);
     ExitOnFailure(p);
-    return (T*)p;
+    return p;
   }
 
   static void* calloc_(size_t aSize)
@@ -161,9 +181,9 @@ public:
   template <typename T>
   static T* pod_calloc(size_t aNumElems)
   {
-    void* p = gMallocTable->calloc(aNumElems, sizeof(T));
+    T* p = maybe_pod_calloc<T>(aNumElems);
     ExitOnFailure(p);
-    return (T*)p;
+    return p;
   }
 
   // This realloc_ is the one we use for direct reallocs within DMD.
@@ -178,9 +198,9 @@ public:
   template <typename T>
   static T* pod_realloc(T* aPtr, size_t aOldSize, size_t aNewSize)
   {
-    if (aNewSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
-      return nullptr;
-    return (T*)InfallibleAllocPolicy::realloc_((void *)aPtr, aNewSize * sizeof(T));
+    T* p = maybe_pod_realloc(aPtr, aOldSize, aNewSize);
+    ExitOnFailure(p);
+    return p;
   }
 
   static void* memalign_(size_t aAlignment, size_t aSize)
@@ -225,6 +245,7 @@ public:
   }
 
   static void reportAllocOverflow() { ExitOnFailure(nullptr); }
+  bool checkSimulatedOOM() const { return true; }
 };
 
 // This is only needed because of the |const void*| vs |void*| arg mismatch.
