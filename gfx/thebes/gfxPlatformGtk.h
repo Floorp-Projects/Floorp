@@ -99,8 +99,8 @@ public:
 
     bool UseXRender() {
 #if defined(MOZ_X11)
-        if (GetDefaultContentBackend() != mozilla::gfx::BackendType::NONE &&
-            GetDefaultContentBackend() != mozilla::gfx::BackendType::CAIRO)
+        if (GetContentBackend() != mozilla::gfx::BackendType::NONE &&
+            GetContentBackend() != mozilla::gfx::BackendType::CAIRO)
             return false;
 
         return sUseXRender;
