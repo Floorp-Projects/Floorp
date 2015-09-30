@@ -44,6 +44,7 @@ UNIFIED_SOURCES += [
     'testGCOutOfMemory.cpp',
     'testGCStoreBufferRemoval.cpp',
     'testGCUniqueId.cpp',
+    'testGCWeakRef.cpp',
     'testGetPropertyDescriptor.cpp',
     'testHashTable.cpp',
     'testIndexToString.cpp',

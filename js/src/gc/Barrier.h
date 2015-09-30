@@ -595,6 +595,11 @@ class ReadBarriered : public ReadBarrieredBase<T>
     }
 };
 
+// A WeakRef pointer does not hold its target live and is automatically nulled
+// out when the GC discovers that it is not reachable from any other path.
+template <typename T>
+using WeakRef = ReadBarriered<T>;
+
 // Add Value operations to all Barrier types. Note, this must be defined before
 // HeapSlot for HeapSlot's base to get these operations.
 template <>
