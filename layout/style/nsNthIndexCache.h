@@ -70,6 +70,7 @@ private:
     void *realloc_(void *p, size_t bytes) { return ::realloc(p, bytes); }
     void free_(void *p) { ::free(p); }
     void reportAllocOverflow() const {}
+    bool checkSimulatedOOM() const { return true; }
   };
 
   typedef js::HashMap<nsIContent*, CacheEntry, js::DefaultHasher<nsIContent*>,

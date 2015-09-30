@@ -39,6 +39,18 @@ namespace mozilla {
  *      to allocate more than the available memory space -- think allocating an
  *      array of large-size objects, where N * size overflows) before null is
  *      returned.
+ *  - bool checkSimulatedOOM() const
+ *      Some clients generally allocate memory yet in some circumstances won't
+ *      need to do so. For example, appending to a vector with a small amount of
+ *      inline storage generally allocates memory, but no allocation occurs
+ *      unless appending exceeds inline storage. But for testing purposes, it
+ *      can be useful to treat *every* operation as allocating.
+ *      Clients (such as this hypothetical append method implementation) should
+ *      call this method in situations that don't allocate, but could generally,
+ *      to support this. The default behavior should return true; more
+ *      complicated behavior might be to return false only after a certain
+ *      number of allocations-or-check-simulated-OOMs (coordinating with the
+ *      other AllocPolicy methods) have occurred.
  *
  * mfbt provides (and typically uses by default) only MallocAllocPolicy, which
  * does nothing more than delegate to the malloc/alloc/free functions.
@@ -82,6 +94,11 @@ public:
 
   void reportAllocOverflow() const
   {
+  }
+
+  bool checkSimulatedOOM() const
+  {
+    return true;
   }
 };
 
