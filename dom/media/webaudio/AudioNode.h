@@ -211,7 +211,6 @@ public:
   virtual const char* NodeType() const = 0;
 
 private:
-  friend class AudioBufferSourceNode;
   // This could possibly delete 'this'.
   void DisconnectFromGraph();
 
