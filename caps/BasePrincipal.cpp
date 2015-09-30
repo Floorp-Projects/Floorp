@@ -30,8 +30,6 @@ using dom::URLParams;
 void
 OriginAttributes::CreateSuffix(nsACString& aStr) const
 {
-  MOZ_RELEASE_ASSERT(mAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
-
   UniquePtr<URLParams> params(new URLParams());
   nsAutoString value;
 
@@ -97,10 +95,6 @@ public:
       nsresult rv;
       mOriginAttributes->mAppId = aValue.ToInteger(&rv);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        return false;
-      }
-
-      if (mOriginAttributes->mAppId == nsIScriptSecurityManager::UNKNOWN_APP_ID) {
         return false;
       }
 
@@ -188,14 +182,6 @@ BasePrincipal::GetOrigin(nsACString& aOrigin)
 {
   nsresult rv = GetOriginInternal(aOrigin);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // OriginAttributes::CreateSuffix asserts against UNKNOWN_APP_ID. It's trivial
-  // to trigger this getter from script on such a principal, so we handle it
-  // here at the API entry point.
-  if (mOriginAttributes.mAppId == nsIScriptSecurityManager::UNKNOWN_APP_ID) {
-    NS_WARNING("Refusing to provide canonical origin string to principal with UNKNOWN_APP_ID");
-    return NS_ERROR_FAILURE;
-  }
 
   nsAutoCString suffix;
   mOriginAttributes.CreateSuffix(suffix);
@@ -292,8 +278,6 @@ BasePrincipal::GetIsNullPrincipal(bool* aIsNullPrincipal)
 NS_IMETHODIMP
 BasePrincipal::GetJarPrefix(nsACString& aJarPrefix)
 {
-  MOZ_ASSERT(AppId() != nsIScriptSecurityManager::UNKNOWN_APP_ID);
-
   mozilla::GetJarPrefix(mOriginAttributes.mAppId, mOriginAttributes.mInBrowser, aJarPrefix);
   return NS_OK;
 }
