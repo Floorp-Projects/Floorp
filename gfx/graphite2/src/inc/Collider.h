@@ -26,13 +26,10 @@ of the License or (at your option) any later version.
 */
 #pragma once
 
-#include <utility>
 #include "inc/List.h"
-//#include "inc/Slot.h"
 #include "inc/Position.h"
 #include "inc/Intervals.h"
 #include "inc/debug.h"
-//#include "inc/Segment.h"
 
 namespace graphite2 {
 
