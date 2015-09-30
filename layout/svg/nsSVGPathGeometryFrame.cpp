@@ -502,6 +502,9 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
   if (getStroke &&
       nsSVGUtils::GetNonScalingStrokeTransform(this, &userToOuterSVG)) {
     Matrix moz2dUserToOuterSVG = ToMatrix(userToOuterSVG);
+    if (moz2dUserToOuterSVG.IsSingular()) {
+      return bbox;
+    }
     gotSimpleBounds = element->GetGeometryBounds(&simpleBounds,
                                                  strokeOptions,
                                                  aToBBoxUserspace,
