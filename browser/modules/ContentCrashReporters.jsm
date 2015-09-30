@@ -17,6 +17,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "CrashSubmit",
   "resource://gre/modules/CrashSubmit.jsm");
 
 this.TabCrashReporter = {
+  get prefs() {
+    delete this.prefs;
+    return this.prefs = Services.prefs.getBranch("browser.tabs.crashReporting.");
+  },
+
   init: function () {
     if (this.initialized)
       return;
@@ -52,6 +57,31 @@ this.TabCrashReporter = {
     }
   },
 
+  /**
+   * Submits a crash report from about:tabcrashed
+   *
+   * @param aBrowser
+   *        The <xul:browser> that the report was sent from.
+   * @param aFormData
+   *        An Object with the following properties:
+   *
+   *        includeURL (bool):
+   *          Whether to include the URL that the user was on
+   *          in the crashed tab before the crash occurred.
+   *        URL (String)
+   *          The URL that the user was on in the crashed tab
+   *          before the crash occurred.
+   *        emailMe (bool):
+   *          Whether or not to include the user's email address
+   *          in the crash report.
+   *        email (String):
+   *          The email address of the user.
+   *        comments (String):
+   *          Any additional comments from the user.
+   *
+   *        Note that it is expected that all properties are set,
+   *        even if they are empty.
+   */
   submitCrashReport: function (aBrowser, aFormData) {
     let childID = this.browserMap.get(aBrowser.permanentKey);
     let dumpID = this.childMap.get(childID);
@@ -67,8 +97,21 @@ this.TabCrashReporter = {
       },
     }).then(null, Cu.reportError);
 
+    this.prefs.setBoolPref("sendReport", true);
+    this.prefs.setBoolPref("includeURL", aFormData.includeURL);
+    this.prefs.setBoolPref("emailMe", aFormData.emailMe);
+    if (aFormData.emailMe) {
+      this.prefs.setCharPref("email", aFormData.email);
+    } else {
+      this.prefs.setCharPref("email", "");
+    }
+
     this.childMap.set(childID, null); // Avoid resubmission.
     this.removeSubmitCheckboxesForSameCrash(childID);
+  },
+
+  dontSubmitCrashReport: function() {
+    this.prefs.setBoolPref("sendReport", false);
   },
 
   removeSubmitCheckboxesForSameCrash: function(childID) {
@@ -108,7 +151,23 @@ this.TabCrashReporter = {
     if (!dumpID)
       return;
 
-    aBrowser.contentDocument.documentElement.classList.add("crashDumpAvailable");
+    let doc = aBrowser.contentDocument;
+
+    doc.documentElement.classList.add("crashDumpAvailable");
+
+    let sendReport = this.prefs.getBoolPref("sendReport");
+    doc.getElementById("sendReport").checked = sendReport;
+
+    let includeURL = this.prefs.getBoolPref("includeURL");
+    doc.getElementById("includeURL").checked = includeURL;
+
+    let emailMe = this.prefs.getBoolPref("emailMe");
+    doc.getElementById("emailMe").checked = emailMe;
+
+    if (emailMe) {
+      let email = this.prefs.getCharPref("email", "");
+      doc.getElementById("email").value = email;
+    }
   },
 
   hideRestoreAllButton: function (aBrowser) {
