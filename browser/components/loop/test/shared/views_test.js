@@ -503,7 +503,7 @@ describe("loop.shared.views", function() {
             .eql("foo");
     });
 
-    it("should accept a enableHangup optional prop", function() {
+    it("should accept an enableHangup optional prop", function() {
       var comp = mountTestComponent({
         enableHangup: false,
         hangup: hangup,
@@ -512,6 +512,16 @@ describe("loop.shared.views", function() {
 
       expect(comp.getDOMNode().querySelector("button.btn-hangup").disabled)
             .eql(true);
+    });
+
+    it("should accept a showHangup optional prop", function() {
+      var comp = mountTestComponent({
+        showHangup: false,
+        hangup: hangup,
+        publishStream: publishStream
+      });
+
+      expect(comp.getDOMNode().querySelector(".btn-hangup-entry")).to.eql(null);
     });
 
     it("should hangup when hangup button is clicked", function() {

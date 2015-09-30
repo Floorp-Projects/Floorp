@@ -55,14 +55,6 @@
   background: none;
 }
 
-.chat-toolbarbutton:hover {
-  background-color: rgba(255,255,255,.35);
-}
-
-.chat-toolbarbutton:hover:active {
-  background-color: rgba(255,255,255,.5);
-}
-
 .chat-toolbarbutton > .toolbarbutton-text {
   display: none;
 }
@@ -76,7 +68,11 @@
   list-style-image: url("chrome://browser/skin/social/chat-icons.svg#close");
 }
 
-.chat-close-button:-moz-any(:hover,:hover:active) {
+.chat-close-button:hover {
+  list-style-image: url("chrome://browser/skin/social/chat-icons.svg#close-hover");
+}
+
+.chat-close-button:hover:active {
   list-style-image: url("chrome://browser/skin/social/chat-icons.svg#close-active");
 }
 
@@ -84,7 +80,11 @@
   list-style-image: url("chrome://browser/skin/social/chat-icons.svg#minimize");
 }
 
-.chat-minimize-button:-moz-any(:hover,:hover:active) {
+.chat-minimize-button:hover {
+  list-style-image: url("chrome://browser/skin/social/chat-icons.svg#minimize-hover");
+}
+
+:hover,:hover:active) {
   list-style-image: url("chrome://browser/skin/social/chat-icons.svg#minimize-active");
 }
 
@@ -93,7 +93,11 @@
   transform: rotate(180deg);
 }
 
-.chat-swap-button:-moz-any(:hover,:hover:active) {
+.chat-swap-button:hover {
+  list-style-image: url("chrome://browser/skin/social/chat-icons.svg#expand-hover");
+}
+
+.chat-swap-button:hover:active {
   list-style-image: url("chrome://browser/skin/social/chat-icons.svg#expand-active");
 }
 
@@ -101,22 +105,46 @@ chatbar > chatbox > .chat-titlebar > .chat-swap-button {
   transform: none;
 }
 
+.chat-loop-hangup {
+  list-style-image: url("chrome://browser/skin/social/chat-icons.svg#exit-white");
+  background-color: #d13f1a;
+  border: 1px solid #d13f1a;
+  border-top-right-radius: 4px;
+  width: 32px;
+  height: 26px;
+  margin-top: -6px;
+  margin-bottom: -5px;
+  -moz-margin-start: 6px;
+  -moz-margin-end: -5px;
+}
+
+.chat-toolbarbutton.chat-loop-hangup:-moz-any(:hover,:hover:active) {
+  background-color: #ef6745;
+  border-color: #ef6745;
+}
+
 .chat-title {
-  font-weight: bold;
-  color: black;
+  color: #666;
   text-shadow: none;
   cursor: inherit;
 }
 
 .chat-titlebar {
-  height: 30px;
-  min-height: 30px;
+  height: 26px;
+  min-height: 26px;
   width: 100%;
   margin: 0;
-  padding: 7px 6px;
-  border: none;
-  border-bottom: 1px solid #ccc;
+  padding: 5px 4px;
+  border: 1px solid #ebebeb;
+  border-bottom: 0;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
   cursor: pointer;
+  background-color: #ebebeb;
+}
+
+.chat-titlebar[selected] {
+  background-color: #f0f0f0;
 }
 
 .chat-titlebar > .notification-anchor-icon {
@@ -149,12 +177,25 @@ chatbar > chatbox > .chat-titlebar > .chat-swap-button {
   width: 21px;
   border: 1px solid #ccc;
   border-bottom: none;
+  background-color: #d9d9d9;
+  background-image: linear-gradient(rgba(255,255,255,.43), transparent);
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
 }
 
 @media (min-resolution: 2dppx) {
   .chatbar-button {
     list-style-image: url("chrome://browser/skin/social/services-16@2x.png");
   }
+}
+
+.chatbar-button:hover,
+.chatbar-button[open="true"] {
+  background-color: #f0f0f0;
+}
+
+.chatbar-button[activity]:not([open]) {
+  background-image: radial-gradient(circle farthest-corner at center 2px, rgb(254,254,255) 3%, rgba(210,235,255,0.9) 12%, rgba(148,205,253,0.6) 30%, rgba(148,205,253,0.2) 70%);
 }
 
 .chatbar-button > .toolbarbutton-icon {
@@ -192,9 +233,18 @@ chatbar {
 
 chatbox {
   -moz-margin-start: 4px;
-  background-color: white;
-  border: 1px solid #ccc;
-  border-bottom: none;
+  background-color: transparent;
+}
+
+chatbar > chatbox {
+  /* Apply the same border-radius as the .chat-titlebar to make the box-shadow
+     go round nicely. */
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  box-shadow: 0 0 5px rgba(0,0,0,.3);
+  /* Offset the chatbox the same amount as the box-shadows' spread, to make it
+     visible. */
+  -moz-margin-end: 5px;
 }
 
 window > chatbox {
@@ -202,4 +252,5 @@ window > chatbox {
   margin: 0px;
   border: none;
   padding: 0px;
+  border-radius: 4px;
 }

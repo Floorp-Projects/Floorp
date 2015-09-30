@@ -53,10 +53,6 @@
           });
         }
 
-        if (!this.chatbar) {
-          document.getAnonymousElementByAttribute(this, "anonid", "minimize").hidden = true;
-          document.getAnonymousElementByAttribute(this, "anonid", "close").hidden = true;
-        }
         let contentWindow = this.contentWindow;
         // process this._callbacks, then set to null so the chatbox creator
         // knows to make new callbacks immediately.
@@ -71,6 +67,7 @@
             return;
           this.removeEventListener("DOMContentLoaded", DOMContentLoaded, true);
           this.isActive = !this.minimized;
+          this._chat.loadButtonSet(this, this.getAttribute("buttonSet"));
           this._deferredChatLoaded.resolve(this);
         }, true);
 
@@ -90,6 +87,10 @@
 
       <field name="content" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "content");
+      </field>
+
+      <field name="_chat" readonly="true">
+        Cu.import("resource:///modules/Chat.jsm", {}).Chat;
       </field>
 
       <property name="contentWindow">
@@ -171,10 +172,9 @@
       <method name="setDecorationAttributes">
         <parameter name="aTarget"/>
         <body><![CDATA[
-          for (let attr of ["dark", "customSize"]) {
-            if (this.hasAttribute(attr))
-              aTarget.setAttribute(attr, this.getAttribute(attr));
-          }
+          if (this.hasAttribute("customSize"))
+            aTarget.setAttribute("customSize", this.getAttribute("customSize"));
+          this._chat.loadButtonSet(aTarget, this.getAttribute("buttonSet"));
         ]]></body>
       </method>
 

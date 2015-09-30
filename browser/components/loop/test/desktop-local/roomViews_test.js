@@ -351,6 +351,7 @@ describe("loop.roomViews", function () {
 
     function mountTestComponent(props) {
       props = _.extend({
+        chatWindowDetached: false,
         dispatcher: dispatcher,
         roomStore: roomStore,
         mozLoop: fakeMozLoop,
@@ -427,32 +428,6 @@ describe("loop.roomViews", function () {
 
       sinon.assert.calledWithMatch(dispatcher.dispatch,
         sinon.match.hasOwn("name", "setMute"));
-    });
-
-    it("should dispatch a `LeaveRoom` action when the hangup button is pressed and the room has been used", function() {
-      view = mountTestComponent();
-
-      view.setState({used: true});
-
-      var hangupBtn = view.getDOMNode().querySelector(".btn-hangup");
-
-      React.addons.TestUtils.Simulate.click(hangupBtn);
-
-      sinon.assert.calledOnce(dispatcher.dispatch);
-      sinon.assert.calledWithExactly(dispatcher.dispatch,
-        new sharedActions.LeaveRoom());
-    });
-
-    it("should close the window when the hangup button is pressed and the room has not been used", function() {
-      view = mountTestComponent();
-
-      view.setState({used: false});
-
-      var hangupBtn = view.getDOMNode().querySelector(".btn-hangup");
-
-      React.addons.TestUtils.Simulate.click(hangupBtn);
-
-      sinon.assert.calledOnce(fakeWindow.close);
     });
 
     describe("#componentWillUpdate", function() {
