@@ -42,8 +42,8 @@ HashChildren(Shape* kid1, Shape* kid2)
         return nullptr;
     }
 
-    JS_ALWAYS_TRUE(hash->putNew(StackShape(kid1), kid1));
-    JS_ALWAYS_TRUE(hash->putNew(StackShape(kid2), kid2));
+    hash->putNewInfallible(StackShape(kid1), kid1);
+    hash->putNewInfallible(StackShape(kid2), kid2);
     return hash;
 }
 
