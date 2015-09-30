@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Bug 1045891</title>
+  </head>
+  <body>
+    <iframe id="innermosttestframe"> </iframe>
+  <script type="text/javascript">
+    page_id = window.location.hash.substring(1);
+
+    function recvMessage(ev) {
+      if (ev.data.id == page_id) {
+        window.parent.postMessage({id:ev.data.id, message:'allowed'}, 'http://mochi.test:8888');
+        window.removeEventListener('message', recvMessage);
+      }
+    }
+
+    window.addEventListener('message', recvMessage, false);
+  </script>
+  </body>
+</html>
