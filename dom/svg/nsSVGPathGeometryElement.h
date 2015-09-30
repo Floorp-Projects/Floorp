@@ -84,6 +84,9 @@ public:
    * the bounds of the image of |aBounds| in non-scaling-stroke space will be
    * tight, but if there are non-rectilinear transforms involved then that may
    * be impossible and this method will return false).
+   *
+   * If |aToNonScalingStrokeSpace| is non-null then |*aToNonScalingStrokeSpace|
+   * must be non-singular.
    */
   virtual bool GetGeometryBounds(Rect* aBounds, const StrokeOptions& aStrokeOptions,
                                  const Matrix& aToBoundsSpace,
