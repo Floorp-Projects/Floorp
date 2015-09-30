@@ -30,7 +30,7 @@ class nsSHEntryShared;
 [ptr] native nsDocShellEditorDataPtr(nsDocShellEditorData);
 [ptr] native nsSHEntryShared(nsSHEntryShared);
 
-[scriptable, uuid(d5fbeb10-f373-4677-b69a-2694aa706cac)]
+[scriptable, uuid(e45ab6ef-3485-449c-b91c-0846b2bf6faf)]
 interface nsISHEntry : nsISupports
 {
     /**
@@ -39,6 +39,13 @@ interface nsISHEntry : nsISupports
      * of type nsIURI
      */
     readonly attribute nsIURI URI;
+
+    /**
+     * A readonly property that returns the original URI of the current entry.
+     * If an entry is the result of a redirect this attribute holds original
+     * URI. The object returned is of type nsIURI
+     */
+    attribute nsIURI originalURI;
 
     /**
      * A readonly property that returns the title
