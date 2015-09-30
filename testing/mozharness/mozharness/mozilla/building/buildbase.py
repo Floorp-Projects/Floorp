@@ -57,8 +57,6 @@ Please make sure that either "repo" is in your config or, if \
 you are running this in buildbot, "repo_path" is in your buildbot_config.',
     'comments_undetermined': '"comments" could not be determined. This may be \
 because it was a forced build.',
-    'src_mozconfig_path_not_found': '"abs_src_mozconfig" path could not be \
-determined. Please make sure it is a valid path off of "abs_src_dir"',
     'tooltool_manifest_undetermined': '"tooltool_manifest_src" not set, \
 Skipping run_tooltool...',
 }
@@ -325,6 +323,7 @@ class BuildOptionParser(object):
         'api-9-debug': 'builds/releng_sub_%s_configs/%s_api_9_debug.py',
         'api-11-debug': 'builds/releng_sub_%s_configs/%s_api_11_debug.py',
         'x86': 'builds/releng_sub_%s_configs/%s_x86.py',
+        'api-11-partner-sample1': 'builds/releng_sub_%s_configs/%s_api_11_partner_sample1.py',
     }
     build_pool_cfg_file = 'builds/build_pool_specifics.py'
     branch_cfg_file = 'builds/branch_specifics.py'
@@ -1016,23 +1015,32 @@ or run without that action (ie: --no-{action})"
         """assign mozconfig."""
         c = self.config
         dirs = self.query_abs_dirs()
-        if c.get('src_mozconfig'):
+        abs_mozconfig_path = ''
+
+        # first determine the mozconfig path
+        if c.get('src_mozconfig') and not c.get('src_mozconfig_manifest'):
             self.info('Using in-tree mozconfig')
-            abs_src_mozconfig = os.path.join(dirs['abs_src_dir'],
-                                             c.get('src_mozconfig'))
-            if not os.path.exists(abs_src_mozconfig):
-                self.info('abs_src_mozconfig: %s' % (abs_src_mozconfig,))
-                self.fatal(ERROR_MSGS['src_mozconfig_path_not_found'])
-            self.copyfile(abs_src_mozconfig,
-                          os.path.join(dirs['abs_src_dir'], '.mozconfig'))
-            self.info("mozconfig content:")
-            with open(abs_src_mozconfig) as mozconfig:
-                for line in mozconfig:
-                    self.info(line)
+            abs_mozconfig_path = os.path.join(dirs['abs_src_dir'], c.get('src_mozconfig'))
+        elif c.get('src_mozconfig_manifest') and not c.get('src_mozconfig'):
+            self.info('Using mozconfig based on manifest contents')
+            manifest = os.path.join(dirs['abs_work_dir'], c['src_mozconfig_manifest'])
+            if not os.path.exists(manifest):
+                self.fatal('src_mozconfig_manifest: "%s" not found. Does it exist?' % (manifest,))
+            with self.opened(manifest, error_level=ERROR) as (fh, err):
+                if err:
+                    self.fatal("%s exists but coud not read properties" % manifest)
+                abs_mozconfig_path = os.path.join(dirs['abs_src_dir'], json.load(fh)['gecko_path'])
         else:
-            self.fatal("To build, you must supply a mozconfig from inside the "
-                       "tree to use use. Please provide the path in your "
-                       "config via 'src_mozconfig'")
+            self.fatal("'src_mozconfig' or 'src_mozconfig_manifest' must be "
+                       "in the config but not both in order to determine the mozconfig.")
+
+        # print its contents
+        content = self.read_from_file(abs_mozconfig_path, error_level=FATAL)
+        self.info("mozconfig content:")
+        self.info(content)
+
+        # finally, copy the mozconfig to a path that 'mach build' expects it to be
+        self.copyfile(abs_mozconfig_path, os.path.join(dirs['abs_src_dir'], '.mozconfig'))
 
     # TODO: replace with ToolToolMixin
     def _get_tooltool_auth_file(self):

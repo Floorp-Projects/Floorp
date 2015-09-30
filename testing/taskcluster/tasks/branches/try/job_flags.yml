@@ -138,6 +138,12 @@ builds:
         task: tasks/builds/opt_linux32_clobber.yml
       debug:
         task: tasks/builds/dbg_linux32_clobber.yml
+  android-partner-sample1:
+    platforms:
+      - Android
+    types:
+      opt:
+        task: tasks/builds/android_api_11_partner_sample1.yml
   sm-plain:
     platforms:
       - Linux64
