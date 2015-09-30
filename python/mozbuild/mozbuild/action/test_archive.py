@@ -45,6 +45,11 @@ ARCHIVE_FILES = {
             'pattern': 'modules/**',
         },
         {
+            'source': buildconfig.topobjdir,
+            'base': '_tests',
+            'pattern': 'mozbase/**',
+        },
+        {
             'source': buildconfig.topsrcdir,
             'base': 'js/src',
             'pattern': 'jit-test/**',
