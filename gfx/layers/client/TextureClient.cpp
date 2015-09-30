@@ -343,13 +343,13 @@ CreateBufferTextureClient(ISurfaceAllocator* aAllocator,
 }
 
 static inline gfx::BackendType
-BackendTypeForBackendSelector(LayersBackend aLayersBackend, BackendSelector aSelector)
+BackendTypeForBackendSelector(BackendSelector aSelector)
 {
   switch (aSelector) {
     case BackendSelector::Canvas:
       return gfxPlatform::GetPlatform()->GetPreferredCanvasBackend();
     case BackendSelector::Content:
-      return gfxPlatform::GetPlatform()->GetContentBackendFor(aLayersBackend);
+      return gfxPlatform::GetPlatform()->GetContentBackend();
     default:
       MOZ_ASSERT_UNREACHABLE("Unknown backend selector");
       return gfx::BackendType::NONE;
@@ -365,8 +365,7 @@ TextureClient::CreateForDrawing(ISurfaceAllocator* aAllocator,
                                 TextureFlags aTextureFlags,
                                 TextureAllocationFlags aAllocFlags)
 {
-  LayersBackend parentBackend = aAllocator->GetCompositorBackendType();
-  gfx::BackendType moz2DBackend = BackendTypeForBackendSelector(parentBackend, aSelector);
+  gfx::BackendType moz2DBackend = BackendTypeForBackendSelector(aSelector);
 
   RefPtr<TextureClient> texture;
 
@@ -375,6 +374,7 @@ TextureClient::CreateForDrawing(ISurfaceAllocator* aAllocator,
 #endif
 
 #ifdef XP_WIN
+  LayersBackend parentBackend = aAllocator->GetCompositorBackendType();
   if (parentBackend == LayersBackend::LAYERS_D3D11 &&
       (moz2DBackend == gfx::BackendType::DIRECT2D ||
        moz2DBackend == gfx::BackendType::DIRECT2D1_1) &&
@@ -407,6 +407,7 @@ TextureClient::CreateForDrawing(ISurfaceAllocator* aAllocator,
 #endif
 
 #ifdef MOZ_X11
+  LayersBackend parentBackend = aAllocator->GetCompositorBackendType();
   gfxSurfaceType type =
     gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType();
 
