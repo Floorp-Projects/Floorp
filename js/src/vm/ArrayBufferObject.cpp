@@ -726,6 +726,12 @@ ArrayBufferObject::dataPointer() const
     return static_cast<uint8_t*>(getSlot(DATA_SLOT).toPrivate());
 }
 
+SharedMem<uint8_t*>
+ArrayBufferObject::dataPointerShared() const
+{
+    return SharedMem<uint8_t*>::unshared(getSlot(DATA_SLOT).toPrivate());
+}
+
 void
 ArrayBufferObject::releaseData(FreeOp* fop)
 {
