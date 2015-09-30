@@ -1829,39 +1829,6 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 
 %include ../shared/social/chat.inc.css
 
-.chat-titlebar {
-  background-color: #d9d9d9;
-  background-image: linear-gradient(@toolbarHighlight@, transparent);
-}
-
-.chat-titlebar[selected] {
-  background-color: #f0f0f0;
-}
-
-.chatbar-button {
-  -moz-appearance: none;
-  background-color: #d9d9d9;
-  background-image: linear-gradient(@toolbarHighlight@, transparent);
-}
-
-.chatbar-button > .toolbarbutton-icon {
-  -moz-margin-end: 0;
-}
-
-.chatbar-button:hover,
-.chatbar-button[open="true"] {
-  background-color: #f0f0f0;
-}
-
-.chatbar-button[activity] {
-  background-image: radial-gradient(circle farthest-corner at center 3px, rgb(233,242,252) 3%, rgba(172,206,255,0.75) 40%, rgba(87,151,201,0.5) 80%, transparent);
-}
-
-chatbox {
-  border-top-left-radius: 2.5px;
-  border-top-right-radius: 2.5px;
-}
-
 /* Customization mode */
 
 %include ../shared/customizableui/customizeMode.inc.css
