@@ -210,6 +210,8 @@ public:
   void GetAudioTracks(nsTArray<nsRefPtr<AudioStreamTrack> >& aTracks);
   void GetVideoTracks(nsTArray<nsRefPtr<VideoStreamTrack> >& aTracks);
   void GetTracks(nsTArray<nsRefPtr<MediaStreamTrack> >& aTracks);
+  void AddTrack(MediaStreamTrack& aTrack);
+  void RemoveTrack(MediaStreamTrack& aTrack);
 
   // NON-WebIDL
 
