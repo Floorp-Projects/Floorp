@@ -132,6 +132,9 @@ e.g. --branch-order v2.0,master"""
             if os.path.islink(manifest):
                 self.info("Skipping %s (softlink)" % manifest)
                 continue
+            if os.path.basename(manifest) in self.config["ignored_manifests"]:
+                self.info("Skipping %s (ignored)" % manifest)
+                continue
             manifests.append(manifest)
         return manifests
 
