@@ -8,7 +8,6 @@
 #define mozilla_dom_bluetooth_bluedroid_BluetoothMapSmsManager_h
 
 #include "BluetoothCommon.h"
-#include "BluetoothMapBMessage.h"
 #include "BluetoothMapFolder.h"
 #include "BluetoothProfileManagerBase.h"
 #include "BluetoothSocketObserver.h"
@@ -151,9 +150,6 @@ private:
 
   // Message notification service client socket
   nsRefPtr<BluetoothSocket> mMnsSocket;
-
-  int mBodySegmentLength;
-  nsAutoArrayPtr<uint8_t> mBodySegment;
 };
 
 END_BLUETOOTH_NAMESPACE
