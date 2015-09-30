@@ -680,13 +680,6 @@ public:
     }
   }
 
-  virtual void Stop() override
-  {
-    if (GetSourceStream()) {
-      GetSourceStream()->EndAllTrackAndFinish();
-    }
-  }
-
   // For gUM streams, we have a trackunion which assigns TrackIDs.  However, for a
   // single-source trackunion like we have here, the TrackUnion will assign trackids
   // that match the source's trackids, so we can avoid needing a mapping function.
