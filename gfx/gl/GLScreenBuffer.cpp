@@ -619,6 +619,79 @@ GLScreenBuffer::IsReadFramebufferDefault() const
 }
 
 ////////////////////////////////////////////////////////////////////////
+// Utils
+
+static void
+RenderbufferStorageBySamples(GLContext* aGL, GLsizei aSamples,
+                             GLenum aInternalFormat, const gfx::IntSize& aSize)
+{
+    if (aSamples) {
+        aGL->fRenderbufferStorageMultisample(LOCAL_GL_RENDERBUFFER,
+                                             aSamples,
+                                             aInternalFormat,
+                                             aSize.width, aSize.height);
+    } else {
+        aGL->fRenderbufferStorage(LOCAL_GL_RENDERBUFFER,
+                                  aInternalFormat,
+                                  aSize.width, aSize.height);
+    }
+}
+
+static GLuint
+CreateRenderbuffer(GLContext* aGL, GLenum aFormat, GLsizei aSamples,
+                   const gfx::IntSize& aSize)
+{
+    GLuint rb = 0;
+    aGL->fGenRenderbuffers(1, &rb);
+    ScopedBindRenderbuffer autoRB(aGL, rb);
+
+    RenderbufferStorageBySamples(aGL, aSamples, aFormat, aSize);
+
+    return rb;
+}
+
+static void
+CreateRenderbuffersForOffscreen(GLContext* aGL, const GLFormats& aFormats,
+                                const gfx::IntSize& aSize, bool aMultisample,
+                                GLuint* aColorMSRB, GLuint* aDepthRB,
+                                GLuint* aStencilRB)
+{
+    GLsizei samples = aMultisample ? aFormats.samples : 0;
+    if (aColorMSRB) {
+        MOZ_ASSERT(aFormats.samples > 0);
+        MOZ_ASSERT(aFormats.color_rbFormat);
+
+        GLenum colorFormat = aFormats.color_rbFormat;
+        if (aGL->IsANGLE()) {
+            MOZ_ASSERT(colorFormat == LOCAL_GL_RGBA8);
+            colorFormat = LOCAL_GL_BGRA8_EXT;
+        }
+
+        *aColorMSRB = CreateRenderbuffer(aGL, colorFormat, samples, aSize);
+    }
+
+    if (aDepthRB &&
+        aStencilRB &&
+        aFormats.depthStencil)
+    {
+        *aDepthRB = CreateRenderbuffer(aGL, aFormats.depthStencil, samples, aSize);
+        *aStencilRB = *aDepthRB;
+    } else {
+        if (aDepthRB) {
+            MOZ_ASSERT(aFormats.depth);
+
+            *aDepthRB = CreateRenderbuffer(aGL, aFormats.depth, samples, aSize);
+        }
+
+        if (aStencilRB) {
+            MOZ_ASSERT(aFormats.stencil);
+
+            *aStencilRB = CreateRenderbuffer(aGL, aFormats.stencil, samples, aSize);
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////
 // DrawBuffer
 
 bool

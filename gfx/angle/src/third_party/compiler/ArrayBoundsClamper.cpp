@@ -43,7 +43,8 @@ namespace {
 class ArrayBoundsClamperMarker : public TIntermTraverser {
 public:
     ArrayBoundsClamperMarker()
-        : mNeedsClamp(false)
+        : TIntermTraverser(true, false, false),
+          mNeedsClamp(false)
    {
    }
 

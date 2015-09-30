@@ -162,7 +162,7 @@
       {"type": "pointerup", "points": [{"x": 1.5, "y": 1, "identifier": 1},
         {"x": 1.5, "y": 1.5, "identifier": 2}]}
     ],
-    "expectedGestures": [{ "type": "swiperight" }]
+    "expectedGestures": [{ "type": "swiperight", "fingers": 2 }]
   },
   {
     "events": [
@@ -173,7 +173,7 @@
       {"type": "pointerup", "points": [{"x": 1.5, "y": 1, "identifier": 1}]},
       {"type": "pointerup", "points": [{"x": 1.5, "y": 1.5, "identifier": 2}]}
     ],
-    "expectedGestures": [{ "type": "swiperight" }]
+    "expectedGestures": [{ "type": "swiperight", "fingers": 2 }]
   },
   {
     "events": [
@@ -187,7 +187,7 @@
         {"x": 1.5, "y": 1.5, "identifier": 2},
         {"x": 1.5, "y": 2, "identifier": 3}]}
     ],
-    "expectedGestures": [{ "type": "swiperight" }]
+    "expectedGestures": [{ "type": "swiperight", "fingers": 3 }]
   },
   {
     "events": [
@@ -263,6 +263,96 @@
       {"type": "pointerup", "points": [{"x": 1.5, "y": 1, "identifier": 1},
         {"x": 1.5, "y": 1.5, "identifier": 2}]}
     ],
-    "expectedGestures": [{ "type": "swiperight", "edge": true }]
+    "expectedGestures": [{ "type": "swiperight", "edge": true, "fingers": 2 }]
+  },
+  {
+    "title": "Bug 1182311 - 3 finger triple tap is not reliable 1/2",
+    "events": [
+      {"points": [
+        {"y": 1.88467, "x": 0.89311, "identifier": 0},
+        {"y": 2.78481, "x": 0.56259, "identifier": 1},
+        {"y": 1.35021, "x": 1.37834, "identifier": 2}], "type": "pointerdown"},
+      {"points": [
+        {"y": 1.88467, "x": 0.89311, "identifier": 0},
+        {"y": 2.78481, "x": 0.56259, "identifier": 1},
+        {"y": 1.35021, "x": 1.37834, "identifier": 2}], "type": "pointerup"},
+      {"points": [
+        {"y": 1.76512, "x": 0.98453, "identifier": 0},
+        {"y": 1.1744, "x": 1.4346, "identifier": 1},
+        {"y": 2.5879, "x": 0.61181, "identifier": 2}], "type": "pointerdown"},
+      {"points": [
+        {"y": 1.76512, "x": 0.98453, "identifier": 0},
+        {"y": 1.1744, "x": 1.4346, "identifier": 1},
+        {"y": 2.5879, "x": 0.61181, "identifier": 2}], "type": "pointerup"},
+      {"points": [
+        {"y": 1.30098, "x": 1.52602, "identifier": 0},
+        {"y": 1.94093, "x": 1.02672, "identifier": 1},
+        {"y": 2.67229, "x": 0.75246, "identifier": 2}], "type": "pointerdown"},
+      {"points": [
+        {"y": 1.30098, "x": 1.52602, "identifier": 0},
+        {"y": 1.94093, "x": 1.02672, "identifier": 1},
+        {"y": 2.67229, "x": 0.75246, "identifier": 2}], "type": "pointerup",
+       "removeConsecutiveGestureDelay": false}],
+    "expectedGestures": [{ "type": "tripletap", "fingers": 3 }]
+  },
+  {
+    "title": "Bug 1182311 - 3 finger triple tap is not reliable 2/2",
+    "events": [
+      {"type": "pointerdown",
+       "points": [{"identifier": 0, "x": 2.21875, "y": 1.510417}]},
+      {"type": "pointerdown",
+       "points": [{"identifier": 1, "x": 1.479167, "y": 2.53125}]},
+      {"type": "pointerdown",
+       "points": [{"identifier": 2, "x": 1.072917, "y": 3.739583}]},
+      {"type": "pointermove",
+       "points": [{"identifier": 1, "x": 1.46875, "y": 2.53125}]},
+      {"type": "pointermove",
+       "points": [{"identifier": 1, "x": 1.447917, "y": 2.46875}]},
+      {"type": "pointerup",
+       "points": [{"identifier": 0, "x": 2.21875, "y": 1.510417}]},
+      {"type": "pointerup",
+       "points": [{"identifier": 1, "x": 1.447917, "y": 2.489583}]},
+      {"type": "pointerup",
+       "points": [{"identifier": 2, "x": 1.072917, "y": 3.739583}]},
+      {"type": "pointerdown",
+       "points": [{"identifier": 0, "x": 2.114583, "y": 1.572917}]},
+      {"type": "pointerdown",
+       "points": [{"identifier": 1, "x": 1.364583, "y": 2.614583}]},
+      {"type": "pointerdown",
+       "points": [{"identifier": 2, "x": 0.927083, "y": 3.864583}]},
+      {"type": "pointermove",
+       "points": [{"identifier": 1, "x": 1.364583, "y": 2.614583}]},
+      {"type": "pointermove",
+       "points": [{"identifier": 0, "x": 2.114583, "y": 1.572917}]},
+      {"type": "pointerup",
+       "points": [{"identifier": 1, "x": 1.364583, "y": 2.614583}]},
+      {"type": "pointerup",
+       "points": [{"identifier": 2, "x": 0.927083, "y": 3.864583}]},
+      {"type": "pointerup",
+       "points": [{"identifier": 0, "x": 2.114583, "y": 1.572917}]},
+      {"type": "pointerdown",
+       "points": [{"identifier": 0, "x": 1.4375, "y": 2.59375}]},
+      {"type": "pointerdown",
+       "points": [{"identifier": 1, "x": 1.083333, "y": 3.71875}]},
+      {"type": "pointerdown",
+       "points": [{"identifier": 2, "x": 2.15625, "y": 1.489583}]},
+      {"type": "pointermove",
+       "points": [{"identifier": 0, "x": 1.4375, "y": 2.59375},
+                  {"identifier": 2, "x": 2.15625, "y": 1.489583}]},
+      {"type": "pointermove",
+       "points": [{"identifier": 0, "x": 1.4375, "y": 2.59375},
+                  {"identifier": 2, "x": 2.15625, "y": 1.489583}]},
+      {"type": "pointerup",
+       "points": [{"identifier": 1, "x": 1.083333, "y": 3.71875}]},
+      {"type": "pointermove",
+       "points": [{"identifier": 0, "x": 1.427083, "y": 2.59375}]},
+      {"type": "pointerup",
+       "points": [{"identifier": 0, "x": 1.427083, "y": 2.59375}]},
+      {"type": "pointerup",
+       "points": [{"identifier": 2, "x": 2.15625, "y": 1.489583}],
+       "removeConsecutiveGestureDelay": false}
+    ],
+    "expectedGestures": [{ "type": "tripletap", "fingers": 3 }]
   }
+
 ]

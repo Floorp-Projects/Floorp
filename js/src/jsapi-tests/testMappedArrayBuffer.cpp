@@ -126,10 +126,9 @@ bool TestCloneObject()
     CHECK(obj1);
     JSAutoStructuredCloneBuffer cloned_buffer;
     JS::RootedValue v1(cx, JS::ObjectValue(*obj1));
-    const JSStructuredCloneCallbacks* callbacks = js::GetContextStructuredCloneCallbacks(cx);
-    CHECK(cloned_buffer.write(cx, v1, callbacks, nullptr));
+    CHECK(cloned_buffer.write(cx, v1, nullptr, nullptr));
     JS::RootedValue v2(cx);
-    CHECK(cloned_buffer.read(cx, &v2, callbacks, nullptr));
+    CHECK(cloned_buffer.read(cx, &v2, nullptr, nullptr));
     JS::RootedObject obj2(cx, v2.toObjectOrNull());
     CHECK(VerifyObject(obj2, 8, 12, false));
 
@@ -162,10 +161,9 @@ bool TestTransferObject()
     JS::RootedValue transferable(cx, JS::ObjectValue(*obj));
 
     JSAutoStructuredCloneBuffer cloned_buffer;
-    const JSStructuredCloneCallbacks* callbacks = js::GetContextStructuredCloneCallbacks(cx);
-    CHECK(cloned_buffer.write(cx, v1, transferable, callbacks, nullptr));
+    CHECK(cloned_buffer.write(cx, v1, transferable, nullptr, nullptr));
     JS::RootedValue v2(cx);
-    CHECK(cloned_buffer.read(cx, &v2, callbacks, nullptr));
+    CHECK(cloned_buffer.read(cx, &v2, nullptr, nullptr));
     JS::RootedObject obj2(cx, v2.toObjectOrNull());
     CHECK(VerifyObject(obj2, 8, 12, true));
     CHECK(isNeutered(obj1));

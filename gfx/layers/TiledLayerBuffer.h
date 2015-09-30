@@ -15,6 +15,7 @@
 #include "gfxPlatform.h"                // for GetTileWidth/GetTileHeight
 #include "LayersLogging.h"              // for print_stderr
 #include "mozilla/gfx/Logging.h"        // for gfxCriticalError
+#include "mozilla/layers/LayersTypes.h" // for TextureDumpMode
 #include "nsDebug.h"                    // for NS_ASSERTION
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsRect.h"                     // for mozilla::gfx::IntRect
@@ -175,7 +176,8 @@ public:
   float GetResolution() const { return mResolution; }
   bool IsLowPrecision() const { return mResolution < 1; }
 
-  void Dump(std::stringstream& aStream, const char* aPrefix, bool aDumpHtml);
+  void Dump(std::stringstream& aStream, const char* aPrefix, bool aDumpHtml,
+            TextureDumpMode aCompress);
 
 protected:
 
@@ -200,7 +202,8 @@ protected:
 template<typename Derived, typename Tile> void
 TiledLayerBuffer<Derived, Tile>::Dump(std::stringstream& aStream,
                                       const char* aPrefix,
-                                      bool aDumpHtml)
+                                      bool aDumpHtml,
+                                      TextureDumpMode aCompress)
 {
   for (size_t i = 0; i < mRetainedTiles.Length(); ++i) {
     const TileIntPoint tilePosition = mTiles.TilePosition(i);
@@ -209,7 +212,7 @@ TiledLayerBuffer<Derived, Tile>::Dump(std::stringstream& aStream,
     aStream << "\n" << aPrefix << "Tile (x=" <<
       tileOffset.x << ", y=" << tileOffset.y << "): ";
     if (!mRetainedTiles[i].IsPlaceholderTile()) {
-      mRetainedTiles[i].DumpTexture(aStream);
+      mRetainedTiles[i].DumpTexture(aStream, aCompress);
     } else {
       aStream << "empty tile";
     }

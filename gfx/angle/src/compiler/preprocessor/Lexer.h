@@ -21,5 +21,5 @@ class Lexer
 };
 
 }  // namespace pp
-#endif  // COMPILER_PREPROCESSOR_LEXER_H_
 
+#endif  // COMPILER_PREPROCESSOR_LEXER_H_

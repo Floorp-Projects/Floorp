@@ -7,8 +7,8 @@
 //   Interfaces of methods for HLSL translation of GLSL structures.
 //
 
-#ifndef TRANSLATOR_STRUCTUREHLSL_H_
-#define TRANSLATOR_STRUCTUREHLSL_H_
+#ifndef COMPILER_TRANSLATOR_STRUCTUREHLSL_H_
+#define COMPILER_TRANSLATOR_STRUCTUREHLSL_H_
 
 #include "compiler/translator/Common.h"
 #include "compiler/translator/IntermNode.h"
@@ -27,7 +27,9 @@ class Std140PaddingHelper
 {
   public:
     explicit Std140PaddingHelper(const std::map<TString, int> &structElementIndexes,
-                                 unsigned *uniqueCounter);
+                                 unsigned int *uniqueCounter);
+    Std140PaddingHelper(const Std140PaddingHelper &other);
+    Std140PaddingHelper &operator=(const Std140PaddingHelper &other);
 
     int elementIndex() const { return mElementIndex; }
     int prePadding(const TType &type);
@@ -39,10 +41,10 @@ class Std140PaddingHelper
 
     unsigned *mPaddingCounter;
     int mElementIndex;
-    const std::map<TString, int> &mStructElementIndexes;
+    const std::map<TString, int> *mStructElementIndexes;
 };
 
-class StructureHLSL
+class StructureHLSL : angle::NonCopyable
 {
   public:
     StructureHLSL();
@@ -76,4 +78,4 @@ class StructureHLSL
 
 }
 
-#endif // COMPILER_STRUCTUREHLSL_H_
+#endif // COMPILER_TRANSLATOR_STRUCTUREHLSL_H_
