@@ -15,7 +15,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=822197
 
     function start() {
       for(var i = 0; i < 70; i++) {
-        var pc = new mozRTCPeerConnection();
+        var pc = new RTCPeerConnection();
         pc.createOffer(function() {}, function() {});
         pcArray.push(pc);
       }

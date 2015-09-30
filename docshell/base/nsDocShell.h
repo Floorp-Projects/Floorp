@@ -341,7 +341,10 @@ protected:
   // not have an owner on the channel should just pass null.
   // If aSrcdoc is not void, the load will be considered as a srcdoc load,
   // and the contents of aSrcdoc will be loaded instead of aURI.
+  // aOriginalURI will be set as the originalURI on the channel that does the
+  // load. If aOriginalURI is null, aURI will be set as the originalURI.
   nsresult DoURILoad(nsIURI* aURI,
+                     nsIURI* aOriginalURI,
                      nsIURI* aReferrer,
                      bool aSendReferrer,
                      uint32_t aReferrerPolicy,

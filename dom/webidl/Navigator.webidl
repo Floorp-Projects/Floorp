@@ -389,7 +389,8 @@ partial interface Navigator {
   readonly attribute MediaDevices mediaDevices;
 
   // Deprecated. Use mediaDevices.getUserMedia instead.
-  [Throws, Func="Navigator::HasUserMediaSupport", UnsafeInPrerendering]
+  [Deprecated="NavigatorGetUserMedia", Throws,
+   Func="Navigator::HasUserMediaSupport", UnsafeInPrerendering]
   void mozGetUserMedia(MediaStreamConstraints constraints,
                        NavigatorUserMediaSuccessCallback successCallback,
                        NavigatorUserMediaErrorCallback errorCallback);

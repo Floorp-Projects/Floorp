@@ -9,7 +9,7 @@
 #include "mozilla/dom/BroadcastChannelBinding.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/StructuredCloneHelper.h"
+#include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
@@ -31,13 +31,13 @@ namespace dom {
 
 using namespace workers;
 
-class BroadcastChannelMessage final : public StructuredCloneHelper
+class BroadcastChannelMessage final : public StructuredCloneHolder
 {
 public:
   NS_INLINE_DECL_REFCOUNTING(BroadcastChannelMessage)
 
   BroadcastChannelMessage()
-    : StructuredCloneHelper(CloningSupported, TransferringNotSupported,
+    : StructuredCloneHolder(CloningSupported, TransferringNotSupported,
                             DifferentProcess)
   {}
 

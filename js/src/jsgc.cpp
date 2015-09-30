@@ -2547,6 +2547,7 @@ UpdateCellPointersTask::updateArenas()
 /* virtual */ void
 UpdateCellPointersTask::run()
 {
+    MOZ_ASSERT(!HelperThreadState().isLocked());
     while (arenaList_) {
         updateArenas();
         {
@@ -4943,7 +4944,9 @@ SweepMiscTask::run()
 void
 GCRuntime::startTask(GCParallelTask& task, gcstats::Phase phase)
 {
+    MOZ_ASSERT(HelperThreadState().isLocked());
     if (!task.startWithLockHeld()) {
+        AutoUnlockHelperThreadState unlock;
         gcstats::AutoPhase ap(stats, phase);
         task.runFromMainThread(rt);
     }

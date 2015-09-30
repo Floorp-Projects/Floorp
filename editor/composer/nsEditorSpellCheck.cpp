@@ -637,13 +637,6 @@ nsEditorSpellCheck::SetCurrentDictionary(const nsAString& aDictionary)
 }
 
 NS_IMETHODIMP
-nsEditorSpellCheck::CheckCurrentDictionary()
-{
-  mSpellChecker->CheckCurrentDictionary();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsEditorSpellCheck::UninitSpellChecker()
 {
   NS_ENSURE_TRUE(mSpellChecker, NS_ERROR_NOT_INITIALIZED);

@@ -215,7 +215,8 @@ function createMediaElement(type, label) {
  */
 function getUserMedia(constraints) {
   info("Call getUserMedia for " + JSON.stringify(constraints));
-  return navigator.mediaDevices.getUserMedia(constraints);
+  return navigator.mediaDevices.getUserMedia(constraints)
+    .then(stream => (checkMediaStreamTracks(constraints, stream), stream));
 }
 
 // These are the promises we use to track that the prerequisites for the test
@@ -318,6 +319,22 @@ function checkMediaStreamTracks(constraints, mediaStream) {
     mediaStream.getVideoTracks());
 }
 
+/**
+ * Check that a media stream contains exactly a set of media stream tracks.
+ *
+ * @param {MediaStream} mediaStream the media stream being checked
+ * @param {Array} tracks the tracks that should exist in mediaStream
+ * @param {String} [message] an optional message to pass to asserts
+ */
+function checkMediaStreamContains(mediaStream, tracks, message) {
+  message = message ? (message + ": ") : "";
+  tracks.forEach(t => ok(mediaStream.getTracks().includes(t),
+                         message + "MediaStream " + mediaStream.id +
+                         " contains track " + t.id));
+  is(mediaStream.getTracks().length, tracks.length,
+     message + "MediaStream " + mediaStream.id + " contains no extra tracks");
+}
+
 /*** Utility methods */
 
 /** The dreadful setTimeout, use sparingly */
@@ -336,6 +353,10 @@ function waitUntil(func, time) {
     }, time || 200);
   });
 }
+
+/** Time out while waiting for a promise to get resolved or rejected. */
+var timeout = (promise, time, msg) =>
+  Promise.race([promise, wait(time).then(() => Promise.reject(new Error(msg)))]);
 
 /*** Test control flow methods */
 

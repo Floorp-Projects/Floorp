@@ -1378,6 +1378,11 @@ public:
     return SurfaceMode::SURFACE_SINGLE_CHANNEL_ALPHA;
   }
 
+  // Returns true if this layer can be treated as opaque for visibility
+  // computation. A layer may be non-opaque for visibility even if it
+  // is not transparent, for example, if it has a mix-blend-mode.
+  bool IsOpaqueForVisibility();
+
   /**
    * This setter can be used anytime. The user data for all keys is
    * initially null. Ownership pases to the layer manager.
