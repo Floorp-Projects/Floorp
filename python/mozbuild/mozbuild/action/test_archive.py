@@ -14,6 +14,7 @@ import argparse
 import itertools
 import os
 import sys
+import time
 
 from mozpack.files import FileFinder
 from mozpack.mozjar import JarWriter
@@ -307,11 +308,20 @@ def main(argv):
     if args.archive == 'reftest':
         insert_reftest_entries(ARCHIVE_FILES['reftest'])
 
+    file_count = 0
+    t_start = time.time()
     with open(args.outputfile, 'wb') as fh:
         with JarWriter(fileobj=fh, optimize=False) as writer:
             res = find_files(args.archive)
             for p, f in res:
+                file_count += 1
                 writer.add(p.encode('utf-8'), f.read(), mode=f.mode)
+
+    duration = time.time() - t_start
+    zip_size = os.path.getsize(args.outputfile)
+    basename = os.path.basename(args.outputfile)
+    print('Wrote %d files in %d bytes to %s in %.2fs' % (
+          file_count, zip_size, basename, duration))
 
 
 if __name__ == '__main__':
