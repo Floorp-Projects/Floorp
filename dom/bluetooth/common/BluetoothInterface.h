@@ -84,65 +84,65 @@ class BluetoothHandsfreeNotificationHandler
 public:
   virtual void
   ConnectionStateNotification(BluetoothHandsfreeConnectionState aState,
-                              const nsAString& aBdAddr);
+                              const BluetoothAddress& aBdAddr);
 
   virtual void
   AudioStateNotification(BluetoothHandsfreeAudioState aState,
-                         const nsAString& aBdAddr);
+                         const BluetoothAddress& aBdAddr);
 
   virtual void
   VoiceRecognitionNotification(BluetoothHandsfreeVoiceRecognitionState aState,
-                               const nsAString& aBdAddr);
+                               const BluetoothAddress& aBdAddr);
 
   virtual void
-  AnswerCallNotification(const nsAString& aBdAddr);
+  AnswerCallNotification(const BluetoothAddress& aBdAddr);
 
   virtual void
-  HangupCallNotification(const nsAString& aBdAddr);
+  HangupCallNotification(const BluetoothAddress& aBdAddr);
 
   virtual void
   VolumeNotification(BluetoothHandsfreeVolumeType aType,
                      int aVolume,
-                     const nsAString& aBdAddr);
+                     const BluetoothAddress& aBdAddr);
 
   virtual void
   DialCallNotification(const nsAString& aNumber,
-                       const nsAString& aBdAddr);
+                       const BluetoothAddress& aBdAddr);
 
   virtual void
   DtmfNotification(char aDtmf,
-                   const nsAString& aBdAddr);
+                   const BluetoothAddress& aBdAddr);
 
   virtual void
   NRECNotification(BluetoothHandsfreeNRECState aNrec,
-                   const nsAString& aBdAddr);
+                   const BluetoothAddress& aBdAddr);
 
   virtual void
   WbsNotification(BluetoothHandsfreeWbsConfig aWbs,
-                  const nsAString& aBdAddr);
+                  const BluetoothAddress& aBdAddr);
 
   virtual void
   CallHoldNotification(BluetoothHandsfreeCallHoldType aChld,
-                       const nsAString& aBdAddr);
+                       const BluetoothAddress& aBdAddr);
 
   virtual void
-  CnumNotification(const nsAString& aBdAddr);
+  CnumNotification(const BluetoothAddress& aBdAddr);
 
   virtual void
-  CindNotification(const nsAString& aBdAddr);
+  CindNotification(const BluetoothAddress& aBdAddr);
 
   virtual void
-  CopsNotification(const nsAString& aBdAddr);
+  CopsNotification(const BluetoothAddress& aBdAddr);
 
   virtual void
-  ClccNotification(const nsAString& aBdAddr);
+  ClccNotification(const BluetoothAddress& aBdAddr);
 
   virtual void
   UnknownAtNotification(const nsACString& aAtString,
-                        const nsAString& aBdAddr);
+                        const BluetoothAddress& aBdAddr);
 
   virtual void
-  KeyPressedNotification(const nsAString& aBdAddr);
+  KeyPressedNotification(const BluetoothAddress& aBdAddr);
 
 protected:
   BluetoothHandsfreeNotificationHandler();
@@ -193,26 +193,26 @@ public:
 
   /* Connect / Disconnect */
 
-  virtual void Connect(const nsAString& aBdAddr,
+  virtual void Connect(const BluetoothAddress& aBdAddr,
                        BluetoothHandsfreeResultHandler* aRes) = 0;
-  virtual void Disconnect(const nsAString& aBdAddr,
+  virtual void Disconnect(const BluetoothAddress& aBdAddr,
                           BluetoothHandsfreeResultHandler* aRes) = 0;
-  virtual void ConnectAudio(const nsAString& aBdAddr,
+  virtual void ConnectAudio(const BluetoothAddress& aBdAddr,
                             BluetoothHandsfreeResultHandler* aRes) = 0;
-  virtual void DisconnectAudio(const nsAString& aBdAddr,
+  virtual void DisconnectAudio(const BluetoothAddress& aBdAddr,
                                BluetoothHandsfreeResultHandler* aRes) = 0;
 
   /* Voice Recognition */
 
-  virtual void StartVoiceRecognition(const nsAString& aBdAddr,
+  virtual void StartVoiceRecognition(const BluetoothAddress& aBdAddr,
                                      BluetoothHandsfreeResultHandler* aRes) = 0;
-  virtual void StopVoiceRecognition(const nsAString& aBdAddr,
+  virtual void StopVoiceRecognition(const BluetoothAddress& aBdAddr,
                                     BluetoothHandsfreeResultHandler* aRes) = 0;
 
   /* Volume */
 
   virtual void VolumeControl(BluetoothHandsfreeVolumeType aType, int aVolume,
-                             const nsAString& aBdAddr,
+                             const BluetoothAddress& aBdAddr,
                              BluetoothHandsfreeResultHandler* aRes) = 0;
 
   /* Device status */
@@ -224,17 +224,18 @@ public:
 
   /* Responses */
 
-  virtual void CopsResponse(const char* aCops, const nsAString& aBdAddr,
+  virtual void CopsResponse(const char* aCops, const BluetoothAddress& aBdAddr,
                             BluetoothHandsfreeResultHandler* aRes) = 0;
   virtual void CindResponse(int aSvc, int aNumActive, int aNumHeld,
                             BluetoothHandsfreeCallState aCallSetupState,
                             int aSignal, int aRoam, int aBattChg,
-                            const nsAString& aBdAddr,
+                            const BluetoothAddress& aBdAddr,
                             BluetoothHandsfreeResultHandler* aRes) = 0;
-  virtual void FormattedAtResponse(const char* aRsp, const nsAString& aBdAddr,
+  virtual void FormattedAtResponse(const char* aRsp,
+                                   const BluetoothAddress& aBdAddr,
                                    BluetoothHandsfreeResultHandler* aRes) = 0;
   virtual void AtResponse(BluetoothHandsfreeAtResponse aResponseCode,
-                          int aErrorCode, const nsAString& aBdAddr,
+                          int aErrorCode, const BluetoothAddress& aBdAddr,
                           BluetoothHandsfreeResultHandler* aRes) = 0;
   virtual void ClccResponse(int aIndex, BluetoothHandsfreeCallDirection aDir,
                             BluetoothHandsfreeCallState aState,
@@ -242,7 +243,7 @@ public:
                             BluetoothHandsfreeCallMptyType aMpty,
                             const nsAString& aNumber,
                             BluetoothHandsfreeCallAddressType aType,
-                            const nsAString& aBdAddr,
+                            const BluetoothAddress& aBdAddr,
                             BluetoothHandsfreeResultHandler* aRes) = 0;
 
   /* Phone State */
@@ -254,7 +255,7 @@ public:
                                 BluetoothHandsfreeResultHandler* aRes) = 0;
 
   /* Wide Band Speech */
-  virtual void ConfigureWbs(const nsAString& aBdAddr,
+  virtual void ConfigureWbs(const BluetoothAddress& aBdAddr,
                             BluetoothHandsfreeWbsConfig aConfig,
                             BluetoothHandsfreeResultHandler* aRes) = 0;
 

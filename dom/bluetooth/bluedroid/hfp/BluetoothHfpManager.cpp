@@ -654,9 +654,15 @@ BluetoothHfpManager::HandleVolumeChanged(nsISupports* aSubject)
 
   // Only send volume back when there's a connected headset
   if (IsConnected()) {
+    BluetoothAddress deviceAddress;
+    nsresult rv = StringToAddress(mDeviceAddress, deviceAddress);
+    if (NS_FAILED(rv)) {
+      return;
+    }
+
     NS_ENSURE_TRUE_VOID(sBluetoothHfpInterface);
     sBluetoothHfpInterface->VolumeControl(
-      HFP_VOLUME_TYPE_SPEAKER, mCurrentVgs, mDeviceAddress,
+      HFP_VOLUME_TYPE_SPEAKER, mCurrentVgs, deviceAddress,
       new VolumeControlResultHandler());
   }
 }
@@ -791,10 +797,16 @@ BluetoothHfpManager::SendCLCC(Call& aCall, int aIndex)
     callState = HFP_CALL_STATE_WAITING;
   }
 
+  BluetoothAddress deviceAddress;
+  nsresult rv = StringToAddress(mDeviceAddress, deviceAddress);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
   sBluetoothHfpInterface->ClccResponse(
     aIndex, aCall.mDirection, callState, HFP_CALL_MODE_VOICE,
     HFP_CALL_MPTY_TYPE_SINGLE, aCall.mNumber,
-    aCall.mType, mDeviceAddress, new ClccResponseResultHandler());
+    aCall.mType, deviceAddress, new ClccResponseResultHandler());
 }
 
 class BluetoothHfpManager::FormattedAtResponseResultHandler final
@@ -813,8 +825,14 @@ BluetoothHfpManager::SendLine(const char* aMessage)
 {
   NS_ENSURE_TRUE_VOID(sBluetoothHfpInterface);
 
+  BluetoothAddress deviceAddress;
+  nsresult rv = StringToAddress(mDeviceAddress, deviceAddress);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
   sBluetoothHfpInterface->FormattedAtResponse(
-    aMessage, mDeviceAddress, new FormattedAtResponseResultHandler());
+    aMessage, deviceAddress, new FormattedAtResponseResultHandler());
 }
 
 class BluetoothHfpManager::AtResponseResultHandler final
@@ -833,8 +851,14 @@ BluetoothHfpManager::SendResponse(BluetoothHandsfreeAtResponse aResponseCode)
 {
   NS_ENSURE_TRUE_VOID(sBluetoothHfpInterface);
 
+  BluetoothAddress deviceAddress;
+  nsresult rv = StringToAddress(mDeviceAddress, deviceAddress);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
   sBluetoothHfpInterface->AtResponse(
-    aResponseCode, 0, mDeviceAddress, new AtResponseResultHandler());
+    aResponseCode, 0, deviceAddress, new AtResponseResultHandler());
 }
 
 class BluetoothHfpManager::PhoneStateChangeResultHandler final
@@ -1135,13 +1159,19 @@ BluetoothHfpManager::HandleBackendError()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  BluetoothAddress deviceAddress;
+  nsresult rv = StringToAddress(mDeviceAddress, deviceAddress);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
   if (mConnectionState != HFP_CONNECTION_STATE_DISCONNECTED) {
     ConnectionStateNotification(HFP_CONNECTION_STATE_DISCONNECTED,
-      mDeviceAddress);
+      deviceAddress);
   }
 
   if (mAudioState != HFP_AUDIO_STATE_DISCONNECTED) {
-    AudioStateNotification(HFP_AUDIO_STATE_DISCONNECTED, mDeviceAddress);
+    AudioStateNotification(HFP_AUDIO_STATE_DISCONNECTED, deviceAddress);
   }
 }
 
@@ -1165,7 +1195,13 @@ BluetoothHfpManager::ConnectSco()
   NS_ENSURE_TRUE(IsConnected() && !IsScoConnected(), false);
   NS_ENSURE_TRUE(sBluetoothHfpInterface, false);
 
-  sBluetoothHfpInterface->ConnectAudio(mDeviceAddress,
+  BluetoothAddress deviceAddress;
+  nsresult rv = StringToAddress(mDeviceAddress, deviceAddress);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  sBluetoothHfpInterface->ConnectAudio(deviceAddress,
                                        new ConnectAudioResultHandler());
 
   return true;
@@ -1188,7 +1224,13 @@ BluetoothHfpManager::DisconnectSco()
   NS_ENSURE_TRUE(IsScoConnected(), false);
   NS_ENSURE_TRUE(sBluetoothHfpInterface, false);
 
-  sBluetoothHfpInterface->DisconnectAudio(mDeviceAddress,
+  BluetoothAddress deviceAddress;
+  nsresult rv = StringToAddress(mDeviceAddress, deviceAddress);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  sBluetoothHfpInterface->DisconnectAudio(deviceAddress,
                                           new DisconnectAudioResultHandler());
 
   return true;
@@ -1265,7 +1307,13 @@ BluetoothHfpManager::Connect(const nsAString& aDeviceAddress,
   mDeviceAddress = aDeviceAddress;
   mController = aController;
 
-  sBluetoothHfpInterface->Connect(mDeviceAddress,
+  BluetoothAddress deviceAddress;
+  nsresult rv = StringToAddress(mDeviceAddress, deviceAddress);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  sBluetoothHfpInterface->Connect(deviceAddress,
                                   new ConnectResultHandler(this));
 }
 
@@ -1316,7 +1364,13 @@ BluetoothHfpManager::Disconnect(BluetoothProfileController* aController)
 
   mController = aController;
 
-  sBluetoothHfpInterface->Disconnect(mDeviceAddress,
+  BluetoothAddress deviceAddress;
+  nsresult rv = StringToAddress(mDeviceAddress, deviceAddress);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  sBluetoothHfpInterface->Disconnect(deviceAddress,
                                      new DisconnectResultHandler(this));
 }
 
@@ -1378,7 +1432,7 @@ BluetoothHfpManager::GetAddress(nsAString& aDeviceAddress)
 
 void
 BluetoothHfpManager::ConnectionStateNotification(
-  BluetoothHandsfreeConnectionState aState, const nsAString& aBdAddress)
+  BluetoothHandsfreeConnectionState aState, const BluetoothAddress& aBdAddress)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1388,7 +1442,7 @@ BluetoothHfpManager::ConnectionStateNotification(
   mConnectionState = aState;
 
   if (aState == HFP_CONNECTION_STATE_SLC_CONNECTED) {
-    mDeviceAddress = aBdAddress;
+    AddressToString(aBdAddress, mDeviceAddress);
     NotifyConnectionStateChanged(
       NS_LITERAL_STRING(BLUETOOTH_HFP_STATUS_CHANGED_ID));
 
@@ -1398,14 +1452,20 @@ BluetoothHfpManager::ConnectionStateNotification(
       NS_LITERAL_STRING(BLUETOOTH_HFP_STATUS_CHANGED_ID));
 
   } else if (aState == HFP_CONNECTION_STATE_CONNECTED) {
+    BluetoothAddress deviceAddress;
+    nsresult rv = StringToAddress(mDeviceAddress, deviceAddress);
+    if (NS_FAILED(rv)) {
+      return;
+    }
+
     // Once RFCOMM is connected, enable NREC before each new SLC connection
-    NRECNotification(HFP_NREC_STARTED, mDeviceAddress);
+    NRECNotification(HFP_NREC_STARTED, deviceAddress);
   }
 }
 
 void
 BluetoothHfpManager::AudioStateNotification(
-  BluetoothHandsfreeAudioState aState, const nsAString& aBdAddress)
+  BluetoothHandsfreeAudioState aState, const BluetoothAddress& aBdAddress)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1421,7 +1481,7 @@ BluetoothHfpManager::AudioStateNotification(
 }
 
 void
-BluetoothHfpManager::AnswerCallNotification(const nsAString& aBdAddress)
+BluetoothHfpManager::AnswerCallNotification(const BluetoothAddress& aBdAddress)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1429,7 +1489,7 @@ BluetoothHfpManager::AnswerCallNotification(const nsAString& aBdAddress)
 }
 
 void
-BluetoothHfpManager::HangupCallNotification(const nsAString& aBdAddress)
+BluetoothHfpManager::HangupCallNotification(const BluetoothAddress& aBdAddress)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1438,7 +1498,7 @@ BluetoothHfpManager::HangupCallNotification(const nsAString& aBdAddress)
 
 void
 BluetoothHfpManager::VolumeNotification(
-  BluetoothHandsfreeVolumeType aType, int aVolume, const nsAString& aBdAddress)
+  BluetoothHandsfreeVolumeType aType, int aVolume, const BluetoothAddress& aBdAddress)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1465,7 +1525,7 @@ BluetoothHfpManager::VolumeNotification(
 }
 
 void
-BluetoothHfpManager::DtmfNotification(char aDtmf, const nsAString& aBdAddress)
+BluetoothHfpManager::DtmfNotification(char aDtmf, const BluetoothAddress& aBdAddress)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1484,7 +1544,7 @@ BluetoothHfpManager::DtmfNotification(char aDtmf, const nsAString& aBdAddress)
  */
 void
 BluetoothHfpManager::NRECNotification(BluetoothHandsfreeNRECState aNrec,
-                                      const nsAString& aBdAddr)
+                                      const BluetoothAddress& aBdAddr)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1505,7 +1565,7 @@ BluetoothHfpManager::NRECNotification(BluetoothHandsfreeNRECState aNrec,
 
 void
 BluetoothHfpManager::CallHoldNotification(BluetoothHandsfreeCallHoldType aChld,
-                                          const nsAString& aBdAddress)
+                                          const BluetoothAddress& aBdAddress)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1524,7 +1584,7 @@ BluetoothHfpManager::CallHoldNotification(BluetoothHandsfreeCallHoldType aChld,
 }
 
 void BluetoothHfpManager::DialCallNotification(const nsAString& aNumber,
-                                               const nsAString& aBdAddress)
+                                               const BluetoothAddress& aBdAddress)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1565,7 +1625,7 @@ void BluetoothHfpManager::DialCallNotification(const nsAString& aNumber,
 }
 
 void
-BluetoothHfpManager::CnumNotification(const nsAString& aBdAddress)
+BluetoothHfpManager::CnumNotification(const BluetoothAddress& aBdAddress)
 {
   static const uint8_t sAddressType[] {
     [HFP_CALL_ADDRESS_TYPE_UNKNOWN] = 0x81,
@@ -1599,7 +1659,7 @@ public:
 };
 
 void
-BluetoothHfpManager::CindNotification(const nsAString& aBdAddress)
+BluetoothHfpManager::CindNotification(const BluetoothAddress& aBdAddress)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1629,7 +1689,7 @@ public:
 };
 
 void
-BluetoothHfpManager::CopsNotification(const nsAString& aBdAddress)
+BluetoothHfpManager::CopsNotification(const BluetoothAddress& aBdAddress)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1641,7 +1701,7 @@ BluetoothHfpManager::CopsNotification(const nsAString& aBdAddress)
 }
 
 void
-BluetoothHfpManager::ClccNotification(const nsAString& aBdAddress)
+BluetoothHfpManager::ClccNotification(const BluetoothAddress& aBdAddress)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1663,7 +1723,7 @@ BluetoothHfpManager::ClccNotification(const nsAString& aBdAddress)
 
 void
 BluetoothHfpManager::UnknownAtNotification(const nsACString& aAtString,
-                                           const nsAString& aBdAddress)
+                                           const BluetoothAddress& aBdAddress)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1673,7 +1733,7 @@ BluetoothHfpManager::UnknownAtNotification(const nsACString& aAtString,
 }
 
 void
-BluetoothHfpManager::KeyPressedNotification(const nsAString& aBdAddress)
+BluetoothHfpManager::KeyPressedNotification(const BluetoothAddress& aBdAddress)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
