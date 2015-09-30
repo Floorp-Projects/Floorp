@@ -131,3 +131,68 @@ add_chat_task(function* testChatWindowChooser() {
   privateWindow.close();
   secondWindow.close();
 });
+
+add_chat_task(function* testButtonSet() {
+  let chatbox = yield promiseOpenChat("http://example.com#1");
+  let document = chatbox.ownerDocument;
+
+  // Expect all default buttons to be visible.
+  for (let buttonId of kDefaultButtonSet) {
+    let button = document.getAnonymousElementByAttribute(chatbox, "anonid", buttonId);
+    Assert.ok(!button.hidden, "Button '" + buttonId + "' should be visible");
+  }
+
+  let visible = new Set(["minimize", "close"]);
+  chatbox = yield promiseOpenChat("http://example.com#2", null, null, [...visible].join(","));
+
+  for (let buttonId of kDefaultButtonSet) {
+    let button = document.getAnonymousElementByAttribute(chatbox, "anonid", buttonId);
+    if (visible.has(buttonId)) {
+      Assert.ok(!button.hidden, "Button '" + buttonId + "' should be visible");
+    } else {
+      Assert.ok(button.hidden, "Button '" + buttonId + "' should NOT be visible");
+    }
+  }
+});
+
+add_chat_task(function* testCustomButton() {
+  let commanded = 0;
+  let customButton = {
+    id: "custom",
+    onCommand: function() {
+      ++commanded;
+    }
+  };
+
+  Chat.registerButton(customButton);
+
+  let chatbox = yield promiseOpenChat("http://example.com#1");
+  let document = chatbox.ownerDocument;
+  let titlebarNode = document.getAnonymousElementByAttribute(chatbox, "class",
+    "chat-titlebar");
+
+  Assert.equal(titlebarNode.getElementsByClassName("chat-custom")[0], null,
+    "Custom chat button should not be in the toolbar yet.");
+
+  let visible = new Set(["minimize", "close", "custom"]);
+  Chat.loadButtonSet(chatbox, [...visible].join(","));
+
+  for (let buttonId of kDefaultButtonSet) {
+    let button = document.getAnonymousElementByAttribute(chatbox, "anonid", buttonId);
+    if (visible.has(buttonId)) {
+      Assert.ok(!button.hidden, "Button '" + buttonId + "' should be visible");
+    } else {
+      Assert.ok(button.hidden, "Button '" + buttonId + "' should NOT be visible");
+    }
+  }
+
+  let customButtonNode = titlebarNode.getElementsByClassName("chat-custom")[0];
+  Assert.ok(!customButtonNode.hidden, "Custom button should be visible");
+
+  let ev = document.createEvent("XULCommandEvent");
+  ev.initCommandEvent("command", true, true, document.defaultView, 0, false,
+    false, false, false, null);
+  customButtonNode.dispatchEvent(ev);
+
+  Assert.equal(commanded, 1, "Button should have been commanded once");
+});
