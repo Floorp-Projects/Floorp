@@ -16,3 +16,4 @@ task:
       build-flame-kk-ota-user-objdir-gecko-{{project}}: /home/worker/objdir-gecko
     env:
       VARIANT: user
+      TOOLTOOL_MANIFEST: 'b2g/config/flame-kk-ota/releng-flame-kk-ota.tt'

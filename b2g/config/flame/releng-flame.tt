@@ -1,14 +1,16 @@
 [
-{"size": 149922032,
-"digest": "8d1a71552ffee561e93b5b3f1bb47866592ab958f908007c75561156430eb1b85a265bfc4dc2038e58dda0264daa9854877a84ef3b591c9ac2f1ab97c098e61e",
-"filename": "backup-flame.tar.xz",
-"algorithm": "sha512"
-},
 {
 "size": 80458572,
 "digest": "e5101f9dee1e462f6cbd3897ea57eede41d23981825c7b20d91d23ab461875d54d3dfc24999aa58a31e8b01f49fb3140e05ffe5af2957ef1d1afb89fd0dfe1ad",
 "algorithm": "sha512",
 "filename": "gcc.tar.xz",
-"unpack": "True"
+"unpack": true
+},
+{
+"size": 12057960,
+"digest": "6105d6432943141cffb40020dc5ba3a793650bdeb3af9bd5e56d3796c5f03df9962a73e521646cd71fbfb5e266c1e74716ad722fb6055589dfb7d35175bca89e",
+"algorithm": "sha512",
+"filename": "gtk3.tar.xz",
+"unpack": true
 }
 ]
