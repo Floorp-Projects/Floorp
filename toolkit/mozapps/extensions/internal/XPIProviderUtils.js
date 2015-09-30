@@ -2060,11 +2060,11 @@ this.XPIDatabaseReconcile = {
                               BOOTSTRAP_REASONS.ADDON_UPGRADE :
                               BOOTSTRAP_REASONS.ADDON_DOWNGRADE;
 
-          // If the previous add-on was in a different path, bootstrapped
+          // If the previous add-on was in a different location, bootstrapped
           // and still exists then call its uninstall method.
           if (previousAddon.bootstrap && previousAddon._installLocation &&
-              previousAddon._sourceBundle.exists() &&
-              currentAddon._sourceBundle.path != previousAddon._sourceBundle.path) {
+              currentAddon._installLocation != previousAddon._installLocation &&
+              previousAddon._sourceBundle.exists()) {
 
             XPIProvider.callBootstrapMethod(previousAddon, previousAddon._sourceBundle,
                                             "uninstall", installReason,
@@ -2118,18 +2118,7 @@ this.XPIDatabaseReconcile = {
         continue;
 
       // This add-on vanished
-
-      // If the previous add-on was bootstrapped and still exists then call its
-      // uninstall method.
-      if (previousAddon.bootstrap && previousAddon._sourceBundle.exists()) {
-        XPIProvider.callBootstrapMethod(previousAddon, previousAddon._sourceBundle,
-                                        "uninstall", BOOTSTRAP_REASONS.ADDON_UNINSTALL);
-        XPIProvider.unloadBootstrapScope(previousAddon.id);
-      }
       AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_UNINSTALLED, id);
-
-      // Make sure to flush the cache when an old add-on has gone away
-      flushStartupCache();
     }
 
     // Make sure add-ons from hidden locations are marked invisible and inactive

@@ -19,8 +19,6 @@ userExtDir.append("extensions2");
 userExtDir.append(gAppInfo.ID);
 registerDirectory("XREUSysExt", userExtDir.parent);
 
-BootstrapMonitor.init();
-
 function TestProvider(result) {
   this.result = result;
 }
@@ -52,12 +50,26 @@ function check_mapping(uri, id) {
   do_check_eq(val.value, id);
 }
 
+function resetPrefs() {
+  Services.prefs.setIntPref("bootstraptest.active_version", -1);
+}
+
+function waitForPref(aPref, aCallback) {
+  function prefChanged() {
+    Services.prefs.removeObserver(aPref, prefChanged);
+    aCallback();
+  }
+  Services.prefs.addObserver(aPref, prefChanged, false);
+}
+
 function getActiveVersion() {
   return Services.prefs.getIntPref("bootstraptest.active_version");
 }
 
 function run_test() {
   do_test_pending();
+
+  resetPrefs();
 
   run_test_early();
 }
@@ -136,7 +148,7 @@ function run_test_1() {
       let uri = addon.getResourceURI(".");
       check_mapping(uri, addon.id);
 
-      BootstrapMonitor.promiseAddonStartup("bootstrap1@tests.mozilla.org").then(function() {
+      waitForPref("bootstraptest.active_version", function() {
         run_test_2(uri);
       });
     });
