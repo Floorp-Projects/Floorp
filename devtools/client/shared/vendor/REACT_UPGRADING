@@ -1,0 +1,16 @@
+React has a dev and prod version. The dev version includes additional
+sanity checks and better errors, but at a slight perf cost. The prod
+version available on the web is by default minified, but we don't want
+a minified version, so we need to build it ourselves.
+
+The react.js and react-dev.js were generated with the following steps:
+
+* git clone https://github.com/facebook/react.git && cd react
+* npm install
+* grunt build
+* cp build/react-with-addons.js <gecko-dev>/devtools/client/shared/vendor/react-dev.js
+* NODE_ENV=production grunt build
+* cp build/react-with-addons.js <gecko-dev>/devtools/client/shared/vendor/react.js
+
+The second build produces a non-minified React file but with all the
+sanity checks that incur a perf hit removed.
