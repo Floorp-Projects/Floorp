@@ -30,6 +30,12 @@ function init(event) {
   fxButton.addEventListener("mousedown", PositionHandler);
 
   updateIndicatorState();
+
+  // Alert accessibility implementations stuff just changed. We only need to do
+  // this initially, because changes after this will automatically fire alert
+  // events if things change materially.
+  let ev = new CustomEvent("AlertActive", {bubbles: true, cancelable: true});
+  document.documentElement.dispatchEvent(ev);
 }
 
 function updateIndicatorState() {
