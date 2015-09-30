@@ -368,7 +368,7 @@ class SharedTypedArrayObjectTemplate : public SharedTypedArrayObject
     {
         SharedTypedArrayObject& tarray = obj->as<SharedTypedArrayObject>();
         MOZ_ASSERT(index < tarray.length());
-        return jit::AtomicOperations::loadSafeWhenRacy(SharedMem<NativeType*>(tarray.viewDataShared()) + index);
+        return jit::AtomicOperations::loadSafeWhenRacy(tarray.viewDataShared().template cast<NativeType*>() + index);
     }
 
     static void
@@ -400,7 +400,7 @@ class SharedTypedArrayObjectTemplate : public SharedTypedArrayObject
     setIndex(SharedTypedArrayObject& tarray, uint32_t index, NativeType val)
     {
         MOZ_ASSERT(index < tarray.length());
-        jit::AtomicOperations::storeSafeWhenRacy(SharedMem<NativeType*>(tarray.viewDataShared()) + index, val);
+        jit::AtomicOperations::storeSafeWhenRacy(tarray.viewDataShared().template cast<NativeType*>() + index, val);
     }
 
     static Value getIndexValue(JSObject* tarray, uint32_t index);

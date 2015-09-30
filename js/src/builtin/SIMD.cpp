@@ -1148,7 +1148,7 @@ Load(JSContext* cx, unsigned argc, Value* vp)
     if (!result)
         return false;
 
-    SharedMem<Elem*> src = SharedMem<Elem*>(AnyTypedArrayViewData(typedArray).addBytes(byteStart));
+    SharedMem<Elem*> src = AnyTypedArrayViewData(typedArray).addBytes(byteStart).cast<Elem*>();
     Elem* dst = reinterpret_cast<Elem*>(result->typedMem());
     jit::AtomicOperations::memcpySafeWhenRacy(dst, src, sizeof(Elem) * NumElem);
 
@@ -1175,7 +1175,7 @@ Store(JSContext* cx, unsigned argc, Value* vp)
         return ErrorBadArgs(cx);
 
     Elem* src = TypedObjectMemory<Elem*>(args[2]);
-    SharedMem<Elem*> dst = SharedMem<Elem*>(AnyTypedArrayViewData(typedArray).addBytes(byteStart));
+    SharedMem<Elem*> dst = AnyTypedArrayViewData(typedArray).addBytes(byteStart).cast<Elem*>();
     js::jit::AtomicOperations::memcpySafeWhenRacy(dst, src, sizeof(Elem) * NumElem);
 
     args.rval().setObject(args[2].toObject());
