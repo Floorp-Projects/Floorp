@@ -1613,34 +1613,21 @@ DocAccessible::AddDependentIDsFor(Accessible* aRelProvider, nsIAtom* aRelAttr)
               mInvalidationList.AppendElement(dependentContent);
             }
 
+            // Update ARIA owns cache.
             if (relAttr == nsGkAtoms::aria_owns) {
-              // Dependent content cannot point to other aria-owns content or
-              // their parents. Ignore it if so.
-              // XXX: note, this alg may make invalid the scenario when X owns Y
-              // and Y owns Z, we should have something smarter to handle that.
-              bool isvalid = true;
-              for (auto it = mARIAOwnsHash.Iter(); !it.Done(); it.Next()) {
-                Accessible* owner = it.Key();
-                nsIContent* parentEl = owner->GetContent();
-                while (parentEl && parentEl != dependentContent) {
-                  parentEl = parentEl->GetParent();
-                }
-                if (parentEl) {
-                  isvalid = false;
-                  break;
-                }
+              // ARIA owns cannot refer to itself or a parent. Ignore
+              // the element if so.
+              nsIContent* parentEl = relProviderEl;
+              while (parentEl && parentEl != dependentContent) {
+                parentEl = parentEl->GetParent();
               }
-              if (isvalid) {
-                // ARIA owns also cannot refer to itself or a parent.
-                nsIContent* parentEl = relProviderEl;
-                while (parentEl && parentEl != dependentContent) {
-                  parentEl = parentEl->GetParent();
-                }
-                if (parentEl) {
-                  isvalid = false;
-                }
 
-                if (isvalid) {
+              if (!parentEl) {
+                // ARIA owns element cannot refer to an element in parents chain
+                // of other ARIA owns element (including that ARIA owns element)
+                // if it's inside of a dependent element subtree of that
+                // ARIA owns element. Applied recursively.
+                if (!IsInARIAOwnsLoop(relProviderEl, dependentContent)) {
                   nsTArray<nsIContent*>* list =
                     mARIAOwnsHash.LookupOrAdd(aRelProvider);
                   list->AppendElement(dependentContent);
@@ -1757,6 +1744,45 @@ DocAccessible::RemoveDependentIDsFor(Accessible* aRelProvider,
     if (aRelAttr)
       break;
   }
+}
+
+bool
+DocAccessible::IsInARIAOwnsLoop(nsIContent* aOwnerEl, nsIContent* aDependentEl)
+{
+  // ARIA owns element cannot refer to an element in parents chain of other ARIA
+  // owns element (including that ARIA owns element) if it's inside of
+  // a dependent element subtree of that ARIA owns element.
+  for (auto it = mARIAOwnsHash.Iter(); !it.Done(); it.Next()) {
+    Accessible* otherOwner = it.Key();
+    nsIContent* parentEl = otherOwner->GetContent();
+    while (parentEl && parentEl != aDependentEl) {
+      parentEl = parentEl->GetParent();
+    }
+
+    // The dependent element of this ARIA owns element contains some other ARIA
+    // owns element, make sure this ARIA owns element is not in a subtree of
+    // a dependent element of that other ARIA owns element. If not then
+    // continue a check recursively.
+    if (parentEl) {
+      nsTArray<nsIContent*>* childEls = it.UserData();
+      for (uint32_t idx = 0; idx < childEls->Length(); idx++) {
+        nsIContent* childEl = childEls->ElementAt(idx);
+        nsIContent* parentEl = aOwnerEl;
+        while (parentEl && parentEl != childEl) {
+          parentEl = parentEl->GetParent();
+        }
+        if (parentEl) {
+          return true;
+        }
+
+        if (IsInARIAOwnsLoop(aOwnerEl, childEl)) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
 }
 
 bool

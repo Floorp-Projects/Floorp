@@ -4,6 +4,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// Utility function. Returns true if the given boolean pref...
+//  (a) exists and (b) is set to true.
+// Otherwise, returns false.
+//
+// This function also reports a test failure if the pref isn't set at all. This
+// ensures that we remove pref-checks from mochitests (instead of accidentally
+// disabling the tests that are controlled by that check) when we remove a
+// mature feature's pref from the rest of the codebase.
+function IsCSSPropertyPrefEnabled(prefName)
+{
+  try {
+    if (SpecialPowers.getBoolPref(prefName)) {
+      return true;
+    }
+  } catch (ex) {
+    ok(false, "Failed to look up property-controlling pref '" +
+       prefName + "' (" + ex + ")");
+  }
+
+  return false;
+}
+
 // True longhand properties.
 const CSS_TYPE_LONGHAND = 0;
 
@@ -4704,7 +4726,7 @@ function get_computed_value(cs, property)
   return cs.getPropertyValue(property);
 }
 
-if (SpecialPowers.getBoolPref("layout.css.touch_action.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.touch_action.enabled")) {
     gCSSProperties["touch-action"] = {
         domProp: "touchAction",
         inherited: false,
@@ -4724,7 +4746,7 @@ if (SpecialPowers.getBoolPref("layout.css.touch_action.enabled")) {
     };
 }
 
-if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.vertical-text.enabled")) {
   var verticalTextProperties = {
     "writing-mode": {
       domProp: "writingMode",
@@ -5305,7 +5327,7 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
   });
 }
 
-if (SpecialPowers.getBoolPref("layout.css.text-combine-upright.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.text-combine-upright.enabled")) {
   gCSSProperties["text-combine-upright"] = {
     domProp: "textCombineUpright",
     inherited: true,
@@ -5318,7 +5340,7 @@ if (SpecialPowers.getBoolPref("layout.css.text-combine-upright.enabled")) {
   };
 }
 
-if (SpecialPowers.getBoolPref("layout.css.masking.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.masking.enabled")) {
   gCSSProperties["mask-type"] = {
     domProp: "maskType",
     inherited: false,
@@ -5329,7 +5351,7 @@ if (SpecialPowers.getBoolPref("layout.css.masking.enabled")) {
   };
 }
 
-if (SpecialPowers.getBoolPref("svg.paint-order.enabled")) {
+if (IsCSSPropertyPrefEnabled("svg.paint-order.enabled")) {
   gCSSProperties["paint-order"] = {
     domProp: "paintOrder",
     inherited: true,
@@ -5340,7 +5362,7 @@ if (SpecialPowers.getBoolPref("svg.paint-order.enabled")) {
   };
 }
 
-if (SpecialPowers.getBoolPref("svg.transform-box.enabled")) {
+if (IsCSSPropertyPrefEnabled("svg.transform-box.enabled")) {
   gCSSProperties["transform-box"] = {
     domProp: "transformBox",
     inherited: false,
@@ -5351,7 +5373,7 @@ if (SpecialPowers.getBoolPref("svg.transform-box.enabled")) {
   };
 }
 
-if (SpecialPowers.getBoolPref("layout.css.clip-path-shapes.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.clip-path-shapes.enabled")) {
   gCSSProperties["clip-path"] = {
     domProp: "clipPath",
     inherited: false,
@@ -5530,7 +5552,7 @@ if (SpecialPowers.getBoolPref("layout.css.clip-path-shapes.enabled")) {
 }
 
 
-if (SpecialPowers.getBoolPref("layout.css.filters.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.filters.enabled")) {
   gCSSProperties["filter"] = {
     domProp: "filter",
     inherited: false,
@@ -5765,7 +5787,7 @@ if (SpecialPowers.getBoolPref("layout.css.filters.enabled")) {
   };
 }
 
-if (SpecialPowers.getBoolPref("layout.css.ruby.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.ruby.enabled")) {
   // Using unshift to add these values at the beginning.
   // Adding them to the end would trigger bug 1038905. The "unshift" should be
   // changed to a "push" when this bug is resolved.
@@ -5797,7 +5819,7 @@ if (SpecialPowers.getBoolPref("layout.css.ruby.enabled")) {
   };
 }
 
-if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
   gCSSProperties["display"].other_values.push("grid", "inline-grid");
   gCSSProperties["grid-auto-flow"] = {
     domProp: "gridAutoFlow",
@@ -6229,11 +6251,11 @@ if (SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
   };
 }
 
-if (SpecialPowers.getBoolPref("layout.css.display-contents.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.display-contents.enabled")) {
   gCSSProperties["display"].other_values.push("contents");
 }
 
-if (SpecialPowers.getBoolPref("layout.css.contain.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.contain.enabled")) {
   gCSSProperties["contain"] = {
     domProp: "contain",
     inherited: false,
@@ -6273,7 +6295,7 @@ if (SpecialPowers.getBoolPref("layout.css.contain.enabled")) {
   };
 }
 
-if (SpecialPowers.getBoolPref("layout.css.image-orientation.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.image-orientation.enabled")) {
   gCSSProperties["image-orientation"] = {
     domProp: "imageOrientation",
     inherited: true,
@@ -6348,7 +6370,7 @@ if (SpecialPowers.getBoolPref("layout.css.image-orientation.enabled")) {
   };
 }
 
-if (SpecialPowers.getBoolPref("layout.css.osx-font-smoothing.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.osx-font-smoothing.enabled")) {
   gCSSProperties["-moz-osx-font-smoothing"] = {
     domProp: "MozOsxFontSmoothing",
     inherited: true,
@@ -6359,11 +6381,11 @@ if (SpecialPowers.getBoolPref("layout.css.osx-font-smoothing.enabled")) {
   };
 }
 
-if (SpecialPowers.getBoolPref("layout.css.sticky.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.sticky.enabled")) {
   gCSSProperties["position"].other_values.push("sticky");
 }
 
-if (SpecialPowers.getBoolPref("layout.css.mix-blend-mode.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.mix-blend-mode.enabled")) {
   gCSSProperties["mix-blend-mode"] = {
     domProp: "mixBlendMode",
     inherited: false,
@@ -6375,7 +6397,7 @@ if (SpecialPowers.getBoolPref("layout.css.mix-blend-mode.enabled")) {
   };
 }
 
-if (SpecialPowers.getBoolPref("layout.css.isolation.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.isolation.enabled")) {
   gCSSProperties["isolation"] = {
     domProp: "isolation",
     inherited: false,
@@ -6386,7 +6408,7 @@ if (SpecialPowers.getBoolPref("layout.css.isolation.enabled")) {
   };
 }
 
-if (SpecialPowers.getBoolPref("layout.css.background-blend-mode.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.background-blend-mode.enabled")) {
   gCSSProperties["background-blend-mode"] = {
     domProp: "backgroundBlendMode",
     inherited: false,
@@ -6398,7 +6420,7 @@ if (SpecialPowers.getBoolPref("layout.css.background-blend-mode.enabled")) {
   };
 }
 
-if (SpecialPowers.getBoolPref("layout.css.object-fit-and-position.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.object-fit-and-position.enabled")) {
   gCSSProperties["object-fit"] = {
     domProp: "objectFit",
     inherited: false,
@@ -6450,7 +6472,7 @@ if (SpecialPowers.getBoolPref("layout.css.object-fit-and-position.enabled")) {
   };
 }
 
-if (SpecialPowers.getBoolPref("layout.css.overflow-clip-box.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.overflow-clip-box.enabled")) {
   gCSSProperties["overflow-clip-box"] = {
     domProp: "overflowClipBox",
     inherited: false,
@@ -6461,7 +6483,7 @@ if (SpecialPowers.getBoolPref("layout.css.overflow-clip-box.enabled")) {
   };
 }
 
-if (SpecialPowers.getBoolPref("layout.css.box-decoration-break.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.box-decoration-break.enabled")) {
   gCSSProperties["box-decoration-break"] = {
     domProp: "boxDecorationBreak",
     inherited: false,
@@ -6472,7 +6494,7 @@ if (SpecialPowers.getBoolPref("layout.css.box-decoration-break.enabled")) {
   };
 }
 
-if (SpecialPowers.getBoolPref("layout.css.scroll-behavior.property-enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.scroll-behavior.property-enabled")) {
   gCSSProperties["scroll-behavior"] = {
     domProp: "scrollBehavior",
     inherited: false,
@@ -6483,7 +6505,7 @@ if (SpecialPowers.getBoolPref("layout.css.scroll-behavior.property-enabled")) {
   };
 }
 
-if (SpecialPowers.getBoolPref("layout.css.scroll-snap.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.scroll-snap.enabled")) {
   gCSSProperties["scroll-snap-coordinate"] = {
     domProp: "scrollSnapCoordinate",
     inherited: false,
@@ -6562,7 +6584,7 @@ if (SpecialPowers.getBoolPref("layout.css.scroll-snap.enabled")) {
   };
 }
 
-if (SpecialPowers.getBoolPref("layout.css.unset-value.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.unset-value.enabled")) {
   gCSSProperties["animation-direction"].invalid_values.push("normal, unset");
   gCSSProperties["animation-name"].invalid_values.push("bounce, unset", "unset, bounce");
   gCSSProperties["-moz-border-bottom-colors"].invalid_values.push("red unset", "unset red");
@@ -6590,10 +6612,10 @@ if (SpecialPowers.getBoolPref("layout.css.unset-value.enabled")) {
   gCSSProperties["-moz-animation"].invalid_values.push("2s unset");
   gCSSProperties["-moz-animation-direction"].invalid_values.push("unset, normal");
   gCSSProperties["-moz-animation-name"].invalid_values.push("bounce, unset", "unset, bounce");
-  if (SpecialPowers.getBoolPref("layout.css.filters.enabled")) {
+  if (IsCSSPropertyPrefEnabled("layout.css.filters.enabled")) {
     gCSSProperties["filter"].invalid_values.push("drop-shadow(unset, 2px 2px)", "drop-shadow(2px 2px, unset)");
   }
-  if (SpecialPowers.getBoolPref("layout.css.text-align-true-value.enabled")) {
+  if (IsCSSPropertyPrefEnabled("layout.css.text-align-true-value.enabled")) {
     gCSSProperties["text-align"].other_values.push("true left");
   } else {
     gCSSProperties["text-align"].invalid_values.push("true left");

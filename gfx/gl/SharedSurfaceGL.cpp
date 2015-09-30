@@ -27,10 +27,7 @@ SharedSurface_Basic::Create(GLContext* gl,
     gl->MakeCurrent();
 
     GLContext::LocalErrorScope localError(*gl);
-    GLuint tex = CreateTexture(gl, formats.color_texInternalFormat,
-                               formats.color_texFormat,
-                               formats.color_texType,
-                               size);
+    GLuint tex = CreateTextureForOffscreen(gl, formats, size);
 
     GLenum err = localError.GetError();
     MOZ_ASSERT_IF(err != LOCAL_GL_NO_ERROR, err == LOCAL_GL_OUT_OF_MEMORY);

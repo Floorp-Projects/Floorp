@@ -1966,10 +1966,7 @@ JS_ReadStructuredClone(JSContext* cx, uint64_t* buf, size_t nbytes,
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SC_BAD_CLONE_VERSION);
         return false;
     }
-    const JSStructuredCloneCallbacks* callbacks =
-        optionalCallbacks ?
-        optionalCallbacks :
-        cx->runtime()->structuredCloneCallbacks;
+    const JSStructuredCloneCallbacks* callbacks = optionalCallbacks;
     return ReadStructuredClone(cx, buf, nbytes, vp, callbacks, closure);
 }
 
@@ -1982,10 +1979,7 @@ JS_WriteStructuredClone(JSContext* cx, HandleValue value, uint64_t** bufp, size_
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value);
 
-    const JSStructuredCloneCallbacks* callbacks =
-        optionalCallbacks ?
-        optionalCallbacks :
-        cx->runtime()->structuredCloneCallbacks;
+    const JSStructuredCloneCallbacks* callbacks = optionalCallbacks;
     return WriteStructuredClone(cx, value, bufp, nbytesp, callbacks, closure, transferable);
 }
 
@@ -2028,10 +2022,7 @@ JS_StructuredClone(JSContext* cx, HandleValue value, MutableHandleValue vp,
       return true;
     }
 
-    const JSStructuredCloneCallbacks* callbacks =
-        optionalCallbacks ?
-        optionalCallbacks :
-        cx->runtime()->structuredCloneCallbacks;
+    const JSStructuredCloneCallbacks* callbacks = optionalCallbacks;
 
     JSAutoStructuredCloneBuffer buf;
     {
@@ -2172,12 +2163,6 @@ JSAutoStructuredCloneBuffer::write(JSContext* cx, HandleValue value,
         ownTransferables_ = NoTransferables;
     }
     return ok;
-}
-
-JS_PUBLIC_API(void)
-JS_SetStructuredCloneCallbacks(JSRuntime* rt, const JSStructuredCloneCallbacks* callbacks)
-{
-    rt->structuredCloneCallbacks = callbacks;
 }
 
 JS_PUBLIC_API(bool)

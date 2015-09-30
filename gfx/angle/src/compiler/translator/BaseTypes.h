@@ -4,10 +4,10 @@
 // found in the LICENSE file.
 //
 
-#ifndef _BASICTYPES_INCLUDED_
-#define _BASICTYPES_INCLUDED_
+#ifndef COMPILER_TRANSLATOR_BASETYPES_H_
+#define COMPILER_TRANSLATOR_BASETYPES_H_
 
-#include <assert.h>
+#include "common/debug.h"
 
 //
 // Precision qualifiers
@@ -18,7 +18,10 @@ enum TPrecision
     EbpUndefined,
     EbpLow,
     EbpMedium,
-    EbpHigh
+    EbpHigh,
+
+    // end of list
+    EbpLast
 };
 
 inline const char* getPrecisionString(TPrecision p)
@@ -42,7 +45,15 @@ enum TBasicType
     EbtInt,
     EbtUInt,
     EbtBool,
-    EbtGVec4,              // non type: represents vec4, ivec4 and uvec4
+    EbtGVec4,              // non type: represents vec4, ivec4, and uvec4
+    EbtGenType,            // non type: represents float, vec2, vec3, and vec4
+    EbtGenIType,           // non type: represents int, ivec2, ivec3, and ivec4
+    EbtGenUType,           // non type: represents uint, uvec2, uvec3, and uvec4
+    EbtGenBType,           // non type: represents bool, bvec2, bvec3, and bvec4
+    EbtVec,                // non type: represents vec2, vec3, and vec4
+    EbtIVec,               // non type: represents ivec2, ivec3, and ivec4
+    EbtUVec,               // non type: represents uvec2, uvec3, and uvec4
+    EbtBVec,               // non type: represents bvec2, bvec3, and bvec4
     EbtGuardSamplerBegin,  // non type: see implementation of IsSampler()
     EbtSampler2D,
     EbtSampler3D,
@@ -62,13 +73,16 @@ enum TBasicType
     EbtSamplerCubeShadow,
     EbtSampler2DArrayShadow,
     EbtGuardSamplerEnd,    // non type: see implementation of IsSampler()
-    EbtGSampler2D,         // non type: represents sampler2D, isampler2D and usampler2D
-    EbtGSampler3D,         // non type: represents sampler3D, isampler3D and usampler3D
-    EbtGSamplerCube,       // non type: represents samplerCube, isamplerCube and usamplerCube
-    EbtGSampler2DArray,    // non type: represents sampler2DArray, isampler2DArray and usampler2DArray
+    EbtGSampler2D,         // non type: represents sampler2D, isampler2D, and usampler2D
+    EbtGSampler3D,         // non type: represents sampler3D, isampler3D, and usampler3D
+    EbtGSamplerCube,       // non type: represents samplerCube, isamplerCube, and usamplerCube
+    EbtGSampler2DArray,    // non type: represents sampler2DArray, isampler2DArray, and usampler2DArray
     EbtStruct,
     EbtInterfaceBlock,
     EbtAddress,            // should be deprecated??
+
+    // end of list
+    EbtLast
 };
 
 const char* getBasicString(TBasicType t);
@@ -258,6 +272,11 @@ inline bool IsShadowSampler(TBasicType type)
     return false;
 }
 
+inline bool IsInteger(TBasicType type)
+{
+    return type == EbtInt || type == EbtUInt;
+}
+
 inline bool SupportsPrecision(TBasicType type)
 {
     return type == EbtFloat || type == EbtInt || type == EbtUInt || IsSampler(type);
@@ -271,27 +290,27 @@ inline bool SupportsPrecision(TBasicType type)
 //
 enum TQualifier
 {
-    EvqTemporary,     // For temporaries (within a function), read/write
-    EvqGlobal,        // For globals read/write
-    EvqInternal,      // For internal use, not visible to the user
-    EvqConst,         // User defined constants and non-output parameters in functions
-    EvqAttribute,     // Readonly
-    EvqVaryingIn,     // readonly, fragment shaders only
-    EvqVaryingOut,    // vertex shaders only  read/write
-    EvqInvariantVaryingIn,     // readonly, fragment shaders only
-    EvqInvariantVaryingOut,    // vertex shaders only  read/write
-    EvqUniform,       // Readonly, vertex and fragment
+    EvqTemporary,   // For temporaries (within a function), read/write
+    EvqGlobal,      // For globals read/write
+    EvqConst,       // User defined constants and non-output parameters in functions
+    EvqAttribute,   // Readonly
+    EvqVaryingIn,   // readonly, fragment shaders only
+    EvqVaryingOut,  // vertex shaders only  read/write
+    EvqUniform,     // Readonly, vertex and fragment
 
-    EvqVertexIn,      // Vertex shader input
-    EvqFragmentOut,   // Fragment shader output
-    EvqVertexOut,     // Vertex shader output
-    EvqFragmentIn,    // Fragment shader input
+    EvqVertexIn,     // Vertex shader input
+    EvqFragmentOut,  // Fragment shader output
+    EvqVertexOut,    // Vertex shader output
+    EvqFragmentIn,   // Fragment shader input
 
     // parameters
     EvqIn,
     EvqOut,
     EvqInOut,
     EvqConstReadOnly,
+
+    // built-ins read by vertex shader
+    EvqInstanceID,
 
     // built-ins written by vertex shader
     EvqPosition,
@@ -305,17 +324,22 @@ enum TQualifier
     // built-ins written by fragment shader
     EvqFragColor,
     EvqFragData,
-    EvqFragDepth,
+    EvqFragDepthEXT,  // gl_FragDepthEXT for ESSL100, EXT_frag_depth.
+    EvqFragDepth,     // gl_FragDepth for ESSL300.
+
+    // built-ins written by the shader_framebuffer_fetch extension(s)
+    EvqLastFragColor,
+    EvqLastFragData,
 
     // GLSL ES 3.0 vertex output and fragment input
-    EvqSmooth,        // Incomplete qualifier, smooth is the default
-    EvqFlat,          // Incomplete qualifier
+    EvqSmooth,  // Incomplete qualifier, smooth is the default
+    EvqFlat,    // Incomplete qualifier
     EvqSmoothOut = EvqSmooth,
-    EvqFlatOut = EvqFlat,
-    EvqCentroidOut,   // Implies smooth
+    EvqFlatOut   = EvqFlat,
+    EvqCentroidOut,  // Implies smooth
     EvqSmoothIn,
     EvqFlatIn,
-    EvqCentroidIn,    // Implies smooth
+    EvqCentroidIn,  // Implies smooth
 
     // end of list
     EvqLast
@@ -365,16 +389,13 @@ struct TLayoutQualifier
 inline const char* getQualifierString(TQualifier q)
 {
     switch(q)
-    {
+    { // clang-format off
     case EvqTemporary:      return "Temporary";      break;
     case EvqGlobal:         return "Global";         break;
     case EvqConst:          return "const";          break;
-    case EvqConstReadOnly:  return "const";          break;
     case EvqAttribute:      return "attribute";      break;
     case EvqVaryingIn:      return "varying";        break;
     case EvqVaryingOut:     return "varying";        break;
-    case EvqInvariantVaryingIn: return "invariant varying";	break;
-    case EvqInvariantVaryingOut:return "invariant varying";	break;
     case EvqUniform:        return "uniform";        break;
     case EvqVertexIn:       return "in";             break;
     case EvqFragmentOut:    return "out";            break;
@@ -383,21 +404,27 @@ inline const char* getQualifierString(TQualifier q)
     case EvqIn:             return "in";             break;
     case EvqOut:            return "out";            break;
     case EvqInOut:          return "inout";          break;
+    case EvqConstReadOnly:  return "const";          break;
+    case EvqInstanceID:     return "InstanceID";     break;
     case EvqPosition:       return "Position";       break;
     case EvqPointSize:      return "PointSize";      break;
     case EvqFragCoord:      return "FragCoord";      break;
     case EvqFrontFacing:    return "FrontFacing";    break;
+    case EvqPointCoord:     return "PointCoord";     break;
     case EvqFragColor:      return "FragColor";      break;
     case EvqFragData:       return "FragData";       break;
+    case EvqFragDepthEXT:   return "FragDepth";      break;
     case EvqFragDepth:      return "FragDepth";      break;
+    case EvqLastFragColor:  return "LastFragColor";  break;
+    case EvqLastFragData:   return "LastFragData";   break;
     case EvqSmoothOut:      return "smooth out";     break;
     case EvqCentroidOut:    return "centroid out";   break;
     case EvqFlatOut:        return "flat out";       break;
     case EvqSmoothIn:       return "smooth in";      break;
-    case EvqCentroidIn:     return "centroid in";    break;
     case EvqFlatIn:         return "flat in";        break;
-    default:                return "unknown qualifier";
-    }
+    case EvqCentroidIn:     return "centroid in";    break;
+    default: UNREACHABLE(); return "unknown qualifier";
+    } // clang-format on
 }
 
 inline const char* getMatrixPackingString(TLayoutMatrixPacking mpq)
@@ -407,7 +434,7 @@ inline const char* getMatrixPackingString(TLayoutMatrixPacking mpq)
     case EmpUnspecified:    return "mp_unspecified";
     case EmpRowMajor:       return "row_major";
     case EmpColumnMajor:    return "column_major";
-    default:                return "unknown matrix packing";
+    default: UNREACHABLE(); return "unknown matrix packing";
     }
 }
 
@@ -419,7 +446,7 @@ inline const char* getBlockStorageString(TLayoutBlockStorage bsq)
     case EbsShared:         return "shared";
     case EbsPacked:         return "packed";
     case EbsStd140:         return "std140";
-    default:                return "unknown block storage";
+    default: UNREACHABLE(); return "unknown block storage";
     }
 }
 
@@ -433,8 +460,8 @@ inline const char* getInterpolationString(TQualifier q)
     case EvqSmoothIn:       return "smooth";   break;
     case EvqCentroidIn:     return "centroid"; break;
     case EvqFlatIn:         return "flat";     break;
-    default:                return "unknown interpolation";
+    default: UNREACHABLE(); return "unknown interpolation";
     }
 }
 
-#endif // _BASICTYPES_INCLUDED_
+#endif // COMPILER_TRANSLATOR_BASETYPES_H_

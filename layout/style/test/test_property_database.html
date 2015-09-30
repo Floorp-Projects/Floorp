@@ -33,7 +33,7 @@
 
 for (var idx in gLonghandProperties) {
   var prop = gLonghandProperties[idx];
-  if (prop.pref && !SpecialPowers.getBoolPref(prop.pref)) {
+  if (prop.pref && !IsCSSPropertyPrefEnabled(prop.pref)) {
     continue;
   }
   var present = prop.name in gCSSProperties;
@@ -48,7 +48,7 @@ for (var idx in gLonghandProperties) {
 }
 for (var idx in gShorthandProperties) {
   var prop = gShorthandProperties[idx];
-  if (prop.pref && !SpecialPowers.getBoolPref(prop.pref)) {
+  if (prop.pref && !IsCSSPropertyPrefEnabled(prop.pref)) {
     continue;
   }
   if (prop.name == "all") {
@@ -68,7 +68,7 @@ for (var idx in gShorthandProperties) {
 }
 for (var idx in gShorthandPropertiesLikeLonghand) {
   var prop = gShorthandPropertiesLikeLonghand[idx];
-  if (prop.pref && !SpecialPowers.getBoolPref(prop.pref)) {
+  if (prop.pref && !IsCSSPropertyPrefEnabled(prop.pref)) {
     continue;
   }
   var present = prop.name in gCSSProperties;
@@ -88,7 +88,7 @@ for (var idx in gShorthandPropertiesLikeLonghand) {
  */
 for (var prop in gCSSProperties) {
   var entry = gCSSProperties[prop];
-  if (entry.pref && !SpecialPowers.getBoolPref(entry.pref)) {
+  if (entry.pref && !IsCSSPropertyPrefEnabled(entry.pref)) {
     continue;
   }
   if (entry.type == CSS_TYPE_LONGHAND) {

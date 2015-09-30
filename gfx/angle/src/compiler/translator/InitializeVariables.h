@@ -4,8 +4,8 @@
 // found in the LICENSE file.
 //
 
-#ifndef COMPILER_INITIALIZE_VARIABLES_H_
-#define COMPILER_INITIALIZE_VARIABLES_H_
+#ifndef COMPILER_TRANSLATOR_INITIALIZEVARIABLES_H_
+#define COMPILER_TRANSLATOR_INITIALIZEVARIABLES_H_
 
 #include "compiler/translator/IntermNode.h"
 
@@ -26,8 +26,9 @@ class InitializeVariables : public TIntermTraverser
     typedef TVector<InitVariableInfo> InitVariableInfoList;
 
     InitializeVariables(const InitVariableInfoList &vars)
-        : mCodeInserted(false),
-          mVariables(vars)
+        : TIntermTraverser(true, false, false),
+          mVariables(vars),
+          mCodeInserted(false)
     {
     }
 
@@ -47,4 +48,4 @@ class InitializeVariables : public TIntermTraverser
     bool mCodeInserted;
 };
 
-#endif  // COMPILER_INITIALIZE_VARIABLES_H_
+#endif  // COMPILER_TRANSLATOR_INITIALIZEVARIABLES_H_

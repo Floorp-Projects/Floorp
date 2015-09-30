@@ -116,4 +116,5 @@ inline bool operator!=(const Token &lhs, const Token &rhs)
 extern std::ostream &operator<<(std::ostream &out, const Token &token);
 
 }  // namepsace pp
+
 #endif  // COMPILER_PREPROCESSOR_TOKEN_H_

@@ -459,7 +459,7 @@
 // const unsigned char*
 //     TRACE_EVENT_API_GET_CATEGORY_ENABLED(const char* category_name)
 #define TRACE_EVENT_API_GET_CATEGORY_ENABLED \
-    gl::TraceGetTraceCategoryEnabledFlag
+    angle::GetTraceCategoryEnabledFlag
 
 // Add a trace event to the platform tracing system.
 // void TRACE_EVENT_API_ADD_TRACE_EVENT(
@@ -473,7 +473,7 @@
 //                    const unsigned long long* arg_values,
 //                    unsigned char flags)
 #define TRACE_EVENT_API_ADD_TRACE_EVENT \
-    gl::TraceAddTraceEvent
+    angle::AddTraceEvent
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -690,45 +690,48 @@ static inline void setTraceValue(const std::string& arg,
 // store pointers to the internal c_str and pass through to the tracing API, the
 // arg values must live throughout these procedures.
 
-static inline void addTraceEvent(char phase,
-                                const unsigned char* categoryEnabled,
-                                const char* name,
-                                unsigned long long id,
-                                unsigned char flags) {
-    TRACE_EVENT_API_ADD_TRACE_EVENT(
+static inline angle::Platform::TraceEventHandle addTraceEvent(
+    char phase,
+    const unsigned char* categoryEnabled,
+    const char* name,
+    unsigned long long id,
+    unsigned char flags) {
+    return TRACE_EVENT_API_ADD_TRACE_EVENT(
         phase, categoryEnabled, name, id,
         zeroNumArgs, 0, 0, 0,
         flags);
 }
 
 template<class ARG1_TYPE>
-static inline void addTraceEvent(char phase,
-                                const unsigned char* categoryEnabled,
-                                const char* name,
-                                unsigned long long id,
-                                unsigned char flags,
-                                const char* arg1Name,
-                                const ARG1_TYPE& arg1Val) {
+static inline angle::Platform::TraceEventHandle addTraceEvent(
+    char phase,
+    const unsigned char* categoryEnabled,
+    const char* name,
+    unsigned long long id,
+    unsigned char flags,
+    const char* arg1Name,
+    const ARG1_TYPE& arg1Val) {
     const int numArgs = 1;
     unsigned char argTypes[1];
     unsigned long long argValues[1];
     setTraceValue(arg1Val, &argTypes[0], &argValues[0]);
-    TRACE_EVENT_API_ADD_TRACE_EVENT(
+    return TRACE_EVENT_API_ADD_TRACE_EVENT(
         phase, categoryEnabled, name, id,
         numArgs, &arg1Name, argTypes, argValues,
         flags);
 }
 
 template<class ARG1_TYPE, class ARG2_TYPE>
-static inline void addTraceEvent(char phase,
-                                const unsigned char* categoryEnabled,
-                                const char* name,
-                                unsigned long long id,
-                                unsigned char flags,
-                                const char* arg1Name,
-                                const ARG1_TYPE& arg1Val,
-                                const char* arg2Name,
-                                const ARG2_TYPE& arg2Val) {
+static inline angle::Platform::TraceEventHandle addTraceEvent(
+    char phase,
+    const unsigned char* categoryEnabled,
+    const char* name,
+    unsigned long long id,
+    unsigned char flags,
+    const char* arg1Name,
+    const ARG1_TYPE& arg1Val,
+    const char* arg2Name,
+    const ARG2_TYPE& arg2Val) {
     const int numArgs = 2;
     const char* argNames[2] = { arg1Name, arg2Name };
     unsigned char argTypes[2];

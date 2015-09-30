@@ -143,21 +143,7 @@ var AboutHome = {
         break;
 
       case "AboutHome:Sync":
-        let weave = Cc["@mozilla.org/weave/service;1"]
-                      .getService(Ci.nsISupports)
-                      .wrappedJSObject;
-
-        if (weave.fxAccountsEnabled) {
-          fxAccounts.getSignedInUser().then(userData => {
-            if (userData) {
-              window.openPreferences("paneSync");
-            } else {
-              window.loadURI("about:accounts?entrypoint=abouthome");
-            }
-          });
-        } else {
-          window.openPreferences("paneSync");
-        }
+        window.openPreferences("paneSync", { urlParams: { entrypoint: "abouthome" } });
         break;
 
       case "AboutHome:Settings":

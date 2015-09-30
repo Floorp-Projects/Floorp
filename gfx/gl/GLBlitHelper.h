@@ -28,48 +28,6 @@ namespace gl {
 
 class GLContext;
 
-/**
- * Helper function that creates a 2D texture aSize.width x aSize.height with
- * storage type specified by aFormats. Returns GL texture object id.
- *
- * See mozilla::gl::CreateTexture.
- */
-GLuint CreateTextureForOffscreen(GLContext* aGL, const GLFormats& aFormats,
-                                 const gfx::IntSize& aSize);
-
-/**
- * Helper function that creates a 2D texture aSize.width x aSize.height with
- * storage type aInternalFormat. Returns GL texture object id.
- *
- * Initialize textyre parameters to:
- *    GL_TEXTURE_MIN_FILTER = GL_LINEAR
- *    GL_TEXTURE_MAG_FILTER = GL_LINEAR
- *    GL_TEXTURE_WRAP_S = GL_CLAMP_TO_EDGE
- *    GL_TEXTURE_WRAP_T = GL_CLAMP_TO_EDGE
- */
-GLuint CreateTexture(GLContext* aGL, GLenum aInternalFormat, GLenum aFormat,
-                     GLenum aType, const gfx::IntSize& aSize, bool linear = true);
-
-/**
- * Helper function to create, potentially, multisample render buffers suitable
- * for offscreen rendering. Buffers of size aSize.width x aSize.height with
- * storage specified by aFormat. returns GL render buffer object id.
- */
-GLuint CreateRenderbuffer(GLContext* aGL, GLenum aFormat, GLsizei aSamples,
-                          const gfx::IntSize& aSize);
-
-/**
- * Helper function to create, potentially, multisample render buffers suitable
- * for offscreen rendering. Buffers of size aSize.width x aSize.height with
- * storage specified by aFormats. GL render buffer object ids are returned via
- * aColorMSRB, aDepthRB, and aStencilRB
- */
-void CreateRenderbuffersForOffscreen(GLContext* aGL, const GLFormats& aFormats,
-                                     const gfx::IntSize& aSize, bool aMultisample,
-                                     GLuint* aColorMSRB, GLuint* aDepthRB,
-                                     GLuint* aStencilRB);
-
-
 /** Buffer blitting helper */
 class GLBlitHelper final
 {

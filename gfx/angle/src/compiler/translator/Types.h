@@ -4,20 +4,20 @@
 // found in the LICENSE file.
 //
 
-#ifndef _TYPES_INCLUDED
-#define _TYPES_INCLUDED
+#ifndef COMPILER_TRANSLATOR_TYPES_H_
+#define COMPILER_TRANSLATOR_TYPES_H_
 
 #include "common/angleutils.h"
+#include "common/debug.h"
 
 #include "compiler/translator/BaseTypes.h"
 #include "compiler/translator/Common.h"
-#include "compiler/translator/compilerdebug.h"
 
 struct TPublicType;
 class TType;
 class TSymbol;
 
-class TField
+class TField : angle::NonCopyable
 {
   public:
     POOL_ALLOCATOR_NEW_DELETE();
@@ -49,7 +49,6 @@ class TField
     }
 
   private:
-    DISALLOW_COPY_AND_ASSIGN(TField);
     TType *mType;
     TString *mName;
     TSourceLoc mLine;
@@ -62,7 +61,7 @@ inline TFieldList *NewPoolTFieldList()
     return new(memory) TFieldList;
 }
 
-class TFieldListCollection
+class TFieldListCollection : angle::NonCopyable
 {
   public:
     const TString &name() const
@@ -113,7 +112,8 @@ class TStructure : public TFieldListCollection
     TStructure(const TString *name, TFieldList *fields)
         : TFieldListCollection(name, fields),
           mDeepestNesting(0),
-          mUniqueId(0)
+          mUniqueId(0),
+          mAtGlobalScope(false)
     {
     }
 
@@ -124,6 +124,7 @@ class TStructure : public TFieldListCollection
         return mDeepestNesting;
     }
     bool containsArrays() const;
+    bool containsSamplers() const;
 
     bool equals(const TStructure &other) const;
 
@@ -138,9 +139,17 @@ class TStructure : public TFieldListCollection
         return mUniqueId;
     }
 
-  private:
-    DISALLOW_COPY_AND_ASSIGN(TStructure);
+    void setAtGlobalScope(bool atGlobalScope)
+    {
+        mAtGlobalScope = atGlobalScope;
+    }
 
+    bool atGlobalScope() const
+    {
+        return mAtGlobalScope;
+    }
+
+  private:
     // TODO(zmo): Find a way to get rid of the const_cast in function
     // setName().  At the moment keep this function private so only
     // friend class RegenerateStructNames may call it.
@@ -159,6 +168,7 @@ class TStructure : public TFieldListCollection
 
     mutable int mDeepestNesting;
     int mUniqueId;
+    bool mAtGlobalScope;
 };
 
 class TInterfaceBlock : public TFieldListCollection
@@ -201,7 +211,6 @@ class TInterfaceBlock : public TFieldListCollection
     }
 
   private:
-    DISALLOW_COPY_AND_ASSIGN(TInterfaceBlock);
     virtual TString mangledNamePrefix() const
     {
         return "iblock-";
@@ -221,10 +230,14 @@ class TType
   public:
     POOL_ALLOCATOR_NEW_DELETE();
     TType()
+        : type(EbtVoid), precision(EbpUndefined), qualifier(EvqGlobal), invariant(false),
+          layoutQualifier(TLayoutQualifier::create()),
+          primarySize(0), secondarySize(0), array(false), arraySize(0),
+          interfaceBlock(nullptr), structure(nullptr)
     {
     }
     TType(TBasicType t, unsigned char ps = 1, unsigned char ss = 1)
-        : type(t), precision(EbpUndefined), qualifier(EvqGlobal),
+        : type(t), precision(EbpUndefined), qualifier(EvqGlobal), invariant(false),
           layoutQualifier(TLayoutQualifier::create()),
           primarySize(ps), secondarySize(ss), array(false), arraySize(0),
           interfaceBlock(0), structure(0)
@@ -232,7 +245,7 @@ class TType
     }
     TType(TBasicType t, TPrecision p, TQualifier q = EvqTemporary,
           unsigned char ps = 1, unsigned char ss = 1, bool a = false)
-        : type(t), precision(p), qualifier(q),
+        : type(t), precision(p), qualifier(q), invariant(false),
           layoutQualifier(TLayoutQualifier::create()),
           primarySize(ps), secondarySize(ss), array(a), arraySize(0),
           interfaceBlock(0), structure(0)
@@ -240,7 +253,7 @@ class TType
     }
     explicit TType(const TPublicType &p);
     TType(TStructure *userDef, TPrecision p = EbpUndefined)
-        : type(EbtStruct), precision(p), qualifier(EvqTemporary),
+        : type(EbtStruct), precision(p), qualifier(EvqTemporary), invariant(false),
           layoutQualifier(TLayoutQualifier::create()),
           primarySize(1), secondarySize(1), array(false), arraySize(0),
           interfaceBlock(0), structure(userDef)
@@ -249,7 +262,7 @@ class TType
     TType(TInterfaceBlock *interfaceBlockIn, TQualifier qualifierIn,
           TLayoutQualifier layoutQualifierIn, int arraySizeIn)
         : type(EbtInterfaceBlock), precision(EbpUndefined), qualifier(qualifierIn),
-          layoutQualifier(layoutQualifierIn),
+          invariant(false), layoutQualifier(layoutQualifierIn),
           primarySize(1), secondarySize(1), array(arraySizeIn > 0), arraySize(arraySizeIn),
           interfaceBlock(interfaceBlockIn), structure(0)
     {
@@ -280,6 +293,11 @@ class TType
     void setQualifier(TQualifier q)
     {
         qualifier = q;
+    }
+
+    bool isInvariant() const
+    {
+        return invariant;
     }
 
     TLayoutQualifier getLayoutQualifier() const
@@ -325,9 +343,17 @@ class TType
     {
         return primarySize > 1 && secondarySize > 1;
     }
+    bool isNonSquareMatrix() const
+    {
+        return isMatrix() && primarySize != secondarySize;
+    }
     bool isArray() const
     {
-        return array ? true : false;
+        return array;
+    }
+    bool isUnsizedArray() const
+    {
+        return array && arraySize == 0;
     }
     int getArraySize() const
     {
@@ -379,7 +405,7 @@ class TType
         structure = s;
     }
 
-    const TString &getMangledName()
+    const TString &getMangledName() const
     {
         if (mangled.empty())
         {
@@ -464,14 +490,25 @@ class TType
         return structure ? structure->containsArrays() : false;
     }
 
+    bool isStructureContainingSamplers() const
+    {
+        return structure ? structure->containsSamplers() : false;
+    }
+
+    // Initializes all lazily-initialized members.
+    void realize()
+    {
+        getMangledName();
+    }
+
   protected:
     TString buildMangledName() const;
     size_t getStructSize() const;
-    void computeDeepestStructNesting();
 
     TBasicType type;
     TPrecision precision;
     TQualifier qualifier;
+    bool invariant;
     TLayoutQualifier layoutQualifier;
     unsigned char primarySize; // size of vector or cols matrix
     unsigned char secondarySize; // rows of a matrix
@@ -501,6 +538,7 @@ struct TPublicType
     TBasicType type;
     TLayoutQualifier layoutQualifier;
     TQualifier qualifier;
+    bool invariant;
     TPrecision precision;
     unsigned char primarySize;          // size of vector or cols of matrix
     unsigned char secondarySize;        // rows of matrix
@@ -514,6 +552,7 @@ struct TPublicType
         type = bt;
         layoutQualifier = TLayoutQualifier::create();
         qualifier = q;
+        invariant = false;
         precision = EbpUndefined;
         primarySize = 1;
         secondarySize = 1;
@@ -535,10 +574,19 @@ struct TPublicType
         secondarySize = r;
     }
 
-    void setArray(bool a, int s = 0)
+    bool isUnsizedArray() const
     {
-        array = a;
+        return array && arraySize == 0;
+    }
+    void setArraySize(int s)
+    {
+        array = true;
         arraySize = s;
+    }
+    void clearArrayness()
+    {
+        array = false;
+        arraySize = 0;
     }
 
     bool isStructureContainingArrays() const
@@ -584,4 +632,4 @@ struct TPublicType
     }
 };
 
-#endif // _TYPES_INCLUDED_
+#endif // COMPILER_TRANSLATOR_TYPES_H_

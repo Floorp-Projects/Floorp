@@ -13,9 +13,10 @@
 class TConstTraverser : public TIntermTraverser
 {
   public:
-    TConstTraverser(ConstantUnion *cUnion, bool singleConstParam,
+    TConstTraverser(TConstantUnion *cUnion, bool singleConstParam,
                     TOperator constructType, TInfoSink &sink, TType &t)
-        : error(false),
+        : TIntermTraverser(true, false, false),
+          error(false),
           mIndex(0),
           mUnionArray(cUnion),
           mType(t),
@@ -42,7 +43,7 @@ class TConstTraverser : public TIntermTraverser
     bool visitBranch(Visit visit, TIntermBranch *);
 
     size_t mIndex;
-    ConstantUnion *mUnionArray;
+    TConstantUnion *mUnionArray;
     TType mType;
     TOperator mConstructorType;
     bool mSingleConstantParam;
@@ -167,7 +168,7 @@ void TConstTraverser::visitConstantUnion(TIntermConstantUnion *node)
         return;
     }
 
-    ConstantUnion *leftUnionArray = mUnionArray;
+    TConstantUnion *leftUnionArray = mUnionArray;
     size_t instanceSize = mType.getObjectSize();
     TBasicType basicType = mType.getBasicType();
 
@@ -177,7 +178,7 @@ void TConstTraverser::visitConstantUnion(TIntermConstantUnion *node)
     if (!mSingleConstantParam)
     {
         size_t objectSize = node->getType().getObjectSize();
-        ConstantUnion *rightUnionArray = node->getUnionArrayPointer();
+        const TConstantUnion *rightUnionArray = node->getUnionArrayPointer();
         for (size_t i=0; i < objectSize; i++)
         {
             if (mIndex >= instanceSize)
@@ -189,7 +190,7 @@ void TConstTraverser::visitConstantUnion(TIntermConstantUnion *node)
     else
     {
         size_t totalSize = mIndex + mSize;
-        ConstantUnion *rightUnionArray = node->getUnionArrayPointer();
+        const TConstantUnion *rightUnionArray = node->getUnionArrayPointer();
         if (!mIsDiagonalMatrixInit)
         {
             int count = 0;
@@ -247,7 +248,7 @@ bool TConstTraverser::visitBranch(Visit visit, TIntermBranch *node)
 // type of node.  It's children will still be processed.
 //
 bool TIntermediate::parseConstTree(
-    const TSourceLoc &line, TIntermNode *root, ConstantUnion *unionArray,
+    const TSourceLoc &line, TIntermNode *root, TConstantUnion *unionArray,
     TOperator constructorType, TType t, bool singleConstantParam)
 {
     if (root == 0)

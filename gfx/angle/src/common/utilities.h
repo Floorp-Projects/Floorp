@@ -6,12 +6,14 @@
 
 // utilities.h: Conversion functions and other utility routines.
 
-#ifndef LIBGLESV2_UTILITIES_H
-#define LIBGLESV2_UTILITIES_H
+#ifndef COMMON_UTILITIES_H_
+#define COMMON_UTILITIES_H_
 
 #include "angle_gl.h"
 #include <string>
 #include <math.h>
+
+#include "common/mathutil.h"
 
 namespace gl
 {
@@ -24,7 +26,8 @@ size_t VariableExternalSize(GLenum type);
 GLenum VariableBoolVectorType(GLenum type);
 int VariableRowCount(GLenum type);
 int VariableColumnCount(GLenum type);
-bool IsSampler(GLenum type);
+bool IsSamplerType(GLenum type);
+GLenum SamplerTypeToTextureType(GLenum samplerType);
 bool IsMatrixType(GLenum type);
 GLenum TransposeMatrixType(GLenum type);
 int VariableRegisterCount(GLenum type);
@@ -34,7 +37,17 @@ int VariableSortOrder(GLenum type);
 
 int AllocateFirstFreeBits(unsigned int *bits, unsigned int allocationSize, unsigned int bitsSize);
 
-bool IsCubemapTextureTarget(GLenum target);
+static const GLenum FirstCubeMapTextureTarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+static const GLenum LastCubeMapTextureTarget = GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
+bool IsCubeMapTextureTarget(GLenum target);
+size_t CubeMapTextureTargetToLayerIndex(GLenum target);
+GLenum LayerIndexToCubeMapTextureTarget(size_t index);
+
+// Parse the base uniform name and array index.  Returns the base name of the uniform. outSubscript is
+// set to GL_INVALID_INDEX if the provided name is not an array or the array index is invalid.
+std::string ParseUniformName(const std::string &name, size_t *outSubscript);
+
+RangeUI ComputeIndexRange(GLenum indexType, const GLvoid *indices, GLsizei count);
 
 bool IsTriangleMode(GLenum drawMode);
 
@@ -51,8 +64,8 @@ std::string getTempPath();
 void writeFile(const char* path, const void* data, size_t size);
 #endif
 
-#if defined(ANGLE_ENABLE_WINDOWS_STORE)
-void Sleep(_In_ unsigned long dwMilliseconds);
+#if defined (ANGLE_PLATFORM_WINDOWS)
+void ScheduleYield();
 #endif
 
-#endif  // LIBGLESV2_UTILITIES_H
+#endif  // COMMON_UTILITIES_H_

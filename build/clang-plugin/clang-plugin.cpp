@@ -30,14 +30,6 @@ typedef ASTConsumer *ASTConsumerPtr;
 
 namespace {
 
-QualType GetCallReturnType(const CallExpr *expr) {
-#if CLANG_VERSION_FULL >= 307
-  return expr->getCallReturnType(expr->getCalleeDecl()->getASTContext());
-#else
-  return expr->getCallReturnType();
-#endif
-}
-
 using namespace clang::ast_matchers;
 class DiagnosticsMatcher {
 public:
@@ -501,13 +493,6 @@ const FieldDecl *getClassRefCntMember(const CXXRecordDecl *D) {
     }
   }
   return 0;
-}
-
-const FieldDecl *getClassRefCntMember(QualType T) {
-  while (const ArrayType *arrTy = T->getAsArrayTypeUnsafe())
-    T = arrTy->getElementType();
-  CXXRecordDecl *clazz = T->getAsCXXRecordDecl();
-  return clazz ? getClassRefCntMember(clazz) : 0;
 }
 
 const FieldDecl *getBaseRefCntMember(QualType T);
@@ -1317,8 +1302,6 @@ void DiagnosticsMatcher::NonMemMovableChecker::run(
   const ClassTemplateSpecializationDecl *specialization =
       Result.Nodes.getNodeAs<ClassTemplateSpecializationDecl>("specialization");
   SourceLocation requestLoc = specialization->getPointOfInstantiation();
-  const CXXRecordDecl *templ =
-      specialization->getSpecializedTemplate()->getTemplatedDecl();
 
   // Report an error for every template argument which is non-memmovable
   const TemplateArgumentList &args =

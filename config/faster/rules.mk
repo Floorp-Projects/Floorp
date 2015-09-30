@@ -53,6 +53,9 @@ default: $(TOPOBJDIR)/dist/bin/greprefs.js
 default: $(TOPOBJDIR)/dist/bin/platform.ini
 default: $(TOPOBJDIR)/dist/bin/webapprt/webapprt.ini
 
+# Targets from the recursive make backend to be built for a default build
+default: $(TOPOBJDIR)/config/makefiles/xpidl/xpidl
+
 .PHONY: FORCE
 
 # Extra define to trigger some workarounds. We should strive to limit the
@@ -189,15 +192,6 @@ jar-browser-themes-%-jar.mn: \
 	$(TOPOBJDIR)/browser/themes/%/tab-selected-end.svg \
 	$(TOPOBJDIR)/browser/themes/%/tab-selected-start.svg
 
-# These files are manually generated from
-# toolkit/components/urlformatter/Makefile.in and are force-included so that
-# the corresponding defines don't end up in the command lines.
-KEYS = mozilla_api_key google_api_key google_oauth_api_key bing_api_key
-$(TOPOBJDIR)/dist/bin/components/nsURLFormatter.js: \
-	$(addprefix $(TOPOBJDIR)/toolkit/components/urlformatter/, $(KEYS))
-$(TOPOBJDIR)/dist/bin/components/nsURLFormatter.js: defines += \
-	$(addprefix -I $(TOPOBJDIR)/toolkit/components/urlformatter/,$(KEYS))
-
 # Extra dependencies and/or definitions for preprocessed files.
 $(TOPOBJDIR)/dist/bin/application.ini: $(TOPOBJDIR)/config/buildid
 $(TOPOBJDIR)/dist/bin/application.ini: defines += \
@@ -207,3 +201,7 @@ $(TOPOBJDIR)/dist/bin/application.ini: defines += \
 $(TOPOBJDIR)/dist/bin/greprefs.js: $(TOPOBJDIR)/modules/libpref/greprefs.js
 $(TOPOBJDIR)/dist/bin/platform.ini: $(TOPOBJDIR)/toolkit/xre/platform.ini
 $(TOPOBJDIR)/dist/bin/webapprt/webapprt.ini: $(TOPOBJDIR)/webapprt/webapprt.ini
+
+# The xpidl target in config/makefiles/xpidl requires the install manifest for
+# dist/idl to have been processed.
+$(TOPOBJDIR)/config/makefiles/xpidl/xpidl: $(TOPOBJDIR)/install-dist_idl

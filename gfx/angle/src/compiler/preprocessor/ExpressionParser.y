@@ -28,7 +28,7 @@ WHICH GENERATES THE GLSL ES preprocessor expression parser.
 #pragma GCC diagnostic ignored "-Wuninitialized"
 #endif
 #elif defined(_MSC_VER)
-#pragma warning(disable: 4065 4701)
+#pragma warning(disable: 4065 4244 4701 4702)
 #endif
 
 #include "ExpressionParser.h"
@@ -69,7 +69,7 @@ struct Context
 %}
 
 %pure-parser
-%name-prefix="pp"
+%name-prefix "pp"
 %parse-param {Context *context}
 %lex-param {Context *context}
 

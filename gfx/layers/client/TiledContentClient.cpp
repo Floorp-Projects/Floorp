@@ -1682,9 +1682,10 @@ TiledContentClient::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 void
 TiledContentClient::Dump(std::stringstream& aStream,
                          const char* aPrefix,
-                         bool aDumpHtml)
+                         bool aDumpHtml,
+                         TextureDumpMode aCompress)
 {
-  GetTiledBuffer()->Dump(aStream, aPrefix, aDumpHtml);
+  GetTiledBuffer()->Dump(aStream, aPrefix, aDumpHtml, aCompress);
 }
 
 void

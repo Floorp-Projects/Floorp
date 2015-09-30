@@ -2469,7 +2469,11 @@ nsFocusManager::DetermineElementToMoveFocus(nsPIDOMWindow* aWindow,
       nsCOMPtr<nsPIDOMWindow> focusedWindow;
       startContent = GetFocusedDescendant(aWindow, true, getter_AddRefs(focusedWindow));
     }
-    else {
+    else if (aType != MOVEFOCUS_LASTDOC) {
+      // Otherwise, start at the focused node. If MOVEFOCUS_LASTDOC is used,
+      // then we are document-navigating backwards from chrome to the content
+      // process, and we don't want to use this so that we start from the end
+      // of the document.
       startContent = aWindow->GetFocusedNode();
     }
   }

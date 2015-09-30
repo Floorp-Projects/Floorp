@@ -27,6 +27,9 @@ function handleRequest(request, response)
   if (secData.allowOrigin)
     response.setHeader("Access-Control-Allow-Origin", secData.allowOrigin);
 
+  if (secData.withCred)
+    response.setHeader("Access-Control-Allow-Credentials", "true");
+
   if (isPreflight) {
     if (secData.allowHeaders)
       response.setHeader("Access-Control-Allow-Headers", secData.allowHeaders);

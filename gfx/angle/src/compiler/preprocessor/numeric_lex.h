@@ -6,8 +6,8 @@
 
 // numeric_lex.h: Functions to extract numeric values from string.
 
-#ifndef COMPILER_PREPROCESSOR_NUMERIC_LEX_H_
-#define COMPILER_PREPROCESSOR_NUMERIC_LEX_H_
+#ifndef COMPILER_PREPROCESSOR_NUMERICLEX_H_
+#define COMPILER_PREPROCESSOR_NUMERICLEX_H_
 
 #include <sstream>
 
@@ -58,4 +58,5 @@ bool numeric_lex_float(const std::string &str, FloatType *value)
 }
 
 } // namespace pp.
-#endif // COMPILER_PREPROCESSOR_NUMERIC_LEX_H_
+
+#endif // COMPILER_PREPROCESSOR_NUMERICLEX_H_

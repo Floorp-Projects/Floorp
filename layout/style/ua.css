@@ -280,13 +280,6 @@
   box-sizing: border-box !important;
 }
 
-/* If there is a full-screen element that is not the root then
-   we should hide the viewport scrollbar. We exclude the chrome
-   document to prevent reframing of contained plugins. */
-:not(xul|*):root:-moz-full-screen-ancestor {
-  overflow: hidden !important;
-}
-
 /* XML parse error reporting */
 
 parsererror|parsererror {

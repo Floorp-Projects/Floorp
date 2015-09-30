@@ -58,5 +58,5 @@ class Input
 };
 
 }  // namespace pp
-#endif  // COMPILER_PREPROCESSOR_INPUT_H_
 
+#endif  // COMPILER_PREPROCESSOR_INPUT_H_

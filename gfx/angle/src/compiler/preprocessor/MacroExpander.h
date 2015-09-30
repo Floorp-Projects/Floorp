@@ -4,8 +4,8 @@
 // found in the LICENSE file.
 //
 
-#ifndef COMPILER_PREPROCESSOR_MACRO_EXPANDER_H_
-#define COMPILER_PREPROCESSOR_MACRO_EXPANDER_H_
+#ifndef COMPILER_PREPROCESSOR_MACROEXPANDER_H_
+#define COMPILER_PREPROCESSOR_MACROEXPANDER_H_
 
 #include <cassert>
 #include <memory>
@@ -85,5 +85,5 @@ class MacroExpander : public Lexer
 };
 
 }  // namespace pp
-#endif  // COMPILER_PREPROCESSOR_MACRO_EXPANDER_H_
 
+#endif  // COMPILER_PREPROCESSOR_MACROEXPANDER_H_
