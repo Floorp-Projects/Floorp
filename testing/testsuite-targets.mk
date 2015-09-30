@@ -396,13 +396,13 @@ endif
 
 TEST_PKGS := \
   cppunittest \
-  mochitest \
   reftest \
   talos \
   web-platform \
   $(NULL)
 
 PYTHON_TEST_PKGS := \
+  mochitest \
   xpcshell \
   $(NULL)
 

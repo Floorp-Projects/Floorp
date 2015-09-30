@@ -24,6 +24,18 @@ STAGE = mozpath.join(buildconfig.topobjdir, 'dist', 'test-stage')
 
 
 ARCHIVE_FILES = {
+    'mochitest': [
+        {
+            'source': buildconfig.topobjdir,
+            'base': '_tests/testing',
+            'pattern': 'mochitest/**',
+        },
+        {
+            'source': STAGE,
+            'base': '',
+            'pattern': 'mochitest/**',
+        },
+    ],
     'mozharness': [
         {
             'source': buildconfig.topsrcdir,
