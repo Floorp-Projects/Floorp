@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_ipc_StructuredCloneData_h
 #define mozilla_dom_ipc_StructuredCloneData_h
 
-#include "mozilla/dom/StructuredCloneHelper.h"
+#include "mozilla/dom/StructuredCloneHolder.h"
 
 namespace IPC {
 class Message;
@@ -17,13 +17,13 @@ namespace mozilla {
 namespace dom {
 namespace ipc {
 
-class StructuredCloneData : public StructuredCloneHelper
+class StructuredCloneData : public StructuredCloneHolder
 {
 public:
   StructuredCloneData()
-    : StructuredCloneHelper(StructuredCloneHelper::CloningSupported,
-                            StructuredCloneHelper::TransferringNotSupported,
-                            StructuredCloneHelper::DifferentProcess)
+    : StructuredCloneHolder(StructuredCloneHolder::CloningSupported,
+                            StructuredCloneHolder::TransferringNotSupported,
+                            StructuredCloneHolder::DifferentProcess)
     , mData(nullptr)
     , mDataLength(0)
     , mDataOwned(eNone)

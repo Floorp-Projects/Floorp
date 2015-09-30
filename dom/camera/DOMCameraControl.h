@@ -71,6 +71,8 @@ public:
 
   nsPIDOMWindow* GetParentObject() const { return mWindow; }
 
+  MediaStream* GetCameraStream() const override;
+
   // Attributes.
   void GetEffect(nsString& aEffect, ErrorResult& aRv);
   void SetEffect(const nsAString& aEffect, ErrorResult& aRv);

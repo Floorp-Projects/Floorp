@@ -78,20 +78,20 @@ class JitAllocPolicy
       : alloc_(alloc)
     {}
     template <typename T>
-    T* pod_malloc(size_t numElems) {
+    T* maybe_pod_malloc(size_t numElems) {
         if (MOZ_UNLIKELY(numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value))
             return nullptr;
         return static_cast<T*>(alloc_.allocate(numElems * sizeof(T)));
     }
     template <typename T>
-    T* pod_calloc(size_t numElems) {
+    T* maybe_pod_calloc(size_t numElems) {
         T* p = pod_malloc<T>(numElems);
         if (MOZ_LIKELY(p))
             memset(p, 0, numElems * sizeof(T));
         return p;
     }
     template <typename T>
-    T* pod_realloc(T* p, size_t oldSize, size_t newSize) {
+    T* maybe_pod_realloc(T* p, size_t oldSize, size_t newSize) {
         T* n = pod_malloc<T>(newSize);
         if (MOZ_UNLIKELY(!n))
             return n;
@@ -99,9 +99,24 @@ class JitAllocPolicy
         memcpy(n, p, Min(oldSize * sizeof(T), newSize * sizeof(T)));
         return n;
     }
+    template <typename T>
+    T* pod_malloc(size_t numElems) {
+        return maybe_pod_malloc<T>(numElems);
+    }
+    template <typename T>
+    T* pod_calloc(size_t numElems) {
+        return maybe_pod_calloc<T>(numElems);
+    }
+    template <typename T>
+    T* pod_realloc(T* ptr, size_t oldSize, size_t newSize) {
+        return maybe_pod_realloc<T>(ptr, oldSize, newSize);
+    }
     void free_(void* p) {
     }
     void reportAllocOverflow() const {
+    }
+    bool checkSimulatedOOM() const {
+        return !js::oom::ShouldFailWithOOM();
     }
 };
 
@@ -111,14 +126,21 @@ class OldJitAllocPolicy
     OldJitAllocPolicy()
     {}
     template <typename T>
-    T* pod_malloc(size_t numElems) {
+    T* maybe_pod_malloc(size_t numElems) {
         if (MOZ_UNLIKELY(numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value))
             return nullptr;
         return static_cast<T*>(GetJitContext()->temp->allocate(numElems * sizeof(T)));
     }
+    template <typename T>
+    T* pod_malloc(size_t numElems) {
+        return maybe_pod_malloc<T>(numElems);
+    }
     void free_(void* p) {
     }
     void reportAllocOverflow() const {
+    }
+    bool checkSimulatedOOM() const {
+        return !js::oom::ShouldFailWithOOM();
     }
 };
 

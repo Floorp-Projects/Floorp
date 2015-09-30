@@ -428,31 +428,6 @@ mozSpellChecker::SetCurrentDictionary(const nsAString &aDictionary)
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-NS_IMETHODIMP 
-mozSpellChecker::CheckCurrentDictionary()
-{
-  // If the current dictionary has been uninstalled, we need to stop using it.
-  // This happens when there is a current engine, but that engine has no
-  // current dictionary.
-
-  if (!mSpellCheckingEngine) {
-    // We didn't have a current dictionary
-    return NS_OK;
-  }
-
-  nsXPIDLString dictname;
-  mSpellCheckingEngine->GetDictionary(getter_Copies(dictname));
-
-  if (!dictname.IsEmpty()) {
-    // We still have a current dictionary
-    return NS_OK;
-  }
-
-  // We had a current dictionary, but it has gone, so we cannot use it anymore.
-  mSpellCheckingEngine = nullptr;
-  return NS_OK;
-}
-
 nsresult
 mozSpellChecker::SetupDoc(int32_t *outBlockOffset)
 {

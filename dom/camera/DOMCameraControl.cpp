@@ -279,8 +279,13 @@ nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId,
 #endif
   mCurrentConfiguration = initialConfig.forget();
 
-  // Attach our DOM-facing media stream to our viewfinder stream.
-  InitStreamCommon(mInput);
+  // Register the playback listener directly on the camera input stream.
+  // We want as low latency as possible for the camera, thus avoiding
+  // MediaStreamGraph altogether. Don't do the regular InitStreamCommon()
+  // to avoid initializing the Owned and Playback streams. This is OK since
+  // we are not user/DOM facing anyway.
+  CreateAndAddPlaybackStreamListener(mInput);
+
   MOZ_ASSERT(mWindow, "Shouldn't be created with a null window!");
   if (mWindow->GetExtantDoc()) {
     CombineWithPrincipal(mWindow->GetExtantDoc()->NodePrincipal());
@@ -324,6 +329,11 @@ nsDOMCameraControl::~nsDOMCameraControl()
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
   /*invoke DOMMediaStream destroy*/
   Destroy();
+
+  if (mInput) {
+    mInput->Destroy();
+    mInput = nullptr;
+  }
 }
 
 JSObject*
@@ -457,6 +467,12 @@ nsDOMCameraControl::Get(uint32_t aKey, nsTArray<CameraRegion>& aValue)
   }
 
   return NS_OK;
+}
+
+MediaStream*
+nsDOMCameraControl::GetCameraStream() const
+{
+  return mInput;
 }
 
 #define THROW_IF_NO_CAMERACONTROL(...)                                          \

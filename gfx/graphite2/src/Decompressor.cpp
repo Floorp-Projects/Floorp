@@ -35,7 +35,7 @@ namespace {
 
 inline
 u32 read_literal(u8 const * &s, u8 const * const e, u32 l) {
-    if (unlikely(l == 15) && likely(s != e))
+    if (l == 15 && s != e)
     {
         u8 b = 0;
         do { l += b = *s++; } while(b==0xff && s != e);
@@ -51,23 +51,23 @@ bool read_sequence(u8 const * &src, u8 const * const end, u8 const * &literal, u
     literal = src;
     src += literal_len;
     
-    if (unlikely(src > end - 2))
+    if (src > end - 2)
         return false;
     
     match_dist  = *src++;
     match_dist |= *src++ << 8;
     match_len = read_literal(src, end, token & 0xf);
     
-    return true;
+    return src <= end-5;
 }
 
 }
 
 int lz4::decompress(void const *in, size_t in_size, void *out, size_t out_size)
 {
-    if (out_size <= in_size)
+    if (out_size <= in_size || in_size < sizeof(unsigned long)+1)
         return -1;
-
+    
     u8 const *       src     = static_cast<u8 const *>(in),
              *       literal = 0,
              * const src_end = src + in_size;
@@ -81,24 +81,30 @@ int lz4::decompress(void const *in, size_t in_size, void *out, size_t out_size)
     
     while (read_sequence(src, src_end, literal, literal_len, match_len, match_dist))
     {
-        // Copy in literal. At this point the last full sequence must be at
-        // least MINMATCH + 5 from the end of the output buffer.
-        if (unlikely(literal + align(literal_len) > src_end
-                  || dst + align(literal_len) > dst_end - MINMATCH+5))
-            return -1;
-        dst = overrun_copy(dst, literal, literal_len);
-
+        if (literal_len != 0)
+        {
+            // Copy in literal. At this point the last full sequence must be at
+            // least MINMATCH + 5 from the end of the output buffer.
+            if (dst + align(literal_len) > dst_end - MINMATCH+5)
+                return -1;
+            dst = overrun_copy(dst, literal, literal_len);
+        }
+        
         // Copy, possibly repeating, match from earlier in the
         //  decoded output.
         u8 const * const pcpy = dst - match_dist;
-        if (unlikely(pcpy < static_cast<u8*>(out)
-                  || dst + align(match_len + MINMATCH) > dst_end))
+        if (pcpy < static_cast<u8*>(out)
+                  || dst + match_len + MINMATCH > dst_end - 5)
             return -1;
-        dst = copy(dst, pcpy, match_len + MINMATCH);
+        if (dst > pcpy+sizeof(unsigned long) 
+            && dst + align(match_len + MINMATCH) <= dst_end)
+            dst = overrun_copy(dst, pcpy, match_len + MINMATCH);
+        else 
+            dst = safe_copy(dst, pcpy, match_len + MINMATCH);
     }
     
-    if (unlikely(literal + literal_len > src_end
-              || dst + literal_len > dst_end)) 
+    if (literal + literal_len > src_end
+              || dst + literal_len > dst_end)
         return -1;
     dst = fast_copy(dst, literal, literal_len);
     

@@ -286,14 +286,14 @@ nsRefPtr<GenericPromise> InvokeUntil(Work aWork, Condition aCondition) {
   }
 
   struct Helper {
-    static void Iteration(nsRefPtr<GenericPromise::Private> aPromise, Work aWork, Condition aCondition) {
-      if (!aWork()) {
+    static void Iteration(nsRefPtr<GenericPromise::Private> aPromise, Work aLocalWork, Condition aLocalCondition) {
+      if (!aLocalWork()) {
         aPromise->Reject(NS_ERROR_FAILURE, __func__);
-      } else if (aCondition()) {
+      } else if (aLocalCondition()) {
         aPromise->Resolve(true, __func__);
       } else {
         nsCOMPtr<nsIRunnable> r =
-          NS_NewRunnableFunction([aPromise, aWork, aCondition] () { Iteration(aPromise, aWork, aCondition); });
+          NS_NewRunnableFunction([aPromise, aLocalWork, aLocalCondition] () { Iteration(aPromise, aLocalWork, aLocalCondition); });
         AbstractThread::GetCurrent()->Dispatch(r.forget());
       }
     }
