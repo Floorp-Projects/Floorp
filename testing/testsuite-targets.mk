@@ -374,7 +374,6 @@ stage-all: \
   stage-config \
   stage-mach \
   stage-mochitest \
-  stage-talos \
   stage-reftest \
   stage-xpcshell \
   stage-jstests \
@@ -396,11 +395,11 @@ endif
 TEST_PKGS := \
   cppunittest \
   reftest \
-  talos \
   $(NULL)
 
 PYTHON_TEST_PKGS := \
   mochitest \
+  talos \
   web-platform \
   xpcshell \
   $(NULL)
@@ -508,11 +507,6 @@ stage-mochitest: make-stage-dir
 ifeq ($(MOZ_BUILD_APP),mobile/android)
 	$(NSINSTALL) $(DEPTH)/mobile/android/base/fennec_ids.txt $(PKG_STAGE)/mochitest
 endif
-
-TALOS_DIR=$(PKG_STAGE)/talos
-stage-talos: make-stage-dir
-	$(NSINSTALL) -D $(TALOS_DIR)
-	@(cd $(topsrcdir)/testing/talos && tar $(TAR_CREATE_FLAGS) - *) | (cd $(TALOS_DIR)/ && tar -xf -)
 
 stage-reftest: make-stage-dir
 	$(MAKE) -C $(DEPTH)/layout/tools/reftest stage-package
@@ -638,7 +632,6 @@ stage-instrumentation-tests: make-stage-dir
   stage-b2g \
   stage-config \
   stage-mochitest \
-  stage-talos \
   stage-reftest \
   stage-xpcshell \
   stage-jstests \
