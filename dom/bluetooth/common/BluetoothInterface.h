@@ -273,14 +273,14 @@ class BluetoothA2dpNotificationHandler
 public:
   virtual void
   ConnectionStateNotification(BluetoothA2dpConnectionState aState,
-                              const nsAString& aBdAddr);
+                              const BluetoothAddress& aBdAddr);
 
   virtual void
   AudioStateNotification(BluetoothA2dpAudioState aState,
-                         const nsAString& aBdAddr);
+                         const BluetoothAddress& aBdAddr);
 
   virtual void
-  AudioConfigNotification(const nsAString& aBdAddr,
+  AudioConfigNotification(const BluetoothAddress& aBdAddr,
                           uint32_t aSampleRate,
                           uint8_t aChannelCount);
 
@@ -311,9 +311,9 @@ public:
                     BluetoothA2dpResultHandler* aRes) = 0;
   virtual void Cleanup(BluetoothA2dpResultHandler* aRes) = 0;
 
-  virtual void Connect(const nsAString& aBdAddr,
+  virtual void Connect(const BluetoothAddress& aBdAddr,
                        BluetoothA2dpResultHandler* aRes) = 0;
-  virtual void Disconnect(const nsAString& aBdAddr,
+  virtual void Disconnect(const BluetoothAddress& aBdAddr,
                           BluetoothA2dpResultHandler* aRes) = 0;
 
 protected:
