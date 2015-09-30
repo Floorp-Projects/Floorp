@@ -75,7 +75,7 @@ FFmpegDataDecoder<LIBAV_VER>::InitDecoder()
   FFMPEG_LOG("Initialising FFmpeg decoder.");
 
   if (!sFFmpegInitDone) {
-    av_register_all();
+    avcodec_register_all();
 #ifdef DEBUG
     av_log_set_level(AV_LOG_DEBUG);
 #endif
