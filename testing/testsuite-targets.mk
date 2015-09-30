@@ -378,7 +378,6 @@ stage-all: \
   stage-jstests \
   stage-jetpack \
   stage-mozbase \
-  stage-modules \
   stage-marionette \
   stage-cppunittests \
   stage-luciddream \
@@ -502,10 +501,6 @@ endif
 stage-jetpack: make-stage-dir
 	$(MAKE) -C $(DEPTH)/addon-sdk stage-tests-package
 
-stage-modules: make-stage-dir
-	$(NSINSTALL) -D $(PKG_STAGE)/modules
-	cp -RL $(DEPTH)/_tests/modules $(PKG_STAGE)
-
 CPP_UNIT_TEST_BINS=$(wildcard $(DIST)/cppunittests/*)
 
 ifdef OBJCOPY
@@ -595,7 +590,6 @@ stage-instrumentation-tests: make-stage-dir
   stage-android \
   stage-jetpack \
   stage-mozbase \
-  stage-modules \
   stage-marionette \
   stage-steeplechase \
   stage-instrumentation-tests \

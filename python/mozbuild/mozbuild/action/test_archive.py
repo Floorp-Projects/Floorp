@@ -40,6 +40,11 @@ ARCHIVE_FILES = {
             ],
         },
         {
+            'source': buildconfig.topobjdir,
+            'base': '_tests',
+            'pattern': 'modules/**',
+        },
+        {
             'source': buildconfig.topsrcdir,
             'base': 'js/src',
             'pattern': 'jit-test/**',
