@@ -10,7 +10,7 @@
 // Required for Promise::PromiseTaskSync.
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
-#include "mozilla/dom/StructuredCloneHelper.h"
+#include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/workers/bindings/WorkerFeature.h"
 #include "nsProxyRelease.h"
 
@@ -113,7 +113,7 @@ class WorkerPrivate;
 
 class PromiseWorkerProxy : public PromiseNativeHandler
                          , public workers::WorkerFeature
-                         , public StructuredCloneHelperInternal
+                         , public StructuredCloneHolderBase
 {
   friend class PromiseWorkerProxyRunnable;
 
@@ -169,16 +169,16 @@ public:
     return mCleanedUp;
   }
 
-  // StructuredCloneHelperInternal
+  // StructuredCloneHolderBase
 
-  JSObject* ReadCallback(JSContext* aCx,
-                         JSStructuredCloneReader* aReader,
-                         uint32_t aTag,
-                         uint32_t aIndex) override;
+  JSObject* CustomReadHandler(JSContext* aCx,
+                              JSStructuredCloneReader* aReader,
+                              uint32_t aTag,
+                              uint32_t aIndex) override;
 
-  bool WriteCallback(JSContext* aCx,
-                     JSStructuredCloneWriter* aWriter,
-                     JS::Handle<JSObject*> aObj) override;
+  bool CustomWriteHandler(JSContext* aCx,
+                          JSStructuredCloneWriter* aWriter,
+                          JS::Handle<JSObject*> aObj) override;
 
 protected:
   virtual void ResolvedCallback(JSContext* aCx,
