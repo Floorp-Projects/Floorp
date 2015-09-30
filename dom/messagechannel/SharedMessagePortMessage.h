@@ -6,7 +6,7 @@
 #ifndef mozilla_dom_SharedMessagePortMessage_h
 #define mozilla_dom_SharedMessagePortMessage_h
 
-#include "mozilla/dom/StructuredCloneHelper.h"
+#include "mozilla/dom/StructuredCloneHolder.h"
 
 namespace mozilla {
 namespace dom {
@@ -15,7 +15,7 @@ class MessagePortChild;
 class MessagePortMessage;
 class MessagePortParent;
 
-class SharedMessagePortMessage final : public StructuredCloneHelper
+class SharedMessagePortMessage final : public StructuredCloneHolder
 {
 public:
   NS_INLINE_DECL_REFCOUNTING(SharedMessagePortMessage)
@@ -23,7 +23,7 @@ public:
   nsTArray<uint8_t> mData;
 
   SharedMessagePortMessage()
-    : StructuredCloneHelper(CloningSupported, TransferringSupported,
+    : StructuredCloneHolder(CloningSupported, TransferringSupported,
                             DifferentProcess)
   {}
 

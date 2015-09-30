@@ -42,10 +42,10 @@ runNetworkTest(function () {
 
   let pc0, pc1, pc2;
   // Test failure callbacks (limited to 1 for now)
-  pc0 = new mozRTCPeerConnection();
+  pc0 = new RTCPeerConnection();
   pc0.createOffer(getFail(), function(err) {
-    pc1 = new mozRTCPeerConnection();
-    pc2 = new mozRTCPeerConnection();
+    pc1 = new RTCPeerConnection();
+    pc2 = new RTCPeerConnection();
 
     // Test success callbacks (happy path)
     navigator.mozGetUserMedia({video:true, fake: true}, function(video1) {

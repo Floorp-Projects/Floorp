@@ -16,7 +16,7 @@ dictionary RTCIceCandidateInit {
 [Pref="media.peerconnection.enabled",
  JSImplementation="@mozilla.org/dom/rtcicecandidate;1",
  Constructor(optional RTCIceCandidateInit candidateInitDict)]
-interface mozRTCIceCandidate {
+interface RTCIceCandidate {
   attribute DOMString?      candidate;
   attribute DOMString?      sdpMid;
   attribute unsigned short? sdpMLineIndex;

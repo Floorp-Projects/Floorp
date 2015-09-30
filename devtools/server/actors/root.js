@@ -94,6 +94,7 @@ function RootActor(aConnection, aParameters) {
   this._parameters = aParameters;
   this._onTabListChanged = this.onTabListChanged.bind(this);
   this._onAddonListChanged = this.onAddonListChanged.bind(this);
+  this._onWorkerListChanged = this.onWorkerListChanged.bind(this);
   this._extraActors = {};
 
   this._globalActorPool = new ActorPool(this.conn);
@@ -348,6 +349,37 @@ RootActor.prototype = {
     this._parameters.addonList.onListChanged = null;
   },
 
+  onListWorkers: function () {
+    let workerList = this._parameters.workerList;
+    if (!workerList) {
+      return { from: this.actorID, error: "noWorkers",
+               message: "This root actor has no workers." };
+    }
+
+    return workerList.getList().then(actors => {
+      let pool = new ActorPool(this.conn);
+      for (let actor of actors) {
+        pool.addActor(actor);
+      }
+
+      this.conn.removeActorPool(this._workerActorPool);
+      this._workerActorPool = pool;
+      this.conn.addActorPool(this._workerActorPool);
+
+      workerList.onListChanged = this._onWorkerListChanged;
+
+      return {
+        "from": this.actorID,
+        "workers": actors.map(actor => actor.form())
+      };
+    });
+  },
+
+  onWorkerListChanged: function () {
+    this.conn.send({ from: this.actorID, type: "workerListChanged" });
+    this._parameters.workerList.onListChanged = null;
+  },
+
   onListProcesses: function () {
     let processes = [];
     for (let i = 0; i < ppmm.childCount; i++) {
@@ -434,6 +466,7 @@ RootActor.prototype.requestTypes = {
   "listTabs": RootActor.prototype.onListTabs,
   "getTab": RootActor.prototype.onGetTab,
   "listAddons": RootActor.prototype.onListAddons,
+  "listWorkers": RootActor.prototype.onListWorkers,
   "listProcesses": RootActor.prototype.onListProcesses,
   "getProcess": RootActor.prototype.onGetProcess,
   "echo": RootActor.prototype.onEcho,

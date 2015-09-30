@@ -349,12 +349,19 @@ public:
 
   /**
    * This will return null if mSrcStream is null, or if mSrcStream is not
-   * null but its GetStream() returns null --- which can happen during
+   * null but its GetPlaybackStream() returns null --- which can happen during
    * cycle collection unlinking!
    */
   MediaStream* GetSrcMediaStream() const
   {
-    return mSrcStream ? mSrcStream->GetStream() : nullptr;
+    if (!mSrcStream) {
+      return nullptr;
+    }
+    if (mSrcStream->GetCameraStream()) {
+      // XXX Remove this check with CameraPreviewMediaStream per bug 1124630.
+      return mSrcStream->GetCameraStream();
+    }
+    return mSrcStream->GetPlaybackStream();
   }
 
   // WebIDL
@@ -664,6 +671,7 @@ protected:
 
   class MediaLoadListener;
   class MediaStreamTracksAvailableCallback;
+  class MediaStreamTrackListener;
   class StreamListener;
   class StreamSizeListener;
 
@@ -752,6 +760,25 @@ protected:
    */
   enum { REMOVING_SRC_STREAM = 0x1 };
   void UpdateSrcMediaStreamPlaying(uint32_t aFlags = 0);
+
+  /**
+   * If loading and playing a MediaStream, for each MediaStreamTrack in the
+   * MediaStream, create a corresponding AudioTrack or VideoTrack during the
+   * phase of resource fetching.
+   */
+  void ConstructMediaTracks();
+
+  /**
+   * Called by our DOMMediaStream::TrackListener when a new MediaStreamTrack has
+   * been added to the playback stream of |mSrcStream|.
+   */
+  void NotifyMediaStreamTrackAdded(const nsRefPtr<MediaStreamTrack>& aTrack);
+
+  /**
+   * Called by our DOMMediaStream::TrackListener when a MediaStreamTrack in
+   * |mSrcStream|'s playback stream has ended.
+   */
+  void NotifyMediaStreamTrackRemoved(const nsRefPtr<MediaStreamTrack>& aTrack);
 
   /**
    * Returns an nsDOMMediaStream containing the played contents of this
@@ -1093,11 +1120,6 @@ protected:
   // Holds a reference to the stream connecting this stream to the capture sink.
   nsRefPtr<MediaInputPort> mCaptureStreamPort;
 
-  // Holds a reference to a stream with mSrcStream as input but intended for
-  // playback. Used so we don't block playback of other video elements
-  // playing the same mSrcStream.
-  nsRefPtr<DOMMediaStream> mPlaybackStream;
-
   // Holds references to the DOM wrappers for the MediaStreams that we're
   // writing to.
   struct OutputMediaStream {
@@ -1106,8 +1128,8 @@ protected:
   };
   nsTArray<OutputMediaStream> mOutputStreams;
 
-  // Holds a reference to the MediaStreamListener attached to mPlaybackStream
-  // (or mSrcStream if mPlaybackStream is null).
+  // Holds a reference to the MediaStreamListener attached to mSrcStream's
+  // playback stream.
   nsRefPtr<StreamListener> mMediaStreamListener;
   // Holds a reference to the size-getting MediaStreamListener attached to
   // mSrcStream.
@@ -1426,6 +1448,8 @@ protected:
   nsRefPtr<AudioTrackList> mAudioTrackList;
 
   nsRefPtr<VideoTrackList> mVideoTrackList;
+
+  nsRefPtr<MediaStreamTrackListener> mMediaStreamTrackListener;
 
   enum ElementInTreeState {
     // The MediaElement is not in the DOM tree now.

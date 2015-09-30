@@ -33,8 +33,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=812785
 
       var stream = localAudio.mozCaptureStreamUntilEnded();
 
-      pc1 = new mozRTCPeerConnection();
-      pc2 = new mozRTCPeerConnection();
+      pc1 = new RTCPeerConnection();
+      pc2 = new RTCPeerConnection();
 
       pc1.addStream(stream);
       pc1.createOffer(function (offer) {

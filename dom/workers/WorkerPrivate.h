@@ -52,7 +52,7 @@ namespace dom {
 class Function;
 class MessagePort;
 class MessagePortIdentifier;
-class StructuredCloneHelper;
+class StructuredCloneHolder;
 } // namespace dom
 namespace ipc {
 class PrincipalInfo;

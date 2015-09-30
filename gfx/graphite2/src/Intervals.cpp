@@ -85,8 +85,8 @@ void Zones::insert(Exclusion e)
 #if !defined GRAPHITE2_NTRACING
     addDebug(&e);
 #endif
-    e.x = std::max(e.x, _pos);
-    e.xm = std::min(e.xm, _posm);
+    e.x = max(e.x, _pos);
+    e.xm = min(e.xm, _posm);
     if (e.x >= e.xm) return;
 
     for (iterator i = _exclusions.begin(), ie = _exclusions.end(); i != ie && e.x < e.xm; ++i)
@@ -141,8 +141,8 @@ void Zones::remove(float x, float xm)
 #if !defined GRAPHITE2_NTRACING
     removeDebug(x, xm);
 #endif
-    x = std::max(x, _pos);
-    xm = std::min(xm, _posm);
+    x = max(x, _pos);
+    xm = min(xm, _posm);
     if (x >= xm) return;
 
     for (iterator i = _exclusions.begin(), ie = _exclusions.end(); i != ie; ++i)

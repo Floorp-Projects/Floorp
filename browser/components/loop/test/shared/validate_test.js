@@ -17,11 +17,11 @@ describe("Validator", function() {
   function Y(){}
 
   describe("#validate", function() {
-    function mozRTCSessionDescription() {}
-    var mozRTC;
+    function RTCSessionDescription() {}
+    var rtcsd;
 
     beforeEach(function() {
-      mozRTC = new mozRTCSessionDescription();
+      rtcsd = new RTCSessionDescription();
     });
 
     it("should check for a single required dependency when no option passed",
@@ -74,9 +74,9 @@ describe("Validator", function() {
     });
 
     it("should check for a native constructor dependency", function() {
-      expect(create({foo: mozRTC}, {foo: "x"}))
+      expect(create({foo: rtcsd}, {foo: "x"}))
         .to.Throw(TypeError,
-                  /invalid dependency: foo; expected mozRTCSessionDescription/);
+                  /invalid dependency: foo; expected RTCSessionDescription/);
     });
 
     it("should check for a null dependency", function() {

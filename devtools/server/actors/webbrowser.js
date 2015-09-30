@@ -15,7 +15,6 @@ var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dbg_assert } = DevToolsUtils;
 var { TabSources } = require("./utils/TabSources");
 var makeDebugger = require("./utils/make-debugger");
-var { WorkerActorList } = require("devtools/server/actors/worker");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -23,6 +22,7 @@ loader.lazyRequireGetter(this, "RootActor", "devtools/server/actors/root", true)
 loader.lazyRequireGetter(this, "ThreadActor", "devtools/server/actors/script", true);
 loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/script", true);
 loader.lazyRequireGetter(this, "BrowserAddonActor", "devtools/server/actors/addon", true);
+loader.lazyRequireGetter(this, "WorkerActorList", "devtools/server/actors/worker", true);
 loader.lazyImporter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 
 // Assumptions on events module:
@@ -129,6 +129,7 @@ function createRootActor(aConnection)
                        {
                          tabList: new BrowserTabList(aConnection),
                          addonList: new BrowserAddonList(aConnection),
+                         workerList: new WorkerActorList({}),
                          globalActorFactories: DebuggerServer.globalActorFactories,
                          onShutdown: sendShutdownEvent
                        });
