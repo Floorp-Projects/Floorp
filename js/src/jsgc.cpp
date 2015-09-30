@@ -4998,6 +4998,16 @@ GCRuntime::beginSweepingZoneGroup()
         }
     }
 
+    /* Clear all weakrefs that point to unmarked things. */
+    for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
+        for (auto edge : zone->gcWeakRefs) {
+            /* Edges may be present multiple times, so may already be nulled. */
+            if (*edge && IsAboutToBeFinalizedDuringSweep(**edge))
+                *edge = nullptr;
+        }
+        zone->gcWeakRefs.clear();
+    }
+
     FreeOp fop(rt);
     SweepAtomsTask sweepAtomsTask(rt);
     SweepInnerViewsTask sweepInnerViewsTask(rt);
