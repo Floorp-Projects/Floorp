@@ -97,17 +97,19 @@ function onAlertLoad() {
 
   if (Services.prefs.getBoolPref("alerts.disableSlidingEffect")) {
     setTimeout(function() { window.close(); }, ALERT_DURATION_IMMEDIATE);
-    return;
+  } else {
+    let alertBox = document.getElementById("alertBox");
+    alertBox.addEventListener("animationend", function hideAlert(event) {
+      if (event.animationName == "alert-animation") {
+        alertBox.removeEventListener("animationend", hideAlert, false);
+        window.close();
+      }
+    }, false);
+    alertBox.setAttribute("animate", true);
   }
 
-  let alertBox = document.getElementById("alertBox");
-  alertBox.addEventListener("animationend", function hideAlert(event) {
-    if (event.animationName == "alert-animation") {
-      alertBox.removeEventListener("animationend", hideAlert, false);
-      window.close();
-    }
-  }, false);
-  alertBox.setAttribute("animate", true);
+  let ev = new CustomEvent("AlertActive", {bubbles: true, cancelable: true});
+  document.documentElement.dispatchEvent(ev);
 
   if (gAlertListener) {
     gAlertListener.observe(null, "alertshow", gAlertCookie);
