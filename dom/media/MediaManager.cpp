@@ -800,17 +800,6 @@ public:
     }
   }
 
-  // let us intervene for direct listeners when someone does track.enabled = false
-  virtual void SetTrackEnabled(TrackID aTrackID, bool aEnabled) override
-  {
-    // We encapsulate the SourceMediaStream and TrackUnion into one entity, so
-    // we can handle the disabling at the SourceMediaStream
-
-    // We need to find the input track ID for output ID aTrackID, so we let the TrackUnion
-    // forward the request to the source and translate the ID
-    GetInputStream()->AsProcessedStream()->ForwardTrackEnabled(aTrackID, aEnabled);
-  }
-
   virtual DOMLocalMediaStream* AsDOMLocalMediaStream() override
   {
     return this;
