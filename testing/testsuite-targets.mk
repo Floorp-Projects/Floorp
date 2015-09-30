@@ -399,9 +399,14 @@ TEST_PKGS := \
   mochitest \
   reftest \
   talos \
-  xpcshell \
   web-platform \
   $(NULL)
+
+PYTHON_TEST_PKGS := \
+  xpcshell \
+  $(NULL)
+
+ALL_TEST_PKGS := $(TEST_PKGS) $(PYTHON_TEST_PKGS)
 
 PKG_ARG = --$(1) '$(PKG_BASENAME).$(1).tests.zip'
 
@@ -413,7 +418,7 @@ test-packages-manifest-tc:
       --dest-file $(MOZ_TEST_PACKAGES_FILE_TC) \
       --use-short-names \
       $(call PKG_ARG,common) \
-      $(foreach pkg,$(TEST_PKGS),$(call PKG_ARG,$(pkg)))
+      $(foreach pkg,$(ALL_TEST_PKGS),$(call PKG_ARG,$(pkg)))
 
 test-packages-manifest:
 	@rm -f $(MOZ_TEST_PACKAGES_FILE)
@@ -422,20 +427,22 @@ test-packages-manifest:
       --jsshell $(JSSHELL_NAME) \
       --dest-file $(MOZ_TEST_PACKAGES_FILE) \
       $(call PKG_ARG,common) \
-      $(foreach pkg,$(TEST_PKGS),$(call PKG_ARG,$(pkg)))
+      $(foreach pkg,$(ALL_TEST_PKGS),$(call PKG_ARG,$(pkg)))
 
 package-tests-prepare-dest:
 	@rm -f '$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)'
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 
 package-tests-mozharness: package-tests-prepare-dest
-	$(call py_action,test_archive,mozharness $(abspath $(DIST))/$(PKG_PATH)/mozharness.zip)
+	$(call py_action,test_archive, \
+		mozharness \
+		$(abspath $(DIST))/$(PKG_PATH)/mozharness.zip)
 package-tests: package-tests-mozharness
 
 package-tests-common: stage-all package-tests-prepare-dest
 	cd $(abspath $(PKG_STAGE)) && \
 	  zip -rq9D '$(abspath $(DIST))/$(PKG_PATH)$(TEST_PACKAGE)' \
-	  * -x \*/.mkdir.done \*.pyc $(foreach name,$(TEST_PKGS),$(name)\*)
+	  * -x \*/.mkdir.done \*.pyc $(foreach name,$(ALL_TEST_PKGS),$(name)\*)
 package-tests: package-tests-common
 
 define package_archive
@@ -449,6 +456,16 @@ package-tests: package-tests-$(1)
 endef
 
 $(foreach name,$(TEST_PKGS),$(eval $(call package_archive,$(name))))
+
+define python_test_archive
+package-tests-$(1): stage-all package-tests-prepare-dest
+	$$(call py_action,test_archive, \
+		$(1) \
+		$$(abspath $$(DIST))/$$(PKG_PATH)/$$(PKG_BASENAME).$(1).tests.zip)
+package-tests: package-tests-$(1)
+endef
+
+$(foreach name,$(PYTHON_TEST_PKGS),$(eval $(call python_test_archive,$(name))))
 
 ifeq ($(MOZ_BUILD_APP),mobile/android)
 stage-all: stage-android
