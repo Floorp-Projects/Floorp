@@ -58,13 +58,13 @@ BluetoothSocketResultHandler::Listen(int aSockFd)
 
 void
 BluetoothSocketResultHandler::Connect(int aSockFd,
-                                      const nsAString& aBdAddress,
+                                      const BluetoothAddress& aBdAddress,
                                       int aConnectionState)
 { }
 
 void
 BluetoothSocketResultHandler::Accept(int aSockFd,
-                                     const nsAString& aBdAddress,
+                                     const BluetoothAddress& aBdAddress,
                                      int aConnectionState)
 { }
 
