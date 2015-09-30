@@ -88,6 +88,14 @@ protected:
   }
 
 public:
+  void DestroyInputPort()
+  {
+    if (mInputPort) {
+      mInputPort->Destroy();
+      mInputPort = nullptr;
+    }
+  }
+
   /**
    * Returns the source stream of the input port.
    */
@@ -225,12 +233,26 @@ public:
 
     nsRefPtr<MediaStreamTrack> track =
       mStream->FindPlaybackDOMTrack(aInputStream, aInputTrackID);
-    if (track) {
-      LOG(LogLevel::Debug, ("DOMMediaStream %p Playback track; notifying stream listeners.",
-                             mStream));
-      mStream->NotifyTrackRemoved(track);
-    } else {
+    if (!track) {
       LOG(LogLevel::Debug, ("DOMMediaStream %p Not a playback track.", mStream));
+      return;
+    }
+
+    LOG(LogLevel::Debug, ("DOMMediaStream %p Playback track; notifying stream listeners.",
+                           mStream));
+    mStream->NotifyTrackRemoved(track);
+
+    nsRefPtr<TrackPort> endedPort = mStream->FindPlaybackTrackPort(*track);
+    NS_ASSERTION(endedPort, "Playback track should have a TrackPort");
+    if (endedPort &&
+        endedPort->GetSourceTrackId() != TRACK_ANY &&
+        endedPort->GetSourceTrackId() != TRACK_INVALID &&
+        endedPort->GetSourceTrackId() != TRACK_NONE) {
+      // If a track connected to a locked-track input port ends, we destroy the
+      // port to allow our playback stream to finish.
+      // XXX (bug 1208316) This should not be necessary when MediaStreams don't
+      // finish but instead become inactive.
+      endedPort->DestroyInputPort();
     }
   }
 
