@@ -6,7 +6,9 @@
 #include "DOMMediaStream.h"
 #include "nsContentUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIScriptError.h"
 #include "nsIUUIDGenerator.h"
+#include "nsPIDOMWindow.h"
 #include "mozilla/dom/MediaStreamBinding.h"
 #include "mozilla/dom/LocalMediaStreamBinding.h"
 #include "mozilla/dom/AudioNode.h"
@@ -940,7 +942,7 @@ DOMLocalMediaStream::~DOMLocalMediaStream()
 {
   if (mInputStream) {
     // Make sure Listeners of this stream know it's going away
-    Stop();
+    StopImpl();
   }
 }
 
@@ -952,6 +954,20 @@ DOMLocalMediaStream::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProt
 
 void
 DOMLocalMediaStream::Stop()
+{
+  nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(GetParentObject());
+  nsIDocument* document = pWindow ? pWindow->GetExtantDoc() : nullptr;
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  NS_LITERAL_CSTRING("Media"),
+                                  document,
+                                  nsContentUtils::eDOM_PROPERTIES,
+                                  "MediaStreamStopDeprecatedWarning");
+
+  StopImpl();
+}
+
+void
+DOMLocalMediaStream::StopImpl()
 {
   if (mInputStream && mInputStream->AsSourceStream()) {
     mInputStream->AsSourceStream()->EndAllTrackAndFinish();
