@@ -40,6 +40,13 @@ ARCHIVE_FILES = {
             ],
         },
     ],
+    'cppunittest': [
+        {
+            'source': STAGE,
+            'base': '',
+            'pattern': 'cppunittest/**',
+        },
+    ],
     'mochitest': [
         {
             'source': buildconfig.topobjdir,
@@ -57,6 +64,13 @@ ARCHIVE_FILES = {
             'source': buildconfig.topsrcdir,
             'base': 'testing',
             'pattern': 'mozharness/**',
+        },
+    ],
+    'reftest': [
+        {
+            'source': STAGE,
+            'base': '',
+            'pattern': 'reftest/**',
         },
     ],
     'talos': [
