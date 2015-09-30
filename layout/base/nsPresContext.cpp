@@ -1575,7 +1575,7 @@ nsPresContext::ScreenSizeInchesForFontInflation(bool* aChanged)
 }
 
 static bool
-CheckOverflow(nsPresContext* aPresContext, const nsStyleDisplay* aDisplay)
+CheckOverflow(const nsStyleDisplay* aDisplay, ScrollbarStyles* aStyles)
 {
   if (aDisplay->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE &&
       aDisplay->mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_AUTO &&
@@ -1591,45 +1591,35 @@ CheckOverflow(nsPresContext* aPresContext, const nsStyleDisplay* aDisplay)
   }
 
   if (aDisplay->mOverflowX == NS_STYLE_OVERFLOW_CLIP) {
-    aPresContext->SetViewportScrollbarStylesOverride(
-                                    ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN,
-                                                    NS_STYLE_OVERFLOW_HIDDEN,
-                                                    aDisplay));
+    *aStyles = ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN,
+                               NS_STYLE_OVERFLOW_HIDDEN, aDisplay);
   } else {
-    aPresContext->SetViewportScrollbarStylesOverride(
-                                    ScrollbarStyles(aDisplay));
+    *aStyles = ScrollbarStyles(aDisplay);
   }
   return true;
 }
 
-/**
- * This checks the root element and the HTML BODY, if any, for an "overflow" property
- * that should be applied to the viewport. If one is found then we return the
- * element that we took the overflow from (which should then be treated as
- * "overflow:visible"), and we store the overflow style in the prescontext.
- * @return if scroll was propagated from some content node, the content node it
- *         was propagated from.
- */
-nsIContent*
-nsPresContext::PropagateScrollToViewport()
+static nsIContent*
+GetPropagatedScrollbarStylesForViewport(nsPresContext* aPresContext,
+                                        ScrollbarStyles *aStyles)
 {
   // Set default
-  SetViewportScrollbarStylesOverride(ScrollbarStyles(NS_STYLE_OVERFLOW_AUTO,
-                                                     NS_STYLE_OVERFLOW_AUTO));
+  *aStyles = ScrollbarStyles(NS_STYLE_OVERFLOW_AUTO, NS_STYLE_OVERFLOW_AUTO);
 
   // We never mess with the viewport scroll state
   // when printing or in print preview
-  if (IsPaginated()) {
+  if (aPresContext->IsPaginated()) {
     return nullptr;
   }
 
-  Element* docElement = mDocument->GetRootElement();
+  nsIDocument* document = aPresContext->Document();
+  Element* docElement = document->GetRootElement();
 
   // Check the style on the document root element
-  nsStyleSet *styleSet = mShell->StyleSet();
+  nsStyleSet *styleSet = aPresContext->StyleSet();
   nsRefPtr<nsStyleContext> rootStyle;
   rootStyle = styleSet->ResolveStyleFor(docElement, nullptr);
-  if (CheckOverflow(this, rootStyle->StyleDisplay())) {
+  if (CheckOverflow(rootStyle->StyleDisplay(), aStyles)) {
     // tell caller we stole the overflow style from the root element
     return docElement;
   }
@@ -1640,7 +1630,7 @@ nsPresContext::PropagateScrollToViewport()
   // for non-HTML documents. Fix this once we support explicit CSS styling
   // of the viewport
   // XXX what about XHTML?
-  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(mDocument));
+  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(document));
   if (!htmlDoc || !docElement->IsHTMLElement()) {
     return nullptr;
   }
@@ -1658,12 +1648,35 @@ nsPresContext::PropagateScrollToViewport()
   nsRefPtr<nsStyleContext> bodyStyle;
   bodyStyle = styleSet->ResolveStyleFor(bodyElement->AsElement(), rootStyle);
 
-  if (CheckOverflow(this, bodyStyle->StyleDisplay())) {
+  if (CheckOverflow(bodyStyle->StyleDisplay(), aStyles)) {
     // tell caller we stole the overflow style from the body element
     return bodyElement;
   }
 
   return nullptr;
+}
+
+nsIContent*
+nsPresContext::UpdateViewportScrollbarStylesOverride()
+{
+  nsIContent* propagatedFrom =
+    GetPropagatedScrollbarStylesForViewport(this, &mViewportStyleScrollbar);
+
+  nsIDocument* document = Document();
+  if (Element* fullscreenElement = document->GetFullScreenElement()) {
+    // If the document is in fullscreen, but the fullscreen element is
+    // not the root element, we should explicitly suppress the scrollbar
+    // here. Note that, we still need to return the original element
+    // the styles are from, so that the state of those elements is not
+    // affected across fullscreen change.
+    if (fullscreenElement != document->GetRootElement() &&
+        fullscreenElement != propagatedFrom) {
+      mViewportStyleScrollbar = ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN,
+                                                NS_STYLE_OVERFLOW_HIDDEN);
+    }
+  }
+
+  return propagatedFrom;
 }
 
 void
