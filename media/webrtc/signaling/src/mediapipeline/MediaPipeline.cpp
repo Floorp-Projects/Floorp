@@ -868,7 +868,9 @@ void MediaPipelineTransmit::PipelineListener::
 NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
                          StreamTime offset,
                          uint32_t events,
-                         const MediaSegment& queued_media) {
+                         const MediaSegment& queued_media,
+                         MediaStream* aInputStream,
+                         TrackID aInputTrackID) {
   MOZ_MTLOG(ML_DEBUG, "MediaPipeline::NotifyQueuedTrackChanges()");
 
   // ignore non-direct data if we're also getting direct data
