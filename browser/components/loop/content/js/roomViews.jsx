@@ -297,14 +297,14 @@ loop.roomViews = (function(mozL10n) {
               })}
               onClick={this.handleCopyButtonClick}>
               <img src="loop/shared/img/svg/glyph-link-16x16.svg" />
-              <p>{mozL10n.get("invite_copy_" +
-                (this.state.copiedUrl ? "triggered" : "button"))}</p>
+              <p>{mozL10n.get(this.state.copiedUrl ?
+                "invite_copied_link_button" : "invite_copy_link_button")}</p>
             </div>
             <div className="btn-email invite-button"
               onClick={this.handleEmailButtonClick}
               onMouseOver={this.resetTriggeredButtons}>
               <img src="loop/shared/img/svg/glyph-email-16x16.svg" />
-              <p>{mozL10n.get("invite_email_button")}</p>
+              <p>{mozL10n.get("invite_email_link_button")}</p>
             </div>
           </div>
           <SocialShareDropdown

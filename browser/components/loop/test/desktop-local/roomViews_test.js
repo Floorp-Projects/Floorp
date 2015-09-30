@@ -267,8 +267,7 @@ describe("loop.roomViews", function () {
         var copyBtn = view.getDOMNode().querySelector(".btn-copy");
         React.addons.TestUtils.Simulate.click(copyBtn);
 
-        // invite_copy_triggered is the l10n string.
-        expect(copyBtn.textContent).eql("invite_copy_triggered");
+        expect(copyBtn.textContent).eql("invite_copied_link_button");
       });
 
       it("should keep the text for a while after the url has been copied", function() {
@@ -276,8 +275,7 @@ describe("loop.roomViews", function () {
         React.addons.TestUtils.Simulate.click(copyBtn);
         clock.tick(loop.roomViews.DesktopRoomInvitationView.TRIGGERED_RESET_DELAY / 2);
 
-        // invite_copy_triggered is the l10n string.
-        expect(copyBtn.textContent).eql("invite_copy_triggered");
+        expect(copyBtn.textContent).eql("invite_copied_link_button");
       });
 
       it("should reset the text a bit after the url has been copied", function() {
@@ -285,8 +283,7 @@ describe("loop.roomViews", function () {
         React.addons.TestUtils.Simulate.click(copyBtn);
         clock.tick(loop.roomViews.DesktopRoomInvitationView.TRIGGERED_RESET_DELAY);
 
-        // invite_copy_button is the l10n string.
-        expect(copyBtn.textContent).eql("invite_copy_button");
+        expect(copyBtn.textContent).eql("invite_copy_link_button");
       });
 
       it("should reset the text after the url has been copied then mouse over another button", function() {
@@ -295,8 +292,7 @@ describe("loop.roomViews", function () {
         var emailBtn = view.getDOMNode().querySelector(".btn-email");
         React.addons.TestUtils.Simulate.mouseOver(emailBtn);
 
-        // invite_copy_button is the l10n string.
-        expect(copyBtn.textContent).eql("invite_copy_button");
+        expect(copyBtn.textContent).eql("invite_copy_link_button");
       });
     });
 
