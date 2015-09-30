@@ -378,7 +378,6 @@ stage-all: \
   stage-jstests \
   stage-jetpack \
   stage-mozbase \
-  stage-tps \
   stage-modules \
   stage-marionette \
   stage-cppunittests \
@@ -503,12 +502,6 @@ endif
 stage-jetpack: make-stage-dir
 	$(MAKE) -C $(DEPTH)/addon-sdk stage-tests-package
 
-stage-tps: make-stage-dir
-	$(NSINSTALL) -D $(PKG_STAGE)/tps/tests
-	@(cd $(topsrcdir)/testing/tps && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/tps && tar -xf -)
-	@(cd $(topsrcdir)/services/sync/tps && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/tps && tar -xf -)
-	(cd $(topsrcdir)/services/sync/tests/tps && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/tps/tests && tar -xf -)
-
 stage-modules: make-stage-dir
 	$(NSINSTALL) -D $(PKG_STAGE)/modules
 	cp -RL $(DEPTH)/_tests/modules $(PKG_STAGE)
@@ -602,7 +595,6 @@ stage-instrumentation-tests: make-stage-dir
   stage-android \
   stage-jetpack \
   stage-mozbase \
-  stage-tps \
   stage-modules \
   stage-marionette \
   stage-steeplechase \

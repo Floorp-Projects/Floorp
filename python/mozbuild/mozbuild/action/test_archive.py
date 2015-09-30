@@ -69,6 +69,22 @@ ARCHIVE_FILES = {
             'pattern': 'jsapi.h',
             'dest': 'jit-test',
         },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'testing',
+            'pattern': 'tps/**',
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'services/sync/',
+            'pattern': 'tps/**',
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'services/sync/tests/tps',
+            'pattern': '**',
+            'dest': 'tps/tests',
+        },
     ],
     'cppunittest': [
         {
