@@ -7818,23 +7818,26 @@ nsContentUtils::SendMouseEvent(nsCOMPtr<nsIPresShell> aPresShell,
 
   EventMessage msg;
   bool contextMenuKey = false;
-  if (aType.EqualsLiteral("mousedown"))
+  if (aType.EqualsLiteral("mousedown")) {
     msg = eMouseDown;
-  else if (aType.EqualsLiteral("mouseup"))
+  } else if (aType.EqualsLiteral("mouseup")) {
     msg = eMouseUp;
-  else if (aType.EqualsLiteral("mousemove"))
+  } else if (aType.EqualsLiteral("mousemove")) {
     msg = eMouseMove;
-  else if (aType.EqualsLiteral("mouseover"))
+  } else if (aType.EqualsLiteral("mouseover")) {
     msg = eMouseEnterIntoWidget;
-  else if (aType.EqualsLiteral("mouseout"))
+  } else if (aType.EqualsLiteral("mouseout")) {
     msg = eMouseExitFromWidget;
-  else if (aType.EqualsLiteral("contextmenu")) {
+  } else if (aType.EqualsLiteral("mouselongtap")) {
+    msg = eMouseLongTap;
+  } else if (aType.EqualsLiteral("contextmenu")) {
     msg = eContextMenu;
     contextMenuKey = (aButton == 0);
-  } else if (aType.EqualsLiteral("MozMouseHittest"))
+  } else if (aType.EqualsLiteral("MozMouseHittest")) {
     msg = eMouseHitTest;
-  else
+  } else {
     return NS_ERROR_FAILURE;
+  }
 
   if (aInputSourceArg == nsIDOMMouseEvent::MOZ_SOURCE_UNKNOWN) {
     aInputSourceArg = nsIDOMMouseEvent::MOZ_SOURCE_MOUSE;
