@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* globals DevToolsUtils, DOMParser, eventListenerService, CssLogic */
 
 "use strict";
 
@@ -999,7 +998,9 @@ var NodeFront = protocol.FrontClass(NodeActor, {
     return this._form.props ? (name in this._form.props) : null;
   },
 
-  get formProperties() this._form.props,
+  get formProperties() {
+    return this._form.props
+  },
 
   /**
    * Return a new AttributeModificationList for this node.
