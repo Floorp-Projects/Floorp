@@ -371,6 +371,108 @@ struct BluetoothActivityEnergyInfo {
   uint64_t mEnergyUsed; /* a product of mA, V and ms */
 };
 
+/**
+ * |BluetoothAddress| stores the 6-byte MAC address of a Bluetooth
+ * device. The constants ANY, ALL and LOCAL represent addresses with
+ * special meaning.
+ */
+struct BluetoothAddress {
+
+  static const BluetoothAddress ANY;
+  static const BluetoothAddress ALL;
+  static const BluetoothAddress LOCAL;
+
+  uint8_t mAddr[6];
+
+  BluetoothAddress()
+  {
+    Clear(); // assign ANY
+  }
+
+  MOZ_IMPLICIT BluetoothAddress(const BluetoothAddress&) = default;
+
+  BluetoothAddress(uint8_t aAddr0, uint8_t aAddr1,
+                   uint8_t aAddr2, uint8_t aAddr3,
+                   uint8_t aAddr4, uint8_t aAddr5)
+  {
+    mAddr[0] = aAddr0;
+    mAddr[1] = aAddr1;
+    mAddr[2] = aAddr2;
+    mAddr[3] = aAddr3;
+    mAddr[4] = aAddr4;
+    mAddr[5] = aAddr5;
+  }
+
+  BluetoothAddress& operator=(const BluetoothAddress&) = default;
+
+  bool operator==(const BluetoothAddress& aRhs) const
+  {
+    return !memcmp(mAddr, aRhs.mAddr, sizeof(mAddr));
+  }
+
+  bool operator!=(const BluetoothAddress& aRhs) const
+  {
+    return !operator==(aRhs);
+  }
+
+  /**
+   * |Clear| assigns an invalid value (i.e., ANY) to the address.
+   */
+  void Clear()
+  {
+    operator=(ANY);
+  }
+
+  /*
+   * Getter and setter methods for the address parts. The figure
+   * below illustrates the mapping to bytes; from LSB to MSB.
+   *
+   *    |       LAP       | UAP |    NAP    |
+   *    |  0  |  1  |  2  |  3  |  4  |  5  |
+   *
+   * See Bluetooth Core Spec 2.1, Sec 1.2.
+   */
+
+  uint32_t GetLAP() const
+  {
+    return (static_cast<uint32_t>(mAddr[0])) |
+           (static_cast<uint32_t>(mAddr[1]) << 8) |
+           (static_cast<uint32_t>(mAddr[2]) << 16);
+  }
+
+  void SetLAP(uint32_t aLAP)
+  {
+    MOZ_ASSERT(!(aLAP & 0xff000000)); // no top-8 bytes in LAP
+
+    mAddr[0] = aLAP;
+    mAddr[1] = aLAP >> 8;
+    mAddr[2] = aLAP >> 16;
+  }
+
+  uint8_t GetUAP() const
+  {
+    return mAddr[3];
+  }
+
+  void SetUAP(uint8_t aUAP)
+  {
+    mAddr[3] = aUAP;
+  }
+
+  uint16_t GetNAP() const
+  {
+    return (static_cast<uint16_t>(mAddr[4])) |
+           (static_cast<uint16_t>(mAddr[5]) << 8);
+  }
+
+  void SetNAP(uint16_t aNAP)
+  {
+    mAddr[4] = aNAP;
+    mAddr[5] = aNAP >> 8;
+  }
+
+};
+
 struct BluetoothUuid {
   uint8_t mUuid[16];
 
@@ -409,8 +511,10 @@ struct BluetoothProperty {
   /* Value
    */
 
+  /* PROPERTY_BDADDR */
+  BluetoothAddress mBdAddress;
+
   /* PROPERTY_BDNAME
-     PROPERTY_BDADDR
      PROPERTY_REMOTE_FRIENDLY_NAME */
   nsString mString;
 
@@ -418,7 +522,7 @@ struct BluetoothProperty {
   nsTArray<BluetoothUuid> mUuidArray;
 
   /* PROPERTY_ADAPTER_BONDED_DEVICES */
-  nsTArray<nsString> mStringArray;
+  nsTArray<BluetoothAddress> mBdAddressArray;
 
   /* PROPERTY_CLASS_OF_DEVICE
      PROPERTY_ADAPTER_DISCOVERY_TIMEOUT */
@@ -811,7 +915,7 @@ struct BluetoothGattWriteParam {
 };
 
 struct BluetoothGattNotifyParam {
-  nsString mBdAddr;
+  BluetoothAddress mBdAddr;
   BluetoothGattServiceId mServiceId;
   BluetoothGattId mCharId;
   uint16_t mLength;
@@ -820,7 +924,7 @@ struct BluetoothGattNotifyParam {
 };
 
 struct BluetoothGattTestParam {
-  nsString mBdAddr;
+  BluetoothAddress mBdAddr;
   BluetoothUuid mUuid;
   uint16_t mU1;
   uint16_t mU2;

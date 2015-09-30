@@ -797,7 +797,7 @@ BluetoothAvrcpManager::RegisterNotificationNotification(
  */
 void
 BluetoothAvrcpManager::RemoteFeatureNotification(
-    const nsAString& aBdAddr, unsigned long aFeatures)
+  const BluetoothAddress& aBdAddr, unsigned long aFeatures)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -809,7 +809,7 @@ BluetoothAvrcpManager::RemoteFeatureNotification(
  */
 void
 BluetoothAvrcpManager::VolumeChangeNotification(uint8_t aVolume,
-                                               uint8_t aCType)
+                                                uint8_t aCType)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
