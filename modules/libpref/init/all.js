@@ -154,12 +154,6 @@ pref("dom.serviceWorkers.interception.enabled", false);
 // Allow service workers to intercept opaque (cross origin) responses
 pref("dom.serviceWorkers.interception.opaque.enabled", false);
 
-// The amount of time (milliseconds) service workers keep running after each event.
-pref("dom.serviceWorkers.idle_timeout", 30000);
-
-// The amount of time (milliseconds) service workers can be kept running using waitUntil promises.
-pref("dom.serviceWorkers.idle_extended_timeout", 300000);
-
 // Whether nonzero values can be returned from performance.timing.*
 pref("dom.enable_performance", true);
 
