@@ -602,7 +602,7 @@ class MessageEventRunnable final : public WorkerRunnable
                                  , public StructuredCloneHolder
 {
   // This is only used for messages dispatched to a service worker.
-  UniquePtr<ServiceWorkerClientInfo> mEventSource;
+  nsAutoPtr<ServiceWorkerClientInfo> mEventSource;
 
 public:
   MessageEventRunnable(WorkerPrivate* aWorkerPrivate,
@@ -614,9 +614,9 @@ public:
   }
 
   void
-  SetMessageSource(UniquePtr<ServiceWorkerClientInfo>&& aSource)
+  SetMessageSource(ServiceWorkerClientInfo* aSource)
   {
-    mEventSource = Move(aSource);
+    mEventSource = aSource;
   }
 
   bool
@@ -1016,7 +1016,7 @@ private:
           nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
           MOZ_ASSERT(swm);
           bool handled = swm->HandleError(aCx, aWorkerPrivate->GetPrincipal(),
-                                          aWorkerPrivate->WorkerName(),
+                                          aWorkerPrivate->SharedWorkerName(),
                                           aWorkerPrivate->ScriptURL(),
                                           mMessage,
                                           mFilename, mLine, mLineNumber,
@@ -2100,13 +2100,13 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
                                            const nsAString& aScriptURL,
                                            bool aIsChromeWorker,
                                            WorkerType aWorkerType,
-                                           const nsACString& aWorkerName,
+                                           const nsACString& aSharedWorkerName,
                                            WorkerLoadInfo& aLoadInfo)
 : mMutex("WorkerPrivateParent Mutex"),
   mCondVar(mMutex, "WorkerPrivateParent CondVar"),
   mMemoryReportCondVar(mMutex, "WorkerPrivateParent Memory Report CondVar"),
   mParent(aParent), mScriptURL(aScriptURL),
-  mWorkerName(aWorkerName), mLoadingWorkerScript(false),
+  mSharedWorkerName(aSharedWorkerName), mLoadingWorkerScript(false),
   mBusyCount(0), mParentStatus(Pending), mParentFrozen(false),
   mIsChromeWorker(aIsChromeWorker), mMainThreadObjectsForgotten(false),
   mWorkerType(aWorkerType),
@@ -2114,8 +2114,8 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
   mCreationTimeHighRes((double)PR_Now() / PR_USEC_PER_MSEC)
 {
   MOZ_ASSERT_IF(!IsDedicatedWorker(),
-                !aWorkerName.IsVoid() && NS_IsMainThread());
-  MOZ_ASSERT_IF(IsDedicatedWorker(), aWorkerName.IsEmpty());
+                !aSharedWorkerName.IsVoid() && NS_IsMainThread());
+  MOZ_ASSERT_IF(IsDedicatedWorker(), aSharedWorkerName.IsEmpty());
 
   if (aLoadInfo.mWindow) {
     AssertIsOnMainThread();
@@ -2422,7 +2422,7 @@ WorkerPrivateParent<Derived>::NotifyPrivate(JSContext* aCx, Status aStatus)
     mParentStatus = aStatus;
   }
 
-  if (IsSharedWorker()) {
+  if (IsSharedWorker() || IsServiceWorker()) {
     RuntimeService* runtime = RuntimeService::GetService();
     MOZ_ASSERT(runtime);
 
@@ -2694,7 +2694,7 @@ WorkerPrivateParent<Derived>::PostMessageInternal(
                                             JSContext* aCx,
                                             JS::Handle<JS::Value> aMessage,
                                             const Optional<Sequence<JS::Value>>& aTransferable,
-                                            UniquePtr<ServiceWorkerClientInfo>&& aClientInfo,
+                                            ServiceWorkerClientInfo* aClientInfo,
                                             ErrorResult& aRv)
 {
   AssertIsOnParentThread();
@@ -2734,7 +2734,7 @@ WorkerPrivateParent<Derived>::PostMessageInternal(
     return;
   }
 
-  runnable->SetMessageSource(Move(aClientInfo));
+  runnable->SetMessageSource(aClientInfo);
 
   if (!runnable->Dispatch(aCx)) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -2743,24 +2743,14 @@ WorkerPrivateParent<Derived>::PostMessageInternal(
 
 template <class Derived>
 void
-WorkerPrivateParent<Derived>::PostMessage(
-                             JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                             const Optional<Sequence<JS::Value>>& aTransferable,
-                             ErrorResult& aRv)
-{
-  PostMessageInternal(aCx, aMessage, aTransferable, nullptr, aRv);
-}
-
-template <class Derived>
-void
 WorkerPrivateParent<Derived>::PostMessageToServiceWorker(
                              JSContext* aCx, JS::Handle<JS::Value> aMessage,
                              const Optional<Sequence<JS::Value>>& aTransferable,
-                             UniquePtr<ServiceWorkerClientInfo>&& aClientInfo,
+                             nsAutoPtr<ServiceWorkerClientInfo>& aClientInfo,
                              ErrorResult& aRv)
 {
   AssertIsOnMainThread();
-  PostMessageInternal(aCx, aMessage, aTransferable, Move(aClientInfo), aRv);
+  PostMessageInternal(aCx, aMessage, aTransferable, aClientInfo.forget(), aRv);
 }
 
 template <class Derived>
@@ -2953,7 +2943,7 @@ WorkerPrivateParent<Derived>::RegisterSharedWorker(JSContext* aCx,
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aSharedWorker);
-  MOZ_ASSERT(IsSharedWorker());
+  MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
   MOZ_ASSERT(!mSharedWorkers.Contains(aSharedWorker));
 
   if (IsSharedWorker()) {
@@ -3831,11 +3821,11 @@ WorkerPrivate::WorkerPrivate(JSContext* aCx,
                              WorkerPrivate* aParent,
                              const nsAString& aScriptURL,
                              bool aIsChromeWorker, WorkerType aWorkerType,
-                             const nsACString& aWorkerName,
+                             const nsACString& aSharedWorkerName,
                              WorkerLoadInfo& aLoadInfo)
   : WorkerPrivateParent<WorkerPrivate>(aCx, aParent, aScriptURL,
                                        aIsChromeWorker, aWorkerType,
-                                       aWorkerName, aLoadInfo)
+                                       aSharedWorkerName, aLoadInfo)
   , mJSContext(nullptr)
   , mPRThread(nullptr)
   , mDebuggerEventLoopLevel(0)
@@ -3855,8 +3845,8 @@ WorkerPrivate::WorkerPrivate(JSContext* aCx,
   , mIdleGCTimerRunning(false)
   , mWorkerScriptExecutedSuccessfully(false)
 {
-  MOZ_ASSERT_IF(!IsDedicatedWorker(), !aWorkerName.IsVoid());
-  MOZ_ASSERT_IF(IsDedicatedWorker(), aWorkerName.IsEmpty());
+  MOZ_ASSERT_IF(!IsDedicatedWorker(), !aSharedWorkerName.IsVoid());
+  MOZ_ASSERT_IF(IsDedicatedWorker(), aSharedWorkerName.IsEmpty());
 
   if (aParent) {
     aParent->AssertIsOnWorkerThread();
@@ -3935,12 +3925,12 @@ already_AddRefed<WorkerPrivate>
 WorkerPrivate::Constructor(const GlobalObject& aGlobal,
                            const nsAString& aScriptURL,
                            bool aIsChromeWorker, WorkerType aWorkerType,
-                           const nsACString& aWorkerName,
+                           const nsACString& aSharedWorkerName,
                            WorkerLoadInfo* aLoadInfo, ErrorResult& aRv)
 {
   JSContext* cx = aGlobal.Context();
   return Constructor(cx, aScriptURL, aIsChromeWorker, aWorkerType,
-                     aWorkerName, aLoadInfo, aRv);
+                     aSharedWorkerName, aLoadInfo, aRv);
 }
 
 // static
@@ -3948,7 +3938,7 @@ already_AddRefed<WorkerPrivate>
 WorkerPrivate::Constructor(JSContext* aCx,
                            const nsAString& aScriptURL,
                            bool aIsChromeWorker, WorkerType aWorkerType,
-                           const nsACString& aWorkerName,
+                           const nsACString& aSharedWorkerName,
                            WorkerLoadInfo* aLoadInfo, ErrorResult& aRv)
 {
   WorkerPrivate* parent = NS_IsMainThread() ?
@@ -3960,11 +3950,10 @@ WorkerPrivate::Constructor(JSContext* aCx,
     AssertIsOnMainThread();
   }
 
-  // Only service and shared workers can have names.
   MOZ_ASSERT_IF(aWorkerType != WorkerTypeDedicated,
-                !aWorkerName.IsVoid());
+                !aSharedWorkerName.IsVoid());
   MOZ_ASSERT_IF(aWorkerType == WorkerTypeDedicated,
-                aWorkerName.IsEmpty());
+                aSharedWorkerName.IsEmpty());
 
   Maybe<WorkerLoadInfo> stackLoadInfo;
   if (!aLoadInfo) {
@@ -4004,7 +3993,7 @@ WorkerPrivate::Constructor(JSContext* aCx,
 
   nsRefPtr<WorkerPrivate> worker =
     new WorkerPrivate(aCx, parent, aScriptURL, aIsChromeWorker,
-                      aWorkerType, aWorkerName, *aLoadInfo);
+                      aWorkerType, aSharedWorkerName, *aLoadInfo);
 
   if (!runtimeService->RegisterWorker(aCx, worker)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -4314,10 +4303,6 @@ WorkerPrivate::OverrideLoadInfoLoadGroup(WorkerLoadInfo& aLoadInfo)
                                            aLoadInfo.mLoadGroup);
   aLoadInfo.mInterfaceRequestor->MaybeAddTabChild(aLoadInfo.mLoadGroup);
 
-  // NOTE: this defaults the load context to:
-  //  - private browsing = false
-  //  - content = true
-  //  - use remote tabs = false
   nsCOMPtr<nsILoadGroup> loadGroup =
     do_CreateInstance(NS_LOADGROUP_CONTRACTID);
 
@@ -6313,9 +6298,9 @@ WorkerPrivate::GetOrCreateGlobalScope(JSContext* aCx)
   if (!mScope) {
     nsRefPtr<WorkerGlobalScope> globalScope;
     if (IsSharedWorker()) {
-      globalScope = new SharedWorkerGlobalScope(this, WorkerName());
+      globalScope = new SharedWorkerGlobalScope(this, SharedWorkerName());
     } else if (IsServiceWorker()) {
-      globalScope = new ServiceWorkerGlobalScope(this, WorkerName());
+      globalScope = new ServiceWorkerGlobalScope(this, SharedWorkerName());
     } else {
       globalScope = new DedicatedWorkerGlobalScope(this);
     }
