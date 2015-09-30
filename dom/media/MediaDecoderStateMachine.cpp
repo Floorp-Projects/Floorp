@@ -205,7 +205,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mQuickBufferingLowDataThresholdUsecs(detail::QUICK_BUFFERING_LOW_DATA_USECS),
   mIsAudioPrerolling(false),
   mIsVideoPrerolling(false),
-  mAudioCaptured(false),
+  mAudioCaptured(false, "MediaDecoderStateMachine::mAudioCaptured"),
   mAudioCompleted(false, "MediaDecoderStateMachine::mAudioCompleted"),
   mNotifyMetadataBeforeFirstFrame(false),
   mDispatchedEventToDecode(false),
@@ -219,7 +219,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mCorruptFrames(60),
   mDecodingFirstFrame(true),
   mSentLoadedMetadataEvent(false),
-  mSentFirstFrameLoadedEvent(false),
+  mSentFirstFrameLoadedEvent(false, "MediaDecoderStateMachine::mSentFirstFrameLoadedEvent"),
   mSentPlaybackEndedEvent(false),
   mStreamSink(new DecodedStream(mTaskQueue, mAudioQueue, mVideoQueue)),
   mResource(aDecoder->GetResource()),
@@ -350,6 +350,8 @@ MediaDecoderStateMachine::InitializationTask()
   mWatchManager.Watch(mPlayState, &MediaDecoderStateMachine::PlayStateChanged);
   mWatchManager.Watch(mLogicallySeeking, &MediaDecoderStateMachine::LogicallySeekingChanged);
   mWatchManager.Watch(mSameOriginMedia, &MediaDecoderStateMachine::SameOriginMediaChanged);
+  mWatchManager.Watch(mSentFirstFrameLoadedEvent, &MediaDecoderStateMachine::AdjustAudioThresholds);
+  mWatchManager.Watch(mAudioCaptured, &MediaDecoderStateMachine::AdjustAudioThresholds);
 
   // Propagate mSameOriginMedia to mDecodedStream.
   SameOriginMediaChanged();
@@ -2071,6 +2073,33 @@ MediaDecoderStateMachine::IsDecodingFirstFrame()
 }
 
 void
+MediaDecoderStateMachine::AdjustAudioThresholds()
+{
+  MOZ_ASSERT(OnTaskQueue());
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+
+  // Experiments show that we need to buffer more if audio is captured to avoid
+  // audio glitch. See bug 1188643 comment 16 for the details.
+  int64_t divisor = mAudioCaptured ? NO_VIDEO_AMPLE_AUDIO_DIVISOR / 2
+                                   : NO_VIDEO_AMPLE_AUDIO_DIVISOR;
+
+  // We're playing audio only. We don't need to worry about slow video
+  // decodes causing audio underruns, so don't buffer so much audio in
+  // order to reduce memory usage.
+  if (HasAudio() && !HasVideo() && mSentFirstFrameLoadedEvent) {
+    mAmpleAudioThresholdUsecs = detail::AMPLE_AUDIO_USECS / divisor;
+    mLowAudioThresholdUsecs = detail::LOW_AUDIO_USECS / divisor;
+    mQuickBufferingLowDataThresholdUsecs =
+      detail::QUICK_BUFFERING_LOW_DATA_USECS / divisor;
+
+    // Check if we need to stop audio prerolling for thresholds changed.
+    if (mIsAudioPrerolling && DonePrerollingAudio()) {
+      StopPrerollingAudio();
+    }
+  }
+}
+
+void
 MediaDecoderStateMachine::FinishDecodeFirstFrame()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -2089,15 +2118,6 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
   DECODER_LOG("Media duration %lld, "
               "transportSeekable=%d, mediaSeekable=%d",
               Duration().ToMicroseconds(), mResource->IsTransportSeekable(), mMediaSeekable.Ref());
-
-  if (HasAudio() && !HasVideo() && !mSentFirstFrameLoadedEvent) {
-    // We're playing audio only. We don't need to worry about slow video
-    // decodes causing audio underruns, so don't buffer so much audio in
-    // order to reduce memory usage.
-    mAmpleAudioThresholdUsecs /= NO_VIDEO_AMPLE_AUDIO_DIVISOR;
-    mLowAudioThresholdUsecs /= NO_VIDEO_AMPLE_AUDIO_DIVISOR;
-    mQuickBufferingLowDataThresholdUsecs /= NO_VIDEO_AMPLE_AUDIO_DIVISOR;
-  }
 
   // Get potentially updated metadata
   {
