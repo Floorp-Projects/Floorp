@@ -273,17 +273,17 @@ BluetoothA2dpNotificationHandler::~BluetoothA2dpNotificationHandler()
 
 void
 BluetoothA2dpNotificationHandler::ConnectionStateNotification(
-  BluetoothA2dpConnectionState aState, const nsAString& aBdAddr)
+  BluetoothA2dpConnectionState aState, const BluetoothAddress& aBdAddr)
 { }
 
 void
 BluetoothA2dpNotificationHandler::AudioStateNotification(
-  BluetoothA2dpAudioState aState, const nsAString& aBdAddr)
+  BluetoothA2dpAudioState aState, const BluetoothAddress& aBdAddr)
 { }
 
 void
 BluetoothA2dpNotificationHandler::AudioConfigNotification(
-  const nsAString& aBdAddr, uint32_t aSampleRate, uint8_t aChannelCount)
+  const BluetoothAddress& aBdAddr, uint32_t aSampleRate, uint8_t aChannelCount)
 { }
 
 // Result handling
