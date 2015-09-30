@@ -289,6 +289,10 @@ description#identity-popup-content-verifier,
   background-image: url(chrome://browser/skin/controlcenter/permissions.svg);
 }
 
+#identity-popup-permission-list menulist {
+  min-width: 60px;
+}
+
 #identity-popup-permission-list:not(:empty) {
   margin-top: 5px;
 }
@@ -299,5 +303,6 @@ description#identity-popup-content-verifier,
 
 .identity-popup-permission-label {
   -moz-margin-start: 0;
+  word-wrap: break-word;
 }
 
