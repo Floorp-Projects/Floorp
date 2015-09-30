@@ -144,7 +144,6 @@ EXPORTS
     glViewport                      @142
 
     ; Extensions
-    glTexImage3DOES                 @143
     glBlitFramebufferANGLE          @149
     glRenderbufferStorageMultisampleANGLE @150
     glDeleteFencesNV                @151
@@ -178,6 +177,12 @@ EXPORTS
     glGetBufferPointervOES          @287
     glMapBufferRangeEXT             @288
     glFlushMappedBufferRangeEXT     @289
+    glDiscardFramebufferEXT         @293
+    glInsertEventMarkerEXT          @294
+    glPushGroupMarkerEXT            @295
+    glPopGroupMarkerEXT             @296
+    glEGLImageTargetTexture2DOES    @297
+    glEGLImageTargetRenderbufferStorageOES @298
 
     ; GLES 3.0 Functions
     glReadBuffer                    @180
@@ -285,20 +290,8 @@ EXPORTS
     glTexStorage3D                  @282
     glGetInternalformativ           @283
 
-    ; EGL dependencies
-    glCreateContext                 @144 NONAME
-    glDestroyContext                @145 NONAME
-    glMakeCurrent                   @146 NONAME
-    glGetCurrentContext             @147 NONAME
-    glGetProcAddress                @148 NONAME
-    glBindTexImage                  @158 NONAME
-    glCreateRenderer                @177 NONAME
-    glDestroyRenderer               @178 NONAME
+    ; ANGLE Platform Implementation
+    ANGLEPlatformCurrent            @290
+    ANGLEPlatformInitialize         @291
+    ANGLEPlatformShutdown           @292
 
-    ; Setting up TRACE macro callbacks
-    SetTraceFunctionPointers        @284
-
-    ; GCC has problems with linking to undecorated stdcall functions,
-    ; so we explicitly add aliases for APIs used by EGL.
-    glGetProcAddress@4=glGetProcAddress
-    glBindTexImage@4=glBindTexImage

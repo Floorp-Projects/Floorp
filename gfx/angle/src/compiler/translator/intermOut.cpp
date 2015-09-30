@@ -27,7 +27,10 @@ class TOutputTraverser : public TIntermTraverser
 {
   public:
     TOutputTraverser(TInfoSinkBase &i)
-        : sink(i) { }
+        : TIntermTraverser(true, false, false),
+          sink(i)
+    {
+    }
     TInfoSinkBase& sink;
 
   protected:
@@ -61,6 +64,8 @@ TString TType::getCompleteString() const
 {
     TStringStream stream;
 
+    if (invariant)
+        stream << "invariant ";
     if (qualifier != EvqTemporary && qualifier != EvqGlobal)
         stream << getQualifierString() << " ";
     if (precision != EbpUndefined)
@@ -131,6 +136,25 @@ bool TOutputTraverser::visitBinary(Visit visit, TIntermBinary *node)
       case EOpDivAssign:
         out << "divide second child into first child";
         break;
+      case EOpIModAssign:
+        out << "modulo second child into first child";
+        break;
+      case EOpBitShiftLeftAssign:
+        out << "bit-wise shift first child left by second child";
+        break;
+      case EOpBitShiftRightAssign:
+        out << "bit-wise shift first child right by second child";
+        break;
+      case EOpBitwiseAndAssign:
+        out << "bit-wise and second child into first child";
+        break;
+      case EOpBitwiseXorAssign:
+        out << "bit-wise xor second child into first child";
+        break;
+      case EOpBitwiseOrAssign:
+        out << "bit-wise or second child into first child";
+        break;
+
       case EOpIndexDirect:
         out << "direct index";
         break;
@@ -159,6 +183,25 @@ bool TOutputTraverser::visitBinary(Visit visit, TIntermBinary *node)
       case EOpDiv:
         out << "divide";
         break;
+      case EOpIMod:
+        out << "modulo";
+        break;
+      case EOpBitShiftLeft:
+        out << "bit-wise shift left";
+        break;
+      case EOpBitShiftRight:
+        out << "bit-wise shift right";
+        break;
+      case EOpBitwiseAnd:
+        out << "bit-wise and";
+        break;
+      case EOpBitwiseXor:
+        out << "bit-wise xor";
+        break;
+      case EOpBitwiseOr:
+        out << "bit-wise or";
+        break;
+
       case EOpEqual:
         out << "Compare Equal";
         break;
@@ -211,6 +254,36 @@ bool TOutputTraverser::visitBinary(Visit visit, TIntermBinary *node)
 
     out << "\n";
 
+    // Special handling for direct indexes. Because constant
+    // unions are not aware they are struct indexes, treat them
+    // here where we have that contextual knowledge.
+    if (node->getOp() == EOpIndexDirectStruct ||
+        node->getOp() == EOpIndexDirectInterfaceBlock)
+    {
+        mDepth++;
+        node->getLeft()->traverse(this);
+        mDepth--;
+
+        TIntermConstantUnion *intermConstantUnion = node->getRight()->getAsConstantUnion();
+        ASSERT(intermConstantUnion);
+
+        OutputTreeText(out, intermConstantUnion, mDepth + 1);
+
+        // The following code finds the field name from the constant union
+        const TConstantUnion *constantUnion = intermConstantUnion->getUnionArrayPointer();
+        const TStructure *structure = node->getLeft()->getType().getStruct();
+        const TInterfaceBlock *interfaceBlock = node->getLeft()->getType().getInterfaceBlock();
+        ASSERT(structure || interfaceBlock);
+
+        const TFieldList &fields = structure ? structure->fields() : interfaceBlock->fields();
+
+        const TField *field = fields[constantUnion->getIConst()];
+
+        out << constantUnion->getIConst() << " (field '" << field->name() << "')";
+
+        return false;
+    }
+
     return true;
 }
 
@@ -226,6 +299,7 @@ bool TOutputTraverser::visitUnary(Visit visit, TIntermUnary *node)
       case EOpPositive:       out << "Positive sign";        break;
       case EOpVectorLogicalNot:
       case EOpLogicalNot:     out << "Negate conditional";   break;
+      case EOpBitwiseNot:     out << "bit-wise not";         break;
 
       case EOpPostIncrement:  out << "Post-Increment";       break;
       case EOpPostDecrement:  out << "Post-Decrement";       break;
@@ -241,6 +315,13 @@ bool TOutputTraverser::visitUnary(Visit visit, TIntermUnary *node)
       case EOpAcos:           out << "arc cosine";           break;
       case EOpAtan:           out << "arc tangent";          break;
 
+      case EOpSinh:           out << "hyperbolic sine";      break;
+      case EOpCosh:           out << "hyperbolic cosine";    break;
+      case EOpTanh:           out << "hyperbolic tangent";   break;
+      case EOpAsinh:          out << "arc hyperbolic sine";  break;
+      case EOpAcosh:          out << "arc hyperbolic cosine"; break;
+      case EOpAtanh:          out << "arc hyperbolic tangent"; break;
+
       case EOpExp:            out << "exp";                  break;
       case EOpLog:            out << "log";                  break;
       case EOpExp2:           out << "exp2";                 break;
@@ -251,14 +332,36 @@ bool TOutputTraverser::visitUnary(Visit visit, TIntermUnary *node)
       case EOpAbs:            out << "Absolute value";       break;
       case EOpSign:           out << "Sign";                 break;
       case EOpFloor:          out << "Floor";                break;
+      case EOpTrunc:          out << "Truncate";             break;
+      case EOpRound:          out << "Round";                break;
+      case EOpRoundEven:      out << "Round half even";      break;
       case EOpCeil:           out << "Ceiling";              break;
       case EOpFract:          out << "Fraction";             break;
+      case EOpIsNan:          out << "Is not a number";      break;
+      case EOpIsInf:          out << "Is infinity";          break;
+
+      case EOpFloatBitsToInt: out << "float bits to int";    break;
+      case EOpFloatBitsToUint: out << "float bits to uint";  break;
+      case EOpIntBitsToFloat: out << "int bits to float";    break;
+      case EOpUintBitsToFloat: out << "uint bits to float";  break;
+
+      case EOpPackSnorm2x16:  out << "pack Snorm 2x16";      break;
+      case EOpPackUnorm2x16:  out << "pack Unorm 2x16";      break;
+      case EOpPackHalf2x16:   out << "pack half 2x16";       break;
+
+      case EOpUnpackSnorm2x16: out << "unpack Snorm 2x16";   break;
+      case EOpUnpackUnorm2x16: out << "unpack Unorm 2x16";   break;
+      case EOpUnpackHalf2x16:  out << "unpack half 2x16";    break;
 
       case EOpLength:         out << "length";               break;
       case EOpNormalize:      out << "normalize";            break;
       // case EOpDPdx:           out << "dPdx";                 break;
       // case EOpDPdy:           out << "dPdy";                 break;
       // case EOpFwidth:         out << "fwidth";               break;
+
+      case EOpDeterminant:    out << "determinant";          break;
+      case EOpTranspose:      out << "transpose";            break;
+      case EOpInverse:        out << "inverse";              break;
 
       case EOpAny:            out << "any";                  break;
       case EOpAll:            out << "all";                  break;
@@ -295,6 +398,7 @@ bool TOutputTraverser::visitAggregate(Visit visit, TIntermAggregate *node)
       case EOpFunction:      out << "Function Definition: " << node->getName(); break;
       case EOpFunctionCall:  out << "Function Call: " << node->getName(); break;
       case EOpParameters:    out << "Function Parameters: ";              break;
+      case EOpPrototype:     out << "Function Prototype: " << node->getName(); break;
 
       case EOpConstructFloat: out << "Construct float"; break;
       case EOpConstructVec2:  out << "Construct vec2";  break;
@@ -313,7 +417,13 @@ bool TOutputTraverser::visitAggregate(Visit visit, TIntermAggregate *node)
       case EOpConstructUVec3: out << "Construct uvec3"; break;
       case EOpConstructUVec4: out << "Construct uvec4"; break;
       case EOpConstructMat2:  out << "Construct mat2";  break;
+      case EOpConstructMat2x3:  out << "Construct mat2x3";  break;
+      case EOpConstructMat2x4:  out << "Construct mat2x4";  break;
+      case EOpConstructMat3x2:  out << "Construct mat3x2";  break;
       case EOpConstructMat3:  out << "Construct mat3";  break;
+      case EOpConstructMat3x4:  out << "Construct mat3x4";  break;
+      case EOpConstructMat4x2:  out << "Construct mat4x2";  break;
+      case EOpConstructMat4x3:  out << "Construct mat4x3";  break;
       case EOpConstructMat4:  out << "Construct mat4";  break;
       case EOpConstructStruct:  out << "Construct structure";  break;
 
@@ -325,6 +435,7 @@ bool TOutputTraverser::visitAggregate(Visit visit, TIntermAggregate *node)
       case EOpVectorNotEqual:   out << "NotEqual";                      break;
 
       case EOpMod:           out << "mod";         break;
+      case EOpModf:          out << "modf";        break;
       case EOpPow:           out << "pow";         break;
 
       case EOpAtan:          out << "arc tangent"; break;
@@ -343,6 +454,8 @@ bool TOutputTraverser::visitAggregate(Visit visit, TIntermAggregate *node)
       case EOpReflect:       out << "reflect";                 break;
       case EOpRefract:       out << "refract";                 break;
       case EOpMul:           out << "component-wise multiply"; break;
+
+      case EOpOuterProduct:  out << "outer product";   break;
 
       case EOpDeclaration:   out << "Declaration: ";   break;
       case EOpInvariantDeclaration: out << "Invariant Declaration: "; break;
@@ -517,14 +630,13 @@ bool TOutputTraverser::visitBranch(Visit visit, TIntermBranch *node)
 //
 // This function is the one to call externally to start the traversal.
 // Individual functions can be initialized to 0 to skip processing of that
-// type of node.  It's children will still be processed.
+// type of node. Its children will still be processed.
 //
-void TIntermediate::outputTree(TIntermNode *root)
+void TIntermediate::outputTree(TIntermNode *root, TInfoSinkBase &infoSink)
 {
-    if (root == NULL)
-        return;
+    TOutputTraverser it(infoSink);
 
-    TOutputTraverser it(mInfoSink.info);
+    ASSERT(root);
 
     root->traverse(&it);
 }

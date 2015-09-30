@@ -14,7 +14,9 @@
 #include "compiler/translator/Compiler.h"
 #include "compiler/translator/InitializeDll.h"
 #include "compiler/translator/length_limits.h"
+#ifdef ANGLE_ENABLE_HLSL
 #include "compiler/translator/TranslatorHLSL.h"
+#endif // ANGLE_ENABLE_HLSL
 #include "compiler/translator/VariablePacker.h"
 #include "angle_gl.h"
 
@@ -92,6 +94,7 @@ TCompiler *GetCompilerFromHandle(ShHandle handle)
     return base->getAsCompiler();
 }
 
+#ifdef ANGLE_ENABLE_HLSL
 TranslatorHLSL *GetTranslatorHLSLFromHandle(ShHandle handle)
 {
     if (!handle)
@@ -99,6 +102,7 @@ TranslatorHLSL *GetTranslatorHLSLFromHandle(ShHandle handle)
     TShHandleBase *base = static_cast<TShHandleBase *>(handle);
     return base->getAsTranslatorHLSL();
 }
+#endif // ANGLE_ENABLE_HLSL
 
 }  // namespace anonymous
 
@@ -153,6 +157,10 @@ void ShInitBuiltInResources(ShBuiltInResources* resources)
     resources->EXT_draw_buffers = 0;
     resources->EXT_frag_depth = 0;
     resources->EXT_shader_texture_lod = 0;
+    resources->WEBGL_debug_shader_precision = 0;
+    resources->EXT_shader_framebuffer_fetch = 0;
+    resources->NV_shader_framebuffer_fetch = 0;
+    resources->ARM_shader_framebuffer_fetch = 0;
 
     resources->NV_draw_buffers = 0;
 
@@ -230,6 +238,13 @@ bool ShCompile(
     ASSERT(compiler);
 
     return compiler->compile(shaderStrings, numStrings, compileOptions);
+}
+
+void ShClearResults(const ShHandle handle)
+{
+    TCompiler *compiler = GetCompilerFromHandle(handle);
+    ASSERT(compiler);
+    compiler->clearResults();
 }
 
 int ShGetShaderVersion(const ShHandle handle)
@@ -323,6 +338,7 @@ bool ShGetInterfaceBlockRegister(const ShHandle handle,
                                  const std::string &interfaceBlockName,
                                  unsigned int *indexOut)
 {
+#ifdef ANGLE_ENABLE_HLSL
     ASSERT(indexOut);
 
     TranslatorHLSL *translator = GetTranslatorHLSLFromHandle(handle);
@@ -335,12 +351,16 @@ bool ShGetInterfaceBlockRegister(const ShHandle handle,
 
     *indexOut = translator->getInterfaceBlockRegister(interfaceBlockName);
     return true;
+#else
+    return false;
+#endif // ANGLE_ENABLE_HLSL
 }
 
 bool ShGetUniformRegister(const ShHandle handle,
                           const std::string &uniformName,
                           unsigned int *indexOut)
 {
+#ifdef ANGLE_ENABLE_HLSL
     ASSERT(indexOut);
     TranslatorHLSL *translator = GetTranslatorHLSLFromHandle(handle);
     ASSERT(translator);
@@ -352,4 +372,7 @@ bool ShGetUniformRegister(const ShHandle handle,
 
     *indexOut = translator->getUniformRegister(uniformName);
     return true;
+#else
+    return false;
+#endif // ANGLE_ENABLE_HLSL
 }

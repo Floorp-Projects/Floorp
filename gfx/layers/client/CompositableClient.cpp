@@ -258,7 +258,9 @@ CompositableClient::GetTextureClientRecycler()
 }
 
 void
-CompositableClient::DumpTextureClient(std::stringstream& aStream, TextureClient* aTexture)
+CompositableClient::DumpTextureClient(std::stringstream& aStream,
+                                      TextureClient* aTexture,
+                                      TextureDumpMode aCompress)
 {
   if (!aTexture) {
     return;
@@ -267,7 +269,11 @@ CompositableClient::DumpTextureClient(std::stringstream& aStream, TextureClient*
   if (!dSurf) {
     return;
   }
-  aStream << gfxUtils::GetAsLZ4Base64Str(dSurf).get();
+  if (aCompress == TextureDumpMode::Compress) {
+    aStream << gfxUtils::GetAsLZ4Base64Str(dSurf).get();
+  } else {
+    aStream << gfxUtils::GetAsDataURI(dSurf).get();
+  }
 }
 
 AutoRemoveTexture::~AutoRemoveTexture()

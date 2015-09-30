@@ -11,6 +11,21 @@
 
 #include "compiler/translator/Pragma.h"
 
+static const int GLSL_VERSION_110 = 110;
+static const int GLSL_VERSION_120 = 120;
+static const int GLSL_VERSION_130 = 130;
+static const int GLSL_VERSION_140 = 140;
+static const int GLSL_VERSION_150 = 150;
+static const int GLSL_VERSION_330 = 330;
+static const int GLSL_VERSION_400 = 400;
+static const int GLSL_VERSION_410 = 410;
+static const int GLSL_VERSION_420 = 420;
+static const int GLSL_VERSION_430 = 430;
+static const int GLSL_VERSION_440 = 440;
+static const int GLSL_VERSION_450 = 450;
+
+int ShaderOutputTypeToGLSLVersion(ShShaderOutput output);
+
 // Traverses the intermediate tree to return the minimum GLSL version
 // required to legally access all built-in features used in the shader.
 // GLSL 1.1 which is mandated by OpenGL 2.0 provides:
@@ -29,23 +44,24 @@
 class TVersionGLSL : public TIntermTraverser
 {
   public:
-    TVersionGLSL(sh::GLenum type, const TPragma &pragma);
+    TVersionGLSL(sh::GLenum type, const TPragma &pragma, ShShaderOutput output);
 
-    // Returns 120 if the following is used the shader:
-    // - "invariant",
-    // - "gl_PointCoord",
-    // - matrix/matrix constructors
-    // - array "out" parameters
-    // Else 110 is returned.
-    int getVersion() { return mVersion; }
+    // If output is core profile, returns 150.
+    // If output is legacy profile,
+    //   Returns 120 if the following is used the shader:
+    //   - "invariant",
+    //   - "gl_PointCoord",
+    //   - matrix/matrix constructors
+    //   - array "out" parameters
+    //   Else 110 is returned.
+    int getVersion() const { return mVersion; }
 
     virtual void visitSymbol(TIntermSymbol *);
     virtual bool visitAggregate(Visit, TIntermAggregate *);
 
-  protected:
-    void updateVersion(int version);
-
   private:
+    void ensureVersionIsAtLeast(int version);
+
     int mVersion;
 };
 
