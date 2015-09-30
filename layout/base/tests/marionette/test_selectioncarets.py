@@ -7,7 +7,6 @@ from marionette_driver.by import By
 from marionette_driver.marionette import Actions
 from marionette import MarionetteTestCase, SkipTest
 from marionette_driver.selection import SelectionManager
-from marionette_driver.gestures import long_press_without_contextmenu
 import re
 
 
@@ -26,7 +25,6 @@ class CommonCaretsTestCase(object):
     MarionetteTestCase.
 
     '''
-    _long_press_time = 1        # 1 second
     _input_selector = (By.ID, 'input')
     _textarea_selector = (By.ID, 'textarea')
     _textarea_rtl_selector = (By.ID, 'textarea_rtl')
@@ -163,15 +161,43 @@ class CommonCaretsTestCase(object):
 
         return x, y
 
+    def rect_relative_to_window(self, el):
+        '''Get element's bounding rectangle.
+
+        This function is similar to el.rect, but the coordinate is relative to
+        the top left corner of the window instead of the document.
+
+        '''
+        return self.marionette.execute_script('''
+            let rect = arguments[0].getBoundingClientRect();
+            return {x: rect.x, y:rect.y, width: rect.width, height: rect.height};
+            ''', script_args=[el])
+
     def long_press_on_location(self, el, x=None, y=None):
         '''Long press the location (x, y) to select a word.
 
         If no (x, y) are given, it will be targeted at the center of the
         element. On Windows, those spaces after the word will also be selected.
+        This function sends synthesized eMouseLongTap to gecko.
 
         '''
-        long_press_without_contextmenu(self.marionette, el, self._long_press_time,
-                                       x, y)
+        rect = self.rect_relative_to_window(el)
+        target_x = rect['x'] + (x if x is not None else rect['width'] // 2)
+        target_y = rect['y'] + (y if y is not None else rect['height'] // 2)
+
+        self.marionette.execute_script('''
+            let Ci = Components.interfaces;
+            let utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIDOMWindowUtils);
+            utils.sendTouchEventToWindow('touchstart', [0],
+                                         [arguments[0]], [arguments[1]],
+                                         [1], [1], [0], [1], 1, 0);
+            utils.sendMouseEventToWindow('mouselongtap', arguments[0], arguments[1],
+                                          0, 1, 0);
+            utils.sendTouchEventToWindow('touchend', [0],
+                                         [arguments[0]], [arguments[1]],
+                                         [1], [1], [0], [1], 1, 0);
+            ''', script_args=[target_x, target_y], sandbox='system')
 
     def long_press_on_word(self, el, wordOrdinal):
         x, y = self.word_location(el, wordOrdinal)
