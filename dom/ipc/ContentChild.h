@@ -204,6 +204,12 @@ public:
                                          const FileDescriptor& aGCLog,
                                          const FileDescriptor& aCCLog) override;
 
+    virtual PWebBrowserPersistDocumentChild* AllocPWebBrowserPersistDocumentChild(PBrowserChild* aBrowser, const uint64_t& aOuterWindowID) override;
+    virtual bool RecvPWebBrowserPersistDocumentConstructor(PWebBrowserPersistDocumentChild *aActor,
+                                                           PBrowserChild *aBrowser,
+                                                           const uint64_t& aOuterWindowID) override;
+    virtual bool DeallocPWebBrowserPersistDocumentChild(PWebBrowserPersistDocumentChild* aActor) override;
+
     virtual bool
     RecvDataStoreNotify(const uint32_t& aAppId, const nsString& aName,
                         const nsString& aManifestURL) override;

@@ -7,7 +7,7 @@
 #include "WebBrowserPersistResourcesChild.h"
 
 #include "WebBrowserPersistDocumentChild.h"
-#include "mozilla/dom/PBrowserChild.h"
+#include "mozilla/dom/ContentChild.h"
 
 namespace mozilla {
 
@@ -36,12 +36,14 @@ WebBrowserPersistResourcesChild::VisitDocument(nsIWebBrowserPersistDocument* aDo
                                                nsIWebBrowserPersistDocument* aSubDocument)
 {
     auto* subActor = new WebBrowserPersistDocumentChild();
-    dom::PBrowserChild* grandManager = Manager()->Manager();
-    // As a consequence of how PWebBrowserPersistDocumentConstructor can be
-    // sent by both the parent and the child, we must pass the outerWindowID
-    // argument here. We pass 0, though note that this argument is actually
-    // just ignored when passed up to the parent from the child.
-    if (!grandManager->SendPWebBrowserPersistDocumentConstructor(subActor, 0)) {
+    // As a consequence of how PWebBrowserPersistDocumentConstructor
+    // can be sent by both the parent and the child, we must pass the
+    // aBrowser and outerWindowID arguments here, but the values are
+    // ignored by the parent.  In particular, the TabChild in which
+    // persistence started does not necessarily exist at this point;
+    // see bug 1203602.
+    if (!Manager()->Manager()
+        ->SendPWebBrowserPersistDocumentConstructor(subActor, nullptr, 0)) {
         // NOTE: subActor is freed at this point.
         return NS_ERROR_FAILURE;
     }

@@ -398,20 +398,47 @@ OutputParser.prototype = {
     swatch.nextElementSibling.textContent = val;
   },
 
-   /**
-    * Append a URL to the output.
-    *
-    * @param  {String} match
-    *         Complete match that may include "url(xxx)"
-    * @param  {String} url
-    *         Actual URL
-    * @param  {Object} [options]
-    *         Options object. For valid options and default values see
-    *         _mergeOptions().
-    */
-  _appendURL: function(match, url, options={}) {
+  /**
+   * A helper function that sanitizes a possibly-unterminated URL.
+   */
+  _sanitizeURL: function(url) {
+    // Re-lex the URL and add any needed termination characters.
+    let urlTokenizer = DOMUtils.getCSSLexer(url);
+    // Just read until EOF; there will only be a single token.
+    while (urlTokenizer.nextToken()) {
+      // Nothing.
+    }
+
+    return urlTokenizer.performEOFFixup(url, true);
+  },
+
+  /**
+   * Append a URL to the output.
+   *
+   * @param  {String} match
+   *         Complete match that may include "url(xxx)"
+   * @param  {String} url
+   *         Actual URL
+   * @param  {Object} [options]
+   *         Options object. For valid options and default values see
+   *         _mergeOptions().
+   */
+  _appendURL: function(match, url, options) {
     if (options.urlClass) {
-      this._appendTextNode("url(\"");
+      // Sanitize the URL.  Note that if we modify the URL, we just
+      // leave the termination characters.  This isn't strictly
+      // "as-authored", but it makes a bit more sense.
+      match = this._sanitizeURL(match);
+      // This regexp matches a URL token.  It puts the "url(", any
+      // leading whitespace, and any opening quote into |leader|; the
+      // URL text itself into |body|, and any trailing quote, trailing
+      // whitespace, and the ")" into |trailer|.  We considered adding
+      // functionality for this to CSSLexer, in some way, but this
+      // seemed simpler on the whole.
+      let [, leader, , body, trailer] =
+        /^(url\([ \t\r\n\f]*(["']?))(.*?)(\2[ \t\r\n\f]*\))$/i.exec(match);
+
+      this._appendTextNode(leader);
 
       let href = url;
       if (options.baseURI) {
@@ -422,11 +449,11 @@ OutputParser.prototype = {
         target: "_blank",
         class: options.urlClass,
         href: href
-      }, url);
+      }, body);
 
-      this._appendTextNode("\")");
+      this._appendTextNode(trailer);
     } else {
-      this._appendTextNode("url(\"" + url + "\")");
+      this._appendTextNode(match);
     }
   },
 

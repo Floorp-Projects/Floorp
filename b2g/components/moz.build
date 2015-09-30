@@ -67,6 +67,7 @@ EXTRA_JS_MODULES += [
     'LogCapture.jsm',
     'LogParser.jsm',
     'LogShake.jsm',
+    'MultiscreenHandler.jsm',
     'OrientationChangeHandler.jsm',
     'SafeMode.jsm',
     'Screenshot.jsm',

@@ -20,6 +20,48 @@
 BEGIN_BLUETOOTH_NAMESPACE
 
 void
+AddressToString(const BluetoothAddress& aAddress, nsAString& aString)
+{
+  char str[BLUETOOTH_ADDRESS_LENGTH + 1];
+
+  int res = snprintf(str, sizeof(str), "%02x:%02x:%02x:%02x:%02x:%02x",
+                     static_cast<int>(aAddress.mAddr[0]),
+                     static_cast<int>(aAddress.mAddr[1]),
+                     static_cast<int>(aAddress.mAddr[2]),
+                     static_cast<int>(aAddress.mAddr[3]),
+                     static_cast<int>(aAddress.mAddr[4]),
+                     static_cast<int>(aAddress.mAddr[5]));
+
+  if ((res == EOF) ||
+      (res < 0) ||
+      (static_cast<size_t>(res) >= sizeof(str))) {
+    /* Conversion should have succeeded or (a) we're out of memory, or
+     * (b) our code is massively broken. We should crash in both cases.
+     */
+    MOZ_CRASH("Failed to convert Bluetooth address to string");
+  }
+
+  aString = NS_ConvertUTF8toUTF16(str);
+}
+
+nsresult
+StringToAddress(const nsAString& aString, BluetoothAddress& aAddress)
+{
+  int res = sscanf(NS_ConvertUTF16toUTF8(aString).get(),
+                   "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx",
+                   &aAddress.mAddr[0],
+                   &aAddress.mAddr[1],
+                   &aAddress.mAddr[2],
+                   &aAddress.mAddr[3],
+                   &aAddress.mAddr[4],
+                   &aAddress.mAddr[5]);
+  if (res < static_cast<ssize_t>(MOZ_ARRAY_LENGTH(aAddress.mAddr))) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  return NS_OK;
+}
+
+void
 UuidToString(const BluetoothUuid& aUuid, nsAString& aString)
 {
   char uuidStr[37];
