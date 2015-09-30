@@ -3347,9 +3347,9 @@ HTMLMediaElement::NotifyMediaStreamTrackRemoved(const nsRefPtr<MediaStreamTrack>
   } else if (MediaTrack* t = VideoTracks()->GetTrackById(id)) {
     VideoTracks()->RemoveTrack(t);
   } else {
-    // XXX Uncomment this when DOMMediaStream doesn't call NotifyTrackRemoved
-    // multiple times for the same track, i.e., when it implements the
-    // "addtrack" and "removetrack" events.
+    // XXX (bug 1208328) Uncomment this when DOMMediaStream doesn't call
+    // NotifyTrackRemoved multiple times for the same track, i.e., when it
+    // implements the "addtrack" and "removetrack" events.
     // NS_ASSERTION(false, "MediaStreamTrack ended but did not exist in track lists");
     return;
   }
