@@ -514,20 +514,6 @@ Convert(int32_t aIn, BluetoothGattStatus& aOut)
 }
 
 nsresult
-Convert(const nsAString& aIn, BluetoothAddress& aOut)
-{
-  NS_ConvertUTF16toUTF8 bdAddressUTF8(aIn);
-  const char* str = bdAddressUTF8.get();
-
-  for (size_t i = 0; i < MOZ_ARRAY_LENGTH(aOut.mAddr); ++i, ++str) {
-    aOut.mAddr[i] =
-      static_cast<uint8_t>(strtoul(str, const_cast<char**>(&str), 16));
-  }
-
-  return NS_OK;
-}
-
-nsresult
 Convert(const nsAString& aIn, BluetoothPinCode& aOut)
 {
   if (MOZ_HAL_IPC_CONVERT_WARN_IF(
@@ -617,31 +603,6 @@ Convert(BluetoothAclState aIn, bool& aOut)
     return NS_ERROR_ILLEGAL_VALUE;
   }
   aOut = sBool[aIn];
-  return NS_OK;
-}
-
-nsresult
-Convert(const BluetoothAddress& aIn, nsAString& aOut)
-{
-  char str[BLUETOOTH_ADDRESS_LENGTH + 1];
-
-  int res = snprintf(str, sizeof(str), "%02x:%02x:%02x:%02x:%02x:%02x",
-                     static_cast<int>(aIn.mAddr[0]),
-                     static_cast<int>(aIn.mAddr[1]),
-                     static_cast<int>(aIn.mAddr[2]),
-                     static_cast<int>(aIn.mAddr[3]),
-                     static_cast<int>(aIn.mAddr[4]),
-                     static_cast<int>(aIn.mAddr[5]));
-  if (MOZ_HAL_IPC_CONVERT_WARN_IF(
-        res < 0, BluetoothAddress, nsAString)) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  } else if (MOZ_HAL_IPC_CONVERT_WARN_IF(
-        (size_t)res >= sizeof(str), BluetoothAddress, nsAString)) {
-    return NS_ERROR_OUT_OF_MEMORY; /* string buffer too small */
-  }
-
-  aOut = NS_ConvertUTF8toUTF16(str);
-
   return NS_OK;
 }
 
