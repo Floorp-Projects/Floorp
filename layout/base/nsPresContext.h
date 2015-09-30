@@ -674,6 +674,8 @@ public:
     return mViewportStyleScrollbar;
   }
 
+  nsIContent* PropagateScrollToViewport();
+
   /**
    * Set and get methods for controlling the background drawing
   */
