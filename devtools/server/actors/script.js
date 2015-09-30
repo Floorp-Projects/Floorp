@@ -755,22 +755,6 @@ ThreadActor.prototype = {
     return this._tabClosed ? null : undefined;
   },
 
-  /**
-   * Handle resume requests that include a forceCompletion request.
-   *
-   * @param Object aRequest
-   *        The request packet received over the RDP.
-   * @returns A response packet.
-   */
-  _forceCompletion: function (aRequest) {
-    // TODO: remove this when Debugger.Frame.prototype.pop is implemented in
-    // bug 736733.
-    return {
-      error: "notImplemented",
-      message: "forced completion is not yet implemented."
-    };
-  },
-
   _makeOnEnterFrame: function ({ pauseAndRespond }) {
     return aFrame => {
       const generatedLocation = this.sources.getFrameLocation(aFrame);
@@ -1010,10 +994,6 @@ ThreadActor.prototype = {
         message: "trying to resume in the wrong order.",
         lastPausedUrl: this._nestedEventLoops.lastPausedUrl
       };
-    }
-
-    if (aRequest && aRequest.forceCompletion) {
-      return this._forceCompletion(aRequest);
     }
 
     let resumeLimitHandled;

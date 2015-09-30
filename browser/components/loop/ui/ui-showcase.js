@@ -1370,7 +1370,7 @@
             React.createElement(FramedExample, {
               dashed: true, 
               height: 254, 
-              summary: "", 
+              summary: "Desktop Room Failure View", 
               width: 298}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(RoomFailureView, {
