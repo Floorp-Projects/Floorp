@@ -1124,11 +1124,24 @@ class HashTable : private AllocPolicy
         return keyHash & ~sCollisionBit;
     }
 
-    static Entry* createTable(AllocPolicy& alloc, uint32_t capacity)
+    enum FailureBehavior { DontReportFailure = false, ReportFailure = true };
+
+    static Entry* createTable(AllocPolicy& alloc, uint32_t capacity,
+                              FailureBehavior reportFailure = ReportFailure)
     {
         static_assert(sFreeKey == 0,
                       "newly-calloc'd tables have to be considered empty");
-        return alloc.template pod_calloc<Entry>(capacity);
+        if (reportFailure)
+            return alloc.template pod_calloc<Entry>(capacity);
+
+        return alloc.template maybe_pod_calloc<Entry>(capacity);
+    }
+
+    static Entry* maybeCreateTable(AllocPolicy& alloc, uint32_t capacity)
+    {
+        static_assert(sFreeKey == 0,
+                      "newly-calloc'd tables have to be considered empty");
+        return alloc.template maybe_pod_calloc<Entry>(capacity);
     }
 
     static void destroyTable(AllocPolicy& alloc, Entry* oldTable, uint32_t capacity)
@@ -1367,7 +1380,7 @@ class HashTable : private AllocPolicy
 
     enum RebuildStatus { NotOverloaded, Rehashed, RehashFailed };
 
-    RebuildStatus changeTableSize(int deltaLog2)
+    RebuildStatus changeTableSize(int deltaLog2, FailureBehavior reportFailure = ReportFailure)
     {
         // Look, but don't touch, until we succeed in getting new entry store.
         Entry* oldTable = table;
@@ -1375,11 +1388,12 @@ class HashTable : private AllocPolicy
         uint32_t newLog2 = sHashBits - hashShift + deltaLog2;
         uint32_t newCapacity = JS_BIT(newLog2);
         if (MOZ_UNLIKELY(newCapacity > sMaxCapacity)) {
-            this->reportAllocOverflow();
+            if (reportFailure)
+                this->reportAllocOverflow();
             return RehashFailed;
         }
 
-        Entry* newTable = createTable(*this, newCapacity);
+        Entry* newTable = createTable(*this, newCapacity, reportFailure);
         if (!newTable)
             return RehashFailed;
 
@@ -1405,14 +1419,19 @@ class HashTable : private AllocPolicy
         return Rehashed;
     }
 
-    RebuildStatus checkOverloaded()
+    bool shouldCompressTable()
+    {
+        // Compress if a quarter or more of all entries are removed.
+        return removedCount >= (capacity() >> 2);
+    }
+
+    RebuildStatus checkOverloaded(FailureBehavior reportFailure = ReportFailure)
     {
         if (!overloaded())
             return NotOverloaded;
 
-        // Compress if a quarter or more of all entries are removed.
         int deltaLog2;
-        if (removedCount >= (capacity() >> 2)) {
+        if (shouldCompressTable()) {
             METER(stats.compresses++);
             deltaLog2 = 0;
         } else {
@@ -1420,14 +1439,14 @@ class HashTable : private AllocPolicy
             deltaLog2 = 1;
         }
 
-        return changeTableSize(deltaLog2);
+        return changeTableSize(deltaLog2, reportFailure);
     }
 
     // Infallibly rehash the table if we are overloaded with removals.
     void checkOverRemoved()
     {
         if (overloaded()) {
-            if (checkOverloaded() == RehashFailed)
+            if (checkOverloaded(DontReportFailure) == RehashFailed)
                 rehashTableInPlace();
         }
     }
@@ -1454,7 +1473,7 @@ class HashTable : private AllocPolicy
     {
         if (underloaded()) {
             METER(stats.shrinks++);
-            (void) changeTableSize(-1);
+            (void) changeTableSize(-1, DontReportFailure);
         }
     }
 
@@ -1470,9 +1489,8 @@ class HashTable : private AllocPolicy
             resizeLog2--;
         }
 
-        if (resizeLog2 != 0) {
-            changeTableSize(resizeLog2);
-        }
+        if (resizeLog2 != 0)
+            (void) changeTableSize(resizeLog2, DontReportFailure);
     }
 
     // This is identical to changeTableSize(currentSize), but without requiring
