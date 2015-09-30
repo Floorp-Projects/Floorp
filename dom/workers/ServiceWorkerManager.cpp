@@ -328,8 +328,8 @@ void
 ServiceWorkerRegistrationInfo::Clear()
 {
   if (mInstallingWorker) {
-    // FIXME(nsm): Terminate installing worker.
     mInstallingWorker->UpdateState(ServiceWorkerState::Redundant);
+    mInstallingWorker->WorkerPrivate()->NoteDeadServiceWorkerInfo();
     mInstallingWorker = nullptr;
     // FIXME(nsm): Abort any inflight requests from installing worker.
   }
@@ -343,6 +343,7 @@ ServiceWorkerRegistrationInfo::Clear()
       NS_WARNING("Failed to purge the waiting cache.");
     }
 
+    mWaitingWorker->WorkerPrivate()->NoteDeadServiceWorkerInfo();
     mWaitingWorker = nullptr;
   }
 
@@ -355,6 +356,7 @@ ServiceWorkerRegistrationInfo::Clear()
       NS_WARNING("Failed to purge the active cache.");
     }
 
+    mActiveWorker->WorkerPrivate()->NoteDeadServiceWorkerInfo();
     mActiveWorker = nullptr;
   }
 
