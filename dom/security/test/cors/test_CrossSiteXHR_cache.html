@@ -476,6 +476,27 @@ function runTest() {
              withCred: true,
              headers: { "y-my-header": "myValue" },
            },
+           { newTest: "*******" },
+           { pass: 1,
+             method: "DELETE",
+             allowMethods: "DELETE",
+             cacheTime: 3600
+           },
+           { pass: 0,
+             method: "GET",
+             headers: { "DELETE": "myvalue" },
+           },
+           { newTest: "*******" },
+           { pass: 1,
+             method: "GET",
+             headers: { "x-my-header": "myValue" },
+             allowHeaders: "x-my-header",
+             cacheTime: 3600
+           },
+           { pass: 0,
+             method: "3600",
+             headers: { "x-my-header": "myvalue" },
+           },
            ];
 
   for (let i = 0; i < 110; i++) {
