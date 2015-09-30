@@ -477,19 +477,19 @@ BluetoothGattNotificationHandler::RegisterClientNotification(
 
 void
 BluetoothGattNotificationHandler::ScanResultNotification(
-  const nsAString& aBdAddr, int aRssi, const BluetoothGattAdvData& aAdvData)
+  const BluetoothAddress& aBdAddr, int aRssi, const BluetoothGattAdvData& aAdvData)
 { }
 
 void
 BluetoothGattNotificationHandler::ConnectNotification(
   int aConnId, BluetoothGattStatus aStatus, int aClientIf,
-  const nsAString& aBdAddr)
+  const BluetoothAddress& aBdAddr)
 { }
 
 void
 BluetoothGattNotificationHandler::DisconnectNotification(
   int aConnId, BluetoothGattStatus aStatus, int aClientIf,
-  const nsAString& aBdAddr)
+  const BluetoothAddress& aBdAddr)
 { }
 
 void
@@ -567,7 +567,7 @@ BluetoothGattNotificationHandler::ExecuteWriteNotification(
 
 void
 BluetoothGattNotificationHandler::ReadRemoteRssiNotification(
-  int aClientIf, const nsAString& aBdAddr, int aRssi,
+  int aClientIf, const BluetoothAddress& aBdAddr, int aRssi,
   BluetoothGattStatus aStatus)
 { }
 
@@ -583,7 +583,7 @@ BluetoothGattNotificationHandler::RegisterServerNotification(
 
 void
 BluetoothGattNotificationHandler::ConnectionNotification(
-  int aConnId, int aServerIf, bool aConnected, const nsAString& aBdAddr)
+  int aConnId, int aServerIf, bool aConnected, const BluetoothAddress& aBdAddr)
 { }
 
 void
@@ -634,20 +634,20 @@ BluetoothGattNotificationHandler::ServiceDeletedNotification(
 
 void
 BluetoothGattNotificationHandler::RequestReadNotification(
-  int aConnId, int aTransId, const nsAString& aBdAddr,
+  int aConnId, int aTransId, const BluetoothAddress& aBdAddr,
   const BluetoothAttributeHandle& aAttributeHandle, int aOffset, bool aIsLong)
 { }
 
 void
 BluetoothGattNotificationHandler::RequestWriteNotification(
-  int aConnId, int aTransId, const nsAString& aBdAddr,
+  int aConnId, int aTransId, const BluetoothAddress& aBdAddr,
   const BluetoothAttributeHandle& aAttributeHandle, int aOffset, int aLength,
   const uint8_t* aValue, bool aNeedResponse, bool aIsPrepareWrite)
 { }
 
 void
 BluetoothGattNotificationHandler::RequestExecuteWriteNotification(
-  int aConnId, int aTransId, const nsAString& aBdAddr, bool aExecute)
+  int aConnId, int aTransId, const BluetoothAddress& aBdAddr, bool aExecute)
 { }
 
 void

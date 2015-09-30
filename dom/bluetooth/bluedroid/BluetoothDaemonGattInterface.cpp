@@ -121,7 +121,7 @@ BluetoothDaemonGattModule::ClientScanCmd(
 
 nsresult
 BluetoothDaemonGattModule::ClientConnectCmd(
-  int aClientIf, const nsAString& aBdAddr, bool aIsDirect,
+  int aClientIf, const BluetoothAddress& aBdAddr, bool aIsDirect,
   BluetoothTransport aTransport, BluetoothGattResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -135,7 +135,7 @@ BluetoothDaemonGattModule::ClientConnectCmd(
 
   nsresult rv = PackPDU(
     PackConversion<int, int32_t>(aClientIf),
-    PackConversion<nsAString, BluetoothAddress>(aBdAddr),
+    aBdAddr,
     PackConversion<bool, uint8_t>(aIsDirect),
     PackConversion<BluetoothTransport, int32_t>(aTransport), *pdu);
   if (NS_FAILED(rv)) {
@@ -151,7 +151,7 @@ BluetoothDaemonGattModule::ClientConnectCmd(
 
 nsresult
 BluetoothDaemonGattModule::ClientDisconnectCmd(
-  int aClientIf, const nsAString& aBdAddr, int aConnId,
+  int aClientIf, const BluetoothAddress& aBdAddr, int aConnId,
   BluetoothGattResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -164,7 +164,7 @@ BluetoothDaemonGattModule::ClientDisconnectCmd(
 
   nsresult rv;
   rv = PackPDU(PackConversion<int, int32_t>(aClientIf),
-               PackConversion<nsAString, BluetoothAddress>(aBdAddr),
+               aBdAddr,
                PackConversion<int, int32_t>(aConnId), *pdu);
   if (NS_FAILED(rv)) {
     return rv;
@@ -204,7 +204,8 @@ BluetoothDaemonGattModule::ClientListenCmd(
 
 nsresult
 BluetoothDaemonGattModule::ClientRefreshCmd(
-  int aClientIf, const nsAString& aBdAddr, BluetoothGattResultHandler* aRes)
+  int aClientIf, const BluetoothAddress& aBdAddr,
+  BluetoothGattResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -214,7 +215,7 @@ BluetoothDaemonGattModule::ClientRefreshCmd(
                         6)); // Remote Address
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aClientIf),
-                        PackConversion<nsAString, BluetoothAddress>(aBdAddr),
+                        aBdAddr,
                         *pdu);
   if (NS_FAILED(rv)) {
     return rv;
@@ -484,7 +485,7 @@ BluetoothDaemonGattModule::ClientExecuteWriteCmd(
 
 nsresult
 BluetoothDaemonGattModule::ClientRegisterNotificationCmd(
-  int aClientIf, const nsAString& aBdAddr,
+  int aClientIf, const BluetoothAddress& aBdAddr,
   const BluetoothGattServiceId& aServiceId, const BluetoothGattId& aCharId,
   BluetoothGattResultHandler* aRes)
 {
@@ -498,8 +499,7 @@ BluetoothDaemonGattModule::ClientRegisterNotificationCmd(
                         17)); // Characteristic ID
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aClientIf),
-                        PackConversion<nsAString, BluetoothAddress>(aBdAddr),
-                        aServiceId, aCharId, *pdu);
+                        aBdAddr, aServiceId, aCharId, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -513,7 +513,7 @@ BluetoothDaemonGattModule::ClientRegisterNotificationCmd(
 
 nsresult
 BluetoothDaemonGattModule::ClientDeregisterNotificationCmd(
-  int aClientIf, const nsAString& aBdAddr,
+  int aClientIf, const BluetoothAddress& aBdAddr,
   const BluetoothGattServiceId& aServiceId, const BluetoothGattId& aCharId,
   BluetoothGattResultHandler* aRes)
 {
@@ -527,8 +527,7 @@ BluetoothDaemonGattModule::ClientDeregisterNotificationCmd(
                         17)); // Characteristic ID
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aClientIf),
-                        PackConversion<nsAString, BluetoothAddress>(aBdAddr),
-                        aServiceId, aCharId, *pdu);
+                        aBdAddr, aServiceId, aCharId, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -542,7 +541,7 @@ BluetoothDaemonGattModule::ClientDeregisterNotificationCmd(
 
 nsresult
 BluetoothDaemonGattModule::ClientReadRemoteRssiCmd(
-  int aClientIf, const nsAString& aBdAddr,
+  int aClientIf, const BluetoothAddress& aBdAddr,
   BluetoothGattResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -553,8 +552,7 @@ BluetoothDaemonGattModule::ClientReadRemoteRssiCmd(
                         6)); // Remote Address
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aClientIf),
-                        PackConversion<nsAString, BluetoothAddress>(aBdAddr),
-                        *pdu);
+                        aBdAddr, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -568,7 +566,7 @@ BluetoothDaemonGattModule::ClientReadRemoteRssiCmd(
 
 nsresult
 BluetoothDaemonGattModule::ClientGetDeviceTypeCmd(
-  const nsAString& aBdAddr, BluetoothGattResultHandler* aRes)
+  const BluetoothAddress& aBdAddr, BluetoothGattResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -576,8 +574,7 @@ BluetoothDaemonGattModule::ClientGetDeviceTypeCmd(
     new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_GET_DEVICE_TYPE,
                         6)); // Remote Address
 
-  nsresult rv = PackPDU(
-    PackConversion<nsAString, BluetoothAddress>(aBdAddr), *pdu);
+  nsresult rv = PackPDU(aBdAddr, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -645,7 +642,7 @@ BluetoothDaemonGattModule::ClientTestCommandCmd(
 
   nsresult rv = PackPDU(
     PackConversion<int, int32_t>(aCommand),
-    PackConversion<nsAString, BluetoothAddress>(aTestParam.mBdAddr),
+    aTestParam.mBdAddr,
     aTestParam.mU1, aTestParam.mU2, aTestParam.mU3, aTestParam.mU4,
     aTestParam.mU5, *pdu);
   if (NS_FAILED(rv)) {
@@ -705,7 +702,7 @@ BluetoothDaemonGattModule::ServerUnregisterCmd(
 
 nsresult
 BluetoothDaemonGattModule::ServerConnectPeripheralCmd(
-  int aServerIf, const nsAString& aBdAddr, bool aIsDirect,
+  int aServerIf, const BluetoothAddress& aBdAddr, bool aIsDirect,
   BluetoothTransport aTransport, BluetoothGattResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -719,7 +716,7 @@ BluetoothDaemonGattModule::ServerConnectPeripheralCmd(
 
   nsresult rv = PackPDU(
     PackConversion<int, int32_t>(aServerIf),
-    PackConversion<nsAString, BluetoothAddress>(aBdAddr),
+    aBdAddr,
     PackConversion<bool, uint8_t>(aIsDirect),
     PackConversion<BluetoothTransport, int32_t>(aTransport), *pdu);
   if (NS_FAILED(rv)) {
@@ -735,7 +732,7 @@ BluetoothDaemonGattModule::ServerConnectPeripheralCmd(
 
 nsresult
 BluetoothDaemonGattModule::ServerDisconnectPeripheralCmd(
-  int aServerIf, const nsAString& aBdAddr, int aConnId,
+  int aServerIf, const BluetoothAddress& aBdAddr, int aConnId,
   BluetoothGattResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -747,7 +744,7 @@ BluetoothDaemonGattModule::ServerDisconnectPeripheralCmd(
                         4)); // Connection Id
 
   nsresult rv = PackPDU(PackConversion<int, int32_t>(aServerIf),
-                        PackConversion<nsAString, BluetoothAddress>(aBdAddr),
+                        aBdAddr,
                         PackConversion<int, int32_t>(aConnId), *pdu);
   if (NS_FAILED(rv)) {
     return rv;
@@ -1529,15 +1526,14 @@ public:
   { }
 
   nsresult
-  operator () (nsString& aArg1,
+  operator () (BluetoothAddress& aArg1,
                int& aArg2,
                BluetoothGattAdvData& aArg3) const
   {
     DaemonSocketPDU& pdu = GetPDU();
 
     /* Read address */
-    nsresult rv = UnpackPDU(
-      pdu, UnpackConversion<BluetoothAddress, nsAString>(aArg1));
+    nsresult rv = UnpackPDU(pdu, aArg1);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1585,7 +1581,7 @@ public:
   operator () (int& aArg1,
                BluetoothGattStatus& aArg2,
                int& aArg3,
-               nsString& aArg4) const
+               BluetoothAddress& aArg4) const
   {
     DaemonSocketPDU& pdu = GetPDU();
 
@@ -1605,8 +1601,7 @@ public:
       return rv;
     }
     /* Read address */
-    rv = UnpackPDU(
-      pdu, UnpackConversion<BluetoothAddress, nsAString>(aArg4));
+    rv = UnpackPDU(pdu, aArg4);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1753,7 +1748,7 @@ public:
 
   nsresult
   operator () (int& aArg1,
-               nsString& aArg2,
+               BluetoothAddress& aArg2,
                int& aArg3,
                BluetoothGattStatus& aArg4) const
   {
@@ -1765,7 +1760,7 @@ public:
       return rv;
     }
     /* Read address */
-    rv = UnpackPDU(pdu, UnpackConversion<BluetoothAddress, nsAString>(aArg2));
+    rv = UnpackPDU(pdu, aArg2);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1825,7 +1820,7 @@ public:
   operator () (int& aArg1,
                int& aArg2,
                bool& aArg3,
-               nsString& aArg4) const
+               BluetoothAddress& aArg4) const
   {
     DaemonSocketPDU& pdu = GetPDU();
 
@@ -1845,8 +1840,7 @@ public:
       return rv;
     }
     /* Read address */
-    rv = UnpackPDU(
-      pdu, UnpackConversion<BluetoothAddress, nsAString>(aArg4));
+    rv = UnpackPDU(pdu, aArg4);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1940,7 +1934,7 @@ public:
   nsresult
   operator () (int& aArg1,
                int& aArg2,
-               nsString& aArg3,
+               BluetoothAddress& aArg3,
                BluetoothAttributeHandle& aArg4,
                int& aArg5,
                bool& aArg6) const
@@ -1958,8 +1952,7 @@ public:
       return rv;
     }
     /* Read address */
-    rv = UnpackPDU(
-      pdu, UnpackConversion<BluetoothAddress, nsAString>(aArg3));
+    rv = UnpackPDU(pdu, aArg3);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -2005,7 +1998,7 @@ public:
   nsresult
   operator () (int& aArg1,
                int& aArg2,
-               nsString& aArg3,
+               BluetoothAddress& aArg3,
                BluetoothAttributeHandle& aArg4,
                int& aArg5,
                int& aArg6,
@@ -2026,8 +2019,7 @@ public:
       return rv;
     }
     /* Read address */
-    rv = UnpackPDU(
-      pdu, UnpackConversion<BluetoothAddress, nsAString>(aArg3));
+    rv = UnpackPDU(pdu, aArg3);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -2089,7 +2081,7 @@ public:
   nsresult
   operator () (int& aArg1,
                int& aArg2,
-               nsString& aArg3,
+               BluetoothAddress& aArg3,
                bool& aArg4) const
   {
     DaemonSocketPDU& pdu = GetPDU();
@@ -2105,8 +2097,7 @@ public:
       return rv;
     }
     /* Read address */
-    rv = UnpackPDU(
-      pdu, UnpackConversion<BluetoothAddress, nsAString>(aArg3));
+    rv = UnpackPDU(pdu, aArg3);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -2352,7 +2343,7 @@ BluetoothDaemonGattInterface::Scan(
 
 void
 BluetoothDaemonGattInterface::Connect(
-  int aClientIf, const nsAString& aBdAddr, bool aIsDirect,
+  int aClientIf, const BluetoothAddress& aBdAddr, bool aIsDirect,
   BluetoothTransport aTransport, BluetoothGattResultHandler* aRes)
 {
   MOZ_ASSERT(mModule);
@@ -2366,7 +2357,7 @@ BluetoothDaemonGattInterface::Connect(
 
 void
 BluetoothDaemonGattInterface::Disconnect(
-  int aClientIf, const nsAString& aBdAddr, int aConnId,
+  int aClientIf, const BluetoothAddress& aBdAddr, int aConnId,
   BluetoothGattResultHandler* aRes)
 {
   MOZ_ASSERT(mModule);
@@ -2394,7 +2385,8 @@ BluetoothDaemonGattInterface::Listen(
 /* Clear the attribute cache for a given device*/
 void
 BluetoothDaemonGattInterface::Refresh(
-  int aClientIf, const nsAString& aBdAddr, BluetoothGattResultHandler* aRes)
+  int aClientIf, const BluetoothAddress& aBdAddr,
+  BluetoothGattResultHandler* aRes)
 {
   MOZ_ASSERT(mModule);
 
@@ -2549,7 +2541,7 @@ BluetoothDaemonGattInterface::ExecuteWrite(
 /* Register / Deregister Characteristic Notifications or Indications */
 void
 BluetoothDaemonGattInterface::RegisterNotification(
-  int aClientIf, const nsAString& aBdAddr,
+  int aClientIf, const BluetoothAddress& aBdAddr,
   const BluetoothGattServiceId& aServiceId, const BluetoothGattId& aCharId,
   BluetoothGattResultHandler* aRes)
 {
@@ -2564,7 +2556,7 @@ BluetoothDaemonGattInterface::RegisterNotification(
 
 void
 BluetoothDaemonGattInterface::DeregisterNotification(
-  int aClientIf, const nsAString& aBdAddr,
+  int aClientIf, const BluetoothAddress& aBdAddr,
   const BluetoothGattServiceId& aServiceId, const BluetoothGattId& aCharId,
   BluetoothGattResultHandler* aRes)
 {
@@ -2579,7 +2571,7 @@ BluetoothDaemonGattInterface::DeregisterNotification(
 
 void
 BluetoothDaemonGattInterface::ReadRemoteRssi(
-  int aClientIf, const nsAString& aBdAddr,
+  int aClientIf, const BluetoothAddress& aBdAddr,
   BluetoothGattResultHandler* aRes)
 {
   MOZ_ASSERT(mModule);
@@ -2593,7 +2585,7 @@ BluetoothDaemonGattInterface::ReadRemoteRssi(
 
 void
 BluetoothDaemonGattInterface::GetDeviceType(
-  const nsAString& aBdAddr, BluetoothGattResultHandler* aRes)
+  const BluetoothAddress& aBdAddr, BluetoothGattResultHandler* aRes)
 {
   MOZ_ASSERT(mModule);
 
@@ -2668,7 +2660,7 @@ BluetoothDaemonGattInterface::UnregisterServer(
 /* Connect / Disconnect */
 void
 BluetoothDaemonGattInterface::ConnectPeripheral(
-  int aServerIf, const nsAString& aBdAddr, bool aIsDirect, /* auto connect */
+  int aServerIf, const BluetoothAddress& aBdAddr, bool aIsDirect, /* auto connect */
   BluetoothTransport aTransport, BluetoothGattResultHandler* aRes)
 {
   MOZ_ASSERT(mModule);
@@ -2683,7 +2675,7 @@ BluetoothDaemonGattInterface::ConnectPeripheral(
 
 void
 BluetoothDaemonGattInterface::DisconnectPeripheral(
-  int aServerIf, const nsAString& aBdAddr, int aConnId,
+  int aServerIf, const BluetoothAddress& aBdAddr, int aConnId,
   BluetoothGattResultHandler* aRes)
 {
   MOZ_ASSERT(mModule);
