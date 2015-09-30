@@ -2075,6 +2075,19 @@ XPCOMUtils.defineLazyGetter(this, "bundle", function() {
          createBundle(PLACES_STRING_BUNDLE_URI);
 });
 
+// A promise resolved once the Sqlite.jsm connections
+// can be closed.
+let promiseCanCloseConnection = function() {
+  let TOPIC = "places-will-close-connection";
+  return new Promise(resolve => {
+    let observer = function() {
+      Services.obs.removeObserver(observer, TOPIC);
+      resolve();
+    }
+    Services.obs.addObserver(observer, TOPIC, false)
+  });
+};
+
 XPCOMUtils.defineLazyGetter(this, "gAsyncDBConnPromised",
   () => new Promise((resolve) => {
     Sqlite.cloneStorageConnection({
@@ -2082,12 +2095,23 @@ XPCOMUtils.defineLazyGetter(this, "gAsyncDBConnPromised",
       readOnly:   true
     }).then(conn => {
       try {
-        Sqlite.shutdown.addBlocker(
-          "PlacesUtils read-only connection closing",
-          conn.close.bind(conn));
-        PlacesUtils.history.shutdownClient.jsclient.addBlocker(
-          "PlacesUtils read-only connection closing",
-          conn.close.bind(conn));
+        let state = "0. not started";
+
+        let promiseReady = promiseCanCloseConnection();
+        let promiseShutdownComplete = Task.async(function*() {
+          // Don't close the connection as long as it might be used.
+          state = "1. waiting for `places-will-close-connection`";
+          yield promiseReady;
+
+          // But close the connection before Sqlite shutdown.
+          state = "2. closing the connection";
+          yield conn.close();
+
+          state = "3. done";
+        })();
+        Sqlite.shutdown.addBlocker("PlacesUtils read-only connection closing",
+          promiseShutdownComplete,
+          () => state);
       } catch(ex) {
         // It's too late to block shutdown, just close the connection.
         conn.close();
@@ -2104,12 +2128,23 @@ XPCOMUtils.defineLazyGetter(this, "gAsyncDBWrapperPromised",
       connection: PlacesUtils.history.DBConnection,
     }).then(conn => {
       try {
-        Sqlite.shutdown.addBlocker(
-          "PlacesUtils wrapped connection closing",
-          conn.close.bind(conn));
-        PlacesUtils.history.shutdownClient.jsclient.addBlocker(
-          "PlacesUtils wrapped connection closing",
-          conn.close.bind(conn));
+        let state = "0. not started";
+
+        let promiseReady = promiseCanCloseConnection();
+        let promiseShutdownComplete = Task.async(function*() {
+          // Don't close the connection as long as it might be used.
+          state = "1. waiting for `places-will-close-connection`";
+          yield promiseReady;
+
+          // But close the connection before Sqlite shutdown.
+          state = "2. closing the connection";
+          yield conn.close();
+
+          state = "3. done";
+        })();
+        Sqlite.shutdown.addBlocker("PlacesUtils wrapped connection closing",
+          promiseShutdownComplete,
+          () => state);
       } catch(ex) {
         // It's too late to block shutdown, just close the connection.
         conn.close();

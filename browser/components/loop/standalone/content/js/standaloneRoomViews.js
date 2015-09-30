@@ -118,8 +118,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
                   this._renderJoinButton()
               
             ), 
-            React.createElement(ToSView, {
-              dispatcher: this.props.dispatcher}), 
+            React.createElement(ToSView, {dispatcher: this.props.dispatcher}), 
             React.createElement("p", {className: "mozilla-logo"})
           )
         )
@@ -309,7 +308,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
               React.createElement("button", {className: "btn btn-join btn-info", 
                       onClick: this.props.joinRoom}, 
                 mozL10n.get("rooms_room_join_label")
-              )
+              ), 
+              React.createElement(ToSView, {dispatcher: this.props.dispatcher})
             )
           );
         }
@@ -422,9 +422,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
     render: function() {
       return (
         React.createElement("footer", {className: "rooms-footer"}, 
-          React.createElement("div", {className: "footer-logo"}), 
-          React.createElement(ToSView, {
-            dispatcher: this.props.dispatcher})
+          React.createElement("div", {className: "footer-logo"})
         )
       );
     }

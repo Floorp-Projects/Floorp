@@ -135,10 +135,10 @@ SocketMessageWatcher::GetSize() const
   return ReadInt16(OFF_SIZE);
 }
 
-nsString
+BluetoothAddress
 SocketMessageWatcher::GetBdAddress() const
 {
-  nsString bdAddress;
+  BluetoothAddress bdAddress;
   ReadBdAddress(OFF_BDADDRESS, bdAddress);
   return bdAddress;
 }
@@ -259,24 +259,14 @@ SocketMessageWatcher::ReadInt32(unsigned long aOffset) const
 
 void
 SocketMessageWatcher::ReadBdAddress(unsigned long aOffset,
-                                    nsAString& aBdAddress) const
+                                    BluetoothAddress& aBdAddress) const
 {
-  char str[BLUETOOTH_ADDRESS_LENGTH + 1];
-
-  int res = snprintf(str, sizeof(str), "%02x:%02x:%02x:%02x:%02x:%02x",
-                     static_cast<int>(mBuf[aOffset + 0]),
-                     static_cast<int>(mBuf[aOffset + 1]),
-                     static_cast<int>(mBuf[aOffset + 2]),
-                     static_cast<int>(mBuf[aOffset + 3]),
-                     static_cast<int>(mBuf[aOffset + 4]),
-                     static_cast<int>(mBuf[aOffset + 5]));
-  if (res < 0) {
-    aBdAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
-  } else if ((size_t)res >= sizeof(str)) { /* string buffer too small */
-    aBdAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
-  } else {
-    aBdAddress = NS_ConvertUTF8toUTF16(str);
-  }
+  aBdAddress = BluetoothAddress(mBuf[aOffset + 0],
+                                mBuf[aOffset + 1],
+                                mBuf[aOffset + 2],
+                                mBuf[aOffset + 3],
+                                mBuf[aOffset + 4],
+                                mBuf[aOffset + 5]);
 }
 
 //
