@@ -4099,8 +4099,11 @@ MobileMessageDB.prototype = {
    * @param {boolean} value
    *        The updated <code>read</code> value.
    * @param {boolean} aSendReadReport
-   *        <code>true</code> to update the <code>isReadReportSent</code>
-   *        property if the message is MMS.
+   *        <code>true</code> to reply the read report of an incoming MMS
+   *        message whose <code>isReadReportSent</code> is 'false'.
+   *        Note: <code>isReadReportSent</code> will be set to 'true' no
+   *        matter aSendReadReport is true or not when a message was marked
+   *        from UNREAD to READ. See bug 1180470 for the new UX policy.
    * @param {nsIMobileMessageCallback} aRequest
    *        The callback object.
    */
@@ -4153,17 +4156,18 @@ MobileMessageDB.prototype = {
         messageRecord.read = value ? FILTER_READ_READ : FILTER_READ_UNREAD;
         messageRecord.readIndex = [messageRecord.read, messageRecord.timestamp];
         let readReportMessageId, readReportTo;
-        if (aSendReadReport &&
-            messageRecord.type == "mms" &&
+        if (messageRecord.type == "mms" &&
             messageRecord.delivery == DELIVERY_RECEIVED &&
             messageRecord.read == FILTER_READ_READ &&
             messageRecord.headers["x-mms-read-report"] &&
             !messageRecord.isReadReportSent) {
           messageRecord.isReadReportSent = true;
 
-          let from = messageRecord.headers["from"];
-          readReportTo = from && from.address;
-          readReportMessageId = messageRecord.headers["message-id"];
+          if (aSendReadReport) {
+            let from = messageRecord.headers["from"];
+            readReportTo = from && from.address;
+            readReportMessageId = messageRecord.headers["message-id"];
+          }
         }
 
         if (DEBUG) debug("Message.read set to: " + value);
