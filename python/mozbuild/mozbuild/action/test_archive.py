@@ -43,6 +43,13 @@ ARCHIVE_FILES = {
             'pattern': 'mozharness/**',
         },
     ],
+    'talos': [
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'testing',
+            'pattern': 'talos/**',
+        },
+    ],
     'web-platform': [
         {
             'source': buildconfig.topobjdir,
