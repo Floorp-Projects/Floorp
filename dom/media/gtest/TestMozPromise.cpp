@@ -207,6 +207,8 @@ TEST(MozPromise, PromiseAllReject)
     promises.AppendElement(TestPromise::CreateAndResolve(22, __func__));
     promises.AppendElement(TestPromise::CreateAndReject(32.0, __func__));
     promises.AppendElement(TestPromise::CreateAndResolve(42, __func__));
+   // Ensure that more than one rejection doesn't cause a crash (bug #1207312)
+    promises.AppendElement(TestPromise::CreateAndReject(52.0, __func__));
 
     TestPromise::All(queue, promises)->Then(queue, __func__,
       DO_FAIL,
