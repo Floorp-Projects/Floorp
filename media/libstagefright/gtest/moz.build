@@ -12,6 +12,7 @@ SOURCES += [
 ]
 
 TEST_HARNESS_FILES.gtest += [
+    'test_case_1156505.mp4',
     'test_case_1187067.mp4',
     'test_case_1200326.mp4',
     'test_case_1204580.mp4',
