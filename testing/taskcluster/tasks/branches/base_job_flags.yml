@@ -36,6 +36,7 @@ flags:
     - aries-dogfood
     - android-api-11
     - android-partner-sample1
+    - android-b2gdroid
     - linux
     - linux64
     - linux64-st-an
