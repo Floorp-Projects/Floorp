@@ -77,6 +77,7 @@ struct EventRadiusPrefs
   bool mTouchOnly;
   bool mRepositionEventCoords;
   bool mTouchClusterDetectionEnabled;
+  bool mSimplifiedClusterDetection;
   uint32_t mLimitReadableSize;
   uint32_t mKeepLimitSizeForCluster;
 };
@@ -128,6 +129,9 @@ GetPrefsFor(EventClassID aEventClassID)
 
     nsPrintfCString touchClusterPref("ui.zoomedview.enabled", prefBranch);
     Preferences::AddBoolVarCache(&prefs->mTouchClusterDetectionEnabled, touchClusterPref.get(), false);
+
+    nsPrintfCString simplifiedClusterDetectionPref("ui.zoomedview.simplified", prefBranch);
+    Preferences::AddBoolVarCache(&prefs->mSimplifiedClusterDetection, simplifiedClusterDetectionPref.get(), false);
 
     nsPrintfCString limitReadableSizePref("ui.zoomedview.limitReadableSize", prefBranch);
     Preferences::AddUintVarCache(&prefs->mLimitReadableSize, limitReadableSizePref.get(), 8);
@@ -472,6 +476,10 @@ static bool
 IsElementClickableAndReadable(nsIFrame* aFrame, WidgetGUIEvent* aEvent, const EventRadiusPrefs* aPrefs)
 {
   if (!aPrefs->mTouchClusterDetectionEnabled) {
+    return true;
+  }
+
+  if (aPrefs->mSimplifiedClusterDetection) {
     return true;
   }
 
