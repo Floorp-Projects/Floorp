@@ -141,7 +141,7 @@ var commandsPeerConnectionInitial = [
       test.setupSignalingClient();
       test.registerSignalingCallback("ice_candidate", function (message) {
         var pc = test.pcRemote ? test.pcRemote : test.pcLocal;
-        pc.storeOrAddIceCandidate(new mozRTCIceCandidate(message.ice_candidate));
+        pc.storeOrAddIceCandidate(new RTCIceCandidate(message.ice_candidate));
       });
       test.registerSignalingCallback("end_of_trickle_ice", function (message) {
         test.signalingMessagesFinished();
@@ -291,7 +291,7 @@ var commandsPeerConnectionOfferAnswer = [
     return test.getSignalingMessage("offer")
       .then(message => {
         ok("offer" in message, "Got an offer message");
-        test._local_offer = new mozRTCSessionDescription(message.offer);
+        test._local_offer = new RTCSessionDescription(message.offer);
         test._offer_constraints = message.offer_constraints;
         test._offer_options = message.offer_options;
       });
@@ -351,7 +351,7 @@ var commandsPeerConnectionOfferAnswer = [
 
     return test.getSignalingMessage("answer").then(message => {
       ok("answer" in message, "Got an answer message");
-      test._remote_answer = new mozRTCSessionDescription(message.answer);
+      test._remote_answer = new RTCSessionDescription(message.answer);
       test._answer_constraints = message.answer_constraints;
     });
   },

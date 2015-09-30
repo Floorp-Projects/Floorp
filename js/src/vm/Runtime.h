@@ -2071,6 +2071,21 @@ class RuntimeAllocPolicy
     MOZ_IMPLICIT RuntimeAllocPolicy(JSRuntime* rt) : runtime(rt) {}
 
     template <typename T>
+    T* maybe_pod_malloc(size_t numElems) {
+        return runtime->maybe_pod_malloc<T>(numElems);
+    }
+
+    template <typename T>
+    T* maybe_pod_calloc(size_t numElems) {
+        return runtime->maybe_pod_calloc<T>(numElems);
+    }
+
+    template <typename T>
+    T* maybe_pod_realloc(T* p, size_t oldSize, size_t newSize) {
+        return runtime->maybe_pod_realloc<T>(p, oldSize, newSize);
+    }
+
+    template <typename T>
     T* pod_malloc(size_t numElems) {
         return runtime->pod_malloc<T>(numElems);
     }
@@ -2087,6 +2102,10 @@ class RuntimeAllocPolicy
 
     void free_(void* p) { js_free(p); }
     void reportAllocOverflow() const {}
+
+    bool checkSimulatedOOM() const {
+        return !js::oom::ShouldFailWithOOM();
+    }
 };
 
 extern const JSSecurityCallbacks NullSecurityCallbacks;

@@ -48,7 +48,6 @@ public:
   NS_IMETHOD GetDictionaryList(nsTArray<nsString> *aDictionaryList) override;
   NS_IMETHOD GetCurrentDictionary(nsAString &aDictionary) override;
   NS_IMETHOD SetCurrentDictionary(const nsAString &aDictionary) override;
-  NS_IMETHOD CheckCurrentDictionary() override;
 
   void DeleteRemoteEngine() {
     mEngine = nullptr;

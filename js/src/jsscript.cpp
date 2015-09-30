@@ -3004,7 +3004,8 @@ js::GetSrcNote(GSNCache& cache, JSScript* script, jsbytecode* pc)
     if (cache.code != script->code() && script->length() >= GSN_CACHE_THRESHOLD) {
         unsigned nsrcnotes = 0;
         for (jssrcnote* sn = script->notes(); !SN_IS_TERMINATOR(sn);
-             sn = SN_NEXT(sn)) {
+             sn = SN_NEXT(sn))
+        {
             if (SN_IS_GETTABLE(sn))
                 ++nsrcnotes;
         }
@@ -3016,10 +3017,11 @@ js::GetSrcNote(GSNCache& cache, JSScript* script, jsbytecode* pc)
         if (cache.map.init(nsrcnotes)) {
             pc = script->code();
             for (jssrcnote* sn = script->notes(); !SN_IS_TERMINATOR(sn);
-                 sn = SN_NEXT(sn)) {
+                 sn = SN_NEXT(sn))
+            {
                 pc += SN_DELTA(sn);
                 if (SN_IS_GETTABLE(sn))
-                    JS_ALWAYS_TRUE(cache.map.put(pc, sn));
+                    cache.map.putNewInfallible(pc, sn);
             }
             cache.code = script->code();
         }

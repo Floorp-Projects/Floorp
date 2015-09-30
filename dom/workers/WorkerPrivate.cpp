@@ -58,7 +58,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseDebugging.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/StructuredCloneHelper.h"
+#include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/dom/WorkerDebuggerGlobalScopeBinding.h"
@@ -599,7 +599,7 @@ private:
 };
 
 class MessageEventRunnable final : public WorkerRunnable
-                                 , public StructuredCloneHelper
+                                 , public StructuredCloneHolder
 {
   // This is only used for messages dispatched to a service worker.
   nsAutoPtr<ServiceWorkerClientInfo> mEventSource;
@@ -608,7 +608,7 @@ public:
   MessageEventRunnable(WorkerPrivate* aWorkerPrivate,
                        TargetAndBusyBehavior aBehavior)
   : WorkerRunnable(aWorkerPrivate, aBehavior)
-  , StructuredCloneHelper(CloningSupported, TransferringSupported,
+  , StructuredCloneHolder(CloningSupported, TransferringSupported,
                           SameProcessDifferentThread)
   {
   }

@@ -19,7 +19,7 @@
 
     test.chain.insertAfter("PC_LOCAL_SET_LOCAL_DESCRIPTION", [
       function PC_LOCAL_ADD_CANDIDATE_EARLY(test) {
-        var candidate = new mozRTCIceCandidate(
+        var candidate = new RTCIceCandidate(
           {candidate:"candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host",
            sdpMLineIndex: 0});
         return test.pcLocal._pc.addIceCandidate(candidate).then(
@@ -31,7 +31,7 @@
     ]);
     test.chain.insertAfter("PC_REMOTE_SET_LOCAL_DESCRIPTION", [
       function PC_REMOTE_ADD_CANDIDATE_INVALID_INDEX(test) {
-        var invalid_index = new mozRTCIceCandidate(
+        var invalid_index = new RTCIceCandidate(
           {candidate:"candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host",
            sdpMLineIndex: 2});
         return test.pcRemote._pc.addIceCandidate(invalid_index)
@@ -43,7 +43,7 @@
         );
       },
       function PC_REMOTE_ADD_BOGUS_CANDIDATE(test) {
-        var bogus = new mozRTCIceCandidate(
+        var bogus = new RTCIceCandidate(
           {candidate:"Pony Lords, jump!",
            sdpMLineIndex: 0});
         return test.pcRemote._pc.addIceCandidate(bogus)
@@ -57,7 +57,7 @@
       function PC_REMOTE_ADD_CANDIDATE_MISSING_INDEX(test) {
         // Note: it is probably not a good idea to automatically fill a missing
         //       MLineIndex with a default value of zero, see bug 1157034
-        var broken = new mozRTCIceCandidate(
+        var broken = new RTCIceCandidate(
           {candidate:"candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host"});
         return test.pcRemote._pc.addIceCandidate(broken)
         .then(
@@ -66,7 +66,7 @@
         );
       },
       function PC_REMOTE_ADD_VALID_CANDIDATE(test) {
-        var candidate = new mozRTCIceCandidate(
+        var candidate = new RTCIceCandidate(
           {candidate:"candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host",
            sdpMLineIndex: 0});
         return test.pcRemote._pc.addIceCandidate(candidate)

@@ -19,11 +19,16 @@ interface nsIDocShell;
 typedef long nsDocShellInfoLoadType;
 typedef unsigned long nsDocShellInfoReferrerPolicy;
 
-[scriptable, uuid(c63e9d64-490d-48bf-8013-b5d8ee4dbc25)]
+[scriptable, uuid(9d3bc466-5efe-414d-ae8b-3830b45877bb)]
 interface nsIDocShellLoadInfo : nsISupports
 {
     /** This is the referrer for the load. */
     attribute nsIURI referrer;
+
+    /**
+     * The originalURI to be passed to nsIDocShell.internalLoad. May be null.
+     */ 
+    attribute nsIURI originalURI;
 
     /** The owner of the load, that is, the entity responsible for 
      *  causing the load to occur. This should be a nsIPrincipal typically.

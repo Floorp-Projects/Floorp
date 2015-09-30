@@ -13,7 +13,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/StructuredCloneHelper.h"
+#include "mozilla/dom/StructuredCloneHolder.h"
 #ifdef MOZ_NFC
 #include "mozilla/dom/MozNDEFRecord.h"
 #endif
@@ -67,7 +67,7 @@ bool IsFileList(JSObject* obj)
 }
 
 class MOZ_STACK_CLASS StackScopedCloneData
-    : public StructuredCloneHelperInternal
+    : public StructuredCloneHolderBase
 {
 public:
     StackScopedCloneData(JSContext* aCx, StackScopedCloneOptions* aOptions)
@@ -78,13 +78,13 @@ public:
 
     ~StackScopedCloneData()
     {
-        Shutdown();
+        Clear();
     }
 
-    JSObject* ReadCallback(JSContext* aCx,
-                           JSStructuredCloneReader* aReader,
-                           uint32_t aTag,
-                           uint32_t aData)
+    JSObject* CustomReadHandler(JSContext* aCx,
+                                JSStructuredCloneReader* aReader,
+                                uint32_t aTag,
+                                uint32_t aData)
     {
         if (aTag == SCTAG_REFLECTOR) {
             MOZ_ASSERT(!aData);
@@ -170,9 +170,9 @@ public:
         return nullptr;
     }
 
-    bool WriteCallback(JSContext* aCx,
-                       JSStructuredCloneWriter* aWriter,
-                       JS::Handle<JSObject*> aObj)
+    bool CustomWriteHandler(JSContext* aCx,
+                            JSStructuredCloneWriter* aWriter,
+                            JS::Handle<JSObject*> aObj)
     {
         {
             Blob* blob = nullptr;

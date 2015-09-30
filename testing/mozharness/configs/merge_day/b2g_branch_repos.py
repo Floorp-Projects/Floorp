@@ -13,10 +13,19 @@ config = {
     ],
     "no_branch_repos": [
         "gecko",
-        # device conflict
+        # device conflicts
+        "platform_external_qemu",
+        "codeaurora_kernel_msm",
+        "platform_system_core",
+        "platform_hardware_ril",
+        "android-sdk",
+        "platform_external_wpa_supplicant_8",
+        "platform_prebuilts_misc",
+        "hardware_qcom_display",
+        "device_generic_goldfish",
+        "platform_frameworks_av",
         "platform_frameworks_base",
-        "device_lge_hammerhead-kernel",
-        "device-hammerhead",
+        "android-development",
     ],
     "extra_branch_manifest_repos": [
         "gecko",
@@ -24,13 +33,30 @@ config = {
     ],
     "branch_order": [
         "master",
-        "b2g-4.3_r2.1",   # prefer jellybean over kitkat for now, since
-        "b2g-jellybean",  # most of our builds use jb
-        "ics_chocolate_rb4.2",  # prefer wasabi's hardware_qcom_display over
-                                # otoro's
-        "foxfone-one",  # prefer flame's kernel_lm ove flame-kk's
     ],
-
+    # outdated/unsupported devices
+    "ignored_manifests": [
+        "dolphin.xml",
+        "otoro.xml",
+        "hamachi.xml",
+        "helix.xml",
+        "keon.xml",
+        "peak.xml",
+        "galaxy-nexus.xml",
+        "galaxy-s2.xml",
+        "sony-aosp-l.xml",
+        "nexus-s.xml",
+        "pandaboard.xml",
+        "wasabi.xml",
+        "nexus-4.xml",
+        "flo.xml",
+        "nexus-4-kk.xml",
+        "nexus-5.xml",
+        "flame.xml",
+        "flame-l.xml",
+        "nexus-s-4g.xml",
+        "rpi.xml",
+    ],
     "exes": {
         "hg": [
             "hg", "--config",

@@ -18,7 +18,7 @@
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ProgressEvent.h"
-#include "mozilla/dom/StructuredCloneHelper.h"
+#include "mozilla/dom/StructuredCloneHolder.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsFormData.h"
@@ -251,7 +251,7 @@ private:
 
 class SendRunnable final
   : public WorkerThreadProxySyncRunnable
-  , public StructuredCloneHelper
+  , public StructuredCloneHolder
 {
   nsString mStringBody;
   nsCOMPtr<nsIEventTarget> mSyncLoopTarget;
@@ -261,7 +261,7 @@ public:
   SendRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
                const nsAString& aStringBody)
   : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy)
-  , StructuredCloneHelper(CloningSupported, TransferringNotSupported,
+  , StructuredCloneHolder(CloningSupported, TransferringNotSupported,
                           SameProcessDifferentThread)
   , mStringBody(aStringBody)
   , mHasUploadListeners(false)
@@ -521,7 +521,7 @@ private:
 };
 
 class EventRunnable final : public MainThreadProxyRunnable
-                          , public StructuredCloneHelper
+                          , public StructuredCloneHolder
 {
   nsString mType;
   nsString mResponseType;
@@ -567,7 +567,7 @@ public:
   EventRunnable(Proxy* aProxy, bool aUploadEvent, const nsString& aType,
                 bool aLengthComputable, uint64_t aLoaded, uint64_t aTotal)
   : MainThreadProxyRunnable(aProxy->mWorkerPrivate, aProxy),
-    StructuredCloneHelper(CloningSupported, TransferringNotSupported,
+    StructuredCloneHolder(CloningSupported, TransferringNotSupported,
                           SameProcessDifferentThread),
     mType(aType), mResponse(JS::UndefinedValue()), mLoaded(aLoaded),
     mTotal(aTotal), mEventStreamId(aProxy->mInnerEventStreamId), mStatus(0),
@@ -578,7 +578,7 @@ public:
 
   EventRunnable(Proxy* aProxy, bool aUploadEvent, const nsString& aType)
   : MainThreadProxyRunnable(aProxy->mWorkerPrivate, aProxy),
-    StructuredCloneHelper(CloningSupported, TransferringNotSupported,
+    StructuredCloneHolder(CloningSupported, TransferringNotSupported,
                           SameProcessDifferentThread),
     mType(aType), mResponse(JS::UndefinedValue()), mLoaded(0), mTotal(0),
     mEventStreamId(aProxy->mInnerEventStreamId), mStatus(0), mReadyState(0),
@@ -1333,7 +1333,7 @@ EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     state->mResponseResult = mResponseResult;
 
     if (NS_SUCCEEDED(mResponseResult)) {
-      if (HasBeenWritten()) {
+      if (HasData()) {
         MOZ_ASSERT(mResponse.isUndefined());
 
         ErrorResult rv;
@@ -1506,7 +1506,7 @@ SendRunnable::MainThreadRun()
 {
   nsCOMPtr<nsIVariant> variant;
 
-  if (HasBeenWritten()) {
+  if (HasData()) {
     AutoSafeJSContext cx;
     JSAutoRequest ar(cx);
 

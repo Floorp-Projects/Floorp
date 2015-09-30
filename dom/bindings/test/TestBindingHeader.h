@@ -1357,6 +1357,20 @@ class TestChildInterface : public TestParentInterface
 {
 };
 
+class TestDeprecatedInterface : public nsISupports, public nsWrapperCache
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  static
+  already_AddRefed<TestDeprecatedInterface>
+    Constructor(const GlobalObject&, ErrorResult&);
+
+  static void AlsoDeprecated(const GlobalObject&);
+
+  virtual nsISupports* GetParentObject();
+};
+
 } // namespace dom
 } // namespace mozilla
 

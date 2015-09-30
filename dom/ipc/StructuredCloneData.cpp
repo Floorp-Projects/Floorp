@@ -70,7 +70,7 @@ StructuredCloneData::Write(JSContext* aCx,
 {
   MOZ_ASSERT(!mData);
 
-  StructuredCloneHelper::Write(aCx, aValue, aRv);
+  StructuredCloneHolder::Write(aCx, aValue, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
