@@ -15,7 +15,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         windowtype="alert:alert"
         xmlns:xhtml="http://www.w3.org/1999/xhtml"
-        xhtml:role="alert"
+        role="alert"
         pack="start"
         onload="onAlertLoad();"
         onclick="onAlertClick();"
