@@ -216,8 +216,6 @@ private:
   void DisconnectFromGraph();
 
 protected:
-  static void Callback(AudioNode* aNode) { /* not implemented */ }
-
   // Helpers for sending different value types to streams
   void SendDoubleParameterToStream(uint32_t aIndex, double aValue);
   void SendInt32ParameterToStream(uint32_t aIndex, int32_t aValue);
