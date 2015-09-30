@@ -6,7 +6,7 @@ var {
   ignoreEvent,
 } = ExtensionUtils;
 
-function processRuntimeConnectParams(...args) {
+function processRuntimeConnectParams(win, ...args) {
   let extensionId, connectInfo;
 
   // connect("...") and connect("...", { ... })
@@ -21,7 +21,7 @@ function processRuntimeConnectParams(...args) {
 
   // raise errors on unexpected connect params (but connect() is ok)
   if (args.length > 0) {
-    throw Error("invalid arguments to runtime.connect");
+    throw win.Error("invalid arguments to runtime.connect");
   }
 
   return { extensionId, connectInfo };
@@ -44,7 +44,7 @@ extensions.registerAPI((extension, context) => {
       onConnect: context.messenger.onConnect("runtime.onConnect"),
 
       connect: function(...args) {
-        let { extensionId, connectInfo } = processRuntimeConnectParams(...args);
+        let { extensionId, connectInfo } = processRuntimeConnectParams(context.contentWindow, ...args);
 
         let name = connectInfo && connectInfo.name || "";
         let recipient = extensionId ? {extensionId} : {extensionId: extension.id};
