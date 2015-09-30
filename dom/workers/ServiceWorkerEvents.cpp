@@ -421,6 +421,7 @@ FetchEvent::RespondWith(Promise& aArg, ErrorResult& aRv)
     mPromise = &aArg;
   }
   nsRefPtr<InternalRequest> ir = mRequest->GetInternalRequest();
+  StopImmediatePropagation();
   mWaitToRespond = true;
   nsRefPtr<RespondWithHandler> handler =
     new RespondWithHandler(mChannel, mRequest->Mode(), ir->IsClientRequest(),
