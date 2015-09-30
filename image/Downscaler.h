@@ -156,7 +156,7 @@ public:
   const nsIntSize& TargetSize() const { return nsIntSize(); }
   const gfxSize& Scale() const { return gfxSize(1.0, 1.0); }
 
-  nsresult BeginFrame(const nsIntSize&, uint8_t*, bool, bool = false)
+  nsresult BeginFrame(const nsIntSize&, const Maybe<nsIntRect>&, uint8_t*, bool, bool = false)
   {
     return NS_ERROR_FAILURE;
   }
