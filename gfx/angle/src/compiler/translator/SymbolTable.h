@@ -4,8 +4,8 @@
 // found in the LICENSE file.
 //
 
-#ifndef _SYMBOL_TABLE_INCLUDED_
-#define _SYMBOL_TABLE_INCLUDED_
+#ifndef COMPILER_TRANSLATOR_SYMBOLTABLE_H_
+#define COMPILER_TRANSLATOR_SYMBOLTABLE_H_
 
 //
 // Symbol table for parsing.  Has these design characteristics:
@@ -38,7 +38,7 @@
 #include "compiler/translator/IntermNode.h"
 
 // Symbol base class. (Can build functions or variables out of these...)
-class TSymbol
+class TSymbol : angle::NonCopyable
 {
   public:
     POOL_ALLOCATOR_NEW_DELETE();
@@ -86,8 +86,6 @@ class TSymbol
     }
 
   private:
-    DISALLOW_COPY_AND_ASSIGN(TSymbol);
-
     int uniqueId; // For real comparing during code generation
     const TString *name;
     TString extension;
@@ -135,20 +133,20 @@ class TVariable : public TSymbol
         type.setQualifier(qualifier);
     }
 
-    ConstantUnion *getConstPointer()
+    TConstantUnion *getConstPointer()
     { 
         if (!unionArray)
-            unionArray = new ConstantUnion[type.getObjectSize()];
+            unionArray = new TConstantUnion[type.getObjectSize()];
 
         return unionArray;
     }
 
-    ConstantUnion *getConstPointer() const
+    TConstantUnion *getConstPointer() const
     {
         return unionArray;
     }
 
-    void shareConstPointer(ConstantUnion *constArray)
+    void shareConstPointer(TConstantUnion *constArray)
     {
         if (unionArray == constArray)
             return;
@@ -158,19 +156,62 @@ class TVariable : public TSymbol
     }
 
   private:
-    DISALLOW_COPY_AND_ASSIGN(TVariable);
-
     TType type;
     bool userType;
     // we are assuming that Pool Allocator will free the memory
     // allocated to unionArray when this object is destroyed.
-    ConstantUnion *unionArray;
+    TConstantUnion *unionArray;
+};
+
+// Immutable version of TParameter.
+struct TConstParameter
+{
+    TConstParameter()
+        : name(nullptr),
+          type(nullptr)
+    {
+    }
+    explicit TConstParameter(const TString *n)
+        : name(n),
+          type(nullptr)
+    {
+    }
+    explicit TConstParameter(const TType *t)
+        : name(nullptr),
+          type(t)
+    {
+    }
+    TConstParameter(const TString *n, const TType *t)
+        : name(n),
+          type(t)
+    {
+    }
+
+    // Both constructor arguments must be const.
+    TConstParameter(TString *n, TType *t) = delete;
+    TConstParameter(const TString *n, TType *t) = delete;
+    TConstParameter(TString *n, const TType *t) = delete;
+
+    const TString *name;
+    const TType *type;
 };
 
 // The function sub-class of symbols and the parser will need to
 // share this definition of a function parameter.
 struct TParameter
 {
+    // Destructively converts to TConstParameter.
+    // This method resets name and type to nullptrs to make sure
+    // their content cannot be modified after the call.
+    TConstParameter turnToConst()
+    {
+        const TString *constName = name;
+        const TType *constType = type;
+        name = nullptr;
+        type = nullptr;
+        return TConstParameter(constName, constType);
+    }
+
     TString *name;
     TType *type;
 };
@@ -179,20 +220,14 @@ struct TParameter
 class TFunction : public TSymbol
 {
   public:
-    TFunction(TOperator o)
-        : TSymbol(0),
-          returnType(TType(EbtVoid, EbpUndefined)),
-          op(o),
-          defined(false)
-    {
-    }
-    TFunction(const TString *name, const TType &retType, TOperator tOp = EOpNull)
+    TFunction(const TString *name, const TType *retType, TOperator tOp = EOpNull, const char *ext = "")
         : TSymbol(name),
           returnType(retType),
-          mangledName(TFunction::mangleName(*name)),
+          mangledName(nullptr),
           op(tOp),
           defined(false)
     {
+        relateToExtension(ext);
     }
     virtual ~TFunction();
     virtual bool isFunction() const
@@ -209,25 +244,25 @@ class TFunction : public TSymbol
         return TString(mangledName.c_str(), mangledName.find_first_of('('));
     }
 
-    void addParameter(TParameter &p)
-    { 
+    void addParameter(const TConstParameter &p)
+    {
         parameters.push_back(p);
-        mangledName = mangledName + p.type->getMangledName();
+        mangledName = nullptr;
     }
 
     const TString &getMangledName() const
     {
-        return mangledName;
+        if (mangledName == nullptr)
+        {
+            mangledName = buildMangledName();
+        }
+        return *mangledName;
     }
     const TType &getReturnType() const
     {
-        return returnType;
+        return *returnType;
     }
 
-    void relateToOperator(TOperator o)
-    {
-        op = o;
-    }
     TOperator getBuiltInOp() const
     {
         return op;
@@ -246,18 +281,18 @@ class TFunction : public TSymbol
     {
         return parameters.size();
     }
-    const TParameter &getParam(size_t i) const
+    const TConstParameter &getParam(size_t i) const
     {
         return parameters[i];
     }
 
   private:
-    DISALLOW_COPY_AND_ASSIGN(TFunction);
+    const TString *buildMangledName() const;
 
-    typedef TVector<TParameter> TParamList;
+    typedef TVector<TConstParameter> TParamList;
     TParamList parameters;
-    TType returnType;
-    TString mangledName;
+    const TType *returnType;
+    mutable const TString *mangledName;
     TOperator op;
     bool defined;
 };
@@ -291,10 +326,10 @@ class TSymbolTableLevel
 
     bool insert(TSymbol *symbol);
 
-    TSymbol *find(const TString &name) const;
+    // Insert a function using its unmangled name as the key.
+    bool insertUnmangled(TFunction *function);
 
-    void relateToOperator(const char *name, TOperator op);
-    void relateToExtension(const char *name, const TString &ext);
+    TSymbol *find(const TString &name) const;
 
   protected:
     tLevel level;
@@ -310,7 +345,7 @@ const int ESSL3_BUILTINS = 2;
 const int LAST_BUILTIN_LEVEL = ESSL3_BUILTINS;
 const int GLOBAL_LEVEL = 3;
 
-class TSymbolTable
+class TSymbolTable : angle::NonCopyable
 {
   public:
     TSymbolTable()
@@ -363,6 +398,12 @@ class TSymbolTable
         return table[level]->insert(symbol);
     }
 
+    bool insert(ESymbolLevel level, const char *ext, TSymbol *symbol)
+    {
+        symbol->relateToExtension(ext);
+        return table[level]->insert(symbol);
+    }
+
     bool insertConstInt(ESymbolLevel level, const char *name, int value)
     {
         TVariable *constant = new TVariable(
@@ -371,9 +412,26 @@ class TSymbolTable
         return insert(level, constant);
     }
 
-    void insertBuiltIn(ESymbolLevel level, TType *rvalue, const char *name,
-                       TType *ptype1, TType *ptype2 = 0, TType *ptype3 = 0,
-                       TType *ptype4 = 0, TType *ptype5 = 0);
+    void insertBuiltIn(ESymbolLevel level, TOperator op, const char *ext, const TType *rvalue, const char *name,
+                       const TType *ptype1, const TType *ptype2 = 0, const TType *ptype3 = 0, const TType *ptype4 = 0, const TType *ptype5 = 0);
+
+    void insertBuiltIn(ESymbolLevel level, const TType *rvalue, const char *name,
+                       const TType *ptype1, const TType *ptype2 = 0, const TType *ptype3 = 0, const TType *ptype4 = 0, const TType *ptype5 = 0)
+    {
+        insertBuiltIn(level, EOpNull, "", rvalue, name, ptype1, ptype2, ptype3, ptype4, ptype5);
+    }
+
+    void insertBuiltIn(ESymbolLevel level, const char *ext, const TType *rvalue, const char *name,
+                       const TType *ptype1, const TType *ptype2 = 0, const TType *ptype3 = 0, const TType *ptype4 = 0, const TType *ptype5 = 0)
+    {
+        insertBuiltIn(level, EOpNull, ext, rvalue, name, ptype1, ptype2, ptype3, ptype4, ptype5);
+    }
+
+    void insertBuiltIn(ESymbolLevel level, TOperator op, const TType *rvalue, const char *name,
+                       const TType *ptype1, const TType *ptype2 = 0, const TType *ptype3 = 0, const TType *ptype4 = 0, const TType *ptype5 = 0)
+    {
+        insertBuiltIn(level, op, "", rvalue, name, ptype1, ptype2, ptype3, ptype4, ptype5);
+    }
 
     TSymbol *find(const TString &name, int shaderVersion,
                   bool *builtIn = NULL, bool *sameScope = NULL) const;
@@ -385,14 +443,6 @@ class TSymbolTable
         return table[currentLevel() - 1];
     }
 
-    void relateToOperator(ESymbolLevel level, const char *name, TOperator op)
-    {
-        table[level]->relateToOperator(name, op);
-    }
-    void relateToExtension(ESymbolLevel level, const char *name, const TString &ext)
-    {
-        table[level]->relateToExtension(name, ext);
-    }
     void dump(TInfoSink &infoSink) const;
 
     bool setDefaultPrecision(const TPublicType &type, TPrecision prec)
@@ -451,4 +501,4 @@ class TSymbolTable
     static int uniqueIdCounter;
 };
 
-#endif // _SYMBOL_TABLE_INCLUDED_
+#endif // COMPILER_TRANSLATOR_SYMBOLTABLE_H_

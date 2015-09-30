@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>@aria-owns attribute testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+    ////////////////////////////////////////////////////////////////////////////
+    // Tests
+    ////////////////////////////////////////////////////////////////////////////
+
+    //enableLogging("tree"); // debug stuff
+
+    var gQueue = null;
+
+    function doTest()
+    {
+      var tree =
+        { SECTION: [ // t1_1
+          { SECTION: [ // t1_2
+            // no kids, no loop
+          ] }
+        ] };
+      testAccessibleTree("t1_1", tree);
+
+      tree =
+        { SECTION: [ // t2_1
+          { SECTION: [ // t2_2
+            { SECTION: [ // t2_3
+              // no kids, no loop
+            ] }
+          ] }
+        ] };
+      testAccessibleTree("t2_1", tree);
+
+      tree =
+        { SECTION: [ // t3_3
+          { SECTION: [ // t3_1
+            { SECTION: [ // t3_2
+              { SECTION: [ // DOM child of t3_2
+                // no kids, no loop
+              ] }
+            ] }
+          ] }
+        ] };
+      testAccessibleTree("t3_3", tree);
+
+      tree =
+        { SECTION: [ // t4_1
+          { SECTION: [ // DOM child of t4_1
+            // no kids, no loop
+          ] }
+        ] };
+      testAccessibleTree("t4_1", tree);
+
+      tree =
+        { SECTION: [ // t5_1
+          { SECTION: [ // DOM child of t5_1
+            { SECTION: [ // t5_2
+              { SECTION: [ // DOM child of t5_2
+                { SECTION: [ // t5_3
+                  { SECTION: [ // DOM child of t5_3
+                    // no kids, no loop
+                  ]}
+                ]}
+              ]}
+            ] }
+          ] }
+        ] };
+      testAccessibleTree("t5_1", tree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+
+  </script>
+</head>
+
+<body>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="t1_1" aria-owns="t1_2"></div>
+  <div id="t1_2" aria-owns="t1_1"></div>
+
+  <div id="t2_2" aria-owns="t2_3"></div>
+  <div id="t2_1" aria-owns="t2_2"></div>
+  <div id="t2_3" aria-owns="t2_1"></div>
+
+  <div id="t3_1" aria-owns="t3_2"></div>
+  <div id="t3_2">
+    <div aria-owns="t3_3"></div>
+  </div>
+  <div id="t3_3" aria-owns="t3_1"></div>
+
+  <div id="t4_1"><div aria-owns="t4_1"></div></div>
+
+  <div id="t5_1"><div aria-owns="t5_2"></div>
+  <div id="t5_2"><div aria-owns="t5_3"></div></div>
+  <div id="t5_3"><div aria-owns="t5_1"></div></div>
+</body>
+
+</html>

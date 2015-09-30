@@ -437,6 +437,12 @@ protected:
                              nsIAtom* aRelAttr = nullptr);
 
   /**
+   * Return true if given ARIA owner element and its referred content make
+   * the loop closed.
+   */
+  bool IsInARIAOwnsLoop(nsIContent* aOwnerEl, nsIContent* aDependentEl);
+
+  /**
    * Update or recreate an accessible depending on a changed attribute.
    *
    * @param aElement   [in] the element the attribute was changed on

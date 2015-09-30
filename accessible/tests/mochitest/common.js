@@ -454,11 +454,11 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree, aFlags)
 
     if (accTree.children.length != childCount) {
       for (var i = 0; i < Math.max(accTree.children.length, childCount); i++) {
-        var accChild;
+        var accChild = null, testChild = null;
         try {
+          testChild = accTree.children[i];
           accChild = children.queryElementAt(i, nsIAccessible);
 
-          testChild = accTree.children[i];
           if (!testChild) {
             ok(false, prettyName(acc) + " has an extra child at index " + i +
               " : " + prettyName(accChild));
@@ -481,10 +481,10 @@ function testAccessibleTree(aAccOrElmOrID, aAccTree, aFlags)
           }
           info("Matching " + prettyName(accTree) + " and " + prettyName(acc) +
                " child at index " + i + " : " + prettyName(accChild));
+
         } catch (e) {
-          ok(false, prettyName(accTree) + " has an extra child at index " + i +
+          ok(false, prettyName(accTree) + " is expected to have a child at index " + i +
              " : " + prettyName(testChild) + ", " + e);
-          throw e;
         }
       }
     } else {

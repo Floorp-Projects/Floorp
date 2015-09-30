@@ -213,8 +213,7 @@ this.GestureTracker = { // jshint ignore:line
    */
   handle: function GestureTracker_handle(aDetail, aTimeStamp) {
     Logger.gesture(() => {
-      return ['Pointer event', aDetail.type, 'at:', aTimeStamp,
-        JSON.stringify(aDetail.points)];
+      return ['Pointer event', Utils.dpi, 'at:', aTimeStamp, JSON.stringify(aDetail)];
     });
     this[this.current ? '_update' : '_init'](aDetail, aTimeStamp);
   },
@@ -403,7 +402,12 @@ Gesture.prototype = {
       let identifier = point.identifier;
       let gesturePoint = this.points[identifier];
       if (gesturePoint) {
-        gesturePoint.update(point);
+        if (aType === 'pointerdown' && aCanCreate) {
+          // scratch the previous pointer with that id.
+          this.points[identifier] = new Point(point);
+        } else {
+          gesturePoint.update(point);
+        }
         if (aNeedComplete) {
           // Since the gesture is completing and at least one of the gesture
           // points is updated, set the return value to true.

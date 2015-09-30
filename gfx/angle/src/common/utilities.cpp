@@ -254,7 +254,7 @@ int VariableColumnCount(GLenum type)
     return 0;
 }
 
-bool IsSampler(GLenum type)
+bool IsSamplerType(GLenum type)
 {
     switch (type)
     {
@@ -277,6 +277,39 @@ bool IsSampler(GLenum type)
     }
 
     return false;
+}
+
+GLenum SamplerTypeToTextureType(GLenum samplerType)
+{
+    switch (samplerType)
+    {
+      case GL_SAMPLER_2D:
+      case GL_INT_SAMPLER_2D:
+      case GL_UNSIGNED_INT_SAMPLER_2D:
+      case GL_SAMPLER_2D_SHADOW:
+        return GL_TEXTURE_2D;
+
+      case GL_SAMPLER_CUBE:
+      case GL_INT_SAMPLER_CUBE:
+      case GL_UNSIGNED_INT_SAMPLER_CUBE:
+      case GL_SAMPLER_CUBE_SHADOW:
+        return GL_TEXTURE_CUBE_MAP;
+
+      case GL_SAMPLER_2D_ARRAY:
+      case GL_INT_SAMPLER_2D_ARRAY:
+      case GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:
+      case GL_SAMPLER_2D_ARRAY_SHADOW:
+        return GL_TEXTURE_2D_ARRAY;
+
+      case GL_SAMPLER_3D:
+      case GL_INT_SAMPLER_3D:
+      case GL_UNSIGNED_INT_SAMPLER_3D:
+        return GL_TEXTURE_3D;
+
+      default:
+        UNREACHABLE();
+        return 0;
+    }
 }
 
 bool IsMatrixType(GLenum type)
@@ -343,9 +376,54 @@ int AllocateFirstFreeBits(unsigned int *bits, unsigned int allocationSize, unsig
     return -1;
 }
 
-bool IsCubemapTextureTarget(GLenum target)
+static_assert(GL_TEXTURE_CUBE_MAP_NEGATIVE_X - GL_TEXTURE_CUBE_MAP_POSITIVE_X == 1, "Unexpected GL cube map enum value.");
+static_assert(GL_TEXTURE_CUBE_MAP_POSITIVE_Y - GL_TEXTURE_CUBE_MAP_POSITIVE_X == 2, "Unexpected GL cube map enum value.");
+static_assert(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y - GL_TEXTURE_CUBE_MAP_POSITIVE_X == 3, "Unexpected GL cube map enum value.");
+static_assert(GL_TEXTURE_CUBE_MAP_POSITIVE_Z - GL_TEXTURE_CUBE_MAP_POSITIVE_X == 4, "Unexpected GL cube map enum value.");
+static_assert(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z - GL_TEXTURE_CUBE_MAP_POSITIVE_X == 5, "Unexpected GL cube map enum value.");
+
+bool IsCubeMapTextureTarget(GLenum target)
 {
-    return (target >= GL_TEXTURE_CUBE_MAP_POSITIVE_X && target <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
+    return (target >= FirstCubeMapTextureTarget && target <= LastCubeMapTextureTarget);
+}
+
+size_t CubeMapTextureTargetToLayerIndex(GLenum target)
+{
+    ASSERT(IsCubeMapTextureTarget(target));
+    return target - static_cast<size_t>(FirstCubeMapTextureTarget);
+}
+
+GLenum LayerIndexToCubeMapTextureTarget(size_t index)
+{
+    ASSERT(index <= (LastCubeMapTextureTarget - FirstCubeMapTextureTarget));
+    return FirstCubeMapTextureTarget + static_cast<GLenum>(index);
+}
+
+template <class IndexType>
+static RangeUI ComputeTypedIndexRange(const IndexType *indices, GLsizei count)
+{
+    ASSERT(count > 0);
+    IndexType minIndex = indices[0];
+    IndexType maxIndex = indices[0];
+
+    for (GLsizei i = 1; i < count; i++)
+    {
+        if (minIndex > indices[i]) minIndex = indices[i];
+        if (maxIndex < indices[i]) maxIndex = indices[i];
+    }
+
+    return RangeUI(static_cast<GLuint>(minIndex), static_cast<GLuint>(maxIndex));
+}
+
+RangeUI ComputeIndexRange(GLenum indexType, const GLvoid *indices, GLsizei count)
+{
+    switch (indexType)
+    {
+      case GL_UNSIGNED_BYTE:  return ComputeTypedIndexRange(static_cast<const GLubyte*>(indices), count);
+      case GL_UNSIGNED_SHORT: return ComputeTypedIndexRange(static_cast<const GLushort*>(indices), count);
+      case GL_UNSIGNED_INT:   return ComputeTypedIndexRange(static_cast<const GLuint*>(indices), count);
+      default: UNREACHABLE(); return RangeUI(0, 0);
+    }
 }
 
 bool IsTriangleMode(GLenum drawMode)
@@ -444,6 +522,37 @@ int VariableSortOrder(GLenum type)
     }
 }
 
+std::string ParseUniformName(const std::string &name, size_t *outSubscript)
+{
+    // Strip any trailing array operator and retrieve the subscript
+    size_t open = name.find_last_of('[');
+    size_t close = name.find_last_of(']');
+    bool hasIndex = (open != std::string::npos) && (close == name.length() - 1);
+    if (!hasIndex)
+    {
+        if (outSubscript)
+        {
+            *outSubscript = GL_INVALID_INDEX;
+        }
+        return name;
+    }
+
+    if (outSubscript)
+    {
+        int index = atoi(name.substr(open + 1).c_str());
+        if (index >= 0)
+        {
+            *outSubscript = index;
+        }
+        else
+        {
+            *outSubscript = GL_INVALID_INDEX;
+        }
+    }
+
+    return name.substr(0, open);
+}
+
 }
 
 #if !defined(ANGLE_ENABLE_WINDOWS_STORE)
@@ -486,10 +595,15 @@ void writeFile(const char* path, const void* content, size_t size)
 }
 #endif // !ANGLE_ENABLE_WINDOWS_STORE
 
-#if defined(ANGLE_ENABLE_WINDOWS_STORE)
+#if defined (ANGLE_PLATFORM_WINDOWS)
 
-void Sleep(unsigned long dwMilliseconds)
+// Causes the thread to relinquish the remainder of its time slice to any
+// other thread that is ready to run.If there are no other threads ready
+// to run, the function returns immediately, and the thread continues execution.
+void ScheduleYield()
 {
+#if defined(ANGLE_ENABLE_WINDOWS_STORE)
+    // This implementation of Sleep exists because it is not available prior to Update 4.
     static HANDLE singletonEvent = nullptr;
     HANDLE sleepEvent = singletonEvent;
     if (!sleepEvent)
@@ -510,7 +624,10 @@ void Sleep(unsigned long dwMilliseconds)
     }
 
     // Emulate sleep by waiting with timeout on an event that is never signalled.
-    WaitForSingleObjectEx(sleepEvent, dwMilliseconds, false);
+    WaitForSingleObjectEx(sleepEvent, 0, false);
+#else
+    Sleep(0);
+#endif
 }
 
-#endif // ANGLE_ENABLE_WINDOWS_STORE
+#endif
