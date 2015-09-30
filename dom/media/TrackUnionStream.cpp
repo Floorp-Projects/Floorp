@@ -96,18 +96,19 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
           if (map->mInputPort == mInputs[i] && map->mInputTrackID == tracks->GetID()) {
             bool trackFinished;
             StreamBuffer::Track* outputTrack = mBuffer.FindTrack(map->mOutputTrackID);
-            if (!outputTrack || outputTrack->IsEnded()) {
+            found = true;
+            if (!outputTrack || outputTrack->IsEnded() ||
+                !mInputs[i]->PassTrackThrough(tracks->GetID())) {
               trackFinished = true;
             } else {
               CopyTrackData(tracks.get(), j, aFrom, aTo, &trackFinished);
             }
             mappedTracksFinished[j] = trackFinished;
             mappedTracksWithMatchingInputTracks[j] = true;
-            found = true;
             break;
           }
         }
-        if (!found) {
+        if (!found && mInputs[i]->PassTrackThrough(tracks->GetID())) {
           bool trackFinished = false;
           trackAdded = true;
           uint32_t mapIndex = AddTrack(mInputs[i], tracks.get(), aFrom);
@@ -191,7 +192,8 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
       MediaStreamListener* l = mListeners[j];
       l->NotifyQueuedTrackChanges(Graph(), id, outputStart,
                                   MediaStreamListener::TRACK_EVENT_CREATED,
-                                  *segment);
+                                  *segment,
+                                  aPort->GetSource(), aTrack->GetID());
     }
     segment->AppendNullData(outputStart);
     StreamBuffer::Track* track =
@@ -223,7 +225,9 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
       segment = outputTrack->GetSegment()->CreateEmptyClone();
       l->NotifyQueuedTrackChanges(Graph(), outputTrack->GetID(), offset,
                                   MediaStreamListener::TRACK_EVENT_ENDED,
-                                  *segment);
+                                  *segment,
+                                  mTrackMap[aIndex].mInputPort->GetSource(),
+                                  mTrackMap[aIndex].mInputTrackID);
     }
     outputTrack->SetEnded();
   }
