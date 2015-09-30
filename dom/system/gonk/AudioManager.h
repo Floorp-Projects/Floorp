@@ -28,6 +28,8 @@
       {0x89, 0x10, 0xf9, 0x3c, 0x55, 0xe6, 0x62, 0xec}}
 #define NS_AUDIOMANAGER_CONTRACTID "@mozilla.org/telephony/audiomanager;1"
 
+class nsISettingsServiceLock;
+
 namespace mozilla {
 namespace hal {
 class SwitchEvent;
@@ -167,8 +169,11 @@ private:
   nsAutoCString AppendProfileToVolumeSetting(const char* aName,
                                              AudioOutputProfiles aProfile);
 
-  // Init volume from the settings database.
+  // We store the volume setting in the database, these are related functions.
   void InitVolumeFromDatabase();
+  void UpdateVolumeSettingToDatabase(nsISettingsServiceLock* aLock,
+                                     const char* aTopic,
+                                     uint32_t aVolIndex);
 
   // Promise functions.
   void InitProfileVolumeSucceeded();
