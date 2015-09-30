@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_PostMessageEvent_h
 #define mozilla_dom_PostMessageEvent_h
 
-#include "mozilla/dom/StructuredCloneHelper.h"
+#include "mozilla/dom/StructuredCloneHolder.h"
 #include "nsCOMPtr.h"
 #include "mozilla/nsRefPtr.h"
 #include "nsTArray.h"
@@ -25,7 +25,7 @@ namespace dom {
  * which asynchronously creates and dispatches events.
  */
 class PostMessageEvent final : public nsRunnable
-                             , public StructuredCloneHelper
+                             , public StructuredCloneHolder
 {
 public:
   NS_DECL_NSIRUNNABLE
