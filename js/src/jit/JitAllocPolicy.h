@@ -103,6 +103,9 @@ class JitAllocPolicy
     }
     void reportAllocOverflow() const {
     }
+    bool checkSimulatedOOM() const {
+        return !js::oom::ShouldFailWithOOM();
+    }
 };
 
 class OldJitAllocPolicy
@@ -119,6 +122,9 @@ class OldJitAllocPolicy
     void free_(void* p) {
     }
     void reportAllocOverflow() const {
+    }
+    bool checkSimulatedOOM() const {
+        return !js::oom::ShouldFailWithOOM();
     }
 };
 

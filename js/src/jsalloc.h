@@ -38,7 +38,13 @@ class SystemAllocPolicy
     }
     void free_(void* p) { js_free(p); }
     void reportAllocOverflow() const {}
+    bool checkSimulatedOOM() const {
+        return !js::oom::ShouldFailWithOOM();
+    }
 };
+
+class ExclusiveContext;
+void ReportOutOfMemory(ExclusiveContext* cxArg);
 
 /*
  * Allocation policy that calls the system memory functions and reports errors
@@ -93,6 +99,15 @@ class TempAllocPolicy
     }
 
     JS_FRIEND_API(void) reportAllocOverflow() const;
+
+    bool checkSimulatedOOM() const {
+        if (js::oom::ShouldFailWithOOM()) {
+            js::ReportOutOfMemory(reinterpret_cast<ExclusiveContext*>(cx_));
+            return false;
+        }
+
+        return true;
+    }
 };
 
 } /* namespace js */
