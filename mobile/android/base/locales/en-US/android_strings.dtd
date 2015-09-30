@@ -218,7 +218,7 @@
 <!ENTITY pref_cookies_disabled "Disabled">
 
 <!ENTITY pref_tap_to_load_images_title "Tap-to-load images">
-<!ENTITY pref_tap_to_load_images_summary "Load images only when you tap on them">
+<!ENTITY pref_tap_to_load_images_summary2 "Load images only when you long press them">
 
 <!ENTITY pref_tracking_protection_title "Tracking protection">
 <!ENTITY pref_tracking_protection_summary3 "Enabled in Private Browsing">
