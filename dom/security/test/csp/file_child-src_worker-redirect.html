@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Bug 1045891</title>
+  </head>
+  <body>
+  <script type="text/javascript">
+    var page_id = window.location.hash.substring(1);
+    var redir = 'none';
+
+    page_id.split('_').forEach(function (val) {
+      var [name, value] = val.split('-');
+      if (name  == 'redir') {
+        redir = unescape(value);
+      }
+    });
+
+    try {
+      worker = new Worker('file_redirect_worker.sjs?path='
+          + escape("/tests/dom/security/test/csp/file_child-src_worker.js")
+          + "&redir=" + redir
+          + "&page_id=" + page_id
+          );
+
+      worker.onerror = function(error) {
+        var msg = error.message;
+        if (msg.match(/^: NetworkError/)) {
+          // this means CSP blocked it
+          msg = "blocked";
+        }
+        window.parent.postMessage({id:page_id, message:msg}, 'http://mochi.test:8888');
+      };
+
+      worker.onmessage = function(ev) {
+        window.parent.postMessage({id:page_id, message:"allowed"}, 'http://mochi.test:8888');
+
+      };
+      worker.postMessage('foo');
+    }
+    catch (e) {
+      if (e.message.match(/Failed to load script/)) {
+        window.parent.postMessage({id:page_id, message:"blocked"}, 'http://mochi.test:8888');
+      } else {
+        window.parent.postMessage({id:page_id, message:"exception"}, 'http://mochi.test:8888');
+      }
+    }
+  </script>
+  </body>
+</html>
