@@ -393,19 +393,14 @@ stage-all: stage-steeplechase
 endif
 
 TEST_PKGS := \
-  cppunittest \
-  reftest \
-  $(NULL)
-
-PYTHON_TEST_PKGS := \
   common \
+  cppunittest \
   mochitest \
+  reftest \
   talos \
   web-platform \
   xpcshell \
   $(NULL)
-
-ALL_TEST_PKGS := $(TEST_PKGS) $(PYTHON_TEST_PKGS)
 
 PKG_ARG = --$(1) '$(PKG_BASENAME).$(1).tests.zip'
 
@@ -417,7 +412,7 @@ test-packages-manifest-tc:
       --dest-file $(MOZ_TEST_PACKAGES_FILE_TC) \
       --use-short-names \
       $(call PKG_ARG,common) \
-      $(foreach pkg,$(ALL_TEST_PKGS),$(call PKG_ARG,$(pkg)))
+      $(foreach pkg,$(TEST_PKGS),$(call PKG_ARG,$(pkg)))
 
 test-packages-manifest:
 	@rm -f $(MOZ_TEST_PACKAGES_FILE)
@@ -426,7 +421,7 @@ test-packages-manifest:
       --jsshell $(JSSHELL_NAME) \
       --dest-file $(MOZ_TEST_PACKAGES_FILE) \
       $(call PKG_ARG,common) \
-      $(foreach pkg,$(ALL_TEST_PKGS),$(call PKG_ARG,$(pkg)))
+      $(foreach pkg,$(TEST_PKGS),$(call PKG_ARG,$(pkg)))
 
 package-tests-prepare-dest:
 	@rm -f '$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)'
@@ -440,25 +435,13 @@ package-tests: package-tests-mozharness
 
 define package_archive
 package-tests-$(1): stage-all package-tests-prepare-dest
-	rm -f '$$(DIST)/$$(PKG_PATH)$$(PKG_BASENAME).$(1).tests.zip' && \
-		cd $$(abspath $(PKG_STAGE)) && \
-		zip -rq9D '$$(abspath $$(DIST))/$$(PKG_PATH)$$(PKG_BASENAME).$(1).tests.zip' \
-		$(1) -x \*/.mkdir.done \*.pyc ;
-.PHONY += package-tests-$(1)
-package-tests: package-tests-$(1)
-endef
-
-$(foreach name,$(TEST_PKGS),$(eval $(call package_archive,$(name))))
-
-define python_test_archive
-package-tests-$(1): stage-all package-tests-prepare-dest
 	$$(call py_action,test_archive, \
 		$(1) \
 		$$(abspath $$(DIST))/$$(PKG_PATH)/$$(PKG_BASENAME).$(1).tests.zip)
 package-tests: package-tests-$(1)
 endef
 
-$(foreach name,$(PYTHON_TEST_PKGS),$(eval $(call python_test_archive,$(name))))
+$(foreach name,$(TEST_PKGS),$(eval $(call package_archive,$(name))))
 
 ifeq ($(MOZ_BUILD_APP),mobile/android)
 stage-all: stage-android
