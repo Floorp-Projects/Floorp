@@ -5,7 +5,7 @@
  *
  * PeerConnection.js' interface to the C++ PeerConnectionImpl.
  *
- * Do not confuse with mozRTCPeerConnection. This interface is purely for
+ * Do not confuse with RTCPeerConnection. This interface is purely for
  * communication between the PeerConnection JS DOM binding and the C++
  * implementation in SIPCC.
  *

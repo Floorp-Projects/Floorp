@@ -89,7 +89,7 @@ firefox_ui_update_config_options = firefox_ui_update_harness_config_options \
 
 class FirefoxUITests(TestingMixin, VCSToolsScript):
 
-    cli_script = 'firefox-ui-tests'
+    cli_script = 'runtests.py'
 
     def __init__(self, config_options=None,
                  all_actions=None, default_actions=None,
@@ -205,21 +205,18 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
 
         super(FirefoxUITests, self).query_minidump_stackwalk(manifest=manifest_path)
 
-    def run_test(self, installer_path, script_name, env=None,
-                 cleanup=True, marionette_port=2828):
+    def run_test(self, installer_path, env=None, cleanup=True, marionette_port=2828):
         """All required steps for running the tests against an installer."""
         dirs = self.query_abs_dirs()
 
-        venv_python_path = self.query_python_path()
-        update_script = os.path.join(dirs['fx_ui_dir'], 'firefox_ui_harness', 'cli_update.py')
         gecko_log = os.path.join(dirs['abs_log_dir'], 'gecko.log')
 
-        # Build the command
         cmd = [
-            venv_python_path,
-            update_script,
+            self.query_python_path(),
+            os.path.join(dirs['fx_ui_dir'], 'firefox_ui_harness', self.cli_script),
             '--installer', installer_path,
             # Log to stdout until tests are stable.
+            # '--gecko-log', gecko_log,
             '--gecko-log=-',
             '--address', 'localhost:{}'.format(marionette_port),
             # Use the work dir to get temporary data stored
@@ -279,7 +276,6 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
 
         return self.run_test(
             installer_path=self.installer_path,
-            script_name=self.cli_script,
             env=self.query_env(),
             cleanup=False,
         )
@@ -287,7 +283,7 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
 
 class FirefoxUIUpdateTests(FirefoxUITests):
 
-    cli_script = 'firefox-ui-update'
+    cli_script = 'cli_update.py'
 
     def __init__(self, config_options=None, *args, **kwargs):
         config_options = config_options or firefox_ui_update_config_options

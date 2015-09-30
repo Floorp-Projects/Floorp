@@ -20,14 +20,14 @@
         function PC_REMOTE_ROLLBACK(test) {
           return test.setRemoteDescription(
               test.pcRemote,
-              new mozRTCSessionDescription({ type: "rollback" }),
+              new RTCSessionDescription({ type: "rollback" }),
               STABLE);
         },
 
         function PC_LOCAL_ROLLBACK(test) {
           return test.setLocalDescription(
               test.pcLocal,
-              new mozRTCSessionDescription({ type: "rollback", sdp: ""}),
+              new RTCSessionDescription({ type: "rollback", sdp: ""}),
               STABLE);
         },
 

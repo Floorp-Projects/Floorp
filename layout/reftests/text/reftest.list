@@ -224,6 +224,9 @@ HTTP(..) == graphite-05-feat.html graphite-05-ref.html
 pref(gfx.font_rendering.graphite.enabled,false) HTTP(..) == glyph-decomposition-opentype.html glyph-decomposition-opentype-ref.html
 pref(gfx.font_rendering.graphite.enabled,true) HTTP(..) == glyph-decomposition-graphite.html glyph-decomposition-graphite-ref.html
 
+# test for bidi bug in graphite 1.3.2, fixed in 1.3.3 (bug 1207061)
+HTTP(..) == graphite-bidi-1.html graphite-bidi-1-ref.html
+
 # Tests for hyphenation with hyphens property
 == auto-hyphenation-1.html auto-hyphenation-1-ref.html
 != auto-hyphenation-1.html auto-hyphenation-1-notref.html

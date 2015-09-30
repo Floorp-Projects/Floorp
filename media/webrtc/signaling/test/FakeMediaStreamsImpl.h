@@ -116,7 +116,9 @@ void Fake_AudioStreamSource::Periodic() {
                                     0, // TrackID
                                     0, // Offset TODO(ekr@rtfm.com) fix
                                     0, // ???
-                                    segment);
+                                    segment,
+                                    nullptr, // Input stream
+                                    -1);     // Input track id
   }
 }
 

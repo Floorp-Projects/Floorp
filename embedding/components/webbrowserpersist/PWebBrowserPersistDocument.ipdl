@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PBrowser;
+include protocol PContent;
 include protocol PWebBrowserPersistResources;
 include protocol PWebBrowserPersistSerialize;
 
@@ -48,9 +48,9 @@ struct WebBrowserPersistURIMap {
 // child->parent and then passed back.  Subdocuments aren't subactors,
 // because that would impose a lifetime relationship that doesn't
 // exist in the XPIDL; instead they're all managed by the enclosing
-// PBrowser (== TabParent/TabChild).
+// PContent.
 protocol PWebBrowserPersistDocument {
-  manager PBrowser;
+  manager PContent;
   manages PWebBrowserPersistResources;
   manages PWebBrowserPersistSerialize;
 

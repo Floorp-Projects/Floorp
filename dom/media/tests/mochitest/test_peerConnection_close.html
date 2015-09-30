@@ -12,7 +12,7 @@
   });
 
   runNetworkTest(function () {
-    var pc = new mozRTCPeerConnection();
+    var pc = new RTCPeerConnection();
     var exception = null;
     var eTimeout = null;
 
@@ -57,9 +57,9 @@
       // These legacy methods fire the error callback instead. This is not
       // entirely to spec but is better than ignoring programming errors.
 
-      var offer = new mozRTCSessionDescription({ sdp: "sdp", type: "offer" });
-      var answer = new mozRTCSessionDescription({ sdp: "sdp", type: "answer" });
-      var candidate = new mozRTCIceCandidate({ candidate: "dummy",
+      var offer = new RTCSessionDescription({ sdp: "sdp", type: "offer" });
+      var answer = new RTCSessionDescription({ sdp: "sdp", type: "answer" });
+      var candidate = new RTCIceCandidate({ candidate: "dummy",
                                                sdpMid: "test",
                                                sdpMLineIndex: 3 });
 

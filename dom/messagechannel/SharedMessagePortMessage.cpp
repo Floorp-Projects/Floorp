@@ -46,7 +46,7 @@ SharedMessagePortMessage::Write(JSContext* aCx,
                                 JS::Handle<JS::Value> aTransfer,
                                 ErrorResult& aRv)
 {
-  StructuredCloneHelper::Write(aCx, aValue, aTransfer, aRv);
+  StructuredCloneHolder::Write(aCx, aValue, aTransfer, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

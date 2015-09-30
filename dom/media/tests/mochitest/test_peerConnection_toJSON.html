@@ -8,13 +8,13 @@
 <script type="application/javascript">
   createHTML({
     bug: "928304",
-    title: "test toJSON() on mozRTCSessionDescription and mozRTCIceCandidate"
+    title: "test toJSON() on RTCSessionDescription and RTCIceCandidate"
   });
 
   runNetworkTest(function () {
     /** Test for Bug 872377 **/
 
-    var rtcSession = new mozRTCSessionDescription({ sdp: "Picklechips!",
+    var rtcSession = new RTCSessionDescription({ sdp: "Picklechips!",
                                                     type: "offer" });
     var jsonCopy = JSON.parse(JSON.stringify(rtcSession));
     for (key in rtcSession) {
@@ -24,7 +24,7 @@
 
     /** Test for Bug 928304 **/
 
-    var rtcIceCandidate = new mozRTCIceCandidate({ candidate: "dummy",
+    var rtcIceCandidate = new RTCIceCandidate({ candidate: "dummy",
                                                    sdpMid: "test",
                                                    sdpMLineIndex: 3 });
     jsonCopy = JSON.parse(JSON.stringify(rtcIceCandidate));

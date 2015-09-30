@@ -128,8 +128,9 @@ public:
     , mWindowID(aWindowID)
     , mStopped(false)
     , mFinished(false)
-    , mLock("mozilla::GUMCMSL")
-    , mRemoved(false) {}
+    , mRemoved(false)
+    , mAudioStopped(false)
+    , mVideoStopped(false) {}
 
   ~GetUserMediaCallbackMediaStreamListener()
   {
@@ -142,7 +143,7 @@ public:
                 AudioDevice* aAudioDevice,
                 VideoDevice* aVideoDevice)
   {
-    NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+    MOZ_ASSERT(NS_IsMainThread());
     mStream = aStream;
     mAudioDevice = aAudioDevice;
     mVideoDevice = aVideoDevice;
@@ -178,7 +179,7 @@ public:
   // if set and represent a real capture device.
   bool CapturingVideo()
   {
-    NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+    MOZ_ASSERT(NS_IsMainThread());
     return mVideoDevice && !mStopped &&
            !mVideoDevice->GetSource()->IsAvailable() &&
            mVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Camera &&
@@ -187,7 +188,7 @@ public:
   }
   bool CapturingAudio()
   {
-    NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+    MOZ_ASSERT(NS_IsMainThread());
     return mAudioDevice && !mStopped &&
            !mAudioDevice->GetSource()->IsAvailable() &&
            (!mAudioDevice->GetSource()->IsFake() ||
@@ -195,36 +196,31 @@ public:
   }
   bool CapturingScreen()
   {
-    NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+    MOZ_ASSERT(NS_IsMainThread());
     return mVideoDevice && !mStopped &&
            !mVideoDevice->GetSource()->IsAvailable() &&
            mVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Screen;
   }
   bool CapturingWindow()
   {
-    NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+    MOZ_ASSERT(NS_IsMainThread());
     return mVideoDevice && !mStopped &&
            !mVideoDevice->GetSource()->IsAvailable() &&
            mVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Window;
   }
   bool CapturingApplication()
   {
-    NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+    MOZ_ASSERT(NS_IsMainThread());
     return mVideoDevice && !mStopped &&
            !mVideoDevice->GetSource()->IsAvailable() &&
            mVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Application;
   }
   bool CapturingBrowser()
   {
-    NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+    MOZ_ASSERT(NS_IsMainThread());
     return mVideoDevice && !mStopped &&
            mVideoDevice->GetSource()->IsAvailable() &&
            mVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Browser;
-  }
-
-  void SetStopped()
-  {
-    mStopped = true;
   }
 
   // implement in .cpp to avoid circular dependency with MediaOperationTask
@@ -240,10 +236,9 @@ public:
   void
   Remove()
   {
-    NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
+    MOZ_ASSERT(NS_IsMainThread());
     // allow calling even if inactive (!mStream) for easier cleanup
     // Caller holds strong reference to us, so no death grip required
-    MutexAutoLock lock(mLock); // protect access to mRemoved
     if (mStream && !mRemoved) {
       MM_LOG(("Listener removed on purpose, mFinished = %d", (int) mFinished));
       mRemoved = true; // RemoveListener is async, avoid races
@@ -255,7 +250,7 @@ public:
   }
 
   // Proxy NotifyPull() to sources
-  virtual void
+  void
   NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime) override
   {
     // Currently audio sources ignore NotifyPull, but they could
@@ -270,16 +265,18 @@ public:
     }
   }
 
-  virtual void
+  void
   NotifyEvent(MediaStreamGraph* aGraph,
               MediaStreamListener::MediaStreamGraphEvent aEvent) override
   {
     switch (aEvent) {
       case EVENT_FINISHED:
-        NotifyFinished(aGraph);
+        NS_DispatchToMainThread(
+          NS_NewRunnableMethod(this, &GetUserMediaCallbackMediaStreamListener::NotifyFinished));
         break;
       case EVENT_REMOVED:
-        NotifyRemoved(aGraph);
+        NS_DispatchToMainThread(
+          NS_NewRunnableMethod(this, &GetUserMediaCallbackMediaStreamListener::NotifyRemoved));
         break;
       case EVENT_HAS_DIRECT_LISTENERS:
         NotifyDirectListeners(aGraph, true);
@@ -292,13 +289,13 @@ public:
     }
   }
 
-  virtual void
-  NotifyFinished(MediaStreamGraph* aGraph);
+  void
+  NotifyFinished();
 
-  virtual void
-  NotifyRemoved(MediaStreamGraph* aGraph);
+  void
+  NotifyRemoved();
 
-  virtual void
+  void
   NotifyDirectListeners(MediaStreamGraph* aGraph, bool aHasListeners);
 
 private:
@@ -306,7 +303,24 @@ private:
   base::Thread* mMediaThread;
   uint64_t mWindowID;
 
-  bool mStopped; // MainThread only
+  // true after this listener has sent MEDIA_STOP. MainThread only.
+  bool mStopped;
+
+  // true after the stream this listener is listening to has finished in the
+  // MediaStreamGraph. MainThread only.
+  bool mFinished;
+
+  // true after this listener has been removed from its MediaStream.
+  // MainThread only.
+  bool mRemoved;
+
+  // true if we have sent MEDIA_STOP or MEDIA_STOP_TRACK for mAudioDevice.
+  // MainThread only.
+  bool mAudioStopped;
+
+  // true if we have sent MEDIA_STOP or MEDIA_STOP_TRACK for mAudioDevice.
+  // MainThread only.
+  bool mVideoStopped;
 
   // Set at Activate on MainThread
 
@@ -315,11 +329,6 @@ private:
   nsRefPtr<AudioDevice> mAudioDevice; // threadsafe refcnt
   nsRefPtr<VideoDevice> mVideoDevice; // threadsafe refcnt
   nsRefPtr<SourceMediaStream> mStream; // threadsafe refcnt
-  bool mFinished;
-
-  // Accessed from MainThread and MSG thread
-  Mutex mLock; // protects mRemoved access from MainThread
-  bool mRemoved;
 };
 
 class GetUserMediaNotificationEvent: public nsRunnable
@@ -428,8 +437,7 @@ public:
   media::Parent<media::NonE10s>* GetNonE10sParent();
   MediaEngine* GetBackend(uint64_t aWindowId = 0);
   StreamListeners *GetWindowListeners(uint64_t aWindowId) {
-    NS_ASSERTION(NS_IsMainThread(), "Only access windowlist on main thread");
-
+    MOZ_ASSERT(NS_IsMainThread());
     return mActiveWindows.Get(aWindowId);
   }
   void RemoveWindowID(uint64_t aWindowId);
@@ -488,7 +496,7 @@ private:
 
   StreamListeners* AddWindowID(uint64_t aWindowId);
   WindowTable *GetActiveWindows() {
-    NS_ASSERTION(NS_IsMainThread(), "Only access windowlist on main thread");
+    MOZ_ASSERT(NS_IsMainThread());
     return &mActiveWindows;
   }
 

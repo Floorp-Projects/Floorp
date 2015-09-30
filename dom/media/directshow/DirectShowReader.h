@@ -110,6 +110,8 @@ private:
 
   // Duration of the stream, in microseconds.
   int64_t mDuration;
+
+  NotifyDataArrivedFilter mFilter;
 };
 
 } // namespace mozilla

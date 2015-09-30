@@ -144,7 +144,7 @@ MacroAssemblerMIPSCompat::convertUInt32ToFloat32(Register src, FloatRegister des
     // have enough precision.
     convertUInt32ToDouble(src, dest);
     convertDoubleToFloat32(dest, dest);
-    ma_b(&done);
+    ma_b(&done, ShortJump);
 
     bind(&positive);
     convertInt32ToFloat32(src, dest);

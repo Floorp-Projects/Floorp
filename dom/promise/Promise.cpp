@@ -1619,8 +1619,8 @@ PromiseWorkerProxy::CleanProperties()
   mWorkerPromise = nullptr;
   mWorkerPrivate = nullptr;
 
-  // Shutdown the StructuredCloneHelperInternal class.
-  Shutdown();
+  // Clear the StructuredCloneHolderBase class.
+  Clear();
 }
 
 bool
@@ -1692,7 +1692,7 @@ PromiseWorkerProxy::RunCallback(JSContext* aCx,
     return;
   }
 
-  // The |aValue| is written into the StructuredCloneHelperInternal.
+  // The |aValue| is written into the StructuredCloneHolderBase.
   if (!Write(aCx, aValue)) {
     JS_ClearPendingException(aCx);
     MOZ_ASSERT(false, "cannot serialize the value with the StructuredCloneAlgorithm!");
@@ -1757,10 +1757,10 @@ PromiseWorkerProxy::CleanUp(JSContext* aCx)
 }
 
 JSObject*
-PromiseWorkerProxy::ReadCallback(JSContext* aCx,
-                                 JSStructuredCloneReader* aReader,
-                                 uint32_t aTag,
-                                 uint32_t aIndex)
+PromiseWorkerProxy::CustomReadHandler(JSContext* aCx,
+                                      JSStructuredCloneReader* aReader,
+                                      uint32_t aTag,
+                                      uint32_t aIndex)
 {
   if (NS_WARN_IF(!mCallbacks)) {
     return nullptr;
@@ -1770,9 +1770,9 @@ PromiseWorkerProxy::ReadCallback(JSContext* aCx,
 }
 
 bool
-PromiseWorkerProxy::WriteCallback(JSContext* aCx,
-                                  JSStructuredCloneWriter* aWriter,
-                                  JS::Handle<JSObject*> aObj)
+PromiseWorkerProxy::CustomWriteHandler(JSContext* aCx,
+                                       JSStructuredCloneWriter* aWriter,
+                                       JS::Handle<JSObject*> aObj)
 {
   if (NS_WARN_IF(!mCallbacks)) {
     return false;

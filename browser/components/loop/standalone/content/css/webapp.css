@@ -254,8 +254,7 @@ html[dir="rtl"] .rooms-footer .footer-logo {
 .room-inner-info-area {
   color: #fff;
   margin: auto;
-  /* 290px is the width of the widest info child, i.e., a tile */
-  width: 290px;
+  padding: 0 5px;
 }
 
 .room-inner-info-area > button {
@@ -299,4 +298,15 @@ html[dir="rtl"] .rooms-footer .footer-logo {
   height: 204px;
   /* Override the default iframe 300px width with the inherited width */
   width: 100%;
+}
+
+/* Terms of Service */
+
+.room-inner-info-area > .terms-service {
+  margin-top: 20px;
+}
+
+.room-inner-info-area > .terms-service,
+.room-inner-info-area > .terms-service > a {
+  color: #999;
 }

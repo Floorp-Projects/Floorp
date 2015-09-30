@@ -12,8 +12,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=799419
     }
 
     function boom() {
-      var v0 = new mozRTCPeerConnection();
-      var v1 = new mozRTCPeerConnection();
+      var v0 = new RTCPeerConnection();
+      var v1 = new RTCPeerConnection();
       var v2 = document.getElementById("pc1video");
       var v3 = document.getElementById("pc2video");
       navigator.mozGetUserMedia({video:true, fake: true},

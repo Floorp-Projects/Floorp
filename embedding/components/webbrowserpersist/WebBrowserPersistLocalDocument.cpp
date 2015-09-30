@@ -1318,7 +1318,10 @@ WebBrowserPersistLocalDocument::ReadResources(nsIWebBrowserPersistResourceVisito
         }
     }
     reader->DocumentDone(rv);
-    return rv;
+    // If NS_FAILED(rv), it was / will be reported by an EndVisit call
+    // via DocumentDone.  This method must return a failure if and
+    // only if visitor won't be invoked.
+    return NS_OK;
 }
 
 static uint32_t

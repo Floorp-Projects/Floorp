@@ -42,7 +42,8 @@ WorkerActor.prototype = {
   form: function () {
     return {
       actor: this.actorID,
-      url: this._dbg.url
+      url: this._dbg.url,
+      type: this._dbg.type
     };
   },
 

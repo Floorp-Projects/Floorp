@@ -1,0 +1,3 @@
+component {94b065ad-d45a-436a-b394-6dabc3cf110f} TVSimulatorService.js
+contract @mozilla.org/tv/simulatorservice;1 {94b065ad-d45a-436a-b394-6dabc3cf110f}
+TVSimulatorService @mozilla.org/tv/simulatorservice;1

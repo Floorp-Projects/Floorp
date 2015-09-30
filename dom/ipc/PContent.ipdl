@@ -50,6 +50,7 @@ include protocol PTestShell;
 include protocol PVoicemail;
 include protocol PJavaScript;
 include protocol PRemoteSpellcheckEngine;
+include protocol PWebBrowserPersistDocument;
 include protocol PWebrtcGlobal;
 include protocol PPresentation;
 include DOMTypes;
@@ -450,6 +451,7 @@ prio(normal upto urgent) sync protocol PContent
     manages PVoicemail;
     manages PJavaScript;
     manages PRemoteSpellcheckEngine;
+    manages PWebBrowserPersistDocument;
     manages PWebrtcGlobal;
     manages PPresentation;
 
@@ -485,6 +487,13 @@ both:
     async PBlob(BlobConstructorParams params);
 
     PFileDescriptorSet(FileDescriptor fd);
+
+    // For parent->child, aBrowser must be non-null; aOuterWindowID can
+    // be 0 to indicate the browser's current root document, or nonzero
+    // to persist a subdocument.  For child->parent, arguments are
+    // ignored and should be null/zero.
+    PWebBrowserPersistDocument(nullable PBrowser aBrowser,
+                               uint64_t aOuterWindowID);
 
 child:
     /**
