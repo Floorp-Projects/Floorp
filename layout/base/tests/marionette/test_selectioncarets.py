@@ -177,7 +177,7 @@ class CommonCaretsTestCase(object):
         x, y = self.word_location(el, wordOrdinal)
         self.long_press_on_location(el, x, y)
 
-    def _to_unix_line_ending(self, s):
+    def to_unix_line_ending(self, s):
         """Changes all Windows/Mac line endings in s to UNIX line endings."""
 
         return s.replace('\r\n', '\n').replace('\r', '\n')
@@ -351,18 +351,18 @@ class CommonCaretsTestCase(object):
         # Drag end caret to target location
         (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
         self.actions.flick(self._body, caret2_x, caret2_y, end_caret_x, end_caret_y, 1).perform()
-        self.assertEqual(self._to_unix_line_ending(sel.selected_content.strip()),
+        self.assertEqual(self.to_unix_line_ending(sel.selected_content.strip()),
                          'this 3\nuser can select this')
 
         (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
         self.actions.flick(self._body, caret2_x, caret2_y, end_caret2_x, end_caret2_y, 1).perform()
-        self.assertEqual(self._to_unix_line_ending(sel.selected_content.strip()),
+        self.assertEqual(self.to_unix_line_ending(sel.selected_content.strip()),
                          'this 3\nuser can select this 4\nuser can select this 5\nuser')
 
         # Drag first caret to target location
         (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
         self.actions.flick(self._body, caret1_x, caret1_y, end_caret_x, end_caret_y, 1).perform()
-        self.assertEqual(self._to_unix_line_ending(sel.selected_content.strip()),
+        self.assertEqual(self.to_unix_line_ending(sel.selected_content.strip()),
                          '4\nuser can select this 5\nuser')
 
     def test_drag_caret_to_beginning_of_a_line(self):
@@ -386,7 +386,7 @@ class CommonCaretsTestCase(object):
         # Drag end caret back to the target word
         self.actions.flick(self._body, start_caret_x, start_caret_y, caret2_x, caret2_y).perform()
 
-        self.assertEqual(self._to_unix_line_ending(sel.selected_content.strip()), 'select')
+        self.assertEqual(self.to_unix_line_ending(sel.selected_content.strip()), 'select')
 
     @skip_if_not_rotatable
     def test_caret_position_after_changing_orientation_of_device(self):
@@ -410,7 +410,7 @@ class CommonCaretsTestCase(object):
         # other tests
         self.marionette.set_orientation('portrait')
 
-        self.assertEqual(self._to_unix_line_ending(sel.selected_content.strip()), 'o')
+        self.assertEqual(self.to_unix_line_ending(sel.selected_content.strip()), 'o')
 
     def test_select_word_inside_an_iframe(self):
         '''Bug 1088552
@@ -432,7 +432,7 @@ class CommonCaretsTestCase(object):
         self._bottomtext = self.marionette.find_element(By.ID, 'bottomtext')
         self.long_press_on_location(self._bottomtext)
 
-        self.assertNotEqual(self._to_unix_line_ending(sel.selected_content.strip()), '')
+        self.assertNotEqual(self.to_unix_line_ending(sel.selected_content.strip()), '')
 
     ########################################################################
     # <input> test cases with selection carets enabled
