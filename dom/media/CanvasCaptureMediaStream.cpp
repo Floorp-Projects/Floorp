@@ -241,14 +241,14 @@ CanvasCaptureMediaStream::Init(const dom::Optional<double>& aFPS,
 {
   if (!aFPS.WasPassed()) {
     mOutputStreamDriver =
-      new AutoDriver(GetStream()->AsSourceStream(), aTrackId);
+      new AutoDriver(GetInputStream()->AsSourceStream(), aTrackId);
   } else if (aFPS.Value() < 0) {
     return NS_ERROR_ILLEGAL_VALUE;
   } else {
     // Cap frame rate to 60 FPS for sanity
     double fps = std::min(60.0, aFPS.Value());
     mOutputStreamDriver =
-      new TimerDriver(GetStream()->AsSourceStream(), fps, aTrackId);
+      new TimerDriver(GetInputStream()->AsSourceStream(), fps, aTrackId);
   }
   return NS_OK;
 }
