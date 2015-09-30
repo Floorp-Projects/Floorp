@@ -8,6 +8,7 @@ from marionette_driver.marionette import Actions
 from marionette import MarionetteTestCase, SkipTest
 from marionette_driver.selection import SelectionManager
 from marionette_driver.gestures import long_press_without_contextmenu
+import re
 
 
 def skip_if_not_rotatable(target):
@@ -133,55 +134,48 @@ class CommonCaretsTestCase(object):
 
         self._iframe = self.marionette.find_element(By.ID, 'frame')
 
-    def _first_word_location(self, el):
-        '''Get the location (x, y) of the first word in el.
+    def word_location(self, el, ordinal):
+        '''Get the location (x, y) of the ordinal-th word in el.
+
+        The ordinal starts from 0.
 
         Note: this function has a side effect which changes focus to the
         target element el.
 
         '''
         sel = SelectionManager(el)
+        tokens = re.split(r'(\S+)', sel.content)  # both words and spaces
+        words = tokens[0::2]                      # collect words at even indices
+        spaces = tokens[1::2]                     # collect spaces at odd indices
+        self.assertTrue(ordinal < len(words),
+                        'Expect at least %d words in the content.' % ordinal)
 
-        # Move caret behind the first character to get the location of the first
-        # word.
-        el.tap()
-        sel.move_caret_to_front()
-        sel.move_caret_by_offset(1)
+        # Cursor position of the targeting word is behind the the first
+        # character in the word. For example, offset to 'def' in 'abc def' is
+        # between 'd' and 'e'.
+        offset = sum(len(words[i]) + len(spaces[i]) for i in range(ordinal)) + 1
 
-        return sel.caret_location()
-
-    def _long_press_to_select(self, el, x, y):
-        '''Long press the location (x, y) to select a word.
-
-        SelectionCarets should appear. On Windows, those spaces after the
-        word will also be selected.
-
-        '''
-        long_press_without_contextmenu(self.marionette, el, self._long_press_time,
-                                       x, y)
-
-    def _long_press_to_select_word(self, el, wordOrdinal):
-        sel = SelectionManager(el)
-        original_content = sel.content
-        words = original_content.split()
-        self.assertTrue(wordOrdinal < len(words),
-            'Expect at least %d words in the content.' % wordOrdinal)
-
-        # Calc offset
-        offset = 0
-        for i in range(wordOrdinal):
-            offset += (len(words[i]) + 1)
-
-        # Move caret inside the word.
+        # Move caret to the word.
         el.tap()
         sel.move_caret_to_front()
         sel.move_caret_by_offset(offset)
         x, y = sel.caret_location()
 
-        # Long press the caret position. Selection carets should appear, and the
-        # word will be selected. On Windows, those spaces after the word
-        # will also be selected.
-        long_press_without_contextmenu(self.marionette, el, self._long_press_time, x, y)
+        return x, y
+
+    def long_press_on_location(self, el, x=None, y=None):
+        '''Long press the location (x, y) to select a word.
+
+        If no (x, y) are given, it will be targeted at the center of the
+        element. On Windows, those spaces after the word will also be selected.
+
+        '''
+        long_press_without_contextmenu(self.marionette, el, self._long_press_time,
+                                       x, y)
+
+    def long_press_on_word(self, el, wordOrdinal):
+        x, y = self.word_location(el, wordOrdinal)
+        self.long_press_on_location(el, x, y)
 
     def _to_unix_line_ending(self, s):
         """Changes all Windows/Mac line endings in s to UNIX line endings."""
@@ -196,8 +190,7 @@ class CommonCaretsTestCase(object):
         target_content = words[0]
 
         # Goal: Select the first word.
-        x, y = self._first_word_location(el)
-        self._long_press_to_select(el, x, y)
+        self.long_press_on_word(el, 0)
 
         # Ignore extra spaces selected after the word.
         assertFunc(target_content, sel.selected_content.rstrip())
@@ -217,8 +210,7 @@ class CommonCaretsTestCase(object):
         sel.select_all()
         (_, _), (end_caret_x, end_caret_y) = sel.selection_carets_location()
 
-        x, y = self._first_word_location(el)
-        self._long_press_to_select(el, x, y)
+        self.long_press_on_word(el, 0)
 
         # Move the right caret to the end of the content.
         (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
@@ -251,8 +243,8 @@ class CommonCaretsTestCase(object):
             # location of the first word
             pass
         else:
-            x, y = self._first_word_location(el)
-        self._long_press_to_select(el, x, y)
+            x, y = self.word_location(el, 0)
+        self.long_press_on_location(el, x, y)
 
         # Move the right caret to the end of the content.
         (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
@@ -275,9 +267,9 @@ class CommonCaretsTestCase(object):
         # el2.
 
         # We want to collect the location of the first word in el2 here
-        # since self._first_word_location() has the side effect which would
+        # since self.word_location() has the side effect which would
         # change the focus.
-        x, y = self._first_word_location(el2)
+        x, y = self.word_location(el2, 0)
         el1.tap()
         self._test_minimum_select_one_character(el2, self.assertEqual,
                                                 x=x, y=y)
@@ -296,8 +288,7 @@ class CommonCaretsTestCase(object):
         self.assertTrue(len(words) >= 1, 'Expect at least one word in the content.')
 
         # Goal: Select the first word.
-        x, y = self._first_word_location(el)
-        self._long_press_to_select(el, x, y)
+        self.long_press_on_word(el, 0)
         target_content = sel.selected_content
 
         # Move the left caret to the position of the right caret to trigger
@@ -335,7 +326,7 @@ class CommonCaretsTestCase(object):
 
         self.open_test_html_multirange()
         halfY = self._nonsel1.size['height'] / 2
-        long_press_without_contextmenu(self.marionette, self._nonsel1, self._long_press_time, 0, halfY)
+        self.long_press_on_location(self._nonsel1, 0, halfY)
         sel = SelectionManager(self._nonsel1)
         range_count = sel.range_count()
         self.assertEqual(range_count, 0)
@@ -347,15 +338,15 @@ class CommonCaretsTestCase(object):
         self.open_test_html_multirange()
 
         # Select target element and get target caret location
-        self._long_press_to_select_word(self._sel4, 3)
+        self.long_press_on_word(self._sel4, 3)
         sel = SelectionManager(self._body)
         (_, _), (end_caret_x, end_caret_y) = sel.selection_carets_location()
 
-        self._long_press_to_select_word(self._sel6, 0)
+        self.long_press_on_word(self._sel6, 0)
         (_, _), (end_caret2_x, end_caret2_y) = sel.selection_carets_location()
 
         # Select start element
-        self._long_press_to_select_word(self._sel3, 3)
+        self.long_press_on_word(self._sel3, 3)
 
         # Drag end caret to target location
         (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
@@ -381,12 +372,12 @@ class CommonCaretsTestCase(object):
         self.open_test_html_multirange()
 
         # Select the first word in the second line
-        self._long_press_to_select_word(self._sel2, 0)
+        self.long_press_on_word(self._sel2, 0)
         sel = SelectionManager(self._body)
         (start_caret_x, start_caret_y), (end_caret_x, end_caret_y) = sel.selection_carets_location()
 
         # Select target word in the first line
-        self._long_press_to_select_word(self._sel1, 2)
+        self.long_press_on_word(self._sel1, 2)
 
         # Drag end caret to the beginning of the second line
         (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
@@ -406,7 +397,7 @@ class CommonCaretsTestCase(object):
 
         # Select word in portrait mode, then change to landscape mode
         self.marionette.set_orientation('portrait')
-        self._long_press_to_select_word(self._longtext, 12)
+        self.long_press_on_word(self._longtext, 12)
         sel = SelectionManager(self._body)
         (p_start_caret_x, p_start_caret_y), (p_end_caret_x, p_end_caret_y) = sel.selection_carets_location()
         self.marionette.set_orientation('landscape')
@@ -439,7 +430,7 @@ class CommonCaretsTestCase(object):
         self._body = self.marionette.find_element(By.ID, 'bd')
         sel = SelectionManager(self._body)
         self._bottomtext = self.marionette.find_element(By.ID, 'bottomtext')
-        long_press_without_contextmenu(self.marionette, self._bottomtext, self._long_press_time)
+        self.long_press_on_location(self._bottomtext)
 
         self.assertNotEqual(self._to_unix_line_ending(sel.selected_content.strip()), '')
 
