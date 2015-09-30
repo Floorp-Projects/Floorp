@@ -1601,7 +1601,7 @@ MediaStream::MediaStream(DOMMediaStream* aWrapper)
   // aWrapper should not already be connected to a MediaStream! It needs
   // to be hooked up to this stream, and since this stream is only just
   // being created now, aWrapper must not be connected to anything.
-  NS_ASSERTION(!aWrapper || !aWrapper->GetStream(),
+  NS_ASSERTION(!aWrapper || !aWrapper->GetPlaybackStream(),
                "Wrapper already has another media stream hooked up to it!");
 }
 
