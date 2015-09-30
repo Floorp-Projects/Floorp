@@ -12,7 +12,7 @@
 <window xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="webrtcIndicator"
-        html:role="alert"
+        role="alert"
         windowtype="Browser:WebRTCGlobalIndicator"
         onload="init(event);"
 #ifdef XP_MACOSX
