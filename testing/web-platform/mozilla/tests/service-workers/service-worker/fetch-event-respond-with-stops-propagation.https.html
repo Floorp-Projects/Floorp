@@ -23,8 +23,8 @@ promise_test(function(t) {
             });
           var worker = frame.contentWindow.navigator.serviceWorker.controller;
 
-          frame.remove();
           worker.postMessage({port: channel.port2}, [channel.port2]);
+          frame.remove();
           return saw_message;
         })
       .then(function(message) {
