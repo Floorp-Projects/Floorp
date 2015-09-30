@@ -979,6 +979,8 @@ void HTMLMediaElement::NotifyMediaTrackEnabled(MediaTrack* aTrack)
     return;
   }
 
+  LOG(LogLevel::Debug, ("MediaElement %p MediaStreamTrack %p enabled", this));
+
   // TODO: We are dealing with single audio track and video track for now.
   if (AudioTrack* track = aTrack->AsAudioTrack()) {
     if (!track->Enabled()) {
@@ -996,6 +998,8 @@ void HTMLMediaElement::NotifyMediaStreamTracksAvailable(DOMMediaStream* aStream)
   if (!mSrcStream || mSrcStream != aStream) {
     return;
   }
+
+  LOG(LogLevel::Debug, ("MediaElement %p MediaStream tracks available", this));
 
   bool videoHasChanged = IsVideo() && HasVideo() != !VideoTracks()->IsEmpty();
 
@@ -3116,6 +3120,10 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags)
   }
   mSrcStreamIsPlaying = shouldPlay;
 
+  LOG(LogLevel::Debug, ("MediaElement %p %s playback of DOMMediaStream %p",
+                        this, shouldPlay ? "Setting up" : "Removing",
+                        mSrcStream.get()));
+
   if (shouldPlay) {
     mSrcStreamPausedCurrentTime = -1;
 
@@ -3584,6 +3592,8 @@ HTMLMediaElement::UpdateReadyStateInternal()
 {
   if (!mDecoder && !mSrcStream) {
     // Not initialized - bail out.
+    LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
+                          "Not initialized", this));
     return;
   }
 
@@ -3591,6 +3601,8 @@ HTMLMediaElement::UpdateReadyStateInternal()
     // aNextFrame might have a next frame because the decoder can advance
     // on its own thread before MetadataLoaded gets a chance to run.
     // The arrival of more data can't change us out of this readyState.
+    LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
+                          "Decoder ready state < HAVE_METADATA", this));
     return;
   }
 
@@ -3598,10 +3610,22 @@ HTMLMediaElement::UpdateReadyStateInternal()
     bool hasAudio = !AudioTracks()->IsEmpty();
     bool hasVideo = !VideoTracks()->IsEmpty();
 
-    if ((!hasAudio && !hasVideo) ||
-        (IsVideo() && hasVideo && !HasVideo())) {
+    if (!hasAudio && !hasVideo) {
+      LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
+                            "Stream with no tracks", this));
       return;
     }
+
+    if (IsVideo() && hasVideo && !HasVideo()) {
+      LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
+                            "Stream waiting for video", this));
+      return;
+    }
+
+    LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() Stream has "
+                          "metadata; audioTracks=%d, videoTracks=%d, "
+                          "hasVideoFrame=%d", this, AudioTracks()->Length(),
+                          VideoTracks()->Length(), HasVideo()));
 
     // We are playing a stream that has video and a video frame is now set.
     // This means we have all metadata needed to change ready state.
@@ -3616,6 +3640,8 @@ HTMLMediaElement::UpdateReadyStateInternal()
   }
 
   if (NextFrameStatus() == MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_SEEKING) {
+    LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
+                          "NEXT_FRAME_UNAVAILABLE_SEEKING; Forcing HAVE_METADATA", this));
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
     return;
   }
@@ -3626,6 +3652,8 @@ HTMLMediaElement::UpdateReadyStateInternal()
     // Also, if video became available after advancing to HAVE_CURRENT_DATA
     // while we are still playing, we need to revert to HAVE_METADATA until
     // a video frame is available.
+    LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
+                          "Playing video but no video frame; Forcing HAVE_METADATA", this));
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
     return;
   }
@@ -3640,11 +3668,15 @@ HTMLMediaElement::UpdateReadyStateInternal()
     // should remain at HAVE_CURRENT_DATA in this case.
     // Note that this state transition includes the case where we finished
     // downloaded the whole data stream.
+    LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
+                          "Decoder download suspended by cache", this));
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
     return;
   }
 
   if (NextFrameStatus() != MediaDecoderOwner::NEXT_FRAME_AVAILABLE) {
+    LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
+                          "Next frame not available", this));
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
     if (!mWaitingFired && NextFrameStatus() == MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING) {
       FireTimeUpdate(false);
@@ -3655,6 +3687,8 @@ HTMLMediaElement::UpdateReadyStateInternal()
   }
 
   if (mSrcStream) {
+    LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
+                          "Stream HAVE_ENOUGH_DATA", this));
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
     return;
   }
@@ -3669,9 +3703,13 @@ HTMLMediaElement::UpdateReadyStateInternal()
   // without stopping to buffer.
   if (mDecoder->CanPlayThrough())
   {
+    LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
+                          "Decoder can play through", this));
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
     return;
   }
+  LOG(LogLevel::Debug, ("MediaElement %p UpdateReadyStateInternal() "
+                        "Default; Decoder has future data", this));
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA);
 }
 
