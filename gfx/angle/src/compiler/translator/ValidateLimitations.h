@@ -4,6 +4,9 @@
 // found in the LICENSE file.
 //
 
+#ifndef COMPILER_TRANSLATOR_VALIDATELIMITATIONS_H_
+#define COMPILER_TRANSLATOR_VALIDATELIMITATIONS_H_
+
 #include "compiler/translator/IntermNode.h"
 #include "compiler/translator/LoopInfo.h"
 
@@ -53,3 +56,4 @@ class ValidateLimitations : public TIntermTraverser
     TLoopStack mLoopStack;
 };
 
+#endif // COMPILER_TRANSLATOR_VALIDATELIMITATIONS_H_

@@ -4,8 +4,8 @@
 // found in the LICENSE file.
 //
 
-#ifndef _INITIALIZE_INCLUDED_
-#define _INITIALIZE_INCLUDED_
+#ifndef COMPILER_TRANSLATOR_INITIALIZE_H_
+#define COMPILER_TRANSLATOR_INITIALIZE_H_
 
 #include "compiler/translator/Common.h"
 #include "compiler/translator/Compiler.h"
@@ -20,4 +20,10 @@ void IdentifyBuiltIns(sh::GLenum type, ShShaderSpec spec,
 void InitExtensionBehavior(const ShBuiltInResources& resources,
                            TExtensionBehavior& extensionBehavior);
 
-#endif // _INITIALIZE_INCLUDED_
+// Resets the behavior of the extensions listed in |extensionBehavior| to the
+// undefined state. These extensions will only be those initially supported in
+// the ShBuiltInResources object for this compiler instance. All other
+// extensions will remain unsupported.
+void ResetExtensionBehavior(TExtensionBehavior &extensionBehavior);
+
+#endif // COMPILER_TRANSLATOR_INITIALIZE_H_

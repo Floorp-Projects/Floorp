@@ -440,27 +440,39 @@ EGLAPI EGLBoolean EGLAPIENTRY eglQuerySurfacePointerANGLE (EGLDisplay dpy, EGLSu
 
 #ifndef EGL_ANGLE_platform_angle
 #define EGL_ANGLE_platform_angle 1
-#define EGL_PLATFORM_ANGLE_ANGLE          0x3201
-#define EGL_PLATFORM_ANGLE_TYPE_ANGLE     0x3202
-#define EGL_PLATFORM_ANGLE_TYPE_DEFAULT_ANGLE 0x3203
+#define EGL_PLATFORM_ANGLE_ANGLE          0x3202
+#define EGL_PLATFORM_ANGLE_TYPE_ANGLE     0x3203
+#define EGL_PLATFORM_ANGLE_MAX_VERSION_MAJOR_ANGLE 0x3204
+#define EGL_PLATFORM_ANGLE_MAX_VERSION_MINOR_ANGLE 0x3205
+#define EGL_PLATFORM_ANGLE_TYPE_DEFAULT_ANGLE 0x3206
 #endif /* EGL_ANGLE_platform_angle */
 
 #ifndef EGL_ANGLE_platform_angle_d3d
 #define EGL_ANGLE_platform_angle_d3d 1
-#define EGL_PLATFORM_ANGLE_TYPE_D3D9_ANGLE 0x3204
-#define EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE 0x3205
-#define EGL_PLATFORM_ANGLE_TYPE_D3D11_WARP_ANGLE 0x3206
+#define EGL_PLATFORM_ANGLE_TYPE_D3D9_ANGLE 0x3207
+#define EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE 0x3208
+#define EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE 0x3209
+#define EGL_PLATFORM_ANGLE_DEVICE_TYPE_HARDWARE_ANGLE 0x320A
+#define EGL_PLATFORM_ANGLE_DEVICE_TYPE_WARP_ANGLE 0x320B
+#define EGL_PLATFORM_ANGLE_DEVICE_TYPE_REFERENCE_ANGLE 0x320C
+#define EGL_PLATFORM_ANGLE_ENABLE_AUTOMATIC_TRIM_ANGLE 0x320F
 #endif /* EGL_ANGLE_platform_angle_d3d */
 
 #ifndef EGL_ANGLE_platform_angle_opengl
 #define EGL_ANGLE_platform_angle_opengl 1
-#define EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE 0x3207
-#define EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE 0x3208
+#define EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE 0x320D
+#define EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE 0x320E
 #endif /* EGL_ANGLE_platform_angle_opengl */
+
+#ifndef EGL_ANGLE_device_d3d
+#define EGL_ANGLE_device_d3d 1
+#define EGL_D3D9_DEVICE_ANGLE             0x33A0
+#define EGL_D3D11_DEVICE_ANGLE            0x33A1
+#endif /* EGL_ANGLE_device_d3d */
 
 #ifndef EGL_ANGLE_keyed_mutex
 #define EGL_ANGLE_keyed_mutex 1
-#define EGL_DXGI_KEYED_MUTEX_ANGLE 0x3209
+#define EGL_DXGI_KEYED_MUTEX_ANGLE        0x33A2
 #endif /* EGL_ANGLE_keyed_mutex */
 
 #ifndef EGL_ARM_pixmap_multisample_discard
@@ -502,6 +514,10 @@ EGLAPI EGLBoolean EGLAPIENTRY eglQueryDevicesEXT (EGLint max_devices, EGLDeviceE
 EGLAPI EGLBoolean EGLAPIENTRY eglQueryDisplayAttribEXT (EGLDisplay dpy, EGLint attribute, EGLAttrib *value);
 #endif
 #endif /* EGL_EXT_device_base */
+
+#ifndef EGL_EXT_device_query
+#define EGL_EXT_device_query 1
+#endif /* EGL_EXT_device_query */
 
 #ifndef EGL_EXT_image_dma_buf_import
 #define EGL_EXT_image_dma_buf_import 1

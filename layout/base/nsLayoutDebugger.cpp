@@ -234,6 +234,14 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
   }
 #endif
   aStream << "\n";
+#ifdef MOZ_DUMP_PAINTING
+  if (aDumpHtml && aItem->Painted()) {
+    nsCString string(aItem->Name());
+    string.Append('-');
+    string.AppendInt((uint64_t)aItem);
+    aStream << nsPrintfCString("<br><img id=\"%s\">\n", string.BeginReading());
+  }
+#endif
 
   if (aDumpSublist && list) {
     PrintDisplayListTo(aBuilder, *list, aStream, aIndent+1, aDumpHtml);

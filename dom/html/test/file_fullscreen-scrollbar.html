@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Test for Bug 1201798</title>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="file_fullscreen-utils.js"></script>
+  <style>
+    html, body, #measure {
+      width: 100%; height: 100%;
+    }
+    #ref-outer { width: 100px; height: 100px; overflow: scroll; }
+    #ref-inner { width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+<div id="measure"></div>
+<div style="height: 1000vh; width: 1000vw"></div>
+<div id="ref-outer">
+  <div id="ref-inner"></div>
+</div>
+<div id="fullscreen"></div>
+<script type="text/javascript">
+
+/** Test for Bug 1201798 */
+
+var info = msg => opener.info("[scrollbar] " + msg);
+var ok = (cond, msg) => opener.ok(cond, "[scrollbar] " + msg);
+var is = (a, b, msg) => opener.is(a, b, "[scrollbar] " + msg);
+
+var gVerticalScrollbarWidth, gHorizontalScrollbarWidth;
+var gMeasureDiv = document.getElementById("measure");
+var gFullscreenDiv = document.getElementById("fullscreen");
+
+function getMeasureRect() {
+  return gMeasureDiv.getBoundingClientRect();
+}
+
+function triggerFrameReconstruction() {
+  info("Triggering a force frame reconstruction");
+  var docElem = document.documentElement;
+  var wm = window.getComputedStyle(docElem).writingMode;
+  if (wm == "horizontal-tb") {
+    docElem.style.writingMode = "vertical-rl";
+  } else {
+    docElem.style.writingMode = "horizontal-tb";
+  }
+  docElem.getBoundingClientRect();
+}
+
+function assertHasScrollbars(elem) {
+  var rect = getMeasureRect();
+  is(rect.width, screen.width - gVerticalScrollbarWidth,
+     `Should have vertical scrollbar when ${elem} is in fullscreen`);
+  is(rect.height, screen.height - gHorizontalScrollbarWidth,
+     `Should have horizontal scrollbar when ${elem} is in fullscreen`);
+}
+
+function assertHasNoScrollbars(elem) {
+  var rect = getMeasureRect();
+  is(rect.width, screen.width,
+     `Should not have vertical scrollbar when ${elem} is in fullscreen`);
+  is(rect.height, screen.height,
+     `Should not have horizontal scrollbar when ${elem} is in fullscreen`);
+}
+
+function checkScrollbars(elem, shouldHaveScrollbars) {
+  is(elem, document.mozFullScreenElement,
+     "Should only check the current fullscreen element");
+  var assertFunc = shouldHaveScrollbars ?
+    assertHasScrollbars : assertHasNoScrollbars;
+  assertFunc(elem);
+  triggerFrameReconstruction();
+  assertFunc(elem);
+}
+
+function begin() {
+  if (window.matchMedia("(-moz-overlay-scrollbar").matches) {
+    // If overlay scrollbar is enabled, the scrollbar is not measurable,
+    // so we skip this test in that case.
+    info("Skip this test because of overlay scrollbar");
+    opener.nextTest();
+    return;
+  }
+
+  var rectOuter = document.getElementById("ref-outer").getBoundingClientRect();
+  var rectInner = document.getElementById("ref-inner").getBoundingClientRect();
+  gVerticalScrollbarWidth = rectOuter.width - rectInner.width;
+  gHorizontalScrollbarWidth = rectOuter.height - rectInner.height;
+  ok(gVerticalScrollbarWidth != 0, "Should have vertical scrollbar");
+  ok(gHorizontalScrollbarWidth != 0, "Should have horizontal scrollbar");
+
+  info("Entering fullscreen on root");
+  addFullscreenChangeContinuation("enter", enteredFullscreenOnRoot);
+  document.documentElement.mozRequestFullScreen();
+}
+
+function enteredFullscreenOnRoot() {
+  checkScrollbars(document.documentElement, true);
+  info("Entering fullscreen on div");
+  addFullscreenChangeContinuation("enter", enteredFullscreenOnDiv);
+  gFullscreenDiv.mozRequestFullScreen();
+}
+
+function enteredFullscreenOnDiv() {
+  checkScrollbars(gFullscreenDiv, false);
+  info("Exiting fullscreen on div");
+  addFullscreenChangeContinuation("exit", exitedFullscreenOnDiv);
+  document.mozCancelFullScreen();
+}
+
+function exitedFullscreenOnDiv() {
+  checkScrollbars(document.documentElement, true);
+  info("Exiting fullscreen on root");
+  addFullscreenChangeContinuation("exit", exitedFullscreenOnRoot);
+  document.mozCancelFullScreen();
+}
+
+function exitedFullscreenOnRoot() {
+  opener.nextTest();
+}
+
+</script>
+</body>
+</html>
