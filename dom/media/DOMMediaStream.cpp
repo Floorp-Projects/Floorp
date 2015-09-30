@@ -118,6 +118,83 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(DOMMediaStream::TrackPort, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(DOMMediaStream::TrackPort, Release)
 
 /**
+ * Listener registered on the Owned stream to detect added and ended owned
+ * tracks for keeping the list of MediaStreamTracks in sync with the tracks
+ * added and ended directly at the source.
+ */
+class DOMMediaStream::OwnedStreamListener : public MediaStreamListener {
+public:
+  explicit OwnedStreamListener(DOMMediaStream* aStream)
+    : mStream(aStream)
+  {}
+
+  void Forget() { mStream = nullptr; }
+
+  void DoNotifyTrackCreated(TrackID aTrackId, MediaSegment::Type aType)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!mStream) {
+      return;
+    }
+
+    MediaStreamTrack* track = mStream->FindOwnedDOMTrack(
+      mStream->GetOwnedStream(), aTrackId);
+    if (track) {
+      // This track has already been manually created. Abort.
+      return;
+    }
+
+    NS_WARN_IF_FALSE(!mStream->mTracks.IsEmpty(),
+                     "A new track was detected on the input stream; creating a corresponding MediaStreamTrack. "
+                     "Initial tracks should be added manually to immediately and synchronously be available to JS.");
+    mStream->CreateOwnDOMTrack(aTrackId, aType);
+  }
+
+  void DoNotifyTrackEnded(TrackID aTrackId)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!mStream) {
+      return;
+    }
+
+    nsRefPtr<MediaStreamTrack> track =
+      mStream->FindOwnedDOMTrack(mStream->GetOwnedStream(), aTrackId);
+    NS_ASSERTION(track, "Owned MediaStreamTracks must be known by the DOMMediaStream");
+    if (track) {
+      LOG(LogLevel::Debug, ("DOMMediaStream %p MediaStreamTrack %p ended at the source. Marking it ended.",
+                            mStream, track.get()));
+      track->NotifyEnded();
+    }
+  }
+
+  void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
+                                StreamTime aTrackOffset, uint32_t aTrackEvents,
+                                const MediaSegment& aQueuedMedia,
+                                MediaStream* aInputStream,
+                                TrackID aInputTrackID) override
+  {
+    if (aTrackEvents & TRACK_EVENT_CREATED) {
+      nsCOMPtr<nsIRunnable> runnable =
+        NS_NewRunnableMethodWithArgs<TrackID, MediaSegment::Type>(
+          this, &OwnedStreamListener::DoNotifyTrackCreated,
+          aID, aQueuedMedia.GetType());
+      aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
+    } else if (aTrackEvents & TRACK_EVENT_ENDED) {
+      nsCOMPtr<nsIRunnable> runnable =
+        NS_NewRunnableMethodWithArgs<TrackID>(
+          this, &OwnedStreamListener::DoNotifyTrackEnded, aID);
+      aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
+    }
+  }
+
+private:
+  // These fields may only be accessed on the main thread
+  DOMMediaStream* mStream;
+};
+
+/**
  * Listener registered on the Playback stream to detect when tracks end and when
  * all new tracks this iteration have been created - for when several tracks are
  * queued by the source and committed all at once.
@@ -128,102 +205,66 @@ public:
     : mStream(aStream)
   {}
 
-  // Main thread only
-  void Forget() { mStream = nullptr; }
-  DOMMediaStream* GetStream() { return mStream; }
+  void Forget()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    mStream = nullptr;
+  }
 
-  class TrackChange : public nsRunnable {
-  public:
-    TrackChange(PlaybackStreamListener* aListener,
-                TrackID aID, StreamTime aTrackOffset,
-                uint32_t aEvents, MediaSegment::Type aType,
-                MediaStream* aInputStream, TrackID aInputTrackID)
-      : mListener(aListener), mID(aID), mEvents(aEvents), mType(aType)
-      , mInputStream(aInputStream), mInputTrackID(aInputTrackID)
-    {
+  void DoNotifyTrackEnded(MediaStream* aInputStream,
+                          TrackID aInputTrackID)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (!mStream) {
+      return;
     }
 
-    NS_IMETHOD Run()
-    {
-      NS_ASSERTION(NS_IsMainThread(), "main thread only");
+    LOG(LogLevel::Debug, ("DOMMediaStream %p Track %u of stream %p ended",
+                          mStream, aInputTrackID, aInputStream));
 
-      DOMMediaStream* stream = mListener->GetStream();
-      if (!stream) {
-        return NS_OK;
-      }
+    nsRefPtr<MediaStreamTrack> track =
+      mStream->FindPlaybackDOMTrack(aInputStream, aInputTrackID);
+    if (track) {
+      LOG(LogLevel::Debug, ("DOMMediaStream %p Playback track; notifying stream listeners.",
+                             mStream));
+      mStream->NotifyTrackRemoved(track);
+    } else {
+      LOG(LogLevel::Debug, ("DOMMediaStream %p Not a playback track.", mStream));
+    }
+  }
 
-      MOZ_ASSERT(mEvents & MediaStreamListener::TRACK_EVENT_ENDED);
-      LOG(LogLevel::Debug, ("DOMMediaStream %p Track %u of stream %p ended",
-                            stream, mInputTrackID, mInputStream.get()));
+  void DoNotifyFinishedTrackCreation()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
 
-      nsRefPtr<MediaStreamTrack> track = stream->FindOwnedDOMTrack(mInputStream, mID);
-      if (track) {
-        LOG(LogLevel::Debug, ("DOMMediaStream %p Owned track; notifying track listeners.", stream));
-        track->NotifyEnded();
-      } else {
-        LOG(LogLevel::Debug, ("DOMMediaStream %p Not an owned track.", stream));
-      }
-
-      track = stream->FindPlaybackDOMTrack(mInputStream, mInputTrackID);
-      if (track) {
-        LOG(LogLevel::Debug, ("DOMMediaStream %p Playback track; notifying stream listeners.", stream));
-        stream->NotifyMediaStreamTrackEnded(track);
-      } else {
-        LOG(LogLevel::Debug, ("DOMMediaStream %p Not a playback track.", stream));
-      }
-      return NS_OK;
+    if (!mStream) {
+      return;
     }
 
-    StreamTime mEndTime;
-    nsRefPtr<PlaybackStreamListener> mListener;
-    TrackID mID;
-    uint32_t mEvents;
-    MediaSegment::Type mType;
-    nsRefPtr<MediaStream> mInputStream;
-    TrackID mInputTrackID;
-  };
+    mStream->NotifyTracksCreated();
+  }
 
-  virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-                                        StreamTime aTrackOffset,
-                                        uint32_t aTrackEvents,
-                                        const MediaSegment& aQueuedMedia,
-                                        MediaStream* aInputStream,
-                                        TrackID aInputTrackID) override
+  // The methods below are called on the MediaStreamGraph thread.
+
+  void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
+                                StreamTime aTrackOffset, uint32_t aTrackEvents,
+                                const MediaSegment& aQueuedMedia,
+                                MediaStream* aInputStream,
+                                TrackID aInputTrackID) override
   {
     if (aTrackEvents & TRACK_EVENT_ENDED) {
-      nsRefPtr<TrackChange> runnable =
-        new TrackChange(this, aID, aTrackOffset, aTrackEvents,
-                        aQueuedMedia.GetType(), aInputStream, aInputTrackID);
+      nsCOMPtr<nsIRunnable> runnable =
+        NS_NewRunnableMethodWithArgs<StorensRefPtrPassByPtr<MediaStream>, TrackID>(
+          this, &PlaybackStreamListener::DoNotifyTrackEnded, aInputStream, aInputTrackID);
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
     }
   }
 
-  class TracksCreatedRunnable : public nsRunnable {
-  public:
-    explicit TracksCreatedRunnable(PlaybackStreamListener* aListener)
-      : mListener(aListener)
-    {
-    }
-
-    NS_IMETHOD Run()
-    {
-      MOZ_ASSERT(NS_IsMainThread());
-
-      DOMMediaStream* stream = mListener->GetStream();
-      if (!stream) {
-        return NS_OK;
-      }
-
-      stream->TracksCreated();
-      return NS_OK;
-    }
-
-    nsRefPtr<PlaybackStreamListener> mListener;
-  };
-
-  virtual void NotifyFinishedTrackCreation(MediaStreamGraph* aGraph) override
+  void NotifyFinishedTrackCreation(MediaStreamGraph* aGraph) override
   {
-    nsRefPtr<TracksCreatedRunnable> runnable = new TracksCreatedRunnable(this);
+    nsCOMPtr<nsIRunnable> runnable =
+      NS_NewRunnableMethod(this, &PlaybackStreamListener::DoNotifyFinishedTrackCreation);
     aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
   }
 
@@ -309,9 +350,13 @@ void
 DOMMediaStream::Destroy()
 {
   LOG(LogLevel::Debug, ("DOMMediaStream %p Being destroyed.", this));
-  if (mListener) {
-    mListener->Forget();
-    mListener = nullptr;
+  if (mOwnedListener) {
+    mOwnedListener->Forget();
+    mOwnedListener = nullptr;
+  }
+  if (mPlaybackListener) {
+    mPlaybackListener->Forget();
+    mPlaybackListener = nullptr;
   }
   if (mPlaybackPort) {
     mPlaybackPort->Destroy();
@@ -452,9 +497,11 @@ DOMMediaStream::InitStreamCommon(MediaStream* aStream,
   LOG(LogLevel::Debug, ("DOMMediaStream %p Initiated with mInputStream=%p, mOwnedStream=%p, mPlaybackStream=%p",
                         this, mInputStream, mOwnedStream, mPlaybackStream));
 
-  // Setup track listener
-  mListener = new PlaybackStreamListener(this);
-  mPlaybackStream->AddListener(mListener);
+  // Setup track listeners
+  mOwnedListener = new OwnedStreamListener(this);
+  mOwnedStream->AddListener(mOwnedListener);
+  mPlaybackListener = new PlaybackStreamListener(this);
+  mPlaybackStream->AddListener(mPlaybackListener);
 }
 
 already_AddRefed<DOMMediaStream>
@@ -684,8 +731,8 @@ void
 DOMMediaStream::CreateAndAddPlaybackStreamListener(MediaStream* aStream)
 {
   MOZ_ASSERT(GetCameraStream(), "I'm a hack. Only DOMCameraControl may use me.");
-  mListener = new PlaybackStreamListener(this);
-  aStream->AddListener(mListener);
+  mPlaybackListener = new PlaybackStreamListener(this);
+  aStream->AddListener(mPlaybackListener);
 }
 
 already_AddRefed<AudioTrack>
