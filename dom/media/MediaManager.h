@@ -128,7 +128,9 @@ public:
     , mWindowID(aWindowID)
     , mStopped(false)
     , mFinished(false)
-    , mRemoved(false) {}
+    , mRemoved(false)
+    , mAudioStopped(false)
+    , mVideoStopped(false) {}
 
   ~GetUserMediaCallbackMediaStreamListener()
   {
@@ -311,6 +313,14 @@ private:
   // true after this listener has been removed from its MediaStream.
   // MainThread only.
   bool mRemoved;
+
+  // true if we have sent MEDIA_STOP or MEDIA_STOP_TRACK for mAudioDevice.
+  // MainThread only.
+  bool mAudioStopped;
+
+  // true if we have sent MEDIA_STOP or MEDIA_STOP_TRACK for mAudioDevice.
+  // MainThread only.
+  bool mVideoStopped;
 
   // Set at Activate on MainThread
 
