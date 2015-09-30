@@ -224,6 +224,42 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NO);
 }
 
+- (BOOL)isLayoutTablePart
+{
+  if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
+    TableAccessible* table = nullptr;
+    if (accWrap->IsTable()) {
+      table = accWrap->AsTable();
+    } else if (accWrap->IsTableRow()) {
+      for (Accessible* acc = accWrap; acc; acc = acc->Parent()) {
+        if (acc->IsTable()) {
+          table = acc->AsTable();
+          break;
+        }
+      }
+    } else if (accWrap->IsTableCell()) {
+      table = accWrap->AsTableCell()->Table();
+    }
+    return table && table->IsProbablyLayoutTable();
+  }
+
+  if (ProxyAccessible* proxy = [self getProxyAccessible]) {
+    ProxyAccessible* tableProxy = nullptr;
+    if (proxy->IsTable()) {
+      tableProxy = proxy;
+    } else if (proxy->IsTableRow() || proxy->IsTableCell()) {
+      for (tableProxy = proxy; tableProxy; tableProxy = tableProxy->Parent()) {
+        if (tableProxy->IsTable()) {
+          break;
+        }
+      }
+    }
+    return tableProxy && tableProxy->TableIsProbablyForLayout();
+  }
+
+  return false;
+}
+
 - (NSArray*)additionalAccessibilityAttributeNames
 {
   NSMutableArray* additional = [NSMutableArray array];
@@ -334,12 +370,14 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
 
   NSArray* objectAttributes = generalAttributes;
 
-  if ((accWrap && accWrap->IsTable()) || (proxy && proxy->IsTable()))
-    objectAttributes = tableAttrs;
-  else if ((accWrap && accWrap->IsTableRow()) || (proxy && proxy->IsTableRow()))
-    objectAttributes = tableRowAttrs;
-  else if ((accWrap && accWrap->IsTableCell()) || (proxy && proxy->IsTableCell()))
-    objectAttributes = tableCellAttrs;
+  if (![self isLayoutTablePart]) {
+    if ((accWrap && accWrap->IsTable()) || (proxy && proxy->IsTable()))
+      objectAttributes = tableAttrs;
+    else if ((accWrap && accWrap->IsTableRow()) || (proxy && proxy->IsTableRow()))
+      objectAttributes = tableRowAttrs;
+    else if ((accWrap && accWrap->IsTableCell()) || (proxy && proxy->IsTableCell()))
+      objectAttributes = tableCellAttrs;
+  }
 
   NSArray* additionalAttributes = [self additionalAccessibilityAttributeNames];
   if ([additionalAttributes count])
@@ -902,6 +940,10 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
     #endif
   } else if (![self getProxyAccessible]) {
     return nil;
+  }
+
+  if ([self isLayoutTablePart]) {
+    return NSAccessibilityGroupRole;
   }
 
 #define ROLE(geckoRole, stringRole, atkRole, macRole, msaaRole, ia2Role, nameRule) \
