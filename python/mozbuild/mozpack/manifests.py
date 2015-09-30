@@ -296,12 +296,15 @@ class InstallManifest(object):
 
         self._dests[dest] = entry
 
-    def populate_registry(self, registry):
+    def populate_registry(self, registry, defines_override={}):
         """Populate a mozpack.copier.FileRegistry instance with data from us.
 
         The caller supplied a FileRegistry instance (or at least something that
         conforms to its interface) and that instance is populated with data
         from this manifest.
+
+        Defines can be given to override the ones in the manifest for
+        preprocessing.
         """
         for dest in sorted(self._dests):
             entry = self._dests[dest]
@@ -340,10 +343,13 @@ class InstallManifest(object):
                 continue
 
             if install_type == self.PREPROCESS:
+                defines = self._decode_field_entry(entry[4])
+                if defines_override:
+                    defines.update(defines_override)
                 registry.add(dest, PreprocessedFile(entry[1],
                     depfile_path=entry[2],
                     marker=entry[3],
-                    defines=self._decode_field_entry(entry[4]),
+                    defines=defines,
                     extra_depends=self._source_files))
 
                 continue
