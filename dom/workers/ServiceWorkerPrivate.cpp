@@ -13,8 +13,7 @@ using namespace mozilla::dom;
 
 BEGIN_WORKERS_NAMESPACE
 
-#define SERVICE_WORKER_IDLE_TIMEOUT 30000 // ms
-#define SERVICE_WORKER_WAITUNTIL_TIMEOUT 300000 // ms
+NS_IMPL_ISUPPORTS0(ServiceWorkerPrivate)
 
 // Tracks the "dom.disable_open_click_delay" preference.  Modified on main
 // thread, read on worker threads.
@@ -1229,6 +1228,13 @@ ServiceWorkerPrivate::TerminateWorker()
   mIdleWorkerTimer->Cancel();
   mKeepAliveToken = nullptr;
   if (mWorkerPrivate) {
+    if (Preferences::GetBool("dom.serviceWorkers.testing.enabled")) {
+      nsCOMPtr<nsIObserverService> os = services::GetObserverService();
+      if (os) {
+        os->NotifyObservers(this, "service-worker-shutdown", nullptr);
+      }
+    }
+
     AutoJSAPI jsapi;
     jsapi.Init();
     NS_WARN_IF(!mWorkerPrivate->Terminate(jsapi.cx()));
@@ -1272,10 +1278,11 @@ ServiceWorkerPrivate::NoteIdleWorkerCallback(nsITimer* aTimer, void* aPrivate)
     // If we still have a workerPrivate at this point it means there are pending
     // waitUntil promises. Wait a bit more until we forcibly terminate the
     // worker.
+    uint32_t timeout = Preferences::GetInt("dom.serviceWorkers.idle_extended_timeout");
     DebugOnly<nsresult> rv =
       swp->mIdleWorkerTimer->InitWithFuncCallback(ServiceWorkerPrivate::TerminateWorkerCallback,
                                                   aPrivate,
-                                                  SERVICE_WORKER_WAITUNTIL_TIMEOUT,
+                                                  timeout,
                                                   nsITimer::TYPE_ONE_SHOT);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
@@ -1306,9 +1313,10 @@ ServiceWorkerPrivate::ResetIdleTimeout(WakeUpReason aWhy)
     mIsPushWorker = true;
   }
 
+  uint32_t timeout = Preferences::GetInt("dom.serviceWorkers.idle_timeout");
   DebugOnly<nsresult> rv =
     mIdleWorkerTimer->InitWithFuncCallback(ServiceWorkerPrivate::NoteIdleWorkerCallback,
-                                           this, SERVICE_WORKER_IDLE_TIMEOUT,
+                                           this, timeout,
                                            nsITimer::TYPE_ONE_SHOT);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   if (!mKeepAliveToken) {
