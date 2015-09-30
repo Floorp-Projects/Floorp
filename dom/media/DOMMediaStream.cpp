@@ -112,6 +112,17 @@ public:
   MediaInputPort* GetInputPort() const { return mInputPort; }
   MediaStreamTrack* GetTrack() const { return mTrack; }
 
+  /**
+   * Blocks aTrackId from going into mInputPort unless the port has been
+   * destroyed.
+   */
+  void BlockTrackId(TrackID aTrackId)
+  {
+    if (mInputPort) {
+      mInputPort->BlockTrackId(aTrackId);
+    }
+  }
+
 private:
   nsRefPtr<MediaInputPort> mInputPort;
   nsRefPtr<MediaStreamTrack> mTrack;
@@ -454,10 +465,69 @@ DOMMediaStream::GetTracks(nsTArray<nsRefPtr<MediaStreamTrack> >& aTracks)
   }
 }
 
+void
+DOMMediaStream::AddTrack(MediaStreamTrack& aTrack)
+{
+  RefPtr<ProcessedMediaStream> dest = mPlaybackStream->AsProcessedStream();
+  MOZ_ASSERT(dest);
+  if (!dest) {
+    return;
+  }
+
+  LOG(LogLevel::Info, ("DOMMediaStream %p Adding track %p (from stream %p with ID %d)",
+                       this, &aTrack, aTrack.GetStream(), aTrack.GetTrackID()));
+
+  if (HasTrack(aTrack)) {
+    LOG(LogLevel::Debug, ("DOMMediaStream %p already contains track %p", this, &aTrack));
+    return;
+  }
+
+  RefPtr<DOMMediaStream> addedDOMStream = aTrack.GetStream();
+  MOZ_RELEASE_ASSERT(addedDOMStream);
+
+  RefPtr<MediaStream> owningStream = addedDOMStream->GetOwnedStream();
+  MOZ_RELEASE_ASSERT(owningStream);
+
+  CombineWithPrincipal(addedDOMStream->mPrincipal);
+
+  // Hook up the underlying track with our underlying playback stream.
+  nsRefPtr<MediaInputPort> inputPort =
+    GetPlaybackStream()->AllocateInputPort(owningStream, aTrack.GetTrackID());
+  nsRefPtr<TrackPort> trackPort =
+    new TrackPort(inputPort, &aTrack, TrackPort::InputPortOwnership::OWNED);
+  mTracks.AppendElement(trackPort.forget());
+  NotifyMediaStreamTrackCreated(&aTrack);
+
+  LOG(LogLevel::Debug, ("DOMMediaStream %p Added track %p", this, &aTrack));
+}
+
+void
+DOMMediaStream::RemoveTrack(MediaStreamTrack& aTrack)
+{
+  LOG(LogLevel::Info, ("DOMMediaStream %p Removing track %p (from stream %p with ID %d)",
+                       this, &aTrack, aTrack.GetStream(), aTrack.GetTrackID()));
+
+  nsRefPtr<TrackPort> toRemove = FindPlaybackTrackPort(aTrack);
+  if (!toRemove) {
+    LOG(LogLevel::Debug, ("DOMMediaStream %p does not contain track %p", this, &aTrack));
+    return;
+  }
+
+  // If the track comes from a TRACK_ANY input port (i.e., mOwnedPort), we need
+  // to block it in the port. Doing this for a locked track is still OK as it
+  // will first block the track, then destroy the port. Both cause the track to
+  // end.
+  toRemove->BlockTrackId(aTrack.GetTrackID());
+
+  DebugOnly<bool> removed = mTracks.RemoveElement(toRemove);
+  MOZ_ASSERT(removed);
+  LOG(LogLevel::Debug, ("DOMMediaStream %p Removed track %p", this, &aTrack));
+}
+
 bool
 DOMMediaStream::HasTrack(const MediaStreamTrack& aTrack) const
 {
-  return !!FindPlaybackDOMTrack(aTrack.GetStream()->GetOwnedStream(), aTrack.GetTrackID());
+  return !!FindPlaybackTrackPort(aTrack);
 }
 
 bool
@@ -693,6 +763,17 @@ DOMMediaStream::FindPlaybackDOMTrack(MediaStream* aInputStream, TrackID aInputTr
       MOZ_ASSERT(aInputTrackID != TRACK_INVALID);
       MOZ_ASSERT(aInputTrackID != TRACK_ANY);
       return info->GetTrack();
+    }
+  }
+  return nullptr;
+}
+
+DOMMediaStream::TrackPort*
+DOMMediaStream::FindPlaybackTrackPort(const MediaStreamTrack& aTrack) const
+{
+  for (const nsRefPtr<TrackPort>& info : mTracks) {
+    if (info->GetTrack() == &aTrack) {
+      return info;
     }
   }
   return nullptr;
