@@ -99,11 +99,7 @@ function run_test() {
   checkOriginAttributes(exampleOrg_addon, { addonId: "dummy" }, '^addonId=dummy');
   do_check_eq(exampleOrg_addon.origin, 'http://example.org^addonId=dummy');
 
-  // Make sure that we refuse to create .origin for principals with UNKNOWN_APP_ID.
-  var simplePrin = ssm.getSimpleCodebasePrincipal(makeURI('http://example.com'));
-  try { simplePrin.origin; do_check_true(false); } catch (e) { do_check_true(true); }
-
-  // Make sure we don't crash when serializing them either.
+  // Make sure we don't crash when serializing principals with UNKNOWN_APP_ID.
   try {
     let binaryStream = Cc["@mozilla.org/binaryoutputstream;1"].
                        createInstance(Ci.nsIObjectOutputStream);
