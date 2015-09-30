@@ -43,6 +43,19 @@ ARCHIVE_FILES = {
             'pattern': 'mozharness/**',
         },
     ],
+    'web-platform': [
+        {
+            'source': buildconfig.topobjdir,
+            'base': '_tests',
+            'pattern': 'web-platform/**',
+        },
+        {
+            'source': buildconfig.topobjdir,
+            'base': '',
+            'pattern': 'mozinfo.json',
+            'dest': 'web-platform',
+        },
+    ],
     'xpcshell': [
         {
             'source': buildconfig.topobjdir,
