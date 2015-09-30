@@ -232,6 +232,12 @@ class HashMap
         return impl.putNew(k, mozilla::Forward<KeyInput>(k), mozilla::Forward<ValueInput>(v));
     }
 
+    // Only call this to populate an empty map after reserving space with init().
+    template<typename KeyInput, typename ValueInput>
+    void putNewInfallible(KeyInput&& k, ValueInput&& v) {
+        impl.putNewInfallible(k, mozilla::Forward<KeyInput>(k), mozilla::Forward<ValueInput>(v));
+    }
+
     // Add (k,defaultValue) if |k| is not found. Return a false-y Ptr on oom.
     Ptr lookupWithDefault(const Key& k, const Value& defaultValue) {
         AddPtr p = lookupForAdd(k);
@@ -461,6 +467,12 @@ class HashSet
     template <typename U>
     bool putNew(const Lookup& l, U&& u) {
         return impl.putNew(l, mozilla::Forward<U>(u));
+    }
+
+    // Only call this to populate an empty set after reserving space with init().
+    template <typename U>
+    void putNewInfallible(const Lookup& l, U&& u) {
+        impl.putNewInfallible(l, mozilla::Forward<U>(u));
     }
 
     void remove(const Lookup& l) {
@@ -1615,6 +1627,8 @@ class HashTable : private AllocPolicy
         // Changing an entry from removed to live does not affect whether we
         // are overloaded and can be handled separately.
         if (p.entry_->isRemoved()) {
+            if (!this->checkSimulatedOOM())
+                return false;
             METER(stats.addOverRemoved++);
             removedCount--;
             p.keyHash |= sCollisionBit;
@@ -1622,6 +1636,8 @@ class HashTable : private AllocPolicy
             // Preserve the validity of |p.entry_|.
             RebuildStatus status = checkOverloaded();
             if (status == RehashFailed)
+                return false;
+            if (!this->checkSimulatedOOM())
                 return false;
             if (status == Rehashed)
                 p.entry_ = &findFreeEntry(p.keyHash);
@@ -1646,6 +1662,7 @@ class HashTable : private AllocPolicy
 
         HashNumber keyHash = prepareHash(l);
         Entry* entry = &findFreeEntry(keyHash);
+        MOZ_ASSERT(entry);
 
         if (entry->isRemoved()) {
             METER(stats.addOverRemoved++);
@@ -1665,6 +1682,9 @@ class HashTable : private AllocPolicy
     template <typename... Args>
     bool putNew(const Lookup& l, Args&&... args)
     {
+        if (!this->checkSimulatedOOM())
+            return false;
+
         if (checkOverloaded() == RehashFailed)
             return false;
 
