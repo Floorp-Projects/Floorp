@@ -135,18 +135,6 @@ chatbar > chatbox > .chat-titlebar > .chat-swap-button {
   background-position: 0 -10px;
 }
 
-chatbox[dark=true] > .chat-titlebar,
-chatbox[dark=true] > .chat-titlebar[selected] {
-  border-bottom: none;
-  background-color: #000;
-  background-image: none;
-}
-
-chatbox[dark=true] > .chat-titlebar > hbox > .chat-title {
-  font-weight: normal;
-  color: #c1c1c1;
-}
-
 .chat-frame {
   padding: 0;
   margin: 0;
