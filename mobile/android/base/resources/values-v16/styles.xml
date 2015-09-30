@@ -13,10 +13,6 @@
         <item name="android:fontFamily">sans-serif-light</item>
     </style>
 
-    <style name="TextAppearance.Widget.Home.PageTitle" parent="TextAppearance.Medium">
-        <item name="android:fontFamily">sans-serif-light</item>
-    </style>
-
     <style name="TextAppearance.FirstrunTextLight">
         <item name="android:fontFamily">sans-serif-light</item>
     </style>
