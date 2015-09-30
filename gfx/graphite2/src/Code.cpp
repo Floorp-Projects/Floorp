@@ -214,8 +214,8 @@ Machine::Code::Code(bool is_constraint, const byte * bytecode_begin, const byte 
     // Now we know exactly how much code and data the program really needs
     // realloc the buffers to exactly the right size so we don't waste any 
     // memory.
-    assert((bytecode_end - bytecode_begin) >= std::ptrdiff_t(_instr_count));
-    assert((bytecode_end - bytecode_begin) >= std::ptrdiff_t(_data_size));
+    assert((bytecode_end - bytecode_begin) >= ptrdiff_t(_instr_count));
+    assert((bytecode_end - bytecode_begin) >= ptrdiff_t(_data_size));
     memmove(_code + (_instr_count+1), _data, _data_size*sizeof(byte));
     size_t const total_sz = ((_instr_count+1) + (_data_size + sizeof(instr)-1)/sizeof(instr))*sizeof(instr);
     if (_out)
