@@ -521,6 +521,7 @@ RenderLayers(ContainerT* aContainer,
 
     gfxRGBA color;
     if ((layer->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
+        layer->IsOpaqueForVisibility() &&
         LayerHasCheckerboardingAPZC(layer, &color)) {
       if (gfxPrefs::APZHighlightCheckerboardedAreas()) {
         color = gfxRGBA(255 / 255.0, 188 / 255.0, 217 / 255.0, 1);  // "Cotton Candy"

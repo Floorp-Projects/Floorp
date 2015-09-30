@@ -557,6 +557,13 @@ Layer::ApplyPendingUpdatesToSubtree()
 }
 
 bool
+Layer::IsOpaqueForVisibility()
+{
+  return GetLocalOpacity() == 1.0f &&
+         GetEffectiveMixBlendMode() == CompositionOp::OP_OVER;
+}
+
+bool
 Layer::CanUseOpaqueSurface()
 {
   // If the visible content in the layer is opaque, there is no need

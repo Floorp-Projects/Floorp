@@ -240,7 +240,7 @@ LayerManagerComposite::ApplyOcclusionCulling(Layer* aLayer, nsIntRegion& aOpaque
   // aOpaqueRegion.
   if (isTranslation &&
       !aLayer->HasMaskLayers() &&
-      aLayer->GetLocalOpacity() == 1.0f) {
+      aLayer->IsOpaqueForVisibility()) {
     if (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE) {
       localOpaque.Or(localOpaque, composite->GetFullyRenderedRegion());
     }
