@@ -18,7 +18,7 @@ namespace mozilla
 FFmpegRuntimeLinker::LinkStatus FFmpegRuntimeLinker::sLinkStatus =
   LinkStatus_INIT;
 
-struct AvFormatLib
+struct AvCodecLib
 {
   const char* Name;
   already_AddRefed<PlatformDecoderModule> (*Factory)();
@@ -31,20 +31,20 @@ public:
   static already_AddRefed<PlatformDecoderModule> Create();
 };
 
-static const AvFormatLib sLibs[] = {
-  { "libavformat-ffmpeg.so.56", FFmpegDecoderModule<55>::Create, 55 },
-  { "libavformat.so.56", FFmpegDecoderModule<55>::Create, 55 },
-  { "libavformat.so.55", FFmpegDecoderModule<55>::Create, 55 },
-  { "libavformat.so.54", FFmpegDecoderModule<54>::Create, 54 },
-  { "libavformat.so.53", FFmpegDecoderModule<53>::Create, 53 },
-  { "libavformat.56.dylib", FFmpegDecoderModule<55>::Create, 55 },
-  { "libavformat.55.dylib", FFmpegDecoderModule<55>::Create, 55 },
-  { "libavformat.54.dylib", FFmpegDecoderModule<54>::Create, 54 },
-  { "libavformat.53.dylib", FFmpegDecoderModule<53>::Create, 53 },
+static const AvCodecLib sLibs[] = {
+  { "libavcodec-ffmpeg.so.56", FFmpegDecoderModule<55>::Create, 55 },
+  { "libavcodec.so.56", FFmpegDecoderModule<55>::Create, 55 },
+  { "libavcodec.so.55", FFmpegDecoderModule<55>::Create, 55 },
+  { "libavcodec.so.54", FFmpegDecoderModule<54>::Create, 54 },
+  { "libavcodec.so.53", FFmpegDecoderModule<53>::Create, 53 },
+  { "libavcodec.56.dylib", FFmpegDecoderModule<55>::Create, 55 },
+  { "libavcodec.55.dylib", FFmpegDecoderModule<55>::Create, 55 },
+  { "libavcodec.54.dylib", FFmpegDecoderModule<54>::Create, 54 },
+  { "libavcodec.53.dylib", FFmpegDecoderModule<53>::Create, 53 },
 };
 
 void* FFmpegRuntimeLinker::sLinkedLib = nullptr;
-const AvFormatLib* FFmpegRuntimeLinker::sLib = nullptr;
+const AvCodecLib* FFmpegRuntimeLinker::sLib = nullptr;
 
 #define AV_FUNC(func, ver) void (*func)();
 #define LIBAVCODEC_ALLVERSION
@@ -62,7 +62,7 @@ FFmpegRuntimeLinker::Link()
   MOZ_ASSERT(NS_IsMainThread());
 
   for (size_t i = 0; i < ArrayLength(sLibs); i++) {
-    const AvFormatLib* lib = &sLibs[i];
+    const AvCodecLib* lib = &sLibs[i];
     sLinkedLib = dlopen(lib->Name, RTLD_NOW | RTLD_LOCAL);
     if (sLinkedLib) {
       if (Bind(lib->Name, lib->Version)) {
