@@ -428,9 +428,8 @@ package-tests-prepare-dest:
 	@rm -f '$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)'
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 
-package-tests-mozharness: stage-all package-tests-prepare-dest
-	cd $(topsrcdir)/testing/ && \
-	  zip -rq9D $(abspath $(DIST))/$(PKG_PATH)mozharness.zip mozharness
+package-tests-mozharness: package-tests-prepare-dest
+	$(call py_action,test_archive,mozharness $(abspath $(DIST))/$(PKG_PATH)/mozharness.zip)
 package-tests: package-tests-mozharness
 
 package-tests-common: stage-all package-tests-prepare-dest
