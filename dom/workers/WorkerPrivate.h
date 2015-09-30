@@ -162,9 +162,7 @@ protected:
 private:
   WorkerPrivate* mParent;
   nsString mScriptURL;
-  // This is the worker name for shared workers or the worker scope
-  // for service workers.
-  nsCString mWorkerName;
+  nsCString mSharedWorkerName;
   LocationInfo mLocationInfo;
   // The lifetime of these objects within LoadInfo is managed explicitly;
   // they do not need to be cycle collected.
@@ -228,7 +226,7 @@ private:
   void
   PostMessageInternal(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                       const Optional<Sequence<JS::Value>>& aTransferable,
-                      UniquePtr<ServiceWorkerClientInfo>&& aClientInfo,
+                      ServiceWorkerClientInfo* aClientInfo,
                       ErrorResult& aRv);
 
   nsresult
@@ -326,13 +324,16 @@ public:
 
   void
   PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-              const Optional<Sequence<JS::Value>>& aTransferable,
-              ErrorResult& aRv);
+              const Optional<Sequence<JS::Value> >& aTransferable,
+              ErrorResult& aRv)
+  {
+    PostMessageInternal(aCx, aMessage, aTransferable, nullptr, aRv);
+  }
 
   void
   PostMessageToServiceWorker(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                              const Optional<Sequence<JS::Value>>& aTransferable,
-                             UniquePtr<ServiceWorkerClientInfo>&& aClientInfo,
+                             nsAutoPtr<ServiceWorkerClientInfo>& aClientInfo,
                              ErrorResult& aRv);
 
   void
@@ -736,10 +737,9 @@ public:
   }
 
   const nsCString&
-  WorkerName() const
+  SharedWorkerName() const
   {
-    MOZ_ASSERT(IsServiceWorker() || IsSharedWorker());
-    return mWorkerName;
+    return mSharedWorkerName;
   }
 
   bool
