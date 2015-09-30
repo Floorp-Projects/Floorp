@@ -218,11 +218,11 @@ class ElementSpecific
                 return setFromOverlappingTypedArray(cx, target, src, offset);
         }
 
-        SharedMem<T*> dest = SharedMem<T*>(AnyTypedArrayViewData(target)) + offset;
+        SharedMem<T*> dest = AnyTypedArrayViewData(target).template cast<T*>() + offset;
         uint32_t count = AnyTypedArrayLength(source);
 
         if (AnyTypedArrayType(source) == target->type()) {
-            Ops::memcpy(SharedMem<void*>(dest), AnyTypedArrayViewData(source), count*sizeof(T));
+            Ops::memcpy(dest.template cast<void*>(), AnyTypedArrayViewData(source), count*sizeof(T));
             return true;
         }
 
@@ -236,50 +236,50 @@ class ElementSpecific
         SharedMem<void*> data = AnyTypedArrayViewData(source);
         switch (AnyTypedArrayType(source)) {
           case Scalar::Int8: {
-            SharedMem<JS_VOLATILE_ARM int8_t*> src = SharedMem<JS_VOLATILE_ARM int8_t*>(data);
+            SharedMem<JS_VOLATILE_ARM int8_t*> src = data.cast<JS_VOLATILE_ARM int8_t*>();
             for (uint32_t i = 0; i < count; ++i)
                 Ops::store(dest++, T(Ops::load(src++)));
             break;
           }
           case Scalar::Uint8:
           case Scalar::Uint8Clamped: {
-            SharedMem<JS_VOLATILE_ARM uint8_t*> src = SharedMem<JS_VOLATILE_ARM uint8_t*>(data);
+            SharedMem<JS_VOLATILE_ARM uint8_t*> src = data.cast<JS_VOLATILE_ARM uint8_t*>();
             for (uint32_t i = 0; i < count; ++i)
                 Ops::store(dest++, T(Ops::load(src++)));
             break;
           }
           case Scalar::Int16: {
-            SharedMem<JS_VOLATILE_ARM int16_t*> src = SharedMem<JS_VOLATILE_ARM int16_t*>(data);
+            SharedMem<JS_VOLATILE_ARM int16_t*> src = data.cast<JS_VOLATILE_ARM int16_t*>();
             for (uint32_t i = 0; i < count; ++i)
                 Ops::store(dest++, T(Ops::load(src++)));
             break;
           }
           case Scalar::Uint16: {
-            SharedMem<JS_VOLATILE_ARM uint16_t*> src = SharedMem<JS_VOLATILE_ARM uint16_t*>(data);
+            SharedMem<JS_VOLATILE_ARM uint16_t*> src = data.cast<JS_VOLATILE_ARM uint16_t*>();
             for (uint32_t i = 0; i < count; ++i)
                 Ops::store(dest++, T(Ops::load(src++)));
             break;
           }
           case Scalar::Int32: {
-            SharedMem<JS_VOLATILE_ARM int32_t*> src = SharedMem<JS_VOLATILE_ARM int32_t*>(data);
+            SharedMem<JS_VOLATILE_ARM int32_t*> src = data.cast<JS_VOLATILE_ARM int32_t*>();
             for (uint32_t i = 0; i < count; ++i)
                 Ops::store(dest++, T(Ops::load(src++)));
             break;
           }
           case Scalar::Uint32: {
-            SharedMem<JS_VOLATILE_ARM uint32_t*> src = SharedMem<JS_VOLATILE_ARM uint32_t*>(data);
+            SharedMem<JS_VOLATILE_ARM uint32_t*> src = data.cast<JS_VOLATILE_ARM uint32_t*>();
             for (uint32_t i = 0; i < count; ++i)
                 Ops::store(dest++, T(Ops::load(src++)));
             break;
           }
           case Scalar::Float32: {
-            SharedMem<JS_VOLATILE_ARM float*> src = SharedMem<JS_VOLATILE_ARM float*>(data);
+            SharedMem<JS_VOLATILE_ARM float*> src = data.cast<JS_VOLATILE_ARM float*>();
             for (uint32_t i = 0; i < count; ++i)
                 Ops::store(dest++, T(Ops::load(src++)));
             break;
           }
           case Scalar::Float64: {
-            SharedMem<JS_VOLATILE_ARM double*> src = SharedMem<JS_VOLATILE_ARM double*>(data);
+            SharedMem<JS_VOLATILE_ARM double*> src = data.cast<JS_VOLATILE_ARM double*>();
             for (uint32_t i = 0; i < count; ++i)
                 Ops::store(dest++, T(Ops::load(src++)));
             break;
@@ -313,7 +313,7 @@ class ElementSpecific
             // the first potentially side-effectful lookup or conversion.
             uint32_t bound = Min(source->as<NativeObject>().getDenseInitializedLength(), len);
 
-            SharedMem<T*> dest = SharedMem<T*>(AnyTypedArrayViewData(target)) + offset;
+            SharedMem<T*> dest = AnyTypedArrayViewData(target).template cast<T*>() + offset;
 
             MOZ_ASSERT(!canConvertInfallibly(MagicValue(JS_ELEMENTS_HOLE)),
                        "the following loop must abort on holes");
@@ -343,7 +343,7 @@ class ElementSpecific
                 break;
 
             // Compute every iteration in case getElement/valueToNative is wacky.
-            Ops::store(SharedMem<T*>(AnyTypedArrayViewData(target)) + offset + i, n);
+            Ops::store(AnyTypedArrayViewData(target).template cast<T*>() + offset + i, n);
         }
 
         return true;
@@ -365,11 +365,11 @@ class ElementSpecific
         MOZ_ASSERT(offset <= target->length());
         MOZ_ASSERT(source->length() <= target->length() - offset);
 
-        SharedMem<T*> dest = SharedMem<T*>(AnyTypedArrayViewData(target)) + offset;
+        SharedMem<T*> dest = AnyTypedArrayViewData(target).template cast<T*>() + offset;
         uint32_t len = source->length();
 
         if (source->type() == target->type()) {
-            Ops::memmove(dest, SharedMem<T*>(AnyTypedArrayViewData(source)), len*sizeof(T));
+            Ops::memmove(dest, AnyTypedArrayViewData(source).template cast<T*>(), len*sizeof(T));
             return true;
         }
 
@@ -723,7 +723,7 @@ class TypedArrayMethods
         MOZ_ASSERT(byteSrc <= viewByteLength - byteSize);
 #endif
 
-        SharedMem<uint8_t*> data = SharedMem<uint8_t*>(AnyTypedArrayViewData(obj));
+        SharedMem<uint8_t*> data = AnyTypedArrayViewData(obj).template cast<uint8_t*>();
         SharedOps::memmove(data + byteDest, data + byteSrc, byteSize);
 
         // Step 19.

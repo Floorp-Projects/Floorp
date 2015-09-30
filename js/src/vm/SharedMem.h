@@ -33,6 +33,7 @@ class SharedMem
     {}
 
   public:
+    // Create a SharedMem<T> that is an unshared nullptr.
     SharedMem()
       : ptr_(nullptr)
 #ifdef DEBUG
@@ -48,30 +49,6 @@ class SharedMem
       , sharedness_(forSharedness.sharedness_)
 #endif
     {}
-
-    SharedMem(const SharedMem& that)
-      : ptr_(that.ptr_)
-#ifdef DEBUG
-      , sharedness_(that.sharedness_)
-#endif
-    {}
-
-    // Cast from U* u where static_cast<T>(u) is legal.
-    template<typename U>
-    explicit SharedMem(const SharedMem<U>& that)
-      : ptr_(static_cast<T>(that.unwrap()))
-#ifdef DEBUG
-      , sharedness_((SharedMem::Sharedness)that.sharedness())
-#endif
-    {}
-
-#ifdef DEBUG
-    // Needed by the constructor directly above, no credible "friend"
-    // solution presents itself.
-    Sharedness sharedness() const {
-        return sharedness_;
-    }
-#endif
 
     // Create a SharedMem<T> that's marked as shared.
     static SharedMem shared(void* p) {
@@ -89,6 +66,19 @@ class SharedMem
         sharedness_ = that.sharedness_;
 #endif
         return *this;
+    }
+
+    // Reinterpret-cast the pointer to type U, preserving sharedness.
+    template<typename U>
+    inline SharedMem<U> cast() const {
+#ifdef DEBUG
+        MOZ_ASSERT(asValue() % sizeof(mozilla::Conditional<mozilla::IsVoid<typename mozilla::RemovePointer<U>::Type>::value,
+                                                           char,
+                                                           typename mozilla::RemovePointer<U>::Type>) == 0);
+        if (sharedness_ == IsUnshared)
+            return SharedMem<U>::unshared(unwrap());
+#endif
+        return SharedMem<U>::shared(unwrap());
     }
 
     explicit operator bool() { return ptr_ != nullptr; }

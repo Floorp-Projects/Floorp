@@ -129,49 +129,49 @@ CompareExchange(Scalar::Type viewType, int32_t oldCandidate, int32_t newCandidat
       case Scalar::Int8: {
         int8_t oldval = (int8_t)oldCandidate;
         int8_t newval = (int8_t)newCandidate;
-        oldval = jit::AtomicOperations::compareExchangeSeqCst(SharedMem<int8_t*>(viewData) + offset,
+        oldval = jit::AtomicOperations::compareExchangeSeqCst(viewData.cast<int8_t*>() + offset,
                                                               oldval, newval);
         return oldval;
       }
       case Scalar::Uint8: {
         uint8_t oldval = (uint8_t)oldCandidate;
         uint8_t newval = (uint8_t)newCandidate;
-        oldval = jit::AtomicOperations::compareExchangeSeqCst(SharedMem<uint8_t*>(viewData) + offset,
+        oldval = jit::AtomicOperations::compareExchangeSeqCst(viewData.cast<uint8_t*>() + offset,
                                                               oldval, newval);
         return oldval;
       }
       case Scalar::Uint8Clamped: {
         uint8_t oldval = ClampIntForUint8Array(oldCandidate);
         uint8_t newval = ClampIntForUint8Array(newCandidate);
-        oldval = jit::AtomicOperations::compareExchangeSeqCst(SharedMem<uint8_t*>(viewData) + offset,
+        oldval = jit::AtomicOperations::compareExchangeSeqCst(viewData.cast<uint8_t*>() + offset,
                                                               oldval, newval);
         return oldval;
       }
       case Scalar::Int16: {
         int16_t oldval = (int16_t)oldCandidate;
         int16_t newval = (int16_t)newCandidate;
-        oldval = jit::AtomicOperations::compareExchangeSeqCst(SharedMem<int16_t*>(viewData) + offset,
+        oldval = jit::AtomicOperations::compareExchangeSeqCst(viewData.cast<int16_t*>() + offset,
                                                               oldval, newval);
         return oldval;
       }
       case Scalar::Uint16: {
         uint16_t oldval = (uint16_t)oldCandidate;
         uint16_t newval = (uint16_t)newCandidate;
-        oldval = jit::AtomicOperations::compareExchangeSeqCst(SharedMem<uint16_t*>(viewData) + offset,
+        oldval = jit::AtomicOperations::compareExchangeSeqCst(viewData.cast<uint16_t*>() + offset,
                                                               oldval, newval);
         return oldval;
       }
       case Scalar::Int32: {
         int32_t oldval = oldCandidate;
         int32_t newval = newCandidate;
-        oldval = jit::AtomicOperations::compareExchangeSeqCst(SharedMem<int32_t*>(viewData) + offset,
+        oldval = jit::AtomicOperations::compareExchangeSeqCst(viewData.cast<int32_t*>() + offset,
                                                               oldval, newval);
         return oldval;
       }
       case Scalar::Uint32: {
         uint32_t oldval = (uint32_t)oldCandidate;
         uint32_t newval = (uint32_t)newCandidate;
-        oldval = jit::AtomicOperations::compareExchangeSeqCst(SharedMem<uint32_t*>(viewData) + offset,
+        oldval = jit::AtomicOperations::compareExchangeSeqCst(viewData.cast<uint32_t*>() + offset,
                                                               oldval, newval);
         return (int32_t)oldval;
       }
@@ -238,32 +238,32 @@ js::atomics_load(JSContext* cx, unsigned argc, Value* vp)
     switch (view->type()) {
       case Scalar::Uint8:
       case Scalar::Uint8Clamped: {
-        uint8_t v = jit::AtomicOperations::loadSeqCst(SharedMem<uint8_t*>(viewData) + offset);
+        uint8_t v = jit::AtomicOperations::loadSeqCst(viewData.cast<uint8_t*>() + offset);
         r.setInt32(v);
         return true;
       }
       case Scalar::Int8: {
-        int8_t v = jit::AtomicOperations::loadSeqCst(SharedMem<uint8_t*>(viewData) + offset);
+        int8_t v = jit::AtomicOperations::loadSeqCst(viewData.cast<uint8_t*>() + offset);
         r.setInt32(v);
         return true;
       }
       case Scalar::Int16: {
-        int16_t v = jit::AtomicOperations::loadSeqCst(SharedMem<int16_t*>(viewData) + offset);
+        int16_t v = jit::AtomicOperations::loadSeqCst(viewData.cast<int16_t*>() + offset);
         r.setInt32(v);
         return true;
       }
       case Scalar::Uint16: {
-        uint16_t v = jit::AtomicOperations::loadSeqCst(SharedMem<uint16_t*>(viewData) + offset);
+        uint16_t v = jit::AtomicOperations::loadSeqCst(viewData.cast<uint16_t*>() + offset);
         r.setInt32(v);
         return true;
       }
       case Scalar::Int32: {
-        int32_t v = jit::AtomicOperations::loadSeqCst(SharedMem<int32_t*>(viewData) + offset);
+        int32_t v = jit::AtomicOperations::loadSeqCst(viewData.cast<int32_t*>() + offset);
         r.setInt32(v);
         return true;
       }
       case Scalar::Uint32: {
-        uint32_t v = jit::AtomicOperations::loadSeqCst(SharedMem<uint32_t*>(viewData) + offset);
+        uint32_t v = jit::AtomicOperations::loadSeqCst(viewData.cast<uint32_t*>() + offset);
         r.setNumber(v);
         return true;
       }
@@ -293,37 +293,37 @@ ExchangeOrStore(Scalar::Type viewType, int32_t numberValue, SharedMem<void*> vie
     switch (viewType) {
       case Scalar::Int8: {
         int8_t value = (int8_t)numberValue;
-        INT_OP(SharedMem<int8_t*>(viewData) + offset, value);
+        INT_OP(viewData.cast<int8_t*>() + offset, value);
         return value;
       }
       case Scalar::Uint8: {
         uint8_t value = (uint8_t)numberValue;
-        INT_OP(SharedMem<uint8_t*>(viewData) + offset, value);
+        INT_OP(viewData.cast<uint8_t*>() + offset, value);
         return value;
       }
       case Scalar::Uint8Clamped: {
         uint8_t value = ClampIntForUint8Array(numberValue);
-        INT_OP(SharedMem<uint8_t*>(viewData) + offset, value);
+        INT_OP(viewData.cast<uint8_t*>() + offset, value);
         return value;
       }
       case Scalar::Int16: {
         int16_t value = (int16_t)numberValue;
-        INT_OP(SharedMem<int16_t*>(viewData) + offset, value);
+        INT_OP(viewData.cast<int16_t*>() + offset, value);
         return value;
       }
       case Scalar::Uint16: {
         uint16_t value = (uint16_t)numberValue;
-        INT_OP(SharedMem<uint16_t*>(viewData) + offset, value);
+        INT_OP(viewData.cast<uint16_t*>() + offset, value);
         return value;
       }
       case Scalar::Int32: {
         int32_t value = numberValue;
-        INT_OP(SharedMem<int32_t*>(viewData) + offset, value);
+        INT_OP(viewData.cast<int32_t*>() + offset, value);
         return value;
       }
       case Scalar::Uint32: {
         uint32_t value = (uint32_t)numberValue;
-        INT_OP(SharedMem<uint32_t*>(viewData) + offset, value);
+        INT_OP(viewData.cast<uint32_t*>() + offset, value);
         return (int32_t)value;
       }
       default:
@@ -399,12 +399,12 @@ AtomicsBinop(JSContext* cx, HandleValue objv, HandleValue idxv, HandleValue valv
     switch (view->type()) {
       case Scalar::Int8: {
         int8_t v = (int8_t)numberValue;
-        r.setInt32(T::operate(SharedMem<int8_t*>(viewData) + offset, v));
+        r.setInt32(T::operate(viewData.cast<int8_t*>() + offset, v));
         return true;
       }
       case Scalar::Uint8: {
         uint8_t v = (uint8_t)numberValue;
-        r.setInt32(T::operate(SharedMem<uint8_t*>(viewData) + offset, v));
+        r.setInt32(T::operate(viewData.cast<uint8_t*>() + offset, v));
         return true;
       }
       case Scalar::Uint8Clamped: {
@@ -415,7 +415,7 @@ AtomicsBinop(JSContext* cx, HandleValue objv, HandleValue idxv, HandleValue valv
         //  - store the result
         // This requires a CAS loop.
         int32_t value = ClampIntForUint8Array(numberValue);
-        SharedMem<uint8_t*> loc = SharedMem<uint8_t*>(viewData) + offset;
+        SharedMem<uint8_t*> loc = viewData.cast<uint8_t*>() + offset;
         for (;;) {
             uint8_t old = jit::AtomicOperations::loadSafeWhenRacy(loc);
             uint8_t result = (uint8_t)ClampIntForUint8Array(T::perform(old, value));
@@ -429,22 +429,22 @@ AtomicsBinop(JSContext* cx, HandleValue objv, HandleValue idxv, HandleValue valv
       }
       case Scalar::Int16: {
         int16_t v = (int16_t)numberValue;
-        r.setInt32(T::operate(SharedMem<int16_t*>(viewData) + offset, v));
+        r.setInt32(T::operate(viewData.cast<int16_t*>() + offset, v));
         return true;
       }
       case Scalar::Uint16: {
         uint16_t v = (uint16_t)numberValue;
-        r.setInt32(T::operate(SharedMem<uint16_t*>(viewData) + offset, v));
+        r.setInt32(T::operate(viewData.cast<uint16_t*>() + offset, v));
         return true;
       }
       case Scalar::Int32: {
         int32_t v = numberValue;
-        r.setInt32(T::operate(SharedMem<int32_t*>(viewData) + offset, v));
+        r.setInt32(T::operate(viewData.cast<int32_t*>() + offset, v));
         return true;
       }
       case Scalar::Uint32: {
         uint32_t v = (uint32_t)numberValue;
-        r.setNumber((double)T::operate(SharedMem<uint32_t*>(viewData) + offset, v));
+        r.setNumber((double)T::operate(viewData.cast<uint32_t*>() + offset, v));
         return true;
       }
       default:
@@ -558,7 +558,7 @@ GetCurrentAsmJSHeap(SharedMem<void*>* heap, size_t* length)
 {
     JSRuntime* rt = js::TlsPerThreadData.get()->runtimeFromMainThread();
     AsmJSModule& mod = rt->asmJSActivationStack()->module();
-    *heap = SharedMem<void*>(mod.maybeHeap());
+    *heap = mod.maybeHeap().cast<void*>();
     *length = mod.heapLength();
 }
 
@@ -572,13 +572,13 @@ js::atomics_add_asm_callout(int32_t vt, int32_t offset, int32_t value)
         return 0;
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
-        return PerformAdd::operate(SharedMem<int8_t*>(heap) + offset, value);
+        return PerformAdd::operate(heap.cast<int8_t*>() + offset, value);
       case Scalar::Uint8:
-        return PerformAdd::operate(SharedMem<uint8_t*>(heap) + offset, value);
+        return PerformAdd::operate(heap.cast<uint8_t*>() + offset, value);
       case Scalar::Int16:
-        return PerformAdd::operate(SharedMem<int16_t*>(heap) + (offset >> 1), value);
+        return PerformAdd::operate(heap.cast<int16_t*>() + (offset >> 1), value);
       case Scalar::Uint16:
-        return PerformAdd::operate(SharedMem<uint16_t*>(heap) + (offset >> 1), value);
+        return PerformAdd::operate(heap.cast<uint16_t*>() + (offset >> 1), value);
       default:
         MOZ_CRASH("Invalid size");
     }
@@ -594,13 +594,13 @@ js::atomics_sub_asm_callout(int32_t vt, int32_t offset, int32_t value)
         return 0;
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
-        return PerformSub::operate(SharedMem<int8_t*>(heap) + offset, value);
+        return PerformSub::operate(heap.cast<int8_t*>() + offset, value);
       case Scalar::Uint8:
-        return PerformSub::operate(SharedMem<uint8_t*>(heap) + offset, value);
+        return PerformSub::operate(heap.cast<uint8_t*>() + offset, value);
       case Scalar::Int16:
-        return PerformSub::operate(SharedMem<int16_t*>(heap) + (offset >> 1), value);
+        return PerformSub::operate(heap.cast<int16_t*>() + (offset >> 1), value);
       case Scalar::Uint16:
-        return PerformSub::operate(SharedMem<uint16_t*>(heap) + (offset >> 1), value);
+        return PerformSub::operate(heap.cast<uint16_t*>() + (offset >> 1), value);
       default:
         MOZ_CRASH("Invalid size");
     }
@@ -616,13 +616,13 @@ js::atomics_and_asm_callout(int32_t vt, int32_t offset, int32_t value)
         return 0;
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
-        return PerformAnd::operate(SharedMem<int8_t*>(heap) + offset, value);
+        return PerformAnd::operate(heap.cast<int8_t*>() + offset, value);
       case Scalar::Uint8:
-        return PerformAnd::operate(SharedMem<uint8_t*>(heap) + offset, value);
+        return PerformAnd::operate(heap.cast<uint8_t*>() + offset, value);
       case Scalar::Int16:
-        return PerformAnd::operate(SharedMem<int16_t*>(heap) + (offset >> 1), value);
+        return PerformAnd::operate(heap.cast<int16_t*>() + (offset >> 1), value);
       case Scalar::Uint16:
-        return PerformAnd::operate(SharedMem<uint16_t*>(heap) + (offset >> 1), value);
+        return PerformAnd::operate(heap.cast<uint16_t*>() + (offset >> 1), value);
       default:
         MOZ_CRASH("Invalid size");
     }
@@ -638,13 +638,13 @@ js::atomics_or_asm_callout(int32_t vt, int32_t offset, int32_t value)
         return 0;
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
-        return PerformOr::operate(SharedMem<int8_t*>(heap) + offset, value);
+        return PerformOr::operate(heap.cast<int8_t*>() + offset, value);
       case Scalar::Uint8:
-        return PerformOr::operate(SharedMem<uint8_t*>(heap) + offset, value);
+        return PerformOr::operate(heap.cast<uint8_t*>() + offset, value);
       case Scalar::Int16:
-        return PerformOr::operate(SharedMem<int16_t*>(heap) + (offset >> 1), value);
+        return PerformOr::operate(heap.cast<int16_t*>() + (offset >> 1), value);
       case Scalar::Uint16:
-        return PerformOr::operate(SharedMem<uint16_t*>(heap) + (offset >> 1), value);
+        return PerformOr::operate(heap.cast<uint16_t*>() + (offset >> 1), value);
       default:
         MOZ_CRASH("Invalid size");
     }
@@ -660,13 +660,13 @@ js::atomics_xor_asm_callout(int32_t vt, int32_t offset, int32_t value)
         return 0;
     switch (Scalar::Type(vt)) {
       case Scalar::Int8:
-        return PerformXor::operate(SharedMem<int8_t*>(heap) + offset, value);
+        return PerformXor::operate(heap.cast<int8_t*>() + offset, value);
       case Scalar::Uint8:
-        return PerformXor::operate(SharedMem<uint8_t*>(heap) + offset, value);
+        return PerformXor::operate(heap.cast<uint8_t*>() + offset, value);
       case Scalar::Int16:
-        return PerformXor::operate(SharedMem<int16_t*>(heap) + (offset >> 1), value);
+        return PerformXor::operate(heap.cast<int16_t*>() + (offset >> 1), value);
       case Scalar::Uint16:
-        return PerformXor::operate(SharedMem<uint16_t*>(heap) + (offset >> 1), value);
+        return PerformXor::operate(heap.cast<uint16_t*>() + (offset >> 1), value);
       default:
         MOZ_CRASH("Invalid size");
     }
@@ -811,7 +811,7 @@ js::atomics_futexWait(JSContext* cx, unsigned argc, Value* vp)
     // and it provides the necessary memory fence.
     AutoLockFutexAPI lock;
 
-    SharedMem<int32_t*>(addr) = SharedMem<int32_t*>(view->viewDataShared()) + offset;
+    SharedMem<int32_t*>(addr) = view->viewDataShared().cast<int32_t*>() + offset;
     if (jit::AtomicOperations::loadSafeWhenRacy(addr) != value) {
         r.setInt32(AtomicsObject::FutexNotequal);
         return true;
@@ -927,7 +927,7 @@ js::atomics_futexWakeOrRequeue(JSContext* cx, unsigned argc, Value* vp)
 
     AutoLockFutexAPI lock;
 
-    SharedMem<int32_t*> addr = SharedMem<int32_t*>(view->viewDataShared()) + offset1;
+    SharedMem<int32_t*> addr = view->viewDataShared().cast<int32_t*>() + offset1;
     if (jit::AtomicOperations::loadSafeWhenRacy(addr) != value) {
         r.setInt32(AtomicsObject::FutexNotequal);
         return true;

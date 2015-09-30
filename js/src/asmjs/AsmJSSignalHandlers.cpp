@@ -406,7 +406,7 @@ MOZ_COLD static void
 SetGPRegToLoadedValueSext32(SharedMem<void*> addr, size_t size, void* gp_reg)
 {
     MOZ_RELEASE_ASSERT(size <= sizeof(int32_t));
-    int8_t msb = AtomicOperations::loadSafeWhenRacy(SharedMem<uint8_t*>(addr) + (size - 1));
+    int8_t msb = AtomicOperations::loadSafeWhenRacy(addr.cast<uint8_t*>() + (size - 1));
     memset(gp_reg, 0, sizeof(void*));
     memset(gp_reg, msb >> 7, sizeof(int32_t));
     AtomicOperations::memcpySafeWhenRacy(gp_reg, addr, size);
@@ -689,13 +689,13 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
         MOZ_RELEASE_ASSERT(wrappedAddress + size <= module.maybeHeap() + module.heapLength());
         switch (access.kind()) {
           case Disassembler::HeapAccess::Load:
-            SetRegisterToLoadedValue(context, SharedMem<void*>(wrappedAddress), size, access.otherOperand());
+            SetRegisterToLoadedValue(context, wrappedAddress.cast<void*>(), size, access.otherOperand());
             break;
           case Disassembler::HeapAccess::LoadSext32:
-            SetRegisterToLoadedValueSext32(context, SharedMem<void*>(wrappedAddress), size, access.otherOperand());
+            SetRegisterToLoadedValueSext32(context, wrappedAddress.cast<void*>(), size, access.otherOperand());
             break;
           case Disassembler::HeapAccess::Store:
-            StoreValueFromRegister(context, SharedMem<void*>(wrappedAddress), size, access.otherOperand());
+            StoreValueFromRegister(context, wrappedAddress.cast<void*>(), size, access.otherOperand());
             break;
           case Disassembler::HeapAccess::Unknown:
             MOZ_CRASH("Failed to disassemble instruction");
