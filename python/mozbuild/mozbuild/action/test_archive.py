@@ -16,8 +16,11 @@ import sys
 
 from mozpack.files import FileFinder
 from mozpack.mozjar import JarWriter
+import mozpack.path as mozpath
 
 import buildconfig
+
+STAGE = mozpath.join(buildconfig.topobjdir, 'dist', 'test-stage')
 
 
 ARCHIVE_FILES = {
@@ -28,6 +31,19 @@ ARCHIVE_FILES = {
             'pattern': 'mozharness/**',
         },
     ],
+    'xpcshell': [
+        {
+            'source': buildconfig.topobjdir,
+            'base': '_tests/xpcshell',
+            'pattern': '**',
+            'dest': 'xpcshell/tests',
+        },
+        {
+            'source': STAGE,
+            'base': '',
+            'pattern': 'xpcshell/**',
+        },
+    ],
 }
 
 
@@ -36,13 +52,23 @@ def find_files(archive):
         source = entry['source']
         base = entry['base']
         pattern = entry['pattern']
+        dest = entry.get('dest')
+        ignore = list(entry.get('ignore', []))
+        ignore.append('**/.mkdir.done')
+        ignore.append('**/*.pyc')
 
-        finder = FileFinder(os.path.join(source, base),
-                            find_executables=False,
-                            find_dotfiles=True)
+        common_kwargs = {
+            'find_executables': False,
+            'find_dotfiles': True,
+            'ignore': ignore,
+        }
 
-        for f in finder.find(pattern):
-            yield f
+        finder = FileFinder(os.path.join(source, base), **common_kwargs)
+
+        for p, f in finder.find(pattern):
+            if dest:
+                p = mozpath.join(dest, p)
+            yield p, f
 
 
 def main(argv):
@@ -58,7 +84,8 @@ def main(argv):
 
     with open(args.outputfile, 'wb') as fh:
         with JarWriter(fileobj=fh, optimize=False) as writer:
-            for p, f in find_files(args.archive):
+            res = find_files(args.archive)
+            for p, f in res:
                 writer.add(p.encode('utf-8'), f.read(), mode=f.mode)
 
 
