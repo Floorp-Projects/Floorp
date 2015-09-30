@@ -16,7 +16,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/StructuredCloneHelper.h"
+#include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/ErrorResult.h"
 
 #include "WorkerPrivate.h"
@@ -208,7 +208,7 @@ protected:
 
 // A DataStoreRunnable to run DataStore::Put(...) on the main thread.
 class DataStorePutRunnable final : public DataStoreProxyRunnable
-                                 , public StructuredCloneHelper
+                                 , public StructuredCloneHolder
 {
   const StringOrUnsignedLong& mId;
   const nsString mRevisionId;
@@ -224,7 +224,7 @@ public:
                        const nsAString& aRevisionId,
                        ErrorResult& aRv)
     : DataStoreProxyRunnable(aWorkerPrivate, aBackingStore, aWorkerPromise)
-    , StructuredCloneHelper(CloningNotSupported, TransferringNotSupported,
+    , StructuredCloneHolder(CloningNotSupported, TransferringNotSupported,
                             SameProcessDifferentThread)
     , mId(aId)
     , mRevisionId(aRevisionId)
@@ -270,7 +270,7 @@ protected:
 
 // A DataStoreRunnable to run DataStore::Add(...) on the main thread.
 class DataStoreAddRunnable final : public DataStoreProxyRunnable
-                                 , public StructuredCloneHelper
+                                 , public StructuredCloneHolder
 {
   const Optional<StringOrUnsignedLong>& mId;
   const nsString mRevisionId;
@@ -286,7 +286,7 @@ public:
                        const nsAString& aRevisionId,
                        ErrorResult& aRv)
     : DataStoreProxyRunnable(aWorkerPrivate, aBackingStore, aWorkerPromise)
-    , StructuredCloneHelper(CloningNotSupported, TransferringNotSupported,
+    , StructuredCloneHolder(CloningNotSupported, TransferringNotSupported,
                             SameProcessDifferentThread)
     , mId(aId)
     , mRevisionId(aRevisionId)
