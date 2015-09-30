@@ -18,6 +18,7 @@ task:
     env:
       TARGET: 'flame-kk'
       DEBUG: 0
+      TOOLTOOL_MANIFEST: 'b2g/config/flame-kk/releng-flame-kk.tt'
     command:
       - >
         checkout-gecko workspace &&
