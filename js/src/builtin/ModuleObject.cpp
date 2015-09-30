@@ -264,8 +264,6 @@ ModuleObject::isInstance(HandleValue value)
 ModuleObject::create(ExclusiveContext* cx)
 {
     Rooted<ModuleObject*> self(cx, NewBuiltinClassInstance<ModuleObject>(cx, TenuredObject));
-    if (!self)
-        return nullptr;
 
     IndirectBindingMap* bindings = cx->new_<IndirectBindingMap>();
     if (!bindings || !bindings->init()) {
@@ -281,9 +279,7 @@ ModuleObject::create(ExclusiveContext* cx)
 /* static */ void
 ModuleObject::finalize(js::FreeOp* fop, JSObject* obj)
 {
-    ModuleObject* self = &obj->as<ModuleObject>();
-    if (!self->getReservedSlot(ImportBindingsSlot).isUndefined())
-        fop->delete_(&self->importBindings());
+    fop->delete_(&obj->as<ModuleObject>().importBindings());
 }
 
 ModuleEnvironmentObject*
