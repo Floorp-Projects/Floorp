@@ -1051,15 +1051,17 @@ public:
 
     uint8_t* nonconstResult = const_cast<uint8_t*>(aResult);
     if (mFetchBody->mWorkerPrivate) {
+      // This way if the runnable dispatch fails, the body is still released.
+      AutoFailConsumeBody<Derived> autoFail(mFetchBody);
       nsRefPtr<ContinueConsumeBodyRunnable<Derived>> r =
         new ContinueConsumeBodyRunnable<Derived>(mFetchBody,
                                         aStatus,
                                         aResultLength,
                                         nonconstResult);
       AutoSafeJSContext cx;
-      if (!r->Dispatch(cx)) {
-        // XXXcatalinb: The worker is shutting down, the pump will be canceled
-        // by FetchBodyFeature::Notify.
+      if (r->Dispatch(cx)) {
+        autoFail.DontFail();
+      } else {
         NS_WARNING("Could not dispatch ConsumeBodyRunnable");
         // Return failure so that aResult is freed.
         return NS_ERROR_FAILURE;
@@ -1129,12 +1131,10 @@ class FetchBodyFeature final : public workers::WorkerFeature
   // This is addrefed before the feature is created, and is released in ContinueConsumeBody()
   // so we can hold a rawptr.
   FetchBody<Derived>* mBody;
-  bool mWasNotified;
 
 public:
   explicit FetchBodyFeature(FetchBody<Derived>* aBody)
     : mBody(aBody)
-    , mWasNotified(false)
   { }
 
   ~FetchBodyFeature()
@@ -1143,10 +1143,7 @@ public:
   bool Notify(JSContext* aCx, workers::Status aStatus) override
   {
     MOZ_ASSERT(aStatus > workers::Running);
-    if (!mWasNotified) {
-      mWasNotified = true;
-      mBody->ContinueConsumeBody(NS_BINDING_ABORTED, 0, nullptr);
-    }
+    mBody->ContinueConsumeBody(NS_BINDING_ABORTED, 0, nullptr);
     return true;
   }
 };
