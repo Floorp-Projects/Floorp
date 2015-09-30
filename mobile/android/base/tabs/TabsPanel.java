@@ -262,12 +262,12 @@ public class TabsPanel extends LinearLayout
 
             // This allows us to accommodate varying height tab previews across different devices.
             // We should be able to remove once we remove the list view and remove the chrome again
-            return  resources.getDimensionPixelSize(R.dimen.tab_thumbnail_height
-                  + resources.getDimensionPixelSize(R.dimen.tab_title_height)
-                  + 2 * (resources.getDimensionPixelSize(R.dimen.tab_highlight_stroke_width)
-                         + resources.getDimensionPixelSize(R.dimen.tab_vertical_padding)
-                         + resources.getDimensionPixelSize(R.dimen.tab_thumbnail_padding)
-                         + resources.getDimensionPixelSize(R.dimen.tab_thumbnail_margin)));
+            return resources.getDimensionPixelSize(R.dimen.tab_thumbnail_height)
+                 + resources.getDimensionPixelSize(R.dimen.tab_title_height)
+                 + 2 * (resources.getDimensionPixelSize(R.dimen.tab_highlight_stroke_width)
+                      + resources.getDimensionPixelSize(R.dimen.tab_vertical_padding)
+                      + resources.getDimensionPixelSize(R.dimen.tab_thumbnail_padding)
+                      + resources.getDimensionPixelSize(R.dimen.tab_thumbnail_margin));
         }
 
         Rect windowRect = new Rect();
