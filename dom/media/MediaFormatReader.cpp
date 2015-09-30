@@ -439,6 +439,36 @@ MediaFormatReader::EnsureDecodersCreated()
 }
 
 bool
+MediaFormatReader::EnsureDecoderInitialized(TrackType aTrack)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  auto& decoder = GetDecoderData(aTrack);
+
+  if (!decoder.mDecoder || decoder.mInitPromise.Exists()) {
+    MOZ_ASSERT(decoder.mDecoder);
+    return false;
+  }
+  if (decoder.mDecoderInitialized) {
+    return true;
+  }
+  nsRefPtr<MediaFormatReader> self = this;
+  decoder.mInitPromise.Begin(decoder.mDecoder->Init()
+       ->Then(OwnerThread(), __func__,
+              [self] (TrackType aTrack) {
+                auto& decoder = self->GetDecoderData(aTrack);
+                decoder.mInitPromise.Complete();
+                decoder.mDecoderInitialized = true;
+                self->ScheduleUpdate(aTrack);
+              },
+              [self, aTrack] (MediaDataDecoder::DecoderFailureReason aResult) {
+                auto& decoder = self->GetDecoderData(aTrack);
+                decoder.mInitPromise.Complete();
+                self->NotifyError(aTrack);
+              }));
+  return false;
+}
+
+bool
 MediaFormatReader::EnsureDecodersInitialized()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -449,16 +479,19 @@ MediaFormatReader::EnsureDecodersInitialized()
   // will call ScheduleUpdate() again.
   // It also avoids calling decoder->Init() multiple times.
   if (mDecodersInitRequest.Exists()) {
+    MOZ_ASSERT(false);
     return false;
   }
 
   nsTArray<nsRefPtr<MediaDataDecoder::InitPromise>> promises;
 
   if (mVideo.mDecoder && !mVideo.mDecoderInitialized) {
+    MOZ_ASSERT(!mVideo.mInitPromise.Exists());
     promises.AppendElement(mVideo.mDecoder->Init());
   }
 
   if (mAudio.mDecoder && !mAudio.mDecoderInitialized) {
+    MOZ_ASSERT(!mAudio.mInitPromise.Exists());
     promises.AppendElement(mAudio.mDecoder->Init());
   }
 
@@ -486,17 +519,14 @@ MediaFormatReader::OnDecoderInitDone(const nsTArray<TrackType>& aTrackTypes)
   for (const auto& track : aTrackTypes) {
     auto& decoder = GetDecoderData(track);
     decoder.mDecoderInitialized = true;
-
-    ScheduleUpdate(track);
   }
 
-  if (!mMetadataPromise.IsEmpty()) {
-    mInitDone = true;
-    nsRefPtr<MetadataHolder> metadata = new MetadataHolder();
-    metadata->mInfo = mInfo;
-    metadata->mTags = nullptr;
-    mMetadataPromise.Resolve(metadata, __func__);
-  }
+  MOZ_ASSERT(!mMetadataPromise.IsEmpty());
+  mInitDone = true;
+  nsRefPtr<MetadataHolder> metadata = new MetadataHolder();
+  metadata->mInfo = mInfo;
+  metadata->mTags = nullptr;
+  mMetadataPromise.Resolve(metadata, __func__);
 }
 
 void
@@ -910,8 +940,7 @@ MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
     return;
   }
 
-  if (!EnsureDecodersInitialized()) {
-    ScheduleUpdate(aTrack);
+  if (!EnsureDecoderInitialized(aTrack)) {
     return;
   }
 
@@ -1040,7 +1069,7 @@ MediaFormatReader::Update(TrackType aTrack)
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  if (mShutdown) {
+  if (mShutdown || !mInitDone) {
     return;
   }
 
