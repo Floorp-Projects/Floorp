@@ -102,6 +102,17 @@ ARCHIVE_FILES = {
             'base': '',
             'pattern': 'reftest/**',
         },
+        {
+            'source': buildconfig.topobjdir,
+            'base': '_tests',
+            'pattern': 'reftest/**',
+        },
+        {
+            'source': buildconfig.topobjdir,
+            'base': '',
+            'pattern': 'mozinfo.json',
+            'dest': 'reftest',
+        },
     ],
     'talos': [
         {
