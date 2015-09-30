@@ -32,6 +32,7 @@ protected:
 
 protected:
   nsCOMPtr<nsIURI> mReferrer;
+  nsCOMPtr<nsIURI> mOriginalURI;
   nsCOMPtr<nsISupports> mOwner;
   bool mInheritOwner;
   bool mOwnerIsExplicit;
