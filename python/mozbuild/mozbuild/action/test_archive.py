@@ -311,7 +311,11 @@ def main(argv):
     file_count = 0
     t_start = time.time()
     with open(args.outputfile, 'wb') as fh:
-        with JarWriter(fileobj=fh, optimize=False) as writer:
+        # Experimentation revealed that level 5 is significantly faster and has
+        # marginally larger sizes than higher values and is the sweet spot
+        # for optimal compression. Read the detailed commit message that
+        # introduced this for raw numbers.
+        with JarWriter(fileobj=fh, optimize=False, compress_level=5) as writer:
             res = find_files(args.archive)
             for p, f in res:
                 file_count += 1
