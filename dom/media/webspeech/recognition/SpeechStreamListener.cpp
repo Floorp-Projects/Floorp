@@ -33,7 +33,9 @@ SpeechStreamListener::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
                                                TrackID aID,
                                                StreamTime aTrackOffset,
                                                uint32_t aTrackEvents,
-                                               const MediaSegment& aQueuedMedia)
+                                               const MediaSegment& aQueuedMedia,
+                                               MediaStream* aInputStream,
+                                               TrackID aInputTrackID)
 {
   AudioSegment* audio = const_cast<AudioSegment*>(
     static_cast<const AudioSegment*>(&aQueuedMedia));

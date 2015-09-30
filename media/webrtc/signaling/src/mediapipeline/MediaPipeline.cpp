@@ -683,7 +683,7 @@ nsresult MediaPipelineTransmit::ReplaceTrack(DOMMediaStream *domstream,
                                              const std::string& track_id) {
   // MainThread, checked in calls we make
   MOZ_MTLOG(ML_DEBUG, "Reattaching pipeline " << description_ << " to stream "
-            << static_cast<void *>(domstream->GetStream())
+            << static_cast<void *>(domstream->GetOwnedStream())
             << " track " << track_id << " conduit type=" <<
             (conduit_->type() == MediaSessionConduit::AUDIO ?"audio":"video"));
 
@@ -691,7 +691,7 @@ nsresult MediaPipelineTransmit::ReplaceTrack(DOMMediaStream *domstream,
     DetachMediaStream();
   }
   domstream_ = domstream; // Detach clears it
-  stream_ = domstream->GetStream();
+  stream_ = domstream->GetOwnedStream();
   // Unsets the track id after RemoveListener() takes effect.
   listener_->UnsetTrackId(stream_->GraphImpl());
   track_id_ = track_id;
@@ -868,7 +868,9 @@ void MediaPipelineTransmit::PipelineListener::
 NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
                          StreamTime offset,
                          uint32_t events,
-                         const MediaSegment& queued_media) {
+                         const MediaSegment& queued_media,
+                         MediaStream* aInputStream,
+                         TrackID aInputTrackID) {
   MOZ_MTLOG(ML_DEBUG, "MediaPipeline::NotifyQueuedTrackChanges()");
 
   // ignore non-direct data if we're also getting direct data

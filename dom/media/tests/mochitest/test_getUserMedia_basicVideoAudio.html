@@ -19,8 +19,6 @@
     var constraints = {video: true, audio: true};
 
     return getUserMedia(constraints).then(stream => {
-      checkMediaStreamTracks(constraints, stream);
-
       var playback = new LocalMediaStreamPlayback(testVideoAudio, stream);
       return playback.playMedia(false);
     });

@@ -4,11 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 # ***** END LICENSE BLOCK *****
-"""firefox_ui_updates.py
 
-Author: Armen Zambrano G.
-        Henrik Skupin
-"""
+
 import copy
 import os
 import pprint
@@ -247,7 +244,6 @@ class ReleaseFirefoxUIUpdateTests(FirefoxUIUpdateTests):
 
                 retcode = self.run_test(
                     installer_path=installer_path,
-                    script_name=self.cli_script,
                     env=self.query_env(avoid_host_env=True),
                     marionette_port=marionette_port,
                 )

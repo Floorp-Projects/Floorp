@@ -49,14 +49,14 @@ if (navigator.mozGetUserMedia) {
   var RTCPeerConnection = function(pcConfig, pcConstraints) {
     // .urls is not supported in FF yet.
     maybeFixConfiguration(pcConfig);
-    return new mozRTCPeerConnection(pcConfig, pcConstraints);
+    return new (RTCPeerConnectioni || mozRTCPeerConnection)(pcConfig, pcConstraints);
   }
 
   // The RTCSessionDescription object.
-  RTCSessionDescription = mozRTCSessionDescription;
+  RTCSessionDescription = RTCSessionDescription || mozRTCSessionDescription;
 
   // The RTCIceCandidate object.
-  RTCIceCandidate = mozRTCIceCandidate;
+  RTCIceCandidate = RTCIceCandidate || mozRTCIceCandidate;
 
   // Get UserMedia (only difference is the prefix).
   // Code from Adam Barth.

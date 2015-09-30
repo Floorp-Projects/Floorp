@@ -27,8 +27,8 @@ function pcall(o, f, beforeArg) {
   });
 }
 
-var pc1 = new mozRTCPeerConnection();
-var pc2 = new mozRTCPeerConnection();
+var pc1 = new RTCPeerConnection();
+var pc2 = new RTCPeerConnection();
 
 var pc2_haveRemoteOffer = new Promise(resolve => {
   pc2.onsignalingstatechange =

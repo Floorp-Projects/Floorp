@@ -16,33 +16,6 @@
 namespace mozilla {
 namespace dom {
 
-void
-MediaTrackListListener::NotifyMediaTrackCreated(MediaTrack* aTrack)
-{
-  if (!mMediaTrackList && !aTrack) {
-    return;
-  }
-
-  if (aTrack->AsAudioTrack() && mMediaTrackList->AsAudioTrackList()) {
-    mMediaTrackList->AddTrack(aTrack);
-  } else if (aTrack->AsVideoTrack() && mMediaTrackList->AsVideoTrackList()) {
-    mMediaTrackList->AddTrack(aTrack);
-  }
-}
-
-void
-MediaTrackListListener::NotifyMediaTrackEnded(const nsAString& aId)
-{
-  if (!mMediaTrackList) {
-    return;
-  }
-
-  const nsRefPtr<MediaTrack> track = mMediaTrackList->GetTrackById(aId);
-  if (track) {
-    mMediaTrackList->RemoveTrack(track);
-  }
-}
-
 MediaTrackList::MediaTrackList(nsPIDOMWindow* aOwnerWindow,
                                HTMLMediaElement* aMediaElement)
   : DOMEventTargetHelper(aOwnerWindow)

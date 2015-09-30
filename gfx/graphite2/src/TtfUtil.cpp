@@ -852,10 +852,11 @@ const void * FindCmapSubtable(const void * pCmap, int nPlatformId, /* =3 */ int 
             const uint8 * pRtn = reinterpret_cast<const uint8 *>(pCmap) + offset;
             if (length)
             {
-                if (offset > length) return NULL;
+                if (offset + 2 > length) return NULL;
                 uint16 format = be::read<uint16>(pRtn);
                 if (format == 4)
                 {
+                    if (offset + 4 > length) return NULL;
                     uint16 subTableLength = be::peek<uint16>(pRtn);
                     if (i + 1 == csuPlatforms)
                     {
@@ -867,6 +868,7 @@ const void * FindCmapSubtable(const void * pCmap, int nPlatformId, /* =3 */ int 
                 }
                 if (format == 12)
                 {
+                    if (offset + 6 > length) return NULL;
                     uint32 subTableLength = be::peek<uint32>(pRtn);
                     if (i + 1 == csuPlatforms)
                     {

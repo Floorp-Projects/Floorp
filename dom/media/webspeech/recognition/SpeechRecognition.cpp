@@ -559,11 +559,11 @@ SpeechRecognition::StartRecording(DOMMediaStream* aDOMStream)
   // doesn't get Destroy()'ed
   mDOMStream = aDOMStream;
 
-  if (NS_WARN_IF(!mDOMStream->GetStream())) {
+  if (NS_WARN_IF(!mDOMStream->GetPlaybackStream())) {
     return NS_ERROR_UNEXPECTED;
   }
   mSpeechListener = new SpeechStreamListener(this);
-  mDOMStream->GetStream()->AddListener(mSpeechListener);
+  mDOMStream->GetPlaybackStream()->AddListener(mSpeechListener);
 
   mEndpointer.StartSession();
 
@@ -577,7 +577,7 @@ SpeechRecognition::StopRecording()
   // we only really need to remove the listener explicitly when testing,
   // as our JS code still holds a reference to mDOMStream and only assigning
   // it to nullptr isn't guaranteed to free the stream and the listener.
-  mDOMStream->GetStream()->RemoveListener(mSpeechListener);
+  mDOMStream->GetPlaybackStream()->RemoveListener(mSpeechListener);
   mSpeechListener = nullptr;
   mDOMStream = nullptr;
 

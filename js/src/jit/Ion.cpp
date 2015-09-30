@@ -2237,6 +2237,8 @@ IonCompile(JSContext* cx, JSScript* script,
         codegen = CompileBackEnd(builder);
         if (!codegen) {
             JitSpew(JitSpew_IonAbort, "Failed during back-end compilation.");
+            if (cx->isExceptionPending())
+                return AbortReason_Error;
             return AbortReason_Disable;
         }
 
