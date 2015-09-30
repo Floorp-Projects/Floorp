@@ -59,8 +59,8 @@ default: $(TOPOBJDIR)/config/makefiles/xpidl/xpidl
 .PHONY: FORCE
 
 # Extra define to trigger some workarounds. We should strive to limit the
-# use of those. As of writing the only one is in
-# toolkit/content/buildconfig.html.
+# use of those. As of writing the only ones are in
+# toolkit/content/buildconfig.html and browser/locales/jar.mn.
 ACDEFINES += -DBUILD_FASTER
 
 # Generic rule to fall back to the recursive make backend
