@@ -32,10 +32,6 @@ enum BluetoothAclState {
   ACL_STATE_DISCONNECTED
 };
 
-struct BluetoothAddress {
-  uint8_t mAddr[6];
-};
-
 struct BluetoothAvrcpAttributeTextPairs {
   BluetoothAvrcpAttributeTextPairs(const uint8_t* aAttr,
                                    const char** aText,
