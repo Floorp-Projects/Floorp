@@ -235,6 +235,11 @@ public:
    */
   MediaStreamTrack* FindPlaybackDOMTrack(MediaStream* aOwningStream, TrackID aTrackID) const;
 
+  /**
+   * Returns the TrackPort connecting mOwnedStream to mPlaybackStream for aTrack.
+   */
+  TrackPort* FindPlaybackTrackPort(const MediaStreamTrack& aTrack) const;
+
   MediaStream* GetInputStream() const { return mInputStream; }
   ProcessedMediaStream* GetOwnedStream() const { return mOwnedStream; }
   ProcessedMediaStream* GetPlaybackStream() const { return mPlaybackStream; }
