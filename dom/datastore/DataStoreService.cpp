@@ -302,154 +302,6 @@ ResetPermission(uint32_t aAppId, const nsAString& aOriginURL,
   return NS_OK;
 }
 
-class MOZ_STACK_CLASS GetDataStoreInfosData
-{
-public:
-  GetDataStoreInfosData(nsClassHashtable<nsStringHashKey, HashApp>& aAccessStores,
-                        const nsAString& aName, const nsAString& aManifestURL,
-                        uint32_t aAppId, nsTArray<DataStoreInfo>& aStores)
-    : mAccessStores(aAccessStores)
-    , mName(aName)
-    , mManifestURL(aManifestURL)
-    , mAppId(aAppId)
-    , mStores(aStores)
-  {}
-
-  nsClassHashtable<nsStringHashKey, HashApp>& mAccessStores;
-  nsString mName;
-  nsString mManifestURL;
-  uint32_t mAppId;
-  nsTArray<DataStoreInfo>& mStores;
-};
-
-PLDHashOperator
-GetDataStoreInfosEnumerator(const uint32_t& aAppId,
-                            DataStoreInfo* aInfo,
-                            void* aUserData)
-{
-  MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
-
-  auto* data = static_cast<GetDataStoreInfosData*>(aUserData);
-  if (aAppId == data->mAppId) {
-    return PL_DHASH_NEXT;
-  }
-
-  HashApp* apps;
-  if (!data->mAccessStores.Get(data->mName, &apps)) {
-    return PL_DHASH_NEXT;
-  }
-
-  if (!data->mManifestURL.IsEmpty() &&
-      !data->mManifestURL.Equals(aInfo->mManifestURL)) {
-    return PL_DHASH_NEXT;
-  }
-
-  DataStoreInfo* accessInfo = nullptr;
-  if (!apps->Get(data->mAppId, &accessInfo)) {
-    return PL_DHASH_NEXT;
-  }
-
-  bool readOnly = aInfo->mReadOnly || accessInfo->mReadOnly;
-  DataStoreInfo* accessStore = data->mStores.AppendElement();
-  accessStore->Init(aInfo->mName, aInfo->mOriginURL,
-                    aInfo->mManifestURL, readOnly,
-                    aInfo->mEnabled);
-
-  return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-GetAppManifestURLsEnumerator(const uint32_t& aAppId,
-                             DataStoreInfo* aInfo,
-                             void* aUserData)
-{
-  MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
-
-  auto* manifestURLs = static_cast<nsIMutableArray*>(aUserData);
-  nsCOMPtr<nsISupportsString> manifestURL(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
-  if (manifestURL) {
-    manifestURL->SetData(aInfo->mManifestURL);
-    manifestURLs->AppendElement(manifestURL, false);
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-// This class is useful to enumerate the add permissions for each app.
-class MOZ_STACK_CLASS AddPermissionsData
-{
-public:
-  AddPermissionsData(const nsAString& aPermission, bool aReadOnly)
-    : mPermission(aPermission)
-    , mReadOnly(aReadOnly)
-    , mResult(NS_OK)
-  {}
-
-  nsString mPermission;
-  bool mReadOnly;
-  nsresult mResult;
-};
-
-PLDHashOperator
-AddPermissionsEnumerator(const uint32_t& aAppId,
-                         DataStoreInfo* aInfo,
-                         void* userData)
-{
-  MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
-
-  auto* data = static_cast<AddPermissionsData*>(userData);
-
-  // ReadOnly is decided by the owner first.
-  bool readOnly = data->mReadOnly || aInfo->mReadOnly;
-
-  data->mResult = ResetPermission(aAppId, aInfo->mOriginURL,
-                                  aInfo->mManifestURL,
-                                  data->mPermission,
-                                  readOnly);
-  return NS_FAILED(data->mResult) ? PL_DHASH_STOP : PL_DHASH_NEXT;
-}
-
-// This class is useful to enumerate the add permissions for each app.
-class MOZ_STACK_CLASS AddAccessPermissionsData
-{
-public:
-  AddAccessPermissionsData(uint32_t aAppId, const nsAString& aName,
-                           const nsAString& aOriginURL, bool aReadOnly)
-    : mAppId(aAppId)
-    , mName(aName)
-    , mOriginURL(aOriginURL)
-    , mReadOnly(aReadOnly)
-    , mResult(NS_OK)
-  {}
-
-  uint32_t mAppId;
-  nsString mName;
-  nsString mOriginURL;
-  bool mReadOnly;
-  nsresult mResult;
-};
-
-PLDHashOperator
-AddAccessPermissionsEnumerator(const uint32_t& aAppId,
-                               DataStoreInfo* aInfo,
-                               void* userData)
-{
-  MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
-
-  auto* data = static_cast<AddAccessPermissionsData*>(userData);
-
-  nsString permission;
-  GeneratePermissionName(permission, data->mName, aInfo->mManifestURL);
-
-  // ReadOnly is decided by the owner first.
-  bool readOnly = aInfo->mReadOnly || data->mReadOnly;
-
-  data->mResult = ResetPermission(data->mAppId, data->mOriginURL,
-                                  aInfo->mManifestURL,
-                                  permission, readOnly);
-  return NS_FAILED(data->mResult) ? PL_DHASH_STOP : PL_DHASH_NEXT;
-}
-
 void
 HomeScreenPrefCallback(const char* aPrefName, void* /* aClosure */)
 {
@@ -1165,8 +1017,36 @@ DataStoreService::GetDataStoreInfos(const nsAString& aName,
                 info->mEnabled);
   }
 
-  GetDataStoreInfosData data(mAccessStores, aName, aOwner, aAppId, aStores);
-  apps->EnumerateRead(GetDataStoreInfosEnumerator, &data);
+  for (auto iter = apps->ConstIter(); !iter.Done(); iter.Next()) {
+    if (iter.Key() == aAppId) {
+      continue;
+    }
+
+    DataStoreInfo* info = iter.UserData();
+    MOZ_ASSERT(info);
+
+    HashApp* app;
+    if (!mAccessStores.Get(aName, &app)) {
+      continue;
+    }
+
+    if (!aOwner.IsEmpty() &&
+        !aOwner.Equals(info->mManifestURL)) {
+      continue;
+    }
+
+    DataStoreInfo* accessInfo = nullptr;
+    if (!app->Get(aAppId, &accessInfo)) {
+      continue;
+    }
+
+    bool readOnly = info->mReadOnly || accessInfo->mReadOnly;
+    DataStoreInfo* accessStore = aStores.AppendElement();
+    accessStore->Init(aName, info->mOriginURL,
+                      info->mManifestURL, readOnly,
+                      info->mEnabled);
+  }
+
   return NS_OK;
 }
 
@@ -1184,10 +1064,22 @@ DataStoreService::GetAppManifestURLsForDataStore(const nsAString& aName,
 
   HashApp* apps = nullptr;
   if (mStores.Get(aName, &apps)) {
-    apps->EnumerateRead(GetAppManifestURLsEnumerator, manifestURLs.get());
+    for (auto iter = apps->ConstIter(); !iter.Done(); iter.Next()) {
+      nsCOMPtr<nsISupportsString> manifestURL(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+      if (manifestURL) {
+        manifestURL->SetData(iter.UserData()->mManifestURL);
+        manifestURLs->AppendElement(manifestURL, false);
+      }
+    }
   }
   if (mAccessStores.Get(aName, &apps)) {
-    apps->EnumerateRead(GetAppManifestURLsEnumerator, manifestURLs.get());
+    for (auto iter = apps->ConstIter(); !iter.Done(); iter.Next()) {
+      nsCOMPtr<nsISupportsString> manifestURL(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+      if (manifestURL) {
+        manifestURL->SetData(iter.UserData()->mManifestURL);
+        manifestURLs->AppendElement(manifestURL, false);
+      }
+    }
   }
 
   manifestURLs.forget(aManifestURLs);
@@ -1341,9 +1233,21 @@ DataStoreService::AddPermissions(uint32_t aAppId,
     return NS_OK;
   }
 
-  AddPermissionsData data(permission, aReadOnly);
-  apps->EnumerateRead(AddPermissionsEnumerator, &data);
-  return data.mResult;
+  for (auto iter = apps->ConstIter(); !iter.Done(); iter.Next()) {
+    DataStoreInfo* info = iter.UserData();
+    MOZ_ASSERT(info);
+
+    bool readOnly = aReadOnly || info->mReadOnly;
+
+    rv = ResetPermission(iter.Key(), info->mOriginURL,
+                         info->mManifestURL,
+                         permission, readOnly);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
 }
 
 nsresult
@@ -1361,9 +1265,25 @@ DataStoreService::AddAccessPermissions(uint32_t aAppId, const nsAString& aName,
     return NS_OK;
   }
 
-  AddAccessPermissionsData data(aAppId, aName, aOriginURL, aReadOnly);
-  apps->EnumerateRead(AddAccessPermissionsEnumerator, &data);
-  return data.mResult;
+  for (auto iter = apps->ConstIter(); !iter.Done(); iter.Next()) {
+    DataStoreInfo* info = iter.UserData();
+    MOZ_ASSERT(info);
+
+    nsAutoString permission;
+    GeneratePermissionName(permission, aName, info->mManifestURL);
+
+    // ReadOnly is decided by the owner first.
+    bool readOnly = info->mReadOnly || aReadOnly;
+
+    nsresult rv = ResetPermission(aAppId, aOriginURL,
+                                  info->mManifestURL,
+                                  permission, readOnly);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
 }
 
 // This method starts the operation to create the first revision for a DataStore
