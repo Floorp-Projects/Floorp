@@ -602,7 +602,7 @@ class MessageEventRunnable final : public WorkerRunnable
                                  , public StructuredCloneHolder
 {
   // This is only used for messages dispatched to a service worker.
-  nsAutoPtr<ServiceWorkerClientInfo> mEventSource;
+  UniquePtr<ServiceWorkerClientInfo> mEventSource;
 
 public:
   MessageEventRunnable(WorkerPrivate* aWorkerPrivate,
@@ -614,9 +614,9 @@ public:
   }
 
   void
-  SetMessageSource(ServiceWorkerClientInfo* aSource)
+  SetMessageSource(UniquePtr<ServiceWorkerClientInfo>&& aSource)
   {
-    mEventSource = aSource;
+    mEventSource = Move(aSource);
   }
 
   bool
@@ -2422,7 +2422,7 @@ WorkerPrivateParent<Derived>::NotifyPrivate(JSContext* aCx, Status aStatus)
     mParentStatus = aStatus;
   }
 
-  if (IsSharedWorker() || IsServiceWorker()) {
+  if (IsSharedWorker()) {
     RuntimeService* runtime = RuntimeService::GetService();
     MOZ_ASSERT(runtime);
 
@@ -2694,7 +2694,7 @@ WorkerPrivateParent<Derived>::PostMessageInternal(
                                             JSContext* aCx,
                                             JS::Handle<JS::Value> aMessage,
                                             const Optional<Sequence<JS::Value>>& aTransferable,
-                                            ServiceWorkerClientInfo* aClientInfo,
+                                            UniquePtr<ServiceWorkerClientInfo>&& aClientInfo,
                                             ErrorResult& aRv)
 {
   AssertIsOnParentThread();
@@ -2734,7 +2734,7 @@ WorkerPrivateParent<Derived>::PostMessageInternal(
     return;
   }
 
-  runnable->SetMessageSource(aClientInfo);
+  runnable->SetMessageSource(Move(aClientInfo));
 
   if (!runnable->Dispatch(aCx)) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -2743,14 +2743,24 @@ WorkerPrivateParent<Derived>::PostMessageInternal(
 
 template <class Derived>
 void
+WorkerPrivateParent<Derived>::PostMessage(
+                             JSContext* aCx, JS::Handle<JS::Value> aMessage,
+                             const Optional<Sequence<JS::Value>>& aTransferable,
+                             ErrorResult& aRv)
+{
+  PostMessageInternal(aCx, aMessage, aTransferable, nullptr, aRv);
+}
+
+template <class Derived>
+void
 WorkerPrivateParent<Derived>::PostMessageToServiceWorker(
                              JSContext* aCx, JS::Handle<JS::Value> aMessage,
                              const Optional<Sequence<JS::Value>>& aTransferable,
-                             nsAutoPtr<ServiceWorkerClientInfo>& aClientInfo,
+                             UniquePtr<ServiceWorkerClientInfo>&& aClientInfo,
                              ErrorResult& aRv)
 {
   AssertIsOnMainThread();
-  PostMessageInternal(aCx, aMessage, aTransferable, aClientInfo.forget(), aRv);
+  PostMessageInternal(aCx, aMessage, aTransferable, Move(aClientInfo), aRv);
 }
 
 template <class Derived>
@@ -2943,7 +2953,7 @@ WorkerPrivateParent<Derived>::RegisterSharedWorker(JSContext* aCx,
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aSharedWorker);
-  MOZ_ASSERT(IsSharedWorker() || IsServiceWorker());
+  MOZ_ASSERT(IsSharedWorker());
   MOZ_ASSERT(!mSharedWorkers.Contains(aSharedWorker));
 
   if (IsSharedWorker()) {
@@ -4303,6 +4313,10 @@ WorkerPrivate::OverrideLoadInfoLoadGroup(WorkerLoadInfo& aLoadInfo)
                                            aLoadInfo.mLoadGroup);
   aLoadInfo.mInterfaceRequestor->MaybeAddTabChild(aLoadInfo.mLoadGroup);
 
+  // NOTE: this defaults the load context to:
+  //  - private browsing = false
+  //  - content = true
+  //  - use remote tabs = false
   nsCOMPtr<nsILoadGroup> loadGroup =
     do_CreateInstance(NS_LOADGROUP_CONTRACTID);
 
