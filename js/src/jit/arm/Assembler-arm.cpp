@@ -2138,7 +2138,6 @@ Assembler::allocEntry(size_t numInst, unsigned numPoolEntries,
                       bool markAsBranch, bool loadToPC)
 {
     BufferOffset offs = m_buffer.allocEntry(numInst, numPoolEntries, inst, data, pe, markAsBranch);
-    propagateOOM(offs.assigned());
 #ifdef JS_DISASM_ARM
     spewData(offs, numInst, loadToPC);
 #endif
