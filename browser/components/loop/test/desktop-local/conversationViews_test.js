@@ -518,6 +518,7 @@ describe("loop.conversationViews", function () {
   describe("OngoingConversationView", function() {
     function mountTestComponent(extraProps) {
       var props = _.extend({
+        chatWindowDetached: false,
         conversationStore: conversationStore,
         dispatcher: dispatcher,
         mozLoop: {},
@@ -562,18 +563,6 @@ describe("loop.conversationViews", function () {
 
       expect(view.getDOMNode().querySelector(".local video")).not.eql(null);
     });
-
-    it("should dispatch a hangupCall action when the hangup button is pressed",
-      function() {
-        view = mountTestComponent();
-
-        var hangupBtn = view.getDOMNode().querySelector(".btn-hangup");
-
-        React.addons.TestUtils.Simulate.click(hangupBtn);
-
-        sinon.assert.calledWithMatch(dispatcher.dispatch,
-          sinon.match.hasOwn("name", "hangupCall"));
-      });
 
     it("should dispatch a setMute action when the audio mute button is pressed",
       function() {
@@ -638,6 +627,7 @@ describe("loop.conversationViews", function () {
     function mountTestComponent() {
       return TestUtils.renderIntoDocument(
         React.createElement(loop.conversationViews.CallControllerView, {
+          chatWindowDetached: false,
           dispatcher: dispatcher,
           mozLoop: fakeMozLoop,
           onCallTerminated: onCallTerminatedStub
