@@ -39,6 +39,36 @@ ARCHIVE_FILES = {
                 'xpcshell/**',
             ],
         },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'js/src',
+            'pattern': 'jit-test/**',
+            'dest': 'jit-test',
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'js/src/tests',
+            'pattern': 'ecma_6/**',
+            'dest': 'jit-test/tests',
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'js/src/tests',
+            'pattern': 'js1_8_5/**',
+            'dest': 'jit-test/tests',
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'js/src/tests',
+            'pattern': 'lib/**',
+            'dest': 'jit-test/tests',
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'js/src',
+            'pattern': 'jsapi.h',
+            'dest': 'jit-test',
+        },
     ],
     'cppunittest': [
         {

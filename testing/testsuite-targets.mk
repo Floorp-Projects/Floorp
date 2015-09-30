@@ -383,7 +383,6 @@ stage-all: \
   stage-modules \
   stage-marionette \
   stage-cppunittests \
-  stage-jittest \
   stage-luciddream \
   test-packages-manifest \
   test-packages-manifest-tc \
@@ -546,14 +545,6 @@ ifdef STRIP_CPP_TESTS
 else
 	cp -RL $(DIST)/bin/jsapi-tests$(BIN_SUFFIX) $(PKG_STAGE)/cppunittest
 endif
-
-stage-jittest: make-stage-dir
-	$(NSINSTALL) -D $(PKG_STAGE)/jit-test/tests
-	cp -RL $(topsrcdir)/js/src/jsapi.h $(PKG_STAGE)/jit-test/
-	cp -RL $(topsrcdir)/js/src/jit-test $(PKG_STAGE)/jit-test/
-	cp -RL $(topsrcdir)/js/src/tests/ecma_6 $(PKG_STAGE)/jit-test/tests/
-	cp -RL $(topsrcdir)/js/src/tests/js1_8_5 $(PKG_STAGE)/jit-test/tests/
-	cp -RL $(topsrcdir)/js/src/tests/lib $(PKG_STAGE)/jit-test/tests/
 
 stage-steeplechase: make-stage-dir
 	$(NSINSTALL) -D $(PKG_STAGE)/steeplechase/
