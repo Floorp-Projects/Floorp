@@ -228,16 +228,39 @@ class AutoTry(object):
                 if 'subsuite' in t and t['subsuite'] == 'devtools':
                     flavor = 'devtools-chrome'
 
-                for path in paths:
-                    if flavor in ["crashtest", "reftest"]:
-                        manifest_relpath = os.path.relpath(t['manifest'], self.topsrcdir)
-                        if manifest_relpath.startswith(path):
-                            paths_by_flavor[flavor].add(manifest_relpath)
-                    else:
-                        if t['file_relpath'].startswith(path):
-                            paths_by_flavor[flavor].add(path)
+                if flavor in ['crashtest', 'reftest']:
+                    manifest_relpath = os.path.relpath(t['manifest'], self.topsrcdir)
+                    paths_by_flavor[flavor].add(os.path.dirname(manifest_relpath))
+                elif 'dir_relpath' in t:
+                    paths_by_flavor[flavor].add(t['dir_relpath'])
+                else:
+                    file_relpath = os.path.relpath(t['path'], self.topsrcdir)
+                    dir_relpath = os.path.dirname(file_relpath)
+                    paths_by_flavor[flavor].add(dir_relpath)
+
+        for flavor, path_set in paths_by_flavor.items():
+            paths_by_flavor[flavor] = self.deduplicate_prefixes(path_set, paths)
 
         return dict(paths_by_flavor)
+
+    def deduplicate_prefixes(self, path_set, input_paths):
+        # Removes paths redundant to test selection in the given path set.
+        # If a path was passed on the commandline that is the prefix of a
+        # path in our set, we only need to include the specified prefix to
+        # run the intended tests (every test in "layout/base" will run if
+        # "layout" is passed to the reftest harness).
+        removals = set()
+        additions = set()
+
+        for path in path_set:
+            full_path = path
+            while path:
+                path, _ = os.path.split(path)
+                if path in input_paths:
+                    removals.add(full_path)
+                    additions.add(path)
+
+        return additions | (path_set - removals)
 
     def remove_duplicates(self, paths_by_flavor, tests):
         rv = {}
@@ -327,3 +350,55 @@ class AutoTry(object):
             stat = subprocess.check_output(['hg', 'status'])
             return any(len(entry.strip()) and entry.strip()[0] in ('A', 'M', 'R')
                        for entry in stat.splitlines())
+
+    def find_paths_and_tags(self, verbose):
+        paths, tags = set(), set()
+        changed_files = self.find_changed_files()
+        if changed_files:
+            if verbose:
+                print("Pushing tests based on modifications to the "
+                      "following files:\n\t%s" % "\n\t".join(changed_files))
+
+            from mozbuild.frontend.reader import (
+                BuildReader,
+                EmptyConfig,
+            )
+
+            config = EmptyConfig(self.topsrcdir)
+            reader = BuildReader(config)
+            files_info = reader.files_info(changed_files)
+
+            for path, info in files_info.items():
+                paths |= info.test_files
+                tags |= info.test_tags
+
+            if verbose:
+                if paths:
+                    print("Pushing tests based on the following patterns:\n\t%s" %
+                          "\n\t".join(paths))
+                if tags:
+                    print("Pushing tests based on the following tags:\n\t%s" %
+                          "\n\t".join(tags))
+        return paths, tags
+
+
+    def find_changed_files(self):
+        """Finds files changed in a local source tree (hg only for now)."""
+        if self._use_git:
+            # Getting changed files on the current branch with rev-list and contains
+            # will not work: subsequent commits on mozilla-central frequently have
+            # non-increasing dates, breaking both.
+            # (see http://thread.gmane.org/gmane.comp.version-control.git/269560/)
+            # Git support will be added in bug 1203686.
+            return []
+
+        hg_args = [
+            'hg', 'log', '-r',
+            # Include everything from the current commit to the last
+            # public ancestor.
+            '::. and not public()',
+            '--template',
+            '{join(files, "\n")}\n',
+        ]
+
+        return subprocess.check_output(hg_args).splitlines()
