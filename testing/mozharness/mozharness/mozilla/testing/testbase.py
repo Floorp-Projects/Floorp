@@ -309,11 +309,6 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
                 self.find_artifacts_from_buildbot_changes()
             elif 'taskId' in self.buildbot_config['properties']:
                 self.find_artifacts_from_taskcluster()
-            else:
-                self.exception(
-                    "We have not been able to determine which artifacts "
-                    "to use in order to run the tests."
-                )
 
             missing = []
             if not self.installer_url:
