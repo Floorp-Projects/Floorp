@@ -8,6 +8,7 @@
 #include "mozilla/dom/TVListeners.h"
 #include "mozilla/Preferences.h"
 #include "nsITVService.h"
+#include "nsITVSimulatorService.h"
 #include "nsServiceManagerUtils.h"
 #include "TVServiceFactory.h"
 
@@ -27,8 +28,14 @@ TVServiceFactory::AutoCreateTVService()
   nsresult rv;
   nsCOMPtr<nsITVService> service = do_CreateInstance(TV_SERVICE_CONTRACTID);
   if (!service) {
-    // Fallback to the fake service.
-    service = do_CreateInstance(FAKE_TV_SERVICE_CONTRACTID, &rv);
+    if (Preferences::GetBool("dom.testing.tv_enabled_for_hosted_apps", false)) {
+      // Fallback to the fake service.
+      service = do_CreateInstance(FAKE_TV_SERVICE_CONTRACTID, &rv);
+    } else {
+      // Fallback to the TV Simulator Service
+      service = do_CreateInstance(TV_SIMULATOR_SERVICE_CONTRACTID, &rv);
+    }
+
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;
     }

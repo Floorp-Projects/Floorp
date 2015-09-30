@@ -81,6 +81,9 @@ TVTuner::Init(nsITVTunerData* aData)
   mTVService = TVServiceFactory::AutoCreateTVService();
   NS_ENSURE_TRUE(mTVService, false);
 
+  rv = aData->GetStreamType(&mStreamType);
+  NS_ENSURE_SUCCESS(rv, false);
+
   return true;
 }
 
@@ -198,10 +201,25 @@ nsresult
 TVTuner::InitMediaStream()
 {
   nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(GetOwner());
-  nsRefPtr<DOMHwMediaStream> stream = DOMHwMediaStream::CreateHwStream(window);
+  nsRefPtr<DOMMediaStream> stream = nullptr;
+  if (mStreamType == nsITVTunerData::TV_STREAM_TYPE_HW) {
+    stream = DOMHwMediaStream::CreateHwStream(window);
+  } else if (mStreamType == nsITVTunerData::TV_STREAM_TYPE_SIMULATOR) {
+    // Bug 1180589 : We should MediaStream from local file.
+    //               We should create the PART.2 patch.
+    //stream = CreateSimulatedMediaStream();
+
+    return NS_OK;
+  }
 
   mStream = stream.forget();
   return NS_OK;
+}
+
+already_AddRefed<DOMMediaStream>
+TVTuner::CreateSimulatedMediaStream()
+{
+  return nullptr;
 }
 
 nsresult
