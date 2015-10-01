@@ -584,7 +584,7 @@ nsFaviconService::GetFaviconDataAsync(nsIURI* aFaviconURI,
   NS_ENSURE_STATE(stmt);
 
   // Ignore the ref part of the URI before querying the database because
-  // we may have added the #-moz-resolution ref for rendering purposes.
+  // we may have added a media fragment for rendering purposes.
 
   nsAutoCString faviconURI;
   aFaviconURI->GetSpecIgnoringRef(faviconURI);

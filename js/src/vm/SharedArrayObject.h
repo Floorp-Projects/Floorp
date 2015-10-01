@@ -57,7 +57,7 @@ class SharedArrayRawBuffer
         length(length),
         waiters_(nullptr)
     {
-        MOZ_ASSERT(buffer == dataPointer());
+        MOZ_ASSERT(buffer == dataPointerShared());
     }
 
   public:
@@ -75,11 +75,12 @@ class SharedArrayRawBuffer
         waiters_ = waiters;
     }
 
-    inline uint8_t* dataPointer() const {
-        return ((uint8_t*)this) + sizeof(SharedArrayRawBuffer);
+    SharedMem<uint8_t*> dataPointerShared() const {
+        uint8_t* ptr = reinterpret_cast<uint8_t*>(const_cast<SharedArrayRawBuffer*>(this));
+        return SharedMem<uint8_t*>::shared(ptr + sizeof(SharedArrayRawBuffer));
     }
 
-    inline uint32_t byteLength() const {
+    uint32_t byteLength() const {
         return length;
     }
 
@@ -143,19 +144,19 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared
 
     // Invariant: This method does not cause GC and can be called
     // without anchoring the object it is called on.
-    void* globalID() const {
+    uintptr_t globalID() const {
         // The buffer address is good enough as an ID provided the memory is not shared
         // between processes or, if it is, it is mapped to the same address in every
         // process.  (At the moment, shared memory cannot be shared between processes.)
-        return dataPointer();
+        return dataPointerShared().asValue();
     }
 
     uint32_t byteLength() const {
         return rawBufferObject()->byteLength();
     }
 
-    uint8_t* dataPointer() const {
-        return rawBufferObject()->dataPointer();
+    SharedMem<uint8_t*> dataPointerShared() const {
+        return rawBufferObject()->dataPointerShared();
     }
 
 private:

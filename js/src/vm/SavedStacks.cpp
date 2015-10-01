@@ -294,7 +294,6 @@ SavedFrame::finishSavedFrameInit(JSContext* cx, HandleObject ctor, HandleObject 
     nullptr,                    // enumerate
     nullptr,                    // resolve
     nullptr,                    // mayResolve
-    nullptr,                    // convert
     SavedFrame::finalize,       // finalize
     nullptr,                    // call
     nullptr,                    // hasInstance

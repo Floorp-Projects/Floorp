@@ -90,14 +90,17 @@ function test() {
 
   /* private utility functions */
 
-  function pressCtrlTab(aShiftKey)
+  function pressCtrlTab(aShiftKey) {
     EventUtils.synthesizeKey("VK_TAB", { ctrlKey: true, shiftKey: !!aShiftKey });
+  }
 
-  function releaseCtrl()
+  function releaseCtrl() {
     EventUtils.synthesizeKey("VK_CONTROL", { type: "keyup" });
+  }
 
-  function isOpen()
-    ctrlTab.isOpen;
+  function isOpen() {
+    return ctrlTab.isOpen;
+  }
 
   function checkTabs(aTabs) {
     var tabs = gBrowser.tabs.length;

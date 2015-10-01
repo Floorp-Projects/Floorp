@@ -51,7 +51,7 @@ function ProtocolHandler(aScheme, aFlags)
 ProtocolHandler.prototype =
 {
   defaultPort: -1,
-  allowPort: function() false,
+  allowPort: () => false,
   newURI: function(aSpec, aCharset, aBaseURI)
   {
     let uri = Cc["@mozilla.org/network/standard-url;1"].

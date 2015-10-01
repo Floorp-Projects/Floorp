@@ -283,7 +283,7 @@ function test_emitLatchedEvents(eventPrefix, initialDelta, cmd)
   for (let dir in cmd)
     cmd[dir].callCount = expect[dir] = 0;
 
-  let check = function(aDir, aMsg) ok(cmd[aDir].callCount == expect[aDir], aMsg);
+  let check = (aDir, aMsg) => ok(cmd[aDir].callCount == expect[aDir], aMsg);
   let checkBoth = function(aNum, aInc, aDec) {
     let prefix = "Step " + aNum + ": ";
     check("inc", prefix + aInc);

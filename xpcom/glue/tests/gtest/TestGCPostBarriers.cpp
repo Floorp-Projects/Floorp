@@ -88,7 +88,7 @@ CreateGlobalAndRunTest(JSRuntime* rt, JSContext* cx)
     "global", JSCLASS_GLOBAL_FLAGS,
     nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, nullptr,
-    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr,
     JS_GlobalObjectTraceHook
   };
 

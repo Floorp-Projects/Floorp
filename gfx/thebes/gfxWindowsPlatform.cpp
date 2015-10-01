@@ -194,7 +194,7 @@ public:
         IDXGIAdapter *DXGIAdapter;
 
         HMODULE gdi32Handle;
-        PFND3DKMTQS queryD3DKMTStatistics;
+        PFND3DKMTQS queryD3DKMTStatistics = nullptr;
 
         // GPU memory reporting is not available before Windows 7
         if (!IsWin7OrLater())
@@ -598,6 +598,10 @@ gfxWindowsPlatform::CreateDevice(nsRefPtr<IDXGIAdapter1> &adapter1,
 void
 gfxWindowsPlatform::VerifyD2DDevice(bool aAttemptForce)
 {
+  if (!Factory::SupportsD2D1() && !gfxPrefs::Direct2DAllow1_0()) {
+    return;
+  }
+
 #ifdef CAIRO_HAS_D2D_SURFACE
     if (mD3D10Device) {
         if (SUCCEEDED(mD3D10Device->GetDeviceRemovedReason())) {

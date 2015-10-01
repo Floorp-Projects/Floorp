@@ -10,6 +10,8 @@ const TEST_URL = TEST_URL_ROOT + "doc_markup_mutation.html";
 
 // Mutation tests. Each entry in the array has the following properties:
 // - desc: for logging only
+// - numMutations: how many mutations are expected to come happen due to the
+//   test case.  Defaults to 1 if not set.
 // - test: a function supposed to mutate the DOM
 // - check: a function supposed to test that the mutation was handled
 const TEST_DATA = [
@@ -63,6 +65,31 @@ const TEST_DATA = [
       ok([...editor.attrList.querySelectorAll(".attreditor")].some(attr => {
         return attr.textContent.trim() === "newattr=\"newattrchanged\"";
       }), "newattr attribute found");
+    }
+  },
+  {
+    desc: "Adding ::after element",
+    numMutations: 2,
+    test: () => {
+      let node1 = getNode("#node1");
+      node1.classList.add("pseudo");
+    },
+    check: function*(inspector) {
+      let {children} = yield getContainerForSelector("#node1", inspector);
+      is(children.childNodes.length, 2,
+        "Node1 now has 2 children (text child and ::after");
+    }
+  },
+  {
+    desc: "Removing ::after element",
+    numMutations: 2,
+    test: () => {
+      let node1 = getNode("#node1");
+      node1.classList.remove("pseudo");
+    },
+    check: function*(inspector) {
+      let container = yield getContainerForSelector("#node1", inspector);
+      ok(container.singleTextChild, "Has single text child.");
     }
   },
   {
@@ -241,13 +268,28 @@ add_task(function*() {
   info("Expanding all markup-view nodes");
   yield inspector.markup.expandAll();
 
-  for (let {desc, test, check} of TEST_DATA) {
+  for (let {desc, test, check, numMutations} of TEST_DATA) {
     info("Starting test: " + desc);
 
+    numMutations = numMutations || 1;
+
     info("Executing the test markup mutation");
-    let onMutation = inspector.once("markupmutation");
-    test();
-    yield onMutation;
+    yield new Promise((resolve) => {
+      // If a test expects more than one mutation it may come through in a
+      // single event or possibly in multiples.
+      let seenMutations = 0;
+      inspector.on("markupmutation", function onmutation(e, mutations) {
+        seenMutations += mutations.length;
+        info("Receieved " + seenMutations +
+             " mutations, expecting at least " + numMutations);
+        if (seenMutations >= numMutations) {
+          inspector.off("markupmutation", onmutation);
+          resolve();
+        }
+      });
+
+      test();
+    })
 
     info("Expanding all markup-view nodes to make sure new nodes are imported");
     yield inspector.markup.expandAll();

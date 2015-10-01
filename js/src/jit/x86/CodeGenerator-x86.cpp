@@ -301,7 +301,7 @@ CodeGeneratorX86::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic*
             bailoutIf(Assembler::AboveOrEqual, ins->snapshot());
     }
 
-    Operand srcAddr(ptr, int32_t(mir->base()) + int32_t(offset));
+    Operand srcAddr(ptr, int32_t(mir->base().asValue()) + int32_t(offset));
     load(accessType, srcAddr, out);
     if (accessType == Scalar::Float64)
         masm.canonicalizeDouble(ToFloatRegister(out));
@@ -506,7 +506,7 @@ CodeGeneratorX86::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStati
     uint32_t offset = mir->offset();
 
     if (!mir->needsBoundsCheck()) {
-        Operand dstAddr(ptr, int32_t(mir->base()) + int32_t(offset));
+        Operand dstAddr(ptr, int32_t(mir->base().asValue()) + int32_t(offset));
         store(accessType, value, dstAddr);
         return;
     }
@@ -516,7 +516,7 @@ CodeGeneratorX86::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStati
     Label rejoin;
     masm.j(Assembler::AboveOrEqual, &rejoin);
 
-    Operand dstAddr(ptr, (int32_t) mir->base());
+    Operand dstAddr(ptr, int32_t(mir->base().asValue()));
     store(accessType, value, dstAddr);
     masm.bind(&rejoin);
 }

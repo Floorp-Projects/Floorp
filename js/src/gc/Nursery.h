@@ -20,6 +20,7 @@
 #include "js/HeapAPI.h"
 #include "js/Value.h"
 #include "js/Vector.h"
+#include "vm/SharedMem.h"
 
 namespace JS {
 struct Zone;
@@ -129,6 +130,10 @@ class Nursery
     MOZ_ALWAYS_INLINE bool isInside(gc::Cell* cellp) const = delete;
     MOZ_ALWAYS_INLINE bool isInside(const void* p) const {
         return uintptr_t(p) >= heapStart_ && uintptr_t(p) < heapEnd_;
+    }
+    template<typename T>
+    bool isInside(const SharedMem<T>& p) const {
+        return isInside(p.unwrap(/*safe - used for value in comparison above*/));
     }
 
     /*

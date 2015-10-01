@@ -683,8 +683,6 @@ InstantiateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
   }
 #endif
 
-  NS_ENSURE_TRUE(decoder != nullptr, nullptr);
-  NS_ENSURE_TRUE(decoder->Init(aOwner), nullptr);
   return nullptr;
 }
 

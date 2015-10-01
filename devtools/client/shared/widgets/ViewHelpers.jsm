@@ -771,7 +771,9 @@ this.WidgetMethods = {
    * Gets the element node or widget associated with this container.
    * @return nsIDOMNode | object
    */
-  get widget() this._widget,
+  get widget() {
+    return this._widget;
+  },
 
   /**
    * Prepares an item to be added to this container. This allows, for example,

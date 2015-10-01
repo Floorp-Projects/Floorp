@@ -1499,6 +1499,25 @@ CodeGeneratorMIPSShared::visitGuardClass(LGuardClass* guard)
 }
 
 void
+CodeGeneratorMIPSShared::visitMemoryBarrier(LMemoryBarrier* ins)
+{
+    memoryBarrier(ins->type());
+}
+
+void
+CodeGeneratorMIPSShared::memoryBarrier(MemoryBarrierBits barrier)
+{
+    if (barrier == MembarLoadLoad)
+        masm.as_sync(19);
+    else if (barrier == MembarStoreStore)
+        masm.as_sync(4);
+    else if (barrier & MembarSynchronizing)
+        masm.as_sync();
+    else if (barrier)
+        masm.as_sync(16);
+}
+
+void
 CodeGeneratorMIPSShared::generateInvalidateEpilogue()
 {
     // Ensure that there is enough space in the buffer for the OsiPoint
@@ -1564,6 +1583,7 @@ CodeGeneratorMIPSShared::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
       default: MOZ_CRASH("unexpected array type");
     }
 
+    memoryBarrier(mir->barrierBefore());
     if (ptr->isConstant()) {
         MOZ_ASSERT(!mir->needsBoundsCheck());
         int32_t ptrImm = ptr->toConstant()->toInt32();
@@ -1578,6 +1598,7 @@ CodeGeneratorMIPSShared::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
             masm.ma_load(ToRegister(out), Address(HeapReg, ptrImm),
                          static_cast<LoadStoreSize>(size), isSigned ? SignExtend : ZeroExtend);
         }
+        memoryBarrier(mir->barrierAfter());
         return;
     }
 
@@ -1594,6 +1615,7 @@ CodeGeneratorMIPSShared::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
             masm.ma_load(ToRegister(out), BaseIndex(HeapReg, ptrReg, TimesOne),
                          static_cast<LoadStoreSize>(size), isSigned ? SignExtend : ZeroExtend);
         }
+        memoryBarrier(mir->barrierAfter());
         return;
     }
 
@@ -1629,6 +1651,7 @@ CodeGeneratorMIPSShared::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
     }
     masm.bind(&done);
 
+    memoryBarrier(mir->barrierAfter());
     masm.append(AsmJSHeapAccess(bo.getOffset()));
 }
 
@@ -1654,6 +1677,7 @@ CodeGeneratorMIPSShared::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
       default: MOZ_CRASH("unexpected array type");
     }
 
+    memoryBarrier(mir->barrierBefore());
     if (ptr->isConstant()) {
         MOZ_ASSERT(!mir->needsBoundsCheck());
         int32_t ptrImm = ptr->toConstant()->toInt32();
@@ -1669,6 +1693,7 @@ CodeGeneratorMIPSShared::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
             masm.ma_store(ToRegister(value), Address(HeapReg, ptrImm),
                           static_cast<LoadStoreSize>(size), isSigned ? SignExtend : ZeroExtend);
         }
+        memoryBarrier(mir->barrierAfter());
         return;
     }
 
@@ -1685,6 +1710,7 @@ CodeGeneratorMIPSShared::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
             masm.ma_store(ToRegister(value), BaseIndex(HeapReg, ptrReg, TimesOne),
                           static_cast<LoadStoreSize>(size), isSigned ? SignExtend : ZeroExtend);
         }
+        memoryBarrier(mir->barrierAfter());
         return;
     }
 
@@ -1710,6 +1736,7 @@ CodeGeneratorMIPSShared::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
         masm.ma_b(gen->outOfBoundsLabel());
     masm.bind(&done);
 
+    memoryBarrier(mir->barrierAfter());
     masm.append(AsmJSHeapAccess(bo.getOffset()));
 }
 

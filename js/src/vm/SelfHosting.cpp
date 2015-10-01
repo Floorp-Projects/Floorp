@@ -40,6 +40,8 @@
 #include "jsfuninlines.h"
 #include "jsscriptinlines.h"
 
+#include "jit/AtomicOperations-inl.h"
+
 #include "vm/BooleanObject-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/NumberObject-inl.h"
@@ -1642,7 +1644,7 @@ JSRuntime::createSelfHostingGlobal(JSContext* cx)
         "self-hosting-global", JSCLASS_GLOBAL_FLAGS,
         nullptr, nullptr, nullptr, nullptr,
         nullptr, nullptr, nullptr, nullptr,
-        nullptr, nullptr, nullptr, nullptr,
+        nullptr, nullptr, nullptr,
         JS_GlobalObjectTraceHook
     };
 

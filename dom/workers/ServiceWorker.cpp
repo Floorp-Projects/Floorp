@@ -10,7 +10,7 @@
 #include "nsPIDOMWindow.h"
 #include "ServiceWorkerClient.h"
 #include "ServiceWorkerManager.h"
-#include "SharedWorker.h"
+#include "ServiceWorkerPrivate.h"
 #include "WorkerPrivate.h"
 
 #include "mozilla/Preferences.h"
@@ -42,15 +42,12 @@ ServiceWorkerVisible(JSContext* aCx, JSObject* aObj)
 }
 
 ServiceWorker::ServiceWorker(nsPIDOMWindow* aWindow,
-                             ServiceWorkerInfo* aInfo,
-                             SharedWorker* aSharedWorker)
+                             ServiceWorkerInfo* aInfo)
   : DOMEventTargetHelper(aWindow),
-    mInfo(aInfo),
-    mSharedWorker(aSharedWorker)
+    mInfo(aInfo)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aInfo);
-  MOZ_ASSERT(mSharedWorker);
 
   // This will update our state too.
   mInfo->AppendWorker(this);
@@ -67,9 +64,6 @@ NS_IMPL_RELEASE_INHERITED(ServiceWorker, DOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServiceWorker)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
-
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorker, DOMEventTargetHelper,
-                                   mSharedWorker)
 
 JSObject*
 ServiceWorker::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
@@ -102,23 +96,9 @@ ServiceWorker::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     return;
   }
 
-  WorkerPrivate* workerPrivate = GetWorkerPrivate();
-  MOZ_ASSERT(workerPrivate);
-
-  nsAutoPtr<ServiceWorkerClientInfo> clientInfo(new ServiceWorkerClientInfo(window->GetExtantDoc()));
-
-  workerPrivate->PostMessageToServiceWorker(aCx, aMessage, aTransferable,
-                                            clientInfo, aRv);
-}
-
-WorkerPrivate*
-ServiceWorker::GetWorkerPrivate() const
-{
-  // At some point in the future, this may be optimized to terminate a worker
-  // that hasn't been used in a certain amount of time or when there is memory
-  // pressure or similar.
-  MOZ_ASSERT(mSharedWorker);
-  return mSharedWorker->GetWorkerPrivate();
+  UniquePtr<ServiceWorkerClientInfo> clientInfo(new ServiceWorkerClientInfo(window->GetExtantDoc()));
+  ServiceWorkerPrivate* workerPrivate = mInfo->WorkerPrivate();
+  aRv = workerPrivate->SendMessageEvent(aCx, aMessage, aTransferable, Move(clientInfo));
 }
 
 void

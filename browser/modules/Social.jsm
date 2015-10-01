@@ -213,7 +213,7 @@ this.Social = {
         }]
       };
       PlacesUtils.asyncHistory.updatePlaces(place, {
-        handleError: function () Cu.reportError("couldn't update history for socialmark annotation"),
+        handleError: () => Cu.reportError("couldn't update history for socialmark annotation"),
         handleResult: function () {},
         handleCompletion: function () {
           promiseSetAnnotation(aURI, providerList).then(function() {

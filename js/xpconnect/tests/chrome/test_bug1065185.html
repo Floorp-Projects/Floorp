@@ -33,7 +33,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1065185
         endMonitor();
         break;
       case 1:
-        doMonitor([/access to property a/i]);
+        doMonitor([/access to property "a"/i]);
         window[0].wrappedJSObject.probe = { a: 2 };
         is(window[0].eval('probe.a'), undefined, "Non-exposed prop undefined");
         is(window[0].eval('probe.a'), undefined, "Non-exposed prop undefined again");

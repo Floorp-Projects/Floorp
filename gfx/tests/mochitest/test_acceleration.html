@@ -84,12 +84,12 @@ switch(osName)
     }
 
     var gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo);
-    if (version < 6.0) {
-      ok(!gfxInfo.D2DEnabled, "Direct2D not supported on Windows 2003 or older");
-      ok(!gfxInfo.DWriteEnabled, "DirectWrite not supported on Windows 2003 or older");
+    if (version < 6.2) {
+      ok(!gfxInfo.D2DEnabled, "Direct2D not supported on Windows 2008 or older");
+      ok(!gfxInfo.DWriteEnabled, "DirectWrite not supported on Windows 2008 or older");
     } else {
-      ok(gfxInfo.D2DEnabled, "Direct2D enabled on Windows Vista or newer");
-      ok(gfxInfo.DWriteEnabled, "DirectWrite enabled on Windows Vista or newer");
+      ok(gfxInfo.D2DEnabled, "Direct2D enabled on Windows 8 or newer");
+      ok(gfxInfo.DWriteEnabled, "DirectWrite enabled on Windows 8 or newer");
     }
     break;
 

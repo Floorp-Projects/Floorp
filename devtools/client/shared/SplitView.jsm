@@ -86,21 +86,30 @@ SplitView.prototype = {
     *
     * @return boolean
     */
-  get isLandscape() this._mql.matches,
+  get isLandscape()
+  {
+    return this._mql.matches;
+  },
 
   /**
     * Retrieve the root element.
     *
     * @return DOMElement
     */
-  get rootElement() this._root,
+  get rootElement()
+  {
+    return this._root;
+  },
 
   /**
     * Retrieve the active item's summary element or null if there is none.
     *
     * @return DOMElement
     */
-  get activeSummary() this._activeSummary,
+  get activeSummary()
+  {
+    return this._activeSummary;
+  },
 
   /**
     * Set the active item's summary element.

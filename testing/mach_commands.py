@@ -465,8 +465,7 @@ class PushToTry(MachCommandBase):
             sys.exit(1)
 
         if kwargs["platforms"] is None:
-            print("Platforms must be specified as an argument to autotry")
-            sys.exit(1)
+            kwargs["platforms"] = [os.environ['AUTOTRY_PLATFORM_HINT']]
 
         try:
             platforms = self.normalise_list(kwargs["platforms"])
@@ -575,11 +574,14 @@ class PushToTry(MachCommandBase):
                 if value in (None, []) and key in defaults:
                     kwargs[key] = defaults[key]
 
-        builds, platforms, tests, talos, paths, tags, extra_args = self.validate_args(**kwargs)
-
         if kwargs["push"] and at.find_uncommited_changes():
             print('ERROR please commit changes before continuing')
             sys.exit(1)
+
+        if not any(kwargs[item] for item in ("paths", "tests", "tags")):
+            kwargs["paths"], kwargs["tags"] = at.find_paths_and_tags(kwargs["verbose"])
+
+        builds, platforms, tests, talos, paths, tags, extra_args = self.validate_args(**kwargs)
 
         if paths or tags:
             driver = self._spawn(BuildDriver)

@@ -109,7 +109,9 @@ function setupTestDir(testDir, relative) {
 }
 
 function createSpaces(dirs, files, links) {
-  function longest(a, b) a.length > b.length ? a : b;
+  function longest(a, b) {
+    return a.length > b.length ? a : b;
+  }
   return dirs.concat(files, links).reduce(longest, "").replace(/./g, " ");
 }
 

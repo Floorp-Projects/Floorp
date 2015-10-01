@@ -977,6 +977,21 @@ class TestFileFinder(MatchTestTemplate, TestWithTmpDir):
         self.do_check('**', ['foo/bar', 'foo/baz', 'foo/quxz', 'bar'])
         self.do_check('foo/**', ['foo/bar', 'foo/baz', 'foo/quxz'])
 
+    def test_dotfiles(self):
+        """Finder can find files beginning with . is configured."""
+        self.prepare_match_test(with_dotfiles=True)
+        self.finder = FileFinder(self.tmpdir, find_dotfiles=True)
+        self.do_check('**', ['bar', 'foo/.foo', 'foo/.bar/foo',
+            'foo/bar', 'foo/baz', 'foo/qux/1', 'foo/qux/bar',
+            'foo/qux/2/test', 'foo/qux/2/test2'])
+
+    def test_dotfiles_plus_ignore(self):
+        self.prepare_match_test(with_dotfiles=True)
+        self.finder = FileFinder(self.tmpdir, find_dotfiles=True,
+                                 ignore=['foo/.bar/**'])
+        self.do_check('foo/**', ['foo/.foo', 'foo/bar', 'foo/baz',
+            'foo/qux/1', 'foo/qux/bar', 'foo/qux/2/test', 'foo/qux/2/test2'])
+
 
 class TestJarFinder(MatchTestTemplate, TestWithTmpDir):
     def add(self, path):

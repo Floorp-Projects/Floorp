@@ -1660,40 +1660,6 @@ this.PlacesUtils = {
   },
 
   /**
-   * Returns the passed URL with a #-moz-resolution fragment
-   * for the specified dimensions and devicePixelRatio.
-   *
-   * @param aWindow
-   *        A window from where we want to get the device
-   *        pixel Ratio
-   *
-   * @param aURL
-   *        The URL where we should add the fragment
-   *
-   * @param aWidth
-   *        The target image width
-   *
-   * @param aHeight
-   *        The target image height
-   *
-   * @return The URL with the fragment at the end
-   */
-  getImageURLForResolution:
-  function PU_getImageURLForResolution(aWindow, aURL, aWidth = 16, aHeight = 16) {
-    // We only want to modify the URL when the file extension is ".ico" or
-    // it's a data URI with an icon media-type.
-    let uri = Services.io.newURI(aURL, null, null);
-    if ((!(uri instanceof Ci.nsIURL) || uri.fileExtension.toLowerCase() != "ico") &&
-        !/^data:image\/(?:x-icon|icon|ico)/.test(aURL)) {
-      return aURL;
-    }
-    let width  = Math.round(aWidth * aWindow.devicePixelRatio);
-    let height = Math.round(aHeight * aWindow.devicePixelRatio);
-    return aURL + (aURL.includes("#") ? "&" : "#") +
-           "-moz-resolution=" + width + "," + height;
-  },
-
-  /**
    * Get the unique id for an item (a bookmark, a folder or a separator) given
    * its item id.
    *
