@@ -135,7 +135,9 @@
  *
  * This file implements four classes, illustrated here:
  *
- * BarrieredBase          abstract base class which provides common operations
+ * BarrieredBase          base class of all barriers
+ *  |
+ * WriteBarrieredBase     base class which provides common write operations
  *  |  |  |  |
  *  |  |  | PreBarriered  provides pre-barriers only
  *  |  |  |
@@ -148,7 +150,7 @@
  * The implementation of the barrier logic is implemented on T::writeBarrier.*,
  * via:
  *
- * BarrieredBase<T>::pre
+ * WriteBarrieredBase<T>::pre
  *  -> InternalGCMethods<T*>::preBarrier
  *      -> T::writeBarrierPre
  *  -> InternalGCMethods<Value>::preBarrier
@@ -302,45 +304,71 @@ struct InternalGCMethods<jsid>
     static void postBarrier(jsid* idp, jsid prev, jsid next) {}
 };
 
+// Barrier classes can use Mixins to add methods to a set of barrier
+// instantiations, to make the barriered thing look and feel more like the
+// thing itself.
 template <typename T>
 class BarrieredBaseMixins {};
 
-/*
- * Base class for barriered pointer types.
- */
-template <class T>
+// Base class of all barrier types.
+template <typename T>
 class BarrieredBase : public BarrieredBaseMixins<T>
 {
   protected:
+    // BarrieredBase is not directly instantiable.
+    explicit BarrieredBase(T v) : value(v) {
+#ifdef DEBUG
+        assertTypeConstraints();
+#endif
+    }
+
+    // Storage for all barrier classes. |value| must be a GC thing reference
+    // type: either a direct pointer to a GC thing or a supported tagged
+    // pointer that can reference GC things, such as JS::Value or jsid. Nested
+    // barrier types are NOT supported. See assertTypeConstraints.
     T value;
 
-    explicit BarrieredBase(T v) : value(v) {}
+  private:
+#ifdef DEBUG
+    // Static type assertions about T must be moved out of line to avoid
+    // circular dependencies between Barrier classes and GC memory definitions.
+    void assertTypeConstraints() const;
+#endif
+};
+
+// Base class for barriered pointer types that intercept only writes.
+template <class T>
+class WriteBarrieredBase : public BarrieredBase<T>
+{
+  protected:
+    // WriteBarrieredBase is not directly instantiable.
+    explicit WriteBarrieredBase(T v) : BarrieredBase<T>(v) {}
 
   public:
     DECLARE_POINTER_COMPARISON_OPS(T);
     DECLARE_POINTER_CONSTREF_OPS(T);
 
     /* Use this if the automatic coercion to T isn't working. */
-    const T& get() const { return value; }
+    const T& get() const { return this->value; }
 
     /*
      * Use these if you want to change the value without invoking barriers.
      * Obviously this is dangerous unless you know the barrier is not needed.
      */
-    T* unsafeGet() { return &value; }
-    const T* unsafeGet() const { return &value; }
-    void unsafeSet(T v) { value = v; }
+    T* unsafeGet() { return &this->value; }
+    const T* unsafeGet() const { return &this->value; }
+    void unsafeSet(T v) { this->value = v; }
 
     /* For users who need to manually barrier the raw types. */
     static void writeBarrierPre(const T& v) { InternalGCMethods<T>::preBarrier(v); }
 
   protected:
-    void pre() { InternalGCMethods<T>::preBarrier(value); }
-    void post(T prev, T next) { InternalGCMethods<T>::postBarrier(&value, prev, next); }
+    void pre() { InternalGCMethods<T>::preBarrier(this->value); }
+    void post(T prev, T next) { InternalGCMethods<T>::postBarrier(&this->value, prev, next); }
 };
 
 template <>
-class BarrieredBaseMixins<JS::Value> : public ValueOperations<BarrieredBase<JS::Value> >
+class BarrieredBaseMixins<JS::Value> : public ValueOperations<WriteBarrieredBase<JS::Value>>
 {};
 
 /*
@@ -350,15 +378,15 @@ class BarrieredBaseMixins<JS::Value> : public ValueOperations<BarrieredBase<JS::
  * of moving behavior, e.g. for HashMap keys.
  */
 template <class T>
-class PreBarriered : public BarrieredBase<T>
+class PreBarriered : public WriteBarrieredBase<T>
 {
   public:
-    PreBarriered() : BarrieredBase<T>(GCMethods<T>::initial()) {}
+    PreBarriered() : WriteBarrieredBase<T>(GCMethods<T>::initial()) {}
     /*
      * Allow implicit construction for use in generic contexts, such as DebuggerWeakMap::markKeys.
      */
-    MOZ_IMPLICIT PreBarriered(T v) : BarrieredBase<T>(v) {}
-    explicit PreBarriered(const PreBarriered<T>& v) : BarrieredBase<T>(v.value) {}
+    MOZ_IMPLICIT PreBarriered(T v) : WriteBarrieredBase<T>(v) {}
+    explicit PreBarriered(const PreBarriered<T>& v) : WriteBarrieredBase<T>(v.value) {}
     ~PreBarriered() { this->pre(); }
 
     void init(T v) {
@@ -395,14 +423,14 @@ class PreBarriered : public BarrieredBase<T>
  * automatically handling deletion or movement.
  */
 template <class T>
-class HeapPtr : public BarrieredBase<T>
+class HeapPtr : public WriteBarrieredBase<T>
 {
   public:
-    HeapPtr() : BarrieredBase<T>(GCMethods<T>::initial()) {}
-    explicit HeapPtr(T v) : BarrieredBase<T>(v) {
+    HeapPtr() : WriteBarrieredBase<T>(GCMethods<T>::initial()) {}
+    explicit HeapPtr(T v) : WriteBarrieredBase<T>(v) {
         this->post(GCMethods<T>::initial(), v);
     }
-    explicit HeapPtr(const HeapPtr<T>& v) : BarrieredBase<T>(v) {
+    explicit HeapPtr(const HeapPtr<T>& v) : WriteBarrieredBase<T>(v) {
         this->post(GCMethods<T>::initial(), v);
     }
 #ifdef DEBUG
@@ -447,11 +475,11 @@ class HeapPtr : public BarrieredBase<T>
  * used in contexts where this ability is necessary.
  */
 template <class T>
-class RelocatablePtr : public BarrieredBase<T>
+class RelocatablePtr : public WriteBarrieredBase<T>
 {
   public:
-    RelocatablePtr() : BarrieredBase<T>(GCMethods<T>::initial()) {}
-    explicit RelocatablePtr(T v) : BarrieredBase<T>(v) {
+    RelocatablePtr() : WriteBarrieredBase<T>(GCMethods<T>::initial()) {}
+    explicit RelocatablePtr(T v) : WriteBarrieredBase<T>(v) {
         this->post(GCMethods<T>::initial(), this->value);
     }
 
@@ -461,7 +489,7 @@ class RelocatablePtr : public BarrieredBase<T>
      * function that will be used for both lvalue and rvalue copies, so we can
      * simply omit the rvalue variant.
      */
-    RelocatablePtr(const RelocatablePtr<T>& v) : BarrieredBase<T>(v) {
+    RelocatablePtr(const RelocatablePtr<T>& v) : WriteBarrieredBase<T>(v) {
         this->post(GCMethods<T>::initial(), this->value);
     }
 
@@ -542,7 +570,7 @@ class ReadBarriered
 // A pre- and post-barriered Value that is specialized to be aware that it
 // resides in a slots or elements vector. This allows it to be relocated in
 // memory, but with substantially less overhead than a RelocatablePtr.
-class HeapSlot : public BarrieredBase<Value>
+class HeapSlot : public WriteBarrieredBase<Value>
 {
   public:
     enum Kind {
@@ -553,13 +581,13 @@ class HeapSlot : public BarrieredBase<Value>
     explicit HeapSlot() = delete;
 
     explicit HeapSlot(NativeObject* obj, Kind kind, uint32_t slot, const Value& v)
-      : BarrieredBase<Value>(v)
+      : WriteBarrieredBase<Value>(v)
     {
         post(obj, kind, slot, v);
     }
 
     explicit HeapSlot(NativeObject* obj, Kind kind, uint32_t slot, const HeapSlot& s)
-      : BarrieredBase<Value>(s.value)
+      : WriteBarrieredBase<Value>(s.value)
     {
         post(obj, kind, slot, s);
     }
