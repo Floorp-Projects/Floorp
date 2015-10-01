@@ -326,6 +326,10 @@ LCovCompartment::collectCodeCoverageInfo(JSCompartment* comp, JSObject* sso,
 void
 LCovCompartment::collectSourceFile(JSCompartment* comp, ScriptSourceObject* sso)
 {
+    // Do not add sources if there is no file name associated to it.
+    if (!sso->source()->filename())
+        return;
+
     // Skip any operation if we already some out-of memory issues.
     if (outTN_.hadOutOfMemory())
         return;
