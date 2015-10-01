@@ -3233,26 +3233,26 @@ nsDocShell::SetDocLoaderParent(nsDocLoader* aParent)
   bool value;
   nsCOMPtr<nsIDocShell> parentAsDocShell(do_QueryInterface(parent));
   if (parentAsDocShell) {
-    if (NS_SUCCEEDED(parentAsDocShell->GetAllowPlugins(&value))) {
+    if (mAllowPlugins && NS_SUCCEEDED(parentAsDocShell->GetAllowPlugins(&value))) {
       SetAllowPlugins(value);
     }
-    if (NS_SUCCEEDED(parentAsDocShell->GetAllowJavascript(&value))) {
+    if (mAllowJavascript && NS_SUCCEEDED(parentAsDocShell->GetAllowJavascript(&value))) {
       SetAllowJavascript(value);
     }
-    if (NS_SUCCEEDED(parentAsDocShell->GetAllowMetaRedirects(&value))) {
+    if (mAllowMetaRedirects && NS_SUCCEEDED(parentAsDocShell->GetAllowMetaRedirects(&value))) {
       SetAllowMetaRedirects(value);
     }
-    if (NS_SUCCEEDED(parentAsDocShell->GetAllowSubframes(&value))) {
+    if (mAllowSubframes && NS_SUCCEEDED(parentAsDocShell->GetAllowSubframes(&value))) {
       SetAllowSubframes(value);
     }
-    if (NS_SUCCEEDED(parentAsDocShell->GetAllowImages(&value))) {
+    if (mAllowImages && NS_SUCCEEDED(parentAsDocShell->GetAllowImages(&value))) {
       SetAllowImages(value);
     }
-    SetAllowMedia(parentAsDocShell->GetAllowMedia());
-    if (NS_SUCCEEDED(parentAsDocShell->GetAllowWindowControl(&value))) {
+    SetAllowMedia(parentAsDocShell->GetAllowMedia() && mAllowMedia);
+    if (mAllowWindowControl && NS_SUCCEEDED(parentAsDocShell->GetAllowWindowControl(&value))) {
       SetAllowWindowControl(value);
     }
-    SetAllowContentRetargeting(
+    SetAllowContentRetargeting(mAllowContentRetargeting &&
       parentAsDocShell->GetAllowContentRetargetingOnChildren());
     if (NS_SUCCEEDED(parentAsDocShell->GetIsActive(&value))) {
       SetIsActive(value);
@@ -3263,7 +3263,7 @@ nsDocShell::SetDocLoaderParent(nsDocLoader* aParent)
     if (NS_FAILED(parentAsDocShell->GetAllowDNSPrefetch(&value))) {
       value = false;
     }
-    SetAllowDNSPrefetch(value);
+    SetAllowDNSPrefetch(mAllowDNSPrefetch && value);
     value = parentAsDocShell->GetAffectPrivateSessionLifetime();
     SetAffectPrivateSessionLifetime(value);
     uint32_t flags;
