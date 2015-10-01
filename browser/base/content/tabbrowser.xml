@@ -1833,7 +1833,10 @@
 
             // If we open a new tab with the newtab URL,
             // check if there is a preloaded browser ready.
-            if (aURI == BROWSER_NEW_TAB_URL) {
+            // Private windows are not included because both the label and the
+            // icon for the tab would be set incorrectly (see bug 1195981).
+            if (aURI == BROWSER_NEW_TAB_URL &&
+                !PrivateBrowsingUtils.isWindowPrivate(window)) {
               b = this._getPreloadedBrowser();
               usingPreloadedContent = !!b;
             }
