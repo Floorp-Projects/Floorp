@@ -1612,6 +1612,18 @@ class JSScript : public js::gc::TenuredCell
     /* Return whether this script was compiled for 'eval' */
     bool isForEval() { return isCachedEval() || isActiveEval(); }
 
+    /*
+     * Return whether this script is a top-level script.
+     *
+     * If we evaluate some code which contains a syntax error, then we might
+     * produce a JSScript which has no associated bytecode. Testing with
+     * |code()| filters out this kind of scripts.
+     *
+     * If this script has a function associated to it, then it is not the
+     * top-level of a file.
+     */
+    bool isTopLevel() { return code() && !functionNonDelazifying(); }
+
     /* Ensure the script has a TypeScript. */
     inline bool ensureHasTypes(JSContext* cx);
 
