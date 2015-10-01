@@ -387,8 +387,9 @@ RTCPeerConnection.prototype = {
         "RTCPeerConnection constructor passed invalid RTCConfiguration");
     }
     // Save the appId
-    this._appId = Cu.getWebIDLCallerPrincipal().appId;
-    this._https = this._win.document.documentURIObject.schemeIs("https");
+    var principal = Cu.getWebIDLCallerPrincipal();
+    this._appId = principal.appId;
+    this._isChrome = Services.scriptSecurityManager.isSystemPrincipal(principal);
 
     // Get the offline status for this appId
     let appOffline = false;
@@ -778,7 +779,8 @@ RTCPeerConnection.prototype = {
     if (this._havePermission) {
       return this._havePermission;
     }
-    if (AppConstants.MOZ_B2G ||
+    if (this._isChrome ||
+        AppConstants.MOZ_B2G ||
         Services.prefs.getBoolPref("media.navigator.permission.disabled")) {
       return this._havePermission = Promise.resolve();
     }
