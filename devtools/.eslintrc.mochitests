@@ -1,21 +1,15 @@
 // Parent config file for all devtools browser mochitest files.
 {
   "rules": {
-    // Only disallow non-global unused vars, so that things like the test
-    // function do not produce errors.
-    "no-unused-vars": [2, {"vars": "local"}],
-    // Allow using undefined variables so that tests can refer to functions
-    // and variables defined in head.js files, without having to maintain a
-    // list of globals in each .eslintrc file.
-    // Note that bug 1168340 will eventually help auto-registering globals
-    // from head.js files.
-    "no-undef": 0,
-    "block-scoped-var": 0
+    // Only disallow non-global unused vars, so that head.js does not produce
+    // errors.
+    "no-unused-vars": [2, {"vars": "local"}]
   },
   // All globals made available in the test environment.
   "globals": {
     "add_task": true,
     "Assert": true,
+    "BrowserTestUtils": true,
     "content": true,
     "document": true,
     "EventUtils": true,
@@ -38,7 +32,6 @@
     "setTimeout": true,
     "SimpleTest": true,
     "SpecialPowers": true,
-    "test": true,
     "todo": true,
     "todo_is": true,
     "todo_isnot": true,

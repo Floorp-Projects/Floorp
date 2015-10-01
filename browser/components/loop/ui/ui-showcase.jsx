@@ -604,7 +604,7 @@
         "google-active", "history", "history-hover", "history-active", "leave",
         "screen-white", "screenmute-white", "settings", "settings-hover", "settings-active",
         "share-darkgrey", "tag", "tag-hover", "tag-active", "trash", "unblock",
-        "unblock-hover", "unblock-active", "video", "video-hover", "video-active", "tour",
+        "unblock-hover", "unblock-active", "video", "video-hover", "video-active",
         "status-available", "status-unavailable"
       ]
     },
