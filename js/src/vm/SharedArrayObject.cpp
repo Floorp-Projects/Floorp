@@ -23,9 +23,12 @@
 #endif
 
 #include "asmjs/AsmJSValidate.h"
+#include "vm/SharedMem.h"
 #include "vm/TypedArrayCommon.h"
 
 #include "jsobjinlines.h"
+
+#include "jit/AtomicOperations-inl.h"
 
 using namespace js;
 
@@ -153,19 +156,23 @@ SharedArrayRawBuffer::dropReference()
 
     // If this was the final reference, release the buffer.
     if (refcount == 0) {
-        uint8_t* p = this->dataPointer() - AsmJSPageSize;
-        MOZ_ASSERT(uintptr_t(p) % AsmJSPageSize == 0);
+        SharedMem<uint8_t*> p = this->dataPointerShared() - AsmJSPageSize;
+
+        MOZ_ASSERT(p.asValue() % AsmJSPageSize == 0);
+
+        uint8_t* address = p.unwrap(/*safe - only reference*/);
 #if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
         numLive--;
-        UnmapMemory(p, SharedArrayMappedSize);
+        UnmapMemory(address, SharedArrayMappedSize);
 #       if defined(MOZ_VALGRIND) \
            && defined(VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE)
         // Tell Valgrind/Memcheck to recommence reporting accesses in the
         // previously-inaccessible region.
-        VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE(p, SharedArrayMappedSize);
+        VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE(address,
+                                                      SharedArrayMappedSize);
 #       endif
 #else
-        UnmapMemory(p, this->length + AsmJSPageSize);
+        UnmapMemory(address, this->length + AsmJSPageSize);
 #endif
     }
 }
@@ -321,7 +328,6 @@ const Class SharedArrayBufferObject::class_ = {
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
-    nullptr, /* convert */
     SharedArrayBufferObject::Finalize,
     nullptr, /* call */
     nullptr, /* hasInstance */
@@ -394,10 +400,8 @@ JS_FRIEND_API(void)
 js::GetSharedArrayBufferViewLengthAndData(JSObject* obj, uint32_t* length, uint8_t** data)
 {
     MOZ_ASSERT(obj->is<SharedTypedArrayObject>());
-
     *length = obj->as<SharedTypedArrayObject>().byteLength();
-
-    *data = static_cast<uint8_t*>(obj->as<SharedTypedArrayObject>().viewData());
+    *data = static_cast<uint8_t*>(obj->as<SharedTypedArrayObject>().viewDataShared().unwrap(/*safe - caller knows*/));
 }
 
 JS_FRIEND_API(void)
@@ -405,7 +409,7 @@ js::GetSharedArrayBufferLengthAndData(JSObject* obj, uint32_t* length, uint8_t**
 {
     MOZ_ASSERT(obj->is<SharedArrayBufferObject>());
     *length = obj->as<SharedArrayBufferObject>().byteLength();
-    *data = obj->as<SharedArrayBufferObject>().dataPointer();
+    *data = obj->as<SharedArrayBufferObject>().dataPointerShared().unwrap(/*safe - caller knows*/);
 }
 
 JS_FRIEND_API(bool)
@@ -421,5 +425,5 @@ JS_GetSharedArrayBufferData(JSObject* obj, const JS::AutoCheckCannotGC&)
     obj = CheckedUnwrap(obj);
     if (!obj)
         return nullptr;
-    return obj->as<SharedArrayBufferObject>().dataPointer();
+    return obj->as<SharedArrayBufferObject>().dataPointerShared().unwrap(/*safe - caller knows*/);
 }

@@ -272,10 +272,8 @@ MediaDecodeTask::OnMetadataRead(MetadataHolder* aMetadata)
 void
 MediaDecodeTask::OnMetadataNotRead(ReadMetadataFailureReason aReason)
 {
-  MOZ_RELEASE_ASSERT(aReason != ReadMetadataFailureReason::WAITING_FOR_RESOURCES);
   mDecoderReader->Shutdown();
   ReportFailureOnMainThread(WebAudioDecodeJob::InvalidContent);
-  return;
 }
 
 void

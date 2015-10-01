@@ -14,7 +14,7 @@ var vectors = [
     "sanitized": "<html><head></head><body>&amp;alert&amp;A7&amp;(1)&amp;R&amp;UA;&amp;&amp;&lt;&amp;A9&amp;11/script&amp;X&amp;&gt;</body></html>"
   },
   {
-    "data": "0?<script>Worker(\"#\").onmessage=function(_)eval(_.data)</script> :postMessage(importScripts('data:;base64,cG9zdE1lc3NhZ2UoJ2FsZXJ0KDEpJyk'))",
+    "data": "0?<script>Worker(\"#\").onmessage=message=>eval(message.data)</script> :postMessage(importScripts('data:;base64,cG9zdE1lc3NhZ2UoJ2FsZXJ0KDEpJyk'))",
     "sanitized": "<html><head></head><body>0? :postMessage(importScripts('data:;base64,cG9zdE1lc3NhZ2UoJ2FsZXJ0KDEpJyk'))</body></html>"
   },
   {

@@ -38,6 +38,8 @@
 
 #include "jsatominlines.h"
 
+#include "jit/AtomicOperations-inl.h"
+
 #include "vm/ArgumentsObject-inl.h"
 #include "vm/ArrayObject-inl.h"
 #include "vm/Interpreter-inl.h"
@@ -3275,7 +3277,6 @@ const Class ArrayObject::class_ = {
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
-    nullptr, /* convert */
     nullptr, /* finalize */
     nullptr, /* call */
     nullptr, /* hasInstance */

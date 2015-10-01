@@ -156,14 +156,6 @@ FilteringWrapper<Base, Policy>::nativeCall(JSContext* cx, JS::IsAcceptableThis t
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::defaultValue(JSContext* cx, HandleObject obj,
-                                             JSType hint, MutableHandleValue vp) const
-{
-    return Base::defaultValue(cx, obj, hint, vp);
-}
-
-template <typename Base, typename Policy>
-bool
 FilteringWrapper<Base, Policy>::getPrototype(JSContext* cx, JS::HandleObject wrapper,
                                              JS::MutableHandleObject protop) const
 {

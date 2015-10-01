@@ -52,16 +52,6 @@ using JS::ubi::StackFrame;
 using JS::ubi::TracerConcrete;
 using JS::ubi::TracerConcreteWithCompartment;
 
-template<typename CharT>
-static size_t
-copyToBuffer(const CharT* src, RangedPtr<char16_t> dest, size_t length)
-{
-    size_t i = 0;
-    for ( ; i < length; i++)
-        dest[i] = src[i];
-    return i;
-}
-
 struct CopyToBufferMatcher
 {
     using ReturnType = size_t;
@@ -74,6 +64,16 @@ struct CopyToBufferMatcher
       , maxLength(maxLength)
     { }
 
+    template<typename CharT>
+    static size_t
+    copyToBufferHelper(const CharT* src, RangedPtr<char16_t> dest, size_t length)
+    {
+        size_t i = 0;
+        for ( ; i < length; i++)
+            dest[i] = src[i];
+        return i;
+    }
+
     size_t
     match(JSAtom* atom)
     {
@@ -83,8 +83,8 @@ struct CopyToBufferMatcher
         size_t length = std::min(atom->length(), maxLength);
         JS::AutoCheckCannotGC noGC;
         return atom->hasTwoByteChars()
-            ? copyToBuffer(atom->twoByteChars(noGC), destination, length)
-            : copyToBuffer(atom->latin1Chars(noGC), destination, length);
+            ? copyToBufferHelper(atom->twoByteChars(noGC), destination, length)
+            : copyToBufferHelper(atom->latin1Chars(noGC), destination, length);
     }
 
     size_t
@@ -94,22 +94,15 @@ struct CopyToBufferMatcher
             return 0;
 
         size_t length = std::min(js_strlen(chars), maxLength);
-        return copyToBuffer(chars, destination, length);
+        return copyToBufferHelper(chars, destination, length);
     }
 };
 
 size_t
-StackFrame::source(RangedPtr<char16_t> destination, size_t length) const
+JS::ubi::AtomOrTwoByteChars::copyToBuffer(RangedPtr<char16_t> destination, size_t length)
 {
     CopyToBufferMatcher m(destination, length);
-    return source().match(m);
-}
-
-size_t
-StackFrame::functionDisplayName(RangedPtr<char16_t> destination, size_t length) const
-{
-    CopyToBufferMatcher m(destination, length);
-    return functionDisplayName().match(m);
+    return match(m);
 }
 
 struct LengthMatcher
@@ -130,17 +123,36 @@ struct LengthMatcher
 };
 
 size_t
-StackFrame::sourceLength()
+JS::ubi::AtomOrTwoByteChars::length()
 {
     LengthMatcher m;
-    return source().match(m);
+    return match(m);
+}
+
+size_t
+StackFrame::source(RangedPtr<char16_t> destination, size_t length) const
+{
+    auto s = source();
+    return s.copyToBuffer(destination, length);
+}
+
+size_t
+StackFrame::functionDisplayName(RangedPtr<char16_t> destination, size_t length) const
+{
+    auto name = functionDisplayName();
+    return name.copyToBuffer(destination, length);
+}
+
+size_t
+StackFrame::sourceLength()
+{
+    return source().length();
 }
 
 size_t
 StackFrame::functionDisplayNameLength()
 {
-    LengthMatcher m;
-    return functionDisplayName().match(m);
+    return functionDisplayName().length();
 }
 
 // All operations on null ubi::Nodes crash.

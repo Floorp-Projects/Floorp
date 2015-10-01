@@ -374,18 +374,11 @@ stage-all: \
   stage-config \
   stage-mach \
   stage-mochitest \
-  stage-talos \
-  stage-reftest \
   stage-xpcshell \
   stage-jstests \
   stage-jetpack \
-  stage-mozbase \
-  stage-tps \
-  stage-modules \
   stage-marionette \
   stage-cppunittests \
-  stage-jittest \
-  stage-web-platform-tests \
   stage-luciddream \
   test-packages-manifest \
   test-packages-manifest-tc \
@@ -395,12 +388,13 @@ stage-all: stage-steeplechase
 endif
 
 TEST_PKGS := \
+  common \
   cppunittest \
   mochitest \
   reftest \
   talos \
-  xpcshell \
   web-platform \
+  xpcshell \
   $(NULL)
 
 PKG_ARG = --$(1) '$(PKG_BASENAME).$(1).tests.zip'
@@ -428,24 +422,17 @@ package-tests-prepare-dest:
 	@rm -f '$(DIST)/$(PKG_PATH)$(TEST_PACKAGE)'
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 
-package-tests-mozharness: stage-all package-tests-prepare-dest
-	cd $(topsrcdir)/testing/ && \
-	  zip -rq9D $(abspath $(DIST))/$(PKG_PATH)mozharness.zip mozharness
+package-tests-mozharness: package-tests-prepare-dest
+	$(call py_action,test_archive, \
+		mozharness \
+		$(abspath $(DIST))/$(PKG_PATH)/mozharness.zip)
 package-tests: package-tests-mozharness
-
-package-tests-common: stage-all package-tests-prepare-dest
-	cd $(abspath $(PKG_STAGE)) && \
-	  zip -rq9D '$(abspath $(DIST))/$(PKG_PATH)$(TEST_PACKAGE)' \
-	  * -x \*/.mkdir.done \*.pyc $(foreach name,$(TEST_PKGS),$(name)\*)
-package-tests: package-tests-common
 
 define package_archive
 package-tests-$(1): stage-all package-tests-prepare-dest
-	rm -f '$$(DIST)/$$(PKG_PATH)$$(PKG_BASENAME).$(1).tests.zip' && \
-		cd $$(abspath $(PKG_STAGE)) && \
-		zip -rq9D '$$(abspath $$(DIST))/$$(PKG_PATH)$$(PKG_BASENAME).$(1).tests.zip' \
-		$(1) -x \*/.mkdir.done \*.pyc ;
-.PHONY += package-tests-$(1)
+	$$(call py_action,test_archive, \
+		$(1) \
+		$$(abspath $$(DIST))/$$(PKG_PATH)/$$(PKG_BASENAME).$(1).tests.zip)
 package-tests: package-tests-$(1)
 endef
 
@@ -472,7 +459,6 @@ make-stage-dir:
 	$(NSINSTALL) -D $(PKG_STAGE)/certs
 	$(NSINSTALL) -D $(PKG_STAGE)/config
 	$(NSINSTALL) -D $(PKG_STAGE)/jetpack
-	$(NSINSTALL) -D $(PKG_STAGE)/mozbase
 	$(NSINSTALL) -D $(PKG_STAGE)/modules
 	$(NSINSTALL) -D $(PKG_STAGE)/tools/mach
 
@@ -494,14 +480,6 @@ ifeq ($(MOZ_BUILD_APP),mobile/android)
 	$(NSINSTALL) $(DEPTH)/mobile/android/base/fennec_ids.txt $(PKG_STAGE)/mochitest
 endif
 
-TALOS_DIR=$(PKG_STAGE)/talos
-stage-talos: make-stage-dir
-	$(NSINSTALL) -D $(TALOS_DIR)
-	@(cd $(topsrcdir)/testing/talos && tar $(TAR_CREATE_FLAGS) - *) | (cd $(TALOS_DIR)/ && tar -xf -)
-
-stage-reftest: make-stage-dir
-	$(MAKE) -C $(DEPTH)/layout/tools/reftest stage-package
-
 stage-xpcshell: make-stage-dir
 	$(MAKE) -C $(DEPTH)/testing/xpcshell stage-package
 
@@ -521,16 +499,6 @@ endif
 stage-jetpack: make-stage-dir
 	$(MAKE) -C $(DEPTH)/addon-sdk stage-tests-package
 
-stage-tps: make-stage-dir
-	$(NSINSTALL) -D $(PKG_STAGE)/tps/tests
-	@(cd $(topsrcdir)/testing/tps && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/tps && tar -xf -)
-	@(cd $(topsrcdir)/services/sync/tps && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/tps && tar -xf -)
-	(cd $(topsrcdir)/services/sync/tests/tps && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/tps/tests && tar -xf -)
-
-stage-modules: make-stage-dir
-	$(NSINSTALL) -D $(PKG_STAGE)/modules
-	cp -RL $(DEPTH)/_tests/modules $(PKG_STAGE)
-
 CPP_UNIT_TEST_BINS=$(wildcard $(DIST)/cppunittests/*)
 
 ifdef OBJCOPY
@@ -546,27 +514,11 @@ ifdef STRIP_CPP_TESTS
 else
 	cp -RL $(CPP_UNIT_TEST_BINS) $(PKG_STAGE)/cppunittest
 endif
-	cp $(topsrcdir)/testing/runcppunittests.py $(PKG_STAGE)/cppunittest
-	cp $(topsrcdir)/testing/remotecppunittests.py $(PKG_STAGE)/cppunittest
-	cp $(topsrcdir)/testing/cppunittest.ini $(PKG_STAGE)/cppunittest
-	cp $(DEPTH)/mozinfo.json $(PKG_STAGE)/cppunittest
-ifeq ($(MOZ_DISABLE_STARTUPCACHE),)
-	cp $(topsrcdir)/startupcache/test/TestStartupCacheTelemetry.js $(PKG_STAGE)/cppunittest
-	cp $(topsrcdir)/startupcache/test/TestStartupCacheTelemetry.manifest $(PKG_STAGE)/cppunittest
-endif
 ifdef STRIP_CPP_TESTS
 	$(OBJCOPY) $(or $(STRIP_FLAGS),--strip-unneeded) $(DIST)/bin/jsapi-tests$(BIN_SUFFIX) $(PKG_STAGE)/cppunittest/jsapi-tests$(BIN_SUFFIX)
 else
 	cp -RL $(DIST)/bin/jsapi-tests$(BIN_SUFFIX) $(PKG_STAGE)/cppunittest
 endif
-
-stage-jittest: make-stage-dir
-	$(NSINSTALL) -D $(PKG_STAGE)/jit-test/tests
-	cp -RL $(topsrcdir)/js/src/jsapi.h $(PKG_STAGE)/jit-test/
-	cp -RL $(topsrcdir)/js/src/jit-test $(PKG_STAGE)/jit-test/
-	cp -RL $(topsrcdir)/js/src/tests/ecma_6 $(PKG_STAGE)/jit-test/tests/
-	cp -RL $(topsrcdir)/js/src/tests/js1_8_5 $(PKG_STAGE)/jit-test/tests/
-	cp -RL $(topsrcdir)/js/src/tests/lib $(PKG_STAGE)/jit-test/tests/
 
 stage-steeplechase: make-stage-dir
 	$(NSINSTALL) -D $(PKG_STAGE)/steeplechase/
@@ -598,12 +550,6 @@ stage-marionette: make-stage-dir
           | (cd $(topsrcdir) && xargs tar $(TAR_CREATE_FLAGS) -) \
           | (cd $(MARIONETTE_DIR)/tests && tar -xf -)
 
-stage-mozbase: make-stage-dir
-	$(MAKE) -C $(DEPTH)/testing/mozbase stage-package
-
-stage-web-platform-tests: make-stage-dir
-	$(MAKE) -C $(DEPTH)/testing/web-platform stage-package
-
 stage-instrumentation-tests: make-stage-dir
 	$(MAKE) -C $(DEPTH)/testing/instrumentation stage-package
 
@@ -626,18 +572,12 @@ stage-instrumentation-tests: make-stage-dir
   stage-b2g \
   stage-config \
   stage-mochitest \
-  stage-talos \
-  stage-reftest \
   stage-xpcshell \
   stage-jstests \
   stage-android \
   stage-jetpack \
-  stage-mozbase \
-  stage-tps \
-  stage-modules \
   stage-marionette \
   stage-steeplechase \
-  stage-web-platform-tests \
   stage-instrumentation-tests \
   stage-luciddream \
   test-packages-manifest \

@@ -267,8 +267,8 @@ PathBuilderD2D::Arc(const Point &aOrigin, Float aRadius, Float aStartAngle,
   }
 
   Point endPoint;
-  endPoint.x = aOrigin.x + aRadius * cos(aEndAngle);
-  endPoint.y = aOrigin.y + aRadius * sin(aEndAngle);
+  endPoint.x = aOrigin.x + aRadius * cosf(aEndAngle);
+  endPoint.y = aOrigin.y + aRadius * sinf(aEndAngle);
 
   D2D1_ARC_SIZE arcSize = D2D1_ARC_SIZE_SMALL;
   D2D1_SWEEP_DIRECTION direction =
@@ -296,8 +296,8 @@ PathBuilderD2D::Arc(const Point &aOrigin, Float aRadius, Float aStartAngle,
   else {
     // draw small circles as two half-circles
     Point midPoint;
-    midPoint.x = aOrigin.x + aRadius * cos(midAngle);
-    midPoint.y = aOrigin.y + aRadius * sin(midAngle);
+    midPoint.x = aOrigin.x + aRadius * cosf(midAngle);
+    midPoint.y = aOrigin.y + aRadius * sinf(midAngle);
 
     mSink->AddArc(D2D1::ArcSegment(D2DPoint(midPoint),
                                    D2D1::SizeF(aRadius, aRadius),

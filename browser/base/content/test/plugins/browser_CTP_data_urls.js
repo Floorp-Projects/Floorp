@@ -68,7 +68,7 @@ add_task(function* () {
   yield promise;
 
   // Simulate clicking the "Allow Always" button.
-  let condition = function() !PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed &&
+  let condition = () => !PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed &&
     PopupNotifications.panel.firstChild;
   yield promiseForCondition(condition);
   PopupNotifications.panel.firstChild._primaryButton.click();
@@ -185,7 +185,7 @@ add_task(function* () {
   yield promise;
 
   // Simulate clicking the "Allow Always" button.
-  let condition = function() !PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed &&
+  let condition = () => !PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed &&
     PopupNotifications.panel.firstChild;
   yield promiseForCondition(condition);
   PopupNotifications.panel.firstChild._primaryButton.click();
@@ -243,7 +243,7 @@ add_task(function* () {
   yield promise;
 
   // Simulate clicking the "Allow Always" button.
-  let condition = function() !PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed &&
+  let condition = () => !PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser).dismissed &&
     PopupNotifications.panel.firstChild;
   yield promiseForCondition(condition);
   PopupNotifications.panel.firstChild._primaryButton.click();

@@ -2223,7 +2223,7 @@ this.Experiments.PreviousExperimentProvider = function (experiments) {
 }
 
 this.Experiments.PreviousExperimentProvider.prototype = Object.freeze({
-  get name() "PreviousExperimentProvider",
+  name: "PreviousExperimentProvider",
 
   startup: function () {
     this._log.trace("startup()");

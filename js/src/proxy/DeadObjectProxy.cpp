@@ -148,14 +148,6 @@ DeadObjectProxy::regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard*
     return false;
 }
 
-bool
-DeadObjectProxy::defaultValue(JSContext* cx, HandleObject obj, JSType hint,
-                              MutableHandleValue vp) const
-{
-    ReportDead(cx);
-    return false;
-}
-
 const char DeadObjectProxy::family = 0;
 const DeadObjectProxy DeadObjectProxy::singleton;
 

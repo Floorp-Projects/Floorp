@@ -51,10 +51,11 @@ public:
 class FetchEvent final : public Event
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
-  nsMainThreadPtrHandle<ServiceWorker> mServiceWorker;
   nsRefPtr<ServiceWorkerClient> mClient;
   nsRefPtr<Request> mRequest;
-  nsAutoPtr<ServiceWorkerClientInfo> mClientInfo;
+  nsCString mScriptSpec;
+  UniquePtr<ServiceWorkerClientInfo> mClientInfo;
+  nsRefPtr<Promise> mPromise;
   bool mIsReload;
   bool mWaitToRespond;
 protected:
@@ -72,8 +73,8 @@ public:
   }
 
   void PostInit(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
-                nsMainThreadPtrHandle<ServiceWorker>& aServiceWorker,
-                nsAutoPtr<ServiceWorkerClientInfo>& aClientInfo);
+                const nsACString& aScriptSpec,
+                UniquePtr<ServiceWorkerClientInfo>&& aClientInfo);
 
   static already_AddRefed<FetchEvent>
   Constructor(const GlobalObject& aGlobal,
@@ -104,6 +105,13 @@ public:
 
   void
   RespondWith(Promise& aArg, ErrorResult& aRv);
+
+  already_AddRefed<Promise>
+  GetPromise() const
+  {
+    nsRefPtr<Promise> p = mPromise;
+    return p.forget();
+  }
 
   already_AddRefed<Promise>
   ForwardTo(const nsAString& aUrl);
@@ -203,7 +211,6 @@ private:
 class PushEvent final : public ExtendableEvent
 {
   nsRefPtr<PushMessageData> mData;
-  nsMainThreadPtrHandle<ServiceWorker> mServiceWorker;
 
 protected:
   explicit PushEvent(mozilla::dom::EventTarget* aOwner);
@@ -235,12 +242,8 @@ public:
     return Constructor(owner, aType, aOptions, aRv);
   }
 
-  void PostInit(nsMainThreadPtrHandle<ServiceWorker>& aServiceWorker)
-  {
-    mServiceWorker = aServiceWorker;
-  }
-
-  PushMessageData* GetData() const
+  PushMessageData*
+  GetData() const
   {
     return mData;
   }

@@ -103,7 +103,7 @@ BEGIN_TEST(testNewObject_1)
         0,
         nullptr, nullptr, nullptr, nullptr,
         nullptr, nullptr, nullptr, nullptr,
-        nullptr, nullptr, nullptr, constructHook
+        nullptr, nullptr, constructHook
     };
     JS::RootedObject ctor(cx, JS_NewObject(cx, &cls));
     CHECK(ctor);

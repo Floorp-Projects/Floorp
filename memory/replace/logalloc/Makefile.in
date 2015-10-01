@@ -3,4 +3,4 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Avoid Lock_impl code depending on mozilla::Logger
-MOZ_DEBUG_ENABLE_DEFS=
+MOZ_DEBUG_DEFINES=

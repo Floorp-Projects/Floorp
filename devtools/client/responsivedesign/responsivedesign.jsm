@@ -233,7 +233,9 @@ function ResponsiveUI(aWindow, aTab)
 
 ResponsiveUI.prototype = {
   _transitionsEnabled: true,
-  get transitionsEnabled() this._transitionsEnabled,
+  get transitionsEnabled() {
+    return this._transitionsEnabled;
+  },
   set transitionsEnabled(aValue) {
     this._transitionsEnabled = aValue;
     if (aValue && !this._resizing && this.stack.hasAttribute("responsivemode")) {

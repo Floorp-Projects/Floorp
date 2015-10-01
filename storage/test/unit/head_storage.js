@@ -156,7 +156,7 @@ function createAsyncStatement(aSQL)
  * can be used to do this concisely.
  *
  * Example:
- *  expectError(Cr.NS_ERROR_INVALID_ARG, function() explodingFunction());
+ *  expectError(Cr.NS_ERROR_INVALID_ARG, () => explodingFunction());
  *
  * @param aErrorCode
  *        The error code to expect from invocation of aFunction.
