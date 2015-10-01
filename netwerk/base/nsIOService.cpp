@@ -1494,10 +1494,10 @@ nsIOService::Observe(nsISupports *subject,
 
 // nsINetUtil interface
 NS_IMETHODIMP
-nsIOService::ParseContentType(const nsACString &aTypeHeader,
-                              nsACString &aCharset,
-                              bool *aHadCharset,
-                              nsACString &aContentType)
+nsIOService::ParseResponseContentType(const nsACString &aTypeHeader,
+                                      nsACString &aCharset,
+                                      bool *aHadCharset,
+                                      nsACString &aContentType)
 {
     net_ParseContentType(aTypeHeader, aContentType, aCharset, aHadCharset);
     return NS_OK;
