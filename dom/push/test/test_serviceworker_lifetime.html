@@ -163,6 +163,7 @@
   }
 
   function setShutdownObserver(expectingEvent) {
+    info("Setting shutdown observer: expectingEvent=" + expectingEvent);
     return function(ctx) {
       cancelShutdownObserver(ctx);
 
@@ -186,6 +187,7 @@
   }
 
   function waitOnShutdownObserver(ctx) {
+    info("Waiting on worker to shutdown.");
     return ctx.observer_promise;
   }
 
@@ -280,11 +282,12 @@
       // the internal sw timer to the new value.
       var test3_1 = {
         prefs: [
-          ["dom.serviceWorkers.idle_timeout", 0]
+          ["dom.serviceWorkers.idle_timeout", 0],
+          ["dom.serviceWorkers.idle_extended_timeout", 0]
         ],
         steps: function(ctx) {
           return new Promise(function(res, rej) {
-            ctx.registration.active.postMessage("update");
+            ctx.iframe.contentWindow.fetch("update");
             res(ctx);
           });
         }
