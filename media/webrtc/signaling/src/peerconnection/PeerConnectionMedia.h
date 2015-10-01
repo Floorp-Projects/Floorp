@@ -393,6 +393,8 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // This passes address, port, level of the default candidate.
   sigslot::signal5<const std::string&, uint16_t,
                    const std::string&, uint16_t, uint16_t>
+      SignalUpdateDefaultCandidate;
+  sigslot::signal1<uint16_t>
       SignalEndOfLocalCandidates;
 
  private:
@@ -452,18 +454,26 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
                                 NrIceCtx::ConnectionState state);
   void IceStreamReady_s(NrIceMediaStream *aStream);
   void OnCandidateFound_s(NrIceMediaStream *aStream,
-                        const std::string &candidate);
+                          const std::string& aCandidate);
   void EndOfLocalCandidates(const std::string& aDefaultAddr,
                             uint16_t aDefaultPort,
                             const std::string& aDefaultRtcpAddr,
                             uint16_t aDefaultRtcpPort,
                             uint16_t aMLine);
+  void GetDefaultCandidates(const NrIceMediaStream& aStream,
+                            NrIceCandidate* aCandidate,
+                            NrIceCandidate* aRtcpCandidate);
 
   void IceGatheringStateChange_m(NrIceCtx* ctx,
                                  NrIceCtx::GatheringState state);
   void IceConnectionStateChange_m(NrIceCtx* ctx,
                                   NrIceCtx::ConnectionState state);
-  void OnCandidateFound_m(const std::string &candidate, uint16_t aMLine);
+  void OnCandidateFound_m(const std::string& aCandidateLine,
+                          const std::string& aDefaultAddr,
+                          uint16_t aDefaultPort,
+                          const std::string& aDefaultRtcpAddr,
+                          uint16_t aDefaultRtcpPort,
+                          uint16_t aMLine);
   void EndOfLocalCandidates_m(const std::string& aDefaultAddr,
                               uint16_t aDefaultPort,
                               const std::string& aDefaultRtcpAddr,
