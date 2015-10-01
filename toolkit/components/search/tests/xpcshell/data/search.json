@@ -9,7 +9,6 @@
         {
           "_id": "[app]/test-search-engine.xml",
           "_name": "Test search engine",
-          "_hidden": false,
           "description": "A test search engine (based on Google search)",
           "extensionID": "test-addon-id@mozilla.org",
           "__searchForm": "http://www.google.com/",
