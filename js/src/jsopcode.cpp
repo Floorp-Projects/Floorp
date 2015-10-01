@@ -1955,8 +1955,12 @@ GenerateLcovInfo(JSContext* cx, JSCompartment* comp, GenericPrinter& out)
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         for (ZoneCellIter i(zone, AllocKind::SCRIPT); !i.done(); i.next()) {
             JSScript* script = i.get<JSScript>();
-            if (script->compartment() != comp || !script->isTopLevel())
+            if (script->compartment() != comp ||
+                !script->isTopLevel() ||
+                !script->filename())
+            {
                 continue;
+            }
 
             if (!topScripts.append(script))
                 return false;
