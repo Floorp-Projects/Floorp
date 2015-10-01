@@ -250,6 +250,27 @@ NS_IMETHODIMP nsChromeTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aS
    return mXULWindow->GetPrimaryContentShell(aShell);
 }
 
+NS_IMETHODIMP
+nsChromeTreeOwner::TabParentAdded(nsITabParent* aTab, bool aPrimary)
+{
+  NS_ENSURE_STATE(mXULWindow);
+  return mXULWindow->TabParentAdded(aTab, aPrimary);
+}
+
+NS_IMETHODIMP
+nsChromeTreeOwner::TabParentRemoved(nsITabParent* aTab)
+{
+  NS_ENSURE_STATE(mXULWindow);
+  return mXULWindow->TabParentRemoved(aTab);
+}
+
+NS_IMETHODIMP
+nsChromeTreeOwner::GetPrimaryTabParent(nsITabParent** aTab)
+{
+  NS_ENSURE_STATE(mXULWindow);
+  return mXULWindow->GetPrimaryTabParent(aTab);
+}
+
 NS_IMETHODIMP nsChromeTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    int32_t aCX, int32_t aCY)
 {

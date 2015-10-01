@@ -130,6 +130,7 @@ protected:
 
   nsCOMPtr<nsIPrompt> mPrompter;
   nsCOMPtr<nsIAuthPrompt> mAuthPrompter;
+  nsCOMPtr<nsITabParent> mPrimaryTabParent;
 };
 
 

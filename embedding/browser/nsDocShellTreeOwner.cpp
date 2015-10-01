@@ -54,6 +54,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsPIWindowWatcher.h"
 #include "nsIPrompt.h"
+#include "nsITabParent.h"
 #include "nsRect.h"
 #include "nsIWebBrowserChromeFocus.h"
 #include "nsIContent.h"
@@ -336,6 +337,7 @@ nsDocShellTreeOwner::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
 
   if (aPrimary) {
     mPrimaryContentShell = aContentShell;
+    mPrimaryTabParent = nullptr;
   }
   return NS_OK;
 }
@@ -364,9 +366,55 @@ nsDocShellTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
   }
 
   nsCOMPtr<nsIDocShellTreeItem> shell;
-  shell = mPrimaryContentShell ? mPrimaryContentShell : mWebBrowser->mDocShell;
+  if (!mPrimaryTabParent) {
+    shell =
+      mPrimaryContentShell ? mPrimaryContentShell : mWebBrowser->mDocShell;
+  }
   shell.forget(aShell);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShellTreeOwner::TabParentAdded(nsITabParent* aTab, bool aPrimary)
+{
+  if (mTreeOwner) {
+    return mTreeOwner->TabParentAdded(aTab, aPrimary);
+  }
+
+  if (aPrimary) {
+    mPrimaryTabParent = aTab;
+    mPrimaryContentShell = nullptr;
+  } else if (mPrimaryTabParent == aTab) {
+    mPrimaryTabParent = nullptr;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShellTreeOwner::TabParentRemoved(nsITabParent* aTab)
+{
+  if (mTreeOwner) {
+    return mTreeOwner->TabParentRemoved(aTab);
+  }
+
+  if (aTab == mPrimaryTabParent) {
+    mPrimaryTabParent = nullptr;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShellTreeOwner::GetPrimaryTabParent(nsITabParent** aTab)
+{
+  if (mTreeOwner) {
+    return mTreeOwner->GetPrimaryTabParent(aTab);
+  }
+
+  nsCOMPtr<nsITabParent> tab = mPrimaryTabParent;
+  tab.forget(aTab);
   return NS_OK;
 }
 
