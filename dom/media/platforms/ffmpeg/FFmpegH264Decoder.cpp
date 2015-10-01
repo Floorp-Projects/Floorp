@@ -79,6 +79,7 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
   uint8_t* inputData = const_cast<uint8_t*>(aSample->Data());
   size_t inputSize = aSample->Size();
 
+#if LIBAVCODEC_VERSION_MAJOR >= 54
   if (inputSize && mCodecParser && (mCodecID == AV_CODEC_ID_VP8
 #if LIBAVCODEC_VERSION_MAJOR >= 55
       || mCodecID == AV_CODEC_ID_VP9
@@ -112,6 +113,7 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
     }
     return gotFrame ? DecodeResult::DECODE_FRAME : DecodeResult::DECODE_NO_FRAME;
   }
+#endif
   return DoDecodeFrame(aSample, inputData, inputSize);
 }
 
@@ -365,9 +367,11 @@ FFmpegH264Decoder<LIBAV_VER>::GetCodecId(const nsACString& aMimeType)
     return AV_CODEC_ID_VP6F;
   }
 
+#if LIBAVCODEC_VERSION_MAJOR >= 54
   if (aMimeType.EqualsLiteral("video/webm; codecs=vp8")) {
     return AV_CODEC_ID_VP8;
   }
+#endif
 
 #if LIBAVCODEC_VERSION_MAJOR >= 55
   if (aMimeType.EqualsLiteral("video/webm; codecs=vp9")) {
