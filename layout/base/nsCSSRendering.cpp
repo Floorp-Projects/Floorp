@@ -4697,18 +4697,21 @@ nsImageRenderer::PrepareImage()
       nsSVGPaintingProperty* property = nsSVGEffects::GetPaintingPropertyForURI(
           targetURI, mForFrame->FirstContinuation(),
           nsSVGEffects::BackgroundImageProperty());
-      if (!property)
+      if (!property) {
         return false;
-      mPaintServerFrame = property->GetReferencedFrame();
-
-      // If the referenced element doesn't have a frame we might still be able
-      // to paint it if it's an <img>, <canvas>, or <video> element.
-      if (!mPaintServerFrame) {
-        mImageElementSurface =
-          nsLayoutUtils::SurfaceFromElement(property->GetReferencedElement());
-        if (!mImageElementSurface.mSourceSurface)
-          return false;
       }
+
+      // If the referenced element is an <img>, <canvas>, or <video> element,
+      // prefer SurfaceFromElement as it's more reliable.
+      mImageElementSurface =
+        nsLayoutUtils::SurfaceFromElement(property->GetReferencedElement());
+      if (!mImageElementSurface.mSourceSurface) {
+        mPaintServerFrame = property->GetReferencedFrame();
+        if (!mPaintServerFrame) {
+          return false;
+        }
+      }
+
       mIsReady = true;
       break;
     }
@@ -5018,6 +5021,12 @@ nsImageRenderer::DrawableForElement(const nsRect& aImageRect,
   NS_ASSERTION(mType == eStyleImageType_Element,
                "DrawableForElement only makes sense if backed by an element");
   if (mPaintServerFrame) {
+    // XXX(seth): In order to not pass FLAG_SYNC_DECODE_IMAGES here,
+    // DrawableFromPaintServer would have to return a DrawResult indicating
+    // whether any images could not be painted because they weren't fully
+    // decoded. Even always passing FLAG_SYNC_DECODE_IMAGES won't eliminate all
+    // problems, as it won't help if there are image which haven't finished
+    // loading, but it's better than nothing.
     int32_t appUnitsPerDevPixel = mForFrame->PresContext()->AppUnitsPerDevPixel();
     nsRect destRect = aImageRect - aImageRect.TopLeft();
     nsIntSize roundedOut = destRect.ToOutsidePixels(appUnitsPerDevPixel).Size();
@@ -5027,9 +5036,7 @@ nsImageRenderer::DrawableForElement(const nsRect& aImageRect,
         mPaintServerFrame, mForFrame, mSize, imageSize,
         aRenderingContext.GetDrawTarget(),
         aRenderingContext.ThebesContext()->CurrentMatrix(),
-        mFlags & FLAG_SYNC_DECODE_IMAGES
-          ? nsSVGIntegrationUtils::FLAG_SYNC_DECODE_IMAGES
-          : 0);
+        nsSVGIntegrationUtils::FLAG_SYNC_DECODE_IMAGES);
 
     return drawable.forget();
   }
