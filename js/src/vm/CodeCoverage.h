@@ -15,8 +15,12 @@
 
 struct JSCompartment;
 class JSScript;
+class JSObject;
 
 namespace js {
+
+class ScriptSourceObject;
+
 namespace coverage {
 
 class LCovCompartment;
@@ -24,7 +28,12 @@ class LCovCompartment;
 class LCovSource
 {
   public:
-    explicit LCovSource(LifoAlloc* alloc);
+    explicit LCovSource(LifoAlloc* alloc, JSObject* sso);
+
+    // Wether the given script source object matches this LCovSource.
+    bool match(JSObject* sso) {
+        return sso == source_;
+    }
 
     // Visit all JSScript in pre-order, and collect the lcov output based on
     // the ScriptCounts counters.
@@ -38,10 +47,10 @@ class LCovSource
     // the runtime code coverage trace file.
     void exportInto(GenericPrinter& out) const;
 
-  private:
     // Write the script name in out.
-    bool writeSourceFilename(LSprinter& out, JSScript* script);
+    bool writeSourceFilename(ScriptSourceObject* sso);
 
+  private:
     // Write the script name in out.
     bool writeScriptName(LSprinter& out, JSScript* script);
 
@@ -50,6 +59,9 @@ class LCovSource
     bool writeScript(JSScript* script);
 
   private:
+    // Weak pointer of the Script Source Object used by the current source.
+    JSObject *source_;
+
     // LifoAlloc string which hold the filename of the source.
     LSprinter outSF_;
 
@@ -76,8 +88,11 @@ class LCovCompartment
   public:
     LCovCompartment();
 
-    // Collect code coverage information
-    void collectCodeCoverageInfo(JSCompartment* comp, JSScript* topLevel);
+    // Collect code coverage information for the given source.
+    void collectCodeCoverageInfo(JSCompartment* comp, JSObject* sso, JSScript* topLevel);
+
+    // Create an ebtry for the current ScriptSourceObject.
+    void collectSourceFile(JSCompartment* comp, ScriptSourceObject* sso);
 
     // Write the Lcov output in a buffer, such as the one associated with
     // the runtime code coverage trace file.
@@ -86,6 +101,9 @@ class LCovCompartment
   private:
     // Write the script name in out.
     bool writeCompartmentName(JSCompartment* comp);
+
+    // Return the LCovSource entry which matches the given ScriptSourceObject.
+    LCovSource* lookup(JSObject* sso);
 
   private:
     typedef Vector<LCovSource, 16, LifoAllocPolicy<Fallible>> LCovSourceVector;

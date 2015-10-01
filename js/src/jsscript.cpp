@@ -1507,6 +1507,12 @@ void
 ScriptSourceObject::finalize(FreeOp* fop, JSObject* obj)
 {
     ScriptSourceObject* sso = &obj->as<ScriptSourceObject>();
+
+    // If code coverage is enabled, record the filename associated with this
+    // source object.
+    if (fop->runtime()->lcovOutput.isEnabled())
+        sso->compartment()->lcovOutput.collectSourceFile(sso->compartment(), sso);
+
     sso->source()->decref();
     sso->setReservedSlot(SOURCE_SLOT, PrivateValue(nullptr));
 }
@@ -2939,7 +2945,7 @@ JSScript::finalize(FreeOp* fop)
     // Collect code coverage information for this script and all its inner
     // scripts, and store the aggregated information on the compartment.
     if (isTopLevel() && fop->runtime()->lcovOutput.isEnabled())
-        compartment()->lcovOutput.collectCodeCoverageInfo(compartment(), this);
+        compartment()->lcovOutput.collectCodeCoverageInfo(compartment(), sourceObject(), this);
 
     fop->runtime()->spsProfiler.onScriptFinalized(this);
 
