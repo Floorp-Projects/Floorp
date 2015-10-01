@@ -97,7 +97,8 @@ this.DownloadLastDir = function DownloadLastDir(aWindow) {
   // load context isn't of interest to the content pref service.
   this.fakeContext = {
     QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsILoadContext]),
-    usePrivateBrowsing: loadContext.usePrivateBrowsing
+    usePrivateBrowsing: loadContext.usePrivateBrowsing,
+    originAttributes: {},
   };
 }
 
