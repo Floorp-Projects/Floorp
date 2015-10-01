@@ -1,8 +1,0 @@
-{
-    "llvm_revision": "241773",
-    "llvm_repo": "http://llvm.org/svn/llvm-project/llvm/branches/release_36",
-    "clang_repo": "http://llvm.org/svn/llvm-project/cfe/branches/release_36",
-    "compiler_repo": "http://llvm.org/svn/llvm-project/compiler-rt/branches/release_36",
-    "patches": {
-    }
-}
