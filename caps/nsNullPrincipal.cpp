@@ -107,15 +107,9 @@ nsNullPrincipal::GetOriginInternal(nsACString& aOrigin)
   return mURI->GetSpec(aOrigin);
 }
 
-NS_IMETHODIMP
-nsNullPrincipal::CheckMayLoad(nsIURI* aURI, bool aReport, bool aAllowIfInheritsPrincipal)
- {
-  if (aAllowIfInheritsPrincipal) {
-    if (nsPrincipal::IsPrincipalInherited(aURI)) {
-      return NS_OK;
-    }
-  }
-
+bool
+nsNullPrincipal::MayLoadInternal(nsIURI* aURI)
+{
   // Also allow the load if we are the principal of the URI being checked.
   nsCOMPtr<nsIURIWithPrincipal> uriPrinc = do_QueryInterface(aURI);
   if (uriPrinc) {
@@ -123,16 +117,11 @@ nsNullPrincipal::CheckMayLoad(nsIURI* aURI, bool aReport, bool aAllowIfInheritsP
     uriPrinc->GetPrincipal(getter_AddRefs(principal));
 
     if (principal == this) {
-      return NS_OK;
+      return true;
     }
   }
 
-  if (aReport) {
-    nsScriptSecurityManager::ReportError(
-      nullptr, NS_LITERAL_STRING("CheckSameOriginError"), mURI, aURI);
-  }
-
-  return NS_ERROR_DOM_BAD_URI;
+  return false;
 }
 
 NS_IMETHODIMP
