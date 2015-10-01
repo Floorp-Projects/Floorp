@@ -333,6 +333,12 @@ class BarrieredBase : public BarrieredBaseMixins<T>
     // barrier types are NOT supported. See assertTypeConstraints.
     T value;
 
+  public:
+    // Note: this is public because C++ cannot friend to a specific template instantiation.
+    // Friending to the generic template leads to a number of unintended consequences, including
+    // template resolution ambiguity and a circular dependency with Tracing.h.
+    T* unsafeUnbarrieredForTracing() { return &value; }
+
   private:
 #ifdef DEBUG
     // Static type assertions about T must be moved out of line to avoid
@@ -353,18 +359,14 @@ class WriteBarrieredBase : public BarrieredBase<T>
     DECLARE_POINTER_COMPARISON_OPS(T);
     DECLARE_POINTER_CONSTREF_OPS(T);
 
-    /* Use this if the automatic coercion to T isn't working. */
+    // Use this if the automatic coercion to T isn't working.
     const T& get() const { return this->value; }
 
-    /*
-     * Use these if you want to change the value without invoking barriers.
-     * Obviously this is dangerous unless you know the barrier is not needed.
-     */
-    T* unsafeGet() { return &this->value; }
-    const T* unsafeGet() const { return &this->value; }
+    // Use this if you want to change the value without invoking barriers.
+    // Obviously this is dangerous unless you know the barrier is not needed.
     void unsafeSet(T v) { this->value = v; }
 
-    /* For users who need to manually barrier the raw types. */
+    // For users who need to manually barrier the raw types.
     static void writeBarrierPre(const T& v) { InternalGCMethods<T>::preBarrier(v); }
 
   protected:
@@ -534,10 +536,6 @@ class ReadBarrieredBase : public BarrieredBase<T>
     // ReadBarrieredBase is not directly instantiable.
     explicit ReadBarrieredBase(T v) : BarrieredBase<T>(v) {}
 
-  public:
-    // For use by the GC.
-    T* unsafeGet() { return &this->value; }
-
   protected:
     void read() const { InternalGCMethods<T>::readBarrier(this->value); }
 };
@@ -555,28 +553,27 @@ class ReadBarriered : public ReadBarrieredBase<T>
 {
   public:
     ReadBarriered() : ReadBarrieredBase<T>(GCMethods<T>::initial()) {}
-    explicit ReadBarriered(T v) : ReadBarrieredBase<T>(v) {}
+    explicit ReadBarriered(const T& v) : ReadBarrieredBase<T>(v) {}
 
-    T get() const {
+    const T get() const {
         if (!InternalGCMethods<T>::isMarkable(this->value))
             return GCMethods<T>::initial();
         this->read();
         return this->value;
     }
 
-    T unbarrieredGet() const {
+    const T unbarrieredGet() const {
         return this->value;
     }
 
-    operator T() const { return get(); }
+    operator const T() const { return get(); }
 
-    T& operator*() const { return *get(); }
-    T operator->() const { return get(); }
+    const T& operator*() const { return *get(); }
+    const T operator->() const { return get(); }
 
-    T* unsafeGet() { return &this->value; }
     T const* unsafeGet() const { return &this->value; }
 
-    void set(T v) { this->value = v; }
+    void set(const T& v) { this->value = v; }
 };
 
 // Add Value operations to all Barrier types. Note, this must be defined before
@@ -635,8 +632,6 @@ class HeapSlot : public WriteBarrieredBase<Value>
     static void writeBarrierPost(NativeObject* owner, Kind kind, uint32_t slot, const Value& target) {
         reinterpret_cast<HeapSlot*>(const_cast<Value*>(&target))->post(owner, kind, slot, target);
     }
-
-    Value* unsafeGet() { return &value; }
 
   private:
     void post(NativeObject* owner, Kind kind, uint32_t slot, const Value& target) {
