@@ -25,10 +25,6 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
     }                                                                         \
                                                                               \
     inst = new _InstanceClass();                                              \
-    if (nullptr == inst) {                                                    \
-        rv = NS_ERROR_OUT_OF_MEMORY;                                          \
-        return rv;                                                            \
-    }                                                                         \
     NS_ADDREF(inst);                                                          \
     rv = inst->QueryInterface(aIID, aResult);                                 \
     NS_RELEASE(inst);                                                         \
@@ -52,10 +48,6 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
     }                                                                         \
                                                                               \
     inst = new _InstanceClass();                                              \
-    if (nullptr == inst) {                                                    \
-        rv = NS_ERROR_OUT_OF_MEMORY;                                          \
-        return rv;                                                            \
-    }                                                                         \
     NS_ADDREF(inst);                                                          \
     rv = inst->_InitMethod();                                                 \
     if(NS_SUCCEEDED(rv)) {                                                    \
