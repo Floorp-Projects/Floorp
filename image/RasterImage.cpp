@@ -1290,14 +1290,12 @@ RasterImage::Decode(const IntSize& aSize, uint32_t aFlags)
   if (mAnim) {
     decoder = DecoderFactory::CreateAnimationDecoder(mDecoderType, this,
                                                      mSourceBuffer, decoderFlags,
-                                                     ToSurfaceFlags(aFlags),
-                                                     mRequestedResolution);
+                                                     ToSurfaceFlags(aFlags));
   } else {
     decoder = DecoderFactory::CreateDecoder(mDecoderType, this, mSourceBuffer,
                                             targetSize, decoderFlags,
                                             ToSurfaceFlags(aFlags),
-                                            mRequestedSampleSize,
-                                            mRequestedResolution);
+                                            mRequestedSampleSize);
   }
 
   // Make sure DecoderFactory was able to create a decoder successfully.
@@ -1352,8 +1350,7 @@ RasterImage::DecodeMetadata(uint32_t aFlags)
   // Create a decoder.
   nsRefPtr<Decoder> decoder =
     DecoderFactory::CreateMetadataDecoder(mDecoderType, this, mSourceBuffer,
-                                          mRequestedSampleSize,
-                                          mRequestedResolution);
+                                          mRequestedSampleSize);
 
   // Make sure DecoderFactory was able to create a decoder successfully.
   if (!decoder) {
