@@ -91,7 +91,7 @@ $(addprefix install-,$(INSTALL_MANIFESTS)): install-%:
 		install_$(subst /,_,$*)
 
 # Preprocessed files. Ideally they would be using install manifests but
-# right now, it's not possible because of things like APP_BUILDID or
+# right now, it's not possible because of things like MOZ_APP_BUILDID or
 # nsURLFormatter.js.
 #
 # The list of preprocessed files is defined in PP_TARGETS. The list is
@@ -194,7 +194,7 @@ jar-browser-themes-%-jar.mn: \
 # Extra dependencies and/or definitions for preprocessed files.
 $(TOPOBJDIR)/dist/bin/application.ini: $(TOPOBJDIR)/config/buildid
 $(TOPOBJDIR)/dist/bin/application.ini: defines += \
-	-DAPP_BUILDID=$(shell cat $(TOPOBJDIR)/config/buildid)
+	-DMOZ_APP_BUILDID=$(shell cat $(TOPOBJDIR)/config/buildid)
 
 # Files to build with the recursive backend and simply copy
 $(TOPOBJDIR)/dist/bin/greprefs.js: $(TOPOBJDIR)/modules/libpref/greprefs.js
