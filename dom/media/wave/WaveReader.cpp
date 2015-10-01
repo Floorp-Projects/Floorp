@@ -523,29 +523,6 @@ WaveReader::GetPosition()
 }
 
 bool
-WaveReader::GetNextChunk(uint32_t* aChunk, uint32_t* aChunkSize)
-{
-  MOZ_ASSERT(aChunk, "Must have aChunk");
-  MOZ_ASSERT(aChunkSize, "Must have aChunkSize");
-  MOZ_ASSERT(mResource.Tell() % 2 == 0,
-             "GetNextChunk called with unaligned resource");
-
-  char chunkHeader[CHUNK_HEADER_SIZE];
-  const char* p = chunkHeader;
-
-  if (!ReadAll(chunkHeader, sizeof(chunkHeader))) {
-    return false;
-  }
-
-  static_assert(sizeof(uint32_t) * 2 <= CHUNK_HEADER_SIZE,
-                "Reads would overflow chunkHeader buffer.");
-  *aChunk = ReadUint32BE(&p);
-  *aChunkSize = ReadUint32LE(&p);
-
-  return true;
-}
-
-bool
 WaveReader::LoadListChunk(uint32_t aChunkSize,
                           nsAutoPtr<dom::HTMLMediaElement::MetadataTags> &aTags)
 {
