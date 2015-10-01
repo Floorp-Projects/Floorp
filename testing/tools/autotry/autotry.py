@@ -21,7 +21,6 @@ def arg_parser():
     parser.add_argument('-b', dest='builds', default='do',
                         help='Build types to run (d for debug, o for optimized).')
     parser.add_argument('-p', dest='platforms', action="append",
-                        required='AUTOTRY_PLATFORM_HINT' not in os.environ,
                         help='Platforms to run (required if not found in the environment as AUTOTRY_PLATFORM_HINT).')
     parser.add_argument('-u', dest='tests', action="append",
                         help='Test suites to run in their entirety.')
