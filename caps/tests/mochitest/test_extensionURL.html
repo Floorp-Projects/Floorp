@@ -121,15 +121,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1161831
       return p;
     }
 
+    function testXHR(url, shouldThrow) {
+      return new Promise(function(resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.addEventListener("load", () => { ok(!shouldThrow, "XHR succeeded for " + url); resolve(); });
+        xhr.addEventListener("error", () => { ok(false, "Unexpected XHR error: " + url); resolve(); });
+        try {
+          xhr.open("GET", url, true);
+          xhr.send();
+        } catch (e) {
+          ok(shouldThrow, "XHR threw for " + url);
+          resolve();
+        }
+      });
+    }
+
     //
     // Perform some loads and make sure they work correctly.
     //
     testLoad.bind(null, 'moz-extension://cherise', navigateFromChromeWithLocation)()
     .then(testLoad.bind(null, 'moz-extension://cherise', navigateFromChromeWithWebNav))
     .then(testLoad.bind(null, 'moz-extension://cherise', navigateWithLocation, /* shouldThrow = */ true))
+    .then(testXHR.bind(null, 'moz-extension://cherise', /* shouldThrow = */ true))
     .then(setWhitelistCallback.bind(null, /cherise/))
     .then(testLoad.bind(null, 'moz-extension://cherise', navigateWithLocation))
+    .then(testXHR.bind(null, 'moz-extension://cherise'))
     .then(testLoad.bind(null, 'moz-extension://liebchen', navigateWithLocation, /* shouldThrow = */ true))
+    .then(testXHR.bind(null, 'moz-extension://liebchen', /* shouldThrow = */ true))
     .then(setWhitelistCallback.bind(null, /cherise|liebchen/))
     .then(testLoad.bind(null, 'moz-extension://liebchen', navigateWithLocation))
     .then(testLoad.bind(null, 'moz-extension://liebchen', navigateWithSrc))
