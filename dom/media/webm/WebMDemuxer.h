@@ -40,8 +40,10 @@ class MediaRawDataQueue {
     mQueue.push_front(Move(aItem));
   }
 
-  void PushFront(const MediaRawDataQueue& aOther) {
-    mQueue.insert(mQueue.begin(), aOther.mQueue.begin(), aOther.mQueue.end());
+  void PushFront(MediaRawDataQueue&& aOther) {
+    while (!aOther.mQueue.empty()) {
+      Push(aOther.PopFront());
+    }
   }
 
   already_AddRefed<MediaRawData> PopFront() {

@@ -908,7 +908,7 @@ WebMTrackDemuxer::SetNextKeyFrameTime()
   }
   // We may have demuxed more than intended, so ensure that all frames are kept
   // in the right order.
-  mSamples.PushFront(skipSamplesQueue);
+  mSamples.PushFront(Move(skipSamplesQueue));
 
   if (frameTime != -1) {
     mNextKeyframeTime.emplace(media::TimeUnit::FromMicroseconds(frameTime));
