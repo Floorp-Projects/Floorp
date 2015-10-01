@@ -11,13 +11,11 @@
   <Param name="oe" value="utf-8"/>
   <Param name="aq" value="t"/>
   <!-- Dynamic parameters -->
-  <MozParam name="client" condition="defaultEngine" trueValue="firefox-a" falseValue="firefox"/>
   <MozParam name="channel" condition="purpose" purpose="contextmenu" value="rcs"/>
   <MozParam name="channel" condition="purpose" purpose="keyword" value="fflb"/>
 </Url>
 <Url type="application/x-moz-default-purpose" method="GET" template="http://www.google.com/search" resultdomain="purpose.google.com">
   <Param name="q" value="{searchTerms}"/>
-  <MozParam name="client" condition="defaultEngine" trueValue="firefox-a" falseValue="firefox"/>
   <!-- MozParam with a default value if purpose is not specified -->
   <MozParam name="channel" condition="purpose" purpose="" value="none"/>
   <MozParam name="channel" condition="purpose" purpose="contextmenu" value="rcs"/>

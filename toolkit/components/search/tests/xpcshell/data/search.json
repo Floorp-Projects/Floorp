@@ -45,13 +45,6 @@
                   "value": "t"
                 },
                 {
-                  "name": "client",
-                  "falseValue": "firefox",
-                  "trueValue": "firefox-a",
-                  "condition": "defaultEngine",
-                  "mozparam": true
-                },
-                {
                   "name": "channel",
                   "value": "fflb",
                   "purpose": "keyword"
@@ -73,13 +66,6 @@
                 {
                   "name": "q",
                   "value": "{searchTerms}"
-                },
-                {
-                  "name": "client",
-                  "falseValue": "firefox",
-                  "trueValue": "firefox-a",
-                  "condition": "defaultEngine",
-                  "mozparam": true
                 },
                 {
                   "name": "channel",

@@ -7,7 +7,6 @@
   <Url type="text/html" method="GET" template="http://mochi.test:8888/browser/browser/components/search/test/">
     <Param name="test" value="{searchTerms}"/>
     <Param name="ie" value="utf-8"/>
-    <MozParam name="client" condition="defaultEngine" trueValue="app-default" falseValue="app"/>
     <MozParam name="channel" condition="purpose" purpose="keyword" value="keywordsearch"/>
     <MozParam name="channel" condition="purpose" purpose="contextmenu" value="contextsearch"/>
   </Url>
