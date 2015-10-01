@@ -14,22 +14,15 @@ static nsresult                                                               \
 _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
                             void **aResult)                                   \
 {                                                                             \
-    nsresult rv;                                                              \
-                                                                              \
-    _InstanceClass * inst;                                                    \
+    nsRefPtr<_InstanceClass> inst;                                            \
                                                                               \
     *aResult = nullptr;                                                       \
     if (nullptr != aOuter) {                                                  \
-        rv = NS_ERROR_NO_AGGREGATION;                                         \
-        return rv;                                                            \
+        return NS_ERROR_NO_AGGREGATION;                                       \
     }                                                                         \
                                                                               \
     inst = new _InstanceClass();                                              \
-    NS_ADDREF(inst);                                                          \
-    rv = inst->QueryInterface(aIID, aResult);                                 \
-    NS_RELEASE(inst);                                                         \
-                                                                              \
-    return rv;                                                                \
+    return inst->QueryInterface(aIID, aResult);                               \
 }
 
 #define NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(_InstanceClass, _InitMethod)      \
@@ -39,21 +32,18 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
 {                                                                             \
     nsresult rv;                                                              \
                                                                               \
-    _InstanceClass * inst;                                                    \
+    nsRefPtr<_InstanceClass> inst;                                            \
                                                                               \
     *aResult = nullptr;                                                       \
     if (nullptr != aOuter) {                                                  \
-        rv = NS_ERROR_NO_AGGREGATION;                                         \
-        return rv;                                                            \
+        return NS_ERROR_NO_AGGREGATION;                                       \
     }                                                                         \
                                                                               \
     inst = new _InstanceClass();                                              \
-    NS_ADDREF(inst);                                                          \
     rv = inst->_InitMethod();                                                 \
     if(NS_SUCCEEDED(rv)) {                                                    \
         rv = inst->QueryInterface(aIID, aResult);                             \
     }                                                                         \
-    NS_RELEASE(inst);                                                         \
                                                                               \
     return rv;                                                                \
 }
@@ -65,26 +55,18 @@ static nsresult                                                               \
 _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
                             void **aResult)                                   \
 {                                                                             \
-    nsresult rv;                                                              \
-                                                                              \
-    _InstanceClass * inst;                                                    \
+    nsRefPtr<_InstanceClass> inst;                                            \
                                                                               \
     *aResult = nullptr;                                                       \
     if (nullptr != aOuter) {                                                  \
-        rv = NS_ERROR_NO_AGGREGATION;                                         \
-        return rv;                                                            \
+        return NS_ERROR_NO_AGGREGATION;                                       \
     }                                                                         \
                                                                               \
-    inst = already_AddRefed<_InstanceClass>(_GetterProc()).take();   \
+    inst = already_AddRefed<_InstanceClass>(_GetterProc());                   \
     if (nullptr == inst) {                                                    \
-        rv = NS_ERROR_OUT_OF_MEMORY;                                          \
-        return rv;                                                            \
+        return NS_ERROR_OUT_OF_MEMORY;                                        \
     }                                                                         \
-    /* NS_ADDREF(inst); */                                                    \
-    rv = inst->QueryInterface(aIID, aResult);                                 \
-    NS_RELEASE(inst);                                                         \
-                                                                              \
-    return rv;                                                                \
+    return inst->QueryInterface(aIID, aResult);                               \
 }
 
 #ifndef MOZILLA_INTERNAL_API
