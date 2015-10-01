@@ -319,6 +319,37 @@ NS_IMETHODIMP nsXULWindow::GetPrimaryContentShell(nsIDocShellTreeItem**
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULWindow::TabParentAdded(nsITabParent* aTab, bool aPrimary)
+{
+  if (aPrimary) {
+    mPrimaryTabParent = aTab;
+    mPrimaryContentShell = nullptr;
+  } else if (mPrimaryTabParent == aTab) {
+    mPrimaryTabParent = nullptr;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULWindow::TabParentRemoved(nsITabParent* aTab)
+{
+  if (aTab == mPrimaryTabParent) {
+    mPrimaryTabParent = nullptr;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULWindow::GetPrimaryTabParent(nsITabParent** aTab)
+{
+  nsCOMPtr<nsITabParent> tab = mPrimaryTabParent;
+  tab.forget(aTab);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsXULWindow::GetContentShellById(const char16_t* aID, 
    nsIDocShellTreeItem** aDocShellTreeItem)
 {
@@ -1565,6 +1596,7 @@ nsresult nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
     NS_ENSURE_SUCCESS(EnsurePrimaryContentTreeOwner(), NS_ERROR_FAILURE);
     aContentShell->SetTreeOwner(mPrimaryContentTreeOwner);
     mPrimaryContentShell = aContentShell;
+    mPrimaryTabParent = nullptr;
   }
   else {
     NS_ENSURE_SUCCESS(EnsureContentTreeOwner(), NS_ERROR_FAILURE);
