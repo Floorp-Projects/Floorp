@@ -112,6 +112,9 @@ this.MessagesBridge = {
       case "task-switcher":
         window.dispatchEvent(new window.CustomEvent("taskmanagershow", {}));
         break;
+      case "back-key":
+        Services.obs.notifyObservers(null, "back-docommand", null);
+        break;
     }
   },
 

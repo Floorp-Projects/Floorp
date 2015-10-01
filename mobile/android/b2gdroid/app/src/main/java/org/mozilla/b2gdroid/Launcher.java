@@ -289,6 +289,12 @@ public class Launcher extends FragmentActivity
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        GeckoEvent e = GeckoEvent.createBroadcastEvent("Android:Launcher", "{\"action\":\"back-key\"}");
+        GeckoAppShell.sendEventToGecko(e);
+    }
+
     public void handleMessage(String event, JSONObject message) {
         Log.w(LOGTAG, "Launcher received " + event);
 
