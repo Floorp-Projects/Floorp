@@ -3785,7 +3785,6 @@ function FillHistoryMenu(aParent) {
         PlacesUtils.favicons.getFaviconURLForPage(entryURI, function (aURI) {
           if (aURI) {
             let iconURL = PlacesUtils.favicons.getFaviconLinkForIcon(aURI).spec;
-            iconURL = PlacesUtils.getImageURLForResolution(window, iconURL);
             item.style.listStyleImage = "url(" + iconURL + ")";
           }
         });

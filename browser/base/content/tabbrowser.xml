@@ -904,9 +904,6 @@
             }
 
             let sizedIconUrl = browser.mIconURL || "";
-            if (sizedIconUrl) {
-              sizedIconUrl = this.PlacesUtils.getImageURLForResolution(window, sizedIconUrl);
-            }
             if (sizedIconUrl != aTab.getAttribute("image")) {
               if (sizedIconUrl)
                 aTab.setAttribute("image", sizedIconUrl);
