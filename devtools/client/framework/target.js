@@ -80,18 +80,6 @@ exports.TargetFactory = {
 };
 
 /**
- * The 'version' property allows the developer tools equivalent of browser
- * detection. Browser detection is evil, however while we don't know what we
- * will need to detect in the future, it is an easy way to postpone work.
- * We should be looking to use the support features added in bug 1069673
- * in place of version where possible.
- */
-function getVersion() {
-  // FIXME: return something better
-  return 20;
-}
-
-/**
  * A Target represents something that we can debug. Targets are generally
  * read-only. Any changes that you wish to make to a target should be done via
  * a Tool that attaches to the target. i.e. a Target is just a pointer saying
@@ -122,12 +110,6 @@ function getVersion() {
 function Target() {
   throw new Error("Use TargetFactory.newXXX or Target.getXXX to create a Target in place of 'new Target()'");
 }
-
-Object.defineProperty(Target.prototype, "version", {
-  get: getVersion,
-  enumerable: true
-});
-
 
 /**
  * A TabTarget represents a page living in a browser tab. Generally these will
@@ -273,8 +255,6 @@ TabTarget.prototype = {
 
     return this.client.traits[traitName];
   },
-
-  get version() { return getVersion(); },
 
   get tab() {
     return this._tab;
