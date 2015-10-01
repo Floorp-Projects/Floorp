@@ -9,6 +9,7 @@
 #ifndef jsapi_h
 #define jsapi_h
 
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Range.h"
@@ -689,18 +690,6 @@ typedef void
 typedef void
 (* JSCompartmentNameCallback)(JSRuntime* rt, JSCompartment* compartment,
                               char* buf, size_t bufsize);
-
-/**
- * Callback used to ask the embedding to determine in which
- * Performance Group the current execution belongs. Typically, this is
- * used to regroup JSCompartments from several iframes from the same
- * page or from several compartments of the same addon into a single
- * Performance Group.
- *
- * Returns an opaque key.
- */
-typedef void*
-(* JSCurrentPerfGroupCallback)(JSContext*);
 
 /************************************************************************/
 
@@ -5643,233 +5632,112 @@ BuildStackString(JSContext* cx, HandleObject stack, MutableHandleString stringp,
 } /* namespace JS */
 
 
-/* Stopwatch-based CPU monitoring. */
+/* Stopwatch-based performance monitoring. */
 
 namespace js {
 
 class AutoStopwatch;
 
 /**
- * Container for performance data
- * All values are monotonic.
- * All values are updated after running to completion.
- */
-struct PerformanceData {
-    // Number of times we have spent at least 2^n consecutive
-    // milliseconds executing code in this group.
-    // durations[0] is increased whenever we spend at least 1 ms
-    // executing code in this group
-    // durations[1] whenever we spend 2ms+
-    //
-    // durations[i] whenever we spend 2^ims+
-    uint64_t durations[10];
-
-    // Total amount of time spent executing code in this group, in
-    // microseconds.
-    uint64_t totalUserTime;
-    uint64_t totalSystemTime;
-    uint64_t totalCPOWTime;
-
-    // Total number of times code execution entered this group,
-    // since process launch. This may be greater than the number
-    // of times we have entered the event loop.
-    uint64_t ticks;
-
-    PerformanceData()
-      : totalUserTime(0)
-      , totalSystemTime(0)
-      , totalCPOWTime(0)
-      , ticks(0)
-    {
-        mozilla::PodArrayZero(durations);
-    }
-    PerformanceData(const PerformanceData& from)
-      : totalUserTime(from.totalUserTime)
-      , totalSystemTime(from.totalSystemTime)
-      , totalCPOWTime(from.totalCPOWTime)
-      , ticks(from.ticks)
-    {
-        mozilla::PodArrayCopy(durations, from.durations);
-    }
-    PerformanceData& operator=(const PerformanceData& from)
-    {
-        mozilla::PodArrayCopy(durations, from.durations);
-        totalUserTime = from.totalUserTime;
-        totalSystemTime = from.totalSystemTime;
-        totalCPOWTime = from.totalCPOWTime;
-        ticks = from.ticks;
-        return *this;
-    }
-};
-
-/**
- * A group of compartments forming a single unit in terms of
- * performance monitoring.
- *
- * Two compartments belong to the same group if either:
- * - they are part of the same add-on;
- * - they are part of the same webpage;
- * - they are both system built-ins.
- *
- * This class is refcounted by instances of `JSCompartment`.
- * Do not attempt to hold to a pointer to a `PerformanceGroup`.
+ * Abstract base class for a representation of the performance of a
+ * component. Embeddings interested in performance monitoring should
+ * provide a concrete implementation of this class, as well as the
+ * relevant callbacks (see below).
  */
 struct PerformanceGroup {
-
-    // Performance data for this group.
-    PerformanceData data;
-
-    // An id unique to this runtime.
-    const uint64_t uid;
-
-    // The number of cycles spent in this group during this iteration
-    // of the event loop. Note that cycles are not a reliable measure,
-    // especially over short intervals. See Runtime.cpp for a more
-    // complete discussion on the imprecision of cycle measurement.
-    uint64_t recentCycles;
-
-    // The number of times this group has been activated during this
-    // iteration of the event loop.
-    uint64_t recentTicks;
-
-    // The number of milliseconds spent doing CPOW during this
-    // iteration of the event loop.
-    uint64_t recentCPOW;
+    PerformanceGroup();
 
     // The current iteration of the event loop.
-    uint64_t iteration() const {
-        return iteration_;
-    }
+    uint64_t iteration() const;
 
     // `true` if an instance of `AutoStopwatch` is already monitoring
     // the performance of this performance group for this iteration
     // of the event loop, `false` otherwise.
-    bool hasStopwatch(uint64_t it) const {
-        return stopwatch_ != nullptr && iteration_ == it;
-    }
+    bool isAcquired(uint64_t it) const;
 
     // `true` if a specific instance of `AutoStopwatch` is already monitoring
     // the performance of this performance group for this iteration
     // of the event loop, `false` otherwise.
-    bool hasStopwatch(uint64_t it, const AutoStopwatch* stopwatch) const {
-        return stopwatch_ == stopwatch && iteration_ == it;
-    }
+    bool isAcquired(uint64_t it, const AutoStopwatch* owner) const;
 
     // Mark that an instance of `AutoStopwatch` is monitoring
     // the performance of this group for a given iteration.
-    void acquireStopwatch(uint64_t it, const AutoStopwatch* stopwatch) {
-        if (iteration_ != it) {
-            // Any data that pretends to be recent is actually bound
-            // to an older iteration and therefore stale.
-            resetRecentData();
-        }
-        iteration_ = it;
-        stopwatch_ = stopwatch;
-    }
+    void acquire(uint64_t it, const AutoStopwatch* owner);
 
     // Mark that no `AutoStopwatch` is monitoring the
     // performance of this group for the iteration.
-    void releaseStopwatch(uint64_t it, const AutoStopwatch* stopwatch) {
-        if (iteration_ != it)
-            return;
+    void release(uint64_t it, const AutoStopwatch* owner);
 
-        MOZ_ASSERT(stopwatch == stopwatch_ || stopwatch_ == nullptr);
-        stopwatch_ = nullptr;
-    }
+    // The number of cycles spent in this group during this iteration
+    // of the event loop. Note that cycles are not a reliable measure,
+    // especially over short intervals. See Stopwatch.* for a more
+    // complete discussion on the imprecision of cycle measurement.
+    uint64_t recentCycles(uint64_t iteration) const;
+    void addRecentCycles(uint64_t iteration, uint64_t cycles);
+
+    // The number of times this group has been activated during this
+    // iteration of the event loop.
+    uint64_t recentTicks(uint64_t iteration) const;
+    void addRecentTicks(uint64_t iteration, uint64_t ticks);
+
+    // The number of microseconds spent doing CPOW during this
+    // iteration of the event loop.
+    uint64_t recentCPOW(uint64_t iteration) const;
+    void addRecentCPOW(uint64_t iteration, uint64_t CPOW);
 
     // Get rid of any data that pretends to be recent.
-    void resetRecentData() {
-        recentCycles = 0;
-        recentTicks = 0;
-        recentCPOW = 0;
-    }
+    void resetRecentData();
 
-    // Refcounting. For use with nsRefPtr.
-    void AddRef();
-    void Release();
+    // `true` if new measures should be added to this group, `false`
+    // otherwise.
+    bool isActive() const;
+    void setIsActive(bool);
 
-    // Construct a PerformanceGroup for a single compartment.
-    explicit PerformanceGroup(JSRuntime* rt);
+    // `true` if this group has been used in the current iteration,
+    // `false` otherwise.
+    bool isUsedInThisIteration() const;
+    void setIsUsedInThisIteration(bool);
+  protected:
+    // An implementation of `delete` for this object. Must be provided
+    // by the embedding.
+    virtual void Delete() = 0;
 
-    // Construct a PerformanceGroup for a group of compartments.
-    explicit PerformanceGroup(JSContext* rt, void* key);
+  private:
+    // The number of cycles spent in this group during this iteration
+    // of the event loop. Note that cycles are not a reliable measure,
+    // especially over short intervals. See Runtime.cpp for a more
+    // complete discussion on the imprecision of cycle measurement.
+    uint64_t recentCycles_;
 
-private:
-    PerformanceGroup& operator=(const PerformanceGroup&) = delete;
-    PerformanceGroup(const PerformanceGroup&) = delete;
+    // The number of times this group has been activated during this
+    // iteration of the event loop.
+    uint64_t recentTicks_;
 
-    JSRuntime* runtime_;
-
-    // The stopwatch currently monitoring the group,
-    // or `nullptr` if none. Used ony for comparison.
-    const AutoStopwatch* stopwatch_;
+    // The number of microseconds spent doing CPOW during this
+    // iteration of the event loop.
+    uint64_t recentCPOW_;
 
     // The current iteration of the event loop. If necessary,
     // may safely overflow.
     uint64_t iteration_;
 
-    // The hash key for this PerformanceGroup.
-    void* const key_;
+    // `true` if new measures should be added to this group, `false`
+    // otherwise.
+    bool isActive_;
 
-    // Refcounter.
+    // `true` if this group has been used in the current iteration,
+    // `false` otherwise.
+    bool isUsedInThisIteration_;
+
+    // The stopwatch currently monitoring the group,
+    // or `nullptr` if none. Used ony for comparison.
+    const AutoStopwatch* owner_;
+
+  public:
+    // Compatibility with RefPtr<>
+    void AddRef();
+    void Release();
     uint64_t refCount_;
-
-    // `true` if this PerformanceGroup may be shared by several
-    // compartments, `false` if it is dedicated to a single
-    // compartment.
-    const bool isSharedGroup_;
-};
-
-/**
- * Each PerformanceGroupHolder handles:
- * - a reference-counted indirection towards a PerformanceGroup shared
- *   by several compartments
- * - a owned PerformanceGroup representing the performance of a single
- *   compartment.
- */
-struct PerformanceGroupHolder {
-    // Get the shared group.
-    // On first call, this causes a single Hashtable lookup.
-    // Successive calls do not require further lookups.
-    js::PerformanceGroup* getSharedGroup(JSContext*);
-
-    // Get the own group.
-    js::PerformanceGroup* getOwnGroup();
-
-    // `true` if the this holder is currently associated to a shared
-    // PerformanceGroup, `false` otherwise. Use this method to avoid
-    // instantiating a PerformanceGroup if you only need to get
-    // available performance data.
-    inline bool hasSharedGroup() const {
-        return sharedGroup_ != nullptr;
-    }
-    inline bool hasOwnGroup() const {
-        return ownGroup_ != nullptr;
-    }
-
-    // Remove the link to the PerformanceGroup. This method is designed
-    // as an invalidation mechanism if the JSCompartment changes nature
-    // (new values of `isSystem()`, `principals()` or `addonId`).
-    void unlink();
-
-    explicit PerformanceGroupHolder(JSRuntime* runtime)
-      : runtime_(runtime)
-    {   }
-    ~PerformanceGroupHolder();
-
-  private:
-    // Return the key representing this PerformanceGroup in
-    // Runtime::Stopwatch.
-    // Do not deallocate the key.
-    void* getHashKey(JSContext* cx);
-
-    JSRuntime *runtime_;
-
-    // The PerformanceGroups held by this object.
-    // Initially set to `nullptr` until the first call to `getGroup`.
-    // May be reset to `nullptr` by a call to `unlink`.
-    RefPtr<js::PerformanceGroup> sharedGroup_;
-    RefPtr<js::PerformanceGroup> ownGroup_;
 };
 
 /**
@@ -5878,7 +5746,7 @@ struct PerformanceGroupHolder {
  * Until `FlushMonitoring` has been called, all PerformanceMonitoring data is invisible
  * to the outside world and can cancelled with a call to `ResetMonitoring`.
  */
-extern JS_PUBLIC_API(void)
+extern JS_PUBLIC_API(bool)
 FlushPerformanceMonitoring(JSRuntime*);
 
 /**
@@ -5887,7 +5755,13 @@ FlushPerformanceMonitoring(JSRuntime*);
 extern JS_PUBLIC_API(void)
 ResetPerformanceMonitoring(JSRuntime*);
 
-/*
+/**
+ * Cleanup any memory used by performance monitoring.
+ */
+extern JS_PUBLIC_API(void)
+DisposePerformanceMonitoring(JSRuntime*);
+
+/**
  * Turn on/off stopwatch-based CPU monitoring.
  *
  * `SetStopwatchIsMonitoringCPOW` or `SetStopwatchIsMonitoringJank`
@@ -5902,10 +5776,6 @@ extern JS_PUBLIC_API(bool)
 SetStopwatchIsMonitoringJank(JSRuntime*, bool);
 extern JS_PUBLIC_API(bool)
 GetStopwatchIsMonitoringJank(JSRuntime*);
-extern JS_PUBLIC_API(bool)
-SetStopwatchIsMonitoringPerCompartment(JSRuntime*, bool);
-extern JS_PUBLIC_API(bool)
-GetStopwatchIsMonitoringPerCompartment(JSRuntime*);
 
 extern JS_PUBLIC_API(bool)
 IsStopwatchActive(JSRuntime*);
@@ -5923,31 +5793,21 @@ extern JS_PUBLIC_API(void)
 AddCPOWPerformanceDelta(JSRuntime*, uint64_t delta);
 
 typedef bool
-(PerformanceStatsWalker)(JSContext* cx,
-                         const PerformanceData& stats, uint64_t uid,
-                         const uint64_t* parentId, void* closure);
-
-/**
- * Extract the performance statistics.
- *
- * Note that before calling `walker`, we enter the corresponding context.
- */
+(*StopwatchStartCallback)(uint64_t, void*);
 extern JS_PUBLIC_API(bool)
-IterPerformanceStats(JSContext* cx, PerformanceStatsWalker* walker, js::PerformanceData* process, void* closure);
+SetStopwatchStartCallback(JSRuntime*, StopwatchStartCallback, void*);
+
+typedef bool
+(*StopwatchCommitCallback)(uint64_t, mozilla::Vector<RefPtr<PerformanceGroup>>&, void*);
+extern JS_PUBLIC_API(bool)
+SetStopwatchCommitCallback(JSRuntime*, StopwatchCommitCallback, void*);
+
+typedef bool
+(*GetGroupsCallback)(JSContext*, mozilla::Vector<RefPtr<PerformanceGroup>>&, void*);
+extern JS_PUBLIC_API(bool)
+SetGetPerformanceGroupsCallback(JSRuntime*, GetGroupsCallback, void*);
 
 } /* namespace js */
-
-/**
- * Callback used to ask the embedding to determine in which
- * Performance Group a compartment belongs. Typically, this is used to
- * regroup JSCompartments from several iframes from the same page or
- * from several compartments of the same addon into a single
- * Performance Group.
- *
- * Returns an opaque key.
- */
-extern JS_PUBLIC_API(void)
-JS_SetCurrentPerfGroupCallback(JSRuntime *rt, JSCurrentPerfGroupCallback cb);
 
 
 #endif /* jsapi_h */
