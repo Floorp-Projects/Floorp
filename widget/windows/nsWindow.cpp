@@ -4761,16 +4761,6 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
   // (Large blocks of code should be broken out into OnEvent handlers.)
   switch (msg) {
-    // Manually reset the cursor if WM_SETCURSOR is requested while over
-    // application content (as opposed to Windows borders, etc).
-    case WM_SETCURSOR:
-      if (LOWORD(lParam) == HTCLIENT)
-      {
-        SetCursor(GetCursor());
-        result = true;
-      }
-      break;
-
     // WM_QUERYENDSESSION must be handled by all windows.
     // Otherwise Windows thinks the window can just be killed at will.
     case WM_QUERYENDSESSION:
