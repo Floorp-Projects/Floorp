@@ -629,33 +629,23 @@ AudioDestinationNode::CheckAudioChannelPermissions(AudioChannel aValue)
   return perm == nsIPermissionManager::ALLOW_ACTION;
 }
 
-nsresult
+void
 AudioDestinationNode::CreateAudioChannelAgent()
 {
   if (mIsOffline) {
-    return NS_OK;
+    return;
   }
 
-  nsresult rv = NS_OK;
   if (mAudioChannelAgent) {
-    rv = mAudioChannelAgent->NotifyStoppedPlaying(nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+    mAudioChannelAgent->NotifyStoppedPlaying(nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY);
   }
 
   mAudioChannelAgent = new AudioChannelAgent();
-  rv = mAudioChannelAgent->InitWithWeakCallback(GetOwner(),
+  mAudioChannelAgent->InitWithWeakCallback(GetOwner(),
                                            static_cast<int32_t>(mAudioChannel),
                                            this);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
 
-  rv = WindowAudioCaptureChanged();
-  NS_WARN_IF(NS_FAILED(rv));
-  return rv;
-
+  WindowAudioCaptureChanged();
 }
 
 void
