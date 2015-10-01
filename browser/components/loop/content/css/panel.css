@@ -891,36 +891,6 @@ html[dir="rtl"] .settings-menu .dropdown-menu {
   right: auto;
 }
 
-.settings-menu .icon {
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  width: 12px;
-  height: 12px;
-  -moz-margin-end: 1em;
-  margin-top: 2px;
-}
-
-.settings-menu .icon-tour {
-  background-image: url("../shared/img/icons-16x16.svg#tour");
-}
-
-.settings-menu .icon-account {
-  background-image: url(../shared/img/svg/glyph-account-16x16.svg);
-}
-
-.settings-menu .icon-signin {
-  background-image: url(../shared/img/svg/glyph-signin-16x16.svg);
-}
-
-.settings-menu .icon-signout {
-  background-image: url(../shared/img/svg/glyph-signout-16x16.svg);
-}
-
-.settings-menu .icon-help {
-  background-image: url(../shared/img/svg/glyph-help-16x16.svg);
-}
-
 /* Footer */
 
 .footer {

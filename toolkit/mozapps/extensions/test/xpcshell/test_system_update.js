@@ -9,7 +9,9 @@ Components.utils.import("resource://testing-common/httpd.js");
 const { computeHash } = Components.utils.import("resource://gre/modules/addons/ProductAddonChecker.jsm");
 
 // Enable signature checks for these tests
-//Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, true);
+Services.prefs.setBoolPref(PREF_XPI_SIGNATURES_REQUIRED, true);
+
+BootstrapMonitor.init();
 
 const featureDir = FileUtils.getDir("ProfD", ["features"]);
 
@@ -142,6 +144,8 @@ function* check_installed(inProfile, ...versions) {
     let addon = yield promiseAddonByID(id);
 
     if (versions[i]) {
+      do_print(`Checking state of add-on ${id}, expecting version ${versions[i]}`);
+
       // Add-on should be installed
       do_check_neq(addon, null);
       do_check_eq(addon.version, versions[i]);
@@ -159,13 +163,14 @@ function* check_installed(inProfile, ...versions) {
       do_check_true(uri instanceof AM_Ci.nsIFileURL);
       do_check_eq(uri.file.path, file.path);
 
-      //do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_SYSTEM);
+      do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_SYSTEM);
 
       // Verify the add-on actually started
-      let installed = Services.prefs.getCharPref("bootstraptest." + id + ".active_version");
-      do_check_eq(installed, versions[i]);
+      BootstrapMonitor.checkAddonStarted(id, versions[i]);
     }
     else {
+      do_print(`Checking state of add-on ${id}, expecting it to be missing`);
+
       if (inProfile) {
         // Add-on should not be installed
         do_check_eq(addon, null);
@@ -175,12 +180,12 @@ function* check_installed(inProfile, ...versions) {
         do_check_true(!addon || !addon.isActive);
       }
 
-      try {
-        Services.prefs.getCharPref("bootstraptest." + id + ".active_version");
-        do_throw("Expected pref to be missing");
-      }
-      catch (e) {
-      }
+      BootstrapMonitor.checkAddonNotStarted(id);
+
+      if (addon)
+        BootstrapMonitor.checkAddonInstalled(id);
+      else
+        BootstrapMonitor.checkAddonNotInstalled(id);
     }
   }
 }
@@ -328,9 +333,9 @@ const TESTS = {
   // Correct sizes and hashes should work
   checkSizeHash: {
     updateList: [
-      { id: "system2@tests.mozilla.org", version: "3.0", path: "system2_3.xpi", size: 858 },
-      { id: "system3@tests.mozilla.org", version: "3.0", path: "system3_3.xpi", hashFunction: "sha1", hashValue: "105a4c49bd513ebd30594e380c19e86bba1f83e2" },
-      { id: "system5@tests.mozilla.org", version: "1.0", path: "system5_1.xpi", size: 857, hashFunction: "sha1", hashValue: "664e9218be3c9acbb9029e715c1e5d2fbb4ea2cc" }
+      { id: "system2@tests.mozilla.org", version: "3.0", path: "system2_3.xpi", size: 4672 },
+      { id: "system3@tests.mozilla.org", version: "3.0", path: "system3_3.xpi", hashFunction: "sha1", hashValue: "2df604b37b13766c0e04f1b7f59800e038f46cd5" },
+      { id: "system5@tests.mozilla.org", version: "1.0", path: "system5_1.xpi", size: 4671, hashFunction: "sha1", hashValue: "f13dcaa8bfacaa222189bcbb0074972c05ceb621" }
     ],
     finalState: [true, null, "3.0", "3.0", null, "1.0"]
   },
@@ -343,11 +348,15 @@ add_task(function* setup() {
 })
 
 function* setup_conditions(setup) {
+  do_print("Clearing existing database.");
+  Services.prefs.clearUserPref(PREF_SYSTEM_ADDON_SET);
+  distroDir.leafName = "empty";
+  startupManager(false);
+  yield promiseShutdownManager();
+
   do_print("Setting up conditions.");
   yield setup.setup();
 
-  // Blow away the cache to force a rescan of the filesystem
-  Services.prefs.clearUserPref(PREF_XPI_STATE);
   startupManager(false);
 
   // Make sure the initial state is correct
@@ -435,8 +444,23 @@ add_task(function* test_app_update_disabled() {
   yield promiseShutdownManager();
 });
 
-// Tests that a set that matches the hidden default set works
+// Tests that a set that matches the default set does nothing
 add_task(function* test_match_default() {
+  yield setup_conditions(TEST_CONDITIONS.withAppSet);
+
+  yield install_system_addons(yield build_xml([
+    { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
+    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" }
+  ]));
+
+  // Shouldn't have installed an updated set
+  yield verify_state(TEST_CONDITIONS.withAppSet.initialState);
+
+  yield promiseShutdownManager();
+});
+
+// Tests that a set that matches the hidden default set works
+add_task(function* test_match_default_revert() {
   yield setup_conditions(TEST_CONDITIONS.withBothSets);
 
   yield install_system_addons(yield build_xml([
@@ -444,10 +468,9 @@ add_task(function* test_match_default() {
     { id: "system2@tests.mozilla.org", version: "1.0", path: "system2_1.xpi" }
   ]));
 
-  // Bug 1204159: This should revert to the default set instead of installing
-  // new versions into the updated set.
-  //yield verify_state([false, "1.0", "1.0", null, null, null]);
-  yield verify_state([true, "1.0", "1.0", null, null, null]);
+  // This should revert to the default set instead of installing new versions
+  // into an updated set.
+  yield verify_state([false, "1.0", "1.0", null, null, null]);
 
   yield promiseShutdownManager();
 });
@@ -461,12 +484,26 @@ add_task(function* test_match_current() {
     { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" }
   ]));
 
-  // Bug 1204159: This should remain with the current set instead of creating
-  // a new copy
-  //let set = JSON.parse(Services.prefs.getCharPref(PREF_SYSTEM_ADDON_SET));
-  //do_check_eq(set.directory, "prefilled");
+  // This should remain with the current set instead of creating a new copy
+  let set = JSON.parse(Services.prefs.getCharPref(PREF_SYSTEM_ADDON_SET));
+  do_check_eq(set.directory, "prefilled");
 
-  yield verify_state([true, null, "2.0", "2.0", null, null]);
+  yield verify_state(TEST_CONDITIONS.withBothSets.initialState);
+
+  yield promiseShutdownManager();
+});
+
+// Tests that a set with a minor change doesn't re-download existing files
+add_task(function* test_no_download() {
+  yield setup_conditions(TEST_CONDITIONS.withBothSets);
+
+  // The missing file here is unneeded since there is a local version already
+  yield install_system_addons(yield build_xml([
+    { id: "system2@tests.mozilla.org", version: "2.0", path: "missing.xpi" },
+    { id: "system4@tests.mozilla.org", version: "1.0", path: "system4_1.xpi" }
+  ]));
+
+  yield verify_state([true, null, "2.0", null, "1.0", null]);
 
   yield promiseShutdownManager();
 });

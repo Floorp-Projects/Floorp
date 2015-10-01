@@ -61,6 +61,123 @@ var gUrlToFileMap = {};
 
 var TEST_UNPACKED = false;
 
+// Map resource://xpcshell-data/ to the data directory
+let resHandler = Services.io.getProtocolHandler("resource")
+                         .QueryInterface(AM_Ci.nsISubstitutingProtocolHandler);
+// Allow non-existent files because of bug 1207735
+let dataURI = NetUtil.newURI(do_get_file("data", true));
+resHandler.setSubstitution("xpcshell-data", dataURI);
+
+// Listens to messages from bootstrap.js telling us what add-ons were started
+// and stopped etc. and performs some sanity checks that only installed add-ons
+// are started etc.
+this.BootstrapMonitor = {
+  // Contain the current state of add-ons in the system
+  installed: new Map(),
+  started: new Map(),
+
+  // Contain the last state of shutdown and uninstall calls for an add-on
+  stopped: new Map(),
+  uninstalled: new Map(),
+
+  startupPromises: [],
+  installPromises: [],
+
+  init() {
+    Services.obs.addObserver(this, "bootstrapmonitor-event", false);
+  },
+
+  clear(id) {
+    this.installed.delete(id);
+    this.started.delete(id);
+    this.stopped.delete(id);
+    this.uninstalled.delete(id);
+  },
+
+  promiseAddonStartup(id) {
+    return new Promise(resolve => {
+      this.startupPromises.push(resolve);
+    });
+  },
+
+  promiseAddonInstall(id) {
+    return new Promise(resolve => {
+      this.installPromises.push(resolve);
+    });
+  },
+
+  checkMatches(cached, current) {
+    do_check_neq(cached, undefined);
+    do_check_eq(current.data.version, cached.data.version);
+    do_check_eq(current.data.installPath, cached.data.installPath);
+    do_check_eq(current.data.resourceURI, cached.data.resourceURI);
+  },
+
+  checkAddonStarted(id, version = undefined) {
+    let started = this.started.get(id);
+    do_check_neq(started, undefined);
+    if (version != undefined)
+      do_check_eq(started.data.version, version);
+  },
+
+  checkAddonNotStarted(id) {
+    do_check_false(this.started.has(id));
+  },
+
+  checkAddonInstalled(id, version = undefined) {
+    let installed = this.installed.get(id);
+    do_check_neq(installed, undefined);
+    if (version != undefined)
+      do_check_eq(installed.data.version, version);
+  },
+
+  checkAddonNotInstalled(id) {
+    do_check_false(this.installed.has(id));
+  },
+
+  observe(subject, topic, data) {
+    let info = JSON.parse(data);
+    let id = info.data.id;
+
+    // If this is the install event the add-ons shouldn't already be installed
+    if (info.event == "install") {
+      this.checkAddonNotInstalled(id);
+
+      this.installed.set(id, info);
+
+      for (let resolve of this.installPromises)
+        resolve();
+      this.installPromises = [];
+    }
+    else {
+      this.checkMatches(this.installed.get(id), info);
+    }
+
+    // If this is the shutdown event than the add-on should already be started
+    if (info.event == "shutdown") {
+      this.checkMatches(this.started.get(id), info);
+
+      this.started.delete(id);
+      this.stopped.set(id, info);
+    }
+    else {
+      this.checkAddonNotStarted(id);
+    }
+
+    if (info.event == "uninstall") {
+      this.installed.delete(id);
+      this.uninstalled.set(id, info)
+    }
+    else if (info.event == "startup") {
+      this.started.set(id, info);
+
+      for (let resolve of this.startupPromises)
+        resolve();
+      this.startupPromises = [];
+    }
+  }
+}
+
 function isNightlyChannel() {
   var channel = "default";
   try {

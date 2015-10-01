@@ -13,7 +13,6 @@ const COLLAPSE_ATTRIBUTE_LENGTH = 120;
 const COLLAPSE_DATA_URL_REGEX = /^data.+base64/;
 const COLLAPSE_DATA_URL_LENGTH = 60;
 const NEW_SELECTION_HIGHLIGHTER_TIMER = 1000;
-const GRAB_DELAY = 400;
 const DRAG_DROP_AUTOSCROLL_EDGE_DISTANCE = 50;
 const DRAG_DROP_MIN_AUTOSCROLL_SPEED = 5;
 const DRAG_DROP_MAX_AUTOSCROLL_SPEED = 15;
@@ -134,6 +133,11 @@ MarkupView.prototype = {
    * How long does a node flash when it mutates (in ms).
    */
   CONTAINER_FLASHING_DURATION: 500,
+  /**
+   * How long do you have to hold the mouse down before a drag
+   * starts (in ms).
+   */
+  GRAB_DELAY: 400,
 
   _selectedContainer: null,
 
@@ -830,7 +834,7 @@ MarkupView.prototype = {
         if (type === "attributes" && container.selected) {
           requiresLayoutChange = true;
         }
-      } else if (type === "childList") {
+      } else if (type === "childList" || type === "nativeAnonymousChildList") {
         container.childrenDirty = true;
         // Update the children to take care of changes in the markup view DOM.
         this._updateChildren(container, {flash: true});
@@ -1925,7 +1929,7 @@ MarkupContainer.prototype = {
       // If this is the last child, use the closing <div.tag-line> of parent as indicator
       this.markup.indicateDragTarget(this.elt.nextElementSibling ||
                                      this.markup.getContainer(this.node.parentNode()).closeTagLine);
-    }, GRAB_DELAY);
+    }, this.GRAB_DELAY);
   },
 
   /**
