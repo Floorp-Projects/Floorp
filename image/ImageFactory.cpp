@@ -208,10 +208,6 @@ ImageFactory::CreateRasterImage(nsIRequest* aRequest,
   nsAutoCString ref;
   aURI->GetRef(ref);
   net::nsMediaFragmentURIParser parser(ref);
-  if (parser.HasResolution()) {
-    newImage->SetRequestedResolution(parser.GetResolution());
-  }
-
   if (parser.HasSampleSize()) {
       /* Get our principal */
       nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));

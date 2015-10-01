@@ -63,8 +63,6 @@ public:
    *                      should produce.
    * @param aSampleSize The sample size requested using #-moz-samplesize (or 0
    *                    if none).
-   * @param aResolution The resolution requested using #-moz-resolution (or an
-   *                    empty rect if none).
    */
   static already_AddRefed<Decoder>
   CreateDecoder(DecoderType aType,
@@ -73,8 +71,7 @@ public:
                 const Maybe<gfx::IntSize>& aTargetSize,
                 DecoderFlags aDecoderFlags,
                 SurfaceFlags aSurfaceFlags,
-                int aSampleSize,
-                const gfx::IntSize& aResolution);
+                int aSampleSize);
 
   /**
    * Creates and initializes a decoder for animated images of type @aType.
@@ -88,16 +85,13 @@ public:
    * @param aDecoderFlags Flags specifying the behavior of this decoder.
    * @param aSurfaceFlags Flags specifying the type of output this decoder
    *                      should produce.
-   * @param aResolution The resolution requested using #-moz-resolution (or an
-   *                    empty rect if none).
    */
   static already_AddRefed<Decoder>
   CreateAnimationDecoder(DecoderType aType,
                          RasterImage* aImage,
                          SourceBuffer* aSourceBuffer,
                          DecoderFlags aDecoderFlags,
-                         SurfaceFlags aSurfaceFlags,
-                         const gfx::IntSize& aResolution);
+                         SurfaceFlags aSurfaceFlags);
 
   /**
    * Creates and initializes a metadata decoder of type @aType. This decoder
@@ -112,15 +106,12 @@ public:
    *                      from.
    * @param aSampleSize The sample size requested using #-moz-samplesize (or 0
    *                    if none).
-   * @param aResolution The resolution requested using #-moz-resolution (or an
-   *                    empty rect if none).
    */
   static already_AddRefed<Decoder>
   CreateMetadataDecoder(DecoderType aType,
                         RasterImage* aImage,
                         SourceBuffer* aSourceBuffer,
-                        int aSampleSize,
-                        const gfx::IntSize& aResolution);
+                        int aSampleSize);
 
   /**
    * Creates and initializes an anonymous decoder (one which isn't associated
