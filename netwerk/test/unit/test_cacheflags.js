@@ -20,6 +20,7 @@ function LoadContext(usePrivateBrowsing) {
 }
 
 LoadContext.prototype = {
+  originAttributes: {},
   usePrivateBrowsing: false,
   // don't bother defining rest of nsILoadContext fields: don't need 'em
 
