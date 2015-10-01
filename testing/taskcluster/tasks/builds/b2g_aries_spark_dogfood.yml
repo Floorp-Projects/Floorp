@@ -18,7 +18,6 @@ task:
       DOGFOOD: 1
       HARDWARE_COMPOSER: 0
       MOZHARNESS_CONFIG: b2g/taskcluster-spark-dogfood.py
-      TOOLTOOL_MANIFEST: 'b2g/config/aries-dogfood/releng-aries-dogfood.tt'
   extra:
     treeherderEnv:
       - production
