@@ -12,20 +12,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
-import org.mozilla.gecko.tabqueue.TabQueueDispatcher;
 
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 
 /**
  * Process commands received from Sync clients.
@@ -241,50 +236,26 @@ public class CommandProcessor {
     }
   }
 
-  private static volatile boolean didUpdateLocale = false;
-
   @SuppressWarnings("deprecation")
   public static void displayURI(final List<String> args, final Context context) {
     // We trust the client sender that these exist.
     final String uri = args.get(0);
     final String clientId = args.get(1);
-
     Logger.pii(LOG_TAG, "Received a URI for display: " + uri + " from " + clientId);
+
+    if (uri == null) {
+      Logger.pii(LOG_TAG, "URI is null – ignoring");
+      return;
+    }
 
     String title = null;
     if (args.size() == 3) {
       title = args.get(2);
     }
 
-    // We don't care too much about races, but let's try to avoid
-    // unnecessary work.
-    if (!didUpdateLocale) {
-      BrowserLocaleManager.getInstance().getAndApplyPersistedLocale(context);
-      didUpdateLocale = true;
-    }
-
-    final String ns = Context.NOTIFICATION_SERVICE;
-
-    String notificationTitle = context.getString(R.string.sync_new_tab);
-    if (title != null) {
-      notificationTitle = notificationTitle.concat(": " + title);
-    }
-
-    Intent notificationIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
-    notificationIntent.putExtra(TabQueueDispatcher.SKIP_TAB_QUEUE_FLAG, true);
-    PendingIntent contentIntent = PendingIntent.getActivity(context, 0, notificationIntent, 0);
-
-    NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
-    builder.setSmallIcon(R.drawable.flat_icon);
-    builder.setContentTitle(notificationTitle);
-    builder.setWhen(System.currentTimeMillis());
-    builder.setAutoCancel(true);
-    builder.setContentIntent(contentIntent);
-    builder.setContentText(uri);
-    builder.setContentIntent(contentIntent);
-
-    // Send notification.
-    final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-    notificationManager.notify(currentId.getAndIncrement(), builder.build());
+    final Intent sendTabNotificationIntent = new Intent(context, TabReceivedBroadcastReceiver.class);
+    sendTabNotificationIntent.setData(Uri.parse(uri));
+    sendTabNotificationIntent.putExtra(TabReceivedBroadcastReceiver.EXTRA_TITLE, title);
+    context.sendBroadcast(sendTabNotificationIntent);
   }
 }
