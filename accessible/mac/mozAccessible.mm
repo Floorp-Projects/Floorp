@@ -453,9 +453,12 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
       if ([attribute isEqualToString:NSAccessibilityIndexAttribute]) {
         // Count the number of rows before that one to obtain the row index.
         uint32_t index = 0;
-        for (int32_t i = accWrap->IndexInParent() - 1; i >= 0; i--) {
-          if (accWrap->GetChildAt(i)->IsTableRow()) {
-            index++;
+        Accessible* parent = accWrap->Parent();
+        if (parent) {
+          for (int32_t i = accWrap->IndexInParent() - 1; i >= 0; i--) {
+            if (parent->GetChildAt(i)->IsTableRow()) {
+              index++;
+            }
           }
         }
         return [NSNumber numberWithUnsignedInteger:index];
@@ -503,9 +506,12 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
       if ([attribute isEqualToString:NSAccessibilityIndexAttribute]) {
         // Count the number of rows before that one to obtain the row index.
         uint32_t index = 0;
-        for (int32_t i = proxy->IndexInParent() - 1; i >= 0; i--) {
-          if (proxy->ChildAt(i)->IsTableRow()) {
-            index++;
+        ProxyAccessible* parent = proxy->Parent();
+        if (parent) {
+          for (int32_t i = proxy->IndexInParent() - 1; i >= 0; i--) {
+            if (parent->ChildAt(i)->IsTableRow()) {
+              index++;
+            }
           }
         }
         return [NSNumber numberWithUnsignedInteger:index];
