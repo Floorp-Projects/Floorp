@@ -4,9 +4,6 @@
 
 "use strict";
 
-/* globals beautify, setNamedTimeout, clearNamedTimeout, VariablesView,
-   VariablesViewController, Task */
-
 const {Cu, Ci} = require("chrome");
 const promise = require("promise");
 const {Spectrum} = require("devtools/client/shared/widgets/Spectrum");

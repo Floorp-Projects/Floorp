@@ -45,6 +45,12 @@ var PrintHelper = {
     return new Promise((resolve, reject) => {
       webBrowserPrint.print(printSettings, {
         onStateChange: function(webProgress, request, stateFlags, status) {
+          // We get two STATE_START calls, one for STATE_IS_DOCUMENT and one for STATE_IS_NETWORK
+          if (stateFlags & Ci.nsIWebProgressListener.STATE_START && stateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
+            // Let the user know something is happening. Generating the PDF can take some time.
+            NativeWindow.toast.show(Strings.browser.GetStringFromName("alertPrintjobToast"), "long");
+          }
+
           // We get two STATE_STOP calls, one for STATE_IS_DOCUMENT and one for STATE_IS_NETWORK
           if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP && stateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
             if (Components.isSuccessCode(status)) {
