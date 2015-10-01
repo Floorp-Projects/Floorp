@@ -1412,7 +1412,7 @@ nsHTMLDocument::Open(JSContext* cx,
   nsAutoString type;
   nsContentUtils::ASCIIToLower(aType, type);
   nsAutoCString actualType, dummy;
-  NS_ParseContentType(NS_ConvertUTF16toUTF8(type), actualType, dummy);
+  NS_ParseRequestContentType(NS_ConvertUTF16toUTF8(type), actualType, dummy);
   if (!actualType.EqualsLiteral("text/html") &&
       !type.EqualsLiteral("replace")) {
     contentType.AssignLiteral("text/plain");
