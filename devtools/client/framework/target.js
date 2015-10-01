@@ -77,39 +77,6 @@ exports.TargetFactory = {
   isKnownTab: function TF_isKnownTab(tab) {
     return targets.has(tab);
   },
-
-  /**
-   * Construct a Target
-   * @param {nsIDOMWindow} window
-   *        The chromeWindow to use in creating a new target
-   * @return A target object
-   */
-  forWindow: function TF_forWindow(window) {
-    let target = targets.get(window);
-    if (target == null) {
-      target = new WindowTarget(window);
-      targets.set(window, target);
-    }
-    return target;
-  },
-
-  /**
-   * Get all of the targets known to the local browser instance
-   * @return An array of target objects
-   */
-  allTargets: function TF_allTargets() {
-    let windows = [];
-    let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-                       .getService(Ci.nsIWindowMediator);
-    let en = wm.getXULWindowEnumerator(null);
-    while (en.hasMoreElements()) {
-      windows.push(en.getNext());
-    }
-
-    return windows.map(function(window) {
-      return TargetFactory.forWindow(window);
-    });
-  },
 };
 
 /**
@@ -742,87 +709,6 @@ TabWebProgressListener.prototype = {
     this.target._navWindow = null;
     this.target = null;
   }
-};
-
-
-/**
- * A WindowTarget represents a page living in a xul window or panel. Generally
- * these will have a chrome: URL
- */
-function WindowTarget(window) {
-  EventEmitter.decorate(this);
-  this._window = window;
-  this._setupListeners();
-}
-
-WindowTarget.prototype = {
-  get version() { return getVersion(); },
-
-  get window() {
-    return this._window;
-  },
-
-  get name() {
-    return this._window.document.title;
-  },
-
-  get url() {
-    return this._window.document.location.href;
-  },
-
-  get isRemote() {
-    return false;
-  },
-
-  get isLocalTab() {
-    return false;
-  },
-
-  get isThreadPaused() {
-    return !!this._isThreadPaused;
-  },
-
-  /**
-   * Listen to the different events.
-   */
-  _setupListeners: function() {
-    this._handleThreadState = this._handleThreadState.bind(this);
-    this.on("thread-paused", this._handleThreadState);
-    this.on("thread-resumed", this._handleThreadState);
-  },
-
-  _handleThreadState: function(event) {
-    switch (event) {
-      case "thread-resumed":
-        this._isThreadPaused = false;
-        break;
-      case "thread-paused":
-        this._isThreadPaused = true;
-        break;
-    }
-  },
-
-  /**
-   * Target is not alive anymore.
-   */
-  destroy: function() {
-    if (!this._destroyed) {
-      this._destroyed = true;
-
-      this.off("thread-paused", this._handleThreadState);
-      this.off("thread-resumed", this._handleThreadState);
-      this.emit("close");
-
-      targets.delete(this._window);
-      this._window = null;
-    }
-
-    return promise.resolve(null);
-  },
-
-  toString: function() {
-    return 'WindowTarget:' + this.window;
-  },
 };
 
 function WorkerTarget(workerClient) {
