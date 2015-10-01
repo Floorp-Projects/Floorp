@@ -16,11 +16,7 @@ loop.store.TextChatStore = (function() {
     SPECIAL: "special"
   };
 
-  var CHAT_CONTENT_TYPES = loop.store.CHAT_CONTENT_TYPES = {
-    CONTEXT: "chat-context",
-    TEXT: "chat-text",
-    ROOM_NAME: "room-name"
-  };
+  var CHAT_CONTENT_TYPES = loop.shared.utils.CHAT_CONTENT_TYPES;
 
   /**
    * A store to handle text chats. The store has a message list that may
