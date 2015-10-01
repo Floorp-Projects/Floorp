@@ -290,6 +290,12 @@ BasePrincipal::CheckMayLoad(nsIURI* aURI, bool aReport, bool aAllowIfInheritsPri
     }
   }
 
+  bool fetchableByAnyone;
+  rv = NS_URIChainHasFlags(aURI, nsIProtocolHandler::URI_FETCHABLE_BY_ANYONE, &fetchableByAnyone);
+  if (NS_SUCCEEDED(rv) && fetchableByAnyone) {
+    return NS_OK;
+  }
+
   if (aReport) {
     nsCOMPtr<nsIURI> prinURI;
     rv = GetURI(getter_AddRefs(prinURI));
