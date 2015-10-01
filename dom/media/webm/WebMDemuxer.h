@@ -32,10 +32,6 @@ class MediaRawDataQueue {
     mQueue.push_back(Move(aItem));
   }
 
-  void Push(const MediaRawDataQueue& aOther) {
-    mQueue.insert(mQueue.end(), aOther.mQueue.begin(), aOther.mQueue.end());
-  }
-
   void PushFront(MediaRawData* aItem) {
     mQueue.push_front(aItem);
   }
