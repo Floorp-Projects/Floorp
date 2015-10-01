@@ -37,6 +37,7 @@ loop.store.ActiveRoomStore = (function() {
 
   var sharedActions = loop.shared.actions;
   var crypto = loop.crypto;
+  var CHAT_CONTENT_TYPES = loop.shared.utils.CHAT_CONTENT_TYPES;
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
 
@@ -106,6 +107,7 @@ loop.store.ActiveRoomStore = (function() {
      */
     _statesToResetOnLeave: [
       "audioMuted",
+      "chatMessageExchanged",
       "localSrcMediaElement",
       "localVideoDimensions",
       "mediaConnected",
@@ -153,7 +155,10 @@ loop.store.ActiveRoomStore = (function() {
         // Social API state.
         socialShareProviders: null,
         // True if media has been connected both-ways.
-        mediaConnected: false
+        mediaConnected: false,
+        // True if a chat message was sent or received during a session.
+        // Read more at https://wiki.mozilla.org/Loop/Session.
+        chatMessageExchanged: false
       };
     },
 
@@ -234,7 +239,7 @@ loop.store.ActiveRoomStore = (function() {
 
       this._registeredActions = true;
 
-      this.dispatcher.register(this, [
+      var actions = [
         "roomFailure",
         "retryAfterRoomFailure",
         "setupRoomInfo",
@@ -261,7 +266,14 @@ loop.store.ActiveRoomStore = (function() {
         "updateSocialShareInfo",
         "connectionStatus",
         "mediaConnected"
-      ]);
+      ];
+      // Register actions that are only used on Desktop.
+      if (this._isDesktop) {
+        // 'receivedTextChatMessage' and  'sendTextChatMessage' actions are only
+        // registered for Telemetry. Once measured, they're unregistered.
+        actions.push("receivedTextChatMessage", "sendTextChatMessage");
+      }
+      this.dispatcher.register(this, actions);
     },
 
     /**
@@ -984,6 +996,50 @@ loop.store.ActiveRoomStore = (function() {
       nextState[storeProp] = this.getStoreState()[storeProp];
       nextState[storeProp][actionData.videoType] = actionData.dimensions;
       this.setStoreState(nextState);
+    },
+
+    /**
+     * Handles chat messages received and/ or about to send. If this is the first
+     * chat message for the current session, register a count with telemetry.
+     * It will unhook the listeners when the telemetry criteria have been
+     * fulfilled to make sure we remain lean.
+     * Note: the 'receivedTextChatMessage' and 'sendTextChatMessage' actions are
+     *       only registered on Desktop.
+     *
+     * @param  {sharedActions.ReceivedTextChatMessage|SendTextChatMessage} actionData
+     */
+    _handleTextChatMessage: function(actionData) {
+      if (!this._isDesktop || this.getStoreState().chatMessageExchanged ||
+          actionData.contentType !== CHAT_CONTENT_TYPES.TEXT) {
+        return;
+      }
+
+      this.setStoreState({ chatMessageExchanged: true });
+      // There's no need to listen to these actions anymore.
+      this.dispatcher.unregister(this, [
+        "receivedTextChatMessage",
+        "sendTextChatMessage"
+      ]);
+      // Ping telemetry of this session with successful message(s) exchange.
+      this._mozLoop.telemetryAddValue("LOOP_ROOM_SESSION_WITHCHAT", 1);
+    },
+
+    /**
+     * Handles received text chat messages. For telemetry purposes only.
+     *
+     * @param {sharedActions.ReceivedTextChatMessage} actionData
+     */
+    receivedTextChatMessage: function(actionData) {
+      this._handleTextChatMessage(actionData);
+    },
+
+    /**
+     * Handles sending of a chat message. For telemetry purposes only.
+     *
+     * @param {sharedActions.SendTextChatMessage} actionData
+     */
+    sendTextChatMessage: function(actionData) {
+      this._handleTextChatMessage(actionData);
     }
   });
 

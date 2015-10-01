@@ -8220,6 +8220,13 @@
     "releaseChannelCollection": "opt-out",
     "description": "Number times room context is clicked to visit the attached URL"
   },
+  "LOOP_ROOM_SESSION_WITHCHAT": {
+    "alert_emails": ["firefox-dev@mozilla.org", "mdeboer@mozilla.com"],
+    "expires_in_version": "45",
+    "kind": "count",
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of sessions where at least one chat message was exchanged"
+  },
   "E10S_AUTOSTART": {
     "expires_in_version": "never",
     "kind": "boolean",

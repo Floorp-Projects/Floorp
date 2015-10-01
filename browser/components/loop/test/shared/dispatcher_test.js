@@ -23,6 +23,8 @@ describe("loop.Dispatcher", function () {
 
       dispatcher.register(object, ["getWindowData"]);
 
+      // XXXmikedeboer: Consider changing these tests to not access private
+      //                properties anymore (`_eventData`).
       expect(dispatcher._eventData.getWindowData[0]).eql(object);
     });
 
@@ -35,6 +37,31 @@ describe("loop.Dispatcher", function () {
 
       expect(dispatcher._eventData.getWindowData[0]).eql(object1);
       expect(dispatcher._eventData.getWindowData[1]).eql(object2);
+    });
+  });
+
+  describe("#unregister", function() {
+    it("should unregister a store against an action name", function() {
+      var object = { fake: true };
+
+      dispatcher.register(object, ["getWindowData"]);
+      dispatcher.unregister(object, ["getWindowData"]);
+
+      expect(dispatcher._eventData.hasOwnProperty("getWindowData")).eql(false);
+    });
+
+    it("should unregister multiple stores against an action name", function() {
+      var object1 = { fake: true };
+      var object2 = { fake2: true };
+
+      dispatcher.register(object1, ["getWindowData"]);
+      dispatcher.register(object2, ["getWindowData"]);
+
+      dispatcher.unregister(object1, ["getWindowData"]);
+      expect(dispatcher._eventData.getWindowData.length).eql(1);
+
+      dispatcher.unregister(object2, ["getWindowData"]);
+      expect(dispatcher._eventData.hasOwnProperty("getWindowData")).eql(false);
     });
   });
 

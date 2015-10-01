@@ -7,7 +7,7 @@ describe("loop.store.TextChatStore", function () {
   var expect = chai.expect;
   var sharedActions = loop.shared.actions;
   var CHAT_MESSAGE_TYPES = loop.store.CHAT_MESSAGE_TYPES;
-  var CHAT_CONTENT_TYPES = loop.store.CHAT_CONTENT_TYPES;
+  var CHAT_CONTENT_TYPES = loop.shared.utils.CHAT_CONTENT_TYPES;
 
   var dispatcher, fakeSdkDriver, sandbox, store;
 

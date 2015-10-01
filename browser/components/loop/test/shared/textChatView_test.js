@@ -9,7 +9,7 @@ describe("loop.shared.views.TextChatView", function () {
   var sharedViews = loop.shared.views;
   var TestUtils = React.addons.TestUtils;
   var CHAT_MESSAGE_TYPES = loop.store.CHAT_MESSAGE_TYPES;
-  var CHAT_CONTENT_TYPES = loop.store.CHAT_CONTENT_TYPES;
+  var CHAT_CONTENT_TYPES = loop.shared.utils.CHAT_CONTENT_TYPES;
   var fixtures = document.querySelector("#fixtures");
 
   var dispatcher, fakeSdkDriver, sandbox, store, fakeClock;
