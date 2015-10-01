@@ -26,6 +26,7 @@ class ProxyAccessibleWrap : public AccessibleWrap
   virtual void Shutdown() override
   {
     mBits.proxy = nullptr;
+    mStateFlags |= eIsDefunct;
   }
 };
 
@@ -39,7 +40,11 @@ public:
     mBits.proxy = aProxy;
   }
 
-  virtual void Shutdown() override { mBits.proxy = nullptr; }
+  virtual void Shutdown() override
+  {
+    mBits.proxy = nullptr;
+ mStateFlags |= eIsDefunct;
+  }
 };
 
 class DocProxyAccessibleWrap : public HyperTextProxyAccessibleWrap
