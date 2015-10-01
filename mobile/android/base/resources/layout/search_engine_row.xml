@@ -19,6 +19,7 @@
                                          android:layout_centerVertical="true"
                                          android:layout_width="wrap_content"
                                          android:layout_height="wrap_content"
+                                         android:layout_marginRight="15dp"
                                          android:duplicateParentState="true">
 
         <include layout="@layout/suggestion_item"
