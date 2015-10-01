@@ -398,6 +398,7 @@ TEST_PKGS := \
   $(NULL)
 
 PYTHON_TEST_PKGS := \
+  common \
   mochitest \
   talos \
   web-platform \
@@ -436,12 +437,6 @@ package-tests-mozharness: package-tests-prepare-dest
 		mozharness \
 		$(abspath $(DIST))/$(PKG_PATH)/mozharness.zip)
 package-tests: package-tests-mozharness
-
-package-tests-common: stage-all package-tests-prepare-dest
-	cd $(abspath $(PKG_STAGE)) && \
-	  zip -rq9D '$(abspath $(DIST))/$(PKG_PATH)$(TEST_PACKAGE)' \
-	  * -x \*/.mkdir.done \*.pyc $(foreach name,$(ALL_TEST_PKGS),$(name)\*)
-package-tests: package-tests-common
 
 define package_archive
 package-tests-$(1): stage-all package-tests-prepare-dest
