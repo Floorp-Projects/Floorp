@@ -507,6 +507,12 @@
                         label="&webapps.label;"
                         accesskey="&webapps.accesskey;"
                         oncommand="BrowserOpenApps();"/>
+
+              <menuitem id="menu_openLoop"
+                        label="&loopMenuItem.label;"
+                        accesskey = "&loopMenuItem.accesskey;"
+                        oncommand="LoopUI.togglePanel();"/>
+
 #ifdef MOZ_SERVICES_SYNC
               <!-- only one of sync-setup, sync-syncnowitem or sync-reauthitem will be showing at once -->
               <menuitem id="sync-setup"
