@@ -1022,4 +1022,7 @@ pref("dom.wakelock.enabled", true);
 
 pref("dom.webcomponents.enabled", true);
 
+// Enable the Alarms API
+pref("dom.mozAlarms.enabled", true);
+
 pref("layout.css.scroll-snap.enabled", true);

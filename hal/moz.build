@@ -33,9 +33,12 @@ SOURCES += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    LOCAL_INCLUDES += [
+        '/widget/android',
+    ]
     UNIFIED_SOURCES += [
+        'android/AndroidAlarm.cpp',
         'android/AndroidSensor.cpp',
-        'fallback/FallbackAlarm.cpp',
         'fallback/FallbackPower.cpp',
         'linux/LinuxMemory.cpp',
     ]

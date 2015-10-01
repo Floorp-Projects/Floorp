@@ -59,6 +59,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -601,6 +602,31 @@ public class GeckoAppShell
     @WrapForJNI
     public static void enableLocationHighAccuracy(final boolean enable) {
         locationHighAccuracyEnabled = enable;
+    }
+
+    @WrapForJNI
+    public static boolean setAlarm(int aSeconds, int aNanoSeconds) {
+        AlarmManager am = (AlarmManager)
+            getContext().getSystemService(Context.ALARM_SERVICE);
+
+        Intent intent = new Intent(getContext(), AlarmReceiver.class);
+        PendingIntent pi = PendingIntent.getBroadcast(getContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        // AlarmManager only supports millisecond precision
+        long time = ((long)aSeconds * 1000) + ((long)aNanoSeconds/1_000_000L);
+        am.setExact(AlarmManager.RTC_WAKEUP, time, pi);
+
+        return true;
+    }
+
+    @WrapForJNI
+    public static void disableAlarm() {
+        AlarmManager am = (AlarmManager)
+            getContext().getSystemService(Context.ALARM_SERVICE);
+
+        Intent intent = new Intent(getContext(), AlarmReceiver.class);
+        PendingIntent pi = PendingIntent.getBroadcast(getContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        am.cancel(pi);
     }
 
     @WrapForJNI
