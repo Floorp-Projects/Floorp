@@ -117,9 +117,6 @@ class FasterMakeBackend(CommonBackend):
 
             dest = mozpath.join(obj.install_target, pref_dir,
                                 mozpath.basename(obj.path))
-            # on win32, pref files need CRLF line endings... see bug 206029
-            if self.environment.substs['OS_ARCH'] == 'WINNT':
-                defines.append('--line-endings=crlf')
             # We preprocess these, but they don't necessarily have preprocessor
             # directives, so tell the preprocessor to not complain about that.
             defines.append('--silence-missing-directive-warnings')

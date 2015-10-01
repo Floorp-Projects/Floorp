@@ -1152,11 +1152,6 @@ ifneq (,$(DIST_SUBDIR)$(XPI_NAME)$(LIBXUL_SDK))
 PREF_DIR = defaults/preferences
 endif
 
-# on win32, pref files need CRLF line endings... see bug 206029
-ifeq (WINNT,$(OS_ARCH))
-PREF_PPFLAGS += --line-endings=crlf
-endif
-
 ifneq ($(PREF_JS_EXPORTS),)
 ifndef NO_DIST_INSTALL
 PREF_JS_EXPORTS_PATH := $(FINAL_TARGET)/$(PREF_DIR)
