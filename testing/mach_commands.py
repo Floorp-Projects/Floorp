@@ -504,7 +504,11 @@ class PushToTry(MachCommandBase):
             sys.exit(1)
 
         if kwargs["platforms"] is None:
-            kwargs["platforms"] = [os.environ['AUTOTRY_PLATFORM_HINT']]
+            if 'AUTOTRY_PLATFORM_HINT' in os.environ:
+                kwargs["platforms"] = [os.environ['AUTOTRY_PLATFORM_HINT']]
+            else:
+                print("Platforms must be specified as an argument to autotry.")
+                sys.exit(1)
 
         try:
             platforms = self.normalise_list(kwargs["platforms"])
