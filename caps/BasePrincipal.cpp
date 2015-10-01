@@ -270,6 +270,38 @@ BasePrincipal::SubsumesConsideringDomain(nsIPrincipal *aOther, bool *aResult)
 }
 
 NS_IMETHODIMP
+BasePrincipal::CheckMayLoad(nsIURI* aURI, bool aReport, bool aAllowIfInheritsPrincipal)
+{
+  // Check the internal method first, which allows us to quickly approve loads
+  // for the System Principal.
+  if (MayLoadInternal(aURI)) {
+    return NS_OK;
+  }
+
+  nsresult rv;
+  if (aAllowIfInheritsPrincipal) {
+    // If the caller specified to allow loads of URIs that inherit
+    // our principal, allow the load if this URI inherits its principal.
+    bool doesInheritSecurityContext;
+    rv = NS_URIChainHasFlags(aURI, nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
+                             &doesInheritSecurityContext);
+    if (NS_SUCCEEDED(rv) && doesInheritSecurityContext) {
+      return NS_OK;
+    }
+  }
+
+  if (aReport) {
+    nsCOMPtr<nsIURI> prinURI;
+    rv = GetURI(getter_AddRefs(prinURI));
+    if (NS_SUCCEEDED(rv) && prinURI) {
+      nsScriptSecurityManager::ReportError(nullptr, NS_LITERAL_STRING("CheckSameOriginError"), prinURI, aURI);
+    }
+  }
+
+  return NS_ERROR_DOM_BAD_URI;
+}
+
+NS_IMETHODIMP
 BasePrincipal::GetCsp(nsIContentSecurityPolicy** aCsp)
 {
   NS_IF_ADDREF(*aCsp = mCSP);
