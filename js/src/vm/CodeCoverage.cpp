@@ -115,12 +115,13 @@ LCovSource::writeTopLevelScript(JSScript* script)
         if (!writeScript(script))
             return false;
 
-        // Iterate from the last to the first object in order to have
-        // the functions them visited in the opposite order when popping
-        // elements from the stack of remaining scripts, such that the
-        // functions are listed with increasing line numbers.
+        // Iterate from the last to the first object in order to have the
+        // functions visited in the opposite order when popping elements from
+        // the queue of remaining scripts, such that the functions are listed
+        // with increasing line numbers.
         if (!script->hasObjects())
             continue;
+
         size_t idx = script->objects()->length;
         while (idx--) {
             JSObject* obj = script->getObject(idx);
@@ -134,6 +135,19 @@ LCovSource::writeTopLevelScript(JSScript* script)
             if (!fun.isInterpreted())
                 continue;
             MOZ_ASSERT(!fun.isInterpretedLazy());
+
+            // Eval scripts can refer to their parent script in order to extend
+            // their scope.  We only care about the inner functions, which are
+            // in the same source, and which are assumed to be visited in the
+            // same order as the source content.
+            //
+            // Note: It is possible that the JSScript visited here has already
+            // been finalized, in which case the sourceObject() will be a
+            // poisoned pointer.  This is safe because all scripts are currently
+            // finalized in the foreground.
+            JSScript* child = fun.nonLazyScript();
+            if (child->sourceObject() != source_)
+                continue;
 
             // Queue the script in the list of script associated to the
             // current source.
