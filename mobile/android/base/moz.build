@@ -160,6 +160,7 @@ gbjar.sources += [
     'ActionModeCompat.java',
     'ActionModeCompatView.java',
     'ActivityHandlerHelper.java',
+    'AlarmReceiver.java',
     'AndroidGamepadManager.java',
     'animation/AnimationUtils.java',
     'animation/AnimatorProxy.java',

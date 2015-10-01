@@ -37,6 +37,21 @@ template<class Impl>
 constexpr JNINativeMethod ANRReporter::Natives<Impl>::methods[];
 
 template<class Impl>
+class AlarmReceiver::Natives : public mozilla::jni::NativeImpl<AlarmReceiver, Impl>
+{
+public:
+    static constexpr JNINativeMethod methods[] = {
+
+        mozilla::jni::MakeNativeMethod<AlarmReceiver::NotifyAlarmFired_t>(
+                mozilla::jni::NativeStub<AlarmReceiver::NotifyAlarmFired_t, Impl>
+                ::template Wrap<&Impl::NotifyAlarmFired>)
+    };
+};
+
+template<class Impl>
+constexpr JNINativeMethod AlarmReceiver::Natives<Impl>::methods[];
+
+template<class Impl>
 class GeckoJavaSampler::Natives : public mozilla::jni::NativeImpl<GeckoJavaSampler, Impl>
 {
 public:
