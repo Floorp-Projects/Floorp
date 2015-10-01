@@ -3290,7 +3290,7 @@ notification[value="loop-sharing-notification"] .messageImage {
 }
 
 #sync-start-panel-subtitle {
-  margin: 0;
+  margin-bottom: 0;
 }
 
 /* Status panel */
