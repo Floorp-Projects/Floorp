@@ -514,14 +514,6 @@ ifdef STRIP_CPP_TESTS
 else
 	cp -RL $(CPP_UNIT_TEST_BINS) $(PKG_STAGE)/cppunittest
 endif
-	cp $(topsrcdir)/testing/runcppunittests.py $(PKG_STAGE)/cppunittest
-	cp $(topsrcdir)/testing/remotecppunittests.py $(PKG_STAGE)/cppunittest
-	cp $(topsrcdir)/testing/cppunittest.ini $(PKG_STAGE)/cppunittest
-	cp $(DEPTH)/mozinfo.json $(PKG_STAGE)/cppunittest
-ifeq ($(MOZ_DISABLE_STARTUPCACHE),)
-	cp $(topsrcdir)/startupcache/test/TestStartupCacheTelemetry.js $(PKG_STAGE)/cppunittest
-	cp $(topsrcdir)/startupcache/test/TestStartupCacheTelemetry.manifest $(PKG_STAGE)/cppunittest
-endif
 ifdef STRIP_CPP_TESTS
 	$(OBJCOPY) $(or $(STRIP_FLAGS),--strip-unneeded) $(DIST)/bin/jsapi-tests$(BIN_SUFFIX) $(PKG_STAGE)/cppunittest/jsapi-tests$(BIN_SUFFIX)
 else
