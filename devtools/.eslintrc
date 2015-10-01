@@ -25,6 +25,11 @@
     // These are the rules that have been configured so far to match the
     // devtools coding style.
 
+    // Rules from the mozilla plugin
+    "mozilla/components-imports": 1,
+    "mozilla/import-headjs-globals": 1,
+    "mozilla/mark-test-function-used": 1,
+
     // Disallow using variables outside the blocks they are defined (especially
     // since only let and const are used, see "no-var").
     "block-scoped-var": 2,

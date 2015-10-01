@@ -12,8 +12,6 @@ const { ObjectActor,
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
 
-/* global events */
-
 // Teach protocol.js how to deal with legacy actor types
 types.addType("ObjectActor", {
   write: actor => actor.grip(),
