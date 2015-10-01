@@ -172,7 +172,21 @@ add_task(function* test_mozLoop_telemetryAdd_roomContextClick() {
 
   let snapshot;
   for (let i = 1; i < 4; ++i) {
-    gMozLoopAPI.telemetryAddValue("LOOP_ROOM_CONTEXT_CLICK", 1);
+    gMozLoopAPI.telemetryAddValue(histogramId, 1);
+    snapshot = histogram.snapshot();
+    Assert.strictEqual(snapshot.counts[0], i);
+  }
+});
+
+add_task(function* test_mozLoop_telemetryAdd_roomSessionWithChat() {
+  let histogramId = "LOOP_ROOM_SESSION_WITHCHAT";
+  let histogram = Services.telemetry.getHistogramById(histogramId);
+
+  histogram.clear();
+
+  let snapshot;
+  for (let i = 1; i < 4; ++i) {
+    gMozLoopAPI.telemetryAddValue(histogramId, 1);
     snapshot = histogram.snapshot();
     Assert.strictEqual(snapshot.counts[0], i);
   }

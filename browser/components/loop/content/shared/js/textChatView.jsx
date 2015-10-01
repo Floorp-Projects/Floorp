@@ -12,7 +12,7 @@ loop.shared.views.chat = (function(mozL10n) {
   var sharedMixins = loop.shared.mixins;
   var sharedViews = loop.shared.views;
   var CHAT_MESSAGE_TYPES = loop.store.CHAT_MESSAGE_TYPES;
-  var CHAT_CONTENT_TYPES = loop.store.CHAT_CONTENT_TYPES;
+  var CHAT_CONTENT_TYPES = loop.shared.utils.CHAT_CONTENT_TYPES;
 
   /**
    * Renders an individual entry for the text chat entries view.

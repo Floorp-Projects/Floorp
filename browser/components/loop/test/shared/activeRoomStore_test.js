@@ -8,6 +8,7 @@ describe("loop.store.ActiveRoomStore", function () {
   var sharedActions = loop.shared.actions;
   var REST_ERRNOS = loop.shared.utils.REST_ERRNOS;
   var ROOM_STATES = loop.store.ROOM_STATES;
+  var CHAT_CONTENT_TYPES = loop.shared.utils.CHAT_CONTENT_TYPES;
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
   var ROOM_INFO_FAILURES = loop.shared.utils.ROOM_INFO_FAILURES;
@@ -38,7 +39,8 @@ describe("loop.store.ActiveRoomStore", function () {
       },
       setScreenShareState: sinon.stub(),
       getActiveTabWindowId: sandbox.stub().callsArgWith(0, null, 42),
-      getSocialShareProviders: sinon.stub().returns([])
+      getSocialShareProviders: sinon.stub().returns([]),
+      telemetryAddValue: sinon.stub()
     };
 
     fakeSdkDriver = {
@@ -1555,7 +1557,8 @@ describe("loop.store.ActiveRoomStore", function () {
         receivingScreenShare: true,
         remoteVideoDimensions: { y: 10 },
         screenSharingState: true,
-        videoMuted: true
+        videoMuted: true,
+        chatMessageExchanged: false
       });
 
       store.leaveRoom();
@@ -1566,6 +1569,7 @@ describe("loop.store.ActiveRoomStore", function () {
       expect(store._storeState.remoteVideoDimensions).eql({});
       expect(store._storeState.screenSharingState).eql(SCREEN_SHARE_STATES.INACTIVE);
       expect(store._storeState.videoMuted).eql(false);
+      expect(store._storeState.chatMessageExchanged).eql(false);
     });
 
     it("should not reset the room context", function() {
@@ -1596,6 +1600,73 @@ describe("loop.store.ActiveRoomStore", function () {
       store._handleSocialShareUpdate();
 
       sinon.assert.calledOnce(fakeMozLoop.getSocialShareProviders);
+    });
+  });
+
+  describe("#_handleTextChatMessage", function() {
+    beforeEach(function() {
+      store._isDesktop = true;
+      store.setupWindowData(new sharedActions.SetupWindowData({
+        windowId: "42",
+        type: "room",
+        roomToken: "fakeToken"
+      }));
+    });
+
+    function assertWeDidNothing() {
+      expect(dispatcher._eventData.receivedTextChatMessage.length).eql(1);
+      expect(dispatcher._eventData.sendTextChatMessage.length).eql(1);
+      expect(store.getStoreState().chatMessageExchanged).eql(false);
+      sinon.assert.notCalled(fakeMozLoop.telemetryAddValue);
+    }
+
+    it("should not do anything for the link clicker side", function() {
+      store._isDesktop = false;
+
+      store._handleTextChatMessage(new sharedActions.SendTextChatMessage({
+        contentType: CHAT_CONTENT_TYPES.TEXT,
+        message: "Hello!",
+        sentTimestamp: "1970-01-01T00:00:00.000Z"
+      }));
+
+      assertWeDidNothing();
+    });
+
+    it("should not do anything when a chat message has arrived before", function() {
+      store.setStoreState({ chatMessageExchanged: true });
+
+      store._handleTextChatMessage(new sharedActions.ReceivedTextChatMessage({
+        contentType: CHAT_CONTENT_TYPES.TEXT,
+        message: "Hello!",
+        receivedTimestamp: "1970-01-01T00:00:00.000Z"
+      }));
+
+      sinon.assert.notCalled(fakeMozLoop.telemetryAddValue);
+    });
+
+    it("should not do anything for non-chat messages", function() {
+      store._handleTextChatMessage(new sharedActions.SendTextChatMessage({
+        contentType: CHAT_CONTENT_TYPES.CONTEXT,
+        message: "Hello!",
+        sentTimestamp: "1970-01-01T00:00:00.000Z"
+      }));
+
+      assertWeDidNothing();
+    });
+
+    it("should ping telemetry when a chat message arrived or is to be sent", function() {
+      store._handleTextChatMessage(new sharedActions.ReceivedTextChatMessage({
+        contentType: CHAT_CONTENT_TYPES.TEXT,
+        message: "Hello!",
+        receivedTimestamp: "1970-01-01T00:00:00.000Z"
+      }));
+
+      sinon.assert.calledOnce(fakeMozLoop.telemetryAddValue);
+      sinon.assert.calledWithExactly(fakeMozLoop.telemetryAddValue,
+        "LOOP_ROOM_SESSION_WITHCHAT", 1);
+      expect(store.getStoreState().chatMessageExchanged).eql(true);
+      expect(dispatcher._eventData.hasOwnProperty("receivedTextChatMessage")).eql(false);
+      expect(dispatcher._eventData.hasOwnProperty("sendTextChatMessage")).eql(false);
     });
   });
 
