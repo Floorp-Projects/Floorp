@@ -16,7 +16,6 @@
 #include "nsPresContext.h"
 #include "nsIWidget.h"
 #include "nsCRTGlue.h"
-#include "nsCSSParser.h"
 #include "nsCSSProps.h"
 
 #include "nsCOMPtr.h"
@@ -3422,7 +3421,7 @@ nsStyleText::nsStyleText(void)
   mRubyPosition = NS_STYLE_RUBY_POSITION_OVER;
   mTextSizeAdjust = NS_STYLE_TEXT_SIZE_ADJUST_AUTO;
   mTextCombineUpright = NS_STYLE_TEXT_COMBINE_UPRIGHT_NONE;
-  mControlCharacterVisibility = nsCSSParser::ControlCharVisibilityDefault();
+  mControlCharacterVisibility = NS_STYLE_CONTROL_CHARACTER_VISIBILITY_VISIBLE;
 
   mLetterSpacing.SetNormalValue();
   mLineHeight.SetNormalValue();
