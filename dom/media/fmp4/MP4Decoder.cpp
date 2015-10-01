@@ -169,6 +169,7 @@ IsFFmpegAvailable()
 #ifndef MOZ_FFMPEG
   return false;
 #else
+  PlatformDecoderModule::Init();
   nsRefPtr<PlatformDecoderModule> m = FFmpegRuntimeLinker::CreateDecoderModule();
   return !!m;
 #endif
