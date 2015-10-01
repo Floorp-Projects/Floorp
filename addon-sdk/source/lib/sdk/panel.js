@@ -26,6 +26,7 @@ const { contract } = require("./util/contract");
 const { on, off, emit, setListeners } = require("./event/core");
 const { EventTarget } = require("./event/target");
 const domPanel = require("./panel/utils");
+const { getDocShell } = require('./frame/utils');
 const { events } = require("./panel/events");
 const systemEvents = require("./system/events");
 const { filter, pipe, stripListeners } = require("./event/utils");
@@ -73,9 +74,26 @@ let panelContract = contract(merge({
   contentStyleFile: merge(Object.create(loaderContract.rules.contentScriptFile), {
     msg: 'The `contentStyleFile` option must be a local URL or an array of URLs'
   }),
-  contextMenu: boolean
+  contextMenu: boolean,
+  allow: {
+    is: ['object', 'undefined', 'null'],
+    map: function (allow) { return { script: !allow || allow.script !== false }}
+  },
 }, displayContract.rules, loaderContract.rules));
 
+function Allow(panel) {
+  return {
+    get script() { return getDocShell(viewFor(panel).backgroundFrame).allowJavascript; },
+    set script(value) { return setScriptState(panel, value); },
+  };
+}
+
+function setScriptState(panel, value) {
+  let view = viewFor(panel);
+  getDocShell(view.backgroundFrame).allowJavascript = value;
+  getDocShell(view.viewFrame).allowJavascript = value;
+  view.setAttribute("sdkscriptenabled", "" + value);
+}
 
 function isDisposed(panel) !views.has(panel);
 
@@ -147,7 +165,8 @@ const Panel = Class({
     }
 
     // Setup view
-    let view = domPanel.make();
+    let viewOptions = {allowJavascript: !model.allow || (model.allow.script !== false)};
+    let view = domPanel.make(null, viewOptions);
     panels.set(view, this);
     views.set(this, view);
 
@@ -210,6 +229,12 @@ const Panel = Class({
     // Detach worker so that messages send will be queued until it's
     // reatached once panel content is ready.
     workerFor(this).detach();
+  },
+
+  get allow() { return Allow(this); },
+  set allow(value) {
+    let allowJavascript = panelContract({ allow: value }).allow.script;
+    return setScriptState(this, value);
   },
 
   /* Public API: Panel.isShowing */

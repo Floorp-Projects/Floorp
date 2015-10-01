@@ -14,7 +14,7 @@ const { platform } = require("../system");
 const { getMostRecentBrowserWindow, getOwnerBrowserWindow,
         getHiddenWindow, getScreenPixelsPerCSSPixel } = require("../window/utils");
 
-const { create: createFrame, swapFrameLoaders } = require("../frame/utils");
+const { create: createFrame, swapFrameLoaders, getDocShell } = require("../frame/utils");
 const { window: addonWindow } = require("../addon/window");
 const { isNil } = require("../lang/type");
 const { data } = require('../self');
@@ -233,10 +233,11 @@ function setupPanelFrame(frame) {
   }
 }
 
-function make(document) {
+function make(document, options) {
   document = document || getMostRecentBrowserWindow().document;
   let panel = document.createElementNS(XUL_NS, "panel");
   panel.setAttribute("type", "arrow");
+  panel.setAttribute("sdkscriptenabled", "" + options.allowJavascript);
 
   // Note that panel is a parent of `viewFrame` who's `docShell` will be
   // configured at creation time. If `panel` and there for `viewFrame` won't
@@ -245,7 +246,7 @@ function make(document) {
   attach(panel, document);
 
   let frameOptions =  {
-    allowJavascript: true,
+    allowJavascript: options.allowJavascript,
     allowPlugins: true,
     allowAuth: true,
     allowWindowControl: false,
@@ -270,8 +271,16 @@ function make(document) {
     // See Bug 886329
     if (target !== this) return;
 
-    try { swapFrameLoaders(backgroundFrame, viewFrame); }
-    catch(error) { console.exception(error); }
+    try {
+      swapFrameLoaders(backgroundFrame, viewFrame);
+      // We need to re-set this because... swapFrameLoaders. Or something.
+      let shouldEnableScript = panel.getAttribute("sdkscriptenabled") == "true";
+      getDocShell(backgroundFrame).allowJavascript = shouldEnableScript;
+      getDocShell(viewFrame).allowJavascript = shouldEnableScript;
+    }
+    catch(error) {
+      console.exception(error);
+    }
     events.emit(type, { subject: panel });
   }
 
@@ -315,6 +324,7 @@ function make(document) {
 
 
   panel.backgroundFrame = backgroundFrame;
+  panel.viewFrame = viewFrame;
 
   // Store event listener on the panel instance so that it won't be GC-ed
   // while panel is alive.
@@ -340,8 +350,10 @@ function detach(panel) {
 exports.detach = detach;
 
 function dispose(panel) {
-  panel.backgroundFrame.parentNode.removeChild(panel.backgroundFrame);
+  panel.backgroundFrame.remove();
+  panel.viewFrame.remove();
   panel.backgroundFrame = null;
+  panel.viewFrame = null;
   events.off("document-element-inserted", panel.onContentChange);
   panel.onContentChange = null;
   detach(panel);
