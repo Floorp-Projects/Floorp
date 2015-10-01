@@ -2219,7 +2219,9 @@ LIRGenerator::visitElements(MElements* ins)
 void
 LIRGenerator::visitConstantElements(MConstantElements* ins)
 {
-    define(new(alloc()) LPointer(ins->value(), LPointer::NON_GC_THING), ins);
+    define(new(alloc()) LPointer(ins->value().unwrap(/*safe - pointer does not flow back to C++*/),
+                                 LPointer::NON_GC_THING),
+           ins);
 }
 
 void

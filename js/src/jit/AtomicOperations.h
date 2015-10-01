@@ -7,57 +7,92 @@
 #ifndef jit_AtomicOperations_h
 #define jit_AtomicOperations_h
 
+#include "vm/SharedMem.h"
+
 namespace js {
 namespace jit {
 
+class RegionLock;
+
 /*
- * The atomic operations layer defines the following types and
- * functions.  The "SeqCst" suffix on operations means "sequentially
- * consistent" and means such a function's operation must have
- * "sequentially consistent" memory ordering.  See mfbt/Atomics.h for
- * an explanation of this memory ordering.
+ * The atomic operations layer defines types and functions for
+ * JIT-compatible atomic operation.
+ *
+ * The fundamental constraints on the functions are:
+ *
+ * - That their realization here MUST be compatible with code the JIT
+ *   generates for its Atomics operations, so that an atomic access
+ *   from the interpreter or runtime - from any C++ code - really is
+ *   atomic relative to a concurrent, compatible atomic access from
+ *   jitted code.  That is, these primitives expose JIT-compatible
+ *   atomicity functionality to C++.
+ *
+ * - That accesses may race without creating C++ undefined behavior:
+ *   atomic accesses (marked "SeqCst") may race with non-atomic
+ *   accesses (marked "SafeWhenRacy"); overlapping but non-matching,
+ *   and hence incompatible, atomic accesses may race; and non-atomic
+ *   accesses may race.  The effects of races need not be predictable,
+ *   so garbage can be produced by a read or written by a write, but
+ *   the effects must be benign: the program must continue to run, and
+ *   only the memory in the union of addresses named in the racing
+ *   accesses may be affected.
+ *
+ * The compatibility constraint means that if the JIT makes dynamic
+ * decisions about how to implement atomic operations then
+ * corresponding dynamic decisions MUST be made in the implementations
+ * of the functions below.
+ *
+ * The safe-for-races constraint means that by and large, it is hard
+ * to implement these primitives in C++.  See "Implementation notes"
+ * below.
+ *
+ * The "SeqCst" suffix on operations means "sequentially consistent"
+ * and means such a function's operation must have "sequentially
+ * consistent" memory ordering.  See mfbt/Atomics.h for an explanation
+ * of this memory ordering.
+ *
+ * Note that a "SafeWhenRacy" access does not provide the atomicity of
+ * a "relaxed atomic" access: it can read or write garbage if there's
+ * a race.
  *
  * To make use of the functions you generally have to include
  * AtomicOperations-inl.h.
  *
- * The fundamental constraint on all these primitives is that their
- * realization by the C++ compiler MUST be compatible with code the
- * JIT generates for its Atomics operations, so that an atomic access
- * from the interpreter really is atomic relative to a concurrent
- * access from jitted code.
  *
- * It's not a requirement that these methods be inlined; performance
- * is not a great concern.  On some platforms these methods may call
+ * Implementation notes.
+ *
+ * It's not a requirement that these functions be inlined; performance
+ * is not a great concern.  On some platforms these functions may call
  * out to code that's generated at run time.
+ *
+ * In principle these functions will not be written in C++, thus
+ * making races defined behavior if all racy accesses from C++ go via
+ * these functions.  (Jitted code will always be safe for races and
+ * provides the same guarantees as these functions.)
+ *
+ * The appropriate implementations will be platform-specific and
+ * there are some obvious implementation strategies to choose
+ * from, sometimes a combination is appropriate:
+ *
+ *  - generating the code at run-time with the JIT;
+ *  - hand-written assembler (maybe inline); or
+ *  - using special compiler intrinsics or directives.
+ *
+ * Trusting the compiler not to generate code that blows up on a
+ * race definitely won't work in the presence of TSan, or even of
+ * optimizing compilers in seemingly-"innocuous" conditions.  (See
+ * https://www.usenix.org/legacy/event/hotpar11/tech/final_files/Boehm.pdf
+ * for details.)
  */
-
 class AtomicOperations
 {
-  public:
+    friend class RegionLock;
 
-    // Test lock-freedom for any integer value.
-    //
-    // This implements a platform-independent pattern, as follows:
-    //
-    // 1, 2, and 4 bytes are always lock free, lock-freedom for 8
-    // bytes is determined by the platform's isLockfree8(), and there
-    // is no lock-freedom for any other values on any platform.
-    static inline bool isLockfree(int32_t n);
-
-    // If the return value is true then a call to the 64-bit (8-byte)
-    // routines below will work, otherwise those functions will assert in
-    // debug builds and may crash in release build.  (See the code in
-    // ../arm for an example.)  The value of this call does not change
-    // during a run.
-    static inline bool isLockfree8();
-
-    // Execute a full memory barrier (LoadLoad+LoadStore+StoreLoad+StoreStore).
-    static inline void fenceSeqCst();
-
+  private:
     // The following functions are defined for T = int8_t, uint8_t,
-    // int16_t, uint16_t, int32_t, uint32_t, int64_t, and uint64_t
+    // int16_t, uint16_t, int32_t, uint32_t, int64_t, and uint64_t.
 
-    // Atomically read* addr.
+    // Atomically read *addr.
     template<typename T>
     static inline T loadSeqCst(T* addr);
 
@@ -70,7 +105,7 @@ class AtomicOperations
     static inline T exchangeSeqCst(T* addr, T val);
 
     // Atomically check that *addr contains oldval and if so replace it
-    // with newval, in any case return the old contents of *addr
+    // with newval, in any case returning the old contents of *addr.
     template<typename T>
     static inline T compareExchangeSeqCst(T* addr, T oldval, T newval);
 
@@ -93,6 +128,122 @@ class AtomicOperations
 
     template<typename T>
     static inline T fetchXorSeqCst(T* addr, T val);
+
+    // The SafeWhenRacy functions are to be used when C++ code has to access
+    // memory without synchronization and can't guarantee that there
+    // won't be a race on the access.
+
+    // Defined for all the integral types as well as for float32 and float64.
+    template<typename T>
+    static inline T loadSafeWhenRacy(T* addr);
+
+    // Defined for all the integral types as well as for float32 and float64.
+    template<typename T>
+    static inline void storeSafeWhenRacy(T* addr, T val);
+
+    // Replacement for memcpy().
+    static inline void memcpySafeWhenRacy(void* dest, const void* src, size_t nbytes);
+
+    // Replacement for memmove().
+    static inline void memmoveSafeWhenRacy(void* dest, const void* src, size_t nbytes);
+
+  public:
+    // Test lock-freedom for any integer value.
+    //
+    // This implements a platform-independent pattern, as follows:
+    //
+    // 1, 2, and 4 bytes are always lock free, lock-freedom for 8
+    // bytes is determined by the platform's isLockfree8(), and there
+    // is no lock-freedom for any other values on any platform.
+    static inline bool isLockfree(int32_t n);
+
+    // If the return value is true then a call to the 64-bit (8-byte)
+    // routines below will work, otherwise those functions will assert in
+    // debug builds and may crash in release build.  (See the code in
+    // ../arm for an example.)  The value of this call does not change
+    // during execution.
+    static inline bool isLockfree8();
+
+    // Execute a full memory barrier (LoadLoad+LoadStore+StoreLoad+StoreStore).
+    static inline void fenceSeqCst();
+
+    // All clients should use the APIs that take SharedMem pointers.
+    // See above for semantics and acceptable types.
+
+    template<typename T>
+    static T loadSeqCst(SharedMem<T*> addr) {
+        return loadSeqCst(addr.unwrap());
+    }
+
+    template<typename T>
+    static void storeSeqCst(SharedMem<T*> addr, T val) {
+        return storeSeqCst(addr.unwrap(), val);
+    }
+
+    template<typename T>
+    static T exchangeSeqCst(SharedMem<T*> addr, T val) {
+        return exchangeSeqCst(addr.unwrap(), val);
+    }
+
+    template<typename T>
+    static T compareExchangeSeqCst(SharedMem<T*> addr, T oldval, T newval) {
+        return compareExchangeSeqCst(addr.unwrap(), oldval, newval);
+    }
+
+    template<typename T>
+    static T fetchAddSeqCst(SharedMem<T*> addr, T val) {
+        return fetchAddSeqCst(addr.unwrap(), val);
+    }
+
+    template<typename T>
+    static T fetchSubSeqCst(SharedMem<T*> addr, T val) {
+        return fetchSubSeqCst(addr.unwrap(), val);
+    }
+
+    template<typename T>
+    static T fetchAndSeqCst(SharedMem<T*> addr, T val) {
+        return fetchAndSeqCst(addr.unwrap(), val);
+    }
+
+    template<typename T>
+    static T fetchOrSeqCst(SharedMem<T*> addr, T val) {
+        return fetchOrSeqCst(addr.unwrap(), val);
+    }
+
+    template<typename T>
+    static T fetchXorSeqCst(SharedMem<T*> addr, T val) {
+        return fetchXorSeqCst(addr.unwrap(), val);
+    }
+
+    template<typename T>
+    static T loadSafeWhenRacy(SharedMem<T*> addr) {
+        return loadSafeWhenRacy(addr.unwrap());
+    }
+
+    template<typename T>
+    static void storeSafeWhenRacy(SharedMem<T*> addr, T val) {
+        return storeSafeWhenRacy(addr.unwrap(), val);
+    }
+
+    template<typename T>
+    static void memcpySafeWhenRacy(SharedMem<T> dest, SharedMem<T> src, size_t nbytes) {
+        memcpySafeWhenRacy(static_cast<void*>(dest.unwrap()), static_cast<void*>(src.unwrap()), nbytes);
+    }
+
+    template<typename T>
+    static void memcpySafeWhenRacy(SharedMem<T> dest, T src, size_t nbytes) {
+        memcpySafeWhenRacy(static_cast<void*>(dest.unwrap()), static_cast<void*>(src), nbytes);
+    }
+
+    template<typename T>
+    static void memcpySafeWhenRacy(T dest, SharedMem<T> src, size_t nbytes) {
+        memcpySafeWhenRacy(static_cast<void*>(dest), static_cast<void*>(src.unwrap()), nbytes);
+    }
+
+    template<typename T>
+    static void memmoveSafeWhenRacy(SharedMem<T> dest, SharedMem<T> src, size_t nbytes) {
+        memmoveSafeWhenRacy(static_cast<void*>(dest.unwrap()), static_cast<void*>(src.unwrap()), nbytes);
+    }
 };
 
 /* A data type representing a lock on some region of a
@@ -100,7 +251,7 @@ class AtomicOperations
  * does not provide necessary atomicity (eg, float64 access on ARMv6
  * and some ARMv7 systems).
  */
-struct RegionLock
+class RegionLock
 {
   public:
     RegionLock() : spinlock(0) {}

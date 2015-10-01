@@ -325,7 +325,6 @@ const Class ModuleEnvironmentObject::class_ = {
     nullptr,        /* enumerate   */
     nullptr,        /* resolve     */
     nullptr,        /* mayResolve  */
-    nullptr,        /* convert     */
     nullptr,        /* finalize    */
     nullptr,        /* call        */
     nullptr,        /* hasInstance */
@@ -720,7 +719,6 @@ const Class DynamicWithObject::class_ = {
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
-    nullptr, /* convert */
     nullptr, /* finalize */
     nullptr, /* call */
     nullptr, /* hasInstance */
@@ -1183,7 +1181,6 @@ const Class UninitializedLexicalObject::class_ = {
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
-    nullptr, /* convert */
     nullptr, /* finalize */
     nullptr, /* call */
     nullptr, /* hasInstance */
@@ -1283,7 +1280,9 @@ ScopeIter::settle()
         MOZ_ASSERT(ssi_.type() == StaticScopeIter<CanGC>::Block);
         incrementStaticScopeIter();
         MOZ_ASSERT(ssi_.type() == StaticScopeIter<CanGC>::Eval);
+        MOZ_ASSERT(maybeStaticScope() == frame_.script()->enclosingStaticScope());
         incrementStaticScopeIter();
+        frame_ = NullFramePtr();
     }
 
     // Check if we have left the extent of the initial frame after we've

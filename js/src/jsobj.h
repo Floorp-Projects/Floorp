@@ -647,13 +647,13 @@ JSObject::writeBarrierPost(void* cellp, JSObject* prev, JSObject* next)
         // via a different store buffer.
         if (prev && prev->storeBuffer())
             return;
-        buffer->putCellFromAnyThread(static_cast<js::gc::Cell**>(cellp));
+        buffer->putCell(static_cast<js::gc::Cell**>(cellp));
         return;
     }
 
     // Remove the prev entry if the new value does not need it.
     if (prev && (buffer = prev->storeBuffer()))
-        buffer->unputCellFromAnyThread(static_cast<js::gc::Cell**>(cellp));
+        buffer->unputCell(static_cast<js::gc::Cell**>(cellp));
 }
 
 namespace js {
@@ -1008,18 +1008,25 @@ WatchProperty(JSContext* cx, HandleObject obj, HandleId id, HandleObject callabl
 extern bool
 UnwatchProperty(JSContext* cx, HandleObject obj, HandleId id);
 
-/*
- * ToPrimitive support, currently implemented like an internal method (JSClass::convert).
- * In ES6 this is just a method, @@toPrimitive. See bug 1054756.
- */
+/* ES6 draft rev 36 (2015 March 17) 7.1.1 ToPrimitive(vp[, preferredType]) */
 extern bool
-ToPrimitive(JSContext* cx, HandleObject obj, JSType hint, MutableHandleValue vp);
+ToPrimitiveSlow(JSContext* cx, JSType hint, MutableHandleValue vp);
 
-MOZ_ALWAYS_INLINE bool
-ToPrimitive(JSContext* cx, MutableHandleValue vp);
+inline bool
+ToPrimitive(JSContext* cx, MutableHandleValue vp)
+{
+    if (vp.isPrimitive())
+        return true;
+    return ToPrimitiveSlow(cx, JSTYPE_VOID, vp);
+}
 
-MOZ_ALWAYS_INLINE bool
-ToPrimitive(JSContext* cx, JSType preferredType, MutableHandleValue vp);
+inline bool
+ToPrimitive(JSContext* cx, JSType preferredType, MutableHandleValue vp)
+{
+    if (vp.isPrimitive())
+        return true;
+    return ToPrimitiveSlow(cx, preferredType, vp);
+}
 
 /*
  * toString support. (This isn't called GetClassName because there's a macro in

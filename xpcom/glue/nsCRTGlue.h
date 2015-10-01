@@ -63,10 +63,14 @@ char16_t* NS_strdup(const char16_t* aString);
 char* NS_strdup(const char* aString);
 
 /**
- * strndup for char16_t strings... this function will ensure that the
- * new string is null-terminated. Uses the NS_Alloc allocator.
+ * strndup for char16_t or char strings (normal strndup is not available on
+ * windows). This function will ensure that the new string is
+ * null-terminated. Uses the NS_Alloc allocator.
+ *
+ * CharT may be either char16_t or char.
  */
-char16_t* NS_strndup(const char16_t* aString, uint32_t aLen);
+template<typename CharT>
+CharT* NS_strndup(const CharT* aString, uint32_t aLen);
 
 // The following case-conversion methods only deal in the ascii repertoire
 // A-Z and a-z

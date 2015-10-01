@@ -11,6 +11,7 @@
         width="1024">
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/MozillaLogger.js"/>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/LogController.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/StructuredLog.jsm"/>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/TestRunner.js"/>
   <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"/>
   <script type="application/javascript" src="chrome://mochikit/content/manifestLibrary.js" />
@@ -83,7 +84,7 @@
         delete this.fileLogger;
         return this.fileLogger = logger;
       },
-      structuredLogger: new StructuredLogger(),
+      structuredLogger: TestRunner.structuredLogger,
       dump: function (str) {
         this.structuredLogger.info(str);
 
@@ -123,13 +124,13 @@
     }
     browserTest.prototype = {
       get passCount() {
-        return this.results.filter(function (t) !t.info && !t.todo && t.pass).length;
+        return this.results.filter(t => !t.info && !t.todo && t.pass).length;
       },
       get todoCount() {
-        return this.results.filter(function (t) !t.info && t.todo && t.pass).length;
+        return this.results.filter(t => !t.info && t.todo && t.pass).length;
       },
       get failCount() {
-        return this.results.filter(function (t) !t.info && !t.pass).length;
+        return this.results.filter(t => !t.info && !t.pass).length;
       },
 
       addResult: function addResult(result) {
@@ -288,9 +289,9 @@
 
       var log = "";
 
-      var passCount = aTests.map(function (f) f.passCount).reduce(sum);
-      var failCount = aTests.map(function (f) f.failCount).reduce(sum);
-      var todoCount = aTests.map(function (f) f.todoCount).reduce(sum);
+      var passCount = aTests.map(f => f.passCount).reduce(sum);
+      var failCount = aTests.map(f => f.failCount).reduce(sum);
+      var todoCount = aTests.map(f => f.todoCount).reduce(sum);
       log += "<div id=\"summary\" class=\"";
       log += failCount != 0 ? "failure" :
                passCount == 0 ? "todo" : "success";

@@ -19,6 +19,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIWindowWatcher.h"
 #include "nsPIDOMWindow.h"
+#include "nsGlobalWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIBaseWindow.h"
@@ -92,8 +93,8 @@ activateWindow( nsIDOMWindow *win ) {
 #endif
 
 // Simple Win32 mutex wrapper.
-struct Mutex {
-    Mutex( const char16_t *name )
+struct Win32Mutex {
+    Win32Mutex( const char16_t *name )
         : mName( name ),
           mHandle( 0 ),
           mState( -1 ) {
@@ -102,7 +103,7 @@ struct Mutex {
         printf( "CreateMutex error = 0x%08X\n", (int)GetLastError() );
 #endif
     }
-    ~Mutex() {
+    ~Win32Mutex() {
         if ( mHandle ) {
             // Make sure we release it if we own it.
             Unlock();
@@ -669,7 +670,7 @@ nsNativeAppSupportWin::Start( bool *aResult ) {
                  MOZ_MUTEX_NAMESPACE,
                  NS_ConvertUTF8toUTF16(gAppData->name).get(),
                  MOZ_STARTUP_MUTEX_NAME );
-    Mutex startupLock = Mutex( mMutexName );
+    Win32Mutex startupLock = Win32Mutex( mMutexName );
 
     NS_ENSURE_TRUE( startupLock.Lock( MOZ_DDE_START_TIMEOUT ), NS_ERROR_FAILURE );
 
@@ -759,7 +760,7 @@ nsNativeAppSupportWin::Stop( bool *aResult ) {
     nsresult rv = NS_OK;
     *aResult = true;
 
-    Mutex ddeLock( mMutexName );
+    Win32Mutex ddeLock( mMutexName );
 
     if ( ddeLock.Lock( MOZ_DDE_STOP_TIMEOUT ) ) {
         if ( mConversations == 0 ) {
@@ -799,7 +800,7 @@ nsNativeAppSupportWin::Quit() {
     // to wait to hold the lock, in which case they will not find the
     // window as we will destroy ours under our lock.
     // When the mutex goes off the stack, it is unlocked via destructor.
-    Mutex mutexLock(mMutexName);
+    Win32Mutex mutexLock(mMutexName);
     NS_ENSURE_TRUE(mutexLock.Lock(MOZ_DDE_START_TIMEOUT), NS_ERROR_FAILURE);
 
     // If we've got a message window to receive IPC or new window requests,
@@ -1007,18 +1008,15 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                         nsCOMPtr<nsIDOMWindow> navWin;
                         GetMostRecentWindow( NS_LITERAL_STRING( "navigator:browser" ).get(),
                                              getter_AddRefs( navWin ) );
-                        if ( !navWin ) {
+                        nsCOMPtr<nsPIDOMWindow> piNavWin = do_QueryInterface(navWin);
+                        if ( !piNavWin ) {
                             // There is not a window open
                             break;
                         }
+
                         // Get content window.
-                        nsCOMPtr<nsIDOMWindow> content;
-                        navWin->GetContent( getter_AddRefs( content ) );
-                        if ( !content ) {
-                            break;
-                        }
-                        // Convert that to internal interface.
-                        nsCOMPtr<nsPIDOMWindow> internalContent( do_QueryInterface( content ) );
+                        nsCOMPtr<nsIDOMWindow> internalContent_ = nsGlobalWindow::Cast(piNavWin)->GetContent();
+                        nsCOMPtr<nsPIDOMWindow> internalContent = do_QueryInterface(internalContent_);
                         if ( !internalContent ) {
                             break;
                         }

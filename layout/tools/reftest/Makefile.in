@@ -48,17 +48,3 @@ $(_HARNESS_FILES): $(_DEST_DIR)
 libs:: $(_HARNESS_FILES) $(addprefix $(_DEST_DIR)/,$(_HARNESS_PP_FILES))
 	$(INSTALL) $(_HARNESS_FILES) $(_DEST_DIR)
 	(cd $(DIST)/xpi-stage && tar $(TAR_CREATE_FLAGS) - reftest) | (cd $(_DEST_DIR) && tar -xf -)
-
-PKG_STAGE = $(DIST)/test-stage
-
-# stage harness and tests for packaging
-stage-package:
-	$(NSINSTALL) -D $(PKG_STAGE)/reftest && $(NSINSTALL) -D $(PKG_STAGE)/reftest/tests
-	(cd $(DEPTH)/_tests/reftest/ && tar $(TAR_CREATE_FLAGS) - *) | (cd $(PKG_STAGE)/reftest && tar -xf -)
-	@cp $(DEPTH)/mozinfo.json $(PKG_STAGE)/reftest
-	$(PYTHON) $(topsrcdir)/layout/tools/reftest/print-manifest-dirs.py \
-          $(topsrcdir) \
-          $(topsrcdir)/layout/reftests/reftest.list \
-          $(topsrcdir)/testing/crashtest/crashtests.list \
-          | (cd $(topsrcdir) && xargs tar $(TAR_CREATE_FLAGS) -) \
-          | (cd $(PKG_STAGE)/reftest/tests && tar -xf -)

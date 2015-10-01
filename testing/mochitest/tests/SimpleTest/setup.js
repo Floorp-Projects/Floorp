@@ -143,7 +143,7 @@ if (params.dumpDMDAfterTest) {
 }
 
 if (params.interactiveDebugger) {
-  TestRunner.structuredLogger.interactiveDebugger = true;
+  TestRunner.interactiveDebugger = true;
 }
 
 if (params.maxTimeouts) {

@@ -67,7 +67,9 @@
         }
       }
 
-      function doesntThrow(s,c,m) !shouldThrow(s,c,m)
+      function doesntThrow(s,c,m) {
+        return !shouldThrow(s,c,m);
+      }
 
       ok(doesntThrow(TP.STATE_NO_PROGRESS, 0, 0), "No progress state can be set");
       ok(doesntThrow(TP.STATE_INDETERMINATE, 0, 0), "Indeterminate state can be set");

@@ -94,6 +94,11 @@ checkAndLogStatementPerformance(sqlite3_stmt *aStatement)
   if (::strstr(sql, "/* do not warn (bug "))
     return;
 
+  // CREATE INDEX always sorts (sorting is a necessary step in creating
+  // an index).  So ignore the warning there.
+  if (::strstr(sql, "CREATE INDEX") || ::strstr(sql, "CREATE UNIQUE INDEX"))
+    return;
+
   nsAutoCString message("Suboptimal indexes for the SQL statement ");
 #ifdef MOZ_STORAGE_SORTWARNING_SQL_DUMP
   message.Append('`');

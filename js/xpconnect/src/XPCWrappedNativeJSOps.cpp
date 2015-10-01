@@ -96,6 +96,44 @@ XPC_WN_Shared_ToSource(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+XPC_WN_Shared_toPrimitive(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    RootedObject obj(cx);
+    if (!JS_ValueToObject(cx, args.thisv(), &obj))
+        return false;
+    XPCCallContext ccx(JS_CALLER, cx, obj);
+    XPCWrappedNative* wrapper = ccx.GetWrapper();
+    THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
+
+    JSType hint;
+    if (!GetFirstArgumentAsTypeHint(cx, args, &hint))
+        return false;
+
+    if (hint == JSTYPE_NUMBER) {
+        args.rval().set(JS_GetNaNValue(cx));
+        return true;
+    }
+
+    MOZ_ASSERT(hint == JSTYPE_STRING || hint == JSTYPE_VOID);
+    ccx.SetName(ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_TO_STRING));
+    ccx.SetArgsAndResultPtr(0, nullptr, args.rval().address());
+
+    XPCNativeMember* member = ccx.GetMember();
+    if (member && member->IsMethod()) {
+        if (!XPCWrappedNative::CallMethod(ccx))
+            return false;
+
+        if (args.rval().isPrimitive())
+            return true;
+    }
+
+    // else...
+    return ToStringGuts(ccx);
+}
+
 /***************************************************************************/
 
 // A "double wrapped object" is a user JSObject that has been wrapped as a
@@ -233,15 +271,17 @@ DefinePropertyIfFound(XPCCallContext& ccx,
             {
                 call = XPC_WN_Shared_ToString;
                 name = rt->GetStringName(XPCJSRuntime::IDX_TO_STRING);
-                id   = rt->GetStringID(XPCJSRuntime::IDX_TO_STRING);
             } else if (id == rt->GetStringID(XPCJSRuntime::IDX_TO_SOURCE)) {
                 call = XPC_WN_Shared_ToSource;
                 name = rt->GetStringName(XPCJSRuntime::IDX_TO_SOURCE);
-                id   = rt->GetStringID(XPCJSRuntime::IDX_TO_SOURCE);
-            }
-
-            else
+            } else if (id == SYMBOL_TO_JSID(
+                               JS::GetWellKnownSymbol(ccx, JS::SymbolCode::toPrimitive)))
+            {
+                call = XPC_WN_Shared_toPrimitive;
+                name = "[Symbol.toPrimitive]";
+            } else {
                 call = nullptr;
+            }
 
             if (call) {
                 RootedFunction fun(ccx, JS_NewFunction(ccx, call, 0, 0, name));
@@ -451,63 +491,6 @@ XPC_WN_CannotModifySetPropertyStub(JSContext* cx, HandleObject obj, HandleId id,
 }
 
 static bool
-XPC_WN_Shared_Convert(JSContext* cx, HandleObject obj, JSType type, MutableHandleValue vp)
-{
-    if (type == JSTYPE_OBJECT) {
-        vp.setObject(*obj);
-        return true;
-    }
-
-    XPCCallContext ccx(JS_CALLER, cx, obj);
-    XPCWrappedNative* wrapper = ccx.GetWrapper();
-    THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
-
-    switch (type) {
-        case JSTYPE_FUNCTION:
-            {
-                if (!ccx.GetTearOff()) {
-                    XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
-                    if (si && (si->GetFlags().WantCall() ||
-                               si->GetFlags().WantConstruct())) {
-                        vp.setObject(*obj);
-                        return true;
-                    }
-                }
-            }
-            return Throw(NS_ERROR_XPC_CANT_CONVERT_WN_TO_FUN, cx);
-        case JSTYPE_NUMBER:
-            vp.set(JS_GetNaNValue(cx));
-            return true;
-        case JSTYPE_BOOLEAN:
-            vp.setBoolean(true);
-            return true;
-        case JSTYPE_VOID:
-        case JSTYPE_STRING:
-        {
-            ccx.SetName(ccx.GetRuntime()->GetStringID(XPCJSRuntime::IDX_TO_STRING));
-            ccx.SetArgsAndResultPtr(0, nullptr, vp.address());
-
-            XPCNativeMember* member = ccx.GetMember();
-            if (member && member->IsMethod()) {
-                if (!XPCWrappedNative::CallMethod(ccx))
-                    return false;
-
-                if (vp.isPrimitive())
-                    return true;
-            }
-
-            // else...
-            return ToStringGuts(ccx);
-        }
-        default:
-            NS_ERROR("bad type in conversion");
-            return false;
-    }
-    NS_NOTREACHED("huh?");
-    return false;
-}
-
-static bool
 XPC_WN_Shared_Enumerate(JSContext* cx, HandleObject obj)
 {
     XPCCallContext ccx(JS_CALLER, cx, obj);
@@ -652,7 +635,6 @@ const XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass = {
     XPC_WN_Shared_Enumerate,           // enumerate
     XPC_WN_NoHelper_Resolve,           // resolve
     nullptr,                           // mayResolve
-    XPC_WN_Shared_Convert,             // convert
     XPC_WN_NoHelper_Finalize,          // finalize
 
     /* Optionally non-null members start here. */
@@ -1046,8 +1028,6 @@ XPCNativeScriptableShared::PopulateJSClass()
     // We have to figure out resolve strategy at call time
     mJSClass.base.resolve = XPC_WN_Helper_Resolve;
 
-    mJSClass.base.convert = XPC_WN_Shared_Convert;
-
     if (mFlags.WantFinalize())
         mJSClass.base.finalize = XPC_WN_Helper_Finalize;
     else
@@ -1294,7 +1274,6 @@ const js::Class XPC_WN_ModsAllowed_WithCall_Proto_JSClass = {
     XPC_WN_Shared_Proto_Enumerate,  // enumerate;
     XPC_WN_ModsAllowed_Proto_Resolve, // resolve;
     nullptr,                        // mayResolve;
-    nullptr,                        // convert;
     XPC_WN_Shared_Proto_Finalize,   // finalize;
 
     /* Optionally non-null members start here. */
@@ -1320,7 +1299,6 @@ const js::Class XPC_WN_ModsAllowed_NoCall_Proto_JSClass = {
     XPC_WN_Shared_Proto_Enumerate,  // enumerate;
     XPC_WN_ModsAllowed_Proto_Resolve, // resolve;
     nullptr,                        // mayResolve;
-    nullptr,                        // convert;
     XPC_WN_Shared_Proto_Finalize,   // finalize;
 
     /* Optionally non-null members start here. */
@@ -1399,7 +1377,6 @@ const js::Class XPC_WN_NoMods_WithCall_Proto_JSClass = {
     XPC_WN_Shared_Proto_Enumerate,             // enumerate;
     XPC_WN_NoMods_Proto_Resolve,               // resolve;
     nullptr,                                   // mayResolve;
-    nullptr,                                   // convert;
     XPC_WN_Shared_Proto_Finalize,              // finalize;
 
     /* Optionally non-null members start here. */
@@ -1425,7 +1402,6 @@ const js::Class XPC_WN_NoMods_NoCall_Proto_JSClass = {
     XPC_WN_Shared_Proto_Enumerate,             // enumerate;
     XPC_WN_NoMods_Proto_Resolve,               // resolve;
     nullptr,                                   // mayResolve;
-    nullptr,                                   // convert;
     XPC_WN_Shared_Proto_Finalize,              // finalize;
 
     /* Optionally non-null members start here. */
@@ -1521,7 +1497,6 @@ const js::Class XPC_WN_Tearoff_JSClass = {
     XPC_WN_TearOff_Enumerate,                  // enumerate;
     XPC_WN_TearOff_Resolve,                    // resolve;
     nullptr,                                   // mayResolve;
-    XPC_WN_Shared_Convert,                     // convert;
     XPC_WN_TearOff_Finalize,                   // finalize;
 
     /* Optionally non-null members start here. */

@@ -178,6 +178,7 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
     void visitOutOfLineBailout(OutOfLineBailout* ool);
   protected:
     virtual ValueOperand ToOutValue(LInstruction* ins) = 0;
+    void memoryBarrier(MemoryBarrierBits barrier);
 
   public:
     CodeGeneratorMIPSShared(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm);
@@ -206,6 +207,8 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
     void visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc* ins);
 
     void visitAsmJSPassStackArg(LAsmJSPassStackArg* ins);
+
+    void visitMemoryBarrier(LMemoryBarrier* ins);
 
     void generateInvalidateEpilogue();
 

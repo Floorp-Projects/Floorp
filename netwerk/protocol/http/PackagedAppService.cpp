@@ -17,6 +17,7 @@
 #include "mozilla/DebugOnly.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "mozilla/LoadContext.h"
+#include "nsIInstallPackagedWebapp.h"
 
 namespace mozilla {
 namespace net {
@@ -427,6 +428,7 @@ PackagedAppService::PackagedAppDownloader::Init(nsILoadContextInfo* aInfo,
 
   mPackageKey = aKey;
   mPackageOrigin = aPackageOrigin;
+  mProcessingFirstRequest = true;
 
   return NS_OK;
 }
@@ -620,6 +622,8 @@ PackagedAppService::PackagedAppDownloader::OnStopRequest(nsIRequest *aRequest,
   LOG(("[%p] PackagedAppDownloader::OnStopRequest > status:%X multiChannel:%p\n",
        this, aStatusCode, multiChannel.get()));
 
+  mProcessingFirstRequest = false;
+
   // lastPart will be true if this is the last part in the package,
   // or if aRequest isn't a multipart channel
   bool lastPart = true;
@@ -699,6 +703,11 @@ PackagedAppService::PackagedAppDownloader::ConsumeData(nsIInputStream *aStream,
   }
 
   self->mWriter->ConsumeData(aFromRawSegment, aCount, aWriteCount);
+
+  if (self->mProcessingFirstRequest) {
+    // mProcessingFirstRequest will be set to false on the first OnStopRequest.
+    self->mManifestContent.Append(aFromRawSegment, aCount);
+  }
 
   nsCOMPtr<nsIInputStream> stream = CreateSharedStringStream(aFromRawSegment, aCount);
   return self->mVerifier->OnDataAvailable(nullptr, nullptr, stream, 0, aCount);
@@ -855,11 +864,39 @@ PackagedAppService::PackagedAppDownloader::NotifyOnStartSignedPackageRequest(con
   LOG(("Notifying the signed package is ready to load."));
 }
 
-void PackagedAppService::PackagedAppDownloader::InstallSignedPackagedApp()
+void PackagedAppService::PackagedAppDownloader::InstallSignedPackagedApp(const ResourceCacheInfo* aInfo)
 {
   // TODO: Bug 1178533 to register permissions, system messages etc on navigation to
   //       signed packages.
   LOG(("Install this packaged app."));
+  bool isSuccess = false;
+
+  nsCOMPtr<nsIInstallPackagedWebapp> installer =
+    do_GetService("@mozilla.org/newapps/installpackagedwebapp;1");
+
+  if (!installer) {
+    LOG(("InstallSignedPackagedApp: fail to get InstallPackagedWebapp service"));
+    return OnError(ERROR_GET_INSTALLER_FAILED);
+  }
+
+  nsCString manifestURL;
+  aInfo->mURI->GetAsciiSpec(manifestURL);
+
+  // Use the origin stored in the verifier since the signed packaged app would
+  // have a specifi package identifer defined in the manifest file.
+  nsCString packageOrigin;
+  mVerifier->GetPackageOrigin(packageOrigin);
+
+  installer->InstallPackagedWebapp(mManifestContent.get(),
+                                   packageOrigin.get(),
+                                   manifestURL.get(),
+                                   &isSuccess);
+  if (!isSuccess) {
+    LOG(("InstallSignedPackagedApp: failed to install permissions"));
+    return OnError(ERROR_INSTALL_RESOURCE_FAILED);
+  }
+
+  LOG(("InstallSignedPackagedApp: success."));
 }
 
 //------------------------------------------------------------------
@@ -917,7 +954,7 @@ PackagedAppService::PackagedAppDownloader::OnManifestVerified(const ResourceCach
   nsCString packageOrigin;
   mVerifier->GetPackageOrigin(packageOrigin);
   NotifyOnStartSignedPackageRequest(packageOrigin);
-  InstallSignedPackagedApp();
+  InstallSignedPackagedApp(aInfo);
 }
 
 void
@@ -1084,7 +1121,7 @@ PackagedAppService::GetResource(nsIChannel *aChannel,
 
   downloader = new PackagedAppDownloader();
   nsCString packageOrigin;
-  principal->GetOriginNoSuffix(packageOrigin);
+  principal->GetOrigin(packageOrigin);
   rv = downloader->Init(loadContextInfo, key, packageOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

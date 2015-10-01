@@ -3,7 +3,6 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/BrowserUtils.jsm");
 var ssm = Services.scriptSecurityManager;
 function makeURI(uri) { return Services.io.newURI(uri, null, null); }
 
@@ -28,9 +27,9 @@ function checkOriginAttributes(prin, attrs, suffix) {
   do_check_eq(prin.originAttributes.inBrowser, attrs.inBrowser || false);
   do_check_eq(prin.originSuffix, suffix || '');
   if (!prin.isNullPrincipal && !prin.origin.startsWith('[')) {
-    do_check_true(BrowserUtils.principalFromOrigin(prin.origin).equals(prin));
+    do_check_true(ssm.createCodebasePrincipalFromOrigin(prin.origin).equals(prin));
   } else {
-    checkThrows(() => BrowserUtils.principalFromOrigin(prin.origin));
+    checkThrows(() => ssm.createCodebasePrincipalFromOrigin(prin.origin));
   }
 }
 
@@ -99,11 +98,7 @@ function run_test() {
   checkOriginAttributes(exampleOrg_addon, { addonId: "dummy" }, '^addonId=dummy');
   do_check_eq(exampleOrg_addon.origin, 'http://example.org^addonId=dummy');
 
-  // Make sure that we refuse to create .origin for principals with UNKNOWN_APP_ID.
-  var simplePrin = ssm.getSimpleCodebasePrincipal(makeURI('http://example.com'));
-  try { simplePrin.origin; do_check_true(false); } catch (e) { do_check_true(true); }
-
-  // Make sure we don't crash when serializing them either.
+  // Make sure we don't crash when serializing principals with UNKNOWN_APP_ID.
   try {
     let binaryStream = Cc["@mozilla.org/binaryoutputstream;1"].
                        createInstance(Ci.nsIObjectOutputStream);

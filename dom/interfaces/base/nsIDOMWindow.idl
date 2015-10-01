@@ -22,7 +22,7 @@ interface nsIVariant;
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(7e26f1bd-a694-4b65-8d9d-9eead0645fe3)]
+[scriptable, uuid(ab30b7cc-f7f9-4b9b-befb-7dbf6cf86d46)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -367,9 +367,6 @@ interface nsIDOMWindow : nsISupports
    * Method for sizing this window to the content in the window.
    */
   void                      sizeToContent();
-
-  /* [replaceable] content */
-  [noscript] readonly attribute nsIDOMWindow            content;
 
   /* [replaceable] prompter */
   [noscript] readonly attribute nsIPrompt               prompter;

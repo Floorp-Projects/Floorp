@@ -128,16 +128,20 @@ NS_strdup(const char16_t* aString)
   return NS_strndup(aString, len);
 }
 
-char16_t*
-NS_strndup(const char16_t* aString, uint32_t aLen)
+template<typename CharT>
+CharT*
+NS_strndup(const CharT* aString, uint32_t aLen)
 {
-  char16_t* newBuf = (char16_t*)NS_Alloc((aLen + 1) * sizeof(char16_t));
+  auto newBuf = (CharT*)NS_Alloc((aLen + 1) * sizeof(CharT));
   if (newBuf) {
-    memcpy(newBuf, aString, aLen * sizeof(char16_t));
+    memcpy(newBuf, aString, aLen * sizeof(CharT));
     newBuf[aLen] = '\0';
   }
   return newBuf;
 }
+
+template char16_t* NS_strndup<char16_t>(const char16_t* aString, uint32_t aLen);
+template char* NS_strndup<char>(const char* aString, uint32_t aLen);
 
 char*
 NS_strdup(const char* aString)

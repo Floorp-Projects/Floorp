@@ -945,8 +945,8 @@ class NativeObject : public JSObject
             const Value& v = elements_[start + i];
             if (v.isObject() && IsInsideNursery(&v.toObject())) {
                 JS::shadow::Runtime* shadowRuntime = shadowRuntimeFromMainThread();
-                shadowRuntime->gcStoreBufferPtr()->putSlotFromAnyThread(this, HeapSlot::Element,
-                                                                        start + i, count - i);
+                shadowRuntime->gcStoreBufferPtr()->putSlot(this, HeapSlot::Element,
+                                                           start + i, count - i);
                 return;
             }
         }
@@ -1161,7 +1161,7 @@ class NativeObject : public JSObject
         MOZ_ASSERT(*cellp);
         gc::StoreBuffer* storeBuffer = (*cellp)->storeBuffer();
         if (storeBuffer)
-            storeBuffer->putCellFromAnyThread(cellp);
+            storeBuffer->putCell(cellp);
     }
 
     /* Private data accessors. */

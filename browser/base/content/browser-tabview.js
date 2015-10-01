@@ -225,7 +225,7 @@ var TabView = {
         self._SSWindowStateReadyListener = null;
       }
 
-      self._initFrameCallbacks.forEach(function (cb) cb());
+      self._initFrameCallbacks.forEach(cb => cb());
       self._initFrameCallbacks = [];
     }, false);
 

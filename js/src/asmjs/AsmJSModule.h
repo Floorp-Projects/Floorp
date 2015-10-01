@@ -1401,10 +1401,14 @@ class AsmJSModule
         JS_STATIC_ASSERT(jit::AsmJSHeapGlobalDataOffset == sizeof(void*));
         return sizeof(void*);
     }
+  private:
+    // The pointer may reference shared memory, use with care.
+    // Generally you want to use maybeHeap(), not heapDatum().
     uint8_t*& heapDatum() const {
         MOZ_ASSERT(isFinished());
         return *(uint8_t**)(globalData() + heapGlobalDataOffset());
     }
+  public:
     static unsigned nan64GlobalDataOffset() {
         static_assert(jit::AsmJSNaN64GlobalDataOffset % sizeof(double) == 0,
                       "Global data NaN should be aligned");
@@ -1561,9 +1565,10 @@ class AsmJSModule
         MOZ_ASSERT(isDynamicallyLinked());
         return outOfBoundsExit_;
     }
-    uint8_t* maybeHeap() const {
+    SharedMem<uint8_t*> maybeHeap() const {
         MOZ_ASSERT(isDynamicallyLinked());
-        return heapDatum();
+        return hasArrayView() && isSharedView() ? SharedMem<uint8_t*>::shared(heapDatum())
+            : SharedMem<uint8_t*>::unshared(heapDatum());
     }
     ArrayBufferObjectMaybeShared* maybeHeapBufferObject() const {
         MOZ_ASSERT(isDynamicallyLinked());

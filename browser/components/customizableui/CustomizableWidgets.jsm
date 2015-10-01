@@ -214,7 +214,7 @@ const CustomizableWidgets = [
                 onHistoryVisit(uri, aEvent, item);
               });
               if (icon) {
-                let iconURL = PlacesUtils.getImageURLForResolution(win, "moz-anno:favicon:" + icon);
+                let iconURL = "moz-anno:favicon:" + icon;
                 item.setAttribute("image", iconURL);
               }
               fragment.appendChild(item);

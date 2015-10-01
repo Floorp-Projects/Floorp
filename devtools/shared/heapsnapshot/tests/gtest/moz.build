@@ -18,7 +18,6 @@ UNIFIED_SOURCES = [
     'SerializesEdgeNames.cpp',
     'SerializesEverythingInHeapGraphOnce.cpp',
     'SerializesTypeNames.cpp',
-    'UniqueStringHashPolicy.cpp',
 ]
 
 # THE MOCK_METHOD2 macro from gtest triggers this clang warning and it's hard

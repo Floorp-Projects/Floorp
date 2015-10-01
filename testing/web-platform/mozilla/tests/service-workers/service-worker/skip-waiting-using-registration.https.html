@@ -50,7 +50,9 @@ promise_test(function(t) {
           return saw_controllerchanged;
         })
       .then(function() {
-          frame.remove();
+          // XXXcatalinb: Removing the iframe here would terminate the worker
+          // discarding inflight events.
+          // frame.remove();
           assert_not_equals(sw_registration.active, null,
                             'Registration active worker should not be null');
           fetch_tests_from_worker(sw_registration.active);

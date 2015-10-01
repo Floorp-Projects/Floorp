@@ -196,14 +196,20 @@ ReportWrapperDenial(JSContext* cx, HandleId id, WrapperDenialType type, const ch
 #endif
 
     nsAutoJSString propertyName;
-    if (!propertyName.init(cx, id))
+    RootedValue idval(cx);
+    if (!JS_IdToValue(cx, id, &idval))
+        return false;
+    JSString* str = JS_ValueToSource(cx, idval);
+    if (!str)
+        return false;
+    if (!propertyName.init(cx, str))
         return false;
     AutoFilename filename;
     unsigned line = 0, column = 0;
     DescribeScriptedCaller(cx, &filename, &line, &column);
 
     // Warn to the terminal for the logs.
-    NS_WARNING(nsPrintfCString("Silently denied access to property |%s|: %s (@%s:%u:%u)",
+    NS_WARNING(nsPrintfCString("Silently denied access to property %s: %s (@%s:%u:%u)",
                                NS_LossyConvertUTF16toASCII(propertyName).get(), reason,
                                filename.get(), line, column).get());
 
@@ -518,12 +524,7 @@ JSXrayTraits::resolveOwnProperty(JSContext* cx, const Wrapper& jsWrapper,
     }
     if (fsMatch) {
         // Generate an Xrayed version of the method.
-        RootedFunction fun(cx);
-        if (fsMatch->selfHostedName) {
-            fun = JS::GetSelfHostedFunction(cx, fsMatch->selfHostedName, id, fsMatch->nargs);
-        } else {
-            fun = JS_NewFunctionById(cx, fsMatch->call.op, fsMatch->nargs, 0, id);
-        }
+        RootedFunction fun(cx, JS::NewFunctionFromSpec(cx, fsMatch, id));
         if (!fun)
             return false;
 
@@ -893,7 +894,7 @@ ExpandoObjectFinalize(JSFreeOp* fop, JSObject* obj)
 const JSClass ExpandoObjectClass = {
     "XrayExpandoObject",
     JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_EXPANDO_COUNT),
-    nullptr, nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, ExpandoObjectFinalize
 };
 
@@ -2179,19 +2180,6 @@ const char*
 XrayWrapper<Base, Traits>::className(JSContext* cx, HandleObject wrapper) const
 {
     return Traits::className(cx, wrapper, Base::singleton);
-}
-
-template <typename Base, typename Traits>
-bool
-XrayWrapper<Base, Traits>::defaultValue(JSContext* cx, HandleObject wrapper,
-                                        JSType hint, MutableHandleValue vp) const
-{
-    // Even if this isn't a security wrapper, Xray semantics dictate that we
-    // run the OrdinaryToPrimitive algorithm directly on the Xray wrapper.
-    //
-    // NB: We don't have to worry about things with special [[DefaultValue]]
-    // behavior like Date because we'll never have an XrayWrapper to them.
-    return OrdinaryToPrimitive(cx, wrapper, hint, vp);
 }
 
 template <typename Base, typename Traits>

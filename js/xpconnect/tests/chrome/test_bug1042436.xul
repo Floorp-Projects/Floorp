@@ -40,8 +40,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1042436
       Cu.evalInSandbox('contentObjWithGetter.getterProp; contentObjWithGetter.valueProp; contentObjWithGetter.getterProp;',
                        chromeSb, "1.7", "http://phony.example.com/file.js", 99);
   },
-  [{ errorMessage: /property someExpandoProperty \(reason: object is not safely Xrayable/, sourceName: /test_bug1042436/, isWarning: true },
-   { errorMessage: /property getterProp \(reason: property has accessor/, sourceName: /phony/, lineNumber: 99, isWarning: true } ],
+  [{ errorMessage: /property "someExpandoProperty" \(reason: object is not safely Xrayable/, sourceName: /test_bug1042436/, isWarning: true },
+   { errorMessage: /property "getterProp" \(reason: property has accessor/, sourceName: /phony/, lineNumber: 99, isWarning: true } ],
   SimpleTest.finish.bind(SimpleTest));
 
   ]]>

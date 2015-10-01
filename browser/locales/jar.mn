@@ -152,9 +152,7 @@
     locale/browser/syncQuota.properties         (%chrome/browser/syncQuota.properties)
 #endif
 % resource search-plugins chrome://browser/locale/searchplugins/
-# little trick to make the test below work
-#define en_US en-US
-#if AB_CD == en_US
+#if BUILD_FASTER
     locale/browser/searchplugins/list.txt       (%searchplugins/list.txt)
     locale/browser/searchplugins/               (%searchplugins/*.xml)
 #else

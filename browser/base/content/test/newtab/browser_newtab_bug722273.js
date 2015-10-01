@@ -46,7 +46,7 @@ function promiseAddFakeVisits() {
   };
   return new Promise((resolve, reject) => {
     PlacesUtils.asyncHistory.updatePlaces(place, {
-      handleError: function () reject(new Error("Couldn't add visit")),
+      handleError: () => reject(new Error("Couldn't add visit")),
       handleResult: function () {},
       handleCompletion: function () {
         NewTabUtils.links.populateCache(function () {

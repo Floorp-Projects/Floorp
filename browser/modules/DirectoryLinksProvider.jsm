@@ -159,12 +159,14 @@ var DirectoryLinksProvider = {
    */
   _newTabHasInadjacentSite: false,
 
-  get _observedPrefs() Object.freeze({
-    enhanced: PREF_NEWTAB_ENHANCED,
-    linksURL: PREF_DIRECTORY_SOURCE,
-    matchOSLocale: PREF_MATCH_OS_LOCALE,
-    prefSelectedLocale: PREF_SELECTED_LOCALE,
-  }),
+  get _observedPrefs() {
+    return Object.freeze({
+      enhanced: PREF_NEWTAB_ENHANCED,
+      linksURL: PREF_DIRECTORY_SOURCE,
+      matchOSLocale: PREF_MATCH_OS_LOCALE,
+      prefSelectedLocale: PREF_SELECTED_LOCALE,
+    });
+  },
 
   get _linksURL() {
     if (!this.__linksURL) {

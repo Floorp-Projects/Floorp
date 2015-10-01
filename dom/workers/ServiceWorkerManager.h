@@ -49,6 +49,7 @@ class ServiceWorkerInfo;
 class ServiceWorkerJob;
 class ServiceWorkerJobQueue;
 class ServiceWorkerManagerChild;
+class ServiceWorkerPrivate;
 
 // Needs to inherit from nsISupports because NS_ProxyRelease() does not support
 // non-ISupports classes.
@@ -175,10 +176,11 @@ private:
   // There is a high chance of there being at least one ServiceWorker
   // associated with this all the time.
   nsAutoTArray<ServiceWorker*, 1> mInstances;
+
+  nsRefPtr<ServiceWorkerPrivate> mServiceWorkerPrivate;
   bool mSkipWaitingFlag;
 
-  ~ServiceWorkerInfo()
-  { }
+  ~ServiceWorkerInfo();
 
   // Generates a unique id for the service worker, with zero being treated as
   // invalid.
@@ -187,6 +189,19 @@ private:
 
 public:
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerInfo)
+
+  class ServiceWorkerPrivate*
+  WorkerPrivate() const
+  {
+    MOZ_ASSERT(mServiceWorkerPrivate);
+    return mServiceWorkerPrivate;
+  }
+
+  nsIPrincipal*
+  GetPrincipal() const
+  {
+    return mRegistration->mPrincipal;
+  }
 
   const nsCString&
   ScriptSpec() const
@@ -220,17 +235,7 @@ public:
 
   ServiceWorkerInfo(ServiceWorkerRegistrationInfo* aReg,
                     const nsACString& aScriptSpec,
-                    const nsAString& aCacheName)
-    : mRegistration(aReg)
-    , mScriptSpec(aScriptSpec)
-    , mCacheName(aCacheName)
-    , mState(ServiceWorkerState::EndGuard_)
-    , mServiceWorkerID(GetNextID())
-    , mSkipWaitingFlag(false)
-  {
-    MOZ_ASSERT(mRegistration);
-    MOZ_ASSERT(!aCacheName.IsEmpty());
-  }
+                    const nsAString& aCacheName);
 
   ServiceWorkerState
   State() const
@@ -454,28 +459,18 @@ private:
   nsresult
   GetDocumentRegistration(nsIDocument* aDoc, ServiceWorkerRegistrationInfo** aRegistrationInfo);
 
-  NS_IMETHOD
-  CreateServiceWorkerForWindow(nsPIDOMWindow* aWindow,
-                               ServiceWorkerInfo* aInfo,
-                               nsIRunnable* aLoadFailedRunnable,
-                               ServiceWorker** aServiceWorker);
-
-  NS_IMETHOD
-  CreateServiceWorker(nsIPrincipal* aPrincipal,
-                      ServiceWorkerInfo* aInfo,
-                      nsIRunnable* aLoadFailedRunnable,
-                      ServiceWorker** aServiceWorker);
-
   NS_IMETHODIMP
   GetServiceWorkerForScope(nsIDOMWindow* aWindow,
                            const nsAString& aScope,
                            WhichServiceWorker aWhichWorker,
                            nsISupports** aServiceWorker);
 
-  already_AddRefed<ServiceWorker>
-  CreateServiceWorkerForScope(const OriginAttributes& aOriginAttributes,
-                              const nsACString& aScope,
-                              nsIRunnable* aLoadFailedRunnable);
+  ServiceWorkerInfo*
+  GetActiveWorkerInfoForScope(const OriginAttributes& aOriginAttributes,
+                              const nsACString& aScope);
+
+  ServiceWorkerInfo*
+  GetActiveWorkerInfoForDocument(nsIDocument* aDocument);
 
   void
   InvalidateServiceWorkerRegistrationWorker(ServiceWorkerRegistrationInfo* aRegistration,

@@ -2272,7 +2272,7 @@ HttpBaseChannel::ShouldIntercept()
   nsCOMPtr<nsINetworkInterceptController> controller;
   GetCallback(controller);
   bool shouldIntercept = false;
-  if (controller && !mForceNoIntercept) {
+  if (controller && !mForceNoIntercept && mLoadInfo) {
     nsContentPolicyType type = mLoadInfo->InternalContentPolicyType();
     nsresult rv = controller->ShouldPrepareForIntercept(mURI,
                                                         IsNavigation(),

@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-__version__ = '0.20'
+__version__ = '1.0.0'
 
 from .marionette_test import MarionetteTestCase, MarionetteJSTestCase, CommonTestCase, expectedFailure, skip, SkipTest
 from .runner import (

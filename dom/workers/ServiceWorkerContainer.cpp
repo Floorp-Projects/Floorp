@@ -240,7 +240,6 @@ ServiceWorkerContainer::GetController()
     //       thread running, but it seems our design does not expect that.
     nsCOMPtr<nsISupports> serviceWorker;
     rv = swm->GetDocumentController(GetOwner(),
-                                    nullptr, // aLoadFailedRunnable
                                     getter_AddRefs(serviceWorker));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return nullptr;

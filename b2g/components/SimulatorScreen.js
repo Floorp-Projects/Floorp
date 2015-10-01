@@ -62,13 +62,13 @@ function hookScreen(window) {
   };
 
   Object.defineProperty(screen, 'width', {
-    get: function () GlobalSimulatorScreen.width
+    get: () => GlobalSimulatorScreen.width
   });
   Object.defineProperty(screen, 'height', {
-    get: function () GlobalSimulatorScreen.height
+    get: () => GlobalSimulatorScreen.height
   });
   Object.defineProperty(screen, 'mozOrientation', {
-    get: function () GlobalSimulatorScreen.mozOrientation
+    get: () => GlobalSimulatorScreen.mozOrientation
   });
 }
 

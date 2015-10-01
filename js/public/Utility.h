@@ -128,7 +128,7 @@ extern JS_PUBLIC_DATA(uint32_t) targetThread;
 static inline bool
 OOMThreadCheck()
 {
-    return (!js::oom::targetThread 
+    return (!js::oom::targetThread
             || js::oom::targetThread == js::oom::GetThreadType());
 }
 
@@ -435,15 +435,15 @@ namespace JS {
 template<typename T>
 struct DeletePolicy
 {
-    void operator()(T* ptr) {
-        js_delete(ptr);
+    void operator()(const T* ptr) {
+        js_delete(const_cast<T*>(ptr));
     }
 };
 
 struct FreePolicy
 {
-    void operator()(void* ptr) {
-        js_free(ptr);
+    void operator()(const void* ptr) {
+        js_free(const_cast<void*>(ptr));
     }
 };
 

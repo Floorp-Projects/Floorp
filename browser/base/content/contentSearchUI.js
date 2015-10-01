@@ -673,12 +673,10 @@ ContentSearchUIController.prototype = {
     return row;
   },
 
-  // Converts favicon array buffer into data URI of the right size and dpi.
+  // Converts favicon array buffer into a data URI.
   _getFaviconURIFromBuffer: function (buffer) {
     let blob = new Blob([buffer]);
-    let dpiSize = Math.round(16 * window.devicePixelRatio);
-    let sizeStr = dpiSize + "," + dpiSize;
-    return URL.createObjectURL(blob) + "#-moz-resolution=" + sizeStr;
+    return URL.createObjectURL(blob);
   },
 
   // Adds "@2x" to the name of the given PNG url for "retina" screens.

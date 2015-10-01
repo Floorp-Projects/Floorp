@@ -91,10 +91,6 @@ var FavIcons = {
       tabImage = this._favIconService.getFaviconLinkForIcon(tabImageURI).spec;
     }
 
-    if (tabImage) {
-      tabImage = PlacesUtils.getImageURLForResolution(window, tabImage);
-    }
-
     callback(tabImage);
   },
 
@@ -107,8 +103,7 @@ var FavIcons = {
     let {currentURI} = tab.linkedBrowser;
     this._favIconService.getFaviconURLForPage(currentURI, function (uri) {
       if (uri) {
-        let icon = PlacesUtils.getImageURLForResolution(window,
-                     this._favIconService.getFaviconLinkForIcon(uri).spec);
+        let icon = this._favIconService.getFaviconLinkForIcon(uri).spec;
         callback(icon);
       } else {
         callback(this.defaultFavicon);

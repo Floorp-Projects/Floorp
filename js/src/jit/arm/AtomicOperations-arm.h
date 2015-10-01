@@ -181,6 +181,32 @@ js::jit::AtomicOperations::fetchXorSeqCst(T* addr, T val)
 # endif
 }
 
+template<typename T>
+inline T
+js::jit::AtomicOperations::loadSafeWhenRacy(T* addr)
+{
+    return *addr;               // FIXME (1208663): not yet safe
+}
+
+template<typename T>
+inline void
+js::jit::AtomicOperations::storeSafeWhenRacy(T* addr, T val)
+{
+    *addr = val;                // FIXME (1208663): not yet safe
+}
+
+inline void
+js::jit::AtomicOperations::memcpySafeWhenRacy(void* dest, const void* src, size_t nbytes)
+{
+    memcpy(dest, src, nbytes); // FIXME (1208663): not yet safe
+}
+
+inline void
+js::jit::AtomicOperations::memmoveSafeWhenRacy(void* dest, const void* src, size_t nbytes)
+{
+    memmove(dest, src, nbytes); // FIXME (1208663): not yet safe
+}
+
 template<size_t nbytes>
 inline void
 js::jit::RegionLock::acquire(void* addr)

@@ -123,5 +123,5 @@ function run_test()
   );
 
   // Run the tests.
-  tests.forEach(function(test) test());
+  tests.forEach(test => test());
 }

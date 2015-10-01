@@ -589,7 +589,7 @@ add_task(function test_clone_readonly()
   // A write statement should fail here.
   let stmt = db2.createStatement("INSERT INTO test (name) VALUES (:name)");
   stmt.params.name = "reed";
-  expectError(Cr.NS_ERROR_FILE_READ_ONLY, function() stmt.execute());
+  expectError(Cr.NS_ERROR_FILE_READ_ONLY, () => stmt.execute());
   stmt.finalize();
 
   // And a read statement should succeed.
@@ -614,7 +614,7 @@ add_task(function test_clone_shared_readonly()
   //      for.  Our IDL comments will have to be updated when this starts to
   //      work again.
   stmt.execute();
-  // expectError(Components.results.NS_ERROR_FILE_READ_ONLY, function() stmt.execute());
+  // expectError(Components.results.NS_ERROR_FILE_READ_ONLY, () => stmt.execute());
   stmt.finalize();
 
   // And a read statement should succeed.
@@ -635,7 +635,7 @@ add_task(function test_close_clone_fails()
   calls.forEach(function(methodName) {
     let db = getService()[methodName](getTestDB());
     db.close();
-    expectError(Cr.NS_ERROR_NOT_INITIALIZED, function() db.clone());
+    expectError(Cr.NS_ERROR_NOT_INITIALIZED, () => db.clone());
   });
 });
 
@@ -643,7 +643,7 @@ add_task(function test_memory_clone_fails()
 {
   let db = getService().openSpecialDatabase("memory");
   db.close();
-  expectError(Cr.NS_ERROR_NOT_INITIALIZED, function() db.clone());
+  expectError(Cr.NS_ERROR_NOT_INITIALIZED, () => db.clone());
 });
 
 add_task(function test_clone_copies_functions()
@@ -663,9 +663,9 @@ add_task(function test_clone_copies_functions()
         let db1 = getService()[methodName](getTestDB());
         // Create a function for db1.
         db1[functionMethod](FUNC_NAME, 1, {
-          onFunctionCall: function() 0,
-          onStep: function() 0,
-          onFinal: function() 0,
+          onFunctionCall: () => 0,
+          onStep: () => 0,
+          onFinal: () => 0,
         });
 
         // Clone it, and make sure the function exists still.
@@ -693,7 +693,7 @@ add_task(function test_clone_copies_overridden_functions()
     onStep: function() {
       this.called = true;
     },
-    onFinal: function() 0,
+    onFinal: () => 0,
   };
 
   let calls = [

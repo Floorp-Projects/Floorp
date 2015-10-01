@@ -150,8 +150,6 @@ using namespace mozilla::image;
 using namespace mozilla::ipc;
 using namespace mozilla::layers;
 
-namespace mgfx = mozilla::gfx;
-
 namespace mozilla {
 namespace dom {
 
@@ -295,10 +293,10 @@ public:
 
   AdjustedTargetForFilter(CanvasRenderingContext2D *ctx,
                           DrawTarget *aFinalTarget,
-                          const mgfx::IntPoint& aFilterSpaceToTargetOffset,
-                          const mgfx::IntRect& aPreFilterBounds,
-                          const mgfx::IntRect& aPostFilterBounds,
-                          mgfx::CompositionOp aCompositionOp)
+                          const gfx::IntPoint& aFilterSpaceToTargetOffset,
+                          const gfx::IntRect& aPreFilterBounds,
+                          const gfx::IntRect& aPostFilterBounds,
+                          gfx::CompositionOp aCompositionOp)
     : mCtx(nullptr)
     , mCompositionOp(aCompositionOp)
   {
@@ -346,7 +344,7 @@ public:
 
   // Return a SourceSurface that contains the FillPaint or StrokePaint source.
   already_AddRefed<SourceSurface>
-  DoSourcePaint(mgfx::IntRect& aRect, CanvasRenderingContext2D::Style aStyle)
+  DoSourcePaint(gfx::IntRect& aRect, CanvasRenderingContext2D::Style aStyle)
   {
     if (aRect.IsEmpty()) {
       return nullptr;
@@ -365,8 +363,8 @@ public:
     dt->SetTransform(transform);
 
     if (transform.Invert()) {
-      mgfx::Rect dtBounds(0, 0, aRect.width, aRect.height);
-      mgfx::Rect fillRect = transform.TransformBounds(dtBounds);
+      gfx::Rect dtBounds(0, 0, aRect.width, aRect.height);
+      gfx::Rect fillRect = transform.TransformBounds(dtBounds);
       dt->FillRect(fillRect, CanvasGeneralPattern().ForStyle(mCtx, aStyle, dt));
     }
     return dt->Snapshot();
@@ -388,9 +386,9 @@ public:
     AutoRestoreTransform autoRestoreTransform(mFinalTarget);
     mFinalTarget->SetTransform(Matrix());
 
-    mgfx::FilterSupport::RenderFilterDescription(
+    gfx::FilterSupport::RenderFilterDescription(
       mFinalTarget, mCtx->CurrentState().filter,
-      mgfx::Rect(mPostFilterBounds),
+      gfx::Rect(mPostFilterBounds),
       snapshot, mSourceGraphicRect,
       fillPaint, mFillPaintRect,
       strokePaint, mStrokePaintRect,
@@ -408,12 +406,12 @@ private:
   RefPtr<DrawTarget> mTarget;
   RefPtr<DrawTarget> mFinalTarget;
   CanvasRenderingContext2D *mCtx;
-  mgfx::IntRect mSourceGraphicRect;
-  mgfx::IntRect mFillPaintRect;
-  mgfx::IntRect mStrokePaintRect;
-  mgfx::IntRect mPostFilterBounds;
-  mgfx::IntPoint mOffset;
-  mgfx::CompositionOp mCompositionOp;
+  gfx::IntRect mSourceGraphicRect;
+  gfx::IntRect mFillPaintRect;
+  gfx::IntRect mStrokePaintRect;
+  gfx::IntRect mPostFilterBounds;
+  gfx::IntPoint mOffset;
+  gfx::CompositionOp mCompositionOp;
 };
 
 /* This is an RAII based class that can be used as a drawtarget for
@@ -427,8 +425,8 @@ public:
 
   AdjustedTargetForShadow(CanvasRenderingContext2D *ctx,
                           DrawTarget *aFinalTarget,
-                          const mgfx::Rect& aBounds,
-                          mgfx::CompositionOp aCompositionOp)
+                          const gfx::Rect& aBounds,
+                          gfx::CompositionOp aCompositionOp)
     : mCtx(nullptr)
     , mCompositionOp(aCompositionOp)
   {
@@ -439,7 +437,7 @@ public:
 
     mSigma = state.ShadowBlurSigma();
 
-    mgfx::Rect bounds = aBounds;
+    gfx::Rect bounds = aBounds;
 
     int32_t blurRadius = state.ShadowBlurRadius();
 
@@ -486,7 +484,7 @@ public:
     return mTarget;
   }
 
-  mgfx::IntPoint OffsetToFinalDT()
+  gfx::IntPoint OffsetToFinalDT()
   {
     return mTempRect.TopLeft();
   }
@@ -496,8 +494,8 @@ private:
   RefPtr<DrawTarget> mFinalTarget;
   CanvasRenderingContext2D *mCtx;
   Float mSigma;
-  mgfx::IntRect mTempRect;
-  mgfx::CompositionOp mCompositionOp;
+  gfx::IntRect mTempRect;
+  gfx::CompositionOp mCompositionOp;
 };
 
 /* This is an RAII based class that can be used as a drawtarget for
@@ -517,7 +515,7 @@ public:
   typedef CanvasRenderingContext2D::ContextState ContextState;
 
   explicit AdjustedTarget(CanvasRenderingContext2D* ctx,
-                          const mgfx::Rect *aBounds = nullptr)
+                          const gfx::Rect *aBounds = nullptr)
   {
     mTarget = ctx->mTarget;
 
@@ -527,21 +525,21 @@ public:
     // calculate what their maximum required bounds would need to be if we
     // were to fill the whole canvas. Everything outside those bounds we don't
     // need to render.
-    mgfx::Rect r(0, 0, ctx->mWidth, ctx->mHeight);
-    mgfx::Rect maxSourceNeededBoundsForShadow =
+    gfx::Rect r(0, 0, ctx->mWidth, ctx->mHeight);
+    gfx::Rect maxSourceNeededBoundsForShadow =
       MaxSourceNeededBoundsForShadow(r, ctx);
-    mgfx::Rect maxSourceNeededBoundsForFilter =
+    gfx::Rect maxSourceNeededBoundsForFilter =
       MaxSourceNeededBoundsForFilter(maxSourceNeededBoundsForShadow, ctx);
 
-    mgfx::Rect bounds = maxSourceNeededBoundsForFilter;
+    gfx::Rect bounds = maxSourceNeededBoundsForFilter;
     if (aBounds) {
       bounds = bounds.Intersect(*aBounds);
     }
-    mgfx::Rect boundsAfterFilter = BoundsAfterFilter(bounds, ctx);
+    gfx::Rect boundsAfterFilter = BoundsAfterFilter(bounds, ctx);
 
     mozilla::gfx::CompositionOp op = ctx->CurrentState().op;
 
-    mgfx::IntPoint offsetToFinalDT;
+    gfx::IntPoint offsetToFinalDT;
 
     // First set up the shadow draw target, because the shadow goes outside.
     // It applies to the post-filter results, if both a filter and a shadow
@@ -554,20 +552,20 @@ public:
 
       // If we also have a filter, the filter needs to be drawn with OP_OVER
       // because shadow drawing already applies op on the result.
-      op = mgfx::CompositionOp::OP_OVER;
+      op = gfx::CompositionOp::OP_OVER;
     }
 
     // Now set up the filter draw target.
     if (ctx->NeedToApplyFilter()) {
       bounds.RoundOut();
 
-      mgfx::IntRect intBounds;
+      gfx::IntRect intBounds;
       if (!bounds.ToIntRect(&intBounds)) {
         return;
       }
       mFilterTarget = MakeUnique<AdjustedTargetForFilter>(
         ctx, mTarget, offsetToFinalDT, intBounds,
-        mgfx::RoundedToInt(boundsAfterFilter), op);
+        gfx::RoundedToInt(boundsAfterFilter), op);
       mTarget = mFilterTarget->DT();
     }
   }
@@ -592,8 +590,8 @@ public:
 
 private:
 
-  mgfx::Rect
-  MaxSourceNeededBoundsForFilter(const mgfx::Rect& aDestBounds, CanvasRenderingContext2D *ctx)
+  gfx::Rect
+  MaxSourceNeededBoundsForFilter(const gfx::Rect& aDestBounds, CanvasRenderingContext2D *ctx)
   {
     if (!ctx->NeedToApplyFilter()) {
       return aDestBounds;
@@ -604,21 +602,21 @@ private:
     nsIntRegion strokePaintNeededRegion;
 
     FilterSupport::ComputeSourceNeededRegions(
-      ctx->CurrentState().filter, mgfx::RoundedToInt(aDestBounds),
+      ctx->CurrentState().filter, gfx::RoundedToInt(aDestBounds),
       sourceGraphicNeededRegion, fillPaintNeededRegion, strokePaintNeededRegion);
 
-    return mgfx::Rect(sourceGraphicNeededRegion.GetBounds());
+    return gfx::Rect(sourceGraphicNeededRegion.GetBounds());
   }
 
-  mgfx::Rect
-  MaxSourceNeededBoundsForShadow(const mgfx::Rect& aDestBounds, CanvasRenderingContext2D *ctx)
+  gfx::Rect
+  MaxSourceNeededBoundsForShadow(const gfx::Rect& aDestBounds, CanvasRenderingContext2D *ctx)
   {
     if (!ctx->NeedToDrawShadow()) {
       return aDestBounds;
     }
 
     const ContextState &state = ctx->CurrentState();
-    mgfx::Rect sourceBounds = aDestBounds - state.shadowOffset;
+    gfx::Rect sourceBounds = aDestBounds - state.shadowOffset;
     sourceBounds.Inflate(state.ShadowBlurRadius());
 
     // Union the shadow source with the original rect because we're going to
@@ -626,25 +624,25 @@ private:
     return sourceBounds.Union(aDestBounds);
   }
 
-  mgfx::Rect
-  BoundsAfterFilter(const mgfx::Rect& aBounds, CanvasRenderingContext2D *ctx)
+  gfx::Rect
+  BoundsAfterFilter(const gfx::Rect& aBounds, CanvasRenderingContext2D *ctx)
   {
     if (!ctx->NeedToApplyFilter()) {
       return aBounds;
     }
 
-    mgfx::Rect bounds(aBounds);
+    gfx::Rect bounds(aBounds);
     bounds.RoundOut();
 
-    mgfx::IntRect intBounds;
+    gfx::IntRect intBounds;
     if (!bounds.ToIntRect(&intBounds)) {
-      return mgfx::Rect();
+      return gfx::Rect();
     }
 
     nsIntRegion extents =
-      mgfx::FilterSupport::ComputePostFilterExtents(ctx->CurrentState().filter,
-                                                    intBounds);
-    return mgfx::Rect(extents.GetBounds());
+      gfx::FilterSupport::ComputePostFilterExtents(ctx->CurrentState().filter,
+                                                   intBounds);
+    return gfx::Rect(extents.GetBounds());
   }
 
   RefPtr<DrawTarget> mTarget;
@@ -1138,7 +1136,7 @@ CanvasRenderingContext2D::Redraw()
 }
 
 void
-CanvasRenderingContext2D::Redraw(const mgfx::Rect &r)
+CanvasRenderingContext2D::Redraw(const gfx::Rect &r)
 {
   mIsCapturedFrameInvalid = true;
 
@@ -1186,8 +1184,7 @@ CanvasRenderingContext2D::RedrawUser(const gfxRect& r)
     return;
   }
 
-  mgfx::Rect newr =
-    mTarget->GetTransform().TransformBounds(ToRect(r));
+  gfx::Rect newr = mTarget->GetTransform().TransformBounds(ToRect(r));
   Redraw(newr);
 }
 
@@ -1234,7 +1231,7 @@ bool CanvasRenderingContext2D::SwitchRenderingMode(RenderingMode aRenderingMode)
   mRenderingMode = attemptedMode;
 
   // Restore the content from the old DrawTarget
-  mgfx::Rect r(0, 0, mWidth, mHeight);
+  gfx::Rect r(0, 0, mWidth, mHeight);
   mTarget->DrawSurface(snapshot, r, r);
 
   // Restore the clips and transform
@@ -1449,15 +1446,15 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
       JS_updateMallocCounter(context, mWidth * mHeight * 4);
     }
 
-    mTarget->ClearRect(mgfx::Rect(Point(0, 0), Size(mWidth, mHeight)));
-    if (mTarget->GetBackendType() == mgfx::BackendType::CAIRO) {
+    mTarget->ClearRect(gfx::Rect(Point(0, 0), Size(mWidth, mHeight)));
+    if (mTarget->GetBackendType() == gfx::BackendType::CAIRO) {
       // Cairo doesn't play well with huge clips. When given a very big clip it
       // will try to allocate big mask surface without taking the target
       // size into account which can cause OOM. See bug 1034593.
       // This limits the clip extents to the size of the canvas.
       // A fix in Cairo would probably be preferable, but requires somewhat
       // invasive changes.
-      mTarget->PushClipRect(mgfx::Rect(Point(0, 0), Size(mWidth, mHeight)));
+      mTarget->PushClipRect(gfx::Rect(Point(0, 0), Size(mWidth, mHeight)));
     }
     // Force a full layer transaction since we didn't have a layer before
     // and now we might need one.
@@ -1580,9 +1577,9 @@ CanvasRenderingContext2D::InitializeWithSurface(nsIDocShell *shell,
     mTarget = sErrorTarget;
   }
 
-  if (mTarget->GetBackendType() == mgfx::BackendType::CAIRO) {
+  if (mTarget->GetBackendType() == gfx::BackendType::CAIRO) {
     // Cf comment in EnsureTarget
-    mTarget->PushClipRect(mgfx::Rect(Point(0, 0), Size(mWidth, mHeight)));
+    mTarget->PushClipRect(gfx::Rect(Point(0, 0), Size(mWidth, mHeight)));
   }
 
   return NS_OK;
@@ -2520,7 +2517,7 @@ CanvasRenderingContext2D::ClearRect(double x, double y, double w,
 
   EnsureTarget();
 
-  mTarget->ClearRect(mgfx::Rect(x, y, w, h));
+  mTarget->ClearRect(gfx::Rect(x, y, w, h));
 
   RedrawUser(gfxRect(x, y, w, h));
 }
@@ -2579,16 +2576,16 @@ CanvasRenderingContext2D::FillRect(double x, double y, double w,
     }
   }
 
-  mgfx::Rect bounds;
+  gfx::Rect bounds;
 
   EnsureTarget();
   if (NeedToCalculateBounds()) {
-    bounds = mgfx::Rect(x, y, w, h);
+    bounds = gfx::Rect(x, y, w, h);
     bounds = mTarget->GetTransform().TransformBounds(bounds);
   }
 
   AdjustedTarget(this, bounds.IsEmpty() ? nullptr : &bounds)->
-    FillRect(mgfx::Rect(x, y, w, h),
+    FillRect(gfx::Rect(x, y, w, h),
              CanvasGeneralPattern().ForStyle(this, Style::FILL, mTarget),
              DrawOptions(state.globalAlpha, UsedOperation()));
 
@@ -2601,7 +2598,7 @@ CanvasRenderingContext2D::StrokeRect(double x, double y, double w,
 {
   const ContextState &state = CurrentState();
 
-  mgfx::Rect bounds;
+  gfx::Rect bounds;
 
   if (!w && !h) {
     return;
@@ -2614,8 +2611,8 @@ CanvasRenderingContext2D::StrokeRect(double x, double y, double w,
   }
 
   if (NeedToCalculateBounds()) {
-    bounds = mgfx::Rect(x - state.lineWidth / 2.0f, y - state.lineWidth / 2.0f,
-                        w + state.lineWidth, h + state.lineWidth);
+    bounds = gfx::Rect(x - state.lineWidth / 2.0f, y - state.lineWidth / 2.0f,
+                       w + state.lineWidth, h + state.lineWidth);
     bounds = mTarget->GetTransform().TransformBounds(bounds);
   }
 
@@ -2654,14 +2651,14 @@ CanvasRenderingContext2D::StrokeRect(double x, double y, double w,
   }
 
   AdjustedTarget(this, bounds.IsEmpty() ? nullptr : &bounds)->
-    StrokeRect(mgfx::Rect(x, y, w, h),
-                CanvasGeneralPattern().ForStyle(this, Style::STROKE, mTarget),
-                StrokeOptions(state.lineWidth, state.lineJoin,
-                              state.lineCap, state.miterLimit,
-                              state.dash.Length(),
-                              state.dash.Elements(),
-                              state.dashOffset),
-                DrawOptions(state.globalAlpha, UsedOperation()));
+    StrokeRect(gfx::Rect(x, y, w, h),
+               CanvasGeneralPattern().ForStyle(this, Style::STROKE, mTarget),
+               StrokeOptions(state.lineWidth, state.lineJoin,
+                             state.lineCap, state.miterLimit,
+                             state.dash.Length(),
+                             state.dash.Elements(),
+                             state.dashOffset),
+               DrawOptions(state.globalAlpha, UsedOperation()));
 
   Redraw();
 }
@@ -2688,7 +2685,7 @@ CanvasRenderingContext2D::Fill(const CanvasWindingRule& winding)
     return;
   }
 
-  mgfx::Rect bounds;
+  gfx::Rect bounds;
 
   if (NeedToCalculateBounds()) {
     bounds = mPath->GetBounds(mTarget->GetTransform());
@@ -2711,7 +2708,7 @@ void CanvasRenderingContext2D::Fill(const CanvasPath& path, const CanvasWindingR
     return;
   }
 
-  mgfx::Rect bounds;
+  gfx::Rect bounds;
 
   if (NeedToCalculateBounds()) {
     bounds = gfxpath->GetBounds(mTarget->GetTransform());
@@ -2740,7 +2737,7 @@ CanvasRenderingContext2D::Stroke()
                               state.dash.Length(), state.dash.Elements(),
                               state.dashOffset);
 
-  mgfx::Rect bounds;
+  gfx::Rect bounds;
   if (NeedToCalculateBounds()) {
     bounds =
       mPath->GetStrokedBounds(strokeOptions, mTarget->GetTransform());
@@ -2771,7 +2768,7 @@ CanvasRenderingContext2D::Stroke(const CanvasPath& path)
                               state.dash.Length(), state.dash.Elements(),
                               state.dashOffset);
 
-  mgfx::Rect bounds;
+  gfx::Rect bounds;
   if (NeedToCalculateBounds()) {
     bounds =
       gfxpath->GetStrokedBounds(strokeOptions, mTarget->GetTransform());
@@ -3337,7 +3334,7 @@ CanvasRenderingContext2D::AddHitRegion(const HitRegionOptions& options, ErrorRes
   }
 
   // get the bounds of the current path. They are relative to the canvas
-  mgfx::Rect bounds(path->GetBounds(mTarget->GetTransform()));
+  gfx::Rect bounds(path->GetBounds(mTarget->GetTransform()));
   if ((bounds.width == 0) || (bounds.height == 0) || !bounds.IsFinite()) {
     // The specified region has no pixels.
     error.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
@@ -3401,7 +3398,7 @@ CanvasRenderingContext2D::GetHitRegionRect(Element* aElement, nsRect& aRect)
   for (unsigned int x = 0; x < mHitRegionsOptions.Length(); x++) {
     RegionInfo& info = mHitRegionsOptions[x];
     if (info.mElement == aElement) {
-      mgfx::Rect bounds(info.mPath->GetBounds());
+      gfx::Rect bounds(info.mPath->GetBounds());
       gfxRect rect(bounds.x, bounds.y, bounds.width, bounds.height);
       aRect = nsLayoutUtils::RoundGfxRectToAppRect(rect, AppUnitsPerCSSPixel());
 
@@ -4253,11 +4250,11 @@ bool CanvasRenderingContext2D::IsPointInStroke(const CanvasPath& mPath, double x
 // On entry, aSourceRect is relative to aSurface, and on return aSourceRect is
 // relative to the returned surface.
 static already_AddRefed<SourceSurface>
-ExtractSubrect(SourceSurface* aSurface, mgfx::Rect* aSourceRect, DrawTarget* aTargetDT)
+ExtractSubrect(SourceSurface* aSurface, gfx::Rect* aSourceRect, DrawTarget* aTargetDT)
 {
-  mgfx::Rect roundedOutSourceRect = *aSourceRect;
+  gfx::Rect roundedOutSourceRect = *aSourceRect;
   roundedOutSourceRect.RoundOut();
-  mgfx::IntRect roundedOutSourceRectInt;
+  gfx::IntRect roundedOutSourceRectInt;
   if (!roundedOutSourceRect.ToIntRect(&roundedOutSourceRectInt)) {
     RefPtr<SourceSurface> surface(aSurface);
     return surface.forget();
@@ -4599,19 +4596,19 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& image,
   Filter filter;
 
   if (CurrentState().imageSmoothingEnabled)
-    filter = mgfx::Filter::LINEAR;
+    filter = gfx::Filter::LINEAR;
   else
-    filter = mgfx::Filter::POINT;
+    filter = gfx::Filter::POINT;
 
-  mgfx::Rect bounds;
+  gfx::Rect bounds;
 
   if (NeedToCalculateBounds()) {
-    bounds = mgfx::Rect(dx, dy, dw, dh);
+    bounds = gfx::Rect(dx, dy, dw, dh);
     bounds = mTarget->GetTransform().TransformBounds(bounds);
   }
 
   if (srcSurf) {
-    mgfx::Rect sourceRect(sx, sy, sw, sh);
+    gfx::Rect sourceRect(sx, sy, sw, sh);
     if (element == mCanvasElement) {
       // srcSurf is a snapshot of mTarget. If we draw to mTarget now, we'll
       // trigger a COW copy of the whole canvas into srcSurf. That's a huge
@@ -4622,14 +4619,14 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& image,
     }
     AdjustedTarget(this, bounds.IsEmpty() ? nullptr : &bounds)->
       DrawSurface(srcSurf,
-                  mgfx::Rect(dx, dy, dw, dh),
+                  gfx::Rect(dx, dy, dw, dh),
                   sourceRect,
                   DrawSurfaceOptions(filter),
                   DrawOptions(CurrentState().globalAlpha, UsedOperation()));
   } else {
     DrawDirectlyToCanvas(drawInfo, &bounds,
-                         mgfx::Rect(dx, dy, dw, dh),
-                         mgfx::Rect(sx, sy, sw, sh),
+                         gfx::Rect(dx, dy, dw, dh),
+                         gfx::Rect(sx, sy, sw, sh),
                          imgSize);
   }
 
@@ -4639,9 +4636,9 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& image,
 void
 CanvasRenderingContext2D::DrawDirectlyToCanvas(
                           const nsLayoutUtils::DirectDrawInfo& image,
-                          mgfx::Rect* bounds,
-                          mgfx::Rect dest,
-                          mgfx::Rect src,
+                          gfx::Rect* bounds,
+                          gfx::Rect dest,
+                          gfx::Rect src,
                           gfx::IntSize imgSize)
 {
   MOZ_ASSERT(src.width > 0 && src.height > 0,
@@ -4908,10 +4905,10 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& window, double x,
       return;
     }
 
-    mgfx::Rect destRect(0, 0, w, h);
-    mgfx::Rect sourceRect(0, 0, sw, sh);
+    gfx::Rect destRect(0, 0, w, h);
+    gfx::Rect sourceRect(0, 0, sw, sh);
     mTarget->DrawSurface(source, destRect, sourceRect,
-                         DrawSurfaceOptions(mgfx::Filter::POINT),
+                         DrawSurfaceOptions(gfx::Filter::POINT),
                          DrawOptions(GlobalAlpha(), CompositionOp::OP_OVER,
                                      AntialiasMode::NONE));
     mTarget->Flush();
@@ -5049,9 +5046,9 @@ CanvasRenderingContext2D::DrawWidgetAsOnScreen(nsGlobalWindow& aWindow,
     return;
   }
 
-  mgfx::Rect sourceRect(mgfx::Point(0, 0), mgfx::Size(snapshot->GetSize()));
+  gfx::Rect sourceRect(gfx::Point(0, 0), gfx::Size(snapshot->GetSize()));
   mTarget->DrawSurface(snapshot, sourceRect, sourceRect,
-                       DrawSurfaceOptions(mgfx::Filter::POINT),
+                       DrawSurfaceOptions(gfx::Filter::POINT),
                        DrawOptions(GlobalAlpha(), CompositionOp::OP_OVER,
                                    AntialiasMode::NONE));
   mTarget->Flush();
@@ -5466,7 +5463,7 @@ CanvasRenderingContext2D::PutImageData_explicit(int32_t x, int32_t y, uint32_t w
                                dirtyRect.width, dirtyRect.height),
                        IntPoint(dirtyRect.x, dirtyRect.y));
 
-  Redraw(mgfx::Rect(dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height));
+  Redraw(gfx::Rect(dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height));
 
   return NS_OK;
 }

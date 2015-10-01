@@ -8,7 +8,7 @@ PATH=$DIRNAME:$PATH
 . desktop-setup.sh
 
 ### Clone gaia
-pull-gaia.sh $GECKO_DIR $GAIA_DIR
+pull-gaia.sh $GECKO_DIR $GAIA_DIR gaia_props.py
 
 # Ensure symlink has been created to gaia...
 rm -f $GECKO_DIR/gaia

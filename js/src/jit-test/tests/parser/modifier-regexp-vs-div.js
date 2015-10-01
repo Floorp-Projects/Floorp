@@ -1,6 +1,6 @@
 load(libdir + "syntax.js");
 
-var repl_expr_flags = [
+var postfixes = [
   "/bar/g; @",
   "\n/bar/g; @",
 ];
@@ -9,4 +9,4 @@ function check_syntax_error(e, code) {
   assertEq(e instanceof SyntaxError, true);
 }
 
-test_syntax(repl_expr_flags, check_syntax_error, true);
+test_syntax(postfixes, check_syntax_error, true);

@@ -383,8 +383,6 @@ public:
   // Adjust the speed of the playback, optionally with pitch correction,
   virtual void SetVolume(double aVolume);
 
-  virtual void NotifyWaitingForResourcesStatusChanged() override;
-
   virtual void SetPlaybackRate(double aPlaybackRate);
   void SetPreservesPitch(bool aPreservesPitch);
 

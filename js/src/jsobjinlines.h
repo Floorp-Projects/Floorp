@@ -568,50 +568,6 @@ HasObjectValueOf(JSObject* obj, JSContext* cx)
     return IsNativeFunction(v, obj_valueOf);
 }
 
-/* ES5 9.1 ToPrimitive(input). */
-MOZ_ALWAYS_INLINE bool
-ToPrimitive(JSContext* cx, MutableHandleValue vp)
-{
-    if (vp.isPrimitive())
-        return true;
-
-    JSObject* obj = &vp.toObject();
-
-    /* Optimize new String(...).valueOf(). */
-    if (obj->is<StringObject>()) {
-        jsid id = NameToId(cx->names().valueOf);
-        StringObject* nobj = &obj->as<StringObject>();
-        if (ClassMethodIsNative(cx, nobj, &StringObject::class_, id, str_toString)) {
-            vp.setString(nobj->unbox());
-            return true;
-        }
-    }
-
-    /* Optimize new Number(...).valueOf(). */
-    if (obj->is<NumberObject>()) {
-        jsid id = NameToId(cx->names().valueOf);
-        NumberObject* nobj = &obj->as<NumberObject>();
-        if (ClassMethodIsNative(cx, nobj, &NumberObject::class_, id, num_valueOf)) {
-            vp.setNumber(nobj->unbox());
-            return true;
-        }
-    }
-
-    RootedObject objRoot(cx, obj);
-    return ToPrimitive(cx, objRoot, JSTYPE_VOID, vp);
-}
-
-/* ES5 9.1 ToPrimitive(input, PreferredType). */
-MOZ_ALWAYS_INLINE bool
-ToPrimitive(JSContext* cx, JSType preferredType, MutableHandleValue vp)
-{
-    MOZ_ASSERT(preferredType != JSTYPE_VOID); /* Use the other ToPrimitive! */
-    if (vp.isPrimitive())
-        return true;
-    RootedObject obj(cx, &vp.toObject());
-    return ToPrimitive(cx, obj, preferredType, vp);
-}
-
 /* ES6 draft rev 28 (2014 Oct 14) 7.1.14 */
 inline bool
 ToPropertyKey(JSContext* cx, Value argument, MutableHandleId result)

@@ -928,6 +928,105 @@ class Marionette(object):
             for perm in original_perms:
                 self.push_permission(perm, original_perms[perm])
 
+    def get_pref(self, pref):
+        '''Gets the preference value.
+
+        :param pref: Name of the preference.
+
+        Usage example::
+
+          marionette.get_pref('browser.tabs.warnOnClose')
+
+        '''
+        with self.using_context(self.CONTEXT_CONTENT):
+            pref_value = self.execute_script("""
+                Components.utils.import("resource://gre/modules/Services.jsm");
+                let pref = arguments[0];
+                let type = Services.prefs.getPrefType(pref);
+                switch (type) {
+                    case Services.prefs.PREF_STRING:
+                        return Services.prefs.getCharPref(pref);
+                    case Services.prefs.PREF_INT:
+                        return Services.prefs.getIntPref(pref);
+                    case Services.prefs.PREF_BOOL:
+                        return Services.prefs.getBoolPref(pref);
+                    case Services.prefs.PREF_INVALID:
+                        return null;
+                }
+                """, script_args=[pref], sandbox='system')
+            return pref_value
+
+    def clear_pref(self, pref):
+        with self.using_context(self.CONTEXT_CHROME):
+            self.execute_script("""
+               Components.utils.import("resource://gre/modules/Services.jsm");
+               let pref = arguments[0];
+               Services.prefs.clearUserPref(pref);
+               """, script_args=[pref])
+
+    def set_pref(self, pref, value):
+        with self.using_context(self.CONTEXT_CHROME):
+            if value is None:
+                self.clear_pref(pref)
+                return
+
+            if isinstance(value, bool):
+                func = 'setBoolPref'
+            elif isinstance(value, (int, long)):
+                func = 'setIntPref'
+            elif isinstance(value, basestring):
+                func = 'setCharPref'
+            else:
+                raise errors.MarionetteException(
+                    "Unsupported preference type: %s" % type(value))
+
+            self.execute_script("""
+                Components.utils.import("resource://gre/modules/Services.jsm");
+                let pref = arguments[0];
+                let value = arguments[1];
+                Services.prefs.%s(pref, value);
+                """ % func, script_args=[pref, value])
+
+    def set_prefs(self, prefs):
+        '''Sets preferences.
+
+        If the value of the preference to be set is None, reset the preference
+        to its default value. If no default value exists, the preference will
+        cease to exist.
+
+        :param prefs: A dict containing one or more preferences and their values
+        to be set.
+
+        Usage example::
+
+          marionette.set_prefs({'browser.tabs.warnOnClose': True})
+
+        '''
+        for pref, value in prefs.items():
+            self.set_pref(pref, value)
+
+    @contextmanager
+    def using_prefs(self, prefs):
+        '''Sets preferences for code being executed in a `with` block,
+        and restores them on exit.
+
+        :param prefs: A dict containing one or more preferences and their values
+        to be set.
+
+        Usage example::
+
+          with marionette.using_prefs({'browser.tabs.warnOnClose': True}):
+              # ... do stuff ...
+
+        '''
+        original_prefs = {p: self.get_pref(p) for p in prefs}
+        self.set_prefs(prefs)
+
+        try:
+            yield
+        finally:
+            self.set_prefs(original_prefs)
+
     def enforce_gecko_prefs(self, prefs):
         """
         Checks if the running instance has the given prefs. If not, it will kill the
