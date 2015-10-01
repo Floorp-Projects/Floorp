@@ -47,13 +47,13 @@ this.TabCrashReporter = {
         if (!browser)
           return;
 
-        this.browserMap.set(browser, aSubject.childID);
+        this.browserMap.set(browser.permanentKey, aSubject.childID);
         break;
     }
   },
 
   submitCrashReport: function (aBrowser) {
-    let childID = this.browserMap.get(aBrowser);
+    let childID = this.browserMap.get(aBrowser.permanentKey);
     let dumpID = this.childMap.get(childID);
     if (!dumpID)
       return
@@ -79,8 +79,8 @@ this.TabCrashReporter = {
         if (!doc.documentURI.startsWith("about:tabcrashed"))
           continue;
 
-        if (this.browserMap.get(browser) == childID) {
-          this.browserMap.delete(browser);
+        if (this.browserMap.get(browser.permanentKey) == childID) {
+          this.browserMap.delete(browser.permanentKey);
           browser.contentDocument.documentElement.classList.remove("crashDumpAvailable");
           browser.contentDocument.documentElement.classList.add("crashDumpSubmitted");
         }
@@ -97,7 +97,7 @@ this.TabCrashReporter = {
     if (!this.childMap)
       return;
 
-    let dumpID = this.childMap.get(this.browserMap.get(aBrowser));
+    let dumpID = this.childMap.get(this.browserMap.get(aBrowser.permanentKey));
     if (!dumpID)
       return;
 
