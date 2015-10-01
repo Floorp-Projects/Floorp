@@ -36,6 +36,7 @@
 extern "C" {  // necessary for Leopard
   #include <fcntl.h>
   #include <mach-o/loader.h>
+  #include <mach-o/swap.h>
   #include <stdio.h>
   #include <stdlib.h>
   #include <string.h>
@@ -60,7 +61,7 @@ MachoID::MachoID(const char *path)
      crc_(0), 
      md5_context_(), 
      update_function_(NULL) {
-  strncpy(path_, path, sizeof(path_) - 1);
+  strlcpy(path_, path, sizeof(path_));
 }
 
 MachoID::MachoID(const char *path, void *memory, size_t size)
@@ -69,7 +70,7 @@ MachoID::MachoID(const char *path, void *memory, size_t size)
      crc_(0), 
      md5_context_(), 
      update_function_(NULL) {
-  strncpy(path_, path, sizeof(path_) - 1);
+  strlcpy(path_, path, sizeof(path_));
 }
 
 MachoID::~MachoID() {
@@ -260,7 +261,7 @@ bool MachoID::WalkerCB(MachoWalker *walker, load_command *cmd, off_t offset,
       return false;
 
     if (swap)
-      breakpad_swap_segment_command(&seg);
+      swap_segment_command(&seg, NXHostByteOrder());
 
     struct mach_header_64 header;
     off_t header_offset;
@@ -277,7 +278,7 @@ bool MachoID::WalkerCB(MachoWalker *walker, load_command *cmd, off_t offset,
         return false;
 
       if (swap)
-        breakpad_swap_section(&sec, 1);
+        swap_section(&sec, 1, NXHostByteOrder());
 
       // sections of type S_ZEROFILL are "virtual" and contain no data
       // in the file itself
@@ -293,7 +294,7 @@ bool MachoID::WalkerCB(MachoWalker *walker, load_command *cmd, off_t offset,
       return false;
 
     if (swap)
-      breakpad_swap_segment_command_64(&seg64);
+      breakpad_swap_segment_command_64(&seg64, NXHostByteOrder());
 
     struct mach_header_64 header;
     off_t header_offset;
@@ -310,7 +311,7 @@ bool MachoID::WalkerCB(MachoWalker *walker, load_command *cmd, off_t offset,
         return false;
 
       if (swap)
-        breakpad_swap_section_64(&sec64, 1);
+        breakpad_swap_section_64(&sec64, 1, NXHostByteOrder());
 
       // sections of type S_ZEROFILL are "virtual" and contain no data
       // in the file itself
@@ -339,7 +340,7 @@ bool MachoID::UUIDWalkerCB(MachoWalker *walker, load_command *cmd, off_t offset,
       return false;
 
     if (swap)
-      breakpad_swap_uuid_command(uuid_cmd);
+      breakpad_swap_uuid_command(uuid_cmd, NXHostByteOrder());
 
     return false;
   }
@@ -358,7 +359,7 @@ bool MachoID::IDWalkerCB(MachoWalker *walker, load_command *cmd, off_t offset,
       return false;
 
     if (swap)
-      breakpad_swap_dylib_command(dylib_cmd);
+      swap_dylib_command(dylib_cmd, NXHostByteOrder());
 
     return false;
   }
