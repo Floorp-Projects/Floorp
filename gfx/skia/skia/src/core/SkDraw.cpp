@@ -734,6 +734,16 @@ void SkDraw::drawPoints(SkCanvas::PointMode mode, size_t count,
     }
 }
 
+static inline SkPoint compute_stroke_size(const SkPaint& paint, const SkMatrix& matrix) {
+    SkASSERT(matrix.rectStaysRect());
+    SkASSERT(SkPaint::kFill_Style != paint.getStyle());
+
+    SkVector size;
+    SkPoint pt = { paint.getStrokeWidth(), paint.getStrokeWidth() };
+    matrix.mapVectors(&size, &pt, 1);
+    return SkPoint::Make(SkScalarAbs(size.fX), SkScalarAbs(size.fY));
+}
+
 static bool easy_rect_join(const SkPaint& paint, const SkMatrix& matrix,
                            SkPoint* strokeSize) {
     if (SkPaint::kMiter_Join != paint.getStrokeJoin() ||
@@ -812,12 +822,22 @@ void SkDraw::drawRect(const SkRect& rect, const SkPaint& paint) const {
     devRect.sort();
 
     // look for the quick exit, before we build a blitter
-    SkIRect ir;
-    devRect.roundOut(&ir);
+    SkRect bbox = devRect;
     if (paint.getStyle() != SkPaint::kFill_Style) {
         // extra space for hairlines
-        ir.inset(-1, -1);
+        if (paint.getStrokeWidth() == 0) {
+            bbox.outset(1, 1);
+        } else {
+            // For kStroke_RectType, strokeSize is already computed.
+            const SkPoint& ssize = (kStroke_RectType == rtype)
+                ? strokeSize
+                : compute_stroke_size(paint, *fMatrix);
+            bbox.outset(SkScalarHalf(ssize.x()), SkScalarHalf(ssize.y()));
+        }
     }
+
+    SkIRect ir;
+    bbox.roundOut(&ir);
     if (fRC->quickReject(ir)) {
         return;
     }
