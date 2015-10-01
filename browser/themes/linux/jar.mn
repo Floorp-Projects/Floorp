@@ -89,6 +89,7 @@ browser.jar:
   skin/classic/browser/update-badge-failed.svg                 (../shared/update-badge-failed.svg)
   skin/classic/browser/urlbar-arrow.png                     (../shared/urlbar-arrow.png)
   skin/classic/browser/urlbar-arrow@2x.png                  (../shared/urlbar-arrow@2x.png)
+  skin/classic/browser/webRTC-indicator.css
   skin/classic/browser/loop/menuPanel.png             (loop/menuPanel.png)
   skin/classic/browser/loop/menuPanel@2x.png          (loop/menuPanel@2x.png)
   skin/classic/browser/loop/toolbar.png               (loop/toolbar.png)
