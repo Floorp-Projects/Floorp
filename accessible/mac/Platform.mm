@@ -8,6 +8,7 @@
 
 #include "Platform.h"
 #include "ProxyAccessible.h"
+#include "mozTableAccessible.h"
 
 #include "nsAppShell.h"
 
@@ -38,7 +39,18 @@ void
 ProxyCreated(ProxyAccessible* aProxy, uint32_t)
 {
   // Pass in dummy state for now as retrieving proxy state requires IPC.
-  Class type = GetTypeFromRole(aProxy->Role());
+  // Note that we can use ProxyAccessible::IsTable* functions here because they
+  // do not use IPC calls but that might change after bug 1210477.
+  Class type;
+  if (aProxy->IsTable())
+    type = [mozTableAccessible class];
+  else if (aProxy->IsTableRow())
+    type = [mozTableRowAccessible class];
+  else if (aProxy->IsTableCell())
+    type = [mozTableCellAccessible class];
+  else
+    type = GetTypeFromRole(aProxy->Role());
+
   uintptr_t accWrap = reinterpret_cast<uintptr_t>(aProxy) | IS_PROXY;
   mozAccessible* mozWrapper = [[type alloc] initWithAccessible:accWrap];
   aProxy->SetWrapper(reinterpret_cast<uintptr_t>(mozWrapper));

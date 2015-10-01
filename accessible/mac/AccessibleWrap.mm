@@ -13,6 +13,7 @@
 #import "mozAccessible.h"
 #import "mozActionElements.h"
 #import "mozHTMLAccessible.h"
+#import "mozTableAccessible.h"
 #import "mozTextAccessible.h"
 
 using namespace mozilla;
@@ -61,6 +62,15 @@ AccessibleWrap::GetNativeType ()
 
   if (IsXULTabpanels())
     return [mozPaneAccessible class];
+
+  if (IsTable())
+    return [mozTableAccessible class];
+
+  if (IsTableRow())
+    return [mozTableRowAccessible class];
+
+  if (IsTableCell())
+    return [mozTableCellAccessible class];
 
   return GetTypeFromRole(Role());
 
