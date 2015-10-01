@@ -13447,7 +13447,7 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
     anchor->GetType(typeHint);
     NS_ConvertUTF16toUTF8 utf8Hint(typeHint);
     nsAutoCString type, dummy;
-    NS_ParseContentType(utf8Hint, type, dummy);
+    NS_ParseRequestContentType(utf8Hint, type, dummy);
     CopyUTF8toUTF16(type, typeHint);
   }
 
