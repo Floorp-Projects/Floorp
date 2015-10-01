@@ -9,7 +9,7 @@ describe("loop.OTSdkDriver", function () {
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var STREAM_PROPERTIES = loop.shared.utils.STREAM_PROPERTIES;
   var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
-  var CHAT_CONTENT_TYPES = loop.store.CHAT_CONTENT_TYPES;
+  var CHAT_CONTENT_TYPES = loop.shared.utils.CHAT_CONTENT_TYPES;
 
   var sandbox;
   var dispatcher, driver, mozLoop, publisher, sdk, session, sessionData, subscriber;
