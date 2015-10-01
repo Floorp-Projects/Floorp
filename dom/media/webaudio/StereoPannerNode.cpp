@@ -171,7 +171,7 @@ StereoPannerNode::StereoPannerNode(AudioContext* aContext)
               2,
               ChannelCountMode::Clamped_max,
               ChannelInterpretation::Speakers)
-  , mPan(new AudioParam(this, SendPanToStream, 0.f, "pan"))
+  , mPan(new AudioParam(this, StereoPannerNodeEngine::PAN, 0.f, "pan"))
 {
   StereoPannerNodeEngine* engine = new StereoPannerNodeEngine(this, aContext->Destination());
   mStream = AudioNodeStream::Create(aContext, engine,
@@ -200,13 +200,6 @@ JSObject*
 StereoPannerNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return StereoPannerNodeBinding::Wrap(aCx, this, aGivenProto);
-}
-
-void
-StereoPannerNode::SendPanToStream(AudioNode* aNode, const AudioTimelineEvent& aEvent)
-{
-  StereoPannerNode* This = static_cast<StereoPannerNode*>(aNode);
-  SendTimelineEventToStream(This, StereoPannerNodeEngine::PAN, aEvent);
 }
 
 } // namespace dom

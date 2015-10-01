@@ -580,8 +580,8 @@ AudioBufferSourceNode::AudioBufferSourceNode(AudioContext* aContext)
   , mLoopStart(0.0)
   , mLoopEnd(0.0)
   // mOffset and mDuration are initialized in Start().
-  , mPlaybackRate(new AudioParam(this, SendPlaybackRateToStream, 1.0f, "playbackRate"))
-  , mDetune(new AudioParam(this, SendDetuneToStream, 0.0f, "detune"))
+  , mPlaybackRate(new AudioParam(this, PLAYBACKRATE, 1.0f, "playbackRate"))
+  , mDetune(new AudioParam(this, DETUNE, 0.0f, "detune"))
   , mLoop(false)
   , mStartCalled(false)
 {
@@ -782,28 +782,6 @@ AudioBufferSourceNode::NotifyMainThreadStreamFinished()
   // Drop the playing reference
   // Warning: The below line might delete this.
   MarkInactive();
-}
-
-void
-AudioBufferSourceNode::SendPlaybackRateToStream(AudioNode* aNode,
-                                                const AudioTimelineEvent& aEvent)
-{
-  AudioBufferSourceNode* This = static_cast<AudioBufferSourceNode*>(aNode);
-  if (!This->mStream) {
-    return;
-  }
-  SendTimelineEventToStream(This, PLAYBACKRATE, aEvent);
-}
-
-void
-AudioBufferSourceNode::SendDetuneToStream(AudioNode* aNode,
-                                          const AudioTimelineEvent& aEvent)
-{
-  AudioBufferSourceNode* This = static_cast<AudioBufferSourceNode*>(aNode);
-  if (!This->mStream) {
-    return;
-  }
-  SendTimelineEventToStream(This, DETUNE, aEvent);
 }
 
 void
