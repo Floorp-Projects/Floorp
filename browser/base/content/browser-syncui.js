@@ -253,7 +253,7 @@ var gSyncUI = {
   doSync() {
     this._needsSetup().then(needsSetup => {
       if (!needsSetup) {
-        setTimeout(function () Weave.Service.errorHandler.syncAndReportErrors(), 0);
+        setTimeout(() => Weave.Service.errorHandler.syncAndReportErrors(), 0);
       }
       Services.obs.notifyObservers(null, "cloudsync:user-sync", null);
     }).catch(err => {

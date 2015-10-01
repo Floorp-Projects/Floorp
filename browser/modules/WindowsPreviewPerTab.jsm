@@ -315,8 +315,7 @@ PreviewController.prototype = {
   },
 
   drawPreview: function (ctx) {
-    let self = this;
-    this.win.tabbrowser.previewTab(this.tab, function () self.previewTabCallback(ctx));
+    this.win.tabbrowser.previewTab(this.tab, () => this.previewTabCallback(ctx));
 
     // We must avoid having the frame drawn around the window. See bug 520807
     return false;
@@ -749,7 +748,7 @@ this.AeroPeek = {
   }
 };
 
-XPCOMUtils.defineLazyGetter(AeroPeek, "cacheTimer", function ()
+XPCOMUtils.defineLazyGetter(AeroPeek, "cacheTimer", () =>
   Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer)
 );
 

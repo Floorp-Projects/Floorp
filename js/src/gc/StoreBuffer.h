@@ -344,48 +344,22 @@ class StoreBuffer
         void* data;
     };
 
-    bool isOkayToUseBuffer() const {
+    template <typename Buffer, typename Edge>
+    void unput(Buffer& buffer, const Edge& edge) {
         MOZ_ASSERT(!JS::shadow::Runtime::asShadowRuntime(runtime_)->isHeapBusy());
-
-        /*
-         * Disabled store buffers may not have a valid state; e.g. when stored
-         * inline in the ChunkTrailer.
-         */
+        MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
         if (!isEnabled())
-            return false;
-
-        /*
-         * The concurrent parsing thread cannot validly insert into the buffer,
-         * but it should not activate the re-entrancy guard either.
-         */
-        if (!CurrentThreadCanAccessRuntime(runtime_))
-            return false;
-
-        return true;
-    }
-
-    template <typename Buffer, typename Edge>
-    void putFromAnyThread(Buffer& buffer, const Edge& edge) {
-        if (!isOkayToUseBuffer())
-            return;
-        mozilla::ReentrancyGuard g(*this);
-        if (edge.maybeInRememberedSet(nursery_))
-            buffer.put(this, edge);
-    }
-
-    template <typename Buffer, typename Edge>
-    void unputFromAnyThread(Buffer& buffer, const Edge& edge) {
-        if (!isOkayToUseBuffer())
             return;
         mozilla::ReentrancyGuard g(*this);
         buffer.unput(this, edge);
     }
 
     template <typename Buffer, typename Edge>
-    void putFromMainThread(Buffer& buffer, const Edge& edge) {
+    void put(Buffer& buffer, const Edge& edge) {
+        MOZ_ASSERT(!JS::shadow::Runtime::asShadowRuntime(runtime_)->isHeapBusy());
+        MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
         if (!isEnabled())
             return;
-        MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
         mozilla::ReentrancyGuard g(*this);
         if (edge.maybeInRememberedSet(nursery_))
             buffer.put(this, edge);
@@ -425,26 +399,26 @@ class StoreBuffer
     bool cancelIonCompilations() const { return cancelIonCompilations_; }
 
     /* Insert a single edge into the buffer/remembered set. */
-    void putValueFromAnyThread(JS::Value* vp) { putFromAnyThread(bufferVal, ValueEdge(vp)); }
-    void unputValueFromAnyThread(JS::Value* vp) { unputFromAnyThread(bufferVal, ValueEdge(vp)); }
-    void putCellFromAnyThread(Cell** cellp) { putFromAnyThread(bufferCell, CellPtrEdge(cellp)); }
-    void unputCellFromAnyThread(Cell** cellp) { unputFromAnyThread(bufferCell, CellPtrEdge(cellp)); }
-    void putSlotFromAnyThread(NativeObject* obj, int kind, int32_t start, int32_t count) {
-        putFromAnyThread(bufferSlot, SlotsEdge(obj, kind, start, count));
+    void putValue(JS::Value* vp) { put(bufferVal, ValueEdge(vp)); }
+    void unputValue(JS::Value* vp) { unput(bufferVal, ValueEdge(vp)); }
+    void putCell(Cell** cellp) { put(bufferCell, CellPtrEdge(cellp)); }
+    void unputCell(Cell** cellp) { unput(bufferCell, CellPtrEdge(cellp)); }
+    void putSlot(NativeObject* obj, int kind, int32_t start, int32_t count) {
+        put(bufferSlot, SlotsEdge(obj, kind, start, count));
     }
-    void putWholeCellFromMainThread(Cell* cell) {
+    void putWholeCell(Cell* cell) {
         MOZ_ASSERT(cell->isTenured());
-        putFromMainThread(bufferWholeCell, WholeCellEdges(cell));
+        put(bufferWholeCell, WholeCellEdges(cell));
     }
 
     /* Insert an entry into the generic buffer. */
     template <typename T>
-    void putGeneric(const T& t) { putFromAnyThread(bufferGeneric, t);}
+    void putGeneric(const T& t) { put(bufferGeneric, t);}
 
     /* Insert or update a callback entry. */
     template <typename Key>
     void putCallback(void (*callback)(JSTracer* trc, Key* key, void* data), Key* key, void* data) {
-        putFromAnyThread(bufferGeneric, CallbackRef<Key>(callback, key, data));
+        put(bufferGeneric, CallbackRef<Key>(callback, key, data));
     }
 
     void assertHasValueEdge(JS::Value* vp) {

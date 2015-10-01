@@ -490,9 +490,6 @@ class Preprocessor:
     def getCommandLineParser(self, unescapeDefines = False):
         escapedValue = re.compile('".*"$')
         numberValue = re.compile('\d+$')
-        def handleE(option, opt, value, parser):
-            for k,v in os.environ.iteritems():
-                self.context[k] = v
         def handleD(option, opt, value, parser):
             vals = value.split('=', 1)
             if len(vals) == 1:
@@ -516,8 +513,6 @@ class Preprocessor:
         p = OptionParser()
         p.add_option('-I', action='append', type="string", default = [],
                      metavar="FILENAME", help='Include file')
-        p.add_option('-E', action='callback', callback=handleE,
-                     help='Import the environment into the defined variables')
         p.add_option('-D', action='callback', callback=handleD, type="string",
                      metavar="VAR[=VAL]", help='Define a variable')
         p.add_option('-U', action='callback', callback=handleU, type="string",

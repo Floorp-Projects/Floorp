@@ -6,7 +6,6 @@
 Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 Components.utils.import("resource://gre/modules/LoadContextInfo.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/BrowserUtils.jsm");
 
 var gAdvancedPane = {
   _inited: false,
@@ -572,7 +571,7 @@ var gAdvancedPane = {
     var list = document.getElementById("offlineAppsList");
     var item = list.selectedItem;
     var origin = item.getAttribute("origin");
-    var principal = BrowserUtils.principalFromOrigin(origin);
+    var principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
 
     var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                             .getService(Components.interfaces.nsIPromptService);

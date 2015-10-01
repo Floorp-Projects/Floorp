@@ -74,17 +74,6 @@ SecurityWrapper<Base>::isExtensible(JSContext* cx, HandleObject wrapper, bool* e
     return true;
 }
 
-// For security wrappers, we run the OrdinaryToPrimitive algorithm on the wrapper
-// itself, which means that the existing security policy on operations like
-// toString() will take effect and do the right thing here.
-template <class Base>
-bool
-SecurityWrapper<Base>::defaultValue(JSContext* cx, HandleObject wrapper,
-                                    JSType hint, MutableHandleValue vp) const
-{
-    return OrdinaryToPrimitive(cx, wrapper, hint, vp);
-}
-
 template <class Base>
 bool
 SecurityWrapper<Base>::getBuiltinClass(JSContext* cx, HandleObject wrapper,

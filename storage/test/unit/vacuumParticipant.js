@@ -43,8 +43,12 @@ vacuumParticipant.prototype =
   classID: Components.ID("{52aa0b22-b82f-4e38-992a-c3675a3355d2}"),
   contractID: "@unit.test.com/test-vacuum-participant;1",
 
-  get expectedDatabasePageSize() this._dbConn.defaultPageSize,
-  get databaseConnection() this._dbConn,
+  get expectedDatabasePageSize() {
+    return this._dbConn.defaultPageSize;
+  },
+  get databaseConnection() {
+    return this._dbConn;
+  },
 
   _grant: true,
   onBeginVacuum: function TVP_onBeginVacuum()

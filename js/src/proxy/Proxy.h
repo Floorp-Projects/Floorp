@@ -62,7 +62,6 @@ class Proxy
     static JSString* fun_toString(JSContext* cx, HandleObject proxy, unsigned indent);
     static bool regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard* g);
     static bool boxedValue_unbox(JSContext* cx, HandleObject proxy, MutableHandleValue vp);
-    static bool defaultValue(JSContext* cx, HandleObject obj, JSType hint, MutableHandleValue vp);
 
     static bool watch(JSContext* cx, HandleObject proxy, HandleId id, HandleObject callable);
     static bool unwatch(JSContext* cx, HandleObject proxy, HandleId id);

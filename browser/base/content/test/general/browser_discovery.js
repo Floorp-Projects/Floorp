@@ -1,6 +1,8 @@
 var browser;
 
-function doc() browser.contentDocument;
+function doc() {
+  return browser.contentDocument;
+}
 
 function setHandlerFunc(aResultFunc) {
   gBrowser.addEventListener("DOMLinkAdded", function (event) {

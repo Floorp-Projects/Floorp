@@ -25,6 +25,7 @@
 #include "js/RootingAPI.h"
 #include "js/TracingAPI.h"
 #include "js/TypeDecls.h"
+#include "js/Value.h"
 #include "js/Vector.h"
 
 // JS::ubi::Node
@@ -186,6 +187,7 @@ class DefaultDelete<JS::ubi::StackFrame> : public JS::DeletePolicy<JS::ubi::Stac
 namespace JS {
 namespace ubi {
 
+using mozilla::Forward;
 using mozilla::Maybe;
 using mozilla::Move;
 using mozilla::RangedPtr;
@@ -199,7 +201,29 @@ using mozilla::Variant;
 // heap snapshots store their strings as const char16_t*. In order to provide
 // zero-cost accessors to these strings in a single interface that works with
 // both cases, we use this variant type.
-using AtomOrTwoByteChars = Variant<JSAtom*, const char16_t*>;
+class AtomOrTwoByteChars : public Variant<JSAtom*, const char16_t*> {
+    using Base = Variant<JSAtom*, const char16_t*>;
+
+  public:
+    template<typename T>
+    MOZ_IMPLICIT AtomOrTwoByteChars(T&& rhs) : Base(Forward<T>(rhs)) { }
+
+    template<typename T>
+    AtomOrTwoByteChars& operator=(T&& rhs) {
+        MOZ_ASSERT(this != &rhs, "self-move disallowed");
+        this->~AtomOrTwoByteChars();
+        new (this) AtomOrTwoByteChars(Forward<T>(rhs));
+        return *this;
+    }
+
+    // Return the length of the given AtomOrTwoByteChars string.
+    size_t length();
+
+    // Copy the given AtomOrTwoByteChars string into the destination buffer,
+    // inflating if necessary. Does NOT null terminate. Returns the number of
+    // characters written to destination.
+    size_t copyToBuffer(RangedPtr<char16_t> destination, size_t length);
+};
 
 // The base class implemented by each ConcreteStackFrame<T> type. Subclasses
 // must not add data members to this class.
@@ -786,32 +810,30 @@ class Node {
 
 /*** Edge and EdgeRange ***************************************************************************/
 
+using EdgeName = UniquePtr<const char16_t[], JS::FreePolicy>;
+
 // An outgoing edge to a referent node.
 class Edge {
   public:
     Edge() : name(nullptr), referent() { }
 
     // Construct an initialized Edge, taking ownership of |name|.
-    Edge(char16_t* name, const Node& referent) {
-        this->name = name;
-        this->referent = referent;
-    }
+    Edge(char16_t* name, const Node& referent)
+        : name(name)
+        , referent(referent)
+    { }
 
     // Move construction and assignment.
-    Edge(Edge&& rhs) {
-        name = rhs.name;
-        referent = rhs.referent;
-        rhs.name = nullptr;
-    }
+    Edge(Edge&& rhs)
+        : name(mozilla::Move(rhs.name))
+        , referent(rhs.referent)
+    { }
+
     Edge& operator=(Edge&& rhs) {
         MOZ_ASSERT(&rhs != this);
         this->~Edge();
         new (this) Edge(mozilla::Move(rhs));
         return *this;
-    }
-
-    ~Edge() {
-        js_free(const_cast<char16_t*>(name));
     }
 
     Edge(const Edge&) = delete;
@@ -826,7 +848,7 @@ class Edge {
     // (In real life we'll want a better representation for names, to avoid
     // creating tons of strings when the names follow a pattern; and we'll need
     // to think about lifetimes carefully to ensure traversal stays cheap.)
-    const char16_t* name;
+    EdgeName name;
 
     // This edge's referent.
     Node referent;

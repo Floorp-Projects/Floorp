@@ -137,8 +137,6 @@ MOZ_ARG_WITH_STRING(debug-label,
     MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${option}"
 done])
 
-MOZ_DEBUG_DISABLE_DEFS="-DNDEBUG -DTRIMMED"
-
 if test -n "$MOZ_DEBUG"; then
     AC_MSG_CHECKING([for valid debug flags])
     _SAVE_CFLAGS=$CFLAGS
@@ -152,7 +150,13 @@ if test -n "$MOZ_DEBUG"; then
         AC_MSG_ERROR([These compiler flags are invalid: $MOZ_DEBUG_FLAGS])
     fi
     CFLAGS=$_SAVE_CFLAGS
+
+    MOZ_DEBUG_DEFINES="$MOZ_DEBUG_ENABLE_DEFS"
+else
+    MOZ_DEBUG_DEFINES="-DNDEBUG -DTRIMMED"
 fi
+
+AC_SUBST(MOZ_DEBUG_DEFINES)
 
 dnl ========================================================
 dnl = Enable generation of debug symbols

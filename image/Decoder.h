@@ -131,14 +131,6 @@ public:
   virtual void SetSampleSize(int aSampleSize) { }
 
   /**
-   * Set the requested resolution for this decoder. Used to implement the
-   * -moz-resolution media fragment.
-   *
-   *  XXX(seth): Support for -moz-resolution will be removed in bug 1118926.
-   */
-  virtual void SetResolution(const gfx::IntSize& aResolution) { }
-
-  /**
    * Set an iterator to the SourceBuffer which will feed data to this decoder.
    *
    * This should be called for almost all decoders; the exceptions are the

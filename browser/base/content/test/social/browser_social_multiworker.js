@@ -52,7 +52,7 @@ var tests = {
       oneWorkerTest(p);
     }
 
-    waitForCondition(function() messageReceived == Social.providers.length,
+    waitForCondition(() => messageReceived == Social.providers.length,
                      next, "received messages from all workers",
                      /* increase timeout because shutting down a child process is slow */ 60);
   },

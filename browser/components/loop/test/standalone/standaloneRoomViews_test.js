@@ -372,6 +372,14 @@ describe("loop.standaloneRoomViews", function() {
         expect(fakeWindow.document.title).to.equal("fakeName — clientShortname2");
       });
 
+      it("should set document.title brand name when there is no context available", function() {
+        activeRoomStore.setStoreState({roomState: ROOM_STATES.INIT});
+        view = mountTestComponent();
+        activeRoomStore.setStoreState({roomState: ROOM_STATES.READY});
+
+        expect(fakeWindow.document.title).to.equal("clientShortname2");
+      });
+
       it("should dispatch a `SetupStreamElements` action when the MEDIA_WAIT state " +
         "is entered", function() {
           activeRoomStore.setStoreState({roomState: ROOM_STATES.READY});

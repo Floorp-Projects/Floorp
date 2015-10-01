@@ -215,31 +215,6 @@ class OriginKeyStore : public nsISupports
       return NS_OK;
     }
 
-    static PLDHashOperator
-    HashWriter(const nsACString& aOrigin, OriginKey* aOriginKey, void *aUserArg)
-    {
-      auto* stream = static_cast<nsIOutputStream *>(aUserArg);
-
-      if (!aOriginKey->mSecondsStamp) {
-        return PL_DHASH_NEXT; // don't write temporal ones
-      }
-
-      nsCString buffer;
-      buffer.Append(aOriginKey->mKey);
-      buffer.Append(' ');
-      buffer.AppendInt(aOriginKey->mSecondsStamp);
-      buffer.Append(' ');
-      buffer.Append(aOrigin);
-      buffer.Append('\n');
-
-      uint32_t count;
-      nsresult rv = stream->Write(buffer.Data(), buffer.Length(), &count);
-      if (NS_WARN_IF(NS_FAILED(rv)) || count != buffer.Length()) {
-        return PL_DHASH_STOP;
-      }
-      return PL_DHASH_NEXT;
-    }
-
     nsresult
     Write()
     {
@@ -265,7 +240,27 @@ class OriginKeyStore : public nsISupports
       if (count != buffer.Length()) {
         return NS_ERROR_UNEXPECTED;
       }
-      mKeys.EnumerateRead(HashWriter, stream.get());
+      for (auto iter = mKeys.Iter(); !iter.Done(); iter.Next()) {
+        const nsACString& origin = iter.Key();
+        OriginKey* originKey = iter.UserData();
+
+        if (!originKey->mSecondsStamp) {
+          continue; // don't write temporal ones
+        }
+        nsCString buffer;
+        buffer.Append(originKey->mKey);
+        buffer.Append(' ');
+        buffer.AppendInt(originKey->mSecondsStamp);
+        buffer.Append(' ');
+        buffer.Append(origin);
+        buffer.Append('\n');
+
+        uint32_t count;
+        nsresult rv = stream->Write(buffer.Data(), buffer.Length(), &count);
+        if (NS_WARN_IF(NS_FAILED(rv)) || count != buffer.Length()) {
+          break;
+        }
+      }
 
       nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(stream);
       MOZ_ASSERT(safeStream);

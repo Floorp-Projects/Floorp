@@ -11,7 +11,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
-XPCOMUtils.defineLazyGetter(window, "gChromeWin", function()
+XPCOMUtils.defineLazyGetter(window, "gChromeWin", () =>
   window.QueryInterface(Ci.nsIInterfaceRequestor)
     .getInterface(Ci.nsIWebNavigation)
     .QueryInterface(Ci.nsIDocShellTreeItem)

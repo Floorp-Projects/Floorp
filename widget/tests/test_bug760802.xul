@@ -51,7 +51,9 @@ function shouldThrowException(fun, exception) {
             e.result === exception)
   }
 }
-function doesntThrowException(fun) !shouldThrowException(fun)
+function doesntThrowException(fun) {
+  return !shouldThrowException(fun);
+}
 
 var baseWindow = getBaseWindowInterface(this);
 var nativeHandle = baseWindow.nativeHandle;

@@ -85,10 +85,10 @@ function test() {
           onPageBLoadComplete();
         }
       },
-      onLocationChange: function () 0,
-      onProgressChange: function () 0,
-      onStatusChange: function () 0,
-      onSecurityChange: function () 0
+      onLocationChange: () => 0,
+      onProgressChange: () => 0,
+      onStatusChange: () => 0,
+      onSecurityChange: () => 0
     });
 
     // test loading new content with a frame into a tab

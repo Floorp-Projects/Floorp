@@ -116,8 +116,7 @@ var gSearchPane = {
       let item = list.appendItem(e.name);
       item.setAttribute("class", "menuitem-iconic searchengine-menuitem menuitem-with-favicon");
       if (e.iconURI) {
-        let uri = PlacesUtils.getImageURLForResolution(window, e.iconURI.spec);
-        item.setAttribute("image", uri);
+        item.setAttribute("image", e.iconURI.spec);
       }
       item.engine = e;
       if (e.name == currentEngine)
@@ -488,8 +487,7 @@ EngineView.prototype = {
 
   getImageSrc: function(index, column) {
     if (column.id == "engineName" && this._engineStore.engines[index].iconURI) {
-      let uri = this._engineStore.engines[index].iconURI.spec;
-      return PlacesUtils.getImageURLForResolution(window, uri);
+      return this._engineStore.engines[index].iconURI.spec;
     }
     return "";
   },

@@ -69,228 +69,6 @@ function flattenArguments(lst/* ...*/) {
 }
 
 /**
- * StructuredFormatter: Formatter class turning structured messages
- * into human-readable messages.
- */
-this.StructuredFormatter = function() {
-    this.testStartTimes = {};
-};
-
-StructuredFormatter.prototype.log = function(message) {
-  return message.message;
-};
-
-StructuredFormatter.prototype.suite_start = function(message) {
-    this.suiteStartTime = message.time;
-    return "SUITE-START | Running " +  message.tests.length + " tests";
-};
-
-StructuredFormatter.prototype.test_start = function(message) {
-    this.testStartTimes[message.test] = new Date().getTime();
-    return "TEST-START | " + message.test;
-};
-
-StructuredFormatter.prototype.test_status = function(message) {
-    var statusInfo = message.test + " | " + message.subtest +
-                    (message.message ? " | " + message.message : "");
-    if (message.expected) {
-        return "TEST-UNEXPECTED-" + message.status + " | " + statusInfo +
-               " - expected: " + message.expected;
-    } else {
-        return "TEST-" + message.status + " | " + statusInfo;
-    }
-};
-
-StructuredFormatter.prototype.test_end = function(message) {
-    var startTime = this.testStartTimes[message.test];
-    delete this.testStartTimes[message.test];
-    var statusInfo = message.test + (message.message ? " | " + String(message.message) : "");
-    var result;
-    if (message.expected) {
-        result = "TEST-UNEXPECTED-" + message.status + " | " + statusInfo +
-                 " - expected: " + message.expected;
-    } else {
-        return "TEST-" + message.status + " | " + statusInfo;
-    }
-    result = " | took " + message.time - startTime + "ms";
-};
-
-StructuredFormatter.prototype.suite_end = function(message) {
-    return "SUITE-END | took " + message.time - this.suiteStartTime + "ms";
-};
-
-/**
- * StructuredLogger: Structured logger class following the mozlog.structured protocol
- *
- *
-**/
-var VALID_ACTIONS = ['suite_start', 'suite_end', 'test_start', 'test_end', 'test_status', 'process_output', 'log'];
-// This delimiter is used to avoid interleaving Mochitest/Gecko logs.
-var LOG_DELIMITER = String.fromCharCode(0xe175) + String.fromCharCode(0xee31) + String.fromCharCode(0x2c32) + String.fromCharCode(0xacbf);
-
-function StructuredLogger(name) {
-    this.name = name;
-    this.testsStarted = [];
-    this.interactiveDebugger = false;
-    this.structuredFormatter = new StructuredFormatter();
-
-    /* test logs */
-
-    this.testStart = function(test) {
-        var data = {test: test};
-        this._logData("test_start", data);
-    };
-
-    this.testStatus = function(test, subtest, status, expected="PASS", message=null, stack=null) {
-        // Bugfix for assertions not passing an assertion name
-        if (subtest === null || subtest === undefined) {
-            subtest = "undefined assertion name";
-        }
-
-        var data = {test: test, subtest: subtest, status: status};
-
-        if (message) {
-            data.message = String(message);
-        }
-        if (expected != status && status != 'SKIP') {
-            data.expected = expected;
-        }
-        if (stack) {
-            data.stack = stack;
-        }
-
-        this._logData("test_status", data);
-    };
-
-    this.testEnd = function(test, status, expected="OK", message=null, extra=null) {
-        var data = {test: test, status: status};
-
-        if (message !== null) {
-            data.message = String(message);
-        }
-        if (expected != status) {
-            data.expected = expected;
-        }
-        if (extra !== null) {
-            data.extra = extra;
-        }
-
-        this._logData("test_end", data);
-    };
-
-    this.suiteStart = function(tests, runinfo) {
-        runinfo = typeof runinfo !== "undefined" ? runinfo : null;
-
-        var data = {tests: tests};
-        if (runinfo !== null) {
-            data.runinfo = runinfo;
-        }
-
-        this._logData("suite_start", data);
-    };
-
-    this.suiteEnd = function() {
-        this._logData("suite_end");
-    };
-
-    this.testStart = function(test) {
-        this.testsStarted.push(test);
-        var data = {test: test};
-        this._logData("test_start", data);
-    };
-
-    /* log action: human readable logs */
-
-    this._log = function(level, message) {
-        // Coercing the message parameter to a string, in case an invalid value is passed.
-        message = String(message);
-        var data = {level: level, message: message};
-        this._logData('log', data);
-    };
-
-    this.debug = function(message) {
-        this._log('DEBUG', message);
-    };
-
-    this.info = function(message) {
-        this._log('INFO', message);
-    };
-
-    this.warning = function(message) {
-        this._log('WARNING', message);
-    };
-
-    this.error = function(message) {
-        this._log("ERROR", message);
-    };
-
-    this.critical = function(message) {
-        this._log('CRITICAL', message);
-    };
-
-    /* Special mochitest messages for deactivating/activating buffering */
-
-    this.deactivateBuffering = function() {
-        this._logData("buffering_off");
-    };
-    this.activateBuffering = function() {
-        this._logData("buffering_on");
-    };
-
-    /* dispatches a log to handlers */
-
-    this._logData = function(action, data) {
-        data = typeof data !== "undefined" ? data : null;
-
-        if (data === null) {
-            data = {};
-        }
-
-        var allData = {action: action,
-                       time: new Date().getTime(),
-                       thread: "",
-                       // This is a directive to python to format these messages
-                       // for compatibility with mozharness. This can be removed
-                       // with the MochitestFormatter (see bug 1045525).
-                       js_source: "TestRunner",
-                       pid: null,
-                       source: this.name};
-
-        for (var attrname in data) {
-            allData[attrname] = data[attrname];
-        }
-
-        this._dumpMessage(allData);
-    };
-
-    this._dumpMessage = function(message) {
-        var str;
-        if (this.interactiveDebugger && !message.action.startsWith("buffering_")) {
-            str = this.structuredFormatter[message.action](message);
-        } else {
-            str = LOG_DELIMITER + JSON.stringify(message) + LOG_DELIMITER;
-        }
-
-        // BUGFIX: browser-chrome tests doesn't use LogController
-        if (Object.keys(LogController.listeners).length !== 0) {
-            LogController.log(str);
-        } else {
-            dump('\n' + str + '\n');
-        }
-
-        // Checking for error messages
-        if (message.expected || (message.level && message.level === "ERROR")) {
-            TestRunner.failureHandler();
-        }
-    };
-
-    /* Message validation. Only checking the action for now */
-    this.validMessage = function(message) {
-        return message.action !== undefined && VALID_ACTIONS.indexOf(message.action) >= 0;
-    };
-}
-
-/**
  * TestRunner: A test runner for SimpleTest
  * TODO:
  *
@@ -318,6 +96,7 @@ TestRunner.dumpAboutMemoryAfterTest = false;
 TestRunner.dumpDMDAfterTest = false;
 TestRunner.slowestTestTime = 0;
 TestRunner.slowestTestURL = "";
+TestRunner.interactiveDebugger = false;
 
 TestRunner._expectingProcessCrash = false;
 
@@ -429,8 +208,48 @@ TestRunner.generateFailureList = function () {
 
 /**
  * If logEnabled is true, this is the logger that will be used.
-**/
-TestRunner.structuredLogger = new StructuredLogger('mochitest');
+ **/
+
+// A log callback for StructuredLog.jsm
+TestRunner._dumpMessage = function(message) {
+  // This delimiter is used to avoid interleaving Mochitest/Gecko logs.
+  var LOG_DELIMITER = String.fromCharCode(0xe175) + String.fromCharCode(0xee31) + String.fromCharCode(0x2c32) + String.fromCharCode(0xacbf);
+  var _structuredFormatter;
+  var str;
+
+  // This is a directive to python to format these messages
+  // for compatibility with mozharness. This can be removed
+  // with the MochitestFormatter (see bug 1045525).
+  message.js_source = 'TestRunner.js'
+
+  if (TestRunner.interactiveDebugger) {
+    if (!_structuredFormatter) {
+      _structuredFormatter = new StructuredFormatter();
+    }
+    str = _structuredFormatter[message.action](message);
+  } else {
+    str = LOG_DELIMITER + JSON.stringify(message) + LOG_DELIMITER;
+  }
+  // BUGFIX: browser-chrome tests don't use LogController
+  if (Object.keys(LogController.listeners).length !== 0) {
+    LogController.log(str);
+  } else {
+    dump('\n' + str + '\n');
+  }
+  // Checking for error messages
+  if (message.expected || message.level === "ERROR") {
+    TestRunner.failureHandler();
+  }
+};
+
+// From https://dxr.mozilla.org/mozilla-central/source/testing/modules/StructuredLog.jsm
+TestRunner.structuredLogger = new StructuredLogger('mochitest', TestRunner._dumpMessage);
+TestRunner.structuredLogger.deactivateBuffering = function() {
+    TestRunner.structuredLogger._logData("buffering_off");
+};
+TestRunner.structuredLogger.activateBuffering = function() {
+    TestRunner.structuredLogger._logData("buffering_on");
+};
 
 TestRunner.log = function(msg) {
     if (TestRunner.logEnabled) {

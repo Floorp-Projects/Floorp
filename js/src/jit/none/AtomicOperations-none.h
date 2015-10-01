@@ -11,12 +11,14 @@
 
 #include "jit/AtomicOperations.h"
 
+// A "none" build is never run (ref IRC discussion with h4writer) and
+// all functions here can therefore MOZ_CRASH, even if they are
+// referenced from other than jitted code.
+
 inline bool
 js::jit::AtomicOperations::isLockfree8()
 {
-    // Don't crash this one, since it may be read during
-    // initialization, to cache the value.
-    return false;
+    MOZ_CRASH();
 }
 
 inline void
@@ -88,10 +90,37 @@ js::jit::AtomicOperations::exchangeSeqCst(T* addr, T val)
     MOZ_CRASH();
 }
 
+template<typename T>
+inline T
+js::jit::AtomicOperations::loadSafeWhenRacy(T* addr)
+{
+    MOZ_CRASH();
+}
+
+template<typename T>
+inline void
+js::jit::AtomicOperations::storeSafeWhenRacy(T* addr, T val)
+{
+    MOZ_CRASH();
+}
+
+inline void
+js::jit::AtomicOperations::memcpySafeWhenRacy(void* dest, const void* src, size_t nbytes)
+{
+    MOZ_CRASH();
+}
+
+inline void
+js::jit::AtomicOperations::memmoveSafeWhenRacy(void* dest, const void* src, size_t nbytes)
+{
+    MOZ_CRASH();
+}
+
 template<size_t nbytes>
 inline void
 js::jit::RegionLock::acquire(void* addr)
 {
+    (void)spinlock;             // Remove a lot of "unused" warnings.
     MOZ_CRASH();
 }
 

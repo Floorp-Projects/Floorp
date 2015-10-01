@@ -1,0 +1,334 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+  Test the lifetime management of service workers. We keep this test in
+  dom/push/tests to pass the external network check when connecting to
+  the mozilla push service.
+
+  How this test works:
+  - the service worker maintains a state variable and a promise used for
+    extending its lifetime. Note that the terminating the worker will reset
+    these variables to their default values.
+  - we send 3 types of requests to the service worker:
+    |update|, |wait| and |release|. All three requests will cause the sw to update
+    its state to the new value and reply with a message containing
+    its previous state. Furthermore, |wait| will set a waitUntil or a respondWith
+    promise that's not resolved until the next |release| message.
+  - Each subtest will use a combination of values for the timeouts and check
+    if the service worker is in the correct state as we send it different
+    events.
+  - We also wait and assert for service worker termination using an event dispatched
+    through nsIObserverService.
+  -->
+<head>
+  <title>Test for Bug 1188545</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1188545">Mozilla Bug 118845</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="text/javascript">
+
+  function start() {
+    return navigator.serviceWorker.register("lifetime_worker.js", {scope: "./"})
+    .then((swr) => ({registration: swr}));
+  }
+
+  function waitForActiveServiceWorker(ctx) {
+    return navigator.serviceWorker.ready.then(function(result) {
+      ok(ctx.registration.active, "Service Worker is active");
+      return ctx;
+    });
+  }
+
+  function unregister(ctx) {
+    return ctx.registration.unregister().then(function(result) {
+      ok(result, "Unregister should return true.");
+    }, function(e) {
+      dump("Unregistering the SW failed with " + e + "\n");
+    });
+  }
+
+  function registerPushNotification(ctx) {
+    var p = new Promise(function(res, rej) {
+      ctx.registration.pushManager.subscribe().then(
+        function(pushSubscription) {
+          ok(true, "successful registered for push notification");
+          ctx.subscription = pushSubscription;
+          res(ctx);
+        }, function(error) {
+          ok(false, "could not register for push notification");
+          res(ctx);
+        });
+    });
+    return p;
+  }
+
+  function sendPushToPushServer(pushEndpoint) {
+    // Work around CORS for now.
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', "http://mochi.test:8888/tests/dom/push/test/push-server.sjs", true);
+    xhr.setRequestHeader("X-Push-Method", "PUT");
+    xhr.setRequestHeader("X-Push-Server", pushEndpoint);
+    xhr.send("version=24601");
+  }
+
+  function unregisterPushNotification(ctx) {
+    return ctx.subscription.unsubscribe().then(function(result) {
+      ok(result, "unsubscribe should succeed.");
+      ctx.subscription = null;
+      return ctx;
+    });
+  }
+
+  function createIframe(ctx) {
+    var p = new Promise(function(res, rej) {
+      var iframe = document.createElement('iframe');
+      // This file doesn't exist, the service worker will give us an empty
+      // document.
+      iframe.src = "http://mochi.test:8888/tests/dom/push/test/lifetime_frame.html";
+
+      iframe.onload = function() {
+        ctx.iframe = iframe;
+        res(ctx);
+      }
+      document.body.appendChild(iframe);
+    });
+    return p;
+  }
+
+  function closeIframe(ctx) {
+    ctx.iframe.parentNode.removeChild(ctx.iframe);
+    return new Promise(function(res, rej) {
+      // XXXcatalinb: give the worker more time to "notice" it stopped
+      // controlling documents
+      ctx.iframe = null;
+      setTimeout(res, 0);
+    }).then(() => ctx);
+  }
+
+  function waitAndCheckMessage(contentWindow, expected) {
+    function checkMessage(expected, resolve, event) {
+      ok(event.data.type == expected.type, "Received correct message type: " + expected.type);
+      ok(event.data.state == expected.state, "Service worker is in the correct state: " + expected.state);
+      this.navigator.serviceWorker.onmessage = null;
+      resolve();
+    }
+    return new Promise(function(res, rej) {
+      contentWindow.navigator.serviceWorker.onmessage =
+        checkMessage.bind(contentWindow, expected, res);
+    });
+  }
+
+  function fetchEvent(ctx, expected_state, new_state) {
+    var expected = { type: "fetch", state: expected_state };
+    var p = waitAndCheckMessage(ctx.iframe.contentWindow, expected);
+    ctx.iframe.contentWindow.fetch(new_state);
+    return p;
+  }
+
+  function pushEvent(ctx, expected_state, new_state) {
+    var expected = {type: "push", state: expected_state};
+    var p = waitAndCheckMessage(ctx.iframe.contentWindow, expected);
+    sendPushToPushServer(ctx.subscription.endpoint);
+    return p;
+  }
+
+  function messageEventIframe(ctx, expected_state, new_state) {
+    var expected = {type: "message", state: expected_state};
+    var p = waitAndCheckMessage(ctx.iframe.contentWindow, expected);
+    ctx.iframe.contentWindow.navigator.serviceWorker.controller.postMessage(new_state);
+    return p;
+  }
+
+  function messageEvent(ctx, expected_state, new_state) {
+    var expected = {type: "message", state: expected_state};
+    var p = waitAndCheckMessage(window, expected);
+    ctx.registration.active.postMessage(new_state);
+    return p;
+  }
+
+  function checkStateAndUpdate(eventFunction, expected_state, new_state) {
+    return function(ctx) {
+      return eventFunction(ctx, expected_state, new_state)
+        .then(() => ctx);
+    }
+  }
+
+  function setShutdownObserver(expectingEvent) {
+    info("Setting shutdown observer: expectingEvent=" + expectingEvent);
+    return function(ctx) {
+      cancelShutdownObserver(ctx);
+
+      ctx.observer_promise = new Promise(function(res, rej) {
+        ctx.observer = {
+          observe: function(subject, topic, data) {
+            ok((topic == "service-worker-shutdown") && expectingEvent, "Service worker was terminated.");
+            this.remove(ctx);
+          },
+          remove: function(ctx) {
+            SpecialPowers.removeObserver(this, "service-worker-shutdown");
+            ctx.observer = null;
+            res(ctx);
+          }
+        }
+        SpecialPowers.addObserver(ctx.observer, "service-worker-shutdown", false);
+      });
+
+      return ctx;
+    }
+  }
+
+  function waitOnShutdownObserver(ctx) {
+    info("Waiting on worker to shutdown.");
+    return ctx.observer_promise;
+  }
+
+  function cancelShutdownObserver(ctx) {
+    if (ctx.observer) {
+      ctx.observer.remove(ctx);
+    }
+    return ctx.observer_promise;
+  }
+
+  function subTest(test) {
+    return function(ctx) {
+      return new Promise(function(res, rej) {
+        function run() {
+          test.steps(ctx).catch(function(e) {
+            ok(false, "Some test failed with error: " + e);
+          }).then((ctx) => res(ctx));
+        }
+
+        SpecialPowers.pushPrefEnv({"set" : test.prefs}, run);
+      });
+    }
+  }
+
+  var test1 = {
+    prefs: [
+      ["dom.serviceWorkers.idle_timeout", 0],
+      ["dom.serviceWorkers.idle_extended_timeout", 2999999]
+    ],
+    // Test that service workers are terminated after the grace period expires
+    // when there are no pending waitUntil or respondWith promises.
+    steps: function(ctx) {
+      // Test with fetch events and respondWith promises
+      return createIframe(ctx)
+        .then(setShutdownObserver(true))
+        .then(checkStateAndUpdate(fetchEvent, "from_scope", "update"))
+        .then(waitOnShutdownObserver)
+        .then(setShutdownObserver(false))
+        .then(checkStateAndUpdate(fetchEvent, "from_scope", "wait"))
+        .then(checkStateAndUpdate(fetchEvent, "wait", "update"))
+        .then(checkStateAndUpdate(fetchEvent, "update", "update"))
+        .then(setShutdownObserver(true))
+        // The service worker should be terminated when the promise is resolved.
+        .then(checkStateAndUpdate(fetchEvent, "update", "release"))
+        .then(waitOnShutdownObserver)
+        .then(setShutdownObserver(false))
+        .then(closeIframe)
+        .then(cancelShutdownObserver)
+
+        // Test with push events and message events
+        .then(createIframe)
+        .then(setShutdownObserver(false))
+        .then(checkStateAndUpdate(pushEvent, "from_scope", "wait"))
+        .then(setShutdownObserver(true))
+        .then(checkStateAndUpdate(messageEventIframe, "wait", "update"))
+        .then(waitOnShutdownObserver)
+        .then(closeIframe)
+    }
+  }
+
+  var test2 = {
+    prefs: [
+      ["dom.serviceWorkers.idle_timeout", 0],
+      ["dom.serviceWorkers.idle_extended_timeout", 2999999]
+    ],
+    steps: function(ctx) {
+      // Non push workers are terminated when they stop controlling documents.
+      return createIframe(ctx)
+        .then(setShutdownObserver(true))
+        .then(checkStateAndUpdate(fetchEvent, "from_scope", "wait"))
+        .then(closeIframe)
+        .then(waitOnShutdownObserver)
+
+      // Push workers are exempt from this rule.
+        .then(createIframe)
+        .then(setShutdownObserver(false))
+        .then(checkStateAndUpdate(pushEvent, "from_scope", "wait"))
+        .then(closeIframe)
+        .then(setShutdownObserver(true))
+        .then(checkStateAndUpdate(messageEvent, "wait", "release"))
+        .then(waitOnShutdownObserver)
+    }
+  };
+
+  var test3 = {
+    prefs: [
+      ["dom.serviceWorkers.idle_timeout", 2999999],
+      ["dom.serviceWorkers.idle_extended_timeout", 0]
+    ],
+    steps: function(ctx) {
+      // set the grace period to 0 and dispatch a message which will reset
+      // the internal sw timer to the new value.
+      var test3_1 = {
+        prefs: [
+          ["dom.serviceWorkers.idle_timeout", 0],
+          ["dom.serviceWorkers.idle_extended_timeout", 0]
+        ],
+        steps: function(ctx) {
+          return new Promise(function(res, rej) {
+            ctx.iframe.contentWindow.fetch("update");
+            res(ctx);
+          });
+        }
+      }
+
+      // Test that service worker is closed when the extended timeout expired
+      return createIframe(ctx)
+        .then(setShutdownObserver(false))
+        .then(checkStateAndUpdate(messageEvent, "from_scope", "update"))
+        .then(checkStateAndUpdate(messageEventIframe, "update", "update"))
+        .then(checkStateAndUpdate(fetchEvent, "update", "wait"))
+        .then(setShutdownObserver(true))
+        .then(subTest(test3_1)) // This should cause the internal timer to expire.
+        .then(waitOnShutdownObserver)
+        .then(closeIframe)
+    }
+  }
+
+  function runTest() {
+    start()
+      .then(waitForActiveServiceWorker)
+      .then(registerPushNotification)
+      .then(subTest(test1))
+      .then(subTest(test2))
+      .then(subTest(test3))
+      .then(unregisterPushNotification)
+      .then(unregister)
+      .catch(function(e) {
+        ok(false, "Some test failed with error " + e)
+      }).then(SimpleTest.finish);
+  }
+
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.push.enabled", true],
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+    ["dom.serviceWorkers.interception.enabled", true]
+    ]}, runTest);
+  SpecialPowers.addPermission('push', true, document);
+  SimpleTest.waitForExplicitFinish();
+</script>
+</body>
+</html>

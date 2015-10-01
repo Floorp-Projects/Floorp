@@ -40,12 +40,12 @@ struct DeserializedEdge {
   // A borrowed reference to a string owned by this node's owning HeapSnapshot.
   const char16_t* name;
 
-  explicit DeserializedEdge();
+  explicit DeserializedEdge(NodeId referent, const char16_t* edgeName = nullptr)
+    : referent(referent)
+    , name(edgeName)
+  { }
   DeserializedEdge(DeserializedEdge&& rhs);
   DeserializedEdge& operator=(DeserializedEdge&& rhs);
-
-  // Initialize this `DeserializedEdge` from the given `protobuf::Edge` message.
-  bool init(const protobuf::Edge& edge, HeapSnapshot& owner);
 
 private:
   DeserializedEdge(const DeserializedEdge&) = delete;
@@ -65,7 +65,8 @@ struct DeserializedNode {
   uint64_t            size;
   EdgeVector          edges;
   Maybe<StackFrameId> allocationStack;
-  UniquePtr<char[]>   jsObjectClassName;
+  // A borrowed reference to a string owned by this node's owning HeapSnapshot.
+  const char*         jsObjectClassName;
   // A weak pointer to this node's owning `HeapSnapshot`. Safe without
   // AddRef'ing because this node's lifetime is equal to that of its owner.
   HeapSnapshot*       owner;
@@ -76,7 +77,7 @@ struct DeserializedNode {
                    uint64_t size,
                    EdgeVector&& edges,
                    Maybe<StackFrameId> allocationStack,
-                   UniquePtr<char[]>&& className,
+                   const char* className,
                    HeapSnapshot& owner)
     : id(id)
     , coarseType(coarseType)
@@ -84,7 +85,7 @@ struct DeserializedNode {
     , size(size)
     , edges(Move(edges))
     , allocationStack(allocationStack)
-    , jsObjectClassName(Move(className))
+    , jsObjectClassName(className)
     , owner(&owner)
   { }
   virtual ~DeserializedNode() { }
@@ -96,7 +97,7 @@ struct DeserializedNode {
     , size(rhs.size)
     , edges(Move(rhs.edges))
     , allocationStack(rhs.allocationStack)
-    , jsObjectClassName(Move(rhs.jsObjectClassName))
+    , jsObjectClassName(rhs.jsObjectClassName)
     , owner(rhs.owner)
   { }
 
@@ -258,7 +259,7 @@ public:
   bool isLive() const override { return false; }
   const char16_t* typeName() const override;
   Node::Size size(mozilla::MallocSizeOf mallocSizeof) const override;
-  const char* jsObjectClassName() const override { return get().jsObjectClassName.get(); }
+  const char* jsObjectClassName() const override { return get().jsObjectClassName; }
 
   bool hasAllocationStack() const override { return get().allocationStack.isSome(); }
   StackFrame allocationStack() const override;

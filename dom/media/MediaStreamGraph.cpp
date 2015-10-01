@@ -2604,26 +2604,16 @@ NS_IMPL_ISUPPORTS(MediaStreamGraphShutdownObserver, nsIObserver)
 
 static bool gShutdownObserverRegistered = false;
 
-namespace {
-
-PLDHashOperator
-ForceShutdownEnumerator(const uint32_t& /* aAudioChannel */,
-                        MediaStreamGraphImpl* aGraph,
-                        void* /* aUnused */)
-{
-  aGraph->ForceShutDown();
-  return PL_DHASH_NEXT;
-}
-
-} // namespace
-
 NS_IMETHODIMP
 MediaStreamGraphShutdownObserver::Observe(nsISupports *aSubject,
                                           const char *aTopic,
                                           const char16_t *aData)
 {
   if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
-    gGraphs.EnumerateRead(ForceShutdownEnumerator, nullptr);
+    for (auto iter = gGraphs.Iter(); !iter.Done(); iter.Next()) {
+      MediaStreamGraphImpl* graph = iter.UserData();
+      graph->ForceShutDown();
+    }
     nsContentUtils::UnregisterShutdownObserver(this);
     gShutdownObserverRegistered = false;
   }

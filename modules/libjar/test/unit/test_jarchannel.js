@@ -310,4 +310,6 @@ if (inChild) {
     });
 } // if inChild
 
-function run_test() run_next_test();
+function run_test() {
+  return run_next_test();
+}
