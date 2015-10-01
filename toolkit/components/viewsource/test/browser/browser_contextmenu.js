@@ -29,8 +29,6 @@ add_task(function *() {
 
   contextMenu = document.getElementById("contentAreaContextMenu");
 
-  // Prepend view-source to this one as it opens in a tab.
-  expectedData[0][3] = "view-source:" + expectedData[0][3];
   for (let test of expectedData) {
     yield* checkMenuItems(contextMenu, true, test[0], test[1], test[2], test[3]);
   }
