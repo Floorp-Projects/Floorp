@@ -47,10 +47,6 @@ const ENVIRONMENT_CHANGE_LISTENER = "TelemetrySession::onEnvironmentChange";
 const MS_IN_ONE_HOUR  = 60 * 60 * 1000;
 const MIN_SUBSESSION_LENGTH_MS = Preferences.get("toolkit.telemetry.minSubsessionLength", 10 * 60) * 1000;
 
-// This is the HG changeset of the Histogram.json file, used to associate
-// submitted ping data with its histogram definition (bug 832007)
-#expand const HISTOGRAMS_FILE_VERSION = "__HISTOGRAMS_FILE_VERSION__";
-
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetrySession" + (Utils.isContentProcess ? "#content::" : "::");
 
@@ -1044,7 +1040,7 @@ var Impl = {
 
     let ret = {
       reason: reason,
-      revision: HISTOGRAMS_FILE_VERSION,
+      revision: AppConstants.SOURCE_REVISION_URL,
       asyncPluginInit: Preferences.get(PREF_ASYNC_PLUGIN_INIT, false),
 
       // Date.getTimezoneOffset() unintuitively returns negative values if we are ahead of
