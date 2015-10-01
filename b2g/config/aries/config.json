@@ -39,7 +39,7 @@
     },
     "b2g_manifest": "aries.xml",
     "b2g_manifest_intree": true,
-    "additional_source_tarballs": [],
+    "additional_source_tarballs": ["backup-aries.tar.xz"],
     "gecko_l10n_root": "https://hg.mozilla.org/l10n-central",
     "gaia": {
         "l10n": {
