@@ -444,7 +444,6 @@ WaveReader::LoadFormatChunk(uint32_t aChunkSize)
     return false;
   }
 
-  ReentrantMonitorAutoEnter monitor(mDecoder->GetReentrantMonitor());
   mSampleRate = rate;
   mChannels = channels;
   mFrameSize = frameSize;
@@ -471,7 +470,6 @@ WaveReader::FindDataOffset(uint32_t aChunkSize)
     return false;
   }
 
-  ReentrantMonitorAutoEnter monitor(mDecoder->GetReentrantMonitor());
   mWaveLength = aChunkSize;
   mWavePCMOffset = uint32_t(offset);
   return true;
