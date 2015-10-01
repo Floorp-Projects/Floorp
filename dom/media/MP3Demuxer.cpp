@@ -26,8 +26,8 @@ PRLogModuleInfo* gMP3DemuxerLog;
 #define MP3DEMUXER_LOGV(msg, ...)
 #endif
 
-using media::TimeUnit;
-using media::TimeIntervals;
+using mozilla::media::TimeUnit;
+using mozilla::media::TimeIntervals;
 
 namespace mozilla {
 namespace mp3 {

@@ -324,7 +324,7 @@ private:
 // MPEG streams.
 class MP3TrackDemuxer : public MediaTrackDemuxer {
 public:
-  // Constructor, expecing a valid media resource.
+  // Constructor, expecting a valid media resource.
   explicit MP3TrackDemuxer(MediaResource* aSource);
 
   // Initializes the track demuxer by reading the first frame for meta data.
