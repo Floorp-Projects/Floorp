@@ -60,8 +60,6 @@ protected:
   virtual ~StereoPannerNode();
 
 private:
-  static void SendPanToStream(AudioNode* aNode,
-                              const AudioTimelineEvent& aEvent);
   nsRefPtr<AudioParam> mPan;
 };
 
