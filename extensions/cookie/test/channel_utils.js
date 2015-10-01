@@ -171,6 +171,10 @@ function LoadContextCallback(appId, inBrowserElement, isPrivate, isContent) {
   this.isInBrowserElement = inBrowserElement;
   this.usePrivateBrowsing = isPrivate;
   this.isContent = isContent;
+  this.originAttributes = {
+    appId: appId,
+    inBrowser: inBrowserElement
+  };
 }
 
 LoadContextCallback.prototype = {
