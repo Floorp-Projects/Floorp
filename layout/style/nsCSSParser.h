@@ -309,6 +309,11 @@ public:
   bool IsValueValidForProperty(const nsCSSProperty aPropID,
                                const nsAString&    aPropValue);
 
+  // Return the default value to be used for -moz-control-character-visibility,
+  // from preferences (cached by our Startup(), so that both nsStyleText and
+  // nsRuleNode can have fast access to it).
+  static uint8_t ControlCharVisibilityDefault();
+
 protected:
   // This is a CSSParserImpl*, but if we expose that type name in this
   // header, we can't put the type definition (in nsCSSParser.cpp) in

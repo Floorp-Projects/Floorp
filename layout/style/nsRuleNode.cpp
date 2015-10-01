@@ -4376,7 +4376,7 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
               conditions,
               SETDSC_ENUMERATED | SETDSC_UNSET_INHERIT,
               parentText->mControlCharacterVisibility,
-              NS_STYLE_CONTROL_CHARACTER_VISIBILITY_VISIBLE, 0, 0, 0, 0);
+              nsCSSParser::ControlCharVisibilityDefault(), 0, 0, 0, 0);
 
   COMPUTE_END_INHERITED(Text, text)
 }
