@@ -574,7 +574,23 @@ JSCompartment::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime t
     if (objectMetadataTable)
         objectMetadataTable->trace(trc);
 
-    if (scriptCountsMap && !trc->runtime()->isHeapMinorCollecting()) {
+    // If code coverage is only enabled with the Debugger or the LCovOutput,
+    // then the following comment holds.
+    //
+    // The scriptCountsMap maps JSScript weak-pointers to ScriptCounts
+    // structures. It uses a HashMap instead of a WeakMap, so that we can keep
+    // the data alive for the JSScript::finalize call. Thus, we do not trace the
+    // keys of the HashMap to avoid adding a strong reference to the JSScript
+    // pointers. Additionally, we assert that the JSScripts have not been moved
+    // in JSCompartment::fixupAfterMovingGC.
+    //
+    // If the code coverage is either enabled with the --dump-bytecode command
+    // line option, or with the PCCount JSFriend API functions, then we mark the
+    // keys of the map to hold the JSScript alive.
+    if (scriptCountsMap &&
+        trc->runtime()->profilingScripts &&
+        !trc->runtime()->isHeapMinorCollecting())
+    {
         MOZ_ASSERT_IF(!trc->runtime()->isBeingDestroyed(), collectCoverage());
         for (ScriptCountsMap::Range r = scriptCountsMap->all(); !r.empty(); r.popFront()) {
             JSScript* script = const_cast<JSScript*>(r.front().key());
@@ -754,6 +770,18 @@ JSCompartment::fixupAfterMovingGC()
     fixupGlobal();
     fixupInitialShapeTable();
     objectGroups.fixupTablesAfterMovingGC();
+
+#ifdef DEBUG
+    // Assert that none of the JSScript pointers, which are used as key of the
+    // scriptCountsMap HashMap are moved. We do not mark these keys because we
+    // need weak references. We do not use a WeakMap because these entries would
+    // be collected before the JSScript::finalize calls which is used to
+    // summarized the content of the code coverage.
+    if (scriptCountsMap) {
+        for (ScriptCountsMap::Range r = scriptCountsMap->all(); !r.empty(); r.popFront())
+            MOZ_ASSERT(!IsForwarded(r.front().key()));
+    }
+#endif
 }
 
 void
@@ -978,9 +1006,8 @@ JSCompartment::updateDebuggerObservesCoverage()
         return;
     }
 
-    // If the runtime flag is enabled, then keep the data until
-    // StopPCCountProfiling is called.
-    if (runtimeFromMainThread()->profilingScripts)
+    // If code coverage is enabled by any other means, keep it.
+    if (collectCoverage())
         return;
 
     clearScriptCounts();
