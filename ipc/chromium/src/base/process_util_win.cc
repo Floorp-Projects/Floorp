@@ -19,6 +19,8 @@
 #include <algorithm>
 #include "prenv.h"
 
+#include "mozilla/WindowsVersion.h"
+
 namespace {
 
 // System pagesize. This value remains constant on x86/64 architectures.
@@ -294,7 +296,7 @@ bool LaunchApp(const std::wstring& cmdline,
 
   LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList = NULL;
   // Don't even bother trying pre-Vista...
-  if (win_util::GetWinVersion() >= win_util::WINVERSION_VISTA) {
+  if (mozilla::IsVistaOrLater()) {
     // setup our handle array first - if we end up with no handles that can
     // be inherited we can avoid trying to do the ThreadAttributeList dance...
     HANDLE handlesToInherit[2];
