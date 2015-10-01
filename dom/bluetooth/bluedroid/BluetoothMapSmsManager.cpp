@@ -724,25 +724,23 @@ BluetoothMapSmsManager::AppendBtNamedValueByTagId(
     }
     case Map::AppParametersTagId::SubjectLength: {
       uint8_t subLength = *((uint8_t *)buf);
-      // convert big endian to little endian
-      subLength = (subLength >> 8) | (subLength << 8);
       BT_LOGR("msg subLength : %d", subLength);
       AppendNamedValue(aValues, "subLength", subLength);
       break;
     }
     case Map::AppParametersTagId::ParameterMask: {
-      // 4 bytes
-      uint32_t parameterMask = *((uint32_t *)buf);
-      // convert big endian to little endian
-      parameterMask = (parameterMask >> 8) | (parameterMask << 8);
+      /* Table 6.5, MAP 6.3.1. ParameterMask is Bit 16-31 Reserved for future
+       * use. The reserved bits shall be set to 0 by MCE and discarded by MSE.
+       * convert big endian to little endian
+       */
+      uint32_t parameterMask = (buf[3] << 0) | (buf[2] << 8) |
+                               (buf[1] << 16) | (buf[0] << 24);
       BT_LOGR("msg parameterMask : %d", parameterMask);
       AppendNamedValue(aValues, "parameterMask", parameterMask);
       break;
     }
     case Map::AppParametersTagId::FilterMessageType: {
       uint8_t filterMessageType = *((uint8_t *)buf);
-      // convert big endian to little endian
-      filterMessageType = (filterMessageType >> 8) | (filterMessageType << 8);
       BT_LOGR("msg filterMessageType : %d", filterMessageType);
       AppendNamedValue(aValues, "filterMessageType", filterMessageType);
       break;
@@ -761,8 +759,6 @@ BluetoothMapSmsManager::AppendBtNamedValueByTagId(
     }
     case Map::AppParametersTagId::FilterReadStatus: {
       uint8_t filterReadStatus = *((uint8_t *)buf);
-      // convert big endian to little endian
-      filterReadStatus = (filterReadStatus >> 8) | (filterReadStatus << 8);
       BT_LOGR("msg filter read status : %d", filterReadStatus);
       AppendNamedValue(aValues, "filterReadStatus", filterReadStatus);
       break;
@@ -781,32 +777,24 @@ BluetoothMapSmsManager::AppendBtNamedValueByTagId(
     }
     case Map::AppParametersTagId::FilterPriority: {
       uint8_t filterPriority = *((uint8_t *)buf);
-      // convert big endian to little endian
-      filterPriority = (filterPriority >> 8) | (filterPriority << 8);
       BT_LOGR("msg filter priority: %d", filterPriority);
       AppendNamedValue(aValues, "filterPriority", filterPriority);
       break;
     }
     case Map::AppParametersTagId::Attachment: {
       uint8_t attachment = *((uint8_t *)buf);
-      // convert big endian to little endian
-      attachment = (attachment >> 8) | (attachment << 8);
       BT_LOGR("msg filter attachment: %d", attachment);
       AppendNamedValue(aValues, "attachment", attachment);
       break;
     }
     case Map::AppParametersTagId::Charset: {
       uint8_t charset = *((uint8_t *)buf);
-      // convert big endian to little endian
-      charset = (charset >> 8) | (charset << 8);
       BT_LOGR("msg filter charset: %d", charset);
       AppendNamedValue(aValues, "charset", charset);
       break;
     }
     case Map::AppParametersTagId::StatusIndicator: {
       uint8_t statusIndicator = *((uint8_t *)buf);
-      // convert big endian to little endian
-      statusIndicator = (statusIndicator >> 8) | (statusIndicator << 8);
       BT_LOGR("msg filter statusIndicator: %d", statusIndicator);
       AppendNamedValue(aValues, "statusIndicator",
                        static_cast<uint32_t>(statusIndicator));
@@ -814,8 +802,6 @@ BluetoothMapSmsManager::AppendBtNamedValueByTagId(
     }
     case Map::AppParametersTagId::StatusValue: {
       uint8_t statusValue = *((uint8_t *)buf);
-      // convert big endian to little endian
-      statusValue = (statusValue >> 8) | (statusValue << 8);
       BT_LOGR("msg filter statusvalue: %d", statusValue);
       AppendNamedValue(aValues, "statusValue",
                        static_cast<uint32_t>(statusValue));
@@ -823,8 +809,6 @@ BluetoothMapSmsManager::AppendBtNamedValueByTagId(
     }
     case Map::AppParametersTagId::Transparent: {
       uint8_t transparent = *((uint8_t *)buf);
-      // convert big endian to little endian
-      transparent = (transparent >> 8) | (transparent << 8);
       BT_LOGR("msg filter statusvalue: %d", transparent);
       AppendNamedValue(aValues, "transparent",
                        static_cast<uint32_t>(transparent));
@@ -832,8 +816,6 @@ BluetoothMapSmsManager::AppendBtNamedValueByTagId(
     }
     case Map::AppParametersTagId::Retry: {
       uint8_t retry = *((uint8_t *)buf);
-      // convert big endian to little endian
-      retry = (retry >> 8) | (retry << 8);
       BT_LOGR("msg filter retry: %d", retry);
       AppendNamedValue(aValues, "retry", static_cast<uint32_t>(retry));
       break;
@@ -1007,6 +989,12 @@ BluetoothMapSmsManager::HandleSmsMmsPushMessage(const ObexHeaderSet& aHeader)
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE_VOID(bs);
 
+  if (!aHeader.Has(ObexHeaderId::Body) &&
+      !aHeader.Has(ObexHeaderId::EndOfBody)) {
+    BT_LOGR("Error! Fail to find Body/EndOfBody. Ignore this push request");
+    return;
+  }
+
   InfallibleTArray<BluetoothNamedValue> data;
   nsString name;
   aHeader.GetName(name);
@@ -1015,7 +1003,46 @@ BluetoothMapSmsManager::HandleSmsMmsPushMessage(const ObexHeaderSet& aHeader)
   AppendBtNamedValueByTagId(aHeader, data,
                             Map::AppParametersTagId::Transparent);
   AppendBtNamedValueByTagId(aHeader, data, Map::AppParametersTagId::Retry);
+
+  /* TODO: Support native format charset (mandatory format).
+   *
+   * Charset indicates Gaia application how to deal with encoding.
+   * - Native: If the message object shall be delivered without trans-coding.
+   * - UTF-8:  If the message text shall be trans-coded to UTF-8.
+   *
+   * We only support UTF-8 charset due to current SMS API limitation.
+   */
   AppendBtNamedValueByTagId(aHeader, data, Map::AppParametersTagId::Charset);
+
+  // Get Body
+  uint8_t* bodyPtr = nullptr;
+  aHeader.GetBody(&bodyPtr, &mBodySegmentLength);
+  mBodySegment = bodyPtr;
+
+  nsRefPtr<BluetoothMapBMessage> bmsg =
+    new BluetoothMapBMessage(bodyPtr, mBodySegmentLength);
+
+  /* If FolderName is outbox:
+   *   1. Parse body to get SMS
+   *   2. Get receipent subject
+   *   3. Send it to Gaia
+   * Otherwise reply HTTP_NOT_ACCEPTABLE
+   */
+
+  nsCString subject;
+  bmsg->GetBody(subject);
+  // It's possible that subject is empty, send it anyway
+  AppendNamedValue(data, "subject", subject);
+
+  nsTArray<nsRefPtr<VCard>> recipients;
+  bmsg->GetRecipients(recipients);
+
+  // Get the topmost level, only one recipient for SMS case
+  if (!recipients.IsEmpty()) {
+    nsCString recipient;
+    recipients[0]->GetTelephone(recipient);
+    AppendNamedValue(data, "recipient", recipient);
+  }
 
   bs->DistributeSignal(NS_LITERAL_STRING(MAP_PUSH_MESSAGE_REQ_ID),
                        NS_LITERAL_STRING(KEY_ADAPTER), data);
