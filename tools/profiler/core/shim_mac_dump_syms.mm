@@ -13,7 +13,10 @@ bool ReadSymbolData_DARWIN(const string& obj_file,
 {
   google_breakpad::DumpSymbols ds(symbol_data);
 
-  if (!ds.Read(obj_file))
+  NSString* obj_file_ns = [NSString stringWithUTF8String:obj_file.c_str()];
+  // TODO: remember to [obj_file_ns release] this at the exit points
+
+  if (!ds.Read(obj_file_ns))
     return false;
 
   return ds.ReadSymbolData(module);
