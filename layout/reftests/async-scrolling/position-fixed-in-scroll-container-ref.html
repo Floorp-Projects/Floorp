@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<style>
+
+body {
+  height: 10000px;
+}
+
+.outer-opacity {
+  opacity: 0.8;
+}
+
+.scrollbox {
+  border: 1px solid black;
+  width: 200px;
+  height: 400px;
+  overflow: hidden;
+}
+
+.inner-opacity {
+  height: 1000px;
+  opacity: 0.8;
+}
+
+.fixed {
+  background: blue;
+  width: 100px;
+  height: 100px;
+}
+
+</style>
+
+<div class="outer-opacity">
+  <div class="scrollbox">
+    <div class="inner-opacity">
+      <div class="fixed"></div>
+    </div>
+  </div>
+</div>
+</html>

@@ -134,7 +134,7 @@ var tests = {
         function() { // the "load" callback.
           todo_is(panelCallbackCount, 0, "Bug 833207 - should be no callback when error page loads.");
           let chat = getChatBar().selectedChat;
-          waitForCondition(function() chat.content != null && chat.contentDocument.documentURI.indexOf("about:socialerror?mode=tryAgainOnly")==0,
+          waitForCondition(() => chat.content != null && chat.contentDocument.documentURI.indexOf("about:socialerror?mode=tryAgainOnly")==0,
                            function() {
                             chat.close();
                             next();
@@ -162,14 +162,14 @@ var tests = {
         chat.swapWindows().then(
           chat => {
             ok(!!chat.content, "we have chat content 1");
-            waitForCondition(function() chat.content != null && chat.contentDocument.readyState == "complete",
+            waitForCondition(() => chat.content != null && chat.contentDocument.readyState == "complete",
                              function() {
               // now go offline and reload the chat - about:socialerror should be loaded.
               goOffline().then(function() {
                 ok(!!chat.content, "we have chat content 2");
                 chat.contentDocument.location.reload();
                 info("chat reload called");
-                waitForCondition(function() chat.contentDocument.documentURI.indexOf("about:socialerror?mode=tryAgainOnly")==0,
+                waitForCondition(() => chat.contentDocument.documentURI.indexOf("about:socialerror?mode=tryAgainOnly")==0,
                                  function() {
                                   chat.close();
                                   next();

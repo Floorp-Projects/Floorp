@@ -33,7 +33,7 @@ task:
       - -exc
       - >
         tc-vcs checkout ./gecko {{base_repository}} {{head_repository}} {{head_rev}} {{head_ref}} &&
-        ./gecko/testing/taskcluster/scripts/builder/pull-gaia.sh ./gecko ./gaia &&
+        ./gecko/testing/taskcluster/scripts/builder/pull-gaia.sh ./gecko ./gaia gaia_props.py &&
         ./gecko/testing/taskcluster/scripts/builder/build-simulator.sh ./gecko ./gaia {{build_url}}
 
     artifacts:

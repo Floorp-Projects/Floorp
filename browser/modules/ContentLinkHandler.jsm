@@ -144,7 +144,7 @@ this.ContentLinkHandler = {
       /^about:blocked\?/,
       /^about:certerror\?/,
       /^about:home$/,
-    ].some(function (re) re.test(targetDoc.documentURI));
+    ].some(re => re.test(targetDoc.documentURI));
 
     if (!isAllowedPage || !uri.schemeIs("chrome")) {
       var ssm = Services.scriptSecurityManager;

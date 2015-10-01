@@ -1414,9 +1414,6 @@ PlacesTreeView.prototype = {
       return "";
 
     let node = this._getNodeForRow(aRow);
-    if (PlacesUtils.nodeIsURI(node) && node.icon)
-      return PlacesUtils.getImageURLForResolution(window, node.icon);
-
     return node.icon;
   },
 

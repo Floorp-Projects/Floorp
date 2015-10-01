@@ -533,12 +533,10 @@ var LoopUI;
       }
 
       this.PlacesUtils.promiseFaviconLinkUrl(pageURI).then(uri => {
-        uri = this.PlacesUtils.getImageURLForResolution(window, uri.spec);
-
         // We XHR the favicon to get a File object, which we can pass to the FileReader
         // object. The FileReader turns the File object into a data-uri.
         let xhr = new XMLHttpRequest();
-        xhr.open("get", uri, true);
+        xhr.open("get", uri.spec, true);
         xhr.responseType = "blob";
         xhr.overrideMimeType("image/x-icon");
         xhr.onload = () => {

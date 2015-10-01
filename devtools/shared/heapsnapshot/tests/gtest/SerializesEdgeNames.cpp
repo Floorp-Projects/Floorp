@@ -30,11 +30,11 @@ DEF_TEST(SerializesEdgeNames, {
       writer,
       writeNode(AllOf(EdgesLength(rt, 3),
                       Edge(rt, 0, Field(&JS::ubi::Edge::name,
-                                        UTF16StrEq(edgeName))),
+                                        UniqueUTF16StrEq(edgeName))),
                       Edge(rt, 1, Field(&JS::ubi::Edge::name,
-                                        UTF16StrEq(emptyStr))),
+                                        UniqueUTF16StrEq(emptyStr))),
                       Edge(rt, 2, Field(&JS::ubi::Edge::name,
-                                        IsNull()))),
+                                        UniqueIsNull()))),
                 _)
     )
       .Times(1)

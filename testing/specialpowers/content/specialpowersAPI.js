@@ -607,7 +607,7 @@ SpecialPowersAPI.prototype = {
       // in order to properly log these assertions and notify
       // all usefull log observers
       let window = this.window.get();
-      let parentRunner, repr = function (o) o;
+      let parentRunner, repr = o => o;
       if (window) {
         window = window.wrappedJSObject;
         parentRunner = window.TestRunner;

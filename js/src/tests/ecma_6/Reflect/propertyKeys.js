@@ -38,13 +38,14 @@ var keys = [
             valueOf() { return "fallback"; }
         },
         expected: "fallback"
+    },
+    {
+        value: {
+            [Symbol.toPrimitive](hint) { return hint; }
+        },
+        expected: "string"
     }
 ];
-
-if ("toPrimitive" in Symbol) {
-    throw new Error("Congratulations on implementing Symbol.toPrimitive! " +
-                    "Please add an object with an @@toPrimitive method in the list above.");
-}
 
 for (var {value, expected} of keys) {
     if (expected === undefined)

@@ -417,16 +417,6 @@ CrossCompartmentWrapper::boxedValue_unbox(JSContext* cx, HandleObject wrapper, M
            cx->compartment()->wrap(cx, vp));
 }
 
-bool
-CrossCompartmentWrapper::defaultValue(JSContext* cx, HandleObject wrapper, JSType hint,
-                                      MutableHandleValue vp) const
-{
-    PIERCE(cx, wrapper,
-           NOTHING,
-           Wrapper::defaultValue(cx, wrapper, hint, vp),
-           cx->compartment()->wrap(cx, vp));
-}
-
 const CrossCompartmentWrapper CrossCompartmentWrapper::singleton(0u);
 
 bool

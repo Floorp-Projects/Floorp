@@ -41,8 +41,6 @@ class SymbolObject : public NativeObject
 
     static bool construct(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool convert(JSContext* cx, HandleObject obj, JSType type, MutableHandleValue vp);
-
     // Static methods.
     static bool for_(JSContext* cx, unsigned argc, Value* vp);
     static bool keyFor(JSContext* cx, unsigned argc, Value* vp);
@@ -52,6 +50,7 @@ class SymbolObject : public NativeObject
     static bool toString(JSContext* cx, unsigned argc, Value* vp);
     static bool valueOf_impl(JSContext* cx, const CallArgs& args);
     static bool valueOf(JSContext* cx, unsigned argc, Value* vp);
+    static bool toPrimitive(JSContext* cx, unsigned argc, Value* vp);
 
     static const JSPropertySpec properties[];
     static const JSFunctionSpec methods[];

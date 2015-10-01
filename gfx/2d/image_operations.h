@@ -185,8 +185,8 @@ inline float EvalLanczos(int filter_size, float x) {
       x < std::numeric_limits<float>::epsilon())
     return 1.0f;  // Special case the discontinuity at the origin.
   float xpi = x * static_cast<float>(M_PI);
-  return (sin(xpi) / xpi) *  // sinc(x)
-          sin(xpi / filter_size) / (xpi / filter_size);  // sinc(x/filter_size)
+  return (sinf(xpi) / xpi) *  // sinc(x)
+          sinf(xpi / filter_size) / (xpi / filter_size);  // sinc(x/filter_size)
 }
 
 // Evaluates the Hamming filter of the given filter size window for the given
@@ -212,8 +212,8 @@ inline float EvalHamming(int filter_size, float x) {
     return 1.0f;  // Special case the sinc discontinuity at the origin.
   const float xpi = x * static_cast<float>(M_PI);
 
-  return ((sin(xpi) / xpi) *  // sinc(x)
-          (0.54f + 0.46f * cos(xpi / filter_size)));  // hamming(x)
+  return ((sinf(xpi) / xpi) *  // sinc(x)
+          (0.54f + 0.46f * cosf(xpi / filter_size)));  // hamming(x)
 }
 
 // ResizeFilter ----------------------------------------------------------------

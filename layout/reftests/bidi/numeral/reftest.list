@@ -34,9 +34,9 @@ pref(bidi.numeral,2) == bug441782-2.html bug441782-2-ref.html
 pref(bidi.numeral,3) == bug441782-2.html bug441782-2-ref.html
 pref(bidi.numeral,4) == bug441782-2.html bug441782-2-ref.html
 pref(bidi.numeral,0) != bug441782-3.html bug441782-3-ref.html
-fails-if(winWidget&&!layersGPUAccelerated) pref(bidi.numeral,1) == bug441782-3.html bug441782-3-ref.html
-fails-if(winWidget&&!layersGPUAccelerated) pref(bidi.numeral,2) == bug441782-3.html bug441782-3-ref.html
-fails-if(winWidget&&!layersGPUAccelerated) pref(bidi.numeral,3) == bug441782-3.html bug441782-3-ref.html
+fails-if(winWidget&&!layersGPUAccelerated) fuzzy-if(winWidget&&!d2d&&d3d11,13,1) pref(bidi.numeral,1) == bug441782-3.html bug441782-3-ref.html
+fails-if(winWidget&&!layersGPUAccelerated) fuzzy-if(winWidget&&!d2d&&d3d11,13,1) pref(bidi.numeral,2) == bug441782-3.html bug441782-3-ref.html
+fails-if(winWidget&&!layersGPUAccelerated) fuzzy-if(winWidget&&!d2d&&d3d11,13,1) pref(bidi.numeral,3) == bug441782-3.html bug441782-3-ref.html
 pref(bidi.numeral,4) == bug441782-3.html bug441782-3-ref.html
 pref(bidi.numeral,0) != bug441782-4.html bug441782-4-ref.html
 pref(bidi.numeral,1) == bug441782-4.html bug441782-4-ref.html

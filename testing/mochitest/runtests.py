@@ -149,6 +149,13 @@ class MessageLogger(object):
                     message['test'] = test[len(prefix):]
                     break
 
+    def _fix_message_format(self, message):
+        if 'message' in message:
+            if isinstance(message['message'], bytes):
+                message['message'] = message['message'].decode('utf-8', 'replace')
+            elif not isinstance(message['message'], unicode):
+                message['message'] = unicode(message['message'])
+
     def parse_line(self, line):
         """Takes a given line of input (structured or not) and returns a list of structured messages"""
         line = line.rstrip().decode("UTF-8", "replace")
@@ -172,6 +179,7 @@ class MessageLogger(object):
                     message=fragment,
                     unstructured=True)
             self._fix_test_name(message)
+            self._fix_message_format(message)
             messages.append(message)
 
         return messages
@@ -731,7 +739,7 @@ class MochitestUtilsMixin(object):
         testHost = "http://mochi.test:8888"
         testURL = "/".join([testHost, self.TEST_PATH])
 
-        if len(options.test_paths) == 1 :
+        if len(options.test_paths) == 1:
             if options.repeat > 0 and os.path.isfile(
                 os.path.join(
                     self.oldcwd,
@@ -2385,7 +2393,7 @@ class Mochitest(MochitestUtilsMixin):
             messages = self.harness.message_logger.parse_line(line)
 
             for message in messages:
-                    # Passing the message to the handlers
+                # Passing the message to the handlers
                 for handler in self.outputHandlers():
                     message = handler(message)
 
@@ -2453,11 +2461,12 @@ class Mochitest(MochitestUtilsMixin):
         def countline(self, message):
             if message['action'] != 'log':
                 return message
+
             line = message['message']
             val = 0
             try:
                 val = int(line.split(':')[-1].strip())
-            except ValueError:
+            except (AttributeError, ValueError):
                 return message
 
             if "Passed:" in line:
@@ -2470,10 +2479,7 @@ class Mochitest(MochitestUtilsMixin):
 
         def fix_stack(self, message):
             if message['action'] == 'log' and self.stackFixerFunction:
-                message['message'] = self.stackFixerFunction(
-                    message['message'].encode(
-                        'utf-8',
-                        'replace'))
+                message['message'] = self.stackFixerFunction(message['message'])
             return message
 
         def record_last_test(self, message):

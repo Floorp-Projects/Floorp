@@ -208,7 +208,7 @@ const AppProjects = {
     return IDB.update(project);
   },
 
-  updateLocation: function(project, newLocation) {
+  updateLocation: function(project, newLocation) {
     return IDB.remove(project.location)
               .then(() => {
                 project.location = newLocation;

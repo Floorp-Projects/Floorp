@@ -15,6 +15,6 @@ GARBAGE += \
 # We have to preprocess our def file because we need different symbols in debug
 # builds exposed that are not built in non-debug builds.
 $(DEFFILE): sqlite.def
-	@$(call py_action,preprocessor,$(DEFINES) $(XULPPFLAGS) \
+	@$(call py_action,preprocessor,$(DEFINES) $(MOZ_DEBUG_DEFINES) \
 	  $(srcdir)/sqlite.def -o $(DEFFILE))
 endif

@@ -117,10 +117,6 @@ public:
   // on the main thread.
   virtual MediaDecoderOwner* GetOwner() = 0;
 
-  // May be called by the reader to notify the decoder that the resources
-  // required to begin playback have been acquired. Can be called on any thread.
-  virtual void NotifyWaitingForResourcesStatusChanged() = 0;
-
   // Called by the reader's MediaResource as data arrives over the network.
   // Must be called on the main thread.
   virtual void NotifyDataArrived(uint32_t aLength, int64_t aOffset,

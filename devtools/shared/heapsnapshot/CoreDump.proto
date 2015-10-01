@@ -38,11 +38,25 @@
 //     | .                                                                     |
 //     +-----------------------------------------------------------------------+
 //
-// In practice, certain message fields have a lot of duplication (such as type
-// or edge name strings). Rather than try and de-duplicate this information at
-// the protobuf message and field level, core dumps should be written with
-// `google::protobuf::io::GzipOutputStream` and read from
+// Core dumps should always be written with a
+// `google::protobuf::io::GzipOutputStream` and read from a
 // `google::protobuf::io::GzipInputStream`.
+//
+// Note that all strings are de-duplicated. The first time the N^th unique
+// string is encountered, the full string is serialized. Subsequent times that
+// same string is encountered, it is referenced by N. This de-duplication
+// happens across string properties, not on a per-property basis. For example,
+// if the same K^th unique string is first used as an Edge::EdgeNameOrRef and
+// then as a StackFrame::Data::FunctionDisplayNameOrRef, the first will be the
+// actual string as the functionDisplayName oneof property, and the second will
+// be a reference to the first as the edgeNameRef oneof property whose value is
+// K.
+//
+// We would ordinarily abstract these de-duplicated strings with messages of
+// their own, but unfortunately, the protobuf compiler does not have a way to
+// inline a messsage within another message and the child message must be
+// referenced by pointer. This leads to extra mallocs that we wish to avoid.
+
 
 package mozilla.devtools.protobuf;
 
@@ -65,36 +79,59 @@ message StackFrame {
     }
 
     message Data {
-        optional uint64 id = 1;
-        optional StackFrame parent = 2;
-        optional uint32 line = 3;
-        optional uint32 column = 4;
-        // char16_t[]
-        optional bytes source = 5;
-        // char16_t[]
-        optional bytes functionDisplayName = 6;
-        optional bool isSystem = 7;
-        optional bool isSelfHosted = 8;
+        optional uint64        id           = 1;
+        optional StackFrame    parent       = 2;
+        optional uint32        line         = 3;
+        optional uint32        column       = 4;
+
+        // De-duplicated two-byte string.
+        oneof SourceOrRef {
+            bytes  source                   = 5;
+            uint64 sourceRef                = 6;
+        }
+
+        // De-duplicated two-byte string.
+        oneof FunctionDisplayNameOrRef {
+            bytes  functionDisplayName      = 7;
+            uint64 functionDisplayNameRef   = 8;
+        }
+
+        optional bool          isSystem     = 9;
+        optional bool          isSelfHosted = 10;
     }
 }
 
 // A serialized version of `JS::ubi::Node` and its outgoing edges.
 message Node {
-    optional uint64     id                = 1;
-    // char16_t[]
-    optional bytes      typeName          = 2;
-    optional uint64     size              = 3;
-    repeated Edge       edges             = 4;
-    optional StackFrame allocationStack   = 5;
-    // char[]
-    optional bytes      jsObjectClassName = 6;
+    optional uint64     id                   = 1;
+
+    // De-duplicated two-byte string.
+    oneof TypeNameOrRef {
+        bytes           typeName             = 2;
+        uint64          typeNameRef          = 3;
+    }
+    
+    optional uint64     size                 = 4;
+    repeated Edge       edges                = 5;
+    optional StackFrame allocationStack      = 6;
+
+    // De-duplicated one-byte string.
+    oneof JSObjectClassNameOrRef {
+        bytes           jsObjectClassName    = 7;
+        uint64          jsObjectClassNameRef = 8;
+    }
+
     // JS::ubi::CoarseType. Defaults to Other.
-    optional uint32     coarseType        = 7 [default = 0];
+    optional uint32     coarseType           = 9 [default = 0];
 }
 
 // A serialized edge from the heap graph.
 message Edge {
-    optional uint64 referent = 1;
-    // char16_t[]
-    optional bytes  name     = 2;
+    optional uint64 referent    = 1;
+
+    // De-duplicated two-byte string.
+    oneof EdgeNameOrRef {
+        bytes       name    = 2;
+        uint64      nameRef = 3;
+    }
 }

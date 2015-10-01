@@ -27,6 +27,7 @@
 #include "jit/TypePolicy.h"
 #include "vm/ArrayObject.h"
 #include "vm/ScopeObject.h"
+#include "vm/SharedMem.h"
 #include "vm/TypedArrayCommon.h"
 #include "vm/UnboxedObject.h"
 
@@ -7773,13 +7774,13 @@ class MElements
     ALLOW_CLONE(MElements)
 };
 
-// A constant value for some object's array elements or typed array elements.
+// A constant value for some object's typed array elements.
 class MConstantElements : public MNullaryInstruction
 {
-    void* value_;
+    SharedMem<void*> value_;
 
   protected:
-    explicit MConstantElements(void* v)
+    explicit MConstantElements(SharedMem<void*> v)
       : value_(v)
     {
         setResultType(MIRType_Elements);
@@ -7788,18 +7789,18 @@ class MConstantElements : public MNullaryInstruction
 
   public:
     INSTRUCTION_HEADER(ConstantElements)
-    static MConstantElements* New(TempAllocator& alloc, void* v) {
+    static MConstantElements* New(TempAllocator& alloc, SharedMem<void*> v) {
         return new(alloc) MConstantElements(v);
     }
 
-    void* value() const {
+    SharedMem<void*> value() const {
         return value_;
     }
 
     void printOpcode(GenericPrinter& out) const override;
 
     HashNumber valueHash() const override {
-        return (HashNumber)(size_t) value_;
+        return (HashNumber)(size_t) value_.asValue();
     }
 
     bool congruentTo(const MDefinition* ins) const override {
@@ -9648,7 +9649,7 @@ class MLoadTypedArrayElementStatic
     Scalar::Type accessType() const {
         return AnyTypedArrayType(someTypedArray_);
     }
-    void* base() const;
+    SharedMem<void*> base() const;
     size_t length() const;
 
     MDefinition* ptr() const { return getOperand(0); }
@@ -9912,7 +9913,7 @@ class MStoreTypedArrayElementStatic :
         return writeType();
     }
 
-    void* base() const;
+    SharedMem<void*> base() const;
     size_t length() const;
 
     MDefinition* ptr() const { return getOperand(0); }

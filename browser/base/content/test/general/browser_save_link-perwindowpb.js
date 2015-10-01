@@ -80,7 +80,7 @@ function triggerSave(aWindow, aCallback) {
     ok(downloadSuccess, "Link should have been downloaded successfully");
     aWindow.close();
 
-    executeSoon(function() aCallback());
+    executeSoon(() => aCallback());
   }
 }
 

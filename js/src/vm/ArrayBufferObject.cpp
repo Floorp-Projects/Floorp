@@ -111,7 +111,6 @@ const Class ArrayBufferObject::class_ = {
     nullptr,                 /* enumerate */
     nullptr,                 /* resolve */
     nullptr,                 /* mayResolve */
-    nullptr,                 /* convert */
     ArrayBufferObject::finalize,
     nullptr,        /* call        */
     nullptr,        /* hasInstance */
@@ -725,6 +724,12 @@ uint8_t*
 ArrayBufferObject::dataPointer() const
 {
     return static_cast<uint8_t*>(getSlot(DATA_SLOT).toPrivate());
+}
+
+SharedMem<uint8_t*>
+ArrayBufferObject::dataPointerShared() const
+{
+    return SharedMem<uint8_t*>::unshared(getSlot(DATA_SLOT).toPrivate());
 }
 
 void
