@@ -152,14 +152,16 @@ public:
     }
   }
 
-  void UpdateParametersIfNeeded(StreamTime ticks, size_t count)
+  // Returns true if the final frequency (and thus the phase increment) changed,
+  // false otherwise. This allow some optimizations at callsite.
+  bool UpdateParametersIfNeeded(StreamTime ticks, size_t count)
   {
     double frequency, detune;
 
     // Shortcut if frequency-related AudioParam are not automated, and we
     // already have computed the frequency information and related parameters.
     if (!ParametersMayNeedUpdate()) {
-      return;
+      return false;
     }
 
     bool simpleFrequency = mFrequency.HasSimpleValue();
@@ -176,11 +178,17 @@ public:
       detune = mDetune.GetValueAtTime(ticks, count);
     }
 
-    mFinalFrequency = frequency * pow(2., detune / 1200.);
-    float signalPeriod = mSource->SampleRate() / mFinalFrequency;
+    float finalFrequency = frequency * pow(2., detune / 1200.);
+    float signalPeriod = mSource->SampleRate() / finalFrequency;
     mRecomputeParameters = false;
 
     mPhaseIncrement = 2 * M_PI / signalPeriod;
+
+    if (finalFrequency != mFinalFrequency) {
+      mFinalFrequency = finalFrequency;
+      return true;
+    }
+    return false;
   }
 
   void FillBounds(float* output, StreamTime ticks,
@@ -208,6 +216,8 @@ public:
   void ComputeSine(float * aOutput, StreamTime ticks, uint32_t aStart, uint32_t aEnd)
   {
     for (uint32_t i = aStart; i < aEnd; ++i) {
+      // We ignore the return value, changing the frequency has no impact on
+      // performances here.
       UpdateParametersIfNeeded(ticks, i);
 
       aOutput[i] = sin(mPhase);
@@ -242,7 +252,7 @@ public:
     // mPhase runs [0,periodicWaveSize) here instead of [0,2*M_PI).
     float basePhaseIncrement = mPeriodicWave->rateScale();
 
-    UpdateParametersIfNeeded(ticks, aStart);
+    bool needToFetchWaveData = UpdateParametersIfNeeded(ticks, aStart);
 
     bool parametersMayNeedUpdate = ParametersMayNeedUpdate();
     mPeriodicWave->waveDataForFundamentalFrequency(mFinalFrequency,
@@ -252,11 +262,13 @@ public:
 
     for (uint32_t i = aStart; i < aEnd; ++i) {
       if (parametersMayNeedUpdate) {
-        mPeriodicWave->waveDataForFundamentalFrequency(mFinalFrequency,
-                                                       lowerWaveData,
-                                                       higherWaveData,
-                                                       tableInterpolationFactor);
-        UpdateParametersIfNeeded(ticks, i);
+        if (needToFetchWaveData) {
+          mPeriodicWave->waveDataForFundamentalFrequency(mFinalFrequency,
+                                                         lowerWaveData,
+                                                         higherWaveData,
+                                                         tableInterpolationFactor);
+        }
+        needToFetchWaveData = UpdateParametersIfNeeded(ticks, i);
       }
       // Bilinear interpolation between adjacent samples in each table.
       float floorPhase = floorf(mPhase);
