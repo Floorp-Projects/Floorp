@@ -70,7 +70,7 @@ void PlatformThread::SetName(const char* name) {
 bool PlatformThread::Create(size_t stack_size, Delegate* delegate,
                             PlatformThreadHandle* thread_handle) {
   unsigned int flags = 0;
-  if (stack_size > 0 && win_util::GetWinVersion() >= win_util::WINVERSION_XP) {
+  if (stack_size > 0) {
     flags = STACK_SIZE_PARAM_IS_A_RESERVATION;
   } else {
     stack_size = 0;
