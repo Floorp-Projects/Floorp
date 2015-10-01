@@ -196,6 +196,7 @@ class ExclusiveContext : public ContextFriendFields,
     bool canUseSignalHandlers() const { return runtime_->canUseSignalHandlers(); }
     bool jitSupportsFloatingPoint() const { return runtime_->jitSupportsFloatingPoint; }
     bool jitSupportsSimd() const { return runtime_->jitSupportsSimd; }
+    bool lcovEnabled() const { return runtime_->lcovOutput.isEnabled(); }
 
     // Thread local data that may be accessed freely.
     DtoaState* dtoaState() {
