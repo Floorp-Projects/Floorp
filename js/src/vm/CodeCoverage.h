@@ -101,6 +101,43 @@ class LCovCompartment
     LCovSourceVector* sources_;
 };
 
+class LCovRuntime
+{
+  public:
+    LCovRuntime();
+    ~LCovRuntime();
+
+    // If the environment variable JS_CODE_COVERAGE_OUTPUT_DIR is set to a
+    // directory, create a file inside this directory which uses the process
+    // ID, the thread ID and a timestamp to ensure the uniqueness of the
+    // file.
+    //
+    // At the end of the execution, this file should contains the LCOV output of
+    // all the scripts executed in the current JSRuntime.
+    void init();
+
+    // Check if we should collect code coverage information.
+    bool isEnabled() const { return out_.isInitialized(); }
+
+    // Write the aggregated result of the code coverage of a compartment
+    // into a file.
+    void writeLCovResult(LCovCompartment& comp);
+
+  private:
+    // When a process forks, the file will remain open, but 2 processes will
+    // have the same file. To avoid conflicting writes, we open a new file for
+    // the child process.
+    void maybeReopenAfterFork();
+
+  private:
+    // Output file which is created if code coverage is enabled.
+    Fprinter out_;
+
+    // The process' PID is used to watch for fork. When the process fork,
+    // we want to close the current file and open a new one.
+    size_t pid_;
+};
+
 } // namespace coverage
 } // namespace js
 
