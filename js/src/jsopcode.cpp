@@ -2014,7 +2014,8 @@ GenerateLcovInfo(JSContext* cx, JSCompartment* comp, GenericPrinter& out)
             }
         } while (!queue.empty());
 
-        compCover.collectCodeCoverageInfo(comp, topScript);
+        compCover.collectSourceFile(comp, &topScript->scriptSourceUnwrap());
+        compCover.collectCodeCoverageInfo(comp, topScript->sourceObject(), topScript);
     }
 
     compCover.exportInto(out);
