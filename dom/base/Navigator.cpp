@@ -1312,9 +1312,9 @@ Navigator::SendBeacon(const nsAString& aUrl,
   rv = secMan->CheckSameOriginURI(documentURI, uri, false);
   bool crossOrigin = NS_FAILED(rv);
   nsAutoCString contentType, parsedCharset;
-  rv = NS_ParseContentType(mimeType, contentType, parsedCharset);
+  rv = NS_ParseRequestContentType(mimeType, contentType, parsedCharset);
   if (crossOrigin &&
-      contentType.Length() > 0 &&
+      mimeType.Length() > 0 &&
       !contentType.Equals(APPLICATION_WWW_FORM_URLENCODED) &&
       !contentType.Equals(MULTIPART_FORM_DATA) &&
       !contentType.Equals(TEXT_PLAIN)) {
