@@ -27,6 +27,10 @@ add_task(function*() {
 
   ok(!el.isDragging, "isDragging should not be set to true immediately");
 
+  info("Waiting for 10ms");
+  yield wait(10);
+  ok(!el.isDragging, "isDragging should not be set to true after a brief wait");
+
   info("Waiting " + (GRAB_DELAY + 1) + "ms");
   yield wait(GRAB_DELAY + 1);
   ok(el.isDragging, "isDragging true after GRAB_DELAY has passed");
