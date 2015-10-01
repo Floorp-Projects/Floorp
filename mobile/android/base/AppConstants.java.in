@@ -94,10 +94,9 @@ public class AppConstants {
     public static final String MOZ_APP_ABI = "@MOZ_APP_ABI@";
     public static final String MOZ_APP_BASENAME = "@MOZ_APP_BASENAME@";
 
-    // For the benefit of future archaeologists: APP_BUILDID and
-    // MOZ_APP_BUILDID are *exactly* the same.
-    // GRE_BUILDID is exactly the same unless you're running on XULRunner,
-    // which is never the case on Android.
+    // For the benefit of future archaeologists:
+    // GRE_BUILDID is exactly the same as MOZ_APP_BUILDID unless you're running
+    // on XULRunner, which is never the case on Android.
     public static final String MOZ_APP_BUILDID = "@MOZ_APP_BUILDID@";
     public static final String MOZ_APP_ID = "@MOZ_APP_ID@";
     public static final String MOZ_APP_NAME = "@MOZ_APP_NAME@";
