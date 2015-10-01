@@ -199,7 +199,7 @@ class MOZ_RAII AutoSetNewObjectMetadata : private JS::CustomAutoRooter
     virtual void trace(JSTracer* trc) override {
         if (prevState_.is<PendingMetadata>()) {
             TraceRoot(trc,
-                      prevState_.as<PendingMetadata>().unsafeGet(),
+                      prevState_.as<PendingMetadata>().unsafeUnbarrieredForTracing(),
                       "Object pending metadata");
         }
     }

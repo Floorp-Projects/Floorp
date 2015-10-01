@@ -2106,8 +2106,7 @@ DebugScopes::sweep(JSRuntime* rt)
      * released more eagerly.
      */
     for (MissingScopeMap::Enum e(missingScopes); !e.empty(); e.popFront()) {
-        DebugScopeObject** debugScope = e.front().value().unsafeGet();
-        if (IsAboutToBeFinalizedUnbarriered(debugScope)) {
+        if (IsAboutToBeFinalized(&e.front().value())) {
             /*
              * Note that onPopCall and onPopBlock rely on missingScopes to find
              * scope objects that we synthesized for the debugger's sake, and
@@ -2125,7 +2124,7 @@ DebugScopes::sweep(JSRuntime* rt)
              * Thus, we must explicitly remove the entries from both liveScopes
              * and missingScopes here.
              */
-            liveScopes.remove(&(*debugScope)->scope());
+            liveScopes.remove(&e.front().value()->scope());
             e.removeFront();
         } else {
             MissingScopeKey key = e.front().key();

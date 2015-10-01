@@ -392,7 +392,7 @@ template <typename T>
 void
 js::TraceEdge(JSTracer* trc, WriteBarrieredBase<T>* thingp, const char* name)
 {
-    DispatchToTracer(trc, ConvertToBase(thingp->unsafeGet()), name);
+    DispatchToTracer(trc, ConvertToBase(thingp->unsafeUnbarrieredForTracing()), name);
 }
 
 template <typename T>
@@ -426,7 +426,7 @@ js::TraceRange(JSTracer* trc, size_t len, WriteBarrieredBase<T>* vec, const char
     JS::AutoTracingIndex index(trc);
     for (auto i : MakeRange(len)) {
         if (InternalGCMethods<T>::isMarkable(vec[i].get()))
-            DispatchToTracer(trc, ConvertToBase(vec[i].unsafeGet()), name);
+            DispatchToTracer(trc, ConvertToBase(vec[i].unsafeUnbarrieredForTracing()), name);
         ++index;
     }
 }
@@ -474,7 +474,7 @@ js::TraceCrossCompartmentEdge(JSTracer* trc, JSObject* src, WriteBarrieredBase<T
                               const char* name)
 {
     if (ShouldMarkCrossCompartment(trc, src, dst->get()))
-        DispatchToTracer(trc, dst->unsafeGet(), name);
+        DispatchToTracer(trc, dst->unsafeUnbarrieredForTracing(), name);
 }
 template void js::TraceCrossCompartmentEdge<Value>(JSTracer*, JSObject*,
                                                    WriteBarrieredBase<Value>*, const char*);
@@ -1894,8 +1894,8 @@ js::gc::StoreBuffer::SlotsEdge::trace(TenuringTracer& mover) const
         int32_t initLen = obj->getDenseInitializedLength();
         int32_t clampedStart = Min(start_, initLen);
         int32_t clampedEnd = Min(start_ + count_, initLen);
-        mover.traceSlots(static_cast<HeapSlot*>(obj->getDenseElements() + clampedStart)->unsafeGet(),
-                         clampedEnd - clampedStart);
+        mover.traceSlots(static_cast<HeapSlot*>(obj->getDenseElements() + clampedStart)
+                            ->unsafeUnbarrieredForTracing(), clampedEnd - clampedStart);
     } else {
         int32_t start = Min(uint32_t(start_), obj->slotSpan());
         int32_t end = Min(uint32_t(start_) + count_, obj->slotSpan());
@@ -2032,7 +2032,7 @@ js::TenuringTracer::traceObject(JSObject* obj)
         !nobj->denseElementsAreCopyOnWrite() &&
         ObjectDenseElementsMayBeMarkable(nobj))
     {
-        Value* elems = static_cast<HeapSlot*>(nobj->getDenseElements())->unsafeGet();
+        Value* elems = static_cast<HeapSlot*>(nobj->getDenseElements())->unsafeUnbarrieredForTracing();
         traceSlots(elems, elems + nobj->getDenseInitializedLength());
     }
 
@@ -2048,9 +2048,9 @@ js::TenuringTracer::traceObjectSlots(NativeObject* nobj, uint32_t start, uint32_
     HeapSlot* dynEnd;
     nobj->getSlotRange(start, length, &fixedStart, &fixedEnd, &dynStart, &dynEnd);
     if (fixedStart)
-        traceSlots(fixedStart->unsafeGet(), fixedEnd->unsafeGet());
+        traceSlots(fixedStart->unsafeUnbarrieredForTracing(), fixedEnd->unsafeUnbarrieredForTracing());
     if (dynStart)
-        traceSlots(dynStart->unsafeGet(), dynEnd->unsafeGet());
+        traceSlots(dynStart->unsafeUnbarrieredForTracing(), dynEnd->unsafeUnbarrieredForTracing());
 }
 
 void
@@ -2325,14 +2325,14 @@ template <typename T>
 bool
 IsMarked(WriteBarrieredBase<T>* thingp)
 {
-    return IsMarkedInternal(ConvertToBase(thingp->unsafeGet()));
+    return IsMarkedInternal(ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
 }
 
 template <typename T>
 bool
 IsMarked(ReadBarrieredBase<T>* thingp)
 {
-    return IsMarkedInternal(ConvertToBase(thingp->unsafeGet()));
+    return IsMarkedInternal(ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
 }
 
 template <typename T>
@@ -2346,14 +2346,14 @@ template <typename T>
 bool
 IsAboutToBeFinalized(WriteBarrieredBase<T>* thingp)
 {
-    return IsAboutToBeFinalizedInternal(ConvertToBase(thingp->unsafeGet()));
+    return IsAboutToBeFinalizedInternal(ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
 }
 
 template <typename T>
 bool
 IsAboutToBeFinalized(ReadBarrieredBase<T>* thingp)
 {
-    return IsAboutToBeFinalizedInternal(ConvertToBase(thingp->unsafeGet()));
+    return IsAboutToBeFinalizedInternal(ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
 }
 
 // Instantiate a copy of the Tracing templates for each derived type.
