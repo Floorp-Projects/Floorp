@@ -1740,7 +1740,7 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 }
 
 #sync-start-panel-subtitle {
-  margin: 0;
+  margin-bottom: 0;
 }
 
 /* Status panel */
