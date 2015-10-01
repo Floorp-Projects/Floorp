@@ -15,4 +15,4 @@ task:
       build-aries-spark-ota-user-objdir-gecko-{{project}}: /home/worker/objdir-gecko
     env:
       VARIANT: user
-      TOOLTOOL_MANIFEST: 'b2g/config/aries-spark-ota/releng-aries-spark-ota.tt'
+

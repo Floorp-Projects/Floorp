@@ -16,7 +16,6 @@ task:
       build-flame-kk-eng-objdir-gecko-{{project}}: /home/worker/objdir-gecko
     env:
       TARGET: 'flame-kk'
-      TOOLTOOL_MANIFEST: 'b2g/config/flame-kk/releng-flame-kk.tt'
   extra:
     treeherderEnv:
       - production
