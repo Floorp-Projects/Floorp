@@ -2,6 +2,7 @@
 
 SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
+browserElementTestHelpers.setClipboardPlainTextOnlyPref(false);
 browserElementTestHelpers.addPermission();
 
 var audioUrl = 'http://mochi.test:8888/tests/dom/browser-element/mochitest/audio.ogg';
