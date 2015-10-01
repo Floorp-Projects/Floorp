@@ -102,7 +102,7 @@ struct DevTools : public ::testing::Test {
       "global", JSCLASS_GLOBAL_FLAGS,
       nullptr, nullptr, nullptr, nullptr,
       nullptr, nullptr, nullptr, nullptr,
-      nullptr, nullptr, nullptr, nullptr,
+      nullptr, nullptr, nullptr,
       JS_GlobalObjectTraceHook
     };
     return &globalClass;
@@ -182,7 +182,7 @@ class Concrete<FakeNode> : public Base
     return concreteTypeName;
   }
 
-  UniquePtr<EdgeRange> edges(JSRuntime* rt, bool wantNames) const override {
+  UniquePtr<EdgeRange> edges(JSRuntime*, bool) const override {
     return UniquePtr<EdgeRange>(js_new<PreComputedEdgeRange>(get().edges));
   }
 
@@ -268,6 +268,14 @@ MATCHER_P3(Edge, rt, n, matcher, "") {
 // Ensures that two char16_t* strings are equal.
 MATCHER_P(UTF16StrEq, str, "") {
   return NS_strcmp(arg, str) == 0;
+}
+
+MATCHER_P(UniqueUTF16StrEq, str, "") {
+  return NS_strcmp(arg.get(), str) == 0;
+}
+
+MATCHER(UniqueIsNull, "") {
+  return arg.get() == nullptr;
 }
 
 } // namespace testing

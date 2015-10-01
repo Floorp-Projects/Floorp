@@ -128,12 +128,6 @@ BufferDecoder::OnReadMetadataCompleted()
   // ignore
 }
 
-void
-BufferDecoder::NotifyWaitingForResourcesStatusChanged()
-{
-  // ignore
-}
-
 MediaDecoderOwner*
 BufferDecoder::GetOwner()
 {

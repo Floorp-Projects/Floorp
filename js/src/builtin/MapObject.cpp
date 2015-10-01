@@ -114,7 +114,6 @@ const Class MapIteratorObject::class_ = {
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
-    nullptr, /* convert */
     MapIteratorObject::finalize
 };
 
@@ -231,7 +230,6 @@ const Class MapObject::class_ = {
     nullptr, // enumerate
     nullptr, // resolve
     nullptr, // mayResolve
-    nullptr, // convert
     finalize,
     nullptr, // call
     nullptr, // hasInstance
@@ -838,7 +836,6 @@ const Class SetIteratorObject::class_ = {
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
-    nullptr, /* convert */
     SetIteratorObject::finalize
 };
 
@@ -979,7 +976,6 @@ const Class SetObject::class_ = {
     nullptr, // enumerate
     nullptr, // resolve
     nullptr, // mayResolve
-    nullptr, // convert
     finalize,
     nullptr, // call
     nullptr, // hasInstance

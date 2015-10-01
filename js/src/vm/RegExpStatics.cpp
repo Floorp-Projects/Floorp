@@ -45,7 +45,6 @@ const Class RegExpStaticsObject::class_ = {
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
-    nullptr, /* convert */
     resc_finalize,
     nullptr, /* call */
     nullptr, /* hasInstance */

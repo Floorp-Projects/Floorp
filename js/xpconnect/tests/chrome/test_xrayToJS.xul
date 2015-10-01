@@ -159,7 +159,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     "setUTCMilliseconds", "toUTCString", "toLocaleFormat", "toLocaleString",
     "toLocaleDateString", "toLocaleTimeString", "toDateString", "toTimeString",
     "toISOString", "toJSON", "toSource", "toString", "valueOf", "constructor",
-    "toGMTString"];
+    "toGMTString", Symbol.toPrimitive];
   gPrototypeProperties['Object'] =
     ["constructor", "toSource", "toString", "toLocaleString", "valueOf", "watch",
      "unwatch", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable",

@@ -193,7 +193,7 @@ static const JSClass parseTaskGlobalClass = {
     "internal-parse-task-global", JSCLASS_GLOBAL_FLAGS,
     nullptr, nullptr, nullptr, nullptr,
     nullptr, nullptr, nullptr, nullptr,
-    nullptr, nullptr, nullptr, nullptr,
+    nullptr, nullptr, nullptr,
     JS_GlobalObjectTraceHook
 };
 

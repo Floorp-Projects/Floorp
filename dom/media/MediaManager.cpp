@@ -2713,27 +2713,35 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-static PLDHashOperator
-WindowsHashToArrayFunc (const uint64_t& aId,
-                        StreamListeners* aData,
-                        void *userArg)
+nsresult
+MediaManager::GetActiveMediaCaptureWindows(nsISupportsArray** aArray)
 {
-  nsISupportsArray *array =
-    static_cast<nsISupportsArray *>(userArg);
-  nsPIDOMWindow *window = static_cast<nsPIDOMWindow*>
-    (nsGlobalWindow::GetInnerWindowWithId(aId));
+  MOZ_ASSERT(aArray);
+  nsISupportsArray* array;
+  nsresult rv = NS_NewISupportsArray(&array); // AddRefs
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-  MOZ_ASSERT(window);
-  if (window) {
+  for (auto iter = mActiveWindows.Iter(); !iter.Done(); iter.Next()) {
+    const uint64_t& id = iter.Key();
+    StreamListeners* listeners = iter.UserData();
+
+    nsPIDOMWindow* window = static_cast<nsPIDOMWindow*>
+      (nsGlobalWindow::GetInnerWindowWithId(id));
+    MOZ_ASSERT(window);
+    if (!window) {
+      continue;
+    }
     // mActiveWindows contains both windows that have requested device
     // access and windows that are currently capturing media. We want
     // to return only the latter. See bug 975177.
     bool capturing = false;
-    if (aData) {
-      uint32_t length = aData->Length();
+    if (listeners) {
+      uint32_t length = listeners->Length();
       for (uint32_t i = 0; i < length; ++i) {
         nsRefPtr<GetUserMediaCallbackMediaStreamListener> listener =
-          aData->ElementAt(i);
+          listeners->ElementAt(i);
         if (listener->CapturingVideo() || listener->CapturingAudio() ||
             listener->CapturingScreen() || listener->CapturingWindow() ||
             listener->CapturingApplication()) {
@@ -2742,24 +2750,10 @@ WindowsHashToArrayFunc (const uint64_t& aId,
         }
       }
     }
-
-    if (capturing)
+    if (capturing) {
       array->AppendElement(window);
+    }
   }
-  return PL_DHASH_NEXT;
-}
-
-
-nsresult
-MediaManager::GetActiveMediaCaptureWindows(nsISupportsArray **aArray)
-{
-  MOZ_ASSERT(aArray);
-  nsISupportsArray *array;
-  nsresult rv = NS_NewISupportsArray(&array); // AddRefs
-  if (NS_FAILED(rv))
-    return rv;
-
-  mActiveWindows.EnumerateRead(WindowsHashToArrayFunc, array);
 
   *aArray = array;
   return NS_OK;

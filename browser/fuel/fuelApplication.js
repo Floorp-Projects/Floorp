@@ -18,34 +18,34 @@ var Utilities = {
   get bookmarks() {
     let bookmarks = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
                     getService(Ci.nsINavBookmarksService);
-    this.__defineGetter__("bookmarks", function() bookmarks);
+    this.__defineGetter__("bookmarks", () => bookmarks);
     return this.bookmarks;
   },
 
   get bookmarksObserver() {
     let bookmarksObserver = new BookmarksObserver();
-    this.__defineGetter__("bookmarksObserver", function() bookmarksObserver);
+    this.__defineGetter__("bookmarksObserver", () => bookmarksObserver);
     return this.bookmarksObserver;
   },
 
   get annotations() {
     let annotations = Cc["@mozilla.org/browser/annotation-service;1"].
                       getService(Ci.nsIAnnotationService);
-    this.__defineGetter__("annotations", function() annotations);
+    this.__defineGetter__("annotations", () => annotations);
     return this.annotations;
   },
 
   get history() {
     let history = Cc["@mozilla.org/browser/nav-history-service;1"].
                   getService(Ci.nsINavHistoryService);
-    this.__defineGetter__("history", function() history);
+    this.__defineGetter__("history", () => history);
     return this.history;
   },
 
   get windowMediator() {
     let windowMediator = Cc["@mozilla.org/appshell/window-mediator;1"].
                          getService(Ci.nsIWindowMediator);
-    this.__defineGetter__("windowMediator", function() windowMediator);
+    this.__defineGetter__("windowMediator", () => windowMediator);
     return this.windowMediator;
   },
 

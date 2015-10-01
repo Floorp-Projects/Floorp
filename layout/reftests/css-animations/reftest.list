@@ -3,3 +3,4 @@
 fails == print-no-animations.html print-no-animations-ref.html # reftest harness doesn't actually make pres context non-dynamic for reftest-print tests
 fails != print-no-animations.html print-no-animations-notref.html # reftest harness doesn't actually make pres context non-dynamic for reftest-print tests
 == animate-opacity.html animate-opacity-ref.html
+== animate-preserves3d.html animate-preserves3d-ref.html

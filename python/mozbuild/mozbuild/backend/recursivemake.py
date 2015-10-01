@@ -1494,7 +1494,7 @@ INSTALL_TARGETS += %(prefix)s
                 # which would modify content in the source directory.
                 '$(RM) $@',
                 '$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) '
-                    '$(XULPPFLAGS) $< -o $@)'
+                    '$(MOZ_DEBUG_DEFINES) $< -o $@)'
             ])
 
         self._add_unified_build_rules(mk,

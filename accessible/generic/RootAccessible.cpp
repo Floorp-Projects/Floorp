@@ -39,6 +39,7 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsReadableUtils.h"
 #include "nsFocusManager.h"
+#include "nsGlobalWindow.h"
 
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h"
@@ -482,10 +483,9 @@ RootAccessible::RelationByType(RelationType aType)
   if (!mDocumentNode || aType != RelationType::EMBEDS)
     return DocAccessibleWrap::RelationByType(aType);
 
-  nsIDOMWindow* rootWindow = mDocumentNode->GetWindow();
+  nsPIDOMWindow* rootWindow = mDocumentNode->GetWindow();
   if (rootWindow) {
-    nsCOMPtr<nsIDOMWindow> contentWindow;
-    rootWindow->GetContent(getter_AddRefs(contentWindow));
+    nsCOMPtr<nsIDOMWindow> contentWindow = nsGlobalWindow::Cast(rootWindow)->GetContent();
     if (contentWindow) {
       nsCOMPtr<nsIDOMDocument> contentDOMDocument;
       contentWindow->GetDocument(getter_AddRefs(contentDOMDocument));

@@ -106,14 +106,17 @@ function test() {
     is(nPreviews, aPreviews, msg || "Got expected number of previews");
   }
 
-  function getPreviewForTab(tab)
-    window.gTaskbarTabGroup.previewFromTab(tab);
+  function getPreviewForTab(tab) {
+    return window.gTaskbarTabGroup.previewFromTab(tab);
+  }
 
-  function checkSelectedTab()
-    getPreviewForTab(gBrowser.selectedTab).active;
+  function checkSelectedTab() {
+    return getPreviewForTab(gBrowser.selectedTab).active;
+  }
 
-  function isTabSelected(idx)
-    gBrowser.tabs[idx].selected;
+  function isTabSelected(idx) {
+    return gBrowser.tabs[idx].selected;
+  }
 
   function createThumbnailSurface(p) {
     let thumbnailWidth = 200,

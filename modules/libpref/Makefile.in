@@ -27,7 +27,7 @@ endif
 endif
 
 greprefs.js: $(grepref_files)
-	$(call py_action,preprocessor,$(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $^ -o $@)
+	$(call py_action,preprocessor,$(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $(MOZ_DEBUG_DEFINES) $^ -o $@)
 
 libs:: greprefs.js
 	$(INSTALL) $^ $(DIST)/bin/

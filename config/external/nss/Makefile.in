@@ -354,7 +354,7 @@ nspr_def_file := $(srcdir)/nspr-dummy.def
 
 nss3.def: $(nss_def_file) $(sqlite_def_file) $(nspr_def_file) $(NSS_EXTRA_SYMBOLS_FILE)
 	@$(call py_action,convert_def_file, \
-	  $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) -o $@ $^)
+	  $(DEFINES) $(ACDEFINES) $(MOZ_DEBUG_DEFINES) -o $@ $^)
 
 GARBAGE += \
   nss3.def \

@@ -42,7 +42,7 @@ var _add_params = function (params) {
 };
 
 var _dumpLog = function (raw_msg) {
-  dump("\n" + raw_msg + "\n");
+  dump("\n" + JSON.stringify(raw_msg) + "\n");
 }
 
 var _LoggerClass = Components.utils.import("resource://testing-common/StructuredLog.jsm", null).StructuredLogger;
@@ -234,7 +234,9 @@ var _fakeIdleService = {
       Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
   },
   contractID: "@mozilla.org/widget/idleservice;1",
-  get CID() this.registrar.contractIDToCID(this.contractID),
+  get CID() {
+    return this.registrar.contractIDToCID(this.contractID);
+  },
 
   activate: function FIS_activate()
   {
@@ -286,7 +288,9 @@ var _fakeIdleService = {
   },
 
   // nsIIdleService
-  get idleTime() 0,
+  get idleTime() {
+    return 0;
+  },
   addIdleObserver: function () {},
   removeIdleObserver: function () {},
 
