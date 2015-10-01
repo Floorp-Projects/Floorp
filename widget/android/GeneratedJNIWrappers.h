@@ -76,6 +76,39 @@ public:
     template<class Impl> class Natives;
 };
 
+class AlarmReceiver : public mozilla::jni::Class<AlarmReceiver>
+{
+public:
+    typedef mozilla::jni::Ref<AlarmReceiver> Ref;
+    typedef mozilla::jni::LocalRef<AlarmReceiver> LocalRef;
+    typedef mozilla::jni::GlobalRef<AlarmReceiver> GlobalRef;
+    typedef const mozilla::jni::Param<AlarmReceiver>& Param;
+
+    static constexpr char name[] =
+            "org/mozilla/gecko/AlarmReceiver";
+
+protected:
+    AlarmReceiver(jobject instance) : Class(instance) {}
+
+public:
+    struct NotifyAlarmFired_t {
+        typedef AlarmReceiver Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "notifyAlarmFired";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    template<class Impl> class Natives;
+};
+
 class DownloadsIntegration : public mozilla::jni::Class<DownloadsIntegration>
 {
 public:
@@ -375,6 +408,23 @@ public:
     };
 
     static auto DeleteMessageWrapper(int32_t, int32_t) -> void;
+
+public:
+    struct DisableAlarm_t {
+        typedef GeckoAppShell Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "disableAlarm";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto DisableAlarm() -> void;
 
 public:
     struct DisableBatteryNotifications_t {
@@ -1457,6 +1507,25 @@ public:
     };
 
     static auto SendMessageWrapper(mozilla::jni::String::Param, mozilla::jni::String::Param, int32_t) -> void;
+
+public:
+    struct SetAlarm_t {
+        typedef GeckoAppShell Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                int32_t> Args;
+        static constexpr char name[] = "setAlarm";
+        static constexpr char signature[] =
+                "(II)Z";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto SetAlarm(int32_t, int32_t) -> bool;
 
 public:
     struct SetFullScreen_t {
