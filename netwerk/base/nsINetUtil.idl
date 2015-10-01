@@ -11,7 +11,7 @@ interface nsIPrefBranch;
 /**
  * nsINetUtil provides various network-related utility methods.
  */
-[scriptable, uuid(885d6940-1001-46e7-92ec-d494a78d7784)]
+[scriptable, uuid(ff0b3233-7ec5-4bf4-830f-6b2edaa53661)]
 interface nsINetUtil : nsISupports
 {
   /**
@@ -24,9 +24,9 @@ interface nsINetUtil : nsISupports
    * @param [out] aHadCharset whether a charset was explicitly specified.
    * @return the MIME type specified in the header, in lower-case.
    */
-  AUTF8String parseContentType(in AUTF8String aTypeHeader,
-                               out AUTF8String aCharset,
-                               out boolean aHadCharset);
+  AUTF8String parseResponseContentType(in AUTF8String aTypeHeader,
+                                       out AUTF8String aCharset,
+                                       out boolean aHadCharset);
 
   /**
    * Test whether the given URI's handler has the given protocol flags.
