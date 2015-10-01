@@ -2936,6 +2936,11 @@ JSScript::finalize(FreeOp* fop)
     // JSScript::Create(), but not yet finished initializing it with
     // fullyInitFromEmitter() or fullyInitTrivial().
 
+    // Collect code coverage information for this script and all its inner
+    // scripts, and store the aggregated information on the compartment.
+    if (isTopLevel() && fop->runtime()->lcovOutput.isEnabled())
+        compartment()->lcovOutput.collectCodeCoverageInfo(compartment(), this);
+
     fop->runtime()->spsProfiler.onScriptFinalized(this);
 
     if (types_)

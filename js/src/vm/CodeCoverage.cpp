@@ -6,13 +6,23 @@
 
 #include "vm/CodeCoverage.h"
 
+#include "mozilla/Atomics.h"
 #include "mozilla/IntegerPrintfMacros.h"
+
+#include <stdio.h>
+#if defined(XP_WIN)
+# include <windows.h>
+#else
+# include <unistd.h>
+#endif
 
 #include "jscompartment.h"
 #include "jsopcode.h"
+#include "jsprf.h"
 #include "jsscript.h"
 
 #include "vm/Runtime.h"
+#include "vm/Time.h"
 
 // This file contains a few functions which are used to produce files understood
 // by lcov tools. A detailed description of the format is available in the man
@@ -360,6 +370,68 @@ LCovCompartment::writeCompartmentName(JSCompartment* comp)
     return !outTN_.hadOutOfMemory();
 }
 
+LCovRuntime::LCovRuntime()
+  : out_(),
+#if defined(XP_WIN)
+    pid_(GetCurrentProcessId())
+#else
+    pid_(getpid())
+#endif
+{
+}
+
+LCovRuntime::~LCovRuntime()
+{
+    if (out_.isInitialized())
+        out_.finish();
+}
+
+void
+LCovRuntime::init()
+{
+    const char* outDir = getenv("JS_CODE_COVERAGE_OUTPUT_DIR");
+    if (!outDir || *outDir == 0)
+        return;
+
+    int64_t timestamp = static_cast<double>(PRMJ_Now()) / PRMJ_USEC_PER_SEC;
+    static mozilla::Atomic<size_t> globalRuntimeId(0);
+    size_t rid = globalRuntimeId++;
+
+    char name[1024];
+    size_t len = JS_snprintf(name, sizeof(name), "%s/%" PRId64 "-%d-%d.info",
+                             outDir, timestamp, size_t(pid_), rid);
+    if (sizeof(name) < len) {
+        fprintf(stderr, "Warning: LCovRuntime::init: Cannot serialize file name.");
+        return;
+    }
+
+    // If we cannot open the file, report a warning.
+    if (!out_.init(name))
+        fprintf(stderr, "Warning: LCovRuntime::init: Cannot open file named '%s'.", name);
+}
+
+void
+LCovRuntime::writeLCovResult(LCovCompartment& comp)
+{
+    if (!out_.isInitialized())
+        return;
+
+#if defined(XP_WIN)
+    size_t p = GetCurrentProcessId();
+#else
+    size_t p = getpid();
+#endif
+    if (pid_ != p) {
+        pid_ = p;
+        out_.finish();
+        init();
+        if (!out_.isInitialized())
+            return;
+    }
+
+    comp.exportInto(out_);
+    out_.flush();
+}
 
 } // namespace coverage
 } // namespace js
