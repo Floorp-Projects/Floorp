@@ -92,17 +92,6 @@ private:
 
 } // namespace mozilla
 
-#define NS_IMPL_MOZILLA192_NSGETMODULE(module)     \
-extern "C" NS_EXPORT nsresult                      \
-NSGetModule(nsIComponentManager* aCompMgr,         \
-            nsIFile* aLocation,                    \
-            nsIModule** aResult)                   \
-{                                                  \
-    *aResult = new mozilla::GenericModule(module); \
-    NS_ADDREF(*aResult);                           \
-    return NS_OK;                                  \
-}
-
 #endif
 
 #endif // mozilla_GenericModule_h
