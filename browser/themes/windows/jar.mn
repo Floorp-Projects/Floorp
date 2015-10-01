@@ -130,6 +130,7 @@ browser.jar:
         skin/classic/browser/urlbar-history-dropmarker@2x.png
         skin/classic/browser/urlbar-history-dropmarker-preWin10.png
         skin/classic/browser/urlbar-history-dropmarker-preWin10@2x.png
+        skin/classic/browser/webRTC-indicator.css
         skin/classic/browser/loop/menuPanel.png                      (loop/menuPanel.png)
         skin/classic/browser/loop/menuPanel@2x.png                   (loop/menuPanel@2x.png)
         skin/classic/browser/loop/menuPanel-aero.png                 (loop/menuPanel-aero.png)
