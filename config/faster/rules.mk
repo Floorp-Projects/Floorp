@@ -31,8 +31,6 @@
 #   symbolic links
 # - JAR_MN_TARGETS, which defines the targets to use for jar manifest
 #   processing, see further below
-# - PP_TARGETS, which defines the file paths of preprocessed files, see
-#   further below
 # - INSTALL_MANIFESTS, which defines the list of base directories handled
 #   by install manifests, see further below
 # - MANIFEST_TARGETS, which defines the file paths of chrome manifests, see
@@ -47,7 +45,6 @@ default: $(addprefix install-,$(INSTALL_MANIFESTS))
 default: $(addprefix jar-,$(JAR_MN_TARGETS))
 
 # Explicit files to be built for a default build
-default: $(addprefix $(TOPOBJDIR)/,$(PP_TARGETS))
 default: $(addprefix $(TOPOBJDIR)/,$(MANIFEST_TARGETS))
 default: $(TOPOBJDIR)/dist/bin/greprefs.js
 default: $(TOPOBJDIR)/dist/bin/platform.ini
@@ -83,42 +80,20 @@ $(TOPOBJDIR)/dist/%:
 # corresponding install manifests are named correspondingly, with forward
 # slashes replaced with underscores, and prefixed with `install_`. That is,
 # the install manifest for `dist/bin` would be `install_dist_bin`.
-$(addprefix install-,$(INSTALL_MANIFESTS)): install-%:
+$(addprefix install-,$(INSTALL_MANIFESTS)): install-%: $(TOPOBJDIR)/config/buildid
+	@# For now, force preprocessed files to be reprocessed every time.
+	@# The overhead is not that big, and this avoids waiting for proper
+	@# support for defines tracking in process_install_manifest.
+	@touch install_$(subst /,_,$*)
 	$(PYTHON) -m mozbuild.action.process_install_manifest \
 		--no-remove \
 		--no-remove-empty-directories \
 		$(TOPOBJDIR)/$* \
-		install_$(subst /,_,$*)
-
-# Preprocessed files. Ideally they would be using install manifests but
-# right now, it's not possible because of things like MOZ_APP_BUILDID or
-# nsURLFormatter.js.
-#
-# The list of preprocessed files is defined in PP_TARGETS. The list is
-# relative to TOPOBJDIR.
-# The source file for each of those preprocessed files is defined as a Make
-# dependency for the $(TOPOBJDIR)/path target. For example:
-#   PP_TARGETS = foo/bar
-#   $(TOPOBJDIR)/foo/bar: /path/to/source/for/foo/bar.in
-# The file name for the source doesn't need to be different.
-# Additionally, extra defines can be specified for a given preprocessing
-# by setting the `defines` variable specifically for the given target.
-# For example:
-#   $(TOPOBJDIR)/foo/bar: defines = -Dqux=foobar
-$(addprefix $(TOPOBJDIR)/,$(PP_TARGETS)): Makefile
-$(addprefix $(TOPOBJDIR)/,$(PP_TARGETS)): $(TOPOBJDIR)/%:
-	$(PYTHON) -m mozbuild.action.preprocessor \
-		--depend $(TOPOBJDIR)/faster/.deps/$(subst /,_,$*) \
 		-DAB_CD=en-US \
-		$(defines) \
+		-DMOZ_APP_BUILDID=$(shell cat $(TOPOBJDIR)/config/buildid) \
 		$(ACDEFINES) \
 		$(MOZ_DEBUG_DEFINES) \
-		$< \
-		-o $@
-
-# Include the dependency files from the above preprocessed files rule.
-$(foreach pp_target,$(PP_TARGETS), \
-	$(eval -include $(TOPOBJDIR)/faster/.deps/$(subst /,_,$(pp_target))))
+		install_$(subst /,_,$*)
 
 # Install files from jar manifests. Ideally, they would be using install
 # manifests, but the code to read jar manifests and emit appropriate
@@ -190,11 +165,6 @@ $(foreach p,linux osx windows,jar-browser-themes-$(p)-jar.mn): \
 jar-browser-themes-%-jar.mn: \
 	$(TOPOBJDIR)/browser/themes/%/tab-selected-end.svg \
 	$(TOPOBJDIR)/browser/themes/%/tab-selected-start.svg
-
-# Extra dependencies and/or definitions for preprocessed files.
-$(TOPOBJDIR)/dist/bin/application.ini: $(TOPOBJDIR)/config/buildid
-$(TOPOBJDIR)/dist/bin/application.ini: defines += \
-	-DMOZ_APP_BUILDID=$(shell cat $(TOPOBJDIR)/config/buildid)
 
 # Files to build with the recursive backend and simply copy
 $(TOPOBJDIR)/dist/bin/greprefs.js: $(TOPOBJDIR)/modules/libpref/greprefs.js
