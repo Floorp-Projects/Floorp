@@ -1276,6 +1276,13 @@ PeerConnectionWrapper.prototype = {
       ok(anEvent.candidate.candidate.length > 0, "ICE candidate contains candidate");
       ok(anEvent.candidate.sdpMid.length > 0, "SDP mid not empty");
 
+      // only check the m-section for the updated default addr that corresponds
+      // with this candidate.
+      var mSections = this.localDescription.sdp.split("\r\nm=");
+      sdputils.checkSdpCLineNotDefault(
+        mSections[anEvent.candidate.sdpMLineIndex+1], this.label
+      );
+
       ok(typeof anEvent.candidate.sdpMLineIndex === 'number', "SDP MLine Index needs to exist");
       this._local_ice_candidates.push(anEvent.candidate);
       candidateHandler(this.label, anEvent.candidate);
