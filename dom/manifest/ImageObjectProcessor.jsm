@@ -92,7 +92,7 @@ ImageObjectProcessor.prototype.process = function(
     };
     let value = extractor.extractValue(spec);
     if (value) {
-      value = netutil.parseContentType(value, charset, hadCharset);
+      value = netutil.parseRequestContentType(value, charset, hadCharset);
     }
     return value || undefined;
   }
