@@ -49,8 +49,6 @@ class DeadObjectProxy : public BaseProxyHandler
     virtual const char* className(JSContext* cx, HandleObject proxy) const override;
     virtual JSString* fun_toString(JSContext* cx, HandleObject proxy, unsigned indent) const override;
     virtual bool regexp_toShared(JSContext* cx, HandleObject proxy, RegExpGuard* g) const override;
-    virtual bool defaultValue(JSContext* cx, HandleObject obj, JSType hint,
-                              MutableHandleValue vp) const override;
 
     static const char family;
     static const DeadObjectProxy singleton;

@@ -1093,6 +1093,13 @@ AssemblerMIPSShared::as_break(uint32_t code)
 }
 
 void
+AssemblerMIPSShared::as_sync(uint32_t stype)
+{
+    MOZ_ASSERT(stype <= 31);
+    writeInst(InstReg(op_special, zero, zero, zero, stype, ff_sync).encode());
+}
+
+void
 AssemblerMIPSShared::PatchDataWithValueCheck(CodeLocationLabel label, ImmPtr newValue, ImmPtr expectedValue)
 {
     Assembler::PatchDataWithValueCheck(label, PatchedImmPtr(newValue.value),

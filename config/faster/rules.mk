@@ -59,8 +59,8 @@ default: $(TOPOBJDIR)/config/makefiles/xpidl/xpidl
 .PHONY: FORCE
 
 # Extra define to trigger some workarounds. We should strive to limit the
-# use of those. As of writing the only one is in
-# toolkit/content/buildconfig.html.
+# use of those. As of writing the only ones are in
+# toolkit/content/buildconfig.html and browser/locales/jar.mn.
 ACDEFINES += -DBUILD_FASTER
 
 # Generic rule to fall back to the recursive make backend
@@ -93,8 +93,6 @@ $(addprefix install-,$(INSTALL_MANIFESTS)): install-%:
 # Preprocessed files. Ideally they would be using install manifests but
 # right now, it's not possible because of things like APP_BUILDID or
 # nsURLFormatter.js.
-# Things missing:
-# - XULPPFLAGS
 #
 # The list of preprocessed files is defined in PP_TARGETS. The list is
 # relative to TOPOBJDIR.
@@ -114,6 +112,7 @@ $(addprefix $(TOPOBJDIR)/,$(PP_TARGETS)): $(TOPOBJDIR)/%:
 		-DAB_CD=en-US \
 		$(defines) \
 		$(ACDEFINES) \
+		$(MOZ_DEBUG_DEFINES) \
 		$< \
 		-o $@
 
@@ -125,7 +124,6 @@ $(foreach pp_target,$(PP_TARGETS), \
 # manifests, but the code to read jar manifests and emit appropriate
 # install manifests is not there yet.
 # Things missing:
-# - XULPPFLAGS
 # - DEFINES from config/config.mk
 # - L10N
 # - -e when USE_EXTENSION_MANIFEST is set in moz.build
@@ -165,6 +163,7 @@ jar-%:
 		-DAB_CD=en-US \
 		$(defines) \
 		$(ACDEFINES) \
+		$(MOZ_DEBUG_DEFINES) \
 		$<
 
 # Create some chrome manifests

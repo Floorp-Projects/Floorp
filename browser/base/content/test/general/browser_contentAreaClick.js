@@ -218,7 +218,7 @@ var gClickHandler = {
     
     if (gInvokedMethods.length != gCurrentTest.expectedInvokedMethods.length) {
       ok(false, "Wrong number of invoked methods");
-      gInvokedMethods.forEach(function (method) info(method + " was invoked"));
+      gInvokedMethods.forEach(method => info(method + " was invoked"));
     }
 
     event.preventDefault();

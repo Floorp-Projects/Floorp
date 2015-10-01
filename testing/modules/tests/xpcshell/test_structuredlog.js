@@ -7,7 +7,7 @@ function run_test () {
   let testBuffer = [];
 
   let appendBuffer = function (msg) {
-    testBuffer.push(msg);
+    testBuffer.push(JSON.stringify(msg));
   }
 
   let assertLastMsg = function (refData) {
@@ -48,14 +48,12 @@ function run_test () {
 
   // Test end / start actions
   logger.testStart("aTest");
-  ok(logger._runningTests.has("aTest"));
   assertLastMsg({
     test: "aTest",
     action: "test_start",
   });
 
   logger.testEnd("aTest", "OK");
-  ok(!logger._runningTests.has("aTest"));
   assertLastMsg({
     test: "aTest",
     action: "test_end",
@@ -91,20 +89,6 @@ function run_test () {
     action: "test_end",
     test: "aTest",
     status: "SKIP"
-  });
-
-  // Ending a test twice logs an error.
-  logger.testEnd("aTest", "PASS");
-  assertLastMsg({
-    action: "log",
-    level: "ERROR"
-  });
-
-  // Ending a test than never started logs an error.
-  logger.testEnd("errantTest", "PASS");
-  assertLastMsg({
-    action: "log",
-    level: "ERROR"
   });
 
   logger.testStatus("aTest", "foo", "PASS", "PASS", "Passed test");

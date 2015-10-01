@@ -14,6 +14,7 @@
 #include "js/Class.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/SharedArrayObject.h"
+#include "vm/SharedMem.h"
 #include "vm/TypedArrayObject.h"
 
 typedef struct JSProperty JSProperty;
@@ -76,8 +77,8 @@ class SharedTypedArrayObject : public NativeObject
 
     inline size_t bytesPerElement() const;
 
-    void* viewData() const {
-        return getPrivate(DATA_SLOT);
+    SharedMem<void*> viewDataShared() const {
+        return SharedMem<void*>::shared(getPrivate(DATA_SLOT));
     }
     uint32_t byteOffset() const {
         return byteOffsetValue(const_cast<SharedTypedArrayObject*>(this)).toInt32();

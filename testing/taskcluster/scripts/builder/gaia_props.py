@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2.7
 
 '''
 Command line interface to fetch details from the b2g/config/gaia.json properties

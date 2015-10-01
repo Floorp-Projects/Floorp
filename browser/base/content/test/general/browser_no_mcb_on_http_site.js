@@ -69,7 +69,7 @@ function test1A() {
   var expected = "Verifying MCB does not trigger warning/error for an http page ";
   expected += "with https css that includes http image";
   waitForCondition(
-    function() content.document.getElementById('testDiv').innerHTML == expected,
+    () => content.document.getElementById('testDiv').innerHTML == expected,
     test1B, "Error: Waited too long for status in Test 1!",
     "OK: Expected result in innerHTML!");
 }
@@ -89,7 +89,7 @@ function test2A() {
   var expected = "Verifying MCB does not trigger warning/error for an http page ";
   expected += "with https css that includes http font";
   waitForCondition(
-    function() content.document.getElementById('testDiv').innerHTML == expected,
+    () => content.document.getElementById('testDiv').innerHTML == expected,
     test2B, "Error: Waited too long for status in Test 2!",
     "OK: Expected result in innerHTML!");
 }
@@ -109,7 +109,7 @@ function test3() {
   var expected = "Verifying MCB does not trigger warning/error for an http page "
   expected += "with https css that imports another http css which includes http font";
   waitForCondition(
-    function() content.document.getElementById('testDiv').innerHTML == expected,
+    () => content.document.getElementById('testDiv').innerHTML == expected,
     cleanUpAfterTests, "Error: Waited too long for status in Test 3!",
     "OK: Expected result in innerHTML!");
 }
