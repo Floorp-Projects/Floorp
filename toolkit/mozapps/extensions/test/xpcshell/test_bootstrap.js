@@ -11,6 +11,9 @@ const ADDON_UNINSTALL                 = 6;
 const ADDON_UPGRADE                   = 7;
 const ADDON_DOWNGRADE                 = 8;
 
+const ID1 = "bootstrap1@tests.mozilla.org";
+const ID2 = "bootstrap2@tests.mozilla.org";
+
 // This verifies that bootstrappable add-ons can be used without restarts.
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/Promise.jsm");
@@ -18,6 +21,8 @@ Components.utils.import("resource://gre/modules/Promise.jsm");
 // Enable loading extensions from the user scopes
 Services.prefs.setIntPref("extensions.enabledScopes",
                           AddonManager.SCOPE_PROFILE + AddonManager.SCOPE_USER);
+
+BootstrapMonitor.init();
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
@@ -30,99 +35,49 @@ registerDirectory("XREUSysExt", userExtDir.parent);
 
 Components.utils.import("resource://testing-common/httpd.js");
 var testserver = new HttpServer();
-testserver.start(-1);
+testserver.start(undefined);
 gPort = testserver.identity.primaryPort;
 
 testserver.registerDirectory("/addons/", do_get_file("addons"));
 
-function resetPrefs() {
-  Services.prefs.setIntPref("bootstraptest.active_version", -1);
-  Services.prefs.setIntPref("bootstraptest.installed_version", -1);
-  Services.prefs.setIntPref("bootstraptest2.active_version", -1);
-  Services.prefs.setIntPref("bootstraptest2.installed_version", -1);
-  Services.prefs.setIntPref("bootstraptest.startup_reason", -1);
-  Services.prefs.setIntPref("bootstraptest.shutdown_reason", -1);
-  Services.prefs.setIntPref("bootstraptest.install_reason", -1);
-  Services.prefs.setIntPref("bootstraptest.uninstall_reason", -1);
-  Services.prefs.setIntPref("bootstraptest.startup_oldversion", -1);
-  Services.prefs.setIntPref("bootstraptest.shutdown_newversion", -1);
-  Services.prefs.setIntPref("bootstraptest.install_oldversion", -1);
-  Services.prefs.setIntPref("bootstraptest.uninstall_newversion", -1);
-}
-
-function waitForPref(aPref, aCallback) {
-  function prefChanged() {
-    Services.prefs.removeObserver(aPref, prefChanged);
-    // Always let whoever set the preference keep running
-    do_execute_soon(aCallback);
-  }
-  Services.prefs.addObserver(aPref, prefChanged, false);
-}
-
-function promisePref(aPref) {
-  let deferred = Promise.defer();
-
-  waitForPref(aPref, deferred.resolve.bind(deferred));
-
-  return deferred.promise;
-}
-
-function promiseInstall(aFiles) {
-  let deferred = Promise.defer();
-
-  installAllFiles(aFiles, function() {
-    deferred.resolve();
-  });
-
-  return deferred.promise;
-}
-
-function getActiveVersion() {
-  return Services.prefs.getIntPref("bootstraptest.active_version");
-}
-
-function getInstalledVersion() {
-  return Services.prefs.getIntPref("bootstraptest.installed_version");
-}
-
-function getActiveVersion2() {
-  return Services.prefs.getIntPref("bootstraptest2.active_version");
-}
-
-function getInstalledVersion2() {
-  return Services.prefs.getIntPref("bootstraptest2.installed_version");
-}
-
 function getStartupReason() {
-  return Services.prefs.getIntPref("bootstraptest.startup_reason");
+  let info = BootstrapMonitor.started.get(ID1);
+  return info ? info.reason : undefined;
 }
 
 function getShutdownReason() {
-  return Services.prefs.getIntPref("bootstraptest.shutdown_reason");
+  let info = BootstrapMonitor.stopped.get(ID1);
+  return info ? info.reason : undefined;
 }
 
 function getInstallReason() {
-  return Services.prefs.getIntPref("bootstraptest.install_reason");
+  let info = BootstrapMonitor.installed.get(ID1);
+  return info ? info.reason : undefined;
 }
 
 function getUninstallReason() {
-  return Services.prefs.getIntPref("bootstraptest.uninstall_reason");
+  let info = BootstrapMonitor.uninstalled.get(ID1);
+  return info ? info.reason : undefined;
 }
 
 function getStartupOldVersion() {
-  return Services.prefs.getIntPref("bootstraptest.startup_oldversion");
+  let info = BootstrapMonitor.started.get(ID1);
+  return info ? info.data.oldVersion : undefined;
 }
 
 function getShutdownNewVersion() {
-  return Services.prefs.getIntPref("bootstraptest.shutdown_newversion");
+  let info = BootstrapMonitor.stopped.get(ID1);
+  return info ? info.data.newVersion : undefined;
 }
 
 function getInstallOldVersion() {
-  return Services.prefs.getIntPref("bootstraptest.install_oldversion");
+  let info = BootstrapMonitor.installed.get(ID1);
+  return info ? info.data.oldVersion : undefined;
 }
 
 function getUninstallNewVersion() {
-  return Services.prefs.getIntPref("bootstraptest.uninstall_newversion");
+  let info = BootstrapMonitor.uninstalled.get(ID1);
+  return info ? info.data.newVersion : undefined;
 }
 
 function do_check_bootstrappedPref(aCallback) {
@@ -157,8 +112,6 @@ function do_check_bootstrappedPref(aCallback) {
 function run_test() {
   do_test_pending();
 
-  resetPrefs();
-
   startupManager();
 
   do_check_false(gExtensionsJSON.exists());
@@ -188,18 +141,18 @@ function run_test_1() {
     do_check_false(install.addon.hasResource("foo.bar"));
     do_check_eq(install.addon.operationsRequiringRestart &
                 AddonManager.OP_NEEDS_RESTART_INSTALL, 0);
-    do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+    do_check_not_in_crash_annotation(ID1, "1.0");
 
     let addon = install.addon;
 
-    waitForPref("bootstraptest.startup_reason", function() {
+    BootstrapMonitor.promiseAddonStartup(ID1).then(function() {
       do_check_bootstrappedPref(function() {
         check_test_1(addon.syncGUID);
       });
     });
 
     prepare_test({
-      "bootstrap1@tests.mozilla.org": [
+      [ID1]: [
         ["onInstalling", false],
         "onInstalled"
       ]
@@ -210,7 +163,7 @@ function run_test_1() {
       do_check_true(addon.hasResource("install.rdf"));
 
       // startup should not have been called yet.
-      do_check_eq(getActiveVersion(), -1);
+      BootstrapMonitor.checkAddonNotStarted(ID1);
     });
     install.install();
   });
@@ -224,7 +177,7 @@ function check_test_1(installSyncGUID) {
     // doesn't require a restart.
     do_check_eq(installs.length, 0);
 
-    AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+    AddonManager.getAddonByID(ID1, function(b1) {
       do_check_neq(b1, null);
       do_check_eq(b1.version, "1.0");
       do_check_neq(b1.syncGUID, null);
@@ -232,16 +185,16 @@ function check_test_1(installSyncGUID) {
       do_check_false(b1.appDisabled);
       do_check_false(b1.userDisabled);
       do_check_true(b1.isActive);
-      do_check_eq(getInstalledVersion(), 1);
-      do_check_eq(getActiveVersion(), 1);
+      BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+      BootstrapMonitor.checkAddonStarted(ID1, "1.0");
       do_check_eq(getStartupReason(), ADDON_INSTALL);
-      do_check_eq(getStartupOldVersion(), 0);
+      do_check_eq(getStartupOldVersion(), undefined);
       do_check_true(b1.hasResource("install.rdf"));
       do_check_true(b1.hasResource("bootstrap.js"));
       do_check_false(b1.hasResource("foo.bar"));
-      do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+      do_check_in_crash_annotation(ID1, "1.0");
 
-      let dir = do_get_addon_root_uri(profileDir, "bootstrap1@tests.mozilla.org");
+      let dir = do_get_addon_root_uri(profileDir, ID1);
       do_check_eq(b1.getResourceURI("bootstrap.js").spec, dir + "bootstrap.js");
 
       AddonManager.getAddonsWithOperationsByTypes(null, function(list) {
@@ -255,9 +208,9 @@ function check_test_1(installSyncGUID) {
 
 // Tests that disabling doesn't require a restart
 function run_test_2() {
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID(ID1, function(b1) {
     prepare_test({
-      "bootstrap1@tests.mozilla.org": [
+      [ID1]: [
         ["onDisabling", false],
         "onDisabled"
       ]
@@ -273,13 +226,13 @@ function run_test_2() {
     do_check_false(b1.appDisabled);
     do_check_true(b1.userDisabled);
     do_check_false(b1.isActive);
-    do_check_eq(getInstalledVersion(), 1);
-    do_check_eq(getActiveVersion(), 0);
+    BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+    BootstrapMonitor.checkAddonNotStarted(ID1);
     do_check_eq(getShutdownReason(), ADDON_DISABLE);
-    do_check_eq(getShutdownNewVersion(), 0);
-    do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+    do_check_eq(getShutdownNewVersion(), undefined);
+    do_check_not_in_crash_annotation(ID1, "1.0");
 
-    AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(newb1) {
+    AddonManager.getAddonByID(ID1, function(newb1) {
       do_check_neq(newb1, null);
       do_check_eq(newb1.version, "1.0");
       do_check_false(newb1.appDisabled);
@@ -294,20 +247,20 @@ function run_test_2() {
 // Test that restarting doesn't accidentally re-enable
 function run_test_3() {
   shutdownManager();
-  do_check_eq(getInstalledVersion(), 1);
-  do_check_eq(getActiveVersion(), 0);
+  BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+  BootstrapMonitor.checkAddonNotStarted(ID1);
   do_check_eq(getShutdownReason(), ADDON_DISABLE);
-  do_check_eq(getShutdownNewVersion(), 0);
+  do_check_eq(getShutdownNewVersion(), undefined);
   startupManager(false);
-  do_check_eq(getInstalledVersion(), 1);
-  do_check_eq(getActiveVersion(), 0);
+  BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+  BootstrapMonitor.checkAddonNotStarted(ID1);
   do_check_eq(getShutdownReason(), ADDON_DISABLE);
-  do_check_eq(getShutdownNewVersion(), 0);
-  do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+  do_check_eq(getShutdownNewVersion(), undefined);
+  do_check_not_in_crash_annotation(ID1, "1.0");
 
   do_check_false(gExtensionsINI.exists());
 
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID(ID1, function(b1) {
     do_check_neq(b1, null);
     do_check_eq(b1.version, "1.0");
     do_check_false(b1.appDisabled);
@@ -320,9 +273,9 @@ function run_test_3() {
 
 // Tests that enabling doesn't require a restart
 function run_test_4() {
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID(ID1, function(b1) {
     prepare_test({
-      "bootstrap1@tests.mozilla.org": [
+      [ID1]: [
         ["onEnabling", false],
         "onEnabled"
       ]
@@ -338,13 +291,13 @@ function run_test_4() {
     do_check_false(b1.appDisabled);
     do_check_false(b1.userDisabled);
     do_check_true(b1.isActive);
-    do_check_eq(getInstalledVersion(), 1);
-    do_check_eq(getActiveVersion(), 1);
+    BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+    BootstrapMonitor.checkAddonStarted(ID1, "1.0");
     do_check_eq(getStartupReason(), ADDON_ENABLE);
-    do_check_eq(getStartupOldVersion(), 0);
-    do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+    do_check_eq(getStartupOldVersion(), undefined);
+    do_check_in_crash_annotation(ID1, "1.0");
 
-    AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(newb1) {
+    AddonManager.getAddonByID(ID1, function(newb1) {
       do_check_neq(newb1, null);
       do_check_eq(newb1.version, "1.0");
       do_check_false(newb1.appDisabled);
@@ -362,19 +315,19 @@ function run_test_5() {
   // By the time we've shut down, the database must have been written
   do_check_true(gExtensionsJSON.exists());
 
-  do_check_eq(getInstalledVersion(), 1);
-  do_check_eq(getActiveVersion(), 0);
+  BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+  BootstrapMonitor.checkAddonNotStarted(ID1);
   do_check_eq(getShutdownReason(), APP_SHUTDOWN);
-  do_check_eq(getShutdownNewVersion(), 0);
-  do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+  do_check_eq(getShutdownNewVersion(), undefined);
+  do_check_not_in_crash_annotation(ID1, "1.0");
   startupManager(false);
-  do_check_eq(getInstalledVersion(), 1);
-  do_check_eq(getActiveVersion(), 1);
+  BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+  BootstrapMonitor.checkAddonStarted(ID1, "1.0");
   do_check_eq(getStartupReason(), APP_STARTUP);
-  do_check_eq(getStartupOldVersion(), 0);
-  do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+  do_check_eq(getStartupOldVersion(), undefined);
+  do_check_in_crash_annotation(ID1, "1.0");
 
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID(ID1, function(b1) {
     do_check_neq(b1, null);
     do_check_eq(b1.version, "1.0");
     do_check_false(b1.appDisabled);
@@ -401,9 +354,9 @@ function run_test_6() {
     do_check_eq(install.name, "Test Bootstrap 1");
     do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
 
-    waitForPref("bootstraptest.startup_reason", check_test_6);
+    BootstrapMonitor.promiseAddonStartup(ID1).then(check_test_6);
     prepare_test({
-      "bootstrap1@tests.mozilla.org": [
+      [ID1]: [
         ["onInstalling", false],
         "onInstalled"
       ]
@@ -417,22 +370,22 @@ function run_test_6() {
 }
 
 function check_test_6() {
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID(ID1, function(b1) {
     do_check_neq(b1, null);
     do_check_eq(b1.version, "2.0");
     do_check_false(b1.appDisabled);
     do_check_false(b1.userDisabled);
     do_check_true(b1.isActive);
-    do_check_eq(getInstalledVersion(), 2);
-    do_check_eq(getActiveVersion(), 2);
+    BootstrapMonitor.checkAddonInstalled(ID1, "2.0");
+    BootstrapMonitor.checkAddonStarted(ID1, "2.0");
     do_check_eq(getStartupReason(), ADDON_UPGRADE);
     do_check_eq(getInstallOldVersion(), 1);
     do_check_eq(getStartupOldVersion(), 1);
     do_check_eq(getShutdownReason(), ADDON_UPGRADE);
     do_check_eq(getShutdownNewVersion(), 2);
     do_check_eq(getUninstallNewVersion(), 2);
-    do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
-    do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "2.0");
+    do_check_not_in_crash_annotation(ID1, "1.0");
+    do_check_in_crash_annotation(ID1, "2.0");
 
     do_check_bootstrappedPref(run_test_7);
   });
@@ -440,9 +393,9 @@ function check_test_6() {
 
 // Tests that uninstalling doesn't require a restart
 function run_test_7() {
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID(ID1, function(b1) {
     prepare_test({
-      "bootstrap1@tests.mozilla.org": [
+      [ID1]: [
         ["onUninstalling", false],
         "onUninstalled"
       ]
@@ -458,18 +411,18 @@ function run_test_7() {
 
 function check_test_7() {
   ensure_test_completed();
-  do_check_eq(getInstalledVersion(), 0);
-  do_check_eq(getActiveVersion(), 0);
+  BootstrapMonitor.checkAddonNotInstalled(ID1);
+  BootstrapMonitor.checkAddonNotStarted(ID1);
   do_check_eq(getShutdownReason(), ADDON_UNINSTALL);
-  do_check_eq(getShutdownNewVersion(), 0);
-  do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "2.0");
+  do_check_eq(getShutdownNewVersion(), undefined);
+  do_check_not_in_crash_annotation(ID1, "2.0");
 
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", callback_soon(function(b1) {
+  AddonManager.getAddonByID(ID1, callback_soon(function(b1) {
     do_check_eq(b1, null);
 
     restartManager();
 
-    AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(newb1) {
+    AddonManager.getAddonByID(ID1, function(newb1) {
       do_check_eq(newb1, null);
 
       do_check_bootstrappedPref(run_test_8);
@@ -483,21 +436,21 @@ function run_test_8() {
   shutdownManager();
 
   manuallyInstall(do_get_addon("test_bootstrap1_1"), profileDir,
-                  "bootstrap1@tests.mozilla.org");
+                  ID1);
 
   startupManager(false);
 
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID(ID1, function(b1) {
     do_check_neq(b1, null);
     do_check_eq(b1.version, "1.0");
     do_check_false(b1.appDisabled);
     do_check_false(b1.userDisabled);
     do_check_true(b1.isActive);
-    do_check_eq(getInstalledVersion(), 1);
-    do_check_eq(getActiveVersion(), 1);
+    BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+    BootstrapMonitor.checkAddonStarted(ID1, "1.0");
     do_check_eq(getStartupReason(), ADDON_INSTALL);
-    do_check_eq(getStartupOldVersion(), 0);
-    do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+    do_check_eq(getStartupOldVersion(), undefined);
+    do_check_in_crash_annotation(ID1, "1.0");
 
     do_check_bootstrappedPref(run_test_9);
   });
@@ -507,13 +460,14 @@ function run_test_8() {
 function run_test_9() {
   shutdownManager();
 
-  manuallyUninstall(profileDir, "bootstrap1@tests.mozilla.org");
+  manuallyUninstall(profileDir, ID1);
+  BootstrapMonitor.clear(ID1);
 
   startupManager(false);
 
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID(ID1, function(b1) {
     do_check_eq(b1, null);
-    do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+    do_check_not_in_crash_annotation(ID1, "1.0");
 
     do_check_bootstrappedPref(run_test_10);
   });
@@ -522,7 +476,6 @@ function run_test_9() {
 
 // Tests that installing a downgrade sends the right reason
 function run_test_10() {
-  resetPrefs();
   prepare_test({ }, [
     "onNewInstall"
   ]);
@@ -538,11 +491,11 @@ function run_test_10() {
     do_check_true(install.addon.hasResource("install.rdf"));
     do_check_true(install.addon.hasResource("bootstrap.js"));
     do_check_false(install.addon.hasResource("foo.bar"));
-    do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "2.0");
+    do_check_not_in_crash_annotation(ID1, "2.0");
 
-    waitForPref("bootstraptest.startup_reason", check_test_10_pt1);
+    BootstrapMonitor.promiseAddonStartup(ID1).then(check_test_10_pt1);
     prepare_test({
-      "bootstrap1@tests.mozilla.org": [
+      [ID1]: [
         ["onInstalling", false],
         "onInstalled"
       ]
@@ -557,20 +510,20 @@ function run_test_10() {
 }
 
 function check_test_10_pt1() {
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID(ID1, function(b1) {
     do_check_neq(b1, null);
     do_check_eq(b1.version, "2.0");
     do_check_false(b1.appDisabled);
     do_check_false(b1.userDisabled);
     do_check_true(b1.isActive);
-    do_check_eq(getInstalledVersion(), 2);
-    do_check_eq(getActiveVersion(), 2);
+    BootstrapMonitor.checkAddonInstalled(ID1, "2.0");
+    BootstrapMonitor.checkAddonStarted(ID1, "2.0");
     do_check_eq(getStartupReason(), ADDON_INSTALL);
-    do_check_eq(getStartupOldVersion(), 0);
+    do_check_eq(getStartupOldVersion(), undefined);
     do_check_true(b1.hasResource("install.rdf"));
     do_check_true(b1.hasResource("bootstrap.js"));
     do_check_false(b1.hasResource("foo.bar"));
-    do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "2.0");
+    do_check_in_crash_annotation(ID1, "2.0");
 
     prepare_test({ }, [
       "onNewInstall"
@@ -585,9 +538,9 @@ function check_test_10_pt1() {
       do_check_eq(install.name, "Test Bootstrap 1");
       do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
 
-      waitForPref("bootstraptest.startup_reason", check_test_10_pt2);
+      BootstrapMonitor.promiseAddonStartup(ID1).then(check_test_10_pt2);
       prepare_test({
-        "bootstrap1@tests.mozilla.org": [
+        [ID1]: [
           ["onInstalling", false],
           "onInstalled"
         ]
@@ -601,22 +554,22 @@ function check_test_10_pt1() {
 }
 
 function check_test_10_pt2() {
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID(ID1, function(b1) {
     do_check_neq(b1, null);
     do_check_eq(b1.version, "1.0");
     do_check_false(b1.appDisabled);
     do_check_false(b1.userDisabled);
     do_check_true(b1.isActive);
-    do_check_eq(getInstalledVersion(), 1);
-    do_check_eq(getActiveVersion(), 1);
+    BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+    BootstrapMonitor.checkAddonStarted(ID1, "1.0");
     do_check_eq(getStartupReason(), ADDON_DOWNGRADE);
     do_check_eq(getInstallOldVersion(), 2);
     do_check_eq(getStartupOldVersion(), 2);
     do_check_eq(getShutdownReason(), ADDON_DOWNGRADE);
     do_check_eq(getShutdownNewVersion(), 1);
     do_check_eq(getUninstallNewVersion(), 1);
-    do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
-    do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "2.0");
+    do_check_in_crash_annotation(ID1, "1.0");
+    do_check_not_in_crash_annotation(ID1, "2.0");
 
     do_check_bootstrappedPref(run_test_11);
   });
@@ -624,9 +577,9 @@ function check_test_10_pt2() {
 
 // Tests that uninstalling a disabled add-on still calls the uninstall method
 function run_test_11() {
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID(ID1, function(b1) {
     prepare_test({
-      "bootstrap1@tests.mozilla.org": [
+      [ID1]: [
         ["onDisabling", false],
         "onDisabled",
         ["onUninstalling", false],
@@ -636,11 +589,11 @@ function run_test_11() {
 
     b1.userDisabled = true;
 
-    do_check_eq(getInstalledVersion(), 1);
-    do_check_eq(getActiveVersion(), 0);
+    BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+    BootstrapMonitor.checkAddonNotStarted(ID1);
     do_check_eq(getShutdownReason(), ADDON_DISABLE);
-    do_check_eq(getShutdownNewVersion(), 0);
-    do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+    do_check_eq(getShutdownNewVersion(), undefined);
+    do_check_not_in_crash_annotation(ID1, "1.0");
 
     b1.uninstall();
 
@@ -650,9 +603,9 @@ function run_test_11() {
 
 function check_test_11() {
   ensure_test_completed();
-  do_check_eq(getInstalledVersion(), 0);
-  do_check_eq(getActiveVersion(), 0);
-  do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+  BootstrapMonitor.checkAddonNotInstalled(ID1);
+  BootstrapMonitor.checkAddonNotStarted(ID1);
+  do_check_not_in_crash_annotation(ID1, "1.0");
 
   do_check_bootstrappedPref(run_test_12);
 }
@@ -663,21 +616,21 @@ function run_test_12() {
   shutdownManager();
 
   manuallyInstall(do_get_addon("test_bootstrap1_1"), profileDir,
-                  "bootstrap1@tests.mozilla.org");
+                  ID1);
 
   startupManager(true);
 
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID(ID1, function(b1) {
     do_check_neq(b1, null);
     do_check_eq(b1.version, "1.0");
     do_check_false(b1.appDisabled);
     do_check_false(b1.userDisabled);
     do_check_true(b1.isActive);
-    do_check_eq(getInstalledVersion(), 1);
-    do_check_eq(getActiveVersion(), 1);
+    BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+    BootstrapMonitor.checkAddonStarted(ID1, "1.0");
     do_check_eq(getStartupReason(), ADDON_INSTALL);
-    do_check_eq(getStartupOldVersion(), 0);
-    do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+    do_check_eq(getStartupOldVersion(), undefined);
+    do_check_in_crash_annotation(ID1, "1.0");
 
     b1.uninstall();
     do_execute_soon(test_12_restart);
@@ -705,10 +658,10 @@ function run_test_13() {
     do_check_eq(install.version, "3.0");
     do_check_eq(install.name, "Test Bootstrap 1");
     do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
-    do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "3.0");
+    do_check_not_in_crash_annotation(ID1, "3.0");
 
     prepare_test({
-      "bootstrap1@tests.mozilla.org": [
+      [ID1]: [
         ["onInstalling", false],
         "onInstalled"
       ]
@@ -726,15 +679,15 @@ function check_test_13() {
     // doesn't require a restart.
     do_check_eq(installs.length, 0);
 
-    AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+    AddonManager.getAddonByID(ID1, function(b1) {
       do_check_neq(b1, null);
       do_check_eq(b1.version, "3.0");
       do_check_true(b1.appDisabled);
       do_check_false(b1.userDisabled);
       do_check_false(b1.isActive);
-      do_check_eq(getInstalledVersion(), 3);  // We call install even for disabled add-ons
-      do_check_eq(getActiveVersion(), 0);     // Should not have called startup though
-      do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "3.0");
+      BootstrapMonitor.checkAddonInstalled(ID1, "3.0"); // We call install even for disabled add-ons
+      BootstrapMonitor.checkAddonNotStarted(ID1);       // Should not have called startup though
+      do_check_not_in_crash_annotation(ID1, "3.0");
 
       do_execute_soon(test_13_restart);
     });
@@ -744,15 +697,15 @@ function check_test_13() {
 function test_13_restart() {
   restartManager();
 
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID(ID1, function(b1) {
     do_check_neq(b1, null);
     do_check_eq(b1.version, "3.0");
     do_check_true(b1.appDisabled);
     do_check_false(b1.userDisabled);
     do_check_false(b1.isActive);
-    do_check_eq(getInstalledVersion(), 3);  // We call install even for disabled add-ons
-    do_check_eq(getActiveVersion(), 0);     // Should not have called startup though
-    do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "3.0");
+    BootstrapMonitor.checkAddonInstalled(ID1, "3.0"); // We call install even for disabled add-ons
+    BootstrapMonitor.checkAddonNotStarted(ID1);       // Should not have called startup though
+    do_check_not_in_crash_annotation(ID1, "3.0");
 
     do_check_bootstrappedPref(function() {
       b1.uninstall();
@@ -769,19 +722,19 @@ function run_test_14() {
   shutdownManager();
 
   manuallyInstall(do_get_addon("test_bootstrap1_3"), profileDir,
-                  "bootstrap1@tests.mozilla.org");
+                  ID1);
 
   startupManager(false);
 
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID(ID1, function(b1) {
     do_check_neq(b1, null);
     do_check_eq(b1.version, "3.0");
     do_check_true(b1.appDisabled);
     do_check_false(b1.userDisabled);
     do_check_false(b1.isActive);
-    do_check_eq(getInstalledVersion(), 3);   // We call install even for disabled add-ons
-    do_check_eq(getActiveVersion(), 0);      // Should not have called startup though
-    do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "3.0");
+    BootstrapMonitor.checkAddonInstalled(ID1, "3.0"); // We call install even for disabled add-ons
+    BootstrapMonitor.checkAddonNotStarted(ID1);       // Should not have called startup though
+    do_check_not_in_crash_annotation(ID1, "3.0");
 
     do_check_bootstrappedPref(function() {
       b1.uninstall();
@@ -794,21 +747,20 @@ function run_test_14() {
 // Tests that upgrading a disabled bootstrapped extension still calls uninstall
 // and install but doesn't startup the new version
 function run_test_15() {
-  resetPrefs();
-  waitForPref("bootstraptest.startup_reason", function test_15_after_startup() {
-    AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  BootstrapMonitor.promiseAddonStartup(ID1).then(function test_15_after_startup() {
+    AddonManager.getAddonByID(ID1, function(b1) {
       do_check_neq(b1, null);
       do_check_eq(b1.version, "1.0");
       do_check_false(b1.appDisabled);
       do_check_false(b1.userDisabled);
       do_check_true(b1.isActive);
-      do_check_eq(getInstalledVersion(), 1);
-      do_check_eq(getActiveVersion(), 1);
+      BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+      BootstrapMonitor.checkAddonStarted(ID1, "1.0");
 
       b1.userDisabled = true;
       do_check_false(b1.isActive);
-      do_check_eq(getInstalledVersion(), 1);
-      do_check_eq(getActiveVersion(), 0);
+      BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+      BootstrapMonitor.checkAddonNotStarted(ID1);
 
       prepare_test({ }, [
         "onNewInstall"
@@ -821,7 +773,7 @@ function run_test_15() {
         do_check_true(install.addon.userDisabled);
 
         prepare_test({
-          "bootstrap1@tests.mozilla.org": [
+          [ID1]: [
             ["onInstalling", false],
             "onInstalled"
           ]
@@ -837,26 +789,26 @@ function run_test_15() {
 }
 
 function check_test_15() {
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID(ID1, function(b1) {
     do_check_neq(b1, null);
     do_check_eq(b1.version, "2.0");
     do_check_false(b1.appDisabled);
     do_check_true(b1.userDisabled);
     do_check_false(b1.isActive);
-    do_check_eq(getInstalledVersion(), 2);
-    do_check_eq(getActiveVersion(), 0);
+    BootstrapMonitor.checkAddonInstalled(ID1, "2.0");
+    BootstrapMonitor.checkAddonNotStarted(ID1);
 
     do_check_bootstrappedPref(function() {
       restartManager();
 
-      AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", callback_soon(function(b1) {
+      AddonManager.getAddonByID(ID1, callback_soon(function(b1) {
         do_check_neq(b1, null);
         do_check_eq(b1.version, "2.0");
         do_check_false(b1.appDisabled);
         do_check_true(b1.userDisabled);
         do_check_false(b1.isActive);
-        do_check_eq(getInstalledVersion(), 2);
-        do_check_eq(getActiveVersion(), 0);
+        BootstrapMonitor.checkAddonInstalled(ID1, "2.0");
+        BootstrapMonitor.checkAddonNotStarted(ID1);
 
         b1.uninstall();
 
@@ -868,12 +820,11 @@ function check_test_15() {
 
 // Tests that bootstrapped extensions don't get loaded when in safe mode
 function run_test_16() {
-  resetPrefs();
-  waitForPref("bootstraptest.startup_reason", function test_16_after_startup() {
-    AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", callback_soon(function(b1) {
+  BootstrapMonitor.promiseAddonStartup(ID1).then(function test_16_after_startup() {
+    AddonManager.getAddonByID(ID1, callback_soon(function(b1) {
       // Should have installed and started
-      do_check_eq(getInstalledVersion(), 1);
-      do_check_eq(getActiveVersion(), 1);
+      BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+      BootstrapMonitor.checkAddonStarted(ID1, "1.0");
       do_check_true(b1.isActive);
       do_check_eq(b1.iconURL, "chrome://foo/skin/icon.png");
       do_check_eq(b1.aboutURL, "chrome://foo/content/about.xul");
@@ -882,16 +833,16 @@ function run_test_16() {
       shutdownManager();
 
       // Should have stopped
-      do_check_eq(getInstalledVersion(), 1);
-      do_check_eq(getActiveVersion(), 0);
+      BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+      BootstrapMonitor.checkAddonNotStarted(ID1);
 
       gAppInfo.inSafeMode = true;
       startupManager(false);
 
-      AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", callback_soon(function(b1) {
+      AddonManager.getAddonByID(ID1, callback_soon(function(b1) {
         // Should still be stopped
-        do_check_eq(getInstalledVersion(), 1);
-        do_check_eq(getActiveVersion(), 0);
+        BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+        BootstrapMonitor.checkAddonNotStarted(ID1);
         do_check_false(b1.isActive);
         do_check_eq(b1.iconURL, null);
         do_check_eq(b1.aboutURL, null);
@@ -902,10 +853,10 @@ function run_test_16() {
         startupManager(false);
 
         // Should have started
-        do_check_eq(getInstalledVersion(), 1);
-        do_check_eq(getActiveVersion(), 1);
+        BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+        BootstrapMonitor.checkAddonStarted(ID1, "1.0");
 
-        AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+        AddonManager.getAddonByID(ID1, function(b1) {
           b1.uninstall();
 
           do_execute_soon(run_test_17);
@@ -921,15 +872,14 @@ function run_test_17() {
   shutdownManager();
 
   manuallyInstall(do_get_addon("test_bootstrap1_1"), userExtDir,
-                  "bootstrap1@tests.mozilla.org");
+                  ID1);
 
-  resetPrefs();
   startupManager();
 
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID(ID1, function(b1) {
     // Should have installed and started
-    do_check_eq(getInstalledVersion(), 1);
-    do_check_eq(getActiveVersion(), 1);
+    BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+    BootstrapMonitor.checkAddonStarted(ID1, "1.0");
     do_check_neq(b1, null);
     do_check_eq(b1.version, "1.0");
     do_check_true(b1.isActive);
@@ -941,12 +891,11 @@ function run_test_17() {
 // Check that installing a new bootstrapped extension in the profile replaces
 // the existing one
 function run_test_18() {
-  resetPrefs();
-  waitForPref("bootstraptest.startup_reason", function test_18_after_startup() {
-    AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  BootstrapMonitor.promiseAddonStartup(ID1).then(function test_18_after_startup() {
+    AddonManager.getAddonByID(ID1, function(b1) {
       // Should have installed and started
-      do_check_eq(getInstalledVersion(), 2);
-      do_check_eq(getActiveVersion(), 2);
+      BootstrapMonitor.checkAddonInstalled(ID1, "2.0");
+      BootstrapMonitor.checkAddonStarted(ID1, "2.0");
       do_check_neq(b1, null);
       do_check_eq(b1.version, "2.0");
       do_check_true(b1.isActive);
@@ -969,11 +918,10 @@ function run_test_18() {
 
 // Check that uninstalling the profile version reveals the non-profile one
 function run_test_19() {
-  resetPrefs();
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID(ID1, function(b1) {
     // The revealed add-on gets activated asynchronously
     prepare_test({
-      "bootstrap1@tests.mozilla.org": [
+      [ID1]: [
         ["onUninstalling", false],
         "onUninstalled",
         ["onInstalling", false],
@@ -986,10 +934,10 @@ function run_test_19() {
 }
 
 function check_test_19() {
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID(ID1, function(b1) {
     // Should have reverted to the older version
-    do_check_eq(getInstalledVersion(), 1);
-    do_check_eq(getActiveVersion(), 1);
+    BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+    BootstrapMonitor.checkAddonStarted(ID1, "1.0");
     do_check_neq(b1, null);
     do_check_eq(b1.version, "1.0");
     do_check_true(b1.isActive);
@@ -1000,10 +948,10 @@ function check_test_19() {
     do_check_eq(getInstallReason(), ADDON_INSTALL);
     do_check_eq(getStartupReason(), ADDON_INSTALL);
 
-    do_check_eq(getShutdownNewVersion(), 0);
-    do_check_eq(getUninstallNewVersion(), 0);
-    do_check_eq(getInstallOldVersion(), 0);
-    do_check_eq(getStartupOldVersion(), 0);
+    do_check_eq(getShutdownNewVersion(), undefined);
+    do_check_eq(getUninstallNewVersion(), undefined);
+    do_check_eq(getInstallOldVersion(), undefined);
+    do_check_eq(getStartupOldVersion(), undefined);
 
     do_check_bootstrappedPref(run_test_20);
   });
@@ -1012,18 +960,17 @@ function check_test_19() {
 // Check that a new profile extension detected at startup replaces the non-profile
 // one
 function run_test_20() {
-  resetPrefs();
   shutdownManager();
 
   manuallyInstall(do_get_addon("test_bootstrap1_2"), profileDir,
-                  "bootstrap1@tests.mozilla.org");
+                  ID1);
 
   startupManager();
 
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID(ID1, function(b1) {
     // Should have installed and started
-    do_check_eq(getInstalledVersion(), 2);
-    do_check_eq(getActiveVersion(), 2);
+    BootstrapMonitor.checkAddonInstalled(ID1, "2.0");
+    BootstrapMonitor.checkAddonStarted(ID1, "2.0");
     do_check_neq(b1, null);
     do_check_eq(b1.version, "2.0");
     do_check_true(b1.isActive);
@@ -1033,10 +980,10 @@ function run_test_20() {
     do_check_eq(getInstallReason(), ADDON_UPGRADE);
     do_check_eq(getStartupReason(), APP_STARTUP);
 
-    do_check_eq(getShutdownNewVersion(), 0);
+    do_check_eq(getShutdownNewVersion(), undefined);
     do_check_eq(getUninstallNewVersion(), 2);
     do_check_eq(getInstallOldVersion(), 1);
-    do_check_eq(getStartupOldVersion(), 0);
+    do_check_eq(getStartupOldVersion(), undefined);
 
     do_execute_soon(run_test_21);
   });
@@ -1044,39 +991,42 @@ function run_test_20() {
 
 // Check that a detected removal reveals the non-profile one
 function run_test_21() {
-  resetPrefs();
   shutdownManager();
 
-  manuallyUninstall(profileDir, "bootstrap1@tests.mozilla.org");
+  do_check_eq(getShutdownReason(), APP_SHUTDOWN);
+  do_check_eq(getShutdownNewVersion(), undefined);
+
+  manuallyUninstall(profileDir, ID1);
+  BootstrapMonitor.clear(ID1);
 
   startupManager();
 
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID(ID1, function(b1) {
     // Should have installed and started
-    do_check_eq(getInstalledVersion(), 1);
-    do_check_eq(getActiveVersion(), 1);
+    BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+    BootstrapMonitor.checkAddonStarted(ID1, "1.0");
     do_check_neq(b1, null);
     do_check_eq(b1.version, "1.0");
     do_check_true(b1.isActive);
 
-    do_check_eq(getShutdownReason(), APP_SHUTDOWN);
-    do_check_eq(getShutdownNewVersion(), 0);
-
     // This won't be set as the bootstrap script was gone so we couldn't
     // uninstall it properly
-    do_check_eq(getUninstallReason(), -1);
-    do_check_eq(getUninstallNewVersion(), -1);
+    do_check_eq(getUninstallReason(), undefined);
+    do_check_eq(getUninstallNewVersion(), undefined);
 
     do_check_eq(getInstallReason(), ADDON_DOWNGRADE);
     do_check_eq(getInstallOldVersion(), 2);
 
     do_check_eq(getStartupReason(), APP_STARTUP);
-    do_check_eq(getStartupOldVersion(), 0);
+    do_check_eq(getStartupOldVersion(), undefined);
 
     do_check_bootstrappedPref(function() {
-      manuallyUninstall(userExtDir, "bootstrap1@tests.mozilla.org");
+      shutdownManager();
 
-      restartManager();
+      manuallyUninstall(userExtDir, ID1);
+      BootstrapMonitor.clear(ID1);
+
+      startupManager(false);
       run_test_22();
     });
   });
@@ -1087,50 +1037,50 @@ function run_test_22() {
   shutdownManager();
 
   let file = manuallyInstall(do_get_addon("test_bootstrap1_1"), profileDir,
-                             "bootstrap1@tests.mozilla.org");
+                             ID1);
 
   // Make it look old so changes are detected
   setExtensionModifiedTime(file, file.lastModifiedTime - 5000);
 
   startupManager();
 
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", callback_soon(function(b1) {
+  AddonManager.getAddonByID(ID1, callback_soon(function(b1) {
     // Should have installed and started
-    do_check_eq(getInstalledVersion(), 1);
-    do_check_eq(getActiveVersion(), 1);
+    BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+    BootstrapMonitor.checkAddonStarted(ID1, "1.0");
     do_check_neq(b1, null);
     do_check_eq(b1.version, "1.0");
     do_check_true(b1.isActive);
 
-    resetPrefs();
     shutdownManager();
 
-    manuallyUninstall(profileDir, "bootstrap1@tests.mozilla.org");
+    do_check_eq(getShutdownReason(), APP_SHUTDOWN);
+    do_check_eq(getShutdownNewVersion(), undefined);
+
+    manuallyUninstall(profileDir, ID1);
+    BootstrapMonitor.clear(ID1);
     manuallyInstall(do_get_addon("test_bootstrap1_2"), profileDir,
-                    "bootstrap1@tests.mozilla.org");
+                    ID1);
 
     startupManager();
 
-    AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+    AddonManager.getAddonByID(ID1, function(b1) {
       // Should have installed and started
-      do_check_eq(getInstalledVersion(), 2);
-      do_check_eq(getActiveVersion(), 2);
+      BootstrapMonitor.checkAddonInstalled(ID1, "2.0");
+      BootstrapMonitor.checkAddonStarted(ID1, "2.0");
       do_check_neq(b1, null);
       do_check_eq(b1.version, "2.0");
       do_check_true(b1.isActive);
 
-      do_check_eq(getShutdownReason(), APP_SHUTDOWN);
-      do_check_eq(getShutdownNewVersion(), 0);
-
       // This won't be set as the bootstrap script was gone so we couldn't
       // uninstall it properly
-      do_check_eq(getUninstallReason(), -1);
-      do_check_eq(getUninstallNewVersion(), -1);
+      do_check_eq(getUninstallReason(), undefined);
+      do_check_eq(getUninstallNewVersion(), undefined);
 
       do_check_eq(getInstallReason(), ADDON_UPGRADE);
       do_check_eq(getInstallOldVersion(), 1);
       do_check_eq(getStartupReason(), APP_STARTUP);
-      do_check_eq(getStartupOldVersion(), 0);
+      do_check_eq(getStartupOldVersion(), undefined);
 
       do_check_bootstrappedPref(function() {
         b1.uninstall();
@@ -1167,11 +1117,11 @@ function run_test_23() {
       do_check_false(install.addon.hasResource("foo.bar"));
       do_check_eq(install.addon.operationsRequiringRestart &
                   AddonManager.OP_NEEDS_RESTART_INSTALL, 0);
-      do_check_not_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+      do_check_not_in_crash_annotation(ID1, "1.0");
 
       let addon = install.addon;
       prepare_test({
-        "bootstrap1@tests.mozilla.org": [
+        [ID1]: [
           ["onInstalling", false],
           "onInstalled"
         ]
@@ -1193,30 +1143,30 @@ function check_test_23() {
     // doesn't require a restart.
     do_check_eq(installs.length, 0);
 
-    AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+    AddonManager.getAddonByID(ID1, function(b1) {
      do_execute_soon(function test_23_after_startup() {
       do_check_neq(b1, null);
       do_check_eq(b1.version, "1.0");
       do_check_false(b1.appDisabled);
       do_check_false(b1.userDisabled);
       do_check_true(b1.isActive);
-      do_check_eq(getInstalledVersion(), 1);
-      do_check_eq(getActiveVersion(), 1);
+      BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+      BootstrapMonitor.checkAddonStarted(ID1, "1.0");
       do_check_eq(getStartupReason(), ADDON_INSTALL);
-      do_check_eq(getStartupOldVersion(), 0);
+      do_check_eq(getStartupOldVersion(), undefined);
       do_check_true(b1.hasResource("install.rdf"));
       do_check_true(b1.hasResource("bootstrap.js"));
       do_check_false(b1.hasResource("foo.bar"));
-      do_check_in_crash_annotation("bootstrap1@tests.mozilla.org", "1.0");
+      do_check_in_crash_annotation(ID1, "1.0");
 
-      let dir = do_get_addon_root_uri(profileDir, "bootstrap1@tests.mozilla.org");
+      let dir = do_get_addon_root_uri(profileDir, ID1);
       do_check_eq(b1.getResourceURI("bootstrap.js").spec, dir + "bootstrap.js");
 
       AddonManager.getAddonsWithOperationsByTypes(null, callback_soon(function(list) {
         do_check_eq(list.length, 0);
 
         restartManager();
-        AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", callback_soon(function(b1) {
+        AddonManager.getAddonByID(ID1, callback_soon(function(b1) {
           b1.uninstall();
           restartManager();
 
@@ -1230,45 +1180,42 @@ function check_test_23() {
 
 // Tests that we recover from a broken preference
 function run_test_24() {
-  resetPrefs();
   do_print("starting 24");
 
-  Promise.all([promisePref("bootstraptest2.active_version"),
-              promiseInstall([do_get_addon("test_bootstrap1_1"), do_get_addon("test_bootstrap2_1")])])
+  Promise.all([BootstrapMonitor.promiseAddonStartup(ID2),
+              promiseInstallAllFiles([do_get_addon("test_bootstrap1_1"), do_get_addon("test_bootstrap2_1")])])
          .then(function test_24_pref() {
     do_print("test 24 got prefs");
-    do_check_eq(getInstalledVersion(), 1);
-    do_check_eq(getActiveVersion(), 1);
-    do_check_eq(getInstalledVersion2(), 1);
-    do_check_eq(getActiveVersion2(), 1);
-
-    resetPrefs();
+    BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+    BootstrapMonitor.checkAddonStarted(ID1, "1.0");
+    BootstrapMonitor.checkAddonInstalled(ID2, "1.0");
+    BootstrapMonitor.checkAddonStarted(ID2, "1.0");
 
     restartManager();
 
-    do_check_eq(getInstalledVersion(), -1);
-    do_check_eq(getActiveVersion(), 1);
-    do_check_eq(getInstalledVersion2(), -1);
-    do_check_eq(getActiveVersion2(), 1);
+    BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+    BootstrapMonitor.checkAddonStarted(ID1, "1.0");
+    BootstrapMonitor.checkAddonInstalled(ID2, "1.0");
+    BootstrapMonitor.checkAddonStarted(ID2, "1.0");
 
     shutdownManager();
 
-    do_check_eq(getInstalledVersion(), -1);
-    do_check_eq(getActiveVersion(), 0);
-    do_check_eq(getInstalledVersion2(), -1);
-    do_check_eq(getActiveVersion2(), 0);
+    BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+    BootstrapMonitor.checkAddonNotStarted(ID1);
+    BootstrapMonitor.checkAddonInstalled(ID2, "1.0");
+    BootstrapMonitor.checkAddonNotStarted(ID2);
 
-    // Break the preferece
+    // Break the preference
     let bootstrappedAddons = JSON.parse(Services.prefs.getCharPref("extensions.bootstrappedAddons"));
-    bootstrappedAddons["bootstrap1@tests.mozilla.org"].descriptor += "foo";
+    bootstrappedAddons[ID1].descriptor += "foo";
     Services.prefs.setCharPref("extensions.bootstrappedAddons", JSON.stringify(bootstrappedAddons));
 
     startupManager(false);
 
-    do_check_eq(getInstalledVersion(), -1);
-    do_check_eq(getActiveVersion(), 1);
-    do_check_eq(getInstalledVersion2(), -1);
-    do_check_eq(getActiveVersion2(), 1);
+    BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+    BootstrapMonitor.checkAddonStarted(ID1, "1.0");
+    BootstrapMonitor.checkAddonInstalled(ID2, "1.0");
+    BootstrapMonitor.checkAddonStarted(ID2, "1.0");
 
     run_test_25();
   });
@@ -1277,17 +1224,17 @@ function run_test_24() {
 // Tests that updating from a bootstrappable add-on to a normal add-on calls
 // the uninstall method
 function run_test_25() {
-  waitForPref("bootstraptest.startup_reason", function test_25_after_pref() {
+  BootstrapMonitor.promiseAddonStartup(ID1).then(function test_25_after_pref() {
       do_print("test 25 pref change detected");
-      do_check_eq(getInstalledVersion(), 1);
-      do_check_eq(getActiveVersion(), 1);
+      BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+      BootstrapMonitor.checkAddonStarted(ID1, "1.0");
 
       installAllFiles([do_get_addon("test_bootstrap1_4")], function() {
         // Needs a restart to complete this so the old version stays running
-        do_check_eq(getInstalledVersion(), 1);
-        do_check_eq(getActiveVersion(), 1);
+        BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+        BootstrapMonitor.checkAddonStarted(ID1, "1.0");
 
-        AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", callback_soon(function(b1) {
+        AddonManager.getAddonByID(ID1, callback_soon(function(b1) {
           do_check_neq(b1, null);
           do_check_eq(b1.version, "1.0");
           do_check_true(b1.isActive);
@@ -1295,12 +1242,12 @@ function run_test_25() {
 
           restartManager();
 
-          do_check_eq(getInstalledVersion(), 0);
+          BootstrapMonitor.checkAddonNotInstalled(ID1);
           do_check_eq(getUninstallReason(), ADDON_UPGRADE);
           do_check_eq(getUninstallNewVersion(), 4);
-          do_check_eq(getActiveVersion(), 0);
+          BootstrapMonitor.checkAddonNotStarted(ID1);
 
-          AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+          AddonManager.getAddonByID(ID1, function(b1) {
             do_check_neq(b1, null);
             do_check_eq(b1.version, "4.0");
             do_check_true(b1.isActive);
@@ -1321,10 +1268,10 @@ function run_test_25() {
 function run_test_26() {
   installAllFiles([do_get_addon("test_bootstrap1_1")], function() {
     // Needs a restart to complete this
-    do_check_eq(getInstalledVersion(), 0);
-    do_check_eq(getActiveVersion(), 0);
+    BootstrapMonitor.checkAddonNotInstalled(ID1);
+    BootstrapMonitor.checkAddonNotStarted(ID1);
 
-    AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", callback_soon(function(b1) {
+    AddonManager.getAddonByID(ID1, callback_soon(function(b1) {
       do_check_neq(b1, null);
       do_check_eq(b1.version, "4.0");
       do_check_true(b1.isActive);
@@ -1332,12 +1279,12 @@ function run_test_26() {
 
       restartManager();
 
-      do_check_eq(getInstalledVersion(), 1);
+      BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
       do_check_eq(getInstallReason(), ADDON_DOWNGRADE);
       do_check_eq(getInstallOldVersion(), 4);
-      do_check_eq(getActiveVersion(), 1);
+      BootstrapMonitor.checkAddonStarted(ID1, "1.0");
 
-      AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+      AddonManager.getAddonByID(ID1, function(b1) {
         do_check_neq(b1, null);
         do_check_eq(b1.version, "1.0");
         do_check_true(b1.isActive);
@@ -1352,23 +1299,23 @@ function run_test_26() {
 // Tests that updating from a bootstrappable add-on to a normal add-on while
 // disabled calls the uninstall method
 function run_test_27() {
-  AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+  AddonManager.getAddonByID(ID1, function(b1) {
     do_check_neq(b1, null);
     b1.userDisabled = true;
     do_check_eq(b1.version, "1.0");
     do_check_false(b1.isActive);
     do_check_eq(b1.pendingOperations, AddonManager.PENDING_NONE);
-    do_check_eq(getInstalledVersion(), 1);
-    do_check_eq(getActiveVersion(), 0);
+    BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+    BootstrapMonitor.checkAddonNotStarted(ID1);
 
     installAllFiles([do_get_addon("test_bootstrap1_4")], function() {
       // Updating disabled things happens immediately
-      do_check_eq(getInstalledVersion(), 0);
+      BootstrapMonitor.checkAddonNotInstalled(ID1);
       do_check_eq(getUninstallReason(), ADDON_UPGRADE);
       do_check_eq(getUninstallNewVersion(), 4);
-      do_check_eq(getActiveVersion(), 0);
+      BootstrapMonitor.checkAddonNotStarted(ID1);
 
-      AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", callback_soon(function(b1) {
+      AddonManager.getAddonByID(ID1, callback_soon(function(b1) {
         do_check_neq(b1, null);
         do_check_eq(b1.version, "4.0");
         do_check_false(b1.isActive);
@@ -1376,10 +1323,10 @@ function run_test_27() {
 
         restartManager();
 
-        do_check_eq(getInstalledVersion(), 0);
-        do_check_eq(getActiveVersion(), 0);
+        BootstrapMonitor.checkAddonNotInstalled(ID1);
+        BootstrapMonitor.checkAddonNotStarted(ID1);
 
-        AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+        AddonManager.getAddonByID(ID1, function(b1) {
           do_check_neq(b1, null);
           do_check_eq(b1.version, "4.0");
           do_check_false(b1.isActive);
@@ -1398,12 +1345,12 @@ function run_test_28() {
   installAllFiles([do_get_addon("test_bootstrap1_1")], function() {
    do_execute_soon(function bootstrap_disabled_downgrade_check() {
     // Doesn't need a restart to complete this
-    do_check_eq(getInstalledVersion(), 1);
+    BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
     do_check_eq(getInstallReason(), ADDON_DOWNGRADE);
     do_check_eq(getInstallOldVersion(), 4);
-    do_check_eq(getActiveVersion(), 0);
+    BootstrapMonitor.checkAddonNotStarted(ID1);
 
-    AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", callback_soon(function(b1) {
+    AddonManager.getAddonByID(ID1, callback_soon(function(b1) {
       do_check_neq(b1, null);
       do_check_eq(b1.version, "1.0");
       do_check_false(b1.isActive);
@@ -1412,18 +1359,18 @@ function run_test_28() {
 
       restartManager();
 
-      do_check_eq(getInstalledVersion(), 1);
-      do_check_eq(getActiveVersion(), 0);
+      BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+      BootstrapMonitor.checkAddonNotStarted(ID1);
 
-      AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+      AddonManager.getAddonByID(ID1, function(b1) {
         do_check_neq(b1, null);
         do_check_true(b1.userDisabled);
         b1.userDisabled = false;
         do_check_eq(b1.version, "1.0");
         do_check_true(b1.isActive);
         do_check_eq(b1.pendingOperations, AddonManager.PENDING_NONE);
-        do_check_eq(getInstalledVersion(), 1);
-        do_check_eq(getActiveVersion(), 1);
+        BootstrapMonitor.checkAddonInstalled(ID1, "1.0");
+        BootstrapMonitor.checkAddonStarted(ID1, "1.0");
 
         do_check_bootstrappedPref(do_test_finished);
       });

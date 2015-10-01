@@ -30,6 +30,11 @@ add_task(function* testMainViewVisible() {
   gIdentityHandler._identityBox.click();
   ok(is_hidden(emptyLabel), "List of permissions is not empty");
 
+  let labelText = SitePermissions.getPermissionLabel("install");
+  let labels = permissionsList.querySelectorAll(".identity-popup-permission-label");
+  is(labels.length, 1, "One permission visible in main view");
+  is(labels[0].textContent, labelText, "Correct value");
+
   let menulists = permissionsList.querySelectorAll("menulist");
   is(menulists.length, 1, "One permission visible in main view");
   is(menulists[0].id, "identity-popup-permission:install", "Install permission visible");
