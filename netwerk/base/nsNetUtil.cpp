@@ -909,9 +909,9 @@ NS_GetReferrerFromChannel(nsIChannel *channel,
 }
 
 nsresult
-NS_ParseContentType(const nsACString &rawContentType,
-                    nsCString        &contentType,
-                    nsCString        &contentCharset)
+NS_ParseResponseContentType(const nsACString &rawContentType,
+                            nsCString        &contentType,
+                            nsCString        &contentCharset)
 {
     // contentCharset is left untouched if not present in rawContentType
     nsresult rv;

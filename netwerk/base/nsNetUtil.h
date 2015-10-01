@@ -488,9 +488,9 @@ nsresult NS_GetURLSpecFromDir(nsIFile      *file,
 nsresult NS_GetReferrerFromChannel(nsIChannel *channel,
                                    nsIURI **referrer);
 
-nsresult NS_ParseContentType(const nsACString &rawContentType,
-                             nsCString        &contentType,
-                             nsCString        &contentCharset);
+nsresult NS_ParseResponseContentType(const nsACString &rawContentType,
+                                     nsCString        &contentType,
+                                     nsCString        &contentCharset);
 
 nsresult NS_ExtractCharsetFromContentType(const nsACString &rawContentType,
                                           nsCString        &contentCharset,
