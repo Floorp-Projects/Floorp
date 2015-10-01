@@ -37,8 +37,7 @@ add_task(function* () {
 
   let result = gURLBar.popup.richlistbox.children[0];
   ok(result.hasAttribute("image"), "Result should have an image attribute");
-  // Image attribute gets a suffix (-moz-resolution) added in the value.
-  ok(result.getAttribute("image").startsWith(engine.iconURI.spec),
+  ok(result.getAttribute("image") === engine.iconURI.spec,
      "Image attribute should have the search engine's icon");
 
   EventUtils.synthesizeKey("VK_RETURN" , { });

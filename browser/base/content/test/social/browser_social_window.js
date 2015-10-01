@@ -96,7 +96,7 @@ var tests = {
     SocialService.addProvider(manifest, function() {
       SocialService.addProvider(manifest2, function (provider) {
         SocialSidebar.show();
-        waitForCondition(function() SocialSidebar.opened,
+        waitForCondition(() => SocialSidebar.opened,
                      function() {
           ok(SocialSidebar.opened, "first window sidebar is open");
           openWindowAndWaitForInit(window, function(w1) {
@@ -140,7 +140,7 @@ var tests = {
     SocialService.addProvider(manifest, function() {
       openWindowAndWaitForInit(window, function(w1) {
         w1.SocialSidebar.show();
-        waitForCondition(function() w1.SocialSidebar.opened,
+        waitForCondition(() => w1.SocialSidebar.opened,
                      function() {
           ok(Services.prefs.prefHasUserValue("social.sidebar.provider"), "global state set");
           ok(!SocialSidebar.opened, "1. main sidebar is still closed");

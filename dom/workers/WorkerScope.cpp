@@ -740,18 +740,6 @@ workerdebuggersandbox_resolve(JSContext *cx, JS::Handle<JSObject *> obj,
   return JS_ResolveStandardClass(cx, obj, id, resolvedp);
 }
 
-static bool
-workerdebuggersandbox_convert(JSContext *cx, JS::Handle<JSObject *> obj,
-                              JSType type, JS::MutableHandle<JS::Value> vp)
-{
-  if (type == JSTYPE_OBJECT) {
-    vp.setObject(*obj);
-    return true;
-  }
-
-  return JS::OrdinaryToPrimitive(cx, obj, type, vp);
-}
-
 static void
 workerdebuggersandbox_finalize(js::FreeOp *fop, JSObject *obj)
 {
@@ -775,7 +763,6 @@ const js::Class workerdebuggersandbox_class = {
     workerdebuggersandbox_enumerate,
     workerdebuggersandbox_resolve,
     nullptr, /* mayResolve */
-    workerdebuggersandbox_convert,
     workerdebuggersandbox_finalize,
     nullptr,
     nullptr,

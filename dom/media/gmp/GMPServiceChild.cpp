@@ -355,18 +355,14 @@ GMPServiceChild::RemoveGMPContentParent(GMPContentParent* aGMPContentParent)
   }
 }
 
-static PLDHashOperator
-FillProcessIDArray(const uint64_t& aKey, GMPContentParent*, void* aUserArg)
-{
-  static_cast<nsTArray<base::ProcessId>*>(aUserArg)->AppendElement(aKey);
-  return PL_DHASH_NEXT;
-}
-
 void
 GMPServiceChild::GetAlreadyBridgedTo(nsTArray<base::ProcessId>& aAlreadyBridgedTo)
 {
   aAlreadyBridgedTo.SetCapacity(mContentParents.Count());
-  mContentParents.EnumerateRead(FillProcessIDArray, &aAlreadyBridgedTo);
+  for (auto iter = mContentParents.Iter(); !iter.Done(); iter.Next()) {
+    const uint64_t& id = iter.Key();
+    aAlreadyBridgedTo.AppendElement(id);
+  }
 }
 
 class OpenPGMPServiceChild : public nsRunnable

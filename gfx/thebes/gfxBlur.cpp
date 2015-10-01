@@ -795,7 +795,9 @@ ComputeRectsForInsetBoxShadow(IntSize aBlurRadius,
                               Rect& aOutInnerRect,
                               Margin& aOutPathMargins,
                               const Rect& aDestRect,
-                              const Rect& aShadowClipRect)
+                              const Rect& aShadowClipRect,
+                              bool aHasBorderRadius,
+                              const RectCornerRadii& aInnerClipRectRadii)
 {
   IntSize marginSize = aBlurRadius + aSpreadRadius;
   aOutPathMargins.SizeTo(marginSize.height, marginSize.width, marginSize.height, marginSize.width);
@@ -814,6 +816,16 @@ ComputeRectsForInsetBoxShadow(IntSize aBlurRadius,
   // The outer path rect needs to be 1 blur radius past the inner edges
   aOutOuterRect.width = aOutInnerRect.XMost() + marginSize.width;
   aOutOuterRect.height = aOutInnerRect.YMost() + marginSize.height;
+
+  if (aHasBorderRadius) {
+    for (int i = 0; i < 4; i++) {
+      aOutInnerRect.width += aInnerClipRectRadii[i].width;
+      aOutInnerRect.height += aInnerClipRectRadii[i].height;
+
+      aOutOuterRect.width += aInnerClipRectRadii[i].width;
+      aOutOuterRect.height += aInnerClipRectRadii[i].height;
+    }
+  }
 
   if ((aOutOuterRect.width >= aDestRect.width) ||
       (aOutOuterRect.height >= aDestRect.height) ||
@@ -975,9 +987,9 @@ gfxAlphaBoxBlur::BlurInsetBox(gfxContext* aDestinationCtx,
   Margin pathMargins;
   ComputeRectsForInsetBoxShadow(aBlurRadius, aSpreadRadius,
                                 outerRect, innerRect,
-                                pathMargins,
-                                aDestinationRect,
-                                aShadowClipRect);
+                                pathMargins, aDestinationRect,
+                                aShadowClipRect, aHasBorderRadius,
+                                aInnerClipRadii);
 
   IntPoint topLeft;
   RefPtr<SourceSurface> minInsetBlur = GetInsetBlur(outerRect, innerRect,

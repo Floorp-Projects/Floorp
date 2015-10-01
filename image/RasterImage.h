@@ -233,11 +233,6 @@ public:
    */
   nsresult SetSourceSizeHint(uint32_t aSizeHint);
 
-  /* Provide a hint for the requested resolution of the resulting image. */
-  void SetRequestedResolution(const nsIntSize requestedResolution) {
-    mRequestedResolution = requestedResolution;
-  }
-
   /* Provide a hint for the requested dimension of the resulting image. */
   void SetRequestedSampleSize(int requestedSampleSize) {
     mRequestedSampleSize = requestedSampleSize;
@@ -364,10 +359,6 @@ private: // data
   // How many times we've decoded this image.
   // This is currently only used for statistics
   int32_t                        mDecodeCount;
-
-  // If the image contains multiple resolutions, a hint as to which one
-  // should be used
-  nsIntSize                  mRequestedResolution;
 
   // A hint for image decoder that directly scale the image to smaller buffer
   int                        mRequestedSampleSize;

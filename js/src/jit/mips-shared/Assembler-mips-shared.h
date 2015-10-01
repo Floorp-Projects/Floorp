@@ -311,6 +311,7 @@ enum FunctionField {
     ff_movz        = 10,
     ff_movn        = 11,
     ff_break       = 13,
+    ff_sync        = 15,
 
     ff_mfhi        = 16,
     ff_mflo        = 18,
@@ -967,6 +968,7 @@ class AssemblerMIPSShared : public AssemblerShared
     void call(void* target);
 
     void as_break(uint32_t code);
+    void as_sync(uint32_t stype = 0);
 
   public:
     static bool SupportsFloatingPoint() {

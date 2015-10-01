@@ -21,7 +21,7 @@ GARBAGE += \
 # Convert to the format we need for ld.
 $(LD_VERSION_SCRIPT): $(topsrcdir)/db/sqlite3/src/sqlite.def
 	@$(call py_action,convert_def_file, \
-	  $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) -o $@ $^)
+	  $(DEFINES) $(ACDEFINES) $(MOZ_DEBUG_DEFINES) -o $@ $^)
 
 endif
 endif

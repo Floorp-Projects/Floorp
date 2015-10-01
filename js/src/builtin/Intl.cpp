@@ -569,7 +569,6 @@ static const Class CollatorClass = {
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
-    nullptr, /* convert */
     collator_finalize
 };
 
@@ -1064,7 +1063,6 @@ static const Class NumberFormatClass = {
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
-    nullptr, /* convert */
     numberFormat_finalize
 };
 
@@ -1534,7 +1532,6 @@ static const Class DateTimeFormatClass = {
     nullptr, /* enumerate */
     nullptr, /* resolve */
     nullptr, /* mayResolve */
-    nullptr, /* convert */
     dateTimeFormat_finalize
 };
 

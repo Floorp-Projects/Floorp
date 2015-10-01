@@ -140,7 +140,6 @@ public:
   enum State {
     DECODER_STATE_DECODING_NONE,
     DECODER_STATE_DECODING_METADATA,
-    DECODER_STATE_WAIT_FOR_RESOURCES,
     DECODER_STATE_WAIT_FOR_CDM,
     DECODER_STATE_DORMANT,
     DECODER_STATE_DECODING,
@@ -174,10 +173,6 @@ public:
   {
     mReader->DispatchNotifyDataArrived(aLength, aOffset, aThrottleUpdates);
   }
-
-  // Called when the reader may have acquired the hardware resources required
-  // to begin decoding.
-  void DispatchWaitingForResourcesStatusChanged();
 
   // Notifies the state machine that should minimize the number of samples
   // decoded we preroll, until playback starts. The first time playback starts
@@ -256,8 +251,6 @@ private:
   void SetDormant(bool aDormant);
 
   void SetAudioCaptured(bool aCaptured);
-
-  void NotifyWaitingForResourcesStatusChanged();
 
   nsRefPtr<MediaDecoder::SeekPromise> Seek(SeekTarget aTarget);
 

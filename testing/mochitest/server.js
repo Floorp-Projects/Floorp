@@ -669,6 +669,8 @@ function testListing(metadata, response)
               type: "text/css", href: "/static/harness.css"}
         ),
         SCRIPT({type: "text/javascript",
+                 src: "/tests/SimpleTest/StructuredLog.jsm"}),
+        SCRIPT({type: "text/javascript",
                  src: "/tests/SimpleTest/LogController.js"}),
         SCRIPT({type: "text/javascript",
                  src: "/tests/SimpleTest/MemoryStats.js"}),

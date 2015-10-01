@@ -19,6 +19,8 @@
 
 #include "jsopcodeinlines.h"
 
+#include "jit/AtomicOperations-inl.h"
+
 using namespace js;
 using namespace js::jit;
 

@@ -1461,8 +1461,13 @@ Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
     return fun;
 }
 
+/*
+ * WARNING: Do not call this function directly.
+ * Call either MatchOrInsertSemicolonAfterExpression or
+ * MatchOrInsertSemicolonAfterNonExpression instead, depending on context.
+ */
 static bool
-MatchOrInsertSemicolon(TokenStream& ts, TokenStream::Modifier modifier = TokenStream::None)
+MatchOrInsertSemicolonHelper(TokenStream& ts, TokenStream::Modifier modifier)
 {
     TokenKind tt = TOK_EOF;
     if (!ts.peekTokenSameLine(&tt, modifier))
@@ -1479,6 +1484,18 @@ MatchOrInsertSemicolon(TokenStream& ts, TokenStream::Modifier modifier = TokenSt
     if (!matched && modifier == TokenStream::None)
         ts.addModifierException(TokenStream::OperandIsNone);
     return true;
+}
+
+static bool
+MatchOrInsertSemicolonAfterExpression(TokenStream& ts)
+{
+    return MatchOrInsertSemicolonHelper(ts, TokenStream::None);
+}
+
+static bool
+MatchOrInsertSemicolonAfterNonExpression(TokenStream& ts)
+{
+    return MatchOrInsertSemicolonHelper(ts, TokenStream::Operand);
 }
 
 /*
@@ -2838,7 +2855,7 @@ Parser<ParseHandler>::functionArgsAndBodyGeneric(InHandling inHandling,
         if (tokenStream.hadError())
             return false;
         funbox->bufEnd = pos().end;
-        if (kind == Statement && !MatchOrInsertSemicolon(tokenStream))
+        if (kind == Statement && !MatchOrInsertSemicolonAfterExpression(tokenStream))
             return false;
     }
 
@@ -4455,7 +4472,7 @@ Parser<FullParseHandler>::lexicalDeclaration(YieldHandling yieldHandling, bool i
     if (!pn)
         return null();
     pn->pn_xflags = PNX_POPVAR;
-    return MatchOrInsertSemicolon(tokenStream) ? pn : nullptr;
+    return MatchOrInsertSemicolonAfterExpression(tokenStream) ? pn : nullptr;
 }
 
 template <>
@@ -4722,7 +4739,7 @@ Parser<ParseHandler>::importDeclaration()
     if (!moduleSpec)
         return null();
 
-    if (!MatchOrInsertSemicolon(tokenStream, TokenStream::Operand))
+    if (!MatchOrInsertSemicolonAfterNonExpression(tokenStream))
         return null();
 
     return handler.newImportDeclaration(importSpecSet, moduleSpec, TokenPos(begin, pos().end));
@@ -4851,8 +4868,8 @@ Parser<FullParseHandler>::exportDeclaration()
         //   export { x }   // ExportDeclaration, terminated by ASI
         //   fro\u006D      // ExpressionStatement, the name "from"
         //
-        // In that case let MatchOrInsertSemicolon sort out ASI or any
-        // necessary error.
+        // In that case let MatchOrInsertSemicolonAfterNonExpression sort out
+        // ASI or any necessary error.
         TokenKind tt;
         if (!tokenStream.getToken(&tt, TokenStream::Operand))
             return null();
@@ -4867,7 +4884,7 @@ Parser<FullParseHandler>::exportDeclaration()
             if (!moduleSpec)
                 return null();
 
-            if (!MatchOrInsertSemicolon(tokenStream, TokenStream::Operand))
+            if (!MatchOrInsertSemicolonAfterNonExpression(tokenStream))
                 return null();
 
             return handler.newExportFromDeclaration(begin, kid, moduleSpec);
@@ -4875,7 +4892,7 @@ Parser<FullParseHandler>::exportDeclaration()
 
         tokenStream.ungetToken();
 
-        if (!MatchOrInsertSemicolon(tokenStream, TokenStream::Operand))
+        if (!MatchOrInsertSemicolonAfterNonExpression(tokenStream))
             return null();
         break;
       }
@@ -4909,7 +4926,7 @@ Parser<FullParseHandler>::exportDeclaration()
         if (!moduleSpec)
             return null();
 
-        if (!MatchOrInsertSemicolon(tokenStream, TokenStream::Operand))
+        if (!MatchOrInsertSemicolonAfterNonExpression(tokenStream))
             return null();
 
         return handler.newExportFromDeclaration(begin, kid, moduleSpec);
@@ -4942,7 +4959,7 @@ Parser<FullParseHandler>::exportDeclaration()
             return null();
         kid->pn_xflags = PNX_POPVAR;
 
-        kid = MatchOrInsertSemicolon(tokenStream) ? kid : nullptr;
+        kid = MatchOrInsertSemicolonAfterExpression(tokenStream) ? kid : nullptr;
         if (!kid)
             return null();
 
@@ -4979,7 +4996,7 @@ Parser<FullParseHandler>::exportDeclaration()
                 return null();
             kid = assignExpr(InAllowed, YieldIsKeyword);
             if (kid) {
-                if (!MatchOrInsertSemicolon(tokenStream))
+                if (!MatchOrInsertSemicolonAfterExpression(tokenStream))
                     return null();
             }
             break;
@@ -5021,7 +5038,7 @@ Parser<ParseHandler>::expressionStatement(YieldHandling yieldHandling, InvokedPr
     Node pnexpr = expr(InAllowed, yieldHandling, invoked);
     if (!pnexpr)
         return null();
-    if (!MatchOrInsertSemicolon(tokenStream))
+    if (!MatchOrInsertSemicolonAfterExpression(tokenStream))
         return null();
     return handler.newExprStatement(pnexpr, pos().end);
 }
@@ -5838,7 +5855,7 @@ Parser<ParseHandler>::continueStatement(YieldHandling yieldHandling)
         }
     }
 
-    if (!MatchOrInsertSemicolon(tokenStream, TokenStream::Operand))
+    if (!MatchOrInsertSemicolonAfterNonExpression(tokenStream))
         return null();
 
     return handler.newContinueStatement(label, TokenPos(begin, pos().end));
@@ -5875,7 +5892,7 @@ Parser<ParseHandler>::breakStatement(YieldHandling yieldHandling)
         }
     }
 
-    if (!MatchOrInsertSemicolon(tokenStream, TokenStream::Operand))
+    if (!MatchOrInsertSemicolonAfterNonExpression(tokenStream))
         return null();
 
     return handler.newBreakStatement(label, TokenPos(begin, pos().end));
@@ -5897,7 +5914,6 @@ Parser<ParseHandler>::returnStatement(YieldHandling yieldHandling)
     TokenKind tt = TOK_EOF;
     if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand))
         return null();
-    TokenStream::Modifier modifier = TokenStream::Operand;
     switch (tt) {
       case TOK_EOL:
       case TOK_EOF:
@@ -5910,13 +5926,17 @@ Parser<ParseHandler>::returnStatement(YieldHandling yieldHandling)
         exprNode = expr(InAllowed, yieldHandling);
         if (!exprNode)
             return null();
-        modifier = TokenStream::None;
         pc->funHasReturnExpr = true;
       }
     }
 
-    if (!MatchOrInsertSemicolon(tokenStream, modifier))
-        return null();
+    if (exprNode) {
+        if (!MatchOrInsertSemicolonAfterExpression(tokenStream))
+            return null();
+    } else {
+        if (!MatchOrInsertSemicolonAfterNonExpression(tokenStream))
+            return null();
+    }
 
     Node genrval = null();
     if (pc->isStarGenerator()) {
@@ -6190,7 +6210,7 @@ Parser<ParseHandler>::throwStatement(YieldHandling yieldHandling)
     if (!throwExpr)
         return null();
 
-    if (!MatchOrInsertSemicolon(tokenStream))
+    if (!MatchOrInsertSemicolonAfterExpression(tokenStream))
         return null();
 
     return handler.newThrowStatement(throwExpr, TokenPos(begin, pos().end));
@@ -6385,7 +6405,7 @@ Parser<ParseHandler>::debuggerStatement()
 {
     TokenPos p;
     p.begin = pos().begin;
-    if (!MatchOrInsertSemicolon(tokenStream, TokenStream::Operand))
+    if (!MatchOrInsertSemicolonAfterNonExpression(tokenStream))
         return null();
     p.end = pos().end;
 
@@ -6682,7 +6702,7 @@ Parser<ParseHandler>::statement(YieldHandling yieldHandling, bool canHaveDirecti
         // Tell js_EmitTree to generate a final POP.
         handler.setListFlag(pn, PNX_POPVAR);
 
-        if (!MatchOrInsertSemicolon(tokenStream))
+        if (!MatchOrInsertSemicolonAfterExpression(tokenStream))
             return null();
         return pn;
       }

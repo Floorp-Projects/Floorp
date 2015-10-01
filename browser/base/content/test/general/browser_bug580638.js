@@ -6,7 +6,9 @@ function test() {
   waitForExplicitFinish();
 
   function testState(aPinned) {
-    function elemAttr(id, attr) document.getElementById(id).getAttribute(attr);
+    function elemAttr(id, attr) {
+      return document.getElementById(id).getAttribute(attr);
+    }
 
     if (aPinned) {
       is(elemAttr("key_close", "disabled"), "true",

@@ -2,7 +2,7 @@ load(libdir + "syntax.js");
 
 var JSMSG_ILLEGAL_CHARACTER = "illegal character";
 
-var repl_expr_flags = [
+var postfixes = [
   "@",
 ];
 
@@ -11,4 +11,4 @@ function check_syntax_error(e, code, name) {
   assertEq(e.message, JSMSG_ILLEGAL_CHARACTER, name + ": " + code);
 }
 
-test_syntax(repl_expr_flags, check_syntax_error, false);
+test_syntax(postfixes, check_syntax_error, false);

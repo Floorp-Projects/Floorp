@@ -30,7 +30,9 @@ var APP_INFO = {
   invalidateCachesOnRestart() {},
 
   // nsIWinAppHelper
-  get userCanElevate() false,
+  get userCanElevate() {
+    return false;
+  },
 
   QueryInterface(iid) {
     let interfaces = [ Ci.nsIXULAppInfo, Ci.nsIXULRuntime ];

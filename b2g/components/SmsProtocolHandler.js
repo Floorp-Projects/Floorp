@@ -29,7 +29,7 @@ SmsProtocolHandler.prototype = {
                  Ci.nsIProtocolHandler.URI_NOAUTH |
                  Ci.nsIProtocolHandler.URI_LOADABLE_BY_ANYONE |
                  Ci.nsIProtocolHandler.URI_DOES_NOT_RETURN_DATA,
-  allowPort: function() false,
+  allowPort: () => false,
 
   newURI: function Proto_newURI(aSpec, aOriginCharset) {
     let uri = Cc["@mozilla.org/network/simple-uri;1"].createInstance(Ci.nsIURI);

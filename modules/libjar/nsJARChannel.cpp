@@ -877,7 +877,7 @@ nsJARChannel::ShouldIntercept()
                                   NS_GET_IID(nsINetworkInterceptController),
                                   getter_AddRefs(controller));
     bool shouldIntercept = false;
-    if (controller && !mForceNoIntercept) {
+    if (controller && !mForceNoIntercept && mLoadInfo) {
       bool isNavigation = mLoadFlags & LOAD_DOCUMENT_URI;
       nsContentPolicyType type = mLoadInfo->InternalContentPolicyType();
       nsresult rv = controller->ShouldPrepareForIntercept(mAppURI,

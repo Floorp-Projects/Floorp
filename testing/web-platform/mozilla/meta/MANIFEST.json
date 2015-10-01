@@ -145,6 +145,7 @@
         "service-workers/service-worker/fetch-event-redirect.https.html": [
           {
             "path": "service-workers/service-worker/fetch-event-redirect.https.html",
+            "timeout": "long",
             "url": "/_mozilla/service-workers/service-worker/fetch-event-redirect.https.html"
           }
         ],
@@ -175,12 +176,14 @@
         "service-workers/service-worker/fetch-mixed-content-to-inscope.https.html": [
           {
             "path": "service-workers/service-worker/fetch-mixed-content-to-inscope.https.html",
+            "timeout": "long",
             "url": "/_mozilla/service-workers/service-worker/fetch-mixed-content-to-inscope.https.html"
           }
         ],
         "service-workers/service-worker/fetch-mixed-content-to-outscope.https.html": [
           {
             "path": "service-workers/service-worker/fetch-mixed-content-to-outscope.https.html",
+            "timeout": "long",
             "url": "/_mozilla/service-workers/service-worker/fetch-mixed-content-to-outscope.https.html"
           }
         ],

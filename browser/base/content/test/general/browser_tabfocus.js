@@ -206,7 +206,7 @@ add_task(function*() {
   is(focused, "Focus is button2", "focusedElement in second browser after focus in unfocused tab");
 
   // When focus is in the tab bar, it should be retained there
-  yield expectFocusShift(function () gBrowser.selectedTab.focus(),
+  yield expectFocusShift(() => gBrowser.selectedTab.focus(),
                          "main-window", "tab2", true,
                          "focusing tab element");
   yield* expectFocusShiftAfterTabSwitch(tab1, "main-window", "tab1", true,
@@ -233,7 +233,7 @@ add_task(function*() {
     yield switchWaiter;
   }
 
-  yield expectFocusShift(function () gBrowser.selectedTab.blur(),
+  yield expectFocusShift(() => gBrowser.selectedTab.blur(),
                          "main-window", null, true,
                          "blurring tab element");
 
@@ -241,7 +241,7 @@ add_task(function*() {
   // not clear what would be the focus in the browser
   focusElementInChild("button1", "focus");
 
-  yield expectFocusShift(function () gURLBar.focus(),
+  yield expectFocusShift(() => gURLBar.focus(),
                          "main-window", "urlbar", true,
                          "focusedWindow after url field focused");
   focused = yield getFocusedElementForBrowser(browser1, true);
@@ -249,7 +249,7 @@ add_task(function*() {
   focused = yield getFocusedElementForBrowser(browser2, true);
   is(focused, "Focus is button2", "focusedElement after url field focused, second browser");
 
-  yield expectFocusShift(function () gURLBar.blur(),
+  yield expectFocusShift(() => gURLBar.blur(),
                          "main-window", null, true,
                          "blurring url field");
 
@@ -274,7 +274,7 @@ add_task(function*() {
   is(fm.getFocusedElementForWindow(window, false, focusedWindow), browser1, "focusedElement after blur in focused tab, parent");
 
   // blurring an non-focused url field should have no effect
-  yield expectFocusShift(function () gURLBar.blur(),
+  yield expectFocusShift(() => gURLBar.blur(),
                          "window1", null, false,
                          "after blur in unfocused url field");
 
@@ -289,7 +289,7 @@ add_task(function*() {
 
   // clearing focus on the chrome window should switch the focus to the
   // chrome window
-  yield expectFocusShift(function () fm.clearFocus(window),
+  yield expectFocusShift(() => fm.clearFocus(window),
                          "main-window", null, true,
                          "after switch to chrome with no focused element");
 
@@ -333,7 +333,7 @@ add_task(function*() {
     _browser_tabfocus_test_lastfocus = "urlbar";
     _browser_tabfocus_test_lastfocuswindow = "main-window";
 
-    yield expectFocusShift(function () EventUtils.synthesizeKey("VK_F6", { }),
+    yield expectFocusShift(() => EventUtils.synthesizeKey("VK_F6", { }),
                            "window1", "html1",
                            true, "switch document forward with f6");
 

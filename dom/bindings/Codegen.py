@@ -485,7 +485,6 @@ class CGDOMJSClass(CGThing):
                 ${enumerate}, /* enumerate */
                 ${resolve}, /* resolve */
                 ${mayResolve}, /* mayResolve */
-                nullptr,               /* convert */
                 ${finalize}, /* finalize */
                 ${call}, /* call */
                 nullptr,               /* hasInstance */
@@ -628,7 +627,6 @@ class CGPrototypeJSClass(CGThing):
                 nullptr,               /* enumerate */
                 nullptr,               /* resolve */
                 nullptr,               /* mayResolve */
-                nullptr,               /* convert */
                 nullptr,               /* finalize */
                 nullptr,               /* call */
                 nullptr,               /* hasInstance */
@@ -725,7 +723,6 @@ class CGInterfaceObjectJSClass(CGThing):
                 nullptr,               /* enumerate */
                 nullptr,               /* resolve */
                 nullptr,               /* mayResolve */
-                nullptr,               /* convert */
                 nullptr,               /* finalize */
                 ${ctorname}, /* call */
                 ${hasInstance}, /* hasInstance */

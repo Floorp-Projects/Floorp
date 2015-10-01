@@ -11,6 +11,7 @@
 
 #include "builtin/TypedObjectConstants.h"
 #include "vm/Runtime.h"
+#include "vm/SharedMem.h"
 
 typedef struct JSProperty JSProperty;
 
@@ -75,7 +76,6 @@ class ArrayBufferViewObject;
 class ArrayBufferObjectMaybeShared;
 
 uint32_t AnyArrayBufferByteLength(const ArrayBufferObjectMaybeShared* buf);
-uint8_t* AnyArrayBufferDataPointer(const ArrayBufferObjectMaybeShared* buf);
 ArrayBufferObjectMaybeShared& AsAnyArrayBuffer(HandleValue val);
 
 class ArrayBufferObjectMaybeShared : public NativeObject
@@ -85,9 +85,7 @@ class ArrayBufferObjectMaybeShared : public NativeObject
         return AnyArrayBufferByteLength(this);
     }
 
-    uint8_t* dataPointer() {
-        return AnyArrayBufferDataPointer(this);
-    }
+    inline SharedMem<uint8_t*> dataPointerMaybeShared();
 };
 
 /*
@@ -298,6 +296,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 
   public:
     uint8_t* dataPointer() const;
+    SharedMem<uint8_t*> dataPointerShared() const;
     size_t byteLength() const;
     BufferContents contents() const {
         return BufferContents(dataPointer(), bufferKind());

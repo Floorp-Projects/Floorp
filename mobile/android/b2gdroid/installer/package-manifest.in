@@ -138,6 +138,7 @@
 @BINPATH@/components/dom.xpt
 @BINPATH@/components/dom_activities.xpt
 @BINPATH@/components/dom_apps.xpt
+@BINPATH@/components/dom_newapps.xpt
 @BINPATH@/components/dom_base.xpt
 @BINPATH@/components/dom_canvas.xpt
 @BINPATH@/components/dom_core.xpt
@@ -676,6 +677,9 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/components/SystemMessageManager.js
 @BINPATH@/components/SystemMessageCache.js
 @BINPATH@/components/SystemMessageManager.manifest
+
+@BINPATH@/components/InstallPackagedWebapp.manifest
+@BINPATH@/components/InstallPackagedWebapp.js
 
 @BINPATH@/components/B2GComponents.manifest
 @BINPATH@/components/AlertsService.js

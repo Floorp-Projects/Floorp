@@ -10,7 +10,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 #include "nsTHashtable.h"
-#include "prlock.h"
 #include "nsDebug.h"
 
 // These are the codes returned by |EnumReadFunction| and |EnumFunction|, which

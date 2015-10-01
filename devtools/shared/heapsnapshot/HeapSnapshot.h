@@ -34,36 +34,14 @@ struct NSFreePolicy {
   }
 };
 
-using UniqueString = UniquePtr<char16_t[], NSFreePolicy>;
-
-struct UniqueStringHashPolicy {
-  struct Lookup {
-    const char16_t* str;
-    size_t          length;
-
-    Lookup(const char16_t* str, size_t length)
-      : str(str)
-      , length(length)
-    { }
-  };
-
-  static js::HashNumber hash(const Lookup& lookup) {
-    MOZ_ASSERT(lookup.str);
-    return HashString(lookup.str, lookup.length);
-  }
-
-  static bool match(const UniqueString& existing, const Lookup& lookup) {
-    MOZ_ASSERT(lookup.str);
-    if (NS_strlen(existing.get()) != lookup.length)
-      return false;
-    return memcmp(existing.get(), lookup.str, lookup.length * sizeof(char16_t)) == 0;
-  }
-};
+using UniqueTwoByteString = UniquePtr<char16_t[], NSFreePolicy>;
+using UniqueOneByteString = UniquePtr<char[], NSFreePolicy>;
 
 class HeapSnapshot final : public nsISupports
                          , public nsWrapperCache
 {
   friend struct DeserializedNode;
+  friend struct DeserializedEdge;
   friend struct DeserializedStackFrame;
   friend struct JS::ubi::Concrete<JS::ubi::DeserializedNode>;
 
@@ -72,7 +50,6 @@ class HeapSnapshot final : public nsISupports
     , rootId(0)
     , nodes(cx)
     , frames(cx)
-    , strings(cx)
     , mParent(aParent)
   {
     MOZ_ASSERT(aParent);
@@ -108,14 +85,15 @@ class HeapSnapshot final : public nsISupports
                                DeserializedStackFrame::HashPolicy>;
   FrameSet frames;
 
-  // Core dump files have many duplicate strings: type names are repeated for
-  // each node, and although in theory edge names are highly customizable for
-  // specific edges, in practice they are also highly duplicated. Rather than
-  // make each Deserialized{Node,Edge} malloc their own copy of their edge and
-  // type names, we de-duplicate the strings here and Deserialized{Node,Edge}
-  // get borrowed pointers into this set.
-  using UniqueStringSet = js::HashSet<UniqueString, UniqueStringHashPolicy>;
-  UniqueStringSet strings;
+  Vector<UniqueTwoByteString> internedTwoByteStrings;
+  Vector<UniqueOneByteString> internedOneByteStrings;
+
+  using StringOrRef = Variant<const std::string*, uint64_t>;
+
+  template<typename CharT,
+           typename InternedStringSet>
+  const CharT* getOrInternString(InternedStringSet& internedStrings,
+                                 Maybe<StringOrRef>& maybeStrOrRef);
 
 protected:
   nsCOMPtr<nsISupports> mParent;

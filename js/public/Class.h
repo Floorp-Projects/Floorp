@@ -330,12 +330,6 @@ typedef bool
 typedef bool
 (* JSMayResolveOp)(const JSAtomState& names, jsid id, JSObject* maybeObj);
 
-// Convert obj to the given type, returning true with the resulting value in
-// *vp on success, and returning false on error or exception.
-typedef bool
-(* JSConvertOp)(JSContext* cx, JS::HandleObject obj, JSType type,
-                JS::MutableHandleValue vp);
-
 // Finalize obj, which the garbage collector has determined to be unreachable
 // from other live objects or from GC roots.  Obviously, finalizers must never
 // store a reference to obj.
@@ -470,7 +464,6 @@ typedef void
     JSEnumerateOp       enumerate;                                            \
     JSResolveOp         resolve;                                              \
     JSMayResolveOp      mayResolve;                                           \
-    JSConvertOp         convert;                                              \
     FinalizeOpType      finalize;                                             \
     JSNative            call;                                                 \
     JSHasInstanceOp     hasInstance;                                          \
@@ -797,8 +790,6 @@ static_assert(offsetof(JSClass, enumerate) == offsetof(Class, enumerate),
 static_assert(offsetof(JSClass, resolve) == offsetof(Class, resolve),
               "Class and JSClass must be consistent");
 static_assert(offsetof(JSClass, mayResolve) == offsetof(Class, mayResolve),
-              "Class and JSClass must be consistent");
-static_assert(offsetof(JSClass, convert) == offsetof(Class, convert),
               "Class and JSClass must be consistent");
 static_assert(offsetof(JSClass, finalize) == offsetof(Class, finalize),
               "Class and JSClass must be consistent");

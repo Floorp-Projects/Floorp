@@ -623,6 +623,8 @@ function BuildConditionSandbox(aURL) {
 
     sandbox.layersGPUAccelerated =
       gWindowUtils.layerManagerType != "Basic";
+    sandbox.d3d11 =
+      gWindowUtils.layerManagerType == "Direct3D 11";
     sandbox.layersOpenGL =
       gWindowUtils.layerManagerType == "OpenGL";
     sandbox.layersOMTC =

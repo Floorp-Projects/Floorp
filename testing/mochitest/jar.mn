@@ -34,6 +34,7 @@ mochikit.jar:
 * content/tests/SimpleTest/specialpowersAPI.js (../specialpowers/content/specialpowersAPI.js)
   content/tests/SimpleTest/setup.js (tests/SimpleTest/setup.js)
   content/tests/SimpleTest/SimpleTest.js (tests/SimpleTest/SimpleTest.js)
+  content/tests/SimpleTest/StructuredLog.jsm (../modules/StructuredLog.jsm)
   content/tests/SimpleTest/test.css (tests/SimpleTest/test.css)
   content/tests/SimpleTest/TestRunner.js (tests/SimpleTest/TestRunner.js)
   content/tests/SimpleTest/iframe-between-tests.html (tests/SimpleTest/iframe-between-tests.html)

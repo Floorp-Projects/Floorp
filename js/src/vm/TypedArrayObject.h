@@ -177,6 +177,9 @@ class TypedArrayObject : public NativeObject
         // Keep synced with js::Get<Type>ArrayLengthAndData in jsfriendapi.h!
         return static_cast<void*>(getPrivate(TypedArrayLayout::DATA_SLOT));
     }
+    SharedMem<void*> viewDataShared() const {
+        return SharedMem<void*>::unshared(viewData());
+    }
 
     Value getElement(uint32_t index);
     static void setElement(TypedArrayObject& obj, uint32_t index, double d);

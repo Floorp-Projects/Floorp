@@ -158,7 +158,6 @@ JSObject* newKey()
         nullptr, /* enumerate */
         nullptr, /* resolve */
         nullptr, /* mayResolve */
-        nullptr, /* convert */
         nullptr, /* finalize */
         nullptr, /* call */
         nullptr, /* hasInstance */
@@ -215,7 +214,6 @@ JSObject* newDelegate()
         nullptr, /* enumerate */
         nullptr, /* resolve */
         nullptr, /* mayResolve */
-        nullptr, /* convert */
         nullptr, /* finalize */
         nullptr, /* call */
         nullptr, /* hasInstance */

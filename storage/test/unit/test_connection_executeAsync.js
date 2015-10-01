@@ -175,7 +175,7 @@ function test_multiple_bindings_on_statements()
       run_next_test();
     }
   });
-  stmts.forEach(function(stmt) stmt.finalize());
+  stmts.forEach(stmt => stmt.finalize());
 }
 
 function test_asyncClose_does_not_complete_before_statements()

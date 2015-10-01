@@ -10,11 +10,6 @@
 namespace mozilla {
 namespace devtools {
 
-DeserializedEdge::DeserializedEdge()
-  : referent(0)
-  , name(nullptr)
-{ }
-
 DeserializedEdge::DeserializedEdge(DeserializedEdge&& rhs)
 {
   referent = rhs.referent;
@@ -27,26 +22,6 @@ DeserializedEdge& DeserializedEdge::operator=(DeserializedEdge&& rhs)
   this->~DeserializedEdge();
   new(this) DeserializedEdge(Move(rhs));
   return *this;
-}
-
-bool
-DeserializedEdge::init(const protobuf::Edge& edge, HeapSnapshot& owner)
-{
-  // Although the referent property is optional in the protobuf format for
-  // future compatibility, we can't semantically have an edge to nowhere and
-  // require a referent here.
-  if (!edge.has_referent())
-    return false;
-  referent = edge.referent();
-
-  if (edge.has_name()) {
-    const char16_t* duplicateEdgeName = reinterpret_cast<const char16_t*>(edge.name().c_str());
-    name = owner.borrowUniqueString(duplicateEdgeName, edge.name().length() / sizeof(char16_t));
-    if (!name)
-      return false;
-  }
-
-  return true;
 }
 
 JS::ubi::Node

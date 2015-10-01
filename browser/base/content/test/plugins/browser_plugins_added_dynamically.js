@@ -114,7 +114,7 @@ add_task(function* () {
   let pluginInfo = yield promiseForPluginInfo("pluginone");
   ok(!pluginInfo.activated, "Test 8, test plugin should be activated");
 
-  let condition = function() !notification.dismissed &&
+  let condition = () => !notification.dismissed &&
     PopupNotifications.panel.firstChild;
   yield promiseForCondition(condition);
 

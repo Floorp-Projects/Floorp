@@ -64,7 +64,9 @@
         },
       };
       os.addObserver(observer, URI_VISITED_RESOLUTION_TOPIC, false);
-      function notified() observer.notified;
+      function notified() {
+        return observer.notified;
+      }
 
       // Load a test page containing a link that should be initially
       // blue, per the :link style.

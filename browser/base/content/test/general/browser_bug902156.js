@@ -60,7 +60,7 @@ function test1A() {
 function test1B() {
   var expected = "Mixed Content Blocker disabled";
   waitForCondition(
-    function() content.document.getElementById('mctestdiv').innerHTML == expected,
+    () => content.document.getElementById('mctestdiv').innerHTML == expected,
     test1C, "Error: Waited too long for mixed script to run in Test 1B");
 }
 
@@ -115,7 +115,7 @@ function test2A() {
 function test2B() {
   var expected = "Mixed Content Blocker disabled";
   waitForCondition(
-    function() content.document.getElementById('mctestdiv').innerHTML == expected,
+    () => content.document.getElementById('mctestdiv').innerHTML == expected,
     test2C, "Error: Waited too long for mixed script to run in Test 2B");
 }
 

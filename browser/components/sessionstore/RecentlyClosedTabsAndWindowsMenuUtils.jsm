@@ -169,7 +169,7 @@ this.RecentlyClosedTabsAndWindowsMenuUtils = {
 };
 
 function setImage(aWindow, aItem, aElement) {
-  let iconURL = PlacesUtils.getImageURLForResolution(aWindow, aItem.image);
+  let iconURL = aItem.image;
   // don't initiate a connection just to fetch a favicon (see bug 467828)
   if (/^https?:/.test(iconURL))
     iconURL = "moz-anno:favicon:" + iconURL;

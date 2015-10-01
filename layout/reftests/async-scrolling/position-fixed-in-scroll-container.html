@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html reftest-async-scroll>
+<!-- In this test, the div |fixed| is fixed with respect to the
+     page's root scroll frame, but there's also a subframe |scrollbox|
+     which is async-scrolled and which generates a container layer
+     (because of the opacity), so that its async transform is on an
+     ancestor layer of |fixed|'s layer. We are testing that this
+     async transform is correctly unapplied to keep |fixed| fixed. -->
+<style>
+
+body {
+  height: 10000px;
+}
+
+.outer-opacity {
+  opacity: 0.8;
+}
+
+.scrollbox {
+  border: 1px solid black;
+  width: 200px;
+  height: 400px;
+  overflow: hidden;
+}
+
+.inner-opacity {
+  height: 1000px;
+  opacity: 0.8;
+}
+
+.fixed {
+  background: blue;
+  width: 100px;
+  height: 100px;
+  position: fixed;
+}
+
+</style>
+<div class="outer-opacity">
+  <div class="scrollbox"
+       reftest-displayport-x="0" reftest-displayport-y="0"
+       reftest-displayport-w="200" reftest-displayport-h="1000"
+       reftest-async-scroll-x="0" reftest-async-scroll-y="50">
+    <div class="inner-opacity">
+      <div class="fixed"></div>
+    </div>
+  </div>
+</div>
+</html>

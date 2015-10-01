@@ -265,9 +265,6 @@
         <parameter name="element"/>
         <parameter name="uri"/>
         <body><![CDATA[
-          if (uri) {
-            uri = this.PlacesUtils.getImageURLForResolution(window, uri);
-          }
           element.setAttribute("src", uri);
         ]]></body>
       </method>
@@ -1091,8 +1088,7 @@
           let currentEngine = Services.search.currentEngine;
           let uri = currentEngine.iconURI;
           if (uri) {
-            uri = uri.spec;
-            this.setAttribute("src", PlacesUtils.getImageURLForResolution(window, uri));
+            this.setAttribute("src", uri.spec);
           }
           else {
             // If the default has just been changed to a provider without icon,
@@ -1254,8 +1250,7 @@
             button.setAttribute("tooltiptext", engine.uri);
             button.setAttribute("uri", engine.uri);
             if (engine.icon) {
-              let uri = PlacesUtils.getImageURLForResolution(window, engine.icon);
-              button.setAttribute("image", uri);
+              button.setAttribute("image", engine.icon);
             }
             button.setAttribute("title", engine.title);
             addEngineList.appendChild(button);
@@ -1328,7 +1323,7 @@
           button.id = "searchbar-engine-one-off-item-" + engine.name.replace(/ /g, '-');
           let uri = "chrome://browser/skin/search-engine-placeholder.png";
           if (engine.iconURI) {
-            uri = PlacesUtils.getImageURLForResolution(window, engine.iconURI.spec);
+            uri = engine.iconURI.spec;
           }
           button.setAttribute("image", uri);
           button.setAttribute("class", "searchbar-engine-one-off-item");
