@@ -374,7 +374,6 @@ stage-all: \
   stage-config \
   stage-mach \
   stage-mochitest \
-  stage-reftest \
   stage-xpcshell \
   stage-jstests \
   stage-jetpack \
@@ -484,9 +483,6 @@ stage-mochitest: make-stage-dir
 ifeq ($(MOZ_BUILD_APP),mobile/android)
 	$(NSINSTALL) $(DEPTH)/mobile/android/base/fennec_ids.txt $(PKG_STAGE)/mochitest
 endif
-
-stage-reftest: make-stage-dir
-	$(MAKE) -C $(DEPTH)/layout/tools/reftest stage-package
 
 stage-xpcshell: make-stage-dir
 	$(MAKE) -C $(DEPTH)/testing/xpcshell stage-package
@@ -601,7 +597,6 @@ stage-instrumentation-tests: make-stage-dir
   stage-b2g \
   stage-config \
   stage-mochitest \
-  stage-reftest \
   stage-xpcshell \
   stage-jstests \
   stage-android \

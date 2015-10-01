@@ -98,11 +98,6 @@ ARCHIVE_FILES = {
     ],
     'reftest': [
         {
-            'source': STAGE,
-            'base': '',
-            'pattern': 'reftest/**',
-        },
-        {
             'source': buildconfig.topobjdir,
             'base': '_tests',
             'pattern': 'reftest/**',
@@ -168,8 +163,8 @@ for k, v in ARCHIVE_FILES.items():
 def find_files(archive):
     for entry in ARCHIVE_FILES[archive]:
         source = entry['source']
-        base = entry['base']
-        pattern = entry['pattern']
+        base = entry.get('base', '')
+        pattern = entry.get('pattern')
         dest = entry.get('dest')
         ignore = list(entry.get('ignore', []))
         ignore.append('**/.mkdir.done')
@@ -189,6 +184,55 @@ def find_files(archive):
             yield p, f
 
 
+def find_reftest_dirs(topsrcdir, manifests):
+    from reftest import ReftestManifest
+
+    dirs = set()
+    for p in manifests:
+        m = ReftestManifest()
+        m.load(os.path.join(topsrcdir, p))
+        dirs |= m.dirs
+
+    dirs = {mozpath.normpath(d[len(topsrcdir):]).lstrip('/') for d in dirs}
+
+    # Filter out children captured by parent directories because duplicates
+    # will confuse things later on.
+    def parents(p):
+        while True:
+            p = mozpath.dirname(p)
+            if not p:
+                break
+            yield p
+
+    seen = set()
+    for d in sorted(dirs, key=len):
+        if not any(p in seen for p in parents(d)):
+            seen.add(d)
+
+    return sorted(seen)
+
+
+def insert_reftest_entries(entries):
+    """Reftests have their own mechanism for defining tests and locations.
+
+    This function is called when processing the reftest archive to process
+    reftest test manifests and insert the results into the existing list of
+    archive entries.
+    """
+    manifests = (
+        'layout/reftests/reftest.list',
+        'testing/crashtest/crashtests.list',
+    )
+
+    for base in find_reftest_dirs(buildconfig.topsrcdir, manifests):
+        entries.append({
+            'source': buildconfig.topsrcdir,
+            'base': '',
+            'pattern': '%s/**' % base,
+            'dest': 'reftest/tests',
+        })
+
+
 def main(argv):
     parser = argparse.ArgumentParser(
         description='Produce test archives')
@@ -199,6 +243,11 @@ def main(argv):
 
     if not args.outputfile.endswith('.zip'):
         raise Exception('expected zip output file')
+
+    # Adjust reftest entries only if processing reftests (because it is
+    # unnecessary overhead otherwise).
+    if args.archive == 'reftest':
+        insert_reftest_entries(ARCHIVE_FILES['reftest'])
 
     with open(args.outputfile, 'wb') as fh:
         with JarWriter(fileobj=fh, optimize=False) as writer:
