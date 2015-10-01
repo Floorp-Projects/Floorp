@@ -238,17 +238,9 @@ nsPrincipal::GetURI(nsIURI** aURI)
   return NS_EnsureSafeToReturn(mCodebase, aURI);
 }
 
-NS_IMETHODIMP
-nsPrincipal::CheckMayLoad(nsIURI* aURI, bool aReport, bool aAllowIfInheritsPrincipal)
+bool
+nsPrincipal::MayLoadInternal(nsIURI* aURI)
 {
-   if (aAllowIfInheritsPrincipal) {
-    // If the caller specified to allow loads of URIs that inherit
-    // our principal, allow the load if this URI inherits its principal
-    if (nsPrincipal::IsPrincipalInherited(aURI)) {
-      return NS_OK;
-    }
-  }
-
   // See if aURI is something like a Blob URI that is actually associated with
   // a principal.
   nsCOMPtr<nsIURIWithPrincipal> uriWithPrin = do_QueryInterface(aURI);
@@ -257,17 +249,17 @@ nsPrincipal::CheckMayLoad(nsIURI* aURI, bool aReport, bool aAllowIfInheritsPrinc
     uriWithPrin->GetPrincipal(getter_AddRefs(uriPrin));
   }
   if (uriPrin && nsIPrincipal::Subsumes(uriPrin)) {
-      return NS_OK;
+    return true;
   }
 
   // If this principal is associated with an addon, check whether that addon
   // has been given permission to load from this domain.
   if (AddonAllowsLoad(aURI)) {
-    return NS_OK;
+    return true;
   }
 
   if (nsScriptSecurityManager::SecurityCompareURIs(mCodebase, aURI)) {
-    return NS_OK;
+    return true;
   }
 
   // If strict file origin policy is in effect, local files will always fail
@@ -276,13 +268,10 @@ nsPrincipal::CheckMayLoad(nsIURI* aURI, bool aReport, bool aAllowIfInheritsPrinc
   if (nsScriptSecurityManager::GetStrictFileOriginPolicy() &&
       NS_URIIsLocalFile(aURI) &&
       NS_RelaxStrictFileOriginPolicy(aURI, mCodebase)) {
-    return NS_OK;
+    return true;
   }
 
-  if (aReport) {
-    nsScriptSecurityManager::ReportError(nullptr, NS_LITERAL_STRING("CheckSameOriginError"), mCodebase, aURI);
-  }
-  return NS_ERROR_DOM_BAD_URI;
+  return false;
 }
 
 void
@@ -758,17 +747,16 @@ nsExpandedPrincipal::SubsumesInternal(nsIPrincipal* aOther,
   return false;
 }
 
-NS_IMETHODIMP
-nsExpandedPrincipal::CheckMayLoad(nsIURI* uri, bool aReport, bool aAllowIfInheritsPrincipal)
+bool
+nsExpandedPrincipal::MayLoadInternal(nsIURI* uri)
 {
-  nsresult rv;
   for (uint32_t i = 0; i < mPrincipals.Length(); ++i){
-    rv = mPrincipals[i]->CheckMayLoad(uri, aReport, aAllowIfInheritsPrincipal);
-    if (NS_SUCCEEDED(rv))
-      return rv;
+    if (BasePrincipal::Cast(mPrincipals[i])->MayLoadInternal(uri)) {
+      return true;
+    }
   }
 
-  return NS_ERROR_DOM_BAD_URI;
+  return false;
 }
 
 NS_IMETHODIMP

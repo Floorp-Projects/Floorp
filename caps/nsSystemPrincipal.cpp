@@ -42,12 +42,6 @@ nsSystemPrincipal::GetScriptLocation(nsACString &aStr)
 ///////////////////////////////////////
 
 NS_IMETHODIMP
-nsSystemPrincipal::CheckMayLoad(nsIURI* uri, bool aReport, bool aAllowIfInheritsPrincipal)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSystemPrincipal::GetHashValue(uint32_t *result)
 {
     *result = NS_PTR_TO_INT32(this);
