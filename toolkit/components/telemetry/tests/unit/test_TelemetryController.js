@@ -283,7 +283,7 @@ add_task(function* test_archivePings() {
   Preferences.set(uploadPref, true);
   Preferences.set(PREF_ARCHIVE_ENABLED, true);
 
-  now = new Date(2014, 06, 18, 22, 0, 0);
+  now = new Date(2014, 6, 18, 22, 0, 0);
   fakeNow(now);
   // Restore the non asserting ping handler.
   PingServer.resetPingHandler();
