@@ -156,9 +156,11 @@ class InstallManifest(object):
                 continue
 
             if record_type == self.PREPROCESS:
-                dest, source, deps, marker, defines = fields[1:]
+                dest, source, deps, marker, defines, warnings = fields[1:]
+
                 self.add_preprocess(source, dest, deps, marker,
-                    self._decode_field_entry(defines))
+                    self._decode_field_entry(defines),
+                    silence_missing_directive_warnings=bool(int(warnings)))
                 continue
 
             raise UnreadableInstallManifest('Unknown record type: %d' %
@@ -281,14 +283,21 @@ class InstallManifest(object):
         self._add_entry(mozpath.join(base, pattern, dest),
             (self.PATTERN_COPY, base, pattern, dest))
 
-    def add_preprocess(self, source, dest, deps, marker='#', defines={}):
+    def add_preprocess(self, source, dest, deps, marker='#', defines={},
+                       silence_missing_directive_warnings=False):
         """Add a preprocessed file to this manifest.
 
         ``source`` will be passed through preprocessor.py, and the output will be
         written to ``dest``.
         """
-        self._add_entry(dest,
-            (self.PREPROCESS, source, deps, marker, self._encode_field_entry(defines)))
+        self._add_entry(dest, (
+            self.PREPROCESS,
+            source,
+            deps,
+            marker,
+            self._encode_field_entry(defines),
+            '1' if silence_missing_directive_warnings else '0',
+        ))
 
     def _add_entry(self, dest, entry):
         if dest in self._dests:
@@ -350,7 +359,8 @@ class InstallManifest(object):
                     depfile_path=entry[2],
                     marker=entry[3],
                     defines=defines,
-                    extra_depends=self._source_files))
+                    extra_depends=self._source_files,
+                    silence_missing_directive_warnings=bool(int(entry[5]))))
 
                 continue
 
