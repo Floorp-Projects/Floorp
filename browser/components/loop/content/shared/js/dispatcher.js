@@ -39,6 +39,28 @@ loop.Dispatcher = (function() {
     },
 
     /**
+     * Unregister a store from receiving notifications of specific actions.
+     *
+     * @param {Object} store The store object to unregister
+     * @param {Array} eventTypes An array of action names
+     */
+    unregister: function(store, eventTypes) {
+      eventTypes.forEach(function(type) {
+        if (!this._eventData.hasOwnProperty(type)) {
+          return;
+        }
+        var idx = this._eventData[type].indexOf(store);
+        if (idx === -1) {
+          return;
+        }
+        this._eventData[type].splice(idx, 1);
+        if (!this._eventData[type].length) {
+          delete this._eventData[type];
+        }
+      }.bind(this));
+    },
+
+    /**
      * Dispatches an action to all registered stores.
      */
     dispatch: function(action) {
