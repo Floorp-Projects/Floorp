@@ -1881,7 +1881,7 @@ nsObjectLoadingContent::UpdateObjectParameters(bool aJavaURI)
       // end up trying to dispatch to a nsFrameLoader, which will complain that
       // it couldn't find a way to handle application/octet-stream
       nsAutoCString parsedMime, dummy;
-      NS_ParseContentType(newMime, parsedMime, dummy);
+      NS_ParseResponseContentType(newMime, parsedMime, dummy);
       if (!parsedMime.IsEmpty()) {
         mChannel->SetContentType(parsedMime);
       }
