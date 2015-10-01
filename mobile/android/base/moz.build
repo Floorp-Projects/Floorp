@@ -469,6 +469,7 @@ gbjar.sources += [
     'sqlite/SQLiteBridgeException.java',
     'SuggestClient.java',
     'SurfaceBits.java',
+    'sync/TabReceivedBroadcastReceiver.java',
     'Tab.java',
     'tabqueue/TabQueueDispatcher.java',
     'tabqueue/TabQueueHelper.java',
