@@ -341,46 +341,6 @@ AssertRootMarkingPhase(JSTracer* trc)
 
 /*** Tracing Interface ***************************************************************************/
 
-#define FOR_EACH_GC_POINTER_TYPE(D) \
-    D(AccessorShape*) \
-    D(BaseShape*) \
-    D(UnownedBaseShape*) \
-    D(jit::JitCode*) \
-    D(NativeObject*) \
-    D(ArrayObject*) \
-    D(ArgumentsObject*) \
-    D(ArrayBufferObject*) \
-    D(ArrayBufferObjectMaybeShared*) \
-    D(ArrayBufferViewObject*) \
-    D(DebugScopeObject*) \
-    D(GlobalObject*) \
-    D(JSObject*) \
-    D(JSFunction*) \
-    D(ModuleObject*) \
-    D(ModuleEnvironmentObject*) \
-    D(NestedScopeObject*) \
-    D(PlainObject*) \
-    D(SavedFrame*) \
-    D(ScopeObject*) \
-    D(ScriptSourceObject*) \
-    D(SharedArrayBufferObject*) \
-    D(SharedTypedArrayObject*) \
-    D(ImportEntryObject*) \
-    D(ExportEntryObject*) \
-    D(JSScript*) \
-    D(LazyScript*) \
-    D(Shape*) \
-    D(JSAtom*) \
-    D(JSString*) \
-    D(JSFlatString*) \
-    D(JSLinearString*) \
-    D(PropertyName*) \
-    D(JS::Symbol*) \
-    D(js::ObjectGroup*) \
-    D(Value) \
-    D(jsid) \
-    D(TaggedProto)
-
 // The second parameter to BaseGCType is derived automatically based on T. The
 // relation here is that for any T, the TraceKind will automatically,
 // statically select the correct Cell layout for marking. Below, we instantiate
@@ -430,7 +390,7 @@ template <typename T> void DoMarking(GCMarker* gcmarker, T thing);
 
 template <typename T>
 void
-js::TraceEdge(JSTracer* trc, BarrieredBase<T>* thingp, const char* name)
+js::TraceEdge(JSTracer* trc, WriteBarrieredBase<T>* thingp, const char* name)
 {
     DispatchToTracer(trc, ConvertToBase(thingp->unsafeGet()), name);
 }
@@ -461,7 +421,7 @@ js::TraceNullableRoot(JSTracer* trc, T* thingp, const char* name)
 
 template <typename T>
 void
-js::TraceRange(JSTracer* trc, size_t len, BarrieredBase<T>* vec, const char* name)
+js::TraceRange(JSTracer* trc, size_t len, WriteBarrieredBase<T>* vec, const char* name)
 {
     JS::AutoTracingIndex index(trc);
     for (auto i : MakeRange(len)) {
@@ -486,11 +446,11 @@ js::TraceRootRange(JSTracer* trc, size_t len, T* vec, const char* name)
 
 // Instantiate a copy of the Tracing templates for each derived type.
 #define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(type) \
-    template void js::TraceEdge<type>(JSTracer*, BarrieredBase<type>*, const char*); \
+    template void js::TraceEdge<type>(JSTracer*, WriteBarrieredBase<type>*, const char*); \
     template void js::TraceManuallyBarrieredEdge<type>(JSTracer*, type*, const char*); \
     template void js::TraceRoot<type>(JSTracer*, type*, const char*); \
     template void js::TraceNullableRoot<type>(JSTracer*, type*, const char*); \
-    template void js::TraceRange<type>(JSTracer*, size_t, BarrieredBase<type>*, const char*); \
+    template void js::TraceRange<type>(JSTracer*, size_t, WriteBarrieredBase<type>*, const char*); \
     template void js::TraceRootRange<type>(JSTracer*, size_t, type*, const char*);
 FOR_EACH_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS)
 #undef INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS
@@ -510,13 +470,14 @@ template void js::TraceManuallyBarrieredCrossCompartmentEdge<JSScript*>(JSTracer
 
 template <typename T>
 void
-js::TraceCrossCompartmentEdge(JSTracer* trc, JSObject* src, BarrieredBase<T>* dst, const char* name)
+js::TraceCrossCompartmentEdge(JSTracer* trc, JSObject* src, WriteBarrieredBase<T>* dst,
+                              const char* name)
 {
     if (ShouldMarkCrossCompartment(trc, src, dst->get()))
         DispatchToTracer(trc, dst->unsafeGet(), name);
 }
-template void js::TraceCrossCompartmentEdge<Value>(JSTracer*, JSObject*, BarrieredBase<Value>*,
-                                                   const char*);
+template void js::TraceCrossCompartmentEdge<Value>(JSTracer*, JSObject*,
+                                                   WriteBarrieredBase<Value>*, const char*);
 
 template <typename T>
 void
@@ -2362,7 +2323,7 @@ IsMarkedUnbarriered(T* thingp)
 
 template <typename T>
 bool
-IsMarked(BarrieredBase<T>* thingp)
+IsMarked(WriteBarrieredBase<T>* thingp)
 {
     return IsMarkedInternal(ConvertToBase(thingp->unsafeGet()));
 }
@@ -2383,7 +2344,7 @@ IsAboutToBeFinalizedUnbarriered(T* thingp)
 
 template <typename T>
 bool
-IsAboutToBeFinalized(BarrieredBase<T>* thingp)
+IsAboutToBeFinalized(WriteBarrieredBase<T>* thingp)
 {
     return IsAboutToBeFinalizedInternal(ConvertToBase(thingp->unsafeGet()));
 }
@@ -2398,10 +2359,10 @@ IsAboutToBeFinalized(ReadBarriered<T>* thingp)
 // Instantiate a copy of the Tracing templates for each derived type.
 #define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(type) \
     template bool IsMarkedUnbarriered<type>(type*); \
-    template bool IsMarked<type>(BarrieredBase<type>*); \
+    template bool IsMarked<type>(WriteBarrieredBase<type>*); \
     template bool IsMarked<type>(ReadBarriered<type>*); \
     template bool IsAboutToBeFinalizedUnbarriered<type>(type*); \
-    template bool IsAboutToBeFinalized<type>(BarrieredBase<type>*); \
+    template bool IsAboutToBeFinalized<type>(WriteBarrieredBase<type>*); \
     template bool IsAboutToBeFinalized<type>(ReadBarriered<type>*);
 FOR_EACH_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS)
 #undef INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS
