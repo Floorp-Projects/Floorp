@@ -39,6 +39,7 @@
 #endif
 #include "js/TraceableVector.h"
 #include "js/Vector.h"
+#include "vm/CodeCoverage.h"
 #include "vm/CommonPropertyNames.h"
 #include "vm/DateTime.h"
 #include "vm/MallocProvider.h"
@@ -1055,6 +1056,9 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     /* Strong references on scripts held for PCCount profiling API. */
     JS::PersistentRooted<js::ScriptAndCountsVector>* scriptAndCountsVector;
+
+    /* Code coverage output. */
+    js::coverage::LCovRuntime lcovOutput;
 
     /* Well-known numbers held for use by this runtime's contexts. */
     const js::Value     NaNValue;
