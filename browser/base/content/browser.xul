@@ -1151,23 +1151,24 @@
 #include ../../components/customizableui/content/customizeMode.inc.xul
   </deck>
 
-  <hbox id="fullscreen-warning" hidden="true">
-    <description id="fullscreen-domain-text">
+  <html:div id="fullscreen-warning" hidden="true">
+    <html:div id="fullscreen-domain-text">
       &fullscreenWarning.beforeDomain.label;
-      <label id="fullscreen-domain"/>
+      <html:span id="fullscreen-domain"/>
       &fullscreenWarning.afterDomain.label;
-    </description>
-    <description id="fullscreen-generic-text">
+    </html:div>
+    <html:div id="fullscreen-generic-text">
       &fullscreenWarning.generic.label;
-    </description>
-    <button id="fullscreen-exit-button"
+    </html:div>
+    <html:button id="fullscreen-exit-button"
+                 onclick="FullScreen.exitDomFullScreen();">
 #ifdef XP_MACOSX
-            label="&exitDOMFullscreenMac.button;"
+            &exitDOMFullscreenMac.button;
 #else
-            label="&exitDOMFullscreen.button;"
+            &exitDOMFullscreen.button;
 #endif
-            oncommand="FullScreen.exitDomFullScreen();"/>
-  </hbox>
+    </html:button>
+  </html:div>
 
   <vbox id="browser-bottombox" layer="true">
     <notificationbox id="global-notificationbox"/>
