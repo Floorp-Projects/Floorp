@@ -1768,14 +1768,15 @@ var BrowserApp = {
           break;
 
       case "Session:Reload": {
-        let flags = Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY;
+        let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
 
         // Check to see if this is a message to enable/disable mixed content blocking.
         if (aData) {
           let data = JSON.parse(aData);
 
           if (data.bypassCache) {
-            flags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE;
+            flags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE |
+                     Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_PROXY;
           }
 
           if (data.contentType === "tracking") {
