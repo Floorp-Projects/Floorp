@@ -35,10 +35,16 @@
 
 #include "common/mac/dump_syms.h"
 
-#include <Foundation/Foundation.h>
+#include <assert.h>
+#include <dirent.h>
+#include <errno.h>
+#include <libgen.h>
 #include <mach-o/arch.h>
 #include <mach-o/fat.h>
 #include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include <ostream>
 #include <string>
@@ -78,89 +84,105 @@ using std::pair;
 using std::string;
 using std::vector;
 
+namespace {
+// Return a vector<string> with absolute paths to all the entries
+// in directory (excluding . and ..).
+vector<string> list_directory(const string& directory) {
+  vector<string> entries;
+  DIR* dir = opendir(directory.c_str());
+  if (!dir) {
+    return entries;
+  }
+
+  string path = directory;
+  if (path[path.length() - 1] != '/') {
+    path += '/';
+  }
+
+  struct dirent* entry = NULL;
+  while ((entry = readdir(dir))) {
+    if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+      entries.push_back(path + entry->d_name);
+    }
+  }
+
+  closedir(dir);
+  return entries;
+}
+}
+
 namespace google_breakpad {
 
-bool DumpSymbols::Read(NSString *filename) {
-  if (![[NSFileManager defaultManager] fileExistsAtPath:filename]) {
-    fprintf(stderr, "Object file does not exist: %s\n",
-            [filename fileSystemRepresentation]);
+bool DumpSymbols::Read(const string &filename) {
+  struct stat st;
+  if (stat(filename.c_str(), &st) == -1) {
+    fprintf(stderr, "Could not access object file %s: %s\n",
+            filename.c_str(), strerror(errno));
     return false;
   }
 
-  input_pathname_ = [filename retain];
+  input_pathname_ = filename;
 
   // Does this filename refer to a dSYM bundle?
-  NSBundle *bundle = [NSBundle bundleWithPath:input_pathname_];
+  string contents_path = input_pathname_ + "/Contents/Resources/DWARF";
+  if (S_ISDIR(st.st_mode) &&
+      access(contents_path.c_str(), F_OK) == 0) {
+    // If there's one file under Contents/Resources/DWARF then use that,
+    // otherwise bail out.
+    const vector<string> entries = list_directory(contents_path);
+    if (entries.size() == 0) {
+      fprintf(stderr, "Unable to find DWARF-bearing file in bundle: %s\n",
+              input_pathname_.c_str());
+      return false;
+    }
+    if (entries.size() > 1) {
+      fprintf(stderr, "Too many DWARF files in bundle: %s\n",
+              input_pathname_.c_str());
+      return false;
+    }
 
-  if (bundle) {
-    // Filenames referring to bundles usually have names of the form
-    // "<basename>.dSYM"; however, if the user has specified a wrapper
-    // suffix (the WRAPPER_SUFFIX and WRAPPER_EXTENSION build settings),
-    // then the name may have the form "<basename>.<extension>.dSYM". In
-    // either case, the resource name for the file containing the DWARF
-    // info within the bundle is <basename>.
-    //
-    // Since there's no way to tell how much to strip off, remove one
-    // extension at a time, and use the first one that
-    // pathForResource:ofType:inDirectory likes.
-    NSString *base_name = [input_pathname_ lastPathComponent];
-    NSString *dwarf_resource;
-
-    do {
-      NSString *new_base_name = [base_name stringByDeletingPathExtension];
-
-      // If stringByDeletingPathExtension returned the name unchanged, then
-      // there's nothing more for us to strip off --- lose.
-      if ([new_base_name isEqualToString:base_name]) {
-        fprintf(stderr, "Unable to find DWARF-bearing file in bundle: %s\n",
-                [input_pathname_ fileSystemRepresentation]);
-        return false;
-      }
-
-      // Take the shortened result as our new base_name.
-      base_name = new_base_name;
-
-      // Try to find a DWARF resource in the bundle under the new base_name.
-      dwarf_resource = [bundle pathForResource:base_name
-                        ofType:nil inDirectory:@"DWARF"];
-    } while (!dwarf_resource);
-
-    object_filename_ = [dwarf_resource retain];
+    object_filename_ = entries[0];
   } else {
-    object_filename_ = [input_pathname_ retain];
+    object_filename_ = input_pathname_;
   }
 
   // Read the file's contents into memory.
-  //
-  // The documentation for dataWithContentsOfMappedFile says:
-  //
-  //     Because of file mapping restrictions, this method should only be
-  //     used if the file is guaranteed to exist for the duration of the
-  //     data object’s existence. It is generally safer to use the
-  //     dataWithContentsOfFile: method.
-  //
-  // I gather this means that OS X doesn't have (or at least, that method
-  // doesn't use) a form of mapping like Linux's MAP_PRIVATE, where the
-  // process appears to get its own copy of the data, and changes to the
-  // file don't affect memory and vice versa).
-  NSError *error;
-  contents_ = [NSData dataWithContentsOfFile:object_filename_
-                                     options:0
-                                       error:&error];
-  if (!contents_) {
+  bool read_ok = true;
+  string error;
+  if (stat(object_filename_.c_str(), &st) != -1) {
+    FILE* f = fopen(object_filename_.c_str(), "rb");
+    if (f) {
+      contents_.reset(new uint8_t[st.st_size]);
+      off_t total = 0;
+      while (total < st.st_size && !feof(f)) {
+        size_t read = fread(&contents_[0] + total, 1, st.st_size - total, f);
+        if (read == 0) {
+          if (ferror(f)) {
+            read_ok = false;
+            error = strerror(errno);
+          }
+          break;
+        }
+        total += read;
+      }
+      fclose(f);
+    } else {
+      error = strerror(errno);
+    }
+  }
+
+  if (!read_ok) {
     fprintf(stderr, "Error reading object file: %s: %s\n",
-            [object_filename_ fileSystemRepresentation],
-            [[error localizedDescription] UTF8String]);
+            object_filename_.c_str(),
+            error.c_str());
     return false;
   }
-  [contents_ retain];
 
   // Get the list of object files present in the file.
-  FatReader::Reporter fat_reporter([object_filename_
-                                    fileSystemRepresentation]);
+  FatReader::Reporter fat_reporter(object_filename_);
   FatReader fat_reader(&fat_reporter);
-  if (!fat_reader.Read(reinterpret_cast<const uint8_t *>([contents_ bytes]),
-                       [contents_ length])) {
+  if (!fat_reader.Read(&contents_[0],
+                       st.st_size)) {
     return false;
   }
 
@@ -170,7 +192,7 @@ bool DumpSymbols::Read(NSString *filename) {
     fat_reader.object_files(&object_files_count);
   if (object_files_count == 0) {
     fprintf(stderr, "Fat binary file contains *no* architectures: %s\n",
-            [object_filename_ fileSystemRepresentation]);
+            object_filename_.c_str());
     return false;
   }
   object_files_.resize(object_files_count);
@@ -204,13 +226,13 @@ bool DumpSymbols::SetArchitecture(const std::string &arch_name) {
 }
 
 string DumpSymbols::Identifier() {
-  FileID file_id([object_filename_ fileSystemRepresentation]);
+  FileID file_id(object_filename_.c_str());
   unsigned char identifier_bytes[16];
   cpu_type_t cpu_type = selected_object_file_->cputype;
   cpu_subtype_t cpu_subtype = selected_object_file_->cpusubtype;
   if (!file_id.MachoIdentifier(cpu_type, cpu_subtype, identifier_bytes)) {
     fprintf(stderr, "Unable to calculate UUID of mach-o binary %s!\n",
-            [object_filename_ fileSystemRepresentation]);
+            object_filename_.c_str());
     return "";
   }
 
@@ -456,7 +478,7 @@ bool DumpSymbols::ReadSymbolData(Module** out_module) {
                 " architecture, none of which match the current"
                 " architecture; specify an architecture explicitly"
                 " with '-a ARCH' to resolve the ambiguity\n",
-                [object_filename_ fileSystemRepresentation]);
+                object_filename_.c_str());
         return false;
       }
     }
@@ -476,14 +498,15 @@ bool DumpSymbols::ReadSymbolData(Module** out_module) {
 
   // Produce a name to use in error messages that includes the
   // filename, and the architecture, if there is more than one.
-  selected_object_name_ = [object_filename_ UTF8String];
+  selected_object_name_ = object_filename_;
   if (object_files_.size() > 1) {
     selected_object_name_ += ", architecture ";
     selected_object_name_ + selected_arch_name;
   }
 
   // Compute a module name, to appear in the MODULE record.
-  NSString *module_name = [object_filename_ lastPathComponent];
+  string module_name = object_filename_;
+  module_name = basename(&module_name[0]);
 
   // Choose an identifier string, to appear in the MODULE record.
   string identifier = Identifier();
@@ -492,7 +515,7 @@ bool DumpSymbols::ReadSymbolData(Module** out_module) {
   identifier += "0";
 
   // Create a module to hold the debugging information.
-  scoped_ptr<Module> module(new Module([module_name UTF8String],
+  scoped_ptr<Module> module(new Module(module_name,
                                        "mac",
                                        selected_arch_name,
                                        identifier));
@@ -500,7 +523,7 @@ bool DumpSymbols::ReadSymbolData(Module** out_module) {
   // Parse the selected object file.
   mach_o::Reader::Reporter reporter(selected_object_name_);
   mach_o::Reader reader(&reporter);
-  if (!reader.Read(reinterpret_cast<const uint8_t *>([contents_ bytes])
+  if (!reader.Read(&contents_[0]
                    + selected_object_file_->offset,
                    selected_object_file_->size,
                    selected_object_file_->cputype,
