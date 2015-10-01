@@ -2330,7 +2330,7 @@ IsMarked(WriteBarrieredBase<T>* thingp)
 
 template <typename T>
 bool
-IsMarked(ReadBarriered<T>* thingp)
+IsMarked(ReadBarrieredBase<T>* thingp)
 {
     return IsMarkedInternal(ConvertToBase(thingp->unsafeGet()));
 }
@@ -2351,7 +2351,7 @@ IsAboutToBeFinalized(WriteBarrieredBase<T>* thingp)
 
 template <typename T>
 bool
-IsAboutToBeFinalized(ReadBarriered<T>* thingp)
+IsAboutToBeFinalized(ReadBarrieredBase<T>* thingp)
 {
     return IsAboutToBeFinalizedInternal(ConvertToBase(thingp->unsafeGet()));
 }
@@ -2360,10 +2360,10 @@ IsAboutToBeFinalized(ReadBarriered<T>* thingp)
 #define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(type) \
     template bool IsMarkedUnbarriered<type>(type*); \
     template bool IsMarked<type>(WriteBarrieredBase<type>*); \
-    template bool IsMarked<type>(ReadBarriered<type>*); \
+    template bool IsMarked<type>(ReadBarrieredBase<type>*); \
     template bool IsAboutToBeFinalizedUnbarriered<type>(type*); \
     template bool IsAboutToBeFinalized<type>(WriteBarrieredBase<type>*); \
-    template bool IsAboutToBeFinalized<type>(ReadBarriered<type>*);
+    template bool IsAboutToBeFinalized<type>(ReadBarrieredBase<type>*);
 FOR_EACH_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS)
 #undef INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS
 
