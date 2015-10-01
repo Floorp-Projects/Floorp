@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+  Test that an unresolved respondWith promise will reset the channel when
+  the service worker is terminated due to idling.
+  -->
+<head>
+  <title>Test for Bug 1188545</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1188545">Mozilla Bug 118845</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script class="testbody" type="text/javascript">
+
+  function start() {
+    return navigator.serviceWorker.register("unresolved_fetch_worker.js", {scope: "./"})
+    .then((swr) => ({registration: swr}));
+  }
+
+  function waitControlled(ctx) {
+    var p = new Promise(function(res, rej) {
+      if (navigator.serviceWorker.controller) {
+        res(ctx);
+      } else {
+        navigator.serviceWorker.oncontrollerchange = function() {
+          res(ctx);
+          navigator.serviceWorker.oncontrollerchange = null;
+        }
+      }
+    });
+
+    return p;
+  }
+
+  function unregister(ctx) {
+    return ctx.registration.unregister().then(function(result) {
+      ok(result, "Unregister should return true.");
+    }, function(e) {
+      dump("Unregistering the SW failed with " + e + "\n");
+    });
+  }
+
+  function testFetch(ctx) {
+    ok(navigator.serviceWorker.controller, "Controlled");
+
+    var p = fetch("something_that_doesnt_exist_abcd.html")
+      .catch(function() {
+        ok(true, "channel was reset");
+      }).then(function() { return ctx; });
+
+    navigator.serviceWorker.onmessage = function(event) {
+      ok(event.data == "continue", "Got continue message from worker.");
+      // close worker
+      SpecialPowers.pushPrefEnv({"set": [
+        ["dom.serviceWorkers.idle_extended_timeout", 0]
+      ]}, function() {
+        navigator.serviceWorker.controller.postMessage("shutdown");
+      });
+
+      navigator.serviceWorker.onmessage = null;
+    }
+
+    return p;
+  }
+
+  function runTest() {
+    start()
+      .then(waitControlled)
+      .then(testFetch)
+      .then(unregister)
+      .catch(function(e) {
+        ok(false, "Some test failed with error " + e)
+      }).then(SimpleTest.finish);
+  }
+
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.idle_timeout", 0],
+    ["dom.serviceWorkers.idle_extended_timeout", 299999],
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+    ["dom.serviceWorkers.interception.enabled", true]
+    ]}, runTest);
+  SimpleTest.waitForExplicitFinish();
+</script>
+</body>
+</html>

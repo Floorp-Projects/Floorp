@@ -776,7 +776,6 @@ XPCWrappedNative::Init(const XPCNativeScriptableCreateInfo* sci)
                jsclazz->name &&
                jsclazz->flags &&
                jsclazz->resolve &&
-               jsclazz->convert &&
                jsclazz->finalize, "bad class");
 
     // XXXbz JS_GetObjectPrototype wants an object, even though it then asserts

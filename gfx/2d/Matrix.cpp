@@ -90,8 +90,8 @@ Matrix::Rotation(Float aAngle)
 {
   Matrix newMatrix;
 
-  Float s = sin(aAngle);
-  Float c = cos(aAngle);
+  Float s = sinf(aAngle);
+  Float c = cosf(aAngle);
 
   newMatrix._11 = c;
   newMatrix._12 = s;

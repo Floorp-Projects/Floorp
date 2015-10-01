@@ -83,7 +83,7 @@ add_task(function* () {
     utils.sendMouseEvent("mouseup", left, top, 0, 1, 0, false, 0, 0);
   });
 
-  let condition = function() !PopupNotifications.getNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser).dismissed && gNewWindow.PopupNotifications.panel.firstChild;
+  let condition = () => !PopupNotifications.getNotification("click-to-play-plugins", gNewWindow.gBrowser.selectedBrowser).dismissed && gNewWindow.PopupNotifications.panel.firstChild;
   yield promiseForCondition(condition);
 });
 

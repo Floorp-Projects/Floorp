@@ -387,7 +387,7 @@ OSXNotificationCenter::OnActivate(NSString *aAlertName,
     OSXNotificationInfo *osxni = mActiveAlerts[i];
     if ([aAlertName isEqualToString:osxni->mName]) {
       if (osxni->mObserver) {
-        switch (aActivationType) {
+        switch ((int)aActivationType) {
           case NSUserNotificationActivationTypeAdditionalActionClicked:
           case NSUserNotificationActivationTypeActionButtonClicked:
             switch (aAdditionalActionIndex) {

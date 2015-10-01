@@ -21,10 +21,10 @@ const { EventEmitter } = Cu.import("resource://gre/modules/devtools/shared/event
 // have trailing newlines.  And note that registerLogHandler actually registers
 // an error handler, despite its name.
 Subprocess.registerLogHandler(
-  function(s) console.error("subprocess: " + s.trim())
+  s => console.error("subprocess: " + s.trim())
 );
 Subprocess.registerDebugHandler(
-  function(s) console.debug("subprocess: " + s.trim())
+  s => console.debug("subprocess: " + s.trim())
 );
 
 function SimulatorProcess(options) {
@@ -38,7 +38,9 @@ function SimulatorProcess(options) {
 SimulatorProcess.prototype = {
 
   // check if b2g is running
-  get isRunning() !!this.process,
+  get isRunning() {
+    return !!this.process;
+  },
 
   /**
    * Start the process and connect the debugger client.

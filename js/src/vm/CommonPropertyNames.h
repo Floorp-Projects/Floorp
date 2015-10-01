@@ -268,8 +268,8 @@
     macro(iterator, iterator, "iterator") \
     macro(match, match, "match") \
     macro(species, species, "species") \
+    macro(toPrimitive, toPrimitive, "toPrimitive") \
     /* Same goes for the descriptions of the well-known symbols. */ \
-    macro(Symbol_create, Symbol_create, "Symbol.create") \
     macro(Symbol_hasInstance, Symbol_hasInstance, "Symbol.hasInstance") \
     macro(Symbol_isConcatSpreadable, Symbol_isConcatSpreadable, "Symbol.isConcatSpreadable") \
     macro(Symbol_iterator, Symbol_iterator, "Symbol.iterator") \

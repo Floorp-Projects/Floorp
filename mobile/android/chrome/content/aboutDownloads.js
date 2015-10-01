@@ -266,8 +266,12 @@ DownloadItem.prototype = {
       this);
   },
 
-  get download() this._download,
-  get element() this._element,
+  get download() {
+    return this._download;
+  },
+  get element() {
+    return this._element;
+  },
 
   createElement: function() {
     let template = document.getElementById("download-item");
@@ -312,10 +316,18 @@ DownloadItem.prototype = {
   },
 
   // template properties below
-  get domain() this._domain,
-  get fileName() this._fileName,
-  get id() this._id,
-  get iconUrl() this._iconUrl,
+  get domain() {
+    return this._domain;
+  },
+  get fileName() {
+    return this._fileName;
+  },
+  get id() {
+    return this._id;
+  },
+  get iconUrl() {
+    return this._iconUrl;
+  },
 
   get size() {
     if (this.download.hasProgress) {

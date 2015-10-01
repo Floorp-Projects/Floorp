@@ -45,7 +45,7 @@ function checkFile(ch, cx, status, data)
   actualFile.append("test_registerdirectory.js");
   do_check_eq(ch.getResponseHeader("Content-Length"),
               actualFile.fileSize.toString());
-  do_check_eq(data.map(function(v) String.fromCharCode(v)).join(""),
+  do_check_eq(data.map(v => String.fromCharCode(v)).join(""),
               fileContents(actualFile));
 }
 

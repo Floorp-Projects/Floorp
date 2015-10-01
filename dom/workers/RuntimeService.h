@@ -152,22 +152,7 @@ public:
   CreateSharedWorker(const GlobalObject& aGlobal,
                      const nsAString& aScriptURL,
                      const nsACString& aName,
-                     SharedWorker** aSharedWorker)
-  {
-    return CreateSharedWorkerInternal(aGlobal, aScriptURL, aName,
-                                      WorkerTypeShared, aSharedWorker);
-  }
-
-  nsresult
-  CreateSharedWorkerForServiceWorkerFromLoadInfo(JSContext* aCx,
-                                                 WorkerLoadInfo* aLoadInfo,
-                                                 const nsAString& aScriptURL,
-                                                 const nsACString& aScope,
-                                                 SharedWorker** aSharedWorker)
-  {
-    return CreateSharedWorkerFromLoadInfo(aCx, aLoadInfo, aScriptURL, aScope,
-                                          WorkerTypeService, aSharedWorker);
-  }
+                     SharedWorker** aSharedWorker);
 
   void
   ForgetSharedWorker(WorkerPrivate* aWorkerPrivate);
@@ -309,18 +294,10 @@ private:
   JSVersionChanged(const char* aPrefName, void* aClosure);
 
   nsresult
-  CreateSharedWorkerInternal(const GlobalObject& aGlobal,
-                             const nsAString& aScriptURL,
-                             const nsACString& aName,
-                             WorkerType aType,
-                             SharedWorker** aSharedWorker);
-
-  nsresult
   CreateSharedWorkerFromLoadInfo(JSContext* aCx,
                                  WorkerLoadInfo* aLoadInfo,
                                  const nsAString& aScriptURL,
                                  const nsACString& aName,
-                                 WorkerType aType,
                                  SharedWorker** aSharedWorker);
 };
 

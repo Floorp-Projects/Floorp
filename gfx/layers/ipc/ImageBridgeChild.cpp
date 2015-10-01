@@ -119,6 +119,11 @@ ImageBridgeChild::UseTextures(CompositableClient* aCompositable,
   for (auto& t : aTextures) {
     MOZ_ASSERT(t.mTextureClient);
     MOZ_ASSERT(t.mTextureClient->GetIPDLActor());
+
+    if (!t.mTextureClient->IsSharedWithCompositor()) {
+      return;
+    }
+
     FenceHandle fence = t.mTextureClient->GetAcquireFenceHandle();
     textures.AppendElement(TimedTexture(nullptr, t.mTextureClient->GetIPDLActor(),
                                         fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t()),
@@ -342,7 +347,7 @@ static void ReleaseImageClientNow(ImageClient* aClient,
   if (aClient) {
     aClient->Release();
   }
-  if (aChild) {
+  if (aChild && ImageBridgeChild::IsCreated()) {
     aChild->SendAsyncDelete();
   }
 }
@@ -405,6 +410,11 @@ void ImageBridgeChild::DispatchReleaseTextureClient(TextureClient* aClient)
 
 static void UpdateImageClientNow(ImageClient* aClient, ImageContainer* aContainer)
 {
+  if (!ImageBridgeChild::IsCreated()) {
+    NS_WARNING("Something is holding on to graphics resources after the shutdown"
+               "of the graphics subsystem!");
+    return;
+  }
   MOZ_ASSERT(aClient);
   MOZ_ASSERT(aContainer);
   sImageBridgeChildSingleton->BeginTransaction();
@@ -416,6 +426,11 @@ static void UpdateImageClientNow(ImageClient* aClient, ImageContainer* aContaine
 void ImageBridgeChild::DispatchImageClientUpdate(ImageClient* aClient,
                                                  ImageContainer* aContainer)
 {
+  if (!ImageBridgeChild::IsCreated()) {
+    NS_WARNING("Something is holding on to graphics resources after the shutdown"
+               "of the graphics subsystem!");
+    return;
+  }
   if (!aClient || !aContainer || !IsCreated()) {
     return;
   }
@@ -435,6 +450,17 @@ void ImageBridgeChild::DispatchImageClientUpdate(ImageClient* aClient,
 static void FlushAllImagesSync(ImageClient* aClient, ImageContainer* aContainer,
                                AsyncTransactionWaiter* aWaiter)
 {
+  if (!ImageBridgeChild::IsCreated()) {
+    // How sad. If we get into this branch it means that the ImageBridge
+    // got destroyed between the time we ImageBridgeChild::FlushAllImage
+    // was called on some thread, and the time this function was proxied
+    // to the ImageBridge thread. ImageBridge gets destroyed way to late
+    // in the shutdown of gecko for this to be happening for a good reason.
+    NS_WARNING("Something is holding on to graphics resources after the shutdown"
+               "of the graphics subsystem!");
+    aWaiter->DecrementWaitCount();
+    return;
+  }
   MOZ_ASSERT(aClient);
   sImageBridgeChildSingleton->BeginTransaction();
   if (aContainer) {
@@ -936,6 +962,11 @@ ImageBridgeChild::RemoveTextureFromCompositable(CompositableClient* aCompositabl
                                                 TextureClient* aTexture)
 {
   MOZ_ASSERT(!mShuttingDown);
+  MOZ_ASSERT(aTexture);
+  MOZ_ASSERT(aTexture->IsSharedWithCompositor());
+  if (!aTexture || !aTexture->IsSharedWithCompositor()) {
+    return;
+  }
   if (aTexture->GetFlags() & TextureFlags::DEALLOCATE_CLIENT) {
     mTxn->AddEdit(OpRemoveTexture(nullptr, aCompositable->GetIPDLActor(),
                                   nullptr, aTexture->GetIPDLActor()));
@@ -952,6 +983,12 @@ ImageBridgeChild::RemoveTextureFromCompositableAsync(AsyncTransactionTracker* aA
                                                      CompositableClient* aCompositable,
                                                      TextureClient* aTexture)
 {
+  MOZ_ASSERT(!mShuttingDown);
+  MOZ_ASSERT(aTexture);
+  MOZ_ASSERT(aTexture->IsSharedWithCompositor());
+  if (!aTexture || !aTexture->IsSharedWithCompositor()) {
+    return;
+  }
   mTxn->AddNoSwapEdit(OpRemoveTextureAsync(CompositableClient::GetTrackersHolderId(aCompositable->GetIPDLActor()),
                                            aAsyncTransactionTracker->GetId(),
                                            nullptr, aCompositable->GetIPDLActor(),

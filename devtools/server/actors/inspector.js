@@ -1000,7 +1000,7 @@ var NodeFront = protocol.FrontClass(NodeActor, {
   },
 
   get formProperties() {
-    return this._form.props
+    return this._form.props;
   },
 
   /**

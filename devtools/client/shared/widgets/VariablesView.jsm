@@ -402,13 +402,17 @@ VariablesView.prototype = {
    * Sets if the variable and property searching is enabled.
    * @param boolean aFlag
    */
-  set searchEnabled(aFlag) aFlag ? this._enableSearch() : this._disableSearch(),
+  set searchEnabled(aFlag) {
+    aFlag ? this._enableSearch() : this._disableSearch();
+  },
 
   /**
    * Gets if the variable and property searching is enabled.
    * @return boolean
    */
-  get searchEnabled() !!this._searchboxContainer,
+  get searchEnabled() {
+    return !!this._searchboxContainer;
+  },
 
   /**
    * Sets the text displayed for the searchbox in this container.
@@ -425,7 +429,9 @@ VariablesView.prototype = {
    * Gets the text displayed for the searchbox in this container.
    * @return string
    */
-  get searchPlaceholder() this._searchboxPlaceholder,
+  get searchPlaceholder() {
+    return this._searchboxPlaceholder;
+  },
 
   /**
    * Enables variable and property searching in this view.
@@ -997,25 +1003,33 @@ VariablesView.prototype = {
    * Gets the parent node holding this view.
    * @return nsIDOMNode
    */
-  get boxObject() this._list.boxObject,
+  get boxObject() {
+    return this._list.boxObject;
+  },
 
   /**
    * Gets the parent node holding this view.
    * @return nsIDOMNode
    */
-  get parentNode() this._parent,
+  get parentNode() {
+    return this._parent;
+  },
 
   /**
    * Gets the owner document holding this view.
    * @return nsIHTMLDocument
    */
-  get document() this._document || (this._document = this._parent.ownerDocument),
+  get document() {
+    return this._document || (this._document = this._parent.ownerDocument);
+  },
 
   /**
    * Gets the default window holding this view.
    * @return nsIDOMWindow
    */
-  get window() this._window || (this._window = this.document.defaultView),
+  get window() {
+    return this._window || (this._window = this.document.defaultView);
+  },
 
   _document: null,
   _window: null,
@@ -1587,61 +1601,81 @@ Scope.prototype = {
    * Gets the visibility state.
    * @return boolean
    */
-  get visible() this._isContentVisible,
+  get visible() {
+    return this._isContentVisible;
+  },
 
   /**
    * Gets the expanded state.
    * @return boolean
    */
-  get expanded() this._isExpanded,
+  get expanded() {
+    return this._isExpanded;
+  },
 
   /**
    * Gets the header visibility state.
    * @return boolean
    */
-  get header() this._isHeaderVisible,
+  get header() {
+    return this._isHeaderVisible;
+  },
 
   /**
    * Gets the twisty visibility state.
    * @return boolean
    */
-  get twisty() this._isArrowVisible,
+  get twisty() {
+    return this._isArrowVisible;
+  },
 
   /**
    * Gets the expand lock state.
    * @return boolean
    */
-  get locked() this._isLocked,
+  get locked() {
+    return this._isLocked;
+  },
 
   /**
    * Sets the visibility state.
    * @param boolean aFlag
    */
-  set visible(aFlag) aFlag ? this.show() : this.hide(),
+  set visible(aFlag) {
+    aFlag ? this.show() : this.hide();
+  },
 
   /**
    * Sets the expanded state.
    * @param boolean aFlag
    */
-  set expanded(aFlag) aFlag ? this.expand() : this.collapse(),
+  set expanded(aFlag) {
+    aFlag ? this.expand() : this.collapse();
+  },
 
   /**
    * Sets the header visibility state.
    * @param boolean aFlag
    */
-  set header(aFlag) aFlag ? this.showHeader() : this.hideHeader(),
+  set header(aFlag) {
+    aFlag ? this.showHeader() : this.hideHeader();
+  },
 
   /**
    * Sets the twisty visibility state.
    * @param boolean aFlag
    */
-  set twisty(aFlag) aFlag ? this.showArrow() : this.hideArrow(),
+  set twisty(aFlag) {
+    aFlag ? this.showArrow() : this.hideArrow();
+  },
 
   /**
    * Sets the expand lock state.
    * @param boolean aFlag
    */
-  set locked(aFlag) this._isLocked = aFlag,
+  set locked(aFlag) {
+    this._isLocked = aFlag;
+  },
 
   /**
    * Specifies if this target node may be focused.
@@ -1698,31 +1732,41 @@ Scope.prototype = {
    * Gets the id associated with this item.
    * @return string
    */
-  get id() this._idString,
+  get id() {
+    return this._idString;
+  },
 
   /**
    * Gets the name associated with this item.
    * @return string
    */
-  get name() this._nameString,
+  get name() {
+    return this._nameString;
+  },
 
   /**
    * Gets the displayed value for this item.
    * @return string
    */
-  get displayValue() this._valueString,
+  get displayValue() {
+    return this._valueString;
+  },
 
   /**
    * Gets the class names used for the displayed value.
    * @return string
    */
-  get displayValueClassName() this._valueClassName,
+  get displayValueClassName() {
+    return this._valueClassName;
+  },
 
   /**
    * Gets the element associated with this item.
    * @return nsIDOMNode
    */
-  get target() this._target,
+  get target() {
+    return this._target;
+  },
 
   /**
    * Initializes this scope's id, view and binds event listeners.
@@ -2004,33 +2048,41 @@ Scope.prototype = {
    * Gets top level variables view instance.
    * @return VariablesView
    */
-  get _variablesView() this._topView || (this._topView = (function(self) {
-    let parentView = self.ownerView;
-    let topView;
+  get _variablesView() {
+    return this._topView || (this._topView = (() => {
+      let parentView = this.ownerView;
+      let topView;
 
-    while ((topView = parentView.ownerView)) {
-      parentView = topView;
-    }
-    return parentView;
-  })(this)),
+      while ((topView = parentView.ownerView)) {
+        parentView = topView;
+      }
+      return parentView;
+    })());
+  },
 
   /**
    * Gets the parent node holding this scope.
    * @return nsIDOMNode
    */
-  get parentNode() this.ownerView._list,
+  get parentNode() {
+    return this.ownerView._list;
+  },
 
   /**
    * Gets the owner document holding this scope.
    * @return nsIHTMLDocument
    */
-  get document() this._document || (this._document = this.ownerView.document),
+  get document() {
+    return this._document || (this._document = this.ownerView.document);
+  },
 
   /**
    * Gets the default window holding this scope.
    * @return nsIDOMWindow
    */
-  get window() this._window || (this._window = this.ownerView.window),
+  get window() {
+    return this._window || (this._window = this.ownerView.window);
+  },
 
   _topView: null,
   _document: null,
@@ -2333,19 +2385,25 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
    * Returns this variable's value from the descriptor if available.
    * @return any
    */
-  get value() this._initialDescriptor.value,
+  get value() {
+    return this._initialDescriptor.value;
+  },
 
   /**
    * Returns this variable's getter from the descriptor if available.
    * @return object
    */
-  get getter() this._initialDescriptor.get,
+  get getter() {
+    return this._initialDescriptor.get;
+  },
 
   /**
    * Returns this variable's getter from the descriptor if available.
    * @return object
    */
-  get setter() this._initialDescriptor.set,
+  get setter() {
+    return this._initialDescriptor.set;
+  },
 
   /**
    * Sets the specific grip for this variable (applies the text content and
