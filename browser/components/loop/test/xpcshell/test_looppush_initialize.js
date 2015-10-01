@@ -7,13 +7,6 @@ var dummyCallback = () => {};
 var mockWebSocket = new MockWebSocketChannel();
 var pushServerRequestCount = 0;
 
-add_test(function test_initalize_offline() {
-  Services.io.offline = true;
-  do_check_false(MozLoopPushHandler.initialize());
-  Services.io.offline = false;
-  run_next_test();
-});
-
 add_test(function test_initalize_missing_chanid() {
   Assert.throws(() => MozLoopPushHandler.register(null, dummyCallback, dummyCallback));
   run_next_test();
@@ -30,7 +23,7 @@ add_test(function test_initalize_missing_notifycallback() {
 });
 
 add_test(function test_initalize_websocket() {
-  do_check_true(MozLoopPushHandler.initialize({mockWebSocket: mockWebSocket}));
+  MozLoopPushHandler.initialize({mockWebSocket: mockWebSocket});
   MozLoopPushHandler.register(
     "chan-1",
     function(err, url, id) {
@@ -192,7 +185,7 @@ add_test(function test_retry_pushurl() {
     }
   });
 
-  do_check_true(MozLoopPushHandler.initialize({mockWebSocket: mockWebSocket}));
+  MozLoopPushHandler.initialize({mockWebSocket: mockWebSocket});
 });
 
 function run_test() {
