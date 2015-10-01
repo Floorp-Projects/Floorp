@@ -318,10 +318,13 @@ MP3TrackDemuxer::GetResourceOffset() const {
 
 TimeIntervals
 MP3TrackDemuxer::GetBuffered() {
-  // TODO: bug 1169485.
-  MP3DEMUXER_LOG("MP3TrackDemuxer::GetBuffered()");
-  NS_WARNING("Unimplemented function GetBuffered");
-  return TimeIntervals();
+  TimeUnit duration = Duration();
+
+  if (duration <= TimeUnit()) {
+    return TimeIntervals();
+  }
+  AutoPinned<MediaResource> stream(mSource.GetResource());
+  return GetEstimatedBufferedTimeRanges(stream, duration.ToMicroseconds());
 }
 
 int64_t
