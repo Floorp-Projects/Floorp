@@ -4,14 +4,14 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VP8TrackEncoder.h"
-#include "vpx/vp8cx.h"
-#include "vpx/vpx_encoder.h"
+#include "GeckoProfiler.h"
+#include "libyuv.h"
+#include "prsystem.h"
 #include "VideoSegment.h"
 #include "VideoUtils.h"
-#include "prsystem.h"
+#include "vpx/vp8cx.h"
+#include "vpx/vpx_encoder.h"
 #include "WebMWriter.h"
-#include "libyuv.h"
-#include "GeckoProfiler.h"
 
 namespace mozilla {
 
