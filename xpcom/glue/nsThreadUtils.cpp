@@ -7,7 +7,6 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
-#include "LeakRefPtr.h"
 
 #ifdef MOZILLA_INTERNAL_API
 # include "nsThreadManager.h"
@@ -27,8 +26,6 @@ using mozilla::IsVistaOrLater;
 
 #include <pratom.h>
 #include <prthread.h>
-
-using namespace mozilla;
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
 
@@ -142,11 +139,13 @@ NS_IsMainThread()
 }
 #endif
 
+// It is common to call NS_DispatchToCurrentThread with a newly
+// allocated runnable with a refcount of zero. To keep us from leaking
+// the runnable if the dispatch method fails, we take a death grip.
 NS_METHOD
-NS_DispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent)
+NS_DispatchToCurrentThread(nsIRunnable* aEvent)
 {
-  nsresult rv;
-  nsCOMPtr<nsIRunnable> event(aEvent);
+  nsCOMPtr<nsIRunnable> deathGrip = aEvent;
 #ifdef MOZILLA_INTERNAL_API
   nsIThread* thread = NS_GetCurrentThread();
   if (!thread) {
@@ -154,47 +153,28 @@ NS_DispatchToCurrentThread(already_AddRefed<nsIRunnable>&& aEvent)
   }
 #else
   nsCOMPtr<nsIThread> thread;
-  rv = NS_GetCurrentThread(getter_AddRefs(thread));
+  nsresult rv = NS_GetCurrentThread(getter_AddRefs(thread));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
 #endif
-  // To keep us from leaking the runnable if dispatch method fails,
-  // we grab the reference on failures and release it.
-  nsIRunnable* temp = event.get();
-  rv = thread->Dispatch(event.forget(), NS_DISPATCH_NORMAL);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    // Dispatch() leaked the reference to the event, but due to caller's
-    // assumptions, we shouldn't leak here. And given we are on the same
-    // thread as the dispatch target, it's mostly safe to do it here.
-    NS_RELEASE(temp);
-  }
-  return rv;
-}
-
-// It is common to call NS_DispatchToCurrentThread with a newly
-// allocated runnable with a refcount of zero. To keep us from leaking
-// the runnable if the dispatch method fails, we take a death grip.
-NS_METHOD
-NS_DispatchToCurrentThread(nsIRunnable* aEvent)
-{
-  nsCOMPtr<nsIRunnable> event(aEvent);
-  return NS_DispatchToCurrentThread(event.forget());
+  return thread->Dispatch(aEvent, NS_DISPATCH_NORMAL);
 }
 
 NS_METHOD
 NS_DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDispatchFlags)
 {
-  LeakRefPtr<nsIRunnable> event(Move(aEvent));
+  nsCOMPtr<nsIRunnable> event(aEvent);
   nsCOMPtr<nsIThread> thread;
   nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     NS_ASSERTION(false, "Failed NS_DispatchToMainThread() in shutdown; leaking");
     // NOTE: if you stop leaking here, adjust Promise::MaybeReportRejected(),
     // which assumes a leak here, or split into leaks and no-leaks versions
-    return rv;
+    nsIRunnable* temp = event.forget().take(); // leak without using "unused <<" due to Windows (boo)
+    return temp ? rv : rv; // to make compiler not bletch on us
   }
-  return thread->Dispatch(event.take(), aDispatchFlags);
+  return thread->Dispatch(event.forget(), aDispatchFlags);
 }
 
 // In the case of failure with a newly allocated runnable with a
