@@ -183,9 +183,6 @@ nsresult
 Convert(int32_t aIn, BluetoothGattStatus& aOut);
 
 nsresult
-Convert(const nsAString& aIn, BluetoothPropertyType& aOut);
-
-nsresult
 Convert(const BluetoothAttributeHandle& aIn, int32_t& aOut);
 
 nsresult
@@ -327,7 +324,7 @@ nsresult
 PackPDU(const BluetoothHandsfreeWbsConfig& aIn, DaemonSocketPDU& aPDU);
 
 nsresult
-PackPDU(const BluetoothNamedValue& aIn, DaemonSocketPDU& aPDU);
+PackPDU(const BluetoothProperty& aIn, DaemonSocketPDU& aPDU);
 
 nsresult
 PackPDU(const BluetoothPinCode& aIn, DaemonSocketPDU& aPDU);

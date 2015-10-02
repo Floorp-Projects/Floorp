@@ -654,7 +654,7 @@ BluetoothDaemonInterface::GetAdapterProperty(BluetoothPropertyType aType,
 
 void
 BluetoothDaemonInterface::SetAdapterProperty(
-  const BluetoothNamedValue& aProperty, BluetoothResultHandler* aRes)
+  const BluetoothProperty& aProperty, BluetoothResultHandler* aRes)
 {
   nsresult rv = static_cast<BluetoothDaemonCoreModule*>
     (mProtocol)->SetAdapterPropertyCmd(aProperty, aRes);
@@ -690,7 +690,7 @@ BluetoothDaemonInterface::GetRemoteDeviceProperty(
 
 void
 BluetoothDaemonInterface::SetRemoteDeviceProperty(
-  const BluetoothAddress& aRemoteAddr, const BluetoothNamedValue& aProperty,
+  const BluetoothAddress& aRemoteAddr, const BluetoothProperty& aProperty,
   BluetoothResultHandler* aRes)
 {
   nsresult rv = static_cast<BluetoothDaemonCoreModule*>

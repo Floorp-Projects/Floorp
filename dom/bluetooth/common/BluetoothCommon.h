@@ -560,6 +560,68 @@ struct BluetoothProperty {
 
   /* PROPERTY_REMOTE_VERSION_INFO */
   BluetoothRemoteInfo mRemoteInfo;
+
+  BluetoothProperty()
+    : mType(PROPERTY_UNKNOWN)
+  { }
+
+  explicit BluetoothProperty(BluetoothPropertyType aType,
+                             const BluetoothAddress& aBdAddress)
+    : mType(aType)
+    , mBdAddress(aBdAddress)
+  { }
+
+  explicit BluetoothProperty(BluetoothPropertyType aType,
+                             const nsAString& aString)
+    : mType(aType)
+    , mString(aString)
+  { }
+
+  explicit BluetoothProperty(BluetoothPropertyType aType,
+                             const nsTArray<BluetoothUuid>& aUuidArray)
+    : mType(aType)
+    , mUuidArray(aUuidArray)
+  { }
+
+  explicit BluetoothProperty(BluetoothPropertyType aType,
+                             const nsTArray<BluetoothAddress>& aBdAddressArray)
+    : mType(aType)
+    , mBdAddressArray(aBdAddressArray)
+  { }
+
+  explicit BluetoothProperty(BluetoothPropertyType aType, uint32_t aUint32)
+    : mType(aType)
+    , mUint32(aUint32)
+  { }
+
+  explicit BluetoothProperty(BluetoothPropertyType aType, int32_t aInt32)
+    : mType(aType)
+    , mInt32(aInt32)
+  { }
+
+  explicit BluetoothProperty(BluetoothPropertyType aType,
+                             BluetoothTypeOfDevice aTypeOfDevice)
+    : mType(aType)
+    , mTypeOfDevice(aTypeOfDevice)
+  { }
+
+  explicit BluetoothProperty(BluetoothPropertyType aType,
+                             const BluetoothServiceRecord& aServiceRecord)
+    : mType(aType)
+    , mServiceRecord(aServiceRecord)
+  { }
+
+  explicit BluetoothProperty(BluetoothPropertyType aType,
+                             BluetoothScanMode aScanMode)
+    : mType(aType)
+    , mScanMode(aScanMode)
+  { }
+
+  explicit BluetoothProperty(BluetoothPropertyType aType,
+                             const BluetoothRemoteInfo& aRemoteInfo)
+    : mType(aType)
+    , mRemoteInfo(aRemoteInfo)
+  { }
 };
 
 enum BluetoothSocketType {
