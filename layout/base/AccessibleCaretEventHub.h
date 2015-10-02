@@ -130,9 +130,6 @@ protected:
   // Member variables
   bool mInitialized = false;
 
-  // True if async-pan-zoom should be used.
-  bool mUseAsyncPanZoom = false;
-
   State* mState = NoActionState();
 
   // Will be set to nullptr in Terminate().
@@ -154,6 +151,9 @@ protected:
 
   // For filter multitouch event
   int32_t mActiveTouchId = kInvalidTouchId;
+
+  // Simulate long tap if the platform does not support eMouseLongTap events.
+  static bool sUseLongTapInjector;
 
   static const int32_t kScrollEndTimerDelay = 300;
   static const int32_t kMoveStartToleranceInPixel = 5;

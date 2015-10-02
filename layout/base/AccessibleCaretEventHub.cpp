@@ -13,6 +13,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/Preferences.h"
 #include "nsDocShell.h"
 #include "nsFocusManager.h"
 #include "nsFrameSelection.h"
@@ -371,8 +372,16 @@ MOZ_IMPL_STATE_CLASS_GETTER(ScrollState)
 MOZ_IMPL_STATE_CLASS_GETTER(PostScrollState)
 MOZ_IMPL_STATE_CLASS_GETTER(LongTapState)
 
+bool AccessibleCaretEventHub::sUseLongTapInjector = true;
+
 AccessibleCaretEventHub::AccessibleCaretEventHub()
 {
+  static bool prefsAdded = false;
+  if (!prefsAdded) {
+    Preferences::AddBoolVarCache(&sUseLongTapInjector,
+                                 "layout.accessiblecaret.use_long_tap_injector");
+    prefsAdded = true;
+  }
 }
 
 AccessibleCaretEventHub::~AccessibleCaretEventHub()
@@ -406,16 +415,15 @@ AccessibleCaretEventHub::Init(nsIPresShell* aPresShell)
     return;
   }
 
-#if defined(MOZ_WIDGET_GONK)
-  mUseAsyncPanZoom = mPresShell->AsyncPanZoomEnabled();
-#endif
-
   docShell->AddWeakReflowObserver(this);
   docShell->AddWeakScrollObserver(this);
 
   mDocShell = static_cast<nsDocShell*>(docShell);
 
-  mLongTapInjectorTimer = do_CreateInstance("@mozilla.org/timer;1");
+  if (sUseLongTapInjector) {
+    mLongTapInjectorTimer = do_CreateInstance("@mozilla.org/timer;1");
+  }
+
   mScrollEndInjectorTimer = do_CreateInstance("@mozilla.org/timer;1");
 
   mManager = MakeUnique<AccessibleCaretManager>(mPresShell);
@@ -638,10 +646,6 @@ AccessibleCaretEventHub::MoveDistanceIsLarge(const nsPoint& aPoint) const
 void
 AccessibleCaretEventHub::LaunchLongTapInjector()
 {
-  if (mUseAsyncPanZoom) {
-    return;
-  }
-
   if (!mLongTapInjectorTimer) {
     return;
   }
@@ -654,10 +658,6 @@ AccessibleCaretEventHub::LaunchLongTapInjector()
 void
 AccessibleCaretEventHub::CancelLongTapInjector()
 {
-  if (mUseAsyncPanZoom) {
-    return;
-  }
-
   if (!mLongTapInjectorTimer) {
     return;
   }
