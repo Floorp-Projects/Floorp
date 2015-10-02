@@ -30,40 +30,8 @@ class CommonCaretsTestCase(object):
         super(CommonCaretsTestCase, self).setUp()
         self.actions = Actions(self.marionette)
 
-        # The carets to be tested.
-        self.carets_tested_pref = None
-
-        # The carets to be disabled in this test suite.
-        self.carets_disabled_pref = None
-
-    def set_pref(self, pref_name, value):
-        '''Set a preference to value.
-
-        For example:
-        >>> set_pref('layout.accessiblecaret.enabled', True)
-
-        '''
-        pref_name = repr(pref_name)
-        if isinstance(value, bool):
-            value = 'true' if value else 'false'
-            func = 'setBoolPref'
-        elif isinstance(value, int):
-            value = str(value)
-            func = 'setIntPref'
-        else:
-            value = repr(value)
-            func = 'setCharPref'
-
-        with self.marionette.using_context('chrome'):
-            script = 'Services.prefs.%s(%s, %s)' % (func, pref_name, value)
-            self.marionette.execute_script(script)
-
-    def open_test_html(self, enabled=True):
-        '''Open html for testing and locate elements, and enable/disable touch
-        caret.'''
-        self.set_pref(self.carets_tested_pref, enabled)
-        self.set_pref(self.carets_disabled_pref, False)
-
+    def open_test_html(self):
+        'Open html for testing and locate elements.'
         test_html = self.marionette.absolute_url('test_selectioncarets.html')
         self.marionette.navigate(test_html)
 
@@ -73,12 +41,8 @@ class CommonCaretsTestCase(object):
         self._contenteditable = self.marionette.find_element(By.ID, 'contenteditable')
         self._content = self.marionette.find_element(By.ID, 'content')
 
-    def open_test_html2(self, enabled=True):
-        '''Open html for testing and locate elements, and enable/disable touch
-        caret.'''
-        self.set_pref(self.carets_tested_pref, enabled)
-        self.set_pref(self.carets_disabled_pref, False)
-
+    def open_test_html2(self):
+        'Open html for testing and locate elements.'
         test_html2 = self.marionette.absolute_url('test_selectioncarets_multipleline.html')
         self.marionette.navigate(test_html2)
 
@@ -86,11 +50,8 @@ class CommonCaretsTestCase(object):
         self._contenteditable2 = self.marionette.find_element(By.ID, 'contenteditable2')
         self._content2 = self.marionette.find_element(By.ID, 'content2')
 
-    def open_test_html_multirange(self, enabled=True):
-        'Open html for testing and enable selectioncaret and non-editable support'
-        self.set_pref(self.carets_tested_pref, enabled)
-        self.set_pref(self.carets_disabled_pref, False)
-
+    def open_test_html_multirange(self):
+        'Open html for testing non-editable support.'
         test_html = self.marionette.absolute_url('test_selectioncarets_multiplerange.html')
         self.marionette.navigate(test_html)
 
@@ -102,22 +63,16 @@ class CommonCaretsTestCase(object):
         self._sel6 = self.marionette.find_element(By.ID, 'sel6')
         self._nonsel1 = self.marionette.find_element(By.ID, 'nonsel1')
 
-    def open_test_html_long_text(self, enabled=True):
-        'Open html for testing and enable selectioncaret'
-        self.set_pref(self.carets_tested_pref, enabled)
-        self.set_pref(self.carets_disabled_pref, False)
-
+    def open_test_html_long_text(self):
+        'Open html for testing long text.'
         test_html = self.marionette.absolute_url('test_selectioncarets_longtext.html')
         self.marionette.navigate(test_html)
 
         self._body = self.marionette.find_element(By.ID, 'bd')
         self._longtext = self.marionette.find_element(By.ID, 'longtext')
 
-    def open_test_html_iframe(self, enabled=True):
-        'Open html for testing and enable selectioncaret'
-        self.set_pref(self.carets_tested_pref, enabled)
-        self.set_pref(self.carets_disabled_pref, False)
-
+    def open_test_html_iframe(self):
+        'Open html for testing iframe.'
         test_html = self.marionette.absolute_url('test_selectioncarets_iframe.html')
         self.marionette.navigate(test_html)
 
@@ -486,12 +441,14 @@ class CommonCaretsTestCase(object):
     # <input> test cases with selection carets disabled
     ########################################################################
     def test_input_long_press_to_select_a_word_disabled(self):
-        self.open_test_html(enabled=False)
-        self._test_long_press_to_select_a_word(self._input, self.assertNotEqual)
+        with self.marionette.using_prefs({self.carets_tested_pref: False}):
+            self.open_test_html()
+            self._test_long_press_to_select_a_word(self._input, self.assertNotEqual)
 
     def test_input_move_selection_carets_disabled(self):
-        self.open_test_html(enabled=False)
-        self._test_move_selection_carets(self._input, self.assertNotEqual)
+        with self.marionette.using_prefs({self.carets_tested_pref: False}):
+            self.open_test_html()
+            self._test_move_selection_carets(self._input, self.assertNotEqual)
 
     ########################################################################
     # <textarea> test cases with selection carets enabled
@@ -528,12 +485,14 @@ class CommonCaretsTestCase(object):
     # <textarea> test cases with selection carets disabled
     ########################################################################
     def test_textarea_long_press_to_select_a_word_disabled(self):
-        self.open_test_html(enabled=False)
-        self._test_long_press_to_select_a_word(self._textarea, self.assertNotEqual)
+        with self.marionette.using_prefs({self.carets_tested_pref: False}):
+            self.open_test_html()
+            self._test_long_press_to_select_a_word(self._textarea, self.assertNotEqual)
 
     def test_textarea_move_selection_carets_disable(self):
-        self.open_test_html(enabled=False)
-        self._test_move_selection_carets(self._textarea, self.assertNotEqual)
+        with self.marionette.using_prefs({self.carets_tested_pref: False}):
+            self.open_test_html()
+            self._test_move_selection_carets(self._textarea, self.assertNotEqual)
 
     ########################################################################
     # <textarea> right-to-left test cases with selection carets enabled
@@ -554,12 +513,14 @@ class CommonCaretsTestCase(object):
     # <textarea> right-to-left test cases with selection carets disabled
     ########################################################################
     def test_textarea_rtl_long_press_to_select_a_word_disabled(self):
-        self.open_test_html(enabled=False)
-        self._test_long_press_to_select_a_word(self._textarea_rtl, self.assertNotEqual)
+        with self.marionette.using_prefs({self.carets_tested_pref: False}):
+            self.open_test_html()
+            self._test_long_press_to_select_a_word(self._textarea_rtl, self.assertNotEqual)
 
     def test_textarea_rtl_move_selection_carets_disabled(self):
-        self.open_test_html(enabled=False)
-        self._test_move_selection_carets(self._textarea_rtl, self.assertNotEqual)
+        with self.marionette.using_prefs({self.carets_tested_pref: False}):
+            self.open_test_html()
+            self._test_move_selection_carets(self._textarea_rtl, self.assertNotEqual)
 
     ########################################################################
     # <div> contenteditable test cases with selection carets enabled
@@ -596,12 +557,14 @@ class CommonCaretsTestCase(object):
     # <div> contenteditable test cases with selection carets disabled
     ########################################################################
     def test_contenteditable_long_press_to_select_a_word_disabled(self):
-        self.open_test_html(enabled=False)
-        self._test_long_press_to_select_a_word(self._contenteditable, self.assertNotEqual)
+        with self.marionette.using_prefs({self.carets_tested_pref: False}):
+            self.open_test_html()
+            self._test_long_press_to_select_a_word(self._contenteditable, self.assertNotEqual)
 
     def test_contenteditable_move_selection_carets_disabled(self):
-        self.open_test_html(enabled=False)
-        self._test_move_selection_carets(self._contenteditable, self.assertNotEqual)
+        with self.marionette.using_prefs({self.carets_tested_pref: False}):
+            self.open_test_html()
+            self._test_move_selection_carets(self._contenteditable, self.assertNotEqual)
 
     ########################################################################
     # <div> non-editable test cases with selection carets enabled
@@ -660,11 +623,21 @@ class SelectionCaretsTestCase(CommonCaretsTestCase, MarionetteTestCase):
     def setUp(self):
         super(SelectionCaretsTestCase, self).setUp()
         self.carets_tested_pref = 'selectioncaret.enabled'
-        self.carets_disabled_pref = 'layout.accessiblecaret.enabled'
+
+        self.prefs = {
+            'layout.accessiblecaret.enabled': False,
+            self.carets_tested_pref: True,
+        }
+        self.marionette.set_prefs(self.prefs)
 
 
 class AccessibleCaretSelectionModeTestCase(CommonCaretsTestCase, MarionetteTestCase):
     def setUp(self):
         super(AccessibleCaretSelectionModeTestCase, self).setUp()
         self.carets_tested_pref = 'layout.accessiblecaret.enabled'
-        self.carets_disabled_pref = 'selectioncaret.enabled'
+
+        self.prefs = {
+            'selectioncaret.enabled': False,
+            self.carets_tested_pref: True,
+        }
+        self.marionette.set_prefs(self.prefs)
