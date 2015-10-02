@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "BackgroundUtils.h"
 #include "OfflineCacheUpdateChild.h"
 #include "nsOfflineCacheUpdate.h"
 #include "mozilla/dom/ContentChild.h"
@@ -174,6 +175,7 @@ OfflineCacheUpdateChild::AssociateDocument(nsIDOMDocument *aDocument,
 NS_IMETHODIMP
 OfflineCacheUpdateChild::Init(nsIURI *aManifestURI,
                               nsIURI *aDocumentURI,
+                              nsIPrincipal *aLoadingPrincipal,
                               nsIDOMDocument *aDocument,
                               nsIFile *aCustomProfileDir,
                               uint32_t aAppID,
@@ -212,6 +214,7 @@ OfflineCacheUpdateChild::Init(nsIURI *aManifestURI,
     NS_ENSURE_SUCCESS(rv, rv);
 
     mDocumentURI = aDocumentURI;
+    mLoadingPrincipal = aLoadingPrincipal;
 
     mState = STATE_INITIALIZED;
 
@@ -227,7 +230,8 @@ OfflineCacheUpdateChild::Init(nsIURI *aManifestURI,
 NS_IMETHODIMP
 OfflineCacheUpdateChild::InitPartial(nsIURI *aManifestURI,
                                   const nsACString& clientID,
-                                  nsIURI *aDocumentURI)
+                                  nsIURI *aDocumentURI,
+                                  nsIPrincipal *aLoadingPrincipal)
 {
     NS_NOTREACHED("Not expected to do partial offline cache updates"
                   " on the child process");
@@ -237,6 +241,7 @@ OfflineCacheUpdateChild::InitPartial(nsIURI *aManifestURI,
 
 NS_IMETHODIMP
 OfflineCacheUpdateChild::InitForUpdateCheck(nsIURI *aManifestURI,
+                                            nsIPrincipal* aLoadingPrincipal,
                                             uint32_t aAppID,
                                             bool aInBrowser,
                                             nsIObserver *aObserver)
@@ -409,6 +414,12 @@ OfflineCacheUpdateChild::Schedule()
     SerializeURI(mManifestURI, manifestURI);
     SerializeURI(mDocumentURI, documentURI);
 
+    nsresult rv = NS_OK;
+    PrincipalInfo loadingPrincipalInfo;
+    rv = PrincipalToPrincipalInfo(mLoadingPrincipal,
+                                  &loadingPrincipalInfo);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsIObserverService> observerService =
       mozilla::services::GetObserverService();
     if (observerService) {
@@ -431,7 +442,7 @@ OfflineCacheUpdateChild::Schedule()
     // a reference to us. Will be released in RecvFinish() that identifies 
     // the work has been done.
     ContentChild::GetSingleton()->SendPOfflineCacheUpdateConstructor(
-        this, manifestURI, documentURI,
+        this, manifestURI, documentURI, loadingPrincipalInfo,
         stickDocument, child->GetTabId());
 
     // ContentChild::DeallocPOfflineCacheUpdate will release this.

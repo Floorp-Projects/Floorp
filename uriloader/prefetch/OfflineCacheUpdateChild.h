@@ -68,6 +68,7 @@ private:
     nsCString mUpdateDomain;
     nsCOMPtr<nsIURI> mManifestURI;
     nsCOMPtr<nsIURI> mDocumentURI;
+    nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
 
     nsCOMPtr<nsIObserverService> mObserverService;
 
