@@ -11,19 +11,19 @@
 
 #define DROP_THIS_TABLE(...) \
   do { \
-    OTS_FAILURE_MSG_(file, TABLE_NAME ": " __VA_ARGS__); \
+    OTS_FAILURE_MSG_(font->file, TABLE_NAME ": " __VA_ARGS__); \
     OTS_FAILURE_MSG("Table discarded"); \
-    delete file->gasp; \
-    file->gasp = 0; \
+    delete font->gasp; \
+    font->gasp = 0; \
   } while (0)
 
 namespace ots {
 
-bool ots_gasp_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
+bool ots_gasp_parse(Font *font, const uint8_t *data, size_t length) {
   Buffer table(data, length);
 
   OpenTypeGASP *gasp = new OpenTypeGASP;
-  file->gasp = gasp;
+  font->gasp = gasp;
 
   uint16_t num_ranges = 0;
   if (!table.ReadU16(&gasp->version) ||
@@ -80,12 +80,12 @@ bool ots_gasp_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   return true;
 }
 
-bool ots_gasp_should_serialise(OpenTypeFile *file) {
-  return file->gasp != NULL;
+bool ots_gasp_should_serialise(Font *font) {
+  return font->gasp != NULL;
 }
 
-bool ots_gasp_serialise(OTSStream *out, OpenTypeFile *file) {
-  const OpenTypeGASP *gasp = file->gasp;
+bool ots_gasp_serialise(OTSStream *out, Font *font) {
+  const OpenTypeGASP *gasp = font->gasp;
 
   const uint16_t num_ranges = static_cast<uint16_t>(gasp->gasp_ranges.size());
   if (num_ranges != gasp->gasp_ranges.size() ||
@@ -104,8 +104,13 @@ bool ots_gasp_serialise(OTSStream *out, OpenTypeFile *file) {
   return true;
 }
 
-void ots_gasp_free(OpenTypeFile *file) {
-  delete file->gasp;
+void ots_gasp_reuse(Font *font, Font *other) {
+  font->gasp = other->gasp;
+  font->gasp_reused = true;
+}
+
+void ots_gasp_free(Font *font) {
+  delete font->gasp;
 }
 
 }  // namespace ots
