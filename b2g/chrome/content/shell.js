@@ -666,7 +666,7 @@ var shell = {
           let manifestURI = Services.io.newURI(manifest, null, documentURI);
           let updateService = Cc['@mozilla.org/offlinecacheupdate-service;1']
                               .getService(Ci.nsIOfflineCacheUpdateService);
-          updateService.scheduleUpdate(manifestURI, documentURI, window);
+          updateService.scheduleUpdate(manifestURI, documentURI, principal, window);
         } catch (e) {
           dump('Error while creating offline cache: ' + e + '\n');
         }
