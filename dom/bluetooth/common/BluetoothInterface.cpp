@@ -894,7 +894,8 @@ BluetoothNotificationHandler::BondStateChangedNotification(
 
 void
 BluetoothNotificationHandler::AclStateChangedNotification(
-  BluetoothStatus aStatus, const BluetoothAddress& aRemoteBdAddr, bool aState)
+  BluetoothStatus aStatus, const BluetoothAddress& aRemoteBdAddr,
+  BluetoothAclState aState)
 { }
 
 void

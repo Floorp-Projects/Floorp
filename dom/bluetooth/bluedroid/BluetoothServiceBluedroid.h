@@ -411,7 +411,7 @@ public:
     BluetoothBondState aState) override;
   virtual void AclStateChangedNotification(
     BluetoothStatus aStatus, const BluetoothAddress& aRemoteBdAddr,
-    bool aState) override;
+    BluetoothAclState aState) override;
 
   virtual void DutModeRecvNotification(uint16_t aOpcode,
                                        const uint8_t* aBuf,
