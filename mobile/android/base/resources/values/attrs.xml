@@ -126,10 +126,6 @@
         <attr name="topDivider" format="boolean"/>
     </declare-styleable>
 
-    <declare-styleable name="HomePagerTabStrip">
-        <attr name="tabIndicatorColor" format="color"/>
-    </declare-styleable>
-
     <declare-styleable name="FadedTextView">
         <attr name="fadeWidth" format="dimension"/>
     </declare-styleable>
