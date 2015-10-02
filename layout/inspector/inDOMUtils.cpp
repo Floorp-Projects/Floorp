@@ -511,14 +511,14 @@ inDOMUtils::GetCSSPropertyNames(uint32_t aFlags, uint32_t* aCount,
   char16_t** props =
     static_cast<char16_t**>(moz_xmalloc(maxCount * sizeof(char16_t*)));
 
-#define DO_PROP(_prop)                                                  \
-  PR_BEGIN_MACRO                                                        \
-    nsCSSProperty cssProp = nsCSSProperty(_prop);                       \
-    if (nsCSSProps::IsEnabled(cssProp)) {                               \
-      props[propCount] =                                                \
-        ToNewUnicode(nsDependentCString(kCSSRawProperties[_prop]));     \
-      ++propCount;                                                      \
-    }                                                                   \
+#define DO_PROP(_prop)                                                       \
+  PR_BEGIN_MACRO                                                             \
+    nsCSSProperty cssProp = nsCSSProperty(_prop);                            \
+    if (nsCSSProps::IsEnabled(cssProp, nsCSSProps::eEnabledForAllContent)) { \
+      props[propCount] =                                                     \
+        ToNewUnicode(nsDependentCString(kCSSRawProperties[_prop]));          \
+      ++propCount;                                                           \
+    }                                                                        \
   PR_END_MACRO
 
   // prop is the property id we're considering; propCount is how many properties
