@@ -41,12 +41,6 @@ task:
       MH_BRANCH: {{project}}
       MH_BUILD_POOL: taskcluster
 
-      # image paths
-      TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
-
-      # authentication
-      RELENGAPI_TOKEN: 'TODO' # 1164612: encrypt this secret
-
     maxRunTime: 36000
 
     command: ["/bin/bash", "bin/build.sh"]
