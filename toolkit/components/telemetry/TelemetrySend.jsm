@@ -235,6 +235,13 @@ this.TelemetrySend = {
   },
 
   /**
+   * Clear out unpersisted, yet to be sent, pings and cancel outgoing ping requests.
+   */
+  clearCurrentPings: function() {
+    return TelemetrySendImpl.clearCurrentPings();
+  },
+
+  /**
    * Only used in tests to wait on outgoing pending pings.
    */
   testWaitOnOutgoingPings: function() {
@@ -326,16 +333,19 @@ var SendScheduler = {
     return Promise.resolve(this._sendTask);
   },
 
+  start: function() {
+    this._log.trace("start");
+    this._sendsFailed = false;
+    this._backoffDelay = SEND_TICK_DELAY;
+    this._shutdown = false;
+  },
+
   /**
    * Only used for testing, resets the state to emulate a restart.
    */
   reset: function() {
     this._log.trace("reset");
-    return this.shutdown().then(() => {
-      this._sendsFailed = false;
-      this._backoffDelay = SEND_TICK_DELAY;
-      this._shutdown = false;
-    });
+    return this.shutdown().then(() => this.start());
   },
 
   /**
@@ -521,6 +531,8 @@ var SendScheduler = {
 
 var TelemetrySendImpl = {
   _sendingEnabled: false,
+  // Tracks the shutdown state.
+  _shutdown: false,
   _logger: null,
   // This tracks all pending ping requests to the server.
   _pendingPingRequests: new Map(),
@@ -616,6 +628,8 @@ var TelemetrySendImpl = {
    }),
 
   shutdown: Task.async(function*() {
+    this._shutdown = true;
+
     for (let topic of this.OBSERVER_TOPICS) {
       try {
         Services.obs.removeObserver(this, topic);
@@ -643,8 +657,8 @@ var TelemetrySendImpl = {
   reset: function() {
     this._log.trace("reset");
 
+    this._shutdown = false;
     this._currentPings = new Map();
-
     this._overduePingCount = 0;
 
     const histograms = [
@@ -705,6 +719,38 @@ var TelemetrySendImpl = {
     this._log.trace("setServer", server);
     this._server = server;
   },
+
+  /**
+   * Clear out unpersisted, yet to be sent, pings and cancel outgoing ping requests.
+   */
+  clearCurrentPings: Task.async(function*() {
+    if (this._shutdown) {
+      this._log.trace("clearCurrentPings - in shutdown, bailing out");
+      return;
+    }
+
+    // Temporarily disable the scheduler. It must not try to reschedule ping sending
+    // while we're deleting them.
+    yield SendScheduler.shutdown();
+
+    // Now that the ping activity has settled, abort outstanding ping requests.
+    this._cancelOutgoingRequests();
+
+    // Also, purge current pings.
+    this._currentPings.clear();
+
+    // We might have been interrupted and shutdown could have been started.
+    // We need to bail out in that case to avoid triggering send activity etc.
+    // at unexpected times.
+    if (this._shutdown) {
+      this._log.trace("clearCurrentPings - in shutdown, not spinning SendScheduler up again");
+      return;
+    }
+
+    // Enable the scheduler again and spin the send task.
+    SendScheduler.start();
+    SendScheduler.triggerSendingPings(true);
+  }),
 
   _cancelOutgoingRequests: function() {
     // Abort any pending ping XHRs.

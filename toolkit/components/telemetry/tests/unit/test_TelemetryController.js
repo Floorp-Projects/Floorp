@@ -143,7 +143,7 @@ add_task(function* test_simplePing() {
   checkPingFormat(ping, TEST_PING_TYPE, false, false);
 });
 
-add_task(function* test_deletionPing() {
+add_task(function* test_disableDataUpload() {
   const isUnified = Preferences.get(PREF_UNIFIED, false);
   if (!isUnified) {
     // Skipping the test if unified telemetry is off, as no deletion ping will
@@ -166,11 +166,25 @@ add_task(function* test_deletionPing() {
 
   // Simulate a failure in sending the deletion ping by disabling the HTTP server.
   yield PingServer.stop();
+
+  // Try to send a ping. It will be saved as pending  and get deleted when disabling upload.
+  TelemetryController.submitExternalPing(TEST_PING_TYPE, {});
+
   // Disable FHR upload to send a deletion ping again.
   Preferences.set(PREF_FHR_UPLOAD_ENABLED, false);
-  // Wait for the send task to terminate, flagging it to do so at the next opportunity and
-  // cancelling any timeouts.
+
+  // Wait on sending activity to settle, as |TelemetryController.reset()| doesn't do that.
+  yield TelemetrySend.testWaitOnOutgoingPings();
+  // Wait for the pending pings to be deleted. Resetting TelemetryController doesn't
+  // trigger the shutdown, so we need to call it ourselves.
+  yield TelemetryStorage.shutdown();
+  // Simulate a restart, and spin the send task.
   yield TelemetryController.reset();
+
+  // Disabling Telemetry upload must clear out all the pending pings.
+  let pendingPings = yield TelemetryStorage.loadPendingPingList();
+  Assert.equal(pendingPings.length, 1,
+               "All the pending pings but the deletion ping should have been deleted");
 
   // Enable the ping server again.
   PingServer.start();
@@ -269,7 +283,7 @@ add_task(function* test_archivePings() {
   Preferences.set(uploadPref, true);
   Preferences.set(PREF_ARCHIVE_ENABLED, true);
 
-  now = new Date(2014, 06, 18, 22, 0, 0);
+  now = new Date(2014, 6, 18, 22, 0, 0);
   fakeNow(now);
   // Restore the non asserting ping handler.
   PingServer.resetPingHandler();
