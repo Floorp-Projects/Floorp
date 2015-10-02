@@ -1040,7 +1040,7 @@ public:
   virtual void GetAdapterProperties(BluetoothResultHandler* aRes) = 0;
   virtual void GetAdapterProperty(BluetoothPropertyType,
                                   BluetoothResultHandler* aRes) = 0;
-  virtual void SetAdapterProperty(const BluetoothNamedValue& aProperty,
+  virtual void SetAdapterProperty(const BluetoothProperty& aProperty,
                                   BluetoothResultHandler* aRes) = 0;
 
   /* Remote Device Properties */
@@ -1051,7 +1051,7 @@ public:
                                        BluetoothPropertyType aType,
                                        BluetoothResultHandler* aRes) = 0;
   virtual void SetRemoteDeviceProperty(const BluetoothAddress& aRemoteAddr,
-                                       const BluetoothNamedValue& aProperty,
+                                       const BluetoothProperty& aProperty,
                                        BluetoothResultHandler* aRes) = 0;
 
   /* Remote Services */

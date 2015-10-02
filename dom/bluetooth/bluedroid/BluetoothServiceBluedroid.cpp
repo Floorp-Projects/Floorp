@@ -1046,8 +1046,16 @@ BluetoothServiceBluedroid::SetProperty(BluetoothObjectType aType,
 
   ENSURE_BLUETOOTH_IS_READY(aRunnable, NS_OK);
 
+  BluetoothProperty property;
+  nsresult rv = NamedValueToProperty(aValue, property);
+  if (NS_FAILED(rv)) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return rv;
+  }
+
   mSetAdapterPropertyRunnables.AppendElement(aRunnable);
-  sBtInterface->SetAdapterProperty(aValue,
+  sBtInterface->SetAdapterProperty(
+    property,
     new DispatchReplyErrorResultHandler(mSetAdapterPropertyRunnables,
                                         aRunnable));
 
@@ -1947,7 +1955,7 @@ BluetoothServiceBluedroid::AdapterStateChangedNotification(bool aState)
     // be connectable and non-discoverable.
     NS_ENSURE_TRUE_VOID(sBtInterface);
     sBtInterface->SetAdapterProperty(
-      BluetoothNamedValue(NS_ConvertUTF8toUTF16("Discoverable"), false),
+      BluetoothProperty(PROPERTY_ADAPTER_SCAN_MODE, SCAN_MODE_CONNECTABLE),
       new SetAdapterPropertyDiscoverableResultHandler());
 
     // Trigger OPP & PBAP managers to listen
