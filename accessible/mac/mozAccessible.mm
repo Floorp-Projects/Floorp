@@ -1202,6 +1202,14 @@ struct RoleDescrComparator
   // Do nothing. mozTextAccessible will.
 }
 
+- (void)documentLoadComplete
+{
+  id realSelf = GetObjectOrRepresentedView(self);
+  NSAccessibilityPostNotification(realSelf, NSAccessibilityFocusedUIElementChangedNotification);
+  NSAccessibilityPostNotification(realSelf, @"AXLoadComplete");
+  NSAccessibilityPostNotification(realSelf, @"AXLayoutComplete");
+}
+
 - (NSString*)help
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
