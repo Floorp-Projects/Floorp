@@ -547,7 +547,6 @@ PopupNotifications.prototype = {
       popupnotification.setAttribute("id", popupnotificationID);
       popupnotification.setAttribute("popupid", n.id);
       popupnotification.setAttribute("closebuttoncommand", "PopupNotifications._dismiss();");
-      popupnotification.setAttribute("noautofocus", "true");
       if (n.mainAction) {
         popupnotification.setAttribute("buttonlabel", n.mainAction.label);
         popupnotification.setAttribute("buttonaccesskey", n.mainAction.accessKey);
@@ -869,6 +868,9 @@ PopupNotifications.prototype = {
       this._dismissOrRemoveCurrentNotifications();
     }
 
+    // Ensure we move focus into the panel because it's opened through user interaction:
+    this.panel.removeAttribute("noautofocus", "true");
+
     this._reshowNotifications(anchor);
   },
 
@@ -948,6 +950,10 @@ PopupNotifications.prototype = {
       }
       return;
     }
+
+    // Ensure that when the panel comes up without user interaction,
+    // we don't autofocus it.
+    this.panel.setAttribute("noautofocus", "true");
 
     this._dismissOrRemoveCurrentNotifications();
 
