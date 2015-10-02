@@ -704,7 +704,7 @@ ServiceWorkerRegistrationMainThread::ShowNotification(JSContext* aCx,
 
   nsRefPtr<workers::ServiceWorker> worker = GetActive();
   if (!worker) {
-    aRv.ThrowTypeError<MSG_NO_ACTIVE_WORKER>(&mScope);
+    aRv.ThrowTypeError(MSG_NO_ACTIVE_WORKER, &mScope);
     return nullptr;
   }
 
