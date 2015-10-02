@@ -1252,7 +1252,7 @@ Declaration::ToString(nsAString& aString) const
       continue;
     }
 
-    if (!nsCSSProps::IsEnabled(property, nsCSSProps::eEnabledForAllContent)) {
+    if (!nsCSSProps::IsEnabled(property)) {
       continue;
     }
     bool doneProperty = false;
