@@ -1651,9 +1651,9 @@ nsWindowWatcher::CalculateChromeFlags(nsIDOMWindow* aParent,
   if (aParent) {
     aParent->GetFullScreen(&isFullScreen);
   }
-  if (isFullScreen && openedFromContentScript) {
-    // If the parent window is in fullscreen & the caller context is content,
-    // dialog feature is disabled. (see bug 803675)
+  if (openedFromContentScript) {
+    // If the caller context is content, we do not support the
+    // dialog feature. See bug 1095236.
     disableDialogFeature = true;
   }
 
