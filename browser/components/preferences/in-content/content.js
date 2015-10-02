@@ -32,6 +32,8 @@ var gContentPane = {
 
     setEventListener("font.language.group", "change",
       gContentPane._rebuildFonts);
+    setEventListener("notificationsPolicyButton", "command",
+      gContentPane.showNotificationExceptions);
     setEventListener("popupPolicyButton", "command",
       gContentPane.showPopupExceptions);
     setEventListener("advancedFonts", "command",
@@ -82,6 +84,28 @@ var gContentPane = {
    * dom.disable_open_during_load
    * - true if popups are blocked by default, false otherwise
    */
+
+  // NOTIFICATIONS
+
+  /**
+   * Displays the notifications exceptions dialog where specific site notification
+   * preferences can be set.
+   */
+  showNotificationExceptions()
+  {
+    let bundlePreferences = document.getElementById("bundlePreferences");
+    let params = { blockVisible: true,
+                   sessionVisible: false,
+                   allowVisible: true,
+                   prefilledHost: "",
+                   permissionType: "desktop-notification" };
+    params.windowTitle = bundlePreferences.getString("notificationspermissionstitle");
+    params.introText = bundlePreferences.getString("notificationspermissionstext");
+
+    gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
+                    "resizable=yes", params);
+  },
+
 
   // POP-UPS
 
