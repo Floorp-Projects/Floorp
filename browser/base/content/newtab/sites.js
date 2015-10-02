@@ -50,13 +50,19 @@ Site.prototype = {
   /**
    * Pins the site on its current or a given index.
    * @param aIndex The pinned index (optional).
+   * @return true if link changed type after pin
    */
   pin: function Site_pin(aIndex) {
     if (typeof aIndex == "undefined")
       aIndex = this.cell.index;
 
     this._updateAttributes(true);
-    gPinnedLinks.pin(this._link, aIndex);
+    let changed = gPinnedLinks.pin(this._link, aIndex);
+    if (changed) {
+      // render site again to remove suggested/sponsored tags
+      this._render();
+    }
+    return changed;
   },
 
   /**
@@ -179,6 +185,10 @@ Site.prototype = {
     if (this.link.titleBgColor) {
       titleNode.style.backgroundColor = this.link.titleBgColor;
     }
+
+    // remove "suggested" attribute to avoid showing "suggested" tag
+    // after site was pinned or dropped
+    this.node.removeAttribute("suggested");
 
     if (this.link.targetedSite) {
       if (this.node.getAttribute("type") != "sponsored") {
@@ -370,7 +380,10 @@ Site.prototype = {
         action = "unpin";
       }
       else if (!pinned && target.classList.contains("newtab-control-pin")) {
-        this.pin();
+        if (this.pin()) {
+          // suggested link has changed - update rest of the pages
+          gAllPages.update(gPage);
+        }
         action = "pin";
       }
     }
