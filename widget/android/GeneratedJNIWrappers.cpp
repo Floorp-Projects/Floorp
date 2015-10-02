@@ -21,6 +21,11 @@ constexpr char ANRReporter::ReleaseNativeStack_t::signature[];
 constexpr char ANRReporter::RequestNativeStack_t::name[];
 constexpr char ANRReporter::RequestNativeStack_t::signature[];
 
+constexpr char AlarmReceiver::name[];
+
+constexpr char AlarmReceiver::NotifyAlarmFired_t::name[];
+constexpr char AlarmReceiver::NotifyAlarmFired_t::signature[];
+
 constexpr char DownloadsIntegration::name[];
 
 constexpr char DownloadsIntegration::ScanMedia_t::name[];
@@ -135,6 +140,14 @@ constexpr char GeckoAppShell::DeleteMessageWrapper_t::signature[];
 auto GeckoAppShell::DeleteMessageWrapper(int32_t a0, int32_t a1) -> void
 {
     return mozilla::jni::Method<DeleteMessageWrapper_t>::Call(nullptr, nullptr, a0, a1);
+}
+
+constexpr char GeckoAppShell::DisableAlarm_t::name[];
+constexpr char GeckoAppShell::DisableAlarm_t::signature[];
+
+auto GeckoAppShell::DisableAlarm() -> void
+{
+    return mozilla::jni::Method<DisableAlarm_t>::Call(nullptr, nullptr);
 }
 
 constexpr char GeckoAppShell::DisableBatteryNotifications_t::name[];
@@ -615,6 +628,14 @@ constexpr char GeckoAppShell::SendMessageWrapper_t::signature[];
 auto GeckoAppShell::SendMessageWrapper(mozilla::jni::String::Param a0, mozilla::jni::String::Param a1, int32_t a2) -> void
 {
     return mozilla::jni::Method<SendMessageWrapper_t>::Call(nullptr, nullptr, a0, a1, a2);
+}
+
+constexpr char GeckoAppShell::SetAlarm_t::name[];
+constexpr char GeckoAppShell::SetAlarm_t::signature[];
+
+auto GeckoAppShell::SetAlarm(int32_t a0, int32_t a1) -> bool
+{
+    return mozilla::jni::Method<SetAlarm_t>::Call(nullptr, nullptr, a0, a1);
 }
 
 constexpr char GeckoAppShell::SetFullScreen_t::name[];
