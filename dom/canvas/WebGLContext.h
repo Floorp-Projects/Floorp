@@ -213,10 +213,9 @@ public:
     NS_DECL_NSIDOMWEBGLRENDERINGCONTEXT
 
     // nsICanvasRenderingContextInternal
-#ifdef DEBUG
     virtual int32_t GetWidth() const override;
     virtual int32_t GetHeight() const override;
-#endif
+
     NS_IMETHOD SetDimensions(int32_t width, int32_t height) override;
     NS_IMETHOD InitializeWithSurface(nsIDocShell*, gfxASurface*, int32_t,
                                      int32_t) override
