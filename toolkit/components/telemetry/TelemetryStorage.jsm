@@ -591,6 +591,12 @@ var TelemetryStorageImpl = {
         this._log.error("shutdown - the pending pings removal task failed", ex);
       });
     }
+
+    // Wait on pending pings still being saved. While OS.File should have shutdown
+    // blockers in place, we a) have seen weird errors being reported that might
+    // indicate a bad shutdown path and b) might have completion handlers hanging
+    // off the save operations that don't expect to be late in shutdown.
+    yield this.promisePendingPingSaves();
   }),
 
   /**
