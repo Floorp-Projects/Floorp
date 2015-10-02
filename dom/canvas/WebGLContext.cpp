@@ -480,7 +480,6 @@ WebGLContext::SetContextOptions(JSContext* cx, JS::Handle<JS::Value> options)
     return NS_OK;
 }
 
-#ifdef DEBUG
 int32_t
 WebGLContext::GetWidth() const
 {
@@ -492,7 +491,6 @@ WebGLContext::GetHeight() const
 {
     return mHeight;
 }
-#endif
 
 /* So there are a number of points of failure here. We might fail based
  * on EGL vs. WGL, or we might fail to alloc a too-large size, or we

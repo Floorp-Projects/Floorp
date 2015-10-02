@@ -136,8 +136,8 @@ Instrument::Instrument(const char* datafile, uint64_t sample_period)
 
   // Construct Counter objects from counter description array.
   for (int i = 0; i < num_counters; i++) {
-    Counter* counter = js_new<Counter>(kCounterList[i].name, kCounterList[i].type);
-    counters_.append(counter);
+    if (Counter* counter = js_new<Counter>(kCounterList[i].name, kCounterList[i].type))
+      counters_.append(counter);
   }
 
   DumpCounterNames();

@@ -304,15 +304,6 @@ AudioNode::SendChannelMixingParametersToStream()
 }
 
 void
-AudioNode::SendTimelineEventToStream(AudioNode* aNode, uint32_t aIndex,
-                                     const AudioTimelineEvent& aEvent)
-{
-  AudioNodeStream* ns = aNode->mStream;
-  MOZ_ASSERT(ns, "How come we don't have a stream here?");
-  ns->SendTimelineEvent(aIndex, aEvent);
-}
-
-void
 AudioNode::Disconnect(uint32_t aOutput, ErrorResult& aRv)
 {
   if (aOutput >= NumberOfOutputs()) {

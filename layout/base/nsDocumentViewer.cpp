@@ -410,7 +410,6 @@ protected:
   nsCString mForceCharacterSet;
   
   bool mIsPageMode;
-  bool mCallerIsClosingWindow;
   bool mInitializedForPrintPreview;
   bool mHidden;
 };
@@ -461,7 +460,6 @@ void nsDocumentViewer::PrepareToStartLoad()
   mLoaded           = false;
   mAttachedToParent = false;
   mDeferredWindowClose = false;
-  mCallerIsClosingWindow = false;
 
 #ifdef NS_PRINTING
   mPrintIsPending        = false;
@@ -1049,18 +1047,15 @@ nsDocumentViewer::LoadComplete(nsresult aStatus)
 }
 
 NS_IMETHODIMP
-nsDocumentViewer::PermitUnload(bool aCallerClosesWindow,
-                               bool *aPermitUnload)
+nsDocumentViewer::PermitUnload(bool *aPermitUnload)
 {
   bool shouldPrompt = true;
-  return PermitUnloadInternal(aCallerClosesWindow, &shouldPrompt,
-                              aPermitUnload);
+  return PermitUnloadInternal(&shouldPrompt, aPermitUnload);
 }
 
 
 nsresult
-nsDocumentViewer::PermitUnloadInternal(bool aCallerClosesWindow,
-                                       bool *aShouldPrompt,
+nsDocumentViewer::PermitUnloadInternal(bool *aShouldPrompt,
                                        bool *aPermitUnload)
 {
   AutoDontWarnAboutSyncXHR disableSyncXHRWarning;
@@ -1069,7 +1064,6 @@ nsDocumentViewer::PermitUnloadInternal(bool aCallerClosesWindow,
 
   if (!mDocument
    || mInPermitUnload
-   || mCallerIsClosingWindow
    || mInPermitUnloadPrompt) {
     return NS_OK;
   }
@@ -1245,15 +1239,11 @@ nsDocumentViewer::PermitUnloadInternal(bool aCallerClosesWindow,
         docShell->GetContentViewer(getter_AddRefs(cv));
 
         if (cv) {
-          cv->PermitUnloadInternal(aCallerClosesWindow, aShouldPrompt,
-                                   aPermitUnload);
+          cv->PermitUnloadInternal(aShouldPrompt, aPermitUnload);
         }
       }
     }
   }
-
-  if (aCallerClosesWindow && *aPermitUnload)
-    mCallerIsClosingWindow = true;
 
   return NS_OK;
 }
@@ -1269,35 +1259,6 @@ NS_IMETHODIMP
 nsDocumentViewer::GetInPermitUnload(bool* aInEvent)
 {
   *aInEvent = mInPermitUnloadPrompt;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::ResetCloseWindow()
-{
-  mCallerIsClosingWindow = false;
-
-  nsCOMPtr<nsIDocShell> docShell(mContainer);
-  if (docShell) {
-    int32_t childCount;
-    docShell->GetChildCount(&childCount);
-
-    for (int32_t i = 0; i < childCount; ++i) {
-      nsCOMPtr<nsIDocShellTreeItem> item;
-      docShell->GetChildAt(i, getter_AddRefs(item));
-
-      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(item));
-
-      if (docShell) {
-        nsCOMPtr<nsIContentViewer> cv;
-        docShell->GetContentViewer(getter_AddRefs(cv));
-
-        if (cv) {
-          cv->ResetCloseWindow();
-        }
-      }
-    }
-  }
   return NS_OK;
 }
 

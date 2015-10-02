@@ -624,12 +624,7 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
     cand=TAILQ_FIRST(&component->candidates);
     while(cand){
       if(cand->state!=NR_ICE_CAND_STATE_INITIALIZING){
-        if(r=nr_ice_candidate_initialize(cand,nr_ice_gather_finished_cb,cand)){
-          if(r!=R_WOULDBLOCK){
-            ctx->uninitialized_candidates--;
-            cand->state=NR_ICE_CAND_STATE_FAILED;
-          }
-        }
+        nr_ice_candidate_initialize(cand,nr_ice_gather_finished_cb,cand);
       }
       cand=TAILQ_NEXT(cand,entry_comp);
     }

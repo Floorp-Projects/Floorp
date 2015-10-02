@@ -566,6 +566,8 @@ asserts(1-2) load 1015563-2.html
 asserts(0-300) load 1015844.html # bug 574889
 load outline-on-frameset.xhtml
 pref(font.size.inflation.minTwips,200) load 1032450.html
+load 1032613-1.svg
+load 1032613-2.html
 load 1037903.html
 load 1039454-1.html
 load 1042489.html

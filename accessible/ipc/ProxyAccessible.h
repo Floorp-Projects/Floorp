@@ -218,10 +218,25 @@ public:
   bool IsLinkValid();
 
   // XXX checking mRole alone may not result in same behavior as Accessibles
-  // due to ARIA roles
-  inline bool IsTable() const { return mRole == roles::TABLE; }
-  inline bool IsTableRow() const { return mRole == roles::ROW; }
-  inline bool IsTableCell() const { return mRole == roles::CELL; }
+  // due to ARIA roles. See bug 1210477.
+  inline bool IsTable() const
+  {
+    return mRole == roles::TABLE || mRole == roles::MATHML_TABLE;
+  }
+  inline bool IsTableRow() const
+  {
+    return (mRole == roles::ROW ||
+            mRole == roles::MATHML_TABLE_ROW ||
+            mRole == roles::MATHML_LABELED_ROW);
+  }
+  inline bool IsTableCell() const
+  {
+    return (mRole == roles::CELL ||
+            mRole == roles::COLUMNHEADER ||
+            mRole == roles::ROWHEADER ||
+            mRole == roles::GRID_CELL ||
+            mRole == roles::MATHML_CELL);
+  }
 
   uint32_t AnchorCount(bool* aOk);
 

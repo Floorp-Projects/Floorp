@@ -418,10 +418,9 @@ public:
 
   nsresult Redraw();
 
-#ifdef DEBUG
-    virtual int32_t GetWidth() const override;
-    virtual int32_t GetHeight() const override;
-#endif
+  virtual int32_t GetWidth() const override;
+  virtual int32_t GetHeight() const override;
+
   // nsICanvasRenderingContextInternal
   /**
     * Gets the pres shell from either the canvas element or the doc shell

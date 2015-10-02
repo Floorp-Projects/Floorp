@@ -117,7 +117,7 @@ GainNode::GainNode(AudioContext* aContext)
               2,
               ChannelCountMode::Max,
               ChannelInterpretation::Speakers)
-  , mGain(new AudioParam(this, SendGainToStream, 1.0f, "gain"))
+  , mGain(new AudioParam(this, GainNodeEngine::GAIN, 1.0f, "gain"))
 {
   GainNodeEngine* engine = new GainNodeEngine(this, aContext->Destination());
   mStream = AudioNodeStream::Create(aContext, engine,
@@ -146,13 +146,6 @@ JSObject*
 GainNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return GainNodeBinding::Wrap(aCx, this, aGivenProto);
-}
-
-void
-GainNode::SendGainToStream(AudioNode* aNode, const AudioTimelineEvent& aEvent)
-{
-  GainNode* This = static_cast<GainNode*>(aNode);
-  SendTimelineEventToStream(This, GainNodeEngine::GAIN, aEvent);
 }
 
 } // namespace dom

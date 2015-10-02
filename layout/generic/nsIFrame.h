@@ -3028,6 +3028,15 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
   }
 
   /**
+   * Return whether this frame keeps track of overflow areas. (Frames for
+   * non-display SVG elements -- e.g. <clipPath> -- do not maintain overflow
+   * areas, because they're never painted.)
+   */
+  bool FrameMaintainsOverflow() const {
+    return !HasAllStateBits(NS_FRAME_SVG_LAYOUT | NS_FRAME_IS_NONDISPLAY);
+  }
+
+  /**
    * Returns the content node within the anonymous content that this frame
    * generated and which corresponds to the specified pseudo-element type,
    * or nullptr if there is no such anonymous content.

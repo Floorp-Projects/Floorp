@@ -196,7 +196,7 @@ DelayNode::DelayNode(AudioContext* aContext, double aMaxDelay)
               2,
               ChannelCountMode::Max,
               ChannelInterpretation::Speakers)
-  , mDelay(new AudioParam(this, SendDelayToStream, 0.0f, "delayTime"))
+  , mDelay(new AudioParam(this, DelayNodeEngine::DELAY, 0.0f, "delayTime"))
 {
   DelayNodeEngine* engine =
     new DelayNodeEngine(this, aContext->Destination(),
@@ -227,13 +227,6 @@ JSObject*
 DelayNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return DelayNodeBinding::Wrap(aCx, this, aGivenProto);
-}
-
-void
-DelayNode::SendDelayToStream(AudioNode* aNode, const AudioTimelineEvent& aEvent)
-{
-  DelayNode* This = static_cast<DelayNode*>(aNode);
-  SendTimelineEventToStream(This, DelayNodeEngine::DELAY, aEvent);
 }
 
 } // namespace dom

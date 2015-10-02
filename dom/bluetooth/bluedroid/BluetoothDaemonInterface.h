@@ -55,9 +55,9 @@ public:
   /* Adapter Properties */
 
   void GetAdapterProperties(BluetoothResultHandler* aRes) override;
-  void GetAdapterProperty(const nsAString& aName,
+  void GetAdapterProperty(BluetoothPropertyType aType,
                           BluetoothResultHandler* aRes) override;
-  void SetAdapterProperty(const BluetoothNamedValue& aProperty,
+  void SetAdapterProperty(const BluetoothProperty& aProperty,
                           BluetoothResultHandler* aRes) override;
 
   /* Remote Device Properties */
@@ -65,10 +65,10 @@ public:
   void GetRemoteDeviceProperties(const BluetoothAddress& aRemoteAddr,
                                  BluetoothResultHandler* aRes) override;
   void GetRemoteDeviceProperty(const BluetoothAddress& aRemoteAddr,
-                               const nsAString& aName,
+                               BluetoothPropertyType aType,
                                BluetoothResultHandler* aRes) override;
   void SetRemoteDeviceProperty(const BluetoothAddress& aRemoteAddr,
-                               const BluetoothNamedValue& aProperty,
+                               const BluetoothProperty& aProperty,
                                BluetoothResultHandler* aRes) override;
 
   /* Remote Services */
@@ -102,7 +102,7 @@ public:
   /* Authentication */
 
   void PinReply(const BluetoothAddress& aBdAddr, bool aAccept,
-                const nsAString& aPinCode,
+                const BluetoothPinCode& aPinCode,
                 BluetoothResultHandler* aRes) override;
 
   void SspReply(const BluetoothAddress& aBdAddr,
