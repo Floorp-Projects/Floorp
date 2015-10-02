@@ -27,6 +27,9 @@ task:
         expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
+    treeherderEnv:
+      - production
+      - staging
     treeherder:
       groupName: CPP Unit Tests
       symbol: 'Cpp'
