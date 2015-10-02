@@ -229,7 +229,7 @@ Tools.canvasDebugger = {
   id: "canvasdebugger",
   ordinal: 6,
   visibilityswitch: "devtools.canvasdebugger.enabled",
-  icon: "chrome://devtools/skin/themes/images/tool-styleeditor.svg",
+  icon: "chrome://devtools/skin/themes/images/tool-canvas.svg",
   invertIconForLightTheme: true,
   url: "chrome://devtools/content/canvasdebugger/canvasdebugger.xul",
   label: l10n("ToolboxCanvasDebugger.label", canvasDebuggerStrings),

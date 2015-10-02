@@ -1,0 +1,4 @@
+evaluate("", {
+    fileName: null
+});
+getLcovInfo();

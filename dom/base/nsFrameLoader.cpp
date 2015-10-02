@@ -956,11 +956,17 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
     }
   }
 
+  MaybeUpdatePrimaryTabParent(eTabParentRemoved);
+  aOther->MaybeUpdatePrimaryTabParent(eTabParentRemoved);
+
   SetOwnerContent(otherContent);
   aOther->SetOwnerContent(ourContent);
 
   mRemoteBrowser->SetOwnerElement(otherContent);
   aOther->mRemoteBrowser->SetOwnerElement(ourContent);
+
+  MaybeUpdatePrimaryTabParent(eTabParentChanged);
+  aOther->MaybeUpdatePrimaryTabParent(eTabParentChanged);
 
   nsRefPtr<nsFrameMessageManager> ourMessageManager = mMessageManager;
   nsRefPtr<nsFrameMessageManager> otherMessageManager = aOther->mMessageManager;
@@ -1404,7 +1410,7 @@ nsFrameLoader::StartDestroy()
     doc = mOwnerContent->OwnerDoc();
     dynamicSubframeRemoval = !mIsTopLevelContent && !doc->InUnlinkOrDeletion();
     doc->SetSubDocumentFor(mOwnerContent, nullptr);
-
+    MaybeUpdatePrimaryTabParent(eTabParentRemoved);
     SetOwnerContent(nullptr);
   }
 
@@ -2283,6 +2289,8 @@ nsFrameLoader::TryRemoteBrowser()
     return false;
   }
 
+  MaybeUpdatePrimaryTabParent(eTabParentChanged);
+
   mChildID = mRemoteBrowser->Manager()->ChildID();
 
   nsCOMPtr<nsIDocShellTreeItem> rootItem;
@@ -2635,6 +2643,7 @@ nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent)
   mRemoteFrame = true;
   mRemoteBrowser = TabParent::GetFrom(aTabParent);
   mChildID = mRemoteBrowser ? mRemoteBrowser->Manager()->ChildID() : 0;
+  MaybeUpdatePrimaryTabParent(eTabParentChanged);
   ReallyLoadFrameScripts();
   InitializeBrowserAPI();
   ShowRemoteFrame(ScreenIntSize(0, 0));
@@ -2658,6 +2667,8 @@ nsFrameLoader::SwapRemoteBrowser(nsITabParent* aTabParent)
   if (newParent == mRemoteBrowser) {
     return NS_OK;
   }
+
+  MaybeUpdatePrimaryTabParent(eTabParentRemoved);
   mRemoteBrowser->CacheFrameLoader(nullptr);
   mRemoteBrowser->SetOwnerElement(nullptr);
   mRemoteBrowser->Detach();
@@ -2666,6 +2677,8 @@ nsFrameLoader::SwapRemoteBrowser(nsITabParent* aTabParent)
   mRemoteBrowser = newParent;
   mRemoteBrowser->Attach(this);
   mChildID = mRemoteBrowser->Manager()->ChildID();
+
+  MaybeUpdatePrimaryTabParent(eTabParentChanged);
 
   // Force the new remote frame manager to load pending scripts
   mMessageManager->LoadPendingScripts();
@@ -2718,8 +2731,6 @@ nsFrameLoader::AttributeChanged(nsIDocument* aDocument,
                                 const nsAttrValue* aOldValue)
 {
   MOZ_ASSERT(mObservingOwnerContent);
-  // TODO: Implement ContentShellAdded for remote browsers (bug 658304)
-  MOZ_ASSERT(!mRemoteBrowser);
 
   if (aNameSpaceID != kNameSpaceID_None || aAttribute != TypeAttrName()) {
     return;
@@ -2736,6 +2747,7 @@ nsFrameLoader::AttributeChanged(nsIDocument* aDocument,
   // if our parent is chrome, since in all other cases we're random content
   // subframes and the treeowner shouldn't worry about us.
   if (!mDocShell) {
+    MaybeUpdatePrimaryTabParent(eTabParentChanged);
     return;
   }
 
@@ -2995,4 +3007,41 @@ nsFrameLoader::StartPersistence(uint64_t aOuterWindowID,
     aRecv->OnDocumentReady(pdoc);
   }
   return NS_OK;
+}
+
+void
+nsFrameLoader::MaybeUpdatePrimaryTabParent(TabParentChange aChange)
+{
+  if (mRemoteBrowser && mOwnerContent) {
+    nsCOMPtr<nsIDocShell> docShell = mOwnerContent->OwnerDoc()->GetDocShell();
+    if (!docShell) {
+      return;
+    }
+
+    int32_t parentType = docShell->ItemType();
+    if (parentType != nsIDocShellTreeItem::typeChrome) {
+      return;
+    }
+
+    nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
+    docShell->GetTreeOwner(getter_AddRefs(parentTreeOwner));
+    if (!parentTreeOwner) {
+      return;
+    }
+
+    if (!mObservingOwnerContent) {
+      mOwnerContent->AddMutationObserver(this);
+      mObservingOwnerContent = true;
+    }
+
+    parentTreeOwner->TabParentRemoved(mRemoteBrowser);
+    if (aChange == eTabParentChanged) {
+      bool isPrimary =
+        mOwnerContent->AttrValueIs(kNameSpaceID_None,
+                                   TypeAttrName(),
+                                   NS_LITERAL_STRING("content-primary"),
+                                   eIgnoreCase);
+      parentTreeOwner->TabParentAdded(mRemoteBrowser, isPrimary);
+    }
+  }
 }

@@ -637,10 +637,18 @@ var settingsToObserve = {
   'layers.draw-borders': false,
   'layers.draw-tile-borders': false,
   'layers.dump': false,
+#ifdef XP_WIN
+  'layers.enable-tiles': false,
+#else
   'layers.enable-tiles': true,
+#endif
   'layers.effect.invert': false,
   'layers.effect.grayscale': false,
   'layers.effect.contrast': '0.0',
+#ifdef MOZ_GRAPHENE
+  // Restart required
+  'layers.async-pan-zoom.enabled': false,
+#endif
   'layout.display-list.dump': false,
   'mms.debugging.enabled': false,
   'network.debugging.enabled': false,
