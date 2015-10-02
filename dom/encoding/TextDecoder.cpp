@@ -26,7 +26,7 @@ TextDecoder::Init(const nsAString& aLabel, const bool aFatal,
   if (!EncodingUtils::FindEncodingForLabelNoReplacement(aLabel, encoding)) {
     nsAutoString label(aLabel);
     EncodingUtils::TrimSpaceCharacters(label);
-    aRv.ThrowRangeError<MSG_ENCODING_NOT_SUPPORTED>(&label);
+    aRv.ThrowRangeError(MSG_ENCODING_NOT_SUPPORTED, &label);
     return;
   }
   InitWithEncoding(encoding, aFatal);
@@ -83,7 +83,7 @@ TextDecoder::Decode(const char* aInput, const int32_t aLength,
     mDecoder->Reset();
     if (rv == NS_OK_UDEC_MOREINPUT) {
       if (mFatal) {
-        aRv.ThrowTypeError<MSG_DOM_DECODING_FAILED>();
+        aRv.ThrowTypeError(MSG_DOM_DECODING_FAILED);
       } else {
         // Need to emit a decode error manually
         // to simulate the EOF handling of the Encoding spec.
@@ -93,7 +93,7 @@ TextDecoder::Decode(const char* aInput, const int32_t aLength,
   }
 
   if (NS_FAILED(rv)) {
-    aRv.ThrowTypeError<MSG_DOM_DECODING_FAILED>();
+    aRv.ThrowTypeError(MSG_DOM_DECODING_FAILED);
   }
 }
 

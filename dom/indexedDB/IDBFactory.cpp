@@ -657,7 +657,7 @@ IDBFactory::OpenInternal(nsIPrincipal* aPrincipal,
   uint64_t version = 0;
   if (!aDeleting && aVersion.WasPassed()) {
     if (aVersion.Value() < 1) {
-      aRv.ThrowTypeError<MSG_INVALID_VERSION>();
+      aRv.ThrowTypeError(MSG_INVALID_VERSION);
       return nullptr;
     }
     version = aVersion.Value();
