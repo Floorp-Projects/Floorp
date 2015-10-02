@@ -69,9 +69,21 @@ CanCreateMP3Decoder()
   return result;
 }
 
+/* static */
 bool
 MP3Decoder::IsEnabled() {
   return CanCreateMP3Decoder();
+}
+
+/* static */
+bool MP3Decoder::CanHandleMediaType(const nsACString& aType,
+                                    const nsAString& aCodecs)
+{
+  if (aType.EqualsASCII("audio/mp3") || aType.EqualsASCII("audio/mpeg")) {
+    return CanCreateMP3Decoder() &&
+      (aCodecs.IsEmpty() || aCodecs.EqualsASCII("mp3"));
+  }
+  return false;
 }
 
 } // namespace mozilla
