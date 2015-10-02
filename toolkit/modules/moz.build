@@ -109,8 +109,7 @@ for var in ('ANDROID_PACKAGE_NAME',
             'DEBUG_JS_MODULES'):
             DEFINES[var] = CONFIG[var]
 
-for var in ('MOZILLA_OFFICIAL',
-            'MOZ_TOOLKIT_SEARCH',
+for var in ('MOZ_TOOLKIT_SEARCH',
             'MOZ_UPDATER'):
     if CONFIG[var]:
         DEFINES[var] = True
