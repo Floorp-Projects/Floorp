@@ -103,6 +103,9 @@ static RedirEntry kRedirMap[] = {
     nsIAboutModule::ALLOW_SCRIPT },
   { "customizing", "chrome://browser/content/customizableui/aboutCustomizing.xul",
     nsIAboutModule::ALLOW_SCRIPT },
+  {
+    "debugging", "chrome://devtools/content/aboutdebugging/aboutdebugging.xhtml",
+    nsIAboutModule::ALLOW_SCRIPT },
   { "loopconversation", "chrome://browser/content/loop/conversation.html",
     nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
     nsIAboutModule::ALLOW_SCRIPT |
