@@ -8,12 +8,9 @@
 
 #include "nsIProfiler.h"
 #include "nsIObserver.h"
-#include "nsWeakReference.h"
 #include "mozilla/Attributes.h"
 
-class nsProfiler final : public nsIProfiler
-                       , public nsIObserver
-                       , public nsSupportsWeakReference
+class nsProfiler final : public nsIProfiler, public nsIObserver
 {
 public:
     nsProfiler();

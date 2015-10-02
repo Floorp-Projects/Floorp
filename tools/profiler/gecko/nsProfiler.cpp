@@ -24,7 +24,7 @@ using mozilla::ErrorResult;
 using mozilla::dom::Promise;
 using std::string;
 
-NS_IMPL_ISUPPORTS(nsProfiler, nsIProfiler, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(nsProfiler, nsIProfiler)
 
 nsProfiler::nsProfiler()
   : mLockedForPrivateBrowsing(false)
@@ -44,8 +44,8 @@ nsresult
 nsProfiler::Init() {
   nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
   if (observerService) {
-    observerService->AddObserver(this, "chrome-document-global-created", true);
-    observerService->AddObserver(this, "last-pb-context-exited", true);
+    observerService->AddObserver(this, "chrome-document-global-created", false);
+    observerService->AddObserver(this, "last-pb-context-exited", false);
   }
   return NS_OK;
 }
