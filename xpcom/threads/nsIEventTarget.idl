@@ -60,7 +60,10 @@ interface nsIEventTarget : nsISupports
    * any thread, and it may be called re-entrantly.
    *
    * @param event
-   *   The alreadyAddRefed<> event to dispatch
+   *   The alreadyAddRefed<> event to dispatch.
+   *   NOTE that the event will be leaked if it fails to dispatch. Also note
+   *   that if "flags" includes DISPATCH_SYNC, it may return error from Run()
+   *   after a successful dispatch. In that case, the event is not leaked.
    * @param flags
    *   The flags modifying event dispatch.  The flags are described in detail
    *   below.
