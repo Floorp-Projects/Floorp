@@ -79,7 +79,6 @@ static int nr_turn_stun_set_auth_params(nr_turn_stun_ctx *ctx,
 static void nr_turn_client_refresh_timer_cb(NR_SOCKET s, int how, void *arg);
 static int nr_turn_client_refresh_setup(nr_turn_client_ctx *ctx,
                                         nr_turn_stun_ctx **sctx);
-static int nr_turn_client_failed(nr_turn_client_ctx *ctx);
 static int nr_turn_client_start_refresh_timer(nr_turn_client_ctx *ctx,
                                               nr_turn_stun_ctx *sctx,
                                               UINT4 lifetime);
@@ -497,7 +496,16 @@ abort:
   return(_status);
 }
 
-static int nr_turn_client_failed(nr_turn_client_ctx *ctx)
+static void nr_turn_client_fire_finished_cb(nr_turn_client_ctx *ctx)
+  {
+    if (ctx->finished_cb) {
+      NR_async_cb finished_cb=ctx->finished_cb;
+      ctx->finished_cb=0;
+      finished_cb(0, 0, ctx->cb_arg);
+    }
+  }
+
+int nr_turn_client_failed(nr_turn_client_ctx *ctx)
 {
   if (ctx->state == NR_TURN_CLIENT_STATE_FAILED ||
       ctx->state == NR_TURN_CLIENT_STATE_CANCELLED)
@@ -506,9 +514,7 @@ static int nr_turn_client_failed(nr_turn_client_ctx *ctx)
   r_log(NR_LOG_TURN, LOG_WARNING, "TURN(%s) failed", ctx->label);
   nr_turn_client_cancel(ctx);
   ctx->state = NR_TURN_CLIENT_STATE_FAILED;
-  if (ctx->finished_cb) {
-    ctx->finished_cb(0, 0, ctx->cb_arg);
-  }
+  nr_turn_client_fire_finished_cb(ctx);
 
   return(0);
 }
@@ -549,7 +555,6 @@ static void nr_turn_client_allocate_cb(NR_SOCKET s, int how, void *arg)
 {
   nr_turn_stun_ctx *ctx = (nr_turn_stun_ctx *)arg;
   nr_turn_stun_ctx *refresh_ctx;
-  NR_async_cb tmp_finished_cb;
   int r,_status;
 
   ctx->tctx->state = NR_TURN_CLIENT_STATE_ALLOCATED;
@@ -578,14 +583,12 @@ static void nr_turn_client_allocate_cb(NR_SOCKET s, int how, void *arg)
         ctx->tctx->relay_addr.as_string,
         ctx->stun->results.allocate_response.lifetime_secs);
 
+  nr_turn_client_fire_finished_cb(ctx->tctx);
   _status=0;
 abort:
   if (_status) {
     nr_turn_client_failed(ctx->tctx);
   }
-  tmp_finished_cb = ctx->tctx->finished_cb;
-  ctx->tctx->finished_cb = 0;  /* So we don't call it again */
-  tmp_finished_cb(0, 0, ctx->tctx->cb_arg);
 }
 
 static void nr_turn_client_error_cb(NR_SOCKET s, int how, void *arg)

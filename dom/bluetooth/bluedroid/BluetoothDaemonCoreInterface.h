@@ -79,21 +79,21 @@ public:
 
   nsresult GetAdapterPropertiesCmd(BluetoothResultHandler* aRes);
 
-  nsresult GetAdapterPropertyCmd(const nsAString& aName,
+  nsresult GetAdapterPropertyCmd(BluetoothPropertyType aType,
                                  BluetoothResultHandler* aRes);
 
-  nsresult SetAdapterPropertyCmd(const BluetoothNamedValue& aProperty,
+  nsresult SetAdapterPropertyCmd(const BluetoothProperty& aProperty,
                                  BluetoothResultHandler* aRes);
 
   nsresult GetRemoteDevicePropertiesCmd(const BluetoothAddress& aRemoteAddr,
                                         BluetoothResultHandler* aRes);
 
   nsresult GetRemoteDevicePropertyCmd(const BluetoothAddress& aRemoteAddr,
-                                      const nsAString& aName,
+                                      BluetoothPropertyType aType,
                                       BluetoothResultHandler* aRes);
 
   nsresult SetRemoteDevicePropertyCmd(const BluetoothAddress& aRemoteAddr,
-                                      const BluetoothNamedValue& aProperty,
+                                      const BluetoothProperty& aProperty,
                                       BluetoothResultHandler* aRes);
 
   nsresult GetRemoteServiceRecordCmd(const BluetoothAddress& aRemoteAddr,
@@ -118,7 +118,7 @@ public:
                          BluetoothResultHandler* aRes);
 
   nsresult PinReplyCmd(const BluetoothAddress& aBdAddr, bool aAccept,
-                       const nsAString& aPinCode,
+                       const BluetoothPinCode& aPinCode,
                        BluetoothResultHandler* aRes);
 
   nsresult SspReplyCmd(const BluetoothAddress& aBdAddr,
@@ -266,13 +266,16 @@ private:
     DiscoveryStateChangedNotification;
 
   typedef mozilla::ipc::DaemonNotificationRunnable3<
-    NotificationHandlerWrapper, void, BluetoothAddress, nsString, uint32_t,
-    const BluetoothAddress&, const nsAString&>
+    NotificationHandlerWrapper, void,
+    BluetoothAddress, BluetoothRemoteName, uint32_t,
+    const BluetoothAddress&, const BluetoothRemoteName&>
     PinRequestNotification;
 
   typedef mozilla::ipc::DaemonNotificationRunnable5<
-    NotificationHandlerWrapper, void, BluetoothAddress, nsString, uint32_t,
-    BluetoothSspVariant, uint32_t, const BluetoothAddress&, const nsAString&>
+    NotificationHandlerWrapper, void,
+    BluetoothAddress, BluetoothRemoteName, uint32_t, BluetoothSspVariant,
+    uint32_t,
+    const BluetoothAddress&, const BluetoothRemoteName&>
     SspRequestNotification;
 
   typedef mozilla::ipc::DaemonNotificationRunnable3<
@@ -281,7 +284,8 @@ private:
     BondStateChangedNotification;
 
   typedef mozilla::ipc::DaemonNotificationRunnable3<
-    NotificationHandlerWrapper, void, BluetoothStatus, BluetoothAddress, bool,
+    NotificationHandlerWrapper, void,
+    BluetoothStatus, BluetoothAddress, BluetoothAclState,
     BluetoothStatus, const BluetoothAddress&>
     AclStateChangedNotification;
 

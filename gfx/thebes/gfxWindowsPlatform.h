@@ -214,6 +214,8 @@ public:
 
     virtual bool DidRenderingDeviceReset(DeviceResetReason* aResetReason = nullptr);
 
+    mozilla::gfx::BackendType GetContentBackendFor(mozilla::layers::LayersBackend aLayers) override;
+
     // ClearType is not always enabled even when available (e.g. Windows XP)
     // if either of these prefs are enabled and apply, use ClearType rendering
     bool UseClearTypeForDownloadableFonts();
@@ -333,7 +335,7 @@ private:
     mozilla::gfx::FeatureStatus AttemptD3D11ImageBridgeDeviceCreation();
 
     mozilla::gfx::FeatureStatus AttemptD3D11ContentDeviceCreation();
-    bool gfxWindowsPlatform::AttemptD3D11ContentDeviceCreationHelper(
+    bool AttemptD3D11ContentDeviceCreationHelper(
         IDXGIAdapter1* aAdapter, HRESULT& aResOut);
 
     bool CanUseD3D11ImageBridge();

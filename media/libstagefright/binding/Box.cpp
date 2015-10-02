@@ -40,6 +40,11 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
   : mContext(aContext), mParent(aParent)
 {
   uint8_t header[8];
+
+  if (aOffset > INT64_MAX - sizeof(header)) {
+    return;
+  }
+
   MediaByteRange headerRange(aOffset, aOffset + sizeof(header));
   if (mParent && !mParent->mRange.Contains(headerRange)) {
     return;
@@ -67,11 +72,14 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
   uint64_t size = BigEndian::readUint32(header);
   if (size == 1) {
     uint8_t bigLength[8];
+    if (aOffset > INT64_MAX - sizeof(header) - sizeof(bigLength)) {
+      return;
+    }
     MediaByteRange bigLengthRange(headerRange.mEnd,
                                   headerRange.mEnd + sizeof(bigLength));
     if ((mParent && !mParent->mRange.Contains(bigLengthRange)) ||
         !byteRange->Contains(bigLengthRange) ||
-        !mContext->mSource->CachedReadAt(aOffset + 8, bigLength,
+        !mContext->mSource->CachedReadAt(aOffset + sizeof(header), bigLength,
                                          sizeof(bigLength), &bytes) ||
         bytes != sizeof(bigLength)) {
       return;
@@ -86,10 +94,19 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
     mBodyOffset = headerRange.mEnd;
   }
 
+  if (size > INT64_MAX) {
+    return;
+  }
+  int64_t end = static_cast<int64_t>(aOffset) + static_cast<int64_t>(size);
+  if (end < static_cast<int64_t>(aOffset)) {
+    // Overflowed.
+    return;
+  }
+
   mType = BigEndian::readUint32(&header[4]);
   mChildOffset = mBodyOffset + BoxOffset(mType);
 
-  MediaByteRange boxRange(aOffset, aOffset + size);
+  MediaByteRange boxRange(aOffset, end);
   if (mChildOffset > boxRange.mEnd ||
       (mParent && !mParent->mRange.Contains(boxRange)) ||
       !byteRange->Contains(boxRange)) {

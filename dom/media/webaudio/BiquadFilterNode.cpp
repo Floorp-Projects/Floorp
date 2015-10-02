@@ -242,10 +242,11 @@ BiquadFilterNode::BiquadFilterNode(AudioContext* aContext)
               ChannelCountMode::Max,
               ChannelInterpretation::Speakers)
   , mType(BiquadFilterType::Lowpass)
-  , mFrequency(new AudioParam(this, SendFrequencyToStream, 350.f, "frequency"))
-  , mDetune(new AudioParam(this, SendDetuneToStream, 0.f, "detune"))
-  , mQ(new AudioParam(this, SendQToStream, 1.f, "Q"))
-  , mGain(new AudioParam(this, SendGainToStream, 0.f, "gain"))
+  , mFrequency(new AudioParam(this, BiquadFilterNodeEngine::FREQUENCY,
+                              350.f, "frequency"))
+  , mDetune(new AudioParam(this, BiquadFilterNodeEngine::DETUNE, 0.f, "detune"))
+  , mQ(new AudioParam(this, BiquadFilterNodeEngine::Q, 1.f, "Q"))
+  , mGain(new AudioParam(this, BiquadFilterNodeEngine::GAIN, 0.f, "gain"))
 {
   BiquadFilterNodeEngine* engine = new BiquadFilterNodeEngine(this, aContext->Destination());
   mStream = AudioNodeStream::Create(aContext, engine,
@@ -334,34 +335,6 @@ BiquadFilterNode::GetFrequencyResponse(const Float32Array& aFrequencyHz,
   WebCore::Biquad biquad;
   SetParamsOnBiquad(biquad, Context()->SampleRate(), mType, freq, q, gain, detune);
   biquad.getFrequencyResponse(int(length), frequencies, aMagResponse.Data(), aPhaseResponse.Data());
-}
-
-void
-BiquadFilterNode::SendFrequencyToStream(AudioNode* aNode, const AudioTimelineEvent& aEvent)
-{
-  BiquadFilterNode* This = static_cast<BiquadFilterNode*>(aNode);
-  SendTimelineEventToStream(This, BiquadFilterNodeEngine::FREQUENCY, aEvent);
-}
-
-void
-BiquadFilterNode::SendDetuneToStream(AudioNode* aNode, const AudioTimelineEvent& aEvent)
-{
-  BiquadFilterNode* This = static_cast<BiquadFilterNode*>(aNode);
-  SendTimelineEventToStream(This, BiquadFilterNodeEngine::DETUNE, aEvent);
-}
-
-void
-BiquadFilterNode::SendQToStream(AudioNode* aNode, const AudioTimelineEvent& aEvent)
-{
-  BiquadFilterNode* This = static_cast<BiquadFilterNode*>(aNode);
-  SendTimelineEventToStream(This, BiquadFilterNodeEngine::Q, aEvent);
-}
-
-void
-BiquadFilterNode::SendGainToStream(AudioNode* aNode, const AudioTimelineEvent& aEvent)
-{
-  BiquadFilterNode* This = static_cast<BiquadFilterNode*>(aNode);
-  SendTimelineEventToStream(This, BiquadFilterNodeEngine::GAIN, aEvent);
 }
 
 } // namespace dom

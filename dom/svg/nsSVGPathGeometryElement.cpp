@@ -81,7 +81,7 @@ nsSVGPathGeometryElement::GetOrBuildPath(const DrawTarget& aDrawTarget,
 {
   // We only cache the path if it matches the backend used for screen painting:
   bool cacheable  = aDrawTarget.GetBackendType() ==
-                      gfxPlatform::GetPlatform()->GetContentBackend();
+                    gfxPlatform::GetPlatform()->GetDefaultContentBackend();
 
   // Checking for and returning mCachedPath before checking the pref means
   // that the pref is only live on page reload (or app restart for SVG in

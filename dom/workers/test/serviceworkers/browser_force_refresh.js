@@ -29,6 +29,11 @@ function test() {
     function eventHandler(event) {
       if (event.type === 'base-load') {
         if (cachedLoad) {
+          removeEventListener('base-load', eventHandler, true);
+          removeEventListener('base-register', eventHandler, true);
+          removeEventListener('base-sw-ready', eventHandler, true);
+          removeEventListener('cached-load', eventHandler, true);
+
           gBrowser.removeTab(tab);
           executeSoon(finish);
         }

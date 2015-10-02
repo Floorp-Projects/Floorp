@@ -76,7 +76,7 @@ var gPlayedTests = [
   { name:"seek.ogv", type:"video/ogg", duration:3.966 },
   { name:"seek.webm", type:"video/webm", duration:3.966 },
   { name:"gizmo.mp4", type:"video/mp4", duration:5.56 },
-  { name:"owl.mp3", type:"audio/mpeg", duration:3.29 },
+  { name:"owl.mp3", type:"audio/mpeg", duration:3.343 },
   // Disable vbr.mp3 to see if it reduces the error of AUDCLNT_E_CPUUSAGE_EXCEEDED.
   // See bug 1110922 comment 26.
   //{ name:"vbr.mp3", type:"audio/mpeg", duration:10.0 },
@@ -237,13 +237,13 @@ var gPlayTests = [
 
   { name:"small-shot.m4a", type:"audio/mp4", duration:0.29 },
   { name:"small-shot.mp3", type:"audio/mpeg", duration:0.27 },
-  { name:"owl.mp3", type:"audio/mpeg", duration:3.29 },
+  { name:"owl.mp3", type:"audio/mpeg", duration:3.343 },
   // owl.mp3 as above, but with something funny going on in the ID3v2 tag
   // that causes DirectShow to fail.
-  { name:"owl-funny-id3.mp3", type:"audio/mpeg", duration:3.29 },
+  { name:"owl-funny-id3.mp3", type:"audio/mpeg", duration:3.343 },
   // owl.mp3 as above, but with something even funnier going on in the ID3v2 tag
   // that causes DirectShow to fail.
-  { name:"owl-funnier-id3.mp3", type:"audio/mpeg", duration:3.29 },
+  { name:"owl-funnier-id3.mp3", type:"audio/mpeg", duration:3.343 },
   // One second of silence with ~140KB of ID3 tags. Usually when the first MP3
   // frame is at such a high offset into the file, MP3FrameParser will give up
   // and report that the stream is not MP3. However, it does not count ID3 tags
@@ -469,7 +469,7 @@ var gSeekTests = [
   { name:"split.webm", type:"video/webm", duration:1.967 },
   { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 },
   { name:"gizmo.mp4", type:"video/mp4", duration:5.56 },
-  { name:"owl.mp3", type:"audio/mpeg", duration:3.29 },
+  { name:"owl.mp3", type:"audio/mpeg", duration:3.343 },
   { name:"bogus.duh", type:"bogus/duh", duration:123 }
 ];
 
@@ -523,7 +523,7 @@ if (getAndroidVersion() >= 18) {
 var gAudioTests = [
   { name:"r11025_s16_c1.wav", type:"audio/x-wav", duration:1.0 },
   { name:"sound.ogg", type:"audio/ogg" },
-  { name:"owl.mp3", type:"audio/mpeg", duration:3.29 },
+  { name:"owl.mp3", type:"audio/mpeg", duration:3.343 },
   { name:"small-shot.m4a", type:"audio/mp4", duration:0.29 },
   { name:"bogus.duh", type:"bogus/duh", duration:123 }
 ];
