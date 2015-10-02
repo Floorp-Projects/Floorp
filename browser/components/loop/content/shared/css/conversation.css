@@ -459,16 +459,11 @@ html[dir="rtl"] .room-failure > .settings-control {
 
 .screen-share-menu.dropdown-menu,
 .settings-menu.dropdown-menu {
-  left: auto;
   bottom: 3.1rem;
 }
 
-.screen-share-menu.dropdown-menu {
-  /*offset dropdown menu to be above menu button*/
-  right: 40px;
-}
-
 .settings-menu.dropdown-menu {
+  left: auto;
   /*offset dropdown menu to be above menu button*/
   right: 14px;
 }
