@@ -7849,12 +7849,13 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
   nsPIDOMWindow* win = GetWindow();
   if (win && win->IsDesktopModeViewport() && !IsAboutPage())
   {
-    float viewportWidth = gfxPrefs::DesktopViewportWidth() / fullZoom;
-    float scaleToFit = aDisplaySize.width / viewportWidth;
+    CSSCoord viewportWidth = gfxPrefs::DesktopViewportWidth() / fullZoom;
+    CSSToScreenScale scaleToFit(aDisplaySize.width / viewportWidth);
     float aspectRatio = (float)aDisplaySize.height / aDisplaySize.width;
-    ScreenSize viewportSize(viewportWidth, viewportWidth * aspectRatio);
-    return nsViewportInfo(RoundedToInt(viewportSize),
-                          CSSToScreenScale(scaleToFit),
+    CSSSize viewportSize(viewportWidth, viewportWidth * aspectRatio);
+    ScreenIntSize fakeDesktopSize = RoundedToInt(viewportSize * scaleToFit);
+    return nsViewportInfo(fakeDesktopSize,
+                          scaleToFit,
                           /*allowZoom*/ true);
   }
 

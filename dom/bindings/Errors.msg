@@ -68,6 +68,7 @@ MSG_DEF(MSG_FETCH_BODY_CONSUMED_ERROR, 0, JSEXN_TYPEERR, "Body has already been 
 MSG_DEF(MSG_RESPONSE_INVALID_STATUSTEXT_ERROR, 0, JSEXN_TYPEERR, "Response statusText may not contain newline or carriage return.")
 MSG_DEF(MSG_FETCH_FAILED, 0, JSEXN_TYPEERR, "NetworkError when attempting to fetch resource.")
 MSG_DEF(MSG_NO_BODY_ALLOWED_FOR_GET_AND_HEAD, 0, JSEXN_TYPEERR, "HEAD or GET Request cannot have a body.")
+MSG_DEF(MSG_RESPONSE_NULL_STATUS_WITH_BODY, 0, JSEXN_TYPEERR, "Response body is given with a null body status.")
 MSG_DEF(MSG_DEFINE_NON_CONFIGURABLE_PROP_ON_WINDOW, 0, JSEXN_TYPEERR, "Not allowed to define a non-configurable property on the WindowProxy object")
 MSG_DEF(MSG_INVALID_ZOOMANDPAN_VALUE_ERROR, 0, JSEXN_RANGEERR, "Invalid zoom and pan value.")
 MSG_DEF(MSG_INVALID_TRANSFORM_ANGLE_ERROR, 0, JSEXN_RANGEERR, "Invalid transform angle.")

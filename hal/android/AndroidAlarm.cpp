@@ -1,0 +1,51 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "Hal.h"
+#include "AndroidBridge.h"
+
+#include "GeneratedJNINatives.h"
+
+using namespace mozilla::hal;
+
+namespace mozilla {
+
+class AlarmReceiver : public widget::AlarmReceiver::Natives<AlarmReceiver>
+{
+private:
+    AlarmReceiver();
+
+public:
+    static void NotifyAlarmFired() {
+        nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([=]() {
+            hal::NotifyAlarmFired();
+        });
+        NS_DispatchToMainThread(runnable);
+    }
+};
+
+namespace hal_impl {
+
+bool
+EnableAlarm()
+{
+    AlarmReceiver::Init();
+    return true;
+}
+
+void
+DisableAlarm()
+{
+    widget::GeckoAppShell::DisableAlarm();
+}
+
+bool
+SetAlarm(int32_t aSeconds, int32_t aNanoseconds)
+{
+    return widget::GeckoAppShell::SetAlarm(aSeconds, aNanoseconds);
+}
+
+} // hal_impl
+} // mozilla

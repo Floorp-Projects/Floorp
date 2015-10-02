@@ -853,6 +853,7 @@ MOZ_PATH_PROG(RPMBUILD, rpmbuild, :)
 AC_SUBST(RPMBUILD)
 
 MOZ_PATH_PROG(GENISOIMAGE, genisoimage, :)
+MOZ_PATH_PROG(DSYMUTIL, dsymutil, llvm-dsymutil :)
 
 if test "$COMPILE_ENVIRONMENT"; then
 
@@ -4038,14 +4039,20 @@ browser)
 xulrunner)
   AC_DEFINE(MOZ_XULRUNNER)
   ;;
-b2g)
-  AC_DEFINE(MOZ_B2G)
-  ;;
-b2g/dev)
-  AC_DEFINE(MOZ_B2G)
-  AC_DEFINE(MOZ_MULET)
-  ;;
 esac
+
+if test -n "$MOZ_B2G"; then
+    AC_DEFINE(MOZ_B2G)
+fi
+
+# Graphene is a desktop runtime for running applications with a HTML UI.
+if test -n "$MOZ_GRAPHENE"; then
+    AC_DEFINE(MOZ_GRAPHENE)
+fi
+
+if test -n "$MOZ_MULET"; then
+    AC_DEFINE(MOZ_MULET)
+fi
 
 if test -n "$MOZ_B2GDROID"; then
     AC_DEFINE(MOZ_B2GDROID)
@@ -6070,7 +6077,7 @@ MOZ_ARG_DISABLE_BOOL(crashreporter,
     [MOZ_CRASHREPORTER=],
     [MOZ_CRASHREPORTER=F # Force enable breakpad])
 
-if test "$OS_ARCH" != "$HOST_OS_ARCH" -a "$OS_ARCH" != "WINNT"; then
+if test "$OS_ARCH" != "$HOST_OS_ARCH" -a "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "Darwin"; then
   if test "$MOZ_CRASHREPORTER" = F; then
     AC_MSG_ERROR([Cannot --enable-crashreporter, as breakpad tools do not support compiling on $HOST_OS_ARCH while targeting $OS_ARCH.])
   fi
@@ -7525,6 +7532,16 @@ MOZ_ARG_ENABLE_BOOL(reflow-perf,
 if test -n "$MOZ_REFLOW_PERF"; then
     AC_DEFINE(MOZ_REFLOW_PERF)
 fi
+
+dnl ========================================================
+dnl = Horizon build options - set default preferences for
+dnl   the horizon project. Horizon is a browser built on
+dnl   top of the graphene runtime.
+dnl ========================================================
+if test -n "$MOZ_HORIZON"; then
+    AC_DEFINE(MOZ_HORIZON)
+fi
+AC_SUBST(MOZ_HORIZON)
 
 dnl ========================================================
 dnl = Offer a way to disable the startup cache
