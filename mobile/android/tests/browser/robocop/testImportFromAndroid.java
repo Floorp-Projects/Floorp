@@ -172,9 +172,9 @@ public class testImportFromAndroid extends AboutHomeTest {
         Cursor cursor = null;
         try {
             if (data.equals("history")) {
-                cursor = Browser.getAllVisitedUrls(resolver);
+                cursor = getAllVisitedUrls(resolver);
             } else if (data.equals("bookmarks")) {
-                cursor = Browser.getAllBookmarks(resolver);
+                cursor = getAllBookmarks(resolver);
             }
             if (cursor != null) {
                 cursor.moveToFirst();
@@ -203,6 +203,23 @@ public class testImportFromAndroid extends AboutHomeTest {
         for (String url:androidData) {
              mDatabaseHelper.deleteHistoryItem(url);
         }
+    }
+
+    private static Cursor getAllVisitedUrls(ContentResolver resolver) {
+        final Uri authorityUri = Uri.parse("content://com.android.browser");
+        final Uri contentUri = Uri.withAppendedPath(authorityUri, "combined");
+
+        return resolver.query(contentUri,
+                new String[] { "url" }, null, null,
+                "created ASC");
+    }
+
+    private static Cursor getAllBookmarks(ContentResolver resolver) {
+        final Uri bookmarksUri = Uri.parse("content://browser/bookmarks");
+
+        return resolver.query(bookmarksUri,
+            new String[] { "url" },
+            "folder = 0", null, null);
     }
 
     @Override
