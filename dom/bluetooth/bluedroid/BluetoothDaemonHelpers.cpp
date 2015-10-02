@@ -532,24 +532,6 @@ Convert(const nsAString& aIn, BluetoothPropertyType& aOut)
 }
 
 nsresult
-Convert(const nsAString& aIn, BluetoothServiceName& aOut)
-{
-  NS_ConvertUTF16toUTF8 serviceNameUTF8(aIn);
-  const char* str = serviceNameUTF8.get();
-  size_t len = strlen(str);
-
-  if (MOZ_HAL_IPC_CONVERT_WARN_IF(
-        len > sizeof(aOut.mName), nsAString, BluetoothServiceName)) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  memcpy(aOut.mName, str, len);
-  memset(aOut.mName + len, 0, sizeof(aOut.mName) - len);
-
-  return NS_OK;
-}
-
-nsresult
 Convert(nsresult aIn, BluetoothStatus& aOut)
 {
   if (NS_SUCCEEDED(aIn)) {
@@ -1301,7 +1283,15 @@ PackPDU(BluetoothScanMode aIn, DaemonSocketPDU& aPDU)
 nsresult
 PackPDU(const BluetoothServiceName& aIn, DaemonSocketPDU& aPDU)
 {
-  return PackPDU(PackArray<uint8_t>(aIn.mName, sizeof(aIn.mName)), aPDU);
+  static const uint8_t sTerminator = '\0';
+
+  nsresult rv =
+    PackPDU(PackArray<uint8_t>(aIn.mName, sizeof(aIn.mName)), aPDU);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  /* The PDU requries one additional byte for \0 termination */
+  return aPDU.Write(sTerminator);
 }
 
 nsresult
