@@ -797,7 +797,7 @@ BluetoothDaemonInterface::GetConnectionState(const BluetoothAddress& aBdAddr,
 void
 BluetoothDaemonInterface::PinReply(const BluetoothAddress& aBdAddr,
                                    bool aAccept,
-                                   const nsAString& aPinCode,
+                                   const BluetoothPinCode& aPinCode,
                                    BluetoothResultHandler* aRes)
 {
   nsresult rv = static_cast<BluetoothDaemonCoreModule*>

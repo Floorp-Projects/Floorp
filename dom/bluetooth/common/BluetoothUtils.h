@@ -34,6 +34,13 @@ nsresult
 StringToAddress(const nsAString& aString, BluetoothAddress& aAddress);
 
 //
+// Pin code/string conversion
+//
+
+nsresult
+StringToPinCode(const nsAString& aString, BluetoothPinCode& aPinCode);
+
+//
 // BluetoothUuid <-> uuid string conversion
 //
 

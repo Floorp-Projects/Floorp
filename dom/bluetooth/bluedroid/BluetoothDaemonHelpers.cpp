@@ -514,35 +514,6 @@ Convert(int32_t aIn, BluetoothGattStatus& aOut)
 }
 
 nsresult
-Convert(const nsAString& aIn, BluetoothPinCode& aOut)
-{
-  if (MOZ_HAL_IPC_CONVERT_WARN_IF(
-        aIn.Length() > MOZ_ARRAY_LENGTH(aOut.mPinCode), nsAString,
-        BluetoothPinCode)) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-
-  NS_ConvertUTF16toUTF8 pinCodeUTF8(aIn);
-  const char* str = pinCodeUTF8.get();
-
-  nsAString::size_type i;
-
-  // Fill pin into aOut
-  for (i = 0; i < aIn.Length(); ++i, ++str) {
-    aOut.mPinCode[i] = static_cast<uint8_t>(*str);
-  }
-
-  // Clear remaining bytes in aOut
-  size_t ntrailing = (MOZ_ARRAY_LENGTH(aOut.mPinCode) - aIn.Length()) *
-                     sizeof(aOut.mPinCode[0]);
-  memset(aOut.mPinCode + aIn.Length(), 0, ntrailing);
-
-  aOut.mLength = aIn.Length();
-
-  return NS_OK;
-}
-
-nsresult
 Convert(const nsAString& aIn, BluetoothPropertyType& aOut)
 {
   if (aIn.EqualsLiteral("Name")) {

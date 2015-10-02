@@ -373,7 +373,7 @@ BluetoothDaemonCoreModule::CancelBondCmd(const BluetoothAddress& aBdAddr,
 nsresult
 BluetoothDaemonCoreModule::PinReplyCmd(const BluetoothAddress& aBdAddr,
                                        bool aAccept,
-                                       const nsAString& aPinCode,
+                                       const BluetoothPinCode& aPinCode,
                                        BluetoothResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -382,10 +382,7 @@ BluetoothDaemonCoreModule::PinReplyCmd(const BluetoothAddress& aBdAddr,
     new DaemonSocketPDU(SERVICE_ID, OPCODE_PIN_REPLY,
                         0));
 
-  nsresult rv = PackPDU(
-    aBdAddr,
-    aAccept,
-    PackConversion<nsAString, BluetoothPinCode>(aPinCode), *pdu);
+  nsresult rv = PackPDU(aBdAddr, aAccept, aPinCode, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
