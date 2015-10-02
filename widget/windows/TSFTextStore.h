@@ -549,6 +549,32 @@ protected:
     return newAction;
   }
 
+  /**
+   * WasTextInsertedWithoutCompositionAt() checks if text was inserted without
+   * composition immediately before (e.g., see InsertTextAtSelectionInternal()).
+   *
+   * @param aStart              The inserted offset you expected.
+   * @param aLength             The inserted text length you expected.
+   * @return                    true if the last pending actions are
+   *                            COMPOSITION_START and COMPOSITION_END and
+   *                            aStart and aLength match their information.
+   */
+  bool WasTextInsertedWithoutCompositionAt(LONG aStart, LONG aLength) const
+  {
+    if (mPendingActions.Length() < 2) {
+      return false;
+    }
+    const PendingAction& pendingLastAction = mPendingActions.LastElement();
+    if (pendingLastAction.mType != PendingAction::COMPOSITION_END ||
+        pendingLastAction.mData.Length() != aLength) {
+      return false;
+    }
+    const PendingAction& pendingPreLastAction =
+      mPendingActions[mPendingActions.Length() - 2];
+    return pendingPreLastAction.mType == PendingAction::COMPOSITION_START &&
+           pendingPreLastAction.mSelectionStart == aStart;
+  }
+
   bool IsPendingCompositionUpdateIncomplete() const
   {
     if (mPendingActions.IsEmpty()) {
@@ -642,6 +668,23 @@ protected:
     void StartComposition(ITfCompositionView* aCompositionView,
                           const PendingAction& aCompStart,
                           bool aPreserveSelection);
+    /**
+     * RestoreCommittedComposition() restores the committed string as
+     * composing string.  If InsertTextAtSelection() or something is called
+     * before a call of OnStartComposition(), there is a pending
+     * compositionstart and a pending compositionend.  In this case, we
+     * need to cancel the pending compositionend and continue the composition.
+     *
+     * @param aCompositionView          The composition view.
+     * @param aPendingCompositionStart  The pending compositionstart which
+     *                                  started the committed composition.
+     * @param aCanceledCompositionEnd   The pending compositionend which is
+     *                                  canceled for restarting the composition.
+     */
+    void RestoreCommittedComposition(
+                         ITfCompositionView* aCompositionView,
+                         const PendingAction& aPendingCompositionStart,
+                         const PendingAction& aCanceledCompositionEnd);
     void EndComposition(const PendingAction& aCompEnd);
 
     const nsString& Text() const
