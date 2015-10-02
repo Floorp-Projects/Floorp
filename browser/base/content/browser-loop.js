@@ -60,13 +60,13 @@ var LoopUI;
      */
     promiseDocumentVisible(aDocument) {
       if (!aDocument.hidden) {
-        return Promise.resolve();
+        return Promise.resolve(aDocument);
       }
 
       return new Promise((resolve) => {
         aDocument.addEventListener("visibilitychange", function onVisibilityChanged() {
           aDocument.removeEventListener("visibilitychange", onVisibilityChanged);
-          resolve();
+          resolve(aDocument);
         });
       });
     },
@@ -81,6 +81,15 @@ var LoopUI;
      * @return {Promise}
      */
     togglePanel: function(event, tabId = null) {
+      if (!this.panel) {
+        // We're on the hidden window! What fun!
+        let obs = win => {
+          Services.obs.removeObserver(obs, "browser-delayed-startup-finished");
+          win.LoopUI.togglePanel(event, tabId);
+        };
+        Services.obs.addObserver(obs, "browser-delayed-startup-finished", false);
+        return OpenBrowserWindow();
+      }
       if (this.panel.state == "open") {
         return new Promise(resolve => {
           this.panel.hidePopup();
@@ -88,7 +97,12 @@ var LoopUI;
         });
       }
 
-      return this.openCallPanel(event, tabId);
+      return this.openCallPanel(event, tabId).then(doc => {
+        let fm = Services.focus;
+        fm.moveFocus(doc.defaultView, null, fm.MOVEFOCUS_FIRST, fm.FLAG_NOSCROLL);
+      }).catch(err => {
+        Cu.reportError(x);
+      });
     },
 
     /**
@@ -130,14 +144,14 @@ var LoopUI;
 
           let documentDOMLoaded = () => {
             iframe.removeEventListener("DOMContentLoaded", documentDOMLoaded, true);
-  	    this.injectLoopAPI(iframe.contentWindow);
-  	    iframe.contentWindow.addEventListener("loopPanelInitialized", function loopPanelInitialized() {
+            this.injectLoopAPI(iframe.contentWindow);
+            iframe.contentWindow.addEventListener("loopPanelInitialized", function loopPanelInitialized() {
               iframe.contentWindow.removeEventListener("loopPanelInitialized",
-                                                       loopPanelInitialized);
+                loopPanelInitialized);
               showTab();
-	    });
-	  };
-	  iframe.addEventListener("DOMContentLoaded", documentDOMLoaded, true); 
+            });
+          };
+          iframe.addEventListener("DOMContentLoaded", documentDOMLoaded, true);
         };
 
         // Used to clear the temporary "login" state from the button.
@@ -153,7 +167,9 @@ var LoopUI;
             return;
           }
 
-          this.PanelFrame.showPopup(window, event ? event.target : this.toolbarButton.node,
+          let anchor = event ? event.target : this.toolbarButton.anchor;
+
+          this.PanelFrame.showPopup(window, anchor,
             "loop", null, "about:looppanel",
             // Loop wants a fixed size for the panel. This also stops it dynamically resizing.
             { width: 330, height: 410 },

@@ -1046,8 +1046,16 @@ BluetoothServiceBluedroid::SetProperty(BluetoothObjectType aType,
 
   ENSURE_BLUETOOTH_IS_READY(aRunnable, NS_OK);
 
+  BluetoothProperty property;
+  nsresult rv = NamedValueToProperty(aValue, property);
+  if (NS_FAILED(rv)) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return rv;
+  }
+
   mSetAdapterPropertyRunnables.AppendElement(aRunnable);
-  sBtInterface->SetAdapterProperty(aValue,
+  sBtInterface->SetAdapterProperty(
+    property,
     new DispatchReplyErrorResultHandler(mSetAdapterPropertyRunnables,
                                         aRunnable));
 
@@ -1347,7 +1355,14 @@ BluetoothServiceBluedroid::PinReplyInternal(
     return;
   }
 
-  sBtInterface->PinReply(address, aAccept, aPinCode,
+  BluetoothPinCode pinCode;
+  rv = StringToPinCode(aPinCode, pinCode);
+  if (NS_FAILED(rv)) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
+  sBtInterface->PinReply(address, aAccept, pinCode,
                          new PinReplyResultHandler(aRunnable));
 }
 
@@ -1940,7 +1955,7 @@ BluetoothServiceBluedroid::AdapterStateChangedNotification(bool aState)
     // be connectable and non-discoverable.
     NS_ENSURE_TRUE_VOID(sBtInterface);
     sBtInterface->SetAdapterProperty(
-      BluetoothNamedValue(NS_ConvertUTF8toUTF16("Discoverable"), false),
+      BluetoothProperty(PROPERTY_ADAPTER_SCAN_MODE, SCAN_MODE_CONNECTABLE),
       new SetAdapterPropertyDiscoverableResultHandler());
 
     // Trigger OPP & PBAP managers to listen
@@ -2286,7 +2301,8 @@ BluetoothServiceBluedroid::DiscoveryStateChangedNotification(bool aState)
 
 void
 BluetoothServiceBluedroid::PinRequestNotification(
-  const BluetoothAddress& aRemoteBdAddr, const nsAString& aBdName, uint32_t aCod)
+  const BluetoothAddress& aRemoteBdAddr, const BluetoothRemoteName& aBdName,
+  uint32_t aCod)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -2297,7 +2313,9 @@ BluetoothServiceBluedroid::PinRequestNotification(
   nsAutoString bdAddr;
   AddressToString(aRemoteBdAddr, bdAddr);
 
-  nsString bdName(aBdName);
+  nsAutoString bdName;
+  RemoteNameToString(aBdName, bdName);
+
   if (bdName.IsEmpty()) {
     mDeviceNameMap.Get(aRemoteBdAddr, &bdName);
   } else {
@@ -2318,7 +2336,7 @@ BluetoothServiceBluedroid::PinRequestNotification(
 
 void
 BluetoothServiceBluedroid::SspRequestNotification(
-  const BluetoothAddress& aRemoteBdAddr, const nsAString& aBdName,
+  const BluetoothAddress& aRemoteBdAddr, const BluetoothRemoteName& aBdName,
   uint32_t aCod, BluetoothSspVariant aPairingVariant, uint32_t aPassKey)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -2330,7 +2348,9 @@ BluetoothServiceBluedroid::SspRequestNotification(
   nsAutoString bdAddr;
   AddressToString(aRemoteBdAddr, bdAddr);
 
-  nsString bdName(aBdName);
+  nsAutoString bdName;
+  RemoteNameToString(aBdName, bdName);
+
   if (bdName.IsEmpty()) {
     mDeviceNameMap.Get(aRemoteBdAddr, &bdName);
   } else {
@@ -2460,7 +2480,8 @@ BluetoothServiceBluedroid::BondStateChangedNotification(
 
 void
 BluetoothServiceBluedroid::AclStateChangedNotification(
-  BluetoothStatus aStatus, const BluetoothAddress& aRemoteBdAddr, bool aState)
+  BluetoothStatus aStatus, const BluetoothAddress& aRemoteBdAddr,
+  BluetoothAclState aState)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
