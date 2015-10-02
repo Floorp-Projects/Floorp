@@ -886,6 +886,43 @@ public:
         NS_LITERAL_STRING("\x5FAE\x8EDF\x4E94\x7B46"));
   }
 
+  /****************************************************************************
+   * Korean TIP
+   ****************************************************************************/
+
+  // MS-IME for Korean on Vista, Win8.1 and Win10.
+  bool IsMSKoreanIMEActive() const
+  {
+    // {B5FE1F02-D5F2-4445-9C03-C568F23C99A1}
+    static const GUID kGUID = {
+      0xB5FE1F02, 0xD5F2, 0x4445,
+        { 0x9C, 0x03, 0xC5, 0x68, 0xF2, 0x3C, 0x99, 0xA1 }
+    };
+    return mActiveTIPGUID == kGUID;
+  }
+
+  // MS-IME for Korean on Win7
+  bool IsMSKoreanIME2010Active() const
+  {
+    // {48878C45-93F9-4AAF-A6A1-272CD863C4F5}
+    static const GUID kGUID = {
+      0x48878C45, 0x93F9, 0x4AAF,
+        { 0xA6, 0xA1, 0x27, 0x2C, 0xD8, 0x63, 0xC4, 0xF5 }
+    };
+    return mActiveTIPGUID == kGUID;
+  }
+
+  // Microsoft Old Handle is an optional Korean IME on Win8.1 and Win10.
+  bool IsMSOldHangulActive() const
+  {
+    // {B60AF051-257A-46BC-B9D3-84DAD819BAFB}
+    static const GUID kGUID = {
+      0xB60AF051, 0x257A, 0x46BC,
+        { 0xB9, 0xD3, 0x84, 0xDA, 0xD8, 0x19, 0xBA, 0xFB }
+    };
+    return mActiveTIPGUID == kGUID;
+  }
+
 public: // ITfActiveLanguageProfileNotifySink
   STDMETHODIMP OnActivated(REFCLSID clsid, REFGUID guidProfile,
                            BOOL fActivated);
@@ -922,6 +959,9 @@ private:
   // i.e., IMM-IME or just a keyboard layout, this is empty.
   nsString mActiveTIPKeyboardDescription;
 
+  // Active TIP's GUID
+  GUID mActiveTIPGUID;
+
   static StaticRefPtr<TSFStaticSink> sInstance;
 };
 
@@ -932,6 +972,7 @@ TSFStaticSink::TSFStaticSink()
   , mLangProfileCookie(TF_INVALID_COOKIE)
   , mIsIMM_IME(false)
   , mOnActivatedCalled(false)
+  , mActiveTIPGUID(GUID_NULL)
 {
 }
 
@@ -1046,6 +1087,7 @@ TSFStaticSink::OnActivated(REFCLSID clsid, REFGUID guidProfile,
   if (fActivated) {
     // TODO: We should check if the profile's category is keyboard or not.
     mOnActivatedCalled = true;
+    mActiveTIPGUID = guidProfile;
     mIsIMM_IME = IsIMM_IME(::GetKeyboardLayout(0));
 
     LANGID langID;
@@ -1089,6 +1131,7 @@ TSFStaticSink::OnActivated(DWORD dwProfileType,
       (dwProfileType == TF_PROFILETYPE_KEYBOARDLAYOUT ||
        catid == GUID_TFCAT_TIP_KEYBOARD)) {
     mOnActivatedCalled = true;
+    mActiveTIPGUID = guidProfile;
     mIsIMM_IME = IsIMM_IME(hkl);
     GetTIPDescription(rclsid, langid, guidProfile,
                       mActiveTIPKeyboardDescription);
@@ -4013,7 +4056,12 @@ TSFTextStore::RecordCompositionStartAction(ITfCompositionView* aComposition,
   // compositionstart occurred same range as this composition, it was the
   // start of this composition.  In such case, we should cancel the pending
   // compositionend and start composition normally.
+  // FYI: This fix is restricted to MS-IME for Korean at least in 42.
+  const TSFStaticSink* kSink = TSFStaticSink::GetInstance();
   if (!aPreserveSelection &&
+      (kSink->IsMSKoreanIMEActive() ||
+       kSink->IsMSKoreanIME2010Active() ||
+       kSink->IsMSOldHangulActive()) &&
       WasTextInsertedWithoutCompositionAt(aStart, aLength)) {
     const PendingAction& pendingCompositionEnd = mPendingActions.LastElement();
     const PendingAction& pendingCompositionStart =
