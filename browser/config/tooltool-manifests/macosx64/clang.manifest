@@ -3,8 +3,8 @@
 "clang_version": "r247539"
 },
 {
-"size": 121911359,
-"digest": "2bfbc45c5b172bf97a7d06373ddc4677f95cf765b7582725abb6552ce5b12bc199480af169d9ea5469c4aabb86c9f24725320eea8b1a153fba4cfa0ec59c7917",
+"size": 97314461,
+"digest": "9a74670fa917f760a4767923485d5166bbd258a8023c8aeb899b8c4d22f2847be76508ac5f26d7d2193318a2bb368a71bc62888d1bfe9d81eb45329a60451aa4",
 "algorithm": "sha512",
 "filename": "clang.tar.xz",
 "unpack": true
