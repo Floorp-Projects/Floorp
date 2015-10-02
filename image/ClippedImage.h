@@ -68,7 +68,7 @@ protected:
   virtual ~ClippedImage();
 
 private:
-  already_AddRefed<SourceSurface>
+  Pair<DrawResult, RefPtr<SourceSurface>>
     GetFrameInternal(const nsIntSize& aSize,
                      const Maybe<SVGImageContext>& aSVGContext,
                      uint32_t aWhichFrame,

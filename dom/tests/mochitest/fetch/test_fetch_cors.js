@@ -1277,7 +1277,17 @@ function testRedirects() {
         ok(test.pass, "Expected test to pass for " + test.toSource());
         is(res.status, 200, "wrong status in test for " + test.toSource());
         is(res.statusText, "OK", "wrong status text for " + test.toSource());
-        is((new URL(res.url)).host, (new URL(test.hops[test.hops.length-1].server)).host, "Response URL should be redirected URL");
+        var reqHost = (new URL(req.url)).host;
+        // If there is a service worker present, the redirections will be
+        // transparent, assuming that the original request is to the current
+        // site and would be intercepted.
+        if (isSWPresent) {
+          if (reqHost === location.host) {
+            is((new URL(res.url)).host, reqHost, "Response URL should be original URL with a SW present");
+          }
+        } else {
+          is((new URL(res.url)).host, (new URL(test.hops[test.hops.length-1].server)).host, "Response URL should be redirected URL");
+        }
         return res.text().then(function(v) {
           is(v, "<res>hello pass</res>\n",
              "wrong responseText in test for " + test.toSource());

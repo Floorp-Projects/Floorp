@@ -288,6 +288,7 @@ UNIFIED_SOURCES += [
     'vm/ArrayBufferObject.cpp',
     'vm/CallNonGenericMethod.cpp',
     'vm/CharacterEncoding.cpp',
+    'vm/CodeCoverage.cpp',
     'vm/Compression.cpp',
     'vm/DateTime.cpp',
     'vm/Debugger.cpp',

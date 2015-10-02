@@ -168,6 +168,13 @@ user_pref("layout.spammy_warnings.enabled", false);
 user_pref("media.mediasource.mp4.enabled", true);
 user_pref("media.mediasource.webm.enabled", true);
 
+// Enable fragmented MP4 parser for testing
+user_pref("media.fragmented-mp4.exposed", true);
+
+#if defined(LINUX)
+user_pref("media.fragmented-mp4.ffmpeg.enabled", true);
+#endif
+
 // Enable mozContacts
 user_pref("dom.mozContacts.enabled", true);
 
@@ -303,6 +310,8 @@ user_pref("browser.search.geoSpecificDefaults", false);
 user_pref("browser.selfsupport.url", "https://%(server)s/selfsupport-dummy/");
 
 user_pref("media.eme.enabled", true);
+
+user_pref("media.autoplay.enabled", true);
 
 #if defined(XP_WIN)
 user_pref("media.decoder.heuristic.dormant.timeout", 0);

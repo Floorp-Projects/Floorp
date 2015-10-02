@@ -381,9 +381,12 @@
         </receiver>
 
         <service android:name="org.mozilla.gecko.Restarter"
-                  android:exported="false"
-                  android:process="@MANGLED_ANDROID_PACKAGE_NAME@.Restarter">
+                 android:exported="false"
+                 android:process="@MANGLED_ANDROID_PACKAGE_NAME@.Restarter">
         </service>
+
+        <receiver android:name="org.mozilla.gecko.AlarmReceiver" >
+        </receiver>
 
 #include ../services/manifests/FxAccountAndroidManifest_activities.xml.in
 #include ../services/manifests/HealthReportAndroidManifest_activities.xml.in

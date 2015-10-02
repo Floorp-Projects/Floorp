@@ -293,7 +293,6 @@ ResponsiveImageSelector::SelectImage(bool aReselect)
   nsCOMPtr<nsIURI> baseURI = mOwnerNode ? mOwnerNode->GetBaseURI() : nullptr;
 
   if (!pctx || !doc || !baseURI) {
-    MOZ_ASSERT(false, "Unable to find document prescontext and base URI");
     return oldBest != -1;
   }
 

@@ -30,20 +30,21 @@
 #include "common/mac/arch_utilities.h"
 
 #include <mach-o/arch.h>
+#include <mach-o/fat.h>
 #include <stdio.h>
 #include <string.h>
-
-#ifndef CPU_TYPE_ARM
-#define CPU_TYPE_ARM (static_cast<cpu_type_t>(12))
-#endif  // CPU_TYPE_ARM
-
-#ifndef CPU_SUBTYPE_ARM_V7
-#define CPU_SUBTYPE_ARM_V7 (static_cast<cpu_subtype_t>(9))
-#endif  // CPU_SUBTYPE_ARM_V7
 
 #ifndef CPU_SUBTYPE_ARM_V7S
 #define CPU_SUBTYPE_ARM_V7S (static_cast<cpu_subtype_t>(11))
 #endif  // CPU_SUBTYPE_ARM_V7S
+
+#ifndef CPU_TYPE_ARM64
+#define CPU_TYPE_ARM64 (CPU_TYPE_ARM | CPU_ARCH_ABI64)
+#endif  // CPU_TYPE_ARM64
+
+#ifndef CPU_SUBTYPE_ARM64_ALL
+#define CPU_SUBTYPE_ARM64_ALL (static_cast<cpu_subtype_t>(0))
+#endif  // CPU_SUBTYPE_ARM64_ALL
 
 namespace {
 
@@ -79,3 +80,108 @@ const NXArchInfo* BreakpadGetArchInfoFromCpuType(cpu_type_t cpu_type,
 }
 
 }  // namespace google_breakpad
+
+#ifndef __APPLE__
+namespace {
+
+enum Architecture {
+  kArch_i386 = 0,
+  kArch_x86_64,
+  kArch_arm,
+  kArch_arm64,
+  kArch_ppc,
+  // This must be last.
+  kNumArchitectures
+};
+
+// enum Architecture above and kKnownArchitectures below
+// must be kept in sync.
+const NXArchInfo kKnownArchitectures[] = {
+  {
+    "i386",
+    CPU_TYPE_I386,
+    CPU_SUBTYPE_I386_ALL,
+    NX_LittleEndian,
+    "Intel 80x86"
+  },
+  {
+    "x86_64",
+    CPU_TYPE_X86_64,
+    CPU_SUBTYPE_X86_64_ALL,
+    NX_LittleEndian,
+    "Intel x86-64"
+  },
+  {
+    "arm",
+    CPU_TYPE_ARM,
+    CPU_SUBTYPE_ARM_ALL,
+    NX_LittleEndian,
+    "ARM"
+  },
+  {
+    "arm64",
+    CPU_TYPE_ARM64,
+    CPU_SUBTYPE_ARM64_ALL,
+    NX_LittleEndian,
+    "ARM64"
+  },
+  {
+    "ppc",
+    CPU_TYPE_POWERPC,
+    CPU_SUBTYPE_POWERPC_ALL,
+    NX_BigEndian,
+    "PowerPC"
+  }
+};
+
+}  // namespace
+
+const NXArchInfo *NXGetLocalArchInfo(void) {
+  Architecture arch;
+#if defined(__i386__)
+  arch = kArch_i386;
+#elif defined(__x86_64__)
+  arch = kArch_x86_64;
+#elif defined(__arm64)
+  arch = kArch_arm64;
+#elif defined(__arm__)
+  arch = kArch_arm;
+#elif defined(__powerpc__)
+  arch = kArch_ppc;
+#else
+  #error "Unsupported CPU architecture"
+#endif
+  return &kKnownArchitectures[arch];
+}
+
+const NXArchInfo *NXGetArchInfoFromName(const char *name) {
+  for (int arch = 0; arch < kNumArchitectures; ++arch) {
+    if (!strcmp(name, kKnownArchitectures[arch].name)) {
+      return &kKnownArchitectures[arch];
+    }
+  }
+  return nullptr;
+}
+
+const NXArchInfo *NXGetArchInfoFromCpuType(cpu_type_t cputype,
+                                           cpu_subtype_t cpusubtype) {
+  for (int arch = 0; arch < kNumArchitectures; ++arch) {
+    if (kKnownArchitectures[arch].cputype == cputype) {
+      return &kKnownArchitectures[arch];
+    }
+  }
+  return nullptr;
+}
+
+struct fat_arch *NXFindBestFatArch(cpu_type_t cputype,
+                                   cpu_subtype_t cpusubtype,
+                                   struct fat_arch *fat_archs,
+                                   uint32_t nfat_archs) {
+  for (uint32_t f = 0; f < nfat_archs; ++f) {
+    if (fat_archs[f].cputype == cputype) {
+      return &fat_archs[f];
+    }
+  }
+  return nullptr;
+}
+#endif  // !__APPLE__

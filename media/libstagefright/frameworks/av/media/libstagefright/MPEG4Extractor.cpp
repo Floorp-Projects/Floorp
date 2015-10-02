@@ -478,14 +478,14 @@ status_t MPEG4Extractor::readMetaData() {
     }
 
     off64_t offset = 0;
-    status_t err;
+    status_t err = NO_INIT;
     while (!mFirstTrack) {
         err = parseChunk(&offset, 0);
         // The parseChunk function returns UNKNOWN_ERROR to skip
         // some boxes we don't want to handle. Filter that error
         // code but return others so e.g. I/O errors propagate.
         if (err != OK && err != (status_t) UNKNOWN_ERROR) {
-          ALOGW("Error %d parsing chuck at offset %lld looking for first track",
+          ALOGW("Error %d parsing chunck at offset %lld looking for first track",
               err, (long long)offset);
           break;
         }
@@ -2539,7 +2539,7 @@ sp<MediaSource> MPEG4Extractor::getTrack(size_t index) {
         return NULL;
     }
 
-    ALOGV("getTrack called, pssh: %d", mPssh.size());
+    ALOGV("getTrack called, pssh: %d", mPssh.Length());
 
     return new MPEG4Source(
             track->meta, mDataSource, track->timescale, track->sampleTable,
