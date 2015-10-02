@@ -52,6 +52,7 @@ public:
 
   nsDOMOfflineResourceList(nsIURI* aManifestURI,
                            nsIURI* aDocumentURI,
+                           nsIPrincipal* aLoadingPrincipal,
                            nsPIDOMWindow* aWindow);
 
   void FirePendingEvents();
@@ -153,6 +154,7 @@ private:
   nsCString mManifestSpec;
 
   nsCOMPtr<nsIURI> mDocumentURI;
+  nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
   nsCOMPtr<nsIApplicationCacheService> mApplicationCacheService;
   nsCOMPtr<nsIApplicationCache> mAvailableApplicationCache;
   nsCOMPtr<nsIOfflineCacheUpdate> mCacheUpdate;
