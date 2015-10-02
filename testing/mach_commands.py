@@ -22,12 +22,13 @@ from mozbuild.base import MachCommandBase
 from mozbuild.base import MachCommandConditions as conditions
 from argparse import ArgumentParser
 
-
 UNKNOWN_TEST = '''
-I was unable to find tests in the argument(s) given.
+I was unable to find tests from the given argument(s).
 
-You need to specify a test directory, filename, test suite name, or
-abbreviation.
+You should specify a test directory, filename, test suite name, or
+abbreviation. If no arguments are given, there must be local file
+changes and corresponding IMPACTED_TESTS annotations in moz.build
+files relevant to those files.
 
 It's possible my little brain doesn't know about the type of test you are
 trying to execute. If you suspect this, please request support by filing
@@ -199,6 +200,11 @@ class Test(MachCommandBase):
         * A test suite name
         * An alias to a test suite name (codes used on TreeHerder)
 
+        If no input is provided, tests will be run based on files changed in
+        the local tree. Relevant tests, tags, or flavors are determined by
+        IMPACTED_TESTS annotations in moz.build files relevant to the
+        changed files.
+
         When paths or directories are given, they are first resolved to test
         files known to the build system.
 
@@ -236,6 +242,45 @@ class Test(MachCommandBase):
             if not tests:
                 print('UNKNOWN TEST: %s' % entry, file=sys.stderr)
 
+        if not what:
+            # TODO: This isn't really related to try, and should be
+            # extracted to a common library for vcs interactions when it is
+            # introduced in bug 1185599.
+            from autotry import AutoTry
+            at = AutoTry(self.topsrcdir, resolver, self._mach_context)
+            changed_files = at.find_changed_files()
+            if changed_files:
+                print("Tests will be run based on modifications to the "
+                      "following files:\n\t%s" % "\n\t".join(changed_files))
+
+            from mozbuild.frontend.reader import (
+                BuildReader,
+                EmptyConfig,
+            )
+            config = EmptyConfig(self.topsrcdir)
+            reader = BuildReader(config)
+            files_info = reader.files_info(changed_files)
+
+            paths, tags, flavors = set(), set(), set()
+            for info in files_info.values():
+                paths |= info.test_files
+                tags |= info.test_tags
+                flavors |= info.test_flavors
+
+            # This requires multiple calls to resolve_tests, because the test
+            # resolver returns tests that match every condition, while we want
+            # tests that match any condition. Bug 1210213 tracks implementing
+            # more flexible querying.
+            if tags:
+                run_tests = list(resolver.resolve_tests(tags=tags))
+            if paths:
+                run_tests += [t for t in resolver.resolve_tests(paths=paths)
+                              if not (tags & set(t.get('tags', '').split()))]
+            if flavors:
+                run_tests = [t for t in run_tests if t['flavor'] not in flavors]
+                for flavor in flavors:
+                    run_tests += list(resolver.resolve_tests(flavor=flavor))
+
         if not run_suites and not run_tests:
             print(UNKNOWN_TEST)
             return 1
@@ -248,12 +293,6 @@ class Test(MachCommandBase):
                 res = self._mach_context.commands.dispatch(
                     suite['mach_command'], self._mach_context,
                     **suite['kwargs'])
-                if res:
-                    status = res
-
-            elif 'make_target' in suite:
-                res = self._run_make(target=suite['make_target'],
-                    pass_thru=True)
                 if res:
                     status = res
 
@@ -465,7 +504,11 @@ class PushToTry(MachCommandBase):
             sys.exit(1)
 
         if kwargs["platforms"] is None:
-            kwargs["platforms"] = [os.environ['AUTOTRY_PLATFORM_HINT']]
+            if 'AUTOTRY_PLATFORM_HINT' in os.environ:
+                kwargs["platforms"] = [os.environ['AUTOTRY_PLATFORM_HINT']]
+            else:
+                print("Platforms must be specified as an argument to autotry.")
+                sys.exit(1)
 
         try:
             platforms = self.normalise_list(kwargs["platforms"])
@@ -477,7 +520,7 @@ class PushToTry(MachCommandBase):
             tests = (self.normalise_list(kwargs["tests"], allow_subitems=True)
                      if kwargs["tests"] else {})
         except ValueError as e:
-            print("Error parsing -u argument:\n%s" % e.message)
+            print("Error parsing -u argument (%s):\n%s" % (kwargs["tests"], e.message))
             sys.exit(1)
 
         try:

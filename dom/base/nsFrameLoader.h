@@ -317,6 +317,12 @@ private:
 
   void InitializeBrowserAPI();
 
+  enum TabParentChange {
+    eTabParentRemoved,
+    eTabParentChanged
+  };
+  void MaybeUpdatePrimaryTabParent(TabParentChange aChange);
+
   nsCOMPtr<nsIDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURIToLoad;
   mozilla::dom::Element* mOwnerContent; // WEAK

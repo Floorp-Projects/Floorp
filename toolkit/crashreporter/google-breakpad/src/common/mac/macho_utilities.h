@@ -62,23 +62,34 @@ struct breakpad_uuid_command {
   uint8_t     uuid[16];       /* the 128-bit uuid */
 };
 
-void breakpad_swap_uuid_command(struct breakpad_uuid_command *uc,
-                                enum NXByteOrder target_byte_order);
+void breakpad_swap_uuid_command(struct breakpad_uuid_command *uc);
+
+void breakpad_swap_load_command(struct load_command *lc);
+
+void breakpad_swap_dylib_command(struct dylib_command *dc);
 
 // Older SDKs defines thread_state_data_t as an int[] instead
 // of the natural_t[] it should be.
 typedef natural_t breakpad_thread_state_data_t[THREAD_STATE_MAX];
 
+void breakpad_swap_segment_command(struct segment_command *sc);
+
 // The 64-bit swap routines were added during the 10.4 series, their
 // presence isn't guaranteed.
-void breakpad_swap_segment_command_64(struct segment_command_64 *sg,
-                                      enum NXByteOrder target_byte_order);
+void breakpad_swap_segment_command_64(struct segment_command_64 *sg);
 
-void breakpad_swap_mach_header_64(struct mach_header_64 *mh,
-                                  enum NXByteOrder target_byte_order);
+void breakpad_swap_fat_header(struct fat_header *fh);
+
+void breakpad_swap_fat_arch(struct fat_arch *fa, uint32_t narchs);
+
+void breakpad_swap_mach_header(struct mach_header *mh);
+
+void breakpad_swap_mach_header_64(struct mach_header_64 *mh);
+
+void breakpad_swap_section(struct section *s,
+                           uint32_t nsects);
 
 void breakpad_swap_section_64(struct section_64 *s,
-                              uint32_t nsects,
-                              enum NXByteOrder target_byte_order);
+                              uint32_t nsects);
 
 #endif

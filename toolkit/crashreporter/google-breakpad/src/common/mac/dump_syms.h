@@ -35,7 +35,6 @@
 // reading debugging information from Mach-O files and writing it out as a
 // Breakpad symbol file.
 
-#include <Foundation/Foundation.h>
 #include <mach-o/loader.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,6 +46,7 @@
 #include "common/byte_cursor.h"
 #include "common/mac/macho_reader.h"
 #include "common/module.h"
+#include "common/scoped_ptr.h"
 #include "common/symbol_data.h"
 
 namespace google_breakpad {
@@ -61,20 +61,13 @@ class DumpSymbols {
         selected_object_file_(),
         selected_object_name_() { }
   ~DumpSymbols() {
-    [input_pathname_ release];
-    [object_filename_ release];
-    [contents_ release];
   }
 
   // Prepare to read debugging information from |filename|. |filename| may be
   // the name of a universal binary, a Mach-O file, or a dSYM bundle
   // containing either of the above. On success, return true; if there is a
   // problem reading |filename|, report it and return false.
-  //
-  // (This class uses NSString for filenames and related values,
-  // because the Mac Foundation framework seems to support
-  // filename-related operations more fully on NSString values.)
-  bool Read(NSString *filename);
+  bool Read(const std::string &filename);
 
   // If this dumper's file includes an object file for |cpu_type| and
   // |cpu_subtype|, then select that object file for dumping, and return
@@ -151,16 +144,16 @@ class DumpSymbols {
 
   // The name of the file or bundle whose symbols this will dump.
   // This is the path given to Read, for use in error messages.
-  NSString *input_pathname_;
+  std::string input_pathname_;
 
   // The name of the file this DumpSymbols will actually read debugging
   // information from. Normally, this is the same as input_pathname_, but if
   // filename refers to a dSYM bundle, then this is the resource file
   // within that bundle.
-  NSString *object_filename_;
+  std::string object_filename_;
 
   // The complete contents of object_filename_, mapped into memory.
-  NSData *contents_;
+  scoped_array<uint8_t> contents_;
 
   // A vector of fat_arch structures describing the object files
   // object_filename_ contains. If object_filename_ refers to a fat binary,

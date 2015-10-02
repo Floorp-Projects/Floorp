@@ -176,6 +176,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     simulator_(nullptr),
 #endif
     scriptAndCountsVector(nullptr),
+    lcovOutput(),
     NaNValue(DoubleNaNValue()),
     negativeInfinityValue(DoubleValue(NegativeInfinity<double>())),
     positiveInfinityValue(DoubleValue(PositiveInfinity<double>())),
@@ -242,6 +243,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
 
     PodArrayZero(nativeStackQuota);
     PodZero(&asmJSCacheOps);
+    lcovOutput.init();
 }
 
 static bool

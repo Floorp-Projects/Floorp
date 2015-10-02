@@ -103,6 +103,7 @@ SVGCircleElement::GetGeometryBounds(Rect* aBounds,
     if (aStrokeOptions.mLineWidth > 0.f) {
       if (aToNonScalingStrokeSpace) {
         if (aToNonScalingStrokeSpace->IsRectilinear()) {
+          MOZ_ASSERT(!aToNonScalingStrokeSpace->IsSingular());
           Rect userBounds(x - r, y - r, 2 * r, 2 * r);
           SVGContentUtils::RectilinearGetStrokeBounds(
             userBounds, aToBoundsSpace, *aToNonScalingStrokeSpace,

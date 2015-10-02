@@ -21,6 +21,7 @@
 #     -s <srcdir>  : Use <srcdir> as the top source directory to
 #                    generate relative filenames.
 
+import buildconfig
 import errno
 import sys
 import platform
@@ -326,13 +327,9 @@ def make_file_mapping(install_manifests):
 def GetPlatformSpecificDumper(**kwargs):
     """This function simply returns a instance of a subclass of Dumper
     that is appropriate for the current platform."""
-    # Python 2.5 has a bug where platform.system() returns 'Microsoft'.
-    # Remove this when we no longer support Python 2.5.
-    return {'Windows': Dumper_Win32,
-            'Microsoft': Dumper_Win32,
+    return {'WINNT': Dumper_Win32,
             'Linux': Dumper_Linux,
-            'Sunos5': Dumper_Solaris,
-            'Darwin': Dumper_Mac}[platform.system()](**kwargs)
+            'Darwin': Dumper_Mac}[buildconfig.substs['OS_ARCH']](**kwargs)
 
 def SourceIndex(fileStream, outputPath, vcs_root):
     """Takes a list of files, writes info to a data block in a .stream file"""
@@ -619,8 +616,9 @@ class Dumper:
         for file in files:
             # files is a tuple of files, containing fallbacks in case the first file doesn't process successfully
             try:
-                proc = subprocess.Popen([self.dump_syms] + arch.split() + [file],
-                                        stdout=subprocess.PIPE)
+                cmd = [self.dump_syms] + arch.split() + [file]
+                self.output_pid(sys.stderr, ' '.join(cmd))
+                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
                 module_line = proc.stdout.next()
                 if module_line.startswith("MODULE"):
                     # MODULE os cpu guid debug_file
@@ -902,10 +900,17 @@ class Dumper_Mac(Dumper):
         dsymbundle = file + ".dSYM"
         if os.path.exists(dsymbundle):
             shutil.rmtree(dsymbundle)
+        dsymutil = buildconfig.substs['DSYMUTIL']
         # dsymutil takes --arch=foo instead of -a foo like everything else
-        subprocess.call(["dsymutil"] + [a.replace('-a ', '--arch=') for a in self.archs if a]
-                        + [file],
-                        stdout=open(os.devnull, 'w'))
+        try:
+            cmd = ([dsymutil] +
+                   [a.replace('-a ', '--arch=') for a in self.archs if a] +
+                   [file])
+            self.output_pid(sys.stderr, ' '.join(cmd))
+            subprocess.check_call(cmd, stdout=open(os.devnull, 'w'))
+        except subprocess.CalledProcessError as e:
+            self.output_pid(sys.stderr, 'Error running dsymutil: %s' % str(e))
+
         if not os.path.exists(dsymbundle):
             # dsymutil won't produce a .dSYM for files without symbols
             self.output_pid(sys.stderr, "No symbols found in file: %s" % (file,))
