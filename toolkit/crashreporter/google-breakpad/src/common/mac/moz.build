@@ -6,14 +6,17 @@
 
 UNIFIED_SOURCES += [
     'arch_utilities.cc',
-    'bootstrap_compat.cc',
     'file_id.cc',
     'macho_id.cc',
     'macho_reader.cc',
     'macho_utilities.cc',
     'macho_walker.cc',
-    'string_utilities.cc',
 ]
+
+if CONFIG['HOST_OS_ARCH'] != 'Darwin':
+    HOST_CXXFLAGS += [
+        '-I%s/toolkit/crashreporter/google-breakpad/src/third_party/mac_headers/' % TOPSRCDIR,
+    ]
 
 # This is a little weird, but we're building a host and a target lib here.
 # The host lib is used for dump_syms, and the target lib for the
@@ -21,13 +24,15 @@ UNIFIED_SOURCES += [
 if CONFIG['MOZ_CRASHREPORTER']:
     HOST_SOURCES += UNIFIED_SOURCES
     HOST_SOURCES += [
-        'dump_syms.mm',
+        'dump_syms.cc',
     ]
     HostLibrary('host_breakpad_mac_common_s')
 
 SOURCES += [
+    'bootstrap_compat.cc',
     'HTTPMultipartUpload.m',
     'MachIPC.mm',
+    'string_utilities.cc',
 ]
 
 Library('breakpad_mac_common_s')

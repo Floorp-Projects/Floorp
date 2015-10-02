@@ -12,19 +12,6 @@
 ; ; file comment
 ;
 
-; Due to Apple Mac OS X packaging requirements, files that are in the same
-; directory on other platforms must be located in different directories on
-; Mac OS X. The following defines allow specifying the Mac OS X bundle
-; location which also work on other platforms.
-;
-; @BINPATH@
-; Equals Contents/MacOS/ on Mac OS X and is the path to the main binary on other
-; platforms.
-;
-; @RESPATH@
-; Equals Contents/Resources/ on Mac OS X and is equivalent to @BINPATH@ on other
-; platforms.
-
 #filter substitution
 
 #ifdef XP_MACOSX
@@ -142,6 +129,7 @@
 @BINPATH@/@DLL_PREFIX@lgpllibs@DLL_SUFFIX@
 @RESPATH@/blocklist.xml
 @RESPATH@/ua-update.json
+@RESPATH@/defaults/settings.json
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
 @RESPATH@/run-mozilla.sh

@@ -29,7 +29,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// dump_syms_tool.mm: Command line tool that uses the DumpSymbols class.
+// dump_syms_tool.cc: Command line tool that uses the DumpSymbols class.
 // TODO(waylonis): accept stdin
 
 #include <mach-o/arch.h>
@@ -47,7 +47,7 @@ using std::vector;
 
 struct Options {
   Options() : srcPath(), arch(), cfi(true) { }
-  NSString *srcPath;
+  string srcPath;
   const NXArchInfo *arch;
   bool cfi;
 };
@@ -63,7 +63,7 @@ static bool Start(const Options &options) {
     if (!dump_symbols.SetArchitecture(options.arch->cputype,
                                       options.arch->cpusubtype)) {
       fprintf(stderr, "%s: no architecture '%s' is present in file.\n",
-              [options.srcPath fileSystemRepresentation], options.arch->name);
+              options.srcPath.c_str(), options.arch->name);
       size_t available_size;
       const struct fat_arch *available =
         dump_symbols.AvailableArchitectures(&available_size);
@@ -136,21 +136,16 @@ static void SetupOptions(int argc, const char *argv[], Options *options) {
     exit(1);
   }
 
-  options->srcPath = [[NSFileManager defaultManager]
-                       stringWithFileSystemRepresentation:argv[optind]
-                       length:strlen(argv[optind])];
+  options->srcPath = argv[optind];
 }
 
 //=============================================================================
 int main (int argc, const char * argv[]) {
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   Options options;
   bool result;
 
   SetupOptions(argc, argv, &options);
   result = Start(options);
-
-  [pool release];
 
   return !result;
 }

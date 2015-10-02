@@ -221,7 +221,8 @@ BytecodeCompiler::canLazilyParse()
            !HasNonSyntacticStaticScopeChain(enclosingStaticScope) &&
            !cx->compartment()->options().disableLazyParsing() &&
            !cx->compartment()->options().discardSource() &&
-           !options.sourceIsLazy;
+           !options.sourceIsLazy &&
+           !cx->lcovEnabled();
 }
 
 bool

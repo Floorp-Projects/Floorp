@@ -45,7 +45,7 @@ using MacFileUtilities::MachoID;
 namespace google_breakpad {
 
 FileID::FileID(const char *path) {
-  strlcpy(path_, path, sizeof(path_));
+  strncpy(path_, path, sizeof(path_) - 1);
 }
 
 bool FileID::FileIdentifier(unsigned char identifier[16]) {

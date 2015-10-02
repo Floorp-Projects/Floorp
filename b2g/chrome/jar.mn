@@ -12,9 +12,9 @@ chrome.jar:
 * content/settings.js                   (content/settings.js)
 * content/shell.html                    (content/shell.html)
 * content/shell.js                      (content/shell.js)
-  content/shell.css                     (content/shell.css)
   content/shell_remote.html             (content/shell_remote.html)
   content/shell_remote.js               (content/shell_remote.js)
+* content/shell.css                     (content/shell.css)
   content/blank.html                    (content/blank.html)
   content/blank.css                     (content/blank.css)
 #ifdef MOZ_WIDGET_GONK
@@ -38,7 +38,9 @@ chrome.jar:
 
   content/identity.js                   (content/identity.js)
 
+#ifndef MOZ_GRAPHENE
 % override chrome://global/skin/media/videocontrols.css chrome://b2g/content/touchcontrols.css
+#endif
 % override chrome://global/content/aboutCertError.xhtml chrome://b2g/content/aboutCertError.xhtml
 % override chrome://global/skin/netError.css chrome://b2g/content/netError.css
 
