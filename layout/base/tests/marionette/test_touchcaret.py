@@ -19,10 +19,6 @@ class CommonCaretTestCase(object):
     MarionetteTestCase.
 
     '''
-    _input_selector = (By.ID, 'input')
-    _textarea_selector = (By.ID, 'textarea')
-    _contenteditable_selector = (By.ID, 'contenteditable')
-
     def setUp(self):
         # Code to execute before a test is being run.
         super(CommonCaretTestCase, self).setUp()
@@ -75,9 +71,9 @@ class CommonCaretTestCase(object):
         test_html = self.marionette.absolute_url('test_touchcaret.html')
         self.marionette.navigate(test_html)
 
-        self._input = self.marionette.find_element(*self._input_selector)
-        self._textarea = self.marionette.find_element(*self._textarea_selector)
-        self._contenteditable = self.marionette.find_element(*self._contenteditable_selector)
+        self._input = self.marionette.find_element(By.ID, 'input')
+        self._textarea = self.marionette.find_element(By.ID, 'textarea')
+        self._contenteditable = self.marionette.find_element(By.ID, 'contenteditable')
 
     def _test_move_caret_to_the_right_by_one_character(self, el, assertFunc):
         sel = SelectionManager(el)
