@@ -60,6 +60,27 @@
   </grid>
 </groupbox>
 
+<groupbox id="notificationsGroup" data-category="paneContent" hidden="true">
+  <caption><label>&notificationsPolicy.label;</label></caption>
+  <grid>
+    <columns>
+      <column flex="1"/>
+      <column/>
+    </columns>
+    <rows>
+      <row id="notificationsPolicyRow">
+        <vbox align="start">
+          <label id="notificationsPolicy">&notificationsPolicyDesc.label;</label>
+        </vbox>
+        <hbox pack="end">
+          <button id="notificationsPolicyButton" label="&notificationsPolicyButton.label;"
+                  accesskey="&notificationsPolicyButton.accesskey;"/>
+        </hbox>
+      </row>
+    </rows>
+  </grid>
+</groupbox>
+
 <groupbox id="miscGroup" data-category="paneContent" hidden="true">
   <caption><label>&popups.label;</label></caption>
   <grid id="contentGrid">
