@@ -56,7 +56,7 @@ public:
   // Init and Cleanup is handled by BluetoothInterface
 
   virtual void Listen(BluetoothSocketType aType,
-                      const nsAString& aServiceName,
+                      const BluetoothServiceName& aServiceName,
                       const BluetoothUuid& aServiceUuid,
                       int aChannel, bool aEncrypt, bool aAuth,
                       BluetoothSocketResultHandler* aRes) = 0;
@@ -949,10 +949,10 @@ public:
   virtual void DiscoveryStateChangedNotification(bool aState);
 
   virtual void PinRequestNotification(const BluetoothAddress& aRemoteBdAddr,
-                                      const nsAString& aBdName,
+                                      const BluetoothRemoteName& aBdName,
                                       uint32_t aCod);
   virtual void SspRequestNotification(const BluetoothAddress& aRemoteBdAddr,
-                                      const nsAString& aBdName,
+                                      const BluetoothRemoteName& aBdName,
                                       uint32_t aCod,
                                       BluetoothSspVariant aPairingVariant,
                                       uint32_t aPassKey);
@@ -962,7 +962,7 @@ public:
     BluetoothBondState aState);
   virtual void AclStateChangedNotification(
     BluetoothStatus aStatus, const BluetoothAddress& aRemoteBdAddr,
-    bool aState);
+    BluetoothAclState aState);
 
   virtual void DutModeRecvNotification(uint16_t aOpcode,
                                        const uint8_t* aBuf, uint8_t aLen);
@@ -1038,9 +1038,9 @@ public:
   /* Adapter Properties */
 
   virtual void GetAdapterProperties(BluetoothResultHandler* aRes) = 0;
-  virtual void GetAdapterProperty(const nsAString& aName,
+  virtual void GetAdapterProperty(BluetoothPropertyType,
                                   BluetoothResultHandler* aRes) = 0;
-  virtual void SetAdapterProperty(const BluetoothNamedValue& aProperty,
+  virtual void SetAdapterProperty(const BluetoothProperty& aProperty,
                                   BluetoothResultHandler* aRes) = 0;
 
   /* Remote Device Properties */
@@ -1048,10 +1048,10 @@ public:
   virtual void GetRemoteDeviceProperties(const BluetoothAddress& aRemoteAddr,
                                          BluetoothResultHandler* aRes) = 0;
   virtual void GetRemoteDeviceProperty(const BluetoothAddress& aRemoteAddr,
-                                       const nsAString& aName,
+                                       BluetoothPropertyType aType,
                                        BluetoothResultHandler* aRes) = 0;
   virtual void SetRemoteDeviceProperty(const BluetoothAddress& aRemoteAddr,
-                                       const BluetoothNamedValue& aProperty,
+                                       const BluetoothProperty& aProperty,
                                        BluetoothResultHandler* aRes) = 0;
 
   /* Remote Services */
@@ -1085,7 +1085,7 @@ public:
   /* Authentication */
 
   virtual void PinReply(const BluetoothAddress& aBdAddr, bool aAccept,
-                        const nsAString& aPinCode,
+                        const BluetoothPinCode& aPinCode,
                         BluetoothResultHandler* aRes) = 0;
 
   virtual void SspReply(const BluetoothAddress& aBdAddr,

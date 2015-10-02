@@ -642,11 +642,11 @@ BluetoothDaemonInterface::GetAdapterProperties(BluetoothResultHandler* aRes)
 }
 
 void
-BluetoothDaemonInterface::GetAdapterProperty(const nsAString& aName,
+BluetoothDaemonInterface::GetAdapterProperty(BluetoothPropertyType aType,
                                              BluetoothResultHandler* aRes)
 {
   nsresult rv = static_cast<BluetoothDaemonCoreModule*>
-    (mProtocol)->GetAdapterPropertyCmd(aName, aRes);
+    (mProtocol)->GetAdapterPropertyCmd(aType, aRes);
   if (NS_FAILED(rv)) {
     DispatchError(aRes, rv);
   }
@@ -654,7 +654,7 @@ BluetoothDaemonInterface::GetAdapterProperty(const nsAString& aName,
 
 void
 BluetoothDaemonInterface::SetAdapterProperty(
-  const BluetoothNamedValue& aProperty, BluetoothResultHandler* aRes)
+  const BluetoothProperty& aProperty, BluetoothResultHandler* aRes)
 {
   nsresult rv = static_cast<BluetoothDaemonCoreModule*>
     (mProtocol)->SetAdapterPropertyCmd(aProperty, aRes);
@@ -678,11 +678,11 @@ BluetoothDaemonInterface::GetRemoteDeviceProperties(
 
 void
 BluetoothDaemonInterface::GetRemoteDeviceProperty(
-  const BluetoothAddress& aRemoteAddr, const nsAString& aName,
+  const BluetoothAddress& aRemoteAddr, BluetoothPropertyType aType,
   BluetoothResultHandler* aRes)
 {
   nsresult rv = static_cast<BluetoothDaemonCoreModule*>
-    (mProtocol)->GetRemoteDevicePropertyCmd(aRemoteAddr, aName, aRes);
+    (mProtocol)->GetRemoteDevicePropertyCmd(aRemoteAddr, aType, aRes);
   if (NS_FAILED(rv)) {
     DispatchError(aRes, rv);
   }
@@ -690,7 +690,7 @@ BluetoothDaemonInterface::GetRemoteDeviceProperty(
 
 void
 BluetoothDaemonInterface::SetRemoteDeviceProperty(
-  const BluetoothAddress& aRemoteAddr, const BluetoothNamedValue& aProperty,
+  const BluetoothAddress& aRemoteAddr, const BluetoothProperty& aProperty,
   BluetoothResultHandler* aRes)
 {
   nsresult rv = static_cast<BluetoothDaemonCoreModule*>
@@ -797,7 +797,7 @@ BluetoothDaemonInterface::GetConnectionState(const BluetoothAddress& aBdAddr,
 void
 BluetoothDaemonInterface::PinReply(const BluetoothAddress& aBdAddr,
                                    bool aAccept,
-                                   const nsAString& aPinCode,
+                                   const BluetoothPinCode& aPinCode,
                                    BluetoothResultHandler* aRes)
 {
   nsresult rv = static_cast<BluetoothDaemonCoreModule*>

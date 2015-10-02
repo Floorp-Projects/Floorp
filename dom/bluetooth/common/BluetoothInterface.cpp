@@ -876,13 +876,13 @@ BluetoothNotificationHandler::DiscoveryStateChangedNotification(bool aState)
 
 void
 BluetoothNotificationHandler::PinRequestNotification(
-  const BluetoothAddress& aRemoteBdAddr, const nsAString& aBdName,
+  const BluetoothAddress& aRemoteBdAddr, const BluetoothRemoteName& aBdName,
   uint32_t aCod)
 { }
 
 void
 BluetoothNotificationHandler::SspRequestNotification(
-  const BluetoothAddress& aRemoteBdAddr, const nsAString& aBdName,
+  const BluetoothAddress& aRemoteBdAddr, const BluetoothRemoteName& aBdName,
   uint32_t aCod, BluetoothSspVariant aPairingVariant, uint32_t aPassKey)
 { }
 
@@ -894,7 +894,8 @@ BluetoothNotificationHandler::BondStateChangedNotification(
 
 void
 BluetoothNotificationHandler::AclStateChangedNotification(
-  BluetoothStatus aStatus, const BluetoothAddress& aRemoteBdAddr, bool aState)
+  BluetoothStatus aStatus, const BluetoothAddress& aRemoteBdAddr,
+  BluetoothAclState aState)
 { }
 
 void
