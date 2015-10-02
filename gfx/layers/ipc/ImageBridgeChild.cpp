@@ -119,6 +119,11 @@ ImageBridgeChild::UseTextures(CompositableClient* aCompositable,
   for (auto& t : aTextures) {
     MOZ_ASSERT(t.mTextureClient);
     MOZ_ASSERT(t.mTextureClient->GetIPDLActor());
+
+    if (!t.mTextureClient->IsSharedWithCompositor()) {
+      return;
+    }
+
     FenceHandle fence = t.mTextureClient->GetAcquireFenceHandle();
     textures.AppendElement(TimedTexture(nullptr, t.mTextureClient->GetIPDLActor(),
                                         fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t()),
@@ -936,6 +941,11 @@ ImageBridgeChild::RemoveTextureFromCompositable(CompositableClient* aCompositabl
                                                 TextureClient* aTexture)
 {
   MOZ_ASSERT(!mShuttingDown);
+  MOZ_ASSERT(aTexture);
+  MOZ_ASSERT(aTexture->IsSharedWithCompositor());
+  if (!aTexture || !aTexture->IsSharedWithCompositor()) {
+    return;
+  }
   if (aTexture->GetFlags() & TextureFlags::DEALLOCATE_CLIENT) {
     mTxn->AddEdit(OpRemoveTexture(nullptr, aCompositable->GetIPDLActor(),
                                   nullptr, aTexture->GetIPDLActor()));
@@ -952,6 +962,12 @@ ImageBridgeChild::RemoveTextureFromCompositableAsync(AsyncTransactionTracker* aA
                                                      CompositableClient* aCompositable,
                                                      TextureClient* aTexture)
 {
+  MOZ_ASSERT(!mShuttingDown);
+  MOZ_ASSERT(aTexture);
+  MOZ_ASSERT(aTexture->IsSharedWithCompositor());
+  if (!aTexture || !aTexture->IsSharedWithCompositor()) {
+    return;
+  }
   mTxn->AddNoSwapEdit(OpRemoveTextureAsync(CompositableClient::GetTrackersHolderId(aCompositable->GetIPDLActor()),
                                            aAsyncTransactionTracker->GetId(),
                                            nullptr, aCompositable->GetIPDLActor(),
