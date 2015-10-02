@@ -87,8 +87,6 @@ protected:
   virtual ~OscillatorNode();
 
 private:
-  static void SendFrequencyToStream(AudioNode* aNode, const AudioTimelineEvent& aEvent);
-  static void SendDetuneToStream(AudioNode* aNode, const AudioTimelineEvent& aEvent);
   void SendTypeToStream();
   void SendPeriodicWaveToStream();
 

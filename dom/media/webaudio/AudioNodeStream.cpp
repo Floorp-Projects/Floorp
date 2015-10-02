@@ -493,20 +493,18 @@ AudioNodeStream::UpMixDownMixChunk(const AudioBlock* aChunk,
                                    nsTArray<const float*>& aOutputChannels,
                                    nsTArray<float>& aDownmixBuffer)
 {
-  static const float silenceChannel[WEBAUDIO_BLOCK_SIZE] = {0.f};
-
   for (uint32_t i = 0; i < aChunk->ChannelCount(); i++) {
     aOutputChannels.AppendElement(static_cast<const float*>(aChunk->mChannelData[i]));
   }
   if (aOutputChannels.Length() < aOutputChannelCount) {
     if (mChannelInterpretation == ChannelInterpretation::Speakers) {
-      AudioChannelsUpMix(&aOutputChannels, aOutputChannelCount, SilentChannel::ZeroChannel<float>());
+      AudioChannelsUpMix<float>(&aOutputChannels, aOutputChannelCount, nullptr);
       NS_ASSERTION(aOutputChannelCount == aOutputChannels.Length(),
                    "We called GetAudioChannelsSuperset to avoid this");
     } else {
       // Fill up the remaining aOutputChannels by zeros
       for (uint32_t j = aOutputChannels.Length(); j < aOutputChannelCount; ++j) {
-        aOutputChannels.AppendElement(silenceChannel);
+        aOutputChannels.AppendElement(nullptr);
       }
     }
   } else if (aOutputChannels.Length() > aOutputChannelCount) {

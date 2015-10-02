@@ -107,7 +107,8 @@ function removeTab(aTab, aWindow) {
   let targetWindow = aWindow || window;
   let targetBrowser = targetWindow.gBrowser;
 
-  targetBrowser.removeTab(aTab);
+  // browser_net_pane-toggle.js relies on synchronous removeTab behavior.
+  targetBrowser.removeTab(aTab, {skipPermitUnload: true});
 }
 
 function waitForNavigation(aTarget) {

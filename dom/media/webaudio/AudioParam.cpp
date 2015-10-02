@@ -44,14 +44,14 @@ NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(AudioParam, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(AudioParam, Release)
 
 AudioParam::AudioParam(AudioNode* aNode,
-                       AudioParam::CallbackType aCallback,
+                       uint32_t aIndex,
                        float aDefaultValue,
                        const char* aName)
   : AudioParamTimeline(aDefaultValue)
   , mNode(aNode)
-  , mCallback(aCallback)
-  , mDefaultValue(aDefaultValue)
   , mName(aName)
+  , mIndex(aIndex)
+  , mDefaultValue(aDefaultValue)
 {
 }
 
@@ -120,10 +120,18 @@ AudioParam::Stream()
 
   // Send the stream to the timeline on the MSG side.
   AudioTimelineEvent event(mStream);
-
-  mCallback(mNode, event);
+  SendEventToEngine(event);
 
   return mStream;
+}
+
+void
+AudioParam::SendEventToEngine(const AudioTimelineEvent& aEvent)
+{
+  AudioNodeStream* stream = mNode->GetStream();
+  if (stream) {
+    stream->SendTimelineEvent(mIndex, aEvent);
+  }
 }
 
 float
