@@ -49,12 +49,6 @@ import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
 
 import com.mozilla.SUTAgentAndroid.R;
 import com.mozilla.SUTAgentAndroid.SUTAgentAndroid;
@@ -2961,53 +2955,6 @@ private void CancelNotification()
                 e.printStackTrace();
                 }
             }
-        return(sRet);
-        }
-
-    public String GetInternetData(String sHost, String sPort, String sURL)
-        {
-        String sRet = "";
-        String sNewURL = "";
-        HttpClient httpClient = new DefaultHttpClient();
-        try
-            {
-            sNewURL = "http://" + sHost + ((sPort.length() > 0) ? (":" + sPort) : "") + sURL;
-
-            HttpGet request = new HttpGet(sNewURL);
-            HttpResponse response = httpClient.execute(request);
-            int status = response.getStatusLine().getStatusCode();
-            // we assume that the response body contains the error message
-            if (status != HttpStatus.SC_OK)
-                {
-                ByteArrayOutputStream ostream = new ByteArrayOutputStream();
-                response.getEntity().writeTo(ostream);
-                Log.e("HTTP CLIENT", ostream.toString());
-                }
-            else
-                {
-                InputStream content = response.getEntity().getContent();
-                byte [] data = new byte [2048];
-                int nRead = content.read(data);
-                sRet = new String(data, 0, nRead);
-                content.close(); // this will also close the connection
-                }
-            }
-        catch (IllegalArgumentException e)
-            {
-            sRet = e.getLocalizedMessage();
-            e.printStackTrace();
-            }
-        catch (ClientProtocolException e)
-            {
-            sRet = e.getLocalizedMessage();
-            e.printStackTrace();
-            }
-        catch (IOException e)
-            {
-            sRet = e.getLocalizedMessage();
-            e.printStackTrace();
-            }
-
         return(sRet);
         }
 
