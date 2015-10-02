@@ -691,9 +691,14 @@ PopupNotifications.prototype = {
 
     if (!notifications)
       notifications = this._currentNotifications;
+    let notificationsToShow = [];
+    // Filter out notifications that have been dismissed.
+    notificationsToShow = notifications.filter(function (n) {
+      return !n.dismissed && !n.options.neverShow;
+    });
 
-    if (!anchors.size && notifications.length)
-      anchors = this._getAnchorsForNotifications(notifications);
+    if (!anchors.size && notificationsToShow.length)
+      anchors = this._getAnchorsForNotifications(notificationsToShow);
 
     let useIconBox = !!this.iconBox;
     if (useIconBox && anchors.size) {
@@ -705,18 +710,9 @@ PopupNotifications.prototype = {
       }
     }
 
-    let notificationsToShow = [];
-    // Filter out notifications that have been dismissed.
-    notificationsToShow = notifications.filter(function (n) {
-      return !n.dismissed && !n.options.neverShow;
-    });
-
     if (useIconBox) {
-      // Hide icons of the previous tab.
+      // hide icons of the previous tab.
       this._hideIcons();
-      // Make sure that panels can only be attached to anchors of shown
-      // notifications inside an iconBox.
-      anchors = this._getAnchorsForNotifications(notificationsToShow);
     }
 
     let haveNotifications = notifications.length > 0;
