@@ -25,15 +25,6 @@ class CommonCaretsTestCase(object):
     MarionetteTestCase.
 
     '''
-    _input_selector = (By.ID, 'input')
-    _textarea_selector = (By.ID, 'textarea')
-    _textarea_rtl_selector = (By.ID, 'textarea_rtl')
-    _contenteditable_selector = (By.ID, 'contenteditable')
-    _content_selector = (By.ID, 'content')
-    _textarea2_selector = (By.ID, 'textarea2')
-    _contenteditable2_selector = (By.ID, 'contenteditable2')
-    _content2_selector = (By.ID, 'content2')
-
     def setUp(self):
         # Code to execute before a tests are run.
         super(CommonCaretsTestCase, self).setUp()
@@ -76,11 +67,11 @@ class CommonCaretsTestCase(object):
         test_html = self.marionette.absolute_url('test_selectioncarets.html')
         self.marionette.navigate(test_html)
 
-        self._input = self.marionette.find_element(*self._input_selector)
-        self._textarea = self.marionette.find_element(*self._textarea_selector)
-        self._textarea_rtl = self.marionette.find_element(*self._textarea_rtl_selector)
-        self._contenteditable = self.marionette.find_element(*self._contenteditable_selector)
-        self._content = self.marionette.find_element(*self._content_selector)
+        self._input = self.marionette.find_element(By.ID, 'input')
+        self._textarea = self.marionette.find_element(By.ID, 'textarea')
+        self._textarea_rtl = self.marionette.find_element(By.ID, 'textarea_rtl')
+        self._contenteditable = self.marionette.find_element(By.ID, 'contenteditable')
+        self._content = self.marionette.find_element(By.ID, 'content')
 
     def open_test_html2(self, enabled=True):
         '''Open html for testing and locate elements, and enable/disable touch
@@ -91,9 +82,9 @@ class CommonCaretsTestCase(object):
         test_html2 = self.marionette.absolute_url('test_selectioncarets_multipleline.html')
         self.marionette.navigate(test_html2)
 
-        self._textarea2 = self.marionette.find_element(*self._textarea2_selector)
-        self._contenteditable2 = self.marionette.find_element(*self._contenteditable2_selector)
-        self._content2 = self.marionette.find_element(*self._content2_selector)
+        self._textarea2 = self.marionette.find_element(By.ID, 'textarea2')
+        self._contenteditable2 = self.marionette.find_element(By.ID, 'contenteditable2')
+        self._content2 = self.marionette.find_element(By.ID, 'content2')
 
     def open_test_html_multirange(self, enabled=True):
         'Open html for testing and enable selectioncaret and non-editable support'
