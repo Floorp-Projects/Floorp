@@ -744,6 +744,11 @@ public:
   nsAbsoluteItems           mFixedItems;
   nsAbsoluteItems           mAbsoluteItems;
   nsAbsoluteItems           mFloatedItems;
+  // Items in the top layer are always fixed positioned children of the
+  // viewport frame. It differs from mFixedItems that the items here
+  // should not be caught by any other fixed-pos containing block like
+  // frames with transform or filter.
+  nsAbsoluteItems           mTopLayerItems;
 
   nsCOMPtr<nsILayoutHistoryState> mFrameState;
   // These bits will be added to the state bits of any frame we construct
@@ -951,6 +956,7 @@ nsFrameConstructorState::nsFrameConstructorState(
     mFixedItems(aFixedContainingBlock),
     mAbsoluteItems(aAbsoluteContainingBlock),
     mFloatedItems(aFloatContainingBlock),
+    mTopLayerItems(do_QueryFrame(mFrameManager->GetRootFrame())),
     // See PushAbsoluteContaningBlock below
     mFrameState(aHistoryState),
     mAdditionalStateBits(nsFrameState(0)),
@@ -987,6 +993,8 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
 nsFrameConstructorState::~nsFrameConstructorState()
 {
   MOZ_COUNT_DTOR(nsFrameConstructorState);
+  // Items in the top layer are fixed positioned children of the viewport frame.
+  ProcessFrameInsertions(mTopLayerItems, nsIFrame::kFixedList);
   ProcessFrameInsertions(mFloatedItems, nsIFrame::kFloatList);
   ProcessFrameInsertions(mAbsoluteItems, nsIFrame::kAbsoluteList);
   ProcessFrameInsertions(mFixedItems, nsIFrame::kFixedList);
@@ -1102,6 +1110,15 @@ nsFrameConstructorState::GetGeometricParent(const nsStyleDisplay* aStyleDisplay,
     return mFloatedItems.containingBlock;
   }
 
+  if (aStyleDisplay->mTopLayer != NS_STYLE_TOP_LAYER_NONE) {
+    MOZ_ASSERT(aStyleDisplay->mTopLayer == NS_STYLE_TOP_LAYER_TOP,
+               "-moz-top-layer should be either none or top");
+    MOZ_ASSERT(mTopLayerItems.containingBlock, "No root frame?");
+    MOZ_ASSERT(aStyleDisplay->IsAbsolutelyPositionedStyle(),
+               "Top layer items should always be absolutely positioned");
+    return mTopLayerItems.containingBlock;
+  }
+
   if (aStyleDisplay->mPosition == NS_STYLE_POSITION_ABSOLUTE &&
       mAbsoluteItems.containingBlock) {
     return mAbsoluteItems.containingBlock;
@@ -1136,6 +1153,10 @@ nsFrameConstructorState::GetOutOfFlowFrameItems(nsIFrame* aNewFrame,
 
   if (aCanBePositioned) {
     const nsStyleDisplay* disp = aNewFrame->StyleDisplay();
+    if (disp->mTopLayer != NS_STYLE_TOP_LAYER_NONE) {
+      *aPlaceholderType = PLACEHOLDER_FOR_FIXEDPOS;
+      return &mTopLayerItems;
+    }
     if (disp->mPosition == NS_STYLE_POSITION_ABSOLUTE) {
       *aPlaceholderType = PLACEHOLDER_FOR_ABSPOS;
       return &mAbsoluteItems;
@@ -1218,7 +1239,8 @@ nsFrameConstructorState::ProcessFrameInsertions(nsAbsoluteItems& aFrameItems,
                              aChildListID == nsIFrame::kFloatList)    ||  \
                             (&aFrameItems == &mAbsoluteItems &&           \
                              aChildListID == nsIFrame::kAbsoluteList) ||  \
-                            (&aFrameItems == &mFixedItems &&              \
+                            ((&aFrameItems == &mFixedItems ||             \
+                              &aFrameItems == &mTopLayerItems) &&         \
                              aChildListID == nsIFrame::kFixedList)
 #ifdef MOZ_XUL
   NS_PRECONDITION(NS_NONXUL_LIST_TEST ||
