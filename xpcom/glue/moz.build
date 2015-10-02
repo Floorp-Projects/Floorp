@@ -106,6 +106,7 @@ if CONFIG['_MSC_VER']:
 
 LOCAL_INCLUDES += [
     '../build',
+    '../threads',
 ]
 
 if CONFIG['ENABLE_TESTS']:
