@@ -338,7 +338,10 @@ loop.store = loop.store || {};
       }
 
       this._endSession();
-      this.setStoreState({callState: CALL_STATES.FINISHED});
+      this.setStoreState({
+        callState: this._storeState.callState === CALL_STATES.ONGOING ?
+                   CALL_STATES.FINISHED : CALL_STATES.CLOSE
+      });
     },
 
     /**
