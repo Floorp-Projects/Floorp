@@ -630,9 +630,10 @@ RestyleManager::StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint)
 void
 RestyleManager::AddSubtreeToOverflowTracker(nsIFrame* aFrame) 
 {
-  mOverflowChangedTracker.AddFrame(
-      aFrame,
-      OverflowChangedTracker::CHILDREN_CHANGED);
+  if (aFrame->FrameMaintainsOverflow()) {
+    mOverflowChangedTracker.AddFrame(aFrame,
+                                     OverflowChangedTracker::CHILDREN_CHANGED);
+  }
   nsIFrame::ChildListIterator lists(aFrame);
   for (; !lists.IsDone(); lists.Next()) {
     for (nsIFrame* child : lists.CurrentList()) {
