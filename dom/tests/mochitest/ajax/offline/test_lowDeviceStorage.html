@@ -29,6 +29,8 @@ var obs = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
 
 var errorReceived = false;
 
+var systemPrincipal = SpecialPowers.Services.scriptSecurityManager.getSystemPrincipal();
+
 function finish() {
   obs.notifyObservers(updateService, "disk-space-watcher", "free");
 
@@ -73,7 +75,7 @@ if (OfflineTest.setup()) {
                   .getService(Ci.nsIIOService);
   var manifestURI = ioService.newURI(manifest, null, null);
   var documentURI = ioService.newURI(document.documentURI, null, null);
-  var update = updateService.scheduleUpdate(manifestURI, documentURI, window);
+  var update = updateService.scheduleUpdate(manifestURI, documentURI, systemPrincipal, window);
   update.addObserver(updateObserver, false);
 }
 

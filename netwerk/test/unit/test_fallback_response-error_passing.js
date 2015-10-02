@@ -10,6 +10,7 @@ XPCOMUtils.defineLazyGetter(this, "randomURI", function() {
 });
 
 var cacheUpdateObserver = null;
+var systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 
 function make_channel(url, callback, ctx) {
   var ios = Cc["@mozilla.org/network/io-service;1"].
@@ -18,7 +19,7 @@ function make_channel(url, callback, ctx) {
                          "",
                          null,
                          null,      // aLoadingNode
-                         Services.scriptSecurityManager.getSystemPrincipal(),
+                         systemPrincipal,
                          null,      // aTriggeringPrincipal
                          Ci.nsILoadInfo.SEC_NORMAL,
                          Ci.nsIContentPolicy.TYPE_OTHER);
@@ -114,6 +115,7 @@ function run_test()
                              httpServer.identity.primaryPort + "/manifest"),
                     make_uri("http://localhost:" +
                              httpServer.identity.primaryPort + "/masterEntry"),
+                    systemPrincipal,
                     null);
 
   do_test_pending();
