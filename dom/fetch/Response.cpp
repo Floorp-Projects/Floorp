@@ -100,7 +100,7 @@ Response::Redirect(const GlobalObject& aGlobal, const nsAString& aUrl,
   }
 
   if (aStatus != 301 && aStatus != 302 && aStatus != 303 && aStatus != 307 && aStatus != 308) {
-    aRv.ThrowRangeError(MSG_INVALID_REDIRECT_STATUSCODE_ERROR);
+    aRv.ThrowRangeError<MSG_INVALID_REDIRECT_STATUSCODE_ERROR>();
     return nullptr;
   }
 
@@ -131,7 +131,7 @@ Response::Constructor(const GlobalObject& aGlobal,
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
 
   if (aInit.mStatus < 200 || aInit.mStatus > 599) {
-    aRv.ThrowRangeError(MSG_INVALID_RESPONSE_STATUSCODE_ERROR);
+    aRv.ThrowRangeError<MSG_INVALID_RESPONSE_STATUSCODE_ERROR>();
     return nullptr;
   }
 
@@ -142,13 +142,13 @@ Response::Constructor(const GlobalObject& aGlobal,
     statusText.BeginReading(start);
     statusText.EndReading(end);
     if (FindCharInReadable('\r', start, end)) {
-      aRv.ThrowTypeError(MSG_RESPONSE_INVALID_STATUSTEXT_ERROR);
+      aRv.ThrowTypeError<MSG_RESPONSE_INVALID_STATUSTEXT_ERROR>();
       return nullptr;
     }
     // Reset iterator since FindCharInReadable advances it.
     statusText.BeginReading(start);
     if (FindCharInReadable('\n', start, end)) {
-      aRv.ThrowTypeError(MSG_RESPONSE_INVALID_STATUSTEXT_ERROR);
+      aRv.ThrowTypeError<MSG_RESPONSE_INVALID_STATUSTEXT_ERROR>();
       return nullptr;
     }
   } else {
@@ -199,7 +199,7 @@ Response::Constructor(const GlobalObject& aGlobal,
 
   if (aBody.WasPassed()) {
     if (aInit.mStatus == 204 || aInit.mStatus == 205 || aInit.mStatus == 304) {
-      aRv.ThrowTypeError(MSG_RESPONSE_NULL_STATUS_WITH_BODY);
+      aRv.ThrowTypeError<MSG_RESPONSE_NULL_STATUS_WITH_BODY>();
       return nullptr;
     }
 
@@ -226,7 +226,7 @@ already_AddRefed<Response>
 Response::Clone(ErrorResult& aRv) const
 {
   if (BodyUsed()) {
-    aRv.ThrowTypeError(MSG_FETCH_BODY_CONSUMED_ERROR);
+    aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
     return nullptr;
   }
 
