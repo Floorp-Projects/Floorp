@@ -49,6 +49,9 @@ typedef unsigned __int64 uint64_t;
 #include <cstddef>
 #include <cstring>
 
+#define OTS_TAG(c1,c2,c3,c4) ((uint32_t)((((uint8_t)(c1))<<24)|(((uint8_t)(c2))<<16)|(((uint8_t)(c3))<<8)|((uint8_t)(c4))))
+#define OTS_UNTAG(tag)       ((uint8_t)((tag)>>24)), ((uint8_t)((tag)>>16)), ((uint8_t)((tag)>>8)), ((uint8_t)(tag))
+
 namespace ots {
 
 // -----------------------------------------------------------------------------
@@ -57,9 +60,7 @@ namespace ots {
 // -----------------------------------------------------------------------------
 class OTSStream {
  public:
-  OTSStream() {
-    ResetChecksum();
-  }
+  OTSStream() : chksum_(0) {}
 
   virtual ~OTSStream() {}
 
@@ -71,20 +72,15 @@ class OTSStream {
 
     const size_t orig_length = length;
     size_t offset = 0;
-    if (chksum_buffer_offset_) {
-      const size_t l =
-        std::min(length, static_cast<size_t>(4) - chksum_buffer_offset_);
-      std::memcpy(chksum_buffer_ + chksum_buffer_offset_, data, l);
-      chksum_buffer_offset_ += l;
-      offset += l;
-      length -= l;
-    }
 
-    if (chksum_buffer_offset_ == 4) {
-      uint32_t tmp;
-      std::memcpy(&tmp, chksum_buffer_, 4);
+    size_t chksum_offset = Tell() & 3;
+    if (chksum_offset) {
+      const size_t l = std::min(length, static_cast<size_t>(4) - chksum_offset);
+      uint32_t tmp = 0;
+      std::memcpy(reinterpret_cast<uint8_t *>(&tmp) + chksum_offset, data, l);
       chksum_ += ntohl(tmp);
-      chksum_buffer_offset_ = 0;
+      length -= l;
+      offset += l;
     }
 
     while (length >= 4) {
@@ -97,11 +93,11 @@ class OTSStream {
     }
 
     if (length) {
-      if (chksum_buffer_offset_ != 0) return false;  // not reached
       if (length > 4) return false;  // not reached
-      std::memcpy(chksum_buffer_,
-             reinterpret_cast<const uint8_t*>(data) + offset, length);
-      chksum_buffer_offset_ = length;
+      uint32_t tmp = 0;
+      std::memcpy(&tmp,
+                  reinterpret_cast<const uint8_t*>(data) + offset, length);
+      chksum_ += ntohl(tmp);
     }
 
     return WriteRaw(data, orig_length);
@@ -113,7 +109,7 @@ class OTSStream {
   virtual bool Pad(size_t bytes) {
     static const uint32_t kZero = 0;
     while (bytes >= 4) {
-      if (!WriteTag(kZero)) return false;
+      if (!Write(&kZero, 4)) return false;
       bytes -= 4;
     }
     while (bytes) {
@@ -157,46 +153,17 @@ class OTSStream {
     return Write(&v, sizeof(v));
   }
 
-  bool WriteTag(uint32_t v) {
-    return Write(&v, sizeof(v));
-  }
-
   void ResetChecksum() {
+    assert((Tell() & 3) == 0);
     chksum_ = 0;
-    chksum_buffer_offset_ = 0;
   }
 
   uint32_t chksum() const {
-    assert(chksum_buffer_offset_ == 0);
     return chksum_;
-  }
-
-  struct ChecksumState {
-    uint32_t chksum;
-    uint8_t chksum_buffer[4];
-    unsigned chksum_buffer_offset;
-  };
-
-  ChecksumState SaveChecksumState() const {
-    ChecksumState s;
-    s.chksum = chksum_;
-    s.chksum_buffer_offset = chksum_buffer_offset_;
-    std::memcpy(s.chksum_buffer, chksum_buffer_, 4);
-
-    return s;
-  }
-
-  void RestoreChecksum(const ChecksumState &s) {
-    assert(chksum_buffer_offset_ == 0);
-    chksum_ += s.chksum;
-    chksum_buffer_offset_ = s.chksum_buffer_offset;
-    std::memcpy(chksum_buffer_, s.chksum_buffer, 4);
   }
 
  protected:
   uint32_t chksum_;
-  uint8_t chksum_buffer_[4];
-  unsigned chksum_buffer_offset_;
 };
 
 #ifdef __GCC__
@@ -223,7 +190,10 @@ class OTS_API OTSContext {
     //     partial output may have been written.
     //   input: the OpenType file
     //   length: the size, in bytes, of |input|
-    bool Process(OTSStream *output, const uint8_t *input, size_t length);
+    //   index: if the input is a font collection and index is specified, then
+    //     the corresponding font will be returned, otherwise the whole
+    //     collection. Ignored for non-collection fonts.
+    bool Process(OTSStream *output, const uint8_t *input, size_t length, uint32_t index = -1);
 
     // This function will be called when OTS is reporting an error.
     //   level: the severity of the generated message:
@@ -233,8 +203,7 @@ class OTS_API OTSContext {
 
     // This function will be called when OTS needs to decide what to do for a
     // font table.
-    //   tag: table tag as an integer in big-endian byte order, independent of
-    //   platform endianness
+    //   tag: table tag as a platform-native unsigned integer
     virtual TableAction GetTableAction(uint32_t tag) { return ots::TABLE_ACTION_DEFAULT; }
 };
 
