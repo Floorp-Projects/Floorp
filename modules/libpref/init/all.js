@@ -4855,6 +4855,10 @@ pref("layout.accessiblecaret.bar.width", "2.0");
 // no one touches it. Set the value to 0 to disable this feature.
 pref("layout.accessiblecaret.timeout_ms", 3000);
 
+// Simulate long tap to select words on the platforms where APZ is not enabled
+// or long tap events does not fired by APZ.
+pref("layout.accessiblecaret.use_long_tap_injector", true);
+
 // Wakelock is disabled by default.
 pref("dom.wakelock.enabled", false);
 
