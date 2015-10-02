@@ -281,7 +281,8 @@ private:
     BondStateChangedNotification;
 
   typedef mozilla::ipc::DaemonNotificationRunnable3<
-    NotificationHandlerWrapper, void, BluetoothStatus, BluetoothAddress, bool,
+    NotificationHandlerWrapper, void,
+    BluetoothStatus, BluetoothAddress, BluetoothAclState,
     BluetoothStatus, const BluetoothAddress&>
     AclStateChangedNotification;
 
