@@ -15,7 +15,6 @@ namespace mozilla {
 namespace dom {
 
 class AudioContext;
-struct AudioTimelineEvent;
 
 class BiquadFilterNode final : public AudioNode
 {
@@ -67,16 +66,6 @@ public:
 
 protected:
   virtual ~BiquadFilterNode();
-
-private:
-  static void SendFrequencyToStream(AudioNode* aNode,
-                                    const AudioTimelineEvent& aEvent);
-  static void SendDetuneToStream(AudioNode* aNode,
-                                const AudioTimelineEvent& aEvente);
-  static void SendQToStream(AudioNode* aNode,
-                            const AudioTimelineEvent& aEvent);
-  static void SendGainToStream(AudioNode* aNode,
-                               const AudioTimelineEvent& aEvent);
 
 private:
   BiquadFilterType mType;

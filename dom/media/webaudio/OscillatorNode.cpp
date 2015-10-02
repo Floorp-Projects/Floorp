@@ -402,8 +402,9 @@ OscillatorNode::OscillatorNode(AudioContext* aContext)
               ChannelCountMode::Max,
               ChannelInterpretation::Speakers)
   , mType(OscillatorType::Sine)
-  , mFrequency(new AudioParam(this, SendFrequencyToStream, 440.0f, "frequency"))
-  , mDetune(new AudioParam(this, SendDetuneToStream, 0.0f, "detune"))
+  , mFrequency(new AudioParam(this, OscillatorNodeEngine::FREQUENCY,
+                              440.0f, "frequency"))
+  , mDetune(new AudioParam(this, OscillatorNodeEngine::DETUNE, 0.0f, "detune"))
   , mStartCalled(false)
 {
   OscillatorNodeEngine* engine = new OscillatorNodeEngine(this, aContext->Destination());
@@ -450,26 +451,6 @@ OscillatorNode::DestroyMediaStream()
     mStream->RemoveMainThreadListener(this);
   }
   AudioNode::DestroyMediaStream();
-}
-
-void
-OscillatorNode::SendFrequencyToStream(AudioNode* aNode, const AudioTimelineEvent& aEvent)
-{
-  OscillatorNode* This = static_cast<OscillatorNode*>(aNode);
-  if (!This->mStream) {
-    return;
-  }
-  SendTimelineEventToStream(This, OscillatorNodeEngine::FREQUENCY, aEvent);
-}
-
-void
-OscillatorNode::SendDetuneToStream(AudioNode* aNode, const AudioTimelineEvent& aEvent)
-{
-  OscillatorNode* This = static_cast<OscillatorNode*>(aNode);
-  if (!This->mStream) {
-    return;
-  }
-  SendTimelineEventToStream(This, OscillatorNodeEngine::DETUNE, aEvent);
 }
 
 void

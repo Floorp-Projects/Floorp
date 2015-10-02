@@ -234,6 +234,89 @@
 
       <field name="mDestroyed">false</field>
 
+      <field name="_permitUnloadId">0</field>
+
+      <method name="getInPermitUnload">
+        <parameter name="aCallback"/>
+        <body>
+        <![CDATA[
+          let id = this._permitUnloadId++;
+          let mm = this.messageManager;
+          mm.sendAsyncMessage("InPermitUnload", {id});
+          mm.addMessageListener("InPermitUnload", function listener(msg) {
+            if (msg.data.id != id) {
+              return;
+            }
+	    aCallback(msg.data.inPermitUnload);
+          });
+        ]]>
+        </body>
+      </method>
+
+      <method name="permitUnload">
+        <body>
+        <![CDATA[
+          const Cc = Components.classes;
+          const Ci = Components.interfaces;
+
+          const kTimeout = 5000;
+
+          let finished = false;
+          let responded = false;
+          let permitUnload;
+          let id = this._permitUnloadId++;
+          let mm = this.messageManager;
+
+          let msgListener = msg => {
+            if (msg.data.id != id) {
+              return;
+            }
+            if (msg.data.kind == "start") {
+              responded = true;
+              return;
+            }
+            done(msg.data.permitUnload);
+          };
+
+          let observer = subject => {
+            if (subject == mm) {
+              done(true);
+            }
+          };
+
+          function done(result) {
+            finished = true;
+            permitUnload = result;
+            mm.removeMessageListener("PermitUnload", msgListener);
+            Services.obs.removeObserver(observer, "message-manager-close");
+          }
+
+          mm.sendAsyncMessage("PermitUnload", {id});
+          mm.addMessageListener("PermitUnload", msgListener);
+          Services.obs.addObserver(observer, "message-manager-close", false);
+
+          let timedOut = false;
+          function timeout() {
+            if (!responded) {
+              timedOut = true;
+            }
+
+            // Dispatch something to ensure that the main thread wakes up.
+            Services.tm.mainThread.dispatch(function() {}, Ci.nsIThread.DISPATCH_NORMAL);
+          }
+
+          let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+          timer.initWithCallback(timeout, kTimeout, timer.TYPE_ONE_SHOT);
+
+          while (!finished && !timedOut) {
+            Services.tm.currentThread.processNextEvent(true);
+          }
+
+          return {permitUnload, timedOut};
+        ]]>
+        </body>
+      </method>
+
       <constructor>
         <![CDATA[
           /*
