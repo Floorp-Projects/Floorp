@@ -150,6 +150,9 @@ public class PostSearchFragment extends Fragment {
             return false;
         }
 
+        // We are suppressing the 'deprecation' warning because the new method is only available starting with API
+        // level 23 and that's much higher than our current minSdkLevel (1208580).
+        @SuppressWarnings("deprecation")
         @Override
         public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
             Log.e(LOG_TAG, "Error loading search results: " + description);
