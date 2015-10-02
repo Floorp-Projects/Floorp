@@ -1929,7 +1929,7 @@ MarkupContainer.prototype = {
       // If this is the last child, use the closing <div.tag-line> of parent as indicator
       this.markup.indicateDragTarget(this.elt.nextElementSibling ||
                                      this.markup.getContainer(this.node.parentNode()).closeTagLine);
-    }, this.GRAB_DELAY);
+    }, this.markup.GRAB_DELAY);
   },
 
   /**

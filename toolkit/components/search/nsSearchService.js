@@ -1255,12 +1255,7 @@ EngineURL.prototype = {
     for (let i = 0; i < aJson.params.length; ++i) {
       let param = aJson.params[i];
       if (param.mozparam) {
-        if (param.condition == "defaultEngine") {
-          if (aEngine._isDefaultEngine())
-            this.addParam(param.name, param.trueValue);
-          else
-            this.addParam(param.name, param.falseValue);
-        } else if (param.condition == "pref") {
+        if (param.condition == "pref") {
           let value = getMozParamPref(param.pref);
           this.addParam(param.name, value);
         }
@@ -1275,7 +1270,7 @@ EngineURL.prototype = {
    * Creates a JavaScript object that represents this URL.
    * @returns An object suitable for serialization as JSON.
    **/
-  _serializeToJSON: function SRCH_EURL__serializeToJSON() {
+  toJSON: function SRCH_EURL_toJSON() {
     var json = {
       template: this.template,
       rels: this.rels,
@@ -1399,8 +1394,6 @@ Engine.prototype = {
   // Set to true if the engine has a preferred icon (an icon that should not be
   // overridden by a non-preferred icon).
   _hasPreferredIcon: null,
-  // Whether the engine is hidden from the user.
-  _hidden: null,
   // The engine's name.
   _name: null,
   // The name of the charset used to submit the search terms.
@@ -2041,19 +2034,6 @@ Engine.prototype = {
             // _addMozParam is not needed here since it can be serialized fine without. _addMozParam
             // also requires a unique "name" which is not normally the case when @purpose is used.
             break;
-          case "defaultEngine":
-            // If this engine was the default search engine, use the true value
-            if (this._isDefaultEngine())
-              value = param.getAttribute("trueValue");
-            else
-              value = param.getAttribute("falseValue");
-            url.addParam(param.getAttribute("name"), value);
-            url._addMozParam({"name": param.getAttribute("name"),
-                              "falseValue": param.getAttribute("falseValue"),
-                              "trueValue": param.getAttribute("trueValue"),
-                              "condition": "defaultEngine"});
-            break;
-
           case "pref":
             try {
               value = getMozParamPref(param.getAttribute("pref"), value);
@@ -2073,17 +2053,6 @@ Engine.prototype = {
     }
 
     this._urls.push(url);
-  },
-
-  _isDefaultEngine: function SRCH_ENG__isDefaultEngine() {
-    let defaultPrefB = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF);
-    let nsIPLS = Ci.nsIPrefLocalizedString;
-    let defaultEngine;
-    let pref = getGeoSpecificPrefName("defaultenginename");
-    try {
-      defaultEngine = defaultPrefB.getComplexValue(pref, nsIPLS).data;
-    } catch (ex) {}
-    return this.name == defaultEngine;
   },
 
   /**
@@ -2174,7 +2143,6 @@ Engine.prototype = {
       this._hasPreferredIcon = true;
     else
       this._hasPreferredIcon = false;
-    this._hidden = aJson._hidden;
     this._queryCharset = aJson.queryCharset || DEFAULT_QUERY_CHARSET;
     this.__searchForm = aJson.__searchForm;
     this.__installLocation = aJson._installLocation || SEARCH_APP_DIR;
@@ -2202,40 +2170,36 @@ Engine.prototype = {
 
   /**
    * Creates a JavaScript object that represents this engine.
-   * @param aFilter
-   *        Whether or not to filter out common default values. Recommended for
-   *        use with _initWithJSON().
    * @returns An object suitable for serialization as JSON.
    **/
-  _serializeToJSON: function SRCH_ENG__serializeToJSON(aFilter) {
+  toJSON: function SRCH_ENG_toJSON() {
     var json = {
       _id: this._id,
       _name: this._name,
-      _hidden: this.hidden,
       description: this.description,
       __searchForm: this.__searchForm,
       _iconURL: this._iconURL,
       _iconMapObj: this._iconMapObj,
-      _urls: [url._serializeToJSON() for each(url in this._urls)]
+      _urls: this._urls
     };
 
     if (this._file instanceof Ci.nsILocalFile)
       json.filePath = this._file.persistentDescriptor;
     if (this._uri)
       json._url = this._uri.spec;
-    if (this._installLocation != SEARCH_APP_DIR || !aFilter)
+    if (this._installLocation != SEARCH_APP_DIR)
       json._installLocation = this._installLocation;
-    if (this._updateInterval || !aFilter)
+    if (this._updateInterval)
       json._updateInterval = this._updateInterval;
-    if (this._updateURL || !aFilter)
+    if (this._updateURL)
       json._updateURL = this._updateURL;
-    if (this._iconUpdateURL || !aFilter)
+    if (this._iconUpdateURL)
       json._iconUpdateURL = this._iconUpdateURL;
-    if (!this._hasPreferredIcon || !aFilter)
+    if (!this._hasPreferredIcon)
       json._hasPreferredIcon = this._hasPreferredIcon;
-    if (this.queryCharset != DEFAULT_QUERY_CHARSET || !aFilter)
+    if (this.queryCharset != DEFAULT_QUERY_CHARSET)
       json.queryCharset = this.queryCharset;
-    if (!this._readOnly || !aFilter)
+    if (!this._readOnly)
       json._readOnly = this._readOnly;
     if (this._extensionID) {
       json.extensionID = this._extensionID;
@@ -2404,14 +2368,11 @@ Engine.prototype = {
   },
 
   get hidden() {
-    if (this._hidden === null)
-      this._hidden = engineMetadataService.getAttr(this, "hidden") || false;
-    return this._hidden;
+    return engineMetadataService.getAttr(this, "hidden") || false;
   },
   set hidden(val) {
     var value = !!val;
-    if (value != this._hidden) {
-      this._hidden = value;
+    if (value != this.hidden) {
       engineMetadataService.setAttr(this, "hidden", value);
       notifyAction(this, SEARCH_ENGINE_CHANGED);
     }
@@ -3132,7 +3093,7 @@ SearchService.prototype = {
         cacheEntry.engines = [];
         cache.directories[cacheKey] = cacheEntry;
       }
-      cache.directories[cacheKey].engines.push(engine._serializeToJSON(true));
+      cache.directories[cacheKey].engines.push(engine);
     }
 
     try {

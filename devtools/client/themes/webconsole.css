@@ -474,7 +474,7 @@ a {
 .message .theme-twisty {
   display: inline-block;
   vertical-align: middle;
-  margin: 0 3px 0 0;
+  margin: 3px 3px 0 0;
 }
 
 .stacktrace li {

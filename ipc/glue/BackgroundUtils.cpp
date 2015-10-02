@@ -25,7 +25,6 @@ class OptionalLoadInfoArgs;
 }
 
 using mozilla::BasePrincipal;
-using mozilla::OriginAttributes;
 using namespace mozilla::net;
 
 namespace ipc {
@@ -77,13 +76,10 @@ PrincipalInfoToPrincipal(const PrincipalInfo& aPrincipalInfo,
         return nullptr;
       }
 
-      if (info.appId() == nsIScriptSecurityManager::UNKNOWN_APP_ID) {
+      if (info.attrs().mAppId == nsIScriptSecurityManager::UNKNOWN_APP_ID) {
         rv = secMan->GetSimpleCodebasePrincipal(uri, getter_AddRefs(principal));
       } else {
-        // TODO: Bug 1167100 - User nsIPrincipal.originAttribute in ContentPrincipalInfo
-        OriginAttributes attrs(info.appId(), info.isInBrowserElement());
-        attrs.mSignedPkg = NS_ConvertUTF8toUTF16(info.signedPkg());
-        principal = BasePrincipal::CreateCodebasePrincipal(uri, attrs);
+        principal = BasePrincipal::CreateCodebasePrincipal(uri, info.attrs());
         rv = principal ? NS_OK : NS_ERROR_FAILURE;
       }
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -203,33 +199,8 @@ PrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
     return rv;
   }
 
-  const mozilla::OriginAttributes& attr =
-	mozilla::BasePrincipal::Cast(aPrincipal)->OriginAttributesRef();
-  nsCString signedPkg = NS_ConvertUTF16toUTF8(attr.mSignedPkg);
-
-  bool isUnknownAppId;
-  rv = aPrincipal->GetUnknownAppId(&isUnknownAppId);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  uint32_t appId;
-  if (isUnknownAppId) {
-    appId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
-  } else {
-    rv = aPrincipal->GetAppId(&appId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  bool isInBrowserElement;
-  rv = aPrincipal->GetIsInBrowserElement(&isInBrowserElement);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  *aPrincipalInfo = ContentPrincipalInfo(appId, isInBrowserElement, spec, signedPkg);
+  *aPrincipalInfo = ContentPrincipalInfo(BasePrincipal::Cast(aPrincipal)->OriginAttributesRef(),
+                                         spec);
   return NS_OK;
 }
 
