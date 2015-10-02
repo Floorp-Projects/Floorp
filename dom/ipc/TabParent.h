@@ -442,6 +442,10 @@ public:
                                int32_t& aDragAreaX, int32_t& aDragAreaY);
     layout::RenderFrameParent* GetRenderFrame();
 
+    // Called by HttpChannelParent. The function may use a new process to
+    // reload the URI associated with the given channel.
+    void OnStartSignedPackageRequest(nsIChannel* aChannel);
+
 protected:
     bool ReceiveMessage(const nsString& aMessage,
                         bool aSync,
@@ -481,6 +485,10 @@ protected:
                                   BrowserConfiguration& aConfiguration);
 
     void SetHasContentOpener(bool aHasContentOpener);
+
+    // Decide whether we have to use a new process to reload the URI associated
+    // with the given channel.
+    bool ShouldSwitchProcess(nsIChannel* aChannel);
 
     ContentCacheInParent mContentCache;
 
