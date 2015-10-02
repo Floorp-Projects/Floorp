@@ -432,27 +432,23 @@ var PageStyleHandler = {
   init: function() {
     addMessageListener("PageStyle:Switch", this);
     addMessageListener("PageStyle:Disable", this);
-
-    // Send a CPOW to the parent so that it can synchronously request
-    // the list of style sheets.
-    sendSyncMessage("PageStyle:SetSyncHandler", {}, {syncHandler: this});
+    addEventListener("pageshow", () => this.sendStyleSheetInfo());
   },
 
   get markupDocumentViewer() {
     return docShell.contentViewer;
   },
 
-  // Called synchronously via CPOW from the parent.
-  getStyleSheetInfo: function() {
-    let styleSheets = this._filterStyleSheets(this.getAllStyleSheets());
-    return {
-      styleSheets: styleSheets,
+  sendStyleSheetInfo: function() {
+    let filteredStyleSheets = this._filterStyleSheets(this.getAllStyleSheets());
+
+    sendAsyncMessage("PageStyle:StyleSheets", {
+      filteredStyleSheets: filteredStyleSheets,
       authorStyleDisabled: this.markupDocumentViewer.authorStyleDisabled,
       preferredStyleSheetSet: content.document.preferredStyleSheetSet
-    };
+    });
   },
 
-  // Called synchronously via CPOW from the parent.
   getAllStyleSheets: function(frameset = content) {
     let selfSheets = Array.slice(frameset.document.styleSheets);
     let subSheets = Array.map(frameset.frames, frame => this.getAllStyleSheets(frame));
@@ -470,6 +466,8 @@ var PageStyleHandler = {
         this.markupDocumentViewer.authorStyleDisabled = true;
         break;
     }
+
+    this.sendStyleSheetInfo();
   },
 
   _stylesheetSwitchAll: function (frameset, title) {
@@ -515,8 +513,16 @@ var PageStyleHandler = {
         }
       }
 
-      result.push({title: currentStyleSheet.title,
-                   disabled: currentStyleSheet.disabled});
+      // We won't send data URIs all of the way up to the parent, as these
+      // can be arbitrarily large.
+      let URI = Services.io.newURI(currentStyleSheet.href, null, null);
+      let sentURI = URI.scheme == "data" ? null : URI.spec;
+
+      result.push({
+        title: currentStyleSheet.title,
+        disabled: currentStyleSheet.disabled,
+        href: sentURI,
+      });
     }
 
     return result;
