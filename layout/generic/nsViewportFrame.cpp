@@ -51,14 +51,67 @@ ViewportFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   PROFILER_LABEL("ViewportFrame", "BuildDisplayList",
     js::ProfileEntry::Category::GRAPHICS);
 
-  nsIFrame* kid = mFrames.FirstChild();
-  if (!kid)
-    return;
+  if (nsIFrame* kid = mFrames.FirstChild()) {
+    // make the kid's BorderBackground our own. This ensures that the canvas
+    // frame's background becomes our own background and therefore appears
+    // below negative z-index elements.
+    BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+  }
 
-  // make the kid's BorderBackground our own. This ensures that the canvas
-  // frame's background becomes our own background and therefore appears
-  // below negative z-index elements.
-  BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
+  nsDisplayList topLayerList;
+  BuildDisplayListForTopLayer(aBuilder, &topLayerList);
+  if (!topLayerList.IsEmpty()) {
+    // Wrap the whole top layer in a single item with maximum z-index,
+    // and append it at the very end, so that it stays at the topmost.
+    nsDisplayWrapList* wrapList =
+      new (aBuilder) nsDisplayWrapList(aBuilder, this, &topLayerList);
+    wrapList->SetOverrideZIndex(
+      std::numeric_limits<decltype(wrapList->ZIndex())>::max());
+    aLists.PositionedDescendants()->AppendNewToTop(wrapList);
+  }
+}
+
+void
+ViewportFrame::BuildDisplayListForTopLayer(nsDisplayListBuilder* aBuilder,
+                                           nsDisplayList* aList)
+{
+  nsIDocument* doc = PresContext()->Document();
+  nsTArray<Element*> fullscreenStack = doc->GetFullscreenStack();
+  for (Element* elem : fullscreenStack) {
+    // Root element cannot be put in the top layer.
+    if (!elem->GetParent()) {
+      continue;
+    }
+    if (nsIFrame* frame = elem->GetPrimaryFrame()) {
+      // When building display list for purpose other than painting, it
+      // is possible that the style and layout info is inconsistent with
+      // the content tree. Skip inconsistent frames in that case.
+      if (frame->StyleDisplay()->mTopLayer == NS_STYLE_TOP_LAYER_NONE) {
+        MOZ_ASSERT(!aBuilder->IsForPainting(), "Fullscreen element should "
+                   "always be in the top layer for painting");
+        continue;
+      }
+      // Inner SVG, MathML elements, as well as children of some XUL
+      // elements are not allowed to be out-of-flow. They should not
+      // be handled as top layer element here.
+      if (!(frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+        MOZ_ASSERT(!elem->GetParent()->IsHTMLElement(), "HTML element "
+                   "should always be out-of-flow if in the top layer");
+        continue;
+      }
+      MOZ_ASSERT(frame->GetParent() == this);
+
+      nsRect dirty;
+      nsDisplayListBuilder::OutOfFlowDisplayData*
+        savedOutOfFlowData = nsDisplayListBuilder::GetOutOfFlowData(frame);
+      if (savedOutOfFlowData) {
+        dirty = savedOutOfFlowData->mDirtyRect;
+      }
+      nsDisplayList list;
+      frame->BuildDisplayListForStackingContext(aBuilder, dirty, &list);
+      aList->AppendToTop(&list);
+    }
+  }
 }
 
 #ifdef DEBUG
