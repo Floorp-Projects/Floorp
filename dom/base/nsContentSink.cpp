@@ -1171,7 +1171,8 @@ nsContentSink::ProcessOfflineManifest(const nsAString& aManifestSpec)
 
     if (updateService) {
       nsCOMPtr<nsIDOMDocument> domdoc = do_QueryInterface(mDocument);
-      updateService->ScheduleOnDocumentStop(manifestURI, mDocumentURI, domdoc);
+      updateService->ScheduleOnDocumentStop(manifestURI, mDocumentURI,
+                                            mDocument->NodePrincipal(), domdoc);
     }
     break;
   }
