@@ -193,6 +193,10 @@ add_task(function* test_window_open_with_non_defaults() {
   yield testLinkWithMatrix("#winOpenNonDefault", kWinOpenNonDefault);
 });
 
+add_task(function* test_window_open_dialog() {
+  yield testLinkWithMatrix("#winOpenDialog", kWinOpenNonDefault);
+});
+
 add_task(function* test_target__blank() {
   yield testLinkWithMatrix("#targetBlank", kTargetBlank);
 });
