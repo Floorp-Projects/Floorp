@@ -11,45 +11,45 @@
     <LinearLayout android:id="@+id/prompt"
                   android:focusable="true"
                   android:layout_width="match_parent"
+                  android:minHeight="48dp"
                   android:layout_height="wrap_content"
                   android:orientation="horizontal"
-                  android:minHeight="@dimen/search_row_height"
                   android:gravity="center_vertical"
-                  android:padding="10dip">
+                  android:paddingLeft="15dp"
+                  android:paddingRight="15dp"
+                  android:textSize="12sp">
 
         <TextView android:id="@+id/suggestions_prompt_title"
                   android:layout_height="wrap_content"
                   android:layout_width="0dp"
-                  android:layout_marginLeft="6dip"
                   android:layout_weight="1"
-                  android:textAppearance="@style/TextAppearance.Widget.SuggestionsPrompt"/>
-
-        <TextView android:id="@+id/suggestions_prompt_yes"
-                  android:layout_height="wrap_content"
-                  android:layout_width="wrap_content"
-                  android:layout_marginLeft="15dip"
-                  android:textAppearance="@style/TextAppearance.Widget.SuggestionsPrompt"
-                  android:background="@drawable/suggestion_selector"
-                  android:paddingLeft="15dp"
-                  android:paddingRight="15dp"
-                  android:paddingTop="7dp"
-                  android:paddingBottom="7dp"
-                  android:focusable="true"
-                  android:text="@string/button_yes" />
+                  android:fontFamily="sans-serif"
+                  android:textColor="@color/text_and_tabs_tray_grey"
+                  android:layout_marginRight="10dp"/>
 
         <TextView android:id="@+id/suggestions_prompt_no"
-                  android:layout_height="wrap_content"
+                  android:layout_height="32dp"
+                  android:minWidth="72dp"
                   android:layout_width="wrap_content"
-                  android:layout_marginLeft="6dip"
-                  android:textAppearance="@style/TextAppearance.Widget.SuggestionsPrompt"
-                  android:background="@drawable/suggestion_selector"
-                  android:nextFocusRight="@+id/suggestions_prompt_no"
-                  android:paddingLeft="15dp"
-                  android:paddingRight="15dp"
-                  android:paddingTop="7dp"
-                  android:paddingBottom="7dp"
+                  android:layout_marginRight="10dp"
+                  android:textColor="@color/text_and_tabs_tray_grey"
+                  android:gravity="center"
+                  android:background="@drawable/search_suggestion_prompt_no"
+                  android:nextFocusRight="@+id/suggestions_prompt_yes"
                   android:focusable="true"
-                  android:text="@string/button_no" />
+                  android:text="@string/button_no"/>
+
+        <TextView android:id="@+id/suggestions_prompt_yes"
+                  android:layout_height="32dp"
+                  android:minWidth="72dp"
+                  android:layout_width="wrap_content"
+                  android:gravity="center"
+                  android:textColor="@color/swipe_refresh_white"
+                  android:background="@drawable/search_suggestion_prompt_yes"
+                  android:focusable="true"
+                  android:text="@string/button_yes"/>
+
+
 
     </LinearLayout>
 
