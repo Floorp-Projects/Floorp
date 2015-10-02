@@ -61,6 +61,27 @@ StringToAddress(const nsAString& aString, BluetoothAddress& aAddress)
   return NS_OK;
 }
 
+nsresult
+StringToPinCode(const nsAString& aString, BluetoothPinCode& aPinCode)
+{
+  NS_ConvertUTF16toUTF8 stringUTF8(aString);
+
+  auto len = stringUTF8.Length();
+
+  if (len > sizeof(aPinCode.mPinCode)) {
+    BT_LOGR("Service-name string too long");
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  auto str = stringUTF8.get();
+
+  memcpy(aPinCode.mPinCode, str, len);
+  memset(aPinCode.mPinCode + len, 0, sizeof(aPinCode.mPinCode) - len);
+  aPinCode.mLength = len;
+
+  return NS_OK;
+}
+
 void
 UuidToString(const BluetoothUuid& aUuid, nsAString& aString)
 {

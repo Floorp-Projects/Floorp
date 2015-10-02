@@ -118,7 +118,7 @@ public:
                          BluetoothResultHandler* aRes);
 
   nsresult PinReplyCmd(const BluetoothAddress& aBdAddr, bool aAccept,
-                       const nsAString& aPinCode,
+                       const BluetoothPinCode& aPinCode,
                        BluetoothResultHandler* aRes);
 
   nsresult SspReplyCmd(const BluetoothAddress& aBdAddr,
