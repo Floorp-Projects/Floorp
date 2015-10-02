@@ -398,10 +398,10 @@ public:
   virtual void DiscoveryStateChangedNotification(bool aState) override;
 
   virtual void PinRequestNotification(const BluetoothAddress& aRemoteBdAddr,
-                                      const nsAString& aBdName,
+                                      const BluetoothRemoteName& aBdName,
                                       uint32_t aCod) override;
   virtual void SspRequestNotification(const BluetoothAddress& aRemoteBdAddr,
-                                      const nsAString& aBdName,
+                                      const BluetoothRemoteName& aBdName,
                                       uint32_t aCod,
                                       BluetoothSspVariant aPairingVariant,
                                       uint32_t aPasskey) override;

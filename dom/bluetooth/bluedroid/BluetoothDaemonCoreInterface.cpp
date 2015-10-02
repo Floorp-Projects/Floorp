@@ -958,7 +958,8 @@ public:
   { }
 
   nsresult
-  operator () (BluetoothAddress& aArg1, nsString& aArg2, uint32_t& aArg3) const
+  operator () (BluetoothAddress& aArg1, BluetoothRemoteName& aArg2,
+               uint32_t& aArg3) const
   {
     DaemonSocketPDU& pdu = GetPDU();
 
@@ -969,8 +970,7 @@ public:
     }
 
     /* Read remote name */
-    rv = UnpackPDU(
-      pdu, UnpackConversion<BluetoothRemoteName, nsAString>(aArg2));
+    rv = UnpackPDU(pdu, aArg2);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1004,8 +1004,9 @@ public:
   { }
 
   nsresult
-  operator () (BluetoothAddress& aArg1, nsString& aArg2, uint32_t& aArg3,
-               BluetoothSspVariant& aArg4, uint32_t& aArg5) const
+  operator () (BluetoothAddress& aArg1, BluetoothRemoteName& aArg2,
+               uint32_t& aArg3, BluetoothSspVariant& aArg4,
+               uint32_t& aArg5) const
   {
     DaemonSocketPDU& pdu = GetPDU();
 
@@ -1016,8 +1017,7 @@ public:
     }
 
     /* Read remote name */
-    rv = UnpackPDU(
-      pdu, UnpackConversion<BluetoothRemoteName, nsAString>(aArg2));
+    rv = UnpackPDU(pdu, aArg2);
     if (NS_FAILED(rv)) {
       return rv;
     }

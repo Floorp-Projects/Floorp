@@ -41,6 +41,13 @@ nsresult
 StringToPinCode(const nsAString& aString, BluetoothPinCode& aPinCode);
 
 //
+// Remote name/string conversion
+//
+
+void
+RemoteNameToString(const BluetoothRemoteName& aRemoteName, nsAString& aString);
+
+//
 // BluetoothUuid <-> uuid string conversion
 //
 

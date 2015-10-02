@@ -266,13 +266,16 @@ private:
     DiscoveryStateChangedNotification;
 
   typedef mozilla::ipc::DaemonNotificationRunnable3<
-    NotificationHandlerWrapper, void, BluetoothAddress, nsString, uint32_t,
-    const BluetoothAddress&, const nsAString&>
+    NotificationHandlerWrapper, void,
+    BluetoothAddress, BluetoothRemoteName, uint32_t,
+    const BluetoothAddress&, const BluetoothRemoteName&>
     PinRequestNotification;
 
   typedef mozilla::ipc::DaemonNotificationRunnable5<
-    NotificationHandlerWrapper, void, BluetoothAddress, nsString, uint32_t,
-    BluetoothSspVariant, uint32_t, const BluetoothAddress&, const nsAString&>
+    NotificationHandlerWrapper, void,
+    BluetoothAddress, BluetoothRemoteName, uint32_t, BluetoothSspVariant,
+    uint32_t,
+    const BluetoothAddress&, const BluetoothRemoteName&>
     SspRequestNotification;
 
   typedef mozilla::ipc::DaemonNotificationRunnable3<
