@@ -5,6 +5,7 @@
 
 #include "VP8TrackEncoder.h"
 #include "GeckoProfiler.h"
+#include "LayersLogging.h"
 #include "libyuv.h"
 #include "mozilla/gfx/2D.h"
 #include "prsystem.h"
@@ -365,6 +366,64 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
     }
 
     VP8LOG("Converted an %s frame to I420\n");
+  } else {
+    // Not YCbCr at all. Try to get access to the raw data and convert.
+
+    RefPtr<SourceSurface> surf = img->GetAsSourceSurface();
+    if (!surf) {
+      VP8LOG("Getting surface from %s image failed\n", Stringify(format).c_str());
+      return NS_ERROR_FAILURE;
+    }
+
+    RefPtr<DataSourceSurface> data = surf->GetDataSurface();
+    if (!data) {
+      VP8LOG("Getting data surface from %s image with %s (%s) surface failed\n",
+             Stringify(format).c_str(), Stringify(surf->GetType()).c_str(),
+             Stringify(surf->GetFormat()).c_str());
+      return NS_ERROR_FAILURE;
+    }
+
+    DataSourceSurface::ScopedMap map(data, DataSourceSurface::READ);
+    if (!map.IsMapped()) {
+      VP8LOG("Reading DataSourceSurface from %s image with %s (%s) surface failed\n",
+             Stringify(format).c_str(), Stringify(surf->GetType()).c_str(),
+             Stringify(surf->GetFormat()).c_str());
+      return NS_ERROR_FAILURE;
+    }
+
+    int rv;
+    switch (surf->GetFormat()) {
+      case SurfaceFormat::B8G8R8A8:
+      case SurfaceFormat::B8G8R8X8:
+        rv = libyuv::ARGBToI420(static_cast<uint8*>(map.GetData()),
+                                map.GetStride(),
+                                y, mFrameWidth,
+                                cb, halfWidth,
+                                cr, halfWidth,
+                                mFrameWidth, mFrameHeight);
+        break;
+      case SurfaceFormat::R5G6B5:
+        rv = libyuv::RGB565ToI420(static_cast<uint8*>(map.GetData()),
+                                  map.GetStride(),
+                                  y, mFrameWidth,
+                                  cb, halfWidth,
+                                  cr, halfWidth,
+                                  mFrameWidth, mFrameHeight);
+        break;
+      default:
+        VP8LOG("Unsupported SourceSurface format %s\n",
+               Stringify(surf->GetFormat()).c_str());
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    if (rv != 0) {
+      VP8LOG("%s to I420 conversion failed\n",
+             Stringify(surf->GetFormat()).c_str());
+      return NS_ERROR_FAILURE;
+    }
+
+    VP8LOG("Converted a %s frame to I420\n",
+           Stringify(surf->GetFormat()).c_str());
   }
 
   mVPXImageWrapper->planes[VPX_PLANE_Y] = y;
