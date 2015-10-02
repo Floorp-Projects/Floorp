@@ -1474,7 +1474,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
         case FOURCC('s', 't', 'c', 'o'):
         case FOURCC('c', 'o', '6', '4'):
         {
-            if (!mLastTrack) {
+            if (!mLastTrack || !mLastTrack->sampleTable.get()) {
               return ERROR_MALFORMED;
             }
             status_t err =
@@ -1491,7 +1491,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
 
         case FOURCC('s', 't', 's', 'c'):
         {
-            if (!mLastTrack) {
+            if (!mLastTrack || !mLastTrack->sampleTable.get()) {
               return ERROR_MALFORMED;
             }
             status_t err =
@@ -1509,7 +1509,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
         case FOURCC('s', 't', 's', 'z'):
         case FOURCC('s', 't', 'z', '2'):
         {
-            if (!mLastTrack) {
+            if (!mLastTrack || !mLastTrack->sampleTable.get()) {
               return ERROR_MALFORMED;
             }
             status_t err =
@@ -1566,7 +1566,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
 
         case FOURCC('s', 't', 't', 's'):
         {
-            if (!mLastTrack) {
+            if (!mLastTrack || !mLastTrack->sampleTable.get()) {
               return ERROR_MALFORMED;
             }
             status_t err =
@@ -1583,7 +1583,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
 
         case FOURCC('c', 't', 't', 's'):
         {
-            if (!mLastTrack) {
+            if (!mLastTrack || !mLastTrack->sampleTable.get()) {
               return ERROR_MALFORMED;
             }
             status_t err =
@@ -1600,7 +1600,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
 
         case FOURCC('s', 't', 's', 's'):
         {
-            if (!mLastTrack) {
+            if (!mLastTrack || !mLastTrack->sampleTable.get()) {
               return ERROR_MALFORMED;
             }
             status_t err =
@@ -1617,7 +1617,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
 
         case FOURCC('s', 'a', 'i', 'z'):
         {
-            if (!mLastTrack) {
+            if (!mLastTrack || !mLastTrack->sampleTable.get()) {
               return ERROR_MALFORMED;
             }
             status_t err =
@@ -1634,7 +1634,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
 
         case FOURCC('s', 'a', 'i', 'o'):
         {
-            if (!mLastTrack) {
+            if (!mLastTrack || !mLastTrack->sampleTable.get()) {
               return ERROR_MALFORMED;
             }
             status_t err =
@@ -4245,7 +4245,7 @@ public:
 nsTArray<MediaSource::Indice> MPEG4Source::exportIndex()
 {
   nsTArray<MediaSource::Indice> index;
-  if (!mTimescale) {
+  if (!mTimescale || !mSampleTable.get()) {
     return index;
   }
 
