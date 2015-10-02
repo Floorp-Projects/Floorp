@@ -71,9 +71,12 @@ private:
       return mMessage.get();
     }
 
-    already_AddRefed<nsIConsoleMessage> forget()
+    // Swap directly into an nsCOMPtr to avoid spurious refcount
+    // traffic off the main thread in debug builds from
+    // NSCAP_ASSERT_NO_QUERY_NEEDED().
+    void swapMessage(nsCOMPtr<nsIConsoleMessage>& aRetVal)
     {
-      return mMessage.forget();
+      mMessage.swap(aRetVal);
     }
 
     ~MessageElement();

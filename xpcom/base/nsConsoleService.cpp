@@ -300,7 +300,7 @@ nsConsoleService::LogMessageWithMode(nsIConsoleMessage* aMessage,
       } else {
         MessageElement* p = mMessages.popFirst();
         MOZ_ASSERT(p);
-        retiredMessage = p->forget();
+        p->swapMessage(retiredMessage);
         delete p;
       }
     }
