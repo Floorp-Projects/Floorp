@@ -29,9 +29,8 @@ FINAL_TARGET_FILES.defaults.profile += ['profile/prefs.js']
 
 DEFINES['APP_VERSION'] = CONFIG['MOZ_APP_VERSION']
 
-for var in ('MOZILLA_OFFICIAL', 'LIBXUL_SDK'):
-    if CONFIG[var]:
-        DEFINES[var] = True
+if CONFIG['LIBXUL_SDK']:
+    DEFINES['LIBXUL_SDK'] = True
 
 GENERATED_INCLUDES += [
     '/build',
