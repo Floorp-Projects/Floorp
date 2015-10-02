@@ -1989,8 +1989,12 @@ this.DOMApplicationRegistry = {
         },
         id: aApp.id
       });
+      let appURI = NetUtil.newURI(aApp.origin, null, null);
+      let principal =
+        Services.scriptSecurityManager.createCodebasePrincipal(appURI,
+                                                               {appId: aApp.localId});
       let cacheUpdate = updateSvc.scheduleAppUpdate(
-        appcacheURI, docURI, aApp.localId, false, aProfileDir);
+        appcacheURI, docURI, principal, aApp.localId, false, aProfileDir);
 
       // We save the download details for potential further usage like
       // cancelling it.
@@ -2139,8 +2143,12 @@ this.DOMApplicationRegistry = {
           new ManifestHelper(manifest, aData.origin, aData.manifestURL);
         debug("onlyCheckAppCache - launch updateSvc.checkForUpdate for " +
               helper.fullAppcachePath());
+        let appURI = NetUtil.newURI(aApp.origin, null, null);
+        let principal =
+          Services.scriptSecurityManager.createCodebasePrincipal(appURI,
+                                                                 {appId: aApp.localId});
         updateSvc.checkForUpdate(Services.io.newURI(helper.fullAppcachePath(), null, null),
-                                 app.localId, false, updateObserver);
+                                 principal, app.localId, false, updateObserver);
       });
       return;
     }
@@ -2409,9 +2417,13 @@ this.DOMApplicationRegistry = {
             manifest.fullAppcachePath());
 
       let updateDeferred = Promise.defer();
+      let appURI = NetUtil.newURI(aApp.origin, null, null);
+      let principal =
+        Services.scriptSecurityManager.createCodebasePrincipal(appURI,
+                                                               {appId: aApp.localId});
 
       updateSvc.checkForUpdate(Services.io.newURI(manifest.fullAppcachePath(), null, null),
-                               aApp.localId, false,
+                               principal, aApp.localId, false,
                                (aSubject, aTopic, aData) => updateDeferred.resolve(aTopic));
 
       let topic = yield updateDeferred.promise;
