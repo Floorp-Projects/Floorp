@@ -2,7 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function test() {
+add_task(function* () {
+  // Ensure TabView has been initialized already. Otherwise it could
+  // activate at an unexpected time and show/hide tabs.
+  yield new Promise(resolve => TabView._initFrame(resolve));
+
   // There should be one tab when we start the test
   let [origTab] = gBrowser.visibleTabs;
 
@@ -100,4 +104,5 @@ function test() {
 
   if (tabViewWindow)
     tabViewWindow.GroupItems.groupItems[0].close();
-}
+});
+

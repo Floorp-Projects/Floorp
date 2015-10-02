@@ -195,6 +195,25 @@ this.FxAccountsOAuthClient.prototype = {
               };
             }
 
+            // if the message asked to close the tab
+            if (data.closeWindow && target) {
+              // for e10s reasons the best way is to use the TabBrowser to close the tab.
+              let tabbrowser = target.getTabBrowser();
+
+              if (tabbrowser) {
+                let tab = tabbrowser.getTabForBrowser(target);
+
+                if (tab) {
+                  tabbrowser.removeTab(tab);
+                  log.debug("OAuth flow closed the tab.");
+                } else {
+                  log.debug("OAuth flow failed to close the tab. Tab not found in TabBrowser.");
+                }
+              } else {
+                log.debug("OAuth flow failed to close the tab. TabBrowser not found.");
+              }
+            }
+
             if (err) {
               log.debug(err.message);
               if (this.onError) {
@@ -214,25 +233,6 @@ this.FxAccountsOAuthClient.prototype = {
             // onComplete will be called for this client only once
             // calling onComplete again will result in a failure of the OAuth flow
             this.tearDown();
-
-            // if the message asked to close the tab
-            if (data.closeWindow && target) {
-              // for e10s reasons the best way is to use the TabBrowser to close the tab.
-              let tabbrowser = target.getTabBrowser();
-
-              if (tabbrowser) {
-                let tab = tabbrowser.getTabForBrowser(target);
-
-                if (tab) {
-                  tabbrowser.removeTab(tab);
-                  log.debug("OAuth flow closed the tab.");
-                } else {
-                  log.debug("OAuth flow failed to close the tab. Tab not found in TabBrowser.");
-                }
-              } else {
-                log.debug("OAuth flow failed to close the tab. TabBrowser not found.");
-              }
-            }
             break;
         }
       }

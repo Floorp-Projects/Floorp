@@ -70,11 +70,15 @@ SimSystemRegister SimSystemRegister::DefaultValueFor(SystemRegister id) {
 Simulator::~Simulator() {
   js_free(stack_);
   // The decoder may outlive the simulator.
-  decoder_->RemoveVisitor(print_disasm_);
-  js_delete(print_disasm_);
+  if (print_disasm_) {
+    decoder_->RemoveVisitor(print_disasm_);
+    js_delete(print_disasm_);
+  }
 
-  decoder_->RemoveVisitor(instrumentation_);
-  js_delete(instrumentation_);
+  if (instrumentation_) {
+    decoder_->RemoveVisitor(instrumentation_);
+    js_delete(instrumentation_);
+  }
 }
 
 

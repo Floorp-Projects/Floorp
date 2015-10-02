@@ -186,12 +186,17 @@ DynamicsCompressorNode::DynamicsCompressorNode(AudioContext* aContext)
               2,
               ChannelCountMode::Explicit,
               ChannelInterpretation::Speakers)
-  , mThreshold(new AudioParam(this, SendThresholdToStream, -24.f, "threshold"))
-  , mKnee(new AudioParam(this, SendKneeToStream, 30.f, "knee"))
-  , mRatio(new AudioParam(this, SendRatioToStream, 12.f, "ratio"))
+  , mThreshold(new AudioParam(this, DynamicsCompressorNodeEngine::THRESHOLD,
+                              -24.f, "threshold"))
+  , mKnee(new AudioParam(this, DynamicsCompressorNodeEngine::KNEE,
+                         30.f, "knee"))
+  , mRatio(new AudioParam(this, DynamicsCompressorNodeEngine::RATIO,
+                          12.f, "ratio"))
   , mReduction(0)
-  , mAttack(new AudioParam(this, SendAttackToStream, 0.003f, "attack"))
-  , mRelease(new AudioParam(this, SendReleaseToStream, 0.25f, "release"))
+  , mAttack(new AudioParam(this, DynamicsCompressorNodeEngine::ATTACK,
+                           0.003f, "attack"))
+  , mRelease(new AudioParam(this, DynamicsCompressorNodeEngine::RELEASE,
+                            0.25f, "release"))
 {
   DynamicsCompressorNodeEngine* engine = new DynamicsCompressorNodeEngine(this, aContext->Destination());
   mStream = AudioNodeStream::Create(aContext, engine,
@@ -224,46 +229,6 @@ JSObject*
 DynamicsCompressorNode::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return DynamicsCompressorNodeBinding::Wrap(aCx, this, aGivenProto);
-}
-
-void
-DynamicsCompressorNode::SendThresholdToStream(AudioNode* aNode,
-                                              const AudioTimelineEvent& aEvent)
-{
-  DynamicsCompressorNode* This = static_cast<DynamicsCompressorNode*>(aNode);
-  SendTimelineEventToStream(This, DynamicsCompressorNodeEngine::THRESHOLD, aEvent);
-}
-
-void
-DynamicsCompressorNode::SendKneeToStream(AudioNode* aNode,
-                                         const AudioTimelineEvent& aEvent)
-{
-  DynamicsCompressorNode* This = static_cast<DynamicsCompressorNode*>(aNode);
-  SendTimelineEventToStream(This, DynamicsCompressorNodeEngine::KNEE, aEvent);
-}
-
-void
-DynamicsCompressorNode::SendRatioToStream(AudioNode* aNode,
-                                          const AudioTimelineEvent& aEvent)
-{
-  DynamicsCompressorNode* This = static_cast<DynamicsCompressorNode*>(aNode);
-  SendTimelineEventToStream(This, DynamicsCompressorNodeEngine::RATIO, aEvent);
-}
-
-void
-DynamicsCompressorNode::SendAttackToStream(AudioNode* aNode,
-                                          const AudioTimelineEvent& aEvent)
-{
-  DynamicsCompressorNode* This = static_cast<DynamicsCompressorNode*>(aNode);
-  SendTimelineEventToStream(This, DynamicsCompressorNodeEngine::ATTACK, aEvent);
-}
-
-void
-DynamicsCompressorNode::SendReleaseToStream(AudioNode* aNode,
-                                            const AudioTimelineEvent& aEvent)
-{
-  DynamicsCompressorNode* This = static_cast<DynamicsCompressorNode*>(aNode);
-  SendTimelineEventToStream(This, DynamicsCompressorNodeEngine::RELEASE, aEvent);
 }
 
 } // namespace dom

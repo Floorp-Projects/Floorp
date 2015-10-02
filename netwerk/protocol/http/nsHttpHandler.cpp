@@ -365,6 +365,8 @@ nsHttpHandler::Init()
         obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, true);
         obsService->AddObserver(this, "net:clear-active-logins", true);
         obsService->AddObserver(this, "net:prune-dead-connections", true);
+        // Sent by the TorButton add-on in the Tor Browser
+        obsService->AddObserver(this, "net:prune-all-connections", true);
         obsService->AddObserver(this, "net:failed-to-process-uri-content", true);
         obsService->AddObserver(this, "last-pb-context-exited", true);
         obsService->AddObserver(this, "webapps-clear-data", true);
@@ -2042,6 +2044,11 @@ nsHttpHandler::Observe(nsISupports *subject,
         mPrivateAuthCache.ClearAll();
     } else if (!strcmp(topic, "net:prune-dead-connections")) {
         if (mConnMgr) {
+            mConnMgr->PruneDeadConnections();
+        }
+    } else if (!strcmp(topic, "net:prune-all-connections")) {
+        if (mConnMgr) {
+            mConnMgr->DoShiftReloadConnectionCleanup(nullptr);
             mConnMgr->PruneDeadConnections();
         }
     } else if (!strcmp(topic, "net:failed-to-process-uri-content")) {

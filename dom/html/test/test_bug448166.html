@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=448166
 /** Test for Bug 448166 **/
 isnot($("test").href, "http://www.mozilla.org/",
       "Should notice unpaired surrogate");
-is($("test").href, "http://www.moz\ufffdilla.org/",
+is($("test").href, "http://www.xn--mozilla-2e14b.org/",
       "Should replace unpaired surrogate with replacement char");
 is($("control").href, "http://www.mozilla.org/",
       "Just making sure .href works");
