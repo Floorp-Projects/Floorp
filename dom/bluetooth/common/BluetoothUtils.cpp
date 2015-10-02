@@ -82,6 +82,23 @@ StringToPinCode(const nsAString& aString, BluetoothPinCode& aPinCode)
   return NS_OK;
 }
 
+nsresult
+StringToPropertyType(const nsAString& aString, BluetoothPropertyType& aType)
+{
+  if (aString.EqualsLiteral("Name")) {
+    aType = PROPERTY_BDNAME;
+  } else if (aString.EqualsLiteral("Discoverable")) {
+    aType = PROPERTY_ADAPTER_SCAN_MODE;
+  } else if (aString.EqualsLiteral("DiscoverableTimeout")) {
+    aType = PROPERTY_ADAPTER_DISCOVERY_TIMEOUT;
+  } else {
+    BT_LOGR("Invalid property name: %s", NS_ConvertUTF16toUTF8(aString).get());
+    aType = PROPERTY_UNKNOWN; // silences compiler warning
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  return NS_OK;
+}
+
 void
 RemoteNameToString(const BluetoothRemoteName& aRemoteName, nsAString& aString)
 {
