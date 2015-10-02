@@ -2071,7 +2071,7 @@ class LazyScript : public gc::TenuredCell
     // If non-nullptr, the script has been compiled and this is a forwarding
     // pointer to the result. This is a weak pointer: after relazification, we
     // can collect the script if there are no other pointers to it.
-    ReadBarrieredScript script_;
+    WeakRef<JSScript*> script_;
 
     // Original function with which the lazy script is associated.
     HeapPtrFunction function_;
@@ -2174,12 +2174,13 @@ class LazyScript : public gc::TenuredCell
     void resetScript();
 
     JSScript* maybeScript() {
-        if (script_.unbarrieredGet() && gc::IsAboutToBeFinalized(&script_))
-            script_.set(nullptr);
         return script_;
     }
-    JSScript* maybeScriptUnbarriered() const {
+    const JSScript* maybeScriptUnbarriered() const {
         return script_.unbarrieredGet();
+    }
+    bool hasScript() const {
+        return bool(script_);
     }
 
     JSObject* enclosingScope() const {
