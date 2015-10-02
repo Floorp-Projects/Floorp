@@ -14,6 +14,7 @@
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:actionBarStyle">@style/GeckoActionBar</item>
+        <item name="android:colorAccent">@color/action_orange</item>
     </style>
 
     <style name="ActionBar.FxAccountStatusActivity" parent="@android:style/Widget.Material.ActionBar.Solid">

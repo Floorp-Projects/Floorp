@@ -67,7 +67,7 @@ function test() {
 
     function checkSearchURL(event) {
       is(event.originalTarget.URL,
-         "http://mochi.test:8888/browser/browser/components/search/test/?test=test+search&ie=utf-8&client=app&channel=contextsearch",
+         "http://mochi.test:8888/browser/browser/components/search/test/?test=test+search&ie=utf-8&channel=contextsearch",
          "Checking context menu search URL");
       // Remove the tab opened by the search
       gBrowser.removeCurrentTab();
