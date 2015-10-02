@@ -5,8 +5,10 @@ const {devtools} =
 const { getActiveTab } = devtools.require("sdk/tabs/utils");
 const { getMostRecentBrowserWindow } = devtools.require("sdk/window/utils");
 
+webserver = Services.prefs.getCharPref("addon.test.damp.webserver");
+
 const SIMPLE_URL = "chrome://damp/content/pages/simple.html";
-const COMPLICATED_URL = "http://localhost/tests/tp5n/bild.de/www.bild.de/index.html";
+const COMPLICATED_URL = webserver + "/tests/tp5n/bild.de/www.bild.de/index.html";
 
 function Damp() {
 }
