@@ -382,7 +382,7 @@ public:
 
   void MarkImmutable() { AddFlags(TextureFlags::IMMUTABLE); }
 
-  bool IsSharedWithCompositor() const { return mShared; }
+  bool IsSharedWithCompositor() const;
 
   bool ShouldDeallocateInDestructor() const;
 
