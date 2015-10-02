@@ -158,6 +158,13 @@ nsLayoutStylesheetCache::QuirkSheet()
 }
 
 CSSStyleSheet*
+nsLayoutStylesheetCache::FullScreenOverrideSheet()
+{
+  EnsureGlobal();
+  return gStyleCache->mFullScreenOverrideSheet;
+}
+
+CSSStyleSheet*
 nsLayoutStylesheetCache::SVGSheet()
 {
   EnsureGlobal();
@@ -309,6 +316,7 @@ nsLayoutStylesheetCache::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf
   MEASURE(mCounterStylesSheet);
   MEASURE(mDesignModeSheet);
   MEASURE(mFormsSheet);
+  MEASURE(mFullScreenOverrideSheet);
   MEASURE(mHTMLSheet);
   MEASURE(mMathMLSheet);
   MEASURE(mMinimalXULSheet);
@@ -349,6 +357,8 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache()
   // per-profile, since they're profile-invariant.
   LoadSheetURL("resource://gre-resources/counterstyles.css",
                mCounterStylesSheet, true);
+  LoadSheetURL("resource://gre-resources/full-screen-override.css",
+               mFullScreenOverrideSheet, true);
   LoadSheetURL("chrome://global/content/minimal-xul.css",
                mMinimalXULSheet, true);
   LoadSheetURL("resource://gre-resources/quirk.css",
