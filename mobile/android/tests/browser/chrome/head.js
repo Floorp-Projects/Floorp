@@ -18,3 +18,17 @@ function promiseBrowserEvent(browser, eventType) {
     info("Now waiting for " + eventType + " event from browser");
   });
 }
+
+function promiseNotification(topic) {
+  Cu.import("resource://gre/modules/Services.jsm");
+
+  return new Promise((resolve, reject) => {
+    function observe(subject, topic, data) {
+      info("Received " + topic + " notification from Gecko");
+      Services.obs.removeObserver(observe, topic);
+      resolve();
+    }
+    Services.obs.addObserver(observe, topic, false);
+    info("Now waiting for " + topic + " notification from Gecko");
+  });
+}
