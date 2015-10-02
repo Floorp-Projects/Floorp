@@ -170,6 +170,27 @@ add_task(function* test_updated() {
   yield promiseShutdownManager();
 });
 
+// Entering safe mode should disable the updated system add-ons and use the
+// default system add-ons
+add_task(function* safe_mode_disabled() {
+  gAppInfo.inSafeMode = true;
+  startupManager(false);
+
+  yield check_installed(false, "1.0", "1.0", null);
+
+  yield promiseShutdownManager();
+});
+
+// Leaving safe mode should re-enable the updated system add-ons
+add_task(function* normal_mode_enabled() {
+  gAppInfo.inSafeMode = false;
+  startupManager(false);
+
+  yield check_installed(true, null, "1.0", "1.0");
+
+  yield promiseShutdownManager();
+});
+
 // An additional add-on in the directory should be ignored
 add_task(function* test_skips_additional() {
   // Copy in the system add-ons

@@ -662,7 +662,8 @@ struct JSCompartment
     // Debugger API, or for the entire runtime.
     bool collectCoverage() const {
         return debuggerObservesCoverage() ||
-               runtimeFromAnyThread()->profilingScripts;
+               runtimeFromAnyThread()->profilingScripts ||
+               runtimeFromAnyThread()->lcovOutput.isEnabled();
     }
     void clearScriptCounts();
 
@@ -746,6 +747,11 @@ struct JSCompartment
 
   public:
     void addTelemetry(const char* filename, DeprecatedLanguageExtension e);
+
+  public:
+    // Aggregated output used to collect JSScript hit counts when code coverage
+    // is enabled.
+    js::coverage::LCovCompartment lcovOutput;
 };
 
 inline bool

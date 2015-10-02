@@ -274,11 +274,6 @@ var EXPECTED_ENGINE = {
               "purpose": undefined,
             },
             {
-              "name": "client",
-              "value": "firefox",
-              "purpose": undefined,
-            },
-            {
               "name": "channel",
               "value": "fflb",
               "purpose": "keyword",
@@ -289,15 +284,6 @@ var EXPECTED_ENGINE = {
               "purpose": "contextmenu",
             },
           ],
-          mozparams: {
-            "client": {
-              "name": "client",
-              "falseValue": "firefox",
-              "trueValue": "firefox-a",
-              "condition": "defaultEngine",
-              "mozparam": true,
-            },
-          },
         },
         {
           type: "application/x-moz-default-purpose",
@@ -308,11 +294,6 @@ var EXPECTED_ENGINE = {
             {
               "name": "q",
               "value": "{searchTerms}",
-              "purpose": undefined,
-            },
-            {
-              "name": "client",
-              "value": "firefox",
               "purpose": undefined,
             },
             {
@@ -331,15 +312,6 @@ var EXPECTED_ENGINE = {
               "purpose": "contextmenu",
             },
           ],
-          mozparams: {
-            "client": {
-              "name": "client",
-              "falseValue": "firefox",
-              "trueValue": "firefox-a",
-              "condition": "defaultEngine",
-              "mozparam": true,
-            },
-          },
         },
       ],
     },

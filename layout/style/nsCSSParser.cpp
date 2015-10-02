@@ -62,6 +62,7 @@ static bool sUnprefixingServiceEnabled;
 static bool sUnprefixingServiceGloballyWhitelisted;
 #endif
 static bool sMozGradientsEnabled;
+static bool sControlCharVisibility;
 
 const uint32_t
 nsCSSProps::kParserVariantTable[eCSSProperty_COUNT_no_shorthands] = {
@@ -15717,6 +15718,8 @@ nsCSSParser::Startup()
 #endif
   Preferences::AddBoolVarCache(&sMozGradientsEnabled,
                                "layout.css.prefixes.gradients");
+  Preferences::AddBoolVarCache(&sControlCharVisibility,
+                               "layout.css.control-characters.visible");
 }
 
 nsCSSParser::nsCSSParser(mozilla::css::Loader* aLoader,
@@ -16048,4 +16051,13 @@ nsCSSParser::IsValueValidForProperty(const nsCSSProperty aPropID,
 {
   return static_cast<CSSParserImpl*>(mImpl)->
     IsValueValidForProperty(aPropID, aPropValue);
+}
+
+/* static */
+uint8_t
+nsCSSParser::ControlCharVisibilityDefault()
+{
+  return sControlCharVisibility
+    ? NS_STYLE_CONTROL_CHARACTER_VISIBILITY_VISIBLE
+    : NS_STYLE_CONTROL_CHARACTER_VISIBILITY_HIDDEN;
 }

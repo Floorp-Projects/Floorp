@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1209621
+-->
+<window title="Mozilla Bug 1209621"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="run()">
+  <label value="Mozilla Bug 1209621"/>
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+  var Cr = Components.results;
+  var Cu = Components.utils;
+  function ok(cond, msg) {
+    opener.wrappedJSObject.ok(cond, msg);
+  }
+
+  function is(actual, expected, msg) {
+    opener.wrappedJSObject.is(actual, expected, msg);
+  }
+
+  function run() {
+    var docshell = window.getInterface(Ci.nsIDocShell);
+    ok(docshell, "Active window should have a DocShell");
+    var treeOwner = docshell.treeOwner;
+    ok(treeOwner, "Active docshell should have a TreeOwner!");
+
+    is(treeOwner.primaryContentShell, null,
+       "There shouldn't be primaryContentShell because no browser has type=content-primary.");
+    is(treeOwner.primaryTabParent, null,
+       "There shouldn't be primaryTabParent because no remote browser has type=content-primary.");
+
+    var ip = document.getElementById("inprocess");
+    var remote = document.getElementById("remote");
+    var remote2 = document.getElementById("remote2");
+
+    ip.setAttribute("type", "content-primary");
+    ok(ip.docShell, "non-remote browser should have a DocShell.");
+    is(treeOwner.primaryContentShell, ip.docShell,
+       "content-primary browser should be the primaryContentShell.");
+    is(treeOwner.primaryTabParent, null,
+       "There shouldn't be primaryTabParent because no remote browser has type=content-primary.");
+
+    ip.setAttribute("type", "content");
+    remote.setAttribute("type", "content-primary");
+    is(treeOwner.primaryContentShell, null,
+       "There shouldn't be primaryContentShell because no browser has type=content-primary.");
+    var tp = remote.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.tabParent;
+    ok(tp, "Remote browsers should have a TabParent.");
+    is(treeOwner.primaryTabParent, tp,
+       "content-primary remote browser should be the primaryTabParent.");
+
+    remote.setAttribute("type", "content");
+    is(treeOwner.primaryContentShell, null,
+       "There shouldn't be primaryContentShell because no browser has type=content-primary.");
+    is(treeOwner.primaryTabParent, null,
+       "There shouldn't be primaryTabParent because no remote browser has type=content-primary.");
+
+    remote2.setAttribute("type", "content-primary");
+    var tp2 = remote2.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.tabParent;
+    ok(tp2, "Remote browsers should have a TabParent.");
+    is(treeOwner.primaryTabParent, tp2,
+       "content-primary remote browser should be the primaryTabParent.");
+    is(treeOwner.primaryContentShell, null,
+       "There shouldn't be primaryContentShell because no browser has type=content-primary.");
+
+    opener.setTimeout("done()", 0);
+    window.close();
+  }
+
+  ]]></script>
+  <browser type="content" src="about:blank" id="inprocess"/>
+  <browser type="content" remote="true" src="about:blank" id="remote"/>
+  <browser type="content" remote="true" src="about:blank" id="remote2"/>
+</window>

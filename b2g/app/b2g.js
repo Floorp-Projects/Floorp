@@ -325,7 +325,6 @@ pref("media.fragmented-mp4.gonk.enabled", true);
 //Encrypted media extensions.
 pref("media.eme.enabled", true);
 pref("media.eme.apiVisible", true);
-
 // The default number of decoded video frames that are enqueued in
 // MediaDecoderReader's mVideoQueue.
 pref("media.video-queue.default-size", 3);
@@ -431,7 +430,7 @@ pref("dom.ipc.processCount", 100000);
 
 pref("dom.ipc.browser_frames.oop_by_default", false);
 
-#ifndef MOZ_MULET
+#if !defined(MOZ_MULET) && !defined(MOZ_GRAPHENE)
 pref("dom.meta-viewport.enabled", true);
 #endif
 
@@ -1067,11 +1066,18 @@ pref("dom.wakelock.enabled", true);
 // Enable webapps add-ons
 pref("dom.apps.customization.enabled", true);
 
+#ifdef MOZ_GRAPHENE
+// Enable touch caret by default
+pref("touchcaret.enabled", true);
+// Enable selection caret by default
+pref("selectioncaret.enabled", true);
+#else
 // Original caret implementation on collapsed selection.
 pref("touchcaret.enabled", false);
-
 // Original caret implementation on non-collapsed selection.
 pref("selectioncaret.enabled", false);
+#endif
+
 
 // New implementation to unify touch-caret and selection-carets.
 pref("layout.accessiblecaret.enabled", true);
@@ -1150,3 +1156,7 @@ pref("dom.performance.enable_notify_performance_timing", true);
 pref("b2g.multiscreen.chrome_remote_url", "chrome://b2g/content/shell_remote.html");
 pref("b2g.multiscreen.system_remote_url", "index_remote.html");
 
+// Because we can't have nice things.
+#ifdef MOZ_GRAPHENE
+#include ../graphene/graphene.js
+#endif

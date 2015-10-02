@@ -8,8 +8,6 @@ namespace ipc {
 struct IPCChannelInfo
 {
   nsCString securityInfo;
-  nsCString redirectedURI;
-  bool redirected;
 };
 
 } // namespace ipc

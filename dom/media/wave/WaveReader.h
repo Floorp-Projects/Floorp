@@ -49,7 +49,6 @@ public:
 private:
   bool ReadAll(char* aBuf, int64_t aSize, int64_t* aBytesRead = nullptr);
   bool LoadRIFFChunk();
-  bool GetNextChunk(uint32_t* aChunk, uint32_t* aChunkSize);
   bool LoadFormatChunk(uint32_t aChunkSize);
   bool FindDataOffset(uint32_t aChunkSize);
   bool LoadListChunk(uint32_t aChunkSize, nsAutoPtr<dom::HTMLMediaElement::MetadataTags> &aTags);

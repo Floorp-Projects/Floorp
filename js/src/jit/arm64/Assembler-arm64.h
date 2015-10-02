@@ -236,10 +236,6 @@ class Assembler : public vixl::Assembler
             preBarrierTableBytes();
     }
 
-    BufferOffset nextOffset() const {
-        return armbuffer_.nextOffset();
-    }
-
     void addCodeLabel(CodeLabel label) {
         propagateOOM(codeLabels_.append(label));
     }
