@@ -164,7 +164,7 @@ TypeUtils::ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
     if (aSchemeAction == TypeErrorOnInvalidScheme) {
       NS_NAMED_LITERAL_STRING(label, "Request");
       NS_ConvertUTF8toUTF16 urlUTF16(url);
-      aRv.ThrowTypeError<MSG_INVALID_URL_SCHEME>(&label, &urlUTF16);
+      aRv.ThrowTypeError(MSG_INVALID_URL_SCHEME, &label, &urlUTF16);
       return;
     }
   }
@@ -218,7 +218,7 @@ TypeUtils::ToCacheResponseWithoutBody(CacheResponse& aOut,
   nsRefPtr<InternalHeaders> headers = aIn.UnfilteredHeaders();
   MOZ_ASSERT(headers);
   if (HasVaryStar(headers)) {
-    aRv.ThrowTypeError<MSG_RESPONSE_HAS_VARY_STAR>();
+    aRv.ThrowTypeError(MSG_RESPONSE_HAS_VARY_STAR);
     return;
   }
   ToHeadersEntryList(aOut.headers(), headers);
@@ -235,7 +235,7 @@ void
 TypeUtils::ToCacheResponse(CacheResponse& aOut, Response& aIn, ErrorResult& aRv)
 {
   if (aIn.BodyUsed()) {
-    aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
+    aRv.ThrowTypeError(MSG_FETCH_BODY_CONSUMED_ERROR);
     return;
   }
 
@@ -458,7 +458,7 @@ TypeUtils::CheckAndSetBodyUsed(Request* aRequest, BodyAction aBodyAction,
   }
 
   if (aRequest->BodyUsed()) {
-    aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
+    aRv.ThrowTypeError(MSG_FETCH_BODY_CONSUMED_ERROR);
     return;
   }
 
