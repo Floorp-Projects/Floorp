@@ -81,11 +81,7 @@ MOZ_EXPORT MediaSource::ReadOptions::ReadOptions()
 {
 }
 
-MOZ_EXPORT void MediaSource::ReadOptions::setSeekTo(int64_t time_us
-#if !defined(MOZ_ANDROID_FROYO)
-, SeekMode mode
-#endif
-)
+MOZ_EXPORT void MediaSource::ReadOptions::setSeekTo(int64_t time_us, SeekMode mode)
 {
 }
 

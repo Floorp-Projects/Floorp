@@ -19,6 +19,7 @@ function LoadContext(usePrivateBrowsing) {
   this.usePrivateBrowsing = usePrivateBrowsing;
 }
 LoadContext.prototype = {
+  originAttributes: {},
   QueryInterface: XPCOMUtils.generateQI([Ci.nsILoadContext, Ci.nsIInterfaceRequestor]),
   getInterface: XPCOMUtils.generateQI([Ci.nsILoadContext])
 };

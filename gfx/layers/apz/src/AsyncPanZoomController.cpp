@@ -63,7 +63,6 @@
 #include "nsStyleStruct.h"              // for nsTimingFunction
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
 #include "nsThreadUtils.h"              // for NS_IsMainThread
-#include "prsystem.h"                   // for PR_GetPhysicalMemorySize
 #include "SharedMemoryBasic.h"          // for SharedMemoryBasic
 #include "WheelScrollAnimation.h"
 
@@ -330,11 +329,6 @@ using mozilla::gfx::PointTyped;
  * The multiplier we apply to the displayport size if it is not skating (see
  * documentation for the skate size multipliers above).
  *
- * \li\b apz.x_skate_highmem_adjust
- * \li\b apz.y_skate_highmem_adjust
- * On high memory systems, we adjust the displayport during skating
- * to be larger so we can reduce checkerboarding.
- *
  * \li\b apz.zoom_animation_duration_ms
  * This controls how long the zoom-to-rect animation takes.\n
  * Units: ms
@@ -349,16 +343,6 @@ StaticAutoPtr<ComputedTimingFunction> gZoomAnimationFunction;
  * Computed time function used for curving up velocity when it gets high.
  */
 StaticAutoPtr<ComputedTimingFunction> gVelocityCurveFunction;
-
-/**
- * Returns true if this is a high memory system and we can use
- * extra memory for a larger displayport to reduce checkerboarding.
- */
-static bool gIsHighMemSystem = false;
-static bool IsHighMemSystem()
-{
-  return gIsHighMemSystem;
-}
 
 /**
  * Maximum zoom amount, always used, even if a page asks for higher.
@@ -818,10 +802,6 @@ AsyncPanZoomController::InitializeGlobalState()
                      gfxPrefs::APZCurveFunctionX2(),
                      gfxPrefs::APZCurveFunctionY2()));
   ClearOnShutdown(&gVelocityCurveFunction);
-
-  uint64_t sysmem = PR_GetPhysicalMemorySize();
-  uint64_t threshold = 1LL << 32; // 4 GB in bytes
-  gIsHighMemSystem = sysmem >= threshold;
 }
 
 AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
@@ -2447,11 +2427,6 @@ CalculateDisplayPortSize(const CSSSize& aCompositionSize,
   float yMultiplier = fabsf(aVelocity.y) < gfxPrefs::APZMinSkateSpeed()
                         ? gfxPrefs::APZYStationarySizeMultiplier()
                         : gfxPrefs::APZYSkateSizeMultiplier();
-
-  if (IsHighMemSystem()) {
-    xMultiplier += gfxPrefs::APZXSkateHighMemAdjust();
-    yMultiplier += gfxPrefs::APZYSkateHighMemAdjust();
-  }
 
   // Ensure that it is at least as large as the visible area inflated by the
   // danger zone. If this is not the case then the "AboutToCheckerboard"
