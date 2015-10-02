@@ -165,7 +165,7 @@ loop.shared.views = (function(_, mozL10n) {
         React.createElement("div", null, 
           React.createElement("button", {className: screenShareClasses, 
                   onClick: this.handleClick, 
-                  ref: "menu-button", 
+                  ref: "anchor", 
                   title: this._getTitle()}, 
             isActive ? null : React.createElement("span", {className: "chevron"})
           ), 
