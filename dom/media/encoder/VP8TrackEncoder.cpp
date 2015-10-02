@@ -6,6 +6,7 @@
 #include "VP8TrackEncoder.h"
 #include "GeckoProfiler.h"
 #include "libyuv.h"
+#include "mozilla/gfx/2D.h"
 #include "prsystem.h"
 #include "VideoSegment.h"
 #include "VideoUtils.h"
@@ -23,6 +24,7 @@ PRLogModuleInfo* gVP8TrackEncoderLog;
 #define DEFAULT_BITRATE_BPS 2500000
 #define DEFAULT_ENCODE_FRAMERATE 30
 
+using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
 VP8TrackEncoder::VP8TrackEncoder()
@@ -257,6 +259,12 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
     img = mMuteFrame;
   } else {
     img = aChunk.mFrame.GetImage();
+  }
+
+  if (img->GetSize() != IntSize(mFrameWidth, mFrameHeight)) {
+    VP8LOG("Dynamic resolution changes (was %dx%d, now %dx%d) are unsupported\n",
+           mFrameWidth, mFrameHeight, img->GetSize().width, img->GetSize().height);
+    return NS_ERROR_FAILURE;
   }
 
   ImageFormat format = img->GetFormat();
