@@ -165,7 +165,7 @@ loop.shared.views = (function(_, mozL10n) {
         <div>
           <button className={screenShareClasses}
                   onClick={this.handleClick}
-                  ref="menu-button"
+                  ref="anchor"
                   title={this._getTitle()}>
             {isActive ? null : <span className="chevron"/>}
           </button>
