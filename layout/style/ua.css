@@ -263,6 +263,7 @@
 }
 
 *|*:not(:root):-moz-full-screen {
+  -moz-top-layer: top !important;
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
