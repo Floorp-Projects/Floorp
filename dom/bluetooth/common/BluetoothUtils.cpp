@@ -94,6 +94,27 @@ RemoteNameToString(const BluetoothRemoteName& aRemoteName, nsAString& aString)
     NS_ConvertUTF8toUTF16(name, strnlen(name, sizeof(aRemoteName.mName)));
 }
 
+nsresult
+StringToServiceName(const nsAString& aString,
+                    BluetoothServiceName& aServiceName)
+{
+  NS_ConvertUTF16toUTF8 serviceNameUTF8(aString);
+
+  auto len = serviceNameUTF8.Length();
+
+  if (len > sizeof(aServiceName.mName)) {
+    BT_LOGR("Service-name string too long");
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  auto str = serviceNameUTF8.get();
+
+  memcpy(aServiceName.mName, str, len);
+  memset(aServiceName.mName + len, 0, sizeof(aServiceName.mName) - len);
+
+  return NS_OK;
+}
+
 void
 UuidToString(const BluetoothUuid& aUuid, nsAString& aString)
 {

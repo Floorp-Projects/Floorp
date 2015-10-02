@@ -103,10 +103,6 @@ struct BluetoothConfigurationParameter {
   nsAutoArrayPtr<uint8_t> mValue;
 };
 
-struct BluetoothServiceName {
-  uint8_t mName[256];
-};
-
 //
 // Conversion
 //
@@ -188,9 +184,6 @@ Convert(int32_t aIn, BluetoothGattStatus& aOut);
 
 nsresult
 Convert(const nsAString& aIn, BluetoothPropertyType& aOut);
-
-nsresult
-Convert(const nsAString& aIn, BluetoothServiceName& aOut);
 
 nsresult
 Convert(const BluetoothAttributeHandle& aIn, int32_t& aOut);
