@@ -48,10 +48,40 @@ const gTestcases = [
     afterStyle:  "outline: 1px dotted black",
   },
 
-  // * Changing between completely-different outlines.
+  // * Changing between completely different outlines.
   {
     beforeStyle: "outline: 2px solid black",
     afterStyle:  "outline: 6px dashed yellow",
+  },
+
+  // * Adding a box-shadow.
+  {
+    afterStyle: "box-shadow: inset 3px 3px gray",
+  },
+  {
+    afterStyle: "box-shadow: 0px 0px 10px 30px blue"
+  },
+
+  // * Changing between completely different box-shadow values,
+  // e.g. from an upper-left shadow to a bottom-right shadow:
+  {
+    beforeStyle: "box-shadow: -15px -20px teal",
+    afterStyle:  "box-shadow:  30px  40px yellow",
+  },
+
+  // * Adding a text-shadow.
+  {
+    afterStyle: "text-shadow: 3px 3px gray",
+  },
+  {
+    afterStyle: "text-shadow: 0px 0px 10px blue"
+  },
+
+  // * Changing between completely different text-shadow values,
+  // e.g. from an upper-left shadow to a bottom-right shadow:
+  {
+    beforeStyle: "text-shadow: -15px -20px teal",
+    afterStyle:  "text-shadow:  30px  40px yellow",
   },
 
   // Things that *should* cause reflow:
