@@ -11,11 +11,18 @@ xul|window xul|scrollbar {
 }
 
 /* Bug 1041576 - Scrollable with scrollgrab should not have scrollbars */
+
 @-moz-document domain(system.gaiamobile.org) {
   .browser-container > xul|scrollbar {
     display: none;
   }
 }
+
+%ifdef MOZ_GRAPHENE
+.moz-noscrollbars > xul|scrollbar {
+  display: none;
+}
+%endif
 
 xul|scrollbar[root="true"] {
   position: relative;
@@ -85,6 +92,7 @@ xul|scrollbarbutton {
   background-image: none !important;
 }
 
+%ifndef MOZ_GRAPHENE
 /* -moz-touch-enabled? media elements */
 :-moz-any(video, audio) > xul|videocontrols {
   -moz-binding: url("chrome://global/content/bindings/videocontrols.xml#touchControls");
@@ -310,6 +318,7 @@ input[type=number] > div > div, /* work around bug 946184 */
 input[type=number]::-moz-number-spin-box {
   display: none;
 }
+%endif
 
 %ifdef MOZ_WIDGET_GONK
 /* This binding only provide key shortcuts that we can't use on devices */

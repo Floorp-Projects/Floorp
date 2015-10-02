@@ -119,6 +119,8 @@
             android:process="org.mozilla.b2gdroid.UpdateService">
         </service>
 
+        <receiver android:name="org.mozilla.gecko.AlarmReceiver" >
+        </receiver>
     </application>
 
 </manifest>

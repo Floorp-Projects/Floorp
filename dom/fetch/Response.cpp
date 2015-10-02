@@ -198,6 +198,11 @@ Response::Constructor(const GlobalObject& aGlobal,
   }
 
   if (aBody.WasPassed()) {
+    if (aInit.mStatus == 204 || aInit.mStatus == 205 || aInit.mStatus == 304) {
+      aRv.ThrowTypeError(MSG_RESPONSE_NULL_STATUS_WITH_BODY);
+      return nullptr;
+    }
+
     nsCOMPtr<nsIInputStream> bodyStream;
     nsCString contentType;
     aRv = ExtractByteStreamFromBody(aBody.Value(), getter_AddRefs(bodyStream), contentType);

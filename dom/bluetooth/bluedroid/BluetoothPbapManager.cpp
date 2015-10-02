@@ -842,8 +842,9 @@ BluetoothPbapManager::ReplyToGet(uint16_t aPhonebookSize)
    * - Part 2: [headerId:1][length:2][PhonebookSize:4]
    * - Part 3: [headerId:1][length:2][EndOfBody:0]
    * Otherwise,
-   * - Part 2: [headerId:1][length:2][Body:var]
-   * - (optional) Part 3: [headerId:1][length:2][EndOfBody:0]
+   * - Part 2a: [headerId:1][length:2][EndOfBody:0]
+   *   or
+   * - Part 2b: [headerId:1][length:2][Body:var]
    */
   uint8_t* res = new uint8_t[mRemoteMaxPacketLength];
   uint8_t opcode;
@@ -883,40 +884,54 @@ BluetoothPbapManager::ReplyToGet(uint16_t aPhonebookSize)
   } else {
     MOZ_ASSERT(mVCardDataStream);
 
-    // ---- Part 2: [headerId:1][length:2][Body:var] ---- //
-    // Compute remaining packet size to append Body, excluding Body's header
-    uint32_t remainingPacketSize =
-      mRemoteMaxPacketLength - kObexBodyHeaderSize - index;
-
-    // Read vCard data from input stream
-    uint32_t numRead = 0;
-    nsAutoArrayPtr<char> buf(new char[remainingPacketSize]);
-    nsresult rv = mVCardDataStream->Read(buf, remainingPacketSize, &numRead);
+    uint64_t bytesAvailable = 0;
+    nsresult rv = mVCardDataStream->Available(&bytesAvailable);
     if (NS_FAILED(rv)) {
-      BT_LOGR("Failed to read from input stream. rv=0x%x",
+      BT_LOGR("Failed to get available bytes from input stream. rv=0x%x",
               static_cast<uint32_t>(rv));
       return false;
     }
 
-    if (numRead) {
-      index += AppendHeaderBody(&res[index],
-                                remainingPacketSize,
-                                (uint8_t*) buf.forget(),
-                                numRead);
-    }
-
-    // More GET requests are required if remaining packet size isn't
-    // enough for 1) number of bytes read plus 2) one EndOfBody's header
-    if (numRead + kObexBodyHeaderSize > remainingPacketSize) {
-      opcode = ObexResponseCode::Continue;
-    } else {
-      // ---- Part 3: [headerId:1][length:2][EndOfBody:0] ---- //
-      opcode = ObexResponseCode::Success;
+    /*
+     * In practice, some platforms can only handle zero length End-of-Body
+     * header separately with Body header.
+     * Thus, append End-of-Body only if the data stream had been sent out,
+     * otherwise, send 'Continue' to request for next GET request.
+     */
+    if (!bytesAvailable) {
+      // ----  Part 2a: [headerId:1][length:2][EndOfBody:0] ---- //
       index += AppendHeaderEndOfBody(&res[index]);
 
       // Close input stream
       mVCardDataStream->Close();
       mVCardDataStream = nullptr;
+
+      opcode = ObexResponseCode::Success;
+    } else {
+      // Compute remaining packet size to append Body, excluding Body's header
+      uint32_t remainingPacketSize =
+        mRemoteMaxPacketLength - kObexBodyHeaderSize - index;
+
+      // Read vCard data from input stream
+      uint32_t numRead = 0;
+      nsAutoArrayPtr<char> buf(new char[remainingPacketSize]);
+      rv = mVCardDataStream->Read(buf, remainingPacketSize, &numRead);
+      if (NS_FAILED(rv)) {
+        BT_LOGR("Failed to read from input stream. rv=0x%x",
+                static_cast<uint32_t>(rv));
+        return false;
+      }
+
+      // |numRead| must be non-zero as |bytesAvailable| is non-zero
+      MOZ_ASSERT(numRead);
+
+      // ----  Part 2b: [headerId:1][length:2][Body:var] ---- //
+      index += AppendHeaderBody(&res[index],
+                                remainingPacketSize,
+                                (uint8_t*) buf.forget(),
+                                numRead);
+
+      opcode = ObexResponseCode::Continue;
     }
   }
 
