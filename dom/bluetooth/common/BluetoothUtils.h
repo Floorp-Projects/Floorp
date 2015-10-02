@@ -48,6 +48,14 @@ void
 RemoteNameToString(const BluetoothRemoteName& aRemoteName, nsAString& aString);
 
 //
+// Service name/string conversion
+//
+
+nsresult
+StringToServiceName(const nsAString& aString,
+                    BluetoothServiceName& aServiceName);
+
+//
 // BluetoothUuid <-> uuid string conversion
 //
 
