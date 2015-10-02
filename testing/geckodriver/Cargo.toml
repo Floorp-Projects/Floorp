@@ -8,7 +8,7 @@ license = "MPL-2.0"
 
 [dependencies]
 env_logger = "0.3.1"
-hyper = "0.6.13"
+hyper = {version = "0.6.13", default-features = false}
 log = "0.3.1"
 mozprofile = "0.1.0"
 mozrunner = "0.1.0"

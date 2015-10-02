@@ -1,6 +1,6 @@
 [root]
 name = "wires"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "argparse 0.2.0 (git+https://github.com/tailhook/rust-argparse.git)",
  "env_logger 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
