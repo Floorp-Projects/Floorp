@@ -361,7 +361,8 @@ nsDOMOfflineResourceList::MozAdd(const nsAString& aURI)
   rv = appCache->GetClientID(clientID);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = update->InitPartial(mManifestURI, clientID, mDocumentURI);
+  rv = update->InitPartial(mManifestURI, clientID,
+                           mDocumentURI, mLoadingPrincipal);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = update->AddDynamicURI(requestedURI);
