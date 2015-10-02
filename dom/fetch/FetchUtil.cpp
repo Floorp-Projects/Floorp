@@ -140,7 +140,7 @@ FetchUtil::ConsumeFormData(nsIGlobalObject* aParent, const nsCString& aMimeType,
   if (isValidFormDataMimeType) {
     FormDataParser parser(aMimeType, aStr, aParent);
     if (!parser.Parse()) {
-      aRv.ThrowTypeError<MSG_BAD_FORMDATA>();
+      aRv.ThrowTypeError(MSG_BAD_FORMDATA);
       return nullptr;
     }
 
@@ -168,7 +168,7 @@ FetchUtil::ConsumeFormData(nsIGlobalObject* aParent, const nsCString& aMimeType,
     return fd.forget();
   }
 
-  aRv.ThrowTypeError<MSG_BAD_FORMDATA>();
+  aRv.ThrowTypeError(MSG_BAD_FORMDATA);
   return nullptr;
 }
 
