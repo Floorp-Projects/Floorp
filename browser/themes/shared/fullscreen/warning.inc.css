@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
-#fullscreen-warning {
+html|*#fullscreen-warning {
   align-items: center;
   background: rgba(45, 62, 72, 0.9);
   border: 2px solid #fafafa;
@@ -14,39 +14,38 @@
   font: message-box;
 }
 
-#fullscreen-warning::before {
+html|*#fullscreen-warning::before {
   margin: 0;
   width: 24px; height: 24px;
 }
 
-#fullscreen-warning.verifiedIdentity::before,
-#fullscreen-warning.verifiedDomain::before {
+html|*#fullscreen-warning.verifiedIdentity::before,
+html|*#fullscreen-warning.verifiedDomain::before {
   content: url("chrome://browser/skin/fullscreen/secure.svg");
 }
 
-#fullscreen-warning.unknownIdentity::before {
+html|*#fullscreen-warning.unknownIdentity::before {
   content: url("chrome://browser/skin/fullscreen/insecure.svg");
 }
 
-#fullscreen-domain-text,
-#fullscreen-generic-text {
+html|*#fullscreen-domain-text,
+html|*#fullscreen-generic-text {
   font-size: 21px;
   font-weight: lighter;
   color: #fafafa;
   margin: 0 16px;
 }
 
-#fullscreen-domain {
+html|*#fullscreen-domain {
   font-weight: bold;
   margin: 0;
 }
 
-#fullscreen-exit-button {
-  padding: 0 30px;
+html|*#fullscreen-exit-button {
+  padding: 5px 30px;
   font: message-box;
   font-size: 14px;
   font-weight: lighter;
   margin: 0;
-  height: 28px;
   box-sizing: content-box;
 }

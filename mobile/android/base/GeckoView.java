@@ -222,7 +222,7 @@ public class GeckoView extends LayerView
     @Override
     public void onDetachedFromWindow()
     {
-        super.onAttachedToWindow();
+        super.onDetachedFromWindow();
         window.disposeNative();
     }
 

@@ -444,6 +444,26 @@ add_task(function* test_app_update_disabled() {
   yield promiseShutdownManager();
 });
 
+// Safe mode should block system add-on updates
+add_task(function* test_safe_mode() {
+  gAppInfo.inSafeMode = true;
+
+  yield setup_conditions(TEST_CONDITIONS.blank);
+
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_ENABLED, false);
+  yield update_all_addons(yield build_xml([
+    { id: "system2@tests.mozilla.org", version: "2.0", path: "system2_2.xpi" },
+    { id: "system3@tests.mozilla.org", version: "2.0", path: "system3_2.xpi" }
+  ]));
+  Services.prefs.clearUserPref(PREF_APP_UPDATE_ENABLED);
+
+  yield verify_state(TEST_CONDITIONS.blank.initialState);
+
+  yield promiseShutdownManager();
+
+  gAppInfo.inSafeMode = false;
+});
+
 // Tests that a set that matches the default set does nothing
 add_task(function* test_match_default() {
   yield setup_conditions(TEST_CONDITIONS.withAppSet);

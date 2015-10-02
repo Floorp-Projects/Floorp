@@ -1,10 +1,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
-  <g fill="#edf0f1" fill-rule="evenodd">
-    <path d="m8,1c-3.9,0-7,3.1-7,7 0,3.9 3.1,7 7,7 3.9,0 7-3.1 7-7 0-3.9-3.1-7-7-7zm0,12c-2.8,0-5-2.2-5-5 0-2.8 2.2-5 5-5 2.8,0 5,2.2 5,5 0,2.8-2.2,5-5,5z"/>
-    <path d="m6,5c.6,0 1,.4 1,1v4c0,.6-.4,1-1,1-.6,0-1-.4-1-1v-4c0-.6 .4-1 1-1z"/>
-    <path d="m10,5c.6,0 1,.4 1,1v4c0,.6-.4,1-1,1-.6,0-1-.4-1-1v-4c0-.6 .4-1 1-1z"/>
-  </g>
+<svg height="16" width="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="whitesmoke">
+    <path d="M20 4.1c-8.8 0-15.9 7-15.9 15.9s7 15.9 15.9 15.9 15.9-7 15.9-15.9S28.8 4.1 20 4.1zm0 27.2c-6.3 0-11.3-5-11.3-11.3S13.7 8.7 20 8.7s11.3 5 11.3 11.3-5 11.3-11.3 11.3z"/>
+    <path d="M15.5 13.2c1.4 0 2.3.9 2.3 2.3v9.1c0 1.4-.9 2.3-2.3 2.3s-2.3-.9-2.3-2.3v-9.1c0-1.4.9-2.3 2.3-2.3zM24.5 13.2c1.4 0 2.3.9 2.3 2.3v9.1c0 1.4-.9 2.3-2.3 2.3s-2.3-.9-2.3-2.3v-9.1c.1-1.4 1-2.3 2.3-2.3z"/>
 </svg>

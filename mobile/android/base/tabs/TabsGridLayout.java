@@ -199,8 +199,11 @@ class TabsGridLayout extends GridView
     public void onTabChanged(Tab tab, Tabs.TabEvents msg, Object data) {
         switch (msg) {
             case ADDED:
-                // Refresh the list to make sure the new tab is added in the right position.
-                refreshTabsData();
+                // Refresh only if panel is shown. show() will call refreshTabsData() later again.
+                if (tabsPanel.isShown()) {
+                    // Refresh the list to make sure the new tab is added in the right position.
+                    refreshTabsData();
+                }
                 break;
 
             case CLOSED:
@@ -337,6 +340,10 @@ class TabsGridLayout extends GridView
     }
 
     void closeTab(View v) {
+        if (tabsAdapter.getCount() == 1) {
+            autoHidePanel();
+        }
+
         TabsLayoutItemView itemView = (TabsLayoutItemView) v.getTag();
         Tab tab = Tabs.getInstance().getTab(itemView.getTabId());
 

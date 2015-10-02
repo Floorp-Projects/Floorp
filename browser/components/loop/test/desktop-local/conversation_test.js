@@ -177,6 +177,7 @@ describe("loop.conversation", function() {
         activeRoomStore: activeRoomStore
       });
       conversationAppStore = new loop.store.ConversationAppStore({
+        activeRoomStore: activeRoomStore,
         dispatcher: dispatcher,
         mozLoop: navigator.mozLoop
       });
