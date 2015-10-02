@@ -12,15 +12,14 @@ import org.mozilla.gecko.util.JSONUtils;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.WebActivityMapper;
-import org.mozilla.gecko.widget.ExternalIntentDuringPrivateBrowsingPromptFragment;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
-import android.support.v4.app.FragmentActivity;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -54,15 +53,15 @@ public final class IntentHelper implements GeckoEventListener,
 
     private static IntentHelper instance;
 
-    private final FragmentActivity activity;
+    private final Activity activity;
 
-    private IntentHelper(final FragmentActivity activity) {
+    private IntentHelper(Activity activity) {
         this.activity = activity;
         EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener) this, EVENTS);
         EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener) this, NATIVE_EVENTS);
     }
 
-    public static IntentHelper init(final FragmentActivity activity) {
+    public static IntentHelper init(Activity activity) {
         if (instance == null) {
             instance = new IntentHelper(activity);
         } else {
@@ -123,7 +122,7 @@ public final class IntentHelper implements GeckoEventListener,
                                       message.optString("packageName"),
                                       message.optString("className"),
                                       message.optString("action"),
-                                      message.optString("title"), false);
+                                      message.optString("title"));
     }
 
     private void openForResult(final JSONObject message) throws JSONException {
@@ -202,8 +201,7 @@ public final class IntentHelper implements GeckoEventListener,
 
             // (Bug 1192436) We don't know if marketIntent matches any Activities (e.g. non-Play
             // Store devices). If it doesn't, clicking the link will cause no action to occur.
-            ExternalIntentDuringPrivateBrowsingPromptFragment.showDialogOrAndroidChooser(
-                    activity, activity.getSupportFragmentManager(), marketIntent);
+            activity.startActivity(marketIntent);
             callback.sendSuccess(null);
 
         }  else {
