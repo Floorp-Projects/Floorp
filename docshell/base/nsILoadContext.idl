@@ -23,7 +23,7 @@ interface nsIDOMElement;
  * can be queried for various information about where the load is
  * happening.
  */
-[scriptable, uuid(1220e340-b337-4c35-aaa1-f51362763621)]
+[scriptable, uuid(96014778-d30b-4fee-8902-a3481788907b)]
 interface nsILoadContext : nsISupports
 {
   /**
@@ -148,7 +148,7 @@ interface nsILoadContext : nsISupports
     JS::Rooted<JS::Value> v(jsapi.cx());
     nsresult rv = GetOriginAttributes(&v);
     NS_ENSURE_SUCCESS(rv, false);
-    MOZ_ASSERT(v.isObject());
+    NS_ENSURE_TRUE(v.isObject(), false);
     JS::Rooted<JSObject*> obj(jsapi.cx(), &v.toObject());
 
     // If we're JS-implemented, the object will be left in a different (System-Principaled)
