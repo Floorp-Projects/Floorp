@@ -128,7 +128,7 @@ BluetoothDaemonCoreModule::GetAdapterPropertyCmd(BluetoothPropertyType aType,
 
 nsresult
 BluetoothDaemonCoreModule::SetAdapterPropertyCmd(
-  const BluetoothNamedValue& aProperty, BluetoothResultHandler* aRes)
+  const BluetoothProperty& aProperty, BluetoothResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -197,7 +197,7 @@ BluetoothDaemonCoreModule::GetRemoteDevicePropertyCmd(
 nsresult
 BluetoothDaemonCoreModule::SetRemoteDevicePropertyCmd(
   const BluetoothAddress& aRemoteAddr,
-  const BluetoothNamedValue& aProperty,
+  const BluetoothProperty& aProperty,
   BluetoothResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());

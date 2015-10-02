@@ -99,6 +99,55 @@ StringToPropertyType(const nsAString& aString, BluetoothPropertyType& aType)
   return NS_OK;
 }
 
+nsresult
+NamedValueToProperty(const BluetoothNamedValue& aValue,
+                     BluetoothProperty& aProperty)
+{
+  nsresult rv = StringToPropertyType(aValue.name(), aProperty.mType);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  switch (aProperty.mType) {
+    case PROPERTY_BDNAME:
+      if (aValue.value().type() != BluetoothValue::TnsString) {
+        BT_LOGR("Bluetooth property value is not a string");
+        return NS_ERROR_ILLEGAL_VALUE;
+      }
+      // Set name
+      aProperty.mString = aValue.value().get_nsString();
+      break;
+
+    case PROPERTY_ADAPTER_SCAN_MODE:
+      if (aValue.value().type() != BluetoothValue::Tbool) {
+        BT_LOGR("Bluetooth property value is not a boolean");
+        return NS_ERROR_ILLEGAL_VALUE;
+      }
+      // Set scan mode
+      if (aValue.value().get_bool()) {
+        aProperty.mScanMode = SCAN_MODE_CONNECTABLE_DISCOVERABLE;
+      } else {
+        aProperty.mScanMode = SCAN_MODE_CONNECTABLE;
+      }
+      break;
+
+    case PROPERTY_ADAPTER_DISCOVERY_TIMEOUT:
+      if (aValue.value().type() != BluetoothValue::Tuint32_t) {
+        BT_LOGR("Bluetooth property value is not an unsigned integer");
+        return NS_ERROR_ILLEGAL_VALUE;
+      }
+      // Set discoverable timeout
+      aProperty.mUint32 = aValue.value().get_uint32_t();
+      break;
+
+    default:
+      BT_LOGR("Invalid property value type");
+      return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  return NS_OK;
+}
+
 void
 RemoteNameToString(const BluetoothRemoteName& aRemoteName, nsAString& aString)
 {
