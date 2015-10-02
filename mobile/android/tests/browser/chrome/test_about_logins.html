@@ -8,11 +8,13 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   <meta charset="utf-8">
   <title>Test for Bug 1136477</title>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
-  <script type="application/javascript;version=1.7">
+  <script type="application/javascript;version=1.8" src="head.js"></script>
+  <script type="application/javascript;version=1.8">
 
-  "use strict"
+  "use strict";
 
   const { interfaces: Ci, utils: Cu } = Components;
 
@@ -31,11 +33,6 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
 
   const LoginInfo = Components.Constructor("@mozilla.org/login-manager/loginInfo;1", "nsILoginInfo", "init");
 
-  let BrowserApp;
-  let browser;
-
-  SimpleTest.waitForExplicitFinish();
-
   function add_login(login) {
     let newLogin = new LoginInfo(login.hostname,
                                  login.formSubmitUrl,
@@ -48,23 +45,41 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
     Services.logins.addLogin(newLogin);
   }
 
-  function password_setup() {
+  add_task(function* test_passwords_list() {
     add_login(LOGIN_FIELDS);
 
     // Load about:logins.
-    BrowserApp = Services.wm.getMostRecentWindow("navigator:browser").BrowserApp;
-    browser = BrowserApp.addTab("about:logins", { selected: true, parentId: BrowserApp.selectedTab.id }).browser;
+    let BrowserApp = Services.wm.getMostRecentWindow("navigator:browser").BrowserApp;
+    let browser = BrowserApp.addTab("about:logins", { selected: true, parentId: BrowserApp.selectedTab.id }).browser;
 
-    browser.addEventListener("load", function handle(event) {
-      browser.removeEventListener("load", handle, true);
-      Services.tm.mainThread.dispatch(test_passwords_list, Ci.nsIThread.DISPATCH_NORMAL);
-    }, true);
-  }
+    yield promiseBrowserEvent(browser, "load");
 
-  function test_passwords_list() {
-    // Test that the (single) entry added in setup is correct.
+    let logins_list_parent = browser.contentDocument.getElementById("logins-list").parentNode;
+
+    let waitForLoginToBeAdded = new Promise((resolve) => {
+      let observer = new MutationObserver((mutations) => {
+        for (let mutation of mutations) {
+          for (let node of mutation.addedNodes) {
+            if (node.id == 'logins-list') {
+              info("Received mutation replacing 'logins-list'");
+              resolve();
+              return;
+            }
+          }
+        }
+        info("Skipping spurious mutation not replacing 'logins-list'");
+      });
+      observer.observe(logins_list_parent, {
+        childList: true,
+      });
+      info("Now waiting for mutation to replace 'logins-list'");
+    });
+
+    yield waitForLoginToBeAdded;
+
     let logins_list = browser.contentDocument.getElementById("logins-list");
 
+    // Test that the (single) entry added in setup is correct.
     let hostname = logins_list.querySelector(".hostname");
     is(hostname.textContent, LOGIN_FIELDS.hostname, "hostname is correct");
 
@@ -73,11 +88,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
 
     // Cleanup: close about:logins, opened in password_setup()
     BrowserApp.closeTab(BrowserApp.selectedTab);
-
-    SimpleTest.finish();
-  }
-
-  password_setup();
+  });
 
   </script>
 </head>
