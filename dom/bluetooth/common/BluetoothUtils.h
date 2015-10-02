@@ -41,6 +41,13 @@ nsresult
 StringToPinCode(const nsAString& aString, BluetoothPinCode& aPinCode);
 
 //
+// Property type/string conversion
+//
+
+nsresult
+StringToPropertyType(const nsAString& aString, BluetoothPropertyType& aType);
+
+//
 // Remote name/string conversion
 //
 

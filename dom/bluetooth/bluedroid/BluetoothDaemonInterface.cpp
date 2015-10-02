@@ -642,11 +642,11 @@ BluetoothDaemonInterface::GetAdapterProperties(BluetoothResultHandler* aRes)
 }
 
 void
-BluetoothDaemonInterface::GetAdapterProperty(const nsAString& aName,
+BluetoothDaemonInterface::GetAdapterProperty(BluetoothPropertyType aType,
                                              BluetoothResultHandler* aRes)
 {
   nsresult rv = static_cast<BluetoothDaemonCoreModule*>
-    (mProtocol)->GetAdapterPropertyCmd(aName, aRes);
+    (mProtocol)->GetAdapterPropertyCmd(aType, aRes);
   if (NS_FAILED(rv)) {
     DispatchError(aRes, rv);
   }
@@ -678,11 +678,11 @@ BluetoothDaemonInterface::GetRemoteDeviceProperties(
 
 void
 BluetoothDaemonInterface::GetRemoteDeviceProperty(
-  const BluetoothAddress& aRemoteAddr, const nsAString& aName,
+  const BluetoothAddress& aRemoteAddr, BluetoothPropertyType aType,
   BluetoothResultHandler* aRes)
 {
   nsresult rv = static_cast<BluetoothDaemonCoreModule*>
-    (mProtocol)->GetRemoteDevicePropertyCmd(aRemoteAddr, aName, aRes);
+    (mProtocol)->GetRemoteDevicePropertyCmd(aRemoteAddr, aType, aRes);
   if (NS_FAILED(rv)) {
     DispatchError(aRes, rv);
   }
