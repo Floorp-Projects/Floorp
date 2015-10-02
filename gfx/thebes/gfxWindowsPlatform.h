@@ -335,7 +335,7 @@ private:
     mozilla::gfx::FeatureStatus AttemptD3D11ImageBridgeDeviceCreation();
 
     mozilla::gfx::FeatureStatus AttemptD3D11ContentDeviceCreation();
-    bool gfxWindowsPlatform::AttemptD3D11ContentDeviceCreationHelper(
+    bool AttemptD3D11ContentDeviceCreationHelper(
         IDXGIAdapter1* aAdapter, HRESULT& aResOut);
 
     bool CanUseD3D11ImageBridge();
