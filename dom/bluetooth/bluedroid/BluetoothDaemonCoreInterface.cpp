@@ -105,7 +105,7 @@ BluetoothDaemonCoreModule::GetAdapterPropertiesCmd(
 }
 
 nsresult
-BluetoothDaemonCoreModule::GetAdapterPropertyCmd(const nsAString& aName,
+BluetoothDaemonCoreModule::GetAdapterPropertyCmd(BluetoothPropertyType aType,
                                                  BluetoothResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -114,8 +114,7 @@ BluetoothDaemonCoreModule::GetAdapterPropertyCmd(const nsAString& aName,
     new DaemonSocketPDU(SERVICE_ID, OPCODE_GET_ADAPTER_PROPERTY,
                         0));
 
-  nsresult rv = PackPDU(
-    PackConversion<const nsAString, BluetoothPropertyType>(aName), *pdu);
+  nsresult rv = PackPDU(aType, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -174,7 +173,7 @@ BluetoothDaemonCoreModule::GetRemoteDevicePropertiesCmd(
 nsresult
 BluetoothDaemonCoreModule::GetRemoteDevicePropertyCmd(
   const BluetoothAddress& aRemoteAddr,
-  const nsAString& aName,
+  BluetoothPropertyType aType,
   BluetoothResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -183,9 +182,7 @@ BluetoothDaemonCoreModule::GetRemoteDevicePropertyCmd(
     new DaemonSocketPDU(SERVICE_ID, OPCODE_GET_REMOTE_DEVICE_PROPERTY,
                         0));
 
-  nsresult rv = PackPDU(
-    aRemoteAddr,
-    PackConversion<nsAString, BluetoothPropertyType>(aName), *pdu);
+  nsresult rv = PackPDU(aRemoteAddr, aType, *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }

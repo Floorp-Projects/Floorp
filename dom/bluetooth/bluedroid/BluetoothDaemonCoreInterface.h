@@ -79,7 +79,7 @@ public:
 
   nsresult GetAdapterPropertiesCmd(BluetoothResultHandler* aRes);
 
-  nsresult GetAdapterPropertyCmd(const nsAString& aName,
+  nsresult GetAdapterPropertyCmd(BluetoothPropertyType aType,
                                  BluetoothResultHandler* aRes);
 
   nsresult SetAdapterPropertyCmd(const BluetoothNamedValue& aProperty,
@@ -89,7 +89,7 @@ public:
                                         BluetoothResultHandler* aRes);
 
   nsresult GetRemoteDevicePropertyCmd(const BluetoothAddress& aRemoteAddr,
-                                      const nsAString& aName,
+                                      BluetoothPropertyType aType,
                                       BluetoothResultHandler* aRes);
 
   nsresult SetRemoteDevicePropertyCmd(const BluetoothAddress& aRemoteAddr,
