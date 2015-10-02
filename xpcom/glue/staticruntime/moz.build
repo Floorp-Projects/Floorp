@@ -28,7 +28,6 @@ if CONFIG['_MSC_VER']:
 
 LOCAL_INCLUDES += [
     '../../build',
-    '../../threads',
 ]
 
 # Statically link to the CRT on Windows
