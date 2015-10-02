@@ -200,23 +200,14 @@ static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 // This property requires a stacking context.
 #define CSS_PROPERTY_CREATES_STACKING_CONTEXT     (1<<21)
 
-// The following two flags along with the pref defines where the this
-// property can be used:
-// * If none of the two flags is presented, the pref completely controls
-//   the availability of this property. And in that case, if it has no
-//   pref, this property is usable everywhere.
-// * If any of the flags is set, this property is always enabled in the
-//   specific contexts regardless of the value of the pref. If there is
-//   no pref for this property at all in this case, it is an internal-
-//   only property, which cannot be used anywhere else, and should be
-//   wrapped in "#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL".
-// Note that, these flags have no effect on the use of aliases of this
-// property.
-#define CSS_PROPERTY_ENABLED_MASK                 (3<<22)
-#define CSS_PROPERTY_ENABLED_IN_UA_SHEETS         (1<<22)
-#define CSS_PROPERTY_ENABLED_IN_CHROME            (1<<23)
-#define CSS_PROPERTY_ENABLED_IN_UA_SHEETS_AND_CHROME \
-  (CSS_PROPERTY_ENABLED_IN_UA_SHEETS | CSS_PROPERTY_ENABLED_IN_CHROME)
+// This property is always enabled in UA sheets.  This is meant to be used
+// together with a pref that enables the property for non-UA sheets.
+// Note that if such a property has an alias, then any use of that alias
+// in an UA sheet will still be ignored unless the pref is enabled.
+// In other words, this bit has no effect on the use of aliases.
+#define CSS_PROPERTY_ALWAYS_ENABLED_IN_UA_SHEETS  (1<<22)
+
+// XXX (1<<23) will shortly be reused in bug 1069192.
 
 // This property's unitless values are pixels.
 #define CSS_PROPERTY_NUMBERS_ARE_PIXELS           (1<<24)
@@ -307,8 +298,6 @@ public:
     eEnabledForAllContent = 0,
     // Enable a property in UA sheets.
     eEnabledInUASheets    = 0x01,
-    // Enable a property in chrome code.
-    eEnabledInChrome      = 0x02,
     // Special value to unconditionally enable a property. This implies all the
     // bits above, but is strictly more than just their OR-ed union.
     // This just skips any test so a property will be enabled even if it would
@@ -554,12 +543,15 @@ public:
     return kIDLNameSortPositionTable[aProperty];
   }
 
+public:
+
   static bool IsEnabled(nsCSSProperty aProperty) {
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_with_aliases,
                "out of range");
     return gPropertyEnabled[aProperty];
   }
 
+private:
   // A table for the use counter associated with each CSS property.  If a
   // property does not have a use counter defined in UseCounters.conf, then
   // its associated entry is |eUseCounter_UNKNOWN|.
@@ -582,12 +574,7 @@ public:
       return true;
     }
     if ((aEnabled & eEnabledInUASheets) &&
-        PropHasFlags(aProperty, CSS_PROPERTY_ENABLED_IN_UA_SHEETS))
-    {
-      return true;
-    }
-    if ((aEnabled & eEnabledInChrome) &&
-        PropHasFlags(aProperty, CSS_PROPERTY_ENABLED_IN_CHROME))
+        PropHasFlags(aProperty, CSS_PROPERTY_ALWAYS_ENABLED_IN_UA_SHEETS))
     {
       return true;
     }
