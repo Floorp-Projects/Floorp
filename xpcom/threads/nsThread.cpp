@@ -592,7 +592,7 @@ nsThread::DispatchInternal(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFla
   }
 
 #ifdef MOZ_TASK_TRACER
-  nsCOMPtr<nsIRunnable> tracedRunnable = CreateTracedRunnable(event); // adds a ref
+  nsCOMPtr<nsIRunnable> tracedRunnable = CreateTracedRunnable(event.forget());
   (static_cast<TracedRunnable*>(tracedRunnable.get()))->DispatchTask();
   event = tracedRunnable.forget();
 #endif

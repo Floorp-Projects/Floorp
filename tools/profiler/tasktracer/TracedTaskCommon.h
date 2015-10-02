@@ -46,7 +46,7 @@ class TracedRunnable : public TracedTaskCommon
 public:
   NS_DECL_NSIRUNNABLE
 
-  TracedRunnable(nsIRunnable* aOriginalObj);
+  TracedRunnable(already_AddRefed<nsIRunnable>&& aOriginalObj);
 
 private:
   virtual ~TracedRunnable();
