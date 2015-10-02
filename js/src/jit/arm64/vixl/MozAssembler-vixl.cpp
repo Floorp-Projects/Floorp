@@ -120,26 +120,14 @@ void Assembler::b(Instruction* at, int imm19, Condition cond) {
 
 
 BufferOffset Assembler::b(Label* label) {
-  // Flush the instruction buffer if necessary before getting an offset.
-  BufferOffset branch = b(0);
-  Instruction* ins = getInstructionAt(branch);
-  VIXL_ASSERT(ins->IsUncondBranchImm());
-
-  // Encode the relative offset.
-  b(ins, LinkAndGetInstructionOffsetTo(branch, label));
-  return branch;
+  // Encode the relative offset from the inserted branch to the label.
+  return b(LinkAndGetInstructionOffsetTo(nextInstrOffset(), label));
 }
 
 
 BufferOffset Assembler::b(Label* label, Condition cond) {
-  // Flush the instruction buffer if necessary before getting an offset.
-  BufferOffset branch = b(0, Always);
-  Instruction* ins = getInstructionAt(branch);
-  VIXL_ASSERT(ins->IsCondBranchImm());
-
-  // Encode the relative offset.
-  b(ins, LinkAndGetInstructionOffsetTo(branch, label), cond);
-  return branch;
+  // Encode the relative offset from the inserted branch to the label.
+  return b(LinkAndGetInstructionOffsetTo(nextInstrOffset(), label), cond);
 }
 
 
@@ -154,12 +142,8 @@ void Assembler::bl(Instruction* at, int imm26) {
 
 
 void Assembler::bl(Label* label) {
-  // Flush the instruction buffer if necessary before getting an offset.
-  BufferOffset branch = b(0);
-  Instruction* ins = getInstructionAt(branch);
-
-  // Encode the relative offset.
-  bl(ins, LinkAndGetInstructionOffsetTo(branch, label));
+  // Encode the relative offset from the inserted branch to the label.
+  return bl(LinkAndGetInstructionOffsetTo(nextInstrOffset(), label));
 }
 
 
@@ -174,12 +158,8 @@ void Assembler::cbz(Instruction* at, const Register& rt, int imm19) {
 
 
 void Assembler::cbz(const Register& rt, Label* label) {
-  // Flush the instruction buffer if necessary before getting an offset.
-  BufferOffset branch = b(0);
-  Instruction* ins = getInstructionAt(branch);
-
-  // Encode the relative offset.
-  cbz(ins, rt, LinkAndGetInstructionOffsetTo(branch, label));
+  // Encode the relative offset from the inserted branch to the label.
+  return cbz(rt, LinkAndGetInstructionOffsetTo(nextInstrOffset(), label));
 }
 
 
@@ -194,12 +174,8 @@ void Assembler::cbnz(Instruction* at, const Register& rt, int imm19) {
 
 
 void Assembler::cbnz(const Register& rt, Label* label) {
-  // Flush the instruction buffer if necessary before getting an offset.
-  BufferOffset branch = b(0);
-  Instruction* ins = getInstructionAt(branch);
-
-  // Encode the relative offset.
-  cbnz(ins, rt, LinkAndGetInstructionOffsetTo(branch, label));
+  // Encode the relative offset from the inserted branch to the label.
+  return cbnz(rt, LinkAndGetInstructionOffsetTo(nextInstrOffset(), label));
 }
 
 
@@ -216,12 +192,8 @@ void Assembler::tbz(Instruction* at, const Register& rt, unsigned bit_pos, int i
 
 
 void Assembler::tbz(const Register& rt, unsigned bit_pos, Label* label) {
-  // Flush the instruction buffer if necessary before getting an offset.
-  BufferOffset branch = b(0);
-  Instruction* ins = getInstructionAt(branch);
-
-  // Encode the relative offset.
-  tbz(ins, rt, bit_pos, LinkAndGetInstructionOffsetTo(branch, label));
+  // Encode the relative offset from the inserted branch to the label.
+  return tbz(rt, bit_pos, LinkAndGetInstructionOffsetTo(nextInstrOffset(), label));
 }
 
 
@@ -238,12 +210,8 @@ void Assembler::tbnz(Instruction* at, const Register& rt, unsigned bit_pos, int 
 
 
 void Assembler::tbnz(const Register& rt, unsigned bit_pos, Label* label) {
-  // Flush the instruction buffer if necessary before getting an offset.
-  BufferOffset branch = b(0);
-  Instruction* ins = getInstructionAt(branch);
-
-  // Encode the relative offset.
-  tbnz(ins, rt, bit_pos, LinkAndGetInstructionOffsetTo(branch, label));
+  // Encode the relative offset from the inserted branch to the label.
+  return tbnz(rt, bit_pos, LinkAndGetInstructionOffsetTo(nextInstrOffset(), label));
 }
 
 
@@ -260,13 +228,8 @@ void Assembler::adr(Instruction* at, const Register& rd, int imm21) {
 
 
 void Assembler::adr(const Register& rd, Label* label) {
-  // Flush the instruction buffer if necessary before getting an offset.
-  // Note that ADR is not a branch, but it encodes an offset like a branch.
-  BufferOffset offset = Emit(0);
-  Instruction* ins = getInstructionAt(offset);
-
-  // Encode the relative offset.
-  adr(ins, rd, LinkAndGetByteOffsetTo(offset, label));
+  // Encode the relative offset from the inserted adr to the label.
+  return adr(rd, LinkAndGetByteOffsetTo(nextInstrOffset(), label));
 }
 
 
@@ -284,13 +247,8 @@ void Assembler::adrp(Instruction* at, const Register& rd, int imm21) {
 
 void Assembler::adrp(const Register& rd, Label* label) {
   VIXL_ASSERT(AllowPageOffsetDependentCode());
-
-  // Flush the instruction buffer if necessary before getting an offset.
-  BufferOffset offset = Emit(0);
-  Instruction* ins = getInstructionAt(offset);
-
-  // Encode the relative offset.
-  adrp(ins, rd, LinkAndGetPageOffsetTo(offset, label));
+  // Encode the relative offset from the inserted adr to the label.
+  return adrp(rd, LinkAndGetPageOffsetTo(nextInstrOffset(), label));
 }
 
 

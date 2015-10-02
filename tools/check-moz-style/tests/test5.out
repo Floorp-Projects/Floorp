@@ -1,0 +1,7 @@
+tests/test5.cpp:4:  The class ShouldHaveVirtualDes probably needs a virtual destructor due to having virtual method(s), one declared at line 5.  [runtime/virtual] [4]
+tests/test5.cpp:10:  Did you mean "memset(blah, 0, sizeof(blah))"?  [runtime/memset] [4]
+tests/test5.cpp:13:  Do not use dynamic_cast<>.  If you need to cast within a class hierarchy, use static_cast<> to upcast.  Mozilla doesn't support RTTI.  [runtime/rtti] [5]
+tests/test5.cpp:17:  Using sizeof(type).  Use sizeof(varname) instead if possible  [runtime/sizeof] [1]
+tests/test5.cpp:20:  Consider using getpwuid_r(...) instead of getpwuid(...) for improved thread safety.  [runtime/threadsafe_fn] [2]
+tests/test5.cpp:21:  Consider using strtok_r(...) instead of strtok(...) for improved thread safety.  [runtime/threadsafe_fn] [2]
+Done processing tests/test5.cpp

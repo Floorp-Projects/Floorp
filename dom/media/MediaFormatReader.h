@@ -111,6 +111,7 @@ private:
   // It returns true when all decoders are initialized. False when there is pending
   // initialization.
   bool EnsureDecodersInitialized();
+  bool EnsureDecoderInitialized(TrackType aTrack);
 
   // Enqueues a task to call Update(aTrack) on the decoder task queue.
   // Lock for corresponding track must be held.
@@ -249,6 +250,8 @@ private:
     }
 
     // MediaDataDecoder handler's variables.
+    // Decoder initialization promise holder.
+    MozPromiseRequestHolder<MediaDataDecoder::InitPromise> mInitPromise;
     // False when decoder is created. True when decoder Init() promise is resolved.
     bool mDecoderInitialized;
     bool mDecodingRequested;

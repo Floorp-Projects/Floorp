@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>b2g</string>
+	<string>%APP_BINARY%</string>
 	<key>CFBundleGetInfoString</key>
 	<string>%APP_NAME% %APP_VERSION%</string>
 	<key>CFBundleIconFile</key>
@@ -32,5 +32,36 @@
 	<true/>
 	<key>NSPrincipalClass</key>
 	<string>GeckoNSApplication</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLIconFile</key>
+			<string>document.icns</string>
+			<key>CFBundleURLName</key>
+			<string>http URL</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>http</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLIconFile</key>
+			<string>document.icns</string>
+			<key>CFBundleURLName</key>
+			<string>https URL</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>https</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>ftp URL</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>ftp</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
