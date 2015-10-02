@@ -17,7 +17,6 @@ EXPORTS += [
 UNIFIED_SOURCES += [
     'dec/bit_reader.c',
     'dec/decode.c',
-    'dec/dictionary.c',
     'dec/huffman.c',
     'dec/state.c',
     'dec/streams.c',
