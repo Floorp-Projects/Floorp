@@ -313,6 +313,7 @@ p {
   border-radius: 2px;
   border-bottom-right-radius: 0;
   border-top-right-radius: 0;
+  line-height: 0.9rem;
 }
 
 /* Alerts/Notifications */
