@@ -214,6 +214,8 @@ public:
 
     virtual bool DidRenderingDeviceReset(DeviceResetReason* aResetReason = nullptr);
 
+    mozilla::gfx::BackendType GetContentBackendFor(mozilla::layers::LayersBackend aLayers) override;
+
     // ClearType is not always enabled even when available (e.g. Windows XP)
     // if either of these prefs are enabled and apply, use ClearType rendering
     bool UseClearTypeForDownloadableFonts();
