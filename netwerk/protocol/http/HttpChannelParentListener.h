@@ -11,6 +11,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIChannelEventSink.h"
 #include "nsIRedirectResultListener.h"
+#include "nsIPackagedAppChannelListener.h"
 
 namespace mozilla {
 namespace net {
@@ -20,12 +21,14 @@ class HttpChannelParent;
 class HttpChannelParentListener final : public nsIInterfaceRequestor
                                       , public nsIChannelEventSink
                                       , public nsIRedirectResultListener
+                                      , public nsIPackagedAppChannelListener
                                       , public nsIStreamListener
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSICHANNELEVENTSINK
+  NS_DECL_NSIPACKAGEDAPPCHANNELLISTENER
   NS_DECL_NSIREDIRECTRESULTLISTENER
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER

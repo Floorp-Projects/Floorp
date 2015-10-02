@@ -1,0 +1,25 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * nsIPackagedAppChannelListener
+ */
+[scriptable, uuid(27caf7d0-3c0e-11e5-b970-0800200c9a66)]
+interface nsIPackagedAppChannelListener : nsISupports
+{
+  /**
+   * @param aPackageId
+   *    the package identifier of the signed package that we are going
+   *    to load. The identifier will be defined in the manifest of the
+   *    package.
+   *
+   * This callback is to notify a signed package is about to load. Some
+   * component else will be in charge of responding to this fact properly.
+   * The procotol layer should have no idea what to do with this.
+   *
+   */
+  void onStartSignedPackageRequest(in ACString aPackageId);
+};
