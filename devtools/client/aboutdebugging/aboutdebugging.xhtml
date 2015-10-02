@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html [
+<!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd"> %htmlDTD;
+<!ENTITY % toolboxDTD SYSTEM "chrome://browser/locale/devtools/toolbox.dtd"> %toolboxDTD;
+<!ENTITY % aboutdebuggingDTD SYSTEM "chrome://browser/locale/devtools/aboutdebugging.dtd"> %aboutdebuggingDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>&aboutDebugging.title;</title>
+    <link rel="stylesheet" href="chrome://global/skin/global.css" type="text/css"/>
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" type="text/css"/>
+    <link rel="stylesheet" href="chrome://devtools/content/aboutdebugging/aboutdebugging.css"  type="text/css"/>
+    <script type="application/javascript" src="resource:///modules/devtools/client/shared/vendor/react.js"></script>
+    <script type="application/javascript;version=1.8" src="chrome://devtools/content/aboutdebugging/aboutdebugging.js"></script>
+  </head>
+  <body id="body">
+    <div id="categories">
+      <div class="category" value="addons" selected="true">
+        <img class="category-icon" src="chrome://mozapps/skin/extensions/category-extensions.png"/>
+        <div class="category-name">&aboutDebugging.addons;</div>
+      </div>
+      <div class="category" value="workers">
+        <img class="category-icon" src="chrome://browser/skin/preferences/in-content/icons.svg#applications"/>
+        <div class="category-name">&aboutDebugging.workers;</div>
+      </div>
+    </div>
+    <div class="main-content">
+      <div id="tab-addons" class="tab active">
+        <div class="header">
+          <h1 class="header-name">&aboutDebugging.addons;</h1>
+        </div>
+        <input id="enable-addon-debugging" type="checkbox" data-pref="devtools.chrome.enabled"/>
+        <label for="enable-addon-debugging" title="&aboutDebugging.addonDebugging.tooltip;">&aboutDebugging.addonDebugging.label;</label>
+        <div id="addons"></div>
+      </div>
+      <div id="tab-workers" class="tab">
+        <div class="header">
+          <h1 class="header-name">&aboutDebugging.workers;</h1>
+        </div>
+        <input id="enable-worker-debugging" type="checkbox" data-pref="devtools.debugger.workers"/>
+        <label for="enable-worker-debugging" title="&options.enableWorkers.tooltip;">&options.enableWorkers.label;</label>
+        <div id="workers"></div>
+      </div>
+    </div>
+  </body>
+</html>
