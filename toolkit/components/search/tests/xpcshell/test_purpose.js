@@ -27,7 +27,7 @@ add_task(function* test_purpose() {
                 base + aExpected);
   }
 
-  let base = "http://www.google.com/search?q=foo&ie=utf-8&oe=utf-8&aq=t&client=firefox";
+  let base = "http://www.google.com/search?q=foo&ie=utf-8&oe=utf-8&aq=t";
   check_submission("",              "foo");
   check_submission("",              "foo", null);
   check_submission("",              "foo", "text/html");
@@ -38,7 +38,7 @@ add_task(function* test_purpose() {
   check_submission("",              "foo", "text/html", "invalid");
 
   // Tests for a param that varies with a purpose but has a default value.
-  base = "http://www.google.com/search?q=foo&client=firefox";
+  base = "http://www.google.com/search?q=foo";
   check_submission("&channel=none", "foo", "application/x-moz-default-purpose");
   check_submission("&channel=none", "foo", "application/x-moz-default-purpose", null);
   check_submission("&channel=none", "foo", "application/x-moz-default-purpose", "");
