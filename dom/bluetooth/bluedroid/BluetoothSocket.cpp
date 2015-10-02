@@ -732,6 +732,12 @@ BluetoothSocket::Listen(const nsAString& aServiceName,
 {
   MOZ_ASSERT(!mImpl);
 
+  BluetoothServiceName serviceName;
+  nsresult rv = StringToServiceName(aServiceName, serviceName);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   SetConnectionStatus(SOCKET_LISTENING);
 
   mImpl = new DroidSocketImpl(aConsumerLoop, aIOLoop, this);
@@ -741,7 +747,7 @@ BluetoothSocket::Listen(const nsAString& aServiceName,
 
   sBluetoothSocketInterface->Listen(
     aType,
-    aServiceName, aServiceUuid, aChannel,
+    serviceName, aServiceUuid, aChannel,
     aEncrypt, aAuth, res);
 
   return NS_OK;
