@@ -9,7 +9,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetAddress;
-import org.apache.http.conn.util.InetAddressUtils;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
@@ -19,6 +18,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Formatter;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.Timer;
 
 import com.mozilla.SUTAgentAndroid.service.ASMozStub;
@@ -55,6 +55,8 @@ import android.widget.Toast;
 public class SUTAgentAndroid extends Activity
     {
     final Handler mHandler = new Handler();
+
+    private static final Pattern IPV4_PATTERN = Pattern.compile("^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$");
 
     public static final int START_PRG = 1959;
     MenuItem mExitMenuItem;
@@ -810,6 +812,10 @@ public class SUTAgentAndroid extends Activity
         return sHWID;
     }
 
+    public static boolean isIPv4Address(final String input) {
+        return IPV4_PATTERN.matcher(input).matches();
+    }
+
     public static InetAddress getLocalInetAddress() throws SocketException
         {
         for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();)
@@ -818,7 +824,7 @@ public class SUTAgentAndroid extends Activity
             for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();)
                 {
                 InetAddress inetAddress = enumIpAddr.nextElement();
-                if (!inetAddress.isLoopbackAddress() && InetAddressUtils.isIPv4Address(inetAddress.getHostAddress()))
+                if (!inetAddress.isLoopbackAddress() && isIPv4Address(inetAddress.getHostAddress()))
                     {
                         return inetAddress;
                     }

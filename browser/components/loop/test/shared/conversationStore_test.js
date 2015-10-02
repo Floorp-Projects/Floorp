@@ -777,10 +777,20 @@ describe("loop.store.ConversationStore", function () {
       sinon.assert.calledOnce(wsHangupSpy);
     });
 
-    it("should set the callState to finished", function() {
+    it("should set the callState to finished for ongoing call state", function() {
       store.hangupCall(new sharedActions.HangupCall());
 
       expect(store.getStoreState("callState")).eql(CALL_STATES.FINISHED);
+    });
+
+    it("should set the callState to CLOSE for non-ongoing call state", function() {
+      store.setStoreState({
+        callState: CALL_STATES.CONNECTING
+      });
+
+      store.hangupCall(new sharedActions.HangupCall());
+
+      expect(store.getStoreState("callState")).eql(CALL_STATES.CLOSE);
     });
 
     it("should release mozLoop callsData", function() {
