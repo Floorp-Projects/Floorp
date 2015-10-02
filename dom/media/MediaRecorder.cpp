@@ -988,7 +988,7 @@ MediaRecorder::Constructor(const GlobalObject& aGlobal,
     // Pretending that this constructor is not defined.
     NS_NAMED_LITERAL_STRING(argStr, "Argument 1 of MediaRecorder.constructor");
     NS_NAMED_LITERAL_STRING(typeStr, "MediaStream");
-    aRv.ThrowTypeError<MSG_DOES_NOT_IMPLEMENT_INTERFACE>(&argStr, &typeStr);
+    aRv.ThrowTypeError(MSG_DOES_NOT_IMPLEMENT_INTERFACE, &argStr, &typeStr);
     return nullptr;
   }
 

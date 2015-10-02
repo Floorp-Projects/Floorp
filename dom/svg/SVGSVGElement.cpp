@@ -470,7 +470,7 @@ SVGSVGElement::SetZoomAndPan(uint16_t aZoomAndPan, ErrorResult& rv)
     return;
   }
 
-  rv.ThrowRangeError<MSG_INVALID_ZOOMANDPAN_VALUE_ERROR>();
+  rv.ThrowRangeError(MSG_INVALID_ZOOMANDPAN_VALUE_ERROR);
 }
 
 //----------------------------------------------------------------------

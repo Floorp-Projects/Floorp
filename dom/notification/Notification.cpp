@@ -815,7 +815,7 @@ Notification::Constructor(const GlobalObject& aGlobal,
   ServiceWorkerGlobalScope* scope = nullptr;
   UNWRAP_WORKER_OBJECT(ServiceWorkerGlobalScope, aGlobal.Get(), scope);
   if (scope) {
-    aRv.ThrowTypeError<MSG_NOTIFICATION_NO_CONSTRUCTOR_IN_SERVICEWORKER>();
+    aRv.ThrowTypeError(MSG_NOTIFICATION_NO_CONSTRUCTOR_IN_SERVICEWORKER);
     return nullptr;
   }
 
@@ -2320,7 +2320,7 @@ Notification::ShowPersistentNotification(nsIGlobalObject *aGlobal,
     if (NS_WARN_IF(NS_FAILED(loadChecker->Result()))) {
       if (loadChecker->Result() == NS_ERROR_NOT_AVAILABLE) {
         nsAutoString scope(aScope);
-        aRv.ThrowTypeError<MSG_NO_ACTIVE_WORKER>(&scope);
+        aRv.ThrowTypeError(MSG_NO_ACTIVE_WORKER, &scope);
       } else {
         aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
       }
@@ -2341,7 +2341,7 @@ Notification::ShowPersistentNotification(nsIGlobalObject *aGlobal,
   // "If permission for notification’s origin is not "granted", reject promise with a TypeError exception, and terminate these substeps."
   if (NS_WARN_IF(aRv.Failed()) || permission == NotificationPermission::Denied) {
     ErrorResult result;
-    result.ThrowTypeError<MSG_NOTIFICATION_PERMISSION_DENIED>();
+    result.ThrowTypeError(MSG_NOTIFICATION_PERMISSION_DENIED);
     p->MaybeReject(result);
     return p.forget();
   }

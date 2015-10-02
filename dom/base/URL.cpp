@@ -78,7 +78,7 @@ URL::Constructor(nsISupports* aParent, const nsAString& aUrl,
   nsresult rv = NS_NewURI(getter_AddRefs(baseUri), aBase, nullptr, nullptr,
                           nsContentUtils::GetIOService());
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.ThrowTypeError<MSG_INVALID_URL>(&aBase);
+    aRv.ThrowTypeError(MSG_INVALID_URL, &aBase);
     return nullptr;
   }
 
@@ -94,7 +94,7 @@ URL::Constructor(nsISupports* aParent, const nsAString& aUrl, nsIURI* aBase,
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aUrl, nullptr, aBase,
                           nsContentUtils::GetIOService());
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.ThrowTypeError<MSG_INVALID_URL>(&aUrl);
+    aRv.ThrowTypeError(MSG_INVALID_URL, &aUrl);
     return nullptr;
   }
 
@@ -230,7 +230,7 @@ URL::SetHref(const nsAString& aHref, ErrorResult& aRv)
   rv = ioService->NewURI(href, nullptr, nullptr, getter_AddRefs(uri));
   if (NS_FAILED(rv)) {
     nsAutoString label(aHref);
-    aRv.ThrowTypeError<MSG_INVALID_URL>(&label);
+    aRv.ThrowTypeError(MSG_INVALID_URL, &label);
     return;
   }
 

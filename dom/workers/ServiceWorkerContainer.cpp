@@ -168,7 +168,7 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
   nsCOMPtr<nsIURI> scriptURI;
   rv = NS_NewURI(getter_AddRefs(scriptURI), aScriptURL, nullptr, baseURI);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.ThrowTypeError<MSG_INVALID_URL>(&aScriptURL);
+    aRv.ThrowTypeError(MSG_INVALID_URL, &aScriptURL);
     return nullptr;
   }
 
@@ -190,7 +190,7 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
       nsAutoCString spec;
       scriptURI->GetSpec(spec);
       NS_ConvertUTF8toUTF16 wSpec(spec);
-      aRv.ThrowTypeError<MSG_INVALID_SCOPE>(&defaultScope, &wSpec);
+      aRv.ThrowTypeError(MSG_INVALID_SCOPE, &defaultScope, &wSpec);
       return nullptr;
     }
   } else {
@@ -201,7 +201,7 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
       nsAutoCString spec;
       baseURI->GetSpec(spec);
       NS_ConvertUTF8toUTF16 wSpec(spec);
-      aRv.ThrowTypeError<MSG_INVALID_SCOPE>(&aOptions.mScope.Value(), &wSpec);
+      aRv.ThrowTypeError(MSG_INVALID_SCOPE, &aOptions.mScope.Value(), &wSpec);
       return nullptr;
     }
 
