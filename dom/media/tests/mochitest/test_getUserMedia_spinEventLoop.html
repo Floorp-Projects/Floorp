@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({ title: "getUserMedia Basic Audio Test", bug: "1208656" });
+  /**
+   * Run a test to verify that we can spin the event loop from within a mozGUM callback.
+   */
+  runTest(() => {
+    var testAudio = createMediaElement('audio', 'testAudio');
+    return new Promise((resolve, reject) => {
+      navigator.mozGetUserMedia({ audio: true }, () => {
+	var syncXHR = new XMLHttpRequest();
+	syncXHR.open('GET', location, false);
+	syncXHR.send();
+	ok(true, "Didn't crash");
+	resolve();
+      }, () => {});
+    });
+  });
+
+</script>
+</pre>
+</body>
+</html>
