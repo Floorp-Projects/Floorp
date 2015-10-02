@@ -577,6 +577,10 @@ class ReadBarriered : public ReadBarrieredBase<T>
         return this->value;
     }
 
+    explicit operator bool() const {
+        return bool(this->value);
+    }
+
     operator const T() const { return get(); }
 
     const T operator->() const { return get(); }
