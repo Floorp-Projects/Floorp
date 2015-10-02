@@ -63,9 +63,6 @@ public:
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists) override;
 
-  void BuildDisplayListForTopLayer(nsDisplayListBuilder* aBuilder,
-                                   nsDisplayList* aList);
-
   virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
   virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
   virtual void Reflow(nsPresContext*           aPresContext,
