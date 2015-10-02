@@ -3906,10 +3906,22 @@ TSFTextStore::InsertTextAtSelectionInternal(const nsAString& aInsertStr,
     compositionStart->mSelectionStart = oldSelection.acpStart;
     compositionStart->mSelectionLength =
       oldSelection.acpEnd - oldSelection.acpStart;
+    compositionStart->mAdjustSelection = false;
 
     PendingAction* compositionEnd = mPendingActions.AppendElement();
     compositionEnd->mType = PendingAction::COMPOSITION_END;
     compositionEnd->mData = aInsertStr;
+
+    MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+            ("TSF: 0x%p   TSFTextStore::InsertTextAtSelectionInternal() "
+             "appending pending compositionstart and compositionend... "
+             "PendingCompositionStart={ mSelectionStart=%d, "
+             "mSelectionLength=%d }, PendingCompositionEnd={ mData=\"%s\" "
+             "(Length()=%u) }",
+             this, compositionStart->mSelectionStart,
+             compositionStart->mSelectionLength,
+             NS_ConvertUTF16toUTF8(compositionEnd->mData).get(),
+             compositionEnd->mData.Length()));
   }
 
   lockedContent.ReplaceSelectedTextWith(aInsertStr);
@@ -3994,6 +4006,34 @@ TSFTextStore::RecordCompositionStartAction(ITfCompositionView* aComposition,
   }
 
   CompleteLastActionIfStillIncomplete();
+
+  // TIP may have inserted text at selection before calling
+  // OnStartComposition().  In this case, we've already created a pair of
+  // pending compositionstart and pending compositionend.  If the pending
+  // compositionstart occurred same range as this composition, it was the
+  // start of this composition.  In such case, we should cancel the pending
+  // compositionend and start composition normally.
+  if (!aPreserveSelection &&
+      WasTextInsertedWithoutCompositionAt(aStart, aLength)) {
+    const PendingAction& pendingCompositionEnd = mPendingActions.LastElement();
+    const PendingAction& pendingCompositionStart =
+      mPendingActions[mPendingActions.Length() - 2];
+    lockedContent.RestoreCommittedComposition(
+      aComposition, pendingCompositionStart, pendingCompositionEnd);
+    mPendingActions.RemoveElementAt(mPendingActions.Length() - 1);
+    MOZ_LOG(sTextStoreLog, LogLevel::Info,
+           ("TSF: 0x%p   TSFTextStore::RecordCompositionStartAction() "
+            "succeeded: restoring the committed string as composing string, "
+            "mComposition={ mStart=%ld, mString.Length()=%ld, "
+            "mSelection={ acpStart=%ld, acpEnd=%ld, style.ase=%s, "
+            "style.fInterimChar=%s } }",
+            this, mComposition.mStart, mComposition.mString.Length(),
+            mSelection.StartOffset(), mSelection.EndOffset(),
+            GetActiveSelEndName(mSelection.ActiveSelEnd()),
+            GetBoolName(mSelection.IsInterimChar())));
+    return S_OK;
+  }
+
   PendingAction* action = mPendingActions.AppendElement();
   action->mType = PendingAction::COMPOSITION_START;
   action->mSelectionStart = aStart;
@@ -5508,6 +5548,30 @@ TSFTextStore::Content::StartComposition(ITfCompositionView* aCompositionView,
     mSelection.SetSelection(mComposition.mStart, mComposition.mString.Length(),
                             false, mSelection.GetWritingMode());
   }
+}
+
+void
+TSFTextStore::Content::RestoreCommittedComposition(
+                         ITfCompositionView* aCompositionView,
+                         const PendingAction& aPendingCompositionStart,
+                         const PendingAction& aCanceledCompositionEnd)
+{
+  MOZ_ASSERT(mInitialized);
+  MOZ_ASSERT(aCompositionView);
+  MOZ_ASSERT(!mComposition.mView);
+  MOZ_ASSERT(aPendingCompositionStart.mType ==
+               PendingAction::COMPOSITION_START);
+  MOZ_ASSERT(aCanceledCompositionEnd.mType ==
+               PendingAction::COMPOSITION_END);
+  MOZ_ASSERT(GetSubstring(
+               static_cast<uint32_t>(aPendingCompositionStart.mSelectionStart),
+               static_cast<uint32_t>(aCanceledCompositionEnd.mData.Length())) ==
+               aCanceledCompositionEnd.mData);
+
+  // Restore the committed string as composing string.
+  mComposition.Start(aCompositionView,
+                     aPendingCompositionStart.mSelectionStart,
+                     aCanceledCompositionEnd.mData);
 }
 
 void
