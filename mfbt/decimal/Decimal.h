@@ -93,7 +93,7 @@ public:
         bool isSpecial() const { return m_formatClass == ClassInfinity || m_formatClass == ClassNaN; }
         bool isZero() const { return m_formatClass == ClassZero; }
         Sign sign() const { return m_sign; }
-        void setSign(Sign sign) { m_sign = sign; }
+        void setSign(Sign aSign) { m_sign = aSign; }
 
     private:
         enum FormatClass {

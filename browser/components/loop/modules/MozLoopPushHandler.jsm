@@ -387,13 +387,9 @@ var MozLoopPushHandler = {
     */
   initialize: function(options = {}) {
     consoleLog.info("PushHandler: initialize options = ", options);
-    if (Services.io.offline) {
-      consoleLog.warn("PushHandler: IO offline");
-      return false;
-    }
 
     if (this._initDone) {
-      return true;
+      return;
     }
 
     this._initDone = true;
@@ -411,7 +407,6 @@ var MozLoopPushHandler = {
     }
 
     this._openSocket();
-    return true;
   },
 
   /**

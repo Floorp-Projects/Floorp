@@ -1,0 +1,3 @@
+patch:0:  Patch summary should begin with 'Bug XXXXX - ' or 'No bug -'.  [patch/bugnumber] [3]
+tests/test2.cpp:1:  No copyright message found.  [legal/copyright] [3]
+Done processing tests/test2.cpp

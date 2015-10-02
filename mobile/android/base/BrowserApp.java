@@ -3309,7 +3309,7 @@ public class BrowserApp extends GeckoApp
                                tab.getContentType().startsWith("video/")));
         saveAsPDF.setEnabled(allowPDF);
         print.setEnabled(allowPDF);
-        print.setVisible(Versions.feature19Plus && AppConstants.NIGHTLY_BUILD);
+        print.setVisible(Versions.feature19Plus);
 
         // Disable find in page for about:home, since it won't work on Java content.
         findInPage.setEnabled(!isAboutHome(tab));

@@ -1,0 +1,27 @@
+if [ "x$IS_NIGHTLY" = "xyes" ]; then
+  MOZ_AUTOMATION_UPLOAD_SYMBOLS=1
+  MOZ_AUTOMATION_UPDATE_PACKAGING=1
+fi
+
+. "$topsrcdir/b2g/graphene/config/mozconfigs/common"
+
+ac_add_options --target=x86_64-pc-mingw32
+ac_add_options --host=x86_64-pc-mingw32
+
+. $topsrcdir/build/win64/mozconfig.vs2013
+
+ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
+ac_add_options --enable-update-packaging
+ac_add_options --enable-jemalloc
+ac_add_options --enable-signmar
+
+# Nightlies only since this has a cost in performance
+ac_add_options --enable-js-diagnostics
+
+# Needed to enable breakpad in application.ini
+export MOZILLA_OFFICIAL=1
+
+# graphene Options
+export CXXFLAGS=-DMOZ_ENABLE_JS_DUMP
+
+. "$topsrcdir/b2g/graphene/config/mozconfigs/common.override"

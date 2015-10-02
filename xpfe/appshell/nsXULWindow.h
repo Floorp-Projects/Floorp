@@ -157,6 +157,8 @@ protected:
    nsIntRect               mOpenerScreenRect; // the screen rect of the opener
 
    nsCOMArray<nsIWeakReference> mTargetableShells; // targetable shells only
+
+   nsCOMPtr<nsITabParent> mPrimaryTabParent;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsXULWindow, NS_XULWINDOW_IMPL_CID)
