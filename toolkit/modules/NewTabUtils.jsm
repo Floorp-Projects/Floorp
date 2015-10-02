@@ -400,19 +400,17 @@ var PinnedLinks = {
    * Pins a link at the given position.
    * @param aLink The link to pin.
    * @param aIndex The grid index to pin the cell at.
+   * @return true if link changes, false otherwise
    */
   pin: function PinnedLinks_pin(aLink, aIndex) {
     // Clear the link's old position, if any.
     this.unpin(aLink);
 
     // change pinned link into a history link
-    // update all pages on link change
-    let updatePages = this._makeHistoryLink(aLink);
+    let changed = this._makeHistoryLink(aLink);
     this.links[aIndex] = aLink;
     this.save();
-    if (updatePages) {
-      AllPages.update();
-    }
+    return changed;
   },
 
   /**
