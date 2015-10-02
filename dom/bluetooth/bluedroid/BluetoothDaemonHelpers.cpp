@@ -592,21 +592,6 @@ Convert(nsresult aIn, BluetoothStatus& aOut)
 }
 
 nsresult
-Convert(BluetoothAclState aIn, bool& aOut)
-{
-  static const bool sBool[] = {
-    [ACL_STATE_CONNECTED] = true,
-    [ACL_STATE_DISCONNECTED] = false
-  };
-  if (MOZ_HAL_IPC_CONVERT_WARN_IF(
-        aIn >= MOZ_ARRAY_LENGTH(sBool), BluetoothAclState, bool)) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-  aOut = sBool[aIn];
-  return NS_OK;
-}
-
-nsresult
 Convert(const BluetoothAttributeHandle& aIn, int32_t& aOut)
 {
   aOut = static_cast<int32_t>(aIn.mHandle);

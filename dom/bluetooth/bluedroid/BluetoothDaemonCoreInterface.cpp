@@ -1113,7 +1113,7 @@ public:
 
   nsresult
   operator () (BluetoothStatus& aArg1, BluetoothAddress& aArg2,
-               bool& aArg3) const
+               BluetoothAclState& aArg3) const
   {
     DaemonSocketPDU& pdu = GetPDU();
 
@@ -1130,8 +1130,7 @@ public:
     }
 
     /* Read ACL state */
-    rv = UnpackPDU(
-      pdu, UnpackConversion<BluetoothAclState, bool>(aArg3));
+    rv = UnpackPDU(pdu, aArg3);
     if (NS_FAILED(rv)) {
       return rv;
     }
