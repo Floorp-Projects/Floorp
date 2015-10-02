@@ -22,7 +22,7 @@
  * All values are monotonic and are updated only when
  * `nsIPerformanceStatsService.isStopwatchActive` is `true`.
  */
-[scriptable, uuid(89440555-dd81-4a22-8747-049bcf0ab586)]
+[scriptable, uuid(f171c901-1888-4087-a002-c2751e510f92)]
 interface nsIPerformanceStats: nsISupports {
   /**
    * An identifier unique to the component.
@@ -33,21 +33,7 @@ interface nsIPerformanceStats: nsISupports {
   readonly attribute AString groupId;
 
   /**
-   * If this component is part of a larger component, the larger
-   * component. Otherwise, null.
-   *
-   * As of this writing, there can be at most two levels of components:
-   * - compartments (a single module, iframe, etc.);
-   * - groups (an entire add-on, an entire webpage, etc.).
-   */
-  readonly attribute AString parentId;
-
-  /**
-   * The name of the component:
-   * - for the process itself, "<process>";
-   * - for platform code, "<platform>";
-   * - for an add-on, the identifier of the addon (e.g. "myaddon@foo.bar");
-   * - for a webpage, the url of the page.
+   * A somewhat human-readable name for the component.
    */
   readonly attribute AString name;
 
@@ -62,12 +48,6 @@ interface nsIPerformanceStats: nsISupports {
    * outer window (i.e. the tab), otherwise 0.
    */
   readonly attribute uint64_t windowId;
-
-  /**
-   * If the component is code executed in a window, the title of the topmost
-   * window (i.e. the tab), otherwise an empty string.
-   */
-  readonly attribute AString title;
 
   /**
    * Total amount of time spent executing code in this group, in
@@ -109,7 +89,7 @@ interface nsIPerformanceStats: nsISupports {
 /**
  * A snapshot of the performance data of the process.
  */
-[scriptable, uuid(2e0c50e2-3aff-4cc8-88a6-c0dc200da8fc)]
+[scriptable, uuid(0ac38e2a-2613-4e3f-9f21-95f085c177de)]
 interface nsIPerformanceSnapshot: nsISupports {
   /**
    * Data on all individual components.
@@ -127,7 +107,7 @@ interface nsIPerformanceSnapshot: nsISupports {
   nsIPerformanceStats getProcessData();
 };
 
-[scriptable, builtinclass, uuid(60973d54-13e2-455c-a3c6-84dea5dfc8b9)]
+[scriptable, builtinclass, uuid(aad18f7c-9ff7-4e22-8cd1-60ab0b57c698)]
 interface nsIPerformanceStatsService : nsISupports {
   /**
    * `true` if we should monitor CPOW, `false` otherwise.
