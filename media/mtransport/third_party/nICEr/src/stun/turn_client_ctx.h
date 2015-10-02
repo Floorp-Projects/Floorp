@@ -120,6 +120,7 @@ int nr_turn_client_process_response(nr_turn_client_ctx *ctx,
                                     UCHAR *msg, int len,
                                     nr_transport_addr *turn_server_addr);
 int nr_turn_client_cancel(nr_turn_client_ctx *ctx);
+int nr_turn_client_failed(nr_turn_client_ctx *ctx);
 int nr_turn_client_deallocate(nr_turn_client_ctx *ctx);
 int nr_turn_client_send_indication(nr_turn_client_ctx *ctx,
                                    const UCHAR *msg, size_t len,

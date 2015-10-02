@@ -31,6 +31,11 @@ if [ 0$B2G_DEBUG -ne 0 ]; then
   debug_flag='--debug'
 fi
 
+if ! aws --output=text s3 ls s3://b2g-phone-backups/; then
+    echo "[aws:error] Failed to connect to AWS! Are the AWS credentials ok?"
+    exit 1
+fi
+
 backup_file=$(aws --output=text s3 ls s3://b2g-phone-backups/$TARGET/ | tail -1 | awk '{print $NF}')
 
 if echo $backup_file | grep '\.tar\.bz2'; then

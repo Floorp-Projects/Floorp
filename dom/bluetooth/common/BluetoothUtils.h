@@ -34,6 +34,43 @@ nsresult
 StringToAddress(const nsAString& aString, BluetoothAddress& aAddress);
 
 //
+// Pin code/string conversion
+//
+
+nsresult
+StringToPinCode(const nsAString& aString, BluetoothPinCode& aPinCode);
+
+//
+// Property type/string conversion
+//
+
+nsresult
+StringToPropertyType(const nsAString& aString, BluetoothPropertyType& aType);
+
+//
+// Property conversion
+//
+
+nsresult
+NamedValueToProperty(const BluetoothNamedValue& aIn,
+                     BluetoothProperty& aProperty);
+
+//
+// Remote name/string conversion
+//
+
+void
+RemoteNameToString(const BluetoothRemoteName& aRemoteName, nsAString& aString);
+
+//
+// Service name/string conversion
+//
+
+nsresult
+StringToServiceName(const nsAString& aString,
+                    BluetoothServiceName& aServiceName);
+
+//
 // BluetoothUuid <-> uuid string conversion
 //
 

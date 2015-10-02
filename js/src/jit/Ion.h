@@ -153,7 +153,8 @@ uint8_t* LazyLinkTopActivation(JSContext* cx);
 static inline bool
 IsIonEnabled(JSContext* cx)
 {
-#ifdef JS_CODEGEN_NONE
+    // The ARM64 Ion engine is not yet implemented.
+#if defined(JS_CODEGEN_NONE) || defined(JS_CODEGEN_ARM64)
     return false;
 #else
     return cx->runtime()->options().ion() &&

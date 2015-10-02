@@ -61,6 +61,9 @@ if (AppConstants.MOZ_SAFE_BROWSING) {
                                     "resource://gre/modules/SafeBrowsing.jsm");
 }
 
+XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
+                                  "resource://gre/modules/BrowserUtils.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
@@ -3395,6 +3398,10 @@ nsBrowserAccess.prototype = {
 
   isTabContentWindow: function(aWindow) {
     return BrowserApp.getBrowserForWindow(aWindow) != null;
+  },
+
+  canClose() {
+    return BrowserUtils.canCloseWindow(window);
   },
 };
 

@@ -191,6 +191,7 @@ int nr_stun_client_ctx_destroy(nr_stun_client_ctx **ctxp);
 int nr_stun_transport_addr_check(nr_transport_addr* addr, UINT4 mask);
 int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len, nr_transport_addr *peer_addr);
 int nr_stun_client_cancel(nr_stun_client_ctx *ctx);
+int nr_stun_client_failed(nr_stun_client_ctx *ctx);
 
 #endif
 

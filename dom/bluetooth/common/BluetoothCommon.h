@@ -312,6 +312,11 @@ enum BluetoothStatus {
   NUM_STATUS
 };
 
+enum BluetoothAclState {
+  ACL_STATE_CONNECTED,
+  ACL_STATE_DISCONNECTED
+};
+
 enum BluetoothBondState {
   BOND_STATE_NONE,
   BOND_STATE_BONDING,
@@ -492,6 +497,15 @@ struct BluetoothUuid {
   }
 };
 
+struct BluetoothPinCode {
+  uint8_t mPinCode[16]; /* not \0-terminated */
+  uint8_t mLength;
+};
+
+struct BluetoothServiceName {
+  uint8_t mName[255]; /* not \0-terminated */
+};
+
 struct BluetoothServiceRecord {
   BluetoothUuid mUuid;
   uint16_t mChannel;
@@ -502,6 +516,10 @@ struct BluetoothRemoteInfo {
   int mVerMajor;
   int mVerMinor;
   int mManufacturer;
+};
+
+struct BluetoothRemoteName {
+  uint8_t mName[248]; /* not \0-terminated */
 };
 
 struct BluetoothProperty {
@@ -542,6 +560,68 @@ struct BluetoothProperty {
 
   /* PROPERTY_REMOTE_VERSION_INFO */
   BluetoothRemoteInfo mRemoteInfo;
+
+  BluetoothProperty()
+    : mType(PROPERTY_UNKNOWN)
+  { }
+
+  explicit BluetoothProperty(BluetoothPropertyType aType,
+                             const BluetoothAddress& aBdAddress)
+    : mType(aType)
+    , mBdAddress(aBdAddress)
+  { }
+
+  explicit BluetoothProperty(BluetoothPropertyType aType,
+                             const nsAString& aString)
+    : mType(aType)
+    , mString(aString)
+  { }
+
+  explicit BluetoothProperty(BluetoothPropertyType aType,
+                             const nsTArray<BluetoothUuid>& aUuidArray)
+    : mType(aType)
+    , mUuidArray(aUuidArray)
+  { }
+
+  explicit BluetoothProperty(BluetoothPropertyType aType,
+                             const nsTArray<BluetoothAddress>& aBdAddressArray)
+    : mType(aType)
+    , mBdAddressArray(aBdAddressArray)
+  { }
+
+  explicit BluetoothProperty(BluetoothPropertyType aType, uint32_t aUint32)
+    : mType(aType)
+    , mUint32(aUint32)
+  { }
+
+  explicit BluetoothProperty(BluetoothPropertyType aType, int32_t aInt32)
+    : mType(aType)
+    , mInt32(aInt32)
+  { }
+
+  explicit BluetoothProperty(BluetoothPropertyType aType,
+                             BluetoothTypeOfDevice aTypeOfDevice)
+    : mType(aType)
+    , mTypeOfDevice(aTypeOfDevice)
+  { }
+
+  explicit BluetoothProperty(BluetoothPropertyType aType,
+                             const BluetoothServiceRecord& aServiceRecord)
+    : mType(aType)
+    , mServiceRecord(aServiceRecord)
+  { }
+
+  explicit BluetoothProperty(BluetoothPropertyType aType,
+                             BluetoothScanMode aScanMode)
+    : mType(aType)
+    , mScanMode(aScanMode)
+  { }
+
+  explicit BluetoothProperty(BluetoothPropertyType aType,
+                             const BluetoothRemoteInfo& aRemoteInfo)
+    : mType(aType)
+    , mRemoteInfo(aRemoteInfo)
+  { }
 };
 
 enum BluetoothSocketType {

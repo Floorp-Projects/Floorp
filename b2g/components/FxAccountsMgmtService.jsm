@@ -101,7 +101,7 @@ this.FxAccountsMgmtService = {
     switch(data.method) {
       case "getAssertion":
         let principal = Services.scriptSecurityManager.getSystemPrincipal();
-        let audience = msg.audience || principal.originNoSuffix;
+        let audience = data.audience || principal.originNoSuffix;
         FxAccountsManager.getAssertion(audience, principal, {
           silent: msg.silent || false
         }).then(result => {
