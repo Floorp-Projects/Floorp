@@ -883,6 +883,9 @@ js::GCMarker::mark(T* thing)
 void
 LazyScript::traceChildren(JSTracer* trc)
 {
+    if (script_)
+        TraceWeakEdge(trc, &script_, "script");
+
     if (function_)
         TraceEdge(trc, &function_, "function");
 
@@ -906,6 +909,9 @@ LazyScript::traceChildren(JSTracer* trc)
 inline void
 js::GCMarker::eagerlyMarkChildren(LazyScript *thing)
 {
+    if (thing->script_)
+        noteWeakEdge(thing->script_.unsafeUnbarrieredForTracing());
+
     if (thing->function_)
         traverseEdge(thing, static_cast<JSObject*>(thing->function_));
 

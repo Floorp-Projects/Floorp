@@ -2964,14 +2964,12 @@ JSScript::finalize(FreeOp* fop)
 
     fop->runtime()->lazyScriptCache.remove(this);
 
-    if (lazyScript && lazyScript->maybeScriptUnbarriered() == this) {
-        // In most cases, our LazyScript's script pointer will reference this
-        // script. However, because sweeping can be incremental, it's
-        // possible LazyScript::maybeScript() already null'ed this pointer.
-        // Furthermore, if we unlazified the LazyScript, it will have a
-        // completely different JSScript.
-        lazyScript->resetScript();
-    }
+    // In most cases, our LazyScript's script pointer will reference this
+    // script, and thus be nulled out by normal weakref processing. However, if
+    // we unlazified the LazyScript during incremental sweeping, it will have a
+    // completely different JSScript.
+    MOZ_ASSERT_IF(lazyScript && !IsAboutToBeFinalizedUnbarriered(&lazyScript),
+                  !lazyScript->hasScript() || lazyScript->maybeScriptUnbarriered() != this);
 }
 
 static const uint32_t GSN_CACHE_THRESHOLD = 100;
@@ -4172,7 +4170,7 @@ LazyScript::Create(ExclusiveContext* cx, HandleFunction fun,
     MOZ_ASSERT(!res->sourceObject());
     res->setParent(enclosingScope, &sourceObjectScript->scriptSourceUnwrap());
 
-    MOZ_ASSERT(!res->maybeScriptUnbarriered());
+    MOZ_ASSERT(!res->hasScript());
     if (script)
         res->initScript(script);
 
