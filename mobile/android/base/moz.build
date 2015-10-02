@@ -340,7 +340,6 @@ gbjar.sources += [
     'home/HomeFragment.java',
     'home/HomeListView.java',
     'home/HomePager.java',
-    'home/HomePagerTabStrip.java',
     'home/HomePanelsManager.java',
     'home/ImageLoader.java',
     'home/MultiTypeCursorAdapter.java',
