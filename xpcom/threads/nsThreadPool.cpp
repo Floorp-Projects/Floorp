@@ -12,7 +12,6 @@
 #include "nsAutoPtr.h"
 #include "prinrval.h"
 #include "mozilla/Logging.h"
-#include "nsThreadSyncDispatch.h"
 
 using namespace mozilla;
 
