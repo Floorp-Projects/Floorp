@@ -102,7 +102,7 @@ public:
   /* Authentication */
 
   void PinReply(const BluetoothAddress& aBdAddr, bool aAccept,
-                const nsAString& aPinCode,
+                const BluetoothPinCode& aPinCode,
                 BluetoothResultHandler* aRes) override;
 
   void SspReply(const BluetoothAddress& aBdAddr,

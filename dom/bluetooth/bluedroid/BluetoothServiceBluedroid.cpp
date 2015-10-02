@@ -1347,7 +1347,14 @@ BluetoothServiceBluedroid::PinReplyInternal(
     return;
   }
 
-  sBtInterface->PinReply(address, aAccept, aPinCode,
+  BluetoothPinCode pinCode;
+  rv = StringToPinCode(aPinCode, pinCode);
+  if (NS_FAILED(rv)) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
+  sBtInterface->PinReply(address, aAccept, pinCode,
                          new PinReplyResultHandler(aRunnable));
 }
 
