@@ -418,49 +418,19 @@ StructuredCloneHolder::ReadFullySerializableObjects(JSContext* aCx,
   if (aTag == SCTAG_DOM_NULL_PRINCIPAL ||
       aTag == SCTAG_DOM_SYSTEM_PRINCIPAL ||
       aTag == SCTAG_DOM_CONTENT_PRINCIPAL) {
-    if (!NS_IsMainThread()) {
+    JSPrincipals* prin;
+    if (!nsJSPrincipals::ReadKnownPrincipalType(aCx, aReader, aTag, &prin)) {
       return nullptr;
     }
-
-    mozilla::ipc::PrincipalInfo info;
-    if (aTag == SCTAG_DOM_SYSTEM_PRINCIPAL) {
-      info = mozilla::ipc::SystemPrincipalInfo();
-    } else if (aTag == SCTAG_DOM_NULL_PRINCIPAL) {
-      info = mozilla::ipc::NullPrincipalInfo();
-    } else {
-      
-      uint32_t suffixLength, specLength;
-      if (!JS_ReadUint32Pair(aReader, &suffixLength, &specLength)) {
-        return nullptr;
-      }
-
-      nsAutoCString suffix;
-      suffix.SetLength(suffixLength);
-      if (!JS_ReadBytes(aReader, suffix.BeginWriting(), suffixLength)) {
-       return nullptr;
-      }
-
-      nsAutoCString spec;
-      spec.SetLength(specLength);
-      if (!JS_ReadBytes(aReader, spec.BeginWriting(), specLength)) {
-        return nullptr;
-      }
-
-      OriginAttributes attrs;
-      attrs.PopulateFromSuffix(suffix);
-      info = mozilla::ipc::ContentPrincipalInfo(attrs, spec);
-    }
-
-    nsresult rv;
-    nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(info, &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
-      return nullptr;
-    }
+    // nsJSPrincipals::ReadKnownPrincipalType addrefs for us, but because of the
+    // casting between JSPrincipals* and nsIPrincipal* we can't use
+    // getter_AddRefs above and have to already_AddRefed here.
+    nsCOMPtr<nsIPrincipal> principal = already_AddRefed<nsIPrincipal>(nsJSPrincipals::get(prin));
 
     JS::RootedValue result(aCx);
-    rv = nsContentUtils::WrapNative(aCx, principal, &NS_GET_IID(nsIPrincipal),
-                                    &result);
+    nsresult rv = nsContentUtils::WrapNative(aCx, principal,
+                                             &NS_GET_IID(nsIPrincipal),
+                                             &result);
     if (NS_FAILED(rv)) {
       xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
       return nullptr;
@@ -560,27 +530,8 @@ StructuredCloneHolder::WriteFullySerializableObjects(JSContext* aCx,
     nsCOMPtr<nsISupports> base = xpc::UnwrapReflectorToISupports(aObj);
     nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(base);
     if (principal) {
-      mozilla::ipc::PrincipalInfo info;
-      if (NS_WARN_IF(NS_FAILED(PrincipalToPrincipalInfo(principal, &info)))) {
-        xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
-        return false;
-      }
-
-      if (info.type() == mozilla::ipc::PrincipalInfo::TNullPrincipalInfo) {
-        return JS_WriteUint32Pair(aWriter, SCTAG_DOM_NULL_PRINCIPAL, 0);
-      }
-      if (info.type() == mozilla::ipc::PrincipalInfo::TSystemPrincipalInfo) {
-        return JS_WriteUint32Pair(aWriter, SCTAG_DOM_SYSTEM_PRINCIPAL, 0);
-      }
-
-      MOZ_ASSERT(info.type() == mozilla::ipc::PrincipalInfo::TContentPrincipalInfo);
-      const mozilla::ipc::ContentPrincipalInfo& cInfo = info;
-      nsAutoCString suffix;
-      cInfo.attrs().CreateSuffix(suffix);
-      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_CONTENT_PRINCIPAL, 0) &&
-             JS_WriteUint32Pair(aWriter, suffix.Length(), cInfo.spec().Length()) &&
-             JS_WriteBytes(aWriter, suffix.get(), suffix.Length()) &&
-             JS_WriteBytes(aWriter, cInfo.spec().get(), cInfo.spec().Length());
+      auto nsjsprincipals = nsJSPrincipals::get(principal);
+      return nsjsprincipals->write(aCx, aWriter);
     }
   }
 
