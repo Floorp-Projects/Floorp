@@ -111,9 +111,7 @@ const char *gInaccessibleProperties[] = {
     "-moz-script-size-multiplier",
     "-moz-script-min-size",
     "-moz-math-variant",
-    "-moz-math-display", // parsed by UA sheets only
-    "-moz-window-dragging", // chrome-only internal properties
-    "-moz-window-shadow" // chrome-only internal properties
+    "-moz-math-display" // parsed by UA sheets only
 };
 
 inline int
