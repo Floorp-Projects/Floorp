@@ -638,6 +638,7 @@ class AccessibleCaretSelectionModeTestCase(CommonCaretsTestCase, MarionetteTestC
 
         self.prefs = {
             'selectioncaret.enabled': False,
+            'layout.accessiblecaret.use_long_tap_injector': False,
             self.carets_tested_pref: True,
         }
         self.marionette.set_prefs(self.prefs)
