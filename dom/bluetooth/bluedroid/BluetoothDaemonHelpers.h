@@ -27,11 +27,6 @@ using namespace mozilla::ipc::DaemonSocketPDUHelpers;
 // Helper structures
 //
 
-enum BluetoothAclState {
-  ACL_STATE_CONNECTED,
-  ACL_STATE_DISCONNECTED
-};
-
 struct BluetoothAvrcpAttributeTextPairs {
   BluetoothAvrcpAttributeTextPairs(const uint8_t* aAttr,
                                    const char** aText,
@@ -106,19 +101,6 @@ struct BluetoothConfigurationParameter {
   uint8_t mType;
   uint16_t mLength;
   nsAutoArrayPtr<uint8_t> mValue;
-};
-
-struct BluetoothPinCode {
-  uint8_t mPinCode[16];
-  uint8_t mLength;
-};
-
-struct BluetoothRemoteName {
-  uint8_t mName[249];
-};
-
-struct BluetoothServiceName {
-  uint8_t mName[256];
 };
 
 //
@@ -201,18 +183,6 @@ nsresult
 Convert(int32_t aIn, BluetoothGattStatus& aOut);
 
 nsresult
-Convert(const nsAString& aIn, BluetoothPinCode& aOut);
-
-nsresult
-Convert(const nsAString& aIn, BluetoothPropertyType& aOut);
-
-nsresult
-Convert(const nsAString& aIn, BluetoothServiceName& aOut);
-
-nsresult
-Convert(BluetoothAclState aIn, bool& aOut);
-
-nsresult
 Convert(const BluetoothAttributeHandle& aIn, int32_t& aOut);
 
 nsresult
@@ -262,9 +232,6 @@ Convert(BluetoothHandsfreeWbsConfig aIn, uint8_t& aOut);
 
 nsresult
 Convert(BluetoothPropertyType aIn, uint8_t& aOut);
-
-nsresult
-Convert(const BluetoothRemoteName& aIn, nsAString& aOut);
 
 nsresult
 Convert(BluetoothScanMode aIn, uint8_t& aOut);
@@ -357,7 +324,7 @@ nsresult
 PackPDU(const BluetoothHandsfreeWbsConfig& aIn, DaemonSocketPDU& aPDU);
 
 nsresult
-PackPDU(const BluetoothNamedValue& aIn, DaemonSocketPDU& aPDU);
+PackPDU(const BluetoothProperty& aIn, DaemonSocketPDU& aPDU);
 
 nsresult
 PackPDU(const BluetoothPinCode& aIn, DaemonSocketPDU& aPDU);
@@ -481,7 +448,17 @@ UnpackPDU(DaemonSocketPDU& aPDU, BluetoothRemoteInfo& aOut);
 inline nsresult
 UnpackPDU(DaemonSocketPDU& aPDU, BluetoothRemoteName& aOut)
 {
-  return aPDU.Read(aOut.mName, sizeof(aOut.mName));
+  nsresult rv = aPDU.Read(aOut.mName, sizeof(aOut.mName));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  /* The PDU stores one extra byte for the trailing \0 character. We
+   * consume the byte, but don't store the character.
+   */
+  if (!aPDU.Consume(1)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
 }
 
 nsresult

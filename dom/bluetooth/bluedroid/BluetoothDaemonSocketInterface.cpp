@@ -24,7 +24,7 @@ const int BluetoothDaemonSocketModule::MAX_NUM_CLIENTS = 1;
 
 nsresult
 BluetoothDaemonSocketModule::ListenCmd(BluetoothSocketType aType,
-                                       const nsAString& aServiceName,
+                                       const BluetoothServiceName& aServiceName,
                                        const BluetoothUuid& aServiceUuid,
                                        int aChannel, bool aEncrypt,
                                        bool aAuth,
@@ -38,7 +38,7 @@ BluetoothDaemonSocketModule::ListenCmd(BluetoothSocketType aType,
 
   nsresult rv = PackPDU(
     aType,
-    PackConversion<nsAString, BluetoothServiceName>(aServiceName),
+    aServiceName,
     aServiceUuid,
     PackConversion<int, int32_t>(aChannel),
     SocketFlags(aEncrypt, aAuth), *pdu);
@@ -306,7 +306,7 @@ BluetoothDaemonSocketInterface::~BluetoothDaemonSocketInterface()
 
 void
 BluetoothDaemonSocketInterface::Listen(BluetoothSocketType aType,
-                                       const nsAString& aServiceName,
+                                       const BluetoothServiceName& aServiceName,
                                        const BluetoothUuid& aServiceUuid,
                                        int aChannel, bool aEncrypt,
                                        bool aAuth,
