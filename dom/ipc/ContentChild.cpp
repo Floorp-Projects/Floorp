@@ -2518,6 +2518,7 @@ ContentChild::RecvUnregisterSheet(const URIParams& aURI, const uint32_t& aType)
 POfflineCacheUpdateChild*
 ContentChild::AllocPOfflineCacheUpdateChild(const URIParams& manifestURI,
                                             const URIParams& documentURI,
+                                            const PrincipalInfo& aLoadingPrincipalInfo,
                                             const bool& stickDocument,
                                             const TabId& aTabId)
 {
