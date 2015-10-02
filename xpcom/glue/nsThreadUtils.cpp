@@ -7,6 +7,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
+#include "LeakRefPtr.h"
 
 #ifdef MOZILLA_INTERNAL_API
 # include "nsThreadManager.h"
@@ -26,6 +27,8 @@ using mozilla::IsVistaOrLater;
 
 #include <pratom.h>
 #include <prthread.h>
+
+using namespace mozilla;
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
 
@@ -164,17 +167,16 @@ NS_DispatchToCurrentThread(nsIRunnable* aEvent)
 NS_METHOD
 NS_DispatchToMainThread(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDispatchFlags)
 {
-  nsCOMPtr<nsIRunnable> event(aEvent);
+  LeakRefPtr<nsIRunnable> event(Move(aEvent));
   nsCOMPtr<nsIThread> thread;
   nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     NS_ASSERTION(false, "Failed NS_DispatchToMainThread() in shutdown; leaking");
     // NOTE: if you stop leaking here, adjust Promise::MaybeReportRejected(),
     // which assumes a leak here, or split into leaks and no-leaks versions
-    nsIRunnable* temp = event.forget().take(); // leak without using "unused <<" due to Windows (boo)
-    return temp ? rv : rv; // to make compiler not bletch on us
+    return rv;
   }
-  return thread->Dispatch(event.forget(), aDispatchFlags);
+  return thread->Dispatch(event.take(), aDispatchFlags);
 }
 
 // In the case of failure with a newly allocated runnable with a
