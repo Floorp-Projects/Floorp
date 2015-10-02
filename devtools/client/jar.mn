@@ -157,6 +157,9 @@ devtools.jar:
     content/eyedropper/eyedropper.xul (eyedropper/eyedropper.xul)
     content/eyedropper/crosshairs.css (eyedropper/crosshairs.css)
     content/eyedropper/nocursor.css (eyedropper/nocursor.css)
+    content/aboutdebugging/aboutdebugging.xhtml (aboutdebugging/aboutdebugging.xhtml)
+    content/aboutdebugging/aboutdebugging.css (aboutdebugging/aboutdebugging.css)
+    content/aboutdebugging/aboutdebugging.js (aboutdebugging/aboutdebugging.js)
 %   skin devtools classic/1.0 %skin/
 *   skin/themes/common.css (themes/common.css)
 *   skin/themes/dark-theme.css (themes/dark-theme.css)
