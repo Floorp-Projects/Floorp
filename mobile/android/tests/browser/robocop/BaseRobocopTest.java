@@ -14,10 +14,6 @@ import android.util.Log;
 
 import com.jayway.android.robotium.solo.Solo;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Assert;
@@ -32,6 +28,8 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Map;
 
 @SuppressWarnings("unchecked")
@@ -236,15 +234,21 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
         // those are managed by Fennec's proxy settings.
         final String rawUrl = ((String) mConfig.get("rawhost")).replaceAll("(/$)", "");
 
+        HttpURLConnection urlConnection = null;
+
         try {
-            final HttpClient httpclient = new DefaultHttpClient();
-            final HttpResponse response = httpclient.execute(new HttpGet(rawUrl));
-            final int statusCode = response.getStatusLine().getStatusCode();
+            urlConnection = (HttpURLConnection) new URL(rawUrl).openConnection();
+
+            final int statusCode = urlConnection.getResponseCode();
             if (200 != statusCode) {
                 throw new IllegalStateException("Status code: " + statusCode);
             }
         } catch (Exception e) {
             mAsserter.ok(false, "Robocop tests on your device need network/wifi access to reach: [" + rawUrl + "].", e.toString());
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
         }
     }
 
