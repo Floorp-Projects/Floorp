@@ -185,7 +185,7 @@ InternalHeaders::IsInvalidName(const nsACString& aName, ErrorResult& aRv)
 {
   if (!NS_IsValidHTTPToken(aName)) {
     NS_ConvertUTF8toUTF16 label(aName);
-    aRv.ThrowTypeError<MSG_INVALID_HEADER_NAME>(&label);
+    aRv.ThrowTypeError(MSG_INVALID_HEADER_NAME, &label);
     return true;
   }
 
@@ -198,7 +198,7 @@ InternalHeaders::IsInvalidValue(const nsACString& aValue, ErrorResult& aRv)
 {
   if (!NS_IsReasonableHTTPHeaderValue(aValue)) {
     NS_ConvertUTF8toUTF16 label(aValue);
-    aRv.ThrowTypeError<MSG_INVALID_HEADER_VALUE>(&label);
+    aRv.ThrowTypeError(MSG_INVALID_HEADER_VALUE, &label);
     return true;
   }
   return false;
@@ -208,7 +208,7 @@ bool
 InternalHeaders::IsImmutable(ErrorResult& aRv) const
 {
   if (mGuard == HeadersGuardEnum::Immutable) {
-    aRv.ThrowTypeError<MSG_HEADERS_IMMUTABLE>();
+    aRv.ThrowTypeError(MSG_HEADERS_IMMUTABLE);
     return true;
   }
   return false;
@@ -259,7 +259,7 @@ InternalHeaders::Fill(const Sequence<Sequence<nsCString>>& aInit, ErrorResult& a
   for (uint32_t i = 0; i < aInit.Length() && !aRv.Failed(); ++i) {
     const Sequence<nsCString>& tuple = aInit[i];
     if (tuple.Length() != 2) {
-      aRv.ThrowTypeError<MSG_INVALID_HEADER_SEQUENCE>();
+      aRv.ThrowTypeError(MSG_INVALID_HEADER_SEQUENCE);
       return;
     }
     Append(tuple[0], tuple[1], aRv);

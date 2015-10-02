@@ -37,16 +37,6 @@ enum ErrNum {
   Err_Limit
 };
 
-// Debug-only compile-time table of the number of arguments of each error, for use in static_assert.
-#if defined(DEBUG) && (defined(__clang__) || defined(__GNUC__))
-uint16_t constexpr ErrorFormatNumArgs[] = {
-#define MSG_DEF(_name, _argc, _exn, _str) \
-  _argc,
-#include "mozilla/dom/Errors.msg"
-#undef MSG_DEF
-};
-#endif
-
 uint16_t
 GetErrorArgCount(const ErrNum aErrorNumber);
 
@@ -124,16 +114,16 @@ public:
     return rv;
   }
 
-  template<dom::ErrNum errorNumber, typename... Ts>
-  void ThrowTypeError(Ts... messageArgs)
+  template<typename... Ts>
+  void ThrowTypeError(const dom::ErrNum errorNumber, Ts... messageArgs)
   {
-    ThrowErrorWithMessage<errorNumber>(NS_ERROR_TYPE_ERR, messageArgs...);
+    ThrowErrorWithMessage(errorNumber, NS_ERROR_TYPE_ERR, messageArgs...);
   }
 
-  template<dom::ErrNum errorNumber, typename... Ts>
-  void ThrowRangeError(Ts... messageArgs)
+  template<typename... Ts>
+  void ThrowRangeError(const dom::ErrNum errorNumber, Ts... messageArgs)
   {
-    ThrowErrorWithMessage<errorNumber>(NS_ERROR_RANGE_ERR, messageArgs...);
+    ThrowErrorWithMessage(errorNumber, NS_ERROR_RANGE_ERR, messageArgs...);
   }
 
   void ReportErrorWithMessage(JSContext* cx);
@@ -221,14 +211,9 @@ private:
   // and returns the arguments array from that Message.
   nsTArray<nsString>& CreateErrorMessageHelper(const dom::ErrNum errorNumber, nsresult errorType);
 
-  template<dom::ErrNum errorNumber, typename... Ts>
-  void ThrowErrorWithMessage(nsresult errorType, Ts... messageArgs)
+  template<typename... Ts>
+  void ThrowErrorWithMessage(const dom::ErrNum errorNumber, nsresult errorType, Ts... messageArgs)
   {
-#if defined(DEBUG) && (defined(__clang__) || defined(__GNUC__))
-    static_assert(dom::ErrorFormatNumArgs[errorNumber] == sizeof...(messageArgs),
-                  "Pass in the right number of arguments");
-#endif
-
     if (IsJSException()) {
       // We have rooted our mJSException, and we don't have the info
       // needed to unroot here, so just bail.
