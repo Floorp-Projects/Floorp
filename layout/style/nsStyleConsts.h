@@ -817,6 +817,10 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_TOUCH_ACTION_MANIPULATION    (1 << 4)
 
 // See nsStyleDisplay
+#define NS_STYLE_TOP_LAYER_NONE   0 // not in the top layer
+#define NS_STYLE_TOP_LAYER_TOP    1 // in the top layer
+
+// See nsStyleDisplay
 #define NS_STYLE_TRANSFORM_BOX_BORDER_BOX                0
 #define NS_STYLE_TRANSFORM_BOX_FILL_BOX                  1
 #define NS_STYLE_TRANSFORM_BOX_VIEW_BOX                  2
