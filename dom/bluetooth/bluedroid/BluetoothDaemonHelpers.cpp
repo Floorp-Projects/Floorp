@@ -861,18 +861,6 @@ Convert(BluetoothPropertyType aIn, uint8_t& aOut)
 }
 
 nsresult
-Convert(const BluetoothRemoteName& aIn, nsAString& aOut)
-{
-  const char* name = reinterpret_cast<const char*>(aIn.mName);
-
-  // We construct an nsCString here because the string
-  // returned from the PDU is not 0-terminated.
-  aOut = NS_ConvertUTF8toUTF16(
-    nsCString(name, strnlen(name, sizeof(aIn.mName))));
-  return NS_OK;
-}
-
-nsresult
 Convert(BluetoothScanMode aIn, int32_t& aOut)
 {
   static const int32_t sScanMode[] = {

@@ -83,6 +83,18 @@ StringToPinCode(const nsAString& aString, BluetoothPinCode& aPinCode)
 }
 
 void
+RemoteNameToString(const BluetoothRemoteName& aRemoteName, nsAString& aString)
+{
+  auto name = reinterpret_cast<const char*>(aRemoteName.mName);
+
+  /* The content in |BluetoothRemoteName| is not a C string and not
+   * terminated by \0. We use |strnlen| to limit its length.
+   */
+  aString =
+    NS_ConvertUTF8toUTF16(name, strnlen(name, sizeof(aRemoteName.mName)));
+}
+
+void
 UuidToString(const BluetoothUuid& aUuid, nsAString& aString)
 {
   char uuidStr[37];

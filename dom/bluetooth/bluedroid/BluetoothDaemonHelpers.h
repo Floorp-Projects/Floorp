@@ -103,10 +103,6 @@ struct BluetoothConfigurationParameter {
   nsAutoArrayPtr<uint8_t> mValue;
 };
 
-struct BluetoothRemoteName {
-  uint8_t mName[249];
-};
-
 struct BluetoothServiceName {
   uint8_t mName[256];
 };
@@ -246,9 +242,6 @@ Convert(BluetoothHandsfreeWbsConfig aIn, uint8_t& aOut);
 
 nsresult
 Convert(BluetoothPropertyType aIn, uint8_t& aOut);
-
-nsresult
-Convert(const BluetoothRemoteName& aIn, nsAString& aOut);
 
 nsresult
 Convert(BluetoothScanMode aIn, uint8_t& aOut);
@@ -465,7 +458,17 @@ UnpackPDU(DaemonSocketPDU& aPDU, BluetoothRemoteInfo& aOut);
 inline nsresult
 UnpackPDU(DaemonSocketPDU& aPDU, BluetoothRemoteName& aOut)
 {
-  return aPDU.Read(aOut.mName, sizeof(aOut.mName));
+  nsresult rv = aPDU.Read(aOut.mName, sizeof(aOut.mName));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  /* The PDU stores one extra byte for the trailing \0 character. We
+   * consume the byte, but don't store the character.
+   */
+  if (!aPDU.Consume(1)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
 }
 
 nsresult
