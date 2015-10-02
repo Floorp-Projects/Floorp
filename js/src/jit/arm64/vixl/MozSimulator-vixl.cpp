@@ -37,25 +37,18 @@ namespace vixl {
 using mozilla::DebugOnly;
 using js::jit::ABIFunctionType;
 
-
-Simulator::Simulator() {
-  decoder_ = js_new<Decoder>();
-  if (!decoder_) {
-    MOZ_ReportAssertionFailure("[unhandlable oom] Decoder", __FILE__, __LINE__);
-    MOZ_CRASH();
-  }
-
-  // FIXME: This just leaks the Decoder object for now, which is probably OK.
-  // FIXME: We should free it at some point.
-  // FIXME: Note that it can't be stored in the SimulatorRuntime due to lifetime conflicts.
-  this->init(decoder_, stdout);
+Simulator::Simulator(Decoder* decoder, FILE* stream)
+  : stream_(nullptr)
+  , print_disasm_(nullptr)
+  , instrumentation_(nullptr)
+  , stack_(nullptr)
+  , stack_limit_(nullptr)
+  , decoder_(nullptr)
+  , oom_(false)
+  , lock_(nullptr)
+{
+    this->init(decoder, stream);
 }
-
-
-Simulator::Simulator(Decoder* decoder, FILE* stream) {
-  this->init(decoder, stream);
-}
-
 
 void Simulator::ResetState() {
   // Reset the system registers.
@@ -92,6 +85,10 @@ void Simulator::init(Decoder* decoder, FILE* stream) {
 
   stream_ = stream;
   print_disasm_ = js_new<PrintDisassembler>(stream_);
+  if (!print_disasm_) {
+    oom_ = true;
+    return;
+  }
   set_coloured_trace(false);
   trace_parameters_ = LOG_NONE;
 
@@ -99,6 +96,10 @@ void Simulator::init(Decoder* decoder, FILE* stream) {
 
   // Allocate and set up the simulator stack.
   stack_ = (byte*)js_malloc(stack_size_);
+  if (!stack_) {
+    oom_ = true;
+    return;
+  }
   stack_limit_ = stack_ + stack_protection_size_;
   // Configure the starting stack pointer.
   //  - Find the top of the stack.
@@ -111,6 +112,10 @@ void Simulator::init(Decoder* decoder, FILE* stream) {
 
   // Set the sample period to 10, as the VIXL examples and tests are short.
   instrumentation_ = js_new<Instrument>("vixl_stats.csv", 10);
+  if (!instrumentation_) {
+    oom_ = true;
+    return;
+  }
 
   // Print a warning about exclusive-access instructions, but only the first
   // time they are encountered. This warning can be silenced using
@@ -118,8 +123,10 @@ void Simulator::init(Decoder* decoder, FILE* stream) {
   print_exclusive_access_warning_ = true;
 
   lock_ = PR_NewLock();
-  if (!lock_)
-    MOZ_CRASH("Could not allocate simulator lock.");
+  if (!lock_) {
+    oom_ = true;
+    return;
+  }
 #ifdef DEBUG
   lockOwner_ = nullptr;
 #endif
@@ -133,30 +140,24 @@ Simulator* Simulator::Current() {
 
 
 Simulator* Simulator::Create() {
-  Decoder* decoder = js_new<vixl::Decoder>();
-  if (!decoder) {
-    MOZ_ReportAssertionFailure("[unhandlable oom] Decoder", __FILE__, __LINE__);
-    MOZ_CRASH();
-  }
+  Decoder *decoder = js_new<vixl::Decoder>();
+  if (!decoder)
+    return nullptr;
 
   // FIXME: This just leaks the Decoder object for now, which is probably OK.
   // FIXME: We should free it at some point.
   // FIXME: Note that it can't be stored in the SimulatorRuntime due to lifetime conflicts.
-  if (getenv("USE_DEBUGGER") != nullptr) {
-    Debugger* debugger = js_new<Debugger>(decoder, stdout);
-    if (!debugger) {
-      MOZ_ReportAssertionFailure("[unhandlable oom] Decoder", __FILE__, __LINE__);
-      MOZ_CRASH();
-    }
-    return debugger;
-  }
+  Simulator *sim;
+  if (getenv("USE_DEBUGGER") != nullptr)
+    sim = js_new<Debugger>(decoder, stdout);
+  else
+    sim = js_new<Simulator>(decoder, stdout);
 
-  Simulator* sim = js_new<Simulator>();
-  if (!sim) {
-    MOZ_CRASH("NEED SIMULATOR");
+  // Check if Simulator:init ran out of memory.
+  if (sim && sim->oom()) {
+    js_delete(sim);
     return nullptr;
   }
-  sim->init(decoder, stdout);
 
   return sim;
 }

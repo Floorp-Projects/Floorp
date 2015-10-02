@@ -154,7 +154,8 @@ const testcases = [
             "xn--j50icd",                            false, true,  true],
 
     // Same with a lone high surrogate at the end
-    ["\uD840\uDC00\uD840\uDC01\uD840", "",           false, false, false],
+    ["\uD840\uDC00\uD840\uDC01\uD840",
+            "xn--zn7c0336bda",                       false, false, false],
 
     // Latin text and Bengali digits
     ["super৪",   "xn--super-k2l",                    false, false, true],

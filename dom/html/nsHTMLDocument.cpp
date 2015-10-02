@@ -1519,7 +1519,7 @@ nsHTMLDocument::Open(JSContext* cx,
 
     if (cv) {
       bool okToUnload;
-      if (NS_SUCCEEDED(cv->PermitUnload(false, &okToUnload)) && !okToUnload) {
+      if (NS_SUCCEEDED(cv->PermitUnload(&okToUnload)) && !okToUnload) {
         // We don't want to unload, so stop here, but don't throw an
         // exception.
         nsCOMPtr<nsIDocument> ret = this;

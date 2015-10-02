@@ -512,12 +512,14 @@ gfxWindowsPlatform::HandleDeviceReset()
   return true;
 }
 
+static const BackendType SOFTWARE_BACKEND = BackendType::CAIRO;
+
 void
 gfxWindowsPlatform::UpdateBackendPrefs()
 {
-  uint32_t canvasMask = BackendTypeBit(BackendType::CAIRO);
-  uint32_t contentMask = BackendTypeBit(BackendType::CAIRO);
-  BackendType defaultBackend = BackendType::CAIRO;
+  uint32_t canvasMask = BackendTypeBit(SOFTWARE_BACKEND);
+  uint32_t contentMask = BackendTypeBit(SOFTWARE_BACKEND);
+  BackendType defaultBackend = SOFTWARE_BACKEND;
   if (GetD2DStatus() == FeatureStatus::Available) {
     mRenderMode = RENDER_DIRECT2D;
     canvasMask |= BackendTypeBit(BackendType::DIRECT2D);
@@ -548,6 +550,17 @@ gfxWindowsPlatform::UpdateRenderMode()
     mScreenReferenceDrawTarget =
       CreateOffscreenContentDrawTarget(IntSize(1, 1), SurfaceFormat::B8G8R8A8);
   }
+}
+
+mozilla::gfx::BackendType
+gfxWindowsPlatform::GetContentBackendFor(mozilla::layers::LayersBackend aLayers)
+{
+  if (aLayers == LayersBackend::LAYERS_D3D11) {
+    return gfxPlatform::GetDefaultContentBackend();
+  }
+
+  // If we're not accelerated with D3D11, never use D2D.
+  return SOFTWARE_BACKEND;
 }
 
 #ifdef CAIRO_HAS_D2D_SURFACE

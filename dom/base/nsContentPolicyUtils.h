@@ -14,6 +14,7 @@
 #ifndef __nsContentPolicyUtils_h__
 #define __nsContentPolicyUtils_h__
 
+#include "nsContentUtils.h"
 #include "nsIContentPolicy.h"
 #include "nsIContent.h"
 #include "nsIScriptSecurityManager.h"
@@ -194,7 +195,9 @@ NS_CP_ContentTypeName(uint32_t contentType)
                           do_GetService(                                      \
                               "@mozilla.org/data-document-content-policy;1"); \
                       if (dataPolicy) {                                       \
-                          dataPolicy-> action (contentType, contentLocation,  \
+                          nsContentPolicyType externalType =                  \
+                              nsContentUtils::InternalContentPolicyTypeToExternal(contentType);\
+                          dataPolicy-> action (externalType, contentLocation, \
                                                requestOrigin, context,        \
                                                mimeType, extra,               \
                                                originPrincipal, decision);    \

@@ -323,6 +323,52 @@ class AutoTry(object):
         finally:
             self._run_git('reset', 'HEAD~')
 
+    def _git_find_changed_files(self):
+        # This finds the files changed on the current branch based on the
+        # diff of the current branch its merge-base base with other branches.
+        try:
+            args = ['git', 'rev-parse', 'HEAD']
+            current_branch = subprocess.check_output(args).strip()
+            args = ['git', 'for-each-ref', 'refs/heads', 'refs/remotes',
+                    '--format=%(objectname)']
+            all_branches = subprocess.check_output(args).splitlines()
+            other_branches = set(all_branches) - set([current_branch])
+            args = ['git', 'merge-base', 'HEAD'] + list(other_branches)
+            base_commit = subprocess.check_output(args).strip()
+            args = ['git', 'diff', '--name-only', '-z', 'HEAD', base_commit]
+            return subprocess.check_output(args).strip('\0').split('\0')
+        except subprocess.CalledProcessError as e:
+            print('Failed while determining files changed on this branch')
+            print('Failed whle running: %s' % args)
+            print(e.output)
+            sys.exit(1)
+
+    def _hg_find_changed_files(self):
+        hg_args = [
+            'hg', 'log', '-r',
+            '::. and not public()',
+            '--template',
+            '{join(files, "\n")}\n',
+        ]
+        try:
+            return subprocess.check_output(hg_args).splitlines()
+        except subprocess.CalledProcessError as e:
+            print('Failed while finding files changed since the last '
+                  'public ancestor')
+            print('Failed whle running: %s' % hg_args)
+            print(e.output)
+            sys.exit(1)
+
+    def find_changed_files(self):
+        """Finds files changed in a local source tree.
+
+        For hg, changes since the last public ancestor of '.' are
+        considered. For git, changes in the current branch are considered.
+        """
+        if self._use_git:
+            return self._git_find_changed_files()
+        return self._hg_find_changed_files()
+
     def push_to_try(self, msg, verbose):
         if not self._use_git:
             try:
@@ -383,25 +429,3 @@ class AutoTry(object):
                     print("Pushing tests based on the following tags:\n\t%s" %
                           "\n\t".join(tags))
         return paths, tags
-
-
-    def find_changed_files(self):
-        """Finds files changed in a local source tree (hg only for now)."""
-        if self._use_git:
-            # Getting changed files on the current branch with rev-list and contains
-            # will not work: subsequent commits on mozilla-central frequently have
-            # non-increasing dates, breaking both.
-            # (see http://thread.gmane.org/gmane.comp.version-control.git/269560/)
-            # Git support will be added in bug 1203686.
-            return []
-
-        hg_args = [
-            'hg', 'log', '-r',
-            # Include everything from the current commit to the last
-            # public ancestor.
-            '::. and not public()',
-            '--template',
-            '{join(files, "\n")}\n',
-        ]
-
-        return subprocess.check_output(hg_args).splitlines()
