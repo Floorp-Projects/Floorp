@@ -249,7 +249,7 @@ MainThreadFetchResolver::OnResponseAvailableInternal(InternalResponse* aResponse
     mPromise->MaybeResolve(mResponse);
   } else {
     ErrorResult result;
-    result.ThrowTypeError(MSG_FETCH_FAILED);
+    result.ThrowTypeError<MSG_FETCH_FAILED>();
     mPromise->MaybeReject(result);
   }
 }
@@ -288,7 +288,7 @@ public:
       promise->MaybeResolve(response);
     } else {
       ErrorResult result;
-      result.ThrowTypeError(MSG_FETCH_FAILED);
+      result.ThrowTypeError<MSG_FETCH_FAILED>();
       promise->MaybeReject(result);
     }
     return true;
@@ -1476,7 +1476,7 @@ FetchBody<Derived>::ConsumeBody(ConsumeType aType, ErrorResult& aRv)
 {
   mConsumeType = aType;
   if (BodyUsed()) {
-    aRv.ThrowTypeError(MSG_FETCH_BODY_CONSUMED_ERROR);
+    aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
     return nullptr;
   }
 

@@ -520,7 +520,7 @@ IDBCursor::Advance(uint32_t aCount, ErrorResult &aRv)
   AssertIsOnOwningThread();
 
   if (!aCount) {
-    aRv.ThrowTypeError(MSG_INVALID_ADVANCE_COUNT);
+    aRv.ThrowTypeError<MSG_INVALID_ADVANCE_COUNT>();
     return;
   }
 
