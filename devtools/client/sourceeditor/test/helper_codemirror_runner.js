@@ -28,7 +28,7 @@ function runCodeMirrorTest(browser) {
     'function check() { ' +
     '  var doc = content.document; var out = doc.getElementById("status"); ' +
     '  if (!out || !out.classList.contains("done")) { return setTimeout(check, 100); }' +
-    '  sendSyncMessage("done", { failed: content.wrappedJSObject.failed });' +
+    '  sendAsyncMessage("done", { failed: content.wrappedJSObject.failed });' +
     '}' +
     'check();'
   , true);
