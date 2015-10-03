@@ -7,10 +7,8 @@
 toolbarbutton {
   -moz-box-align: center;
   -moz-box-pack: center;
-  margin: 0px 2px 0px 2px;
-  padding: 3px 1px 3px 1px;
-  border-right: 1px solid transparent;
-  border-left: 1px solid transparent;
+  margin: 0 2px;
+  padding: 3px 2px;
   background-color: transparent;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
 }

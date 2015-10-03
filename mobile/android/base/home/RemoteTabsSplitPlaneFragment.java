@@ -140,6 +140,12 @@ public class RemoteTabsSplitPlaneFragment extends RemoteTabsBaseFragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+
+        // Discard any additional item clicks on the list as the
+        // panel is getting destroyed (bug 1210243).
+        mClientList.setOnItemClickListener(null);
+        mTabList.setOnItemClickListener(null);
+
         mClientList = null;
         mTabList = null;
         mEmptyView = null;
