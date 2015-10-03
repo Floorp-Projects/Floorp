@@ -95,8 +95,9 @@ OfflineCacheUpdateGlue::Schedule()
 }
 
 NS_IMETHODIMP
-OfflineCacheUpdateGlue::Init(nsIURI *aManifestURI, 
+OfflineCacheUpdateGlue::Init(nsIURI *aManifestURI,
                              nsIURI *aDocumentURI,
+                             nsIPrincipal* aLoadingPrincipal,
                              nsIDOMDocument *aDocument,
                              nsIFile *aCustomProfileDir,
                              uint32_t aAppID,
@@ -114,6 +115,7 @@ OfflineCacheUpdateGlue::Init(nsIURI *aManifestURI,
         return NS_ERROR_NULL_POINTER;
 
     mDocumentURI = aDocumentURI;
+    mLoadingPrincipal = aLoadingPrincipal;
 
     if (aDocument)
         SetDocument(aDocument);
@@ -123,7 +125,8 @@ OfflineCacheUpdateGlue::Init(nsIURI *aManifestURI,
         return NS_OK;
     }
 
-    return mUpdate->Init(aManifestURI, aDocumentURI, nullptr, aCustomProfileDir, aAppID, aInBrowser);
+    return mUpdate->Init(aManifestURI, aDocumentURI, aLoadingPrincipal, nullptr,
+                         aCustomProfileDir, aAppID, aInBrowser);
 }
 
 void

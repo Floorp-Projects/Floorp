@@ -388,11 +388,11 @@ IsMarkedUnbarriered(T* thingp);
 
 template <typename T>
 bool
-IsMarked(BarrieredBase<T>* thingp);
+IsMarked(WriteBarrieredBase<T>* thingp);
 
 template <typename T>
 bool
-IsMarked(ReadBarriered<T>* thingp);
+IsMarked(ReadBarrieredBase<T>* thingp);
 
 template <typename T>
 bool
@@ -400,11 +400,11 @@ IsAboutToBeFinalizedUnbarriered(T* thingp);
 
 template <typename T>
 bool
-IsAboutToBeFinalized(BarrieredBase<T>* thingp);
+IsAboutToBeFinalized(WriteBarrieredBase<T>* thingp);
 
 template <typename T>
 bool
-IsAboutToBeFinalized(ReadBarriered<T>* thingp);
+IsAboutToBeFinalized(ReadBarrieredBase<T>* thingp);
 
 inline Cell*
 ToMarkable(const Value& v)

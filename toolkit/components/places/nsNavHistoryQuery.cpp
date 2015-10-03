@@ -908,6 +908,19 @@ nsNavHistoryQuery::nsNavHistoryQuery()
   mDomain.SetIsVoid(true);
 }
 
+nsNavHistoryQuery::nsNavHistoryQuery(const nsNavHistoryQuery& aOther)
+  : mMinVisits(aOther.mMinVisits), mMaxVisits(aOther.mMaxVisits),
+    mBeginTime(aOther.mBeginTime),
+    mBeginTimeReference(aOther.mBeginTimeReference),
+    mEndTime(aOther.mEndTime), mEndTimeReference(aOther.mEndTimeReference),
+    mSearchTerms(aOther.mSearchTerms), mOnlyBookmarked(aOther.mOnlyBookmarked),
+    mDomainIsHost(aOther.mDomainIsHost), mDomain(aOther.mDomain),
+    mUriIsPrefix(aOther.mUriIsPrefix), mUri(aOther.mUri),
+    mAnnotationIsNot(aOther.mAnnotationIsNot),
+    mAnnotation(aOther.mAnnotation), mTags(aOther.mTags),
+    mTagsAreNot(aOther.mTagsAreNot), mTransitions(aOther.mTransitions)
+{}
+
 NS_IMETHODIMP nsNavHistoryQuery::GetBeginTime(PRTime *aBeginTime)
 {
   *aBeginTime = mBeginTime;
@@ -1321,11 +1334,10 @@ NS_IMETHODIMP nsNavHistoryQuery::Clone(nsINavHistoryQuery** _retval)
 {
   *_retval = nullptr;
 
-  nsNavHistoryQuery *clone = new nsNavHistoryQuery(*this);
+  nsRefPtr<nsNavHistoryQuery> clone = new nsNavHistoryQuery(*this);
   NS_ENSURE_TRUE(clone, NS_ERROR_OUT_OF_MEMORY);
 
-  clone->mRefCnt = 0; // the clone doesn't inherit our refcount
-  NS_ADDREF(*_retval = clone);
+  clone.forget(_retval);
   return NS_OK;
 }
 

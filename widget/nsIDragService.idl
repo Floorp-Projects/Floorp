@@ -126,6 +126,9 @@ interface nsIDragService : nsISupports
   void suppress();
   void unsuppress();
 
+  /**
+    * aX and aY are in LayoutDevice pixels.
+    */
   [noscript] void dragMoved(in long aX, in long aY);
 
   [notxpcom, nostdcall] boolean maybeAddChildProcess(in ContentParentPtr aChild);

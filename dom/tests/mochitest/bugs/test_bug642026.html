@@ -48,7 +48,7 @@ for (var p in result) {
     result1[result[p]] = true;
 }
 
-ok(expResult.every(function(c) result1[c]), "all of the standard classes have been enumerated");
+ok(expResult.every(c => result1[c]), "all of the standard classes have been enumerated");
 
 </script>
 </pre>

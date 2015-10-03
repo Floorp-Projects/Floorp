@@ -26,7 +26,6 @@ public:
   NS_IMETHOD GetURI(nsIURI** aURI) override;
   NS_IMETHOD GetDomain(nsIURI** aDomain) override;
   NS_IMETHOD SetDomain(nsIURI* aDomain) override;
-  NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
   virtual bool IsOnCSSUnprefixingWhitelist() override;
   bool IsCodebasePrincipal() const override { return true; }
@@ -39,23 +38,6 @@ public:
 
   virtual void GetScriptLocation(nsACString& aStr) override;
   void SetURI(nsIURI* aURI);
-
-  static bool IsPrincipalInherited(nsIURI* aURI) {
-    // return true if the loadee URI has
-    // the URI_INHERITS_SECURITY_CONTEXT flag set.
-    bool doesInheritSecurityContext;
-    nsresult rv =
-    NS_URIChainHasFlags(aURI,
-                        nsIProtocolHandler::URI_INHERITS_SECURITY_CONTEXT,
-                        &doesInheritSecurityContext);
-
-    if (NS_SUCCEEDED(rv) && doesInheritSecurityContext) {
-      return true;
-    }
-
-    return false;
-  }
-
 
   /**
    * Computes the puny-encoded origin of aURI.
@@ -79,6 +61,7 @@ protected:
   virtual ~nsPrincipal();
 
   bool SubsumesInternal(nsIPrincipal* aOther, DocumentDomainConsideration aConsideration) override;
+  bool MayLoadInternal(nsIURI* aURI) override;
 };
 
 class nsExpandedPrincipal : public nsIExpandedPrincipal, public mozilla::BasePrincipal
@@ -95,7 +78,6 @@ public:
   NS_IMETHOD GetURI(nsIURI** aURI) override;
   NS_IMETHOD GetDomain(nsIURI** aDomain) override;
   NS_IMETHOD SetDomain(nsIURI* aDomain) override;
-  NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
   virtual bool IsOnCSSUnprefixingWhitelist() override;
   virtual void GetScriptLocation(nsACString &aStr) override;
@@ -105,6 +87,7 @@ protected:
   virtual ~nsExpandedPrincipal();
 
   bool SubsumesInternal(nsIPrincipal* aOther, DocumentDomainConsideration aConsideration) override;
+  bool MayLoadInternal(nsIURI* aURI) override;
 
 private:
   nsTArray< nsCOMPtr<nsIPrincipal> > mPrincipals;

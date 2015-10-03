@@ -1,0 +1,19 @@
+{
+    "llvm_revision": "247539",
+    "stages": "3",
+    "build_libcxx": true,
+    "build_type": "Release",
+    "assertions": false,
+    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/trunk",
+    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/trunk",
+    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/trunk",
+    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/trunk",
+    "python_path": "/usr/local/bin/python2.7",
+    "cc": "/usr/bin/clang",
+    "cxx": "/usr/bin/clang++",
+    "patches": {
+        "macosx64": ["llvm-debug-frame.patch"],
+        "linux64": ["llvm-debug-frame.patch"],
+        "linux32": ["llvm-debug-frame.patch"]
+    }
+}
