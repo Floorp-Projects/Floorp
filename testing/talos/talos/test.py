@@ -358,7 +358,6 @@ class damp(PageloaderTest):
     sps_profile_entries = 1000000
     win_counters = w7_counters = linux_counters = mac_counters = None
     filters = filter.ignore_first.prepare(1) + filter.median.prepare()
-    preferences = {'addon.test.damp.webserver': '${webserver}'}
 
 
 @register_test()
