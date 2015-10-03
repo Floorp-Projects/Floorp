@@ -1,3 +1,5 @@
+load(libdir + "immutable-prototype.js");
+
 var summary = '';
 var actual = '';
 gcPreserveCode()
@@ -12,7 +14,8 @@ var p = Proxy.create({
     has : function(id) {},
     set : function() {}
 });
-Object.prototype.__proto__ = p;
+if (globalPrototypeChainIsMutable())
+    Object.prototype.__proto__ = p;
 new TestCase;
 var expect = '';
 reportCompare(expect, actual, summary);

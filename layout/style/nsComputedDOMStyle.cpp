@@ -96,7 +96,8 @@ struct nsComputedStyleMap
 
     bool IsEnabled() const
     {
-      return nsCSSProps::IsEnabled(mProperty);
+      return nsCSSProps::IsEnabled(mProperty,
+                                   nsCSSProps::eEnabledForAllContent);
     }
   };
 

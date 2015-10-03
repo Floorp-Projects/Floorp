@@ -536,7 +536,7 @@ JSCompartment::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime t
 {
     if (objectMetadataState.is<PendingMetadata>()) {
         TraceRoot(trc,
-                  objectMetadataState.as<PendingMetadata>().unsafeGet(),
+                  objectMetadataState.as<PendingMetadata>().unsafeUnbarrieredForTracing(),
                   "on-stack object pending metadata");
     }
 
@@ -550,7 +550,7 @@ JSCompartment::traceRoots(JSTracer* trc, js::gc::GCRuntime::TraceOrMarkRuntime t
         // If a compartment is on-stack, we mark its global so that
         // JSContext::global() remains valid.
         if (enterCompartmentDepth && global_.unbarrieredGet())
-            TraceRoot(trc, global_.unsafeGet(), "on-stack compartment global");
+            TraceRoot(trc, global_.unsafeUnbarrieredForTracing(), "on-stack compartment global");
     }
 
     // Nothing below here needs to be treated as a root if we aren't marking

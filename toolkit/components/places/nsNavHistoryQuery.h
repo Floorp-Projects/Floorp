@@ -26,7 +26,7 @@ class nsNavHistoryQuery final : public nsINavHistoryQuery
 {
 public:
   nsNavHistoryQuery();
-  // note: we use a copy constructor in Clone(), the default is good enough
+  nsNavHistoryQuery(const nsNavHistoryQuery& aOther);
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYQUERY_IID)
   NS_DECL_ISUPPORTS
