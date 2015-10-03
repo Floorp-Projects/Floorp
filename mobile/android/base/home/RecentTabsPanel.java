@@ -166,6 +166,11 @@ public class RecentTabsPanel extends HomeFragment
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+
+        // Discard any additional item clicks on the list as the
+        // panel is getting destroyed (bug 1210243).
+        mList.setOnItemClickListener(null);
+
         mList = null;
         mEmptyView = null;
 

@@ -58,22 +58,70 @@ function show(id) {
   }
 }
 
+// Each time we try to load the remote <iframe>, loadedDeferred is replaced.  It
+// is resolved by a LOADED message, and rejected by a failure to load.
 var loadedDeferred = null;
 
 // We have a new load starting.  Replace the existing promise with a new one,
 // and queue up the transition to remote content.
-function deferTransitionToRemoteAfterLoaded() {
+function deferTransitionToRemoteAfterLoaded(url) {
   log.d('Waiting for LOADED message.');
+
+  // We are collecting data to understand the experience when using
+  // about:accounts to connect to the specific fxa-content-server hosted by
+  // Mozilla at accounts.firefox.com.  However, we don't want to observe what
+  // alternate servers users might be using, so we can't collect the whole URL.
+  // Here, we filter the data based on whether the user is /not/ using
+  // accounts.firefox.com, and then record just the endpoint path.  Other
+  // collected data could expose that the user is using Firefox Accounts, and
+  // together, that leaks the number of users not using accounts.firefox.com.
+  // We accept this leak: Mozilla already collects data about whether Sync (both
+  // legacy and FxA) is using a custom server in various situations: see the
+  // WEAVE_CUSTOM_* Telemetry histograms.
+  let recordResultTelemetry; // Defined only when not customized.
+  let isCustomized = Services.prefs.prefHasUserValue("identity.fxaccounts.remote.webchannel.uri");
+  if (!isCustomized) {
+    // Turn "https://accounts.firefox.com/settings?context=fx_fennec_v1&email=EMAIL" into "/settings".
+    let key = Services.io.newURI(url, null, null).path.split("?")[0];
+
+    let startTime = Cu.now();
+
+    let start = Services.telemetry.getKeyedHistogramById('ABOUT_ACCOUNTS_CONTENT_SERVER_LOAD_STARTED_COUNT');
+    start.add(key);
+
+    recordResultTelemetry = function(success) {
+      let rate = Services.telemetry.getKeyedHistogramById('ABOUT_ACCOUNTS_CONTENT_SERVER_LOADED_RATE');
+      rate.add(key, success);
+
+      // We would prefer to use TelemetryStopwatch, but it doesn't yet support
+      // keyed histograms (see Bug 1205898).  So we measure and store ourselves.
+      let delta = Cu.now() - startTime; // Floating point milliseconds, microsecond precision.
+      let time = success ?
+            Services.telemetry.getKeyedHistogramById('ABOUT_ACCOUNTS_CONTENT_SERVER_LOADED_TIME_MS') :
+            Services.telemetry.getKeyedHistogramById('ABOUT_ACCOUNTS_CONTENT_SERVER_FAILURE_TIME_MS');
+      time.add(key, Math.round(delta));
+    };
+  }
+
   loadedDeferred = PromiseUtils.defer();
   loadedDeferred.promise.then(() => {
+    log.d('Got LOADED message!');
     document.getElementById("remote").style.opacity = 0;
     show("remote");
     document.getElementById("remote").style.opacity = 1;
+    if (!isCustomized) {
+      recordResultTelemetry(true);
+    }
+  })
+  .catch((e) => {
+    log.w('Did not get LOADED message: ' + e.toString());
+    if (!isCustomized) {
+      recordResultTelemetry(false);
+    }
   });
 }
 
 function handleLoadedMessage(message) {
-  log.d('Got LOADED message!');
   loadedDeferred.resolve();
 };
 
@@ -83,7 +131,8 @@ let wrapper = {
   url: null,
 
   init: function (url) {
-    deferTransitionToRemoteAfterLoaded();
+    this.url = url;
+    deferTransitionToRemoteAfterLoaded(this.url);
 
     let iframe = document.getElementById("remote");
     this.iframe = iframe;
@@ -92,7 +141,6 @@ let wrapper = {
     docShell.QueryInterface(Ci.nsIWebProgress);
     docShell.addProgressListener(this.iframeListener, Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
 
-    this.url = url;
     // Set the iframe's location with loadURI/LOAD_FLAGS_BYPASS_HISTORY to
     // avoid having a new history entry being added.
     let webNav = iframe.frameLoader.docShell.QueryInterface(Ci.nsIWebNavigation);
@@ -100,7 +148,7 @@ let wrapper = {
   },
 
   retry: function () {
-    deferTransitionToRemoteAfterLoaded();
+    deferTransitionToRemoteAfterLoaded(this.url);
 
     let webNav = this.iframe.frameLoader.docShell.QueryInterface(Ci.nsIWebNavigation);
     webNav.loadURI(this.url, Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY, null, null, null);
@@ -131,6 +179,12 @@ let wrapper = {
       // so avoid doing that more than once
       if (failure && aStatus != Components.results.NS_BINDING_ABORTED) {
         aRequest.cancel(Components.results.NS_BINDING_ABORTED);
+        // Since after a promise is fulfilled, subsequent fulfillments are
+        // treated as no-ops, we don't care that we might see multiple failures
+        // due to multiple listener callbacks.  (It's not easy to extract this
+        // from the Promises spec, but it is widely quoted.  Start with
+        // http://stackoverflow.com/a/18218542.)
+        loadedDeferred.reject(new Error("Failed in onStateChange!"));
         show("networkError");
       }
     },
@@ -138,6 +192,8 @@ let wrapper = {
     onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
       if (aRequest && aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
         aRequest.cancel(Components.results.NS_BINDING_ABORTED);
+        // As above, we're not concerned by multiple listener callbacks.
+        loadedDeferred.reject(new Error("Failed in onLocationChange!"));
         show("networkError");
       }
     },
