@@ -11,13 +11,6 @@
 using namespace mozilla;
 
 void
-nsViewportInfo::SetDefaultZoom(const CSSToScreenScale& aDefaultZoom)
-{
-  MOZ_ASSERT(aDefaultZoom.scale >= 0.0f);
-  mDefaultZoom = aDefaultZoom;
-}
-
-void
 nsViewportInfo::ConstrainViewportValues()
 {
   // Constrain the min/max zoom as specified at:
