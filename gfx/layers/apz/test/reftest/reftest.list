@@ -12,3 +12,6 @@ chaos-mode skip-if(!asyncPan) == async-scrollbar-1-vh-rtl.html async-scrollbar-1
 # off, hence the fuzzy-if clauses.
 chaos-mode skip-if(!asyncZoom) fuzzy-if(B2G,98,82) == async-scrollbar-zoom-1.html async-scrollbar-zoom-1-ref.html
 chaos-mode skip-if(!asyncZoom) fuzzy-if(B2G,94,146) == async-scrollbar-zoom-2.html async-scrollbar-zoom-2-ref.html
+
+# Meta-viewport tag support
+chaos-mode skip-if(!asyncZoom) == initial-scale-1.html initial-scale-1-ref.html
