@@ -16,12 +16,16 @@
 
     let tests = [];
 
+    function fuzzeq(a, b, msg) {
+      ok(Math.abs(a - b) < 1e-6, msg);
+    }
+
     tests.push(function test1() {
       SpecialPowers.pushPrefEnv(scaleRatio(1.0),
         function() {
           let info = getViewportInfo(800, 480);
-          is(info.defaultZoom, 0,       "initial scale is unspecified");
-          is(info.minZoom,     0,       "minumum scale defaults to the absolute minumum");
+          fuzzeq(info.defaultZoom, 0.1, "initial scale is unspecified");
+          fuzzeq(info.minZoom, 0.1,     "minimum scale defaults to the absolute minimum");
           is(info.maxZoom,     10,      "maximum scale defaults to the absolute maximum");
           is(info.width,       980,     "width is the default width");
           is(info.height,      588,     "height is proportional to displayHeight");

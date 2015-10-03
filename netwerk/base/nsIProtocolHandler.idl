@@ -32,7 +32,7 @@ interface nsIProtocolHandlerWithDynamicFlags : nsISupports
 /**
  * nsIProtocolHandler
  */
-[scriptable, uuid(3393c327-ce70-47f1-9be3-cc312e21c012)]
+[scriptable, uuid(a87210e6-7c8c-41f7-864d-df809015193e)]
 interface nsIProtocolHandler : nsISupports
 {
     /**
@@ -287,6 +287,13 @@ interface nsIProtocolHandler : nsISupports
      * by nsMixedContentBlocker
      */
     const unsigned long URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT = (1<<18);
+
+    /**
+     * This URI may be fetched and the contents are visible to anyone. This is
+     * semantically equivalent to the resource being served with all-access CORS
+     * headers.
+     */
+    const unsigned long URI_FETCHABLE_BY_ANYONE = (1 << 19);
 };
 
 %{C++

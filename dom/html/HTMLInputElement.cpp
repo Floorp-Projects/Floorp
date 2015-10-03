@@ -2202,10 +2202,6 @@ HTMLInputElement::MozIsTextField(bool aExcludePassword, bool* aResult)
 NS_IMETHODIMP
 HTMLInputElement::SetUserInput(const nsAString& aValue)
 {
-  if (!nsContentUtils::IsCallerChrome()) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
   if (mType == NS_FORM_INPUT_FILE)
   {
     Sequence<nsString> list;

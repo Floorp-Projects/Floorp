@@ -207,9 +207,8 @@ ZoomConstraintsClient::RefreshZoomConstraints()
   if (zoomConstraints.mAllowDoubleTapZoom) {
     // If the CSS viewport is narrower than the screen (i.e. width <= device-width)
     // then we disable double-tap-to-zoom behaviour.
-    int32_t auPerDevPixel = mPresShell->GetPresContext()->AppUnitsPerDevPixel();
-    CSSToLayoutDeviceScale scale(
-      (float)nsPresContext::AppUnitsPerCSSPixel() / auPerDevPixel);
+    CSSToLayoutDeviceScale scale =
+        mPresShell->GetPresContext()->CSSToDevPixelScale();
     if ((viewportInfo.GetSize() * scale).width <= screenSize.width) {
       zoomConstraints.mAllowDoubleTapZoom = false;
     }
