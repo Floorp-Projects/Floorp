@@ -55,7 +55,6 @@ class MOZ_STACK_CLASS nsViewportInfo
     }
 
     mozilla::CSSToScreenScale GetDefaultZoom() const { return mDefaultZoom; }
-    void SetDefaultZoom(const mozilla::CSSToScreenScale& aDefaultZoom);
     mozilla::CSSToScreenScale GetMinZoom() const { return mMinZoom; }
     mozilla::CSSToScreenScale GetMaxZoom() const { return mMaxZoom; }
 
