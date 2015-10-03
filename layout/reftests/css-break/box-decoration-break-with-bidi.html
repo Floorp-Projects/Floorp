@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Testing box-decoration-break with bidi resolution</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1210877">
+  <link rel="help" href="http://dev.w3.org/csswg/css-break/#break-decoration">
+  <link rel="match" href="box-decoration-break-with-bidi-ref.html">
+  <style type="text/css">
+
+.test {
+    box-decoration-break: clone;
+    background: black;
+}
+.p {
+    padding:11px 3px 5px 7px;
+}
+.b {
+    border: 1px solid blue;
+    border-width:3px 5px 7px 11px;
+}
+.m {
+    margin:5px 7px 11px 3px;
+}
+.direction {
+    direction: rtl;
+}
+
+x {display:inline-block; width:20px; height:10px; background:lime; }
+y {display:inline-block; width:30px; height:1px; background:lime; }
+d {display:inline-block; border:10px solid red }
+    </style>
+</head>
+<body>
+
+<div style="float:left; width: 100px;">
+<span class="test p"><x></x><br><y></y></span><br><br><br>
+<span class="test b"><x></x><br><y></y></span><br><br><br>
+<span class="test p b"><x></x><br><y></y></span><br><br><br>
+<span class="test m"><x></x><br><y></y></span><br><br><br>
+<span class="test p m"><x></x><br><y></y></span><br><br><br>
+<span class="test b m"><x></x><br><y></y></span><br><br><br>
+<span class="test p b m"><x></x><br><y></y></span><br><br><br>
+
+<div class="direction"></div>  <!-- to trigger bidi resolution -->
+
+</div><div style="float:left; width: 100px; text-align:right">
+
+<span class="test p"><y></y><br><x></x></span><br><br><br>
+<span class="test b"><y></y><br><x></x></span><br><br><br>
+<span class="test p b"><y></y><br><x></x></span><br><br><br>
+<span class="test m"><y></y><br><x></x></span><br><br><br>
+<span class="test p m"><y></y><br><x></x></span><br><br><br>
+<span class="test b m"><y></y><br><x></x></span><br><br><br>
+<span class="test p b m"><y></y><br><x></x></span><br><br><br>
+
+<div class="direction"></div>  <!-- to trigger bidi resolution -->
+</div>
+
+</body>
+</html>

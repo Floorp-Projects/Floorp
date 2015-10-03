@@ -1578,19 +1578,22 @@ nsBidiPresUtils::RepositionFrame(nsIFrame* aFrame,
   // Since the visual order of frame could be different from the
   // continuation order, we need to remove any border/padding first,
   // so that we can get the correct isize of the current frame.
-  if (!aFrame->GetPrevContinuation()) {
-    frameISize -= borderPadding.IStart(frameWM);
-  }
-  if (!aFrame->GetNextContinuation()) {
-    frameISize -= borderPadding.IEnd(frameWM);
-  }
-  if (!isFirst) {
-    frameMargin.IStart(frameWM) = 0;
-    borderPadding.IStart(frameWM) = 0;
-  }
-  if (!isLast) {
-    frameMargin.IEnd(frameWM) = 0;
-    borderPadding.IEnd(frameWM) = 0;
+  if (aFrame->StyleBorder()->mBoxDecorationBreak ==
+        NS_STYLE_BOX_DECORATION_BREAK_SLICE) {
+    if (!aFrame->GetPrevContinuation()) {
+      frameISize -= borderPadding.IStart(frameWM);
+    }
+    if (!aFrame->GetNextContinuation()) {
+      frameISize -= borderPadding.IEnd(frameWM);
+    }
+    if (!isFirst) {
+      frameMargin.IStart(frameWM) = 0;
+      borderPadding.IStart(frameWM) = 0;
+    }
+    if (!isLast) {
+      frameMargin.IEnd(frameWM) = 0;
+      borderPadding.IEnd(frameWM) = 0;
+    }
   }
   frameISize += borderPadding.IStartEnd(frameWM);
 
