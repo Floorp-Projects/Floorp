@@ -6,6 +6,12 @@
 
 <!ENTITY  blockPopups.label           "Block pop-up windows">
 <!ENTITY  blockPopups.accesskey       "B">
+
+<!ENTITY  notificationsPolicy.label            "Notifications">
+<!ENTITY  notificationsPolicyDesc.label        "Choose which sites are allowed to show notifications">
+<!ENTITY  notificationsPolicyButton.accesskey  "h">
+<!ENTITY  notificationsPolicyButton.label      "Choose…">
+
 <!ENTITY  popupExceptions.label       "Exceptions…">
 <!ENTITY  popupExceptions.accesskey   "E">
 
