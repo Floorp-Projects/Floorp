@@ -543,15 +543,12 @@ public:
     return kIDLNameSortPositionTable[aProperty];
   }
 
-public:
-
   static bool IsEnabled(nsCSSProperty aProperty) {
     MOZ_ASSERT(0 <= aProperty && aProperty < eCSSProperty_COUNT_with_aliases,
                "out of range");
     return gPropertyEnabled[aProperty];
   }
 
-private:
   // A table for the use counter associated with each CSS property.  If a
   // property does not have a use counter defined in UseCounters.conf, then
   // its associated entry is |eUseCounter_UNKNOWN|.
