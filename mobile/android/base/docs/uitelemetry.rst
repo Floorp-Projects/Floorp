@@ -123,6 +123,21 @@ Events
 ``neterror.1``
   When the user performs actions on the in-content network error page. This should probably be a ``Session``, but it's difficult to start and stop the session reliably.
 
+``panel.hide.1``
+  Hide a built-in home panel.
+
+``panel.move.1``
+  Move a home panel up or down.
+
+``panel.remove.1``
+  Remove a custom home panel.
+
+``panel.setdefault.1``
+  Set default home panel.
+
+``panel.show.1``
+  Show a hidden built-in home panel.
+
 ``pin.1``, ``unpin.1``
   Sent when the user pinned or unpinned a top site.
 
@@ -148,9 +163,6 @@ Events
 
 ``search.setdefault.1``
   Sent when the user sets a search engine to be the default.
-
-``setdefault.1``
-  Set default home panel.
 
 ``share.1``
   Sharing content.
