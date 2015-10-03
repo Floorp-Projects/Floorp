@@ -17,6 +17,12 @@ nsViewportInfo::ConstrainViewportValues()
   // dev.w3.org/csswg/css-device-adapt section 6.2
   mMaxZoom = std::max(mMinZoom, mMaxZoom);
 
-  mDefaultZoom = mDefaultZoom < mMaxZoom ? mDefaultZoom : mMaxZoom;
-  mDefaultZoom = mDefaultZoom > mMinZoom ? mDefaultZoom : mMinZoom;
+  if (mDefaultZoom > mMaxZoom) {
+    mDefaultZoomValid = false;
+    mDefaultZoom = mMaxZoom;
+  }
+  if (mDefaultZoom < mMinZoom) {
+    mDefaultZoomValid = false;
+    mDefaultZoom = mMinZoom;
+  }
 }
