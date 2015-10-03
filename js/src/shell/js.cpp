@@ -5760,13 +5760,6 @@ NewGlobalObject(JSContext* cx, JS::CompartmentOptions& options,
             return nullptr;
 #endif
 
-        bool succeeded;
-        if (!JS_SetImmutablePrototype(cx, glob, &succeeded))
-            return nullptr;
-        MOZ_ASSERT(succeeded,
-                   "a fresh, unexposed global object is always capable of "
-                   "having its [[Prototype]] be immutable");
-
 #ifdef JS_HAS_CTYPES
         if (!JS_InitCTypesClass(cx, glob))
             return nullptr;
