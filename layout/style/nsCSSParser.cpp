@@ -1684,10 +1684,7 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
 
   // Check for unknown or preffed off properties
   if (eCSSProperty_UNKNOWN == aPropID ||
-      !(nsCSSProps::IsEnabled(aPropID) ||
-        (mUnsafeRulesEnabled &&
-         nsCSSProps::PropHasFlags(aPropID,
-                                  CSS_PROPERTY_ALWAYS_ENABLED_IN_UA_SHEETS)))) {
+      !nsCSSProps::IsEnabled(aPropID, PropertyEnabledState())) {
     NS_ConvertASCIItoUTF16 propName(nsCSSProps::GetStringValue(aPropID));
     REPORT_UNEXPECTED_P(PEUnknownProperty, propName);
     REPORT_UNEXPECTED(PEDeclDropped);
@@ -2991,7 +2988,8 @@ CSSParserImpl::ParseAtRule(RuleAppendFunc aAppendFunc,
     parseFunc = &CSSParserImpl::ParsePageRule;
     newSection = eCSSSection_General;
 
-  } else if ((nsCSSProps::IsEnabled(eCSSPropertyAlias_MozAnimation) &&
+  } else if ((nsCSSProps::IsEnabled(eCSSPropertyAlias_MozAnimation,
+                                    PropertyEnabledState()) &&
               mToken.mIdent.LowerCaseEqualsLiteral("-moz-keyframes")) ||
              mToken.mIdent.LowerCaseEqualsLiteral("keyframes")) {
     parseFunc = &CSSParserImpl::ParseKeyframesRule;
