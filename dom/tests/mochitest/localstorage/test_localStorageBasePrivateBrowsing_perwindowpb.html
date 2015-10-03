@@ -246,7 +246,7 @@ function doTest() {
         prefBranch.clearUserPref("browser.startup.homepage_override.mstone");
         SimpleTest.finish();
       };
-      SimpleTest.executeSoon(function() testOnWindow(true, callback));
+      SimpleTest.executeSoon(() => testOnWindow(true, callback));
     });
   });
 }
