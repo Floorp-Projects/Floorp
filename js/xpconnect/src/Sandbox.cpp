@@ -1040,25 +1040,6 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
     {
         JSAutoCompartment ac(cx, sandbox);
 
-        nsCOMPtr<nsIScriptObjectPrincipal> sbp =
-            new SandboxPrivate(principal, sandbox);
-
-        // Pass on ownership of sbp to |sandbox|.
-        JS_SetPrivate(sandbox, sbp.forget().take());
-
-        {
-            // Don't try to mirror standard class properties, if we're using a
-            // mirroring sandbox.  (This is meaningless for non-mirroring
-            // sandboxes.)
-            AutoSkipPropertyMirroring askip(CompartmentPrivate::Get(sandbox));
-
-            // Resolve standard classes so that |Object.prototype| is
-            // instantiated before any prototype-splicing below.  This is
-            // necessary for both kinds of sandboxes.
-            if (!JS_EnumerateStandardClasses(cx, sandbox))
-                return NS_ERROR_XPC_UNEXPECTED;
-        }
-
         if (options.proto) {
             bool ok = JS_WrapObject(cx, &options.proto);
             if (!ok)
@@ -1093,10 +1074,16 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
                     return NS_ERROR_OUT_OF_MEMORY;
             }
 
-            ok = JS_SplicePrototype(cx, sandbox, options.proto);
+            ok = JS_SetPrototype(cx, sandbox, options.proto);
             if (!ok)
                 return NS_ERROR_XPC_UNEXPECTED;
         }
+
+        nsCOMPtr<nsIScriptObjectPrincipal> sbp =
+            new SandboxPrivate(principal, sandbox);
+
+        // Pass on ownership of sbp to |sandbox|.
+        JS_SetPrivate(sandbox, sbp.forget().take());
 
         // Don't try to mirror the properties that are set below.
         AutoSkipPropertyMirroring askip(CompartmentPrivate::Get(sandbox));
@@ -1126,6 +1113,10 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
         // Promise is supposed to be part of ES, and therefore should appear on
         // every global.
         if (!dom::PromiseBinding::GetConstructorObject(cx, sandbox))
+            return NS_ERROR_XPC_UNEXPECTED;
+
+        // Resolve standard classes eagerly to avoid triggering mirroring hooks for them.
+        if (options.writeToGlobalPrototype && !JS_EnumerateStandardClasses(cx, sandbox))
             return NS_ERROR_XPC_UNEXPECTED;
     }
 
