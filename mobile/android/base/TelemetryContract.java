@@ -49,8 +49,20 @@ public interface TelemetryContract {
         LOCALE_BROWSER_SELECTED("locale.browser.selected.1"),
         LOCALE_BROWSER_UNSELECTED("locale.browser.unselected.1"),
 
-        // Set default panel.
-        PANEL_SET_DEFAULT("setdefault.1"),
+        // Hide a built-in home panel.
+        PANEL_HIDE("panel.hide.1"),
+
+        // Move a home panel up or down.
+        PANEL_MOVE("panel.move.1"),
+
+        // Remove a custom home panel.
+        PANEL_REMOVE("panel.remove.1"),
+
+        // Set default home panel.
+        PANEL_SET_DEFAULT("panel.setdefault.1"),
+
+        // Show a hidden built-in home panel.
+        PANEL_SHOW("panel.show.1"),
 
         // Pinning an item.
         PIN("pin.1"),

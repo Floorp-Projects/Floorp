@@ -165,7 +165,7 @@ public class PanelsPreferenceCategory extends CustomListCategory {
         mConfigEditor.setDefault(id);
         mConfigEditor.apply();
 
-        Telemetry.sendUIEvent(TelemetryContract.Event.PANEL_SET_DEFAULT, Method.NONE, id);
+        Telemetry.sendUIEvent(TelemetryContract.Event.PANEL_SET_DEFAULT, Method.DIALOG, id);
     }
 
     @Override
@@ -177,8 +177,11 @@ public class PanelsPreferenceCategory extends CustomListCategory {
 
     @Override
     public void uninstall(CustomListPreference pref) {
-        mConfigEditor.uninstall(pref.getKey());
+        final String id = pref.getKey();
+        mConfigEditor.uninstall(id);
         mConfigEditor.apply();
+
+        Telemetry.sendUIEvent(TelemetryContract.Event.PANEL_REMOVE, Method.DIALOG, id);
 
         super.uninstall(pref);
     }
@@ -189,6 +192,9 @@ public class PanelsPreferenceCategory extends CustomListCategory {
             final String panelKey = pref.getKey();
             mConfigEditor.moveTo(panelKey, panelIndex - 1);
             final State state = mConfigEditor.apply();
+
+            Telemetry.sendUIEvent(TelemetryContract.Event.PANEL_MOVE, Method.DIALOG, panelKey);
+
             refresh(state, panelKey);
         }
     }
@@ -199,6 +205,9 @@ public class PanelsPreferenceCategory extends CustomListCategory {
             final String panelKey = pref.getKey();
             mConfigEditor.moveTo(panelKey, panelIndex + 1);
             final State state = mConfigEditor.apply();
+
+            Telemetry.sendUIEvent(TelemetryContract.Event.PANEL_MOVE, Method.DIALOG, panelKey);
+
             refresh(state, panelKey);
         }
     }
@@ -211,8 +220,15 @@ public class PanelsPreferenceCategory extends CustomListCategory {
      * @param toHide New hidden state of the preference
      */
     protected void setHidden(PanelsPreference pref, boolean toHide) {
-        mConfigEditor.setDisabled(pref.getKey(), toHide);
+        final String id = pref.getKey();
+        mConfigEditor.setDisabled(id, toHide);
         mConfigEditor.apply();
+
+        if (toHide) {
+            Telemetry.sendUIEvent(TelemetryContract.Event.PANEL_HIDE, Method.DIALOG, id);
+        } else {
+            Telemetry.sendUIEvent(TelemetryContract.Event.PANEL_SHOW, Method.DIALOG, id);
+        }
 
         pref.setHidden(toHide);
         setDefaultFromConfig();
