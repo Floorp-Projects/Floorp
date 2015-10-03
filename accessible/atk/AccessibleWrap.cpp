@@ -1115,6 +1115,10 @@ GetInterfacesForProxy(ProxyAccessible* aProxy, uint32_t aInterfaces)
   if (aInterfaces & Interfaces::DOCUMENT)
     interfaces |= 1 << MAI_INTERFACE_DOCUMENT;
 
+  if (aInterfaces & Interfaces::SELECTION) {
+    interfaces |= 1 << MAI_INTERFACE_SELECTION;
+  }
+
   return interfaces;
 }
 

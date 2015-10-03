@@ -41,15 +41,15 @@ function testStringEncode()
 function testToJSON() {
   var obj1 = {a:1};
   var obj2 = {foo:"bar"};
-  do_check_eq(nativeJSON.encode({toJSON: function() obj1}), '{"a":1}');
-  do_check_eq(nativeJSON.encode({toJSON: function() obj2}), '{"foo":"bar"}');
+  do_check_eq(nativeJSON.encode({toJSON: () => obj1}), '{"a":1}');
+  do_check_eq(nativeJSON.encode({toJSON: () => obj2}), '{"foo":"bar"}');
   
-  do_check_eq(nativeJSON.encode({toJSON: function() null}), null);
-  do_check_eq(nativeJSON.encode({toJSON: function() ""}), null);
-  do_check_eq(nativeJSON.encode({toJSON: function() undefined }), null);
-  do_check_eq(nativeJSON.encode({toJSON: function() 5}), null);
-  do_check_eq(nativeJSON.encode({toJSON: function() function(){}}), null);
-  do_check_eq(nativeJSON.encode({toJSON: function() dump}), null);
+  do_check_eq(nativeJSON.encode({toJSON: () => null}), null);
+  do_check_eq(nativeJSON.encode({toJSON: () => ""}), null);
+  do_check_eq(nativeJSON.encode({toJSON: () => undefined }), null);
+  do_check_eq(nativeJSON.encode({toJSON: () => 5}), null);
+  do_check_eq(nativeJSON.encode({toJSON: () => function(){}}), null);
+  do_check_eq(nativeJSON.encode({toJSON: () => dump}), null);
 }
 
 function testThrowingToJSON() {

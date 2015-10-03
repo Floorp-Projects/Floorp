@@ -29,8 +29,8 @@ namespace docshell {
   NS_IMETHOD GetUpdateDomain(nsACString & aUpdateDomain) override { return !_to ? NS_ERROR_NULL_POINTER : _to->GetUpdateDomain(aUpdateDomain); } \
   NS_IMETHOD GetManifestURI(nsIURI **aManifestURI) override { return !_to ? NS_ERROR_NULL_POINTER : _to->GetManifestURI(aManifestURI); } \
   NS_IMETHOD GetSucceeded(bool *aSucceeded) override { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSucceeded(aSucceeded); } \
-  NS_IMETHOD InitPartial(nsIURI *aManifestURI, const nsACString & aClientID, nsIURI *aDocumentURI) override { return !_to ? NS_ERROR_NULL_POINTER : _to->InitPartial(aManifestURI, aClientID, aDocumentURI); } \
-  NS_IMETHOD InitForUpdateCheck(nsIURI *aManifestURI, uint32_t aAppID, bool aInBrowser, nsIObserver *aObserver) override { return !_to ? NS_ERROR_NULL_POINTER : _to->InitForUpdateCheck(aManifestURI, aAppID, aInBrowser, aObserver); } \
+  NS_IMETHOD InitPartial(nsIURI *aManifestURI, const nsACString & aClientID, nsIURI *aDocumentURI, nsIPrincipal *aLoadingPrincipal) override { return !_to ? NS_ERROR_NULL_POINTER : _to->InitPartial(aManifestURI, aClientID, aDocumentURI, aLoadingPrincipal); } \
+  NS_IMETHOD InitForUpdateCheck(nsIURI *aManifestURI, nsIPrincipal* aLoadingPrincipal, uint32_t aAppID, bool aInBrowser, nsIObserver *aObserver) override { return !_to ? NS_ERROR_NULL_POINTER : _to->InitForUpdateCheck(aManifestURI, aLoadingPrincipal, aAppID, aInBrowser, aObserver); } \
   NS_IMETHOD AddDynamicURI(nsIURI *aURI) override { return !_to ? NS_ERROR_NULL_POINTER : _to->AddDynamicURI(aURI); } \
   NS_IMETHOD AddObserver(nsIOfflineCacheUpdateObserver *aObserver, bool aHoldWeak) override { return !_to ? NS_ERROR_NULL_POINTER : _to->AddObserver(aObserver, aHoldWeak); } \
   NS_IMETHOD RemoveObserver(nsIOfflineCacheUpdateObserver *aObserver) override { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveObserver(aObserver); } \
@@ -50,8 +50,9 @@ private:
 public:
     NS_ADJUSTED_FORWARD_NSIOFFLINECACHEUPDATE(EnsureUpdate())
     NS_IMETHOD Schedule(void) override;
-    NS_IMETHOD Init(nsIURI *aManifestURI, 
+    NS_IMETHOD Init(nsIURI *aManifestURI,
                     nsIURI *aDocumentURI,
+                    nsIPrincipal* aLoadingPrincipal,
                     nsIDOMDocument *aDocument,
                     nsIFile *aCustomProfileDir,
                     uint32_t aAppID,
@@ -72,6 +73,7 @@ private:
     /* Document that requested this update */
     nsCOMPtr<nsIDOMDocument> mDocument;
     nsCOMPtr<nsIURI> mDocumentURI;
+    nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
 };
 
 } // namespace docshell

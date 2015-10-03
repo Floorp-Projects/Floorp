@@ -4,6 +4,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 var httpServer = null;
 // Need to randomize, because apparently no one clears our cache
 var randomPath = "/redirect/" + Math.random();
+var systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 
 XPCOMUtils.defineLazyGetter(this, "randomURI", function() {
   return "http://localhost:" + httpServer.identity.primaryPort + randomPath;
@@ -18,7 +19,7 @@ function make_channel(url, callback, ctx) {
                          "",
                          null,
                          null,      // aLoadingNode
-                         Services.scriptSecurityManager.getSystemPrincipal(),
+                         systemPrincipal,
                          null,      // aTriggeringPrincipal
                          Ci.nsILoadInfo.SEC_NORMAL,
                          Ci.nsIContentPolicy.TYPE_OTHER);
@@ -112,6 +113,7 @@ function run_test()
                              httpServer.identity.primaryPort + "/manifest"),
                     make_uri("http://localhost:" +
                              httpServer.identity.primaryPort + "/masterEntry"),
+                    systemPrincipal,
                     null);
 
   do_test_pending();

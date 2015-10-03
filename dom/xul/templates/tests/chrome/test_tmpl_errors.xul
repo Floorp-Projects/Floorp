@@ -33,37 +33,37 @@ var tests = [
 
 // <queryset> used in invalid location
 {
-  pre: function(template) template.insertBefore(document.createElement("queryset"), template.lastChild),
+  pre: template => template.insertBefore(document.createElement("queryset"), template.lastChild),
   error: "Error parsing template: unexpected <queryset> element",
-  post: function(queryset) queryset.parentNode.removeChild(queryset)
+  post: queryset => queryset.parentNode.removeChild(queryset)
 },
 
 // no member variable found
 {
-  pre: function(template) $("action").firstChild.removeAttribute("uri"),
+  pre: template => $("action").firstChild.removeAttribute("uri"),
   error: "Error parsing template: no member variable found. Action body should have an element with uri attribute",
-  post: function() $("action").firstChild.setAttribute("uri", "?child")
+  post: () => $("action").firstChild.setAttribute("uri", "?child")
 },
 
 // bad binding subject
 {
-  pre: function(template) $("binding").removeAttribute("subject"),
+  pre: template => $("binding").removeAttribute("subject"),
   error: "Error parsing template: <binding> requires a variable for its subject attribute",
-  post: function() $("binding").setAttribute("subject", "?child"),
+  post: () => $("binding").setAttribute("subject", "?child"),
 },
 
 // bad binding predicate
 {
-  pre: function(template) $("binding").removeAttribute("predicate"),
+  pre: template => $("binding").removeAttribute("predicate"),
   error: "Error parsing template: <binding> element is missing a predicate attribute",
-  post: function() $("binding").setAttribute("predicate", "http://www.some-fictitious-zoo.com/rdf#name"),
+  post: () => $("binding").setAttribute("predicate", "http://www.some-fictitious-zoo.com/rdf#name"),
 },
 
 // bad binding object
 {
-  pre: function(template) $("binding").setAttribute("object", "blah"),
+  pre: template => $("binding").setAttribute("object", "blah"),
   error: "Error parsing template: <binding> requires a variable for its object attribute",
-  post: function() $("binding").setAttribute("object", "?name"),
+  post: () => $("binding").setAttribute("object", "?name"),
 },
 
 // where condition missing a subject
@@ -120,65 +120,65 @@ var tests = [
 
 // bad member container
 {
-  pre: function(template) $("member").setAttribute("container", "blah"),
+  pre: template => $("member").setAttribute("container", "blah"),
   error: "Error parsing template: <member> requires a variable for its container attribute",
-  post: function() $("member").setAttribute("container", "?uri"),
+  post: () => $("member").setAttribute("container", "?uri"),
 },
 
 // bad member child
 {
-  pre: function(template) $("member").setAttribute("child", "blah"),
+  pre: template => $("member").setAttribute("child", "blah"),
   error: "Error parsing template: <member> requires a variable for its child attribute",
-  post: function() $("member").setAttribute("child", "?child"),
+  post: () => $("member").setAttribute("child", "?child"),
 },
 
 // bad triple subject
 {
-  pre: function(template) $("triple").removeAttribute("subject"),
+  pre: template => $("triple").removeAttribute("subject"),
   error: "Error parsing template: <triple> requires a variable for its subject attribute",
-  post: function() $("triple").setAttribute("subject", "?child"),
+  post: () => $("triple").setAttribute("subject", "?child"),
 },
 
 // missing triple predicate
 {
-  pre: function(template) $("triple").removeAttribute("predicate"),
+  pre: template => $("triple").removeAttribute("predicate"),
   error: "Error parsing template: <triple> should have a non-variable value as a predicate",
-  post: function() $("triple").setAttribute("predicate", "http://www.some-fictitious-zoo.com/rdf#name"),
+  post: () => $("triple").setAttribute("predicate", "http://www.some-fictitious-zoo.com/rdf#name"),
 },
 
 // bad triple predicate
 {
-  pre: function(template) $("triple").setAttribute("predicate", "?predicate"),
+  pre: template => $("triple").setAttribute("predicate", "?predicate"),
   error: "Error parsing template: <triple> should have a non-variable value as a predicate",
-  post: function() $("triple").setAttribute("predicate", "http://www.some-fictitious-zoo.com/rdf#name"),
+  post: () => $("triple").setAttribute("predicate", "http://www.some-fictitious-zoo.com/rdf#name"),
 },
 
 // bad triple object
 {
-  pre: function(template) $("triple").removeAttribute("object"),
+  pre: template => $("triple").removeAttribute("object"),
   error: "Error parsing template: <triple> requires a variable for its object attribute",
-  post: function() $("triple").setAttribute("object", "?name"),
+  post: () => $("triple").setAttribute("object", "?name"),
 },
 
 // content not first element in query
 {
   pre: function(template) { var content = $("content"); content.parentNode.appendChild(content); return content; },
   error: "Error parsing template: expected <content> to be first",
-  post: function(content) content.parentNode.insertBefore(content, content.parentNode.firstChild),
+  post: content => content.parentNode.insertBefore(content, content.parentNode.firstChild),
 },
 
 // member container variable not bound
 {
-  pre: function(template) $("member").removeAttribute("container"),
+  pre: template => $("member").removeAttribute("container"),
   error: "Error parsing template: neither container or child variables of <member> has a value",
-  post: function() $("member").setAttribute("container", "?uri"),
+  post: () => $("member").setAttribute("container", "?uri"),
 },
 
 // neither triple subject or object variable are bound
 {
-  pre: function(template) $("triple").setAttribute("subject", "?blah"),
+  pre: template => $("triple").setAttribute("subject", "?blah"),
   error: "Error parsing template: neither subject or object variables of <triple> has a value",
-  post: function() $("triple").setAttribute("subject", "?child"),
+  post: () => $("triple").setAttribute("subject", "?child"),
 },
 
 // neither triple subject or object variable are bound
