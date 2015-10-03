@@ -26,6 +26,7 @@ class OfflineCacheUpdateParent : public POfflineCacheUpdateParent
                                , public nsILoadContext
 {
     typedef mozilla::ipc::URIParams URIParams;
+    typedef mozilla::ipc::PrincipalInfo PrincipalInfo;
 
 public:
     NS_DECL_ISUPPORTS
@@ -35,6 +36,7 @@ public:
     nsresult
     Schedule(const URIParams& manifestURI,
              const URIParams& documentURI,
+             const PrincipalInfo& loadingPrincipalInfo,
              const bool& stickDocument);
 
     void

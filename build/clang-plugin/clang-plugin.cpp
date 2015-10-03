@@ -103,6 +103,11 @@ private:
     virtual void run(const MatchFinder::MatchResult &Result);
   };
 
+  class RefCountedCopyConstructorChecker : public MatchFinder::MatchCallback {
+  public:
+    virtual void run(const MatchFinder::MatchResult &Result);
+  };
+
   ScopeChecker scopeChecker;
   ArithmeticArgChecker arithmeticArgChecker;
   TrivialCtorDtorChecker trivialCtorDtorChecker;
@@ -116,6 +121,7 @@ private:
   ExplicitImplicitChecker explicitImplicitChecker;
   NoAutoTypeChecker noAutoTypeChecker;
   NoExplicitMoveConstructorChecker noExplicitMoveConstructorChecker;
+  RefCountedCopyConstructorChecker refCountedCopyConstructorChecker;
   MatchFinder astMatcher;
 };
 
@@ -615,8 +621,6 @@ AST_MATCHER(MemberExpr, isAddRefOrRelease) {
 }
 
 /// This matcher will select classes which are refcounted.
-AST_MATCHER(QualType, isRefCounted) { return isClassRefCounted(Node); }
-
 AST_MATCHER(CXXRecordDecl, hasRefCntMember) {
   return isClassRefCounted(&Node) && getClassRefCntMember(&Node);
 }
@@ -671,6 +675,10 @@ AST_MATCHER(QualType, autoNonAutoableType) {
 
 AST_MATCHER(CXXConstructorDecl, isExplicitMoveConstructor) {
   return Node.isExplicit() && Node.isMoveConstructor();
+}
+
+AST_MATCHER(CXXConstructorDecl, isCompilerProvidedCopyConstructor) {
+  return !Node.isUserProvided() && Node.isCopyConstructor();
 }
 }
 }
@@ -950,6 +958,12 @@ DiagnosticsMatcher::DiagnosticsMatcher() {
 
   astMatcher.addMatcher(constructorDecl(isExplicitMoveConstructor()).bind("node"),
                         &noExplicitMoveConstructorChecker);
+
+  astMatcher.addMatcher(constructExpr(hasDeclaration(
+                                          constructorDecl(
+                                              isCompilerProvidedCopyConstructor(),
+                                              ofClass(hasRefCntMember())))).bind("node"),
+                        &refCountedCopyConstructorChecker);
 }
 
 // These enum variants determine whether an allocation has occured in the code.
@@ -1372,6 +1386,28 @@ void DiagnosticsMatcher::NoExplicitMoveConstructorChecker::run(
     Result.Nodes.getNodeAs<CXXConstructorDecl>("node");
 
   Diag.Report(D->getLocation(), ErrorID);
+}
+
+void DiagnosticsMatcher::RefCountedCopyConstructorChecker::run(
+    const MatchFinder::MatchResult &Result) {
+  DiagnosticsEngine &Diag = Result.Context->getDiagnostics();
+  unsigned ErrorID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Error, "Invalid use of compiler-provided copy constructor "
+                            "on refcounted type");
+  unsigned NoteID = Diag.getDiagnosticIDs()->getCustomDiagID(
+      DiagnosticIDs::Note, "The default copy constructor also copies the "
+                           "default mRefCnt property, leading to reference "
+                           "count imbalance issues. Please provide your own "
+                           "copy constructor which only copies the fields which "
+                           "need to be copied");
+
+  // Everything we needed to know was checked in the matcher - we just report
+  // the error here
+  const CXXConstructExpr *E =
+    Result.Nodes.getNodeAs<CXXConstructExpr>("node");
+
+  Diag.Report(E->getLocation(), ErrorID);
+  Diag.Report(E->getLocation(), NoteID);
 }
 
 class MozCheckAction : public PluginASTAction {

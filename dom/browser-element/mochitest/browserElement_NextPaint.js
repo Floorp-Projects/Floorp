@@ -29,7 +29,7 @@ function runTest() {
     });
 
     // Force the iframe to repaint.
-    SimpleTest.executeSoon(function () iframe.src += '#next');
+    SimpleTest.executeSoon(() => iframe.src += '#next');
   });
 
   // Remove the first listener to make sure it's not called.

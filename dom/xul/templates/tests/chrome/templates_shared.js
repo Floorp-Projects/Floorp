@@ -440,7 +440,7 @@ function compareConsoleMessages()
   var consoleService = Components.classes["@mozilla.org/consoleservice;1"].
                          getService(Components.interfaces.nsIConsoleService);
   var messages = consoleService.getMessageArray() || [];
-  messages = messages.map(function (m) m.message);
+  messages = messages.map(m => m.message);
   // Copy to avoid modifying expectedConsoleMessages
   var expect = expectedConsoleMessages.concat();
   for (var m = 0; m < messages.length; m++) {

@@ -119,7 +119,7 @@ class WeakMapBase {
 };
 
 template <typename T>
-static T extractUnbarriered(BarrieredBase<T> v)
+static T extractUnbarriered(WriteBarrieredBase<T> v)
 {
     return v.get();
 }

@@ -42,13 +42,13 @@ onhashchange = function() {
   if (!second) {
     second = true;
     is(location.hash, "#x", "First map");
-    SimpleTest.waitForFocus(function() synthesizeMouse(images[1], 50, 50, {}));
+    SimpleTest.waitForFocus(() => synthesizeMouse(images[1], 50, 50, {}));
   } else {
     is(location.hash, "#y", "Second map");
     SimpleTest.finish();
   }
 };
-SimpleTest.waitForFocus(function() synthesizeMouse(images[0], 50, 50, {}));
+SimpleTest.waitForFocus(() => synthesizeMouse(images[0], 50, 50, {}));
 </script>
 </pre>
 </body>
