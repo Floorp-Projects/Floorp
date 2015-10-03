@@ -28,6 +28,7 @@ PRLogModuleInfo* gMP3DemuxerLog;
 
 using mozilla::media::TimeUnit;
 using mozilla::media::TimeIntervals;
+using mp4_demuxer::ByteReader;
 
 namespace mozilla {
 namespace mp3 {
@@ -374,45 +375,50 @@ MP3TrackDemuxer::FindNextFrame() {
 
   uint8_t buffer[BUFFER_SIZE];
   int32_t read = 0;
-  const uint8_t* frameBeg = nullptr;
-  const uint8_t* bufferEnd = nullptr;
 
-  while (frameBeg == bufferEnd) {
+  bool foundFrame = false;
+  int64_t frameHeaderOffset = 0;
+
+  // Check whether we've found a valid MPEG frame.
+  while (!foundFrame) {
     if ((!mParser.FirstFrame().Length() &&
          mOffset - mParser.ID3Header().Size() > MAX_SKIPPED_BYTES) ||
         (read = Read(buffer, mOffset, BUFFER_SIZE)) == 0) {
       // This is not a valid MPEG audio stream or we've reached EOS, give up.
       break;
     }
-    NS_ENSURE_TRUE(mOffset + read > mOffset, MediaByteRange(0, 0));
-    mOffset += read;
-    bufferEnd = buffer + read;
-    const FrameParserResult parseResults = mParser.Parse(buffer, bufferEnd);
-    frameBeg = parseResults.mBufferPos;
 
-    // If mBytesToSkip is > 0, this skips the rest of an ID3 tag which stretches
-    // beyond the current buffer.
-    NS_ENSURE_TRUE(mOffset + parseResults.mBytesToSkip >= mOffset, MediaByteRange(0, 0));
-    mOffset += parseResults.mBytesToSkip;
+    ByteReader reader(buffer, read);
+    uint32_t bytesToSkip = 0;
+    foundFrame = mParser.Parse(&reader, &bytesToSkip);
+    frameHeaderOffset = mOffset + reader.Offset() - FrameParser::FrameHeader::SIZE;
+
+    // If we've found neither an MPEG frame header nor an ID3v2 tag,
+    // the reader shouldn't have any bytes remaining.
+    MOZ_ASSERT(foundFrame || bytesToSkip || !reader.Remaining());
+    reader.DiscardRemaining();
+
+    // Advance mOffset by the amount of bytes read and if necessary,
+    // skip an ID3v2 tag which stretches beyond the current buffer.
+    NS_ENSURE_TRUE(mOffset + read + bytesToSkip > mOffset, MediaByteRange(0, 0));
+    mOffset += read + bytesToSkip;
   }
 
-  if (frameBeg == bufferEnd || !mParser.CurrentFrame().Length()) {
-    MP3DEMUXER_LOG("FindNext() Exit frameBeg=%p bufferEnd=%p "
-                   "mParser.CurrentFrame().Length()=%d ",
-                   frameBeg, bufferEnd, mParser.CurrentFrame().Length());
+  if (!foundFrame || !mParser.CurrentFrame().Length()) {
+    MP3DEMUXER_LOG("FindNext() Exit foundFrame=%d mParser.CurrentFrame().Length()=%d ",
+                   foundFrame, mParser.CurrentFrame().Length());
     return { 0, 0 };
   }
 
   MP3DEMUXER_LOGV("FindNext() End mOffset=%" PRIu64 " mNumParsedFrames=%" PRIu64
-                  " mFrameIndex=%" PRId64 " bufferEnd=%p frameBeg=%p"
+                  " mFrameIndex=%" PRId64 " frameHeaderOffset=%d"
                   " mTotalFrameLen=%" PRIu64 " mSamplesPerFrame=%d mSamplesPerSecond=%d "
                   "mChannels=%d",
-                  mOffset, mNumParsedFrames, mFrameIndex, bufferEnd, frameBeg,
+                  mOffset, mNumParsedFrames, mFrameIndex, frameHeaderOffset,
                   mTotalFrameLen, mSamplesPerFrame,
                   mSamplesPerSecond, mChannels);
 
-  const int64_t nextBeg = mOffset - (bufferEnd - frameBeg) + 1;
-  return { nextBeg, nextBeg + mParser.CurrentFrame().Length() };
+  return { frameHeaderOffset, frameHeaderOffset + mParser.CurrentFrame().Length() };
 }
 
 bool
@@ -594,49 +600,49 @@ FrameParser::VBRInfo() const {
   return mVBRHeader;
 }
 
-FrameParserResult
-FrameParser::Parse(const uint8_t* aBeg, const uint8_t* aEnd) {
-  if (!aBeg || !aEnd || aBeg >= aEnd) {
-    return { aEnd, 0 };
-  }
+bool
+FrameParser::Parse(ByteReader* aReader, uint32_t* aBytesToSkip) {
+  MOZ_ASSERT(aReader && aBytesToSkip);
+  *aBytesToSkip = 0;
 
   if (!mID3Parser.Header().Size() && !mFirstFrame.Length()) {
     // No MP3 frames have been parsed yet, look for ID3v2 headers at file begin.
     // ID3v1 tags may only be at file end.
     // TODO: should we try to read ID3 tags at end of file/mid-stream, too?
-    const uint8_t* id3Beg = mID3Parser.Parse(aBeg, aEnd);
-    if (id3Beg != aEnd) {
+    const size_t prevReaderOffset = aReader->Offset();
+    const uint32_t tagSize = mID3Parser.Parse(aReader);
+    if (tagSize) {
       // ID3 tag found, skip past it.
-      const uint32_t tagSize = ID3Parser::ID3Header::SIZE + mID3Parser.Header().Size() +
-                               mID3Parser.Header().FooterSize();
-      const uint32_t remainingBuffer = aEnd - id3Beg;
-      if (tagSize > remainingBuffer) {
-        // Skipping across the ID3 tag would take us past the end of the buffer, therefore we
+      const uint32_t skipSize = tagSize - ID3Parser::ID3Header::SIZE;
+
+      if (skipSize > aReader->Remaining()) {
+        // Skipping across the ID3v2 tag would take us past the end of the buffer, therefore we
         // return immediately and let the calling function handle skipping the rest of the tag.
         MP3DEMUXER_LOGV("ID3v2 tag detected, size=%d, "
                         "needing to skip %d bytes past the current buffer",
-                        tagSize, tagSize - remainingBuffer);
-        return { aEnd, tagSize - remainingBuffer };
+                        tagSize, skipSize - aReader->Remaining());
+        *aBytesToSkip = skipSize - aReader->Remaining();
+        return false;
       }
       MP3DEMUXER_LOGV("ID3v2 tag detected, size=%d", tagSize);
-      aBeg = id3Beg + tagSize;
+      aReader->Read(skipSize);
+    } else {
+      // No ID3v2 tag found, rewinding reader in order to search for a MPEG frame header.
+      aReader->Seek(prevReaderOffset);
     }
   }
 
-  while (aBeg < aEnd && !mFrame.ParseNext(*aBeg)) {
-    ++aBeg;
-  }
+  while (aReader->CanRead8() && !mFrame.ParseNext(aReader->ReadU8())) { }
 
   if (mFrame.Length()) {
     // MP3 frame found.
     if (!mFirstFrame.Length()) {
       mFirstFrame = mFrame;
     }
-    // Move to the frame header begin to allow for whole-frame parsing.
-    aBeg -= FrameHeader::SIZE;
-    return { aBeg, 0 };
+    // Indicate success.
+    return true;
   }
-  return { aEnd, 0 };
+  return false;
 }
 
 // FrameParser::Header
@@ -959,21 +965,17 @@ static const uint8_t MIN_MAJOR_VER = 2;
 static const uint8_t MAX_MAJOR_VER = 4;
 } // namespace id3_header
 
-const uint8_t*
-ID3Parser::Parse(const uint8_t* aBeg, const uint8_t* aEnd) {
-  if (!aBeg || !aEnd || aBeg >= aEnd) {
-    return aEnd;
-  }
+uint32_t
+ID3Parser::Parse(ByteReader* aReader) {
+  MOZ_ASSERT(aReader);
 
-  while (aBeg < aEnd && !mHeader.ParseNext(*aBeg)) {
-    ++aBeg;
-  }
+  while (aReader->CanRead8() && !mHeader.ParseNext(aReader->ReadU8())) { }
 
-  if (aBeg < aEnd) {
-    // Header found, move to header begin.
-    aBeg -= ID3Header::SIZE - 1;
+  if (mHeader.IsValid()) {
+    // Header found, return total tag size.
+    return ID3Header::SIZE + Header().Size() + Header().FooterSize();
   }
-  return aBeg;
+  return 0;
 }
 
 void
