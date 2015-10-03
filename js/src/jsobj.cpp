@@ -2395,7 +2395,7 @@ JSObject::reportNotExtensible(JSContext* cx, unsigned report)
 // immutable-prototype behavior is enforced; if it's false, behavior is not
 // enforced, and immutable-prototype bits stored on objects are completely
 // ignored.
-static const bool ImmutablePrototypesEnabled = false;
+static const bool ImmutablePrototypesEnabled = true;
 
 JS_FRIEND_API(bool)
 JS_ImmutablePrototypesEnabled()
@@ -2466,15 +2466,6 @@ js::SetPrototype(JSContext* cx, HandleObject obj, HandleObject proto, JS::Object
         return false;
     if (!extensible)
         return result.fail(JSMSG_CANT_SET_PROTO);
-
-    // If this is a global object, resolve the Object class so that its
-    // [[Prototype]] chain is always properly immutable, even in the presence
-    // of lazy standard classes.
-    if (obj->is<GlobalObject>()) {
-        Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
-        if (!GlobalObject::ensureConstructor(cx, global, JSProto_Object))
-            return false;
-    }
 
     /*
      * ES6 9.1.2 step 6 forbids generating cyclical prototype chains. But we
@@ -3350,7 +3341,6 @@ JSObject::dump()
     if (obj->hasUncacheableProto()) fprintf(stderr, " has_uncacheable_proto");
     if (obj->hadElementsAccess()) fprintf(stderr, " had_elements_access");
     if (obj->wasNewScriptCleared()) fprintf(stderr, " new_script_cleared");
-    if (!obj->hasLazyPrototype() && obj->nonLazyPrototypeIsImmutable()) fprintf(stderr, " immutable_prototype");
 
     if (obj->isNative()) {
         NativeObject* nobj = &obj->as<NativeObject>();

@@ -6320,12 +6320,6 @@ JS_DecodeInterpretedFunction(JSContext* cx, const void* data, uint32_t length)
     return funobj;
 }
 
-JS_PUBLIC_API(bool)
-JS_SetImmutablePrototype(JSContext *cx, JS::HandleObject obj, bool *succeeded)
-{
-    return SetImmutablePrototype(cx, obj, succeeded);
-}
-
 JS_PUBLIC_API(void)
 JS::SetAsmJSCacheOps(JSRuntime* rt, const JS::AsmJSCacheOps* ops)
 {

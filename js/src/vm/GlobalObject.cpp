@@ -89,6 +89,9 @@ js::GlobalObject::getTypedObjectModule() const {
     return v.toObject().as<TypedObjectModuleObject>();
 }
 
+
+
+
 /* static */ bool
 GlobalObject::ensureConstructor(JSContext* cx, Handle<GlobalObject*> global, JSProtoKey key)
 {

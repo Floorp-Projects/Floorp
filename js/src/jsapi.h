@@ -2453,16 +2453,6 @@ JS_FreezeObject(JSContext* cx, JS::Handle<JSObject*> obj);
 extern JS_PUBLIC_API(bool)
 JS_PreventExtensions(JSContext* cx, JS::HandleObject obj, JS::ObjectOpResult& result);
 
-/*
- * Attempt to make the [[Prototype]] of |obj| immutable, such that any attempt
- * to modify it will fail.  If an error occurs during the attempt, return false
- * (with a pending exception set, depending upon the nature of the error).  If
- * no error occurs, return true with |*succeeded| set to indicate whether the
- * attempt successfully made the [[Prototype]] immutable.
- */
-extern JS_PUBLIC_API(bool)
-JS_SetImmutablePrototype(JSContext* cx, JS::HandleObject obj, bool* succeeded);
-
 extern JS_PUBLIC_API(JSObject*)
 JS_New(JSContext* cx, JS::HandleObject ctor, const JS::HandleValueArray& args);
 
