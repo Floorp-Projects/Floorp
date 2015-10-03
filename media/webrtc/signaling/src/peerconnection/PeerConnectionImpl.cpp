@@ -1267,7 +1267,7 @@ PeerConnectionImpl::InitializeDataChannel()
     channels = MAX_NUM_STREAMS;
   }
 
-  rv = EnsureDataConnection(codec->mChannels);
+  rv = EnsureDataConnection(channels);
   if (NS_SUCCEEDED(rv)) {
     uint16_t localport = 5000;
     uint16_t remoteport = 0;
