@@ -474,6 +474,11 @@ let Modem = Modems[0];
     checkState(null, [], "", []);
   }
 
+
+  /****************************************************************************
+   ****                           Check Functions                          ****
+   ****************************************************************************/
+
   /**
    * Convenient helper to compare two call lists (order is not important).
    */
@@ -580,6 +585,166 @@ let Modem = Modems[0];
   function checkAll(active, calls, conferenceState, conferenceCalls, callList) {
     checkState(active, calls, conferenceState, conferenceCalls);
     return checkEmulatorCallList(callList);
+  }
+
+  /**
+   * The factory function for creating an expected call.
+   *
+   * @param aReference
+   *        The reference of the telephonyCall object.
+   * @param aNumber
+   *        The call number.
+   * @param aConference
+   *        Shows whether the call belongs to the conference.
+   * @param aDirection
+   *        The direction of the call, "in" for inbound, and "out" for outbound.
+   * @param aState
+   *        The expected state of the call.
+   * @param aEmulatorState
+   *        The state logged in emulator now, may be different from aState.
+   * @param aDisconnectedReason
+   *        The disconnected reason if the call becomed disconnected.
+   */
+  function createExptectedCall(aReference, aNumber, aConference, aDirection,
+                               aState, aEmulatorState, aDisconnectedReason) {
+    return {
+      reference:          aReference,
+      number:             aNumber,
+      conference:         aConference,
+      direction:          aDirection,
+      state:              aState,
+      emulatorState:      aEmulatorState,
+      disconnectedReason: aDisconnectedReason
+    };
+  }
+
+  /**
+   * Check telephony.active
+   *
+   * @param aExpectedCalls
+   *        An array of expected calls.
+   * @param aExpectedCallsInConference
+   *        An array of expected calls in the conference.
+   */
+  function checkActive(aExpectedCalls, aExpectedCallsInConference) {
+    // Get the active call
+    let calls = aExpectedCalls && aExpectedCalls.filter(aExpectedCall => {
+      return aExpectedCall.state === "connected" ||
+             aExpectedCall.state === "alerting" ||
+             aExpectedCall.state === "dialing";
+    });
+
+    ok(calls.length < 2, "Too many actives call in telephony.calls");
+    let activeCall = calls.length ? calls[0].reference : null;
+
+    // Get the active conference
+    let callsInConference = aExpectedCallsInConference || [];
+    let activeConference = callsInConference.length &&
+                           callsInConference[0].state === "connected"
+                           ? navigator.mozTelephony.conferenceGroup
+                           : null;
+
+    // Check telephony.active
+    ok(!(activeCall && activeConference),
+       "An active call cannot coexist with an active conference call.");
+    is(telephony.active, activeCall || activeConference, "check Active");
+  }
+
+  /**
+   * Check whether the data in telephony and emulator meets our expectation.
+   *
+   * NOTE: Conference call is not supported in this function yet, so related
+   * checks are skipped.
+   *
+   * Fulfill params:
+   *   {
+   *     reference,          -- the reference of the call object instance.
+   *     number,             -- the call number.
+   *     conference,         -- shows whether it belongs to the conference.
+   *     direction,          -- "in" for inbound, and "out" for outbound.
+   *     state,              -- the call state.
+   *     emulatorState,      -- the call state logged in emulator now.
+   *     disconnectedReason, -- the disconnected reason of a disconnected call.
+   *   }
+   *
+   * @param aExpectedCalls
+   *        An array of call records.
+   * @return Promise
+   */
+  function equals(aExpectedCalls) {
+    // Classify calls
+    let callsInTelephony  = [];
+    let CallsInConference = [];
+
+    aExpectedCalls.forEach(function(aCall) {
+      if (aCall.state === "disconnected") {
+        is(aCall.disconnectedReason,
+           aCall.reference.disconnectedReason,
+           "Check disconnectedReason");
+        return;
+      }
+
+      if (aCall.conference) {
+        CallsInConference.push(aCall);
+        return;
+      }
+
+      callsInTelephony.push(aCall);
+      ok(!aCall.secondId, "For a telephony call, the secondId must be null");
+    });
+
+    // Check the active connection
+    checkActive(callsInTelephony, CallsInConference);
+
+    // Check telephony.calls
+    is(telephony.calls.length,
+       callsInTelephony.length,
+       "Check telephony.calls.length");
+
+    callsInTelephony.forEach(aExpectedCall => {
+      let number = aExpectedCall.number;
+      let call = telephony.calls.find(aCall => aCall.id.number === number);
+      if (!call) {
+        ok(false, "telephony.calls lost the call(number: " + number + ")");
+        return;
+      }
+
+      is(call, aExpectedCall.reference,
+         "Check the object reference of number:" + number);
+
+      is(call.state, aExpectedCall.state,
+         "Check call.state of number:" + number);
+    });
+
+    // Check conference.calls
+    // NOTE: This function doesn't support conference call now, so the length of
+    // |CallsInConference| should be 0, and the conference state shoul be "".
+    is(conference.state, "", "Conference call is not supported yet.");
+    is(CallsInConference.length, 0, "Conference call is not supported yet.");
+
+    // Check the emulator call list
+    // NOTE: Conference is not supported yet, so |CallsInConference| is ignored.
+    let strings = callsInTelephony.map(aCall => {
+      // The emulator doesn't have records for disconnected calls.
+      if (aCall.emulatorState === "disconnected") {
+        return null;
+      }
+
+      let state = {
+        alerting:  "ringing",
+        connected: "active",
+        held:      "held",
+        incoming:  "incoming"
+      }[aCall.state];
+
+      state = aCall.emulatorState || state;
+      let prefix = (aCall.direction === "in") ? "inbound from "
+                                              : "outbound to  ";
+
+      return state ? (prefix + aCall.number + " : " + state) : null;
+    });
+
+    return checkEmulatorCallList(strings.filter(aString => aString));
   }
 
   /****************************************************************************
