@@ -540,7 +540,7 @@ nsHttpTransaction::OnTransportStatus(nsITransport* transport,
     // and the correct value will be returned in nsPerformance.
     if (TimingEnabled() && GetRequestStart().IsNull()) {
         if (status == NS_NET_STATUS_RESOLVING_HOST) {
-            SetDomainLookupStart(TimeStamp::Now());
+            SetDomainLookupStart(TimeStamp::Now(), true);
         } else if (status == NS_NET_STATUS_RESOLVED_HOST) {
             SetDomainLookupEnd(TimeStamp::Now());
         } else if (status == NS_NET_STATUS_CONNECTING_TO) {
