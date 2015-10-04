@@ -654,8 +654,7 @@ HalFormatToSurfaceFormat(int aHalFormat, int* bytepp)
 already_AddRefed<DrawTarget>
 nsWindow::StartRemoteDrawing()
 {
-    GonkDisplay* display = GetGonkDisplay();
-    mFramebuffer = display->DequeueBuffer();
+    mFramebuffer = mScreen->DequeueBuffer();
     int width = mFramebuffer->width, height = mFramebuffer->height;
     void *vaddr;
     if (gralloc_module()->lock(gralloc_module(), mFramebuffer->handle,
@@ -667,7 +666,7 @@ nsWindow::StartRemoteDrawing()
         return nullptr;
     }
     int bytepp;
-    SurfaceFormat format = HalFormatToSurfaceFormat(display->surfaceformat,
+    SurfaceFormat format = HalFormatToSurfaceFormat(mScreen->GetSurfaceFormat(),
                                                     &bytepp);
     mFramebufferTarget = Factory::CreateDrawTargetForData(
          BackendType::CAIRO, (uint8_t*)vaddr,
@@ -696,7 +695,7 @@ nsWindow::EndRemoteDrawing()
         gralloc_module()->unlock(gralloc_module(), mFramebuffer->handle);
     }
     if (mFramebuffer) {
-        GetGonkDisplay()->QueueBuffer(mFramebuffer);
+        mScreen->QueueBuffer(mFramebuffer);
     }
     mFramebuffer = nullptr;
     mFramebufferTarget = nullptr;
