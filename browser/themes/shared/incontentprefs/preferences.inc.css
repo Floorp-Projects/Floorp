@@ -589,6 +589,7 @@ description > html|a {
 }
 
 .fxaAccountBoxButtons > button {
+  text-align: center;
   padding-left: 11px;
   padding-right: 11px;
   margin: 0;
