@@ -322,6 +322,41 @@ private:
   nsAutoTArray<Element, 3> mElements;
 };
 
+/* media::Refcountable - Add threadsafe ref-counting to something that isn't.
+ *
+ * Often, reference counting is the most practical way to share an object with
+ * another thread without imposing lifetime restrictions, even if there's
+ * otherwise no concurrent access happening on the object.  For instance, an
+ * algorithm on another thread may find it more expedient to modify a passed-in
+ * object, rather than pass expensive copies back and forth.
+ *
+ * Lists in particular often aren't ref-countable, yet are expensive to copy,
+ * e.g. nsTArray<nsRefPtr<Foo>>. Refcountable can be used to make such objects
+ * (or owning smart-pointers to such objects) refcountable.
+ *
+ * Technical limitation: A template specialization is needed for types that take
+ * a constructor. Please add below (ScopedDeletePtr covers a lot of ground though).
+ */
+
+template<typename T>
+class Refcountable : public T
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Refcountable<T>)
+private:
+  ~Refcountable<T>() {}
+};
+
+template<typename T>
+class Refcountable<ScopedDeletePtr<T>> : public ScopedDeletePtr<T>
+{
+public:
+  explicit Refcountable<ScopedDeletePtr<T>>(T* aPtr) : ScopedDeletePtr<T>(aPtr) {}
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Refcountable<T>)
+private:
+  ~Refcountable<ScopedDeletePtr<T>>() {}
+};
+
 } // namespace media
 } // namespace mozilla
 
