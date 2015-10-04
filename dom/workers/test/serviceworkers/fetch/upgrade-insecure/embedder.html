@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<script>
+  window.onmessage = function(e) {
+    window.parent.postMessage(e.data, "*");
+    if (e.data.status == "protocol") {
+      document.querySelector("iframe").src = "image.html";
+    }
+  };
+</script>
+<iframe src="http://example.com/tests/dom/workers/test/serviceworkers/fetch/upgrade-insecure/index.html"></iframe>
