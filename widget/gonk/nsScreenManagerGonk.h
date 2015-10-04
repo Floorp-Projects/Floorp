@@ -74,6 +74,9 @@ public:
     ScreenConfiguration GetConfiguration();
     bool IsPrimaryScreen();
 
+    ANativeWindowBuffer* DequeueBuffer();
+    bool QueueBuffer(ANativeWindowBuffer* buf);
+
 #if ANDROID_VERSION >= 17
     android::DisplaySurface* GetDisplaySurface();
     int GetPrevDispAcquireFd();

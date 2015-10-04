@@ -359,6 +359,39 @@ nsScreenGonk::BringToTop(nsWindow* aWindow)
     mTopWindows.InsertElementAt(0, aWindow);
 }
 
+ANativeWindowBuffer*
+nsScreenGonk::DequeueBuffer()
+{
+    ANativeWindowBuffer* buf = nullptr;
+#if ANDROID_VERSION >= 17
+    int fenceFd = -1;
+    mNativeWindow->dequeueBuffer(mNativeWindow.get(), &buf, &fenceFd);
+    android::sp<android::Fence> fence(new android::Fence(fenceFd));
+#if ANDROID_VERSION == 17
+    fence->waitForever(1000, "nsScreenGonk_DequeueBuffer");
+    // 1000 is what Android uses. It is a warning timeout in ms.
+    // This timeout was removed in ANDROID_VERSION 18.
+#else
+    fence->waitForever("nsScreenGonk_DequeueBuffer");
+#endif
+#else
+    mNativeWindow->dequeueBuffer(mNativeWindow.get(), &buf);
+#endif
+    return buf;
+}
+
+bool
+nsScreenGonk::QueueBuffer(ANativeWindowBuffer* buf)
+{
+#if ANDROID_VERSION >= 17
+  int ret = mNativeWindow->queueBuffer(mNativeWindow.get(), buf, -1);
+  return ret == 0;
+#else
+  int ret = mNativeWindow->queueBuffer(mNativeWindow.get(), buf);
+  return ret == 0;
+#endif
+}
+
 #if ANDROID_VERSION >= 17
 android::DisplaySurface*
 nsScreenGonk::GetDisplaySurface()
