@@ -980,9 +980,7 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 }
 
 .context-url-view-wrapper {
-  /* 18px for indent of .text-chat-arrow, 1px for border of .text-chat-entry > p,
-     0.5rem for padding of .text-chat-entry > p */
-  padding: calc(18px - 1px - 0.5rem);
+  padding: 12px;
   margin-bottom: 0.5em;
   background-color: #dbf7ff;
 }
@@ -1491,32 +1489,44 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   background: white;
 }
 
-.text-chat-box {
-  flex: 0 0 auto;
-  max-height: 40px;
-  min-height: 40px;
-  width: 100%;
-}
-
 .text-chat-entries {
   overflow: auto;
 }
 
-.text-chat-entry {
+.text-chat-entry,
+.text-chat-header {
   display: flex;
-  flex-direction: row;
-  margin-right: .2em;
   margin-bottom: .5em;
-  text-align: start;
-  flex-wrap: nowrap;
-  justify-content: flex-start;
-  align-content: stretch;
   align-items: flex-start;
 }
 
-html[dir="rtl"] .text-chat-entry {
-  margin-right: auto;
-  margin-left: .2em;
+.text-chat-entry {
+  /* aligns paragraph to side where reading starts from */
+  text-align: start;
+}
+
+/* Sent text chat entries should be on the right */
+.text-chat-entry.sent {
+  /* aligns paragraph to right side */
+  justify-content: flex-end;
+  margin-left: 0;
+  margin-right: 5px;
+}
+
+.text-chat-entry.received {
+  margin-left: 4px;
+  margin-right: 0;
+}
+
+html[dir="rtl"] .text-chat-entry.sent {
+  margin-left: 5px;
+  margin-right: 0;
+}
+
+
+html[dir="rtl"] .text-chat-entry.received {
+  margin-left: 0;
+  margin-right: 5px;
 }
 
 /* If you change this entry, check it doesn't affect the "special" text
@@ -1526,57 +1536,34 @@ html[dir="rtl"] .text-chat-entry {
   z-index: 10;
   /* Drop the default margins from the 'p' element. */
   margin: 0;
-  padding: .5rem;
+  padding: .8rem;
   /* leave some room for the chat bubble arrow */
-  max-width: 80%;
-  border-width: 1px;
-  border-style: solid;
-  border-color: #5cccee;
+  max-width: 70%;
+  border-radius: 15px;
+  border: 1px solid #5cccee;
   background: #fff;
   word-wrap: break-word;
   flex: 0 1 auto;
-  align-self: auto;
-}
-
-.text-chat-entry.sent > p,
-.text-chat-entry.received > p {
-  background: #fff;
+  order: 1;
 }
 
 .text-chat-entry.sent > p {
-  border-radius: 15px;
   border-bottom-right-radius: 0;
 }
 
 .text-chat-entry.received > p {
-  border-radius: 15px;
   border-top-left-radius: 0;
+  border-color: #d8d8d8;
 }
 
 html[dir="rtl"] .text-chat-entry.sent > p {
-  border-radius: 15px;
   border-bottom-left-radius: 0;
+  border-bottom-right-radius: 15px;
 }
 
 html[dir="rtl"] .text-chat-entry.received > p {
-  border-radius: 15px;
   border-top-right-radius: 0;
-}
-
-.text-chat-entry.received > p {
-  order: 1;
-}
-
-.text-chat-entry.sent > p {
-  order: 1;
-}
-
-.text-chat-entry.received {
-  text-align: start;
-}
-
-.text-chat-entry.received > p {
-  border-color: #d8d8d8;
+  border-top-left-radius: 15px;
 }
 
 /* Text chat entry timestamp */
@@ -1589,38 +1576,34 @@ html[dir="rtl"] .text-chat-entry.received > p {
   align-self: center;
 }
 
-/* Sent text chat entries should be on the right */
-.text-chat-entry.sent {
-  justify-content: flex-end;
-}
-
 .received > .text-chat-entry-timestamp {
   order: 2;
 }
 
-/* Pseudo element used to cover part between chat bubble and chat arrow. */
+/* Pseudo element used to cover part between chat bubble and chat arrow.
+   dimensions may change for each position */
 .text-chat-entry > p:after {
   position: absolute;
   background: #fff;
   content: "";
+  /* default dimensions */
+  width: 6px;
+  height: 7px;
 }
 
 .text-chat-entry.sent > p:after {
-  right: -2px;
+  right: -1px;
   bottom: 0;
-  width: 15px;
-  height: 9px;
-  border-top-left-radius: 15px;
-  border-top-right-radius: 22px;
+  width: 7px;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
 }
 
 .text-chat-entry.received > p:after {
   top: 0;
-  left: -2px;
-  width: 15px;
-  height: 9px;
-  border-bottom-left-radius: 22px;
-  border-bottom-right-radius: 15px;
+  left: -1px;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
 }
 
 html[dir="rtl"] .text-chat-entry.sent > p:after {
@@ -1628,16 +1611,13 @@ html[dir="rtl"] .text-chat-entry.sent > p:after {
   right: auto;
   left: -1px;
   bottom: 0;
-  width: 15px;
-  height: 9px;
 }
 
 html[dir="rtl"] .text-chat-entry.received > p:after {
   /* Reset */
-  left: auto;
   top: 0;
   right: -1px;
-  width: 15px;
+  width: 9px;
   height: 6px;
 }
 
@@ -1683,7 +1663,7 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
   margin-left: -10px;
 }
 
-.text-chat-entry.special.room-name {
+.text-chat-header.special.room-name {
   color: black;
   font-weight: bold;
   text-align: start;
@@ -1692,7 +1672,7 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
   margin-right: 0;
 }
 
-.text-chat-entry.special.room-name p {
+.text-chat-header.special.room-name p {
   background: #dbf7ff;
   max-width: 100%;
   /* 18px for indent of .text-chat-arrow, 1px for border of .text-chat-entry > p,
@@ -1700,12 +1680,16 @@ html[dir="rtl"] .text-chat-entry.received .text-chat-arrow {
   padding: calc(18px - 1px - 0.5rem);
 }
 
-.text-chat-entry.special > p {
+.text-chat-header.special > p {
   border: none;
 }
 
 .text-chat-box {
   margin: auto;
+  flex: 0 0 auto;
+  max-height: 40px;
+  min-height: 40px;
+  width: 100%;
 }
 
 .text-chat-box > form > input {

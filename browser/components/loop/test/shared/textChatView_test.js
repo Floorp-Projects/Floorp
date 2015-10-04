@@ -580,7 +580,7 @@ describe("loop.shared.views.TextChatView", function () {
       var node = view.getDOMNode();
       expect(node.querySelector(".text-chat-entries")).to.not.eql(null);
 
-      var entries = node.querySelectorAll(".text-chat-entry");
+      var entries = node.querySelectorAll(".text-chat-header");
       expect(entries.length).eql(1);
       expect(entries[0].classList.contains("special")).eql(true);
       expect(entries[0].classList.contains("room-name")).eql(true);
