@@ -220,18 +220,24 @@ public:
     // Returns the total number of frames expected in the stream/file.
     int64_t NumFrames() const;
 
-    // Parses given buffer [aBeg, aEnd) for a valid VBR header.
+    // Parses contents of given ByteReader for a valid VBR header.
+    // The offset of the passed ByteReader needs to point to an MPEG frame begin,
+    // as a VBRI-style header is searched at a fixed offset relative to frame begin.
     // Returns whether a valid VBR header was found in the range.
-    bool Parse(const uint8_t* aBeg, const uint8_t* aEnd);
+    bool Parse(mp4_demuxer::ByteReader* aReader);
 
   private:
-    // Parses given buffer [aBeg, aEnd) for a valid Xing header.
+    // Parses contents of given ByteReader for a valid Xing header.
+    // The initial ByteReader offset will be preserved.
     // Returns whether a valid Xing header was found in the range.
-    bool ParseXing(const uint8_t* aBeg, const uint8_t* aEnd);
+    bool ParseXing(mp4_demuxer::ByteReader* aReader);
 
-    // Parses given buffer [aBeg, aEnd) for a valid VBRI header.
+    // Parses contents of given ByteReader for a valid VBRI header.
+    // The initial ByteReader offset will be preserved. It also needs to point
+    // to the beginning of a valid MPEG frame, as VBRI headers are searched
+    // at a fixed offset relative to frame begin.
     // Returns whether a valid VBRI header was found in the range.
-    bool ParseVBRI(const uint8_t* aBeg, const uint8_t* aEnd);
+    bool ParseVBRI(mp4_demuxer::ByteReader* aReader);
 
     // The total number of frames expected as parsed from a VBR header.
     int64_t mNumFrames;
@@ -296,9 +302,11 @@ public:
   // ID3v2 tag spanning multiple buffers.
   bool Parse(mp4_demuxer::ByteReader* aReader, uint32_t* aBytesToSkip);
 
-  // Parses given buffer [aBeg, aEnd) for a valid VBR header.
+  // Parses contents of given ByteReader for a valid VBR header.
+  // The offset of the passed ByteReader needs to point to an MPEG frame begin,
+  // as a VBRI-style header is searched at a fixed offset relative to frame begin.
   // Returns whether a valid VBR header was found.
-  bool ParseVBRHeader(const uint8_t* aBeg, const uint8_t* aEnd);
+  bool ParseVBRHeader(mp4_demuxer::ByteReader* aReader);
 
 private:
   // ID3 header parser.

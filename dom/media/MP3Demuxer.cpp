@@ -476,7 +476,9 @@ MP3TrackDemuxer::GetNextFrame(const MediaByteRange& aRange) {
   if (mNumParsedFrames == 1) {
     // First frame parsed, let's read VBR info if available.
     // TODO: read info that helps with seeking (bug 1163667).
-    mParser.ParseVBRHeader(frame->Data(), frame->Data() + frame->Size());
+    ByteReader reader(frame->Data(), frame->Size());
+    mParser.ParseVBRHeader(&reader);
+    reader.DiscardRemaining();
     mFirstFrameOffset = frame->mOffset;
   }
 
@@ -852,9 +854,11 @@ FrameParser::VBRHeader::NumFrames() const {
 }
 
 bool
-FrameParser::VBRHeader::ParseXing(const uint8_t* aBeg, const uint8_t* aEnd) {
+FrameParser::VBRHeader::ParseXing(ByteReader* aReader) {
   static const uint32_t TAG = BigEndian::readUint32("Xing");
+  static const uint32_t TAG2 = BigEndian::readUint32("Info");
   static const uint32_t FRAME_COUNT_OFFSET = 8;
+  static const uint32_t FRAME_COUNT_SIZE = 4;
 
   enum Flags {
     NUM_FRAMES = 0x01,
@@ -863,51 +867,61 @@ FrameParser::VBRHeader::ParseXing(const uint8_t* aBeg, const uint8_t* aEnd) {
     VBR_SCALE = 0x08
   };
 
-  if (!aBeg || !aEnd || aBeg >= aEnd) {
-    return false;
-  }
+  MOZ_ASSERT(aReader);
+  const size_t prevReaderOffset = aReader->Offset();
 
   // We have to search for the Xing header as its position can change.
-  for (; aBeg + sizeof(TAG) < aEnd; ++aBeg) {
-    if (BigEndian::readUint32(aBeg) != TAG) {
+  while (aReader->Remaining() >= FRAME_COUNT_OFFSET + FRAME_COUNT_SIZE) {
+    if (aReader->PeekU32() != TAG && aReader->PeekU32() != TAG2) {
+      aReader->Read(1);
       continue;
     }
+    // Skip across the VBR header ID tag.
+    aReader->Read(sizeof(TAG));
 
-    const uint32_t flags = BigEndian::readUint32(aBeg + sizeof(TAG));
-    if (flags & NUM_FRAMES && aBeg + FRAME_COUNT_OFFSET < aEnd) {
-      mNumFrames = BigEndian::readUint32(aBeg + FRAME_COUNT_OFFSET);
+    const uint32_t flags = aReader->ReadU32();
+    if (flags & NUM_FRAMES) {
+      mNumFrames = aReader->ReadU32();
     }
     mType = XING;
+    aReader->Seek(prevReaderOffset);
     return true;
   }
+  aReader->Seek(prevReaderOffset);
   return false;
 }
 
 bool
-FrameParser::VBRHeader::ParseVBRI(const uint8_t* aBeg, const uint8_t* aEnd) {
+FrameParser::VBRHeader::ParseVBRI(ByteReader* aReader) {
   static const uint32_t TAG = BigEndian::readUint32("VBRI");
-  static const uint32_t OFFSET = 32 - FrameParser::FrameHeader::SIZE;
+  static const uint32_t OFFSET = 32 + FrameParser::FrameHeader::SIZE;
   static const uint32_t FRAME_COUNT_OFFSET = OFFSET + 14;
   static const uint32_t MIN_FRAME_SIZE = OFFSET + 26;
 
-  if (!aBeg || !aEnd || aBeg >= aEnd) {
-    return false;
-  }
+  MOZ_ASSERT(aReader);
+  // ParseVBRI assumes that the ByteReader offset points to the beginning of a frame,
+  // therefore as a simple check, we look for the presence of a frame sync at that position.
+  MOZ_ASSERT(aReader->PeekU16() & 0xFFE0);
+  const size_t prevReaderOffset = aReader->Offset();
 
-  const int64_t frameLen = aEnd - aBeg;
   // VBRI have a fixed relative position, so let's check for it there.
-  if (frameLen > MIN_FRAME_SIZE &&
-      BigEndian::readUint32(aBeg + OFFSET) == TAG) {
-    mNumFrames = BigEndian::readUint32(aBeg + FRAME_COUNT_OFFSET);
-    mType = VBRI;
-    return true;
+  if (aReader->Remaining() > MIN_FRAME_SIZE) {
+    aReader->Seek(prevReaderOffset + OFFSET);
+    if (aReader->ReadU32() == TAG) {
+      aReader->Seek(prevReaderOffset + FRAME_COUNT_OFFSET);
+      mNumFrames = aReader->ReadU32();
+      mType = VBRI;
+      aReader->Seek(prevReaderOffset);
+      return true;
+    }
   }
+  aReader->Seek(prevReaderOffset);
   return false;
 }
 
 bool
-FrameParser::VBRHeader::Parse(const uint8_t* aBeg, const uint8_t* aEnd) {
-  return ParseVBRI(aBeg, aEnd) || ParseXing(aBeg, aEnd);
+FrameParser::VBRHeader::Parse(ByteReader* aReader) {
+  return ParseVBRI(aReader) || ParseXing(aReader);
 }
 
 // FrameParser::Frame
@@ -941,8 +955,8 @@ FrameParser::Frame::Header() const {
 }
 
 bool
-FrameParser::ParseVBRHeader(const uint8_t* aBeg, const uint8_t* aEnd) {
-  return mVBRHeader.Parse(aBeg, aEnd);
+FrameParser::ParseVBRHeader(ByteReader* aReader) {
+  return mVBRHeader.Parse(aReader);
 }
 
 // ID3Parser
