@@ -59,6 +59,7 @@ toolkit.jar:
    content/global/resetProfile.xul
    content/global/resetProfileProgress.xul
    content/global/select-child.js
+   content/global/TopLevelVideoDocument.js
    content/global/treeUtils.js
    content/global/viewZoomOverlay.js
 *+ content/global/bindings/autocomplete.xml    (widgets/autocomplete.xml)
