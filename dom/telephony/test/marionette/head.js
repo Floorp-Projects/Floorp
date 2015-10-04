@@ -100,6 +100,121 @@ var emulator = (function() {
 }());
 
 /**
+ * Modem Helper
+ *
+ * TODO: Should select which modem here to support multi-SIM
+ */
+
+function modemHelperGenerator() {
+  function Modem(aClientID) {
+    this.clientID = aClientID;
+  }
+  Modem.prototype = {
+    clientID: 0,
+
+    voiceTypeToTech: function(aVoiceType) {
+      switch(aVoiceType) {
+        case "gsm":
+        case "gprs":
+        case "edge":
+          return "gsm";
+
+        case "umts":
+        case "hsdpa":
+        case "hsupa":
+        case "hspa":
+        case "hspa+":
+          return "wcdma";
+
+        case "is95a":
+        case "is95b":
+        case "1xrtt":
+          return "cdma";
+
+        case "evdo0":
+        case "evdoa":
+        case "evdob":
+          return "evdo";
+
+        case "ehrpd":
+          return "ehrpd";
+
+        case "lte":
+          return "lte";
+
+        default:
+          return null;
+      }
+    },
+
+    isCDMA: function() {
+      var mobileConn = navigator.mozMobileConnections[this.clientID];
+      var tech = mobileConn && this.voiceTypeToTech(mobileConn.voice.type);
+      return tech === "cdma" || tech === "evdo" || tech == "ehrpd";
+    },
+
+    isGSM: function() {
+      var mobileConn = navigator.mozMobileConnections[this.clientID];
+      var tech = mobileConn && this.voiceTypeToTech(mobileConn.voice.type);
+      return tech === "gsm" || tech === "wcdma" || tech === "lte";
+    },
+
+    /**
+     * @return Promise:
+     */
+    changeTech: function(aTech, aMask) {
+      let target = navigator.mozMobileConnections[this.clientID];
+
+      let mask = aMask || {
+        gsm:   "gsm",
+        wcdma: "gsm/wcdma",
+        cdma:  "cdma",
+        evdo:  "evdo0",
+        ehrpd: "ehrpd",
+        lte:   "lte"
+      }[aTech];
+
+      let waitForExpectedTech = () => {
+        return new Promise((aResolve, aReject) => {
+          let listener = aEvent => {
+            log("MobileConnection[" + this.clientID + "] " +
+                "received event 'voicechange'");
+            if (aTech === this.voiceTypeToTech(target.voice.type)) {
+              target.removeEventListener("voicechange", listener);
+              aResolve();
+            }
+          };
+
+          target.addEventListener("voicechange", listener);
+        });
+      };
+
+      // TODO: Should select a modem here to support multi-SIM
+      let changeToExpectedTech = () => {
+        return Promise.resolve()
+          .then(() => emulator.runCmd("modem tech " + aTech + " " + mask))
+          .then(() => emulator.runCmd("modem tech"))
+          .then(result => is(result[0], aTech + " " + mask,
+                             "Check modem 'tech/preferred mask'"));
+      }
+
+      return aTech === this.voiceTypeToTech(target.voice.type)
+           ? Promise.resolve()
+           : Promise.all([waitForExpectedTech(), changeToExpectedTech()]);
+    }
+  };
+
+  let modems = [];
+  for (let i = 0; i < navigator.mozMobileConnections.length; ++i) {
+    modems.push(new Modem(i));
+  }
+  return modems;
+}
+
+let Modems = modemHelperGenerator();
+let Modem = Modems[0];
+
+/**
  * Telephony related helper functions.
  */
 (function() {
@@ -274,70 +389,6 @@ var emulator = (function() {
         return telephony.calls.length === 0;
       });
     });
-  }
-
-  /**
-   * @param aVoiceType
-   *        The voice type of a mobileConnection, which can be obtained from
-   *        |<mobileConnection>.voice.type|.
-   * @return A string with format of the emulator voice tech.
-   */
-  function voiceTypeToTech(aVoiceType) {
-    switch(aVoiceType) {
-        case "gsm":
-        case "gprs":
-        case "edge":
-          return "gsm";
-
-        case "umts":
-        case "hsdpa":
-        case "hsupa":
-        case "hspa":
-        case "hspa+":
-          return "wcdma";
-
-        case "is95a":
-        case "is95b":
-        case "1xrtt":
-          return "cdma";
-
-        case "evdo0":
-        case "evdoa":
-        case "evdob":
-          return "evdo";
-
-        case "ehrpd":
-        case "lte":
-          return "lte";
-
-        default:
-          return null;
-      }
-  }
-
-  /**
-   * @return Promise
-   */
-  function changeModemTech(aTech, aPreferredMask) {
-    let mobileConn = navigator.mozMobileConnections[0];
-
-    function isTechMatched() {
-      return aTech === voiceTypeToTech(mobileConn.voice.type);
-    }
-
-    let promise1 = isTechMatched() ? Promise.resolve()
-                                   : waitForEvent(mobileConn,
-                                                  "voicechange",
-                                                  isTechMatched);
-
-    let promise2 = Promise.resolve()
-      .then(() => emulator.runCmd("modem tech " + aTech + " " + aPreferredMask))
-      .then(() => emulator.runCmd("modem tech"))
-      .then(result => is(result[0],
-                         aTech + " " + aPreferredMask,
-                         "Check modem 'tech/preferred mask'"));
-
-    return Promise.all([promise1, promise2]);
   }
 
   /**
@@ -1216,7 +1267,6 @@ var emulator = (function() {
   this.gWaitForNamedStateEvent = waitForNamedStateEvent;
   this.gWaitForStateChangeEvent = waitForStateChangeEvent;
   this.gCheckInitialState = checkInitialState;
-  this.gChangeModemTech = changeModemTech;
   this.gClearCalls = clearCalls;
   this.gOutCallStrPool = outCallStrPool;
   this.gInCallStrPool = inCallStrPool;
