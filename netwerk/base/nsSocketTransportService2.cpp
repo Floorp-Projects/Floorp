@@ -8,7 +8,6 @@
 #include "nsSocketTransport2.h"
 #include "NetworkActivityMonitor.h"
 #include "mozilla/Preferences.h"
-#include "ClosingService.h"
 #endif // !defined(MOZILLA_XPCOMRT_API)
 #include "nsASocketHandler.h"
 #include "nsError.h"
@@ -561,13 +560,6 @@ nsSocketTransportService::Init()
         obsSvc->AddObserver(this, "last-pb-context-exited", false);
     }
 
-#if !defined(MOZILLA_XPCOMRT_API)
-    // Start the closing service. Actual PR_Close() will be carried out on
-    // a separate "closing" thread. Start the closing servicee here since this
-    // point is executed only once per session.
-    ClosingService::Start();
-#endif //!defined(MOZILLA_XPCOMRT_API)
-
     mInitialized = true;
     return NS_OK;
 }
@@ -618,7 +610,6 @@ nsSocketTransportService::Shutdown()
 
 #if !defined(MOZILLA_XPCOMRT_API)
     mozilla::net::NetworkActivityMonitor::Shutdown();
-    ClosingService::Shutdown();
 #endif // !defined(MOZILLA_XPCOMRT_API)
 
     mInitialized = false;
