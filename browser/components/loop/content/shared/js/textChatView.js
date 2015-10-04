@@ -81,7 +81,7 @@ loop.shared.views.chat = (function(mozL10n) {
 
     render: function() {
       return (
-        React.createElement("div", {className: "text-chat-entry special room-name"}, 
+        React.createElement("div", {className: "text-chat-header special room-name"}, 
           React.createElement("p", null, mozL10n.get("rooms_welcome_title", {conversationName: this.props.message}))
         )
       );
