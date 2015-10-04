@@ -81,7 +81,7 @@ loop.shared.views.chat = (function(mozL10n) {
 
     render: function() {
       return (
-        <div className="text-chat-entry special room-name">
+        <div className="text-chat-header special room-name">
           <p>{mozL10n.get("rooms_welcome_title", {conversationName: this.props.message})}</p>
         </div>
       );
