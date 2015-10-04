@@ -23,10 +23,16 @@ function checkRecursion(n, limit) {
   }
 
   // Async stacks are limited even if we didn't ask for a limit. There is a
-  // default limit on frames attached on top of any synchronous frames. In this
-  // case the synchronous frame is the last call to `recur`.
+  // default limit on frames attached on top of any synchronous frames, and
+  // every time the limit is reached when capturing, half of the frames are
+  // truncated from the old end of the async stack.
   if (limit == 0) {
-    limit = defaultAsyncStackLimit + 1;
+    // Always add one synchronous frame that is the last call to `recur`.
+    if (n + 1 < defaultAsyncStackLimit) {
+      limit = defaultAsyncStackLimit + 1;
+    } else {
+      limit = n + 2 - (defaultAsyncStackLimit / 2);
+    }
   }
 
   // The first `n` or `limit` frames should have `recur` as their `asyncParent`.
@@ -68,6 +74,8 @@ function checkRecursion(n, limit) {
 checkRecursion(0, 0);
 checkRecursion(1, 0);
 checkRecursion(2, 0);
+checkRecursion(defaultAsyncStackLimit - 10, 0);
+checkRecursion(defaultAsyncStackLimit, 0);
 checkRecursion(defaultAsyncStackLimit + 10, 0);
 
 // Limit of 1 frame.
