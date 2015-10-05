@@ -23,8 +23,6 @@ browser.jar:
   skin/classic/browser/content-contextmenu.svg
   skin/classic/browser/Geolocation-16.png
   skin/classic/browser/Geolocation-64.png
-  skin/classic/browser/Push-16.png
-  skin/classic/browser/Push-64.png
   skin/classic/browser/Info.png
   skin/classic/browser/menuPanel.png
   skin/classic/browser/menuPanel@2x.png

@@ -12,7 +12,8 @@ namespace dom {
 const char* kPermissionTypes[] = {
   "geo",
   "desktop-notification",
-  "push",
+  // Alias `push` to `desktop-notification`.
+  "desktop-notification",
   "midi"
 };
 
