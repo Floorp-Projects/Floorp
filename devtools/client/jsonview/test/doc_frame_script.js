@@ -71,6 +71,12 @@ addMessageListener("Test:JsonView:WaitForFilter", function(msg) {
   let firstRow = content.document.querySelector(
     ".jsonPanelBox .domTable .memberRow");
 
+  // Check if the filter is already set.
+  if (firstRow.classList.contains("hidden")) {
+    sendAsyncMessage(msg.name);
+    return;
+  }
+
   // Wait till the first row has 'hidden' class set.
   var observer = new content.MutationObserver(function(mutations) {
     for (let i = 0; i < mutations.length; i++) {

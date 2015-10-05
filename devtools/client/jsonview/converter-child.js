@@ -199,7 +199,7 @@ var Converter = Class({
     var baseUrl = "resource:///modules/devtools/client/jsonview/";
     var theme = (themeClassName == "theme-light") ? "light" : "dark";
     var themeUrl = '<link rel="stylesheet" type="text/css" ' +
-      'href="chrome://devtools/skin/themes/' + theme + '-theme.css">';
+      'href="css/' + theme + '-theme.css">';
 
     return '<!DOCTYPE html>\n' +
       '<html><head><title>' + this.htmlEncode(title) + '</title>' +
