@@ -208,11 +208,10 @@ public:
   virtual void Enter(AccessibleCaretEventHub* aContext) {}
   virtual void Leave(AccessibleCaretEventHub* aContext) {}
 
-protected:
   explicit State() = default;
   virtual ~State() = default;
   State(const State&) = delete;
-  void operator=(const State&) = delete;
+  State& operator=(const State&) = delete;
 };
 
 } // namespace mozilla
