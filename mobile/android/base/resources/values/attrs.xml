@@ -165,6 +165,7 @@
         <attr name="tabContentStart" format="dimension" />
         <attr name="activeTextColor" format="color" />
         <attr name="inactiveTextColor" format="color" />
+        <attr name="titlebarFill" format="boolean" />
     </declare-styleable>
 
     <declare-styleable name="TabPanelBackButton">
