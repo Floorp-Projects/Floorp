@@ -260,7 +260,7 @@ SVGTransform::SetSkewX(float angle, ErrorResult& rv)
   }
 
   if (!IsFinite(tan(angle * kRadPerDegree))) {
-    rv.ThrowRangeError(MSG_INVALID_TRANSFORM_ANGLE_ERROR);
+    rv.ThrowRangeError<MSG_INVALID_TRANSFORM_ANGLE_ERROR>();
     return;
   }
 
@@ -283,7 +283,7 @@ SVGTransform::SetSkewY(float angle, ErrorResult& rv)
   }
 
   if (!IsFinite(tan(angle * kRadPerDegree))) {
-    rv.ThrowRangeError(MSG_INVALID_TRANSFORM_ANGLE_ERROR);
+    rv.ThrowRangeError<MSG_INVALID_TRANSFORM_ANGLE_ERROR>();
     return;
   }
 
