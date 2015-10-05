@@ -58,7 +58,7 @@ parent:
   sync Stop();
 
   sync PCompositable(TextureInfo aInfo,
-                     nullable PImageContainer aImageContainer) returns (uint64_t id);
+                     PImageContainer aImageContainer) returns (uint64_t id);
   async PTexture(SurfaceDescriptor aSharedData, TextureFlags aTextureFlags);
   async PMediaSystemResourceManager();
   async PImageContainer();

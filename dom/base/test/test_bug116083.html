@@ -63,8 +63,7 @@ function hasExpectedFlavors() {
                                    cb.kGlobalClipboard);
 }
 
-SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(function nextTest() {
+function nextTest() {
   var div = document.querySelector("#content>div");
   if (!div) {
     SimpleTest.finish();
@@ -85,6 +84,11 @@ SimpleTest.waitForFocus(function nextTest() {
     ok(false, "failed to copy the expected content to the clipboard");
     SimpleTest.finish();
   });
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  SpecialPowers.pushPrefEnv({"set": [["clipboard.plainTextOnly", false]]}, nextTest);
 });
 
 </script>
