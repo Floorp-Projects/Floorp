@@ -32,10 +32,6 @@ browser.jar:
   skin/classic/browser/subtle-pattern.png
   skin/classic/browser/menu-back.png
   skin/classic/browser/menu-forward.png
-  skin/classic/browser/notification-16.png
-  skin/classic/browser/notification-16@2x.png
-  skin/classic/browser/notification-64.png
-  skin/classic/browser/notification-64@2x.png
   skin/classic/browser/menuPanel.png
   skin/classic/browser/menuPanel@2x.png
   skin/classic/browser/menuPanel-customize.png
