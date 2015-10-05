@@ -47,13 +47,7 @@
       document.body.removeChild(document.getElementById('ifr_' + test));
 
     // clean up the STS state
-    const Cc = SpecialPowers.Cc;
-    const Ci = SpecialPowers.Ci;
-    var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-    var thehost = ios.newURI("http://example.com", null, null);
-
-    var sss = Cc["@mozilla.org/ssservice;1"].getService(Ci.nsISiteSecurityService);
-    sss.removeState(Ci.nsISiteSecurityService.HEADER_HSTS, thehost, 0);
+    SpecialPowers.cleanUpSTSData("http://example.com");
   }
 
   function loadVerifyFrames(round) {

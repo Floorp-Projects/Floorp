@@ -558,10 +558,11 @@ SpecialPowersObserverAPI.prototype = {
 
       case "SPCleanUpSTSData": {
         let origin = aMessage.data.origin;
+        let flags = aMessage.data.flags;
         let uri = Services.io.newURI(origin, null, null);
         let sss = Cc["@mozilla.org/ssservice;1"].
                   getService(Ci.nsISiteSecurityService);
-        sss.removeState(Ci.nsISiteSecurityService.HEADER_HSTS, uri, 0);
+        sss.removeState(Ci.nsISiteSecurityService.HEADER_HSTS, uri, flags);
       }
 
       case "SPLoadExtension": {
