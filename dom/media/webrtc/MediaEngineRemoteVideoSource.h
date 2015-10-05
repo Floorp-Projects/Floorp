@@ -82,6 +82,10 @@ public:
     return mMediaSource;
   }
 
+  bool ChooseCapability(const dom::MediaTrackConstraints &aConstraints,
+                        const MediaEnginePrefs &aPrefs,
+                        const nsString& aDeviceId) override;
+
   void Refresh(int aIndex);
 
   virtual void Shutdown() override;

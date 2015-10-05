@@ -387,6 +387,31 @@ MediaEngineRemoteVideoSource::NumCapabilities()
   return mHardcodedCapabilities.Length();
 }
 
+bool
+MediaEngineRemoteVideoSource::ChooseCapability(const MediaTrackConstraints &aConstraints,
+    const MediaEnginePrefs &aPrefs,
+    const nsString& aDeviceId)
+{
+
+  switch(mMediaSource) {
+    case dom::MediaSourceEnum::Screen:
+    case dom::MediaSourceEnum::Window:
+    case dom::MediaSourceEnum::Application: {
+      FlattenedConstraints c(aConstraints);
+      mCapability.width = c.mWidth.Clamp(c.mWidth.mIdeal.WasPassed() ?
+        c.mWidth.mIdeal.Value() : aPrefs.mWidth);
+      mCapability.height = c.mHeight.Clamp(c.mHeight.mIdeal.WasPassed() ?
+        c.mHeight.mIdeal.Value() : aPrefs.mHeight);
+      mCapability.maxFPS = c.mFrameRate.Clamp(c.mFrameRate.mIdeal.WasPassed() ?
+        c.mFrameRate.mIdeal.Value() : aPrefs.mFPS);
+      return true;
+    }
+    default:
+      return MediaEngineCameraVideoSource::ChooseCapability(aConstraints, aPrefs, aDeviceId);
+  }
+
+}
+
 void
 MediaEngineRemoteVideoSource::GetCapability(size_t aIndex,
                                             webrtc::CaptureCapability& aOut)

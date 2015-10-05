@@ -89,7 +89,7 @@ static void LogCapability(const char* aHeader,
                           uint32_t aDistance);
   virtual size_t NumCapabilities();
   virtual void GetCapability(size_t aIndex, webrtc::CaptureCapability& aOut);
-  bool ChooseCapability(const dom::MediaTrackConstraints &aConstraints,
+  virtual bool ChooseCapability(const dom::MediaTrackConstraints &aConstraints,
                         const MediaEnginePrefs &aPrefs,
                         const nsString& aDeviceId);
   void SetName(nsString aName);
@@ -118,7 +118,7 @@ static void LogCapability(const char* aHeader,
   int mCaptureIndex;
   TrackID mTrackID;
 
-  webrtc::CaptureCapability mCapability; // Doesn't work on OS X.
+  webrtc::CaptureCapability mCapability;
 
   nsTArray<webrtc::CaptureCapability> mHardcodedCapabilities; // For OSX & B2G
 private:
