@@ -1285,10 +1285,10 @@
      * scripts where use of dynamic scoping inhibits optimization.
      *   Category: Variables and Scopes
      *   Type: Variables
-     *   Operands: uint32_t funcIndex
-     *   Stack: =>
+     *   Operands:
+     *   Stack: fun =>
      */ \
-    macro(JSOP_DEFFUN,    127,"deffun",     NULL,         5,  0,  0,  JOF_OBJECT) \
+    macro(JSOP_DEFFUN,    127,"deffun",     NULL,         1,  1,  0,  JOF_BYTE) \
     /* Defines the new constant binding on global lexical scope.
      *
      * Throws if a binding with the same name already exists on the scope, or
@@ -1995,7 +1995,6 @@
      *   Stack: val => ToString(val)
      */ \
     macro(JSOP_TOSTRING,    228, "tostring",       NULL,  1,  1,  1,  JOF_BYTE)
-
 /*
  * In certain circumstances it may be useful to "pad out" the opcode space to
  * a power of two.  Use this macro to do so.

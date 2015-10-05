@@ -1238,18 +1238,22 @@ class LDefLexical : public LCallInstructionHelper<0, 0, 0>
     }
 };
 
-class LDefFun : public LCallInstructionHelper<0, 1, 0>
+class LDefFun : public LCallInstructionHelper<0, 2, 0>
 {
   public:
     LIR_HEADER(DefFun)
 
-    explicit LDefFun(const LAllocation& scopeChain)
+    LDefFun(const LAllocation& fun, const LAllocation& scopeChain)
     {
-        setOperand(0, scopeChain);
+        setOperand(0, fun);
+        setOperand(1, scopeChain);
     }
 
-    const LAllocation* scopeChain() {
+    const LAllocation* fun() {
         return getOperand(0);
+    }
+    const LAllocation* scopeChain() {
+        return getOperand(1);
     }
     MDefFun* mir() const {
         return mir_->toDefFun();
