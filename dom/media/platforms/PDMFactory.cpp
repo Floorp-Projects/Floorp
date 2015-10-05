@@ -32,9 +32,7 @@
 #include "FuzzingWrapper.h"
 #include "H264Converter.h"
 
-#include "OpusDecoder.h"
-#include "VorbisDecoder.h"
-#include "VPXDecoder.h"
+#include "AgnosticDecoderModule.h"
 
 namespace mozilla {
 
@@ -112,22 +110,15 @@ PDMFactory::CreateDecoder(const TrackInfo& aConfig,
                           layers::ImageContainer* aImageContainer)
 {
   nsRefPtr<PlatformDecoderModule> current = GetDecoder(aConfig.mMimeType);
+  if (!current) {
+    return nullptr;
+  }
   nsRefPtr<MediaDataDecoder> m;
 
   if (aConfig.GetAsAudioInfo()) {
-    if (!current && VorbisDataDecoder::IsVorbis(aConfig.mMimeType)) {
-      m = new VorbisDataDecoder(*aConfig.GetAsAudioInfo(),
-                                aTaskQueue,
-                                aCallback);
-    } else if (!current && OpusDataDecoder::IsOpus(aConfig.mMimeType)) {
-      m = new OpusDataDecoder(*aConfig.GetAsAudioInfo(),
-                              aTaskQueue,
-                              aCallback);
-    } else if (current) {
-      m = current->CreateAudioDecoder(*aConfig.GetAsAudioInfo(),
+    m = current->CreateAudioDecoder(*aConfig.GetAsAudioInfo(),
                                       aTaskQueue,
                                       aCallback);
-    }
     return m.forget();
   }
 
@@ -145,34 +136,27 @@ PDMFactory::CreateDecoder(const TrackInfo& aConfig,
     callback = callbackWrapper.get();
   }
 
-  if (!current && VPXDecoder::IsVPX(aConfig.mMimeType)) {
-    m = new VPXDecoder(*aConfig.GetAsVideoInfo(),
-                       aImageContainer,
-                       aTaskQueue,
-                       callback);
-  } else if (current) {
-    if (H264Converter::IsH264(aConfig)) {
-      nsRefPtr<H264Converter> h
-        = new H264Converter(current,
-                            *aConfig.GetAsVideoInfo(),
-                            aLayersBackend,
-                            aImageContainer,
-                            aTaskQueue,
-                            callback);
-      const nsresult rv = h->GetLastError();
-      if (NS_SUCCEEDED(rv) || rv == NS_ERROR_NOT_INITIALIZED) {
-        // The H264Converter either successfully created the wrapped decoder,
-        // or there wasn't enough AVCC data to do so. Otherwise, there was some
-        // problem, for example WMF DLLs were missing.
-        m = h.forget();
-      }
-    } else {
-      m = current->CreateVideoDecoder(*aConfig.GetAsVideoInfo(),
-                                      aLayersBackend,
-                                      aImageContainer,
-                                      aTaskQueue,
-                                      callback);
+  if (H264Converter::IsH264(aConfig)) {
+    nsRefPtr<H264Converter> h
+      = new H264Converter(current,
+                          *aConfig.GetAsVideoInfo(),
+                          aLayersBackend,
+                          aImageContainer,
+                          aTaskQueue,
+                          callback);
+    const nsresult rv = h->GetLastError();
+    if (NS_SUCCEEDED(rv) || rv == NS_ERROR_NOT_INITIALIZED) {
+      // The H264Converter either successfully created the wrapped decoder,
+      // or there wasn't enough AVCC data to do so. Otherwise, there was some
+      // problem, for example WMF DLLs were missing.
+      m = h.forget();
     }
+  } else {
+    m = current->CreateVideoDecoder(*aConfig.GetAsVideoInfo(),
+                                    aLayersBackend,
+                                    aImageContainer,
+                                    aTaskQueue,
+                                    callback);
   }
 
   if (callbackWrapper && m) {
@@ -186,10 +170,7 @@ bool
 PDMFactory::SupportsMimeType(const nsACString& aMimeType)
 {
   nsRefPtr<PlatformDecoderModule> current = GetDecoder(aMimeType);
-  return current ||
-    VPXDecoder::IsVPX(aMimeType) ||
-    OpusDataDecoder::IsOpus(aMimeType) ||
-    VorbisDataDecoder::IsVorbis(aMimeType);
+  return !!current;
 }
 
 void
@@ -231,6 +212,10 @@ PDMFactory::CreatePDMs()
     StartupPDM(m);
   }
 #endif
+
+  m = new AgnosticDecoderModule();
+  StartupPDM(m);
+
   if (sUseBlankDecoder) {
     m = CreateBlankDecoderModule();
     StartupPDM(m);
