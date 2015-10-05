@@ -9,6 +9,9 @@
 #ifndef COMMON_UTILITIES_H_
 #define COMMON_UTILITIES_H_
 
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+
 #include "angle_gl.h"
 #include <string>
 #include <math.h>
@@ -47,7 +50,15 @@ GLenum LayerIndexToCubeMapTextureTarget(size_t index);
 // set to GL_INVALID_INDEX if the provided name is not an array or the array index is invalid.
 std::string ParseUniformName(const std::string &name, size_t *outSubscript);
 
-RangeUI ComputeIndexRange(GLenum indexType, const GLvoid *indices, GLsizei count);
+// Find the range of index values in the provided indices pointer.  Primitive restart indices are
+// only counted in the range if primitive restart is disabled.
+IndexRange ComputeIndexRange(GLenum indexType,
+                             const GLvoid *indices,
+                             size_t count,
+                             bool primitiveRestartEnabled);
+
+// Get the primitive restart index value for the given index type.
+GLuint GetPrimitiveRestartIndex(GLenum indexType);
 
 bool IsTriangleMode(GLenum drawMode);
 
@@ -57,6 +68,24 @@ bool IsTriangleMode(GLenum drawMode);
 template <typename outT> outT iround(GLfloat value) { return static_cast<outT>(value > 0.0f ? floor(value + 0.5f) : ceil(value - 0.5f)); }
 template <typename outT> outT uiround(GLfloat value) { return static_cast<outT>(value + 0.5f); }
 
+}
+
+namespace egl
+{
+static const EGLenum FirstCubeMapTextureTarget = EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_X_KHR;
+static const EGLenum LastCubeMapTextureTarget = EGL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_KHR;
+bool IsCubeMapTextureTarget(EGLenum target);
+size_t CubeMapTextureTargetToLayerIndex(EGLenum target);
+EGLenum LayerIndexToCubeMapTextureTarget(size_t index);
+bool IsTextureTarget(EGLenum target);
+bool IsRenderbufferTarget(EGLenum target);
+}
+
+namespace egl_gl
+{
+GLenum EGLCubeMapTargetToGLCubeMapTarget(EGLenum eglTarget);
+GLenum EGLImageTargetToGLTextureTarget(EGLenum eglTarget);
+GLuint EGLClientBufferToGLObjectHandle(EGLClientBuffer buffer);
 }
 
 #if !defined(ANGLE_ENABLE_WINDOWS_STORE)

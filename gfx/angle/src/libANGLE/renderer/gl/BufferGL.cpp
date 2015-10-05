@@ -92,7 +92,7 @@ gl::Error BufferGL::mapRange(size_t offset, size_t length, GLbitfield access, GL
 
 gl::Error BufferGL::unmap(GLboolean *result)
 {
-    ASSERT(*result);
+    ASSERT(result);
 
     mStateManager->bindBuffer(DestBufferOperationTarget, mBufferID);
     *result = mFunctions->unmapBuffer(DestBufferOperationTarget);
@@ -101,13 +101,17 @@ gl::Error BufferGL::unmap(GLboolean *result)
     return gl::Error(GL_NO_ERROR);
 }
 
-gl::Error BufferGL::getIndexRange(GLenum type, size_t offset, size_t count, gl::RangeUI *outRange)
+gl::Error BufferGL::getIndexRange(GLenum type,
+                                  size_t offset,
+                                  size_t count,
+                                  bool primitiveRestartEnabled,
+                                  gl::IndexRange *outRange)
 {
     ASSERT(!mIsMapped);
 
     mStateManager->bindBuffer(DestBufferOperationTarget, mBufferID);
     const uint8_t *bufferData = reinterpret_cast<uint8_t*>(mFunctions->mapBuffer(DestBufferOperationTarget, GL_READ_ONLY));
-    *outRange = gl::ComputeIndexRange(type, bufferData + offset, count);
+    *outRange = gl::ComputeIndexRange(type, bufferData + offset, count, primitiveRestartEnabled);
     mFunctions->unmapBuffer(DestBufferOperationTarget);
 
     return gl::Error(GL_NO_ERROR);

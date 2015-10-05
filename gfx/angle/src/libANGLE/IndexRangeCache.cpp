@@ -15,37 +15,22 @@
 namespace gl
 {
 
-void IndexRangeCache::addRange(GLenum type, unsigned int offset, GLsizei count, const RangeUI &range)
+void IndexRangeCache::addRange(GLenum type,
+                               size_t offset,
+                               size_t count,
+                               bool primitiveRestartEnabled,
+                               const IndexRange &range)
 {
-    mIndexRangeCache[IndexRange(type, offset, count)] = range;
+    mIndexRangeCache[IndexRangeKey(type, offset, count, primitiveRestartEnabled)] = range;
 }
 
-void IndexRangeCache::invalidateRange(unsigned int offset, unsigned int size)
+bool IndexRangeCache::findRange(GLenum type,
+                                size_t offset,
+                                size_t count,
+                                bool primitiveRestartEnabled,
+                                IndexRange *outRange) const
 {
-    unsigned int invalidateStart = offset;
-    unsigned int invalidateEnd = offset + size;
-
-    IndexRangeMap::iterator i = mIndexRangeCache.begin();
-    while (i != mIndexRangeCache.end())
-    {
-        unsigned int rangeStart = i->first.offset;
-        unsigned int rangeEnd = i->first.offset + (GetTypeInfo(i->first.type).bytes * i->first.count);
-
-        if (invalidateEnd < rangeStart || invalidateStart > rangeEnd)
-        {
-            ++i;
-        }
-        else
-        {
-            mIndexRangeCache.erase(i++);
-        }
-    }
-}
-
-bool IndexRangeCache::findRange(GLenum type, unsigned int offset, GLsizei count,
-                                RangeUI *outRange) const
-{
-    IndexRangeMap::const_iterator i = mIndexRangeCache.find(IndexRange(type, offset, count));
+    auto i = mIndexRangeCache.find(IndexRangeKey(type, offset, count, primitiveRestartEnabled));
     if (i != mIndexRangeCache.end())
     {
         if (outRange)
@@ -58,9 +43,31 @@ bool IndexRangeCache::findRange(GLenum type, unsigned int offset, GLsizei count,
     {
         if (outRange)
         {
-            *outRange = RangeUI(0, 0);
+            *outRange = IndexRange();
         }
         return false;
+    }
+}
+
+void IndexRangeCache::invalidateRange(size_t offset, size_t size)
+{
+    size_t invalidateStart = offset;
+    size_t invalidateEnd   = offset + size;
+
+    auto i = mIndexRangeCache.begin();
+    while (i != mIndexRangeCache.end())
+    {
+        size_t rangeStart = i->first.offset;
+        size_t rangeEnd   = i->first.offset + (GetTypeInfo(i->first.type).bytes * i->first.count);
+
+        if (invalidateEnd < rangeStart || invalidateStart > rangeEnd)
+        {
+            ++i;
+        }
+        else
+        {
+            mIndexRangeCache.erase(i++);
+        }
     }
 }
 
@@ -69,23 +76,38 @@ void IndexRangeCache::clear()
     mIndexRangeCache.clear();
 }
 
-IndexRangeCache::IndexRange::IndexRange()
-    : IndexRangeCache::IndexRange(GL_NONE, 0, 0)
+IndexRangeCache::IndexRangeKey::IndexRangeKey()
+    : IndexRangeCache::IndexRangeKey(GL_NONE, 0, 0, false)
 {
 }
 
-IndexRangeCache::IndexRange::IndexRange(GLenum typ, intptr_t off, GLsizei c)
-    : type(typ),
-      offset(static_cast<unsigned int>(off)),
-      count(c)
+IndexRangeCache::IndexRangeKey::IndexRangeKey(GLenum type_,
+                                              size_t offset_,
+                                              size_t count_,
+                                              bool primitiveRestartEnabled_)
+    : type(type_), offset(offset_), count(count_), primitiveRestartEnabled(primitiveRestartEnabled_)
 {
 }
 
-bool IndexRangeCache::IndexRange::operator<(const IndexRange& rhs) const
+bool IndexRangeCache::IndexRangeKey::operator<(const IndexRangeKey &rhs) const
 {
-    if (type != rhs.type) return type < rhs.type;
-    if (offset != rhs.offset) return offset < rhs.offset;
-    return count < rhs.count;
+    if (type != rhs.type)
+    {
+        return type < rhs.type;
+    }
+    if (offset != rhs.offset)
+    {
+        return offset < rhs.offset;
+    }
+    if (count != rhs.count)
+    {
+        return count < rhs.count;
+    }
+    if (primitiveRestartEnabled != rhs.primitiveRestartEnabled)
+    {
+        return primitiveRestartEnabled;
+    }
+    return false;
 }
 
 }

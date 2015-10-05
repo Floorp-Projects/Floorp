@@ -110,7 +110,7 @@ bool ValidateES2TexImageParameters(Context *context, GLenum target, GLint level,
     }
     else
     {
-        if (texture->isImmutable())
+        if (texture->getImmutableFormat())
         {
             context->recordError(Error(GL_INVALID_OPERATION));
             return false;
@@ -830,7 +830,7 @@ bool ValidateES2TexStorageParameters(Context *context, GLenum target, GLsizei le
         return false;
     }
 
-    if (texture->isImmutable())
+    if (texture->getImmutableFormat())
     {
         context->recordError(Error(GL_INVALID_OPERATION));
         return false;
@@ -903,4 +903,68 @@ bool ValidateDiscardFramebufferEXT(Context *context, GLenum target, GLsizei numA
     return ValidateDiscardFramebufferBase(context, target, numAttachments, attachments, defaultFramebuffer);
 }
 
+bool ValidateDrawBuffers(Context *context, GLsizei n, const GLenum *bufs)
+{
+    // INVALID_VALUE is generated if n is negative or greater than value of MAX_DRAW_BUFFERS
+    if (n < 0 || static_cast<GLuint>(n) > context->getCaps().maxDrawBuffers)
+    {
+        context->recordError(
+            Error(GL_INVALID_VALUE, "n must be non-negative and no greater than MAX_DRAW_BUFFERS"));
+        return false;
+    }
+
+    ASSERT(context->getState().getDrawFramebuffer());
+    GLuint frameBufferId      = context->getState().getDrawFramebuffer()->id();
+    GLuint maxColorAttachment = GL_COLOR_ATTACHMENT0_EXT + context->getCaps().maxColorAttachments;
+
+    // This should come first before the check for the default frame buffer
+    // because when we switch to ES3.1+, invalid enums will return INVALID_ENUM
+    // rather than INVALID_OPERATION
+    for (int colorAttachment = 0; colorAttachment < n; colorAttachment++)
+    {
+        const GLenum attachment = GL_COLOR_ATTACHMENT0_EXT + colorAttachment;
+
+        if (bufs[colorAttachment] != GL_NONE && bufs[colorAttachment] != GL_BACK &&
+            (bufs[colorAttachment] < GL_COLOR_ATTACHMENT0_EXT ||
+             bufs[colorAttachment] >= maxColorAttachment))
+        {
+            // Value in bufs is not NONE, BACK, or GL_COLOR_ATTACHMENTi
+            // In the 3.0 specs, the error should return GL_INVALID_OPERATION.
+            // When we move to 3.1 specs, we should change the error to be GL_INVALID_ENUM
+            context->recordError(Error(GL_INVALID_OPERATION, "Invalid buffer value"));
+            return false;
+        }
+        else if (bufs[colorAttachment] != GL_NONE && bufs[colorAttachment] != attachment &&
+                 frameBufferId != 0)
+        {
+            // INVALID_OPERATION-GL is bound to buffer and ith argument
+            // is not COLOR_ATTACHMENTi or NONE
+            context->recordError(
+                Error(GL_INVALID_OPERATION, "Ith value does not match COLOR_ATTACHMENTi or NONE"));
+            return false;
+        }
+    }
+
+    // INVALID_OPERATION is generated if GL is bound to the default framebuffer
+    // and n is not 1 or bufs is bound to value other than BACK and NONE
+    if (frameBufferId == 0)
+    {
+        if (n != 1)
+        {
+            context->recordError(Error(GL_INVALID_OPERATION,
+                                       "n must be 1 when GL is bound to the default framebuffer"));
+            return false;
+        }
+
+        if (bufs[0] != GL_NONE && bufs[0] != GL_BACK)
+        {
+            context->recordError(Error(
+                GL_INVALID_OPERATION,
+                "Only NONE or BACK are valid values when drawing to the default framebuffer"));
+            return false;
+        }
+    }
+
+    return true;
+}
 }

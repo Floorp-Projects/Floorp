@@ -275,11 +275,7 @@ gl::Error Buffer11::setData(const void *data, size_t size, GLenum usage)
         return error;
     }
 
-    if (usage == GL_STATIC_DRAW)
-    {
-        initializeStaticData();
-    }
-
+    updateD3DBufferUsage(usage);
     return error;
 }
 
@@ -614,7 +610,8 @@ ID3D11ShaderResourceView *Buffer11::getSRV(DXGI_FORMAT srvFormat)
 
     D3D11_SHADER_RESOURCE_VIEW_DESC bufferSRVDesc;
     bufferSRVDesc.Buffer.ElementOffset = 0;
-    bufferSRVDesc.Buffer.ElementWidth  = mSize / dxgiFormatInfo.pixelBytes;
+    bufferSRVDesc.Buffer.ElementWidth =
+        static_cast<unsigned int>(mSize) / dxgiFormatInfo.pixelBytes;
     bufferSRVDesc.ViewDimension        = D3D11_SRV_DIMENSION_BUFFER;
     bufferSRVDesc.Format               = srvFormat;
 
@@ -933,8 +930,8 @@ bool Buffer11::NativeStorage::copyFromStorage(BufferStorage *source,
     else
     {
         D3D11_BOX srcBox;
-        srcBox.left   = sourceOffset;
-        srcBox.right  = sourceOffset + size;
+        srcBox.left   = static_cast<unsigned int>(sourceOffset);
+        srcBox.right  = static_cast<unsigned int>(sourceOffset + size);
         srcBox.top    = 0;
         srcBox.bottom = 1;
         srcBox.front  = 0;
@@ -942,8 +939,8 @@ bool Buffer11::NativeStorage::copyFromStorage(BufferStorage *source,
 
         ID3D11Buffer *sourceBuffer = GetAs<NativeStorage>(source)->getNativeStorage();
 
-        context->CopySubresourceRegion(mNativeStorage, 0, destOffset, 0, 0, sourceBuffer, 0,
-                                       &srcBox);
+        context->CopySubresourceRegion(mNativeStorage, 0, static_cast<unsigned int>(destOffset), 0,
+                                       0, sourceBuffer, 0, &srcBox);
     }
 
     return createBuffer;
@@ -955,7 +952,7 @@ gl::Error Buffer11::NativeStorage::resize(size_t size, bool preserveData)
     ID3D11DeviceContext *context = mRenderer->getDeviceContext();
 
     D3D11_BUFFER_DESC bufferDesc;
-    fillBufferDesc(&bufferDesc, mRenderer, mUsage, size);
+    fillBufferDesc(&bufferDesc, mRenderer, mUsage, static_cast<unsigned int>(size));
 
     ID3D11Buffer *newBuffer;
     HRESULT result = device->CreateBuffer(&bufferDesc, nullptr, &newBuffer);
@@ -975,7 +972,7 @@ gl::Error Buffer11::NativeStorage::resize(size_t size, bool preserveData)
 
         D3D11_BOX srcBox;
         srcBox.left   = 0;
-        srcBox.right  = mBufferSize;
+        srcBox.right  = static_cast<unsigned int>(mBufferSize);
         srcBox.top    = 0;
         srcBox.bottom = 1;
         srcBox.front  = 0;
@@ -1092,7 +1089,8 @@ ID3D11Buffer *Buffer11::EmulatedIndexedStorage::getNativeStorage()
     if (!mNativeStorage)
     {
         // Expand the memory storage upon request and cache the results.
-        unsigned int expandedDataSize = (mIndexInfo.srcCount * mAttributeStride) + mAttributeOffset;
+        unsigned int expandedDataSize =
+            static_cast<unsigned int>((mIndexInfo.srcCount * mAttributeStride) + mAttributeOffset);
         MemoryBuffer expandedData;
         if (!expandedData.resize(expandedDataSize))
         {

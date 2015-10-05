@@ -53,7 +53,7 @@ class VertexAttributeTest : public ANGLETest
         GLint midPixelX = (viewportSize[0] + viewportSize[2]) / 2;
         GLint midPixelY = (viewportSize[1] + viewportSize[3]) / 2;
 
-        for (size_t i = 0; i < 4; i++)
+        for (GLint i = 0; i < 4; i++)
         {
             glBindBuffer(GL_ARRAY_BUFFER, 0);
             glVertexAttribPointer(mTestAttrib, i + 1, test.type, test.normalized, 0, test.inputData);

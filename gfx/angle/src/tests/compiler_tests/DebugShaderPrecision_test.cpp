@@ -61,8 +61,8 @@ class DebugShaderPrecisionTest : public testing::Test
         ShBuiltInResources resources;
         ShInitBuiltInResources(&resources);
         resources.WEBGL_debug_shader_precision = 1;
-        return compileTestShader(GL_FRAGMENT_SHADER, SH_GLES2_SPEC, output, shaderString, &resources,
-                                 translatedCode, infoLog);
+        return compileTestShader(GL_FRAGMENT_SHADER, SH_GLES3_SPEC, output, shaderString,
+                                 &resources, translatedCode, infoLog);
     }
 
     std::string mESSLCode;
@@ -770,4 +770,53 @@ TEST_F(DebugShaderPrecisionTest, NestedFunctionCalls)
     compile(shaderString);
     // Test nested calls
     ASSERT_TRUE(foundInCode("v2 = add(compound_add(v, angle_frm(u2)), angle_frm(fract(angle_frm(u3))))"));
+}
+
+// Test that code inside an index of a function out parameter gets processed.
+TEST_F(DebugShaderPrecisionTest, OpInIndexOfFunctionOutParameter)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "void foo(out vec4 f) { f.x = 0.0; }\n"
+        "uniform float u2;\n"
+        "void main() {\n"
+        "   vec4 v[2];\n"
+        "   foo(v[int(exp2(u2))]);\n"
+        "   gl_FragColor = v[0];\n"
+        "}\n";
+    compile(shaderString);
+    ASSERT_TRUE(foundInCode("angle_frm(exp2(angle_frm(u2)))"));
+}
+
+// Test that code inside an index of an l-value gets processed.
+TEST_F(DebugShaderPrecisionTest, OpInIndexOfLValue)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "uniform vec4 u1;\n"
+        "uniform float u2;\n"
+        "void main() {\n"
+        "   vec4 v[2];\n"
+        "   v[int(exp2(u2))] = u1;\n"
+        "   gl_FragColor = v[0];\n"
+        "}\n";
+    compile(shaderString);
+    ASSERT_TRUE(foundInCode("angle_frm(exp2(angle_frm(u2)))"));
+}
+
+// Test that the out parameter of modf doesn't get rounded
+TEST_F(DebugShaderPrecisionTest, ModfOutParameter)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "uniform float u;\n"
+        "out vec4 my_FragColor;\n"
+        "void main() {\n"
+        "   float o;\n"
+        "   float f = modf(u, o);\n"
+        "   my_FragColor = vec4(f, o, 0, 1);\n"
+        "}\n";
+    compile(shaderString);
+    ASSERT_TRUE(foundInCode("modf(angle_frm(u), o)"));
 }

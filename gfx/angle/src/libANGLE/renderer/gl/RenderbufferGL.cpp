@@ -18,10 +18,13 @@
 
 namespace rx
 {
-
-RenderbufferGL::RenderbufferGL(const FunctionsGL *functions, StateManagerGL *stateManager, const gl::TextureCapsMap &textureCaps)
+RenderbufferGL::RenderbufferGL(const FunctionsGL *functions,
+                               const WorkaroundsGL &workarounds,
+                               StateManagerGL *stateManager,
+                               const gl::TextureCapsMap &textureCaps)
     : RenderbufferImpl(),
       mFunctions(functions),
+      mWorkarounds(workarounds),
       mStateManager(stateManager),
       mTextureCaps(textureCaps),
       mRenderbufferID(0)
@@ -40,8 +43,10 @@ gl::Error RenderbufferGL::setStorage(GLenum internalformat, size_t width, size_t
 {
     mStateManager->bindRenderbuffer(GL_RENDERBUFFER, mRenderbufferID);
 
-    const nativegl::InternalFormat &nativeInternalFormatInfo = nativegl::GetInternalFormatInfo(internalformat, mFunctions->standard);
-    mFunctions->renderbufferStorage(GL_RENDERBUFFER, nativeInternalFormatInfo.internalFormat, width, height);
+    nativegl::RenderbufferFormat renderbufferFormat =
+        nativegl::GetRenderbufferFormat(mFunctions, mWorkarounds, internalformat);
+    mFunctions->renderbufferStorage(GL_RENDERBUFFER, renderbufferFormat.internalFormat,
+                                    static_cast<GLsizei>(width), static_cast<GLsizei>(height));
 
     return gl::Error(GL_NO_ERROR);
 }
@@ -50,8 +55,11 @@ gl::Error RenderbufferGL::setStorageMultisample(size_t samples, GLenum internalf
 {
     mStateManager->bindRenderbuffer(GL_RENDERBUFFER, mRenderbufferID);
 
-    const nativegl::InternalFormat &nativeInternalFormatInfo = nativegl::GetInternalFormatInfo(internalformat, mFunctions->standard);
-    mFunctions->renderbufferStorageMultisample(GL_RENDERBUFFER, samples, nativeInternalFormatInfo.internalFormat, width, height);
+    nativegl::RenderbufferFormat renderbufferFormat =
+        nativegl::GetRenderbufferFormat(mFunctions, mWorkarounds, internalformat);
+    mFunctions->renderbufferStorageMultisample(
+        GL_RENDERBUFFER, static_cast<GLsizei>(samples), renderbufferFormat.internalFormat,
+        static_cast<GLsizei>(width), static_cast<GLsizei>(height));
 
     const gl::TextureCaps &formatCaps = mTextureCaps.get(internalformat);
     if (samples > formatCaps.getMaxSamples())
@@ -72,6 +80,12 @@ gl::Error RenderbufferGL::setStorageMultisample(size_t samples, GLenum internalf
     }
 
     return gl::Error(GL_NO_ERROR);
+}
+
+gl::Error RenderbufferGL::setStorageEGLImageTarget(egl::Image *image)
+{
+    UNIMPLEMENTED();
+    return gl::Error(GL_INVALID_OPERATION);
 }
 
 GLuint RenderbufferGL::getRenderbufferID() const

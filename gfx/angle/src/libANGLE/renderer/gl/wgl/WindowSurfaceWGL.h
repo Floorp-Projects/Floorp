@@ -21,7 +21,11 @@ class FunctionsWGL;
 class WindowSurfaceWGL : public SurfaceGL
 {
   public:
-    WindowSurfaceWGL(EGLNativeWindowType window, int pixelFormat, HGLRC wglContext, const FunctionsWGL *functions);
+    WindowSurfaceWGL(RendererGL *renderer,
+                     EGLNativeWindowType window,
+                     int pixelFormat,
+                     HGLRC wglContext,
+                     const FunctionsWGL *functions);
     ~WindowSurfaceWGL() override;
 
     egl::Error initialize() override;
@@ -38,6 +42,7 @@ class WindowSurfaceWGL : public SurfaceGL
     EGLint getHeight() const override;
 
     EGLint isPostSubBufferSupported() const override;
+    EGLint getSwapBehavior() const override;
 
   private:
     int mPixelFormat;
@@ -48,6 +53,8 @@ class WindowSurfaceWGL : public SurfaceGL
     HDC mDeviceContext;
 
     const FunctionsWGL *mFunctionsWGL;
+
+    EGLint mSwapBehavior;
 };
 
 }

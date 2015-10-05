@@ -33,8 +33,14 @@ SurfaceD3D *SurfaceD3D::createFromWindow(RendererD3D *renderer, egl::Display *di
     return new SurfaceD3D(renderer, display, config, width, height, fixedSize, static_cast<EGLClientBuffer>(0), window);
 }
 
-SurfaceD3D::SurfaceD3D(RendererD3D *renderer, egl::Display *display, const egl::Config *config, EGLint width, EGLint height, EGLint fixedSize,
-                       EGLClientBuffer shareHandle, EGLNativeWindowType window)
+SurfaceD3D::SurfaceD3D(RendererD3D *renderer,
+                       egl::Display *display,
+                       const egl::Config *config,
+                       EGLint width,
+                       EGLint height,
+                       EGLint fixedSize,
+                       EGLClientBuffer shareHandle,
+                       EGLNativeWindowType window)
     : SurfaceImpl(),
       mRenderer(renderer),
       mDisplay(display),
@@ -43,11 +49,11 @@ SurfaceD3D::SurfaceD3D(RendererD3D *renderer, egl::Display *display, const egl::
       mDepthStencilFormat(config->depthStencilFormat),
       mSwapChain(nullptr),
       mSwapIntervalDirty(true),
-      mNativeWindow(window),
+      mNativeWindow(window, config),
       mWidth(width),
       mHeight(height),
       mSwapInterval(1),
-      mShareHandle(reinterpret_cast<HANDLE*>(shareHandle))
+      mShareHandle(reinterpret_cast<HANDLE *>(shareHandle))
 {
 }
 
@@ -78,6 +84,11 @@ egl::Error SurfaceD3D::initialize()
     }
 
     return egl::Error(EGL_SUCCESS);
+}
+
+FramebufferImpl *SurfaceD3D::createDefaultFramebuffer(const gl::Framebuffer::Data &data)
+{
+    return mRenderer->createFramebuffer(data);
 }
 
 egl::Error SurfaceD3D::bindTexImage(EGLint)
@@ -293,6 +304,11 @@ EGLint SurfaceD3D::isPostSubBufferSupported() const
 {
     // post sub buffer is always possible on D3D surfaces
     return EGL_TRUE;
+}
+
+EGLint SurfaceD3D::getSwapBehavior() const
+{
+    return EGL_BUFFER_PRESERVED;
 }
 
 egl::Error SurfaceD3D::querySurfacePointerANGLE(EGLint attribute, void **value)

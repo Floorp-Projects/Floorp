@@ -8,7 +8,7 @@
 #define PREPROCESSOR_TESTS_MOCK_DIRECTIVE_HANDLER_H_
 
 #include "gmock/gmock.h"
-#include "DirectiveHandlerBase.h"
+#include "compiler/preprocessor/DirectiveHandlerBase.h"
 
 class MockDirectiveHandler : public pp::DirectiveHandler
 {

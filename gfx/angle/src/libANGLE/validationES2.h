@@ -32,6 +32,7 @@ bool ValidES2ReadFormatType(Context *context, GLenum format, GLenum type);
 bool ValidateDiscardFramebufferEXT(Context *context, GLenum target, GLsizei numAttachments,
                                    const GLenum *attachments);
 
+bool ValidateDrawBuffers(Context *context, GLsizei n, const GLenum *bufs);
 }
 
 #endif // LIBANGLE_VALIDATION_ES2_H_

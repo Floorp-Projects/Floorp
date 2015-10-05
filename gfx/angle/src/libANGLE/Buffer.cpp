@@ -160,20 +160,24 @@ void Buffer::onPixelUnpack()
     mIndexRangeCache.clear();
 }
 
-Error Buffer::getIndexRange(GLenum type, size_t offset, size_t count, gl::RangeUI *outRange) const
+Error Buffer::getIndexRange(GLenum type,
+                            size_t offset,
+                            size_t count,
+                            bool primitiveRestartEnabled,
+                            IndexRange *outRange) const
 {
-    if (mIndexRangeCache.findRange(type, offset, count, outRange))
+    if (mIndexRangeCache.findRange(type, offset, count, primitiveRestartEnabled, outRange))
     {
         return gl::Error(GL_NO_ERROR);
     }
 
-    Error error = mBuffer->getIndexRange(type, offset, count, outRange);
+    Error error = mBuffer->getIndexRange(type, offset, count, primitiveRestartEnabled, outRange);
     if (error.isError())
     {
         return error;
     }
 
-    mIndexRangeCache.addRange(type, offset, count, *outRange);
+    mIndexRangeCache.addRange(type, offset, count, primitiveRestartEnabled, *outRange);
 
     return Error(GL_NO_ERROR);
 }

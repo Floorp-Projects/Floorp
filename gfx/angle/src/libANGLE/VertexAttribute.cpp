@@ -52,4 +52,23 @@ size_t ComputeVertexAttributeStride(const VertexAttribute& attrib)
     return attrib.stride ? attrib.stride : ComputeVertexAttributeTypeSize(attrib);
 }
 
+size_t ComputeVertexAttributeElementCount(const VertexAttribute &attrib,
+                                          size_t drawCount,
+                                          size_t instanceCount)
+{
+    // For instanced rendering, we draw "instanceDrawCount" sets of "vertexDrawCount" vertices.
+    //
+    // A vertex attribute with a positive divisor loads one instanced vertex for every set of
+    // non-instanced vertices, and the instanced vertex index advances once every "mDivisor"
+    // instances.
+    if (instanceCount > 0 && attrib.divisor > 0)
+    {
+        // When instanceDrawCount is not a multiple attrib.divisor, the division must round up.
+        // For instance, with 5 non-instanced vertices and a divisor equal to 3, we need 2 instanced
+        // vertices.
+        return (instanceCount + attrib.divisor - 1u) / attrib.divisor;
+    }
+
+    return drawCount;
+}
 }

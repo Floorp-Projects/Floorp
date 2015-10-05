@@ -25,12 +25,14 @@ const char *g_CaseListFiles[] =
 {
     "dEQP-GLES2-cases.txt.gz",
     "dEQP-GLES3-cases.txt.gz",
+    "dEQP-EGL-cases.txt.gz",
 };
 
 const char *g_TestExpectationsFiles[] =
 {
     "deqp_gles2_test_expectations.txt",
     "deqp_gles3_test_expectations.txt",
+    "deqp_egl_test_expectations.txt",
 };
 
 class dEQPCaseList
@@ -54,14 +56,18 @@ class dEQPCaseList
         int mExpectation;
     };
 
+    void initialize();
+
     const CaseInfo &getCaseInfo(size_t caseIndex) const
     {
+        ASSERT(mInitialized);
         ASSERT(caseIndex < mCaseInfoList.size());
         return mCaseInfoList[caseIndex];
     }
 
     size_t numCases() const
     {
+        ASSERT(mInitialized);
         return mCaseInfoList.size();
     }
 
@@ -69,35 +75,50 @@ class dEQPCaseList
     std::vector<CaseInfo> mCaseInfoList;
     gpu::GPUTestExpectationsParser mTestExpectationsParser;
     gpu::GPUTestBotConfig mTestConfig;
+    size_t mTestModuleIndex;
+    bool mInitialized;
 };
 
 dEQPCaseList::dEQPCaseList(size_t testModuleIndex)
+    : mTestModuleIndex(testModuleIndex),
+      mInitialized(false)
 {
+}
+
+void dEQPCaseList::initialize()
+{
+    if (mInitialized)
+    {
+        return;
+    }
+
+    mInitialized = true;
+
     std::string exeDir = angle::GetExecutableDirectory();
 
     std::stringstream caseListPathStr;
-    caseListPathStr << exeDir << "/deqp_support/" << g_CaseListFiles[testModuleIndex];
+    caseListPathStr << exeDir << "/deqp_support/" << g_CaseListFiles[mTestModuleIndex];
     std::string caseListPath = caseListPathStr.str();
 
     std::stringstream testExpectationsPathStr;
     testExpectationsPathStr << exeDir << "/deqp_support/"
-                            << g_TestExpectationsFiles[testModuleIndex];
+                            << g_TestExpectationsFiles[mTestModuleIndex];
     std::string testExpectationsPath = testExpectationsPathStr.str();
 
     if (!mTestExpectationsParser.LoadTestExpectationsFromFile(testExpectationsPath))
     {
-        std::cerr << "Failed to load test expectations." << std::endl;
+        std::stringstream errorMsgStream;
         for (const auto &message : mTestExpectationsParser.GetErrorMessages())
         {
-            std::cerr << " " << message << std::endl;
+            errorMsgStream << std::endl << " " << message;
         }
-        return;
+
+        FAIL() << "Failed to load test expectations." << errorMsgStream.str();
     }
 
     if (!mTestConfig.LoadCurrentConfig(nullptr))
     {
-        std::cerr << "Failed to load test configuration." << std::endl;
-        return;
+        FAIL() << "Failed to load test configuration.";
     }
 
     std::stringstream caseListStream;
@@ -107,7 +128,7 @@ dEQPCaseList::dEQPCaseList(size_t testModuleIndex)
 
     if (fi == nullptr)
     {
-        return;
+        FAIL() << "Failed to read gzipped test information.";
     }
 
     gzrewind(fi);
@@ -154,6 +175,7 @@ class dEQPTest : public testing::TestWithParam<size_t>
     static const dEQPCaseList &GetCaseList()
     {
         static dEQPCaseList sCaseList(TestModuleIndex);
+        sCaseList.initialize();
         return sCaseList;
     }
 
@@ -184,6 +206,10 @@ class dEQP_GLES3 : public dEQPTest<1>
 {
 };
 
+class dEQP_EGL : public dEQPTest<2>
+{
+};
+
 #ifdef ANGLE_DEQP_GLES2_TESTS
 // TODO(jmadill): add different platform configs, or ability to choose platform
 TEST_P(dEQP_GLES2, Default)
@@ -201,6 +227,15 @@ TEST_P(dEQP_GLES3, Default)
 }
 
 INSTANTIATE_TEST_CASE_P(, dEQP_GLES3, dEQP_GLES3::GetTestingRange());
+#endif
+
+#ifdef ANGLE_DEQP_EGL_TESTS
+TEST_P(dEQP_EGL, Default)
+{
+    runTest();
+}
+
+INSTANTIATE_TEST_CASE_P(, dEQP_EGL, dEQP_EGL::GetTestingRange());
 #endif
 
 } // anonymous namespace

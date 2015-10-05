@@ -22,7 +22,8 @@ BufferD3D::BufferD3D(BufferFactoryD3D *factory)
       mFactory(factory),
       mStaticVertexBuffer(nullptr),
       mStaticIndexBuffer(nullptr),
-      mUnmodifiedDataUse(0)
+      mUnmodifiedDataUse(0),
+      mUsage(D3D_BUFFER_USAGE_STATIC)
 {
     updateSerial();
 }
@@ -36,6 +37,30 @@ BufferD3D::~BufferD3D()
 void BufferD3D::updateSerial()
 {
     mSerial = mNextSerial++;
+}
+
+void BufferD3D::updateD3DBufferUsage(GLenum usage)
+{
+    switch (usage)
+    {
+        case GL_STATIC_DRAW:
+        case GL_STATIC_READ:
+        case GL_STATIC_COPY:
+            mUsage = D3D_BUFFER_USAGE_STATIC;
+            initializeStaticData();
+            break;
+
+        case GL_STREAM_DRAW:
+        case GL_STREAM_READ:
+        case GL_STREAM_COPY:
+        case GL_DYNAMIC_READ:
+        case GL_DYNAMIC_COPY:
+        case GL_DYNAMIC_DRAW:
+            mUsage = D3D_BUFFER_USAGE_DYNAMIC;
+            break;
+        default:
+            UNREACHABLE();
+    }
 }
 
 void BufferD3D::initializeStaticData()
@@ -57,8 +82,12 @@ void BufferD3D::invalidateStaticData()
         SafeDelete(mStaticVertexBuffer);
         SafeDelete(mStaticIndexBuffer);
 
-        // Re-init static data to track that we're in a static buffer
-        initializeStaticData();
+        // If the buffer was created with a static usage then we recreate the static
+        // buffers so that they are populated the next time we use this buffer.
+        if (mUsage == D3D_BUFFER_USAGE_STATIC)
+        {
+            initializeStaticData();
+        }
     }
 
     mUnmodifiedDataUse = 0;
@@ -78,7 +107,11 @@ void BufferD3D::promoteStaticUsage(int dataSize)
     }
 }
 
-gl::Error BufferD3D::getIndexRange(GLenum type, size_t offset, size_t count, gl::RangeUI *outRange)
+gl::Error BufferD3D::getIndexRange(GLenum type,
+                                   size_t offset,
+                                   size_t count,
+                                   bool primitiveRestartEnabled,
+                                   gl::IndexRange *outRange)
 {
     const uint8_t *data = nullptr;
     gl::Error error = getData(&data);
@@ -87,7 +120,7 @@ gl::Error BufferD3D::getIndexRange(GLenum type, size_t offset, size_t count, gl:
         return error;
     }
 
-    *outRange = gl::ComputeIndexRange(type, data + offset, count);
+    *outRange = gl::ComputeIndexRange(type, data + offset, count, primitiveRestartEnabled);
     return gl::Error(GL_NO_ERROR);
 }
 

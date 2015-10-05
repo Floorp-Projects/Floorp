@@ -21,8 +21,13 @@ class FunctionsGLX;
 class WindowSurfaceGLX : public SurfaceGL
 {
   public:
-    WindowSurfaceGLX(const FunctionsGLX &glx, const DisplayGLX &glxDisplay, Window window, Display *display,
-                     glx::Context context, glx::FBConfig fbConfig);
+    WindowSurfaceGLX(const FunctionsGLX &glx,
+                     DisplayGLX *glxDisplay,
+                     RendererGL *renderer,
+                     Window window,
+                     Display *display,
+                     glx::Context context,
+                     glx::FBConfig fbConfig);
     ~WindowSurfaceGLX() override;
 
     egl::Error initialize() override;
@@ -39,6 +44,8 @@ class WindowSurfaceGLX : public SurfaceGL
     EGLint getHeight() const override;
 
     EGLint isPostSubBufferSupported() const override;
+    EGLint getSwapBehavior() const override;
+
   private:
     bool getWindowDimensions(Window window, unsigned int *width, unsigned int *height) const;
 

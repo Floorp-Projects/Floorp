@@ -30,6 +30,7 @@ deqp_data_path = os.path.join('third_party', 'deqp', 'data')
 os.chdir(os.path.join(script_dir, '..'))
 run_deqp(os.path.join(path_to_deqp_exe, 'angle_deqp_gles2_tests' + os_suffix))
 run_deqp(os.path.join(path_to_deqp_exe, 'angle_deqp_gles3_tests' + os_suffix))
+run_deqp(os.path.join(path_to_deqp_exe, 'angle_deqp_egl_tests' + os_suffix))
 
 def compress_case_list(case_file):
     with open(os.path.join(deqp_data_path, case_file + '.txt')) as in_handle:
@@ -41,3 +42,4 @@ def compress_case_list(case_file):
 
 compress_case_list('dEQP-GLES2-cases')
 compress_case_list('dEQP-GLES3-cases')
+compress_case_list('dEQP-EGL-cases')
