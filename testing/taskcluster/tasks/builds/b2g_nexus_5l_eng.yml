@@ -15,6 +15,7 @@ task:
     env:
       TARGET: 'nexus-5-l'
       DEBUG: 0
+      TOOLTOOL_MANIFEST: 'b2g/config/nexus-5-l/releng-nexus5.tt'
     command:
       - >
         checkout-gecko workspace &&
