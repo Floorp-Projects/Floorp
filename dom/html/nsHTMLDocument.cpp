@@ -1610,8 +1610,9 @@ nsHTMLDocument::Open(JSContext* cx,
     }
 #endif
 
-    // Should this pass true for aForceReuseInnerWindow?
-    rv = window->SetNewDocument(this, nullptr, false);
+    // Per spec, we pass false here so that a new Window is created.
+    rv = window->SetNewDocument(this, nullptr,
+                                /* aForceReuseInnerWindow */ false);
     if (rv.Failed()) {
       return nullptr;
     }
