@@ -19,10 +19,8 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/HTMLCanvasElementBinding.h"
 #include "mozilla/dom/MouseEvent.h"
-#include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/gfx/Rect.h"
-#include "mozilla/layers/AsyncCanvasRenderer.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
@@ -241,134 +239,17 @@ HTMLCanvasPrintState::NotifyDone()
 
 // ---------------------------------------------------------------------------
 
-HTMLCanvasElementObserver::HTMLCanvasElementObserver(HTMLCanvasElement* aElement)
-    : mElement(aElement)
-{
-  RegisterVisibilityChangeEvent();
-  RegisterMemoryPressureEvent();
-}
-
-HTMLCanvasElementObserver::~HTMLCanvasElementObserver()
-{
-  Destroy();
-}
-
-void
-HTMLCanvasElementObserver::Destroy()
-{
-  UnregisterMemoryPressureEvent();
-  UnregisterVisibilityChangeEvent();
-  mElement = nullptr;
-}
-
-void
-HTMLCanvasElementObserver::RegisterVisibilityChangeEvent()
-{
-  if (!mElement) {
-    return;
-  }
-
-  nsIDocument* document = mElement->OwnerDoc();
-  document->AddSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
-                                   this, true, false);
-}
-
-void
-HTMLCanvasElementObserver::UnregisterVisibilityChangeEvent()
-{
-  if (!mElement) {
-    return;
-  }
-
-  nsIDocument* document = mElement->OwnerDoc();
-  document->RemoveSystemEventListener(NS_LITERAL_STRING("visibilitychange"),
-                                      this, true);
-}
-
-void
-HTMLCanvasElementObserver::RegisterMemoryPressureEvent()
-{
-  if (!mElement) {
-    return;
-  }
-
-  nsCOMPtr<nsIObserverService> observerService =
-    mozilla::services::GetObserverService();
-
-  MOZ_ASSERT(observerService);
-
-  if (observerService)
-    observerService->AddObserver(this, "memory-pressure", false);
-}
-
-void
-HTMLCanvasElementObserver::UnregisterMemoryPressureEvent()
-{
-  if (!mElement) {
-    return;
-  }
-
-  nsCOMPtr<nsIObserverService> observerService =
-    mozilla::services::GetObserverService();
-
-  // Do not assert on observerService here. This might be triggered by
-  // the cycle collector at a late enough time, that XPCOM services are
-  // no longer available. See bug 1029504.
-  if (observerService)
-    observerService->RemoveObserver(this, "memory-pressure");
-}
-
-NS_IMETHODIMP
-HTMLCanvasElementObserver::Observe(nsISupports*, const char* aTopic, const char16_t*)
-{
-  if (!mElement || strcmp(aTopic, "memory-pressure")) {
-    return NS_OK;
-  }
-
-  mElement->OnMemoryPressure();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLCanvasElementObserver::HandleEvent(nsIDOMEvent* aEvent)
-{
-  nsAutoString type;
-  aEvent->GetType(type);
-  if (!mElement || !type.EqualsLiteral("visibilitychange")) {
-    return NS_OK;
-  }
-
-  mElement->OnVisibilityChange();
-
-  return NS_OK;
-}
-
-NS_IMPL_ISUPPORTS(HTMLCanvasElementObserver, nsIObserver)
-
-// ---------------------------------------------------------------------------
-
 HTMLCanvasElement::HTMLCanvasElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
-    mResetLayer(true) ,
     mWriteOnly(false)
 {
 }
 
 HTMLCanvasElement::~HTMLCanvasElement()
 {
-  if (mContextObserver) {
-    mContextObserver->Destroy();
-    mContextObserver = nullptr;
-  }
-
   ResetPrintCallback();
   if (mRequestedFrameRefreshObserver) {
     mRequestedFrameRefreshObserver->DetachFromRefreshDriver();
-  }
-
-  if (mAsyncCanvasRenderer) {
-    mAsyncCanvasRenderer->mHTMLCanvasElement = nullptr;
   }
 }
 
@@ -389,22 +270,6 @@ NS_IMPL_ELEMENT_CLONE(HTMLCanvasElement)
 HTMLCanvasElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return HTMLCanvasElementBinding::Wrap(aCx, this, aGivenProto);
-}
-
-already_AddRefed<nsICanvasRenderingContextInternal>
-HTMLCanvasElement::CreateContext(CanvasContextType aContextType)
-{
-  nsRefPtr<nsICanvasRenderingContextInternal> ret =
-    CanvasRenderingContextHelper::CreateContext(aContextType);
-
-  // Add Observer for webgl canvas.
-  if (aContextType == CanvasContextType::WebGL1 ||
-      aContextType == CanvasContextType::WebGL2) {
-    mContextObserver = new HTMLCanvasElementObserver(this);
-  }
-
-  ret->SetCanvasElement(this);
-  return ret.forget();
 }
 
 nsIntSize
@@ -691,8 +556,49 @@ HTMLCanvasElement::ExtractData(nsAString& aType,
                                    aOptions,
                                    GetSize(),
                                    mCurrentContext,
-                                   mAsyncCanvasRenderer,
                                    aStream);
+}
+
+nsresult
+HTMLCanvasElement::ParseParams(JSContext* aCx,
+                               const nsAString& aType,
+                               const JS::Value& aEncoderOptions,
+                               nsAString& aParams,
+                               bool* usingCustomParseOptions)
+{
+  // Quality parameter is only valid for the image/jpeg MIME type
+  if (aType.EqualsLiteral("image/jpeg")) {
+    if (aEncoderOptions.isNumber()) {
+      double quality = aEncoderOptions.toNumber();
+      // Quality must be between 0.0 and 1.0, inclusive
+      if (quality >= 0.0 && quality <= 1.0) {
+        aParams.AppendLiteral("quality=");
+        aParams.AppendInt(NS_lround(quality * 100.0));
+      }
+    }
+  }
+
+  // If we haven't parsed the aParams check for proprietary options.
+  // The proprietary option -moz-parse-options will take a image lib encoder
+  // parse options string as is and pass it to the encoder.
+  *usingCustomParseOptions = false;
+  if (aParams.Length() == 0 && aEncoderOptions.isString()) {
+    NS_NAMED_LITERAL_STRING(mozParseOptions, "-moz-parse-options:");
+    nsAutoJSString paramString;
+    if (!paramString.init(aCx, aEncoderOptions.toString())) {
+      return NS_ERROR_FAILURE;
+    }
+    if (StringBeginsWith(paramString, mozParseOptions)) {
+      nsDependentSubstring parseOptions = Substring(paramString,
+                                                    mozParseOptions.Length(),
+                                                    paramString.Length() -
+                                                    mozParseOptions.Length());
+      aParams.Append(parseOptions);
+      *usingCustomParseOptions = true;
+    }
+  }
+
+  return NS_OK;
 }
 
 nsresult
@@ -753,38 +659,84 @@ HTMLCanvasElement::ToBlob(JSContext* aCx,
     return;
   }
 
+  nsAutoString type;
+  nsContentUtils::ASCIIToLower(aType, type);
+
+  nsAutoString params;
+  bool usingCustomParseOptions;
+  aRv = ParseParams(aCx, type, aParams, params, &usingCustomParseOptions);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  if (mCurrentContext) {
+    // We disallow canvases of width or height zero, and set them to 1, so
+    // we will have a discrepancy with the sizes of the canvas and the context.
+    // That discrepancy is OK, the rest are not.
+    nsIntSize elementSize = GetWidthHeight();
+    if ((elementSize.width != mCurrentContext->GetWidth() &&
+         (elementSize.width != 0 || mCurrentContext->GetWidth() != 1)) ||
+        (elementSize.height != mCurrentContext->GetHeight() &&
+         (elementSize.height != 0 || mCurrentContext->GetHeight() != 1))) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+    }
+  }
+
+  uint8_t* imageBuffer = nullptr;
+  int32_t format = 0;
+  if (mCurrentContext) {
+    mCurrentContext->GetImageBuffer(&imageBuffer, &format);
+  }
+
+  // Encoder callback when encoding is complete.
+  class EncodeCallback : public EncodeCompleteCallback
+  {
+  public:
+    EncodeCallback(nsIGlobalObject* aGlobal, FileCallback* aCallback)
+      : mGlobal(aGlobal)
+      , mFileCallback(aCallback) {}
+
+    // This is called on main thread.
+    nsresult ReceiveBlob(already_AddRefed<Blob> aBlob)
+    {
+      nsRefPtr<Blob> blob = aBlob;
+
+      ErrorResult rv;
+      uint64_t size = blob->GetSize(rv);
+      if (rv.Failed()) {
+        rv.SuppressException();
+      } else {
+        AutoJSAPI jsapi;
+        if (jsapi.Init(mGlobal)) {
+          JS_updateMallocCounter(jsapi.cx(), size);
+        }
+      }
+
+      nsRefPtr<Blob> newBlob = Blob::Create(mGlobal, blob->Impl());
+
+      mFileCallback->Call(*newBlob, rv);
+
+      mGlobal = nullptr;
+      mFileCallback = nullptr;
+
+      return rv.StealNSResult();
+    }
+
+    nsCOMPtr<nsIGlobalObject> mGlobal;
+    nsRefPtr<FileCallback> mFileCallback;
+  };
+
   nsCOMPtr<nsIGlobalObject> global = OwnerDoc()->GetScopeObject();
   MOZ_ASSERT(global);
-
-  CanvasRenderingContextHelper::ToBlob(aCx, global, aCallback, aType,
-                                       aParams, aRv);
-
-}
-
-OffscreenCanvas*
-HTMLCanvasElement::TransferControlToOffscreen(ErrorResult& aRv)
-{
-  if (mCurrentContext) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
-  if (!mOffscreenCanvas) {
-    nsIntSize sz = GetWidthHeight();
-    nsRefPtr<AsyncCanvasRenderer> renderer = GetAsyncCanvasRenderer();
-    renderer->SetWidth(sz.width);
-    renderer->SetHeight(sz.height);
-
-    mOffscreenCanvas = new OffscreenCanvas(sz.width,
-                                           sz.height,
-                                           GetCompositorBackendType(),
-                                           renderer);
-    mContextObserver = new HTMLCanvasElementObserver(this);
-  } else {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-  }
-
-  return mOffscreenCanvas;
+  nsRefPtr<EncodeCompleteCallback> callback = new EncodeCallback(global, &aCallback);
+  aRv = ImageEncoder::ExtractDataAsync(type,
+                                       params,
+                                       usingCustomParseOptions,
+                                       imageBuffer,
+                                       format,
+                                       GetSize(),
+                                       callback);
 }
 
 already_AddRefed<File>
@@ -855,6 +807,76 @@ HTMLCanvasElement::MozGetAsBlobImpl(const nsAString& aName,
   return NS_OK;
 }
 
+static bool
+GetCanvasContextType(const nsAString& str, CanvasContextType* const out_type)
+{
+  if (str.EqualsLiteral("2d")) {
+    *out_type = CanvasContextType::Canvas2D;
+    return true;
+  }
+
+  if (str.EqualsLiteral("experimental-webgl")) {
+    *out_type = CanvasContextType::WebGL1;
+    return true;
+  }
+
+#ifdef MOZ_WEBGL_CONFORMANT
+  if (str.EqualsLiteral("webgl")) {
+    /* WebGL 1.0, $2.1 "Context Creation":
+     *   If the user agent supports both the webgl and experimental-webgl
+     *   canvas context types, they shall be treated as aliases.
+     */
+    *out_type = CanvasContextType::WebGL1;
+    return true;
+  }
+#endif
+
+  if (WebGL2Context::IsSupported()) {
+    if (str.EqualsLiteral("webgl2")) {
+      *out_type = CanvasContextType::WebGL2;
+      return true;
+    }
+  }
+
+  return false;
+}
+
+static already_AddRefed<nsICanvasRenderingContextInternal>
+CreateContextForCanvas(CanvasContextType contextType, HTMLCanvasElement* canvas)
+{
+  MOZ_ASSERT(contextType != CanvasContextType::NoContext);
+  nsRefPtr<nsICanvasRenderingContextInternal> ret;
+
+  switch (contextType) {
+  case CanvasContextType::NoContext:
+    break;
+  case CanvasContextType::Canvas2D:
+    Telemetry::Accumulate(Telemetry::CANVAS_2D_USED, 1);
+    ret = new CanvasRenderingContext2D();
+    break;
+
+  case CanvasContextType::WebGL1:
+    Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_USED, 1);
+
+    ret = WebGL1Context::Create();
+    if (!ret)
+      return nullptr;
+    break;
+
+  case CanvasContextType::WebGL2:
+    Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_USED, 1);
+
+    ret = WebGL2Context::Create();
+    if (!ret)
+      return nullptr;
+    break;
+  }
+  MOZ_ASSERT(ret);
+
+  ret->SetCanvasElement(canvas);
+  return ret.forget();
+}
+
 nsresult
 HTMLCanvasElement::GetContext(const nsAString& aContextId,
                               nsISupports** aContext)
@@ -868,14 +890,45 @@ already_AddRefed<nsISupports>
 HTMLCanvasElement::GetContext(JSContext* aCx,
                               const nsAString& aContextId,
                               JS::Handle<JS::Value> aContextOptions,
-                              ErrorResult& aRv)
+                              ErrorResult& rv)
 {
-  if (mOffscreenCanvas) {
+  CanvasContextType contextType;
+  if (!GetCanvasContextType(aContextId, &contextType))
     return nullptr;
+
+  if (!mCurrentContext) {
+    // This canvas doesn't have a context yet.
+
+    nsRefPtr<nsICanvasRenderingContextInternal> context;
+    context = CreateContextForCanvas(contextType, this);
+    if (!context)
+      return nullptr;
+
+    // Ensure that the context participates in CC.  Note that returning a
+    // CC participant from QI doesn't addref.
+    nsXPCOMCycleCollectionParticipant* cp = nullptr;
+    CallQueryInterface(context, &cp);
+    if (!cp) {
+      rv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    mCurrentContext = context.forget();
+    mCurrentContextType = contextType;
+
+    rv = UpdateContext(aCx, aContextOptions);
+    if (rv.Failed()) {
+      rv = NS_OK; // See bug 645792
+      return nullptr;
+    }
+  } else {
+    // We already have a context of some type.
+    if (contextType != mCurrentContextType)
+      return nullptr;
   }
 
-  return CanvasRenderingContextHelper::GetContext(aCx, aContextId,
-                                                  aContextOptions, aRv);
+  nsCOMPtr<nsICanvasRenderingContextInternal> context = mCurrentContext;
+  return context.forget();
 }
 
 NS_IMETHODIMP
@@ -897,7 +950,7 @@ HTMLCanvasElement::MozGetIPCContext(const nsAString& aContextId,
     // This canvas doesn't have a context yet.
 
     nsRefPtr<nsICanvasRenderingContextInternal> context;
-    context = CreateContext(contextType);
+    context = CreateContextForCanvas(contextType, this);
     if (!context) {
       *aContext = nullptr;
       return NS_OK;
@@ -919,6 +972,36 @@ HTMLCanvasElement::MozGetIPCContext(const nsAString& aContextId,
   return NS_OK;
 }
 
+nsresult
+HTMLCanvasElement::UpdateContext(JSContext* aCx, JS::Handle<JS::Value> aNewContextOptions)
+{
+  if (!mCurrentContext)
+    return NS_OK;
+
+  nsIntSize sz = GetWidthHeight();
+
+  nsCOMPtr<nsICanvasRenderingContextInternal> currentContext = mCurrentContext;
+
+  nsresult rv = currentContext->SetIsOpaque(HasAttr(kNameSpaceID_None, nsGkAtoms::moz_opaque));
+  if (NS_FAILED(rv)) {
+    mCurrentContext = nullptr;
+    return rv;
+  }
+
+  rv = currentContext->SetContextOptions(aCx, aNewContextOptions);
+  if (NS_FAILED(rv)) {
+    mCurrentContext = nullptr;
+    return rv;
+  }
+
+  rv = currentContext->SetDimensions(sz.width, sz.height);
+  if (NS_FAILED(rv)) {
+    mCurrentContext = nullptr;
+    return rv;
+  }
+
+  return rv;
+}
 
 nsIntSize
 HTMLCanvasElement::GetSize()
@@ -1022,12 +1105,6 @@ HTMLCanvasElement::GetIsOpaque()
     return mCurrentContext->GetIsOpaque();
   }
 
-  return GetOpaqueAttr();
-}
-
-bool
-HTMLCanvasElement::GetOpaqueAttr()
-{
   return HasAttr(kNameSpaceID_None, nsGkAtoms::moz_opaque);
 }
 
@@ -1036,57 +1113,16 @@ HTMLCanvasElement::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
                                   CanvasLayer *aOldLayer,
                                   LayerManager *aManager)
 {
-  // The address of sOffscreenCanvasLayerUserDataDummy is used as the user
-  // data key for retained LayerManagers managed by FrameLayerBuilder.
-  // We don't much care about what value in it, so just assign a dummy
-  // value for it.
-  static uint8_t sOffscreenCanvasLayerUserDataDummy = 0;
+  if (!mCurrentContext)
+    return nullptr;
 
-  if (mCurrentContext) {
-    return mCurrentContext->GetCanvasLayer(aBuilder, aOldLayer, aManager);
-  }
-
-  if (mOffscreenCanvas) {
-    if (!mResetLayer &&
-        aOldLayer && aOldLayer->HasUserData(&sOffscreenCanvasLayerUserDataDummy)) {
-      nsRefPtr<CanvasLayer> ret = aOldLayer;
-      return ret.forget();
-    }
-
-    nsRefPtr<CanvasLayer> layer = aManager->CreateCanvasLayer();
-    if (!layer) {
-      NS_WARNING("CreateCanvasLayer failed!");
-      return nullptr;
-    }
-
-    LayerUserData* userData = nullptr;
-    layer->SetUserData(&sOffscreenCanvasLayerUserDataDummy, userData);
-
-    CanvasLayer::Data data;
-    data.mRenderer = GetAsyncCanvasRenderer();
-    data.mSize = GetWidthHeight();
-    layer->Initialize(data);
-
-    layer->Updated();
-    return layer.forget();
-  }
-
-  return nullptr;
+  return mCurrentContext->GetCanvasLayer(aBuilder, aOldLayer, aManager);
 }
 
 bool
-HTMLCanvasElement::ShouldForceInactiveLayer(LayerManager* aManager)
+HTMLCanvasElement::ShouldForceInactiveLayer(LayerManager *aManager)
 {
-  if (mCurrentContext) {
-    return mCurrentContext->ShouldForceInactiveLayer(aManager);
-  }
-
-  if (mOffscreenCanvas) {
-    // TODO: We should handle offscreen canvas case.
-    return false;
-  }
-
-  return true;
+  return !mCurrentContext || mCurrentContext->ShouldForceInactiveLayer(aManager);
 }
 
 void
@@ -1199,156 +1235,6 @@ HTMLCanvasElement::GetSurfaceSnapshot(bool* aPremultAlpha)
     return nullptr;
 
   return mCurrentContext->GetSurfaceSnapshot(aPremultAlpha);
-}
-
-AsyncCanvasRenderer*
-HTMLCanvasElement::GetAsyncCanvasRenderer()
-{
-  if (!mAsyncCanvasRenderer) {
-    mAsyncCanvasRenderer = new AsyncCanvasRenderer();
-    mAsyncCanvasRenderer->mHTMLCanvasElement = this;
-  }
-
-  return mAsyncCanvasRenderer;
-}
-
-layers::LayersBackend
-HTMLCanvasElement::GetCompositorBackendType() const
-{
-  nsIWidget* docWidget = nsContentUtils::WidgetForDocument(OwnerDoc());
-  if (docWidget) {
-    layers::LayerManager* layerManager = docWidget->GetLayerManager();
-    return layerManager->GetCompositorBackendType();
-  }
-
-  return LayersBackend::LAYERS_NONE;
-}
-
-void
-HTMLCanvasElement::OnVisibilityChange()
-{
-  if (OwnerDoc()->Hidden()) {
-    return;
-  }
-
-  if (mOffscreenCanvas) {
-    class Runnable final : public nsCancelableRunnable
-    {
-    public:
-      explicit Runnable(AsyncCanvasRenderer* aRenderer)
-        : mRenderer(aRenderer)
-      {}
-
-      NS_IMETHOD Run()
-      {
-        if (mRenderer && mRenderer->mContext) {
-          mRenderer->mContext->OnVisibilityChange();
-        }
-
-        return NS_OK;
-      }
-
-      void Revoke()
-      {
-        mRenderer = nullptr;
-      }
-
-    private:
-      nsRefPtr<AsyncCanvasRenderer> mRenderer;
-    };
-
-    nsRefPtr<nsIRunnable> runnable = new Runnable(mAsyncCanvasRenderer);
-    nsCOMPtr<nsIThread> activeThread = mAsyncCanvasRenderer->GetActiveThread();
-    if (activeThread) {
-      activeThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL);
-    }
-    return;
-  }
-
-  if (mCurrentContext) {
-    mCurrentContext->OnVisibilityChange();
-  }
-}
-
-void
-HTMLCanvasElement::OnMemoryPressure()
-{
-  if (mOffscreenCanvas) {
-    class Runnable final : public nsCancelableRunnable
-    {
-    public:
-      explicit Runnable(AsyncCanvasRenderer* aRenderer)
-        : mRenderer(aRenderer)
-      {}
-
-      NS_IMETHOD Run()
-      {
-        if (mRenderer && mRenderer->mContext) {
-          mRenderer->mContext->OnMemoryPressure();
-        }
-
-        return NS_OK;
-      }
-
-      void Revoke()
-      {
-        mRenderer = nullptr;
-      }
-
-    private:
-      nsRefPtr<AsyncCanvasRenderer> mRenderer;
-    };
-
-    nsRefPtr<nsIRunnable> runnable = new Runnable(mAsyncCanvasRenderer);
-    nsCOMPtr<nsIThread> activeThread = mAsyncCanvasRenderer->GetActiveThread();
-    if (activeThread) {
-      activeThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL);
-    }
-    return;
-  }
-
-  if (mCurrentContext) {
-    mCurrentContext->OnMemoryPressure();
-  }
-}
-
-/* static */ void
-HTMLCanvasElement::SetAttrFromAsyncCanvasRenderer(AsyncCanvasRenderer *aRenderer)
-{
-  HTMLCanvasElement *element = aRenderer->mHTMLCanvasElement;
-  if (!element) {
-    return;
-  }
-
-  if (element->GetWidthHeight() == aRenderer->GetSize()) {
-    return;
-  }
-
-  gfx::IntSize asyncCanvasSize = aRenderer->GetSize();
-
-  ErrorResult rv;
-  element->SetUnsignedIntAttr(nsGkAtoms::width, asyncCanvasSize.width, rv);
-  if (rv.Failed()) {
-    NS_WARNING("Failed to set width attribute to a canvas element asynchronously.");
-  }
-
-  element->SetUnsignedIntAttr(nsGkAtoms::height, asyncCanvasSize.height, rv);
-  if (rv.Failed()) {
-    NS_WARNING("Failed to set height attribute to a canvas element asynchronously.");
-  }
-
-  element->mResetLayer = true;
-}
-
-/* static */ void
-HTMLCanvasElement::InvalidateFromAsyncCanvasRenderer(AsyncCanvasRenderer *aRenderer)
-{
-  HTMLCanvasElement *element = aRenderer->mHTMLCanvasElement;
-  if (!element) {
-    return;
-  }
-
-  element->InvalidateCanvasContent(nullptr);
 }
 
 } // namespace dom

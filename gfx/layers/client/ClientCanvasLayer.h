@@ -97,6 +97,7 @@ protected:
 
   TextureFlags mFlags;
 
+  friend class DeprecatedCanvasClient2D;
   friend class CanvasClient2D;
   friend class CanvasClientSharedSurface;
 };

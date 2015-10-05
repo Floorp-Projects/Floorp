@@ -7,11 +7,20 @@
 interface nsINetworkInterface;
 interface nsIWifiTetheringCallback;
 
-[scriptable, uuid(993b79df-f10e-4697-a5dc-5981cf8ff7e6)]
+[scriptable, uuid(779de2d3-6d29-4ee6-b069-6251839f757a)]
 interface nsITetheringService : nsISupports
 {
+  const long TETHERING_STATE_INACTIVE = 0;
+  const long TETHERING_STATE_WIFI     = 1;
+  const long TETHERING_STATE_USB      = 2;
+
   /**
-   * Enable or disable Wifi Tethering
+   * Current tethering state. One of the TETHERING_STATE_* constants.
+   */
+  readonly attribute long state;
+
+  /**
+   * Enable or disable Wifi Tethering.
    *
    * @param enabled
    *        Boolean that indicates whether tethering should be enabled (true) or
