@@ -77,6 +77,8 @@ inline GraphicsFilter ThebesFilter(Filter aFilter)
   switch (aFilter) {
   case Filter::POINT:
     return GraphicsFilter::FILTER_NEAREST;
+  case Filter::GOOD:
+    return GraphicsFilter::FILTER_GOOD;
   default:
     return GraphicsFilter::FILTER_BEST;
   }
