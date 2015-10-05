@@ -1123,6 +1123,12 @@ nsDisplayListBuilder::FindAnimatedGeometryRootFor(nsIFrame* aFrame, const nsIFra
 void
 nsDisplayListBuilder::RecomputeCurrentAnimatedGeometryRoot()
 {
+  // technically we only need to clear any part of the cache that relies on
+  // the AGR of mCurrentFrame (i.e. all entries in mAnimatedGeometryRootCache
+  // where the key frame is a descendant of mCurrentFrame) but doing that is
+  // complicated so we just clear the whole thing.
+  mAnimatedGeometryRootCache.Clear();
+
   mCurrentAnimatedGeometryRoot = ComputeAnimatedGeometryRootFor(this, const_cast<nsIFrame *>(mCurrentFrame));
   AnimatedGeometryRootLookup lookup(mCurrentFrame, nullptr);
   mAnimatedGeometryRootCache.Put(lookup, mCurrentAnimatedGeometryRoot);
