@@ -6,7 +6,7 @@
  * Modified 2011 by Guido Vollbeding.
  * libjpeg-turbo Modifications:
  * Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
- * Copyright (C) 2009, 2011-2012, 2014, D. R. Commander.
+ * Copyright (C) 2009, 2011-2012, 2014-2015, D. R. Commander.
  * Copyright (C) 2013, Linaro Limited.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -364,23 +364,53 @@ null_convert (j_decompress_ptr cinfo,
               JSAMPIMAGE input_buf, JDIMENSION input_row,
               JSAMPARRAY output_buf, int num_rows)
 {
-  register JSAMPROW inptr, outptr;
-  register JDIMENSION count;
+  register JSAMPROW inptr, inptr0, inptr1, inptr2, inptr3, outptr;
+  register JDIMENSION col;
   register int num_components = cinfo->num_components;
   JDIMENSION num_cols = cinfo->output_width;
   int ci;
 
-  while (--num_rows >= 0) {
-    for (ci = 0; ci < num_components; ci++) {
-      inptr = input_buf[ci][input_row];
-      outptr = output_buf[0] + ci;
-      for (count = num_cols; count > 0; count--) {
-        *outptr = *inptr++;     /* needn't bother with GETJSAMPLE() here */
-        outptr += num_components;
+  if (num_components == 3) {
+    while (--num_rows >= 0) {
+      inptr0 = input_buf[0][input_row];
+      inptr1 = input_buf[1][input_row];
+      inptr2 = input_buf[2][input_row];
+      input_row++;
+      outptr = *output_buf++;
+      for (col = 0; col < num_cols; col++) {
+        *outptr++ = inptr0[col];
+        *outptr++ = inptr1[col];
+        *outptr++ = inptr2[col];
       }
     }
-    input_row++;
-    output_buf++;
+  } else if (num_components == 4) {
+    while (--num_rows >= 0) {
+      inptr0 = input_buf[0][input_row];
+      inptr1 = input_buf[1][input_row];
+      inptr2 = input_buf[2][input_row];
+      inptr3 = input_buf[3][input_row];
+      input_row++;
+      outptr = *output_buf++;
+      for (col = 0; col < num_cols; col++) {
+        *outptr++ = inptr0[col];
+        *outptr++ = inptr1[col];
+        *outptr++ = inptr2[col];
+        *outptr++ = inptr3[col];
+      }
+    }
+  } else {
+    while (--num_rows >= 0) {
+      for (ci = 0; ci < num_components; ci++) {
+        inptr = input_buf[ci][input_row];
+        outptr = *output_buf;
+        for (col = 0; col < num_cols; col++) {
+          outptr[ci] = inptr[col];
+          outptr += num_components;
+        }
+      }
+      output_buf++;
+      input_row++;
+    }
   }
 }
 

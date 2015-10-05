@@ -91,6 +91,7 @@ start_pass_huff_decoder (j_decompress_ptr cinfo)
 {
   huff_entropy_ptr entropy = (huff_entropy_ptr) cinfo->entropy;
   int ci, blkn, dctbl, actbl;
+  d_derived_tbl **pdtbl;
   jpeg_component_info * compptr;
 
   /* Check that the scan parameters Ss, Se, Ah/Al are OK for sequential JPEG.
@@ -107,10 +108,10 @@ start_pass_huff_decoder (j_decompress_ptr cinfo)
     actbl = compptr->ac_tbl_no;
     /* Compute derived values for Huffman tables */
     /* We may do this more than once for a table, but it's not expensive */
-    jpeg_make_d_derived_tbl(cinfo, TRUE, dctbl,
-                            & entropy->dc_derived_tbls[dctbl]);
-    jpeg_make_d_derived_tbl(cinfo, FALSE, actbl,
-                            & entropy->ac_derived_tbls[actbl]);
+    pdtbl = entropy->dc_derived_tbls + dctbl;
+    jpeg_make_d_derived_tbl(cinfo, TRUE, dctbl, pdtbl);
+    pdtbl = entropy->ac_derived_tbls + actbl;
+    jpeg_make_d_derived_tbl(cinfo, FALSE, actbl, pdtbl);
     /* Initialize DC predictions to 0 */
     entropy->saved.last_dc_val[ci] = 0;
   }
@@ -419,11 +420,11 @@ jpeg_fill_bit_buffer (bitread_working_state * state,
   } \
 }
 
-#if __WORDSIZE == 64 || defined(_WIN64)
+#if SIZEOF_SIZE_T==8 || defined(_WIN64)
 
 /* Pre-fetch 48 bytes, because the holding register is 64-bit */
 #define FILL_BIT_BUFFER_FAST \
-  if (bits_left < 16) { \
+  if (bits_left <= 16) { \
     GET_BYTE GET_BYTE GET_BYTE GET_BYTE GET_BYTE GET_BYTE \
   }
 
@@ -431,7 +432,7 @@ jpeg_fill_bit_buffer (bitread_working_state * state,
 
 /* Pre-fetch 16 bytes, because the holding register is 32-bit */
 #define FILL_BIT_BUFFER_FAST \
-  if (bits_left < 16) { \
+  if (bits_left <= 16) { \
     GET_BYTE GET_BYTE \
   }
 
@@ -490,7 +491,8 @@ jpeg_huff_decode (bitread_working_state * state,
 #define AVOID_TABLES
 #ifdef AVOID_TABLES
 
-#define HUFF_EXTEND(x,s)  ((x) + ((((x) - (1<<((s)-1))) >> 31) & (((-1)<<(s)) + 1)))
+#define NEG_1 ((unsigned int)-1)
+#define HUFF_EXTEND(x,s)  ((x) + ((((x) - (1<<((s)-1))) >> 31) & (((NEG_1)<<(s)) + 1)))
 
 #else
 

@@ -50,7 +50,7 @@ EXTN(jsimd_convsamp_sse2):
         psllw   xmm7,7                  ; xmm7={0xFF80 0xFF80 0xFF80 0xFF80 ..}
 
         mov rsi, r10
-        mov rax, r11
+        mov eax, r11d
         mov rdi, r12
         mov     rcx, DCTSIZE/4
 .convloop:

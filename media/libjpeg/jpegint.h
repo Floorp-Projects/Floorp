@@ -4,8 +4,8 @@
  * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1991-1997, Thomas G. Lane.
  * Modified 1997-2009 by Guido Vollbeding.
- * It was modified by The libjpeg-turbo Project to include only code relevant
- * to libjpeg-turbo.
+ * libjpeg-turbo Modifications:
+ * Copyright (C) 2015, D. R. Commander
  * For conditions of distribution and use, see the accompanying README file.
  *
  * This file provides common declarations for the various JPEG modules.
@@ -40,6 +40,18 @@ typedef enum {            /* Operating modes for buffer controllers */
 #define DSTATE_BUFPOST  208     /* looking for SOS/EOI in jpeg_finish_output */
 #define DSTATE_RDCOEFS  209     /* reading file in jpeg_read_coefficients */
 #define DSTATE_STOPPING 210     /* looking for EOI in jpeg_finish_decompress */
+
+
+/*
+ * Left shift macro that handles a negative operand without causing any
+ * sanitizer warnings
+ */
+
+#ifdef __INT32_IS_ACTUALLY_LONG
+#define LEFT_SHIFT(a, b) ((INT32)((unsigned long)(a) << (b)))
+#else
+#define LEFT_SHIFT(a, b) ((INT32)((unsigned int)(a) << (b)))
+#endif
 
 
 /* Declarations for compression modules */

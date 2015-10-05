@@ -326,7 +326,7 @@ EXTN(jsimd_idct_float_sse2):
         mov     rax, [original_rbp]
         lea     rsi, [workspace]                        ; FAST_FLOAT * wsptr
         mov     rdi, r12        ; (JSAMPROW *)
-        mov     rax, r13
+        mov     eax, r13d
         mov     rcx, DCTSIZE/4                          ; ctr
 .rowloop:
 

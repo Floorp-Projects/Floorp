@@ -312,7 +312,7 @@ EXTN(jsimd_idct_4x4_sse2):
 
         mov     rax, [original_rbp]
         mov     rdi, r12        ; (JSAMPROW *)
-        mov     rax, r13
+        mov     eax, r13d
 
         ; -- Even part
 
@@ -521,7 +521,7 @@ EXTN(jsimd_idct_2x2_sse2):
         ; ---- Pass 2: process rows, store into output array.
 
         mov     rdi, r12        ; (JSAMPROW *)
-        mov     rax, r13
+        mov     eax, r13d
 
         ; | input:| result:|
         ; | A0 B0 |        |
