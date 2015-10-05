@@ -12,27 +12,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=923010
   /** Test for Bug 923010 **/
   try {
     var conn = new RTCPeerConnection();
-    try {
-      conn.updateIce(candidate, function() {
-          ok(false, "The call to updateIce succeeded when it should have thrown");
-        }, function() {
-          ok(false, "The call to updateIce failed when it should have thrown");
-        })
-      ok(false, "That call to updateIce should have thrown");
-    } catch (e) {
-      is(e.lineNumber, 16, "Exception should have been on line 16");
-      is(e.message,
-         "updateIce not yet implemented",
-         "Should have the exception we expect");
-    }
 
     var candidate = new RTCIceCandidate({candidate: null });
-
     conn.addIceCandidate(candidate)
     .then(function() {
       ok(false, "addIceCandidate succeeded when it should have failed");
     }, function(reason) {
-      is(reason.lineNumber, 31, "Rejection should have been on line 31");
+      is(reason.lineNumber, 17, "Rejection should have been on line 17");
       is(reason.message,
          "Invalid candidate passed to addIceCandidate!",
          "Should have the rejection we expect");
@@ -44,6 +30,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=923010
     // b2g has no WebRTC, apparently
     todo(false, "No WebRTC on b2g yet");
   }
+
+  conn.close();
+  try {
+      conn.setIdentityProvider("example.com", "foo");
+      ok(false, "That call to setIdentityProvider should have thrown");
+    } catch (e) {
+      is(e.lineNumber, 36, "Exception should have been on line 36");
+      is(e.message,
+         "Peer connection is closed",
+         "Should have the exception we expect");
+    }
+
   </script>
 </head>
 <body>
