@@ -166,7 +166,7 @@ PluginContent.prototype = {
       pluginName = BrowserUtils.makeNicePluginName(pluginTag.name);
 
       // Convert this from nsIPluginTag so it can be serialized.
-      let properties = ["name", "description", "filename", "version", "enabledState"];
+      let properties = ["name", "description", "filename", "version", "enabledState", "niceName"];
       let pluginTagCopy = {};
       for (let prop of properties) {
         pluginTagCopy[prop] = pluginTag[prop];
@@ -422,6 +422,7 @@ PluginContent.prototype = {
         break;
 
       case "PluginInstantiated":
+        Services.telemetry.getKeyedHistogramById('PLUGIN_ACTIVATION_COUNT').add(this._getPluginInfo(plugin).pluginTag.niceName);
         shouldShowNotification = true;
         break;
     }
