@@ -250,6 +250,19 @@ describe("loop.store.ConversationAppStore", function () {
         sinon.assert.notCalled(loop.shared.mixins.WindowCloseMixin.closeWindow);
       });
 
+      it("should close the window when a room was used and it showed feedback", function() {
+        store.setStoreState({
+          showFeedbackForm: true,
+          windowType: "room"
+        });
+        roomUsed = true;
+
+        store.LoopHangupNowHandler();
+
+        sinon.assert.notCalled(dispatcher.dispatch);
+        sinon.assert.calledOnce(loop.shared.mixins.WindowCloseMixin.closeWindow);
+      });
+
       it("should close the window when a room was not used", function() {
         store.setStoreState({ windowType: "room" });
 
