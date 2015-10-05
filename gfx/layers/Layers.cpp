@@ -2148,9 +2148,6 @@ DumpFilter(layerscope::LayersPacket::Layer* aLayer, const GraphicsFilter& aFilte
 {
   using namespace layerscope;
   switch (aFilter) {
-    case GraphicsFilter::FILTER_FAST:
-      aLayer->set_filter(LayersPacket::Layer::FILTER_FAST);
-      break;
     case GraphicsFilter::FILTER_GOOD:
       aLayer->set_filter(LayersPacket::Layer::FILTER_GOOD);
       break;

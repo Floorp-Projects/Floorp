@@ -454,7 +454,7 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
     nsRefPtr<gfxContext> tmpCtx = new gfxContext(target);
     tmpCtx->SetOp(OptimalFillOp());
     aDrawable->Draw(tmpCtx, needed - needed.TopLeft(), true,
-                    GraphicsFilter::FILTER_FAST, 1.0, gfxMatrix::Translation(needed.TopLeft()));
+                    GraphicsFilter::FILTER_BEST, 1.0, gfxMatrix::Translation(needed.TopLeft()));
     RefPtr<SourceSurface> surface = target->Snapshot();
 
     nsRefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(surface, size, gfxMatrix::Translation(-needed.TopLeft()));

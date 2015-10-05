@@ -117,7 +117,7 @@ OrientedImage::GetFrame(uint32_t aWhichFrame,
   ctx->Multiply(OrientationMatrix(size));
   gfxUtils::DrawPixelSnapped(ctx, drawable, size,
                              ImageRegion::Create(size),
-                             surfaceFormat, GraphicsFilter::FILTER_FAST);
+                             surfaceFormat, GraphicsFilter::FILTER_BEST);
 
   return target->Snapshot();
 }

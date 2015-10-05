@@ -1186,7 +1186,6 @@ bool LayersPacket_Layer_Filter_IsValid(int value) {
 }
 
 #ifndef _MSC_VER
-const LayersPacket_Layer_Filter LayersPacket_Layer::FILTER_FAST;
 const LayersPacket_Layer_Filter LayersPacket_Layer::FILTER_GOOD;
 const LayersPacket_Layer_Filter LayersPacket_Layer::FILTER_BEST;
 const LayersPacket_Layer_Filter LayersPacket_Layer::FILTER_NEAREST;
