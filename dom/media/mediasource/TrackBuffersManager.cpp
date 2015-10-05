@@ -1354,11 +1354,11 @@ TrackBuffersManager::ResolveProcessing(bool aResolveValue, const char* aName)
 }
 
 void
-TrackBuffersManager::CheckSequenceDiscontinuity()
+TrackBuffersManager::CheckSequenceDiscontinuity(const TimeUnit& aPresentationTime)
 {
   if (mSourceBufferAttributes->GetAppendMode() == SourceBufferAppendMode::Sequence &&
       mGroupStartTimestamp.isSome()) {
-    mTimestampOffset = mGroupStartTimestamp.ref();
+    mTimestampOffset = mGroupStartTimestamp.ref() - aPresentationTime;
     mGroupEndTimestamp = mGroupStartTimestamp.ref();
     mVideoTracks.mNeedRandomAccessPoint = true;
     mAudioTracks.mNeedRandomAccessPoint = true;
@@ -1373,8 +1373,15 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
     return;
   }
 
+  // 1. If generate timestamps flag equals true
+  // Let presentation timestamp equal 0.
+  // Otherwise
+  // Let presentation timestamp be a double precision floating point representation of the coded frame's presentation timestamp in seconds.
+  TimeUnit presentationTimestamp = mSourceBufferAttributes->mGenerateTimestamps
+    ? TimeUnit() : TimeUnit::FromMicroseconds(aSamples[0]->mTime);
+
   // 3. If mode equals "sequence" and group start timestamp is set, then run the following steps:
-  CheckSequenceDiscontinuity();
+  CheckSequenceDiscontinuity(presentationTimestamp);
 
   // 5. Let track buffer equal the track buffer that the coded frame will be added to.
   auto& trackBuffer = aTrackData;
@@ -1482,7 +1489,9 @@ TrackBuffersManager::ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData)
       // Rather that restarting the process for the frame, we run the first
       // steps again instead.
       // 3. If mode equals "sequence" and group start timestamp is set, then run the following steps:
-      CheckSequenceDiscontinuity();
+      TimeUnit presentationTimestamp = mSourceBufferAttributes->mGenerateTimestamps
+        ? TimeUnit() : TimeUnit::FromMicroseconds(sample->mTime);
+      CheckSequenceDiscontinuity(presentationTimestamp);
 
       if (!sample->mKeyframe) {
         continue;
