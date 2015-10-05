@@ -6806,7 +6806,7 @@ Parser<ParseHandler>::statement(YieldHandling yieldHandling, bool canHaveDirecti
         TokenKind next;
         TokenKind nextSameLine = TOK_EOF;
 
-#ifdef NIGHTLY_BUILD
+#ifdef JS_HAS_ASYNC_FUNCS
         if (tokenStream.currentName() == context->names().async) {
             if (!tokenStream.peekTokenSameLine(&nextSameLine))
                 return null();
@@ -7207,7 +7207,7 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
     if (tt == TOK_NAME) {
         TokenKind nextSameLine = TOK_EOF;
 
-#ifdef NIGHTLY_BUILD
+#ifdef JS_HAS_ASYNC_FUNCS
         if (tokenStream.currentName() == context->names().async) {
             if (!tokenStream.peekTokenSameLine(&nextSameLine))
                 return null();
@@ -7570,9 +7570,12 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, InvokedPrediction i
 
       case TOK_AWAIT:
       {
+#ifndef JS_HAS_ASYNC_FUNCS
+          MOZ_CRASH("Should not see TOK_AWAIT without async function support");
+#endif
+
           TokenKind nextSameLine = TOK_EOF;
 
-#ifdef NIGHTLY_BUILD
           if (!tokenStream.peekTokenSameLine(&nextSameLine, TokenStream::Operand))
               return null();
           if (nextSameLine != TOK_EOL) {
@@ -7584,7 +7587,6 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, InvokedPrediction i
               report(ParseError, false, null(), JSMSG_LINE_BREAK_AFTER_AWAIT);
               return null();
           }
-#endif
       }
 
       default: {
