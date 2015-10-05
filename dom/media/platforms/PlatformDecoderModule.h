@@ -30,24 +30,20 @@ class MediaDataDecoderCallback;
 class FlushableTaskQueue;
 class CDMProxy;
 
-// The PlatformDecoderModule interface is used by the MP4Reader to abstract
-// access to the H264 and Audio (AAC/MP3) decoders provided by various platforms.
-// It may be extended to support other codecs in future. Each platform (Windows,
-// MacOSX, Linux, B2G etc) must implement a PlatformDecoderModule to provide
-// access to its decoders in order to get decompressed H.264/AAC from the
-// MP4Reader.
+// The PlatformDecoderModule interface is used by the MediaFormatReader to
+// abstract access to decoders provided by various
+// platforms.
+// Each platform (Windows, MacOSX, Linux, B2G etc) must implement a
+// PlatformDecoderModule to provide access to its decoders in order to get
+// decompressed H.264/AAC from the MediaFormatReader.
 //
-// Video decoding is asynchronous, and should be performed on the task queue
+// Decoding is asynchronous, and should be performed on the task queue
 // provided if the underlying platform isn't already exposing an async API.
-//
-// Platforms that don't have a corresponding PlatformDecoderModule won't be
-// able to play the H.264/AAC data output by the MP4Reader. In practice this
-// means that we won't have fragmented MP4 supported in Media Source
-// Extensions.
 //
 // A cross-platform decoder module that discards input and produces "blank"
 // output samples exists for testing, and is created when the pref
 // "media.fragmented-mp4.use-blank-decoder" is true.
+
 class PlatformDecoderModule {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PlatformDecoderModule)
@@ -59,8 +55,7 @@ public:
   // Factory method that creates the appropriate PlatformDecoderModule for
   // the platform we're running on. Caller is responsible for deleting this
   // instance. It's expected that there will be multiple
-  // PlatformDecoderModules alive at the same time. There is one
-  // PlatformDecoderModule created per MP4Reader.
+  // PlatformDecoderModules alive at the same time.
   // This is called on the decode task queue.
   static already_AddRefed<PlatformDecoderModule> Create();
 
@@ -90,10 +85,7 @@ public:
     MOZ_CRASH();
   }
 
-  // An audio decoder module must support AAC by default.
-  // A video decoder must support H264 by default.
-  // If more codecs are to be supported, SupportsMimeType will have
-  // to be extended
+  // Indicates if the PlatformDecoderModule supports decoding of aMimeType.
   virtual bool SupportsMimeType(const nsACString& aMimeType);
 
   enum ConversionRequired {
@@ -149,7 +141,8 @@ protected:
 };
 
 // A callback used by MediaDataDecoder to return output/errors to the
-// MP4Reader. Implementation is threadsafe, and can be called on any thread.
+// MediaFormatReader.
+// Implementation is threadsafe, and can be called on any thread.
 class MediaDataDecoderCallback {
 public:
   virtual ~MediaDataDecoderCallback() {}
@@ -179,7 +172,7 @@ public:
 //
 // Unless otherwise noted, all functions are only called on the decode task
 // queue.  An exception is the MediaDataDecoder in
-// MP4Reader::IsVideoAccelerated() for which all calls (Init(),
+// MediaFormatReader::IsVideoAccelerated() for which all calls (Init(),
 // IsHardwareAccelerated(), and Shutdown()) are from the main thread.
 //
 // Don't block inside these functions, unless it's explicitly noted that you
@@ -207,7 +200,7 @@ public:
   // Initialize the decoder. The decoder should be ready to decode once
   // promise resolves. The decoder should do any initialization here, rather
   // than in its constructor or PlatformDecoderModule::Create*Decoder(),
-  // so that if the MP4Reader needs to shutdown during initialization,
+  // so that if the MediaFormatReader needs to shutdown during initialization,
   // it can call Shutdown() to cancel this operation. Any initialization
   // that requires blocking the calling thread in this function *must*
   // be done here so that it can be canceled by calling Shutdown()!
@@ -222,7 +215,7 @@ public:
   // decoding resumes after the seek.
   // While the reader calls Flush(), it ignores all output sent to it;
   // it is safe (but pointless) to send output while Flush is called.
-  // The MP4Reader will not call Input() while it's calling Flush().
+  // The MediaFormatReader will not call Input() while it's calling Flush().
   virtual nsresult Flush() = 0;
 
   // Causes all complete samples in the pipeline that can be decoded to be
@@ -230,7 +223,7 @@ public:
   // it drops the input samples. The decoder may be holding onto samples
   // that are required to decode samples that it expects to get in future.
   // This is called when the demuxer reaches end of stream.
-  // The MP4Reader will not call Input() while it's calling Drain().
+  // The MediaFormatReader will not call Input() while it's calling Drain().
   // This function is asynchronous. The MediaDataDecoder must call
   // MediaDataDecoderCallback::DrainComplete() once all remaining
   // samples have been output.
