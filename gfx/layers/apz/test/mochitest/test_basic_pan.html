@@ -40,7 +40,11 @@ window.onload = function() {
         // Dropping the touch slop to 0 makes the tests easier to write because
         // we can just do a one-pixel drag to get over the pan threshold rather
         // than having to hard-code some larger value.
-        ["apz.touch_start_tolerance", "0.0"]
+        ["apz.touch_start_tolerance", "0.0"],
+        // The touchstart from the drag can turn into a long-tap if the touch-move
+        // events get held up. Try to prevent that by making long-taps require
+        // a 10 second hold.
+        ["ui.click_hold_context_menus.delay", "10000"],
       ]
     }, testDone);
 };
