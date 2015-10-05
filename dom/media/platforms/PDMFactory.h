@@ -60,7 +60,11 @@ protected:
   }
 
 private:
-  already_AddRefed<PlatformDecoderModule> CreatePDM();
+  void CreatePDMs();
+  // Startup the provided PDM and add it to our list if successful.
+  bool StartupPDM(PlatformDecoderModule* aPDM);
+  // Returns the first PDM in our list supporting the mimetype.
+  already_AddRefed<PlatformDecoderModule> GetDecoder(const nsACString& aMimeType);
 
   // Caches pref media.fragmented-mp4.use-blank-decoder
   static bool sUseBlankDecoder;
@@ -72,7 +76,7 @@ private:
   static uint32_t sVideoOutputMinimumInterval_ms;
   static bool sDontDelayInputExhausted;
 
-  nsRefPtr<PlatformDecoderModule> mCurrentPDM;
+  nsTArray<nsRefPtr<PlatformDecoderModule>> mCurrentPDMs;
 };
 
 } // namespace mozilla

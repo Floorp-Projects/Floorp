@@ -96,11 +96,8 @@ PDMFactory::Init()
 }
 
 PDMFactory::PDMFactory()
-  : mCurrentPDM(CreatePDM())
 {
-  if (!mCurrentPDM || NS_FAILED(mCurrentPDM->Startup())) {
-    mCurrentPDM = CreateAgnosticDecoderModule();
-  }
+  CreatePDMs();
 }
 
 PDMFactory::~PDMFactory()
@@ -114,25 +111,22 @@ PDMFactory::CreateDecoder(const TrackInfo& aConfig,
                           layers::LayersBackend aLayersBackend,
                           layers::ImageContainer* aImageContainer)
 {
-  MOZ_ASSERT(mCurrentPDM);
-
+  nsRefPtr<PlatformDecoderModule> current = GetDecoder(aConfig.mMimeType);
   nsRefPtr<MediaDataDecoder> m;
 
-  bool hasPlatformDecoder = mCurrentPDM->SupportsMimeType(aConfig.mMimeType);
-
   if (aConfig.GetAsAudioInfo()) {
-    if (!hasPlatformDecoder && VorbisDataDecoder::IsVorbis(aConfig.mMimeType)) {
+    if (!current && VorbisDataDecoder::IsVorbis(aConfig.mMimeType)) {
       m = new VorbisDataDecoder(*aConfig.GetAsAudioInfo(),
                                 aTaskQueue,
                                 aCallback);
-    } else if (!hasPlatformDecoder && OpusDataDecoder::IsOpus(aConfig.mMimeType)) {
+    } else if (!current && OpusDataDecoder::IsOpus(aConfig.mMimeType)) {
       m = new OpusDataDecoder(*aConfig.GetAsAudioInfo(),
                               aTaskQueue,
                               aCallback);
-    } else {
-      m = mCurrentPDM->CreateAudioDecoder(*aConfig.GetAsAudioInfo(),
-                                          aTaskQueue,
-                                          aCallback);
+    } else if (current) {
+      m = current->CreateAudioDecoder(*aConfig.GetAsAudioInfo(),
+                                      aTaskQueue,
+                                      aCallback);
     }
     return m.forget();
   }
@@ -151,32 +145,34 @@ PDMFactory::CreateDecoder(const TrackInfo& aConfig,
     callback = callbackWrapper.get();
   }
 
-  if (H264Converter::IsH264(aConfig)) {
-    nsRefPtr<H264Converter> h
-      = new H264Converter(mCurrentPDM,
-                          *aConfig.GetAsVideoInfo(),
-                          aLayersBackend,
-                          aImageContainer,
-                          aTaskQueue,
-                          callback);
-    const nsresult rv = h->GetLastError();
-    if (NS_SUCCEEDED(rv) || rv == NS_ERROR_NOT_INITIALIZED) {
-      // The H264Converter either successfully created the wrapped decoder,
-      // or there wasn't enough AVCC data to do so. Otherwise, there was some
-      // problem, for example WMF DLLs were missing.
-      m = h.forget();
-    }
-  } else if (!hasPlatformDecoder && VPXDecoder::IsVPX(aConfig.mMimeType)) {
+  if (!current && VPXDecoder::IsVPX(aConfig.mMimeType)) {
     m = new VPXDecoder(*aConfig.GetAsVideoInfo(),
                        aImageContainer,
                        aTaskQueue,
                        callback);
-  } else {
-    m = mCurrentPDM->CreateVideoDecoder(*aConfig.GetAsVideoInfo(),
-                                        aLayersBackend,
-                                        aImageContainer,
-                                        aTaskQueue,
-                                        callback);
+  } else if (current) {
+    if (H264Converter::IsH264(aConfig)) {
+      nsRefPtr<H264Converter> h
+        = new H264Converter(current,
+                            *aConfig.GetAsVideoInfo(),
+                            aLayersBackend,
+                            aImageContainer,
+                            aTaskQueue,
+                            callback);
+      const nsresult rv = h->GetLastError();
+      if (NS_SUCCEEDED(rv) || rv == NS_ERROR_NOT_INITIALIZED) {
+        // The H264Converter either successfully created the wrapped decoder,
+        // or there wasn't enough AVCC data to do so. Otherwise, there was some
+        // problem, for example WMF DLLs were missing.
+        m = h.forget();
+      }
+    } else {
+      m = current->CreateVideoDecoder(*aConfig.GetAsVideoInfo(),
+                                      aLayersBackend,
+                                      aImageContainer,
+                                      aTaskQueue,
+                                      callback);
+    }
   }
 
   if (callbackWrapper && m) {
@@ -189,56 +185,79 @@ PDMFactory::CreateDecoder(const TrackInfo& aConfig,
 bool
 PDMFactory::SupportsMimeType(const nsACString& aMimeType)
 {
-  MOZ_ASSERT(mCurrentPDM);
-  return mCurrentPDM->SupportsMimeType(aMimeType) ||
+  nsRefPtr<PlatformDecoderModule> current = GetDecoder(aMimeType);
+  return current ||
     VPXDecoder::IsVPX(aMimeType) ||
     OpusDataDecoder::IsOpus(aMimeType) ||
     VorbisDataDecoder::IsVorbis(aMimeType);
 }
 
-already_AddRefed<PlatformDecoderModule>
-PDMFactory::CreatePDM()
+void
+PDMFactory::CreatePDMs()
 {
+  nsRefPtr<PlatformDecoderModule> m;
+
   if (sGMPDecoderEnabled) {
-    nsRefPtr<PlatformDecoderModule> m(new GMPDecoderModule());
-    return m.forget();
+    m = new GMPDecoderModule();
+    StartupPDM(m);
   }
 #ifdef MOZ_WIDGET_ANDROID
-  if(sAndroidMCDecoderPreferred && sAndroidMCDecoderEnabled){
-    nsRefPtr<PlatformDecoderModule> m(new AndroidDecoderModule());
-    return m.forget();
+  if(sAndroidMCDecoderPreferred && sAndroidMCDecoderEnabled) {
+    m = new AndroidDecoderModule();
+    StartupPDM(m);
   }
 #endif
-  if (sUseBlankDecoder) {
-    return CreateBlankDecoderModule();
-  }
 #ifdef XP_WIN
-  nsRefPtr<PlatformDecoderModule> m(new WMFDecoderModule());
-  return m.forget();
+  m = new WMFDecoderModule();
+  StartupPDM(m);
 #endif
 #ifdef MOZ_FFMPEG
-  nsRefPtr<PlatformDecoderModule> mffmpeg = FFmpegRuntimeLinker::CreateDecoderModule();
-  if (mffmpeg) {
-    return mffmpeg.forget();
-  }
+  m = FFmpegRuntimeLinker::CreateDecoderModule();
+  StartupPDM(m);
 #endif
 #ifdef MOZ_APPLEMEDIA
-  nsRefPtr<PlatformDecoderModule> m(new AppleDecoderModule());
-  return m.forget();
+  m = new AppleDecoderModule();
+  StartupPDM(m);
 #endif
 #ifdef MOZ_GONK_MEDIACODEC
   if (sGonkDecoderEnabled) {
-    nsRefPtr<PlatformDecoderModule> m(new GonkDecoderModule());
-    return m.forget();
+    m = new GonkDecoderModule();
+    StartupPDM(m);
   }
 #endif
 #ifdef MOZ_WIDGET_ANDROID
   if(sAndroidMCDecoderEnabled){
-    nsRefPtr<PlatformDecoderModule> m(new AndroidDecoderModule());
-    return m.forget();
+    m = new AndroidDecoderModule();
+    StartupPDM(m);
   }
 #endif
-  return nullptr;
+  if (sUseBlankDecoder) {
+    m = CreateBlankDecoderModule();
+    StartupPDM(m);
+  }
+}
+
+bool
+PDMFactory::StartupPDM(PlatformDecoderModule* aPDM)
+{
+  if (aPDM && NS_SUCCEEDED(aPDM->Startup())) {
+    mCurrentPDMs.AppendElement(aPDM);
+    return true;
+  }
+  return false;
+}
+
+already_AddRefed<PlatformDecoderModule>
+PDMFactory::GetDecoder(const nsACString& aMimeType)
+{
+  nsRefPtr<PlatformDecoderModule> pdm;
+  for (auto& current : mCurrentPDMs) {
+    if (current->SupportsMimeType(aMimeType)) {
+      pdm = current;
+      break;
+    }
+  }
+  return pdm.forget();
 }
 
 }  // namespace mozilla
