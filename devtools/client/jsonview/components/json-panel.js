@@ -79,10 +79,10 @@ var JsonToolbar = React.createFactory(React.createClass({
   render: function() {
     return (
       Toolbar({},
-        ToolbarButton({className: "save", onClick: this.onSave},
+        ToolbarButton({className: "btn save", onClick: this.onSave},
           Locale.$STR("jsonViewer.Save")
         ),
-        ToolbarButton({className: "copy", onClick: this.onCopy},
+        ToolbarButton({className: "btn copy", onClick: this.onCopy},
           Locale.$STR("jsonViewer.Copy")
         ),
         SearchBox({

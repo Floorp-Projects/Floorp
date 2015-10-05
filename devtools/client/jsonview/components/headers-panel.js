@@ -50,7 +50,7 @@ var HeadersToolbar = React.createFactory(React.createClass({
   render: function() {
     return (
       Toolbar({},
-        ToolbarButton({className: "copy", onClick: this.onCopy},
+        ToolbarButton({className: "btn copy", onClick: this.onCopy},
           Locale.$STR("jsonViewer.Copy")
         )
       )

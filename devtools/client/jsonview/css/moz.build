@@ -6,10 +6,12 @@
 
 
 DevToolsModules(
+    'dark-theme.css',
     'dom-tree.css',
     'general.css',
     'headers-panel.css',
     'json-panel.css',
+    'light-theme.css',
     'main.css',
     'read-only-prop.svg',
     'reps.css',
