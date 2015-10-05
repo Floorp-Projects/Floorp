@@ -286,7 +286,10 @@ static int nr_ice_component_initialize_udp(struct nr_ice_ctx_ *ctx,nr_ice_compon
           isock,turn_sock,RELAYED,0,
           &ctx->turn_servers[j].turn_server,component->component_id,&cand))
            ABORT(r);
-        cand->u.relayed.srvflx_candidate=srvflx_cand;
+        if (srvflx_cand) {
+          cand->u.relayed.srvflx_candidate=srvflx_cand;
+          srvflx_cand->u.srvrflx.relay_candidate=cand;
+        }
         cand->u.relayed.server=&ctx->turn_servers[j];
         TAILQ_INSERT_TAIL(&component->candidates,cand,entry_comp);
         component->candidate_ct++;

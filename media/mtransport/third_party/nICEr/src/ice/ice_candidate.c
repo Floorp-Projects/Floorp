@@ -284,8 +284,6 @@ static void nr_ice_candidate_mark_done(nr_ice_candidate *cand, int state)
      * piggybacking on it. Make sure it is marked done too. */
     if ((cand->type == RELAYED) && cand->u.relayed.srvflx_candidate) {
       nr_ice_candidate *srflx=cand->u.relayed.srvflx_candidate;
-      /* Calling done_cb can destroy this, make sure it doesn't dangle. */
-      cand->u.relayed.srvflx_candidate=0;
       if (state == NR_ICE_CAND_STATE_INITIALIZED &&
           nr_turn_client_get_mapped_address(cand->u.relayed.turn,
                                             &srflx->addr)) {
@@ -325,6 +323,8 @@ int nr_ice_candidate_destroy(nr_ice_candidate **candp)
       case RELAYED:
         if (cand->u.relayed.turn_handle)
           nr_ice_socket_deregister(cand->isock, cand->u.relayed.turn_handle);
+        if (cand->u.relayed.srvflx_candidate)
+          cand->u.relayed.srvflx_candidate->u.srvrflx.relay_candidate=0;
         nr_turn_client_ctx_destroy(&cand->u.relayed.turn);
         nr_socket_destroy(&cand->u.relayed.turn_sock);
         break;
@@ -332,6 +332,8 @@ int nr_ice_candidate_destroy(nr_ice_candidate **candp)
       case SERVER_REFLEXIVE:
         if (cand->u.srvrflx.stun_handle)
           nr_ice_socket_deregister(cand->isock, cand->u.srvrflx.stun_handle);
+        if (cand->u.srvrflx.relay_candidate)
+          cand->u.srvrflx.relay_candidate->u.relayed.srvflx_candidate=0;
         nr_stun_client_ctx_destroy(&cand->u.srvrflx.stun);
         break;
       default:
