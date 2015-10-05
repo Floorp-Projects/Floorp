@@ -26,6 +26,7 @@ gDirectorySource = "data:application/json," + JSON.stringify({
 
 
 function runTests() {
+  requestLongerTimeout(4);
   let origEnhanced = NewTabUtils.allPages.enhanced;
   let origCompareLinks = NewTabUtils.links.compareLinks;
   registerCleanupFunction(() => {

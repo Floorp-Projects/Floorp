@@ -54,7 +54,7 @@ namespace js {
 // effect of tracing the edge depends on the JSTracer being used.
 template <typename T>
 void
-TraceEdge(JSTracer* trc, BarrieredBase<T>* thingp, const char* name);
+TraceEdge(JSTracer* trc, WriteBarrieredBase<T>* thingp, const char* name);
 
 // Trace through a "root" edge. These edges are the initial edges in the object
 // graph traversal. Root edges are asserted to only be traversed in the initial
@@ -79,7 +79,7 @@ TraceManuallyBarrieredEdge(JSTracer* trc, T* thingp, const char* name);
 // Trace all edges contained in the given array.
 template <typename T>
 void
-TraceRange(JSTracer* trc, size_t len, BarrieredBase<T>* vec, const char* name);
+TraceRange(JSTracer* trc, size_t len, WriteBarrieredBase<T>* vec, const char* name);
 
 // Trace all root edges in the given array.
 template <typename T>
@@ -90,7 +90,7 @@ TraceRootRange(JSTracer* trc, size_t len, T* vec, const char* name);
 // destination thing is not being GC'd, then the edge will not be traced.
 template <typename T>
 void
-TraceCrossCompartmentEdge(JSTracer* trc, JSObject* src, BarrieredBase<T>* dst,
+TraceCrossCompartmentEdge(JSTracer* trc, JSObject* src, WriteBarrieredBase<T>* dst,
                           const char* name);
 
 // As above but with manual barriers.

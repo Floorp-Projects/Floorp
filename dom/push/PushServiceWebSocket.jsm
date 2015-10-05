@@ -166,6 +166,9 @@ this.PushServiceWebSocket = {
     case "nsPref:changed":
       if (aData == "dom.push.debug") {
         gDebuggingEnabled = prefs.get("debug");
+      } else if (aData == "dom.push.userAgentID") {
+        this._shutdownWS();
+        this._reconnectAfterBackoff();
       }
       break;
     case "timer-callback":
@@ -346,6 +349,8 @@ this.PushServiceWebSocket = {
     this._currentState = STATE_SHUT_DOWN;
     this._willBeWokenUpByUDP = false;
 
+    prefs.ignore("userAgentID", this);
+
     if (this._wsListener) {
       this._wsListener._pushService = null;
     }
@@ -370,6 +375,7 @@ this.PushServiceWebSocket = {
   },
 
   uninit: function() {
+    prefs.ignore("debug", this);
 
     if (this._udpServer) {
       this._udpServer.close();
@@ -791,6 +797,8 @@ this.PushServiceWebSocket = {
     function finishHandshake() {
       this._UAID = reply.uaid;
       this._currentState = STATE_READY;
+      prefs.observe("userAgentID", this);
+
       this._dataEnabled = !!reply.use_webpush;
       if (this._dataEnabled) {
         this._mainPushService.getAllUnexpired().then(records =>
@@ -808,9 +816,10 @@ this.PushServiceWebSocket = {
     // By this point we've got a UAID from the server that we are ready to
     // accept.
     //
-    // If we already had a valid UAID before, we have to ask apps to
-    // re-register.
-    if (this._UAID && this._UAID != reply.uaid) {
+    // We unconditionally drop all existing registrations and notify service
+    // workers if we receive a new UAID. This ensures we expunge all stale
+    // registrations if the `userAgentID` pref is reset.
+    if (this._UAID != reply.uaid) {
       debug("got new UAID: all re-register");
 
       this._mainPushService.dropRegistrations()

@@ -348,14 +348,15 @@ CertBlocklist::AddRevokedCertInternal(const nsACString& aEncodedDN,
 
 
   if (aItemState == CertNewFromBlocklist) {
-    // we want SaveEntries to be a no-op if no new entries are added
-    if (!mBlocklist.Contains(item)) {
+    // We want SaveEntries to be a no-op if no new entries are added.
+    nsGenericHashKey<CertBlocklistItem>* entry = mBlocklist.GetEntry(item);
+    if (!entry) {
       mModified = true;
+    } else {
+      // Ensure that any existing item is replaced by a fresh one so we can
+      // use mIsCurrent to decide which entries to write out.
+      mBlocklist.RemoveEntry(entry);
     }
-
-    // Ensure that any existing item is replaced by a fresh one so we can
-    // use mIsCurrent to decide which entries to write out
-    mBlocklist.RemoveEntry(item);
     item.mIsCurrent = true;
   }
   mBlocklist.PutEntry(item);

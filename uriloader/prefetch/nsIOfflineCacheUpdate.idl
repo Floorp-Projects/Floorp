@@ -58,7 +58,7 @@ interface nsIOfflineCacheUpdateObserver : nsISupports {
  * load its items one by one, sending itemCompleted() to any registered
  * observers.
  */
-[scriptable, uuid(a4503a53-6ab8-4b50-b01e-1c4f393fc980)]
+[scriptable, uuid(e9029838-3553-4192-a00b-f0f11073a6eb)]
 interface nsIOfflineCacheUpdate : nsISupports {
   /**
    * Fetch the status of the running update.  This will return a value
@@ -101,8 +101,13 @@ interface nsIOfflineCacheUpdate : nsISupports {
    *        The manifest URI to be checked.
    * @param aDocumentURI
    *        The page that is requesting the update.
+   * @param aLoadingPrincipal
+   *        The principal of the page that is requesting the update.
    */
-  void init(in nsIURI aManifestURI, in nsIURI aDocumentURI, in nsIDOMDocument aDocument,
+  void init(in nsIURI aManifestURI,
+            in nsIURI aDocumentURI,
+            in nsIPrincipal aLoadingPrincipal,
+            in nsIDOMDocument aDocument,
             [optional] in nsIFile aCustomProfileDir,
             [optional] in unsigned long aAppId,
             [optional] in boolean aInBrowser);
@@ -120,7 +125,8 @@ interface nsIOfflineCacheUpdate : nsISupports {
    *        The page that is requesting the update. May be null 
    *        when this information is unknown.
    */
-  void initPartial(in nsIURI aManifestURI, in ACString aClientID, in nsIURI aDocumentURI);
+  void initPartial(in nsIURI aManifestURI, in ACString aClientID,
+                   in nsIURI aDocumentURI, in nsIPrincipal aPrincipal);
 
   /**
    * Initialize the update to only check whether there is an update
@@ -141,6 +147,7 @@ interface nsIOfflineCacheUpdate : nsISupports {
    *        update available (the manifest has not changed on the server).
    */
   void initForUpdateCheck(in nsIURI aManifestURI,
+                          in nsIPrincipal aLoadingPrincipal,
                           in unsigned long aAppID,
                           in boolean aInBrowser,
                           in nsIObserver aObserver);
@@ -192,7 +199,7 @@ interface nsIOfflineCacheUpdate : nsISupports {
   readonly attribute uint64_t byteProgress;
 };
 
-[scriptable, uuid(0668910d-d14f-4cee-8db5-25faebc360ab)]
+[scriptable, uuid(a297a334-bcae-4779-a564-555593edc96b)]
 interface nsIOfflineCacheUpdateService : nsISupports {
     /**
      * Constants for the offline-app permission.
@@ -220,6 +227,7 @@ interface nsIOfflineCacheUpdateService : nsISupports {
      */
     nsIOfflineCacheUpdate scheduleUpdate(in nsIURI aManifestURI,
                                          in nsIURI aDocumentURI,
+                                         in nsIPrincipal aLoadingPrincipal,
                                          in nsIDOMWindow aWindow);
 
     /**
@@ -230,6 +238,7 @@ interface nsIOfflineCacheUpdateService : nsISupports {
      */
     nsIOfflineCacheUpdate scheduleAppUpdate(in nsIURI aManifestURI,
                                             in nsIURI aDocumentURI,
+                                            in nsIPrincipal aLoadingPrincipal,
                                             in unsigned long aAppID,
                                             in boolean aInBrowser,
                                             in nsIFile aProfileDir);
@@ -240,6 +249,7 @@ interface nsIOfflineCacheUpdateService : nsISupports {
      */
     void scheduleOnDocumentStop(in nsIURI aManifestURI,
                                 in nsIURI aDocumentURI,
+                                in nsIPrincipal aLoadingPrincipal,
                                 in nsIDOMDocument aDocument);
 
     /**
@@ -254,6 +264,7 @@ interface nsIOfflineCacheUpdateService : nsISupports {
      * description.
      */
     void checkForUpdate(in nsIURI aManifestURI,
+                        in nsIPrincipal aLoadingPrincipal,
                         in unsigned long aAppID,
                         in boolean aInBrowser,
                         in nsIObserver aObserver);

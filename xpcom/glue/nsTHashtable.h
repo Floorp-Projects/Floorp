@@ -11,12 +11,13 @@
 #include "PLDHashTable.h"
 #include "nsDebug.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
+#include "mozilla/fallible.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
-#include "mozilla/fallible.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/Attributes.h"
+#include "mozilla/TypeTraits.h"
 
 #include <new>
 
@@ -76,6 +77,8 @@ template<class EntryType>
 class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable
 {
   typedef mozilla::fallible_t fallible_t;
+  static_assert(mozilla::IsPointer<typename EntryType::KeyTypePointer>::value,
+                "KeyTypePointer should be a pointer");
 
 public:
   // Separate constructors instead of default aInitLength parameter since
@@ -164,12 +167,20 @@ public:
   }
 
   /**
+   * Remove the entry associated with a key.
+   * @param aEntry   the entry-pointer to remove (obtained from GetEntry)
+   */
+  void RemoveEntry(EntryType* aEntry)
+  {
+    mTable.RemoveEntry(aEntry);
+  }
+
+  /**
    * Remove the entry associated with a key, but don't resize the hashtable.
    * This is a low-level method, and is not recommended unless you know what
-   * you're doing and you need the extra performance. This method can be used
-   * during enumeration, while RemoveEntry() cannot.
-   * @param aEntry   the entry-pointer to remove (obtained from GetEntry or
-   *                 the enumerator
+   * you're doing. If you use it, please add a comment explaining why you
+   * didn't use RemoveEntry().
+   * @param aEntry   the entry-pointer to remove (obtained from GetEntry)
    */
   void RawRemoveEntry(EntryType* aEntry)
   {
@@ -358,7 +369,7 @@ template<class EntryType>
 PLDHashNumber
 nsTHashtable<EntryType>::s_HashKey(PLDHashTable* aTable, const void* aKey)
 {
-  return EntryType::HashKey(reinterpret_cast<const KeyTypePointer>(aKey));
+  return EntryType::HashKey(static_cast<const KeyTypePointer>(aKey));
 }
 
 template<class EntryType>
@@ -368,7 +379,7 @@ nsTHashtable<EntryType>::s_MatchEntry(PLDHashTable* aTable,
                                       const void* aKey)
 {
   return ((const EntryType*)aEntry)->KeyEquals(
-    reinterpret_cast<const KeyTypePointer>(aKey));
+    static_cast<const KeyTypePointer>(aKey));
 }
 
 template<class EntryType>
@@ -378,7 +389,7 @@ nsTHashtable<EntryType>::s_CopyEntry(PLDHashTable* aTable,
                                      PLDHashEntryHdr* aTo)
 {
   EntryType* fromEntry =
-    const_cast<EntryType*>(reinterpret_cast<const EntryType*>(aFrom));
+    const_cast<EntryType*>(static_cast<const EntryType*>(aFrom));
 
   new (aTo) EntryType(mozilla::Move(*fromEntry));
 
@@ -398,7 +409,7 @@ void
 nsTHashtable<EntryType>::s_InitEntry(PLDHashEntryHdr* aEntry,
                                      const void* aKey)
 {
-  new (aEntry) EntryType(reinterpret_cast<KeyTypePointer>(aKey));
+  new (aEntry) EntryType(static_cast<KeyTypePointer>(aKey));
 }
 
 class nsCycleCollectionTraversalCallback;

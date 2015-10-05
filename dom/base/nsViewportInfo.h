@@ -12,7 +12,7 @@
 /**
  * Default values for the nsViewportInfo class.
  */
-static const mozilla::LayoutDeviceToScreenScale kViewportMinScale(0.0f);
+static const mozilla::LayoutDeviceToScreenScale kViewportMinScale(0.1f);
 static const mozilla::LayoutDeviceToScreenScale kViewportMaxScale(10.0f);
 static const mozilla::CSSIntSize kViewportMinSize(200, 40);
 static const mozilla::CSSIntSize kViewportMaxSize(10000, 10000);
@@ -27,6 +27,7 @@ class MOZ_STACK_CLASS nsViewportInfo
     nsViewportInfo(const mozilla::ScreenIntSize& aDisplaySize,
                    const mozilla::CSSToScreenScale& aDefaultZoom,
                    bool aAllowZoom) :
+      mDefaultZoomValid(true),
       mDefaultZoom(aDefaultZoom),
       mAutoSize(true),
       mAllowZoom(aAllowZoom)
@@ -44,6 +45,7 @@ class MOZ_STACK_CLASS nsViewportInfo
                    const mozilla::CSSSize& aSize,
                    bool aAutoSize,
                    bool aAllowZoom) :
+                     mDefaultZoomValid(true),
                      mDefaultZoom(aDefaultZoom),
                      mMinZoom(aMinZoom),
                      mMaxZoom(aMaxZoom),
@@ -54,8 +56,8 @@ class MOZ_STACK_CLASS nsViewportInfo
       ConstrainViewportValues();
     }
 
+    bool IsDefaultZoomValid() const { return mDefaultZoomValid; }
     mozilla::CSSToScreenScale GetDefaultZoom() const { return mDefaultZoom; }
-    void SetDefaultZoom(const mozilla::CSSToScreenScale& aDefaultZoom);
     mozilla::CSSToScreenScale GetMinZoom() const { return mMinZoom; }
     mozilla::CSSToScreenScale GetMaxZoom() const { return mMaxZoom; }
 
@@ -72,6 +74,10 @@ class MOZ_STACK_CLASS nsViewportInfo
      * sane minimum/maximum values.
      */
     void ConstrainViewportValues();
+
+    // If the default zoom was specified and was between the min and max
+    // zoom values.
+    bool mDefaultZoomValid;
 
     // Default zoom indicates the level at which the display is 'zoomed in'
     // initially for the user, upon loading of the page.

@@ -81,11 +81,13 @@ NS_IMPL_EVENT_HANDLER(nsDOMOfflineResourceList, obsolete)
 
 nsDOMOfflineResourceList::nsDOMOfflineResourceList(nsIURI *aManifestURI,
                                                    nsIURI *aDocumentURI,
+                                                   nsIPrincipal *aLoadingPrincipal,
                                                    nsPIDOMWindow *aWindow)
   : DOMEventTargetHelper(aWindow)
   , mInitialized(false)
   , mManifestURI(aManifestURI)
   , mDocumentURI(aDocumentURI)
+  , mLoadingPrincipal(aLoadingPrincipal)
   , mExposeCacheUpdateStatus(true)
   , mStatus(nsIDOMOfflineResourceList::IDLE)
   , mCachedKeys(nullptr)
@@ -359,7 +361,8 @@ nsDOMOfflineResourceList::MozAdd(const nsAString& aURI)
   rv = appCache->GetClientID(clientID);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = update->InitPartial(mManifestURI, clientID, mDocumentURI);
+  rv = update->InitPartial(mManifestURI, clientID,
+                           mDocumentURI, mLoadingPrincipal);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = update->AddDynamicURI(requestedURI);
@@ -466,7 +469,7 @@ nsDOMOfflineResourceList::Update()
     do_QueryInterface(GetOwner());
 
   nsCOMPtr<nsIOfflineCacheUpdate> update;
-  rv = updateService->ScheduleUpdate(mManifestURI, mDocumentURI,
+  rv = updateService->ScheduleUpdate(mManifestURI, mDocumentURI, mLoadingPrincipal,
                                      window, getter_AddRefs(update));
   NS_ENSURE_SUCCESS(rv, rv);
 

@@ -13,7 +13,7 @@
 function focused()
 {
   if (window.arguments)
-    setTimeout(function () window.arguments[0](window, window.arguments[1]), 0);
+    setTimeout(() => window.arguments[0](window, window.arguments[1]), 0);
 }
 
 SimpleTest.waitForFocus(focused);

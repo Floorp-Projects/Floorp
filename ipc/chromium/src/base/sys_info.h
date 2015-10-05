@@ -42,18 +42,6 @@ class SysInfo {
   // Returns the name of the host operating system.
   static std::string OperatingSystemName();
 
-  // Returns the version of the host operating system.
-  static std::string OperatingSystemVersion();
-
-  // Retrieves detailed numeric values for the OS version.
-  // WARNING: On OS X, this method uses static variables and is not threadsafe
-  // until it's been initialized by being called once without a race.
-  // TODO(port): Implement a Linux version of this method and enable the
-  // corresponding unit test.
-  static void OperatingSystemVersionNumbers(int32_t *major_version,
-                                            int32_t *minor_version,
-                                            int32_t *bugfix_version);
-
   // Returns the CPU architecture of the system. Exact return value may differ
   // across platforms.
   static std::string CPUArchitecture();
@@ -68,14 +56,6 @@ class SysInfo {
   // Return the smallest amount of memory (in bytes) which the VM system will
   // allocate.
   static size_t VMAllocationGranularity();
-
-#if defined(OS_MACOSX)
-  // Under the OS X Sandbox, our access to the system is limited, this call
-  // caches the system info on startup before we turn the Sandbox on.
-  // The above functions are all wired up to return the cached value so the rest
-  // of the code can call them in the Sandbox without worrying.
-  static void CacheSysInfo();
-#endif
 };
 
 }  // namespace base

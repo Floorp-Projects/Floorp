@@ -38,6 +38,7 @@ Cu.import("resource://gre/modules/ExtensionManagement.jsm");
 // in browser/, mobile/, or b2g/.
 ExtensionManagement.registerScript("chrome://extensions/content/ext-alarms.js");
 ExtensionManagement.registerScript("chrome://extensions/content/ext-backgroundPage.js");
+ExtensionManagement.registerScript("chrome://extensions/content/ext-cookies.js");
 ExtensionManagement.registerScript("chrome://extensions/content/ext-notifications.js");
 ExtensionManagement.registerScript("chrome://extensions/content/ext-i18n.js");
 ExtensionManagement.registerScript("chrome://extensions/content/ext-idle.js");

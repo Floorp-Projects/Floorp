@@ -18,6 +18,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "nsTArray.h"
+#include "Units.h"
 
 // translucency level for drag images
 #define DRAG_TRANSLUCENCY 0.65
@@ -144,9 +145,8 @@ protected:
 
   // used to determine the image to appear on the cursor while dragging
   nsCOMPtr<nsIDOMNode> mImage;
-  // offset of cursor within the image 
-  int32_t mImageX;
-  int32_t mImageY;
+  // offset of cursor within the image
+  mozilla::CSSIntPoint mImageOffset;
 
   // set if a selection is being dragged
   nsCOMPtr<nsISelection> mSelection;

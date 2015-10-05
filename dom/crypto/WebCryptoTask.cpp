@@ -1288,7 +1288,11 @@ public:
 
   void SetKeyData(const CryptoBuffer& aKeyData)
   {
-    mKeyData = aKeyData;
+    if (!mKeyData.Assign(aKeyData)) {
+      mEarlyRv = NS_ERROR_DOM_OPERATION_ERR;
+      return;
+    }
+
     mDataIsJwk = false;
 
     if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
@@ -1468,7 +1472,10 @@ public:
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
 
-    mKey->SetSymKey(mKeyData);
+    if (NS_FAILED(mKey->SetSymKey(mKeyData))) {
+      return NS_ERROR_DOM_OPERATION_ERR;
+    }
+
     mKey->SetType(CryptoKey::SECRET);
 
     if (mDataIsJwk && !JwkCompatible(mJwk, mKey)) {
@@ -1574,7 +1581,10 @@ private:
         return NS_ERROR_DOM_DATA_ERR;
       }
 
-      mKey->SetPublicKey(pubKey.get());
+      if (NS_FAILED(mKey->SetPublicKey(pubKey.get()))) {
+        return NS_ERROR_DOM_OPERATION_ERR;
+      }
+
       mKey->SetType(CryptoKey::PUBLIC);
     } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_PKCS8) ||
         (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK) &&
@@ -1590,7 +1600,10 @@ private:
         return NS_ERROR_DOM_DATA_ERR;
       }
 
-      mKey->SetPrivateKey(privKey.get());
+      if (NS_FAILED(mKey->SetPrivateKey(privKey.get()))) {
+        return NS_ERROR_DOM_OPERATION_ERR;
+      }
+
       mKey->SetType(CryptoKey::PRIVATE);
       pubKey = SECKEY_ConvertToPublicKey(privKey.get());
       if (!pubKey) {
@@ -1708,7 +1721,10 @@ private:
         return NS_ERROR_DOM_DATA_ERR;
       }
 
-      mKey->SetPrivateKey(privKey.get());
+      if (NS_FAILED(mKey->SetPrivateKey(privKey.get()))) {
+        return NS_ERROR_DOM_OPERATION_ERR;
+      }
+
       mKey->SetType(CryptoKey::PRIVATE);
     } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_RAW) ||
                mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI) ||
@@ -1745,7 +1761,10 @@ private:
         }
       }
 
-      mKey->SetPublicKey(pubKey.get());
+      if (NS_FAILED(mKey->SetPublicKey(pubKey.get()))) {
+        return NS_ERROR_DOM_OPERATION_ERR;
+      }
+
       mKey->SetType(CryptoKey::PUBLIC);
     } else {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
@@ -1867,7 +1886,10 @@ private:
         ATTEMPT_BUFFER_ASSIGN(mGenerator, &pubKey->u.dh.base);
       }
 
-      mKey->SetPublicKey(pubKey.get());
+      if (NS_FAILED(mKey->SetPublicKey(pubKey.get()))) {
+        return NS_ERROR_DOM_OPERATION_ERR;
+      }
+
       mKey->SetType(CryptoKey::PUBLIC);
     } else {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
@@ -2153,8 +2175,11 @@ private:
 
   virtual void Resolve() override
   {
-    mKey->SetSymKey(mKeyData);
-    mResultPromise->MaybeResolve(mKey);
+    if (NS_SUCCEEDED(mKey->SetSymKey(mKeyData))) {
+      mResultPromise->MaybeResolve(mKey);
+    } else {
+      mResultPromise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
+    }
   }
 
   virtual void Cleanup() override
@@ -2378,13 +2403,15 @@ GenerateAsymmetricKeyTask::DoCrypto()
     return NS_ERROR_DOM_UNKNOWN_ERR;
   }
 
-  mKeyPair.mPrivateKey.get()->SetPrivateKey(mPrivateKey);
-  mKeyPair.mPublicKey.get()->SetPublicKey(mPublicKey);
+  nsresult rv = mKeyPair.mPrivateKey.get()->SetPrivateKey(mPrivateKey);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
+  rv = mKeyPair.mPublicKey.get()->SetPublicKey(mPublicKey);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
 
   // PK11_GenerateKeyPair() does not set a CKA_EC_POINT attribute on the
   // private key, we need this later when exporting to PKCS8 and JWK though.
   if (mMechanism == CKM_EC_KEY_PAIR_GEN) {
-    nsresult rv = mKeyPair.mPrivateKey->AddPublicKeyData(mPublicKey);
+    rv = mKeyPair.mPrivateKey->AddPublicKeyData(mPublicKey);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
   }
 

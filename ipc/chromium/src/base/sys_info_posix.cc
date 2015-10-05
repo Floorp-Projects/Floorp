@@ -128,16 +128,6 @@ std::string SysInfo::OperatingSystemName() {
 }
 
 // static
-std::string SysInfo::OperatingSystemVersion() {
-  utsname info;
-  if (uname(&info) < 0) {
-    NOTREACHED();
-    return "";
-  }
-  return std::string(info.release);
-}
-
-// static
 std::string SysInfo::CPUArchitecture() {
   utsname info;
   if (uname(&info) < 0) {
