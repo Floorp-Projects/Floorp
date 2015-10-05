@@ -33,6 +33,15 @@
 // Stores the private WeakMap slot used for WeakSets
 #define WEAKSET_MAP_SLOT 0
 
+// Slots for use with promises implementation.
+#define PROMISE_STATE_SLOT 0
+#define PROMISE_VALUE_SLOT 1
+#define PROMISE_DEFERREDS_SLOT 2
+
+#define PROMISE_STATE_PENDING 0
+#define PROMISE_STATE_RESOLVED 1
+#define PROMISE_STATE_REJECTED 2
+
 #define ITERATOR_SLOT_TARGET 0
 // Used for collection iterators.
 #define ITERATOR_SLOT_RANGE 1
