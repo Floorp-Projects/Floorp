@@ -12,8 +12,13 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'alerts'
 
+EXPORTS += [
+    'nsAlertsUtils.h',
+]
+
 UNIFIED_SOURCES += [
     'nsAlertsService.cpp',
+    'nsAlertsUtils.cpp',
     'nsXULAlerts.cpp',
 ]
 
