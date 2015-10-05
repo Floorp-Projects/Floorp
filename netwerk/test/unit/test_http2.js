@@ -942,7 +942,7 @@ function resetPrefs() {
 
 function run_test() {
   var env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
-  serverPort = env.get("MOZHTTP2-PORT");
+  serverPort = env.get("MOZHTTP2_PORT");
   do_check_neq(serverPort, null);
   dump("using port " + serverPort + "\n");
 

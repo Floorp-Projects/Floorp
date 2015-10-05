@@ -603,4 +603,13 @@ function listenok() {
   serverPort = server._server.address().port;
   console.log('HTTP2 server listening on port ' + serverPort);
 }
-server.listen(-1, "0.0.0.0", 200, listenok);
+var portSelection = -1;
+var envport = process.env.MOZHTTP2_PORT;
+if (envport !== undefined) {
+  try {
+    portSelection = parseInt(envport, 10);
+  } catch (e) {
+    portSelection = -1;
+  }
+}
+server.listen(portSelection, "0.0.0.0", 200, listenok);
