@@ -217,6 +217,16 @@ TEST(ImageDecoders, ICOMultiChunk)
   CheckDecoderMultiChunk(GreenICOTestCase());
 }
 
+TEST(ImageDecoders, IconSingleChunk)
+{
+  CheckDecoderSingleChunk(GreenIconTestCase());
+}
+
+TEST(ImageDecoders, IconMultiChunk)
+{
+  CheckDecoderMultiChunk(GreenIconTestCase());
+}
+
 TEST(ImageDecoders, AnimatedGIFSingleChunk)
 {
   CheckDecoderSingleChunk(GreenFirstFrameAnimatedGIFTestCase());
