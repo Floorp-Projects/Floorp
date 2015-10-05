@@ -65,12 +65,12 @@
 # SNI Tests
 #
   SNI     0       -r_-a_Host-sni.Dom       -V_ssl3:_-w_nss_-n_TestUser                     TLS Server hello response without SNI
-  SNI     0       -r_-a_Host-sni.Dom       -V_ssl3:_-w_nss_-n_TestUser_-a_Host-sni.Dom     TLS Server hello response with SNI
-  SNI     1       -r_-a_Host-sni.Dom       -V_ssl3:_-w_nss_-n_TestUser_-a_Host-sni1.Dom    TLS Server response with alert
+  SNI     0       -r_-a_Host-sni.Dom       -V_ssl3:_-c_v_-w_nss_-n_TestUser_-a_Host-sni.Dom     TLS Server hello response with SNI
+  SNI     1       -r_-a_Host-sni.Dom       -V_ssl3:_-c_v_-w_nss_-n_TestUser_-a_Host-sni1.Dom    TLS Server response with alert
   SNI     0       -r_-a_Host-sni.Dom       -V_ssl3:ssl3_-w_nss_-n_TestUser                  SSL3 Server hello response without SNI
-  SNI     1       -r_-a_Host-sni.Dom       -V_ssl3:ssl3_-w_nss_-n_TestUser_-a_Host-sni.Dom  SSL3 Server hello response with SNI: SSL don't have SH extensions
+  SNI     1       -r_-a_Host-sni.Dom       -V_ssl3:ssl3_-c_v_-w_nss_-n_TestUser_-a_Host-sni.Dom  SSL3 Server hello response with SNI: SSL don't have SH extensions
   SNI     0       -r_-r_-r_-a_Host-sni.Dom -V_ssl3:_-w_nss_-n_TestUser                     TLS Server hello response without SNI
-  SNI     0       -r_-r_-r_-a_Host-sni.Dom -V_ssl3:_-w_nss_-n_TestUser_-a_Host-sni.Dom     TLS Server hello response with SNI
+  SNI     0       -r_-r_-r_-a_Host-sni.Dom -V_ssl3:_-c_v_-w_nss_-n_TestUser_-a_Host-sni.Dom     TLS Server hello response with SNI
   SNI     1       -r_-r_-r_-a_Host-sni.Dom -V_ssl3:_-w_nss_-n_TestUser_-a_Host-sni.Dom_-a_Host.Dom TLS Server hello response with SNI: Change name on 2d HS
-  SNI     1       -r_-r_-r_-a_Host-sni.Dom -V_ssl3:_-w_nss_-n_TestUser_-a_Host-sni.Dom_-a_Host-sni1.Dom TLS Server hello response with SNI: Change name to invalid 2d HS
-  SNI     1       -r_-r_-r_-a_Host-sni.Dom -V_ssl3:_-w_nss_-n_TestUser_-a_Host-sni1.Dom    TLS Server response with alert
+  SNI     1       -r_-r_-r_-a_Host-sni.Dom -V_ssl3:_-c_v_-w_nss_-n_TestUser_-a_Host-sni.Dom_-a_Host-sni1.Dom TLS Server hello response with SNI: Change name to invalid 2d HS
+  SNI     1       -r_-r_-r_-a_Host-sni.Dom -V_ssl3:_-c_v_-w_nss_-n_TestUser_-a_Host-sni1.Dom    TLS Server response with alert

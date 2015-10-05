@@ -12,6 +12,7 @@
 #define _PKIX_REVOCATIONCHECKER_H
 
 #include "pkixt.h"
+#include "certt.h"
 
 #ifdef __cplusplus
 extern "C" {

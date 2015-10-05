@@ -824,7 +824,7 @@ pkix_PolicyNode_Hashcode(
                 (node, &nodeHash, plContext),
                 PKIX_SINGLEPOLICYNODEHASHCODEFAILED);
 
-        nodeHash = 31*nodeHash + (PKIX_UInt32)(node->parent);
+        nodeHash = 31*nodeHash + (PKIX_UInt32)((char *)node->parent - (char *)NULL);
 
         PKIX_HASHCODE
                 (node->children,

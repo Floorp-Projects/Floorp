@@ -130,7 +130,6 @@ main(int argc, char **argv)
 {
     char *progName;
     FILE *inFile, *outFile;
-    char *certName;
     CERTCertDBHandle *certHandle;
     struct recipient *recipients, *rcpt;
     PLOptState *optstate;
@@ -142,7 +141,6 @@ main(int argc, char **argv)
 
     inFile = NULL;
     outFile = NULL;
-    certName = NULL;
     recipients = NULL;
     rcpt = NULL;
 

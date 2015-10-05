@@ -10,6 +10,7 @@
 #define _PKIX_CERTSTORE_H
 
 #include "pkixt.h"
+#include "certt.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -327,7 +328,7 @@ typedef PKIX_Error *
         PKIX_PL_Cert *issuer,
         PKIX_PL_Date *date,
         PKIX_Boolean  crlDownloadDone,
-        PKIX_UInt32 *reasonCode,
+        CERTCRLEntryReasonCode *reasonCode,
         PKIX_RevocationStatus *revStatus,
         void *plContext);
 

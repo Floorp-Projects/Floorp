@@ -22,7 +22,7 @@ ec_GFp_nistp224_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 	mp_digit carry;
 #ifdef ECL_THIRTY_TWO_BIT
         mp_digit a6a = 0, a6b = 0,
-                a5a = 0, a5b = 0, a4a = 0, a4b = 0, a3a = 0, a3b = 0;
+                a5a = 0, a5b = 0, a4a = 0, a4b = 0, a3b = 0;
         mp_digit r0a, r0b, r1a, r1b, r2a, r2b, r3a;
 #else
 	mp_digit a6 = 0, a5 = 0, a4 = 0, a3b = 0, a5a = 0;
@@ -72,52 +72,54 @@ ec_GFp_nistp224_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 			+(  0, a6,a5b,  0)
 			-(  0	 0,    0|a6b, a6a|a5b )
 			-(  a6b, a6a|a5b, a5a|a4b, a4a|a3b ) */
-		MP_ADD_CARRY (r1b, a3b, r1b, 0,     carry);
-		MP_ADD_CARRY (r2a, a4a, r2a, carry, carry);
-		MP_ADD_CARRY (r2b, a4b, r2b, carry, carry);
-		MP_ADD_CARRY (r3a, a5a, r3a, carry, carry);
-		r3b = carry;
-		MP_ADD_CARRY (r1b, a5b, r1b, 0,     carry);
-		MP_ADD_CARRY (r2a, a6a, r2a, carry, carry);
-		MP_ADD_CARRY (r2b, a6b, r2b, carry, carry);
-		MP_ADD_CARRY (r3a,   0, r3a, carry, carry);
-		r3b += carry;
-		MP_SUB_BORROW(r0a, a3b, r0a, 0,     carry);
-		MP_SUB_BORROW(r0b, a4a, r0b, carry, carry);
-		MP_SUB_BORROW(r1a, a4b, r1a, carry, carry);
-		MP_SUB_BORROW(r1b, a5a, r1b, carry, carry);
-		MP_SUB_BORROW(r2a, a5b, r2a, carry, carry);
-		MP_SUB_BORROW(r2b, a6a, r2b, carry, carry);
-		MP_SUB_BORROW(r3a, a6b, r3a, carry, carry);
-		r3b -= carry;
-		MP_SUB_BORROW(r0a, a5b, r0a, 0,     carry);
-		MP_SUB_BORROW(r0b, a6a, r0b, carry, carry);
-		MP_SUB_BORROW(r1a, a6b, r1a, carry, carry);
+                carry = 0;
+		MP_ADD_CARRY (r1b, a3b, r1b, carry);
+		MP_ADD_CARRY (r2a, a4a, r2a, carry);
+		MP_ADD_CARRY (r2b, a4b, r2b, carry);
+		MP_ADD_CARRY (r3a, a5a, r3a, carry);
+		r3b = carry; carry = 0;
+		MP_ADD_CARRY (r1b, a5b, r1b, carry);
+		MP_ADD_CARRY (r2a, a6a, r2a, carry);
+		MP_ADD_CARRY (r2b, a6b, r2b, carry);
+		MP_ADD_CARRY (r3a,   0, r3a, carry);
+		r3b += carry; carry = 0;
+		MP_SUB_BORROW(r0a, a3b, r0a, carry);
+		MP_SUB_BORROW(r0b, a4a, r0b, carry);
+		MP_SUB_BORROW(r1a, a4b, r1a, carry);
+		MP_SUB_BORROW(r1b, a5a, r1b, carry);
+		MP_SUB_BORROW(r2a, a5b, r2a, carry);
+		MP_SUB_BORROW(r2b, a6a, r2b, carry);
+		MP_SUB_BORROW(r3a, a6b, r3a, carry);
+		r3b -= carry; carry = 0;
+		MP_SUB_BORROW(r0a, a5b, r0a, carry);
+		MP_SUB_BORROW(r0b, a6a, r0b, carry);
+		MP_SUB_BORROW(r1a, a6b, r1a, carry);
 		if (carry) {
-			MP_SUB_BORROW(r1b, 0, r1b, carry, carry);
-			MP_SUB_BORROW(r2a, 0, r2a, carry, carry);
-			MP_SUB_BORROW(r2b, 0, r2b, carry, carry);
-			MP_SUB_BORROW(r3a, 0, r3a, carry, carry);
+			MP_SUB_BORROW(r1b, 0, r1b, carry);
+			MP_SUB_BORROW(r2a, 0, r2a, carry);
+			MP_SUB_BORROW(r2b, 0, r2b, carry);
+			MP_SUB_BORROW(r3a, 0, r3a, carry);
 			r3b -= carry;
 		}
 
 		while (r3b > 0) {
 			int tmp;
-			MP_ADD_CARRY(r1b, r3b, r1b, 0,     carry);
+                        carry = 0;
+			MP_ADD_CARRY(r1b, r3b, r1b, carry);
 			if (carry) {
-				MP_ADD_CARRY(r2a,  0, r2a, carry, carry);
-				MP_ADD_CARRY(r2b,  0, r2b, carry, carry);
-				MP_ADD_CARRY(r3a,  0, r3a, carry, carry);
+				MP_ADD_CARRY(r2a,  0, r2a, carry);
+				MP_ADD_CARRY(r2b,  0, r2b, carry);
+				MP_ADD_CARRY(r3a,  0, r3a, carry);
 			}
-			tmp = carry;
-			MP_SUB_BORROW(r0a, r3b, r0a, 0,     carry);
+			tmp = carry; carry = 0;
+			MP_SUB_BORROW(r0a, r3b, r0a, carry);
 			if (carry) {
-				MP_SUB_BORROW(r0b, 0, r0b, carry, carry);
-				MP_SUB_BORROW(r1a, 0, r1a, carry, carry);
-				MP_SUB_BORROW(r1b, 0, r1b, carry, carry);
-				MP_SUB_BORROW(r2a, 0, r2a, carry, carry);
-				MP_SUB_BORROW(r2b, 0, r2b, carry, carry);
-				MP_SUB_BORROW(r3a, 0, r3a, carry, carry);
+				MP_SUB_BORROW(r0b, 0, r0b, carry);
+				MP_SUB_BORROW(r1a, 0, r1a, carry);
+				MP_SUB_BORROW(r1b, 0, r1b, carry);
+				MP_SUB_BORROW(r2a, 0, r2a, carry);
+				MP_SUB_BORROW(r2b, 0, r2b, carry);
+				MP_SUB_BORROW(r3a, 0, r3a, carry);
 				tmp -= carry;
 			}
 			r3b = tmp;
@@ -125,13 +127,14 @@ ec_GFp_nistp224_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 
 		while (r3b < 0) {
 			mp_digit maxInt = MP_DIGIT_MAX;
-                	MP_ADD_CARRY (r0a, 1, r0a, 0,     carry);
-                	MP_ADD_CARRY (r0b, 0, r0b, carry, carry);
-                	MP_ADD_CARRY (r1a, 0, r1a, carry, carry);
-                	MP_ADD_CARRY (r1b, maxInt, r1b, carry, carry);
-                	MP_ADD_CARRY (r2a, maxInt, r2a, carry, carry);
-                	MP_ADD_CARRY (r2b, maxInt, r2b, carry, carry);
-                	MP_ADD_CARRY (r3a, maxInt, r3a, carry, carry);
+                        carry = 0;
+                	MP_ADD_CARRY (r0a, 1, r0a, carry);
+                	MP_ADD_CARRY (r0b, 0, r0b, carry);
+                	MP_ADD_CARRY (r1a, 0, r1a, carry);
+                	MP_ADD_CARRY (r1b, maxInt, r1b, carry);
+                	MP_ADD_CARRY (r2a, maxInt, r2a, carry);
+                	MP_ADD_CARRY (r2b, maxInt, r2b, carry);
+                	MP_ADD_CARRY (r3a, maxInt, r3a, carry);
 			r3b += carry;
 		}
 		/* check for final reduction */
@@ -140,9 +143,10 @@ ec_GFp_nistp224_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 			&& (r2a == MP_DIGIT_MAX) && (r1b == MP_DIGIT_MAX) &&
 			 ((r1a != 0) || (r0b != 0) || (r0a != 0)) ) {
 			/* one last subraction */
-			MP_SUB_BORROW(r0a, 1, r0a, 0,     carry);
-			MP_SUB_BORROW(r0b, 0, r0b, carry, carry);
-			MP_SUB_BORROW(r1a, 0, r1a, carry, carry);
+                        carry = 0;
+			MP_SUB_BORROW(r0a, 1, r0a, carry);
+			MP_SUB_BORROW(r0b, 0, r0b, carry);
+			MP_SUB_BORROW(r1a, 0, r1a, carry);
 			r1b = r2a = r2b = r3a = 0;
 		}
 
@@ -194,22 +198,26 @@ ec_GFp_nistp224_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 			+(  0, a6,a5b,  0)
 			-(  0	 0,    0|a6b, a6a|a5b )
 			-(  a6b, a6a|a5b, a5a|a4b, a4a|a3b ) */
-		MP_ADD_CARRY (r1, a3b, r1, 0,     carry);
-		MP_ADD_CARRY (r2, a4 , r2, carry, carry);
-		MP_ADD_CARRY (r3, a5a, r3, carry, carry);
-		MP_ADD_CARRY (r1, a5b, r1, 0,     carry);
-		MP_ADD_CARRY (r2, a6 , r2, carry, carry);
-		MP_ADD_CARRY (r3,   0, r3, carry, carry);
+                carry = 0;
+		MP_ADD_CARRY (r1, a3b, r1, carry);
+		MP_ADD_CARRY (r2, a4 , r2, carry);
+		MP_ADD_CARRY (r3, a5a, r3, carry);
+                carry = 0;
+		MP_ADD_CARRY (r1, a5b, r1, carry);
+		MP_ADD_CARRY (r2, a6 , r2, carry);
+		MP_ADD_CARRY (r3,   0, r3, carry);
 
-		MP_SUB_BORROW(r0, a4a_a3b, r0, 0,     carry);
-		MP_SUB_BORROW(r1, a5a_a4b, r1, carry, carry);
-		MP_SUB_BORROW(r2, a6a_a5b, r2, carry, carry);
-		MP_SUB_BORROW(r3, a6b    , r3, carry, carry);
-		MP_SUB_BORROW(r0, a6a_a5b, r0, 0,     carry);
-		MP_SUB_BORROW(r1, a6b    , r1, carry, carry);
+		carry = 0;
+		MP_SUB_BORROW(r0, a4a_a3b, r0, carry);
+		MP_SUB_BORROW(r1, a5a_a4b, r1, carry);
+		MP_SUB_BORROW(r2, a6a_a5b, r2, carry);
+		MP_SUB_BORROW(r3, a6b    , r3, carry);
+		carry = 0;
+		MP_SUB_BORROW(r0, a6a_a5b, r0, carry);
+		MP_SUB_BORROW(r1, a6b    , r1, carry);
 		if (carry) {
-			MP_SUB_BORROW(r2, 0, r2, carry, carry);
-			MP_SUB_BORROW(r3, 0, r3, carry, carry);
+			MP_SUB_BORROW(r2, 0, r2, carry);
+			MP_SUB_BORROW(r3, 0, r3, carry);
 		}
 
 
@@ -218,25 +226,28 @@ ec_GFp_nistp224_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 		r3b = (int)(r3 >>32);
 		while (r3b > 0) {
 			r3 &= 0xffffffff;
-			MP_ADD_CARRY(r1,((mp_digit)r3b) << 32, r1, 0, carry);
+                        carry = 0;
+			MP_ADD_CARRY(r1,((mp_digit)r3b) << 32, r1, carry);
 			if (carry) {
-				MP_ADD_CARRY(r2,  0, r2, carry, carry);
-				MP_ADD_CARRY(r3,  0, r3, carry, carry);
+				MP_ADD_CARRY(r2,  0, r2, carry);
+				MP_ADD_CARRY(r3,  0, r3, carry);
 			}
-			MP_SUB_BORROW(r0, r3b, r0, 0, carry);
+			carry = 0;
+			MP_SUB_BORROW(r0, r3b, r0, carry);
 			if (carry) {
-				MP_SUB_BORROW(r1, 0, r1, carry, carry);
-				MP_SUB_BORROW(r2, 0, r2, carry, carry);
-				MP_SUB_BORROW(r3, 0, r3, carry, carry);
+				MP_SUB_BORROW(r1, 0, r1, carry);
+				MP_SUB_BORROW(r2, 0, r2, carry);
+				MP_SUB_BORROW(r3, 0, r3, carry);
 			}
 			r3b = (int)(r3 >>32);
 		}
 
 		while (r3b < 0) {
-                	MP_ADD_CARRY (r0, 1, r0, 0,     carry);
-                	MP_ADD_CARRY (r1, MP_DIGIT_MAX <<32, r1, carry, carry);
-                	MP_ADD_CARRY (r2, MP_DIGIT_MAX, r2, carry, carry);
-                	MP_ADD_CARRY (r3, MP_DIGIT_MAX >> 32, r3, carry, carry);
+                        carry = 0;
+                	MP_ADD_CARRY (r0, 1, r0, carry);
+                	MP_ADD_CARRY (r1, MP_DIGIT_MAX <<32, r1, carry);
+                	MP_ADD_CARRY (r2, MP_DIGIT_MAX, r2, carry);
+                	MP_ADD_CARRY (r3, MP_DIGIT_MAX >> 32, r3, carry);
 			r3b = (int)(r3 >>32);
 		}
 		/* check for final reduction */
@@ -247,8 +258,9 @@ ec_GFp_nistp224_mod(const mp_int *a, mp_int *r, const GFMethod *meth)
 			&& ((r1 & MP_DIGIT_MAX << 32)== MP_DIGIT_MAX << 32) &&
 			 ((r1 != MP_DIGIT_MAX << 32 ) || (r0 != 0)) ) {
 			/* one last subraction */
-			MP_SUB_BORROW(r0, 1, r0, 0,     carry);
-			MP_SUB_BORROW(r1, MP_DIGIT_MAX << 32, r1, carry, carry);
+			carry = 0;
+			MP_SUB_BORROW(r0, 1, r0, carry);
+			MP_SUB_BORROW(r1, MP_DIGIT_MAX << 32, r1, carry);
 			r2 = r3 = 0;
 		}
 

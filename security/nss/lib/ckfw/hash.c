@@ -48,9 +48,7 @@ nss_ckfw_identity_hash
   const void *key
 )
 {
-  PRUint32 i = (PRUint32)key;
-  PR_ASSERT(sizeof(PLHashNumber) == sizeof(PRUint32));
-  return (PLHashNumber)i;
+  return (PLHashNumber)((char *)key - (char *)NULL);
 }
 
 /*
