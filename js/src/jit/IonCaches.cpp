@@ -1259,6 +1259,13 @@ IsCacheableArrayLength(JSContext* cx, HandleObject obj, HandlePropertyName name,
         return false;
     }
 
+    // The emitted stub can only handle int32 lengths. If the length of the
+    // actual object does not fit in an int32 then don't attach a stub, as if
+    // the cache is idempotent we won't end up invalidating the compiled script
+    // otherwise.
+    if (obj->as<ArrayObject>().length() > INT32_MAX)
+        return false;
+
     return true;
 }
 
