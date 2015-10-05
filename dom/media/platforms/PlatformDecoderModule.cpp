@@ -64,12 +64,4 @@ PlatformDecoderModule::Create()
   return m.forget();
 }
 
-bool
-PlatformDecoderModule::SupportsMimeType(const nsACString& aMimeType)
-{
-  return aMimeType.EqualsLiteral("audio/mp4a-latm") ||
-    aMimeType.EqualsLiteral("video/mp4") ||
-    aMimeType.EqualsLiteral("video/avc");
-}
-
 } // namespace mozilla
