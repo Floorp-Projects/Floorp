@@ -48,20 +48,8 @@ static NS_DEFINE_IID(kXULDocumentCID, NS_XULDOCUMENT_CID);
 
 already_AddRefed<nsIContentViewer> NS_NewContentViewer();
 
-// XXXbz if you change the MIME types here, be sure to update
-// nsIParser.h and DetermineParseMode in nsParser.cpp and
-// nsHTMLDocument::StartDocumentLoad accordingly.
 static const char* const gHTMLTypes[] = {
   TEXT_HTML,
-  TEXT_PLAIN,
-  TEXT_CACHE_MANIFEST,
-  TEXT_CSS,
-  TEXT_JAVASCRIPT,
-  TEXT_ECMASCRIPT,
-  APPLICATION_JAVASCRIPT,
-  APPLICATION_ECMASCRIPT,
-  APPLICATION_XJAVASCRIPT,
-  APPLICATION_JSON,
   VIEWSOURCE_CONTENT_TYPE,
   APPLICATION_XHTML_XML,
   0
@@ -86,6 +74,19 @@ static const char* const gXULTypes[] = {
   APPLICATION_CACHED_XUL,
   0
 };
+
+static bool
+IsTypeInList(const nsACString& aType, const char* const aList[])
+{
+  int32_t typeIndex;
+  for (typeIndex = 0; aList[typeIndex]; ++typeIndex) {
+    if (aType.Equals(aList[typeIndex])) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 nsresult
 NS_NewContentDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult)
@@ -154,32 +155,13 @@ nsContentDLF::CreateInstance(const char* aCommand,
     // text/plain.
     nsAutoCString type;
     viewSourceChannel->GetOriginalContentType(type);
-    bool knownType = false;
-    int32_t typeIndex;
-    for (typeIndex = 0; gHTMLTypes[typeIndex] && !knownType; ++typeIndex) {
-      if (type.Equals(gHTMLTypes[typeIndex]) &&
-          !type.EqualsLiteral(VIEWSOURCE_CONTENT_TYPE)) {
-        knownType = true;
-      }
-    }
-
-    for (typeIndex = 0; gXMLTypes[typeIndex] && !knownType; ++typeIndex) {
-      if (type.Equals(gXMLTypes[typeIndex])) {
-        knownType = true;
-      }
-    }
-
-    for (typeIndex = 0; gSVGTypes[typeIndex] && !knownType; ++typeIndex) {
-      if (type.Equals(gSVGTypes[typeIndex])) {
-        knownType = true;
-      }
-    }
-
-    for (typeIndex = 0; gXULTypes[typeIndex] && !knownType; ++typeIndex) {
-      if (type.Equals(gXULTypes[typeIndex])) {
-        knownType = true;
-      }
-    }
+    bool knownType =
+      (!type.EqualsLiteral(VIEWSOURCE_CONTENT_TYPE) &&
+        IsTypeInList(type, gHTMLTypes)) ||
+      nsContentUtils::IsPlainTextType(type) ||
+      IsTypeInList(type, gXMLTypes) ||
+      IsTypeInList(type, gSVGTypes) ||
+      IsTypeInList(type, gXMLTypes);
 
     if (knownType) {
       viewSourceChannel->SetContentType(type);
@@ -194,50 +176,40 @@ nsContentDLF::CreateInstance(const char* aCommand,
     aChannel->SetContentType(NS_LITERAL_CSTRING(TEXT_PLAIN));
     contentType = TEXT_PLAIN;
   }
-  // Try html
-  int typeIndex=0;
-  while(gHTMLTypes[typeIndex]) {
-    if (contentType.EqualsASCII(gHTMLTypes[typeIndex++])) {
-      return CreateDocument(aCommand, 
-                            aChannel, aLoadGroup,
-                            aContainer, kHTMLDocumentCID,
-                            aDocListener, aDocViewer);
-    }
+
+  // Try html or plaintext; both use the same document CID
+  if (IsTypeInList(contentType, gHTMLTypes) ||
+      nsContentUtils::IsPlainTextType(contentType)) {
+    return CreateDocument(aCommand,
+                          aChannel, aLoadGroup,
+                          aContainer, kHTMLDocumentCID,
+                          aDocListener, aDocViewer);
   }
 
   // Try XML
-  typeIndex = 0;
-  while(gXMLTypes[typeIndex]) {
-    if (contentType.EqualsASCII(gXMLTypes[typeIndex++])) {
-      return CreateDocument(aCommand, 
-                            aChannel, aLoadGroup,
-                            aContainer, kXMLDocumentCID,
-                            aDocListener, aDocViewer);
-    }
+  if (IsTypeInList(contentType, gXMLTypes)) {
+    return CreateDocument(aCommand,
+                          aChannel, aLoadGroup,
+                          aContainer, kXMLDocumentCID,
+                          aDocListener, aDocViewer);
   }
 
   // Try SVG
-  typeIndex = 0;
-  while(gSVGTypes[typeIndex]) {
-    if (contentType.EqualsASCII(gSVGTypes[typeIndex++])) {
-      return CreateDocument(aCommand,
-                            aChannel, aLoadGroup,
-                            aContainer, kSVGDocumentCID,
-                            aDocListener, aDocViewer);
-    }
+  if (IsTypeInList(contentType, gSVGTypes)) {
+    return CreateDocument(aCommand,
+                          aChannel, aLoadGroup,
+                          aContainer, kSVGDocumentCID,
+                          aDocListener, aDocViewer);
   }
 
   // Try XUL
-  typeIndex = 0;
-  while (gXULTypes[typeIndex]) {
-    if (contentType.EqualsASCII(gXULTypes[typeIndex++])) {
-      if (!MayUseXULXBL(aChannel)) {
-        return NS_ERROR_REMOTE_XUL;
-      }
-
-      return CreateXULDocument(aCommand, aChannel, aLoadGroup, aContainer,
-                               aExtraInfo, aDocListener, aDocViewer);
+  if (IsTypeInList(contentType, gXULTypes)) {
+    if (!MayUseXULXBL(aChannel)) {
+      return NS_ERROR_REMOTE_XUL;
     }
+
+    return CreateXULDocument(aCommand, aChannel, aLoadGroup, aContainer,
+                             aExtraInfo, aDocListener, aDocViewer);
   }
 
   if (mozilla::DecoderTraits::ShouldHandleMediaType(contentType.get())) {
