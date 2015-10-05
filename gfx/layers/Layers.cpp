@@ -2143,12 +2143,6 @@ CanvasLayer::~CanvasLayer()
 {}
 
 void
-CanvasLayer::SetAsyncRenderer(AsyncCanvasRenderer *aAsyncRenderer)
-{
-  mAsyncRenderer = aAsyncRenderer;
-}
-
-void
 CanvasLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
   Layer::PrintInfo(aStream, aPrefix);

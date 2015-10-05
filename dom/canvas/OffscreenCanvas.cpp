@@ -23,10 +23,12 @@ namespace dom {
 
 OffscreenCanvasCloneData::OffscreenCanvasCloneData(layers::AsyncCanvasRenderer* aRenderer,
                                                    uint32_t aWidth, uint32_t aHeight,
+                                                   layers::LayersBackend aCompositorBackend,
                                                    bool aNeutered)
   : mRenderer(aRenderer)
   , mWidth(aWidth)
   , mHeight(aHeight)
+  , mCompositorBackendType(aCompositorBackend)
   , mNeutered(aNeutered)
 {
 }
@@ -37,26 +39,20 @@ OffscreenCanvasCloneData::~OffscreenCanvasCloneData()
 
 OffscreenCanvas::OffscreenCanvas(uint32_t aWidth,
                                  uint32_t aHeight,
+                                 layers::LayersBackend aCompositorBackend,
                                  layers::AsyncCanvasRenderer* aRenderer)
   : mAttrDirty(false)
   , mNeutered(false)
   , mWidth(aWidth)
   , mHeight(aHeight)
+  , mCompositorBackendType(aCompositorBackend)
   , mCanvasClient(nullptr)
   , mCanvasRenderer(aRenderer)
 {}
 
 OffscreenCanvas::~OffscreenCanvas()
 {
-  if (mCanvasRenderer) {
-    mCanvasRenderer->SetCanvasClient(nullptr);
-    mCanvasRenderer->mContext = nullptr;
-    mCanvasRenderer->mActiveThread = nullptr;
-  }
-
-  if (mCanvasClient) {
-    ImageBridgeChild::DispatchReleaseCanvasClient(mCanvasClient);
-  }
+  ClearResources();
 }
 
 OffscreenCanvas*
@@ -70,6 +66,26 @@ OffscreenCanvas::WrapObject(JSContext* aCx,
                             JS::Handle<JSObject*> aGivenProto)
 {
   return OffscreenCanvasBinding::Wrap(aCx, this, aGivenProto);
+}
+
+void
+OffscreenCanvas::ClearResources()
+{
+  if (mCanvasClient) {
+    mCanvasClient->Clear();
+    ImageBridgeChild::DispatchReleaseCanvasClient(mCanvasClient);
+    mCanvasClient = nullptr;
+
+    if (mCanvasRenderer) {
+      nsCOMPtr<nsIThread> activeThread = mCanvasRenderer->GetActiveThread();
+      MOZ_RELEASE_ASSERT(activeThread);
+      MOZ_RELEASE_ASSERT(activeThread == NS_GetCurrentThread());
+      mCanvasRenderer->SetCanvasClient(nullptr);
+      mCanvasRenderer->mContext = nullptr;
+      mCanvasRenderer->mGLContext = nullptr;
+      mCanvasRenderer->ResetActiveThread();
+    }
+  }
 }
 
 already_AddRefed<nsISupports>
@@ -103,26 +119,34 @@ OffscreenCanvas::GetContext(JSContext* aCx,
                                              aContextOptions,
                                              aRv);
 
-  if (mCanvasRenderer && mCurrentContext && ImageBridgeChild::IsCreated()) {
-    TextureFlags flags = TextureFlags::ORIGIN_BOTTOM_LEFT;
+  if (!mCurrentContext) {
+    return nullptr;
+  }
 
-    mCanvasClient = ImageBridgeChild::GetSingleton()->
-      CreateCanvasClient(CanvasClient::CanvasClientTypeShSurf, flags).take();
-    mCanvasRenderer->SetCanvasClient(mCanvasClient);
-    gl::GLContext* gl = static_cast<WebGLContext*>(mCurrentContext.get())->GL();
+  if (mCanvasRenderer) {
+    WebGLContext* webGL = static_cast<WebGLContext*>(mCurrentContext.get());
+    gl::GLContext* gl = webGL->GL();
     mCanvasRenderer->mContext = mCurrentContext;
-    mCanvasRenderer->mActiveThread = NS_GetCurrentThread();
+    mCanvasRenderer->SetActiveThread();
     mCanvasRenderer->mGLContext = gl;
+    mCanvasRenderer->SetIsAlphaPremultiplied(webGL->IsPremultAlpha() || !gl->Caps().alpha);
 
-    gl::GLScreenBuffer* screen = gl->Screen();
-    gl::SurfaceCaps caps = screen->mCaps;
-    auto forwarder = mCanvasClient->GetForwarder();
+    if (ImageBridgeChild::IsCreated()) {
+      TextureFlags flags = TextureFlags::ORIGIN_BOTTOM_LEFT;
+      mCanvasClient = ImageBridgeChild::GetSingleton()->
+        CreateCanvasClient(CanvasClient::CanvasClientTypeShSurf, flags).take();
+      mCanvasRenderer->SetCanvasClient(mCanvasClient);
 
-    UniquePtr<gl::SurfaceFactory> factory =
-      gl::GLScreenBuffer::CreateFactory(gl, caps, forwarder, flags);
+      gl::GLScreenBuffer* screen = gl->Screen();
+      gl::SurfaceCaps caps = screen->mCaps;
+      auto forwarder = mCanvasClient->GetForwarder();
 
-    if (factory)
-      screen->Morph(Move(factory));
+      UniquePtr<gl::SurfaceFactory> factory =
+        gl::GLScreenBuffer::CreateFactory(gl, caps, forwarder, flags);
+
+      if (factory)
+        screen->Morph(Move(factory));
+    }
   }
 
   return result;
@@ -157,6 +181,7 @@ OffscreenCanvas::CommitFrameToCompositor()
   }
 
   if (mCanvasRenderer && mCanvasRenderer->mGLContext) {
+    mCanvasRenderer->NotifyElementAboutInvalidation();
     ImageBridgeChild::GetSingleton()->
       UpdateAsyncCanvasRenderer(mCanvasRenderer);
   }
@@ -165,8 +190,8 @@ OffscreenCanvas::CommitFrameToCompositor()
 OffscreenCanvasCloneData*
 OffscreenCanvas::ToCloneData()
 {
-  return new OffscreenCanvasCloneData(mCanvasRenderer, mWidth,
-                                      mHeight, mNeutered);
+  return new OffscreenCanvasCloneData(mCanvasRenderer, mWidth, mHeight,
+                                      mCompositorBackendType, mNeutered);
 }
 
 /* static */ already_AddRefed<OffscreenCanvas>
@@ -174,7 +199,8 @@ OffscreenCanvas::CreateFromCloneData(OffscreenCanvasCloneData* aData)
 {
   MOZ_ASSERT(aData);
   nsRefPtr<OffscreenCanvas> wc =
-    new OffscreenCanvas(aData->mWidth, aData->mHeight, aData->mRenderer);
+    new OffscreenCanvas(aData->mWidth, aData->mHeight,
+                        aData->mCompositorBackendType, aData->mRenderer);
   if (aData->mNeutered) {
     wc->SetNeutered();
   }

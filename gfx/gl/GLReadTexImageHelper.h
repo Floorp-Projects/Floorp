@@ -34,6 +34,9 @@ void ReadPixelsIntoDataSurface(GLContext* aGL,
 already_AddRefed<gfx::DataSourceSurface>
 ReadBackSurface(GLContext* gl, GLuint aTexture, bool aYInvert, gfx::SurfaceFormat aFormat);
 
+already_AddRefed<gfx::DataSourceSurface>
+YInvertImageSurface(gfx::DataSourceSurface* aSurf);
+
 class GLReadTexImageHelper final
 {
     // The GLContext is the sole owner of the GLBlitHelper.

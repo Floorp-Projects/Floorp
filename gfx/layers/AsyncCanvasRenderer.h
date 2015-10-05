@@ -7,14 +7,21 @@
 #ifndef MOZILLA_LAYERS_ASYNCCANVASRENDERER_H_
 #define MOZILLA_LAYERS_ASYNCCANVASRENDERER_H_
 
+#include "LayersTypes.h"
 #include "mozilla/gfx/Point.h"          // for IntSize
+#include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"             // for nsAutoPtr, nsRefPtr, etc
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 
 class nsICanvasRenderingContextInternal;
+class nsIInputStream;
 class nsIThread;
 
 namespace mozilla {
+
+namespace gfx {
+class DataSourceSurface;
+}
 
 namespace gl {
 class GLContext;
@@ -36,8 +43,13 @@ class CanvasClient;
  * Each HTMLCanvasElement object is responsible for creating
  * AsyncCanvasRenderer object. Once Canvas is transfered to worker,
  * OffscreenCanvas will keep reference pointer of this object.
- * This object will pass to ImageBridgeChild for submitting frames to
- * Compositor.
+ *
+ * Sometimes main thread needs AsyncCanvasRenderer's result, such as layers
+ * fallback to BasicLayerManager or calling toDataURL in Javascript. Simply call
+ * GetSurface() in main thread will readback the result to mSurface.
+ *
+ * If layers backend is LAYERS_CLIENT, this object will pass to ImageBridgeChild
+ * for submitting frames to Compositor.
  */
 class AsyncCanvasRenderer final
 {
@@ -47,6 +59,7 @@ public:
   AsyncCanvasRenderer();
 
   void NotifyElementAboutAttributesChanged();
+  void NotifyElementAboutInvalidation();
 
   void SetCanvasClient(CanvasClient* aClient);
 
@@ -59,6 +72,28 @@ public:
   {
     mHeight = aHeight;
   }
+
+  void SetIsAlphaPremultiplied(bool aIsAlphaPremultiplied)
+  {
+    mIsAlphaPremultiplied = aIsAlphaPremultiplied;
+  }
+
+  // Active thread means the thread which spawns GLContext.
+  void SetActiveThread();
+  void ResetActiveThread();
+
+  // This will readback surface and return the surface
+  // in the DataSourceSurface.
+  // Can be called in main thread only.
+  already_AddRefed<gfx::DataSourceSurface> GetSurface();
+
+  // Readback current WebGL's content and convert it to InputStream. This
+  // function called GetSurface implicitly and GetSurface handles only get
+  // called in the main thread. So this function can be called in main thread.
+  nsresult
+  GetInputStream(const char *aMimeType,
+                 const char16_t *aEncoderOptions,
+                 nsIInputStream **aStream);
 
   gfx::IntSize GetSize() const
   {
@@ -75,26 +110,44 @@ public:
     return mCanvasClient;
   }
 
+  already_AddRefed<nsIThread> GetActiveThread();
+
   // The lifetime is controllered by HTMLCanvasElement.
+  // Only accessed in main thread.
   dom::HTMLCanvasElement* mHTMLCanvasElement;
 
+  // Only accessed in active thread.
   nsICanvasRenderingContextInternal* mContext;
 
   // We need to keep a reference to the context around here, otherwise the
   // canvas' surface texture destructor will deref and destroy it too early
+  // Only accessed in active thread.
   RefPtr<gl::GLContext> mGLContext;
-
-  nsCOMPtr<nsIThread> mActiveThread;
 private:
 
   virtual ~AsyncCanvasRenderer();
+
+  // Readback current WebGL's content and return it as DataSourceSurface.
+  already_AddRefed<gfx::DataSourceSurface> UpdateTarget();
+
+  bool mIsAlphaPremultiplied;
 
   uint32_t mWidth;
   uint32_t mHeight;
   uint64_t mCanvasClientAsyncID;
 
   // The lifetime of this pointer is controlled by OffscreenCanvas
+  // Can be accessed in active thread and ImageBridge thread.
+  // But we never accessed it at the same time on both thread. So no
+  // need to protect this member.
   CanvasClient* mCanvasClient;
+
+
+  // Protect non thread-safe objects.
+  Mutex mMutex;
+
+  // Can be accessed in any thread, need protect by mutex.
+  nsCOMPtr<nsIThread> mActiveThread;
 };
 
 } // namespace layers
