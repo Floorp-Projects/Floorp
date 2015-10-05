@@ -34,7 +34,6 @@ AppendToString(std::stringstream& aStream, const GraphicsFilter& f,
 {
   aStream << pfx;
   switch (f) {
-  case GraphicsFilter::FILTER_FAST:      aStream << "fast"; break;
   case GraphicsFilter::FILTER_GOOD:      aStream << "good"; break;
   case GraphicsFilter::FILTER_BEST:      aStream << "best"; break;
   case GraphicsFilter::FILTER_NEAREST:   aStream << "nearest"; break;

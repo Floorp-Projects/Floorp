@@ -136,7 +136,7 @@ public:
                         const gfxMatrix& aTransform = gfxMatrix());
 
 protected:
-    already_AddRefed<gfxSurfaceDrawable> MakeSurfaceDrawable(const GraphicsFilter aFilter = GraphicsFilter::FILTER_FAST);
+    already_AddRefed<gfxSurfaceDrawable> MakeSurfaceDrawable(const GraphicsFilter aFilter = GraphicsFilter::FILTER_BEST);
 
     nsRefPtr<gfxDrawingCallback> mCallback;
     nsRefPtr<gfxSurfaceDrawable> mSurfaceDrawable;

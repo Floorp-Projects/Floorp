@@ -7,7 +7,6 @@
 #define GraphicsFilter_h
 
 enum class GraphicsFilter : int {
-  FILTER_FAST,
   FILTER_GOOD,
   FILTER_BEST,
   FILTER_NEAREST,
