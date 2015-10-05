@@ -21,8 +21,6 @@
 #include "mozilla/dom/StructuredClone.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MessagePortBinding.h"
-#include "mozilla/dom/OffscreenCanvas.h"
-#include "mozilla/dom/OffscreenCanvasBinding.h"
 #include "mozilla/dom/PMessagePort.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/SubtleCryptoBinding.h"
@@ -418,49 +416,19 @@ StructuredCloneHolder::ReadFullySerializableObjects(JSContext* aCx,
   if (aTag == SCTAG_DOM_NULL_PRINCIPAL ||
       aTag == SCTAG_DOM_SYSTEM_PRINCIPAL ||
       aTag == SCTAG_DOM_CONTENT_PRINCIPAL) {
-    if (!NS_IsMainThread()) {
+    JSPrincipals* prin;
+    if (!nsJSPrincipals::ReadKnownPrincipalType(aCx, aReader, aTag, &prin)) {
       return nullptr;
     }
-
-    mozilla::ipc::PrincipalInfo info;
-    if (aTag == SCTAG_DOM_SYSTEM_PRINCIPAL) {
-      info = mozilla::ipc::SystemPrincipalInfo();
-    } else if (aTag == SCTAG_DOM_NULL_PRINCIPAL) {
-      info = mozilla::ipc::NullPrincipalInfo();
-    } else {
-      
-      uint32_t suffixLength, specLength;
-      if (!JS_ReadUint32Pair(aReader, &suffixLength, &specLength)) {
-        return nullptr;
-      }
-
-      nsAutoCString suffix;
-      suffix.SetLength(suffixLength);
-      if (!JS_ReadBytes(aReader, suffix.BeginWriting(), suffixLength)) {
-       return nullptr;
-      }
-
-      nsAutoCString spec;
-      spec.SetLength(specLength);
-      if (!JS_ReadBytes(aReader, spec.BeginWriting(), specLength)) {
-        return nullptr;
-      }
-
-      OriginAttributes attrs;
-      attrs.PopulateFromSuffix(suffix);
-      info = mozilla::ipc::ContentPrincipalInfo(attrs, spec);
-    }
-
-    nsresult rv;
-    nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(info, &rv);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
-      return nullptr;
-    }
+    // nsJSPrincipals::ReadKnownPrincipalType addrefs for us, but because of the
+    // casting between JSPrincipals* and nsIPrincipal* we can't use
+    // getter_AddRefs above and have to already_AddRefed here.
+    nsCOMPtr<nsIPrincipal> principal = already_AddRefed<nsIPrincipal>(nsJSPrincipals::get(prin));
 
     JS::RootedValue result(aCx);
-    rv = nsContentUtils::WrapNative(aCx, principal, &NS_GET_IID(nsIPrincipal),
-                                    &result);
+    nsresult rv = nsContentUtils::WrapNative(aCx, principal,
+                                             &NS_GET_IID(nsIPrincipal),
+                                             &result);
     if (NS_FAILED(rv)) {
       xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
       return nullptr;
@@ -560,27 +528,8 @@ StructuredCloneHolder::WriteFullySerializableObjects(JSContext* aCx,
     nsCOMPtr<nsISupports> base = xpc::UnwrapReflectorToISupports(aObj);
     nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(base);
     if (principal) {
-      mozilla::ipc::PrincipalInfo info;
-      if (NS_WARN_IF(NS_FAILED(PrincipalToPrincipalInfo(principal, &info)))) {
-        xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
-        return false;
-      }
-
-      if (info.type() == mozilla::ipc::PrincipalInfo::TNullPrincipalInfo) {
-        return JS_WriteUint32Pair(aWriter, SCTAG_DOM_NULL_PRINCIPAL, 0);
-      }
-      if (info.type() == mozilla::ipc::PrincipalInfo::TSystemPrincipalInfo) {
-        return JS_WriteUint32Pair(aWriter, SCTAG_DOM_SYSTEM_PRINCIPAL, 0);
-      }
-
-      MOZ_ASSERT(info.type() == mozilla::ipc::PrincipalInfo::TContentPrincipalInfo);
-      const mozilla::ipc::ContentPrincipalInfo& cInfo = info;
-      nsAutoCString suffix;
-      cInfo.attrs().CreateSuffix(suffix);
-      return JS_WriteUint32Pair(aWriter, SCTAG_DOM_CONTENT_PRINCIPAL, 0) &&
-             JS_WriteUint32Pair(aWriter, suffix.Length(), cInfo.spec().Length()) &&
-             JS_WriteBytes(aWriter, suffix.get(), suffix.Length()) &&
-             JS_WriteBytes(aWriter, cInfo.spec().get(), cInfo.spec().Length());
+      auto nsjsprincipals = nsJSPrincipals::get(principal);
+      return nsjsprincipals->write(aCx, aWriter);
     }
   }
 
@@ -1066,25 +1015,6 @@ StructuredCloneHolder::CustomReadTransferHandler(JSContext* aCx,
     return true;
   }
 
-  if (aTag == SCTAG_DOM_CANVAS) {
-    MOZ_ASSERT(mSupportedContext == SameProcessSameThread ||
-               mSupportedContext == SameProcessDifferentThread);
-    MOZ_ASSERT(aContent);
-    OffscreenCanvasCloneData* data =
-      static_cast<OffscreenCanvasCloneData*>(aContent);
-    nsRefPtr<OffscreenCanvas> canvas = OffscreenCanvas::CreateFromCloneData(data);
-    delete data;
-
-    JS::Rooted<JS::Value> value(aCx);
-    if (!GetOrCreateDOMReflector(aCx, canvas, &value)) {
-      JS_ClearPendingException(aCx);
-      return false;
-    }
-
-    aReturnObject.set(&value.toObject());
-    return true;
-  }
-
   return false;
 }
 
@@ -1116,24 +1046,6 @@ StructuredCloneHolder::CustomWriteTransferHandler(JSContext* aCx,
 
       return true;
     }
-
-    if (mSupportedContext == SameProcessSameThread ||
-        mSupportedContext == SameProcessDifferentThread) {
-      OffscreenCanvas* canvas = nullptr;
-      rv = UNWRAP_OBJECT(OffscreenCanvas, aObj, canvas);
-      if (NS_SUCCEEDED(rv)) {
-        MOZ_ASSERT(canvas);
-
-        *aExtraData = 0;
-        *aTag = SCTAG_DOM_CANVAS;
-        *aOwnership = JS::SCTAG_TMO_CUSTOM;
-        *aContent = canvas->ToCloneData();
-        MOZ_ASSERT(*aContent);
-        canvas->SetNeutered();
-
-        return true;
-      }
-    }
   }
 
   return false;
@@ -1151,17 +1063,6 @@ StructuredCloneHolder::CustomFreeTransferHandler(uint32_t aTag,
     MOZ_ASSERT(!aContent);
     MOZ_ASSERT(aExtraData < mPortIdentifiers.Length());
     MessagePort::ForceClose(mPortIdentifiers[aExtraData]);
-    return;
-  }
-
-  if (aTag == SCTAG_DOM_CANVAS) {
-    MOZ_ASSERT(mSupportedContext == SameProcessSameThread ||
-               mSupportedContext == SameProcessDifferentThread);
-    MOZ_ASSERT(aContent);
-    OffscreenCanvasCloneData* data =
-      static_cast<OffscreenCanvasCloneData*>(aContent);
-    delete data;
-    return;
   }
 }
 

@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test MediaRecorder Recording canvas stream that dynamically changes resolution</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<div id="content">
+</div>
+<script class="testbody" type="text/javascript">
+
+function startTest() {
+  var content = document.getElementById("content");
+
+  var canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 100;
+
+  var ctx = canvas.getContext("2d");
+  ctx.fillStyle = "red";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  var stream = canvas.captureStream(0);
+
+  var numErrorRaised = 0;
+  var numDataAvailabledRaised = 0;
+
+  mediaRecorder = new MediaRecorder(stream);
+  is(mediaRecorder.stream, stream,
+     "Media recorder stream = canvas stream at the start of recording");
+
+  mediaRecorder.onwarning = () => ok(false, "onwarning unexpectedly fired");
+
+  mediaRecorder.onerror = err => {
+    info("Got 'error' event, " + err.name + " (" + err.message + ")");
+    ++numErrorRaised;
+  };
+
+  mediaRecorder.ondataavailable = ev => {
+    info("Got 'dataavailable' event");
+    ++numDataAvailabledRaised;
+  };
+
+  mediaRecorder.onstart = () => {
+    canvas.width = canvas.height = canvas.width * 1.1;
+    ctx.fillStyle = "blue";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    stream.requestFrame();
+  };
+
+  mediaRecorder.onstop = () => {
+    info("Got 'stop' event");
+    is(numErrorRaised, 1, "Should have gotten 1 error event");
+    is(numDataAvailabledRaised, 1, "Should have gotten 1 dataavailable event");
+    SimpleTest.finish();
+  };
+
+  mediaRecorder.start();
+  is(mediaRecorder.state, "recording", "Media recorder should be recording");
+}
+
+SimpleTest.waitForExplicitFinish();
+startTest();
+
+</script>
+</pre>
+</body>
+</html>

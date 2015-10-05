@@ -13,6 +13,7 @@
 #import "mozAccessible.h"
 #import "mozActionElements.h"
 #import "mozHTMLAccessible.h"
+#import "mozTableAccessible.h"
 #import "mozTextAccessible.h"
 
 using namespace mozilla;
@@ -62,6 +63,15 @@ AccessibleWrap::GetNativeType ()
   if (IsXULTabpanels())
     return [mozPaneAccessible class];
 
+  if (IsTable())
+    return [mozTableAccessible class];
+
+  if (IsTableRow())
+    return [mozTableRowAccessible class];
+
+  if (IsTableCell())
+    return [mozTableCellAccessible class];
+
   return GetTypeFromRole(Role());
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
@@ -100,12 +110,13 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
 
   uint32_t eventType = aEvent->GetEventType();
 
-  // ignore everything but focus-changed, value-changed, caret and selection
-  // events for now.
+  // ignore everything but focus-changed, value-changed, caret, selection
+  // and document load complete events for now.
   if (eventType != nsIAccessibleEvent::EVENT_FOCUS &&
       eventType != nsIAccessibleEvent::EVENT_VALUE_CHANGE &&
       eventType != nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED &&
-      eventType != nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED)
+      eventType != nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED &&
+      eventType != nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE)
     return NS_OK;
 
   Accessible* accessible = aEvent->GetAccessible();
@@ -242,6 +253,9 @@ a11y::FireNativeEvent(mozAccessible* aNativeAcc, uint32_t aEventType)
     case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED:
     case nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED:
       [aNativeAcc selectedTextDidChange];
+      break;
+    case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
+      [aNativeAcc documentLoadComplete];
       break;
   }
 

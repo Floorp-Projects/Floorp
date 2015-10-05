@@ -14,6 +14,7 @@
 #include "nsNullPrincipal.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIInputStreamChannel.h"
+#include "mozilla/DebugOnly.h"
 
 NS_IMPL_ADDREF(nsViewSourceChannel)
 NS_IMPL_RELEASE(nsViewSourceChannel)
@@ -377,9 +378,19 @@ nsViewSourceChannel::SetLoadFlags(uint32_t aLoadFlags)
     // Win32 compiler thinks that's supposed to be a method.
     mIsDocument = (aLoadFlags & ::nsIChannel::LOAD_DOCUMENT_URI) ? true : false;
 
-    return mChannel->SetLoadFlags((aLoadFlags |
-                                   ::nsIRequest::LOAD_FROM_CACHE) &
-                                  ~::nsIChannel::LOAD_DOCUMENT_URI);
+    nsresult rv = mChannel->SetLoadFlags((aLoadFlags |
+                                          ::nsIRequest::LOAD_FROM_CACHE) &
+                                          ~::nsIChannel::LOAD_DOCUMENT_URI);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+    }
+
+    if (mHttpChannel) {
+       rv = mHttpChannel->SetIsMainDocumentChannel(aLoadFlags & ::nsIChannel::LOAD_DOCUMENT_URI);
+       MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -916,4 +927,18 @@ nsViewSourceChannel::SetSchedulingContextID(const nsID scid)
 {
     return !mHttpChannel ? NS_ERROR_NULL_POINTER :
         mHttpChannel->SetSchedulingContextID(scid);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::GetIsMainDocumentChannel(bool* aValue)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->GetIsMainDocumentChannel(aValue);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::SetIsMainDocumentChannel(bool aValue)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->SetIsMainDocumentChannel(aValue);
 }
