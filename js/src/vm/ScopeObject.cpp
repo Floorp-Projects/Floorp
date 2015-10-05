@@ -237,7 +237,12 @@ CallObject::createForFunction(JSContext* cx, HandleObject enclosing, HandleFunct
      * object holding function's name.
      */
     if (callee->isNamedLambda()) {
-        scopeChain = DeclEnvObject::create(cx, scopeChain, callee);
+        if (callee->isAsync()) {
+            RootedFunction fun(cx, &callee->getExtendedSlot(1).toObject().as<JSFunction>());
+            scopeChain = DeclEnvObject::create(cx, scopeChain, fun);
+        } else {
+            scopeChain = DeclEnvObject::create(cx, scopeChain, callee);
+        }
         if (!scopeChain)
             return nullptr;
     }
