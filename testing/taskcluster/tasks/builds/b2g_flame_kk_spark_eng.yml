@@ -17,6 +17,7 @@ task:
     env:
       TARGET: 'flame-kk'
       MOZHARNESS_CONFIG: b2g/taskcluster-spark.py
+      TOOLTOOL_MANIFEST: 'b2g/config/flame-kk/releng-flame-kk.tt'
   extra:
     treeherderEnv:
       - staging
