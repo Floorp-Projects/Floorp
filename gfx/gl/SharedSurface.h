@@ -24,7 +24,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/gfx/Point.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 #include "ScopedGLHelpers.h"
@@ -34,7 +33,6 @@ class nsIThread;
 
 namespace mozilla {
 namespace gfx {
-class DataSourceSurface;
 class DrawTarget;
 } // namespace gfx
 
@@ -201,10 +199,6 @@ public:
     }
 
     virtual bool ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor) = 0;
-
-    virtual bool ReadbackBySharedHandle(gfx::DataSourceSurface* out_surface) {
-        return false;
-    }
 };
 
 template<typename T>
@@ -304,7 +298,6 @@ public:
     const RefPtr<layers::ISurfaceAllocator> mAllocator;
     const layers::TextureFlags mFlags;
     const GLFormats mFormats;
-    Mutex mMutex;
 protected:
     SurfaceCaps mDrawCaps;
     SurfaceCaps mReadCaps;

@@ -21,6 +21,7 @@ UNIFIED_SOURCES += [
     'mozActionElements.mm',
     'mozDocAccessible.mm',
     'mozHTMLAccessible.mm',
+    'mozTableAccessible.mm',
     'mozTextAccessible.mm',
     'Platform.mm',
     'RootAccessibleWrap.mm',

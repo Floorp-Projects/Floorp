@@ -663,6 +663,19 @@ NullHttpChannel::GetCacheReadEnd(mozilla::TimeStamp *aCacheReadEnd)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+NullHttpChannel::GetIsMainDocumentChannel(bool* aValue)
+{
+  *aValue = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::SetIsMainDocumentChannel(bool aValue)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 #define IMPL_TIMING_ATTR(name)                                 \
 NS_IMETHODIMP                                                  \
 NullHttpChannel::Get##name##Time(PRTime* _retval) {            \

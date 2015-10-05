@@ -252,11 +252,15 @@ ReportError(JSContext* cx, const char* message, JSErrorReport* reportp,
 static void
 PopulateReportBlame(JSContext* cx, JSErrorReport* report)
 {
+    JSCompartment* compartment = cx->compartment();
+    if (!compartment)
+        return;
+
     /*
      * Walk stack until we find a frame that is associated with a non-builtin
      * rather than a builtin frame and which we're allowed to know about.
      */
-    NonBuiltinFrameIter iter(cx, cx->compartment()->principals());
+    NonBuiltinFrameIter iter(cx, compartment->principals());
     if (iter.done())
         return;
 

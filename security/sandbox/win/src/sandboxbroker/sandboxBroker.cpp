@@ -85,14 +85,22 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel)
   sandbox::IntegrityLevel initialIntegrityLevel;
   sandbox::IntegrityLevel delayedIntegrityLevel;
 
-  if (aSandboxLevel > 2) {
+  // The setting of these levels is pretty arbitrary, but they are a useful (if
+  // crude) tool while we are tightening the policy. Gaps are left to try and
+  // avoid changing their meaning.
+  if (aSandboxLevel >= 20) {
     jobLevel = sandbox::JOB_LOCKDOWN;
     accessTokenLevel = sandbox::USER_LOCKDOWN;
     initialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
     delayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_UNTRUSTED;
-  } else if (aSandboxLevel == 2) {
+  } else if (aSandboxLevel >= 10) {
     jobLevel = sandbox::JOB_RESTRICTED;
     accessTokenLevel = sandbox::USER_LIMITED;
+    initialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
+    delayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
+  } else if (aSandboxLevel == 2) {
+    jobLevel = sandbox::JOB_INTERACTIVE;
+    accessTokenLevel = sandbox::USER_INTERACTIVE;
     initialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
     delayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
   } else if (aSandboxLevel == 1) {
@@ -120,7 +128,7 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel)
   result = mPolicy->SetDelayedIntegrityLevel(delayedIntegrityLevel);
   ret = ret && (sandbox::SBOX_ALL_OK == result);
 
-  if (aSandboxLevel > 1) {
+  if (aSandboxLevel > 2) {
     result = mPolicy->SetAlternateDesktop(true);
     ret = ret && (sandbox::SBOX_ALL_OK == result);
   }

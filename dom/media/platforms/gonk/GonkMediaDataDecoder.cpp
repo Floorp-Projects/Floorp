@@ -61,7 +61,12 @@ GonkMediaDataDecoder::Init()
 nsresult
 GonkMediaDataDecoder::Shutdown()
 {
-  return mManager->Shutdown();
+  nsresult rv = mManager->Shutdown();
+
+  // Because codec allocated runnable and init promise is at reader TaskQueue,
+  // so manager needs to be destroyed at reader TaskQueue to prevent racing.
+  mManager = nullptr;
+  return rv;
 }
 
 // Inserts data into the decoder's pipeline.

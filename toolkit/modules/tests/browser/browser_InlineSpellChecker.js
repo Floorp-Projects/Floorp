@@ -31,9 +31,9 @@ var tests = {
     is(isc.getDictionaryDisplayName("en-US-qxqaaaaz"), "English (United States) (qxqaaaaz)", "'en-US-qxqaaaaz' should display as 'English (United States) (qxqaaaaz)'");
 
     // Check valid language subtag and invalid but well-formed region subtag.
-    is(isc.getDictionaryDisplayName("en-QZ"), "English (QZ)", "'en-QZ' should display as 'English (QZ)'");
-    is(isc.getDictionaryDisplayName("en-QZ-fonipa"), "English (QZ) (fonipa)", "'en-QZ-fonipa' should display as 'English (QZ) (fonipa)'");
-    is(isc.getDictionaryDisplayName("en-QZ-qxqaaaaz"), "English (QZ) (qxqaaaaz)", "'en-QZ-qxqaaaaz' should display as 'English (QZ) (qxqaaaaz)'");
+    is(isc.getDictionaryDisplayName("en-WO"), "English (WO)", "'en-WO' should display as 'English (WO)'");
+    is(isc.getDictionaryDisplayName("en-WO-fonipa"), "English (WO) (fonipa)", "'en-WO-fonipa' should display as 'English (WO) (fonipa)'");
+    is(isc.getDictionaryDisplayName("en-WO-qxqaaaaz"), "English (WO) (qxqaaaaz)", "'en-WO-qxqaaaaz' should display as 'English (WO) (qxqaaaaz)'");
 
     // Check valid language subtag and valid script subtag.
     todo_is(isc.getDictionaryDisplayName("en-Cyrl"), "English / Cyrillic", "'en-Cyrl' should display as 'English / Cyrillic'");
@@ -42,9 +42,9 @@ var tests = {
     todo_is(isc.getDictionaryDisplayName("en-Cyrl-US"), "English (United States) / Cyrillic", "'en-Cyrl-US' should display as 'English (United States) / Cyrillic'");
     todo_is(isc.getDictionaryDisplayName("en-Cyrl-US-fonipa"), "English (United States) / Cyrillic (fonipa)", "'en-Cyrl-US-fonipa' should display as 'English (United States) / Cyrillic (fonipa)'");
     todo_is(isc.getDictionaryDisplayName("en-Cyrl-US-qxqaaaaz"), "English (United States) / Cyrillic (qxqaaaaz)", "'en-Cyrl-US-qxqaaaaz' should display as 'English (United States) / Cyrillic (qxqaaaaz)'");
-    todo_is(isc.getDictionaryDisplayName("en-Cyrl-QZ"), "English (QZ) / Cyrillic", "'en-Cyrl-QZ' should display as 'English (QZ) / Cyrillic'");
-    todo_is(isc.getDictionaryDisplayName("en-Cyrl-QZ-fonipa"), "English (QZ) / Cyrillic (fonipa)", "'en-Cyrl-QZ-fonipa' should display as 'English (QZ) / Cyrillic (fonipa)'");
-    todo_is(isc.getDictionaryDisplayName("en-Cyrl-QZ-qxqaaaaz"), "English (QZ) / Cyrillic (qxqaaaaz)", "'en-Cyrl-QZ-qxqaaaaz' should display as 'English (QZ) / Cyrillic (qxqaaaaz)'");
+    todo_is(isc.getDictionaryDisplayName("en-Cyrl-WO"), "English (WO) / Cyrillic", "'en-Cyrl-WO' should display as 'English (WO) / Cyrillic'");
+    todo_is(isc.getDictionaryDisplayName("en-Cyrl-WO-fonipa"), "English (WO) / Cyrillic (fonipa)", "'en-Cyrl-WO-fonipa' should display as 'English (WO) / Cyrillic (fonipa)'");
+    todo_is(isc.getDictionaryDisplayName("en-Cyrl-WO-qxqaaaaz"), "English (WO) / Cyrillic (qxqaaaaz)", "'en-Cyrl-WO-qxqaaaaz' should display as 'English (WO) / Cyrillic (qxqaaaaz)'");
 
     // Check valid language subtag and invalid but well-formed script subtag.
     is(isc.getDictionaryDisplayName("en-Qaaz"), "English / Qaaz", "'en-Qaaz' should display as 'English / Qaaz'");
@@ -53,9 +53,9 @@ var tests = {
     is(isc.getDictionaryDisplayName("en-Qaaz-US"), "English (United States) / Qaaz", "'en-Qaaz-US' should display as 'English (United States) / Qaaz'");
     is(isc.getDictionaryDisplayName("en-Qaaz-US-fonipa"), "English (United States) / Qaaz (fonipa)", "'en-Qaaz-US-fonipa' should display as 'English (United States) / Qaaz (fonipa)'");
     is(isc.getDictionaryDisplayName("en-Qaaz-US-qxqaaaaz"), "English (United States) / Qaaz (qxqaaaaz)", "'en-Qaaz-US-qxqaaaaz' should display as 'English (United States) / Qaaz (qxqaaaaz)'");
-    is(isc.getDictionaryDisplayName("en-Qaaz-QZ"), "English (QZ) / Qaaz", "'en-Qaaz-QZ' should display as 'English (QZ) / Qaaz'");
-    is(isc.getDictionaryDisplayName("en-Qaaz-QZ-fonipa"), "English (QZ) / Qaaz (fonipa)", "'en-Qaaz-QZ-fonipa' should display as 'English (QZ) / Qaaz (fonipa)'");
-    is(isc.getDictionaryDisplayName("en-Qaaz-QZ-qxqaaaaz"), "English (QZ) / Qaaz (qxqaaaaz)", "'en-Qaaz-QZ-qxqaaaaz' should display as 'English (QZ) / Qaaz (qxqaaaaz)'");
+    is(isc.getDictionaryDisplayName("en-Qaaz-WO"), "English (WO) / Qaaz", "'en-Qaaz-WO' should display as 'English (WO) / Qaaz'");
+    is(isc.getDictionaryDisplayName("en-Qaaz-WO-fonipa"), "English (WO) / Qaaz (fonipa)", "'en-Qaaz-WO-fonipa' should display as 'English (WO) / Qaaz (fonipa)'");
+    is(isc.getDictionaryDisplayName("en-Qaaz-WO-qxqaaaaz"), "English (WO) / Qaaz (qxqaaaaz)", "'en-Qaaz-WO-qxqaaaaz' should display as 'English (WO) / Qaaz (qxqaaaaz)'");
 
     // Check invalid but well-formed language subtag.
     is(isc.getDictionaryDisplayName("qaz"), "qaz", "'qaz' should display as 'qaz'");
@@ -68,9 +68,9 @@ var tests = {
     is(isc.getDictionaryDisplayName("qaz-US-qxqaaaaz"), "qaz (United States) (qxqaaaaz)", "'qaz-US-qxqaaaaz' should display as 'qaz (United States) (qxqaaaaz)'");
 
     // Check invalid but well-formed language subtag and invalid but well-formed region subtag.
-    is(isc.getDictionaryDisplayName("qaz-QZ"), "qaz (QZ)", "'qaz-QZ' should display as 'qaz (QZ)'");
-    is(isc.getDictionaryDisplayName("qaz-QZ-fonipa"), "qaz (QZ) (fonipa)", "'qaz-QZ-fonipa' should display as 'qaz (QZ) (fonipa)'");
-    is(isc.getDictionaryDisplayName("qaz-QZ-qxqaaaaz"), "qaz (QZ) (qxqaaaaz)", "'qaz-QZ-qxqaaaaz' should display as 'qaz (QZ) (qxqaaaaz)'");
+    is(isc.getDictionaryDisplayName("qaz-WO"), "qaz (WO)", "'qaz-WO' should display as 'qaz (WO)'");
+    is(isc.getDictionaryDisplayName("qaz-WO-fonipa"), "qaz (WO) (fonipa)", "'qaz-WO-fonipa' should display as 'qaz (WO) (fonipa)'");
+    is(isc.getDictionaryDisplayName("qaz-WO-qxqaaaaz"), "qaz (WO) (qxqaaaaz)", "'qaz-WO-qxqaaaaz' should display as 'qaz (WO) (qxqaaaaz)'");
 
     // Check invalid but well-formed language subtag and valid script subtag.
     todo_is(isc.getDictionaryDisplayName("qaz-Cyrl"), "qaz / Cyrillic", "'qaz-Cyrl' should display as 'qaz / Cyrillic'");
@@ -79,9 +79,9 @@ var tests = {
     todo_is(isc.getDictionaryDisplayName("qaz-Cyrl-US"), "qaz (United States) / Cyrillic", "'qaz-Cyrl-US' should display as 'qaz (United States) / Cyrillic'");
     todo_is(isc.getDictionaryDisplayName("qaz-Cyrl-US-fonipa"), "qaz (United States) / Cyrillic (fonipa)", "'qaz-Cyrl-US-fonipa' should display as 'qaz (United States) / Cyrillic (fonipa)'");
     todo_is(isc.getDictionaryDisplayName("qaz-Cyrl-US-qxqaaaaz"), "qaz (United States) / Cyrillic (qxqaaaaz)", "'qaz-Cyrl-US-qxqaaaaz' should display as 'qaz (United States) / Cyrillic (qxqaaaaz)'");
-    todo_is(isc.getDictionaryDisplayName("qaz-Cyrl-QZ"), "qaz (QZ) / Cyrillic", "'qaz-Cyrl-QZ' should display as 'qaz (QZ) / Cyrillic'");
-    todo_is(isc.getDictionaryDisplayName("qaz-Cyrl-QZ-fonipa"), "qaz (QZ) / Cyrillic (fonipa)", "'qaz-Cyrl-QZ-fonipa' should display as 'qaz (QZ) / Cyrillic (fonipa)'");
-    todo_is(isc.getDictionaryDisplayName("qaz-Cyrl-QZ-qxqaaaaz"), "qaz (QZ) / Cyrillic (qxqaaaaz)", "'qaz-Cyrl-QZ-qxqaaaaz' should display as 'qaz (QZ) / Cyrillic (qxqaaaaz)'");
+    todo_is(isc.getDictionaryDisplayName("qaz-Cyrl-WO"), "qaz (WO) / Cyrillic", "'qaz-Cyrl-WO' should display as 'qaz (WO) / Cyrillic'");
+    todo_is(isc.getDictionaryDisplayName("qaz-Cyrl-WO-fonipa"), "qaz (WO) / Cyrillic (fonipa)", "'qaz-Cyrl-WO-fonipa' should display as 'qaz (WO) / Cyrillic (fonipa)'");
+    todo_is(isc.getDictionaryDisplayName("qaz-Cyrl-WO-qxqaaaaz"), "qaz (WO) / Cyrillic (qxqaaaaz)", "'qaz-Cyrl-WO-qxqaaaaz' should display as 'qaz (WO) / Cyrillic (qxqaaaaz)'");
 
     // Check invalid but well-formed language subtag and invalid but well-formed script subtag.
     is(isc.getDictionaryDisplayName("qaz-Qaaz"), "qaz / Qaaz", "'qaz-Qaaz' should display as 'qaz / Qaaz'");
@@ -90,17 +90,17 @@ var tests = {
     is(isc.getDictionaryDisplayName("qaz-Qaaz-US"), "qaz (United States) / Qaaz", "'qaz-Qaaz-US' should display as 'qaz (United States) / Qaaz'");
     is(isc.getDictionaryDisplayName("qaz-Qaaz-US-fonipa"), "qaz (United States) / Qaaz (fonipa)", "'qaz-Qaaz-US-fonipa' should display as 'qaz (United States) / Qaaz (fonipa)'");
     is(isc.getDictionaryDisplayName("qaz-Qaaz-US-qxqaaaaz"), "qaz (United States) / Qaaz (qxqaaaaz)", "'qaz-Qaaz-US-qxqaaaaz' should display as 'qaz (United States) / Qaaz (qxqaaaaz)'");
-    is(isc.getDictionaryDisplayName("qaz-Qaaz-QZ"), "qaz (QZ) / Qaaz", "'qaz-Qaaz-QZ' should display as 'qaz (QZ) / Qaaz'");
-    is(isc.getDictionaryDisplayName("qaz-Qaaz-QZ-fonipa"), "qaz (QZ) / Qaaz (fonipa)", "'qaz-Qaaz-QZ-fonipa' should display as 'qaz (QZ) / Qaaz (fonipa)'");
-    is(isc.getDictionaryDisplayName("qaz-Qaaz-QZ-qxqaaaaz"), "qaz (QZ) / Qaaz (qxqaaaaz)", "'qaz-Qaaz-QZ-qxqaaaaz' should display as 'qaz (QZ) / Qaaz (qxqaaaaz)'");
+    is(isc.getDictionaryDisplayName("qaz-Qaaz-WO"), "qaz (WO) / Qaaz", "'qaz-Qaaz-WO' should display as 'qaz (WO) / Qaaz'");
+    is(isc.getDictionaryDisplayName("qaz-Qaaz-WO-fonipa"), "qaz (WO) / Qaaz (fonipa)", "'qaz-Qaaz-WO-fonipa' should display as 'qaz (WO) / Qaaz (fonipa)'");
+    is(isc.getDictionaryDisplayName("qaz-Qaaz-WO-qxqaaaaz"), "qaz (WO) / Qaaz (qxqaaaaz)", "'qaz-Qaaz-WO-qxqaaaaz' should display as 'qaz (WO) / Qaaz (qxqaaaaz)'");
 
     // Check multiple variant subtags.
     todo_is(isc.getDictionaryDisplayName("en-Cyrl-US-fonipa-fonxsamp"), "English (United States) / Cyrillic (fonipa / fonxsamp)", "'en-Cyrl-US-fonipa-fonxsamp' should display as 'English (United States) / Cyrillic (fonipa / fonxsamp)'");
     todo_is(isc.getDictionaryDisplayName("en-Cyrl-US-fonipa-qxqaaaaz"), "English (United States) / Cyrillic (fonipa / qxqaaaaz)", "'en-Cyrl-US-fonipa-qxqaaaaz' should display as 'English (United States) / Cyrillic (fonipa / qxqaaaaz)'");
     todo_is(isc.getDictionaryDisplayName("en-Cyrl-US-fonipa-fonxsamp-qxqaaaaz"), "English (United States) / Cyrillic (fonipa / fonxsamp / qxqaaaaz)", "'en-Cyrl-US-fonipa-fonxsamp-qxqaaaaz' should display as 'English (United States) / Cyrillic (fonipa / fonxsamp / qxqaaaaz)'");
-    is(isc.getDictionaryDisplayName("qaz-Qaaz-QZ-fonipa-fonxsamp"), "qaz (QZ) / Qaaz (fonipa / fonxsamp)", "'qaz-Qaaz-QZ-fonipa-fonxsamp' should display as 'qaz (QZ) / Qaaz (fonipa / fonxsamp)'");
-    is(isc.getDictionaryDisplayName("qaz-Qaaz-QZ-fonipa-qxqaaaaz"), "qaz (QZ) / Qaaz (fonipa / qxqaaaaz)", "'qaz-Qaaz-QZ-fonipa-qxqaaaaz' should display as 'qaz (QZ) / Qaaz (fonipa / qxqaaaaz)'");
-    is(isc.getDictionaryDisplayName("qaz-Qaaz-QZ-fonipa-fonxsamp-qxqaaaaz"), "qaz (QZ) / Qaaz (fonipa / fonxsamp / qxqaaaaz)", "'qaz-Qaaz-QZ-fonipa-fonxsamp-qxqaaaaz' should display as 'qaz (QZ) / Qaaz (fonipa / fonxsamp / qxqaaaaz)'");
+    is(isc.getDictionaryDisplayName("qaz-Qaaz-WO-fonipa-fonxsamp"), "qaz (WO) / Qaaz (fonipa / fonxsamp)", "'qaz-Qaaz-WO-fonipa-fonxsamp' should display as 'qaz (WO) / Qaaz (fonipa / fonxsamp)'");
+    is(isc.getDictionaryDisplayName("qaz-Qaaz-WO-fonipa-qxqaaaaz"), "qaz (WO) / Qaaz (fonipa / qxqaaaaz)", "'qaz-Qaaz-WO-fonipa-qxqaaaaz' should display as 'qaz (WO) / Qaaz (fonipa / qxqaaaaz)'");
+    is(isc.getDictionaryDisplayName("qaz-Qaaz-WO-fonipa-fonxsamp-qxqaaaaz"), "qaz (WO) / Qaaz (fonipa / fonxsamp / qxqaaaaz)", "'qaz-Qaaz-WO-fonipa-fonxsamp-qxqaaaaz' should display as 'qaz (WO) / Qaaz (fonipa / fonxsamp / qxqaaaaz)'");
 
     // Check numeric region subtag.
     todo_is(isc.getDictionaryDisplayName("es-419"), "Spanish (Latin America and the Caribbean)", "'es-419' should display as 'Spanish (Latin America and the Caribbean)'");

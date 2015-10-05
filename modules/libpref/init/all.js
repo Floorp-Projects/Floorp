@@ -4184,8 +4184,6 @@ pref("webgl.angle.force-d3d11", false);
 pref("webgl.angle.force-warp", false);
 #endif
 
-pref("gfx.offscreencanvas.enabled", false);
-
 #ifdef MOZ_WIDGET_GONK
 pref("gfx.gralloc.fence-with-readpixels", false);
 #endif
@@ -4901,6 +4899,7 @@ pref("dom.beforeAfterKeyboardEvent.enabled", false);
 pref("dom.presentation.enabled", false);
 pref("dom.presentation.tcp_server.debug", false);
 pref("dom.presentation.discovery.enabled", true);
+pref("dom.presentation.discovery.timeout_ms", 10000);
 pref("dom.presentation.discoverable", false);
 
 #ifdef XP_MACOSX
