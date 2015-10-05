@@ -341,10 +341,6 @@ function RTCPeerConnection() {
 
   this._localType = null;
   this._remoteType = null;
-  // http://rtcweb-wg.github.io/jsep/#rfc.section.4.1.9
-  // canTrickle == null means unknown; when a remote description is received it
-  // is set to true or false based on the presence of the "trickle" ice-option
-  this._canTrickle = null;
 
   // States
   this._iceGatheringState = this._iceConnectionState = "new";
@@ -923,7 +919,7 @@ RTCPeerConnection.prototype = {
             this._onSetRemoteDescriptionSuccess = resolve;
             this._onSetRemoteDescriptionFailure = reject;
             this._impl.setRemoteDescription(type, desc.sdp);
-          })).then(() => { this._updateCanTrickle(); });
+          }));
 
         if (desc.type === "rollback") {
           return setRem;
@@ -951,37 +947,9 @@ RTCPeerConnection.prototype = {
     );
   },
 
-  get canTrickleIceCandidates() {
-    return this._canTrickle;
-  },
-
-  _updateCanTrickle: function() {
-    let containsTrickle = section => {
-      let lines = section.toLowerCase().split(/(?:\r\n?|\n)/);
-      return lines.some(line => {
-        let prefix = "a=ice-options:";
-        if (line.substring(0, prefix.length) !== prefix) {
-          return false;
-        }
-        let tokens = line.substring(prefix.length).split(" ");
-        return tokens.some(x => x === "trickle");
-      });
-    };
-
-    let desc = null;
-    try {
-      // The getter for remoteDescription can throw if the pc is closed.
-      desc = this.remoteDescription;
-    } catch (e) {}
-    if (!desc) {
-      this._canTrickle = null;
-      return;
-    }
-
-    let sections = desc.sdp.split(/(?:\r\n?|\n)m=/);
-    let topSection = sections.shift();
-    this._canTrickle =
-      containsTrickle(topSection) || sections.every(containsTrickle);
+  updateIce: function(config) {
+    throw new this._win.DOMException("updateIce not yet implemented",
+                                     "NotSupportedError");
   },
 
   addIceCandidate: function(c, onSuccess, onError) {
