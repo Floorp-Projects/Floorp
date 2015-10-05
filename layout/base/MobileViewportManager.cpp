@@ -118,19 +118,24 @@ MobileViewportManager::UpdateResolution(const nsViewportInfo& aViewportInfo,
                                         const CSSSize& aViewport,
                                         const Maybe<float>& aDisplayWidthChangeRatio)
 {
-  CSSToLayoutDeviceScale cssToDev((float)nsPresContext::AppUnitsPerCSSPixel()
-    / mPresShell->GetPresContext()->AppUnitsPerDevPixel());
+  CSSToLayoutDeviceScale cssToDev =
+      mPresShell->GetPresContext()->CSSToDevPixelScale();
   LayoutDeviceToLayerScale res(nsLayoutUtils::GetResolution(mPresShell));
 
   if (mIsFirstPaint) {
     CSSToScreenScale defaultZoom = aViewportInfo.GetDefaultZoom();
     MVM_LOG("%p: default zoom from viewport is %f\n", this, defaultZoom.scale);
-    // FIXME/bug 799585(?): GetViewportInfo() returns a default zoom of
-    // 0.0 to mean "did not calculate a zoom".  In that case, we default
-    // it to the intrinsic scale.
-    if (defaultZoom.scale < 0.01f) {
+    if (!aViewportInfo.IsDefaultZoomValid()) {
       defaultZoom = MaxScaleRatio(ScreenSize(aDisplaySize), aViewport);
       MVM_LOG("%p: Intrinsic computed zoom is %f\n", this, defaultZoom.scale);
+      if (defaultZoom < aViewportInfo.GetMinZoom()) {
+        defaultZoom = aViewportInfo.GetMinZoom();
+        MVM_LOG("%p: Clamped to %f\n", this, defaultZoom.scale);
+      }
+      if (defaultZoom > aViewportInfo.GetMaxZoom()) {
+        defaultZoom = aViewportInfo.GetMaxZoom();
+        MVM_LOG("%p: Clamped to %f\n", this, defaultZoom.scale);
+      }
     }
     MOZ_ASSERT(aViewportInfo.GetMinZoom() <= defaultZoom &&
       defaultZoom <= aViewportInfo.GetMaxZoom());

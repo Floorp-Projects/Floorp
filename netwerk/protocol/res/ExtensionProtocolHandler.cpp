@@ -21,7 +21,7 @@ nsresult
 ExtensionProtocolHandler::GetFlagsForURI(nsIURI* aURI, uint32_t* aFlags)
 {
   // In general a moz-extension URI is only loadable by chrome, but a whitelisted
-  // subset are web-accessible. Check that whitelist.
+  // subset are web-accessible (and cross-origin fetchable). Check that whitelist.
   nsCOMPtr<nsIAddonPolicyService> aps = do_GetService("@mozilla.org/addons/policy-service;1");
   bool loadableByAnyone = false;
   if (aps) {
@@ -29,7 +29,7 @@ ExtensionProtocolHandler::GetFlagsForURI(nsIURI* aURI, uint32_t* aFlags)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  *aFlags = URI_STD | URI_IS_LOCAL_RESOURCE | (loadableByAnyone ? URI_LOADABLE_BY_ANYONE : URI_DANGEROUS_TO_LOAD);
+  *aFlags = URI_STD | URI_IS_LOCAL_RESOURCE | (loadableByAnyone ? (URI_LOADABLE_BY_ANYONE | URI_FETCHABLE_BY_ANYONE) : URI_DANGEROUS_TO_LOAD);
   return NS_OK;
 }
 

@@ -14,19 +14,27 @@ import tempfile
 import glob
 import errno
 from contextlib import contextmanager
+import sys
 
-centOS6 = False
-
+DEBUG = os.getenv("DEBUG")
 
 def check_run(args):
+    global DEBUG
+    if DEBUG:
+        print >> sys.stderr, ' '.join(args)
     r = subprocess.call(args)
     assert r == 0
 
 
 def run_in(path, args):
     d = os.getcwd()
+    global DEBUG
+    if DEBUG:
+        print >> sys.stderr, 'cd "%s"' % path
     os.chdir(path)
     check_run(args)
+    if DEBUG:
+        print >> sys.stderr, 'cd "%s"' % d
     os.chdir(d)
 
 
@@ -36,14 +44,12 @@ def patch(patch, srcdir):
                '-s'])
 
 
-def build_package(package_source_dir, package_build_dir, configure_args,
-                  make_args):
+def build_package(package_build_dir, run_cmake, cmake_args):
     if not os.path.exists(package_build_dir):
         os.mkdir(package_build_dir)
-    run_in(package_build_dir,
-           ["%s/configure" % package_source_dir] + configure_args)
-    run_in(package_build_dir, ["make", "-j4"] + make_args)
-    run_in(package_build_dir, ["make", "install"])
+    if run_cmake:
+        run_in(package_build_dir, ["cmake"] + cmake_args)
+    run_in(package_build_dir, ["ninja", "install"])
 
 
 @contextmanager
@@ -57,7 +63,9 @@ def updated_env(env):
 
 def build_tar_package(tar, name, base, directory):
     name = os.path.realpath(name)
-    run_in(base, [tar, "-cJf", name, directory])
+    run_in(base, [tar,
+                  "-c -%s -f" % "J" if ".xz" in name else "j",
+                  name, directory])
 
 
 def copy_dir_contents(src, dest):
@@ -115,9 +123,15 @@ def svn_co(url, directory, revision):
     check_run(["svn", "co", "-r", revision, url, directory])
 
 
-def build_one_stage(env, stage_dir, llvm_source_dir):
+def svn_update(directory, revision):
+    run_in(directory, ["svn", "update", "-r", revision])
+
+
+def build_one_stage(env, src_dir, stage_dir, build_libcxx, build_type, assertions,
+                    python_path):
     with updated_env(env):
-        build_one_stage_aux(stage_dir, llvm_source_dir)
+        build_one_stage_aux(src_dir, stage_dir, build_libcxx, build_type,
+                            assertions, python_path)
 
 
 def get_platform():
@@ -137,34 +151,27 @@ def is_darwin():
     return platform.system() == "Darwin"
 
 
-def build_one_stage_aux(stage_dir, llvm_source_dir):
-    os.mkdir(stage_dir)
+def build_one_stage_aux(src_dir, stage_dir, build_libcxx,
+                        build_type, assertions, python_path):
+    if not os.path.exists(stage_dir):
+        os.mkdir(stage_dir)
 
     build_dir = stage_dir + "/build"
     inst_dir = stage_dir + "/clang"
 
-    targets = ["x86", "x86_64"]
-    # The Darwin equivalents of binutils appear to have intermittent problems
-    # with objects in compiler-rt that are compiled for arm.  Since the arm
-    # support is only necessary for iOS (which we don't support), only enable
-    # arm support on Linux.
-    if not is_darwin():
-        targets.append("arm")
+    run_cmake = True
+    if os.path.exists(build_dir):
+        run_cmake = False
 
-    global centOS6
-    if centOS6:
-        python_path = "/usr/bin/python2.7"
-    else:
-        python_path = "/usr/local/bin/python2.7"
-
-    configure_opts = ["--enable-optimized",
-                      "--enable-targets=" + ",".join(targets),
-                      "--disable-assertions",
-                      "--disable-libedit",
-                      "--with-python=%s" % python_path,
-                      "--prefix=%s" % inst_dir,
-                      "--disable-compiler-version-checks"]
-    build_package(llvm_source_dir, build_dir, configure_opts, [])
+    cmake_args = ["-GNinja",
+                  "-DCMAKE_BUILD_TYPE=%s" % build_type,
+                  "-DLLVM_TARGETS_TO_BUILD=X86;ARM",
+                  "-DLLVM_ENABLE_ASSERTIONS=%s" % ("ON" if assertions else "OFF"),
+                  "-DPYTHON_EXECUTABLE=%s" % python_path,
+                  "-DCMAKE_INSTALL_PREFIX=%s" % inst_dir,
+                  "-DLLVM_TOOL_LIBCXX_BUILD=%s" % ("ON" if build_libcxx else "OFF"),
+                  src_dir];
+    build_package(build_dir, run_cmake, cmake_args)
 
 if __name__ == "__main__":
     # The directories end up in the debug info, so the easy way of getting
@@ -181,12 +188,6 @@ if __name__ == "__main__":
     compiler_rt_source_dir = source_dir + "/compiler-rt"
     libcxx_source_dir = source_dir + "/libcxx"
 
-    global centOS6
-    if centOS6:
-        gcc_dir = "/home/worker/workspace/build/src/gcc"
-    else:
-        gcc_dir = "/tools/gcc-4.7.3-0moz1"
-
     if is_darwin():
         os.environ['MACOSX_DEPLOYMENT_TARGET'] = '10.7'
 
@@ -194,14 +195,67 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--config', required=True,
                         type=argparse.FileType('r'),
                         help="Clang configuration file")
+    parser.add_argument('--clean', required=False,
+                        action='store_true',
+                        help="Clean the build directory")
 
     args = parser.parse_args()
     config = json.load(args.config)
+
+    if args.clean:
+        shutil.rmtree(build_dir)
+        os.sys.exit(0)
+
     llvm_revision = config["llvm_revision"]
     llvm_repo = config["llvm_repo"]
     clang_repo = config["clang_repo"]
     compiler_repo = config["compiler_repo"]
     libcxx_repo = config["libcxx_repo"]
+    stages = 3
+    if "stages" in config:
+        stages = int(config["stages"])
+        if stages not in (1, 2, 3):
+            raise ValueError("We only know how to build 1, 2, or 3 stages")
+    build_type = "Release"
+    if "build_type" in config:
+        build_type = config["build_type"]
+        if build_type not in ("Release", "Debug", "RelWithDebInfo", "MinSizeRel"):
+            raise ValueError("We only know how to do Release, Debug, RelWithDebInfo or MinSizeRel builds")
+    build_libcxx = False
+    if "build_libcxx" in config:
+        build_libcxx = config["build_libcxx"]
+        if build_libcxx not in (True, False):
+            raise ValueError("Only boolean values are accepted for build_libcxx.")
+    assertions = False
+    if "assertions" in config:
+        assertions = config["assertions"]
+        if assertions not in (True, False):
+            raise ValueError("Only boolean values are accepted for assertions.")
+    python_path = None
+    if "python_path" not in config:
+        raise ValueError("Config file needs to set python_path")
+    python_path = config["python_path"]
+    gcc_dir = None
+    if "gcc_dir" in config:
+        gcc_dir = config["gcc_dir"]
+        if not os.path.exists(gcc_dir):
+            raise ValueError("gcc_dir must point to an existing path")
+    if not is_darwin() and gcc_dir is None:
+        raise ValueError("Config file needs to set gcc_dir")
+    cc = None
+    if "cc" in config:
+        cc = config["cc"]
+        if not os.path.exists(cc):
+            raise ValueError("cc must point to an existing path")
+    else:
+        raise ValueError("Config file needs to set cc")
+    cxx = None
+    if "cxx" in config:
+        cxx = config["cxx"]
+        if not os.path.exists(cxx):
+            raise ValueError("cxx must point to an existing path")
+    else:
+        raise ValueError("Config file needs to set cxx")
 
     if not os.path.exists(source_dir):
         os.makedirs(source_dir)
@@ -216,50 +270,69 @@ if __name__ == "__main__":
                    llvm_source_dir + "/projects/libcxx")
         for p in config.get("patches", {}).get(get_platform(), []):
             patch(p, source_dir)
+    else:
+        svn_update(llvm_source_dir, llvm_revision)
+        svn_update(clang_source_dir, llvm_revision)
+        svn_update(compiler_rt_source_dir, llvm_revision)
+        svn_update(libcxx_source_dir, llvm_revision)
 
-    if os.path.exists(build_dir):
-        shutil.rmtree(build_dir)
-    os.makedirs(build_dir)
+    if not os.path.exists(build_dir):
+        os.makedirs(build_dir)
 
     stage1_dir = build_dir + '/stage1'
     stage1_inst_dir = stage1_dir + '/clang'
+
+    final_stage_dir = stage1_dir
 
     if is_darwin():
         extra_cflags = ""
         extra_cxxflags = "-stdlib=libc++"
         extra_cflags2 = ""
         extra_cxxflags2 = "-stdlib=libc++"
-        cc = "/usr/bin/clang"
-        cxx = "/usr/bin/clang++"
     else:
-        extra_cflags = ""
-        extra_cxxflags = ""
-        extra_cflags2 = "-static-libgcc --gcc-toolchain=%s" % gcc_dir
-        extra_cxxflags2 = "-static-libgcc -static-libstdc++ --gcc-toolchain=%s" % gcc_dir
-        cc = gcc_dir + "/bin/gcc"
-        cxx = gcc_dir + "/bin/g++"
+        extra_cflags = "-static-libgcc"
+        extra_cxxflags = "-static-libgcc -static-libstdc++"
+        extra_cflags2 = "-fPIC --gcc-toolchain=%s" % gcc_dir
+        extra_cxxflags2 = "-fPIC --gcc-toolchain=%s" % gcc_dir
 
-    if os.environ.has_key('LD_LIBRARY_PATH'):
-        os.environ['LD_LIBRARY_PATH'] = '%s/lib64/:%s' % (gcc_dir, os.environ['LD_LIBRARY_PATH']);
-    else:
-        os.environ['LD_LIBRARY_PATH'] = '%s/lib64/' % gcc_dir
+        if os.environ.has_key('LD_LIBRARY_PATH'):
+            os.environ['LD_LIBRARY_PATH'] = '%s/lib64/:%s' % (gcc_dir, os.environ['LD_LIBRARY_PATH']);
+        else:
+            os.environ['LD_LIBRARY_PATH'] = '%s/lib64/' % gcc_dir
 
     build_one_stage(
         {"CC": cc + " %s" % extra_cflags,
          "CXX": cxx + " %s" % extra_cxxflags},
-        stage1_dir, llvm_source_dir)
+        llvm_source_dir, stage1_dir, build_libcxx,
+        build_type, assertions, python_path)
 
-    stage2_dir = build_dir + '/stage2'
-    build_one_stage(
-        {"CC": stage1_inst_dir + "/bin/clang %s" % extra_cflags2,
-         "CXX": stage1_inst_dir + "/bin/clang++ %s" % extra_cxxflags2},
-        stage2_dir, llvm_source_dir)
+    if stages > 1:
+        stage2_dir = build_dir + '/stage2'
+        stage2_inst_dir = stage2_dir + '/clang'
+        final_stage_dir = stage2_dir
+        build_one_stage(
+            {"CC": stage1_inst_dir + "/bin/clang %s" % extra_cflags2,
+             "CXX": stage1_inst_dir + "/bin/clang++ %s" % extra_cxxflags2},
+            llvm_source_dir, stage2_dir, build_libcxx,
+            build_type, assertions, python_path)
+
+        if stages > 2:
+            stage3_dir = build_dir + '/stage3'
+            final_stage_dir = stage3_dir
+            build_one_stage(
+                {"CC": stage2_inst_dir + "/bin/clang %s" % extra_cflags2,
+                 "CXX": stage2_inst_dir + "/bin/clang++ %s" % extra_cxxflags2},
+                llvm_source_dir, stage3_dir, build_libcxx,
+                build_type, assertions, python_path)
 
     if not is_darwin():
-        stage2_inst_dir = stage2_dir + '/clang'
+        final_stage_inst_dir = final_stage_dir + '/clang'
         build_and_use_libgcc(
             {"CC": cc + " %s" % extra_cflags,
              "CXX": cxx + " %s" % extra_cxxflags},
-            stage2_inst_dir)
+            final_stage_inst_dir)
 
-    build_tar_package("tar", "clang.tar.xz", stage2_dir, "clang")
+    if is_darwin():
+        build_tar_package("tar", "clang.tar.bz2", final_stage_dir, "clang")
+    else:
+        build_tar_package("tar", "clang.tar.xz", final_stage_dir, "clang")

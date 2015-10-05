@@ -8,6 +8,7 @@
 #include <algorithm>
 #include "angle/ShaderLang.h"
 #include "CanvasUtils.h"
+#include "gfxPrefs.h"
 #include "GLContext.h"
 #include "jsfriendapi.h"
 #include "mozilla/CheckedInt.h"
@@ -1665,11 +1666,11 @@ WebGLContext::InitAndValidateGL()
         return false;
     }
 
-    mMinCapability = Preferences::GetBool("webgl.min_capability_mode", false);
-    mDisableExtensions = Preferences::GetBool("webgl.disable-extensions", false);
-    mLoseContextOnMemoryPressure = Preferences::GetBool("webgl.lose-context-on-memory-pressure", false);
-    mCanLoseContextInForeground = Preferences::GetBool("webgl.can-lose-context-in-foreground", true);
-    mRestoreWhenVisible = Preferences::GetBool("webgl.restore-context-when-visible", true);
+    mMinCapability = gfxPrefs::WebGLMinCapabilityMode();
+    mDisableExtensions = gfxPrefs::WebGLDisableExtensions();
+    mLoseContextOnMemoryPressure = gfxPrefs::WebGLLoseContextOnMemoryPressure();
+    mCanLoseContextInForeground = gfxPrefs::WebGLCanLoseContextInForeground();
+    mRestoreWhenVisible = gfxPrefs::WebGLRestoreWhenVisible();
 
     if (MinCapabilityMode())
         mDisableFragHighP = true;
@@ -1878,10 +1879,7 @@ WebGLContext::InitAndValidateGL()
 #endif
 
     // Check the shader validator pref
-    NS_ENSURE_TRUE(Preferences::GetRootBranch(), false);
-
-    mBypassShaderValidation = Preferences::GetBool("webgl.bypass-shader-validation",
-                                                   mBypassShaderValidation);
+    mBypassShaderValidation = gfxPrefs::WebGLBypassShaderValidator();
 
     // initialize shader translator
     if (!ShInitialize()) {
@@ -1936,9 +1934,6 @@ WebGLContext::InitAndValidateGL()
         mDefaultVertexArray->GenVertexArray();
         mDefaultVertexArray->BindVertexArray();
     }
-
-    if (mLoseContextOnMemoryPressure)
-        mContextObserver->RegisterMemoryPressureEvent();
 
     return true;
 }

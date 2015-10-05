@@ -169,6 +169,7 @@ TextureChild::ActorDestroy(ActorDestroyReason why)
 {
   if (mTextureClient) {
     mTextureClient->mActor = nullptr;
+    mTextureClient->mAllocator = nullptr;
   }
   mWaitForRecycle = nullptr;
   mKeep = nullptr;

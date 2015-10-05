@@ -2386,23 +2386,38 @@ BuildFlatMatchArray(JSContext* cx, HandleString textstr, const FlatMatch& fm, Ca
         return true;
     }
 
-    /* For this non-global match, produce a RegExp.exec-style array. */
-    RootedObject obj(cx, NewDenseEmptyArray(cx));
-    if (!obj)
+    /* Get the templateObject that defines the shape and type of the output object */
+    JSObject* templateObject = cx->compartment()->regExps.getOrCreateMatchResultTemplateObject(cx);
+    if (!templateObject)
         return false;
 
-    RootedValue patternVal(cx, StringValue(fm.pattern()));
-    RootedValue matchVal(cx, Int32Value(fm.match()));
-    RootedValue textVal(cx, StringValue(textstr));
-
-    if (!DefineElement(cx, obj, 0, patternVal) ||
-        !DefineProperty(cx, obj, cx->names().index, matchVal) ||
-        !DefineProperty(cx, obj, cx->names().input, textVal))
-    {
+    RootedArrayObject arr(cx, NewDenseFullyAllocatedArrayWithTemplate(cx, 1, templateObject));
+    if (!arr)
         return false;
-    }
 
-    args->rval().setObject(*obj);
+    /* Store a Value for each pair. */
+    arr->setDenseInitializedLength(1);
+    arr->initDenseElement(0, StringValue(fm.pattern()));
+
+    /* Set the |index| property. (TemplateObject positions it in slot 0) */
+    arr->setSlot(0, Int32Value(fm.match()));
+
+    /* Set the |input| property. (TemplateObject positions it in slot 1) */
+    arr->setSlot(1, StringValue(textstr));
+
+#ifdef DEBUG
+    RootedValue test(cx);
+    RootedId id(cx, NameToId(cx->names().index));
+    if (!NativeGetProperty(cx, arr, id, &test))
+        return false;
+    MOZ_ASSERT(test == arr->getSlot(0));
+    id = NameToId(cx->names().input);
+    if (!NativeGetProperty(cx, arr, id, &test))
+        return false;
+    MOZ_ASSERT(test == arr->getSlot(1));
+#endif
+
+    args->rval().setObject(*arr);
     return true;
 }
 

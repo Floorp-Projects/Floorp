@@ -80,8 +80,8 @@ function IDPProvisioningContext(aID, aOrigin, aTargetMM) {
 }
 
 IDPProvisioningContext.prototype = {
-  get id() this._id,
-  get origin() this._origin,
+  get id() { return this._id; },
+  get origin() { return this._origin; },
 
   sendAsyncMessage: _sendAsyncMessage,
 
@@ -112,8 +112,8 @@ function IDPAuthenticationContext(aID, aOrigin, aTargetMM) {
 }
 
 IDPAuthenticationContext.prototype = {
-  get id() this._id,
-  get origin() this._origin,
+  get id() { return this._id; },
+  get origin() { return this._origin; },
 
   sendAsyncMessage: _sendAsyncMessage,
 

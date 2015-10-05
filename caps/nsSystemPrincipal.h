@@ -29,7 +29,6 @@ public:
   NS_IMETHOD GetURI(nsIURI** aURI) override;
   NS_IMETHOD GetDomain(nsIURI** aDomain) override;
   NS_IMETHOD SetDomain(nsIURI* aDomain) override;
-  NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) override;
   NS_IMETHOD GetCsp(nsIContentSecurityPolicy** aCsp) override;
   NS_IMETHOD SetCsp(nsIContentSecurityPolicy* aCsp) override;
   NS_IMETHOD GetBaseDomain(nsACString& aBaseDomain) override;
@@ -43,6 +42,11 @@ protected:
   virtual ~nsSystemPrincipal(void) {}
 
   bool SubsumesInternal(nsIPrincipal *aOther, DocumentDomainConsideration aConsideration) override
+  {
+    return true;
+  }
+
+  bool MayLoadInternal(nsIURI* aURI) override
   {
     return true;
   }

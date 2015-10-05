@@ -228,33 +228,13 @@ add_task(function test() {
     let db = Services.storage.openDatabase(GetPermissionsFile(profile));
     do_check_true(db.tableExists("moz_perms"));
     do_check_true(db.tableExists("moz_hosts"));
-    do_check_true(db.tableExists("moz_hosts_is_backup"));
+    do_check_false(db.tableExists("moz_hosts_is_backup"));
     do_check_false(db.tableExists("moz_perms_v6"));
 
-    let mozHostsStmt = db.createStatement("SELECT " +
-                                          "host, type, permission, expireType, expireTime, " +
-                                          "modificationTime, appId, isInBrowserElement " +
-                                          "FROM moz_hosts WHERE id = :id");
-
-    // Check that the moz_hosts table still contains the correct values.
-    created.forEach((it) => {
-      mozHostsStmt.reset();
-      mozHostsStmt.bindByName("id", it.id);
-      mozHostsStmt.executeStep();
-      do_check_eq(mozHostsStmt.getUTF8String(0), it.host);
-      do_check_eq(mozHostsStmt.getUTF8String(1), it.type);
-      do_check_eq(mozHostsStmt.getInt64(2), it.permission);
-      do_check_eq(mozHostsStmt.getInt64(3), it.expireType);
-      do_check_eq(mozHostsStmt.getInt64(4), it.expireTime);
-      do_check_eq(mozHostsStmt.getInt64(5), it.modificationTime);
-      do_check_eq(mozHostsStmt.getInt64(6), it.appId);
-      do_check_eq(mozHostsStmt.getInt64(7), it.isInBrowserElement);
-    });
-
-    // Check that there are the right number of values
+    // The moz_hosts table should still exist but be empty
     let mozHostsCount = db.createStatement("SELECT count(*) FROM moz_hosts");
     mozHostsCount.executeStep();
-    do_check_eq(mozHostsCount.getInt64(0), created.length);
+    do_check_eq(mozHostsCount.getInt64(0), 0);
 
     // Check that there are the right number of values in the permissions database
     let mozPermsCount = db.createStatement("SELECT count(*) FROM moz_perms");

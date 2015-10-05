@@ -8,20 +8,27 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/WeakPtr.h"
+#include "nsIDOMEventListener.h"
 #include "nsIDOMHTMLCanvasElement.h"
+#include "nsIObserver.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"
 #include "nsSize.h"
 #include "nsError.h"
 
+#include "mozilla/dom/CanvasRenderingContextHelper.h"
 #include "mozilla/gfx/Rect.h"
+#include "mozilla/layers/LayersTypes.h"
 
 class nsICanvasRenderingContextInternal;
 class nsITimerCallback;
 
 namespace mozilla {
 
+class WebGLContext;
+
 namespace layers {
+class AsyncCanvasRenderer;
 class CanvasLayer;
 class Image;
 class LayerManager;
@@ -35,14 +42,33 @@ class CanvasCaptureMediaStream;
 class File;
 class FileCallback;
 class HTMLCanvasPrintState;
+class OffscreenCanvas;
 class PrintCallback;
 class RequestedFrameRefreshObserver;
 
-enum class CanvasContextType : uint8_t {
-  NoContext,
-  Canvas2D,
-  WebGL1,
-  WebGL2
+// Listen visibilitychange and memory-pressure event and inform
+// context when event is fired.
+class HTMLCanvasElementObserver final : public nsIObserver
+                                      , public nsIDOMEventListener
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+  NS_DECL_NSIDOMEVENTLISTENER
+
+  explicit HTMLCanvasElementObserver(HTMLCanvasElement* aElement);
+  void Destroy();
+
+  void RegisterVisibilityChangeEvent();
+  void UnregisterVisibilityChangeEvent();
+
+  void RegisterMemoryPressureEvent();
+  void UnregisterMemoryPressureEvent();
+
+private:
+  ~HTMLCanvasElementObserver();
+
+  HTMLCanvasElement* mElement;
 };
 
 /*
@@ -84,13 +110,15 @@ protected:
 };
 
 class HTMLCanvasElement final : public nsGenericHTMLElement,
-                                public nsIDOMHTMLCanvasElement
+                                public nsIDOMHTMLCanvasElement,
+                                public CanvasRenderingContextHelper
 {
   enum {
     DEFAULT_CANVAS_WIDTH = 300,
     DEFAULT_CANVAS_HEIGHT = 150
   };
 
+  typedef layers::AsyncCanvasRenderer AsyncCanvasRenderer;
   typedef layers::CanvasLayer CanvasLayer;
   typedef layers::LayerManager LayerManager;
 
@@ -116,6 +144,11 @@ public:
   }
   void SetHeight(uint32_t aHeight, ErrorResult& aRv)
   {
+    if (mOffscreenCanvas) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+
     SetUnsignedIntAttr(nsGkAtoms::height, aHeight, aRv);
   }
   uint32_t Width()
@@ -124,23 +157,33 @@ public:
   }
   void SetWidth(uint32_t aWidth, ErrorResult& aRv)
   {
+    if (mOffscreenCanvas) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+
     SetUnsignedIntAttr(nsGkAtoms::width, aWidth, aRv);
   }
-  already_AddRefed<nsISupports>
+
+  virtual already_AddRefed<nsISupports>
   GetContext(JSContext* aCx, const nsAString& aContextId,
              JS::Handle<JS::Value> aContextOptions,
-             ErrorResult& aRv);
+             ErrorResult& aRv) override;
+
   void ToDataURL(JSContext* aCx, const nsAString& aType,
                  JS::Handle<JS::Value> aParams,
                  nsAString& aDataURL, ErrorResult& aRv)
   {
     aRv = ToDataURL(aType, aParams, aCx, aDataURL);
   }
+
   void ToBlob(JSContext* aCx,
               FileCallback& aCallback,
               const nsAString& aType,
               JS::Handle<JS::Value> aParams,
               ErrorResult& aRv);
+
+  OffscreenCanvas* TransferControlToOffscreen(ErrorResult& aRv);
 
   bool MozOpaque() const
   {
@@ -148,6 +191,11 @@ public:
   }
   void SetMozOpaque(bool aValue, ErrorResult& aRv)
   {
+    if (mOffscreenCanvas) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+
     SetHTMLBoolAttr(nsGkAtoms::moz_opaque, aValue, aRv);
   }
   already_AddRefed<File> MozGetAsFile(const nsAString& aName,
@@ -204,6 +252,7 @@ public:
    * across its entire area.
    */
   bool GetIsOpaque();
+  virtual bool GetOpaqueAttr() override;
 
   virtual already_AddRefed<gfx::SourceSurface> GetSurfaceSnapshot(bool* aPremultAlpha = nullptr);
 
@@ -282,19 +331,25 @@ public:
 
   nsresult GetContext(const nsAString& aContextId, nsISupports** aContext);
 
+  layers::LayersBackend GetCompositorBackendType() const;
+
+  void OnVisibilityChange();
+
+  void OnMemoryPressure();
+
+  static void SetAttrFromAsyncCanvasRenderer(AsyncCanvasRenderer *aRenderer);
+  static void InvalidateFromAsyncCanvasRenderer(AsyncCanvasRenderer *aRenderer);
+
 protected:
   virtual ~HTMLCanvasElement();
 
   virtual JSObject* WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  nsIntSize GetWidthHeight();
+  virtual nsIntSize GetWidthHeight() override;
 
-  nsresult UpdateContext(JSContext* aCx, JS::Handle<JS::Value> options);
-  nsresult ParseParams(JSContext* aCx,
-                       const nsAString& aType,
-                       const JS::Value& aEncoderOptions,
-                       nsAString& aParams,
-                       bool* usingCustomParseOptions);
+  virtual already_AddRefed<nsICanvasRenderingContextInternal>
+  CreateContext(CanvasContextType aContextType) override;
+
   nsresult ExtractData(nsAString& aType,
                        const nsAString& aOptions,
                        nsIInputStream** aStream);
@@ -307,13 +362,17 @@ protected:
                             nsISupports** aResult);
   void CallPrintCallback();
 
-  CanvasContextType mCurrentContextType;
+  AsyncCanvasRenderer* GetAsyncCanvasRenderer();
+
+  bool mResetLayer;
   nsRefPtr<HTMLCanvasElement> mOriginalCanvas;
   nsRefPtr<PrintCallback> mPrintCallback;
-  nsCOMPtr<nsICanvasRenderingContextInternal> mCurrentContext;
   nsRefPtr<HTMLCanvasPrintState> mPrintState;
   nsTArray<WeakPtr<FrameCaptureListener>> mRequestedFrameListeners;
   nsRefPtr<RequestedFrameRefreshObserver> mRequestedFrameRefreshObserver;
+  nsRefPtr<AsyncCanvasRenderer> mAsyncCanvasRenderer;
+  nsRefPtr<OffscreenCanvas> mOffscreenCanvas;
+  nsRefPtr<HTMLCanvasElementObserver> mContextObserver;
 
 public:
   // Record whether this canvas should be write-only or not.

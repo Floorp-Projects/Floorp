@@ -5,6 +5,7 @@
 
 #include "OfflineCacheUpdateParent.h"
 
+#include "BackgroundUtils.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/ipc/URIUtils.h"
@@ -77,6 +78,7 @@ OfflineCacheUpdateParent::ActorDestroy(ActorDestroyReason why)
 nsresult
 OfflineCacheUpdateParent::Schedule(const URIParams& aManifestURI,
                                    const URIParams& aDocumentURI,
+                                   const PrincipalInfo& aLoadingPrincipalInfo,
                                    const bool& stickDocument)
 {
     LOG(("OfflineCacheUpdateParent::RecvSchedule [%p]", this));
@@ -119,9 +121,13 @@ OfflineCacheUpdateParent::Schedule(const URIParams& aManifestURI,
     if (!update) {
         update = new nsOfflineCacheUpdate();
 
+        nsCOMPtr<nsIPrincipal> loadingPrincipal =
+          PrincipalInfoToPrincipal(aLoadingPrincipalInfo, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
         // Leave aDocument argument null. Only glues and children keep 
         // document instances.
-        rv = update->Init(manifestURI, documentURI, nullptr, nullptr,
+        rv = update->Init(manifestURI, documentURI, loadingPrincipal, nullptr, nullptr,
                           mOriginAttributes.mAppId, mOriginAttributes.mInBrowser);
         NS_ENSURE_SUCCESS(rv, rv);
 

@@ -1,0 +1,34 @@
+build-clang.py
+==============
+
+A script to build clang from source.
+
+```
+usage: build-clang.py [-h] -c CONFIG [--clean]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -c CONFIG, --config CONFIG
+                        Clang configuration file
+  --clean               Clean the build directory
+```
+
+Config file format
+------------------
+
+build-clang.py accepts a JSON config format with the following fields:
+
+* llvm_revision: The LLVM SVN revision to build.
+* stages: Use 1, 2, or 3 to select different compiler stages.  The default is 3.
+* llvm_repo: SVN path to the LLVM repo.
+* clang_repo: SVN path to the Clang repo.
+* compiler_repo: SVN path to the compiler-rt repo.
+* libcxx_repo: SVN path to the libcxx repo.
+* python_path: Path to the Python 2.7 installation on the machine building clang.
+* gcc_dir: Path to the gcc toolchain installation, only required on Linux.
+* cc: Path to the bootsraping C Compiler.
+* cxx: Path to the bootsraping C++ Compiler.
+* patches: Optional list of patches to apply per platform.  Supported platforms: macosx64, linux32, linux64.  The default is Release.
+* build_type: The type of build to make.  Supported types: Release, Debug, RelWithDebInfo or MinSizeRel.
+* build_libcxx: Whether to build with libcxx.  The default is false.
+* assertions: Whether to enable LLVM assertions.  The default is false.

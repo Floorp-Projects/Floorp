@@ -119,9 +119,9 @@ function run_test() {
              .getService(Ci.nsIPermissionManager);
   let latestNow = Number(Date.now());
 
-  // The schema should be upgraded to 6, and a 'modificationTime' column should
+  // The schema should be upgraded to 9, and a 'modificationTime' column should
   // exist with all records having a value of 0.
-  do_check_eq(connection.schemaVersion, 8);
+  do_check_eq(connection.schemaVersion, 9);
 
   let select = connection.createStatement("SELECT modificationTime FROM moz_perms")
   let numMigrated = 0;
