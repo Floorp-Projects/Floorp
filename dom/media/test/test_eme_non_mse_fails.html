@@ -12,11 +12,12 @@
 <script class="testbody" type="text/javascript">
 var manager = new MediaTestManager;
 
-function DoSetMediaKeys(v)
+function DoSetMediaKeys(v, test)
 {
   var options = [{
     initDataType: "cenc",
-    videoType: test.type,
+    audioType: test.audioType,
+    videoType: test.videoType,
   }];
 
   return navigator.requestMediaKeySystemAccess("org.w3.clearkey", options)
@@ -68,7 +69,7 @@ function TestSetSrc(test, token)
     manager.finished(token);
   });
 
-  DoSetMediaKeys(v)
+  DoSetMediaKeys(v, test)
 
   .then(function() {
     v.src = test.name;
