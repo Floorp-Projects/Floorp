@@ -139,8 +139,7 @@ enum {
 namespace mozilla {
 
 enum {
-  OSXNotificationActionDisable = 0,
-  OSXNotificationActionSettings = 1,
+  OSXNotificationActionDisable = 0
 };
 
 class OSXNotificationInfo {
@@ -254,15 +253,13 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
     nsCOMPtr<nsIStringBundle> bundle;
     nsresult rv = sbs->CreateBundle("chrome://alerts/locale/alert.properties", getter_AddRefs(bundle));
     if (NS_SUCCEEDED(rv)) {
-      nsXPIDLString closeButtonTitle, actionButtonTitle, disableButtonTitle, settingsButtonTitle;
+      nsXPIDLString closeButtonTitle, actionButtonTitle, disableButtonTitle;
       bundle->GetStringFromName(NS_LITERAL_STRING("closeButton.title").get(),
                                 getter_Copies(closeButtonTitle));
       bundle->GetStringFromName(NS_LITERAL_STRING("actionButton.label").get(),
                                 getter_Copies(actionButtonTitle));
       bundle->GetStringFromName(NS_LITERAL_STRING("webActions.disable.label").get(),
                                 getter_Copies(disableButtonTitle));
-      bundle->GetStringFromName(NS_LITERAL_STRING("webActions.settings.label").get(),
-                                getter_Copies(settingsButtonTitle));
 
       notification.hasActionButton = YES;
       notification.otherButtonTitle = nsCocoaUtils::ToNSString(closeButtonTitle);
@@ -270,8 +267,7 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
       [(NSObject*)notification setValue:@(YES) forKey:@"_showsButtons"];
       [(NSObject*)notification setValue:@(YES) forKey:@"_alwaysShowAlternateActionMenu"];
       [(NSObject*)notification setValue:@[
-                                          nsCocoaUtils::ToNSString(disableButtonTitle),
-                                          nsCocoaUtils::ToNSString(settingsButtonTitle)
+                                          nsCocoaUtils::ToNSString(disableButtonTitle)
                                           ]
                                forKey:@"_alternateActionButtonTitles"];
     }
@@ -397,9 +393,6 @@ OSXNotificationCenter::OnActivate(NSString *aAlertName,
             switch (aAdditionalActionIndex) {
               case OSXNotificationActionDisable:
                 osxni->mObserver->Observe(nullptr, "alertdisablecallback", osxni->mCookie.get());
-                break;
-              case OSXNotificationActionSettings:
-                osxni->mObserver->Observe(nullptr, "alertsettingscallback", osxni->mCookie.get());
                 break;
               default:
                 NS_WARNING("Unknown NSUserNotification additional action clicked");

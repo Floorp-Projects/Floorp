@@ -59,6 +59,16 @@ function whenDelayedStartupFinished(aWindow, aCallback) {
   }, "browser-delayed-startup-finished", false);
 }
 
+function findChromeWindowByURI(aURI) {
+  let windows = Services.wm.getEnumerator(null);
+  while (windows.hasMoreElements()) {
+    let win = windows.getNext();
+    if (win.location.href == aURI)
+      return win;
+  }
+  return null;
+}
+
 function updateTabContextMenu(tab) {
   let menu = document.getElementById("tabContextMenu");
   if (!tab)
