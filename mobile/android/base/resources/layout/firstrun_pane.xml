@@ -22,6 +22,7 @@
                                              android:visibility="visible"
                                              android:layout_gravity="top"
                                              gecko:strip="@drawable/home_tab_menu_strip"
+                                             gecko:titlebarFill="true"
                                              gecko:activeTextColor="@android:color/white"
                                              gecko:inactiveTextColor="@color/divider_light" />
 
