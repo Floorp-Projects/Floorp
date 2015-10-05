@@ -8,7 +8,6 @@
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
-#include "mozilla/layers/AsyncCanvasRenderer.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/unused.h"
@@ -166,7 +165,6 @@ public:
                                                     mSize,
                                                     mImage,
                                                     nullptr,
-                                                    nullptr,
                                                     getter_AddRefs(stream),
                                                     mEncoder);
 
@@ -179,7 +177,6 @@ public:
                                              mFormat,
                                              mSize,
                                              mImage,
-                                             nullptr,
                                              nullptr,
                                              getter_AddRefs(stream),
                                              mEncoder);
@@ -237,7 +234,6 @@ ImageEncoder::ExtractData(nsAString& aType,
                           const nsAString& aOptions,
                           const nsIntSize aSize,
                           nsICanvasRenderingContextInternal* aContext,
-                          layers::AsyncCanvasRenderer* aRenderer,
                           nsIInputStream** aStream)
 {
   nsCOMPtr<imgIEncoder> encoder = ImageEncoder::GetImageEncoder(aType);
@@ -246,8 +242,9 @@ ImageEncoder::ExtractData(nsAString& aType,
   }
 
   return ExtractDataInternal(aType, aOptions, nullptr, 0, aSize, nullptr,
-                             aContext, aRenderer, aStream, encoder);
+                             aContext, aStream, encoder);
 }
+
 
 /* static */
 nsresult
@@ -344,7 +341,6 @@ ImageEncoder::ExtractDataInternal(const nsAString& aType,
                                   const nsIntSize aSize,
                                   layers::Image* aImage,
                                   nsICanvasRenderingContextInternal* aContext,
-                                  layers::AsyncCanvasRenderer* aRenderer,
                                   nsIInputStream** aStream,
                                   imgIEncoder* aEncoder)
 {
@@ -370,11 +366,6 @@ ImageEncoder::ExtractDataInternal(const nsAString& aType,
     rv = aContext->GetInputStream(encoderType.get(),
                                   nsPromiseFlatString(aOptions).get(),
                                   getter_AddRefs(imgStream));
-  } else if (aRenderer) {
-    NS_ConvertUTF16toUTF8 encoderType(aType);
-    rv = aRenderer->GetInputStream(encoderType.get(),
-                                   nsPromiseFlatString(aOptions).get(),
-                                   getter_AddRefs(imgStream));
   } else if (aImage) {
     // It is safe to convert PlanarYCbCr format from YUV to RGB off-main-thread.
     // Other image formats could have problem to convert format off-main-thread.

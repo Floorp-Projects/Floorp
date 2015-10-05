@@ -41,18 +41,22 @@ add_task(function*() {
 
   function doKeyHover(args) {
     info("Key pressed. Waiting for element to be highlighted/hovered");
+    let onHighlighterReady = toolbox.once("highlighter-ready");
+    let onPickerNodeHovered = inspector.toolbox.once("picker-node-hovered");
     testActor.synthesizeKey(args);
-    return inspector.toolbox.once("picker-node-hovered");
+    return promise.all([onHighlighterReady, onPickerNodeHovered]);
   }
 
   function moveMouseOver(selector) {
     info("Waiting for element " + selector + " to be highlighted");
+    let onHighlighterReady = toolbox.once("highlighter-ready");
+    let onPickerNodeHovered = inspector.toolbox.once("picker-node-hovered");
     testActor.synthesizeMouse({
       options: {type: "mousemove"},
       center: true,
       selector: selector
     });
-    return inspector.toolbox.once("picker-node-hovered");
+    return promise.all([onHighlighterReady, onPickerNodeHovered]);
   }
 
 });

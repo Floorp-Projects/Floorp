@@ -7,7 +7,7 @@
 // A helper actor for brower/devtools/inspector tests.
 
 let { Cc, Ci, Cu, Cr } = require("chrome");
-const {getElementFromPoint, getAdjustedQuads} = require("devtools/shared/layout/utils");
+const {getRect, getElementFromPoint, getAdjustedQuads} = require("devtools/shared/layout/utils");
 const promise = require("promise");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 var DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
@@ -511,6 +511,18 @@ const TestActor = exports.TestActor = protocol.ActorClass({
       value: RetVal("json")
     }
   }),
+
+  getNodeRect: protocol.method(Task.async(function* (selector) {
+    let node = this._querySelector(selector);
+    return getRect(this.content, node, this.content);
+  }), {
+    request: {
+      selector: Arg(0, "string")
+    },
+    response: {
+      value: RetVal("json")
+    }
+  }),
 });
 
 const TestActorFront = exports.TestActorFront = protocol.FrontClass(TestActor, {
@@ -560,19 +572,6 @@ const TestActorFront = exports.TestActorFront = protocol.FrontClass(TestActor, {
     return this.getHighlighterNodeAttribute("box-model-elements", "hidden")
       .then(value => value === null);
   },
-
-  assertHighlightedNode: Task.async(function* (selector) {
-    let {visible, content} = yield this._getBoxModelStatus();
-    let points = content.points;
-    if (visible) {
-      let x = (points.p1.x + points.p2.x + points.p3.x + points.p4.x) / 4;
-      let y = (points.p1.y + points.p2.y + points.p3.y + points.p4.y) / 4;
-
-      return this.assertElementAtPoint(x, y, selector);
-    } else {
-      return false;
-    }
-  }),
 
   /**
    * Assert that the box-model highlighter's current position corresponds to the
@@ -637,6 +636,77 @@ const TestActorFront = exports.TestActorFront = protocol.FrontClass(TestActor, {
     }
 
     return ret;
+  }),
+
+  assertHighlightedNode: Task.async(function* (selector) {
+    // Taken and tweaked from:
+    // https://github.com/iominh/point-in-polygon-extended/blob/master/src/index.js#L30-L85
+    function isLeft(p0, p1, p2) {
+      let l = ( (p1[0] - p0[0]) * (p2[1] - p0[1]) ) -
+              ( (p2[0] - p0[0]) * (p1[1] - p0[1]) );
+      return l;
+    }
+    function isInside(point, polygon) {
+      if (polygon.length === 0) {
+        return false;
+      }
+
+      var n = polygon.length;
+      var newPoints = polygon.slice(0);
+      newPoints.push(polygon[0]);
+      var wn = 0; // wn counter
+
+      // loop through all edges of the polygon
+      for (var i = 0; i < n; i++) {
+        // Accept points on the edges
+        let r = isLeft(newPoints[i], newPoints[i + 1], point);
+        if (r === 0) {
+          return true;
+        }
+        if (newPoints[i][1] <= point[1]) {
+          if (newPoints[i + 1][1] > point[1] && r > 0) {
+            wn++;
+          }
+        } else {
+          if (newPoints[i + 1][1] <= point[1] && r < 0) {
+            wn--;
+          }
+        }
+      }
+      if (wn === 0) {
+        dumpn(JSON.stringify(point) + " is outside of " + JSON.stringify(polygon));
+      }
+      // the point is outside only when this winding number wn===0, otherwise it's inside
+      return wn !== 0;
+    }
+
+    let {visible, border} = yield this._getBoxModelStatus();
+    let points = border.points;
+    if (visible) {
+      // Check that the node is within the box model
+      let { left, top, width, height } = yield this.getNodeRect(selector);
+      let right = left + width;
+      let bottom = top + height;
+
+      // Converts points dictionnary into an array
+      let list = [];
+      for(var i = 1; i <= 4; i++) {
+        let p = points["p" + i];
+        list.push([p.x, p.y]);
+      }
+      points = list;
+
+      // Check that each point of the node is within the box model
+      if (!isInside([left, top], points) ||
+          !isInside([right, top], points) ||
+          !isInside([right, bottom], points) ||
+          !isInside([left, bottom], points)) {
+        return false;
+      }
+      return true;
+    } else {
+      return false;
+    }
   }),
 
   /**

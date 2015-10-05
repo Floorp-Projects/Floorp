@@ -14,24 +14,24 @@ add_task(function*() {
   info("Starting element picker");
   yield toolbox.highlighterUtils.startPicker();
 
-  info("Selecting the simple-div1 DIV");
-  yield moveMouseOver("#simple-div2");
+  info("Selecting the #another DIV");
+  yield moveMouseOver("#another");
 
   // Testing pick-node shortcut
   info("Testing enter/return key as pick-node command");
   yield doKeyPick({key: "VK_RETURN", options: {}});
-  is(inspector.selection.nodeFront.id, "simple-div2", "The #simple-div2 node was selected. Passed.");
+  is(inspector.selection.nodeFront.id, "another", "The #another node was selected. Passed.");
 
   // Testing cancel-picker command
   info("Starting element picker again");
   yield toolbox.highlighterUtils.startPicker();
 
-  info("Selecting the simple-div1 DIV");
-  yield moveMouseOver("#simple-div1");
+  info("Selecting the ahoy DIV");
+  yield moveMouseOver("#ahoy");
 
   info("Testing escape key as cancel-picker command");
   yield doKeyStop({key: "VK_ESCAPE", options: {}});
-  is(inspector.selection.nodeFront.id, "simple-div2", "The simple-div2 DIV is still selected. Passed.");
+  is(inspector.selection.nodeFront.id, "another", "The #another DIV is still selected. Passed.");
 
   function doKeyPick(args) {
     info("Key pressed. Waiting for element to be picked");
@@ -50,12 +50,14 @@ add_task(function*() {
 
   function moveMouseOver(selector) {
     info("Waiting for element " + selector + " to be highlighted");
+    let onHighlighterReady = toolbox.once("highlighter-ready");
+    let onPickerNodeHovered = inspector.toolbox.once("picker-node-hovered");
     testActor.synthesizeMouse({
       options: {type: "mousemove"},
       center: true,
       selector: selector
     });
-    return inspector.toolbox.once("picker-node-hovered");
+    return promise.all([onHighlighterReady, onPickerNodeHovered]);
   }
 
 });

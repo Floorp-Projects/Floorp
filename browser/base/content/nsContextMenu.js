@@ -1495,9 +1495,11 @@ nsContextMenu.prototype = {
   },
 
   copyLink: function() {
+    // If we're in a view source tab, remove the view-source: prefix
+    let linkURL = this.linkURL.replace(/^view-source:/, "");
     var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
                     getService(Ci.nsIClipboardHelper);
-    clipboard.copyString(this.linkURL);
+    clipboard.copyString(linkURL);
   },
 
   ///////////////

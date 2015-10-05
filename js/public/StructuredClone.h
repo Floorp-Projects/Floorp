@@ -195,20 +195,17 @@ class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
     void clear(const JSStructuredCloneCallbacks* optionalCallbacks=nullptr, void* closure=nullptr);
 
     // Copy some memory. It will be automatically freed by the destructor.
-    bool copy(const uint64_t* data, size_t nbytes, uint32_t version=JS_STRUCTURED_CLONE_VERSION,
-              const JSStructuredCloneCallbacks* callbacks=nullptr, void* closure=nullptr);
+    bool copy(const uint64_t* data, size_t nbytes, uint32_t version=JS_STRUCTURED_CLONE_VERSION);
 
     // Adopt some memory. It will be automatically freed by the destructor.
     // data must have been allocated by the JS engine (e.g., extracted via
     // JSAutoStructuredCloneBuffer::steal).
-    void adopt(uint64_t* data, size_t nbytes, uint32_t version=JS_STRUCTURED_CLONE_VERSION,
-               const JSStructuredCloneCallbacks* callbacks=nullptr, void* closure=nullptr);
+    void adopt(uint64_t* data, size_t nbytes, uint32_t version=JS_STRUCTURED_CLONE_VERSION);
 
     // Release the buffer and transfer ownership to the caller. The caller is
     // responsible for calling JS_ClearStructuredClone or feeding the memory
     // back to JSAutoStructuredCloneBuffer::adopt.
-    void steal(uint64_t** datap, size_t* nbytesp, uint32_t* versionp=nullptr,
-               const JSStructuredCloneCallbacks** callbacks=nullptr, void** closure=nullptr);
+    void steal(uint64_t** datap, size_t* nbytesp, uint32_t* versionp=nullptr);
 
     // Abandon ownership of any transferable objects stored in the buffer,
     // without freeing the buffer itself. Useful when copying the data out into

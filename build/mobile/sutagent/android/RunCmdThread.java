@@ -222,20 +222,25 @@ public class RunCmdThread extends Thread
         int icon = R.drawable.ateamlogo;
         long when = System.currentTimeMillis();
 
-        Notification notification = new Notification(icon, tickerText, when);
-
-        notification.flags |= (Notification.FLAG_INSISTENT | Notification.FLAG_AUTO_CANCEL);
-        notification.defaults |= Notification.DEFAULT_SOUND;
-        notification.defaults |= Notification.DEFAULT_VIBRATE;
-        notification.defaults |= Notification.DEFAULT_LIGHTS;
-
         Context context = svc.getApplicationContext();
 
         // Intent to launch an activity when the extended text is clicked
         Intent intent2 = new Intent(svc, SUTAgentAndroid.class);
         PendingIntent launchIntent = PendingIntent.getActivity(context, 0, intent2, 0);
 
-        notification.setLatestEventInfo(context, tickerText, expandedText, launchIntent);
+
+        Notification notification = new Notification.Builder(context)
+            .setSmallIcon(icon)
+            .setContentTitle(tickerText)
+            .setContentText(expandedText)
+            .setContentIntent(launchIntent)
+            .setWhen(when)
+            .build();
+
+        notification.flags |= (Notification.FLAG_INSISTENT | Notification.FLAG_AUTO_CANCEL);
+        notification.defaults |= Notification.DEFAULT_SOUND;
+        notification.defaults |= Notification.DEFAULT_VIBRATE;
+        notification.defaults |= Notification.DEFAULT_LIGHTS;
 
         notificationManager.notify(1959, notification);
         }

@@ -837,6 +837,10 @@ function cleanUp() {
 
 function startBluetoothTestBase(aPermissions, aTestCaseMain) {
   ensureBluetoothManager(aPermissions)
+    .then(function() {
+      log("Wait for creating bluetooth adapter...");
+      return waitForManagerStateChanged(bluetoothManager);
+    })
     .then(aTestCaseMain)
     .then(cleanUp, function() {
       ok(false, "Unhandled rejected promise.");
@@ -885,3 +889,22 @@ function startBluetoothTest(aReenable, aTestCaseMain) {
       });
   });
 }
+
+function waitForManagerStateChanged(aManager) {
+  let deferred = Promise.defer();
+
+  aManager.onattributechanged = function(evt) {
+    for (var i in evt.attrs) {
+      switch (evt.attrs[i]) {
+        case 'defaultAdapter':
+          deferred.resolve(evt);
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  return deferred.promise;
+}
+
