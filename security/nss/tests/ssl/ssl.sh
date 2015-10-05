@@ -437,10 +437,10 @@ ssl_stapling_sub()
     start_selfserv
 
     echo "tstclnt -p ${PORT} -h ${HOSTADDR} -f -d ${P_R_CLIENTDIR} -v ${CLIENT_OPTIONS} \\"
-    echo "        -T -O -F -M 1 -V ssl3: < ${REQUEST_FILE}"
+    echo "        -c v -T -O -F -M 1 -V ssl3: < ${REQUEST_FILE}"
     rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
     ${PROFTOOL} ${BINDIR}/tstclnt -p ${PORT} -h ${HOSTADDR} -f ${CLIENT_OPTIONS} \
-	    -d ${P_R_CLIENTDIR} -v -T -O -F -M 1 -V ssl3: < ${REQUEST_FILE} \
+	    -d ${P_R_CLIENTDIR} -v -c v -T -O -F -M 1 -V ssl3: < ${REQUEST_FILE} \
 	    >${TMP}/$HOST.tmp.$$  2>&1
     ret=$?
     cat ${TMP}/$HOST.tmp.$$

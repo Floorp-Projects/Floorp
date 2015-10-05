@@ -122,7 +122,6 @@ OurVerifyData(unsigned char *buf, int len, SECKEYPublicKey *key,
     SECStatus rv;
     VFYContext *cx;
     SECOidData *sigAlgOid, *oiddata;
-    SECOidTag sigAlgTag;
     SECOidTag hashAlgTag;
     int showDigestOid=0;
 
@@ -134,8 +133,6 @@ OurVerifyData(unsigned char *buf, int len, SECKEYPublicKey *key,
     sigAlgOid = SECOID_FindOID(&sigAlgorithm->algorithm);
     if (sigAlgOid == 0)
 	return SECFailure;
-    sigAlgTag = sigAlgOid->offset;
-
 
     if (showDigestOid) {
 	oiddata = SECOID_FindOIDByTag(hashAlgTag);
@@ -388,7 +385,7 @@ int main(int argc, char **argv)
 
     SECU_RegisterDynamicOids();
     rv = SECU_PrintSignedData(stdout, &derCert, "Certificate", 0,
-			      SECU_PrintCertificate);
+			      (SECU_PPFunc)SECU_PrintCertificate);
 
     if (rv) {
 	fprintf(stderr, "%s: Unable to pretty print cert. Error: %d\n",

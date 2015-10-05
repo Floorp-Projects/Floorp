@@ -824,6 +824,14 @@ typedef CK_ULONG          CK_MECHANISM_TYPE;
 #define CKM_WTLS_SERVER_KEY_AND_MAC_DERIVE  0x000003D4
 #define CKM_WTLS_CLIENT_KEY_AND_MAC_DERIVE  0x000003D5
 
+/* TLS 1.2 mechanisms are new for v2.40 */
+#define CKM_TLS12_MASTER_KEY_DERIVE         0x000003E0
+#define CKM_TLS12_KEY_AND_MAC_DERIVE        0x000003E1
+#define CKM_TLS12_MASTER_KEY_DERIVE_DH      0x000003E2
+#define CKM_TLS12_KEY_SAFE_DERIVE           0x000003E3
+#define CKM_TLS_MAC                         0x000003E4
+#define CKM_TLS_KDF                         0x000003E5
+
 #define CKM_KEY_WRAP_LYNKS             0x00000400
 #define CKM_KEY_WRAP_SET_OAEP          0x00000401
 
@@ -1647,6 +1655,45 @@ typedef struct CK_TLS_PRF_PARAMS {
 } CK_TLS_PRF_PARAMS;
 
 typedef CK_TLS_PRF_PARAMS CK_PTR CK_TLS_PRF_PARAMS_PTR;
+
+/* TLS 1.2 is new for version 2.40 */
+typedef struct CK_TLS12_MASTER_KEY_DERIVE_PARAMS {
+  CK_SSL3_RANDOM_DATA RandomInfo;
+  CK_VERSION_PTR pVersion;
+  CK_MECHANISM_TYPE prfHashMechanism;
+} CK_TLS12_MASTER_KEY_DERIVE_PARAMS;
+
+typedef CK_TLS12_MASTER_KEY_DERIVE_PARAMS CK_PTR \
+  CK_TLS12_MASTER_KEY_DERIVE_PARAMS_PTR;
+
+typedef struct CK_TLS12_KEY_MAT_PARAMS {
+  CK_ULONG ulMacSizeInBits;
+  CK_ULONG ulKeySizeInBits;
+  CK_ULONG ulIVSizeInBits;
+  CK_BBOOL bIsExport;  /* Unused. Must be set to CK_FALSE. */
+  CK_SSL3_RANDOM_DATA RandomInfo;
+  CK_SSL3_KEY_MAT_OUT_PTR pReturnedKeyMaterial;
+  CK_MECHANISM_TYPE prfHashMechanism;
+} CK_TLS12_KEY_MAT_PARAMS;
+
+typedef CK_TLS12_KEY_MAT_PARAMS CK_PTR CK_TLS12_KEY_MAT_PARAMS_PTR;
+
+typedef struct CK_TLS_KDF_PARAMS {
+  CK_MECHANISM_TYPE prfMechanism;
+  CK_BYTE_PTR pLabel;
+  CK_ULONG ulLabelLength;
+  CK_SSL3_RANDOM_DATA RandomInfo;
+  CK_BYTE_PTR pContextData;
+  CK_ULONG ulContextDataLength;
+} CK_TLS_KDF_PARAMS;
+
+typedef struct CK_TLS_MAC_PARAMS {
+  CK_MECHANISM_TYPE prfMechanism;
+  CK_ULONG ulMacLength;
+  CK_ULONG ulServerOrClient;
+} CK_TLS_MAC_PARAMS;
+
+typedef CK_TLS_MAC_PARAMS CK_PTR CK_TLS_MAC_PARAMS_PTR;
 
 /* WTLS is new for version 2.20 */
 typedef struct CK_WTLS_RANDOM_DATA {

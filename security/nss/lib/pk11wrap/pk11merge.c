@@ -750,8 +750,7 @@ pk11_mergeCert(PK11SlotInfo *targetSlot, PK11SlotInfo *sourceSlot,
     CK_ATTRIBUTE sourceCKAID = {CKA_ID, NULL, 0};
     CK_ATTRIBUTE targetCKAID = {CKA_ID, NULL, 0};
     SECStatus lrv = SECSuccess;
-    int error;
-
+    int error = SEC_ERROR_LIBRARY_FAILURE;
 
     sourceCert = PK11_MakeCertFromHandle(sourceSlot, id, NULL);
     if (sourceCert == NULL) {
@@ -1262,7 +1261,8 @@ pk11_mergeByObjectIDs(PK11SlotInfo *targetSlot, PK11SlotInfo *sourceSlot,
 		PK11MergeLog *log, void *targetPwArg, void *sourcePwArg)
 {
     SECStatus rv = SECSuccess;
-    int error, i;
+    int error = SEC_ERROR_LIBRARY_FAILURE;
+    int i;
     
     for (i=0; i < count; i++) {
 	/* try to update the entire database. On failure, keep going,
@@ -1326,7 +1326,8 @@ PK11_MergeTokens(PK11SlotInfo *targetSlot, PK11SlotInfo *sourceSlot,
 		PK11MergeLog *log, void *targetPwArg, void *sourcePwArg)
 {
     SECStatus rv = SECSuccess, lrv = SECSuccess;
-    int error, count = 0;
+    int error = SEC_ERROR_LIBRARY_FAILURE;
+    int count = 0;
     CK_ATTRIBUTE search[2];
     CK_OBJECT_HANDLE *objectIDs = NULL;
     CK_BBOOL ck_true = CK_TRUE;

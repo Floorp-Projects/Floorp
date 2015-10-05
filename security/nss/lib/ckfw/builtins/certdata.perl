@@ -11,7 +11,6 @@ my $o;
 my @objects = ();
 my @objsize;
 
-$constants{CKO_DATA} = "static const CK_OBJECT_CLASS cko_data = CKO_DATA;\n";
 $constants{CK_TRUE} = "static const CK_BBOOL ck_true = CK_TRUE;\n";
 $constants{CK_FALSE} = "static const CK_BBOOL ck_false = CK_FALSE;\n";
 

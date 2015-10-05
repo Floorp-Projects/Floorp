@@ -263,15 +263,11 @@ pkix_pl_LdapRequest_Destroy(
         PKIX_PL_Object *object,
         void *plContext)
 {
-        PKIX_PL_LdapRequest *ldapRq = NULL;
-
         PKIX_ENTER(LDAPREQUEST, "pkix_pl_LdapRequest_Destroy");
         PKIX_NULLCHECK_ONE(object);
 
         PKIX_CHECK(pkix_CheckType(object, PKIX_LDAPREQUEST_TYPE, plContext),
                     PKIX_OBJECTNOTLDAPREQUEST);
-
-        ldapRq = (PKIX_PL_LdapRequest *)object;
 
         /*
          * All dynamic fields in an LDAPRequest are allocated

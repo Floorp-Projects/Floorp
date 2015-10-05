@@ -74,11 +74,11 @@ pkix_CertStore_Hashcode(
                    PKIX_CERTSTOREHASHCODEFAILED);
         }
 
-        *pHashcode = (PKIX_UInt32) certStore->certCallback +
-                     (PKIX_UInt32) certStore->crlCallback +
-                     (PKIX_UInt32) certStore->certContinue +
-                     (PKIX_UInt32) certStore->crlContinue +
-                     (PKIX_UInt32) certStore->trustCallback +
+        *pHashcode = (PKIX_UInt32)((char *)certStore->certCallback - (char *)NULL) +
+                     (PKIX_UInt32)((char *)certStore->crlCallback - (char *)NULL) +
+                     (PKIX_UInt32)((char *)certStore->certContinue - (char *)NULL) +
+                     (PKIX_UInt32)((char *)certStore->crlContinue - (char *)NULL) +
+                     (PKIX_UInt32)((char *)certStore->trustCallback - (char *)NULL) +
                      (tempHash << 7);
 
 cleanup:

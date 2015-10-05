@@ -147,7 +147,7 @@ pkix_OcspChecker_CheckLocal(
         PKIX_UInt32 methodFlags,
         PKIX_Boolean chainVerificationState,
         PKIX_RevocationStatus *pRevStatus,
-        PKIX_UInt32 *pReasonCode,
+        CERTCRLEntryReasonCode *pReasonCode,
         void *plContext)
 {
         PKIX_PL_OcspCertID    *cid = NULL;
@@ -222,7 +222,7 @@ pkix_OcspChecker_CheckExternal(
         PKIX_ProcessingParams *procParams,
         PKIX_UInt32 methodFlags,
         PKIX_RevocationStatus *pRevStatus,
-        PKIX_UInt32 *pReasonCode,
+        CERTCRLEntryReasonCode *pReasonCode,
         void **pNBIOContext,
         void *plContext)
 {

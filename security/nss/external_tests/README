@@ -1,31 +1,15 @@
 GTest-based Unit Tests
 
-This directory contains GTest-based unit tests for NSS.
+This directory contains GTest-based unit tests for NSS libssl.
 
-Currently, these are only loopback-type tests of libsssl,
-but could be expanded to other types of tests. To make these
-work do:
+These aren't built by default, because they require C++.
+To build them, set ``NSS_BUILD_GTESTS=1''
 
-- Set NSS_BUILD_GTESTS=1 before starting your build
+Once built, they are run as part of running ``test/all.sh''
+You can run just the GTests by running ``tests/ssl_gtests/ssl_gtests.sh''
 
-- cd tests/
-
-- Set NSS_TESTS=ssl_gtests and NSS_CYCLES=standard
-
-- run ./all.sh
-
-This will run the certutil tests (generating a test db) and
-will finalize with a call to the ssl_gtest
-
-You should be able to run the unit tests manually as:
-
-  ssl_gtest -d ${SSLGTESTDIR}
-
-Where $SSLGTESTDIR is a directory with a database containing:
- - an RSA certificate called server (with its private key)
- - an ECDSA certificate called ecdsa (with its private key)
-
-A directory like this is created by ./all.sh and can be found
-in a directory named something like
+They can be run standalone or under a debugger by invoking the ssl_gtest
+executable with a ``-d'' option pointing to the directory created by either
+of the above options.  You can find that in
 
   tests_results/security/${hostname}.${NUMBER}/ssl_gtests

@@ -41,12 +41,12 @@ struct _DataBuffer;
 
 typedef struct _DataBufferList {
   struct _DataBuffer *first,*last;
-  int size;
+  unsigned int size;
   int isEncrypted;
   unsigned char * msgBuf;
-  int             msgBufOffset;
-  int             msgBufSize;
-  int             hMACsize;
+  unsigned int msgBufOffset;
+  unsigned int msgBufSize;
+  unsigned int hMACsize;
 } DataBufferList;
 
 typedef struct _DataBuffer {
@@ -566,7 +566,7 @@ void print_sslv2(DataBufferList *s, unsigned char *recordBuf, unsigned int recor
 	       (PRUint32)(GET_SHORT((chv2->rndlength))),
 	       (PRUint32)(GET_SHORT((chv2->rndlength))));
     PR_fprintf(PR_STDOUT,"           cipher-suites = { \n");
-    for (p=0;p<GET_SHORT((chv2->cslength));p+=3) {
+    for (p=0;p<(PRUint32)GET_SHORT((chv2->cslength));p+=3) {
       PRUint32 cs_int    = GET_24((&chv2->csuites[p]));
       const char *cs_str = V2CipherString(cs_int);
 
@@ -575,17 +575,17 @@ void print_sslv2(DataBufferList *s, unsigned char *recordBuf, unsigned int recor
     }
     q = p;
     PR_fprintf(PR_STDOUT,"                }\n");
-    if (chv2->sidlength) {
+    if (GET_SHORT((chv2->sidlength))) {
       PR_fprintf(PR_STDOUT,"           session-id = { ");
-      for (p=0;p<GET_SHORT((chv2->sidlength));p+=2) {
+      for (p=0;p<(PRUint32)GET_SHORT((chv2->sidlength));p+=2) {
 	PR_fprintf(PR_STDOUT,"0x%04x ",(PRUint32)(GET_SHORT((&chv2->csuites[p+q]))));
       }
     }
     q += p;
     PR_fprintf(PR_STDOUT,"}\n");
-    if (chv2->rndlength) {
+    if (GET_SHORT((chv2->rndlength))) {
       PR_fprintf(PR_STDOUT,"           challenge = { ");
-      for (p=0;p<GET_SHORT((chv2->rndlength));p+=2) {
+      for (p=0;p<(PRUint32)GET_SHORT((chv2->rndlength));p+=2) {
 	PR_fprintf(PR_STDOUT,"0x%04x ",(PRUint32)(GET_SHORT((&chv2->csuites[p+q]))));
       }
       PR_fprintf(PR_STDOUT,"}\n");
@@ -978,7 +978,7 @@ void print_ssl3_handshake(unsigned char *recordBuf,
 {
   struct sslhandshake sslh; 
   unsigned char *     hsdata;  
-  int                 offset=0;
+  unsigned int offset=0;
 
   PR_fprintf(PR_STDOUT,"   handshake {\n");
 
@@ -1365,7 +1365,7 @@ void print_ssl3_handshake(unsigned char *recordBuf,
     offset += sslh.length + 4; 
   } /* while */
   if (offset < recordLen) { /* stuff left over */
-    int newMsgLen = recordLen - offset;
+    unsigned int newMsgLen = recordLen - offset;
     if (!s->msgBuf) {
       s->msgBuf = PORT_Alloc(newMsgLen);
       if (!s->msgBuf) {

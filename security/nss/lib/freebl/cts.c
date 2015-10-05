@@ -185,7 +185,7 @@ CTS_DecryptUpdate(CTSContext *cts, unsigned char *outbuf,
     unsigned char lastBlock[MAX_BLOCK_SIZE];
     const unsigned char *tmp;
     unsigned int tmpLen;
-    int fullblocks, pad;
+    unsigned int fullblocks, pad;
     unsigned int i;
     SECStatus rv;
 

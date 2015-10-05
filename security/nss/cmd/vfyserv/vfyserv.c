@@ -510,7 +510,7 @@ main(int argc, char **argv)
 		int  cipher;
 
 		if (ndx == ':') {
-		    int ctmp;
+		    int ctmp = 0;
 
 		    cipher = 0;
 		    HEXCHAR_TO_INT(*cipherString, ctmp)

@@ -205,7 +205,7 @@ DH_Derive(SECItem *publicValue,
 {
     mp_int p, Xa, Yb, ZZ, psub1;
     mp_err err = MP_OKAY;
-    int len = 0;
+    unsigned int len = 0;
     unsigned int nb;
     unsigned char *secret = NULL;
     if (!publicValue || !prime || !privateValue || !derivedSecret) {
@@ -252,6 +252,24 @@ DH_Derive(SECItem *publicValue,
         err = MP_BADARG;
         goto cleanup;
     }
+
+    /*
+     * We check to make sure that ZZ is not equal to 1 or -1 mod p.
+     * This helps guard against small subgroup attacks, since an attacker
+     * using a subgroup of size N will produce 1 or -1 with probability 1/N.
+     * When the protocol is executed within a properly large subgroup, the
+     * probability of this result will be negligibly small.  For example,
+     * with a strong prime of the form 2p+1, the probability will be 1/p.
+     *
+     * We return MP_BADARG because this is probably the result of a bad
+     * public value or a bad prime having been provided.
+     */
+    if (mp_cmp_d(&ZZ, 1) == 0 ||
+        mp_cmp(&ZZ, &psub1) == 0) {
+        err = MP_BADARG;
+        goto cleanup;
+    }
+
     /* allocate a buffer which can hold the entire derived secret. */
     secret = PORT_Alloc(len);
     /* grab the derived secret */

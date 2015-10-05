@@ -175,7 +175,7 @@ main(int argc, char **argv)
     PRFileDesc *inFile;
     char *keyName = NULL;
     CERTCertDBHandle *certHandle;
-    CERTCertificate *cert;
+    CERTCertificate *cert = NULL;
     PLOptState *optstate;
     PLOptStatus status;
     SECStatus rv;

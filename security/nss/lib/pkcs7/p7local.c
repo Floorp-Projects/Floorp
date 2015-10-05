@@ -397,7 +397,7 @@ sec_PKCS7Decrypt (sec_PKCS7CipherObject *obj, unsigned char *output,
 		  const unsigned char *input, unsigned int input_len,
 		  PRBool final)
 {
-    int blocks, bsize, pcount, padsize;
+    unsigned int blocks, bsize, pcount, padsize;
     unsigned int max_needed, ifraglen, ofraglen, output_len;
     unsigned char *pbuf;
     SECStatus rv;

@@ -112,7 +112,7 @@ typedef void (*SFTKBegin)(void *);
 typedef SECStatus (*SFTKCipher)(void *,void *,unsigned int *,unsigned int,
 					void *, unsigned int);
 typedef SECStatus (*SFTKVerify)(void *,void *,unsigned int,void *,unsigned int);
-typedef void (*SFTKHash)(void *,void *,unsigned int);
+typedef void (*SFTKHash)(void *,const void *,unsigned int);
 typedef void (*SFTKEnd)(void *,void *,unsigned int *,unsigned int);
 typedef void (*SFTKFree)(void *);
 
@@ -724,8 +724,8 @@ sftk_MACConstantTimeCtx* sftk_HMACConstantTime_New(
 	CK_MECHANISM_PTR mech, SFTKObject *key);
 sftk_MACConstantTimeCtx* sftk_SSLv3MACConstantTime_New(
 	CK_MECHANISM_PTR mech, SFTKObject *key);
-void sftk_HMACConstantTime_Update(void *pctx, void *data, unsigned int len);
-void sftk_SSLv3MACConstantTime_Update(void *pctx, void *data, unsigned int len);
+void sftk_HMACConstantTime_Update(void *pctx, const void *data, unsigned int len);
+void sftk_SSLv3MACConstantTime_Update(void *pctx, const void *data, unsigned int len);
 void sftk_MACConstantTime_EndHash(
 	void *pctx, void *out, unsigned int *outLength, unsigned int maxLength);
 void sftk_MACConstantTime_DestroyContext(void *pctx, PRBool);
@@ -738,7 +738,8 @@ extern CK_RV
 sftk_TLSPRFInit(SFTKSessionContext *context, 
 		  SFTKObject *        key, 
 		  CK_KEY_TYPE         key_type,
-		  HASH_HashType       hash_alg);
+		  HASH_HashType       hash_alg,
+		  unsigned int        out_len);
 
 SEC_END_PROTOS
 

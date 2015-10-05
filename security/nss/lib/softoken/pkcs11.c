@@ -393,6 +393,7 @@ static const struct mechanismList mechanisms[] = {
      {CKM_SHA512_HMAC,		{1, 128, CKF_SN_VR},		PR_TRUE},
      {CKM_SHA512_HMAC_GENERAL,	{1, 128, CKF_SN_VR},		PR_TRUE},
      {CKM_TLS_PRF_GENERAL,	{0, 512, CKF_SN_VR},		PR_FALSE},
+     {CKM_TLS_MAC,		{0, 512, CKF_SN_VR},		PR_FALSE},
      {CKM_NSS_TLS_PRF_GENERAL_SHA256,
 				{0, 512, CKF_SN_VR},		PR_FALSE},
      /* ------------------------- HKDF Operations -------------------------- */
@@ -462,14 +463,21 @@ static const struct mechanismList mechanisms[] = {
      {CKM_SHA384_KEY_DERIVATION,	{ 0, 48, CKF_DERIVE},   PR_FALSE}, 
      {CKM_SHA512_KEY_DERIVATION,	{ 0, 64, CKF_DERIVE},   PR_FALSE}, 
      {CKM_TLS_MASTER_KEY_DERIVE,	{48, 48, CKF_DERIVE},   PR_FALSE}, 
+     {CKM_TLS12_MASTER_KEY_DERIVE,	{48, 48, CKF_DERIVE},   PR_FALSE}, 
      {CKM_NSS_TLS_MASTER_KEY_DERIVE_SHA256,
 					{48, 48, CKF_DERIVE},	PR_FALSE},
      {CKM_TLS_MASTER_KEY_DERIVE_DH,	{8, 128, CKF_DERIVE},   PR_FALSE}, 
+     {CKM_TLS12_MASTER_KEY_DERIVE_DH,	{8, 128, CKF_DERIVE},   PR_FALSE}, 
      {CKM_NSS_TLS_MASTER_KEY_DERIVE_DH_SHA256,
 					{8, 128, CKF_DERIVE},	PR_FALSE},
      {CKM_TLS_KEY_AND_MAC_DERIVE,	{48, 48, CKF_DERIVE},   PR_FALSE}, 
+     {CKM_TLS12_KEY_AND_MAC_DERIVE,	{48, 48, CKF_DERIVE},   PR_FALSE}, 
      {CKM_NSS_TLS_KEY_AND_MAC_DERIVE_SHA256,
 					{48, 48, CKF_DERIVE},	PR_FALSE},
+     {CKM_NSS_TLS_EXTENDED_MASTER_KEY_DERIVE,
+                                        {48,128, CKF_DERIVE},   PR_FALSE},
+     {CKM_NSS_TLS_EXTENDED_MASTER_KEY_DERIVE_DH,
+                                        {48,128, CKF_DERIVE},   PR_FALSE},
      /* ---------------------- PBE Key Derivations  ------------------------ */
      {CKM_PBE_MD2_DES_CBC,		{8, 8, CKF_DERIVE},   PR_TRUE},
      {CKM_PBE_MD5_DES_CBC,		{8, 8, CKF_DERIVE},   PR_TRUE},
@@ -1742,7 +1750,7 @@ NSSLOWKEYPublicKey *sftk_GetPubKey(SFTKObject *object,CK_KEY_TYPE key_type,
 	crv = sftk_Attribute2SSecItem(arena,&pubKey->u.ec.publicValue,
 	                              object,CKA_EC_POINT);
 	if (crv == CKR_OK) {
-	    int keyLen,curveLen;
+	    unsigned int keyLen,curveLen;
 
 	    curveLen = (pubKey->u.ec.ecParams.fieldID.size +7)/8;
 	    keyLen = (2*curveLen)+1;
@@ -2217,7 +2225,7 @@ CK_RV C_GetFunctionList(CK_FUNCTION_LIST_PTR *pFunctionList)
 static PLHashNumber
 sftk_HashNumber(const void *key)
 {
-    return (PLHashNumber) key;
+    return (PLHashNumber)((char *)key - (char *)NULL);
 }
 
 /*
@@ -2598,7 +2606,7 @@ CK_RV sftk_CloseAllSessions(SFTKSlot *slot, PRBool logout)
 		--slot->sessionCount;
 		SKIP_AFTER_FORK(PZ_Unlock(slot->slotLock));
 		if (session->info.flags & CKF_RW_SESSION) {
-		    PR_ATOMIC_DECREMENT(&slot->rwSessionCount);
+		    (void)PR_ATOMIC_DECREMENT(&slot->rwSessionCount);
 		}
 	    } else {
 		SKIP_AFTER_FORK(PZ_Unlock(lock));
@@ -3140,11 +3148,11 @@ extern const char __nss_softokn_version[];
 /* NSC_GetInfo returns general information about Cryptoki. */
 CK_RV  NSC_GetInfo(CK_INFO_PTR pInfo)
 {
-    volatile char c; /* force a reference that won't get optimized away */
+#define NSS_VERSION_VARIABLE __nss_softokn_version
+#include "verref.h"
 
     CHECK_FORK();
     
-    c = __nss_softokn_version[0];
     pInfo->cryptokiVersion.major = 2;
     pInfo->cryptokiVersion.minor = 20;
     PORT_Memcpy(pInfo->manufacturerID,manufacturerID,32);
@@ -3715,7 +3723,7 @@ CK_RV NSC_OpenSession(CK_SLOT_ID slotID, CK_FLAGS flags,
     ++slot->sessionCount;
     PZ_Unlock(slot->slotLock);
     if (session->info.flags & CKF_RW_SESSION) {
-	PR_ATOMIC_INCREMENT(&slot->rwSessionCount);
+	(void)PR_ATOMIC_INCREMENT(&slot->rwSessionCount);
     }
 
     do {
@@ -3783,7 +3791,7 @@ CK_RV NSC_CloseSession(CK_SESSION_HANDLE hSession)
 	    sftk_freeDB(handle);
 	}
 	if (session->info.flags & CKF_RW_SESSION) {
-	    PR_ATOMIC_DECREMENT(&slot->rwSessionCount);
+	    (void)PR_ATOMIC_DECREMENT(&slot->rwSessionCount);
 	}
     }
 
@@ -4001,7 +4009,7 @@ static CK_RV sftk_CreateNewSlot(SFTKSlot *slot, CK_OBJECT_CLASS class,
     PRBool isValidFIPSUserSlot = PR_FALSE;
     PRBool isValidSlot = PR_FALSE;
     PRBool isFIPS = PR_FALSE;
-    unsigned long moduleIndex;
+    unsigned long moduleIndex = NSC_NON_FIPS_MODULE;
     SFTKAttribute *attribute;
     sftk_parameters paramStrings;
     char *paramString;
@@ -4510,7 +4518,7 @@ sftk_emailhack(SFTKSlot *slot, SFTKDBHandle *handle,
 {
     PRBool isCert = PR_FALSE;
     int emailIndex = -1;
-    int i;
+    unsigned int i;
     SFTKSearchResults smime_search;
     CK_ATTRIBUTE smime_template[2];
     CK_OBJECT_CLASS smime_class = CKO_NETSCAPE_SMIME;

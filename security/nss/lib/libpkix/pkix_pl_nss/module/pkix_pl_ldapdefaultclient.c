@@ -359,7 +359,7 @@ pkix_pl_LdapDefaultClient_VerifyBindResponse(
                 "pkix_pl_LdapDefaultClient_VerifyBindResponse");
         PKIX_NULLCHECK_TWO(client, client->rcvBuf);
 
-        decode.data = (void *)(client->rcvBuf);
+        decode.data = (unsigned char *)(client->rcvBuf);
         decode.len = bufLen;
 
         PKIX_CHECK(pkix_pl_LdapDefaultClient_DecodeBindResponse

@@ -10,7 +10,7 @@
 #include "keyhi.h"
 #include "cryptohi.h"
 
-#define CRMF_DEFAULT_ALLOC_SIZE 1024
+#define CRMF_DEFAULT_ALLOC_SIZE 1024U
 
 SECStatus
 crmf_init_encoder_callback_arg (struct crmfEncoderArg *encoderArg, 
@@ -33,7 +33,6 @@ crmf_init_encoder_callback_arg (struct crmfEncoderArg *encoderArg,
 SECStatus 
 CRMF_CertReqMsgSetRAVerifiedPOP(CRMFCertReqMsg *inCertReqMsg)
 {
-    SECItem               *dummy;
     CRMFProofOfPossession *pop;
     PLArenaPool           *poolp;
     void                  *mark;
@@ -52,9 +51,9 @@ CRMF_CertReqMsgSetRAVerifiedPOP(CRMFCertReqMsg *inCertReqMsg)
     pop->popChoice.raVerified.data = NULL;
     pop->popChoice.raVerified.len  = 0;
     inCertReqMsg->pop = pop;
-    dummy = SEC_ASN1EncodeItem(poolp, &(inCertReqMsg->derPOP),
-			       &(pop->popChoice.raVerified),
-			       CRMFRAVerifiedTemplate);
+    (void)SEC_ASN1EncodeItem(poolp, &(inCertReqMsg->derPOP),
+                             &(pop->popChoice.raVerified),
+                             CRMFRAVerifiedTemplate);
     return SECSuccess;
  loser:
     PORT_ArenaRelease(poolp, mark);
