@@ -404,6 +404,8 @@ loop.conversationViews = (function(mozL10n) {
         case FAILURE_DETAILS.TOS_FAILURE:
           return mozL10n.get("tos_failure_message",
             { clientShortname: mozL10n.get("clientShortname2") });
+        case FAILURE_DETAILS.ICE_FAILED:
+          return mozL10n.get("ice_failure_message");
         default:
           return mozL10n.get("generic_failure_message");
       }

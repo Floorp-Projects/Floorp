@@ -652,6 +652,17 @@ describe("loop.standaloneRoomViews", function() {
           TestUtils.findRenderedComponentWithType(view,
             loop.standaloneRoomViews.StandaloneRoomFailureView);
         });
+
+        it("should display ICE failure message", function() {
+          activeRoomStore.setStoreState({
+            roomState: ROOM_STATES.FAILED,
+            failureReason: FAILURE_DETAILS.ICE_FAILED
+          });
+
+          var ice_failed_message = view.getDOMNode().querySelector(".failed-room-message").textContent;
+          expect(ice_failed_message).eql("rooms_ice_failure_message");
+          expect(view.getDOMNode().querySelector(".btn-info")).not.eql(null);
+        });
       });
 
       describe("Join button", function() {
