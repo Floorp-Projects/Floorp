@@ -338,6 +338,9 @@ IsH264ContentType(const nsAString& aContentType);
 bool
 IsAACContentType(const nsAString& aContentType);
 
+bool
+IsAACCodecString(const nsAString& aCodec);
+
 } // end namespace mozilla
 
 #endif
