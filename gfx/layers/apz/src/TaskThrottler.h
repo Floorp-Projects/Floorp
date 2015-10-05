@@ -9,9 +9,10 @@
 
 #include <stdint.h>                     // for uint32_t
 #include "base/task.h"                  // for CancelableTask
-#include "mozilla/TimeStamp.h"          // for TimeDuration, TimeStamp
-#include "mozilla/RollingMean.h"        // for RollingMean
+#include "mozilla/Monitor.h"            // for Monitor
 #include "mozilla/mozalloc.h"           // for operator delete
+#include "mozilla/RollingMean.h"        // for RollingMean
+#include "mozilla/TimeStamp.h"          // for TimeDuration, TimeStamp
 #include "mozilla/UniquePtr.h"          // for UniquePtr
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsISupportsImpl.h"            // for NS_INLINE_DECL_THREADSAFE_REFCOUNTING
@@ -95,6 +96,7 @@ public:
   void SetMaxDurations(uint32_t aMaxDurations);
 
 private:
+  mutable Monitor mMonitor;
   bool mOutstanding;
   UniquePtr<CancelableTask> mQueuedTask;
   TimeStamp mStartTime;
@@ -103,7 +105,11 @@ private:
   nsCOMPtr<nsITimer> mTimer;
 
   ~TaskThrottler();
-  void RunQueuedTask(const TimeStamp& aTimeStamp);
+  void RunQueuedTask(const TimeStamp& aTimeStamp,
+                     const MonitorAutoLock& aProofOfLock);
+  void CancelPendingTask(const MonitorAutoLock& aProofOfLock);
+  TimeDuration TimeSinceLastRequest(const TimeStamp& aTimeStamp,
+                                    const MonitorAutoLock& aProofOfLock);
 };
 
 } // namespace layers
