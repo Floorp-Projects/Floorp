@@ -25,10 +25,12 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 public final class IntentHelper implements GeckoEventListener,
                                            NativeEventListener {
@@ -50,6 +52,8 @@ public final class IntentHelper implements GeckoEventListener,
     private static String EXTRA_BROWSER_FALLBACK_URL = "browser_fallback_url";
 
     /** A partial URI to an error page - the encoded error URI should be appended before loading. */
+    private static final String GENERIC_URI_PREFIX = "about:neterror?e=generic&u=";
+    private static final String MALFORMED_URI_PREFIX = "about:neterror?e=malformedURI&u=";
     private static String UNKNOWN_PROTOCOL_URI_PREFIX = "about:neterror?e=unknownProtocolFound&u=";
 
     private static IntentHelper instance;
@@ -184,7 +188,22 @@ public final class IntentHelper implements GeckoEventListener,
         //   https://developer.chrome.com/multidevice/android/intents
         if (intent.hasExtra(EXTRA_BROWSER_FALLBACK_URL)) {
             final String fallbackUrl = intent.getStringExtra(EXTRA_BROWSER_FALLBACK_URL);
-            callback.sendError(fallbackUrl);
+            String urlToLoad;
+            try {
+                final String anyCaseScheme = new URI(fallbackUrl).getScheme();
+                final String scheme = (anyCaseScheme == null) ? null : anyCaseScheme.toLowerCase(Locale.US);
+                if ("http".equals(scheme) || "https".equals(scheme)) {
+                    urlToLoad = fallbackUrl;
+                } else {
+                    Log.w(LOGTAG, "Fallback URI uses unsupported scheme: " + scheme);
+                    urlToLoad = GENERIC_URI_PREFIX + fallbackUrl;
+                }
+            } catch (final URISyntaxException e) {
+                // Do not include Exception to avoid leaking uris.
+                Log.w(LOGTAG, "Exception parsing fallback URI");
+                urlToLoad = MALFORMED_URI_PREFIX + fallbackUrl;
+            }
+            callback.sendError(urlToLoad);
 
         } else if (intent.getPackage() != null) {
             // Note on alternative flows: we could get the intent package from a component, however, for
