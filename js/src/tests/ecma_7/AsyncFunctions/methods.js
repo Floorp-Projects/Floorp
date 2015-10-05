@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+var test = `
+
 var Promise = ShellPromise;
 
 class X {
@@ -54,3 +56,10 @@ Promise.all([
   if (typeof reportCompare === "function")
       reportCompare(true, true);
 });
+
+`;
+
+if (classesEnabled() && asyncFunctionsEnabled())
+    eval(test);
+else if (typeof reportCompare === 'function')
+    reportCompare(0,0,"OK");
