@@ -756,7 +756,7 @@ P12U_ListPKCS12File(char *in_file, PK11SlotInfo *slot,
 		    } else 
                     if (SECU_PrintSignedData(stdout, dip->der,
                             (dip->hasKey) ? "(has private key)" : "",
-                             0, SECU_PrintCertificate) != 0) {
+                             0, (SECU_PPFunc)SECU_PrintCertificate) != 0) {
                         SECU_PrintError(progName,"PKCS12 print cert bag failed");
                     }
                     if (dip->friendlyName != NULL) {

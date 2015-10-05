@@ -36,11 +36,12 @@ jar_inflate_memory(unsigned int method, long *length, long expected_out_len,
                    char **data);
 
 static int 
-jar_physical_extraction(JAR_FILE fp, char *outpath, long offset, long length);
+jar_physical_extraction(JAR_FILE fp, char *outpath, unsigned long offset,
+                        unsigned long length);
 
 static int 
-jar_physical_inflate(JAR_FILE fp, char *outpath, long offset, long length, 
-                     unsigned int method);
+jar_physical_inflate(JAR_FILE fp, char *outpath, unsigned long offset,
+                     unsigned long length, unsigned int method);
 
 static int 
 jar_verify_extract(JAR *jar, char *path, char *physical_path);
@@ -74,6 +75,10 @@ static int
 dostime(char *time, const char *s);
 
 #ifdef NSS_X86_OR_X64
+/* The following macros throw up warnings. */
+#if defined(__GNUC__) && !defined(NSS_NO_GCC48)
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#endif
 #define x86ShortToUint32(ii)   ((const PRUint32)*((const PRUint16 *)(ii)))
 #define x86LongToUint32(ii)    (*(const PRUint32 *)(ii))
 #else
@@ -241,7 +246,8 @@ JAR_extract(JAR *jar, char *path, char *outpath)
 #define CHUNK 32768
 
 static int 
-jar_physical_extraction(JAR_FILE fp, char *outpath, long offset, long length)
+jar_physical_extraction(JAR_FILE fp, char *outpath, unsigned long offset,
+                        unsigned long length)
 {
     JAR_FILE out;
     char *buffer = (char *)PORT_ZAlloc(CHUNK);
@@ -251,7 +257,7 @@ jar_physical_extraction(JAR_FILE fp, char *outpath, long offset, long length)
 	return JAR_ERR_MEMORY;
 
     if ((out = JAR_FOPEN (outpath, "wb")) != NULL) {
-	long at = 0;
+	unsigned long at = 0;
 
 	JAR_FSEEK (fp, offset, (PRSeekWhence)0);
 	while (at < length) {
@@ -289,7 +295,7 @@ jar_physical_extraction(JAR_FILE fp, char *outpath, long offset, long length)
 #define OCHUNK 32768
 
 static int 
-jar_physical_inflate(JAR_FILE fp, char *outpath, long offset, long length, 
+jar_physical_inflate(JAR_FILE fp, char *outpath, unsigned long offset, unsigned long length,
                      unsigned int method)
 {
     char *inbuf, *outbuf;
@@ -315,11 +321,11 @@ jar_physical_inflate(JAR_FILE fp, char *outpath, long offset, long length,
     }
 
     if ((out = JAR_FOPEN (outpath, "wb")) != NULL) {
-	long at = 0;
+	unsigned long at = 0;
 
 	JAR_FSEEK (fp, offset, (PRSeekWhence)0);
 	while (at < length) {
-	    long chunk = (at + ICHUNK <= length) ? ICHUNK : length - at;
+	    unsigned long chunk = (at + ICHUNK <= length) ? ICHUNK : length - at;
 	    unsigned long tin;
 
 	    if (JAR_FREAD (fp, inbuf, chunk) != chunk) {
@@ -353,7 +359,7 @@ jar_physical_inflate(JAR_FILE fp, char *outpath, long offset, long length,
 		    return JAR_ERR_CORRUPT;
 		}
 		ochunk = zs.total_out - prev_total;
-		if (JAR_FWRITE (out, outbuf, ochunk) < ochunk) {
+		if (JAR_FWRITE (out, outbuf, ochunk) < (long)ochunk) {
 		    /* most likely a disk full error */
 		    status = JAR_ERR_DISK;
 		    break;
@@ -820,8 +826,7 @@ jar_listtar(JAR *jar, JAR_FILE fp)
     char *s;
     JAR_Physical *phy;
     long pos = 0L;
-    long sz, mode;
-    time_t when;
+    long sz;
     union TarEntry tarball;
 
     while (1) {
@@ -833,9 +838,7 @@ jar_listtar(JAR *jar, JAR_FILE fp)
 	if (!*tarball.val.filename)
 	    break;
 
-	when = octalToLong (tarball.val.time);
 	sz   = octalToLong (tarball.val.size);
-	mode = octalToLong (tarball.val.mode);
 
 	/* Tag the end of filename */
 	s = tarball.val.filename;

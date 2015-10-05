@@ -25,8 +25,11 @@ static void Usage(char *progName)
 	    "Usage:  %s [-t type] [-a] [-i input] [-o output] [-w] [-u]\n",
 	    progName);
     fprintf(stderr, "Pretty prints a file containing ASN.1 data in DER or ascii format.\n");
-    fprintf(stderr, "%-14s Specify input and display type: %s (sk),\n",
-	    "-t type", SEC_CT_PRIVATE_KEY);
+    fprintf(stderr, "%-14s Specify input and display type:", "-t type");
+#ifdef HAVE_EPV_TEMPLATE
+    fprintf(stderr, " %s (sk),", SEC_CT_PRIVATE_KEY);
+#endif
+    fprintf(stderr, "\n");
     fprintf(stderr, "%-14s %s (pk), %s (c), %s (cr),\n", "", SEC_CT_PUBLIC_KEY,
 	    SEC_CT_CERTIFICATE, SEC_CT_CERTIFICATE_REQUEST);
     fprintf(stderr, "%-14s %s (ci), %s (p7), %s or %s (n).\n", "", SEC_CT_CERTIFICATE_ID,
@@ -136,7 +139,7 @@ int main(int argc, char **argv)
     if (PORT_Strcmp(typeTag, SEC_CT_CERTIFICATE) == 0 ||
         PORT_Strcmp(typeTag, "c") == 0) {
 	rv = SECU_PrintSignedData(outFile, &data, "Certificate", 0,
-			     SECU_PrintCertificate);
+			     (SECU_PPFunc)SECU_PrintCertificate);
     } else if (PORT_Strcmp(typeTag, SEC_CT_CERTIFICATE_ID) == 0 ||
                PORT_Strcmp(typeTag, "ci") == 0) {
         rv = SECU_PrintSignedContent(outFile, &data, 0, 0,

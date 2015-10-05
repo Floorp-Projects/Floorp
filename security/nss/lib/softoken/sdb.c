@@ -689,7 +689,7 @@ sdb_FindObjectsInit(SDB *sdb, const CK_ATTRIBUTE *template, CK_ULONG count,
     char *join="";
     int sqlerr = SQLITE_OK;
     CK_RV error = CKR_OK;
-    int i;
+    unsigned int i;
 
     LOCK_SQLITE()
     *find = NULL;
@@ -836,7 +836,7 @@ sdb_GetAttributeValueNoLock(SDB *sdb, CK_OBJECT_HANDLE object_id,
     CK_RV error = CKR_OK;
     int found = 0;
     int retry = 0;
-    int i;
+    unsigned int i;
 
 
     /* open a new db if necessary */
@@ -879,7 +879,7 @@ sdb_GetAttributeValueNoLock(SDB *sdb, CK_OBJECT_HANDLE object_id,
 		PR_Sleep(SDB_BUSY_RETRY_TIME);
 	    }
 	    if (sqlerr == SQLITE_ROW) {
-	    	int blobSize;
+	    	unsigned int blobSize;
 	    	const char *blobData;
 
 	    	blobSize = sqlite3_column_bytes(stmt, 0);
@@ -963,7 +963,7 @@ sdb_SetAttributeValue(SDB *sdb, CK_OBJECT_HANDLE object_id,
     int sqlerr = SQLITE_OK;
     int retry = 0;
     CK_RV error = CKR_OK;
-    int i;
+    unsigned int i;
 
     if ((sdb->sdb_flags & SDB_RDONLY) != 0) {
 	return CKR_TOKEN_WRITE_PROTECTED;
@@ -1115,7 +1115,7 @@ sdb_CreateObject(SDB *sdb, CK_OBJECT_HANDLE *object_id,
     CK_RV error = CKR_OK;
     CK_OBJECT_HANDLE this_object = CK_INVALID_HANDLE;
     int retry = 0;
-    int i;
+    unsigned int i;
 
     if ((sdb->sdb_flags & SDB_RDONLY) != 0) {
 	return CKR_TOKEN_WRITE_PROTECTED;

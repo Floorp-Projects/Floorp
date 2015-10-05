@@ -71,9 +71,9 @@ long_usage (char *program_name)
 int 
 readStdin(SECItem * result)
 {
-  int bufsize = 0;
+  unsigned int bufsize = 0;
   int cc;
-  int wanted  = 8192;
+  unsigned int wanted  = 8192U;
 
   result->len = 0;
   result->data = NULL;

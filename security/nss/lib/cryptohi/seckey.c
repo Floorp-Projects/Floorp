@@ -1565,7 +1565,7 @@ SECKEY_DestroyPrivateKeyInfo(SECKEYPrivateKeyInfo *pvk,
 	     * this yet.
 	     */
 	    PORT_Memset(pvk->privateKey.data, 0, pvk->privateKey.len);
-	    PORT_Memset((char *)pvk, 0, sizeof(*pvk));
+	    PORT_Memset(pvk, 0, sizeof(*pvk));
 	    if(freeit == PR_TRUE) {
 		PORT_FreeArena(poolp, PR_TRUE);
 	    } else {
@@ -1575,7 +1575,7 @@ SECKEY_DestroyPrivateKeyInfo(SECKEYPrivateKeyInfo *pvk,
 	    SECITEM_ZfreeItem(&pvk->version, PR_FALSE);
 	    SECITEM_ZfreeItem(&pvk->privateKey, PR_FALSE);
 	    SECOID_DestroyAlgorithmID(&pvk->algorithm, PR_FALSE);
-	    PORT_Memset((char *)pvk, 0, sizeof(*pvk));
+	    PORT_Memset(pvk, 0, sizeof(*pvk));
 	    if(freeit == PR_TRUE) {
 		PORT_Free(pvk);
 	    }
@@ -1596,7 +1596,7 @@ SECKEY_DestroyEncryptedPrivateKeyInfo(SECKEYEncryptedPrivateKeyInfo *epki,
 	     * this yet.
 	     */
 	    PORT_Memset(epki->encryptedData.data, 0, epki->encryptedData.len);
-	    PORT_Memset((char *)epki, 0, sizeof(*epki));
+	    PORT_Memset(epki, 0, sizeof(*epki));
 	    if(freeit == PR_TRUE) {
 		PORT_FreeArena(poolp, PR_TRUE);
 	    } else {
@@ -1605,7 +1605,7 @@ SECKEY_DestroyEncryptedPrivateKeyInfo(SECKEYEncryptedPrivateKeyInfo *epki,
 	} else {
 	    SECITEM_ZfreeItem(&epki->encryptedData, PR_FALSE);
 	    SECOID_DestroyAlgorithmID(&epki->algorithm, PR_FALSE);
-	    PORT_Memset((char *)epki, 0, sizeof(*epki));
+	    PORT_Memset(epki, 0, sizeof(*epki));
 	    if(freeit == PR_TRUE) {
 		PORT_Free(epki);
 	    }
@@ -1903,4 +1903,23 @@ SECKEY_CacheStaticFlags(SECKEYPrivateKey* key)
         rv = SECSuccess;
     }
     return rv;
+}
+
+SECOidTag
+SECKEY_GetECCOid(const SECKEYECParams * params)
+{
+    SECItem oid = { siBuffer, NULL, 0};
+    SECOidData *oidData = NULL;
+
+    /* 
+     * params->data needs to contain the ASN encoding of an object ID (OID)
+     * representing a named curve. Here, we strip away everything
+     * before the actual OID and use the OID to look up a named curve.
+     */
+    if (params->data[0] != SEC_ASN1_OBJECT_ID) return 0;
+    oid.len = params->len - 2;
+    oid.data = params->data + 2;
+    if ((oidData = SECOID_FindOID(&oid)) == NULL) return 0;
+
+    return oidData->offset;
 }

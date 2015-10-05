@@ -42,7 +42,20 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
 
-MKPROG = $(CXX)
-CFLAGS += -std=c++0x
+MKPROG = $(CCC)
+CXXFLAGS += -std=c++0x
+CFLAGS += -I$(CORE_DEPTH)/lib/ssl
+
 include ../../cmd/platrules.mk
 
+ifeq (WINNT,$(OS_ARCH))
+    # -MTd (not -MD) because that makes it link to the right library
+    # -EHsc because gtest has exception handlers
+    OS_CFLAGS := $(filterout -MD,$(OS_CFLAGS))
+    OS_CFLAGS += -MTd -EHsc -nologo
+    # http://www.suodenjoki.dk/us/archive/2010/min-max.htm
+    OS_CFLAGS += -DNOMINMAX
+
+    # Linking to winsock to get htonl
+    OS_LIBS += Ws2_32.lib
+endif

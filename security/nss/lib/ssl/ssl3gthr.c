@@ -71,8 +71,8 @@ ssl3_GatherData(sslSocket *ss, sslGather *gs, int flags)
 	    break;
 	}
 
-	PORT_Assert( nb <= gs->remainder );
-	if (nb > gs->remainder) {
+	PORT_Assert( (unsigned int)nb <= gs->remainder );
+	if ((unsigned int)nb > gs->remainder) {
 	    /* ssl_DefRecv is misbehaving!  this error is fatal to SSL. */
 	    gs->state = GS_INIT;         /* so we don't crash next time */
 	    rv = SECFailure;

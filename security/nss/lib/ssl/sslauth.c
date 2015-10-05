@@ -264,8 +264,7 @@ SSL_AuthCertificate(void *arg, PRFileDesc *fd, PRBool checkSig, PRBool isServer)
 						  &certStatusArray->items[0],
 						  ss->pkcs11PinArg)
 		!= SECSuccess) {
-	    PRErrorCode error = PR_GetError();
-	    PORT_Assert(error != 0);
+	    PORT_Assert(PR_GetError() != 0);
 	}
     }
 

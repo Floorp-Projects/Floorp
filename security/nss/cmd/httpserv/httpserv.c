@@ -339,7 +339,6 @@ static enum {
 
 static const char stopCmd[] = { "GET /stop " };
 static const char getCmd[]  = { "GET " };
-static const char EOFmsg[]  = { "EOF\r\n\r\n\r\n" };
 static const char outHeader[] = {
     "HTTP/1.0 200 OK\r\n"
     "Server: Generic Web Server\r\n"
@@ -712,8 +711,8 @@ handle_connection(
 		      /* else good status response */
 		      if (!isPost && ocspMethodsAllowed == ocspGetUnknown) {
 			  unknown = PR_TRUE;
-			  nextUpdate = PR_Now() + 60*60*24 * PR_USEC_PER_SEC; /*tomorrow*/
-			  revoDate = PR_Now() - 60*60*24 * PR_USEC_PER_SEC; /*yesterday*/
+			  nextUpdate = PR_Now() + (PRTime)60*60*24 * PR_USEC_PER_SEC; /*tomorrow*/
+			  revoDate = PR_Now() - (PRTime)60*60*24 * PR_USEC_PER_SEC; /*yesterday*/
 		      }
 		  }
 	      }

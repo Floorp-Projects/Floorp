@@ -39,8 +39,12 @@ char * NSSUTIL_MkSlotString(unsigned long slotID, unsigned long defaultFlags,
                   PRBool hasRootCerts, PRBool hasRootTrust);
 SECStatus NSSUTIL_ArgParseModuleSpec(char *modulespec, char **lib, char **mod,
                                         char **parameters, char **nss);
+SECStatus NSSUTIL_ArgParseModuleSpecEx(char *modulespec, char **lib, char **mod,
+                                        char **parameters, char **nss, char **config);
 char *NSSUTIL_MkModuleSpec(char *dllName, char *commonName, 
 					char *parameters, char *NSS);
+char *NSSUTIL_MkModuleSpecEx(char *dllName, char *commonName, 
+				char *parameters, char *NSS, char *config);
 void NSSUTIL_ArgParseCipherFlags(unsigned long *newCiphers,char *cipherList);
 char * NSSUTIL_MkNSSString(char **slotStrings, int slotCount, PRBool internal,
           PRBool isFIPS, PRBool isModuleDB,  PRBool isModuleDBOnly,

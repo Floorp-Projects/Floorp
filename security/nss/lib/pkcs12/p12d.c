@@ -2810,7 +2810,7 @@ SEC_PKCS12DecoderRenameCertNicknames(SEC_PKCS12DecoderContext *p12dcx,
         return SECFailure;
     }
 
-    for (i = 0; safeBag = p12dcx->safeBags[i]; i++) {
+    for (i = 0; (safeBag = p12dcx->safeBags[i]); i++) {
         SECItem *newNickname = NULL;
         SECItem *defaultNickname = NULL;
         SECStatus rename_rv;
