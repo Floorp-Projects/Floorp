@@ -16,9 +16,13 @@ class AutoSetNewObjectMetadata;
 class ShellPromiseObject : public NativeObject
 {
   public:
+    static const unsigned RESERVED_SLOTS = 3;
     static const Class class_;
     static const Class protoClass_;
 };
+
+bool
+PromiseConstructor(JSContext* cx, unsigned argc, Value* vp);
 
 } // namespace js
 
