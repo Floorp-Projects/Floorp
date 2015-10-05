@@ -2309,6 +2309,86 @@ function runCharAtPointAtOutsideTest()
   }
 }
 
+function runCSSTransformTest()
+{
+  textarea.focus();
+  textarea.value = "some text";
+  textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
+  var editorRect = synthesizeQueryEditorRect();
+  if (!checkQueryContentResult(editorRect,
+        "runCSSTransformTest: editorRect")) {
+    return;
+  }
+  var firstCharRect = synthesizeQueryTextRect(0, 1);
+  if (!checkQueryContentResult(firstCharRect,
+        "runCSSTransformTest: firstCharRect")) {
+    return;
+  }
+  var lastCharRect = synthesizeQueryTextRect(textarea.value.length - 1, textarea.value.length);
+  if (!checkQueryContentResult(lastCharRect,
+        "runCSSTransformTest: lastCharRect")) {
+    return;
+  }
+  var caretRect = synthesizeQueryCaretRect(textarea.selectionStart);
+  if (!checkQueryContentResult(caretRect,
+        "runCSSTransformTest: caretRect")) {
+    return;
+  }
+  var caretRectBeforeFirstChar = synthesizeQueryCaretRect(0);
+  if (!checkQueryContentResult(caretRectBeforeFirstChar,
+        "runCSSTransformTest: caretRectBeforeFirstChar")) {
+    return;
+  }
+
+  try {
+    textarea.style.transform = "translate(10px, 15px)";
+    function movedRect(aRect, aX, aY)
+    {
+      return { left: aRect.left + aX, top: aRect.top + aY, width: aRect.width, height: aRect.height }
+    }
+
+    var editorRectTranslated = synthesizeQueryEditorRect();
+    if (!checkQueryContentResult(editorRectTranslated,
+          "runCSSTransformTest: editorRectTranslated") ||
+        !checkRect(editorRectTranslated, movedRect(editorRect, 10, 15),
+          "runCSSTransformTest: editorRectTranslated")) {
+      return;
+    }
+    var firstCharRectTranslated = synthesizeQueryTextRect(0, 1);
+    if (!checkQueryContentResult(firstCharRectTranslated,
+          "runCSSTransformTest: firstCharRectTranslated") ||
+        !checkRect(firstCharRectTranslated, movedRect(firstCharRect, 10, 15),
+          "runCSSTransformTest: firstCharRectTranslated")) {
+      return;
+    }
+    var lastCharRectTranslated = synthesizeQueryTextRect(textarea.value.length - 1, textarea.value.length);
+    if (!checkQueryContentResult(lastCharRectTranslated,
+          "runCSSTransformTest: lastCharRectTranslated") ||
+        !checkRect(lastCharRectTranslated, movedRect(lastCharRect, 10, 15),
+          "runCSSTransformTest: lastCharRectTranslated")) {
+      return;
+    }
+    var caretRectTranslated = synthesizeQueryCaretRect(textarea.selectionStart);
+    if (!checkQueryContentResult(caretRectTranslated,
+          "runCSSTransformTest: caretRectTranslated") ||
+        !checkRect(caretRectTranslated, movedRect(caretRect, 10, 15),
+          "runCSSTransformTest: caretRectTranslated")) {
+      return;
+    }
+    var caretRectBeforeFirstCharTranslated = synthesizeQueryCaretRect(0);
+    if (!checkQueryContentResult(caretRectBeforeFirstCharTranslated,
+          "runCSSTransformTest: caretRectBeforeFirstCharTranslated") ||
+        !checkRect(caretRectBeforeFirstCharTranslated, movedRect(caretRectBeforeFirstChar, 10, 15),
+          "runCSSTransformTest: caretRectBeforeFirstCharTranslated")) {
+      return;
+    }
+
+    // XXX It's too difficult to check the result with scale and rotate...
+  } finally {
+    textarea.style.transform = "";
+  }
+}
+
 function runBug722639Test()
 {
   textarea.focus();
@@ -4522,6 +4602,7 @@ function runTest()
   runCompositionEventTest();
   runCharAtPointTest(textarea, "textarea in the document");
   runCharAtPointAtOutsideTest();
+  runCSSTransformTest();
   runBug722639Test();
   runForceCommitTest();
   runNestedSettingValue();
