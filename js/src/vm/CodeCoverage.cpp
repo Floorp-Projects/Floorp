@@ -74,13 +74,19 @@ LCovSource::LCovSource(LifoAlloc* alloc, JSObject* sso)
     numBranchesHit_(0),
     outDA_(alloc),
     numLinesInstrumented_(0),
-    numLinesHit_(0)
+    numLinesHit_(0),
+    hasFilename_(false),
+    hasScripts_(false)
 {
 }
 
 void
 LCovSource::exportInto(GenericPrinter& out) const
 {
+    // Only write if everything got recorded.
+    if (!hasFilename_ || !hasScripts_)
+        return;
+
     outSF_.exportInto(out);
 
     outFN_.exportInto(out);
@@ -156,17 +162,27 @@ LCovSource::writeTopLevelScript(JSScript* script)
         }
     } while (!queue.empty());
 
-    return !(outFN_.hadOutOfMemory() ||
-             outFNDA_.hadOutOfMemory() ||
-             outBRDA_.hadOutOfMemory() ||
-             outDA_.hadOutOfMemory());
+    if (outFN_.hadOutOfMemory() ||
+        outFNDA_.hadOutOfMemory() ||
+        outBRDA_.hadOutOfMemory() ||
+        outDA_.hadOutOfMemory())
+    {
+        return false;
+    }
+
+    hasScripts_ = true;
+    return true;
 }
 
 bool
 LCovSource::writeSourceFilename(ScriptSourceObject* sso)
 {
     outSF_.printf("SF:%s\n", sso->source()->filename());
-    return !outSF_.hadOutOfMemory();
+    if (outSF_.hadOutOfMemory())
+        return false;
+
+    hasFilename_ = true;
+    return true;
 }
 
 bool
@@ -311,12 +327,12 @@ LCovCompartment::collectCodeCoverageInfo(JSCompartment* comp, JSObject* sso,
     if (!sources_)
         return;
 
-    // Lookup if there is already one entry.
-    LCovSource* source = lookup(sso);
+    // Get the existing source LCov summary, or create a new one.
+    LCovSource* source = lookupOrAdd(comp, sso);
     if (!source)
         return;
 
-    // Write code coverage data into the allocated LCovSource.
+    // Write code coverage data into the LCovSource.
     if (!source->writeTopLevelScript(topLevel)) {
         outTN_.reportOutOfMemory();
         return;
@@ -334,47 +350,49 @@ LCovCompartment::collectSourceFile(JSCompartment* comp, ScriptSourceObject* sso)
     if (outTN_.hadOutOfMemory())
         return;
 
-    // On the first call, write the compartment name, and allocate a LCovSource
-    // vector in the LifoAlloc.
-    if (!sources_) {
-        if (!writeCompartmentName(comp))
-            return;
-
-        LCovSourceVector* raw = alloc_.pod_malloc<LCovSourceVector>();
-        if (!raw) {
-            outTN_.reportOutOfMemory();
-            return;
-        }
-
-        sources_ = new(raw) LCovSourceVector(alloc_);
-    }
-
-    // Allocate a new LCovSource for the current top-level.
-    if (!sources_->append(Move(LCovSource(&alloc_, sso)))) {
-        outTN_.reportOutOfMemory();
+    // Get the existing source LCov summary, or create a new one.
+    LCovSource* source = lookupOrAdd(comp, sso);
+    if (!source)
         return;
-    }
 
-    // Write code coverage data into the allocated LCovSource.
-    if (!sources_->back().writeSourceFilename(sso)) {
+    // Write source filename into the LCovSource.
+    if (!source->writeSourceFilename(sso)) {
         outTN_.reportOutOfMemory();
         return;
     }
 }
 
 LCovSource*
-LCovCompartment::lookup(JSObject* sso)
+LCovCompartment::lookupOrAdd(JSCompartment* comp, JSObject* sso)
 {
-    if (!sources_)
-        return nullptr;
+    // On the first call, write the compartment name, and allocate a LCovSource
+    // vector in the LifoAlloc.
+    if (!sources_) {
+        if (!writeCompartmentName(comp))
+            return nullptr;
 
-    // Find the first matching source.
-    for (LCovSource& source : *sources_) {
-        if (source.match(sso))
-            return &source;
+        LCovSourceVector* raw = alloc_.pod_malloc<LCovSourceVector>();
+        if (!raw) {
+            outTN_.reportOutOfMemory();
+            return nullptr;
+        }
+
+        sources_ = new(raw) LCovSourceVector(alloc_);
+    } else {
+        // Find the first matching source.
+        for (LCovSource& source : *sources_) {
+            if (source.match(sso))
+                return &source;
+        }
     }
 
-    return nullptr;
+    // Allocate a new LCovSource for the current top-level.
+    if (!sources_->append(Move(LCovSource(&alloc_, sso)))) {
+        outTN_.reportOutOfMemory();
+        return nullptr;
+    }
+
+    return &sources_->back();
 }
 
 void
