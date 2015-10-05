@@ -45,24 +45,38 @@ dictionary WebGLContextAttributes {
     boolean failIfMajorPerformanceCaveat = false;
 };
 
+[Exposed=(Window,Worker),
+ Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread"]
 interface WebGLBuffer {
 };
 
+[Exposed=(Window,Worker),
+ Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread"]
 interface WebGLFramebuffer {
 };
 
+[Exposed=(Window,Worker),
+ Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread"]
 interface WebGLProgram {
 };
 
+[Exposed=(Window,Worker),
+ Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread"]
 interface WebGLRenderbuffer {
 };
 
+[Exposed=(Window,Worker),
+ Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread"]
 interface WebGLShader {
 };
 
+[Exposed=(Window,Worker),
+ Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread"]
 interface WebGLTexture {
 };
 
+[Exposed=(Window,Worker),
+ Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread"]
 interface WebGLUniformLocation {
 };
 
@@ -70,18 +84,24 @@ interface WebGLUniformLocation {
 interface WebGLVertexArrayObjectOES {
 };
 
+[Exposed=(Window,Worker),
+ Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread"]
 interface WebGLActiveInfo {
     readonly attribute GLint size;
     readonly attribute GLenum type;
     readonly attribute DOMString name;
 };
 
+[Exposed=(Window,Worker),
+ Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread"]
 interface WebGLShaderPrecisionFormat {
     readonly attribute GLint rangeMin;
     readonly attribute GLint rangeMax;
     readonly attribute GLint precision;
 };
 
+[Exposed=(Window,Worker),
+ Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread"]
 interface WebGLRenderingContext {
 
     /* ClearBufferMask */
@@ -504,7 +524,7 @@ interface WebGLRenderingContext {
     const GLenum BROWSER_DEFAULT_WEBGL          = 0x9244;
 
     // The canvas might actually be null in some cases, apparently.
-    readonly attribute HTMLCanvasElement? canvas;
+    readonly attribute (HTMLCanvasElement or OffscreenCanvas)? canvas;
     readonly attribute GLsizei drawingBufferWidth;
     readonly attribute GLsizei drawingBufferHeight;
 
@@ -764,6 +784,14 @@ interface WebGLRenderingContext {
                              GLboolean normalized, GLsizei stride, GLintptr offset);
 
     void viewport(GLint x, GLint y, GLsizei width, GLsizei height);
+};
+
+// For OffscreenCanvas
+// Reference: https://wiki.whatwg.org/wiki/OffscreenCanvas
+[Exposed=(Window,Worker)]
+partial interface WebGLRenderingContext {
+  [Func="mozilla::dom::OffscreenCanvas::PrefEnabled"]
+  void commit();
 };
 
 /*[Constructor(DOMString type, optional WebGLContextEventInit eventInit)]

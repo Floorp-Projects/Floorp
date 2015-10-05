@@ -12,12 +12,13 @@
 #include "nsIDocShell.h"
 #include "nsRefreshDriver.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
+#include "mozilla/dom/OffscreenCanvas.h"
 #include "GraphicsFilter.h"
 #include "mozilla/RefPtr.h"
 
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID \
-{ 0x3cc9e801, 0x1806, 0x4ff6, \
-  { 0x86, 0x14, 0xf9, 0xd0, 0xf4, 0xfb, 0x3b, 0x08 } }
+{ 0xb84f2fed, 0x9d4b, 0x430b, \
+  { 0xbd, 0xfb, 0x85, 0x57, 0x8a, 0xc2, 0xb4, 0x4b } }
 
 class gfxASurface;
 class nsDisplayListBuilder;
@@ -78,6 +79,11 @@ public:
   mozilla::dom::HTMLCanvasElement* GetParentObject() const
   {
     return mCanvasElement;
+  }
+
+  void SetOffscreenCanvas(mozilla::dom::OffscreenCanvas* aOffscreenCanvas)
+  {
+    mOffscreenCanvas = aOffscreenCanvas;
   }
 
   // Dimensions of the canvas, in pixels.
@@ -152,6 +158,10 @@ public:
   // Given a point, return hit region ID if it exists or an empty string if it doesn't
   virtual nsString GetHitRegion(const mozilla::gfx::Point& point) { return nsString(); }
 
+  virtual void OnVisibilityChange() {}
+
+  virtual void OnMemoryPressure() {}
+
   //
   // shmem support
   //
@@ -164,6 +174,7 @@ public:
 
 protected:
   nsRefPtr<mozilla::dom::HTMLCanvasElement> mCanvasElement;
+  nsRefPtr<mozilla::dom::OffscreenCanvas> mOffscreenCanvas;
   nsRefPtr<nsRefreshDriver> mRefreshDriver;
 };
 

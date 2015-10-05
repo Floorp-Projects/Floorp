@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>OffscreenCanvas: Test subworkers</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<!--
+  We want to test offscreen canvas works well when it running on worker
+  and nested worker simultaneously. So we create 10 canvas and dispatch
+  it to different workers and sub-workers.
+-->
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+function createCanvas() {
+  var htmlCanvas = document.createElement('canvas');
+  htmlCanvas.width = 64;
+  htmlCanvas.height = 64;
+  document.body.appendChild(htmlCanvas);
+  return htmlCanvas.transferControlToOffscreen();
+}
+
+function runTest() {
+
+  var worker = new Worker("offscreencanvas.js");
+
+  worker.onmessage = function(evt) {
+    var msg = evt.data || {};
+    if (msg.type == "test") {
+      ok(msg.result, msg.name);
+    }
+    if (msg.type == "finish") {
+      worker.terminate();
+      SimpleTest.finish();
+    }
+  }
+
+  var findTransferables = function(t) {
+    if (t.test == "subworker") {
+      var result = [];
+      t.subtests.forEach(function(test) {
+        result = result.concat(findTransferables(test));
+      });
+
+      return result;
+    } else {
+      return [t.canvas];
+    }
+  };
+
+  var testData =
+    {test: 'subworker', subtests: [
+      {test: 'webgl', canvas: createCanvas()},
+      {test: 'subworker', subtests: [
+        {test: 'webgl', canvas: createCanvas()},
+        {test: 'webgl_changesize', canvas: createCanvas()},
+        {test: 'webgl', canvas: createCanvas()}
+      ]},
+      {test: 'subworker', subtests: [
+        {test: 'webgl', canvas: createCanvas()},
+        {test: 'webgl_changesize', canvas: createCanvas()},
+        {test: 'subworker', subtests: [
+          {test: 'webgl_changesize', canvas: createCanvas()},
+          {test: 'webgl', canvas: createCanvas()}
+        ]},
+        {test: 'subworker', subtests: [
+          {test: 'webgl_changesize', canvas: createCanvas()},
+          {test: 'subworker', subtests: [
+            {test: 'subworker', subtests: [
+              {test: 'webgl_changesize', canvas: createCanvas()}
+            ]}
+          ]}
+        ]},
+      ]}
+    ]};
+
+  worker.postMessage(testData, findTransferables(testData));
+}
+
+SpecialPowers.pushPrefEnv({'set': [
+  ['gfx.offscreencanvas.enabled', true],
+  ['webgl.force-enabled', true],
+]}, runTest);
+
+</script>
+</body>
+</html>
