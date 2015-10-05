@@ -6,6 +6,7 @@
   <title>Sanity panning test</title>
   <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
   <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
 function scrollPage() {
@@ -25,7 +26,9 @@ function checkScroll() {
 }
 
 window.onload = function() {
-  setTimeout(scrollPage, 0);
+  waitForAllPaints(function() {
+    flushApzRepaints(scrollPage);
+  });
 }
 
   </script>
