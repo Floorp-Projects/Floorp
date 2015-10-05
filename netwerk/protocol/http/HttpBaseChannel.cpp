@@ -773,6 +773,52 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
                                    mListenerContext);
 }
 
+// create a listener chain that looks like this
+// http-channel -> decompressor (n times) -> InterceptFailedOnSTop -> channel-creator-listener
+//
+// we need to do this because not every decompressor has fully streamed output so
+// may need a call to OnStopRequest to identify its completion state.. and if it
+// creates an error there the channel status code needs to be updated before calling
+// the terminal listener. Having the decompress do it via cancel() means channels cannot
+// effectively be used in two contexts (specifically this one and a peek context for
+// sniffing)
+//
+class InterceptFailedOnStop : public nsIStreamListener
+{
+  virtual ~InterceptFailedOnStop() {}
+  nsCOMPtr<nsIStreamListener> mNext;
+  HttpBaseChannel *mChannel;
+
+public:
+  InterceptFailedOnStop(nsIStreamListener *arg, HttpBaseChannel *chan)
+  : mNext(arg)
+  , mChannel(chan) {}
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHODIMP OnStartRequest(nsIRequest *aRequest, nsISupports *aContext) override
+  {
+    return mNext->OnStartRequest(aRequest, aContext);
+  }
+
+  NS_IMETHODIMP OnStopRequest(nsIRequest *aRequest, nsISupports *aContext, nsresult aStatusCode) override
+  {
+    if (NS_FAILED(aStatusCode) && NS_SUCCEEDED(mChannel->mStatus)) {
+      LOG(("HttpBaseChannel::InterceptFailedOnStop %p seting status %x", mChannel, aStatusCode));
+      mChannel->mStatus = aStatusCode;
+    }
+    return mNext->OnStopRequest(aRequest, aContext, aStatusCode);
+  }
+
+  NS_IMETHODIMP OnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
+                           nsIInputStream *aInputStream, uint64_t aOffset,
+                           uint32_t aCount) override
+  {
+    return mNext->OnDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount);
+  }
+};
+
+NS_IMPL_ISUPPORTS(InterceptFailedOnStop, nsIStreamListener, nsIRequestObserver)
+
 NS_IMETHODIMP
 HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
                                            nsIStreamListener** aNewNextListener,
@@ -782,8 +828,6 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
   if (!mResponseHead || ! aNextListener) {
     return NS_OK;
   }
-
-  nsCOMPtr<nsIStreamListener> nextListener = aNextListener;
 
   LOG(("HttpBaseChannel::DoApplyContentConversions [this=%p]\n", this));
 
@@ -796,6 +840,8 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
   nsresult rv = mResponseHead->GetHeader(nsHttp::Content_Encoding, contentEncoding);
   if (NS_FAILED(rv) || contentEncoding.IsEmpty())
     return NS_OK;
+
+  nsCOMPtr<nsIStreamListener> nextListener = new InterceptFailedOnStop(aNextListener, this);
 
   // The encodings are listed in the order they were applied
   // (see rfc 2616 section 14.11), so they need to removed in reverse

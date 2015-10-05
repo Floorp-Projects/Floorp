@@ -140,10 +140,6 @@ nsHTTPCompressConv::OnStopRequest(nsIRequest* request, nsISupports *aContext,
       fpChannel->ForcePending(false);
     }
   }
-  if (NS_FAILED(status) && status != aStatus) {
-    LOG(("nsHttpCompresssConv %p onstop calling cancel %x\n", this, status));
-    request->Cancel(status);
-  }
   return mListener->OnStopRequest(request, aContext, status);
 }
 
@@ -162,6 +158,11 @@ nsHTTPCompressConv::BrotliHandler(nsIInputStream *stream, void *closure, const c
   size_t outSize;
   size_t avail = aAvail;
   BrotliResult res;
+
+  if (!self->mBrotli) {
+    *countRead = aAvail;
+    return NS_OK;
+  }
 
   do {
     outSize = kOutSize;
