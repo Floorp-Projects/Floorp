@@ -2160,12 +2160,6 @@ DumpFilter(layerscope::LayersPacket::Layer* aLayer, const GraphicsFilter& aFilte
     case GraphicsFilter::FILTER_NEAREST:
       aLayer->set_filter(LayersPacket::Layer::FILTER_NEAREST);
       break;
-    case GraphicsFilter::FILTER_BILINEAR:
-      aLayer->set_filter(LayersPacket::Layer::FILTER_BILINEAR);
-      break;
-    case GraphicsFilter::FILTER_GAUSSIAN:
-      aLayer->set_filter(LayersPacket::Layer::FILTER_GAUSSIAN);
-      break;
     default:
       // ignore it
       break;
