@@ -38,8 +38,6 @@ AppendToString(std::stringstream& aStream, const GraphicsFilter& f,
   case GraphicsFilter::FILTER_GOOD:      aStream << "good"; break;
   case GraphicsFilter::FILTER_BEST:      aStream << "best"; break;
   case GraphicsFilter::FILTER_NEAREST:   aStream << "nearest"; break;
-  case GraphicsFilter::FILTER_BILINEAR:  aStream << "bilinear"; break;
-  case GraphicsFilter::FILTER_GAUSSIAN:  aStream << "gaussian"; break;
   default:
     NS_ERROR("unknown filter type");
     aStream << "???";

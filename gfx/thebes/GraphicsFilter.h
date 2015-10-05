@@ -11,8 +11,6 @@ enum class GraphicsFilter : int {
   FILTER_GOOD,
   FILTER_BEST,
   FILTER_NEAREST,
-  FILTER_BILINEAR,
-  FILTER_GAUSSIAN,
   FILTER_SENTINEL
 };
 
