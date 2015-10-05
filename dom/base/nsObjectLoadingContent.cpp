@@ -1494,7 +1494,7 @@ nsObjectLoadingContent::IsYoutubeEmbed()
   nsAutoCString currentBaseDomain;
   bool ok = NS_SUCCEEDED(tldService->GetBaseDomain(mURI, 0, currentBaseDomain));
   if (!ok) {
-    NS_WARNING("Could not parse plugin domain!");
+    // Data URIs won't parse correctly, so just fail silently here.
     return false;
   }
   nsAutoCString domain("youtube.com");
