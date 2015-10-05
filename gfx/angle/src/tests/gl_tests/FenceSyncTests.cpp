@@ -120,7 +120,7 @@ TEST_P(FenceNVTest, BasicOperations)
     glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
 
     GLuint fences[20] = { 0 };
-    glGenFencesNV(ArraySize(fences), fences);
+    glGenFencesNV(static_cast<GLsizei>(ArraySize(fences)), fences);
     EXPECT_GL_NO_ERROR();
 
     for (GLuint fence : fences)

@@ -69,6 +69,7 @@ UNIFIED_SOURCES += [
     'src/compiler/translator/PruneEmptyDeclarations.cpp',
     'src/compiler/translator/RecordConstantPrecision.cpp',
     'src/compiler/translator/RegenerateStructNames.cpp',
+    'src/compiler/translator/RemoveDynamicIndexing.cpp',
     'src/compiler/translator/RemovePow.cpp',
     'src/compiler/translator/RemoveSwitchFallThrough.cpp',
     'src/compiler/translator/RewriteElseBlocks.cpp',

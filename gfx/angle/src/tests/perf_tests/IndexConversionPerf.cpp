@@ -32,6 +32,16 @@ struct IndexConversionPerfParams final : public RenderTestParams
     unsigned int numIndexTris;
 };
 
+// Provide a custom gtest parameter name function for IndexConversionPerfParams
+// that includes the number of iterations and triangles in the test parameter name.
+// This also fixes the resolution of the overloaded operator<< on MSVC.
+std::ostream &operator<<(std::ostream &stream, const IndexConversionPerfParams &param)
+{
+    const PlatformParameters &platform = param;
+    stream << platform << "_" << param.iterations << "_" << param.numIndexTris;
+    return stream;
+}
+
 class IndexConversionPerfTest : public ANGLERenderTest,
                                 public ::testing::WithParamInterface<IndexConversionPerfParams>
 {

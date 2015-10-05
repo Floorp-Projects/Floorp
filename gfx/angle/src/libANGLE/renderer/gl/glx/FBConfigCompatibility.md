@@ -40,7 +40,7 @@ the vast majority of applications use.
 use it for all types of EGL surfaces
  * It must have an associated visual ID so that we can use it with X, it seems
 like this would be strongly tied to it having the ```WINDOW_BIT``` set.
- * We would like a conformat context.
+ * We would like a conformant context.
 
 Study of compatible GLXFBConfigs
 --------------------------------
@@ -120,11 +120,50 @@ can find a trick to avoid that flicker, then we would be able to expose single
 and double-buffered surfaces at the EGL level. Not exposing them isn't too much
 of a problem though as the vast majority of application want double-buffering.
 
+AMD and extra buffers
+---------------------
+As can be seen above, NVIDIA does not expose conformant context with multisampled
+buffers or non RGBA16 accumulation buffers. The behavior is different on AMD that
+exposes them as conformant, which gives the following list after filtering as
+explained above:
+
+```
+    visual  x   bf lv rg d st  colorbuffer  sr ax dp st accumbuffer  ms  cav
+  id dep cl sp  sz l  ci b ro  r  g  b  a F gb bf th cl  r  g  b  a ns b eat
+----------------------------------------------------------------------------
+0x023 24 tc  0  32  0 r  y .   8  8  8  8 .  .  0 24  8 16 16 16 16  0 0 None
+0x027 24 tc  0  32  0 r  y .   8  8  8  8 .  .  0 24  8  0  0  0  0  0 0 None
+0x02b 24 tc  0  32  0 r  y .   8  8  8  8 .  .  0 24  8  0  0  0  0  2 1 None
+0x02f 24 tc  0  32  0 r  y .   8  8  8  8 .  .  0 24  8  0  0  0  0  4 1 None
+0x03b 24 dc  0  32  0 r  y .   8  8  8  8 .  .  0 24  8 16 16 16 16  0 0 None
+0x03f 24 dc  0  32  0 r  y .   8  8  8  8 .  .  0 24  8  0  0  0  0  0 0 None
+0x043 24 dc  0  32  0 r  y .   8  8  8  8 .  .  0 24  8  0  0  0  0  2 1 None
+0x047 24 dc  0  32  0 r  y .   8  8  8  8 .  .  0 24  8  0  0  0  0  4 1 None
+```
+
+ANGLE's context is created using 0x027 and experimentation shows it is only compatible
+with 0x03f which is the only other config lacking both an accumulation buffer and a
+multisample buffer. The GLX spec seems to hint it should still work ("should have the
+same size, if they exist") but it doesn't work in this case. Filtering the configs to
+have the same multisample and accumulation buffers gives the following:
+
+```
+    visual  x   bf lv rg d st  colorbuffer  sr ax dp st accumbuffer  ms  cav
+  id dep cl sp  sz l  ci b ro  r  g  b  a F gb bf th cl  r  g  b  a ns b eat
+----------------------------------------------------------------------------
+0x027 24 tc  0  32  0 r  y .   8  8  8  8 .  .  0 24  8  0  0  0  0  0 0 None
+0x03f 24 dc  0  32  0 r  y .   8  8  8  8 .  .  0 24  8  0  0  0  0  0 0 None
+```
+
 Future investigation
 --------------------
 All the non-conformant configs have a multisampled buffer, so it could be interesting
 to see if we can use them to expose another EGL extension.
 
-Finally all this document is written with respect to the proprietary NVIDIA driver,
-before using the GLX EGL implementation in the wild it would be good to test it on
-other drivers and hardware.
+Finally this document is written with respect to a small number of drivers, before
+using the GLX EGL implementation in the wild it would be good to test it on other
+drivers and hardware.
+
+The drivers tested were:
+ - the proprietary NVIDIA driver
+ - the proprietary AMD driver

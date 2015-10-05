@@ -26,12 +26,15 @@ struct Version;
 namespace rx
 {
 class FunctionsGL;
+struct WorkaroundsGL;
 
 namespace nativegl_gl
 {
 
 void GenerateCaps(const FunctionsGL *functions, gl::Caps *caps, gl::TextureCapsMap *textureCapsMap,
                   gl::Extensions *extensions, gl::Version *maxSupportedESVersion);
+
+void GenerateWorkarounds(const FunctionsGL *functions, WorkaroundsGL *workarounds);
 }
 
 }

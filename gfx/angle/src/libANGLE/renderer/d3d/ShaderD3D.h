@@ -10,8 +10,6 @@
 #define LIBANGLE_RENDERER_D3D_SHADERD3D_H_
 
 #include "libANGLE/renderer/ShaderImpl.h"
-#include "libANGLE/renderer/Workarounds.h"
-#include "libANGLE/Shader.h"
 
 #include <map>
 
@@ -19,49 +17,36 @@ namespace rx
 {
 class DynamicHLSL;
 class RendererD3D;
+struct D3DCompilerWorkarounds;
 
 class ShaderD3D : public ShaderImpl
 {
     friend class DynamicHLSL;
 
   public:
-    ShaderD3D(GLenum type);
+    ShaderD3D(const gl::Shader::Data &data);
     virtual ~ShaderD3D();
 
     // ShaderImpl implementation
-    virtual std::string getDebugInfo() const;
+    int prepareSourceAndReturnOptions(std::stringstream *sourceStream) override;
+    bool postTranslateCompile(gl::Compiler *compiler, std::string *infoLog) override;
+    std::string getDebugInfo() const override;
 
     // D3D-specific methods
-    virtual void uncompile();
-    void resetVaryingsRegisterAssignment();
+    void uncompile();
     unsigned int getUniformRegister(const std::string &uniformName) const;
     unsigned int getInterfaceBlockRegister(const std::string &blockName) const;
     void appendDebugInfo(const std::string &info) { mDebugInfo += info; }
 
     void generateWorkarounds(D3DCompilerWorkarounds *workarounds) const;
-    int getShaderVersion() const { return mShaderVersion; }
     bool usesDepthRange() const { return mUsesDepthRange; }
     bool usesPointSize() const { return mUsesPointSize; }
     bool usesDeferredInit() const { return mUsesDeferredInit; }
     bool usesFrontFacing() const { return mUsesFrontFacing; }
 
-    GLenum getShaderType() const;
     ShShaderOutput getCompilerOutputType() const;
 
-    virtual bool compile(gl::Compiler *compiler, const std::string &source);
-
   private:
-    void compileToHLSL(ShHandle compiler, const std::string &source);
-    void parseVaryings(ShHandle compiler);
-
-    void parseAttributes(ShHandle compiler);
-
-    static bool compareVarying(const gl::PackedVarying &x, const gl::PackedVarying &y);
-
-    GLenum mShaderType;
-
-    int mShaderVersion;
-
     bool mUsesMultipleRenderTargets;
     bool mUsesFragColor;
     bool mUsesFragData;

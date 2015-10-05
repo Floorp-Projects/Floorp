@@ -11,9 +11,11 @@
 
 #include "libANGLE/Version.h"
 #include "libANGLE/renderer/Renderer.h"
+#include "libANGLE/renderer/gl/WorkaroundsGL.h"
 
 namespace rx
 {
+class BlitGL;
 class FunctionsGL;
 class StateManagerGL;
 
@@ -26,19 +28,41 @@ class RendererGL : public Renderer
     gl::Error flush() override;
     gl::Error finish() override;
 
-    gl::Error drawArrays(const gl::Data &data, GLenum mode,
-                         GLint first, GLsizei count, GLsizei instances) override;
-    gl::Error drawElements(const gl::Data &data, GLenum mode, GLsizei count, GLenum type,
-                           const GLvoid *indices, GLsizei instances,
-                           const gl::RangeUI &indexRange) override;
+    gl::Error drawArrays(const gl::Data &data, GLenum mode, GLint first, GLsizei count) override;
+    gl::Error drawArraysInstanced(const gl::Data &data,
+                                  GLenum mode,
+                                  GLint first,
+                                  GLsizei count,
+                                  GLsizei instanceCount) override;
+
+    gl::Error drawElements(const gl::Data &data,
+                           GLenum mode,
+                           GLsizei count,
+                           GLenum type,
+                           const GLvoid *indices,
+                           const gl::IndexRange &indexRange) override;
+    gl::Error drawElementsInstanced(const gl::Data &data,
+                                    GLenum mode,
+                                    GLsizei count,
+                                    GLenum type,
+                                    const GLvoid *indices,
+                                    GLsizei instances,
+                                    const gl::IndexRange &indexRange) override;
+    gl::Error drawRangeElements(const gl::Data &data,
+                                GLenum mode,
+                                GLuint start,
+                                GLuint end,
+                                GLsizei count,
+                                GLenum type,
+                                const GLvoid *indices,
+                                const gl::IndexRange &indexRange) override;
 
     // Shader creation
-    CompilerImpl *createCompiler(const gl::Data &data) override;
-    ShaderImpl *createShader(GLenum type) override;
-    ProgramImpl *createProgram() override;
+    CompilerImpl *createCompiler() override;
+    ShaderImpl *createShader(const gl::Shader::Data &data) override;
+    ProgramImpl *createProgram(const gl::Program::Data &data) override;
 
     // Framebuffer creation
-    FramebufferImpl *createDefaultFramebuffer(const gl::Framebuffer::Data &data) override;
     FramebufferImpl *createFramebuffer(const gl::Framebuffer::Data &data) override;
 
     // Texture creation
@@ -76,19 +100,25 @@ class RendererGL : public Renderer
     std::string getVendorString() const override;
     std::string getRendererDescription() const override;
 
+    void syncState(const gl::State &state, const gl::State::DirtyBits &dirtyBits) override;
+
     const gl::Version &getMaxSupportedESVersion() const;
+    const FunctionsGL *getFunctions() const { return mFunctions; }
+    StateManagerGL *getStateManager() const { return mStateManager; }
 
   private:
     void generateCaps(gl::Caps *outCaps, gl::TextureCapsMap* outTextureCaps,
                       gl::Extensions *outExtensions,
                       gl::Limitations *outLimitations) const override;
 
-    Workarounds generateWorkarounds() const override;
-
     mutable gl::Version mMaxSupportedESVersion;
 
     const FunctionsGL *mFunctions;
     StateManagerGL *mStateManager;
+
+    BlitGL *mBlitter;
+
+    WorkaroundsGL mWorkarounds;
 
     // For performance debugging
     bool mSkipDrawCalls;

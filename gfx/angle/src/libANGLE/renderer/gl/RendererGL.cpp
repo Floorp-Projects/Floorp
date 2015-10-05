@@ -14,6 +14,7 @@
 #include "libANGLE/AttributeMap.h"
 #include "libANGLE/Data.h"
 #include "libANGLE/Surface.h"
+#include "libANGLE/renderer/gl/BlitGL.h"
 #include "libANGLE/renderer/gl/BufferGL.h"
 #include "libANGLE/renderer/gl/CompilerGL.h"
 #include "libANGLE/renderer/gl/FenceNVGL.h"
@@ -83,10 +84,13 @@ RendererGL::RendererGL(const FunctionsGL *functions, const egl::AttributeMap &at
       mMaxSupportedESVersion(0, 0),
       mFunctions(functions),
       mStateManager(nullptr),
+      mBlitter(nullptr),
       mSkipDrawCalls(false)
 {
     ASSERT(mFunctions);
     mStateManager = new StateManagerGL(mFunctions, getRendererCaps());
+    nativegl_gl::GenerateWorkarounds(mFunctions, &mWorkarounds);
+    mBlitter = new BlitGL(functions, mWorkarounds, mStateManager);
 
 #ifndef NDEBUG
     if (mFunctions->debugMessageControl && mFunctions->debugMessageCallback)
@@ -110,6 +114,7 @@ RendererGL::RendererGL(const FunctionsGL *functions, const egl::AttributeMap &at
 RendererGL::~RendererGL()
 {
     SafeDelete(mStateManager);
+    SafeDelete(mBlitter);
 }
 
 gl::Error RendererGL::flush()
@@ -124,10 +129,9 @@ gl::Error RendererGL::finish()
     return gl::Error(GL_NO_ERROR);
 }
 
-gl::Error RendererGL::drawArrays(const gl::Data &data, GLenum mode,
-                                 GLint first, GLsizei count, GLsizei instances)
+gl::Error RendererGL::drawArrays(const gl::Data &data, GLenum mode, GLint first, GLsizei count)
 {
-    gl::Error error = mStateManager->setDrawArraysState(data, first, count);
+    gl::Error error = mStateManager->setDrawArraysState(data, first, count, 0);
     if (error.isError())
     {
         return error;
@@ -141,17 +145,36 @@ gl::Error RendererGL::drawArrays(const gl::Data &data, GLenum mode,
     return gl::Error(GL_NO_ERROR);
 }
 
-gl::Error RendererGL::drawElements(const gl::Data &data, GLenum mode, GLsizei count, GLenum type,
-                                   const GLvoid *indices, GLsizei instances,
-                                   const gl::RangeUI &indexRange)
+gl::Error RendererGL::drawArraysInstanced(const gl::Data &data,
+                                          GLenum mode,
+                                          GLint first,
+                                          GLsizei count,
+                                          GLsizei instanceCount)
 {
-    if (instances > 0)
+    gl::Error error = mStateManager->setDrawArraysState(data, first, count, instanceCount);
+    if (error.isError())
     {
-        UNIMPLEMENTED();
+        return error;
     }
 
+    if (!mSkipDrawCalls)
+    {
+        mFunctions->drawArraysInstanced(mode, first, count, instanceCount);
+    }
+
+    return gl::Error(GL_NO_ERROR);
+}
+
+gl::Error RendererGL::drawElements(const gl::Data &data,
+                                   GLenum mode,
+                                   GLsizei count,
+                                   GLenum type,
+                                   const GLvoid *indices,
+                                   const gl::IndexRange &indexRange)
+{
     const GLvoid *drawIndexPointer = nullptr;
-    gl::Error error = mStateManager->setDrawElementsState(data, count, type, indices, &drawIndexPointer);
+    gl::Error error =
+        mStateManager->setDrawElementsState(data, count, type, indices, 0, &drawIndexPointer);
     if (error.isError())
     {
         return error;
@@ -165,24 +188,68 @@ gl::Error RendererGL::drawElements(const gl::Data &data, GLenum mode, GLsizei co
     return gl::Error(GL_NO_ERROR);
 }
 
-CompilerImpl *RendererGL::createCompiler(const gl::Data &data)
+gl::Error RendererGL::drawElementsInstanced(const gl::Data &data,
+                                            GLenum mode,
+                                            GLsizei count,
+                                            GLenum type,
+                                            const GLvoid *indices,
+                                            GLsizei instances,
+                                            const gl::IndexRange &indexRange)
 {
-    return new CompilerGL(data, mFunctions);
+    const GLvoid *drawIndexPointer = nullptr;
+    gl::Error error = mStateManager->setDrawElementsState(data, count, type, indices, instances,
+                                                          &drawIndexPointer);
+    if (error.isError())
+    {
+        return error;
+    }
+
+    if (!mSkipDrawCalls)
+    {
+        mFunctions->drawElementsInstanced(mode, count, type, drawIndexPointer, instances);
+    }
+
+    return gl::Error(GL_NO_ERROR);
 }
 
-ShaderImpl *RendererGL::createShader(GLenum type)
+gl::Error RendererGL::drawRangeElements(const gl::Data &data,
+                                        GLenum mode,
+                                        GLuint start,
+                                        GLuint end,
+                                        GLsizei count,
+                                        GLenum type,
+                                        const GLvoid *indices,
+                                        const gl::IndexRange &indexRange)
 {
-    return new ShaderGL(type, mFunctions);
+    const GLvoid *drawIndexPointer = nullptr;
+    gl::Error error =
+        mStateManager->setDrawElementsState(data, count, type, indices, 0, &drawIndexPointer);
+    if (error.isError())
+    {
+        return error;
+    }
+
+    if (!mSkipDrawCalls)
+    {
+        mFunctions->drawRangeElements(mode, start, end, count, type, drawIndexPointer);
+    }
+
+    return gl::Error(GL_NO_ERROR);
 }
 
-ProgramImpl *RendererGL::createProgram()
+CompilerImpl *RendererGL::createCompiler()
 {
-    return new ProgramGL(mFunctions, mStateManager);
+    return new CompilerGL(mFunctions);
 }
 
-FramebufferImpl *RendererGL::createDefaultFramebuffer(const gl::Framebuffer::Data &data)
+ShaderImpl *RendererGL::createShader(const gl::Shader::Data &data)
 {
-    return new FramebufferGL(data, mFunctions, mStateManager, true);
+    return new ShaderGL(data, mFunctions);
+}
+
+ProgramImpl *RendererGL::createProgram(const gl::Program::Data &data)
+{
+    return new ProgramGL(data, mFunctions, mStateManager);
 }
 
 FramebufferImpl *RendererGL::createFramebuffer(const gl::Framebuffer::Data &data)
@@ -192,12 +259,12 @@ FramebufferImpl *RendererGL::createFramebuffer(const gl::Framebuffer::Data &data
 
 TextureImpl *RendererGL::createTexture(GLenum target)
 {
-    return new TextureGL(target, mFunctions, mStateManager);
+    return new TextureGL(target, mFunctions, mWorkarounds, mStateManager, mBlitter);
 }
 
 RenderbufferImpl *RendererGL::createRenderbuffer()
 {
-    return new RenderbufferGL(mFunctions, mStateManager, getRendererTextureCaps());
+    return new RenderbufferGL(mFunctions, mWorkarounds, mStateManager, getRendererTextureCaps());
 }
 
 BufferImpl *RendererGL::createBuffer()
@@ -323,10 +390,8 @@ void RendererGL::generateCaps(gl::Caps *outCaps, gl::TextureCapsMap* outTextureC
     nativegl_gl::GenerateCaps(mFunctions, outCaps, outTextureCaps, outExtensions, &mMaxSupportedESVersion);
 }
 
-Workarounds RendererGL::generateWorkarounds() const
+void RendererGL::syncState(const gl::State &state, const gl::State::DirtyBits &dirtyBits)
 {
-    Workarounds workarounds;
-    return workarounds;
+    mStateManager->syncState(state, dirtyBits);
 }
-
 }

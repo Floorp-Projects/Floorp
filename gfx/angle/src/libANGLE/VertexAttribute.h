@@ -44,6 +44,9 @@ T QuerySingleVertexAttributeParameter(const VertexAttribute& attrib, GLenum pnam
 
 size_t ComputeVertexAttributeTypeSize(const VertexAttribute& attrib);
 size_t ComputeVertexAttributeStride(const VertexAttribute& attrib);
+size_t ComputeVertexAttributeElementCount(const VertexAttribute &attrib,
+                                          size_t drawCount,
+                                          size_t instanceCount);
 
 struct VertexAttribCurrentValueData
 {

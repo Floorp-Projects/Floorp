@@ -7,6 +7,13 @@
 #ifndef ANGLE_TEST_CONFIGS_H_
 #define ANGLE_TEST_CONFIGS_H_
 
+// On Linux EGL/egl.h includes X.h which does defines for some very common
+// names that are used by gtest (like None and Bool) and causes a lot of
+// compilation errors. To work around this, even if this file doesn't use it,
+// we include gtest before EGL so that it compiles fine in other files that
+// want to use gtest.
+#include <gtest/gtest.h>
+
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
