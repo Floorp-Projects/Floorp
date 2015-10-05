@@ -1132,6 +1132,8 @@ MessageChannel::WaitForInterruptNotify()
       NS_ASSERTION(timerId, "SetTimer failed!");
     }
 
+    NeuteredWindowRegion neuteredRgn(true);
+
     MSG msg = { 0 };
 
     // Don't get wrapped up in here if the child connection dies.
