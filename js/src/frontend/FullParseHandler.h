@@ -436,6 +436,11 @@ class FullParseHandler
         return new_<BinaryNode>(PNK_YIELD, op, pos, value, gen);
     }
 
+    ParseNode* newAwaitExpression(uint32_t begin, ParseNode* value, ParseNode* gen) {
+        TokenPos pos(begin, value ? value->pn_pos.end : begin + 1);
+        return new_<BinaryNode>(PNK_AWAIT, JSOP_YIELD, pos, value, gen);
+    }
+
     ParseNode* newYieldStarExpression(uint32_t begin, ParseNode* value, ParseNode* gen) {
         TokenPos pos(begin, value->pn_pos.end);
         return new_<BinaryNode>(PNK_YIELD_STAR, JSOP_NOP, pos, value, gen);
