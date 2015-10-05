@@ -28,6 +28,8 @@
     locale/browser/browser.properties              (%chrome/browser/browser.properties)
     locale/browser/browser-pocket.properties       (%chrome/browser/browser-pocket.properties)
     locale/browser/customizableui/customizableWidgets.properties (%chrome/browser/customizableui/customizableWidgets.properties)
+    locale/browser/devtools/aboutdebugging.dtd        (%chrome/browser/devtools/aboutdebugging.dtd)
+    locale/browser/devtools/aboutdebugging.properties (%chrome/browser/devtools/aboutdebugging.properties)
     locale/browser/devtools/animationinspector.dtd    (%chrome/browser/devtools/animationinspector.dtd)
     locale/browser/devtools/animationinspector.properties (%chrome/browser/devtools/animationinspector.properties)
     locale/browser/devtools/appcacheutils.properties  (%chrome/browser/devtools/appcacheutils.properties)
