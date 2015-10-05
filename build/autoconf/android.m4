@@ -295,8 +295,9 @@ AC_DEFUN([MOZ_ANDROID_GOOGLE_PLAY_SERVICES],
 if test -n "$MOZ_NATIVE_DEVICES" ; then
     AC_SUBST(MOZ_NATIVE_DEVICES)
 
-    MOZ_ANDROID_AAR(play-services-base, 7.8.0, google, com/google/android/gms)
-    MOZ_ANDROID_AAR(play-services-cast, 7.8.0, google, com/google/android/gms)
+    MOZ_ANDROID_AAR(play-services-base, 8.1.0, google, com/google/android/gms)
+    MOZ_ANDROID_AAR(play-services-basement, 8.1.0, google, com/google/android/gms)
+    MOZ_ANDROID_AAR(play-services-cast, 8.1.0, google, com/google/android/gms)
     MOZ_ANDROID_AAR(mediarouter-v7, 22.2.1, android, com/android/support, REQUIRED_INTERNAL_IMPL)
 fi
 
