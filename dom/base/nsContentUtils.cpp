@@ -3612,7 +3612,9 @@ nsContentUtils::IsPlainTextType(const nsACString& aContentType)
          aContentType.EqualsLiteral(TEXT_ECMASCRIPT) ||
          aContentType.EqualsLiteral(APPLICATION_ECMASCRIPT) ||
          aContentType.EqualsLiteral(TEXT_JAVASCRIPT) ||
-         aContentType.EqualsLiteral(APPLICATION_JSON);
+         aContentType.EqualsLiteral(APPLICATION_JSON) ||
+         aContentType.EqualsLiteral(TEXT_JSON) ||
+         aContentType.EqualsLiteral(TEXT_VTT);
 }
 
 bool
