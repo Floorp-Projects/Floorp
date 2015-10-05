@@ -8,18 +8,16 @@
 
 #ifdef ANDROID
 #include <android/log.h>
-#else
+#endif
 #include <algorithm>
 #include <stdio.h>
 #include <sys/uio.h>
 #include <unistd.h>
-#endif
 
 #include "base/posix/eintr_wrapper.h"
 
 namespace mozilla {
 
-#ifndef ANDROID
 // Alters an iovec array to remove the first `toDrop` bytes.  This
 // complexity is necessary because writev can return a short write
 // (e.g., if stderr is a pipe and the buffer is almost full).
@@ -35,7 +33,6 @@ IOVecDrop(struct iovec* iov, int iovcnt, size_t toDrop)
     --iovcnt;
   }
 }
-#endif
 
 void
 SandboxLogError(const char* message)
@@ -43,7 +40,7 @@ SandboxLogError(const char* message)
 #ifdef ANDROID
   // This uses writev internally and appears to be async signal safe.
   __android_log_write(ANDROID_LOG_ERROR, "Sandbox", message);
-#else
+#endif
   static const char logPrefix[] = "Sandbox: ", logSuffix[] = "\n";
   struct iovec iovs[3] = {
     { const_cast<char*>(logPrefix), sizeof(logPrefix) - 1 },
@@ -57,7 +54,6 @@ SandboxLogError(const char* message)
     }
     IOVecDrop(iovs, 3, static_cast<size_t>(written));
   }
-#endif
 }
 
 }
