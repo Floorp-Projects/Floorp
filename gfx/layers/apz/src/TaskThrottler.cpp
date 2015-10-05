@@ -17,7 +17,8 @@ namespace mozilla {
 namespace layers {
 
 TaskThrottler::TaskThrottler(const TimeStamp& aTimeStamp, const TimeDuration& aMaxWait)
-  : mOutstanding(false)
+  : mMonitor("TaskThrottler")
+  , mOutstanding(false)
   , mQueuedTask(nullptr)
   , mStartTime(aTimeStamp)
   , mMaxWait(aMaxWait)
@@ -39,24 +40,27 @@ void
 TaskThrottler::PostTask(const tracked_objects::Location& aLocation,
                         UniquePtr<CancelableTask> aTask, const TimeStamp& aTimeStamp)
 {
+  MonitorAutoLock lock(mMonitor);
+
   TASK_LOG("%p got a task posted; mOutstanding=%d\n", this, mOutstanding);
   aTask->SetBirthPlace(aLocation);
 
   if (mOutstanding) {
-    CancelPendingTask();
-    if (TimeSinceLastRequest(aTimeStamp) < mMaxWait) {
+    CancelPendingTask(lock);
+    if (TimeSinceLastRequest(aTimeStamp, lock) < mMaxWait) {
       mQueuedTask = Move(aTask);
       TASK_LOG("%p queued task %p\n", this, mQueuedTask.get());
       // Make sure the queued task is sent after mMaxWait time elapses,
       // even if we don't get a TaskComplete() until then.
-      TimeDuration timeout = mMaxWait - TimeSinceLastRequest(aTimeStamp);
+      TimeDuration timeout = mMaxWait - TimeSinceLastRequest(aTimeStamp, lock);
       TimeStamp timeoutTime = mStartTime + mMaxWait;
       nsRefPtr<TaskThrottler> refPtrThis = this;
       mTimer->InitWithCallback(NewTimerCallback(
           [refPtrThis, timeoutTime]()
           {
+            MonitorAutoLock lock(refPtrThis->mMonitor);
             if (refPtrThis->mQueuedTask) {
-              refPtrThis->RunQueuedTask(timeoutTime);
+              refPtrThis->RunQueuedTask(timeoutTime, lock);
             }
           }),
           timeout.ToMilliseconds(), nsITimer::TYPE_ONE_SHOT);
@@ -74,6 +78,8 @@ TaskThrottler::PostTask(const tracked_objects::Location& aLocation,
 void
 TaskThrottler::TaskComplete(const TimeStamp& aTimeStamp)
 {
+  MonitorAutoLock lock(mMonitor);
+
   if (!mOutstanding) {
     return;
   }
@@ -81,7 +87,7 @@ TaskThrottler::TaskComplete(const TimeStamp& aTimeStamp)
   mMean.insert(aTimeStamp - mStartTime);
 
   if (mQueuedTask) {
-    RunQueuedTask(aTimeStamp);
+    RunQueuedTask(aTimeStamp, lock);
     mTimer->Cancel();
   } else {
     mOutstanding = false;
@@ -91,21 +97,30 @@ TaskThrottler::TaskComplete(const TimeStamp& aTimeStamp)
 TimeDuration
 TaskThrottler::AverageDuration()
 {
+  MonitorAutoLock lock(mMonitor);
+
   return mMean.empty() ? TimeDuration() : mMean.mean();
 }
 
 void
-TaskThrottler::RunQueuedTask(const TimeStamp& aTimeStamp)
+TaskThrottler::RunQueuedTask(const TimeStamp& aTimeStamp,
+                             const MonitorAutoLock& aProofOfLock)
 {
   TASK_LOG("%p running task %p\n", this, mQueuedTask.get());
   mStartTime = aTimeStamp;
   mQueuedTask->Run();
   mQueuedTask = nullptr;
-
 }
 
 void
 TaskThrottler::CancelPendingTask()
+{
+  MonitorAutoLock lock(mMonitor);
+  CancelPendingTask(lock);
+}
+
+void
+TaskThrottler::CancelPendingTask(const MonitorAutoLock& aProofOfLock)
 {
   if (mQueuedTask) {
     TASK_LOG("%p cancelling task %p\n", this, mQueuedTask.get());
@@ -118,18 +133,30 @@ TaskThrottler::CancelPendingTask()
 TimeDuration
 TaskThrottler::TimeSinceLastRequest(const TimeStamp& aTimeStamp)
 {
+  MonitorAutoLock lock(mMonitor);
+  return TimeSinceLastRequest(aTimeStamp, lock);
+}
+
+TimeDuration
+TaskThrottler::TimeSinceLastRequest(const TimeStamp& aTimeStamp,
+                                    const MonitorAutoLock& aProofOfLock)
+{
   return aTimeStamp - mStartTime;
 }
 
 void
 TaskThrottler::ClearHistory()
 {
+  MonitorAutoLock lock(mMonitor);
+
   mMean.clear();
 }
 
 void
 TaskThrottler::SetMaxDurations(uint32_t aMaxDurations)
 {
+  MonitorAutoLock lock(mMonitor);
+
   if (aMaxDurations != mMean.maxValues()) {
     mMean = RollingMean<TimeDuration, TimeDuration>(aMaxDurations);
   }
