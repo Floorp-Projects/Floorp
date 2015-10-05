@@ -2057,8 +2057,8 @@ NativeSetExistingDataProperty(JSContext* cx, HandleNativeObject obj, HandleShape
  * is really old code and there are a few barnacles.
  */
 bool
-js::SetPropertyByDefining(JSContext* cx, HandleObject obj, HandleId id, HandleValue v,
-                          HandleValue receiverValue, ObjectOpResult& result)
+js::SetPropertyByDefining(JSContext* cx, HandleId id, HandleValue v, HandleValue receiverValue,
+                          ObjectOpResult& result)
 {
     // Step 5.b.
     if (!receiverValue.isObject())
@@ -2141,7 +2141,7 @@ js::SetPropertyOnProto(JSContext* cx, HandleObject obj, HandleId id, HandleValue
     RootedObject proto(cx, obj->getProto());
     if (proto)
         return SetProperty(cx, proto, id, v, receiver, result);
-    return SetPropertyByDefining(cx, obj, id, v, receiver, result);
+    return SetPropertyByDefining(cx, id, v, receiver, result);
 }
 
 /*
@@ -2152,8 +2152,8 @@ js::SetPropertyOnProto(JSContext* cx, HandleObject obj, HandleId id, HandleValue
  * steps 4.d.i and 5.
  */
 static bool
-SetNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id, HandleValue v,
-                       HandleValue receiver, QualifiedBool qualified, ObjectOpResult& result)
+SetNonexistentProperty(JSContext* cx, HandleId id, HandleValue v, HandleValue receiver,
+                       QualifiedBool qualified, ObjectOpResult& result)
 {
     // We should never add properties to lexical blocks.
     MOZ_ASSERT_IF(receiver.isObject(), !receiver.toObject().is<BlockObject>());
@@ -2163,7 +2163,7 @@ SetNonexistentProperty(JSContext* cx, HandleNativeObject obj, HandleId id, Handl
             return false;
     }
 
-    return SetPropertyByDefining(cx, obj, id, v, receiver, result);
+    return SetPropertyByDefining(cx, id, v, receiver, result);
 }
 
 /*
@@ -2224,7 +2224,7 @@ SetExistingProperty(JSContext* cx, HandleNativeObject obj, HandleId id, HandleVa
             return SetDenseOrTypedArrayElement(cx, pobj, JSID_TO_INT(id), v, result);
 
         // Steps 5.b-f.
-        return SetPropertyByDefining(cx, obj, id, v, receiver, result);
+        return SetPropertyByDefining(cx, id, v, receiver, result);
     }
 
     // Step 5 for all other properties.
@@ -2262,7 +2262,7 @@ SetExistingProperty(JSContext* cx, HandleNativeObject obj, HandleId id, HandleVa
 
         // Shadow pobj[id] by defining a new data property receiver[id].
         // Delegate everything to SetPropertyByDefining.
-        return SetPropertyByDefining(cx, obj, id, v, receiver, result);
+        return SetPropertyByDefining(cx, id, v, receiver, result);
     }
 
     // Steps 6-11.
@@ -2319,7 +2319,7 @@ js::NativeSetProperty(JSContext* cx, HandleNativeObject obj, HandleId id, Handle
         RootedObject proto(cx, done ? nullptr : pobj->getProto());
         if (!proto) {
             // Step 4.d.i (and step 5).
-            return SetNonexistentProperty(cx, obj, id, v, receiver, qualified, result);
+            return SetNonexistentProperty(cx, id, v, receiver, qualified, result);
         }
 
         // Step 4.c.i. If the prototype is also native, this step is a
@@ -2336,7 +2336,7 @@ js::NativeSetProperty(JSContext* cx, HandleNativeObject obj, HandleId id, Handle
                 if (!HasProperty(cx, proto, id, &found))
                     return false;
                 if (!found)
-                    return SetNonexistentProperty(cx, obj, id, v, receiver, qualified, result);
+                    return SetNonexistentProperty(cx, id, v, receiver, qualified, result);
             }
 
             return SetProperty(cx, proto, id, v, receiver, result);
