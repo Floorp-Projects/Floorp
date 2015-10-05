@@ -209,7 +209,6 @@ enum WorkerPreference
   WORKERPREF_PERFORMANCE_LOGGING_ENABLED, // dom.performance.enable_user_timing_logging
   WORKERPREF_PUSH, // dom.push.enabled
   WORKERPREF_REQUESTCONTEXT, // dom.requestcontext.enabled
-  WORKERPREF_OFFSCREENCANVAS, // gfx.offscreencanvas.enabled
   WORKERPREF_COUNT
 };
 
