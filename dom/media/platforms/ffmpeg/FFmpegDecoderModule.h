@@ -10,6 +10,7 @@
 #include "PlatformDecoderModule.h"
 #include "FFmpegAudioDecoder.h"
 #include "FFmpegH264Decoder.h"
+#include "FFmpegRuntimeLinker.h"
 
 namespace mozilla
 {
@@ -23,7 +24,7 @@ public:
   {
     uint32_t major, minor;
     GetVersion(major, minor);
-    if (major < 54 && !sFFmpegDecoderEnabled) {
+    if (major < 54 && !FFmpegRuntimeLinker::sFFmpegDecoderEnabled) {
       return nullptr;
     }
     nsRefPtr<PlatformDecoderModule> pdm = new FFmpegDecoderModule();
