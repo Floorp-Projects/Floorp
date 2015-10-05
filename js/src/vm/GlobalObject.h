@@ -387,6 +387,12 @@ class GlobalObject : public NativeObject
         return &global->getPrototype(JSProto_Symbol).toObject().as<NativeObject>();
     }
 
+    static NativeObject* getOrCreatePromisePrototype(JSContext* cx, Handle<GlobalObject*> global) {
+        if (!ensureConstructor(cx, global, JSProto_ShellPromise))
+            return nullptr;
+        return &global->getPrototype(JSProto_ShellPromise).toObject().as<NativeObject>();
+    }
+
     static NativeObject* getOrCreateRegExpPrototype(JSContext* cx, Handle<GlobalObject*> global) {
         if (!ensureConstructor(cx, global, JSProto_RegExp))
             return nullptr;
