@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.home;
 
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import android.content.res.ColorStateList;
@@ -42,6 +43,7 @@ class TabMenuStripLayout extends LinearLayout
     // This variable is used to predict the direction of scroll.
     private float prevProgress;
     private int tabContentStart;
+    private boolean titlebarFill;
     private int activeTextColor;
     private ColorStateList inactiveTextColor;
 
@@ -50,6 +52,8 @@ class TabMenuStripLayout extends LinearLayout
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TabMenuStrip);
         final int stripResId = a.getResourceId(R.styleable.TabMenuStrip_strip, -1);
+
+        titlebarFill = a.getBoolean(R.styleable.TabMenuStrip_titlebarFill, false);
         tabContentStart = a.getDimensionPixelSize(R.styleable.TabMenuStrip_tabContentStart, 0);
         activeTextColor = a.getColor(R.styleable.TabMenuStrip_activeTextColor, R.color.text_and_tabs_tray_grey);
         inactiveTextColor = a.getColorStateList(R.styleable.TabMenuStrip_inactiveTextColor);
@@ -66,6 +70,13 @@ class TabMenuStripLayout extends LinearLayout
         final TextView button = (TextView) LayoutInflater.from(getContext()).inflate(R.layout.tab_menu_strip, this, false);
         button.setText(title.toUpperCase());
         button.setTextColor(inactiveTextColor);
+
+        // Set titles width to weight, or wrap text width.
+        if (titlebarFill) {
+            button.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f));
+        } else {
+            button.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        }
 
         if (getChildCount() == 0) {
             button.setPadding(button.getPaddingLeft() + tabContentStart,
