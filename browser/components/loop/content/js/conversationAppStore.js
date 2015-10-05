@@ -147,7 +147,8 @@ loop.store.ConversationAppStore = (function() {
           this._dispatcher.dispatch(new loop.shared.actions.HangupCall());
           break;
         case "room":
-          if (this._activeRoomStore.getStoreState().used) {
+          if (this._activeRoomStore.getStoreState().used &&
+              !this._storeState.showFeedbackForm) {
             this._dispatcher.dispatch(new loop.shared.actions.LeaveRoom());
           } else {
             loop.shared.mixins.WindowCloseMixin.closeWindow();
