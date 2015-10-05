@@ -8,6 +8,8 @@
 
 #include "jscntxt.h"
 
+#include "builtin/SelfHostingDefines.h"
+
 #include "jsobjinlines.h"
 
 using namespace js;
@@ -26,17 +28,59 @@ static const JSFunctionSpec promise_static_methods[] = {
     JS_FS_END
 };
 
-static bool
+namespace js {
+
+bool
 PromiseConstructor(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    JSObject* obj = NewBuiltinClassInstance(cx, &ShellPromiseObject::class_);
-    if (!obj)
+    if (args.length() == 0) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_MORE_ARGS_NEEDED,
+                             "ShellPromise.constructor", "0", "s");
         return false;
-    // TODO: store the resolve and reject callbacks.
-    args.rval().setObject(*obj);
+    }
+
+    HandleValue fn = args.get(0);
+
+    if (!IsCallable(fn)) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_CALLABLE,
+                              "Argument 1 of ShellPromise.constructor");
+        return false;
+    }
+
+    RootedObject promise(cx, NewBuiltinClassInstance(cx, &ShellPromiseObject::class_));
+    if (!promise)
+        return false;
+
+    JS_SetReservedSlot(promise, PROMISE_STATE_SLOT, NumberValue(PROMISE_STATE_PENDING));
+    JS_SetReservedSlot(promise, PROMISE_VALUE_SLOT, NullValue());
+    JS_SetReservedSlot(promise, PROMISE_DEFERREDS_SLOT, NullValue());
+
+    RootedValue initRval(cx);
+    JS::AutoValueVector argValues(cx);
+    argValues.append(ObjectValue(*promise));
+    argValues.append(fn);
+    HandleValueArray arr(argValues);
+
+    JSAtom* promiseInitAtom;
+    if (!(promiseInitAtom = Atomize(cx, "Promise_init", 12)))
+        return false;
+
+    RootedPropertyName name(cx, promiseInitAtom->asPropertyName());
+    RootedValue selfHostedFun(cx);
+
+    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), name, &selfHostedFun))
+        return false;
+
+    if (!JS_CallFunctionValue(cx, promise, selfHostedFun, arr, &initRval))
+        return false;
+
+    args.rval().setObject(*promise);
+
     return true;
+}
+
 }
 
 static JSObject*
@@ -47,7 +91,7 @@ CreatePromisePrototype(JSContext* cx, JSProtoKey key)
 
 const Class ShellPromiseObject::class_ = {
     "ShellPromise",
-    JSCLASS_HAS_CACHED_PROTO(JSProto_ShellPromise),
+    JSCLASS_HAS_RESERVED_SLOTS(RESERVED_SLOTS) | JSCLASS_HAS_CACHED_PROTO(JSProto_ShellPromise),
     nullptr, /* addProperty */
     nullptr, /* delProperty */
     nullptr, /* getProperty */
