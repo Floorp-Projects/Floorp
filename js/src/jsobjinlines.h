@@ -29,6 +29,7 @@
 #include "jscompartmentinlines.h"
 #include "jsgcinlines.h"
 
+#include "jit/AtomicOperations-inl.h"
 #include "vm/TypeInference-inl.h"
 
 namespace js {
