@@ -74,9 +74,6 @@ enums = GENERATED_FILES['TelemetryHistogramEnums.h']
 enums.script = 'gen-histogram-enum.py'
 enums.inputs = histogram_files
 
-if CONFIG['MOZILLA_OFFICIAL']:
-    DEFINES['MOZILLA_OFFICIAL'] = True
-
 DEFINES['MOZ_APP_VERSION'] = '"%s"' % CONFIG['MOZ_APP_VERSION']
 
 LOCAL_INCLUDES += [

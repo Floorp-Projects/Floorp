@@ -131,10 +131,12 @@ public:
     nsOfflineCachePendingUpdate(nsOfflineCacheUpdateService *aService,
                                 nsIURI *aManifestURI,
                                 nsIURI *aDocumentURI,
+                                nsIPrincipal* aLoadingPrincipal,
                                 nsIDOMDocument *aDocument)
         : mService(aService)
         , mManifestURI(aManifestURI)
         , mDocumentURI(aDocumentURI)
+        , mLoadingPrincipal(aLoadingPrincipal)
         , mDidReleaseThis(false)
         {
             mDocument = do_GetWeakReference(aDocument);
@@ -146,6 +148,7 @@ private:
     nsRefPtr<nsOfflineCacheUpdateService> mService;
     nsCOMPtr<nsIURI> mManifestURI;
     nsCOMPtr<nsIURI> mDocumentURI;
+    nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
     nsCOMPtr<nsIWeakReference> mDocument;
     bool mDidReleaseThis;
 };
@@ -218,9 +221,8 @@ nsOfflineCachePendingUpdate::OnStateChange(nsIWebProgress* aWebProgress,
         NS_ENSURE_SUCCESS(rv, rv);
 
         nsCOMPtr<nsIOfflineCacheUpdate> update;
-        mService->Schedule(mManifestURI, mDocumentURI,
-                           updateDoc, window, nullptr,
-                           appId, isInBrowserElement, getter_AddRefs(update));
+        mService->Schedule(mManifestURI, mDocumentURI, mLoadingPrincipal, updateDoc, window,
+                           nullptr, appId, isInBrowserElement, getter_AddRefs(update));
         if (mDidReleaseThis) {
             return NS_OK;
         }
@@ -375,6 +377,7 @@ nsOfflineCacheUpdateService::ScheduleUpdate(nsOfflineCacheUpdate *aUpdate)
 NS_IMETHODIMP
 nsOfflineCacheUpdateService::ScheduleOnDocumentStop(nsIURI *aManifestURI,
                                                     nsIURI *aDocumentURI,
+                                                    nsIPrincipal* aLoadingPrincipal,
                                                     nsIDOMDocument *aDocument)
 {
     LOG(("nsOfflineCacheUpdateService::ScheduleOnDocumentStop [%p, manifestURI=%p, documentURI=%p doc=%p]",
@@ -386,8 +389,8 @@ nsOfflineCacheUpdateService::ScheduleOnDocumentStop(nsIURI *aManifestURI,
 
     // Proceed with cache update
     nsRefPtr<nsOfflineCachePendingUpdate> update =
-        new nsOfflineCachePendingUpdate(this, aManifestURI,
-                                        aDocumentURI, aDocument);
+        new nsOfflineCachePendingUpdate(this, aManifestURI, aDocumentURI,
+                                        aLoadingPrincipal, aDocument);
     NS_ENSURE_TRUE(update, NS_ERROR_OUT_OF_MEMORY);
 
     nsresult rv = progress->AddProgressListener
@@ -520,6 +523,7 @@ nsOfflineCacheUpdateService::FindUpdate(nsIURI *aManifestURI,
 nsresult
 nsOfflineCacheUpdateService::Schedule(nsIURI *aManifestURI,
                                       nsIURI *aDocumentURI,
+                                      nsIPrincipal* aLoadingPrincipal,
                                       nsIDOMDocument *aDocument,
                                       nsIDOMWindow* aWindow,
                                       nsIFile* aCustomProfileDir,
@@ -545,7 +549,7 @@ nsOfflineCacheUpdateService::Schedule(nsIURI *aManifestURI,
       aWindow->GetApplicationCache(getter_AddRefs(appCacheWindowObject));
     }
 
-    rv = update->Init(aManifestURI, aDocumentURI, aDocument,
+    rv = update->Init(aManifestURI, aDocumentURI, aLoadingPrincipal, aDocument,
                       aCustomProfileDir, aAppID, aInBrowser);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -560,6 +564,7 @@ nsOfflineCacheUpdateService::Schedule(nsIURI *aManifestURI,
 NS_IMETHODIMP
 nsOfflineCacheUpdateService::ScheduleUpdate(nsIURI *aManifestURI,
                                             nsIURI *aDocumentURI,
+                                            nsIPrincipal* aLoadingPrincipal,
                                             nsIDOMWindow *aWindow,
                                             nsIOfflineCacheUpdate **aUpdate)
 {
@@ -569,22 +574,24 @@ nsOfflineCacheUpdateService::ScheduleUpdate(nsIURI *aManifestURI,
     nsresult rv = GetAppIDAndInBrowserFromWindow(aWindow, &appId, &isInBrowser);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return Schedule(aManifestURI, aDocumentURI, nullptr, aWindow, nullptr,
-                    appId, isInBrowser, aUpdate);
+    return Schedule(aManifestURI, aDocumentURI, aLoadingPrincipal, nullptr, aWindow,
+                    nullptr, appId, isInBrowser, aUpdate);
 }
 
 NS_IMETHODIMP
 nsOfflineCacheUpdateService::ScheduleAppUpdate(nsIURI *aManifestURI,
                                                nsIURI *aDocumentURI,
+                                               nsIPrincipal* aLoadingPrincipal,
                                                uint32_t aAppID, bool aInBrowser,
                                                nsIFile *aProfileDir,
                                                nsIOfflineCacheUpdate **aUpdate)
 {
-    return Schedule(aManifestURI, aDocumentURI, nullptr, nullptr, aProfileDir,
-                    aAppID, aInBrowser, aUpdate);
+    return Schedule(aManifestURI, aDocumentURI, aLoadingPrincipal, nullptr, nullptr,
+                    aProfileDir, aAppID, aInBrowser, aUpdate);
 }
 
 NS_IMETHODIMP nsOfflineCacheUpdateService::CheckForUpdate(nsIURI *aManifestURI,
+                                                          nsIPrincipal* aLoadingPrincipal,
                                                           uint32_t aAppID,
                                                           bool aInBrowser,
                                                           nsIObserver *aObserver)
@@ -598,7 +605,7 @@ NS_IMETHODIMP nsOfflineCacheUpdateService::CheckForUpdate(nsIURI *aManifestURI,
 
     nsresult rv;
 
-    rv = update->InitForUpdateCheck(aManifestURI, aAppID, aInBrowser, aObserver);
+    rv = update->InitForUpdateCheck(aManifestURI, aLoadingPrincipal, aAppID, aInBrowser, aObserver);
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = update->Schedule();

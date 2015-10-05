@@ -15,6 +15,7 @@
 #endif
 #include "mozilla/Logging.h"
 #include "nsMimeTypes.h"
+#include "nsContentTypeParser.h"
 
 #ifdef XP_WIN
 #include "mozilla/WindowsVersion.h"
@@ -139,28 +140,43 @@ MP4Decoder::CanHandleMediaType(const nsACString& aType,
 
   // Verify that all the codecs specifed are ones that we expect that
   // we can play.
-  nsCharSeparatedTokenizer tokenizer(aCodecs, ',');
-  bool expectMoreTokens = false;
-  while (tokenizer.hasMoreTokens()) {
-    const nsSubstring& token = tokenizer.nextToken();
-    expectMoreTokens = tokenizer.separatorAfterCurrentToken();
-    if (IsSupportedAudioCodec(token,
+  nsTArray<nsString> codecs;
+  if (!ParseCodecsString(aCodecs, codecs)) {
+    return false;
+  }
+  for (const nsString& codec : codecs) {
+    if (IsSupportedAudioCodec(codec,
                               aOutContainsAAC,
                               aOutContainsMP3)) {
       continue;
     }
-    if (IsSupportedH264Codec(token)) {
+    if (IsSupportedH264Codec(codec)) {
       aOutContainsH264 = true;
       continue;
     }
-    return false;
-  }
-  if (expectMoreTokens) {
-    // Last codec name was empty
+    // Some unsupported codec.
     return false;
   }
 
   return true;
+}
+
+/* static */ bool
+MP4Decoder::CanHandleMediaType(const nsAString& aContentType)
+{
+  nsContentTypeParser parser(aContentType);
+  nsAutoString mimeType;
+  nsresult rv = parser.GetType(mimeType);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+  nsString codecs;
+  parser.GetParameter("codecs", codecs);
+
+  bool ignoreAAC, ignoreH264, ignoreMP3;
+  return CanHandleMediaType(NS_ConvertUTF16toUTF8(mimeType),
+                            codecs,
+                            ignoreAAC, ignoreH264, ignoreMP3);
 }
 
 static bool

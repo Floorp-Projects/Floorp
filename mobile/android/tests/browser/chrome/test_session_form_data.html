@@ -11,6 +11,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript;version=1.7">
 
 "use strict";
@@ -35,25 +36,6 @@ function sleep(wait) {
         resolve();
       },
     }, wait, gTimer.TYPE_ONE_SHOT);
-  });
-}
-
-function promiseBrowserLoaded(browser, eventType="load") {
-  return new Promise((resolve, reject) => {
-    dump("Wait browser event: " + eventType);
-
-    function handle(event) {
-      if (event.target != browser.contentDocument) {
-        dump("Skipping spurious '" + eventType + "' event" + " for " + event.target.location.href);
-        return;
-      }
-
-      browser.removeEventListener(eventType, handle, true);
-      dump("Browser event received: " + eventType);
-      resolve(event);
-    }
-
-    browser.addEventListener(eventType, handle, true);
   });
 }
 
@@ -129,7 +111,7 @@ add_task(function* test_formdata() {
       // Create a new tab.
       let tab = gBrowserApp.addTab(URL);
       let browser = tab.browser;
-      yield promiseBrowserLoaded(browser);
+      yield promiseBrowserEvent(browser, "load");
 
       // Modify form data.
       setInputValue(browser, {id: "txt", value: OUTER_VALUE});
@@ -184,7 +166,7 @@ add_task(function* test_formdata2() {
       // Create a new tab.
       let tab = gBrowserApp.addTab(URL);
       let browser = tab.browser;
-      yield promiseBrowserLoaded(browser);
+      yield promiseBrowserEvent(browser, "load");
 
       // Modify form data.
       setInputValue(browser, {id: "txt", value: OUTER_VALUE});
@@ -205,7 +187,7 @@ add_task(function* test_formdata2() {
   // Restore the closed tab.
   let closedTabData = ss.getClosedTabs(gChromeWin)[0];
   let browser = ss.undoCloseTab(gChromeWin, closedTabData);
-  yield promiseBrowserLoaded(browser);
+  yield promiseBrowserEvent(browser, "load");
 
   // Check the form data.
   is(getInputValue(browser, {id: "txt"}), OUTER_VALUE, "outer value restored correctly");

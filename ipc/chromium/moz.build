@@ -169,7 +169,4 @@ if '86' not in ost and 'arm' not in ost and 'mips' not in ost:
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
-# XXX: We should fix these warnings.
-ALLOW_COMPILER_WARNINGS = True
-
 FINAL_LIBRARY = 'xul'

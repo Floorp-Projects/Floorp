@@ -5,9 +5,13 @@
 
 const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
 
+const userAgentID = '3c7462fc-270f-45be-a459-b9d631b0d093';
+
 function run_test() {
   do_get_profile();
-  setPrefs();
+  setPrefs({
+    userAgentID: userAgentID,
+  });
   disableServiceWorkerEvents(
     'https://example.com/a',
     'https://example.com/b',
@@ -82,7 +86,7 @@ add_task(function* test_notification_error() {
           this.serverSendMsg(JSON.stringify({
             messageType: 'hello',
             status: 200,
-            uaid: '3c7462fc-270f-45be-a459-b9d631b0d093'
+            uaid: userAgentID,
           }));
           this.serverSendMsg(JSON.stringify({
             messageType: 'notification',

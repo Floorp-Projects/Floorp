@@ -60,6 +60,7 @@ include PTabContext;
 include URIParams;
 include PluginTypes;
 include ProtocolTypes;
+include PBackgroundSharedTypes;
 include PContentPermission;
 include BrowserConfiguration;
 include GraphicsMessages;
@@ -1021,6 +1022,8 @@ parent:
      *   URI of the manifest to fetch, the application cache group ID
      * @param documentURI
      *   URI of the document that referred the manifest
+     * @param loadingPrincipal
+     *   Principal of the document that referred the manifest
      * @param stickDocument
      *   True if the update was initiated by a document load that referred
      *   a manifest.
@@ -1040,7 +1043,8 @@ parent:
      *   To identify which tab owns the app.
      */
     POfflineCacheUpdate(URIParams manifestURI, URIParams documentURI,
-                        bool stickDocument, TabId tabId);
+                        PrincipalInfo loadingPrincipal, bool stickDocument,
+                        TabId tabId);
 
     /**
      * Sets "offline-app" permission for the principal.  Called when we hit

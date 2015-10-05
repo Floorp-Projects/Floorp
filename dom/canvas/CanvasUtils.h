@@ -21,6 +21,7 @@ class HTMLCanvasElement;
 
 namespace CanvasUtils {
 
+bool GetCanvasContextType(const nsAString& str, dom::CanvasContextType* const out_type);
 
 // Check that the rectangle [x,y,w,h] is a subrectangle of [0,0,realWidth,realHeight]
 

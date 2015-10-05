@@ -41,7 +41,7 @@ onhashchange = function() {
   is(location.hash, "#PASS", "Should get the first map in tree order.");
   SimpleTest.finish();
 };
-SimpleTest.waitForFocus(function() synthesizeMouse(images[0], 50, 50, {}));
+SimpleTest.waitForFocus(() => synthesizeMouse(images[0], 50, 50, {}));
 </script>
 </pre>
 </body>

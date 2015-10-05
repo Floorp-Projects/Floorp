@@ -16,32 +16,32 @@ let tests = [
   },
 
   function test2() {
-    listen("fullscreen", function() checkAndContinue("fullscreen"));
+    listen("fullscreen", () => checkAndContinue("fullscreen"));
     window.fullScreen = true;
   },
 
   function test3() {
-    listen("fullscreen", function() checkAndContinue("normal"));
+    listen("fullscreen", () => checkAndContinue("normal"));
     window.fullScreen = false;
   },
 
   function test4() {
-    listen("resize", function() checkAndContinue("maximized"));
+    listen("resize", () => checkAndContinue("maximized"));
     window.maximize();
   },
 
   function test5() {
-    listen("fullscreen", function() checkAndContinue("fullscreen"));
+    listen("fullscreen", () => checkAndContinue("fullscreen"));
     window.fullScreen = true;
   },
 
   function test6() {
-    listen("fullscreen", function() checkAndContinue("maximized"));
+    listen("fullscreen", () => checkAndContinue("maximized"));
     window.fullScreen = false;
   },
 
   function test7() {
-    listen("resize", function() checkAndContinue("normal"));
+    listen("resize", () => checkAndContinue("normal"));
     window.restore();
   },
 
