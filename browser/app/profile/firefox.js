@@ -1174,12 +1174,10 @@ pref("dom.ipc.plugins.sandbox-level.flash", 0);
 // This controls the strength of the Windows content process sandbox for testing
 // purposes. This will require a restart.
 // On windows these levels are:
-// 0 - sandbox with USER_NON_ADMIN access token level
-// 1 - level 0 plus low integrity
-// 2 - a policy that we can reasonably call an effective sandbox
-// 3 - an equivalent basic policy to the Chromium renderer processes
+// See - security/sandbox/win/src/sandboxbroker/sandboxBroker.cpp
+// SetSecurityLevelForContentProcess() for what the different settings mean.
 #if defined(NIGHTLY_BUILD)
-pref("security.sandbox.content.level", 1);
+pref("security.sandbox.content.level", 2);
 #else
 pref("security.sandbox.content.level", 0);
 #endif

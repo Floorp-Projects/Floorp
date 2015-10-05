@@ -623,9 +623,9 @@ static void
 SetUpSandboxEnvironment()
 {
   // A low integrity temp only currently makes sense for Vista and later, e10s
-  // and sandbox pref level 1.
+  // and sandbox pref level >= 1.
   if (!IsVistaOrLater() || !BrowserTabsRemoteAutostart() ||
-      Preferences::GetInt("security.sandbox.content.level") != 1) {
+      Preferences::GetInt("security.sandbox.content.level") < 1) {
     return;
   }
 
