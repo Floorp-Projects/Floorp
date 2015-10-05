@@ -18,6 +18,7 @@ UNIFIED_SOURCES += [
     'agnostic/OpusDecoder.cpp',
     'agnostic/VorbisDecoder.cpp',
     'agnostic/VPXDecoder.cpp',
+    'PDMFactory.cpp',
     'PlatformDecoderModule.cpp',
     'wrappers/FuzzingWrapper.cpp',
     'wrappers/H264Converter.cpp'
