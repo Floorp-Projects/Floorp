@@ -27,8 +27,8 @@ class FlagStd140Structs : public TIntermTraverser
     const std::vector<TIntermTyped *> getFlaggedNodes() const { return mFlaggedNodes; }
 
   protected:
-    virtual bool visitBinary(Visit visit, TIntermBinary *binaryNode);
-    virtual void visitSymbol(TIntermSymbol *symbol);
+    bool visitBinary(Visit visit, TIntermBinary *binaryNode) override;
+    void visitSymbol(TIntermSymbol *symbol) override;
 
   private:
     bool isInStd140InterfaceBlock(TIntermTyped *node) const;

@@ -35,7 +35,8 @@ ImageIndex ImageIndex::Make2D(GLint mipIndex)
 ImageIndex ImageIndex::MakeCube(GLenum target, GLint mipIndex)
 {
     ASSERT(gl::IsCubeMapTextureTarget(target));
-    return ImageIndex(target, mipIndex, CubeMapTextureTargetToLayerIndex(target));
+    return ImageIndex(target, mipIndex,
+                      static_cast<GLint>(CubeMapTextureTargetToLayerIndex(target)));
 }
 
 ImageIndex ImageIndex::Make2DArray(GLint mipIndex, GLint layerIndex)
@@ -50,7 +51,9 @@ ImageIndex ImageIndex::Make3D(GLint mipIndex, GLint layerIndex)
 
 ImageIndex ImageIndex::MakeGeneric(GLenum target, GLint mipIndex)
 {
-    GLint layerIndex = IsCubeMapTextureTarget(target) ? CubeMapTextureTargetToLayerIndex(target) : ENTIRE_LEVEL;
+    GLint layerIndex = IsCubeMapTextureTarget(target)
+                           ? static_cast<GLint>(CubeMapTextureTargetToLayerIndex(target))
+                           : ENTIRE_LEVEL;
     return ImageIndex(target, mipIndex, layerIndex);
 }
 

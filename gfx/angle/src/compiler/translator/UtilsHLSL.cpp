@@ -8,6 +8,7 @@
 //
 
 #include "compiler/translator/UtilsHLSL.h"
+#include "compiler/translator/IntermNode.h"
 #include "compiler/translator/StructureHLSL.h"
 #include "compiler/translator/SymbolTable.h"
 
@@ -85,6 +86,30 @@ TString Decorate(const TString &string)
     }
 
     return string;
+}
+
+TString DecorateIfNeeded(const TName &name)
+{
+    if (name.isInternal())
+    {
+        return name.getString();
+    }
+    else
+    {
+        return Decorate(name.getString());
+    }
+}
+
+TString DecorateFunctionIfNeeded(const TName &name)
+{
+    if (name.isInternal())
+    {
+        return TFunction::unmangleName(name.getString());
+    }
+    else
+    {
+        return Decorate(TFunction::unmangleName(name.getString()));
+    }
 }
 
 TString TypeString(const TType &type)

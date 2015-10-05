@@ -217,29 +217,73 @@ bool Uniform::isSameUniformAtLinkTime(const Uniform &other) const
     return ShaderVariable::isSameVariableAtLinkTime(other, true);
 }
 
-Attribute::Attribute()
-    : location(-1)
+InterfaceVariable::InterfaceVariable() : location(-1)
 {}
 
-Attribute::~Attribute()
+InterfaceVariable::~InterfaceVariable()
 {}
 
-Attribute::Attribute(const Attribute &other)
-    : ShaderVariable(other),
-      location(other.location)
+InterfaceVariable::InterfaceVariable(const InterfaceVariable &other)
+    : ShaderVariable(other), location(other.location)
 {}
 
-Attribute &Attribute::operator=(const Attribute &other)
+InterfaceVariable &InterfaceVariable::operator=(const InterfaceVariable &other)
 {
     ShaderVariable::operator=(other);
     location = other.location;
     return *this;
 }
 
-bool Attribute::operator==(const Attribute &other) const
+bool InterfaceVariable::operator==(const InterfaceVariable &other) const
 {
     return (ShaderVariable::operator==(other) &&
             location == other.location);
+}
+
+Attribute::Attribute()
+{
+}
+
+Attribute::~Attribute()
+{
+}
+
+Attribute::Attribute(const Attribute &other) : InterfaceVariable(other)
+{
+}
+
+Attribute &Attribute::operator=(const Attribute &other)
+{
+    InterfaceVariable::operator=(other);
+    return *this;
+}
+
+bool Attribute::operator==(const Attribute &other) const
+{
+    return InterfaceVariable::operator==(other);
+}
+
+OutputVariable::OutputVariable()
+{
+}
+
+OutputVariable::~OutputVariable()
+{
+}
+
+OutputVariable::OutputVariable(const OutputVariable &other) : InterfaceVariable(other)
+{
+}
+
+OutputVariable &OutputVariable::operator=(const OutputVariable &other)
+{
+    InterfaceVariable::operator=(other);
+    return *this;
+}
+
+bool OutputVariable::operator==(const OutputVariable &other) const
+{
+    return InterfaceVariable::operator==(other);
 }
 
 InterfaceBlockField::InterfaceBlockField()

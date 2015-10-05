@@ -1,9 +1,19 @@
-# Copyright 2014 The Chromium Authors. All rights reserved.
+# Copyright 2014-2015 The Chromium Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
 # import the use_x11 variable
 import("//build/config/ui.gni")
+import("//third_party/angle/build/angle_common.gni")
+
+angle_git_is_present = exec_script("src/commit_id.py",
+                                   [
+                                     "check",
+                                     rebase_path(".", root_build_dir),
+                                   ],
+                                   "value")
+
+angle_use_commit_id = angle_git_is_present == 1
 
 gles_gypi = exec_script(
   "//build/gypi_to_gn.py",
@@ -33,30 +43,11 @@ config("internal_config") {
   ]
 }
 
-angle_enable_d3d9 = false
-angle_enable_d3d11 = false
-angle_enable_gl = false
-
 if (is_win) {
-  angle_enable_d3d9 = true
-  angle_enable_d3d11 = true
-  angle_enable_gl = true
-
-  import("//build/config/win/visual_studio_version.gni")
   copy("copy_compiler_dll") {
     sources = [ "$windows_sdk_path/Redist/D3D/$target_cpu/d3dcompiler_47.dll" ]
     outputs = [ "$root_build_dir/d3dcompiler_47.dll" ]
   }
-} # is_win
-
-if (is_linux) {
-  angle_enable_gl = true
-}
-
-angle_enable_hlsl = false
-
-if (angle_enable_d3d9 || angle_enable_d3d11) {
-  angle_enable_hlsl = true
 }
 
 component("translator") {
@@ -93,8 +84,9 @@ source_set("includes") {
     "include/GLES2/gl2ext.h",
     "include/GLES2/gl2platform.h",
     "include/GLES3/gl3.h",
-    "include/GLES3/gl3ext.h",
     "include/GLES3/gl3platform.h",
+    "include/GLES3/gl31.h",
+    "include/GLES3/gl32.h",
     "include/GLSLANG/ShaderLang.h",
     "include/KHR/khrplatform.h",
   ]
@@ -113,6 +105,7 @@ static_library("preprocessor") {
 config("translator_static_config") {
   defines = [ "ANGLE_TRANSLATOR_STATIC" ]
 }
+
 
 config("debug_annotations_config") {
   if (is_debug) {
@@ -184,19 +177,32 @@ config("commit_id_config") {
   include_dirs = [ "$root_gen_dir/angle" ]
 }
 
-action("commit_id") {
-  script = "src/commit_id.py"
+commit_id_output_file = "$root_gen_dir/angle/id/commit.h"
+if (angle_use_commit_id) {
+  action("commit_id") {
+    script = "src/commit_id.py"
+    outputs = [
+      commit_id_output_file,
+    ]
 
-  output_file = "$root_gen_dir/angle/id/commit.h"
-  outputs = [ output_file ]
+    args = [
+      "gen",
+      rebase_path(".", root_build_dir),
+      rebase_path(commit_id_output_file, root_build_dir),
+    ]
 
-  args = [
-    "gen",
-    rebase_path(".", root_build_dir),
-    rebase_path(output_file, root_build_dir),
-  ]
-
-  public_configs = [ ":commit_id_config" ]
+    public_configs = [ ":commit_id_config" ]
+  }
+} else {
+  copy("commit_id") {
+    sources = [
+      "src/commit.h",
+    ]
+    outputs = [
+      commit_id_output_file,
+    ]
+    public_configs = [ ":commit_id_config" ]
+  }
 }
 
 config("libANGLE_config") {
@@ -215,10 +221,20 @@ config("libANGLE_config") {
     defines += [ "ANGLE_USE_X11" ]
   }
   defines += [
-    "GL_APICALL=",
-    "GL_GLEXT_PROTOTYPES=",
-    "EGLAPI=",
+    "GL_GLEXT_PROTOTYPES",
   ]
+
+  if (is_win) {
+    defines += [
+      "GL_APICALL=",
+      "EGLAPI=",
+    ]
+  } else {
+    defines += [
+      "GL_APICALL=__attribute__((visibility(\"default\")))",
+      "EGLAPI=__attribute__((visibility(\"default\")))",
+    ]
+  }
   if (is_win) {
     cflags += [ "/wd4530" ]  # C++ exception handler used, but unwind semantics are not enabled.
   }
@@ -333,6 +349,7 @@ shared_library("libEGL") {
   configs += [
     ":internal_config",
     ":commit_id_config",
+    ":debug_annotations_config",
     ":libANGLE_config",
     "//build/config/compiler:no_chromium_code",
   ]
@@ -343,6 +360,51 @@ shared_library("libEGL") {
 
   deps = [
     ":includes",
+    ":libGLESv2",
+  ]
+}
+
+util_gypi = exec_script(
+  "//build/gypi_to_gn.py",
+  [ rebase_path("util/util.gyp") ],
+  "scope",
+  [ "util/util.gyp" ])
+
+static_library("angle_util") {
+  sources = rebase_path(util_gypi.util_sources, ".", "util")
+
+  if (is_win) {
+    sources += rebase_path(util_gypi.util_win32_sources, ".", "util")
+  }
+
+  if (is_linux) {
+    sources += rebase_path(util_gypi.util_linux_sources, ".", "util")
+  }
+
+  if (is_mac) {
+    sources += rebase_path(util_gypi.util_osx_sources, ".", "util")
+  }
+
+  if (use_x11) {
+    sources += rebase_path(util_gypi.util_x11_sources, ".", "util")
+  }
+
+  defines = [
+    "GL_GLEXT_PROTOTYPES",
+    "EGL_EGLEXT_PROTOTYPES",
+  ]
+
+  configs += [
+    ":internal_config",
+    ":debug_annotations_config",
+  ]
+
+  include_dirs = [
+    "util",
+  ]
+
+  deps = [
+    ":libEGL",
     ":libGLESv2",
   ]
 }

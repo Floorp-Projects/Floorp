@@ -10,10 +10,12 @@
 #include "libANGLE/validationES2.h"
 #include "libANGLE/validationES3.h"
 #include "libANGLE/Context.h"
+#include "libANGLE/Display.h"
 #include "libANGLE/Texture.h"
 #include "libANGLE/Framebuffer.h"
 #include "libANGLE/FramebufferAttachment.h"
 #include "libANGLE/formatutils.h"
+#include "libANGLE/Image.h"
 #include "libANGLE/Query.h"
 #include "libANGLE/Program.h"
 #include "libANGLE/Uniform.h"
@@ -34,13 +36,11 @@ bool ValidateDrawAttribs(gl::Context *context, GLint primcount, GLint maxVertex)
 
     const VertexArray *vao     = state.getVertexArray();
     const auto &vertexAttribs  = vao->getVertexAttributes();
-    const int *semanticIndexes = program->getSemanticIndexes();
     size_t maxEnabledAttrib = vao->getMaxEnabledAttribute();
     for (size_t attributeIndex = 0; attributeIndex < maxEnabledAttrib; ++attributeIndex)
     {
         const VertexAttribute &attrib = vertexAttribs[attributeIndex];
-        bool attribActive = (semanticIndexes[attributeIndex] != -1);
-        if (attribActive && attrib.enabled)
+        if (program->isAttribLocationActive(attributeIndex) && attrib.enabled)
         {
             gl::Buffer *buffer = attrib.buffer.get();
 
@@ -180,7 +180,7 @@ bool ValidBufferTarget(const Context *context, GLenum target)
 
       case GL_PIXEL_PACK_BUFFER:
       case GL_PIXEL_UNPACK_BUFFER:
-        return context->getExtensions().pixelBufferObject;
+          return (context->getExtensions().pixelBufferObject || context->getClientVersion() >= 3);
 
       case GL_COPY_READ_BUFFER:
       case GL_COPY_WRITE_BUFFER:
@@ -240,7 +240,7 @@ bool ValidMipLevel(const Context *context, GLenum target, GLint level)
       default: UNREACHABLE();
     }
 
-    return level <= gl::log2(maxDimension);
+    return level <= gl::log2(static_cast<int>(maxDimension));
 }
 
 bool ValidImageSize(const Context *context, GLenum target, GLint level,
@@ -265,6 +265,23 @@ bool ValidImageSize(const Context *context, GLenum target, GLint level,
     return true;
 }
 
+bool CompressedTextureFormatRequiresExactSize(GLenum internalFormat)
+{
+    // List of compressed format that require that the texture size is smaller than or a multiple of
+    // the compressed block size.
+    switch (internalFormat)
+    {
+        case GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
+        case GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
+        case GL_COMPRESSED_RGBA_S3TC_DXT3_ANGLE:
+        case GL_COMPRESSED_RGBA_S3TC_DXT5_ANGLE:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
 bool ValidCompressedImageSize(const Context *context, GLenum internalFormat, GLsizei width, GLsizei height)
 {
     const gl::InternalFormat &formatInfo = gl::GetInternalFormatInfo(internalFormat);
@@ -273,10 +290,20 @@ bool ValidCompressedImageSize(const Context *context, GLenum internalFormat, GLs
         return false;
     }
 
-    if (width  < 0 || (static_cast<GLuint>(width)  > formatInfo.compressedBlockWidth  && width  % formatInfo.compressedBlockWidth != 0) ||
-        height < 0 || (static_cast<GLuint>(height) > formatInfo.compressedBlockHeight && height % formatInfo.compressedBlockHeight != 0))
+    if (width < 0 || height < 0)
     {
         return false;
+    }
+
+    if (CompressedTextureFormatRequiresExactSize(internalFormat))
+    {
+        if ((static_cast<GLuint>(width) > formatInfo.compressedBlockWidth &&
+             width % formatInfo.compressedBlockWidth != 0) ||
+            (static_cast<GLuint>(height) > formatInfo.compressedBlockHeight &&
+             height % formatInfo.compressedBlockHeight != 0))
+        {
+            return false;
+        }
     }
 
     return true;
@@ -299,28 +326,50 @@ bool ValidQueryType(const Context *context, GLenum queryType)
     }
 }
 
-bool ValidProgram(Context *context, GLuint id)
+Program *GetValidProgram(Context *context, GLuint id)
 {
     // ES3 spec (section 2.11.1) -- "Commands that accept shader or program object names will generate the
     // error INVALID_VALUE if the provided name is not the name of either a shader or program object and
     // INVALID_OPERATION if the provided name identifies an object that is not the expected type."
 
-    if (context->getProgram(id) != NULL)
+    Program *validProgram = context->getProgram(id);
+
+    if (!validProgram)
     {
-        return true;
+        if (context->getShader(id))
+        {
+            context->recordError(
+                Error(GL_INVALID_OPERATION, "Expected a program name, but found a shader name"));
+        }
+        else
+        {
+            context->recordError(Error(GL_INVALID_VALUE, "Program name is not valid"));
+        }
     }
-    else if (context->getShader(id) != NULL)
+
+    return validProgram;
+}
+
+Shader *GetValidShader(Context *context, GLuint id)
+{
+    // See ValidProgram for spec details.
+
+    Shader *validShader = context->getShader(id);
+
+    if (!validShader)
     {
-        // ID is the wrong type
-        context->recordError(Error(GL_INVALID_OPERATION));
-        return false;
+        if (context->getProgram(id))
+        {
+            context->recordError(
+                Error(GL_INVALID_OPERATION, "Expected a shader name, but found a program name"));
+        }
+        else
+        {
+            context->recordError(Error(GL_INVALID_VALUE, "Shader name is invalid"));
+        }
     }
-    else
-    {
-        // No shader/program object has this ID
-        context->recordError(Error(GL_INVALID_VALUE));
-        return false;
-    }
+
+    return validShader;
 }
 
 bool ValidateAttachmentTarget(gl::Context *context, GLenum attachment)
@@ -603,7 +652,7 @@ bool ValidateBlitFramebufferParameters(gl::Context *context, GLint srcX0, GLint 
             GLenum readInternalFormat = readColorBuffer->getInternalFormat();
             const InternalFormat &readFormatInfo = GetInternalFormatInfo(readInternalFormat);
 
-            for (GLuint i = 0; i < context->getCaps().maxColorAttachments; i++)
+            for (size_t i = 0; i < drawFramebuffer->getNumColorBuffers(); i++)
             {
                 if (drawFramebuffer->isEnabledColorAttachment(i))
                 {
@@ -659,7 +708,8 @@ bool ValidateBlitFramebufferParameters(gl::Context *context, GLint srcX0, GLint 
                     return false;
                 }
 
-                for (GLuint colorAttachment = 0; colorAttachment < context->getCaps().maxColorAttachments; ++colorAttachment)
+                for (size_t colorAttachment = 0;
+                     colorAttachment < drawFramebuffer->getNumColorBuffers(); ++colorAttachment)
                 {
                     if (drawFramebuffer->isEnabledColorAttachment(colorAttachment))
                     {
@@ -1095,8 +1145,11 @@ bool ValidateEndQuery(gl::Context *context, GLenum target)
     return true;
 }
 
-static bool ValidateUniformCommonBase(gl::Context *context, GLenum targetUniformType,
-                                      GLint location, GLsizei count, LinkedUniform **uniformOut)
+static bool ValidateUniformCommonBase(gl::Context *context,
+                                      GLenum targetUniformType,
+                                      GLint location,
+                                      GLsizei count,
+                                      const LinkedUniform **uniformOut)
 {
     if (count < 0)
     {
@@ -1123,16 +1176,16 @@ static bool ValidateUniformCommonBase(gl::Context *context, GLenum targetUniform
         return false;
     }
 
-    LinkedUniform *uniform = program->getUniformByLocation(location);
+    const LinkedUniform &uniform = program->getUniformByLocation(location);
 
     // attempting to write an array to a non-array uniform is an INVALID_OPERATION
-    if (uniform->elementCount() == 1 && count > 1)
+    if (!uniform.isArray() && count > 1)
     {
         context->recordError(Error(GL_INVALID_OPERATION));
         return false;
     }
 
-    *uniformOut = uniform;
+    *uniformOut = &uniform;
     return true;
 }
 
@@ -1145,7 +1198,7 @@ bool ValidateUniform(gl::Context *context, GLenum uniformType, GLint location, G
         return false;
     }
 
-    LinkedUniform *uniform = NULL;
+    const LinkedUniform *uniform = nullptr;
     if (!ValidateUniformCommonBase(context, uniformType, location, count, &uniform))
     {
         return false;
@@ -1180,7 +1233,7 @@ bool ValidateUniformMatrix(gl::Context *context, GLenum matrixType, GLint locati
         return false;
     }
 
-    LinkedUniform *uniform = NULL;
+    const LinkedUniform *uniform = nullptr;
     if (!ValidateUniformCommonBase(context, matrixType, location, count, &uniform))
     {
         return false;
@@ -1348,7 +1401,7 @@ bool ValidateCopyTexImageParametersBase(gl::Context *context, GLenum target, GLi
         return false;
     }
 
-    if (texture->isImmutable() && !isSubImage)
+    if (texture->getImmutableFormat() && !isSubImage)
     {
         context->recordError(Error(GL_INVALID_OPERATION));
         return false;
@@ -1404,7 +1457,7 @@ bool ValidateCopyTexImageParametersBase(gl::Context *context, GLenum target, GLi
     return true;
 }
 
-static bool ValidateDrawBase(Context *context, GLenum mode, GLsizei count, GLsizei maxVertex, GLsizei primcount)
+static bool ValidateDrawBase(Context *context, GLenum mode, GLsizei count, GLsizei primcount)
 {
     switch (mode)
     {
@@ -1436,17 +1489,21 @@ static bool ValidateDrawBase(Context *context, GLenum mode, GLsizei count, GLsiz
         return false;
     }
 
-    const gl::DepthStencilState &depthStencilState = state.getDepthStencilState();
-    if (depthStencilState.stencilWritemask != depthStencilState.stencilBackWritemask ||
-        state.getStencilRef() != state.getStencilBackRef() ||
-        depthStencilState.stencilMask != depthStencilState.stencilBackMask)
+    if (context->getLimitations().noSeparateStencilRefsAndMasks)
     {
-        // Note: these separate values are not supported in WebGL, due to D3D's limitations.
-        // See Section 6.10 of the WebGL 1.0 spec
-        ERR("This ANGLE implementation does not support separate front/back stencil "
-            "writemasks, reference values, or stencil mask values.");
-        context->recordError(Error(GL_INVALID_OPERATION));
-        return false;
+        const gl::DepthStencilState &depthStencilState = state.getDepthStencilState();
+        if (depthStencilState.stencilWritemask != depthStencilState.stencilBackWritemask ||
+            state.getStencilRef() != state.getStencilBackRef() ||
+            depthStencilState.stencilMask != depthStencilState.stencilBackMask)
+        {
+            // Note: these separate values are not supported in WebGL, due to D3D's limitations. See
+            // Section 6.10 of the WebGL 1.0 spec
+            ERR(
+                "This ANGLE implementation does not support separate front/back stencil "
+                "writemasks, reference values, or stencil mask values.");
+            context->recordError(Error(GL_INVALID_OPERATION));
+            return false;
+        }
     }
 
     const gl::Framebuffer *fbo = state.getDrawFramebuffer();
@@ -1469,16 +1526,10 @@ static bool ValidateDrawBase(Context *context, GLenum mode, GLsizei count, GLsiz
         return false;
     }
 
-    // Buffer validations
-    if (!ValidateDrawAttribs(context, primcount, maxVertex))
-    {
-        return false;
-    }
-
     // Uniform buffer validation
     for (unsigned int uniformBlockIndex = 0; uniformBlockIndex < program->getActiveUniformBlockCount(); uniformBlockIndex++)
     {
-        const gl::UniformBlock *uniformBlock = program->getUniformBlockByIndex(uniformBlockIndex);
+        const gl::UniformBlock &uniformBlock = program->getUniformBlockByIndex(uniformBlockIndex);
         GLuint blockBinding = program->getUniformBlockBinding(uniformBlockIndex);
         const gl::Buffer *uniformBuffer = state.getIndexedUniformBuffer(blockBinding);
 
@@ -1497,7 +1548,7 @@ static bool ValidateDrawBase(Context *context, GLenum mode, GLsizei count, GLsiz
             uniformBufferSize = static_cast<size_t>(uniformBuffer->getSize());
         }
 
-        if (uniformBufferSize < uniformBlock->dataSize)
+        if (uniformBufferSize < uniformBlock.dataSize)
         {
             // undefined behaviour
             context->recordError(Error(GL_INVALID_OPERATION, "It is undefined behaviour to use a uniform buffer that is too small."));
@@ -1529,7 +1580,12 @@ bool ValidateDrawArrays(Context *context, GLenum mode, GLint first, GLsizei coun
         return false;
     }
 
-    if (!ValidateDrawBase(context, mode, count, count, primcount))
+    if (!ValidateDrawBase(context, mode, count, primcount))
+    {
+        return false;
+    }
+
+    if (!ValidateDrawAttribs(context, primcount, count))
     {
         return false;
     }
@@ -1562,11 +1618,10 @@ static bool ValidateDrawInstancedANGLE(Context *context)
     gl::Program *program = state.getProgram();
 
     const VertexArray *vao = state.getVertexArray();
-    for (int attributeIndex = 0; attributeIndex < MAX_VERTEX_ATTRIBS; attributeIndex++)
+    for (size_t attributeIndex = 0; attributeIndex < MAX_VERTEX_ATTRIBS; attributeIndex++)
     {
         const VertexAttribute &attrib = vao->getVertexAttribute(attributeIndex);
-        bool active = (program->getSemanticIndex(attributeIndex) != -1);
-        if (active && attrib.divisor == 0)
+        if (program->isAttribLocationActive(attributeIndex) && attrib.divisor == 0)
         {
             return true;
         }
@@ -1587,8 +1642,13 @@ bool ValidateDrawArraysInstancedANGLE(Context *context, GLenum mode, GLint first
     return ValidateDrawArraysInstanced(context, mode, first, count, primcount);
 }
 
-bool ValidateDrawElements(Context *context, GLenum mode, GLsizei count, GLenum type,
-                          const GLvoid *indices, GLsizei primcount, RangeUI *indexRangeOut)
+bool ValidateDrawElements(Context *context,
+                          GLenum mode,
+                          GLsizei count,
+                          GLenum type,
+                          const GLvoid *indices,
+                          GLsizei primcount,
+                          IndexRange *indexRangeOut)
 {
     switch (type)
     {
@@ -1662,13 +1722,20 @@ bool ValidateDrawElements(Context *context, GLenum mode, GLsizei count, GLenum t
         return false;
     }
 
+    if (!ValidateDrawBase(context, mode, count, primcount))
+    {
+        return false;
+    }
+
     // Use max index to validate if our vertex buffers are large enough for the pull.
     // TODO: offer fast path, with disabled index validation.
     // TODO: also disable index checking on back-ends that are robust to out-of-range accesses.
     if (elementArrayBuffer)
     {
         uintptr_t offset = reinterpret_cast<uintptr_t>(indices);
-        Error error = elementArrayBuffer->getIndexRange(type, static_cast<size_t>(offset), count, indexRangeOut);
+        Error error =
+            elementArrayBuffer->getIndexRange(type, static_cast<size_t>(offset), count,
+                                              state.isPrimitiveRestartEnabled(), indexRangeOut);
         if (error.isError())
         {
             context->recordError(error);
@@ -1677,21 +1744,25 @@ bool ValidateDrawElements(Context *context, GLenum mode, GLsizei count, GLenum t
     }
     else
     {
-        *indexRangeOut = ComputeIndexRange(type, indices, count);
+        *indexRangeOut = ComputeIndexRange(type, indices, count, state.isPrimitiveRestartEnabled());
     }
 
-    if (!ValidateDrawBase(context, mode, count, static_cast<GLsizei>(indexRangeOut->end), primcount))
+    if (!ValidateDrawAttribs(context, primcount, static_cast<GLsizei>(indexRangeOut->end)))
     {
         return false;
     }
 
-    return true;
+    // No op if there are no real indices in the index data (all are primitive restart).
+    return (indexRangeOut->vertexIndexCount > 0);
 }
 
 bool ValidateDrawElementsInstanced(Context *context,
-                                   GLenum mode, GLsizei count, GLenum type,
-                                   const GLvoid *indices, GLsizei primcount,
-                                   RangeUI *indexRangeOut)
+                                   GLenum mode,
+                                   GLsizei count,
+                                   GLenum type,
+                                   const GLvoid *indices,
+                                   GLsizei primcount,
+                                   IndexRange *indexRangeOut)
 {
     if (primcount < 0)
     {
@@ -1708,8 +1779,13 @@ bool ValidateDrawElementsInstanced(Context *context,
     return (primcount > 0);
 }
 
-bool ValidateDrawElementsInstancedANGLE(Context *context, GLenum mode, GLsizei count, GLenum type,
-                                        const GLvoid *indices, GLsizei primcount, RangeUI *indexRangeOut)
+bool ValidateDrawElementsInstancedANGLE(Context *context,
+                                        GLenum mode,
+                                        GLsizei count,
+                                        GLenum type,
+                                        const GLvoid *indices,
+                                        GLsizei primcount,
+                                        IndexRange *indexRangeOut)
 {
     if (!ValidateDrawInstancedANGLE(context))
     {
@@ -1845,12 +1921,11 @@ bool ValidateGetUniformBase(Context *context, GLuint program, GLint location)
         return false;
     }
 
-    if (!ValidProgram(context, program))
+    gl::Program *programObject = GetValidProgram(context, program);
+    if (!programObject)
     {
         return false;
     }
-
-    gl::Program *programObject = context->getProgram(program);
 
     if (!programObject || !programObject->isLinked())
     {
@@ -1888,8 +1963,8 @@ static bool ValidateSizedGetUniform(Context *context, GLuint program, GLint loca
     ASSERT(programObject);
 
     // sized queries -- ensure the provided buffer is large enough
-    LinkedUniform *uniform = programObject->getUniformByLocation(location);
-    size_t requiredBytes = VariableExternalSize(uniform->type);
+    const LinkedUniform &uniform = programObject->getUniformByLocation(location);
+    size_t requiredBytes = VariableExternalSize(uniform.type);
     if (static_cast<size_t>(bufSize) < requiredBytes)
     {
         context->recordError(Error(GL_INVALID_OPERATION));
@@ -2006,7 +2081,43 @@ bool ValidateEGLImageTargetTexture2DOES(Context *context,
                                         GLenum target,
                                         egl::Image *image)
 {
-    UNIMPLEMENTED();
+    if (!context->getExtensions().eglImage && !context->getExtensions().eglImageExternal)
+    {
+        context->recordError(Error(GL_INVALID_OPERATION));
+        return false;
+    }
+
+    switch (target)
+    {
+        case GL_TEXTURE_2D:
+            break;
+
+        default:
+            context->recordError(Error(GL_INVALID_ENUM, "invalid texture target."));
+            return false;
+    }
+
+    if (!display->isValidImage(image))
+    {
+        context->recordError(Error(GL_INVALID_VALUE, "EGL image is not valid."));
+        return false;
+    }
+
+    if (image->getSamples() > 0)
+    {
+        context->recordError(Error(GL_INVALID_OPERATION,
+                                   "cannot create a 2D texture from a multisampled EGL image."));
+        return false;
+    }
+
+    const TextureCaps &textureCaps = context->getTextureCaps().get(image->getInternalFormat());
+    if (!textureCaps.texturable)
+    {
+        context->recordError(Error(GL_INVALID_OPERATION,
+                                   "EGL image internal format is not supported as a texture."));
+        return false;
+    }
+
     return true;
 }
 
@@ -2015,7 +2126,36 @@ bool ValidateEGLImageTargetRenderbufferStorageOES(Context *context,
                                                   GLenum target,
                                                   egl::Image *image)
 {
-    UNIMPLEMENTED();
+    if (!context->getExtensions().eglImage)
+    {
+        context->recordError(Error(GL_INVALID_OPERATION));
+        return false;
+    }
+
+    switch (target)
+    {
+        case GL_RENDERBUFFER:
+            break;
+
+        default:
+            context->recordError(Error(GL_INVALID_ENUM, "invalid renderbuffer target."));
+            return false;
+    }
+
+    if (!display->isValidImage(image))
+    {
+        context->recordError(Error(GL_INVALID_VALUE, "EGL image is not valid."));
+        return false;
+    }
+
+    const TextureCaps &textureCaps = context->getTextureCaps().get(image->getInternalFormat());
+    if (!textureCaps.renderable)
+    {
+        context->recordError(Error(
+            GL_INVALID_OPERATION, "EGL image internal format is not supported as a renderbuffer."));
+        return false;
+    }
+
     return true;
 }
 }

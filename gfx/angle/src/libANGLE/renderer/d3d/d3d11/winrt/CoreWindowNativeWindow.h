@@ -25,7 +25,13 @@ class CoreWindowNativeWindow : public InspectableNativeWindow, public std::enabl
     ~CoreWindowNativeWindow();
 
     bool initialize(EGLNativeWindowType window, IPropertySet *propertySet) override;
-    HRESULT createSwapChain(ID3D11Device *device, DXGIFactory *factory, DXGI_FORMAT format, unsigned int width, unsigned int height, DXGISwapChain **swapChain) override;
+    HRESULT createSwapChain(ID3D11Device *device,
+                            DXGIFactory *factory,
+                            DXGI_FORMAT format,
+                            unsigned int width,
+                            unsigned int height,
+                            bool containsAlpha,
+                            DXGISwapChain **swapChain) override;
 
   protected:
     HRESULT scaleSwapChain(const SIZE &windowSize, const RECT &clientRect) override;

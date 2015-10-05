@@ -20,7 +20,7 @@ class ScalarizeVecAndMatConstructorArgs : public TIntermTraverser
           mFragmentPrecisionHigh(fragmentPrecisionHigh) {}
 
   protected:
-    virtual bool visitAggregate(Visit visit, TIntermAggregate *node);
+    bool visitAggregate(Visit visit, TIntermAggregate *node) override;
 
   private:
     void scalarizeArgs(TIntermAggregate *aggregate,

@@ -4,21 +4,24 @@
 // found in the LICENSE file.
 //
 
-// DisplayNSGL.h: NSOpenGL implementation of egl::Display
+// DisplayCGL.h: CGL implementation of egl::Display
 
-#ifndef LIBANGLE_RENDERER_GL_NSGL_DISPLAYNSGL_H_
-#define LIBANGLE_RENDERER_GL_NSGL_DISPLAYNSGL_H_
+#ifndef LIBANGLE_RENDERER_GL_CGL_DISPLAYCGL_H_
+#define LIBANGLE_RENDERER_GL_CGL_DISPLAYCGL_H_
 
 #include "libANGLE/renderer/gl/DisplayGL.h"
+
+struct _CGLContextObject;
+typedef _CGLContextObject *CGLContextObj;
 
 namespace rx
 {
 
-class DisplayNSGL : public DisplayGL
+class DisplayCGL : public DisplayGL
 {
   public:
-    DisplayNSGL();
-    ~DisplayNSGL() override;
+    DisplayCGL();
+    ~DisplayCGL() override;
 
     egl::Error initialize(egl::Display *display) override;
     void terminate() override;
@@ -54,8 +57,10 @@ class DisplayNSGL : public DisplayGL
     void generateCaps(egl::Caps *outCaps) const override;
 
     egl::Display *mEGLDisplay;
+    FunctionsGL *mFunctions;
+    CGLContextObj mContext;
 };
 
 }
 
-#endif // LIBANGLE_RENDERER_GL_NSGL_DISPLAYNSGL_H_
+#endif // LIBANGLE_RENDERER_GL_CGL_DISPLAYCGL_H_

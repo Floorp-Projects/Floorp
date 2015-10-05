@@ -54,14 +54,12 @@ void VertexArray::detachBuffer(GLuint bufferName)
         if (mData.mVertexAttributes[attribute].buffer.id() == bufferName)
         {
             mData.mVertexAttributes[attribute].buffer.set(nullptr);
-            mVertexArray->setAttribute(attribute, mData.mVertexAttributes[attribute]);
         }
     }
 
     if (mData.mElementArrayBuffer.id() == bufferName)
     {
         mData.mElementArrayBuffer.set(nullptr);
-        mVertexArray->setElementArrayBuffer(nullptr);
     }
 }
 
@@ -75,14 +73,14 @@ void VertexArray::setVertexAttribDivisor(size_t index, GLuint divisor)
 {
     ASSERT(index < getMaxAttribs());
     mData.mVertexAttributes[index].divisor = divisor;
-    mVertexArray->setAttributeDivisor(index, divisor);
+    mDirtyBits.set(DIRTY_BIT_ATTRIB_0_DIVISOR + index);
 }
 
 void VertexArray::enableAttribute(size_t attributeIndex, bool enabledState)
 {
     ASSERT(attributeIndex < getMaxAttribs());
     mData.mVertexAttributes[attributeIndex].enabled = enabledState;
-    mVertexArray->enableAttribute(attributeIndex, enabledState);
+    mDirtyBits.set(DIRTY_BIT_ATTRIB_0_ENABLED + attributeIndex);
 
     // Update state cache
     if (enabledState)
@@ -113,14 +111,22 @@ void VertexArray::setAttributeState(size_t attributeIndex, gl::Buffer *boundBuff
     attrib->pureInteger = pureInteger;
     attrib->stride = stride;
     attrib->pointer = pointer;
-
-    mVertexArray->setAttribute(attributeIndex, *attrib);
+    mDirtyBits.set(DIRTY_BIT_ATTRIB_0_POINTER + attributeIndex);
 }
 
 void VertexArray::setElementArrayBuffer(Buffer *buffer)
 {
     mData.mElementArrayBuffer.set(buffer);
-    mVertexArray->setElementArrayBuffer(buffer);
+    mDirtyBits.set(DIRTY_BIT_ELEMENT_ARRAY_BUFFER);
+}
+
+void VertexArray::syncImplState()
+{
+    if (mDirtyBits.any())
+    {
+        mVertexArray->syncState(mDirtyBits);
+        mDirtyBits.reset();
+    }
 }
 
 }

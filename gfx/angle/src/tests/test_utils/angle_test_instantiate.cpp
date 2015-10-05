@@ -63,7 +63,8 @@ bool IsPlatformAvailable(const PlatformParameters &param)
 
         if (result)
         {
-            EGLWindow *eglWindow = new EGLWindow(param.majorVersion, param.eglParameters);
+            EGLWindow *eglWindow =
+                new EGLWindow(param.majorVersion, param.minorVersion, param.eglParameters);
             result = eglWindow->initializeGL(osWindow);
 
             eglWindow->destroyGL();

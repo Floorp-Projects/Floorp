@@ -271,13 +271,13 @@ gl::Error Clear11::clearFramebuffer(const ClearParameters &clearParams, const gl
     ID3D11DeviceContext1 *deviceContext1 = mRenderer->getDeviceContext1IfSupported();
     ID3D11Device *device = mRenderer->getDevice();
 
-    for (size_t colorAttachment = 0; colorAttachment < colorAttachments.size(); colorAttachment++)
+    for (size_t colorAttachmentIndex = 0; colorAttachmentIndex < colorAttachments.size();
+         colorAttachmentIndex++)
     {
-        const gl::FramebufferAttachment &attachment = colorAttachments[colorAttachment];
+        const gl::FramebufferAttachment &attachment = colorAttachments[colorAttachmentIndex];
 
-        if (clearParams.clearColor[colorAttachment] &&
-            attachment.isAttached() &&
-            drawBufferStates[colorAttachment] != GL_NONE)
+        if (clearParams.clearColor[colorAttachmentIndex] && attachment.isAttached() &&
+            drawBufferStates[colorAttachmentIndex] != GL_NONE)
         {
             RenderTarget11 *renderTarget = nullptr;
             gl::Error error = attachment.getRenderTarget(&renderTarget);
@@ -291,9 +291,12 @@ gl::Error Clear11::clearFramebuffer(const ClearParameters &clearParams, const gl
             if (clearParams.colorClearType == GL_FLOAT &&
                 !(formatInfo.componentType == GL_FLOAT || formatInfo.componentType == GL_UNSIGNED_NORMALIZED || formatInfo.componentType == GL_SIGNED_NORMALIZED))
             {
-                ERR("It is undefined behaviour to clear a render buffer which is not normalized fixed point or floating-"
-                    "point to floating point values (color attachment %u has internal format 0x%X).", colorAttachment,
-                    attachment.getInternalFormat());
+                ERR(
+                    "It is undefined behaviour to clear a render buffer which is not normalized "
+                    "fixed point or floating-"
+                    "point to floating point values (color attachment %u has internal format "
+                    "0x%X).",
+                    colorAttachmentIndex, attachment.getInternalFormat());
             }
 
             if ((formatInfo.redBits == 0 || !clearParams.colorMaskRed) &&
@@ -312,7 +315,7 @@ gl::Error Clear11::clearFramebuffer(const ClearParameters &clearParams, const gl
             {
                 // A masked clear is required, or a scissored clear is required and ID3D11DeviceContext1::ClearView is unavailable
                 MaskedRenderTarget maskAndRt;
-                bool clearColor = clearParams.clearColor[colorAttachment];
+                bool clearColor        = clearParams.clearColor[colorAttachmentIndex];
                 maskAndRt.colorMask[0] = (clearColor && clearParams.colorMaskRed);
                 maskAndRt.colorMask[1] = (clearColor && clearParams.colorMaskGreen);
                 maskAndRt.colorMask[2] = (clearColor && clearParams.colorMaskBlue);
@@ -522,7 +525,8 @@ gl::Error Clear11::clearFramebuffer(const ClearParameters &clearParams, const gl
         deviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
         // Apply render targets
-        deviceContext->OMSetRenderTargets(rtvs.size(), (rtvs.empty() ? nullptr : &rtvs[0]), dsv);
+        deviceContext->OMSetRenderTargets(static_cast<unsigned int>(rtvs.size()),
+                                          (rtvs.empty() ? nullptr : &rtvs[0]), dsv);
 
         // Draw the clear quad
         deviceContext->Draw(4, 0);
