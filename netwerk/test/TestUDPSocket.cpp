@@ -13,7 +13,9 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsITimer.h"
 #include "mozilla/net/DNS.h"
+#ifdef XP_WIN
 #include "mozilla/WindowsVersion.h"
+#endif
 #include "prerror.h"
 
 #define REQUEST  0x68656c6f
