@@ -294,6 +294,7 @@ selfhosting_srcs := \
   $(srcdir)/builtin/Module.js \
   $(srcdir)/builtin/Number.js \
   $(srcdir)/builtin/Object.js \
+  $(srcdir)/builtin/Promise.js \
   $(srcdir)/builtin/Reflect.js \
   $(srcdir)/builtin/RegExp.js \
   $(srcdir)/builtin/String.js \

@@ -56,6 +56,12 @@
 #define IF_SAB(real,imaginary) imaginary
 #endif
 
+#ifdef NIGHTLY_BUILD
+#define IF_NIGHTLY(real,imaginary) real
+#else
+#define IF_NIGHTLY(real,imaginary) imaginary
+#endif
+
 #define JS_FOR_PROTOTYPES(real,imaginary) \
     imaginary(Null,              0,     InitNullClass,          dummy) \
     real(Object,                 1,     InitViaClassSpec,       OCLASP(Plain)) \
@@ -115,6 +121,7 @@ IF_SAB(real,imaginary)(Atomics,                 53,     InitAtomicsClass, OCLASP
     real(Module,                55,      InitModuleClass,       OCLASP(Module)) \
     real(ImportEntry,           56,      InitImportEntryClass,  OCLASP(ImportEntry)) \
     real(ExportEntry,           57,      InitExportEntryClass,  OCLASP(ExportEntry)) \
+IF_NIGHTLY(real, imaginary)(ShellPromise,       58,     InitViaClassSpec,       OCLASP(ShellPromise)) \
 
 #define JS_FOR_EACH_PROTOTYPE(macro) JS_FOR_PROTOTYPES(macro,macro)
 
