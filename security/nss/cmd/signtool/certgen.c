@@ -73,9 +73,6 @@ GenerateCert(char *nickname, int keysize, char *token)
     LL_L2UI(serial, PR_Now());
 
     subject = GetSubjectFromUser(serial);
-    if (!subject) {
-	FatalError("Unable to get subject from user");
-    }
 
     cert = GenerateSelfSignedObjectSigningCert(nickname, db, subject,
          		serial, keysize, token);
@@ -125,9 +122,7 @@ GetSubjectFromUser(unsigned long serial)
 #else
     PR_fprintf(PR_STDOUT, "certificate common name: ");
 #endif
-    if (!fgets(buf, STDIN_BUF_SIZE, stdin)) {
-	return NULL;
-    }
+    fgets(buf, STDIN_BUF_SIZE, stdin);
     cp = chop(buf);
     if (*cp == '\0') {
 	sprintf(common_name_buf, "%s (%lu)", DEFAULT_COMMON_NAME,
@@ -149,9 +144,7 @@ GetSubjectFromUser(unsigned long serial)
 #else
     PR_fprintf(PR_STDOUT, "organization: ");
 #endif
-    if (!fgets(buf, STDIN_BUF_SIZE, stdin)) {
-	return NULL;
-    }
+    fgets(buf, STDIN_BUF_SIZE, stdin);
     cp = chop(buf);
     if (*cp != '\0') {
 	org = PORT_ZAlloc(strlen(cp) + 5);
@@ -170,9 +163,7 @@ GetSubjectFromUser(unsigned long serial)
 #else
     PR_fprintf(PR_STDOUT, "organization unit: ");
 #endif
-    if (!fgets(buf, STDIN_BUF_SIZE, stdin)) {
-	return NULL;
-    }
+    fgets(buf, STDIN_BUF_SIZE, stdin);
     cp = chop(buf);
     if (*cp != '\0') {
 	orgunit = PORT_ZAlloc(strlen(cp) + 6);
@@ -190,9 +181,7 @@ GetSubjectFromUser(unsigned long serial)
 #else
     PR_fprintf(PR_STDOUT, "state or province: ");
 #endif
-    if (!fgets(buf, STDIN_BUF_SIZE, stdin)) {
-	return NULL;
-    }
+    fgets(buf, STDIN_BUF_SIZE, stdin);
     cp = chop(buf);
     if (*cp != '\0') {
 	state = PORT_ZAlloc(strlen(cp) + 6);
@@ -210,9 +199,7 @@ GetSubjectFromUser(unsigned long serial)
 #else
     PR_fprintf(PR_STDOUT, "country (must be exactly 2 characters): ");
 #endif
-    if (!fgets(buf, STDIN_BUF_SIZE, stdin)) {
-	return NULL;
-    }
+    fgets(buf, STDIN_BUF_SIZE, stdin);
     cp = chop(cp);
     if (strlen(cp) != 2) {
 	*cp = '\0';	/* country code must be 2 chars */
@@ -233,9 +220,7 @@ GetSubjectFromUser(unsigned long serial)
 #else
     PR_fprintf(PR_STDOUT, "username: ");
 #endif
-    if (!fgets(buf, STDIN_BUF_SIZE, stdin)) {
-	return NULL;
-    }
+    fgets(buf, STDIN_BUF_SIZE, stdin);
     cp = chop(buf);
     if (*cp != '\0') {
 	uid = PORT_ZAlloc(strlen(cp) + 7);
@@ -253,9 +238,7 @@ GetSubjectFromUser(unsigned long serial)
 #else
     PR_fprintf(PR_STDOUT, "email address: ");
 #endif
-    if (!fgets(buf, STDIN_BUF_SIZE, stdin)) {
-	return NULL;
-    }
+    fgets(buf, STDIN_BUF_SIZE, stdin);
     cp = chop(buf);
     if (*cp != '\0') {
 	email = PORT_ZAlloc(strlen(cp) + 5);
@@ -437,6 +420,7 @@ sign_cert(CERTCertificate *cert, SECKEYPrivateKey *privk)
     SECItem der2;
     SECItem * result2;
 
+    void	*dummy;
     SECOidTag alg = SEC_OID_UNKNOWN;
 
     alg = SEC_GetSignatureAlgorithmOidTag(privk->keyType, SEC_OID_UNKNOWN);
@@ -456,7 +440,7 @@ sign_cert(CERTCertificate *cert, SECKEYPrivateKey *privk)
     der2.len = 0;
     der2.data = NULL;
 
-    (void)SEC_ASN1EncodeItem
+    dummy = SEC_ASN1EncodeItem
         (cert->arena, &der2, cert, SEC_ASN1_GET(CERT_CertificateTemplate));
 
     if (rv != SECSuccess) {

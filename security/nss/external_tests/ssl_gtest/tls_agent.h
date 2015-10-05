@@ -31,10 +31,35 @@ enum SessionResumptionMode {
 class TlsAgent : public PollTarget {
  public:
   enum Role { CLIENT, SERVER };
-  enum State { STATE_INIT, STATE_CONNECTING, STATE_CONNECTED, STATE_ERROR };
+  enum State { INIT, CONNECTING, CONNECTED, ERROR };
 
-  TlsAgent(const std::string& name, Role role, Mode mode, SSLKEAType kea);
-  virtual ~TlsAgent();
+  TlsAgent(const std::string& name, Role role, Mode mode, SSLKEAType kea)
+      : name_(name),
+        mode_(mode),
+        kea_(kea),
+        pr_fd_(nullptr),
+        adapter_(nullptr),
+        ssl_fd_(nullptr),
+        role_(role),
+        state_(INIT),
+        error_code_(0) {
+      memset(&info_, 0, sizeof(info_));
+      memset(&csinfo_, 0, sizeof(csinfo_));
+      SECStatus rv = SSL_VersionRangeGetDefault(mode_ == STREAM ?
+                                                ssl_variant_stream : ssl_variant_datagram,
+                                                &vrange_);
+      EXPECT_EQ(SECSuccess, rv);
+  }
+
+  ~TlsAgent() {
+    if (pr_fd_) {
+      PR_Close(pr_fd_);
+    }
+
+    if (ssl_fd_) {
+      PR_Close(ssl_fd_);
+    }
+  }
 
   bool Init() {
     pr_fd_ = DummyPrSocket::CreateFD(name_, mode_);
@@ -56,43 +81,23 @@ class TlsAgent : public PollTarget {
   void StartConnect();
   void CheckKEAType(SSLKEAType type) const;
   void CheckAuthType(SSLAuthType type) const;
+  void CheckVersion(uint16_t version) const;
 
   void Handshake();
-  // Marks the internal state as CONNECTING in anticipation of renegotiation.
-  void PrepareForRenegotiate();
-  // Prepares for renegotiation, then actually triggers it.
-  void StartRenegotiate();
-  void DisableCiphersByKeyExchange(SSLKEAType kea);
+  void EnableSomeEcdheCiphers();
+  void DisableDheCiphers();
   bool EnsureTlsSetup();
-
-  void SetupClientAuth();
-  void RequestClientAuth(bool requireAuth);
-  bool GetClientAuthCredentials(CERTCertificate** cert,
-                                SECKEYPrivateKey** priv) const;
 
   void ConfigureSessionCache(SessionResumptionMode mode);
   void SetSessionTicketsEnabled(bool en);
   void SetSessionCacheEnabled(bool en);
   void SetVersionRange(uint16_t minver, uint16_t maxver);
-  void CheckPreliminaryInfo();
-  void SetExpectedVersion(uint16_t version);
-  void SetExpectedReadError(bool err);
-  void EnableFalseStart();
-  void ExpectResumption();
-  void SetSignatureAlgorithms(const SSLSignatureAndHashAlg* algorithms,
-                              size_t count);
   void EnableAlpn(const uint8_t* val, size_t len);
   void CheckAlpn(SSLNextProtoState expected_state,
-                 const std::string& expected) const;
+                 const std::string& expected);
   void EnableSrtp();
-  void CheckSrtp() const;
+  void CheckSrtp();
   void CheckErrorCode(int32_t expected) const;
-  void SendData(size_t bytes, size_t blocksize = 1024);
-  void ReadBytes();
-  void ResetSentBytes(); // Hack to test drops.
-  void EnableExtendedMasterSecret();
-  void CheckExtendedMasterSecret(bool expected);
-  void DisableRollbackDetection();
 
   State state() const { return state_; }
 
@@ -101,24 +106,33 @@ class TlsAgent : public PollTarget {
   const char* state_str(State state) const { return states[state]; }
 
   PRFileDesc* ssl_fd() { return ssl_fd_; }
-  DummyPrSocket* adapter() { return adapter_; }
 
   uint16_t min_version() const { return vrange_.min; }
   uint16_t max_version() const { return vrange_.max; }
+
+  bool version(uint16_t* version) const {
+    if (state_ != CONNECTED) return false;
+
+    *version = info_.protocolVersion;
+
+    return true;
+  }
+
   uint16_t version() const {
-    EXPECT_EQ(STATE_CONNECTED, state_);
+    EXPECT_EQ(CONNECTED, state_);
+
     return info_.protocolVersion;
   }
 
   bool cipher_suite(int16_t* cipher_suite) const {
-    if (state_ != STATE_CONNECTED) return false;
+    if (state_ != CONNECTED) return false;
 
     *cipher_suite = info_.cipherSuite;
     return true;
   }
 
   std::string cipher_suite_name() const {
-    if (state_ != STATE_CONNECTED) return "UNKNOWN";
+    if (state_ != CONNECTED) return "UNKNOWN";
 
     return csinfo_.cipherSuiteName;
   }
@@ -127,9 +141,6 @@ class TlsAgent : public PollTarget {
     return std::vector<uint8_t>(info_.sessionID,
                                 info_.sessionID + info_.sessionIDLength);
   }
-
-  size_t received_bytes() const { return recv_ctr_; }
-  int32_t error_code() const { return error_code_; }
 
  private:
   const static char* states[];
@@ -145,73 +156,24 @@ class TlsAgent : public PollTarget {
   // Dummy auth certificate hook.
   static SECStatus AuthCertificateHook(void* arg, PRFileDesc* fd,
                                        PRBool checksig, PRBool isServer) {
-    TlsAgent* agent = reinterpret_cast<TlsAgent*>(arg);
-    agent->CheckPreliminaryInfo();
-    agent->auth_certificate_hook_called_ = true;
     return SECSuccess;
   }
-
-  // Client auth certificate hook.
-  static SECStatus ClientAuthenticated(void* arg, PRFileDesc* fd,
-                                       PRBool checksig, PRBool isServer) {
-    TlsAgent* agent = reinterpret_cast<TlsAgent*>(arg);
-    EXPECT_TRUE(agent->expect_client_auth_);
-    EXPECT_TRUE(isServer);
-    return SECSuccess;
-  }
-
-  static SECStatus GetClientAuthDataHook(void* self, PRFileDesc* fd,
-                                         CERTDistNames* caNames,
-                                         CERTCertificate** cert,
-                                         SECKEYPrivateKey** privKey);
 
   static void ReadableCallback(PollTarget* self, Event event) {
     TlsAgent* agent = static_cast<TlsAgent*>(self);
     agent->ReadableCallback_int();
   }
 
-
   void ReadableCallback_int() {
     LOG("Readable");
-    switch (state_) {
-      case STATE_CONNECTING:
-        Handshake();
-        break;
-      case STATE_CONNECTED:
-        ReadBytes();
-        break;
-      default:
-        break;
-    }
+    Handshake();
   }
 
   static PRInt32 SniHook(PRFileDesc *fd, const SECItem *srvNameArr,
                          PRUint32 srvNameArrSize,
                          void *arg) {
-    TlsAgent* agent = reinterpret_cast<TlsAgent*>(arg);
-    agent->CheckPreliminaryInfo();
-    agent->sni_hook_called_ = true;
     return SSL_SNI_CURRENT_CONFIG_IS_USED;
   }
-
-  static SECStatus CanFalseStartCallback(PRFileDesc *fd, void *arg,
-                                         PRBool *canFalseStart) {
-    TlsAgent* agent = reinterpret_cast<TlsAgent*>(arg);
-    agent->CheckPreliminaryInfo();
-    EXPECT_TRUE(agent->falsestart_enabled_);
-    agent->can_falsestart_hook_called_ = true;
-    *canFalseStart = true;
-    return SECSuccess;
-  }
-
-  static void HandshakeCallback(PRFileDesc *fd, void *arg) {
-    TlsAgent* agent = reinterpret_cast<TlsAgent*>(arg);
-    agent->CheckPreliminaryInfo();
-    agent->handshake_callback_called_ = true;
-  }
-
-  void CheckCallbacks() const;
-  void Connected();
 
   const std::string name_;
   Mode mode_;
@@ -221,73 +183,10 @@ class TlsAgent : public PollTarget {
   PRFileDesc* ssl_fd_;
   Role role_;
   State state_;
-  bool falsestart_enabled_;
-  uint16_t expected_version_;
-  uint16_t expected_cipher_suite_;
-  bool expect_resumption_;
-  bool expect_client_auth_;
-  bool can_falsestart_hook_called_;
-  bool sni_hook_called_;
-  bool auth_certificate_hook_called_;
-  bool handshake_callback_called_;
   SSLChannelInfo info_;
   SSLCipherSuiteInfo csinfo_;
   SSLVersionRange vrange_;
   int32_t error_code_;
-  size_t send_ctr_;
-  size_t recv_ctr_;
-  bool expected_read_error_;
-};
-
-class TlsAgentTestBase : public ::testing::Test {
- public:
-  static ::testing::internal::ParamGenerator<std::string> kTlsRolesAll;
-
-  TlsAgentTestBase(TlsAgent::Role role,
-                   Mode mode) : agent_(nullptr),
-                                       fd_(nullptr),
-                                       role_(role),
-                                       mode_(mode),
-                                       kea_(ssl_kea_rsa) {}
-  ~TlsAgentTestBase() {
-    delete agent_;
-    if (fd_) {
-      PR_Close(fd_);
-    }
-  }
-
-  static inline TlsAgent::Role ToRole(const std::string& str) {
-    return str == "CLIENT" ? TlsAgent::CLIENT : TlsAgent::SERVER;
-  }
-
-  static inline Mode ToMode(const std::string& str) {
-    return str == "TLS" ? STREAM : DGRAM;
-  }
-
-  void Init();
-
- protected:
-  void EnsureInit();
-  void ProcessMessage(const DataBuffer& buffer,
-                      TlsAgent::State expected_state,
-                      int32_t error_code = 0);
-
-
-  TlsAgent* agent_;
-  PRFileDesc* fd_;
-  TlsAgent::Role role_;
-  Mode mode_;
-  SSLKEAType kea_;
-};
-
-class TlsAgentTest :
-      public TlsAgentTestBase,
-      public ::testing::WithParamInterface
-      <std::tuple<std::string,std::string>> {
- public:
-  TlsAgentTest() :
-      TlsAgentTestBase(ToRole(std::get<0>(GetParam())),
-                       ToMode(std::get<1>(GetParam()))) {}
 };
 
 }  // namespace nss_test

@@ -408,6 +408,7 @@ SEC_PKCS7EncryptContents(PLArenaPool *poolp,
 			 void *wincx)
 {
     SECAlgorithmID *algid 	= NULL;
+    SECItem *       result 	= NULL;
     SECItem *       src;
     SECItem *       dest;
     SECItem *       blocked_data = NULL;
@@ -523,6 +524,9 @@ loser:
     if(blocked_data != NULL)
 	SECITEM_ZfreeItem(blocked_data, PR_TRUE);
 
+    if(result != NULL)
+	SECITEM_ZfreeItem(result, PR_TRUE);
+
     if(rv == SECFailure)
 	PORT_ArenaRelease(poolp, mark);
     else 
@@ -562,7 +566,7 @@ SEC_PKCS7DecryptContents(PLArenaPool *poolp,
 {
     SECAlgorithmID *algid = NULL;
     SECStatus rv = SECFailure;
-    SECItem *dest, *src;
+    SECItem *result = NULL, *dest, *src;
     void *mark;
 
     PK11SymKey *eKey = NULL;
@@ -641,6 +645,9 @@ SEC_PKCS7DecryptContents(PLArenaPool *poolp,
 
 loser:
     /* let success fall through */
+    if(result != NULL)
+	SECITEM_ZfreeItem(result, PR_TRUE);
+
     if(rv == SECFailure)
 	PORT_ArenaRelease(poolp, mark);
     else

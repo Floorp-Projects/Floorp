@@ -196,8 +196,8 @@ class TlsExtensionReplacer : public TlsExtensionFilter {
     return true;
   }
  private:
-  const uint16_t extension_;
-  const DataBuffer data_;
+  uint16_t extension_;
+  DataBuffer data_;
 };
 
 class TlsExtensionInjector : public TlsHandshakeFilter {
@@ -251,27 +251,7 @@ class TlsExtensionInjector : public TlsHandshakeFilter {
   }
 
  private:
-  const uint16_t extension_;
-  const DataBuffer data_;
-};
-
-class TlsExtensionCapture : public TlsExtensionFilter {
- public:
-  TlsExtensionCapture(uint16_t ext)
-      : extension_(ext), data_() {}
-
-  virtual bool FilterExtension(uint16_t extension_type,
-                               const DataBuffer& input, DataBuffer* output) {
-    if (extension_type == extension_) {
-      data_.Assign(input);
-    }
-    return false;
-  }
-
-  const DataBuffer& extension() const { return data_; }
-
- private:
-  const uint16_t extension_;
+  uint16_t extension_;
   DataBuffer data_;
 };
 
@@ -514,6 +494,7 @@ TEST_P(TlsExtensionTest12Plus, DISABLED_SignatureAlgorithmsSigUnsupported) {
 }
 
 TEST_P(TlsExtensionTestGeneric, SupportedCurvesShort) {
+  EnableSomeEcdheCiphers();
   const uint8_t val[] = { 0x00, 0x01, 0x00 };
   DataBuffer extension(val, sizeof(val));
   ClientHelloErrorTest(new TlsExtensionReplacer(ssl_elliptic_curves_xtn,
@@ -521,6 +502,7 @@ TEST_P(TlsExtensionTestGeneric, SupportedCurvesShort) {
 }
 
 TEST_P(TlsExtensionTestGeneric, SupportedCurvesBadLength) {
+  EnableSomeEcdheCiphers();
   const uint8_t val[] = { 0x09, 0x99, 0x00, 0x00 };
   DataBuffer extension(val, sizeof(val));
   ClientHelloErrorTest(new TlsExtensionReplacer(ssl_elliptic_curves_xtn,
@@ -528,6 +510,7 @@ TEST_P(TlsExtensionTestGeneric, SupportedCurvesBadLength) {
 }
 
 TEST_P(TlsExtensionTestGeneric, SupportedCurvesTrailingData) {
+  EnableSomeEcdheCiphers();
   const uint8_t val[] = { 0x00, 0x02, 0x00, 0x00, 0x00 };
   DataBuffer extension(val, sizeof(val));
   ClientHelloErrorTest(new TlsExtensionReplacer(ssl_elliptic_curves_xtn,
@@ -535,6 +518,7 @@ TEST_P(TlsExtensionTestGeneric, SupportedCurvesTrailingData) {
 }
 
 TEST_P(TlsExtensionTestGeneric, SupportedPointsEmpty) {
+  EnableSomeEcdheCiphers();
   const uint8_t val[] = { 0x00 };
   DataBuffer extension(val, sizeof(val));
   ClientHelloErrorTest(new TlsExtensionReplacer(ssl_ec_point_formats_xtn,
@@ -542,6 +526,7 @@ TEST_P(TlsExtensionTestGeneric, SupportedPointsEmpty) {
 }
 
 TEST_P(TlsExtensionTestGeneric, SupportedPointsBadLength) {
+  EnableSomeEcdheCiphers();
   const uint8_t val[] = { 0x99, 0x00, 0x00 };
   DataBuffer extension(val, sizeof(val));
   ClientHelloErrorTest(new TlsExtensionReplacer(ssl_ec_point_formats_xtn,
@@ -549,6 +534,7 @@ TEST_P(TlsExtensionTestGeneric, SupportedPointsBadLength) {
 }
 
 TEST_P(TlsExtensionTestGeneric, SupportedPointsTrailingData) {
+  EnableSomeEcdheCiphers();
   const uint8_t val[] = { 0x01, 0x00, 0x00 };
   DataBuffer extension(val, sizeof(val));
   ClientHelloErrorTest(new TlsExtensionReplacer(ssl_ec_point_formats_xtn,
@@ -574,32 +560,6 @@ TEST_P(TlsExtensionTestGeneric, RenegotiationInfoExtensionEmpty) {
   DataBuffer extension;
   ClientHelloErrorTest(new TlsExtensionReplacer(ssl_renegotiation_info_xtn,
                                                 extension));
-}
-
-TEST_P(TlsExtensionTest12Plus, SignatureAlgorithmConfiguration) {
-  const SSLSignatureAndHashAlg algorithms[] = {
-    {ssl_hash_sha512, ssl_sign_rsa},
-    {ssl_hash_sha384, ssl_sign_ecdsa}
-  };
-
-  TlsExtensionCapture *capture =
-    new TlsExtensionCapture(ssl_signature_algorithms_xtn);
-  client_->SetSignatureAlgorithms(algorithms, PR_ARRAY_SIZE(algorithms));
-  client_->SetPacketFilter(capture);
-  DisableDheAndEcdheCiphers();
-  Connect();
-
-  const DataBuffer& ext = capture->extension();
-  EXPECT_EQ(2 + PR_ARRAY_SIZE(algorithms) * 2, ext.len());
-  for (size_t i = 0, cursor = 2;
-       i < PR_ARRAY_SIZE(algorithms) && cursor < ext.len();
-       ++i) {
-    uint32_t v;
-    EXPECT_TRUE(ext.Read(cursor++, 1, &v));
-    EXPECT_EQ(algorithms[i].hashAlg, static_cast<SSLHashType>(v));
-    EXPECT_TRUE(ext.Read(cursor++, 1, &v));
-    EXPECT_EQ(algorithms[i].sigAlg, static_cast<SSLSignType>(v));
-  }
 }
 
 INSTANTIATE_TEST_CASE_P(ExtensionTls10, TlsExtensionTestGeneric,

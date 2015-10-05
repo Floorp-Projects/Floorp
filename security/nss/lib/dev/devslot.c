@@ -25,6 +25,9 @@
 /* measured as interval */
 static PRIntervalTime s_token_delay_time = 0;
 
+/* The flags needed to open a read-only session. */
+static const CK_FLAGS s_ck_readonly_flags = CKF_SERIAL_SESSION;
+
 NSS_IMPLEMENT PRStatus
 nssSlot_Destroy (
   NSSSlot *slot

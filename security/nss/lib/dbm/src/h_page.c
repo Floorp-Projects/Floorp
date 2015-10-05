@@ -158,11 +158,10 @@ long new_lseek(int fd, long offset, int origin)
  	  { 
  	 	char buffer[1024];
 	   	long len = seek_pos-end_pos;
-	   	memset(buffer, 0, 1024);
+	   	memset(&buffer, 0, 1024);
 	   	while(len > 0)
 	      {
-	        if(write(fd, buffer, (size_t)(1024 > len ? len : 1024)) < 0)
-				return(-1);
+	        write(fd, (char*)&buffer, (size_t)(1024 > len ? len : 1024));
 		    len -= 1024;
 		  }
 		return(lseek(fd, seek_pos, SEEK_SET));
@@ -721,6 +720,23 @@ __get_page(HTAB *hashp,
 		PAGE_INIT(p);
 	} else {
 
+#ifdef DEBUG
+		if(BYTE_ORDER == LITTLE_ENDIAN)
+		  {
+			int is_little_endian;
+			is_little_endian = BYTE_ORDER;
+		  }
+		else if(BYTE_ORDER == BIG_ENDIAN)
+		  {
+			int is_big_endian;
+			is_big_endian = BYTE_ORDER;
+		  }
+		else
+		  {
+			assert(0);
+		  }
+#endif
+
 		if (hashp->LORDER != BYTE_ORDER) {
 			register int i, max;
 
@@ -982,7 +998,7 @@ overflow_page(HTAB *hashp)
 	if (offset > SPLITMASK) {
 		if (++splitnum >= NCACHED) {
 #ifndef macintosh
-			(void)fwrite(OVMSG, 1, sizeof(OVMSG) - 1, stderr);
+			(void)write(STDERR_FILENO, OVMSG, sizeof(OVMSG) - 1);
 #endif
 			return (0);
 		}
@@ -997,7 +1013,7 @@ overflow_page(HTAB *hashp)
 		free_page++;
 		if (free_page >= NCACHED) {
 #ifndef macintosh
-			(void)fwrite(OVMSG, 1, sizeof(OVMSG) - 1, stderr);
+			(void)write(STDERR_FILENO, OVMSG, sizeof(OVMSG) - 1);
 #endif
 			return (0);
 		}
@@ -1023,7 +1039,8 @@ overflow_page(HTAB *hashp)
 		if (offset > SPLITMASK) {
 			if (++splitnum >= NCACHED) {
 #ifndef macintosh
-				(void)fwrite(OVMSG, 1, sizeof(OVMSG) - 1, stderr);
+				(void)write(STDERR_FILENO, OVMSG,
+				    sizeof(OVMSG) - 1);
 #endif
 				return (0);
 			}

@@ -24,9 +24,8 @@ else
 	CC           = cl
 	CCC          = cl
 	LINK         = link
-        LDFLAGS += -nologo
 	AR           = lib
-	AR          += -nologo -OUT:$@
+	AR          += -NOLOGO -OUT:$@
 	RANLIB       = echo
 	BSDECHO      = echo
 	RC           = rc.exe
@@ -104,7 +103,10 @@ endif
 DLL_SUFFIX   = dll
 
 ifdef NS_USE_GCC
-    OS_CFLAGS += -mwindows -mms-bitfields -Werror
+    # The -mnop-fun-dllimport flag allows us to avoid a drawback of
+    # the dllimport attribute that a pointer to a function marked as
+    # dllimport cannot be used as as a constant address.
+    OS_CFLAGS += -mwindows -mms-bitfields -mnop-fun-dllimport
     _GEN_IMPORT_LIB=-Wl,--out-implib,$(IMPORT_LIBRARY)
     DLLFLAGS  += -mwindows -o $@ -shared -Wl,--export-all-symbols $(if $(IMPORT_LIBRARY),$(_GEN_IMPORT_LIB))
     ifdef BUILD_OPT
@@ -123,7 +125,7 @@ ifdef NS_USE_GCC
 	DEFINES    += -DDEBUG -D_DEBUG -UNDEBUG -DDEBUG_$(USERNAME)
     endif
 else # !NS_USE_GCC
-    OS_CFLAGS += -W3 -WX -nologo -D_CRT_SECURE_NO_WARNINGS \
+    OS_CFLAGS += -W3 -nologo -D_CRT_SECURE_NO_WARNINGS \
 		 -D_CRT_NONSTDC_NO_WARNINGS
     OS_DLLFLAGS += -nologo -DLL -SUBSYSTEM:WINDOWS
     ifeq ($(_MSC_VER),$(_MSC_VER_6))
@@ -188,11 +190,11 @@ endif
 	LDFLAGS    += /FIXED:NO
     endif
 ifneq ($(_MSC_VER),$(_MSC_VER_6))
-    # NSS has too many of these to fix, downgrade the warning
-    # Disable C4267: conversion from 'size_t' to 'type', possible loss of data
-    # Disable C4244: conversion from 'type1' to 'type2', possible loss of data
-    # Disable C4018: 'expression' : signed/unsigned mismatch
-    OS_CFLAGS += -w44267 -w44244 -w44018
+    # Convert certain deadly warnings to errors (see list at end of file)
+    OS_CFLAGS += -we4002 -we4003 -we4004 -we4006 -we4009 -we4013 \
+     -we4015 -we4028 -we4033 -we4035 -we4045 -we4047 -we4053 -we4054 -we4063 \
+     -we4064 -we4078 -we4087 -we4090 -we4098 -we4390 -we4551 -we4553 -we4715
+
     ifeq ($(_MSC_VER_GE_12),1)
 	OS_CFLAGS += -FS
     endif
@@ -215,13 +217,10 @@ ifdef USE_64
 else
 	DEFINES += -D_X86_
 	# VS2012 defaults to -arch:SSE2. Use -arch:IA32 to avoid requiring
-	# SSE2. Clang-cl gets confused by -arch:IA32, so don't add it.
-	# (See https://llvm.org/bugs/show_bug.cgi?id=24335)
+	# SSE2.
 	# Use subsystem 5.01 to allow running on Windows XP.
 	ifeq ($(_MSC_VER_GE_11),1)
-		ifneq ($(CLANG_CL),1)
-			OS_CFLAGS += -arch:IA32
-		endif
+		OS_CFLAGS += -arch:IA32
 		LDFLAGS += -SUBSYSTEM:CONSOLE,5.01
 	endif
 endif
@@ -367,3 +366,32 @@ endif
 ifndef TARGETS
     TARGETS = $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY) $(PROGRAM)
 endif
+
+# list of MSVC warnings converted to errors above:
+# 4002: too many actual parameters for macro 'identifier'
+# 4003: not enough actual parameters for macro 'identifier'
+# 4004: incorrect construction after 'defined'
+# 4006: #undef expected an identifier
+# 4009: string too big; trailing characters truncated
+# 4015: 'identifier' : type of bit field must be integral
+# 4028: formal parameter different from declaration
+# 4033: 'function' must return a value
+# 4035: 'function' : no return value
+# 4045: 'identifier' : array bounds overflow
+# 4047: 'function' : 'type 1' differs in levels of indirection from 'type 2'
+# 4053: one void operand for '?:'
+# 4054: 'conversion' : from function pointer 'type1' to data pointer 'type2'
+# 4059: pascal string too big, length byte is length % 256
+# 4063: case 'identifier' is not a valid value for switch of enum 'identifier'
+# 4064: switch of incomplete enum 'identifier'
+# 4078: case constant 'value' too big for the type of the switch expression
+# 4087: 'function' : declared with 'void' parameter list
+# 4090: 'function' : different 'const' qualifiers
+# 4098: 'function' : void function returning a value
+# 4390: ';' : empty controlled statement found; is this the intent?
+# 4541: RTTI train wreck
+# 4715: not all control paths return a value
+# 4013: function undefined; assuming extern returning int
+# 4553: '==' : operator has no effect; did you intend '='?
+# 4551: function call missing argument list
+

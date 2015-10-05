@@ -217,8 +217,9 @@ nsslist_add_element(nssList *list, void *data)
 NSS_IMPLEMENT PRStatus
 nssList_Add(nssList *list, void *data)
 {
+    PRStatus nssrv;
     NSSLIST_LOCK_IF(list);
-    (void)nsslist_add_element(list, data);
+    nssrv = nsslist_add_element(list, data);
     NSSLIST_UNLOCK_IF(list);
     return PR_SUCCESS;
 }

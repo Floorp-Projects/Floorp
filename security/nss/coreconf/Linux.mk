@@ -125,49 +125,13 @@ ifdef MOZ_DEBUG_SYMBOLS
 endif
 endif
 
-ifndef COMPILER_TAG
-COMPILER_TAG = _$(shell $(CC) -? 2>&1 >/dev/null | sed -e 's/:.*//;1q')
-CCC_COMPILER_TAG = _$(shell $(CCC) -? 2>&1 >/dev/null | sed -e 's/:.*//;1q')
-endif
 
 ifeq ($(USE_PTHREADS),1)
 OS_PTHREAD = -lpthread 
 endif
 
-OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) $(ARCHFLAG) -Wall -pipe -ffunction-sections -fdata-sections -DLINUX -Dlinux -DHAVE_STRERROR
+OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) $(ARCHFLAG) -Wall -Werror-implicit-function-declaration -Wno-switch -pipe -ffunction-sections -fdata-sections -DLINUX -Dlinux -DHAVE_STRERROR
 OS_LIBS			= $(OS_PTHREAD) -ldl -lc
-
-ifeq ($(COMPILER_TAG),_clang)
-# -Qunused-arguments : clang objects to arguments that it doesn't understand
-#    and fixing this would require rearchitecture
-# -Wno-parentheses-equality : because clang warns about macro expansions
-OS_CFLAGS += -Qunused-arguments -Wno-parentheses-equality
-ifdef BUILD_OPT
-# clang is unable to handle glib's expansion of strcmp and similar for optimized
-# builds, so ignore the resulting errors.
-# See https://llvm.org/bugs/show_bug.cgi?id=20144
-OS_CFLAGS += -Wno-array-bounds -Wno-unevaluated-expression
-endif
-# Clang reports its version as an older gcc, but it's OK
-NSS_HAS_GCC48 = true
-endif
-
-ifndef NSS_HAS_GCC48
-NSS_HAS_GCC48 := $(shell \
-  [ `$(CC) -dumpversion | cut -f 1 -d . -` -eq 4 -a \
-    `$(CC) -dumpversion | cut -f 2 -d . -` -ge 8 -o \
-    `$(CC) -dumpversion | cut -f 1 -d . -` -ge 5 ] && \
-  echo true || echo false)
-export NSS_HAS_GCC48
-endif
-ifeq (true,$(NSS_HAS_GCC48))
-OS_CFLAGS += -Werror
-else
-# Old versions of gcc (< 4.8) don't support #pragma diagnostic in functions.
-# Use this to disable use of that #pragma and the warnings it suppresses.
-OS_CFLAGS += -DNSS_NO_GCC48
-$(warning Unable to find gcc >= 4.8 disabling -Werror)
-endif
 
 ifdef USE_PTHREADS
 	DEFINES		+= -D_REENTRANT

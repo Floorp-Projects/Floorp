@@ -138,9 +138,6 @@ ssl_FinishHandshake(sslSocket *ss)
     ss->gs.readOffset  = 0;
 
     if (ss->handshakeCallback) {
-      PORT_Assert(ss->version < SSL_LIBRARY_VERSION_3_0 ||
-                  (ss->ssl3.hs.preliminaryInfo & ssl_preinfo_all) ==
-                  ssl_preinfo_all);
 	(ss->handshakeCallback)(ss->fd, ss->handshakeCallbackData);
     }
 }
@@ -655,16 +652,6 @@ DoRecv(sslSocket *ss, unsigned char *out, int len, int flags)
 	}
 	SSL_TRC(30, ("%d: SSL[%d]: partial data ready, available=%d",
 		     SSL_GETPID(), ss->fd, available));
-    }
-
-    if (IS_DTLS(ss) && (len < available)) {
-        /* DTLS does not allow you to do partial reads */
-        SSL_TRC(30, ("%d: SSL[%d]: DTLS short read. len=%d available=%d",
-                     SSL_GETPID(), ss->fd, len, available));
-        ss->gs.readOffset += available;
-        PORT_SetError(SSL_ERROR_RX_SHORT_DTLS_READ);
-        rv = SECFailure;
-        goto done;
     }
 
     /* Dole out clear data to reader */
@@ -1196,7 +1183,10 @@ ssl_SecureShutdown(sslSocket *ss, int nsprHow)
 int
 ssl_SecureRecv(sslSocket *ss, unsigned char *buf, int len, int flags)
 {
+    sslSecurityInfo *sec;
     int              rv   = 0;
+
+    sec = &ss->sec;
 
     if (ss->shutdownHow & ssl_SHUTDOWN_RCV) {
 	PORT_SetError(PR_SOCKET_SHUTDOWN_ERROR);

@@ -101,6 +101,9 @@ CERT_EncodeCRLDistributionPoints (PLArenaPool *arena,
 		    rv = SECFailure;
 		break;
 
+	    /* distributionPointName is omitted */
+	    case 0: break;
+
 	    default:
 		PORT_SetError (SEC_ERROR_EXTENSION_VALUE_INVALID);
 		rv = SECFailure;

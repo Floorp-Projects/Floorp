@@ -767,31 +767,6 @@ NSSUTIL_MkSlotString(unsigned long slotID, unsigned long defaultFlags,
  * and NSS specifi parameters.
  */
 SECStatus
-NSSUTIL_ArgParseModuleSpecEx(char *modulespec, char **lib, char **mod, 
-					char **parameters, char **nss,
-					char **config)
-{
-    int next;
-    modulespec = NSSUTIL_ArgStrip(modulespec);
-
-    *lib = *mod = *parameters = *nss = *config = 0;
-
-    while (*modulespec) {
-	NSSUTIL_HANDLE_STRING_ARG(modulespec,*lib,"library=",;)
-	NSSUTIL_HANDLE_STRING_ARG(modulespec,*mod,"name=",;)
-	NSSUTIL_HANDLE_STRING_ARG(modulespec,*parameters,"parameters=",;)
-	NSSUTIL_HANDLE_STRING_ARG(modulespec,*nss,"nss=",;)
-        NSSUTIL_HANDLE_STRING_ARG(modulespec,*config,"config=",;)
-	NSSUTIL_HANDLE_FINAL_ARG(modulespec)
-   }
-   return SECSuccess;
-}
-
-/************************************************************************
- * Parse Full module specs into: library, commonName, module parameters,
- * and NSS specifi parameters.
- */
-SECStatus
 NSSUTIL_ArgParseModuleSpec(char *modulespec, char **lib, char **mod, 
 					char **parameters, char **nss)
 {
@@ -813,12 +788,11 @@ NSSUTIL_ArgParseModuleSpec(char *modulespec, char **lib, char **mod,
 /************************************************************************
  * make a new module spec from it's components */
 char *
-NSSUTIL_MkModuleSpecEx(char *dllName, char *commonName, char *parameters, 
-								char *NSS,
-								char *config)
+NSSUTIL_MkModuleSpec(char *dllName, char *commonName, char *parameters, 
+								char *NSS)
 {
     char *moduleSpec;
-    char *lib,*name,*param,*nss,*conf;
+    char *lib,*name,*param,*nss;
 
     /*
      * now the final spec
@@ -827,27 +801,12 @@ NSSUTIL_MkModuleSpecEx(char *dllName, char *commonName, char *parameters,
     name = nssutil_formatPair("name",commonName,'\"');
     param = nssutil_formatPair("parameters",parameters,'\"');
     nss = nssutil_formatPair("NSS",NSS,'\"');
-    if (config) {
-        conf = nssutil_formatPair("config",config,'\"');
-        moduleSpec = PR_smprintf("%s %s %s %s %s", lib,name,param,nss,conf);
-        nssutil_freePair(conf);
-    } else {
-        moduleSpec = PR_smprintf("%s %s %s %s", lib,name,param,nss);
-    }
+    moduleSpec = PR_smprintf("%s %s %s %s", lib,name,param,nss);
     nssutil_freePair(lib);
     nssutil_freePair(name);
     nssutil_freePair(param);
     nssutil_freePair(nss);
     return (moduleSpec);
-}
-
-/************************************************************************
- * make a new module spec from it's components */
-char *
-NSSUTIL_MkModuleSpec(char *dllName, char *commonName, char *parameters, 
-								char *NSS)
-{
-    return NSSUTIL_MkModuleSpecEx(dllName, commonName, parameters, NSS, NULL);
 }
 
 

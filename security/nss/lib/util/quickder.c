@@ -146,7 +146,7 @@ static SECStatus GetItem(SECItem* src, SECItem* dest, PRBool includeTag)
         PORT_SetError(SEC_ERROR_BAD_DER);
         return SECFailure;
     }
-    src->len -= (int)(dest->data - src->data) + dest->len;
+    src->len -= (dest->data - src->data) + dest->len;
     src->data = dest->data + dest->len;
     return SECSuccess;
 }
@@ -270,9 +270,13 @@ static SECStatus MatchComponentType(const SEC_ASN1Template* templateEntry,
     if ( (tag & SEC_ASN1_CLASS_MASK) !=
          (((unsigned char)kind) & SEC_ASN1_CLASS_MASK) )
     {
+#ifdef DEBUG
         /* this is only to help debugging of the decoder in case of problems */
-        /* unsigned char tagclass = tag & SEC_ASN1_CLASS_MASK; */
-        /* unsigned char expectedclass = (unsigned char)kind & SEC_ASN1_CLASS_MASK; */
+        unsigned char tagclass = tag & SEC_ASN1_CLASS_MASK;
+        unsigned char expectedclass = (unsigned char)kind & SEC_ASN1_CLASS_MASK;
+        tagclass = tagclass;
+        expectedclass = expectedclass;
+#endif
         *match = PR_FALSE;
         return SECSuccess;
     }
@@ -653,12 +657,13 @@ static SECStatus DecodeItem(void* dest,
 {
     SECStatus rv = SECSuccess;
     SECItem temp;
-    SECItem mark = {siBuffer, NULL, 0};
+    SECItem mark;
     PRBool pop = PR_FALSE;
     PRBool decode = PR_TRUE;
     PRBool save = PR_FALSE;
     unsigned long kind;
     PRBool match = PR_TRUE;
+    PRBool optional = PR_FALSE;
 
     PR_ASSERT(src && dest && templateEntry && arena);
 #if 0
@@ -673,6 +678,7 @@ static SECStatus DecodeItem(void* dest,
     {
         /* do the template validation */
         kind = templateEntry->kind;
+        optional = (0 != (kind & SEC_ASN1_OPTIONAL));
         if (!kind)
         {
             PORT_SetError(SEC_ERROR_BAD_TEMPLATE);

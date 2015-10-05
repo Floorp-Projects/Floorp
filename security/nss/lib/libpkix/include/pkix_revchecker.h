@@ -65,10 +65,12 @@ extern "C" {
  * FUNCTION: PKIX_RevocationChecker_Create
  * DESCRIPTION:
  *
- * Creates a revocation checker object with the given flags. Revocation will
- * be checked at the current date.
+ * Creates revocation checker object with a given flags.
  *
  * PARAMETERS:
+ *  "revDate"
+ *      Revocation will be checked at this date. Current date is taken if the
+ *      parameter is not specified.
  *  "leafMethodListFlags"
  *      Defines a set of method independent flags that will be used to check
  *      revocation of the leaf cert in the chain.

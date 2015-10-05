@@ -857,6 +857,7 @@ CRMF_CreateEncryptedKeyWithEncryptedValue (SECKEYPrivateKey *inPrivKey,
 {
     SECKEYPublicKey          *caPubKey = NULL;
     CRMFEncryptedKey         *encKey = NULL;
+    CRMFEncryptedValue       *dummy;
 
     PORT_Assert(inPrivKey != NULL && inCACert != NULL);
     if (inPrivKey == NULL || inCACert == NULL) {
@@ -872,17 +873,10 @@ CRMF_CreateEncryptedKeyWithEncryptedValue (SECKEYPrivateKey *inPrivKey,
     if (encKey == NULL) {
         goto loser;
     }
-#ifdef DEBUG
-    {
-        CRMFEncryptedValue *dummy =
-            crmf_create_encrypted_value_wrapped_privkey(
-                inPrivKey, caPubKey, &encKey->value.encryptedValue);
-        PORT_Assert(dummy == &encKey->value.encryptedValue);
-    }
-#else
-    crmf_create_encrypted_value_wrapped_privkey(
-        inPrivKey, caPubKey, &encKey->value.encryptedValue);
-#endif
+    dummy = crmf_create_encrypted_value_wrapped_privkey(inPrivKey,
+							caPubKey,
+					       &encKey->value.encryptedValue);
+    PORT_Assert(dummy == &encKey->value.encryptedValue);
     /* We won't add the der value here, but rather when it 
      * becomes part of a certificate request.
      */
