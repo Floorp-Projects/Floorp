@@ -36,6 +36,7 @@ VibrancyManager::UpdateVibrantRegion(VibrancyType aType, const nsIntRegion& aReg
       if (i < viewsToRecycle.Length()) {
         view = viewsToRecycle[i];
         [view setFrame:rect];
+        [view setNeedsDisplay:YES];
       } else {
         view = CreateEffectView(aType, rect);
         [mContainerView addSubview:view];
