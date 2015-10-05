@@ -71,15 +71,7 @@ public:
    * Calculate the average time between processing the posted task and getting
    * the TaskComplete() call back.
    */
-  TimeDuration AverageDuration()
-  {
-    return mMean.empty() ? TimeDuration() : mMean.mean();
-  }
-
-  /**
-   * return true if Throttler has an outstanding task
-   */
-  bool IsOutstanding() { return mOutstanding; }
+  TimeDuration AverageDuration();
 
   /**
    * Cancel the queued task if there is one.
@@ -94,18 +86,13 @@ public:
   /**
    * Clear average history.
    */
-  void ClearHistory() { mMean.clear(); }
+  void ClearHistory();
 
   /**
    * @param aMaxDurations The maximum number of durations to measure.
    */
 
-  void SetMaxDurations(uint32_t aMaxDurations)
-  {
-    if (aMaxDurations != mMean.maxValues()) {
-      mMean = RollingMean<TimeDuration, TimeDuration>(aMaxDurations);
-    }
-  }
+  void SetMaxDurations(uint32_t aMaxDurations);
 
 private:
   bool mOutstanding;
