@@ -6,7 +6,7 @@
 
 var tab;
 var notification;
-var notificationURL = "http://example.org/browser/browser/base/content/test/alerts/file_dom_notifications.html";
+var notificationURL = "http://example.org/browser/browser/base/content/test/general/file_dom_notifications.html";
 var newWindowOpenedFromTab;
 
 function test () {
@@ -58,7 +58,7 @@ function onAlertShowing() {
   info("Notification alert showing");
   notification.removeEventListener("show", onAlertShowing);
 
-  let alertWindow = Services.wm.getMostRecentWindow("alert:alert");
+  let alertWindow = findChromeWindowByURI("chrome://global/content/alerts/alert.xul");
   if (!alertWindow) {
     todo(false, "Notifications don't use XUL windows on all platforms.");
     notification.close();
