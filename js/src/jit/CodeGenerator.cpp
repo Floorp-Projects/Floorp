@@ -3737,9 +3737,8 @@ void
 CodeGenerator::visitDefFun(LDefFun* lir)
 {
     Register scopeChain = ToRegister(lir->scopeChain());
-    Register fun = ToRegister(lir->fun());
 
-    pushArg(fun);
+    pushArg(ImmGCPtr(lir->mir()->fun()));
     pushArg(scopeChain);
     pushArg(ImmGCPtr(current->mir()->info().script()));
 

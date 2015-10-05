@@ -106,8 +106,6 @@ MSG_DEF(JSMSG_TERMINATED,              1, JSEXN_ERR, "Script terminated by timeo
 MSG_DEF(JSMSG_PROTO_NOT_OBJORNULL,     1, JSEXN_TYPEERR, "{0}.prototype is not an object or null")
 MSG_DEF(JSMSG_CANT_CALL_CLASS_CONSTRUCTOR, 0, JSEXN_TYPEERR, "class constructors must be invoked with |new|")
 MSG_DEF(JSMSG_DISABLED_DERIVED_CLASS,  1, JSEXN_INTERNALERR, "{0} temporarily disallowed in derived class constructors")
-MSG_DEF(JSMSG_NOT_CALLABLE,            1, JSEXN_TYPEERR, "{0} is not callable")
-MSG_DEF(JSMSG_NOT_IMPLEMENTED,         1, JSEXN_INTERNALERR, "{0} is not implemented")
 
 // JSON
 MSG_DEF(JSMSG_JSON_BAD_PARSE,          3, JSEXN_SYNTAXERR, "JSON.parse: {0} at line {1} column {2} of the JSON data")
@@ -188,9 +186,6 @@ MSG_DEF(JSMSG_ARRAY_COMP_LEFTSIDE,     0, JSEXN_SYNTAXERR, "invalid array compre
 MSG_DEF(JSMSG_ARRAY_INIT_TOO_BIG,      0, JSEXN_INTERNALERR, "array initialiser too large")
 MSG_DEF(JSMSG_AS_AFTER_IMPORT_STAR,    0, JSEXN_SYNTAXERR, "missing keyword 'as' after import *")
 MSG_DEF(JSMSG_AS_AFTER_RESERVED_WORD,  1, JSEXN_SYNTAXERR, "missing keyword 'as' after reserved word '{0}'")
-MSG_DEF(JSMSG_ASYNC_ACCESSOR,          0, JSEXN_SYNTAXERR, "async getters and setters are not allowed")
-MSG_DEF(JSMSG_ASYNC_CONSTRUCTOR,       0, JSEXN_SYNTAXERR, "constructor may not be async")
-MSG_DEF(JSMSG_ASYNC_GENERATOR,         0, JSEXN_SYNTAXERR, "generator function or method may not be async")
 MSG_DEF(JSMSG_BAD_ANON_GENERATOR_RETURN, 0, JSEXN_TYPEERR, "anonymous generator function returns a value")
 MSG_DEF(JSMSG_BAD_ARROW_ARGS,          0, JSEXN_SYNTAXERR, "invalid arrow-function arguments (parentheses around the arrow-function may help)")
 MSG_DEF(JSMSG_BAD_BINDING,             1, JSEXN_SYNTAXERR, "redefining {0} is deprecated")
@@ -272,7 +267,6 @@ MSG_DEF(JSMSG_LABEL_NOT_FOUND,         0, JSEXN_SYNTAXERR, "label not found")
 MSG_DEF(JSMSG_LET_CLASS_BINDING,       0, JSEXN_SYNTAXERR, "'let' is not a valid name for a class")
 MSG_DEF(JSMSG_LET_COMP_BINDING,        0, JSEXN_SYNTAXERR, "'let' is not a valid name for a comprehension variable")
 MSG_DEF(JSMSG_LEXICAL_DECL_NOT_IN_BLOCK,   1, JSEXN_SYNTAXERR, "{0} declaration not directly within block")
-MSG_DEF(JSMSG_LINE_BREAK_AFTER_AWAIT,  0, JSEXN_SYNTAXERR, "no line break is allowed after 'await'")
 MSG_DEF(JSMSG_LINE_BREAK_AFTER_THROW,  0, JSEXN_SYNTAXERR, "no line break is allowed between 'throw' and its expression")
 MSG_DEF(JSMSG_MALFORMED_ESCAPE,        1, JSEXN_SYNTAXERR, "malformed {0} character escape sequence")
 MSG_DEF(JSMSG_MISSING_BINARY_DIGITS,   0, JSEXN_SYNTAXERR, "missing binary digits after '0b'")
@@ -345,9 +339,7 @@ MSG_DEF(JSMSG_USE_ASM_DIRECTIVE_FAIL,  0, JSEXN_SYNTAXERR, "\"use asm\" is only 
 MSG_DEF(JSMSG_VAR_HIDES_ARG,           1, JSEXN_TYPEERR, "variable {0} redeclares argument")
 MSG_DEF(JSMSG_WHILE_AFTER_DO,          0, JSEXN_SYNTAXERR, "missing while after do-loop body")
 MSG_DEF(JSMSG_YIELD_IN_ARROW,          0, JSEXN_SYNTAXERR, "arrow function may not contain yield")
-MSG_DEF(JSMSG_YIELD_IN_ASYNC,          0, JSEXN_SYNTAXERR, "async function may not contain yield")
 MSG_DEF(JSMSG_YIELD_IN_DEFAULT,        0, JSEXN_SYNTAXERR, "yield in default expression")
-MSG_DEF(JSMSG_AWAIT_IN_DEFAULT,        0, JSEXN_SYNTAXERR, "await in default expression")
 MSG_DEF(JSMSG_BAD_COLUMN_NUMBER,       0, JSEXN_RANGEERR, "column number out of range")
 MSG_DEF(JSMSG_COMPUTED_NAME_IN_PATTERN,0, JSEXN_SYNTAXERR, "computed property names aren't supported in this destructuring declaration")
 MSG_DEF(JSMSG_DEFAULT_IN_PATTERN,      0, JSEXN_SYNTAXERR, "destructuring defaults aren't supported in this destructuring declaration")
@@ -515,10 +507,6 @@ MSG_DEF(JSMSG_NO_INDEXED_SETTER,         2, JSEXN_TYPEERR, "{0} doesn't have an 
 
 // Super
 MSG_DEF(JSMSG_CANT_DELETE_SUPER, 0, JSEXN_REFERENCEERR, "invalid delete involving 'super'")
-
-// Promise
-MSG_DEF(JSMSG_PROMISE_RESOLVED_WITH_ITSELF, 0, JSEXN_TYPEERR, "A promise cannot be resolved with itself")
-MSG_DEF(JSMSG_SETTIMEOUT_INTERVAL_NONZERO, 0, JSEXN_TYPEERR, "Intervals other than 0 are not supported")
 
 // Modules
 MSG_DEF(JSMSG_BAD_DEFAULT_EXPORT,        0, JSEXN_SYNTAXERR, "default export cannot be provided by export *")

@@ -445,8 +445,6 @@ class MOZ_STACK_CLASS TokenStream
         {}
     };
 
-    bool awaitIsKeyword = false;
-
   public:
     typedef Token::Modifier Modifier;
     static MOZ_CONSTEXPR_VAR Modifier None = Token::None;
@@ -685,14 +683,6 @@ class MOZ_STACK_CLASS TokenStream
             return false;
         *endsExpr = isExprEnding[tt];
         return true;
-    }
-
-    bool getAwaitIsKeyword() {
-        return awaitIsKeyword;
-    }
-
-    void setAwaitIsKeyword(bool _awaitIsKeyword) {
-        awaitIsKeyword = _awaitIsKeyword;
     }
 
     class MOZ_STACK_CLASS Position {

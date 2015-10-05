@@ -240,6 +240,7 @@ bool
 BytecodeEmitter::emit1(JSOp op)
 {
     MOZ_ASSERT(checkStrictOrSloppy(op));
+
     ptrdiff_t offset;
     if (!emitCheck(1, &offset))
         return false;
@@ -2011,7 +2012,6 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
 
       case PNK_YIELD_STAR:
       case PNK_YIELD:
-      case PNK_AWAIT:
         MOZ_ASSERT(pn->isArity(PN_BINARY));
         *answer = true;
         return true;
@@ -5857,16 +5857,6 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             MOZ_ASSERT(pn->getOp() == JSOP_LAMBDA);
             pn->setOp(JSOP_FUNWITHPROTO);
         }
-
-        if (funbox->isAsync())
-            return emitAsyncWrapper(index, funbox->needsHomeObject());
-
-        if (pn->getOp() == JSOP_DEFFUN) {
-          if (!emitIndex32(JSOP_LAMBDA, index))
-            return false;
-          return emit1(JSOP_DEFFUN);
-        }
-
         return emitIndex32(pn->getOp(), index);
     }
 
@@ -5886,14 +5876,7 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
         MOZ_ASSERT(pn->getOp() == JSOP_NOP);
         MOZ_ASSERT(atBodyLevel());
         switchToPrologue();
-        if (funbox->isAsync()) {
-            if (!emitAsyncWrapper(index, fun->isMethod()))
-                return false;
-        } else {
-            if (!emitIndex32(JSOP_LAMBDA, index))
-                return false;
-        }
-        if (!emit1(JSOP_DEFFUN))
+        if (!emitIndex32(JSOP_DEFFUN, index))
             return false;
         if (!updateSourceCoordNotes(pn->pn_pos.begin))
             return false;
@@ -5907,11 +5890,7 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
                    bi->kind() == Binding::ARGUMENT);
         MOZ_ASSERT(bi.argOrLocalIndex() < JS_BIT(20));
 #endif
-        if (funbox->isAsync()) {
-            if (!emitAsyncWrapper(index, false))
-                return false;
-        }
-        else if (!emitIndexOp(JSOP_LAMBDA, index))
+        if (!emitIndexOp(JSOP_LAMBDA, index))
             return false;
         MOZ_ASSERT(pn->getOp() == JSOP_GETLOCAL || pn->getOp() == JSOP_GETARG);
         JSOp setOp = pn->getOp() == JSOP_GETLOCAL ? JSOP_SETLOCAL : JSOP_SETARG;
@@ -5921,30 +5900,6 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             return false;
     }
 
-    return true;
-}
-
-bool
-BytecodeEmitter::emitAsyncWrapper(unsigned index, bool needsHomeObject) {
-    JSAtom* atom = Atomize(cx, "AsyncFunction_wrap", 18);
-    if (!atom)
-        return false;
-    /* TODO Comment */
-    if (needsHomeObject && !emitIndex32(JSOP_LAMBDA, index))
-        return false;
-    if (!emitAtomOp(atom, JSOP_GETINTRINSIC))
-        return false;
-    if (!emit1(JSOP_UNDEFINED))
-        return false;
-    if (needsHomeObject) {
-        if (!emitDupAt(2))
-            return false;
-    } else {
-        if (!emitIndex32(JSOP_LAMBDA, index))
-            return false;
-    }
-    if (!emitCall(JSOP_CALL, 1))
-        return false;
     return true;
 }
 
@@ -7114,12 +7069,7 @@ BytecodeEmitter::emitPropertyList(ParseNode* pn, MutableHandlePlainObject objp, 
             propdef->pn_right->pn_funbox->needsHomeObject())
         {
             MOZ_ASSERT(propdef->pn_right->pn_funbox->function()->allowSuperProperty());
-            bool isAsync = propdef->pn_right->pn_funbox->isAsync();
-            if (isAsync && !emit1(JSOP_SWAP))
-                return false;
-            if (!emit2(JSOP_INITHOMEOBJECT, isIndex + isAsync))
-                return false;
-            if (isAsync && !emit1(JSOP_POP))
+            if (!emit2(JSOP_INITHOMEOBJECT, isIndex))
                 return false;
         }
 
@@ -7738,7 +7688,6 @@ BytecodeEmitter::emitTree(ParseNode* pn)
         break;
 
       case PNK_YIELD:
-      case PNK_AWAIT:
         ok = emitYield(pn);
         break;
 
