@@ -916,6 +916,8 @@ BrowserElementChild.prototype = {
     // Pass along the position where the context menu should be located
     menuData.clientX = e.clientX;
     menuData.clientY = e.clientY;
+    menuData.screenX = e.screenX;
+    menuData.screenY = e.screenY;
 
     // The value returned by the contextmenu sync call is true if the embedder
     // called preventDefault() on its contextmenu event.
