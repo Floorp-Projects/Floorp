@@ -288,7 +288,7 @@ gfxFontCache::DestroyFont(gfxFont *aFont)
             aFont->GetUnicodeRangeMap());
     HashEntry *entry = mFonts.GetEntry(key);
     if (entry && entry->mFont == aFont) {
-        mFonts.RemoveEntry(key);
+        mFonts.RemoveEntry(entry);
     }
     NS_ASSERTION(aFont->GetRefCount() == 0,
                  "Destroying with non-zero ref count!");

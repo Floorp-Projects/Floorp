@@ -6,6 +6,7 @@
 #include "WebGLShaderValidator.h"
 
 #include "angle/ShaderLang.h"
+#include "gfxPrefs.h"
 #include "GLContext.h"
 #include "mozilla/Preferences.h"
 #include "MurmurHash3.h"
@@ -43,7 +44,7 @@ ChooseValidatorCompileOptions(const ShBuiltInResources& resources,
         options |= SH_LIMIT_EXPRESSION_COMPLEXITY;
     }
 
-    if (Preferences::GetBool("webgl.all-angle-options", false)) {
+    if (gfxPrefs::WebGLAllANGLEOptions()) {
         return options |
                SH_VALIDATE_LOOP_INDEXING |
                SH_UNROLL_FOR_LOOP_WITH_INTEGER_INDEX |

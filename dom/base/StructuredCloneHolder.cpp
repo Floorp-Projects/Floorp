@@ -21,6 +21,8 @@
 #include "mozilla/dom/StructuredClone.h"
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MessagePortBinding.h"
+#include "mozilla/dom/OffscreenCanvas.h"
+#include "mozilla/dom/OffscreenCanvasBinding.h"
 #include "mozilla/dom/PMessagePort.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/SubtleCryptoBinding.h"
@@ -1064,6 +1066,25 @@ StructuredCloneHolder::CustomReadTransferHandler(JSContext* aCx,
     return true;
   }
 
+  if (aTag == SCTAG_DOM_CANVAS) {
+    MOZ_ASSERT(mSupportedContext == SameProcessSameThread ||
+               mSupportedContext == SameProcessDifferentThread);
+    MOZ_ASSERT(aContent);
+    OffscreenCanvasCloneData* data =
+      static_cast<OffscreenCanvasCloneData*>(aContent);
+    nsRefPtr<OffscreenCanvas> canvas = OffscreenCanvas::CreateFromCloneData(data);
+    delete data;
+
+    JS::Rooted<JS::Value> value(aCx);
+    if (!GetOrCreateDOMReflector(aCx, canvas, &value)) {
+      JS_ClearPendingException(aCx);
+      return false;
+    }
+
+    aReturnObject.set(&value.toObject());
+    return true;
+  }
+
   return false;
 }
 
@@ -1095,6 +1116,24 @@ StructuredCloneHolder::CustomWriteTransferHandler(JSContext* aCx,
 
       return true;
     }
+
+    if (mSupportedContext == SameProcessSameThread ||
+        mSupportedContext == SameProcessDifferentThread) {
+      OffscreenCanvas* canvas = nullptr;
+      rv = UNWRAP_OBJECT(OffscreenCanvas, aObj, canvas);
+      if (NS_SUCCEEDED(rv)) {
+        MOZ_ASSERT(canvas);
+
+        *aExtraData = 0;
+        *aTag = SCTAG_DOM_CANVAS;
+        *aOwnership = JS::SCTAG_TMO_CUSTOM;
+        *aContent = canvas->ToCloneData();
+        MOZ_ASSERT(*aContent);
+        canvas->SetNeutered();
+
+        return true;
+      }
+    }
   }
 
   return false;
@@ -1112,6 +1151,17 @@ StructuredCloneHolder::CustomFreeTransferHandler(uint32_t aTag,
     MOZ_ASSERT(!aContent);
     MOZ_ASSERT(aExtraData < mPortIdentifiers.Length());
     MessagePort::ForceClose(mPortIdentifiers[aExtraData]);
+    return;
+  }
+
+  if (aTag == SCTAG_DOM_CANVAS) {
+    MOZ_ASSERT(mSupportedContext == SameProcessSameThread ||
+               mSupportedContext == SameProcessDifferentThread);
+    MOZ_ASSERT(aContent);
+    OffscreenCanvasCloneData* data =
+      static_cast<OffscreenCanvasCloneData*>(aContent);
+    delete data;
+    return;
   }
 }
 
