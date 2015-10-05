@@ -48,7 +48,8 @@ parseAndEvaluate("var foo = 1;");
 parseAndEvaluate("let foo = 1;");
 parseAndEvaluate("const foo = 1");
 parseAndEvaluate("function foo() {}");
-parseAndEvaluate("class foo { constructor() {} }");
+if (classesEnabled())
+    parseAndEvaluate("class foo { constructor() {} }");
 
 // Check we can evaluate all module-related syntax.
 parseAndEvaluate("export var foo = 1;");
@@ -56,14 +57,16 @@ parseAndEvaluate("export let foo = 1;");
 parseAndEvaluate("export const foo = 1;");
 parseAndEvaluate("var x = 1; export { x };");
 parseAndEvaluate("export default 1");
-parseAndEvaluate("export default class { constructor() {} };");
 parseAndEvaluate("export default function() {};");
-parseAndEvaluate("export default class foo { constructor() {} };");
 parseAndEvaluate("export default function foo() {};");
 parseAndEvaluate("import a from 'a';");
 parseAndEvaluate("import { x } from 'a';");
 parseAndEvaluate("import * as ns from 'a';");
 parseAndEvaluate("export * from 'a'");
+if (classesEnabled()) {
+    parseAndEvaluate("export default class { constructor() {} };");
+    parseAndEvaluate("export default class foo { constructor() {} };");
+}
 
 // Test default import
 m = parseModule("import a from 'a'; a;")

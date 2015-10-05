@@ -206,8 +206,18 @@ jit::ExceptionHandlerBailout(JSContext* cx, const InlineFrameIterator& frame,
     CommonFrameLayout* currentFramePtr = iter.current();
 
     BaselineBailoutInfo* bailoutInfo = nullptr;
-    uint32_t retval = BailoutIonToBaseline(cx, bailoutData.activation(), iter, true,
-                                           &bailoutInfo, &excInfo);
+    uint32_t retval;
+
+    {
+        // Currently we do not tolerate OOM here so as not to complicate the
+        // exception handling code further.
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+
+        retval = BailoutIonToBaseline(cx, bailoutData.activation(), iter, true,
+                                      &bailoutInfo, &excInfo);
+        if (retval == BAILOUT_RETURN_FATAL_ERROR && cx->isThrowingOutOfMemory())
+            oomUnsafe.crash("ExceptionHandlerBailout");
+    }
 
     if (retval == BAILOUT_RETURN_OK) {
         MOZ_ASSERT(bailoutInfo);
@@ -235,8 +245,6 @@ jit::ExceptionHandlerBailout(JSContext* cx, const InlineFrameIterator& frame,
 
             // Crash for now so as not to complicate the exception handling code
             // further.
-            if (cx->isThrowingOutOfMemory())
-                CrashAtUnhandlableOOM("ExceptionHandlerBailout");
             MOZ_CRASH();
         }
     }
