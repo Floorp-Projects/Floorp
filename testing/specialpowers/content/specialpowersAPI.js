@@ -2044,8 +2044,8 @@ SpecialPowersAPI.prototype = {
     this.notifyObserversInParentProcess(null, "browser:purge-domain-data", "example.com");
   },
 
-  cleanUpSTSData: function(origin) {
-    return this._sendSyncMessage('SPCleanUpSTSData', {origin: origin});
+  cleanUpSTSData: function(origin, flags) {
+    return this._sendSyncMessage('SPCleanUpSTSData', {origin: origin, flags: flags || 0});
   },
 
   loadExtension: function(ext, handler) {
