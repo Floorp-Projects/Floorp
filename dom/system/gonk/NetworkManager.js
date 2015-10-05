@@ -35,6 +35,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gPACGenerator",
                                    "@mozilla.org/pac-generator;1",
                                    "nsIPACGenerator");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gTetheringService",
+                                   "@mozilla.org/tethering/service;1",
+                                   "nsITetheringService");
+
 const TOPIC_INTERFACE_REGISTERED     = "network-interface-registered";
 const TOPIC_INTERFACE_UNREGISTERED   = "network-interface-unregistered";
 const TOPIC_ACTIVE_CHANGED           = "network-active-changed";
@@ -855,7 +859,9 @@ NetworkManager.prototype = {
         }
 
         if (this._manageOfflineStatus) {
-          Services.io.offline = !anyConnected;
+          Services.io.offline = !anyConnected &&
+                                (gTetheringService.state ===
+                                 Ci.nsITetheringService.TETHERING_STATE_INACTIVE);
         }
       });
   },

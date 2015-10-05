@@ -45,6 +45,8 @@ class nsIStreamLoaderObserver;
 class nsIUnicharStreamLoader;
 class nsIUnicharStreamLoaderObserver;
 
+namespace mozilla { class OriginAttributes; }
+
 template <class> class nsCOMPtr;
 template <typename> struct already_AddRefed;
 
@@ -688,6 +690,12 @@ NS_QueryNotificationCallbacks(nsIInterfaceRequestor  *callbacks,
  * Returns false if channel's callbacks don't implement nsILoadContext.
  */
 bool NS_UsePrivateBrowsing(nsIChannel *channel);
+
+/**
+ * Extract the OriginAttributes from the channel's triggering principal.
+ */
+bool NS_GetOriginAttributes(nsIChannel *aChannel,
+                            mozilla::OriginAttributes &aAttributes);
 
 // Constants duplicated from nsIScriptSecurityManager so we avoid having necko
 // know about script security manager.

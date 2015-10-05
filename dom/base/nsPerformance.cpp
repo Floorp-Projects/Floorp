@@ -30,6 +30,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/TimeStamp.h"
 #include "js/HeapAPI.h"
+#include "GeckoProfiler.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 
@@ -922,6 +923,10 @@ PerformanceBase::Mark(const nsAString& aName, ErrorResult& aRv)
   nsRefPtr<PerformanceMark> performanceMark =
     new PerformanceMark(GetAsISupports(), aName, Now());
   InsertUserEntry(performanceMark);
+
+  if (profiler_is_active()) {
+    PROFILER_MARKER(NS_ConvertUTF16toUTF8(aName).get());
+  }
 }
 
 void

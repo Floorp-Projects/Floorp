@@ -2006,6 +2006,9 @@ pref("middlemouse.scrollbarPosition", false);
 // Clipboard behavior
 pref("clipboard.autocopy", false);
 
+// Clipboard only supports text/plain
+pref("clipboard.plainTextOnly", false);
+
 // mouse wheel scroll transaction period of time (in milliseconds)
 pref("mousewheel.transaction.timeout", 1500);
 // mouse wheel scroll transaction is held even if the mouse cursor is moved.
@@ -4180,8 +4183,6 @@ pref("webgl.angle.try-d3d11", true);
 pref("webgl.angle.force-d3d11", false);
 pref("webgl.angle.force-warp", false);
 #endif
-
-pref("gfx.offscreencanvas.enabled", false);
 
 #ifdef MOZ_WIDGET_GONK
 pref("gfx.gralloc.fence-with-readpixels", false);

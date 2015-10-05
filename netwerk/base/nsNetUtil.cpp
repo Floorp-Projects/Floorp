@@ -6,6 +6,7 @@
 
 #include "mozilla/LoadContext.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/BasePrincipal.h"
 #include "nsNetUtil.h"
 #include "nsNetUtil.inl"
 #include "mozIApplicationClearPrivateDataParams.h"
@@ -1208,6 +1209,20 @@ NS_UsePrivateBrowsing(nsIChannel *channel)
     nsCOMPtr<nsILoadContext> loadContext;
     NS_QueryNotificationCallbacks(channel, loadContext);
     return loadContext && loadContext->UsePrivateBrowsing();
+}
+
+bool
+NS_GetOriginAttributes(nsIChannel *aChannel,
+                       mozilla::OriginAttributes &aAttributes)
+{
+    nsCOMPtr<nsILoadContext> loadContext;
+    NS_QueryNotificationCallbacks(aChannel, loadContext);
+    if (!loadContext) {
+        return false;
+    }
+
+    loadContext->GetOriginAttributes(aAttributes);
+    return true;
 }
 
 bool
