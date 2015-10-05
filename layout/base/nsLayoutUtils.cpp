@@ -1961,6 +1961,25 @@ nsLayoutUtils::GetAnimatedGeometryRootFor(nsDisplayItem* aItem,
   return GetAnimatedGeometryRootForFrame(aBuilder, f);
 }
 
+nsIFrame*
+nsLayoutUtils::GetAnimatedGeometryRootForInit(nsDisplayItem* aItem,
+                                              nsDisplayListBuilder* aBuilder)
+{
+  nsIFrame* f = aItem->Frame();
+  if (aItem->ShouldFixToViewport(aBuilder)) {
+    // Make its active scrolled root be the active scrolled root of
+    // the enclosing viewport, since it shouldn't be scrolled by scrolled
+    // frames in its document. InvalidateFixedBackgroundFramesFromList in
+    // nsGfxScrollFrame will not repaint this item when scrolling occurs.
+    nsIFrame* viewportFrame =
+      nsLayoutUtils::GetClosestFrameOfType(f, nsGkAtoms::viewportFrame, aBuilder->RootReferenceFrame());
+    if (viewportFrame) {
+      return GetAnimatedGeometryRootForFrame(aBuilder, viewportFrame);
+    }
+  }
+  return GetAnimatedGeometryRootForFrame(aBuilder, f);
+}
+
 // static
 nsIScrollableFrame*
 nsLayoutUtils::GetNearestScrollableFrameForDirection(nsIFrame* aFrame,
