@@ -215,14 +215,3 @@ if (typeof assertWarning === 'undefined') {
         disableLastWarning();
     }
 }
-
-function classesEnabled(testCode = "class Foo { constructor() {} }") {
-    try {
-        new Function(testCode);
-        return true;
-    } catch (e) {
-        if (!(e instanceof SyntaxError))
-            throw e;
-        return false;
-    }
-}

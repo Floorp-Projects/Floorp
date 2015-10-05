@@ -46,6 +46,9 @@
 /* Support for ES7 Exponentiation proposal. */
 #define JS_HAS_EXPONENTIATION 1
 
+/* Support for ES7 Async Functions. */
+#define JS_HAS_ASYNC_FUNCS 1
+
 #endif // NIGHTLY_BUILD
 
 #endif /* jsversion_h */
