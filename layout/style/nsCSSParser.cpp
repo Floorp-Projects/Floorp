@@ -1304,6 +1304,9 @@ static void AppendRuleToSheet(css::Rule* aRule, void* aParser)
 #define REPORT_UNEXPECTED_P(msg_, param_) \
   { if (!mSuppressErrors) mReporter->ReportUnexpected(#msg_, param_); }
 
+#define REPORT_UNEXPECTED_P_V(msg_, param_, value_) \
+  { if (!mSuppressErrors) mReporter->ReportUnexpected(#msg_, param_, value_); }
+
 #define REPORT_UNEXPECTED_TOKEN(msg_) \
   { if (!mSuppressErrors) mReporter->ReportUnexpected(#msg_, mToken); }
 
@@ -2690,7 +2693,8 @@ CSSParserImpl::ParsePropertyWithVariableReferences(
     if (!valid) {
       NS_ConvertASCIItoUTF16 propName(nsCSSProps::GetStringValue(
                                                               propertyToParse));
-      REPORT_UNEXPECTED_P(PEValueWithVariablesParsingError, propName);
+      REPORT_UNEXPECTED_P_V(PEValueWithVariablesParsingErrorInValue,
+                            propName, expandedValue);
       if (nsCSSProps::IsInherited(aPropertyID)) {
         REPORT_UNEXPECTED(PEValueWithVariablesFallbackInherit);
       } else {
