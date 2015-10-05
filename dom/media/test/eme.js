@@ -346,6 +346,11 @@ function SetupEME(test, token, params)
     });
   }
 
+  function streamType(type) {
+    var x = test.tracks.find(o => o.name == type);
+    return x ? x.type : undefined;
+  }
+
   // All 'initDataType's should be the same.
   // null indicates no 'encrypted' event received yet.
   var initDataType = null;
@@ -367,8 +372,8 @@ function SetupEME(test, token, params)
       var options = [
          {
            initDataType: ev.initDataType,
-           videoType: test.type,
-           audioType: test.type,
+           videoType: streamType("video"),
+           audioType: streamType("audio"),
          }
        ];
       var p = navigator.requestMediaKeySystemAccess(KEYSYSTEM_TYPE, options);
