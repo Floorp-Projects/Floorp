@@ -99,7 +99,7 @@
   list-style-image: url(chrome://browser/skin/Geolocation-64.png);
 }
 .pref-icon[type="desktop-notification"] {
-  list-style-image: url(chrome://browser/skin/notification-64.png);
+  list-style-image: url(chrome://browser/skin/web-notifications-icon.svg);
 }
 .pref-icon[type="indexedDB"] {
   list-style-image: url(chrome://global/skin/icons/question-64.png);
