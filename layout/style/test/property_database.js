@@ -65,6 +65,12 @@ const CSS_TYPE_SHORTHAND_AND_LONGHAND = 2;
 //   unbalanced_values: Things that are not values for the property and
 //     should be rejected, and which also contain unbalanced constructs
 //     that should absorb what follows
+//
+// Note: By default, an alias is assumed to accept/reject the same values as
+// the property that it aliases, and to have the same prerequisites. So, if
+// "alias_for" is set, the "*_values" and "prerequisites" fields can simply
+// be omitted, and they'll be populated automatically to match the aliased
+// property's fields.
 
 // Helper functions used to construct gCSSProperties.
 
@@ -6619,5 +6625,33 @@ if (IsCSSPropertyPrefEnabled("layout.css.unset-value.enabled")) {
     gCSSProperties["text-align"].other_values.push("true left");
   } else {
     gCSSProperties["text-align"].invalid_values.push("true left");
+  }
+}
+
+// Copy aliased properties' fields from their alias targets.
+for (var prop in gCSSProperties) {
+  var entry = gCSSProperties[prop];
+  if (entry.alias_for) {
+    var aliasTargetEntry = gCSSProperties[entry.alias_for];
+    if (!aliasTargetEntry) {
+      ok(false,
+         "Alias '" + prop + "' alias_for field, '" + entry.alias_for + "', " +
+         "must be set to a recognized CSS property in gCSSProperties");
+    } else {
+      // Copy 'values' fields & 'prerequisites' field from aliasTargetEntry:
+      var fieldsToCopy =
+          ["initial_values", "other_values", "invalid_values",
+           "quirks_values", "unbalanced_values",
+           "prerequisites"];
+
+      fieldsToCopy.forEach(function(fieldName) {
+        // (Don't copy the field if the alias already has something there,
+        // or if the aliased property doesn't have anything to copy.)
+        if (!(fieldName in entry) &&
+            fieldName in aliasTargetEntry) {
+          entry[fieldName] = aliasTargetEntry[fieldName]
+        }
+      });
+    }
   }
 }
