@@ -306,7 +306,7 @@ decode_mcu_DC_first (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
     }
 
     /* Scale and output the DC coefficient (assumes jpeg_natural_order[0]=0) */
-    (*block)[0] = (JCOEF) (entropy->last_dc_val[ci] << cinfo->Al);
+    (*block)[0] = (JCOEF) LEFT_SHIFT(entropy->last_dc_val[ci], cinfo->Al);
   }
 
   return TRUE;

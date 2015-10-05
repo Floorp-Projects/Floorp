@@ -5,7 +5,7 @@
  * Copyright (C) 1991-1996, Thomas G. Lane.
  * libjpeg-turbo Modifications:
  * Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
- * Copyright (C) 2009-2012, D. R. Commander.
+ * Copyright (C) 2009-2012, 2015 D. R. Commander.
  * Copyright (C) 2014, MIPS Technologies, Inc., California
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -464,24 +464,54 @@ null_convert (j_compress_ptr cinfo,
               JDIMENSION output_row, int num_rows)
 {
   register JSAMPROW inptr;
-  register JSAMPROW outptr;
+  register JSAMPROW outptr, outptr0, outptr1, outptr2, outptr3;
   register JDIMENSION col;
   register int ci;
   int nc = cinfo->num_components;
   JDIMENSION num_cols = cinfo->image_width;
 
-  while (--num_rows >= 0) {
-    /* It seems fastest to make a separate pass for each component. */
-    for (ci = 0; ci < nc; ci++) {
-      inptr = *input_buf;
-      outptr = output_buf[ci][output_row];
+  if (nc == 3) {
+    while (--num_rows >= 0) {
+      inptr = *input_buf++;
+      outptr0 = output_buf[0][output_row];
+      outptr1 = output_buf[1][output_row];
+      outptr2 = output_buf[2][output_row];
+      output_row++;
       for (col = 0; col < num_cols; col++) {
-        outptr[col] = inptr[ci]; /* don't need GETJSAMPLE() here */
-        inptr += nc;
+        outptr0[col] = *inptr++;
+        outptr1[col] = *inptr++;
+        outptr2[col] = *inptr++;
       }
     }
-    input_buf++;
-    output_row++;
+  } else if (nc == 4) {
+    while (--num_rows >= 0) {
+      inptr = *input_buf++;
+      outptr0 = output_buf[0][output_row];
+      outptr1 = output_buf[1][output_row];
+      outptr2 = output_buf[2][output_row];
+      outptr3 = output_buf[3][output_row];
+      output_row++;
+      for (col = 0; col < num_cols; col++) {
+        outptr0[col] = *inptr++;
+        outptr1[col] = *inptr++;
+        outptr2[col] = *inptr++;
+        outptr3[col] = *inptr++;
+      }
+    }
+  } else {
+    while (--num_rows >= 0) {
+      /* It seems fastest to make a separate pass for each component. */
+      for (ci = 0; ci < nc; ci++) {
+        inptr = *input_buf;
+        outptr = output_buf[ci][output_row];
+        for (col = 0; col < num_cols; col++) {
+          outptr[col] = inptr[ci]; /* don't need GETJSAMPLE() here */
+          inptr += nc;
+        }
+      }
+      input_buf++;
+      output_row++;
+    }
   }
 }
 
