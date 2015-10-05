@@ -283,7 +283,7 @@ private:
     }
   };
 
-  void CheckSequenceDiscontinuity();
+  void CheckSequenceDiscontinuity(const media::TimeUnit& aPresentationTime);
   void ProcessFrames(TrackBuffer& aSamples, TrackData& aTrackData);
   bool CheckNextInsertionIndex(TrackData& aTrackData,
                                const media::TimeUnit& aSampleTime);
