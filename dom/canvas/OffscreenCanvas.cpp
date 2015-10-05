@@ -210,7 +210,13 @@ OffscreenCanvas::CreateFromCloneData(OffscreenCanvasCloneData* aData)
 /* static */ bool
 OffscreenCanvas::PrefEnabled(JSContext* aCx, JSObject* aObj)
 {
-  return gfxPrefs::OffscreenCanvasEnabled();
+  if (NS_IsMainThread()) {
+    return Preferences::GetBool("gfx.offscreencanvas.enabled");
+  } else {
+    WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+    MOZ_ASSERT(workerPrivate);
+    return workerPrivate->OffscreenCanvasEnabled();
+  }
 }
 
 /* static */ bool
