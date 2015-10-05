@@ -3602,6 +3602,8 @@ nsContentUtils::IsChildOfSameType(nsIDocument* aDoc)
 bool
 nsContentUtils::IsPlainTextType(const nsACString& aContentType)
 {
+  // NOTE: if you add a type here, add it to the CONTENTDLF_CATEGORIES
+  // define in nsContentDLF.h as well.
   return aContentType.EqualsLiteral(TEXT_PLAIN) ||
          aContentType.EqualsLiteral(TEXT_CSS) ||
          aContentType.EqualsLiteral(TEXT_CACHE_MANIFEST) ||
