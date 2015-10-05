@@ -10,7 +10,6 @@
 #include "GLLibraryEGL.h"
 #include "GLReadTexImageHelper.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
-#include "ScopedGLHelpers.h"
 #include "SharedSurface.h"
 #include "TextureGarbageBin.h"
 
@@ -211,6 +210,14 @@ SharedSurface_EGLImage::ToSurfaceDescriptor(layers::SurfaceDescriptor* const out
     *out_descriptor = layers::EGLImageDescriptor((uintptr_t)mImage, (uintptr_t)mSync,
                                                  mSize, mHasAlpha);
     return true;
+}
+
+bool
+SharedSurface_EGLImage::ReadbackBySharedHandle(gfx::DataSourceSurface* out_surface)
+{
+    MOZ_ASSERT(out_surface);
+    MOZ_ASSERT(NS_IsMainThread());
+    return sEGLLibrary.ReadbackEGLImage(mImage, out_surface);
 }
 
 ////////////////////////////////////////////////////////////////////////

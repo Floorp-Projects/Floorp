@@ -167,12 +167,20 @@ public:
   }
 
   /**
+   * Remove the entry associated with a key.
+   * @param aEntry   the entry-pointer to remove (obtained from GetEntry)
+   */
+  void RemoveEntry(EntryType* aEntry)
+  {
+    mTable.RemoveEntry(aEntry);
+  }
+
+  /**
    * Remove the entry associated with a key, but don't resize the hashtable.
    * This is a low-level method, and is not recommended unless you know what
-   * you're doing and you need the extra performance. This method can be used
-   * during enumeration, while RemoveEntry() cannot.
-   * @param aEntry   the entry-pointer to remove (obtained from GetEntry or
-   *                 the enumerator
+   * you're doing. If you use it, please add a comment explaining why you
+   * didn't use RemoveEntry().
+   * @param aEntry   the entry-pointer to remove (obtained from GetEntry)
    */
   void RawRemoveEntry(EntryType* aEntry)
   {
