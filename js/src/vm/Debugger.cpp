@@ -7099,7 +7099,7 @@ DebuggerObject_getScript(JSContext* cx, unsigned argc, Value* vp)
     }
 
     RootedFunction fun(cx, &obj->as<JSFunction>());
-    if (fun->isBuiltin()) {
+    if (!fun->isInterpreted()) {
         args.rval().setUndefined();
         return true;
     }
