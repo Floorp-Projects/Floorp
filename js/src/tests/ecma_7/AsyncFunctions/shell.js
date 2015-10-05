@@ -25,3 +25,12 @@ if (typeof assertEventuallyDeepEq === 'undefined') {
     return promise.then(actual => assertDeepEq(actual, expected));
   };
 }
+
+function asyncFunctionsEnabled() {
+    try {
+        eval("async function f()  { }");
+        return true;
+    } catch (e if e instanceof SyntaxError) {
+        return false;
+    }
+}
