@@ -28,9 +28,9 @@ SetUpSandboxEnvironment()
     "SetUpSandboxEnvironment relies on nsDirectoryService being initialized");
 
   // A low integrity temp only currently makes sense for Vista or Later and
-  // sandbox pref level 1.
+  // sandbox pref level >= 1.
   if (!IsVistaOrLater() ||
-      Preferences::GetInt("security.sandbox.content.level") != 1) {
+      Preferences::GetInt("security.sandbox.content.level") < 1) {
     return;
   }
 
