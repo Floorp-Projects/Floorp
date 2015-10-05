@@ -251,11 +251,6 @@ public:
     return true;
   }
 
-  bool
-  SupportsSharedDecoders(const VideoInfo& aConfig) const override {
-    return false;
-  }
-
   ConversionRequired
   DecoderNeedsConversion(const TrackInfo& aConfig) const override
   {
