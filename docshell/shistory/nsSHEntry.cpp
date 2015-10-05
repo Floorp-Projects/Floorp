@@ -39,6 +39,7 @@ nsSHEntry::nsSHEntry(const nsSHEntry& aOther)
   : mShared(aOther.mShared)
   , mURI(aOther.mURI)
   , mOriginalURI(aOther.mOriginalURI)
+  , mLoadReplace(aOther.mLoadReplace)
   , mReferrerURI(aOther.mReferrerURI)
   , mReferrerPolicy(aOther.mReferrerPolicy)
   , mTitle(aOther.mTitle)
@@ -130,6 +131,20 @@ NS_IMETHODIMP
 nsSHEntry::SetOriginalURI(nsIURI* aOriginalURI)
 {
   mOriginalURI = aOriginalURI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::GetLoadReplace(bool* aLoadReplace)
+{
+  *aLoadReplace = mLoadReplace;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::SetLoadReplace(bool aLoadReplace)
+{
+  mLoadReplace = aLoadReplace;
   return NS_OK;
 }
 

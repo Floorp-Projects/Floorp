@@ -30,7 +30,7 @@ class nsSHEntryShared;
 [ptr] native nsDocShellEditorDataPtr(nsDocShellEditorData);
 [ptr] native nsSHEntryShared(nsSHEntryShared);
 
-[scriptable, uuid(e45ab6ef-3485-449c-b91c-0846b2bf6faf)]
+[scriptable, uuid(3a5e5fa0-5364-4fbb-a87a-3f12a6b51903)]
 interface nsISHEntry : nsISupports
 {
     /**
@@ -46,6 +46,11 @@ interface nsISHEntry : nsISupports
      * URI. The object returned is of type nsIURI
      */
     attribute nsIURI originalURI;
+
+    /**
+     *  This flag remembers whether channel has LOAD_REPLACE set.
+     */
+    attribute boolean loadReplace;
 
     /**
      * A readonly property that returns the title
