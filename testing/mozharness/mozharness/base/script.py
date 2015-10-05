@@ -274,8 +274,13 @@ class ScriptMixin(PlatformMixin):
             if file_attr & win32file.FILE_ATTRIBUTE_DIRECTORY:
                 self._rmtree_windows(full_name)
             else:
-                win32file.SetFileAttributesW('\\\\?\\' + full_name, win32file.FILE_ATTRIBUTE_NORMAL)
-                win32file.DeleteFile('\\\\?\\' + full_name)
+                try:
+                    win32file.SetFileAttributesW('\\\\?\\' + full_name, win32file.FILE_ATTRIBUTE_NORMAL)
+                    win32file.DeleteFile('\\\\?\\' + full_name)
+                except:
+                    # DeleteFile fails on long paths, del /f /q works just fine
+                    self.run_command('del /F /Q "%s"' % full_name)
+
         win32file.RemoveDirectory('\\\\?\\' + path)
 
     def get_filename_from_url(self, url):
