@@ -895,6 +895,14 @@ function makePreview(row)
       // "width" and "height" attributes must be set to newImage,
       // even if there is no "width" or "height attribute in item;
       // otherwise, the preview image cannot be displayed correctly.
+      // Since the image might have been loaded out-of-process, we expect
+      // the item to tell us its width / height dimensions. Failing that
+      // the item should tell us the natural dimensions of the image. Finally
+      // failing that, we'll assume that the image was never loaded in the
+      // other process (this can be true for favicons, for example), and so
+      // we'll assume that we can use the natural dimensions of the newImage
+      // we just created. If the natural dimensions of newImage are not known
+      // then the image is probably broken.
       if (!isBG) {
         newImage.width = ("width" in item && item.width) || newImage.naturalWidth;
         newImage.height = ("height" in item && item.height) || newImage.naturalHeight;
@@ -902,8 +910,8 @@ function makePreview(row)
       else {
         // the Width and Height of an HTML tag should not be used for its background image
         // (for example, "table" can have "width" or "height" attributes)
-        newImage.width = newImage.naturalWidth;
-        newImage.height = newImage.naturalHeight;
+        newImage.width = item.naturalWidth || newImage.naturalWidth;
+        newImage.height = item.naturalHeight || newImage.naturalHeight;
       }
 
       if (item.SVGImageElement) {
