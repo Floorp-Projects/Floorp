@@ -43,6 +43,7 @@ const TOPIC_MOZSETTINGS_CHANGED      = "mozsettings-changed";
 const TOPIC_CONNECTION_STATE_CHANGED = "network-connection-state-changed";
 const TOPIC_PREF_CHANGED             = "nsPref:changed";
 const TOPIC_XPCOM_SHUTDOWN           = "xpcom-shutdown";
+const PREF_MANAGE_OFFLINE_STATUS     = "network.gonk.manage-offline-status";
 const PREF_NETWORK_DEBUG_ENABLED     = "network.debugging.enabled";
 
 const POSSIBLE_USB_INTERFACE_NAME = "rndis0,usb0";
@@ -125,6 +126,14 @@ function TetheringService() {
   Services.obs.addObserver(this, TOPIC_MOZSETTINGS_CHANGED, false);
   Services.obs.addObserver(this, TOPIC_CONNECTION_STATE_CHANGED, false);
   Services.prefs.addObserver(PREF_NETWORK_DEBUG_ENABLED, this, false);
+  Services.prefs.addObserver(PREF_MANAGE_OFFLINE_STATUS, this, false);
+
+  try {
+    this._manageOfflineStatus =
+      Services.prefs.getBoolPref(PREF_MANAGE_OFFLINE_STATUS);
+  } catch(ex) {
+    // Ignore.
+  }
 
   this._dataDefaultServiceId = 0;
 
@@ -230,6 +239,12 @@ TetheringService.prototype = {
   // Arguments for pending wifi tethering request.
   _pendingWifiTetheringRequestArgs: null,
 
+  // The state of tethering.
+  state: Ci.nsITetheringService.TETHERING_STATE_INACTIVE,
+
+  // Flag to check if we can modify the Services.io.offline.
+  _manageOfflineStatus: true,
+
   // nsIObserver
 
   observe: function(aSubject, aTopic, aData) {
@@ -258,9 +273,18 @@ TetheringService.prototype = {
         Services.obs.removeObserver(this, TOPIC_MOZSETTINGS_CHANGED);
         Services.obs.removeObserver(this, TOPIC_CONNECTION_STATE_CHANGED);
         Services.prefs.removeObserver(PREF_NETWORK_DEBUG_ENABLED, this);
+        Services.prefs.removeObserver(PREF_MANAGE_OFFLINE_STATUS, this);
 
         this.dunConnectTimer.cancel();
         this.dunRetryTimer.cancel();
+        break;
+      case PREF_MANAGE_OFFLINE_STATUS:
+        try {
+          this._manageOfflineStatus =
+            Services.prefs.getBoolPref(PREF_MANAGE_OFFLINE_STATUS);
+        } catch(ex) {
+          // Ignore.
+        }
         break;
     }
   },
@@ -582,10 +606,31 @@ TetheringService.prototype = {
 
     this._wifiTetheringRequestOngoing = true;
     gNetworkService.setWifiTethering(aEnable, aConfig, (aError) => {
-      // Disconnect dun on error or when wifi tethering is disabled.
-      if (this.tetheringSettings[SETTINGS_DUN_REQUIRED] &&
-          (!aEnable || aError)) {
-        this.handleDunConnection(false);
+      // Change the tethering state to WIFI if there is no error.
+      if (aEnable && !aError) {
+        this.state = Ci.nsITetheringService.TETHERING_STATE_WIFI;
+      } else {
+        // If wifi thethering is disable, or any error happens,
+          // then consider the following statements.
+
+        // Check whether the state is USB now or not. If no then just change
+          // it to INACTIVE, if yes then just keep it.
+          // It means that don't let the disable or error of WIFI affect
+          // the original active state.
+        if (this.state != Ci.nsITetheringService.TETHERING_STATE_USB) {
+          this.state = Ci.nsITetheringService.TETHERING_STATE_INACTIVE;
+        }
+
+        // Disconnect dun on error or when wifi tethering is disabled.
+        if (this.tetheringSettings[SETTINGS_DUN_REQUIRED]) {
+          this.handleDunConnection(false);
+        }
+      }
+
+      if (this._manageOfflineStatus) {
+        Services.io.offline = !this.isAnyConnected() &&
+                              (this.state ===
+                               Ci.nsITetheringService.TETHERING_STATE_INACTIVE);
       }
 
       let resetSettings = aError;
@@ -720,17 +765,34 @@ TetheringService.prototype = {
       // Skip others request when we found an error.
       this._usbTetheringRequestCount = 0;
       this._usbTetheringAction = TETHERING_STATE_IDLE;
+      // If the thethering state is WIFI now, then just keep it,
+        // if not, just change the state to INACTIVE.
+        // It means that don't let the error of USB affect the original active state.
+      if (this.state != Ci.nsITetheringService.TETHERING_STATE_WIFI) {
+        this.state = Ci.nsITetheringService.TETHERING_STATE_INACTIVE;
+      }
       if (this.tetheringSettings[SETTINGS_DUN_REQUIRED]) {
         this.handleDunConnection(false);
       }
     } else {
       if (aEnable) {
         this._usbTetheringAction = TETHERING_STATE_ACTIVE;
+        this.state = Ci.nsITetheringService.TETHERING_STATE_USB;
       } else {
         this._usbTetheringAction = TETHERING_STATE_IDLE;
+        // If the state is now WIFI, don't let the disable of USB affect it.
+        if (this.state != Ci.nsITetheringService.TETHERING_STATE_WIFI) {
+          this.state = Ci.nsITetheringService.TETHERING_STATE_INACTIVE;
+        }
         if (this.tetheringSettings[SETTINGS_DUN_REQUIRED]) {
           this.handleDunConnection(false);
         }
+      }
+
+      if (this._manageOfflineStatus) {
+        Services.io.offline = !this.isAnyConnected() &&
+                              (this.state ===
+                               Ci.nsITetheringService.TETHERING_STATE_INACTIVE);
       }
 
       this.handleLastUsbTetheringRequest();
@@ -811,6 +873,17 @@ TetheringService.prototype = {
     this.wantConnectionEvent = null;
 
     callback.call(this);
+  },
+
+  isAnyConnected: function() {
+    let allNetworkInfo = gNetworkManager.allNetworkInfo;
+    for (let networkId in allNetworkInfo) {
+      if (allNetworkInfo.hasOwnProperty(networkId) &&
+          allNetworkInfo[networkId].state === Ci.nsINetworkInfo.NETWORK_STATE_CONNECTED) {
+          return true;
+      }
+    }
+    return false;
   },
 };
 

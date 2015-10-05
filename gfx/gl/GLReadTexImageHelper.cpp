@@ -214,7 +214,7 @@ GetActualReadFormats(GLContext* gl,
     }
 }
 
-void
+static void
 SwapRAndBComponents(DataSourceSurface* surf)
 {
     DataSourceSurface::MappedSurface map;
@@ -533,8 +533,8 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
 #endif
 }
 
-already_AddRefed<gfx::DataSourceSurface>
-YInvertImageSurface(gfx::DataSourceSurface* aSurf)
+static already_AddRefed<DataSourceSurface>
+YInvertImageSurface(DataSourceSurface* aSurf)
 {
     RefPtr<DataSourceSurface> temp =
       Factory::CreateDataSourceSurfaceWithStride(aSurf->GetSize(),
@@ -560,8 +560,8 @@ YInvertImageSurface(gfx::DataSourceSurface* aSurf)
         return nullptr;
     }
 
-    dt->SetTransform(Matrix::Scaling(1.0, -1.0) *
-                     Matrix::Translation(0.0, aSurf->GetSize().height));
+    dt->SetTransform(Matrix::Translation(0.0, aSurf->GetSize().height) *
+                     Matrix::Scaling(1.0, -1.0));
     Rect rect(0, 0, aSurf->GetSize().width, aSurf->GetSize().height);
     dt->DrawSurface(aSurf, rect, rect, DrawSurfaceOptions(),
                     DrawOptions(1.0, CompositionOp::OP_SOURCE, AntialiasMode::NONE));
@@ -614,36 +614,12 @@ ReadBackSurface(GLContext* gl, GLuint aTexture, bool aYInvert, SurfaceFormat aFo
 
 #define CLEANUP_IF_GLERROR_OCCURRED(x)                                      \
     if (DidGLErrorOccur(x)) {                                               \
-        return false;                                                       \
+        isurf = nullptr;                                                    \
+        break;                                                              \
     }
 
 already_AddRefed<DataSourceSurface>
 GLReadTexImageHelper::ReadTexImage(GLuint aTextureId,
-                                   GLenum aTextureTarget,
-                                   const gfx::IntSize& aSize,
-    /* ShaderConfigOGL.mFeature */ int aConfig,
-                                   bool aYInvert)
-{
-    /* Allocate resulting image surface */
-    int32_t stride = aSize.width * BytesPerPixel(SurfaceFormat::R8G8B8A8);
-    RefPtr<DataSourceSurface> isurf =
-        Factory::CreateDataSourceSurfaceWithStride(aSize,
-                                                   SurfaceFormat::R8G8B8A8,
-                                                   stride);
-    if (NS_WARN_IF(!isurf)) {
-        return nullptr;
-    }
-
-    if (!ReadTexImage(isurf, aTextureId, aTextureTarget, aSize, aConfig, aYInvert)) {
-        return nullptr;
-    }
-
-    return isurf.forget();
-}
-
-bool
-GLReadTexImageHelper::ReadTexImage(DataSourceSurface* aDest,
-                                   GLuint aTextureId,
                                    GLenum aTextureTarget,
                                    const gfx::IntSize& aSize,
     /* ShaderConfigOGL.mFeature */ int aConfig,
@@ -654,6 +630,16 @@ GLReadTexImageHelper::ReadTexImage(DataSourceSurface* aDest,
                aTextureTarget == LOCAL_GL_TEXTURE_RECTANGLE_ARB);
 
     mGL->MakeCurrent();
+
+    /* Allocate resulting image surface */
+    int32_t stride = aSize.width * BytesPerPixel(SurfaceFormat::R8G8B8A8);
+    RefPtr<DataSourceSurface> isurf =
+        Factory::CreateDataSourceSurfaceWithStride(aSize,
+                                                   SurfaceFormat::R8G8B8A8,
+                                                   stride);
+    if (NS_WARN_IF(!isurf)) {
+        return nullptr;
+    }
 
     GLint oldrb, oldfb, oldprog, oldTexUnit, oldTex;
     GLuint rb, fb;
@@ -751,7 +737,7 @@ GLReadTexImageHelper::ReadTexImage(DataSourceSurface* aDest,
         CLEANUP_IF_GLERROR_OCCURRED("when drawing texture");
 
         /* Read-back draw results */
-        ReadPixelsIntoDataSurface(mGL, aDest);
+        ReadPixelsIntoDataSurface(mGL, isurf);
         CLEANUP_IF_GLERROR_OCCURRED("when reading pixels into surface");
     } while (false);
 
@@ -770,7 +756,7 @@ GLReadTexImageHelper::ReadTexImage(DataSourceSurface* aDest,
     if (oldTexUnit != LOCAL_GL_TEXTURE0)
         mGL->fActiveTexture(oldTexUnit);
 
-    return true;
+    return isurf.forget();
 }
 
 #undef CLEANUP_IF_GLERROR_OCCURRED

@@ -280,10 +280,6 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
     return [NSArray array];
 
   static NSArray* generalAttributes = nil;
-  static NSArray* tableAttrs = nil;
-  static NSArray* tableRowAttrs = nil;
-  static NSArray* tableCellAttrs = nil;
-  NSMutableArray* tempArray = nil;
 
   if (!generalAttributes) {
     // standard attributes that are shared and supported by all generic elements.
@@ -308,38 +304,7 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
                                                            nil];
   }
 
-  if (!tableAttrs) {
-    tempArray = [[NSMutableArray alloc] initWithArray:generalAttributes];
-    [tempArray addObject:NSAccessibilityRowCountAttribute];
-    [tempArray addObject:NSAccessibilityColumnCountAttribute];
-    [tempArray addObject:NSAccessibilityRowsAttribute];
-    tableAttrs = [[NSArray alloc] initWithArray:tempArray];
-    [tempArray release];
-  }
-  if (!tableRowAttrs) {
-    tempArray = [[NSMutableArray alloc] initWithArray:generalAttributes];
-    [tempArray addObject:NSAccessibilityIndexAttribute];
-    tableRowAttrs = [[NSArray alloc] initWithArray:tempArray];
-    [tempArray release];
-  }
-  if (!tableCellAttrs) {
-    tempArray = [[NSMutableArray alloc] initWithArray:generalAttributes];
-    [tempArray addObject:NSAccessibilityRowIndexRangeAttribute];
-    [tempArray addObject:NSAccessibilityColumnIndexRangeAttribute];
-    [tempArray addObject:NSAccessibilityRowHeaderUIElementsAttribute];
-    [tempArray addObject:NSAccessibilityColumnHeaderUIElementsAttribute];
-    tableCellAttrs = [[NSArray alloc] initWithArray:tempArray];
-    [tempArray release];
-  }
-
   NSArray* objectAttributes = generalAttributes;
-
-  if ((accWrap && accWrap->IsTable()) || (proxy && proxy->IsTable()))
-    objectAttributes = tableAttrs;
-  else if ((accWrap && accWrap->IsTableRow()) || (proxy && proxy->IsTableRow()))
-    objectAttributes = tableRowAttrs;
-  else if ((accWrap && accWrap->IsTableCell()) || (proxy && proxy->IsTableCell()))
-    objectAttributes = tableCellAttrs;
 
   NSArray* additionalAttributes = [self additionalAccessibilityAttributeNames];
   if ([additionalAttributes count])
@@ -424,114 +389,6 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
   }
   if ([attribute isEqualToString:NSAccessibilityHelpAttribute])
     return [self help];
-
-  if (accWrap) {
-    if (accWrap->IsTable()) {
-      TableAccessible* table = accWrap->AsTable();
-      if ([attribute isEqualToString:NSAccessibilityRowCountAttribute])
-        return @(table->RowCount());
-      if ([attribute isEqualToString:NSAccessibilityColumnCountAttribute])
-        return @(table->ColCount());
-      if ([attribute isEqualToString:NSAccessibilityRowsAttribute]) {
-        // Create a new array with the list of table rows.
-        NSMutableArray* nativeArray = [[NSMutableArray alloc] init];
-        uint32_t totalCount = accWrap->ChildCount();
-        for (uint32_t i = 0; i < totalCount; i++) {
-          if (accWrap->GetChildAt(i)->IsTableRow()) {
-            mozAccessible* curNative =
-              GetNativeFromGeckoAccessible(accWrap->GetChildAt(i));
-            if (curNative)
-              [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
-          }
-        }
-        return nativeArray;
-      }
-    } else if (accWrap->IsTableRow()) {
-      if ([attribute isEqualToString:NSAccessibilityIndexAttribute]) {
-        // Count the number of rows before that one to obtain the row index.
-        uint32_t index = 0;
-        Accessible* parent = accWrap->Parent();
-        if (parent) {
-          for (int32_t i = accWrap->IndexInParent() - 1; i >= 0; i--) {
-            if (parent->GetChildAt(i)->IsTableRow()) {
-              index++;
-            }
-          }
-        }
-        return [NSNumber numberWithUnsignedInteger:index];
-      }
-    } else if (accWrap->IsTableCell()) {
-      TableCellAccessible* cell = accWrap->AsTableCell();
-      if ([attribute isEqualToString:NSAccessibilityRowIndexRangeAttribute])
-        return [NSValue valueWithRange:NSMakeRange(cell->RowIdx(),
-                                                   cell->RowExtent())];
-      if ([attribute isEqualToString:NSAccessibilityColumnIndexRangeAttribute])
-        return [NSValue valueWithRange:NSMakeRange(cell->ColIdx(),
-                                                   cell->ColExtent())];
-      if ([attribute isEqualToString:NSAccessibilityRowHeaderUIElementsAttribute]) {
-        nsAutoTArray<Accessible*, 10> headerCells;
-        cell->RowHeaderCells(&headerCells);
-        return ConvertToNSArray(headerCells);
-      }
-      if ([attribute isEqualToString:NSAccessibilityColumnHeaderUIElementsAttribute]) {
-        nsAutoTArray<Accessible*, 10> headerCells;
-        cell->ColHeaderCells(&headerCells);
-        return ConvertToNSArray(headerCells);
-      }
-    }
-  } else if (proxy) {
-    if (proxy->IsTable()) {
-      if ([attribute isEqualToString:NSAccessibilityRowCountAttribute])
-        return @(proxy->TableRowCount());
-      if ([attribute isEqualToString:NSAccessibilityColumnCountAttribute])
-        return @(proxy->TableColumnCount());
-      if ([attribute isEqualToString:NSAccessibilityRowsAttribute]) {
-        // Create a new array with the list of table rows.
-        NSMutableArray* nativeArray = [[NSMutableArray alloc] init];
-        uint32_t totalCount = proxy->ChildrenCount();
-        for (uint32_t i = 0; i < totalCount; i++) {
-          if (proxy->ChildAt(i)->IsTableRow()) {
-            mozAccessible* curNative =
-              GetNativeFromProxy(proxy->ChildAt(i));
-            if (curNative)
-              [nativeArray addObject:GetObjectOrRepresentedView(curNative)];
-          }
-        }
-        return nativeArray;
-      }
-    } else if (proxy->IsTableRow()) {
-      if ([attribute isEqualToString:NSAccessibilityIndexAttribute]) {
-        // Count the number of rows before that one to obtain the row index.
-        uint32_t index = 0;
-        ProxyAccessible* parent = proxy->Parent();
-        if (parent) {
-          for (int32_t i = proxy->IndexInParent() - 1; i >= 0; i--) {
-            if (parent->ChildAt(i)->IsTableRow()) {
-              index++;
-            }
-          }
-        }
-        return [NSNumber numberWithUnsignedInteger:index];
-      }
-    } else if (proxy->IsTableCell()) {
-      if ([attribute isEqualToString:NSAccessibilityRowIndexRangeAttribute])
-        return [NSValue valueWithRange:NSMakeRange(proxy->RowIdx(),
-                                                   proxy->RowExtent())];
-      if ([attribute isEqualToString:NSAccessibilityColumnIndexRangeAttribute])
-        return [NSValue valueWithRange:NSMakeRange(proxy->ColIdx(),
-                                                   proxy->ColExtent())];
-      if ([attribute isEqualToString:NSAccessibilityRowHeaderUIElementsAttribute]) {
-        nsTArray<ProxyAccessible*> headerCells;
-        proxy->RowHeaderCells(&headerCells);
-        return ConvertToNSArray(headerCells);
-      }
-      if ([attribute isEqualToString:NSAccessibilityColumnHeaderUIElementsAttribute]) {
-        nsTArray<ProxyAccessible*> headerCells;
-        proxy->ColHeaderCells(&headerCells);
-        return ConvertToNSArray(headerCells);
-      }
-    }
-  }
 
   switch (mRole) {
   case roles::MATHML_ROOT:
@@ -1200,6 +1057,14 @@ struct RoleDescrComparator
 - (void)selectedTextDidChange
 {
   // Do nothing. mozTextAccessible will.
+}
+
+- (void)documentLoadComplete
+{
+  id realSelf = GetObjectOrRepresentedView(self);
+  NSAccessibilityPostNotification(realSelf, NSAccessibilityFocusedUIElementChangedNotification);
+  NSAccessibilityPostNotification(realSelf, @"AXLoadComplete");
+  NSAccessibilityPostNotification(realSelf, @"AXLayoutComplete");
 }
 
 - (NSString*)help

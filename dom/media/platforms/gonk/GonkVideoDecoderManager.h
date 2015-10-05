@@ -97,6 +97,9 @@ private:
     void codecReserved() override;
     void codecCanceled() override;
 
+    void NotifyManagerRelease();
+    void NotifyCodecReserved();
+
   private:
     // Forbidden
     VideoResourceListener() = delete;
