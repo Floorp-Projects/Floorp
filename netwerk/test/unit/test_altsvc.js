@@ -25,7 +25,7 @@ var httpsBarOrigin; // https://bar.example.com:PORT/
 
 function run_test() {
   var env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
-  h2Port = env.get("MOZHTTP2-PORT");
+  h2Port = env.get("MOZHTTP2_PORT");
   do_check_neq(h2Port, null);
   do_check_neq(h2Port, "");
 
