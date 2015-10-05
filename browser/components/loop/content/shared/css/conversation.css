@@ -318,6 +318,7 @@ html[dir="rtl"] .conversation-toolbar-btn-box.btn-edit-entry {
 }
 
 .call-action-group > .invite-button {
+  cursor: pointer;
   margin: 0 4px;
   position: relative;
 }
