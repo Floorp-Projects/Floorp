@@ -86,7 +86,7 @@ public:
   }
 
   // Indicates if the PlatformDecoderModule supports decoding of aMimeType.
-  virtual bool SupportsMimeType(const nsACString& aMimeType);
+  virtual bool SupportsMimeType(const nsACString& aMimeType) = 0;
 
   enum ConversionRequired {
     kNeedNone,
