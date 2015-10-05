@@ -438,7 +438,8 @@ class RobocopTestRunner(Mochitest):
         try:
             self.dm.recordLogcat()
             result = self.auto.runApp(
-                None, browserEnv, "am", self.localProfile, browserArgs, timeout=self.NO_OUTPUT_TIMEOUT)
+                None, browserEnv, "am", self.localProfile, browserArgs,
+                timeout=self.NO_OUTPUT_TIMEOUT, symbolsPath=self.options.symbolsPath)
             self.log.debug("runApp completes with status %d" % result)
             if result != 0:
                 self.log.error("runApp() exited with code %s" % result)
