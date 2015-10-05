@@ -4,14 +4,16 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VP8TrackEncoder.h"
-#include "vpx/vp8cx.h"
-#include "vpx/vpx_encoder.h"
+#include "GeckoProfiler.h"
+#include "LayersLogging.h"
+#include "libyuv.h"
+#include "mozilla/gfx/2D.h"
+#include "prsystem.h"
 #include "VideoSegment.h"
 #include "VideoUtils.h"
-#include "prsystem.h"
+#include "vpx/vp8cx.h"
+#include "vpx/vpx_encoder.h"
 #include "WebMWriter.h"
-#include "libyuv.h"
-#include "GeckoProfiler.h"
 
 namespace mozilla {
 
@@ -23,6 +25,7 @@ PRLogModuleInfo* gVP8TrackEncoderLog;
 #define DEFAULT_BITRATE_BPS 2500000
 #define DEFAULT_ENCODE_FRAMERATE 30
 
+using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
 VP8TrackEncoder::VP8TrackEncoder()
@@ -259,90 +262,178 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
     img = aChunk.mFrame.GetImage();
   }
 
+  if (img->GetSize() != IntSize(mFrameWidth, mFrameHeight)) {
+    VP8LOG("Dynamic resolution changes (was %dx%d, now %dx%d) are unsupported\n",
+           mFrameWidth, mFrameHeight, img->GetSize().width, img->GetSize().height);
+    return NS_ERROR_FAILURE;
+  }
+
   ImageFormat format = img->GetFormat();
-  if (format != ImageFormat::PLANAR_YCBCR) {
-    VP8LOG("Unsupported video format\n");
-    return NS_ERROR_FAILURE;
-  }
+  if (format == ImageFormat::PLANAR_YCBCR) {
+    PlanarYCbCrImage* yuv = static_cast<PlanarYCbCrImage *>(img.get());
 
-  // Cast away constness b/c some of the accessors are non-const
-  PlanarYCbCrImage* yuv =
-  const_cast<PlanarYCbCrImage *>(static_cast<const PlanarYCbCrImage *>(img.get()));
-  // Big-time assumption here that this is all contiguous data coming
-  // from getUserMedia or other sources.
-  MOZ_ASSERT(yuv);
-  if (!yuv->IsValid()) {
-    NS_WARNING("PlanarYCbCrImage is not valid");
-    return NS_ERROR_FAILURE;
-  }
-  const PlanarYCbCrImage::Data *data = yuv->GetData();
-
-  if (isYUV420(data) && !data->mCbSkip) { // 420 planar
-    mVPXImageWrapper->planes[VPX_PLANE_Y] = data->mYChannel;
-    mVPXImageWrapper->planes[VPX_PLANE_U] = data->mCbChannel;
-    mVPXImageWrapper->planes[VPX_PLANE_V] = data->mCrChannel;
-    mVPXImageWrapper->stride[VPX_PLANE_Y] = data->mYStride;
-    mVPXImageWrapper->stride[VPX_PLANE_U] = data->mCbCrStride;
-    mVPXImageWrapper->stride[VPX_PLANE_V] = data->mCbCrStride;
-  } else {
-    uint32_t yPlaneSize = mFrameWidth * mFrameHeight;
-    uint32_t halfWidth = (mFrameWidth + 1) / 2;
-    uint32_t halfHeight = (mFrameHeight + 1) / 2;
-    uint32_t uvPlaneSize = halfWidth * halfHeight;
-    if (mI420Frame.IsEmpty()) {
-      mI420Frame.SetLength(yPlaneSize + uvPlaneSize * 2);
+    MOZ_RELEASE_ASSERT(yuv);
+    if (!yuv->IsValid()) {
+      NS_WARNING("PlanarYCbCrImage is not valid");
+      return NS_ERROR_FAILURE;
     }
+    const PlanarYCbCrImage::Data *data = yuv->GetData();
 
-    MOZ_ASSERT(mI420Frame.Length() >= (yPlaneSize + uvPlaneSize * 2));
-    uint8_t *y = mI420Frame.Elements();
-    uint8_t *cb = mI420Frame.Elements() + yPlaneSize;
-    uint8_t *cr = mI420Frame.Elements() + yPlaneSize + uvPlaneSize;
+    if (isYUV420(data) && !data->mCbSkip) {
+      // 420 planar, no need for conversions
+      mVPXImageWrapper->planes[VPX_PLANE_Y] = data->mYChannel;
+      mVPXImageWrapper->planes[VPX_PLANE_U] = data->mCbChannel;
+      mVPXImageWrapper->planes[VPX_PLANE_V] = data->mCrChannel;
+      mVPXImageWrapper->stride[VPX_PLANE_Y] = data->mYStride;
+      mVPXImageWrapper->stride[VPX_PLANE_U] = data->mCbCrStride;
+      mVPXImageWrapper->stride[VPX_PLANE_V] = data->mCbCrStride;
 
+      return NS_OK;
+    }
+  }
+
+  // Not 420 planar, have to convert
+  uint32_t yPlaneSize = mFrameWidth * mFrameHeight;
+  uint32_t halfWidth = (mFrameWidth + 1) / 2;
+  uint32_t halfHeight = (mFrameHeight + 1) / 2;
+  uint32_t uvPlaneSize = halfWidth * halfHeight;
+
+  if (mI420Frame.IsEmpty()) {
+    mI420Frame.SetLength(yPlaneSize + uvPlaneSize * 2);
+  }
+
+  uint8_t *y = mI420Frame.Elements();
+  uint8_t *cb = mI420Frame.Elements() + yPlaneSize;
+  uint8_t *cr = mI420Frame.Elements() + yPlaneSize + uvPlaneSize;
+
+  if (format == ImageFormat::PLANAR_YCBCR) {
+    PlanarYCbCrImage* yuv = static_cast<PlanarYCbCrImage *>(img.get());
+
+    MOZ_RELEASE_ASSERT(yuv);
+    if (!yuv->IsValid()) {
+      NS_WARNING("PlanarYCbCrImage is not valid");
+      return NS_ERROR_FAILURE;
+    }
+    const PlanarYCbCrImage::Data *data = yuv->GetData();
+
+    int rv;
+    std::string yuvFormat;
     if (isYUV420(data) && data->mCbSkip) {
       // If mCbSkip is set, we assume it's nv12 or nv21.
       if (data->mCbChannel < data->mCrChannel) { // nv12
-        libyuv::NV12ToI420(data->mYChannel, data->mYStride,
-                           data->mCbChannel, data->mCbCrStride,
-                           y, mFrameWidth,
-                           cb, halfWidth,
-                           cr, halfWidth,
-                           mFrameWidth, mFrameHeight);
+        rv = libyuv::NV12ToI420(data->mYChannel, data->mYStride,
+                                data->mCbChannel, data->mCbCrStride,
+                                y, mFrameWidth,
+                                cb, halfWidth,
+                                cr, halfWidth,
+                                mFrameWidth, mFrameHeight);
+        yuvFormat = "NV12";
       } else { // nv21
-        libyuv::NV21ToI420(data->mYChannel, data->mYStride,
-                           data->mCrChannel, data->mCbCrStride,
-                           y, mFrameWidth,
-                           cb, halfWidth,
-                           cr, halfWidth,
-                           mFrameWidth, mFrameHeight);
+        rv = libyuv::NV21ToI420(data->mYChannel, data->mYStride,
+                                data->mCrChannel, data->mCbCrStride,
+                                y, mFrameWidth,
+                                cb, halfWidth,
+                                cr, halfWidth,
+                                mFrameWidth, mFrameHeight);
+        yuvFormat = "NV21";
       }
     } else if (isYUV444(data) && !data->mCbSkip) {
-      libyuv::I444ToI420(data->mYChannel, data->mYStride,
-                         data->mCbChannel, data->mCbCrStride,
-                         data->mCrChannel, data->mCbCrStride,
-                         y, mFrameWidth,
-                         cb, halfWidth,
-                         cr, halfWidth,
-                         mFrameWidth, mFrameHeight);
+      rv = libyuv::I444ToI420(data->mYChannel, data->mYStride,
+                              data->mCbChannel, data->mCbCrStride,
+                              data->mCrChannel, data->mCbCrStride,
+                              y, mFrameWidth,
+                              cb, halfWidth,
+                              cr, halfWidth,
+                              mFrameWidth, mFrameHeight);
+      yuvFormat = "I444";
     } else if (isYUV422(data) && !data->mCbSkip) {
-      libyuv::I422ToI420(data->mYChannel, data->mYStride,
-                         data->mCbChannel, data->mCbCrStride,
-                         data->mCrChannel, data->mCbCrStride,
-                         y, mFrameWidth,
-                         cb, halfWidth,
-                         cr, halfWidth,
-                         mFrameWidth, mFrameHeight);
+      rv = libyuv::I422ToI420(data->mYChannel, data->mYStride,
+                              data->mCbChannel, data->mCbCrStride,
+                              data->mCrChannel, data->mCbCrStride,
+                              y, mFrameWidth,
+                              cb, halfWidth,
+                              cr, halfWidth,
+                              mFrameWidth, mFrameHeight);
+      yuvFormat = "I422";
     } else {
       VP8LOG("Unsupported planar format\n");
+      NS_ASSERTION(false, "Unsupported planar format");
       return NS_ERROR_NOT_IMPLEMENTED;
     }
 
-    mVPXImageWrapper->planes[VPX_PLANE_Y] = y;
-    mVPXImageWrapper->planes[VPX_PLANE_U] = cb;
-    mVPXImageWrapper->planes[VPX_PLANE_V] = cr;
-    mVPXImageWrapper->stride[VPX_PLANE_Y] = mFrameWidth;
-    mVPXImageWrapper->stride[VPX_PLANE_U] = halfWidth;
-    mVPXImageWrapper->stride[VPX_PLANE_V] = halfWidth;
+    if (rv != 0) {
+      VP8LOG("Converting an %s frame to I420 failed\n", yuvFormat.c_str());
+      return NS_ERROR_FAILURE;
+    }
+
+    VP8LOG("Converted an %s frame to I420\n");
+  } else {
+    // Not YCbCr at all. Try to get access to the raw data and convert.
+
+    RefPtr<SourceSurface> surf = img->GetAsSourceSurface();
+    if (!surf) {
+      VP8LOG("Getting surface from %s image failed\n", Stringify(format).c_str());
+      return NS_ERROR_FAILURE;
+    }
+
+    RefPtr<DataSourceSurface> data = surf->GetDataSurface();
+    if (!data) {
+      VP8LOG("Getting data surface from %s image with %s (%s) surface failed\n",
+             Stringify(format).c_str(), Stringify(surf->GetType()).c_str(),
+             Stringify(surf->GetFormat()).c_str());
+      return NS_ERROR_FAILURE;
+    }
+
+    DataSourceSurface::ScopedMap map(data, DataSourceSurface::READ);
+    if (!map.IsMapped()) {
+      VP8LOG("Reading DataSourceSurface from %s image with %s (%s) surface failed\n",
+             Stringify(format).c_str(), Stringify(surf->GetType()).c_str(),
+             Stringify(surf->GetFormat()).c_str());
+      return NS_ERROR_FAILURE;
+    }
+
+    int rv;
+    switch (surf->GetFormat()) {
+      case SurfaceFormat::B8G8R8A8:
+      case SurfaceFormat::B8G8R8X8:
+        rv = libyuv::ARGBToI420(static_cast<uint8*>(map.GetData()),
+                                map.GetStride(),
+                                y, mFrameWidth,
+                                cb, halfWidth,
+                                cr, halfWidth,
+                                mFrameWidth, mFrameHeight);
+        break;
+      case SurfaceFormat::R5G6B5:
+        rv = libyuv::RGB565ToI420(static_cast<uint8*>(map.GetData()),
+                                  map.GetStride(),
+                                  y, mFrameWidth,
+                                  cb, halfWidth,
+                                  cr, halfWidth,
+                                  mFrameWidth, mFrameHeight);
+        break;
+      default:
+        VP8LOG("Unsupported SourceSurface format %s\n",
+               Stringify(surf->GetFormat()).c_str());
+        NS_ASSERTION(false, "Unsupported SourceSurface format");
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    if (rv != 0) {
+      VP8LOG("%s to I420 conversion failed\n",
+             Stringify(surf->GetFormat()).c_str());
+      return NS_ERROR_FAILURE;
+    }
+
+    VP8LOG("Converted a %s frame to I420\n",
+           Stringify(surf->GetFormat()).c_str());
   }
+
+  mVPXImageWrapper->planes[VPX_PLANE_Y] = y;
+  mVPXImageWrapper->planes[VPX_PLANE_U] = cb;
+  mVPXImageWrapper->planes[VPX_PLANE_V] = cr;
+  mVPXImageWrapper->stride[VPX_PLANE_Y] = mFrameWidth;
+  mVPXImageWrapper->stride[VPX_PLANE_U] = halfWidth;
+  mVPXImageWrapper->stride[VPX_PLANE_V] = halfWidth;
 
   return NS_OK;
 }

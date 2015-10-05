@@ -32,7 +32,6 @@ public:
   virtual MediaDecoderOwner::NextFrameStatus NextFrameStatus() override;
   virtual void SetElementVisibility(bool aIsVisible) override;
   virtual void SetPlatformCanOffloadAudio(bool aCanOffloadAudio) override;
-  virtual bool CheckDecoderCanOffloadAudio() override;
   virtual void AddOutputStream(ProcessedMediaStream* aStream,
                                bool aFinishWhenEnded) override;
   virtual void SetPlaybackRate(double aPlaybackRate) override;
@@ -50,6 +49,8 @@ protected:
   virtual ~MediaOmxCommonDecoder();
   void PauseStateMachine();
   void ResumeStateMachine();
+  bool CheckDecoderCanOffloadAudio();
+  void DisableStateMachineAudioOffloading();
 
   MediaOmxCommonReader* mReader;
 

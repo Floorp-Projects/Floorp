@@ -57,6 +57,7 @@ private:
   {
     PlanarYCbCrImage *image = new PlanarYCbCrImage(new BufferRecycleBin());
     PlanarYCbCrData data;
+    data.mPicSize = mImageSize;
 
     const uint32_t yPlaneSize = mImageSize.width * mImageSize.height;
     const uint32_t halfWidth = (mImageSize.width + 1) / 2;
@@ -94,6 +95,7 @@ private:
   {
     PlanarYCbCrImage *image = new PlanarYCbCrImage(new BufferRecycleBin());
     PlanarYCbCrData data;
+    data.mPicSize = mImageSize;
 
     const uint32_t yPlaneSize = mImageSize.width * mImageSize.height;
     const uint32_t halfWidth = (mImageSize.width + 1) / 2;
@@ -130,6 +132,7 @@ private:
   {
     PlanarYCbCrImage *image = new PlanarYCbCrImage(new BufferRecycleBin());
     PlanarYCbCrData data;
+    data.mPicSize = mImageSize;
 
     const uint32_t yPlaneSize = mImageSize.width * mImageSize.height;
     const uint32_t halfWidth = (mImageSize.width + 1) / 2;
