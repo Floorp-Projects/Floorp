@@ -6844,10 +6844,10 @@ Parser<ParseHandler>::statement(YieldHandling yieldHandling, bool canHaveDirecti
 
       case TOK_NAME: {
         TokenKind next;
-        TokenKind nextSameLine = TOK_EOF;
 
 #ifdef JS_HAS_ASYNC_FUNCS
         if (tokenStream.currentName() == context->names().async) {
+            TokenKind nextSameLine = TOK_EOF;
             if (!tokenStream.peekTokenSameLine(&nextSameLine))
                 return null();
             if (nextSameLine == TOK_FUNCTION) {
@@ -7245,10 +7245,9 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
     bool endsExpr;
 
     if (tt == TOK_NAME) {
-        TokenKind nextSameLine = TOK_EOF;
-
 #ifdef JS_HAS_ASYNC_FUNCS
         if (tokenStream.currentName() == context->names().async) {
+            TokenKind nextSameLine = TOK_EOF;
             if (!tokenStream.peekTokenSameLine(&nextSameLine))
                 return null();
 
