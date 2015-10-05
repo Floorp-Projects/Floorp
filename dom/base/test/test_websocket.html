@@ -1225,11 +1225,7 @@ function test41()
         ok(true, "test 41c close");
 
         // clean up the STS state
-        const Cc = SpecialPowers.Cc;
         const Ci = SpecialPowers.Ci;
-        var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-        var thehost = ios.newURI("http://example.com", null, null);
-        var sss = Cc["@mozilla.org/ssservice;1"].getService(Ci.nsISiteSecurityService);
         var loadContext = SpecialPowers.wrap(window)
                           .QueryInterface(Ci.nsIInterfaceRequestor)
                           .getInterface(Ci.nsIWebNavigation)
@@ -1237,7 +1233,7 @@ function test41()
         var flags = 0;
         if (loadContext.usePrivateBrowsing)
           flags |= Ci.nsISocketProvider.NO_PERMANENT_STORAGE;
-        sss.removeState(Ci.nsISiteSecurityService.HEADER_HSTS, thehost, flags);
+        SpecialPowers.cleanUpSTSData("http://example.com", flags);
         doTest(42);
        }
      }
