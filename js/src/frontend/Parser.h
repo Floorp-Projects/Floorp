@@ -127,6 +127,8 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
     bool isLegacyGenerator() const { return generatorKind() == LegacyGenerator; }
     bool isStarGenerator() const { return generatorKind() == StarGenerator; }
 
+    bool isAsync() const { return sc->isFunctionBox() && sc->asFunctionBox()->isAsync(); }
+
     bool isArrowFunction() const {
         return sc->isFunctionBox() && sc->asFunctionBox()->function()->isArrow();
     }
@@ -378,6 +380,7 @@ enum class PropertyType {
     SetterNoExpressionClosure,
     Method,
     GeneratorMethod,
+    AsyncMethod,
     Constructor,
     DerivedConstructor
 };
@@ -519,22 +522,26 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     ObjectBox* newObjectBox(JSObject* obj);
     FunctionBox* newFunctionBox(Node fn, JSFunction* fun, ParseContext<ParseHandler>* outerpc,
                                 Directives directives, GeneratorKind generatorKind,
+                                FunctionAsyncKind asyncKind,
                                 JSObject* enclosingStaticScope);
 
     // Use when the funbox is the outermost.
     FunctionBox* newFunctionBox(Node fn, HandleFunction fun, Directives directives,
-                                GeneratorKind generatorKind, HandleObject enclosingStaticScope)
+                                GeneratorKind generatorKind,
+                                FunctionAsyncKind asyncKind,
+                                HandleObject enclosingStaticScope)
     {
         return newFunctionBox(fn, fun, nullptr, directives, generatorKind,
-                              enclosingStaticScope);
+                              asyncKind, enclosingStaticScope);
     }
 
     // Use when the funbox should be linked to the outerpc's innermost scope.
     FunctionBox* newFunctionBox(Node fn, HandleFunction fun, ParseContext<ParseHandler>* outerpc,
-                                Directives directives, GeneratorKind generatorKind)
+                                Directives directives, GeneratorKind generatorKind,
+                                FunctionAsyncKind asyncKind)
     {
         RootedObject enclosing(context, outerpc->innermostStaticScope());
-        return newFunctionBox(fn, fun, outerpc, directives, generatorKind, enclosing);
+        return newFunctionBox(fn, fun, outerpc, directives, generatorKind, asyncKind, enclosing);
     }
 
     ModuleBox* newModuleBox(Node pn, HandleModuleObject module);
@@ -544,7 +551,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
      * a function expression).
      */
     JSFunction* newFunction(HandleAtom atom, FunctionSyntaxKind kind, GeneratorKind generatorKind,
-                            HandleObject proto);
+                            FunctionAsyncKind asyncKind, HandleObject proto);
 
     bool generateBlockId(JSObject* staticScope, uint32_t* blockIdOut) {
         if (blockScopes.length() == StmtInfoPC::BlockIdLimit) {
@@ -583,7 +590,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
                                         TokenKind* ttp);
 
     inline Node newName(PropertyName* name);
-    inline Node newYieldExpression(uint32_t begin, Node expr, bool isYieldStar = false);
+    inline Node newYieldExpression(uint32_t begin, Node expr, bool isYieldStar = false, bool isAsync = false);
 
     inline bool abortIfSyntaxParser();
 
@@ -606,13 +613,14 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     // Parse a function, given only its body. Used for the Function and
     // Generator constructors.
     Node standaloneFunctionBody(HandleFunction fun, Handle<PropertyNameVector> formals,
-                                GeneratorKind generatorKind,
+                                GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
                                 Directives inheritedDirectives, Directives* newDirectives,
                                 HandleObject enclosingStaticScope);
 
     // Parse a function, given only its arguments and body. Used for lazily
     // parsed functions.
-    Node standaloneLazyFunction(HandleFunction fun, bool strict, GeneratorKind generatorKind);
+    Node standaloneLazyFunction(HandleFunction fun, bool strict, GeneratorKind generatorKind,
+                                FunctionAsyncKind asyncKind);
 
     /*
      * Parse a function body.  Pass StatementListBody if the body is a list of
@@ -664,8 +672,10 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
      * Some parsers have two versions:  an always-inlined version (with an 'i'
      * suffix) and a never-inlined version (with an 'n' suffix).
      */
-    Node functionStmt(YieldHandling yieldHandling, DefaultHandling defaultHandling);
-    Node functionExpr(InvokedPrediction invoked = PredictUninvoked);
+    Node functionStmt(YieldHandling yieldHandling,
+        DefaultHandling defaultHandling, FunctionAsyncKind asyncKind);
+    Node functionExpr(InvokedPrediction invoked = PredictUninvoked,
+        FunctionAsyncKind asyncKind = SyncFunction);
     Node statements(YieldHandling yieldHandling);
 
     Node blockStatement(YieldHandling yieldHandling);
@@ -698,7 +708,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
               InvokedPrediction invoked = PredictUninvoked);
     Node assignExpr(InHandling inHandling, YieldHandling yieldHandling,
                     InvokedPrediction invoked = PredictUninvoked);
-    Node assignExprWithoutYield(YieldHandling yieldHandling, unsigned err);
+    Node assignExprWithoutYieldAndAwait(YieldHandling yieldHandling, unsigned err);
     Node yieldExpression(InHandling inHandling);
     Node condExpr1(InHandling inHandling, YieldHandling yieldHandling,
                    InvokedPrediction invoked = PredictUninvoked);
@@ -722,13 +732,13 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
      * Additional JS parsers.
      */
     bool functionArguments(YieldHandling yieldHandling, FunctionSyntaxKind kind,
-                           Node funcpn, bool* hasRest);
+                           FunctionAsyncKind asyncKind, Node funcpn, bool* hasRest);
 
     Node functionDef(InHandling inHandling, YieldHandling uieldHandling, HandlePropertyName name,
-                     FunctionSyntaxKind kind, GeneratorKind generatorKind,
+                     FunctionSyntaxKind kind, GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
                      InvokedPrediction invoked = PredictUninvoked);
     bool functionArgsAndBody(InHandling inHandling, Node pn, HandleFunction fun,
-                             FunctionSyntaxKind kind, GeneratorKind generatorKind,
+                             FunctionSyntaxKind kind, GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
                              Directives inheritedDirectives, Directives* newDirectives);
 
     Node unaryOpExpr(YieldHandling yieldHandling, ParseNodeKind kind, JSOp op, uint32_t begin);
@@ -838,6 +848,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
 
     // Top-level entrypoint into destructuring pattern checking/name-analyzing.
     bool checkDestructuringPattern(BindData<ParseHandler>* data, Node pattern);
+
 
     // Recursive methods for checking/name-analyzing subcomponents of a
     // destructuring pattern.  The array/object methods *must* be passed arrays
