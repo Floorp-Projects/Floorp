@@ -1154,7 +1154,6 @@ class LayersPacket_Layer : public ::google::protobuf::MessageLite {
     LayersPacket_Layer_ScrollingDirect_ScrollingDirect_ARRAYSIZE;
 
   typedef LayersPacket_Layer_Filter Filter;
-  static const Filter FILTER_FAST = LayersPacket_Layer_Filter_FILTER_FAST;
   static const Filter FILTER_GOOD = LayersPacket_Layer_Filter_FILTER_GOOD;
   static const Filter FILTER_BEST = LayersPacket_Layer_Filter_FILTER_BEST;
   static const Filter FILTER_NEAREST = LayersPacket_Layer_Filter_FILTER_NEAREST;

@@ -209,7 +209,7 @@ template <>
 struct ParamTraits<mozilla::GraphicsFilterType>
   : public ContiguousEnumSerializer<
              mozilla::GraphicsFilterType,
-             GraphicsFilter::FILTER_FAST,
+             GraphicsFilter::FILTER_GOOD,
              GraphicsFilter::FILTER_SENTINEL>
 {};
 

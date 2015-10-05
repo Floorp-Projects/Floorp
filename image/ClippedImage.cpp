@@ -291,7 +291,7 @@ ClippedImage::GetFrameInternal(const nsIntSize& aSize,
     gfxUtils::DrawPixelSnapped(ctx, drawable, aSize,
                                ImageRegion::Create(aSize),
                                SurfaceFormat::B8G8R8A8,
-                               GraphicsFilter::FILTER_FAST,
+                               GraphicsFilter::FILTER_BEST,
                                imgIContainer::FLAG_CLAMP);
 
     // Cache the resulting surface.
