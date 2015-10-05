@@ -11,39 +11,12 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="head.js"></script>
   <script type="application/javascript;version=1.7">
 
   const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
   Cu.import("resource://gre/modules/Services.jsm");
-
-  function promiseBrowserEvent(browser, eventType) {
-    return new Promise((resolve) => {
-      function handle(event) {
-        // Since we'll be redirecting, don't make assumptions about the given URL and the loaded URL
-        if (event.target != browser.contentDocument || event.target.location.href == "about:blank") {
-          info("Skipping spurious '" + eventType + "' event" + " for " + event.target.location.href);
-          return;
-        }
-        info("Received event " + eventType + " from browser");
-        browser.removeEventListener(eventType, handle, true);
-        resolve(event);
-      }
-
-      browser.addEventListener(eventType, handle, true);
-      info("Now waiting for " + eventType + " event from browser");
-    });
-  }
-
-  function promiseNotification(topic) {
-    return new Promise((resolve, reject) => {
-      function observe(subject, topic, data) {
-        Services.obs.removeObserver(observe, topic);
-        resolve();
-      }
-      Services.obs.addObserver(observe, topic, false);
-    });
-  }
 
   add_task(function* test_reader_view_visibility() {
     let gWin = Services.wm.getMostRecentWindow("navigator:browser");
