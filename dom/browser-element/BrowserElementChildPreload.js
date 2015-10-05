@@ -869,6 +869,7 @@ BrowserElementChild.prototype = {
     var elem = e.target;
     var menuData = {systemTargets: [], contextmenu: null};
     var ctxMenuId = null;
+    var clipboardPlainTextOnly = Services.prefs.getBoolPref('clipboard.plainTextOnly');
     var copyableElements = {
       image: false,
       link: false,
@@ -896,7 +897,7 @@ BrowserElementChild.prototype = {
 
       // Enable copy image/link option
       if (elem.nodeName == 'IMG') {
-        copyableElements.image = true;
+        copyableElements.image = !clipboardPlainTextOnly;
       } else if (elem.nodeName == 'A') {
         copyableElements.link = true;
       }

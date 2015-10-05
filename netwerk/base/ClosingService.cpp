@@ -187,6 +187,11 @@ ClosingService::ShutdownInternal()
 {
   {
     mozilla::MonitorAutoLock mon(mMonitor);
+    if (mShutdown) {
+      // This should not happen.
+      return;
+    }
+
     mShutdown = true;
     // If it is waiting on the empty queue, wake it up.
     if (mQueue.Length() == 0) {

@@ -15,6 +15,8 @@
 
 #include "jspubtd.h"
 
+#include "js/StructuredClone.h"
+
 namespace js {
     struct PerformanceGroup;
 } // namespace js
@@ -35,6 +37,12 @@ struct JSPrincipals {
         debugToken = token;
 # endif
     }
+
+    /*
+     * Write the principals with the given |writer|. Return false on failure,
+     * true on success.
+     */
+    virtual bool write(JSContext* cx, JSStructuredCloneWriter* writer) = 0;
 
     /*
      * This is not defined by the JS engine but should be provided by the
@@ -98,5 +106,27 @@ typedef void
  */
 extern JS_PUBLIC_API(void)
 JS_InitDestroyPrincipalsCallback(JSRuntime* rt, JSDestroyPrincipalsOp destroyPrincipals);
+
+/*
+ * Read a JSPrincipals instance from the given |reader| and initialize the out
+ * paratemer |outPrincipals| to the JSPrincipals instance read.
+ *
+ * Return false on failure, true on success. The |outPrincipals| parameter
+ * should not be modified if false is returned.
+ *
+ * The caller is not responsible for calling JS_HoldPrincipals on the resulting
+ * JSPrincipals instance, the JSReadPrincipalsOp must increment the refcount of
+ * the resulting JSPrincipals on behalf of the caller.
+ */
+using JSReadPrincipalsOp = bool (*)(JSContext* cx, JSStructuredCloneReader* reader,
+                                    JSPrincipals** outPrincipals);
+
+/*
+ * Initialize the callback that is called to read JSPrincipals instances from a
+ * buffer. The initialization can be done only once per JS runtime.
+ */
+extern JS_PUBLIC_API(void)
+JS_InitReadPrincipalsCallback(JSRuntime* rt, JSReadPrincipalsOp read);
+
 
 #endif  /* js_Principals_h */

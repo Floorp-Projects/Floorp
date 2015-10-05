@@ -3338,6 +3338,14 @@ JS_InitDestroyPrincipalsCallback(JSRuntime* rt, JSDestroyPrincipalsOp destroyPri
     rt->destroyPrincipals = destroyPrincipals;
 }
 
+extern JS_PUBLIC_API(void)
+JS_InitReadPrincipalsCallback(JSRuntime* rt, JSReadPrincipalsOp read)
+{
+    MOZ_ASSERT(read);
+    MOZ_ASSERT(!rt->readPrincipals);
+    rt->readPrincipals = read;
+}
+
 JS_PUBLIC_API(JSFunction*)
 JS_NewFunction(JSContext* cx, JSNative native, unsigned nargs, unsigned flags,
                const char* name)
