@@ -136,9 +136,10 @@ protected:
   nsresult GetStartFrameAndOffset(const nsRange* aRange,
                                   nsIFrame*& aFrame,
                                   int32_t& aOffsetInFrame);
-  // Convert the frame relative offset to the root view relative offset.
-  nsresult ConvertToRootViewRelativeOffset(nsIFrame* aFrame,
-                                           nsRect& aRect);
+  // Convert the frame relative offset to the root frame of the root presContext
+  // relative offset.
+  nsresult ConvertToRootRelativeOffset(nsIFrame* aFrame,
+                                       nsRect& aRect);
   // Expand aXPOffset to the nearest offset in cluster boundary. aForward is
   // true, it is expanded to forward.
   nsresult ExpandToClusterBoundary(nsIContent* aContent, bool aForward,
