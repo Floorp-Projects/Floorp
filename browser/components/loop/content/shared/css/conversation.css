@@ -934,20 +934,15 @@ html[dir="rtl"] .room-conversation-wrapper header a {
   z-index: 1010;
   display: flex;
   flex-flow: column nowrap;
-  justify-content: flex-start;
+  justify-content: center;
   align-items: stretch;
 }
 
 .room-invitation-content {
-  flex: 1 1 auto;
   display: flex;
   flex-flow: column nowrap;
   justify-content: center;
   align-items: center;
-}
-
-.room-invitation-overlay .btn-group {
-  padding: 0 0 10rem;
 }
 
 .share-service-dropdown {
