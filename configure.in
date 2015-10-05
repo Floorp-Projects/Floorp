@@ -4095,7 +4095,7 @@ if test -z "$gonkdir" ; then
             ;;
         esac
 
-        MOZ_ANDROID_SDK(22, 22.0.1)
+        MOZ_ANDROID_SDK(23, 23.0.1)
         ;;
     esac
 fi
