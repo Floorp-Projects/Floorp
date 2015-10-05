@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1209658
+-->
+<head>
+  <title>Test for Bug 1209658</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1209658">Mozilla Bug 1209658</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function loaded() {
+  for (var iframe of document.querySelectorAll("iframe")) {
+    is(iframe.contentWindow.location.href, iframe.src, "should load correct URL");
+    is(iframe.contentDocument.body.textContent, '{"<p>Hello</p>": null}',
+       iframe.getAttribute("mimeType") + " should be treated as text");
+  }
+  SimpleTest.finish();
+});
+</script>
+<iframe src="data:text/json,{&quot;<p>Hello</p>&quot;:%20null}"
+        mimeType="text/json"></iframe>
+<!-- Totally not valid VTT data, but doesn't matter for our purposes here -->
+<iframe src="data:text/vtt,{&quot;<p>Hello</p>&quot;:%20null}"
+        mimeType="text/vtt"></iframe>
+</body>
+</html>
