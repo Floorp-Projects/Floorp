@@ -1,0 +1,27 @@
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/******************************************************************************/
+/* Dark Theme (copied from themes/dark-theme.css) */
+
+:root {
+  --theme-body-background: #14171a;
+
+  --theme-tab-toolbar-background: #252c33;
+  --theme-toolbar-background: #343c45;
+  --theme-selection-background: #1d4f73;
+  --theme-splitter-color: black;
+  --theme-selection-color: #f5f7fa;
+  --theme-comment: #757873;
+
+  --theme-body-color: #8fa1b2;
+  --theme-body-color-alt: #b6babf;
+  --theme-content-color1: #a9bacb;
+
+  --theme-highlight-green: #70bf53;
+  --theme-highlight-blue: #46afe3;
+  --theme-highlight-orange: #d96629;
+  --theme-highlight-bluegrey: #5e88b0;
+}

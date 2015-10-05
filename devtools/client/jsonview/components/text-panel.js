@@ -46,13 +46,13 @@ var TextToolbar = React.createFactory(React.createClass({
   render: function() {
     return (
       Toolbar({},
-        ToolbarButton({className: "prettyprint",onClick: this.onPrettify},
+        ToolbarButton({className: "btn prettyprint",onClick: this.onPrettify},
           Locale.$STR("jsonViewer.PrettyPrint")
         ),
-        ToolbarButton({className: "save", onClick: this.onSave},
+        ToolbarButton({className: "btn save", onClick: this.onSave},
           Locale.$STR("jsonViewer.Save")
         ),
-        ToolbarButton({className: "copy", onClick: this.onCopy},
+        ToolbarButton({className: "btn copy", onClick: this.onCopy},
           Locale.$STR("jsonViewer.Copy")
         )
       )
