@@ -483,7 +483,7 @@ this.DownloadUtils = {
     if (aBytes === Infinity) {
       aBytes = "Infinity";
     } else {
-      if (Intl) {
+      if (typeof Intl != "undefined") {
         aBytes = getLocaleNumberFormat(fractionDigits)
                    .format(aBytes);
       } else if (gDecimalSymbol != ".") {
