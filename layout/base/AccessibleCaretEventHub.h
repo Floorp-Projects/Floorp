@@ -28,7 +28,6 @@ class AccessibleCaretManager;
 class WidgetKeyboardEvent;
 class WidgetMouseEvent;
 class WidgetTouchEvent;
-class WidgetWheelEvent;
 
 // -----------------------------------------------------------------------------
 // Each PresShell holds a shared pointer to an AccessibleCaretEventHub; each
@@ -110,7 +109,6 @@ protected:
   void SetState(State* aState);
 
   nsEventStatus HandleMouseEvent(WidgetMouseEvent* aEvent);
-  nsEventStatus HandleWheelEvent(WidgetWheelEvent* aEvent);
   nsEventStatus HandleTouchEvent(WidgetTouchEvent* aEvent);
   nsEventStatus HandleKeyboardEvent(WidgetKeyboardEvent* aEvent);
 
@@ -197,7 +195,6 @@ public:
 
   virtual void OnScrollStart(AccessibleCaretEventHub* aContext) {}
   virtual void OnScrollEnd(AccessibleCaretEventHub* aContext) {}
-  virtual void OnScrolling(AccessibleCaretEventHub* aContext) {}
   virtual void OnScrollPositionChanged(AccessibleCaretEventHub* aContext) {}
   virtual void OnBlur(AccessibleCaretEventHub* aContext,
                       bool aIsLeavingDocument) {}
