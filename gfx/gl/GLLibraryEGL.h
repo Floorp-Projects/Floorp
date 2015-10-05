@@ -10,7 +10,6 @@
 #endif
 
 #include "GLLibraryLoader.h"
-#include "mozilla/StaticMutex.h"
 #include "mozilla/ThreadLocal.h"
 #include "nsIFile.h"
 #include "GeckoProfiler.h"
@@ -53,11 +52,6 @@
 #endif
 
 namespace mozilla {
-
-namespace gfx {
-class DataSourceSurface;
-}
-
 namespace gl {
 
 #undef BEFORE_GL_CALL
@@ -99,8 +93,6 @@ namespace gl {
 #endif
 #define AFTER_GL_CALL
 #endif
-
-class GLContext;
 
 class GLLibraryEGL
 {
@@ -486,8 +478,6 @@ public:
         return IsExtensionSupported(EXT_create_context_robustness);
     }
 
-    bool ReadbackEGLImage(EGLImage image, gfx::DataSourceSurface* out_surface);
-
     bool EnsureInitialized(bool forceAccel = false);
 
     void DumpEGLConfig(EGLConfig cfg);
@@ -613,11 +603,9 @@ private:
     bool mInitialized;
     PRLibrary* mEGLLibrary;
     EGLDisplay mEGLDisplay;
-    RefPtr<GLContext> mReadbackGL;
 
     bool mIsANGLE;
     bool mIsWARP;
-    static StaticMutex sMutex;
 };
 
 extern GLLibraryEGL sEGLLibrary;

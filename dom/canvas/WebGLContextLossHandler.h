@@ -10,7 +10,6 @@
 #include "mozilla/WeakPtr.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
-#include "WorkerFeature.h"
 
 class nsIThread;
 class nsITimer;
@@ -18,14 +17,13 @@ class nsITimer;
 namespace mozilla {
 class WebGLContext;
 
-class WebGLContextLossHandler : public dom::workers::WorkerFeature
+class WebGLContextLossHandler
 {
     WeakPtr<WebGLContext> mWeakWebGL;
     nsCOMPtr<nsITimer> mTimer;
     bool mIsTimerRunning;
     bool mShouldRunTimerAgain;
     bool mIsDisabled;
-    bool mFeatureAdded;
     DebugOnly<nsIThread*> mThread;
 
 public:
@@ -35,7 +33,6 @@ public:
 
     void RunTimer();
     void DisableTimer();
-    bool Notify(JSContext* aCx, dom::workers::Status aStatus) override;
 
 protected:
     ~WebGLContextLossHandler();
