@@ -160,6 +160,8 @@ public:
   NS_IMETHOD RedirectTo(nsIURI *newURI) override;
   NS_IMETHOD GetSchedulingContextID(nsID *aSCID) override;
   NS_IMETHOD SetSchedulingContextID(const nsID aSCID) override;
+  NS_IMETHOD GetIsMainDocumentChannel(bool* aValue) override;
+  NS_IMETHOD SetIsMainDocumentChannel(bool aValue) override;
 
   // nsIHttpChannelInternal
   NS_IMETHOD GetDocumentURI(nsIURI **aDocumentURI) override;
@@ -461,6 +463,8 @@ protected:
   bool                              mWithCredentials;
   nsTArray<nsCString>               mUnsafeHeaders;
   nsCOMPtr<nsIPrincipal>            mPreflightPrincipal;
+
+  bool mForceMainDocumentChannel;
 };
 
 // Share some code while working around C++'s absurd inability to handle casting
