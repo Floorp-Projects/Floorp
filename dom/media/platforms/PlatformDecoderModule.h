@@ -63,8 +63,6 @@ public:
   // PlatformDecoderModule created per MP4Reader.
   // This is called on the decode task queue.
   static already_AddRefed<PlatformDecoderModule> Create();
-  // As Create() but do not initialize the created PlatformDecoderModule.
-  static already_AddRefed<PlatformDecoderModule> CreatePDM();
 
   // Perform any per-instance initialization.
   // This is called on the decode task queue.
@@ -87,17 +85,16 @@ public:
                 FlushableTaskQueue* aTaskQueue,
                 MediaDataDecoderCallback* aCallback,
                 layers::LayersBackend aLayersBackend = layers::LayersBackend::LAYERS_NONE,
-                layers::ImageContainer* aImageContainer = nullptr);
+                layers::ImageContainer* aImageContainer = nullptr)
+  {
+    MOZ_CRASH();
+  }
 
   // An audio decoder module must support AAC by default.
   // A video decoder must support H264 by default.
   // If more codecs are to be supported, SupportsMimeType will have
   // to be extended
   virtual bool SupportsMimeType(const nsACString& aMimeType);
-
-  // MimeType can be decoded with shipped decoders if no platform decoders exist
-  static bool AgnosticMimeType(const nsACString& aMimeType);
-
 
   enum ConversionRequired {
     kNeedNone,
@@ -115,6 +112,8 @@ protected:
   virtual ~PlatformDecoderModule() {}
 
   friend class H264Converter;
+  friend class PDMFactory;
+
   // Creates a Video decoder. The layers backend is passed in so that
   // decoders can determine whether hardware accelerated decoding can be used.
   // Asynchronous decoding of video should be done in runnables dispatched
@@ -147,17 +146,6 @@ protected:
   CreateAudioDecoder(const AudioInfo& aConfig,
                      FlushableTaskQueue* aAudioTaskQueue,
                      MediaDataDecoderCallback* aCallback) = 0;
-
-  // Caches pref media.fragmented-mp4.use-blank-decoder
-  static bool sUseBlankDecoder;
-  static bool sFFmpegDecoderEnabled;
-  static bool sGonkDecoderEnabled;
-  static bool sAndroidMCDecoderPreferred;
-  static bool sAndroidMCDecoderEnabled;
-  static bool sGMPDecoderEnabled;
-  static bool sEnableFuzzingWrapper;
-  static uint32_t sVideoOutputMinimumInterval_ms;
-  static bool sDontDelayInputExhausted;
 };
 
 // A callback used by MediaDataDecoder to return output/errors to the
