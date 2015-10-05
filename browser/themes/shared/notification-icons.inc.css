@@ -49,7 +49,7 @@
 }
 
 .popup-notification-icon[popupid="web-notifications"] {
-  list-style-image: url(chrome://browser/skin/notification-64.png);
+  list-style-image: url(chrome://browser/skin/web-notifications-icon.svg);
 }
 
 .popup-notification-icon[popupid="indexedDB-permissions-prompt"],
@@ -246,7 +246,18 @@
 
 .web-notifications-notification-icon,
 #web-notifications-notification-icon {
-  list-style-image: url(chrome://browser/skin/notification-16.png);
+  list-style-image: url(chrome://browser/skin/web-notifications-tray.svg);
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+.web-notifications-notification-icon:hover,
+#web-notifications-notification-icon:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.web-notifications-notification-icon:hover:active,
+#web-notifications-notification-icon:hover:active {
+  -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
 .pointerLock-notification-icon,
@@ -400,11 +411,6 @@
     -moz-image-region: rect(0, 96px, 32px, 64px);
   }
 
-  .web-notifications-notification-icon,
-  #web-notifications-notification-icon {
-    list-style-image: url(chrome://browser/skin/notification-16@2x.png);
-  }
-
   .pointerLock-notification-icon,
   #pointerLock-notification-icon {
     list-style-image: url(chrome://browser/skin/pointerLock-16@2x.png);
@@ -424,10 +430,6 @@
 
   .popup-notification-icon[popupid="geolocation"] {
     list-style-image: url(chrome://browser/skin/Geolocation-64@2x.png);
-  }
-
-  .popup-notification-icon[popupid="web-notifications"] {
-    list-style-image: url(chrome://browser/skin/notification-64@2x.png);
   }
 
   .popup-notification-icon[popupid="pointerLock"] {
