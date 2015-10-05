@@ -563,6 +563,13 @@ public:
   static nsIFrame* GetAnimatedGeometryRootFor(nsDisplayItem* aItem,
                                               nsDisplayListBuilder* aBuilder,
                                               uint32_t aFlags = 0);
+  /**
+   * Version of GetAnimatedGeometryRootFor that can be called in nsDisplayItem
+   * constructor, and only from there. Not valid for transform items, but they
+   * set their AGR in their constructor.
+   */
+  static nsIFrame* GetAnimatedGeometryRootForInit(nsDisplayItem* aItem,
+                                                  nsDisplayListBuilder* aBuilder);
 
   /**
    * Finds the nearest ancestor frame to aFrame that is considered to have (or
