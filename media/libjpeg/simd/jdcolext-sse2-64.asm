@@ -52,14 +52,14 @@ EXTN(jsimd_ycc_rgb_convert_sse2):
         collect_args
         push    rbx
 
-        mov     rcx, r10        ; num_cols
+        mov     ecx, r10d        ; num_cols
         test    rcx,rcx
         jz      near .return
 
         push    rcx
 
         mov     rdi, r11
-        mov     rcx, r12
+        mov     ecx, r12d
         mov     rsi, JSAMPARRAY [rdi+0*SIZEOF_JSAMPARRAY]
         mov     rbx, JSAMPARRAY [rdi+1*SIZEOF_JSAMPARRAY]
         mov     rdx, JSAMPARRAY [rdi+2*SIZEOF_JSAMPARRAY]

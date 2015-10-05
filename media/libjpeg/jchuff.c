@@ -4,7 +4,7 @@
  * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1991-1997, Thomas G. Lane.
  * libjpeg-turbo Modifications:
- * Copyright (C) 2009-2011, 2014 D. R. Commander.
+ * Copyright (C) 2009-2011, 2014-2015 D. R. Commander.
  * For conditions of distribution and use, see the accompanying README file.
  *
  * This file contains Huffman entropy encoding routines.
@@ -376,7 +376,11 @@ dump_buffer (working_state * state)
   } \
 }
 
-#if __WORDSIZE==64 || defined(_WIN64)
+#if !defined(_WIN32) && !defined(SIZEOF_SIZE_T)
+#error Cannot determine word size
+#endif
+
+#if SIZEOF_SIZE_T==8 || defined(_WIN64)
 
 #define EMIT_BITS(code, size) { \
   CHECKBUF47() \
@@ -513,16 +517,14 @@ encode_one_block (working_state * state, JCOEFPTR block, int last_dc_val,
   /* Emit the Huffman-coded symbol for the number of bits */
   code = dctbl->ehufco[nbits];
   size = dctbl->ehufsi[nbits];
-  PUT_BITS(code, size)
-  CHECKBUF15()
+  EMIT_BITS(code, size)
 
   /* Mask off any extra bits in code */
   temp2 &= (((INT32) 1)<<nbits) - 1;
 
   /* Emit that number of bits of the value, if positive, */
   /* or the complement of its magnitude, if negative. */
-  PUT_BITS(temp2, nbits)
-  CHECKBUF15()
+  EMIT_BITS(temp2, nbits)
 
   /* Encode the AC coefficients per section F.1.2.2 */
 
