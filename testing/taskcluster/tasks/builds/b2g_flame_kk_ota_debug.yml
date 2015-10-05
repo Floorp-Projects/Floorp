@@ -17,3 +17,4 @@ task:
     env:
       VARIANT: userdebug
       B2G_DEBUG: 0
+      TOOLTOOL_MANIFEST: 'b2g/config/flame-kk-ota/releng-flame-kk-ota.tt'
