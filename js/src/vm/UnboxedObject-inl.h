@@ -195,7 +195,6 @@ UnboxedArrayObject::setLength(ExclusiveContext* cx, uint32_t length)
 inline void
 UnboxedArrayObject::setInitializedLength(uint32_t initlen)
 {
-    MOZ_ASSERT(initlen <= InitializedLengthMask);
     if (initlen < initializedLength()) {
         switch (elementType()) {
           case JSVAL_TYPE_STRING:
@@ -210,8 +209,7 @@ UnboxedArrayObject::setInitializedLength(uint32_t initlen)
             MOZ_ASSERT(!UnboxedTypeNeedsPreBarrier(elementType()));
         }
     }
-    capacityIndexAndInitializedLength_ =
-        (capacityIndexAndInitializedLength_ & CapacityMask) | initlen;
+    setInitializedLengthNoBarrier(initlen);
 }
 
 template <JSValueType Type>
@@ -541,7 +539,7 @@ SetOrExtendBoxedOrUnboxedDenseElements(ExclusiveContext* cx, JSObject* obj,
         } else {
             for (; i < count; i++) {
                 if (!nobj->initElementSpecific<Type>(cx, start + i, vp[i])) {
-                    nobj->setInitializedLength(oldInitlen);
+                    nobj->setInitializedLengthNoBarrier(oldInitlen);
                     return DenseElementResult::Incomplete;
                 }
             }
