@@ -467,7 +467,7 @@ class JSFunction : public js::NativeObject
     }
 
     js::FunctionAsyncKind asyncKind() const {
-      return isInterpretedLazy() ? lazyScript()->asyncKind() : nonLazyScript()->asyncKind();
+        return isInterpretedLazy() ? lazyScript()->asyncKind() : nonLazyScript()->asyncKind();
     }
 
     bool isGenerator() const { return generatorKind() != js::NotGenerator; }
