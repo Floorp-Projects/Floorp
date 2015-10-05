@@ -1996,6 +1996,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_PREDECREMENT:
       case PNK_POSTDECREMENT:
       case PNK_THROW:
+      case PNK_AWAIT:
         MOZ_ASSERT(pn->isArity(PN_UNARY));
         *answer = true;
         return true;
@@ -8007,6 +8008,13 @@ BytecodeEmitter::emitTree(ParseNode* pn)
 
       case PNK_NEWTARGET:
         if (!emit1(JSOP_NEWTARGET))
+            return false;
+        break;
+
+      // PNK_AWAIT handling is not yet implemented (in this part),
+      // so currently we just return "true" as a placeholder.
+      case PNK_AWAIT:
+        if (!emit1(JSOP_TRUE))
             return false;
         break;
 
