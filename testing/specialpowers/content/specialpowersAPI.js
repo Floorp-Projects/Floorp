@@ -2044,6 +2044,10 @@ SpecialPowersAPI.prototype = {
     this.notifyObserversInParentProcess(null, "browser:purge-domain-data", "example.com");
   },
 
+  cleanUpSTSData: function(origin) {
+    return this._sendSyncMessage('SPCleanUpSTSData', {origin: origin});
+  },
+
   loadExtension: function(ext, handler) {
     let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
     let id = uuidGenerator.generateUUID().number;
