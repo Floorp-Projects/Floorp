@@ -154,6 +154,13 @@ SimulatorProcess.prototype = {
     // Ignore eventual zombie instances of b2g that are left over.
     args.push("-no-remote");
 
+    // If we are running a simulator based on Mulet,
+    // we have to override the default chrome URL
+    // in order to prevent the Browser UI to appear.
+    if (this.b2gBinary.leafName.includes("firefox")) {
+      args.push("-chrome", "chrome://b2g/content/shell.html");
+    }
+
     return args;
   },
 };
@@ -212,6 +219,19 @@ Object.defineProperty(ASPp, "b2gBinary", {
         mac64: "B2G.app/Contents/MacOS/b2g-bin",
         linux32: "b2g-bin",
         linux64: "b2g-bin",
+      };
+      binaries[OS].split("/").forEach(node => file.append(node));
+    }
+    // If the binary doesn't exists, it may be because of a simulator
+    // based on mulet, which has a different binary name.
+    if (!file.exists()) {
+      file = this.addon.getResourceURI().QueryInterface(Ci.nsIFileURL).file;
+      file.append("firefox");
+      let binaries = {
+        win32: "firefox-bin.exe",
+        mac64: "B2G.app/Contents/MacOS/firefox-bin",
+        linux32: "firefox-bin",
+        linux64: "firefox-bin",
       };
       binaries[OS].split("/").forEach(node => file.append(node));
     }
