@@ -110,7 +110,7 @@ class LCovCompartment
     LCovSource* lookupOrAdd(JSCompartment* comp, JSObject* sso);
 
   private:
-    typedef mozilla::Vector<LCovSource, 16, LifoAllocPolicy<Fallible>> LCovSourceVector;
+    typedef Vector<LCovSource, 16, LifoAllocPolicy<Fallible>> LCovSourceVector;
 
     // LifoAlloc backend for all temporary allocations needed to stash the
     // strings to be written in the file.
