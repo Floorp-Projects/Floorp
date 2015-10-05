@@ -84,7 +84,8 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     // TOS_FAILURE reflects the sdk error code 1026:
     // https://tokbox.com/developer/sdks/js/reference/ExceptionEvent.html
     TOS_FAILURE: "reason-tos-failure",
-    UNKNOWN: "reason-unknown"
+    UNKNOWN: "reason-unknown",
+    ICE_FAILED: "reason-ice-failed"
   };
 
   var ROOM_INFO_FAILURES = {

@@ -8,6 +8,7 @@ loop.roomViews = (function(mozL10n) {
 
   var ROOM_STATES = loop.store.ROOM_STATES;
   var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
+  var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var sharedActions = loop.shared.actions;
   var sharedMixins = loop.shared.mixins;
   var sharedUtils = loop.shared.utils;
@@ -99,6 +100,14 @@ loop.roomViews = (function(mozL10n) {
         { id: "feedback" },
         { id: "help" }
       ];
+
+      var btnTitle;
+      if (this.props.failureReason === FAILURE_DETAILS.ICE_FAILED) {
+        btnTitle = mozL10n.get("retry_call_button");
+      } else {
+        btnTitle = mozL10n.get("rejoin_button");
+      }
+
       return (
         <div className="room-failure">
           <loop.conversationViews.FailureInfoView
@@ -106,7 +115,7 @@ loop.roomViews = (function(mozL10n) {
           <div className="btn-group call-action-group">
             <button className="btn btn-info btn-rejoin"
                     onClick={this.handleRejoinCall}>
-              {mozL10n.get("rejoin_button")}
+              {btnTitle}
             </button>
           </div>
           <loop.shared.views.SettingsControlButton
