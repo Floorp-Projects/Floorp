@@ -14,7 +14,7 @@ interface nsIHttpHeaderVisitor;
  * the inspection of the resulting HTTP response status and headers when they
  * become available.
  */
-[builtinclass, scriptable, uuid(46ca0df4-bb4d-423a-9b3e-2fb0988cd1f3)]
+[builtinclass, scriptable, uuid(e90acf2d-eaf2-41d8-97b2-c8d99f6437a1)]
 interface nsIHttpChannel : nsIChannel
 {
     /**************************************************************************
@@ -248,6 +248,12 @@ interface nsIHttpChannel : nsIChannel
      *         has been received (before onStartRequest).
      */
     readonly attribute boolean requestSucceeded;
+
+   /** Indicates whether channel should be treated as the main one for the
+    *  current document.  If manually set to true, will always remain true.  Otherwise,
+    *  will be true iff LOAD_DOCUMENT_URI is set in the channel's loadflags.
+    */
+    attribute boolean isMainDocumentChannel;
 
     /**
      * Get the value of a particular response header.

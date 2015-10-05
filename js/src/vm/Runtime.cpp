@@ -196,6 +196,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     securityCallbacks(const_cast<JSSecurityCallbacks*>(&NullSecurityCallbacks)),
     DOMcallbacks(nullptr),
     destroyPrincipals(nullptr),
+    readPrincipals(nullptr),
     errorReporter(nullptr),
     linkedAsmJSModules(nullptr),
     propertyRemovals(0),

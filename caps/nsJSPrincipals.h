@@ -16,6 +16,17 @@ public:
   static bool Subsume(JSPrincipals *jsprin, JSPrincipals *other);
   static void Destroy(JSPrincipals *jsprin);
 
+  /* JSReadPrincipalsOp for nsJSPrincipals */
+  static bool ReadPrincipals(JSContext* aCx, JSStructuredCloneReader* aReader,
+                             JSPrincipals** aOutPrincipals);
+
+  static bool ReadKnownPrincipalType(JSContext* aCx,
+                                     JSStructuredCloneReader* aReader,
+                                     uint32_t aTag,
+                                     JSPrincipals** aOutPrincipals);
+
+  bool write(JSContext* aCx, JSStructuredCloneWriter* aWriter) final;
+
   /*
    * Get a weak reference to nsIPrincipal associated with the given JS
    * principal, and vice-versa.

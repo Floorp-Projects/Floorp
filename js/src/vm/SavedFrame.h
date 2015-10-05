@@ -195,6 +195,11 @@ struct ReconstructedSavedFramePrincipals : public JSPrincipals
         this->refcount = 1;
     }
 
+    bool write(JSContext* cx, JSStructuredCloneWriter* writer) override {
+        MOZ_ASSERT(false, "ReconstructedSavedFramePrincipals should never be exposed to embedders");
+        return false;
+    }
+
     static ReconstructedSavedFramePrincipals IsSystem;
     static ReconstructedSavedFramePrincipals IsNotSystem;
 
