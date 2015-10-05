@@ -704,45 +704,4 @@ TEST_F(AccessibleCaretEventHubTester, TestAsyncPanZoomScrollEndedThenBlur)
   EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::NoActionState());
 }
 
-TEST_F(AccessibleCaretEventHubTester, TestWheelEventScroll)
-{
-  MockFunction<void(::std::string aCheckPointName)> check;
-  {
-    InSequence dummy;
-
-    EXPECT_CALL(check, Call("1"));
-    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollStart());
-
-    EXPECT_CALL(check, Call("2"));
-    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollEnd());
-  }
-
-  check.Call("1");
-
-  HandleEventAndCheckState(CreateWheelEvent(eWheelOperationStart),
-                           MockAccessibleCaretEventHub::ScrollState(),
-                           nsEventStatus_eIgnore);
-
-  HandleEventAndCheckState(CreateWheelEvent(eWheel),
-                           MockAccessibleCaretEventHub::ScrollState(),
-                           nsEventStatus_eIgnore);
-
-  mHub->ScrollPositionChanged();
-
-  HandleEventAndCheckState(CreateWheelEvent(eWheelOperationEnd),
-                           MockAccessibleCaretEventHub::PostScrollState(),
-                           nsEventStatus_eIgnore);
-
-  // Momentum scroll
-  HandleEventAndCheckState(CreateWheelEvent(eWheel),
-                           MockAccessibleCaretEventHub::PostScrollState(),
-                           nsEventStatus_eIgnore);
-
-  check.Call("2");
-
-  // Simulate scroll end fired by timer.
-  MockAccessibleCaretEventHub::FireScrollEnd(nullptr, mHub);
-  EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::NoActionState());
-}
-
 } // namespace mozilla
