@@ -156,6 +156,8 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Notification",
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    { name: "OffscreenCanvas", disabled: true },
+// IMPORTANT: Do not change this list without review from a DOM peer!
     "Performance",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "PerformanceEntry",
@@ -189,6 +191,26 @@ var interfaceNamesInGlobalScope =
     "URL",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "URLSearchParams",
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    { name: "WebGLActiveInfo", disabled: true },
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    { name: "WebGLBuffer", disabled: true },
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    { name: "WebGLFramebuffer", disabled: true },
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    { name: "WebGLProgram", disabled: true },
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    { name: "WebGLRenderbuffer", disabled: true },
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    { name: "WebGLRenderingContext", disabled: true },
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    { name: "WebGLShader", disabled: true },
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    { name: "WebGLShaderPrecisionFormat", disabled: true },
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    { name: "WebGLTexture", disabled: true },
+// IMPORTANT: Do not change this list without review from a DOM peer!
+    { name: "WebGLUniformLocation", disabled: true },
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "WebSocket",
 // IMPORTANT: Do not change this list without review from a DOM peer!
