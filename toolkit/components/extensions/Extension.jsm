@@ -776,5 +776,9 @@ Extension.prototype = {
   hasPermission(perm) {
     return this.permissions.has(perm);
   },
+
+  get name() {
+    return this.localize(this.manifest.name);
+  },
 };
 
