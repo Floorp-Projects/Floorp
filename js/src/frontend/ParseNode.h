@@ -183,7 +183,6 @@ class PackedScopeCoordinate
     F(VOID) \
     F(NOT) \
     F(BITNOT) \
-    F(AWAIT) \
     \
     /* \
      * Binary operators. \

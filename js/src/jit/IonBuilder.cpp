@@ -12585,11 +12585,13 @@ IonBuilder::jsop_defvar(uint32_t index)
 bool
 IonBuilder::jsop_deffun(uint32_t index)
 {
+    JSFunction* fun = script()->getFunction(index);
+    if (fun->isNative() && IsAsmJSModuleNative(fun->native()))
+        return abort("asm.js module function");
+
     MOZ_ASSERT(analysis().usesScopeChain());
 
-    MDefinition *funDef = current->pop();
-
-    MDefFun* deffun = MDefFun::New(alloc(), funDef, current->scopeChain());
+    MDefFun* deffun = MDefFun::New(alloc(), fun, current->scopeChain());
     current->add(deffun);
 
     return resumeAfter(deffun);
