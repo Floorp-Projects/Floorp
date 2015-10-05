@@ -6,45 +6,41 @@
 <body>
 <pre id="test">
 <script type="application/javascript">
-createHTML({
-  bug: "952145",
-  title: "Rollback remote offer"
-});
+  createHTML({
+    bug: "952145",
+    title: "Rollback remote offer"
+  });
 
-var test;
-runNetworkTest(function (options) {
-  test = new PeerConnectionTest(options);
-  test.setMediaConstraints([{audio: true}], [{audio: true}]);
-  test.chain.removeAfter('PC_REMOTE_CHECK_CAN_TRICKLE_SYNC');
-  test.chain.append([
-    function PC_REMOTE_ROLLBACK(test) {
-      return test.setRemoteDescription(
-        test.pcRemote,
-        new RTCSessionDescription({ type: "rollback" }),
-        STABLE);
-    },
+  var test;
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+    test.chain.removeAfter('PC_REMOTE_SET_REMOTE_DESCRIPTION');
+    test.chain.append([
+        function PC_REMOTE_ROLLBACK(test) {
+          return test.setRemoteDescription(
+              test.pcRemote,
+              new RTCSessionDescription({ type: "rollback" }),
+              STABLE);
+        },
 
-    function PC_REMOTE_CHECK_CAN_TRICKLE_REVERT_SYNC(test) {
-      is(test.pcRemote._pc.canTrickleIceCandidates, null,
-         "Remote canTrickleIceCandidates is reverted to null");
-    },
+        function PC_LOCAL_ROLLBACK(test) {
+          return test.setLocalDescription(
+              test.pcLocal,
+              new RTCSessionDescription({ type: "rollback", sdp: ""}),
+              STABLE);
+        },
 
-    function PC_LOCAL_ROLLBACK(test) {
-      return test.setLocalDescription(
-        test.pcLocal,
-        new RTCSessionDescription({ type: "rollback", sdp: "" }),
-        STABLE);
-    },
-
-    // Rolling back should shut down gathering
-    function PC_LOCAL_WAIT_FOR_END_OF_TRICKLE(test) {
-      return test.pcLocal.endOfTrickleIce;
-    },
-  ]);
-  test.chain.append(commandsPeerConnectionOfferAnswer);
-  test.run();
-});
+        // Rolling back should shut down gathering
+        function PC_LOCAL_WAIT_FOR_END_OF_TRICKLE(test) {
+          return test.pcLocal.endOfTrickleIce;
+        },
+    ]);
+    test.chain.append(commandsPeerConnectionOfferAnswer);
+    test.run();
+  });
 </script>
 </pre>
 </body>
 </html>
+
