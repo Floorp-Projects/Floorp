@@ -164,6 +164,7 @@ struct TestFileData
   int32_t mHeight;
 };
 static const TestFileData testFiles[] = {
+  { "test_case_1156505.mp4", 0, 0, 0 },
   { "test_case_1187067.mp4", 1, 160, 90 },
   { "test_case_1200326.mp4", 0, 0, 0 },
   { "test_case_1204580.mp4", 1, 320, 180 }
