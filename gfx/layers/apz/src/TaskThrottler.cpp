@@ -88,6 +88,12 @@ TaskThrottler::TaskComplete(const TimeStamp& aTimeStamp)
   }
 }
 
+TimeDuration
+TaskThrottler::AverageDuration()
+{
+  return mMean.empty() ? TimeDuration() : mMean.mean();
+}
+
 void
 TaskThrottler::RunQueuedTask(const TimeStamp& aTimeStamp)
 {
@@ -113,6 +119,20 @@ TimeDuration
 TaskThrottler::TimeSinceLastRequest(const TimeStamp& aTimeStamp)
 {
   return aTimeStamp - mStartTime;
+}
+
+void
+TaskThrottler::ClearHistory()
+{
+  mMean.clear();
+}
+
+void
+TaskThrottler::SetMaxDurations(uint32_t aMaxDurations)
+{
+  if (aMaxDurations != mMean.maxValues()) {
+    mMean = RollingMean<TimeDuration, TimeDuration>(aMaxDurations);
+  }
 }
 
 } // namespace layers
