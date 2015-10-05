@@ -347,7 +347,9 @@ static bool
 IsMP4SupportedType(const nsACString& aType,
                    const nsAString& aCodecs = EmptyString())
 {
-  return MP4Decoder::CanHandleMediaType(aType, aCodecs);
+  // MP4Decoder/Reader is currently used for MSE and mp4 files local playback.
+  bool haveAAC, haveMP3, haveH264;
+  return MP4Decoder::CanHandleMediaType(aType, aCodecs, haveAAC, haveH264, haveMP3);
 }
 #endif
 
