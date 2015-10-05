@@ -40,7 +40,7 @@ class AccessibleCaretEventHub::NoActionState
   : public AccessibleCaretEventHub::State
 {
 public:
-  NS_IMPL_STATE_UTILITIES(NoActionState)
+  virtual const char* Name() const override { return "NoActionState"; }
 
   virtual nsEventStatus OnPress(AccessibleCaretEventHub* aContext,
                                 const nsPoint& aPoint,
@@ -104,7 +104,7 @@ class AccessibleCaretEventHub::PressCaretState
   : public AccessibleCaretEventHub::State
 {
 public:
-  NS_IMPL_STATE_UTILITIES(PressCaretState)
+  virtual const char* Name() const override { return "PressCaretState"; }
 
   virtual nsEventStatus OnMove(AccessibleCaretEventHub* aContext,
                                const nsPoint& aPoint) override
@@ -141,7 +141,7 @@ class AccessibleCaretEventHub::DragCaretState
   : public AccessibleCaretEventHub::State
 {
 public:
-  NS_IMPL_STATE_UTILITIES(DragCaretState)
+  virtual const char* Name() const override { return "DragCaretState"; }
 
   virtual nsEventStatus OnMove(AccessibleCaretEventHub* aContext,
                                const nsPoint& aPoint) override
@@ -167,7 +167,7 @@ class AccessibleCaretEventHub::PressNoCaretState
   : public AccessibleCaretEventHub::State
 {
 public:
-  NS_IMPL_STATE_UTILITIES(PressNoCaretState)
+  virtual const char* Name() const override { return "PressNoCaretState"; }
 
   virtual nsEventStatus OnMove(AccessibleCaretEventHub* aContext,
                                const nsPoint& aPoint) override
@@ -239,7 +239,7 @@ class AccessibleCaretEventHub::ScrollState
   : public AccessibleCaretEventHub::State
 {
 public:
-  NS_IMPL_STATE_UTILITIES(ScrollState)
+  virtual const char* Name() const override { return "ScrollState"; }
 
   virtual void OnScrollEnd(AccessibleCaretEventHub* aContext) override
   {
@@ -264,7 +264,7 @@ class AccessibleCaretEventHub::PostScrollState
   : public AccessibleCaretEventHub::State
 {
 public:
-  NS_IMPL_STATE_UTILITIES(PostScrollState)
+  virtual const char* Name() const override { return "PostScrollState"; }
 
   virtual nsEventStatus OnPress(AccessibleCaretEventHub* aContext,
                                 const nsPoint& aPoint,
@@ -321,7 +321,7 @@ class AccessibleCaretEventHub::LongTapState
   : public AccessibleCaretEventHub::State
 {
 public:
-  NS_IMPL_STATE_UTILITIES(LongTapState)
+  virtual const char* Name() const override { return "LongTapState"; }
 
   virtual nsEventStatus OnLongTap(AccessibleCaretEventHub* aContext,
                                   const nsPoint& aPoint) override
