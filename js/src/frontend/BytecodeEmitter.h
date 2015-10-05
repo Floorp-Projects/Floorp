@@ -480,6 +480,8 @@ struct BytecodeEmitter
     bool emitPropOp(ParseNode* pn, JSOp op);
     bool emitPropIncDec(ParseNode* pn);
 
+    bool emitAsyncWrapper(unsigned index, bool isMethod);
+
     bool emitComputedPropertyName(ParseNode* computedPropName);
 
     // Emit bytecode to put operands for a JSOP_GETELEM/CALLELEM/SETELEM/DELELEM

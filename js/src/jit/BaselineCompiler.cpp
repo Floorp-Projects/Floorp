@@ -2516,15 +2516,15 @@ static const VMFunction DefFunOperationInfo = FunctionInfo<DefFunOperationFn>(De
 bool
 BaselineCompiler::emit_JSOP_DEFFUN()
 {
-    RootedFunction fun(cx, script->getFunction(GET_UINT32_INDEX(pc)));
 
-    frame.syncStack(0);
-    masm.loadPtr(frame.addressOfScopeChain(), R0.scratchReg());
+    frame.popRegsAndSync(1);
+    masm.unboxObject(R0, R0.scratchReg());
+    masm.loadPtr(frame.addressOfScopeChain(), R1.scratchReg());
 
     prepareVMCall();
 
-    pushArg(ImmGCPtr(fun));
     pushArg(R0.scratchReg());
+    pushArg(R1.scratchReg());
     pushArg(ImmGCPtr(script));
 
     return callVM(DefFunOperationInfo);

@@ -3529,9 +3529,10 @@ CASE(JSOP_DEFFUN)
      * a compound statement (not at the top statement level of global code, or
      * at the top level of a function body).
      */
-    ReservedRooted<JSFunction*> fun(&rootFunction0, script->getFunction(GET_UINT32_INDEX(REGS.pc)));
+    ReservedRooted<JSFunction*> fun(&rootFunction0, &REGS.sp[-1].toObject().as<JSFunction>());
     if (!DefFunOperation(cx, script, REGS.fp()->scopeChain(), fun))
         goto error;
+    REGS.sp--;
 }
 END_CASE(JSOP_DEFFUN)
 
@@ -4335,14 +4336,6 @@ js::DefFunOperation(JSContext* cx, HandleScript script, HandleObject scopeChain,
      * requests in server-side JS.
      */
     RootedFunction fun(cx, funArg);
-    if (fun->isNative() || fun->environment() != scopeChain) {
-        fun = CloneFunctionObjectIfNotSingleton(cx, fun, scopeChain, nullptr, TenuredObject);
-        if (!fun)
-            return false;
-    } else {
-        MOZ_ASSERT(script->treatAsRunOnce());
-        MOZ_ASSERT(!script->functionNonDelazifying());
-    }
 
     /*
      * We define the function as a property of the variable object and not the
