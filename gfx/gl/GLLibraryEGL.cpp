@@ -5,6 +5,7 @@
 #include "GLLibraryEGL.h"
 
 #include "gfxCrashReporterUtils.h"
+#include "gfxUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Assertions.h"
 #include "nsDirectoryServiceDefs.h"
@@ -128,7 +129,9 @@ static bool
 IsAccelAngleSupported(const nsCOMPtr<nsIGfxInfo>& gfxInfo)
 {
     int32_t angleSupport;
-    gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_WEBGL_ANGLE, &angleSupport);
+    gfxUtils::ThreadSafeGetFeatureStatus(gfxInfo,
+                                         nsIGfxInfo::FEATURE_WEBGL_ANGLE,
+                                         &angleSupport);
     return (angleSupport == nsIGfxInfo::FEATURE_STATUS_OK);
 }
 
