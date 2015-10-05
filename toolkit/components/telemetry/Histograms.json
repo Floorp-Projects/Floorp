@@ -9038,7 +9038,7 @@
   },
   "FENNEC_OPEN_URLS_IN_PRIVATE": {
     "alert_emails": ["margaret@mozilla.com"],
-    "expires_in_version": "44",
+    "expires_in_version": "45",
     "kind": "flag",
     "description": "Reports the state of the open external links in private tabs preference"
   },
