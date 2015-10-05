@@ -10,6 +10,9 @@
 #include "nsComponentManagerUtils.h"        // for do_CreateInstance
 #include "nsITimer.h"
 
+#define TASK_LOG(...)
+// #define TASK_LOG(...) printf_stderr("TASK: " __VA_ARGS__)
+
 namespace mozilla {
 namespace layers {
 
@@ -36,16 +39,14 @@ void
 TaskThrottler::PostTask(const tracked_objects::Location& aLocation,
                         UniquePtr<CancelableTask> aTask, const TimeStamp& aTimeStamp)
 {
+  TASK_LOG("%p got a task posted; mOutstanding=%d\n", this, mOutstanding);
   aTask->SetBirthPlace(aLocation);
 
   if (mOutstanding) {
-    if (mQueuedTask) {
-      mQueuedTask->Cancel();
-      mQueuedTask = nullptr;
-      mTimer->Cancel();
-    }
+    CancelPendingTask();
     if (TimeSinceLastRequest(aTimeStamp) < mMaxWait) {
       mQueuedTask = Move(aTask);
+      TASK_LOG("%p queued task %p\n", this, mQueuedTask.get());
       // Make sure the queued task is sent after mMaxWait time elapses,
       // even if we don't get a TaskComplete() until then.
       TimeDuration timeout = mMaxWait - TimeSinceLastRequest(aTimeStamp);
@@ -90,6 +91,7 @@ TaskThrottler::TaskComplete(const TimeStamp& aTimeStamp)
 void
 TaskThrottler::RunQueuedTask(const TimeStamp& aTimeStamp)
 {
+  TASK_LOG("%p running task %p\n", this, mQueuedTask.get());
   mStartTime = aTimeStamp;
   mQueuedTask->Run();
   mQueuedTask = nullptr;
@@ -100,6 +102,7 @@ void
 TaskThrottler::CancelPendingTask()
 {
   if (mQueuedTask) {
+    TASK_LOG("%p cancelling task %p\n", this, mQueuedTask.get());
     mQueuedTask->Cancel();
     mQueuedTask = nullptr;
     mTimer->Cancel();
