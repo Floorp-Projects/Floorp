@@ -1200,12 +1200,6 @@ void GStreamerReader::Eos(GstAppSink* aSink)
     }
     mon.NotifyAll();
   }
-
-  {
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    /* Potentially unblock the decode thread in ::DecodeLoop */
-    mon.NotifyAll();
-  }
 }
 
 /**
