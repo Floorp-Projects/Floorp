@@ -1,1 +1,2 @@
-load(libdir + "../../tests/ecma_6/shell.js");
+// classesEnabled ended up needing a fairly broad scope.
+load(libdir + "../../tests/shell.js");
