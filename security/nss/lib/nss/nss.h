@@ -33,12 +33,12 @@
  * The format of the version string should be
  *     "<major version>.<minor version>[.<patch level>[.<build number>]][ <ECC>][ <Beta>]"
  */
-#define NSS_VERSION  "3.21" _NSS_ECC_STRING _NSS_CUSTOMIZED " Beta"
+#define NSS_VERSION  "3.20" _NSS_ECC_STRING _NSS_CUSTOMIZED 
 #define NSS_VMAJOR   3
-#define NSS_VMINOR   21
+#define NSS_VMINOR   20
 #define NSS_VPATCH   0
 #define NSS_VBUILD   0
-#define NSS_BETA     PR_TRUE
+#define NSS_BETA     PR_FALSE
 
 #ifndef RC_INVOKED
 
@@ -293,19 +293,6 @@ SECStatus NSS_RegisterShutdown(NSS_ShutdownFunc sFunc, void *appData);
  * complete and going away, but NSS is still running).
  */
 SECStatus NSS_UnregisterShutdown(NSS_ShutdownFunc sFunc, void *appData);
-
-/* Available options for NSS_OptionSet() and NSS_OptionGet().
- */
-#define NSS_RSA_MIN_KEY_SIZE (1<<0)
-#define NSS_DH_MIN_KEY_SIZE  (1<<1)
-#define NSS_DSA_MIN_KEY_SIZE (1<<2)
-
-/*
- * Set and get global options for the NSS library.
- */
-SECStatus NSS_OptionSet(PRInt32 which, PRInt32 value);
-SECStatus NSS_OptionGet(PRInt32 which, PRInt32 *value);
-
 
 /* 
  * Close the Cert, Key databases.

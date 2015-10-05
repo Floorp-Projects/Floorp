@@ -67,6 +67,16 @@ static const SEC_ASN1Template CERTOtherNameTemplate[] = {
       sizeof(CERTGeneralName) }
 };
 
+static const SEC_ASN1Template CERTOtherName2Template[] = {
+    { SEC_ASN1_SEQUENCE | SEC_ASN1_CONTEXT_SPECIFIC | 0 ,
+      0, NULL, sizeof(CERTGeneralName) },
+    { SEC_ASN1_OBJECT_ID,
+	  offsetof(CERTGeneralName, name.OthName) + offsetof(OtherName, oid) },
+    { SEC_ASN1_ANY,
+	  offsetof(CERTGeneralName, name.OthName) + offsetof(OtherName, name) },
+    { 0, } 
+};
+
 static const SEC_ASN1Template CERT_RFC822NameTemplate[] = {
     { SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_XTRN | 1 ,
           offsetof(CERTGeneralName, name.other),

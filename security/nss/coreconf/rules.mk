@@ -272,10 +272,6 @@ $(IMPORT_LIBRARY): $(MAPFILE)
 	$(IMPLIB) $@ $<
 	$(RANLIB) $@
 endif
-ifeq ($(OS_ARCH),WINNT)
-$(IMPORT_LIBRARY): $(LIBRARY)
-	cp -f $< $@
-endif
 
 ifdef SHARED_LIBRARY_LIBS
 ifdef BUILD_TREE
@@ -424,12 +420,12 @@ $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.S
 $(OBJDIR)/$(PROG_PREFIX)%: %.cpp
 	@$(MAKE_OBJDIR)
 ifdef USE_NT_C_SYNTAX
-	$(CCC) -Fo$@ -c $(CFLAGS) $(CXXFLAGS) $(call core_abspath,$<)
+	$(CCC) -Fo$@ -c $(CFLAGS) $(call core_abspath,$<)
 else
 ifdef NEED_ABSOLUTE_PATH
-	$(CCC) -o $@ -c $(CFLAGS) $(CXXFLAGS) $(call core_abspath,$<)
+	$(CCC) -o $@ -c $(CFLAGS) $(call core_abspath,$<)
 else
-	$(CCC) -o $@ -c $(CFLAGS) $(CXXFLAGS) $<
+	$(CCC) -o $@ -c $(CFLAGS) $<
 endif
 endif
 
@@ -437,43 +433,29 @@ endif
 # Please keep the next two rules in sync.
 #
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.cc
-	$(MAKE_OBJDIR)
-ifdef STRICT_CPLUSPLUS_SUFFIX
-	echo "#line 1 \"$<\"" | cat - $< > $(OBJDIR)/t_$*.cc
-	$(CCC) -o $@ -c $(CFLAGS) $(CXXFLAGS) $(OBJDIR)/t_$*.cc
-	rm -f $(OBJDIR)/t_$*.cc
-else
-ifdef USE_NT_C_SYNTAX
-	$(CCC) -Fo$@ -c $(CFLAGS) $(CXXFLAGS) $(call core_abspath,$<)
-else
-ifdef NEED_ABSOLUTE_PATH
-	$(CCC) -o $@ -c $(CFLAGS) $(CXXFLAGS) $(call core_abspath,$<)
-else
-	$(CCC) -o $@ -c $(CFLAGS) $(CXXFLAGS) $<
-endif
-endif
-endif #STRICT_CPLUSPLUS_SUFFIX
+	@$(MAKE_OBJDIR)
+	$(CCC) -o $@ -c $(CFLAGS) $<
 
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.cpp
 	@$(MAKE_OBJDIR)
 ifdef STRICT_CPLUSPLUS_SUFFIX
 	echo "#line 1 \"$<\"" | cat - $< > $(OBJDIR)/t_$*.cc
-	$(CCC) -o $@ -c $(CFLAGS) $(CXXFLAGS) $(OBJDIR)/t_$*.cc
+	$(CCC) -o $@ -c $(CFLAGS) $(OBJDIR)/t_$*.cc
 	rm -f $(OBJDIR)/t_$*.cc
 else
 ifdef USE_NT_C_SYNTAX
-	$(CCC) -Fo$@ -c $(CFLAGS) $(CXXFLAGS) $(call core_abspath,$<)
+	$(CCC) -Fo$@ -c $(CFLAGS) $(call core_abspath,$<)
 else
 ifdef NEED_ABSOLUTE_PATH
-	$(CCC) -o $@ -c $(CFLAGS) $(CXXFLAGS) $(call core_abspath,$<)
+	$(CCC) -o $@ -c $(CFLAGS) $(call core_abspath,$<)
 else
-	$(CCC) -o $@ -c $(CFLAGS) $(CXXFLAGS) $<
+	$(CCC) -o $@ -c $(CFLAGS) $<
 endif
 endif
 endif #STRICT_CPLUSPLUS_SUFFIX
 
 %.i: %.cpp
-	$(CCC) -C -E $(CFLAGS) $(CXXFLAGS) $< > $@
+	$(CCC) -C -E $(CFLAGS) $< > $@
 
 %.i: %.c
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))

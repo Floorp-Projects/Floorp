@@ -62,12 +62,7 @@ static PKIX_Boolean socketTraceFlag = PKIX_FALSE;
 static void pkix_pl_socket_timestamp() {
         PRInt64 prTime;
         prTime = PR_Now();
-/* We shouldn't use PR_ALTERNATE_INT64_TYPEDEF, but nor can we use PRId64 */
-#if PR_BYTES_PER_LONG == 8 && !defined(PR_ALTERNATE_INT64_TYPEDEF)
-        printf("%ld:\n", prTime);
-#else
         printf("%lld:\n", prTime);
-#endif
 }
 
 /*
@@ -145,7 +140,7 @@ static void pkix_pl_socket_linePrefix(PKIX_UInt32 addr) {
  */
 static void pkix_pl_socket_traceLine(char *ptr) {
         PKIX_UInt32 i = 0;
-        pkix_pl_socket_linePrefix((PKIX_UInt32)((char *)ptr - (char *)NULL));
+        pkix_pl_socket_linePrefix((PKIX_UInt32)ptr);
         for (i = 0; i < 16; i++) {
                 printf(" ");
                 pkix_pl_socket_hexDigit(ptr[i]);
@@ -189,7 +184,7 @@ static void pkix_pl_socket_traceLine(char *ptr) {
 static void pkix_pl_socket_tracePartialLine(char *ptr, PKIX_UInt32 nBytes) {
         PKIX_UInt32 i = 0;
         if (nBytes > 0) {
-                pkix_pl_socket_linePrefix((PKIX_UInt32)((char *)ptr - (char *)NULL));
+                pkix_pl_socket_linePrefix((PKIX_UInt32)ptr);
         }
         for (i = 0; i < nBytes; i++) {
                 printf(" ");
@@ -248,7 +243,7 @@ void pkix_pl_socket_tracebuff(void *buf, PKIX_UInt32 nBytes) {
          * Special case: if called with length of zero, just do address
          */
         if (nBytes == 0) {
-                pkix_pl_socket_linePrefix((PKIX_UInt32)((char *)buf - (char *)NULL));
+                pkix_pl_socket_linePrefix((PKIX_UInt32)buf);
                 printf("\n");
         } else {
                 while (bytesRemaining >= 16) {

@@ -67,8 +67,7 @@ typedef struct {
 } sslMutex;
 typedef pid_t sslPID;
 
-/* other types of unix, except OS X */
-#elif defined(XP_UNIX) && !defined(DARWIN)
+#elif defined(XP_UNIX) /* other types of Unix */
 
 #include <sys/types.h>	/* for pid_t */
 #include <semaphore.h>  /* for sem_t, and sem_* functions */
@@ -84,7 +83,7 @@ typedef struct
 
 typedef pid_t sslPID;
 
-#else /* no support for cross-process locking */
+#else
 
 /* what platform is this ?? */
 
@@ -96,11 +95,7 @@ typedef struct {
     } u;
 } sslMutex;
 
-#ifdef DARWIN
-typedef pid_t sslPID;
-#else
 typedef int sslPID;
-#endif
 
 #endif
 

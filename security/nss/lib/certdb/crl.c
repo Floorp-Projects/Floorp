@@ -627,6 +627,7 @@ crl_storeCRL (PK11SlotInfo *slot,char *url,
     CERTSignedCrl *oldCrl = NULL, *crl = NULL;
     PRBool deleteOldCrl = PR_FALSE;
     CK_OBJECT_HANDLE crlHandle = CK_INVALID_HANDLE;
+    SECStatus rv;
 
     PORT_Assert(newCrl);
     PORT_Assert(derCrl);
@@ -639,8 +640,8 @@ crl_storeCRL (PK11SlotInfo *slot,char *url,
 
     /* we can't use the cache here because we must look in the same
        token */
-    (void)SEC_FindCrlByKeyOnSlot(slot, &newCrl->crl.derName, type,
-                                 &oldCrl, CRL_DECODE_SKIP_ENTRIES);
+    rv = SEC_FindCrlByKeyOnSlot(slot, &newCrl->crl.derName, type,
+                                &oldCrl, CRL_DECODE_SKIP_ENTRIES);
     /* if there is an old crl on the token, make sure the one we are
        installing is newer. If not, exit out, otherwise delete the
        old crl.
@@ -2692,7 +2693,7 @@ cert_CheckCertRevocationStatus(CERTCertificate* cert, CERTCertificate* issuer,
             }
             if (SECFailure == rv)
             {
-                (void)CERT_FindCRLEntryReasonExten(entry, &reason);
+                SECStatus rv2 = CERT_FindCRLEntryReasonExten(entry, &reason);
                 PORT_SetError(SEC_ERROR_REVOKED_CERTIFICATE);
             }
             break;
@@ -3049,7 +3050,7 @@ SECStatus cert_CacheCRLByGeneralName(CERTCertDBHandle* dbhandle, SECItem* crl,
 {
     NamedCRLCacheEntry* oldEntry, * newEntry = NULL;
     NamedCRLCache* ncc = NULL;
-    SECStatus rv = SECSuccess;
+    SECStatus rv = SECSuccess, rv2;
 
     PORT_Assert(namedCRLCache.lock);
     PORT_Assert(namedCRLCache.entries);
@@ -3087,7 +3088,8 @@ SECStatus cert_CacheCRLByGeneralName(CERTCertDBHandle* dbhandle, SECItem* crl,
                                         (void*) newEntry))
             {
                 PORT_Assert(0);
-                NamedCRLCacheEntry_Destroy(newEntry);
+                rv2 = NamedCRLCacheEntry_Destroy(newEntry);
+                PORT_Assert(SECSuccess == rv2);
                 rv = SECFailure;
             }
         }
@@ -3110,7 +3112,8 @@ SECStatus cert_CacheCRLByGeneralName(CERTCertDBHandle* dbhandle, SECItem* crl,
             }
             else
             {
-                PORT_CheckSuccess(NamedCRLCacheEntry_Destroy(oldEntry));
+                rv2 = NamedCRLCacheEntry_Destroy(oldEntry);
+                PORT_Assert(SECSuccess == rv2);
             }
             if (NULL == PL_HashTableAdd(namedCRLCache.entries,
                                       (void*) newEntry->canonicalizedName,
@@ -3157,7 +3160,8 @@ SECStatus cert_CacheCRLByGeneralName(CERTCertDBHandle* dbhandle, SECItem* crl,
                 }
                 else
                 {
-                    PORT_CheckSuccess(NamedCRLCacheEntry_Destroy(oldEntry));
+                    rv2 = NamedCRLCacheEntry_Destroy(oldEntry);
+                    PORT_Assert(SECSuccess == rv2);
                 }
                 if (NULL == PL_HashTableAdd(namedCRLCache.entries,
                                           (void*) newEntry->canonicalizedName,
@@ -3169,7 +3173,8 @@ SECStatus cert_CacheCRLByGeneralName(CERTCertDBHandle* dbhandle, SECItem* crl,
             }
         }
     }
-    PORT_CheckSuccess(cert_ReleaseNamedCRLCache(ncc));
+    rv2 = cert_ReleaseNamedCRLCache(ncc);
+    PORT_Assert(SECSuccess == rv2);
 
     return rv;
 }

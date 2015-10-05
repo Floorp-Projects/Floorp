@@ -22,6 +22,20 @@
 
 static PRBool policyWasSet;
 
+/* This ordered list is indexed by (SSL_CK_xx * 3)   */
+/* Second and third bytes are MSB and LSB of master key length. */
+static const PRUint8 allCipherSuites[] = {
+    0,						0,    0,
+    SSL_CK_RC4_128_WITH_MD5,			0x00, 0x80,
+    SSL_CK_RC4_128_EXPORT40_WITH_MD5,		0x00, 0x80,
+    SSL_CK_RC2_128_CBC_WITH_MD5,		0x00, 0x80,
+    SSL_CK_RC2_128_CBC_EXPORT40_WITH_MD5,	0x00, 0x80,
+    SSL_CK_IDEA_128_CBC_WITH_MD5,		0x00, 0x80,
+    SSL_CK_DES_64_CBC_WITH_MD5,			0x00, 0x40,
+    SSL_CK_DES_192_EDE3_CBC_WITH_MD5,		0x00, 0xC0,
+    0,						0,    0
+};
+
 #define ssl2_NUM_SUITES_IMPLEMENTED 6
 
 /* This list is sent back to the client when the client-hello message 
@@ -837,7 +851,7 @@ ssl2_SendClear(sslSocket *ss, const PRUint8 *in, PRInt32 len, PRInt32 flags)
 {
     PRUint8         * out;
     int               rv;
-    unsigned int amount;
+    int               amount;
     int               count	= 0;
 
     PORT_Assert( ss->opt.noLocks || ssl_HaveXmitBufLock(ss) );
@@ -913,7 +927,7 @@ ssl2_SendStream(sslSocket *ss, const PRUint8 *in, PRInt32 len, PRInt32 flags)
     int              amount;
     PRUint8          macLen;
     int              nout;
-    unsigned int buflen;
+    int              buflen;
 
     PORT_Assert( ss->opt.noLocks || ssl_HaveXmitBufLock(ss) );
 
@@ -1017,7 +1031,7 @@ ssl2_SendBlock(sslSocket *ss, const PRUint8 *in, PRInt32 len, PRInt32 flags)
     int              amount;		    /* of plaintext to go in record. */
     unsigned int     padding;		    /* add this many padding byte.   */
     int              nout;		    /* ciphertext size after header. */
-    unsigned int buflen;		    /* size of generated record.     */
+    int              buflen;		    /* size of generated record.     */
 
     PORT_Assert( ss->opt.noLocks || ssl_HaveXmitBufLock(ss) );
 
@@ -1541,7 +1555,7 @@ ssl2_ServerSetupSessionCypher(sslSocket *ss, int cipher, unsigned int keyBits,
     unsigned int      ddLen;	/* length of RSA decrypted data in kbuf */
     unsigned int      keySize;
     unsigned int      dkLen;    /* decrypted key length in bytes */
-    int modulusLen;
+    int               modulusLen;
     SECStatus         rv;
     PRUint16          allowed;  /* cipher kinds enabled and allowed by policy */
     PRUint8           mkbuf[SSL_MAX_MASTER_KEY_BYTES];
@@ -1603,11 +1617,11 @@ ssl2_ServerSetupSessionCypher(sslSocket *ss, int cipher, unsigned int keyBits,
     }
 
     modulusLen = PK11_GetPrivateModulusLen(sc->SERVERKEY);
-    if (modulusLen < 0) {
+    if (modulusLen == -1) {
 	/* XXX If the key is bad, then PK11_PubDecryptRaw will fail below. */
 	modulusLen = ekLen;
     }
-    if (ekLen > (unsigned int)modulusLen || ekLen + ckLen < keySize) {
+    if (ekLen > modulusLen || ekLen + ckLen < keySize) {
 	SSL_DBG(("%d: SSL[%d]: invalid encrypted key length, ekLen=%d (bytes)!",
 		 SSL_GETPID(), ss->fd, ekLen));
 	PORT_SetError(SSL_ERROR_BAD_CLIENT);
@@ -2481,6 +2495,7 @@ ssl2_HandleMessage(sslSocket *ss)
     PRUint8 *        cid;
     unsigned         len, certType, certLen, responseLen;
     int              rv;
+    int              rv2;
 
     PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
 
@@ -2598,7 +2613,7 @@ ssl2_HandleMessage(sslSocket *ss)
 		data + SSL_HL_CLIENT_CERTIFICATE_HBYTES + certLen,
 		responseLen);
 	if (rv) {
-	    (void)ssl2_SendErrorMessage(ss, SSL_PE_BAD_CERTIFICATE);
+	    rv2 = ssl2_SendErrorMessage(ss, SSL_PE_BAD_CERTIFICATE);
 	    SET_ERROR_CODE
 	    goto loser;
 	}
@@ -2726,7 +2741,7 @@ ssl2_HandleServerHelloMessage(sslSocket *ss)
     PRUint8 *        cs;
     PRUint8 *        data;
     SECStatus        rv; 
-    unsigned int needed, sidHit, certLen, csLen, cidLen, certType, err;
+    int              needed, sidHit, certLen, csLen, cidLen, certType, err;
 
     PORT_Assert( ss->opt.noLocks || ssl_Have1stHandshakeLock(ss) );
 
@@ -3659,9 +3674,6 @@ extern const char __nss_ssl_version[];
 PRBool
 NSSSSL_VersionCheck(const char *importedVersion)
 {
-#define NSS_VERSION_VARIABLE __nss_ssl_version
-#include "verref.h"
-
     /*
      * This is the secret handshake algorithm.
      *
@@ -3671,6 +3683,9 @@ NSSSSL_VersionCheck(const char *importedVersion)
      * not compatible with future major, minor, or
      * patch releases.
      */
+    volatile char c; /* force a reference that won't get optimized away */
+
+    c = __nss_ssl_version[0];
     return NSS_VersionCheck(importedVersion);
 }
 

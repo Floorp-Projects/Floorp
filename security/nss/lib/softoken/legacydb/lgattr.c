@@ -210,6 +210,8 @@ static const CK_ATTRIBUTE lg_StaticFalseAttr =
   LG_DEF_ATTRIBUTE(&lg_staticFalseValue,sizeof(lg_staticFalseValue));
 static const CK_ATTRIBUTE lg_StaticNullAttr = LG_DEF_ATTRIBUTE(NULL,0);
 char lg_StaticOneValue = 1;
+static const CK_ATTRIBUTE lg_StaticOneAttr = 
+  LG_DEF_ATTRIBUTE(&lg_StaticOneValue,sizeof(lg_StaticOneValue));
 
 /*
  * helper functions which get the database and call the underlying 
@@ -431,6 +433,11 @@ lg_GetPubItem(NSSLOWKEYPublicKey *pubKey) {
     }
     return pubItem;
 }
+
+static const SEC_ASN1Template lg_SerialTemplate[] = {
+    { SEC_ASN1_INTEGER, offsetof(NSSLOWCERTCertificate,serialNumber) },
+    { 0 }
+};
 
 static CK_RV
 lg_FindRSAPublicKeyAttribute(NSSLOWKEYPublicKey *key, CK_ATTRIBUTE_TYPE type,

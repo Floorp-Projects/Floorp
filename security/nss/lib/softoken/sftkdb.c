@@ -325,7 +325,9 @@ sftkdb_fixupTemplateOut(CK_ATTRIBUTE *template, CK_OBJECT_HANDLE objectID,
 	    if (sftkdb_isULONGAttribute(template[i].type)) {
 		if (template[i].pValue) {
 		    CK_ULONG value;
+		    unsigned char *data;
 
+		    data = (unsigned char *)ntemplate[i].pValue;
 		    value = sftk_SDBULong2ULong(ntemplate[i].pValue);
 		    if (length < sizeof(CK_ULONG)) {
 			template[i].ulValueLen = -1;
@@ -473,7 +475,7 @@ sftk_signTemplate(PLArenaPool *arena, SFTKDBHandle *handle,
 		  CK_OBJECT_HANDLE objectID, const CK_ATTRIBUTE *template,
 		  CK_ULONG count)
 {
-    unsigned int i;
+    int i;
     CK_RV crv;
     SFTKDBHandle *keyHandle = handle;
     SDB *keyTarget = NULL;
@@ -571,8 +573,11 @@ sftkdb_CreateObject(PLArenaPool *arena, SFTKDBHandle *handle,
 	SDB *db, CK_OBJECT_HANDLE *objectID,
         CK_ATTRIBUTE *template, CK_ULONG count)
 {
+    PRBool inTransaction = PR_FALSE;
     CK_RV crv;
 
+    inTransaction = PR_TRUE;
+    
     crv = (*db->sdb_CreateObject)(db, objectID, template, count);
     if (crv != CKR_OK) {
 	goto loser;
@@ -590,9 +595,9 @@ sftk_ExtractTemplate(PLArenaPool *arena, SFTKObject *object,
 		     SFTKDBHandle *handle,CK_ULONG *pcount, 
 		     CK_RV *crv)
 {
-    unsigned int count;
+    int count;
     CK_ATTRIBUTE *template;
-    unsigned int i, templateIndex;
+    int i, templateIndex;
     SFTKSessionObject *sessObject = sftk_narrowToSessionObject(object);
     PRBool doEnc = PR_TRUE;
 
@@ -1016,7 +1021,7 @@ sftkdb_resolveConflicts(PLArenaPool *arena, CK_OBJECT_CLASS objectType,
 {
     CK_ATTRIBUTE *attr;
     char *nickname, *newNickname;
-    unsigned int end, digit;
+    int end, digit;
 
     /* sanity checks. We should never get here with these errors */
     if (objectType != CKO_CERTIFICATE) {
@@ -1055,11 +1060,9 @@ sftkdb_resolveConflicts(PLArenaPool *arena, CK_OBJECT_CLASS objectType,
 	return CKR_OK;
     }
 
-    for (end = attr->ulValueLen; end-- > 0;) {
-	digit = nickname[end];
-        if (digit > '9' || digit < '0') {
-	    break;
-        }
+    for (end = attr->ulValueLen - 1; 
+	 end >= 0 && (digit = nickname[end]) <= '9' &&  digit >= '0'; 
+	 end--) {
 	if (digit < '9') {
 	    nickname[end]++;
 	    return CKR_OK;
@@ -1254,7 +1257,7 @@ sftkdb_FindObjects(SFTKDBHandle *handle, SDBFind *find,
     crv = (*db->sdb_FindObjects)(db, find, ids, 
 					    arraySize, count);
     if (crv == CKR_OK) {
-	unsigned int i;
+	int i;
 	for (i=0; i < *count; i++) {
 	    ids[i] |= (handle->type | SFTK_TOKEN_TYPE);
 	}
@@ -1597,14 +1600,14 @@ static const CK_ATTRIBUTE_TYPE known_attributes[] = {
     CKA_NETSCAPE_DB, CKA_NETSCAPE_TRUST, CKA_NSS_OVERRIDE_EXTENSIONS
 };
 
-static unsigned int known_attributes_size= sizeof(known_attributes)/
+static int known_attributes_size= sizeof(known_attributes)/
 			   sizeof(known_attributes[0]);
 
 static CK_RV
 sftkdb_GetObjectTemplate(SDB *source, CK_OBJECT_HANDLE id,
 		CK_ATTRIBUTE *ptemplate, CK_ULONG *max)
 {
-    unsigned int i,j;
+    int i,j;
     CK_RV crv;
 
     if (*max < known_attributes_size) {
@@ -2008,6 +2011,7 @@ sftkdb_handleIDAndName(PLArenaPool *arena, SDB *db, CK_OBJECT_HANDLE id,
 	{CKA_ID, NULL, 0},
 	{CKA_LABEL, NULL, 0}
     };
+    CK_RV crv;
 
     attr1 = sftkdb_getAttributeFromTemplate(CKA_LABEL, ptemplate, *plen);
     attr2 = sftkdb_getAttributeFromTemplate(CKA_ID, ptemplate, *plen);
@@ -2019,7 +2023,7 @@ sftkdb_handleIDAndName(PLArenaPool *arena, SDB *db, CK_OBJECT_HANDLE id,
     }
 
     /* the source has either an id or a label, see what the target has */
-    (void)(*db->sdb_GetAttributeValue)(db, id, ttemplate, 2);
+    crv = (*db->sdb_GetAttributeValue)(db, id, ttemplate, 2);
 
     /* if the target has neither, update from the source */
     if ( ((ttemplate[0].ulValueLen == 0) || 
@@ -2164,7 +2168,7 @@ sftkdb_mergeObject(SFTKDBHandle *handle, CK_OBJECT_HANDLE id,
     CK_OBJECT_CLASS objectType;
     SDB *source = handle->update;
     SDB *target = handle->db;
-    unsigned int i;
+    int i;
     CK_RV crv;
     PLArenaPool *arena = NULL;
 
@@ -2253,7 +2257,7 @@ sftkdb_Update(SFTKDBHandle *handle, SECItem *key)
     SECItem *updatePasswordKey = NULL;
     CK_RV crv, crv2;
     PRBool inTransaction = PR_FALSE;
-    unsigned int i;
+    int i;
 
     if (handle == NULL) {
 	return CKR_OK;
@@ -2408,7 +2412,7 @@ sftk_getCertDB(SFTKSlot *slot)
     PZ_Lock(slot->slotLock);
     dbHandle = slot->certDB;
     if (dbHandle) {
-        (void)PR_ATOMIC_INCREMENT(&dbHandle->ref);
+        PR_ATOMIC_INCREMENT(&dbHandle->ref);
     }
     PZ_Unlock(slot->slotLock);
     return dbHandle;
@@ -2426,7 +2430,7 @@ sftk_getKeyDB(SFTKSlot *slot)
     SKIP_AFTER_FORK(PZ_Lock(slot->slotLock));
     dbHandle = slot->keyDB;
     if (dbHandle) {
-        (void)PR_ATOMIC_INCREMENT(&dbHandle->ref);
+        PR_ATOMIC_INCREMENT(&dbHandle->ref);
     }
     SKIP_AFTER_FORK(PZ_Unlock(slot->slotLock));
     return dbHandle;
@@ -2444,7 +2448,7 @@ sftk_getDBForTokenObject(SFTKSlot *slot, CK_OBJECT_HANDLE objectID)
     PZ_Lock(slot->slotLock);
     dbHandle = objectID & SFTK_KEYDB_TYPE ? slot->keyDB : slot->certDB;
     if (dbHandle) {
-        (void)PR_ATOMIC_INCREMENT(&dbHandle->ref);
+        PR_ATOMIC_INCREMENT(&dbHandle->ref);
     }
     PZ_Unlock(slot->slotLock);
     return dbHandle;
