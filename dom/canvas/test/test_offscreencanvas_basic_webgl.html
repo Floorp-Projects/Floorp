@@ -7,9 +7,22 @@
 </head>
 <body>
 <canvas id="c" width="64" height="64"></canvas>
+<canvas id="c-ref" width="64" height="64"></canvas>
 <script>
 
 SimpleTest.waitForExplicitFinish();
+
+function testToDataURL() {
+  // testing toDataURL
+  // Fill c-ref with green color.
+  var c = document.getElementById("c-ref");
+  var ctx = c.getContext("2d");
+  ctx.rect(0, 0, 64, 64);
+  ctx.fillStyle = "#00FF00";
+  ctx.fill();
+  var htmlCanvas = document.getElementById("c");
+  ok(c.toDataURL() == htmlCanvas.toDataURL(), "toDataURL should return a 64x64 green square");
+}
 
 function runTest() {
 
@@ -25,6 +38,7 @@ function runTest() {
       ok(msg.result, msg.name);
     }
     if (msg.type == "finish") {
+      testToDataURL();
       worker.terminate();
       SimpleTest.finish();
     }

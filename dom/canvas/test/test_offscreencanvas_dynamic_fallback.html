@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>WebGL in OffscreenCanvas</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+function createCanvas(initWithMask) {
+  var canvas = document.createElement("canvas");
+  canvas.width = 64;
+  canvas.height = 64;
+  document.body.appendChild(canvas);
+  if (initWithMask) {
+    canvas.style.mask = "url('offscreencanvas_mask.svg#fade_mask_both')";
+  }
+
+  return canvas;
+}
+
+function getRefSnapshot(initWithMask) {
+  var refCanvas = createCanvas(!initWithMask);
+  var ctx = refCanvas.getContext("2d");
+  ctx.rect(0, 0, 64, 64);
+  ctx.fillStyle = "#00FF00";
+  ctx.fill();
+  var result = snapshotWindow(window);
+  document.body.removeChild(refCanvas);
+  return result;
+}
+
+function runTest(initWithMask) {
+  var htmlCanvas = createCanvas(initWithMask);
+  var worker = new Worker("offscreencanvas.js");
+
+  worker.onmessage = function(evt) {
+    var msg = evt.data || {};
+    if (msg.type == "draw") {
+      if (msg.count === 10) {
+        // Change the fallback state dynamically when drawing count reaches 10.
+        if (initWithMask) {
+          htmlCanvas.style.mask = "";
+        } else {
+          htmlCanvas.style.mask = "url('offscreencanvas_mask.svg#fade_mask_both')";
+        }
+      } else if (msg.count === 20) {
+        var snapshotFallback = snapshotWindow(window);
+        worker.terminate();
+        document.body.removeChild(htmlCanvas);
+
+        var results = compareSnapshots(snapshotFallback, getRefSnapshot(initWithMask), true);
+        ok(results[0], "after dynamic fallback, screenshots should be the same");
+
+        if (initWithMask) {
+          SimpleTest.finish();
+        } else {
+          runTest(true);
+        }
+      }
+    }
+  }
+
+  var offscreenCanvas = htmlCanvas.transferControlToOffscreen();
+
+  worker.postMessage({test: 'webgl_fallback', canvas: offscreenCanvas}, [offscreenCanvas]);
+}
+
+SpecialPowers.pushPrefEnv({'set': [
+  ['gfx.offscreencanvas.enabled', true],
+  ['webgl.force-enabled', true],
+]}, runTest.bind(false));
+
+</script>
+</body>
+</html>
