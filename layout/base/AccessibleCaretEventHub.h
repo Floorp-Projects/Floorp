@@ -94,7 +94,8 @@ protected:
 #define MOZ_IMPL_STATE_CLASS_GETTER(aClassName)                                \
   AccessibleCaretEventHub::State* AccessibleCaretEventHub::aClassName()        \
   {                                                                            \
-    return AccessibleCaretEventHub::aClassName::Singleton();                   \
+    static class aClassName singleton;                                         \
+    return &singleton;                                                         \
   }
 
   // Concrete state getters
@@ -169,14 +170,6 @@ protected:
 class AccessibleCaretEventHub::State
 {
 public:
-#define NS_IMPL_STATE_UTILITIES(aClassName)                                    \
-  virtual const char* Name() const override { return #aClassName; }            \
-  static aClassName* Singleton()                                               \
-  {                                                                            \
-    static aClassName singleton;                                               \
-    return &singleton;                                                         \
-  }
-
   virtual const char* Name() const { return ""; }
 
   virtual nsEventStatus OnPress(AccessibleCaretEventHub* aContext,
