@@ -2011,7 +2011,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
           }
 
           :root {
-            --tab-toolbar-navbar-overlap: 0;
+            --tab-toolbar-navbar-overlap: 0px;
           }
 
           #nav-bar {
