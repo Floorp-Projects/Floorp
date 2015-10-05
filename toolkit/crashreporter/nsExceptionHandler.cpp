@@ -3089,8 +3089,8 @@ TakeMinidumpForChild(uint32_t childPid, nsIFile** dump, uint32_t* aSequence)
   if (aSequence) {
     *aSequence = pd->sequence;
   }
-  
-  pidToMinidump->RemoveEntry(childPid);
+
+  pidToMinidump->RemoveEntry(pd);
 
   return !!*dump;
 }

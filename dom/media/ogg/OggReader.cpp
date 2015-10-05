@@ -470,8 +470,6 @@ nsresult OggReader::ReadMetadata(MediaInfo* aInfo,
   SetupMediaTracksInfo(serials);
 
   if (HasAudio() || HasVideo()) {
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-
     if (mInfo.mMetadataDuration.isNothing() &&
         !mDecoder->IsOggDecoderShutdown() &&
         mResource.GetLength() >= 0) {
@@ -481,11 +479,7 @@ nsresult OggReader::ReadMetadata(MediaInfo* aInfo,
 
       NS_ASSERTION(length > 0, "Must have a content length to get end time");
 
-      int64_t endTime = 0;
-      {
-        ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-        endTime = RangeEndTime(length);
-      }
+      int64_t endTime = RangeEndTime(length);
       if (endTime != -1) {
         mInfo.mUnadjustedMetadataEndTime.emplace(TimeUnit::FromMicroseconds(endTime));
         LOG(LogLevel::Debug, ("Got Ogg duration from seeking to end %lld", endTime));

@@ -150,17 +150,11 @@ void MessagePumpForUI::PumpOutPendingPaintMessages() {
   // to get the job done.  Actual common max is 4 peeks, but we'll be a little
   // safe here.
   const int kMaxPeekCount = 20;
-  bool win2k = win_util::GetWinVersion() <= win_util::WINVERSION_2000;
   int peek_count;
   for (peek_count = 0; peek_count < kMaxPeekCount; ++peek_count) {
     MSG msg;
-    if (win2k) {
-      if (!PeekMessage(&msg, NULL, WM_PAINT, WM_PAINT, PM_REMOVE))
-        break;
-    } else {
-      if (!PeekMessage(&msg, NULL, 0, 0, PM_REMOVE | PM_QS_PAINT))
-        break;
-    }
+    if (!PeekMessage(&msg, NULL, 0, 0, PM_REMOVE | PM_QS_PAINT))
+      break;
     ProcessMessageHelper(msg);
     if (state_->should_quit)  // Handle WM_QUIT.
       break;
