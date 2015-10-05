@@ -1268,6 +1268,7 @@ nsDocShell::LoadURI(nsIURI* aURI,
 
   nsCOMPtr<nsIURI> referrer;
   nsCOMPtr<nsIURI> originalURI;
+  bool loadReplace = false;
   nsCOMPtr<nsIInputStream> postStream;
   nsCOMPtr<nsIInputStream> headersStream;
   nsCOMPtr<nsISupports> owner;
@@ -1295,7 +1296,7 @@ nsDocShell::LoadURI(nsIURI* aURI,
   if (aLoadInfo) {
     aLoadInfo->GetReferrer(getter_AddRefs(referrer));
     aLoadInfo->GetOriginalURI(getter_AddRefs(originalURI));
-
+    aLoadInfo->GetLoadReplace(&loadReplace);
     nsDocShellInfoLoadType lt = nsIDocShellLoadInfo::loadNormal;
     aLoadInfo->GetLoadType(&lt);
     // Get the appropriate loadType from nsIDocShellLoadInfo type
@@ -1550,6 +1551,7 @@ nsDocShell::LoadURI(nsIURI* aURI,
 
   return InternalLoad(aURI,
                       originalURI,
+                      loadReplace,
                       referrer,
                       referrerPolicy,
                       owner,
@@ -5215,7 +5217,8 @@ nsDocShell::LoadErrorPage(nsIURI* aURI, const char16_t* aURL,
   rv = NS_NewURI(getter_AddRefs(errorPageURI), errorPageUrl);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return InternalLoad(errorPageURI, nullptr, nullptr, mozilla::net::RP_Default,
+  return InternalLoad(errorPageURI, nullptr, false, nullptr,
+                      mozilla::net::RP_Default,
                       nullptr, INTERNAL_LOAD_FLAGS_INHERIT_OWNER, nullptr,
                       nullptr, NullString(), nullptr, nullptr, LOAD_ERROR_PAGE,
                       nullptr, true, NullString(), this, nullptr, nullptr,
@@ -5266,6 +5269,7 @@ nsDocShell::Reload(uint32_t aReloadFlags)
     nsAutoString contentTypeHint;
     nsCOMPtr<nsIURI> baseURI;
     nsCOMPtr<nsIURI> originalURI;
+    bool loadReplace = false;
     if (doc) {
       principal = doc->NodePrincipal();
       doc->GetContentType(contentTypeHint);
@@ -5277,15 +5281,19 @@ nsDocShell::Reload(uint32_t aReloadFlags)
       }
       nsCOMPtr<nsIChannel> chan = doc->GetChannel();
       if (chan) {
+        uint32_t loadFlags;
+        chan->GetLoadFlags(&loadFlags);
+        loadReplace = loadFlags & nsIChannel::LOAD_REPLACE;
         nsCOMPtr<nsIHttpChannel> httpChan(do_QueryInterface(chan));
         if (httpChan) {
           httpChan->GetOriginalURI(getter_AddRefs(originalURI));
         }
-      } 
+      }
     }
 
     rv = InternalLoad(mCurrentURI,
                       originalURI,
+                      loadReplace,
                       mReferrerURI,
                       mReferrerPolicy,
                       principal,
@@ -9317,7 +9325,8 @@ nsDocShell::CopyFavicon(nsIURI* aOldURI,
 class InternalLoadEvent : public nsRunnable
 {
 public:
-  InternalLoadEvent(nsDocShell* aDocShell, nsIURI* aURI, nsIURI* aOriginalURI,
+  InternalLoadEvent(nsDocShell* aDocShell, nsIURI* aURI,
+                    nsIURI* aOriginalURI, bool aLoadReplace,
                     nsIURI* aReferrer, uint32_t aReferrerPolicy,
                     nsISupports* aOwner, uint32_t aFlags,
                     const char* aTypeHint, nsIInputStream* aPostData,
@@ -9329,6 +9338,7 @@ public:
     , mDocShell(aDocShell)
     , mURI(aURI)
     , mOriginalURI(aOriginalURI)
+    , mLoadReplace(aLoadReplace)
     , mReferrer(aReferrer)
     , mReferrerPolicy(aReferrerPolicy)
     , mOwner(aOwner)
@@ -9351,6 +9361,7 @@ public:
   Run()
   {
     return mDocShell->InternalLoad(mURI, mOriginalURI,
+                                   mLoadReplace,
                                    mReferrer,
                                    mReferrerPolicy,
                                    mOwner, mFlags,
@@ -9370,6 +9381,7 @@ private:
   nsRefPtr<nsDocShell> mDocShell;
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIURI> mOriginalURI;
+  bool mLoadReplace;
   nsCOMPtr<nsIURI> mReferrer;
   uint32_t mReferrerPolicy;
   nsCOMPtr<nsISupports> mOwner;
@@ -9414,6 +9426,7 @@ nsDocShell::CreatePrincipalFromReferrer(nsIURI* aReferrer,
 NS_IMETHODIMP
 nsDocShell::InternalLoad(nsIURI* aURI,
                          nsIURI* aOriginalURI,
+                         bool aLoadReplace,
                          nsIURI* aReferrer,
                          uint32_t aReferrerPolicy,
                          nsISupports* aOwner,
@@ -9676,6 +9689,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
     if (NS_SUCCEEDED(rv) && targetDocShell) {
       rv = targetDocShell->InternalLoad(aURI,
                                         aOriginalURI,
+                                        aLoadReplace,
                                         aReferrer,
                                         aReferrerPolicy,
                                         owner,
@@ -9757,8 +9771,8 @@ nsDocShell::InternalLoad(nsIURI* aURI,
 
       // Do this asynchronously
       nsCOMPtr<nsIRunnable> ev =
-        new InternalLoadEvent(this, aURI, aOriginalURI, aReferrer,
-                              aReferrerPolicy, aOwner, aFlags,
+        new InternalLoadEvent(this, aURI, aOriginalURI, aLoadReplace,
+                              aReferrer, aReferrerPolicy, aOwner, aFlags,
                               aTypeHint, aPostData, aHeadersData,
                               aLoadType, aSHEntry, aFirstParty, aSrcdoc,
                               aSourceDocShell, aBaseURI);
@@ -10238,7 +10252,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
                         nsINetworkPredictor::PREDICT_LOAD, this, nullptr);
 
   nsCOMPtr<nsIRequest> req;
-  rv = DoURILoad(aURI, aOriginalURI, aReferrer,
+  rv = DoURILoad(aURI, aOriginalURI, aLoadReplace, aReferrer,
                  !(aFlags & INTERNAL_LOAD_FLAGS_DONT_SEND_REFERRER),
                  aReferrerPolicy,
                  owner, aTypeHint, aFileName, aPostData, aHeadersData,
@@ -10313,6 +10327,7 @@ nsDocShell::GetInheritedPrincipal(bool aConsiderCurrentDocument)
 nsresult
 nsDocShell::DoURILoad(nsIURI* aURI,
                       nsIURI* aOriginalURI,
+                      bool aLoadReplace,
                       nsIURI* aReferrerURI,
                       bool aSendReferrer,
                       uint32_t aReferrerPolicy,
@@ -10549,6 +10564,12 @@ nsDocShell::DoURILoad(nsIURI* aURI,
 
   if (aOriginalURI) {
     channel->SetOriginalURI(aOriginalURI);
+    if (aLoadReplace) {
+      uint32_t loadFlags;
+      channel->GetLoadFlags(&loadFlags);
+      NS_ENSURE_SUCCESS(rv, rv);
+      channel->SetLoadFlags(loadFlags | nsIChannel::LOAD_REPLACE);
+    }
   } else {
     channel->SetOriginalURI(aURI);
   }
@@ -11531,6 +11552,7 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
     newSHEntry = mOSHE;
     newSHEntry->SetURI(newURI);
     newSHEntry->SetOriginalURI(newURI);
+    newSHEntry->SetLoadReplace(false);
   }
 
   // Step 4: Modify new/original session history entry and clear its POST
@@ -11720,6 +11742,7 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
   // Get the post data & referrer
   nsCOMPtr<nsIInputStream> inputStream;
   nsCOMPtr<nsIURI> originalURI;
+  bool loadReplace = false;
   nsCOMPtr<nsIURI> referrerURI;
   uint32_t referrerPolicy = mozilla::net::RP_Default;
   nsCOMPtr<nsISupports> cacheKey;
@@ -11748,6 +11771,9 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
         uploadChannel->GetUploadStream(getter_AddRefs(inputStream));
       }
       httpChannel->GetOriginalURI(getter_AddRefs(originalURI));
+      uint32_t loadFlags;
+      aChannel->GetLoadFlags(&loadFlags);
+      loadReplace = loadFlags & nsIChannel::LOAD_REPLACE;
       httpChannel->GetReferrer(getter_AddRefs(referrerURI));
       httpChannel->GetReferrerPolicy(&referrerPolicy);
 
@@ -11782,6 +11808,7 @@ nsDocShell::AddToSessionHistory(nsIURI* aURI, nsIChannel* aChannel,
                 mDynamicallyCreated);
 
   entry->SetOriginalURI(originalURI);
+  entry->SetLoadReplace(loadReplace);
   entry->SetReferrerURI(referrerURI);
   entry->SetReferrerPolicy(referrerPolicy);
   nsCOMPtr<nsIInputStreamChannel> inStrmChan = do_QueryInterface(aChannel);
@@ -11883,6 +11910,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType)
 
   nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsIURI> originalURI;
+  bool loadReplace = false;
   nsCOMPtr<nsIInputStream> postData;
   nsCOMPtr<nsIURI> referrerURI;
   uint32_t referrerPolicy;
@@ -11893,6 +11921,8 @@ nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType)
 
   NS_ENSURE_SUCCESS(aEntry->GetURI(getter_AddRefs(uri)), NS_ERROR_FAILURE);
   NS_ENSURE_SUCCESS(aEntry->GetOriginalURI(getter_AddRefs(originalURI)),
+                    NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(aEntry->GetLoadReplace(&loadReplace),
                     NS_ERROR_FAILURE);
   NS_ENSURE_SUCCESS(aEntry->GetReferrerURI(getter_AddRefs(referrerURI)),
                     NS_ERROR_FAILURE);
@@ -11975,6 +12005,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, uint32_t aLoadType)
   // first created. bug 947716 has been created to address this issue.
   rv = InternalLoad(uri,
                     originalURI,
+                    loadReplace,
                     referrerURI,
                     referrerPolicy,
                     owner,
@@ -13434,6 +13465,7 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
 
   nsresult rv = InternalLoad(clonedURI,                 // New URI
                              nullptr,                   // Original URI
+                             false,                     // LoadReplace
                              referer,                   // Referer URI
                              refererPolicy,             // Referer policy
                              aContent->NodePrincipal(), // Owner is our node's
