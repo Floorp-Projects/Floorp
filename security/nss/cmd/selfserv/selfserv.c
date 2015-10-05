@@ -65,7 +65,7 @@ static const char inheritableSockName[] = { "SELFSERV_LISTEN_SOCKET" };
 #define MAX_BULK_TEST     1048576 /* 1 MB */
 static PRBool testBulk;
 static PRUint32 testBulkSize       = DEFAULT_BULK_TEST;
-static PRInt32 testBulkTotal;
+static PRUint32 testBulkTotal;
 static char* testBulkBuf;
 static PRDescIdentity log_layer_id = PR_INVALID_IO_LAYER;
 static PRFileDesc *loggingFD;
@@ -74,10 +74,10 @@ static PRIOMethods loggingMethods;
 static PRBool logStats;
 static PRBool loggingLayer;
 static int logPeriod = 30;
-static PRInt32 loggerOps;
-static PRInt32 loggerBytes;
-static PRInt32 loggerBytesTCP;
-static PRInt32 bulkSentChunks;
+static PRUint32 loggerOps;
+static PRUint32 loggerBytes;
+static PRUint32 loggerBytesTCP;
+static PRUint32 bulkSentChunks;
 static enum ocspStaplingModeEnum {
     osm_disabled,  /* server doesn't support stapling */
     osm_good,      /* supply a signed good status */
@@ -428,11 +428,10 @@ printSecurityInfo(PRFileDesc *fd)
 	       suite.macBits, suite.macAlgorithmName);
 	    FPRINTF(stderr, 
 	    "selfserv: Server Auth: %d-bit %s, Key Exchange: %d-bit %s\n"
-            "          Compression: %s, Extended Master Secret: %s\n",
+	    "          Compression: %s\n",
 	       channel.authKeyBits, suite.authAlgorithmName,
 	       channel.keaKeyBits,  suite.keaTypeName,
-               channel.compressionMethodName,
-               channel.extendedMasterSecretUsed ? "Yes": "No");
+	       channel.compressionMethodName);
     	}
     }
     if (verbose) {
@@ -503,8 +502,8 @@ mySSLSNISocketConfig(PRFileDesc *fd, const SECItem *sniNameArr,
 
     pwdata = SSL_RevealPinArg(fd);
 
-    for (;current && (PRUint32)i < sniNameArrSize;i++) {
-        unsigned int j = 0;
+    for (;current && i < sniNameArrSize;i++) {
+        int j = 0;
         for (;j < MAX_VIRT_SERVER_NAME_ARRAY_INDEX && nameArr[j];j++) {
             if (!PORT_Strncmp(nameArr[j],
                               (const char *)current[i].data,
@@ -752,8 +751,8 @@ logger(void *arg)
     PRIntervalTime period;
     PRIntervalTime previousTime;
     PRIntervalTime latestTime;
-    PRInt32 previousOps;
-    PRInt32 ops;
+    PRUint32 previousOps;
+    PRUint32 ops;
     PRIntervalTime logPeriodTicks = PR_TicksPerSecond();
     PRFloat64 secondsPerTick = 1.0 / (PRFloat64)logPeriodTicks;
     int iterations = 0;
@@ -772,7 +771,7 @@ logger(void *arg)
          */
         PR_Sleep(logPeriodTicks);
         secondsElapsed++;
-        totalPeriodBytes += PR_ATOMIC_SET(&loggerBytes, 0);
+        totalPeriodBytes +=  PR_ATOMIC_SET(&loggerBytes, 0);
         totalPeriodBytesTCP += PR_ATOMIC_SET(&loggerBytesTCP, 0);
         if (secondsElapsed != logPeriod) {
             continue;
@@ -838,8 +837,6 @@ PRBool testbypass      = PR_FALSE;
 PRBool enableSessionTickets = PR_FALSE;
 PRBool enableCompression    = PR_FALSE;
 PRBool failedToNegotiateName  = PR_FALSE;
-PRBool enableExtendedMasterSecret = PR_FALSE;
-
 static char  *virtServerNameArray[MAX_VIRT_SERVER_NAME_ARRAY_INDEX];
 static int                  virtServerNameIndex = 1;
 
@@ -1132,7 +1129,7 @@ makeSignedOCSPResponse(PLArenaPool *arena, ocspStaplingModeType osm,
     SECItemArray *result = NULL;
     SECItem *ocspResponse = NULL;
     CERTOCSPSingleResponse **singleResponses;
-    CERTOCSPSingleResponse *sr = NULL;
+    CERTOCSPSingleResponse *sr;
     CERTOCSPCertID *cid = NULL;
     CERTCertificate *ca;
     PRTime now = PR_Now();
@@ -1148,7 +1145,7 @@ makeSignedOCSPResponse(PLArenaPool *arena, ocspStaplingModeType osm,
     if (!cid)
 	errExit("cannot created cid");
 
-    nextUpdate = now + (PRTime)60*60*24 * PR_USEC_PER_SEC; /* plus 1 day */
+    nextUpdate = now + 60*60*24 * PR_USEC_PER_SEC; /* plus 1 day */
 
     switch (osm) {
 	case osm_good:
@@ -1163,7 +1160,7 @@ makeSignedOCSPResponse(PLArenaPool *arena, ocspStaplingModeType osm,
 	case osm_revoked:
 	    sr = CERT_CreateOCSPSingleResponseRevoked(arena, cid, now,
 		&nextUpdate,
-		now - (PRTime)60*60*24 * PR_USEC_PER_SEC, /* minus 1 day */
+		now - 60*60*24 * PR_USEC_PER_SEC, /* minus 1 day */
 		NULL);
 	    break;
 	default:
@@ -1945,13 +1942,6 @@ server_main(
         }
     }
 
-    if  (enableExtendedMasterSecret) {
-        rv = SSL_OptionSet(model_sock, SSL_ENABLE_EXTENDED_MASTER_SECRET, PR_TRUE);
-	if (rv != SECSuccess) {
-	    errExit("error enabling extended master secret ");
-	}
-    }
-
     for (kea = kt_rsa; kea < kt_kea_size; kea++) {
 	if (cert[kea] != NULL) {
 	    secStatus = SSL_ConfigSecureServer(model_sock, 
@@ -2228,7 +2218,7 @@ main(int argc, char **argv)
     ** numbers, then capital letters, then lower case, alphabetical. 
     */
     optstate = PL_CreateOptState(argc, argv, 
-        "2:A:BC:DEGH:L:M:NP:RS:T:U:V:W:Ya:bc:d:e:f:g:hi:jk:lmn:op:qrst:uvw:xyz");
+        "2:A:BC:DEH:L:M:NP:RS:T:U:V:W:Ya:bc:d:e:f:g:hi:jk:lmn:op:qrst:uvw:xyz");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	++optionsFound;
 	switch(optstate->option) {
@@ -2243,8 +2233,6 @@ main(int argc, char **argv)
 	case 'D': noDelay = PR_TRUE; break;
 	case 'E': disableStepDown = PR_TRUE; break;
 	case 'H': configureDHE = (PORT_Atoi(optstate->value) != 0); break;
-
-        case 'G': enableExtendedMasterSecret = PR_TRUE; break;
 
 	case 'I': /* reserved for OCSP multi-stapling */ break;
 

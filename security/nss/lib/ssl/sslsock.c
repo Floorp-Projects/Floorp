@@ -85,7 +85,6 @@ static sslOptions ssl_defaults = {
     PR_TRUE,    /* reuseServerECDHEKey */
     PR_FALSE,   /* enableFallbackSCSV */
     PR_TRUE,    /* enableServerDhe */
-    PR_FALSE    /* enableExtendedMS    */
 };
 
 /*
@@ -227,10 +226,6 @@ ssl_DupSocket(sslSocket *os)
         PORT_Memcpy(ss->ssl3.dtlsSRTPCiphers, os->ssl3.dtlsSRTPCiphers,
                     sizeof(PRUint16) * os->ssl3.dtlsSRTPCipherCount);
         ss->ssl3.dtlsSRTPCipherCount = os->ssl3.dtlsSRTPCipherCount;
-        PORT_Memcpy(ss->ssl3.signatureAlgorithms, os->ssl3.signatureAlgorithms,
-                    sizeof(ss->ssl3.signatureAlgorithms[0]) *
-                    os->ssl3.signatureAlgorithmCount);
-        ss->ssl3.signatureAlgorithmCount = os->ssl3.signatureAlgorithmCount;
 
         ss->ssl3.dheWeakGroupEnabled = os->ssl3.dheWeakGroupEnabled;
         ss->ssl3.numDHEGroups = os->ssl3.numDHEGroups;
@@ -414,6 +409,7 @@ ssl_DestroySocketContents(sslSocket *ss)
         ss->dheKeyPair = NULL;
     }
     SECITEM_FreeItem(&ss->opt.nextProtoNego, PR_FALSE);
+    PORT_Assert(!ss->xtnData.sniNameArr);
     if (ss->xtnData.sniNameArr) {
         PORT_Free(ss->xtnData.sniNameArr);
         ss->xtnData.sniNameArr = NULL;
@@ -826,10 +822,6 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
         ss->opt.enableServerDhe = on;
         break;
 
-      case SSL_ENABLE_EXTENDED_MASTER_SECRET:
-        ss->opt.enableExtendedMS = on;
-        break;
-
       default:
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         rv = SECFailure;
@@ -906,8 +898,6 @@ SSL_OptionGet(PRFileDesc *fd, PRInt32 which, PRBool *pOn)
                                   on = ss->opt.reuseServerECDHEKey; break;
     case SSL_ENABLE_FALLBACK_SCSV: on = ss->opt.enableFallbackSCSV; break;
     case SSL_ENABLE_SERVER_DHE:   on = ss->opt.enableServerDhe; break;
-    case SSL_ENABLE_EXTENDED_MASTER_SECRET:
-                                  on = ss->opt.enableExtendedMS; break;
 
     default:
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -979,9 +969,6 @@ SSL_OptionGetDefault(PRInt32 which, PRBool *pOn)
        break;
     case SSL_ENABLE_SERVER_DHE:
        on = ssl_defaults.enableServerDhe;
-       break;
-    case SSL_ENABLE_EXTENDED_MASTER_SECRET:
-       on = ssl_defaults.enableExtendedMS;
        break;
 
     default:
@@ -1168,10 +1155,6 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
 
       case SSL_ENABLE_SERVER_DHE:
         ssl_defaults.enableServerDhe = on;
-        break;
-
-      case SSL_ENABLE_EXTENDED_MASTER_SECRET:
-        ssl_defaults.enableExtendedMS = on;
         break;
 
       default:
@@ -1440,7 +1423,7 @@ static PQGParams *gWeakParamsPQG;
 static ssl3DHParams *gWeakDHParams;
 
 static PRStatus
-ssl3_CreateWeakDHParams(void)
+ssl3_CreateWeakDHParams()
 {
     PQGVerify *vfy;
     SECStatus rv, passed;
@@ -1887,10 +1870,6 @@ SSL_ReconfigFD(PRFileDesc *model, PRFileDesc *fd)
     PORT_Memcpy(ss->ssl3.dtlsSRTPCiphers, sm->ssl3.dtlsSRTPCiphers,
                 sizeof(PRUint16) * sm->ssl3.dtlsSRTPCipherCount);
     ss->ssl3.dtlsSRTPCipherCount = sm->ssl3.dtlsSRTPCipherCount;
-    PORT_Memcpy(ss->ssl3.signatureAlgorithms, sm->ssl3.signatureAlgorithms,
-                sizeof(ss->ssl3.signatureAlgorithms[0]) *
-                sm->ssl3.signatureAlgorithmCount);
-    ss->ssl3.signatureAlgorithmCount = sm->ssl3.signatureAlgorithmCount;
 
     if (!ss->opt.useSecurity) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);

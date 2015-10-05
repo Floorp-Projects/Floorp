@@ -486,6 +486,9 @@ CONST_OID aes256_KEY_WRAP[]			= { AES, 45 };
 CONST_OID camellia128_CBC[]			= { CAMELLIA_ENCRYPT_OID, 2};
 CONST_OID camellia192_CBC[]			= { CAMELLIA_ENCRYPT_OID, 3};
 CONST_OID camellia256_CBC[]			= { CAMELLIA_ENCRYPT_OID, 4};
+CONST_OID camellia128_KEY_WRAP[]		= { CAMELLIA_WRAP_OID, 2};
+CONST_OID camellia192_KEY_WRAP[]		= { CAMELLIA_WRAP_OID, 3};
+CONST_OID camellia256_KEY_WRAP[]		= { CAMELLIA_WRAP_OID, 4};
 
 CONST_OID sha256[]                              = { SHAXXX, 1 };
 CONST_OID sha384[]                              = { SHAXXX, 2 };
@@ -1869,7 +1872,7 @@ static PLHashTable *oidmechhash = NULL;
 static PLHashNumber
 secoid_HashNumber(const void *key)
 {
-    return (PLHashNumber)((char *)key - (char *)NULL);
+    return (PLHashNumber) key;
 }
 
 static void
@@ -1910,9 +1913,9 @@ SECOID_Init(void)
     const SECOidData *oid;
     int i;
     char * envVal;
+    volatile char c; /* force a reference that won't get optimized away */
 
-#define NSS_VERSION_VARIABLE __nss_util_version
-#include "verref.h"
+    c = __nss_util_version[0];
 
     if (oidhash) {
 	return SECSuccess; /* already initialized */

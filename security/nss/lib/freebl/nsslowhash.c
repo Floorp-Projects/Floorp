@@ -285,9 +285,14 @@ static NSSLOWInitContext dummyContext = { 0 };
 NSSLOWInitContext *
 NSSLOW_Init(void)
 {
+    SECStatus rv;
     CK_RV crv;
 #ifdef FREEBL_NO_DEPEND
-    (void)FREEBL_InitStubs();
+    PRBool nsprAvailable = PR_FALSE;
+
+
+    rv = FREEBL_InitStubs();
+    nsprAvailable = (rv ==  SECSuccess ) ? PR_TRUE : PR_FALSE;
 #endif
 
     if (post_failed) {

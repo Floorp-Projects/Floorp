@@ -59,9 +59,12 @@ sec_pkcs7_encoder_start_encrypt (SEC_PKCS7ContentInfo *cinfo,
     SECKEYPublicKey *publickey = NULL;
     SECKEYPrivateKey *ourPrivKey = NULL;
     PK11SymKey  *bulkkey;
-    void *mark;
+    void *mark, *wincx;
     int i;
     PLArenaPool *arena = NULL;
+
+    /* Get the context in case we need it below. */
+    wincx = cinfo->pwfn_arg;
 
     kind = SEC_PKCS7ContentType (cinfo);
     switch (kind) {

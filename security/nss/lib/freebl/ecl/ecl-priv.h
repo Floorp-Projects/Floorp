@@ -29,39 +29,40 @@
 	((i) >= mpl_significant_bits((a))) ? 0 : mpl_get_bit((a), (i))
 
 #if !defined(MP_NO_MP_WORD) && !defined(MP_NO_ADD_WORD)
-#define MP_ADD_CARRY(a1, a2, s, carry)   \
+#define MP_ADD_CARRY(a1, a2, s, cin, cout)   \
     { mp_word w; \
-    w = ((mp_word)carry) + (a1) + (a2); \
+    w = ((mp_word)(cin)) + (a1) + (a2); \
     s = ACCUM(w); \
-    carry = CARRYOUT(w); }
+    cout = CARRYOUT(w); }
 
-#define MP_SUB_BORROW(a1, a2, s, borrow)   \
+#define MP_SUB_BORROW(a1, a2, s, bin, bout)   \
     { mp_word w; \
-    w = ((mp_word)(a1)) - (a2) - borrow; \
+    w = ((mp_word)(a1)) - (a2) - (bin); \
     s = ACCUM(w); \
-    borrow = (w >> MP_DIGIT_BIT) & 1; }
+    bout = (w >> MP_DIGIT_BIT) & 1; }
 
 #else
 /* NOTE, 
- * carry and borrow are both read and written.
+ * cin and cout could be the same variable.
+ * bin and bout could be the same variable.
  * a1 or a2 and s could be the same variable.
  * don't trash those outputs until their respective inputs have
  * been read. */
-#define MP_ADD_CARRY(a1, a2, s, carry)   \
+#define MP_ADD_CARRY(a1, a2, s, cin, cout)   \
     { mp_digit tmp,sum; \
     tmp = (a1); \
     sum = tmp + (a2); \
     tmp = (sum < tmp);                     /* detect overflow */ \
-    s = sum += carry; \
-    carry = tmp + (sum < carry); }
+    s = sum += (cin); \
+    cout = tmp + (sum < (cin)); }
 
-#define MP_SUB_BORROW(a1, a2, s, borrow)   \
+#define MP_SUB_BORROW(a1, a2, s, bin, bout)   \
     { mp_digit tmp; \
     tmp = (a1); \
     s = tmp - (a2); \
     tmp = (s > tmp);                    /* detect borrow */ \
-    if (borrow && !s--) tmp++;	\
-    borrow = tmp; }
+    if ((bin) && !s--) tmp++;	\
+    bout = tmp; }
 #endif
 
 

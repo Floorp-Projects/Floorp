@@ -24,9 +24,6 @@ static const std::string kTlsModesAllArr[] = {"TLS", "DTLS"};
 static const uint16_t kTlsV10Arr[] = {SSL_LIBRARY_VERSION_TLS_1_0};
 ::testing::internal::ParamGenerator<uint16_t>
   TlsConnectTestBase::kTlsV10 = ::testing::ValuesIn(kTlsV10Arr);
-static const uint16_t kTlsV11Arr[] = {SSL_LIBRARY_VERSION_TLS_1_1};
-::testing::internal::ParamGenerator<uint16_t>
-  TlsConnectTestBase::kTlsV11 = ::testing::ValuesIn(kTlsV11Arr);
 static const uint16_t kTlsV11V12Arr[] = {SSL_LIBRARY_VERSION_TLS_1_1,
                                          SSL_LIBRARY_VERSION_TLS_1_2};
 ::testing::internal::ParamGenerator<uint16_t>
@@ -58,13 +55,13 @@ TlsConnectTestBase::TlsConnectTestBase(Mode mode, uint16_t version)
         client_(new TlsAgent("client", TlsAgent::CLIENT, mode_, ssl_kea_rsa)),
         server_(new TlsAgent("server", TlsAgent::SERVER, mode_, ssl_kea_rsa)),
         version_(version),
-        expected_resumption_mode_(RESUME_NONE),
-        session_ids_(),
-        expect_extended_master_secret_(false) {
+        session_ids_() {
   std::cerr << "Version: " << mode_ << " " << VersionString(version_) << std::endl;
 }
 
 TlsConnectTestBase::~TlsConnectTestBase() {
+  delete client_;
+  delete server_;
 }
 
 void TlsConnectTestBase::SetUp() {
@@ -79,8 +76,8 @@ void TlsConnectTestBase::SetUp() {
 }
 
 void TlsConnectTestBase::TearDown() {
-  delete client_;
-  delete server_;
+  client_ = nullptr;
+  server_ = nullptr;
 
   SSL_ClearSessionCache();
   SSL_ShutdownServerSessionIDCache();
@@ -115,14 +112,7 @@ void TlsConnectTestBase::ResetRsa() {
 
 void TlsConnectTestBase::ResetEcdsa() {
   Reset("ecdsa", ssl_kea_ecdh);
-}
-
-void TlsConnectTestBase::ExpectResumption(SessionResumptionMode expected) {
-  expected_resumption_mode_ = expected;
-  if (expected != RESUME_NONE) {
-    client_->ExpectResumption();
-    server_->ExpectResumption();
-  }
+  EnableSomeEcdheCiphers();
 }
 
 void TlsConnectTestBase::EnsureTlsSetup() {
@@ -131,36 +121,28 @@ void TlsConnectTestBase::EnsureTlsSetup() {
 }
 
 void TlsConnectTestBase::Handshake() {
+  server_->StartConnect();
+  client_->StartConnect();
   client_->Handshake();
   server_->Handshake();
 
-  ASSERT_TRUE_WAIT((client_->state() != TlsAgent::STATE_CONNECTING) &&
-                   (server_->state() != TlsAgent::STATE_CONNECTING),
+  ASSERT_TRUE_WAIT((client_->state() != TlsAgent::CONNECTING) &&
+                   (server_->state() != TlsAgent::CONNECTING),
                    5000);
-}
 
-void TlsConnectTestBase::EnableExtendedMasterSecret() {
-  client_->EnableExtendedMasterSecret();
-  server_->EnableExtendedMasterSecret();
-  ExpectExtendedMasterSecret(true);
 }
 
 void TlsConnectTestBase::Connect() {
-  server_->StartConnect();
-  client_->StartConnect();
   Handshake();
-  CheckConnected();
-}
 
-void TlsConnectTestBase::CheckConnected() {
   // Check the version is as expected
   EXPECT_EQ(client_->version(), server_->version());
   EXPECT_EQ(std::min(client_->max_version(),
                      server_->max_version()),
             client_->version());
 
-  EXPECT_EQ(TlsAgent::STATE_CONNECTED, client_->state());
-  EXPECT_EQ(TlsAgent::STATE_CONNECTED, server_->state());
+  EXPECT_EQ(TlsAgent::CONNECTED, client_->state());
+  EXPECT_EQ(TlsAgent::CONNECTED, server_->state());
 
   int16_t cipher_suite1, cipher_suite2;
   bool ret = client_->cipher_suite(&cipher_suite1);
@@ -180,39 +162,23 @@ void TlsConnectTestBase::CheckConnected() {
   EXPECT_EQ(32U, sid_s1.size());
   EXPECT_EQ(sid_c1, sid_s1);
   session_ids_.push_back(sid_c1);
-
-  CheckResumption(expected_resumption_mode_);
-  // Check whether the extended master secret extension was negotiated.
-  CheckExtendedMasterSecret();
 }
 
 void TlsConnectTestBase::ConnectExpectFail() {
-  server_->StartConnect();
-  client_->StartConnect();
   Handshake();
 
-  ASSERT_EQ(TlsAgent::STATE_ERROR, client_->state());
-  ASSERT_EQ(TlsAgent::STATE_ERROR, server_->state());
+  ASSERT_EQ(TlsAgent::ERROR, client_->state());
+  ASSERT_EQ(TlsAgent::ERROR, server_->state());
 }
 
-void TlsConnectTestBase::SetExpectedVersion(uint16_t version) {
-  client_->SetExpectedVersion(version);
-  server_->SetExpectedVersion(version);
+void TlsConnectTestBase::EnableSomeEcdheCiphers() {
+  client_->EnableSomeEcdheCiphers();
+  server_->EnableSomeEcdheCiphers();
 }
 
 void TlsConnectTestBase::DisableDheCiphers() {
-  client_->DisableCiphersByKeyExchange(ssl_kea_dh);
-  server_->DisableCiphersByKeyExchange(ssl_kea_dh);
-}
-
-void TlsConnectTestBase::DisableEcdheCiphers() {
-  client_->DisableCiphersByKeyExchange(ssl_kea_ecdh);
-  server_->DisableCiphersByKeyExchange(ssl_kea_ecdh);
-}
-
-void TlsConnectTestBase::DisableDheAndEcdheCiphers() {
-  DisableDheCiphers();
-  DisableEcdheCiphers();
+  client_->DisableDheCiphers();
+  server_->DisableDheCiphers();
 }
 
 void TlsConnectTestBase::ConfigureSessionCache(SessionResumptionMode client,
@@ -257,39 +223,13 @@ void TlsConnectTestBase::EnableSrtp() {
   server_->EnableSrtp();
 }
 
-void TlsConnectTestBase::CheckSrtp() const {
+void TlsConnectTestBase::CheckSrtp() {
   client_->CheckSrtp();
   server_->CheckSrtp();
-}
-
-void TlsConnectTestBase::SendReceive() {
-  client_->SendData(50);
-  server_->SendData(50);
-  WAIT_(client_->received_bytes() == 50U &&
-        server_->received_bytes() == 50U, 2000);
-  ASSERT_EQ(50U, client_->received_bytes());
-  ASSERT_EQ(50U, server_->received_bytes());
-}
-
-void TlsConnectTestBase::ExpectExtendedMasterSecret(bool expected) {
-    expect_extended_master_secret_ = expected;
-}
-
-void TlsConnectTestBase::CheckExtendedMasterSecret() {
-  client_->CheckExtendedMasterSecret(expect_extended_master_secret_);
-  server_->CheckExtendedMasterSecret(expect_extended_master_secret_);
 }
 
 TlsConnectGeneric::TlsConnectGeneric()
   : TlsConnectTestBase(TlsConnectTestBase::ToMode(std::get<0>(GetParam())),
                        std::get<1>(GetParam())) {}
-
-TlsConnectPre12::TlsConnectPre12()
-  : TlsConnectTestBase(TlsConnectTestBase::ToMode(std::get<0>(GetParam())),
-                       std::get<1>(GetParam())) {}
-
-TlsConnectTls12::TlsConnectTls12()
-  : TlsConnectTestBase(TlsConnectTestBase::ToMode(GetParam()),
-                       SSL_LIBRARY_VERSION_TLS_1_2) {}
 
 } // namespace nss_test

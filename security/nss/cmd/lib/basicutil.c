@@ -684,7 +684,7 @@ static unsigned char nibble(char c) {
 SECStatus
 SECU_SECItemHexStringToBinary(SECItem* srcdest)
 {
-    unsigned int i;
+    int i;
 
     if (!srcdest) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);

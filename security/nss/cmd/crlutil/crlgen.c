@@ -545,7 +545,7 @@ crlgen_CreateReasonCode(PLArenaPool *arena, const char **dataArr,
 {
     SECItem *encodedItem;
     void *dummy;
-    void *mark = NULL;
+    void *mark;
     int code = 0;
 
     PORT_Assert(arena && dataArr);
@@ -583,9 +583,7 @@ crlgen_CreateReasonCode(PLArenaPool *arena, const char **dataArr,
     return encodedItem;
 
   loser:
-    if (mark) {
-        PORT_ArenaRelease (arena, mark);
-    }
+    PORT_ArenaRelease (arena, mark);
     return NULL;
 }
 
@@ -597,7 +595,7 @@ crlgen_CreateInvalidityDate(PLArenaPool *arena, const char **dataArr,
 {
     SECItem *encodedItem;
     int length = 0;
-    void *mark = NULL;
+    void *mark;
 
     PORT_Assert(arena && dataArr);
     if (!arena || !dataArr) {
@@ -626,9 +624,7 @@ crlgen_CreateInvalidityDate(PLArenaPool *arena, const char **dataArr,
     return encodedItem;
     
   loser:
-    if (mark) {
-        PORT_ArenaRelease(arena, mark);
-    }
+    PORT_ArenaRelease(arena, mark);
     return NULL;
 }
 
@@ -1083,12 +1079,15 @@ static SECStatus
 crlgen_RmCert(CRLGENGeneratorData *crlGenData, char *certId)
 {
     PRUint64 i = 0;
+    PLArenaPool *arena;
 
     PORT_Assert(crlGenData && certId);
     if (!crlGenData || !certId) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
+
+    arena = crlGenData->signCrl->arena;
 
     if (crlgen_SetNewRangeField(crlGenData, certId) == SECFailure &&
         certId) {

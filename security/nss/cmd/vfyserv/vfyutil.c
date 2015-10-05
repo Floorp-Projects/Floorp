@@ -603,7 +603,7 @@ void
 dumpCertChain(CERTCertificate *cert, SECCertUsage usage)
 {
     CERTCertificateList *certList;
-    unsigned int count = 0;
+    int count = 0;
 
     certList = CERT_CertChainFromCert(cert, usage, PR_TRUE);
     if (certList == NULL) {

@@ -476,7 +476,15 @@ lg_Close(SDB *sdb)
 static PLHashNumber
 lg_HashNumber(const void *key)
 {
-    return (PLHashNumber)((char *)key - (char *)NULL);
+    return (PLHashNumber) key;
+}
+
+PRIntn
+lg_CompareValues(const void *v1, const void *v2)
+{
+    PLHashNumber value1 = (PLHashNumber) v1;
+    PLHashNumber value2 = (PLHashNumber) v2;
+    return (value1 == value2);
 }
 
 /*
@@ -507,7 +515,7 @@ lg_init(SDB **pSdb, int flags, NSSLOWCERTCertDBHandle *certdbPtr,
     if (lgdb_p->dbLock == NULL) {
 	goto loser;
     }
-    lgdb_p->hashTable = PL_NewHashTable(64, lg_HashNumber, PL_CompareValues,
+    lgdb_p->hashTable = PL_NewHashTable(64, lg_HashNumber, lg_CompareValues,
 			SECITEM_HashCompare, NULL, 0);
     if (lgdb_p->hashTable == NULL) {
 	goto loser;
@@ -579,9 +587,9 @@ legacy_Open(const char *configdir, const char *certPrefix,
     CK_RV crv = CKR_OK;
     SECStatus rv;
     PRBool readOnly = (flags == SDB_RDONLY)? PR_TRUE: PR_FALSE;
+    volatile char c; /* force a reference that won't get optimized away */
 
-#define NSS_VERSION_VARIABLE __nss_dbm_version
-#include "verref.h"
+    c = __nss_dbm_version[0];
 
     rv = SECOID_Init();
     if (SECSuccess != rv) {
@@ -593,7 +601,7 @@ legacy_Open(const char *configdir, const char *certPrefix,
     if (certDB) *certDB = NULL;
 
     if (certDB) {
-	NSSLOWCERTCertDBHandle *certdbPtr = NULL;
+	NSSLOWCERTCertDBHandle *certdbPtr;
 
 	crv = lg_OpenCertDB(configdir, certPrefix, readOnly, &certdbPtr);
 	if (crv != CKR_OK) {

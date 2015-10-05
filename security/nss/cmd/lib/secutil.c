@@ -375,8 +375,7 @@ SECU_ChangePW2(PK11SlotInfo *slot, char *oldPass, char *newPass,
 		PR_fprintf(PR_STDERR, "Invalid password.\n");
 		PORT_Memset(oldpw, 0, PL_strlen(oldpw));
 		PORT_Free(oldpw);
-		rv = SECFailure;
-                goto done;
+		return SECFailure;
 	    }
 	} else
 	    break;
@@ -386,22 +385,20 @@ SECU_ChangePW2(PK11SlotInfo *slot, char *oldPass, char *newPass,
 
     newpw = secu_InitSlotPassword(slot, PR_FALSE, &newpwdata);
 
-    rv = PK11_ChangePW(slot, oldpw, newpw);
-    if (rv != SECSuccess) {
+    if (PK11_ChangePW(slot, oldpw, newpw) != SECSuccess) {
 	PR_fprintf(PR_STDERR, "Failed to change password.\n");
-    } else {
-        PR_fprintf(PR_STDOUT, "Password changed successfully.\n");
+	return SECFailure;
     }
 
     PORT_Memset(oldpw, 0, PL_strlen(oldpw));
     PORT_Free(oldpw);
 
+    PR_fprintf(PR_STDOUT, "Password changed successfully.\n");
+
 done:
-    if (newpw) {
-        PORT_Memset(newpw, 0, PL_strlen(newpw));
-        PORT_Free(newpw);
-    }
-    return rv;
+    PORT_Memset(newpw, 0, PL_strlen(newpw));
+    PORT_Free(newpw);
+    return SECSuccess;
 }
 
 struct matchobj {
@@ -1553,7 +1550,7 @@ SECU_PrintDumpDerIssuerAndSerial(FILE *out, SECItem *der, char *m,
     fprintf(out, "Serial DER as C source: \n{ %d, \"", c->serialNumber.len);
 
     {
-      unsigned int i;
+      int i;
       for (i=0; i < c->serialNumber.len; ++i) {
         unsigned char *chardata = (unsigned char*)(c->serialNumber.data);
         unsigned char c = *(chardata + i);
@@ -2420,6 +2417,7 @@ SECU_PrintCertificateBasicInfo(FILE *out, const SECItem *der, const char *m, int
     PLArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     CERTCertificate *c;
     int rv = SEC_ERROR_NO_MEMORY;
+    int iv;
     
     if (!arena)
 	return rv;
@@ -2745,7 +2743,7 @@ secu_PrintPKCS7Signed(FILE *out, SEC_PKCS7SignedData *src,
 	while ((aCert = src->rawCerts[iv++]) != NULL) {
 	    sprintf(om, "Certificate (%x)", iv);
 	    rv = SECU_PrintSignedData(out, aCert, om, level + 2, 
-				      (SECU_PPFunc)SECU_PrintCertificate);
+				      SECU_PrintCertificate);
 	    if (rv)
 		return rv;
 	}
@@ -2864,7 +2862,7 @@ secu_PrintPKCS7SignedAndEnveloped(FILE *out,
 	while ((aCert = src->rawCerts[iv++]) != NULL) {
 	    sprintf(om, "Certificate (%x)", iv);
 	    rv = SECU_PrintSignedData(out, aCert, om, level + 2, 
-				      (SECU_PPFunc)SECU_PrintCertificate);
+				      SECU_PrintCertificate);
 	    if (rv)
 		return rv;
 	}
@@ -3194,7 +3192,7 @@ SEC_PrintCertificateAndTrust(CERTCertificate *cert,
     data.len = cert->derCert.len;
 
     rv = SECU_PrintSignedData(stdout, &data, label, 0,
-			      (SECU_PPFunc)SECU_PrintCertificate);
+			      SECU_PrintCertificate);
     if (rv) {
 	return(SECFailure);
     }
@@ -3285,7 +3283,7 @@ SECU_displayVerifyLog(FILE *outfile, CERTVerifyLog *log,
 	    errstr = NULL;
 	    switch (node->error) {
 	    case SEC_ERROR_INADEQUATE_KEY_USAGE:
-		flags = (unsigned int)((char *)node->arg - (char *)NULL);
+		flags = (unsigned int)node->arg;
 		switch (flags) {
 		case KU_DIGITAL_SIGNATURE:
 		    errstr = "Cert cannot sign.";
@@ -3301,7 +3299,7 @@ SECU_displayVerifyLog(FILE *outfile, CERTVerifyLog *log,
 		    break;
 		}
 	    case SEC_ERROR_INADEQUATE_CERT_TYPE:
-		flags = (unsigned int)((char *)node->arg - (char *)NULL);
+		flags = (unsigned int)node->arg;
 		switch (flags) {
 		case NS_CERT_TYPE_SSL_CLIENT:
 		case NS_CERT_TYPE_SSL_SERVER:
