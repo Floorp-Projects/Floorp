@@ -2011,7 +2011,7 @@ History::NotifyVisited(nsIURI* aURI)
   }
 
   // All the registered nodes can now be removed for this URI.
-  mObservers.RemoveEntry(aURI);
+  mObservers.RemoveEntry(key);
   return NS_OK;
 }
 

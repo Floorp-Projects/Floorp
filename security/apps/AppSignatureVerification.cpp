@@ -811,7 +811,7 @@ OpenSignedAppFile(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
     }
 
     // Remove the item so we can check for leftover items later
-    items.RemoveEntry(entryFilename);
+    items.RemoveEntry(item);
   }
 
   // We verified that every entry that we require to be signed is signed. But,
@@ -1321,7 +1321,7 @@ CheckDirForUnsignedFiles(nsIFile* aDir,
       }
 
       // Remove the item so we can check for leftover items later
-      aItems.RemoveEntry(curName);
+      aItems.RemoveEntry(item);
     }
   }
   files->Close();

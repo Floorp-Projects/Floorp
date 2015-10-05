@@ -4984,9 +4984,13 @@ Parser<FullParseHandler>::exportDeclaration()
         switch (tt) {
           case TOK_FUNCTION:
             kid = functionStmt(YieldIsKeyword, AllowDefaultName);
+            if (!kid)
+                return null();
             break;
           case TOK_CLASS:
             kid = classDefinition(YieldIsKeyword, ClassStatement, AllowDefaultName);
+            if (!kid)
+                return null();
             break;
           default:
             tokenStream.ungetToken();
@@ -4995,14 +4999,12 @@ Parser<FullParseHandler>::exportDeclaration()
             if (!binding)
                 return null();
             kid = assignExpr(InAllowed, YieldIsKeyword);
-            if (kid) {
-                if (!MatchOrInsertSemicolonAfterExpression(tokenStream))
-                    return null();
-            }
+            if (!kid)
+                return null();
+            if (!MatchOrInsertSemicolonAfterExpression(tokenStream))
+                return null();
             break;
         }
-        if (!kid)
-            return null();
 
         return handler.newExportDefaultDeclaration(kid, binding, TokenPos(begin, pos().end));
       }
