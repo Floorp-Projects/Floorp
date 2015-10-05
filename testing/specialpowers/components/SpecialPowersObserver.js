@@ -93,6 +93,7 @@ SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
       this._messageManager.addMessageListener("SPStartupExtension", this);
       this._messageManager.addMessageListener("SPUnloadExtension", this);
       this._messageManager.addMessageListener("SPExtensionMessage", this);
+      this._messageManager.addMessageListener("SPCleanUpSTSData", this);
 
       this._messageManager.loadFrameScript(CHILD_LOGGER_SCRIPT, true);
       this._messageManager.loadFrameScript(CHILD_SCRIPT_API, true);
@@ -173,6 +174,7 @@ SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
       this._messageManager.removeMessageListener("SPStartupExtension", this);
       this._messageManager.removeMessageListener("SPUnloadExtension", this);
       this._messageManager.removeMessageListener("SPExtensionMessage", this);
+      this._messageManager.removeMessageListener("SPCleanUpSTSData", this);
 
       this._messageManager.removeDelayedFrameScript(CHILD_LOGGER_SCRIPT);
       this._messageManager.removeDelayedFrameScript(CHILD_SCRIPT_API);
