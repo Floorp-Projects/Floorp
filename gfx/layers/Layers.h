@@ -74,6 +74,7 @@ namespace layers {
 
 class Animation;
 class AnimationData;
+class AsyncCanvasRenderer;
 class AsyncPanZoomController;
 class ClientLayerManager;
 class Layer;
@@ -2273,15 +2274,17 @@ public:
     Data()
       : mBufferProvider(nullptr)
       , mGLContext(nullptr)
+      , mRenderer(nullptr)
       , mFrontbufferGLTex(0)
       , mSize(0,0)
       , mHasAlpha(false)
       , mIsGLAlphaPremult(true)
     { }
 
-    // One of these two must be specified for Canvas2D, but never both
+    // One of these three must be specified for Canvas2D, but never more than one
     PersistentBufferProvider* mBufferProvider; // A BufferProvider for the Canvas contents
     mozilla::gl::GLContext* mGLContext; // or this, for GL.
+    AsyncCanvasRenderer* mRenderer; // or this, for OffscreenCanvas
 
     // Frontbuffer override
     uint32_t mFrontbufferGLTex;
@@ -2397,16 +2400,14 @@ public:
     ComputeEffectiveTransformForMaskLayers(aTransformToSurface);
   }
 
+  bool GetIsAsyncRenderer() const
+  {
+    return !!mAsyncRenderer;
+  }
+
 protected:
-  CanvasLayer(LayerManager* aManager, void* aImplData)
-    : Layer(aManager, aImplData)
-    , mPreTransCallback(nullptr)
-    , mPreTransCallbackData(nullptr)
-    , mPostTransCallback(nullptr)
-    , mPostTransCallbackData(nullptr)
-    , mFilter(GraphicsFilter::FILTER_GOOD)
-    , mDirty(false)
-  {}
+  CanvasLayer(LayerManager* aManager, void* aImplData);
+  virtual ~CanvasLayer();
 
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
@@ -2428,6 +2429,7 @@ protected:
   DidTransactionCallback mPostTransCallback;
   void* mPostTransCallbackData;
   GraphicsFilter mFilter;
+  nsRefPtr<AsyncCanvasRenderer> mAsyncRenderer;
 
 private:
   /**
