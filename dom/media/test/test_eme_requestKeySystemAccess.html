@@ -202,12 +202,23 @@ var tests = [
     shouldPass: false,
   },
   {
-    name: 'MP4 video container with mp3 and h264 is unsupported',
+    name: 'MP4 video container type with an audio codec is unsupported',
     keySystem: CLEARKEY_ID,
     options: [
       {
         initDataType: 'cenc',
-        videoType: 'video/mp4; codecs="avc1.42E01E,mp3"',
+        videoType: 'video/mp4; codecs="mp3"',
+      }
+    ],
+    shouldPass: false,
+  },
+  {
+    name: 'MP4 audio container type with a video codec is unsupported',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        initDataType: 'cenc',
+        audioType: 'audio/mp4; codecs="avc1.42E01E"',
       }
     ],
     shouldPass: false,
@@ -218,7 +229,7 @@ var tests = [
     options: [
       {
         initDataType: 'cenc',
-        audioType: 'video/mp4; codecs="avc1.42E01E"',
+        videoType: 'video/mp4; codecs="avc1.42E01E"',
       }
     ],
     shouldPass: true,
@@ -235,7 +246,7 @@ var tests = [
     shouldPass: false,
   },
   {
-    name: 'MP4 video container with constrained baseline h.264 and AAC-LC',
+    name: 'MP4 video container with both audio and video codec type in videoType',
     keySystem: CLEARKEY_ID,
     options: [
       {
@@ -243,7 +254,7 @@ var tests = [
         videoType: 'video/mp4; codecs="avc1.42E01E,mp4a.40.2"',
       }
     ],
-    shouldPass: true,
+    shouldPass: false,
   },
   {
     name: 'MP4 audio and video type both specified',

@@ -792,7 +792,6 @@ var gEMETests = [
   },
   {
     name:"400x300 audio&video tracks, each with its key",
-    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
     tracks: [
       {
         name:"audio",
@@ -824,7 +823,6 @@ var gEMETests = [
   },
   {
     name:"640x480@624kbps audio&video tracks, each with its key",
-    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
     tracks: [
       {
         name:"audio",
@@ -856,7 +854,6 @@ var gEMETests = [
   },
   {
     name:"640x480@959kbps audio&video tracks, each with its key",
-    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
     tracks: [
       {
         name:"audio",
@@ -888,7 +885,6 @@ var gEMETests = [
   },
   {
     name:"640x480 then 400x300, same key (1st) per track",
-    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
     tracks: [
       {
         name:"audio",
@@ -921,7 +917,6 @@ var gEMETests = [
   },
   {
     name:"640x480 then 400x300, same key (2nd) per track",
-    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
     tracks: [
       {
         name:"audio",
@@ -954,7 +949,6 @@ var gEMETests = [
   },
   {
     name:"640x480 with 1st keys then 400x300 with 2nd keys",
-    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
     tracks: [
       {
         name:"audio",
@@ -988,7 +982,6 @@ var gEMETests = [
   },
   {
     name:"400x300 with 1st keys then 640x480 with 2nd keys",
-    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
     tracks: [
       {
         name:"audio",
@@ -1022,7 +1015,6 @@ var gEMETests = [
   },
   {
     name:"640x480@959kbps with 1st keys then 640x480@624kbps with 2nd keys",
-    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
     tracks: [
       {
         name:"audio",
@@ -1056,7 +1048,6 @@ var gEMETests = [
   },
   {
     name:"640x480@624kbps with 1st keys then 640x480@959kbps with 2nd keys",
-    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
     tracks: [
       {
         name:"audio",
@@ -1090,7 +1081,6 @@ var gEMETests = [
   },
   {
     name:"400x300 with presentation size 533x300",
-    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
     tracks: [
       {
         name:"audio",
@@ -1122,7 +1112,6 @@ var gEMETests = [
   },
   {
     name:"400x300 as-is then 400x300 presented as 533x300",
-    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
     tracks: [
       {
         name:"audio",
@@ -1156,7 +1145,6 @@ var gEMETests = [
   },
   {
     name:"400x225",
-    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
     tracks: [
       {
         name:"audio",
@@ -1187,7 +1175,6 @@ var gEMETests = [
   },
   {
     name:"640x360",
-    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
     tracks: [
       {
         name:"audio",
@@ -1218,7 +1205,6 @@ var gEMETests = [
   },
   {
     name:"400x225 then 640x360",
-    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
     tracks: [
       {
         name:"audio",
@@ -1252,7 +1238,6 @@ var gEMETests = [
   },
   {
     name:"640x360 then 640x480",
-    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
     tracks: [
       {
         name:"audio",
@@ -1289,7 +1274,8 @@ var gEMETests = [
 var gEMENonMSEFailTests = [
   {
     name:"short-cenc.mp4",
-    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
+    audioType:"audio/mp4; codecs=\"mp4a.40.2\"",
+    videoType:"video/mp4; codecs=\"avc1.64000d\"",
     duration:0.47,
   },
 ];
