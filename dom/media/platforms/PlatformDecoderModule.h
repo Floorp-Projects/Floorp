@@ -110,10 +110,6 @@ public:
   // feeding it to MediaDataDecoder::Input.
   virtual ConversionRequired DecoderNeedsConversion(const TrackInfo& aConfig) const = 0;
 
-  virtual bool SupportsSharedDecoders(const VideoInfo& aConfig) const {
-    return !AgnosticMimeType(aConfig.mMimeType);
-  }
-
 protected:
   PlatformDecoderModule() {}
   virtual ~PlatformDecoderModule() {}
