@@ -32,7 +32,8 @@ function SpecialPowers(window) {
                            "SPProcessCrashService",
                            "SPSetTestPluginEnabledState",
                            "SPWebAppService",
-                           "SPPeriodicServiceWorkerUpdates"];
+                           "SPPeriodicServiceWorkerUpdates",
+                           "SPCleanUpSTSData"];
 
   this.SP_ASYNC_MESSAGES = ["SpecialPowers.Focus",
                             "SpecialPowers.Quit",
