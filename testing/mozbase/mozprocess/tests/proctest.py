@@ -1,11 +1,10 @@
-import mozinfo
 import os
-import subprocess
 import sys
 import unittest
-from mozprocess.pid import get_pids
+import psutil
 
 here = os.path.dirname(os.path.abspath(__file__))
+
 
 def check_for_process(processName):
     """
@@ -16,11 +15,13 @@ def check_for_process(processName):
         output -- if process exists, stdout of the process, [] otherwise
     """
     name = os.path.basename(processName)
-    process = get_pids(name)
+    process = [p.pid for p in psutil.process_iter()
+               if p.name() == name]
 
     if process:
         return True, process
     return False, []
+
 
 class ProcTest(unittest.TestCase):
 
