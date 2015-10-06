@@ -985,6 +985,13 @@ UpdateAtkRelation(RelationType aType, Accessible* aAcc,
   while ((tempAcc = rel.Next()))
     targets.AppendElement(AccessibleWrap::GetAtkObject(tempAcc));
 
+  if (aType == RelationType::EMBEDS && aAcc->IsRoot()) {
+    if (ProxyAccessible* proxyDoc =
+        aAcc->AsRoot()->GetPrimaryRemoteTopLevelContentDoc()) {
+      targets.AppendElement(GetWrapperFor(proxyDoc));
+    }
+  }
+
   if (targets.Length()) {
     atkRelation = atk_relation_new(targets.Elements(),
                                    targets.Length(), aAtkType);
