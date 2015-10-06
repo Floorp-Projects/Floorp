@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cc = Components.classes;
-const CC = Components.Constructor;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
+var Cc = Components.classes;
+var CC = Components.Constructor;
 
 var BinaryOutputStream = CC("@mozilla.org/binaryoutputstream;1",
                             "nsIBinaryOutputStream",

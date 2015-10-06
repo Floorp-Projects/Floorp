@@ -4,10 +4,10 @@
 
 // Inspired by the Places infrastructure in head_bookmarks.js
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-const Cu = Components.utils;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cu = Components.utils;
 
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/ContentPrefInstance.jsm');

@@ -1,7 +1,7 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cm = Components.manager;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
+var Cm = Components.manager;
 
 const kBlocklistServiceUUID = "{66354bc9-7ed1-4692-ae1d-8da97d6b205e}";
 const kBlocklistServiceContractID = "@mozilla.org/extensions/blocklist;1";

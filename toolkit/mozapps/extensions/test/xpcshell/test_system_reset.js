@@ -10,7 +10,7 @@ BootstrapMonitor.init();
 const featureDir = FileUtils.getDir("ProfD", ["features"]);
 
 // Build the test sets
-let dir = FileUtils.getDir("ProfD", ["sysfeatures", "app1"], true);
+var dir = FileUtils.getDir("ProfD", ["sysfeatures", "app1"], true);
 do_get_file("data/system_addons/system1_1.xpi").copyTo(dir, "system1@tests.mozilla.org.xpi");
 do_get_file("data/system_addons/system2_1.xpi").copyTo(dir, "system2@tests.mozilla.org.xpi");
 

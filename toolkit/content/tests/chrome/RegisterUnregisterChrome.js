@@ -3,9 +3,9 @@
 const NS_CHROME_MANIFESTS_FILE_LIST = "ChromeML";
 const XUL_CACHE_PREF = "nglayout.debug.disable_xul_cache";
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
 
 var gDirSvc    = Cc["@mozilla.org/file/directory_service;1"].
   getService(Ci.nsIDirectoryService).QueryInterface(Ci.nsIProperties);

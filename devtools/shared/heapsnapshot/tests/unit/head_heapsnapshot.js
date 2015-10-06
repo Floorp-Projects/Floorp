@@ -3,11 +3,11 @@
 
 "use strict";
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
-const CC = Components.Constructor;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
+var Cr = Components.results;
+var CC = Components.Constructor;
 
 const { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 const { Match } = Cu.import("resource://test/Match.jsm", {});

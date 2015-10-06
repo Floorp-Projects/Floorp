@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { interfaces: Ci, classes: Cc, utils: Cu } = Components;
+var { interfaces: Ci, classes: Cc, utils: Cu } = Components;
 
 function notify() {
   // Log objects so makeDebuggeeValue can get the global to use

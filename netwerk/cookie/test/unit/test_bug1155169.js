@@ -1,4 +1,4 @@
-const {utils: Cu, interfaces: Ci, classes: Cc} = Components;
+var {utils: Cu, interfaces: Ci, classes: Cc} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 

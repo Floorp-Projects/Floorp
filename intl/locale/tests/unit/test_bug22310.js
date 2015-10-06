@@ -1,7 +1,7 @@
 String.prototype.has = function(s) { return this.indexOf(s) != -1; }
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 
 const dts = Cc["@mozilla.org/intl/scriptabledateformat;1"]
         .getService(Ci.nsIScriptableDateFormat);

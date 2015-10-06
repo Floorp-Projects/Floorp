@@ -1,6 +1,6 @@
 dump('loaded child cpow test\n');
 
-const Cu = Components.utils;
+var Cu = Components.utils;
 
 (function start() {
   [is_remote] = sendRpcMessage("cpows:is_remote");

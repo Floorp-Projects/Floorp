@@ -1,8 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 
 const isWindows = ("@mozilla.org/windows-registry-key;1" in Components.classes);
 const refMARPrefix = (isWindows ? "win_" : "");

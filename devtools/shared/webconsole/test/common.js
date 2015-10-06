@@ -3,7 +3,7 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 

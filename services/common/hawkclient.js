@@ -26,7 +26,7 @@
 
 this.EXPORTED_SYMBOLS = ["HawkClient"];
 
-const {interfaces: Ci, utils: Cu} = Components;
+var {interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-crypto/utils.js");

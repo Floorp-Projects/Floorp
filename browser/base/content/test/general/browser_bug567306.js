@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const {Ci: interfaces, Cc: classes} = Components;
+var {Ci: interfaces, Cc: classes} = Components;
 
 var Clipboard = Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
 var HasFindClipboard = Clipboard.supportsFindClipboard();

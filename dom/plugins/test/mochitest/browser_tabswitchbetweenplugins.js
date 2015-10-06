@@ -1,4 +1,4 @@
-let gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
 
 // tests that we get plugin updates when we flip between tabs that
 // have the same plugin in the same position in the page.

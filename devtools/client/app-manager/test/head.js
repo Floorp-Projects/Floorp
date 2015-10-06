@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const {utils: Cu, classes: Cc, interfaces: Ci} = Components;
+var {utils: Cu, classes: Cc, interfaces: Ci} = Components;
 
 const {Promise: promise} =
   Cu.import("resource://gre/modules/devtools/shared/deprecated-sync-thenables.js", {});

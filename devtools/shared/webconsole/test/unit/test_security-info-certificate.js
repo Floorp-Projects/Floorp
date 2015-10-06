@@ -17,7 +17,7 @@ Object.defineProperty(this, "NetworkHelper", {
   enumerable: true
 });
 
-const Ci = Components.interfaces;
+var Ci = Components.interfaces;
 const DUMMY_CERT = {
   commonName: "cn",
   organization: "o",

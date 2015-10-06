@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {classes: Cc, interfaces: Ci, manager: Cm, utils: Cu} = Components;
+var {classes: Cc, interfaces: Ci, manager: Cm, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 
 const VKB_ENTER_KEY = 13;   // User press of VKB enter key

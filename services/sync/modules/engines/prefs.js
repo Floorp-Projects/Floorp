@@ -4,9 +4,9 @@
 
 this.EXPORTED_SYMBOLS = ['PrefsEngine', 'PrefRec'];
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
 
 const PREF_SYNC_PREFS_PREFIX = "services.sync.prefs.sync.";
 

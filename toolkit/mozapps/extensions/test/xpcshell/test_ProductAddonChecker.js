@@ -6,10 +6,10 @@ Components.utils.import("resource://gre/modules/osfile.jsm");
 
 const LocalFile = new Components.Constructor("@mozilla.org/file/local;1", AM_Ci.nsIFile, "initWithPath");
 
-let testserver = new HttpServer();
+var testserver = new HttpServer();
 testserver.registerDirectory("/data/", do_get_file("data/productaddons"));
 testserver.start();
-let root = testserver.identity.primaryScheme + "://" +
+var root = testserver.identity.primaryScheme + "://" +
            testserver.identity.primaryHost + ":" +
            testserver.identity.primaryPort + "/data/"
 

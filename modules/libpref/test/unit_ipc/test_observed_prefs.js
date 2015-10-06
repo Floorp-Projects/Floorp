@@ -1,5 +1,5 @@
-const Ci = Components.interfaces;
-const Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cc = Components.classes;
 
 function isParentProcess() {
     let appInfo = Cc["@mozilla.org/xre/app-info;1"];

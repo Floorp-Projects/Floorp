@@ -4,7 +4,7 @@
 
 // Tests that state menu is displayed correctly (enabled or disabled) in the add-on manager
 // when the preference is unlocked / locked
-const {classes: Cc, interfaces: Ci} = Components;
+var {classes: Cc, interfaces: Ci} = Components;
 const gIsWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 const gIsOSX = ("nsILocalFileMac" in Ci);
 const gIsLinux = ("@mozilla.org/gnome-gconf-service;1" in Cc) ||

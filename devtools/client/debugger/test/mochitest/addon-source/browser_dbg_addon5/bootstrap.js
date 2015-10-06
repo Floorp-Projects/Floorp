@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { interfaces: Ci, classes: Cc } = Components;
+var { interfaces: Ci, classes: Cc } = Components;
 
 function startup(aParams, aReason) {
   Components.utils.import("resource://gre/modules/Services.jsm");

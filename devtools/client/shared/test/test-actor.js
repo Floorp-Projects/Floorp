@@ -6,7 +6,7 @@
 
 // A helper actor for brower/devtools/inspector tests.
 
-let { Cc, Ci, Cu, Cr } = require("chrome");
+var { Cc, Ci, Cu, Cr } = require("chrome");
 const {getRect, getElementFromPoint, getAdjustedQuads} = require("devtools/shared/layout/utils");
 const promise = require("promise");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});

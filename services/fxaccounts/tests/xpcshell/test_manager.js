@@ -3,7 +3,7 @@
 
 "use strict";
 
-const Cm = Components.manager;
+var Cm = Components.manager;
 
 Cu.import("resource://gre/modules/FxAccounts.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");

@@ -6,7 +6,7 @@
 
 (function() {
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 var {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 

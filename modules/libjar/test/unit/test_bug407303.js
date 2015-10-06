@@ -1,9 +1,9 @@
 // Regression test for bug 407303 - A failed channel should not be checked
 // for an unsafe content type.
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 
 // XXX: NS_ERROR_UNKNOWN_HOST is not in Components.results

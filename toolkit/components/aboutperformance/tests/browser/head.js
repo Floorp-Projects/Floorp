@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { utils: Cu, interfaces: Ci, classes: Cc } = Components;
+var { utils: Cu, interfaces: Ci, classes: Cc } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm", this);
 

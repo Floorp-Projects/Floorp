@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 var { gDevTools } = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
 var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});

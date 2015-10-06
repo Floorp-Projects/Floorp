@@ -19,8 +19,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=793433
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 
 function shouldThrow(fun, args, msg) {
   try {

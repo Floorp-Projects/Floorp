@@ -3,7 +3,7 @@
  */
 
 // This should eventually be moved to head_addons.js
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 // Test whether a machine which differs only on OS version, but otherwise
 // exactly matches the blacklist entry, is not blocked.
