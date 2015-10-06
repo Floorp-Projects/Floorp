@@ -21,7 +21,6 @@
 #include "nsIDOMHTMLAppletElement.h"
 #include "nsIExternalProtocolHandler.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIHttpChannelInternal.h"
 #include "nsIObjectFrame.h"
 #include "nsIPermissionManager.h"
 #include "nsPluginHost.h"
@@ -2535,7 +2534,8 @@ nsObjectLoadingContent::OpenChannel()
                      group, // aLoadGroup
                      shim,  // aCallbacks
                      nsIChannel::LOAD_CALL_CONTENT_SNIFFERS |
-                     nsIChannel::LOAD_CLASSIFY_URI);
+                     nsIChannel::LOAD_CLASSIFY_URI |
+                     nsIChannel::LOAD_BYPASS_SERVICE_WORKER);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2556,13 +2556,6 @@ nsObjectLoadingContent::OpenChannel()
   if (scriptChannel) {
     // Allow execution against our context if the principals match
     scriptChannel->SetExecutionPolicy(nsIScriptChannel::EXECUTE_NORMAL);
-  }
-
-  nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(httpChan);
-  if (internalChannel) {
-    // Bug 1168676. object/embed tags are not allowed to be intercepted by
-    // ServiceWorkers.
-    internalChannel->ForceNoIntercept();
   }
 
   // AsyncOpen can fail if a file does not exist.
