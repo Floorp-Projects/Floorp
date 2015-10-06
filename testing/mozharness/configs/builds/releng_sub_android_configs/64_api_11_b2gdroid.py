@@ -3,6 +3,6 @@ config = {
     'stage_platform': 'android-api-11-b2gdroid',
     'build_type': 'api-11-b2gdroid-opt',
     'src_mozconfig': 'mobile/android/b2gdroid/config/mozconfigs/nightly',
-    'tooltool_manifest_src': 'mobile/android/config/tooltool-manifests/android/releng.manifest',
+    'tooltool_manifest_src': 'mobile/android/config/tooltool-manifests/b2gdroid/releng.manifest',
     'multi_locale_config_platform': 'android',
 }

@@ -1,10 +1,10 @@
 [
 {
-"size": 357533004,
+"size": 932378577,
 "visibility": "internal",
-"digest": "9b24b6db45ca4f6418d18119e3d2dd48e2a352e977ebf4fd0b2a8c4103fd0735eacb0f7360ff3a2eda6777fdd1029325ca23b8a4c34542b3b1fa487ff633647c",
+"digest": "b42eac625027afca51ff6113c614cae5ba9d2042c8dd63dc0b48e35016e9e8ba47995d639ae4d192f2efee7de83ee410cc96bb6e9d5dab48b123c6ed7c56cec9",
 "algorithm": "sha512",
-"filename": "android-ndk.tar.bz2",
+"filename": "android-ndk-r10e.tgz",
 "unpack": true
 },
 {
@@ -53,6 +53,13 @@
 "digest": "e30a26f98a3448064857491aee1a7a26f98494f86a89113de9be17c37c8181ed60250706fed881ec1f035002fcdaf8b9b4a7d9ae70ce40acff2f1acfbb40f8d9",
 "algorithm": "sha512",
 "filename": "java_home-1.7.0-openjdk-1.7.0.85.x86_64.tar.xz",
+"unpack": true
+},
+{
+"size": 31078810,
+"digest": "2dffe4e5419a0c0c9908dc52b01cc07379a42e2aa8481be7a26bb8750b586b95bbac3fe57e64f5d37b43e206516ea70ad938a2e45858fdcf1e28258e70ae8d8c",
+"algorithm": "sha512",
+"filename": "moz-tt.tar.bz2",
 "unpack": true
 }
 ]
