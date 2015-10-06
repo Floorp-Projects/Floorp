@@ -314,36 +314,7 @@ Downscaler::DownscaleInputLine()
   }
 }
 
-Deinterlacer::Deinterlacer(const nsIntSize& aImageSize)
-  : mImageSize(aImageSize)
-  , mBuffer(MakeUnique<uint8_t[]>(mImageSize.width *
-                                  mImageSize.height *
-                                  sizeof(uint32_t)))
-{ }
 
-uint32_t
-Deinterlacer::RowSize() const
-{
-  return mImageSize.width * sizeof(uint32_t);
-}
-
-uint8_t*
-Deinterlacer::RowBuffer(uint32_t aRow)
-{
-  uint32_t offset = aRow * RowSize();
-  MOZ_ASSERT(offset < mImageSize.width * mImageSize.height * sizeof(uint32_t),
-             "Row is outside of image");
-  return mBuffer.get() + offset;
-}
-
-void
-Deinterlacer::PropagatePassToDownscaler(Downscaler& aDownscaler)
-{
-  for (int32_t row = 0 ; row < mImageSize.height ; ++row) {
-    memcpy(aDownscaler.RowBuffer(), RowBuffer(row), RowSize());
-    aDownscaler.CommitRow();
-  }
-}
 
 } // namespace image
 } // namespace mozilla
