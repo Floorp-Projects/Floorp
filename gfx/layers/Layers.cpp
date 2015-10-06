@@ -2144,7 +2144,7 @@ CanvasLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 // This help function is used to assign the correct enum value
 // to the packet
 static void
-DumpFilter(layerscope::LayersPacket::Layer* aLayer, const GraphicsFilter& aFilter)
+DumpFilter(layerscope::LayersPacket::Layer* aLayer, const Filter& aFilter)
 {
   using namespace layerscope;
   switch (aFilter) {

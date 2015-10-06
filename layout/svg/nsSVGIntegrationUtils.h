@@ -7,7 +7,6 @@
 #define NSSVGINTEGRATIONUTILS_H_
 
 #include "gfxMatrix.h"
-#include "GraphicsFilter.h"
 #include "gfxRect.h"
 #include "nsAutoPtr.h"
 

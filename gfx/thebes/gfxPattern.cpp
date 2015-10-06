@@ -182,7 +182,7 @@ gfxPattern::IsOpaque()
 }
 
 void
-gfxPattern::SetFilter(GraphicsFilter filter)
+gfxPattern::SetFilter(gfx::Filter filter)
 {
   if (mGfxPattern.GetPattern()->GetType() != PatternType::SURFACE) {
     return;
@@ -191,11 +191,11 @@ gfxPattern::SetFilter(GraphicsFilter filter)
   static_cast<SurfacePattern*>(mGfxPattern.GetPattern())->mFilter = filter;
 }
 
-GraphicsFilter
+Filter
 gfxPattern::Filter() const
 {
   if (mGfxPattern.GetPattern()->GetType() != PatternType::SURFACE) {
-    return Filter::GOOD;
+    return gfx::Filter::GOOD;
   }
   return static_cast<const SurfacePattern*>(mGfxPattern.GetPattern())->mFilter;
 }

@@ -272,7 +272,7 @@ OrientedImage::Draw(gfxContext* aContext,
                     const nsIntSize& aSize,
                     const ImageRegion& aRegion,
                     uint32_t aWhichFrame,
-                    GraphicsFilter aFilter,
+                    Filter aFilter,
                     const Maybe<SVGImageContext>& aSVGContext,
                     uint32_t aFlags)
 {
@@ -309,7 +309,7 @@ OrientedImage::Draw(gfxContext* aContext,
 nsIntSize
 OrientedImage::OptimalImageSizeForDest(const gfxSize& aDest,
                                        uint32_t aWhichFrame,
-                                       GraphicsFilter aFilter, uint32_t aFlags)
+                                       Filter aFilter, uint32_t aFlags)
 {
   if (!mOrientation.SwapsWidthAndHeight()) {
     return InnerImage()->OptimalImageSizeForDest(aDest, aWhichFrame, aFilter,
