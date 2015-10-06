@@ -1997,6 +1997,9 @@ void
 ScrollFrameHelper::NotifyPluginFrames(AsyncScrollEventType aEvent)
 {
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+  if (!gfxPrefs::HidePluginsForScroll()) {
+    return;
+  }
   if (XRE_IsContentProcess()) {
     if (aEvent != mAsyncScrollEvent) {
       nsPresContext* presContext = mOuter->PresContext();
