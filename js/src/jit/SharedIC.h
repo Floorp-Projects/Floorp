@@ -720,6 +720,7 @@ class ICStub
           case GetElem_UnboxedPropertyName:
           case GetProp_CallScripted:
           case GetProp_CallNative:
+          case GetProp_CallNativeGlobal:
           case GetProp_CallDOMProxyNative:
           case GetProp_CallDOMProxyWithGenerationNative:
           case GetProp_DOMProxyShadowed:
@@ -737,6 +738,7 @@ class ICStub
           case GetElem_Arguments:
           case GetProp_NativePrototype:
           case GetProp_Native:
+          case GetName_Global:
 #endif
             return true;
           default:

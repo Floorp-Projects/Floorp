@@ -16,8 +16,11 @@ using namespace js::jit;
 bool
 FrameInfo::init(TempAllocator& alloc)
 {
-    // One slot is always needed for this/arguments type checks.
-    size_t nstack = Max(script->nslots() - script->nfixed(), size_t(1));
+    // The minimum stack size is two. One slot is always needed for
+    // this/arguments type checks. Two slots are needed because INITGLEXICAL
+    // (stack depth 1) is compiled as a SETPROP (stack depth 2) on the global
+    // lexical scope.
+    size_t nstack = Max(script->nslots() - script->nfixed(), size_t(2));
     if (!stack.init(alloc, nstack))
         return false;
 
