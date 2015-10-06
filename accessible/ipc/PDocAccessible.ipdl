@@ -202,6 +202,10 @@ child:
   prio(high) sync TableUnselectColumn(uint64_t aID, uint32_t aCol);
   prio(high) sync TableUnselectRow(uint64_t aID, uint32_t aRow);
   prio(high) sync TableIsProbablyForLayout(uint64_t aID) returns(bool aForLayout);
+  prio(high) sync AtkTableColumnHeader(uint64_t aID, int32_t aCol)
+    returns(uint64_t aHeaderID, bool aOk);
+  prio(high) sync AtkTableRowHeader(uint64_t aID, int32_t aRow)
+    returns(uint64_t aHeaderID, bool aOk);
 
   prio(high) sync SelectedItems(uint64_t aID) returns(uint64_t[] aSelectedItemIDs);
   prio(high) sync SelectedItemCount(uint64_t aID) returns(uint32_t aCount);

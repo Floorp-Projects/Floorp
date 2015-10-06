@@ -14,6 +14,8 @@
 #include "OuterDocAccessible.h"
 #include "ProxyAccessible.h"
 #include "RootAccessible.h"
+#include "TableAccessible.h"
+#include "TableCellAccessible.h"
 #include "nsMai.h"
 #include "nsMaiHyperlink.h"
 #include "nsString.h"
@@ -1616,4 +1618,72 @@ AccessibleWrap::GetKeyBinding(Accessible* aAccessible, nsAString& aResult)
     keyBinding.AppendToString(keyBindingsStr, KeyBinding::eAtkFormat);
   }
   aResult = keyBindingsStr;
+}
+
+// static
+Accessible*
+AccessibleWrap::GetColumnHeader(TableAccessible* aAccessible, int32_t aColIdx)
+{
+  if (!aAccessible) {
+    return nullptr;
+  }
+
+  Accessible* cell = aAccessible->CellAt(0, aColIdx);
+  if (!cell) {
+    return nullptr;
+  }
+
+  // If the cell at the first row is column header then assume it is column
+  // header for all rows,
+  if (cell->Role() == roles::COLUMNHEADER) {
+    return cell;
+  }
+
+  // otherwise get column header for the data cell at the first row.
+  TableCellAccessible* tableCell = cell->AsTableCell();
+  if (!tableCell) {
+    return nullptr;
+  }
+
+  nsAutoTArray<Accessible*, 10> headerCells;
+  tableCell->ColHeaderCells(&headerCells);
+  if (headerCells.IsEmpty()) {
+    return nullptr;
+  }
+
+  return headerCells[0];
+}
+
+// static
+Accessible*
+AccessibleWrap::GetRowHeader(TableAccessible* aAccessible, int32_t aRowIdx)
+{
+  if (!aAccessible) {
+    return nullptr;
+  }
+
+  Accessible* cell = aAccessible->CellAt(aRowIdx, 0);
+  if (!cell) {
+    return nullptr;
+  }
+
+  // If the cell at the first column is row header then assume it is row
+  // header for all columns,
+  if (cell->Role() == roles::ROWHEADER) {
+    return cell;
+  }
+
+  // otherwise get row header for the data cell at the first column.
+  TableCellAccessible* tableCell = cell->AsTableCell();
+  if (!tableCell) {
+    return nullptr;
+  }
+
+  nsAutoTArray<Accessible*, 10> headerCells;
+  tableCell->RowHeaderCells(&headerCells);
+  if (headerCells.IsEmpty()) {
+    return nullptr;
+  }
+
+  return headerCells[0];
 }

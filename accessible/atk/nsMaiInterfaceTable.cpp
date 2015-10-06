@@ -12,7 +12,7 @@
 #include "TableAccessible.h"
 #include "TableCellAccessible.h"
 #include "nsMai.h"
-
+#include "ProxyAccessible.h"
 #include "nsArrayUtils.h"
 
 #include "mozilla/Likely.h"
@@ -23,17 +23,31 @@ extern "C" {
 static AtkObject*
 refAtCB(AtkTable* aTable, gint aRowIdx, gint aColIdx)
 {
+  if (aRowIdx < 0 || aColIdx < 0) {
+    return nullptr;
+  }
+
+  AtkObject* cellAtkObj = nullptr;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-  if (!accWrap || aRowIdx < 0 || aColIdx < 0)
-    return nullptr;
+  if (accWrap) {
+    Accessible* cell = accWrap->AsTable()->CellAt(aRowIdx, aColIdx);
+    if (!cell) {
+      return nullptr;
+    }
 
-  Accessible* cell = accWrap->AsTable()->CellAt(aRowIdx, aColIdx);
-  if (!cell)
-    return nullptr;
+    cellAtkObj = AccessibleWrap::GetAtkObject(cell);
+  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aTable))) {
+    ProxyAccessible* cell = proxy->TableCellAt(aRowIdx, aColIdx);
+    if (!cell) {
+      return nullptr;
+    }
 
-  AtkObject* cellAtkObj = AccessibleWrap::GetAtkObject(cell);
-  if (cellAtkObj)
+    cellAtkObj = GetWrapperFor(cell);
+  }
+
+  if (cellAtkObj) {
     g_object_ref(cellAtkObj);
+  }
 
   return cellAtkObj;
 }
@@ -41,93 +55,153 @@ refAtCB(AtkTable* aTable, gint aRowIdx, gint aColIdx)
 static gint
 getIndexAtCB(AtkTable* aTable, gint aRowIdx, gint aColIdx)
 {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-  if (!accWrap || aRowIdx < 0 || aColIdx < 0)
+  if (aRowIdx < 0 || aColIdx < 0) {
     return -1;
+  }
 
-  return static_cast<gint>(accWrap->AsTable()->CellIndexAt(aRowIdx, aColIdx));
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
+  if (accWrap) {
+    return static_cast<gint>(accWrap->AsTable()->CellIndexAt(aRowIdx, aColIdx));
+  }
+
+  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aTable))) {
+    return static_cast<gint>(proxy->TableCellIndexAt(aRowIdx, aColIdx));
+  }
+
+  return -1;
 }
 
 static gint
 getColumnAtIndexCB(AtkTable *aTable, gint aIdx)
 {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-  if (!accWrap || aIdx < 0)
+  if (aIdx < 0) {
     return -1;
+  }
 
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
+  if (accWrap) {
     return static_cast<gint>(accWrap->AsTable()->ColIndexAt(aIdx));
+  }
+
+  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aTable))) {
+    return static_cast<gint>(proxy->TableColumnIndexAt(aIdx));
+  }
+
+  return -1;
 }
 
 static gint
 getRowAtIndexCB(AtkTable *aTable, gint aIdx)
 {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-  if (!accWrap || aIdx < 0)
+  if (aIdx < 0) {
     return -1;
+  }
 
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
+  if (accWrap) {
     return static_cast<gint>(accWrap->AsTable()->RowIndexAt(aIdx));
+  }
+
+  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aTable))) {
+    return static_cast<gint>(proxy->TableRowIndexAt(aIdx));
+  }
+
+  return -1;
 }
 
 static gint
 getColumnCountCB(AtkTable *aTable)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-  if (!accWrap)
-    return -1;
-
+  if (accWrap) {
     return static_cast<gint>(accWrap->AsTable()->ColCount());
+  }
+
+  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aTable))) {
+    return static_cast<gint>(proxy->TableColumnCount());
+  }
+
+  return -1;
 }
 
 static gint
 getRowCountCB(AtkTable *aTable)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-  if (!accWrap)
-    return -1;
-
+  if (accWrap) {
     return static_cast<gint>(accWrap->AsTable()->RowCount());
+  }
+
+  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aTable))) {
+    return static_cast<gint>(proxy->TableRowCount());
+  }
+
+  return -1;
 }
 
 static gint
 getColumnExtentAtCB(AtkTable *aTable, gint aRowIdx, gint aColIdx)
 {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-  if (!accWrap || aRowIdx < 0 || aColIdx < 0)
+  if (aRowIdx < 0 || aColIdx < 0) {
     return -1;
+  }
 
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
+  if (accWrap) {
     return static_cast<gint>(accWrap->AsTable()->ColExtentAt(aRowIdx, aColIdx));
+  }
+
+  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aTable))) {
+    return static_cast<gint>(proxy->TableColumnExtentAt(aRowIdx, aColIdx));
+  }
+
+  return -1;
 }
 
 static gint
 getRowExtentAtCB(AtkTable *aTable, gint aRowIdx, gint aColIdx)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-  if (!accWrap)
-    return -1;
+  if (accWrap) {
+    return static_cast<gint>(accWrap->AsTable()->RowExtentAt(aRowIdx, aColIdx));
+  }
 
-  return static_cast<gint>(accWrap->AsTable()->RowExtentAt(aRowIdx, aColIdx));
+  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aTable))) {
+    return static_cast<gint>(proxy->TableRowExtentAt(aRowIdx, aColIdx));
+  }
+
+  return -1;
 }
 
 static AtkObject*
 getCaptionCB(AtkTable* aTable)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-  if (!accWrap)
-    return nullptr;
+  if (accWrap) {
+    Accessible* caption = accWrap->AsTable()->Caption();
+    return caption ? AccessibleWrap::GetAtkObject(caption) : nullptr;
+  }
 
-  Accessible* caption = accWrap->AsTable()->Caption();
-  return caption ? AccessibleWrap::GetAtkObject(caption) : nullptr;
+  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aTable))) {
+    ProxyAccessible* caption = proxy->TableCaption();
+    return caption ? GetWrapperFor(caption) : nullptr;
+  }
+
+  return nullptr;
 }
 
 static const gchar*
 getColumnDescriptionCB(AtkTable *aTable, gint aColumn)
 {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-  if (!accWrap)
-    return nullptr;
-
   nsAutoString autoStr;
-  accWrap->AsTable()->ColDescription(aColumn, autoStr);
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
+  if (accWrap) {
+    accWrap->AsTable()->ColDescription(aColumn, autoStr);
+  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aTable))) {
+    proxy->TableColumnDescription(aColumn, autoStr);
+  } else {
+    return nullptr;
+  }
 
   return AccessibleWrap::ReturnString(autoStr);
 }
@@ -136,40 +210,32 @@ static AtkObject*
 getColumnHeaderCB(AtkTable *aTable, gint aColIdx)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-  if (!accWrap)
-    return nullptr;
+  if (accWrap) {
+    Accessible* header =
+      AccessibleWrap::GetColumnHeader(accWrap->AsTable(), aColIdx);
+    return header ? AccessibleWrap::GetAtkObject(header) : nullptr;
+  }
 
-  Accessible* cell = accWrap->AsTable()->CellAt(0, aColIdx);
-  if (!cell)
-    return nullptr;
+  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aTable))) {
+    ProxyAccessible* header = proxy->AtkTableColumnHeader(aColIdx);
+    return header ? GetWrapperFor(header) : nullptr;
+  }
 
-  // If the cell at the first row is column header then assume it is column
-  // header for all rows,
-  if (cell->Role() == roles::COLUMNHEADER)
-    return AccessibleWrap::GetAtkObject(cell);
-
-  // otherwise get column header for the data cell at the first row.
-  TableCellAccessible* tableCell = cell->AsTableCell();
-  if (!tableCell)
-    return nullptr;
-
-  nsAutoTArray<Accessible*, 10> headerCells;
-  tableCell->ColHeaderCells(&headerCells);
-  if (headerCells.IsEmpty())
-    return nullptr;
-
-  return AccessibleWrap::GetAtkObject(headerCells[0]);
+  return nullptr;
 }
 
 static const gchar*
 getRowDescriptionCB(AtkTable *aTable, gint aRow)
 {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-  if (!accWrap)
-    return nullptr;
-
   nsAutoString autoStr;
-  accWrap->AsTable()->RowDescription(aRow, autoStr);
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
+  if (accWrap) {
+    accWrap->AsTable()->RowDescription(aRow, autoStr);
+  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aTable))) {
+    proxy->TableRowDescription(aRow, autoStr);
+  } else {
+    return nullptr;
+  }
 
   return AccessibleWrap::ReturnString(autoStr);
 }
@@ -178,29 +244,18 @@ static AtkObject*
 getRowHeaderCB(AtkTable *aTable, gint aRowIdx)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-  if (!accWrap)
-    return nullptr;
+  if (accWrap) {
+    Accessible* header =
+      AccessibleWrap::GetRowHeader(accWrap->AsTable(), aRowIdx);
+    return header ? AccessibleWrap::GetAtkObject(header) : nullptr;
+  }
 
-  Accessible* cell = accWrap->AsTable()->CellAt(aRowIdx, 0);
-  if (!cell)
-    return nullptr;
+  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aTable))) {
+    ProxyAccessible* header = proxy->AtkTableRowHeader(aRowIdx);
+    return header ? GetWrapperFor(header) : nullptr;
+  }
 
-  // If the cell at the first column is row header then assume it is row
-  // header for all columns,
-  if (cell->Role() == roles::ROWHEADER)
-    return AccessibleWrap::GetAtkObject(cell);
-
-  // otherwise get row header for the data cell at the first column.
-  TableCellAccessible* tableCell = cell->AsTableCell();
-  if (!tableCell)
-    return nullptr;
-
-  nsAutoTArray<Accessible*, 10> headerCells;
-  tableCell->RowHeaderCells(&headerCells);
-  if (headerCells.IsEmpty())
-    return nullptr;
-
-  return AccessibleWrap::GetAtkObject(headerCells[0]);
+  return nullptr;
 }
 
 static AtkObject*
@@ -218,12 +273,16 @@ getSelectedColumnsCB(AtkTable *aTable, gint** aSelected)
 {
   *aSelected = nullptr;
 
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-  if (!accWrap)
-    return 0;
-
   nsAutoTArray<uint32_t, 10> cols;
-  accWrap->AsTable()->SelectedColIndices(&cols);
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
+  if (accWrap) {
+    accWrap->AsTable()->SelectedColIndices(&cols);
+   } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aTable))) {
+    proxy->TableSelectedColumnIndices(&cols);
+  } else {
+    return 0;
+  }
+
   if (cols.IsEmpty())
     return 0;
 
@@ -241,12 +300,15 @@ getSelectedColumnsCB(AtkTable *aTable, gint** aSelected)
 static gint
 getSelectedRowsCB(AtkTable *aTable, gint **aSelected)
 {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-  if (!accWrap)
-    return 0;
-
   nsAutoTArray<uint32_t, 10> rows;
-  accWrap->AsTable()->SelectedRowIndices(&rows);
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
+  if (accWrap) {
+    accWrap->AsTable()->SelectedRowIndices(&rows);
+  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aTable))) {
+    proxy->TableSelectedRowIndices(&rows);
+  } else {
+    return 0;
+  }
 
   gint* atkRows = g_new(gint, rows.Length());
   if (!atkRows) {
@@ -263,31 +325,40 @@ static gboolean
 isColumnSelectedCB(AtkTable *aTable, gint aColIdx)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-  if (!accWrap)
-    return FALSE;
+  if (accWrap) {
+    return static_cast<gboolean>(accWrap->AsTable()->IsColSelected(aColIdx));
+  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aTable))) {
+    return static_cast<gboolean>(proxy->TableColumnSelected(aColIdx));
+  }
 
-  return static_cast<gboolean>(accWrap->AsTable()->IsColSelected(aColIdx));
+  return FALSE;
 }
 
 static gboolean
 isRowSelectedCB(AtkTable *aTable, gint aRowIdx)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-  if (!accWrap)
-    return FALSE;
+  if (accWrap) {
+    return static_cast<gboolean>(accWrap->AsTable()->IsRowSelected(aRowIdx));
+  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aTable))) {
+    return static_cast<gboolean>(proxy->TableRowSelected(aRowIdx));
+  }
 
-  return static_cast<gboolean>(accWrap->AsTable()->IsRowSelected(aRowIdx));
+  return FALSE;
 }
 
 static gboolean
 isCellSelectedCB(AtkTable *aTable, gint aRowIdx, gint aColIdx)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aTable));
-  if (!accWrap)
-    return FALSE;
-
+  if (accWrap) {
     return static_cast<gboolean>(accWrap->AsTable()->
       IsCellSelected(aRowIdx, aColIdx));
+  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aTable))) {
+    return static_cast<gboolean>(proxy->TableCellSelected(aRowIdx, aColIdx));
+  }
+
+  return FALSE;
 }
 }
 

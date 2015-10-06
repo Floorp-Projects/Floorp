@@ -1453,6 +1453,52 @@ DocAccessibleChild::RecvTableIsProbablyForLayout(const uint64_t& aID,
 }
 
 bool
+DocAccessibleChild::RecvAtkTableColumnHeader(const uint64_t& aID,
+                                             const int32_t& aCol,
+                                             uint64_t* aHeader,
+                                             bool* aOk)
+{
+  *aHeader = 0;
+  *aOk = false;
+
+#ifdef MOZ_ACCESSIBILITY_ATK
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    Accessible* header = AccessibleWrap::GetColumnHeader(acc, aCol);
+    if (header) {
+      *aHeader = reinterpret_cast<uint64_t>(header->UniqueID());
+      *aOk = true;
+    }
+  }
+#endif
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvAtkTableRowHeader(const uint64_t& aID,
+                                          const int32_t& aRow,
+                                          uint64_t* aHeader,
+                                          bool* aOk)
+{
+  *aHeader = 0;
+  *aOk = false;
+
+#ifdef MOZ_ACCESSIBILITY_ATK
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    Accessible* header = AccessibleWrap::GetRowHeader(acc, aRow);
+    if (header) {
+      *aHeader = reinterpret_cast<uint64_t>(header->UniqueID());
+      *aOk = true;
+    }
+  }
+#endif
+
+  return true;
+}
+
+bool
 DocAccessibleChild::RecvSelectedItems(const uint64_t& aID,
                                       nsTArray<uint64_t>* aSelectedItemIDs)
 {
