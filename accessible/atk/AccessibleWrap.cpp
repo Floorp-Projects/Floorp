@@ -1570,3 +1570,50 @@ AccessibleWrap::FireAtkShowHideEvent(AccEvent* aEvent,
 
     return NS_OK;
 }
+
+// static
+void
+AccessibleWrap::GetKeyBinding(Accessible* aAccessible, nsAString& aResult)
+{
+  // Return all key bindings including access key and keyboard shortcut.
+
+  // Get access key.
+  nsAutoString keyBindingsStr;
+  KeyBinding keyBinding = aAccessible->AccessKey();
+  if (!keyBinding.IsEmpty()) {
+    keyBinding.AppendToString(keyBindingsStr, KeyBinding::eAtkFormat);
+
+    Accessible* parent = aAccessible->Parent();
+    roles::Role role = parent ? parent->Role() : roles::NOTHING;
+    if (role == roles::PARENT_MENUITEM || role == roles::MENUITEM ||
+        role == roles::RADIO_MENU_ITEM || role == roles::CHECK_MENU_ITEM) {
+      // It is submenu, expose keyboard shortcuts from menu hierarchy like
+      // "s;<Alt>f:s"
+      nsAutoString keysInHierarchyStr = keyBindingsStr;
+      do {
+        KeyBinding parentKeyBinding = parent->AccessKey();
+        if (!parentKeyBinding.IsEmpty()) {
+          nsAutoString str;
+          parentKeyBinding.ToString(str, KeyBinding::eAtkFormat);
+          str.Append(':');
+
+          keysInHierarchyStr.Insert(str, 0);
+        }
+      } while ((parent = parent->Parent()) && parent->Role() != roles::MENUBAR);
+
+      keyBindingsStr.Append(';');
+      keyBindingsStr.Append(keysInHierarchyStr);
+    }
+  } else {
+    // No access key, add ';' to point this.
+    keyBindingsStr.Append(';');
+  }
+
+  // Get keyboard shortcut.
+  keyBindingsStr.Append(';');
+  keyBinding = aAccessible->KeyboardShortcut();
+  if (!keyBinding.IsEmpty()) {
+    keyBinding.AppendToString(keyBindingsStr, KeyBinding::eAtkFormat);
+  }
+  aResult = keyBindingsStr;
+}

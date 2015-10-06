@@ -17,6 +17,9 @@
 #include "nsIPersistentProperties2.h"
 #include "nsISimpleEnumerator.h"
 #include "nsAccUtils.h"
+#ifdef MOZ_ACCESSIBILITY_ATK
+#include "AccessibleWrap.h"
+#endif
 
 namespace mozilla {
 namespace a11y {
@@ -1652,6 +1655,19 @@ DocAccessibleChild::RecvKeyboardShortcut(const uint64_t& aID,
     *aModifierMask = kb.ModifierMask();
   }
 
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvAtkKeyBinding(const uint64_t& aID,
+                                      nsString* aResult)
+{
+#ifdef MOZ_ACCESSIBILITY_ATK
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    AccessibleWrap::GetKeyBinding(acc, *aResult);
+  }
+#endif
   return true;
 }
 

@@ -10,7 +10,7 @@
 #include "nsMai.h"
 #include "Role.h"
 #include "mozilla/Likely.h"
-
+#include "ProxyAccessible.h"
 #include "nsString.h"
 
 using namespace mozilla::a11y;
@@ -21,86 +21,69 @@ static gboolean
 doActionCB(AtkAction *aAction, gint aActionIndex)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
-  return accWrap && accWrap->DoAction(aActionIndex);
+  if (accWrap) {
+    return accWrap->DoAction(aActionIndex);
+  }
+
+  ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aAction));
+  return proxy && proxy->DoAction(aActionIndex);
 }
 
 static gint
 getActionCountCB(AtkAction *aAction)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
-  return accWrap ? accWrap->ActionCount() : 0;
+  if (accWrap) {
+    return accWrap->ActionCount();
+  }
+
+  ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aAction));
+  return proxy ? proxy->ActionCount() : 0;
 }
 
 static const gchar*
 getActionDescriptionCB(AtkAction *aAction, gint aActionIndex)
 {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
-  if (!accWrap)
-    return nullptr;
-
   nsAutoString description;
-  accWrap->ActionDescriptionAt(aActionIndex, description);
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
+  if (accWrap) {
+    accWrap->ActionDescriptionAt(aActionIndex, description);
+  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aAction))) {
+    proxy->ActionDescriptionAt(aActionIndex, description);
+  } else {
+    return nullptr;
+  }
+
   return AccessibleWrap::ReturnString(description);
 }
 
 static const gchar*
 getActionNameCB(AtkAction *aAction, gint aActionIndex)
 {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
-  if (!accWrap)
-    return nullptr;
-
   nsAutoString autoStr;
-  accWrap->ActionNameAt(aActionIndex, autoStr);
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aAction));
+  if (accWrap) {
+    accWrap->ActionNameAt(aActionIndex, autoStr);
+  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aAction))) {
+    proxy->ActionNameAt(aActionIndex, autoStr);
+  } else {
+    return nullptr;
+  }
+
   return AccessibleWrap::ReturnString(autoStr);
 }
 
 static const gchar*
 getKeyBindingCB(AtkAction *aAction, gint aActionIndex)
 {
-  AccessibleWrap* acc = GetAccessibleWrap(ATK_OBJECT(aAction));
-  if (!acc)
-    return nullptr;
-
-  // Return all key bindings including access key and keyboard shortcut.
   nsAutoString keyBindingsStr;
-
-  // Get access key.
-  KeyBinding keyBinding = acc->AccessKey();
-  if (!keyBinding.IsEmpty()) {
-    keyBinding.AppendToString(keyBindingsStr, KeyBinding::eAtkFormat);
-
-    Accessible* parent = acc->Parent();
-    roles::Role role = parent ? parent->Role() : roles::NOTHING;
-    if (role == roles::PARENT_MENUITEM || role == roles::MENUITEM ||
-        role == roles::RADIO_MENU_ITEM || role == roles::CHECK_MENU_ITEM) {
-      // It is submenu, expose keyboard shortcuts from menu hierarchy like
-      // "s;<Alt>f:s"
-      nsAutoString keysInHierarchyStr = keyBindingsStr;
-      do {
-        KeyBinding parentKeyBinding = parent->AccessKey();
-        if (!parentKeyBinding.IsEmpty()) {
-          nsAutoString str;
-          parentKeyBinding.ToString(str, KeyBinding::eAtkFormat);
-          str.Append(':');
-
-          keysInHierarchyStr.Insert(str, 0);
-        }
-      } while ((parent = parent->Parent()) && parent->Role() != roles::MENUBAR);
-
-      keyBindingsStr.Append(';');
-      keyBindingsStr.Append(keysInHierarchyStr);
-    }
+  AccessibleWrap* acc = GetAccessibleWrap(ATK_OBJECT(aAction));
+  if (acc) {
+    AccessibleWrap::GetKeyBinding(acc, keyBindingsStr);
+  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aAction))) {
+    proxy->AtkKeyBinding(keyBindingsStr);
   } else {
-    // No access key, add ';' to point this.
-    keyBindingsStr.Append(';');
-  }
-
-  // Get keyboard shortcut.
-  keyBindingsStr.Append(';');
-  keyBinding = acc->KeyboardShortcut();
-  if (!keyBinding.IsEmpty()) {
-    keyBinding.AppendToString(keyBindingsStr, KeyBinding::eAtkFormat);
+    return nullptr;
   }
 
   return AccessibleWrap::ReturnString(keyBindingsStr);
