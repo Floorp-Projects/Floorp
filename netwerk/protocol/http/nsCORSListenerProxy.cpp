@@ -1347,6 +1347,14 @@ nsCORSListenerProxy::StartCORSPreflight(nsIChannel* aRequestChannel,
   rv = aRequestChannel->GetLoadFlags(&loadFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Preflight requests should never be intercepted by service workers.
+  // NOTE: We ignore CORS checks on synthesized responses (see the CORS
+  // preflights, then we need to extend the GetResponseSynthesized() check in
+  // nsCORSListenerProxy::CheckRequestApproved()). If we change our behavior
+  // here and allow service workers to intercept CORS preflights, then that
+  // check won't be safe any more.
+  loadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
+
   nsCOMPtr<nsIChannel> preflightChannel;
   rv = NS_NewChannelInternal(getter_AddRefs(preflightChannel),
                              uri,
@@ -1362,17 +1370,6 @@ nsCORSListenerProxy::StartCORSPreflight(nsIChannel* aRequestChannel,
   rv = preHttp->SetRequestMethod(NS_LITERAL_CSTRING("OPTIONS"));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Preflight requests should never be intercepted by service workers.
-  nsCOMPtr<nsIHttpChannelInternal> preInternal = do_QueryInterface(preflightChannel);
-  if (preInternal) {
-    // NOTE: We ignore CORS checks on synthesized responses (see the CORS
-    // preflights, then we need to extend the GetResponseSynthesized() check in
-    // nsCORSListenerProxy::CheckRequestApproved()). If we change our behavior
-    // here and allow service workers to intercept CORS preflights, then that
-    // check won't be safe any more.
-    preInternal->ForceNoIntercept();
-  }
-  
   // Set up listener which will start the original channel
   nsCOMPtr<nsIStreamListener> preflightListener =
     new nsCORSPreflightListener(aRequestChannel, aListener, nullptr, aPrincipal,
