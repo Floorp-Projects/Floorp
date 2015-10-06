@@ -13,7 +13,7 @@
 
 #include "MediaDataDemuxer.h"
 #include "MediaDecoderReader.h"
-#include "PlatformDecoderModule.h"
+#include "PDMFactory.h"
 
 namespace mozilla {
 
@@ -155,7 +155,7 @@ private:
   size_t SizeOfQueue(TrackType aTrack);
 
   nsRefPtr<MediaDataDemuxer> mDemuxer;
-  nsRefPtr<PlatformDecoderModule> mPlatform;
+  nsRefPtr<PDMFactory> mPlatform;
 
   class DecoderCallback : public MediaDataDecoderCallback {
   public:

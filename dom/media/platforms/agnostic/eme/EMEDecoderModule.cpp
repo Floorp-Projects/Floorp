@@ -191,7 +191,7 @@ EMEMediaDataDecoderProxy::Shutdown()
 }
 
 EMEDecoderModule::EMEDecoderModule(CDMProxy* aProxy,
-                                   PlatformDecoderModule* aPDM,
+                                   PDMFactory* aPDM,
                                    bool aCDMDecodesAudio,
                                    bool aCDMDecodesVideo)
   : mProxy(aProxy)
