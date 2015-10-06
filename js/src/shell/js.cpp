@@ -186,6 +186,7 @@ static FILE* gOutFile = nullptr;
 static bool reportWarnings = true;
 static bool compileOnly = false;
 static bool fuzzingSafe = false;
+static bool disableOOMFunctions = false;
 
 #ifdef DEBUG
 static bool dumpEntrainedVariables = false;
@@ -5781,7 +5782,7 @@ NewGlobalObject(JSContext* cx, JS::CompartmentOptions& options,
         {
             return nullptr;
         }
-        if (!js::DefineTestingFunctions(cx, glob, fuzzingSafe))
+        if (!js::DefineTestingFunctions(cx, glob, fuzzingSafe, disableOOMFunctions))
             return nullptr;
 
         if (!fuzzingSafe) {
@@ -6212,6 +6213,9 @@ Shell(JSContext* cx, OptionParser* op, char** envp)
     else
         fuzzingSafe = (getenv("MOZ_FUZZING_SAFE") && getenv("MOZ_FUZZING_SAFE")[0] != '0');
 
+    if (op->getBoolOption("disable-oom-functions"))
+        disableOOMFunctions = true;
+
     RootedObject glob(cx);
     JS::CompartmentOptions options;
     options.setVersion(JSVERSION_LATEST);
@@ -6411,6 +6415,8 @@ main(int argc, char** argv, char** envp)
         || !op.addBoolOption('\0', "no-avx", "No-op. AVX is currently disabled by default.")
         || !op.addBoolOption('\0', "fuzzing-safe", "Don't expose functions that aren't safe for "
                              "fuzzers to call")
+        || !op.addBoolOption('\0', "disable-oom-functions", "Disable functions that cause "
+                            "artificial OOMs")
         || !op.addBoolOption('\0', "no-threads", "Disable helper threads")
 #ifdef DEBUG
         || !op.addBoolOption('\0', "dump-entrained-variables", "Print variables which are "
