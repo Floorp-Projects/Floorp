@@ -40,7 +40,6 @@
 
 #include "jsatominlines.h"
 
-#include "jit/AtomicOperations-inl.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/Shape-inl.h"
 

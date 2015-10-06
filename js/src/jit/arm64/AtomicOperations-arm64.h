@@ -9,8 +9,10 @@
 #ifndef jit_arm64_AtomicOperations_arm64_h
 #define jit_arm64_AtomicOperations_arm64_h
 
+#include "mozilla/Assertions.h"
+#include "mozilla/Types.h"
+
 #include "jit/arm64/Architecture-arm64.h"
-#include "jit/AtomicOperations.h"
 
 inline bool
 js::jit::AtomicOperations::isLockfree8()

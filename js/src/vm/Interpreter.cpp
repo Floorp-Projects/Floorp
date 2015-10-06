@@ -48,7 +48,6 @@
 #include "jsfuninlines.h"
 #include "jsscriptinlines.h"
 
-#include "jit/AtomicOperations-inl.h"
 #include "jit/JitFrames-inl.h"
 #include "vm/Debugger-inl.h"
 #include "vm/NativeObject-inl.h"

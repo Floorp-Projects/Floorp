@@ -33,7 +33,6 @@
 #include "jsboolinlines.h"
 #include "jsscriptinlines.h"
 
-#include "jit/AtomicOperations-inl.h"
 #include "jit/JitFrames-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "jit/shared/Lowering-shared-inl.h"

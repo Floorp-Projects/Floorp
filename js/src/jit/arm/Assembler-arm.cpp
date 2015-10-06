@@ -20,6 +20,7 @@
 #include "jit/arm/MacroAssembler-arm.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/JitCompartment.h"
+#include "jit/MacroAssembler.h"
 
 using namespace js;
 using namespace js::jit;

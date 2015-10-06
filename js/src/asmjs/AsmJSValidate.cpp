@@ -51,7 +51,6 @@
 
 #include "frontend/ParseNode-inl.h"
 #include "frontend/Parser-inl.h"
-#include "jit/AtomicOperations-inl.h"
 #include "jit/MacroAssembler-inl.h"
 
 using namespace js;

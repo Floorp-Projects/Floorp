@@ -19,7 +19,6 @@
 #include "jsobjinlines.h"
 
 #include "gc/Nursery-inl.h"
-#include "jit/AtomicOperations-inl.h"
 #include "vm/ArrayObject-inl.h"
 #include "vm/ScopeObject-inl.h"
 #include "vm/Shape-inl.h"

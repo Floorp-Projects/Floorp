@@ -9,7 +9,8 @@
 #ifndef jit_mips_shared_AtomicOperations_mips_shared_h
 #define jit_mips_shared_AtomicOperations_mips_shared_h
 
-#include "jit/AtomicOperations.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Types.h"
 
 #if defined(__clang__) || defined(__GNUC__)
 
