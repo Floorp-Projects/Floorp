@@ -5,6 +5,11 @@
 <!ENTITY tabCrashed.header "Bad news first: This tab has crashed">
 <!ENTITY tabCrashed.message "Now for the good news: You can just close this tab, restore it or restore all your crashed tabs.">
 <!ENTITY tabCrashed.sendReport "Submit a crash report to help prevent more bad news">
+<!ENTITY tabCrashed.includeURL "Include the address of the page I was on">
+<!ENTITY tabCrashed.commentPlaceholder "Add a comment (comments are publicly visible)">
+<!ENTITY tabCrashed.emailPlaceholder "Enter your email address here">
+<!ENTITY tabCrashed.emailMe "Email me when more information is available">
+<!ENTITY tabCrashed.crashReporter "Mozilla Crash Reporter">
 <!ENTITY tabCrashed.reportSent "Crash report already submitted; thank you for helping make &brandShortName; better!">
 <!ENTITY tabCrashed.closeTab "Close This Tab">
 <!ENTITY tabCrashed.restoreTab "Restore This Tab">

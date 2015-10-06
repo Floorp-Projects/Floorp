@@ -223,9 +223,7 @@ menu.subviewbutton > .menu-right:-moz-locale-dir(rtl) {
   }
 
   #BMB_bookmarksPopup menupopup[placespopup=true] > hbox {
-    /* After fixing of bug 1194480 the box-shadow can be removed again */
-    /* box-shadow: none; */
-    box-shadow: 0 0 4px rgba(0,0,0,0.02);
+    box-shadow: none;
     background: -moz-field;
     border: 1px solid ThreeDShadow;
   }
