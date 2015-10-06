@@ -10373,12 +10373,6 @@ CSSParserImpl::ParseBoxProperty(nsCSSValue& aValue,
     return false;
   }
 
-  if (aPropID == eCSSProperty_script_level ||
-      aPropID == eCSSProperty_math_display) {
-    MOZ_ASSERT(false, "must not be called for unsafe properties");
-    return false;
-  }
-
   if (variant & ~(VARIANT_AHKLP | VARIANT_COLOR | VARIANT_CALC)) {
     MOZ_ASSERT(false, "must only be called for properties that take certain "
                       "variants");
@@ -10466,15 +10460,6 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     MOZ_ASSERT(false, "not a single value property");
     return false;
   }
-
-  // We only allow 'script-level' when unsafe rules are enabled, because
-  // otherwise it could interfere with rulenode optimizations if used in
-  // a non-MathML-enabled document. We also only allow math-display when
-  // unsafe rules are enabled.
-  if (!mUnsafeRulesEnabled &&
-      (aPropID == eCSSProperty_script_level ||
-       aPropID == eCSSProperty_math_display))
-    return false;
 
   const KTableValue* kwtable = nsCSSProps::kKeywordTableTable[aPropID];
   uint32_t restrictions = nsCSSProps::ValueRestrictions(aPropID);
