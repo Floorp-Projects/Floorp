@@ -29,7 +29,7 @@ interface nsIStreamListener;
  *
  * This interface must be used only from the XPCOM main thread.
  */
-[scriptable, uuid(cc3bff29-324e-4704-9eeb-1b8a62c4a9dc)]
+[scriptable, uuid(2c389865-23db-4aa7-9fe5-60cc7b00697e)]
 interface nsIChannel : nsIRequest
 {
     /**
@@ -192,7 +192,7 @@ interface nsIChannel : nsIRequest
     /**************************************************************************
      * Channel specific load flags:
      *
-     * Bits 23-31 are reserved for future use by this interface or one of its
+     * Bits 26-31 are reserved for future use by this interface or one of its
      * derivatives (e.g., see nsICachingChannel).
      */
 
@@ -271,6 +271,13 @@ interface nsIChannel : nsIRequest
      * to override them for the same user name.
      */
     const unsigned long LOAD_EXPLICIT_CREDENTIALS = 1 << 24;
+
+    /**
+     * Set to force bypass of any service worker interception of the channel.
+     */
+    const unsigned long LOAD_BYPASS_SERVICE_WORKER = 1 << 25;
+
+    // nsICachingChannel load flags begin at bit 26.
 
     /**
      * Access to the type implied or stated by the Content-Disposition header
