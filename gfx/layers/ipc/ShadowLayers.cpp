@@ -816,13 +816,14 @@ void ShadowLayerForwarder::AttachAsyncCompositable(uint64_t aCompositableID,
 
 PTextureChild*
 ShadowLayerForwarder::CreateTexture(const SurfaceDescriptor& aSharedData,
+                                    LayersBackend aLayersBackend,
                                     TextureFlags aFlags)
 {
   if (!HasShadowManager() ||
       !mShadowManager->IPCOpen()) {
     return nullptr;
   }
-  return mShadowManager->SendPTextureConstructor(aSharedData, aFlags);
+  return mShadowManager->SendPTextureConstructor(aSharedData, aLayersBackend, aFlags);
 }
 
 

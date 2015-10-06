@@ -330,4 +330,53 @@ TEST_F(AccessibleCaretManagerTester, TestTypingAtEndOfInput)
   EXPECT_EQ(FirstCaretAppearance(), Appearance::None);
 }
 
+TEST_F(AccessibleCaretManagerTester, TestScrollInSelectionMode)
+{
+  EXPECT_CALL(mManager, GetCaretMode())
+    .WillRepeatedly(Return(CaretMode::Selection));
+
+  MockFunction<void(std::string aCheckPointName)> check;
+  {
+    InSequence dummy;
+
+    // Initially, first caret is out of scrollport, and second caret is visible.
+    EXPECT_CALL(mManager.FirstCaret(), SetPosition(_, _))
+      .WillRepeatedly(Return(PositionChangedResult::Invisible));
+    EXPECT_CALL(mManager.SecondCaret(), SetPosition(_, _))
+      .WillRepeatedly(Return(PositionChangedResult::Changed));
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                  CaretChangedReason::Updateposition)).Times(1);
+    EXPECT_CALL(check, Call("updatecarets"));
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                  CaretChangedReason::Visibilitychange)).Times(1);
+    EXPECT_CALL(check, Call("scrollstart"));
+
+    // After scroll ended, first caret is visible and second caret is out of
+    // scroll port.
+    EXPECT_CALL(mManager.FirstCaret(), SetPosition(_, _))
+      .WillRepeatedly(Return(PositionChangedResult::Changed));
+    EXPECT_CALL(mManager.SecondCaret(), SetPosition(_, _))
+      .WillRepeatedly(Return(PositionChangedResult::Invisible));
+
+    EXPECT_CALL(mManager, DispatchCaretStateChangedEvent(
+                  CaretChangedReason::Updateposition)).Times(1);
+  }
+
+  mManager.UpdateCarets();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::NormalNotShown);
+  EXPECT_EQ(SecondCaretAppearance(), Appearance::Normal);
+  check.Call("updatecarets");
+
+  mManager.OnScrollStart();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::None);
+  EXPECT_EQ(SecondCaretAppearance(), Appearance::None);
+  check.Call("scrollstart");
+
+  mManager.OnScrollEnd();
+  EXPECT_EQ(FirstCaretAppearance(), Appearance::Normal);
+  EXPECT_EQ(SecondCaretAppearance(), Appearance::NormalNotShown);
+}
+
 } // namespace mozilla

@@ -121,7 +121,7 @@ private:
     if (!mInitOkay) {
       return;
     }
-    if (FAILED(mDevice->CreateVertexShader(aShader.mData, aShader.mLength, nullptr, aOut))) {
+    if (Failed(mDevice->CreateVertexShader(aShader.mData, aShader.mLength, nullptr, aOut), "create vs")) {
       mInitOkay = false;
     }
   }
@@ -129,9 +129,18 @@ private:
     if (!mInitOkay) {
       return;
     }
-    if (FAILED(mDevice->CreatePixelShader(aShader.mData, aShader.mLength, nullptr, aOut))) {
+    if (Failed(mDevice->CreatePixelShader(aShader.mData, aShader.mLength, nullptr, aOut), "create ps")) {
       mInitOkay = false;
     }
+  }
+
+  bool Failed(HRESULT hr, const char* aContext) {
+    if (SUCCEEDED(hr))
+      return false;
+
+    gfxCriticalError(CriticalLog::DefaultOptions(false))
+      << "[D3D11] " << aContext << " failed: " << hexa(hr);
+    return true;
   }
 
   // Only used during initialization.
@@ -145,7 +154,6 @@ CompositorD3D11::CompositorD3D11(nsIWidget* aWidget)
   , mHwnd(nullptr)
   , mDisableSequenceForNextFrame(false)
 {
-  SetBackend(LayersBackend::LAYERS_D3D11);
 }
 
 CompositorD3D11::~CompositorD3D11()
@@ -193,6 +201,8 @@ CompositorD3D11::Initialize()
   mDevice->GetImmediateContext(byRef(mContext));
 
   if (!mContext) {
+    gfxCriticalError(CriticalLog::DefaultOptions(false))
+      << "[D3D11] failed to get immediate context";
     return false;
   }
 
@@ -231,7 +241,7 @@ CompositorD3D11::Initialize()
                                     sizeof(LayerQuadVS),
                                     byRef(mAttachments->mInputLayout));
 
-    if (FAILED(hr)) {
+    if (Failed(hr, "CreateInputLayout")) {
       return false;
     }
 
@@ -242,7 +252,7 @@ CompositorD3D11::Initialize()
 
     hr = mDevice->CreateBuffer(&bufferDesc, &data, byRef(mAttachments->mVertexBuffer));
 
-    if (FAILED(hr)) {
+    if (Failed(hr, "create vertex buffer")) {
       return false;
     }
 
@@ -256,13 +266,13 @@ CompositorD3D11::Initialize()
                                    D3D11_CPU_ACCESS_WRITE);
 
     hr = mDevice->CreateBuffer(&cBufferDesc, nullptr, byRef(mAttachments->mVSConstantBuffer));
-    if (FAILED(hr)) {
+    if (Failed(hr, "create vs buffer")) {
       return false;
     }
 
     cBufferDesc.ByteWidth = sizeof(PixelShaderConstants);
     hr = mDevice->CreateBuffer(&cBufferDesc, nullptr, byRef(mAttachments->mPSConstantBuffer));
-    if (FAILED(hr)) {
+    if (Failed(hr, "create ps buffer")) {
       return false;
     }
 
@@ -271,19 +281,19 @@ CompositorD3D11::Initialize()
     rastDesc.ScissorEnable = TRUE;
 
     hr = mDevice->CreateRasterizerState(&rastDesc, byRef(mAttachments->mRasterizerState));
-    if (FAILED(hr)) {
+    if (Failed(hr, "create rasterizer")) {
       return false;
     }
 
     CD3D11_SAMPLER_DESC samplerDesc(D3D11_DEFAULT);
     hr = mDevice->CreateSamplerState(&samplerDesc, byRef(mAttachments->mLinearSamplerState));
-    if (FAILED(hr)) {
+    if (Failed(hr, "create linear sampler")) {
       return false;
     }
 
     samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
     hr = mDevice->CreateSamplerState(&samplerDesc, byRef(mAttachments->mPointSamplerState));
-    if (FAILED(hr)) {
+    if (Failed(hr, "create point sampler")) {
       return false;
     }
 
@@ -296,7 +306,7 @@ CompositorD3D11::Initialize()
     };
     blendDesc.RenderTarget[0] = rtBlendPremul;
     hr = mDevice->CreateBlendState(&blendDesc, byRef(mAttachments->mPremulBlendState));
-    if (FAILED(hr)) {
+    if (Failed(hr, "create pm blender")) {
       return false;
     }
 
@@ -308,7 +318,7 @@ CompositorD3D11::Initialize()
     };
     blendDesc.RenderTarget[0] = rtBlendMultiplyPremul;
     hr = mDevice->CreateBlendState(&blendDesc, byRef(mAttachments->mPremulBlendMultiplyState));
-    if (FAILED(hr)) {
+    if (Failed(hr, "create pm-mul blender")) {
       return false;
     }
 
@@ -320,7 +330,7 @@ CompositorD3D11::Initialize()
     };
     blendDesc.RenderTarget[0] = rtBlendScreenPremul;
     hr = mDevice->CreateBlendState(&blendDesc, byRef(mAttachments->mPremulBlendScreenState));
-    if (FAILED(hr)) {
+    if (Failed(hr, "create pm-scn blender")) {
       return false;
     }
 
@@ -332,7 +342,7 @@ CompositorD3D11::Initialize()
     };
     blendDesc.RenderTarget[0] = rtBlendNonPremul;
     hr = mDevice->CreateBlendState(&blendDesc, byRef(mAttachments->mNonPremulBlendState));
-    if (FAILED(hr)) {
+    if (Failed(hr, "create npm blender")) {
       return false;
     }
 
@@ -349,7 +359,7 @@ CompositorD3D11::Initialize()
       };
       blendDesc.RenderTarget[0] = rtBlendComponent;
       hr = mDevice->CreateBlendState(&blendDesc, byRef(mAttachments->mComponentBlendState));
-      if (FAILED(hr)) {
+      if (Failed(hr, "create component blender")) {
         return false;
       }
     }
@@ -362,7 +372,7 @@ CompositorD3D11::Initialize()
     };
     blendDesc.RenderTarget[0] = rtBlendDisabled;
     hr = mDevice->CreateBlendState(&blendDesc, byRef(mAttachments->mDisabledBlendState));
-    if (FAILED(hr)) {
+    if (Failed(hr, "create null blender")) {
       return false;
     }
 
@@ -394,7 +404,7 @@ CompositorD3D11::Initialize()
 
     cBufferDesc.ByteWidth = sizeof(gfx::VRDistortionConstants);
     hr = mDevice->CreateBuffer(&cBufferDesc, nullptr, byRef(mAttachments->mVRDistortionConstants));
-    if (FAILED(hr)) {
+    if (Failed(hr, "create vr buffer ")) {
       return false;
     }
   }
@@ -432,7 +442,7 @@ CompositorD3D11::Initialize()
      * buffer.
      */
     hr = dxgiFactory->CreateSwapChain(dxgiDevice, &swapDesc, byRef(mSwapChain));
-    if (FAILED(hr)) {
+    if (Failed(hr, "create swap chain")) {
      return false;
     }
 
@@ -1353,12 +1363,12 @@ DeviceAttachmentsD3D11::InitSyncObject()
 
   RefPtr<ID3D11Texture2D> texture;
   HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(texture));
-  if (FAILED(hr)) {
+  if (Failed(hr, "create sync texture")) {
     return false;
   }
 
   hr = texture->QueryInterface((IDXGIResource**)byRef(mSyncTexture));
-  if (FAILED(hr)) {
+  if (Failed(hr, "QI sync texture")) {
     return false;
   }
 
@@ -1506,6 +1516,17 @@ CompositorD3D11::PaintToTarget()
 
   mTarget->Flush();
   mContext->Unmap(readTexture, 0);
+}
+
+bool
+CompositorD3D11::Failed(HRESULT hr, const char* aContext)
+{
+  if (SUCCEEDED(hr))
+    return false;
+
+  gfxCriticalError(CriticalLog::DefaultOptions(false))
+    << "[D3D11] " << aContext << " failed: " << hexa(hr);
+  return true;
 }
 
 void
