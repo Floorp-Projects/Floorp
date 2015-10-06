@@ -89,6 +89,58 @@ nsSecCheckWrapChannel::~nsSecCheckWrapChannel()
 }
 
 //---------------------------------------------------------
+// SecWrapChannelStreamListener helper
+//---------------------------------------------------------
+
+class SecWrapChannelStreamListener final : public nsIStreamListener
+{
+  public:
+    SecWrapChannelStreamListener(nsIRequest *aRequest,
+                                 nsIStreamListener *aStreamListener)
+    : mRequest(aRequest)
+    , mListener(aStreamListener) {}
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSIREQUESTOBSERVER
+
+  private:
+    ~SecWrapChannelStreamListener() {}
+
+    nsCOMPtr<nsIRequest>        mRequest;
+    nsCOMPtr<nsIStreamListener> mListener;
+};
+
+NS_IMPL_ISUPPORTS(SecWrapChannelStreamListener,
+                  nsIStreamListener,
+                  nsIRequestObserver)
+
+NS_IMETHODIMP
+SecWrapChannelStreamListener::OnStartRequest(nsIRequest *aRequest,
+                                             nsISupports *aContext)
+{
+  return mListener->OnStartRequest(mRequest, aContext);
+}
+
+NS_IMETHODIMP
+SecWrapChannelStreamListener::OnStopRequest(nsIRequest *aRequest,
+                                            nsISupports *aContext,
+                                            nsresult aStatus)
+{
+  return mListener->OnStopRequest(mRequest, aContext, aStatus);
+}
+
+NS_IMETHODIMP
+SecWrapChannelStreamListener::OnDataAvailable(nsIRequest *aRequest,
+                                              nsISupports *aContext,
+                                              nsIInputStream *aInStream,
+                                              uint64_t aOffset,
+                                              uint32_t aCount)
+{
+  return mListener->OnDataAvailable(mRequest, aContext, aInStream, aOffset, aCount);
+}
+
+//---------------------------------------------------------
 // nsIChannel implementation
 //---------------------------------------------------------
 
@@ -111,10 +163,11 @@ nsSecCheckWrapChannel::SetLoadInfo(nsILoadInfo* aLoadInfo)
 NS_IMETHODIMP
 nsSecCheckWrapChannel::AsyncOpen2(nsIStreamListener *aListener)
 {
-  nsCOMPtr<nsIStreamListener> listener = aListener;
-  nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, listener);
+  nsCOMPtr<nsIStreamListener> secWrapChannelListener =
+    new SecWrapChannelStreamListener(this, aListener);
+  nsresult rv = nsContentSecurityManager::doContentSecurityCheck(this, secWrapChannelListener);
   NS_ENSURE_SUCCESS(rv, rv);
-  return AsyncOpen(listener, nullptr);
+  return AsyncOpen(secWrapChannelListener, nullptr);
 }
 
 NS_IMETHODIMP
