@@ -383,10 +383,10 @@ public:
 
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   /**
-   * Calculates and updates plugin positioning and clip via ipc messages
-   * sent to the main thread.
+   * Calculates and requests the main thread update plugin positioning, clip,
+   * and visibility via ipc.
    */
-  static void UpdatePluginWindowState(uint64_t aId);
+  void UpdatePluginWindowState(uint64_t aId);
 #endif
 
   /**
@@ -477,6 +477,14 @@ protected:
 
   nsRefPtr<CompositorThreadHolder> mCompositorThreadHolder;
   nsRefPtr<CompositorVsyncScheduler> mCompositorScheduler;
+
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+  // cached plugin data used to reduce the number of updates we request.
+  uint64_t mLastPluginUpdateLayerTreeId;
+  nsIntPoint mPluginsLayerOffset;
+  nsIntRegion mPluginsLayerVisibleRegion;
+  nsTArray<PluginWindowData> mCachedPluginData;
+#endif
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };
