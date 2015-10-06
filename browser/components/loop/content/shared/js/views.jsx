@@ -120,10 +120,12 @@ loop.shared.views = (function(_, mozL10n) {
 
     _handleShareTabs: function() {
       this._startScreenShare("browser");
+      this.hideDropdownMenu();
     },
 
     _handleShareWindows: function() {
       this._startScreenShare("window");
+      this.hideDropdownMenu();
     },
 
     _getTitle: function() {
