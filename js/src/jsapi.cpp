@@ -4477,7 +4477,7 @@ ExecuteScript(JSContext* cx, AutoObjectVector& scopeChain, HandleScript scriptAr
         return false;
 
     RootedScript script(cx, scriptArg);
-    if (!script->hasNonSyntacticScope() && !dynamicScope->is<GlobalObject>()) {
+    if (!script->hasNonSyntacticScope() && !IsGlobalLexicalScope(dynamicScope)) {
         script = CloneGlobalScript(cx, staticScope, script);
         if (!script)
             return false;
