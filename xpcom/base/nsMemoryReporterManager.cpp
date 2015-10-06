@@ -1506,15 +1506,6 @@ nsMemoryReporterManager::StartGettingReports()
 }
 
 NS_IMETHODIMP
-nsMemoryReporterManager::GetReportsForThisProcess(
-  nsIHandleReportCallback* aHandleReport,
-  nsISupports* aHandleReportData, bool aAnonymize)
-{
-  return GetReportsForThisProcessExtended(aHandleReport, aHandleReportData,
-                                          aAnonymize, nullptr);
-}
-
-NS_IMETHODIMP
 nsMemoryReporterManager::GetReportsForThisProcessExtended(
   nsIHandleReportCallback* aHandleReport, nsISupports* aHandleReportData,
   bool aAnonymize, FILE* aDMDFile)
