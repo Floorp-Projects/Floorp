@@ -2243,7 +2243,7 @@ HttpChannelChild::ResetInterception()
 
   // The chance to intercept any further requests associated with this channel
   // (such as redirects) has passed.
-  ForceNoIntercept();
+  mLoadFlags |= LOAD_BYPASS_SERVICE_WORKER;
 
   // Continue with the original cross-process request
   nsresult rv = ContinueAsyncOpen();
