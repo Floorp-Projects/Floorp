@@ -117,7 +117,9 @@ public:
                        uri, aPrincipal,
                        nsILoadInfo::SEC_NORMAL,
                        nsIContentPolicy::TYPE_INTERNAL_SCRIPT,
-                       loadGroup);
+                       loadGroup,
+                       nullptr, // aCallbacks
+                       nsIChannel::LOAD_BYPASS_SERVICE_WORKER);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -138,12 +140,6 @@ public:
     if (httpChannel) {
       // Spec says no redirects allowed for SW scripts.
       httpChannel->SetRedirectionLimit(0);
-    }
-
-    // Don't let serviceworker intercept.
-    nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(mChannel);
-    if (internalChannel) {
-      internalChannel->ForceNoIntercept();
     }
 
     nsCOMPtr<nsIStreamLoader> loader;
