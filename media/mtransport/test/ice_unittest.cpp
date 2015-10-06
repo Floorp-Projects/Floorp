@@ -2457,6 +2457,10 @@ void DelayRelayCandidates(
   }
 }
 
+void DropTrickleCandidates(
+    std::vector<SchedulableTrickleCandidate*>& candidates) {
+}
+
 TEST_F(IceConnectTest, TestConnectTrickleAddStreamDuringICE) {
   AddStream("first", 1);
   ASSERT_TRUE(Gather());
@@ -2504,6 +2508,26 @@ TEST_F(IceConnectTest, RemoveStream) {
   RemoveStream(0);
   ASSERT_TRUE(Gather());
   ConnectTrickle();
+}
+
+TEST_F(IceConnectTest, P1NoTrickle) {
+  AddStream("first", 1);
+  ASSERT_TRUE(Gather());
+  ConnectTrickle();
+  DropTrickleCandidates(p1_->ControlTrickle(0));
+  RealisticTrickleDelay(p2_->ControlTrickle(0));
+  ASSERT_TRUE_WAIT(p1_->ice_complete(), 1000);
+  ASSERT_TRUE_WAIT(p2_->ice_complete(), 1000);
+}
+
+TEST_F(IceConnectTest, P2NoTrickle) {
+  AddStream("first", 1);
+  ASSERT_TRUE(Gather());
+  ConnectTrickle();
+  RealisticTrickleDelay(p1_->ControlTrickle(0));
+  DropTrickleCandidates(p2_->ControlTrickle(0));
+  ASSERT_TRUE_WAIT(p1_->ice_complete(), 1000);
+  ASSERT_TRUE_WAIT(p2_->ice_complete(), 1000);
 }
 
 TEST_F(IceConnectTest, RemoveAndAddStream) {
