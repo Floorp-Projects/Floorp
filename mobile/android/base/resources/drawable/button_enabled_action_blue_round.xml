@@ -7,5 +7,5 @@
        android:shape="rectangle" >
   <solid android:color="@color/link_blue_pressed" />
   <corners
-      android:radius="@dimen/button_corner_radius" />
+      android:radius="@dimen/standard_corner_radius" />
 </shape>
