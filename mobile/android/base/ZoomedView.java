@@ -271,7 +271,7 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
 
         toolbarHeight = getResources().getDimensionPixelSize(R.dimen.zoomed_view_toolbar_height);
         containterSize = getResources().getDimensionPixelSize(R.dimen.drawable_dropshadow_size);
-        cornerRadius = getResources().getDimensionPixelSize(R.dimen.button_corner_radius);
+        cornerRadius = getResources().getDimensionPixelSize(R.dimen.standard_corner_radius);
 
         moveToolbar(true);
     }
