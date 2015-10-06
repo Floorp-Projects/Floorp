@@ -6210,13 +6210,12 @@ ICGetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     return true;
 }
 
-bool
+void
 ICGetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> code)
 {
     CodeOffsetLabel offset(returnOffset_);
     offset.fixup(&masm);
     cx->compartment()->jitCompartment()->initBaselineGetPropReturnAddr(code->raw() + offset.offset());
-    return true;
 }
 
 bool
@@ -7632,13 +7631,12 @@ ICSetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     return true;
 }
 
-bool
+void
 ICSetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> code)
 {
     CodeOffsetLabel offset(returnOffset_);
     offset.fixup(&masm);
     cx->compartment()->jitCompartment()->initBaselineSetPropReturnAddr(code->raw() + offset.offset());
-    return true;
 }
 
 static void
@@ -9403,17 +9401,16 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     return true;
 }
 
-bool
+void
 ICCall_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> code)
 {
     if (MOZ_UNLIKELY(isSpread_))
-        return true;
+        return;
 
     CodeOffsetLabel offset(returnOffset_);
     offset.fixup(&masm);
     cx->compartment()->jitCompartment()->initBaselineCallReturnAddr(code->raw() + offset.offset(),
                                                                     isConstructing_);
-    return true;
 }
 
 typedef bool (*CreateThisFn)(JSContext* cx, HandleObject callee, MutableHandleValue rval);

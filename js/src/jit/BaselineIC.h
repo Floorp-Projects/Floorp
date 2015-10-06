@@ -2341,7 +2341,7 @@ class ICGetProp_Fallback : public ICMonitoredFallbackStub
       protected:
         uint32_t returnOffset_;
         bool generateStubCode(MacroAssembler& masm);
-        bool postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> code);
+        void postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> code);
 
       public:
         explicit Compiler(JSContext* cx)
@@ -3334,7 +3334,7 @@ class ICSetProp_Fallback : public ICFallbackStub
       protected:
         uint32_t returnOffset_;
         bool generateStubCode(MacroAssembler& masm);
-        bool postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> code);
+        void postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> code);
 
       public:
         explicit Compiler(JSContext* cx)
@@ -3941,7 +3941,7 @@ class ICCall_Fallback : public ICMonitoredFallbackStub
         bool isSpread_;
         uint32_t returnOffset_;
         bool generateStubCode(MacroAssembler& masm);
-        bool postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> code);
+        void postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> code);
 
         virtual int32_t getKey() const {
             return static_cast<int32_t>(engine_) |
