@@ -20,8 +20,6 @@ private:
   ~MobileMessageDatabaseService() {}
 
 public:
-  MobileMessageDatabaseService();
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMOBILEMESSAGEDATABASESERVICE
 };

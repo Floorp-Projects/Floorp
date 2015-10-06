@@ -5,8 +5,6 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.annotation.WrapForJNI;
-
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -20,7 +18,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.HandlerThread;
+import android.os.Looper;
 import android.telephony.SmsManager;
 import android.telephony.SmsMessage;
 import android.util.Log;
@@ -29,12 +27,6 @@ import static android.telephony.SmsMessage.MessageClass;
 import static org.mozilla.gecko.SmsManager.ISmsManager;
 
 import java.util.ArrayList;
-import java.util.Formatter;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -191,7 +183,7 @@ class Postman
   }
 }
 
-class SmsIOThread extends HandlerThread {
+class SmsIOThread extends Thread {
   private final static SmsIOThread sInstance = new SmsIOThread();
 
   private Handler mHandler;
@@ -200,18 +192,17 @@ class SmsIOThread extends HandlerThread {
     return sInstance;
   }
 
-  SmsIOThread() {
-    super("SmsIOThread");
+  public boolean execute(Runnable r) {
+    return mHandler.post(r);
   }
 
   @Override
-  public void start() {
-    super.start();
-    mHandler = new Handler(getLooper());
-  }
+  public void run() {
+    Looper.prepare();
 
-  public boolean execute(Runnable r) {
-    return mHandler.post(r);
+    mHandler = new Handler();
+
+    Looper.loop();
   }
 }
 
@@ -223,40 +214,57 @@ class MessagesListManager
     return sInstance;
   }
 
-  private final HashMap<Integer, Cursor> mCursors = new HashMap<>();
+  private final ArrayList<Cursor> mCursors = new ArrayList<>();
 
-  public void add(int id, Cursor aCursor) {
-    if (mCursors.containsKey(id)) {
-      Log.e("GeckoSmsManager", "Trying to overwrite cursor!");
-      return;
+  public int add(Cursor aCursor) {
+    int size = mCursors.size();
+
+    for (int i=0; i<size; ++i) {
+      if (mCursors.get(i) == null) {
+        mCursors.set(i, aCursor);
+        return i;
+      }
     }
 
-    mCursors.put(id, aCursor);
+    mCursors.add(aCursor);
+    return size;
   }
 
   public Cursor get(int aId) {
-    if (!mCursors.containsKey(aId)) {
-      Log.e("GeckoSmsManager", "Cursor doesn't exist!");
+    if (aId < 0 || mCursors.size() <= aId) {
+      Log.e("GeckoSmsManager", "Trying to get an unknown list!");
       return null;
     }
 
-    return mCursors.get(aId);
+    Cursor cursor = mCursors.get(aId);
+    if (cursor == null) {
+      Log.e("GeckoSmsManager", "Trying to get an empty list!");
+    }
+
+    return cursor;
   }
 
   public void remove(int aId) {
-    if (!mCursors.containsKey(aId)) {
-      Log.e("GeckoSmsManager", "Cursor doesn't exist!");
+    if (aId < 0 || mCursors.size() <= aId) {
+      Log.e("GeckoSmsManager", "Trying to destroy an unknown list!");
       return;
     }
 
-    mCursors.remove(aId);
+    Cursor cursor = mCursors.set(aId, null);
+    if (cursor == null) {
+      Log.e("GeckoSmsManager", "Trying to destroy an empty list!");
+      return;
+    }
+
+    cursor.close();
   }
 
   public void clear() {
-    Set<Map.Entry<Integer, Cursor>> entries = mCursors.entrySet();
-    Iterator<Map.Entry<Integer, Cursor>> it = entries.iterator();
-    while (it.hasNext()) {
-      it.next().getValue().close();
+    for (int i=0; i<mCursors.size(); ++i) {
+      Cursor c = mCursors.get(i);
+      if (c != null) {
+        c.close();
+      }
     }
 
     mCursors.clear();
@@ -274,7 +282,7 @@ public class GeckoSmsManager
   /*
    * Make sure that the following error codes are in sync with |ErrorType| in:
    * dom/mobilemessage/interfaces/nsIMobileMessageCallback.idl
-   * The error codes are owned by the DOM.
+   * The error code are owned by the DOM.
    */
   public final static int kNoError               = 0;
   public final static int kNoSignalError         = 1;
@@ -297,9 +305,8 @@ public class GeckoSmsManager
 
   private final static int kMaxMessageSize    = 160;
 
-  private final static Uri kSmsContentUri        = Uri.parse("content://sms");
-  private final static Uri kSmsSentContentUri    = Uri.parse("content://sms/sent");
-  private final static Uri kSmsThreadsContentUri = Uri.parse("content://sms/conversations");
+  private final static Uri kSmsContentUri     = Uri.parse("content://sms");
+  private final static Uri kSmsSentContentUri = Uri.parse("content://sms/sent");
 
   private final static int kSmsTypeInbox      = 1;
   private final static int kSmsTypeSentbox    = 2;
@@ -344,9 +351,7 @@ public class GeckoSmsManager
   private final static int kMessageClassClass2  = 3;
   private final static int kMessageClassClass3  = 4;
 
-  private final static String[] kRequiredMessageRows = { "_id", "address", "body", "date", "type", "status", "read", "thread_id" };
-  private final static String[] kRequiredMessageRowsForThread = { "_id", "address", "body", "read", "subject", "date" };
-  private final static String[] kThreadProjection = { "thread_id" };
+  private final static String[] kRequiredMessageRows = { "_id", "address", "body", "date", "type", "status" };
 
   // Used to generate monotonically increasing GUIDs.
   private static final AtomicInteger pendingIntentGuid = new AtomicInteger(Integer.MIN_VALUE);
@@ -655,14 +660,11 @@ public class GeckoSmsManager
             throw new InvalidTypeException();
           }
 
-          boolean read = cursor.getInt(cursor.getColumnIndex("read")) != 0;
-
           notifyGetSms(cursor.getInt(cursor.getColumnIndex("_id")),
                        deliveryStatus,
                        receiver, sender,
                        cursor.getString(cursor.getColumnIndex("body")),
                        cursor.getLong(cursor.getColumnIndex("date")),
-                       read,
                        mRequestId);
         } catch (NotFoundException e) {
           Log.i("GeckoSmsManager", "Message id " + mMessageId + " not found");
@@ -734,55 +736,23 @@ public class GeckoSmsManager
     }
   }
 
-  private void getMessageFromCursorAndNotify(Cursor aCursor, int aRequestId) throws Exception {
-    int type = aCursor.getInt(aCursor.getColumnIndex("type"));
-    int deliveryStatus = kDeliveryStateUnknown;
-    String sender = "";
-    String receiver = "";
-
-    if (type == kSmsTypeInbox) {
-      deliveryStatus = kDeliveryStatusSuccess;
-      sender = aCursor.getString(aCursor.getColumnIndex("address"));
-    } else if (type == kSmsTypeSentbox) {
-      deliveryStatus = getGeckoDeliveryStatus(aCursor.getInt(aCursor.getColumnIndex("status")));
-      receiver = aCursor.getString(aCursor.getColumnIndex("address"));
-    } else {
-      throw new Exception("Shouldn't ever get a message here that's not from inbox or sentbox");
-    }
-
-    boolean read = aCursor.getInt(aCursor.getColumnIndex("read")) != 0;
-
-    notifyMessageCursorResult(aCursor.getInt(aCursor.getColumnIndex("_id")),
-                              deliveryStatus,
-                              receiver, sender,
-                              aCursor.getString(aCursor.getColumnIndex("body")),
-                              aCursor.getLong(aCursor.getColumnIndex("date")),
-                              aCursor.getLong(aCursor.getColumnIndex("thread_id")),
-                              read,
-                              aRequestId);
-  }
-
   @Override
-  public void createMessageCursor(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, String aDelivery, boolean aHasRead, boolean aRead, boolean aHasThreadId, long aThreadId, boolean aReverse, int aRequestId) {
-    class CreateMessageCursorRunnable implements Runnable {
+  public void createMessageList(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, String aDelivery, boolean aHasRead, boolean aRead, long aThreadId, boolean aReverse, int aRequestId) {
+    class CreateMessageListRunnable implements Runnable {
       private final long     mStartDate;
       private final long     mEndDate;
       private final String[] mNumbers;
       private final int      mNumbersCount;
       private final String   mDelivery;
-      private final boolean  mHasThreadId;
-      private final long     mThreadId;
       private final boolean  mReverse;
       private final int      mRequestId;
 
-      CreateMessageCursorRunnable(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, String aDelivery, boolean aHasRead, boolean aRead, boolean aHasThreadId, long aThreadId, boolean aReverse, int aRequestId) {
+      CreateMessageListRunnable(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, String aDelivery, boolean aHasRead, boolean aRead, long aThreadId, boolean aReverse, int aRequestId) {
         mStartDate = aStartDate;
         mEndDate = aEndDate;
         mNumbers = aNumbers;
         mNumbersCount = aNumbersCount;
         mDelivery = aDelivery;
-        mHasThreadId = aHasThreadId;
-        mThreadId = aThreadId;
         mReverse = aReverse;
         mRequestId = aRequestId;
       }
@@ -793,236 +763,169 @@ public class GeckoSmsManager
         boolean closeCursor = true;
 
         try {
-          StringBuilder restrictions = new StringBuilder();
-          Formatter formatter = new Formatter(restrictions);
+          // TODO: should use the |selectionArgs| argument in |ContentResolver.query()|.
+          ArrayList<String> restrictions = new ArrayList<String>();
 
           if (mStartDate >= 0) {
-            formatter.format("date >= '%d' AND ", mStartDate);
+            restrictions.add("date >= " + mStartDate);
           }
 
           if (mEndDate >= 0) {
-            formatter.format("date <= '%d' AND ", mEndDate);
+            restrictions.add("date <= " + mEndDate);
           }
 
           if (mNumbersCount > 0) {
-            formatter.format("address IN ('%s'", mNumbers[0]);
+            final StringBuilder numberRestriction = new StringBuilder("address IN ('");
+            numberRestriction.append(mNumbers[0]).append("'");
 
-            for (int i = 1; i < mNumbersCount; ++i) {
-              formatter.format(", '%s'", mNumbers[i]);
+            for (int i=1; i<mNumbersCount; ++i) {
+              numberRestriction.append(", '").append(mNumbers[i]).append("'");
             }
-            
-            formatter.format(") AND ");
+            numberRestriction.append(')');
+
+            restrictions.add(numberRestriction.toString());
           }
 
-          if (mDelivery == null || mDelivery.isEmpty()) {
-            formatter.format("type IN ('%d', '%d') AND ", kSmsTypeSentbox, kSmsTypeInbox);
+          if (mDelivery == null) {
+            restrictions.add("type IN ('" + kSmsTypeSentbox + "', '" + kSmsTypeInbox + "')");
           } else if (mDelivery.equals("sent")) {
-            formatter.format("type = '%d' AND ", kSmsTypeSentbox);
+            restrictions.add("type = " + kSmsTypeSentbox);
           } else if (mDelivery.equals("received")) {
-            formatter.format("type = '%d' AND ", kSmsTypeInbox);
+            restrictions.add("type = " + kSmsTypeInbox);
           } else {
-            throw new Exception("Unexpected delivery state: " + mDelivery);
+            throw new UnexpectedDeliveryStateException();
           }
 
-          if (mHasThreadId) {
-            formatter.format("thread_id = '%d' AND ", mThreadId);
+          final StringBuilder restrictionText = new StringBuilder();
+          if (!restrictions.isEmpty()) {
+            restrictionText.append(restrictions.get(0));
           }
 
-          // Final 'AND 1' is a no-op so we don't have to special case the last
-          // condition.
-          formatter.format("1");
+          for (int i=1; i<restrictions.size(); ++i) {
+            restrictionText.append(" AND ").append(restrictions.get(i));
+          }
 
           ContentResolver cr = GeckoAppShell.getContext().getContentResolver();
-          cursor = cr.query(kSmsContentUri,
-                            kRequiredMessageRows,
-                            restrictions.toString(),
-                            null,
+          cursor = cr.query(kSmsContentUri, kRequiredMessageRows, restrictionText.toString(), null,
                             mReverse ? "date DESC" : "date ASC");
 
           if (cursor.getCount() == 0) {
-            notifyCursorDone(mRequestId);
+            notifyNoMessageInList(mRequestId);
             return;
           }
-
-          MessagesListManager.getInstance().add(mRequestId, cursor);
 
           cursor.moveToFirst();
-          getMessageFromCursorAndNotify(cursor, mRequestId);
+
+          int type = cursor.getInt(cursor.getColumnIndex("type"));
+          int deliveryStatus;
+          String sender = "";
+          String receiver = "";
+
+          if (type == kSmsTypeInbox) {
+            deliveryStatus = kDeliveryStatusSuccess;
+            sender = cursor.getString(cursor.getColumnIndex("address"));
+          } else if (type == kSmsTypeSentbox) {
+            deliveryStatus = getGeckoDeliveryStatus(cursor.getInt(cursor.getColumnIndex("status")));
+            receiver = cursor.getString(cursor.getColumnIndex("address"));
+          } else {
+            throw new UnexpectedDeliveryStateException();
+          }
+
+          int listId = MessagesListManager.getInstance().add(cursor);
           closeCursor = false;
+          notifyListCreated(listId,
+                            cursor.getInt(cursor.getColumnIndex("_id")),
+                            deliveryStatus,
+                            receiver, sender,
+                            cursor.getString(cursor.getColumnIndex("body")),
+                            cursor.getLong(cursor.getColumnIndex("date")),
+                            mRequestId);
+        } catch (UnexpectedDeliveryStateException e) {
+          Log.e("GeckoSmsManager", "Unexcepted delivery state type", e);
+          notifyReadingMessageListFailed(kUnknownError, mRequestId);
         } catch (Exception e) {
           Log.e("GeckoSmsManager", "Error while trying to create a message list cursor", e);
-          notifyCursorError(kUnknownError, mRequestId);
+          notifyReadingMessageListFailed(kUnknownError, mRequestId);
         } finally {
-          if (closeCursor && cursor != null) {
+          // Close the cursor if MessagesListManager isn't taking care of it.
+          // We could also just check if it is in the MessagesListManager list but
+          // that would be less efficient.
+          if (cursor != null && closeCursor) {
             cursor.close();
           }
         }
       }
     }
 
-    if (!SmsIOThread.getInstance().execute(new CreateMessageCursorRunnable(aStartDate, aEndDate, aNumbers, aNumbersCount, aDelivery, aHasRead, aRead, aHasThreadId, aThreadId, aReverse, aRequestId))) {
-      Log.e("GeckoSmsManager", "Failed to add CreateMessageCursorRunnable to the SmsIOThread");
-      notifyCursorError(kUnknownError, aRequestId);
+    if (!SmsIOThread.getInstance().execute(new CreateMessageListRunnable(aStartDate, aEndDate, aNumbers, aNumbersCount, aDelivery, aHasRead, aRead, aThreadId, aReverse, aRequestId))) {
+      Log.e("GeckoSmsManager", "Failed to add CreateMessageListRunnable to the SmsIOThread");
+      notifyReadingMessageListFailed(kUnknownError, aRequestId);
     }
   }
 
   @Override
-  public void getNextMessage(int aRequestId) {
-    class GetNextMessageRunnable implements Runnable {
+  public void getNextMessageInList(int aListId, int aRequestId) {
+    class GetNextMessageInListRunnable implements Runnable {
+      private final int mListId;
       private final int mRequestId;
 
-      GetNextMessageRunnable(int aRequestId) {
+      GetNextMessageInListRunnable(int aListId, int aRequestId) {
+        mListId = aListId;
         mRequestId = aRequestId;
       }
 
       @Override
       public void run() {
-        Cursor cursor = null;
-        boolean closeCursor = true;
         try {
-          cursor = MessagesListManager.getInstance().get(mRequestId);
+          Cursor cursor = MessagesListManager.getInstance().get(mListId);
 
           if (!cursor.moveToNext()) {
-            MessagesListManager.getInstance().remove(mRequestId);
-            notifyCursorDone(mRequestId);
+            MessagesListManager.getInstance().remove(mListId);
+            notifyNoMessageInList(mRequestId);
             return;
           }
 
-          getMessageFromCursorAndNotify(cursor, mRequestId);
-          closeCursor = false;
+          int type = cursor.getInt(cursor.getColumnIndex("type"));
+          int deliveryStatus;
+          String sender = "";
+          String receiver = "";
+
+          if (type == kSmsTypeInbox) {
+            deliveryStatus = kDeliveryStatusSuccess;
+            sender = cursor.getString(cursor.getColumnIndex("address"));
+          } else if (type == kSmsTypeSentbox) {
+            deliveryStatus = getGeckoDeliveryStatus(cursor.getInt(cursor.getColumnIndex("status")));
+            receiver = cursor.getString(cursor.getColumnIndex("address"));
+          } else {
+            throw new UnexpectedDeliveryStateException();
+          }
+
+          int listId = MessagesListManager.getInstance().add(cursor);
+          notifyGotNextMessage(cursor.getInt(cursor.getColumnIndex("_id")),
+                               deliveryStatus,
+                               receiver, sender,
+                               cursor.getString(cursor.getColumnIndex("body")),
+                               cursor.getLong(cursor.getColumnIndex("date")),
+                               mRequestId);
+        } catch (UnexpectedDeliveryStateException e) {
+          Log.e("GeckoSmsManager", "Unexcepted delivery state type", e);
+          notifyReadingMessageListFailed(kUnknownError, mRequestId);
         } catch (Exception e) {
           Log.e("GeckoSmsManager", "Error while trying to get the next message of a list", e);
-          notifyCursorError(kUnknownError, mRequestId);
-        } finally {
-          if (closeCursor) {
-            cursor.close();
-          }
+          notifyReadingMessageListFailed(kUnknownError, mRequestId);
         }
       }
     }
 
-    if (!SmsIOThread.getInstance().execute(new GetNextMessageRunnable(aRequestId))) {
-      Log.e("GeckoSmsManager", "Failed to add GetNextMessageRunnable to the SmsIOThread");
-      notifyCursorError(kUnknownError, aRequestId);
-    }
-  }
-
-  private void getThreadFromCursorAndNotify(Cursor aCursor, int aRequestId) throws Exception {
-    ContentResolver cr = GeckoAppShell.getContext().getContentResolver();
-
-    long id = aCursor.getLong(aCursor.getColumnIndex("thread_id"));
-    Cursor msgCursor = cr.query(kSmsContentUri,
-                                kRequiredMessageRowsForThread,
-                                "thread_id = " + id,
-                                null,
-                                "date DESC");
-
-    if (msgCursor == null || msgCursor.getCount() == 0) {
-      throw new Exception("Empty thread " + id);
-    }
-
-    msgCursor.moveToFirst();
-
-    String lastMessageSubject = msgCursor.getString(msgCursor.getColumnIndex("subject"));
-    String body = msgCursor.getString(msgCursor.getColumnIndex("body"));
-    long timestamp = msgCursor.getLong(msgCursor.getColumnIndex("date"));
-
-    HashSet<String> participants = new HashSet<>();
-    do {
-      String p = msgCursor.getString(msgCursor.getColumnIndex("address"));
-      participants.add(p);
-    } while (msgCursor.moveToNext());
-
-    //TODO: handle MMS
-    String lastMessageType = "sms";
-
-    msgCursor = cr.query(kSmsContentUri,
-                         kRequiredMessageRowsForThread,
-                         "thread_id = " + id + " AND read = 0",
-                         null,
-                         null);
-
-    if (msgCursor == null) {
-      Log.e("GeckoSmsManager", "We should never get here, should have errored before");
-      throw new Exception("Empty thread " + id);
-    }
-
-    long unreadCount = msgCursor.getCount();
-
-    notifyThreadCursorResult(id, lastMessageSubject, body, unreadCount, participants.toArray(), timestamp, lastMessageType, aRequestId);
-  }
-
-  @Override
-  public void createThreadCursor(int aRequestId) {
-    class CreateThreadCursorRunnable implements Runnable {
-      private final int mRequestId;
-
-      CreateThreadCursorRunnable(int aRequestId) {
-        mRequestId = aRequestId;
-      }
-
-      @Override
-      public void run() {
-        try {
-          ContentResolver cr = GeckoAppShell.getContext().getContentResolver();
-          Cursor cursor = cr.query(kSmsThreadsContentUri,
-                                   kThreadProjection,
-                                   null,
-                                   null,
-                                   "date DESC");
-          if (cursor == null || !cursor.moveToFirst()) {
-            notifyCursorDone(mRequestId);
-            return;
-          }
-
-          MessagesListManager.getInstance().add(mRequestId, cursor);
-
-          getThreadFromCursorAndNotify(cursor, mRequestId);
-        } catch (Exception e) {
-          Log.e("GeckoSmsManager", "Error while trying to create thread cursor: " + e);
-          notifyCursorError(kUnknownError, mRequestId);
-        }
-      }
-    }
-
-    if (!SmsIOThread.getInstance().execute(new CreateThreadCursorRunnable(aRequestId))) {
-      Log.e("GeckoSmsManager", "Failed to add CreateThreadCursorRunnable to the SmsIOThread");
-      notifyCursorError(kUnknownError, aRequestId);
+    if (!SmsIOThread.getInstance().execute(new GetNextMessageInListRunnable(aListId, aRequestId))) {
+      Log.e("GeckoSmsManager", "Failed to add GetNextMessageInListRunnable to the SmsIOThread");
+      notifyReadingMessageListFailed(kUnknownError, aRequestId);
     }
   }
 
   @Override
-  public void getNextThread(int aRequestId) {
-    class GetNextThreadRunnable implements Runnable {
-      private final int mRequestId;
-
-      GetNextThreadRunnable(int aRequestId) {
-        mRequestId = aRequestId;
-      }
-
-      @Override
-      public void run() {
-        try {
-          Cursor cursor = MessagesListManager.getInstance().get(mRequestId);
-
-          if (!cursor.moveToNext()) {
-            MessagesListManager.getInstance().remove(mRequestId);
-            notifyCursorDone(mRequestId);
-            return;
-          }
-
-          getThreadFromCursorAndNotify(cursor, mRequestId);
-        } catch (Exception e) {
-          Log.e("GeckoSmsManager", "Error while trying to create thread cursor: " + e);
-          notifyCursorError(kUnknownError, mRequestId);
-        }
-      }
-    }
-
-    if (!SmsIOThread.getInstance().execute(new GetNextThreadRunnable(aRequestId))) {
-      Log.e("GeckoSmsManager", "Failed to add GetNextThreadRunnable to the SmsIOThread");
-      notifyCursorError(kUnknownError, aRequestId);
-    }
+  public void clearMessageList(int aListId) {
+    MessagesListManager.getInstance().remove(aListId);
   }
 
   @Override
@@ -1080,32 +983,24 @@ public class GeckoSmsManager
     private static final long serialVersionUID = 51883196784325305L;
   }
 
+  static class UnexpectedDeliveryStateException extends Exception {
+    private static final long serialVersionUID = 494122763684005716L;
+  }
+
   static class UnmatchingIdException extends Exception {
     private static final long serialVersionUID = 158467542575633280L;
   }
 
-  @WrapForJNI
   private static native void notifySmsReceived(String aSender, String aBody, int aMessageClass, long aTimestamp);
-  @WrapForJNI
   private static native void notifySmsSent(int aId, String aReceiver, String aBody, long aTimestamp, int aRequestId);
-  @WrapForJNI
   private static native void notifySmsDelivery(int aId, int aDeliveryStatus, String aReceiver, String aBody, long aTimestamp);
-  @WrapForJNI
   private static native void notifySmsSendFailed(int aError, int aRequestId);
-  @WrapForJNI
-  private static native void notifyGetSms(int aId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, boolean aRead, int aRequestId);
-  @WrapForJNI
+  private static native void notifyGetSms(int aId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId);
   private static native void notifyGetSmsFailed(int aError, int aRequestId);
-  @WrapForJNI
   private static native void notifySmsDeleted(boolean aDeleted, int aRequestId);
-  @WrapForJNI
   private static native void notifySmsDeleteFailed(int aError, int aRequestId);
-  @WrapForJNI
-  private static native void notifyCursorError(int aError, int aRequestId);
-  @WrapForJNI
-  private static native void notifyThreadCursorResult(long aId, String aLastMessageSubject, String aBody, long aUnreadCount, Object[] aParticipants, long aTimestamp, String aLastMessageType, int aRequestId);
-  @WrapForJNI
-  private static native void notifyMessageCursorResult(int aMessageId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, long aThreadId, boolean aRead, int aRequestId);
-  @WrapForJNI
-  private static native void notifyCursorDone(int aRequestId);
+  private static native void notifyNoMessageInList(int aRequestId);
+  private static native void notifyListCreated(int aListId, int aMessageId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId);
+  private static native void notifyGotNextMessage(int aMessageId, int aDeliveryStatus, String aReceiver, String aSender, String aBody, long aTimestamp, int aRequestId);
+  private static native void notifyReadingMessageListFailed(int aError, int aRequestId);
 }
