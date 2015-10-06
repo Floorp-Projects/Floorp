@@ -218,6 +218,7 @@ child:
   prio(high) sync ActionNameAt(uint64_t aID, uint8_t aIndex) returns(nsString aName);
   prio(high) sync AccessKey(uint64_t aID) returns(uint32_t aKey, uint32_t aModifierMask);
   prio(high) sync KeyboardShortcut(uint64_t aID) returns(uint32_t aKey, uint32_t aModifierMask);
+  prio(high) sync AtkKeyBinding(uint64_t aID) returns(nsString aResult);
 
   prio(high) sync CurValue(uint64_t aID) returns(double aValue);
   prio(high) sync SetCurValue(uint64_t aID, double aValue) returns(bool aRetVal);

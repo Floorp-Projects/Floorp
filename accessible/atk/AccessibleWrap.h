@@ -69,6 +69,7 @@ public:
     return returnedString.get();
   }
 
+  static void GetKeyBinding(Accessible* aAccessible, nsAString& aResult);
 protected:
 
   nsresult FireAtkStateChangeEvent(AccEvent* aEvent, AtkObject *aObject);
