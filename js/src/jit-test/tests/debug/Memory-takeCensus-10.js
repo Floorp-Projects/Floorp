@@ -27,7 +27,7 @@ dbg.memory.trackingAllocationSites = true;
 g.hold = null;
 g.fnerd();
 
-let census = dbg.memory.takeCensus({
+census = dbg.memory.takeCensus({
   breakdown: { by: 'objectClass',
                then: { by: 'allocationStack' }
              }

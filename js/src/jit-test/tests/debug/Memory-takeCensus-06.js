@@ -14,15 +14,15 @@ let census = dbg.memory.takeCensus({ breakdown: { by: 'count', count: false, byt
 assertEq('count' in census, false);
 assertEq('bytes' in census, false);
 
-let census = dbg.memory.takeCensus({ breakdown: { by: 'count', count: true,  bytes: false } });
+census = dbg.memory.takeCensus({ breakdown: { by: 'count', count: true,  bytes: false } });
 assertEq('count' in census, true);
 assertEq('bytes' in census, false);
 
-let census = dbg.memory.takeCensus({ breakdown: { by: 'count', count: false, bytes: true } });
+census = dbg.memory.takeCensus({ breakdown: { by: 'count', count: false, bytes: true } });
 assertEq('count' in census, false);
 assertEq('bytes' in census, true);
 
-let census = dbg.memory.takeCensus({ breakdown: { by: 'count', count: true,  bytes: true } });
+census = dbg.memory.takeCensus({ breakdown: { by: 'count', count: true,  bytes: true } });
 assertEq('count' in census, true);
 assertEq('bytes' in census, true);
 
