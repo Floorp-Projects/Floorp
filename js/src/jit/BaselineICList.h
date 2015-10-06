@@ -78,6 +78,7 @@ namespace jit {
     _(In_Dense)                                  \
                                                  \
     _(GetName_Fallback)                          \
+    _(GetName_GlobalLexical)                     \
     _(GetName_Global)                            \
     _(GetName_Scope0)                            \
     _(GetName_Scope1)                            \
@@ -104,6 +105,7 @@ namespace jit {
     _(GetProp_TypedObject)                       \
     _(GetProp_CallScripted)                      \
     _(GetProp_CallNative)                        \
+    _(GetProp_CallNativeGlobal)                  \
     _(GetProp_CallDOMProxyNative)                \
     _(GetProp_CallDOMProxyWithGenerationNative)  \
     _(GetProp_DOMProxyShadowed)                  \

@@ -141,7 +141,7 @@ namespace jit {
     _(JSOP_GETINTRINSIC)       \
     _(JSOP_DEFVAR)             \
     _(JSOP_DEFCONST)           \
-    _(JSOP_SETCONST)           \
+    _(JSOP_DEFLET)             \
     _(JSOP_DEFFUN)             \
     _(JSOP_GETLOCAL)           \
     _(JSOP_SETLOCAL)           \
@@ -149,6 +149,7 @@ namespace jit {
     _(JSOP_SETARG)             \
     _(JSOP_CHECKLEXICAL)       \
     _(JSOP_INITLEXICAL)        \
+    _(JSOP_INITGLEXICAL)       \
     _(JSOP_CHECKALIASEDLEXICAL) \
     _(JSOP_INITALIASEDLEXICAL) \
     _(JSOP_UNINITIALIZED)      \
