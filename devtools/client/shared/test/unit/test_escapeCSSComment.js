@@ -8,7 +8,7 @@
 const Cu = Components.utils;
 Cu.import("resource://gre/modules/devtools/Loader.jsm");
 const {escapeCSSComment, _unescapeCSSComment} =
-      devtools.require("devtools/client/styleinspector/css-parsing-utils");
+      devtools.require("devtools/client/shared/css-parsing-utils");
 
 const TEST_DATA = [
   {
