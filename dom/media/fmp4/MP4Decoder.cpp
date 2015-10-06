@@ -220,6 +220,7 @@ MP4Decoder::IsVideoAccelerated(layers::LayersBackend aBackend, nsACString& aFail
     return false;
   }
   bool result = decoder->IsHardwareAccelerated(aFailureReason);
+  decoder->Shutdown();
   return result;
 }
 
@@ -293,6 +294,7 @@ MP4Decoder::CanCreateAACDecoder()
                                     MOZ_ARRAY_LENGTH(sTestAACExtraData));
   nsRefPtr<MediaDataDecoder> decoder(CreateTestAACDecoder(config));
   if (decoder) {
+    decoder->Shutdown();
     result = true;
   }
   haveCachedResult = true;
