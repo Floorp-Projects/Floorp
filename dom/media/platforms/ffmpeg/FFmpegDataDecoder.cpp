@@ -70,23 +70,15 @@ ChoosePixelFormat(AVCodecContext* aCodecContext, const PixelFormat* aFormats)
 nsresult
 FFmpegDataDecoder<LIBAV_VER>::InitDecoder()
 {
-  StaticMutexAutoLock mon(sMonitor);
-
   FFMPEG_LOG("Initialising FFmpeg decoder.");
 
-  if (!sFFmpegInitDone) {
-    avcodec_register_all();
-#ifdef DEBUG
-    av_log_set_level(AV_LOG_DEBUG);
-#endif
-    sFFmpegInitDone = true;
-  }
-
-  AVCodec* codec = avcodec_find_decoder(mCodecID);
+  AVCodec* codec = FindAVCodec(mCodecID);
   if (!codec) {
     NS_WARNING("Couldn't find ffmpeg decoder");
     return NS_ERROR_FAILURE;
   }
+
+  StaticMutexAutoLock mon(sMonitor);
 
   if (!(mCodecContext = avcodec_alloc_context3(codec))) {
     NS_WARNING("Couldn't init ffmpeg context");
@@ -240,4 +232,18 @@ FFmpegDataDecoder<LIBAV_VER>::PrepareFrame()
   return mFrame;
 }
 
+/* static */ AVCodec*
+FFmpegDataDecoder<LIBAV_VER>::FindAVCodec(AVCodecID aCodec)
+{
+  StaticMutexAutoLock mon(sMonitor);
+  if (!sFFmpegInitDone) {
+    avcodec_register_all();
+#ifdef DEBUG
+    av_log_set_level(AV_LOG_DEBUG);
+#endif
+    sFFmpegInitDone = true;
+  }
+  return avcodec_find_decoder(aCodec);
+}
+  
 } // namespace mozilla
