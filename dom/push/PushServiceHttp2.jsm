@@ -479,6 +479,10 @@ this.PushServiceHttp2 = {
     this.startConnections(subscriptions);
   },
 
+  isConnected: function() {
+    return this._mainPushService != null;
+  },
+
   disconnect: function() {
     this._shutdownConnections(false);
   },
