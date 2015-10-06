@@ -205,7 +205,7 @@ interface nsIFinishReportingCallback : nsISupports
   void callback(in nsISupports data);
 };
 
-[scriptable, builtinclass, uuid(461c477a-54f9-4fe0-b00e-1857f96690f9)]
+[scriptable, builtinclass, uuid(6cc4aa56-e18c-4b61-9290-6297172d6978)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -290,14 +290,6 @@ interface nsIMemoryReporterManager : nsISupports
                        in AString DMDDumpIdent);
 
   /*
-   * Get memory reports in the current process only.  |handleReport| is called
-   * for each report.
-   */
-  void getReportsForThisProcess(in nsIMemoryReporterCallback handleReport,
-                                in nsISupports handleReportData,
-                                in boolean anonymize);
-
-  /*
    * As above, but if DMD is enabled and |DMDFile| is non-null then
    * write a DMD report to that file and close it.
    */
@@ -315,9 +307,8 @@ interface nsIMemoryReporterManager : nsISupports
    * interesting that we want external code (e.g. telemetry) to be able to rely
    * on them.
    *
-   * Note that these are not reporters and so getReports() and
-   * getReportsForThisProcess() do not look at them.  However, distinguished
-   * amounts can be embedded in a reporter.
+   * Note that these are not reporters and so getReports() does not look at
+   * them.  However, distinguished amounts can be embedded in a reporter.
    *
    * Access to these attributes can fail.  In particular, some of them are not
    * available on all platforms.
