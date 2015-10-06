@@ -2094,13 +2094,6 @@ HttpBaseChannel::GetLastModifiedTime(PRTime* lastModifiedTime)
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::ForceNoIntercept()
-{
-  mLoadFlags |= LOAD_BYPASS_SERVICE_WORKER;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 HttpBaseChannel::GetCorsIncludeCredentials(bool* aInclude)
 {
   *aInclude = mCorsIncludeCredentials;
