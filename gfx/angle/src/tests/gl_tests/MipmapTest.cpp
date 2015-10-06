@@ -141,10 +141,10 @@ class MipmapTest : public ANGLETest
         glDeleteTextures(1, &mOffscreenTexture2D);
         glDeleteTextures(1, &mOffscreenTextureCube);
 
-        delete mLevelZeroBlueInitData;
-        delete mLevelZeroWhiteInitData;
-        delete mLevelOneInitData;
-        delete mLevelTwoInitData;
+        SafeDeleteArray(mLevelZeroBlueInitData);
+        SafeDeleteArray(mLevelZeroWhiteInitData);
+        SafeDeleteArray(mLevelOneInitData);
+        SafeDeleteArray(mLevelTwoInitData);
 
         ANGLETest::TearDown();
     }

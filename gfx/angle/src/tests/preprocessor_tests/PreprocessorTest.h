@@ -8,7 +8,7 @@
 
 #include "MockDiagnostics.h"
 #include "MockDirectiveHandler.h"
-#include "Preprocessor.h"
+#include "compiler/preprocessor/Preprocessor.h"
 
 #ifndef PREPROCESSOR_TESTS_PREPROCESSOR_TEST_H_
 #define PREPROCESSOR_TESTS_PREPROCESSOR_TEST_H_

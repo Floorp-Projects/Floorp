@@ -1324,21 +1324,14 @@ Accessible::Value(nsString& aValue)
   if (mRoleMapEntry->Is(nsGkAtoms::combobox)) {
     Accessible* option = CurrentItem();
     if (!option) {
-      Accessible* listbox = nullptr;
-      ARIAOwnsIterator iter(this);
-      while ((listbox = iter.Next()) && !listbox->IsListControl());
-
-      if (!listbox) {
-        uint32_t childCount = ChildCount();
-        for (uint32_t idx = 0; idx < childCount; idx++) {
-          Accessible* child = mChildren.ElementAt(idx);
-          if (child->IsListControl())
-            listbox = child;
+      uint32_t childCount = ChildCount();
+      for (uint32_t idx = 0; idx < childCount; idx++) {
+        Accessible* child = mChildren.ElementAt(idx);
+        if (child->IsListControl()) {
+          option = child->GetSelectedItem(0);
+          break;
         }
       }
-
-      if (listbox)
-        option = listbox->GetSelectedItem(0);
     }
 
     if (option)

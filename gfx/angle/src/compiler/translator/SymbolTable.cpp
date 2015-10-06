@@ -32,14 +32,14 @@ TFunction::~TFunction()
 
 const TString *TFunction::buildMangledName() const
 {
-    std::string mangledName = mangleName(getName()).c_str();
+    std::string newName = mangleName(getName()).c_str();
 
     for (const auto &p : parameters)
     {
-        mangledName += p.type->getMangledName().c_str();
+        newName += p.type->getMangledName().c_str();
     }
 
-    return NewPoolTString(mangledName.c_str());
+    return NewPoolTString(newName.c_str());
 }
 
 //

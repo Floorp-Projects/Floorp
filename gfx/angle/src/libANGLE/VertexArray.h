@@ -15,6 +15,7 @@
 
 #include "libANGLE/RefCountObject.h"
 #include "libANGLE/Constants.h"
+#include "libANGLE/State.h"
 #include "libANGLE/VertexAttribute.h"
 
 #include <vector>
@@ -66,6 +67,10 @@ class VertexArray
         size_t getMaxAttribs() const { return mVertexAttributes.size(); }
         size_t getMaxEnabledAttribute() const { return mMaxEnabledAttribute; }
         const std::vector<VertexAttribute> &getVertexAttributes() const { return mVertexAttributes; }
+        const VertexAttribute &getVertexAttribute(size_t index) const
+        {
+            return mVertexAttributes[index];
+        }
 
       private:
         friend class VertexArray;
@@ -74,12 +79,37 @@ class VertexArray
         size_t mMaxEnabledAttribute;
     };
 
+    enum DirtyBitType
+    {
+        DIRTY_BIT_ELEMENT_ARRAY_BUFFER,
+
+        // Reserve bits for enabled flags
+        DIRTY_BIT_ATTRIB_0_ENABLED,
+        DIRTY_BIT_ATTRIB_MAX_ENABLED = DIRTY_BIT_ATTRIB_0_ENABLED + gl::MAX_VERTEX_ATTRIBS,
+
+        // Reserve bits for attrib pointers
+        DIRTY_BIT_ATTRIB_0_POINTER   = DIRTY_BIT_ATTRIB_MAX_ENABLED,
+        DIRTY_BIT_ATTRIB_MAX_POINTER = DIRTY_BIT_ATTRIB_0_POINTER + gl::MAX_VERTEX_ATTRIBS,
+
+        // Reserve bits for divisors
+        DIRTY_BIT_ATTRIB_0_DIVISOR   = DIRTY_BIT_ATTRIB_MAX_POINTER,
+        DIRTY_BIT_ATTRIB_MAX_DIVISOR = DIRTY_BIT_ATTRIB_0_DIVISOR + gl::MAX_VERTEX_ATTRIBS,
+
+        DIRTY_BIT_UNKNOWN = DIRTY_BIT_ATTRIB_MAX_DIVISOR,
+        DIRTY_BIT_MAX     = DIRTY_BIT_UNKNOWN,
+    };
+
+    typedef std::bitset<DIRTY_BIT_MAX> DirtyBits;
+
+    void syncImplState();
+
   private:
     GLuint mId;
 
     rx::VertexArrayImpl *mVertexArray;
 
     Data mData;
+    DirtyBits mDirtyBits;
 };
 
 }

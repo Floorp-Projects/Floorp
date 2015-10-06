@@ -1850,10 +1850,8 @@ nsIWidget::LookupRegisteredPluginWindow(uintptr_t aWindowID)
   return nullptr;
 #else
   MOZ_ASSERT(NS_IsMainThread());
-  nsIWidget* widget = nullptr;
   MOZ_ASSERT(sPluginWidgetList);
-  sPluginWidgetList->Get((void*)aWindowID, &widget);
-  return widget;
+  return sPluginWidgetList->GetWeak((void*)aWindowID);
 #endif
 }
 

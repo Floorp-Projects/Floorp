@@ -147,6 +147,7 @@ TEST(ImageMetadata, TransparentGIF) { CheckMetadata(TransparentGIFTestCase()); }
 TEST(ImageMetadata, JPG) { CheckMetadata(GreenJPGTestCase()); }
 TEST(ImageMetadata, BMP) { CheckMetadata(GreenBMPTestCase()); }
 TEST(ImageMetadata, ICO) { CheckMetadata(GreenICOTestCase()); }
+TEST(ImageMetadata, Icon) { CheckMetadata(GreenIconTestCase()); }
 
 TEST(ImageMetadata, AnimatedGIF)
 {

@@ -8,15 +8,16 @@
 // specific to the D3D9 renderer.
 
 #include "libANGLE/renderer/d3d/d3d9/renderer9_utils.h"
-#include "libANGLE/renderer/d3d/d3d9/formatutils9.h"
-#include "libANGLE/renderer/d3d/FramebufferD3D.h"
-#include "libANGLE/renderer/Workarounds.h"
-#include "libANGLE/formatutils.h"
-#include "libANGLE/Framebuffer.h"
-#include "libANGLE/renderer/d3d/d3d9/RenderTarget9.h"
 
 #include "common/mathutil.h"
 #include "common/debug.h"
+
+#include "libANGLE/formatutils.h"
+#include "libANGLE/Framebuffer.h"
+#include "libANGLE/renderer/d3d/d3d9/formatutils9.h"
+#include "libANGLE/renderer/d3d/d3d9/RenderTarget9.h"
+#include "libANGLE/renderer/d3d/FramebufferD3D.h"
+#include "libANGLE/renderer/d3d/WorkaroundsD3D.h"
 
 #include "third_party/systeminfo/SystemInfo.h"
 
@@ -273,6 +274,16 @@ D3DMULTISAMPLE_TYPE GetMultisampleType(GLuint samples)
 namespace d3d9_gl
 {
 
+unsigned int GetReservedVertexUniformVectors()
+{
+    return 3;  // dx_ViewCoords, dx_ViewAdjust and dx_DepthRange.
+}
+
+unsigned int GetReservedFragmentUniformVectors()
+{
+    return 3;  // dx_ViewCoords, dx_DepthFront and dx_DepthRange.
+}
+
 GLsizei GetSamplesCount(D3DMULTISAMPLE_TYPE type)
 {
     return (type != D3DMULTISAMPLE_NONMASKABLE) ? type : 0;
@@ -318,7 +329,7 @@ static gl::TextureCaps GenerateTextureFormatCaps(GLenum internalFormat, IDirect3
         }
 
         textureCaps.sampleCounts.insert(1);
-        for (size_t i = D3DMULTISAMPLE_2_SAMPLES; i <= D3DMULTISAMPLE_16_SAMPLES; i++)
+        for (unsigned int i = D3DMULTISAMPLE_2_SAMPLES; i <= D3DMULTISAMPLE_16_SAMPLES; i++)
         {
             D3DMULTISAMPLE_TYPE multisampleType = D3DMULTISAMPLE_TYPE(i);
 
@@ -333,8 +344,14 @@ static gl::TextureCaps GenerateTextureFormatCaps(GLenum internalFormat, IDirect3
     return textureCaps;
 }
 
-void GenerateCaps(IDirect3D9 *d3d9, IDirect3DDevice9 *device, D3DDEVTYPE deviceType, UINT adapter, gl::Caps *caps,
-                  gl::TextureCapsMap *textureCapsMap, gl::Extensions *extensions)
+void GenerateCaps(IDirect3D9 *d3d9,
+                  IDirect3DDevice9 *device,
+                  D3DDEVTYPE deviceType,
+                  UINT adapter,
+                  gl::Caps *caps,
+                  gl::TextureCapsMap *textureCapsMap,
+                  gl::Extensions *extensions,
+                  gl::Limitations *limitations)
 {
     D3DCAPS9 deviceCaps;
     if (FAILED(d3d9->GetDeviceCaps(adapter, deviceType, &deviceCaps)))
@@ -428,9 +445,9 @@ void GenerateCaps(IDirect3D9 *d3d9, IDirect3DDevice9 *device, D3DDEVTYPE deviceT
     // Vertex shader limits
     caps->maxVertexAttributes = 16;
 
-    const size_t reservedVertexUniformVectors = 2; // dx_ViewAdjust and dx_DepthRange.
     const size_t MAX_VERTEX_CONSTANT_VECTORS_D3D9 = 256;
-    caps->maxVertexUniformVectors = MAX_VERTEX_CONSTANT_VECTORS_D3D9 - reservedVertexUniformVectors;
+    caps->maxVertexUniformVectors =
+        MAX_VERTEX_CONSTANT_VECTORS_D3D9 - GetReservedVertexUniformVectors();
     caps->maxVertexUniformComponents = caps->maxVertexUniformVectors * 4;
 
     caps->maxVertexUniformBlocks = 0;
@@ -456,12 +473,12 @@ void GenerateCaps(IDirect3D9 *d3d9, IDirect3DDevice9 *device, D3DDEVTYPE deviceT
     }
 
     // Fragment shader limits
-    const size_t reservedPixelUniformVectors = 3; // dx_ViewCoords, dx_DepthFront and dx_DepthRange.
-
     const size_t MAX_PIXEL_CONSTANT_VECTORS_SM3 = 224;
     const size_t MAX_PIXEL_CONSTANT_VECTORS_SM2 = 32;
-    caps->maxFragmentUniformVectors = ((deviceCaps.PixelShaderVersion >= D3DPS_VERSION(3, 0)) ? MAX_PIXEL_CONSTANT_VECTORS_SM3
-                                                                                              : MAX_PIXEL_CONSTANT_VECTORS_SM2) - reservedPixelUniformVectors;
+    caps->maxFragmentUniformVectors =
+        ((deviceCaps.PixelShaderVersion >= D3DPS_VERSION(3, 0)) ? MAX_PIXEL_CONSTANT_VECTORS_SM3
+                                                                : MAX_PIXEL_CONSTANT_VECTORS_SM2) -
+        GetReservedFragmentUniformVectors();
     caps->maxFragmentUniformComponents = caps->maxFragmentUniformVectors * 4;
     caps->maxFragmentUniformBlocks = 0;
     caps->maxFragmentInputComponents = caps->maxVertexOutputComponents;
@@ -556,6 +573,19 @@ void GenerateCaps(IDirect3D9 *d3d9, IDirect3DDevice9 *device, D3DDEVTYPE deviceT
     extensions->discardFramebuffer = false; // It would be valid to set this to true, since glDiscardFramebufferEXT is just a hint
     extensions->colorBufferFloat = false;
     extensions->debugMarker = true;
+    extensions->eglImage               = true;
+
+    // D3D9 has no concept of separate masks and refs for front and back faces in the depth stencil
+    // state.
+    limitations->noSeparateStencilRefsAndMasks = true;
+
+    // D3D9 shader models have limited support for looping, so the Appendix A
+    // index/loop limitations are necessary. Workarounds that are needed to
+    // support dynamic indexing of vectors on HLSL also don't work on D3D9.
+    limitations->shadersRequireIndexedLoopValidation = true;
+
+    // D3D9 cannot support constant color and alpha blend funcs together
+    limitations->noSimultaneousConstantColorAndAlphaBlendFunc = true;
 }
 
 }
@@ -590,9 +620,9 @@ void MakeValidSize(bool isImage, D3DFORMAT format, GLsizei *requestWidth, GLsize
     *levelOffset = upsampleCount;
 }
 
-Workarounds GenerateWorkarounds()
+WorkaroundsD3D GenerateWorkarounds()
 {
-    Workarounds workarounds;
+    WorkaroundsD3D workarounds;
     workarounds.mrtPerfWorkaround = true;
     workarounds.setDataFasterThanImageUpload = false;
     workarounds.useInstancedPointSpriteEmulation = false;

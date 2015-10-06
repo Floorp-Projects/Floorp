@@ -7,9 +7,6 @@
 #ifndef ANGLE_TESTS_ANGLE_TEST_H_
 #define ANGLE_TESTS_ANGLE_TEST_H_
 
-#define GL_GLEXT_PROTOTYPES
-#define EGL_EGLEXT_PROTOTYPES
-
 #include <gtest/gtest.h>
 #include <algorithm>
 
@@ -68,6 +65,7 @@ class ANGLETest : public ::testing::TestWithParam<angle::PlatformParameters>
     static bool InitTestWindow();
     static bool DestroyTestWindow();
     static void SetWindowVisible(bool isVisible);
+    static bool eglDisplayExtensionEnabled(EGLDisplay display, const std::string &extName);
 
   protected:
     virtual void SetUp();
@@ -78,7 +76,6 @@ class ANGLETest : public ::testing::TestWithParam<angle::PlatformParameters>
     static void drawQuad(GLuint program, const std::string& positionAttribName, GLfloat quadDepth, GLfloat quadScale = 1.0f);
     static GLuint compileShader(GLenum type, const std::string &source);
     static bool extensionEnabled(const std::string &extName);
-    static bool eglDisplayExtensionEnabled(EGLDisplay display, const std::string &extName);
     static bool eglClientExtensionEnabled(const std::string &extName);
 
     void setWindowWidth(int width);

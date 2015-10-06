@@ -149,11 +149,14 @@ class IndexedPointsTest : public ANGLETest
         {
             glBindBuffer(GL_ARRAY_BUFFER, mVertexWithColorBuffer);
             GLint vertexLocation = glGetAttribLocation(program, "position");
-            glVertexAttribPointer(vertexLocation, 2, GL_FLOAT, GL_FALSE, VertexWithColorSize, 0);
+            glVertexAttribPointer(vertexLocation, 2, GL_FLOAT, GL_FALSE,
+                                  static_cast<const GLsizei>(VertexWithColorSize), 0);
             glEnableVertexAttribArray(vertexLocation);
 
             GLint vertexColorLocation = glGetAttribLocation(program, "color");
-            glVertexAttribPointer(vertexColorLocation, 3, GL_FLOAT, GL_FALSE, VertexWithColorSize, (GLvoid*)((sizeof(float) * 2)));
+            glVertexAttribPointer(vertexColorLocation, 3, GL_FLOAT, GL_FALSE,
+                                  static_cast<const GLsizei>(VertexWithColorSize),
+                                  (GLvoid *)((sizeof(float) * 2)));
             glEnableVertexAttribArray(vertexColorLocation);
         }
         else

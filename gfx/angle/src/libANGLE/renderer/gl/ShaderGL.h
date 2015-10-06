@@ -13,16 +13,17 @@
 
 namespace rx
 {
-
 class FunctionsGL;
 
 class ShaderGL : public ShaderImpl
 {
   public:
-    ShaderGL(GLenum type, const FunctionsGL *functions);
+    ShaderGL(const gl::Shader::Data &data, const FunctionsGL *functions);
     ~ShaderGL() override;
 
-    bool compile(gl::Compiler *compiler, const std::string &source) override;
+    // ShaderImpl implementation
+    int prepareSourceAndReturnOptions(std::stringstream *sourceStream) override;
+    bool postTranslateCompile(gl::Compiler *compiler, std::string *infoLog) override;
     std::string getDebugInfo() const override;
 
     GLuint getShaderID() const;
@@ -30,7 +31,6 @@ class ShaderGL : public ShaderImpl
   private:
     const FunctionsGL *mFunctions;
 
-    GLenum mType;
     GLuint mShaderID;
 };
 

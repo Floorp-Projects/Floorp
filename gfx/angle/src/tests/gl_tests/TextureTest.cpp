@@ -703,8 +703,366 @@ TEST_P(TextureTestES3, RedefineInittableArray)
     ASSERT_GL_NO_ERROR();
 }
 
+class TextureLimitsTest : public ANGLETest
+{
+  protected:
+    struct RGBA8
+    {
+        uint8_t R, G, B, A;
+    };
+
+    TextureLimitsTest()
+        : mProgram(0), mMaxVertexTextures(0), mMaxFragmentTextures(0), mMaxCombinedTextures(0)
+    {
+        setWindowWidth(128);
+        setWindowHeight(128);
+        setConfigRedBits(8);
+        setConfigGreenBits(8);
+        setConfigBlueBits(8);
+        setConfigAlphaBits(8);
+    }
+
+    ~TextureLimitsTest()
+    {
+        if (mProgram != 0)
+        {
+            glDeleteProgram(mProgram);
+            mProgram = 0;
+
+            if (!mTextures.empty())
+            {
+                glDeleteTextures(static_cast<GLsizei>(mTextures.size()), &mTextures[0]);
+            }
+        }
+    }
+
+    void SetUp() override
+    {
+        ANGLETest::SetUp();
+
+        glGetIntegerv(GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &mMaxVertexTextures);
+        glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &mMaxFragmentTextures);
+        glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &mMaxCombinedTextures);
+
+        ASSERT_GL_NO_ERROR();
+    }
+
+    void compileProgramWithTextureCounts(const std::string &vertexPrefix,
+                                         GLint vertexTextureCount,
+                                         GLint vertexActiveTextureCount,
+                                         const std::string &fragPrefix,
+                                         GLint fragmentTextureCount,
+                                         GLint fragmentActiveTextureCount)
+    {
+        std::stringstream vertexShaderStr;
+        vertexShaderStr << "attribute vec2 position;\n"
+                        << "varying vec4 color;\n"
+                        << "varying vec2 texCoord;\n";
+
+        for (GLint textureIndex = 0; textureIndex < vertexTextureCount; ++textureIndex)
+        {
+            vertexShaderStr << "uniform sampler2D " << vertexPrefix << textureIndex << ";\n";
+        }
+
+        vertexShaderStr << "void main() {\n"
+                        << "  gl_Position = vec4(position, 0, 1);\n"
+                        << "  texCoord = (position * 0.5) + 0.5;\n"
+                        << "  color = vec4(0);\n";
+
+        for (GLint textureIndex = 0; textureIndex < vertexActiveTextureCount; ++textureIndex)
+        {
+            vertexShaderStr << "  color += texture2D(" << vertexPrefix << textureIndex
+                            << ", texCoord);\n";
+        }
+
+        vertexShaderStr << "}";
+
+        std::stringstream fragmentShaderStr;
+        fragmentShaderStr << "varying mediump vec4 color;\n"
+                          << "varying mediump vec2 texCoord;\n";
+
+        for (GLint textureIndex = 0; textureIndex < fragmentTextureCount; ++textureIndex)
+        {
+            fragmentShaderStr << "uniform sampler2D " << fragPrefix << textureIndex << ";\n";
+        }
+
+        fragmentShaderStr << "void main() {\n"
+                          << "  gl_FragColor = color;\n";
+
+        for (GLint textureIndex = 0; textureIndex < fragmentActiveTextureCount; ++textureIndex)
+        {
+            fragmentShaderStr << "  gl_FragColor += texture2D(" << fragPrefix << textureIndex
+                              << ", texCoord);\n";
+        }
+
+        fragmentShaderStr << "}";
+
+        const std::string &vertexShaderSource   = vertexShaderStr.str();
+        const std::string &fragmentShaderSource = fragmentShaderStr.str();
+
+        mProgram = CompileProgram(vertexShaderSource, fragmentShaderSource);
+    }
+
+    RGBA8 getPixel(GLint texIndex)
+    {
+        RGBA8 pixel = {static_cast<uint8_t>(texIndex & 0x7u), static_cast<uint8_t>(texIndex >> 3),
+                       0, 255u};
+        return pixel;
+    }
+
+    void initTextures(GLint tex2DCount, GLint texCubeCount)
+    {
+        GLint totalCount = tex2DCount + texCubeCount;
+        mTextures.assign(totalCount, 0);
+        glGenTextures(totalCount, &mTextures[0]);
+        ASSERT_GL_NO_ERROR();
+
+        std::vector<RGBA8> texData(16 * 16);
+
+        GLint texIndex = 0;
+        for (; texIndex < tex2DCount; ++texIndex)
+        {
+            texData.assign(texData.size(), getPixel(texIndex));
+            glActiveTexture(GL_TEXTURE0 + texIndex);
+            glBindTexture(GL_TEXTURE_2D, mTextures[texIndex]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 16, 16, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                         &texData[0]);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        }
+
+        ASSERT_GL_NO_ERROR();
+
+        for (; texIndex < texCubeCount; ++texIndex)
+        {
+            texData.assign(texData.size(), getPixel(texIndex));
+            glActiveTexture(GL_TEXTURE0 + texIndex);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, mTextures[texIndex]);
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X, 0, GL_RGBA, 16, 16, 0, GL_RGBA,
+                         GL_UNSIGNED_BYTE, &texData[0]);
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGBA, 16, 16, 0, GL_RGBA,
+                         GL_UNSIGNED_BYTE, &texData[0]);
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGBA, 16, 16, 0, GL_RGBA,
+                         GL_UNSIGNED_BYTE, &texData[0]);
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGBA, 16, 16, 0, GL_RGBA,
+                         GL_UNSIGNED_BYTE, &texData[0]);
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGBA, 16, 16, 0, GL_RGBA,
+                         GL_UNSIGNED_BYTE, &texData[0]);
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGBA, 16, 16, 0, GL_RGBA,
+                         GL_UNSIGNED_BYTE, &texData[0]);
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        }
+
+        ASSERT_GL_NO_ERROR();
+    }
+
+    void testWithTextures(GLint vertexTextureCount,
+                          const std::string &vertexTexturePrefix,
+                          GLint fragmentTextureCount,
+                          const std::string &fragmentTexturePrefix)
+    {
+        // Generate textures
+        initTextures(vertexTextureCount + fragmentTextureCount, 0);
+
+        glUseProgram(mProgram);
+        RGBA8 expectedSum = {0};
+        for (GLint texIndex = 0; texIndex < vertexTextureCount; ++texIndex)
+        {
+            std::stringstream uniformNameStr;
+            uniformNameStr << vertexTexturePrefix << texIndex;
+            const std::string &uniformName = uniformNameStr.str();
+            GLint location = glGetUniformLocation(mProgram, uniformName.c_str());
+            ASSERT_NE(-1, location);
+
+            glUniform1i(location, texIndex);
+            RGBA8 contribution = getPixel(texIndex);
+            expectedSum.R += contribution.R;
+            expectedSum.G += contribution.G;
+        }
+
+        for (GLint texIndex = 0; texIndex < fragmentTextureCount; ++texIndex)
+        {
+            std::stringstream uniformNameStr;
+            uniformNameStr << fragmentTexturePrefix << texIndex;
+            const std::string &uniformName = uniformNameStr.str();
+            GLint location = glGetUniformLocation(mProgram, uniformName.c_str());
+            ASSERT_NE(-1, location);
+
+            glUniform1i(location, texIndex + vertexTextureCount);
+            RGBA8 contribution = getPixel(texIndex + vertexTextureCount);
+            expectedSum.R += contribution.R;
+            expectedSum.G += contribution.G;
+        }
+
+        ASSERT_GE(256u, expectedSum.G);
+
+        drawQuad(mProgram, "position", 0.5f);
+        ASSERT_GL_NO_ERROR();
+        EXPECT_PIXEL_EQ(0, 0, expectedSum.R, expectedSum.G, 0, 255);
+    }
+
+    GLuint mProgram;
+    std::vector<GLuint> mTextures;
+    GLint mMaxVertexTextures;
+    GLint mMaxFragmentTextures;
+    GLint mMaxCombinedTextures;
+};
+
+// Test rendering with the maximum vertex texture units.
+TEST_P(TextureLimitsTest, MaxVertexTextures)
+{
+    compileProgramWithTextureCounts("tex", mMaxVertexTextures, mMaxVertexTextures, "tex", 0, 0);
+    ASSERT_NE(0u, mProgram);
+    ASSERT_GL_NO_ERROR();
+
+    testWithTextures(mMaxVertexTextures, "tex", 0, "tex");
+}
+
+// Test rendering with the maximum fragment texture units.
+TEST_P(TextureLimitsTest, MaxFragmentTextures)
+{
+    compileProgramWithTextureCounts("tex", 0, 0, "tex", mMaxFragmentTextures, mMaxFragmentTextures);
+    ASSERT_NE(0u, mProgram);
+    ASSERT_GL_NO_ERROR();
+
+    testWithTextures(mMaxFragmentTextures, "tex", 0, "tex");
+}
+
+// Test rendering with maximum combined texture units.
+TEST_P(TextureLimitsTest, MaxCombinedTextures)
+{
+    GLint vertexTextures = mMaxVertexTextures;
+
+    if (vertexTextures + mMaxFragmentTextures > mMaxCombinedTextures)
+    {
+        vertexTextures = mMaxCombinedTextures - mMaxFragmentTextures;
+    }
+
+    compileProgramWithTextureCounts("vtex", vertexTextures, vertexTextures, "ftex",
+                                    mMaxFragmentTextures, mMaxFragmentTextures);
+    ASSERT_NE(0u, mProgram);
+    ASSERT_GL_NO_ERROR();
+
+    testWithTextures(vertexTextures, "vtex", mMaxFragmentTextures, "ftex");
+}
+
+// Negative test for exceeding the number of vertex textures
+TEST_P(TextureLimitsTest, ExcessiveVertexTextures)
+{
+    compileProgramWithTextureCounts("tex", mMaxVertexTextures + 1, mMaxVertexTextures + 1, "tex", 0,
+                                    0);
+    ASSERT_EQ(0u, mProgram);
+}
+
+// Negative test for exceeding the number of fragment textures
+TEST_P(TextureLimitsTest, ExcessiveFragmentTextures)
+{
+    compileProgramWithTextureCounts("tex", 0, 0, "tex", mMaxFragmentTextures + 1,
+                                    mMaxFragmentTextures + 1);
+    ASSERT_EQ(0u, mProgram);
+}
+
+// Test active vertex textures under the limit, but excessive textures specified.
+TEST_P(TextureLimitsTest, MaxActiveVertexTextures)
+{
+    compileProgramWithTextureCounts("tex", mMaxVertexTextures + 4, mMaxVertexTextures, "tex", 0, 0);
+    ASSERT_NE(0u, mProgram);
+    ASSERT_GL_NO_ERROR();
+
+    testWithTextures(mMaxVertexTextures, "tex", 0, "tex");
+}
+
+// Test active fragment textures under the limit, but excessive textures specified.
+TEST_P(TextureLimitsTest, MaxActiveFragmentTextures)
+{
+    compileProgramWithTextureCounts("tex", 0, 0, "tex", mMaxFragmentTextures + 4,
+                                    mMaxFragmentTextures);
+    ASSERT_NE(0u, mProgram);
+    ASSERT_GL_NO_ERROR();
+
+    testWithTextures(0, "tex", mMaxFragmentTextures, "tex");
+}
+
+// Negative test for pointing two sampler uniforms of different types to the same texture.
+TEST_P(TextureLimitsTest, TextureTypeConflict)
+{
+    const std::string &vertexShader =
+        "attribute vec2 position;\n"
+        "varying float color;\n"
+        "uniform sampler2D tex2D;\n"
+        "uniform samplerCube texCube;\n"
+        "void main() {\n"
+        "  gl_Position = vec4(position, 0, 1);\n"
+        "  vec2 texCoord = (position * 0.5) + 0.5;\n"
+        "  color = texture2D(tex2D, texCoord).x;\n"
+        "  color += textureCube(texCube, vec3(texCoord, 0)).x;\n"
+        "}";
+    const std::string &fragmentShader =
+        "varying mediump float color;\n"
+        "void main() {\n"
+        "  gl_FragColor = vec4(color, 0, 0, 1);\n"
+        "}";
+
+    mProgram = CompileProgram(vertexShader, fragmentShader);
+    ASSERT_NE(0u, mProgram);
+
+    initTextures(1, 0);
+
+    glUseProgram(mProgram);
+    GLint tex2DLocation = glGetUniformLocation(mProgram, "tex2D");
+    ASSERT_NE(-1, tex2DLocation);
+    GLint texCubeLocation = glGetUniformLocation(mProgram, "texCube");
+    ASSERT_NE(-1, texCubeLocation);
+
+    glUniform1i(tex2DLocation, 0);
+    glUniform1i(texCubeLocation, 0);
+    ASSERT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+    EXPECT_GL_ERROR(GL_INVALID_OPERATION);
+}
+
+// Negative test for rendering with texture outside the valid range.
+// TODO(jmadill): Research if this is correct.
+TEST_P(TextureLimitsTest, DrawWithTexturePastMaximum)
+{
+    const std::string &vertexShader =
+        "attribute vec2 position;\n"
+        "varying float color;\n"
+        "uniform sampler2D tex2D;\n"
+        "void main() {\n"
+        "  gl_Position = vec4(position, 0, 1);\n"
+        "  vec2 texCoord = (position * 0.5) + 0.5;\n"
+        "  color = texture2D(tex2D, texCoord).x;\n"
+        "}";
+    const std::string &fragmentShader =
+        "varying mediump float color;\n"
+        "void main() {\n"
+        "  gl_FragColor = vec4(color, 0, 0, 1);\n"
+        "}";
+
+    mProgram = CompileProgram(vertexShader, fragmentShader);
+    ASSERT_NE(0u, mProgram);
+
+    glUseProgram(mProgram);
+    GLint tex2DLocation = glGetUniformLocation(mProgram, "tex2D");
+    ASSERT_NE(-1, tex2DLocation);
+
+    glUniform1i(tex2DLocation, mMaxCombinedTextures);
+    ASSERT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+    EXPECT_GL_ERROR(GL_INVALID_OPERATION);
+}
+
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
 ANGLE_INSTANTIATE_TEST(TextureTest, ES2_D3D9(), ES2_D3D11(), ES2_D3D11_FL9_3()); // TODO(geofflang): Figure out why this test fails on Intel OpenGL
 ANGLE_INSTANTIATE_TEST(TextureTestES3, ES3_D3D11(), ES3_OPENGL());
+ANGLE_INSTANTIATE_TEST(TextureLimitsTest, ES2_D3D11(), ES2_OPENGL());
 
 } // namespace

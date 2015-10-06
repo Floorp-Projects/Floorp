@@ -95,7 +95,8 @@ TEST_P(D3D11FormatTablesTest, TestFormatSupport)
         if (renderSuccess && ((renderSupport & D3D11_FORMAT_SUPPORT_MULTISAMPLE_RENDERTARGET) != 0))
         {
             EXPECT_TRUE(!textureInfo.sampleCounts.empty());
-            for (size_t sampleCount = 1; sampleCount <= D3D11_MAX_MULTISAMPLE_SAMPLE_COUNT; sampleCount *= 2)
+            for (unsigned int sampleCount = 1; sampleCount <= D3D11_MAX_MULTISAMPLE_SAMPLE_COUNT;
+                 sampleCount *= 2)
             {
                 UINT qualityCount = 0;
                 bool sampleSuccess = SUCCEEDED(device->CheckMultisampleQualityLevels(formatInfo.renderFormat, sampleCount, &qualityCount));

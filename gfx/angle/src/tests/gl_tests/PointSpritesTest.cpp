@@ -341,7 +341,7 @@ TEST_P(PointSpritesTest, PointSizeEnabledCompliance)
     glUniform1f(pointSizeLoc, 1.0f);
     ASSERT_GL_NO_ERROR();
 
-    glDrawArrays(GL_POINTS, 0, ArraySize(vertices) / 3);
+    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(ArraySize(vertices)) / 3);
     ASSERT_GL_NO_ERROR();
 
     // Test the pixels around the target Red pixel to ensure
@@ -373,7 +373,7 @@ TEST_P(PointSpritesTest, PointSizeEnabledCompliance)
         glUniform1f(pointSizeLoc, 2.0f);
         ASSERT_GL_NO_ERROR();
 
-        glDrawArrays(GL_POINTS, 0, ArraySize(vertices) / 3);
+        glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(ArraySize(vertices)) / 3);
         ASSERT_GL_NO_ERROR();
 
         // Test the pixels to ensure the target is ALL Red pixels
@@ -431,12 +431,4 @@ TEST_P(PointSpritesTest, PointSizeDeclaredButUnused)
 // We test on D3D11 9_3 because the existing D3D11 PointSprite implementation
 // uses Geometry Shaders which are not supported for 9_3.
 // D3D9 and D3D11 are also tested to ensure no regressions.
-ANGLE_INSTANTIATE_TEST(PointSpritesTest,
-                       ES2_D3D9(),
-                       ES2_D3D11(),
-                       ES2_D3D11_FL9_3(),
-                       ES2_OPENGL(),
-                       ES3_OPENGL(),
-                       ES2_OPENGL(3, 1),
-                       ES2_OPENGL(3, 2),
-                       ES2_OPENGL(3, 3));
+ANGLE_INSTANTIATE_TEST(PointSpritesTest, ES2_D3D9(), ES2_D3D11(), ES2_D3D11_FL9_3());

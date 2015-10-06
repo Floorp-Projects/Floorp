@@ -199,7 +199,20 @@ egl::Error DisplayWGL::initialize(egl::Display *display)
         return egl::Error(EGL_NOT_INITIALIZED, "Failed to get the device context of the intermediate OpenGL window.");
     }
 
-    mPixelFormat = ChoosePixelFormat(mDeviceContext, &pixelFormatDescriptor);
+    if (mFunctionsWGL->choosePixelFormatARB)
+    {
+        std::vector<int> attribs = wgl::GetDefaultPixelFormatAttributes(false);
+
+        UINT matchingFormats = 0;
+        mFunctionsWGL->choosePixelFormatARB(mDeviceContext, &attribs[0], nullptr, 1u, &mPixelFormat,
+                                            &matchingFormats);
+    }
+
+    if (mPixelFormat == 0)
+    {
+        mPixelFormat = ChoosePixelFormat(mDeviceContext, &pixelFormatDescriptor);
+    }
+
     if (mPixelFormat == 0)
     {
         return egl::Error(EGL_NOT_INITIALIZED, "Could not find a compatible pixel format for the intermediate OpenGL window.");
@@ -308,7 +321,8 @@ SurfaceImpl *DisplayWGL::createWindowSurface(const egl::Config *configuration,
                                              EGLNativeWindowType window,
                                              const egl::AttributeMap &attribs)
 {
-    return new WindowSurfaceWGL(window, mPixelFormat, mWGLContext, mFunctionsWGL);
+    return new WindowSurfaceWGL(this->getRenderer(), window, mPixelFormat, mWGLContext,
+                                mFunctionsWGL);
 }
 
 SurfaceImpl *DisplayWGL::createPbufferSurface(const egl::Config *configuration,
@@ -320,8 +334,8 @@ SurfaceImpl *DisplayWGL::createPbufferSurface(const egl::Config *configuration,
     EGLenum textureFormat = attribs.get(EGL_TEXTURE_FORMAT, EGL_NO_TEXTURE);
     EGLenum textureTarget = attribs.get(EGL_TEXTURE_TARGET, EGL_NO_TEXTURE);
 
-    return new PbufferSurfaceWGL(width, height, textureFormat, textureTarget, largest,
-                                 mPixelFormat, mDeviceContext, mWGLContext, mFunctionsWGL);
+    return new PbufferSurfaceWGL(this->getRenderer(), width, height, textureFormat, textureTarget,
+                                 largest, mPixelFormat, mDeviceContext, mWGLContext, mFunctionsWGL);
 }
 
 SurfaceImpl *DisplayWGL::createPbufferFromClientBuffer(const egl::Config *configuration,
@@ -338,17 +352,6 @@ SurfaceImpl *DisplayWGL::createPixmapSurface(const egl::Config *configuration,
 {
     UNIMPLEMENTED();
     return nullptr;
-}
-
-static int QueryWGLFormatAttrib(HDC dc, int format, int attribName, const FunctionsWGL *functions)
-{
-    int result = 0;
-    if (functions->getPixelFormatAttribivARB == nullptr ||
-        !functions->getPixelFormatAttribivARB(dc, format, 0, 1, &attribName, &result))
-    {
-        return 0;
-    }
-    return result;
 }
 
 egl::Error DisplayWGL::getDevice(DeviceImpl **device)
@@ -377,6 +380,11 @@ egl::ConfigSet DisplayWGL::generateConfigs() const
     PIXELFORMATDESCRIPTOR pixelFormatDescriptor;
     DescribePixelFormat(mDeviceContext, mPixelFormat, sizeof(pixelFormatDescriptor), &pixelFormatDescriptor);
 
+    auto getAttrib = [this](int attrib)
+    {
+        return wgl::QueryWGLFormatAttrib(mDeviceContext, mPixelFormat, attrib, mFunctionsWGL);
+    };
+
     egl::Config config;
     config.renderTargetFormat = GL_RGBA8; // TODO: use the bit counts to determine the format
     config.depthStencilFormat = GL_DEPTH24_STENCIL8; // TODO: use the bit counts to determine the format
@@ -387,17 +395,17 @@ egl::ConfigSet DisplayWGL::generateConfigs() const
     config.luminanceSize = 0;
     config.alphaSize = pixelFormatDescriptor.cAlphaBits;
     config.alphaMaskSize = 0;
-    config.bindToTextureRGB = (QueryWGLFormatAttrib(mDeviceContext, mPixelFormat, WGL_BIND_TO_TEXTURE_RGB_ARB, mFunctionsWGL) == TRUE);
-    config.bindToTextureRGBA = (QueryWGLFormatAttrib(mDeviceContext, mPixelFormat, WGL_BIND_TO_TEXTURE_RGBA_ARB, mFunctionsWGL) == TRUE);
+    config.bindToTextureRGB   = (getAttrib(WGL_BIND_TO_TEXTURE_RGB_ARB) == TRUE);
+    config.bindToTextureRGBA  = (getAttrib(WGL_BIND_TO_TEXTURE_RGBA_ARB) == TRUE);
     config.colorBufferType = EGL_RGB_BUFFER;
     config.configCaveat = EGL_NONE;
     config.conformant = EGL_OPENGL_ES2_BIT | (supportsES3 ? EGL_OPENGL_ES3_BIT_KHR : 0);
     config.depthSize = pixelFormatDescriptor.cDepthBits;
     config.level = 0;
     config.matchNativePixmap = EGL_NONE;
-    config.maxPBufferWidth = QueryWGLFormatAttrib(mDeviceContext, mPixelFormat, WGL_MAX_PBUFFER_WIDTH_ARB, mFunctionsWGL);
-    config.maxPBufferHeight = QueryWGLFormatAttrib(mDeviceContext, mPixelFormat, WGL_MAX_PBUFFER_HEIGHT_ARB, mFunctionsWGL);
-    config.maxPBufferPixels = QueryWGLFormatAttrib(mDeviceContext, mPixelFormat, WGL_MAX_PBUFFER_PIXELS_ARB, mFunctionsWGL);
+    config.maxPBufferWidth    = getAttrib(WGL_MAX_PBUFFER_WIDTH_ARB);
+    config.maxPBufferHeight   = getAttrib(WGL_MAX_PBUFFER_HEIGHT_ARB);
+    config.maxPBufferPixels   = getAttrib(WGL_MAX_PBUFFER_PIXELS_ARB);
     config.maxSwapInterval = maxSwapInterval;
     config.minSwapInterval = minSwapInterval;
     config.nativeRenderable = EGL_TRUE; // Direct rendering
@@ -407,9 +415,11 @@ egl::ConfigSet DisplayWGL::generateConfigs() const
     config.sampleBuffers = 0; // FIXME: enumerate multi-sampling
     config.samples = 0;
     config.stencilSize = pixelFormatDescriptor.cStencilBits;
-    config.surfaceType = ((pixelFormatDescriptor.dwFlags & PFD_DRAW_TO_WINDOW) ? EGL_WINDOW_BIT : 0) |
-                         ((QueryWGLFormatAttrib(mDeviceContext, mPixelFormat, WGL_DRAW_TO_PBUFFER_ARB, mFunctionsWGL) == TRUE) ? EGL_PBUFFER_BIT : 0) |
-                         EGL_SWAP_BEHAVIOR_PRESERVED_BIT;
+    config.surfaceType =
+        ((pixelFormatDescriptor.dwFlags & PFD_DRAW_TO_WINDOW) ? EGL_WINDOW_BIT : 0) |
+        ((getAttrib(WGL_DRAW_TO_PBUFFER_ARB) == TRUE) ? EGL_PBUFFER_BIT : 0) |
+        ((getAttrib(WGL_SWAP_METHOD_ARB) == WGL_SWAP_COPY_ARB) ? EGL_SWAP_BEHAVIOR_PRESERVED_BIT
+                                                               : 0);
     config.transparentType = EGL_NONE;
     config.transparentRedValue = 0;
     config.transparentGreenValue = 0;
@@ -456,7 +466,7 @@ const FunctionsGL *DisplayWGL::getFunctionsGL() const
 
 void DisplayWGL::generateExtensions(egl::DisplayExtensions *outExtensions) const
 {
-    //UNIMPLEMENTED();
+    outExtensions->createContext = true;
 }
 
 void DisplayWGL::generateCaps(egl::Caps *outCaps) const

@@ -1386,18 +1386,14 @@ void OutputHLSL::visitSymbol(TIntermSymbol *node)
             mUsesInstanceID = true;
             out << name;
         }
-        else if (name == "gl_FragDepthEXT" || name == "gl_FragDepth")
+        else if (name == "gl_FragDepthEXT")
         {
             mUsesFragDepth = true;
             out << "gl_Depth";
         }
-        else if (node->isInternal())
-        {
-            out << name;
-        }
         else
         {
-            out << Decorate(name);
+            out << DecorateIfNeeded(node->getName());
         }
     }
 }
@@ -1943,7 +1939,9 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
                 return false;
             }
 
-            out << TypeString(node->getType()) << " " << Decorate(TFunction::unmangleName(node->getName())) << (mOutputLod0Function ? "Lod0(" : "(");
+            TString name = DecorateFunctionIfNeeded(node->getNameObj());
+            out << TypeString(node->getType()) << " " << name
+                << (mOutputLod0Function ? "Lod0(" : "(");
 
             TIntermSequence *arguments = node->getSequence();
 
@@ -1981,7 +1979,7 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
       case EOpFunction:
         {
             ASSERT(mCurrentFunctionMetadata == nullptr);
-            TString name = TFunction::unmangleName(node->getName());
+            TString name = TFunction::unmangleName(node->getNameObj().getString());
 
             size_t index = mCallDag.findIndex(node);
             ASSERT(index != CallDAG::InvalidIndex);
@@ -1995,7 +1993,8 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
             }
             else
             {
-                out << Decorate(name) << (mOutputLod0Function ? "Lod0(" : "(");
+                out << DecorateFunctionIfNeeded(node->getNameObj())
+                    << (mOutputLod0Function ? "Lod0(" : "(");
             }
 
             TIntermSequence *sequence = node->getSequence();
@@ -2051,7 +2050,6 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
         break;
       case EOpFunctionCall:
         {
-            TString name = TFunction::unmangleName(node->getName());
             TIntermSequence *arguments = node->getSequence();
 
             bool lod0 = mInsideDiscontinuousLoop || mOutputLod0Function;
@@ -2065,10 +2063,11 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
                 ASSERT(index != CallDAG::InvalidIndex);
                 lod0 &= mASTMetadataList[index].mNeedsLod0;
 
-                out << Decorate(name) << (lod0 ? "Lod0(" : "(");
+                out << DecorateFunctionIfNeeded(node->getNameObj()) << (lod0 ? "Lod0(" : "(");
             }
             else
             {
+                TString name           = TFunction::unmangleName(node->getNameObj().getString());
                 TBasicType samplerType = (*arguments)[0]->getAsTyped()->getType().getBasicType();
 
                 TextureFunction textureFunction;
@@ -2375,9 +2374,7 @@ bool OutputHLSL::visitSelection(Visit visit, TIntermSelection *node)
     }
 
     // D3D errors when there is a gradient operation in a loop in an unflattened if.
-    if (mShaderType == GL_FRAGMENT_SHADER &&
-        mCurrentFunctionMetadata->hasDiscontinuousLoop(node) &&
-        mCurrentFunctionMetadata->hasGradientInCallGraph(node))
+    if (mShaderType == GL_FRAGMENT_SHADER && mCurrentFunctionMetadata->hasGradientLoop(node))
     {
         out << "FLATTEN ";
     }
@@ -2849,25 +2846,27 @@ void OutputHLSL::outputLineDirective(int line)
 TString OutputHLSL::argumentString(const TIntermSymbol *symbol)
 {
     TQualifier qualifier = symbol->getQualifier();
-    const TType &type = symbol->getType();
-    TString name = symbol->getSymbol();
+    const TType &type    = symbol->getType();
+    const TName &name    = symbol->getName();
+    TString nameStr;
 
-    if (name.empty())   // HLSL demands named arguments, also for prototypes
+    if (name.getString().empty())  // HLSL demands named arguments, also for prototypes
     {
-        name = "x" + str(mUniqueIndex++);
+        nameStr = "x" + str(mUniqueIndex++);
     }
-    else if (!symbol->isInternal())
+    else
     {
-        name = Decorate(name);
+        nameStr = DecorateIfNeeded(name);
     }
 
     if (mOutputType == SH_HLSL11_OUTPUT && IsSampler(type.getBasicType()))
     {
-        return QualifierString(qualifier) + " " + TextureString(type) + " texture_" + name + ArrayString(type) + ", " +
-               QualifierString(qualifier) + " " + SamplerString(type) + " sampler_" + name + ArrayString(type);
+        return QualifierString(qualifier) + " " + TextureString(type) + " texture_" + nameStr +
+               ArrayString(type) + ", " + QualifierString(qualifier) + " " + SamplerString(type) +
+               " sampler_" + nameStr + ArrayString(type);
     }
 
-    return QualifierString(qualifier) + " " + TypeString(type) + " " + name + ArrayString(type);
+    return QualifierString(qualifier) + " " + TypeString(type) + " " + nameStr + ArrayString(type);
 }
 
 TString OutputHLSL::initializer(const TType &type)
