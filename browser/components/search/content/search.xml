@@ -119,9 +119,6 @@
       <field name="FormHistory" readonly="true">
         (Components.utils.import("resource://gre/modules/FormHistory.jsm", {})).FormHistory;
       </field>
-      <field name="PlacesUtils" readonly="true">
-        (Components.utils.import("resource://gre/modules/PlacesUtils.jsm", {})).PlacesUtils;
-      </field>
 
       <property name="engines" readonly="true">
         <getter><![CDATA[
@@ -1445,7 +1442,7 @@
           button.id = "searchbar-engine-one-off-item-" + currentEngine.name.replace(/ /g, '-');
           let uri = "chrome://browser/skin/search-engine-placeholder.png";
           if (currentEngine.iconURI)
-            uri = PlacesUtils.getImageURLForResolution(window, currentEngine.iconURI.spec);
+            uri = currentEngine.iconURI.spec;
           button.setAttribute("image", uri);
           button.setAttribute("tooltiptext", currentEngine.name);
           button.engine = currentEngine;

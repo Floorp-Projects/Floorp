@@ -239,21 +239,21 @@
           </vbox>
         </hbox>
 
-        <!-- Push Notifications -->
-        <hbox id="push-pref-item"
+        <!-- Notifications -->
+        <hbox id="desktop-notification-pref-item"
               class="pref-item" align="top">
-          <image class="pref-icon" type="push"/>
+          <image class="pref-icon" type="desktop-notification"/>
           <vbox>
-            <label class="pref-title" value="&push.label;"/>
+            <label class="pref-title" value="&desktop-notification.label;"/>
             <hbox align="center">
-              <menulist id="push-menulist"
+              <menulist id="desktop-notification-menulist"
                         class="pref-menulist"
-                        type="push"
+                        type="desktop-notification"
                         oncommand="AboutPermissions.onPermissionCommand(event);">
                 <menupopup>
-                  <menuitem id="push-0" value="0" label="&permission.alwaysAsk;"/>
-                  <menuitem id="push-1" value="1" label="&permission.allow;"/>
-                  <menuitem id="push-2" value="2" label="&permission.block;"/>
+                  <menuitem id="desktop-notification-0" value="0" label="&permission.alwaysAsk;"/>
+                  <menuitem id="desktop-notification-1" value="1" label="&permission.allow;"/>
+                  <menuitem id="desktop-notification-2" value="2" label="&permission.block;"/>
                 </menupopup>
               </menulist>
             </hbox>

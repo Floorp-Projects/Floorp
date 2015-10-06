@@ -71,13 +71,33 @@ http://creativecommons.org/licenses/publicdomain/
   }
 
   function checkPermissionState(swr) {
-    return swr.pushManager.permissionState().then(function(state) {
-      ok(state === "denied", "permissionState() should resolve to denied.");
-      return swr;
-    }).catch(function(e) {
-      ok(false, "permissionState() should resolve to denied.");
-      return swr;
-    });
+    var permissionManager = SpecialPowers.Ci.nsIPermissionManager;
+    var tests = [{
+      action: permissionManager.ALLOW_ACTION,
+      state: "granted",
+    }, {
+      action: permissionManager.DENY_ACTION,
+      state: "denied",
+    }, {
+      action: permissionManager.PROMPT_ACTION,
+      state: "prompt",
+    }, {
+      action: permissionManager.UNKNOWN_ACTION,
+      state: "prompt",
+    }];
+    return tests.reduce((promise, test) => {
+      return promise.then(function() {
+        if (test.action == permissionManager.UNKNOWN_ACTION) {
+          SpecialPowers.removePermission("desktop-notification", document);
+        } else {
+          SpecialPowers.addPermission("desktop-notification",
+            test.action, document);
+        }
+        return swr.pushManager.permissionState().then(state => {
+          is(state, test.state, JSON.stringify(test));
+        });
+      });
+    }, Promise.resolve());
   }
 
   function runTest() {
@@ -91,7 +111,7 @@ http://creativecommons.org/licenses/publicdomain/
     }).then(SimpleTest.finish);
   }
 
-  SpecialPowers.addPermission('push', false, document);
+  SpecialPowers.addPermission("desktop-notification", false, document);
   SpecialPowers.pushPrefEnv({"set": [
     ["dom.push.enabled", true],
     ["dom.serviceWorkers.exemptFromPerDomainMax", true],

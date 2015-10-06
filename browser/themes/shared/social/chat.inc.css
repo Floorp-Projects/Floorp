@@ -84,7 +84,7 @@
   list-style-image: url("chrome://browser/skin/social/chat-icons.svg#minimize-hover");
 }
 
-:hover,:hover:active) {
+.chat-minimize-button:hover:active {
   list-style-image: url("chrome://browser/skin/social/chat-icons.svg#minimize-active");
 }
 

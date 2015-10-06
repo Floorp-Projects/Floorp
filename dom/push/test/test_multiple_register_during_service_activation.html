@@ -107,7 +107,7 @@ var defaultServerURL = SpecialPowers.getCharPref("dom.push.serverURL");
     ["dom.serviceWorkers.testing.enabled", true],
     ["dom.push.serverURL", "wss://something.org"]
     ]}, runTest);
-  SpecialPowers.addPermission('push', true, document);
+  SpecialPowers.addPermission("desktop-notification", true, document);
   SimpleTest.waitForExplicitFinish();
 </script>
 </body>
