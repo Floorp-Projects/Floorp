@@ -1,45 +1,5 @@
 let gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
 
-// Returns the chrome side nsIPluginTag for this plugin
-function getTestPlugin(aName) {
-  let pluginName = aName || "Test Plug-in";
-  let ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
-  let tags = ph.getPluginTags();
-
-  // Find the test plugin
-  for (let i = 0; i < tags.length; i++) {
-    if (tags[i].name == pluginName)
-      return tags[i];
-  }
-  ok(false, "Unable to find plugin");
-  return null;
-}
-
-// Set the test plugin state, disabling features like click-to-play
-function setTestPluginEnabledState(newEnabledState, pluginName) {
-  let name = pluginName || "Test Plug-in";
-  let plugin = getTestPlugin(name);
-  plugin.enabledState = newEnabledState;
-}
-
-function promiseNewTabSwitched() {
-  return new Promise(resolve => {
-    gBrowser.addEventListener("TabSwitchDone", function onSwitch() {
-      gBrowser.removeEventListener("TabSwitchDone", onSwitch);
-      executeSoon(resolve);
-    });
-  });
-}
-
-function waitForMs(aMs) {
-  return new Promise((resolve) => {
-    setTimeout(done, aMs);
-    function done() {
-      resolve(true);
-    }
-  });
-}
-
 function checkPaintCount(aCount) {
   ok(aCount != 0, "paint count can't be greater than zero, count was " + aCount);
   ok(aCount < kMaxPaints, "paint count should be within limits, count was " + aCount);
@@ -82,7 +42,7 @@ add_task(function* () {
   });
 
   // select plugin tab
-  tabSwitchedPromise = promiseNewTabSwitched();
+  tabSwitchedPromise = waitTabSwitched();
   gBrowser.selectedTab = pluginTab;
   yield tabSwitchedPromise;
 
@@ -105,7 +65,7 @@ add_task(function* () {
   checkPaintCount(result);
 
   // select home tab
-  tabSwitchedPromise = promiseNewTabSwitched();
+  tabSwitchedPromise = waitTabSwitched();
   gBrowser.selectedTab = homeTab;
   yield tabSwitchedPromise;
 
@@ -142,7 +102,7 @@ add_task(function* () {
   });
 
   // select plugin tab
-  tabSwitchedPromise = promiseNewTabSwitched();
+  tabSwitchedPromise = waitTabSwitched();
   gBrowser.selectedTab = pluginTab;
   yield tabSwitchedPromise;
 
