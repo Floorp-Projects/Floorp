@@ -21,7 +21,7 @@ add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {view} = yield openRuleView();
   let value = getRuleViewProperty(view, "body", "background").valueSpan;
-  let swatch = value.querySelectorAll(".ruleview-colorswatch")[1];
+  let swatch = value.querySelectorAll(".ruleview-colorswatch")[0];
   let url = value.querySelector(".theme-link");
   yield testImageTooltipAfterColorChange(swatch, url, view);
 });

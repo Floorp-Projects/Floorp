@@ -23,6 +23,11 @@ const {SourceMapConsumer} = require("source-map");
 
 loader.lazyGetter(this, "CssLogic", () => require("devtools/shared/styleinspector/css-logic").CssLogic);
 
+const {
+  getIndentationFromPrefs,
+  getIndentationFromString
+} = require("devtools/shared/shared/indentation");
+
 var TRANSITION_CLASS = "moz-styleeditor-transitioning";
 var TRANSITION_DURATION_MS = 500;
 var TRANSITION_BUFFER_MS = 1000;
@@ -39,6 +44,22 @@ var LOAD_ERROR = "error-load";
 
 types.addActorType("stylesheet");
 types.addActorType("originalsource");
+
+// The possible kinds of style-applied events.
+// UPDATE_PRESERVING_RULES means that the update is guaranteed to
+// preserve the number and order of rules on the style sheet.
+// UPDATE_GENERAL covers any other kind of change to the style sheet.
+const UPDATE_PRESERVING_RULES = 0;
+exports.UPDATE_PRESERVING_RULES = UPDATE_PRESERVING_RULES;
+const UPDATE_GENERAL = 1;
+exports.UPDATE_GENERAL = UPDATE_GENERAL;
+
+// If the user edits a style sheet, we stash a copy of the edited text
+// here, keyed by the style sheet.  This way, if the tools are closed
+// and then reopened, the edited text will be available.  A weak map
+// is used so that navigation by the user will eventually cause the
+// edited text to be collected.
+let modifiedStyleSheets = new WeakMap();
 
 /**
  * Creates a StyleSheetsActor. StyleSheetsActor provides remote access to the
@@ -385,7 +406,9 @@ var StyleSheetActor = protocol.ActorClass({
       value: Arg(1, "json")
     },
     "style-applied" : {
-      type: "styleApplied"
+      type: "styleApplied",
+      kind: Arg(0, "number"),
+      styleSheet: Arg(1, "stylesheet")
     },
     "media-rules-changed" : {
       type: "mediaRulesChanged",
@@ -595,6 +618,12 @@ var StyleSheetActor = protocol.ActorClass({
   _getText: function() {
     if (typeof this.text === "string") {
       return promise.resolve(this.text);
+    }
+
+    let cssText = modifiedStyleSheets.get(this.rawSheet);
+    if (cssText !== undefined) {
+      this.text = cssText;
+      return promise.resolve(cssText);
     }
 
     if (!this.href) {
@@ -872,19 +901,22 @@ var StyleSheetActor = protocol.ActorClass({
    * @param  {object} request
    *         'text' - new text
    *         'transition' - whether to do CSS transition for change.
+   *         'kind' - either UPDATE_PRESERVING_RULES or UPDATE_GENERAL
    */
-  update: method(function(text, transition) {
+  update: method(function(text, transition, kind = UPDATE_GENERAL) {
     DOMUtils.parseStyleSheet(this.rawSheet, text);
+
+    modifiedStyleSheets.set(this.rawSheet, text);
 
     this.text = text;
 
     this._notifyPropertyChanged("ruleCount");
 
     if (transition) {
-      this._insertTransistionRule();
+      this._insertTransistionRule(kind);
     }
     else {
-      events.emit(this, "style-applied");
+      events.emit(this, "style-applied", kind, this);
     }
 
     this._getMediaRules().then((rules) => {
@@ -901,7 +933,7 @@ var StyleSheetActor = protocol.ActorClass({
    * Insert a catch-all transition rule into the document. Set a timeout
    * to remove the rule after a certain time.
    */
-  _insertTransistionRule: function() {
+  _insertTransistionRule: function(kind) {
     this.document.documentElement.classList.add(TRANSITION_CLASS);
 
     // We always add the rule since we've just reset all the rules
@@ -910,7 +942,7 @@ var StyleSheetActor = protocol.ActorClass({
     // Set up clean up and commit after transition duration (+buffer)
     // @see _onTransitionEnd
     this.window.clearTimeout(this._transitionTimeout);
-    this._transitionTimeout = this.window.setTimeout(this._onTransitionEnd.bind(this),
+    this._transitionTimeout = this.window.setTimeout(this._onTransitionEnd.bind(this, kind),
                               TRANSITION_DURATION_MS + TRANSITION_BUFFER_MS);
   },
 
@@ -918,7 +950,7 @@ var StyleSheetActor = protocol.ActorClass({
    * This cleans up class and rule added for transition effect and then
    * notifies that the style has been applied.
    */
-  _onTransitionEnd: function()
+  _onTransitionEnd: function(kind)
   {
     this.document.documentElement.classList.remove(TRANSITION_CLASS);
 
@@ -928,7 +960,7 @@ var StyleSheetActor = protocol.ActorClass({
       this.rawSheet.deleteRule(index);
     }
 
-    events.emit(this, "style-applied");
+    events.emit(this, "style-applied", kind, this);
   }
 })
 
@@ -981,6 +1013,29 @@ var StyleSheetFront = protocol.FrontClass(StyleSheetActor, {
   },
   get ruleCount() {
     return this._form.ruleCount;
+  },
+
+  /**
+   * Get the indentation to use for edits to this style sheet.
+   *
+   * @return {Promise} A promise that will resolve to a string that
+   * should be used to indent a block in this style sheet.
+   */
+  guessIndentation: function() {
+    let prefIndent = getIndentationFromPrefs();
+    if (prefIndent) {
+      let {indentUnit, indentWithTabs} = prefIndent;
+      return promise.resolve(indentWithTabs ? "\t" : " ".repeat(indentUnit));
+    }
+
+    return Task.spawn(function*() {
+      let longStr = yield this.getText();
+      let source = yield longStr.string();
+
+      let {indentUnit, indentWithTabs} = getIndentationFromString(source);
+
+      return indentWithTabs ? "\t" : " ".repeat(indentUnit);
+    }.bind(this));
   }
 });
 
