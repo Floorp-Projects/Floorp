@@ -934,10 +934,21 @@ frontend::CompileFunctionBody(JSContext* cx, MutableHandleFunction fun,
 }
 
 bool
+frontend::CompileFunctionBody(JSContext* cx, MutableHandleFunction fun,
+                              const ReadOnlyCompileOptions& options,
+                              Handle<PropertyNameVector> formals, JS::SourceBufferHolder& srcBuf)
+{
+    Rooted<ScopeObject*> staticLexical(cx, &cx->global()->lexicalScope().staticBlock());
+    return CompileFunctionBody(cx, fun, options, formals, srcBuf, staticLexical, NotGenerator);
+}
+
+
+bool
 frontend::CompileStarGeneratorBody(JSContext* cx, MutableHandleFunction fun,
                                    const ReadOnlyCompileOptions& options,
                                    Handle<PropertyNameVector> formals,
                                    JS::SourceBufferHolder& srcBuf)
 {
-    return CompileFunctionBody(cx, fun, options, formals, srcBuf, nullptr, StarGenerator);
+    Rooted<ScopeObject*> staticLexical(cx, &cx->global()->lexicalScope().staticBlock());
+    return CompileFunctionBody(cx, fun, options, formals, srcBuf, staticLexical, StarGenerator);
 }

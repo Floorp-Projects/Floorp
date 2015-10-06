@@ -3325,7 +3325,13 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
                         MOZ_ASSERT(scriptStaticScope->is<JSFunction>());
                         enclosingScope = scriptStaticScope;
                     } else if (ssi.type() == StaticScopeIter<CanGC>::Block) {
-                        enclosingScope = objects[FindScopeObjectIndex(src, ssi.block())];
+                        if (ssi.block().isGlobal()) {
+                            MOZ_ASSERT(IsStaticGlobalLexicalScope(scriptStaticScope) ||
+                                       scriptStaticScope->is<StaticNonSyntacticScopeObjects>());
+                            enclosingScope = scriptStaticScope;
+                        } else {
+                            enclosingScope = objects[FindScopeObjectIndex(src, ssi.block())];
+                        }
                     } else {
                         enclosingScope = objects[FindScopeObjectIndex(src, ssi.staticWith())];
                     }
@@ -3475,8 +3481,8 @@ CreateEmptyScriptForClone(JSContext* cx, HandleObject enclosingScope, HandleScri
 JSScript*
 js::CloneGlobalScript(JSContext* cx, Handle<ScopeObject*> enclosingScope, HandleScript src)
 {
-    // No enclosingScope means clean global.
-    MOZ_ASSERT(!enclosingScope || enclosingScope->is<StaticNonSyntacticScopeObjects>());
+    MOZ_ASSERT(IsGlobalLexicalScope(enclosingScope) ||
+               enclosingScope->is<StaticNonSyntacticScopeObjects>());
 
     RootedScript dst(cx, CreateEmptyScriptForClone(cx, enclosingScope, src));
     if (!dst)
