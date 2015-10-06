@@ -237,10 +237,8 @@ struct BytecodeEmitter
     StmtInfoBCE* innermostStmt() const { return stmtStack.innermost(); }
     StmtInfoBCE* innermostScopeStmt() const { return stmtStack.innermostScopeStmt(); }
     JSObject* innermostStaticScope() const;
-    JSObject* blockScopeOfDef(ParseNode* pn) const {
-        MOZ_ASSERT(pn->resolve());
-        unsigned blockid = pn->resolve()->pn_blockid;
-        return parser->blockScopes[blockid];
+    JSObject* blockScopeOfDef(Definition* dn) const {
+        return parser->blockScopes[dn->pn_blockid];
     }
 
     bool atBodyLevel() const;

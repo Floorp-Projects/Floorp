@@ -44,6 +44,18 @@ function isParseError(str)
     assertEq(caught, true);
 }
 
+function isRuntimeParseError(str, arg)
+{
+    var caught = false;
+    try {
+        (new Function("x", str))(arg);
+    } catch(e) {
+        assertEq(e instanceof TypeError || e instanceof SyntaxError, true);
+        caught = true;
+    }
+    assertEq(caught, true);
+}
+
 function isReferenceError(str)
 {
     var caught = false;
@@ -141,7 +153,7 @@ test('let (y = x[1]) {let (x = x[0]) {try {let (y = "unicorns") {throw y;}} catc
 isParseError('let (x = x) {try {let (x = "unicorns") eval("throw x");} catch (e) {return x;}}');
 test('let (y = x) {return function () {return eval("y");}();}');
 test('return eval("let (y = x) {y;}");');
-test('let (y = x) {eval("var y = 2");return y;}', 'ponies', 2);
+isRuntimeParseError('let (y = x) {eval("var y = 2");return y;}', 'ponies');
 test('"use strict";let (y = x) {eval("var y = 2");return y;}');
 test('this.y = x;let (y = 1) {return this.eval("y");}');
 isParseError('let (x = 1, x = 2) {x}');
@@ -215,7 +227,7 @@ test('x.foo;{let y = x;return y;}');
 test('x.foo;if (x) {x.bar;let y = x;return y;}');
 test('if (x) {let y = x;return function () {return eval("y");}();}');
 test('return eval("let y = x; y");');
-test('if (x) {let y = x;eval("var y = 2");return y;}', 'ponies', 2);
+isRuntimeParseError('if (x) {let y = x;eval("var y = 2");return y;}', 'ponies');
 test('"use strict";if (x) {let y = x;eval("var y = 2");return y;}');
 test('"use strict";if (x) {let y = x;eval("let y = 2");return y;}');
 test('"use strict";if (x) {let y = 1;return eval("let y = x;y;");}');

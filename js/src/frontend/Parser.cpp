@@ -242,13 +242,22 @@ ParseContext<FullParseHandler>::define(TokenStream& ts,
         break;
 
       case Definition::VAR:
-        if (!sc->isGlobalContext()) {
+        // Unlike args, var bindings keep the blockid of where the statement
+        // was found until ParseContext::generateBindings. In practice, this
+        // means when we emit bytecode for function scripts, var Definition
+        // nodes will have their static scopes correctly set to the static
+        // scope of the body. For global scripts, vars are dynamically defined
+        // on the global object and their static scope is never consulted.
+        if (!vars_.append(dn))
+            return false;
+
+        // We always track vars for redeclaration checks, but only non-global
+        // and non-deoptimized (e.g., inside a with scope) vars live in frame
+        // or CallObject slots.
+        if (!sc->isGlobalContext() && !dn->isDeoptimized()) {
             dn->setOp((js_CodeSpec[dn->getOp()].format & JOF_SET) ? JSOP_SETLOCAL : JSOP_GETLOCAL);
-            dn->pn_blockid = bodyid;
             dn->pn_dflags |= PND_BOUND;
-            if (!dn->pn_scopecoord.setSlot(ts, vars_.length()))
-                return false;
-            if (!vars_.append(dn))
+            if (!dn->pn_scopecoord.setSlot(ts, vars_.length() - 1))
                 return false;
             if (!checkLocalsOverflow(ts))
                 return false;
@@ -336,7 +345,7 @@ ParseContext<ParseHandler>::prepareToAddDuplicateArg(HandlePropertyName name, De
 
 template <typename ParseHandler>
 void
-ParseContext<ParseHandler>::updateDecl(JSAtom* atom, Node pn)
+ParseContext<ParseHandler>::updateDecl(TokenStream& ts, JSAtom* atom, Node pn)
 {
     Definition* oldDecl = decls_.lookupFirst(atom);
 
@@ -344,8 +353,24 @@ ParseContext<ParseHandler>::updateDecl(JSAtom* atom, Node pn)
     Definition* newDecl = (Definition*)pn;
     decls_.updateFirst(atom, newDecl);
 
-    if (sc->isGlobalContext()) {
+    if (sc->isGlobalContext() || oldDecl->isDeoptimized()) {
         MOZ_ASSERT(newDecl->isFreeVar());
+        // Global 'var' bindings have no slots, but are still tracked for
+        // redeclaration checks.
+        for (uint32_t i = 0; i < vars_.length(); i++) {
+            if (vars_[i] == oldDecl) {
+                // Terribly, deoptimized bindings may be updated with
+                // optimized bindings due to hoisted function statements, so
+                // give the new declaration a slot.
+                if (oldDecl->isDeoptimized() && !newDecl->isDeoptimized()) {
+                    newDecl->pn_dflags |= PND_BOUND;
+                    newDecl->pn_scopecoord.setSlot(ts, i);
+                    newDecl->setOp(JSOP_GETLOCAL);
+                }
+                vars_[i] = newDecl;
+                break;
+            }
+        }
         return;
     }
 
@@ -438,6 +463,12 @@ ParseContext<ParseHandler>::generateBindings(ExclusiveContext* cx, TokenStream& 
     if (UINT32_MAX - args_.length() <= vars_.length() + bodyLevelLexicals_.length())
         return ts.reportError(JSMSG_TOO_MANY_LOCALS);
 
+    // Fix up the blockids of vars, whose static scope is always at the body
+    // level. This could not be done up front in ParseContext::Define, as
+    // the original blockids are used for redeclaration checks.
+    for (size_t i = 0; i < vars_.length(); i++)
+        vars_[i]->pn_blockid = bodyid;
+
     // Fix up the slots of body-level lets to come after the vars now that we
     // know how many vars there are.
     for (size_t i = 0; i < bodyLevelLexicals_.length(); i++) {
@@ -465,6 +496,32 @@ ParseContext<ParseHandler>::generateBindings(ExclusiveContext* cx, TokenStream& 
                                               bodyLevelLexicals_.length(), blockScopeDepth,
                                               numUnaliasedVars, numUnaliasedBodyLevelLexicals,
                                               packedBindings, sc->isModuleBox());
+}
+
+template <>
+bool
+ParseContext<FullParseHandler>::drainGlobalOrEvalBindings(ExclusiveContext* cx,
+                                                          MutableHandle<TraceableVector<Binding>> vars,
+                                                          MutableHandle<TraceableVector<Binding>> lexicals)
+{
+    MOZ_ASSERT(sc->isGlobalContext());
+
+    uint32_t newVarsPos = vars.length();
+    uint32_t newLexicalsPos = lexicals.length();
+
+    if (!vars.growBy(vars_.length()))
+        return false;
+    AppendPackedBindings(this, vars_, vars.begin() + newVarsPos);
+    vars_.clear();
+
+    if (!sc->staticScope()->is<StaticEvalObject>()) {
+        if (!lexicals.growBy(bodyLevelLexicals_.length()))
+            return false;
+        AppendPackedBindings(this, bodyLevelLexicals_, lexicals.begin() + newLexicalsPos);
+    }
+    bodyLevelLexicals_.clear();
+
+    return true;
 }
 
 template <typename ParseHandler>
@@ -1224,10 +1281,10 @@ Parser<ParseHandler>::functionBody(InHandling inHandling, YieldHandling yieldHan
 /* See comment for use in Parser::functionDef. */
 template <>
 bool
-Parser<FullParseHandler>::makeDefIntoUse(Definition* dn, ParseNode* pn, JSAtom* atom)
+Parser<FullParseHandler>::makeDefIntoUse(Definition* dn, ParseNode* pn, HandleAtom atom)
 {
     /* Turn pn into a definition. */
-    pc->updateDecl(atom, pn);
+    pc->updateDecl(tokenStream, atom, pn);
 
     /* Change all uses of dn to be uses of pn. */
     for (ParseNode* pnu = dn->dn_uses; pnu; pnu = pnu->pn_link) {
@@ -3263,7 +3320,7 @@ Parser<FullParseHandler>::bindLexical(BindData<FullParseHandler>* data,
     ExclusiveContext* cx = parser->context;
     Rooted<StaticBlockObject*> blockObj(cx, data->letData().blockObj);
 
-    uint32_t index;
+    uint32_t index = StaticBlockObject::LOCAL_INDEX_LIMIT;
     if (blockObj) {
         // Leave the scope coordinate free on global lexicals.
         //
@@ -3310,7 +3367,10 @@ Parser<FullParseHandler>::bindLexical(BindData<FullParseHandler>* data,
      * define() right now. Otherwise, delay define until pushLetScope.
      */
     if (data->letData().varContext == HoistVars) {
-        if (dn && dn->pn_blockid == pc->blockid())
+        // The reason we compare using >= instead of == on the block id is to
+        // detect redeclarations where a 'var' binding first appeared in a
+        // nested block: |{ var x; } let x;|
+        if (dn && dn->pn_blockid >= pc->blockid())
             return parser->reportRedeclaration(pn, dn->kind(), name);
         if (!pc->define(parser->tokenStream, name, pn, bindingKind))
             return false;
@@ -3518,21 +3578,27 @@ Parser<ParseHandler>::bindVar(BindData<ParseHandler>* data,
         }
 
         /*
-         * This definition isn't being added to the parse context's
-         * declarations, so make sure to indicate the need to deoptimize
-         * the script's arguments object. Mark the function as if it
-         * contained a debugger statement, which will deoptimize arguments
-         * as much as possible.
+         * Make sure to indicate the need to deoptimize the script's arguments
+         * object. Mark the function as if it contained a debugger statement,
+         * which will deoptimize arguments as much as possible.
          */
         if (name == cx->names().arguments)
             pc->sc->setHasDebuggerStatement();
 
-        return true;
+        // Find the nearest enclosing non-with scope that defined name, if
+        // any, for redeclaration checks below.
+        while (stmt && stmt->type == StmtType::WITH) {
+            if (stmt->enclosingScope)
+                stmt = LexicalLookup(pc, name, stmt->enclosingScope);
+            else
+                stmt = nullptr;
+        }
     }
 
     DefinitionList::Range defs = pc->decls().lookupMulti(name);
     MOZ_ASSERT_IF(stmt, !defs.empty());
 
+    // TODOshu: ES6 Annex B.3.5 is not implemented.
     if (defs.empty())
         return pc->define(parser->tokenStream, name, pn, Definition::VAR);
 

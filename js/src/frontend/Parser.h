@@ -195,7 +195,7 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
     void prepareToAddDuplicateArg(HandlePropertyName name, DefinitionNode prevDecl);
 
     /* See the sad story in MakeDefIntoUse. */
-    void updateDecl(JSAtom* atom, Node newDecl);
+    void updateDecl(TokenStream& ts, JSAtom* atom, Node newDecl);
 
     /*
      * After a function body or module has been parsed, the parser generates the
@@ -213,6 +213,21 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
      */
     bool generateBindings(ExclusiveContext* cx, TokenStream& ts, LifoAlloc& alloc,
                           MutableHandle<Bindings> bindings) const;
+
+    // All global names in global scripts are added to the scope dynamically
+    // via JSOP_DEF{FUN,VAR,LET,CONST}, but ES6 15.1.8 specifies that if there
+    // are name conflicts in the script, *no* bindings from the script are
+    // instantiated. So, record the vars and lexical bindings to check for
+    // redeclarations in the prologue.
+    //
+    // Eval scripts do not need this mechanism as they always have a
+    // non-extensible lexical scope.
+    //
+    // Global and eval scripts may have block-scoped locals, however, which
+    // are allocated to the fixed part of the stack frame.
+    bool drainGlobalOrEvalBindings(ExclusiveContext* cx,
+                                   MutableHandle<TraceableVector<Binding>> vars,
+                                   MutableHandle<TraceableVector<Binding>> lexicals);
 
   private:
     ParseContext**  parserPC;     /* this points to the Parser's active pc
@@ -774,7 +789,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     bool matchInOrOf(bool* isForInp, bool* isForOfp);
 
     bool checkFunctionArguments();
-    bool makeDefIntoUse(Definition* dn, Node pn, JSAtom* atom);
+    bool makeDefIntoUse(Definition* dn, Node pn, HandleAtom atom);
     bool checkFunctionDefinition(HandlePropertyName funName, Node* pn, FunctionSyntaxKind kind,
                                  bool* pbodyProcessed);
     bool finishFunctionDefinition(Node pn, FunctionBox* funbox, Node body);

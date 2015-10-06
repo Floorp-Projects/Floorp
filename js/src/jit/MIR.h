@@ -7279,6 +7279,21 @@ class MThrowUninitializedLexical : public MNullaryInstruction
     }
 };
 
+// In the prologues of global and eval scripts, check for redeclarations.
+class MGlobalNameConflictsCheck : public MNullaryInstruction
+{
+    MGlobalNameConflictsCheck() {
+        setGuard();
+    }
+
+  public:
+    INSTRUCTION_HEADER(GlobalNameConflictsCheck)
+
+    static MGlobalNameConflictsCheck* New(TempAllocator& alloc) {
+        return new(alloc) MGlobalNameConflictsCheck();
+    }
+};
+
 // If not defined, set a global variable to |undefined|.
 class MDefVar
   : public MUnaryInstruction,

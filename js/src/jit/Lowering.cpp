@@ -4272,6 +4272,14 @@ LIRGenerator::visitThrowUninitializedLexical(MThrowUninitializedLexical* ins)
 }
 
 void
+LIRGenerator::visitGlobalNameConflictsCheck(MGlobalNameConflictsCheck* ins)
+{
+    LGlobalNameConflictsCheck* lir = new(alloc()) LGlobalNameConflictsCheck();
+    add(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitDebugger(MDebugger* ins)
 {
     LDebugger* lir = new(alloc()) LDebugger(tempFixed(CallTempReg0), tempFixed(CallTempReg1));
