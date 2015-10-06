@@ -314,7 +314,6 @@ protected:
     WbsNotification;
 
   class ConnectionStateInitOp;
-  class AudioStateInitOp;
   class VoiceRecognitionInitOp;
   class AnswerCallInitOp;
   class HangupCallInitOp;
@@ -330,7 +329,6 @@ protected:
   class VolumeInitOp;
   class UnknownAtInitOp;
   class KeyPressedInitOp;
-  class WbsInitOp;
 
   void ConnectionStateNtf(const DaemonSocketPDUHeader& aHeader,
                           DaemonSocketPDU& aPDU);
