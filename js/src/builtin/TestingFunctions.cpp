@@ -993,25 +993,16 @@ OOMThreadTypes(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
-OOMAfterAllocations(JSContext* cx, unsigned argc, Value* vp)
+SetupOOMFailure(JSContext* cx, bool failAlways, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() < 1) {
-        JS_ReportError(cx, "count argument required");
+        JS_ReportError(cx, "Count argument required");
         return false;
     }
 
     if (args.length() > 2) {
-        JS_ReportError(cx, "too many arguments");
-        return false;
-    }
-
-    uint32_t targetThread = 0;
-    if (!ToUint32(cx, args.get(1), &targetThread))
-        return false;
-
-    if (targetThread >= js::oom::THREAD_TYPE_MAX) {
-        JS_ReportError(cx, "invalid thread type specified");
+        JS_ReportError(cx, "Too many arguments");
         return false;
     }
 
@@ -1019,45 +1010,32 @@ OOMAfterAllocations(JSContext* cx, unsigned argc, Value* vp)
     if (!JS::ToUint32(cx, args.get(0), &count))
         return false;
 
+    uint32_t targetThread = js::oom::THREAD_TYPE_MAIN;
+    if (args.length() > 1 && !ToUint32(cx, args[1], &targetThread))
+        return false;
+
+    if (targetThread == js::oom::THREAD_TYPE_NONE || targetThread >= js::oom::THREAD_TYPE_MAX) {
+        JS_ReportError(cx, "Invalid thread type specified");
+        return false;
+    }
+
     HelperThreadState().waitForAllThreads();
     js::oom::targetThread = targetThread;
     OOM_maxAllocations = OOM_counter + count;
-    OOM_failAlways = true;
+    OOM_failAlways = failAlways;
     return true;
+}
+
+static bool
+OOMAfterAllocations(JSContext* cx, unsigned argc, Value* vp)
+{
+    return SetupOOMFailure(cx, true, argc, vp);
 }
 
 static bool
 OOMAtAllocation(JSContext* cx, unsigned argc, Value* vp)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() < 1) {
-        JS_ReportError(cx, "count argument required");
-        return false;
-    }
-
-    if (args.length() > 2) {
-        JS_ReportError(cx, "too many arguments");
-        return false;
-    }
-
-    uint32_t targetThread = 0;
-    if (!ToUint32(cx, args.get(1), &targetThread))
-        return false;
-
-    if (targetThread >= js::oom::THREAD_TYPE_MAX) {
-        JS_ReportError(cx, "invalid thread type specified");
-        return false;
-    }
-
-    uint32_t count;
-    if (!JS::ToUint32(cx, args.get(0), &count))
-        return false;
-
-    HelperThreadState().waitForAllThreads();
-    js::oom::targetThread = targetThread;
-    OOM_maxAllocations = OOM_counter + count;
-    OOM_failAlways = false;
-    return true;
+    return SetupOOMFailure(cx, false, argc, vp);
 }
 
 static bool
@@ -1065,6 +1043,7 @@ ResetOOMFailure(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setBoolean(OOM_counter >= OOM_maxAllocations);
+    js::oom::targetThread = js::oom::THREAD_TYPE_NONE;
     OOM_maxAllocations = UINT32_MAX;
     return true;
 }
