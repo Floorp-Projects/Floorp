@@ -9,7 +9,12 @@ var status = 'Testing scope after changing obj.__proto__';
 var expect= '';
 var actual = '';
 var obj = {};
-const five = 5;
+
+Object.defineProperty(this, "five", {
+  value: 5,
+  enumerable: true,
+  writable: false
+});
 
 
 //-----------------------------------------------------------------------------
