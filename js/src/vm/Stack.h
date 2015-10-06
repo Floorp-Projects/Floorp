@@ -45,6 +45,7 @@ class ScriptFrameIter;
 class SPSProfiler;
 class InterpreterFrame;
 class StaticBlockObject;
+class ClonedBlockObject;
 
 class ScopeCoordinate;
 
@@ -616,7 +617,8 @@ class InterpreterFrame
     inline ScopeObject& aliasedVarScope(ScopeCoordinate sc) const;
     inline GlobalObject& global() const;
     inline CallObject& callObj() const;
-    inline JSObject& varObj();
+    inline JSObject& varObj() const;
+    inline ClonedBlockObject& extensibleLexicalScope() const;
 
     inline void pushOnScopeChain(ScopeObject& scope);
     inline void popOffScopeChain();

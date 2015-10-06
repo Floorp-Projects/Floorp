@@ -215,7 +215,7 @@ ScopeCoordinateFunctionScript(JSScript* script, jsbytecode* pc);
  *     |
  *   ScopeObject---+---+           Engine-internal scope
  *     |   |   |   |   |
- *     |   |   |   |  StaticNonSyntacticScopeObjects  See NB2
+ *     |   |   |   |  StaticNonSyntacticScopeObjects  See "Non-syntactic scope objects"
  *     |   |   |   |
  *     |   |   |  StaticEvalObject  Placeholder so eval scopes may be iterated through
  *     |   |   |
@@ -246,9 +246,6 @@ ScopeCoordinateFunctionScript(JSScript* script, jsbytecode* pc);
  * compile time to hold the shape/binding information from which block objects
  * are cloned at runtime. These objects should never escape into the wild and
  * support a restricted set of ScopeObject operations.
- *
- * NB2: StaticNonSyntacticScopeObjects notify either of 0+ non-syntactic
- * DynamicWithObjects on the dynamic scope chain or a NonSyntacticScopeObject.
  *
  * See also "Debug scope objects" below.
  */
@@ -459,13 +456,113 @@ class StaticEvalObject : public ScopeObject
     inline bool isNonGlobal() const;
 };
 
-// Static scope objects that stand in for one or more "polluting global"
-// scopes on the dynamic scope chain.
-//
-// There are two flavors of polluting global scopes on the dynamic scope
-// chain: either 0+ non-syntactic DynamicWithObjects, or 1
-// NonSyntacticVariablesObject, created exclusively in
-// js::ExecuteInGlobalAndReturnScope.
+/*
+ * Non-syntactic scope objects
+ *
+ * A non-syntactic scope is one that was not created due to source code. On
+ * the static scope chain, a single StaticNonSyntacticScopeObjects maps to 0+
+ * non-syntactic dynamic scope objects. This is contrasted with syntactic
+ * scopes, where each syntactic static scope corresponds to 0 or 1 dynamic
+ * scope objects.
+ *
+ * There are 3 kinds of dynamic non-syntactic scopes:
+ *
+ * 1. DynamicWithObject
+ *
+ *    When the embedding compiles or executes a script, it has the option to
+ *    pass in a vector of objects to be used as the initial scope chain. Each
+ *    of those objects is wrapped by a DynamicWithObject.
+ *
+ *    The innermost scope passed in by the embedding becomes a qualified
+ *    variables object that captures 'var' bindings. That is, it wraps the
+ *    holder object of 'var' bindings.
+ *
+ *    Does not hold 'let' or 'const' bindings.
+ *
+ * 2. NonSyntacticVariablesObject
+ *
+ *    When the embedding wants qualified 'var' bindings and unqualified
+ *    bareword assignments to go on a different object than the global
+ *    object. While any object can be made into a qualified variables object,
+ *    only the GlobalObject and NonSyntacticVariablesObject are considered
+ *    unqualified variables objects.
+ *
+ *    Unlike DynamicWithObjects, this object is itself the holder of 'var'
+ *    bindings.
+ *
+ *    Does not hold 'let' or 'const' bindings.
+ *
+ * 3. ClonedBlockObject
+ *
+ *    Each non-syntactic object used as a qualified variables object needs to
+ *    enclose a non-syntactic ClonedBlockObject to hold 'let' and 'const'
+ *    bindings. There is a bijection per compartment between the non-syntactic
+ *    variables objects and their non-syntactic ClonedBlockObjects.
+ *
+ *    Does not hold 'var' bindings.
+ *
+ * The embedding (Gecko) uses non-syntactic scopes for various things, some of
+ * which are detailed below. All scope chain listings below are, from top to
+ * bottom, outermost to innermost.
+ *
+ * A. Component loading
+ *
+ * Components may be loaded in "reuse loader global" mode, where to save on
+ * memory, all JSMs and JS-implemented XPCOM modules are loaded into a single
+ * global. Each individual JSMs are compiled as functions with their own
+ * FakeBackstagePass. They have the following dynamic scope chain:
+ *
+ *   BackstagePass global
+ *       |
+ *   Global lexical scope
+ *       |
+ *   DynamicWithObject wrapping FakeBackstagePass
+ *       |
+ *   Non-syntactic lexical scope
+ *
+ * B. Subscript loading
+ *
+ * Subscripts may be loaded into a target object. They have the following
+ * dynamic scope chain:
+ *
+ *   Loader global
+ *       |
+ *   Global lexical scope
+ *       |
+ *   DynamicWithObject wrapping target
+ *       |
+ *   ClonedBlockObject
+ *
+ * C. Frame scripts
+ *
+ * XUL frame scripts are always loaded with a NonSyntacticVariablesObject as a
+ * "polluting global". This is done exclusively in
+ * js::ExecuteInGlobalAndReturnScope.
+ *
+ *   Loader global
+ *       |
+ *   Global lexical scope
+ *       |
+ *   NonSyntacticVariablesObject
+ *       |
+ *   ClonedBlockObject
+ *
+ * D. XBL
+ *
+ * XBL methods are compiled as functions with XUL elements on the scope chain.
+ * For a chain of elements e0,...,eN:
+ *
+ *      ...
+ *       |
+ *   DynamicWithObject wrapping eN
+ *       |
+ *      ...
+ *       |
+ *   DynamicWithObject wrapping e0
+ *       |
+ *   ClonedBlockObject
+ *
+ */
 class StaticNonSyntacticScopeObjects : public ScopeObject
 {
   public:
@@ -482,7 +579,7 @@ class StaticNonSyntacticScopeObjects : public ScopeObject
 // A non-syntactic dynamic scope object that captures non-lexical
 // bindings. That is, a scope object that captures both qualified var
 // assignments and unqualified bareword assignments. Its parent is always the
-// real global.
+// global lexical scope.
 //
 // This is used in ExecuteInGlobalAndReturnScope and sits in front of the
 // global scope to capture 'var' and bareword asignments.
@@ -492,7 +589,8 @@ class NonSyntacticVariablesObject : public ScopeObject
     static const unsigned RESERVED_SLOTS = 1;
     static const Class class_;
 
-    static NonSyntacticVariablesObject* create(JSContext* cx, Handle<GlobalObject*> global);
+    static NonSyntacticVariablesObject* create(JSContext* cx,
+                                               Handle<ClonedBlockObject*> globalLexical);
 };
 
 class NestedScopeObject : public ScopeObject
@@ -703,8 +801,12 @@ class StaticBlockObject : public BlockObject
     }
 
     // Is this the static global lexical scope?
-    bool isGlobal() {
+    bool isGlobal() const {
         return !enclosingStaticScope();
+    }
+
+    bool isSyntactic() const {
+        return !isExtensible() || isGlobal();
     }
 
     /* Frontend-only functions ***********************************************/
@@ -765,6 +867,9 @@ class ClonedBlockObject : public BlockObject
 
     static ClonedBlockObject* createGlobal(JSContext* cx, Handle<GlobalObject*> global);
 
+    static ClonedBlockObject* createNonSyntactic(JSContext* cx, HandleObject enclosingStatic,
+                                                 HandleObject enclosingScope);
+
     static ClonedBlockObject* createHollowForDebug(JSContext* cx,
                                                    Handle<StaticBlockObject*> block);
 
@@ -793,6 +898,10 @@ class ClonedBlockObject : public BlockObject
     GlobalObject& global() const {
         MOZ_ASSERT(isGlobal());
         return enclosingScope().as<GlobalObject>();
+    }
+
+    bool isSyntactic() const {
+        return !isExtensible() || isGlobal();
     }
 
     /* Copy in all the unaliased formals and locals. */
@@ -1179,9 +1288,25 @@ namespace js {
 inline bool
 IsSyntacticScope(JSObject* scope)
 {
-    return scope->is<ScopeObject>() &&
-           (!scope->is<DynamicWithObject>() || scope->as<DynamicWithObject>().isSyntactic()) &&
-           !scope->is<NonSyntacticVariablesObject>();
+    if (!scope->is<ScopeObject>())
+        return false;
+
+    if (scope->is<DynamicWithObject>())
+        return scope->as<DynamicWithObject>().isSyntactic();
+
+    if (scope->is<ClonedBlockObject>())
+        return scope->as<ClonedBlockObject>().isSyntactic();
+
+    if (scope->is<NonSyntacticVariablesObject>())
+        return false;
+
+    return true;
+}
+
+inline bool
+IsExtensibleLexicalScope(JSObject* scope)
+{
+    return scope->is<ClonedBlockObject>() && scope->as<ClonedBlockObject>().isExtensible();
 }
 
 inline bool
@@ -1234,13 +1359,12 @@ inline bool
 ScopeIter::hasNonSyntacticScopeObject() const
 {
     // The case we're worrying about here is a NonSyntactic static scope which
-    // has 0+ corresponding non-syntactic DynamicWithObject scopes or a
-    // NonSyntacticVariablesObject.
+    // has 0+ corresponding non-syntactic DynamicWithObject scopes, a
+    // NonSyntacticVariablesObject, or a non-syntactic ClonedBlockObject.
     if (ssi_.type() == StaticScopeIter<CanGC>::NonSyntactic) {
         MOZ_ASSERT_IF(scope_->is<DynamicWithObject>(),
                       !scope_->as<DynamicWithObject>().isSyntactic());
-        return scope_->is<DynamicWithObject>() ||
-               scope_->is<NonSyntacticVariablesObject>();
+        return scope_->is<ScopeObject>() && !IsSyntacticScope(scope_);
     }
     return false;
 }

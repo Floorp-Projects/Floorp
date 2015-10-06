@@ -16,6 +16,14 @@
 
 namespace js {
 
+inline ClonedBlockObject&
+NearestEnclosingExtensibleLexicalScope(JSObject* scope)
+{
+    while (!IsExtensibleLexicalScope(scope))
+        scope = scope->enclosingScope();
+    return scope->as<ClonedBlockObject>();
+}
+
 inline void
 ScopeObject::setAliasedVar(JSContext* cx, ScopeCoordinate sc, PropertyName* name, const Value& v)
 {

@@ -342,7 +342,8 @@ StatsCompartmentCallback(JSRuntime* rt, void* data, JSCompartment* compartment)
                                         &cStats.objectMetadataTable,
                                         &cStats.crossCompartmentWrappersTable,
                                         &cStats.regexpCompartment,
-                                        &cStats.savedStacksSet);
+                                        &cStats.savedStacksSet,
+                                        &cStats.nonSyntacticLexicalScopesTable);
 }
 
 static void

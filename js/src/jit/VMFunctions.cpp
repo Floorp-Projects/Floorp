@@ -178,6 +178,27 @@ DefVar(JSContext* cx, HandlePropertyName dn, unsigned attrs, HandleObject scopeC
 }
 
 bool
+DefLexical(JSContext* cx, HandlePropertyName dn, unsigned attrs, HandleObject scopeChain)
+{
+    // Find the extensible lexical scope.
+    Rooted<ClonedBlockObject*> lexical(cx, &NearestEnclosingExtensibleLexicalScope(scopeChain));
+
+    // Find the variables object.
+    RootedObject varObj(cx, scopeChain);
+    while (!varObj->isQualifiedVarObj())
+        varObj = varObj->enclosingScope();
+
+    return DefLexicalOperation(cx, lexical, varObj, dn, attrs);
+}
+
+bool
+DefGlobalLexical(JSContext* cx, HandlePropertyName dn, unsigned attrs)
+{
+    Rooted<ClonedBlockObject*> globalLexical(cx, &cx->global()->lexicalScope());
+    return DefLexicalOperation(cx, globalLexical, cx->global(), dn, attrs);
+}
+
+bool
 MutatePrototype(JSContext* cx, HandlePlainObject obj, HandleValue value)
 {
     if (!value.isObjectOrNull())
