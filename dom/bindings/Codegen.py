@@ -3345,11 +3345,18 @@ def InitUnforgeablePropertiesOnHolder(descriptor, properties, failureCode):
                             "nsContentUtils::ThreadsafeIsCallerChrome()"))
 
     if descriptor.interface.getExtendedAttribute("Unforgeable"):
-        # We do our undefined toJSON here, not as a regular property
-        # because we don't have a concept of value props anywhere in IDL.
+        # We do our undefined toJSON and toPrimitive here, not as a regular
+        # property because we don't have a concept of value props anywhere in
+        # IDL.
         unforgeables.append(CGGeneric(fill(
             """
-            if (!JS_DefineProperty(aCx, unforgeableHolder, "toJSON", JS::UndefinedHandleValue,
+            JS::RootedId toPrimitive(aCx,
+              SYMBOL_TO_JSID(JS::GetWellKnownSymbol(aCx, JS::SymbolCode::toPrimitive)));
+            if (!JS_DefinePropertyById(aCx, unforgeableHolder, toPrimitive,
+                                       JS::UndefinedHandleValue,
+                                       JSPROP_READONLY | JSPROP_PERMANENT) ||
+                !JS_DefineProperty(aCx, unforgeableHolder, "toJSON",
+                                   JS::UndefinedHandleValue,
                                    JSPROP_READONLY | JSPROP_ENUMERATE | JSPROP_PERMANENT)) {
               $*{failureCode}
             }
