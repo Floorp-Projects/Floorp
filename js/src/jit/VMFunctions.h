@@ -589,6 +589,8 @@ bool CheckOverRecursedWithExtra(JSContext* cx, BaselineFrame* frame,
                                 uint32_t extra, uint32_t earlyCheck);
 
 bool DefVar(JSContext* cx, HandlePropertyName dn, unsigned attrs, HandleObject scopeChain);
+bool DefLexical(JSContext* cx, HandlePropertyName dn, unsigned attrs, HandleObject scopeChain);
+bool DefGlobalLexical(JSContext* cx, HandlePropertyName dn, unsigned attrs);
 bool MutatePrototype(JSContext* cx, HandlePlainObject obj, HandleValue value);
 bool InitProp(JSContext* cx, HandleObject obj, HandlePropertyName name, HandleValue value,
               jsbytecode* pc);

@@ -495,8 +495,10 @@ js::ExecuteInGlobalAndReturnScope(JSContext* cx, HandleObject global, HandleScri
     MOZ_RELEASE_ASSERT(scriptArg->hasNonSyntacticScope());
 
     RootedScript script(cx, scriptArg);
+    Rooted<GlobalObject*> globalRoot(cx, &global->as<GlobalObject>());
     if (script->compartment() != cx->compartment()) {
-        Rooted<ScopeObject*> staticScope(cx, StaticNonSyntacticScopeObjects::create(cx, nullptr));
+        Rooted<ScopeObject*> staticScope(cx, &globalRoot->lexicalScope().staticBlock());
+        staticScope = StaticNonSyntacticScopeObjects::create(cx, staticScope);
         if (!staticScope)
             return false;
         script = CloneGlobalScript(cx, staticScope, script);
@@ -506,8 +508,15 @@ js::ExecuteInGlobalAndReturnScope(JSContext* cx, HandleObject global, HandleScri
         Debugger::onNewScript(cx, script);
     }
 
-    Rooted<GlobalObject*> globalRoot(cx, &global->as<GlobalObject>());
-    Rooted<ScopeObject*> scope(cx, NonSyntacticVariablesObject::create(cx, globalRoot));
+    Rooted<ClonedBlockObject*> globalLexical(cx, &globalRoot->lexicalScope());
+    Rooted<ScopeObject*> scope(cx, NonSyntacticVariablesObject::create(cx, globalLexical));
+    if (!scope)
+        return false;
+
+    // Unlike the non-syntactic scope chain API used by the subscript loader,
+    // this API creates a fresh block scope each time.
+    RootedObject enclosingStaticScope(cx, script->enclosingStaticScope());
+    scope = ClonedBlockObject::createNonSyntactic(cx, enclosingStaticScope, scope);
     if (!scope)
         return false;
 

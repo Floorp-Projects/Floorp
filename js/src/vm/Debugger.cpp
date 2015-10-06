@@ -6525,7 +6525,12 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, HandleValue thisv, AbstractFrameP
      */
     Rooted<ScopeObject*> enclosingStaticScope(cx);
     if (!IsGlobalLexicalScope(env)) {
-        enclosingStaticScope = StaticNonSyntacticScopeObjects::create(cx, nullptr);
+        // If we are doing a global evalWithBindings, we will still need to
+        // link the static global lexical scope to the static non-syntactic
+        // scope.
+        if (IsGlobalLexicalScope(env->enclosingScope()))
+            enclosingStaticScope = &cx->global()->lexicalScope().staticBlock();
+        enclosingStaticScope = StaticNonSyntacticScopeObjects::create(cx, enclosingStaticScope);
         if (!enclosingStaticScope)
             return false;
     } else {
@@ -6675,9 +6680,9 @@ DebuggerGenericEval(JSContext* cx, const char* fullMethodName, const Value& code
             return false;
     } else {
         /*
-         * Use the global as 'this'. If the global is an inner object, it
-         * should have a thisObject hook that returns the appropriate outer
-         * object.
+         * Use the global lexical scope as 'this'. If the global is an inner
+         * object, it should have a thisObject hook that returns the
+         * appropriate outer object.
          */
         JSObject* thisObj = GetThisObject(cx, scope);
         if (!thisObj)

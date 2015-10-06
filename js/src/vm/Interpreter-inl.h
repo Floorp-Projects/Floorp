@@ -300,19 +300,18 @@ SetNameOperation(JSContext* cx, JSScript* script, jsbytecode* pc, HandleObject s
 }
 
 inline bool
-DefLexicalOperation(JSContext* cx, HandlePropertyName name, unsigned attrs)
+DefLexicalOperation(JSContext* cx, Handle<ClonedBlockObject*> lexicalScope,
+                    HandleObject varObj, HandlePropertyName name, unsigned attrs)
 {
-    Rooted<ClonedBlockObject*> globalLexical(cx, &cx->global()->lexicalScope());
-
     // Due to the extensibility of the global lexical scope, we must check for
     // redeclaring a binding.
     mozilla::Maybe<frontend::Definition::Kind> redeclKind;
     RootedId id(cx, NameToId(name));
     RootedShape shape(cx);
-    if ((shape = globalLexical->lookup(cx, name))) {
+    if ((shape = lexicalScope->lookup(cx, name))) {
         redeclKind = mozilla::Some(shape->writable() ? frontend::Definition::LET
                                                      : frontend::Definition::CONST);
-    } else if ((shape = cx->global()->lookup(cx, name))) {
+    } else if (varObj->isNative() && (shape = varObj->as<NativeObject>().lookup(cx, name))) {
         if (!shape->configurable())
             redeclKind = mozilla::Some(frontend::Definition::VAR);
     } else {
@@ -332,7 +331,8 @@ DefLexicalOperation(JSContext* cx, HandlePropertyName name, unsigned attrs)
 }
 
 inline bool
-DefLexicalOperation(JSContext* cx, JSScript* script, jsbytecode* pc)
+DefLexicalOperation(JSContext* cx, ClonedBlockObject* lexicalScopeArg,
+                    JSObject* varObjArg, JSScript* script, jsbytecode* pc)
 {
     MOZ_ASSERT(*pc == JSOP_DEFLET || *pc == JSOP_DEFCONST);
     RootedPropertyName name(cx, script->getName(pc));
@@ -341,17 +341,25 @@ DefLexicalOperation(JSContext* cx, JSScript* script, jsbytecode* pc)
     if (*pc == JSOP_DEFCONST)
         attrs |= JSPROP_READONLY;
 
-    return DefLexicalOperation(cx, name, attrs);
+    Rooted<ClonedBlockObject*> lexicalScope(cx, lexicalScopeArg);
+    RootedObject varObj(cx, varObjArg);
+    MOZ_ASSERT_IF(!script->hasNonSyntacticScope(),
+                  lexicalScope == &cx->global()->lexicalScope() && varObj == cx->global());
+
+    return DefLexicalOperation(cx, lexicalScope, varObj, name, attrs);
 }
 
 inline void
-InitGlobalLexicalOperation(JSContext* cx, JSScript* script, jsbytecode* pc, HandleValue value)
+InitGlobalLexicalOperation(JSContext* cx, ClonedBlockObject* lexicalScopeArg,
+                           JSScript* script, jsbytecode* pc, HandleValue value)
 {
+    MOZ_ASSERT_IF(!script->hasNonSyntacticScope(),
+                  lexicalScopeArg == &cx->global()->lexicalScope());
     MOZ_ASSERT(*pc == JSOP_INITGLEXICAL);
-    Rooted<ClonedBlockObject*> globalLexical(cx, &cx->global()->lexicalScope());
-    RootedShape shape(cx, globalLexical->lookup(cx, script->getName(pc)));
+    Rooted<ClonedBlockObject*> lexicalScope(cx, lexicalScopeArg);
+    RootedShape shape(cx, lexicalScope->lookup(cx, script->getName(pc)));
     MOZ_ASSERT(shape);
-    globalLexical->setSlot(shape->slot(), value);
+    lexicalScope->setSlot(shape->slot(), value);
 }
 
 inline bool

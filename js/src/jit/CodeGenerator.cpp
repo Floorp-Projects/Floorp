@@ -3729,7 +3729,7 @@ CodeGenerator::visitDefVar(LDefVar* lir)
 }
 
 typedef bool (*DefLexicalFn)(JSContext*, HandlePropertyName, unsigned);
-static const VMFunction DefLexicalInfo = FunctionInfo<DefLexicalFn>(DefLexicalOperation);
+static const VMFunction DefLexicalInfo = FunctionInfo<DefLexicalFn>(DefGlobalLexical);
 
 void
 CodeGenerator::visitDefLexical(LDefLexical* lir)
