@@ -7252,13 +7252,11 @@ nsGlobalWindow::FocusOuter(ErrorResult& aError)
     }
     return;
   }
-  if (nsCOMPtr<nsITabChild> child = do_GetInterface(mDocShell)) {
-    child->SendRequestFocus(canFocus);
-    return;
-  }
+
   if (canFocus) {
     // if there is no parent, this must be a toplevel window, so raise the
-    // window if canFocus is true
+    // window if canFocus is true. If this is a child process, the raise
+    // window request will get forwarded to the parent by the puppet widget.
     aError = fm->SetActiveWindow(this);
   }
 }
