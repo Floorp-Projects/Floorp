@@ -1570,7 +1570,7 @@ struct Definition : public ParseNode
     enum Kind {
         MISSING = 0,
         VAR,
-        CONST,
+        CONSTANT,
         LET,
         ARG,
         NAMED_LAMBDA,
@@ -1598,7 +1598,7 @@ struct Definition : public ParseNode
         if (isImport())
             return IMPORT;
         if (isLexical())
-            return isConst() ? CONST : LET;
+            return isConst() ? CONSTANT : LET;
         return VAR;
     }
 };
