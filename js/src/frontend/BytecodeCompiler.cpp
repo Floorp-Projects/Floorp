@@ -287,8 +287,11 @@ BytecodeCompiler::isEvalCompilationUnit()
 bool
 BytecodeCompiler::isNonGlobalEvalCompilationUnit()
 {
-    return isEvalCompilationUnit() &&
-           enclosingStaticScope->as<StaticEvalObject>().enclosingScopeForStaticScopeIter();
+    if (!isEvalCompilationUnit())
+        return false;
+    StaticEvalObject& eval = enclosingStaticScope->as<StaticEvalObject>();
+    JSObject* enclosing = eval.enclosingScopeForStaticScopeIter();
+    return !IsStaticGlobalLexicalScope(enclosing);
 }
 
 bool

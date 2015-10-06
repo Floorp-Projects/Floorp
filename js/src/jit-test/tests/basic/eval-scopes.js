@@ -50,16 +50,14 @@ setLazyParsingDisabled(false);
     eval("function h() { assertEq(x, 'inner');} h()");
     eval("function h2() { (function nest() { assertEq(x, 'inner'); })(); } h2()");
 }
-// It sure would be nice if we could run the h3/h4 tests below, but it turns out
-// that lazy functions and eval don't play together all that well.  See bug
-// 1146080.  For now, assert we have no gname, so people will notice if they
-// accidentally fix it and adjust this test accordingly.
+
+// GNAME optimizations should work through lazy parsing.
 eval(`
      function h3() {
 	 assertEq(x, 'outer');
      }
      h3();
-     hasGname(h3, 'x', false);
+     hasGname(h3, 'x', true);
      `);
 eval(`
      function h4() {
@@ -67,7 +65,7 @@ eval(`
 	 nest();
 	 return nest;
      }
-     hasGname(h4(), 'x', false);
+     hasGname(h4(), 'x', true);
      `);
 
 setLazyParsingDisabled(true);
