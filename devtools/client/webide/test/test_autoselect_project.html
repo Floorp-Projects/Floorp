@@ -20,7 +20,6 @@
 
         Task.spawn(function* () {
           const { DebuggerServer } = require("devtools/server/main");
-          Services.prefs.setBoolPref("devtools.webide.sidebars", false);
 
           if (!DebuggerServer.initialized) {
             DebuggerServer.init();
@@ -28,8 +27,10 @@
           }
 
           let win = yield openWebIDE();
+          let docRuntime = getRuntimeDocument(win);
+          let docProject = getProjectDocument(win);
 
-          let panelNode = win.document.querySelector("#runtime-panel");
+          let panelNode = docRuntime.querySelector("#runtime-panel");
           let items = panelNode.querySelectorAll(".runtime-panel-item-other");
           is(items.length, 2, "Found 2 runtime buttons");
 
@@ -46,7 +47,7 @@
           yield win.Cmds.showProjectPanel();
           yield waitForUpdate(win, "runtime-targets");
           SimpleTest.executeSoon(() => {
-            win.document.querySelectorAll("#project-panel-runtimeapps .panel-item")[0].click();
+            docProject.querySelectorAll("#project-panel-runtimeapps .panel-item")[0].click();
           });
 
           yield waitForUpdate(win, "project");
@@ -62,7 +63,9 @@
           // Re-open, should reselect main process after connection
           win = yield openWebIDE();
 
-          panelNode = win.document.querySelector("#runtime-panel");
+          docRuntime = getRuntimeDocument(win);
+
+          panelNode = docRuntime.querySelector("#runtime-panel");
           items = panelNode.querySelectorAll(".runtime-panel-item-other");
           is(items.length, 2, "Found 2 runtime buttons");
 
@@ -84,7 +87,6 @@
           SimpleTest.finish();
         });
       }
-
     </script>
   </body>
 </html>

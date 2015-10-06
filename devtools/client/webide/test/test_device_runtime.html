@@ -20,7 +20,6 @@
 
         Task.spawn(function* () {
           const { DebuggerServer } = require("devtools/server/main");
-          Services.prefs.setBoolPref("devtools.webide.sidebars", false);
 
           if (!DebuggerServer.initialized) {
             DebuggerServer.init();
