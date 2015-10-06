@@ -363,6 +363,14 @@ public:
                                     const uint32_t& aRow) override;
   virtual bool RecvTableIsProbablyForLayout(const uint64_t& aID,
                                             bool* aForLayout) override;
+  virtual bool RecvAtkTableColumnHeader(const uint64_t& aID,
+                                        const int32_t& aCol,
+                                        uint64_t* aHeader,
+                                        bool* aOk) override;
+  virtual bool RecvAtkTableRowHeader(const uint64_t& aID,
+                                     const int32_t& aRow,
+                                     uint64_t* aHeader,
+                                     bool* aOk) override;
 
   virtual bool RecvSelectedItems(const uint64_t& aID,
                                  nsTArray<uint64_t>* aSelectedItemIDs) override;
