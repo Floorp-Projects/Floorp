@@ -18,31 +18,6 @@ class Matrix4x4;
 
 namespace layers {
 
-/* static */ LayersBackend Compositor::sBackend = LayersBackend::LAYERS_NONE;
-/* static */ LayersBackend
-Compositor::GetBackend()
-{
-  if (sBackend != LayersBackend::LAYERS_NONE) {
-    AssertOnCompositorThread();
-  }
-  return sBackend;
-}
-
-/* static */ void
-Compositor::SetBackend(LayersBackend backend)
-{
-  if (!gIsGtest && sBackend != backend &&
-      sBackend != LayersBackend::LAYERS_NONE &&
-      backend != LayersBackend::LAYERS_NONE) {
-    // Assert this once we figure out bug 972891.
-#ifdef XP_MACOSX
-    gfxWarning() << "Changing compositor from " << unsigned(sBackend) << " to " << unsigned(backend);
-#endif
-  }
-
-  sBackend = backend;
-}
-
 /* static */ void
 Compositor::AssertOnCompositorThread()
 {

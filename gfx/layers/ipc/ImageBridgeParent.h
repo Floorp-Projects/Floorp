@@ -49,7 +49,10 @@ public:
   ImageBridgeParent(MessageLoop* aLoop, Transport* aTransport, ProcessId aChildProcessId);
   ~ImageBridgeParent();
 
-  virtual LayersBackend GetCompositorBackendType() const override;
+  LayersBackend GetCompositorBackendType() const override {
+    MOZ_CRASH("ImageBridgeParent does not support GetCompositorBackendType");
+    return LayersBackend::LAYERS_NONE;
+  }
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -80,6 +83,7 @@ public:
   bool DeallocPCompositableParent(PCompositableParent* aActor) override;
 
   virtual PTextureParent* AllocPTextureParent(const SurfaceDescriptor& aSharedData,
+                                              const LayersBackend& aLayersBackend,
                                               const TextureFlags& aFlags) override;
   virtual bool DeallocPTextureParent(PTextureParent* actor) override;
 

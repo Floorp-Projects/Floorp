@@ -924,9 +924,11 @@ LayerTransactionParent::DeallocPCompositableParent(PCompositableParent* aActor)
 
 PTextureParent*
 LayerTransactionParent::AllocPTextureParent(const SurfaceDescriptor& aSharedData,
+                                            const LayersBackend& aLayersBackend,
                                             const TextureFlags& aFlags)
 {
-  return TextureHost::CreateIPDLActor(this, aSharedData, aFlags);
+  MOZ_ASSERT(aLayersBackend == mLayerManager->GetCompositor()->GetBackendType());
+  return TextureHost::CreateIPDLActor(this, aSharedData, aLayersBackend, aFlags);
 }
 
 bool

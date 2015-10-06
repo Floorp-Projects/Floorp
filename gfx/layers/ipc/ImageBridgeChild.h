@@ -185,7 +185,7 @@ public:
   ~ImageBridgeChild();
 
   virtual PTextureChild*
-  AllocPTextureChild(const SurfaceDescriptor& aSharedData, const TextureFlags& aFlags) override;
+  AllocPTextureChild(const SurfaceDescriptor& aSharedData, const LayersBackend& aLayersBackend, const TextureFlags& aFlags) override;
 
   virtual bool
   DeallocPTextureChild(PTextureChild* actor) override;
@@ -292,6 +292,7 @@ public:
   virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
 
   virtual PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData,
+                                       LayersBackend aLayersBackend,
                                        TextureFlags aFlags) override;
 
   virtual bool IsSameProcess() const override;

@@ -126,6 +126,7 @@ LayerTransactionChild::ActorDestroy(ActorDestroyReason why)
 
 PTextureChild*
 LayerTransactionChild::AllocPTextureChild(const SurfaceDescriptor&,
+                                          const LayersBackend&,
                                           const TextureFlags&)
 {
   MOZ_ASSERT(!mDestroyed);
