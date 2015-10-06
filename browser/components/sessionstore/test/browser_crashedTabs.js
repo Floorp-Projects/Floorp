@@ -117,7 +117,7 @@ add_task(function test_crash_page_not_in_history() {
   yield TabStateFlusher.flush(browser);
 
   // Crash the tab
-  yield crashBrowser(browser);
+  yield BrowserTestUtils.crashBrowser(browser);
 
   // Check the tab state and make sure the tab crashed page isn't
   // mentioned.
@@ -146,7 +146,7 @@ add_task(function test_revived_history_from_remote() {
   yield TabStateFlusher.flush(browser);
 
   // Crash the tab
-  yield crashBrowser(browser);
+  yield BrowserTestUtils.crashBrowser(browser);
 
   // Browse to a new site that will cause the browser to
   // become remote again.
@@ -185,7 +185,7 @@ add_task(function test_revived_history_from_non_remote() {
   yield TabStateFlusher.flush(browser);
 
   // Crash the tab
-  yield crashBrowser(browser);
+  yield BrowserTestUtils.crashBrowser(browser);
 
   // Browse to a new site that will not cause the browser to
   // become remote again.
@@ -235,7 +235,7 @@ add_task(function test_revive_tab_from_session_store() {
   yield TabStateFlusher.flush(browser);
 
   // Crash the tab
-  yield crashBrowser(browser);
+  yield BrowserTestUtils.crashBrowser(browser);
   is(newTab2.getAttribute("crashed"), "true", "Second tab should be crashed too.");
 
   // Use SessionStore to revive the tab
@@ -286,7 +286,7 @@ add_task(function test_revive_all_tabs_from_session_store() {
   yield TabStateFlusher.flush(browser2);
 
   // Crash the tab
-  yield crashBrowser(browser);
+  yield BrowserTestUtils.crashBrowser(browser);
   is(newTab2.getAttribute("crashed"), "true", "Second tab should be crashed too.");
 
   // Use SessionStore to revive all the tabs
@@ -331,7 +331,7 @@ add_task(function test_close_tab_after_crash() {
   yield TabStateFlusher.flush(browser);
 
   // Crash the tab
-  yield crashBrowser(browser);
+  yield BrowserTestUtils.crashBrowser(browser);
 
   let promise = promiseEvent(gBrowser.tabContainer, "TabClose");
 
@@ -359,7 +359,7 @@ add_task(function* test_hide_restore_all_button() {
   yield TabStateFlusher.flush(browser);
 
   // Crash the tab
-  yield crashBrowser(browser);
+  yield BrowserTestUtils.crashBrowser(browser);
 
   let doc = browser.contentDocument;
   let restoreAllButton = doc.getElementById("restoreAll");
@@ -375,7 +375,7 @@ add_task(function* test_hide_restore_all_button() {
   yield promiseBrowserLoaded(browser);
 
   // Crash the tab
-  yield crashBrowser(browser);
+  yield BrowserTestUtils.crashBrowser(browser);
 
   doc = browser.contentDocument;
   restoreAllButton = doc.getElementById("restoreAll");
@@ -405,7 +405,7 @@ add_task(function* test_aboutcrashedtabzoom() {
   yield TabStateFlusher.flush(browser);
 
   // Crash the tab
-  yield crashBrowser(browser);
+  yield BrowserTestUtils.crashBrowser(browser);
 
   ok(ZoomManager.getZoomForBrowser(browser) === 1, "zoom should have reset on crash");
 

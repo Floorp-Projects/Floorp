@@ -856,6 +856,10 @@ WorkerTarget.prototype = {
     return true;
   },
 
+  get url() {
+    return this._workerClient.url;
+  },
+
   get form() {
     return {
       from: this._workerClient.actor,

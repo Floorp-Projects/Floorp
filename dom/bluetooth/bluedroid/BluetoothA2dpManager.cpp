@@ -86,11 +86,11 @@ AvStatusToSinkString(BluetoothA2dpConnectionState aState, nsAString& aString)
   }
 }
 
-class BluetoothA2dpManager::InitA2dpResultHandler final
+class BluetoothA2dpManager::InitResultHandler final
   : public BluetoothA2dpResultHandler
 {
 public:
-  InitA2dpResultHandler(BluetoothProfileResultHandler* aRes)
+  InitResultHandler(BluetoothProfileResultHandler* aRes)
     : mRes(aRes)
   { }
 
@@ -172,7 +172,7 @@ BluetoothA2dpManager::InitA2dpInterface(BluetoothProfileResultHandler* aRes)
   }
 
   BluetoothA2dpManager* a2dpManager = BluetoothA2dpManager::Get();
-  sBtA2dpInterface->Init(a2dpManager, new InitA2dpResultHandler(aRes));
+  sBtA2dpInterface->Init(a2dpManager, new InitResultHandler(aRes));
 }
 
 BluetoothA2dpManager::~BluetoothA2dpManager()
@@ -227,11 +227,11 @@ BluetoothA2dpManager::Get()
   return sBluetoothA2dpManager;
 }
 
-class BluetoothA2dpManager::CleanupA2dpResultHandler final
+class BluetoothA2dpManager::CleanupResultHandler final
   : public BluetoothA2dpResultHandler
 {
 public:
-  CleanupA2dpResultHandler(BluetoothProfileResultHandler* aRes)
+  CleanupResultHandler(BluetoothProfileResultHandler* aRes)
     : mRes(aRes)
   { }
 
@@ -260,11 +260,11 @@ private:
   nsRefPtr<BluetoothProfileResultHandler> mRes;
 };
 
-class BluetoothA2dpManager::CleanupA2dpResultHandlerRunnable final
+class BluetoothA2dpManager::CleanupResultHandlerRunnable final
   : public nsRunnable
 {
 public:
-  CleanupA2dpResultHandlerRunnable(BluetoothProfileResultHandler* aRes)
+  CleanupResultHandlerRunnable(BluetoothProfileResultHandler* aRes)
     : mRes(aRes)
   { }
 
@@ -289,11 +289,11 @@ BluetoothA2dpManager::DeinitA2dpInterface(BluetoothProfileResultHandler* aRes)
   MOZ_ASSERT(NS_IsMainThread());
 
   if (sBtA2dpInterface) {
-    sBtA2dpInterface->Cleanup(new CleanupA2dpResultHandler(aRes));
+    sBtA2dpInterface->Cleanup(new CleanupResultHandler(aRes));
   } else if (aRes) {
     // We dispatch a runnable here to make the profile resource handler
     // behave as if A2DP was initialized.
-    nsRefPtr<nsRunnable> r = new CleanupA2dpResultHandlerRunnable(aRes);
+    nsRefPtr<nsRunnable> r = new CleanupResultHandlerRunnable(aRes);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
       BT_LOGR("Failed to dispatch cleanup-result-handler runnable");
     }

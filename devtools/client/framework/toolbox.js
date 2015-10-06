@@ -1493,10 +1493,8 @@ Toolbox.prototype = {
       toolName = toolboxStrings("toolbox.defaultTitle");
     }
     let title = toolboxStrings("toolbox.titleTemplate",
-                               toolName,
-                               this.target.isAddon ?
-                               this.target.name :
-                               this.target.url || this.target.name);
+                               toolName, this.target.name ||
+                                         this.target.url);
     this._host.setTitle(title);
   },
 
