@@ -46,7 +46,6 @@
     <dimen name="tablet_browser_toolbar_menu_item_padding_horizontal">19dp</dimen>
     <dimen name="tablet_browser_toolbar_menu_item_inset_vertical">5dp</dimen>
     <dimen name="tablet_browser_toolbar_menu_item_inset_horizontal">3dp</dimen>
-    <dimen name="tablet_browser_toolbar_menu_item_corner_radius">5dp</dimen>
     <dimen name="tablet_tab_strip_button_inset">5dp</dimen>
 
     <!-- Dimensions used by Favicons and FaviconView -->
