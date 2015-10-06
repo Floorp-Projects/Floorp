@@ -143,6 +143,7 @@ OnSharedPreferenceChangeListener
     private static final String PREFS_CATEGORY_HOMEPAGE = NON_PREF_PREFIX + "category_homepage";
     public static final String PREFS_HOMEPAGE = NON_PREF_PREFIX + "homepage";
     public static final String PREFS_HISTORY_SAVED_SEARCH = NON_PREF_PREFIX + "search.search_history.enabled";
+    private static final String PREFS_FAQ_LINK = NON_PREF_PREFIX + "faq.link";
 
     private static final String ACTION_STUMBLER_UPLOAD_PREF = AppConstants.ANDROID_PACKAGE_NAME + ".STUMBLER_PREF";
 
@@ -921,6 +922,14 @@ OnSharedPreferenceChangeListener
                             return true;
                         }
                     });
+                } else if (PREFS_FAQ_LINK.equals(key)) {
+                    // Format the FAQ link
+                    final String VERSION = AppConstants.MOZ_APP_VERSION;
+                    final String OS = AppConstants.OS_TARGET;
+                    final String LOCALE = Locales.getLanguageTag(Locale.getDefault());
+
+                    final String url = getResources().getString(R.string.faq_link, VERSION, OS, LOCALE);
+                    ((LinkPreference) pref).setUrl(url);
                 }
 
                 // Some Preference UI elements are not actually preferences,
