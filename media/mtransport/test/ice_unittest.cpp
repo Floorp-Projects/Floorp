@@ -706,13 +706,21 @@ class IceTestPeer : public sigslot::has_slots<> {
         } else {
           ASSERT_TRUE(NS_SUCCEEDED(res));
           DumpCandidate("Local  ", *local);
-          ASSERT_EQ(expected_local_type_, local->type);
+          /* Depending on timing, and the whims of the network
+           * stack/configuration we're running on top of, prflx is always a
+           * possibility. */
+          if (expected_local_type_ == NrIceCandidate::ICE_HOST) {
+            ASSERT_NE(NrIceCandidate::ICE_SERVER_REFLEXIVE, local->type);
+            ASSERT_NE(NrIceCandidate::ICE_RELAYED, local->type);
+          } else {
+            ASSERT_EQ(expected_local_type_, local->type);
+          }
           ASSERT_EQ(expected_local_transport_, local->local_addr.transport);
           DumpCandidate("Remote ", *remote);
-          /* Remote ICE TCP active candidates are always trickled with port 9
-             so they will get discovered as peer reflexive locally. */
-          if (expected_local_transport_ == kNrIceTransportTcp &&
-              expected_remote_type_ == NrIceCandidate::ICE_HOST) {
+          /* Depending on timing, and the whims of the network
+           * stack/configuration we're running on top of, prflx is always a
+           * possibility. */
+          if (expected_remote_type_ == NrIceCandidate::ICE_HOST) {
             ASSERT_NE(NrIceCandidate::ICE_SERVER_REFLEXIVE, remote->type);
             ASSERT_NE(NrIceCandidate::ICE_RELAYED, remote->type);
           } else {
