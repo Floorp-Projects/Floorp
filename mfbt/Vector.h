@@ -603,6 +603,12 @@ public:
   {
     internalAppend(aBegin, aLength);
   }
+  template<typename... Args>
+  void infallibleEmplaceBack(Args&&... aArgs)
+  {
+    infallibleGrowByUninitialized(1);
+    new (&back()) T(Forward<Args>(aArgs)...);
+  }
 
   void popBack();
 
