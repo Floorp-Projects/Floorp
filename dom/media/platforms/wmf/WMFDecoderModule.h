@@ -36,13 +36,6 @@ public:
   ConversionRequired
   DecoderNeedsConversion(const TrackInfo& aConfig) const override;
 
-  // Accessors that report whether we have the required MFTs available
-  // on the system to play various codecs. Windows Vista doesn't have the
-  // H.264/AAC decoders if the "Platform Update Supplement for Windows Vista"
-  // is not installed.
-  static bool HasAAC();
-  static bool HasH264();
-
   // Called on main thread.
   static void Init();
 
