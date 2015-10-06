@@ -314,6 +314,8 @@ protected:
   // GetPrincipal Returns the channel's URI principal.
   nsIPrincipal *GetURIPrincipal();
 
+  bool BypassServiceWorker() const;
+
   // Returns true if this channel should intercept the network request and prepare
   // for a possible synthesized response instead.
   bool ShouldIntercept();
@@ -391,9 +393,6 @@ protected:
   // Is 1 if no redirects have occured or if all redirects
   // pass the Resource Timing timing-allow-check
   uint32_t                          mAllRedirectsPassTimingAllowCheck : 1;
-
-  // True if this channel should skip any interception checks
-  uint32_t                          mForceNoIntercept           : 1;
 
   // True if this channel was intercepted and could receive a synthesized response.
   uint32_t                          mResponseCouldBeSynthesized : 1;

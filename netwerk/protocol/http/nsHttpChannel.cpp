@@ -7001,6 +7001,7 @@ nsHttpChannel::OnPush(const nsACString &url, Http2PushedStream *pushedStream)
 void
 nsHttpChannel::SetCouldBeSynthesized()
 {
+  MOZ_ASSERT(!BypassServiceWorker());
   mResponseCouldBeSynthesized = true;
 }
 
