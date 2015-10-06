@@ -11,7 +11,7 @@
  */
 
 /*
- * Created on Thu Sep  3 14:42:28 2015 from UCD data files with version info:
+ * Created on Tue Nov 17 07:34:16 2015 from UCD data files with version info:
  *
 
 # Date: 2015-06-16, 20:24:00 GMT [KW]
@@ -37,6 +37,9 @@ Standard.
 
 # BidiMirroring-8.0.0.txt
 # Date: 2015-01-20, 18:30:00 GMT [KW, LI]
+
+# BidiBrackets-8.0.0.txt
+# Date: 2015-01-20, 19:00:00 GMT [AG, LI, KW]
 
 # HangulSyllableType-8.0.0.txt
 # Date: 2014-12-16, 23:07:45 GMT [MD]
@@ -72,7 +75,7 @@ struct nsCharProps1 {
 
 struct nsCharProps2 {
   unsigned char mScriptCode:8;
-  unsigned char mUnused:3;
+  unsigned char mPairedBracketType:3; // only 2 bits actually needed
   unsigned char mCategory:5;
   unsigned char mBidiCategory:5;
   unsigned char mXidmod:4;
