@@ -313,6 +313,7 @@ public:
   void ActionNameAt(uint8_t aIndex, nsString& aName);
   KeyBinding AccessKey();
   KeyBinding KeyboardShortcut();
+  void AtkKeyBinding(nsString& aBinding);
 
   double CurValue();
   bool SetCurValue(double aValue);

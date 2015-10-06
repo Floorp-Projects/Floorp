@@ -416,6 +416,9 @@ public:
                                     uint32_t* aKey,
                                     uint32_t* aModifierMask) override;
 
+  virtual bool RecvAtkKeyBinding(const uint64_t& aID,
+                                 nsString* aResult) override;
+
   virtual bool RecvCurValue(const uint64_t& aID,
                             double* aValue) override;
 
