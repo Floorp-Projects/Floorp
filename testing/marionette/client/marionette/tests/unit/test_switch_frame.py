@@ -124,3 +124,13 @@ class TestSwitchFrame(MarionetteTestCase):
     def test_switch_to_frame_with_negative_index(self):
         self.marionette.navigate(self.marionette.absolute_url("test_iframe.html"))
         self.assertRaises(NoSuchFrameException, self.marionette.switch_to_frame, -1)
+
+    def test_after_switching_to_child_frame_navigates_changes_top(self):
+        frame_html = self.marionette.absolute_url("frameset.html")
+        self.marionette.navigate(frame_html)
+        frame = self.marionette.find_element("name", "third")
+        self.marionette.switch_to_frame(frame)
+        self.assertEqual("Unique title", self.marionette.title)
+        test_html = self.marionette.absolute_url("test.html")
+        self.marionette.navigate(test_html)
+        self.assertEqual("Marionette Test", self.marionette.title)
