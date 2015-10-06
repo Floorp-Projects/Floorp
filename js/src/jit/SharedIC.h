@@ -997,9 +997,8 @@ class ICStubCompiler
     }
 
     virtual bool generateStubCode(MacroAssembler& masm) = 0;
-    virtual bool postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> genCode) {
-        return true;
-    }
+    virtual void postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> genCode) {}
+
     JitCode* getStubCode();
 
     ICStubCompiler(JSContext* cx, ICStub::Kind kind, Engine engine)
