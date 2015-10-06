@@ -102,7 +102,6 @@ UNIFIED_SOURCES += [
     'frameworks/av/media/libstagefright/foundation/ABitReader.cpp',
     'frameworks/av/media/libstagefright/foundation/ABuffer.cpp',
     'frameworks/av/media/libstagefright/foundation/AString.cpp',
-    'frameworks/av/media/libstagefright/id3/ID3.cpp',
     'frameworks/av/media/libstagefright/MediaBuffer.cpp',
     'frameworks/av/media/libstagefright/MediaDefs.cpp',
     'frameworks/av/media/libstagefright/MediaSource.cpp',
