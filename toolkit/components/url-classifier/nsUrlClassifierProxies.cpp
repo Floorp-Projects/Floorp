@@ -216,6 +216,21 @@ UrlClassifierDBServiceWorkerProxy::CacheMissesRunnable::Run()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+UrlClassifierDBServiceWorkerProxy::SetLastUpdateTime(const nsACString& table,
+                                                     uint64_t lastUpdateTime)
+{
+  nsCOMPtr<nsIRunnable> r =
+    new SetLastUpdateTimeRunnable(mTarget, table, lastUpdateTime);
+  return DispatchToWorkerThread(r);
+}
+
+NS_IMETHODIMP
+UrlClassifierDBServiceWorkerProxy::SetLastUpdateTimeRunnable::Run()
+{
+  mTarget->SetLastUpdateTime(mTable, mUpdateTime);
+  return NS_OK;
+}
 
 NS_IMPL_ISUPPORTS(UrlClassifierLookupCallbackProxy,
                   nsIUrlClassifierLookupCallback)
