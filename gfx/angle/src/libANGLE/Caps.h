@@ -228,6 +228,12 @@ struct Extensions
     // GL_OES_EGL_image_external_essl3
     bool eglImageExternalEssl3;
 
+    // EXT_unpack_subimage
+    bool unpackSubimage;
+
+    // NV_pack_subimage
+    bool packSubimage;
+
     // ES3 Extension support
 
     // GL_EXT_color_buffer_float
@@ -247,7 +253,15 @@ struct Limitations
     // In glVertexAttribDivisorANGLE, attribute zero must have a zero divisor
     bool attributeZeroRequiresZeroDivisorInEXT;
 
-    // TODO: add entry for renderers that don't support separate stencil masks/refs
+    // Unable to support different values for front and back faces for stencil refs and masks
+    bool noSeparateStencilRefsAndMasks;
+
+    // Renderer doesn't support non-constant indexing loops in fragment shader
+    bool shadersRequireIndexedLoopValidation;
+
+    // Renderer doesn't support Simultaneous use of GL_CONSTANT_ALPHA/GL_ONE_MINUS_CONSTANT_ALPHA
+    // and GL_CONSTANT_COLOR/GL_ONE_MINUS_CONSTANT_COLOR blend functions.
+    bool noSimultaneousConstantColorAndAlphaBlendFunc;
 };
 
 struct TypePrecision
@@ -409,6 +423,9 @@ struct DisplayExtensions
 
     // EGL_KHR_gl_renderbuffer_image
     bool glRenderbufferImage;
+
+    // EGL_KHR_get_all_proc_addresses
+    bool getAllProcAddresses;
 };
 
 struct DeviceExtensions
@@ -443,6 +460,9 @@ struct ClientExtensions
 
     // EGL_ANGLE_platform_angle_opengl
     bool platformANGLEOpenGL;
+
+    // EGL_KHR_client_get_all_proc_addresses
+    bool clientGetAllProcAddresses;
 };
 
 }

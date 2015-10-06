@@ -109,13 +109,8 @@ class TVariable : public TSymbol
           unionArray(0)
     {
     }
-    virtual ~TVariable()
-    {
-    }
-    virtual bool isVariable() const
-    {
-        return true;
-    }
+    ~TVariable() override {}
+    bool isVariable() const override { return true; }
     TType &getType()
     {
         return type;
@@ -229,11 +224,8 @@ class TFunction : public TSymbol
     {
         relateToExtension(ext);
     }
-    virtual ~TFunction();
-    virtual bool isFunction() const
-    {
-        return true;
-    }
+    ~TFunction() override;
+    bool isFunction() const override { return true; }
 
     static TString mangleName(const TString &name)
     {
@@ -250,7 +242,7 @@ class TFunction : public TSymbol
         mangledName = nullptr;
     }
 
-    const TString &getMangledName() const
+    const TString &getMangledName() const override
     {
         if (mangledName == nullptr)
         {
@@ -410,6 +402,14 @@ class TSymbolTable : angle::NonCopyable
             NewPoolTString(name), TType(EbtInt, EbpUndefined, EvqConst, 1));
         constant->getConstPointer()->setIConst(value);
         return insert(level, constant);
+    }
+
+    bool insertConstIntExt(ESymbolLevel level, const char *ext, const char *name, int value)
+    {
+        TVariable *constant =
+            new TVariable(NewPoolTString(name), TType(EbtInt, EbpUndefined, EvqConst, 1));
+        constant->getConstPointer()->setIConst(value);
+        return insert(level, ext, constant);
     }
 
     void insertBuiltIn(ESymbolLevel level, TOperator op, const char *ext, const TType *rvalue, const char *name,

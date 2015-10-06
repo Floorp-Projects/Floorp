@@ -67,13 +67,13 @@ Push.prototype = {
   askPermission: function (aAllowCallback, aCancelCallback) {
     debug("askPermission");
 
-    let principal = this._window.document.nodePrincipal;
-    let type = "push";
-    let permValue =
-      Services.perms.testExactPermissionFromPrincipal(principal, type);
+    let permValue = Services.perms.testExactPermissionFromPrincipal(
+      this._principal,
+      "desktop-notification"
+    );
 
     if (permValue == Ci.nsIPermissionManager.ALLOW_ACTION) {
-        aAllowCallback();
+      aAllowCallback();
       return;
     }
 
@@ -83,8 +83,8 @@ Push.prototype = {
     }
 
     // Create an array with a single nsIContentPermissionType element.
-    type = {
-      type: "push",
+    let type = {
+      type: "desktop-notification",
       access: null,
       options: [],
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionType])
@@ -95,7 +95,7 @@ Push.prototype = {
     // create a nsIContentPermissionRequest
     let request = {
       types: typeArray,
-      principal: principal,
+      principal: this._principal,
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionRequest]),
       allow: function() {
         let histogram = Services.telemetry.getHistogramById("PUSH_API_PERMISSION_GRANTED");
@@ -182,11 +182,8 @@ Push.prototype = {
       let permission = Ci.nsIPermissionManager.DENY_ACTION;
 
       try {
-        let permissionManager = Cc["@mozilla.org/permissionmanager;1"]
-                                .getService(Ci.nsIPermissionManager);
-        permission =
-          permissionManager.testExactPermissionFromPrincipal(this._principal,
-                                                             "push");
+        permission = Services.perms.testExactPermissionFromPrincipal(
+          this._principal, "desktop-notification");
       } catch(e) {
         reject();
         return;

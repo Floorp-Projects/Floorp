@@ -195,9 +195,10 @@ gl::Error Framebuffer11::invalidateBase(size_t count, const GLenum *attachments,
                     colorAttachmentID = attachments[i] - GL_COLOR_ATTACHMENT0;
                 }
 
-                if (mData.getColorAttachment(colorAttachmentID))
+                if (mData.getColorAttachment(static_cast<unsigned int>(colorAttachmentID)))
                 {
-                    error = mData.getColorAttachment(colorAttachmentID)->getRenderTarget(&renderTarget);
+                    error = mData.getColorAttachment(static_cast<unsigned int>(colorAttachmentID))
+                                ->getRenderTarget(&renderTarget);
                     if (error.isError())
                     {
                         return error;
@@ -306,7 +307,8 @@ gl::Error Framebuffer11::readPixels(const gl::Rectangle &area, GLenum format, GL
     if (packBuffer != nullptr)
     {
         Buffer11 *packBufferStorage = GetImplAs<Buffer11>(packBuffer);
-        PackPixelsParams packParams(area, format, type, outputPitch, pack, reinterpret_cast<ptrdiff_t>(pixels));
+        PackPixelsParams packParams(area, format, type, static_cast<GLuint>(outputPitch), pack,
+                                    reinterpret_cast<ptrdiff_t>(pixels));
 
         error = packBufferStorage->packPixels(colorBufferTexture, subresourceIndex, packParams);
         if (error.isError())
@@ -317,7 +319,8 @@ gl::Error Framebuffer11::readPixels(const gl::Rectangle &area, GLenum format, GL
     }
     else
     {
-        error = mRenderer->readTextureData(colorBufferTexture, subresourceIndex, area, format, type, outputPitch, pack, pixels);
+        error = mRenderer->readTextureData(colorBufferTexture, subresourceIndex, area, format, type,
+                                           static_cast<GLuint>(outputPitch), pack, pixels);
         if (error.isError())
         {
             SafeRelease(colorBufferTexture);

@@ -42,41 +42,44 @@
             'third_party/rapidjson/include/rapidjson/msinttypes/stdint.h',
         ],
     },
-    'targets':
-    [
-        {
-            'target_name': 'angle_test_support',
-            'type': 'none',
-            'conditions':
-            [
-                ['angle_standalone==1',
-                {
-                    'dependencies': [
-                        'angle_internal_gmock',
-                        'angle_internal_gtest',
-                    ],
-                },
-                {
-                    'dependencies': [
-                        '<(DEPTH)/testing/gmock.gyp:gmock',
-                        '<(DEPTH)/testing/gtest.gyp:gtest',
-                    ],
-                    'all_dependent_settings':
-                    {
-                        'include_dirs':
-                        [
-                            '<(DEPTH)/testing/gmock/include',
-                            '<(DEPTH)/testing/gtest/include',
-                        ],
-                    },
-                }],
-            ],
-        },
-    ],
-
     'conditions':
     [
-        ['angle_standalone==1',
+        # GoogleTest doesn't support WinRT
+        ['angle_build_winrt==0',
+        {
+            'targets':
+            [
+                {
+                    'target_name': 'angle_test_support',
+                    'type': 'none',
+                    'conditions':
+                    [
+                        ['angle_standalone==1',
+                        {
+                            'dependencies': [
+                                'angle_internal_gmock',
+                                'angle_internal_gtest',
+                            ],
+                        },
+                        {
+                            'dependencies': [
+                                '<(DEPTH)/testing/gmock.gyp:gmock',
+                                '<(DEPTH)/testing/gtest.gyp:gtest',
+                            ],
+                            'all_dependent_settings':
+                            {
+                                'include_dirs':
+                                [
+                                    '<(DEPTH)/testing/gmock/include',
+                                    '<(DEPTH)/testing/gtest/include',
+                                ],
+                            },
+                        }],
+                    ],
+                },
+            ],
+        }],
+        ['angle_standalone==1 and angle_build_winrt==0',
         {
             'targets':
             [

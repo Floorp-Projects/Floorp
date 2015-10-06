@@ -66,6 +66,7 @@ JAVA_CLASSPATH += \
 ifdef MOZ_NATIVE_DEVICES
     JAVA_CLASSPATH += \
         $(ANDROID_PLAY_SERVICES_BASE_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
         $(ANDROID_PLAY_SERVICES_CAST_AAR_LIB) \
         $(ANDROID_MEDIAROUTER_V7_AAR_LIB) \
         $(ANDROID_MEDIAROUTER_V7_AAR_INTERNAL_LIB) \
@@ -86,6 +87,7 @@ java_bundled_libs := \
 ifdef MOZ_NATIVE_DEVICES
     java_bundled_libs += \
         $(ANDROID_PLAY_SERVICES_BASE_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
         $(ANDROID_PLAY_SERVICES_CAST_AAR_LIB) \
         $(ANDROID_MEDIAROUTER_V7_AAR_LIB) \
         $(ANDROID_MEDIAROUTER_V7_AAR_INTERNAL_LIB) \
@@ -372,6 +374,7 @@ generated/android/support/v7/appcompat/R.java: .aapt.deps ;
 generated/android/support/v7/mediarouter/R.java: .aapt.deps ;
 generated/android/support/v7/recyclerview/R.java: .aapt.deps ;
 generated/com/google/android/gms/R.java: .aapt.deps ;
+generated/com/google/android/gms/base/R.java: .aapt.deps ;
 generated/com/google/android/gms/cast/R.java: .aapt.deps ;
 
 gecko.ap_: .aapt.deps ;

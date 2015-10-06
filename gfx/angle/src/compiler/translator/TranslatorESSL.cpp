@@ -28,10 +28,10 @@ void TranslatorESSL::initBuiltInFunctionEmulator(BuiltInFunctionEmulator *emu, i
 void TranslatorESSL::translate(TIntermNode *root, int) {
     TInfoSinkBase& sink = getInfoSink().obj;
 
-    int shaderVersion = getShaderVersion();
-    if (shaderVersion > 100)
+    int shaderVer = getShaderVersion();
+    if (shaderVer > 100)
     {
-        sink << "#version " << shaderVersion << " es\n";
+        sink << "#version " << shaderVer << " es\n";
     }
 
     writePragma();
@@ -43,7 +43,7 @@ void TranslatorESSL::translate(TIntermNode *root, int) {
 
     if (precisionEmulation)
     {
-        EmulatePrecision emulatePrecision;
+        EmulatePrecision emulatePrecision(getSymbolTable(), shaderVer);
         root->traverse(&emulatePrecision);
         emulatePrecision.updateTree();
         emulatePrecision.writeEmulationHelpers(sink, SH_ESSL_OUTPUT);
@@ -78,13 +78,8 @@ void TranslatorESSL::translate(TIntermNode *root, int) {
     getArrayBoundsClamper().OutputClampingFunctionDefinition(sink);
 
     // Write translated shader.
-    TOutputESSL outputESSL(sink,
-                           getArrayIndexClampingStrategy(),
-                           getHashFunction(),
-                           getNameMap(),
-                           getSymbolTable(),
-                           shaderVersion,
-                           precisionEmulation);
+    TOutputESSL outputESSL(sink, getArrayIndexClampingStrategy(), getHashFunction(), getNameMap(),
+                           getSymbolTable(), shaderVer, precisionEmulation);
     root->traverse(&outputESSL);
 }
 

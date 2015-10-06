@@ -110,19 +110,39 @@ struct COMPILER_EXPORT Uniform : public ShaderVariable
     bool isSameUniformAtLinkTime(const Uniform &other) const;
 };
 
-struct COMPILER_EXPORT Attribute : public ShaderVariable
+// An interface variable is a variable which passes data between the GL data structures and the
+// shader execution: either vertex shader inputs or fragment shader outputs. These variables can
+// have integer locations to pass back to the GL API.
+struct COMPILER_EXPORT InterfaceVariable : public ShaderVariable
+{
+    InterfaceVariable();
+    ~InterfaceVariable();
+    InterfaceVariable(const InterfaceVariable &other);
+    InterfaceVariable &operator=(const InterfaceVariable &other);
+    bool operator==(const InterfaceVariable &other) const;
+    bool operator!=(const InterfaceVariable &other) const { return !operator==(other); }
+
+    int location;
+};
+
+struct COMPILER_EXPORT Attribute : public InterfaceVariable
 {
     Attribute();
     ~Attribute();
     Attribute(const Attribute &other);
     Attribute &operator=(const Attribute &other);
     bool operator==(const Attribute &other) const;
-    bool operator!=(const Attribute &other) const
-    {
-        return !operator==(other);
-    }
+    bool operator!=(const Attribute &other) const { return !operator==(other); }
+};
 
-    int location;
+struct COMPILER_EXPORT OutputVariable : public InterfaceVariable
+{
+    OutputVariable();
+    ~OutputVariable();
+    OutputVariable(const OutputVariable &other);
+    OutputVariable &operator=(const OutputVariable &other);
+    bool operator==(const OutputVariable &other) const;
+    bool operator!=(const OutputVariable &other) const { return !operator==(other); }
 };
 
 struct COMPILER_EXPORT InterfaceBlockField : public ShaderVariable

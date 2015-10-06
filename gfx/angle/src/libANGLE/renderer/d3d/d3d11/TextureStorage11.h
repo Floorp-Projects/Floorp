@@ -23,6 +23,7 @@ struct ImageIndex;
 
 namespace rx
 {
+class EGLImageD3D;
 class RenderTargetD3D;
 class RenderTarget11;
 class Renderer11;
@@ -42,7 +43,8 @@ class TextureStorage11 : public TextureStorage
     UINT getMiscFlags() const;
 
     virtual gl::Error getResource(ID3D11Resource **outResource) = 0;
-    virtual gl::Error getSRV(const gl::SamplerState &samplerState, ID3D11ShaderResourceView **outSRV);
+    virtual gl::Error getSRV(const gl::TextureState &textureState,
+                             ID3D11ShaderResourceView **outSRV);
     virtual gl::Error getRenderTarget(const gl::ImageIndex &index, RenderTargetD3D **outRT) = 0;
 
     virtual gl::Error generateMipmap(const gl::ImageIndex &sourceIndex, const gl::ImageIndex &destIndex);
@@ -92,6 +94,9 @@ class TextureStorage11 : public TextureStorage
                                 ID3D11ShaderResourceView **outSRV) const = 0;
 
     void verifySwizzleExists(GLenum swizzleRed, GLenum swizzleGreen, GLenum swizzleBlue, GLenum swizzleAlpha);
+
+    // Clear all cached non-swizzle SRVs and invalidate the swizzle cache.
+    void clearSRVCache();
 
     Renderer11 *mRenderer;
     int mTopLevel;
@@ -195,6 +200,52 @@ class TextureStorage11_2D : public TextureStorage11
     ID3D11RenderTargetView *mSwizzleRenderTargets[gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS];
 
     Image11 *mAssociatedImages[gl::IMPLEMENTATION_MAX_TEXTURE_LEVELS];
+};
+
+class TextureStorage11_EGLImage final : public TextureStorage11
+{
+  public:
+    TextureStorage11_EGLImage(Renderer11 *renderer, EGLImageD3D *eglImage);
+    ~TextureStorage11_EGLImage() override;
+
+    gl::Error getResource(ID3D11Resource **outResource) override;
+    gl::Error getSRV(const gl::TextureState &textureState,
+                     ID3D11ShaderResourceView **outSRV) override;
+    gl::Error getMippedResource(ID3D11Resource **outResource) override;
+    gl::Error getRenderTarget(const gl::ImageIndex &index, RenderTargetD3D **outRT) override;
+
+    gl::Error copyToStorage(TextureStorage *destStorage) override;
+
+    void associateImage(Image11 *image, const gl::ImageIndex &index) override;
+    void disassociateImage(const gl::ImageIndex &index, Image11 *expectedImage) override;
+    bool isAssociatedImageValid(const gl::ImageIndex &index, Image11 *expectedImage) override;
+    gl::Error releaseAssociatedImage(const gl::ImageIndex &index, Image11 *incomingImage) override;
+
+    gl::Error useLevelZeroWorkaroundTexture(bool useLevelZeroTexture) override;
+
+  protected:
+    gl::Error getSwizzleTexture(ID3D11Resource **outTexture) override;
+    gl::Error getSwizzleRenderTarget(int mipLevel, ID3D11RenderTargetView **outRTV) override;
+
+  private:
+    // Check if the EGL image's render target has been updated due to orphaning and delete
+    // any SRVs and other resources based on the image's old render target.
+    gl::Error checkForUpdatedRenderTarget();
+
+    gl::Error createSRV(int baseLevel,
+                        int mipLevels,
+                        DXGI_FORMAT format,
+                        ID3D11Resource *texture,
+                        ID3D11ShaderResourceView **outSRV) const override;
+
+    gl::Error getImageRenderTarget(RenderTarget11 **outRT) const;
+
+    EGLImageD3D *mImage;
+    uintptr_t mCurrentRenderTarget;
+
+    // Swizzle-related variables
+    ID3D11Texture2D *mSwizzleTexture;
+    std::vector<ID3D11RenderTargetView *> mSwizzleRenderTargets;
 };
 
 class TextureStorage11_Cube : public TextureStorage11

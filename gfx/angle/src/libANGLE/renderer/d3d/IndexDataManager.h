@@ -38,7 +38,7 @@ class RendererD3D;
 
 struct TranslatedIndexData
 {
-    gl::RangeUI indexRange;
+    gl::IndexRange indexRange;
     unsigned int startIndex;
     unsigned int startOffset;   // In bytes
 

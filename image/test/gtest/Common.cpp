@@ -152,6 +152,12 @@ ImageTestCase GreenICOTestCase()
                        TEST_CASE_IS_TRANSPARENT);
 }
 
+ImageTestCase GreenIconTestCase()
+{
+  return ImageTestCase("green.icon", "image/icon", IntSize(100, 100),
+                       TEST_CASE_IS_TRANSPARENT);
+}
+
 ImageTestCase GreenFirstFrameAnimatedGIFTestCase()
 {
   return ImageTestCase("first-frame-green.gif", "image/gif", IntSize(100, 100),

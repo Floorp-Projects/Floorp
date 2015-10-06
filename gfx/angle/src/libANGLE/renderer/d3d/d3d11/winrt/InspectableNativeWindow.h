@@ -43,7 +43,13 @@ class InspectableNativeWindow
     virtual ~InspectableNativeWindow(){}
 
     virtual bool initialize(EGLNativeWindowType window, IPropertySet *propertySet) = 0;
-    virtual HRESULT createSwapChain(ID3D11Device *device, DXGIFactory *factory, DXGI_FORMAT format, unsigned int width, unsigned int height, DXGISwapChain **swapChain) = 0;
+    virtual HRESULT createSwapChain(ID3D11Device *device,
+                                    DXGIFactory *factory,
+                                    DXGI_FORMAT format,
+                                    unsigned int width,
+                                    unsigned int height,
+                                    bool containsAlpha,
+                                    DXGISwapChain **swapChain) = 0;
 
     bool getClientRect(RECT *rect)
     {

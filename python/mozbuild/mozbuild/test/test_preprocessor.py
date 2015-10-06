@@ -440,12 +440,6 @@ class TestPreprocessor(unittest.TestCase):
             '#endif',
         ])
 
-    def test_lineEndings(self):
-        with MockedOpen({'f': 'first\n#literal second\n'}):
-            self.pp.setLineEndings('cr')
-            self.pp.do_include('f')
-            self.assertEqual(self.pp.out.getvalue(), "first\rsecond\r")
-
     def test_filterDefine(self):
         self.do_include_pass([
             '#filter substitution',

@@ -426,19 +426,27 @@ TIntermBranch* TIntermediate::addBranch(
 // This is to be executed once the final root is put on top by the parsing
 // process.
 //
-bool TIntermediate::postProcess(TIntermNode *root)
+TIntermAggregate *TIntermediate::postProcess(TIntermNode *root)
 {
-    if (root == NULL)
-        return true;
+    if (root == nullptr)
+        return nullptr;
 
     //
-    // First, finish off the top level sequence, if any
+    // Finish off the top level sequence, if any
     //
     TIntermAggregate *aggRoot = root->getAsAggregate();
-    if (aggRoot && aggRoot->getOp() == EOpNull)
+    if (aggRoot != nullptr && aggRoot->getOp() == EOpNull)
+    {
         aggRoot->setOp(EOpSequence);
+    }
+    else if (aggRoot == nullptr || aggRoot->getOp() != EOpSequence)
+    {
+        aggRoot = new TIntermAggregate(EOpSequence);
+        aggRoot->setLine(root->getLine());
+        aggRoot->getSequence()->push_back(root);
+    }
 
-    return true;
+    return aggRoot;
 }
 
 TIntermTyped *TIntermediate::foldAggregateBuiltIn(TIntermAggregate *aggregate)

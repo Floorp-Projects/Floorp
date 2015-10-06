@@ -632,7 +632,7 @@ awk '$$8 ~ /@$(2)_/ { \
 	split(b[2],v,"."); \
 	if ($(4)) { \
 		if (!found) { \
-			print "TEST-UNEXPECTED-FAIL | check_stdcxx | We do not want these $(3) symbols to be used:" \
+			print "TEST-UNEXPECTED-FAIL | check_stdcxx | We do not want these $(3) symbol versions to be used:" \
 		} \
 		print " ",$$8; \
 		found=1 \

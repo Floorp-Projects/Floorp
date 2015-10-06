@@ -16,14 +16,19 @@
 namespace rx
 {
 
-WindowSurfaceGLX::WindowSurfaceGLX(const FunctionsGLX &glx, const DisplayGLX &glxDisplay, Window window, Display *display,
-                                   glx::Context context, glx::FBConfig fbConfig)
-    : SurfaceGL(),
+WindowSurfaceGLX::WindowSurfaceGLX(const FunctionsGLX &glx,
+                                   DisplayGLX *glxDisplay,
+                                   RendererGL *renderer,
+                                   Window window,
+                                   Display *display,
+                                   glx::Context context,
+                                   glx::FBConfig fbConfig)
+    : SurfaceGL(renderer),
       mParent(window),
       mWindow(0),
       mDisplay(display),
       mGLX(glx),
-      mGLXDisplay(glxDisplay),
+      mGLXDisplay(*glxDisplay),
       mContext(context),
       mFBConfig(fbConfig),
       mGLXWindow(0),
@@ -190,6 +195,11 @@ EGLint WindowSurfaceGLX::isPostSubBufferSupported() const
 {
     UNIMPLEMENTED();
     return EGL_FALSE;
+}
+
+EGLint WindowSurfaceGLX::getSwapBehavior() const
+{
+    return EGL_BUFFER_PRESERVED;
 }
 
 bool WindowSurfaceGLX::getWindowDimensions(Window window, unsigned int *width, unsigned int *height) const

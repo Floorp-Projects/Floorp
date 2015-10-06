@@ -138,7 +138,8 @@ TEST_P(ProgramBinaryTest, SaveAndLoadBinary)
             if (infoLogLength > 0)
             {
                 std::vector<GLchar> infoLog(infoLogLength);
-                glGetProgramInfoLog(program2, infoLog.size(), NULL, &infoLog[0]);
+                glGetProgramInfoLog(program2, static_cast<GLsizei>(infoLog.size()), NULL,
+                                    &infoLog[0]);
                 FAIL() << "program link failed: " << &infoLog[0];
             }
             else
@@ -184,6 +185,18 @@ struct PlatformsWithLinkResult : PlatformParameters
     bool expectedLinkResult;
 };
 
+// Provide a custom gtest parameter name function for PlatformsWithLinkResult
+// to avoid returning the same parameter name twice. Such a conflict would happen
+// between ES2_D3D11_to_ES2D3D11 and ES2_D3D11_to_ES3D3D11 as they were both
+// named ES2_D3D11
+std::ostream &operator<<(std::ostream& stream, const PlatformsWithLinkResult &platform)
+{
+    const PlatformParameters &platform1 = platform;
+    const PlatformParameters &platform2 = platform.loadParams;
+    stream << platform1 << "_to_" << platform2;
+    return stream;
+}
+
 class ProgramBinariesAcrossPlatforms : public testing::TestWithParam<PlatformsWithLinkResult>
 {
   public:
@@ -200,7 +213,8 @@ class ProgramBinariesAcrossPlatforms : public testing::TestWithParam<PlatformsWi
 
     EGLWindow *createAndInitEGLWindow(angle::PlatformParameters &param)
     {
-        EGLWindow *eglWindow = new EGLWindow(param.majorVersion, param.eglParameters);
+        EGLWindow *eglWindow =
+            new EGLWindow(param.majorVersion, param.minorVersion, param.eglParameters);
         bool result = eglWindow->initializeGL(mOSWindow);
         if (result == false)
         {
@@ -376,9 +390,8 @@ TEST_P(ProgramBinariesAcrossPlatforms, CreateAndReloadBinary)
 
     if (program == 0)
     {
-        FAIL() << "Failed to create program from source";
         destroyEGLWindow(&eglWindow);
-        return;
+        FAIL() << "Failed to create program from source";
     }
 
     // Draw using the program to ensure it works as expected

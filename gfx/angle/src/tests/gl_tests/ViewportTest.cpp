@@ -152,7 +152,8 @@ class ViewportTest : public ANGLETest
         glClearDepthf(0.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Call glViewport with default parameters.
+        // Call glViewport and glScissor with default parameters.
+        glScissor(0, 0, getWindowWidth(), getWindowHeight());
         glViewport(0, 0, getWindowWidth(), getWindowHeight());
 
         glDisable(GL_DEPTH_TEST);

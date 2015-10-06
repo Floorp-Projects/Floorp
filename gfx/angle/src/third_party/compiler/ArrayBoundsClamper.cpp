@@ -48,7 +48,7 @@ public:
    {
    }
 
-   virtual bool visitBinary(Visit visit, TIntermBinary* node)
+    bool visitBinary(Visit visit, TIntermBinary *node) override
    {
        if (node->getOp() == EOpIndexIndirect)
        {
