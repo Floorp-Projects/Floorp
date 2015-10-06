@@ -100,6 +100,121 @@ var emulator = (function() {
 }());
 
 /**
+ * Modem Helper
+ *
+ * TODO: Should select which modem here to support multi-SIM
+ */
+
+function modemHelperGenerator() {
+  function Modem(aClientID) {
+    this.clientID = aClientID;
+  }
+  Modem.prototype = {
+    clientID: 0,
+
+    voiceTypeToTech: function(aVoiceType) {
+      switch(aVoiceType) {
+        case "gsm":
+        case "gprs":
+        case "edge":
+          return "gsm";
+
+        case "umts":
+        case "hsdpa":
+        case "hsupa":
+        case "hspa":
+        case "hspa+":
+          return "wcdma";
+
+        case "is95a":
+        case "is95b":
+        case "1xrtt":
+          return "cdma";
+
+        case "evdo0":
+        case "evdoa":
+        case "evdob":
+          return "evdo";
+
+        case "ehrpd":
+          return "ehrpd";
+
+        case "lte":
+          return "lte";
+
+        default:
+          return null;
+      }
+    },
+
+    isCDMA: function() {
+      var mobileConn = navigator.mozMobileConnections[this.clientID];
+      var tech = mobileConn && this.voiceTypeToTech(mobileConn.voice.type);
+      return tech === "cdma" || tech === "evdo" || tech == "ehrpd";
+    },
+
+    isGSM: function() {
+      var mobileConn = navigator.mozMobileConnections[this.clientID];
+      var tech = mobileConn && this.voiceTypeToTech(mobileConn.voice.type);
+      return tech === "gsm" || tech === "wcdma" || tech === "lte";
+    },
+
+    /**
+     * @return Promise:
+     */
+    changeTech: function(aTech, aMask) {
+      let target = navigator.mozMobileConnections[this.clientID];
+
+      let mask = aMask || {
+        gsm:   "gsm",
+        wcdma: "gsm/wcdma",
+        cdma:  "cdma",
+        evdo:  "evdo0",
+        ehrpd: "ehrpd",
+        lte:   "lte"
+      }[aTech];
+
+      let waitForExpectedTech = () => {
+        return new Promise((aResolve, aReject) => {
+          let listener = aEvent => {
+            log("MobileConnection[" + this.clientID + "] " +
+                "received event 'voicechange'");
+            if (aTech === this.voiceTypeToTech(target.voice.type)) {
+              target.removeEventListener("voicechange", listener);
+              aResolve();
+            }
+          };
+
+          target.addEventListener("voicechange", listener);
+        });
+      };
+
+      // TODO: Should select a modem here to support multi-SIM
+      let changeToExpectedTech = () => {
+        return Promise.resolve()
+          .then(() => emulator.runCmd("modem tech " + aTech + " " + mask))
+          .then(() => emulator.runCmd("modem tech"))
+          .then(result => is(result[0], aTech + " " + mask,
+                             "Check modem 'tech/preferred mask'"));
+      }
+
+      return aTech === this.voiceTypeToTech(target.voice.type)
+           ? Promise.resolve()
+           : Promise.all([waitForExpectedTech(), changeToExpectedTech()]);
+    }
+  };
+
+  let modems = [];
+  for (let i = 0; i < navigator.mozMobileConnections.length; ++i) {
+    modems.push(new Modem(i));
+  }
+  return modems;
+}
+
+let Modems = modemHelperGenerator();
+let Modem = Modems[0];
+
+/**
  * Telephony related helper functions.
  */
 (function() {
@@ -277,70 +392,6 @@ var emulator = (function() {
   }
 
   /**
-   * @param aVoiceType
-   *        The voice type of a mobileConnection, which can be obtained from
-   *        |<mobileConnection>.voice.type|.
-   * @return A string with format of the emulator voice tech.
-   */
-  function voiceTypeToTech(aVoiceType) {
-    switch(aVoiceType) {
-        case "gsm":
-        case "gprs":
-        case "edge":
-          return "gsm";
-
-        case "umts":
-        case "hsdpa":
-        case "hsupa":
-        case "hspa":
-        case "hspa+":
-          return "wcdma";
-
-        case "is95a":
-        case "is95b":
-        case "1xrtt":
-          return "cdma";
-
-        case "evdo0":
-        case "evdoa":
-        case "evdob":
-          return "evdo";
-
-        case "ehrpd":
-        case "lte":
-          return "lte";
-
-        default:
-          return null;
-      }
-  }
-
-  /**
-   * @return Promise
-   */
-  function changeModemTech(aTech, aPreferredMask) {
-    let mobileConn = navigator.mozMobileConnections[0];
-
-    function isTechMatched() {
-      return aTech === voiceTypeToTech(mobileConn.voice.type);
-    }
-
-    let promise1 = isTechMatched() ? Promise.resolve()
-                                   : waitForEvent(mobileConn,
-                                                  "voicechange",
-                                                  isTechMatched);
-
-    let promise2 = Promise.resolve()
-      .then(() => emulator.runCmd("modem tech " + aTech + " " + aPreferredMask))
-      .then(() => emulator.runCmd("modem tech"))
-      .then(result => is(result[0],
-                         aTech + " " + aPreferredMask,
-                         "Check modem 'tech/preferred mask'"));
-
-    return Promise.all([promise1, promise2]);
-  }
-
-  /**
    * @return Promise
    */
   function clearCalls() {
@@ -361,7 +412,7 @@ var emulator = (function() {
 
     return Promise.all(hangUpPromises)
       .then(() => {
-        return emulator.runCmd("gsm clear").then(waitForNoCall);
+        return emulator.runCmd("telephony clear").then(waitForNoCall);
       })
       .then(waitForNoCall);
   }
@@ -423,6 +474,11 @@ var emulator = (function() {
     checkState(null, [], "", []);
   }
 
+
+  /****************************************************************************
+   ****                           Check Functions                          ****
+   ****************************************************************************/
+
   /**
    * Convenient helper to compare two call lists (order is not important).
    */
@@ -478,7 +534,7 @@ var emulator = (function() {
    * @return Promise
    */
   function checkEmulatorCallList(expectedCallList) {
-    return emulator.runCmd("gsm list").then(result => {
+    return emulator.runCmd("telephony list").then(result => {
       log("Call list is now: " + result);
       for (let i = 0; i < expectedCallList.length; ++i) {
         is(result[i], expectedCallList[i], "emulator calllist");
@@ -532,8 +588,168 @@ var emulator = (function() {
   }
 
   /**
-   * Request utility functions.
+   * The factory function for creating an expected call.
+   *
+   * @param aReference
+   *        The reference of the telephonyCall object.
+   * @param aNumber
+   *        The call number.
+   * @param aConference
+   *        Shows whether the call belongs to the conference.
+   * @param aDirection
+   *        The direction of the call, "in" for inbound, and "out" for outbound.
+   * @param aState
+   *        The expected state of the call.
+   * @param aEmulatorState
+   *        The state logged in emulator now, may be different from aState.
+   * @param aDisconnectedReason
+   *        The disconnected reason if the call becomed disconnected.
    */
+  function createExptectedCall(aReference, aNumber, aConference, aDirection,
+                               aState, aEmulatorState, aDisconnectedReason) {
+    return {
+      reference:          aReference,
+      number:             aNumber,
+      conference:         aConference,
+      direction:          aDirection,
+      state:              aState,
+      emulatorState:      aEmulatorState,
+      disconnectedReason: aDisconnectedReason
+    };
+  }
+
+  /**
+   * Check telephony.active
+   *
+   * @param aExpectedCalls
+   *        An array of expected calls.
+   * @param aExpectedCallsInConference
+   *        An array of expected calls in the conference.
+   */
+  function checkActive(aExpectedCalls, aExpectedCallsInConference) {
+    // Get the active call
+    let calls = aExpectedCalls && aExpectedCalls.filter(aExpectedCall => {
+      return aExpectedCall.state === "connected" ||
+             aExpectedCall.state === "alerting" ||
+             aExpectedCall.state === "dialing";
+    });
+
+    ok(calls.length < 2, "Too many actives call in telephony.calls");
+    let activeCall = calls.length ? calls[0].reference : null;
+
+    // Get the active conference
+    let callsInConference = aExpectedCallsInConference || [];
+    let activeConference = callsInConference.length &&
+                           callsInConference[0].state === "connected"
+                           ? navigator.mozTelephony.conferenceGroup
+                           : null;
+
+    // Check telephony.active
+    ok(!(activeCall && activeConference),
+       "An active call cannot coexist with an active conference call.");
+    is(telephony.active, activeCall || activeConference, "check Active");
+  }
+
+  /**
+   * Check whether the data in telephony and emulator meets our expectation.
+   *
+   * NOTE: Conference call is not supported in this function yet, so related
+   * checks are skipped.
+   *
+   * Fulfill params:
+   *   {
+   *     reference,          -- the reference of the call object instance.
+   *     number,             -- the call number.
+   *     conference,         -- shows whether it belongs to the conference.
+   *     direction,          -- "in" for inbound, and "out" for outbound.
+   *     state,              -- the call state.
+   *     emulatorState,      -- the call state logged in emulator now.
+   *     disconnectedReason, -- the disconnected reason of a disconnected call.
+   *   }
+   *
+   * @param aExpectedCalls
+   *        An array of call records.
+   * @return Promise
+   */
+  function equals(aExpectedCalls) {
+    // Classify calls
+    let callsInTelephony  = [];
+    let CallsInConference = [];
+
+    aExpectedCalls.forEach(function(aCall) {
+      if (aCall.state === "disconnected") {
+        is(aCall.disconnectedReason,
+           aCall.reference.disconnectedReason,
+           "Check disconnectedReason");
+        return;
+      }
+
+      if (aCall.conference) {
+        CallsInConference.push(aCall);
+        return;
+      }
+
+      callsInTelephony.push(aCall);
+      ok(!aCall.secondId, "For a telephony call, the secondId must be null");
+    });
+
+    // Check the active connection
+    checkActive(callsInTelephony, CallsInConference);
+
+    // Check telephony.calls
+    is(telephony.calls.length,
+       callsInTelephony.length,
+       "Check telephony.calls.length");
+
+    callsInTelephony.forEach(aExpectedCall => {
+      let number = aExpectedCall.number;
+      let call = telephony.calls.find(aCall => aCall.id.number === number);
+      if (!call) {
+        ok(false, "telephony.calls lost the call(number: " + number + ")");
+        return;
+      }
+
+      is(call, aExpectedCall.reference,
+         "Check the object reference of number:" + number);
+
+      is(call.state, aExpectedCall.state,
+         "Check call.state of number:" + number);
+    });
+
+    // Check conference.calls
+    // NOTE: This function doesn't support conference call now, so the length of
+    // |CallsInConference| should be 0, and the conference state shoul be "".
+    is(conference.state, "", "Conference call is not supported yet.");
+    is(CallsInConference.length, 0, "Conference call is not supported yet.");
+
+    // Check the emulator call list
+    // NOTE: Conference is not supported yet, so |CallsInConference| is ignored.
+    let strings = callsInTelephony.map(aCall => {
+      // The emulator doesn't have records for disconnected calls.
+      if (aCall.emulatorState === "disconnected") {
+        return null;
+      }
+
+      let state = {
+        alerting:  "ringing",
+        connected: "active",
+        held:      "held",
+        incoming:  "incoming"
+      }[aCall.state];
+
+      state = aCall.emulatorState || state;
+      let prefix = (aCall.direction === "in") ? "inbound from "
+                                              : "outbound to  ";
+
+      return state ? (prefix + aCall.number + " : " + state) : null;
+    });
+
+    return checkEmulatorCallList(strings.filter(aString => aString));
+  }
+
+  /****************************************************************************
+   ****                     Request utility functions                      ****
+   ****************************************************************************/
 
   /**
    * Make an outgoing call.
@@ -558,7 +774,13 @@ var emulator = (function() {
         is(outCall.state, "dialing");
         is(outCall.serviceId, serviceId);
       })
-      .then(() => waitForNamedStateEvent(outCall, "alerting"));
+      .then(() => {
+        // A CDMA call goes to connected state directly when the operator find
+        // its callee, which makes the "connected" state in CDMA calls behaves
+        // like the "alerting" state in GSM calls.
+        let state = Modems[serviceId].isGSM() ? "alerting" : "connected";
+        return waitForNamedStateEvent(outCall, state);
+      });
   }
 
   /**
@@ -581,7 +803,13 @@ var emulator = (function() {
         is(outCall.id.number, number);
         is(outCall.state, "dialing");
       })
-      .then(() => waitForNamedStateEvent(outCall, "alerting"))
+      .then(() => {
+        // Similar to function |dial|, a CDMA call directly goes to connected
+        // state  when the operator find its callee.
+        let state = Modems[outCall.serviceId].isGSM() ? "alerting"
+                                                      : "connected";
+        return waitForNamedStateEvent(outCall, state);
+      })
       .then(() => {
         is(outCall.emergency, true, "check emergency");
         return outCall;
@@ -651,19 +879,23 @@ var emulator = (function() {
   /**
    * Hold a call.
    *
-   * @param call
+   * @param aCall
    *        A TelephonyCall object.
+   * @param aWaitForEvent
+   *        Decide whether to wait for the state event.
    * @return Promise<TelephonyCall>
    */
-  function hold(call) {
+  function hold(aCall, aWaitForEvent = true) {
     log("Putting the call on hold.");
 
     let promises = [];
 
-    promises.push(waitForNamedStateEvent(call, "held"));
-    promises.push(call.hold());
+    if (aWaitForEvent) {
+      promises.push(waitForNamedStateEvent(aCall, "held"));
+    }
+    promises.push(aCall.hold());
 
-    return Promise.all(promises).then(() => call);
+    return Promise.all(promises).then(() => aCall);
   }
 
   /**
@@ -673,7 +905,7 @@ var emulator = (function() {
    *        A TelephonyCall object.
    * @return Promise<TelephonyCall>
    */
-  function resume(call) {
+  function resume(call, aWaitForEvent = true) {
     log("Resuming the held call.");
 
     let promises = [];
@@ -721,8 +953,10 @@ var emulator = (function() {
     numberPresentation = numberPresentation || "";
     name = name || "";
     namePresentation = namePresentation || "";
-    emulator.runCmd("gsm call " + number + "," + numberPresentation + "," + name +
-                 "," + namePresentation);
+    emulator.runCmd("telephony call " + number +
+                    "," + numberPresentation +
+                    "," + name +
+                    "," + namePresentation);
 
     return waitForEvent(telephony, "incoming")
       .then(event => {
@@ -747,9 +981,14 @@ var emulator = (function() {
   function remoteAnswer(call) {
     log("Remote answering the call: " + call.id.number);
 
-    emulator.runCmd("gsm accept " + call.id.number);
+    emulator.runCmd("telephony accept " + call.id.number);
 
-    return waitForNamedStateEvent(call, "connected");
+    // A CDMA call goes to connected state directly when the operator find its
+    // callee, which makes the "connected" state in CDMA calls behaves like the
+    // "alerting" state in GSM calls, so we don't have to wait for the call to
+    // change to "connected" state here for CDMA calls.
+    return Modem.isCDMA() ? Promise.resolve()
+                          : waitForNamedStateEvent(call, "connected");
   }
 
   /**
@@ -762,7 +1001,7 @@ var emulator = (function() {
   function remoteHangUp(call) {
     log("Remote hanging up the call: " + call.id.number);
 
-    emulator.runCmd("gsm cancel " + call.id.number);
+    emulator.runCmd("telephony cancel " + call.id.number);
 
     return waitForNamedStateEvent(call, "disconnected");
   }
@@ -1216,7 +1455,6 @@ var emulator = (function() {
   this.gWaitForNamedStateEvent = waitForNamedStateEvent;
   this.gWaitForStateChangeEvent = waitForStateChangeEvent;
   this.gCheckInitialState = checkInitialState;
-  this.gChangeModemTech = changeModemTech;
   this.gClearCalls = clearCalls;
   this.gOutCallStrPool = outCallStrPool;
   this.gInCallStrPool = inCallStrPool;
@@ -1244,6 +1482,25 @@ var emulator = (function() {
   this.gSetupConference = setupConference;
   this.gSetRadioEnabled = setRadioEnabled;
   this.gSetRadioEnabledAll = setRadioEnabledAll;
+
+  // Telephony helper
+  this.TelephonyHelper = {
+    dial:   dial,
+    answer: answer,
+    hangUp: hangUp,
+    hold:   hold,
+    resume: resume,
+    equals: equals,
+    createExptectedCall: createExptectedCall
+  };
+
+  // Remote Utils, TODO: This should be an array for multi-SIM scenarios
+  this.Remotes = [{
+    dial:   remoteDial,
+    answer: remoteAnswer,
+    hangUp: remoteHangUp
+  }];
+  this.Remote = this.Remotes[0];
 }());
 
 function _startTest(permissions, test) {

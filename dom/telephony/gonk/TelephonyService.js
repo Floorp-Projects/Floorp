@@ -2211,10 +2211,9 @@ TelephonyService.prototype = {
                              aFailCause = RIL.GECKO_CALL_ERROR_NORMAL_CALL_CLEARING) {
     if (DEBUG) debug("_disconnectCalls: " + JSON.stringify(aCalls));
 
-    // Child cannot live without parent. Let's find all the calls that need to
-    // be disconnected.
+    // In addition to the disconnected call itself, its decedent calls should be
+    // treated as disconnected calls as well.
     let disconnectedCalls = aCalls.slice();
-
     for (let call in aCalls) {
       while (call.childId) {
         call = this._currentCalls[aClientId][call.childId];
@@ -2231,8 +2230,8 @@ TelephonyService.prototype = {
       call.state = nsITelephonyService.CALL_STATE_DISCONNECTED;
       call.disconnectedReason = aFailCause;
 
-      if (call.parentId) {
-        let parentCall = this._currentCalls[aClientId][call.parentId];
+      let parentCall = this._currentCalls[aClientId][call.parentId];
+      if (parentCall) {
         delete parentCall.childId;
       }
 

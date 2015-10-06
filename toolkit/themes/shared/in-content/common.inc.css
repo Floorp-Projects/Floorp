@@ -406,13 +406,11 @@ xul|button[type="menu"] > xul|menupopup xul|menuseparator {
 
 /* textboxes */
 
-*|textbox {
+html|input[type="text"],
+html|textarea,
+xul|textbox {
   -moz-appearance: none;
-  height: 30px;
   color: var(--in-content-text-color);
-  line-height: 20px;
-  padding-right: 10px;
-  padding-left: 10px;
   border: 1px solid var(--in-content-box-border-color);
   -moz-border-top-colors: none !important;
   -moz-border-right-colors: none !important;
@@ -422,12 +420,27 @@ xul|button[type="menu"] > xul|menupopup xul|menuseparator {
   background-color: var(--in-content-box-background);
 }
 
-html|textbox:focus,
+xul|textbox {
+  min-height: 30px;
+  padding-right: 10px;
+  padding-left: 10px;
+}
+
+html|input[type="text"],
+html|textarea {
+  font-family: inherit;
+  font-size: inherit;
+  padding: 5px 10px;
+}
+
+html|input[type="text"]:focus,
+html|textarea:focus,
 xul|textbox[focused] {
   border-color: var(--in-content-border-focus);
 }
 
-html|textbox:disabled,
+html|input[type="text"]:disabled,
+html|textarea:disabled,
 xul|textbox[disabled="true"] {
   opacity: 0.5;
 }

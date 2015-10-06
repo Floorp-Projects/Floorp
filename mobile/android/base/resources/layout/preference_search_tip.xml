@@ -2,14 +2,19 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_height="match_parent"
-    android:layout_width="match_parent">
+
+<!-- Ignore UseCompoundDrawables because they caused a regression in bug 1208790. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              tools:ignore="UseCompoundDrawables"
+              android:orientation="horizontal"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:paddingRight="?android:attr/scrollbarSize">
 
     <TextView android:id="@+id/label_search_hint"
               android:layout_height="wrap_content"
-              android:layout_width="match_parent"
+              android:layout_width="0dp"
               android:text="@string/pref_search_hint"
               android:layout_marginTop="5dip"
               android:layout_marginBottom="6dip"
@@ -17,8 +22,13 @@
               android:layout_marginRight="6dip"
               android:paddingTop="8dp"
               android:paddingBottom="8dp"
-              android:paddingRight="8dip"
-              android:drawableRight="@drawable/tip_addsearch"
-              android:drawablePadding="6dp"/>
+              android:paddingRight="6dip"
+              android:layout_weight="1"/>
 
-</FrameLayout>
+    <ImageView android:layout_height="wrap_content"
+               android:layout_width="wrap_content"
+               android:paddingRight="8dp"
+               android:paddingTop="12dip"
+               android:src="@drawable/tip_addsearch"/>
+
+</LinearLayout>

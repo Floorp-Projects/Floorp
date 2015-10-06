@@ -24,7 +24,7 @@ startTest(function() {
 
     // Disable the Hold function of the emulator, then hold the active call,
     // where the hold request will fail and the call will remain active.
-    .then(() => emulator.runCmd("gsm disable hold"))
+    .then(() => emulator.runCmd("telephony disable hold"))
     .then(() => gHold(inCall))
     .then(() => ok(false, "This hold request should be rejected."),
           () => log("This hold request is rejected as expected."))
@@ -33,7 +33,7 @@ startTest(function() {
 
     // Enable the Hold function of the emulator, then hold the active call,
     // where the hold request should succeed and the call should become held.
-    .then(() => emulator.runCmd("gsm enable hold"))
+    .then(() => emulator.runCmd("telephony enable hold"))
     .then(() => gHold(inCall))
     .then(() => log("This hold request is resolved as expected."),
           () => ok(false, "This hold request should be resolved."))
@@ -47,6 +47,6 @@ startTest(function() {
 
     // Clean Up
     .catch(error => ok(false, "Promise reject: " + error))
-    .then(() => emulator.runCmd("gsm enable hold"))
+    .then(() => emulator.runCmd("telephony enable hold"))
     .then(finish);
 });

@@ -1166,7 +1166,15 @@ var gBrowserInit = {
       let browser = gBrowser.getBrowserForDocument(ownerDoc);
 #ifdef MOZ_CRASHREPORTER
       if (event.detail.sendCrashReport) {
-        TabCrashReporter.submitCrashReport(browser);
+        TabCrashReporter.submitCrashReport(browser, {
+          comments: event.detail.comments,
+          email: event.detail.email,
+          emailMe: event.detail.emailMe,
+          includeURL: event.detail.includeURL,
+          URL: event.detail.URL,
+        });
+      } else {
+        TabCrashReporter.dontSubmitCrashReport();
       }
 #endif
 

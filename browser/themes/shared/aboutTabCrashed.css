@@ -9,3 +9,34 @@
 #reportSent {
   font-weight: bold;
 }
+
+#crash-reporter-container {
+  width: 80%;
+  background-color: var(--in-content-box-background-hover);
+  margin: 24px 0;
+  padding: 14px;
+  border: 1px solid var(--in-content-box-border-color);
+  border-radius: 2px;
+}
+
+#crash-reporter-title {
+  font-weight: bold;
+  margin: 0 0 14px 0;
+}
+
+input[type="text"],
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
+}
+
+#options {
+  list-style: none;
+  margin-inline-start: 0;
+}
+
+input[type="text"],
+#options > li {
+  margin: 14px 0 0 0;
+}
