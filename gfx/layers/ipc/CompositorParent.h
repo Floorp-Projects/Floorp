@@ -386,8 +386,14 @@ public:
    * Calculates and requests the main thread update plugin positioning, clip,
    * and visibility via ipc.
    */
-  void UpdatePluginWindowState(uint64_t aId);
+  bool UpdatePluginWindowState(uint64_t aId);
 #endif
+
+  /**
+   * Main thread response for a plugin visibility request made by the
+   * compositor thread.
+   */
+  virtual bool RecvRemotePluginsReady() override;
 
   /**
    * Used by the profiler to denote when a vsync occured
@@ -484,6 +490,11 @@ protected:
   nsIntPoint mPluginsLayerOffset;
   nsIntRegion mPluginsLayerVisibleRegion;
   nsTArray<PluginWindowData> mCachedPluginData;
+#endif
+#if defined(XP_WIN)
+  // indicates if we are currently waiting on a plugin update confirmation.
+  // When this is true, composition is currently on hold.
+  bool mPluginUpdateResponsePending;
 #endif
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);

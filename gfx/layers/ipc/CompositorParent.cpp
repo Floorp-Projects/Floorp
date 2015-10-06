@@ -56,6 +56,7 @@
 #include "nsTArray.h"                   // for nsTArray
 #include "nsThreadUtils.h"              // for NS_IsMainThread
 #include "nsXULAppAPI.h"                // for XRE_GetIOMessageLoop
+#include "nsIXULRuntime.h"              // for BrowserTabsRemoteAutostart
 #ifdef XP_WIN
 #include "mozilla/layers/CompositorD3D11.h"
 #include "mozilla/layers/CompositorD3D9.h"
@@ -554,6 +555,9 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   , mLastPluginUpdateLayerTreeId(0)
 #endif
+#if defined(XP_WIN)
+  , mPluginUpdateResponsePending(false)
+#endif
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(CompositorThread(),
@@ -1043,13 +1047,57 @@ CompositorParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRect* aRe
     return;
   }
 
-  AutoResolveRefLayers resolve(mCompositionManager, true);
+#if defined(XP_WIN)
+  // Still waiting on plugin update confirmation
+  if (mPluginUpdateResponsePending) {
+    return;
+  }
+#endif
+
+  bool hasRemoteContent = false;
+  bool pluginsUpdatedFlag = true;
+  AutoResolveRefLayers resolve(mCompositionManager, this,
+                               &hasRemoteContent,
+                               &pluginsUpdatedFlag);
 
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+  /*
+   * AutoResolveRefLayers handles two tasks related to Windows and Linux
+   * plugin window management:
+   * 1) calculating if we have remote content in the view. If we do not have
+   * remote content, all plugin windows for this CompositorParent (window)
+   * can be hidden since we do not support plugins in chrome when running
+   * under e10s.
+   * 2) Updating plugin position, size, and clip. We do this here while the
+   * remote layer tree is hooked up to to chrome layer tree. This is needed
+   * since plugin clipping can depend on chrome (for example, due to tab modal
+   * prompts). Updates in step 2 are applied via an async ipc message sent
+   * to the main thread.
+   * Windows specific: The compositor will wait for confirmation that plugin
+   * updates have been applied before painting. Deferment of painting is
+   * indicated by the mPluginUpdateResponsePending flag. The main thread
+   * messages back using the RemotePluginsReady async ipc message.
+   * This is neccessary since plugin windows can leave remnants of window
+   * content if moved after the underlying window paints.
+   */
+#if defined(XP_WIN)
+  if (pluginsUpdatedFlag) {
+    mPluginUpdateResponsePending = true;
+    return;
+  }
+#endif
+
   // We do not support plugins in local content. When switching tabs
   // to local pages, hide every plugin associated with the window.
-  if (!mCompositionManager->HasRemoteContent()) {
+  if (!hasRemoteContent && BrowserTabsRemoteAutostart() &&
+      mCachedPluginData.Length()) {
     unused << SendHideAllPlugins((uintptr_t)GetWidget());
+    mCachedPluginData.Clear();
+#if defined(XP_WIN)
+    // Wait for confirmation the hide operation is complete.
+    mPluginUpdateResponsePending = true;
+    return;
+#endif
   }
 #endif
 
@@ -1127,6 +1175,20 @@ CompositorParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRect* aRe
 
   mozilla::Telemetry::AccumulateTimeDelta(mozilla::Telemetry::COMPOSITE_TIME, start);
   profiler_tracing("Paint", "Composite", TRACING_INTERVAL_END);
+}
+
+bool
+CompositorParent::RecvRemotePluginsReady()
+{
+#if defined(XP_WIN)
+  mPluginUpdateResponsePending = false;
+  ScheduleComposition();
+  return true;
+#else
+  NS_NOTREACHED("CompositorParent::RecvRemotePluginsReady calls "
+                "unexpected on this platform.");
+  return false;
+#endif
 }
 
 void
@@ -1744,6 +1806,7 @@ public:
                                       const nsTArray<ScrollableLayerGuid>& aTargets) override;
 
   virtual AsyncCompositionManager* GetCompositionManager(LayerTransactionParent* aParent) override;
+  virtual bool RecvRemotePluginsReady()  override { return false; }
 
   void DidComposite(uint64_t aId,
                     TimeStamp& aCompositeStart,
