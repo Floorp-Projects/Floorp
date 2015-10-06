@@ -98,7 +98,7 @@ this.RequestSyncService = {
     // operation is completed.
 
     this.dbTxn("readonly", function(aStore) {
-      aStore.openCursor().onsuccess = function(event) {
+      aStore.openCursor().onsuccess = event => {
         let cursor = event.target.result;
         if (cursor) {
           this.addRegistration(cursor.value, cursor.continue);

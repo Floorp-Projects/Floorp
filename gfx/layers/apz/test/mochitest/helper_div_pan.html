@@ -6,6 +6,7 @@
   <title>Sanity panning test for scrollable div</title>
   <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
   <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
 function scrollOuter() {
@@ -26,7 +27,9 @@ function checkScroll() {
 }
 
 window.onload = function() {
-  setTimeout(scrollOuter, 0);
+  waitForAllPaints(function() {
+    flushApzRepaints(scrollOuter);
+  });
 }
 
   </script>

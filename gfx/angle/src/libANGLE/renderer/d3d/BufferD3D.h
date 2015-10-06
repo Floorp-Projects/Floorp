@@ -20,6 +20,12 @@ class BufferFactoryD3D;
 class StaticIndexBufferInterface;
 class StaticVertexBufferInterface;
 
+enum D3DBufferUsage
+{
+    D3D_BUFFER_USAGE_STATIC,
+    D3D_BUFFER_USAGE_DYNAMIC,
+};
+
 class BufferD3D : public BufferImpl
 {
   public:
@@ -40,10 +46,15 @@ class BufferD3D : public BufferImpl
     void invalidateStaticData();
     void promoteStaticUsage(int dataSize);
 
-    gl::Error getIndexRange(GLenum type, size_t offset, size_t count, gl::RangeUI *outRange) override;
+    gl::Error getIndexRange(GLenum type,
+                            size_t offset,
+                            size_t count,
+                            bool primitiveRestartEnabled,
+                            gl::IndexRange *outRange) override;
 
   protected:
     void updateSerial();
+    void updateD3DBufferUsage(GLenum usage);
 
     BufferFactoryD3D *mFactory;
     unsigned int mSerial;
@@ -52,6 +63,7 @@ class BufferD3D : public BufferImpl
     StaticVertexBufferInterface *mStaticVertexBuffer;
     StaticIndexBufferInterface *mStaticIndexBuffer;
     unsigned int mUnmodifiedDataUse;
+    D3DBufferUsage mUsage;
 };
 
 }

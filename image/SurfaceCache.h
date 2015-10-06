@@ -69,11 +69,6 @@ public:
   float AnimationTime() const { return mAnimationTime; }
   SurfaceFlags Flags() const { return mFlags; }
 
-  SurfaceKey WithNewFlags(SurfaceFlags aFlags) const
-  {
-    return SurfaceKey(mSize, mSVGContext, mAnimationTime, aFlags);
-  }
-
 private:
   SurfaceKey(const IntSize& aSize,
              const Maybe<SVGImageContext>& aSVGContext,
@@ -181,37 +176,24 @@ struct SurfaceCache
    * @param aSurfaceKey     Key data which uniquely identifies the requested
    *                        surface.
    *
-   * @param aAlternateFlags If not Nothing(), a different set of flags than the
-   *                        ones specified in @aSurfaceKey which are also
-   *                        acceptable to the caller. This is more efficient
-   *                        than calling Lookup() twice, which requires taking a
-   *                        lock each time.
-   *
    * @return                a LookupResult, which will either contain a
    *                        DrawableFrameRef to the requested surface, or an
    *                        empty DrawableFrameRef if the surface was not found.
    */
   static LookupResult Lookup(const ImageKey    aImageKey,
-                             const SurfaceKey& aSurfaceKey,
-                             const Maybe<SurfaceFlags>& aAlternateFlags
-                               = Nothing());
+                             const SurfaceKey& aSurfaceKey);
 
   /**
    * Looks up the best matching surface in the cache and returns a drawable
    * reference to the imgFrame containing it.
    *
    * Returned surfaces may vary from the requested surface only in terms of
-   * size, unless @aAlternateFlags is specified.
+   * size.
    *
    * @param aImageKey    Key data identifying which image the surface belongs
    *                     to.
    *
    * @param aSurfaceKey  Key data which identifies the ideal surface to return.
-   *
-   * @param aAlternateFlags If not Nothing(), a different set of flags than the
-   *                        ones specified in @aSurfaceKey which are also
-   *                        acceptable to the caller. This is much more
-   *                        efficient than calling LookupBestMatch() twice.
    *
    * @return                a LookupResult, which will either contain a
    *                        DrawableFrameRef to a surface similar to the
@@ -221,9 +203,7 @@ struct SurfaceCache
    *                        returned surface exactly matches @aSurfaceKey.
    */
   static LookupResult LookupBestMatch(const ImageKey    aImageKey,
-                                      const SurfaceKey& aSurfaceKey,
-                                      const Maybe<SurfaceFlags>& aAlternateFlags
-                                        = Nothing());
+                                      const SurfaceKey& aSurfaceKey);
 
   /**
    * Insert a surface into the cache. If a surface with the same ImageKey and

@@ -5,16 +5,18 @@
 //
 
 #include "libANGLE/renderer/d3d/HLSLCompiler.h"
-#include "libANGLE/Program.h"
-#include "libANGLE/features.h"
 
 #include "common/utilities.h"
-
+#include "libANGLE/Program.h"
+#include "libANGLE/features.h"
+#include "libANGLE/histogram_macros.h"
 #include "third_party/trace_event/trace_event.h"
 
 // Definitions local to the translation unit
 namespace
 {
+
+#if ANGLE_SHADER_DEBUG_INFO == ANGLE_ENABLED
 
 #ifdef CREATE_COMPILER_FLAG_INFO
     #undef CREATE_COMPILER_FLAG_INFO
@@ -77,16 +79,7 @@ bool IsCompilerFlagSet(UINT mask, UINT flag)
     }
 }
 
-const char *GetCompilerFlagName(UINT mask, size_t flagIx)
-{
-    const CompilerFlagInfo &flagInfo = CompilerFlagInfos[flagIx];
-    if (IsCompilerFlagSet(mask, flagInfo.mFlag))
-    {
-        return flagInfo.mName;
-    }
-
-    return nullptr;
-}
+#endif
 
 }
 
@@ -216,9 +209,15 @@ gl::Error HLSLCompiler::compileToBinary(gl::InfoLog &infoLog, const std::string 
     {
         ID3DBlob *errorMessage = nullptr;
         ID3DBlob *binary = nullptr;
+        HRESULT result         = S_OK;
 
-        HRESULT result = mD3DCompileFunc(hlsl.c_str(), hlsl.length(), gl::g_fakepath, macros, nullptr, "main", profile.c_str(),
-                                         configs[i].flags, 0, &binary, &errorMessage);
+        {
+            TRACE_EVENT0("gpu.angle", "D3DCompile");
+            SCOPED_ANGLE_HISTOGRAM_TIMER("GPU.ANGLE.D3DCompileMS");
+            result = mD3DCompileFunc(hlsl.c_str(), hlsl.length(), gl::g_fakepath, macros, nullptr,
+                                     "main", profile.c_str(), configs[i].flags, 0, &binary,
+                                     &errorMessage);
+        }
 
         if (errorMessage)
         {
@@ -229,11 +228,12 @@ gl::Error HLSLCompiler::compileToBinary(gl::InfoLog &infoLog, const std::string 
             TRACE("\n%s", hlsl.c_str());
             TRACE("\n%s", message.c_str());
 
-            if (message.find("error X3531:") != std::string::npos || // "can't unroll loops marked with loop attribute"
-                message.find("error X4014:") != std::string::npos)   // "cannot have gradient operations inside loops with divergent flow control",
-                                                                     // even though it is counter-intuitive to disable unrolling for this error,
-                                                                     // some very long shaders have trouble deciding which loops to unroll and
-                                                                     // turning off forced unrolls allows them to compile properly.
+            if ((message.find("error X3531:") != std::string::npos ||  // "can't unroll loops marked with loop attribute"
+                 message.find("error X4014:") != std::string::npos) && // "cannot have gradient operations inside loops with divergent flow control",
+                                                                       // even though it is counter-intuitive to disable unrolling for this error,
+                                                                       // some very long shaders have trouble deciding which loops to unroll and
+                                                                       // turning off forced unrolls allows them to compile properly.
+                macros != nullptr)
             {
                 macros = nullptr;   // Disable [loop] and [flatten]
 
@@ -253,10 +253,9 @@ gl::Error HLSLCompiler::compileToBinary(gl::InfoLog &infoLog, const std::string 
             (*outDebugInfo) += "// Compiler configuration: " + configs[i].name + "\n// Flags:\n";
             for (size_t fIx = 0; fIx < ArraySize(CompilerFlagInfos); ++fIx)
             {
-                const char *flagName = GetCompilerFlagName(configs[i].flags, fIx);
-                if (flagName != nullptr)
+                if (IsCompilerFlagSet(configs[i].flags, CompilerFlagInfos[fIx].mFlag))
                 {
-                    (*outDebugInfo) += std::string("// ") + flagName + "\n";
+                    (*outDebugInfo) += std::string("// ") + CompilerFlagInfos[fIx].mName + "\n";
                 }
             }
 

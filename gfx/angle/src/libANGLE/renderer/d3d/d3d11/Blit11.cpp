@@ -233,8 +233,10 @@ Blit11::Blit11(Renderer11 *renderer)
     ID3D11Device *device = mRenderer->getDevice();
 
     D3D11_BUFFER_DESC vbDesc;
-    vbDesc.ByteWidth = std::max(sizeof(d3d11::PositionLayerTexCoord3DVertex), sizeof(d3d11::PositionTexCoordVertex)) *
-                       6 * renderer->getRendererCaps().max3DTextureSize;
+    vbDesc.ByteWidth =
+        static_cast<unsigned int>(std::max(sizeof(d3d11::PositionLayerTexCoord3DVertex),
+                                           sizeof(d3d11::PositionTexCoordVertex)) *
+                                  6 * renderer->getRendererCaps().max3DTextureSize);
     vbDesc.Usage = D3D11_USAGE_DYNAMIC;
     vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
     vbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;

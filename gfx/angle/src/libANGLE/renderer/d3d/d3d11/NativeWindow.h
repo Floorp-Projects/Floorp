@@ -16,6 +16,7 @@
 #include "common/platform.h"
 
 #include <EGL/eglplatform.h>
+#include "libANGLE/Config.h"
 
 // DXGISwapChain and DXGIFactory are typedef'd to specific required
 // types. The HWND NativeWindow implementation requires IDXGISwapChain
@@ -51,7 +52,7 @@ namespace rx
 class NativeWindow
 {
   public:
-    explicit NativeWindow(EGLNativeWindowType window);
+    explicit NativeWindow(EGLNativeWindowType window, const egl::Config *config);
 
     bool initialize();
     bool getClientRect(LPRECT rect);
@@ -70,6 +71,7 @@ class NativeWindow
     EGLNativeWindowType mWindow;
 
 #if defined(ANGLE_ENABLE_WINDOWS_STORE)
+    const egl::Config *mConfig;
     std::shared_ptr<InspectableNativeWindow> mImpl;
 #endif
 

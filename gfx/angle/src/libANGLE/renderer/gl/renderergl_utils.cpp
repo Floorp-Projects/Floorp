@@ -14,6 +14,7 @@
 #include "libANGLE/Caps.h"
 #include "libANGLE/formatutils.h"
 #include "libANGLE/renderer/gl/FunctionsGL.h"
+#include "libANGLE/renderer/gl/WorkaroundsGL.h"
 #include "libANGLE/renderer/gl/formatutilsgl.h"
 
 #include <algorithm>
@@ -21,6 +22,27 @@
 
 namespace rx
 {
+static VendorID GetVendorID(const FunctionsGL *functions)
+{
+    std::string nativeVendorString(reinterpret_cast<const char *>(functions->getString(GL_VENDOR)));
+    if (nativeVendorString.find("Intel") != std::string::npos)
+    {
+        return VENDOR_ID_INTEL;
+    }
+    else if (nativeVendorString.find("NVIDIA") != std::string::npos)
+    {
+        return VENDOR_ID_NVIDIA;
+    }
+    else if (nativeVendorString.find("ATI") != std::string::npos ||
+             nativeVendorString.find("AMD") != std::string::npos)
+    {
+        return VENDOR_ID_AMD;
+    }
+    else
+    {
+        return VENDOR_ID_UNKNOWN;
+    }
+}
 
 namespace nativegl_gl
 {
@@ -75,7 +97,8 @@ static gl::TextureCaps GenerateTextureFormatCaps(const FunctionsGL *functions, G
         if (numSamples > 0)
         {
             std::vector<GLint> samples(numSamples);
-            functions->getInternalformativ(GL_RENDERBUFFER, internalFormat, GL_SAMPLES, samples.size(), &samples[0]);
+            functions->getInternalformativ(GL_RENDERBUFFER, internalFormat, GL_SAMPLES,
+                                           static_cast<GLsizei>(samples.size()), &samples[0]);
             for (size_t sampleIndex = 0; sampleIndex < samples.size(); sampleIndex++)
             {
                 textureCaps.sampleCounts.insert(samples[sampleIndex]);
@@ -481,12 +504,59 @@ void GenerateCaps(const FunctionsGL *functions, gl::Caps *caps, gl::TextureCapsM
 
     // Extension support
     extensions->setTextureExtensionSupport(*textureCapsMap);
-    extensions->textureNPOT = true;
+    extensions->elementIndexUint = functions->standard == STANDARD_GL_DESKTOP ||
+                                   functions->isAtLeastGLES(gl::Version(3, 0)) || functions->hasGLESExtension("GL_OES_element_index_uint");
+    extensions->readFormatBGRA = functions->isAtLeastGL(gl::Version(1, 2)) || functions->hasGLExtension("GL_EXT_bgra") ||
+                                 functions->hasGLESExtension("GL_EXT_read_format_bgra");
+    extensions->mapBuffer = functions->isAtLeastGL(gl::Version(1, 5)) ||
+                            functions->hasGLESExtension("GL_OES_mapbuffer");
+    extensions->mapBufferRange = functions->isAtLeastGL(gl::Version(3, 0)) || functions->hasGLExtension("GL_ARB_map_buffer_range") ||
+                                 functions->isAtLeastGLES(gl::Version(3, 0)) || functions->hasGLESExtension("GL_EXT_map_buffer_range");
+    extensions->textureNPOT = functions->standard == STANDARD_GL_DESKTOP ||
+                              functions->isAtLeastGLES(gl::Version(3, 0)) || functions->hasGLESExtension("GL_OES_texture_npot");
+    extensions->drawBuffers = functions->isAtLeastGL(gl::Version(2, 0)) || functions->hasGLExtension("ARB_draw_buffers") ||
+                              functions->isAtLeastGLES(gl::Version(3, 0)) || functions->hasGLESExtension("GL_EXT_draw_buffers");
     extensions->textureStorage = true;
-    extensions->fboRenderMipmap = true;
+    extensions->textureFilterAnisotropic = functions->hasGLExtension("GL_EXT_texture_filter_anisotropic") || functions->hasGLESExtension("GL_EXT_texture_filter_anisotropic");
+    extensions->maxTextureAnisotropy = extensions->textureFilterAnisotropic ? QuerySingleGLFloat(functions, GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0.0f;
+    extensions->fence = functions->hasGLExtension("GL_NV_fence") || functions->hasGLESExtension("GL_NV_fence");
+    extensions->blendMinMax = functions->isAtLeastGL(gl::Version(1, 5)) || functions->hasGLExtension("GL_EXT_blend_minmax") ||
+                              functions->isAtLeastGLES(gl::Version(3, 0)) || functions->hasGLESExtension("GL_EXT_blend_minmax");
     extensions->framebufferBlit = (functions->blitFramebuffer != nullptr);
     extensions->framebufferMultisample = caps->maxSamples > 0;
-    extensions->fence = functions->hasGLExtension("GL_NV_fence") || functions->hasGLESExtension("GL_NV_fence");
+    extensions->standardDerivatives = functions->isAtLeastGL(gl::Version(2, 0)) || functions->hasGLExtension("GL_ARB_fragment_shader") ||
+                                      functions->isAtLeastGLES(gl::Version(3, 0)) || functions->hasGLESExtension("GL_OES_standard_derivatives");
+    extensions->shaderTextureLOD = functions->isAtLeastGL(gl::Version(3, 0)) || functions->hasGLExtension("GL_ARB_shader_texture_lod") ||
+                                   functions->isAtLeastGLES(gl::Version(3, 0)) || functions->hasGLESExtension("GL_EXT_shader_texture_lod");
+    extensions->fragDepth = functions->standard == STANDARD_GL_DESKTOP ||
+                            functions->isAtLeastGLES(gl::Version(3, 0)) || functions->hasGLESExtension("GL_EXT_frag_depth");
+    extensions->fboRenderMipmap = functions->isAtLeastGL(gl::Version(3, 0)) || functions->hasGLExtension("GL_EXT_framebuffer_object") ||
+                                  functions->isAtLeastGLES(gl::Version(3, 0)) || functions->hasGLESExtension("GL_OES_fbo_render_mipmap");
+    extensions->instancedArrays = functions->isAtLeastGL(gl::Version(3, 1)) ||
+                                  (functions->hasGLExtension("GL_ARB_instanced_arrays") &&
+                                   (functions->hasGLExtension("GL_ARB_draw_instanced") ||
+                                    functions->hasGLExtension("GL_EXT_draw_instanced"))) ||
+                                  functions->isAtLeastGLES(gl::Version(3, 0)) ||
+                                  functions->hasGLESExtension("GL_EXT_instanced_arrays");
+    extensions->unpackSubimage = functions->standard == STANDARD_GL_DESKTOP ||
+                                 functions->isAtLeastGLES(gl::Version(3, 0)) ||
+                                 functions->hasGLESExtension("GL_EXT_unpack_subimage");
+    extensions->packSubimage = functions->standard == STANDARD_GL_DESKTOP ||
+                               functions->isAtLeastGLES(gl::Version(3, 0)) ||
+                               functions->hasGLESExtension("GL_NV_pack_subimage");
+}
+
+void GenerateWorkarounds(const FunctionsGL *functions, WorkaroundsGL *workarounds)
+{
+    VendorID vendor = GetVendorID(functions);
+
+    // Don't use 1-bit alpha formats on desktop GL with AMD or Intel drivers.
+    workarounds->avoid1BitAlphaTextureFormats =
+        functions->standard == STANDARD_GL_DESKTOP &&
+        (vendor == VENDOR_ID_AMD || vendor == VENDOR_ID_INTEL);
+
+    workarounds->rgba4IsNotSupportedForColorRendering =
+        functions->standard == STANDARD_GL_DESKTOP && vendor == VENDOR_ID_INTEL;
 }
 
 }

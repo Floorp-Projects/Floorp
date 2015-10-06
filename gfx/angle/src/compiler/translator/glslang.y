@@ -1631,11 +1631,6 @@ function_definition
         $$->getAsAggregate()->setType($1.function->getReturnType());
         $$->getAsAggregate()->setFunctionId($1.function->getUniqueId());
 
-        // store the pragma information for debug and optimize and other vendor specific
-        // information. This information can be queried from the parse tree
-        $$->getAsAggregate()->setOptimize(context->pragma().optimize);
-        $$->getAsAggregate()->setDebug(context->pragma().debug);
-
         context->symbolTable.pop();
     }
     ;

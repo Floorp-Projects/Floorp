@@ -11,6 +11,8 @@
 #define LIBANGLE_RENDERER_IMPLFACTORY_H_
 
 #include "libANGLE/Framebuffer.h"
+#include "libANGLE/Program.h"
+#include "libANGLE/Shader.h"
 #include "libANGLE/VertexArray.h"
 
 namespace rx
@@ -35,12 +37,11 @@ class ImplFactory : angle::NonCopyable
     virtual ~ImplFactory() {}
 
     // Shader creation
-    virtual CompilerImpl *createCompiler(const gl::Data &data) = 0;
-    virtual ShaderImpl *createShader(GLenum type) = 0;
-    virtual ProgramImpl *createProgram() = 0;
+    virtual CompilerImpl *createCompiler() = 0;
+    virtual ShaderImpl *createShader(const gl::Shader::Data &data) = 0;
+    virtual ProgramImpl *createProgram(const gl::Program::Data &data) = 0;
 
     // Framebuffer creation
-    virtual FramebufferImpl *createDefaultFramebuffer(const gl::Framebuffer::Data &data) = 0;
     virtual FramebufferImpl *createFramebuffer(const gl::Framebuffer::Data &data) = 0;
 
     // Texture creation

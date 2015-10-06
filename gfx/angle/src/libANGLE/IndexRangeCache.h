@@ -23,26 +23,35 @@ namespace gl
 class IndexRangeCache
 {
   public:
-    void addRange(GLenum type, unsigned int offset, GLsizei count, const RangeUI &range);
-    bool findRange(GLenum type, unsigned int offset, GLsizei count, RangeUI *rangeOut) const;
+    void addRange(GLenum type,
+                  size_t offset,
+                  size_t count,
+                  bool primitiveRestartEnabled,
+                  const IndexRange &range);
+    bool findRange(GLenum type,
+                   size_t offset,
+                   size_t count,
+                   bool primitiveRestartEnabled,
+                   IndexRange *outRange) const;
 
-    void invalidateRange(unsigned int offset, unsigned int size);
+    void invalidateRange(size_t offset, size_t size);
     void clear();
 
   private:
-    struct IndexRange
+    struct IndexRangeKey
     {
+        IndexRangeKey();
+        IndexRangeKey(GLenum type, size_t offset, size_t count, bool primitiveRestart);
+
+        bool operator<(const IndexRangeKey &rhs) const;
+
         GLenum type;
-        unsigned int offset;
-        GLsizei count;
-
-        IndexRange();
-        IndexRange(GLenum type, intptr_t offset, GLsizei count);
-
-        bool operator<(const IndexRange& rhs) const;
+        size_t offset;
+        size_t count;
+        bool primitiveRestartEnabled;
     };
 
-    typedef std::map<IndexRange, RangeUI> IndexRangeMap;
+    typedef std::map<IndexRangeKey, IndexRange> IndexRangeMap;
     IndexRangeMap mIndexRangeCache;
 };
 

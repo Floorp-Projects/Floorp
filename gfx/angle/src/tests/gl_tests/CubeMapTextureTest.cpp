@@ -98,7 +98,7 @@ TEST_P(CubeMapTextureTest, RenderToFacesConsecutively)
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     EXPECT_GL_NO_ERROR();
 
-    for (size_t face = 0; face < 6; face++)
+    for (GLenum face = 0; face < 6; face++)
     {
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, tex, 0);
         EXPECT_GL_NO_ERROR();
@@ -112,7 +112,7 @@ TEST_P(CubeMapTextureTest, RenderToFacesConsecutively)
         EXPECT_GL_NO_ERROR();
     }
 
-    for (size_t face = 0; face < 6; face++)
+    for (GLenum face = 0; face < 6; face++)
     {
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, tex, 0);
         EXPECT_GL_NO_ERROR();

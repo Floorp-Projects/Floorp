@@ -337,7 +337,8 @@ GLenum FramebufferD3D::checkStatus() const
     return GL_FRAMEBUFFER_COMPLETE;
 }
 
-const gl::AttachmentList &FramebufferD3D::getColorAttachmentsForRender(const Workarounds &workarounds) const
+const gl::AttachmentList &FramebufferD3D::getColorAttachmentsForRender(
+    const WorkaroundsD3D &workarounds) const
 {
     if (!mInvalidateColorAttachmentCache)
     {

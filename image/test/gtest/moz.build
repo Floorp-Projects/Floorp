@@ -23,6 +23,7 @@ TEST_HARNESS_FILES.gtest += [
     'green.bmp',
     'green.gif',
     'green.ico',
+    'green.icon',
     'green.jpg',
     'green.png',
     'no-frame-delay.gif',

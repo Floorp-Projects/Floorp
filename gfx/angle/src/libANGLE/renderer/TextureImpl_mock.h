@@ -19,7 +19,7 @@ namespace rx
 class MockTextureImpl : public TextureImpl
 {
   public:
-    ~MockTextureImpl() override { destructor(); }
+    virtual ~MockTextureImpl() { destructor(); }
     MOCK_METHOD1(setUsage, void(GLenum));
     MOCK_METHOD8(setImage, gl::Error(GLenum, size_t, GLenum, const gl::Extents &, GLenum, GLenum, const gl::PixelUnpackState &, const uint8_t *));
     MOCK_METHOD7(setSubImage, gl::Error(GLenum, size_t, const gl::Box &, GLenum, GLenum, const gl::PixelUnpackState &, const uint8_t *));
@@ -28,7 +28,8 @@ class MockTextureImpl : public TextureImpl
     MOCK_METHOD5(copyImage, gl::Error(GLenum, size_t, const gl::Rectangle &, GLenum, const gl::Framebuffer *));
     MOCK_METHOD5(copySubImage, gl::Error(GLenum, size_t, const gl::Offset &, const gl::Rectangle &, const gl::Framebuffer *));
     MOCK_METHOD4(setStorage, gl::Error(GLenum, size_t, GLenum, const gl::Extents &));
-    MOCK_METHOD1(generateMipmaps, gl::Error(const gl::SamplerState &));
+    MOCK_METHOD2(setEGLImageTarget, gl::Error(GLenum, egl::Image *));
+    MOCK_METHOD1(generateMipmaps, gl::Error(const gl::TextureState &));
     MOCK_METHOD1(bindTexImage, void(egl::Surface *));
     MOCK_METHOD0(releaseTexImage, void(void));
 

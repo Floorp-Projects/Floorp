@@ -23,15 +23,6 @@
 namespace
 {
 
-enum ShaderVariableType
-{
-    SHADERVAR_UNIFORM,
-    SHADERVAR_VARYING,
-    SHADERVAR_ATTRIBUTE,
-    SHADERVAR_OUTPUTVARIABLE,
-    SHADERVAR_INTERFACEBLOCK
-};
-    
 bool isInitialized = false;
 
 //
@@ -40,36 +31,40 @@ bool isInitialized = false;
 //
 
 template <typename VarT>
-const std::vector<VarT> *GetVariableList(const TCompiler *compiler, ShaderVariableType variableType);
+const std::vector<VarT> *GetVariableList(const TCompiler *compiler);
 
 template <>
-const std::vector<sh::Uniform> *GetVariableList(const TCompiler *compiler, ShaderVariableType)
+const std::vector<sh::Uniform> *GetVariableList(const TCompiler *compiler)
 {
     return &compiler->getUniforms();
 }
 
 template <>
-const std::vector<sh::Varying> *GetVariableList(const TCompiler *compiler, ShaderVariableType)
+const std::vector<sh::Varying> *GetVariableList(const TCompiler *compiler)
 {
     return &compiler->getVaryings();
 }
 
 template <>
-const std::vector<sh::Attribute> *GetVariableList(const TCompiler *compiler, ShaderVariableType variableType)
+const std::vector<sh::Attribute> *GetVariableList(const TCompiler *compiler)
 {
-    return (variableType == SHADERVAR_ATTRIBUTE ?
-        &compiler->getAttributes() :
-        &compiler->getOutputVariables());
+    return &compiler->getAttributes();
 }
 
 template <>
-const std::vector<sh::InterfaceBlock> *GetVariableList(const TCompiler *compiler, ShaderVariableType)
+const std::vector<sh::OutputVariable> *GetVariableList(const TCompiler *compiler)
+{
+    return &compiler->getOutputVariables();
+}
+
+template <>
+const std::vector<sh::InterfaceBlock> *GetVariableList(const TCompiler *compiler)
 {
     return &compiler->getInterfaceBlocks();
 }
 
 template <typename VarT>
-const std::vector<VarT> *GetShaderVariables(const ShHandle handle, ShaderVariableType variableType)
+const std::vector<VarT> *GetShaderVariables(const ShHandle handle)
 {
     if (!handle)
     {
@@ -83,7 +78,7 @@ const std::vector<VarT> *GetShaderVariables(const ShHandle handle, ShaderVariabl
         return NULL;
     }
 
-    return GetVariableList<VarT>(compiler, variableType);
+    return GetVariableList<VarT>(compiler);
 }
 
 TCompiler *GetCompilerFromHandle(ShHandle handle)
@@ -104,7 +99,7 @@ TranslatorHLSL *GetTranslatorHLSLFromHandle(ShHandle handle)
 }
 #endif // ANGLE_ENABLE_HLSL
 
-}  // namespace anonymous
+}  // anonymous namespace
 
 //
 // Driver must call this first, once, before doing any other compiler operations.
@@ -154,6 +149,7 @@ void ShInitBuiltInResources(ShBuiltInResources* resources)
     resources->OES_standard_derivatives = 0;
     resources->OES_EGL_image_external = 0;
     resources->ARB_texture_rectangle = 0;
+    resources->EXT_blend_func_extended      = 0;
     resources->EXT_draw_buffers = 0;
     resources->EXT_frag_depth = 0;
     resources->EXT_shader_texture_lod = 0;
@@ -172,6 +168,9 @@ void ShInitBuiltInResources(ShBuiltInResources* resources)
     resources->MaxFragmentInputVectors = 15;
     resources->MinProgramTexelOffset = -8;
     resources->MaxProgramTexelOffset = 7;
+
+    // Extensions constants.
+    resources->MaxDualSourceDrawBuffers = 0;
 
     // Disable name hashing by default.
     resources->HashFunction = NULL;
@@ -295,27 +294,27 @@ const std::map<std::string, std::string> *ShGetNameHashingMap(
 
 const std::vector<sh::Uniform> *ShGetUniforms(const ShHandle handle)
 {
-    return GetShaderVariables<sh::Uniform>(handle, SHADERVAR_UNIFORM);
+    return GetShaderVariables<sh::Uniform>(handle);
 }
 
 const std::vector<sh::Varying> *ShGetVaryings(const ShHandle handle)
 {
-    return GetShaderVariables<sh::Varying>(handle, SHADERVAR_VARYING);
+    return GetShaderVariables<sh::Varying>(handle);
 }
 
 const std::vector<sh::Attribute> *ShGetAttributes(const ShHandle handle)
 {
-    return GetShaderVariables<sh::Attribute>(handle, SHADERVAR_ATTRIBUTE);
+    return GetShaderVariables<sh::Attribute>(handle);
 }
 
-const std::vector<sh::Attribute> *ShGetOutputVariables(const ShHandle handle)
+const std::vector<sh::OutputVariable> *ShGetOutputVariables(const ShHandle handle)
 {
-    return GetShaderVariables<sh::Attribute>(handle, SHADERVAR_OUTPUTVARIABLE);
+    return GetShaderVariables<sh::OutputVariable>(handle);
 }
 
 const std::vector<sh::InterfaceBlock> *ShGetInterfaceBlocks(const ShHandle handle)
 {
-    return GetShaderVariables<sh::InterfaceBlock>(handle, SHADERVAR_INTERFACEBLOCK);
+    return GetShaderVariables<sh::InterfaceBlock>(handle);
 }
 
 bool ShCheckVariablesWithinPackingLimits(

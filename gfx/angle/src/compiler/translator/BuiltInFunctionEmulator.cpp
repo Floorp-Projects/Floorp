@@ -17,7 +17,7 @@ class BuiltInFunctionEmulator::BuiltInFunctionEmulationMarker : public TIntermTr
     {
     }
 
-    virtual bool visitUnary(Visit visit, TIntermUnary *node)
+    bool visitUnary(Visit visit, TIntermUnary *node) override
     {
         if (visit == PreVisit)
         {
@@ -28,7 +28,7 @@ class BuiltInFunctionEmulator::BuiltInFunctionEmulationMarker : public TIntermTr
         return true;
     }
 
-    virtual bool visitAggregate(Visit visit, TIntermAggregate *node)
+    bool visitAggregate(Visit visit, TIntermAggregate *node) override
     {
         if (visit == PreVisit)
         {

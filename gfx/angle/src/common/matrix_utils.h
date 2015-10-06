@@ -71,15 +71,15 @@ class Matrix
     {
         ASSERT(columns() == m.rows());
 
-        size_t resultRows = rows();
-        size_t resultCols = m.columns();
+        unsigned int resultRows = rows();
+        unsigned int resultCols = m.columns();
         Matrix<T> result(std::vector<T>(resultRows * resultCols), resultRows, resultCols);
-        for (size_t i = 0; i < resultRows; i++)
+        for (unsigned int i = 0; i < resultRows; i++)
         {
-            for (size_t j = 0; j < resultCols; j++)
+            for (unsigned int j = 0; j < resultCols; j++)
             {
                 T tmp = 0.0f;
-                for (size_t k = 0; k < columns(); k++)
+                for (unsigned int k = 0; k < columns(); k++)
                     tmp += at(i, k) * m(k, j);
                 result(i, j) = tmp;
             }
@@ -103,8 +103,8 @@ class Matrix
     Matrix<T> compMult(const Matrix<T> &mat1) const
     {
         Matrix result(std::vector<T>(mElements.size()), size());
-        for (size_t i = 0; i < columns(); i++)
-            for (size_t j = 0; j < rows(); j++)
+        for (unsigned int i = 0; i < columns(); i++)
+            for (unsigned int j = 0; j < rows(); j++)
                 result(i, j) = at(i, j) * mat1(i, j);
 
         return result;
@@ -114,8 +114,8 @@ class Matrix
     {
         unsigned int cols = mat1.columns();
         Matrix result(std::vector<T>(rows() * cols), rows(), cols);
-        for (size_t i = 0; i < rows(); i++)
-            for (size_t j = 0; j < cols; j++)
+        for (unsigned int i = 0; i < rows(); i++)
+            for (unsigned int j = 0; j < cols; j++)
                 result(i, j) = at(i, 0) * mat1(0, j);
 
         return result;
@@ -124,8 +124,8 @@ class Matrix
     Matrix<T> transpose() const
     {
         Matrix result(std::vector<T>(mElements.size()), columns(), rows());
-        for (size_t i = 0; i < columns(); i++)
-            for (size_t j = 0; j < rows(); j++)
+        for (unsigned int i = 0; i < columns(); i++)
+            for (unsigned int j = 0; j < rows(); j++)
                 result(i, j) = at(j, i);
 
         return result;
@@ -330,8 +330,8 @@ class Matrix
         Matrix<T> adjugateMatrix(cof.transpose());
         T det = determinant();
         Matrix<T> result(std::vector<T>(mElements.size()), rows(), columns());
-        for (size_t i = 0; i < rows(); i++)
-            for (size_t j = 0; j < columns(); j++)
+        for (unsigned int i = 0; i < rows(); i++)
+            for (unsigned int j = 0; j < columns(); j++)
                 result(i, j) = det ? adjugateMatrix(i, j) / det : T();
 
         return result;
