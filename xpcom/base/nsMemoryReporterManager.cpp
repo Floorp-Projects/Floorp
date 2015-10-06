@@ -1357,6 +1357,7 @@ nsMemoryReporterManager::nsMemoryReporterManager()
   , mSavedWeakReporters(nullptr)
   , mNextGeneration(1)
   , mPendingProcessesState(nullptr)
+  , mPendingReportersState(nullptr)
 {
 }
 
@@ -1466,8 +1467,11 @@ nsMemoryReporterManager::StartGettingReports()
     }
   }
 #endif
+
+  // This is async.
   GetReportsForThisProcessExtended(s->mHandleReport, s->mHandleReportData,
-                                   s->mAnonymize, parentDMDFile);
+                                   s->mAnonymize, parentDMDFile,
+                                   s->mFinishReporting, s->mFinishReportingData);
 
   nsTArray<ContentParent*> childWeakRefs;
   ContentParent::GetAll(childWeakRefs);
@@ -1499,21 +1503,54 @@ nsMemoryReporterManager::StartGettingReports()
     s->mTimer.swap(timer);
   }
 
-  // The parent's report is done; make note of that, and start
-  // launching child process reports (if any).
-  EndProcessReport(s->mGeneration, true);
   return NS_OK;
+}
+
+void
+nsMemoryReporterManager::DispatchReporter(
+  nsIMemoryReporter* aReporter, bool aIsAsync,
+  nsIHandleReportCallback* aHandleReport,
+  nsISupports* aHandleReportData,
+  bool aAnonymize)
+{
+  MOZ_ASSERT(mPendingReportersState);
+
+  // Grab refs to everything used in the lambda function.
+  nsRefPtr<nsMemoryReporterManager> self = this;
+  nsCOMPtr<nsIMemoryReporter> reporter = aReporter;
+  nsCOMPtr<nsIHandleReportCallback> handleReport = aHandleReport;
+  nsCOMPtr<nsISupports> handleReportData = aHandleReportData;
+
+  nsCOMPtr<nsIRunnable> event = NS_NewRunnableFunction(
+    [self, reporter, aIsAsync, handleReport, handleReportData, aAnonymize] () {
+      reporter->CollectReports(handleReport,
+                               handleReportData,
+                               aAnonymize);
+      if (!aIsAsync) {
+        self->EndReport();
+      }
+    });
+
+  NS_DispatchToMainThread(event);
+  mPendingReportersState->mReportsPending++;
 }
 
 NS_IMETHODIMP
 nsMemoryReporterManager::GetReportsForThisProcessExtended(
   nsIHandleReportCallback* aHandleReport, nsISupports* aHandleReportData,
-  bool aAnonymize, FILE* aDMDFile)
+  bool aAnonymize, FILE* aDMDFile,
+  nsIFinishReportingCallback* aFinishReporting,
+  nsISupports* aFinishReportingData)
 {
   // Memory reporters are not necessarily threadsafe, so this function must
   // be called from the main thread.
   if (!NS_IsMainThread()) {
     MOZ_CRASH();
+  }
+
+  if (NS_WARN_IF(mPendingReportersState)) {
+    // Report is already in progress.
+    return NS_ERROR_IN_PROGRESS;
   }
 
 #ifdef MOZ_DMD
@@ -1526,26 +1563,47 @@ nsMemoryReporterManager::GetReportsForThisProcessExtended(
   MOZ_ASSERT(!aDMDFile);
 #endif
 
-  nsCOMArray<nsIMemoryReporter> allReporters;
+  mPendingReportersState = new PendingReportersState(
+      aFinishReporting, aFinishReportingData, aDMDFile);
+
   {
     mozilla::MutexAutoLock autoLock(mMutex);
+
     for (auto iter = mStrongReporters->Iter(); !iter.Done(); iter.Next()) {
-      allReporters.AppendElement(iter.Key());
+      DispatchReporter(iter.Key(), iter.Data(),
+                       aHandleReport, aHandleReportData, aAnonymize);
     }
+
     for (auto iter = mWeakReporters->Iter(); !iter.Done(); iter.Next()) {
-      allReporters.AppendElement(iter.Key());
+      nsCOMPtr<nsIMemoryReporter> reporter = iter.Key();
+      DispatchReporter(reporter, iter.Data(),
+                       aHandleReport, aHandleReportData, aAnonymize);
     }
-  }
-  for (uint32_t i = 0; i < allReporters.Length(); i++) {
-    allReporters[i]->CollectReports(aHandleReport, aHandleReportData,
-                                    aAnonymize);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMemoryReporterManager::EndReport()
+{
+  if (--mPendingReportersState->mReportsPending == 0) {
 #ifdef MOZ_DMD
-  if (aDMDFile) {
-    return nsMemoryInfoDumper::DumpDMDToFile(aDMDFile);
-  }
+    if (mPendingReportersState->mDMDFile) {
+      nsMemoryInfoDumper::DumpDMDToFile(mPendingReportersState->mDMDFile);
+    }
 #endif
+    if (mPendingProcessesState) {
+      // This is the parent process.
+      EndProcessReport(mPendingProcessesState->mGeneration, true);
+    } else {
+      mPendingReportersState->mFinishReporting->Callback(
+          mPendingReportersState->mFinishReportingData);
+    }
+
+    delete mPendingReportersState;
+    mPendingReportersState = nullptr;
+  }
 
   return NS_OK;
 }

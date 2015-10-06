@@ -188,6 +188,11 @@ private:
   nsresult StartGettingReports();
   nsresult FinishReporting();
 
+  void DispatchReporter(nsIMemoryReporter* aReporter, bool aIsAsync,
+                        nsIHandleReportCallback* aHandleReport,
+                        nsISupports* aHandleReportData,
+                        bool aAnonymize);
+
   static void TimeoutCallback(nsITimer* aTimer, void* aData);
   // Note: this timeout needs to be long enough to allow for the
   // possibility of DMD reports and/or running on a low-end phone.
@@ -205,6 +210,9 @@ private:
 
   uint32_t mNextGeneration;
 
+  // Used to keep track of state of which processes are currently running and
+  // waiting to run memory reports. Holds references to parameters needed when
+  // requesting a memory report and finishing reporting.
   struct PendingProcessesState
   {
     uint32_t                             mGeneration;
@@ -230,10 +238,39 @@ private:
                           const nsAString& aDMDDumpIdent);
   };
 
+  // Used to keep track of the state of the asynchronously run memory
+  // reporters. The callback and file handle used when all memory reporters
+  // have finished are also stored here.
+  struct PendingReportersState
+  {
+    // Number of memory reporters currently running.
+    uint32_t mReportsPending;
+
+    // Callback for when all memory reporters have completed.
+    nsCOMPtr<nsIFinishReportingCallback> mFinishReporting;
+    nsCOMPtr<nsISupports> mFinishReportingData;
+
+    // File handle to write a DMD report to if requested.
+    FILE* mDMDFile;
+
+    PendingReportersState(nsIFinishReportingCallback* aFinishReporting,
+                        nsISupports* aFinishReportingData,
+                        FILE* aDMDFile)
+      : mReportsPending(0)
+      , mFinishReporting(aFinishReporting)
+      , mFinishReportingData(aFinishReportingData)
+      , mDMDFile(aDMDFile)
+    {
+    }
+  };
+
   // When this is non-null, a request is in flight.  Note: We use manual
   // new/delete for this because its lifetime doesn't match block scope or
   // anything like that.
   PendingProcessesState* mPendingProcessesState;
+
+  // This is reinitialized each time a call to GetReports is initiated.
+  PendingReportersState* mPendingReportersState;
 
   PendingProcessesState* GetStateForGeneration(uint32_t aGeneration);
   static bool StartChildReport(mozilla::dom::ContentParent* aChild,
