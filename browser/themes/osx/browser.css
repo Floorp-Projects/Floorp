@@ -98,12 +98,6 @@
   -moz-appearance: -moz-window-titlebar;
 }
 
-@media (-moz-mac-yosemite-theme) {
-  #main-window:not(:-moz-lwtheme) > #titlebar {
-    -moz-appearance: -moz-mac-vibrancy-light;
-  }
-}
-
 #main-window:not([tabsintitlebar]) > #titlebar {
   height: 22px; /* The native titlebar on OS X is 22px tall. */
 }
