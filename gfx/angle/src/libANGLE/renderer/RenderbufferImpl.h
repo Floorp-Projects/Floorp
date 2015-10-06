@@ -14,6 +14,11 @@
 #include "libANGLE/Error.h"
 #include "libANGLE/FramebufferAttachment.h"
 
+namespace egl
+{
+class Image;
+}
+
 namespace rx
 {
 
@@ -25,6 +30,7 @@ class RenderbufferImpl : public FramebufferAttachmentObjectImpl
 
     virtual gl::Error setStorage(GLenum internalformat, size_t width, size_t height) = 0;
     virtual gl::Error setStorageMultisample(size_t samples, GLenum internalformat, size_t width, size_t height) = 0;
+    virtual gl::Error setStorageEGLImageTarget(egl::Image *image) = 0;
 };
 
 }

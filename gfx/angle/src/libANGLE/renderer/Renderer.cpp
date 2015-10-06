@@ -14,10 +14,7 @@
 
 namespace rx
 {
-
-Renderer::Renderer()
-    : mCapsInitialized(false),
-      mWorkaroundsInitialized(false)
+Renderer::Renderer() : mCapsInitialized(false)
 {
 }
 
@@ -60,17 +57,6 @@ const gl::Limitations &Renderer::getRendererLimitations() const
     ensureCapsInitialized();
 
     return mLimitations;
-}
-
-const Workarounds &Renderer::getWorkarounds() const
-{
-    if (!mWorkaroundsInitialized)
-    {
-        mWorkarounds = generateWorkarounds();
-        mWorkaroundsInitialized = true;
-    }
-
-    return mWorkarounds;
 }
 
 }

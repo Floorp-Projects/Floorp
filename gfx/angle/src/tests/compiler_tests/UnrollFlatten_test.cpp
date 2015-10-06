@@ -4,7 +4,8 @@
 // found in the LICENSE file.
 //
 // UnrollFlatten_test.cpp:
-//   Test for the outputting of [[unroll]] and [[flatten]] for the D3D compiler
+//   Test for the outputting of [[unroll]] and [[flatten]] for the D3D compiler.
+//   This test can only be enabled when HLSL support is enabled.
 //
 
 #include "angle_gl.h"
@@ -32,7 +33,7 @@ class UnrollFlattenTest : public testing::Test
             FAIL() << "Shader compilation failed " << infoLog;
         }
         // Ignore the beginning of the shader to avoid the definitions of LOOP and FLATTEN
-        mCurrentPosition = mTranslatedSource.find("GL_USES_FRAG_COLOR");
+        mCurrentPosition = static_cast<int>(mTranslatedSource.find("GL_USES_FRAG_COLOR"));
     }
 
     void expect(const char *patterns[], size_t count)
@@ -59,7 +60,7 @@ class UnrollFlattenTest : public testing::Test
                 }
             }
             mExpectationList += " - " + std::string(pattern);
-            mCurrentPosition = position + 1;
+            mCurrentPosition = static_cast<int>(position) + 1;
         }
     }
 
@@ -104,7 +105,7 @@ TEST_F(UnrollFlattenTest, NoGradient)
     // 2 - no FLATTEN because does not contain discont loop
     // 3 - shouldn't get a Lod0 version generated
     // 4 - no LOOP because discont, and also no gradient
-    // 5 - no FLATTEN because does not contain discont loop
+    // 5 - no FLATTEN because does not contain loop with a gradient
     // 6 - call non-Lod0 version
     // 7 - no FLATTEN
     const char *expectations[] =
@@ -145,16 +146,16 @@ TEST_F(UnrollFlattenTest, GradientNotInDiscont)
     // 2 - no Lod0 version generated
     // 3 - shouldn't get a Lod0 version generated (not in discont loop)
     // 4 - should have LOOP because it contains a gradient operation (even if Lod0)
-    // 5 - no FLATTEN because doesn't contain discont loop
+    // 5 - no FLATTEN because doesn't contain loop with a gradient
     // 6 - call non-Lod0 version
     // 7 - call non-Lod0 version
-    // 8 - no FLATTEN
+    // 8 - FLATTEN because it contains a loop with a gradient
     compile(shaderString);
     const char *expectations[] =
     {
         "fun(", "texture2D(",
         "fun2(", "LOOP", "for", "if", "fun(", "texture2D(",
-        "main(", "if", "fun2("
+        "main(", "FLATTEN", "if", "fun2("
     };
     expect(expectations, ArraySize(expectations));
 }
@@ -187,10 +188,10 @@ TEST_F(UnrollFlattenTest, GradientInDiscont)
     // 2 - will get the Lod0 if in funLod0
     // 3 - shouldn't get a Lod0 version generated (not in discont loop)
     // 4 - should have LOOP because it contains a gradient operation (even if Lod0)
-    // 5 - no FLATTEN because doesn't contain discont loop
+    // 5 - no FLATTEN because doesn't contain a loop with a gradient
     // 6 - call Lod0 version
     // 7 - call Lod0 version
-    // 8 - should have a FLATTEN because has a discont loop and gradient
+    // 8 - FLATTEN because it contains a loop with a gradient
     compile(shaderString);
     const char *expectations[] =
     {

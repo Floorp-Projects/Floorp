@@ -15,7 +15,6 @@ enum TOperator
     EOpNull,            // if in a node, should only mean a node is still being built
     EOpSequence,        // denotes a list of statements, or parameters, etc.
     EOpFunctionCall,
-    EOpInternalFunctionCall, // Call to an internal helper function
     EOpFunction,        // For function definition
     EOpParameters,      // an aggregate listing the parameters to a function
 

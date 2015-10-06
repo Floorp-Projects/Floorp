@@ -20,7 +20,7 @@
 #include "libANGLE/renderer/FramebufferImpl.h"
 #include "libANGLE/renderer/ImplFactory.h"
 #include "libANGLE/renderer/RenderbufferImpl.h"
-#include "libANGLE/renderer/Workarounds.h"
+#include "libANGLE/renderer/SurfaceImpl.h"
 
 namespace gl
 {
@@ -36,6 +36,14 @@ void DetachMatchingAttachment(FramebufferAttachment *attachment, GLenum matchTyp
         attachment->detach();
     }
 }
+}
+
+Framebuffer::Data::Data()
+    : mColorAttachments(1),
+      mDrawBufferStates(1, GL_NONE),
+      mReadBufferState(GL_COLOR_ATTACHMENT0_EXT)
+{
+    mDrawBufferStates[0] = GL_COLOR_ATTACHMENT0_EXT;
 }
 
 Framebuffer::Data::Data(const Caps &caps)
@@ -84,7 +92,7 @@ const FramebufferAttachment *Framebuffer::Data::getDepthOrStencilAttachment() co
     return nullptr;
 }
 
-const FramebufferAttachment *Framebuffer::Data::getColorAttachment(unsigned int colorAttachment) const
+const FramebufferAttachment *Framebuffer::Data::getColorAttachment(size_t colorAttachment) const
 {
     ASSERT(colorAttachment < mColorAttachments.size());
     return mColorAttachments[colorAttachment].isAttached() ?
@@ -117,18 +125,15 @@ const FramebufferAttachment *Framebuffer::Data::getDepthStencilAttachment() cons
 }
 
 Framebuffer::Framebuffer(const Caps &caps, rx::ImplFactory *factory, GLuint id)
-    : mData(caps),
-      mImpl(nullptr),
-      mId(id)
+    : mData(caps), mImpl(factory->createFramebuffer(mData)), mId(id)
 {
-    if (mId == 0)
-    {
-        mImpl = factory->createDefaultFramebuffer(mData);
-    }
-    else
-    {
-        mImpl = factory->createFramebuffer(mData);
-    }
+    ASSERT(mId != 0);
+    ASSERT(mImpl != nullptr);
+}
+
+Framebuffer::Framebuffer(rx::SurfaceImpl *surface)
+    : mData(), mImpl(surface->createDefaultFramebuffer(mData)), mId(0)
+{
     ASSERT(mImpl != nullptr);
 }
 
@@ -158,7 +163,7 @@ void Framebuffer::detachResourceById(GLenum resourceType, GLuint resourceId)
     DetachMatchingAttachment(&mData.mStencilAttachment, resourceType, resourceId);
 }
 
-const FramebufferAttachment *Framebuffer::getColorbuffer(unsigned int colorAttachment) const
+const FramebufferAttachment *Framebuffer::getColorbuffer(size_t colorAttachment) const
 {
     return mData.getColorAttachment(colorAttachment);
 }
@@ -258,7 +263,7 @@ void Framebuffer::setReadBuffer(GLenum buffer)
     mImpl->setReadBuffer(buffer);
 }
 
-bool Framebuffer::isEnabledColorAttachment(unsigned int colorAttachment) const
+bool Framebuffer::isEnabledColorAttachment(size_t colorAttachment) const
 {
     ASSERT(colorAttachment < mData.mColorAttachments.size());
     return (mData.mColorAttachments[colorAttachment].isAttached() &&
@@ -269,13 +274,18 @@ bool Framebuffer::hasEnabledColorAttachment() const
 {
     for (size_t colorAttachment = 0; colorAttachment < mData.mColorAttachments.size(); ++colorAttachment)
     {
-        if (isEnabledColorAttachment(colorAttachment))
+        if (isEnabledColorAttachment(static_cast<unsigned int>(colorAttachment)))
         {
             return true;
         }
     }
 
     return false;
+}
+
+size_t Framebuffer::getNumColorBuffers() const
+{
+    return mData.mColorAttachments.size();
 }
 
 bool Framebuffer::hasStencil() const
@@ -287,7 +297,7 @@ bool Framebuffer::usingExtendedDrawBuffers() const
 {
     for (size_t colorAttachment = 1; colorAttachment < mData.mColorAttachments.size(); ++colorAttachment)
     {
-        if (isEnabledColorAttachment(colorAttachment))
+        if (isEnabledColorAttachment(static_cast<unsigned int>(colorAttachment)))
         {
             return true;
         }
@@ -512,29 +522,57 @@ Error Framebuffer::invalidateSub(size_t count, const GLenum *attachments, const 
     return mImpl->invalidateSub(count, attachments, area);
 }
 
-Error Framebuffer::clear(const gl::Data &data, GLbitfield mask)
+Error Framebuffer::clear(Context *context, GLbitfield mask)
 {
-    return mImpl->clear(data, mask);
+    // Sync the clear state
+    context->syncRendererState(context->getState().clearStateBitMask());
+
+    return mImpl->clear(context->getData(), mask);
 }
 
-Error Framebuffer::clearBufferfv(const State &state, GLenum buffer, GLint drawbuffer, const GLfloat *values)
+Error Framebuffer::clearBufferfv(Context *context,
+                                 GLenum buffer,
+                                 GLint drawbuffer,
+                                 const GLfloat *values)
 {
-    return mImpl->clearBufferfv(state, buffer, drawbuffer, values);
+    // Sync the clear state
+    context->syncRendererState(context->getState().clearStateBitMask());
+
+    return mImpl->clearBufferfv(context->getState(), buffer, drawbuffer, values);
 }
 
-Error Framebuffer::clearBufferuiv(const State &state, GLenum buffer, GLint drawbuffer, const GLuint *values)
+Error Framebuffer::clearBufferuiv(Context *context,
+                                  GLenum buffer,
+                                  GLint drawbuffer,
+                                  const GLuint *values)
 {
-    return mImpl->clearBufferuiv(state, buffer, drawbuffer, values);
+    // Sync the clear state
+    context->syncRendererState(context->getState().clearStateBitMask());
+
+    return mImpl->clearBufferuiv(context->getState(), buffer, drawbuffer, values);
 }
 
-Error Framebuffer::clearBufferiv(const State &state, GLenum buffer, GLint drawbuffer, const GLint *values)
+Error Framebuffer::clearBufferiv(Context *context,
+                                 GLenum buffer,
+                                 GLint drawbuffer,
+                                 const GLint *values)
 {
-    return mImpl->clearBufferiv(state, buffer, drawbuffer, values);
+    // Sync the clear state
+    context->syncRendererState(context->getState().clearStateBitMask());
+
+    return mImpl->clearBufferiv(context->getState(), buffer, drawbuffer, values);
 }
 
-Error Framebuffer::clearBufferfi(const State &state, GLenum buffer, GLint drawbuffer, GLfloat depth, GLint stencil)
+Error Framebuffer::clearBufferfi(Context *context,
+                                 GLenum buffer,
+                                 GLint drawbuffer,
+                                 GLfloat depth,
+                                 GLint stencil)
 {
-    return mImpl->clearBufferfi(state, buffer, drawbuffer, depth, stencil);
+    // Sync the clear state
+    context->syncRendererState(context->getState().clearStateBitMask());
+
+    return mImpl->clearBufferfi(context->getState(), buffer, drawbuffer, depth, stencil);
 }
 
 GLenum Framebuffer::getImplementationColorReadFormat() const
@@ -547,8 +585,17 @@ GLenum Framebuffer::getImplementationColorReadType() const
     return mImpl->getImplementationColorReadType();
 }
 
-Error Framebuffer::readPixels(const gl::State &state, const gl::Rectangle &area, GLenum format, GLenum type, GLvoid *pixels) const
+Error Framebuffer::readPixels(Context *context,
+                              const gl::Rectangle &area,
+                              GLenum format,
+                              GLenum type,
+                              GLvoid *pixels) const
 {
+    const State &state = context->getState();
+
+    // Sync pack state
+    context->syncRendererState(state.packStateBitMask());
+
     Error error = mImpl->readPixels(state, area, format, type, pixels);
     if (error.isError())
     {

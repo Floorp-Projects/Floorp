@@ -9,19 +9,25 @@
 #include "libANGLE/renderer/gl/wgl/WindowSurfaceWGL.h"
 
 #include "common/debug.h"
+#include "libANGLE/renderer/gl/RendererGL.h"
 #include "libANGLE/renderer/gl/wgl/FunctionsWGL.h"
 #include "libANGLE/renderer/gl/wgl/wgl_utils.h"
 
 namespace rx
 {
 
-WindowSurfaceWGL::WindowSurfaceWGL(EGLNativeWindowType window, int pixelFormat, HGLRC wglContext, const FunctionsWGL *functions)
-    : SurfaceGL(),
+WindowSurfaceWGL::WindowSurfaceWGL(RendererGL *renderer,
+                                   EGLNativeWindowType window,
+                                   int pixelFormat,
+                                   HGLRC wglContext,
+                                   const FunctionsWGL *functions)
+    : SurfaceGL(renderer),
       mPixelFormat(pixelFormat),
       mWGLContext(wglContext),
       mWindow(window),
       mDeviceContext(nullptr),
-      mFunctionsWGL(functions)
+      mFunctionsWGL(functions),
+      mSwapBehavior(0)
 {
 }
 
@@ -59,6 +65,21 @@ egl::Error WindowSurfaceWGL::initialize()
     else if (windowPixelFormat != mPixelFormat)
     {
         return egl::Error(EGL_NOT_INITIALIZED, "Pixel format of the NativeWindow and NativeDisplayType must match.");
+    }
+
+    // Check for the swap behavior of this pixel format
+    switch (
+        wgl::QueryWGLFormatAttrib(mDeviceContext, mPixelFormat, WGL_SWAP_METHOD_ARB, mFunctionsWGL))
+    {
+        case WGL_SWAP_COPY_ARB:
+            mSwapBehavior = EGL_BUFFER_PRESERVED;
+            break;
+
+        case WGL_SWAP_EXCHANGE_ARB:
+        case WGL_SWAP_UNDEFINED_ARB:
+        default:
+            mSwapBehavior = EGL_BUFFER_DESTROYED;
+            break;
     }
 
     return egl::Error(EGL_SUCCESS);
@@ -143,6 +164,11 @@ EGLint WindowSurfaceWGL::isPostSubBufferSupported() const
     // PostSubBuffer extension not exposed on WGL.
     UNIMPLEMENTED();
     return EGL_FALSE;
+}
+
+EGLint WindowSurfaceWGL::getSwapBehavior() const
+{
+    return mSwapBehavior;
 }
 
 }

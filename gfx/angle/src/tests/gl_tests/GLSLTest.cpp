@@ -827,7 +827,7 @@ TEST_P(GLSLTest, FixedShaderLength)
     const std::string source = "void main() { gl_FragColor = vec4(0, 0, 0, 0); }" + appendGarbage;
     const char *sourceArray[1] = { source.c_str() };
     GLint lengths[1] = { static_cast<GLint>(source.length() - appendGarbage.length()) };
-    glShaderSource(shader, ArraySize(sourceArray), sourceArray, lengths);
+    glShaderSource(shader, static_cast<GLsizei>(ArraySize(sourceArray)), sourceArray, lengths);
     glCompileShader(shader);
 
     GLint compileResult;
@@ -842,7 +842,7 @@ TEST_P(GLSLTest, NegativeShaderLength)
 
     const char *sourceArray[1] = { "void main() { gl_FragColor = vec4(0, 0, 0, 0); }" };
     GLint lengths[1] = { -10 };
-    glShaderSource(shader, ArraySize(sourceArray), sourceArray, lengths);
+    glShaderSource(shader, static_cast<GLsizei>(ArraySize(sourceArray)), sourceArray, lengths);
     glCompileShader(shader);
 
     GLint compileResult;
@@ -871,7 +871,7 @@ TEST_P(GLSLTest, MixedShaderLengths)
     };
     ASSERT_EQ(ArraySize(sourceArray), ArraySize(lengths));
 
-    glShaderSource(shader, ArraySize(sourceArray), sourceArray, lengths);
+    glShaderSource(shader, static_cast<GLsizei>(ArraySize(sourceArray)), sourceArray, lengths);
     glCompileShader(shader);
 
     GLint compileResult;
@@ -902,7 +902,7 @@ TEST_P(GLSLTest, ZeroShaderLength)
     };
     ASSERT_EQ(ArraySize(sourceArray), ArraySize(lengths));
 
-    glShaderSource(shader, ArraySize(sourceArray), sourceArray, lengths);
+    glShaderSource(shader, static_cast<GLsizei>(ArraySize(sourceArray)), sourceArray, lengths);
     glCompileShader(shader);
 
     GLint compileResult;
@@ -1057,8 +1057,239 @@ TEST_P(GLSLTest, DISABLED_PowOfSmallConstant)
     EXPECT_GL_NO_ERROR();
 }
 
+// Test that fragment shaders which contain non-constant loop indexers and compiled for FL9_3 and
+// below
+// fail with a specific error message.
+// Additionally test that the same fragment shader compiles successfully with feature levels greater
+// than FL9_3.
+TEST_P(GLSLTest, LoopIndexingValidation)
+{
+    const std::string fragmentShaderSource = SHADER_SOURCE
+    (
+        precision mediump float;
+
+        uniform float loopMax;
+
+        void main()
+        {
+            gl_FragColor = vec4(1, 0, 0, 1);
+            for (float l = 0.0; l < loopMax; l++)
+            {
+                if (loopMax > 3.0)
+                {
+                    gl_FragColor.a += 0.1;
+                }
+            }
+        }
+    );
+
+    GLuint shader = glCreateShader(GL_FRAGMENT_SHADER);
+
+    const char *sourceArray[1] = {fragmentShaderSource.c_str()};
+    glShaderSource(shader, 1, sourceArray, nullptr);
+    glCompileShader(shader);
+
+    GLint compileResult;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &compileResult);
+
+    // If the test is configured to run limited to Feature Level 9_3, then it is
+    // assumed that shader compilation will fail with an expected error message containing
+    // "Loop index cannot be compared with non-constant expression"
+    if ((GetParam() == ES2_D3D11_FL9_3() || GetParam() == ES2_D3D9()))
+    {
+        if (compileResult != 0)
+        {
+            FAIL() << "Shader compilation succeeded, expected failure";
+        }
+        else
+        {
+            GLint infoLogLength;
+            glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLength);
+
+            std::string infoLog;
+            infoLog.resize(infoLogLength);
+            glGetShaderInfoLog(shader, static_cast<GLsizei>(infoLog.size()), NULL, &infoLog[0]);
+
+            if (infoLog.find("Loop index cannot be compared with non-constant expression") ==
+                std::string::npos)
+            {
+                FAIL() << "Shader compilation failed with unexpected error message";
+            }
+        }
+    }
+    else
+    {
+        EXPECT_NE(0, compileResult);
+    }
+
+    if (shader != 0)
+    {
+        glDeleteShader(shader);
+    }
+}
+
+// Tests that the maximum uniforms count returned from querying GL_MAX_VERTEX_UNIFORM_VECTORS
+// can actually be used.
+TEST_P(GLSLTest, VerifyMaxVertexUniformVectors)
+{
+    const std::string &fragmentShaderSource = SHADER_SOURCE
+    (
+        precision mediump float;
+        void main()
+        {
+            gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+        }
+    );
+
+    int maxUniforms = 10000;
+    glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxUniforms);
+    EXPECT_GL_NO_ERROR();
+    std::cout << "Validating GL_MAX_VERTEX_UNIFORM_VECTORS = " << maxUniforms << std::endl;
+
+    std::stringstream vshaderSource;
+    vshaderSource << "precision mediump float;\n";
+
+    for (int i = 0; i < maxUniforms; i++)
+    {
+        vshaderSource << "uniform vec4 v" << i << ";\n";
+    }
+
+    vshaderSource << "void main()\n{\n";
+
+    for (int i = 0; i < maxUniforms; i++)
+    {
+        vshaderSource << "    gl_Position +=  v" << i << ";\n";
+    }
+
+    vshaderSource << "}\n";
+
+    GLuint program = CompileProgram(vshaderSource.str(), fragmentShaderSource);
+    EXPECT_NE(0u, program);
+}
+
+// Tests that the maximum uniforms count + 1 from querying GL_MAX_VERTEX_UNIFORM_VECTORS
+// fails shader compilation.
+TEST_P(GLSLTest, VerifyMaxVertexUniformVectorsExceeded)
+{
+    const std::string &fragmentShaderSource = SHADER_SOURCE
+    (
+        precision mediump float;
+        void main()
+        {
+            gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+        }
+    );
+
+    int maxUniforms = 10000;
+    glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxUniforms);
+    EXPECT_GL_NO_ERROR();
+    // Add 1 more to exceed the reported max count
+    maxUniforms += 1;
+    std::cout << "Validating GL_MAX_VERTEX_UNIFORM_VECTORS + 1 = " << maxUniforms << std::endl;
+
+    std::stringstream vshaderSource;
+    vshaderSource << "precision mediump float;\n";
+
+    for (int i = 0; i < maxUniforms; i++)
+    {
+        vshaderSource << "uniform vec4 v" << i << ";\n";
+    }
+
+    vshaderSource << "void main()\n{\n";
+
+    for (int i = 0; i < maxUniforms; i++)
+    {
+        vshaderSource << "    gl_Position +=  v" << i << ";\n";
+    }
+
+    vshaderSource << "}\n";
+
+    GLuint program = CompileProgram(vshaderSource.str(), fragmentShaderSource);
+    EXPECT_EQ(0u, program);
+}
+
+// Tests that the maximum uniforms count returned from querying GL_MAX_FRAGMENT_UNIFORM_VECTORS
+// can actually be used.
+TEST_P(GLSLTest, VerifyMaxFragmentUniformVectorsFragment)
+{
+    const std::string &vertexShaderSource = SHADER_SOURCE
+    (
+        precision mediump float;
+        void main()
+        {
+            gl_Position = vec4(0.0);
+        }
+    );
+
+    int maxUniforms = 10000;
+    glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_VECTORS, &maxUniforms);
+    EXPECT_GL_NO_ERROR();
+    std::cout << "Validating GL_MAX_FRAGMENT_UNIFORM_VECTORS = " << maxUniforms << std::endl;
+
+    std::stringstream fshaderSource;
+    fshaderSource << "precision mediump float;\n";
+
+    for (int i = 0; i < maxUniforms; i++)
+    {
+        fshaderSource << "uniform vec4 v" << i << ";\n";
+    }
+
+    fshaderSource << "void main()\n{\n";
+
+    for (int i = 0; i < maxUniforms; i++)
+    {
+        fshaderSource << "    gl_FragColor +=  v" << i << ";\n";
+    }
+
+    fshaderSource << "}\n";
+
+    GLuint program = CompileProgram(vertexShaderSource, fshaderSource.str());
+    EXPECT_NE(0u, program);
+}
+
+// Tests that the maximum uniforms count + 1 from querying GL_MAX_FRAGMENT_UNIFORM_VECTORS
+// fails shader compilation.
+TEST_P(GLSLTest, VerifyMaxFragmentUniformVectorsFragmentExceeded)
+{
+    const std::string &vertexShaderSource = SHADER_SOURCE
+    (
+        precision mediump float;
+        void main()
+        {
+            gl_Position = vec4(0.0);
+        }
+    );
+
+    int maxUniforms = 10000;
+    glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_VECTORS, &maxUniforms);
+    EXPECT_GL_NO_ERROR();
+    // Add 1 more to exceed the reported max count
+    maxUniforms += 1;
+    std::cout << "Validating GL_MAX_FRAGMENT_UNIFORM_VECTORS + 1 = " << maxUniforms << std::endl;
+
+    std::stringstream fshaderSource;
+    fshaderSource << "precision mediump float;\n";
+
+    for (int i = 0; i < maxUniforms; i++)
+    {
+        fshaderSource << "uniform vec4 v" << i << ";\n";
+    }
+
+    fshaderSource << "void main()\n{\n";
+
+    for (int i = 0; i < maxUniforms; i++)
+    {
+        fshaderSource << "    gl_FragColor +=  v" << i << ";\n";
+    }
+
+    fshaderSource << "}\n";
+
+    GLuint program = CompileProgram(vertexShaderSource, fshaderSource.str());
+    EXPECT_EQ(0u, program);
+}
+
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
-ANGLE_INSTANTIATE_TEST(GLSLTest, ES2_D3D9(), ES2_D3D11());
+ANGLE_INSTANTIATE_TEST(GLSLTest, ES2_D3D9(), ES2_D3D11(), ES2_D3D11_FL9_3());
 
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
 ANGLE_INSTANTIATE_TEST(GLSLTest_ES3, ES3_D3D11());

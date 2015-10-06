@@ -26,6 +26,8 @@ struct InterfaceBlock;
 
 struct COMPILER_EXPORT BlockMemberInfo
 {
+    BlockMemberInfo() : offset(-1), arrayStride(-1), matrixStride(-1), isRowMajorMatrix(false) {}
+
     BlockMemberInfo(int offset, int arrayStride, int matrixStride, bool isRowMajorMatrix)
         : offset(offset),
           arrayStride(arrayStride),
@@ -81,12 +83,20 @@ class COMPILER_EXPORT Std140BlockEncoder : public BlockLayoutEncoder
   public:
     Std140BlockEncoder();
 
-    virtual void enterAggregateType();
-    virtual void exitAggregateType();
+    void enterAggregateType() override;
+    void exitAggregateType() override;
 
   protected:
-    virtual void getBlockLayoutInfo(GLenum type, unsigned int arraySize, bool isRowMajorMatrix, int *arrayStrideOut, int *matrixStrideOut);
-    virtual void advanceOffset(GLenum type, unsigned int arraySize, bool isRowMajorMatrix, int arrayStride, int matrixStride);
+    void getBlockLayoutInfo(GLenum type,
+                            unsigned int arraySize,
+                            bool isRowMajorMatrix,
+                            int *arrayStrideOut,
+                            int *matrixStrideOut) override;
+    void advanceOffset(GLenum type,
+                       unsigned int arraySize,
+                       bool isRowMajorMatrix,
+                       int arrayStride,
+                       int matrixStride) override;
 };
 
 }

@@ -96,6 +96,10 @@ std::ostream &operator<<(std::ostream& stream, const PlatformParameters &pp)
         // default
         break;
 
+      case EGL_PLATFORM_ANGLE_DEVICE_TYPE_NULL_ANGLE:
+          stream << "_NULL";
+          break;
+
       case EGL_PLATFORM_ANGLE_DEVICE_TYPE_REFERENCE_ANGLE:
         stream << "_REFERENCE";
         break;

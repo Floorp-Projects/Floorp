@@ -139,6 +139,8 @@ Extensions::Extensions()
       eglImage(false),
       eglImageExternal(false),
       eglImageExternalEssl3(false),
+      unpackSubimage(false),
+      packSubimage(false),
       colorBufferFloat(false)
 {
 }
@@ -195,6 +197,8 @@ std::vector<std::string> Extensions::getStrings() const
     InsertExtensionString("GL_OES_EGL_image",                  eglImage,                 &extensionStrings);
     InsertExtensionString("GL_OES_EGL_image_external",         eglImageExternal,         &extensionStrings);
     InsertExtensionString("GL_OES_EGL_image_external_essl3",   eglImageExternalEssl3,    &extensionStrings);
+    InsertExtensionString("GL_EXT_unpack_subimage",            unpackSubimage,           &extensionStrings);
+    InsertExtensionString("GL_NV_pack_subimage",               packSubimage,             &extensionStrings);
     InsertExtensionString("GL_EXT_color_buffer_float",         colorBufferFloat,         &extensionStrings);
     // clang-format on
 
@@ -204,7 +208,10 @@ std::vector<std::string> Extensions::getStrings() const
 Limitations::Limitations()
     : noFrontFacingSupport(false),
       noSampleAlphaToCoverageSupport(false),
-      attributeZeroRequiresZeroDivisorInEXT(false)
+      attributeZeroRequiresZeroDivisorInEXT(false),
+      noSeparateStencilRefsAndMasks(false),
+      shadersRequireIndexedLoopValidation(false),
+      noSimultaneousConstantColorAndAlphaBlendFunc(false)
 {
 }
 
@@ -522,7 +529,8 @@ DisplayExtensions::DisplayExtensions()
       glTexture2DImage(false),
       glTextureCubemapImage(false),
       glTexture3DImage(false),
-      glRenderbufferImage(false)
+      glRenderbufferImage(false),
+      getAllProcAddresses(false)
 {
 }
 
@@ -548,6 +556,7 @@ std::vector<std::string> DisplayExtensions::getStrings() const
     InsertExtensionString("EGL_KHR_gl_texture_cubemap_image",              glTextureCubemapImage,          &extensionStrings);
     InsertExtensionString("EGL_KHR_gl_texture_3D_image",                   glTexture3DImage,               &extensionStrings);
     InsertExtensionString("EGL_KHR_gl_renderbuffer_image",                 glRenderbufferImage,            &extensionStrings);
+    InsertExtensionString("EGL_KHR_get_all_proc_addresses",                getAllProcAddresses,            &extensionStrings);
     // clang-format on
 
     return extensionStrings;
@@ -573,7 +582,8 @@ ClientExtensions::ClientExtensions()
       platformBase(false),
       platformANGLE(false),
       platformANGLED3D(false),
-      platformANGLEOpenGL(false)
+      platformANGLEOpenGL(false),
+      clientGetAllProcAddresses(false)
 {
 }
 
@@ -582,12 +592,13 @@ std::vector<std::string> ClientExtensions::getStrings() const
     std::vector<std::string> extensionStrings;
 
     // clang-format off
-    //                   | Extension name                   | Supported flag     | Output vector   |
-    InsertExtensionString("EGL_EXT_client_extensions",       clientExtensions,    &extensionStrings);
-    InsertExtensionString("EGL_EXT_platform_base",           platformBase,        &extensionStrings);
-    InsertExtensionString("EGL_ANGLE_platform_angle",        platformANGLE,       &extensionStrings);
-    InsertExtensionString("EGL_ANGLE_platform_angle_d3d",    platformANGLED3D,    &extensionStrings);
-    InsertExtensionString("EGL_ANGLE_platform_angle_opengl", platformANGLEOpenGL, &extensionStrings);
+    //                   | Extension name                         | Supported flag           | Output vector   |
+    InsertExtensionString("EGL_EXT_client_extensions",             clientExtensions,          &extensionStrings);
+    InsertExtensionString("EGL_EXT_platform_base",                 platformBase,              &extensionStrings);
+    InsertExtensionString("EGL_ANGLE_platform_angle",              platformANGLE,             &extensionStrings);
+    InsertExtensionString("EGL_ANGLE_platform_angle_d3d",          platformANGLED3D,          &extensionStrings);
+    InsertExtensionString("EGL_ANGLE_platform_angle_opengl",       platformANGLEOpenGL,       &extensionStrings);
+    InsertExtensionString("EGL_KHR_client_get_all_proc_addresses", clientGetAllProcAddresses, &extensionStrings);
     // clang-format on
 
     return extensionStrings;

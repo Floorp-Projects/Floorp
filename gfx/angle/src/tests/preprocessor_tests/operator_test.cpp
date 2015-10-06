@@ -5,7 +5,7 @@
 //
 
 #include "PreprocessorTest.h"
-#include "Token.h"
+#include "compiler/preprocessor/Token.h"
 
 struct OperatorTestParam
 {

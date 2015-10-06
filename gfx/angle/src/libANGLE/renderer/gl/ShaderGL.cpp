@@ -10,40 +10,14 @@
 
 #include "common/debug.h"
 #include "libANGLE/Compiler.h"
-#include "libANGLE/renderer/gl/CompilerGL.h"
 #include "libANGLE/renderer/gl/FunctionsGL.h"
-
-template <typename VarT>
-static std::vector<VarT> GetFilteredShaderVariables(const std::vector<VarT> *variableList)
-{
-    ASSERT(variableList);
-    std::vector<VarT> result;
-    for (size_t varIndex = 0; varIndex < variableList->size(); varIndex++)
-    {
-        const VarT &var = variableList->at(varIndex);
-        if (var.staticUse)
-        {
-            result.push_back(var);
-        }
-    }
-    return result;
-}
-
-template <typename VarT>
-static const std::vector<VarT> &GetShaderVariables(const std::vector<VarT> *variableList)
-{
-    ASSERT(variableList);
-    return *variableList;
-}
+#include "libANGLE/renderer/gl/RendererGL.h"
 
 namespace rx
 {
 
-ShaderGL::ShaderGL(GLenum type, const FunctionsGL *functions)
-    : ShaderImpl(),
-      mFunctions(functions),
-      mType(type),
-      mShaderID(0)
+ShaderGL::ShaderGL(const gl::Shader::Data &data, const FunctionsGL *functions)
+    : ShaderImpl(data), mFunctions(functions), mShaderID(0)
 {
     ASSERT(mFunctions);
 }
@@ -57,38 +31,27 @@ ShaderGL::~ShaderGL()
     }
 }
 
-bool ShaderGL::compile(gl::Compiler *compiler, const std::string &source)
+int ShaderGL::prepareSourceAndReturnOptions(std::stringstream *sourceStream)
 {
     // Reset the previous state
-    mActiveAttributes.clear();
-    mVaryings.clear();
-    mUniforms.clear();
-    mInterfaceBlocks.clear();
-    mActiveOutputVariables.clear();
     if (mShaderID != 0)
     {
         mFunctions->deleteShader(mShaderID);
         mShaderID = 0;
     }
 
+    *sourceStream << mData.getSource();
+
+    return SH_INIT_GL_POSITION;
+}
+
+bool ShaderGL::postTranslateCompile(gl::Compiler *compiler, std::string *infoLog)
+{
     // Translate the ESSL into GLSL
-    CompilerGL *compilerGL = GetImplAs<CompilerGL>(compiler);
-    ShHandle compilerHandle = compilerGL->getCompilerHandle(mType);
-
-    int compileOptions = (SH_OBJECT_CODE | SH_VARIABLES | SH_INIT_GL_POSITION);
-    const char* sourceCString = source.c_str();
-    if (!ShCompile(compilerHandle, &sourceCString, 1, compileOptions))
-    {
-        mInfoLog = ShGetInfoLog(compilerHandle);
-        TRACE("\n%s", mInfoLog.c_str());
-        return false;
-    }
-
-    mTranslatedSource = ShGetObjectCode(compilerHandle);
-    const char* translatedSourceCString = mTranslatedSource.c_str();
+    const char *translatedSourceCString = mData.getTranslatedSource().c_str();
 
     // Generate a shader object and set the source
-    mShaderID = mFunctions->createShader(mType);
+    mShaderID = mFunctions->createShader(mData.getShaderType());
     mFunctions->shaderSource(mShaderID, 1, &translatedSourceCString, nullptr);
     mFunctions->compileShader(mShaderID);
 
@@ -108,31 +71,9 @@ bool ShaderGL::compile(gl::Compiler *compiler, const std::string &source)
         mFunctions->deleteShader(mShaderID);
         mShaderID = 0;
 
-        mInfoLog = &buf[0];
-        TRACE("\n%s", mInfoLog.c_str());
+        *infoLog = &buf[0];
+        TRACE("\n%s", infoLog->c_str());
         return false;
-    }
-
-    // Gather the shader information
-    // TODO: refactor this out, gathering of the attributes, varyings and outputs should be done
-    // at the gl::Shader level
-    if (mType == GL_VERTEX_SHADER)
-    {
-        mActiveAttributes = GetFilteredShaderVariables(ShGetAttributes(compilerHandle));
-    }
-
-    const std::vector<sh::Varying> &varyings = GetShaderVariables(ShGetVaryings(compilerHandle));
-    for (size_t varyingIndex = 0; varyingIndex < varyings.size(); varyingIndex++)
-    {
-        mVaryings.push_back(gl::PackedVarying(varyings[varyingIndex]));
-    }
-
-    mUniforms = GetShaderVariables(ShGetUniforms(compilerHandle));
-    mInterfaceBlocks = GetShaderVariables(ShGetInterfaceBlocks(compilerHandle));
-
-    if (mType == GL_FRAGMENT_SHADER)
-    {
-        mActiveOutputVariables = GetFilteredShaderVariables(ShGetOutputVariables(compilerHandle));
     }
 
     return true;

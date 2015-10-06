@@ -136,11 +136,12 @@ TEST_P(PbufferTest, Clearing)
     eglMakeCurrent(window->getDisplay(), mPbuffer, mPbuffer, window->getContext());
     ASSERT_EGL_SUCCESS();
 
-    glViewport(0, 0, mPbufferSize, mPbufferSize);
+    glViewport(0, 0, static_cast<GLsizei>(mPbufferSize), static_cast<GLsizei>(mPbufferSize));
     glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     ASSERT_GL_NO_ERROR();
-    EXPECT_PIXEL_EQ(mPbufferSize / 2, mPbufferSize / 2, 255, 0, 255, 255);
+    EXPECT_PIXEL_EQ(static_cast<GLint>(mPbufferSize) / 2, static_cast<GLint>(mPbufferSize) / 2, 255,
+                    0, 255, 255);
 
     // Rebind the window surface and verify that it is still blue
     eglMakeCurrent(window->getDisplay(), window->getSurface(), window->getSurface(), window->getContext());
@@ -169,12 +170,13 @@ TEST_P(PbufferTest, BindTexImage)
     eglMakeCurrent(window->getDisplay(), mPbuffer, mPbuffer, window->getContext());
     ASSERT_EGL_SUCCESS();
 
-    glViewport(0, 0, mPbufferSize, mPbufferSize);
+    glViewport(0, 0, static_cast<GLsizei>(mPbufferSize), static_cast<GLsizei>(mPbufferSize));
     glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     ASSERT_GL_NO_ERROR();
 
-    EXPECT_PIXEL_EQ(mPbufferSize / 2, mPbufferSize / 2, 255, 0, 255, 255);
+    EXPECT_PIXEL_EQ(static_cast<GLint>(mPbufferSize) / 2, static_cast<GLint>(mPbufferSize) / 2, 255,
+                    0, 255, 255);
 
     // Apply the window surface
     eglMakeCurrent(window->getDisplay(), window->getSurface(), window->getSurface(), window->getContext());
@@ -240,7 +242,8 @@ TEST_P(PbufferTest, TextureSizeReset)
 
     // Fill the texture with white pixels
     std::vector<GLubyte> whitePixels(mPbufferSize * mPbufferSize * 4, 255);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, mPbufferSize, mPbufferSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, &whitePixels[0]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, static_cast<GLsizei>(mPbufferSize),
+                 static_cast<GLsizei>(mPbufferSize), 0, GL_RGBA, GL_UNSIGNED_BYTE, &whitePixels[0]);
     EXPECT_GL_NO_ERROR();
 
     // Draw the white texture and verify that the pixels are correct
@@ -287,12 +290,13 @@ TEST_P(PbufferTest, BindTexImageAndRedefineTexture)
     eglMakeCurrent(window->getDisplay(), mPbuffer, mPbuffer, window->getContext());
     ASSERT_EGL_SUCCESS();
 
-    glViewport(0, 0, mPbufferSize, mPbufferSize);
+    glViewport(0, 0, static_cast<GLsizei>(mPbufferSize), static_cast<GLsizei>(mPbufferSize));
     glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     ASSERT_GL_NO_ERROR();
 
-    EXPECT_PIXEL_EQ(mPbufferSize / 2, mPbufferSize / 2, 255, 0, 255, 255);
+    EXPECT_PIXEL_EQ(static_cast<GLint>(mPbufferSize) / 2, static_cast<GLint>(mPbufferSize) / 2, 255,
+                    0, 255, 255);
 
     // Apply the window surface
     eglMakeCurrent(window->getDisplay(), window->getSurface(), window->getSurface(), window->getContext());

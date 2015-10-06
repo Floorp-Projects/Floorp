@@ -271,11 +271,13 @@ TEST_F(ConstantFoldingTest, Fold2x2MatrixInverse)
     const std::string &shaderString =
         "#version 300 es\n"
         "precision mediump float;\n"
-        "out mat2 my_Matrix;"
+        "in float i;\n"
+        "out vec2 my_Vec;\n"
         "void main() {\n"
         "   const mat2 m2 = inverse(mat2(2.0f, 3.0f,\n"
         "                                5.0f, 7.0f));\n"
-        "   my_Matrix = m2;\n"
+        "   mat2 m = m2 * mat2(i);\n"
+        "   my_Vec = m[0];\n"
         "}\n";
     compile(shaderString);
     float inputElements[] =
@@ -300,12 +302,14 @@ TEST_F(ConstantFoldingTest, Fold3x3MatrixInverse)
     const std::string &shaderString =
         "#version 300 es\n"
         "precision mediump float;\n"
-        "out mat3 my_Matrix;"
+        "in float i;\n"
+        "out vec3 my_Vec;\n"
         "void main() {\n"
         "   const mat3 m3 = inverse(mat3(11.0f, 13.0f, 19.0f,\n"
         "                                23.0f, 29.0f, 31.0f,\n"
         "                                37.0f, 41.0f, 43.0f));\n"
-        "   my_Matrix = m3;\n"
+        "   mat3 m = m3 * mat3(i);\n"
+        "   my_Vec = m3[0];\n"
         "}\n";
     compile(shaderString);
     float inputElements[] =
@@ -333,13 +337,15 @@ TEST_F(ConstantFoldingTest, Fold4x4MatrixInverse)
     const std::string &shaderString =
         "#version 300 es\n"
         "precision mediump float;\n"
-        "out mat4 my_Matrix;"
+        "in float i;\n"
+        "out vec4 my_Vec;\n"
         "void main() {\n"
         "   const mat4 m4 = inverse(mat4(29.0f, 31.0f, 37.0f, 41.0f,\n"
         "                                43.0f, 47.0f, 53.0f, 59.0f,\n"
         "                                61.0f, 67.0f, 71.0f, 73.0f,\n"
         "                                79.0f, 83.0f, 89.0f, 97.0f));\n"
-        "   my_Matrix = m4;\n"
+        "   mat4 m = m4 * mat4(i);\n"
+        "   my_Vec = m[0];\n"
         "}\n";
     compile(shaderString);
     float inputElements[] =
@@ -448,12 +454,14 @@ TEST_F(ConstantFoldingTest, Fold3x3MatrixTranspose)
     const std::string &shaderString =
         "#version 300 es\n"
         "precision mediump float;\n"
-        "out mat3 my_Matrix;"
+        "in float i;\n"
+        "out vec3 my_Vec;\n"
         "void main() {\n"
         "   const mat3 m3 = transpose(mat3(11.0f, 13.0f, 19.0f,\n"
         "                                  23.0f, 29.0f, 31.0f,\n"
         "                                  37.0f, 41.0f, 43.0f));\n"
-        "   my_Matrix = m3;\n"
+        "   mat3 m = m3 * mat3(i);\n"
+        "   my_Vec = m[0];\n"
         "}\n";
     compile(shaderString);
     float inputElements[] =
