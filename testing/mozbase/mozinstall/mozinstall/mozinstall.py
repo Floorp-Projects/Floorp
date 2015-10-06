@@ -110,12 +110,12 @@ def install(src, dest):
     trbk = None
     try:
         install_dir = None
-        if zipfile.is_zipfile(src) or tarfile.is_tarfile(src):
-            install_dir = mozfile.extract(src, dest)[0]
-        elif src.lower().endswith('.dmg'):
+        if src.lower().endswith('.dmg'):
             install_dir = _install_dmg(src, dest)
         elif src.lower().endswith('.exe'):
             install_dir = _install_exe(src, dest)
+        elif zipfile.is_zipfile(src) or tarfile.is_tarfile(src):
+            install_dir = mozfile.extract(src, dest)[0]
 
         return install_dir
 
