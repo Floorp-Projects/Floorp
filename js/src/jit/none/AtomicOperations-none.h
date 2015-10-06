@@ -9,7 +9,7 @@
 #ifndef jit_none_AtomicOperations_none_h
 #define jit_none_AtomicOperations_none_h
 
-#include "jit/AtomicOperations.h"
+#include "mozilla/Assertions.h"
 
 // A "none" build is never run (ref IRC discussion with h4writer) and
 // all functions here can therefore MOZ_CRASH, even if they are

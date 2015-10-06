@@ -9,7 +9,8 @@
 #ifndef jit_shared_AtomicOperations_x86_shared_h
 #define jit_shared_AtomicOperations_x86_shared_h
 
-#include "jit/AtomicOperations.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Types.h"
 
 // Lock-freedom on x86 and x64:
 //

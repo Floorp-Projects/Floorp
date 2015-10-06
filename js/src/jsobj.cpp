@@ -59,8 +59,6 @@
 #include "jscntxtinlines.h"
 #include "jscompartmentinlines.h"
 
-#include "jit/AtomicOperations-inl.h"
-
 #include "vm/ArrayObject-inl.h"
 #include "vm/BooleanObject-inl.h"
 #include "vm/Interpreter-inl.h"
