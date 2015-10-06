@@ -48,32 +48,9 @@ class PlatformDecoderModule {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PlatformDecoderModule)
 
-  // Call on the main thread to initialize the static state
-  // needed by Create().
-  static void Init();
-
-  // Factory method that creates the appropriate PlatformDecoderModule for
-  // the platform we're running on. Caller is responsible for deleting this
-  // instance. It's expected that there will be multiple
-  // PlatformDecoderModules alive at the same time.
-  // This is called on the decode task queue.
-  static already_AddRefed<PlatformDecoderModule> Create();
-
   // Perform any per-instance initialization.
   // This is called on the decode task queue.
   virtual nsresult Startup() { return NS_OK; };
-
-  // Creates a decoder.
-  // See CreateVideoDecoder and CreateAudioDecoder for implementation details.
-  virtual already_AddRefed<MediaDataDecoder>
-  CreateDecoder(const TrackInfo& aConfig,
-                FlushableTaskQueue* aTaskQueue,
-                MediaDataDecoderCallback* aCallback,
-                layers::LayersBackend aLayersBackend = layers::LayersBackend::LAYERS_NONE,
-                layers::ImageContainer* aImageContainer = nullptr)
-  {
-    MOZ_CRASH();
-  }
 
   // Indicates if the PlatformDecoderModule supports decoding of aMimeType.
   virtual bool SupportsMimeType(const nsACString& aMimeType) = 0;

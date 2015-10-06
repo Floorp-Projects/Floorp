@@ -13,23 +13,29 @@ class CDMProxy;
 
 namespace mozilla {
 
-class PDMFactory : public PlatformDecoderModule {
+class PDMFactory final {
 public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PDMFactory)
+
   PDMFactory();
-  virtual ~PDMFactory();
 
   // Call on the main thread to initialize the static state
   // needed by Create().
   static void Init();
 
+  // Factory method that creates the appropriate PlatformDecoderModule for
+  // the platform we're running on. Caller is responsible for deleting this
+  // instance. It's expected that there will be multiple
+  // PlatformDecoderModules alive at the same time.
+  // This is called on the decode task queue.
   already_AddRefed<MediaDataDecoder>
   CreateDecoder(const TrackInfo& aConfig,
                 FlushableTaskQueue* aTaskQueue,
                 MediaDataDecoderCallback* aCallback,
                 layers::LayersBackend aLayersBackend = layers::LayersBackend::LAYERS_NONE,
-                layers::ImageContainer* aImageContainer = nullptr) override;
+                layers::ImageContainer* aImageContainer = nullptr);
 
-  bool SupportsMimeType(const nsACString& aMimeType) override;
+  bool SupportsMimeType(const nsACString& aMimeType);
 
 #ifdef MOZ_EME
   // Creates a PlatformDecoderModule that uses a CDMProxy to decrypt or
@@ -40,37 +46,8 @@ public:
   void SetCDMProxy(CDMProxy* aProxy);
 #endif
 
-  ConversionRequired
-  DecoderNeedsConversion(const TrackInfo& aConfig) const override
-  {
-    MOZ_CRASH("Should never reach this function");
-    return ConversionRequired::kNeedNone;
-  }
-
-protected:
-  // Decode thread.
-  already_AddRefed<MediaDataDecoder>
-  CreateVideoDecoder(const VideoInfo& aConfig,
-                     layers::LayersBackend aLayersBackend,
-                     layers::ImageContainer* aImageContainer,
-                     FlushableTaskQueue* aVideoTaskQueue,
-                     MediaDataDecoderCallback* aCallback) override
-  {
-    MOZ_CRASH("Should never reach this function");
-    return nullptr;
-  }
-
-  // Decode thread.
-  already_AddRefed<MediaDataDecoder>
-  CreateAudioDecoder(const AudioInfo& aConfig,
-                     FlushableTaskQueue* aAudioTaskQueue,
-                     MediaDataDecoderCallback* aCallback) override
-  {
-    MOZ_CRASH("Should never reach this function");
-    return nullptr;
-  }
-
 private:
+  virtual ~PDMFactory();
   void CreatePDMs();
   // Startup the provided PDM and add it to our list if successful.
   bool StartupPDM(PlatformDecoderModule* aPDM);
