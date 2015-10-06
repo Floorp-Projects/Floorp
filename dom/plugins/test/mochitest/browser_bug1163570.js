@@ -1,27 +1,5 @@
 var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
 
-// Returns the chrome side nsIPluginTag for this plugin
-function getTestPlugin(aName) {
-  let pluginName = aName || "Test Plug-in";
-  let ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
-  let tags = ph.getPluginTags();
-
-  // Find the test plugin
-  for (let i = 0; i < tags.length; i++) {
-    if (tags[i].name == pluginName)
-      return tags[i];
-  }
-  ok(false, "Unable to find plugin");
-  return null;
-}
-
-// Set the test plugin state, disabling features like click-to-play
-function setTestPluginEnabledState(newEnabledState, pluginName) {
-  let name = pluginName || "Test Plug-in";
-  let plugin = getTestPlugin(name);
-  plugin.enabledState = newEnabledState;
-}
-
 // simple tab load helper, pilfered from browser plugin tests
 function promiseTabLoad(tab, url, eventType="load") {
   return new Promise((resolve, reject) => {
