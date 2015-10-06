@@ -671,6 +671,7 @@ var settingsToObserve = {
   'mms.debugging.enabled': false,
   'network.debugging.enabled': false,
   'privacy.donottrackheader.enabled': false,
+  'privacy.trackingprotection.enabled': false,
   'ril.debugging.enabled': false,
   'ril.radio.disabled': false,
   'ril.mms.requestReadReport.enabled': {

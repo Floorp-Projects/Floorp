@@ -243,14 +243,13 @@ protected:
     VolumeChangeNotification;
 
   typedef mozilla::ipc::DaemonNotificationRunnable2<
-    NotificationHandlerWrapper, void, int, int>
+    NotificationHandlerWrapper, void, uint8_t, uint8_t, int, int>
     PassthroughCmdNotification;
 
   class GetElementAttrInitOp;
   class GetPlayerAppAttrsTextInitOp;
   class GetPlayerAppValueInitOp;
   class GetPlayerAppValuesTextInitOp;
-  class PassthroughCmdInitOp;
   class RemoteFeatureInitOp;
 
   void RemoteFeatureNtf(const DaemonSocketPDUHeader& aHeader,
