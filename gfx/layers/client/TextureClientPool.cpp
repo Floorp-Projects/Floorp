@@ -27,7 +27,7 @@ TextureClientPool::TextureClientPool(gfx::SurfaceFormat aFormat,
                                      gfx::IntSize aSize,
                                      uint32_t aMaxTextureClients,
                                      uint32_t aShrinkTimeoutMsec,
-                                     ISurfaceAllocator *aAllocator)
+                                     CompositableForwarder* aAllocator)
   : mFormat(aFormat)
   , mSize(aSize)
   , mMaxTextureClients(aMaxTextureClients)

@@ -31,7 +31,7 @@ protected:
   RefPtr<TextureClient> mTextureClient;
 };
 
-TextureClientRecycleAllocator::TextureClientRecycleAllocator(ISurfaceAllocator *aAllocator)
+TextureClientRecycleAllocator::TextureClientRecycleAllocator(CompositableForwarder* aAllocator)
   : mSurfaceAllocator(aAllocator)
   , mMaxPooledSize(kMaxPooledSized)
   , mLock("TextureClientRecycleAllocatorImp.mLock")

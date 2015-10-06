@@ -20,7 +20,7 @@ namespace layers {
 class D3D11RecycleAllocator : public TextureClientRecycleAllocator
 {
 public:
-  explicit D3D11RecycleAllocator(ISurfaceAllocator* aAllocator,
+  explicit D3D11RecycleAllocator(CompositableForwarder* aAllocator,
                                  ID3D11Device* aDevice)
     : TextureClientRecycleAllocator(aAllocator)
     , mDevice(aDevice)
