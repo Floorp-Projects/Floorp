@@ -88,6 +88,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitInitPropGetterSetter(MInitPropGetterSetter* ins);
     void visitCheckOverRecursed(MCheckOverRecursed* ins);
     void visitDefVar(MDefVar* ins);
+    void visitDefLexical(MDefLexical* ins);
     void visitDefFun(MDefFun* ins);
     void visitCreateThisWithTemplate(MCreateThisWithTemplate* ins);
     void visitCreateThisWithProto(MCreateThisWithProto* ins);

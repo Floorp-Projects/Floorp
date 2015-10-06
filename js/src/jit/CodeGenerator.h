@@ -73,6 +73,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitStart(LStart* lir);
     void visitReturn(LReturn* ret);
     void visitDefVar(LDefVar* lir);
+    void visitDefLexical(LDefLexical* lir);
     void visitDefFun(LDefFun* lir);
     void visitOsrEntry(LOsrEntry* lir);
     void visitOsrScopeChain(LOsrScopeChain* lir);

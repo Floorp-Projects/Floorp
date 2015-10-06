@@ -1092,6 +1092,11 @@ GenerateCallGetter(JSContext* cx, IonScript* ion, MacroAssembler& masm,
     Label pop1AndFail;
     Label* maybePopAndFail = failures;
 
+    // If we're calling a getter on the global, inline the logic for the
+    // 'this' hook on the global lexical scope and manually push the global.
+    if (IsGlobalLexicalScope(obj))
+        masm.extractObject(Address(object, ScopeObject::offsetOfEnclosingScope()), object);
+
     // Save off the object register if it aliases the scratchReg
     if (spillObjReg) {
         masm.push(object);
@@ -3332,8 +3337,15 @@ SetPropertyIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex
     }
 
     // Set/Add the property on the object, the inlined cache are setup for the next execution.
-    if (!SetProperty(cx, obj, name, value, cache.strict(), cache.pc()))
-        return false;
+    if (JSOp(*cache.pc()) == JSOP_INITGLEXICAL) {
+        RootedScript script(cx);
+        jsbytecode* pc;
+        cache.getScriptedLocation(&script, &pc);
+        InitGlobalLexicalOperation(cx, script, pc, value);
+    } else {
+        if (!SetProperty(cx, obj, name, value, cache.strict(), cache.pc()))
+            return false;
+    }
 
     // A GC may have caused cache.value() to become stale as it is not traced.
     // In this case the IonScript will have been invalidated, so check for that.
