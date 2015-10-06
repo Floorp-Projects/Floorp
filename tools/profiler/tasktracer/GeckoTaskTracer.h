@@ -75,7 +75,8 @@ const PRTime GetStartTime();
 
 Task* CreateTracedTask(Task* aTask);
 
-already_AddRefed<nsIRunnable> CreateTracedRunnable(nsIRunnable* aRunnable);
+already_AddRefed<nsIRunnable>
+CreateTracedRunnable(already_AddRefed<nsIRunnable>&& aRunnable);
 
 // Free the TraceInfo allocated on a thread's TLS. Currently we are wrapping
 // tasks running on nsThreads and base::thread, so FreeTraceInfo is called at
