@@ -1323,7 +1323,15 @@ function get(msg) {
     navTimer.initWithCallback(timerFunc, msg.json.pageTimeout, Ci.nsITimer.TYPE_ONE_SHOT);
   }
   addEventListener("DOMContentLoaded", onDOMContentLoaded, false);
-  curContainer.frame.location = msg.json.url;
+  if (isB2G) {
+    curContainer.frame.location = msg.json.url;
+  } else {
+    // We need to move to the top frame before navigating
+    sendSyncMessage("Marionette:switchedToFrame", { frameValue: null });
+    curContainer.frame = content;
+
+    curContainer.frame.location = msg.json.url;
+  }
 }
 
  /**
