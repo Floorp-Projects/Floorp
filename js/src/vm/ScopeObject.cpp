@@ -804,6 +804,12 @@ const Class NonSyntacticVariablesObject::class_ = {
 
 /*****************************************************************************/
 
+bool
+BlockObject::isExtensible() const
+{
+    return nonProxyIsExtensible();
+}
+
 /* static */ ClonedBlockObject*
 ClonedBlockObject::create(JSContext* cx, Handle<StaticBlockObject*> block, HandleObject enclosing)
 {
@@ -907,6 +913,18 @@ StaticBlockObject::lookupAliasedName(PropertyName* name)
         r.popFront();
     }
     return nullptr;
+}
+
+bool
+StaticBlockObject::makeNonExtensible(ExclusiveContext* cx)
+{
+    // Do not do all the work of js::PreventExtensions, as BlockObjects are
+    // known to be NativeObjects, have no lazy properties, and no dense
+    // elements. Indeed, we do not have a JSContext as parsing may happen
+    // off-thread.
+    if (!isExtensible())
+        return true;
+    return setFlags(cx, BaseShape::NOT_EXTENSIBLE, JSObject::GENERATE_SHAPE);
 }
 
 /* static */ Shape*

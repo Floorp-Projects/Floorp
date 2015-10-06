@@ -908,6 +908,12 @@ BytecodeEmitter::enterNestedScope(StmtInfoBCE* stmt, ObjectBox* objbox, StmtType
             if (!emitInternedObjectOp(scopeObjectIndex, JSOP_PUSHBLOCKSCOPE))
                 return false;
         }
+
+        // Non-global block scopes are non-extensible. At this point the
+        // Parser has added all bindings to the StaticBlockObject, so we make
+        // it non-extensible.
+        if (!blockObj->makeNonExtensible(cx))
+            return false;
         break;
       }
       case StmtType::WITH:
