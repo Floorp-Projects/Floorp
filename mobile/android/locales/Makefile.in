@@ -64,18 +64,10 @@ installers-%: clobber-stage repackage-zip-%
 # When we unpack fennec on MacOS X the platform.ini and application.ini are in slightly
 # different locations that on all other platforms
 ifeq (Darwin, $(OS_ARCH))
-ifdef LIBXUL_SDK
-GECKO_PLATFORM_INI_PATH='$(STAGEDIST)/../Frameworks/XUL.framework/Versions/$(MOZILLA_VERSION)/platform.ini'
-else
 GECKO_PLATFORM_INI_PATH='$(STAGEDIST)/platform.ini'
-endif
 FENNEC_APPLICATION_INI_PATH='$(STAGEDIST)/application.ini'
 else
-ifdef LIBXUL_SDK
-GECKO_PLATFORM_INI_PATH='$(STAGEDIST)/xulrunner/platform.ini'
-else
 GECKO_PLATFORM_INI_PATH='$(STAGEDIST)/platform.ini'
-endif
 FENNEC_APPLICATION_INI_PATH='$(STAGEDIST)/application.ini'
 endif
 
