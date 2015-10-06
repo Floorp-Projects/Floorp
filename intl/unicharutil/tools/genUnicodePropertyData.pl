@@ -19,6 +19,7 @@
 #       - UnicodeData.txt
 #       - Scripts.txt
 #       - BidiMirroring.txt
+#       - BidiBrackets.txt
 #       - HangulSyllableType.txt
 #       - ReadMe.txt (to record version/date of the UCD)
 #       - Unihan_Variants.txt (from Unihan.zip)
@@ -334,6 +335,7 @@ my @script;
 my @category;
 my @combining;
 my @mirror;
+my @pairedBracketType;
 my @hangul;
 my @casemap;
 my @xidmod;
@@ -346,6 +348,7 @@ for (my $i = 0; $i < 0x110000; ++$i) {
     $script[$i] = $scriptCode{"UNKNOWN"};
     $category[$i] = $catCode{"UNASSIGNED"};
     $combining[$i] = 0;
+    $pairedBracketType[$i] = 0;
     $casemap[$i] = 0;
     $xidmod[$i] = $xidmodCode{"not-chars"};
     $numericvalue[$i] = -1;
@@ -523,13 +526,38 @@ while (<FH>) {
     s/#.*//;
     if (m/([0-9A-F]{4,6});\s*([0-9A-F]{4,6})/) {
         my $mirrorOffset = hex("0x$2") - hex("0x$1");
-	my $offsetIndex = first { $offsets[$_] eq $mirrorOffset } 0..$#offsets;
-	if ($offsetIndex == undef) {
+        my $offsetIndex = first { $offsets[$_] eq $mirrorOffset } 0..$#offsets;
+        if ($offsetIndex == undef) {
             die "too many offset codes\n" if scalar @offsets == 31;
             push @offsets, $mirrorOffset;
-	    $offsetIndex = $#offsets;
+            $offsetIndex = $#offsets;
         }
-	$mirror[hex "0x$1"] = $offsetIndex;
+        $mirror[hex "0x$1"] = $offsetIndex;
+    }
+}
+close FH;
+
+# read BidiBrackets.txt
+my %pairedBracketTypeCode = (
+  'N' => 0,
+  'O' => 1,
+  'C' => 2
+);
+open FH, "< $ARGV[1]/BidiBrackets.txt" or die "can't open UCD file BidiBrackets.txt\n";
+push @versionInfo, "";
+while (<FH>) {
+    chomp;
+    push @versionInfo, $_;
+    last if /Date:/;
+}
+while (<FH>) {
+    s/#.*//;
+    if (m/([0-9A-F]{4,6});\s*([0-9A-F]{4,6});\s*(.)/) {
+        my $mirroredChar = $offsets[$mirror[hex "0x$1"]] + hex "0x$1";
+        die "bidi bracket does not match mirrored char\n" unless $mirroredChar == hex "0x$2";
+        my $pbt = uc($3);
+        warn "unknown Bidi Bracket type" unless exists $pairedBracketTypeCode{$pbt};
+        $pairedBracketType[hex "0x$1"] = $pairedBracketTypeCode{$pbt};
     }
 }
 close FH;
@@ -736,27 +764,27 @@ struct nsCharProps1 {
 /;
 print DATA_TABLES "#ifndef ENABLE_INTL_API\n";
 &genTables("CharProp1", $type, "nsCharProps1", 11, 5, \&sprintCharProps1, 1, 2, 1);
-+print DATA_TABLES "#endif\n\n";
+print DATA_TABLES "#endif\n\n";
 
 sub sprintCharProps2
 {
   my $usv = shift;
   return sprintf("{%d,%d,%d,%d,%d,%d,%d},",
-                 $script[$usv], 0, $category[$usv],
+                 $script[$usv], $pairedBracketType[$usv], $category[$usv],
                  $bidicategory[$usv], $xidmod[$usv], $numericvalue[$usv],
                  $verticalOrientation[$usv]);
 }
-$type = q/
+$type = q|
 struct nsCharProps2 {
   unsigned char mScriptCode:8;
-  unsigned char mUnused:3;
+  unsigned char mPairedBracketType:3; // only 2 bits actually needed
   unsigned char mCategory:5;
   unsigned char mBidiCategory:5;
   unsigned char mXidmod:4;
   signed char   mNumericValue:5;
   unsigned char mVertOrient:2;
 };
-/;
+|;
 &genTables("CharProp2", $type, "nsCharProps2", 11, 5, \&sprintCharProps2, 16, 4, 1);
 
 print HEADER "#pragma pack()\n\n";
