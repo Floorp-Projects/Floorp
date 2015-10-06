@@ -1040,7 +1040,15 @@ CompositorParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRect* aRe
     return;
   }
 
-  AutoResolveRefLayers resolve(mCompositionManager);
+  AutoResolveRefLayers resolve(mCompositionManager, true);
+
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+  // We do not support plugins in local content. When switching tabs
+  // to local pages, hide every plugin associated with the window.
+  if (!mCompositionManager->HasRemoteContent()) {
+    unused << SendHideAllPlugins((uintptr_t)GetWidget());
+  }
+#endif
 
   if (aTarget) {
     mLayerManager->BeginTransactionWithDrawTarget(aTarget, *aRect);
@@ -1998,67 +2006,41 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
 }
 
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-// Sends plugin window state changes to the main thread
-static void
-UpdatePluginWindowState(uint64_t aId)
+// static, sends plugin window state changes to the main thread
+void
+CompositorParent::UpdatePluginWindowState(uint64_t aId)
 {
   CompositorParent::LayerTreeState& lts = sIndirectLayerTrees[aId];
-  if (!lts.mPluginData.Length() && !lts.mUpdatedPluginDataAvailable) {
+  if (!lts.mUpdatedPluginDataAvailable) {
     return;
   }
 
-  bool shouldComposePlugin = !!lts.mRoot &&
-                             !!lts.mRoot->GetParent();
-
-  bool shouldHidePlugin = !lts.mRoot ||
-                          !lts.mRoot->GetParent();
-
-  if (shouldComposePlugin) {
-    if (!lts.mPluginData.Length()) {
-      // We will pass through here in cases where the previous shadow layer
-      // tree contained visible plugins and the new tree does not. All we need
-      // to do here is hide the plugins for the old tree, so don't waste time
-      // calculating clipping.
-      uintptr_t parentWidget = (uintptr_t)lts.mParent->GetWidget();
-      unused << lts.mParent->SendHideAllPlugins(parentWidget);
-      lts.mUpdatedPluginDataAvailable = false;
-      return;
-    }
-
-    // Retrieve the offset and visible region of the layer that hosts
-    // the plugins, CompositorChild needs these in calculating proper
-    // plugin clipping.
-    LayerTransactionParent* layerTree = lts.mLayerTree;
-    Layer* contentRoot = layerTree->GetRoot();
-    if (contentRoot) {
-      nsIntPoint offset;
-      nsIntRegion visibleRegion;
-      if (contentRoot->GetVisibleRegionRelativeToRootLayer(visibleRegion,
-                                                           &offset)) {
-        unused <<
-          lts.mParent->SendUpdatePluginConfigurations(offset, visibleRegion,
-                                                      lts.mPluginData);
-        lts.mUpdatedPluginDataAvailable = false;
-      } else {
-        shouldHidePlugin = true;
-      }
-    }
+  if (!lts.mPluginData.Length()) {
+    // We will pass through here in cases where the previous shadow layer
+    // tree contained visible plugins and the new tree does not. All we need
+    // to do here is hide the plugins for the old tree, so don't waste time
+    // calculating clipping.
+    uintptr_t parentWidget = (uintptr_t)lts.mParent->GetWidget();
+    unused << lts.mParent->SendHideAllPlugins(parentWidget);
+    lts.mUpdatedPluginDataAvailable = false;
+    return;
   }
 
-  // Hide all of our plugins, this remote layer tree is no longer active.
-  if (shouldHidePlugin) {
-    for (uint32_t pluginsIdx = 0; pluginsIdx < lts.mPluginData.Length();
-         pluginsIdx++) {
-      lts.mPluginData[pluginsIdx].visible() = false;
-    }
+  // Retrieve the offset and visible region of the layer that hosts
+  // the plugins, CompositorChild needs these in calculating proper
+  // plugin clipping.
+  LayerTransactionParent* layerTree = lts.mLayerTree;
+  Layer* contentRoot = layerTree->GetRoot();
+  if (contentRoot) {
     nsIntPoint offset;
-    nsIntRegion region;
-    unused << lts.mParent->SendUpdatePluginConfigurations(offset,
-                                                          region,
-                                                          lts.mPluginData);
-    // Clear because there's no recovering from this until we receive
-    // new shadow layer plugin data in ShadowLayersUpdated.
-    lts.mPluginData.Clear();
+    nsIntRegion visibleRegion;
+    if (contentRoot->GetVisibleRegionRelativeToRootLayer(visibleRegion,
+                                                          &offset)) {
+      unused <<
+        lts.mParent->SendUpdatePluginConfigurations(offset, visibleRegion,
+                                                    lts.mPluginData);
+      lts.mUpdatedPluginDataAvailable = false;
+    }
   }
 }
 #endif // #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
@@ -2074,9 +2056,6 @@ CrossProcessCompositorParent::DidComposite(uint64_t aId,
     unused << SendDidComposite(aId, layerTree->GetPendingTransactionId(), aCompositeStart, aCompositeEnd);
     layerTree->SetPendingTransactionId(0);
   }
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-      UpdatePluginWindowState(aId);
-#endif
 }
 
 void

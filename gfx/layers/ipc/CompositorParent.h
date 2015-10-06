@@ -381,6 +381,14 @@ public:
    */
   static LayerTreeState* GetIndirectShadowTree(uint64_t aId);
 
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+  /**
+   * Calculates and updates plugin positioning and clip via ipc messages
+   * sent to the main thread.
+   */
+  static void UpdatePluginWindowState(uint64_t aId);
+#endif
+
   /**
    * Used by the profiler to denote when a vsync occured
    */

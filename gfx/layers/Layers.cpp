@@ -993,6 +993,10 @@ Layer::GetVisibleRegionRelativeToRootLayer(nsIntRegion& aResult,
 {
   MOZ_ASSERT(aLayerOffset, "invalid offset pointer");
 
+  if (!GetParent()) {
+    return false;
+  }
+
   IntPoint offset;
   aResult = GetEffectiveVisibleRegion();
   for (Layer* layer = this; layer; layer = layer->GetParent()) {
