@@ -278,14 +278,14 @@ GetNameOperation(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc, MutableHan
      * before the global object.
      */
     if (IsGlobalOp(JSOp(*pc)) && !fp->script()->hasNonSyntacticScope())
-        obj = &obj->global();
+        obj = &obj->global().lexicalScope();
 
     Shape* shape = nullptr;
     JSObject* scope = nullptr;
     JSObject* pobj = nullptr;
     if (LookupNameNoGC(cx, name, obj, &scope, &pobj, &shape)) {
         if (FetchNameNoGC(pobj, shape, vp))
-            return CheckUninitializedLexical(cx, name, vp);
+            return true;
     }
 
     RootedObject objRoot(cx, obj), scopeRoot(cx), pobjRoot(cx);
@@ -2051,9 +2051,8 @@ CASE(EnableInterruptsPseudoOpcode)
 /* Various 1-byte no-ops. */
 CASE(JSOP_NOP)
 CASE(JSOP_UNUSED2)
+CASE(JSOP_UNUSED14)
 CASE(JSOP_BACKPATCH)
-CASE(JSOP_UNUSED161)
-CASE(JSOP_UNUSED162)
 CASE(JSOP_UNUSED163)
 CASE(JSOP_UNUSED164)
 CASE(JSOP_UNUSED165)
@@ -2394,17 +2393,6 @@ CASE(JSOP_PICK)
 }
 END_CASE(JSOP_PICK)
 
-CASE(JSOP_SETCONST)
-{
-    ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
-    ReservedRooted<Value> rval(&rootValue0, REGS.sp[-1]);
-    ReservedRooted<JSObject*> obj(&rootObject0, &REGS.fp()->varObj());
-
-    if (!SetConstOperation(cx, obj, name, rval))
-        goto error;
-}
-END_CASE(JSOP_SETCONST)
-
 CASE(JSOP_BINDINTRINSIC)
 {
     NativeObject* holder = GlobalObject::getIntrinsicsHolder(cx, cx->global());
@@ -2419,19 +2407,19 @@ CASE(JSOP_BINDGNAME)
 CASE(JSOP_BINDNAME)
 {
     JSOp op = JSOp(*REGS.pc);
-    if (op == JSOP_BINDNAME || script->hasNonSyntacticScope()) {
-        ReservedRooted<JSObject*> scopeChain(&rootObject0, REGS.fp()->scopeChain());
-        ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
+    ReservedRooted<JSObject*> scopeChain(&rootObject0);
+    if (op == JSOP_BINDNAME || script->hasNonSyntacticScope())
+        scopeChain.set(REGS.fp()->scopeChain());
+    else
+        scopeChain.set(&REGS.fp()->global().lexicalScope());
+    ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
 
-        /* Assigning to an undeclared name adds a property to the global object. */
-        ReservedRooted<JSObject*> scope(&rootObject1);
-        if (!LookupNameUnqualified(cx, name, scopeChain, &scope))
-            goto error;
+    /* Assigning to an undeclared name adds a property to the global object. */
+    ReservedRooted<JSObject*> scope(&rootObject1);
+    if (!LookupNameUnqualified(cx, name, scopeChain, &scope))
+        goto error;
 
-        PUSH_OBJECT(*scope);
-    } else {
-        PUSH_OBJECT(REGS.fp()->global());
-    }
+    PUSH_OBJECT(*scope);
 
     static_assert(JSOP_BINDNAME_LENGTH == JSOP_BINDGNAME_LENGTH,
                   "We're sharing the END_CASE so the lengths better match");
@@ -3439,6 +3427,13 @@ CASE(JSOP_INITALIASEDLEXICAL)
 }
 END_CASE(JSOP_INITALIASEDLEXICAL)
 
+CASE(JSOP_INITGLEXICAL)
+{
+    HandleValue value = REGS.stackHandleAt(-1);
+    InitGlobalLexicalOperation(cx, script, REGS.pc, value);
+}
+END_CASE(JSOP_INITGLEXICAL)
+
 CASE(JSOP_UNINITIALIZED)
     PUSH_UNINITIALIZED();
 END_CASE(JSOP_UNINITIALIZED)
@@ -3488,24 +3483,29 @@ CASE(JSOP_SETLOCAL)
 }
 END_CASE(JSOP_SETLOCAL)
 
-CASE(JSOP_DEFCONST)
 CASE(JSOP_DEFVAR)
 {
     /* ES5 10.5 step 8 (with subsequent errata). */
     unsigned attrs = JSPROP_ENUMERATE;
-    if (*REGS.pc == JSOP_DEFCONST)
-        attrs |= JSPROP_READONLY;
-    else if (!REGS.fp()->isEvalFrame())
+    if (!REGS.fp()->isEvalFrame())
         attrs |= JSPROP_PERMANENT;
 
     /* Step 8b. */
     ReservedRooted<JSObject*> obj(&rootObject0, &REGS.fp()->varObj());
     ReservedRooted<PropertyName*> name(&rootName0, script->getName(REGS.pc));
 
-    if (!DefVarOrConstOperation(cx, obj, name, attrs))
+    if (!DefVarOperation(cx, obj, name, attrs))
         goto error;
 }
 END_CASE(JSOP_DEFVAR)
+
+CASE(JSOP_DEFCONST)
+CASE(JSOP_DEFLET)
+{
+    if (!DefLexicalOperation(cx, script, REGS.pc))
+        goto error;
+}
+END_CASE(JSOP_DEFLET)
 
 CASE(JSOP_DEFFUN)
 {
@@ -4947,4 +4947,22 @@ js::ReportUninitializedLexical(JSContext* cx, HandleScript script, jsbytecode* p
     }
 
     ReportUninitializedLexical(cx, name);
+}
+
+void
+js::ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name,
+                               frontend::Definition::Kind declKind)
+{
+    JSAutoByteString printable;
+    if (AtomToPrintableString(cx, name, &printable)) {
+        // We cannot distinguish 'var' declarations from manually defined,
+        // non-configurable global properties.
+        const char* kindStr;
+        if (declKind == frontend::Definition::VAR)
+            kindStr = "non-configurable global property";
+        else
+            kindStr = frontend::Definition::kindString(declKind);
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_REDECLARED_VAR,
+                             kindStr, printable.ptr());
+    }
 }

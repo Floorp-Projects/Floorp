@@ -473,18 +473,18 @@ NewArrayOperation(JSContext* cx, HandleScript script, jsbytecode* pc, uint32_t l
 JSObject*
 NewArrayOperationWithTemplate(JSContext* cx, HandleObject templateObject);
 
-inline bool
-SetConstOperation(JSContext* cx, HandleObject varobj, HandlePropertyName name, HandleValue rval)
-{
-    return DefineProperty(cx, varobj, name, rval, nullptr, nullptr,
-                          JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY);
-}
-
 void
 ReportUninitializedLexical(JSContext* cx, HandlePropertyName name);
 
 void
 ReportUninitializedLexical(JSContext* cx, HandleScript script, jsbytecode* pc);
+
+// The parser only reports redeclarations that occurs within a single
+// script. Due to the extensibility of the global lexical scope, we also check
+// for redeclarations during runtime in JSOP_DEF{VAR,LET,CONST}.
+void
+ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name,
+                           frontend::Definition::Kind declKind);
 
 }  /* namespace js */
 

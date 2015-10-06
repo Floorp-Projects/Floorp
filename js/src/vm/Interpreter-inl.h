@@ -273,10 +273,11 @@ SetNameOperation(JSContext* cx, JSScript* script, jsbytecode* pc, HandleObject s
                *pc == JSOP_STRICTSETNAME ||
                *pc == JSOP_SETGNAME ||
                *pc == JSOP_STRICTSETGNAME);
-    MOZ_ASSERT_IF(*pc == JSOP_SETGNAME && !script->hasNonSyntacticScope(),
-                  scope == cx->global());
-    MOZ_ASSERT_IF(*pc == JSOP_STRICTSETGNAME && !script->hasNonSyntacticScope(),
-                  scope == cx->global());
+    MOZ_ASSERT_IF((*pc == JSOP_SETGNAME || *pc == JSOP_STRICTSETGNAME) &&
+                  !script->hasNonSyntacticScope(),
+                  scope == cx->global() ||
+                  scope == &cx->global()->lexicalScope() ||
+                  scope->is<UninitializedLexicalObject>());
 
     bool strict = *pc == JSOP_STRICTSETNAME || *pc == JSOP_STRICTSETGNAME;
     RootedPropertyName name(cx, script->getName(pc));
@@ -299,6 +300,61 @@ SetNameOperation(JSContext* cx, JSScript* script, jsbytecode* pc, HandleObject s
 }
 
 inline bool
+DefLexicalOperation(JSContext* cx, HandlePropertyName name, unsigned attrs)
+{
+    Rooted<ClonedBlockObject*> globalLexical(cx, &cx->global()->lexicalScope());
+
+    // Due to the extensibility of the global lexical scope, we must check for
+    // redeclaring a binding.
+    mozilla::Maybe<frontend::Definition::Kind> redeclKind;
+    RootedId id(cx, NameToId(name));
+    RootedShape shape(cx);
+    if ((shape = globalLexical->lookup(cx, name))) {
+        redeclKind = mozilla::Some(shape->writable() ? frontend::Definition::LET
+                                                     : frontend::Definition::CONST);
+    } else if ((shape = cx->global()->lookup(cx, name))) {
+        if (!shape->configurable())
+            redeclKind = mozilla::Some(frontend::Definition::VAR);
+    } else {
+        Rooted<PropertyDescriptor> desc(cx);
+        if (!GetOwnPropertyDescriptor(cx, varObj, id, &desc))
+            return false;
+        if (desc.object() && desc.hasConfigurable() && !desc.configurable())
+            redeclKind = mozilla::Some(frontend::Definition::VAR);
+    }
+    if (redeclKind.isSome()) {
+        ReportRuntimeRedeclaration(cx, name, *redeclKind);
+        return false;
+    }
+
+    RootedValue uninitialized(cx, MagicValue(JS_UNINITIALIZED_LEXICAL));
+    return NativeDefineProperty(cx, lexicalScope, id, uninitialized, nullptr, nullptr, attrs);
+}
+
+inline bool
+DefLexicalOperation(JSContext* cx, JSScript* script, jsbytecode* pc)
+{
+    MOZ_ASSERT(*pc == JSOP_DEFLET || *pc == JSOP_DEFCONST);
+    RootedPropertyName name(cx, script->getName(pc));
+
+    unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT;
+    if (*pc == JSOP_DEFCONST)
+        attrs |= JSPROP_READONLY;
+
+    return DefLexicalOperation(cx, name, attrs);
+}
+
+inline void
+InitGlobalLexicalOperation(JSContext* cx, JSScript* script, jsbytecode* pc, HandleValue value)
+{
+    MOZ_ASSERT(*pc == JSOP_INITGLEXICAL);
+    Rooted<ClonedBlockObject*> globalLexical(cx, &cx->global()->lexicalScope());
+    RootedShape shape(cx, globalLexical->lookup(cx, script->getName(pc)));
+    MOZ_ASSERT(shape);
+    globalLexical->setSlot(shape->slot(), value);
+}
+
+inline bool
 InitPropertyOperation(JSContext* cx, JSOp op, HandleObject obj, HandleId id, HandleValue rhs)
 {
     if (obj->is<PlainObject>() || obj->is<JSFunction>()) {
@@ -312,9 +368,19 @@ InitPropertyOperation(JSContext* cx, JSOp op, HandleObject obj, HandleId id, Han
 }
 
 inline bool
-DefVarOrConstOperation(JSContext* cx, HandleObject varobj, HandlePropertyName dn, unsigned attrs)
+DefVarOperation(JSContext* cx, HandleObject varobj, HandlePropertyName dn, unsigned attrs)
 {
     MOZ_ASSERT(varobj->isQualifiedVarObj());
+
+    // Due to the extensibility of the global lexical scope, we must check for
+    // redeclaring a lexical binding.
+    if (varobj == cx->global()) {
+        if (Shape* shape = cx->global()->lexicalScope().lookup(cx, dn)) {
+            ReportRuntimeRedeclaration(cx, dn, shape->writable() ? frontend::Definition::LET
+                                                                 : frontend::Definition::CONST);
+            return false;
+        }
+    }
 
     RootedShape prop(cx);
     RootedObject obj2(cx);
@@ -325,26 +391,6 @@ DefVarOrConstOperation(JSContext* cx, HandleObject varobj, HandlePropertyName dn
     if (!prop || (obj2 != varobj && varobj->is<GlobalObject>())) {
         if (!DefineProperty(cx, varobj, dn, UndefinedHandleValue, nullptr, nullptr, attrs))
             return false;
-    } else if (attrs & JSPROP_READONLY) {
-        /*
-         * Extension: ordinarily we'd be done here -- but for |const|.  If we
-         * see a redeclaration that's |const|, we consider it a conflict.
-         */
-        RootedId id(cx, NameToId(dn));
-        Rooted<PropertyDescriptor> desc(cx);
-        if (!GetOwnPropertyDescriptor(cx, obj2, id, &desc))
-            return false;
-
-        JSAutoByteString bytes;
-        if (AtomToPrintableString(cx, dn, &bytes)) {
-            bool isConst = desc.hasWritable() && !desc.writable();
-            JS_ALWAYS_FALSE(JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
-                                                         GetErrorMessage,
-                                                         nullptr, JSMSG_REDECLARED_VAR,
-                                                         isConst ? "const" : "var",
-                                                         bytes.ptr()));
-        }
-        return false;
     }
 
     return true;
