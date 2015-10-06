@@ -38,6 +38,10 @@
   font-size: 110%;
 }
 
+.alertSource {
+  color: gray;
+}
+
 #alertImage {
   max-width: 48px;
   max-height: 48px;
