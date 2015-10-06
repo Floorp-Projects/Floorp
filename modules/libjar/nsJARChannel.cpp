@@ -203,7 +203,6 @@ nsJARChannel::nsJARChannel()
     , mIsUnsafe(true)
     , mOpeningRemote(false)
     , mSynthesizedStreamLength(0)
-    , mForceNoIntercept(false)
     , mBlockRemoteFiles(false)
 {
     if (!gJarProtocolLog)
@@ -864,6 +863,12 @@ nsJARChannel::Open2(nsIInputStream** aStream)
 }
 
 bool
+nsJARChannel::BypassServiceWorker() const
+{
+  return mLoadFlags & LOAD_BYPASS_SERVICE_WORKER;
+}
+
+bool
 nsJARChannel::ShouldIntercept()
 {
     LOG(("nsJARChannel::ShouldIntercept [this=%x]\n", this));
@@ -877,7 +882,7 @@ nsJARChannel::ShouldIntercept()
                                   NS_GET_IID(nsINetworkInterceptController),
                                   getter_AddRefs(controller));
     bool shouldIntercept = false;
-    if (controller && !mForceNoIntercept) {
+    if (controller && !BypassServiceWorker() && mLoadInfo) {
       bool isNavigation = mLoadFlags & LOAD_DOCUMENT_URI;
       nsresult rv = controller->ShouldPrepareForIntercept(mAppURI,
                                                           isNavigation,
@@ -1122,7 +1127,7 @@ nsJARChannel::GetZipEntry(nsIZipEntry **aZipEntry)
 NS_IMETHODIMP
 nsJARChannel::ForceNoIntercept()
 {
-    mForceNoIntercept = true;
+    mLoadFlags |= LOAD_BYPASS_SERVICE_WORKER;
     return NS_OK;
 }
 
