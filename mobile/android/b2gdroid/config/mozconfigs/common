@@ -29,13 +29,13 @@ MOZ_SZIP_FLAGS="-D auto -f auto"
 
 ac_add_options --enable-elf-hack
 
-ANDROID_NDK_VERSION="r8e"
-ANDROID_NDK_VERSION_32BIT="r8c"
+ANDROID_NDK_VERSION="r10e"
+ANDROID_NDK_VERSION_32BIT="r10c"
 
 # Build B2GDroid
 ac_add_options --enable-application=mobile/android/b2gdroid
 
-ac_add_options --with-android-ndk="$topsrcdir/android-ndk"
+ac_add_options --with-android-ndk="$topsrcdir/android-ndk-r10e"
 ac_add_options --with-android-sdk="$topsrcdir/android-sdk-linux"
 
 ac_add_options --with-android-gnu-compiler-version=4.9
