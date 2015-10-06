@@ -192,14 +192,8 @@ OuterDocAccessible::RemoteChildDoc() const
   if (!tab)
     return nullptr;
 
-  // XXX Consider managing non top level remote documents with there parent
-  // document.
-  const nsTArray<PDocAccessibleParent*>& docs = tab->ManagedPDocAccessibleParent();
-  size_t docCount = docs.Length();
-  for (size_t i = 0; i < docCount; i++) {
-    auto doc = static_cast<DocAccessibleParent*>(docs[i]);
-    if (!doc->ParentDoc())
-      return doc;
+  if (DocAccessibleParent* doc = tab->GetTopLevelDocAccessible()) {
+    return doc;
   }
 
   MOZ_ASSERT(false, "no top level tab document?");
