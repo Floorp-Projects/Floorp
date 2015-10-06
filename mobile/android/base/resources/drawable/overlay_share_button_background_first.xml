@@ -13,16 +13,16 @@
     <item android:state_pressed="true">
         <shape>
             <solid android:color="@color/toolbar_grey_pressed"/>
-            <corners android:topLeftRadius="@dimen/button_corner_radius"
-                     android:topRightRadius="@dimen/button_corner_radius"/>
+            <corners android:topLeftRadius="@dimen/standard_corner_radius"
+                     android:topRightRadius="@dimen/standard_corner_radius"/>
         </shape>
     </item>
 
     <item>
         <shape>
             <solid android:color="@color/toolbar_grey"/>
-            <corners android:topLeftRadius="@dimen/button_corner_radius"
-                     android:topRightRadius="@dimen/button_corner_radius"/>
+            <corners android:topLeftRadius="@dimen/standard_corner_radius"
+                     android:topRightRadius="@dimen/standard_corner_radius"/>
         </shape>
     </item>
 

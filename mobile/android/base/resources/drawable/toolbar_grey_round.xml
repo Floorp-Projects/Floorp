@@ -5,6 +5,6 @@
 
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <solid android:color="@color/toolbar_grey"/>
-    <corners android:radius="@dimen/button_corner_radius"/>
+    <corners android:radius="@dimen/standard_corner_radius"/>
 </shape>
 
