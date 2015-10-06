@@ -82,6 +82,11 @@ child:
   async ClearCachedResources(uint64_t id);
 
 parent:
+  /**
+   * Confirmation callback for UpdatePluginConfigurations and HideAllPlugins.
+   */
+  async RemotePluginsReady();
+
   // Child sends the parent a request for fill ratio numbers.
   async RequestOverfill();
 
