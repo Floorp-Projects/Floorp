@@ -719,10 +719,6 @@ ICStubCompiler::getStubCode()
     if (!newStubCode)
         return nullptr;
 
-    // After generating code, run postGenerateStubCode()
-    if (!postGenerateStubCode(masm, newStubCode))
-        return nullptr;
-
     // All barriers are emitted off-by-default, enable them if needed.
     if (cx->zone()->needsIncrementalBarrier())
         newStubCode->togglePreBarriers(true);
@@ -730,6 +726,10 @@ ICStubCompiler::getStubCode()
     // Cache newly compiled stubcode.
     if (!comp->putStubCode(cx, stubKey, newStubCode))
         return nullptr;
+
+    // After generating code, run postGenerateStubCode().  We must not fail
+    // after this point.
+    postGenerateStubCode(masm, newStubCode);
 
     MOZ_ASSERT(entersStubFrame_ == ICStub::CanMakeCalls(kind));
     MOZ_ASSERT(!inStubFrame_);
