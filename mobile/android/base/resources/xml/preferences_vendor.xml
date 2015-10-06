@@ -15,8 +15,7 @@
 
     <org.mozilla.gecko.preferences.LinkPreference android:key="android.not_a_preference.faq.link"
                                                   android:title="@string/pref_vendor_faqs"
-                                                  android:persistent="false"
-                                                  url="https://support.mozilla.org/kb/firefox-android-faq"/>
+                                                  android:persistent="false"/>
 
     <org.mozilla.gecko.preferences.LinkPreference android:key="android.not_a_preference.feedback.link"
                                                   android:title="@string/pref_vendor_feedback"
