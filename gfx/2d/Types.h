@@ -192,7 +192,8 @@ enum class AntialiasMode : int8_t {
 enum class Filter : int8_t {
   GOOD,
   LINEAR,
-  POINT
+  POINT,
+  SENTINEL  // one past the last valid value
 };
 
 enum class PatternType : int8_t {
