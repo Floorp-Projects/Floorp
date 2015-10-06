@@ -1396,16 +1396,16 @@ HelperThread::handleParseWorkload()
         // ! WARNING WARNING WARNING !
         //
         // See comment in Parser::bindLexical about optimizing global lexical
-        // bindings. If we start optimizing them, passing in parseTask->cx's
+        // bindings. If we start optimizing them, passing in task->cx's
         // global lexical scope would be incorrect!
         //
         // ! WARNING WARNING WARNING !
-        ExclusiveContext* parseCx = parseTask->cx;
+        ExclusiveContext* parseCx = task->cx;
         Rooted<ClonedBlockObject*> globalLexical(parseCx, &parseCx->global()->lexicalScope());
         Rooted<ScopeObject*> staticScope(parseCx, &globalLexical->staticBlock());
-        task->script = frontend::CompileScript(parseCx, &parseTask->alloc,
+        task->script = frontend::CompileScript(parseCx, &task->alloc,
                                                globalLexical, staticScope, nullptr,
-                                               parseTask->options, srcBuf,
+                                               task->options, srcBuf,
                                                /* source_ = */ nullptr,
                                                /* extraSct = */ nullptr,
                                                /* sourceObjectOut = */ &(task->sourceObject));
