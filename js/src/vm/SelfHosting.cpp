@@ -1246,13 +1246,13 @@ intrinsic_ConstructorForTypedArray(JSContext* cx, unsigned argc, Value* vp)
 // Additionally, a set of C++-implemented helper functions is defined on the
 // self-hosting global.
 static const JSFunctionSpec intrinsic_functions[] = {
-    JS_FN("std_Array",                           ArrayConstructor,             1,0),
+    JS_INLINABLE_FN("std_Array",                 ArrayConstructor,             1,0, Array),
     JS_FN("std_Array_join",                      array_join,                   1,0),
-    JS_FN("std_Array_push",                      array_push,                   1,0),
-    JS_FN("std_Array_pop",                       array_pop,                    0,0),
-    JS_FN("std_Array_shift",                     array_shift,                  0,0),
+    JS_INLINABLE_FN("std_Array_push",            array_push,                   1,0, ArrayPush),
+    JS_INLINABLE_FN("std_Array_pop",             array_pop,                    0,0, ArrayPop),
+    JS_INLINABLE_FN("std_Array_shift",           array_shift,                  0,0, ArrayShift),
     JS_FN("std_Array_unshift",                   array_unshift,                1,0),
-    JS_FN("std_Array_slice",                     array_slice,                  2,0),
+    JS_INLINABLE_FN("std_Array_slice",           array_slice,                  2,0, ArraySlice),
     JS_FN("std_Array_sort",                      array_sort,                   1,0),
 
     JS_FN("std_Date_now",                        date_now,                     0,0),
@@ -1261,19 +1261,19 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_Function_bind",                   fun_bind,                     1,0),
     JS_FN("std_Function_apply",                  fun_apply,                    2,0),
 
-    JS_FN("std_Math_floor",                      math_floor,                   1,0),
-    JS_FN("std_Math_max",                        math_max,                     2,0),
-    JS_FN("std_Math_min",                        math_min,                     2,0),
-    JS_FN("std_Math_abs",                        math_abs,                     1,0),
-    JS_FN("std_Math_imul",                       math_imul,                    2,0),
-    JS_FN("std_Math_log2",                       math_log2,                    1,0),
+    JS_INLINABLE_FN("std_Math_floor",            math_floor,                   1,0, MathFloor),
+    JS_INLINABLE_FN("std_Math_max",              math_max,                     2,0, MathMax),
+    JS_INLINABLE_FN("std_Math_min",              math_min,                     2,0, MathMin),
+    JS_INLINABLE_FN("std_Math_abs",              math_abs,                     1,0, MathAbs),
+    JS_INLINABLE_FN("std_Math_imul",             math_imul,                    2,0, MathImul),
+    JS_INLINABLE_FN("std_Math_log2",             math_log2,                    1,0, MathLog2),
 
     JS_FN("std_Map_has",                         MapObject::has,               1,0),
     JS_FN("std_Map_iterator",                    MapObject::entries,           0,0),
 
     JS_FN("std_Number_valueOf",                  num_valueOf,                  0,0),
 
-    JS_FN("std_Object_create",                   obj_create,                   2,0),
+    JS_INLINABLE_FN("std_Object_create",         obj_create,                   2, 0, ObjectCreate),
     JS_FN("std_Object_propertyIsEnumerable",     obj_propertyIsEnumerable,     1,0),
     JS_FN("std_Object_defineProperty",           obj_defineProperty,           3,0),
     JS_FN("std_Object_getOwnPropertyNames",      obj_getOwnPropertyNames,      1,0),
@@ -1287,13 +1287,13 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_Set_has",                         SetObject::has,               1,0),
     JS_FN("std_Set_iterator",                    SetObject::values,            0,0),
 
-    JS_FN("std_String_fromCharCode",             str_fromCharCode,             1,0),
-    JS_FN("std_String_charCodeAt",               str_charCodeAt,               1,0),
+    JS_INLINABLE_FN("std_String_fromCharCode",   str_fromCharCode,             1,0, StringFromCharCode),
+    JS_INLINABLE_FN("std_String_charCodeAt",     str_charCodeAt,               1,0, StringCharCodeAt),
     JS_FN("std_String_indexOf",                  str_indexOf,                  1,0),
     JS_FN("std_String_lastIndexOf",              str_lastIndexOf,              1,0),
     JS_FN("std_String_match",                    str_match,                    1,0),
-    JS_FN("std_String_replace",                  str_replace,                  2,0),
-    JS_FN("std_String_split",                    str_split,                    2,0),
+    JS_INLINABLE_FN("std_String_replace",        str_replace,                  2,0, StringReplace),
+    JS_INLINABLE_FN("std_String_split",          str_split,                    2,0, StringSplit),
     JS_FN("std_String_startsWith",               str_startsWith,               1,0),
     JS_FN("std_String_toLowerCase",              str_toLowerCase,              0,0),
     JS_FN("std_String_toUpperCase",              str_toUpperCase,              0,0),
@@ -1304,8 +1304,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_WeakMap_delete",                  WeakMap_delete,               1,0),
     JS_FN("std_WeakMap_clear",                   WeakMap_clear,                0,0),
 
-    JS_FN("std_SIMD_Int32x4_extractLane",        simd_int32x4_extractLane,     2,0),
-    JS_FN("std_SIMD_Float32x4_extractLane",      simd_float32x4_extractLane,   2,0),
+    JS_INLINABLE_FN("std_SIMD_Int32x4_extractLane",   simd_int32x4_extractLane,  2,0, SimdInt32x4),
+    JS_INLINABLE_FN("std_SIMD_Float32x4_extractLane", simd_float32x4_extractLane,2,0, SimdFloat32x4),
     JS_FN("std_SIMD_Float64x2_extractLane",      simd_float64x2_extractLane,   2,0),
 
     // Helper funtions after this point.
