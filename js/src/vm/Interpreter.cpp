@@ -3429,8 +3429,13 @@ END_CASE(JSOP_INITALIASEDLEXICAL)
 
 CASE(JSOP_INITGLEXICAL)
 {
+    ClonedBlockObject* lexicalScope;
+    if (script->hasNonSyntacticScope())
+        lexicalScope = &REGS.fp()->extensibleLexicalScope();
+    else
+        lexicalScope = &cx->global()->lexicalScope();
     HandleValue value = REGS.stackHandleAt(-1);
-    InitGlobalLexicalOperation(cx, script, REGS.pc, value);
+    InitGlobalLexicalOperation(cx, lexicalScope, script, REGS.pc, value);
 }
 END_CASE(JSOP_INITGLEXICAL)
 
@@ -3502,7 +3507,16 @@ END_CASE(JSOP_DEFVAR)
 CASE(JSOP_DEFCONST)
 CASE(JSOP_DEFLET)
 {
-    if (!DefLexicalOperation(cx, script, REGS.pc))
+    ClonedBlockObject* lexicalScope;
+    JSObject* varObj;
+    if (script->hasNonSyntacticScope()) {
+        lexicalScope = &REGS.fp()->extensibleLexicalScope();
+        varObj = &REGS.fp()->varObj();
+    } else {
+        lexicalScope = &cx->global()->lexicalScope();
+        varObj = cx->global();
+    }
+    if (!DefLexicalOperation(cx, lexicalScope, varObj, script, REGS.pc))
         goto error;
 }
 END_CASE(JSOP_DEFLET)

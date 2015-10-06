@@ -7617,7 +7617,12 @@ DoSetPropFallback(JSContext* cx, BaselineFrame* frame, ICSetProp_Fallback* stub_
         obj->as<ScopeObject>().setAliasedVar(cx, ScopeCoordinate(pc), name, rhs);
     } else if (op == JSOP_INITGLEXICAL) {
         RootedValue v(cx, rhs);
-        InitGlobalLexicalOperation(cx, script, pc, v);
+        ClonedBlockObject* lexicalScope;
+        if (script->hasNonSyntacticScope())
+            lexicalScope = &NearestEnclosingExtensibleLexicalScope(frame->scopeChain());
+        else
+            lexicalScope = &cx->global()->lexicalScope();
+        InitGlobalLexicalOperation(cx, lexicalScope, script, pc, v);
     } else {
         MOZ_ASSERT(op == JSOP_SETPROP || op == JSOP_STRICTSETPROP);
 

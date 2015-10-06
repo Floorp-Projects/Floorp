@@ -1572,6 +1572,15 @@ JS_GetGlobalForObject(JSContext* cx, JSObject* obj);
 extern JS_PUBLIC_API(bool)
 JS_IsGlobalObject(JSObject* obj);
 
+extern JS_PUBLIC_API(JSObject*)
+JS_GlobalLexicalScope(JSObject* obj);
+
+extern JS_PUBLIC_API(bool)
+JS_HasExtensibleLexicalScope(JSObject* obj);
+
+extern JS_PUBLIC_API(JSObject*)
+JS_ExtensibleLexicalScope(JSObject* obj);
+
 /*
  * May return nullptr, if |c| never had a global (e.g. the atoms compartment),
  * or if |c|'s global has been collected.

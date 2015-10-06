@@ -3341,7 +3341,8 @@ SetPropertyIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex
         RootedScript script(cx);
         jsbytecode* pc;
         cache.getScriptedLocation(&script, &pc);
-        InitGlobalLexicalOperation(cx, script, pc, value);
+        MOZ_ASSERT(!script->hasNonSyntacticScope());
+        InitGlobalLexicalOperation(cx, &cx->global()->lexicalScope(), script, pc, value);
     } else {
         if (!SetProperty(cx, obj, name, value, cache.strict(), cache.pc()))
             return false;

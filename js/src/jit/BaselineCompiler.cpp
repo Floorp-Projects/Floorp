@@ -2481,8 +2481,8 @@ BaselineCompiler::emit_JSOP_DEFVAR()
     return callVM(DefVarInfo);
 }
 
-typedef bool (*DefLexicalFn)(JSContext*, HandlePropertyName, unsigned);
-static const VMFunction DefLexicalInfo = FunctionInfo<DefLexicalFn>(DefLexicalOperation);
+typedef bool (*DefLexicalFn)(JSContext*, HandlePropertyName, unsigned, HandleObject);
+static const VMFunction DefLexicalInfo = FunctionInfo<DefLexicalFn>(DefLexical);
 
 bool
 BaselineCompiler::emit_JSOP_DEFCONST()
@@ -2500,8 +2500,11 @@ BaselineCompiler::emit_JSOP_DEFLET()
         attrs |= JSPROP_READONLY;
     MOZ_ASSERT(attrs <= UINT32_MAX);
 
+    masm.loadPtr(frame.addressOfScopeChain(), R0.scratchReg());
+
     prepareVMCall();
 
+    pushArg(R0.scratchReg());
     pushArg(Imm32(attrs));
     pushArg(ImmGCPtr(script->getName(pc)));
 

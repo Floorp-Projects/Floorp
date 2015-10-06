@@ -1768,6 +1768,7 @@ IonBuilder::inspectOpcode(JSOp op)
         return true;
 
       case JSOP_INITGLEXICAL: {
+        MOZ_ASSERT(!script()->hasNonSyntacticScope());
         MDefinition* value = current->pop();
         current->push(constant(ObjectValue(script()->global().lexicalScope())));
         current->push(value);
@@ -12661,6 +12662,7 @@ IonBuilder::jsop_defvar(uint32_t index)
 bool
 IonBuilder::jsop_deflexical(uint32_t index)
 {
+    MOZ_ASSERT(!script()->hasNonSyntacticScope());
     MOZ_ASSERT(JSOp(*pc) == JSOP_DEFLET || JSOp(*pc) == JSOP_DEFCONST);
 
     PropertyName* name = script()->getName(index);
