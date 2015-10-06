@@ -102,7 +102,8 @@ nsHTTPDownloadEvent::Run()
   if (priorityChannel)
     priorityChannel->AdjustPriority(nsISupportsPriority::PRIORITY_HIGHEST);
 
-  chan->SetLoadFlags(nsIRequest::LOAD_ANONYMOUS);
+  chan->SetLoadFlags(nsIRequest::LOAD_ANONYMOUS |
+                     nsIChannel::LOAD_BYPASS_SERVICE_WORKER);
 
   // Create a loadgroup for this new channel.  This way if the channel
   // is redirected, we'll have a way to cancel the resulting channel.
@@ -133,9 +134,6 @@ nsHTTPDownloadEvent::Run()
   nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(chan);
   if (internalChannel) {
     rv = internalChannel->SetAllowSpdy(false);
-    NS_ENSURE_SUCCESS(rv, rv);
-    // OCSP requests should never be intercepted.
-    rv = internalChannel->ForceNoIntercept();
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
