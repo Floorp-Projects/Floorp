@@ -175,6 +175,25 @@ ICUUtils::AssignUCharArrayToString(UChar* aICUString,
   NS_ASSERTION((int32_t)aMozString.Length() == aLength, "Conversion failed");
 }
 
+/* static */ nsresult
+ICUUtils::UErrorToNsResult(const UErrorCode aErrorCode)
+{
+  if (U_SUCCESS(aErrorCode)) {
+    return NS_OK;
+  }
+
+  switch(aErrorCode) {
+    case U_ILLEGAL_ARGUMENT_ERROR:
+      return NS_ERROR_INVALID_ARG;
+
+    case U_MEMORY_ALLOCATION_ERROR:
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    default:
+      return NS_ERROR_FAILURE;
+  }
+}
+
 #if 0
 /* static */ Locale
 ICUUtils::BCP47CodeToLocale(const nsAString& aBCP47Code)
