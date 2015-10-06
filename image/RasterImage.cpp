@@ -1445,7 +1445,7 @@ RasterImage::DrawInternal(DrawableFrameRef&& aFrameRef,
                           gfxContext* aContext,
                           const IntSize& aSize,
                           const ImageRegion& aRegion,
-                          GraphicsFilter aFilter,
+                          Filter aFilter,
                           uint32_t aFlags)
 {
   gfxContextMatrixAutoSaveRestore saveMatrix(aContext);
@@ -1480,7 +1480,7 @@ RasterImage::DrawInternal(DrawableFrameRef&& aFrameRef,
 
 //******************************************************************************
 /* [noscript] void draw(in gfxContext aContext,
- *                      in gfxGraphicsFilter aFilter,
+ *                      in Filter aFilter,
  *                      [const] in gfxMatrix aUserSpaceToImageSpace,
  *                      [const] in gfxRect aFill,
  *                      [const] in IntRect aSubimage,
@@ -1493,7 +1493,7 @@ RasterImage::Draw(gfxContext* aContext,
                   const IntSize& aSize,
                   const ImageRegion& aRegion,
                   uint32_t aWhichFrame,
-                  GraphicsFilter aFilter,
+                  Filter aFilter,
                   const Maybe<SVGImageContext>& /*aSVGContext - ignored*/,
                   uint32_t aFlags)
 {
@@ -1850,7 +1850,7 @@ RasterImage::PropagateUseCounters(nsIDocument*)
 
 IntSize
 RasterImage::OptimalImageSizeForDest(const gfxSize& aDest, uint32_t aWhichFrame,
-                                     GraphicsFilter aFilter, uint32_t aFlags)
+                                     Filter aFilter, uint32_t aFlags)
 {
   MOZ_ASSERT(aDest.width >= 0 || ceil(aDest.width) <= INT32_MAX ||
              aDest.height >= 0 || ceil(aDest.height) <= INT32_MAX,

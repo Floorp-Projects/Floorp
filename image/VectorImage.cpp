@@ -263,7 +263,7 @@ public:
   { }
   virtual bool operator()(gfxContext* aContext,
                           const gfxRect& aFillRect,
-                          const GraphicsFilter& aFilter,
+                          const Filter& aFilter,
                           const gfxMatrix& aTransform);
 private:
   nsRefPtr<SVGDocumentWrapper> mSVGDocumentWrapper;
@@ -276,7 +276,7 @@ private:
 bool
 SVGDrawingCallback::operator()(gfxContext* aContext,
                                const gfxRect& aFillRect,
-                               const GraphicsFilter& aFilter,
+                               const Filter& aFilter,
                                const gfxMatrix& aTransform)
 {
   MOZ_ASSERT(mSVGDocumentWrapper, "need an SVGDocumentWrapper");
@@ -759,7 +759,7 @@ struct SVGDrawingParameters
   SVGDrawingParameters(gfxContext* aContext,
                        const nsIntSize& aSize,
                        const ImageRegion& aRegion,
-                       GraphicsFilter aFilter,
+                       Filter aFilter,
                        const Maybe<SVGImageContext>& aSVGContext,
                        float aAnimationTime,
                        uint32_t aFlags)
@@ -784,7 +784,7 @@ struct SVGDrawingParameters
   IntSize                       size;
   IntRect                       imageRect;
   ImageRegion                   region;
-  GraphicsFilter                filter;
+  Filter                        filter;
   const Maybe<SVGImageContext>& svgContext;
   nsIntSize                     viewportSize;
   float                         animationTime;
@@ -797,7 +797,7 @@ struct SVGDrawingParameters
  *                      [const] in nsIntSize aSize,
  *                      [const] in ImageRegion aRegion,
  *                      in uint32_t aWhichFrame,
- *                      in gfxGraphicsFilter aFilter,
+ *                      in Filter aFilter,
  *                      [const] in MaybeSVGImageContext aSVGContext,
  *                      in uint32_t aFlags); */
 NS_IMETHODIMP_(DrawResult)
@@ -805,7 +805,7 @@ VectorImage::Draw(gfxContext* aContext,
                   const nsIntSize& aSize,
                   const ImageRegion& aRegion,
                   uint32_t aWhichFrame,
-                  GraphicsFilter aFilter,
+                  Filter aFilter,
                   const Maybe<SVGImageContext>& aSVGContext,
                   uint32_t aFlags)
 {
@@ -1296,7 +1296,7 @@ VectorImage::ReportUseCounters()
 nsIntSize
 VectorImage::OptimalImageSizeForDest(const gfxSize& aDest,
                                      uint32_t aWhichFrame,
-                                     GraphicsFilter aFilter,
+                                     Filter aFilter,
                                      uint32_t aFlags)
 {
   MOZ_ASSERT(aDest.width >= 0 || ceil(aDest.width) <= INT32_MAX ||
