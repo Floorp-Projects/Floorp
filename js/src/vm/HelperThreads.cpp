@@ -127,14 +127,15 @@ CompiledScriptMatches(JSCompartment* compartment, JSScript* script, JSScript* ta
 {
     if (script)
         return target == script;
-    return target->compartment() == compartment;
+    if (compartment)
+        return target->compartment() == compartment;
+    return true;
 }
 
 void
 js::CancelOffThreadIonCompile(JSCompartment* compartment, JSScript* script)
 {
-    jit::JitCompartment* jitComp = compartment->jitCompartment();
-    if (!jitComp)
+    if (compartment && !compartment->jitCompartment())
         return;
 
     AutoLockHelperThreadState lock;
@@ -619,6 +620,120 @@ GlobalHelperThreadState::notifyOne(CondVar which)
 }
 
 bool
+GlobalHelperThreadState::hasActiveThreads()
+{
+    MOZ_ASSERT(isLocked());
+    if (!threads)
+        return false;
+
+    for (size_t i = 0; i < threadCount; i++) {
+        if (!threads[i].idle())
+            return true;
+    }
+
+    return false;
+}
+
+void
+GlobalHelperThreadState::waitForAllThreads()
+{
+    CancelOffThreadIonCompile(nullptr, nullptr);
+
+    AutoLockHelperThreadState lock;
+    while (hasActiveThreads())
+        wait(CONSUMER);
+}
+
+template <typename T>
+bool
+GlobalHelperThreadState::checkTaskThreadLimit(size_t maxThreads) const
+{
+    if (maxThreads >= threadCount)
+        return true;
+
+    size_t count = 0;
+    for (size_t i = 0; i < threadCount; i++) {
+        if (threads[i].currentTask.isSome() && threads[i].currentTask->is<T>())
+            count++;
+        if (count >= maxThreads)
+            return false;
+    }
+
+    return true;
+}
+
+static inline bool
+IsHelperThreadSimulatingOOM(js::oom::ThreadType threadType)
+{
+#if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
+    return js::oom::targetThread == threadType;
+#else
+    return false;
+#endif
+}
+
+size_t
+GlobalHelperThreadState::maxIonCompilationThreads() const
+{
+    if (IsHelperThreadSimulatingOOM(js::oom::THREAD_TYPE_ION))
+        return 1;
+    return threadCount;
+}
+
+size_t
+GlobalHelperThreadState::maxUnpausedIonCompilationThreads() const
+{
+    return 1;
+}
+
+size_t
+GlobalHelperThreadState::maxAsmJSCompilationThreads() const
+{
+    if (IsHelperThreadSimulatingOOM(js::oom::THREAD_TYPE_ASMJS))
+        return 1;
+    if (cpuCount < 2)
+        return 2;
+    return cpuCount;
+}
+
+size_t
+GlobalHelperThreadState::maxParseThreads() const
+{
+    if (IsHelperThreadSimulatingOOM(js::oom::THREAD_TYPE_PARSE))
+        return 1;
+
+    // Don't allow simultaneous off thread parses, to reduce contention on the
+    // atoms table. Note that asm.js compilation depends on this to avoid
+    // stalling the helper thread, as off thread parse tasks can trigger and
+    // block on other off thread asm.js compilation tasks.
+    return 1;
+}
+
+size_t
+GlobalHelperThreadState::maxCompressionThreads() const
+{
+    if (IsHelperThreadSimulatingOOM(js::oom::THREAD_TYPE_COMPRESS))
+        return 1;
+    return threadCount;
+}
+
+size_t
+GlobalHelperThreadState::maxGCHelperThreads() const
+{
+    if (IsHelperThreadSimulatingOOM(js::oom::THREAD_TYPE_GCHELPER))
+        return 1;
+    return threadCount;
+}
+
+size_t
+GlobalHelperThreadState::maxGCParallelThreads() const
+{
+    if (IsHelperThreadSimulatingOOM(js::oom::THREAD_TYPE_GCPARALLEL))
+        return 1;
+    return threadCount;
+}
+
+bool
 GlobalHelperThreadState::canStartAsmJSCompile()
 {
     // Don't execute an AsmJS job if an earlier one failed.
@@ -628,12 +743,7 @@ GlobalHelperThreadState::canStartAsmJSCompile()
 
     // Honor the maximum allowed threads to compile AsmJS jobs at once,
     // to avoid oversaturating the machine.
-    size_t numAsmJSThreads = 0;
-    for (size_t i = 0; i < threadCount; i++) {
-        if (threads[i].asmJSTask())
-            numAsmJSThreads++;
-    }
-    if (numAsmJSThreads >= maxAsmJSCompilationThreads())
+    if (!checkTaskThreadLimit<AsmJSParallelTask*>(maxAsmJSCompilationThreads()))
         return false;
 
     return true;
@@ -661,7 +771,8 @@ IonBuilderHasHigherPriority(jit::IonBuilder* first, jit::IonBuilder* second)
 bool
 GlobalHelperThreadState::canStartIonCompile()
 {
-    return !ionWorklist().empty();
+    return !ionWorklist().empty() &&
+           checkTaskThreadLimit<jit::IonBuilder*>(maxIonCompilationThreads());
 }
 
 jit::IonBuilder*
@@ -692,7 +803,7 @@ GlobalHelperThreadState::lowestPriorityUnpausedIonCompileAtThreshold()
     MOZ_ASSERT(isLocked());
 
     // Get the lowest priority IonBuilder which has started compilation and
-    // isn't paused, unless there are still fewer than the aximum number of
+    // isn't paused, unless there are still fewer than the maximum number of
     // such builders permitted.
     size_t numBuilderThreads = 0;
     HelperThread* thread = nullptr;
@@ -703,7 +814,7 @@ GlobalHelperThreadState::lowestPriorityUnpausedIonCompileAtThreshold()
                 thread = &threads[i];
         }
     }
-    if (numBuilderThreads < maxIonCompilationThreads())
+    if (numBuilderThreads < maxUnpausedIonCompilationThreads())
         return nullptr;
     return thread;
 }
@@ -759,36 +870,29 @@ GlobalHelperThreadState::pendingIonCompileHasSufficientPriority()
 bool
 GlobalHelperThreadState::canStartParseTask()
 {
-    // Don't allow simultaneous off thread parses, to reduce contention on the
-    // atoms table. Note that asm.js compilation depends on this to avoid
-    // stalling the helper thread, as off thread parse tasks can trigger and
-    // block on other off thread asm.js compilation tasks.
     MOZ_ASSERT(isLocked());
-    if (parseWorklist().empty())
-        return false;
-    for (size_t i = 0; i < threadCount; i++) {
-        if (threads[i].parseTask())
-            return false;
-    }
-    return true;
+    return !parseWorklist().empty() && checkTaskThreadLimit<ParseTask*>(maxParseThreads());
 }
 
 bool
 GlobalHelperThreadState::canStartCompressionTask()
 {
-    return !compressionWorklist().empty();
+    return !compressionWorklist().empty() &&
+           checkTaskThreadLimit<SourceCompressionTask*>(maxCompressionThreads());
 }
 
 bool
 GlobalHelperThreadState::canStartGCHelperTask()
 {
-    return !gcHelperWorklist().empty();
+    return !gcHelperWorklist().empty() &&
+           checkTaskThreadLimit<GCHelperState*>(maxGCHelperThreads());
 }
 
 bool
 GlobalHelperThreadState::canStartGCParallelTask()
 {
-    return !gcParallelWorklist().empty();
+    return !gcParallelWorklist().empty() &&
+           checkTaskThreadLimit<GCParallelTask*>(maxGCParallelThreads());
 }
 
 js::GCParallelTask::~GCParallelTask()
@@ -897,6 +1001,7 @@ HelperThread::handleGCParallelWorkload()
     currentTask.emplace(HelperThreadState().gcParallelWorklist().popCopy());
     gcParallelTask()->runFromHelperThread();
     currentTask.reset();
+    HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER);
 }
 
 static void
@@ -1432,6 +1537,7 @@ HelperThread::handleGCHelperWorkload()
     }
 
     currentTask.reset();
+    HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER);
 }
 
 void

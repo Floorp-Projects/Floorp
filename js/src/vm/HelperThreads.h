@@ -93,14 +93,13 @@ class GlobalHelperThreadState
     GCParallelTaskVector gcParallelWorklist_;
 
   public:
-    size_t maxIonCompilationThreads() const {
-        return 1;
-    }
-    size_t maxAsmJSCompilationThreads() const {
-        if (cpuCount < 2)
-            return 2;
-        return cpuCount;
-    }
+    size_t maxIonCompilationThreads() const;
+    size_t maxUnpausedIonCompilationThreads() const;
+    size_t maxAsmJSCompilationThreads() const;
+    size_t maxParseThreads() const;
+    size_t maxCompressionThreads() const;
+    size_t maxGCHelperThreads() const;
+    size_t maxGCParallelThreads() const;
 
     GlobalHelperThreadState();
 
@@ -235,6 +234,12 @@ class GlobalHelperThreadState
                                    JSCompartment* dest);
     bool compressionInProgress(SourceCompressionTask* task);
     SourceCompressionTask* compressionTaskForSource(ScriptSource* ss);
+
+    bool hasActiveThreads();
+    void waitForAllThreads();
+
+    template <typename T>
+    bool checkTaskThreadLimit(size_t maxThreads) const;
 
   private:
 

@@ -1019,6 +1019,7 @@ OOMAfterAllocations(JSContext* cx, unsigned argc, Value* vp)
     if (!JS::ToUint32(cx, args.get(0), &count))
         return false;
 
+    HelperThreadState().waitForAllThreads();
     js::oom::targetThread = targetThread;
     OOM_maxAllocations = OOM_counter + count;
     OOM_failAlways = true;
@@ -1052,6 +1053,7 @@ OOMAtAllocation(JSContext* cx, unsigned argc, Value* vp)
     if (!JS::ToUint32(cx, args.get(0), &count))
         return false;
 
+    HelperThreadState().waitForAllThreads();
     js::oom::targetThread = targetThread;
     OOM_maxAllocations = OOM_counter + count;
     OOM_failAlways = false;
