@@ -1440,6 +1440,23 @@ TabParent::RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
   return true;
 }
 
+a11y::DocAccessibleParent*
+TabParent::GetTopLevelDocAccessible() const
+{
+  // XXX Consider managing non top level PDocAccessibles with their parent
+  // document accessible.
+  const nsTArray<PDocAccessibleParent*>& docs = ManagedPDocAccessibleParent();
+  size_t docCount = docs.Length();
+  for (size_t i = 0; i < docCount; i++) {
+    auto doc = static_cast<a11y::DocAccessibleParent*>(docs[i]);
+    if (!doc->ParentDoc()) {
+      return doc;
+    }
+  }
+
+  return nullptr;
+}
+
 PDocumentRendererParent*
 TabParent::AllocPDocumentRendererParent(const nsRect& documentRect,
                                         const gfx::Matrix& transform,

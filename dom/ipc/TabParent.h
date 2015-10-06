@@ -39,6 +39,10 @@ class nsIDocShell;
 
 namespace mozilla {
 
+  namespace a11y {
+class DocAccessibleParent;
+  }
+
 namespace jsipc {
 class CpowHolder;
 } // namespace jsipc
@@ -258,6 +262,11 @@ public:
     RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
                                   PDocAccessibleParent* aParentDoc,
                                   const uint64_t& aParentID) override;
+
+    /**
+     * Return the top level doc accessible parent for this tab.
+     */
+     a11y::DocAccessibleParent* GetTopLevelDocAccessible() const;
 
     void LoadURL(nsIURI* aURI);
     // XXX/cjones: it's not clear what we gain by hiding these
