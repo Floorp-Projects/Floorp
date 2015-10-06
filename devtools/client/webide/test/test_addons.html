@@ -90,13 +90,12 @@
           return deferred.promise;
         }
 
-        Task.spawn(function* () {
-
-          Services.prefs.setBoolPref("devtools.webide.sidebars", false);
+        Task.spawn(function*() {
 
           ok(!Devices.helperAddonInstalled, "Helper not installed");
 
           let win = yield openWebIDE(true);
+          let docRuntime = getRuntimeDocument(win);
 
           yield adbAddonsInstalled.promise;
 
@@ -138,7 +137,7 @@
 
           yield nextTick();
 
-          let panelNode = win.document.querySelector("#runtime-panel");
+          let panelNode = docRuntime.querySelector("#runtime-panel");
           let items;
 
           items = panelNode.querySelectorAll(".runtime-panel-item-usb");
@@ -172,8 +171,6 @@
 
         });
       }
-
-
     </script>
   </body>
 </html>

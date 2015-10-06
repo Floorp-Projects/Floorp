@@ -23,14 +23,8 @@ module.exports = RuntimeList = function(window, parentWindow) {
   this._UI = parentWindow.UI;
   this._Cmds = parentWindow.Cmds;
   this._parentWindow = parentWindow;
-  this._panelNodeEl = "toolbarbutton";
-  this._panelBoxEl = "hbox";
-  this._sidebarsEnabled = Services.prefs.getBoolPref("devtools.webide.sidebars");
-
-  if (this._sidebarsEnabled) {
-    this._panelNodeEl = "button";
-    this._panelBoxEl = "div";
-  }
+  this._panelNodeEl = "button";
+  this._panelBoxEl = "div";
 
   this.onWebIDEUpdate = this.onWebIDEUpdate.bind(this);
   this._UI.on("webide-update", this.onWebIDEUpdate);
@@ -43,10 +37,6 @@ module.exports = RuntimeList = function(window, parentWindow) {
 RuntimeList.prototype = {
   get doc() {
     return this._doc;
-  },
-
-  get sidebarsEnabled() {
-    return this._sidebarsEnabled;
   },
 
   appManagerUpdate: function(event, what, details) {
@@ -187,18 +177,9 @@ RuntimeList.prototype = {
 
         let connectButton = doc.createElement(this._panelNodeEl);
         connectButton.className = "panel-item runtime-panel-item-" + type;
-
-        if (this._sidebarsEnabled) {
-          connectButton.textContent = r.name;
-        } else {
-          connectButton.setAttribute("label", r.name);
-          connectButton.setAttribute("flex", "1");
-        }
+        connectButton.textContent = r.name;
 
         connectButton.addEventListener("click", () => {
-          if (!this._sidebarsEnabled) {
-            this._UI.hidePanels();
-          }
           this._UI.dismissErrorNotification();
           this._UI.connectToRuntime(r);
         }, true);
@@ -219,13 +200,10 @@ RuntimeList.prototype = {
   destroy: function() {
     this._doc = null;
     AppManager.off("app-manager-update", this.appManagerUpdate);
-    if (this.sidebarsEnabled) {
-      this._UI.off("webide-update", this.onWebIDEUpdate);
-    }
+    this._UI.off("webide-update", this.onWebIDEUpdate);
     this._UI = null;
     this._Cmds = null;
     this._parentWindow = null;
     this._panelNodeEl = null;
-    this._sidebarsEnabled = null;
   }
 };
