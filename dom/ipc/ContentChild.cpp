@@ -895,6 +895,32 @@ NS_IMPL_ISUPPORTS(
 , nsIMemoryReporterCallback
 )
 
+class MemoryReportFinishedCallback final : public nsIFinishReportingCallback
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    explicit MemoryReportFinishedCallback(MemoryReportRequestChild* aActor)
+    : mActor(aActor)
+    {
+    }
+
+    NS_IMETHOD Callback(nsISupports* aUnused) override
+    {
+        bool sent = PMemoryReportRequestChild::Send__delete__(mActor);
+        return sent ? NS_OK : NS_ERROR_FAILURE;
+    }
+
+private:
+    ~MemoryReportFinishedCallback() {}
+
+    nsRefPtr<MemoryReportRequestChild> mActor;
+};
+NS_IMPL_ISUPPORTS(
+  MemoryReportFinishedCallback
+, nsIFinishReportingCallback
+)
+
 bool
 ContentChild::RecvPMemoryReportRequestConstructor(
     PMemoryReportRequestChild* aChild,
@@ -931,11 +957,12 @@ NS_IMETHODIMP MemoryReportRequestChild::Run()
     // MemoryReport.
     nsRefPtr<MemoryReportCallback> cb =
         new MemoryReportCallback(this, process);
-    mgr->GetReportsForThisProcessExtended(cb, nullptr, mAnonymize,
-                                          FileDescriptorToFILE(mDMDFile, "wb"));
+    nsRefPtr<MemoryReportFinishedCallback> finished =
+        new MemoryReportFinishedCallback(this);
 
-    bool sent = Send__delete__(this);
-    return sent ? NS_OK : NS_ERROR_FAILURE;
+    return mgr->GetReportsForThisProcessExtended(cb, nullptr, mAnonymize,
+                                                 FileDescriptorToFILE(mDMDFile, "wb"),
+                                                 finished, nullptr);
 }
 
 bool
