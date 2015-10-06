@@ -155,10 +155,10 @@ js::CancelOffThreadIonCompile(JSCompartment* compartment, JSScript* script)
     /* Wait for in progress entries to finish up. */
     for (size_t i = 0; i < HelperThreadState().threadCount; i++) {
         HelperThread& helper = HelperThreadState().threads[i];
-        while (helper.ionBuilder &&
-               CompiledScriptMatches(compartment, script, helper.ionBuilder->script()))
+        while (helper.ionBuilder() &&
+               CompiledScriptMatches(compartment, script, helper.ionBuilder()->script()))
         {
-            helper.ionBuilder->cancel();
+            helper.ionBuilder()->cancel();
             if (helper.pause) {
                 helper.pause = false;
                 HelperThreadState().notifyAll(GlobalHelperThreadState::PAUSE);
@@ -274,7 +274,7 @@ js::CancelOffThreadParses(JSRuntime* rt)
         if (!pending) {
             bool inProgress = false;
             for (size_t i = 0; i < HelperThreadState().threadCount; i++) {
-                ParseTask* task = HelperThreadState().threads[i].parseTask;
+                ParseTask* task = HelperThreadState().threads[i].parseTask();
                 if (task && task->runtimeMatches(rt))
                     inProgress = true;
             }
@@ -630,7 +630,7 @@ GlobalHelperThreadState::canStartAsmJSCompile()
     // to avoid oversaturating the machine.
     size_t numAsmJSThreads = 0;
     for (size_t i = 0; i < threadCount; i++) {
-        if (threads[i].asmData)
+        if (threads[i].asmJSTask())
             numAsmJSThreads++;
     }
     if (numAsmJSThreads >= maxAsmJSCompilationThreads())
@@ -697,9 +697,9 @@ GlobalHelperThreadState::lowestPriorityUnpausedIonCompileAtThreshold()
     size_t numBuilderThreads = 0;
     HelperThread* thread = nullptr;
     for (size_t i = 0; i < threadCount; i++) {
-        if (threads[i].ionBuilder && !threads[i].pause) {
+        if (threads[i].ionBuilder() && !threads[i].pause) {
             numBuilderThreads++;
-            if (!thread || IonBuilderHasHigherPriority(thread->ionBuilder, threads[i].ionBuilder))
+            if (!thread || IonBuilderHasHigherPriority(thread->ionBuilder(), threads[i].ionBuilder()))
                 thread = &threads[i];
         }
     }
@@ -719,8 +719,8 @@ GlobalHelperThreadState::highestPriorityPausedIonCompile()
     for (size_t i = 0; i < threadCount; i++) {
         if (threads[i].pause) {
             // Currently, only threads with IonBuilders can be paused.
-            MOZ_ASSERT(threads[i].ionBuilder);
-            if (!thread || IonBuilderHasHigherPriority(threads[i].ionBuilder, thread->ionBuilder))
+            MOZ_ASSERT(threads[i].ionBuilder());
+            if (!thread || IonBuilderHasHigherPriority(threads[i].ionBuilder(), thread->ionBuilder()))
                 thread = &threads[i];
         }
     }
@@ -748,7 +748,8 @@ GlobalHelperThreadState::pendingIonCompileHasSufficientPriority()
     // If there is a builder in the worklist with higher priority than some
     // builder currently being compiled, then that current compilation can be
     // paused, so allow the compilation.
-    if (IonBuilderHasHigherPriority(highestPriorityPendingIonCompile(), lowestPriorityThread->ionBuilder))
+    if (IonBuilderHasHigherPriority(highestPriorityPendingIonCompile(),
+                                    lowestPriorityThread->ionBuilder()))
         return true;
 
     // Compilation will have to wait until one of the active compilations finishes.
@@ -766,7 +767,7 @@ GlobalHelperThreadState::canStartParseTask()
     if (parseWorklist().empty())
         return false;
     for (size_t i = 0; i < threadCount; i++) {
-        if (threads[i].parseTask)
+        if (threads[i].parseTask())
             return false;
     }
     return true;
@@ -893,10 +894,9 @@ HelperThread::handleGCParallelWorkload()
     MOZ_ASSERT(HelperThreadState().canStartGCParallelTask());
     MOZ_ASSERT(idle());
 
-    MOZ_ASSERT(!gcParallelTask);
-    gcParallelTask = HelperThreadState().gcParallelWorklist().popCopy();
-    gcParallelTask->runFromHelperThread();
-    gcParallelTask = nullptr;
+    currentTask.emplace(HelperThreadState().gcParallelWorklist().popCopy());
+    gcParallelTask()->runFromHelperThread();
+    currentTask.reset();
 }
 
 static void
@@ -1094,9 +1094,10 @@ HelperThread::handleAsmJSWorkload()
     MOZ_ASSERT(HelperThreadState().canStartAsmJSCompile());
     MOZ_ASSERT(idle());
 
-    asmData = HelperThreadState().asmJSWorklist().popCopy();
+    currentTask.emplace(HelperThreadState().asmJSWorklist().popCopy());
     bool success = false;
 
+    AsmJSParallelTask* asmData = asmJSTask();
     do {
         AutoUnlockHelperThreadState unlock;
         PerThreadData::AutoEnterRuntime enter(threadData.ptr(), asmData->runtime);
@@ -1129,13 +1130,13 @@ HelperThread::handleAsmJSWorkload()
     if (!success) {
         HelperThreadState().noteAsmJSFailure(asmData->func);
         HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER);
-        asmData = nullptr;
+        currentTask.reset();
         return;
     }
 
     // Notify the main thread in case it's blocked waiting for a LifoAlloc.
     HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER);
-    asmData = nullptr;
+    currentTask.reset();
 }
 
 void
@@ -1156,32 +1157,32 @@ HelperThread::handleIonWorkload()
     // was called, the builder we are pausing may actually be higher priority
     // than the one we are about to start. Oh well.
     if (HelperThread* other = HelperThreadState().lowestPriorityUnpausedIonCompileAtThreshold()) {
-        MOZ_ASSERT(other->ionBuilder && !other->pause);
+        MOZ_ASSERT(other->ionBuilder() && !other->pause);
         other->pause = true;
     }
 
-    ionBuilder = builder;
-    ionBuilder->setPauseFlag(&pause);
+    currentTask.emplace(builder);
+    builder->setPauseFlag(&pause);
 
     TraceLoggerThread* logger = TraceLoggerForCurrentThread();
-    TraceLoggerEvent event(logger, TraceLogger_AnnotateScripts, ionBuilder->script());
+    TraceLoggerEvent event(logger, TraceLogger_AnnotateScripts, builder->script());
     AutoTraceLog logScript(logger, event);
     AutoTraceLog logCompile(logger, TraceLogger_IonCompilation);
 
-    JSRuntime* rt = ionBuilder->script()->compartment()->runtimeFromAnyThread();
+    JSRuntime* rt = builder->script()->compartment()->runtimeFromAnyThread();
 
     {
         AutoUnlockHelperThreadState unlock;
         PerThreadData::AutoEnterRuntime enter(threadData.ptr(),
-                                              ionBuilder->script()->runtimeFromAnyThread());
+                                              builder->script()->runtimeFromAnyThread());
         jit::JitContext jctx(jit::CompileRuntime::get(rt),
-                             jit::CompileCompartment::get(ionBuilder->script()->compartment()),
-                             &ionBuilder->alloc());
-        ionBuilder->setBackgroundCodegen(jit::CompileBackEnd(ionBuilder));
+                             jit::CompileCompartment::get(builder->script()->compartment()),
+                             &builder->alloc());
+        builder->setBackgroundCodegen(jit::CompileBackEnd(builder));
     }
 
-    FinishOffThreadIonCompile(ionBuilder);
-    ionBuilder = nullptr;
+    FinishOffThreadIonCompile(builder);
+    currentTask.reset();
     pause = false;
 
     // Ping the main thread so that the compiled code can be incorporated
@@ -1201,12 +1202,12 @@ HelperThread::handleIonWorkload()
     // many there are, since each thread we unpause will eventually finish and
     // end up back here.
     if (HelperThread* other = HelperThreadState().highestPriorityPausedIonCompile()) {
-        MOZ_ASSERT(other->ionBuilder && other->pause);
+        MOZ_ASSERT(other->ionBuilder() && other->pause);
 
         // Only unpause the other thread if there isn't a higher priority
         // builder which this thread or another can start on.
         jit::IonBuilder* builder = HelperThreadState().highestPriorityPendingIonCompile();
-        if (!builder || IonBuilderHasHigherPriority(other->ionBuilder, builder)) {
+        if (!builder || IonBuilderHasHigherPriority(other->ionBuilder(), builder)) {
             other->pause = false;
 
             // Notify all paused threads, to make sure the one we just
@@ -1257,7 +1258,7 @@ ExclusiveContext::addPendingCompileError()
     frontend::CompileError* error = js_new<frontend::CompileError>();
     if (!error)
         MOZ_CRASH();
-    if (!helperThread()->parseTask->errors.append(error))
+    if (!helperThread()->parseTask()->errors.append(error))
         MOZ_CRASH();
     return *error;
 }
@@ -1265,8 +1266,8 @@ ExclusiveContext::addPendingCompileError()
 void
 ExclusiveContext::addPendingOverRecursed()
 {
-    if (helperThread()->parseTask)
-        helperThread()->parseTask->overRecursed = true;
+    if (helperThread()->parseTask())
+        helperThread()->parseTask()->overRecursed = true;
 }
 
 void
@@ -1276,33 +1277,34 @@ HelperThread::handleParseWorkload()
     MOZ_ASSERT(HelperThreadState().canStartParseTask());
     MOZ_ASSERT(idle());
 
-    parseTask = HelperThreadState().parseWorklist().popCopy();
-    parseTask->cx->setHelperThread(this);
+    currentTask.emplace(HelperThreadState().parseWorklist().popCopy());
+    ParseTask* task = parseTask();
+    task->cx->setHelperThread(this);
 
     {
         AutoUnlockHelperThreadState unlock;
         PerThreadData::AutoEnterRuntime enter(threadData.ptr(),
-                                              parseTask->exclusiveContextGlobal->runtimeFromAnyThread());
-        SourceBufferHolder srcBuf(parseTask->chars, parseTask->length,
+                                              task->exclusiveContextGlobal->runtimeFromAnyThread());
+        SourceBufferHolder srcBuf(task->chars, task->length,
                                   SourceBufferHolder::NoOwnership);
-        parseTask->script = frontend::CompileScript(parseTask->cx, &parseTask->alloc,
-                                                    nullptr, nullptr, nullptr,
-                                                    parseTask->options,
-                                                    srcBuf,
-                                                    /* source_ = */ nullptr,
-                                                    /* extraSct = */ nullptr,
-                                                    /* sourceObjectOut = */ &(parseTask->sourceObject));
+        task->script = frontend::CompileScript(task->cx, &task->alloc,
+                                               nullptr, nullptr, nullptr,
+                                               task->options,
+                                               srcBuf,
+                                               /* source_ = */ nullptr,
+                                               /* extraSct = */ nullptr,
+                                               /* sourceObjectOut = */ &(task->sourceObject));
     }
 
     // The callback is invoked while we are still off the main thread.
-    parseTask->callback(parseTask, parseTask->callbackData);
+    task->callback(task, task->callbackData);
 
     // FinishOffThreadScript will need to be called on the script to
     // migrate it into the correct compartment.
-    if (!HelperThreadState().parseFinishedList().append(parseTask))
+    if (!HelperThreadState().parseFinishedList().append(task))
         CrashAtUnhandlableOOM("handleParseWorkload");
 
-    parseTask = nullptr;
+    currentTask.reset();
 
     // Notify the main thread in case it is waiting for the parse/emit to finish.
     HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER);
@@ -1315,16 +1317,17 @@ HelperThread::handleCompressionWorkload()
     MOZ_ASSERT(HelperThreadState().canStartCompressionTask());
     MOZ_ASSERT(idle());
 
-    compressionTask = HelperThreadState().compressionWorklist().popCopy();
-    compressionTask->helperThread = this;
+    currentTask.emplace(HelperThreadState().compressionWorklist().popCopy());
+    SourceCompressionTask* task = compressionTask();
+    task->helperThread = this;
 
     {
         AutoUnlockHelperThreadState unlock;
-        compressionTask->result = compressionTask->work();
+        task->result = task->work();
     }
 
-    compressionTask->helperThread = nullptr;
-    compressionTask = nullptr;
+    task->helperThread = nullptr;
+    currentTask.reset();
 
     // Notify the main thread in case it is waiting for the compression to finish.
     HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER);
@@ -1354,7 +1357,7 @@ GlobalHelperThreadState::compressionInProgress(SourceCompressionTask* task)
             return true;
     }
     for (size_t i = 0; i < threadCount; i++) {
-        if (threads[i].compressionTask == task)
+        if (threads[i].compressionTask() == task)
             return true;
     }
     return false;
@@ -1406,7 +1409,7 @@ GlobalHelperThreadState::compressionTaskForSource(ScriptSource* ss)
             return task;
     }
     for (size_t i = 0; i < threadCount; i++) {
-        SourceCompressionTask* task = threads[i].compressionTask;
+        SourceCompressionTask* task = threads[i].compressionTask();
         if (task && task->source() == ss)
             return task;
     }
@@ -1420,15 +1423,15 @@ HelperThread::handleGCHelperWorkload()
     MOZ_ASSERT(HelperThreadState().canStartGCHelperTask());
     MOZ_ASSERT(idle());
 
-    MOZ_ASSERT(!gcHelperState);
-    gcHelperState = HelperThreadState().gcHelperWorklist().popCopy();
+    currentTask.emplace(HelperThreadState().gcHelperWorklist().popCopy());
+    GCHelperState* task = gcHelperTask();
 
     {
         AutoUnlockHelperThreadState unlock;
-        gcHelperState->work();
+        task->work();
     }
 
-    gcHelperState = nullptr;
+    currentTask.reset();
 }
 
 void
