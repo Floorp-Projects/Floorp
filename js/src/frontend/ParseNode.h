@@ -131,7 +131,6 @@ class PackedScopeCoordinate
     F(CONTINUE) \
     F(VAR) \
     F(CONST) \
-    F(GLOBALCONST) \
     F(WITH) \
     F(RETURN) \
     F(NEW) \
@@ -1571,7 +1570,6 @@ struct Definition : public ParseNode
     enum Kind {
         MISSING = 0,
         VAR,
-        GLOBALCONST,
         CONST,
         LET,
         ARG,
@@ -1601,8 +1599,6 @@ struct Definition : public ParseNode
             return IMPORT;
         if (isLexical())
             return isConst() ? CONST : LET;
-        if (isConst())
-            return GLOBALCONST;
         return VAR;
     }
 };

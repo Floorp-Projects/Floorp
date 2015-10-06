@@ -76,6 +76,7 @@ class MOZ_STACK_CLASS BytecodeCompiler
                        bool insideNonGlobalEval = false);
     bool isEvalCompilationUnit();
     bool isNonGlobalEvalCompilationUnit();
+    bool isNonSyntacticCompilationUnit();
     bool createParseContext(Maybe<ParseContext<FullParseHandler>>& parseContext,
                             SharedContext& globalsc, uint32_t blockScopeDepth = 0);
     bool saveCallerFun(HandleScript evalCaller, ParseContext<FullParseHandler>& parseContext);
@@ -280,7 +281,7 @@ BytecodeCompiler::createEmitter(SharedContext* sharedContext, HandleScript evalC
 bool
 BytecodeCompiler::isEvalCompilationUnit()
 {
-    return enclosingStaticScope && enclosingStaticScope->is<StaticEvalObject>();
+    return enclosingStaticScope->is<StaticEvalObject>();
 }
 
 bool
@@ -288,6 +289,12 @@ BytecodeCompiler::isNonGlobalEvalCompilationUnit()
 {
     return isEvalCompilationUnit() &&
            enclosingStaticScope->as<StaticEvalObject>().enclosingScopeForStaticScopeIter();
+}
+
+bool
+BytecodeCompiler::isNonSyntacticCompilationUnit()
+{
+    return enclosingStaticScope->is<StaticNonSyntacticScopeObjects>();
 }
 
 bool

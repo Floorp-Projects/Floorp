@@ -590,8 +590,9 @@ js::XDRInterpretedFunction(XDRState<mode>* xdr, HandleObject enclosingScope, Han
         gc::AllocKind allocKind = gc::AllocKind::FUNCTION;
         if (uint16_t(flagsword) & JSFunction::EXTENDED)
             allocKind = gc::AllocKind::FUNCTION_EXTENDED;
+        RootedObject globalLexical(cx, &cx->global()->lexicalScope());
         fun = NewFunctionWithProto(cx, nullptr, 0, JSFunction::INTERPRETED,
-                                   /* enclosingDynamicScope = */ nullptr, nullptr, proto,
+                                   globalLexical, nullptr, proto,
                                    allocKind, TenuredObject);
         if (!fun)
             return false;

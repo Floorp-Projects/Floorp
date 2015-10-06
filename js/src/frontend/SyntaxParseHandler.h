@@ -349,6 +349,7 @@ class SyntaxParseHandler
     }
 
     bool finishInitializerAssignment(Node pn, Node init, JSOp op) { return true; }
+    void setLexicalDeclarationOp(Node pn, JSOp op) {}
 
     void setBeginPosition(Node pn, Node oth) {}
     void setBeginPosition(Node pn, uint32_t begin) {}
@@ -371,8 +372,7 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
     Node newDeclarationList(ParseNodeKind kind, JSOp op = JSOP_NOP) {
-        MOZ_ASSERT(kind == PNK_VAR || kind == PNK_CONST || kind == PNK_LET ||
-                   kind == PNK_GLOBALCONST);
+        MOZ_ASSERT(kind == PNK_VAR || kind == PNK_CONST || kind == PNK_LET);
         return kind == PNK_VAR ? NodeHoistableDeclaration : NodeGeneric;
     }
     Node newList(ParseNodeKind kind, Node kid, JSOp op = JSOP_NOP) {
@@ -380,8 +380,7 @@ class SyntaxParseHandler
         return NodeGeneric;
     }
     Node newDeclarationList(ParseNodeKind kind, Node kid, JSOp op = JSOP_NOP) {
-        MOZ_ASSERT(kind == PNK_VAR || kind == PNK_CONST || kind == PNK_LET ||
-                   kind == PNK_GLOBALCONST);
+        MOZ_ASSERT(kind == PNK_VAR || kind == PNK_CONST || kind == PNK_LET);
         return kind == PNK_VAR ? NodeHoistableDeclaration : NodeGeneric;
     }
 
