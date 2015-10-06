@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    'IntelWebMVideoDecoder.h',
     'NesteggPacketHolder.h',
     'SoftwareWebMVideoDecoder.h',
     'WebMBufferedParser.h',
@@ -22,10 +21,6 @@ UNIFIED_SOURCES += [
     'WebMDemuxer.cpp',
     'WebMReader.cpp',
 ]
-
-if CONFIG['MOZ_FMP4'] and CONFIG['MOZ_WMF']:
-    DEFINES['MOZ_PDM_VPX'] = True
-    UNIFIED_SOURCES += ['IntelWebMVideoDecoder.cpp']
 
 if CONFIG['MOZ_WEBM_ENCODER']:
     EXPORTS += ['WebMWriter.h']
