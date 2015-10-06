@@ -27,9 +27,7 @@ function run_test() {
   }).then(function(responseList) {
     ok(responseList.length > 0, 'should have at least one response in cache');
     responseList.forEach(function(response) {
-      ok(response, 'each response in list should be non-null');
-      do_check_eq(response.headers.get('Content-Type'), 'text/plain;charset=UTF-8',
-                  'the response should have the correct header');
+      ok(response, 'each request in list should be non-null');
     });
   }).then(function() {
     do_test_finished();

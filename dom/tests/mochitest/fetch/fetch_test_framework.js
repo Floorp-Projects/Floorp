@@ -1,9 +1,4 @@
 function testScript(script) {
-  // reroute.html should have set this variable if a service worker is present!
-  if (!("isSWPresent" in window)) {
-    window.isSWPresent = false;
-  }
-
   function setupPrefs() {
     return new Promise(function(resolve, reject) {
       SpecialPowers.pushPrefEnv({
