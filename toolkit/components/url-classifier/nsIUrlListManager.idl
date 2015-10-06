@@ -18,7 +18,7 @@ interface nsIUrlListManagerCallback : nsISupports {
 };
 
 
-[scriptable, uuid(5d5ed98f-72cd-46b6-a9fe-76418adfdfeb)]
+[scriptable, uuid(d60a08ee-5c83-4eb6-bdfb-79fd0716501e)]
 interface nsIUrlListManager : nsISupports
 {
     /**
@@ -32,10 +32,12 @@ interface nsIUrlListManager : nsISupports
      * @param tableName A string of the format
      *        provider_name-semantic_type-table_type.  For example,
      *        goog-white-enchash or goog-black-url.
+     * @param providerName The name of the entity providing the list.
      * @param updateUrl The URL from which to fetch updates.
      * @param gethashUrl The URL from which to fetch hash completions.
      */
     boolean registerTable(in ACString tableName,
+                          in ACString providerName,
                           in ACString updateUrl,
                           in ACString gethashUrl);
 
