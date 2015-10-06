@@ -310,7 +310,7 @@ DefLexicalOperation(JSContext* cx, Handle<ClonedBlockObject*> lexicalScope,
     RootedShape shape(cx);
     if ((shape = lexicalScope->lookup(cx, name))) {
         redeclKind = mozilla::Some(shape->writable() ? frontend::Definition::LET
-                                                     : frontend::Definition::CONST);
+                                                     : frontend::Definition::CONSTANT);
     } else if (varObj->isNative() && (shape = varObj->as<NativeObject>().lookup(cx, name))) {
         if (!shape->configurable())
             redeclKind = mozilla::Some(frontend::Definition::VAR);
@@ -385,7 +385,7 @@ DefVarOperation(JSContext* cx, HandleObject varobj, HandlePropertyName dn, unsig
     if (varobj == cx->global()) {
         if (Shape* shape = cx->global()->lexicalScope().lookup(cx, dn)) {
             ReportRuntimeRedeclaration(cx, dn, shape->writable() ? frontend::Definition::LET
-                                                                 : frontend::Definition::CONST);
+                                                                 : frontend::Definition::CONSTANT);
             return false;
         }
     }

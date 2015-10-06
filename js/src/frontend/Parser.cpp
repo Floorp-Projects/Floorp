@@ -180,7 +180,7 @@ ParseContext<FullParseHandler>::define(TokenStream& ts,
     MOZ_ASSERT_IF(pn->isDefn(), pn->isPlaceholder());
 
     Definition* prevDef = nullptr;
-    if (kind == Definition::LET || kind == Definition::CONST)
+    if (kind == Definition::LET || kind == Definition::CONSTANT)
         prevDef = decls_.lookupFirst(name);
     else
         MOZ_ASSERT(!decls_.lookupFirst(name));
@@ -191,8 +191,8 @@ ParseContext<FullParseHandler>::define(TokenStream& ts,
     if (prevDef) {
         ParseNode** pnup = &prevDef->dn_uses;
         ParseNode* pnu;
-        unsigned start = (kind == Definition::LET || kind == Definition::CONST) ? pn->pn_blockid
-                                                                                : bodyid;
+        unsigned start = (kind == Definition::LET || kind == Definition::CONSTANT)
+                         ? pn->pn_blockid : bodyid;
 
         while ((pnu = *pnup) != nullptr && pnu->pn_blockid >= start) {
             MOZ_ASSERT(pnu->pn_blockid >= bodyid);
@@ -214,10 +214,10 @@ ParseContext<FullParseHandler>::define(TokenStream& ts,
         pn->pn_dflags |= prevDef->pn_dflags & PND_CLOSED;
     }
 
-    MOZ_ASSERT_IF(kind != Definition::LET && kind != Definition::CONST, !lexdeps->lookup(name));
+    MOZ_ASSERT_IF(kind != Definition::LET && kind != Definition::CONSTANT, !lexdeps->lookup(name));
     pn->setDefn(true);
     pn->pn_dflags &= ~PND_PLACEHOLDER;
-    if (kind == Definition::CONST)
+    if (kind == Definition::CONSTANT)
         pn->pn_dflags |= PND_CONST;
 
     Definition* dn = (Definition*)pn;
@@ -260,7 +260,7 @@ ParseContext<FullParseHandler>::define(TokenStream& ts,
         break;
 
       case Definition::LET:
-      case Definition::CONST:
+      case Definition::CONSTANT:
         // See FullParseHandler::setLexicalDeclarationOp.
         dn->setOp(dn->pn_scopecoord.isFree() ? JSOP_INITGLEXICAL : JSOP_INITLEXICAL);
         dn->pn_dflags |= (PND_LEXICAL | PND_BOUND);
@@ -370,7 +370,7 @@ void
 ParseContext<ParseHandler>::popLetDecl(JSAtom* atom)
 {
     MOZ_ASSERT(ParseHandler::getDefinitionKind(decls_.lookupFirst(atom)) == Definition::LET ||
-               ParseHandler::getDefinitionKind(decls_.lookupFirst(atom)) == Definition::CONST);
+               ParseHandler::getDefinitionKind(decls_.lookupFirst(atom)) == Definition::CONSTANT);
     decls_.remove(atom);
 }
 
@@ -393,7 +393,7 @@ AppendPackedBindings(const ParseContext<ParseHandler>* pc, const DeclVector& vec
           case Definition::VAR:
             kind = Binding::VARIABLE;
             break;
-          case Definition::CONST:
+          case Definition::CONSTANT:
             kind = Binding::CONSTANT;
             break;
           case Definition::ARG:
@@ -1059,7 +1059,7 @@ Parser<FullParseHandler>::checkFunctionArguments()
     // arguments object.
     bool argumentsHasLocalBinding = maybeArgDef && (maybeArgDef->kind() != Definition::ARG &&
                                                     maybeArgDef->kind() != Definition::LET &&
-                                                    maybeArgDef->kind() != Definition::CONST);
+                                                    maybeArgDef->kind() != Definition::CONSTANT);
 
     /*
      * Even if 'arguments' isn't explicitly mentioned, dynamic name lookup
@@ -2084,7 +2084,7 @@ Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
             MOZ_ASSERT(!dn->isUsed());
             MOZ_ASSERT(dn->isDefn());
 
-            bool throwRedeclarationError = dn->kind() == Definition::CONST ||
+            bool throwRedeclarationError = dn->kind() == Definition::CONSTANT ||
                                            dn->kind() == Definition::LET;
             if (options().extraWarningsOption || throwRedeclarationError) {
                 JSAutoByteString name;
@@ -2316,7 +2316,7 @@ Parser<SyntaxParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
          * function (thereby avoiding JSOP_DEFFUN and dynamic name lookup).
          */
         if (DefinitionNode dn = pc->decls().lookupFirst(funName)) {
-            if (dn == Definition::CONST || dn == Definition::LET) {
+            if (dn == Definition::CONSTANT || dn == Definition::LET) {
                 JSAutoByteString name;
                 if (!AtomToPrintableString(context, funName, &name) ||
                     !report(ParseError, false, null(), JSMSG_REDECLARED_VAR,
@@ -3299,7 +3299,7 @@ Parser<FullParseHandler>::bindLexical(BindData<FullParseHandler>* data,
     if (pn->isImport())
         bindingKind = Definition::IMPORT;
     else if (data->isConst())
-        bindingKind = Definition::CONST;
+        bindingKind = Definition::CONSTANT;
     else
         bindingKind = Definition::LET;
 
@@ -3554,7 +3554,7 @@ Parser<ParseHandler>::bindVar(BindData<ParseHandler>* data,
     } else {
         bool inCatchBody = (stmt && stmt->type == StmtType::CATCH);
         bool error = (dn_kind == Definition::IMPORT ||
-                      dn_kind == Definition::CONST ||
+                      dn_kind == Definition::CONSTANT ||
                       (dn_kind == Definition::LET &&
                        (!inCatchBody || OuterLet(pc, stmt, name))));
 
