@@ -654,6 +654,7 @@ moz_native_devices_jars = [
     CONFIG['ANDROID_MEDIAROUTER_V7_AAR_LIB'],
     CONFIG['ANDROID_MEDIAROUTER_V7_AAR_INTERNAL_LIB'],
     CONFIG['ANDROID_PLAY_SERVICES_BASE_AAR_LIB'],
+    CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB'],
     CONFIG['ANDROID_PLAY_SERVICES_CAST_AAR_LIB'],
 ]
 moz_native_devices_sources = [
@@ -672,8 +673,13 @@ if CONFIG['MOZ_NATIVE_DEVICES']:
         resjar.generated_sources += ['android/support/v7/mediarouter/R.java']
 
     if CONFIG['ANDROID_PLAY_SERVICES_BASE_AAR']:
-        ANDROID_EXTRA_PACKAGES += ['com.google.android.gms']
+        ANDROID_EXTRA_PACKAGES += ['com.google.android.gms.base']
         ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_BASE_AAR_RES']]
+        resjar.generated_sources += ['com/google/android/gms/base/R.java']
+
+    if CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR']:
+        ANDROID_EXTRA_PACKAGES += ['com.google.android.gms']
+        ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR_RES']]
         resjar.generated_sources += ['com/google/android/gms/R.java']
 
     if CONFIG['ANDROID_PLAY_SERVICES_CAST_AAR']:

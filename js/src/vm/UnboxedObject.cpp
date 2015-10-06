@@ -1474,7 +1474,7 @@ UnboxedArrayObject::obj_defineProperty(JSContext* cx, HandleObject obj, HandleId
                     nobj->setLengthInt32(index + 1);
                 return result.succeed();
             }
-            nobj->setInitializedLength(index);
+            nobj->setInitializedLengthNoBarrier(index);
         }
     }
 
@@ -1891,7 +1891,7 @@ UnboxedArrayObject::fillAfterConvert(ExclusiveContext* cx,
 {
     MOZ_ASSERT(CapacityArray[1] == 0);
     setCapacityIndex(1);
-    setInitializedLength(0);
+    setInitializedLengthNoBarrier(0);
     setInlineElements();
 
     setLength(cx, NextValue(values, valueCursor).toInt32());

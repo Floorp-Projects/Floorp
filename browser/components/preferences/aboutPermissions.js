@@ -46,7 +46,7 @@ var gVisitStmt = gPlacesDatabase.createAsyncStatement(
  * Permission types that should be tested with testExactPermission, as opposed
  * to testPermission. This is based on what consumers use to test these permissions.
  */
-var TEST_EXACT_PERM_TYPES = ["geo", "camera", "microphone"];
+var TEST_EXACT_PERM_TYPES = ["geo", "camera", "microphone", "desktop-notification"];
 
 /**
  * Site object represents a single site, uniquely identified by a principal.
@@ -321,15 +321,8 @@ var PermissionDefaults = {
     Services.prefs.setBoolPref("dom.disable_open_during_load", value);
   },
 
-  get push() {
-    if (!Services.prefs.getBoolPref("dom.push.enabled")) {
-      return this.DENY;
-    }
+  get ["desktop-notification"]() {
     return this.UNKNOWN;
-  },
-  set push(aValue) {
-    let value = (aValue != this.DENY);
-    Services.prefs.setBoolPref("dom.push.enabled", value);
   },
   get camera() {
     return this.UNKNOWN;
@@ -384,17 +377,18 @@ var AboutPermissions = {
    * Potential future additions: "sts/use", "sts/subd"
    */
   _supportedPermissions: ["password", "cookie", "geo", "indexedDB", "popup",
-                          "camera", "microphone", "push"],
+                          "camera", "microphone", "desktop-notification"],
 
   /**
    * Permissions that don't have a global "Allow" option.
    */
-  _noGlobalAllow: ["geo", "indexedDB", "camera", "microphone", "push"],
+  _noGlobalAllow: ["geo", "indexedDB", "camera", "microphone",
+                   "desktop-notification"],
 
   /**
    * Permissions that don't have a global "Deny" option.
    */
-  _noGlobalDeny: ["camera", "microphone"],
+  _noGlobalDeny: ["camera", "microphone", "desktop-notification"],
 
   _stringBundle: Services.strings.
                  createBundle("chrome://browser/locale/preferences/aboutPermissions.properties"),

@@ -210,7 +210,7 @@ bool VertexBufferInterface::directStoragePossible(const gl::VertexAttribute &att
 StreamingVertexBufferInterface::StreamingVertexBufferInterface(BufferFactoryD3D *factory, std::size_t initialSize)
     : VertexBufferInterface(factory, true)
 {
-    setBufferSize(initialSize);
+    setBufferSize(static_cast<unsigned int>(initialSize));
 }
 
 StreamingVertexBufferInterface::~StreamingVertexBufferInterface()

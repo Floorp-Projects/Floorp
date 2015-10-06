@@ -81,6 +81,10 @@ class LCovSource
     LSprinter outDA_;
     size_t numLinesInstrumented_;
     size_t numLinesHit_;
+
+    // Status flags.
+    bool hasFilename_ : 1;
+    bool hasScripts_ : 1;
 };
 
 class LCovCompartment
@@ -103,7 +107,7 @@ class LCovCompartment
     bool writeCompartmentName(JSCompartment* comp);
 
     // Return the LCovSource entry which matches the given ScriptSourceObject.
-    LCovSource* lookup(JSObject* sso);
+    LCovSource* lookupOrAdd(JSCompartment* comp, JSObject* sso);
 
   private:
     typedef Vector<LCovSource, 16, LifoAllocPolicy<Fallible>> LCovSourceVector;

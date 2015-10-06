@@ -13,10 +13,10 @@
 #include "libANGLE/Caps.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/Framebuffer.h"
+#include "libANGLE/State.h"
 #include "libANGLE/Uniform.h"
 #include "libANGLE/angletypes.h"
 #include "libANGLE/renderer/ImplFactory.h"
-#include "libANGLE/renderer/Workarounds.h"
 #include "common/mathutil.h"
 
 #include <stdint.h>
@@ -30,17 +30,11 @@ class Display;
 class Surface;
 }
 
-namespace gl
-{
-class Buffer;
-struct Data;
-}
-
 namespace rx
 {
 struct TranslatedIndexData;
 struct SourceIndexData;
-struct Workarounds;
+struct WorkaroundsD3D;
 class DisplayImpl;
 
 class Renderer : public ImplFactory
@@ -52,11 +46,34 @@ class Renderer : public ImplFactory
     virtual gl::Error flush() = 0;
     virtual gl::Error finish() = 0;
 
-    virtual gl::Error drawArrays(const gl::Data &data, GLenum mode,
-                                 GLint first, GLsizei count, GLsizei instances) = 0;
-    virtual gl::Error drawElements(const gl::Data &data, GLenum mode, GLsizei count, GLenum type,
-                                   const GLvoid *indices, GLsizei instances,
-                                   const gl::RangeUI &indexRange) = 0;
+    virtual gl::Error drawArrays(const gl::Data &data, GLenum mode, GLint first, GLsizei count) = 0;
+    virtual gl::Error drawArraysInstanced(const gl::Data &data,
+                                          GLenum mode,
+                                          GLint first,
+                                          GLsizei count,
+                                          GLsizei instanceCount) = 0;
+
+    virtual gl::Error drawElements(const gl::Data &data,
+                                   GLenum mode,
+                                   GLsizei count,
+                                   GLenum type,
+                                   const GLvoid *indices,
+                                   const gl::IndexRange &indexRange) = 0;
+    virtual gl::Error drawElementsInstanced(const gl::Data &data,
+                                            GLenum mode,
+                                            GLsizei count,
+                                            GLenum type,
+                                            const GLvoid *indices,
+                                            GLsizei instances,
+                                            const gl::IndexRange &indexRange) = 0;
+    virtual gl::Error drawRangeElements(const gl::Data &data,
+                                        GLenum mode,
+                                        GLuint start,
+                                        GLuint end,
+                                        GLsizei count,
+                                        GLenum type,
+                                        const GLvoid *indices,
+                                        const gl::IndexRange &indexRange) = 0;
 
     // lost device
     //TODO(jmadill): investigate if this stuff is necessary in GL
@@ -73,28 +90,25 @@ class Renderer : public ImplFactory
     virtual void pushGroupMarker(GLsizei length, const char *marker) = 0;
     virtual void popGroupMarker() = 0;
 
+    virtual void syncState(const gl::State &state, const gl::State::DirtyBits &dirtyBits) = 0;
+
     // Renderer capabilities
     const gl::Caps &getRendererCaps() const;
     const gl::TextureCapsMap &getRendererTextureCaps() const;
     const gl::Extensions &getRendererExtensions() const;
     const gl::Limitations &getRendererLimitations() const;
-    const Workarounds &getWorkarounds() const;
 
   private:
     void ensureCapsInitialized() const;
     virtual void generateCaps(gl::Caps *outCaps, gl::TextureCapsMap* outTextureCaps,
                               gl::Extensions *outExtensions,
                               gl::Limitations *outLimitations) const = 0;
-    virtual Workarounds generateWorkarounds() const = 0;
 
     mutable bool mCapsInitialized;
     mutable gl::Caps mCaps;
     mutable gl::TextureCapsMap mTextureCaps;
     mutable gl::Extensions mExtensions;
     mutable gl::Limitations mLimitations;
-
-    mutable bool mWorkaroundsInitialized;
-    mutable Workarounds mWorkarounds;
 };
 
 }

@@ -13,7 +13,7 @@ class TranslatorHLSL : public TCompiler
 {
   public:
     TranslatorHLSL(sh::GLenum type, ShShaderSpec spec, ShShaderOutput output);
-    virtual TranslatorHLSL *getAsTranslatorHLSL() { return this; }
+    TranslatorHLSL *getAsTranslatorHLSL() override { return this; }
 
     bool hasInterfaceBlock(const std::string &interfaceBlockName) const;
     unsigned int getInterfaceBlockRegister(const std::string &interfaceBlockName) const;
@@ -22,7 +22,10 @@ class TranslatorHLSL : public TCompiler
     unsigned int getUniformRegister(const std::string &uniformName) const;
 
   protected:
-    virtual void translate(TIntermNode *root, int compileOptions);
+    void translate(TIntermNode *root, int compileOptions) override;
+
+    // collectVariables needs to be run always so registers can be assigned.
+    bool shouldCollectVariables(int compileOptions) override { return true; }
 
     std::map<std::string, unsigned int> mInterfaceBlockRegisterMap;
     std::map<std::string, unsigned int> mUniformRegisterMap;

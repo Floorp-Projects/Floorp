@@ -48,7 +48,7 @@ typedef unsigned int GLenum;
 
 // Version number for shader translation API.
 // It is incremented every time the API changes.
-#define ANGLE_SH_VERSION 138
+#define ANGLE_SH_VERSION 140
 
 typedef enum {
   SH_GLES2_SPEC = 0x8B40,
@@ -247,6 +247,7 @@ typedef struct
     int OES_standard_derivatives;
     int OES_EGL_image_external;
     int ARB_texture_rectangle;
+    int EXT_blend_func_extended;
     int EXT_draw_buffers;
     int EXT_frag_depth;
     int EXT_shader_texture_lod;
@@ -270,6 +271,13 @@ typedef struct
     int MaxFragmentInputVectors;
     int MinProgramTexelOffset;
     int MaxProgramTexelOffset;
+
+    // Extension constants.
+
+    // Value of GL_MAX_DUAL_SOURCE_DRAW_BUFFERS_EXT for OpenGL ES output context.
+    // Value of GL_MAX_DUAL_SOURCE_DRAW_BUFFERS for OpenGL output context.
+    // GLES SL version 100 gl_MaxDualSourceDrawBuffersEXT value for EXT_blend_func_extended.
+    int MaxDualSourceDrawBuffers;
 
     // Name Hashing.
     // Set a 64 bit hash function to enable user-defined name hashing.
@@ -398,7 +406,7 @@ COMPILER_EXPORT const std::map<std::string, std::string> *ShGetNameHashingMap(
 COMPILER_EXPORT const std::vector<sh::Uniform> *ShGetUniforms(const ShHandle handle);
 COMPILER_EXPORT const std::vector<sh::Varying> *ShGetVaryings(const ShHandle handle);
 COMPILER_EXPORT const std::vector<sh::Attribute> *ShGetAttributes(const ShHandle handle);
-COMPILER_EXPORT const std::vector<sh::Attribute> *ShGetOutputVariables(const ShHandle handle);
+COMPILER_EXPORT const std::vector<sh::OutputVariable> *ShGetOutputVariables(const ShHandle handle);
 COMPILER_EXPORT const std::vector<sh::InterfaceBlock> *ShGetInterfaceBlocks(const ShHandle handle);
 
 typedef struct

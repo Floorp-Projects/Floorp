@@ -633,13 +633,13 @@ gl::Error Image11::map(D3D11_MAP mapType, D3D11_MAPPED_SUBRESOURCE *map)
     ASSERT(mStagingTexture);
     HRESULT result = deviceContext->Map(stagingTexture, subresourceIndex, mapType, 0, map);
 
-    // this can fail if the device is removed (from TDR)
-    if (d3d11::isDeviceLostError(result))
+    if (FAILED(result))
     {
-        mRenderer->notifyDeviceLost();
-    }
-    else if (FAILED(result))
-    {
+        // this can fail if the device is removed (from TDR)
+        if (d3d11::isDeviceLostError(result))
+        {
+            mRenderer->notifyDeviceLost();
+        }
         return gl::Error(GL_OUT_OF_MEMORY, "Failed to map staging texture, result: 0x%X.", result);
     }
 

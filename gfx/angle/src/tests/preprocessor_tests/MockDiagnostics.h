@@ -8,7 +8,7 @@
 #define PREPROCESSOR_TESTS_MOCK_DIAGNOSTICS_H_
 
 #include "gmock/gmock.h"
-#include "DiagnosticsBase.h"
+#include "compiler/preprocessor/DiagnosticsBase.h"
 
 class MockDiagnostics : public pp::Diagnostics
 {

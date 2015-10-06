@@ -464,6 +464,12 @@ void InsertBuiltInFunctions(sh::GLenum type, ShShaderSpec spec, const ShBuiltInR
     if (spec != SH_CSS_SHADERS_SPEC)
     {
         symbolTable.insertConstInt(COMMON_BUILTINS, "gl_MaxDrawBuffers", resources.MaxDrawBuffers);
+        if (resources.EXT_blend_func_extended)
+        {
+            symbolTable.insertConstIntExt(COMMON_BUILTINS, "GL_EXT_blend_func_extended",
+                                          "gl_MaxDualSourceDrawBuffersEXT",
+                                          resources.MaxDualSourceDrawBuffers);
+        }
     }
 
     symbolTable.insertConstInt(ESSL3_BUILTINS, "gl_MaxVertexOutputVectors", resources.MaxVertexOutputVectors);
@@ -502,19 +508,24 @@ void IdentifyBuiltIns(sh::GLenum type, ShShaderSpec spec,
             fragData.setArraySize(resources.MaxDrawBuffers);
             symbolTable.insert(ESSL1_BUILTINS, new TVariable(NewPoolTString("gl_FragData"), fragData));
 
-            if (resources.EXT_frag_depth)
+            if (resources.EXT_blend_func_extended)
             {
                 symbolTable.insert(
-                    ESSL1_BUILTINS, "GL_EXT_frag_depth",
-                    new TVariable(
-                        NewPoolTString("gl_FragDepthEXT"),
-                        TType(EbtFloat, resources.FragmentPrecisionHigh ? EbpHigh : EbpMedium,
-                              EvqFragDepthEXT, 1)));
+                    ESSL1_BUILTINS, "GL_EXT_blend_func_extended",
+                    new TVariable(NewPoolTString("gl_SecondaryFragColorEXT"),
+                                  TType(EbtFloat, EbpMedium, EvqSecondaryFragColorEXT, 4)));
+                TType secondaryFragData(EbtFloat, EbpMedium, EvqSecondaryFragDataEXT, 4, 1, true);
+                secondaryFragData.setArraySize(resources.MaxDualSourceDrawBuffers);
+                symbolTable.insert(
+                    ESSL1_BUILTINS, "GL_EXT_blend_func_extended",
+                    new TVariable(NewPoolTString("gl_SecondaryFragDataEXT"), secondaryFragData));
             }
 
-            symbolTable.insert(ESSL3_BUILTINS,
-                               new TVariable(NewPoolTString("gl_FragDepth"),
-                                             TType(EbtFloat, EbpHigh, EvqFragDepth, 1)));
+            if (resources.EXT_frag_depth)
+            {
+                symbolTable.insert(ESSL1_BUILTINS, "GL_EXT_frag_depth", new TVariable(NewPoolTString("gl_FragDepthEXT"),
+                    TType(EbtFloat, resources.FragmentPrecisionHigh ? EbpHigh : EbpMedium, EvqFragDepth, 1)));
+            }
 
             if (resources.EXT_shader_framebuffer_fetch || resources.NV_shader_framebuffer_fetch)
             {
@@ -575,6 +586,8 @@ void InitExtensionBehavior(const ShBuiltInResources& resources,
         extBehavior["GL_OES_EGL_image_external"] = EBhUndefined;
     if (resources.ARB_texture_rectangle)
         extBehavior["GL_ARB_texture_rectangle"] = EBhUndefined;
+    if (resources.EXT_blend_func_extended)
+        extBehavior["GL_EXT_blend_func_extended"] = EBhUndefined;
     if (resources.EXT_draw_buffers)
         extBehavior["GL_EXT_draw_buffers"] = EBhUndefined;
     if (resources.EXT_frag_depth)

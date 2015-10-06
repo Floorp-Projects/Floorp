@@ -19,6 +19,78 @@
 #  include <windows.graphics.display.h>
 #endif
 
+namespace
+{
+
+template <class IndexType>
+gl::IndexRange ComputeTypedIndexRange(const IndexType *indices,
+                                      size_t count,
+                                      bool primitiveRestartEnabled,
+                                      GLuint primitiveRestartIndex)
+{
+    ASSERT(count > 0);
+
+    IndexType minIndex                = 0;
+    IndexType maxIndex                = 0;
+    size_t nonPrimitiveRestartIndices = 0;
+
+    if (primitiveRestartEnabled)
+    {
+        // Find the first non-primitive restart index to initialize the min and max values
+        size_t i = 0;
+        for (; i < count; i++)
+        {
+            if (indices[i] != primitiveRestartIndex)
+            {
+                minIndex = indices[i];
+                maxIndex = indices[i];
+                nonPrimitiveRestartIndices++;
+                break;
+            }
+        }
+
+        // Loop over the rest of the indices
+        for (; i < count; i++)
+        {
+            if (indices[i] != primitiveRestartIndex)
+            {
+                if (minIndex > indices[i])
+                {
+                    minIndex = indices[i];
+                }
+                if (maxIndex < indices[i])
+                {
+                    maxIndex = indices[i];
+                }
+                nonPrimitiveRestartIndices++;
+            }
+        }
+    }
+    else
+    {
+        minIndex                   = indices[0];
+        maxIndex                   = indices[0];
+        nonPrimitiveRestartIndices = count;
+
+        for (size_t i = 1; i < count; i++)
+        {
+            if (minIndex > indices[i])
+            {
+                minIndex = indices[i];
+            }
+            if (maxIndex < indices[i])
+            {
+                maxIndex = indices[i];
+            }
+        }
+    }
+
+    return gl::IndexRange(static_cast<size_t>(minIndex), static_cast<size_t>(maxIndex),
+                          nonPrimitiveRestartIndices);
+}
+
+}  // anonymous namespace
+
 namespace gl
 {
 
@@ -399,30 +471,44 @@ GLenum LayerIndexToCubeMapTextureTarget(size_t index)
     return FirstCubeMapTextureTarget + static_cast<GLenum>(index);
 }
 
-template <class IndexType>
-static RangeUI ComputeTypedIndexRange(const IndexType *indices, GLsizei count)
-{
-    ASSERT(count > 0);
-    IndexType minIndex = indices[0];
-    IndexType maxIndex = indices[0];
-
-    for (GLsizei i = 1; i < count; i++)
-    {
-        if (minIndex > indices[i]) minIndex = indices[i];
-        if (maxIndex < indices[i]) maxIndex = indices[i];
-    }
-
-    return RangeUI(static_cast<GLuint>(minIndex), static_cast<GLuint>(maxIndex));
-}
-
-RangeUI ComputeIndexRange(GLenum indexType, const GLvoid *indices, GLsizei count)
+IndexRange ComputeIndexRange(GLenum indexType,
+                             const GLvoid *indices,
+                             size_t count,
+                             bool primitiveRestartEnabled)
 {
     switch (indexType)
     {
-      case GL_UNSIGNED_BYTE:  return ComputeTypedIndexRange(static_cast<const GLubyte*>(indices), count);
-      case GL_UNSIGNED_SHORT: return ComputeTypedIndexRange(static_cast<const GLushort*>(indices), count);
-      case GL_UNSIGNED_INT:   return ComputeTypedIndexRange(static_cast<const GLuint*>(indices), count);
-      default: UNREACHABLE(); return RangeUI(0, 0);
+        case GL_UNSIGNED_BYTE:
+            return ComputeTypedIndexRange(static_cast<const GLubyte *>(indices), count,
+                                          primitiveRestartEnabled,
+                                          GetPrimitiveRestartIndex(indexType));
+        case GL_UNSIGNED_SHORT:
+            return ComputeTypedIndexRange(static_cast<const GLushort *>(indices), count,
+                                          primitiveRestartEnabled,
+                                          GetPrimitiveRestartIndex(indexType));
+        case GL_UNSIGNED_INT:
+            return ComputeTypedIndexRange(static_cast<const GLuint *>(indices), count,
+                                          primitiveRestartEnabled,
+                                          GetPrimitiveRestartIndex(indexType));
+        default:
+            UNREACHABLE();
+            return IndexRange();
+    }
+}
+
+GLuint GetPrimitiveRestartIndex(GLenum indexType)
+{
+    switch (indexType)
+    {
+        case GL_UNSIGNED_BYTE:
+            return 0xFF;
+        case GL_UNSIGNED_SHORT:
+            return 0xFFFF;
+        case GL_UNSIGNED_INT:
+            return 0xFFFFFFFF;
+        default:
+            UNREACHABLE();
+            return 0;
     }
 }
 
@@ -553,6 +639,99 @@ std::string ParseUniformName(const std::string &name, size_t *outSubscript)
     return name.substr(0, open);
 }
 
+}
+
+namespace egl
+{
+static_assert(EGL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X_KHR - EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_X_KHR == 1,
+              "Unexpected EGL cube map enum value.");
+static_assert(EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y_KHR - EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_X_KHR == 2,
+              "Unexpected EGL cube map enum value.");
+static_assert(EGL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_KHR - EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_X_KHR == 3,
+              "Unexpected EGL cube map enum value.");
+static_assert(EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z_KHR - EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_X_KHR == 4,
+              "Unexpected EGL cube map enum value.");
+static_assert(EGL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_KHR - EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_X_KHR == 5,
+              "Unexpected EGL cube map enum value.");
+
+bool IsCubeMapTextureTarget(EGLenum target)
+{
+    return (target >= FirstCubeMapTextureTarget && target <= LastCubeMapTextureTarget);
+}
+
+size_t CubeMapTextureTargetToLayerIndex(EGLenum target)
+{
+    ASSERT(IsCubeMapTextureTarget(target));
+    return target - static_cast<size_t>(FirstCubeMapTextureTarget);
+}
+
+EGLenum LayerIndexToCubeMapTextureTarget(size_t index)
+{
+    ASSERT(index <= (LastCubeMapTextureTarget - FirstCubeMapTextureTarget));
+    return FirstCubeMapTextureTarget + static_cast<GLenum>(index);
+}
+
+bool IsTextureTarget(EGLenum target)
+{
+    switch (target)
+    {
+        case EGL_GL_TEXTURE_2D_KHR:
+        case EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_X_KHR:
+        case EGL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X_KHR:
+        case EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y_KHR:
+        case EGL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_KHR:
+        case EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z_KHR:
+        case EGL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_KHR:
+        case EGL_GL_TEXTURE_3D_KHR:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+bool IsRenderbufferTarget(EGLenum target)
+{
+    return target == EGL_GL_RENDERBUFFER_KHR;
+}
+}
+
+namespace egl_gl
+{
+GLenum EGLCubeMapTargetToGLCubeMapTarget(EGLenum eglTarget)
+{
+    ASSERT(egl::IsCubeMapTextureTarget(eglTarget));
+    return gl::LayerIndexToCubeMapTextureTarget(egl::CubeMapTextureTargetToLayerIndex(eglTarget));
+}
+
+GLenum EGLImageTargetToGLTextureTarget(EGLenum eglTarget)
+{
+    switch (eglTarget)
+    {
+        case EGL_GL_TEXTURE_2D_KHR:
+            return GL_TEXTURE_2D;
+
+        case EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_X_KHR:
+        case EGL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X_KHR:
+        case EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y_KHR:
+        case EGL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_KHR:
+        case EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z_KHR:
+        case EGL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_KHR:
+            return EGLCubeMapTargetToGLCubeMapTarget(eglTarget);
+
+        case EGL_GL_TEXTURE_3D_KHR:
+            return GL_TEXTURE_3D;
+
+        default:
+            UNREACHABLE();
+            return GL_NONE;
+    }
+}
+
+GLuint EGLClientBufferToGLObjectHandle(EGLClientBuffer buffer)
+{
+    return static_cast<GLuint>(reinterpret_cast<uintptr_t>(buffer));
+}
 }
 
 #if !defined(ANGLE_ENABLE_WINDOWS_STORE)

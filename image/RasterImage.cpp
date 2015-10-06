@@ -288,31 +288,22 @@ RasterImage::LookupFrameInternal(uint32_t aFrameNum,
     return mAnim->GetCompositedFrame(aFrameNum);
   }
 
-  Maybe<SurfaceFlags> alternateFlags;
-  if (IsOpaque()) {
-    // If we're opaque, we can always substitute a frame that was decoded with a
-    // different decode flag for premultiplied alpha, because that can only
-    // matter for frames with transparency.
-    alternateFlags.emplace(ToSurfaceFlags(aFlags) ^
-                             SurfaceFlags::NO_PREMULTIPLY_ALPHA);
-  }
+  SurfaceFlags surfaceFlags = ToSurfaceFlags(aFlags);
 
-  // We don't want any substitution for sync decodes (except the premultiplied
-  // alpha optimization above), so we use SurfaceCache::Lookup in this case.
+  // We don't want any substitution for sync decodes, so we use
+  // SurfaceCache::Lookup in this case.
   if (aFlags & FLAG_SYNC_DECODE) {
     return SurfaceCache::Lookup(ImageKey(this),
                                 RasterSurfaceKey(aSize,
-                                                 ToSurfaceFlags(aFlags),
-                                                 aFrameNum),
-                                alternateFlags);
+                                                 surfaceFlags,
+                                                 aFrameNum));
   }
 
   // We'll return the best match we can find to the requested frame.
   return SurfaceCache::LookupBestMatch(ImageKey(this),
                                        RasterSurfaceKey(aSize,
-                                                        ToSurfaceFlags(aFlags),
-                                                        aFrameNum),
-                                       alternateFlags);
+                                                        surfaceFlags,
+                                                        aFrameNum));
 }
 
 DrawableFrameRef
@@ -321,6 +312,12 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
                          uint32_t aFlags)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  // If we're opaque, we don't need to care about premultiplied alpha, because
+  // that can only matter for frames with transparency.
+  if (IsOpaque()) {
+    aFlags &= ~FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
+  }
 
   IntSize requestedSize = CanDownscaleDuringDecode(aSize, aFlags)
                         ? aSize : mSize;
@@ -1285,16 +1282,23 @@ RasterImage::Decode(const IntSize& aSize, uint32_t aFlags)
     decoderFlags |= DecoderFlags::IS_REDECODE;
   }
 
+  SurfaceFlags surfaceFlags = ToSurfaceFlags(aFlags);
+  if (IsOpaque()) {
+    // If there's no transparency, it doesn't matter whether we premultiply
+    // alpha or not.
+    surfaceFlags &= ~SurfaceFlags::NO_PREMULTIPLY_ALPHA;
+  }
+
   // Create a decoder.
   nsRefPtr<Decoder> decoder;
   if (mAnim) {
     decoder = DecoderFactory::CreateAnimationDecoder(mDecoderType, this,
                                                      mSourceBuffer, decoderFlags,
-                                                     ToSurfaceFlags(aFlags));
+                                                     surfaceFlags);
   } else {
     decoder = DecoderFactory::CreateDecoder(mDecoderType, this, mSourceBuffer,
                                             targetSize, decoderFlags,
-                                            ToSurfaceFlags(aFlags),
+                                            surfaceFlags,
                                             mRequestedSampleSize);
   }
 

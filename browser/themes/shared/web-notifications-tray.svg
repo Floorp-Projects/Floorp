@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="48" height="16" viewBox="0 0 96 32">
+  <defs>
+    <style>
+      .style-icon-notification {
+        fill: #666666;
+      }
+      .style-icon-notification.hover {
+        fill: #808080;
+      }
+      .style-icon-notification.active {
+        fill: #4d4d4d;
+      }
+    </style>
+    <path id="shape-notifcations-push" d="M27,23.969 L24,23.969 L24,29.977 L17.241,23.969 L5,23.969 C3.343,23.969 2,22.626 2,20.969 L2,6.969 C2,5.312 3.343,3.969 5,3.969 L27,3.969 C28.657,3.969 30,5.312 30,6.969 L30,20.969 C30,22.626 28.657,23.969 27,23.969 ZM18,8.969 C18,7.864 17.105,6.969 16,6.969 C14.895,6.969 14,7.864 14,8.969 L14,13.969 C14,15.073 14.895,15.969 16,15.969 C17.105,15.969 18,15.073 18,13.969 L18,8.969 ZM16.5,17.969 L15.5,17.969 C14.672,17.969 14,18.640 14,19.469 C14,20.297 14.672,20.969 15.5,20.969 L16.5,20.969 C17.328,20.969 18,20.297 18,19.469 C18,18.640 17.328,17.969 16.5,17.969 Z"/>
+  </defs>
+  <use xlink:href="#shape-notifcations-push" class="style-icon-notification"/>
+  <use xlink:href="#shape-notifcations-push" transform="translate(32)" class="style-icon-notification hover"/>
+  <use xlink:href="#shape-notifcations-push" transform="translate(64)" class="style-icon-notification active"/>
+</svg>

@@ -67,8 +67,8 @@ class TCompiler : public TShHandleBase
 {
   public:
     TCompiler(sh::GLenum type, ShShaderSpec spec, ShShaderOutput output);
-    virtual ~TCompiler();
-    virtual TCompiler* getAsCompiler() { return this; }
+    ~TCompiler() override;
+    TCompiler *getAsCompiler() override { return this; }
 
     bool Init(const ShBuiltInResources& resources);
 
@@ -89,7 +89,7 @@ class TCompiler : public TShHandleBase
     void clearResults();
 
     const std::vector<sh::Attribute> &getAttributes() const { return attributes; }
-    const std::vector<sh::Attribute> &getOutputVariables() const { return outputVariables; }
+    const std::vector<sh::OutputVariable> &getOutputVariables() const { return outputVariables; }
     const std::vector<sh::Uniform> &getUniforms() const { return uniforms; }
     const std::vector<sh::Varying> &getVaryings() const { return varyings; }
     const std::vector<sh::InterfaceBlock> &getInterfaceBlocks() const { return interfaceBlocks; }
@@ -100,6 +100,8 @@ class TCompiler : public TShHandleBase
     ShShaderSpec getShaderSpec() const { return shaderSpec; }
     ShShaderOutput getOutputType() const { return outputType; }
     const std::string &getBuiltInResourcesString() const { return builtInResourcesString; }
+
+    bool shouldRunLoopAndIndexingValidation(int compileOptions) const;
 
     // Get the resources set by InitBuiltInSymbolTable
     const ShBuiltInResources& getResources() const;
@@ -158,11 +160,16 @@ class TCompiler : public TShHandleBase
     const BuiltInFunctionEmulator& getBuiltInFunctionEmulator() const;
 
     std::vector<sh::Attribute> attributes;
-    std::vector<sh::Attribute> outputVariables;
+    std::vector<sh::OutputVariable> outputVariables;
     std::vector<sh::Uniform> uniforms;
     std::vector<sh::ShaderVariable> expandedUniforms;
     std::vector<sh::Varying> varyings;
     std::vector<sh::InterfaceBlock> interfaceBlocks;
+
+    virtual bool shouldCollectVariables(int compileOptions)
+    {
+        return (compileOptions & SH_VARIABLES) != 0;
+    }
 
   private:
     // Creates the function call DAG for further analysis, returning false if there is a recursion
@@ -175,8 +182,9 @@ class TCompiler : public TShHandleBase
     class UnusedPredicate;
     bool pruneUnusedFunctions(TIntermNode *root);
 
-    TIntermNode *compileTreeImpl(const char* const shaderStrings[],
-        size_t numStrings, int compileOptions);
+    TIntermNode *compileTreeImpl(const char *const shaderStrings[],
+                                 size_t numStrings,
+                                 const int compileOptions);
 
     sh::GLenum shaderType;
     ShShaderSpec shaderSpec;
