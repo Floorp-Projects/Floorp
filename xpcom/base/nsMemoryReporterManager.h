@@ -211,10 +211,7 @@ private:
     bool                                 mAnonymize;
     bool                                 mMinimize;
     nsCOMPtr<nsITimer>                   mTimer;
-    // This is a pointer to an nsTArray because otherwise C++ is
-    // unhappy unless this header includes ContentParent.h, which not
-    // everything that includes this header knows how to find.
-    nsTArray<nsRefPtr<mozilla::dom::ContentParent>>* mChildrenPending;
+    nsTArray<nsRefPtr<mozilla::dom::ContentParent>> mChildrenPending;
     uint32_t                             mNumProcessesRunning;
     uint32_t                             mNumProcessesCompleted;
     uint32_t                             mConcurrencyLimit;
@@ -230,23 +227,7 @@ private:
                     nsISupports* aHandleReportData,
                     nsIFinishReportingCallback* aFinishReporting,
                     nsISupports* aFinishReportingData,
-                    const nsAString& aDMDDumpIdent)
-      : mGeneration(aGeneration)
-      , mAnonymize(aAnonymize)
-      , mMinimize(aMinimize)
-      , mChildrenPending(nullptr)
-      , mNumProcessesRunning(1) // reporting starts with the parent
-      , mNumProcessesCompleted(0)
-      , mConcurrencyLimit(aConcurrencyLimit)
-      , mHandleReport(aHandleReport)
-      , mHandleReportData(aHandleReportData)
-      , mFinishReporting(aFinishReporting)
-      , mFinishReportingData(aFinishReportingData)
-      , mDMDDumpIdent(aDMDDumpIdent)
-    {
-    }
-
-    ~GetReportsState();
+                    const nsAString& aDMDDumpIdent);
   };
 
   // When this is non-null, a request is in flight.  Note: We use manual
