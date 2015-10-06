@@ -26,6 +26,7 @@ class AsyncPanZoomController;
 class Layer;
 class LayerManagerComposite;
 class AutoResolveRefLayers;
+class CompositorParent;
 
 // Represents (affine) transforms that are calculated from a content view.
 struct ViewTransform {
@@ -117,10 +118,6 @@ public:
   // True if the underlying layer tree is ready to be composited.
   bool ReadyForCompose() { return mReadyForCompose; }
 
-  // Indicates if during the last composition remote content was detected.
-  // Updated in CompositorParent's CompositeToTarget.
-  bool HasRemoteContent() { return mHasRemoteContent; }
-
   // Returns true if the next composition will be the first for a
   // particular document.
   bool IsFirstPaint() { return mIsFirstPaint; }
@@ -189,8 +186,15 @@ private:
    *
    * For reach RefLayer in our layer tree, look up its referent and connect it
    * to the layer tree, if found.
+   * aHasRemoteContent - indicates if the layer tree contains a remote reflayer.
+   *  May be null.
+   * aResolvePlugins - incoming value indicates if plugin windows should be
+   *  updated through a call on aCompositor's UpdatePluginWindowState. Applies
+   *  to linux and windows only, may be null. On return value indicates
+   *  if any updates occured.
    */
-  void ResolveRefLayers(bool aResolvePlugins);
+  void ResolveRefLayers(CompositorParent* aCompositor, bool* aHasRemoteContent,
+                        bool* aResolvePlugins);
 
   /**
    * Detaches all referents resolved by ResolveRefLayers.
@@ -220,7 +224,6 @@ private:
   int32_t mPaintSyncId;
 
   bool mReadyForCompose;
-  bool mHasRemoteContent;
 
   gfx::Matrix mWorldTransform;
   LayerTransformRecorder mLayerTransformRecorder;
@@ -231,11 +234,13 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(AsyncCompositionManager::TransformsToSkip)
 class MOZ_STACK_CLASS AutoResolveRefLayers {
 public:
   explicit AutoResolveRefLayers(AsyncCompositionManager* aManager,
-                                bool aResolvePlugins = false) :
+                                CompositorParent* aCompositor = nullptr,
+                                bool* aHasRemoteContent = nullptr,
+                                bool* aResolvePlugins = nullptr) :
     mManager(aManager)
   {
     if (mManager) {
-      mManager->ResolveRefLayers(aResolvePlugins);
+      mManager->ResolveRefLayers(aCompositor, aHasRemoteContent, aResolvePlugins);
     }
   }
 
