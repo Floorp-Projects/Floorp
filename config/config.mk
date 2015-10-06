@@ -301,7 +301,6 @@ ifndef IS_GYP_DIR
 # NSPR_CFLAGS and NSS_CFLAGS must appear ahead of the other flags to avoid Linux
 # builds wrongly picking up system NSPR/NSS header files.
 OS_INCLUDES := \
-  $(if $(LIBXUL_SDK),-I$(LIBXUL_SDK)/include) \
   $(NSPR_CFLAGS) $(NSS_CFLAGS) \
   $(MOZ_JPEG_CFLAGS) \
   $(MOZ_PNG_CFLAGS) \
@@ -432,13 +431,8 @@ HOST_CXXFLAGS += $(HOST_DEFINES) $(MOZBUILD_HOST_CXXFLAGS)
 # Override defaults
 
 # Default location of include files
-ifndef LIBXUL_SDK
 IDL_PARSER_DIR = $(topsrcdir)/xpcom/idl-parser
 IDL_PARSER_CACHE_DIR = $(DEPTH)/xpcom/idl-parser
-else
-IDL_PARSER_DIR = $(LIBXUL_SDK)/sdk/bin
-IDL_PARSER_CACHE_DIR = $(LIBXUL_SDK)/sdk/bin
-endif
 
 SDK_LIB_DIR = $(DIST)/sdk/lib
 SDK_BIN_DIR = $(DIST)/sdk/bin
