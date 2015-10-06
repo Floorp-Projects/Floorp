@@ -20,6 +20,7 @@
 namespace egl
 {
 class Surface;
+class Image;
 }
 
 namespace gl
@@ -30,7 +31,7 @@ struct Offset;
 struct Rectangle;
 class Framebuffer;
 struct PixelUnpackState;
-struct SamplerState;
+struct TextureState;
 }
 
 namespace rx
@@ -61,7 +62,9 @@ class TextureImpl : public FramebufferAttachmentObjectImpl
 
     virtual gl::Error setStorage(GLenum target, size_t levels, GLenum internalFormat, const gl::Extents &size) = 0;
 
-    virtual gl::Error generateMipmaps(const gl::SamplerState &samplerState) = 0;
+    virtual gl::Error setEGLImageTarget(GLenum target, egl::Image *image) = 0;
+
+    virtual gl::Error generateMipmaps(const gl::TextureState &textureState) = 0;
 
     virtual void bindTexImage(egl::Surface *surface) = 0;
     virtual void releaseTexImage() = 0;

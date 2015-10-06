@@ -64,6 +64,9 @@ class ImageD3D : angle::NonCopyable
                            const gl::ImageIndex &sourceIndex, TextureStorage *source) = 0;
 
     gl::Error copy(const gl::Offset &destOffset, const gl::Rectangle &sourceArea, const gl::Framebuffer *source);
+    virtual gl::Error copy(const gl::Offset &destOffset,
+                           const gl::Rectangle &sourceArea,
+                           RenderTargetD3D *source) = 0;
 
   protected:
     GLsizei mWidth;
@@ -74,9 +77,6 @@ class ImageD3D : angle::NonCopyable
     GLenum mTarget;
 
     bool mDirty;
-
-  private:
-    virtual gl::Error copy(const gl::Offset &destOffset, const gl::Rectangle &sourceArea, RenderTargetD3D *source) = 0;
 };
 
 }

@@ -32,9 +32,9 @@ class ForLoopUnrollMarker : public TIntermTraverser
     {
     }
 
-    virtual bool visitBinary(Visit, TIntermBinary *node);
-    virtual bool visitLoop(Visit, TIntermLoop *node);
-    virtual void visitSymbol(TIntermSymbol *node);
+    bool visitBinary(Visit, TIntermBinary *node) override;
+    bool visitLoop(Visit, TIntermLoop *node) override;
+    void visitSymbol(TIntermSymbol *node) override;
 
     bool samplerArrayIndexIsFloatLoopIndex() const
     {

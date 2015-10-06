@@ -4874,11 +4874,6 @@ yyreduce:
         (yyval.interm.intermNode)->getAsAggregate()->setType((yyvsp[-2].interm).function->getReturnType());
         (yyval.interm.intermNode)->getAsAggregate()->setFunctionId((yyvsp[-2].interm).function->getUniqueId());
 
-        // store the pragma information for debug and optimize and other vendor specific
-        // information. This information can be queried from the parse tree
-        (yyval.interm.intermNode)->getAsAggregate()->setOptimize(context->pragma().optimize);
-        (yyval.interm.intermNode)->getAsAggregate()->setDebug(context->pragma().debug);
-
         context->symbolTable.pop();
     }
 

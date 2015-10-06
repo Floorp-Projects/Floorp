@@ -41,7 +41,11 @@ class Buffer : public RefCountObject
     void onTransformFeedback();
     void onPixelUnpack();
 
-    Error getIndexRange(GLenum type, size_t offset, size_t count, RangeUI *outRange) const;
+    Error getIndexRange(GLenum type,
+                        size_t offset,
+                        size_t count,
+                        bool primitiveRestartEnabled,
+                        IndexRange *outRange) const;
 
     GLenum getUsage() const { return mUsage; }
     GLbitfield getAccessFlags() const { return mAccessFlags; }

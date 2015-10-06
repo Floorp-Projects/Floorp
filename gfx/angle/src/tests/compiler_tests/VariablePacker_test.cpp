@@ -170,3 +170,37 @@ TEST(VariablePacking, NonSquareMats) {
     EXPECT_FALSE(packer.CheckVariablesWithinPackingLimits(squareSize, vars));
   }
 }
+
+// Scalar type variables can be packed sharing rows with other variables.
+TEST(VariablePacking, ReuseRows)
+{
+    VariablePacker packer;
+    std::vector<sh::ShaderVariable> vars;
+    const int kMaxRows = 512;
+
+    // uniform bool u0[129];
+    // uniform bool u1[129];
+    // uniform bool u2[129];
+    // uniform bool u3[129];
+    {
+        int num_arrays = 4;
+        int num_elements_per_array = kMaxRows / num_arrays + 1;
+        for (int ii = 0; ii < num_arrays; ++ii)
+        {
+            vars.push_back(sh::ShaderVariable(GL_BOOL, num_elements_per_array));
+        }
+        EXPECT_TRUE(packer.CheckVariablesWithinPackingLimits(kMaxRows, vars));
+    }
+
+    vars.clear();
+    // uniform vec2 u0[257];
+    // uniform float u1[257];
+    // uniform int u1[257];
+    {
+        int num_elements_per_array = kMaxRows / 2 + 1;
+        vars.push_back(sh::ShaderVariable(GL_FLOAT_VEC2, num_elements_per_array));
+        vars.push_back(sh::ShaderVariable(GL_FLOAT, num_elements_per_array));
+        vars.push_back(sh::ShaderVariable(GL_INT, num_elements_per_array));
+        EXPECT_TRUE(packer.CheckVariablesWithinPackingLimits(kMaxRows, vars));
+    }
+}

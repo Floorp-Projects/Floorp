@@ -6,7 +6,7 @@
 
 #include "test_utils/ANGLETest.h"
 
-#include <cstdint>
+#include <stdint.h>
 
 using namespace angle;
 

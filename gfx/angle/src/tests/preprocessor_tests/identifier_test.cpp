@@ -5,7 +5,7 @@
 //
 
 #include "PreprocessorTest.h"
-#include "Token.h"
+#include "compiler/preprocessor/Token.h"
 
 #define CLOSED_RANGE(x, y) testing::Range(x, static_cast<char>((y) + 1))
 

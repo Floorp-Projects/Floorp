@@ -23,7 +23,7 @@ namespace rx
 class ImplFactory;
 class FramebufferImpl;
 class RenderbufferImpl;
-struct Workarounds;
+class SurfaceImpl;
 }
 
 namespace egl
@@ -33,6 +33,7 @@ class Surface;
 
 namespace gl
 {
+class Context;
 class Renderbuffer;
 class State;
 class Texture;
@@ -50,13 +51,14 @@ class Framebuffer
     class Data final : angle::NonCopyable
     {
       public:
+        explicit Data();
         explicit Data(const Caps &caps);
         ~Data();
 
         const FramebufferAttachment *getReadAttachment() const;
         const FramebufferAttachment *getFirstColorAttachment() const;
         const FramebufferAttachment *getDepthOrStencilAttachment() const;
-        const FramebufferAttachment *getColorAttachment(unsigned int colorAttachment) const;
+        const FramebufferAttachment *getColorAttachment(size_t colorAttachment) const;
         const FramebufferAttachment *getDepthAttachment() const;
         const FramebufferAttachment *getStencilAttachment() const;
         const FramebufferAttachment *getDepthStencilAttachment() const;
@@ -76,6 +78,7 @@ class Framebuffer
     };
 
     Framebuffer(const Caps &caps, rx::ImplFactory *factory, GLuint id);
+    Framebuffer(rx::SurfaceImpl *surface);
     virtual ~Framebuffer();
 
     const rx::FramebufferImpl *getImplementation() const { return mImpl; }
@@ -92,7 +95,7 @@ class Framebuffer
     void detachTexture(GLuint texture);
     void detachRenderbuffer(GLuint renderbuffer);
 
-    const FramebufferAttachment *getColorbuffer(unsigned int colorAttachment) const;
+    const FramebufferAttachment *getColorbuffer(size_t colorAttachment) const;
     const FramebufferAttachment *getDepthbuffer() const;
     const FramebufferAttachment *getStencilbuffer() const;
     const FramebufferAttachment *getDepthStencilBuffer() const;
@@ -109,8 +112,9 @@ class Framebuffer
     GLenum getReadBufferState() const;
     void setReadBuffer(GLenum buffer);
 
-    bool isEnabledColorAttachment(unsigned int colorAttachment) const;
+    bool isEnabledColorAttachment(size_t colorAttachment) const;
     bool hasEnabledColorAttachment() const;
+    size_t getNumColorBuffers() const;
     bool hasStencil() const;
     int getSamples(const gl::Data &data) const;
     bool usingExtendedDrawBuffers() const;
@@ -122,15 +126,23 @@ class Framebuffer
     Error invalidate(size_t count, const GLenum *attachments);
     Error invalidateSub(size_t count, const GLenum *attachments, const gl::Rectangle &area);
 
-    Error clear(const gl::Data &data, GLbitfield mask);
-    Error clearBufferfv(const State &state, GLenum buffer, GLint drawbuffer, const GLfloat *values);
-    Error clearBufferuiv(const State &state, GLenum buffer, GLint drawbuffer, const GLuint *values);
-    Error clearBufferiv(const State &state, GLenum buffer, GLint drawbuffer, const GLint *values);
-    Error clearBufferfi(const State &state, GLenum buffer, GLint drawbuffer, GLfloat depth, GLint stencil);
+    Error clear(Context *context, GLbitfield mask);
+    Error clearBufferfv(Context *context, GLenum buffer, GLint drawbuffer, const GLfloat *values);
+    Error clearBufferuiv(Context *context, GLenum buffer, GLint drawbuffer, const GLuint *values);
+    Error clearBufferiv(Context *context, GLenum buffer, GLint drawbuffer, const GLint *values);
+    Error clearBufferfi(Context *context,
+                        GLenum buffer,
+                        GLint drawbuffer,
+                        GLfloat depth,
+                        GLint stencil);
 
     GLenum getImplementationColorReadFormat() const;
     GLenum getImplementationColorReadType() const;
-    Error readPixels(const gl::State &state, const gl::Rectangle &area, GLenum format, GLenum type, GLvoid *pixels) const;
+    Error readPixels(Context *context,
+                     const gl::Rectangle &area,
+                     GLenum format,
+                     GLenum type,
+                     GLvoid *pixels) const;
 
     Error blit(const gl::State &state, const gl::Rectangle &sourceArea, const gl::Rectangle &destArea,
                GLbitfield mask, GLenum filter, const gl::Framebuffer *sourceFramebuffer);

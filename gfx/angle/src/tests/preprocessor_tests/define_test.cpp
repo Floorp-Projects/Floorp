@@ -5,7 +5,7 @@
 //
 
 #include "PreprocessorTest.h"
-#include "Token.h"
+#include "compiler/preprocessor/Token.h"
 
 class DefineTest : public PreprocessorTest
 {
@@ -454,10 +454,10 @@ TEST_F(DefineTest, FuncExtraNewlines)
                         "1\n"
                         ")\n";
     const char* expected = "\n"
-                           "(1)\n"
                            "\n"
                            "\n"
-                           "\n";
+                           "\n"
+                           "(1)\n";
 
     preprocess(input, expected);
 }
@@ -789,6 +789,7 @@ TEST_F(DefineTest, UndefRedefine)
     preprocess(input, expected);
 }
 
+// Example from C99 standard section 6.10.3.5 Scope of macro definitions
 TEST_F(DefineTest, C99Example)
 {
     const char* input =
@@ -824,8 +825,8 @@ TEST_F(DefineTest, C99Example)
         "\n"
         "\n"
         "f(2 * (y+1)) + f(2 * (f(2 * (z[0])))) % f(2 * (0)) + t(1);\n"
-        "f(2 * (2+(3,4)-0,1)) | f(2 * (~ 5)) & f(2 * (0,1))\n"
-        "^m(0,1);\n"
+        "f(2 * (2+(3,4)-0,1)) | f(2 * (~ 5)) &\n"
+        " f(2 * (0,1))^m(0,1);\n"
         "int i[] = { 1, 23, 4, 5, };\n";
 
     preprocess(input, expected);
@@ -890,4 +891,34 @@ TEST_F(DefineTest, Predefined_FILE2)
     mPreprocessor.lex(&token);
     EXPECT_EQ(pp::Token::CONST_INT, token.type);
     EXPECT_EQ("21", token.text);
+}
+
+// Defined operator produced by macro expansion should be parsed inside #if directives
+TEST_F(DefineTest, ExpandedDefinedParsedInsideIf)
+{
+    const char *input =
+        "#define bar 1\n"
+        "#define foo defined(bar)\n"
+        "#if foo\n"
+        "bar\n"
+        "#endif\n";
+    const char *expected =
+        "\n"
+        "\n"
+        "\n"
+        "1\n"
+        "\n";
+    preprocess(input, expected);
+}
+
+// Defined operator produced by macro expansion should not be parsed outside #if directives
+TEST_F(DefineTest, ExpandedDefinedNotParsedOutsideIf)
+{
+    const char *input =
+        "#define foo defined(bar)\n"
+        "foo\n";
+    const char *expected =
+        "\n"
+        "defined(bar)\n";
+    preprocess(input, expected);
 }

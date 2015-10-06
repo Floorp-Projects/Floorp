@@ -45,6 +45,7 @@ class FunctionsGLGLX : public FunctionsGL
 DisplayGLX::DisplayGLX()
     : DisplayGL(),
       mFunctionsGL(nullptr),
+      mContextConfig(nullptr),
       mContext(nullptr),
       mDummyPbuffer(0),
       mUsesNewXDisplay(false),
@@ -95,7 +96,6 @@ egl::Error DisplayGLX::initialize(egl::Display *display)
         }
     }
 
-    glx::FBConfig contextConfig;
     // When glXMakeCurrent is called, the context and the surface must be
     // compatible which in glX-speak means that their config have the same
     // color buffer type, are both RGBA or ColorIndex, and their buffers have
@@ -133,11 +133,11 @@ egl::Error DisplayGLX::initialize(egl::Display *display)
             XFree(candidates);
             return egl::Error(EGL_NOT_INITIALIZED, "Could not find a decent GLX FBConfig to create the context.");
         }
-        contextConfig = candidates[0];
+        mContextConfig = candidates[0];
         XFree(candidates);
     }
 
-    mContext = mGLX.createContextAttribsARB(contextConfig, nullptr, True, nullptr);
+    mContext = mGLX.createContextAttribsARB(mContextConfig, nullptr, True, nullptr);
     if (!mContext)
     {
         return egl::Error(EGL_NOT_INITIALIZED, "Could not create GL context.");
@@ -150,7 +150,7 @@ egl::Error DisplayGLX::initialize(egl::Display *display)
 
     // to query things like limits. Ideally we would want to unset the current context
     // and destroy the pbuffer before going back to the application but this is TODO
-    mDummyPbuffer = mGLX.createPbuffer(contextConfig, nullptr);
+    mDummyPbuffer = mGLX.createPbuffer(mContextConfig, nullptr);
     if (!mDummyPbuffer)
     {
         return egl::Error(EGL_NOT_INITIALIZED, "Could not create the dummy pbuffer.");
@@ -197,7 +197,8 @@ SurfaceImpl *DisplayGLX::createWindowSurface(const egl::Config *configuration,
     ASSERT(configIdToGLXConfig.count(configuration->configID) > 0);
     glx::FBConfig fbConfig = configIdToGLXConfig[configuration->configID];
 
-    return new WindowSurfaceGLX(mGLX, *this, window, mGLX.getDisplay(), mContext, fbConfig);
+    return new WindowSurfaceGLX(mGLX, this, this->getRenderer(), window, mGLX.getDisplay(),
+                                mContext, fbConfig);
 }
 
 SurfaceImpl *DisplayGLX::createPbufferSurface(const egl::Config *configuration,
@@ -210,7 +211,8 @@ SurfaceImpl *DisplayGLX::createPbufferSurface(const egl::Config *configuration,
     EGLint height = attribs.get(EGL_HEIGHT, 0);
     bool largest = (attribs.get(EGL_LARGEST_PBUFFER, EGL_FALSE) == EGL_TRUE);
 
-    return new PbufferSurfaceGLX(width, height, largest, mGLX, mContext, fbConfig);
+    return new PbufferSurfaceGLX(this->getRenderer(), width, height, largest, mGLX, mContext,
+                                 fbConfig);
 }
 
 SurfaceImpl* DisplayGLX::createPbufferFromClientBuffer(const egl::Config *configuration,
@@ -241,6 +243,14 @@ egl::ConfigSet DisplayGLX::generateConfigs() const
     configIdToGLXConfig.clear();
 
     bool hasSwapControl = mGLX.hasExtension("GLX_EXT_swap_control");
+
+    int contextSamples = getGLXFBConfigAttrib(mContextConfig, GLX_SAMPLES);
+    int contextSampleBuffers = getGLXFBConfigAttrib(mContextConfig, GLX_SAMPLE_BUFFERS);
+
+    int contextAccumRedSize = getGLXFBConfigAttrib(mContextConfig, GLX_ACCUM_RED_SIZE);
+    int contextAccumGreenSize = getGLXFBConfigAttrib(mContextConfig, GLX_ACCUM_GREEN_SIZE);
+    int contextAccumBlueSize = getGLXFBConfigAttrib(mContextConfig, GLX_ACCUM_BLUE_SIZE);
+    int contextAccumAlphaSize = getGLXFBConfigAttrib(mContextConfig, GLX_ACCUM_ALPHA_SIZE);
 
     int attribList[] =
     {
@@ -287,6 +297,28 @@ egl::ConfigSet DisplayGLX::generateConfigs() const
 
         config.bufferSize = config.redSize + config.greenSize + config.blueSize + config.alphaSize;
 
+        // Multisample and accumulation buffers
+        int samples = getGLXFBConfigAttrib(glxConfig, GLX_SAMPLES);
+        int sampleBuffers = getGLXFBConfigAttrib(glxConfig, GLX_SAMPLE_BUFFERS);
+
+        int accumRedSize = getGLXFBConfigAttrib(glxConfig, GLX_ACCUM_RED_SIZE);
+        int accumGreenSize = getGLXFBConfigAttrib(glxConfig, GLX_ACCUM_GREEN_SIZE);
+        int accumBlueSize = getGLXFBConfigAttrib(glxConfig, GLX_ACCUM_BLUE_SIZE);
+        int accumAlphaSize = getGLXFBConfigAttrib(glxConfig, GLX_ACCUM_ALPHA_SIZE);
+
+        if (samples != contextSamples ||
+            sampleBuffers != contextSampleBuffers ||
+            accumRedSize != contextAccumRedSize ||
+            accumGreenSize != contextAccumGreenSize ||
+            accumBlueSize != contextAccumBlueSize ||
+            accumAlphaSize != contextAccumAlphaSize)
+        {
+            continue;
+        }
+
+        config.samples = samples;
+        config.sampleBuffers = sampleBuffers;
+
         // Transparency
         if (getGLXFBConfigAttrib(glxConfig, GLX_TRANSPARENT_TYPE) == GLX_TRANSPARENT_RGB)
         {
@@ -319,8 +351,6 @@ egl::ConfigSet DisplayGLX::generateConfigs() const
         }
 
         // Misc
-        config.sampleBuffers = getGLXFBConfigAttrib(glxConfig, GLX_SAMPLE_BUFFERS);
-        config.samples = getGLXFBConfigAttrib(glxConfig, GLX_SAMPLES);
         config.level = getGLXFBConfigAttrib(glxConfig, GLX_LEVEL);
 
         config.bindToTextureRGB = EGL_FALSE;
@@ -355,6 +385,9 @@ egl::ConfigSet DisplayGLX::generateConfigs() const
         int id = configs.add(config);
         configIdToGLXConfig[id] = glxConfig;
     }
+
+    XFree(glxConfigs);
+
     return configs;
 }
 
@@ -419,7 +452,7 @@ const FunctionsGL *DisplayGLX::getFunctionsGL() const
 
 void DisplayGLX::generateExtensions(egl::DisplayExtensions *outExtensions) const
 {
-    // UNIMPLEMENTED();
+    outExtensions->createContext = true;
 }
 
 void DisplayGLX::generateCaps(egl::Caps *outCaps) const

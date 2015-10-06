@@ -21,6 +21,7 @@
 #include "gfxWindowsPlatform.h"
 #include "MediaInfo.h"
 #include "prsystem.h"
+#include "mozilla/Maybe.h"
 
 namespace mozilla {
 
@@ -123,16 +124,59 @@ WMFDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
   return decoder.forget();
 }
 
+static bool
+CanCreateMFTDecoder(const GUID& aGuid)
+{
+  if (FAILED(wmf::MFStartup())) {
+    return false;
+  }
+  RefPtr<MFTDecoder> decoder(new MFTDecoder());
+  bool hasH264 = SUCCEEDED(decoder->Create(aGuid));
+  wmf::MFShutdown();
+  return hasH264;
+}
+
+template<const GUID& aGuid>
+static bool
+CanCreateWMFDecoder()
+{
+  static Maybe<bool> result;
+  if (result.isNothing()) {
+    result.emplace(CanCreateMFTDecoder(aGuid));
+  }
+  return result.value();
+}
+
 bool
 WMFDecoderModule::SupportsMimeType(const nsACString& aMimeType)
 {
-  return aMimeType.EqualsLiteral("video/mp4") ||
-         aMimeType.EqualsLiteral("video/avc") ||
-         aMimeType.EqualsLiteral("audio/mp4a-latm") ||
-         aMimeType.EqualsLiteral("audio/mpeg") ||
-         (sIsIntelDecoderEnabled &&
-          (aMimeType.EqualsLiteral("video/webm; codecs=vp8") ||
-           aMimeType.EqualsLiteral("video/webm; codecs=vp9")));
+  if ((aMimeType.EqualsLiteral("audio/mp4a-latm") ||
+       aMimeType.EqualsLiteral("audio/mp4")) &&
+      CanCreateWMFDecoder<CLSID_CMSAACDecMFT>()) {
+    return true;
+  }
+  if ((aMimeType.EqualsLiteral("video/avc") ||
+       aMimeType.EqualsLiteral("video/mp4")) &&
+      CanCreateWMFDecoder<CLSID_CMSH264DecoderMFT>()) {
+    return true;
+  }
+  if (aMimeType.EqualsLiteral("audio/mpeg") &&
+      CanCreateWMFDecoder<CLSID_CMP3DecMediaObject>()) {
+    return true;
+  }
+  if (sIsIntelDecoderEnabled) {
+    if (aMimeType.EqualsLiteral("video/webm; codecs=vp8") &&
+        CanCreateWMFDecoder<CLSID_WebmMfVp8Dec>()) {
+      return true;
+    }
+    if (aMimeType.EqualsLiteral("video/webm; codecs=vp9") &&
+        CanCreateWMFDecoder<CLSID_WebmMfVp9Dec>()) {
+      return true;
+    }
+  }
+
+  // Some unsupported codec.
+  return false;
 }
 
 PlatformDecoderModule::ConversionRequired
@@ -145,45 +189,6 @@ WMFDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
   } else {
     return kNeedNone;
   }
-}
-
-static bool
-ClassesRootRegKeyExists(const nsAString& aRegKeyPath)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIWindowsRegKey> regKey =
-    do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_CLASSES_ROOT,
-                    aRegKeyPath,
-                    nsIWindowsRegKey::ACCESS_READ);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
-  regKey->Close();
-
-  return true;
-}
-
-/* static */ bool
-WMFDecoderModule::HasH264()
-{
-  // CLSID_CMSH264DecoderMFT
-  return ClassesRootRegKeyExists(
-    NS_LITERAL_STRING("CLSID\\{32D186A7-218F-4C75-8876-DD77273A8999}"));
-}
-
-/* static */ bool
-WMFDecoderModule::HasAAC()
-{
-  // CLSID_CMSAACDecMFT
-  return ClassesRootRegKeyExists(
-    NS_LITERAL_STRING("CLSID\\{62CE7E72-4C71-4D20-B15D-452831A87D9D}"));
 }
 
 } // namespace mozilla

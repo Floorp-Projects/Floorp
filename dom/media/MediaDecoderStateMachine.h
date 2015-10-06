@@ -185,7 +185,6 @@ public:
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([self] () -> void
     {
       MOZ_ASSERT(self->OnTaskQueue());
-      ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
       self->mMinimizePreroll = true;
 
       // Make sure that this arrives before playback starts, otherwise this won't
@@ -209,7 +208,6 @@ public:
   {
     nsRefPtr<MediaDecoderStateMachine> self = this;
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
-      ReentrantMonitorAutoEnter mon(self->mDecoder->GetReentrantMonitor());
       if (self->mAudioOffloading != aAudioOffloading) {
         self->mAudioOffloading = aAudioOffloading;
         self->ScheduleStateMachine();
@@ -291,7 +289,6 @@ private:
   // The decoder monitor must be obtained before calling this.
   bool HasAudio() const {
     MOZ_ASSERT(OnTaskQueue());
-    AssertCurrentThreadInMonitor();
     return mInfo.HasAudio();
   }
 
@@ -299,7 +296,6 @@ private:
   // The decoder monitor must be obtained before calling this.
   bool HasVideo() const {
     MOZ_ASSERT(OnTaskQueue());
-    AssertCurrentThreadInMonitor();
     return mInfo.HasVideo();
   }
 
@@ -309,14 +305,12 @@ private:
   // Must be called with the decode monitor held.
   bool IsBuffering() const {
     MOZ_ASSERT(OnTaskQueue());
-    AssertCurrentThreadInMonitor();
     return mState == DECODER_STATE_BUFFERING;
   }
 
   // Must be called with the decode monitor held.
   bool IsSeeking() const {
     MOZ_ASSERT(OnTaskQueue());
-    AssertCurrentThreadInMonitor();
     return mState == DECODER_STATE_SEEKING;
   }
 
@@ -344,7 +338,6 @@ private:
   void OnDelayedSchedule()
   {
     MOZ_ASSERT(OnTaskQueue());
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     mDelayedScheduler.CompleteRequest();
     ScheduleStateMachine();
   }
@@ -384,8 +377,6 @@ private:
 
 protected:
   virtual ~MediaDecoderStateMachine();
-
-  void AssertCurrentThreadInMonitor() const { mDecoder->GetReentrantMonitor().AssertCurrentThreadIn(); }
 
   void SetState(State aState);
 
@@ -588,7 +579,6 @@ protected:
   // which is in the range [0,duration].
   int64_t GetMediaTime() const {
     MOZ_ASSERT(OnTaskQueue());
-    AssertCurrentThreadInMonitor();
     return mCurrentPosition;
   }
 
@@ -1053,7 +1043,6 @@ private:
   bool DonePrerollingAudio()
   {
     MOZ_ASSERT(OnTaskQueue());
-    AssertCurrentThreadInMonitor();
     return !IsAudioDecoding() ||
         GetDecodedAudioDuration() >= AudioPrerollUsecs() * mPlaybackRate;
   }
@@ -1061,7 +1050,6 @@ private:
   bool DonePrerollingVideo()
   {
     MOZ_ASSERT(OnTaskQueue());
-    AssertCurrentThreadInMonitor();
     return !IsVideoDecoding() ||
         static_cast<uint32_t>(VideoQueue().GetSize()) >=
             VideoPrerollFrames() * mPlaybackRate + 1;
@@ -1070,7 +1058,6 @@ private:
   void StopPrerollingAudio()
   {
     MOZ_ASSERT(OnTaskQueue());
-    AssertCurrentThreadInMonitor();
     if (mIsAudioPrerolling) {
       mIsAudioPrerolling = false;
       ScheduleStateMachine();
@@ -1080,7 +1067,6 @@ private:
   void StopPrerollingVideo()
   {
     MOZ_ASSERT(OnTaskQueue());
-    AssertCurrentThreadInMonitor();
     if (mIsVideoPrerolling) {
       mIsVideoPrerolling = false;
       ScheduleStateMachine();

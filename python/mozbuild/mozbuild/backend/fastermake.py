@@ -32,17 +32,29 @@ class FasterMakeBackend(CommonBackend):
         self._defines = dict()
         self._jar_manifests = OrderedDict()
 
-        self._preprocess_files = OrderedDict()
-
         self._manifest_entries = OrderedDefaultDict(list)
 
         self._install_manifests = OrderedDefaultDict(InstallManifest)
 
+    def _add_preprocess(self, obj, path, dest, **kwargs):
+        target = mozpath.basename(path)
+        # This matches what PP_TARGETS do in config/rules.
+        if target.endswith('.in'):
+            target = target[:-3]
+        depfile = mozpath.join(
+            self.environment.topobjdir, 'faster', '.deps',
+            mozpath.join(obj.install_target, dest, target).replace('/', '_'))
+        self._install_manifests[obj.install_target].add_preprocess(
+            mozpath.join(obj.srcdir, path),
+            mozpath.join(dest, target),
+            depfile,
+            **kwargs)
+
     def consume_object(self, obj):
         if not isinstance(obj, Defines) and isinstance(obj, ContextDerived):
-            defines = self._defines.get(obj.objdir, [])
+            defines = self._defines.get(obj.objdir, {})
             if defines:
-                defines = list(defines.get_defines())
+                defines = defines.defines
 
         if isinstance(obj, Defines):
             self._defines[obj.objdir] = obj
@@ -54,6 +66,9 @@ class FasterMakeBackend(CommonBackend):
 
         elif isinstance(obj, JARManifest) and \
                 obj.install_target.startswith('dist/bin'):
+            defines = self._defines.get(obj.objdir, [])
+            if defines:
+                defines = list(defines.get_defines())
             self._jar_manifests[obj.path] = (obj.objdir,
                                              obj.install_target,
                                              defines)
@@ -74,9 +89,8 @@ class FasterMakeBackend(CommonBackend):
                         'manifest components/%s' % mozpath.basename(f))
 
             for f in obj.variables.get('EXTRA_PP_COMPONENTS', {}):
-                path = mozpath.join(obj.install_target, 'components',
-                                    mozpath.basename(f))
-                self._preprocess_files[path] = (obj.srcdir, f, defines)
+                self._add_preprocess(obj, f, 'components', defines=defines)
+
                 if f.endswith('.manifest'):
                     manifest = mozpath.join(obj.install_target,
                                             'chrome.manifest')
@@ -86,16 +100,15 @@ class FasterMakeBackend(CommonBackend):
         elif isinstance(obj, JavaScriptModules) and \
                 obj.install_target.startswith('dist/bin'):
             for path, strings in obj.modules.walk():
-                base = mozpath.join(obj.install_target, 'modules', path)
+                base = mozpath.join('modules', path)
                 for f in strings:
                     if obj.flavor == 'extra':
                         self._install_manifests[obj.install_target].add_symlink(
                             mozpath.join(obj.srcdir, f),
-                            mozpath.join('modules', path, mozpath.basename(f))
+                            mozpath.join(base, mozpath.basename(f))
                         )
                     elif obj.flavor == 'extra_pp':
-                        dest = mozpath.join(base, mozpath.basename(f))
-                        self._preprocess_files[dest] = (obj.srcdir, f, defines)
+                        self._add_preprocess(obj, f, base, defines=defines)
 
         elif isinstance(obj, JsPreferenceFile) and \
                 obj.install_target.startswith('dist/bin'):
@@ -117,30 +130,24 @@ class FasterMakeBackend(CommonBackend):
 
             dest = mozpath.join(obj.install_target, pref_dir,
                                 mozpath.basename(obj.path))
-            # on win32, pref files need CRLF line endings... see bug 206029
-            if self.environment.substs['OS_ARCH'] == 'WINNT':
-                defines.append('--line-endings=crlf')
             # We preprocess these, but they don't necessarily have preprocessor
             # directives, so tell the preprocessor to not complain about that.
-            defines.append('--silence-missing-directive-warnings')
-            self._preprocess_files[dest] = (obj.srcdir, obj.path, defines)
+            self._add_preprocess(obj, obj.path, pref_dir, defines=defines,
+                                 silence_missing_directive_warnings=True)
 
         elif isinstance(obj, Resources) and \
                 obj.install_target.startswith('dist/bin'):
             for path, strings in obj.resources.walk():
-                base = mozpath.join(obj.install_target, 'res', path)
+                base = mozpath.join('res', path)
                 for f in strings:
                     flags = strings.flags_for(f)
                     if flags and flags.preprocess:
-                        dest = mozpath.join(base, mozpath.basename(f))
-                        defines = Defines(obj._context, obj.defines)
-                        defines = list(defines.get_defines())
-                        defines.extend(['--marker', '%'])
-                        self._preprocess_files[dest] = (obj.srcdir, f, defines)
+                        self._add_preprocess(obj, f, base, marker='%',
+                                             defines=obj.defines)
                     else:
                         self._install_manifests[obj.install_target].add_symlink(
                             mozpath.join(obj.srcdir, f),
-                            mozpath.join('res', path, mozpath.basename(f))
+                            mozpath.join(base, mozpath.basename(f))
                         )
 
         elif isinstance(obj, FinalTargetFiles) and \
@@ -157,10 +164,9 @@ class FasterMakeBackend(CommonBackend):
                 obj.install_target.startswith('dist/bin'):
             # We preprocess these, but they don't necessarily have preprocessor
             # directives, so tell the preprocessor to not complain about that.
-            defines.append('--silence-missing-directive-warnings')
             for f in obj.files:
-                dest = mozpath.join(obj.install_target, mozpath.basename(f))
-                self._preprocess_files[dest] = (obj.srcdir, f, defines)
+                self._add_preprocess(obj, f, '', defines=defines,
+                                     silence_missing_directive_warnings=True)
 
         else:
             # We currently ignore a lot of object types, so just acknowledge
@@ -219,25 +225,6 @@ class FasterMakeBackend(CommonBackend):
                 ['content = %s' % ' '.join('"%s"' % e for e in entries)])
 
         mk.add_statement('MANIFEST_TARGETS = %s' % ' '.join(manifest_targets))
-
-        # Add information for preprocessed files.
-        preprocess_targets = []
-
-        for target, (srcdir, f, defines) in self._preprocess_files.iteritems():
-            # This matches what PP_TARGETS do in config/rules.
-            if target.endswith('.in'):
-                target = target[:-3]
-                # PP_TARGETS assumes this is true, but doesn't enforce it.
-                assert target not in self._preprocess_files
-            preprocess_targets.append(target)
-            target = '$(TOPOBJDIR)/%s' % target
-            mk.create_rule([target]).add_dependencies(
-                [mozpath.join(srcdir, f)])
-            if defines:
-                mk.create_rule([target]).add_dependencies(
-                        ['defines = %s' % ' '.join(defines)])
-
-        mk.add_statement('PP_TARGETS = %s' % ' '.join(preprocess_targets))
 
         # Add information for install manifests.
         mk.add_statement('INSTALL_MANIFESTS = %s'

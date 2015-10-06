@@ -380,40 +380,45 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
   if (newCumulativeTransform.IsSingular()) {
     return;
   }
-  Matrix4x4 newCumulativeTransformInverse = newCumulativeTransform.Inverse();
+
+  // Add in the layer's local transform, if it isn't already included in
+  // |aPreviousTransformForRoot| and |aCurrentTransformForRoot| (this happens
+  // when the fixed/sticky layer is itself the transformed subtree root).
+  Matrix4x4 localTransform;
+  GetBaseTransform(aLayer, &localTransform);
+  if (aLayer != aTransformedSubtreeRoot) {
+    oldCumulativeTransform = localTransform * oldCumulativeTransform;
+    newCumulativeTransform = localTransform * newCumulativeTransform;
+  }
 
   // Now work out the translation necessary to make sure the layer doesn't
   // move given the new sub-tree root transform.
-  Matrix4x4 layerTransform;
-  GetBaseTransform(aLayer, &layerTransform);
 
-  // Calculate any offset necessary, in previous transform sub-tree root
-  // space. This is used to make sure fixed position content respects
-  // content document fixed position margins.
-  LayerPoint offsetInOldSubtreeLayerSpace = GetLayerFixedMarginsOffset(aLayer, aFixedLayerMargins);
+  // Get the layer's fixed anchor point, in the layer's local coordinate space
+  // (before any cumulative transform is applied).
+  LayerPoint anchor = aLayer->GetFixedPositionAnchor();
 
-  // Add the above offset to the anchor point so we can offset the layer by
-  // and amount that's specified in old subtree layer space.
-  const LayerPoint& anchorInOldSubtreeLayerSpace = aLayer->GetFixedPositionAnchor();
-  LayerPoint offsetAnchorInOldSubtreeLayerSpace = anchorInOldSubtreeLayerSpace + offsetInOldSubtreeLayerSpace;
+  // Offset the layer's anchor point to make sure fixed position content
+  // respects content document fixed position margins.
+  LayerPoint offsetAnchor = anchor + GetLayerFixedMarginsOffset(aLayer, aFixedLayerMargins);
 
-  // Add the local layer transform to the two points to make the equation
-  // below this section more convenient.
-  Point anchor(anchorInOldSubtreeLayerSpace.x, anchorInOldSubtreeLayerSpace.y);
-  Point offsetAnchor(offsetAnchorInOldSubtreeLayerSpace.x, offsetAnchorInOldSubtreeLayerSpace.y);
-  Point locallyTransformedAnchor = layerTransform * anchor;
-  Point locallyTransformedOffsetAnchor = layerTransform * offsetAnchor;
+  // Additionally transform the anchor to compensate for the change
+  // from the old cumulative transform to the new cumulative transform. We do
+  // this by using the old transform to take the offset anchor back into
+  // subtree root space, and then the inverse of the new cumulative transform
+  // to bring it back to layer space.
+  LayerPoint transformedAnchor = ViewAs<LayerPixel>(
+      newCumulativeTransform.Inverse() *
+      (oldCumulativeTransform * offsetAnchor.ToUnknownPoint()));
 
-  // Transforming the locallyTransformedAnchor by oldCumulativeTransform
-  // returns the layer's anchor point relative to the parent of
-  // aTransformedSubtreeRoot, before the new transform was applied.
-  // Then, applying newCumulativeTransformInverse maps that point relative
-  // to the layer's parent, which is the same coordinate space as
-  // locallyTransformedAnchor again, allowing us to subtract them and find
-  // out the offset necessary to make sure the layer stays stationary.
-  Point oldAnchorPositionInNewSpace =
-    newCumulativeTransformInverse * (oldCumulativeTransform * locallyTransformedOffsetAnchor);
-  Point translation = oldAnchorPositionInNewSpace - locallyTransformedAnchor;
+  // We want to translate the layer by the difference between |transformedAnchor|
+  // and |anchor|. To achieve this, we will add a translation to the layer's
+  // transform. This translation will apply on top of the layer's local
+  // transform, but |anchor| and |transformedAnchor| are in a coordinate space
+  // where the local transform isn't applied yet, so apply it and then subtract
+  // to get the desired translation.
+  ParentLayerPoint translation = TransformTo<ParentLayerPixel>(localTransform, transformedAnchor)
+                               - TransformTo<ParentLayerPixel>(localTransform, anchor);
 
   if (aLayer->GetIsStickyPosition()) {
     // For sticky positioned layers, the difference between the two rectangles
@@ -424,6 +429,8 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
     const LayerRect& stickyOuter = aLayer->GetStickyScrollRangeOuter();
     const LayerRect& stickyInner = aLayer->GetStickyScrollRangeInner();
 
+    // TODO: There's a unit mismatch here, as |translation| is in ParentLayer
+    //       space while |stickyOuter| and |stickyInner| are in Layer space.
     translation.y = IntervalOverlap(translation.y, stickyOuter.y, stickyOuter.YMost()) -
                     IntervalOverlap(translation.y, stickyInner.y, stickyInner.YMost());
     translation.x = IntervalOverlap(translation.x, stickyOuter.x, stickyOuter.XMost()) -
@@ -442,7 +449,7 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
   // those.
   bool adjustClipRect = aLayer != aTransformedSubtreeRoot &&
                         aLayer->IsClipFixed();
-  TranslateShadowLayer(aLayer, ThebesPoint(translation), adjustClipRect);
+  TranslateShadowLayer(aLayer, ThebesPoint(translation.ToUnknownPoint()), adjustClipRect);
 }
 
 static void
