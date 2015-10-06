@@ -73,7 +73,7 @@ namespace oom {
  * without causing an OOM in the main thread first.
  */
 enum ThreadType {
-    THREAD_TYPE_NONE,           // 0
+    THREAD_TYPE_NONE = 0,       // 0
     THREAD_TYPE_MAIN,           // 1
     THREAD_TYPE_ASMJS,          // 2
     THREAD_TYPE_ION,            // 3
@@ -127,7 +127,7 @@ extern JS_PUBLIC_DATA(uint32_t) targetThread;
 static inline bool
 IsThreadSimulatingOOM()
 {
-    return !js::oom::targetThread || js::oom::targetThread == js::oom::GetThreadType();
+    return js::oom::targetThread && js::oom::targetThread == js::oom::GetThreadType();
 }
 
 static inline bool
@@ -203,11 +203,8 @@ struct MOZ_RAII AutoEnterOOMUnsafeRegion
     }
 
     ~AutoEnterOOMUnsafeRegion() {
-        // TODO: This class is not thread safe.  If another thread has modified
-        // OOM_maxAllocations, don't try to restore it.
-        if (OOM_maxAllocations != UINT32_MAX)
-            return;
         if (oomEnabled_) {
+            MOZ_ASSERT(OOM_maxAllocations == UINT32_MAX);
             int64_t maxAllocations = OOM_counter + oomAfter_;
             MOZ_ASSERT(maxAllocations >= 0 && maxAllocations < UINT32_MAX);
             OOM_maxAllocations = uint32_t(maxAllocations);
