@@ -44,8 +44,6 @@
   const XUL_NS =
     "http:\\\\www.mozilla.org\\keymaster\\gatekeeper\\there.is.only.xul";
 
-  SimpleTest.waitForExplicitFinish();
-
   let vsizeAmounts = [];
   let residentAmounts = [];
   let heapAllocatedAmounts = [];
@@ -143,6 +141,21 @@
   let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
             getService(Ci.nsIMemoryReporterManager);
 
+  // Access the distinguished amounts (mgr.explicit et al.) just to make sure
+  // they don't crash.  We can't check their actual values because they're
+  // non-deterministic.
+  //
+  // Nb: mgr.explicit will throw NS_ERROR_NOT_AVAILABLE if this is a
+  // --disable-jemalloc build.  Allow for that exception, but *only* that
+  // exception.
+  let dummy;
+  let haveExplicit = true;
+  try {
+    dummy = mgr.explicit;
+  } catch (ex) {
+    is(ex.result, Cr.NS_ERROR_NOT_AVAILABLE, "mgr.explicit exception");
+    haveExplicit = false;
+  }
   let amounts = [
     "vsize",
     "vsizeMaxContiguous",
@@ -169,7 +182,7 @@
       // aren't available on all platforms.  But if the attribute simply
       // isn't present, that indicates the distinguished amounts have changed
       // and this file hasn't been updated appropriately.
-      let dummy = mgr[amounts[i]];
+      dummy = mgr[amounts[i]];
       ok(dummy !== undefined,
          "accessed an unknown distinguished amount: " + amounts[i]);
     } catch (ex) {
@@ -191,33 +204,11 @@
                 domSize, styleSize, otherSize, totalSize,
                 jsMilliseconds, nonJSMilliseconds);
 
-  let asyncSteps = [
-    getReportsNormal,
-    getReportsAnonymized,
-    checkResults,
-    test_register_strong,
-    test_register_strong, // Make sure re-registering works
-    test_register_weak,
-    SimpleTest.finish
-  ];
+  mgr.getReportsForThisProcess(handleReportNormal, null,
+                               /* anonymize = */ false);
 
-  function runNext() {
-    setTimeout(asyncSteps.shift(), 0);
-  }
-
-  function getReportsNormal()
-  {
-    mgr.getReports(handleReportNormal, null,
-                   runNext, null,
-                   /* anonymize = */ false);
-  }
-
-  function getReportsAnonymized()
-  {
-    mgr.getReports(handleReportAnonymized, null,
-                   runNext, null,
-                   /* anonymize = */ true);
-  }
+  mgr.getReportsForThisProcess(handleReportAnonymized, null,
+                               /* anonymize = */ true);
 
   function checkSizeReasonable(aName, aAmount)
   {
@@ -235,50 +226,40 @@
     }
   }
 
-  function checkResults()
-  {
-    try {
-      // Nb: mgr.heapAllocated will throw NS_ERROR_NOT_AVAILABLE if this is a
-      // --disable-jemalloc build.  Allow for skipping this test on that
-      // exception, but *only* that exception.
-      let dummy = mgr.heapAllocated;
-      checkSpecialReport("heap-allocated", heapAllocatedAmounts);
-    } catch (ex) {
-      is(ex.result, Cr.NS_ERROR_NOT_AVAILABLE, "mgr.heapAllocated exception");
-    }
-    // vsize may be unreasonable if ASAN is enabled
-    checkSpecialReport("vsize",          vsizeAmounts, /*canBeUnreasonable*/true);
-    checkSpecialReport("resident",       residentAmounts);
-
-    for (var reporter in jsGcHeapUsedGcThings) {
-      ok(jsGcHeapUsedGcThings[reporter] == 1);
-    }
-    checkSizeReasonable("js-main-runtime-gc-heap-committed/used/gc-things",
-                        jsGcHeapUsedGcThingsTotal);
-
-    ok(present.jsNonWindowCompartments,     "js-non-window compartments are present");
-    ok(present.windowObjectsJsCompartments, "window-objects/.../js compartments are present");
-    ok(present.places,                      "places is present");
-    ok(present.images,                      "images is present");
-    ok(present.xptiWorkingSet,              "xpti-working-set is present");
-    ok(present.atomTablesMain,              "atom-tables/main is present");
-    ok(present.sandboxLocation,             "sandbox locations are present");
-    ok(present.bigString,                   "large string is present");
-    ok(present.smallString1,                "small string 1 is present");
-    ok(present.smallString2,                "small string 2 is present");
-
-    ok(!present.anonymizedWhenUnnecessary,
-       "anonymized paths are not present when unnecessary. Failed case: " +
-       present.anonymizedWhenUnnecessary);
-    ok(!present.httpWhenAnonymized,
-       "http URLs are anonymized when necessary. Failed case: " +
-       present.httpWhenAnonymized);
-    ok(!present.unanonymizedFilePathWhenAnonymized,
-       "file URLs are anonymized when necessary. Failed case: " +
-       present.unanonymizedFilePathWhenAnonymized);
-
-    runNext();
+  // If mgr.explicit failed, we won't have "heap-allocated" either.
+  if (haveExplicit) {
+    checkSpecialReport("heap-allocated", heapAllocatedAmounts);
   }
+  // vsize may be unreasonable if ASAN is enabled
+  checkSpecialReport("vsize",          vsizeAmounts, /*canBeUnreasonable*/true);
+  checkSpecialReport("resident",       residentAmounts);
+
+  for (var reporter in jsGcHeapUsedGcThings) {
+    ok(jsGcHeapUsedGcThings[reporter] == 1);
+  }
+  checkSizeReasonable("js-main-runtime-gc-heap-committed/used/gc-things",
+                      jsGcHeapUsedGcThingsTotal);
+
+  ok(present.jsNonWindowCompartments,     "js-non-window compartments are present");
+  ok(present.windowObjectsJsCompartments, "window-objects/.../js compartments are present");
+  ok(present.places,                      "places is present");
+  ok(present.images,                      "images is present");
+  ok(present.xptiWorkingSet,              "xpti-working-set is present");
+  ok(present.atomTablesMain,              "atom-tables/main is present");
+  ok(present.sandboxLocation,             "sandbox locations are present");
+  ok(present.bigString,                   "large string is present");
+  ok(present.smallString1,                "small string 1 is present");
+  ok(present.smallString2,                "small string 2 is present");
+
+  ok(!present.anonymizedWhenUnnecessary,
+     "anonymized paths are not present when unnecessary. Failed case: " +
+     present.anonymizedWhenUnnecessary);
+  ok(!present.httpWhenAnonymized,
+     "http URLs are anonymized when necessary. Failed case: " +
+     present.httpWhenAnonymized);
+  ok(!present.unanonymizedFilePathWhenAnonymized,
+     "file URLs are anonymized when necessary. Failed case: " +
+     present.unanonymizedFilePathWhenAnonymized);
 
   // Reporter registration tests
 
@@ -371,27 +352,26 @@
     mgr.registerStrongReporter(reporterAndCallback);
 
     // Check the generated reports.
-    mgr.getReports(reporterAndCallback, null,
-      () => {
-        reporterAndCallback.finish();
-        window.setTimeout(test_unregister_strong, 0, reporterAndCallback);
-      }, null,
-      /* anonymize = */ false);
-  }
+    mgr.getReportsForThisProcess(reporterAndCallback, null,
+                                 /* anonymize = */ false);
+    reporterAndCallback.finish();
 
-  function test_unregister_strong(aReporterAndCallback)
-  {
-    mgr.unregisterStrongReporter(aReporterAndCallback);
+    // Unregistration works.
+    mgr.unregisterStrongReporter(reporterAndCallback);
 
     // The reporter was unregistered, hence there shouldn't be any reports from
     // the test reporter.
-    mgr.getReports(aReporterAndCallback, null,
-      () => {
-        aReporterAndCallback.finish(0);
-        runNext();
-      }, null,
-      /* anonymize = */ false);
+    mgr.getReportsForThisProcess(reporterAndCallback, null,
+                                 /* anonymize = */ false);
+    reporterAndCallback.finish(0);
   }
+
+  test_register_strong();
+
+  // Check strong reporters a second time, to make sure a reporter can be
+  // re-registered.
+  test_register_strong();
+
 
   // Check that you cannot register JS components as weak reporters.
   function test_register_weak() {
@@ -412,12 +392,9 @@
       ok(ex.message.indexOf("NS_ERROR_") >= 0,
          "WrappedJS reporter got rejected: " + ex);
     }
-
-    runNext();
   }
 
-  // Kick-off the async tests.
-  runNext();
+  test_register_weak();
 
   ]]>
   </script>

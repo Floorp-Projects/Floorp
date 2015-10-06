@@ -41,14 +41,14 @@ public:
     return static_cast<nsMemoryReporterManager*>(imgr.get());
   }
 
-  typedef nsDataHashtable<nsRefPtrHashKey<nsIMemoryReporter>, bool> StrongReportersTable;
-  typedef nsDataHashtable<nsPtrHashKey<nsIMemoryReporter>, bool> WeakReportersTable;
+  typedef nsTHashtable<nsRefPtrHashKey<nsIMemoryReporter>> StrongReportersTable;
+  typedef nsTHashtable<nsPtrHashKey<nsIMemoryReporter>> WeakReportersTable;
 
   // Inter-process memory reporting proceeds as follows.
   //
   // - GetReports() (declared within NS_DECL_NSIMEMORYREPORTERMANAGER)
   //   synchronously gets memory reports for the current process, sets up some
-  //   state (mPendingProcessesState) for when child processes report back --
+  //   state (mGetReportsState) for when child processes report back --
   //   including a timer -- and starts telling child processes to get memory
   //   reports.  Control then returns to the main event loop.
   //
@@ -108,7 +108,7 @@ public:
   //   is incomplete.
   //
   // Now, what what happens if a child process is created/destroyed in the
-  // middle of a request?  Well, PendingProcessesState is initialized with an array
+  // middle of a request?  Well, GetReportsState is initialized with an array
   // of child process actors as of when the report started.  So...
   //
   // - If a process is created after reporting starts, it won't be sent a
@@ -184,14 +184,9 @@ public:
 
 private:
   nsresult RegisterReporterHelper(nsIMemoryReporter* aReporter,
-                                  bool aForce, bool aStrongRef, bool aIsAsync);
+                                  bool aForce, bool aStrongRef);
   nsresult StartGettingReports();
   nsresult FinishReporting();
-
-  void DispatchReporter(nsIMemoryReporter* aReporter, bool aIsAsync,
-                        nsIHandleReportCallback* aHandleReport,
-                        nsISupports* aHandleReportData,
-                        bool aAnonymize);
 
   static void TimeoutCallback(nsITimer* aTimer, void* aData);
   // Note: this timeout needs to be long enough to allow for the
@@ -210,16 +205,16 @@ private:
 
   uint32_t mNextGeneration;
 
-  // Used to keep track of state of which processes are currently running and
-  // waiting to run memory reports. Holds references to parameters needed when
-  // requesting a memory report and finishing reporting.
-  struct PendingProcessesState
+  struct GetReportsState
   {
     uint32_t                             mGeneration;
     bool                                 mAnonymize;
     bool                                 mMinimize;
     nsCOMPtr<nsITimer>                   mTimer;
-    nsTArray<nsRefPtr<mozilla::dom::ContentParent>> mChildrenPending;
+    // This is a pointer to an nsTArray because otherwise C++ is
+    // unhappy unless this header includes ContentParent.h, which not
+    // everything that includes this header knows how to find.
+    nsTArray<nsRefPtr<mozilla::dom::ContentParent>>* mChildrenPending;
     uint32_t                             mNumProcessesRunning;
     uint32_t                             mNumProcessesCompleted;
     uint32_t                             mConcurrencyLimit;
@@ -229,52 +224,39 @@ private:
     nsCOMPtr<nsISupports>                mFinishReportingData;
     nsString                             mDMDDumpIdent;
 
-    PendingProcessesState(uint32_t aGeneration, bool aAnonymize, bool aMinimize,
-                          uint32_t aConcurrencyLimit,
-                          nsIHandleReportCallback* aHandleReport,
-                          nsISupports* aHandleReportData,
-                          nsIFinishReportingCallback* aFinishReporting,
-                          nsISupports* aFinishReportingData,
-                          const nsAString& aDMDDumpIdent);
-  };
-
-  // Used to keep track of the state of the asynchronously run memory
-  // reporters. The callback and file handle used when all memory reporters
-  // have finished are also stored here.
-  struct PendingReportersState
-  {
-    // Number of memory reporters currently running.
-    uint32_t mReportsPending;
-
-    // Callback for when all memory reporters have completed.
-    nsCOMPtr<nsIFinishReportingCallback> mFinishReporting;
-    nsCOMPtr<nsISupports> mFinishReportingData;
-
-    // File handle to write a DMD report to if requested.
-    FILE* mDMDFile;
-
-    PendingReportersState(nsIFinishReportingCallback* aFinishReporting,
-                        nsISupports* aFinishReportingData,
-                        FILE* aDMDFile)
-      : mReportsPending(0)
+    GetReportsState(uint32_t aGeneration, bool aAnonymize, bool aMinimize,
+                    uint32_t aConcurrencyLimit,
+                    nsIHandleReportCallback* aHandleReport,
+                    nsISupports* aHandleReportData,
+                    nsIFinishReportingCallback* aFinishReporting,
+                    nsISupports* aFinishReportingData,
+                    const nsAString& aDMDDumpIdent)
+      : mGeneration(aGeneration)
+      , mAnonymize(aAnonymize)
+      , mMinimize(aMinimize)
+      , mChildrenPending(nullptr)
+      , mNumProcessesRunning(1) // reporting starts with the parent
+      , mNumProcessesCompleted(0)
+      , mConcurrencyLimit(aConcurrencyLimit)
+      , mHandleReport(aHandleReport)
+      , mHandleReportData(aHandleReportData)
       , mFinishReporting(aFinishReporting)
       , mFinishReportingData(aFinishReportingData)
-      , mDMDFile(aDMDFile)
+      , mDMDDumpIdent(aDMDDumpIdent)
     {
     }
+
+    ~GetReportsState();
   };
 
   // When this is non-null, a request is in flight.  Note: We use manual
   // new/delete for this because its lifetime doesn't match block scope or
   // anything like that.
-  PendingProcessesState* mPendingProcessesState;
+  GetReportsState* mGetReportsState;
 
-  // This is reinitialized each time a call to GetReports is initiated.
-  PendingReportersState* mPendingReportersState;
-
-  PendingProcessesState* GetStateForGeneration(uint32_t aGeneration);
+  GetReportsState* GetStateForGeneration(uint32_t aGeneration);
   static bool StartChildReport(mozilla::dom::ContentParent* aChild,
-                               const PendingProcessesState* aState);
+                               const GetReportsState* aState);
 };
 
 #define NS_MEMORY_REPORTER_MANAGER_CID \
