@@ -24,7 +24,7 @@ import shutil
 import mozfile
 import logging
 
-from talos.utils import TalosError, TalosCrash, TalosRegression
+from talos.utils import TalosCrash, TalosRegression
 from talos.talos_process import run_browser
 from talos.ffsetup import FFSetup
 from talos.cmanager import CounterManagement

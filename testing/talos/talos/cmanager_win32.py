@@ -83,7 +83,7 @@ _PDH_FMT_LONG = 0x00000100
 
 class WinCounterManager(CounterManager):
 
-    def __init__(self, process, counters=None,
+    def __init__(self, process_name, process, counters,
                  childProcess="plugin-container"):
         CounterManager.__init__(self)
         self.childProcess = childProcess
@@ -96,13 +96,13 @@ class WinCounterManager(CounterManager):
         for counter in self.registeredCounters:
             try:
                 # Add the counter path for the default process.
-                self._addCounter(process, 'process', counter)
+                self._addCounter(process_name, 'process', counter)
             except TalosError:
                 # Assume that this is a memory counter for the system,
                 # not a process counter
                 # If we got an error that has nothing to do with that,
                 # the exception will almost certainly be re-raised
-                self._addCounter(process, 'Memory', counter)
+                self._addCounter(process_name, 'Memory', counter)
 
             self._updateCounterPathsForChildProcesses(counter)
 

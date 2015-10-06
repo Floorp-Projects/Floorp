@@ -71,7 +71,8 @@ def run_browser(command, minidump_dir, timeout=None, on_started=None,
     :param timeout: if specified, timeout to wait for the browser before
                     we raise a :class:`TalosError`
     :param on_started: a callback that can be used to do things just after
-                       the browser has been started
+                       the browser has been started. The callback must takes
+                       an argument, which is the psutil.Process instance
     :param kwargs: additional keyword arguments for the :class:`ProcessHandler`
                    instance
 
@@ -91,7 +92,7 @@ def run_browser(command, minidump_dir, timeout=None, on_started=None,
     try:
         context.process = psutil.Process(proc.pid)
         if on_started:
-            on_started()
+            on_started(context.process)
         # wait until we saw __endTimestamp in the proc output,
         # or the browser just terminated - or we have a timeout
         if not event.wait(timeout):
