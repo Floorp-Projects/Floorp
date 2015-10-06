@@ -627,6 +627,9 @@ js::ReshapeForAllocKind(JSContext* cx, Shape* shape, TaggedProto proto,
     RootedId id(cx);
     RootedShape newShape(cx, EmptyShape::getInitialShape(cx, shape->getObjectClass(),
                                                          proto, nfixed, shape->getObjectFlags()));
+    if (!newShape)
+        return nullptr;
+
     for (unsigned i = 0; i < ids.length(); i++) {
         id = ids[i];
 
