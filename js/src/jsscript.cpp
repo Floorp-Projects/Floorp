@@ -2947,6 +2947,20 @@ JSScript::uninlinedGlobal() const
 }
 
 void
+JSScript::fixEnclosingStaticGlobalLexicalScope()
+{
+    MOZ_ASSERT(IsStaticGlobalLexicalScope(enclosingStaticScope_));
+    enclosingStaticScope_ = &global().lexicalScope().staticBlock();
+}
+
+void
+LazyScript::fixEnclosingStaticGlobalLexicalScope()
+{
+    MOZ_ASSERT(IsStaticGlobalLexicalScope(enclosingScope_));
+    enclosingScope_ = &function_->global().lexicalScope().staticBlock();
+}
+
+void
 JSScript::finalize(FreeOp* fop)
 {
     // NOTE: this JSScript may be partially initialized at this point.  E.g. we
