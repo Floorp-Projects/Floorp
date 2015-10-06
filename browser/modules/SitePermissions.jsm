@@ -161,7 +161,9 @@ var gPermissionObject = {
     }
   },
 
-  "desktop-notification": {},
+  "desktop-notification": {
+    exactHostMatch: true
+  },
 
   "camera": {},
   "microphone": {},
@@ -187,10 +189,6 @@ var gPermissionObject = {
   "indexedDB": {},
 
   "pointerLock": {
-    exactHostMatch: true
-  },
-
-  "push": {
     exactHostMatch: true
   }
 };

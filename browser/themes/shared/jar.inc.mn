@@ -127,6 +127,8 @@
   skin/classic/browser/notification-pluginAlert@2x.png         (../shared/plugins/notification-pluginAlert@2x.png)
   skin/classic/browser/notification-pluginBlocked.png          (../shared/plugins/notification-pluginBlocked.png)
   skin/classic/browser/notification-pluginBlocked@2x.png       (../shared/plugins/notification-pluginBlocked@2x.png)
+  skin/classic/browser/web-notifications-icon.svg              (../shared/web-notifications-icon.svg)
+  skin/classic/browser/web-notifications-tray.svg              (../shared/web-notifications-tray.svg)
   skin/classic/browser/webRTC-shareDevice-16.png               (../shared/webrtc/webRTC-shareDevice-16.png)
   skin/classic/browser/webRTC-shareDevice-16@2x.png            (../shared/webrtc/webRTC-shareDevice-16@2x.png)
   skin/classic/browser/webRTC-shareDevice-64.png               (../shared/webrtc/webRTC-shareDevice-64.png)

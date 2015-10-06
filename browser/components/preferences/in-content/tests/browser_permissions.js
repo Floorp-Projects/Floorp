@@ -28,7 +28,7 @@ const TEST_PERMS = {
   "password": PERM_ALLOW,
   "cookie": PERM_ALLOW,
   "geo": PERM_UNKNOWN,
-  "push": PERM_DENY,
+  "desktop-notification": PERM_UNKNOWN,
   "indexedDB": PERM_UNKNOWN,
   "popup": PERM_DENY,
   "camera": PERM_UNKNOWN,
