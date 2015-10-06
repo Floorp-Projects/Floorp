@@ -127,9 +127,7 @@ class FasterMakeBackend(CommonBackend):
         elif isinstance(obj, JsPreferenceFile) and \
                 obj.install_target.startswith('dist/bin'):
             # The condition for the directory value in config/rules.mk is:
-            # ifneq (,$(DIST_SUBDIR)$(XPI_NAME)$(LIBXUL_SDK))
-            # - LIBXUL_SDK is not supported (it likely doesn't work in the
-            # recursive backend anyways
+            # ifneq (,$(DIST_SUBDIR)$(XPI_NAME))
             # - when XPI_NAME is set, obj.install_target will start with
             # dist/xpi-stage
             # - when DIST_SUBDIR is set, obj.install_target will start with

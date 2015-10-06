@@ -381,11 +381,7 @@ def main():
     # Fill startup cache
     if isinstance(formatter, OmniJarFormatter) and launcher.can_launch() \
       and buildconfig.substs['MOZ_DISABLE_STARTUPCACHE'] != '1':
-        if buildconfig.substs.get('LIBXUL_SDK'):
-            gre_path = mozpath.join(buildconfig.substs['LIBXUL_DIST'],
-                                         'bin')
-        else:
-            gre_path = None
+        gre_path = None
         def get_bases():
             for b in sink.packager.get_bases(addons=False):
                 for p in (mozpath.join('bin', b), b):
