@@ -49,9 +49,23 @@ class MalformedShaderTest : public testing::Test
 
   protected:
     std::string mInfoLog;
-
-  private:
     TranslatorESSL *mTranslator;
+};
+
+class MalformedVertexShaderTest : public MalformedShaderTest
+{
+  public:
+    MalformedVertexShaderTest() {}
+
+  protected:
+    void SetUp() override
+    {
+        ShBuiltInResources resources;
+        ShInitBuiltInResources(&resources);
+
+        mTranslator = new TranslatorESSL(GL_VERTEX_SHADER, SH_GLES3_SPEC);
+        ASSERT_TRUE(mTranslator->Init(resources));
+    }
 };
 
 // This is a test for a bug that used to exist in ANGLE:
@@ -761,5 +775,100 @@ TEST_F(MalformedShaderTest, UniformArray)
     if (!compile(shaderString))
     {
         FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Fragment shader input variables cannot be arrays of structs (ESSL 3.00 section 4.3.4)
+TEST_F(MalformedShaderTest, FragmentInputArrayOfStructs)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "struct S {\n"
+        "    vec4 foo;\n"
+        "};\n"
+        "in S i[2];\n"
+        "out vec4 my_FragColor;\n"
+        "void main() {\n"
+        "    my_FragColor = i[0].foo;\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Vertex shader inputs can't be arrays (ESSL 3.00 section 4.3.4)
+// This test is testing the case where the array brackets are after the variable name, so
+// the arrayness isn't known when the type and qualifiers are initially parsed.
+TEST_F(MalformedVertexShaderTest, VertexShaderInputArray)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "in vec4 i[2];\n"
+        "void main() {\n"
+        "    gl_Position = i[0];\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Vertex shader inputs can't be arrays (ESSL 3.00 section 4.3.4)
+// This test is testing the case where the array brackets are after the type.
+TEST_F(MalformedVertexShaderTest, VertexShaderInputArrayType)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "in vec4[2] i;\n"
+        "void main() {\n"
+        "    gl_Position = i[0];\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Fragment shader inputs can't contain booleans (ESSL 3.00 section 4.3.4)
+TEST_F(MalformedShaderTest, FragmentShaderInputStructWithBool)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "struct S {\n"
+        "    bool foo;\n"
+        "};\n"
+        "in S s;\n"
+        "out vec4 my_FragColor;\n"
+        "void main() {\n"
+        "    my_FragColor = vec4(0.0);\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Fragment shader inputs without a flat qualifier can't contain integers (ESSL 3.00 section 4.3.4)
+TEST_F(MalformedShaderTest, FragmentShaderInputStructWithInt)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "struct S {\n"
+        "    int foo;\n"
+        "};\n"
+        "in S s;\n"
+        "out vec4 my_FragColor;\n"
+        "void main() {\n"
+        "    my_FragColor = vec4(0.0);\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }

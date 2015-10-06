@@ -60,7 +60,7 @@ class TIntermediate
     TIntermBranch *addBranch(TOperator, const TSourceLoc &);
     TIntermBranch *addBranch(TOperator, TIntermTyped *, const TSourceLoc &);
     TIntermTyped *addSwizzle(TVectorFields &, const TSourceLoc &);
-    bool postProcess(TIntermNode *);
+    TIntermAggregate *postProcess(TIntermNode *root);
 
     static void outputTree(TIntermNode *, TInfoSinkBase &);
 

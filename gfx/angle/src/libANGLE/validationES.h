@@ -24,6 +24,8 @@ namespace gl
 {
 
 class Context;
+class Program;
+class Shader;
 
 bool ValidCap(const Context *context, GLenum cap);
 bool ValidTextureTarget(const Context *context, GLenum target);
@@ -35,7 +37,16 @@ bool ValidMipLevel(const Context *context, GLenum target, GLint level);
 bool ValidImageSize(const Context *context, GLenum target, GLint level, GLsizei width, GLsizei height, GLsizei depth);
 bool ValidCompressedImageSize(const Context *context, GLenum internalFormat, GLsizei width, GLsizei height);
 bool ValidQueryType(const Context *context, GLenum queryType);
-bool ValidProgram(Context *context, GLuint id);
+
+// Returns valid program if id is a valid program name
+// Errors INVALID_OPERATION if valid shader is given and returns NULL
+// Errors INVALID_VALUE otherwise and returns NULL
+Program *GetValidProgram(Context *context, GLuint id);
+
+// Returns valid shader if id is a valid shader name
+// Errors INVALID_OPERATION if valid program is given and returns NULL
+// Errors INVALID_VALUE otherwise and returns NULL
+Shader *GetValidShader(Context *context, GLuint id);
 
 bool ValidateAttachmentTarget(Context *context, GLenum attachment);
 bool ValidateRenderbufferStorageParametersBase(Context *context, GLenum target, GLsizei samples,
@@ -76,13 +87,28 @@ bool ValidateDrawArrays(Context *context, GLenum mode, GLint first, GLsizei coun
 bool ValidateDrawArraysInstanced(Context *context, GLenum mode, GLint first, GLsizei count, GLsizei primcount);
 bool ValidateDrawArraysInstancedANGLE(Context *context, GLenum mode, GLint first, GLsizei count, GLsizei primcount);
 
-bool ValidateDrawElements(Context *context, GLenum mode, GLsizei count, GLenum type,
-                          const GLvoid *indices, GLsizei primcount, RangeUI *indexRangeOut);
+bool ValidateDrawElements(Context *context,
+                          GLenum mode,
+                          GLsizei count,
+                          GLenum type,
+                          const GLvoid *indices,
+                          GLsizei primcount,
+                          IndexRange *indexRangeOut);
 
-bool ValidateDrawElementsInstanced(Context *context, GLenum mode, GLsizei count, GLenum type,
-                                   const GLvoid *indices, GLsizei primcount, RangeUI *indexRangeOut);
-bool ValidateDrawElementsInstancedANGLE(Context *context, GLenum mode, GLsizei count, GLenum type,
-                                        const GLvoid *indices, GLsizei primcount, RangeUI *indexRangeOut);
+bool ValidateDrawElementsInstanced(Context *context,
+                                   GLenum mode,
+                                   GLsizei count,
+                                   GLenum type,
+                                   const GLvoid *indices,
+                                   GLsizei primcount,
+                                   IndexRange *indexRangeOut);
+bool ValidateDrawElementsInstancedANGLE(Context *context,
+                                        GLenum mode,
+                                        GLsizei count,
+                                        GLenum type,
+                                        const GLvoid *indices,
+                                        GLsizei primcount,
+                                        IndexRange *indexRangeOut);
 
 bool ValidateFramebufferTextureBase(Context *context, GLenum target, GLenum attachment,
                                     GLuint texture, GLint level);

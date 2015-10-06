@@ -21,10 +21,10 @@ class ValidateLimitations : public TIntermTraverser
 
     int numErrors() const { return mNumErrors; }
 
-    virtual bool visitBinary(Visit, TIntermBinary *);
-    virtual bool visitUnary(Visit, TIntermUnary *);
-    virtual bool visitAggregate(Visit, TIntermAggregate *);
-    virtual bool visitLoop(Visit, TIntermLoop *);
+    bool visitBinary(Visit, TIntermBinary *) override;
+    bool visitUnary(Visit, TIntermUnary *) override;
+    bool visitAggregate(Visit, TIntermAggregate *) override;
+    bool visitLoop(Visit, TIntermLoop *) override;
 
   private:
     void error(TSourceLoc loc, const char *reason, const char *token);

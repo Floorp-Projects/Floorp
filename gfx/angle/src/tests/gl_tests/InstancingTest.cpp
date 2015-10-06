@@ -204,7 +204,9 @@ class InstancingTest : public ANGLETest
         mVertexAttribDivisorANGLE(instancePosLoc, 1);
 
         // Do the instanced draw
-        mDrawElementsInstancedANGLE(GL_TRIANGLES, mIndices.size(), GL_UNSIGNED_SHORT, mIndices.data(), mInstances.size() / 3);
+        mDrawElementsInstancedANGLE(GL_TRIANGLES, static_cast<GLsizei>(mIndices.size()),
+                                    GL_UNSIGNED_SHORT, mIndices.data(),
+                                    static_cast<GLsizei>(mInstances.size()) / 3);
 
         ASSERT_GL_NO_ERROR();
 

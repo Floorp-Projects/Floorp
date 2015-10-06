@@ -9,14 +9,20 @@
 #include "libANGLE/renderer/gl/glx/PbufferSurfaceGLX.h"
 
 #include "common/debug.h"
+#include "libANGLE/renderer/gl/glx/DisplayGLX.h"
 #include "libANGLE/renderer/gl/glx/FunctionsGLX.h"
 
 namespace rx
 {
 
-PbufferSurfaceGLX::PbufferSurfaceGLX(EGLint width, EGLint height, bool largest, const FunctionsGLX &glx,
-                                     glx::Context context, glx::FBConfig fbConfig)
-    : SurfaceGL(),
+PbufferSurfaceGLX::PbufferSurfaceGLX(RendererGL *renderer,
+                                     EGLint width,
+                                     EGLint height,
+                                     bool largest,
+                                     const FunctionsGLX &glx,
+                                     glx::Context context,
+                                     glx::FBConfig fbConfig)
+    : SurfaceGL(renderer),
       mWidth(width),
       mHeight(height),
       mLargest(largest),
@@ -115,6 +121,11 @@ EGLint PbufferSurfaceGLX::isPostSubBufferSupported() const
 {
     UNIMPLEMENTED();
     return EGL_FALSE;
+}
+
+EGLint PbufferSurfaceGLX::getSwapBehavior() const
+{
+    return EGL_BUFFER_PRESERVED;
 }
 
 }

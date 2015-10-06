@@ -142,7 +142,7 @@ describe("loop.roomViews", function () {
     function mountTestComponent(props) {
       props = _.extend({
         dispatcher: dispatcher,
-        failureReason: FAILURE_DETAILS.UNKNOWN,
+        failureReason: props && props.failureReason || FAILURE_DETAILS.UNKNOWN,
         mozLoop: fakeMozLoop
       });
       return TestUtils.renderIntoDocument(
@@ -175,6 +175,16 @@ describe("loop.roomViews", function () {
       sinon.assert.calledOnce(dispatcher.dispatch);
       sinon.assert.calledWithExactly(dispatcher.dispatch,
         new sharedActions.JoinRoom());
+    });
+
+    it("should render retry button when an ice failure is dispatched", function() {
+      view = mountTestComponent({
+        failureReason: FAILURE_DETAILS.ICE_FAILED
+      });
+
+      var retryBtn = view.getDOMNode().querySelector(".btn-rejoin");
+
+      expect(retryBtn.textContent).eql("retry_call_button");
     });
 
     it("should play a failure sound, once", function() {

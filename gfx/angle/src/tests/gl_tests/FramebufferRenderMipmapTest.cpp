@@ -88,7 +88,8 @@ TEST_P(FramebufferRenderMipmapTest, Validation)
     for (size_t i = 0; i < levels; i++)
     {
         size_t size = 1 << ((levels - 1) - i);
-        glTexImage2D(GL_TEXTURE_2D, i, GL_RGBA, size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, static_cast<GLint>(i), GL_RGBA, static_cast<GLsizei>(size),
+                     static_cast<GLsizei>(size), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     }
 
     EXPECT_GL_NO_ERROR();
@@ -100,7 +101,8 @@ TEST_P(FramebufferRenderMipmapTest, Validation)
 
     for (size_t i = 0; i < levels; i++)
     {
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, i);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex,
+                               static_cast<GLint>(i));
 
         if (i > 0 && !renderToMipmapSupported)
         {
@@ -152,7 +154,8 @@ TEST_P(FramebufferRenderMipmapTest, RenderToMipmap)
     for (size_t i = 0; i < testLevels; i++)
     {
         size_t size = 1 << ((testLevels - 1) - i);
-        glTexImage2D(GL_TEXTURE_2D, i, GL_RGBA, size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, static_cast<GLint>(i), GL_RGBA, static_cast<GLsizei>(size),
+                     static_cast<GLsizei>(size), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     }
 
     EXPECT_GL_NO_ERROR();
@@ -165,7 +168,8 @@ TEST_P(FramebufferRenderMipmapTest, RenderToMipmap)
     // Render to the levels of the texture with different colors
     for (size_t i = 0; i < testLevels; i++)
     {
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, i);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex,
+                               static_cast<GLint>(i));
         EXPECT_GL_NO_ERROR();
 
         glUseProgram(mProgram);
@@ -178,7 +182,8 @@ TEST_P(FramebufferRenderMipmapTest, RenderToMipmap)
     // Test that the levels of the texture are correct
     for (size_t i = 0; i < testLevels; i++)
     {
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, i);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex,
+                               static_cast<GLint>(i));
         EXPECT_GL_NO_ERROR();
 
         const GLfloat *color = levelColors + (i * 4);

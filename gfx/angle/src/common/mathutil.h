@@ -69,13 +69,13 @@ inline int clampToInt(unsigned int x)
 template <typename DestT, typename SrcT>
 inline DestT clampCast(SrcT value)
 {
-    // This assumes SrcT can properly represent DestT::min/max
-    // Unfortunately we can't use META_ASSERT without C++11 constexpr support
-    ASSERT(static_cast<DestT>(static_cast<SrcT>(std::numeric_limits<DestT>::min())) == std::numeric_limits<DestT>::min());
-    ASSERT(static_cast<DestT>(static_cast<SrcT>(std::numeric_limits<DestT>::max())) == std::numeric_limits<DestT>::max());
-
     SrcT lo = static_cast<SrcT>(std::numeric_limits<DestT>::min());
     SrcT hi = static_cast<SrcT>(std::numeric_limits<DestT>::max());
+
+    // This assumes SrcT can properly represent DestT::min/max. Checking this is a bit tricky,
+    // especially given floating point representations.
+    ASSERT(lo < hi);
+
     return static_cast<DestT>(value > lo ? (value > hi ? hi : value) : lo);
 }
 
@@ -503,7 +503,6 @@ inline unsigned int averageFloat10(unsigned int a, unsigned int b)
     return float32ToFloat10((float10ToFloat32(static_cast<unsigned short>(a)) + float10ToFloat32(static_cast<unsigned short>(b))) * 0.5f);
 }
 
-// Represents intervals of the type [a, b)
 template <typename T>
 struct Range
 {
@@ -541,6 +540,26 @@ struct Range
 
 typedef Range<int> RangeI;
 typedef Range<unsigned int> RangeUI;
+
+struct IndexRange
+{
+    IndexRange() : IndexRange(0, 0, 0) {}
+    IndexRange(size_t start_, size_t end_, size_t vertexIndexCount_)
+        : start(start_), end(end_), vertexIndexCount(vertexIndexCount_)
+    {
+        ASSERT(start <= end);
+    }
+
+    // Number of vertices in the range.
+    size_t vertexCount() const { return (end - start) + 1; }
+
+    // Inclusive range of indices that are not primitive restart
+    size_t start;
+    size_t end;
+
+    // Number of non-primitive restart indices
+    size_t vertexIndexCount;
+};
 
 // First, both normalized floating-point values are converted into 16-bit integer values.
 // Then, the results are packed into the returned 32-bit unsigned integer.

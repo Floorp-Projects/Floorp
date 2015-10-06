@@ -33,13 +33,13 @@ class InitializeVariables : public TIntermTraverser
     }
 
   protected:
-    virtual bool visitBinary(Visit, TIntermBinary *node) { return false; }
-    virtual bool visitUnary(Visit, TIntermUnary *node) { return false; }
-    virtual bool visitSelection(Visit, TIntermSelection *node) { return false; }
-    virtual bool visitLoop(Visit, TIntermLoop *node) { return false; }
-    virtual bool visitBranch(Visit, TIntermBranch *node) { return false; }
+    bool visitBinary(Visit, TIntermBinary *node) override { return false; }
+    bool visitUnary(Visit, TIntermUnary *node) override { return false; }
+    bool visitSelection(Visit, TIntermSelection *node) override { return false; }
+    bool visitLoop(Visit, TIntermLoop *node) override { return false; }
+    bool visitBranch(Visit, TIntermBranch *node) override { return false; }
 
-    virtual bool visitAggregate(Visit visit, TIntermAggregate* node);
+    bool visitAggregate(Visit visit, TIntermAggregate *node) override;
 
   private:
     void insertInitCode(TIntermSequence *sequence);

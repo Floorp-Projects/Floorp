@@ -8,6 +8,7 @@
 
 #include "compiler/translator/ArrayReturnValueToOutParameter.h"
 #include "compiler/translator/OutputHLSL.h"
+#include "compiler/translator/RemoveDynamicIndexing.h"
 #include "compiler/translator/RewriteElseBlocks.h"
 #include "compiler/translator/SeparateArrayInitialization.h"
 #include "compiler/translator/SeparateDeclarations.h"
@@ -39,6 +40,12 @@ void TranslatorHLSL::translate(TIntermNode *root, int compileOptions)
     // HLSL doesn't support arrays as return values, we'll need to make functions that have an array
     // as a return value to use an out parameter to transfer the array data instead.
     ArrayReturnValueToOutParameter(root, &temporaryIndex);
+
+    if (!shouldRunLoopAndIndexingValidation(compileOptions))
+    {
+        // HLSL doesn't support dynamic indexing of vectors and matrices.
+        RemoveDynamicIndexing(root, &temporaryIndex, getSymbolTable(), getShaderVersion());
+    }
 
     // Work around D3D9 bug that would manifest in vertex shaders with selection blocks which
     // use a vertex attribute as a condition, and some related computation in the else block.

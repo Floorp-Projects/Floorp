@@ -8,7 +8,7 @@
 #include <climits>
 
 #include "PreprocessorTest.h"
-#include "Token.h"
+#include "compiler/preprocessor/Token.h"
 
 class CharTest : public PreprocessorTest,
                  public testing::WithParamInterface<int>
