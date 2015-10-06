@@ -1000,6 +1000,12 @@ GetPcScript(JSContext* cx, JSScript** scriptRes, jsbytecode** pcRes);
 CalleeToken
 MarkCalleeToken(JSTracer* trc, CalleeToken token);
 
+// The minimum stack size is two. Two slots are needed because INITGLEXICAL
+// (stack depth 1) is compiled as a SETPROP (stack depth 2) on the global
+// lexical scope. Baseline also requires one slot for this/argument type
+// checks.
+static const uint32_t MinJITStackSize = 2;
+
 } /* namespace jit */
 } /* namespace js */
 
