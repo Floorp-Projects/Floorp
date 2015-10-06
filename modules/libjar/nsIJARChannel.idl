@@ -8,7 +8,7 @@
 interface nsIFile;
 interface nsIZipEntry;
 
-[scriptable, builtinclass, uuid(1adea16e-aa6c-4201-8f71-e9ff0acfb52e)]
+[scriptable, builtinclass, uuid(e72b179b-d5df-4d87-b5de-fd73a65c60f6)]
 interface nsIJARChannel : nsIChannel
 {
     /**
@@ -34,10 +34,4 @@ interface nsIJARChannel : nsIChannel
      * This will work even without opening the channel.
      */
     readonly attribute nsIZipEntry zipEntry;
-
-    /**
-     * Force the channel to skip any chack for possible interception and
-     * proceed immediately to the network.
-     */
-    void forceNoIntercept();
 };
