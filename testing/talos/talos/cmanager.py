@@ -31,9 +31,6 @@ class CounterManager(object):
     def getCounterValue(self, counterName):
         """Returns the last value of the counter 'counterName'"""
 
-    def updatePidList(self):
-        """Updates the list of PIDs we're interested in"""
-
 
 if mozinfo.os == 'linux':
     from talos.cmanager_linux import LinuxCounterManager \
@@ -47,7 +44,7 @@ else:  # mac
 
 
 class CounterManagement(object):
-    def __init__(self, process, counters, resolution):
+    def __init__(self, process_name, counters, resolution):
         """
         Public interface to manage counters.
 
@@ -58,16 +55,18 @@ class CounterManagement(object):
         """
         assert counters
         self._raw_counters = counters
-        self._process = process
+        self._process_name = process_name
         self._counter_results = \
             dict([(counter, []) for counter in self._raw_counters])
 
         self._resolution = resolution
         self._stop = threading.Event()
         self._thread = threading.Thread(target=self._collect)
+        self._process = None
 
     def _collect(self):
-        manager = DefaultCounterManager(self._process, self._raw_counters)
+        manager = DefaultCounterManager(self._process_name, self._process,
+                                        self._raw_counters)
         while not self._stop.wait(self._resolution):
             # Get the output from all the possible counters
             for count_type in self._raw_counters:
@@ -75,7 +74,14 @@ class CounterManagement(object):
                 if val:
                     self._counter_results[count_type].append(val)
 
-    def start(self):
+    def start(self, process):
+        """
+        start the counter management thread.
+
+        :param process: a psutil.Process instance representing the browser
+                        process.
+        """
+        self._process = process
         self._thread.start()
 
     def stop(self):
