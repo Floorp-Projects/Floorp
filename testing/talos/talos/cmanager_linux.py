@@ -2,11 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os
 import re
 import subprocess
 from cmanager import CounterManager
-from mozprocess import pid as mozpid
 
 
 def xrestop(binary='xrestop'):
@@ -155,18 +153,14 @@ class LinuxCounterManager(CounterManager):
                    "RSS": GetResidentSize,
                    "XRes": GetXRes}
 
-    def __init__(self, process, counters=None,
-                 childProcess="plugin-container"):
+    def __init__(self, process_name, process, counters):
         """Args:
              counters: A list of counters to monitor. Any counters whose name
              does not match a key in 'counterDict' will be ignored.
         """
 
         CounterManager.__init__(self)
-        self.childProcess = childProcess
-        self.pidList = []
-        self.primaryPid = mozpid.get_pids(process)[-1]
-        os.stat('/proc/%s' % self.primaryPid)
+        self.process = process
 
         self._loadCounters()
         self.registerCounters(counters)
@@ -174,18 +168,14 @@ class LinuxCounterManager(CounterManager):
     def getCounterValue(self, counterName):
         """Returns the last value of the counter 'counterName'"""
         try:
-            self.updatePidList()
-            return self.registeredCounters[counterName][0](self.pidList)
+            return self.registeredCounters[counterName][0](self.pidList())
         except:
             return None
 
-    def updatePidList(self):
+    def pidList(self):
         """Updates the list of PIDs we're interested in"""
         try:
-            self.pidList = [self.primaryPid]
-            childPids = mozpid.get_pids(self.childProcess)
-            for pid in childPids:
-                os.stat('/proc/%s' % pid)
-                self.pidList.append(pid)
+            return [self.process.pid] + [child.pid
+                                         for child in self.process.children()]
         except:
             print "WARNING: problem updating child PID's"

@@ -6,7 +6,6 @@
 
 import subprocess
 from cmanager import CounterManager
-from mozprocess import pid as mozpid
 import sys
 
 
@@ -59,7 +58,7 @@ class MacCounterManager(CounterManager):
     counterDict = {"Private Bytes": GetPrivateBytes,
                    "RSS": GetResidentSize}
 
-    def __init__(self, process, counters=None):
+    def __init__(self, process_name, process, counters):
         """Args:
              counters: A list of counters to monitor. Any counters whose name
              does not match a key in 'counterDict' will be ignored.
@@ -68,7 +67,7 @@ class MacCounterManager(CounterManager):
         CounterManager.__init__(self)
 
         # the last process is the useful one
-        self.pid = mozpid.get_pids(process)[-1]
+        self.pid = process.pid
 
         self._loadCounters()
         self.registerCounters(counters)
