@@ -204,15 +204,8 @@ CreateTestH264Decoder(layers::LayersBackend aBackend,
   PDMFactory::Init();
 
   nsRefPtr<PDMFactory> platform = new PDMFactory();
-  if (!platform->SupportsMimeType(NS_LITERAL_CSTRING("video/mp4"))) {
-    return nullptr;
-  }
-
   nsRefPtr<MediaDataDecoder> decoder(
     platform->CreateDecoder(aConfig, nullptr, nullptr, aBackend, nullptr));
-  if (!decoder) {
-    return nullptr;
-  }
 
   return decoder.forget();
 }
@@ -260,15 +253,8 @@ CreateTestAACDecoder(AudioInfo& aConfig)
   PDMFactory::Init();
 
   nsRefPtr<PDMFactory> platform = new PDMFactory();
-  if (!platform->SupportsMimeType(NS_LITERAL_CSTRING("audio/mp4a-latm"))) {
-    return nullptr;
-  }
-
   nsRefPtr<MediaDataDecoder> decoder(
     platform->CreateDecoder(aConfig, nullptr, nullptr));
-  if (!decoder) {
-    return nullptr;
-  }
 
   return decoder.forget();
 }

@@ -147,8 +147,6 @@ private:
   void Error(TrackType aTrack);
   void Flush(TrackType aTrack);
   void DrainComplete(TrackType aTrack);
-  bool IsSupportedAudioMimeType(const nsACString& aMimeType);
-  bool IsSupportedVideoMimeType(const nsACString& aMimeType);
 
   bool ShouldSkip(bool aSkipToNextKeyframe, media::TimeUnit aTimeThreshold);
 

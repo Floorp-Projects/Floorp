@@ -237,18 +237,6 @@ MediaFormatReader::IsWaitingOnCDMResource() {
 #endif
 }
 
-bool
-MediaFormatReader::IsSupportedAudioMimeType(const nsACString& aMimeType)
-{
-  return mPlatform && mPlatform->SupportsMimeType(aMimeType);
-}
-
-bool
-MediaFormatReader::IsSupportedVideoMimeType(const nsACString& aMimeType)
-{
-  return mPlatform && mPlatform->SupportsMimeType(aMimeType);
-}
-
 nsRefPtr<MediaDecoderReader::MetadataPromise>
 MediaFormatReader::AsyncReadMetadata()
 {
@@ -394,9 +382,6 @@ MediaFormatReader::EnsureDecodersCreated()
   }
 
   if (HasAudio() && !mAudio.mDecoder) {
-    NS_ENSURE_TRUE(IsSupportedAudioMimeType(mInfo.mAudio.mMimeType),
-                   false);
-
     mAudio.mDecoderInitialized = false;
     mAudio.mDecoder =
       mPlatform->CreateDecoder(mAudio.mInfo ?
@@ -408,9 +393,6 @@ MediaFormatReader::EnsureDecodersCreated()
   }
 
   if (HasVideo() && !mVideo.mDecoder) {
-    NS_ENSURE_TRUE(IsSupportedVideoMimeType(mInfo.mVideo.mMimeType),
-                   false);
-
     mVideo.mDecoderInitialized = false;
     // Decoders use the layers backend to decide if they can use hardware decoding,
     // so specify LAYERS_NONE if we want to forcibly disable it.
