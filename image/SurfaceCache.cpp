@@ -276,8 +276,7 @@ public:
   }
 
   Pair<already_AddRefed<CachedSurface>, MatchType>
-  LookupBestMatch(const SurfaceKey&      aSurfaceKey,
-                  const Maybe<SurfaceFlags>& aAlternateFlags)
+  LookupBestMatch(const SurfaceKey& aSurfaceKey)
   {
     // Try for an exact match first.
     nsRefPtr<CachedSurface> exactMatch;
@@ -287,7 +286,7 @@ public:
     }
 
     // There's no perfect match, so find the best match we can.
-    MatchContext matchContext(aSurfaceKey, aAlternateFlags);
+    MatchContext matchContext(aSurfaceKey);
     ForEach(TryToImproveMatch, &matchContext);
 
     MatchType matchType;
@@ -328,14 +327,11 @@ public:
 private:
   struct MatchContext
   {
-    MatchContext(const SurfaceKey& aIdealKey,
-                 const Maybe<SurfaceFlags>& aAlternateFlags)
+    explicit MatchContext(const SurfaceKey& aIdealKey)
       : mIdealKey(aIdealKey)
-      , mAlternateFlags(aAlternateFlags)
     { }
 
     const SurfaceKey& mIdealKey;
-    const Maybe<SurfaceFlags> mAlternateFlags;
     nsRefPtr<CachedSurface> mBestMatch;
   };
 
@@ -357,10 +353,8 @@ private:
       return PL_DHASH_NEXT;
     }
 
-    // Matching the flags is required, but we can match the alternate flags as
-    // well if some were provided.
-    if (aSurfaceKey.Flags() != idealKey.Flags() &&
-        Some(aSurfaceKey.Flags()) != context->mAlternateFlags) {
+    // Matching the flags is required.
+    if (aSurfaceKey.Flags() != idealKey.Flags()) {
       return PL_DHASH_NEXT;
     }
 
@@ -636,8 +630,7 @@ public:
   }
 
   LookupResult LookupBestMatch(const ImageKey         aImageKey,
-                               const SurfaceKey&      aSurfaceKey,
-                               const Maybe<SurfaceFlags>& aAlternateFlags)
+                               const SurfaceKey&      aSurfaceKey)
   {
     nsRefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
     if (!cache) {
@@ -655,8 +648,7 @@ public:
     DrawableFrameRef ref;
     MatchType matchType = MatchType::NOT_FOUND;
     while (true) {
-      Tie(surface, matchType) =
-        cache->LookupBestMatch(aSurfaceKey, aAlternateFlags);
+      Tie(surface, matchType) = cache->LookupBestMatch(aSurfaceKey);
 
       if (!surface) {
         return LookupResult(matchType);  // Lookup in the per-image cache missed.
@@ -672,12 +664,13 @@ public:
       Remove(surface);
     }
 
-    MOZ_ASSERT((matchType == MatchType::EXACT) ==
-      (surface->GetSurfaceKey() == aSurfaceKey ||
-         (aAlternateFlags &&
-          surface->GetSurfaceKey() ==
-            aSurfaceKey.WithNewFlags(*aAlternateFlags))),
-      "Result differs in a way other than size or alternate flags");
+    MOZ_ASSERT_IF(matchType == MatchType::EXACT,
+                  surface->GetSurfaceKey() == aSurfaceKey);
+    MOZ_ASSERT_IF(matchType == MatchType::SUBSTITUTE_BECAUSE_NOT_FOUND ||
+                  matchType == MatchType::SUBSTITUTE_BECAUSE_PENDING,
+      surface->GetSurfaceKey().SVGContext() == aSurfaceKey.SVGContext() &&
+      surface->GetSurfaceKey().AnimationTime() == aSurfaceKey.AnimationTime() &&
+      surface->GetSurfaceKey().Flags() == aSurfaceKey.Flags());
 
     if (matchType == MatchType::EXACT) {
       MarkUsed(surface, cache);
@@ -1050,37 +1043,26 @@ SurfaceCache::Shutdown()
 
 /* static */ LookupResult
 SurfaceCache::Lookup(const ImageKey         aImageKey,
-                     const SurfaceKey&      aSurfaceKey,
-                     const Maybe<SurfaceFlags>& aAlternateFlags
-                       /* = Nothing() */)
+                     const SurfaceKey&      aSurfaceKey)
 {
   if (!sInstance) {
     return LookupResult(MatchType::NOT_FOUND);
   }
 
   MutexAutoLock lock(sInstance->GetMutex());
-
-  LookupResult result = sInstance->Lookup(aImageKey, aSurfaceKey);
-  if (!result && aAlternateFlags) {
-    result = sInstance->Lookup(aImageKey,
-                               aSurfaceKey.WithNewFlags(*aAlternateFlags));
-  }
-
-  return result;
+  return sInstance->Lookup(aImageKey, aSurfaceKey);
 }
 
 /* static */ LookupResult
 SurfaceCache::LookupBestMatch(const ImageKey         aImageKey,
-                              const SurfaceKey&      aSurfaceKey,
-                              const Maybe<SurfaceFlags>& aAlternateFlags
-                                /* = Nothing() */)
+                              const SurfaceKey&      aSurfaceKey)
 {
   if (!sInstance) {
     return LookupResult(MatchType::NOT_FOUND);
   }
 
   MutexAutoLock lock(sInstance->GetMutex());
-  return sInstance->LookupBestMatch(aImageKey, aSurfaceKey, aAlternateFlags);
+  return sInstance->LookupBestMatch(aImageKey, aSurfaceKey);
 }
 
 /* static */ InsertOutcome
