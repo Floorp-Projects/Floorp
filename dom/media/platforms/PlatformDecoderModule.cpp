@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PlatformDecoderModule.h"
-#include "PDMFactory.h"
 
 PRLogModuleInfo* GetPDMLog() {
   static PRLogModuleInfo* log = nullptr;
@@ -14,24 +13,3 @@ PRLogModuleInfo* GetPDMLog() {
   }
   return log;
 }
-
-namespace mozilla {
-
-/* static */
-void
-PlatformDecoderModule::Init()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  PDMFactory::Init();
-}
-
-/* static */
-already_AddRefed<PlatformDecoderModule>
-PlatformDecoderModule::Create()
-{
-  // Note: This (usually) runs on the decode thread.
-  nsRefPtr<PlatformDecoderModule> m = new PDMFactory;
-  return m.forget();
-}
-
-} // namespace mozilla
