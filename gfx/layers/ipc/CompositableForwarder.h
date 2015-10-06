@@ -169,7 +169,7 @@ public:
    * We only don't allow changing the backend type at runtime so this value can
    * be queried once and will not change until Gecko is restarted.
    */
-  LayersBackend GetCompositorBackendType() const override
+  LayersBackend GetCompositorBackendType() const
   {
     return mTextureFactoryIdentifier.mParentBackend;
   }
