@@ -7318,6 +7318,33 @@ class MDefVar
     }
 };
 
+class MDefLexical
+  : public MNullaryInstruction
+{
+    CompilerPropertyName name_; // Target name to be defined.
+    unsigned attrs_; // Attributes to be set.
+
+  private:
+    MDefLexical(PropertyName* name, unsigned attrs)
+      : name_(name),
+        attrs_(attrs)
+    { }
+
+  public:
+    INSTRUCTION_HEADER(DefLexical)
+
+    static MDefLexical* New(TempAllocator& alloc, PropertyName* name, unsigned attrs) {
+        return new(alloc) MDefLexical(name, attrs);
+    }
+
+    PropertyName* name() const {
+        return name_;
+    }
+    unsigned attrs() const {
+        return attrs_;
+    }
+};
+
 class MDefFun
   : public MUnaryInstruction,
     public NoTypePolicy::Data

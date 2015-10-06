@@ -1228,6 +1228,16 @@ class LDefVar : public LCallInstructionHelper<0, 1, 0>
     }
 };
 
+class LDefLexical : public LCallInstructionHelper<0, 0, 0>
+{
+  public:
+    LIR_HEADER(DefLexical)
+
+    MDefLexical* mir() const {
+        return mir_->toDefLexical();
+    }
+};
+
 class LDefFun : public LCallInstructionHelper<0, 1, 0>
 {
   public:

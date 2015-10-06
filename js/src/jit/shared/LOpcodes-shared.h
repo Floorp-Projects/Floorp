@@ -68,6 +68,7 @@
     _(InitPropGetterSetter)         \
     _(CheckOverRecursed)            \
     _(DefVar)                       \
+    _(DefLexical)                   \
     _(DefFun)                       \
     _(CallKnown)                    \
     _(CallGeneric)                  \
