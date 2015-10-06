@@ -27,10 +27,6 @@
 #endif
 #include "mozilla/layers/LayersTypes.h"
 
-#ifdef MOZ_FFMPEG
-#include "FFmpegRuntimeLinker.h"
-#endif
-
 #include "PDMFactory.h"
 
 namespace mozilla {
@@ -177,79 +173,11 @@ MP4Decoder::CanHandleMediaType(const nsAString& aContentType)
   return CanHandleMediaType(NS_ConvertUTF16toUTF8(mimeType), codecs);
 }
 
-static bool
-IsFFmpegAvailable()
-{
-#ifndef MOZ_FFMPEG
-  return false;
-#else
-  PDMFactory::Init();
-  nsRefPtr<PlatformDecoderModule> m = FFmpegRuntimeLinker::CreateDecoderModule();
-  return !!m;
-#endif
-}
-
-static bool
-IsAppleAvailable()
-{
-#ifndef MOZ_APPLEMEDIA
-  // Not the right platform.
-  return false;
-#else
-  return Preferences::GetBool("media.apple.mp4.enabled", false);
-#endif
-}
-
-static bool
-IsAndroidAvailable()
-{
-#ifndef MOZ_WIDGET_ANDROID
-  return false;
-#else
-  // We need android.media.MediaCodec which exists in API level 16 and higher.
-  return AndroidBridge::Bridge() && (AndroidBridge::Bridge()->GetAPIVersion() >= 16);
-#endif
-}
-
-static bool
-IsGonkMP4DecoderAvailable()
-{
-#ifndef MOZ_GONK_MEDIACODEC
-  return false;
-#else
-  return Preferences::GetBool("media.fragmented-mp4.gonk.enabled", false);
-#endif
-}
-
-static bool
-IsGMPDecoderAvailable()
-{
-  return Preferences::GetBool("media.fragmented-mp4.gmp.enabled", false);
-}
-
-static bool
-HavePlatformMPEGDecoders()
-{
-  return Preferences::GetBool("media.fragmented-mp4.use-blank-decoder") ||
-#ifdef XP_WIN
-         // We have H.264/AAC platform decoders on Windows Vista and up.
-         IsVistaOrLater() ||
-#endif
-         IsAndroidAvailable() ||
-         IsFFmpegAvailable() ||
-         IsAppleAvailable() ||
-         IsGonkMP4DecoderAvailable() ||
-         IsGMPDecoderAvailable() ||
-         // TODO: Other platforms...
-         false;
-}
-
 /* static */
 bool
 MP4Decoder::IsEnabled()
 {
-  return Preferences::GetBool("media.fragmented-mp4.enabled") &&
-         HavePlatformMPEGDecoders();
+  return Preferences::GetBool("media.fragmented-mp4.enabled");
 }
 
 static const uint8_t sTestH264ExtraData[] = {
