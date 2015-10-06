@@ -331,6 +331,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitAsmJSVoidReturn(LAsmJSVoidReturn* ret);
     void visitLexicalCheck(LLexicalCheck* ins);
     void visitThrowUninitializedLexical(LThrowUninitializedLexical* ins);
+    void visitGlobalNameConflictsCheck(LGlobalNameConflictsCheck* ins);
     void visitDebugger(LDebugger* ins);
     void visitNewTarget(LNewTarget* ins);
     void visitArrowNewTarget(LArrowNewTarget* ins);

@@ -34,7 +34,6 @@ var cases = [
 
     // dynamic bindings
     "function f(s) { eval(s); @@ } f('var x = VAL');",
-    "function f(s) { let (x = 'fail') { eval(s); } x = VAL; @@ } f('var x;');",
     "var x = VAL; function f(s) { eval('var x = 0;'); eval(s); @@ } f('delete x;');",
     "function f(obj) { with (obj) { @@ } } f({x: VAL});",
     "function f(obj) { with (obj) { @@ } } f(Object.create({x: VAL}));",

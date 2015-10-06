@@ -7131,6 +7131,16 @@ class LThrowUninitializedLexical : public LCallInstructionHelper<0, 0, 0>
     }
 };
 
+class LGlobalNameConflictsCheck : public LInstructionHelper<0, 0, 0>
+{
+  public:
+    LIR_HEADER(GlobalNameConflictsCheck)
+
+    MGlobalNameConflictsCheck* mir() {
+        return mir_->toGlobalNameConflictsCheck();
+    }
+};
+
 class LMemoryBarrier : public LInstructionHelper<0, 0, 0>
 {
   private:

@@ -274,6 +274,7 @@ namespace jit {
     _(UnknownValue)                                                         \
     _(LexicalCheck)                                                         \
     _(ThrowUninitializedLexical)                                            \
+    _(GlobalNameConflictsCheck)                                             \
     _(Debugger)                                                             \
     _(NewTarget)                                                            \
     _(ArrowNewTarget)

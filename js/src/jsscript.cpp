@@ -321,6 +321,13 @@ Bindings::bindingIsAliased(uint32_t bindingIndex)
 }
 
 void
+Binding::trace(JSTracer* trc)
+{
+    PropertyName* name = this->name();
+    TraceManuallyBarrieredEdge(trc, &name, "binding");
+}
+
+void
 Bindings::trace(JSTracer* trc)
 {
     if (callObjShape_)
@@ -334,10 +341,8 @@ Bindings::trace(JSTracer* trc)
     if (bindingArrayUsingTemporaryStorage())
         return;
 
-    for (const Binding& b : *this) {
-        PropertyName* name = b.name();
-        TraceManuallyBarrieredEdge(trc, &name, "bindingArray");
-    }
+    for (Binding& b : *this)
+        b.trace(trc);
 }
 
 template<XDRMode mode>
