@@ -91,7 +91,8 @@ static int mar_consume_index(MarFile *mar, char **buf, const char *buf_end) {
   name = *buf;
   /* find namelen; must take care not to read beyond buf_end */
   while (**buf) {
-    if (*buf == buf_end)
+    /* buf_end points one byte past the end of buf's allocation */
+    if (*buf == (buf_end - 1))
       return -1;
     ++(*buf);
   }
