@@ -3309,7 +3309,8 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
                 RootedObject enclosingScope(cx);
                 if (NestedScopeObject* enclosingBlock = innerBlock->enclosingNestedScope()) {
                     if (IsStaticGlobalLexicalScope(enclosingBlock)) {
-                        MOZ_ASSERT(IsStaticGlobalLexicalScope(scriptStaticScope));
+                        MOZ_ASSERT(IsStaticGlobalLexicalScope(scriptStaticScope) ||
+                                   scriptStaticScope->is<StaticNonSyntacticScopeObjects>());
                         enclosingScope = scriptStaticScope;
                     } else {
                         enclosingScope = objects[FindScopeObjectIndex(src, *enclosingBlock)];
