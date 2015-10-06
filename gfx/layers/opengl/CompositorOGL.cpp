@@ -13,7 +13,6 @@
 #include "Layers.h"                     // for WriteSnapshotToDumpFile
 #include "LayerScope.h"                 // for LayerScope
 #include "gfxCrashReporterUtils.h"      // for ScopedGfxFeatureReporter
-#include "GraphicsFilter.h"             // for GraphicsFilter
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxPrefs.h"                   // for gfxPrefs
 #include "gfxRect.h"                    // for gfxRect

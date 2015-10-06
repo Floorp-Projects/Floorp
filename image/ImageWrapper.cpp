@@ -13,6 +13,7 @@
 namespace mozilla {
 
 using gfx::DataSourceSurface;
+using gfx::Filter;
 using gfx::SourceSurface;
 using layers::LayerManager;
 using layers::ImageContainer;
@@ -205,7 +206,7 @@ ImageWrapper::Draw(gfxContext* aContext,
                    const nsIntSize& aSize,
                    const ImageRegion& aRegion,
                    uint32_t aWhichFrame,
-                   GraphicsFilter aFilter,
+                   Filter aFilter,
                    const Maybe<SVGImageContext>& aSVGContext,
                    uint32_t aFlags)
 {
@@ -304,7 +305,7 @@ ImageWrapper::PropagateUseCounters(nsIDocument* aParentDocument)
 nsIntSize
 ImageWrapper::OptimalImageSizeForDest(const gfxSize& aDest,
                                       uint32_t aWhichFrame,
-                                      GraphicsFilter aFilter, uint32_t aFlags)
+                                      Filter aFilter, uint32_t aFlags)
 {
   return mInnerImage->OptimalImageSizeForDest(aDest, aWhichFrame, aFilter,
                                               aFlags);

@@ -14,7 +14,6 @@
 #include <stdint.h>
 
 #include "mozilla/gfx/Matrix.h"
-#include "GraphicsFilter.h"
 #include "gfxPoint.h"
 #include "gfxRect.h"
 #include "nsRect.h"

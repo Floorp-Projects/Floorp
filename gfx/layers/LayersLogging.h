@@ -7,7 +7,6 @@
 #define GFX_LAYERSLOGGING_H
 
 #include "FrameMetrics.h"               // for FrameMetrics, etc
-#include "GraphicsFilter.h"             // for GraphicsFilter
 #include "mozilla/gfx/Point.h"          // for IntSize, etc
 #include "mozilla/gfx/Types.h"          // for Filter, SurfaceFormat
 #include "mozilla/layers/CompositorTypes.h"  // for TextureFlags
