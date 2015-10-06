@@ -49,11 +49,6 @@ public:
   ImageBridgeParent(MessageLoop* aLoop, Transport* aTransport, ProcessId aChildProcessId);
   ~ImageBridgeParent();
 
-  LayersBackend GetCompositorBackendType() const override {
-    MOZ_CRASH("ImageBridgeParent does not support GetCompositorBackendType");
-    return LayersBackend::LAYERS_NONE;
-  }
-
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   static PImageBridgeParent*

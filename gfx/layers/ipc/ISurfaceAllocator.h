@@ -84,12 +84,6 @@ public:
   void Finalize();
 
   /**
-   * Returns the preferred compositor backend type for drawing. If not known
-   * or not supported, LAYERS_NONE is returned.
-   */
-  virtual LayersBackend GetCompositorBackendType() const = 0;
-
-  /**
    * Allocate shared memory that can be accessed by only one process at a time.
    * Ownership of this memory is passed when the memory is sent in an IPDL
    * message.

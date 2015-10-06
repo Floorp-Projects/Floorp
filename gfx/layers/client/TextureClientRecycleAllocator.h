@@ -37,7 +37,7 @@ protected:
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TextureClientRecycleAllocator)
 
-  explicit TextureClientRecycleAllocator(ISurfaceAllocator* aAllocator);
+  explicit TextureClientRecycleAllocator(CompositableForwarder* aAllocator);
 
   void SetMaxPoolSize(uint32_t aMax);
 
@@ -57,7 +57,7 @@ protected:
            TextureFlags aTextureFlags,
            TextureAllocationFlags aAllocFlags);
 
-  RefPtr<ISurfaceAllocator> mSurfaceAllocator;
+  RefPtr<CompositableForwarder> mSurfaceAllocator;
 
 private:
   friend class TextureClient;

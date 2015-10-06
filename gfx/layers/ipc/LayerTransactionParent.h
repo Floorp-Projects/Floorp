@@ -78,8 +78,6 @@ public:
     PLayerTransactionParent::DeallocShmem(aShmem);
   }
 
-  virtual LayersBackend GetCompositorBackendType() const override;
-
   virtual bool IsSameProcess() const override;
 
   const uint64_t& GetPendingTransactionId() { return mPendingTransaction; }
