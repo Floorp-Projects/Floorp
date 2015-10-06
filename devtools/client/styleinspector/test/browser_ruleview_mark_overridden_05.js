@@ -27,6 +27,7 @@ function* testMarkOverridden(inspector, view) {
   let ruleEditor = getRuleViewRuleEditor(view, 1);
 
   yield createNewRuleViewProperty(ruleEditor, "background-color: red;");
+  yield ruleEditor.rule._applyingModifications;
 
   let firstProp = ruleEditor.rule.textProps[0];
   let secondProp = ruleEditor.rule.textProps[1];

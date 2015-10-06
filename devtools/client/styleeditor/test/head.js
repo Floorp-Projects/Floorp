@@ -71,17 +71,29 @@ function* cleanup()
 }
 
 /**
- * Creates a new tab in specified window navigates it to the given URL and
- * opens style editor in it.
+ * Open the style editor for the current tab.
  */
-var openStyleEditorForURL = Task.async(function* (url, win) {
-  let tab = yield addTab(url, win);
+var openStyleEditor = Task.async(function*(tab) {
+  if (!tab) {
+    tab = gBrowser.selectedTab;
+  }
   let target = TargetFactory.forTab(tab);
   let toolbox = yield gDevTools.showToolbox(target, "styleeditor");
   let panel = toolbox.getPanel("styleeditor");
   let ui = panel.UI;
 
-  return { tab, toolbox, panel, ui };
+  return { toolbox, panel, ui };
+});
+
+/**
+ * Creates a new tab in specified window navigates it to the given URL and
+ * opens style editor in it.
+ */
+var openStyleEditorForURL = Task.async(function* (url, win) {
+  let tab = yield addTab(url, win);
+  let result = yield openStyleEditor(tab);
+  result.tab = tab;
+  return result;
 });
 
 /**
