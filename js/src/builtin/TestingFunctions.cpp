@@ -49,6 +49,10 @@ using mozilla::UniquePtr;
 // fuzzers. Set this via the environment variable MOZ_FUZZING_SAFE.
 static bool fuzzingSafe = false;
 
+// If disableOOMFunctions is set, disable functionality that causes artificial
+// OOM conditions.
+static bool disableOOMFunctions = false;
+
 static bool
 GetBuildConfiguration(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -350,6 +354,11 @@ GCParameter(JSContext* cx, unsigned argc, Value* vp)
         JS_ReportError(cx, "Attempt to change read-only parameter %s",
                        paramMap[paramIndex].name);
         return false;
+    }
+
+    if (disableOOMFunctions && (param == JSGC_MAX_BYTES || param == JSGC_MAX_MALLOC_BYTES)) {
+        args.rval().setUndefined();
+        return true;
     }
 
     uint32_t value;
@@ -996,6 +1005,12 @@ static bool
 SetupOOMFailure(JSContext* cx, bool failAlways, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (disableOOMFunctions) {
+        args.rval().setUndefined();
+        return true;
+    }
+
     if (args.length() < 1) {
         JS_ReportError(cx, "Count argument required");
         return false;
@@ -3344,11 +3359,14 @@ static const JSPropertySpec TestingProperties[] = {
 };
 
 bool
-js::DefineTestingFunctions(JSContext* cx, HandleObject obj, bool fuzzingSafe_)
+js::DefineTestingFunctions(JSContext* cx, HandleObject obj, bool fuzzingSafe_,
+                           bool disableOOMFunctions_)
 {
     fuzzingSafe = fuzzingSafe_;
     if (getenv("MOZ_FUZZING_SAFE") && getenv("MOZ_FUZZING_SAFE")[0] != '0')
         fuzzingSafe = true;
+
+    disableOOMFunctions = disableOOMFunctions_;
 
     if (!JS_DefineProperties(cx, obj, TestingProperties))
         return false;

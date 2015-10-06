@@ -172,7 +172,7 @@ checkString(const char* expected, F fillBufferFunction, G stringGetterFunction)
 
 BEGIN_TEST(test_ubiStackFrame)
 {
-    CHECK(js::DefineTestingFunctions(cx, global, false));
+    CHECK(js::DefineTestingFunctions(cx, global, false, false));
 
     JS::RootedValue val(cx);
     CHECK(evaluate("(function one() {                      \n"  // 1
