@@ -48,7 +48,7 @@ public:
   //
   // - GetReports() (declared within NS_DECL_NSIMEMORYREPORTERMANAGER)
   //   synchronously gets memory reports for the current process, sets up some
-  //   state (mGetReportsState) for when child processes report back --
+  //   state (mPendingProcessesState) for when child processes report back --
   //   including a timer -- and starts telling child processes to get memory
   //   reports.  Control then returns to the main event loop.
   //
@@ -108,7 +108,7 @@ public:
   //   is incomplete.
   //
   // Now, what what happens if a child process is created/destroyed in the
-  // middle of a request?  Well, GetReportsState is initialized with an array
+  // middle of a request?  Well, PendingProcessesState is initialized with an array
   // of child process actors as of when the report started.  So...
   //
   // - If a process is created after reporting starts, it won't be sent a
@@ -205,7 +205,7 @@ private:
 
   uint32_t mNextGeneration;
 
-  struct GetReportsState
+  struct PendingProcessesState
   {
     uint32_t                             mGeneration;
     bool                                 mAnonymize;
@@ -221,23 +221,23 @@ private:
     nsCOMPtr<nsISupports>                mFinishReportingData;
     nsString                             mDMDDumpIdent;
 
-    GetReportsState(uint32_t aGeneration, bool aAnonymize, bool aMinimize,
-                    uint32_t aConcurrencyLimit,
-                    nsIHandleReportCallback* aHandleReport,
-                    nsISupports* aHandleReportData,
-                    nsIFinishReportingCallback* aFinishReporting,
-                    nsISupports* aFinishReportingData,
-                    const nsAString& aDMDDumpIdent);
+    PendingProcessesState(uint32_t aGeneration, bool aAnonymize, bool aMinimize,
+                          uint32_t aConcurrencyLimit,
+                          nsIHandleReportCallback* aHandleReport,
+                          nsISupports* aHandleReportData,
+                          nsIFinishReportingCallback* aFinishReporting,
+                          nsISupports* aFinishReportingData,
+                          const nsAString& aDMDDumpIdent);
   };
 
   // When this is non-null, a request is in flight.  Note: We use manual
   // new/delete for this because its lifetime doesn't match block scope or
   // anything like that.
-  GetReportsState* mGetReportsState;
+  PendingProcessesState* mPendingProcessesState;
 
-  GetReportsState* GetStateForGeneration(uint32_t aGeneration);
+  PendingProcessesState* GetStateForGeneration(uint32_t aGeneration);
   static bool StartChildReport(mozilla::dom::ContentParent* aChild,
-                               const GetReportsState* aState);
+                               const PendingProcessesState* aState);
 };
 
 #define NS_MEMORY_REPORTER_MANAGER_CID \

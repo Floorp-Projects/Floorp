@@ -1356,7 +1356,7 @@ nsMemoryReporterManager::nsMemoryReporterManager()
   , mSavedStrongReporters(nullptr)
   , mSavedWeakReporters(nullptr)
   , mNextGeneration(1)
-  , mGetReportsState(nullptr)
+  , mPendingProcessesState(nullptr)
 {
 }
 
@@ -1414,11 +1414,11 @@ nsMemoryReporterManager::GetReportsExtended(
 
   uint32_t generation = mNextGeneration++;
 
-  if (mGetReportsState) {
+  if (mPendingProcessesState) {
     // A request is in flight.  Don't start another one.  And don't report
     // an error;  just ignore it, and let the in-flight request finish.
     MEMORY_REPORTING_LOG("GetReports (gen=%u, s->gen=%u): abort\n",
-                         generation, mGetReportsState->mGeneration);
+                         generation, mPendingProcessesState->mGeneration);
     return NS_OK;
   }
 
@@ -1429,15 +1429,15 @@ nsMemoryReporterManager::GetReportsExtended(
   if (concurrency < 1) {
     concurrency = 1;
   }
-  mGetReportsState = new GetReportsState(generation,
-                                         aAnonymize,
-                                         aMinimize,
-                                         concurrency,
-                                         aHandleReport,
-                                         aHandleReportData,
-                                         aFinishReporting,
-                                         aFinishReportingData,
-                                         aDMDDumpIdent);
+  mPendingProcessesState = new PendingProcessesState(generation,
+                                                     aAnonymize,
+                                                     aMinimize,
+                                                     concurrency,
+                                                     aHandleReport,
+                                                     aHandleReportData,
+                                                     aFinishReporting,
+                                                     aFinishReportingData,
+                                                     aDMDDumpIdent);
 
   if (aMinimize) {
     rv = MinimizeMemoryUsage(NS_NewRunnableMethod(
@@ -1451,7 +1451,7 @@ nsMemoryReporterManager::GetReportsExtended(
 nsresult
 nsMemoryReporterManager::StartGettingReports()
 {
-  GetReportsState* s = mGetReportsState;
+  PendingProcessesState* s = mPendingProcessesState;
   nsresult rv;
 
   // Get reports for this process.
@@ -1552,13 +1552,13 @@ nsMemoryReporterManager::GetReportsForThisProcessExtended(
   return NS_OK;
 }
 
-nsMemoryReporterManager::GetReportsState*
+nsMemoryReporterManager::PendingProcessesState*
 nsMemoryReporterManager::GetStateForGeneration(uint32_t aGeneration)
 {
   // Memory reporting only happens on the main thread.
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  GetReportsState* s = mGetReportsState;
+  PendingProcessesState* s = mPendingProcessesState;
 
   if (!s) {
     // If we reach here, then:
@@ -1595,7 +1595,7 @@ nsMemoryReporterManager::HandleChildReport(
   uint32_t aGeneration,
   const dom::MemoryReport& aChildReport)
 {
-  GetReportsState* s = GetStateForGeneration(aGeneration);
+  PendingProcessesState* s = GetStateForGeneration(aGeneration);
   if (!s) {
     return;
   }
@@ -1615,7 +1615,7 @@ nsMemoryReporterManager::HandleChildReport(
 
 /* static */ bool
 nsMemoryReporterManager::StartChildReport(mozilla::dom::ContentParent* aChild,
-                                          const GetReportsState* aState)
+                                          const PendingProcessesState* aState)
 {
 #ifdef MOZ_NUWA_PROCESS
   if (aChild->IsNuwaProcess()) {
@@ -1653,7 +1653,7 @@ nsMemoryReporterManager::StartChildReport(mozilla::dom::ContentParent* aChild,
 void
 nsMemoryReporterManager::EndProcessReport(uint32_t aGeneration, bool aSuccess)
 {
-  GetReportsState* s = GetStateForGeneration(aGeneration);
+  PendingProcessesState* s = GetStateForGeneration(aGeneration);
   if (!s) {
     return;
   }
@@ -1700,12 +1700,12 @@ nsMemoryReporterManager::EndProcessReport(uint32_t aGeneration, bool aSuccess)
 nsMemoryReporterManager::TimeoutCallback(nsITimer* aTimer, void* aData)
 {
   nsMemoryReporterManager* mgr = static_cast<nsMemoryReporterManager*>(aData);
-  GetReportsState* s = mgr->mGetReportsState;
+  PendingProcessesState* s = mgr->mPendingProcessesState;
 
   // Release assert because: if the pointer is null we're about to
   // crash regardless of DEBUG, and this way the compiler doesn't
   // complain about unused variables.
-  MOZ_RELEASE_ASSERT(s, "mgr->mGetReportsState");
+  MOZ_RELEASE_ASSERT(s, "mgr->mPendingProcessesState");
   MEMORY_REPORTING_LOG("TimeoutCallback (s->gen=%u; %u running, %u pending)\n",
                        s->mGeneration, s->mNumProcessesRunning,
                        static_cast<unsigned>(s->mChildrenPending.Length()));
@@ -1723,23 +1723,23 @@ nsMemoryReporterManager::FinishReporting()
     MOZ_CRASH();
   }
 
-  MOZ_ASSERT(mGetReportsState);
+  MOZ_ASSERT(mPendingProcessesState);
   MEMORY_REPORTING_LOG("FinishReporting (s->gen=%u; %u processes reported)\n",
-                       mGetReportsState->mGeneration,
-                       mGetReportsState->mNumProcessesCompleted);
+                       mPendingProcessesState->mGeneration,
+                       mPendingProcessesState->mNumProcessesCompleted);
 
-  // Call this before deleting |mGetReportsState|.  That way, if
+  // Call this before deleting |mPendingProcessesState|.  That way, if
   // |mFinishReportData| calls GetReports(), it will silently abort, as
   // required.
-  nsresult rv = mGetReportsState->mFinishReporting->Callback(
-    mGetReportsState->mFinishReportingData);
+  nsresult rv = mPendingProcessesState->mFinishReporting->Callback(
+    mPendingProcessesState->mFinishReportingData);
 
-  delete mGetReportsState;
-  mGetReportsState = nullptr;
+  delete mPendingProcessesState;
+  mPendingProcessesState = nullptr;
   return rv;
 }
 
-nsMemoryReporterManager::GetReportsState::GetReportsState(
+nsMemoryReporterManager::PendingProcessesState::PendingProcessesState(
     uint32_t aGeneration, bool aAnonymize, bool aMinimize,
     uint32_t aConcurrencyLimit,
     nsIHandleReportCallback* aHandleReport,
