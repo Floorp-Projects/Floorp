@@ -124,6 +124,7 @@ class TStructure : public TFieldListCollection
         return mDeepestNesting;
     }
     bool containsArrays() const;
+    bool containsType(TBasicType t) const;
     bool containsSamplers() const;
 
     bool equals(const TStructure &other) const;
@@ -160,10 +161,7 @@ class TStructure : public TFieldListCollection
         *mutableName = name;
     }
 
-    virtual TString mangledNamePrefix() const
-    {
-        return "struct-";
-    }
+    TString mangledNamePrefix() const override { return "struct-"; }
     int calculateDeepestNesting() const;
 
     mutable int mDeepestNesting;
@@ -211,10 +209,7 @@ class TInterfaceBlock : public TFieldListCollection
     }
 
   private:
-    virtual TString mangledNamePrefix() const
-    {
-        return "iblock-";
-    }
+    TString mangledNamePrefix() const override { return "iblock-"; }
 
     const TString *mInstanceName; // for interface block instance names
     int mArraySize; // 0 if not an array
@@ -267,6 +262,9 @@ class TType
           interfaceBlock(interfaceBlockIn), structure(0)
     {
     }
+
+    TType(const TType &) = default;
+    TType &operator=(const TType &) = default;
 
     TBasicType getBasicType() const
     {
@@ -490,6 +488,11 @@ class TType
         return structure ? structure->containsArrays() : false;
     }
 
+    bool isStructureContainingType(TBasicType t) const
+    {
+        return structure ? structure->containsType(t) : false;
+    }
+
     bool isStructureContainingSamplers() const
     {
         return structure ? structure->containsSamplers() : false;
@@ -597,6 +600,16 @@ struct TPublicType
         }
 
         return userDef->isStructureContainingArrays();
+    }
+
+    bool isStructureContainingType(TBasicType t) const
+    {
+        if (!userDef)
+        {
+            return false;
+        }
+
+        return userDef->isStructureContainingType(t);
     }
 
     bool isMatrix() const

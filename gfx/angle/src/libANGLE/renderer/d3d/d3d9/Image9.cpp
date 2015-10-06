@@ -330,8 +330,8 @@ gl::Error Image9::getSurface(IDirect3DSurface9 **outSurface)
 gl::Error Image9::setManagedSurface2D(TextureStorage *storage, int level)
 {
     IDirect3DSurface9 *surface = NULL;
-    TextureStorage9_2D *storage9 = GetAs<TextureStorage9_2D>(storage);
-    gl::Error error = storage9->getSurfaceLevel(level, false, &surface);
+    TextureStorage9 *storage9  = GetAs<TextureStorage9>(storage);
+    gl::Error error = storage9->getSurfaceLevel(GL_TEXTURE_2D, level, false, &surface);
     if (error.isError())
     {
         return error;
@@ -342,8 +342,9 @@ gl::Error Image9::setManagedSurface2D(TextureStorage *storage, int level)
 gl::Error Image9::setManagedSurfaceCube(TextureStorage *storage, int face, int level)
 {
     IDirect3DSurface9 *surface = NULL;
-    TextureStorage9_Cube *storage9 = GetAs<TextureStorage9_Cube>(storage);
-    gl::Error error = storage9->getCubeMapSurface(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level, false, &surface);
+    TextureStorage9 *storage9 = GetAs<TextureStorage9>(storage);
+    gl::Error error =
+        storage9->getSurfaceLevel(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level, false, &surface);
     if (error.isError())
     {
         return error;
@@ -384,12 +385,13 @@ gl::Error Image9::copyToStorage(TextureStorage *storage, const gl::ImageIndex &i
         return error;
     }
 
+    TextureStorage9 *storage9 = GetAs<TextureStorage9>(storage);
+
     IDirect3DSurface9 *destSurface = NULL;
 
     if (index.type == GL_TEXTURE_2D)
     {
-        TextureStorage9_2D *storage9 = GetAs<TextureStorage9_2D>(storage);
-        error = storage9->getSurfaceLevel(index.mipIndex, true, &destSurface);
+        error = storage9->getSurfaceLevel(GL_TEXTURE_2D, index.mipIndex, true, &destSurface);
         if (error.isError())
         {
             return error;
@@ -398,8 +400,7 @@ gl::Error Image9::copyToStorage(TextureStorage *storage, const gl::ImageIndex &i
     else
     {
         ASSERT(gl::IsCubeMapTextureTarget(index.type));
-        TextureStorage9_Cube *storage9 = GetAs<TextureStorage9_Cube>(storage);
-        error = storage9->getCubeMapSurface(index.type, index.mipIndex, true, &destSurface);
+        error = storage9->getSurfaceLevel(index.type, index.mipIndex, true, &destSurface);
         if (error.isError())
         {
             return error;

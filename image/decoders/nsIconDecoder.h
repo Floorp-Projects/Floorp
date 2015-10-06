@@ -8,7 +8,7 @@
 #define mozilla_image_decoders_nsIconDecoder_h
 
 #include "Decoder.h"
-
+#include "StreamingLexer.h"
 #include "nsCOMPtr.h"
 
 namespace mozilla {
@@ -47,18 +47,24 @@ private:
   // Decoders should only be instantiated via DecoderFactory.
   explicit nsIconDecoder(RasterImage* aImage);
 
-  uint32_t mExpectedDataLength;
-  uint32_t mPixBytesRead;
-  uint32_t mState;
+  enum class State {
+    HEADER,
+    ROW_OF_PIXELS,
+    FINISH,
+    SUCCESS,
+    FAILURE
+  };
+
+  LexerTransition<State> ReadHeader(const char* aData);
+  LexerTransition<State> ReadRowOfPixels(const char* aData, size_t aLength);
+  LexerTransition<State> Finish();
+
+  StreamingLexer<State> mLexer;
   uint8_t mWidth;
   uint8_t mHeight;
-};
-
-enum {
-  iconStateStart      = 0,
-  iconStateHaveHeight = 1,
-  iconStateReadPixels = 2,
-  iconStateFinished   = 3
+  uint32_t mBytesPerRow;
+  uint32_t mBytesTotal;
+  uint32_t mCurrentRow;
 };
 
 } // namespace image

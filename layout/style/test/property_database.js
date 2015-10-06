@@ -1844,22 +1844,6 @@ var gCSSProperties = {
     other_values: [ "none", "text", "element", "elements", "all", "toggle", "tri-state", "-moz-all", "-moz-none" ],
     invalid_values: []
   },
-  "-moz-window-dragging": {
-    domProp: "MozWindowDragging",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "no-drag" ],
-    other_values: [ "drag" ],
-    invalid_values: [ "none" ]
-  },
-  "-moz-window-shadow": {
-    domProp: "MozWindowShadow",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "default" ],
-    other_values: [ "none", "menu", "tooltip", "sheet" ],
-    invalid_values: []
-  },
   "background": {
     domProp: "background",
     inherited: false,
@@ -6413,4 +6397,25 @@ for (var prop in gCSSProperties) {
       });
     }
   }
+}
+
+if (false) {
+  // TODO These properties are chrome-only, and are not exposed via CSSOM.
+  // We may still want to find a way to test them. See bug 1206999.
+  gCSSProperties["-moz-window-dragging"] = {
+    //domProp: "MozWindowDragging",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "no-drag" ],
+    other_values: [ "drag" ],
+    invalid_values: [ "none" ]
+  };
+  gCSSProperties["-moz-window-shadow"] = {
+    //domProp: "MozWindowShadow",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "default" ],
+    other_values: [ "none", "menu", "tooltip", "sheet" ],
+    invalid_values: []
+  };
 }

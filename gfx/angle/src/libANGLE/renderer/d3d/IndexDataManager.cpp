@@ -9,6 +9,7 @@
 
 #include "libANGLE/renderer/d3d/IndexDataManager.h"
 
+#include "common/utilities.h"
 #include "libANGLE/renderer/d3d/BufferD3D.h"
 #include "libANGLE/renderer/d3d/IndexBuffer.h"
 #include "libANGLE/Buffer.h"
@@ -123,9 +124,11 @@ gl::Error IndexDataManager::prepareIndexData(GLenum srcType, GLsizei count, gl::
 {
     // Avoid D3D11's primitive restart index value
     // see http://msdn.microsoft.com/en-us/library/windows/desktop/bb205124(v=vs.85).aspx
+    bool hasPrimitiveRestartIndex =
+        translated->indexRange.vertexIndexCount < static_cast<size_t>(count) ||
+        translated->indexRange.end == gl::GetPrimitiveRestartIndex(srcType);
     bool primitiveRestartWorkaround = mRendererClass == RENDERER_D3D11 &&
-        translated->indexRange.end == 0xFFFF &&
-        srcType == GL_UNSIGNED_SHORT;
+                                      hasPrimitiveRestartIndex && srcType == GL_UNSIGNED_SHORT;
 
     const GLenum dstType = (srcType == GL_UNSIGNED_INT || primitiveRestartWorkaround) ?
                            GL_UNSIGNED_INT : GL_UNSIGNED_SHORT;
@@ -222,7 +225,8 @@ gl::Error IndexDataManager::prepareIndexData(GLenum srcType, GLsizei count, gl::
             }
             ASSERT(bufferData != nullptr);
 
-            unsigned int convertCount = buffer->getSize() >> srcTypeInfo.bytesShift;
+            unsigned int convertCount =
+                static_cast<unsigned int>(buffer->getSize()) >> srcTypeInfo.bytesShift;
             error = StreamInIndexBuffer(staticBuffer, bufferData, convertCount,
                                         srcType, dstType, nullptr);
             if (error.isError())

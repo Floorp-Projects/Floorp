@@ -44,7 +44,7 @@ void TranslatorGLSL::translate(TIntermNode *root, int) {
 
     if (precisionEmulation)
     {
-        EmulatePrecision emulatePrecision;
+        EmulatePrecision emulatePrecision(getSymbolTable(), getShaderVersion());
         root->traverse(&emulatePrecision);
         emulatePrecision.updateTree();
         emulatePrecision.writeEmulationHelpers(sink, getOutputType());
@@ -64,29 +64,69 @@ void TranslatorGLSL::translate(TIntermNode *root, int) {
 
     // Declare gl_FragColor and glFragData as webgl_FragColor and webgl_FragData
     // if it's core profile shaders and they are used.
-    if (getShaderType() == GL_FRAGMENT_SHADER && IsGLSL130OrNewer(getOutputType()))
+    if (getShaderType() == GL_FRAGMENT_SHADER)
     {
-        bool usesGLFragColor = false;
-        bool usesGLFragData = false;
-        for (auto outputVar : outputVariables)
+        const bool mayHaveESSL1SecondaryOutputs =
+            IsExtensionEnabled(getExtensionBehavior(), "GL_EXT_blend_func_extended") &&
+            getShaderVersion() == 100;
+        const bool declareGLFragmentOutputs = IsGLSL130OrNewer(getOutputType());
+
+        bool hasGLFragColor          = false;
+        bool hasGLFragData           = false;
+        bool hasGLSecondaryFragColor = false;
+        bool hasGLSecondaryFragData  = false;
+
+        for (const auto &outputVar : outputVariables)
         {
-            if (outputVar.name == "gl_FragColor")
+            if (declareGLFragmentOutputs)
             {
-                usesGLFragColor = true;
+                if (outputVar.name == "gl_FragColor")
+                {
+                    ASSERT(!hasGLFragColor);
+                    hasGLFragColor = true;
+                    continue;
+                }
+                else if (outputVar.name == "gl_FragData")
+                {
+                    ASSERT(!hasGLFragData);
+                    hasGLFragData = true;
+                    continue;
+                }
             }
-            else if (outputVar.name == "gl_FragData")
+            if (mayHaveESSL1SecondaryOutputs)
             {
-                usesGLFragData = true;
+                if (outputVar.name == "gl_SecondaryFragColorEXT")
+                {
+                    ASSERT(!hasGLSecondaryFragColor);
+                    hasGLSecondaryFragColor = true;
+                    continue;
+                }
+                else if (outputVar.name == "gl_SecondaryFragDataEXT")
+                {
+                    ASSERT(!hasGLSecondaryFragData);
+                    hasGLSecondaryFragData = true;
+                    continue;
+                }
             }
         }
-        ASSERT(!(usesGLFragColor && usesGLFragData));
-        if (usesGLFragColor)
+        ASSERT(!((hasGLFragColor || hasGLSecondaryFragColor) &&
+                 (hasGLFragData || hasGLSecondaryFragData)));
+        if (hasGLFragColor)
         {
             sink << "out vec4 webgl_FragColor;\n";
         }
-        if (usesGLFragData)
+        if (hasGLFragData)
         {
             sink << "out vec4 webgl_FragData[gl_MaxDrawBuffers];\n";
+        }
+        if (hasGLSecondaryFragColor)
+        {
+            sink << "out vec4 angle_SecondaryFragColor;\n";
+        }
+        if (hasGLSecondaryFragData)
+        {
+            sink << "out vec4 angle_SecondaryFragData[" << getResources().MaxDualSourceDrawBuffers
+                 << "];\n";
         }
     }
 

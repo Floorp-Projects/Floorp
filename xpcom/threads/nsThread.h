@@ -207,36 +207,6 @@ protected:
   MainThreadFlag mIsMainThread;
 };
 
-//-----------------------------------------------------------------------------
-
-class nsThreadSyncDispatch : public nsRunnable
-{
-public:
-  nsThreadSyncDispatch(nsIThread* aOrigin, already_AddRefed<nsIRunnable>&& aTask)
-    : mOrigin(aOrigin)
-    , mSyncTask(aTask)
-    , mResult(NS_ERROR_NOT_INITIALIZED)
-  {
-  }
-
-  bool IsPending()
-  {
-    return mSyncTask != nullptr;
-  }
-
-  nsresult Result()
-  {
-    return mResult;
-  }
-
-private:
-  NS_DECL_NSIRUNNABLE
-
-  nsCOMPtr<nsIThread> mOrigin;
-  nsCOMPtr<nsIRunnable> mSyncTask;
-  nsresult mResult;
-};
-
 #if defined(XP_UNIX) && !defined(ANDROID) && !defined(DEBUG) && HAVE_UALARM \
   && defined(_GNU_SOURCE)
 # define MOZ_CANARY

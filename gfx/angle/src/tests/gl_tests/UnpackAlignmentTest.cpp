@@ -6,8 +6,6 @@
 
 #include "test_utils/ANGLETest.h"
 
-#include <array>
-
 using namespace angle;
 
 namespace
@@ -105,14 +103,6 @@ class UnpackAlignmentTest : public ANGLETest
 
     void testAlignment(int alignment, unsigned int offset, GLenum format, GLenum type)
     {
-        // TODO(geofflang): Support LUMA formats in the core profile.
-        if (getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE &&
-            (format == GL_LUMINANCE_ALPHA || format == GL_LUMINANCE || format == GL_ALPHA))
-        {
-            std::cout << "Test skipped on OpenGL with LUMA formats." << std::endl;
-            return;
-        }
-
         static const unsigned int width = 7;
         static const unsigned int height = 2;
 
@@ -122,8 +112,8 @@ class UnpackAlignmentTest : public ANGLETest
         glGetIntegerv(GL_UNPACK_ALIGNMENT, &readbackAlignment);
         EXPECT_EQ(alignment, readbackAlignment);
 
-        std::array<GLubyte, 1024> buf;
-        std::fill(buf.begin(), buf.end(), 0);
+        GLubyte buf[1024];
+        memset(buf, 0, sizeof(buf));
 
         unsigned int pixelSize;
         getPixelSize(format, type, &pixelSize);

@@ -79,12 +79,12 @@ NOFTU=1 GAIA_APP_TARGET=production SETTINGS_PATH=$SIM_DIR/custom-settings.json m
 mv $GAIA_DIR/profile $WORKDIR/
 cat $SIM_DIR/custom-prefs.js >> $WORKDIR/profile/user.js
 
-APP_BUILDID=$(sed -n "s/BuildID=\([0-9]\{8\}\)/\1/p" $WORKDIR/firefox/application.ini)
-echo "BUILDID $APP_BUILDID -- VERSION $VERSION"
+MOZ_APP_BUILDID=$(sed -n "s/BuildID=\([0-9]\{8\}\)/\1/p" $WORKDIR/firefox/application.ini)
+echo "BUILDID $MOZ_APP_BUILDID -- VERSION $VERSION"
 
-XPI_NAME=fxos-simulator-$VERSION.$APP_BUILDID-$PLATFORM.xpi
+XPI_NAME=fxos-simulator-$VERSION.$MOZ_APP_BUILDID-$PLATFORM.xpi
 ADDON_ID=fxos_$(echo $VERSION | sed "s/\./_/")_simulator@mozilla.org
-ADDON_VERSION=$VERSION.$APP_BUILDID
+ADDON_VERSION=$VERSION.$MOZ_APP_BUILDID
 ADDON_NAME="Firefox OS $VERSION Simulator"
 ADDON_DESCRIPTION="a Firefox OS $VERSION Simulator"
 

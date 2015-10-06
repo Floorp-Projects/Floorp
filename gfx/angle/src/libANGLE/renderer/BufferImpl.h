@@ -30,7 +30,11 @@ class BufferImpl : angle::NonCopyable
     virtual gl::Error mapRange(size_t offset, size_t length, GLbitfield access, GLvoid **mapPtr) = 0;
     virtual gl::Error unmap(GLboolean *result) = 0;
 
-    virtual gl::Error getIndexRange(GLenum type, size_t offset, size_t count, gl::RangeUI *outRange) = 0;
+    virtual gl::Error getIndexRange(GLenum type,
+                                    size_t offset,
+                                    size_t count,
+                                    bool primitiveRestartEnabled,
+                                    gl::IndexRange *outRange) = 0;
 };
 
 }

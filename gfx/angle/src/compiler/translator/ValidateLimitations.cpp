@@ -35,7 +35,7 @@ class ValidateConstIndexExpr : public TIntermTraverser
     // Returns true if the parsed node represents a constant index expression.
     bool isValid() const { return mValid; }
 
-    virtual void visitSymbol(TIntermSymbol *symbol)
+    void visitSymbol(TIntermSymbol *symbol) override
     {
         // Only constants and loop indices are allowed in a
         // constant index expression.

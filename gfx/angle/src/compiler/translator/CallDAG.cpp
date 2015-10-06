@@ -71,10 +71,10 @@ class CallDAG::CallDAGCreator : public TIntermTraverser
             record.callees.reserve(data.callees.size());
             for (auto &callee : data.callees)
             {
-                record.callees.push_back(callee->index);
+                record.callees.push_back(static_cast<int>(callee->index));
             }
 
-            (*idToIndex)[data.node->getFunctionId()] = data.index;
+            (*idToIndex)[data.node->getFunctionId()] = static_cast<int>(data.index);
         }
     }
 

@@ -55,9 +55,16 @@ const char *g_dEQPDataSearchDirs[] =
 #if (DE_OS == DE_OS_WIN32)
 deBool deIsDir(const char *filename)
 {
-    DWORD attribs = GetFileAttributesA(filename);
-    return (attribs != INVALID_FILE_ATTRIBUTES) &&
-           ((attribs & FILE_ATTRIBUTE_DIRECTORY) > 0);
+    WIN32_FILE_ATTRIBUTE_DATA fileInformation;
+
+    BOOL result = GetFileAttributesExA(filename, GetFileExInfoStandard, &fileInformation);
+    if (result)
+    {
+        DWORD attribs = fileInformation.dwFileAttributes;
+        return (attribs != INVALID_FILE_ATTRIBUTES) && ((attribs & FILE_ATTRIBUTE_DIRECTORY) > 0);
+    }
+
+    return false;
 }
 #elif (DE_OS == DE_OS_UNIX)
 deBool deIsDir(const char *filename)

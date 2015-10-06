@@ -2009,7 +2009,8 @@ MessageChannel::CancelCurrentTransaction()
 {
     MonitorAutoLock lock(*mMonitor);
     if (mCurrentTransaction &&
-        (DispatchingSyncMessagePriority() >= IPC::Message::PRIORITY_HIGH))
+        !DispatchingAsyncMessage() &&
+        DispatchingSyncMessagePriority() >= IPC::Message::PRIORITY_HIGH)
     {
         CancelCurrentTransactionInternal();
         mLink->SendMessage(new CancelMessage());

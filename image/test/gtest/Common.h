@@ -89,6 +89,7 @@ ImageTestCase GreenGIFTestCase();
 ImageTestCase GreenJPGTestCase();
 ImageTestCase GreenBMPTestCase();
 ImageTestCase GreenICOTestCase();
+ImageTestCase GreenIconTestCase();
 
 ImageTestCase GreenFirstFrameAnimatedGIFTestCase();
 ImageTestCase GreenFirstFrameAnimatedPNGTestCase();

@@ -5,7 +5,7 @@
 //
 
 #include "PreprocessorTest.h"
-#include "Token.h"
+#include "compiler/preprocessor/Token.h"
 
 class PragmaTest : public PreprocessorTest
 {
@@ -137,9 +137,9 @@ TEST_P(InvalidPragmaTest, Identified)
     using testing::_;
     // No handlePragma calls.
     EXPECT_CALL(mDirectiveHandler, handlePragma(_, _, _, false)).Times(0);
-    // Invalid pragma error.
+    // Unrecognized pragma warning.
     EXPECT_CALL(mDiagnostics,
-                print(pp::Diagnostics::PP_INVALID_PRAGMA,
+                print(pp::Diagnostics::PP_UNRECOGNIZED_PRAGMA,
                       pp::SourceLocation(0, 1), _));
 
     preprocess(str, expected);

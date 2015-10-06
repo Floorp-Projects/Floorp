@@ -21,9 +21,9 @@ const unsigned int maxDimensions = 4;
 
 TEST(MatrixUtilsTest, MatrixConstructorTest)
 {
-    for (size_t i = minDimensions; i <= maxDimensions; i++)
+    for (unsigned int i = minDimensions; i <= maxDimensions; i++)
     {
-        for (size_t j = minDimensions; j <= maxDimensions; j++)
+        for (unsigned int j = minDimensions; j <= maxDimensions; j++)
         {
             unsigned int numElements = i * j;
             Matrix<float> m(std::vector<float>(numElements, 1.0f), i, j);
@@ -33,7 +33,7 @@ TEST(MatrixUtilsTest, MatrixConstructorTest)
         }
     }
 
-    for (size_t i = minDimensions; i <= maxDimensions; i++)
+    for (unsigned int i = minDimensions; i <= maxDimensions; i++)
     {
         unsigned int numElements = i * i;
         Matrix<float> m(std::vector<float>(numElements, 1.0f), i);
@@ -45,7 +45,7 @@ TEST(MatrixUtilsTest, MatrixConstructorTest)
 
 TEST(MatrixUtilsTest, MatrixCompMultTest)
 {
-    for (size_t i = minDimensions; i <= maxDimensions; i++)
+    for (unsigned int i = minDimensions; i <= maxDimensions; i++)
     {
         unsigned int numElements = i * i;
         Matrix<float> m1(std::vector<float>(numElements, 2.0f), i);
@@ -58,9 +58,9 @@ TEST(MatrixUtilsTest, MatrixCompMultTest)
 
 TEST(MatrixUtilsTest, MatrixOuterProductTest)
 {
-    for (size_t i = minDimensions; i <= maxDimensions; i++)
+    for (unsigned int i = minDimensions; i <= maxDimensions; i++)
     {
-        for (size_t j = minDimensions; j <= maxDimensions; j++)
+        for (unsigned int j = minDimensions; j <= maxDimensions; j++)
         {
             unsigned int numElements = i * j;
             Matrix<float> m1(std::vector<float>(numElements, 2.0f), i, 1);
@@ -77,9 +77,9 @@ TEST(MatrixUtilsTest, MatrixOuterProductTest)
 
 TEST(MatrixUtilsTest, MatrixTransposeTest)
 {
-    for (size_t i = minDimensions; i <= maxDimensions; i++)
+    for (unsigned int i = minDimensions; i <= maxDimensions; i++)
     {
-        for (size_t j = minDimensions; j <= maxDimensions; j++)
+        for (unsigned int j = minDimensions; j <= maxDimensions; j++)
         {
             unsigned int numElements = i * j;
             Matrix<float> m1(std::vector<float>(numElements, 2.0f), i, j);
@@ -97,7 +97,7 @@ TEST(MatrixUtilsTest, MatrixTransposeTest)
 
 TEST(MatrixUtilsTest, MatrixDeterminantTest)
 {
-    for (size_t i = minDimensions; i <= maxDimensions; i++)
+    for (unsigned int i = minDimensions; i <= maxDimensions; i++)
     {
         unsigned int numElements = i * i;
         Matrix<float> m(std::vector<float>(numElements, 2.0f), i);
@@ -176,7 +176,7 @@ TEST(MatrixUtilsTest, 4x4MatrixInverseTest)
     Matrix<float> result = inputMatrix * inputMatrix.inverse();
     std::vector<float> resultElements = result.elements();
     const float floatFaultTolarance = 0.00001f;
-    for (size_t i = 0; i < numElements; i++)
+    for (unsigned int i = 0; i < numElements; i++)
         EXPECT_NEAR(resultElements[i], identityMatrix[i], floatFaultTolarance);
 }
 

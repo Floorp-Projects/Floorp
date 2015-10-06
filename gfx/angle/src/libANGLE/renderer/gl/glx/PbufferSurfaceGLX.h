@@ -15,13 +15,19 @@
 namespace rx
 {
 
+class DisplayGLX;
 class FunctionsGLX;
 
 class PbufferSurfaceGLX : public SurfaceGL
 {
   public:
-    PbufferSurfaceGLX(EGLint width, EGLint height, bool largest, const FunctionsGLX &glx,
-                      glx::Context context, glx::FBConfig fbConfig);
+    PbufferSurfaceGLX(RendererGL *renderer,
+                      EGLint width,
+                      EGLint height,
+                      bool largest,
+                      const FunctionsGLX &glx,
+                      glx::Context context,
+                      glx::FBConfig fbConfig);
     ~PbufferSurfaceGLX() override;
 
     egl::Error initialize() override;
@@ -38,6 +44,7 @@ class PbufferSurfaceGLX : public SurfaceGL
     EGLint getHeight() const override;
 
     EGLint isPostSubBufferSupported() const override;
+    EGLint getSwapBehavior() const override;
 
   private:
     unsigned mWidth;

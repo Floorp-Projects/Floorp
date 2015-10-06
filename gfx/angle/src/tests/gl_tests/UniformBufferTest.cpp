@@ -313,6 +313,51 @@ TEST_P(UniformBufferTest, ManyUniformBufferRange)
     }
 }
 
+// Tests that active uniforms have the right names.
+TEST_P(UniformBufferTest, ActiveUniformNames)
+{
+    const std::string &vertexShaderSource =
+        "#version 300 es\n"
+        "in vec2 position;\n"
+        "out float v;\n"
+        "uniform blockName {\n"
+        "  float f;\n"
+        "} instanceName;\n"
+        "void main() {\n"
+        "  v = instanceName.f;\n"
+        "  gl_Position = vec4(position, 0, 1);\n"
+        "}";
+
+    const std::string &fragmentShaderSource =
+        "#version 300 es\n"
+        "precision highp float;\n"
+        "in float v;\n"
+        "out vec4 color;\n"
+        "void main() {\n"
+        "  color = vec4(v, 0, 0, 1);\n"
+        "}";
+
+    GLuint program = CompileProgram(vertexShaderSource, fragmentShaderSource);
+    ASSERT_NE(0u, program);
+
+    GLint activeUniforms;
+    glGetProgramiv(program, GL_ACTIVE_UNIFORMS, &activeUniforms);
+
+    ASSERT_EQ(1, activeUniforms);
+
+    GLint maxLength, size;
+    GLenum type;
+    GLsizei length;
+    glGetProgramiv(program, GL_ACTIVE_UNIFORM_MAX_LENGTH, &maxLength);
+    std::vector<GLchar> strBuffer(maxLength + 1, 0);
+    glGetActiveUniform(program, 0, maxLength, &length, &size, &type, &strBuffer[0]);
+
+    ASSERT_GL_NO_ERROR();
+    EXPECT_EQ(1, size);
+    EXPECT_GLENUM_EQ(GL_FLOAT, type);
+    EXPECT_EQ("blockName.f", std::string(&strBuffer[0]));
+}
+
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
 ANGLE_INSTANTIATE_TEST(UniformBufferTest, ES3_D3D11(), ES3_D3D11_FL11_1(), ES3_D3D11_FL11_1_REFERENCE());
 
