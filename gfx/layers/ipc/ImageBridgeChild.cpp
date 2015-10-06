@@ -856,6 +856,7 @@ ImageBridgeChild::DeallocShmem(ipc::Shmem& aShmem)
 
 PTextureChild*
 ImageBridgeChild::AllocPTextureChild(const SurfaceDescriptor&,
+                                     const LayersBackend&,
                                      const TextureFlags&)
 {
   MOZ_ASSERT(!mShuttingDown);
@@ -951,10 +952,11 @@ ImageBridgeChild::RecvDidComposite(InfallibleTArray<ImageCompositeNotification>&
 
 PTextureChild*
 ImageBridgeChild::CreateTexture(const SurfaceDescriptor& aSharedData,
+                                LayersBackend aLayersBackend,
                                 TextureFlags aFlags)
 {
   MOZ_ASSERT(!mShuttingDown);
-  return SendPTextureConstructor(aSharedData, aFlags);
+  return SendPTextureConstructor(aSharedData, aLayersBackend, aFlags);
 }
 
 void

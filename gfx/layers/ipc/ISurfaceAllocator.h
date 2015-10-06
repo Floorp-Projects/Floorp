@@ -84,12 +84,8 @@ public:
   void Finalize();
 
   /**
-   * Returns the type of backend that is used off the main thread.
-   * We only don't allow changing the backend type at runtime so this value can
-   * be queried once and will not change until Gecko is restarted.
-   *
-   * XXX - With e10s this may not be true anymore. we can have accelerated widgets
-   * and non-accelerated widgets (small popups, etc.)
+   * Returns the preferred compositor backend type for drawing. If not known
+   * or not supported, LAYERS_NONE is returned.
    */
   virtual LayersBackend GetCompositorBackendType() const = 0;
 

@@ -325,9 +325,11 @@ public:
   /**
    * Factory method.
    */
-  static already_AddRefed<TextureHost> Create(const SurfaceDescriptor& aDesc,
-                                          ISurfaceAllocator* aDeallocator,
-                                          TextureFlags aFlags);
+  static already_AddRefed<TextureHost> Create(
+    const SurfaceDescriptor& aDesc,
+    ISurfaceAllocator* aDeallocator,
+    LayersBackend aBackend,
+    TextureFlags aFlags);
 
   /**
    * Tell to TextureChild that TextureHost is recycled.
@@ -450,6 +452,7 @@ public:
    */
   static PTextureParent* CreateIPDLActor(CompositableParentManager* aManager,
                                          const SurfaceDescriptor& aSharedData,
+                                         LayersBackend aLayersBackend,
                                          TextureFlags aFlags);
   static bool DestroyIPDLActor(PTextureParent* actor);
 

@@ -42,6 +42,7 @@ using mozilla::layers::DiagnosticTypes from "mozilla/layers/CompositorTypes.h";
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using struct mozilla::layers::FenceHandle from "mozilla/layers/FenceUtils.h";
+using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 
 namespace mozilla {
 namespace layers {
