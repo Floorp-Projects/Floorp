@@ -10263,6 +10263,17 @@ CodeGenerator::visitThrowUninitializedLexical(LThrowUninitializedLexical* ins)
     callVM(ThrowUninitializedLexicalInfo, ins);
 }
 
+typedef bool (*GlobalNameConflictsCheckFromIonFn)(JSContext*, HandleScript);
+static const VMFunction GlobalNameConflictsCheckFromIonInfo =
+    FunctionInfo<GlobalNameConflictsCheckFromIonFn>(GlobalNameConflictsCheckFromIon);
+
+void
+CodeGenerator::visitGlobalNameConflictsCheck(LGlobalNameConflictsCheck* ins)
+{
+    pushArg(ImmGCPtr(ins->mirRaw()->block()->info().script()));
+    callVM(GlobalNameConflictsCheckFromIonInfo, ins);
+}
+
 void
 CodeGenerator::visitDebugger(LDebugger* ins)
 {

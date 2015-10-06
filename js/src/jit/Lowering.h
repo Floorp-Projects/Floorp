@@ -301,6 +301,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitUnknownValue(MUnknownValue* ins);
     void visitLexicalCheck(MLexicalCheck* ins);
     void visitThrowUninitializedLexical(MThrowUninitializedLexical* ins);
+    void visitGlobalNameConflictsCheck(MGlobalNameConflictsCheck* ins);
     void visitDebugger(MDebugger* ins);
     void visitNewTarget(MNewTarget* ins);
     void visitArrowNewTarget(MArrowNewTarget* ins);

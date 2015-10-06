@@ -365,6 +365,7 @@
     _(AssertResultT)                \
     _(LexicalCheck)                 \
     _(ThrowUninitializedLexical)    \
+    _(GlobalNameConflictsCheck)     \
     _(Debugger)                     \
     _(NewTarget)                    \
     _(ArrowNewTarget)

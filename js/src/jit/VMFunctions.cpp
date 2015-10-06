@@ -845,9 +845,41 @@ GeneratorThrowOrClose(JSContext* cx, BaselineFrame* frame, Handle<GeneratorObjec
 }
 
 bool
-InitStrictEvalScopeObjects(JSContext* cx, BaselineFrame* frame)
+InitGlobalOrEvalScopeObjects(JSContext* cx, BaselineFrame* frame)
 {
-    return frame->initStrictEvalScopeObjects(cx);
+    RootedScript script(cx, frame->script());
+    RootedObject varObj(cx, frame->scopeChain());
+    while (!varObj->isQualifiedVarObj())
+        varObj = varObj->enclosingScope();
+
+    if (script->isForEval()) {
+        // Strict eval needs its own call object.
+        //
+        // Non-strict eval may introduce 'var' bindings that conflict with
+        // lexical bindings in an enclosing lexical scope.
+        if (script->strict()) {
+            if (!frame->initStrictEvalScopeObjects(cx))
+                return false;
+        } else {
+            RootedObject scopeChain(cx, frame->scopeChain());
+            if (!CheckEvalDeclarationConflicts(cx, script, scopeChain, varObj))
+                return false;
+        }
+    } else {
+        Rooted<ClonedBlockObject*> lexicalScope(cx,
+            &NearestEnclosingExtensibleLexicalScope(frame->scopeChain()));
+        if (!CheckGlobalDeclarationConflicts(cx, script, lexicalScope, varObj))
+            return false;
+    }
+
+    return true;
+}
+
+bool
+GlobalNameConflictsCheckFromIon(JSContext* cx, HandleScript script)
+{
+    Rooted<ClonedBlockObject*> lexicalScope(cx, &cx->global()->lexicalScope());
+    return CheckGlobalDeclarationConflicts(cx, script, lexicalScope, cx->global());
 }
 
 bool
