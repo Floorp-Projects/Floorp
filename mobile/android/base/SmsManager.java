@@ -31,10 +31,9 @@ public class SmsManager {
         void send(String aNumber, String aMessage, int aRequestId);
         void getMessage(int aMessageId, int aRequestId);
         void deleteMessage(int aMessageId, int aRequestId);
-        void createMessageCursor(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, String aDelivery, boolean aHasRead, boolean aRead, boolean aHasThreadId, long aThreadId, boolean aReverse, int aRequestId);
-        void createThreadCursor(int aRequestId);
-        void getNextThread(int aRequestId);
-        void getNextMessage(int aRequestId);
+        void createMessageList(long aStartDate, long aEndDate, String[] aNumbers, int aNumbersCount, String aDelivery, boolean aHasRead, boolean aRead, long aThreadId, boolean aReverse, int aRequestId);
+        void getNextMessageInList(int aListId, int aRequestId);
+        void clearMessageList(int aListId);
     }
 }
 
