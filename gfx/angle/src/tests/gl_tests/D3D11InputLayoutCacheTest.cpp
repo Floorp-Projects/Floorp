@@ -27,6 +27,7 @@ class D3D11InputLayoutCacheTest : public ANGLETest
         setWindowWidth(64);
         setWindowHeight(64);
         setConfigRedBits(8);
+        setConfigAlphaBits(8);
     }
 
     GLuint makeProgramWithAttribCount(unsigned int attribCount)

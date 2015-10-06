@@ -40,13 +40,15 @@ TEST_P(DebugMarkerTest, BasicValidation)
     std::string eventMarkerCaption = "Test event marker caption";
     std::string groupMarkerCaption = "Test group marker caption";
 
-    glPushGroupMarkerEXT(groupMarkerCaption.length(), groupMarkerCaption.c_str());
+    glPushGroupMarkerEXT(static_cast<GLsizei>(groupMarkerCaption.length()),
+                         groupMarkerCaption.c_str());
 
     // Do some basic operations between calls to extension entry points
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glInsertEventMarkerEXT(eventMarkerCaption.length(), eventMarkerCaption.c_str());
+    glInsertEventMarkerEXT(static_cast<GLsizei>(eventMarkerCaption.length()),
+                           eventMarkerCaption.c_str());
     glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 

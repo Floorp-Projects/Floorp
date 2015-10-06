@@ -17,6 +17,7 @@
 #include "angle_gl.h"
 #include "libANGLE/Version.h"
 #include "libANGLE/renderer/gl/FunctionsGL.h"
+#include "libANGLE/renderer/gl/WorkaroundsGL.h"
 
 namespace rx
 {
@@ -42,9 +43,6 @@ struct InternalFormat
 {
     InternalFormat();
 
-    // Internal format to use for the native texture
-    GLenum internalFormat;
-
     SupportRequirement texture;
     SupportRequirement filter;
     SupportRequirement renderbuffer;
@@ -52,6 +50,68 @@ struct InternalFormat
 };
 const InternalFormat &GetInternalFormatInfo(GLenum internalFormat, StandardGL standard);
 
+struct TexImageFormat
+{
+    GLenum internalFormat;
+    GLenum format;
+    GLenum type;
+};
+TexImageFormat GetTexImageFormat(const FunctionsGL *functions,
+                                 const WorkaroundsGL &workarounds,
+                                 GLenum internalFormat,
+                                 GLenum format,
+                                 GLenum type);
+
+struct TexSubImageFormat
+{
+    GLenum format;
+    GLenum type;
+};
+TexSubImageFormat GetTexSubImageFormat(const FunctionsGL *functions,
+                                       const WorkaroundsGL &workarounds,
+                                       GLenum format,
+                                       GLenum type);
+
+struct CompressedTexImageFormat
+{
+    GLenum internalFormat;
+};
+CompressedTexImageFormat GetCompressedTexImageFormat(const FunctionsGL *functions,
+                                                     const WorkaroundsGL &workarounds,
+                                                     GLenum internalFormat);
+
+struct CompressedTexSubImageFormat
+{
+    GLenum format;
+};
+CompressedTexSubImageFormat GetCompressedSubTexImageFormat(const FunctionsGL *functions,
+                                                           const WorkaroundsGL &workarounds,
+                                                           GLenum format);
+
+struct CopyTexImageImageFormat
+{
+    GLenum internalFormat;
+};
+CopyTexImageImageFormat GetCopyTexImageImageFormat(const FunctionsGL *functions,
+                                                   const WorkaroundsGL &workarounds,
+                                                   GLenum internalFormat,
+                                                   GLenum framebufferType);
+
+struct TexStorageFormat
+{
+    GLenum internalFormat;
+};
+TexStorageFormat GetTexStorageFormat(const FunctionsGL *functions,
+                                     const WorkaroundsGL &workarounds,
+                                     GLenum internalFormat);
+
+struct RenderbufferFormat
+{
+    GLenum internalFormat;
+};
+RenderbufferFormat GetRenderbufferFormat(const FunctionsGL *functions,
+                                         const WorkaroundsGL &workarounds,
+                                         GLenum internalFormat);
 }
 
 }

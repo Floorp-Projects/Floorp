@@ -21,6 +21,13 @@ class FramebufferGL : public FramebufferImpl
 {
   public:
     FramebufferGL(const gl::Framebuffer::Data &data, const FunctionsGL *functions, StateManagerGL *stateManager, bool isDefault);
+    // Constructor called when we need to create a FramebufferGL from an
+    // existing framebuffer name, for example for the default framebuffer
+    // on the Mac EGL CGL backend.
+    FramebufferGL(GLuint id,
+                  const gl::Framebuffer::Data &data,
+                  const FunctionsGL *functions,
+                  StateManagerGL *stateManager);
     ~FramebufferGL() override;
 
     void onUpdateColorAttachment(size_t index) override;
@@ -57,6 +64,7 @@ class FramebufferGL : public FramebufferImpl
     StateManagerGL *mStateManager;
 
     GLuint mFramebufferID;
+    bool mIsDefault;
 };
 
 }

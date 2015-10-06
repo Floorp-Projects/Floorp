@@ -64,10 +64,12 @@ FunctionsWGL::FunctionsWGL()
       realizeLayerPalette(nullptr),
       swapLayerBuffers(nullptr),
       swapMultipleBuffers(nullptr),
-      createContextAttribsARB(nullptr),
-      getPixelFormatAttribivARB(nullptr),
       getExtensionStringEXT(nullptr),
       getExtensionStringARB(nullptr),
+      createContextAttribsARB(nullptr),
+      getPixelFormatAttribivARB(nullptr),
+      getPixelFormatAttribfvARB(nullptr),
+      choosePixelFormatARB(nullptr),
       swapIntervalEXT(nullptr),
       createPbufferARB(nullptr),
       getPbufferDCARB(nullptr),
@@ -121,8 +123,16 @@ void FunctionsWGL::initialize(HMODULE glModule, HDC context)
     }
 
     // Load the wgl extension functions by checking if the context supports the extension first
+
+    // WGL_ARB_create_context
     GetWGLExtensionProcAddress(glModule, getProcAddress, extensions, "WGL_ARB_create_context", "wglCreateContextAttribsARB", &createContextAttribsARB);
+
+    // WGL_ARB_pixel_format
     GetWGLExtensionProcAddress(glModule, getProcAddress, extensions, "WGL_ARB_pixel_format", "wglGetPixelFormatAttribivARB", &getPixelFormatAttribivARB);
+    GetWGLExtensionProcAddress(glModule, getProcAddress, extensions, "WGL_ARB_pixel_format", "wglGetPixelFormatAttribfvARB", &getPixelFormatAttribfvARB);
+    GetWGLExtensionProcAddress(glModule, getProcAddress, extensions, "WGL_ARB_pixel_format", "wglChoosePixelFormatARB", &choosePixelFormatARB);
+
+    // WGL_EXT_swap_control
     GetWGLExtensionProcAddress(glModule, getProcAddress, extensions, "WGL_EXT_swap_control", "wglSwapIntervalEXT", &swapIntervalEXT);
 
     // WGL_ARB_pbuffer

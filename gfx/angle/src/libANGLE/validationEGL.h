@@ -32,6 +32,7 @@ Error ValidateDisplay(const Display *display);
 Error ValidateSurface(const Display *display, Surface *surface);
 Error ValidateConfig(const Display *display, const Config *config);
 Error ValidateContext(const Display *display, gl::Context *context);
+Error ValidateImage(const Display *display, const Image *image);
 
 // Entry point validation
 Error ValidateCreateContext(Display *display, Config *configuration, gl::Context *shareContext,

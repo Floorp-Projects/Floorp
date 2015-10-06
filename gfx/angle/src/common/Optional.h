@@ -47,10 +47,7 @@ struct Optional
         mValid = false;
     }
 
-    static Optional None()
-    {
-        return Optional();
-    }
+    static Optional Invalid() { return Optional(); }
 
     bool valid() const { return mValid; }
     const T &value() const { return mValue; }

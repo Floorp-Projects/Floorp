@@ -14,7 +14,6 @@
 #include "common/angleutils.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/ImageIndex.h"
-#include "libANGLE/RefCountObject.h"
 
 namespace egl
 {
@@ -57,20 +56,8 @@ class FramebufferAttachment final
                           const ImageIndex &textureIndex,
                           FramebufferAttachmentObject *resource);
 
-    FramebufferAttachment(const FramebufferAttachment &other)
-       : mType(other.mType),
-         mTarget(other.mTarget)
-    {
-        mResource.set(other.mResource.get());
-    }
-
-    FramebufferAttachment &operator=(const FramebufferAttachment &other)
-    {
-        mType = other.mType;
-        mTarget = other.mTarget;
-        mResource.set(other.mResource.get());
-        return *this;
-    }
+    FramebufferAttachment(const FramebufferAttachment &other);
+    FramebufferAttachment &operator=(const FramebufferAttachment &other);
 
     ~FramebufferAttachment();
 
@@ -83,6 +70,7 @@ class FramebufferAttachment final
     class Target
     {
       public:
+        Target();
         Target(GLenum binding, const ImageIndex &imageIndex);
         Target(const Target &other);
         Target &operator=(const Target &other);
@@ -115,7 +103,7 @@ class FramebufferAttachment final
     bool isRenderbufferWithId(GLuint renderbufferId) const { return mType == GL_RENDERBUFFER && id() == renderbufferId; }
 
     GLenum getBinding() const { return mTarget.binding(); }
-    GLuint id() const { return mResource.id(); }
+    GLuint id() const;
 
     // These methods are only legal to call on Texture attachments
     const ImageIndex &getTextureImageIndex() const;
@@ -150,19 +138,23 @@ class FramebufferAttachment final
 
     GLenum mType;
     Target mTarget;
-    BindingPointer<FramebufferAttachmentObject> mResource;
+    FramebufferAttachmentObject *mResource;
 };
 
 // A base class for objects that FBO Attachments may point to.
-class FramebufferAttachmentObject : public RefCountObject
+class FramebufferAttachmentObject
 {
   public:
-    FramebufferAttachmentObject(GLuint id) : RefCountObject(id) {}
+    FramebufferAttachmentObject() {}
 
     virtual GLsizei getAttachmentWidth(const FramebufferAttachment::Target &target) const = 0;
     virtual GLsizei getAttachmentHeight(const FramebufferAttachment::Target &target) const = 0;
     virtual GLenum getAttachmentInternalFormat(const FramebufferAttachment::Target &target) const = 0;
     virtual GLsizei getAttachmentSamples(const FramebufferAttachment::Target &target) const = 0;
+
+    virtual void onAttach() = 0;
+    virtual void onDetach() = 0;
+    virtual GLuint getId() const = 0;
 
     Error getAttachmentRenderTarget(const FramebufferAttachment::Target &target,
                                     rx::FramebufferAttachmentRenderTarget **rtOut) const;

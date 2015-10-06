@@ -108,8 +108,7 @@ class SwizzleTest : public ANGLETest
     {
         glGenTextures(1, &mTexture);
         glBindTexture(GL_TEXTURE_2D, mTexture);
-        glTexStorage2D(GL_TEXTURE_2D, 1, internalFormat, 1, 1);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, dataFormat, dataType, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, 1, 1, 0, dataFormat, dataType, data);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -268,6 +267,52 @@ TEST_P(SwizzleTest, D24_2D)
     runTest2D();
 }
 
+TEST_P(SwizzleTest, L8_2D)
+{
+    GLubyte data[] = {0x77};
+    init2DTexture(GL_LUMINANCE, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
+    runTest2D();
+}
+
+TEST_P(SwizzleTest, A8_2D)
+{
+    GLubyte data[] = {0x55};
+    init2DTexture(GL_ALPHA, GL_ALPHA, GL_UNSIGNED_BYTE, data);
+    runTest2D();
+}
+
+TEST_P(SwizzleTest, LA8_2D)
+{
+    GLubyte data[] = {0x77, 0x66};
+    init2DTexture(GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, data);
+    runTest2D();
+}
+
+TEST_P(SwizzleTest, L32F_2D)
+{
+    GLfloat data[] = {0.7f};
+    init2DTexture(GL_LUMINANCE, GL_LUMINANCE, GL_FLOAT, data);
+    runTest2D();
+}
+
+TEST_P(SwizzleTest, A32F_2D)
+{
+    GLfloat data[] = {
+        0.4f,
+    };
+    init2DTexture(GL_ALPHA, GL_ALPHA, GL_FLOAT, data);
+    runTest2D();
+}
+
+TEST_P(SwizzleTest, LA32F_2D)
+{
+    GLfloat data[] = {
+        0.5f, 0.6f,
+    };
+    init2DTexture(GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_FLOAT, data);
+    runTest2D();
+}
+
 #include "media/pixel.inl"
 
 TEST_P(SwizzleTest, CompressedDXT_2D)
@@ -283,6 +328,6 @@ TEST_P(SwizzleTest, CompressedDXT_2D)
 }
 
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
-ANGLE_INSTANTIATE_TEST(SwizzleTest, ES3_D3D11(), ES3_OPENGL());
+ANGLE_INSTANTIATE_TEST(SwizzleTest, ES3_D3D11(), ES3_OPENGL(), ES3_OPENGL(3, 3));
 
 } // namespace
