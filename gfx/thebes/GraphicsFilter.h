@@ -6,12 +6,9 @@
 #ifndef GraphicsFilter_h
 #define GraphicsFilter_h
 
-enum class GraphicsFilter : int {
-  FILTER_GOOD,
-  FILTER_BEST,
-  FILTER_NEAREST,
-  FILTER_SENTINEL
-};
+#include "mozilla/gfx/Types.h"
+
+typedef mozilla::gfx::Filter GraphicsFilter;
 
 #endif
 

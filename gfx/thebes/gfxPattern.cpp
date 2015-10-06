@@ -188,16 +188,16 @@ gfxPattern::SetFilter(GraphicsFilter filter)
     return;
   }
 
-  static_cast<SurfacePattern*>(mGfxPattern.GetPattern())->mFilter = ToFilter(filter);
+  static_cast<SurfacePattern*>(mGfxPattern.GetPattern())->mFilter = filter;
 }
 
 GraphicsFilter
 gfxPattern::Filter() const
 {
   if (mGfxPattern.GetPattern()->GetType() != PatternType::SURFACE) {
-    return GraphicsFilter::FILTER_GOOD;
+    return Filter::GOOD;
   }
-  return ThebesFilter(static_cast<const SurfacePattern*>(mGfxPattern.GetPattern())->mFilter);
+  return static_cast<const SurfacePattern*>(mGfxPattern.GetPattern())->mFilter;
 }
 
 bool

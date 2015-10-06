@@ -76,11 +76,10 @@ const LayersPacket_Layer_ScrollingDirect LayersPacket_Layer_ScrollingDirect_Scro
 const int LayersPacket_Layer_ScrollingDirect_ScrollingDirect_ARRAYSIZE = LayersPacket_Layer_ScrollingDirect_ScrollingDirect_MAX + 1;
 
 enum LayersPacket_Layer_Filter {
-  LayersPacket_Layer_Filter_FILTER_FAST = 0,
-  LayersPacket_Layer_Filter_FILTER_GOOD = 1,
-  LayersPacket_Layer_Filter_FILTER_BEST = 2,
-  LayersPacket_Layer_Filter_FILTER_NEAREST = 3,
-  LayersPacket_Layer_Filter_FILTER_SENTINEL = 6
+  LayersPacket_Layer_Filter_FILTER_GOOD = 0,
+  LayersPacket_Layer_Filter_FILTER_LINEAR = 1,
+  LayersPacket_Layer_Filter_FILTER_POINT = 2,
+  LayersPacket_Layer_Filter_FILTER_SENTINEL = 3
 };
 bool LayersPacket_Layer_Filter_IsValid(int value);
 
@@ -1155,8 +1154,8 @@ class LayersPacket_Layer : public ::google::protobuf::MessageLite {
 
   typedef LayersPacket_Layer_Filter Filter;
   static const Filter FILTER_GOOD = LayersPacket_Layer_Filter_FILTER_GOOD;
-  static const Filter FILTER_BEST = LayersPacket_Layer_Filter_FILTER_BEST;
-  static const Filter FILTER_NEAREST = LayersPacket_Layer_Filter_FILTER_NEAREST;
+  static const Filter FILTER_LINEAR = LayersPacket_Layer_Filter_FILTER_LINEAR;
+  static const Filter FILTER_POINT = LayersPacket_Layer_Filter_FILTER_POINT;
   static const Filter FILTER_SENTINEL = LayersPacket_Layer_Filter_FILTER_SENTINEL;
   static inline bool Filter_IsValid(int value) {
     return LayersPacket_Layer_Filter_IsValid(value);
