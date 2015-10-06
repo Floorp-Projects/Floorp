@@ -715,6 +715,11 @@ class StaticBlockObject : public BlockObject
         return numVariables() > 0 && !getSlot(RESERVED_SLOTS).isFalse();
     }
 
+    // Is this the static global lexical scope?
+    bool isGlobal() {
+        return !enclosingStaticScope();
+    }
+
     /* Frontend-only functions ***********************************************/
 
     /* Initialization functions for above fields. */
@@ -771,6 +776,8 @@ class ClonedBlockObject : public BlockObject
     static ClonedBlockObject* create(JSContext* cx, Handle<StaticBlockObject*> block,
                                      AbstractFramePtr frame);
 
+    static ClonedBlockObject* createGlobal(JSContext* cx, Handle<GlobalObject*> global);
+
     static ClonedBlockObject* createHollowForDebug(JSContext* cx,
                                                    Handle<StaticBlockObject*> block);
 
@@ -788,6 +795,17 @@ class ClonedBlockObject : public BlockObject
     void setVar(unsigned i, const Value& v, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) {
         MOZ_ASSERT_IF(checkAliasing, staticBlock().isAliased(i));
         setSlotValue(i, v);
+    }
+
+    // Is this the global lexical scope?
+    bool isGlobal() const {
+        MOZ_ASSERT_IF(staticBlock().isGlobal(), enclosingScope().is<GlobalObject>());
+        return enclosingScope().is<GlobalObject>();
+    }
+
+    GlobalObject& global() const {
+        MOZ_ASSERT(isGlobal());
+        return enclosingScope().as<GlobalObject>();
     }
 
     /* Copy in all the unaliased formals and locals. */
@@ -1177,6 +1195,18 @@ IsSyntacticScope(JSObject* scope)
     return scope->is<ScopeObject>() &&
            (!scope->is<DynamicWithObject>() || scope->as<DynamicWithObject>().isSyntactic()) &&
            !scope->is<NonSyntacticVariablesObject>();
+}
+
+inline bool
+IsGlobalLexicalScope(JSObject* scope)
+{
+    return scope->is<ClonedBlockObject>() && scope->as<ClonedBlockObject>().isGlobal();
+}
+
+inline bool
+IsStaticGlobalLexicalScope(JSObject* scope)
+{
+    return scope->is<StaticBlockObject>() && scope->as<StaticBlockObject>().isGlobal();
 }
 
 inline const Value&

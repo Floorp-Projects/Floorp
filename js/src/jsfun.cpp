@@ -1821,8 +1821,9 @@ FunctionConstructor(JSContext* cx, unsigned argc, Value* vp, GeneratorKind gener
         if (!proto)
             return false;
     }
+    RootedObject globalLexical(cx, &global->lexicalScope());
     RootedFunction fun(cx, NewFunctionWithProto(cx, nullptr, 0,
-                                                JSFunction::INTERPRETED_LAMBDA, global,
+                                                JSFunction::INTERPRETED_LAMBDA, globalLexical,
                                                 anonymousAtom, proto,
                                                 AllocKind::FUNCTION, TenuredObject));
     if (!fun)
@@ -1915,8 +1916,7 @@ FunctionConstructor(JSContext* cx, unsigned argc, Value* vp, GeneratorKind gener
     if (isStarGenerator)
         ok = frontend::CompileStarGeneratorBody(cx, &fun, options, formals, srcBuf);
     else
-        ok = frontend::CompileFunctionBody(cx, &fun, options, formals, srcBuf,
-                                           /* enclosingScope = */ nullptr);
+        ok = frontend::CompileFunctionBody(cx, &fun, options, formals, srcBuf);
     args.rval().setObject(*fun);
     return ok;
 }
@@ -1964,10 +1964,12 @@ js::NewScriptedFunction(ExclusiveContext* cx, unsigned nargs,
                         JSFunction::Flags flags, HandleAtom atom,
                         gc::AllocKind allocKind /* = AllocKind::FUNCTION */,
                         NewObjectKind newKind /* = GenericObject */,
-                        HandleObject enclosingDynamicScope /* = nullptr */)
+                        HandleObject enclosingDynamicScopeArg /* = nullptr */)
 {
-    return NewFunctionWithProto(cx, nullptr, nargs, flags,
-                                enclosingDynamicScope ? enclosingDynamicScope : cx->global(),
+    RootedObject enclosingDynamicScope(cx, enclosingDynamicScopeArg);
+    if (!enclosingDynamicScope)
+        enclosingDynamicScope = &cx->global()->lexicalScope();
+    return NewFunctionWithProto(cx, nullptr, nargs, flags, enclosingDynamicScope,
                                 atom, nullptr, allocKind, newKind);
 }
 

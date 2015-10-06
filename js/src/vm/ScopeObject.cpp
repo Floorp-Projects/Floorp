@@ -289,9 +289,10 @@ CallObject::createHollowForDebug(JSContext* cx, HandleFunction callee)
     // This scope's parent link is never used: the DebugScopeObject that
     // refers to this scope carries its own parent link, which is what
     // Debugger uses to construct the tree of Debugger.Environment objects. So
-    // just parent this scope directly to the global.
+    // just parent this scope directly to the global lexical scope.
     Rooted<GlobalObject*> global(cx, &callee->global());
-    Rooted<CallObject*> callobj(cx, createForFunction(cx, global, callee));
+    RootedObject globalLexical(cx, &global->lexicalScope());
+    Rooted<CallObject*> callobj(cx, createForFunction(cx, globalLexical, callee));
     if (!callobj)
         return nullptr;
 
@@ -378,7 +379,8 @@ ModuleEnvironmentObject::create(ExclusiveContext* cx, HandleModuleObject module)
 
     // Initialize this early so that we can manipulate the scope object without
     // causing assertions.
-    scope->setEnclosingScope(cx->global());
+    RootedObject globalLexical(cx, &cx->global()->lexicalScope());
+    scope->setEnclosingScope(globalLexical);
 
     return scope;
 }
@@ -849,6 +851,25 @@ ClonedBlockObject::create(JSContext* cx, Handle<StaticBlockObject*> block, Abstr
 }
 
 /* static */ ClonedBlockObject*
+ClonedBlockObject::createGlobal(JSContext* cx, Handle<GlobalObject*> global)
+{
+    Rooted<StaticBlockObject*> staticLexical(cx, StaticBlockObject::create(cx));
+    if (!staticLexical)
+        return nullptr;
+
+    // Currently the global lexical scope cannot have any bindings with frame
+    // slots.
+    staticLexical->setLocalOffset(UINT32_MAX);
+    staticLexical->initEnclosingScope(nullptr);
+    Rooted<ClonedBlockObject*> lexical(cx, ClonedBlockObject::create(cx, staticLexical, global));
+    if (!lexical)
+        return nullptr;
+    if (!JSObject::setSingleton(cx, lexical))
+        return nullptr;
+    return lexical;
+}
+
+/* static */ ClonedBlockObject*
 ClonedBlockObject::createHollowForDebug(JSContext* cx, Handle<StaticBlockObject*> block)
 {
     MOZ_ASSERT(!block->needsClone());
@@ -856,9 +877,10 @@ ClonedBlockObject::createHollowForDebug(JSContext* cx, Handle<StaticBlockObject*
     // This scope's parent link is never used: the DebugScopeObject that
     // refers to this scope carries its own parent link, which is what
     // Debugger uses to construct the tree of Debugger.Environment objects. So
-    // just parent this scope directly to the global.
+    // just parent this scope directly to the global lexical scope.
     Rooted<GlobalObject*> global(cx, &block->global());
-    Rooted<ClonedBlockObject*> obj(cx, create(cx, block, global));
+    RootedObject globalLexical(cx, &global->lexicalScope());
+    Rooted<ClonedBlockObject*> obj(cx, create(cx, block, globalLexical));
     if (!obj)
         return nullptr;
 
@@ -884,6 +906,7 @@ ClonedBlockObject::copyUnaliasedValues(AbstractFramePtr frame)
 ClonedBlockObject::clone(JSContext* cx, Handle<ClonedBlockObject*> clonedBlock)
 {
     Rooted<StaticBlockObject*> staticBlock(cx, &clonedBlock->staticBlock());
+    MOZ_ASSERT(!staticBlock->isExtensible());
     RootedObject enclosing(cx, &clonedBlock->enclosingScope());
 
     Rooted<ClonedBlockObject*> copy(cx, create(cx, staticBlock, enclosing));
@@ -960,10 +983,48 @@ StaticBlockObject::addVar(ExclusiveContext* cx, Handle<StaticBlockObject*> block
                                              /* allowDictionary = */ false);
 }
 
+static JSObject*
+block_ThisObject(JSContext* cx, HandleObject obj)
+{
+    // No other block objects should ever get passed to the 'this' object
+    // hook.
+    MOZ_ASSERT(obj->as<ClonedBlockObject>().isGlobal());
+    MOZ_ASSERT(&obj->as<ClonedBlockObject>().enclosingScope() == cx->global());
+    RootedObject enclosing(cx, obj->enclosingScope());
+    return GetThisObject(cx, enclosing);
+}
+
 const Class BlockObject::class_ = {
     "Block",
     JSCLASS_HAS_RESERVED_SLOTS(BlockObject::RESERVED_SLOTS) |
-    JSCLASS_IS_ANONYMOUS
+    JSCLASS_IS_ANONYMOUS,
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* getProperty */
+    nullptr, /* setProperty */
+    nullptr, /* enumerate */
+    nullptr, /* resolve */
+    nullptr, /* mayResolve */
+    nullptr, /* finalize */
+    nullptr, /* call */
+    nullptr, /* hasInstance */
+    nullptr, /* construct */
+    nullptr, /* trace */
+    JS_NULL_CLASS_SPEC,
+    JS_NULL_CLASS_EXT,
+    {
+        nullptr,          /* lookupProperty */
+        nullptr,          /* defineProperty */
+        nullptr,          /* hasProperty */
+        nullptr,          /* getProperty */
+        nullptr,          /* setProperty */
+        nullptr,          /* getOwnPropertyDescriptor */
+        nullptr,          /* deleteProperty */
+        nullptr, nullptr, /* watch/unwatch */
+        nullptr,          /* getElements */
+        nullptr,          /* enumerate (native enumeration of target doesn't work) */
+        block_ThisObject,
+    }
 };
 
 template<XDRMode mode>
@@ -1102,6 +1163,11 @@ CloneStaticBlockObject(JSContext* cx, HandleObject enclosingScope, Handle<Static
         }
 
         clone->setAliased(i, srcBlock->isAliased(i));
+    }
+
+    if (!srcBlock->isExtensible()) {
+        if (!clone->makeNonExtensible(cx))
+            return nullptr;
     }
 
     return clone;
