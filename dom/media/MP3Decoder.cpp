@@ -35,15 +35,8 @@ CreateTestMP3Decoder(AudioInfo& aConfig)
   PDMFactory::Init();
 
   nsRefPtr<PDMFactory> platform = new PDMFactory();
-  if (!platform->SupportsMimeType(aConfig.mMimeType)) {
-    return nullptr;
-  }
-
   nsRefPtr<MediaDataDecoder> decoder(
     platform->CreateDecoder(aConfig, nullptr, nullptr));
-  if (!decoder) {
-    return nullptr;
-  }
 
   return decoder.forget();
 }
