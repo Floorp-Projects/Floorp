@@ -34,6 +34,11 @@
 
 #include "AgnosticDecoderModule.h"
 
+#ifdef MOZ_EME
+#include "EMEDecoderModule.h"
+#include "mozilla/CDMProxy.h"
+#endif
+
 namespace mozilla {
 
 extern already_AddRefed<PlatformDecoderModule> CreateAgnosticDecoderModule();
@@ -109,7 +114,9 @@ PDMFactory::CreateDecoder(const TrackInfo& aConfig,
                           layers::LayersBackend aLayersBackend,
                           layers::ImageContainer* aImageContainer)
 {
-  nsRefPtr<PlatformDecoderModule> current = GetDecoder(aConfig.mMimeType);
+  nsRefPtr<PlatformDecoderModule> current = (mEMEPDM && aConfig.mCrypto.mValid)
+    ? mEMEPDM : GetDecoder(aConfig.mMimeType);
+
   if (!current) {
     return nullptr;
   }
@@ -117,8 +124,8 @@ PDMFactory::CreateDecoder(const TrackInfo& aConfig,
 
   if (aConfig.GetAsAudioInfo()) {
     m = current->CreateAudioDecoder(*aConfig.GetAsAudioInfo(),
-                                      aTaskQueue,
-                                      aCallback);
+                                    aTaskQueue,
+                                    aCallback);
     return m.forget();
   }
 
@@ -169,6 +176,9 @@ PDMFactory::CreateDecoder(const TrackInfo& aConfig,
 bool
 PDMFactory::SupportsMimeType(const nsACString& aMimeType)
 {
+  if (mEMEPDM) {
+    return mEMEPDM->SupportsMimeType(aMimeType);
+  }
   nsRefPtr<PlatformDecoderModule> current = GetDecoder(aMimeType);
   return !!current;
 }
@@ -244,5 +254,22 @@ PDMFactory::GetDecoder(const nsACString& aMimeType)
   }
   return pdm.forget();
 }
+
+#ifdef MOZ_EME
+void
+PDMFactory::SetCDMProxy(CDMProxy* aProxy)
+{
+  bool cdmDecodesAudio;
+  bool cdmDecodesVideo;
+  {
+    CDMCaps::AutoLock caps(aProxy->Capabilites());
+    cdmDecodesAudio = caps.CanDecryptAndDecodeAudio();
+    cdmDecodesVideo = caps.CanDecryptAndDecodeVideo();
+  }
+
+  nsRefPtr<PDMFactory> m = new PDMFactory();
+  mEMEPDM = new EMEDecoderModule(aProxy, m, cdmDecodesAudio, cdmDecodesVideo);
+}
+#endif
 
 }  // namespace mozilla

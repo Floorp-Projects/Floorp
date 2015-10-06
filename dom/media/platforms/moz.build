@@ -9,6 +9,7 @@ EXPORTS += [
     'agnostic/OpusDecoder.h',
     'agnostic/VorbisDecoder.h',
     'agnostic/VPXDecoder.h',
+    'PDMFactory.h',
     'PlatformDecoderModule.h',
     'wrappers/FuzzingWrapper.h',
     'wrappers/H264Converter.h'
