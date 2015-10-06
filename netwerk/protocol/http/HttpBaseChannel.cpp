@@ -894,7 +894,7 @@ HttpBaseChannel::DoApplyContentConversions(nsIStreamListener* aNextListener,
           mode = 1;
         } else if (from.Equals("deflate") || from.Equals("x-deflate")) {
           mode = 2;
-        } else if (from.Equals("brotli")) {
+        } else if (from.Equals("br")) {
           mode = 3;
         }
         Telemetry::Accumulate(Telemetry::HTTP_CONTENT_ENCODING, mode);
@@ -1005,7 +1005,7 @@ HttpBaseChannel::nsContentEncodings::GetNext(nsACString& aNextEncoding)
 
   if (!haveType) {
     encoding.BeginReading(start);
-    if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("brotli"), start, end)) {
+    if (CaseInsensitiveFindInReadable(NS_LITERAL_CSTRING("br"), start, end)) {
       aNextEncoding.AssignLiteral(APPLICATION_BROTLI);
       haveType = true;
     }
