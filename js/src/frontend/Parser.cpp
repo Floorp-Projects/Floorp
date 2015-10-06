@@ -241,7 +241,6 @@ ParseContext<FullParseHandler>::define(TokenStream& ts,
             return false;
         break;
 
-      case Definition::GLOBALCONST:
       case Definition::VAR:
         if (!sc->isGlobalContext()) {
             dn->setOp((js_CodeSpec[dn->getOp()].format & JOF_SET) ? JSOP_SETLOCAL : JSOP_GETLOCAL);
@@ -262,7 +261,8 @@ ParseContext<FullParseHandler>::define(TokenStream& ts,
 
       case Definition::LET:
       case Definition::CONST:
-        dn->setOp(JSOP_INITLEXICAL);
+        // See FullParseHandler::setLexicalDeclarationOp.
+        dn->setOp(dn->pn_scopecoord.isFree() ? JSOP_INITGLEXICAL : JSOP_INITLEXICAL);
         dn->pn_dflags |= (PND_LEXICAL | PND_BOUND);
         if (atModuleLevel())
             dn->pn_dflags |= PND_CLOSED;
@@ -394,7 +394,6 @@ AppendPackedBindings(const ParseContext<ParseHandler>* pc, const DeclVector& vec
             kind = Binding::VARIABLE;
             break;
           case Definition::CONST:
-          case Definition::GLOBALCONST:
             kind = Binding::CONSTANT;
             break;
           case Definition::ARG:
@@ -780,8 +779,9 @@ Parser<ParseHandler>::parse()
      *   an object lock before it finishes generating bytecode into a script
      *   protected from the GC by a root or a stack frame reference.
      */
+    Rooted<ScopeObject*> staticLexical(context, &context->global()->lexicalScope().staticBlock());
     Directives directives(options().strictOption);
-    GlobalSharedContext globalsc(context, /* staticScope = */ nullptr, directives,
+    GlobalSharedContext globalsc(context, staticLexical, directives,
                                  options().extraWarningsOption);
     ParseContext<ParseHandler> globalpc(this, /* parent = */ nullptr, ParseHandler::null(),
                                         &globalsc, /* newDirectives = */ nullptr,
@@ -1316,17 +1316,17 @@ struct BindData
       : kind_(Uninitialized), nameNode_(ParseHandler::null()), letData_(cx)
     {}
 
-    void initLexical(VarContext varContext, StaticBlockObject* blockObj, unsigned overflow,
-                     bool isConst = false)
+    void initLexical(VarContext varContext, JSOp op, StaticBlockObject* blockObj,
+                     unsigned overflow)
     {
-        init(LexicalBinding, JSOP_INITLEXICAL, isConst);
+        init(LexicalBinding, op, op == JSOP_DEFCONST);
         letData_.varContext = varContext;
         letData_.blockObj = blockObj;
         letData_.overflow = overflow;
     }
 
-    void initVarOrGlobalConst(JSOp op) {
-        init(VarBinding, op, op == JSOP_DEFCONST);
+    void initVar(JSOp op) {
+        init(VarBinding, op, false);
     }
 
     void initDestructuring(JSOp op) {
@@ -1365,7 +1365,7 @@ struct BindData
           case LexicalBinding:
             return Parser<ParseHandler>::bindLexical(this, name, parser);
           case VarBinding:
-            return Parser<ParseHandler>::bindVarOrGlobalConst(this, name, parser);
+            return Parser<ParseHandler>::bindVar(this, name, parser);
           case DestructuringBinding:
             return Parser<ParseHandler>::bindDestructuringArg(this, name, parser);
           default:
@@ -2084,8 +2084,7 @@ Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
             MOZ_ASSERT(!dn->isUsed());
             MOZ_ASSERT(dn->isDefn());
 
-            bool throwRedeclarationError = dn->kind() == Definition::GLOBALCONST ||
-                                           dn->kind() == Definition::CONST ||
+            bool throwRedeclarationError = dn->kind() == Definition::CONST ||
                                            dn->kind() == Definition::LET;
             if (options().extraWarningsOption || throwRedeclarationError) {
                 JSAutoByteString name;
@@ -2317,10 +2316,7 @@ Parser<SyntaxParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
          * function (thereby avoiding JSOP_DEFFUN and dynamic name lookup).
          */
         if (DefinitionNode dn = pc->decls().lookupFirst(funName)) {
-            if (dn == Definition::GLOBALCONST ||
-                dn == Definition::CONST       ||
-                dn == Definition::LET)
-            {
+            if (dn == Definition::CONST || dn == Definition::LET) {
                 JSAutoByteString name;
                 if (!AtomToPrintableString(context, funName, &name) ||
                     !report(ParseError, false, null(), JSMSG_REDECLARED_VAR,
@@ -3267,31 +3263,37 @@ Parser<FullParseHandler>::bindLexical(BindData<FullParseHandler>* data,
     ExclusiveContext* cx = parser->context;
     Rooted<StaticBlockObject*> blockObj(cx, data->letData().blockObj);
 
-    unsigned index;
+    uint32_t index;
     if (blockObj) {
-        index = blockObj->numVariables();
-        if (index >= StaticBlockObject::LOCAL_INDEX_LIMIT) {
-            parser->report(ParseError, false, pn, data->letData().overflow);
-            return false;
+        // Leave the scope coordinate free on global lexicals.
+        //
+        // For block-level lets, assign block-local index to pn->pn_scopecoord
+        // right away. The emitter will adjust the node's slot based on its
+        // stack depth model -- and, for global and eval code,
+        // js::frontend::CompileScript will adjust the slot again to include
+        // script->nfixed and body-level lets.
+        //
+        // XXXshu: I should like to optimize global lexicals, but we rely on
+        // being able to clone JSScripts to run on multiple globals and to be
+        // able to parse scripts off-thread in a different compartment.
+        if (!blockObj->isGlobal()) {
+            index = blockObj->numVariables();
+            if (index >= StaticBlockObject::LOCAL_INDEX_LIMIT) {
+                parser->report(ParseError, false, pn, data->letData().overflow);
+                return false;
+            }
+            if (!pn->pn_scopecoord.setSlot(parser->tokenStream, index))
+                return false;
         }
-    } else {
-        // If we don't have a block object, we are parsing a body-level let,
-        // in which case we use a bogus index. See comment block below in
-        // setting the pn_scopecoord for explanation on how it gets adjusted.
+    } else if (!pc->sc->isGlobalContext()) {
+        // If we don't have a block object and are parsing a function
+        // body-level let, use a bogus index. It is adjusted when creating the
+        // function's Bindings. See ParseContext::generateFunctionBindings and
+        // AppendPackedBindings.
         index = 0;
+        if (!pn->pn_scopecoord.setSlot(parser->tokenStream, index))
+            return false;
     }
-
-    // For block-level lets, assign block-local index to pn->pn_scopecoord
-    // right away. The emitter will adjust the node's slot based on its
-    // stack depth model -- and, for global and eval code,
-    // js::frontend::CompileScript will adjust the slot again to include
-    // script->nfixed and body-level lets.
-    //
-    // For body-level lets, the index is bogus at this point and is adjusted
-    // when creating Bindings. See ParseContext::generateBindings and
-    // AppendPackedBindings.
-    if (!pn->pn_scopecoord.setSlot(parser->tokenStream, index))
-        return false;
 
     Definition::Kind bindingKind;
     if (pn->isImport())
@@ -3315,24 +3317,26 @@ Parser<FullParseHandler>::bindLexical(BindData<FullParseHandler>* data,
     }
 
     if (blockObj) {
-        bool redeclared;
-        RootedId id(cx, NameToId(name));
-        RootedShape shape(cx, StaticBlockObject::addVar(cx, blockObj, id,
-                                                        data->isConst(), index, &redeclared));
-        if (!shape) {
-            if (redeclared) {
-                // The only way to be redeclared without a previous definition is if we're in a
-                // comma separated list in a DontHoistVars block, so a let block of for header. In
-                // that case, we must be redeclaring the same type of definition as we're trying to
-                // make.
-                Definition::Kind dnKind = dn ? dn->kind() : bindingKind;
-                parser->reportRedeclaration(pn, dnKind, name);
+        if (!blockObj->isGlobal()) {
+            bool redeclared;
+            RootedId id(cx, NameToId(name));
+            RootedShape shape(cx, StaticBlockObject::addVar(cx, blockObj, id,
+                                                            data->isConst(), index, &redeclared));
+            if (!shape) {
+                if (redeclared) {
+                    // The only way to be redeclared without a previous definition is if we're in a
+                    // comma separated list in a DontHoistVars block, so a let block of for header. In
+                    // that case, we must be redeclaring the same type of definition as we're trying to
+                    // make.
+                    Definition::Kind dnKind = dn ? dn->kind() : bindingKind;
+                    parser->reportRedeclaration(pn, dnKind, name);
+                }
+                return false;
             }
-            return false;
-        }
 
-        /* Store pn in the static block object. */
-        blockObj->setDefinitionParseNode(index, reinterpret_cast<Definition*>(pn));
+            /* Store pn in the static block object. */
+            blockObj->setDefinitionParseNode(index, reinterpret_cast<Definition*>(pn));
+        }
     } else {
         // Body-level lets are hoisted and need to have been defined via
         // pc->define above.
@@ -3491,13 +3495,12 @@ OuterLet(ParseContext<ParseHandler>* pc, StmtInfoPC* stmt, HandleAtom atom)
 
 template <typename ParseHandler>
 /* static */ bool
-Parser<ParseHandler>::bindVarOrGlobalConst(BindData<ParseHandler>* data,
-                                           HandlePropertyName name, Parser<ParseHandler>* parser)
+Parser<ParseHandler>::bindVar(BindData<ParseHandler>* data,
+                              HandlePropertyName name, Parser<ParseHandler>* parser)
 {
     ExclusiveContext* cx = parser->context;
     ParseContext<ParseHandler>* pc = parser->pc;
     Node pn = data->nameNode();
-    bool isConstDecl = data->op() == JSOP_DEFCONST;
 
     /* Default best op for pn is JSOP_GETNAME; we'll try to improve below. */
     parser->handler.setOp(pn, JSOP_GETNAME);
@@ -3530,10 +3533,8 @@ Parser<ParseHandler>::bindVarOrGlobalConst(BindData<ParseHandler>* data,
     DefinitionList::Range defs = pc->decls().lookupMulti(name);
     MOZ_ASSERT_IF(stmt, !defs.empty());
 
-    if (defs.empty()) {
-        return pc->define(parser->tokenStream, name, pn,
-                          isConstDecl ? Definition::GLOBALCONST : Definition::VAR);
-    }
+    if (defs.empty())
+        return pc->define(parser->tokenStream, name, pn, Definition::VAR);
 
     /*
      * There was a previous declaration with the same name. The standard
@@ -3548,19 +3549,12 @@ Parser<ParseHandler>::bindVarOrGlobalConst(BindData<ParseHandler>* data,
         JSAutoByteString bytes;
         if (!AtomToPrintableString(cx, name, &bytes))
             return false;
-
-        if (isConstDecl) {
-            parser->report(ParseError, false, pn, JSMSG_REDECLARED_PARAM, bytes.ptr());
-            return false;
-        }
         if (!parser->report(ParseExtraWarning, false, pn, JSMSG_VAR_HIDES_ARG, bytes.ptr()))
             return false;
     } else {
         bool inCatchBody = (stmt && stmt->type == StmtType::CATCH);
-        bool error = (isConstDecl ||
-                      dn_kind == Definition::IMPORT ||
+        bool error = (dn_kind == Definition::IMPORT ||
                       dn_kind == Definition::CONST ||
-                      dn_kind == Definition::GLOBALCONST ||
                       (dn_kind == Definition::LET &&
                        (!inCatchBody || OuterLet(pc, stmt, name))));
 
@@ -3681,12 +3675,10 @@ Parser<FullParseHandler>::bindInitialized(BindData<FullParseHandler>* data, Pars
      * Select the appropriate name-setting opcode, respecting eager selection
      * done by the data->bind function.
      */
-    if (data->op() == JSOP_INITLEXICAL)
-        pn->setOp(JSOP_INITLEXICAL);
+    if (data->op() == JSOP_DEFLET || data->op() == JSOP_DEFCONST)
+        pn->setOp(pn->pn_scopecoord.isFree() ? JSOP_INITGLEXICAL : JSOP_INITLEXICAL);
     else if (pn->pn_dflags & PND_BOUND)
         pn->setOp(JSOP_SETLOCAL);
-    else if (data->op() == JSOP_DEFCONST)
-        pn->setOp(JSOP_SETCONST);
     else
         pn->setOp(JSOP_SETNAME);
 
@@ -4012,6 +4004,9 @@ Parser<ParseHandler>::deprecatedLetBlock(YieldHandling yieldHandling)
     RootedStaticBlockObject blockObj(context, StaticBlockObject::create(context));
     if (!blockObj)
         return null();
+    // Initialize the enclosing scope manually for the call to |variables|
+    // below.
+    blockObj->initEnclosingScopeFromParser(pc->innermostStaticScope());
 
     uint32_t begin = pos().begin;
 
@@ -4106,14 +4101,7 @@ Parser<ParseHandler>::variables(YieldHandling yieldHandling,
                                 ForInitLocation location,
                                 bool* psimple, StaticBlockObject* blockObj, VarContext varContext)
 {
-    /*
-     * The four options here are:
-     * - PNK_VAR:   We're parsing var declarations.
-     * - PNK_CONST: We're parsing const declarations.
-     * - PNK_GLOBALCONST: We're parsing const declarations at toplevel (see bug 589119).
-     * - PNK_LET:   We are parsing a let declaration.
-     */
-    MOZ_ASSERT(kind == PNK_VAR || kind == PNK_CONST || kind == PNK_LET || kind == PNK_GLOBALCONST);
+    MOZ_ASSERT(kind == PNK_VAR || kind == PNK_CONST || kind == PNK_LET);
 
     /*
      * The simple flag is set if the declaration has the form 'var x', with
@@ -4121,28 +4109,23 @@ Parser<ParseHandler>::variables(YieldHandling yieldHandling,
      */
     MOZ_ASSERT_IF(psimple, *psimple);
 
-    JSOp op = JSOP_NOP;
-    if (kind == PNK_VAR)
-        op = JSOP_DEFVAR;
-    else if (kind == PNK_GLOBALCONST)
-        op = JSOP_DEFCONST;
+    JSOp op;
+    switch (kind) {
+      case PNK_VAR:   op = JSOP_DEFVAR;   break;
+      case PNK_CONST: op = JSOP_DEFCONST; break;
+      case PNK_LET:   op = JSOP_DEFLET;   break;
+      default: MOZ_CRASH("unknown variable kind");
+    }
 
     Node pn = handler.newDeclarationList(kind, op);
     if (!pn)
         return null();
 
-    /*
-     * SpiderMonkey const is really "write once per initialization evaluation"
-     * var, whereas let is block scoped. ES-Harmony wants block-scoped const so
-     * this code will change soon.
-     */
     BindData<ParseHandler> data(context);
-    if (kind == PNK_VAR || kind == PNK_GLOBALCONST) {
-        data.initVarOrGlobalConst(op);
-    } else {
-        data.initLexical(varContext, blockObj, JSMSG_TOO_MANY_LOCALS,
-                         /* isConst = */ kind == PNK_CONST);
-    }
+    if (kind == PNK_VAR)
+        data.initVar(op);
+    else
+        data.initLexical(varContext, op, blockObj, JSMSG_TOO_MANY_LOCALS);
 
     bool first = true;
     Node pn2;
@@ -4228,7 +4211,7 @@ Parser<ParseHandler>::variables(YieldHandling yieldHandling,
             }
 
             RootedPropertyName name(context, tokenStream.currentName());
-            pn2 = newBindingNode(name, kind == PNK_VAR || kind == PNK_GLOBALCONST, varContext);
+            pn2 = newBindingNode(name, kind == PNK_VAR, varContext);
             if (!pn2)
                 return null();
             if (data.isConst())
@@ -4309,6 +4292,7 @@ Parser<ParseHandler>::variables(YieldHandling yieldHandling,
                 }
             }
 
+            handler.setLexicalDeclarationOp(pn2, data.op());
             handler.setEndPosition(pn, pn2);
         } while (false);
 
@@ -4348,14 +4332,9 @@ Parser<FullParseHandler>::checkAndPrepareLexical(bool isConst, const TokenPos& e
         MOZ_ASSERT(pc->atBodyLevel());
 
         /*
-         * When bug 589199 is fixed, let variables will be stored in
-         * the slots of a new scope chain object, encountered just
-         * before the global object in the overall chain.  This extra
-         * object is present in the scope chain for all code in that
-         * global, including self-hosted code.  But self-hosted code
-         * must be usable against *any* global object, including ones
-         * with other let variables -- variables possibly placed in
-         * conflicting slots.  Forbid top-level let declarations to
+         * Self-hosted code must be usable against *any* global object,
+         * including ones with other let variables -- variables possibly
+         * placed in conflicting slots.  Forbid top-level let declarations to
          * prevent such conflicts from ever occurring.
          */
         bool isGlobal = !pc->sc->isFunctionBox() && stmt == pc->innermostScopeStmt();
@@ -4409,8 +4388,12 @@ Parser<FullParseHandler>::checkAndPrepareLexical(bool isConst, const TokenPos& e
 static StaticBlockObject*
 CurrentLexicalStaticBlock(ParseContext<FullParseHandler>* pc)
 {
-    return !pc->innermostStmt() ? nullptr :
-           &pc->innermostStmt()->staticScope->as<StaticBlockObject>();
+    if (pc->innermostStaticScope()->is<StaticBlockObject>())
+        return &pc->innermostStaticScope()->as<StaticBlockObject>();
+    MOZ_ASSERT(pc->atBodyLevel() &&
+               (!pc->sc->isGlobalContext() ||
+                HasNonSyntacticStaticScopeChain(pc->innermostStaticScope())));
+    return nullptr;
 }
 
 template <>
@@ -4418,16 +4401,12 @@ ParseNode*
 Parser<FullParseHandler>::makeInitializedLexicalBinding(HandlePropertyName name, bool isConst,
                                                         const TokenPos& pos)
 {
-    // Handle the silliness of global and body level lexical decls.
     BindData<FullParseHandler> data(context);
-    if (pc->atGlobalLevel()) {
-        data.initVarOrGlobalConst(isConst ? JSOP_DEFCONST : JSOP_DEFVAR);
-    } else {
-        if (!checkAndPrepareLexical(isConst, pos))
-            return null();
-        data.initLexical(HoistVars, CurrentLexicalStaticBlock(pc), JSMSG_TOO_MANY_LOCALS, isConst);
-    }
-    ParseNode* dn = newBindingNode(name, pc->atGlobalLevel());
+    if (!checkAndPrepareLexical(isConst, pos))
+        return null();
+    data.initLexical(HoistVars, isConst ? JSOP_DEFCONST : JSOP_DEFLET,
+                     CurrentLexicalStaticBlock(pc), JSMSG_TOO_MANY_LOCALS);
+    ParseNode* dn = newBindingNode(name, false);
     if (!dn)
         return null();
     handler.setPosition(dn, pos);
@@ -4457,16 +4436,8 @@ Parser<FullParseHandler>::lexicalDeclaration(YieldHandling yieldHandling, bool i
      * requires that uninitialized lets throw ReferenceError on use.
      *
      * See 8.1.1.1.6 and the note in 13.2.1.
-     *
-     * FIXME global-level lets are still considered vars until
-     * other bugs are fixed.
      */
-    ParseNodeKind kind = PNK_LET;
-    if (pc->atGlobalLevel())
-        kind = isConst ? PNK_GLOBALCONST : PNK_VAR;
-    else if (isConst)
-        kind = PNK_CONST;
-
+    ParseNodeKind kind = isConst ? PNK_CONST : PNK_LET;
     ParseNode* pn = variables(yieldHandling, kind, NotInForInit,
                               nullptr, CurrentLexicalStaticBlock(pc), HoistVars);
     if (!pn)
@@ -4532,7 +4503,7 @@ Parser<FullParseHandler>::newBoundImportForCurrentName()
 
     importNode->pn_dflags |= PND_CONST | PND_IMPORT;
     BindData<FullParseHandler> data(context);
-    data.initLexical(HoistVars, nullptr, JSMSG_TOO_MANY_LOCALS);
+    data.initLexical(HoistVars, JSOP_DEFLET, nullptr, JSMSG_TOO_MANY_LOCALS);
     handler.setPosition(importNode, pos());
     if (!bindUninitialized(&data, importNode))
         return null();
@@ -5271,6 +5242,9 @@ Parser<FullParseHandler>::forStatement(YieldHandling yieldHandling)
                 blockObj = StaticBlockObject::create(context);
                 if (!blockObj)
                     return null();
+                // Initialize the enclosing scope manually for the call to
+                // |variables| below.
+                blockObj->initEnclosingScopeFromParser(pc->innermostStaticScope());
                 pn1 = variables(yieldHandling, constDecl ? PNK_CONST : PNK_LET, InForInit,
                                 nullptr, blockObj, DontHoistVars);
             } else {
@@ -5287,7 +5261,7 @@ Parser<FullParseHandler>::forStatement(YieldHandling yieldHandling)
     }
 
     MOZ_ASSERT_IF(isForDecl, pn1->isArity(PN_LIST));
-    MOZ_ASSERT(!!blockObj == (isForDecl && pn1->isOp(JSOP_NOP)));
+    MOZ_ASSERT(!!blockObj == (isForDecl && (pn1->isOp(JSOP_DEFLET) || pn1->isOp(JSOP_DEFCONST))));
 
     // All forms of for-loop (for(;;), for-in, for-of) generate an implicit
     // block to store any lexical variables declared by the loop-head.  We
@@ -6298,7 +6272,7 @@ Parser<ParseHandler>::tryStatement(YieldHandling yieldHandling)
              * scoped, not a property of a new Object instance.  This is
              * an intentional change that anticipates ECMA Ed. 4.
              */
-            data.initLexical(HoistVars,
+            data.initLexical(HoistVars, JSOP_DEFLET,
                              &stmtInfo->staticScope->template as<StaticBlockObject>(),
                              JSMSG_TOO_MANY_CATCH_VARS);
             MOZ_ASSERT(data.letData().blockObj);
@@ -7798,7 +7772,7 @@ Parser<FullParseHandler>::legacyComprehensionTail(ParseNode* bodyExpr, unsigned 
 
     MOZ_ASSERT(pc->innermostScopeStmt() &&
                pc->innermostScopeStmt()->staticScope == pn->pn_objbox->object);
-    data.initLexical(HoistVars,
+    data.initLexical(HoistVars, JSOP_DEFLET,
                      &pc->innermostScopeStmt()->staticScope->as<StaticBlockObject>(),
                      JSMSG_ARRAY_INIT_TOO_BIG);
 
@@ -7916,7 +7890,7 @@ Parser<FullParseHandler>::legacyComprehensionTail(ParseNode* bodyExpr, unsigned 
          * These are lets to tell the bytecode emitter to emit initialization
          * code for the temporal dead zone.
          */
-        ParseNode* lets = handler.newList(PNK_LET, pn3);
+        ParseNode* lets = handler.newDeclarationList(PNK_LET, pn3, JSOP_DEFLET);
         if (!lets)
             return null();
         lets->pn_xflags |= PNX_POPVAR;
@@ -8227,10 +8201,15 @@ Parser<ParseHandler>::comprehensionFor(GeneratorKind comprehensionKind)
 
     AutoPushStmtInfoPC stmtInfo(*this, StmtType::BLOCK);
     BindData<ParseHandler> data(context);
+
     RootedStaticBlockObject blockObj(context, StaticBlockObject::create(context));
     if (!blockObj)
         return null();
-    data.initLexical(DontHoistVars, blockObj, JSMSG_TOO_MANY_LOCALS);
+    // Initialize the enclosing scope manually for the call to |bind|
+    // below, which is before the call to |pushLetScope|.
+    blockObj->initEnclosingScopeFromParser(pc->innermostStaticScope());
+
+    data.initLexical(DontHoistVars, JSOP_DEFLET, blockObj, JSMSG_TOO_MANY_LOCALS);
     Node decls = handler.newList(PNK_LET, lhs);
     if (!decls)
         return null();

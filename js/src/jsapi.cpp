@@ -3470,20 +3470,28 @@ IsFunctionCloneable(HandleFunction fun)
     // If a function was compiled to be lexically nested inside some other
     // script, we cannot clone it without breaking the compiler's assumptions.
     if (JSObject* scope = fun->nonLazyScript()->enclosingStaticScope()) {
-        // If the script already deals with a non-syntactic scope, we can clone
-        // it.
-        if (scope->is<StaticNonSyntacticScopeObjects>())
-            return true;
-
         // If the script is directly under the global scope, we can clone it.
         if (IsStaticGlobalLexicalScope(scope))
             return true;
 
-        // If the script is an indirect eval that is immediately scoped under
-        // the global, we can clone it.
+        // 'eval' and non-syntactic scopes are always scoped immediately under
+        // a non-extensible lexical scope.
         if (scope->is<StaticBlockObject>()) {
-            if (StaticEvalObject* staticEval = scope->as<StaticBlockObject>().maybeEnclosingEval())
-                return !staticEval->isDirect();
+            StaticBlockObject& block = scope->as<StaticBlockObject>();
+            if (block.needsClone())
+                return false;
+
+            JSObject* enclosing = block.enclosingStaticScope();
+
+            // If the script is an indirect eval that is immediately scoped
+            // under the global, we can clone it.
+            if (enclosing->is<StaticEvalObject>())
+                return !enclosing->as<StaticEvalObject>().isDirect();
+
+            // If the script already deals with a non-syntactic scope, we can
+            // clone it.
+            if (enclosing->is<StaticNonSyntacticScopeObjects>())
+                return true;
         }
 
         // Any other enclosing static scope (e.g., function, block) cannot be

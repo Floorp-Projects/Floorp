@@ -661,14 +661,6 @@ class StaticBlockObject : public BlockObject
      */
     inline StaticBlockObject* enclosingBlock() const;
 
-    StaticEvalObject* maybeEnclosingEval() const {
-        if (JSObject* enclosing = enclosingStaticScope()) {
-            if (enclosing->is<StaticEvalObject>())
-                return &enclosing->as<StaticEvalObject>();
-        }
-        return nullptr;
-    }
-
     uint32_t localOffset() {
         return getReservedSlot(LOCAL_OFFSET_SLOT).toPrivateUint32();
     }

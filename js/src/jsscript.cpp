@@ -990,10 +990,14 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
             uint32_t enclosingStaticScopeIndex = 0;
             if (mode == XDR_ENCODE) {
                 NestedScopeObject& scope = (*objp)->as<NestedScopeObject>();
-                if (NestedScopeObject* enclosing = scope.enclosingNestedScope())
-                    enclosingStaticScopeIndex = FindScopeObjectIndex(script, *enclosing);
-                else
+                if (NestedScopeObject* enclosing = scope.enclosingNestedScope()) {
+                    if (IsStaticGlobalLexicalScope(enclosing))
+                        enclosingStaticScopeIndex = UINT32_MAX;
+                    else
+                        enclosingStaticScopeIndex = FindScopeObjectIndex(script, *enclosing);
+                } else {
                     enclosingStaticScopeIndex = UINT32_MAX;
+                }
             }
             if (!xdr->codeUint32(&enclosingStaticScopeIndex))
                 return false;
@@ -1056,8 +1060,12 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
                     MOZ_ASSERT_IF(ssi.done() || ssi.type() != StaticScopeIter<NoGC>::Function, !fun);
                     funEnclosingScopeIndex = UINT32_MAX;
                 } else if (ssi.type() == StaticScopeIter<NoGC>::Block) {
-                    funEnclosingScopeIndex = FindScopeObjectIndex(script, ssi.block());
-                    MOZ_ASSERT(funEnclosingScopeIndex < i);
+                    if (ssi.block().isGlobal()) {
+                        funEnclosingScopeIndex = UINT32_MAX;
+                    } else {
+                        funEnclosingScopeIndex = FindScopeObjectIndex(script, ssi.block());
+                        MOZ_ASSERT(funEnclosingScopeIndex < i);
+                    }
                 } else {
                     funEnclosingScopeIndex = FindScopeObjectIndex(script, ssi.staticWith());
                     MOZ_ASSERT(funEnclosingScopeIndex < i);
@@ -3295,10 +3303,16 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
                 Rooted<NestedScopeObject*> innerBlock(cx, &obj->as<NestedScopeObject>());
 
                 RootedObject enclosingScope(cx);
-                if (NestedScopeObject* enclosingBlock = innerBlock->enclosingNestedScope())
-                    enclosingScope = objects[FindScopeObjectIndex(src, *enclosingBlock)];
-                else
+                if (NestedScopeObject* enclosingBlock = innerBlock->enclosingNestedScope()) {
+                    if (IsStaticGlobalLexicalScope(enclosingBlock)) {
+                        MOZ_ASSERT(IsStaticGlobalLexicalScope(scriptStaticScope));
+                        enclosingScope = scriptStaticScope;
+                    } else {
+                        enclosingScope = objects[FindScopeObjectIndex(src, *enclosingBlock)];
+                    }
+                } else {
                     enclosingScope = scriptStaticScope;
+                }
 
                 clone = CloneNestedScopeObject(cx, enclosingScope, innerBlock);
             } else if (obj->is<JSFunction>()) {

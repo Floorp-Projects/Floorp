@@ -301,15 +301,15 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
     //   if (cond) { function f3() { if (cond) { function f4() { } } } }
     //
     bool atBodyLevel() {
-        // 'eval' scripts are always under an invisible lexical scope, but
-        // since it is not syntactic, it should still be considered at body
-        // level.
-        if (sc->staticScope() && sc->staticScope()->is<StaticEvalObject>()) {
+        // 'eval' and non-syntactic scripts are always under an invisible
+        // lexical scope, but since it is not syntactic, it should still be
+        // considered at body level.
+        if (sc->staticScope()->is<StaticEvalObject>()) {
             bool bl = !innermostStmt()->enclosing;
             MOZ_ASSERT_IF(bl, innermostStmt()->type == StmtType::BLOCK);
             MOZ_ASSERT_IF(bl, innermostStmt()->staticScope
                                              ->template as<StaticBlockObject>()
-                                             .maybeEnclosingEval() == sc->staticScope());
+                                             .enclosingStaticScope() == sc->staticScope());
             return bl;
         }
         return !innermostStmt();
@@ -578,9 +578,11 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
 
     bool maybeParseDirective(Node list, Node pn, bool* cont);
 
-    // Parse the body of an eval. It is distinguished from global scripts in
-    // that in ES6, per 18.2.1.1 steps 9 and 10, all eval scripts are executed
-    // under a fresh lexical scope.
+    // Parse the body of an eval.
+    //
+    // Eval scripts are distinguished from global scripts in that in ES6, per
+    // 18.2.1.1 steps 9 and 10, all eval scripts are executed under a fresh
+    // lexical scope.
     Node evalBody();
 
     // Parse a module.
@@ -850,8 +852,8 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
                 HandlePropertyName name, Parser<ParseHandler>* parser);
 
     static bool
-    bindVarOrGlobalConst(BindData<ParseHandler>* data,
-                         HandlePropertyName name, Parser<ParseHandler>* parser);
+    bindVar(BindData<ParseHandler>* data,
+            HandlePropertyName name, Parser<ParseHandler>* parser);
 
     static Node null() { return ParseHandler::null(); }
 

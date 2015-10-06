@@ -640,7 +640,6 @@ ModuleBuilder::processExport(frontend::ParseNode* pn)
 
       case PNK_VAR:
       case PNK_CONST:
-      case PNK_GLOBALCONST:
       case PNK_LET: {
           MOZ_ASSERT(kid->isArity(PN_LIST));
           for (ParseNode* var = kid->pn_head; var; var = var->pn_next) {

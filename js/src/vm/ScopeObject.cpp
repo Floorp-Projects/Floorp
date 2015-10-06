@@ -1038,11 +1038,13 @@ js::XDRStaticBlockObject(XDRState<mode>* xdr, HandleObject enclosingScope,
 
     Rooted<StaticBlockObject*> obj(cx);
     uint32_t count = 0, offset = 0;
+    uint8_t extensible = 0;
 
     if (mode == XDR_ENCODE) {
         obj = objp;
         count = obj->numVariables();
         offset = obj->localOffset();
+        extensible = obj->isExtensible() ? 1 : 0;
     }
 
     if (mode == XDR_DECODE) {
@@ -1056,6 +1058,8 @@ js::XDRStaticBlockObject(XDRState<mode>* xdr, HandleObject enclosingScope,
     if (!xdr->codeUint32(&count))
         return false;
     if (!xdr->codeUint32(&offset))
+        return false;
+    if (!xdr->codeUint8(&extensible))
         return false;
 
     /*
@@ -1089,6 +1093,11 @@ js::XDRStaticBlockObject(XDRState<mode>* xdr, HandleObject enclosingScope,
 
             bool aliased = !!(propFlags >> 1);
             obj->setAliased(i, aliased);
+        }
+
+        if (!extensible) {
+            if (!obj->makeNonExtensible(cx))
+                return false;
         }
     } else {
         Rooted<ShapeVector> shapes(cx, ShapeVector(cx));
