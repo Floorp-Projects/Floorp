@@ -944,12 +944,7 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool bodyOnly, bool lamb
                 return nullptr;
         }
         if (!fun->isArrow()) {
-            bool ok;
-            if (fun->isStarGenerator())
-                ok = out.append("function* ");
-            else
-                ok = out.append("function ");
-            if (!ok)
+            if (!(fun->isStarGenerator() ? out.append("function* ") : out.append("function ")))
                 return nullptr;
         }
         if (fun->atom()) {

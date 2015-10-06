@@ -314,7 +314,7 @@ BytecodeCompiler::saveCallerFun(HandleScript evalCaller,
     MOZ_ASSERT_IF(fun->strict(), options.strictOption);
     Directives directives(/* strict = */ options.strictOption);
     ObjectBox* funbox = parser->newFunctionBox(/* fn = */ nullptr, fun, &parseContext,
-                                               directives, fun->generatorKind(), fun->asyncKind());
+                                              directives, fun->generatorKind());
     if (!funbox)
         return false;
 
@@ -705,7 +705,7 @@ BytecodeCompiler::compileFunctionBody(MutableHandleFunction fun,
     ParseNode* fn;
     do {
         Directives newDirectives = directives;
-        fn = parser->standaloneFunctionBody(fun, formals, generatorKind, SyncFunction, directives,
+        fn = parser->standaloneFunctionBody(fun, formals, generatorKind, directives,
                                             &newDirectives, enclosingStaticScope);
         if (!fn && !handleParseFailure(newDirectives))
             return false;
@@ -865,7 +865,7 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
 
     Rooted<JSFunction*> fun(cx, lazy->functionNonDelazifying());
     MOZ_ASSERT(!lazy->isLegacyGenerator());
-    ParseNode* pn = parser.standaloneLazyFunction(fun, lazy->strict(), lazy->generatorKind(), lazy->asyncKind());
+    ParseNode* pn = parser.standaloneLazyFunction(fun, lazy->strict(), lazy->generatorKind());
     if (!pn)
         return false;
 
