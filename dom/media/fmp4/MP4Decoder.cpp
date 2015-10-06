@@ -98,10 +98,11 @@ MP4Decoder::CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
   // Whitelist MP4 types, so they explicitly match what we encounter on
   // the web, as opposed to what we use internally (i.e. what our demuxers
   // etc output).
-  if (!aMIMETypeExcludingCodecs.EqualsASCII("audio/mp4") &&
-      !aMIMETypeExcludingCodecs.EqualsASCII("audio/x-m4a") &&
-      !aMIMETypeExcludingCodecs.EqualsASCII("video/mp4") &&
-      !aMIMETypeExcludingCodecs.EqualsASCII("video/x-m4v")) {
+  const bool isMP4Audio = aMIMETypeExcludingCodecs.EqualsASCII("audio/mp4") ||
+                          aMIMETypeExcludingCodecs.EqualsASCII("audio/x-m4a");
+  const bool isMP4Video = aMIMETypeExcludingCodecs.EqualsASCII("video/mp4") ||
+                          aMIMETypeExcludingCodecs.EqualsASCII("video/x-m4v");
+  if (!isMP4Audio && !isMP4Video) {
     return false;
   }
 
@@ -114,11 +115,10 @@ MP4Decoder::CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
   nsTArray<nsCString> codecMimes;
   if (aCodecs.IsEmpty()) {
     // No codecs specified. Assume AAC/H.264
-    if (aMIMETypeExcludingCodecs.EqualsLiteral("audio/mp4") ||
-        aMIMETypeExcludingCodecs.EqualsLiteral("audio/x-m4a")) {
+    if (isMP4Audio) {
       codecMimes.AppendElement(NS_LITERAL_CSTRING("audio/mp4a-latm"));
-    } else if (aMIMETypeExcludingCodecs.EqualsLiteral("video/mp4") ||
-               aMIMETypeExcludingCodecs.EqualsLiteral("video/x-m4v")) {
+    } else {
+      MOZ_ASSERT(isMP4Video);
       codecMimes.AppendElement(NS_LITERAL_CSTRING("video/avc"));
     }
   } else {
@@ -137,7 +137,9 @@ MP4Decoder::CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
         codecMimes.AppendElement(NS_LITERAL_CSTRING("audio/mpeg"));
         continue;
       }
-      if (IsWhitelistedH264Codec(codec)) {
+      // Note: Only accept H.264 in a video content type, not in an audio
+      // content type.
+      if (IsWhitelistedH264Codec(codec) && isMP4Video) {
         codecMimes.AppendElement(NS_LITERAL_CSTRING("video/avc"));
         continue;
       }
