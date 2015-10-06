@@ -137,10 +137,10 @@ CanvasLayerComposite::GetEffectFilter()
   Matrix matrix;
   bool is2D = GetEffectiveTransform().Is2D(&matrix);
   if (is2D && !ThebesMatrix(matrix).HasNonTranslationOrFlip()) {
-    filter = GraphicsFilter::FILTER_NEAREST;
+    filter = Filter::POINT;
   }
 #endif
-  return gfx::ToFilter(filter);
+  return filter;
 }
 
 void

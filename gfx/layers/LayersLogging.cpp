@@ -29,22 +29,6 @@ AppendToString(std::stringstream& aStream, const void* p,
 }
 
 void
-AppendToString(std::stringstream& aStream, const GraphicsFilter& f,
-               const char* pfx, const char* sfx)
-{
-  aStream << pfx;
-  switch (f) {
-  case GraphicsFilter::FILTER_GOOD:      aStream << "good"; break;
-  case GraphicsFilter::FILTER_BEST:      aStream << "best"; break;
-  case GraphicsFilter::FILTER_NEAREST:   aStream << "nearest"; break;
-  default:
-    NS_ERROR("unknown filter type");
-    aStream << "???";
-  }
-  aStream << sfx;
-}
-
-void
 AppendToString(std::stringstream& aStream, FrameMetrics::ViewID n,
                const char* pfx, const char* sfx)
 {
@@ -276,7 +260,6 @@ AppendToString(std::stringstream& aStream, const Matrix5x4& m,
   aStream << sfx;
 }
 
-
 void
 AppendToString(std::stringstream& aStream, const Filter filter,
                const char* pfx, const char* sfx)
@@ -287,6 +270,9 @@ AppendToString(std::stringstream& aStream, const Filter filter,
     case Filter::GOOD: aStream << "Filter::GOOD"; break;
     case Filter::LINEAR: aStream << "Filter::LINEAR"; break;
     case Filter::POINT: aStream << "Filter::POINT"; break;
+    default:
+      NS_ERROR("unknown filter type");
+      aStream << "???";
   }
   aStream << sfx;
 }

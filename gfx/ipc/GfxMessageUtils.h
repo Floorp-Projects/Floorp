@@ -33,7 +33,6 @@
 namespace mozilla {
 
 typedef gfxImageFormat PixelFormat;
-typedef ::GraphicsFilter GraphicsFilterType;
 
 } // namespace mozilla
 
@@ -206,11 +205,11 @@ struct ParamTraits<gfxSurfaceType>
 {};
 
 template <>
-struct ParamTraits<mozilla::GraphicsFilterType>
+struct ParamTraits<mozilla::gfx::Filter>
   : public ContiguousEnumSerializer<
-             mozilla::GraphicsFilterType,
-             GraphicsFilter::FILTER_GOOD,
-             GraphicsFilter::FILTER_SENTINEL>
+             mozilla::gfx::Filter,
+             mozilla::gfx::Filter::GOOD,
+             mozilla::gfx::Filter::SENTINEL>
 {};
 
 template <>

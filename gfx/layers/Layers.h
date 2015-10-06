@@ -2404,7 +2404,7 @@ protected:
     , mPreTransCallbackData(nullptr)
     , mPostTransCallback(nullptr)
     , mPostTransCallbackData(nullptr)
-    , mFilter(GraphicsFilter::FILTER_GOOD)
+    , mFilter(gfx::Filter::GOOD)
     , mDirty(false)
   {}
 
