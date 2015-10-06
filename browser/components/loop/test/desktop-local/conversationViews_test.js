@@ -351,6 +351,16 @@ describe("loop.conversationViews", function () {
 
       expect(extraFailureMessage.textContent).eql("Fake failure message");
     });
+
+    it("should display an ICE failure message", function() {
+      view = mountTestComponent({
+        failureReason: FAILURE_DETAILS.ICE_FAILED
+      });
+
+      var message = view.getDOMNode().querySelector(".failure-info-message");
+
+      expect(message.textContent).eql("ice_failure_message");
+    });
   });
 
   describe("DirectCallFailureView", function() {

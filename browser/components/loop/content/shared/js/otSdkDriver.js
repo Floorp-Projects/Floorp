@@ -928,6 +928,13 @@ loop.OTSdkDriver = (function() {
 
     _onOTException: function(event) {
       switch (event.code) {
+        case OT.ExceptionCodes.PUBLISHER_ICE_WORKFLOW_FAILED:
+        case OT.ExceptionCodes.SUBSCRIBER_ICE_WORKFLOW_FAILED:
+          this.dispatcher.dispatch(new sharedActions.ConnectionFailure({
+            reason: FAILURE_DETAILS.ICE_FAILED
+          }));
+          this._notifyMetricsEvent("sdk.exception." + event.code);
+          break;
         case OT.ExceptionCodes.UNABLE_TO_PUBLISH:
           if (event.message === "GetUserMedia") {
             // We free up the publisher here in case the store wants to try

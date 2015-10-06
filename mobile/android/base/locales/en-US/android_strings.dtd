@@ -225,6 +225,10 @@
 <!ENTITY pref_donottrack_title "Do not track">
 <!ENTITY pref_donottrack_summary "&brandShortName; will tell sites that you do not want to be tracked">
 
+<!ENTITY pref_tracking_protection_enabled "Enabled">
+<!ENTITY pref_tracking_protection_enabled_pb "Enabled in Private Browsing">
+<!ENTITY pref_tracking_protection_disabled "Disabled">
+
 <!ENTITY tracking_protection_prompt_title "Now with Tracking Protection">
 <!ENTITY tracking_protection_prompt_text "Actively block tracking elements so you don\'t have to worry.">
 <!ENTITY tracking_protection_prompt_tip_text "Visit Privacy settings to learn more">

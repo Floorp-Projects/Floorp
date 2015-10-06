@@ -592,7 +592,7 @@ public:
     uint32_t permission = nsIPermissionManager::DENY_ACTION;
     nsresult rv = permManager->TestExactPermissionFromPrincipal(
                     principal,
-                    "push",
+                    "desktop-notification",
                     &permission);
 
     if (NS_WARN_IF(NS_FAILED(rv)) || permission != nsIPermissionManager::ALLOW_ACTION) {
@@ -732,28 +732,20 @@ public:
       mozilla::services::GetPermissionManager();
 
     nsresult rv = NS_ERROR_FAILURE;
-    PushPermissionState state = PushPermissionState::Denied;
+    PushPermissionState state = PushPermissionState::Prompt;
 
     if (permManager) {
-      uint32_t permission = nsIPermissionManager::DENY_ACTION;
+      uint32_t permission = nsIPermissionManager::UNKNOWN_ACTION;
       rv = permManager->TestExactPermissionFromPrincipal(
              mProxy->GetWorkerPrivate()->GetPrincipal(),
-             "push",
+             "desktop-notification",
              &permission);
 
       if (NS_SUCCEEDED(rv)) {
-        switch (permission) {
-          case nsIPermissionManager::ALLOW_ACTION:
-            state = PushPermissionState::Granted;
-            break;
-          case nsIPermissionManager::DENY_ACTION:
-            state = PushPermissionState::Denied;
-            break;
-          case nsIPermissionManager::PROMPT_ACTION:
-            state = PushPermissionState::Prompt;
-            break;
-          default:
-            MOZ_CRASH("Unexpected case!");
+        if (permission == nsIPermissionManager::ALLOW_ACTION) {
+          state = PushPermissionState::Granted;
+        } else if (permission == nsIPermissionManager::DENY_ACTION) {
+          state = PushPermissionState::Denied;
         }
       }
     }
