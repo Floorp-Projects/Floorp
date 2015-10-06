@@ -54,6 +54,7 @@ UNIFIED_SOURCES += [
     'DecodePool.cpp',
     'Decoder.cpp',
     'DecoderFactory.cpp',
+    'Deinterlacer.cpp',
     'DynamicImage.cpp',
     'FrameAnimator.cpp',
     'FrozenImage.cpp',

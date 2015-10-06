@@ -8,6 +8,7 @@
 #define mozilla_image_decoders_nsGIFDecoder2_h
 
 #include "Decoder.h"
+#include "Deinterlacer.h"
 #include "Downscaler.h"
 
 #include "GIF2.h"
