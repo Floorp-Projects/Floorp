@@ -44,6 +44,9 @@ Object.prototype.valueOf = function() { return 'hah'; };
 is(({}).valueOf(), 'hah', "Shadowing on Object.prototype works for vanilla objects");
 is(location.valueOf(), location, "Shadowing on Object.prototype and Location.prototype doesn't for location objects");
 
+location[Symbol.toPrimitive] = function() { return 'hah'; }
+is(location + "", location.toString(), "Should't be able to shadow with toPrimitive");
+
 </script>
 </pre>
 </body>
