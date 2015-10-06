@@ -8,20 +8,21 @@
 #define nsThreadSyncDispatch_h_
 
 #include "nsThreadUtils.h"
+#include "LeakRefPtr.h"
 
 class nsThreadSyncDispatch : public nsRunnable
 {
 public:
   nsThreadSyncDispatch(nsIThread* aOrigin, already_AddRefed<nsIRunnable>&& aTask)
     : mOrigin(aOrigin)
-    , mSyncTask(aTask)
+    , mSyncTask(mozilla::Move(aTask))
     , mResult(NS_ERROR_NOT_INITIALIZED)
   {
   }
 
   bool IsPending()
   {
-    return mSyncTask != nullptr;
+    return !!mSyncTask;
   }
 
   nsresult Result()
@@ -32,9 +33,11 @@ public:
 private:
   NS_IMETHOD Run() override
   {
-    if (mSyncTask) {
-      mResult = mSyncTask->Run();
-      mSyncTask = nullptr;
+    if (nsIRunnable* task = mSyncTask.get()) {
+      mResult = task->Run();
+      // We must release the task here to ensure that when the original
+      // thread is unblocked, this task has been released.
+      mSyncTask.release();
       // unblock the origin thread
       mOrigin->Dispatch(this, NS_DISPATCH_NORMAL);
     }
@@ -42,7 +45,9 @@ private:
   }
 
   nsCOMPtr<nsIThread> mOrigin;
-  nsCOMPtr<nsIRunnable> mSyncTask;
+  // The task is leaked by default when Run() is not called, because
+  // otherwise we may release it in an incorrect thread.
+  mozilla::LeakRefPtr<nsIRunnable> mSyncTask;
   nsresult mResult;
 };
 
