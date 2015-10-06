@@ -12,6 +12,7 @@
 #include "mozilla/unused.h"
 #include "nsIRedirectChannelRegistrar.h"
 #include "nsIHttpEventSink.h"
+#include "nsIPackagedAppChannelListener.h"
 
 using mozilla::unused;
 
@@ -38,6 +39,7 @@ NS_IMPL_ISUPPORTS(HttpChannelParentListener,
                   nsIStreamListener,
                   nsIRequestObserver,
                   nsIChannelEventSink,
+                  nsIPackagedAppChannelListener,
                   nsIRedirectResultListener)
 
 //-----------------------------------------------------------------------------
@@ -95,6 +97,22 @@ HttpChannelParentListener::OnDataAvailable(nsIRequest *aRequest,
 
   LOG(("HttpChannelParentListener::OnDataAvailable [this=%p]\n", this));
   return mNextListener->OnDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount);
+}
+
+//-----------------------------------------------------------------------------
+// HttpChannelParentListener::nsIPackagedAppChannelListener
+//-----------------------------------------------------------------------------
+NS_IMETHODIMP
+HttpChannelParentListener::OnStartSignedPackageRequest(const nsACString& aPackageId)
+{
+  nsCOMPtr<nsIPackagedAppChannelListener> listener = do_QueryInterface(mNextListener);
+  if (listener) {
+    listener->OnStartSignedPackageRequest(aPackageId);
+  } else {
+    NS_WARNING("mNextListener is not nsIPackagedAppChannelListener");
+  }
+
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------

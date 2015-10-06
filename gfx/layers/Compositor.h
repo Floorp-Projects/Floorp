@@ -463,16 +463,6 @@ public:
    */
   static void AssertOnCompositorThread();
 
-  /**
-   * We enforce that there can only be one Compositor backend type off the main
-   * thread at the same time. The backend type in use can be checked with this
-   * static method. We need this for creating texture clients/hosts etc. when we
-   * don't have a reference to a Compositor.
-   *
-   * This can only be used from the compositor thread!
-   */
-  static LayersBackend GetBackend();
-
   size_t GetFillRatio() {
     float fillRatio = 0;
     if (mPixelsFilled > 0 && mPixelsPerFrame > 0) {
@@ -520,11 +510,6 @@ protected:
                                uint32_t aFlashCounter);
 
   bool ShouldDrawDiagnostics(DiagnosticFlags);
-
-  /**
-   * Set the global Compositor backend, checking that one isn't already set.
-   */
-  static void SetBackend(LayersBackend backend);
 
   /**
    * Render time for the current composition.

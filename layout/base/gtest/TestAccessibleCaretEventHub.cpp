@@ -87,11 +87,6 @@ public:
   {
     return static_cast<MockAccessibleCaretManager*>(mManager.get());
   }
-
-  void SetUseAsyncPanZoom(bool aUseAsyncPanZoom)
-  {
-    mUseAsyncPanZoom = aUseAsyncPanZoom;
-  }
 };
 
 // Print the name of the state for debugging.
@@ -558,8 +553,6 @@ AccessibleCaretEventHubTester::TestEventDrivenAsyncPanZoomScroll(
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollEnd());
   }
 
-  mHub->SetUseAsyncPanZoom(true);
-
   // Receive press event.
   HandleEventAndCheckState(aPressEventCreator(0, 0),
                            MockAccessibleCaretEventHub::PressNoCaretState(),
@@ -641,8 +634,6 @@ TEST_F(AccessibleCaretEventHubTester, TestNoEventAsyncPanZoomScroll)
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollEnd());
   }
 
-  mHub->SetUseAsyncPanZoom(true);
-
   check.Call("1");
 
   mHub->AsyncPanZoomStarted();
@@ -680,8 +671,6 @@ TEST_F(AccessibleCaretEventHubTester, TestAsyncPanZoomScrollStartedThenBlur)
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnBlur());
   }
 
-  mHub->SetUseAsyncPanZoom(true);
-
   mHub->AsyncPanZoomStarted();
   EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::ScrollState());
 
@@ -702,8 +691,6 @@ TEST_F(AccessibleCaretEventHubTester, TestAsyncPanZoomScrollEndedThenBlur)
     EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnBlur());
   }
 
-  mHub->SetUseAsyncPanZoom(true);
-
   mHub->AsyncPanZoomStarted();
   EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::ScrollState());
 
@@ -714,47 +701,6 @@ TEST_F(AccessibleCaretEventHubTester, TestAsyncPanZoomScrollEndedThenBlur)
   EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::PostScrollState());
 
   mHub->NotifyBlur(true);
-  EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::NoActionState());
-}
-
-TEST_F(AccessibleCaretEventHubTester, TestWheelEventScroll)
-{
-  MockFunction<void(::std::string aCheckPointName)> check;
-  {
-    InSequence dummy;
-
-    EXPECT_CALL(check, Call("1"));
-    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollStart());
-
-    EXPECT_CALL(check, Call("2"));
-    EXPECT_CALL(*mHub->GetMockAccessibleCaretManager(), OnScrollEnd());
-  }
-
-  check.Call("1");
-
-  HandleEventAndCheckState(CreateWheelEvent(eWheelOperationStart),
-                           MockAccessibleCaretEventHub::ScrollState(),
-                           nsEventStatus_eIgnore);
-
-  HandleEventAndCheckState(CreateWheelEvent(eWheel),
-                           MockAccessibleCaretEventHub::ScrollState(),
-                           nsEventStatus_eIgnore);
-
-  mHub->ScrollPositionChanged();
-
-  HandleEventAndCheckState(CreateWheelEvent(eWheelOperationEnd),
-                           MockAccessibleCaretEventHub::PostScrollState(),
-                           nsEventStatus_eIgnore);
-
-  // Momentum scroll
-  HandleEventAndCheckState(CreateWheelEvent(eWheel),
-                           MockAccessibleCaretEventHub::PostScrollState(),
-                           nsEventStatus_eIgnore);
-
-  check.Call("2");
-
-  // Simulate scroll end fired by timer.
-  MockAccessibleCaretEventHub::FireScrollEnd(nullptr, mHub);
   EXPECT_EQ(mHub->GetState(), MockAccessibleCaretEventHub::NoActionState());
 }
 

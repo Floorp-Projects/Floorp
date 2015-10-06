@@ -53,6 +53,9 @@ public:
   // two parameters, a token and a character, in that order
   void ReportUnexpected(const char *aMessage, const nsCSSToken& aToken,
                         char16_t aChar);
+  // two parameters, a param and a value
+  void ReportUnexpected(const char *aMessage, const nsString& aParam,
+                        const nsString& aValue);
 
   // for ReportUnexpectedEOF, aExpected can be either a stringbundle
   // name or a single character.  In the former case there may not be
@@ -95,6 +98,8 @@ inline void ErrorReporter::ReportUnexpected(const char *, const nsString &) {}
 inline void ErrorReporter::ReportUnexpected(const char *, const nsCSSToken &) {}
 inline void ErrorReporter::ReportUnexpected(const char *, const nsCSSToken &,
                                             char16_t) {}
+inline void ErrorReporter::ReportUnexpected(const char *, const nsString &,
+                                            const nsString &) {}
 
 inline void ErrorReporter::ReportUnexpectedEOF(const char *) {}
 inline void ErrorReporter::ReportUnexpectedEOF(char16_t) {}

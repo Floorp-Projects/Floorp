@@ -1304,6 +1304,9 @@ static void AppendRuleToSheet(css::Rule* aRule, void* aParser)
 #define REPORT_UNEXPECTED_P(msg_, param_) \
   { if (!mSuppressErrors) mReporter->ReportUnexpected(#msg_, param_); }
 
+#define REPORT_UNEXPECTED_P_V(msg_, param_, value_) \
+  { if (!mSuppressErrors) mReporter->ReportUnexpected(#msg_, param_, value_); }
+
 #define REPORT_UNEXPECTED_TOKEN(msg_) \
   { if (!mSuppressErrors) mReporter->ReportUnexpected(#msg_, mToken); }
 
@@ -2690,7 +2693,8 @@ CSSParserImpl::ParsePropertyWithVariableReferences(
     if (!valid) {
       NS_ConvertASCIItoUTF16 propName(nsCSSProps::GetStringValue(
                                                               propertyToParse));
-      REPORT_UNEXPECTED_P(PEValueWithVariablesParsingError, propName);
+      REPORT_UNEXPECTED_P_V(PEValueWithVariablesParsingErrorInValue,
+                            propName, expandedValue);
       if (nsCSSProps::IsInherited(aPropertyID)) {
         REPORT_UNEXPECTED(PEValueWithVariablesFallbackInherit);
       } else {
@@ -10369,12 +10373,6 @@ CSSParserImpl::ParseBoxProperty(nsCSSValue& aValue,
     return false;
   }
 
-  if (aPropID == eCSSProperty_script_level ||
-      aPropID == eCSSProperty_math_display) {
-    MOZ_ASSERT(false, "must not be called for unsafe properties");
-    return false;
-  }
-
   if (variant & ~(VARIANT_AHKLP | VARIANT_COLOR | VARIANT_CALC)) {
     MOZ_ASSERT(false, "must only be called for properties that take certain "
                       "variants");
@@ -10462,15 +10460,6 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
     MOZ_ASSERT(false, "not a single value property");
     return false;
   }
-
-  // We only allow 'script-level' when unsafe rules are enabled, because
-  // otherwise it could interfere with rulenode optimizations if used in
-  // a non-MathML-enabled document. We also only allow math-display when
-  // unsafe rules are enabled.
-  if (!mUnsafeRulesEnabled &&
-      (aPropID == eCSSProperty_script_level ||
-       aPropID == eCSSProperty_math_display))
-    return false;
 
   const KTableValue* kwtable = nsCSSProps::kKeywordTableTable[aPropID];
   uint32_t restrictions = nsCSSProps::ValueRestrictions(aPropID);

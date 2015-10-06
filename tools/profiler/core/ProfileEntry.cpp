@@ -177,27 +177,101 @@ public:
   }
 };
 
+// As mentioned in ProfileEntry.h, the JSON format contains many arrays whose
+// elements are laid out according to various schemas to help
+// de-duplication. This RAII class helps write these arrays by keeping track of
+// the last non-null element written and adding the appropriate number of null
+// elements when writing new non-null elements. It also automatically opens and
+// closes an array element on the given JSON writer.
+//
+// Example usage:
+//
+//     // Define the schema of elements in this type of array: [FOO, BAR, BAZ]
+//     enum Schema : uint32_t {
+//       FOO = 0,
+//       BAR = 1,
+//       BAZ = 2
+//     };
+//
+//     AutoArraySchemaWriter writer(someJsonWriter, someUniqueStrings);
+//     if (shouldWriteFoo) {
+//       writer.IntElement(FOO, getFoo());
+//     }
+//     ... etc ...
+class MOZ_RAII AutoArraySchemaWriter
+{
+  friend class AutoObjectWriter;
+
+  SpliceableJSONWriter& mJSONWriter;
+  UniqueJSONStrings*    mStrings;
+  uint32_t              mNextFreeIndex;
+
+public:
+  AutoArraySchemaWriter(SpliceableJSONWriter& aWriter, UniqueJSONStrings& aStrings)
+    : mJSONWriter(aWriter)
+    , mStrings(&aStrings)
+    , mNextFreeIndex(0)
+  {
+    mJSONWriter.StartArrayElement();
+  }
+
+  // If you don't have access to a UniqueStrings, you had better not try and
+  // write a string element down the line!
+  explicit AutoArraySchemaWriter(SpliceableJSONWriter& aWriter)
+    : mJSONWriter(aWriter)
+    , mStrings(nullptr)
+    , mNextFreeIndex(0)
+  {
+    mJSONWriter.StartArrayElement();
+  }
+
+  ~AutoArraySchemaWriter() {
+    mJSONWriter.EndArray();
+  }
+
+  void FillUpTo(uint32_t aIndex) {
+    MOZ_ASSERT(aIndex >= mNextFreeIndex);
+    mJSONWriter.NullElements(aIndex - mNextFreeIndex);
+    mNextFreeIndex = aIndex + 1;
+  }
+
+  void IntElement(uint32_t aIndex, uint32_t aValue) {
+    FillUpTo(aIndex);
+    mJSONWriter.IntElement(aValue);
+  }
+
+  void DoubleElement(uint32_t aIndex, double aValue) {
+    FillUpTo(aIndex);
+    mJSONWriter.DoubleElement(aValue);
+  }
+
+  void StringElement(uint32_t aIndex, const char* aValue) {
+    MOZ_RELEASE_ASSERT(mStrings);
+    FillUpTo(aIndex);
+    mStrings->WriteElement(mJSONWriter, aValue);
+  }
+};
+
 class StreamOptimizationAttemptsOp : public JS::ForEachTrackedOptimizationAttemptOp
 {
-  JSONWriter& mWriter;
+  SpliceableJSONWriter& mWriter;
   UniqueJSONStrings& mUniqueStrings;
 
 public:
-  StreamOptimizationAttemptsOp(JSONWriter& aWriter, UniqueJSONStrings& aUniqueStrings)
+  StreamOptimizationAttemptsOp(SpliceableJSONWriter& aWriter, UniqueJSONStrings& aUniqueStrings)
     : mWriter(aWriter),
       mUniqueStrings(aUniqueStrings)
   { }
 
   void operator()(JS::TrackedStrategy strategy, JS::TrackedOutcome outcome) override {
-    // Schema:
-    //   [strategy, outcome]
+    enum Schema : uint32_t {
+      STRATEGY = 0,
+      OUTCOME = 1
+    };
 
-    mWriter.StartArrayElement();
-    {
-      mUniqueStrings.WriteElement(mWriter, JS::TrackedStrategyString(strategy));
-      mUniqueStrings.WriteElement(mWriter, JS::TrackedOutcomeString(outcome));
-    }
-    mWriter.EndArray();
+    AutoArraySchemaWriter writer(mWriter, mUniqueStrings);
+    writer.StringElement(STRATEGY, JS::TrackedStrategyString(strategy));
+    writer.StringElement(OUTCOME, JS::TrackedOutcomeString(outcome));
   }
 };
 
@@ -432,66 +506,63 @@ void UniqueStacks::SpliceStackTableElements(SpliceableJSONWriter& aWriter)
 
 void UniqueStacks::StreamStack(const StackKey& aStack)
 {
-  // Schema:
-  //   [prefix, frame]
+  enum Schema : uint32_t {
+    PREFIX = 0,
+    FRAME = 1
+  };
 
-  mStackTableWriter.StartArrayElement();
-  {
-    if (aStack.mPrefix.isSome()) {
-      mStackTableWriter.IntElement(*aStack.mPrefix);
-    } else {
-      mStackTableWriter.NullElement();
-    }
-    mStackTableWriter.IntElement(aStack.mFrame);
+  AutoArraySchemaWriter writer(mStackTableWriter, mUniqueStrings);
+  if (aStack.mPrefix.isSome()) {
+    writer.IntElement(PREFIX, *aStack.mPrefix);
   }
-  mStackTableWriter.EndArray();
+  writer.IntElement(FRAME, aStack.mFrame);
 }
 
 void UniqueStacks::StreamFrame(const OnStackFrameKey& aFrame)
 {
-  // Schema:
-  //   [location, implementation, optimizations, line, category]
+  enum Schema : uint32_t {
+    LOCATION = 0,
+    IMPLEMENTATION = 1,
+    OPTIMIZATIONS = 2,
+    LINE = 3,
+    CATEGORY = 4
+  };
 
-  mFrameTableWriter.StartArrayElement();
+  AutoArraySchemaWriter writer(mFrameTableWriter, mUniqueStrings);
+
 #ifndef SPS_STANDALONE
   if (!aFrame.mJITFrameHandle) {
 #else
   {
 #endif
 #ifdef SPS_STANDALONE
-    mUniqueStrings.WriteElement(mFrameTableWriter, aFrame.mLocation.c_str());
+    writer.StringElement(LOCATION, aFrame.mLocation.c_str());
 #else
-    mUniqueStrings.WriteElement(mFrameTableWriter, aFrame.mLocation.get());
+    writer.StringElement(LOCATION, aFrame.mLocation.get());
 #endif
     if (aFrame.mLine.isSome()) {
-      mFrameTableWriter.NullElement(); // implementation
-      mFrameTableWriter.NullElement(); // optimizations
-      mFrameTableWriter.IntElement(*aFrame.mLine);
+      writer.IntElement(LINE, *aFrame.mLine);
     }
     if (aFrame.mCategory.isSome()) {
-      if (aFrame.mLine.isNothing()) {
-        mFrameTableWriter.NullElement(); // implementation
-        mFrameTableWriter.NullElement(); // optimizations
-        mFrameTableWriter.NullElement(); // line
-      }
-      mFrameTableWriter.IntElement(*aFrame.mCategory);
+      writer.IntElement(CATEGORY, *aFrame.mCategory);
     }
   }
 #ifndef SPS_STANDALONE
   else {
     const JS::ForEachProfiledFrameOp::FrameHandle& jitFrame = *aFrame.mJITFrameHandle;
 
-    mUniqueStrings.WriteElement(mFrameTableWriter, jitFrame.label());
+    writer.StringElement(LOCATION, jitFrame.label());
 
     JS::ProfilingFrameIterator::FrameKind frameKind = jitFrame.frameKind();
     MOZ_ASSERT(frameKind == JS::ProfilingFrameIterator::Frame_Ion ||
                frameKind == JS::ProfilingFrameIterator::Frame_Baseline);
-    mUniqueStrings.WriteElement(mFrameTableWriter,
-                                frameKind == JS::ProfilingFrameIterator::Frame_Ion
-                                ? "ion"
-                                : "baseline");
+    writer.StringElement(IMPLEMENTATION,
+                         frameKind == JS::ProfilingFrameIterator::Frame_Ion
+                         ? "ion"
+                         : "baseline");
 
     if (jitFrame.hasTrackedOptimizations()) {
+      writer.FillUpTo(OPTIMIZATIONS);
       mFrameTableWriter.StartObjectElement();
       {
         mFrameTableWriter.StartArrayProperty("types");
@@ -535,7 +606,6 @@ void UniqueStacks::StreamFrame(const OnStackFrameKey& aFrame)
     }
   }
 #endif
-  mFrameTableWriter.EndArray();
 }
 
 struct ProfileSample
@@ -551,62 +621,43 @@ struct ProfileSample
 
 static void WriteSample(SpliceableJSONWriter& aWriter, ProfileSample& aSample)
 {
-  // Schema:
-  //   [stack, time, responsiveness, rss, uss, frameNumber, power]
+  enum Schema : uint32_t {
+    STACK = 0,
+    TIME = 1,
+    RESPONSIVENESS = 2,
+    RSS = 3,
+    USS = 4,
+    FRAME_NUMBER = 5,
+    POWER = 6
+  };
 
-  aWriter.StartArrayElement();
-  {
-    // The last non-null index is tracked to save space in the JSON by avoid
-    // emitting 'null's at the end of the array, as they're only needed if
-    // followed by non-null elements.
-    uint32_t index = 0;
-    uint32_t lastNonNullIndex = 0;
+  AutoArraySchemaWriter writer(aWriter);
 
-    aWriter.IntElement(aSample.mStack);
-    index++;
+  writer.IntElement(STACK, aSample.mStack);
 
-    if (aSample.mTime.isSome()) {
-      lastNonNullIndex = index;
-      aWriter.DoubleElement(*aSample.mTime);
-    }
-    index++;
-
-    if (aSample.mResponsiveness.isSome()) {
-      aWriter.NullElements(index - lastNonNullIndex - 1);
-      lastNonNullIndex = index;
-      aWriter.DoubleElement(*aSample.mResponsiveness);
-    }
-    index++;
-
-    if (aSample.mRSS.isSome()) {
-      aWriter.NullElements(index - lastNonNullIndex - 1);
-      lastNonNullIndex = index;
-      aWriter.DoubleElement(*aSample.mRSS);
-    }
-    index++;
-
-    if (aSample.mUSS.isSome()) {
-      aWriter.NullElements(index - lastNonNullIndex - 1);
-      lastNonNullIndex = index;
-      aWriter.DoubleElement(*aSample.mUSS);
-    }
-    index++;
-
-    if (aSample.mFrameNumber.isSome()) {
-      aWriter.NullElements(index - lastNonNullIndex - 1);
-      lastNonNullIndex = index;
-      aWriter.IntElement(*aSample.mFrameNumber);
-    }
-    index++;
-
-    if (aSample.mPower.isSome()) {
-      aWriter.NullElements(index - lastNonNullIndex - 1);
-      lastNonNullIndex = index;
-      aWriter.DoubleElement(*aSample.mPower);
-    }
-    index++;
+  if (aSample.mTime.isSome()) {
+    writer.DoubleElement(TIME, *aSample.mTime);
   }
-  aWriter.EndArray();
+
+  if (aSample.mResponsiveness.isSome()) {
+    writer.DoubleElement(RESPONSIVENESS, *aSample.mResponsiveness);
+  }
+
+  if (aSample.mRSS.isSome()) {
+    writer.DoubleElement(RSS, *aSample.mRSS);
+  }
+
+  if (aSample.mUSS.isSome()) {
+    writer.DoubleElement(USS, *aSample.mUSS);
+  }
+
+  if (aSample.mFrameNumber.isSome()) {
+    writer.IntElement(FRAME_NUMBER, *aSample.mFrameNumber);
+  }
+
+  if (aSample.mPower.isSome()) {
+    writer.DoubleElement(POWER, *aSample.mPower);
+  }
 }
 
 void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter, int aThreadId,

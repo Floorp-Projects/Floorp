@@ -524,10 +524,6 @@ public:
   MediaDecoderStateMachine* GetStateMachine() const;
   void SetStateMachine(MediaDecoderStateMachine* aStateMachine);
 
-  // Returns the monitor for other threads to synchronise access to
-  // state.
-  ReentrantMonitor& GetReentrantMonitor() override;
-
   // Constructs the time ranges representing what segments of the media
   // are buffered and playable.
   virtual media::TimeIntervals GetBuffered();

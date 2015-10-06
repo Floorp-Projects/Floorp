@@ -49,8 +49,6 @@ public:
   ImageBridgeParent(MessageLoop* aLoop, Transport* aTransport, ProcessId aChildProcessId);
   ~ImageBridgeParent();
 
-  virtual LayersBackend GetCompositorBackendType() const override;
-
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   static PImageBridgeParent*
@@ -80,6 +78,7 @@ public:
   bool DeallocPCompositableParent(PCompositableParent* aActor) override;
 
   virtual PTextureParent* AllocPTextureParent(const SurfaceDescriptor& aSharedData,
+                                              const LayersBackend& aLayersBackend,
                                               const TextureFlags& aFlags) override;
   virtual bool DeallocPTextureParent(PTextureParent* actor) override;
 

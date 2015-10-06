@@ -104,6 +104,16 @@ public:
   // Used to explicitly clear the listener to avoid circula reference.
   void ClearListener() { mListener = nullptr; }
 
+  bool GetIsPackageSigned() const
+  {
+    return mIsPackageSigned;
+  }
+
+  const nsACString& GetPackageOrigin() const
+  {
+    return mPackageOrigin;
+  }
+
   static const char* kSignedPakOriginMetadataKey;
 
 private:

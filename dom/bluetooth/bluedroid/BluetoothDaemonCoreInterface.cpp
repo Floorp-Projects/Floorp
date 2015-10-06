@@ -945,101 +945,14 @@ BluetoothDaemonCoreModule::DiscoveryStateChangedNtf(
     UnpackPDUInitOp(aPDU));
 }
 
-// Init operator class for PinRequestNotification
-class BluetoothDaemonCoreModule::PinRequestInitOp final
-  : private PDUInitOp
-{
-public:
-  PinRequestInitOp(DaemonSocketPDU& aPDU)
-    : PDUInitOp(aPDU)
-  { }
-
-  nsresult
-  operator () (BluetoothAddress& aArg1, BluetoothRemoteName& aArg2,
-               uint32_t& aArg3) const
-  {
-    DaemonSocketPDU& pdu = GetPDU();
-
-    /* Read remote address */
-    nsresult rv = UnpackPDU(pdu, aArg1);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    /* Read remote name */
-    rv = UnpackPDU(pdu, aArg2);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    /* Read CoD */
-    rv = UnpackPDU(pdu, aArg3);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    WarnAboutTrailingData();
-    return NS_OK;
-  }
-};
-
 void
 BluetoothDaemonCoreModule::PinRequestNtf(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU)
 {
   PinRequestNotification::Dispatch(
     &BluetoothNotificationHandler::PinRequestNotification,
-    PinRequestInitOp(aPDU));
+    UnpackPDUInitOp(aPDU));
 }
-
-// Init operator class for SspRequestNotification
-class BluetoothDaemonCoreModule::SspRequestInitOp final
-  : private PDUInitOp
-{
-public:
-  SspRequestInitOp(DaemonSocketPDU& aPDU)
-    : PDUInitOp(aPDU)
-  { }
-
-  nsresult
-  operator () (BluetoothAddress& aArg1, BluetoothRemoteName& aArg2,
-               uint32_t& aArg3, BluetoothSspVariant& aArg4,
-               uint32_t& aArg5) const
-  {
-    DaemonSocketPDU& pdu = GetPDU();
-
-    /* Read remote address */
-    nsresult rv = UnpackPDU(pdu, aArg1);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    /* Read remote name */
-    rv = UnpackPDU(pdu, aArg2);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    /* Read CoD */
-    rv = UnpackPDU(pdu, aArg3);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    /* Read pairing variant */
-    rv = UnpackPDU(pdu, aArg4);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    /* Read passkey */
-    rv = UnpackPDU(pdu, aArg5);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    WarnAboutTrailingData();
-    return NS_OK;
-  }
-};
 
 void
 BluetoothDaemonCoreModule::SspRequestNtf(
@@ -1047,45 +960,8 @@ BluetoothDaemonCoreModule::SspRequestNtf(
 {
   SspRequestNotification::Dispatch(
     &BluetoothNotificationHandler::SspRequestNotification,
-    SspRequestInitOp(aPDU));
+    UnpackPDUInitOp(aPDU));
 }
-
-// Init operator class for BondStateChangedNotification
-class BluetoothDaemonCoreModule::BondStateChangedInitOp final
-  : private PDUInitOp
-{
-public:
-  BondStateChangedInitOp(DaemonSocketPDU& aPDU)
-    : PDUInitOp(aPDU)
-  { }
-
-  nsresult
-  operator () (BluetoothStatus& aArg1, BluetoothAddress& aArg2,
-               BluetoothBondState& aArg3) const
-  {
-    DaemonSocketPDU& pdu = GetPDU();
-
-    /* Read status */
-    nsresult rv = UnpackPDU(pdu, aArg1);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    /* Read remote address */
-    rv = UnpackPDU(pdu, aArg2);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    /* Read bond state */
-    rv = UnpackPDU(pdu, aArg3);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    WarnAboutTrailingData();
-    return NS_OK;
-  }
-};
 
 void
 BluetoothDaemonCoreModule::BondStateChangedNtf(
@@ -1093,45 +969,8 @@ BluetoothDaemonCoreModule::BondStateChangedNtf(
 {
   BondStateChangedNotification::Dispatch(
     &BluetoothNotificationHandler::BondStateChangedNotification,
-    BondStateChangedInitOp(aPDU));
+    UnpackPDUInitOp(aPDU));
 }
-
-// Init operator class for AclStateChangedNotification
-class BluetoothDaemonCoreModule::AclStateChangedInitOp final
-  : private PDUInitOp
-{
-public:
-  AclStateChangedInitOp(DaemonSocketPDU& aPDU)
-    : PDUInitOp(aPDU)
-  { }
-
-  nsresult
-  operator () (BluetoothStatus& aArg1, BluetoothAddress& aArg2,
-               BluetoothAclState& aArg3) const
-  {
-    DaemonSocketPDU& pdu = GetPDU();
-
-    /* Read status */
-    nsresult rv = UnpackPDU(pdu, aArg1);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    /* Read remote address */
-    rv = UnpackPDU(pdu, aArg2);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
-    /* Read ACL state */
-    rv = UnpackPDU(pdu, aArg3);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    WarnAboutTrailingData();
-    return NS_OK;
-  }
-};
 
 void
 BluetoothDaemonCoreModule::AclStateChangedNtf(
@@ -1139,7 +978,7 @@ BluetoothDaemonCoreModule::AclStateChangedNtf(
 {
   AclStateChangedNotification::Dispatch(
     &BluetoothNotificationHandler::AclStateChangedNotification,
-    AclStateChangedInitOp(aPDU));
+    UnpackPDUInitOp(aPDU));
 }
 
 // Init operator class for DutModeRecvNotification
