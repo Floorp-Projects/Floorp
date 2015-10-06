@@ -60,11 +60,11 @@ protected:
   virtual ~BluetoothAvrcpManager();
 
 private:
-  class CleanupAvrcpResultHandler;
-  class CleanupAvrcpResultHandlerRunnable;
+  class CleanupResultHandler;
+  class CleanupResultHandlerRunnable;
   class ConnectRunnable;
   class DisconnectRunnable;
-  class InitAvrcpResultHandler;
+  class InitResultHandler;
   class OnErrorProfileResultHandlerRunnable;
 
   BluetoothAvrcpManager();

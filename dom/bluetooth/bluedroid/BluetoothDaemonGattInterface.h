@@ -681,14 +681,10 @@ protected:
     BluetoothGattStatus, int>
     ServerResponseConfirmationNotification;
 
-  class ClientScanResultInitOp;
-  class ClientConnectDisconnectInitOp;
-  class ClientReadRemoteRssiInitOp;
   class ClientGetDeviceTypeInitOp;
+  class ClientScanResultInitOp;
   class ServerConnectionInitOp;
-  class ServerRequestReadInitOp;
   class ServerRequestWriteInitOp;
-  class ServerRequestExecuteWriteInitOp;
 
   void ClientRegisterNtf(const DaemonSocketPDUHeader& aHeader,
                                DaemonSocketPDU& aPDU);
