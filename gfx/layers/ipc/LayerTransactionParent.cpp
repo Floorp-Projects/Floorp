@@ -182,12 +182,6 @@ LayerTransactionParent::Destroy()
   }
 }
 
-LayersBackend
-LayerTransactionParent::GetCompositorBackendType() const
-{
-  return mLayerManager->GetBackendType();
-}
-
 bool
 LayerTransactionParent::RecvUpdateNoSwap(InfallibleTArray<Edit>&& cset,
                                          const uint64_t& aTransactionId,
@@ -924,9 +918,11 @@ LayerTransactionParent::DeallocPCompositableParent(PCompositableParent* aActor)
 
 PTextureParent*
 LayerTransactionParent::AllocPTextureParent(const SurfaceDescriptor& aSharedData,
+                                            const LayersBackend& aLayersBackend,
                                             const TextureFlags& aFlags)
 {
-  return TextureHost::CreateIPDLActor(this, aSharedData, aFlags);
+  MOZ_ASSERT(aLayersBackend == mLayerManager->GetCompositor()->GetBackendType());
+  return TextureHost::CreateIPDLActor(this, aSharedData, aLayersBackend, aFlags);
 }
 
 bool

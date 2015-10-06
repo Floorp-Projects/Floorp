@@ -11,7 +11,6 @@ import org.mozilla.gecko.GeckoAppShell;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.util.Log;
 
 public class Allocator {
@@ -46,6 +45,8 @@ public class Allocator {
 
     SharedPreferences mPrefs;
 
+    @SuppressWarnings("deprecation") // Suppressing deprecation notification for Context.MODE_MULTI_PROCESS until we
+                                     // reach a timeline for removal of the whole feature. (Bug 1171213)
     protected Allocator(Context context) {
         mPrefs = context.getSharedPreferences("webapps", Context.MODE_PRIVATE | Context.MODE_MULTI_PROCESS);
     }

@@ -178,7 +178,7 @@ public:
 
   // Creates and allocates a TextureClient usable with Moz2D.
   static already_AddRefed<TextureClient>
-  CreateForDrawing(ISurfaceAllocator* aAllocator,
+  CreateForDrawing(CompositableForwarder* aAllocator,
                    gfx::SurfaceFormat aFormat,
                    gfx::IntSize aSize,
                    BackendSelector aSelector,

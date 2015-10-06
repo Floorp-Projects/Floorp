@@ -636,7 +636,7 @@ CodeGeneratorX86::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
         if (mir->isAtomicAccess())
             jumpTo = gen->outOfBoundsLabel();
         else
-            rejoin = jumpTo = alloc().lifoAlloc()->new_<Label>();
+            rejoin = jumpTo = alloc().lifoAlloc()->newInfallible<Label>();
         maybeCmpOffset = emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ptr), jumpTo);
     }
 

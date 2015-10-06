@@ -64,7 +64,10 @@ public:
   /**
    * Create a TextureChild/Parent pair as as well as the TextureHost on the parent side.
    */
-  virtual PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData, TextureFlags aFlags) = 0;
+  virtual PTextureChild* CreateTexture(
+    const SurfaceDescriptor& aSharedData,
+    LayersBackend aLayersBackend,
+    TextureFlags aFlags) = 0;
 
   /**
    * Communicate to the compositor that aRegion in the texture identified by
@@ -166,7 +169,7 @@ public:
    * We only don't allow changing the backend type at runtime so this value can
    * be queried once and will not change until Gecko is restarted.
    */
-  virtual LayersBackend GetCompositorBackendType() const override
+  LayersBackend GetCompositorBackendType() const
   {
     return mTextureFactoryIdentifier.mParentBackend;
   }

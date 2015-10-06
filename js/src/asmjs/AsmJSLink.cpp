@@ -768,6 +768,8 @@ CallAsmJS(JSContext* cx, unsigned argc, Value* vp)
         // functions, the returned value is discarded and an empty object is
         // returned instead.
         PlainObject* obj = NewBuiltinClassInstance<PlainObject>(cx);
+        if (!obj)
+            return false;
         callArgs.rval().set(ObjectValue(*obj));
         return true;
     }

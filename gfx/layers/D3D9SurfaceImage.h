@@ -20,7 +20,7 @@ class SharedTextureClientD3D9;
 class D3D9RecycleAllocator : public TextureClientRecycleAllocator
 {
 public:
-  explicit D3D9RecycleAllocator(ISurfaceAllocator* aAllocator,
+  explicit D3D9RecycleAllocator(CompositableForwarder* aAllocator,
                                 IDirect3DDevice9* aDevice)
     : TextureClientRecycleAllocator(aAllocator)
     , mDevice(aDevice)

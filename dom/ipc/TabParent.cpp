@@ -108,6 +108,12 @@ using namespace mozilla::services;
 using namespace mozilla::widget;
 using namespace mozilla::jsipc;
 
+#if DEUBG
+  #define LOG(args...) printf_stderr(args)
+#else
+  #define LOG(...)
+#endif
+
 // The flags passed by the webProgress notifications are 16 bits shifted
 // from the ones registered by webProgressListeners.
 #define NOTIFY_FLAG_SHIFT 16
@@ -435,6 +441,104 @@ TabParent::IsVisible()
   bool visible = false;
   frameLoader->GetVisible(&visible);
   return visible;
+}
+
+static void LogChannelRelevantInfo(nsIURI* aURI,
+                                   nsIPrincipal* aLoadingPrincipal,
+                                   nsIPrincipal* aChannelResultPrincipal,
+                                   nsContentPolicyType aContentPolicyType) {
+  nsCString loadingOrigin;
+  aLoadingPrincipal->GetOrigin(loadingOrigin);
+
+  nsCString uriString;
+  aURI->GetAsciiSpec(uriString);
+  LOG("Loading %s from origin %s (type: %d)\n", uriString.get(),
+                                                loadingOrigin.get(),
+                                                aContentPolicyType);
+
+  nsCString resultPrincipalOrigin;
+  aChannelResultPrincipal->GetOrigin(resultPrincipalOrigin);
+  LOG("Result principal origin: %s\n", resultPrincipalOrigin.get());
+}
+
+bool
+TabParent::ShouldSwitchProcess(nsIChannel* aChannel)
+{
+  // If we lack of any information which is required to decide the need of
+  // process switch, consider that we should switch process.
+
+  // Prepare the channel loading principal.
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
+  NS_ENSURE_TRUE(loadInfo, true);
+  nsCOMPtr<nsIPrincipal> loadingPrincipal;
+  loadInfo->GetLoadingPrincipal(getter_AddRefs(loadingPrincipal));
+  NS_ENSURE_TRUE(loadingPrincipal, true);
+
+  // Prepare the channel result principal.
+  nsCOMPtr<nsIPrincipal> resultPrincipal;
+  nsContentUtils::GetSecurityManager()->
+    GetChannelResultPrincipal(aChannel, getter_AddRefs(resultPrincipal));
+
+  // Log the debug info which is used to decide the need of proces switch.
+  nsCOMPtr<nsIURI> uri;
+  aChannel->GetURI(getter_AddRefs(uri));
+  LogChannelRelevantInfo(uri, loadingPrincipal, resultPrincipal,
+                         loadInfo->GetContentPolicyType());
+
+  // Check if the signed package is loaded from the same origin.
+  bool sameOrigin = false;
+  loadingPrincipal->Equals(resultPrincipal, &sameOrigin);
+  if (sameOrigin) {
+    LOG("Loading singed package from the same origin. Don't switch process.\n");
+    return false;
+  }
+
+  // If this is not a top level document, there's no need to switch process.
+  if (nsIContentPolicy::TYPE_DOCUMENT != loadInfo->GetContentPolicyType()) {
+    LOG("Subresource of a document. No need to switch process.\n");
+    return false;
+  }
+
+  // If this is a brand new process created to load the signed package
+  // (triggered by previous OnStartSignedPackageRequest), the loading origin
+  // will be "moz-safe-about:blank". In that case, we don't need to switch process
+  // again. We compare with "moz-safe-about:blank" without appId/isBrowserElement/etc
+  // taken into account. That's why we use originNoSuffix.
+  nsCString loadingOriginNoSuffix;
+  loadingPrincipal->GetOriginNoSuffix(loadingOriginNoSuffix);
+  if (loadingOriginNoSuffix.EqualsLiteral("moz-safe-about:blank")) {
+    LOG("The content is already loaded by a brand new process.\n");
+    return false;
+  }
+
+  return true;
+}
+
+void
+TabParent::OnStartSignedPackageRequest(nsIChannel* aChannel)
+{
+  if (!ShouldSwitchProcess(aChannel)) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  aChannel->GetURI(getter_AddRefs(uri));
+
+  aChannel->Cancel(NS_BINDING_FAILED);
+
+  nsCString uriString;
+  uri->GetAsciiSpec(uriString);
+  LOG("We decide to switch process. Call nsFrameLoader::SwitchProcessAndLoadURIs: %s\n",
+       uriString.get());
+
+  nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  NS_ENSURE_TRUE_VOID(frameLoader);
+
+  nsresult rv = frameLoader->SwitchProcessAndLoadURI(uri);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to switch process.");
+  }
 }
 
 void
