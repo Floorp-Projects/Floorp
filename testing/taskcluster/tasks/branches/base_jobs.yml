@@ -150,6 +150,12 @@ builds:
     types:
       debug:
         task: tasks/builds/dbg_macosx64.yml
+  android-b2gdroid:
+    platforms:
+      - Android
+    types:
+      opt:
+        task: tasks/builds/android_api_11_b2gdroid.yml
 
 tests:
   cppunit:
