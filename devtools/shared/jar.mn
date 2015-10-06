@@ -1,0 +1,10 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+devtools.jar:
+%   resource devtools %modules/devtools/
+# The typical approach would be to list all the resource files in this manifest
+# for installation.  Instead of doing this, use the DevToolsModules syntax via
+# moz.build files to do the installation so that we can enforce correct paths
+# based on source tree location.
