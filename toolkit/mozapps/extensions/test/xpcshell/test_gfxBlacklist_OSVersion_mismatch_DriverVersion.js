@@ -3,7 +3,7 @@
  */
 
 // This should eventually be moved to head_addons.js
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 // Test whether blocklists specifying new OSeswcorrectly don't block if driver
 // versions are appropriately up-to-date.

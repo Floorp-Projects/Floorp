@@ -1,4 +1,4 @@
-let gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
+var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content/", "http://127.0.0.1:8888/");
 
 function checkPaintCount(aCount) {
   ok(aCount != 0, "paint count can't be greater than zero, count was " + aCount);

@@ -50,7 +50,7 @@ exports.isXUL = isXUL;
 /**
  * Inject a helper stylesheet in the window.
  */
-let installedHelperSheets = new WeakMap();
+var installedHelperSheets = new WeakMap();
 
 function installHelperSheet(win, source, type = "agent") {
   if (installedHelperSheets.has(win.document)) {

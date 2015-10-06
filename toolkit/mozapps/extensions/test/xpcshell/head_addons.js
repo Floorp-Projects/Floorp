@@ -2,8 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-const AM_Cc = Components.classes;
-const AM_Ci = Components.interfaces;
+var AM_Cc = Components.classes;
+var AM_Ci = Components.interfaces;
 
 const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
 const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
@@ -62,10 +62,10 @@ var gUrlToFileMap = {};
 var TEST_UNPACKED = false;
 
 // Map resource://xpcshell-data/ to the data directory
-let resHandler = Services.io.getProtocolHandler("resource")
+var resHandler = Services.io.getProtocolHandler("resource")
                          .QueryInterface(AM_Ci.nsISubstitutingProtocolHandler);
 // Allow non-existent files because of bug 1207735
-let dataURI = NetUtil.newURI(do_get_file("data", true));
+var dataURI = NetUtil.newURI(do_get_file("data", true));
 resHandler.setSubstitution("xpcshell-data", dataURI);
 
 // Listens to messages from bootstrap.js telling us what add-ons were started

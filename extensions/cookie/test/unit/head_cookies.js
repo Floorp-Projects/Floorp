@@ -6,9 +6,9 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cr = Components.results;
 
 XPCOMUtils.defineLazyServiceGetter(Services, "cookies",
                                    "@mozilla.org/cookieService;1",

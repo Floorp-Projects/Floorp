@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 
 var gProfD = do_get_profile();
 var gDirSvc = Cc["@mozilla.org/file/directory_service;1"].

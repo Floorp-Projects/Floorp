@@ -4,7 +4,7 @@
 
 // This shared-head.js file is used for multiple directories in devtools.
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 function scopedCuImport(path) {
   const scope = {};

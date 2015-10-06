@@ -32,7 +32,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
 
 Cu.importGlobalProperties(["URL"]);
 
-let CtypesKernelHelpers = MSMigrationUtils.CtypesKernelHelpers;
+var CtypesKernelHelpers = MSMigrationUtils.CtypesKernelHelpers;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Resources

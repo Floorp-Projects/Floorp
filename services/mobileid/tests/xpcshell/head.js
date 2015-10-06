@@ -3,9 +3,9 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
+var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
-const Cm = Components.manager;
+var Cm = Components.manager;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");

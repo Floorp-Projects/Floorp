@@ -1,6 +1,6 @@
 // Exercise Unix domain sockets.
 
-const CC = Components.Constructor;
+var CC = Components.Constructor;
 
 const UnixServerSocket = CC("@mozilla.org/network/server-socket;1",
                             "nsIServerSocket",

@@ -1,6 +1,6 @@
 // Regression test for bug 336691 - nsZipArchive::Test shouldn't try to ExtractFile on directories.
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 
 function run_test() {
   var file = do_get_file("data/test_bug336691.zip");

@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {Constructor: CC, classes: Cc, interfaces: Ci, utils: Cu} = Components;
+var {Constructor: CC, classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
 const ServerSocket = CC("@mozilla.org/network/server-socket;1", "nsIServerSocket", "initSpecialConnection");

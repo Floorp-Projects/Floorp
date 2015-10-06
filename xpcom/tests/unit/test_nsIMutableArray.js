@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Ci = Components.interfaces;
-const Cr = Components.results;
-const Cc = Components.classes;
-const CC = Components.Constructor;
+var Ci = Components.interfaces;
+var Cr = Components.results;
+var Cc = Components.classes;
+var CC = Components.Constructor;
 
 var MutableArray = CC("@mozilla.org/array;1", "nsIMutableArray");
 var SupportsString = CC("@mozilla.org/supports-string;1", "nsISupportsString");

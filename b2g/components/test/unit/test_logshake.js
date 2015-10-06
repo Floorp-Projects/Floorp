@@ -10,7 +10,7 @@
 /* jshint -W097 */
 "use strict";
 
-const Cu = Components.utils;
+var Cu = Components.utils;
 
 Cu.import("resource://gre/modules/LogCapture.jsm");
 Cu.import("resource://gre/modules/LogShake.jsm");

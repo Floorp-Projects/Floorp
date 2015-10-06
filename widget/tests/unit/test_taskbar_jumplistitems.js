@@ -5,8 +5,8 @@
 
 // This tests taskbar jump list functionality available on win7 and up.
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 
 function test_basics()
 {

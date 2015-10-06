@@ -24,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=815847
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
-const Cu = Components.utils;
+var Cu = Components.utils;
 
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/PrivateBrowsingUtils.jsm');

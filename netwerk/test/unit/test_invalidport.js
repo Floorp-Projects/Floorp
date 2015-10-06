@@ -4,7 +4,7 @@
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-const CC = Components.Constructor;
+var CC = Components.Constructor;
 
 var counter = 0;
 const iterations = 10;

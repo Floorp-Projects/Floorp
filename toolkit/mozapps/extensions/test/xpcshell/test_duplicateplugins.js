@@ -4,7 +4,7 @@
 
 Components.utils.import("resource://testing-common/MockRegistrar.jsm");
 
-const Ci = Components.interfaces;
+var Ci = Components.interfaces;
 
 // This verifies that duplicate plugins are coalesced and maintain their ID
 // across restarts.

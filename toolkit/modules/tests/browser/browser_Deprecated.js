@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
 const PREF_DEPRECATION_WARNINGS = "devtools.errorconsole.deprecation_warnings";
 
 Cu.import("resource://gre/modules/Services.jsm", this);

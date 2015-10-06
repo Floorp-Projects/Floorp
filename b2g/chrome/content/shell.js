@@ -1502,7 +1502,7 @@ const saveWindowGeometry = () => {
 }
 window.addEventListener("unload", saveWindowGeometry);
 
-let baseWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+var baseWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(Ci.nsIWebNavigation)
                        .QueryInterface(Ci.nsIDocShellTreeItem)
                        .treeOwner

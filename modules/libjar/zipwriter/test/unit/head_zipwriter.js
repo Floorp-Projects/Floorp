@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cc = Components.classes;
 const NS_ERROR_IN_PROGRESS = 2152398863;
 
 const PR_RDONLY      = 0x01
