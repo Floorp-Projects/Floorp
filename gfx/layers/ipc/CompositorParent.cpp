@@ -551,6 +551,9 @@ CompositorParent::CompositorParent(nsIWidget* aWidget,
   , mForceCompositionTask(nullptr)
   , mCompositorThreadHolder(sCompositorThreadHolder)
   , mCompositorScheduler(nullptr)
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+  , mLastPluginUpdateLayerTreeId(0)
+#endif
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(CompositorThread(),
@@ -2006,13 +2009,49 @@ CrossProcessCompositorParent::ShadowLayersUpdated(
 }
 
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-// static, sends plugin window state changes to the main thread
-void
+//#define PLUGINS_LOG(...) printf_stderr("CP [%s]: ", __FUNCTION__);
+//                         printf_stderr(__VA_ARGS__);
+//                         printf_stderr("\n");
+#define PLUGINS_LOG(...)
+
+bool
 CompositorParent::UpdatePluginWindowState(uint64_t aId)
 {
   CompositorParent::LayerTreeState& lts = sIndirectLayerTrees[aId];
+  // Check if this layer tree has received any shadow layer updates
   if (!lts.mUpdatedPluginDataAvailable) {
-    return;
+    PLUGINS_LOG("[%" PRIu64 "] no plugin data", aId);
+    return false;
+  }
+
+  // pluginMetricsChanged tracks whether we need to send plugin update
+  // data to the main thread. If we do we'll have to block composition,
+  // which we want to avoid if at all possible.
+  bool pluginMetricsChanged = false;
+
+  // Same layer tree checks
+  if (mLastPluginUpdateLayerTreeId == aId) {
+    // no plugin data and nothing has changed, bail.
+    if (!mCachedPluginData.Length() && !lts.mPluginData.Length()) {
+      PLUGINS_LOG("[%" PRIu64 "] no data, no changes", aId);
+      return false;
+    }
+
+    if (mCachedPluginData.Length() == lts.mPluginData.Length()) {
+      // check for plugin data changes
+      for (uint32_t idx = 0; idx < lts.mPluginData.Length(); idx++) {
+        if (!(mCachedPluginData[idx] == lts.mPluginData[idx])) {
+          pluginMetricsChanged = true;
+          break;
+        }
+      }
+    } else {
+      // array lengths don't match, need to update
+      pluginMetricsChanged = true;
+    }
+  } else {
+    // exchanging layer trees, we need to update
+    pluginMetricsChanged = true;
   }
 
   if (!lts.mPluginData.Length()) {
@@ -2020,28 +2059,45 @@ CompositorParent::UpdatePluginWindowState(uint64_t aId)
     // tree contained visible plugins and the new tree does not. All we need
     // to do here is hide the plugins for the old tree, so don't waste time
     // calculating clipping.
+    mPluginsLayerOffset = nsIntPoint(0,0);
+    mPluginsLayerVisibleRegion.SetEmpty();
     uintptr_t parentWidget = (uintptr_t)lts.mParent->GetWidget();
     unused << lts.mParent->SendHideAllPlugins(parentWidget);
     lts.mUpdatedPluginDataAvailable = false;
-    return;
-  }
-
-  // Retrieve the offset and visible region of the layer that hosts
-  // the plugins, CompositorChild needs these in calculating proper
-  // plugin clipping.
-  LayerTransactionParent* layerTree = lts.mLayerTree;
-  Layer* contentRoot = layerTree->GetRoot();
-  if (contentRoot) {
-    nsIntPoint offset;
-    nsIntRegion visibleRegion;
-    if (contentRoot->GetVisibleRegionRelativeToRootLayer(visibleRegion,
-                                                          &offset)) {
-      unused <<
-        lts.mParent->SendUpdatePluginConfigurations(offset, visibleRegion,
-                                                    lts.mPluginData);
-      lts.mUpdatedPluginDataAvailable = false;
+    PLUGINS_LOG("[%" PRIu64 "] hide all", aId);
+  } else {
+    // Retrieve the offset and visible region of the layer that hosts
+    // the plugins, CompositorChild needs these in calculating proper
+    // plugin clipping.
+    LayerTransactionParent* layerTree = lts.mLayerTree;
+    Layer* contentRoot = layerTree->GetRoot();
+    if (contentRoot) {
+      nsIntPoint offset;
+      nsIntRegion visibleRegion;
+      if (contentRoot->GetVisibleRegionRelativeToRootLayer(visibleRegion,
+                                                            &offset)) {
+        // Check to see if these values have changed, if so we need to
+        // update plugin window position within the window.
+        if (!pluginMetricsChanged &&
+            mPluginsLayerVisibleRegion == visibleRegion &&
+            mPluginsLayerOffset == offset) {
+          PLUGINS_LOG("[%" PRIu64 "] no change", aId);
+          return false;
+        }
+        mPluginsLayerOffset = offset;
+        mPluginsLayerVisibleRegion = visibleRegion;
+        unused <<
+          lts.mParent->SendUpdatePluginConfigurations(offset, visibleRegion,
+                                                      lts.mPluginData);
+        lts.mUpdatedPluginDataAvailable = false;
+        PLUGINS_LOG("[%" PRIu64 "] updated", aId);
+      }
     }
   }
+
+  mLastPluginUpdateLayerTreeId = aId;
+  mCachedPluginData = lts.mPluginData;
+  return true;
 }
 #endif // #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
 
