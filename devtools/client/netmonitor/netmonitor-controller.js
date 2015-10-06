@@ -125,6 +125,10 @@ const {Tooltip} = require("devtools/client/shared/widgets/Tooltip");
 const {ToolSidebar} = require("devtools/client/framework/sidebar");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
+XPCOMUtils.defineConstant(this, "EVENTS", EVENTS);
+XPCOMUtils.defineConstant(this, "ACTIVITY_TYPE", ACTIVITY_TYPE);
+XPCOMUtils.defineConstant(this, "Editor", Editor);
+
 XPCOMUtils.defineLazyModuleGetter(this, "Chart",
   "resource:///modules/devtools/client/shared/widgets/Chart.jsm");
 

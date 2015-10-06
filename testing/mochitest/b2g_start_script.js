@@ -84,7 +84,7 @@ container.addEventListener('mozbrowsershowmodalprompt', function (e) {
 
 if (outOfProcess) {
   let specialpowers = {};
-  let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
+  let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
   loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.js", specialpowers);
   let specialPowersObserver = new specialpowers.SpecialPowersObserver();
 
@@ -103,7 +103,7 @@ if (outOfProcess) {
 }
 
 if (chrome) {
-  let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
+  let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader);
   if (typeof(SpecialPowers) == 'undefined') {
     loader.loadSubScript("chrome://specialpowers/content/specialpowersAPI.js");
     loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserverAPI.js");
@@ -114,7 +114,7 @@ if (chrome) {
 }
 
 if (onDevice) {
-  var cpuLock = Cc["@mozilla.org/power/powermanagerservice;1"]
+  var cpuLock = Components.classes["@mozilla.org/power/powermanagerservice;1"]
                       .getService(Ci.nsIPowerManagerService)
                       .newWakeLock("cpu");
 

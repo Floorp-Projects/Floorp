@@ -28,7 +28,11 @@ var test = asyncTest(function*() {
   let { jsterm } = yield openConsole();
   let popup = jsterm.autocompletePopup;
 
-  yield jsterm.execute("let testObject = {$$aaab: '', $$aaac: ''}");
+  yield jsterm.execute("var testObject = {$$aaab: '', $$aaac: ''}");
+
+  // FIXMEshu: global lexicals can't be autocompleted without extra platform
+  // support. See bug 1207868.
+  //yield jsterm.execute("let testObject = {$$aaab: '', $$aaac: ''}");
 
   // Should work with bug 967468.
   yield autocomplete("Object.__d");

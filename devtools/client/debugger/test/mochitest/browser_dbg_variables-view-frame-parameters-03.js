@@ -38,7 +38,7 @@ function test() {
 function expandGlobalScope() {
   let deferred = promise.defer();
 
-  let globalScope = gVariables.getScopeAtIndex(1);
+  let globalScope = gVariables.getScopeAtIndex(2);
   is(globalScope.expanded, false,
     "The global scope should not be expanded by default.");
 
@@ -52,7 +52,7 @@ function expandGlobalScope() {
 }
 
 function testGlobalScope() {
-  let globalScope = gVariables.getScopeAtIndex(1);
+  let globalScope = gVariables.getScopeAtIndex(2);
   is(globalScope.expanded, true,
     "The global scope should now be expanded.");
 
@@ -92,7 +92,7 @@ function testGlobalScope() {
 function expandWindowVariable() {
   let deferred = promise.defer();
 
-  let windowVar = gVariables.getScopeAtIndex(1).get("window");
+  let windowVar = gVariables.getScopeAtIndex(2).get("window");
   is(windowVar.expanded, false,
     "The window variable should not be expanded by default.");
 
@@ -106,7 +106,7 @@ function expandWindowVariable() {
 }
 
 function testWindowVariable() {
-  let windowVar = gVariables.getScopeAtIndex(1).get("window");
+  let windowVar = gVariables.getScopeAtIndex(2).get("window");
   is(windowVar.expanded, true,
     "The window variable should now be expanded.");
 

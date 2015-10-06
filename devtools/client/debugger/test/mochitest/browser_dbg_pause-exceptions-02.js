@@ -52,8 +52,8 @@ function testPauseOnExceptionsAfterReload() {
 
     is(gFrames.itemCount, 1,
       "Should have one frame.");
-    is(gVariables._store.length, 3,
-      "Should have three scopes.");
+    is(gVariables._store.length, 4,
+      "Should have four scopes.");
 
     is(innerNodes[0].querySelector(".name").getAttribute("value"), "<exception>",
       "Should have the right property name for <exception>.");
@@ -73,8 +73,8 @@ function testPauseOnExceptionsAfterReload() {
 
       is(gFrames.itemCount, 1,
         "Should have one frame.");
-      is(gVariables._store.length, 3,
-        "Should have three scopes.");
+      is(gVariables._store.length, 4,
+        "Should have four scopes.");
 
       is(innerNodes[0].querySelector(".name").getAttribute("value"), "this",
         "Should have the right property name for 'this'.");

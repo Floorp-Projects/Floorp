@@ -112,6 +112,14 @@ this.EXPORTED_SYMBOLS = ["MozLoopService", "LOOP_SESSION_TYPE",
   "TWO_WAY_MEDIA_CONN_LENGTH", "SHARING_STATE_CHANGE", "SHARING_ROOM_URL",
   "ROOM_CREATE", "ROOM_DELETE", "ROOM_CONTEXT_ADD"];
 
+XPCOMUtils.defineConstant(this, "LOOP_SESSION_TYPE", LOOP_SESSION_TYPE);
+XPCOMUtils.defineConstant(this, "TWO_WAY_MEDIA_CONN_LENGTH", TWO_WAY_MEDIA_CONN_LENGTH);
+XPCOMUtils.defineConstant(this, "SHARING_STATE_CHANGE", SHARING_STATE_CHANGE);
+XPCOMUtils.defineConstant(this, "SHARING_ROOM_URL", SHARING_ROOM_URL);
+XPCOMUtils.defineConstant(this, "ROOM_CREATE", ROOM_CREATE);
+XPCOMUtils.defineConstant(this, "ROOM_DELETE", ROOM_DELETE);
+XPCOMUtils.defineConstant(this, "ROOM_CONTEXT_ADD", ROOM_CONTEXT_ADD);
+
 XPCOMUtils.defineLazyModuleGetter(this, "injectLoopAPI",
   "resource:///modules/loop/MozLoopAPI.jsm");
 

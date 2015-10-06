@@ -153,9 +153,11 @@
       </field>
 
       <field name="PrivateBrowsingUtils" readonly="true">
-        let utils = {};
-        Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm", utils);
-        utils.PrivateBrowsingUtils
+        {
+          let utils = {};
+          Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm", utils);
+          utils.PrivateBrowsingUtils
+        }
       </field>
 
       <property name="inPrivateContext" readonly="true"

@@ -367,6 +367,17 @@ this.XPCOMUtils = {
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory])
     };
   },
+
+  /**
+   * Defines a non-writable property on an object.
+   */
+  defineConstant: function XPCOMUtils__defineConstant(aObj, aName, aValue) {
+    Object.defineProperty(aObj, aName, {
+      value: aValue,
+      enumerable: true,
+      writable: false
+    });
+  },
 };
 
 /**

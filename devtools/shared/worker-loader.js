@@ -429,7 +429,7 @@ var {
     return {
       Debugger,
       createSandbox,
-      dump,
+      dump: this.dump,
       rpc,
       loadSubScript,
       reportError,

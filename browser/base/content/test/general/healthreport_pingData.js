@@ -1,4 +1,4 @@
-const TEST_PINGS = [
+var TEST_PINGS = [
   {
     type: "test-telemetryArchive-1",
     payload: { foo: "bar" },

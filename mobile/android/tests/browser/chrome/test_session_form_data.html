@@ -22,6 +22,9 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
+let gChromeWin;
+let gBrowserApp;
+
 setup_browser();
 
 // Make the timer global so it doesn't get GC'd
@@ -81,9 +84,6 @@ function getInputValue(browser, data) {
 }
 
 let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
-
-let gChromeWin;
-let gBrowserApp;
 
 // Wait 2 seconds for the async Java/JS messsaging dance to settle down. We don't have
 // enough pre/post events, messages or notifications to handle this without a delay.

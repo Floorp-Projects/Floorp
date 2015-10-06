@@ -19,7 +19,7 @@ const GRAPH_REQUIREMENTS = {
   memory: {
     features: ["withMemory"]
   },
-}
+};
 
 /**
  * View handler for the overview panel's time view, displaying
