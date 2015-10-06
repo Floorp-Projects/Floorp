@@ -108,8 +108,10 @@ StaticScopeIter<allowGC>::hasSyntacticDynamicScopeObject() const
     }
     if (obj->template is<ModuleObject>())
         return true;
-    if (obj->template is<StaticBlockObject>())
-        return obj->template as<StaticBlockObject>().needsClone();
+    if (obj->template is<StaticBlockObject>()) {
+        return obj->template as<StaticBlockObject>().needsClone() ||
+               obj->template as<StaticBlockObject>().isGlobal();
+    }
     if (obj->template is<StaticWithObject>())
         return true;
     if (obj->template is<StaticEvalObject>())

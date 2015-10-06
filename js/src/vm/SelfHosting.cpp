@@ -1884,8 +1884,10 @@ CloneObject(JSContext* cx, HandleNativeObject selfHostedObject)
                                  ? gc::AllocKind::FUNCTION_EXTENDED
                                  : selfHostedFunction->getAllocKind();
         MOZ_ASSERT(!CanReuseScriptForClone(cx->compartment(), selfHostedFunction, cx->global()));
-        clone = CloneFunctionAndScript(cx, selfHostedFunction, cx->global(),
-                                       /* newStaticScope = */ nullptr, kind);
+        Rooted<ClonedBlockObject*> globalLexical(cx, &cx->global()->lexicalScope());
+        RootedObject staticGlobalLexical(cx, &globalLexical->staticBlock());
+        clone = CloneFunctionAndScript(cx, selfHostedFunction, globalLexical,
+                                       staticGlobalLexical, kind);
         // To be able to re-lazify the cloned function, its name in the
         // self-hosting compartment has to be stored on the clone.
         if (clone && hasName)
@@ -1977,8 +1979,15 @@ JSRuntime::cloneSelfHostedFunctionScript(JSContext* cx, HandlePropertyName name,
     RootedScript sourceScript(cx, sourceFun->getOrCreateScript(cx));
     if (!sourceScript)
         return false;
-    MOZ_ASSERT(!sourceScript->enclosingStaticScope());
-    if (!CloneScriptIntoFunction(cx, /* enclosingScope = */ nullptr, targetFun, sourceScript))
+
+    // Assert that there are no intervening scopes between the global scope
+    // and the self-hosted script. Toplevel lexicals are explicitly forbidden
+    // by the parser when parsing self-hosted code. The fact they have the
+    // global lexical scope on the scope chain is for uniformity and engine
+    // invariants.
+    MOZ_ASSERT(IsStaticGlobalLexicalScope(sourceScript->enclosingStaticScope()));
+    Rooted<ScopeObject*> enclosingScope(cx, &cx->global()->lexicalScope().staticBlock());
+    if (!CloneScriptIntoFunction(cx, enclosingScope, targetFun, sourceScript))
         return false;
     MOZ_ASSERT(!targetFun->isInterpretedLazy());
 
