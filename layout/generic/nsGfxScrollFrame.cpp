@@ -45,6 +45,7 @@
 #include "nsSMILKeySpline.h"
 #include "nsSubDocumentFrame.h"
 #include "nsSVGOuterSVGFrame.h"
+#include "nsIObjectLoadingContent.h"
 #include "mozilla/Attributes.h"
 #include "ScrollbarActivity.h"
 #include "nsRefreshDriver.h"
@@ -57,6 +58,7 @@
 #include "gfxPrefs.h"
 #include "AsyncScrollBase.h"
 #include "UnitTransforms.h"
+#include "nsPluginFrame.h"
 #include <mozilla/layers/AxisPhysicsModel.h>
 #include <mozilla/layers/AxisPhysicsMSDModel.h>
 #include <algorithm>
@@ -1852,6 +1854,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mTransformingByAPZ(false)
   , mZoomableByAPZ(false)
   , mVelocityQueue(aOuter->PresContext())
+  , mAsyncScrollEvent(END)
 {
   if (LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) != 0) {
     mScrollbarActivity = new ScrollbarActivity(do_QueryFrame(aOuter));
@@ -1958,6 +1961,8 @@ ScrollFrameHelper::AsyncScrollCallback(ScrollFrameHelper* aInstance,
 void
 ScrollFrameHelper::CompleteAsyncScroll(const nsRect &aRange, nsIAtom* aOrigin)
 {
+  NotifyPluginFrames(END);
+
   // Apply desired destination range since this is the last step of scrolling.
   mAsyncSmoothMSDScroll = nullptr;
   mAsyncScroll = nullptr;
@@ -1969,6 +1974,38 @@ ScrollFrameHelper::CompleteAsyncScroll(const nsRect &aRange, nsIAtom* aOrigin)
   // We are done scrolling, set our destination to wherever we actually ended
   // up scrolling to.
   mDestination = GetScrollPosition();
+}
+
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+static void
+NotifyPluginFramesCallback(nsISupports* aSupports, void* aFlag)
+{
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aSupports);
+  if (content) {
+    nsIFrame *frame = content->GetPrimaryFrame();
+    if (frame) {
+      nsPluginFrame* plugin = do_QueryFrame(frame);
+      if (plugin) {
+        plugin->SetScrollVisibility(aFlag != nullptr);
+      }
+    }
+  }
+}
+#endif
+
+void
+ScrollFrameHelper::NotifyPluginFrames(AsyncScrollEventType aEvent)
+{
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+  if (XRE_IsContentProcess()) {
+    if (aEvent != mAsyncScrollEvent) {
+      nsPresContext* presContext = mOuter->PresContext();
+      presContext->Document()->EnumerateActivityObservers(NotifyPluginFramesCallback,
+                                                          (void*)(aEvent == BEGIN));
+      mAsyncScrollEvent = aEvent;
+    }
+  }
+#endif
 }
 
 void
@@ -2125,6 +2162,7 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
   mAsyncScroll->mIsSmoothScroll = isSmoothScroll;
 
   if (isSmoothScroll) {
+    NotifyPluginFrames(BEGIN);
     mAsyncScroll->InitSmoothScroll(now, mDestination, aOrigin, range, currentVelocity);
   } else {
     mAsyncScroll->Init(range);

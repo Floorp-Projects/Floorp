@@ -558,6 +558,14 @@ protected:
 
   void CompleteAsyncScroll(const nsRect &aRange, nsIAtom* aOrigin = nullptr);
 
+  /*
+   * Helper that notifies plugins about async smooth scroll operations managed
+   * by nsGfxScrollFrame.
+   */
+  enum AsyncScrollEventType { BEGIN, END };
+  void NotifyPluginFrames(AsyncScrollEventType aEvent);
+  AsyncScrollEventType mAsyncScrollEvent;
+
   static void EnsureImageVisPrefsCached();
   static bool sImageVisPrefsCached;
   // The number of scrollports wide/high to expand when looking for images.
