@@ -161,20 +161,12 @@ PushRecord.prototype = {
   },
 
   /**
-   * Returns the push permission state for the principal associated with
-   * this registration.
-   */
-  pushPermission() {
-    return Services.perms.testExactPermissionFromPrincipal(
-           this.principal, "push");
-  },
-
-  /**
    * Indicates whether the registration can deliver push messages to its
    * associated service worker.
    */
   hasPermission() {
-    let permission = this.pushPermission();
+    let permission = Services.perms.testExactPermissionFromPrincipal(
+      this.principal, "desktop-notification");
     return permission == Ci.nsIPermissionManager.ALLOW_ACTION;
   },
 
