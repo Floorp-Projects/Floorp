@@ -170,7 +170,7 @@ nsresult
 MediaFormatReader::Init(MediaDecoderReader* aCloneDonor)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
-  PlatformDecoderModule::Init();
+  PDMFactory::Init();
 
   InitLayersBackendType();
 
@@ -380,28 +380,18 @@ MediaFormatReader::EnsureDecodersCreated()
   MOZ_ASSERT(OnTaskQueue());
 
   if (!mPlatform) {
+    mPlatform = new PDMFactory();
+    NS_ENSURE_TRUE(mPlatform, false);
     if (IsEncrypted()) {
 #ifdef MOZ_EME
-      // We have encrypted audio or video. We'll need a CDM to decrypt and
-      // possibly decode this. Wait until we've received a CDM from the
-      // JavaScript player app. Note: we still go through the motions here
-      // even if EME is disabled, so that if script tries and fails to create
-      // a CDM, we can detect that and notify chrome and show some UI
-      // explaining that we failed due to EME being disabled.
       MOZ_ASSERT(mCDMProxy);
-      mPlatform = PlatformDecoderModule::CreateCDMWrapper(mCDMProxy);
-      NS_ENSURE_TRUE(mPlatform, false);
+      mPlatform->SetCDMProxy(mCDMProxy);
 #else
       // EME not supported.
       return false;
 #endif
-    } else {
-      mPlatform = PlatformDecoderModule::Create();
-      NS_ENSURE_TRUE(mPlatform, false);
     }
   }
-
-  MOZ_ASSERT(mPlatform);
 
   if (HasAudio() && !mAudio.mDecoder) {
     NS_ENSURE_TRUE(IsSupportedAudioMimeType(mInfo.mAudio.mMimeType),
