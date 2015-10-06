@@ -65,15 +65,12 @@ URIUtils::ResetWithSource(nsIDocument *aNewDoc, nsIDOMNode *aSourceNode)
                                     sourceDoc,
                                     nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
                                     nsIContentPolicy::TYPE_OTHER,
-                                    loadGroup);
+                                    loadGroup,
+                                    nullptr, // aCallbacks
+                                    nsIChannel::LOAD_BYPASS_SERVICE_WORKER);
 
         if (NS_FAILED(rv)) {
             return;
-        }
-
-        nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(channel);
-        if (internalChannel) {
-            internalChannel->ForceNoIntercept();
         }
     }
 
