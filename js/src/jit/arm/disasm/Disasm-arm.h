@@ -10,6 +10,11 @@
 
 #ifdef JS_DISASM_ARM
 
+#include "mozilla/Assertions.h"
+#include "mozilla/Types.h"
+
+#include <stdio.h>
+
 namespace js {
 namespace jit {
 namespace disasm {

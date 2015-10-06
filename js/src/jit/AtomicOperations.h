@@ -7,6 +7,8 @@
 #ifndef jit_AtomicOperations_h
 #define jit_AtomicOperations_h
 
+#include "mozilla/Types.h"
+
 #include "vm/SharedMem.h"
 
 namespace js {
@@ -54,9 +56,6 @@ class RegionLock;
  * Note that a "SafeWhenRacy" access does not provide the atomicity of
  * a "relaxed atomic" access: it can read or write garbage if there's
  * a race.
- *
- * To make use of the functions you generally have to include
- * AtomicOperations-inl.h.
  *
  *
  * Implementation notes.
@@ -275,7 +274,38 @@ class RegionLock
     uint32_t spinlock;
 };
 
+inline bool
+AtomicOperations::isLockfree(int32_t size)
+{
+    // Keep this in sync with visitAtomicIsLockFree() in jit/CodeGenerator.cpp.
+
+    switch (size) {
+      case 1:
+      case 2:
+      case 4:
+        return true;
+      case 8:
+        return AtomicOperations::isLockfree8();
+      default:
+        return false;
+    }
+}
+
 } // namespace jit
 } // namespace js
+
+#if defined(JS_CODEGEN_ARM)
+# include "jit/arm/AtomicOperations-arm.h"
+#elif defined(JS_CODEGEN_ARM64)
+# include "jit/arm64/AtomicOperations-arm64.h"
+#elif defined(JS_CODEGEN_MIPS32)
+# include "jit/mips-shared/AtomicOperations-mips-shared.h"
+#elif defined(JS_CODEGEN_NONE)
+# include "jit/none/AtomicOperations-none.h"
+#elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+# include "jit/x86-shared/AtomicOperations-x86-shared.h"
+#else
+# error "Atomic operations must be defined for this platform"
+#endif
 
 #endif // jit_AtomicOperations_h
