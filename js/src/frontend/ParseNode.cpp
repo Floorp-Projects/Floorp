@@ -662,7 +662,7 @@ Definition::kindString(Kind kind)
         js_import_str
     };
 
-    MOZ_ASSERT(kind < ArrayLength(table));
+    MOZ_ASSERT(size_t(kind) < ArrayLength(table));
     return table[kind];
 }
 
