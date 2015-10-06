@@ -56,6 +56,7 @@ CanCreateMP3Decoder()
   config.mBitDepth = 16;
   nsRefPtr<MediaDataDecoder> decoder(CreateTestMP3Decoder(config));
   if (decoder) {
+    decoder->Shutdown();
     result = true;
   }
   haveCachedResult = true;
