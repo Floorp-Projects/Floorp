@@ -958,14 +958,26 @@ function _getDOMWindowUtils(aWindow)
                                getInterface(_EU_Ci.nsIDOMWindowUtils);
 }
 
+function _defineConstant(name, value) {
+  Object.defineProperty(this, name, {
+    value: value,
+    enumerable: true,
+    writable: false
+  });
+}
+
 const COMPOSITION_ATTR_RAW_CLAUSE =
   _EU_Ci.nsITextInputProcessor.ATTR_RAW_CLAUSE;
+_defineConstant("COMPOSITION_ATTR_RAW_CLAUSE", COMPOSITION_ATTR_RAW_CLAUSE);
 const COMPOSITION_ATTR_SELECTED_RAW_CLAUSE =
   _EU_Ci.nsITextInputProcessor.ATTR_SELECTED_RAW_CLAUSE;
+_defineConstant("COMPOSITION_ATTR_SELECTED_RAW_CLAUSE", COMPOSITION_ATTR_SELECTED_RAW_CLAUSE);
 const COMPOSITION_ATTR_CONVERTED_CLAUSE =
   _EU_Ci.nsITextInputProcessor.ATTR_CONVERTED_CLAUSE;
+_defineConstant("COMPOSITION_ATTR_CONVERTED_CLAUSE", COMPOSITION_ATTR_CONVERTED_CLAUSE);
 const COMPOSITION_ATTR_SELECTED_CLAUSE =
   _EU_Ci.nsITextInputProcessor.ATTR_SELECTED_CLAUSE;
+_defineConstant("COMPOSITION_ATTR_SELECTED_CLAUSE", COMPOSITION_ATTR_SELECTED_CLAUSE);
 
 var TIPMap = new WeakMap();
 

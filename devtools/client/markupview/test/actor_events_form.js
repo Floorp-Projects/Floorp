@@ -14,7 +14,7 @@ const {ActorClass, Actor, FrontClass, Front, method} =
 const {Cu} = require("chrome");
 const {NodeActor} = require("devtools/server/actors/inspector");
 
-const EventsFormActor = ActorClass({
+var EventsFormActor = ActorClass({
   typeName: "eventsFormActor",
 
   initialize: function() {
@@ -44,7 +44,7 @@ const EventsFormActor = ActorClass({
   }
 });
 
-const EventsFormFront = FrontClass(EventsFormActor, {
+var EventsFormFront = FrontClass(EventsFormActor, {
   initialize: function(client, form) {
     Front.prototype.initialize.apply(this, arguments);
 

@@ -38,6 +38,7 @@ const EVENTS = {
   // When the editor's error markers are all removed
   EDITOR_ERROR_MARKERS_REMOVED: "ShaderEditor:EditorCleaned"
 };
+XPCOMUtils.defineConstant(this, "EVENTS", EVENTS);
 
 const STRINGS_URI = "chrome://browser/locale/devtools/shadereditor.properties"
 const HIGHLIGHT_TINT = [1, 0, 0.25, 1]; // rgba

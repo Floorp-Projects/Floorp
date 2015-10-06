@@ -38,7 +38,7 @@ function getHighlighterCanvasFrameHelper(conn, actorID) {
   }
 }
 
-const TestActor = exports.TestActor = protocol.ActorClass({
+var TestActor = exports.TestActor = protocol.ActorClass({
   typeName: "testActor",
 
   initialize: function(conn, tabActor, options) {
@@ -525,7 +525,7 @@ const TestActor = exports.TestActor = protocol.ActorClass({
   }),
 });
 
-const TestActorFront = exports.TestActorFront = protocol.FrontClass(TestActor, {
+var TestActorFront = exports.TestActorFront = protocol.FrontClass(TestActor, {
   initialize: function(client, { testActor }, toolbox) {
     protocol.Front.prototype.initialize.call(this, client, { actor: testActor });
     this.manage(this);

@@ -20,7 +20,7 @@ function run_test()
 
   do_check_eq(a, 3);
   do_check_eq(b, 3);
-  do_check_eq(c, 3);
+  // c is a lexical binding and does not write to the global prototype
   do_check_eq(d, 3);
   do_check_eq(e(), 3);
 
