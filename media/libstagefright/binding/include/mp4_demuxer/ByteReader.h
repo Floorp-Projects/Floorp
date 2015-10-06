@@ -33,7 +33,7 @@ public:
     : mPtr(aData.Elements()), mRemaining(aData.Length()), mLength(aData.Length())
   {
   }
-  explicit ByteReader(const MediaByteBuffer* aData)
+  explicit ByteReader(const mozilla::MediaByteBuffer* aData)
     : mPtr(aData->Elements()), mRemaining(aData->Length()), mLength(aData->Length())
   {
   }

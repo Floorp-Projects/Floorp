@@ -322,6 +322,24 @@ ErrorReporter::ReportUnexpected(const char *aMessage,
 }
 
 void
+ErrorReporter::ReportUnexpected(const char *aMessage,
+                                const nsString &aParam,
+                                const nsString &aValue)
+{
+  if (!ShouldReportErrors()) return;
+
+  nsAutoString qparam;
+  nsStyleUtil::AppendEscapedCSSIdent(aParam, qparam);
+  const char16_t *params[2] = { qparam.get(), aValue.get() };
+
+  nsAutoString str;
+  sStringBundle->FormatStringFromName(NS_ConvertASCIItoUTF16(aMessage).get(),
+                                      params, ArrayLength(params),
+                                      getter_Copies(str));
+  AddToError(str);
+}
+
+void
 ErrorReporter::ReportUnexpectedEOF(const char *aMessage)
 {
   if (!ShouldReportErrors()) return;

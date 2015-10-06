@@ -88,6 +88,11 @@ public:
                                        int32_t aLength,
                                        nsAString& aMozString);
 
+  /**
+   * Map ICU UErrorCode to nsresult
+   */
+  static nsresult UErrorToNsResult(const UErrorCode aErrorCode);
+
 #if 0
   // Currently disabled because using C++ API doesn't play nicely with enabling
   // system ICU.

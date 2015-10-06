@@ -128,6 +128,7 @@ public:
                        ImageContainer* aImageContainer) override;
 
   virtual PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData,
+                                       LayersBackend aLayersBackend,
                                        TextureFlags aFlags) override;
 
   /**

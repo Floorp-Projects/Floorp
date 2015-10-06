@@ -385,7 +385,7 @@ pref("urlclassifier.gethash.timeout_ms", 5000);
 pref("urlclassifier.max-complete-age", 2700);
 
 // Tracking protection
-pref("privacy.trackingprotection.enabled", true);
+pref("privacy.trackingprotection.enabled", false);
 pref("privacy.trackingprotection.pbmode.enabled", false);
 
 #endif
@@ -1068,6 +1068,11 @@ pref("dom.apps.customization.enabled", true);
 
 // New implementation to unify touch-caret and selection-carets.
 pref("layout.accessiblecaret.enabled", true);
+
+// APZ on real devices supports long tap events.
+#ifdef MOZ_WIDGET_GONK
+pref("layout.accessiblecaret.use_long_tap_injector", false);
+#endif
 
 // Enable sync and mozId with Firefox Accounts.
 pref("services.sync.fxaccounts.enabled", true);

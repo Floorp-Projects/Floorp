@@ -78,8 +78,6 @@ public:
     PLayerTransactionParent::DeallocShmem(aShmem);
   }
 
-  virtual LayersBackend GetCompositorBackendType() const override;
-
   virtual bool IsSameProcess() const override;
 
   const uint64_t& GetPendingTransactionId() { return mPendingTransaction; }
@@ -150,6 +148,7 @@ protected:
   virtual bool DeallocPCompositableParent(PCompositableParent* actor) override;
 
   virtual PTextureParent* AllocPTextureParent(const SurfaceDescriptor& aSharedData,
+                                              const LayersBackend& aLayersBackend,
                                               const TextureFlags& aFlags) override;
   virtual bool DeallocPTextureParent(PTextureParent* actor) override;
 

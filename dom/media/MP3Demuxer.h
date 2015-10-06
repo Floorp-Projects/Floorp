@@ -8,6 +8,7 @@
 #include "mozilla/Attributes.h"
 #include "MediaDataDemuxer.h"
 #include "MediaResource.h"
+#include "mp4_demuxer/ByteReader.h"
 
 namespace mozilla {
 namespace mp3 {
@@ -103,9 +104,9 @@ public:
   // Returns the parsed ID3 header. Note: check for validity.
   const ID3Header& Header() const;
 
-  // Parses the given buffer range [aBeg, aEnd) for a valid ID3 header.
-  // Returns the header begin position or aEnd if no valid header was found.
-  const uint8_t* Parse(const uint8_t* aBeg, const uint8_t* aEnd);
+  // Parses contents of given ByteReader for a valid ID3v2 header.
+  // Returns the total ID3v2 tag size if successful and zero otherwise.
+  uint32_t Parse(mp4_demuxer::ByteReader* aReader);
 
   // Resets the state to allow for a new parsing session.
   void Reset();
@@ -113,11 +114,6 @@ public:
 private:
   // The currently parsed ID3 header. Reset via Reset, updated via Parse.
   ID3Header mHeader;
-};
-
-struct FrameParserResult {
-  const uint8_t* mBufferPos;
-  const uint32_t mBytesToSkip;
 };
 
 // MPEG audio frame parser.
@@ -224,18 +220,24 @@ public:
     // Returns the total number of frames expected in the stream/file.
     int64_t NumFrames() const;
 
-    // Parses given buffer [aBeg, aEnd) for a valid VBR header.
+    // Parses contents of given ByteReader for a valid VBR header.
+    // The offset of the passed ByteReader needs to point to an MPEG frame begin,
+    // as a VBRI-style header is searched at a fixed offset relative to frame begin.
     // Returns whether a valid VBR header was found in the range.
-    bool Parse(const uint8_t* aBeg, const uint8_t* aEnd);
+    bool Parse(mp4_demuxer::ByteReader* aReader);
 
   private:
-    // Parses given buffer [aBeg, aEnd) for a valid Xing header.
+    // Parses contents of given ByteReader for a valid Xing header.
+    // The initial ByteReader offset will be preserved.
     // Returns whether a valid Xing header was found in the range.
-    bool ParseXing(const uint8_t* aBeg, const uint8_t* aEnd);
+    bool ParseXing(mp4_demuxer::ByteReader* aReader);
 
-    // Parses given buffer [aBeg, aEnd) for a valid VBRI header.
+    // Parses contents of given ByteReader for a valid VBRI header.
+    // The initial ByteReader offset will be preserved. It also needs to point
+    // to the beginning of a valid MPEG frame, as VBRI headers are searched
+    // at a fixed offset relative to frame begin.
     // Returns whether a valid VBRI header was found in the range.
-    bool ParseVBRI(const uint8_t* aBeg, const uint8_t* aEnd);
+    bool ParseVBRI(mp4_demuxer::ByteReader* aReader);
 
     // The total number of frames expected as parsed from a VBR header.
     int64_t mNumFrames;
@@ -294,15 +296,17 @@ public:
   // - resets ID3Header if no valid header was parsed yet
   void EndFrameSession();
 
-  // Parses given buffer [aBeg, aEnd) for a valid frame header and returns a FrameParserResult.
-  // FrameParserResult.mBufferPos points to begin of frame header if a frame header was found
-  // or to aEnd otherwise. FrameParserResult.mBytesToSkip indicates whether additional bytes need to
-  // be skipped in order to jump across an ID3 tag that stretches beyond the given buffer.
-  FrameParserResult Parse(const uint8_t* aBeg, const uint8_t* aEnd);
+  // Parses contents of given ByteReader for a valid frame header and returns true
+  // if one was found. After returning, the variable passed to 'aBytesToSkip' holds
+  // the amount of bytes to be skipped (if any) in order to jump across a large
+  // ID3v2 tag spanning multiple buffers.
+  bool Parse(mp4_demuxer::ByteReader* aReader, uint32_t* aBytesToSkip);
 
-  // Parses given buffer [aBeg, aEnd) for a valid VBR header.
+  // Parses contents of given ByteReader for a valid VBR header.
+  // The offset of the passed ByteReader needs to point to an MPEG frame begin,
+  // as a VBRI-style header is searched at a fixed offset relative to frame begin.
   // Returns whether a valid VBR header was found.
-  bool ParseVBRHeader(const uint8_t* aBeg, const uint8_t* aEnd);
+  bool ParseVBRHeader(mp4_demuxer::ByteReader* aReader);
 
 private:
   // ID3 header parser.
@@ -324,7 +328,7 @@ private:
 // MPEG streams.
 class MP3TrackDemuxer : public MediaTrackDemuxer {
 public:
-  // Constructor, expecing a valid media resource.
+  // Constructor, expecting a valid media resource.
   explicit MP3TrackDemuxer(MediaResource* aSource);
 
   // Initializes the track demuxer by reading the first frame for meta data.

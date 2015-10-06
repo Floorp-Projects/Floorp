@@ -118,11 +118,11 @@ BluetoothAvrcpManager::Reset()
   mPlayStatus = ControlPlayStatus::PLAYSTATUS_STOPPED;
 }
 
-class BluetoothAvrcpManager::InitAvrcpResultHandler final
+class BluetoothAvrcpManager::InitResultHandler final
   : public BluetoothAvrcpResultHandler
 {
 public:
-  InitAvrcpResultHandler(BluetoothProfileResultHandler* aRes)
+  InitResultHandler(BluetoothProfileResultHandler* aRes)
     : mRes(aRes)
   { }
 
@@ -209,7 +209,7 @@ BluetoothAvrcpManager::InitAvrcpInterface(BluetoothProfileResultHandler* aRes)
   }
 
   BluetoothAvrcpManager* avrcpManager = BluetoothAvrcpManager::Get();
-  sBtAvrcpInterface->Init(avrcpManager, new InitAvrcpResultHandler(aRes));
+  sBtAvrcpInterface->Init(avrcpManager, new InitResultHandler(aRes));
 }
 
 BluetoothAvrcpManager::~BluetoothAvrcpManager()
@@ -245,11 +245,11 @@ BluetoothAvrcpManager::Get()
   return sBluetoothAvrcpManager;
 }
 
-class BluetoothAvrcpManager::CleanupAvrcpResultHandler final
+class BluetoothAvrcpManager::CleanupResultHandler final
   : public BluetoothAvrcpResultHandler
 {
 public:
-  CleanupAvrcpResultHandler(BluetoothProfileResultHandler* aRes)
+  CleanupResultHandler(BluetoothProfileResultHandler* aRes)
     : mRes(aRes)
   { }
 
@@ -285,25 +285,19 @@ private:
   nsRefPtr<BluetoothProfileResultHandler> mRes;
 };
 
-class BluetoothAvrcpManager::CleanupAvrcpResultHandlerRunnable final
+class BluetoothAvrcpManager::CleanupResultHandlerRunnable final
   : public nsRunnable
 {
 public:
-  CleanupAvrcpResultHandlerRunnable(BluetoothProfileResultHandler* aRes)
+  CleanupResultHandlerRunnable(BluetoothProfileResultHandler* aRes)
     : mRes(aRes)
-  { }
+  {
+    MOZ_ASSERT(mRes);
+  }
 
   NS_IMETHOD Run() override
   {
-    sBtAvrcpInterface = nullptr;
-    if (sBtAvrcpInterface) {
-      sBtAvrcpInterface->Cleanup(new CleanupAvrcpResultHandler(mRes));
-    } else if (mRes) {
-      /* Not all backends support AVRCP. If it's not available
-       * we signal success from here.
-       */
-      mRes->Deinit();
-    }
+    mRes->Deinit();
 
     return NS_OK;
   }
@@ -319,11 +313,11 @@ BluetoothAvrcpManager::DeinitAvrcpInterface(BluetoothProfileResultHandler* aRes)
   MOZ_ASSERT(NS_IsMainThread());
 
   if (sBtAvrcpInterface) {
-    sBtAvrcpInterface->Cleanup(new CleanupAvrcpResultHandler(aRes));
+    sBtAvrcpInterface->Cleanup(new CleanupResultHandler(aRes));
   } else if (aRes) {
     // We dispatch a runnable here to make the profile resource handler
-    // behave as if A2DP was initialized.
-    nsRefPtr<nsRunnable> r = new CleanupAvrcpResultHandlerRunnable(aRes);
+    // behave as if AVRCP was initialized.
+    nsRefPtr<nsRunnable> r = new CleanupResultHandlerRunnable(aRes);
     if (NS_FAILED(NS_DispatchToMainThread(r))) {
       BT_LOGR("Failed to dispatch cleanup-result-handler runnable");
     }
