@@ -6,7 +6,7 @@
 
 "use strict";
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 const { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
 const { AddonWatcher } = Cu.import("resource://gre/modules/AddonWatcher.jsm", {});
@@ -323,7 +323,7 @@ Delta.MAX_DELTA_FOR_AVERAGE_RECENT_PERFORMANCE = {
 /**
  * Utilities for dealing with state
  */
-let State = {
+var State = {
   _monitor: PerformanceStats.getMonitor([
     "jank", "cpow", "ticks",
   ]),
@@ -479,7 +479,7 @@ let State = {
   }),
 };
 
-let View = {
+var View = {
   /**
    * A cache for all the per-item DOM elements that are reused across refreshes.
    *
@@ -822,7 +822,7 @@ let View = {
   },
 };
 
-let Control = {
+var Control = {
   init: function() {
     this._initAutorefresh();
     this._initDisplayMode();
@@ -908,7 +908,7 @@ let Control = {
   _displayMode: MODE_GLOBAL,
 };
 
-let go = Task.async(function*() {
+var go = Task.async(function*() {
   Control.init();
 
   // Setup a hook to allow tests to configure and control this page

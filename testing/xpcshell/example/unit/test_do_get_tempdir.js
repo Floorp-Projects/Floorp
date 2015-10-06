@@ -5,7 +5,7 @@
 
 /* This tests that do_get_tempdir returns a directory that we can write to. */
 
-const Ci = Components.interfaces;
+var Ci = Components.interfaces;
 
 function run_test() {
   let tmpd = do_get_tempdir();

@@ -25,7 +25,7 @@ const kTaskbarID = "@mozilla.org/windows-taskbar;1";
 const DOWNLOAD_MANAGER_URL = "chrome://mozapps/content/downloads/downloads.xul";
 const DLMGR_UI_DONE = "download-manager-ui-done";
 
-const Cu = Components.utils;
+var Cu = Components.utils;
 const nsITP = Ci.nsITaskbarProgress;
 
 let DownloadTaskbarProgress, dm;

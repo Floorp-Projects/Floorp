@@ -3,9 +3,9 @@
  */
 
 // This verifies that add-ons can be installed from XPI files
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
 
 // Maximum error in file modification times. Some file systems don't store
 // modification times exactly. As long as we are closer than this then it

@@ -4,9 +4,9 @@
 
 'use strict';
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cu = Components.utils;
+var Ci = Components.interfaces;
+var Cc = Components.classes;
+var Cu = Components.utils;
 
 const gDashboard = Cc['@mozilla.org/network/dashboard;1'].
   getService(Ci.nsIDashboard);

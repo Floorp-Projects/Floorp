@@ -1,5 +1,5 @@
-const Cu = Components.utils;
-const Ci = Components.interfaces;
+var Cu = Components.utils;
+var Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/Services.jsm");
 

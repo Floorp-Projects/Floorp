@@ -14,9 +14,9 @@
 
 "use strict";
 
-const Cu = Components.utils;
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+var Cu = Components.utils;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 
 const SCRATCHPAD_CONTEXT_CONTENT = 1;
 const SCRATCHPAD_CONTEXT_BROWSER = 2;

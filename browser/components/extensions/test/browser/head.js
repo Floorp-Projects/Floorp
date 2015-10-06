@@ -1,4 +1,4 @@
-let {CustomizableUI} = Cu.import("resource:///modules/CustomizableUI.jsm");
+var {CustomizableUI} = Cu.import("resource:///modules/CustomizableUI.jsm");
 
 function makeWidgetId(id)
 {

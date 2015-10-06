@@ -3,7 +3,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const Cu = Components.utils;
+var Cu = Components.utils;
 const { VariablesView } = Cu.import("resource:///modules/devtools/client/shared/widgets/VariablesView.jsm", {});
 
 const PENDING = {

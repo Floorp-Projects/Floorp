@@ -1,5 +1,5 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 
 // Ensure PSM is initialized.
 Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);

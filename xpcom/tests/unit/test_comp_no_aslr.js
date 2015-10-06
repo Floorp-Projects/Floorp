@@ -1,7 +1,7 @@
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 
 function run_test() {
   let manifest = do_get_file('testcompnoaslr.manifest');

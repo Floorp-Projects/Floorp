@@ -8,7 +8,7 @@ const TRACK_SUFFIX = "-track-digest256";
 const TRACKING_TABLE_PREF = "urlclassifier.trackingTable";
 const LISTS_PREF_BRANCH = "browser.safebrowsing.provider.mozilla.lists.";
 
-let gBlocklistManager = {
+var gBlocklistManager = {
   _type: "",
   _blockLists: [],
   _brandShortName : null,

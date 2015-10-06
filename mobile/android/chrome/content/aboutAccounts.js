@@ -24,7 +24,7 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components; /*global Components */
+var {classes: Cc, interfaces: Ci, utils: Cu} = Components; /*global Components */
 
 Cu.import("resource://gre/modules/Accounts.jsm"); /*global Accounts */
 Cu.import("resource://gre/modules/PromiseUtils.jsm"); /*global PromiseUtils */
@@ -125,7 +125,7 @@ function handleLoadedMessage(message) {
   loadedDeferred.resolve();
 };
 
-let wrapper = {
+var wrapper = {
   iframe: null,
 
   url: null,
@@ -372,7 +372,7 @@ function getBrowserMessageManager() {
 // Add a single listener for 'loaded' messages from the iframe in this
 // <browser>.  These 'loaded' messages are ferried from the WebChannel to just
 // this <browser>.
-let mm = getBrowserMessageManager();
+var mm = getBrowserMessageManager();
 if (mm) {
   mm.addMessageListener(COMMAND_LOADED, handleLoadedMessage);
 } else {

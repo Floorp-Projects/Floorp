@@ -1,4 +1,4 @@
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 const ACTIVITY_GLUE_CID = Components.ID("{f4cfbe10-a106-4cd1-b04e-0d2a6aac138b}");
 const SYS_MSG_GLUE_CID = Components.ID("{b0b6b9af-bc4e-4200-bffe-fb7691065ec9}");

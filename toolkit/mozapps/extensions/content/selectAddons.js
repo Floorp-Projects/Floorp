@@ -10,8 +10,8 @@ Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/addons/AddonRepository.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 
 var gView = null;
 

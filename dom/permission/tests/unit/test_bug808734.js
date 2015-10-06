@@ -1,4 +1,4 @@
-const Cu = Components.utils;
+var Cu = Components.utils;
 const READWRITE = "readwrite";
 const UNKNOWN = "foobar";
 

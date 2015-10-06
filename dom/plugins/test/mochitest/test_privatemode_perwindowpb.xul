@@ -20,8 +20,8 @@
 <![CDATA[
 SimpleTest.waitForExplicitFinish();
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 
 function runTests() {
   // Allow all cookies, then run the actual tests

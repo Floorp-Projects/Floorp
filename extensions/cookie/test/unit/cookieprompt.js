@@ -3,7 +3,7 @@
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const Ci = Components.interfaces;
+var Ci = Components.interfaces;
 
 function CookiePromptService() {
 }

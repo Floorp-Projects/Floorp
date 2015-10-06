@@ -7,7 +7,7 @@
  * See also Bugs 1175327, 1043801, 1178985
  */
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 const PREF = "privacy.trackingprotection.enabled";
 const PB_PREF = "privacy.trackingprotection.pbmode.enabled";
 const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/general/benignPage.html";

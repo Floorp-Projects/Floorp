@@ -18,8 +18,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
 
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
-const Ci = Components.interfaces;
-const Cu = Components.utils;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
 
 var sandbox = new Cu.Sandbox("about:blank");
 

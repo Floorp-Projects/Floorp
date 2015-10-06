@@ -1,8 +1,8 @@
 "use strict";
 
-const Cu = Components.utils;
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+var Cu = Components.utils;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 
 if (SpecialPowers.isMainProcess()) {
   SpecialPowers.Cu.import("resource://gre/modules/SettingsRequestManager.jsm");

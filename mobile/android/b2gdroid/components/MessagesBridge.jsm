@@ -29,7 +29,7 @@ function getWindow() {
 
 // To prevent roundtrips like android -> gecko -> android we keep track of
 // in flight setting changes.
-let _blockedSettings = new Set();
+var _blockedSettings = new Set();
 
 this.MessagesBridge = {
   init: function() {

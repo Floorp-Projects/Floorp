@@ -2043,7 +2043,7 @@ XPCOMUtils.defineLazyGetter(this, "bundle", function() {
 
 // A promise resolved once the Sqlite.jsm connections
 // can be closed.
-let promiseCanCloseConnection = function() {
+var promiseCanCloseConnection = function() {
   let TOPIC = "places-will-close-connection";
   return new Promise(resolve => {
     let observer = function() {
