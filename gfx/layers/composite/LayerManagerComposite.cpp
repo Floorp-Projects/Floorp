@@ -161,7 +161,7 @@ LayerManagerComposite::UpdateRenderBounds(const IntRect& aRect)
 bool
 LayerManagerComposite::AreComponentAlphaLayersEnabled()
 {
-  return Compositor::GetBackend() != LayersBackend::LAYERS_BASIC &&
+  return mCompositor->GetBackendType() != LayersBackend::LAYERS_BASIC &&
          LayerManager::AreComponentAlphaLayersEnabled();
 }
 

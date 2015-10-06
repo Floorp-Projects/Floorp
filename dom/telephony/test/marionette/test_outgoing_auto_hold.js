@@ -37,7 +37,7 @@ function testAutoHoldCallFailed() {
   const callNumber2 = "0900000012";
 
   return Promise.resolve()
-    .then(() => emulator.runCmd("gsm disable hold"))
+    .then(() => emulator.runCmd("telephony disable hold"))
     .then(() => gDial(callNumber1))
     .then(call => { outCall1 = call; })
     .then(() => gRemoteAnswer(outCall1))
@@ -51,7 +51,7 @@ function testAutoHoldCallFailed() {
       return gRemoteHangUpCalls([outCall2]);
     }, () => log("The second |dial()| is rejected as expected."))
     .then(() => gRemoteHangUpCalls([outCall1]))
-    .then(() => emulator.runCmd("gsm enable hold"));
+    .then(() => emulator.runCmd("telephony enable hold"));
 }
 
 function testAutoHoldConferenceCall() {
@@ -87,7 +87,7 @@ startTest(function() {
     .then(() => testAutoHoldConferenceCall())
     .catch(error => {
       ok(false, "Promise reject: " + error);
-      emulator.runCmd("gsm enable hold");
+      emulator.runCmd("telephony enable hold");
     })
     .then(finish);
 });
