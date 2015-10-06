@@ -106,14 +106,7 @@
       SimpleTest.waitForClipboard(
         function(aActual) {
           mostRecentActual = aActual;
-          let rslt = aActual.trim() === aExpected.trim();
-          if (!rslt) {
-            // Try copying again.
-            synthesizeKey("A", {accelKey: true});
-            synthesizeKey("C", {accelKey: true});
-          }
-
-          return rslt;
+          return aActual.trim() === aExpected.trim();
         },
         function() {
           synthesizeKey("A", {accelKey: true});

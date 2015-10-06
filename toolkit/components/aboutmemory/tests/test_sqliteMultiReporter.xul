@@ -24,8 +24,6 @@
   const Ci = Components.interfaces;
   const Cu = Components.utils;
 
-  SimpleTest.waitForExplicitFinish();
-
   // Make a fake DB file.
   let file = Cc["@mozilla.org/file/directory_service;1"].
              getService(Ci.nsIProperties).
@@ -42,12 +40,11 @@
   // them.  It shouldn't crash.
   let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
             getService(Ci.nsIMemoryReporterManager);
-  mgr.getReports(function(){}, null,
-    () => {
-      ok(true, "didn't crash");
-      SimpleTest.finish();
-    }, null,
-    /* anonymize = */ false);
+  mgr.getReportsForThisProcess(function(){}, null, /* anonymize = */ false);
+
+  // If we haven't crashed, we've passed, but the test harness requires that
+  // we explicitly check something.
+  ok(true, "didn't crash");
 
   ]]>
   </script>

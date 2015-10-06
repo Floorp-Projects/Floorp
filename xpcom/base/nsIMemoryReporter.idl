@@ -205,7 +205,7 @@ interface nsIFinishReportingCallback : nsISupports
   void callback(in nsISupports data);
 };
 
-[scriptable, builtinclass, uuid(61de6dc7-ed11-4104-a577-79941f22f434)]
+[scriptable, builtinclass, uuid(5e4eaa5a-4808-4b97-8005-e7cdc4d73693)]
 interface nsIMemoryReporterManager : nsISupports
 {
   /*
@@ -220,7 +220,6 @@ interface nsIMemoryReporterManager : nsISupports
    * unregisterStrongReporter() at any point.
    */
   void registerStrongReporter(in nsIMemoryReporter reporter);
-  void registerStrongAsyncReporter(in nsIMemoryReporter reporter);
 
   /*
    * Like registerReporter, but the Manager service will hold a weak reference
@@ -230,7 +229,6 @@ interface nsIMemoryReporterManager : nsISupports
    * register your JavaScript components with registerStrongReporter().
    */
   void registerWeakReporter(in nsIMemoryReporter reporter);
-  void registerWeakAsyncReporter(in nsIMemoryReporter reporter);
 
   /*
    * Unregister the given memory reporter, which must have been registered with
@@ -292,6 +290,14 @@ interface nsIMemoryReporterManager : nsISupports
                        in AString DMDDumpIdent);
 
   /*
+   * Get memory reports in the current process only.  |handleReport| is called
+   * for each report.
+   */
+  void getReportsForThisProcess(in nsIMemoryReporterCallback handleReport,
+                                in nsISupports handleReportData,
+                                in boolean anonymize);
+
+  /*
    * As above, but if DMD is enabled and |DMDFile| is non-null then
    * write a DMD report to that file and close it.
    */
@@ -299,14 +305,7 @@ interface nsIMemoryReporterManager : nsISupports
     getReportsForThisProcessExtended(in nsIMemoryReporterCallback handleReport,
                                      in nsISupports handleReportData,
                                      in boolean anonymize,
-                                     in FILE DMDFile,
-                                     in nsIFinishReportingCallback finishReporting,
-                                     in nsISupports finishReportingData);
-
-  /*
-   * Called by an asynchronous memory reporter upon completion.
-   */
-  [noscript] void endReport();
+                                     in FILE DMDFile);
 
   /*
    * The memory reporter manager, for the most part, treats reporters
@@ -316,14 +315,20 @@ interface nsIMemoryReporterManager : nsISupports
    * interesting that we want external code (e.g. telemetry) to be able to rely
    * on them.
    *
-   * Note that these are not reporters and so getReports() does not look at
-   * them.  However, distinguished amounts can be embedded in a reporter.
+   * Note that these are not reporters and so getReports() and
+   * getReportsForThisProcess() do not look at them.  However, distinguished
+   * amounts can be embedded in a reporter.
    *
    * Access to these attributes can fail.  In particular, some of them are not
    * available on all platforms.
    *
    * If you add a new distinguished amount, please update
    * toolkit/components/aboutmemory/tests/test_memoryReporters.xul.
+   *
+   * |explicit| (UNITS_BYTES)  The total size of explicit memory allocations,
+   * both at the OS-level (eg. via mmap, VirtualAlloc) and at the heap level
+   * (eg. via malloc, calloc, operator new).  It covers all heap allocations,
+   * but will miss any OS-level ones not covered by memory reporters.
    *
    * |vsize| (UNITS_BYTES)  The virtual size, i.e. the amount of address space
    * taken up.
@@ -373,6 +378,7 @@ interface nsIMemoryReporterManager : nsISupports
    * |pageFaultsHard| (UNITS_COUNT_CUMULATIVE)  The number of hard (a.k.a.
    * major) page faults that have occurred since the process started.
    */
+  readonly attribute int64_t explicit;
   readonly attribute int64_t vsize;
   readonly attribute int64_t vsizeMaxContiguous;
   readonly attribute int64_t resident;
@@ -453,12 +459,10 @@ namespace mozilla {
 // Register a memory reporter.  The manager service will hold a strong
 // reference to this reporter.
 XPCOM_API(nsresult) RegisterStrongMemoryReporter(nsIMemoryReporter* aReporter);
-XPCOM_API(nsresult) RegisterStrongAsyncMemoryReporter(nsIMemoryReporter* aReporter);
 
 // Register a memory reporter.  The manager service will hold a weak reference
 // to this reporter.
 XPCOM_API(nsresult) RegisterWeakMemoryReporter(nsIMemoryReporter* aReporter);
-XPCOM_API(nsresult) RegisterWeakAsyncMemoryReporter(nsIMemoryReporter* aReporter);
 
 // Unregister a strong memory reporter.
 XPCOM_API(nsresult) UnregisterStrongMemoryReporter(nsIMemoryReporter* aReporter);
@@ -516,6 +520,15 @@ nsresult RegisterNonJSSizeOfTab(NonJSSizeOfTabFn aSizeOfTabFn);
 }
 
 #if defined(MOZ_DMD) && !defined(MOZILLA_XPCOMRT_API)
+namespace mozilla {
+namespace dmd {
+// This runs all the memory reporters in the current process but does nothing
+// with the results;  i.e. it does the minimal amount of work possible for DMD
+// to do its thing.  It does nothing with child processes.
+void RunReportersForThisProcess();
+}
+}
+
 #if !defined(MOZ_MEMORY)
 #error "MOZ_DMD requires MOZ_MEMORY"
 #endif

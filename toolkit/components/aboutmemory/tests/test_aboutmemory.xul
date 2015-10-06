@@ -119,6 +119,21 @@
     mgr.registerStrongReporterEvenIfBlocked(fakeReporters[i]);
   }
 
+  // mgr.explicit sums "heap-allocated" and all the appropriate NONHEAP ones:
+  // - "explicit/c", "explicit/cc" x 2, "explicit/d", "explicit/e"
+  // - but *not* "explicit/c/d" x 2
+  // Check explicit now before we add the fake reporters for the fake 2nd
+  // and subsequent processes.
+  //
+  // Nb: mgr.explicit will throw NS_ERROR_NOT_AVAILABLE if this is a
+  // --disable-jemalloc build. Allow for that exception, but *only* that
+  // exception.
+  try {
+    is(mgr.explicit, 500*MB + (100 + 13 + 10)*MB + 599*KB, "mgr.explicit");
+  } catch (ex) {
+    is(ex.result, Cr.NS_ERROR_NOT_AVAILABLE, "mgr.explicit exception");
+  }
+
   // The main process always comes first when we display about:memory.  The
   // remaining processes are sorted by their |resident| values (starting with
   // the largest).  Processes without a |resident| memory reporter are saved
@@ -552,14 +567,7 @@ End of 5th\n\
       SimpleTest.waitForClipboard(
         function(aActual) {
           mostRecentActual = aActual;
-          let rslt = aActual.trim() === aExpected.trim();
-          if (!rslt) {
-            // Try copying again.
-            synthesizeKey("A", {accelKey: true});
-            synthesizeKey("C", {accelKey: true});
-          }
-
-          return rslt;
+          return aActual.trim() === aExpected.trim();
         },
         function() {
           synthesizeKey("A", {accelKey: true});
