@@ -608,17 +608,9 @@ class DynamicWithObject : public NestedScopeObject
 
 class BlockObject : public NestedScopeObject
 {
-  protected:
-    static const unsigned DEPTH_SLOT = 1;
-
   public:
     static const unsigned RESERVED_SLOTS = 2;
     static const Class class_;
-
-    /* Return the abstract stack depth right before entering this nested scope. */
-    uint32_t stackDepth() const {
-        return getReservedSlot(DEPTH_SLOT).toPrivateUint32();
-    }
 
     /* Return the number of variables associated with this block. */
     uint32_t numVariables() const {
