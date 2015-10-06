@@ -5,11 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
-XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 DevToolsModules(
     'computed-view.js',
-    'css-parsing-utils.js',
     'rule-view.js',
     'style-inspector-menu.js',
     'style-inspector-overlays.js',
