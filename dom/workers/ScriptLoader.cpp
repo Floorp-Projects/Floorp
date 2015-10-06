@@ -107,6 +107,7 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                      bool aIsMainScript,
                      WorkerScriptType aWorkerScriptType,
                      nsContentPolicyType aContentPolicyType,
+                     nsLoadFlags aLoadFlags,
                      nsIChannel** aChannel)
 {
   AssertIsOnMainThread();
@@ -159,7 +160,7 @@ ChannelFromScriptURL(nsIPrincipal* principal,
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SECURITY_ERR);
   }
 
-  uint32_t flags = nsIRequest::LOAD_NORMAL | nsIChannel::LOAD_CLASSIFY_URI;
+  aLoadFlags |= nsIChannel::LOAD_CLASSIFY_URI;
 
   nsCOMPtr<nsIChannel> channel;
   // If we have the document, use it
@@ -171,7 +172,7 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                        aContentPolicyType,
                        loadGroup,
                        nullptr, // aCallbacks
-                       flags,
+                       aLoadFlags,
                        ios);
   } else {
     // We must have a loadGroup with a load context for the principal to
@@ -186,7 +187,7 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                        aContentPolicyType,
                        loadGroup,
                        nullptr, // aCallbacks
-                       flags,
+                       aLoadFlags,
                        ios);
   }
 
@@ -849,11 +850,20 @@ private:
     ScriptLoadInfo& loadInfo = mLoadInfos[aIndex];
     nsresult& rv = loadInfo.mLoadResult;
 
+    nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
+
+    // If we are loading a script for a ServiceWorker then we must not
+    // try to intercept it.  If the interception matches the current
+    // ServiceWorker's scope then we could deadlock the load.
+    if (mWorkerPrivate->IsServiceWorker()) {
+      loadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
+    }
+
     if (!channel) {
       rv = ChannelFromScriptURL(principal, baseURI, parentDoc, loadGroup, ios,
                                 secMan, loadInfo.mURL, IsMainWorkerScript(),
                                 mWorkerScriptType,
-                                mWorkerPrivate->ContentPolicyType(),
+                                mWorkerPrivate->ContentPolicyType(), loadFlags,
                                 getter_AddRefs(channel));
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
@@ -879,16 +889,6 @@ private:
     rv = NS_NewStreamLoader(getter_AddRefs(loader), this);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
-    }
-
-    // If we are loading a script for a ServiceWorker then we must not
-    // try to intercept it.  If the interception matches the current
-    // ServiceWorker's scope then we could deadlock the load.
-    if (mWorkerPrivate->IsServiceWorker()) {
-      nsCOMPtr<nsIHttpChannelInternal> internal = do_QueryInterface(channel);
-      if (internal) {
-        internal->ForceNoIntercept();
-      }
     }
 
     if (loadInfo.mCacheStatus != ScriptLoadInfo::ToBeCached) {
@@ -1858,7 +1858,8 @@ ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
 
   return ChannelFromScriptURL(aPrincipal, aBaseURI, aParentDoc, aLoadGroup,
                               ios, secMan, aScriptURL, true, WorkerScript,
-                              aContentPolicyType, aChannel);
+                              aContentPolicyType, nsIRequest::LOAD_NORMAL,
+                              aChannel);
 }
 
 nsresult
