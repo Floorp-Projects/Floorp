@@ -50,8 +50,15 @@ function PushRecord(props) {
 
 PushRecord.prototype = {
   setQuota(suggestedQuota) {
-    this.quota = (!isNaN(suggestedQuota) && suggestedQuota >= 0) ?
-                 suggestedQuota : prefs.get("maxQuotaPerSubscription");
+    if (!isNaN(suggestedQuota) && suggestedQuota >= 0) {
+      this.quota = suggestedQuota;
+    } else {
+      this.resetQuota();
+    }
+  },
+
+  resetQuota() {
+    this.quota = prefs.get("maxQuotaPerSubscription");
   },
 
   updateQuota(lastVisit) {
@@ -168,6 +175,11 @@ PushRecord.prototype = {
     let permission = Services.perms.testExactPermissionFromPrincipal(
       this.principal, "desktop-notification");
     return permission == Ci.nsIPermissionManager.ALLOW_ACTION;
+  },
+
+  quotaChanged() {
+    return this.getLastVisit()
+      .then(lastVisit => lastVisit > this.lastPush);
   },
 
   quotaApplies() {
