@@ -1854,7 +1854,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mTransformingByAPZ(false)
   , mZoomableByAPZ(false)
   , mVelocityQueue(aOuter->PresContext())
-  , mAsyncScrollEvent(END)
+  , mAsyncScrollEvent(END_DOM)
 {
   if (LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) != 0) {
     mScrollbarActivity = new ScrollbarActivity(do_QueryFrame(aOuter));
@@ -1961,7 +1961,7 @@ ScrollFrameHelper::AsyncScrollCallback(ScrollFrameHelper* aInstance,
 void
 ScrollFrameHelper::CompleteAsyncScroll(const nsRect &aRange, nsIAtom* aOrigin)
 {
-  NotifyPluginFrames(END);
+  NotifyPluginFrames(END_DOM);
 
   // Apply desired destination range since this is the last step of scrolling.
   mAsyncSmoothMSDScroll = nullptr;
@@ -2001,10 +2001,15 @@ ScrollFrameHelper::NotifyPluginFrames(AsyncScrollEventType aEvent)
     return;
   }
   if (XRE_IsContentProcess()) {
+    // Ignore 'inner' dom events triggered by apz transformations
+    if (mAsyncScrollEvent == BEGIN_APZ && aEvent != END_APZ) {
+      return;
+    }
     if (aEvent != mAsyncScrollEvent) {
       nsPresContext* presContext = mOuter->PresContext();
+      bool begin = (aEvent == BEGIN_APZ || aEvent == BEGIN_DOM);
       presContext->Document()->EnumerateActivityObservers(NotifyPluginFramesCallback,
-                                                          (void*)(aEvent == BEGIN));
+                                                          (void*)begin);
       mAsyncScrollEvent = aEvent;
     }
   }
@@ -2165,7 +2170,7 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
   mAsyncScroll->mIsSmoothScroll = isSmoothScroll;
 
   if (isSmoothScroll) {
-    NotifyPluginFrames(BEGIN);
+    NotifyPluginFrames(BEGIN_DOM);
     mAsyncScroll->InitSmoothScroll(now, mDestination, aOrigin, range, currentVelocity);
   } else {
     mAsyncScroll->Init(range);
