@@ -14,14 +14,19 @@ const {Class} = require("sdk/core/heritage");
 const {LongStringActor} = require("devtools/server/actors/string");
 const {PSEUDO_ELEMENT_SET} = require("devtools/shared/styleinspector/css-logic");
 
-// This will add the "stylesheet" actor type for protocol.js to recognize
-require("devtools/server/actors/stylesheets");
+// This will also add the "stylesheet" actor type for protocol.js to recognize
+const {UPDATE_PRESERVING_RULES, UPDATE_GENERAL} =
+      require("devtools/server/actors/stylesheets");
 
 loader.lazyGetter(this, "CssLogic", () => {
   return require("devtools/shared/styleinspector/css-logic").CssLogic;
 });
 loader.lazyGetter(this, "DOMUtils", () => {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
+});
+
+loader.lazyGetter(this, "RuleRewriter", () => {
+  return require("devtools/client/styleinspector/css-parsing-utils").RuleRewriter;
 });
 
 // The PageStyle actor flattens the DOM CSS objects a little bit, merging
@@ -128,6 +133,13 @@ types.addDictType("fontface", {
 var PageStyleActor = protocol.ActorClass({
   typeName: "pagestyle",
 
+  events: {
+    "stylesheet-updated": {
+      type: "styleSheetUpdated",
+      styleSheet: Arg(0, "stylesheet")
+    }
+  },
+
   /**
    * Create a PageStyleActor.
    *
@@ -151,9 +163,12 @@ var PageStyleActor = protocol.ActorClass({
 
     this.onFrameUnload = this.onFrameUnload.bind(this);
     events.on(this.inspector.tabActor, "will-navigate", this.onFrameUnload);
+
+    this._styleApplied = this._styleApplied.bind(this);
+    this._watchedSheets = new Set();
   },
 
-  destroy: function () {
+  destroy: function() {
     if (!this.walker) {
       return;
     }
@@ -164,6 +179,11 @@ var PageStyleActor = protocol.ActorClass({
     this.refMap = null;
     this.cssLogic = null;
     this._styleElement = null;
+
+    for (let sheet of this._watchedSheets) {
+      sheet.off("style-applied", this._styleApplied);
+    }
+    this._watchedSheets.clear();
   },
 
   get conn() {
@@ -182,9 +202,20 @@ var PageStyleActor = protocol.ActorClass({
         // getApplied method calls cssLogic.highlight(node) to recreate the
         // style cache. Clients requesting getApplied from actors that have not
         // been fixed must make sure cssLogic.highlight(node) was called before.
-        getAppliedCreatesStyleCache: true
+        getAppliedCreatesStyleCache: true,
+        // Whether addNewRule accepts the editAuthored argument.
+        authoredStyles: true
       }
     };
+  },
+
+  /**
+   * Called when a style sheet is updated.
+   */
+  _styleApplied: function(kind, styleSheet) {
+    if (kind === UPDATE_GENERAL) {
+      events.emit(this, "stylesheet-updated", styleSheet);
+    }
   },
 
   /**
@@ -203,6 +234,21 @@ var PageStyleActor = protocol.ActorClass({
   },
 
   /**
+   * Update the association between a StyleRuleActor and its
+   * corresponding item.  This is used when a StyleRuleActor updates
+   * as style sheet and starts using a new rule.
+   *
+   * @param oldItem The old association; either a CSSStyleRule or a
+   *                DOM element.
+   * @param item Either a CSSStyleRule or a DOM element.
+   * @param actor a StyleRuleActor
+   */
+  updateStyleRef: function(oldItem, item, actor) {
+    this.refMap.delete(oldItem);
+    this.refMap.set(item, actor);
+  },
+
+  /**
    * Return or create a StyleSheetActor for the given nsIDOMCSSStyleSheet.
    * @param  {DOMStyleSheet} sheet
    *         The style sheet to create an actor for.
@@ -212,6 +258,10 @@ var PageStyleActor = protocol.ActorClass({
   _sheetRef: function(sheet) {
     let tabActor = this.inspector.tabActor;
     let actor = tabActor.createStyleSheetActor(sheet);
+    if (!this._watchedSheets.has(actor)) {
+      this._watchedSheets.add(actor);
+      actor.on("style-applied", this._styleApplied);
+    }
     return actor;
   },
 
@@ -524,7 +574,7 @@ var PageStyleActor = protocol.ActorClass({
    *   `matchedSelectors`: Include an array of specific selectors that
    *     caused this rule to match its node.
    */
-  getApplied: method(function(node, options) {
+  getApplied: method(Task.async(function*(node, options) {
     if (!node) {
       return {entries: [], rules: [], sheets: []};
     }
@@ -532,8 +582,14 @@ var PageStyleActor = protocol.ActorClass({
     this.cssLogic.highlight(node.rawNode);
     let entries = [];
     entries = entries.concat(this._getAllElementRules(node, undefined, options));
-    return this.getAppliedProps(node, entries, options);
-  }, {
+
+    let result = this.getAppliedProps(node, entries, options);
+    for (let rule of result.rules) {
+      // See the comment in |form| to understand this.
+      yield rule.getAuthoredCssText();
+    }
+    return result;
+  }), {
     request: {
       node: Arg(0, "domnode"),
       inherited: Option(1, "boolean"),
@@ -905,12 +961,17 @@ var PageStyleActor = protocol.ActorClass({
 
   /**
    * Adds a new rule, and returns the new StyleRuleActor.
-   * @param NodeActor node
-   * @param [string] pseudoClasses The list of pseudo classes to append to the
-   * new selector.
-   * @returns StyleRuleActor of the new rule
+   * @param {NodeActor} node
+   * @param {String} pseudoClasses The list of pseudo classes to append to the
+   *        new selector.
+   * @param {Boolean} editAuthored
+   *        True if the selector should be updated by editing the
+   *        authored text; false if the selector should be updated via
+   *        CSSOM.
+   * @returns {StyleRuleActor} the new rule
    */
-  addNewRule: method(function(node, pseudoClasses) {
+  addNewRule: method(Task.async(function*(node, pseudoClasses,
+                                          editAuthored = false) {
     let style = this.styleElement;
     let sheet = style.sheet;
     let cssRules = sheet.cssRules;
@@ -930,11 +991,22 @@ var PageStyleActor = protocol.ActorClass({
     }
 
     let index = sheet.insertRule(selector + " {}", cssRules.length);
-    return this.getNewAppliedProps(node, cssRules.item(index));
-  }, {
+
+    // If inserting the rule succeeded, go ahead and edit the source
+    // text if requested.
+    if (editAuthored) {
+      let sheetActor = this._sheetRef(sheet);
+      let {str: authoredText} = yield sheetActor.getText();
+      authoredText += "\n" + selector + " {\n" + "}";
+      yield sheetActor.update(authoredText, false);
+    }
+
+    return this.getNewAppliedProps(node, sheet.cssRules.item(index));
+  }), {
     request: {
       node: Arg(0, "domnode"),
-      pseudoClasses: Arg(1, "nullable:array:string")
+      pseudoClasses: Arg(1, "nullable:array:string"),
+      editAuthored: Arg(2, "boolean")
     },
     response: RetVal("appliedStylesReturn")
   }),
@@ -966,6 +1038,10 @@ var PageStyleFront = protocol.FrontClass(PageStyleActor, {
     return this.inspector.walker;
   },
 
+  get supportsAuthoredStyles() {
+    return this._form.traits && this._form.traits.authoredStyles;
+  },
+
   getMatchedSelectors: protocol.custom(function(node, property, options) {
     return this._getMatchedSelectors(node, property, options).then(ret => {
       return ret.matched;
@@ -989,7 +1065,13 @@ var PageStyleFront = protocol.FrontClass(PageStyleActor, {
   }),
 
   addNewRule: protocol.custom(function(node, pseudoClasses) {
-    return this._addNewRule(node, pseudoClasses).then(ret => {
+    let addPromise;
+    if (this.supportsAuthoredStyles) {
+      addPromise = this._addNewRule(node, pseudoClasses, true);
+    } else {
+      addPromise = this._addNewRule(node, pseudoClasses);
+    }
+    return addPromise.then(ret => {
       return ret.entries[0];
     });
   }, {
@@ -1007,19 +1089,34 @@ var PageStyleFront = protocol.FrontClass(PageStyleActor, {
  */
 var StyleRuleActor = protocol.ActorClass({
   typeName: "domstylerule",
+
+  events: {
+    "location-changed": {
+      type: "locationChanged",
+      line: Arg(0, "number"),
+      column: Arg(1, "number")
+    },
+  },
+
   initialize: function(pageStyle, item) {
     protocol.Actor.prototype.initialize.call(this, null);
     this.pageStyle = pageStyle;
     this.rawStyle = item.style;
+    this._parentSheet = null;
+    this._onStyleApplied = this._onStyleApplied.bind(this);
 
     if (item instanceof (Ci.nsIDOMCSSRule)) {
       this.type = item.type;
       this.rawRule = item;
       if ((this.rawRule instanceof Ci.nsIDOMCSSStyleRule ||
            this.rawRule instanceof Ci.nsIDOMMozCSSKeyframeRule) &&
-           this.rawRule.parentStyleSheet) {
-        this.line = DOMUtils.getRuleLine(this.rawRule);
+          this.rawRule.parentStyleSheet) {
+        this.line = DOMUtils.getRelativeRuleLine(this.rawRule);
         this.column = DOMUtils.getRuleColumn(this.rawRule);
+        this._parentSheet = this.rawRule.parentStyleSheet;
+        this._computeRuleIndex();
+        this.sheetActor = this.pageStyle._sheetRef(this._parentSheet);
+        this.sheetActor.on("style-applied", this._onStyleApplied);
       }
     } else {
       // Fake a rule
@@ -1047,12 +1144,26 @@ var StyleRuleActor = protocol.ActorClass({
     this.pageStyle = null;
     this.rawNode = null;
     this.rawRule = null;
+    if (this.sheetActor) {
+      this.sheetActor.off("style-applied", this._onStyleApplied);
+    }
   },
 
   // Objects returned by this actor are owned by the PageStyleActor
   // to which this rule belongs.
   get marshallPool() {
     return this.pageStyle;
+  },
+
+  // True if this rule supports as-authored styles, meaning that the
+  // rule text can be rewritten using setRuleText.
+  get canSetRuleText() {
+    // Special case about:PreferenceStyleSheet, as it is
+    // generated on the fly and the URI is not registered with the
+    // about: handler.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=935803#c37
+    return !!(this._parentSheet &&
+              this._parentSheet.href !== "about:PreferenceStyleSheet");
   },
 
   getDocument: function(sheet) {
@@ -1085,6 +1196,9 @@ var StyleRuleActor = protocol.ActorClass({
         // Whether the style rule actor implements the modifySelector2 method
         // that allows for unmatched rule to be added
         modifySelectorUnmatched: true,
+        // Whether the style rule actor implements the setRuleText
+        // method.
+        canSetRuleText: this.canSetRuleText,
       }
     };
 
@@ -1102,9 +1216,16 @@ var StyleRuleActor = protocol.ActorClass({
         }
       }
     }
-    if (this.rawRule.parentStyleSheet) {
-      form.parentStyleSheet = this.pageStyle._sheetRef(this.rawRule.parentStyleSheet).actorID;
+    if (this._parentSheet) {
+      form.parentStyleSheet = this.pageStyle._sheetRef(this._parentSheet).actorID;
     }
+
+    // One tricky thing here is that other methods in this actor must
+    // ensure that authoredText has been set before |form| is called.
+    // This has to be treated specially, for now, because we cannot
+    // synchronously compute the authored text, but |form| also cannot
+    // return a promise.  See bug 1205868.
+    form.authoredText = this.authoredText;
 
     switch (this.type) {
       case Ci.nsIDOMCSSRule.STYLE_RULE:
@@ -1139,7 +1260,125 @@ var StyleRuleActor = protocol.ActorClass({
   },
 
   /**
-   * Modify a rule's properties.  Passed an array of modifications:
+   * Send an event notifying that the location of the rule has
+   * changed.
+   *
+   * @param {Number} line the new line number
+   * @param {Number} column the new column number
+   */
+  _notifyLocationChanged: function(line, column) {
+    events.emit(this, "location-changed", line, column);
+  },
+
+  /**
+   * Compute the index of this actor's raw rule in its parent style
+   * sheet.
+   */
+  _computeRuleIndex: function() {
+    let rule = this.rawRule;
+    let cssRules = this._parentSheet.cssRules;
+    this._ruleIndex = -1;
+    for (let i = 0; i < cssRules.length; i++) {
+      if (rule === cssRules.item(i)) {
+        this._ruleIndex = i;
+        break;
+      }
+    }
+  },
+
+  /**
+   * This is attached to the parent style sheet actor's
+   * "style-applied" event.
+   */
+  _onStyleApplied: function(kind) {
+    if (kind === UPDATE_GENERAL) {
+      // A general change means that the rule actors are invalidated,
+      // so stop listening to events now.
+      if (this.sheetActor) {
+        this.sheetActor.off("style-applied", this._onStyleApplied);
+      }
+    } else if (this._ruleIndex >= 0) {
+      // The sheet was updated by this actor, in a way that preserves
+      // the rules.  Now, recompute our new rule from the style sheet,
+      // so that we aren't left with a reference to a dangling rule.
+      let oldRule = this.rawRule;
+      this.rawRule = this._parentSheet.cssRules[this._ruleIndex];
+      // Also tell the page style so that future calls to _styleRef
+      // return the same StyleRuleActor.
+      this.pageStyle.updateStyleRef(oldRule, this.rawRule, this);
+      let line = DOMUtils.getRelativeRuleLine(this.rawRule);
+      let column = DOMUtils.getRuleColumn(this.rawRule);
+      if (line !== this.line || column !== this.column) {
+        this._notifyLocationChanged(line, column);
+      }
+      this.line = line;
+      this.column = column;
+    }
+  },
+
+  /**
+   * Return a promise that resolves to the authored form of a rule's
+   * text, if available.  If the authored form is not available, the
+   * returned promise simply resolves to the empty string.  If the
+   * authored form is available, this also sets |this.authoredText|.
+   * The authored text will include invalid and otherwise ignored
+   * properties.
+   */
+  getAuthoredCssText: function() {
+    if (!this.canSetRuleText ||
+        (this.type !== Ci.nsIDOMCSSRule.STYLE_RULE &&
+         this.type !== Ci.nsIDOMCSSRule.KEYFRAME_RULE)) {
+      return promise.resolve("");
+    }
+
+    if (typeof this.authoredText === "string") {
+      return promise.resolve(this.authoredText);
+    }
+
+    let parentStyleSheet =
+        this.pageStyle._sheetRef(this._parentSheet);
+    return parentStyleSheet.getText().then((longStr) => {
+      let cssText = longStr.str;
+      let {text} = getRuleText(cssText, this.line, this.column);
+
+      // Cache the result on the rule actor to avoid parsing again next time
+      this.authoredText = text;
+      return this.authoredText;
+    });
+  },
+
+  /**
+   * Set the contents of the rule.  This rewrites the rule in the
+   * stylesheet and causes it to be re-evaluated.
+   *
+   * @param {String} newText the new text of the rule
+   * @returns the rule with updated properties
+   */
+  setRuleText: method(Task.async(function*(newText) {
+    if (!this.canSetRuleText ||
+        (this.type !== Ci.nsIDOMCSSRule.STYLE_RULE &&
+         this.type !== Ci.nsIDOMCSSRule.KEYFRAME_RULE)) {
+      throw new Error("invalid call to setRuleText");
+    }
+
+    let parentStyleSheet = this.pageStyle._sheetRef(this._parentSheet);
+    let {str: cssText} = yield parentStyleSheet.getText();
+
+    let {offset, text} = getRuleText(cssText, this.line, this.column);
+    cssText = cssText.substring(0, offset) + newText +
+      cssText.substring(offset + text.length);
+
+    this.authoredText = newText;
+    yield parentStyleSheet.update(cssText, false, UPDATE_PRESERVING_RULES);
+
+    return this;
+  }), {
+    request: { modification: Arg(0, "string") },
+    response: { rule: RetVal("domstylerule") }
+  }),
+
+  /**
+   * Modify a rule's properties. Passed an array of modifications:
    * {
    *   type: "set",
    *   name: <string>,
@@ -1163,7 +1402,7 @@ var StyleRuleActor = protocol.ActorClass({
     if (this.rawNode) {
       document = this.rawNode.ownerDocument;
     } else {
-      let parentStyleSheet = this.rawRule.parentStyleSheet;
+      let parentStyleSheet = this._parentSheet;
       while (parentStyleSheet.ownerRule &&
           parentStyleSheet.ownerRule instanceof Ci.nsIDOMCSSImportRule) {
         parentStyleSheet = parentStyleSheet.ownerRule.parentStyleSheet;
@@ -1196,39 +1435,61 @@ var StyleRuleActor = protocol.ActorClass({
    * current rule. Returns the newly inserted css rule or null if the rule is
    * unsuccessfully inserted to the parent style sheet.
    *
-   * @param string value
+   * @param {String} value
    *        The new selector value
+   * @param {Boolean} editAuthored
+   *        True if the selector should be updated by editing the
+   *        authored text; false if the selector should be updated via
+   *        CSSOM.
    *
-   * @returns CSSRule
+   * @returns {CSSRule}
    *        The new CSS rule added
    */
-  _addNewSelector: function(value) {
+  _addNewSelector: Task.async(function*(value, editAuthored) {
     let rule = this.rawRule;
-    let parentStyleSheet = rule.parentStyleSheet;
-    let cssRules = parentStyleSheet.cssRules;
-    let cssText = rule.cssText;
-    let selectorText = rule.selectorText;
+    let parentStyleSheet = this._parentSheet;
 
-    for (let i = 0; i < cssRules.length; i++) {
-      if (rule === cssRules.item(i)) {
-        try {
-          // Inserts the new style rule into the current style sheet and
-          // delete the current rule
-          let ruleText = cssText.slice(selectorText.length).trim();
-          parentStyleSheet.insertRule(value + " " + ruleText, i);
-          parentStyleSheet.deleteRule(i + 1);
-          return cssRules.item(i);
-        } catch(e) {
-          // The selector could be invalid, or the rule could fail to insert.
-          // If that happens, the method returns null.
+    // We know the selector modification is ok, so if the client asked
+    // for the authored text to be edited, do it now.
+    if (editAuthored) {
+      let document = this.getDocument(this._parentSheet);
+      try {
+        document.querySelector(value);
+      } catch (e) {
+        return null;
+      }
+
+      let sheetActor = this.pageStyle._sheetRef(parentStyleSheet);
+      let {str: authoredText} = yield sheetActor.getText();
+      let [startOffset, endOffset] = getSelectorOffsets(authoredText, this.line,
+                                                        this.column);
+      authoredText = authoredText.substring(0, startOffset) + value +
+        authoredText.substring(endOffset);
+      yield sheetActor.update(authoredText, false, UPDATE_PRESERVING_RULES);
+    } else {
+      let cssRules = parentStyleSheet.cssRules;
+      let cssText = rule.cssText;
+      let selectorText = rule.selectorText;
+
+      for (let i = 0; i < cssRules.length; i++) {
+        if (rule === cssRules.item(i)) {
+          try {
+            // Inserts the new style rule into the current style sheet and
+            // delete the current rule
+            let ruleText = cssText.slice(selectorText.length).trim();
+            parentStyleSheet.insertRule(value + " " + ruleText, i);
+            parentStyleSheet.deleteRule(i + 1);
+            break;
+          } catch(e) {
+            // The selector could be invalid, or the rule could fail to insert.
+            return null;
+          }
         }
-
-        break;
       }
     }
 
-    return null;
-  },
+    return parentStyleSheet.cssRules[this._ruleIndex];
+  }),
 
   /**
    * Modify the current rule's selector by inserting a new rule with the new
@@ -1243,12 +1504,12 @@ var StyleRuleActor = protocol.ActorClass({
    *        Returns a boolean if the selector in the stylesheet was modified,
    *        and false otherwise
    */
-  modifySelector: method(function(value) {
+  modifySelector: method(Task.async(function*(value) {
     if (this.type === ELEMENT_STYLE) {
       return false;
     }
 
-    let document = this.getDocument(this.rawRule.parentStyleSheet);
+    let document = this.getDocument(this._parentSheet);
     // Extract the selector, and pseudo elements and classes
     let [selector, pseudoProp] = value.split(/(:{1,2}.+$)/);
     let selectorElement;
@@ -1262,11 +1523,11 @@ var StyleRuleActor = protocol.ActorClass({
     // Check if the selector is valid and not the same as the original
     // selector
     if (selectorElement && this.rawRule.selectorText !== value) {
-      this._addNewSelector(value);
+      yield this._addNewSelector(value, false);
       return true;
     }
     return false;
-  }, {
+  }), {
     request: { selector: Arg(0, "string") },
     response: { isModified: RetVal("boolean") },
   }),
@@ -1281,17 +1542,20 @@ var StyleRuleActor = protocol.ActorClass({
    * selector matches the current element without having to refresh the whole
    * list.
    *
-   * @param DOMNode node
+   * @param {DOMNode} node
    *        The current selected element
-   * @param string value
+   * @param {String} value
    *        The new selector value
-   * @returns Object
+   * @param {Boolean} editAuthored
+   *        True if the selector should be updated by editing the
+   *        authored text; false if the selector should be updated via
+   *        CSSOM.
+   * @returns {Object}
    *        Returns an object that contains the applied style properties of the
    *        new rule and a boolean indicating whether or not the new selector
    *        matches the current selected element
    */
-  modifySelector2: method(function(node, value) {
-    let isMatching = false;
+  modifySelector2: method(function(node, value, editAuthored = false) {
     let ruleProps = null;
 
     if (this.type === ELEMENT_STYLE ||
@@ -1299,23 +1563,40 @@ var StyleRuleActor = protocol.ActorClass({
       return { ruleProps, isMatching: true };
     }
 
-    let newCssRule = this._addNewSelector(value);
-    if (newCssRule) {
-      ruleProps = this.pageStyle.getNewAppliedProps(node, newCssRule);
+    let selectorPromise = this._addNewSelector(value, editAuthored);
+
+    if (editAuthored) {
+      selectorPromise = selectorPromise.then((newCssRule) => {
+        if (newCssRule) {
+          let style = this.pageStyle._styleRef(newCssRule);
+          // See the comment in |form| to understand this.
+          return style.getAuthoredCssText().then(() => newCssRule);
+        }
+        return newCssRule;
+      });
     }
 
-    // Determine if the new selector value matches the current selected element
-    try {
-      isMatching = node.rawNode.matches(value);
-    } catch(e) {
-      // This fails when value is an invalid selector.
-    }
+    return selectorPromise.then((newCssRule) => {
+      if (newCssRule) {
+        ruleProps = this.pageStyle.getNewAppliedProps(node, newCssRule);
+      }
 
-    return { ruleProps, isMatching };
+      // Determine if the new selector value matches the current
+      // selected element
+      let isMatching = false;
+      try {
+        isMatching = node.rawNode.matches(value);
+      } catch(e) {
+        // This fails when value is an invalid selector.
+      }
+
+      return { ruleProps, isMatching };
+    });
   }, {
     request: {
       node: Arg(0, "domnode"),
-      value: Arg(1, "string")
+      value: Arg(1, "string"),
+      editAuthored: Arg(2, "boolean")
     },
     response: RetVal("modifiedStylesReturn")
   })
@@ -1346,9 +1627,25 @@ var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
   },
 
   /**
-   * Return a new RuleModificationList for this node.
+   * Ensure _form is updated when location-changed is emitted.
+   */
+  _locationChangedPre: protocol.preEvent("location-changed", function(line,
+                                                                      column) {
+    this._clearOriginalLocation();
+    this._form.line = line;
+    this._form.column = column;
+  }),
+
+  /**
+   * Return a new RuleModificationList or RuleRewriter for this node.
+   * A RuleRewriter will be returned when the rule's canSetRuleText
+   * trait is true; otherwise a RuleModificationList will be
+   * returned.
    */
   startModifyingProperties: function() {
+    if (this.canSetRuleText) {
+      return new RuleRewriter(this, this.authoredText);
+    }
     return new RuleModificationList(this);
   },
 
@@ -1363,6 +1660,9 @@ var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
   },
   get cssText() {
     return this._form.cssText;
+  },
+  get authoredText() {
+    return this._form.authoredText || this._form.cssText;
   },
   get keyText() {
     return this._form.keyText;
@@ -1416,6 +1716,10 @@ var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
     return this._form.traits && this._form.traits.modifySelectorUnmatched;
   },
 
+  get canSetRuleText() {
+    return this._form.traits && this._form.traits.canSetRuleText;
+  },
+
   get location() {
     return {
       source: this.parentStyleSheet,
@@ -1423,6 +1727,10 @@ var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
       line: this.line,
       column: this.column
     };
+  },
+
+  _clearOriginalLocation: function() {
+    this._originalLocation = null;
   },
 
   getOriginalLocation: function() {
@@ -1458,7 +1766,11 @@ var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
     let response;
     if (this.supportsModifySelectorUnmatched) {
       // If the debugee supports adding unmatched rules (post FF41)
-      response = yield this.modifySelector2(node, value);
+      if (this.canSetRuleText) {
+        response = yield this.modifySelector2(node, value, true);
+      } else {
+        response = yield this.modifySelector2(node, value);
+      }
     } else {
       response = yield this._modifySelector(value);
     }
@@ -1469,6 +1781,13 @@ var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
     return response;
   }), {
     impl: "_modifySelector"
+  }),
+
+  setRuleText: protocol.custom(function(newText) {
+    this._form.authoredText = newText;
+    return this._setRuleText(newText);
+  }, {
+    impl: "_setRuleText"
   })
 });
 
@@ -1478,6 +1797,10 @@ var StyleRuleFront = protocol.FrontClass(StyleRuleActor, {
  * list of modifications that will be applied to a StyleRuleActor.
  * The modifications are processed in the order in which they are
  * added to the RuleModificationList.
+ *
+ * Objects of this type expose the same API as @see RuleRewriter.
+ * This lets the inspector use (mostly) the same code, regardless of
+ * whether the server implements setRuleText.
  */
 var RuleModificationList = Class({
   /**
@@ -1502,12 +1825,17 @@ var RuleModificationList = Class({
   /**
    * Add a "set" entry to the modification list.
    *
-   * @param {string} name the property's name
-   * @param {string} value the property's value
-   * @param {string} priority the property's priority, either the empty
+   * @param {Number} index index of the property in the rule.
+   *                       This can be -1 in the case where
+   *                       the rule does not support setRuleText;
+   *                       generally for setting properties
+   *                       on an element's style.
+   * @param {String} name the property's name
+   * @param {String} value the property's value
+   * @param {String} priority the property's priority, either the empty
    *                          string or "important"
    */
-  setProperty: function(name, value, priority) {
+  setProperty: function(index, name, value, priority) {
     this.modifications.push({
       type: "set",
       name: name,
@@ -1519,14 +1847,73 @@ var RuleModificationList = Class({
   /**
    * Add a "remove" entry to the modification list.
    *
-   * @param {string} name the name of the property to remove
+   * @param {Number} index index of the property in the rule.
+   *                       This can be -1 in the case where
+   *                       the rule does not support setRuleText;
+   *                       generally for setting properties
+   *                       on an element's style.
+   * @param {String} name the name of the property to remove
    */
-  removeProperty: function(name) {
+  removeProperty: function(index, name) {
     this.modifications.push({
       type: "remove",
       name: name
     });
-  }
+  },
+
+  /**
+   * Rename a property.  This implementation acts like
+   * |removeProperty|, because |setRuleText| is not available.
+   *
+   * @param {Number} index index of the property in the rule.
+   *                       This can be -1 in the case where
+   *                       the rule does not support setRuleText;
+   *                       generally for setting properties
+   *                       on an element's style.
+   * @param {String} name current name of the property
+   * @param {String} newName new name of the property
+   */
+  renameProperty: function(index, name, newName) {
+    this.removeProperty(index, name);
+  },
+
+  /**
+   * Enable or disable a property.  This implementation acts like
+   * |removeProperty| when disabling, or a no-op when enabling,
+   * because |setRuleText| is not available.
+   *
+   * @param {Number} index index of the property in the rule.
+   *                       This can be -1 in the case where
+   *                       the rule does not support setRuleText;
+   *                       generally for setting properties
+   *                       on an element's style.
+   * @param {String} name current name of the property
+   * @param {Boolean} isEnabled true if the property should be enabled;
+   *                        false if it should be disabled
+   */
+  setPropertyEnabled: function(index, name, isEnabled) {
+    if (!isEnabled) {
+      this.removeProperty(index, name);
+    }
+  },
+
+  /**
+   * Create a new property.  This implementation does nothing, because
+   * |setRuleText| is not available.
+   *
+   * @param {Number} index index of the property in the rule.
+   *                       This can be -1 in the case where
+   *                       the rule does not support setRuleText;
+   *                       generally for setting properties
+   *                       on an element's style.
+   * @param {String} name name of the new property
+   * @param {String} value value of the new property
+   * @param {String} priority priority of the new property; either
+   *                          the empty string or "important"
+   */
+  createProperty: function(index, name, value, priority) {
+    // Nothing.
+  },
 });
 
 /**
@@ -1658,6 +2045,47 @@ function getRuleText(initialText, line, column) {
 }
 
 exports.getRuleText = getRuleText;
+
+/**
+ * Compute the start and end offsets of a rule's selector text, given
+ * the CSS text and the line and column at which the rule begins.
+ * @param {String} initialText
+ * @param {Number} line (1-indexed)
+ * @param {Number} column (1-indexed)
+ * @return {array} An array with two elements: [startOffset, endOffset].
+ *                 The elements mark the bounds in |initialText| of
+ *                 the CSS rule's selector.
+ */
+function getSelectorOffsets(initialText, line, column) {
+  if (typeof line === "undefined" || typeof column === "undefined") {
+    throw new Error("Location information is missing");
+  }
+
+  let {offset: textOffset, text} =
+      getTextAtLineColumn(initialText, line, column);
+  let lexer = DOMUtils.getCSSLexer(text);
+
+  // Search forward for the opening brace.
+  let endOffset;
+  while (true) {
+    let token = lexer.nextToken();
+    if (!token) {
+      break;
+    }
+    if (token.tokenType === "symbol" && token.text === "{") {
+      if (endOffset === undefined) {
+        break;
+      }
+      return [textOffset, textOffset + endOffset];
+    }
+    // Preserve comments and whitespace just before the "{".
+    if (token.tokenType !== "comment" && token.tokenType !== "whitespace") {
+      endOffset = token.endOffset;
+    }
+  }
+
+  throw new Error("could not find bounds of rule");
+}
 
 /**
  * Return the offset and substring of |text| that starts at the given

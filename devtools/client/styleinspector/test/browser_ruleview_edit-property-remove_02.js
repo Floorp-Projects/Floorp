@@ -48,9 +48,10 @@ function* testEditPropertyAndRemove(inspector, view) {
     "Focus should have moved to the next property name");
 
   info("Focus the property value and remove the property");
+  let onChanged = view.once("ruleview-changed");
   yield sendKeysAndWaitForFocus(view, ruleEditor.element,
     ["VK_TAB", "VK_DELETE", "VK_RETURN"]);
-  yield ruleEditor.rule._applyingModifications;
+  yield onChanged;
 
   newValue = yield executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,

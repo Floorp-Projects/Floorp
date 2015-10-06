@@ -40,9 +40,11 @@ function* userAgentStylesUneditable(inspector, view) {
     ok(rule.editor.element.hasAttribute("uneditable"),
       "UA rules have uneditable attribute");
 
-    ok(!rule.textProps[0].editor.nameSpan._editable,
+    let firstProp = rule.textProps.filter(p => !p.invisible)[0];
+
+    ok(!firstProp.editor.nameSpan._editable,
       "nameSpan is not editable");
-    ok(!rule.textProps[0].editor.valueSpan._editable,
+    ok(!firstProp.editor.valueSpan._editable,
       "valueSpan is not editable");
     ok(!rule.editor.closeBrace._editable, "closeBrace is not editable");
 

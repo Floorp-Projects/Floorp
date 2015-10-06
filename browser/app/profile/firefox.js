@@ -1379,7 +1379,7 @@ pref("devtools.inspector.showAllAnonymousContent", false);
 pref("devtools.inspector.mdnDocsTooltip.enabled", true);
 
 // DevTools default color unit
-pref("devtools.defaultColorUnit", "hex");
+pref("devtools.defaultColorUnit", "authored");
 
 // Enable the Responsive UI tool
 pref("devtools.responsiveUI.no-reload-notification", false);
