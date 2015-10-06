@@ -65,7 +65,7 @@ http://creativecommons.org/licenses/publicdomain/
     }).then(SimpleTest.finish);
   }
 
-  SpecialPowers.addPermission('push', false, document);
+  SpecialPowers.addPermission("desktop-notification", false, document);
   SpecialPowers.pushPrefEnv({"set": [
     ["dom.push.enabled", true],
     ["dom.serviceWorkers.exemptFromPerDomainMax", true],

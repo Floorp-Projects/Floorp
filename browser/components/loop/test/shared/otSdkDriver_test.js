@@ -1661,6 +1661,51 @@ describe("loop.OTSdkDriver", function () {
             }));
         });
       });
+
+      describe("ICE failed", function() {
+        it("should dispatch a ConnectionFailure action (Publisher)", function() {
+          sdk.trigger("exception", {
+            code: OT.ExceptionCodes.PUBLISHER_ICE_WORKFLOW_FAILED,
+            message: "ICE failed"
+          });
+
+          sinon.assert.calledTwice(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
+            new sharedActions.ConnectionFailure({
+              reason: FAILURE_DETAILS.ICE_FAILED
+            }));
+        });
+
+        it("should dispatch a ConnectionFailure action (Subscriber)", function() {
+          sdk.trigger("exception", {
+            code: OT.ExceptionCodes.SUBSCRIBER_ICE_WORKFLOW_FAILED,
+            message: "ICE failed"
+          });
+
+          sinon.assert.calledTwice(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
+            new sharedActions.ConnectionFailure({
+              reason: FAILURE_DETAILS.ICE_FAILED
+            }));
+        });
+
+        it("should notify metrics", function() {
+          sdk.trigger("exception", {
+            code: OT.ExceptionCodes.PUBLISHER_ICE_WORKFLOW_FAILED,
+            message: "ICE failed"
+          });
+
+          sinon.assert.calledTwice(dispatcher.dispatch);
+          sinon.assert.calledWithExactly(dispatcher.dispatch,
+            new sharedActions.ConnectionStatus({
+              event: "sdk.exception." + OT.ExceptionCodes.PUBLISHER_ICE_WORKFLOW_FAILED,
+              state: "starting",
+              connections: 0,
+              sendStreams: 0,
+              recvStreams: 0
+            }));
+        });
+      });
     });
   });
 
