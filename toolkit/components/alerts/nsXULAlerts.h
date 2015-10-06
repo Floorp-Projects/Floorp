@@ -25,8 +25,7 @@ public:
                                  const nsAString& aAlertText, bool aAlertTextClickable,
                                  const nsAString& aAlertCookie, nsIObserver* aAlertListener,
                                  const nsAString& aAlertName, const nsAString& aBidi,
-                                 const nsAString& aLang, nsIPrincipal* aPrincipal,
-                                 bool aInPrivateBrowsing);
+                                 const nsAString& aLang, bool aInPrivateBrowsing);
 
   nsresult CloseAlert(const nsAString& aAlertName);
 protected:

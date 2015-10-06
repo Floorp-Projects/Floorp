@@ -120,7 +120,7 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
   // Use XUL notifications as a fallback if above methods have failed.
   rv = mXULAlerts.ShowAlertNotification(aImageUrl, aAlertTitle, aAlertText, aAlertTextClickable,
                                         aAlertCookie, aAlertListener, aAlertName,
-                                        aBidi, aLang, aPrincipal, aInPrivateBrowsing);
+                                        aBidi, aLang, aInPrivateBrowsing);
   return rv;
 #endif // !MOZ_WIDGET_ANDROID
 }
