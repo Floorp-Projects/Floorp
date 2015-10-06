@@ -4,10 +4,10 @@
 
 const { Cc, Ci, Cu } = require('chrome');
 const {cssTokenizer, cssTokenizerWithLineColumn}  =
-      require("devtools/client/sourceeditor/css-tokenizer");
+      require("devtools/client/shared/css-parsing-utils");
 
 /**
- * Here is what this file (+ ./css-tokenizer.js) do.
+ * Here is what this file (+ css-parsing-utils.js) do.
  *
  * The main objective here is to provide as much suggestions to the user editing
  * a stylesheet in Style Editor. The possible things that can be suggested are:
@@ -22,7 +22,7 @@ const {cssTokenizer, cssTokenizerWithLineColumn}  =
  * edited by the user, figure out what token or word is being written and last
  * but the most difficult, what is being edited.
  *
- * The file 'css-tokenizer' helps in converting the CSS into meaningful tokens,
+ * The file 'css-parsing-utils' helps to convert the CSS into meaningful tokens,
  * each having a certain type associated with it. These tokens help us to figure
  * out the currently edited word and to write a CSS state machine to figure out
  * what the user is currently editing. By that, I mean, whether he is editing a

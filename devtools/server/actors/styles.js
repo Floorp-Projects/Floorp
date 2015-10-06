@@ -26,7 +26,7 @@ loader.lazyGetter(this, "DOMUtils", () => {
 });
 
 loader.lazyGetter(this, "RuleRewriter", () => {
-  return require("devtools/client/styleinspector/css-parsing-utils").RuleRewriter;
+  return require("devtools/client/shared/css-parsing-utils").RuleRewriter;
 });
 
 // The PageStyle actor flattens the DOM CSS objects a little bit, merging
