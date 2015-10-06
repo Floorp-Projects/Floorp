@@ -1124,13 +1124,6 @@ nsJARChannel::GetZipEntry(nsIZipEntry **aZipEntry)
     return reader->GetEntry(mJarEntry, aZipEntry);
 }
 
-NS_IMETHODIMP
-nsJARChannel::ForceNoIntercept()
-{
-    mLoadFlags |= LOAD_BYPASS_SERVICE_WORKER;
-    return NS_OK;
-}
-
 //-----------------------------------------------------------------------------
 // mozilla::net::MemoryDownloader::IObserver
 //-----------------------------------------------------------------------------
