@@ -37,8 +37,22 @@
       <p>&tabCrashed.message;</p>
 
       <div id="report-box">
-        <input type="checkbox" id="sendReport" checked="checked"/>
+        <input type="checkbox" id="sendReport"/>
         <label for="sendReport">&tabCrashed.sendReport;</label>
+        <div id="crash-reporter-container" hidden="true">
+          <p id="crash-reporter-title">&tabCrashed.crashReporter;</p>
+          <textarea id="comments" placeholder="&tabCrashed.commentPlaceholder;" rows="4"></textarea>
+
+          <ul id="options">
+            <li><input type="checkbox" id="includeURL"/>
+            <label for="includeURL">&tabCrashed.includeURL;</label></li>
+
+            <li><input type="checkbox" id="emailMe"/>
+            <label for="emailMe">&tabCrashed.emailMe;</label></li>
+          </ul>
+
+          <input type="text" id="email" placeholder="&tabCrashed.emailPlaceholder;"/>
+        </div>
       </div>
 
       <p id="reportSent">&tabCrashed.reportSent;</p>

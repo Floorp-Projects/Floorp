@@ -39,6 +39,8 @@ typedef nsSVGPaintServerFrame nsSVGGradientFrameBase;
  */
 class nsSVGGradientFrame : public nsSVGGradientFrameBase
 {
+  typedef mozilla::gfx::ExtendMode ExtendMode;
+
 protected:
   explicit nsSVGGradientFrame(nsStyleContext* aContext);
 

@@ -48,10 +48,6 @@ enum class MediaDecoderEventVisibility : int8_t {
 class AbstractMediaDecoder : public nsIObserver
 {
 public:
-  // Returns the monitor for other threads to synchronise access to
-  // state.
-  virtual ReentrantMonitor& GetReentrantMonitor() = 0;
-
   // A special version of the above for the ogg decoder that is allowed to be
   // called cross-thread.
   virtual bool IsOggDecoderShutdown() { return false; }

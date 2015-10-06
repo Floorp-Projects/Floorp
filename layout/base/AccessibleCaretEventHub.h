@@ -28,7 +28,6 @@ class AccessibleCaretManager;
 class WidgetKeyboardEvent;
 class WidgetMouseEvent;
 class WidgetTouchEvent;
-class WidgetWheelEvent;
 
 // -----------------------------------------------------------------------------
 // Each PresShell holds a shared pointer to an AccessibleCaretEventHub; each
@@ -94,7 +93,8 @@ protected:
 #define MOZ_IMPL_STATE_CLASS_GETTER(aClassName)                                \
   AccessibleCaretEventHub::State* AccessibleCaretEventHub::aClassName()        \
   {                                                                            \
-    return AccessibleCaretEventHub::aClassName::Singleton();                   \
+    static class aClassName singleton;                                         \
+    return &singleton;                                                         \
   }
 
   // Concrete state getters
@@ -109,7 +109,6 @@ protected:
   void SetState(State* aState);
 
   nsEventStatus HandleMouseEvent(WidgetMouseEvent* aEvent);
-  nsEventStatus HandleWheelEvent(WidgetWheelEvent* aEvent);
   nsEventStatus HandleTouchEvent(WidgetTouchEvent* aEvent);
   nsEventStatus HandleKeyboardEvent(WidgetKeyboardEvent* aEvent);
 
@@ -129,9 +128,6 @@ protected:
 
   // Member variables
   bool mInitialized = false;
-
-  // True if async-pan-zoom should be used.
-  bool mUseAsyncPanZoom = false;
 
   State* mState = NoActionState();
 
@@ -155,6 +151,9 @@ protected:
   // For filter multitouch event
   int32_t mActiveTouchId = kInvalidTouchId;
 
+  // Simulate long tap if the platform does not support eMouseLongTap events.
+  static bool sUseLongTapInjector;
+
   static const int32_t kScrollEndTimerDelay = 300;
   static const int32_t kMoveStartToleranceInPixel = 5;
   static const int32_t kInvalidTouchId = -1;
@@ -169,14 +168,6 @@ protected:
 class AccessibleCaretEventHub::State
 {
 public:
-#define NS_IMPL_STATE_UTILITIES(aClassName)                                    \
-  virtual const char* Name() const override { return #aClassName; }            \
-  static aClassName* Singleton()                                               \
-  {                                                                            \
-    static aClassName singleton;                                               \
-    return &singleton;                                                         \
-  }
-
   virtual const char* Name() const { return ""; }
 
   virtual nsEventStatus OnPress(AccessibleCaretEventHub* aContext,
@@ -204,7 +195,6 @@ public:
 
   virtual void OnScrollStart(AccessibleCaretEventHub* aContext) {}
   virtual void OnScrollEnd(AccessibleCaretEventHub* aContext) {}
-  virtual void OnScrolling(AccessibleCaretEventHub* aContext) {}
   virtual void OnScrollPositionChanged(AccessibleCaretEventHub* aContext) {}
   virtual void OnBlur(AccessibleCaretEventHub* aContext,
                       bool aIsLeavingDocument) {}
@@ -215,11 +205,10 @@ public:
   virtual void Enter(AccessibleCaretEventHub* aContext) {}
   virtual void Leave(AccessibleCaretEventHub* aContext) {}
 
-protected:
   explicit State() = default;
   virtual ~State() = default;
   State(const State&) = delete;
-  void operator=(const State&) = delete;
+  State& operator=(const State&) = delete;
 };
 
 } // namespace mozilla
