@@ -83,7 +83,16 @@ interface nsIChannel : nsIRequest
     attribute nsIInterfaceRequestor notificationCallbacks;
 
     /**
-     * Transport-level security information (if any) corresponding to the channel.
+     * Transport-level security information (if any) corresponding to the
+     * channel.
+     *
+     * NOTE: In some circumstances TLS information is propagated onto
+     * non-nsIHttpChannel objects to indicate that their contents were likely
+     * delivered over TLS all the same.  For example, document.open() may
+     * create an nsWyciwygChannel to store the data that will be written to the
+     * document.  In that case, if the caller has TLS information, we propagate
+     * that info onto the nsWyciwygChannel given that it is likely that the
+     * caller will be writing data that was delivered over TLS to the document.
      */
     readonly attribute nsISupports securityInfo;
 
