@@ -47,11 +47,11 @@ protected:
   virtual ~BluetoothA2dpManager();
 
 private:
-  class CleanupA2dpResultHandler;
-  class CleanupA2dpResultHandlerRunnable;
+  class CleanupResultHandler;
+  class CleanupResultHandlerRunnable;
   class ConnectResultHandler;
   class DisconnectResultHandler;
-  class InitA2dpResultHandler;
+  class InitResultHandler;
   class OnErrorProfileResultHandlerRunnable;
 
   BluetoothA2dpManager();
