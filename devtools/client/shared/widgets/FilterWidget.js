@@ -707,14 +707,7 @@ CSSFilterEditorWidget.prototype = {
       return;
     }
 
-    // Apply filter to a temporary element
-    // and get the computed value to make parsing
-    // easier
-    let tmp = this.doc.createElement("i");
-    tmp.style.filter = cssValue;
-    const computedValue = this.win.getComputedStyle(tmp).filter;
-
-    for (let {name, value} of tokenizeComputedFilter(computedValue)) {
+    for (let {name, value} of tokenizeFilterValue(cssValue)) {
       this.add(name, value);
     }
 
@@ -875,19 +868,12 @@ function swapArrayIndices(array, a, b) {
 }
 
 /**
-  * Tokenizes CSS Filter value and returns an array of {name, value} pairs
-  *
-  * This is only a very simple tokenizer that only works its way through
-  * parenthesis in the string to detect function names and values.
-  * It assumes that the string actually is a well-formed filter value
-  * (e.g. "blur(2px) hue-rotate(100deg)").
-  *
-  * @param {String} css
-  *        CSS Filter value to be parsed
-  * @return {Array}
-  *        An array of {name, value} pairs
-  */
-function tokenizeComputedFilter(css) {
+ * Tokenizes a CSS Filter value and returns an array of {name, value} pairs.
+ *
+ * @param {String} css CSS Filter value to be parsed
+ * @return {Array} An array of {name, value} pairs
+ */
+function tokenizeFilterValue(css) {
   let filters = [];
   let depth = 0;
 
@@ -907,7 +893,7 @@ function tokenizeComputedFilter(css) {
           state = "function";
           depth = 1;
         } else if (token.tokenType === "url" || token.tokenType === "bad_url") {
-          filters.push({name: "url", value: token.text});
+          filters.push({name: "url", value: token.text.trim()});
           // Leave state as "initial" because the URL token includes
           // the trailing close paren.
         }
@@ -917,7 +903,7 @@ function tokenizeComputedFilter(css) {
         if (token.tokenType === "symbol" && token.text === ")") {
           --depth;
           if (depth === 0) {
-            filters.push({name: name, value: contents});
+            filters.push({name: name, value: contents.trim()});
             state = "initial";
             break;
           }
