@@ -176,6 +176,22 @@ describe("loop.shared.views", function() {
           new sharedActions.StartScreenShare({ type: "browser" }));
       });
 
+    it("should close the dropdown on 'browser' option click", function() {
+      var comp = TestUtils.renderIntoDocument(
+        React.createElement(sharedViews.ScreenShareControlButton, {
+          dispatcher: dispatcher,
+          visible: true,
+          state: SCREEN_SHARE_STATES.INACTIVE
+        }));
+
+      sandbox.stub(comp, "hideDropdownMenu");
+
+      TestUtils.Simulate.click(comp.getDOMNode().querySelector(
+        ".screen-share-menu > li"));
+
+      sinon.assert.calledOnce(comp.hideDropdownMenu);
+    });
+
     it("should dispatch a 'window' StartScreenShare action on option click",
       function() {
         var comp = TestUtils.renderIntoDocument(
@@ -192,6 +208,22 @@ describe("loop.shared.views", function() {
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           new sharedActions.StartScreenShare({ type: "window" }));
       });
+
+    it("should close the dropdown on 'window' option click", function() {
+      var comp = TestUtils.renderIntoDocument(
+        React.createElement(sharedViews.ScreenShareControlButton, {
+          dispatcher: dispatcher,
+          visible: true,
+          state: SCREEN_SHARE_STATES.INACTIVE
+        }));
+
+      sandbox.stub(comp, "hideDropdownMenu");
+
+      TestUtils.Simulate.click(comp.getDOMNode().querySelector(
+        ".screen-share-menu > li:last-child"));
+
+      sinon.assert.calledOnce(comp.hideDropdownMenu);
+    });
 
     it("should have the 'window' option enabled", function() {
       var comp = TestUtils.renderIntoDocument(
