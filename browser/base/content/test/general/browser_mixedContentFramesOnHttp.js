@@ -10,44 +10,25 @@
  * the HTTP top level page to broken HTTPS.
  */
 
-const gHttpTestRoot = "http://example.com/browser/browser/base/content/test/general/";
+const gHttpTestUrl = "http://example.com/browser/browser/base/content/test/general/file_mixedContentFramesOnHttp.html";
 
 var gTestBrowser = null;
 
-function SecStateTestsCompleted() {
-  gBrowser.removeCurrentTab();
-  window.focus();
-  finish();
-}
+add_task(function *() {
+  yield new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({
+      "set": [
+        ["security.mixed_content.block_active_content", true],
+        ["security.mixed_content.block_display_content", false]
+      ]
+    }, resolve);
+  });
+  let url = gHttpTestUrl
+  yield BrowserTestUtils.withNewTab({gBrowser, url}, function*(){
+    gTestBrowser = gBrowser.selectedBrowser;
+    // check security state is insecure
+    isSecurityState("insecure");
+    assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: false, passiveLoaded: true});
+  });
+});
 
-function test() {
-  waitForExplicitFinish();
-  SpecialPowers.pushPrefEnv({"set": [
-    ["security.mixed_content.block_active_content", true],
-    ["security.mixed_content.block_display_content", false]
-  ]}, SecStateTests);
-}
-
-function SecStateTests() {
-  let url = gHttpTestRoot + "file_mixedContentFramesOnHttp.html";
-  gBrowser.selectedTab = gBrowser.addTab();
-  gTestBrowser = gBrowser.selectedBrowser;
-  whenLoaded(gTestBrowser, SecStateTest1);
-  gTestBrowser.contentWindow.location = url;
-}
-
-// The http page loads an https frame with an http image.
-function SecStateTest1() {
-  // check security state is insecure
-  isSecurityState("insecure");
-  assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: false, passiveLoaded: true});
-
-  SecStateTestsCompleted();
-}
-
-function whenLoaded(aElement, aCallback) {
-  aElement.addEventListener("load", function onLoad() {
-    aElement.removeEventListener("load", onLoad, true);
-    executeSoon(aCallback);
-  }, true);
-}
