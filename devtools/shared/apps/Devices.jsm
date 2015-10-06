@@ -44,5 +44,10 @@ const Devices = {
     return this._devices[name];
   }
 };
+Object.defineProperty(this, "Devices", {
+  value: Devices,
+  enumerable: true,
+  writable: false
+});
 
 EventEmitter.decorate(Devices);

@@ -70,6 +70,7 @@ const GMP_PLUGINS = [
     missingKey:      "VIDEO_ADOBE_GMP_DISAPPEARED",
     missingFilesKey: "VIDEO_ADOBE_GMP_MISSING_FILES",
   }];
+XPCOMUtils.defineConstant(this, "GMP_PLUGINS", GMP_PLUGINS);
 
 XPCOMUtils.defineLazyGetter(this, "pluginsBundle",
   () => Services.strings.createBundle("chrome://global/locale/plugins.properties"));

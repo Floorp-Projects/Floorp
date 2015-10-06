@@ -988,13 +988,13 @@ InspectorPanel.prototype = {
       let panel = this._toolbox.getPanel("webconsole");
       let jsterm = panel.hud.jsterm;
 
-      let evalString = `let i = 0;
+      let evalString = `{ let i = 0;
         while (window.hasOwnProperty("temp" + i) && i < 1000) {
           i++;
         }
         window["temp" + i] = $0;
         "temp" + i;
-      `;
+      }`;
 
       let options = {
         selectedNodeActor: this.selection.nodeFront.actorID,

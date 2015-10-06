@@ -63,6 +63,13 @@ Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
 Cu.import("resource://gre/modules/reflect.jsm");
 
+XPCOMUtils.defineConstant(this, "SCRATCHPAD_CONTEXT_CONTENT", SCRATCHPAD_CONTEXT_CONTENT);
+XPCOMUtils.defineConstant(this, "SCRATCHPAD_CONTEXT_BROWSER", SCRATCHPAD_CONTEXT_BROWSER);
+XPCOMUtils.defineConstant(this, "BUTTON_POSITION_SAVE", BUTTON_POSITION_SAVE);
+XPCOMUtils.defineConstant(this, "BUTTON_POSITION_CANCEL", BUTTON_POSITION_CANCEL);
+XPCOMUtils.defineConstant(this, "BUTTON_POSITION_DONT_SAVE", BUTTON_POSITION_DONT_SAVE);
+XPCOMUtils.defineConstant(this, "BUTTON_POSITION_REVERT", BUTTON_POSITION_REVERT);
+
 XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
   "resource:///modules/devtools/client/shared/widgets/VariablesView.jsm");
 

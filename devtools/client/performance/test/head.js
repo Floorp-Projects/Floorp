@@ -47,6 +47,9 @@ const FLATTEN_PREF = "devtools.performance.ui.flatten-tree-recursion";
 const JIT_PREF = "devtools.performance.ui.enable-jit-optimizations";
 const EXPERIMENTAL_PREF = "devtools.performance.ui.experimental";
 
+// Keep in sync with FRAMERATE_GRAPH_HIGH_RES_INTERVAL in views/overview.js
+const FRAMERATE_GRAPH_HIGH_RES_INTERVAL = 16; // ms
+
 // All tests are asynchronous.
 waitForExplicitFinish();
 
@@ -423,7 +426,7 @@ function* stopRecording(panel, options = {
   // incremental rendering and less likely to be from another rendering that was selected
   while (!overviewRendered && options.waitForOverview) {
     let [_, res] = yield onceSpread(win.OverviewView, win.EVENTS.OVERVIEW_RENDERED);
-    if (res === win.FRAMERATE_GRAPH_HIGH_RES_INTERVAL) {
+    if (res === FRAMERATE_GRAPH_HIGH_RES_INTERVAL) {
       overviewRendered = true;
     }
   }

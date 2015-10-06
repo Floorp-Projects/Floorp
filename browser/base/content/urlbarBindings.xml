@@ -1594,9 +1594,11 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         document.getElementById("addon-progress-notification-progresstext");
       </field>
       <field name="DownloadUtils" readonly="true">
-        let utils = {};
-        Components.utils.import("resource://gre/modules/DownloadUtils.jsm", utils);
-        utils.DownloadUtils;
+        {
+          let utils = {};
+          Components.utils.import("resource://gre/modules/DownloadUtils.jsm", utils);
+          utils.DownloadUtils;
+        }
       </field>
 
       <method name="destroy">
@@ -2676,11 +2678,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       ]]></destructor>
 
       <field name="_panel" readonly="true"><![CDATA[
-        let node = this.parentNode;
-        while(node && node.localName != "panel") {
-          node = node.parentNode;
+        {
+          let node = this.parentNode;
+          while(node && node.localName != "panel") {
+            node = node.parentNode;
+          }
+          node;
         }
-        node;
       ]]></field>
       <field name="_promomessage" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "promo-message");

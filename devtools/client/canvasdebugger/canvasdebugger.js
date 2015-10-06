@@ -77,6 +77,7 @@ const EVENTS = {
   SOURCE_SHOWN_IN_JS_DEBUGGER: "CanvasDebugger:SourceShownInJsDebugger",
   SOURCE_NOT_FOUND_IN_JS_DEBUGGER: "CanvasDebugger:SourceNotFoundInJsDebugger"
 };
+XPCOMUtils.defineConstant(this, "EVENTS", EVENTS);
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const STRINGS_URI = "chrome://browser/locale/devtools/canvasdebugger.properties";

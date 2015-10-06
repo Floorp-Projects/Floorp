@@ -56,9 +56,6 @@ function createAppInfo(id, name, version, platformVersion) {
                             XULAPPINFO_CONTRACTID, XULAppInfoFactory);
 }
 
-var gDirSvc = Cc["@mozilla.org/file/directory_service;1"]
-                .getService(Ci.nsIProperties);
-
 var gPluginHost = null;
 
 function test_expected_permission_string(aPermString) {

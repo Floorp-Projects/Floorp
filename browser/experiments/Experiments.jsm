@@ -94,6 +94,7 @@ const TELEMETRY_LOG = {
     RECHECK: "RECHECK",
   },
 };
+XPCOMUtils.defineConstant(this, "TELEMETRY_LOG", TELEMETRY_LOG);
 
 const gPrefs = new Preferences(PREF_BRANCH);
 const gPrefsTelemetry = new Preferences(PREF_BRANCH_TELEMETRY);

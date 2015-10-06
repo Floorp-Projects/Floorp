@@ -21,6 +21,11 @@ const MARKER_STYLING = {
   light: "#AAA",
   dark: "#CED3D9"
 };
+Object.defineProperty(this, "MARKER_STYLING", {
+  value: MARKER_STYLING,
+  enumerable: true,
+  writable: false
+});
 
 const GRAPH_DEBOUNCE_TIMER = 100;
 

@@ -11,7 +11,8 @@ Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader)
   .loadSubScript("resource://gre/modules/PageThumbs.jsm", tmp);
 
-const {EXPIRATION_MIN_CHUNK_SIZE, PageThumbsExpiration} = tmp;
+const EXPIRATION_MIN_CHUNK_SIZE = 50;
+const {PageThumbsExpiration} = tmp;
 
 function runTests() {
   // Create dummy URLs.
