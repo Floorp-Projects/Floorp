@@ -10863,16 +10863,13 @@ nsDocShell::DoChannelLoad(nsIChannel* aChannel,
     loadFlags |= nsIChannel::LOAD_CLASSIFY_URI;
   }
 
-  (void)aChannel->SetLoadFlags(loadFlags);
-
   // If the user pressed shift-reload, then do not allow ServiceWorker
   // interception to occur. See step 12.1 of the SW HandleFetch algorithm.
   if (IsForceReloadType(mLoadType)) {
-    nsCOMPtr<nsIHttpChannelInternal> internal = do_QueryInterface(aChannel);
-    if (internal) {
-      internal->ForceNoIntercept();
-    }
+    loadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
   }
+
+  (void)aChannel->SetLoadFlags(loadFlags);
 
   uint32_t openFlags = 0;
   if (mLoadType == LOAD_LINK) {
