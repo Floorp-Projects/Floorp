@@ -122,6 +122,7 @@ static bool stopWatchingInstanceCount(NPObject* npobj, const NPVariant* args, ui
 static bool getLastMouseX(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getLastMouseY(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getPaintCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
+static bool resetPaintCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getWidthAtLastPaint(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool setInvalidateDuringPaint(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool setSlowPaint(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
@@ -192,6 +193,7 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "getLastMouseX",
   "getLastMouseY",
   "getPaintCount",
+  "resetPaintCount",
   "getWidthAtLastPaint",
   "setInvalidateDuringPaint",
   "setSlowPaint",
@@ -263,6 +265,7 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   getLastMouseX,
   getLastMouseY,
   getPaintCount,
+  resetPaintCount,
   getWidthAtLastPaint,
   setInvalidateDuringPaint,
   setSlowPaint,
@@ -2433,6 +2436,18 @@ getPaintCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVaria
   NPP npp = static_cast<TestNPObject*>(npobj)->npp;
   InstanceData* id = static_cast<InstanceData*>(npp->pdata);
   INT32_TO_NPVARIANT(id->paintCount, *result);
+  return true;
+}
+
+static bool
+resetPaintCount(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
+{
+  if (argCount != 0)
+    return false;
+
+  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
+  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
+  id->paintCount = 0;
   return true;
 }
 
