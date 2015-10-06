@@ -515,10 +515,10 @@ class InterpreterFrame
         return isEvalFrame() && !script()->strict();
     }
 
-    bool isDirectEvalFrame() const;
+    bool isNonGlobalEvalFrame() const;
 
     bool isNonStrictDirectEvalFrame() const {
-        return isNonStrictEvalFrame() && isDirectEvalFrame();
+        return isNonStrictEvalFrame() && isNonGlobalEvalFrame();
     }
 
     /*

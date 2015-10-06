@@ -1537,9 +1537,14 @@ BytecodeEmitter::tryConvertFreeName(ParseNode* pn)
         FunctionBox* funbox = sc->asFunctionBox();
         PropertyName* name = pn->pn_atom->asPropertyName();
         for (StaticScopeIter<NoGC> ssi(funbox->staticScope()); !ssi.done(); ssi++) {
-            // Don't optimize names through eval.
-            if (ssi.type() == StaticScopeIter<NoGC>::Eval)
-                return false;
+            // Don't optimize names through non-global eval. For global eval
+            // we can use GNAME ops.
+            if (ssi.type() == StaticScopeIter<NoGC>::Eval) {
+                if (ssi.eval().isNonGlobal())
+                    return false;
+                MOZ_ASSERT(!slot.isSome());
+                break;
+            }
 
             if (!ssi.hasSyntacticDynamicScopeObject())
                 continue;

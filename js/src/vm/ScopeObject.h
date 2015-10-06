@@ -456,12 +456,7 @@ class StaticEvalObject : public ScopeObject
         return getReservedSlot(STRICT_SLOT).isTrue();
     }
 
-    // Indirect evals terminate in the global at run time, and has no static
-    // enclosing scope.
-    bool isDirect() const {
-        MOZ_ASSERT_IF(!getReservedSlot(SCOPE_CHAIN_SLOT).isObject(), !isStrict());
-        return getReservedSlot(SCOPE_CHAIN_SLOT).isObject();
-    }
+    inline bool isNonGlobal() const;
 };
 
 // Static scope objects that stand in for one or more "polluting global"
@@ -1213,6 +1208,14 @@ NestedScopeObject::enclosingNestedScope() const
 {
     JSObject* obj = getReservedSlot(SCOPE_CHAIN_SLOT).toObjectOrNull();
     return obj && obj->is<NestedScopeObject>() ? &obj->as<NestedScopeObject>() : nullptr;
+}
+
+inline bool
+StaticEvalObject::isNonGlobal() const
+{
+    if (isStrict())
+        return true;
+    return !IsStaticGlobalLexicalScope(&getReservedSlot(SCOPE_CHAIN_SLOT).toObject());
 }
 
 inline bool

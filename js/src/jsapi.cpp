@@ -3486,7 +3486,7 @@ IsFunctionCloneable(HandleFunction fun)
             // If the script is an indirect eval that is immediately scoped
             // under the global, we can clone it.
             if (enclosing->is<StaticEvalObject>())
-                return !enclosing->as<StaticEvalObject>().isDirect();
+                return !enclosing->as<StaticEvalObject>().isNonGlobal();
 
             // If the script already deals with a non-syntactic scope, we can
             // clone it.

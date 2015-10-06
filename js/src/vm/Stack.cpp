@@ -109,10 +109,10 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
 }
 
 bool
-InterpreterFrame::isDirectEvalFrame() const
+InterpreterFrame::isNonGlobalEvalFrame() const
 {
     return isEvalFrame() &&
-           script()->enclosingStaticScope()->as<StaticEvalObject>().isDirect();
+           script()->enclosingStaticScope()->as<StaticEvalObject>().isNonGlobal();
 }
 
 bool
@@ -259,7 +259,7 @@ InterpreterFrame::epilogue(JSContext* cx)
             MOZ_ASSERT_IF(hasCallObj(), scopeChain()->as<CallObject>().isForEval());
             if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
                 DebugScopes::onPopStrictEvalScope(this);
-        } else if (isDirectEvalFrame()) {
+        } else if (isNonGlobalEvalFrame()) {
             MOZ_ASSERT_IF(isDebuggerEvalFrame(), !IsSyntacticScope(scopeChain()));
         }
         return;
