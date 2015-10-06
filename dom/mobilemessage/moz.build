@@ -19,6 +19,7 @@ EXPORTS.mozilla.dom.mobilemessage += [
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     SOURCES += [
         'android/MobileMessageDatabaseService.cpp',
+        'android/SmsManager.cpp',
         'android/SmsService.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
@@ -46,6 +47,7 @@ EXPORTS.mozilla.dom += [
     'DOMMobileMessageError.h',
     'MmsMessage.h',
     'MobileMessageManager.h',
+    'MobileMessageThread.h',
     'SmsMessage.h',
 ]
 
@@ -75,6 +77,7 @@ IPDL_SOURCES += [
 
 LOCAL_INCLUDES += [
     '/dom/base',
+    '/widget/android',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
