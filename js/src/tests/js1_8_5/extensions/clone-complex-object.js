@@ -242,7 +242,7 @@ let obj = { 'foo': foo,
             'baz': baz };
 check(obj);
 
-for (var obj of new getTestContent)
+for (obj of new getTestContent)
     check(obj);
 
 // Stolen wholesale from postMessage_structured_clone_helper.js

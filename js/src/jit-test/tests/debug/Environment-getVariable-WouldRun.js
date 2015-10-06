@@ -8,7 +8,7 @@ var dbg = Debugger(g);
 var hits = 0;
 dbg.onDebuggerStatement = function (frame) {
     assertThrowsInstanceOf(function () {
-        frame.environment.parent.getVariable("x");
+        frame.environment.parent.parent.getVariable("x");
     }, Error);
     hits++;
 };
