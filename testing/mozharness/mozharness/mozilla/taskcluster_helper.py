@@ -156,23 +156,66 @@ class TaskClusterArtifactFinderMixin(object):
 
         return parent_task_id
 
-    def set_artifacts(self, task_id):
-        """ Sets installer, test and symbols URLs from the artifacts of a task.
-
-        In this case we set:
-            self.installer_url
-            self.test_url (points to test_packages.json)
-            self.symbols_url
-        """
+    def set_bbb_artifacts(self, task_id):
+        """ Find BBB artifacts through properties.json and set them. """
         # The tasks which represent a buildbot job only uploads one artifact:
         # the properties.json file
         p = self.load_json_url(
             self.url_to_artifact(task_id, 'public/properties.json'))
 
         # Set importants artifacts for test jobs
-        self.installer_url = p['packageUrl'][0] if p.get('packageUrl') else None
-        self.test_url = p['testPackagesUrl'][0] if p.get('testPackagesUrl') else None
-        self.symbols_url = p['symbolsUrl'][0] if p.get('symbolsUrl') else None
+        self.set_artifacts(
+            p['packageUrl'][0] if p.get('packageUrl') else None,
+            p['testPackagesUrl'][0] if p.get('testPackagesUrl') else None,
+            p['symbolsUrl'][0] if p.get('symbolsUrl') else None
+        )
+
+    def set_artifacts(self, installer, tests, symbols):
+        """ Sets installer, test and symbols URLs from the artifacts of BBB based task."""
+        self.installer_url, self.test_url, self.symbols_url = installer, tests, symbols
+        self.info('Set installer_url: %s' % self.installer_url)
+        self.info('Set test_url: %s' % self.test_url)
+        self.info('Set symbols_url: %s' % self.symbols_url)
 
     def set_parent_artifacts(self, child_task_id):
-        self.set_artifacts(self.find_parent_task_id(child_task_id))
+        """ Find and set installer_url, test_url and symbols_url by querying TaskCluster.
+
+        In Buildbot Bridge's normal behaviour we can find the artifacts by inspecting
+        a child's taskId, determine the task in which it depends on and find the uploaded
+        artifacts.
+
+        In order to support multi-tiered task graph scheduling for BBB triggered tasks,
+        we remove the assumption that the task which depends on is the one from which we
+        find the artifacts we need. Instead, we can set a parent_task_id which points to the
+        tasks from which to retrieve the artifacts. This decouples task dependency from task
+        from which to grab the artifacts.
+
+        In-tree triggered BBB tasks do not use parent_task_id, once there is efforts to move
+        the scheduling into tree we can make parent_task_id as the only method.
+
+        """
+        # Task definition
+        child_task = self.get_task(child_task_id)
+
+        if child_task['payload']['properties'].get('parent_task_id'):
+            # parent_task_id is used to point to the task from which to grab artifacts
+            # rather than the one we depend on
+            parent_id = child_task['payload']['properties']['parent_task_id']
+
+            # Find out where the parent task uploaded the build
+            parent_task = self.get_task(parent_id)
+
+            if parent_task['extra'].get('locations'):
+                # Build tasks generated under TC specify where they upload their builds
+                installer_path = parent_task['extra']['locations']['build']
+
+                self.set_artifacts(
+                    self.url_to_artifact(parent_id, installer_path),
+                    self.url_to_artifact(parent_id, 'public/build/test_packages.json'),
+                    self.url_to_artifact(parent_id, 'public/build/target.crashreporter-symbols.zip')
+                )
+            else:
+                self.set_bbb_artifacts(parent_id)
+        else:
+            parent_id = self.find_parent_task_id(child_task_id)
+            self.set_bbb_artifacts(parent_id)
