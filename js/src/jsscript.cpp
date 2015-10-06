@@ -1334,7 +1334,7 @@ JSScript::initScriptCounts(JSContext* cx)
         return false;
 
     for (size_t i = 0; i < jumpTargets.length(); i++)
-        MOZ_ALWAYS_TRUE(base.emplaceBack(pcToOffset(jumpTargets[i])));
+        base.infallibleEmplaceBack(pcToOffset(jumpTargets[i]));
 
     // Create compartment's scriptCountsMap if necessary.
     ScriptCountsMap* map = compartment()->scriptCountsMap;
