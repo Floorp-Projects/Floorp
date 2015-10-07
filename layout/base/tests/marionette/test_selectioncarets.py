@@ -693,3 +693,26 @@ class AccessibleCaretSelectionModeTestCase(CommonCaretsTestCase, MarionetteTestC
         (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
         self.actions.flick(el, caret2_x, caret2_y, caret1_x, caret1_y).perform()
         self.assertEqual(words[0][0], sel.selected_content)
+
+    def test_carets_do_not_jump_when_dragging_to_editable_content_boundary(self):
+        self.open_test_html()
+        el = self._input
+        sel = SelectionManager(el)
+        original_content = sel.content
+        words = original_content.split()
+        self.assertTrue(len(words) >= 3, 'Expect at least three words in the content.')
+
+        # Goal: the selection does not being changed after dragging the caret
+        # on the Y-axis only.
+        target_content = words[1]
+
+        self.long_press_on_word(el, 1)
+        (caret1_x, caret1_y), (caret2_x, caret2_y) = sel.selection_carets_location()
+
+        # Drag the first caret up by 50px.
+        self.actions.flick(el, caret1_x, caret1_y, caret1_x, caret1_y - 50).perform()
+        self.assertEqual(target_content, sel.selected_content)
+
+        # Drag the first caret down by 50px.
+        self.actions.flick(el, caret2_x, caret2_y, caret2_x, caret2_y + 50).perform()
+        self.assertEqual(target_content, sel.selected_content)
