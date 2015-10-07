@@ -366,21 +366,3 @@ fails-if(winWidget) == mfrac-D-2.html mfrac-D-2-ref.html
 test-pref(dom.webcomponents.enabled,true) == shadow-dom-1.html shadow-dom-1-ref.html
 pref(font.size.inflation.emPerLine,25) == font-inflation-1.html font-inflation-1-ref.html
 test-pref(font.minimum-size.x-math,40) == default-font.html default-font-ref.html
-!= radicalbar-1.html about:blank
-!= radicalbar-1a.html about:blank
-!= radicalbar-1b.html about:blank
-!= radicalbar-1c.html about:blank
-!= radicalbar-1d.html about:blank
-!= radicalbar-1e.html about:blank
-!= radicalbar-2.html about:blank
-!= radicalbar-2a.html about:blank
-!= radicalbar-2b.html about:blank
-!= radicalbar-2c.html about:blank
-!= radicalbar-2d.html about:blank
-!= radicalbar-2e.html about:blank
-!= radicalbar-3.html about:blank
-!= radicalbar-3a.html about:blank
-!= radicalbar-3b.html about:blank
-!= radicalbar-3c.html about:blank
-!= radicalbar-3d.html about:blank
-!= radicalbar-3e.html about:blank
