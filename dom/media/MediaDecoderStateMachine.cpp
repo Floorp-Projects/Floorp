@@ -849,6 +849,10 @@ MediaDecoderStateMachine::OnVideoDecoded(MediaData* aVideoSample)
              (video ? video->GetEndTime() : -1),
              (video ? video->mDiscontinuity : 0));
 
+  // Check frame validity here for every decoded frame in order to have a
+  // better chance to make the decision of turning off HW acceleration.
+  CheckFrameValidity(aVideoSample->As<VideoData>());
+
   switch (mState) {
     case DECODER_STATE_BUFFERING: {
       // If we're buffering, this may be the sample we need to stop buffering.
@@ -2448,15 +2452,10 @@ MediaDecoderStateMachine::Reset()
   DecodeTaskQueue()->Dispatch(resetTask.forget());
 }
 
-bool MediaDecoderStateMachine::CheckFrameValidity(VideoData* aData)
+void
+MediaDecoderStateMachine::CheckFrameValidity(VideoData* aData)
 {
   MOZ_ASSERT(OnTaskQueue());
-
-  // If we've sent this frame before then only return the valid state,
-  // don't update the statistics.
-  if (aData->mSentToCompositor) {
-    return !aData->mImage || aData->mImage->IsValid();
-  }
 
   // Update corrupt-frames statistics
   if (aData->mImage && !aData->mImage->IsValid()) {
@@ -2475,10 +2474,8 @@ bool MediaDecoderStateMachine::CheckFrameValidity(VideoData* aData)
         mCorruptFrames.clear();
       gfxCriticalNote << "Too many dropped/corrupted frames, disabling DXVA";
     }
-    return false;
   } else {
     mCorruptFrames.insert(0);
-    return true;
   }
 }
 
@@ -2500,7 +2497,7 @@ void MediaDecoderStateMachine::RenderVideoFrames(int32_t aMaxFrames,
   for (uint32_t i = 0; i < frames.Length(); ++i) {
     VideoData* frame = frames[i]->As<VideoData>();
 
-    bool valid = CheckFrameValidity(frame);
+    bool valid = !frame->mImage || frame->mImage->IsValid();
     frame->mSentToCompositor = true;
 
     if (!valid) {

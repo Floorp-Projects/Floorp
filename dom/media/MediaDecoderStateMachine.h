@@ -463,8 +463,9 @@ protected:
   // machine thread, caller must hold the decoder lock.
   void UpdatePlaybackPositionInternal(int64_t aTime);
 
-  // Decode monitor must be held.
-  bool CheckFrameValidity(VideoData* aData);
+  // Decode monitor must be held. To determine if MDSM needs to turn off HW
+  // acceleration.
+  void CheckFrameValidity(VideoData* aData);
 
   // Sets VideoQueue images into the VideoFrameContainer. Called on the shared
   // state machine thread. Decode monitor must be held. The first aMaxFrames
