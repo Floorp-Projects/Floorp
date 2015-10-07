@@ -211,6 +211,7 @@
 <string name="fxaccount_status_linktos">&fxaccount_status_linktos;</string>
 <string name="fxaccount_status_linkprivacy">&fxaccount_status_linkprivacy;</string>
 <string name="fxaccount_status_more">&fxaccount_status_more;</string>
+<string name="fxaccount_remove_account">&fxaccount_remove_account;</string>
 
 <string name="fxaccount_label">&fxaccount_account_type_label;</string>
 
@@ -235,7 +236,6 @@
 <string name="fxaccount_remove_account_dialog_title">&fxaccount_remove_account_dialog_title;</string>
 <string name="fxaccount_remove_account_dialog_message">&fxaccount_remove_account_dialog_message;</string>
 <string name="fxaccount_remove_account_toast">&fxaccount_remove_account_toast;</string>
-<string name="fxaccount_remove_account_menu_item">&fxaccount_remove_account_menu_item;</string>
 
 <string name="fxaccount_sync_finish_migrating_notification_title">&fxaccount_sync_finish_migrating_notification_title;</string>
 <string name="fxaccount_sync_finish_migrating_notification_text">&fxaccount_sync_finish_migrating_notification_text;</string>
