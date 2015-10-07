@@ -293,19 +293,6 @@ public:
                     nsCSSPropertySet& aSetProperties,
                     bool& aStyleChanging);
 
-
-  // FIXME: Because we currently determine if we need refresh driver ticks
-  // during restyling (specifically ComposeStyle above) and not necessarily
-  // during a refresh driver tick, we can arrive at a situation where we
-  // have finished running an animation but are waiting until the next tick
-  // to queue the final end event. This method tells us when we are in that
-  // situation so we can avoid unregistering from the refresh driver until
-  // we've finished dispatching events.
-  //
-  // This is a temporary measure until bug 1195180 is done and we can do all
-  // our registering and unregistering within a tick callback.
-  virtual bool HasEndEventToQueue() const { return false; }
-
   void NotifyEffectTimingUpdated();
 
 protected:

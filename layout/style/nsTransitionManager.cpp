@@ -155,17 +155,6 @@ CSSTransition::QueueEvents()
                                           this));
 }
 
-bool
-CSSTransition::HasEndEventToQueue() const
-{
-  if (!mEffect) {
-    return false;
-  }
-
-  return !mWasFinishedOnLastTick &&
-         PlayState() == AnimationPlayState::Finished;
-}
-
 void
 CSSTransition::Tick()
 {
