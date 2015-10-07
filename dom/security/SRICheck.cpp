@@ -16,6 +16,8 @@
 #include "nsIProtocolHandler.h"
 #include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIStreamLoader.h"
+#include "nsIUnicharStreamLoader.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsWhitespaceTokenizer.h"
@@ -45,8 +47,12 @@ static nsresult
 IsEligible(nsIChannel* aChannel, const CORSMode aCORSMode,
            const nsIDocument* aDocument)
 {
-  NS_ENSURE_ARG_POINTER(aChannel);
   NS_ENSURE_ARG_POINTER(aDocument);
+
+  if (!aChannel) {
+    SRILOG(("SRICheck::IsEligible, null channel"));
+    return NS_ERROR_SRI_NOT_ELIGIBLE;
+  }
 
   // Was the sub-resource loaded via CORS?
   if (aCORSMode != CORS_NONE) {
@@ -236,38 +242,14 @@ SRICheck::IntegrityMetadata(const nsAString& aMetadataList,
   return NS_OK;
 }
 
-/* static */ nsresult
-SRICheck::VerifyIntegrity(const SRIMetadata& aMetadata,
-                          nsIChannel* aChannel,
-                          const CORSMode aCORSMode,
-                          const nsAString& aString,
-                          const nsIDocument* aDocument)
+static nsresult
+VerifyIntegrityInternal(const SRIMetadata& aMetadata,
+                        nsIChannel* aChannel,
+                        const CORSMode aCORSMode,
+                        uint32_t aStringLen,
+                        const uint8_t* aString,
+                        const nsIDocument* aDocument)
 {
-  NS_ConvertUTF16toUTF8 utf8Hash(aString);
-  return VerifyIntegrity(aMetadata, aChannel, aCORSMode, utf8Hash.Length(),
-                         (uint8_t*)utf8Hash.get(), aDocument);
-}
-
-/* static */ nsresult
-SRICheck::VerifyIntegrity(const SRIMetadata& aMetadata,
-                          nsIChannel* aChannel,
-                          const CORSMode aCORSMode,
-                          uint32_t aStringLen,
-                          const uint8_t* aString,
-                          const nsIDocument* aDocument)
-{
-  if (MOZ_LOG_TEST(GetSriLog(), mozilla::LogLevel::Debug)) {
-    nsAutoCString requestURL;
-    nsCOMPtr<nsIURI> originalURI;
-    if (NS_SUCCEEDED(aChannel->GetOriginalURI(getter_AddRefs(originalURI))) &&
-        originalURI) {
-      originalURI->GetAsciiSpec(requestURL);
-      // requestURL will be empty if GetAsciiSpec fails
-    }
-    SRILOG(("SRICheck::VerifyIntegrity, url=%s (length=%u)",
-            requestURL.get(), aStringLen));
-  }
-
   MOZ_ASSERT(!aMetadata.IsEmpty()); // should be checked by caller
 
   // IntegrityMetadata() checks this and returns "no metadata" if
@@ -304,6 +286,63 @@ SRICheck::VerifyIntegrity(const SRIMetadata& aMetadata,
                                   "IntegrityMismatch",
                                   params, ArrayLength(params));
   return NS_ERROR_SRI_CORRUPT;
+}
+
+/* static */ nsresult
+SRICheck::VerifyIntegrity(const SRIMetadata& aMetadata,
+                          nsIUnicharStreamLoader* aLoader,
+                          const CORSMode aCORSMode,
+                          const nsAString& aString,
+                          const nsIDocument* aDocument)
+{
+  NS_ENSURE_ARG_POINTER(aLoader);
+
+  NS_ConvertUTF16toUTF8 utf8Hash(aString);
+  nsCOMPtr<nsIChannel> channel;
+  aLoader->GetChannel(getter_AddRefs(channel));
+
+  if (MOZ_LOG_TEST(GetSriLog(), mozilla::LogLevel::Debug)) {
+    nsAutoCString requestURL;
+    nsCOMPtr<nsIURI> originalURI;
+    if (channel &&
+        NS_SUCCEEDED(channel->GetOriginalURI(getter_AddRefs(originalURI))) &&
+        originalURI) {
+      originalURI->GetAsciiSpec(requestURL);
+    }
+    SRILOG(("SRICheck::VerifyIntegrity (unichar stream), url=%s (length=%u)",
+            requestURL.get(), utf8Hash.Length()));
+  }
+
+  return VerifyIntegrityInternal(aMetadata, channel, aCORSMode,
+                                 utf8Hash.Length(), (uint8_t*)utf8Hash.get(),
+                                 aDocument);
+}
+
+/* static */ nsresult
+SRICheck::VerifyIntegrity(const SRIMetadata& aMetadata,
+                          nsIStreamLoader* aLoader,
+                          const CORSMode aCORSMode,
+                          uint32_t aStringLen,
+                          const uint8_t* aString,
+                          const nsIDocument* aDocument)
+{
+  NS_ENSURE_ARG_POINTER(aLoader);
+
+  nsCOMPtr<nsIRequest> request;
+  aLoader->GetRequest(getter_AddRefs(request));
+  NS_ENSURE_ARG_POINTER(request);
+  nsCOMPtr<nsIChannel> channel;
+  channel = do_QueryInterface(request);
+
+  if (MOZ_LOG_TEST(GetSriLog(), mozilla::LogLevel::Debug)) {
+    nsAutoCString requestURL;
+    request->GetName(requestURL);
+    SRILOG(("SRICheck::VerifyIntegrity (stream), url=%s (length=%u)",
+            requestURL.get(), aStringLen));
+  }
+
+  return VerifyIntegrityInternal(aMetadata, channel, aCORSMode,
+                                 aStringLen, aString, aDocument);
 }
 
 } // namespace dom

@@ -11,11 +11,9 @@
 #include "nsCOMPtr.h"
 #include "SRIMetadata.h"
 
-class nsIChannel;
 class nsIDocument;
-class nsIScriptSecurityManager;
 class nsIStreamLoader;
-class nsIURI;
+class nsIUnicharStreamLoader;
 
 namespace mozilla {
 namespace dom {
@@ -39,7 +37,7 @@ public:
    * must prevent the resource from loading.
    */
   static nsresult VerifyIntegrity(const SRIMetadata& aMetadata,
-                                  nsIChannel* aChannel,
+                                  nsIUnicharStreamLoader* aLoader,
                                   const CORSMode aCORSMode,
                                   const nsAString& aString,
                                   const nsIDocument* aDocument);
@@ -49,7 +47,7 @@ public:
    * must prevent the resource from loading.
    */
   static nsresult VerifyIntegrity(const SRIMetadata& aMetadata,
-                                  nsIChannel* aChannel,
+                                  nsIStreamLoader* aLoader,
                                   const CORSMode aCORSMode,
                                   uint32_t aStringLen,
                                   const uint8_t* aString,
