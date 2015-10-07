@@ -262,7 +262,7 @@
 
 }
 
-*|*:not(:root):-moz-full-screen {
+*|*:-moz-full-screen:not(:root) {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
@@ -278,6 +278,10 @@
   min-height: 0 !important;
   max-height: none !important;
   box-sizing: border-box !important;
+}
+
+*|*:-moz-full-screen:not(:root):not(:-moz-browser-frame) {
+  -moz-top-layer: top !important;
 }
 
 /* XML parse error reporting */
