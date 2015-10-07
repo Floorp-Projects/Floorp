@@ -478,6 +478,9 @@ EOF
   fi
 fi
 
+AC_PROG_CPP
+AC_PROG_CXXCPP
+
 dnl ========================================================
 dnl Special win32 checks
 dnl ========================================================
@@ -667,8 +670,6 @@ See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
         fi
         CFLAGS="$CFLAGS -D_HAS_EXCEPTIONS=0"
         CXXFLAGS="$CXXFLAGS -D_HAS_EXCEPTIONS=0"
-
-        MOZ_FIND_WINSDK_VERSION
     else
         # Check w32api version
         _W32API_MAJOR_VERSION=`echo $W32API_VERSION | $AWK -F\. '{ print $1 }'`
@@ -720,10 +721,9 @@ See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
         # strsafe.h on mingw uses macros for function deprecation that pollutes namespace
         # causing problems with local implementations with the same name.
         AC_DEFINE(STRSAFE_NO_DEPRECATE)
-
-        MOZ_WINSDK_MAXVER=0x06030000
     fi # !GNU_CC
 
+    MOZ_FIND_WINSDK_VERSION
     AC_DEFINE_UNQUOTED(WINVER,0x$WINVER)
     AC_DEFINE_UNQUOTED(_WIN32_WINNT,0x$WINVER)
     # Require OS features provided by IE 6.0 SP2 (XP SP2)
@@ -744,9 +744,6 @@ See https://developer.mozilla.org/en/Windows_Build_Prerequisites.])
     AC_SUBST(MOZ_WINSDK_MAXVER)
     ;;
 esac
-
-AC_PROG_CPP
-AC_PROG_CXXCPP
 
 if test -n "$_WIN32_MSVC"; then
     SKIP_PATH_CHECKS=1
