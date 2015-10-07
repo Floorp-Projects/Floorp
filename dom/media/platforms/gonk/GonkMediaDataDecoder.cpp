@@ -8,8 +8,6 @@
 #include "nsTArray.h"
 #include "MediaCodecProxy.h"
 
-#include <stagefright/foundation/ADebug.h>
-
 #include "mozilla/Logging.h"
 #include <android/log.h>
 #define GMDD_LOG(...) __android_log_print(ANDROID_LOG_DEBUG, "GonkMediaDataDecoder", __VA_ARGS__)
@@ -20,87 +18,6 @@ extern PRLogModuleInfo* GetPDMLog();
 using namespace android;
 
 namespace mozilla {
-
-bool
-GonkDecoderManager::InitLoopers(MediaData::Type aType)
-{
-  MOZ_ASSERT(mDecodeLooper.get() == nullptr && mTaskLooper.get() == nullptr);
-  MOZ_ASSERT(aType == MediaData::VIDEO_DATA || aType == MediaData::AUDIO_DATA);
-
-  const char* suffix = (aType == MediaData::VIDEO_DATA ? "video" : "audio");
-  mDecodeLooper = new ALooper;
-  android::AString name("MediaCodecProxy/");
-  name.append(suffix);
-  mDecodeLooper->setName(name.c_str());
-
-  mTaskLooper = new ALooper;
-  name.setTo("GonkDecoderManager/");
-  name.append(suffix);
-  mTaskLooper->setName(name.c_str());
-  mTaskLooper->registerHandler(this);
-
-  return mDecodeLooper->start() == OK && mTaskLooper->start() == OK;
-}
-
-nsresult
-GonkDecoderManager::Input(MediaRawData* aSample)
-{
-  MutexAutoLock lock(mMutex);
-  nsRefPtr<MediaRawData> sample;
-
-  if (!aSample) {
-    // It means EOS with empty sample.
-    sample = new MediaRawData();
-  } else {
-    sample = aSample;
-  }
-
-  mQueuedSamples.AppendElement(sample);
-
-  status_t rv;
-  while (mQueuedSamples.Length()) {
-    nsRefPtr<MediaRawData> data = mQueuedSamples.ElementAt(0);
-    {
-      MutexAutoUnlock unlock(mMutex);
-      rv = mDecoder->Input(reinterpret_cast<const uint8_t*>(data->Data()),
-                           data->Size(),
-                           data->mTime,
-                           0);
-    }
-    if (rv == OK) {
-      mQueuedSamples.RemoveElementAt(0);
-    } else if (rv == -EAGAIN || rv == -ETIMEDOUT) {
-      // In most cases, EAGAIN or ETIMEOUT are safe because OMX can't fill
-      // buffer on time.
-      return NS_OK;
-    } else {
-      return NS_ERROR_UNEXPECTED;
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult
-GonkDecoderManager::Flush()
-{
-  if (mDecoder == nullptr) {
-    GMDD_LOG("Decoder is not initialized");
-    return NS_ERROR_UNEXPECTED;
-  }
-  {
-    MutexAutoLock lock(mMutex);
-    mQueuedSamples.Clear();
-  }
-
-  mLastTime = 0;
-
-  if (mDecoder->flush() != OK) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
 
 nsresult
 GonkDecoderManager::Shutdown()
@@ -116,25 +33,6 @@ GonkDecoderManager::Shutdown()
   return NS_OK;
 }
 
-bool
-GonkDecoderManager::HasQueuedSample()
-{
-  MutexAutoLock lock(mMutex);
-  return mQueuedSamples.Length();
-}
-
-void
-GonkDecoderManager::onMessageReceived(const sp<AMessage> &aMessage)
-{
-  switch (aMessage->what()) {
-    default:
-      {
-        TRESPASS();
-        break;
-      }
-  }
-}
-
 GonkMediaDataDecoder::GonkMediaDataDecoder(GonkDecoderManager* aManager,
                                            FlushableTaskQueue* aTaskQueue,
                                            MediaDataDecoderCallback* aCallback)
@@ -145,7 +43,6 @@ GonkMediaDataDecoder::GonkMediaDataDecoder(GonkDecoderManager* aManager,
   , mDrainComplete(false)
 {
   MOZ_COUNT_CTOR(GonkMediaDataDecoder);
-  mManager->SetDecodeCallback(aCallback);
 }
 
 GonkMediaDataDecoder::~GonkMediaDataDecoder()
@@ -158,7 +55,7 @@ GonkMediaDataDecoder::Init()
 {
   mDrainComplete = false;
 
-  return mManager->Init();
+  return mManager->Init(mCallback);
 }
 
 nsresult
