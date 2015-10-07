@@ -106,7 +106,7 @@ struct RunnableMethodTraits<mozilla::ipc::MessageChannel>
             DebugAbort(__FILE__, __LINE__, #_cond,## __VA_ARGS__);  \
     } while (0)
 
-static MessageChannel* gMainThreadBlocker;
+static MessageChannel* gParentProcessBlocker;
 
 namespace mozilla {
 namespace ipc {
@@ -404,8 +404,8 @@ MessageChannel::Clear()
     // In practice, mListener owns the channel, so the channel gets deleted
     // before mListener.  But just to be safe, mListener is a weak pointer.
 
-    if (gMainThreadBlocker == this) {
-        gMainThreadBlocker = nullptr;
+    if (gParentProcessBlocker == this) {
+        gParentProcessBlocker = nullptr;
     }
 
     mDequeueOneTask->Cancel();
@@ -1334,7 +1334,7 @@ MessageChannel::DispatchSyncMessage(const Message& aMsg, Message*& aReply)
     MaybeScriptBlocker scriptBlocker(this, prio > IPC::Message::PRIORITY_NORMAL);
 
     MessageChannel* dummy;
-    MessageChannel*& blockingVar = NS_IsMainThread() ? gMainThreadBlocker : dummy;
+    MessageChannel*& blockingVar = ShouldBlockScripts() ? gParentProcessBlocker : dummy;
 
     Result rv;
     if (mTimedOutMessageSeqno && mTimedOutMessagePriority >= prio) {
@@ -2046,26 +2046,22 @@ MessageChannel::CancelCurrentTransactionInternal()
     // see if mCurrentTransaction is 0 before examining DispatchSyncMessage.
 }
 
-bool
+void
 MessageChannel::CancelCurrentTransaction()
 {
     MonitorAutoLock lock(*mMonitor);
-    if (mCurrentTransaction &&
-        !DispatchingAsyncMessage() &&
-        DispatchingSyncMessagePriority() >= IPC::Message::PRIORITY_HIGH)
-    {
+    if (mCurrentTransaction) {
         CancelCurrentTransactionInternal();
         mLink->SendMessage(new CancelMessage());
-        return true;
     }
-    return false;
 }
 
 void
 CancelCPOWs()
 {
-    if (gMainThreadBlocker && gMainThreadBlocker->CancelCurrentTransaction()) {
+    if (gParentProcessBlocker) {
         mozilla::Telemetry::Accumulate(mozilla::Telemetry::IPC_TRANSACTION_CANCEL, true);
+        gParentProcessBlocker->CancelCurrentTransaction();
     }
 }
 
