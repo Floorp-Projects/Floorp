@@ -3340,7 +3340,7 @@ template<typename LightType, typename LightingType>
 IntRect
 FilterNodeLightingSoftware<LightType, LightingType>::GetOutputRectInRect(const IntRect& aRect)
 {
-  return GetInputRectInRect(IN_LIGHTING_IN, aRect);
+  return aRect;
 }
 
 Point3D
@@ -3482,7 +3482,7 @@ FilterNodeLightingSoftware<LightType, LightingType>::DoRender(const IntRect& aRe
 
   RefPtr<DataSourceSurface> input =
     GetInputDataSourceSurface(IN_LIGHTING_IN, srcRect, CAN_HANDLE_A8,
-                              EDGE_MODE_DUPLICATE);
+                              EDGE_MODE_NONE);
 
   if (!input) {
     return nullptr;

@@ -536,6 +536,27 @@ IsTransferFilterType(FilterType aType)
   }
 }
 
+static bool
+HasUnboundedOutputRegion(FilterType aType)
+{
+  if (IsTransferFilterType(aType)) {
+    return true;
+  }
+
+  switch (aType) {
+    case FilterType::COLOR_MATRIX:
+    case FilterType::POINT_DIFFUSE:
+    case FilterType::SPOT_DIFFUSE:
+    case FilterType::DISTANT_DIFFUSE:
+    case FilterType::POINT_SPECULAR:
+    case FilterType::SPOT_SPECULAR:
+    case FilterType::DISTANT_SPECULAR:
+      return true;
+    default:
+      return false;
+  }
+}
+
 /* static */
 already_AddRefed<FilterNode>
 FilterNodeD2D1::Create(ID2D1DeviceContext *aDC, FilterType aType)
@@ -556,7 +577,7 @@ FilterNodeD2D1::Create(ID2D1DeviceContext *aDC, FilterType aType)
 
   RefPtr<FilterNodeD2D1> filter = new FilterNodeD2D1(effect, aType);
 
-  if (IsTransferFilterType(aType) || aType == FilterType::COLOR_MATRIX) {
+  if (HasUnboundedOutputRegion(aType)) {
     // These filters can produce non-transparent output from transparent
     // input pixels, and we want them to have an unbounded output region.
     filter = new FilterNodeExtendInputAdapterD2D1(aDC, filter, aType);
