@@ -2494,7 +2494,16 @@ ByteSizeOfScript(JSContext*cx, unsigned argc, Value* vp)
         return false;
     }
 
-    RootedScript script(cx, args[0].toObject().as<JSFunction>().getOrCreateScript(cx));
+    JSFunction* fun = &args[0].toObject().as<JSFunction>();
+    if (fun->isNative()) {
+        JS_ReportError(cx, "Argument must be a scripted function");
+        return false;
+    }
+
+    RootedScript script(cx, fun->getOrCreateScript(cx));
+    if (!script)
+        return false;
+
     mozilla::MallocSizeOf mallocSizeOf = cx->runtime()->debuggerMallocSizeOf;
 
     {
