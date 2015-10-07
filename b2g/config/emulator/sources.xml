@@ -19,7 +19,7 @@
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="0019347fbaedc9d54f2f3436fff17aeb22968174"/>
+  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="b99837aa2294348317bcae68acabe71d9a83d774"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="7e0fe55ac52323eace5a6119ab2b911fc4f64495"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="4ace9aaee0e048dfda11bb787646c59982a3dc80"/>

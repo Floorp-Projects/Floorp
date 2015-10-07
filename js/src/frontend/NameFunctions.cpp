@@ -682,7 +682,6 @@ class NameResolver
           case PNK_VAR:
           case PNK_CONST:
           case PNK_LET:
-          case PNK_GLOBALCONST:
             MOZ_ASSERT(cur->isArity(PN_LIST));
             for (ParseNode* element = cur->pn_head; element; element = element->pn_next) {
                 if (!resolve(element, prefix))

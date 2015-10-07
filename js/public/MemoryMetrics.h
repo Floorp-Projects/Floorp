@@ -696,7 +696,8 @@ struct CompartmentStats
     macro(Other,   MallocHeap, objectMetadataTable) \
     macro(Other,   MallocHeap, crossCompartmentWrappersTable) \
     macro(Other,   MallocHeap, regexpCompartment) \
-    macro(Other,   MallocHeap, savedStacksSet)
+    macro(Other,   MallocHeap, savedStacksSet) \
+    macro(Other,   MallocHeap, nonSyntacticLexicalScopesTable)
 
     CompartmentStats()
       : FOR_EACH_SIZE(ZERO_SIZE)

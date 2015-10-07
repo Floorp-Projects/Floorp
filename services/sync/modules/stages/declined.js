@@ -11,7 +11,7 @@
 
 this.EXPORTED_SYMBOLS = ["DeclinedEngines"];
 
-const {utils: Cu} = Components;
+var {utils: Cu} = Components;
 
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://gre/modules/Log.jsm");

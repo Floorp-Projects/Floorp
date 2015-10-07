@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-const Cu = Components.utils;
+var Cu = Components.utils;
 Cu.import("resource://gre/modules/Services.jsm");
 
 // This is the only implementation of nsIUrlListManager.
@@ -93,6 +93,7 @@ PROT_ListManager.prototype.shutdown_ = function() {
  * @returns true if the table could be created; false otherwise
  */
 PROT_ListManager.prototype.registerTable = function(tableName,
+                                                    providerName,
                                                     updateUrl,
                                                     gethashUrl) {
   log("registering " + tableName + " with " + updateUrl);
@@ -103,6 +104,7 @@ PROT_ListManager.prototype.registerTable = function(tableName,
   this.tablesData[tableName] = {};
   this.tablesData[tableName].updateUrl = updateUrl;
   this.tablesData[tableName].gethashUrl = gethashUrl;
+  this.tablesData[tableName].provider = providerName;
 
   // Keep track of all of our update URLs.
   if (!this.needsUpdate_[updateUrl]) {
@@ -196,6 +198,8 @@ PROT_ListManager.prototype.kickoffUpdate_ = function (onDiskTableData)
 {
   this.startingUpdate_ = false;
   var initialUpdateDelay = 3000;
+  // Add a fuzz of 0-5 minutes.
+  initialUpdateDelay += Math.floor(Math.random() * (5 * 60 * 1000));
 
   // If the user has never downloaded tables, do the check now.
   log("needsUpdate: " + JSON.stringify(this.needsUpdate_, undefined, 2));
@@ -206,10 +210,46 @@ PROT_ListManager.prototype.kickoffUpdate_ = function (onDiskTableData)
     // Don't set the updateChecker unless at least one table has updates
     // enabled.
     if (this.updatesNeeded_(updateUrl) && !this.updateCheckers_[updateUrl]) {
-      log("Initializing update checker for " + updateUrl);
+      let provider = null;
+      Object.keys(this.tablesData).forEach(function(table) {
+        if (this.tablesData[table].updateUrl === updateUrl) {
+          let newProvider = this.tablesData[table].provider;
+          if (provider) {
+            if (newProvider !== provider) {
+              log("Multiple tables for the same updateURL have a different provider?!");
+            }
+          } else {
+            provider = newProvider;
+          }
+        }
+      }, this);
+      log("Initializing update checker for " + updateUrl
+          + " provided by " + provider);
+
+      // Use the initialUpdateDelay + fuzz unless we had previous updates
+      // and the server told us when to try again.
+      let updateDelay = initialUpdateDelay;
+      let targetPref = "browser.safebrowsing.provider." + provider + ".nextupdatetime";
+      let nextUpdate = this.prefs_.getPref(targetPref);
+      if (nextUpdate) {
+        updateDelay = Math.max(0, nextUpdate - Date.now());
+        log("Next update at " + nextUpdate
+            + " which is " + updateDelay + "ms from now");
+      }
+
+      // Set the last update time to verify if data is still valid.
+      let freshnessPref = "browser.safebrowsing.provider." + provider + ".lastupdatetime";
+      let freshness = this.prefs_.getPref(freshnessPref);
+      if (freshness) {
+        Object.keys(this.tablesData).forEach(function(table) {
+        if (this.tablesData[table].provider === provider) {
+          this.dbService_.setLastUpdateTime(table, freshness);
+        }}, this);
+      }
+
       this.updateCheckers_[updateUrl] =
         new G_Alarm(BindToObject(this.checkForUpdates, this, updateUrl),
-                    initialUpdateDelay, false /* repeating */);
+                    updateDelay, false /* repeating */);
     } else {
       log("No updates needed or already initialized for " + updateUrl);
     }
@@ -407,6 +447,34 @@ PROT_ListManager.prototype.updateSuccess_ = function(tableList, updateUrl,
 
   // Let the backoff object know that we completed successfully.
   this.requestBackoffs_[updateUrl].noteServerResponse(200);
+
+  // Set last update time for provider
+  // Get the provider for these tables, check for consistency
+  let tables = tableList.split(",");
+  let provider = null;
+  for (let table of tables) {
+    let newProvider = this.tablesData[table].provider;
+    if (provider) {
+      if (newProvider !== provider) {
+        log("Multiple tables for the same updateURL have a different provider?!");
+      }
+    } else {
+      provider = newProvider;
+    }
+  }
+
+  // Store the last update time (needed to know if the table is "fresh")
+  // and the next update time (to know when to update next).
+  let lastUpdatePref = "browser.safebrowsing.provider." + provider + ".lastupdatetime";
+  let now = Date.now();
+  log("Setting last update of " + provider + " to " + now);
+  this.prefs_.setPref(lastUpdatePref, now.toString());
+
+  let nextUpdatePref = "browser.safebrowsing.provider." + provider + ".nextupdatetime";
+  let targetTime = now + delay;
+  log("Setting next update of " + provider + " to " + targetTime
+      + " (" + delay + "ms from now)");
+  this.prefs_.setPref(nextUpdatePref, targetTime.toString());
 }
 
 /**

@@ -706,14 +706,14 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
                 }
             } else {
                 // For global scripts without a non-syntactic scope the scope
-                // chain is the script's global (Ion does not compile scripts
-                // with a non-syntactic global scope). Also note that it's
-                // invalid to resume into the prologue in this case because
-                // the prologue expects the scope chain in R1 for eval and
-                // global scripts.
+                // chain is the script's global lexical scope (Ion does not
+                // compile scripts with a non-syntactic global scope). Also
+                // note that it's invalid to resume into the prologue in this
+                // case because the prologue expects the scope chain in R1 for
+                // eval and global scripts.
                 MOZ_ASSERT(!script->isForEval());
                 MOZ_ASSERT(!script->hasNonSyntacticScope());
-                scopeChain = &(script->global());
+                scopeChain = &(script->global().lexicalScope());
             }
         }
 

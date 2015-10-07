@@ -292,13 +292,14 @@ YCbCrImageDataDeserializer::ToDataSourceSurface()
     return nullptr;
   }
 
+  gfx::YUVType type = TypeFromSize(GetYSize().width, GetYSize().height,
+                                   GetCbCrSize().width, GetCbCrSize().height);
   gfx::ConvertYCbCrToRGB32(GetYData(), GetCbData(), GetCrData(),
                            map.mData,
                            0, 0, //pic x and y
                            GetYSize().width, GetYSize().height,
                            GetYStride(), GetCbCrStride(),
-                           map.mStride,
-                           gfx::YV12);
+                           map.mStride, type);
   result->Unmap();
   return result.forget();
 }

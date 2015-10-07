@@ -66,7 +66,7 @@ interface nsIUrlClassifierUpdateObserver : nsISupports {
  * It provides async methods for querying and updating the database.  As the
  * methods complete, they call the callback function.
  */
-[scriptable, uuid(3f9e61e5-01bd-45d0-8dd2-f1abcd20dbb7)]
+[scriptable, uuid(7a258022-6765-11e5-b379-b37b1f2354be)]
 interface nsIUrlClassifierDBService : nsISupports
 {
   /**
@@ -99,6 +99,13 @@ interface nsIUrlClassifierDBService : nsISupports
    */
   void setHashCompleter(in ACString tableName,
                         in nsIUrlClassifierHashCompleter completer);
+
+  /**
+   * Set the last update time for the given table. We use this to
+   * remember freshness past restarts. Time is in milliseconds since epoch.
+   */
+  void setLastUpdateTime(in ACString tableName,
+                         in unsigned long long lastUpdateTime);
 
   ////////////////////////////////////////////////////////////////////////////
   // Incremental update methods.

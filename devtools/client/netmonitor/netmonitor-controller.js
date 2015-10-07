@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 const NET_STRINGS_URI = "chrome://browser/locale/devtools/netmonitor.properties";
 const PKI_STRINGS_URI = "chrome://pippki/locale/pippki.properties";
@@ -124,6 +124,10 @@ const Editor = require("devtools/client/sourceeditor/editor");
 const {Tooltip} = require("devtools/client/shared/widgets/Tooltip");
 const {ToolSidebar} = require("devtools/client/framework/sidebar");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+
+XPCOMUtils.defineConstant(this, "EVENTS", EVENTS);
+XPCOMUtils.defineConstant(this, "ACTIVITY_TYPE", ACTIVITY_TYPE);
+XPCOMUtils.defineConstant(this, "Editor", Editor);
 
 XPCOMUtils.defineLazyModuleGetter(this, "Chart",
   "resource:///modules/devtools/client/shared/widgets/Chart.jsm");

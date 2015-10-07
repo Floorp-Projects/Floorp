@@ -80,7 +80,7 @@ this.SafeBrowsing = {
     let providerName = this.listToProvider[listname];
     let provider = this.providers[providerName];
 
-    listManager.registerTable(listname, provider.updateURL, provider.gethashURL);
+    listManager.registerTable(listname, providerName, provider.updateURL, provider.gethashURL);
   },
 
   registerTables: function() {

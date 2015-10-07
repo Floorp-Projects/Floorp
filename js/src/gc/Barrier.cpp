@@ -13,27 +13,31 @@
 #include "js/HashTable.h"
 #include "js/Value.h"
 #include "vm/ScopeObject.h"
+#include "vm/SharedArrayObject.h"
+#include "vm/SharedTypedArrayObject.h"
 #include "vm/Symbol.h"
+
+namespace js {
 
 #ifdef DEBUG
 
 template <typename T>
 void
-js::BarrieredBase<T>::assertTypeConstraints() const
+BarrieredBase<T>::assertTypeConstraints() const
 {
-    static_assert(mozilla::IsBaseOf<js::gc::Cell, typename mozilla::RemovePointer<T>::Type>::value ||
+    static_assert(mozilla::IsBaseOf<gc::Cell, typename mozilla::RemovePointer<T>::Type>::value ||
                   mozilla::IsSame<JS::Value, T>::value ||
                   mozilla::IsSame<jsid, T>::value ||
-                  mozilla::IsSame<js::TaggedProto, T>::value,
+                  mozilla::IsSame<TaggedProto, T>::value,
                   "ensure only supported types are instantiated with barriers");
 }
 #define INSTANTIATE_ALL_VALID_TYPES(type) \
-    template void js::BarrieredBase<type>::assertTypeConstraints() const;
+    template void BarrieredBase<type>::assertTypeConstraints() const;
 FOR_EACH_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_TYPES)
 #undef INSTANTIATE_ALL_VALID_TYPES
 
 bool
-js::HeapSlot::preconditionForSet(NativeObject* owner, Kind kind, uint32_t slot)
+HeapSlot::preconditionForSet(NativeObject* owner, Kind kind, uint32_t slot)
 {
     return kind == Slot
          ? &owner->getSlotRef(slot) == this
@@ -41,7 +45,7 @@ js::HeapSlot::preconditionForSet(NativeObject* owner, Kind kind, uint32_t slot)
 }
 
 bool
-js::HeapSlot::preconditionForWriteBarrierPost(NativeObject* obj, Kind kind, uint32_t slot,
+HeapSlot::preconditionForWriteBarrierPost(NativeObject* obj, Kind kind, uint32_t slot,
                                               Value target) const
 {
     return kind == Slot
@@ -50,33 +54,33 @@ js::HeapSlot::preconditionForWriteBarrierPost(NativeObject* obj, Kind kind, uint
 }
 
 bool
-js::RuntimeFromMainThreadIsHeapMajorCollecting(JS::shadow::Zone* shadowZone)
+RuntimeFromMainThreadIsHeapMajorCollecting(JS::shadow::Zone* shadowZone)
 {
     return shadowZone->runtimeFromMainThread()->isHeapMajorCollecting();
 }
 
 bool
-js::CurrentThreadIsIonCompiling()
+CurrentThreadIsIonCompiling()
 {
     return TlsPerThreadData.get()->ionCompiling;
 }
 
 bool
-js::CurrentThreadIsIonCompilingSafeForMinorGC()
+CurrentThreadIsIonCompilingSafeForMinorGC()
 {
     return TlsPerThreadData.get()->ionCompilingSafeForMinorGC;
 }
 
 bool
-js::CurrentThreadIsGCSweeping()
+CurrentThreadIsGCSweeping()
 {
-    return js::TlsPerThreadData.get()->gcSweeping;
+    return TlsPerThreadData.get()->gcSweeping;
 }
 
 bool
-js::CurrentThreadIsHandlingInitFailure()
+CurrentThreadIsHandlingInitFailure()
 {
-    JSRuntime* rt = js::TlsPerThreadData.get()->runtimeIfOnOwnerThread();
+    JSRuntime* rt = TlsPerThreadData.get()->runtimeIfOnOwnerThread();
     return rt && rt->handlingInitFailure;
 }
 
@@ -85,44 +89,30 @@ js::CurrentThreadIsHandlingInitFailure()
 template <typename S>
 template <typename T>
 void
-js::ReadBarrierFunctor<S>::operator()(T* t)
+ReadBarrierFunctor<S>::operator()(T* t)
 {
     InternalGCMethods<T*>::readBarrier(t);
 }
-template void js::ReadBarrierFunctor<JS::Value>::operator()<JS::Symbol>(JS::Symbol*);
-template void js::ReadBarrierFunctor<JS::Value>::operator()<JSObject>(JSObject*);
-template void js::ReadBarrierFunctor<JS::Value>::operator()<JSString>(JSString*);
+template void ReadBarrierFunctor<JS::Value>::operator()<JS::Symbol>(JS::Symbol*);
+template void ReadBarrierFunctor<JS::Value>::operator()<JSObject>(JSObject*);
+template void ReadBarrierFunctor<JS::Value>::operator()<JSString>(JSString*);
 
 template <typename S>
 template <typename T>
 void
-js::PreBarrierFunctor<S>::operator()(T* t)
+PreBarrierFunctor<S>::operator()(T* t)
 {
     InternalGCMethods<T*>::preBarrier(t);
 }
-template void js::PreBarrierFunctor<JS::Value>::operator()<JS::Symbol>(JS::Symbol*);
-template void js::PreBarrierFunctor<JS::Value>::operator()<JSObject>(JSObject*);
-template void js::PreBarrierFunctor<JS::Value>::operator()<JSString>(JSString*);
-template void js::PreBarrierFunctor<jsid>::operator()<JS::Symbol>(JS::Symbol*);
-template void js::PreBarrierFunctor<jsid>::operator()<JSString>(JSString*);
-
-JS_PUBLIC_API(void)
-JS::HeapObjectPostBarrier(JSObject** objp, JSObject* prev, JSObject* next)
-{
-    MOZ_ASSERT(objp);
-    js::InternalGCMethods<JSObject*>::postBarrier(objp, prev, next);
-}
-
-JS_PUBLIC_API(void)
-JS::HeapValuePostBarrier(JS::Value* valuep, const Value& prev, const Value& next)
-{
-    MOZ_ASSERT(valuep);
-    js::InternalGCMethods<JS::Value>::postBarrier(valuep, prev, next);
-}
+template void PreBarrierFunctor<JS::Value>::operator()<JS::Symbol>(JS::Symbol*);
+template void PreBarrierFunctor<JS::Value>::operator()<JSObject>(JSObject*);
+template void PreBarrierFunctor<JS::Value>::operator()<JSString>(JSString*);
+template void PreBarrierFunctor<jsid>::operator()<JS::Symbol>(JS::Symbol*);
+template void PreBarrierFunctor<jsid>::operator()<JSString>(JSString*);
 
 template <typename T>
-/* static */ js::HashNumber
-js::MovableCellHasher<T>::hash(const Lookup& l)
+/* static */ HashNumber
+MovableCellHasher<T>::hash(const Lookup& l)
 {
     if (!l)
         return 0;
@@ -134,15 +124,15 @@ js::MovableCellHasher<T>::hash(const Lookup& l)
     MOZ_ASSERT(CurrentThreadCanAccessZone(l->zoneFromAnyThread()) ||
                l->zoneFromAnyThread()->isSelfHostingZone());
 
-    js::HashNumber hn;
+    HashNumber hn;
     if (!l->zoneFromAnyThread()->getHashCode(l, &hn))
-        js::CrashAtUnhandlableOOM("failed to get a stable hash code");
+        CrashAtUnhandlableOOM("failed to get a stable hash code");
     return hn;
 }
 
 template <typename T>
 /* static */ bool
-js::MovableCellHasher<T>::match(const Key& k, const Lookup& l)
+MovableCellHasher<T>::match(const Key& k, const Lookup& l)
 {
     // Return true if both are null or false if only one is null.
     if (!k)
@@ -168,7 +158,23 @@ js::MovableCellHasher<T>::match(const Key& k, const Lookup& l)
     return uidK == uidL;
 }
 
-template struct js::MovableCellHasher<JSObject*>;
-template struct js::MovableCellHasher<js::GlobalObject*>;
-template struct js::MovableCellHasher<js::SavedFrame*>;
-template struct js::MovableCellHasher<js::ScopeObject*>;
+template struct MovableCellHasher<JSObject*>;
+template struct MovableCellHasher<GlobalObject*>;
+template struct MovableCellHasher<SavedFrame*>;
+template struct MovableCellHasher<ScopeObject*>;
+
+} // namespace js
+
+JS_PUBLIC_API(void)
+JS::HeapObjectPostBarrier(JSObject** objp, JSObject* prev, JSObject* next)
+{
+    MOZ_ASSERT(objp);
+    js::InternalGCMethods<JSObject*>::postBarrier(objp, prev, next);
+}
+
+JS_PUBLIC_API(void)
+JS::HeapValuePostBarrier(JS::Value* valuep, const Value& prev, const Value& next)
+{
+    MOZ_ASSERT(valuep);
+    js::InternalGCMethods<JS::Value>::postBarrier(valuep, prev, next);
+}

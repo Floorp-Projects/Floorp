@@ -73,7 +73,7 @@ namespace oom {
  * without causing an OOM in the main thread first.
  */
 enum ThreadType {
-    THREAD_TYPE_NONE,           // 0
+    THREAD_TYPE_NONE = 0,       // 0
     THREAD_TYPE_MAIN,           // 1
     THREAD_TYPE_ASMJS,          // 2
     THREAD_TYPE_ION,            // 3
@@ -83,7 +83,6 @@ enum ThreadType {
     THREAD_TYPE_GCPARALLEL,     // 7
     THREAD_TYPE_MAX             // Used to check shell function arguments
 };
-
 
 /*
  * Getter/Setter functions to encapsulate mozilla::ThreadLocal,
@@ -126,23 +125,22 @@ namespace oom {
 extern JS_PUBLIC_DATA(uint32_t) targetThread;
 
 static inline bool
-OOMThreadCheck()
+IsThreadSimulatingOOM()
 {
-    return (!js::oom::targetThread
-            || js::oom::targetThread == js::oom::GetThreadType());
+    return js::oom::targetThread && js::oom::targetThread == js::oom::GetThreadType();
 }
 
 static inline bool
 IsSimulatedOOMAllocation()
 {
-    return OOMThreadCheck() && (OOM_counter == OOM_maxAllocations ||
+    return IsThreadSimulatingOOM() && (OOM_counter == OOM_maxAllocations ||
            (OOM_counter > OOM_maxAllocations && OOM_failAlways));
 }
 
 static inline bool
 ShouldFailWithOOM()
 {
-    if (!OOMThreadCheck())
+    if (!IsThreadSimulatingOOM())
         return false;
 
     OOM_counter++;
@@ -195,7 +193,8 @@ struct MOZ_RAII AutoEnterOOMUnsafeRegion
 
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
     AutoEnterOOMUnsafeRegion()
-      : oomEnabled_(OOM_maxAllocations != UINT32_MAX), oomAfter_(0)
+      : oomEnabled_(oom::IsThreadSimulatingOOM() && OOM_maxAllocations != UINT32_MAX),
+        oomAfter_(0)
     {
         if (oomEnabled_) {
             oomAfter_ = int64_t(OOM_maxAllocations) - OOM_counter;
@@ -204,11 +203,8 @@ struct MOZ_RAII AutoEnterOOMUnsafeRegion
     }
 
     ~AutoEnterOOMUnsafeRegion() {
-        // TODO: This class is not thread safe.  If another thread has modified
-        // OOM_maxAllocations, don't try to restore it.
-        if (OOM_maxAllocations != UINT32_MAX)
-            return;
         if (oomEnabled_) {
+            MOZ_ASSERT(OOM_maxAllocations == UINT32_MAX);
             int64_t maxAllocations = OOM_counter + oomAfter_;
             MOZ_ASSERT(maxAllocations >= 0 && maxAllocations < UINT32_MAX);
             OOM_maxAllocations = uint32_t(maxAllocations);
@@ -340,6 +336,36 @@ static inline char* js_strdup(const char* s)
 
 JS_DECLARE_NEW_METHODS(js_new, js_malloc, static MOZ_ALWAYS_INLINE)
 
+namespace js {
+
+/*
+ * Calculate the number of bytes needed to allocate |numElems| contiguous
+ * instances of type |T|.  Return false if the calculation overflowed.
+ */
+template <typename T>
+MOZ_WARN_UNUSED_RESULT inline bool
+CalculateAllocSize(size_t numElems, size_t* bytesOut)
+{
+    *bytesOut = numElems * sizeof(T);
+    return (numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value) == 0;
+}
+
+/*
+ * Calculate the number of bytes needed to allocate a single instance of type
+ * |T| followed by |numExtra| contiguous instances of type |Extra|.  Return
+ * false if the calculation overflowed.
+ */
+template <typename T, typename Extra>
+MOZ_WARN_UNUSED_RESULT inline bool
+CalculateAllocSizeWithExtra(size_t numExtra, size_t* bytesOut)
+{
+    *bytesOut = sizeof(T) + numExtra * sizeof(Extra);
+    return (numExtra & mozilla::tl::MulOverflowMask<sizeof(Extra)>::value) == 0 &&
+           *bytesOut >= sizeof(T);
+}
+
+} /* namespace js */
+
 template <class T>
 static MOZ_ALWAYS_INLINE void
 js_delete(const T* p)
@@ -365,32 +391,34 @@ template <class T>
 static MOZ_ALWAYS_INLINE T*
 js_pod_malloc()
 {
-    return (T*)js_malloc(sizeof(T));
+    return static_cast<T*>(js_malloc(sizeof(T)));
 }
 
 template <class T>
 static MOZ_ALWAYS_INLINE T*
 js_pod_calloc()
 {
-    return (T*)js_calloc(sizeof(T));
+    return static_cast<T*>(js_calloc(sizeof(T)));
 }
 
 template <class T>
 static MOZ_ALWAYS_INLINE T*
 js_pod_malloc(size_t numElems)
 {
-    if (MOZ_UNLIKELY(numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value))
+    size_t bytes;
+    if (MOZ_UNLIKELY(!js::CalculateAllocSize<T>(numElems, &bytes)))
         return nullptr;
-    return (T*)js_malloc(numElems * sizeof(T));
+    return static_cast<T*>(js_malloc(bytes));
 }
 
 template <class T>
 static MOZ_ALWAYS_INLINE T*
 js_pod_calloc(size_t numElems)
 {
-    if (MOZ_UNLIKELY(numElems & mozilla::tl::MulOverflowMask<sizeof(T)>::value))
+    size_t bytes;
+    if (MOZ_UNLIKELY(!js::CalculateAllocSize<T>(numElems, &bytes)))
         return nullptr;
-    return (T*)js_calloc(numElems * sizeof(T));
+    return static_cast<T*>(js_calloc(bytes));
 }
 
 template <class T>
@@ -398,9 +426,10 @@ static MOZ_ALWAYS_INLINE T*
 js_pod_realloc(T* prior, size_t oldSize, size_t newSize)
 {
     MOZ_ASSERT(!(oldSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value));
-    if (MOZ_UNLIKELY(newSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value))
+    size_t bytes;
+    if (MOZ_UNLIKELY(!js::CalculateAllocSize<T>(newSize, &bytes)))
         return nullptr;
-    return (T*)js_realloc(prior, newSize * sizeof(T));
+    return static_cast<T*>(js_realloc(prior, bytes));
 }
 
 namespace js {

@@ -28,33 +28,8 @@ broader range of users and developers.
 **     License
 *******************************************************************************
 
-Most of libjpeg-turbo inherits the non-restrictive, BSD-style license used by
-libjpeg (see README.)  The TurboJPEG wrapper (both C and Java versions) and
-associated test programs bear a similar license, which is reproduced below:
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-- Redistributions of source code must retain the above copyright notice,
-  this list of conditions and the following disclaimer.
-- Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
-- Neither the name of the libjpeg-turbo Project nor the names of its
-  contributors may be used to endorse or promote products derived from this
-  software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS",
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT HOLDERS OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-POSSIBILITY OF SUCH DAMAGE.
+libjpeg-turbo is covered by three compatible BSD-style open source licenses.
+Refer to LICENSE.txt for a roll-up of license terms.
 
 
 *******************************************************************************
@@ -311,8 +286,9 @@ following reasons:
    numbers on this, the typical difference in PNSR between the two algorithms
    is less than 0.10 dB, whereas changing the quality level by 1 in the upper
    range of the quality scale is typically more like a 1.0 dB difference.)
--- When not using the SIMD extensions, then the accuracy of the floating point
-   DCT/IDCT can depend on the compiler and compiler settings.
+-- If the floating point algorithms in libjpeg-turbo are not implemented using
+   SIMD instructions on a particular platform, then the accuracy of the
+   floating point DCT/IDCT can depend on the compiler settings.
 
 While libjpeg-turbo does emulate the libjpeg v8 API/ABI, under the hood, it is
 still using the same algorithms as libjpeg v6b, so there are several specific

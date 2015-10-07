@@ -400,14 +400,17 @@ bool MediaDecoderStateMachine::HaveNextFrameData()
          (!HasVideo() || VideoQueue().GetSize() > 1);
 }
 
-int64_t MediaDecoderStateMachine::GetDecodedAudioDuration()
+int64_t
+MediaDecoderStateMachine::GetDecodedAudioDuration()
 {
   MOZ_ASSERT(OnTaskQueue());
-  int64_t audioDecoded = AudioQueue().Duration();
   if (mMediaSink->IsStarted()) {
-    audioDecoded += AudioEndTime() - GetMediaTime();
+    // |mDecodedAudioEndTime == -1| means no decoded audio at all so the
+    // returned duration is 0.
+    return mDecodedAudioEndTime != -1 ? mDecodedAudioEndTime - GetClock() : 0;
   }
-  return audioDecoded;
+  // MediaSink not started. All audio samples are in the queue.
+  return AudioQueue().Duration();
 }
 
 void MediaDecoderStateMachine::DiscardStreamData()

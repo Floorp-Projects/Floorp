@@ -1,0 +1,65 @@
+[
+{
+"size": 932378577,
+"visibility": "internal",
+"digest": "b42eac625027afca51ff6113c614cae5ba9d2042c8dd63dc0b48e35016e9e8ba47995d639ae4d192f2efee7de83ee410cc96bb6e9d5dab48b123c6ed7c56cec9",
+"algorithm": "sha512",
+"filename": "android-ndk-r10e.tgz",
+"unpack": true
+},
+{
+"size": 535625068,
+"visibility": "internal", 
+"digest": "0627515046a23c1d109e2782865b1b3b546c1d552955e4156317f76cbb195eb630aa25feea3f4edd1c685f129da0c2a5169d4d6349c1c31d8a95158a4569a478",
+"algorithm": "sha512",
+"filename": "android-sdk-linux.tar.xz",
+"unpack": true
+},
+{
+"size": 167175,
+"visibility": "public",
+"digest": "0b71a936edf5bd70cf274aaa5d7abc8f77fe8e7b5593a208f805cc9436fac646b9c4f0b43c2b10de63ff3da671497d35536077ecbc72dba7f8159a38b580f831",
+"algorithm": "sha512",
+"filename": "sccache.tar.bz2",
+"unpack": true
+},
+{
+"size": 7920445,
+"visibility": "public",
+"digest": "e28b7a12fbbef02ad742958df8dd356ea2adb8ef79e95cd8eb8dbc953eb4cc11888969dac7d636187fd3ace9c63d9a6bc3d7795021c1d811a843e413fe5e52c9",
+"algorithm": "sha512",
+"filename": "apache-ant.tar.bz2",
+"unpack": true
+},
+{
+"size": 4906080,
+"visibility": "public",
+"unpack": true,
+"digest": "d735544e039da89382c53b2302b7408d4610247b4f8b5cdc5a4d5a8ec5470947b19e8ea7f7a37e78222e661347e394e0030d81f41534138b527b14e9c4e55634",
+"algorithm": "sha512",
+"filename": "jsshell.tar.xz"
+},
+{
+"size": 80458572,
+"visibility": "public",
+"unpack": true,
+"digest": "e5101f9dee1e462f6cbd3897ea57eede41d23981825c7b20d91d23ab461875d54d3dfc24999aa58a31e8b01f49fb3140e05ffe5af2957ef1d1afb89fd0dfe1ad",
+"algorithm": "sha512",
+"filename": "gcc.tar.xz"
+},
+{
+"size": 31013068,
+"visibility": "public",
+"digest": "e30a26f98a3448064857491aee1a7a26f98494f86a89113de9be17c37c8181ed60250706fed881ec1f035002fcdaf8b9b4a7d9ae70ce40acff2f1acfbb40f8d9",
+"algorithm": "sha512",
+"filename": "java_home-1.7.0-openjdk-1.7.0.85.x86_64.tar.xz",
+"unpack": true
+},
+{
+"size": 31078810,
+"digest": "2dffe4e5419a0c0c9908dc52b01cc07379a42e2aa8481be7a26bb8750b586b95bbac3fe57e64f5d37b43e206516ea70ad938a2e45858fdcf1e28258e70ae8d8c",
+"algorithm": "sha512",
+"filename": "moz-tt.tar.bz2",
+"unpack": true
+}
+]
