@@ -16,7 +16,7 @@ loader.lazyRequireGetter(this, "prompt",
 loader.lazyRequireGetter(this, "cert",
   "devtools/shared/security/cert");
 loader.lazyRequireGetter(this, "asyncStorage",
-  "devtools/shared/shared/async-storage");
+  "devtools/shared/async-storage");
 DevToolsUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 
