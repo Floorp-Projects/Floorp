@@ -777,11 +777,12 @@ public:
 
   // Constructor
   // Use the passed-in history state.
-  nsFrameConstructorState(nsIPresShell*          aPresShell,
-                          nsContainerFrame*      aFixedContainingBlock,
-                          nsContainerFrame*      aAbsoluteContainingBlock,
-                          nsContainerFrame*      aFloatContainingBlock,
-                          nsILayoutHistoryState* aHistoryState);
+  nsFrameConstructorState(
+    nsIPresShell* aPresShell,
+    nsContainerFrame* aFixedContainingBlock,
+    nsContainerFrame* aAbsoluteContainingBlock,
+    nsContainerFrame* aFloatContainingBlock,
+    already_AddRefed<nsILayoutHistoryState> aHistoryState);
   // Get the history state from the pres context's pres shell.
   nsFrameConstructorState(nsIPresShell*          aPresShell,
                           nsContainerFrame*      aFixedContainingBlock,
@@ -921,11 +922,12 @@ protected:
   PendingBinding* mCurrentPendingBindingInsertionPoint;
 };
 
-nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShell,
-                                                 nsContainerFrame*      aFixedContainingBlock,
-                                                 nsContainerFrame*      aAbsoluteContainingBlock,
-                                                 nsContainerFrame*      aFloatContainingBlock,
-                                                 nsILayoutHistoryState* aHistoryState)
+nsFrameConstructorState::nsFrameConstructorState(
+  nsIPresShell* aPresShell,
+  nsContainerFrame* aFixedContainingBlock,
+  nsContainerFrame* aAbsoluteContainingBlock,
+  nsContainerFrame* aFloatContainingBlock,
+  already_AddRefed<nsILayoutHistoryState> aHistoryState)
   : mPresContext(aPresShell->GetPresContext()),
     mPresShell(aPresShell),
     mFrameManager(aPresShell->FrameManager()),
@@ -961,35 +963,11 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
                                                  nsContainerFrame* aFixedContainingBlock,
                                                  nsContainerFrame* aAbsoluteContainingBlock,
                                                  nsContainerFrame* aFloatContainingBlock)
-  : mPresContext(aPresShell->GetPresContext()),
-    mPresShell(aPresShell),
-    mFrameManager(aPresShell->FrameManager()),
-#ifdef MOZ_XUL
-    mPopupItems(nullptr),
-#endif
-    mFixedItems(aFixedContainingBlock),
-    mAbsoluteItems(aAbsoluteContainingBlock),
-    mFloatedItems(aFloatContainingBlock),
-    // See PushAbsoluteContaningBlock below
-    mAdditionalStateBits(nsFrameState(0)),
-    // If the fixed-pos containing block is equal to the abs-pos containing
-    // block, use the abs-pos containing block's abs-pos list for fixed-pos
-    // frames.
-    mFixedPosIsAbsPos(aFixedContainingBlock == aAbsoluteContainingBlock),
-    mHavePendingPopupgroup(false),
-    mCreatingExtraFrames(false),
-    mTreeMatchContext(true, nsRuleWalker::eRelevantLinkUnvisited,
-                      aPresShell->GetDocument()),
-    mCurrentPendingBindingInsertionPoint(nullptr)
+  : nsFrameConstructorState(aPresShell, aFixedContainingBlock,
+                            aAbsoluteContainingBlock,
+                            aFloatContainingBlock,
+                            aPresShell->GetDocument()->GetLayoutHistoryState())
 {
-#ifdef MOZ_XUL
-  nsIRootBox* rootBox = nsIRootBox::GetRootBox(aPresShell);
-  if (rootBox) {
-    mPopupItems.containingBlock = rootBox->GetPopupSetFrame();
-  }
-#endif
-  MOZ_COUNT_CTOR(nsFrameConstructorState);
-  mFrameState = aPresShell->GetDocument()->GetLayoutHistoryState();
 }
 
 nsFrameConstructorState::~nsFrameConstructorState()
@@ -2322,7 +2300,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   nsFrameConstructorState state(mPresShell,
                                 GetAbsoluteContainingBlock(mDocElementContainingBlock, FIXED_POS),
                                 nullptr,
-                                nullptr, aFrameState);
+                                nullptr, do_AddRef(Move(aFrameState)));
   // Initialize the ancestor filter with null for now; we'll push
   // aDocElement once we finish resolving style for it.
   state.mTreeMatchContext.InitAncestors(nullptr);
@@ -7548,7 +7526,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
                                 GetAbsoluteContainingBlock(insertion.mParentFrame, FIXED_POS),
                                 GetAbsoluteContainingBlock(insertion.mParentFrame, ABS_POS),
                                 GetFloatContainingBlock(insertion.mParentFrame),
-                                aFrameState);
+                                do_AddRef(Move(aFrameState)));
   state.mTreeMatchContext.InitAncestors(aContainer ?
                                           aContainer->AsElement() :
                                           nullptr);
@@ -11264,7 +11242,7 @@ nsCSSFrameConstructor::CreateListBoxContent(nsPresContext*         aPresContext,
     nsFrameConstructorState state(mPresShell, GetAbsoluteContainingBlock(aParentFrame, FIXED_POS),
                                   GetAbsoluteContainingBlock(aParentFrame, ABS_POS),
                                   GetFloatContainingBlock(aParentFrame),
-                                  mTempFrameTreeState);
+                                  do_AddRef(mTempFrameTreeState.get()));
 
     // If we ever initialize the ancestor filter on |state|, make sure
     // to push the right parent!
