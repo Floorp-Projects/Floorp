@@ -883,11 +883,8 @@ nsJARChannel::ShouldIntercept()
                                   getter_AddRefs(controller));
     bool shouldIntercept = false;
     if (controller && !BypassServiceWorker() && mLoadInfo) {
-      bool isNavigation = mLoadFlags & LOAD_DOCUMENT_URI;
-      nsContentPolicyType type = mLoadInfo->InternalContentPolicyType();
       nsresult rv = controller->ShouldPrepareForIntercept(mAppURI,
-                                                          isNavigation,
-                                                          type,
+                                                          nsContentUtils::IsNonSubresourceRequest(this),
                                                           &shouldIntercept);
       NS_ENSURE_SUCCESS(rv, false);
     }
