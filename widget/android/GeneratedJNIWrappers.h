@@ -1796,6 +1796,24 @@ public:
 
     auto OnTextChange(mozilla::jni::String::Param, int32_t, int32_t, int32_t) const -> void;
 
+public:
+    struct OnViewChange_t {
+        typedef GeckoEditable Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "onViewChange";
+        static constexpr char signature[] =
+                "(Lorg/mozilla/gecko/GeckoView;)V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto OnViewChange(mozilla::jni::Object::Param) const -> void;
+
 };
 
 class GeckoEditableListener : public mozilla::jni::Class<GeckoEditableListener>
@@ -2457,11 +2475,12 @@ public:
         typedef void SetterType;
         typedef mozilla::jni::Args<
                 Window::Param,
+                GeckoView::Param,
                 int32_t,
                 int32_t> Args;
         static constexpr char name[] = "open";
         static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/GeckoView$Window;II)V";
+                "(Lorg/mozilla/gecko/GeckoView$Window;Lorg/mozilla/gecko/GeckoView;II)V";
         static const bool isStatic = true;
         static const bool isMultithreaded = true;
         static const mozilla::jni::ExceptionMode exceptionMode =
