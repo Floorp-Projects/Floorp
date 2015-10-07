@@ -21,11 +21,13 @@ function test() {
     let firstScope = variables.getScopeAtIndex(0);
     let secondScope = variables.getScopeAtIndex(1);
     let thirdScope = variables.getScopeAtIndex(2);
-    let globalScope = variables.getScopeAtIndex(3);
+    let globalLexicalScope = variables.getScopeAtIndex(3);
+    let globalScope = variables.getScopeAtIndex(4);
 
     ok(firstScope, "The first scope is available.");
     ok(secondScope, "The second scope is available.");
     ok(thirdScope, "The third scope is available.");
+    ok(globalLexicalScope, "The global lexical scope is available.");
     ok(globalScope, "The global scope is available.");
 
     is(firstScope.name, "Function scope [secondNest]",
@@ -34,6 +36,8 @@ function test() {
       "The second scope's name is correct.");
     is(thirdScope.name, "Function scope [test]",
       "The third scope's name is correct.");
+    is(globalLexicalScope.name, "Block scope",
+      "The global lexical scope's name is correct.");
     is(globalScope.name, "Global scope [Window]",
       "The global scope's name is correct.");
 
@@ -43,6 +47,8 @@ function test() {
       "The second scope's expansion state is correct.");
     is(thirdScope.expanded, false,
       "The third scope's expansion state is correct.");
+    is(globalLexicalScope.expanded, false,
+      "The global lexical scope's expansion state is correct.");
     is(globalScope.expanded, false,
       "The global scope's expansion state is correct.");
 
@@ -52,6 +58,8 @@ function test() {
       "The second scope should have no variables available yet.");
     is(thirdScope._store.size, 0,
       "The third scope should have no variables available yet.");
+    is(globalLexicalScope._store.size, 0,
+      "The global scope should have no variables available yet.");
     is(globalScope._store.size, 0,
       "The global scope should have no variables available yet.");
 
@@ -100,6 +108,7 @@ function test() {
     fetched = waitForDebuggerEvents(panel, events.FETCHED_VARIABLES);
     secondScope.expand();
     thirdScope.expand();
+    globalLexicalScope.expand();
     globalScope.expand();
     yield fetched;
 

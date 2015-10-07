@@ -1,7 +1,7 @@
 // Bug 356571 - loadOneOrMoreURIs gives up if one of the URLs has an unknown protocol
 
-const Cr = Components.results;
-const Cm = Components.manager;
+var Cr = Components.results;
+var Cm = Components.manager;
 
 // Set to true when docShell alerts for unknown protocol error
 var didFail = false;

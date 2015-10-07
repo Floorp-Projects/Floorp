@@ -5,12 +5,12 @@
 "use strict";
 
 const { Cc, Ci, Cu } = require("chrome");
-let protocol = require("devtools/server/protocol");
-let { method, RetVal, Arg, types } = protocol;
+var protocol = require("devtools/server/protocol");
+var { method, RetVal, Arg, types } = protocol;
 const { reportException } = require("devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
 
-let MemprofActor = protocol.ActorClass({
+var MemprofActor = protocol.ActorClass({
   typeName: "memprof",
 
   initialize: function(conn) {

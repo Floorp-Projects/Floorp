@@ -3,8 +3,8 @@
  *
  */
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cc = Components.classes;
 
 var png1A = {
         // A 3x3 image, rows are red, green, blue.

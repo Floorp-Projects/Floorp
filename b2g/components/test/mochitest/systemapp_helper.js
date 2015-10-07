@@ -1,4 +1,4 @@
-const Cu = Components.utils;
+var Cu = Components.utils;
 
 const { Services } = Cu.import("resource://gre/modules/Services.jsm");
 

@@ -10,7 +10,7 @@ this.EXPORTED_SYMBOLS = [
   "Store"
 ];
 
-const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
+var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://gre/modules/Log.jsm");
