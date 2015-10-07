@@ -128,7 +128,10 @@ var LogShake = {
     "/proc/version": LogParser.prettyPrintArray,
     "/proc/vmallocinfo": LogParser.prettyPrintArray,
     "/proc/vmstat": LogParser.prettyPrintArray,
-    "/system/b2g/application.ini": LogParser.prettyPrintArray
+    "/system/b2g/application.ini": LogParser.prettyPrintArray,
+    "/cache/recovery/last_install": LogParser.prettyPrintArray,
+    "/cache/recovery/last_kmsg": LogParser.prettyPrintArray,
+    "/cache/recovery/last_log": LogParser.prettyPrintArray
   },
 
   /**
