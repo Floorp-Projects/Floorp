@@ -123,12 +123,12 @@ onDisable.define(Theme, (theme, {window, newTheme}) => {
 
 const LightTheme = Theme({
   name: "theme-light",
-  styles: "chrome://browser/skin/devtools/light-theme.css",
+  styles: "chrome://devtools/skin/themes/light-theme.css",
 });
 
 const DarkTheme = Theme({
   name: "theme-dark",
-  styles: "chrome://browser/skin/devtools/dark-theme.css",
+  styles: "chrome://devtools/skin/themes/dark-theme.css",
 });
 
 exports.LightTheme = LightTheme;
