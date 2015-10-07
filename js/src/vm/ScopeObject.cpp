@@ -289,9 +289,10 @@ CallObject::createHollowForDebug(JSContext* cx, HandleFunction callee)
     // This scope's parent link is never used: the DebugScopeObject that
     // refers to this scope carries its own parent link, which is what
     // Debugger uses to construct the tree of Debugger.Environment objects. So
-    // just parent this scope directly to the global.
+    // just parent this scope directly to the global lexical scope.
     Rooted<GlobalObject*> global(cx, &callee->global());
-    Rooted<CallObject*> callobj(cx, createForFunction(cx, global, callee));
+    RootedObject globalLexical(cx, &global->lexicalScope());
+    Rooted<CallObject*> callobj(cx, createForFunction(cx, globalLexical, callee));
     if (!callobj)
         return nullptr;
 
@@ -378,7 +379,8 @@ ModuleEnvironmentObject::create(ExclusiveContext* cx, HandleModuleObject module)
 
     // Initialize this early so that we can manipulate the scope object without
     // causing assertions.
-    scope->setEnclosingScope(cx->global());
+    RootedObject globalLexical(cx, &cx->global()->lexicalScope());
+    scope->setEnclosingScope(globalLexical);
 
     return scope;
 }
@@ -780,8 +782,10 @@ const Class StaticNonSyntacticScopeObjects::class_ = {
 };
 
 /* static */ NonSyntacticVariablesObject*
-NonSyntacticVariablesObject::create(JSContext* cx, Handle<GlobalObject*> global)
+NonSyntacticVariablesObject::create(JSContext* cx, Handle<ClonedBlockObject*> globalLexical)
 {
+    MOZ_ASSERT(globalLexical->isGlobal());
+
     Rooted<NonSyntacticVariablesObject*> obj(cx,
         NewObjectWithNullTaggedProto<NonSyntacticVariablesObject>(cx, TenuredObject,
                                                                   BaseShape::DELEGATE));
@@ -792,7 +796,7 @@ NonSyntacticVariablesObject::create(JSContext* cx, Handle<GlobalObject*> global)
     if (!obj->setQualifiedVarObj(cx))
         return nullptr;
 
-    obj->setEnclosingScope(global);
+    obj->setEnclosingScope(globalLexical);
     return obj;
 }
 
@@ -803,6 +807,12 @@ const Class NonSyntacticVariablesObject::class_ = {
 };
 
 /*****************************************************************************/
+
+bool
+BlockObject::isExtensible() const
+{
+    return nonProxyIsExtensible();
+}
 
 /* static */ ClonedBlockObject*
 ClonedBlockObject::create(JSContext* cx, Handle<StaticBlockObject*> block, HandleObject enclosing)
@@ -843,6 +853,45 @@ ClonedBlockObject::create(JSContext* cx, Handle<StaticBlockObject*> block, Abstr
 }
 
 /* static */ ClonedBlockObject*
+ClonedBlockObject::createGlobal(JSContext* cx, Handle<GlobalObject*> global)
+{
+    Rooted<StaticBlockObject*> staticLexical(cx, StaticBlockObject::create(cx));
+    if (!staticLexical)
+        return nullptr;
+
+    // Currently the global lexical scope cannot have any bindings with frame
+    // slots.
+    staticLexical->setLocalOffset(UINT32_MAX);
+    staticLexical->initEnclosingScope(nullptr);
+    Rooted<ClonedBlockObject*> lexical(cx, ClonedBlockObject::create(cx, staticLexical, global));
+    if (!lexical)
+        return nullptr;
+    if (!JSObject::setSingleton(cx, lexical))
+        return nullptr;
+    return lexical;
+}
+
+/* static */ ClonedBlockObject*
+ClonedBlockObject::createNonSyntactic(JSContext* cx, HandleObject enclosingStatic,
+                                      HandleObject enclosingScope)
+{
+    MOZ_ASSERT(enclosingStatic->is<StaticNonSyntacticScopeObjects>());
+    MOZ_ASSERT(!IsSyntacticScope(enclosingScope));
+
+    Rooted<StaticBlockObject*> staticLexical(cx, StaticBlockObject::create(cx));
+    if (!staticLexical)
+        return nullptr;
+
+    staticLexical->setLocalOffset(UINT32_MAX);
+    staticLexical->initEnclosingScope(enclosingStatic);
+    Rooted<ClonedBlockObject*> lexical(cx, ClonedBlockObject::create(cx, staticLexical,
+                                                                     enclosingScope));
+    if (!lexical)
+        return nullptr;
+    return lexical;
+}
+
+/* static */ ClonedBlockObject*
 ClonedBlockObject::createHollowForDebug(JSContext* cx, Handle<StaticBlockObject*> block)
 {
     MOZ_ASSERT(!block->needsClone());
@@ -850,9 +899,10 @@ ClonedBlockObject::createHollowForDebug(JSContext* cx, Handle<StaticBlockObject*
     // This scope's parent link is never used: the DebugScopeObject that
     // refers to this scope carries its own parent link, which is what
     // Debugger uses to construct the tree of Debugger.Environment objects. So
-    // just parent this scope directly to the global.
+    // just parent this scope directly to the global lexical scope.
     Rooted<GlobalObject*> global(cx, &block->global());
-    Rooted<ClonedBlockObject*> obj(cx, create(cx, block, global));
+    RootedObject globalLexical(cx, &global->lexicalScope());
+    Rooted<ClonedBlockObject*> obj(cx, create(cx, block, globalLexical));
     if (!obj)
         return nullptr;
 
@@ -878,6 +928,7 @@ ClonedBlockObject::copyUnaliasedValues(AbstractFramePtr frame)
 ClonedBlockObject::clone(JSContext* cx, Handle<ClonedBlockObject*> clonedBlock)
 {
     Rooted<StaticBlockObject*> staticBlock(cx, &clonedBlock->staticBlock());
+    MOZ_ASSERT(!staticBlock->isExtensible());
     RootedObject enclosing(cx, &clonedBlock->enclosingScope());
 
     Rooted<ClonedBlockObject*> copy(cx, create(cx, staticBlock, enclosing));
@@ -907,6 +958,18 @@ StaticBlockObject::lookupAliasedName(PropertyName* name)
         r.popFront();
     }
     return nullptr;
+}
+
+bool
+StaticBlockObject::makeNonExtensible(ExclusiveContext* cx)
+{
+    // Do not do all the work of js::PreventExtensions, as BlockObjects are
+    // known to be NativeObjects, have no lazy properties, and no dense
+    // elements. Indeed, we do not have a JSContext as parsing may happen
+    // off-thread.
+    if (!isExtensible())
+        return true;
+    return setFlags(cx, BaseShape::NOT_EXTENSIBLE, JSObject::GENERATE_SHAPE);
 }
 
 /* static */ Shape*
@@ -942,10 +1005,50 @@ StaticBlockObject::addVar(ExclusiveContext* cx, Handle<StaticBlockObject*> block
                                              /* allowDictionary = */ false);
 }
 
+static JSObject*
+block_ThisObject(JSContext* cx, HandleObject obj)
+{
+    // No other block objects should ever get passed to the 'this' object
+    // hook except the global lexical scope and non-syntactic ones.
+    MOZ_ASSERT(obj->as<ClonedBlockObject>().isGlobal() ||
+               !obj->as<ClonedBlockObject>().isSyntactic());
+    MOZ_ASSERT_IF(obj->as<ClonedBlockObject>().isGlobal(),
+                  obj->enclosingScope() == cx->global());
+    RootedObject enclosing(cx, obj->enclosingScope());
+    return GetThisObject(cx, enclosing);
+}
+
 const Class BlockObject::class_ = {
     "Block",
     JSCLASS_HAS_RESERVED_SLOTS(BlockObject::RESERVED_SLOTS) |
-    JSCLASS_IS_ANONYMOUS
+    JSCLASS_IS_ANONYMOUS,
+    nullptr, /* addProperty */
+    nullptr, /* delProperty */
+    nullptr, /* getProperty */
+    nullptr, /* setProperty */
+    nullptr, /* enumerate */
+    nullptr, /* resolve */
+    nullptr, /* mayResolve */
+    nullptr, /* finalize */
+    nullptr, /* call */
+    nullptr, /* hasInstance */
+    nullptr, /* construct */
+    nullptr, /* trace */
+    JS_NULL_CLASS_SPEC,
+    JS_NULL_CLASS_EXT,
+    {
+        nullptr,          /* lookupProperty */
+        nullptr,          /* defineProperty */
+        nullptr,          /* hasProperty */
+        nullptr,          /* getProperty */
+        nullptr,          /* setProperty */
+        nullptr,          /* getOwnPropertyDescriptor */
+        nullptr,          /* deleteProperty */
+        nullptr, nullptr, /* watch/unwatch */
+        nullptr,          /* getElements */
+        nullptr,          /* enumerate (native enumeration of target doesn't work) */
+        block_ThisObject,
+    }
 };
 
 template<XDRMode mode>
@@ -959,11 +1062,13 @@ js::XDRStaticBlockObject(XDRState<mode>* xdr, HandleObject enclosingScope,
 
     Rooted<StaticBlockObject*> obj(cx);
     uint32_t count = 0, offset = 0;
+    uint8_t extensible = 0;
 
     if (mode == XDR_ENCODE) {
         obj = objp;
         count = obj->numVariables();
         offset = obj->localOffset();
+        extensible = obj->isExtensible() ? 1 : 0;
     }
 
     if (mode == XDR_DECODE) {
@@ -977,6 +1082,8 @@ js::XDRStaticBlockObject(XDRState<mode>* xdr, HandleObject enclosingScope,
     if (!xdr->codeUint32(&count))
         return false;
     if (!xdr->codeUint32(&offset))
+        return false;
+    if (!xdr->codeUint8(&extensible))
         return false;
 
     /*
@@ -1010,6 +1117,11 @@ js::XDRStaticBlockObject(XDRState<mode>* xdr, HandleObject enclosingScope,
 
             bool aliased = !!(propFlags >> 1);
             obj->setAliased(i, aliased);
+        }
+
+        if (!extensible) {
+            if (!obj->makeNonExtensible(cx))
+                return false;
         }
     } else {
         Rooted<ShapeVector> shapes(cx, ShapeVector(cx));
@@ -1084,6 +1196,11 @@ CloneStaticBlockObject(JSContext* cx, HandleObject enclosingScope, Handle<Static
         }
 
         clone->setAliased(i, srcBlock->isAliased(i));
+    }
+
+    if (!srcBlock->isExtensible()) {
+        if (!clone->makeNonExtensible(cx))
+            return nullptr;
     }
 
     return clone;
@@ -1572,6 +1689,13 @@ class DebugScopeProxy : public BaseProxyHandler
             Shape* shape = block->lastProperty()->search(cx, id);
             if (!shape)
                 return true;
+
+            // Currently consider all global and non-syntactic top-level lexical
+            // bindings to be aliased.
+            if (block->isExtensible()) {
+                MOZ_ASSERT(IsGlobalLexicalScope(block) || !IsSyntacticScope(block));
+                return true;
+            }
 
             unsigned i = block->staticBlock().shapeToIndex(*shape);
             if (block->staticBlock().isAliased(i))
@@ -2736,13 +2860,16 @@ js::GetDebugScopeForFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc)
 
 // See declaration and documentation in jsfriendapi.h
 JS_FRIEND_API(JSObject*)
-js::GetObjectEnvironmentObjectForFunction(JSFunction* fun)
+js::GetNearestEnclosingWithScopeObjectForFunction(JSFunction* fun)
 {
     if (!fun->isInterpreted())
         return &fun->global();
 
     JSObject* env = fun->environment();
-    if (!env || !env->is<DynamicWithObject>())
+    while (env && !env->is<DynamicWithObject>())
+        env = env->enclosingScope();
+
+    if (!env)
         return &fun->global();
 
     return &env->as<DynamicWithObject>().object();

@@ -2795,13 +2795,12 @@ SetJitExceptionHandler(JitExceptionHandler handler);
 #endif
 
 /*
- * Get the object underlying the object environment (in the ES
- * NewObjectEnvironment) sense for a given function.  If the function is not
- * scripted or does not have an object environment, just returns the function's
- * parent.
+ * Get the nearest enclosing with scope object for a given function. If the
+ * function is not scripted or is not enclosed by a with scope, returns the
+ * global.
  */
 extern JS_FRIEND_API(JSObject*)
-GetObjectEnvironmentObjectForFunction(JSFunction* fun);
+GetNearestEnclosingWithScopeObjectForFunction(JSFunction* fun);
 
 /*
  * Get the first SavedFrame object in this SavedFrame stack whose principals are

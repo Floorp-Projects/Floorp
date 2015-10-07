@@ -61,7 +61,7 @@ function* testColorChangeIsntRevertedWhenOtherTooltipIsShown(ruleView) {
 
   info("Image tooltip is shown, verify that the swatch is still correct");
   swatch = value.querySelector(".ruleview-colorswatch");
-  is(swatch.style.backgroundColor, "rgb(0, 0, 0)",
+  is(swatch.style.backgroundColor, "black",
     "The swatch's color is correct");
-  is(swatch.nextSibling.textContent, "#000", "The color name is correct");
+  is(swatch.nextSibling.textContent, "black", "The color name is correct");
 }

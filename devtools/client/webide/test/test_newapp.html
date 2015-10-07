@@ -19,10 +19,10 @@
         SimpleTest.waitForExplicitFinish();
 
         Task.spawn(function* () {
-          Services.prefs.setBoolPref("devtools.webide.sidebars", false);
           let win = yield openWebIDE();
+          let winProject = getProjectWindow(win);
           let tmpDir = FileUtils.getDir("TmpD", []);
-          yield win.projectList.newApp({
+          yield winProject.projectList.newApp({
             index: 0,
             name: "webideTmpApp",
             folder: tmpDir

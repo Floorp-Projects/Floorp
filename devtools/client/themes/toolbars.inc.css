@@ -434,6 +434,10 @@
   -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
+.devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear {
+  margin-bottom: 0;
+}
+
 .devtools-searchinput > .textbox-input-box > .textbox-search-icons > .textbox-search-clear:hover {
   -moz-image-region: rect(0, 32px, 16px, 16px);
 }

@@ -12,7 +12,6 @@
 #include "mozilla/Alignment.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PatternHelpers.h"
-#include "GraphicsFilter.h"
 #include "nsISupportsImpl.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
@@ -58,8 +57,8 @@ public:
 
     int CairoStatus();
 
-    void SetFilter(GraphicsFilter filter);
-    GraphicsFilter Filter() const;
+    void SetFilter(mozilla::gfx::Filter filter);
+    mozilla::gfx::Filter Filter() const;
 
     /* returns TRUE if it succeeded */
     bool GetSolidColor(mozilla::gfx::Color& aColorOut);

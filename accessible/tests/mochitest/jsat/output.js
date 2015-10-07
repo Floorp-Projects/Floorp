@@ -1,4 +1,4 @@
-const Cu = Components.utils;
+var Cu = Components.utils;
 const PREF_UTTERANCE_ORDER = "accessibility.accessfu.utterance";
 
 Cu.import('resource://gre/modules/accessibility/Utils.jsm');

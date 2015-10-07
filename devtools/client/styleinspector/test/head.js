@@ -4,7 +4,7 @@
 
 "use strict";
 
-const Cu = Components.utils;
+var Cu = Components.utils;
 var {gDevTools} = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
 var {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 var {TargetFactory} = require("devtools/client/framework/target");
@@ -307,6 +307,44 @@ function openRuleView() {
 }
 
 /**
+ * Wait for eventName on target to be delivered a number of times.
+ *
+ * @param {Object} target
+ *        An observable object that either supports on/off or
+ *        addEventListener/removeEventListener
+ * @param {String} eventName
+ * @param {Number} numTimes
+ *        Number of deliveries to wait for.
+ * @param {Boolean} useCapture
+ *        Optional, for addEventListener/removeEventListener
+ * @return A promise that resolves when the event has been handled
+ */
+function waitForNEvents(target, eventName, numTimes, useCapture = false) {
+  info("Waiting for event: '" + eventName + "' on " + target + ".");
+
+  let deferred = promise.defer();
+  let count = 0;
+
+  for (let [add, remove] of [
+    ["addEventListener", "removeEventListener"],
+    ["addListener", "removeListener"],
+    ["on", "off"]
+  ]) {
+    if ((add in target) && (remove in target)) {
+      target[add](eventName, function onEvent(...aArgs) {
+        if (++count == numTimes) {
+          target[remove](eventName, onEvent, useCapture);
+          deferred.resolve.apply(deferred, aArgs);
+        }
+      }, useCapture);
+      break;
+    }
+  }
+
+  return deferred.promise;
+}
+
+/**
  * Wait for eventName on target.
  *
  * @param {Object} target
@@ -318,25 +356,7 @@ function openRuleView() {
  * @return A promise that resolves when the event has been handled
  */
 function once(target, eventName, useCapture=false) {
-  info("Waiting for event: '" + eventName + "' on " + target + ".");
-
-  let deferred = promise.defer();
-
-  for (let [add, remove] of [
-    ["addEventListener", "removeEventListener"],
-    ["addListener", "removeListener"],
-    ["on", "off"]
-  ]) {
-    if ((add in target) && (remove in target)) {
-      target[add](eventName, function onEvent(...aArgs) {
-        target[remove](eventName, onEvent, useCapture);
-        deferred.resolve.apply(deferred, aArgs);
-      }, useCapture);
-      break;
-    }
-  }
-
-  return deferred.promise;
+  return waitForNEvents(target, eventName, 1, useCapture);
 }
 
 /**

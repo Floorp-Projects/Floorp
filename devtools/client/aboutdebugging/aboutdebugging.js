@@ -21,7 +21,7 @@ loader.lazyRequireGetter(this, "WorkersComponent",
   "devtools/client/aboutdebugging/components/workers", true);
 loader.lazyRequireGetter(this, "Services");
 
-let AboutDebugging = {
+var AboutDebugging = {
   _categories: null,
   get categories() {
     // If needed, initialize the list of available categories.

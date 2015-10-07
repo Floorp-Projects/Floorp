@@ -14,67 +14,36 @@ const gHttpTestRoot2 = "http://example.net/browser/browser/base/content/test/gen
 const gHttpsTestRoot2 = "https://test2.example.com/browser/browser/base/content/test/general/";
 
 var gTestBrowser = null;
-
-function SecStateTestsCompleted() {
-  gBrowser.removeCurrentTab();
-  window.focus();
-  finish();
-}
-
-function test() {
-  waitForExplicitFinish();
-  SpecialPowers.pushPrefEnv({"set": [["security.mixed_content.block_active_content", true],
-                            ["security.mixed_content.block_display_content", false]]}, SecStateTests);
-}
-
-function SecStateTests() {
-  gBrowser.selectedTab = gBrowser.addTab();
-  gTestBrowser = gBrowser.selectedBrowser;
-
-  whenLoaded(gTestBrowser, SecStateTest1A);
+add_task(function *() {
   let url = gHttpTestRoot1 + "file_mixedContentFromOnunload.html";
-  gTestBrowser.contentWindow.location = url;
-}
-
-// Navigation from an http page to a https page with no mixed content
-// The http page loads an http image on unload
-function SecStateTest1A() {
-  whenLoaded(gTestBrowser, SecStateTest1B);
-  let url = gHttpsTestRoot1 + "file_mixedContentFromOnunload_test1.html";
-  gTestBrowser.contentWindow.location = url;
-}
-
-function SecStateTest1B() {
+  yield BrowserTestUtils.withNewTab({gBrowser, url}, function*(){
+    yield new Promise(resolve => {
+      SpecialPowers.pushPrefEnv({
+        "set": [
+          ["security.mixed_content.block_active_content", true],
+          ["security.mixed_content.block_display_content", false]
+        ]
+      }, resolve);
+    });
+  gTestBrowser = gBrowser.selectedBrowser;
+  // Navigation from an http page to a https page with no mixed content
+  // The http page loads an http image on unload
+  url = gHttpsTestRoot1 + "file_mixedContentFromOnunload_test1.html";
+  yield BrowserTestUtils.loadURI(gTestBrowser, url);
+  yield BrowserTestUtils.browserLoaded(gTestBrowser);
   // check security state.  Since current url is https and doesn't have any
   // mixed content resources, we expect it to be secure.
   isSecurityState("secure");
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: false, passiveLoaded: false});
-
-  whenLoaded(gTestBrowser, SecStateTest2A);
-
-  // change locations and proceed with the second test
-  let url = gHttpTestRoot2 + "file_mixedContentFromOnunload.html";
-  gTestBrowser.contentWindow.location = url;
-}
-
-// Navigation from an http page to a https page that has mixed display content
-// The https page loads an http image on unload
-function SecStateTest2A() {
-  whenLoaded(gTestBrowser, SecStateTest2B);
-  let url = gHttpsTestRoot2 + "file_mixedContentFromOnunload_test2.html";
-  gTestBrowser.contentWindow.location = url;
-}
-
-function SecStateTest2B() {
+  // Navigation from an http page to a https page that has mixed display content
+  // The https page loads an http image on unload
+  url = gHttpTestRoot2 + "file_mixedContentFromOnunload.html";
+  yield BrowserTestUtils.loadURI(gTestBrowser, url);
+  yield BrowserTestUtils.browserLoaded(gTestBrowser);
+  url = gHttpsTestRoot2 + "file_mixedContentFromOnunload_test2.html";
+  yield BrowserTestUtils.loadURI(gTestBrowser, url);
+  yield BrowserTestUtils.browserLoaded(gTestBrowser);
   isSecurityState("broken");
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: false, passiveLoaded: true});
-
-  SecStateTestsCompleted();
-}
-
-function whenLoaded(aElement, aCallback) {
-  aElement.addEventListener("load", function onLoad() {
-    aElement.removeEventListener("load", onLoad, true);
-    executeSoon(aCallback);
-  }, true);
-}
+  });
+});

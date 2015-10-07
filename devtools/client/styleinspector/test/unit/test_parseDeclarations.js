@@ -5,7 +5,7 @@
 
 "use strict";
 
-const Cu = Components.utils;
+var Cu = Components.utils;
 const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 const {parseDeclarations, _parseCommentDeclarations} =
   require("devtools/client/styleinspector/css-parsing-utils");

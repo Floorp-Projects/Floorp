@@ -3,7 +3,7 @@
  */
 
 // This should eventually be moved to head_addons.js
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 // Test whether a new-enough driver bypasses the blacklist, even if the rest of
 // the attributes match the blacklist entry.

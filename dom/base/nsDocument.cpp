@@ -11441,6 +11441,19 @@ nsDocument::FullScreenStackTop()
   return element;
 }
 
+/* virtual */ nsTArray<Element*>
+nsDocument::GetFullscreenStack() const
+{
+  nsTArray<Element*> elements;
+  for (const nsWeakPtr& ptr : mFullScreenStack) {
+    if (nsCOMPtr<Element> elem = do_QueryReferent(ptr)) {
+      MOZ_ASSERT(elem->State().HasState(NS_EVENT_STATE_FULL_SCREEN));
+      elements.AppendElement(elem);
+    }
+  }
+  return elements;
+}
+
 // Returns true if aDoc is in the focused tab in the active window.
 static bool
 IsInActiveTab(nsIDocument* aDoc)

@@ -21,7 +21,7 @@ var frameworker;
  * by cloning methods from the worker's JS origin.
  */
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/MessagePortBase.jsm");

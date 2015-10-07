@@ -1,4 +1,4 @@
-let urifixup = Cc["@mozilla.org/docshell/urifixup;1"].
+var urifixup = Cc["@mozilla.org/docshell/urifixup;1"].
                getService(Ci.nsIURIFixup);
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/AppConstants.jsm");
@@ -10,10 +10,10 @@ const kSearchEngineURL = "http://www.example.org/?search={searchTerms}";
 Services.search.addEngineWithDetails(kSearchEngineID, "", "", "", "get",
                                      kSearchEngineURL);
 
-let oldDefaultEngine = Services.search.defaultEngine;
+var oldDefaultEngine = Services.search.defaultEngine;
 Services.search.defaultEngine = Services.search.getEngineByName(kSearchEngineID);
 
-let selectedName = Services.search.defaultEngine.name;
+var selectedName = Services.search.defaultEngine.name;
 do_check_eq(selectedName, kSearchEngineID);
 
 do_register_cleanup(function() {
@@ -27,9 +27,9 @@ do_register_cleanup(function() {
   Services.prefs.clearUserPref("keyword.enabled");
 });
 
-let isWin = AppConstants.platform == "win";
+var isWin = AppConstants.platform == "win";
 
-let data = [
+var data = [
   {
     // Valid should not be changed.
     wrong: 'https://example.com/this/is/a/test.html',
@@ -90,7 +90,7 @@ let data = [
   },
 ];
 
-let extProtocolSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"]
+var extProtocolSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"]
                      .getService(Ci.nsIExternalProtocolService);
 
 if (extProtocolSvc && extProtocolSvc.externalProtocolHandlerExists("mailto")) {
@@ -104,7 +104,7 @@ function run_test() {
   run_next_test();
 }
 
-let len = data.length;
+var len = data.length;
 // Make sure we fix what needs fixing
 add_task(function test_fix_unknown_schemes() {
   for (let i = 0; i < len; ++i) {

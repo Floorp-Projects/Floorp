@@ -8,7 +8,7 @@
 
 this.EXPORTED_SYMBOLS = ["EngineSynchronizer"];
 
-const {utils: Cu} = Components;
+var {utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/constants.js");

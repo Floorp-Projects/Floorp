@@ -11,12 +11,12 @@ interface nsIPrefBranch;
 /**
  * nsINetUtil provides various network-related utility methods.
  */
-[scriptable, uuid(885d6940-1001-46e7-92ec-d494a78d7784)]
+[scriptable, uuid(fe2625ec-b884-4df1-b39c-9e830e47aa94)]
 interface nsINetUtil : nsISupports
 {
   /**
-   * Parse a content-type header and return the content type and
-   * charset (if any).
+   * Parse a content-type request header and return the content type
+   * and charset (if any).
    *
    * @param aTypeHeader the header string to parse
    * @param [out] aCharset the charset parameter specified in the
@@ -24,9 +24,23 @@ interface nsINetUtil : nsISupports
    * @param [out] aHadCharset whether a charset was explicitly specified.
    * @return the MIME type specified in the header, in lower-case.
    */
-  AUTF8String parseContentType(in AUTF8String aTypeHeader,
-                               out AUTF8String aCharset,
-                               out boolean aHadCharset);
+  AUTF8String parseRequestContentType(in AUTF8String aTypeHeader,
+                                      out AUTF8String aCharset,
+                                      out boolean aHadCharset);
+
+  /**
+   * Parse a content-type response header and return the content type
+   * and charset (if any).
+   *
+   * @param aTypeHeader the header string to parse
+   * @param [out] aCharset the charset parameter specified in the
+   *              header, if any.
+   * @param [out] aHadCharset whether a charset was explicitly specified.
+   * @return the MIME type specified in the header, in lower-case.
+   */
+  AUTF8String parseResponseContentType(in AUTF8String aTypeHeader,
+                                       out AUTF8String aCharset,
+                                       out boolean aHadCharset);
 
   /**
    * Test whether the given URI's handler has the given protocol flags.

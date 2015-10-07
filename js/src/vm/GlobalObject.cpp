@@ -33,6 +33,7 @@
 #include "vm/PIC.h"
 #include "vm/RegExpStatics.h"
 #include "vm/RegExpStaticsObject.h"
+#include "vm/ScopeObject.h"
 #include "vm/StopIterationObject.h"
 
 #include "jscompartmentinlines.h"
@@ -257,6 +258,11 @@ GlobalObject::createInternal(JSContext* cx, const Class* clasp)
     if (clasp->flags & JSCLASS_HAS_PRIVATE)
         global->setPrivate(nullptr);
 
+    Rooted<ClonedBlockObject*> lexical(cx, ClonedBlockObject::createGlobal(cx, global));
+    if (!lexical)
+        return nullptr;
+    global->setReservedSlot(LEXICAL_SCOPE, ObjectValue(*lexical));
+
     cx->compartment()->initGlobal(*global);
 
     if (!global->setQualifiedVarObj(cx))
@@ -307,6 +313,12 @@ GlobalObject::new_(JSContext* cx, const Class* clasp, JSPrincipals* principals,
         JS_FireOnNewGlobalObject(cx, global);
 
     return global;
+}
+
+ClonedBlockObject&
+GlobalObject::lexicalScope() const
+{
+    return getReservedSlot(LEXICAL_SCOPE).toObject().as<ClonedBlockObject>();
 }
 
 /* static */ bool

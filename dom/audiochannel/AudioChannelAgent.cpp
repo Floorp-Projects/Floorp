@@ -98,13 +98,13 @@ AudioChannelAgent::InitInternal(nsIDOMWindow* aWindow, int32_t aChannelType,
              "Enum of channel on nsIAudioChannelAgent.idl should be the same with AudioChannelBinding.h");
 
   if (mAudioChannelType != AUDIO_AGENT_CHANNEL_ERROR ||
-      aChannelType > AUDIO_AGENT_CHANNEL_PUBLICNOTIFICATION ||
+      aChannelType > AUDIO_AGENT_CHANNEL_SYSTEM ||
       aChannelType < AUDIO_AGENT_CHANNEL_NORMAL) {
     return NS_ERROR_FAILURE;
   }
 
   if (NS_WARN_IF(!aWindow)) {
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
 
   nsCOMPtr<nsPIDOMWindow> pInnerWindow = do_QueryInterface(aWindow);
@@ -113,12 +113,16 @@ AudioChannelAgent::InitInternal(nsIDOMWindow* aWindow, int32_t aChannelType,
 
   nsCOMPtr<nsIDOMWindow> topWindow;
   aWindow->GetScriptableTop(getter_AddRefs(topWindow));
+  if (NS_WARN_IF(!topWindow)) {
+    return NS_OK;
+  }
+
   mWindow = do_QueryInterface(topWindow);
   if (mWindow) {
     mWindow = mWindow->GetOuterWindow();
   }
 
-  if (!mWindow) {
+  if (NS_WARN_IF(!mWindow)) {
     return NS_ERROR_FAILURE;
   }
 
