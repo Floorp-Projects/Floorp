@@ -299,6 +299,26 @@ private:
   LinkedListElement<T> sentinel;
 
 public:
+  class Iterator {
+    T* mCurrent;
+
+  public:
+    explicit Iterator(T* aCurrent) : mCurrent(aCurrent) {}
+
+    T* operator *() const {
+      return mCurrent;
+    }
+
+    const Iterator& operator++() {
+      mCurrent = mCurrent->getNext();
+      return *this;
+    }
+
+    bool operator!=(Iterator& aOther) const {
+      return mCurrent != aOther.mCurrent;
+    }
+  };
+
   LinkedList() : sentinel(LinkedListElement<T>::NODE_KIND_SENTINEL) { }
 
   LinkedList(LinkedList<T>&& aOther)
@@ -381,6 +401,18 @@ public:
     while (popFirst()) {
       continue;
     }
+  }
+
+  /*
+   * Allow range-based iteration:
+   *
+   *     for (MyElementType* elt : myList) { ... }
+   */
+  Iterator begin() {
+    return Iterator(getFirst());
+  }
+  Iterator end() {
+    return Iterator(nullptr);
   }
 
   /*
