@@ -7,10 +7,8 @@
 #if !defined(GonkMediaDataDecoder_h_)
 #define GonkMediaDataDecoder_h_
 #include "PlatformDecoderModule.h"
-#include <stagefright/foundation/AHandler.h>
 
 namespace android {
-struct ALooper;
 class MediaCodecProxy;
 } // namespace android
 
@@ -18,7 +16,7 @@ namespace mozilla {
 class MediaRawData;
 
 // Manage the data flow from inputting encoded data and outputting decode data.
-class GonkDecoderManager : public android::AHandler {
+class GonkDecoderManager {
 public:
   typedef TrackInfo::TrackType TrackType;
   typedef MediaDataDecoder::InitPromise InitPromise;
@@ -26,8 +24,10 @@ public:
 
   virtual ~GonkDecoderManager() {}
 
+  virtual nsRefPtr<InitPromise> Init(MediaDataDecoderCallback* aCallback) = 0;
+
   // Add samples into OMX decoder or queue them if decoder is out of input buffer.
-  nsresult Input(MediaRawData* aSample);
+  virtual nsresult Input(MediaRawData* aSample) = 0;
 
   // Produces decoded output, it blocks until output can be produced or a timeout
   // is expired or until EOS. Returns NS_OK on success, or NS_ERROR_NOT_AVAILABLE
@@ -37,57 +37,26 @@ public:
   // The overrided class should follow the same behaviour.
   virtual nsresult Output(int64_t aStreamOffset,
                           nsRefPtr<MediaData>& aOutput) = 0;
-  virtual nsRefPtr<InitPromise> Init() = 0;
 
   // Flush the queued sample.
-  nsresult Flush();
+  virtual nsresult Flush() = 0;
 
   // Shutdown decoder and rejects the init promise.
   nsresult Shutdown();
 
   // True if sample is queued.
-  bool HasQueuedSample();
-
-  // Set callback for decoder events, such as requesting more input,
-  // returning output, or reporting error.
-  void SetDecodeCallback(MediaDataDecoderCallback* aCallback)
-  {
-    mDecodeCallback = aCallback;
-  }
+  virtual bool HasQueuedSample() = 0;
 
 protected:
-  GonkDecoderManager()
-    : mMutex("GonkDecoderManager")
-    , mLastTime(0)
-    , mDecodeCallback(nullptr)
-  {}
-
-  bool InitLoopers(MediaData::Type aType);
-
-  void onMessageReceived(const android::sp<android::AMessage> &aMessage) override;
-
   nsRefPtr<MediaByteBuffer> mCodecSpecificData;
 
   nsAutoCString mMimeType;
 
   // MediaCodedc's wrapper that performs the decoding.
   android::sp<android::MediaCodecProxy> mDecoder;
-  // Looper for mDecoder to run on.
-  android::sp<android::ALooper> mDecodeLooper;
-  // Looper to run decode tasks such as recycling output buffers.
-  android::sp<android::ALooper> mTaskLooper;
 
   MozPromiseHolder<InitPromise> mInitPromise;
 
-  Mutex mMutex; // Protects mQueuedSamples.
-  // A queue that stores the samples waiting to be sent to mDecoder.
-  // Empty element means EOS and there shouldn't be any sample be queued after it.
-  // Samples are queued in caller's thread and dequeued in mTaskLooper.
-  nsTArray<nsRefPtr<MediaRawData>> mQueuedSamples;
-
-  int64_t mLastTime;  // The last decoded frame presentation time.
-
-  MediaDataDecoderCallback* mDecodeCallback; // Reports decoder output or error.
 };
 
 // Samples are decoded using the GonkDecoder (MediaCodec)
@@ -132,7 +101,7 @@ private:
   RefPtr<FlushableTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
 
-  android::sp<GonkDecoderManager> mManager;
+  nsAutoPtr<GonkDecoderManager> mManager;
 
   // The last offset into the media resource that was passed into Input().
   // This is used to approximate the decoder's position in the media resource.

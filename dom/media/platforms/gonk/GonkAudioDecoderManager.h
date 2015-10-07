@@ -13,6 +13,7 @@
 using namespace android;
 
 namespace android {
+struct MOZ_EXPORT ALooper;
 class MOZ_EXPORT MediaBuffer;
 } // namespace android
 
@@ -23,26 +24,44 @@ typedef android::MediaCodecProxy MediaCodecProxy;
 public:
   GonkAudioDecoderManager(const AudioInfo& aConfig);
 
-  virtual ~GonkAudioDecoderManager();
+  virtual ~GonkAudioDecoderManager() override;
 
-  nsRefPtr<InitPromise> Init() override;
+  nsRefPtr<InitPromise> Init(MediaDataDecoderCallback* aCallback) override;
+
+  nsresult Input(MediaRawData* aSample) override;
 
   nsresult Output(int64_t aStreamOffset,
                           nsRefPtr<MediaData>& aOutput) override;
 
+  nsresult Flush() override;
+
+  bool HasQueuedSample() override;
+
 private:
-  bool InitMediaCodecProxy();
+  bool InitMediaCodecProxy(MediaDataDecoderCallback* aCallback);
 
   nsresult CreateAudioData(int64_t aStreamOffset,
                               AudioData** aOutData);
 
   void ReleaseAudioBuffer();
 
+  int64_t mLastDecodedTime;
+
   uint32_t mAudioChannels;
   uint32_t mAudioRate;
   const uint32_t mAudioProfile;
 
+  MediaDataDecoderCallback*  mReaderCallback;
   android::MediaBuffer* mAudioBuffer;
+  android::sp<ALooper> mLooper;
+
+  // This monitor protects mQueueSample.
+  Monitor mMonitor;
+
+  // An queue with the MP4 samples which are waiting to be sent into OMX.
+  // If an element is an empty MP4Sample, that menas EOS. There should not
+  // any sample be queued after EOS.
+  nsTArray<nsRefPtr<MediaRawData>> mQueueSample;
 };
 
 } // namespace mozilla
