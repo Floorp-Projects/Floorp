@@ -17,7 +17,6 @@ task:
     env:
       TARGET: 'nexus-4-kk'
       DEBUG: 0
-      TOOLTOOL_MANIFEST: 'b2g/config/nexus-4-kk/releng-mako.tt'
     command:
       - >
         checkout-gecko workspace &&
