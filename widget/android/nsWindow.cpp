@@ -186,6 +186,7 @@ public:
     // Create and attach a window.
     static void Open(const jni::ClassObject::LocalRef& cls,
                      GeckoView::Window::Param gvWindow,
+                     GeckoView::Param view,
                      int32_t width, int32_t height);
 
     // Set the active layer client object
@@ -200,6 +201,7 @@ public:
 void
 nsWindow::Natives::Open(const jni::ClassObject::LocalRef& cls,
                         GeckoView::Window::Param gvWindow,
+                        GeckoView::Param view,
                         int32_t width, int32_t height)
 {
     MOZ_ASSERT(NS_IsMainThread());
@@ -210,6 +212,10 @@ nsWindow::Natives::Open(const jni::ClassObject::LocalRef& cls,
     if (gGeckoViewWindow) {
         // Should have been created the first time.
         MOZ_ASSERT(gGeckoViewWindow->mNatives);
+
+        // Associate our previous GeckoEditable with the new GeckoView.
+        gGeckoViewWindow->mEditable->OnViewChange(view);
+
         AttachNative(GeckoView::Window::LocalRef(cls.Env(), gvWindow),
                      gGeckoViewWindow->mNatives.get());
         return;
@@ -252,6 +258,7 @@ nsWindow::Natives::Open(const jni::ClassObject::LocalRef& cls,
 
     // Create GeckoEditable for the new nsWindow/GeckoView pair.
     gGeckoViewWindow->mEditable = GeckoEditable::New();
+    gGeckoViewWindow->mEditable->OnViewChange(view);
 
     AttachNative(GeckoView::Window::LocalRef(cls.Env(), gvWindow),
                  gGeckoViewWindow->mNatives.get());
