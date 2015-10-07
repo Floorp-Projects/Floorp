@@ -13,7 +13,7 @@
 
 #include "MediaDataDemuxer.h"
 #include "MediaDecoderReader.h"
-#include "PDMFactory.h"
+#include "PlatformDecoderModule.h"
 
 namespace mozilla {
 
@@ -147,13 +147,15 @@ private:
   void Error(TrackType aTrack);
   void Flush(TrackType aTrack);
   void DrainComplete(TrackType aTrack);
+  bool IsSupportedAudioMimeType(const nsACString& aMimeType);
+  bool IsSupportedVideoMimeType(const nsACString& aMimeType);
 
   bool ShouldSkip(bool aSkipToNextKeyframe, media::TimeUnit aTimeThreshold);
 
   size_t SizeOfQueue(TrackType aTrack);
 
   nsRefPtr<MediaDataDemuxer> mDemuxer;
-  nsRefPtr<PDMFactory> mPlatform;
+  nsRefPtr<PlatformDecoderModule> mPlatform;
 
   class DecoderCallback : public MediaDataDecoderCallback {
   public:

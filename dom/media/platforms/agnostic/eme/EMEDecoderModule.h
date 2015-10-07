@@ -8,7 +8,6 @@
 #define EMEDecoderModule_h_
 
 #include "PlatformDecoderModule.h"
-#include "PDMFactory.h"
 #include "gmp-decryption.h"
 
 namespace mozilla {
@@ -20,13 +19,12 @@ private:
 
 public:
   EMEDecoderModule(CDMProxy* aProxy,
-                   PDMFactory* aPDM,
+                   PlatformDecoderModule* aPDM,
                    bool aCDMDecodesAudio,
                    bool aCDMDecodesVideo);
 
   virtual ~EMEDecoderModule();
 
-protected:
   // Decode thread.
   already_AddRefed<MediaDataDecoder>
   CreateVideoDecoder(const VideoInfo& aConfig,
@@ -44,23 +42,15 @@ protected:
   ConversionRequired
   DecoderNeedsConversion(const TrackInfo& aConfig) const override;
 
-  bool
-  SupportsMimeType(const nsACString& aMimeType) override
-  {
-    // TODO Properly.
-    return aMimeType.EqualsLiteral("audio/mp4a-latm") ||
-      aMimeType.EqualsLiteral("video/mp4") ||
-      aMimeType.EqualsLiteral("video/avc");
-  }
-
 private:
   nsRefPtr<CDMProxy> mProxy;
   // Will be null if CDM has decoding capability.
-  nsRefPtr<PDMFactory> mPDM;
+  nsRefPtr<PlatformDecoderModule> mPDM;
   // We run the PDM on its own task queue.
   nsRefPtr<TaskQueue> mTaskQueue;
   bool mCDMDecodesAudio;
   bool mCDMDecodesVideo;
+
 };
 
 } // namespace mozilla

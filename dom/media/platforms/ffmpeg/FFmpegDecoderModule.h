@@ -10,7 +10,6 @@
 #include "PlatformDecoderModule.h"
 #include "FFmpegAudioDecoder.h"
 #include "FFmpegH264Decoder.h"
-#include "FFmpegRuntimeLinker.h"
 
 namespace mozilla
 {
@@ -24,7 +23,7 @@ public:
   {
     uint32_t major, minor;
     GetVersion(major, minor);
-    if (major < 54 && !FFmpegRuntimeLinker::sFFmpegDecoderEnabled) {
+    if (major < 54 && !sFFmpegDecoderEnabled) {
       return nullptr;
     }
     nsRefPtr<PlatformDecoderModule> pdm = new FFmpegDecoderModule();
@@ -69,13 +68,8 @@ public:
 
   bool SupportsMimeType(const nsACString& aMimeType) override
   {
-    AVCodecID audioCodec = FFmpegAudioDecoder<V>::GetCodecId(aMimeType);
-    AVCodecID videoCodec = FFmpegH264Decoder<V>::GetCodecId(aMimeType);
-    if (audioCodec == AV_CODEC_ID_NONE && videoCodec == AV_CODEC_ID_NONE) {
-      return false;
-    }
-    AVCodecID codec = audioCodec != AV_CODEC_ID_NONE ? audioCodec : videoCodec;
-    return !!FFmpegDataDecoder<V>::FindAVCodec(codec);
+    return FFmpegAudioDecoder<V>::GetCodecId(aMimeType) != AV_CODEC_ID_NONE ||
+      FFmpegH264Decoder<V>::GetCodecId(aMimeType) != AV_CODEC_ID_NONE;
   }
 
   ConversionRequired

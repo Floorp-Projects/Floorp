@@ -11,6 +11,7 @@
 #include "FlushableTaskQueue.h"
 #include "MediaDecoderReader.h"
 #include "MediaResource.h"
+#include "PlatformDecoderModule.h"
 #include "nsAutoRef.h"
 #include "nestegg/nestegg.h"
 
@@ -25,7 +26,9 @@ namespace mozilla {
 static const unsigned NS_PER_USEC = 1000;
 static const double NS_PER_S = 1e9;
 
+typedef MediaDataDecoder::InitPromise InitPromise;
 typedef TrackInfo::TrackType TrackType;
+typedef MediaDataDecoder::DecoderFailureReason DecoderFailureReason;
 
 class WebMBufferedState;
 class WebMPacketQueue;
@@ -36,7 +39,7 @@ class WebMReader;
 class WebMVideoDecoder
 {
 public:
-  virtual nsresult Init(unsigned int aWidth = 0, unsigned int aHeight = 0) = 0;
+  virtual nsRefPtr<InitPromise> Init(unsigned int aWidth = 0, unsigned int aHeight = 0) = 0;
   virtual nsresult Flush() { return NS_OK; }
   virtual void Shutdown() = 0;
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
@@ -49,7 +52,7 @@ public:
 class WebMAudioDecoder
 {
 public:
-  virtual nsresult Init() = 0;
+  virtual nsRefPtr<InitPromise> Init() = 0;
   virtual void Shutdown() = 0;
   virtual nsresult ResetDecode() = 0;
   virtual nsresult DecodeHeader(const unsigned char* aData, size_t aLength) = 0;
@@ -119,6 +122,7 @@ public:
   int64_t GetLastVideoFrameTime();
   void SetLastVideoFrameTime(int64_t aFrameTime);
   layers::LayersBackend GetLayersBackendType() { return mLayersBackendType; }
+  FlushableTaskQueue* GetVideoTaskQueue() { return mVideoTaskQueue; }
   uint64_t GetCodecDelay() { return mCodecDelay; }
 
 protected:
@@ -163,6 +167,8 @@ private:
   nsAutoPtr<WebMAudioDecoder> mAudioDecoder;
   nsAutoPtr<WebMVideoDecoder> mVideoDecoder;
 
+  nsTArray<nsRefPtr<InitPromise>> mInitPromises;
+
   // Queue of video and audio packets that have been read but not decoded. These
   // must only be accessed from the decode thread.
   WebMPacketQueue mVideoPackets;
@@ -205,6 +211,9 @@ private:
   int mVideoCodec;
 
   layers::LayersBackend mLayersBackendType;
+
+  // For hardware video decoding.
+  nsRefPtr<FlushableTaskQueue> mVideoTaskQueue;
 
   // Booleans to indicate if we have audio and/or video data
   bool mHasVideo;

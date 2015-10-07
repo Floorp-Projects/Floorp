@@ -27,7 +27,9 @@
 #endif
 #include "mozilla/layers/LayersTypes.h"
 
-#include "PDMFactory.h"
+#ifdef MOZ_FFMPEG
+#include "FFmpegRuntimeLinker.h"
+#endif
 
 namespace mozilla {
 
@@ -147,8 +149,11 @@ MP4Decoder::CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
   }
 
   // Verify that we have a PDM that supports the whitelisted types.
-  PDMFactory::Init();
-  nsRefPtr<PDMFactory> platform = new PDMFactory();
+  PlatformDecoderModule::Init();
+  nsRefPtr<PlatformDecoderModule> platform = PlatformDecoderModule::Create();
+  if (!platform) {
+    return false;
+  }
   for (const nsCString& codecMime : codecMimes) {
     if (!platform->SupportsMimeType(codecMime)) {
       return false;
@@ -173,11 +178,79 @@ MP4Decoder::CanHandleMediaType(const nsAString& aContentType)
   return CanHandleMediaType(NS_ConvertUTF16toUTF8(mimeType), codecs);
 }
 
+static bool
+IsFFmpegAvailable()
+{
+#ifndef MOZ_FFMPEG
+  return false;
+#else
+  PlatformDecoderModule::Init();
+  nsRefPtr<PlatformDecoderModule> m = FFmpegRuntimeLinker::CreateDecoderModule();
+  return !!m;
+#endif
+}
+
+static bool
+IsAppleAvailable()
+{
+#ifndef MOZ_APPLEMEDIA
+  // Not the right platform.
+  return false;
+#else
+  return Preferences::GetBool("media.apple.mp4.enabled", false);
+#endif
+}
+
+static bool
+IsAndroidAvailable()
+{
+#ifndef MOZ_WIDGET_ANDROID
+  return false;
+#else
+  // We need android.media.MediaCodec which exists in API level 16 and higher.
+  return AndroidBridge::Bridge() && (AndroidBridge::Bridge()->GetAPIVersion() >= 16);
+#endif
+}
+
+static bool
+IsGonkMP4DecoderAvailable()
+{
+#ifndef MOZ_GONK_MEDIACODEC
+  return false;
+#else
+  return Preferences::GetBool("media.fragmented-mp4.gonk.enabled", false);
+#endif
+}
+
+static bool
+IsGMPDecoderAvailable()
+{
+  return Preferences::GetBool("media.fragmented-mp4.gmp.enabled", false);
+}
+
+static bool
+HavePlatformMPEGDecoders()
+{
+  return Preferences::GetBool("media.fragmented-mp4.use-blank-decoder") ||
+#ifdef XP_WIN
+         // We have H.264/AAC platform decoders on Windows Vista and up.
+         IsVistaOrLater() ||
+#endif
+         IsAndroidAvailable() ||
+         IsFFmpegAvailable() ||
+         IsAppleAvailable() ||
+         IsGonkMP4DecoderAvailable() ||
+         IsGMPDecoderAvailable() ||
+         // TODO: Other platforms...
+         false;
+}
+
 /* static */
 bool
 MP4Decoder::IsEnabled()
 {
-  return Preferences::GetBool("media.fragmented-mp4.enabled");
+  return Preferences::GetBool("media.fragmented-mp4.enabled") &&
+         HavePlatformMPEGDecoders();
 }
 
 static const uint8_t sTestH264ExtraData[] = {
@@ -201,11 +274,18 @@ CreateTestH264Decoder(layers::LayersBackend aBackend,
   aConfig.mExtraData->AppendElements(sTestH264ExtraData,
                                      MOZ_ARRAY_LENGTH(sTestH264ExtraData));
 
-  PDMFactory::Init();
+  PlatformDecoderModule::Init();
 
-  nsRefPtr<PDMFactory> platform = new PDMFactory();
+  nsRefPtr<PlatformDecoderModule> platform = PlatformDecoderModule::Create();
+  if (!platform || !platform->SupportsMimeType(NS_LITERAL_CSTRING("video/mp4"))) {
+    return nullptr;
+  }
+
   nsRefPtr<MediaDataDecoder> decoder(
     platform->CreateDecoder(aConfig, nullptr, nullptr, aBackend, nullptr));
+  if (!decoder) {
+    return nullptr;
+  }
 
   return decoder.forget();
 }
@@ -220,8 +300,93 @@ MP4Decoder::IsVideoAccelerated(layers::LayersBackend aBackend, nsACString& aFail
     return false;
   }
   bool result = decoder->IsHardwareAccelerated(aFailureReason);
-  decoder->Shutdown();
   return result;
+}
+
+/* static */ bool
+MP4Decoder::CanCreateH264Decoder()
+{
+#ifdef XP_WIN
+  static bool haveCachedResult = false;
+  static bool result = false;
+  if (haveCachedResult) {
+    return result;
+  }
+  VideoInfo config;
+  nsRefPtr<MediaDataDecoder> decoder(
+    CreateTestH264Decoder(layers::LayersBackend::LAYERS_BASIC, config));
+  if (decoder) {
+    decoder->Shutdown();
+    result = true;
+  }
+  haveCachedResult = true;
+  return result;
+#else
+  return IsEnabled();
+#endif
+}
+
+#ifdef XP_WIN
+static already_AddRefed<MediaDataDecoder>
+CreateTestAACDecoder(AudioInfo& aConfig)
+{
+  PlatformDecoderModule::Init();
+
+  nsRefPtr<PlatformDecoderModule> platform = PlatformDecoderModule::Create();
+  if (!platform || !platform->SupportsMimeType(NS_LITERAL_CSTRING("audio/mp4a-latm"))) {
+    return nullptr;
+  }
+
+  nsRefPtr<MediaDataDecoder> decoder(
+    platform->CreateDecoder(aConfig, nullptr, nullptr));
+  if (!decoder) {
+    return nullptr;
+  }
+
+  return decoder.forget();
+}
+
+// bipbop.mp4's extradata/config...
+static const uint8_t sTestAACExtraData[] = {
+  0x03, 0x80, 0x80, 0x80, 0x22, 0x00, 0x02, 0x00, 0x04, 0x80,
+  0x80, 0x80, 0x14, 0x40, 0x15, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x11, 0x51, 0x00, 0x00, 0x11, 0x51, 0x05, 0x80, 0x80, 0x80,
+  0x02, 0x13, 0x90, 0x06, 0x80, 0x80, 0x80, 0x01, 0x02
+};
+
+static const uint8_t sTestAACConfig[] = { 0x13, 0x90 };
+
+#endif // XP_WIN
+
+/* static */ bool
+MP4Decoder::CanCreateAACDecoder()
+{
+#ifdef XP_WIN
+  static bool haveCachedResult = false;
+  static bool result = false;
+  if (haveCachedResult) {
+    return result;
+  }
+  AudioInfo config;
+  config.mMimeType = "audio/mp4a-latm";
+  config.mRate = 22050;
+  config.mChannels = 2;
+  config.mBitDepth = 16;
+  config.mProfile = 2;
+  config.mExtendedProfile = 2;
+  config.mCodecSpecificConfig->AppendElements(sTestAACConfig,
+                                              MOZ_ARRAY_LENGTH(sTestAACConfig));
+  config.mExtraData->AppendElements(sTestAACExtraData,
+                                    MOZ_ARRAY_LENGTH(sTestAACExtraData));
+  nsRefPtr<MediaDataDecoder> decoder(CreateTestAACDecoder(config));
+  if (decoder) {
+    result = true;
+  }
+  haveCachedResult = true;
+  return result;
+#else
+  return IsEnabled();
+#endif
 }
 
 } // namespace mozilla

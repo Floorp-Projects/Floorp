@@ -5,23 +5,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    'agnostic/AgnosticDecoderModule.h',
     'agnostic/OpusDecoder.h',
     'agnostic/VorbisDecoder.h',
     'agnostic/VPXDecoder.h',
-    'PDMFactory.h',
     'PlatformDecoderModule.h',
     'wrappers/FuzzingWrapper.h',
     'wrappers/H264Converter.h'
 ]
 
 UNIFIED_SOURCES += [
-    'agnostic/AgnosticDecoderModule.cpp',
     'agnostic/BlankDecoderModule.cpp',
     'agnostic/OpusDecoder.cpp',
     'agnostic/VorbisDecoder.cpp',
     'agnostic/VPXDecoder.cpp',
-    'PDMFactory.cpp',
     'PlatformDecoderModule.cpp',
     'wrappers/FuzzingWrapper.cpp',
     'wrappers/H264Converter.cpp'

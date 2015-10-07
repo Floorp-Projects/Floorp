@@ -20,6 +20,11 @@
 #include "vpx/vp8dx.h"
 #include "vpx/vpx_decoder.h"
 
+// IntelWebMVideoDecoder uses the WMF backend, which is Windows Vista+ only.
+#if defined(MOZ_PDM_VPX)
+#include "IntelWebMVideoDecoder.h"
+#endif
+
 // Un-comment to enable logging of seek bisections.
 //#define SEEK_LOGGING
 
@@ -120,6 +125,10 @@ static void webm_log(nestegg * context,
   va_end(args);
 }
 
+#if defined(MOZ_PDM_VPX)
+static bool sIsIntelDecoderEnabled = false;
+#endif
+
 WebMReader::WebMReader(AbstractMediaDecoder* aDecoder, TaskQueue* aBorrowedTaskQueue)
   : MediaDecoderReader(aDecoder, aBorrowedTaskQueue)
   , mContext(nullptr)
@@ -140,6 +149,10 @@ WebMReader::WebMReader(AbstractMediaDecoder* aDecoder, TaskQueue* aBorrowedTaskQ
   if (!gNesteggLog) {
     gNesteggLog = PR_NewLogModule("Nestegg");
   }
+
+#if defined(MOZ_PDM_VPX)
+  sIsIntelDecoderEnabled = Preferences::GetBool("media.webm.intel_decoder.enabled", false);
+#endif
 }
 
 WebMReader::~WebMReader()
@@ -155,6 +168,12 @@ WebMReader::~WebMReader()
 nsRefPtr<ShutdownPromise>
 WebMReader::Shutdown()
 {
+#if defined(MOZ_PDM_VPX)
+  if (mVideoTaskQueue) {
+    mVideoTaskQueue->BeginShutdown();
+    mVideoTaskQueue->AwaitShutdownAndIdle();
+  }
+#endif
   if (mAudioDecoder) {
     mAudioDecoder->Shutdown();
     mAudioDecoder = nullptr;
@@ -170,6 +189,18 @@ WebMReader::Shutdown()
 
 nsresult WebMReader::Init(MediaDecoderReader* aCloneDonor)
 {
+#if defined(MOZ_PDM_VPX)
+  if (sIsIntelDecoderEnabled) {
+    PlatformDecoderModule::Init();
+
+    InitLayersBackendType();
+
+    mVideoTaskQueue = new FlushableTaskQueue(
+      SharedThreadPool::Get(NS_LITERAL_CSTRING("IntelVP8 Video Decode")));
+    NS_ENSURE_TRUE(mVideoTaskQueue, NS_ERROR_FAILURE);
+  }
+#endif
+
   if (aCloneDonor) {
     mBufferedState = static_cast<WebMReader*>(aCloneDonor)->mBufferedState;
   } else {
@@ -296,13 +327,23 @@ WebMReader::RetrieveWebMMetadata(MediaInfo* aInfo)
 
       mVideoCodec = nestegg_track_codec_id(mContext, track);
 
+#if defined(MOZ_PDM_VPX)
+      if (sIsIntelDecoderEnabled) {
+        mVideoDecoder = IntelWebMVideoDecoder::Create(this);
+      }
+#endif
+
+      // If there's no decoder yet (e.g. HW decoder not available), use the software decoder.
       if (!mVideoDecoder) {
         mVideoDecoder = SoftwareWebMVideoDecoder::Create(this);
       }
 
-      if (!mVideoDecoder ||
-          NS_FAILED(mVideoDecoder->Init(params.display_width,
-                                        params.display_height))) {
+      if (mVideoDecoder) {
+        mInitPromises.AppendElement(mVideoDecoder->Init(params.display_width,
+                                                        params.display_height));
+      }
+
+      if (!mVideoDecoder) {
         Cleanup();
         return NS_ERROR_FAILURE;
       }
@@ -383,7 +424,9 @@ WebMReader::RetrieveWebMMetadata(MediaInfo* aInfo)
         return NS_ERROR_FAILURE;
       }
 
-      if (!mAudioDecoder || NS_FAILED(mAudioDecoder->Init())) {
+      if (mAudioDecoder) {
+        mInitPromises.AppendElement(mAudioDecoder->Init());
+      } else {
         Cleanup();
         return NS_ERROR_FAILURE;
       }
