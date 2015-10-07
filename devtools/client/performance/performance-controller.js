@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 const { loader, require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 
 const { Task } = require("resource://gre/modules/Task.jsm");
@@ -11,6 +11,11 @@ const { Heritage, ViewHelpers, WidgetMethods } = require("resource:///modules/de
 
 // Events emitted by various objects in the panel.
 const EVENTS = require("devtools/client/performance/events");
+Object.defineProperty(this, "EVENTS", {
+  value: EVENTS,
+  enumerable: true,
+  writable: false
+});
 
 loader.lazyRequireGetter(this, "Services");
 loader.lazyRequireGetter(this, "promise");

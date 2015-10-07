@@ -11,8 +11,6 @@ if ("@mozilla.org/windows-registry-key;1" in Components.classes)
   DELIM = "|";
 
 var gProfD = do_get_profile_startup();
-var gDirSvc = Cc["@mozilla.org/file/directory_service;1"].
-             getService(Ci.nsIProperties);
 
 // Writes out some plugin registry to the profile
 function write_registry(version, info) {

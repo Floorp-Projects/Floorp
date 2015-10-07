@@ -10,10 +10,10 @@
 
 // <https://developer.mozilla.org/en/XPConnect/xpcshell/HOWTO>
 // <https://bugzilla.mozilla.org/show_bug.cgi?id=546628>
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cu = Components.utils;
+var Cr = Components.results;
 
 const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
 const CertDb = Components.classes[nsX509CertDB].getService(Ci.nsIX509CertDB);

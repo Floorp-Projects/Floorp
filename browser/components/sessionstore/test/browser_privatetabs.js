@@ -1,10 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var Imports = {};
-Cu.import("resource:///modules/sessionstore/SessionSaver.jsm", Imports);
-var {SessionSaver} = Imports;
-
 add_task(function cleanup() {
   info("Forgetting closed tabs");
   while (ss.getClosedTabCount(window)) {

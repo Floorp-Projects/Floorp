@@ -6,7 +6,7 @@
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
 <script type="application/javascript;version=1.8">
 
-  let SimpleTest = window.opener.SimpleTest;
+  var SimpleTest = window.opener.SimpleTest;
   function ok() { window.opener.ok.apply(window.opener, arguments); }
   function done() { window.opener.done.apply(window.opener, arguments); }
   let e = {};

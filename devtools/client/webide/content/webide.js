@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Cc = Components.classes;
-const Cu = Components.utils;
-const Ci = Components.interfaces;
+var Cc = Components.classes;
+var Cu = Components.utils;
+var Ci = Components.interfaces;
 
 Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
@@ -37,6 +37,16 @@ const MAX_ZOOM = 1.4;
 const MIN_ZOOM = 0.6;
 
 const MS_PER_DAY = 86400000;
+
+[["AppManager", AppManager],
+ ["AppProjects", AppProjects],
+ ["Connection", Connection]].forEach(([key, value]) => {
+   Object.defineProperty(this, key, {
+     value: value,
+     enumerable: true,
+     writable: false
+   });
+ });
 
 // Download remote resources early
 getJSON("devtools.webide.addonsURL", true);

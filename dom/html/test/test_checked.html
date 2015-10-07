@@ -29,11 +29,11 @@ and
 <script class="testbody" type="text/javascript; version=1.7">
 
 /** Test for Bug 418756 and 617528 **/
-let group1;
-let group2;
-let group3;
+var group1;
+var group2;
+var group3;
 
-let tags = ["input", "menuitem"];
+var tags = ["input", "menuitem"];
 for each (let tag in tags) {
 
 function bounce(node) {
@@ -43,7 +43,7 @@ function bounce(node) {
   p.insertBefore(node, n);
 }
 
-let createdNodes = [];
+var createdNodes = [];
 
 function cleanup() {
   for each (let node in createdNodes) {
@@ -55,12 +55,12 @@ function cleanup() {
   createdNodes = [];
 }
 
-let typeMapper = {
+var typeMapper = {
  'c': 'checkbox',
  'r': 'radio'
 };
 
-let id = 0;
+var id = 0;
 
 // type can be 'c' for 'checkbox' and 'r' for 'radio'
 function createNode(type, name, checked) {
@@ -75,7 +75,7 @@ function createNode(type, name, checked) {
   return node;
 }
 
-let types = ['c', 'r'];
+var types = ['c', 'r'];
 
 // First make sure that setting .checked makes .defaultChecked changes no
 // longer affect .checked.

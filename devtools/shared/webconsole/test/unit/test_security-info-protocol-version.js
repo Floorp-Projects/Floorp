@@ -17,7 +17,7 @@ Object.defineProperty(this, "NetworkHelper", {
   enumerable: true
 });
 
-const Ci = Components.interfaces;
+var Ci = Components.interfaces;
 const TEST_CASES = [
   {
     description: "TLS_VERSION_1",
