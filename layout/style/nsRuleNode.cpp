@@ -5446,6 +5446,13 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
               parentDisplay->mIsolation, NS_STYLE_ISOLATION_AUTO,
               0, 0, 0, 0);
 
+  // -moz-top-layer: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForTopLayer(), display->mTopLayer,
+              conditions,
+              SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
+              parentDisplay->mTopLayer, NS_STYLE_TOP_LAYER_NONE,
+              0, 0, 0, 0);
+
   // Backup original display value for calculation of a hypothetical
   // box (CSS2 10.6.4/10.6.5), in addition to getting our style data right later.
   // See nsHTMLReflowState::CalculateHypotheticalBox
@@ -5485,6 +5492,16 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
               SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
               parentDisplay->mPosition,
               NS_STYLE_POSITION_STATIC, 0, 0, 0, 0);
+  // If an element is put in the top layer, while it is not absolutely
+  // positioned, the position value should be computed to 'absolute' per
+  // the Fullscreen API spec.
+  if (display->mTopLayer != NS_STYLE_TOP_LAYER_NONE &&
+      !display->IsAbsolutelyPositionedStyle()) {
+    display->mPosition = NS_STYLE_POSITION_ABSOLUTE;
+    // We cannot cache this struct because otherwise it may be used as
+    // an aStartStruct for some other elements.
+    conditions.SetUncacheable();
+  }
 
   // clear: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForClear(), display->mBreakType, conditions,

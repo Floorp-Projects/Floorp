@@ -1834,6 +1834,12 @@ const KTableValue nsCSSProps::kTouchActionKTable[] = {
   eCSSKeyword_UNKNOWN,      -1
 };
 
+const KTableValue nsCSSProps::kTopLayerKTable[] = {
+  eCSSKeyword_none,     NS_STYLE_TOP_LAYER_NONE,
+  eCSSKeyword_top,      NS_STYLE_TOP_LAYER_TOP,
+  eCSSKeyword_UNKNOWN,  -1
+};
+
 const KTableValue nsCSSProps::kTransformBoxKTable[] = {
   eCSSKeyword_border_box, NS_STYLE_TRANSFORM_BOX_BORDER_BOX,
   eCSSKeyword_fill_box, NS_STYLE_TRANSFORM_BOX_FILL_BOX,
