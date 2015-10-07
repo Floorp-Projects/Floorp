@@ -181,6 +181,11 @@
   background: url(chrome://browser/skin/controlcenter/warning-yellow.svg) no-repeat 0 50%;
 }
 
+.identity-popup-warning-gray:-moz-locale-dir(rtl),
+.identity-popup-warning-yellow:-moz-locale-dir(rtl) {
+  background-position: 100% 50%;
+}
+
 /* SECURITY */
 
 .identity-popup-connection-secure {
