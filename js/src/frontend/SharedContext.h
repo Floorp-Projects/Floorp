@@ -301,13 +301,10 @@ class FunctionBox : public ObjectBox, public SharedContext
 
     FunctionContextFlags funCxFlags;
 
-    FunctionAsyncKind _asyncKind;
-
     template <typename ParseHandler>
     FunctionBox(ExclusiveContext* cx, ObjectBox* traceListHead, JSFunction* fun,
                 JSObject* enclosingStaticScope, ParseContext<ParseHandler>* pc,
-                Directives directives, bool extraWarnings, GeneratorKind generatorKind,
-                FunctionAsyncKind asyncKind);
+                Directives directives, bool extraWarnings, GeneratorKind generatorKind);
 
     ObjectBox* toObjectBox() override { return this; }
     JSFunction* function() const { return &object->as<JSFunction>(); }
@@ -319,8 +316,6 @@ class FunctionBox : public ObjectBox, public SharedContext
     bool isLegacyGenerator() const { return generatorKind() == LegacyGenerator; }
     bool isStarGenerator() const { return generatorKind() == StarGenerator; }
     bool isArrow() const { return function()->isArrow(); }
-    bool isAsync() const { return _asyncKind == AsyncFunction; }
-    FunctionAsyncKind asyncKind() const { return _asyncKind; }
 
     void setGeneratorKind(GeneratorKind kind) {
         // A generator kind can be set at initialization, or when "yield" is

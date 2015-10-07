@@ -23,11 +23,6 @@
 #include "builtin/MapObject.h"
 #include "builtin/ModuleObject.h"
 #include "builtin/Object.h"
-
-#ifdef NIGHTLY_BUILD
-#include "builtin/Promise.h"
-#endif
-
 #include "builtin/RegExp.h"
 #include "builtin/SIMD.h"
 #include "builtin/SymbolObject.h"

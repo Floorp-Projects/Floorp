@@ -285,13 +285,6 @@ class JSFunction : public js::NativeObject
         flags_ |= RESOLVED_NAME;
     }
 
-    void setAsyncKind(js::FunctionAsyncKind asyncKind) {
-        if (isInterpretedLazy())
-            lazyScript()->setAsyncKind(asyncKind);
-        else
-            nonLazyScript()->setAsyncKind(asyncKind);
-    }
-
     JSAtom* atom() const { return hasGuessedAtom() ? nullptr : atom_.get(); }
 
     js::PropertyName* name() const {
@@ -466,17 +459,11 @@ class JSFunction : public js::NativeObject
         return js::NotGenerator;
     }
 
-    js::FunctionAsyncKind asyncKind() const {
-        return isInterpretedLazy() ? lazyScript()->asyncKind() : nonLazyScript()->asyncKind();
-    }
-
     bool isGenerator() const { return generatorKind() != js::NotGenerator; }
 
     bool isLegacyGenerator() const { return generatorKind() == js::LegacyGenerator; }
 
     bool isStarGenerator() const { return generatorKind() == js::StarGenerator; }
-
-    bool isAsync() const { return asyncKind() == js::AsyncFunction; }
 
     void setScript(JSScript* script_) {
         mutableScript() = script_;

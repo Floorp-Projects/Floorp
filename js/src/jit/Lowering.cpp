@@ -164,11 +164,7 @@ LIRGenerator::visitDefLexical(MDefLexical* ins)
 void
 LIRGenerator::visitDefFun(MDefFun* ins)
 {
-    MDefinition* fun = ins->fun();
-    MOZ_ASSERT(fun->type() == MIRType_Object);
-
-    LDefFun* lir = new(alloc()) LDefFun(useRegisterAtStart(fun),
-                                        useRegisterAtStart(ins->scopeChain()));
+    LDefFun* lir = new(alloc()) LDefFun(useRegisterAtStart(ins->scopeChain()));
     add(lir, ins);
     assignSafepoint(lir, ins);
 }

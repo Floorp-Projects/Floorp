@@ -876,8 +876,6 @@ class ScriptSourceObject : public NativeObject
 
 enum GeneratorKind { NotGenerator, LegacyGenerator, StarGenerator };
 
-enum FunctionAsyncKind { SyncFunction, AsyncFunction };
-
 static inline unsigned
 GeneratorKindAsBits(GeneratorKind generatorKind) {
     return static_cast<unsigned>(generatorKind);
@@ -1172,8 +1170,6 @@ class JSScript : public js::gc::TenuredCell
 
     bool isDerivedClassConstructor_:1;
 
-    bool isAsync_:1;
-
     // Add padding so JSScript is gc::Cell aligned. Make padding protected
     // instead of private to suppress -Wunused-private-field compiler warnings.
   protected:
@@ -1438,12 +1434,6 @@ class JSScript : public js::gc::TenuredCell
         // so it can only transition from not being a generator.
         MOZ_ASSERT(!isGenerator());
         generatorKindBits_ = GeneratorKindAsBits(kind);
-    }
-
-    js::FunctionAsyncKind asyncKind() const { return isAsync_ ? js::AsyncFunction : js::SyncFunction; }
-
-    void setAsyncKind(js::FunctionAsyncKind kind) {
-        isAsync_ = kind == js::AsyncFunction;
     }
 
     void setNeedsHomeObject() {
@@ -2116,11 +2106,11 @@ class LazyScript : public gc::TenuredCell
         // Assorted bits that should really be in ScriptSourceObject.
         uint32_t version : 8;
 
-        uint32_t numFreeVariables : 23;
+        uint32_t numFreeVariables : 24;
         uint32_t numInnerFunctions : 20;
 
         uint32_t generatorKindBits : 2;
-        uint32_t isAsync : 1;
+
         // N.B. These are booleans but need to be uint32_t to pack correctly on MSVC.
         // If you add another boolean here, make sure to initialze it in
         // LazyScript::CreateRaw().
@@ -2238,10 +2228,6 @@ class LazyScript : public gc::TenuredCell
     }
 
     GeneratorKind generatorKind() const { return GeneratorKindFromBits(p_.generatorKindBits); }
-
-    FunctionAsyncKind asyncKind() const { return p_.isAsync ? AsyncFunction : SyncFunction; }
-
-    void setAsyncKind(FunctionAsyncKind kind) { p_.isAsync = kind == AsyncFunction; }
 
     bool isGenerator() const { return generatorKind() != NotGenerator; }
 

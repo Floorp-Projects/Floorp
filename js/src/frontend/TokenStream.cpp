@@ -986,11 +986,6 @@ TokenStream::putIdentInTokenbuf(const char16_t* identStart)
 bool
 TokenStream::checkForKeyword(const KeywordInfo* kw, TokenKind* ttp)
 {
-    if (!awaitIsKeyword && kw->tokentype == TOK_AWAIT) {
-        *ttp = TOK_NAME;
-        return true;
-    }
-
     if (kw->tokentype == TOK_RESERVED
 #ifndef JS_HAS_CLASSES
         || kw->tokentype == TOK_CLASS

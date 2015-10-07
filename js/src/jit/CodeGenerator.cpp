@@ -1788,7 +1788,7 @@ CodeGenerator::visitLambda(LLambda* lir)
     emitLambdaInit(output, scopeChain, info);
 
     if (info.flags & JSFunction::EXTENDED) {
-        MOZ_ASSERT(info.fun->allowSuperProperty() || info.fun->isAsync());
+        MOZ_ASSERT(info.fun->allowSuperProperty());
         static_assert(FunctionExtended::NUM_EXTENDED_SLOTS == 2, "All slots must be initialized");
         masm.storeValue(UndefinedValue(), Address(output, FunctionExtended::offsetOfExtendedSlot(0)));
         masm.storeValue(UndefinedValue(), Address(output, FunctionExtended::offsetOfExtendedSlot(1)));
@@ -3747,9 +3747,8 @@ void
 CodeGenerator::visitDefFun(LDefFun* lir)
 {
     Register scopeChain = ToRegister(lir->scopeChain());
-    Register fun = ToRegister(lir->fun());
 
-    pushArg(fun);
+    pushArg(ImmGCPtr(lir->mir()->fun()));
     pushArg(scopeChain);
     pushArg(ImmGCPtr(current->mir()->info().script()));
 
