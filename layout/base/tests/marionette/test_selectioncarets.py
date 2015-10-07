@@ -78,6 +78,31 @@ class CommonCaretsTestCase(object):
 
         self._iframe = self.marionette.find_element(By.ID, 'frame')
 
+    def word_offset(self, text, ordinal):
+        'Get the character offset of the ordinal-th word in text.'
+        tokens = re.split(r'(\S+)', text)         # both words and spaces
+        spaces = tokens[0::2]                     # collect spaces at odd indices
+        words = tokens[1::2]                      # collect word at even indices
+
+        if ordinal >= len(words):
+            raise IndexError('Only %d words in text, but got ordinal %d' %
+                             (len(words), ordinal))
+
+        # Cursor position of the targeting word is behind the the first
+        # character in the word. For example, offset to 'def' in 'abc def' is
+        # between 'd' and 'e'.
+        offset = len(spaces[0]) + 1
+        offset += sum(len(words[i]) + len(spaces[i + 1]) for i in range(ordinal))
+        return offset
+
+    def test_word_offset(self):
+        text = ' ' * 3 + 'abc' + ' ' * 3 + 'def'
+
+        self.assertTrue(self.word_offset(text, 0), 4)
+        self.assertTrue(self.word_offset(text, 1), 10)
+        with self.assertRaises(IndexError):
+            self.word_offset(text, 2)
+
     def word_location(self, el, ordinal):
         '''Get the location (x, y) of the ordinal-th word in el.
 
@@ -88,16 +113,7 @@ class CommonCaretsTestCase(object):
 
         '''
         sel = SelectionManager(el)
-        tokens = re.split(r'(\S+)', sel.content)  # both words and spaces
-        words = tokens[0::2]                      # collect words at even indices
-        spaces = tokens[1::2]                     # collect spaces at odd indices
-        self.assertTrue(ordinal < len(words),
-                        'Expect at least %d words in the content.' % ordinal)
-
-        # Cursor position of the targeting word is behind the the first
-        # character in the word. For example, offset to 'def' in 'abc def' is
-        # between 'd' and 'e'.
-        offset = sum(len(words[i]) + len(spaces[i]) for i in range(ordinal)) + 1
+        offset = self.word_offset(sel.content, ordinal)
 
         # Move caret to the word.
         el.tap()
