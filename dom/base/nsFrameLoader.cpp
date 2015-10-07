@@ -2453,13 +2453,8 @@ class nsAsyncMessageToChild : public nsSameProcessAsyncMessageBase,
                               public nsRunnable
 {
 public:
-  nsAsyncMessageToChild(JSContext* aCx,
-                        nsFrameLoader* aFrameLoader,
-                        const nsAString& aMessage,
-                        StructuredCloneData& aData,
-                        JS::Handle<JSObject *> aCpows,
-                        nsIPrincipal* aPrincipal)
-    : nsSameProcessAsyncMessageBase(aCx, aMessage, aData, aCpows, aPrincipal)
+  nsAsyncMessageToChild(JSContext* aCx, JS::Handle<JSObject*> aCpows, nsFrameLoader* aFrameLoader)
+    : nsSameProcessAsyncMessageBase(aCx, aCpows)
     , mFrameLoader(aFrameLoader)
   {
   }
@@ -2478,7 +2473,7 @@ public:
   nsRefPtr<nsFrameLoader> mFrameLoader;
 };
 
-bool
+nsresult
 nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
                                   const nsAString& aMessage,
                                   StructuredCloneData& aData,
@@ -2490,27 +2485,37 @@ nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
     ClonedMessageData data;
     nsIContentParent* cp = tabParent->Manager();
     if (!BuildClonedMessageDataForParent(cp, aData, data)) {
-      return false;
+      MOZ_CRASH();
+      return NS_ERROR_DOM_DATA_CLONE_ERR;
     }
     InfallibleTArray<mozilla::jsipc::CpowEntry> cpows;
     jsipc::CPOWManager* mgr = cp->GetCPOWManager();
     if (aCpows && (!mgr || !mgr->Wrap(aCx, aCpows, &cpows))) {
-      return false;
+      return NS_ERROR_UNEXPECTED;
     }
-    return tabParent->SendAsyncMessage(nsString(aMessage), data, cpows,
-                                       IPC::Principal(aPrincipal));
+    if (tabParent->SendAsyncMessage(nsString(aMessage), data, cpows,
+                                    IPC::Principal(aPrincipal))) {
+      return NS_OK;
+    } else {
+      return NS_ERROR_UNEXPECTED;
+    }
   }
 
   if (mChildMessageManager) {
-    nsCOMPtr<nsIRunnable> ev = new nsAsyncMessageToChild(aCx, this, aMessage,
-                                                         aData, aCpows,
-                                                         aPrincipal);
-    NS_DispatchToCurrentThread(ev);
-    return true;
+    nsRefPtr<nsAsyncMessageToChild> ev = new nsAsyncMessageToChild(aCx, aCpows, this);
+    nsresult rv = ev->Init(aCx, aMessage, aData, aPrincipal);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    rv = NS_DispatchToCurrentThread(ev);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    return rv;
   }
 
   // We don't have any targets to send our asynchronous message to.
-  return false;
+  return NS_ERROR_UNEXPECTED;
 }
 
 bool
