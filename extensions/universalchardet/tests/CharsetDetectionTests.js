@@ -5,8 +5,8 @@ var gOldPref;
 var gDetectorList;
 var gTestIndex;
 var gLocalDir;
-var Cc = Components.classes;
-var Ci = Components.interfaces;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
 function CharsetDetectionTests(aTestFile, aExpectedCharset, aDetectorList)
 {

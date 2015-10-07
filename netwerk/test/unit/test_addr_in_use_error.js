@@ -2,7 +2,7 @@
 // socket should elicit NS_ERROR_SOCKET_ADDRESS_IN_USE on non-Windows
 // machines.
 
-var CC = Components.Constructor;
+const CC = Components.Constructor;
 
 const ServerSocket = CC("@mozilla.org/network/server-socket;1",
                         "nsIServerSocket",

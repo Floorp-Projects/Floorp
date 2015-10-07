@@ -1,6 +1,6 @@
 /* jshint moz: true */
 
-var {utils: Cu, classes: Cc, interfaces: Ci} = Components;
+const {utils: Cu, classes: Cc, interfaces: Ci} = Components;
 
 function debug(msg) {
   var timestamp = Date.now();

@@ -2,8 +2,8 @@ var gTestRoot = getRootDirectory(gTestPath).replace("chrome://mochitests/content
 var gTestBrowser = null;
 var gConsoleErrors = 0;
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
 add_task(function* () {
   registerCleanupFunction(function () {

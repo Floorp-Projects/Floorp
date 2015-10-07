@@ -4,7 +4,7 @@
 
 var EXPORTED_SYMBOLS = ['Assert', 'Expect'];
 
-var Cu = Components.utils;
+const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 

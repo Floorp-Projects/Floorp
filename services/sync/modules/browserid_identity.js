@@ -6,7 +6,7 @@
 
 this.EXPORTED_SYMBOLS = ["BrowserIDManager"];
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/async.js");

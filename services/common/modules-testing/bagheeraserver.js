@@ -4,7 +4,7 @@
 
 "use strict";
 
-var {utils: Cu} = Components;
+const {utils: Cu} = Components;
 
 this.EXPORTED_SYMBOLS = ["BagheeraServer"];
 

@@ -1,4 +1,4 @@
-var Ci = Components.interfaces;
+const Ci = Components.interfaces;
 
 const gCompleteState = Ci.nsIWebProgressListener.STATE_STOP +
                        Ci.nsIWebProgressListener.STATE_IS_NETWORK;

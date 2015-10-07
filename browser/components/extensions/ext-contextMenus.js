@@ -3,7 +3,7 @@ Cu.import("resource://gre/modules/MatchPattern.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-var {
+let {
   EventManager,
   contextMenuItems,
   runSafe
@@ -13,13 +13,13 @@ var {
 // Map[Extension -> Map[ID -> MenuItem]]
 // Note: we want to enumerate all the menu items so
 // this cannot be a weak map.
-var contextMenuMap = new Map();
+let contextMenuMap = new Map();
 
 // Not really used yet, will be used for event pages.
-var onClickedCallbacksMap = new WeakMap();
+let onClickedCallbacksMap = new WeakMap();
 
 // If id is not specified for an item we use an integer.
-var nextID = 0;
+let nextID = 0;
 
 function contextMenuObserver(subject, topic, data) {
   subject = subject.wrappedJSObject;
@@ -34,7 +34,7 @@ function contextMenuObserver(subject, topic, data) {
 // For remote processes there is a gContextMenuContentData where all
 // the important info is stored from the child process. We get
 // this data in |contentData|.
-var menuBuilder = {
+let menuBuilder = {
   build: function(contextData) {
     // TODO: icons should be set for items
     let xulMenu = contextData.menu;
@@ -338,7 +338,7 @@ MenuItem.prototype = {
   },
 };
 
-var extCount = 0;
+let extCount = 0;
 extensions.on("startup", (type, extension) => {
   contextMenuMap.set(extension, new Map());
   if (++extCount == 1) {

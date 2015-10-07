@@ -4,7 +4,7 @@
 
 "use strict";
 
-var {classes: Cc, interfaces: Ci} = Components;
+const {classes: Cc, interfaces: Ci} = Components;
 const uuidGen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 this.EXPORTED_SYMBOLS = ["emulator", "Emulator", "EmulatorCallback"];
 

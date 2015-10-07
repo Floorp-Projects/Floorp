@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var CC = Components.Constructor;
+const CC = Components.Constructor;
 const ServerSocket = CC("@mozilla.org/network/server-socket;1",
                         "nsIServerSocket",
                         "init");

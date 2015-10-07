@@ -6,7 +6,7 @@
 
 "use strict";
 
-var {utils: Cu} = Components;
+const {utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -14,7 +14,7 @@ function debug(aStr) {
   // dump(" -*- ShellRemote.js: " + aStr + "\n");
 }
 
-var remoteShell = {
+let remoteShell = {
 
   get homeURL() {
     let systemAppManifestURL = Services.io.newURI(this.systemAppManifestURL, null, null);

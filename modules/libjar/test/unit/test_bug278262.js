@@ -1,7 +1,7 @@
 // Regression test for bug 278262 - JAR URIs should resolve relative URIs in the base section.
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 const path = "data/test_bug333423.zip";
 
 function test_relative_sub() {

@@ -4,7 +4,7 @@
 
 "use strict";
 
-var { interfaces: Ci, classes: Cc, utils: Cu } = Components;
+const { interfaces: Ci, classes: Cc, utils: Cu } = Components;
 const { addObserver, removeObserver } = Cc["@mozilla.org/observer-service;1"].
                                           getService(Ci.nsIObserverService);
 const { openWindow } = Cc["@mozilla.org/embedcomp/window-watcher;1"].

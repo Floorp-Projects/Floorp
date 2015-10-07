@@ -1,6 +1,6 @@
 "use strict";
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 const CONTROL_CENTER_PANEL = gIdentityHandler._identityPopup;
 const CONTROL_CENTER_MENU_NAME = "controlCenter";
 

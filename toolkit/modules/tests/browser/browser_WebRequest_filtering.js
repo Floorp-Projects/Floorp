@@ -1,6 +1,6 @@
 "use strict";
 
-var { interfaces: Ci, classes: Cc, utils: Cu, results: Cr } = Components;
+const { interfaces: Ci, classes: Cc, utils: Cu, results: Cr } = Components;
 
 var {WebRequest} = Cu.import("resource://gre/modules/WebRequest.jsm", {});
 var {MatchPattern} = Cu.import("resource://gre/modules/MatchPattern.jsm", {});

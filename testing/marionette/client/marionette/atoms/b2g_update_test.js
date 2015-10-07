@@ -34,7 +34,7 @@
  */
 "use strict";
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 const APPLY_TIMEOUT = 10;
 
 var browser = Services.wm.getMostRecentWindow("navigator:browser");

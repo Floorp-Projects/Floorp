@@ -33,7 +33,7 @@
  */
 "use strict";
 
-var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://services-sync/addonutils.js");
 Cu.import("resource://services-sync/addonsreconciler.js");

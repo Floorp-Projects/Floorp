@@ -4,7 +4,7 @@
 
 "use strict";
 
-var {classes: Cc, interfaces: Ci} = Components;
+const {classes: Cc, interfaces: Ci} = Components;
 const subScriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
                           .getService(Ci.mozIJSSubScriptLoader);
 var EventUtils = {};

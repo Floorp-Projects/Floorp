@@ -4,7 +4,7 @@
 
 "use strict";
 
-var Cu = Components.utils;
+const Cu = Components.utils;
 const {gDevTools} = Cu.import("resource:///modules/devtools/client/framework/gDevTools.jsm", {});
 const {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 const promise = require("promise");

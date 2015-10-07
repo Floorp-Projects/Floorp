@@ -1,5 +1,5 @@
-var Cc = Components.classes;
-var Ci = Components.interfaces;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
 const MANDATORY = ["id", "name", "headerURL"];
 const OPTIONAL = ["footerURL", "textcolor", "accentcolor", "iconURL",

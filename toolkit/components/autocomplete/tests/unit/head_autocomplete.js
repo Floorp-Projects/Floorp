@@ -3,8 +3,8 @@
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
 /**
  * Dummy nsIAutoCompleteInput source that returns

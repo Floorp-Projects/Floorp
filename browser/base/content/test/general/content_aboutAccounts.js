@@ -5,7 +5,7 @@
 // This file is loaded as a "content script" for browser_aboutAccounts tests
 "use strict";
 
-var {interfaces: Ci, utils: Cu} = Components;
+const {interfaces: Ci, utils: Cu} = Components;
 
 addEventListener("load", function load(event) {
   if (event.target != content.document) {

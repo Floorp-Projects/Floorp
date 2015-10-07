@@ -15,7 +15,7 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 
-var logger = Log.repository.getLogger("addons.productaddons");
+let logger = Log.repository.getLogger("addons.productaddons");
 
 /**
  * Number of milliseconds after which we need to cancel `downloadXML`.
@@ -232,7 +232,7 @@ function binaryToHex(input) {
  * @return a promise that resolves to hash of the file or rejects with a JS
  *         exception in case of error.
  */
-var computeHash = Task.async(function*(hashFunction, path) {
+let computeHash = Task.async(function*(hashFunction, path) {
   let file = yield OS.File.open(path, { existing: true, read: true });
   try {
     let hasher = Cc["@mozilla.org/security/hash;1"].
@@ -263,7 +263,7 @@ var computeHash = Task.async(function*(hashFunction, path) {
  * @return a promise that resolves if the file matched or rejects with a JS
  *         exception in case of error.
  */
-var verifyFile = Task.async(function*(properties, path) {
+let verifyFile = Task.async(function*(properties, path) {
   if (properties.size !== undefined) {
     let stat = yield OS.File.stat(path);
     if (stat.size != properties.size) {

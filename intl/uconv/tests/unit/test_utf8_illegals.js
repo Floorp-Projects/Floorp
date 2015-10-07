@@ -1,8 +1,8 @@
 // Tests illegal UTF-8 sequences
 
-var Cc = Components.Constructor;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
+const Cc = Components.Constructor;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 

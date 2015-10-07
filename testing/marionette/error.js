@@ -4,7 +4,7 @@
 
 "use strict";
 
-var {results: Cr, utils: Cu} = Components;
+const {results: Cr, utils: Cu} = Components;
 
 const errors = [
   "ElementNotAccessibleError",

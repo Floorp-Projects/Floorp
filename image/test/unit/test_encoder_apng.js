@@ -4,8 +4,8 @@
  */
 
 
-var Ci = Components.interfaces;
-var Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cc = Components.classes;
 
   // dispose=[none|background|previous]
   // blend=[source|over]

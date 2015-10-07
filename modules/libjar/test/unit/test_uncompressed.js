@@ -1,6 +1,6 @@
 // Make sure uncompressed files pass crc
-var Cc = Components.classes;
-var Ci = Components.interfaces;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
 function run_test() {
   var file = do_get_file("data/uncompressed.zip");

@@ -4,7 +4,7 @@
 
 #ifndef MERGED_COMPARTMENT
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 this.EXPORTED_SYMBOLS = [
   "RESTRequest",

@@ -1,6 +1,6 @@
 "use strict";
 
-var { TabCrashReporter } =
+let { TabCrashReporter } =
   Cu.import("resource:///modules/ContentCrashReporters.jsm");
 
 const SERVER_URL = "http://example.com/browser/toolkit/crashreporter/test/browser/crashreport.sjs";

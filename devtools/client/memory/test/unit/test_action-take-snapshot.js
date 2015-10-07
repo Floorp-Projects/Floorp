@@ -5,7 +5,7 @@
  * Tests the async action creator `takeSnapshot(front)`
  */
 
-var actions = require("devtools/client/memory/actions/snapshot");
+let actions = require("devtools/client/memory/actions/snapshot");
 
 function run_test() {
   run_next_test();
