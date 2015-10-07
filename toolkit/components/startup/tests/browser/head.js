@@ -15,13 +15,7 @@ function whenBrowserLoaded(browser, callback) {
 }
 
 function waitForOnBeforeUnloadDialog(browser, callback) {
-  browser.addEventListener("DOMWillOpenModalDialog", function onModalDialog(event) {
-    if (Cu.isCrossProcessWrapper(event.target)) {
-      // This event fires in both the content and chrome processes. We
-      // want to ignore the one in the content process.
-      return;
-    }
-
+  browser.addEventListener("DOMWillOpenModalDialog", function onModalDialog() {
     browser.removeEventListener("DOMWillOpenModalDialog", onModalDialog, true);
 
     executeSoon(() => {
