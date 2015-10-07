@@ -714,7 +714,8 @@ var LoginManagerContent = {
     }
 
     log("Password field (new) id/name is: ", newPasswordField.id, " / ", newPasswordField.name);
-    log("Password field (old) id/name is: ", oldPasswordField.id, " / ", oldPasswordField.name);
+    if (oldPasswordField)
+      log("Password field (old) id/name is: ", oldPasswordField.id, " / ", oldPasswordField.name);
     return [usernameField, newPasswordField, oldPasswordField];
   },
 

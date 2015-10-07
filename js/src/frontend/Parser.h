@@ -195,7 +195,7 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
     void prepareToAddDuplicateArg(HandlePropertyName name, DefinitionNode prevDecl);
 
     /* See the sad story in MakeDefIntoUse. */
-    void updateDecl(JSAtom* atom, Node newDecl);
+    void updateDecl(TokenStream& ts, JSAtom* atom, Node newDecl);
 
     /*
      * After a function body or module has been parsed, the parser generates the
@@ -213,6 +213,21 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
      */
     bool generateBindings(ExclusiveContext* cx, TokenStream& ts, LifoAlloc& alloc,
                           MutableHandle<Bindings> bindings) const;
+
+    // All global names in global scripts are added to the scope dynamically
+    // via JSOP_DEF{FUN,VAR,LET,CONST}, but ES6 15.1.8 specifies that if there
+    // are name conflicts in the script, *no* bindings from the script are
+    // instantiated. So, record the vars and lexical bindings to check for
+    // redeclarations in the prologue.
+    //
+    // Eval scripts do not need this mechanism as they always have a
+    // non-extensible lexical scope.
+    //
+    // Global and eval scripts may have block-scoped locals, however, which
+    // are allocated to the fixed part of the stack frame.
+    bool drainGlobalOrEvalBindings(ExclusiveContext* cx,
+                                   MutableHandle<TraceableVector<Binding>> vars,
+                                   MutableHandle<TraceableVector<Binding>> lexicals);
 
   private:
     ParseContext**  parserPC;     /* this points to the Parser's active pc
@@ -301,15 +316,15 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
     //   if (cond) { function f3() { if (cond) { function f4() { } } } }
     //
     bool atBodyLevel() {
-        // 'eval' scripts are always under an invisible lexical scope, but
-        // since it is not syntactic, it should still be considered at body
-        // level.
-        if (sc->staticScope() && sc->staticScope()->is<StaticEvalObject>()) {
+        // 'eval' and non-syntactic scripts are always under an invisible
+        // lexical scope, but since it is not syntactic, it should still be
+        // considered at body level.
+        if (sc->staticScope()->is<StaticEvalObject>()) {
             bool bl = !innermostStmt()->enclosing;
             MOZ_ASSERT_IF(bl, innermostStmt()->type == StmtType::BLOCK);
             MOZ_ASSERT_IF(bl, innermostStmt()->staticScope
                                              ->template as<StaticBlockObject>()
-                                             .maybeEnclosingEval() == sc->staticScope());
+                                             .enclosingStaticScope() == sc->staticScope());
             return bl;
         }
         return !innermostStmt();
@@ -578,9 +593,11 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
 
     bool maybeParseDirective(Node list, Node pn, bool* cont);
 
-    // Parse the body of an eval. It is distinguished from global scripts in
-    // that in ES6, per 18.2.1.1 steps 9 and 10, all eval scripts are executed
-    // under a fresh lexical scope.
+    // Parse the body of an eval.
+    //
+    // Eval scripts are distinguished from global scripts in that in ES6, per
+    // 18.2.1.1 steps 9 and 10, all eval scripts are executed under a fresh
+    // lexical scope.
     Node evalBody();
 
     // Parse a module.
@@ -772,7 +789,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     bool matchInOrOf(bool* isForInp, bool* isForOfp);
 
     bool checkFunctionArguments();
-    bool makeDefIntoUse(Definition* dn, Node pn, JSAtom* atom);
+    bool makeDefIntoUse(Definition* dn, Node pn, HandleAtom atom);
     bool checkFunctionDefinition(HandlePropertyName funName, Node* pn, FunctionSyntaxKind kind,
                                  bool* pbodyProcessed);
     bool finishFunctionDefinition(Node pn, FunctionBox* funbox, Node body);
@@ -850,8 +867,8 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
                 HandlePropertyName name, Parser<ParseHandler>* parser);
 
     static bool
-    bindVarOrGlobalConst(BindData<ParseHandler>* data,
-                         HandlePropertyName name, Parser<ParseHandler>* parser);
+    bindVar(BindData<ParseHandler>* data,
+            HandlePropertyName name, Parser<ParseHandler>* parser);
 
     static Node null() { return ParseHandler::null(); }
 

@@ -154,6 +154,14 @@ LIRGenerator::visitDefVar(MDefVar* ins)
 }
 
 void
+LIRGenerator::visitDefLexical(MDefLexical* ins)
+{
+    LDefLexical* lir = new(alloc()) LDefLexical();
+    add(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
 LIRGenerator::visitDefFun(MDefFun* ins)
 {
     LDefFun* lir = new(alloc()) LDefFun(useRegisterAtStart(ins->scopeChain()));
@@ -4259,6 +4267,14 @@ void
 LIRGenerator::visitThrowUninitializedLexical(MThrowUninitializedLexical* ins)
 {
     LThrowUninitializedLexical* lir = new(alloc()) LThrowUninitializedLexical();
+    add(lir, ins);
+    assignSafepoint(lir, ins);
+}
+
+void
+LIRGenerator::visitGlobalNameConflictsCheck(MGlobalNameConflictsCheck* ins)
+{
+    LGlobalNameConflictsCheck* lir = new(alloc()) LGlobalNameConflictsCheck();
     add(lir, ins);
     assignSafepoint(lir, ins);
 }

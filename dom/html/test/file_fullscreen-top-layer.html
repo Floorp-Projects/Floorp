@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Test for Bug 1126230</title>
+  <style>
+    #back {
+      position: fixed !important;
+      z-index: 2147483647 !important;
+      top: 0 !important; left: 0 !important;
+      right: 0 !important; bottom: 0 !important;
+      width: 100% !important; height: 100% !important;
+    }
+    #parent {
+      position: fixed;
+      z-index: -2147483748;
+      width: 0; height: 0;
+      overflow: hidden;
+      opacity: 0;
+      mask: url(#mask);
+      clip: rect(0, 0, 0, 0);
+      clip-path: url(#clipPath);
+      filter: opacity(0%);
+      will-change: transform;
+      transform: scale(0);
+    }
+    /* The following styles are copied from ua.css to ensure that
+     * no other style change may trigger frame reconstruction */
+    :root {
+      overflow: hidden !important;
+    }
+    .two #fullscreen {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      z-index: 2147483647 !important;
+      width: 100% !important;
+      height: 100% !important;
+      margin: 0 !important;
+      min-width: 0 !important;
+      max-width: none !important;
+      min-height: 0 !important;
+      max-height: none !important;
+      box-sizing: border-box !important;
+    }
+  </style>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script type="text/javascript" src="file_fullscreen-utils.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1126230">Mozilla Bug 1126230</a>
+<div id="parent">
+  <div id="fullscreen" style="background-color: green"></div>
+</div>
+<div id="back" style="background-color: red"></div>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="clipPath"></clipPath>
+    <mask id="mask"></mask>
+  </defs>
+</svg>
+<script>
+const gParentProperties = [
+  "position", "zIndex", "overflow",
+  "opacity", "mask", "clip", "clipPath",
+  "filter", "willChange", "transform"
+];
+
+var gInitialVals = {};
+
+const gParent = document.getElementById("parent");
+const gFullscreen = document.getElementById("fullscreen");
+const gBack = document.getElementById("back");
+
+function is(a, b, msg) {
+  opener.is(a, b, "[top-layer] " + msg);
+}
+
+function isnot(a, b, msg) {
+  opener.isnot(a, b, "[top-layer] " + msg);
+}
+
+function ok(cond, msg) {
+  opener.ok(cond, "[top-layer] " + msg);
+}
+
+function generatePureColorCanvas(width, height, color) {
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  context.fillStyle = color;
+  context.fillRect(0, 0, width, height);
+  return canvas;
+}
+
+function checkWindowPureColor(color) {
+  const snapshot = SpecialPowers.snapshotRect(window);
+  const pureColor =
+    generatePureColorCanvas(snapshot.width, snapshot.height, color);
+  assertSnapshots(snapshot, pureColor, true, null, "snapshot", color);
+}
+
+function synthesizeMouseAtWindowCenter() {
+  synthesizeMouseAtPoint(innerWidth / 2, innerHeight / 2, {});
+}
+
+
+var tests = ["one", "two"];
+
+function begin() {
+  // record initial computed style of #parent
+  const style = getComputedStyle(gParent);
+  for (var prop of gParentProperties) {
+    gInitialVals[prop] = style[prop];
+  }
+
+  nextTest();
+}
+
+function nextTest() {
+  document.body.className = tests.shift();
+  // trigger a reflow to ensure the state of frames before fullscreen
+  gFullscreen.getBoundingClientRect();
+
+  ok(!document.mozFullScreen, "Shouldn't be in fullscreen");
+  // check window snapshot
+  checkWindowPureColor("red");
+  // simulate click
+  window.addEventListener("click", firstClick);
+  synthesizeMouseAtWindowCenter();
+}
+
+function firstClick(evt) {
+  window.removeEventListener("click", firstClick);
+  is(evt.target, gBack, "Click target should be #back before fullscreen");
+  addFullscreenChangeContinuation("enter", enterFullscreen);
+  gFullscreen.mozRequestFullScreen();
+}
+
+function enterFullscreen() {
+  ok(document.mozFullScreen, "Should now be in fullscreen");
+  // check window snapshot
+  checkWindowPureColor("green");
+  // check computed style of #parent
+  const style = getComputedStyle(gParent);
+  for (var prop of gParentProperties) {
+    is(style[prop], gInitialVals[prop],
+       `Computed style ${prop} of #parent should not be changed`);
+  }
+  // simulate click
+  window.addEventListener("click", secondClick);
+  synthesizeMouseAtWindowCenter();
+}
+
+function secondClick(evt) {
+  window.removeEventListener("click", secondClick);
+  is(evt.target, gFullscreen, "Click target should be #fullscreen now");
+  addFullscreenChangeContinuation("exit", exitFullscreen);
+  document.mozCancelFullScreen();
+}
+
+function exitFullscreen() {
+  if (tests.length > 0) {
+    nextTest();
+  } else {
+    opener.nextTest();
+  }
+}
+</script>
+</body>
+</html>

@@ -291,10 +291,12 @@ public:
 
   // Suspend timeouts in this window and in child windows.
   virtual void SuspendTimeouts(uint32_t aIncrease = 1,
-                               bool aFreezeChildren = true) = 0;
+                               bool aFreezeChildren = true,
+                               bool aFreezeWorkers = true) = 0;
 
   // Resume suspended timeouts in this window and in child windows.
-  virtual nsresult ResumeTimeouts(bool aThawChildren = true) = 0;
+  virtual nsresult ResumeTimeouts(bool aThawChildren = true,
+                                  bool aThawWorkers = true) = 0;
 
   virtual uint32_t TimeoutSuspendCount() = 0;
 

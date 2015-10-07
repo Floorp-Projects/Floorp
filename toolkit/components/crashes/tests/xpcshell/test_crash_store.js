@@ -7,7 +7,7 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 var bsp = Cu.import("resource://gre/modules/CrashManager.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);

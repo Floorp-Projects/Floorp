@@ -1,11 +1,8 @@
---- jmorecfg.h	2014-11-25 05:07:43.000000000 -0500
-+++ jmorecfg.h	2015-01-14 21:46:56.465050782 -0500
-@@ -7,16 +7,17 @@
-  * Copyright (C) 2009, 2011, 2014, D. R. Commander.
-  * For conditions of distribution and use, see the accompanying README file.
-  *
-  * This file contains additional configuration options that customize the
-  * JPEG software for special applications or support machine-dependent
+diff --git jmorecfg.h jmorecfg.h
+index be89189..3b0d05a 100644
+--- jmorecfg.h
++++ jmorecfg.h
+@@ -13,6 +13,7 @@
   * optimizations.  Most users will not need to touch this file.
   */
  
@@ -13,17 +10,7 @@
  
  /*
   * Maximum number of components (color channels) allowed in JPEG image.
-  * To meet the letter of the JPEG spec, set this to 255.  However, darn
-  * few applications need more than 4 channels (maybe 5 for CMYK + alpha
-  * mask).  We recommend 10 as a reasonable compromise; use 4 if you are
-  * really short on memory.  (Each allowed component costs a hundred or so
-  * bytes of storage, whether actually used in an image or not.)
-@@ -116,45 +117,29 @@ typedef char JOCTET;
-  * They must be at least as wide as specified; but making them too big
-  * won't cost a huge amount of memory, so we don't provide special
-  * extraction code like we did for JSAMPLE.  (In other words, these
-  * typedefs live at a different point on the speed/space tradeoff curve.)
-  */
+@@ -122,42 +123,19 @@ typedef char JOCTET;
  
  /* UINT8 must hold at least the values 0..255. */
  
@@ -57,14 +44,16 @@
  /* INT32 must hold at least signed 32-bit values. */
  
 -#ifndef XMD_H                   /* X11/xmd.h correctly defines INT32 */
+-#ifndef _BASETSD_H_		/* Microsoft defines it in basetsd.h */
+-#ifndef _BASETSD_H		/* MinGW is slightly different */
+-#ifndef QGLOBAL_H		/* Qt defines it in qglobal.h */
+-#define __INT32_IS_ACTUALLY_LONG
 -typedef long INT32;
+-#endif
+-#endif
+-#endif
 -#endif
 +typedef int32_t INT32;
  
  /* Datatype used for image dimensions.  The JPEG standard only supports
   * images up to 64K*64K due to 16-bit fields in SOF markers.  Therefore
-  * "unsigned int" is sufficient on all machines.  However, if you need to
-  * handle larger images and you don't mind deviating from the spec, you
-  * can change this datatype.
-  */
- 

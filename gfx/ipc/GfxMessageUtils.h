@@ -14,7 +14,6 @@
 #include <stdint.h>
 
 #include "mozilla/gfx/Matrix.h"
-#include "GraphicsFilter.h"
 #include "gfxPoint.h"
 #include "gfxRect.h"
 #include "nsRect.h"
@@ -33,7 +32,6 @@
 namespace mozilla {
 
 typedef gfxImageFormat PixelFormat;
-typedef ::GraphicsFilter GraphicsFilterType;
 
 } // namespace mozilla
 
@@ -206,11 +204,11 @@ struct ParamTraits<gfxSurfaceType>
 {};
 
 template <>
-struct ParamTraits<mozilla::GraphicsFilterType>
+struct ParamTraits<mozilla::gfx::Filter>
   : public ContiguousEnumSerializer<
-             mozilla::GraphicsFilterType,
-             GraphicsFilter::FILTER_FAST,
-             GraphicsFilter::FILTER_SENTINEL>
+             mozilla::gfx::Filter,
+             mozilla::gfx::Filter::GOOD,
+             mozilla::gfx::Filter::SENTINEL>
 {};
 
 template <>

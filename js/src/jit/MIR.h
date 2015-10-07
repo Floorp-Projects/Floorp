@@ -7279,6 +7279,21 @@ class MThrowUninitializedLexical : public MNullaryInstruction
     }
 };
 
+// In the prologues of global and eval scripts, check for redeclarations.
+class MGlobalNameConflictsCheck : public MNullaryInstruction
+{
+    MGlobalNameConflictsCheck() {
+        setGuard();
+    }
+
+  public:
+    INSTRUCTION_HEADER(GlobalNameConflictsCheck)
+
+    static MGlobalNameConflictsCheck* New(TempAllocator& alloc) {
+        return new(alloc) MGlobalNameConflictsCheck();
+    }
+};
+
 // If not defined, set a global variable to |undefined|.
 class MDefVar
   : public MUnaryInstruction,
@@ -7315,6 +7330,33 @@ class MDefVar
     }
     bool possiblyCalls() const override {
         return true;
+    }
+};
+
+class MDefLexical
+  : public MNullaryInstruction
+{
+    CompilerPropertyName name_; // Target name to be defined.
+    unsigned attrs_; // Attributes to be set.
+
+  private:
+    MDefLexical(PropertyName* name, unsigned attrs)
+      : name_(name),
+        attrs_(attrs)
+    { }
+
+  public:
+    INSTRUCTION_HEADER(DefLexical)
+
+    static MDefLexical* New(TempAllocator& alloc, PropertyName* name, unsigned attrs) {
+        return new(alloc) MDefLexical(name, attrs);
+    }
+
+    PropertyName* name() const {
+        return name_;
+    }
+    unsigned attrs() const {
+        return attrs_;
     }
 };
 

@@ -60,7 +60,7 @@ const manifest_missing_moz_resources = "Content-Location: manifest.webapp\r\n" +
 
 const manifest_malformed_json = "}";
 
-let packagedAppUtils;
+var packagedAppUtils;
 
 function run_test() {
   add_test(test_verify_manifest(header_missing_signature, manifest, false));

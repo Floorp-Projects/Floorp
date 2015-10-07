@@ -73,6 +73,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitStart(LStart* lir);
     void visitReturn(LReturn* ret);
     void visitDefVar(LDefVar* lir);
+    void visitDefLexical(LDefLexical* lir);
     void visitDefFun(LDefFun* lir);
     void visitOsrEntry(LOsrEntry* lir);
     void visitOsrScopeChain(LOsrScopeChain* lir);
@@ -330,6 +331,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitAsmJSVoidReturn(LAsmJSVoidReturn* ret);
     void visitLexicalCheck(LLexicalCheck* ins);
     void visitThrowUninitializedLexical(LThrowUninitializedLexical* ins);
+    void visitGlobalNameConflictsCheck(LGlobalNameConflictsCheck* ins);
     void visitDebugger(LDebugger* ins);
     void visitNewTarget(LNewTarget* ins);
     void visitArrowNewTarget(LArrowNewTarget* ins);

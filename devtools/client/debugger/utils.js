@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const XULUtils = {
+var XULUtils = {
   /**
    * Create <command> elements within `commandset` with event handlers
    * bound to the `command` event
@@ -35,7 +35,7 @@ const CHARACTER_LIMIT = 250; // line character limit
 /**
  * Utility functions for handling sources.
  */
-const SourceUtils = {
+var SourceUtils = {
   _labelsCache: new Map(), // Can't use WeakMaps because keys are strings.
   _groupsCache: new Map(),
   _minifiedCache: new WeakMap(),

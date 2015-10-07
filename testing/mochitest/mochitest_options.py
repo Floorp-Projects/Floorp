@@ -812,7 +812,7 @@ class B2GArguments(ArgumentContainer):
           }],
         [["--adbpath"],
          {"dest": "adbPath",
-          "default": "adb",
+          "default": None,
           "help": "Path to adb binary.",
           "suppress": True,
           }],

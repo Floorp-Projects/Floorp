@@ -26,6 +26,7 @@ class AsyncPanZoomController;
 class Layer;
 class LayerManagerComposite;
 class AutoResolveRefLayers;
+class CompositorParent;
 
 // Represents (affine) transforms that are calculated from a content view.
 struct ViewTransform {
@@ -185,8 +186,16 @@ private:
    *
    * For reach RefLayer in our layer tree, look up its referent and connect it
    * to the layer tree, if found.
+   * aHasRemoteContent - indicates if the layer tree contains a remote reflayer.
+   *  May be null.
+   * aResolvePlugins - incoming value indicates if plugin windows should be
+   *  updated through a call on aCompositor's UpdatePluginWindowState. Applies
+   *  to linux and windows only, may be null. On return value indicates
+   *  if any updates occured.
    */
-  void ResolveRefLayers();
+  void ResolveRefLayers(CompositorParent* aCompositor, bool* aHasRemoteContent,
+                        bool* aResolvePlugins);
+
   /**
    * Detaches all referents resolved by ResolveRefLayers.
    * Assumes that mLayerManager->GetRoot() and mTargetConfig have not changed
@@ -224,10 +233,14 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(AsyncCompositionManager::TransformsToSkip)
 
 class MOZ_STACK_CLASS AutoResolveRefLayers {
 public:
-  explicit AutoResolveRefLayers(AsyncCompositionManager* aManager) : mManager(aManager)
+  explicit AutoResolveRefLayers(AsyncCompositionManager* aManager,
+                                CompositorParent* aCompositor = nullptr,
+                                bool* aHasRemoteContent = nullptr,
+                                bool* aResolvePlugins = nullptr) :
+    mManager(aManager)
   {
     if (mManager) {
-      mManager->ResolveRefLayers();
+      mManager->ResolveRefLayers(aCompositor, aHasRemoteContent, aResolvePlugins);
     }
   }
 

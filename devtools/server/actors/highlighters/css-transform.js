@@ -15,7 +15,7 @@ const { setIgnoreLayoutChanges,
 // The minimum distance a line should be before it has an arrow marker-end
 const ARROW_LINE_MIN_DISTANCE = 10;
 
-let MARKER_COUNTER = 1;
+var MARKER_COUNTER = 1;
 
 /**
  * The CssTransformHighlighter is the class that draws an outline around a

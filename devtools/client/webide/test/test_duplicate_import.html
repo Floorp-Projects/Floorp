@@ -13,14 +13,14 @@
   </head>
 
   <body>
-
     <script type="application/javascript;version=1.8">
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        Task.spawn(function* () {
-          Services.prefs.setBoolPref("devtools.webide.sidebars", false);
+        Task.spawn(function*() {
           let win = yield openWebIDE();
+          let docProject = getProjectDocument(win);
+          let winProject = getProjectWindow(win);
           let packagedAppLocation = getTestFilePath("app");
           let hostedAppManifest = TEST_BASE + "hosted_app.manifest";
 
@@ -28,17 +28,17 @@
           is(win.AppProjects.store.object.projects.length, 0, "IDB is empty");
 
           info("to call importPackagedApp(" + packagedAppLocation + ")");
-          yield win.projectList.importPackagedApp(packagedAppLocation);
+          yield winProject.projectList.importPackagedApp(packagedAppLocation);
           yield waitForUpdate(win, "project-validated");
           yield nextTick();
 
           info("to call importHostedApp(" + hostedAppManifest + ")");
-          yield win.projectList.importHostedApp(hostedAppManifest);
+          yield winProject.projectList.importHostedApp(hostedAppManifest);
           yield waitForUpdate(win, "project-validated");
           yield nextTick();
 
           info("to call importPackagedApp(" + packagedAppLocation + ") again");
-          yield win.projectList.importPackagedApp(packagedAppLocation);
+          yield winProject.projectList.importPackagedApp(packagedAppLocation);
           yield waitForUpdate(win, "project-validated");
 
           let project = win.AppManager.selectedProject;
@@ -46,22 +46,18 @@
           yield nextTick();
 
           info("to call importHostedApp(" + hostedAppManifest + ") again");
-          yield win.projectList.importHostedApp(hostedAppManifest);
+          yield winProject.projectList.importHostedApp(hostedAppManifest);
           yield waitForUpdate(win, "project-validated");
           project = win.AppManager.selectedProject;
           is(project.location, hostedAppManifest, "Correctly reselected existing hosted app.");
           yield nextTick();
 
-          info("opening panel");
-          yield win.Cmds.showProjectPanel();
-          info("panel open");
-
-          let panelNode = win.document.querySelector("#project-panel");
+          let panelNode = docProject.querySelector("#project-panel");
           let items = panelNode.querySelectorAll(".panel-item");
-          // 3 controls, + 2 projects
-          is(items.length, 5, "5 projects in panel");
-          is(items[3].getAttribute("label"), "A name (in app directory)", "Panel label is correct");
-          is(items[4].getAttribute("label"), "hosted manifest name property", "Panel label is correct");
+          // 4 controls, + 2 projects
+          is(items.length, 6, "6 projects in panel");
+          is(items[3].querySelector("span").textContent, "A name (in app directory)", "Panel text is correct");
+          is(items[4].querySelector("span").textContent, "hosted manifest name property", "Panel text is correct");
 
           yield closeWebIDE(win);
 
@@ -76,3 +72,4 @@
     </script>
   </body>
 </html>
+

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const PROMPT_URL = "chrome://global/content/commonDialog.xul";
-const { interfaces: Ci } = Components;
+var { interfaces: Ci } = Components;
 
 function test() {
   waitForExplicitFinish();

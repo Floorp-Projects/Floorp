@@ -13,7 +13,7 @@ function testVarPatternCombinations(makePattSrc, makePattPatt) {
         // variable declarations in blocks
         assertDecl("var " + pattSrcs[i].join(",") + ";", varDecl(pattPatts[i]));
 
-        assertGlobalDecl("let " + pattSrcs[i].join(",") + ";", varDecl(pattPatts[i]));
+        assertGlobalDecl("let " + pattSrcs[i].join(",") + ";", letDecl(pattPatts[i]));
         assertLocalDecl("let " + pattSrcs[i].join(",") + ";", letDecl(pattPatts[i]));
         assertBlockDecl("let " + pattSrcs[i].join(",") + ";", letDecl(pattPatts[i]));
 

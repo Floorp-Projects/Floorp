@@ -155,8 +155,8 @@ typedef CallbackObjectHolder<NodeFilter, nsIDOMNodeFilter> NodeFilterHolder;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x72391609, 0x673d, 0x4bec, \
-  { 0xbd, 0x75, 0x64, 0xbf, 0x1f, 0x6a, 0x6b, 0x5e } }
+{ 0x5f51e18c, 0x9e0e, 0x4dc0, \
+  { 0x9f, 0x08, 0x7a, 0x32, 0x65, 0x52, 0xea, 0x11 } }
 
 // Enum for requesting a particular type of document when creating a doc
 enum DocumentFlavor {
@@ -1093,6 +1093,11 @@ public:
    * this document.
    */
   virtual Element* GetFullScreenElement() = 0;
+
+  /**
+   * Returns all elements in the fullscreen stack in the insertion order.
+   */
+  virtual nsTArray<Element*> GetFullscreenStack() const = 0;
 
   /**
    * Asynchronously requests that the document make aElement the fullscreen

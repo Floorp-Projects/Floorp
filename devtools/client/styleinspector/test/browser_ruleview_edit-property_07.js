@@ -10,7 +10,7 @@
 const TEST_URI = `
   <style type='text/css'>
   #testid {
-    background-color: red;
+    background-color: #f00;
   }
   </style>
   <div id='testid'>Styled Node</div>

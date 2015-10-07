@@ -311,7 +311,9 @@
                 flex="0"
                 hidden="true">
           <tabs>
-            <tab id="workers-tab" label="&debuggerUI.tabs.workers;"/>
+            <tab id="workers-tab"
+                 crop="end"
+                 label="&debuggerUI.tabs.workers;"/>
           </tabs>
           <tabpanels flex="1">
             <tabpanel>
@@ -324,8 +326,12 @@
                 class="devtools-sidebar-tabs"
                 flex="1">
           <tabs>
-            <tab id="sources-tab" label="&debuggerUI.tabs.sources;"/>
-            <tab id="callstack-tab" label="&debuggerUI.tabs.callstack;"/>
+            <tab id="sources-tab"
+                 crop="end"
+                 label="&debuggerUI.tabs.sources;"/>
+            <tab id="callstack-tab"
+                 crop="end"
+                 label="&debuggerUI.tabs.callstack;"/>
           </tabs>
           <tabpanels flex="1">
             <tabpanel id="sources-tabpanel">
@@ -391,8 +397,12 @@
                   class="devtools-sidebar-tabs"
                   hidden="true">
             <tabs>
-              <tab id="variables-tab" label="&debuggerUI.tabs.variables;"/>
-              <tab id="events-tab" label="&debuggerUI.tabs.events;"/>
+              <tab id="variables-tab"
+                   crop="end"
+                   label="&debuggerUI.tabs.variables;"/>
+              <tab id="events-tab"
+                   crop="end"
+                   label="&debuggerUI.tabs.events;"/>
             </tabs>
             <tabpanels flex="1">
               <tabpanel id="variables-tabpanel">

@@ -3,7 +3,7 @@
 
 // Test parseAttribute from node-attribute-parser.js
 
-const Cu = Components.utils;
+var Cu = Components.utils;
 var {require} = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 const {parseAttribute} = require("devtools/client/shared/node-attribute-parser");
 

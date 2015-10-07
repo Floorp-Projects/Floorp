@@ -164,7 +164,7 @@ class YieldOffsetArray {
     }
 };
 
-class Binding
+class Binding : public JS::Traceable
 {
     // One JSScript stores one Binding per formal/variable so we use a
     // packed-word representation.
@@ -200,6 +200,9 @@ class Binding
     bool aliased() const {
         return bool(bits_ & ALIASED_BIT);
     }
+
+    static void trace(Binding* self, JSTracer* trc) { self->trace(trc); }
+    void trace(JSTracer* trc);
 };
 
 JS_STATIC_ASSERT(sizeof(Binding) == sizeof(uintptr_t));
@@ -1644,6 +1647,10 @@ class JSScript : public js::gc::TenuredCell
         return enclosingStaticScope_;
     }
 
+    // Switch the script over from the off-thread compartment's static
+    // global lexical scope to the main thread compartment's.
+    void fixEnclosingStaticGlobalLexicalScope();
+
   private:
     bool makeTypes(JSContext* cx);
 
@@ -2071,7 +2078,7 @@ class LazyScript : public gc::TenuredCell
     // If non-nullptr, the script has been compiled and this is a forwarding
     // pointer to the result. This is a weak pointer: after relazification, we
     // can collect the script if there are no other pointers to it.
-    ReadBarrieredScript script_;
+    WeakRef<JSScript*> script_;
 
     // Original function with which the lazy script is associated.
     HeapPtrFunction function_;
@@ -2174,17 +2181,23 @@ class LazyScript : public gc::TenuredCell
     void resetScript();
 
     JSScript* maybeScript() {
-        if (script_.unbarrieredGet() && gc::IsAboutToBeFinalized(&script_))
-            script_.set(nullptr);
         return script_;
     }
-    JSScript* maybeScriptUnbarriered() const {
+    const JSScript* maybeScriptUnbarriered() const {
         return script_.unbarrieredGet();
+    }
+    bool hasScript() const {
+        return bool(script_);
     }
 
     JSObject* enclosingScope() const {
         return enclosingScope_;
     }
+
+    // Switch the script over from the off-thread compartment's static
+    // global lexical scope to the main thread compartment's.
+    void fixEnclosingStaticGlobalLexicalScope();
+
     ScriptSourceObject* sourceObject() const;
     ScriptSource* scriptSource() const {
         return sourceObject()->source();

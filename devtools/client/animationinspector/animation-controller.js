@@ -7,7 +7,7 @@
 
 "use strict";
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Task.jsm");
 var { loader, require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm");
@@ -89,7 +89,9 @@ var getServerTraits = Task.async(function*(target) {
     { name: "hasTargetNode", actor: "domwalker",
       method: "getNodeFromActor" },
     { name: "hasSetCurrentTimes", actor: "animations",
-      method: "setCurrentTimes" }
+      method: "setCurrentTimes" },
+    { name: "hasGetFrames", actor: "animationplayer",
+      method: "getFrames" }
   ];
 
   let traits = {};

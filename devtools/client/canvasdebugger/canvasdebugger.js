@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -77,6 +77,7 @@ const EVENTS = {
   SOURCE_SHOWN_IN_JS_DEBUGGER: "CanvasDebugger:SourceShownInJsDebugger",
   SOURCE_NOT_FOUND_IN_JS_DEBUGGER: "CanvasDebugger:SourceNotFoundInJsDebugger"
 };
+XPCOMUtils.defineConstant(this, "EVENTS", EVENTS);
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const STRINGS_URI = "chrome://browser/locale/devtools/canvasdebugger.properties";
