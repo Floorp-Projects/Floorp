@@ -1284,6 +1284,26 @@ ThawWorkersForWindow(nsPIDOMWindow* aWindow)
   }
 }
 
+void
+SuspendWorkersForWindow(nsPIDOMWindow* aWindow)
+{
+  AssertIsOnMainThread();
+  RuntimeService* runtime = RuntimeService::GetService();
+  if (runtime) {
+    runtime->SuspendWorkersForWindow(aWindow);
+  }
+}
+
+void
+ResumeWorkersForWindow(nsPIDOMWindow* aWindow)
+{
+  AssertIsOnMainThread();
+  RuntimeService* runtime = RuntimeService::GetService();
+  if (runtime) {
+    runtime->ResumeWorkersForWindow(aWindow);
+  }
+}
+
 WorkerCrossThreadDispatcher::WorkerCrossThreadDispatcher(
                                                   WorkerPrivate* aWorkerPrivate)
 : mMutex("WorkerCrossThreadDispatcher::mMutex"),
@@ -2401,6 +2421,34 @@ RuntimeService::ThawWorkersForWindow(nsPIDOMWindow* aWindow)
         JS_ReportPendingException(cx);
       }
     }
+  }
+}
+
+void
+RuntimeService::SuspendWorkersForWindow(nsPIDOMWindow* aWindow)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aWindow);
+
+  nsAutoTArray<WorkerPrivate*, MAX_WORKERS_PER_DOMAIN> workers;
+  GetWorkersForWindow(aWindow, workers);
+
+  for (uint32_t index = 0; index < workers.Length(); index++) {
+    workers[index]->Suspend();
+  }
+}
+
+void
+RuntimeService::ResumeWorkersForWindow(nsPIDOMWindow* aWindow)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aWindow);
+
+  nsAutoTArray<WorkerPrivate*, MAX_WORKERS_PER_DOMAIN> workers;
+  GetWorkersForWindow(aWindow, workers);
+
+  for (uint32_t index = 0; index < workers.Length(); index++) {
+    workers[index]->Resume();
   }
 }
 

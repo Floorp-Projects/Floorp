@@ -678,7 +678,8 @@ private:
         return true;
       }
 
-      if (aWorkerPrivate->IsFrozen()) {
+      if (aWorkerPrivate->IsFrozen() || aWorkerPrivate->IsSuspended()) {
+        MOZ_ASSERT(!IsDebuggerRunnable());
         aWorkerPrivate->QueueRunnable(this);
         return true;
       }
@@ -1006,7 +1007,8 @@ private:
     else {
       AssertIsOnMainThread();
 
-      if (aWorkerPrivate->IsFrozen()) {
+      if (aWorkerPrivate->IsFrozen() || aWorkerPrivate->IsSuspended()) {
+        MOZ_ASSERT(!IsDebuggerRunnable());
         aWorkerPrivate->QueueRunnable(this);
         return true;
       }
@@ -2108,8 +2110,8 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
   mParent(aParent), mScriptURL(aScriptURL),
   mWorkerName(aWorkerName), mLoadingWorkerScript(false),
   mBusyCount(0), mParentStatus(Pending), mParentFrozen(false),
-  mIsChromeWorker(aIsChromeWorker), mMainThreadObjectsForgotten(false),
-  mWorkerType(aWorkerType),
+  mParentSuspended(false), mIsChromeWorker(aIsChromeWorker),
+  mMainThreadObjectsForgotten(false), mWorkerType(aWorkerType),
   mCreationTimeStamp(TimeStamp::Now()),
   mCreationTimeHighRes((double)PR_Now() / PR_USEC_PER_MSEC)
 {
@@ -2576,7 +2578,7 @@ WorkerPrivateParent<Derived>::Thaw(JSContext* aCx, nsPIDOMWindow* aWindow)
 
   // Execute queued runnables before waking up the worker, otherwise the worker
   // could post new messages before we run those that have been queued.
-  if (!mQueuedRunnables.IsEmpty()) {
+  if (!IsSuspended() && !mQueuedRunnables.IsEmpty()) {
     AssertIsOnMainThread();
     MOZ_ASSERT(IsDedicatedWorker());
 
@@ -2595,6 +2597,50 @@ WorkerPrivateParent<Derived>::Thaw(JSContext* aCx, nsPIDOMWindow* aWindow)
   }
 
   return true;
+}
+
+template <class Derived>
+void
+WorkerPrivateParent<Derived>::Suspend()
+{
+  AssertIsOnMainThread();
+
+  MOZ_ASSERT(!mParentSuspended, "Suspended more than once!");
+
+  mParentSuspended = true;
+}
+
+template <class Derived>
+void
+WorkerPrivateParent<Derived>::Resume()
+{
+  AssertIsOnMainThread();
+
+  MOZ_ASSERT(mParentSuspended, "Resumed more than once!");
+
+  mParentSuspended = false;
+
+  {
+    MutexAutoLock lock(mMutex);
+
+    if (mParentStatus >= Terminating) {
+      return;
+    }
+  }
+
+  // Execute queued runnables before waking up, otherwise the worker could post
+  // new messages before we run those that have been queued.
+  if (!IsFrozen() && !mQueuedRunnables.IsEmpty()) {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(IsDedicatedWorker());
+
+    nsTArray<nsCOMPtr<nsIRunnable>> runnables;
+    mQueuedRunnables.SwapElements(runnables);
+
+    for (uint32_t index = 0; index < runnables.Length(); index++) {
+      runnables[index]->Run();
+    }
+  }
 }
 
 template <class Derived>
