@@ -142,6 +142,9 @@ struct nsStyleFont {
   // MathML displaystyle support
   uint8_t mMathDisplay;         // [inherited]
 
+  // allow different min font-size for certain cases
+  uint8_t mMinFontSizeRatio;     // [inherited] percent * 100
+
   // was mLanguage set based on a lang attribute in the document?
   bool mExplicitLanguage;        // [inherited]
 

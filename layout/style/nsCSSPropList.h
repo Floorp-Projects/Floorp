@@ -2483,6 +2483,20 @@ CSS_PROP_POSITION(
     kWidthKTable,
     offsetof(nsStylePosition, mMaxWidth),
     eStyleAnimType_Coord)
+#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL
+CSS_PROP_FONT(
+    -moz-min-font-size-ratio,
+    _moz_min_font_size_ratio,
+    CSS_PROP_DOMPROP_PREFIXED(MinFontSizeRatio),
+    CSS_PROPERTY_INTERNAL |
+        CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_ENABLED_IN_UA_SHEETS,
+    "",
+    VARIANT_INHERIT | VARIANT_PERCENT,
+    nullptr,
+    offsetof(nsStyleFont, mMinFontSizeRatio),
+    eStyleAnimType_None)
+#endif
 CSS_PROP_POSITION(
     min-height,
     min_height,
