@@ -362,7 +362,7 @@ Parent<PMediaParent>* Parent<PMediaParent>::GetSingleton()
 template<> /* static */
 Parent<NonE10s>* Parent<NonE10s>::GetSingleton()
 {
-  RefPtr<MediaManager> mgr = MediaManager::GetInstance();
+  nsRefPtr<MediaManager> mgr = MediaManager::GetInstance();
   if (!mgr) {
     return nullptr;
   }
@@ -397,12 +397,12 @@ Parent<Super>::RecvGetOriginKey(const uint32_t& aRequestId,
   // Then over to stream-transport thread to do the actual file io.
   // Stash a pledge to hold the answer and get an id for this request.
 
-  RefPtr<Pledge<nsCString>> p = new Pledge<nsCString>();
+  nsRefPtr<Pledge<nsCString>> p = new Pledge<nsCString>();
   uint32_t id = mOutstandingPledges.Append(*p);
 
   nsCOMPtr<nsIEventTarget> sts = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
   MOZ_ASSERT(sts);
-  RefPtr<OriginKeyStore> store(mOriginKeyStore);
+  nsRefPtr<OriginKeyStore> store(mOriginKeyStore);
   bool sameProcess = mSameProcess;
 
   rv = sts->Dispatch(NewRunnableFrom([id, profileDir, store, sameProcess, aOrigin,
@@ -424,7 +424,7 @@ Parent<Super>::RecvGetOriginKey(const uint32_t& aRequestId,
       if (!parent) {
         return NS_OK;
       }
-      RefPtr<Pledge<nsCString>> p = parent->mOutstandingPledges.Remove(id);
+      nsRefPtr<Pledge<nsCString>> p = parent->mOutstandingPledges.Remove(id);
       if (!p) {
         return NS_ERROR_UNEXPECTED;
       }
@@ -449,11 +449,11 @@ Parent<Super>::RecvGetOriginKey(const uint32_t& aRequestId,
       }
       unused << sIPCServingParent->SendGetOriginKeyResponse(aRequestId, aKey);
     } else {
-      RefPtr<MediaManager> mgr = MediaManager::GetInstance();
+      nsRefPtr<MediaManager> mgr = MediaManager::GetInstance();
       if (!mgr) {
         return NS_OK;
       }
-      RefPtr<Pledge<nsCString>> pledge =
+      nsRefPtr<Pledge<nsCString>> pledge =
           mgr->mGetOriginKeyPledges.Remove(aRequestId);
       if (pledge) {
         pledge->Resolve(aKey);
@@ -479,7 +479,7 @@ Parent<Super>::RecvSanitizeOriginKeys(const uint64_t& aSinceWhen,
 
   nsCOMPtr<nsIEventTarget> sts = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
   MOZ_ASSERT(sts);
-  RefPtr<OriginKeyStore> store(mOriginKeyStore);
+  nsRefPtr<OriginKeyStore> store(mOriginKeyStore);
 
   rv = sts->Dispatch(NewRunnableFrom([profileDir, store, aSinceWhen,
                                       aOnlyPrivateBrowsing]() -> nsresult {

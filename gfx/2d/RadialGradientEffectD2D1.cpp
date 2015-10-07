@@ -132,7 +132,7 @@ RadialGradientEffectD2D1::PrepareForRender(D2D1_CHANGE_TYPE changeType)
     return hr;
   }
 
-  RefPtr<ID2D1ResourceTexture> tex = CreateGradientTexture();
+  nsRefPtr<ID2D1ResourceTexture> tex = CreateGradientTexture();
   hr = mDrawInfo->SetResourceTexture(1, tex);
 
   if (FAILED(hr)) {
@@ -370,7 +370,7 @@ RadialGradientEffectD2D1::CreateGradientTexture()
     texData[i * 4 + 3] = (char)(255.0f * newColor.a);
   }
 
-  RefPtr<ID2D1ResourceTexture> tex;
+  nsRefPtr<ID2D1ResourceTexture> tex;
 
   UINT32 width = 4096;
   UINT32 stride = 4096 * 4;

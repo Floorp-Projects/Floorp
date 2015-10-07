@@ -456,7 +456,7 @@ nsAccessibilityService::CreatePluginAccessible(nsPluginFrame* aFrame,
     return nullptr;
 
 #if defined(XP_WIN) || defined(MOZ_ACCESSIBILITY_ATK)
-  RefPtr<nsNPAPIPluginInstance> pluginInstance;
+  nsRefPtr<nsNPAPIPluginInstance> pluginInstance;
   if (NS_SUCCEEDED(aFrame->GetPluginInstance(getter_AddRefs(pluginInstance))) &&
       pluginInstance) {
 #ifdef XP_WIN
@@ -464,7 +464,7 @@ nsAccessibilityService::CreatePluginAccessible(nsPluginFrame* aFrame,
         (Preferences::GetBool("accessibility.delay_plugins") ||
          Compatibility::IsJAWS() || Compatibility::IsWE())) {
       nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
-      RefPtr<PluginTimerCallBack> cb = new PluginTimerCallBack(aContent);
+      nsRefPtr<PluginTimerCallBack> cb = new PluginTimerCallBack(aContent);
       timer->InitWithCallback(cb, Preferences::GetUint("accessibility.delay_plugin_time"),
                               nsITimer::TYPE_ONE_SHOT);
       sPluginTimers->AppendElement(timer);
@@ -481,7 +481,7 @@ nsAccessibilityService::CreatePluginAccessible(nsPluginFrame* aFrame,
     HWND pluginPort = nullptr;
     aFrame->GetPluginPort(&pluginPort);
 
-    RefPtr<Accessible> accessible =
+    nsRefPtr<Accessible> accessible =
       new HTMLWin32ObjectOwnerAccessible(aContent, aContext->Document(),
                                          pluginPort);
     return accessible.forget();
@@ -496,7 +496,7 @@ nsAccessibilityService::CreatePluginAccessible(nsPluginFrame* aFrame,
     nsresult rv = pluginInstance->GetValueFromPlugin(
       NPPVpluginNativeAccessibleAtkPlugId, &plugId);
     if (NS_SUCCEEDED(rv) && !plugId.IsEmpty()) {
-      RefPtr<AtkSocketAccessible> socketAccessible =
+      nsRefPtr<AtkSocketAccessible> socketAccessible =
         new AtkSocketAccessible(aContent, aContext->Document(), plugId);
 
       return socketAccessible.forget();
@@ -787,7 +787,7 @@ NS_IMETHODIMP
 nsAccessibilityService::GetStringStates(uint32_t aState, uint32_t aExtraState,
                                         nsISupports **aStringStates)
 {
-  RefPtr<DOMStringList> stringStates = new DOMStringList();
+  nsRefPtr<DOMStringList> stringStates = new DOMStringList();
 
   uint64_t state = nsAccUtils::To64State(aState, aExtraState);
 
@@ -1087,7 +1087,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
 #endif
 
   // Attempt to create an accessible based on what we know.
-  RefPtr<Accessible> newAcc;
+  nsRefPtr<Accessible> newAcc;
 
   // Create accessible for visible text frames.
   if (content->IsNodeOfType(nsINode::eTEXT)) {
@@ -1424,11 +1424,11 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
     return nullptr;
 
   if (role.EqualsLiteral("outerdoc")) {
-    RefPtr<Accessible> accessible = new OuterDocAccessible(aContent, aDoc);
+    nsRefPtr<Accessible> accessible = new OuterDocAccessible(aContent, aDoc);
     return accessible.forget();
   }
 
-  RefPtr<Accessible> accessible;
+  nsRefPtr<Accessible> accessible;
 #ifdef MOZ_XUL
   // XUL controls
   if (role.EqualsLiteral("xul:alert")) {
@@ -1600,7 +1600,7 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
 {
   DocAccessible* document = aContext->Document();
 
-  RefPtr<Accessible> newAcc;
+  nsRefPtr<Accessible> newAcc;
   switch (aFrame->AccessibleType()) {
     case eNoType:
       return nullptr;
@@ -1827,7 +1827,7 @@ NS_GetAccessibilityService(nsIAccessibilityService** aResult)
     return NS_OK;
   }
 
-  RefPtr<nsAccessibilityService> service = new nsAccessibilityService();
+  nsRefPtr<nsAccessibilityService> service = new nsAccessibilityService();
   NS_ENSURE_TRUE(service, NS_ERROR_OUT_OF_MEMORY);
 
   if (!service->Init()) {
@@ -1860,19 +1860,19 @@ nsAccessibilityService::CreateAccessibleForXULTree(nsIContent* aContent,
   if (!treeFrame)
     return nullptr;
 
-  RefPtr<nsTreeColumns> treeCols = treeFrame->Columns();
+  nsRefPtr<nsTreeColumns> treeCols = treeFrame->Columns();
   int32_t count = 0;
   treeCols->GetCount(&count);
 
   // Outline of list accessible.
   if (count == 1) {
-    RefPtr<Accessible> accessible =
+    nsRefPtr<Accessible> accessible =
       new XULTreeAccessible(aContent, aDoc, treeFrame);
     return accessible.forget();
   }
 
   // Table or tree table accessible.
-  RefPtr<Accessible> accessible =
+  nsRefPtr<Accessible> accessible =
     new XULTreeGridAccessibleWrap(aContent, aDoc, treeFrame);
   return accessible.forget();
 }

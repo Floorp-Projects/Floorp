@@ -13,7 +13,7 @@
 #include "GraphicsFilter.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsRect.h"
 #include "nsSize.h"
 #include "limits.h"

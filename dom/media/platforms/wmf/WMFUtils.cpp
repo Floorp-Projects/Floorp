@@ -7,7 +7,7 @@
 #include "WMFUtils.h"
 #include <stdint.h>
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/Logging.h"
 #include "nsThreadUtils.h"

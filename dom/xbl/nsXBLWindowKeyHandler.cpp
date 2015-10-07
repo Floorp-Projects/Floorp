@@ -39,8 +39,8 @@ using namespace mozilla::dom;
 class nsXBLSpecialDocInfo : public nsIObserver
 {
 public:
-  RefPtr<nsXBLDocumentInfo> mHTMLBindings;
-  RefPtr<nsXBLDocumentInfo> mUserHTMLBindings;
+  nsRefPtr<nsXBLDocumentInfo> mHTMLBindings;
+  nsRefPtr<nsXBLDocumentInfo> mUserHTMLBindings;
 
   static const char sHTMLBindingStr[];
   static const char sUserHTMLBindingStr[];
@@ -620,7 +620,7 @@ nsXBLWindowKeyHandler::GetElement(bool* aIsDisabled)
 already_AddRefed<nsXBLWindowKeyHandler>
 NS_NewXBLWindowKeyHandler(nsIDOMElement* aElement, EventTarget* aTarget)
 {
-  RefPtr<nsXBLWindowKeyHandler> result =
+  nsRefPtr<nsXBLWindowKeyHandler> result =
     new nsXBLWindowKeyHandler(aElement, aTarget);
   return result.forget();
 }

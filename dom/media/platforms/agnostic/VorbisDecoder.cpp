@@ -63,7 +63,7 @@ VorbisDataDecoder::Shutdown()
   return NS_OK;
 }
 
-RefPtr<MediaDataDecoder::InitPromise>
+nsRefPtr<MediaDataDecoder::InitPromise>
 VorbisDataDecoder::Init()
 {
   vorbis_info_init(&mVorbisInfo);
@@ -125,9 +125,9 @@ nsresult
 VorbisDataDecoder::Input(MediaRawData* aSample)
 {
   nsCOMPtr<nsIRunnable> runnable(
-    NS_NewRunnableMethodWithArg<RefPtr<MediaRawData>>(
+    NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(
       this, &VorbisDataDecoder::Decode,
-      RefPtr<MediaRawData>(aSample)));
+      nsRefPtr<MediaRawData>(aSample)));
   mTaskQueue->Dispatch(runnable.forget());
 
   return NS_OK;

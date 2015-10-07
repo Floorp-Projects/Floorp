@@ -838,9 +838,9 @@ protected:
 
   nsCOMPtr<nsIInlineSpellChecker> mInlineSpellChecker;
 
-  RefPtr<nsTransactionManager> mTxnMgr;
+  nsRefPtr<nsTransactionManager> mTxnMgr;
   nsCOMPtr<mozilla::dom::Element> mRootElement; // cached root node
-  RefPtr<mozilla::dom::Text>    mIMETextNode; // current IME text node
+  nsRefPtr<mozilla::dom::Text>    mIMETextNode; // current IME text node
   nsCOMPtr<mozilla::dom::EventTarget> mEventTarget; // The form field as an event receiver
   nsCOMPtr<nsIDOMEventListener> mEventListener;
   nsWeakPtr        mSelConWeak;          // weak reference to the nsISelectionController
@@ -851,7 +851,7 @@ protected:
   nsString         *mPhonetic;
   // IME composition this is not null between compositionstart and
   // compositionend.
-  RefPtr<mozilla::TextComposition> mComposition;
+  nsRefPtr<mozilla::TextComposition> mComposition;
 
   // various listeners
   // Listens to all low level actions on the doc

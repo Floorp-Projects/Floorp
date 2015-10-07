@@ -47,7 +47,7 @@ IDBFileRequest::Create(nsPIDOMWindow* aOwner, IDBFileHandle* aFileHandle,
   MOZ_ASSERT(aFileHandle);
   aFileHandle->AssertIsOnOwningThread();
 
-  RefPtr<IDBFileRequest> request =
+  nsRefPtr<IDBFileRequest> request =
     new IDBFileRequest(aOwner, aFileHandle, aWrapAsDOMRequest);
 
   return request.forget();
@@ -147,7 +147,7 @@ IDBFileRequest::FireProgressEvent(uint64_t aLoaded, uint64_t aTotal)
   init.mLoaded = aLoaded;
   init.mTotal = aTotal;
 
-  RefPtr<ProgressEvent> event =
+  nsRefPtr<ProgressEvent> event =
     ProgressEvent::Constructor(this, NS_LITERAL_STRING("progress"), init);
   DispatchTrustedEvent(event);
 }

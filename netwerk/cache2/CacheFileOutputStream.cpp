@@ -342,7 +342,7 @@ CacheFileOutputStream::OnChunkUpdated(CacheFileChunk *aChunk)
 
 void CacheFileOutputStream::NotifyCloseListener()
 {
-  RefPtr<CacheOutputCloseListener> listener;
+  nsRefPtr<CacheOutputCloseListener> listener;
   listener.swap(mCloseListener);
   if (!listener)
     return;

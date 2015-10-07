@@ -79,7 +79,7 @@ protected:
   uint32_t mMaxBuffer;
 
 private:
-  RefPtr<HpackDynamicTableReporter> mDynamicReporter;
+  nsRefPtr<HpackDynamicTableReporter> mDynamicReporter;
 };
 
 class Http2Compressor;

@@ -110,8 +110,8 @@ private:
   bool mEmergencyCallsOnly;
   bool mRoaming;
   nsCOMPtr<nsPIDOMWindow> mWindow;
-  RefPtr<MobileNetworkInfo> mNetworkInfo;
-  RefPtr<MobileCellInfo> mCellInfo;
+  nsRefPtr<MobileNetworkInfo> mNetworkInfo;
+  nsRefPtr<MobileCellInfo> mCellInfo;
   Nullable<MobileConnectionState> mState;
   Nullable<MobileConnectionType> mType;
   Nullable<int32_t> mSignalStrength;

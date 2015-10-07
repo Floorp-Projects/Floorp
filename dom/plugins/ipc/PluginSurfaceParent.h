@@ -32,7 +32,7 @@ public:
   gfxASurface* Surface() { return mSurface; }
 
 private:
-  RefPtr<gfxASurface> mSurface;
+  nsRefPtr<gfxASurface> mSurface;
 };
 
 } // namespace plugins

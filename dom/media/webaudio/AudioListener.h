@@ -117,7 +117,7 @@ private:
 
 private:
   friend class PannerNode;
-  RefPtr<AudioContext> mContext;
+  nsRefPtr<AudioContext> mContext;
   ThreeDPoint mPosition;
   ThreeDPoint mFrontVector;
   ThreeDPoint mRightVector;

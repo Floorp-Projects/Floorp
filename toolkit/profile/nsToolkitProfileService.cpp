@@ -51,7 +51,7 @@ public:
     NS_DECL_NSITOOLKITPROFILE
 
     friend class nsToolkitProfileService;
-    RefPtr<nsToolkitProfile> mNext;
+    nsRefPtr<nsToolkitProfile> mNext;
     nsToolkitProfile          *mPrev;
 
 private:
@@ -87,7 +87,7 @@ public:
 private:
     ~nsToolkitProfileLock();
 
-    RefPtr<nsToolkitProfile> mProfile;
+    nsRefPtr<nsToolkitProfile> mProfile;
     nsCOMPtr<nsIFile> mDirectory;
     nsCOMPtr<nsIFile> mLocalDirectory;
 
@@ -138,7 +138,7 @@ private:
                                    bool aForExternalApp,
                                    nsIToolkitProfile** aResult);
 
-    RefPtr<nsToolkitProfile>  mFirst;
+    nsRefPtr<nsToolkitProfile>  mFirst;
     nsCOMPtr<nsIToolkitProfile> mChosen;
     nsCOMPtr<nsIToolkitProfile> mDefault;
     nsCOMPtr<nsIFile>           mAppData;
@@ -160,7 +160,7 @@ private:
           { mCurrent = first; }
     private:
         ~ProfileEnumerator() { }
-        RefPtr<nsToolkitProfile> mCurrent;
+        nsRefPtr<nsToolkitProfile> mCurrent;
     };
 };
 
@@ -278,7 +278,7 @@ nsToolkitProfile::Lock(nsIProfileUnlocker* *aUnlocker, nsIProfileLock* *aResult)
         return NS_OK;
     }
 
-    RefPtr<nsToolkitProfileLock> lock = new nsToolkitProfileLock();
+    nsRefPtr<nsToolkitProfileLock> lock = new nsToolkitProfileLock();
     if (!lock) return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv = lock->Init(this, aUnlocker);
@@ -671,7 +671,7 @@ nsresult
 NS_LockProfilePath(nsIFile* aPath, nsIFile* aTempPath,
                    nsIProfileUnlocker* *aUnlocker, nsIProfileLock* *aResult)
 {
-    RefPtr<nsToolkitProfileLock> lock = new nsToolkitProfileLock();
+    nsRefPtr<nsToolkitProfileLock> lock = new nsToolkitProfileLock();
     if (!lock) return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv = lock->Init(aPath, aTempPath, aUnlocker);

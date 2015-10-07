@@ -42,7 +42,7 @@ public:
     }
   }
 private:
-  RefPtr<gfxContext> mContext;
+  nsRefPtr<gfxContext> mContext;
 };
 
 class BasicReadbackLayer : public ReadbackLayer,

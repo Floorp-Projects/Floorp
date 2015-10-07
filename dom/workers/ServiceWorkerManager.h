@@ -69,9 +69,9 @@ public:
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
 
-  RefPtr<ServiceWorkerInfo> mActiveWorker;
-  RefPtr<ServiceWorkerInfo> mWaitingWorker;
-  RefPtr<ServiceWorkerInfo> mInstallingWorker;
+  nsRefPtr<ServiceWorkerInfo> mActiveWorker;
+  nsRefPtr<ServiceWorkerInfo> mWaitingWorker;
+  nsRefPtr<ServiceWorkerInfo> mInstallingWorker;
 
   // When unregister() is called on a registration, it is not immediately
   // removed since documents may be controlled. It is marked as
@@ -84,7 +84,7 @@ public:
   already_AddRefed<ServiceWorkerInfo>
   Newest()
   {
-    RefPtr<ServiceWorkerInfo> newest;
+    nsRefPtr<ServiceWorkerInfo> newest;
     if (mInstallingWorker) {
       newest = mInstallingWorker;
     } else if (mWaitingWorker) {
@@ -177,7 +177,7 @@ private:
   // associated with this all the time.
   nsAutoTArray<ServiceWorker*, 1> mInstances;
 
-  RefPtr<ServiceWorkerPrivate> mServiceWorkerPrivate;
+  nsRefPtr<ServiceWorkerPrivate> mServiceWorkerPrivate;
   bool mSkipWaitingFlag;
 
   ~ServiceWorkerInfo();
@@ -547,7 +547,7 @@ private:
     { }
 
     nsCOMPtr<nsIURI> mURI;
-    RefPtr<Promise> mPromise;
+    nsRefPtr<Promise> mPromise;
   };
 
   void AppendPendingOperation(nsIRunnable* aRunnable);
@@ -582,7 +582,7 @@ private:
   void
   RemoveAllRegistrations(OriginAttributes* aParams);
 
-  RefPtr<ServiceWorkerManagerChild> mActor;
+  nsRefPtr<ServiceWorkerManagerChild> mActor;
 
   struct PendingOperation;
   nsTArray<PendingOperation> mPendingOperations;

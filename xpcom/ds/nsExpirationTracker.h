@@ -303,7 +303,7 @@ protected:
 
 private:
   class ExpirationTrackerObserver;
-  RefPtr<ExpirationTrackerObserver> mObserver;
+  nsRefPtr<ExpirationTrackerObserver> mObserver;
   nsTArray<T*>       mGenerations[K];
   nsCOMPtr<nsITimer> mTimer;
   uint32_t           mTimerPeriod;

@@ -133,7 +133,7 @@ private:
     nsCString                       mJarEntry;
     nsCString                       mInnerJarEntry;
 
-    RefPtr<nsInputStreamPump>     mSynthesizedResponsePump;
+    nsRefPtr<nsInputStreamPump>     mSynthesizedResponsePump;
     int64_t                         mSynthesizedStreamLength;
 
     // True if this channel should skip any interception checks.

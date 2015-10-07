@@ -35,7 +35,7 @@ public:
                              T* aPromiseLike,
                              nsPIDOMWindow* aParent)
   {
-    RefPtr<PromiseLike<T>> p(new PromiseLike<T>(aPromiseLike, aAccess));
+    nsRefPtr<PromiseLike<T>> p(new PromiseLike<T>(aPromiseLike, aAccess));
     MaybeAwaitTrialCreate(aKeySystem, p, aParent);
   }
 
@@ -72,8 +72,8 @@ private:
     }
   protected:
     ~PromiseLike() {}
-    RefPtr<T> mPromiseLike;
-    RefPtr<MediaKeySystemAccess> mAccess;
+    nsRefPtr<T> mPromiseLike;
+    nsRefPtr<MediaKeySystemAccess> mAccess;
   };
 
   void MaybeAwaitTrialCreate(const nsAString& aKeySystem,
@@ -100,8 +100,8 @@ private:
     {}
     ~TrialCreateData() {}
     const nsString mKeySystem;
-    RefPtr<TestGMPVideoDecoder> mTest;
-    nsTArray<RefPtr<AbstractPromiseLike>> mPending;
+    nsRefPtr<TestGMPVideoDecoder> mTest;
+    nsTArray<nsRefPtr<AbstractPromiseLike>> mPending;
     TrialCreateState mStatus;
   private:
     TrialCreateData(const TrialCreateData& aOther) = delete;
@@ -151,7 +151,7 @@ public:
     ~Callback() {}
     void Done(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost) override;
   private:
-    RefPtr<TestGMPVideoDecoder> mInstance;
+    nsRefPtr<TestGMPVideoDecoder> mInstance;
   };
 
 private:
@@ -166,7 +166,7 @@ private:
   const nsString mKeySystem;
   nsCOMPtr<mozIGeckoMediaPluginService> mGMPService;
 
-  RefPtr<GMPVideoDecoderTrialCreator> mInstance;
+  nsRefPtr<GMPVideoDecoderTrialCreator> mInstance;
   nsCOMPtr<nsPIDOMWindow> mWindow;
   GMPVideoDecoderProxy* mGMP;
   GMPVideoHost* mHost;

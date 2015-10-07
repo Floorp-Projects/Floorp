@@ -47,7 +47,7 @@ public:
   }
 
 private:
-  RefPtr<MediaOmxReader> mOmxReader;
+  nsRefPtr<MediaOmxReader> mOmxReader;
   int64_t                  mOffset;
 };
 
@@ -110,7 +110,7 @@ private:
     }
   }
 
-  RefPtr<MediaOmxReader>         mOmxReader;
+  nsRefPtr<MediaOmxReader>         mOmxReader;
   uint64_t                         mLength;
   int64_t                          mOffset;
   uint64_t                         mFullLength;
@@ -146,7 +146,7 @@ nsresult MediaOmxReader::Init(MediaDecoderReader* aCloneDonor)
 
 already_AddRefed<AbstractMediaDecoder>
 MediaOmxReader::SafeGetDecoder() {
-  RefPtr<AbstractMediaDecoder> decoder;
+  nsRefPtr<AbstractMediaDecoder> decoder;
   MutexAutoLock lock(mShutdownMutex);
   if (!mIsShutdown) {
     decoder = mDecoder;
@@ -162,7 +162,7 @@ void MediaOmxReader::ReleaseDecoder()
   mOmxDecoder.clear();
 }
 
-RefPtr<ShutdownPromise>
+nsRefPtr<ShutdownPromise>
 MediaOmxReader::Shutdown()
 {
   {
@@ -170,7 +170,7 @@ MediaOmxReader::Shutdown()
     mIsShutdown = true;
   }
 
-  RefPtr<ShutdownPromise> p = MediaDecoderReader::Shutdown();
+  nsRefPtr<ShutdownPromise> p = MediaDecoderReader::Shutdown();
 
   // Wait for the superclass to finish tearing things down before releasing
   // the decoder on the main thread.
@@ -218,7 +218,7 @@ nsresult MediaOmxReader::InitOmxDecoder()
   return NS_OK;
 }
 
-RefPtr<MediaDecoderReader::MetadataPromise>
+nsRefPtr<MediaDecoderReader::MetadataPromise>
 MediaOmxReader::AsyncReadMetadata()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -240,9 +240,9 @@ MediaOmxReader::AsyncReadMetadata()
     ProcessCachedData(0);
   }
 
-  RefPtr<MediaDecoderReader::MetadataPromise> p = mMetadataPromise.Ensure(__func__);
+  nsRefPtr<MediaDecoderReader::MetadataPromise> p = mMetadataPromise.Ensure(__func__);
 
-  RefPtr<MediaOmxReader> self = this;
+  nsRefPtr<MediaOmxReader> self = this;
   mMediaResourceRequest.Begin(mOmxDecoder->AllocateMediaResources()
     ->Then(OwnerThread(), __func__,
       [self] (bool) -> void {
@@ -319,7 +319,7 @@ void MediaOmxReader::HandleResourceAllocated()
     mInfo.mAudio.mRate = sampleRate;
   }
 
-  RefPtr<MetadataHolder> metadata = new MetadataHolder();
+  nsRefPtr<MetadataHolder> metadata = new MetadataHolder();
   metadata->mInfo = mInfo;
   metadata->mTags = nullptr;
 
@@ -397,7 +397,7 @@ bool MediaOmxReader::DecodeVideoFrame(bool &aKeyframeSkip,
     // This is the approximate byte position in the stream.
     int64_t pos = mStreamSource->Tell();
 
-    RefPtr<VideoData> v;
+    nsRefPtr<VideoData> v;
     if (!frame.mGraphicBuffer) {
 
       VideoData::YCbCrBuffer b;
@@ -462,7 +462,7 @@ bool MediaOmxReader::DecodeVideoFrame(bool &aKeyframeSkip,
 void MediaOmxReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
 {
   MOZ_ASSERT(OnTaskQueue());
-  RefPtr<AbstractMediaDecoder> decoder = SafeGetDecoder();
+  nsRefPtr<AbstractMediaDecoder> decoder = SafeGetDecoder();
   if (!decoder) { // reader has shut down
     return;
   }
@@ -475,7 +475,7 @@ void MediaOmxReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset
 
   IntervalSet<int64_t> intervals = mFilter.NotifyDataArrived(aLength, aOffset);
   for (const auto& interval : intervals) {
-    RefPtr<MediaByteBuffer> bytes =
+    nsRefPtr<MediaByteBuffer> bytes =
       mDecoder->GetResource()->MediaReadAt(interval.mStart, interval.Length());
     NS_ENSURE_TRUE_VOID(bytes);
     mMP3FrameParser.Parse(bytes->Elements(), interval.Length(), interval.mStart);
@@ -526,12 +526,12 @@ bool MediaOmxReader::DecodeAudioData()
                                       source.mAudioChannels));
 }
 
-RefPtr<MediaDecoderReader::SeekPromise>
+nsRefPtr<MediaDecoderReader::SeekPromise>
 MediaOmxReader::Seek(int64_t aTarget, int64_t aEndTime)
 {
   MOZ_ASSERT(OnTaskQueue());
   EnsureActive();
-  RefPtr<SeekPromise> p = mSeekPromise.Ensure(__func__);
+  nsRefPtr<SeekPromise> p = mSeekPromise.Ensure(__func__);
 
   if (mHasAudio && mHasVideo) {
     // The OMXDecoder seeks/demuxes audio and video streams separately. So if
@@ -544,7 +544,7 @@ MediaOmxReader::Seek(int64_t aTarget, int64_t aEndTime)
     // audio and video streams won't be in sync after the seek.
     mVideoSeekTimeUs = aTarget;
 
-    RefPtr<MediaOmxReader> self = this;
+    nsRefPtr<MediaOmxReader> self = this;
     mSeekRequest.Begin(DecodeToFirstVideoData()->Then(OwnerThread(), __func__, [self] (MediaData* v) {
       self->mSeekRequest.Complete();
       self->mAudioSeekTimeUs = v->mTime;
@@ -580,7 +580,7 @@ void MediaOmxReader::EnsureActive() {
 int64_t MediaOmxReader::ProcessCachedData(int64_t aOffset)
 {
   // Could run on decoder thread or IO thread.
-  RefPtr<AbstractMediaDecoder> decoder = SafeGetDecoder();
+  nsRefPtr<AbstractMediaDecoder> decoder = SafeGetDecoder();
   if (!decoder) { // reader has shut down
     return -1;
   }
@@ -601,7 +601,7 @@ int64_t MediaOmxReader::ProcessCachedData(int64_t aOffset)
   }
 
   int64_t bufferLength = std::min<int64_t>(resourceLength-aOffset, sReadSize);
-  RefPtr<NotifyDataArrivedRunnable> runnable(
+  nsRefPtr<NotifyDataArrivedRunnable> runnable(
     new NotifyDataArrivedRunnable(this, bufferLength, aOffset, resourceLength));
 
   if (OnTaskQueue()) {

@@ -212,7 +212,7 @@ public:
     DISALLOW_COPY_AND_ASSIGN(StackIdentifier);
 
     PluginIdentifier mIdentifier;
-    RefPtr<StoredIdentifier> mStored;
+    nsRefPtr<StoredIdentifier> mStored;
   };
 
   static void ClearIdentifiers();
@@ -311,7 +311,7 @@ private:
   static StoredIdentifier* HashIdentifier(const nsCString& aIdentifier);
   static void UnhashIdentifier(StoredIdentifier* aIdentifier);
 
-  typedef nsDataHashtable<nsCStringHashKey, RefPtr<StoredIdentifier>> IdentifierTable;
+  typedef nsDataHashtable<nsCStringHashKey, nsRefPtr<StoredIdentifier>> IdentifierTable;
   static IdentifierTable sIdentifiers;
 
   struct NPObjectData : public nsPtrHashKey<NPObject>

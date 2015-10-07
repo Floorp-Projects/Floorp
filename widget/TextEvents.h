@@ -390,7 +390,7 @@ public:
   // TextComposition automatically.
   nsString mData;
 
-  RefPtr<TextRangeArray> mRanges;
+  nsRefPtr<TextRangeArray> mRanges;
 
   // If the instance is a clone of another event, mOriginalMessage stores
   // the another event's mMessage.

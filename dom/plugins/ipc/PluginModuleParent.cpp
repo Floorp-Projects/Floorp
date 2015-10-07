@@ -113,8 +113,8 @@ mozilla::plugins::SetupBridge(uint32_t aPluginId,
     }
 
     PluginModuleChromeParent::ClearInstantiationFlag();
-    RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
-    RefPtr<nsNPAPIPlugin> plugin;
+    nsRefPtr<nsPluginHost> host = nsPluginHost::GetInst();
+    nsRefPtr<nsNPAPIPlugin> plugin;
     *rv = host->GetPluginForContentProcess(aPluginId, getter_AddRefs(plugin));
     if (NS_FAILED(*rv)) {
         return true;
@@ -360,12 +360,12 @@ mozilla::plugins::TerminatePlugin(uint32_t aPluginId,
 {
     MOZ_ASSERT(XRE_IsParentProcess());
 
-    RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
+    nsRefPtr<nsPluginHost> host = nsPluginHost::GetInst();
     nsPluginTag* pluginTag = host->PluginWithId(aPluginId);
     if (!pluginTag || !pluginTag->mPlugin) {
         return;
     }
-    RefPtr<nsNPAPIPlugin> plugin = pluginTag->mPlugin;
+    nsRefPtr<nsNPAPIPlugin> plugin = pluginTag->mPlugin;
     PluginModuleChromeParent* chromeParent =
         static_cast<PluginModuleChromeParent*>(plugin->GetLibrary());
     chromeParent->TerminateChildProcess(MessageLoop::current(),
@@ -1189,7 +1189,7 @@ PluginModuleChromeParent::ShouldContinueFromReplyTimeout()
 bool
 PluginModuleContentParent::ShouldContinueFromReplyTimeout()
 {
-    RefPtr<ProcessHangMonitor> monitor = ProcessHangMonitor::Get();
+    nsRefPtr<ProcessHangMonitor> monitor = ProcessHangMonitor::Get();
     if (!monitor) {
         return true;
     }
@@ -1352,7 +1352,7 @@ PluginModuleChromeParent::TerminateChildProcess(MessageLoop* aMsgLoop,
 bool
 PluginModuleParent::GetPluginDetails()
 {
-    RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
+    nsRefPtr<nsPluginHost> host = nsPluginHost::GetInst();
     if (!host) {
         return false;
     }
@@ -2378,7 +2378,7 @@ PluginModuleParent::InitAsyncSurrogates()
 
 bool
 PluginModuleParent::RemovePendingSurrogate(
-                            const RefPtr<PluginAsyncSurrogate>& aSurrogate)
+                            const nsRefPtr<PluginAsyncSurrogate>& aSurrogate)
 {
     return mSurrogateInstances.RemoveElement(aSurrogate);
 }
@@ -2559,7 +2559,7 @@ PluginModuleParent::NPP_New(NPMIMEType pluginType, NPP instance,
         }
 
         if (!mNPInitialized) {
-            RefPtr<PluginAsyncSurrogate> surrogate =
+            nsRefPtr<PluginAsyncSurrogate> surrogate =
                 PluginAsyncSurrogate::Cast(instance);
             mSurrogateInstances.AppendElement(surrogate);
             *error = NPERR_NO_ERROR;
@@ -2632,7 +2632,7 @@ PluginModuleParent::NPP_NewInternal(NPMIMEType pluginType, NPP instance,
     }
 
     // Release the surrogate reference that was in pdata
-    RefPtr<PluginAsyncSurrogate> surrogate(
+    nsRefPtr<PluginAsyncSurrogate> surrogate(
         dont_AddRef(PluginAsyncSurrogate::Cast(instance)));
     // Now replace it with the instance
     instance->pdata = static_cast<PluginDataResolver*>(parentInstance);
@@ -2963,7 +2963,7 @@ PluginModuleParent::RecvNPN_ReloadPlugins(const bool& aReloadPages)
 bool
 PluginModuleChromeParent::RecvNotifyContentModuleDestroyed()
 {
-    RefPtr<nsPluginHost> host = nsPluginHost::GetInst();
+    nsRefPtr<nsPluginHost> host = nsPluginHost::GetInst();
     if (host) {
         host->NotifyContentModuleDestroyed(mPluginId);
     }
@@ -3151,7 +3151,7 @@ PluginProfilerObserver::Observe(nsISupports *aSubject,
     } else if (!strcmp(aTopic, "profiler-stopped")) {
         unused << mPmp->SendStopProfiler();
     } else if (!strcmp(aTopic, "profiler-subprocess-gather")) {
-        RefPtr<ProfileGatherer> gatherer = static_cast<ProfileGatherer*>(aSubject);
+        nsRefPtr<ProfileGatherer> gatherer = static_cast<ProfileGatherer*>(aSubject);
         mPmp->GatherAsyncProfile(gatherer);
     } else if (!strcmp(aTopic, "profiler-subprocess")) {
         nsCOMPtr<nsIProfileSaveEvent> pse = do_QueryInterface(aSubject);

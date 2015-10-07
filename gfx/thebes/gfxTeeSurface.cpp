@@ -28,18 +28,18 @@ gfxTeeSurface::gfxTeeSurface(gfxASurface **aSurfaces, int32_t aSurfaceCount)
 const mozilla::gfx::IntSize
 gfxTeeSurface::GetSize() const
 {
-    RefPtr<gfxASurface> master = Wrap(cairo_tee_surface_index(mSurface, 0));
+    nsRefPtr<gfxASurface> master = Wrap(cairo_tee_surface_index(mSurface, 0));
     return master->GetSize();
 }
 
 void
-gfxTeeSurface::GetSurfaces(nsTArray<RefPtr<gfxASurface> >* aSurfaces)
+gfxTeeSurface::GetSurfaces(nsTArray<nsRefPtr<gfxASurface> >* aSurfaces)
 {
     for (int32_t i = 0; ; ++i) {
         cairo_surface_t *csurf = cairo_tee_surface_index(mSurface, i);
         if (cairo_surface_status(csurf))
             break;
-        RefPtr<gfxASurface> *elem = aSurfaces->AppendElement();
+        nsRefPtr<gfxASurface> *elem = aSurfaces->AppendElement();
         if (!elem)
             return;
         *elem = Wrap(csurf);

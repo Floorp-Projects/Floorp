@@ -167,7 +167,7 @@ already_AddRefed<PersistentBufferProvider>
 LayerManager::CreatePersistentBufferProvider(const mozilla::gfx::IntSize &aSize,
                                              mozilla::gfx::SurfaceFormat aFormat)
 {
-  RefPtr<PersistentBufferProviderBasic> bufferProvider =
+  nsRefPtr<PersistentBufferProviderBasic> bufferProvider =
     new PersistentBufferProviderBasic(aSize, aFormat,
                                       gfxPlatform::GetPlatform()->GetPreferredCanvasBackend());
 
@@ -194,7 +194,7 @@ LayerManager::Mutated(Layer* aLayer)
 already_AddRefed<ImageContainer>
 LayerManager::CreateImageContainer(ImageContainer::Mode flag)
 {
-  RefPtr<ImageContainer> container = new ImageContainer(flag);
+  nsRefPtr<ImageContainer> container = new ImageContainer(flag);
   return container.forget();
 }
 
@@ -301,7 +301,7 @@ CreateCSSValueList(const InfallibleTArray<TransformFunction>& aFunctions)
   nsAutoPtr<nsCSSValueList> result;
   nsCSSValueList** resultTail = getter_Transfers(result);
   for (uint32_t i = 0; i < aFunctions.Length(); i++) {
-    RefPtr<nsCSSValue::Array> arr;
+    nsRefPtr<nsCSSValue::Array> arr;
     switch (aFunctions[i].type()) {
       case TransformFunction::TRotationX:
       {
@@ -1657,8 +1657,8 @@ void WriteSnapshotToDumpFile(LayerManager* aManager, DataSourceSurface* aSurf)
 
 void WriteSnapshotToDumpFile(Compositor* aCompositor, DrawTarget* aTarget)
 {
-  RefPtr<SourceSurface> surf = aTarget->Snapshot();
-  RefPtr<DataSourceSurface> dSurf = surf->GetDataSurface();
+  nsRefPtr<SourceSurface> surf = aTarget->Snapshot();
+  nsRefPtr<DataSourceSurface> dSurf = surf->GetDataSurface();
   WriteSnapshotToDumpFile_internal(aCompositor, dSurf);
 }
 #endif

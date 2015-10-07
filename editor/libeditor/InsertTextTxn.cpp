@@ -53,7 +53,7 @@ InsertTextTxn::DoTransaction()
 
   // Only set selection to insertion point if editor gives permission
   if (mEditor.GetShouldTxnSetSelection()) {
-    RefPtr<Selection> selection = mEditor.GetSelection();
+    nsRefPtr<Selection> selection = mEditor.GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     res = selection->Collapse(mTextNode,
                               mOffset + mStringToInsert.Length());
@@ -83,7 +83,7 @@ InsertTextTxn::Merge(nsITransaction* aTransaction, bool* aDidMerge)
 
   // If aTransaction is a InsertTextTxn, and if the selection hasn't changed,
   // then absorb it
-  RefPtr<InsertTextTxn> otherInsTxn = do_QueryObject(aTransaction);
+  nsRefPtr<InsertTextTxn> otherInsTxn = do_QueryObject(aTransaction);
   if (otherInsTxn && IsSequentialInsert(*otherInsTxn)) {
     nsAutoString otherData;
     otherInsTxn->GetData(otherData);

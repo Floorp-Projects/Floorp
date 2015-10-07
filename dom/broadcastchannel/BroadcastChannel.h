@@ -12,7 +12,7 @@
 #include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 class nsPIDOMWindow;
 
@@ -108,8 +108,8 @@ private:
     return mIsKeptAlive;
   }
 
-  RefPtr<BroadcastChannelChild> mActor;
-  nsTArray<RefPtr<BroadcastChannelMessage>> mPendingMessages;
+  nsRefPtr<BroadcastChannelChild> mActor;
+  nsTArray<nsRefPtr<BroadcastChannelMessage>> mPendingMessages;
 
   nsAutoPtr<workers::WorkerFeature> mWorkerFeature;
 

@@ -120,7 +120,7 @@ class ContentPermissionRequestParent : public PContentPermissionRequestParent
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<Element> mElement;
-  RefPtr<nsContentPermissionRequestProxy> mProxy;
+  nsRefPtr<nsContentPermissionRequestProxy> mProxy;
   nsTArray<PermissionRequest> mRequests;
 
  private:
@@ -249,7 +249,7 @@ nsContentPermissionUtils::ConvertPermissionRequestToArray(nsTArray<PermissionReq
 {
   uint32_t len = aSrcArray.Length();
   for (uint32_t i = 0; i < len; i++) {
-    RefPtr<ContentPermissionType> cpt =
+    nsRefPtr<ContentPermissionType> cpt =
       new ContentPermissionType(aSrcArray[i].type(),
                                 aSrcArray[i].access(),
                                 aSrcArray[i].options());
@@ -307,7 +307,7 @@ nsContentPermissionUtils::CreatePermissionArray(const nsACString& aType,
                                                 nsIArray** aTypesArray)
 {
   nsCOMPtr<nsIMutableArray> types = do_CreateInstance(NS_ARRAY_CONTRACTID);
-  RefPtr<ContentPermissionType> permType = new ContentPermissionType(aType,
+  nsRefPtr<ContentPermissionType> permType = new ContentPermissionType(aType,
                                                                        aAccess,
                                                                        aOptions);
   types->AppendElement(permType, false);
@@ -338,7 +338,7 @@ nsContentPermissionUtils::AskPermission(nsIContentPermissionRequest* aRequest, n
   // for content process
   if (XRE_IsContentProcess()) {
 
-    RefPtr<RemotePermissionRequest> req =
+    nsRefPtr<RemotePermissionRequest> req =
       new RemotePermissionRequest(aRequest, aWindow);
 
     MOZ_ASSERT(NS_IsMainThread()); // IPC can only be execute on main thread.
@@ -690,7 +690,7 @@ nsContentPermissionRequestProxy::GetRequester(nsIContentPermissionRequester** aR
 {
   NS_ENSURE_ARG_POINTER(aRequester);
 
-  RefPtr<nsContentPermissionRequesterProxy> requester = mRequester;
+  nsRefPtr<nsContentPermissionRequesterProxy> requester = mRequester;
   requester.forget(aRequester);
   return NS_OK;
 }

@@ -50,7 +50,7 @@ void InkCollector::Initialize()
   }
 
   // Set up connection between sink and InkCollector.
-  RefPtr<IConnectionPointContainer> connPointContainer;
+  nsRefPtr<IConnectionPointContainer> connPointContainer;
 
   // Get the connection point container.
   if (SUCCEEDED(mInkCollector->QueryInterface(IID_IConnectionPointContainer,

@@ -65,8 +65,8 @@ public:
   }
 
 private:
-  RefPtr<nsIFilePicker> mFilePicker;
-  RefPtr<nsIFilePickerShownCallback> mCallback;
+  nsRefPtr<nsIFilePicker> mFilePicker;
+  nsRefPtr<nsIFilePickerShownCallback> mCallback;
 };
 
 class nsBaseFilePickerEnumerator : public nsISimpleEnumerator
@@ -98,7 +98,7 @@ public:
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<File> domFile = File::CreateFromFile(mParent, localFile);
+    nsRefPtr<File> domFile = File::CreateFromFile(mParent, localFile);
 
     // Right now we're on the main thread of the chrome process. We need
     // to call SetIsDirectory on the BlobImpl, but it's preferable not to
@@ -348,7 +348,7 @@ nsBaseFilePicker::GetDomfile(nsISupports** aDomfile)
     return NS_OK;
   }
 
-  RefPtr<File> domFile = File::CreateFromFile(mParent, localFile);
+  nsRefPtr<File> domFile = File::CreateFromFile(mParent, localFile);
   domFile->Impl()->SetIsDirectory(mMode == nsIFilePicker::modeGetFolder);
   nsCOMPtr<nsIDOMBlob>(domFile).forget(aDomfile);
   return NS_OK;
@@ -361,7 +361,7 @@ nsBaseFilePicker::GetDomfiles(nsISimpleEnumerator** aDomfiles)
   nsresult rv = GetFiles(getter_AddRefs(iter));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<nsBaseFilePickerEnumerator> retIter =
+  nsRefPtr<nsBaseFilePickerEnumerator> retIter =
     new nsBaseFilePickerEnumerator(mParent, iter, mMode);
 
   retIter.forget(aDomfiles);

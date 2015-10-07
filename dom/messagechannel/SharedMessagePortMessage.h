@@ -42,24 +42,24 @@ public:
   static void
   FromSharedToMessagesChild(
                       MessagePortChild* aActor,
-                      const nsTArray<RefPtr<SharedMessagePortMessage>>& aData,
+                      const nsTArray<nsRefPtr<SharedMessagePortMessage>>& aData,
                       nsTArray<MessagePortMessage>& aArray);
 
   static bool
   FromMessagesToSharedChild(
                      nsTArray<MessagePortMessage>& aArray,
-                     FallibleTArray<RefPtr<SharedMessagePortMessage>>& aData);
+                     FallibleTArray<nsRefPtr<SharedMessagePortMessage>>& aData);
 
   static bool
   FromSharedToMessagesParent(
                       MessagePortParent* aActor,
-                      const nsTArray<RefPtr<SharedMessagePortMessage>>& aData,
+                      const nsTArray<nsRefPtr<SharedMessagePortMessage>>& aData,
                       FallibleTArray<MessagePortMessage>& aArray);
 
   static bool
   FromMessagesToSharedParent(
                      nsTArray<MessagePortMessage>& aArray,
-                     FallibleTArray<RefPtr<SharedMessagePortMessage>>& aData);
+                     FallibleTArray<nsRefPtr<SharedMessagePortMessage>>& aData);
 
 private:
   ~SharedMessagePortMessage();

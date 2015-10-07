@@ -18,7 +18,7 @@ nsSystemStatusBarCocoa::AddItem(nsIDOMElement* aDOMElement)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
-  RefPtr<nsStandaloneNativeMenu> menu = new nsStandaloneNativeMenu();
+  nsRefPtr<nsStandaloneNativeMenu> menu = new nsStandaloneNativeMenu();
   nsresult rv = menu->Init(aDOMElement);
   if (NS_FAILED(rv)) {
     return rv;

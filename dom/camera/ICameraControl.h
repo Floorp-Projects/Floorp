@@ -323,7 +323,7 @@ public:
   }
 
 protected:
-  RefPtr<ICameraControl> mCameraControl;
+  nsRefPtr<ICameraControl> mCameraControl;
 };
 
 } // namespace mozilla

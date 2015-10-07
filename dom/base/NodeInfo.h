@@ -280,7 +280,7 @@ protected:
 
   NodeInfoInner mInner;
 
-  RefPtr<nsNodeInfoManager> mOwnerManager;
+  nsRefPtr<nsNodeInfoManager> mOwnerManager;
 
   /*
    * Members for various functions of mName+mPrefix that we can be

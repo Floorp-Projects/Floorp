@@ -50,7 +50,7 @@ class GstMozVideoBufferData {
       delete reinterpret_cast<GstMozVideoBufferData*>(aData);
     }
 
-    RefPtr<layers::PlanarYCbCrImage> mImage;
+    nsRefPtr<layers::PlanarYCbCrImage> mImage;
 };
 
 GType gst_moz_video_buffer_data_get_type (void);

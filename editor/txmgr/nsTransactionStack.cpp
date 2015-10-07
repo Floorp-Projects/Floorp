@@ -38,7 +38,7 @@ nsTransactionStack::Pop()
   if (mDeque.empty()) {
     return nullptr;
   }
-  RefPtr<nsTransactionItem> ret = mDeque.back().forget();
+  nsRefPtr<nsTransactionItem> ret = mDeque.back().forget();
   mDeque.pop_back();
   return ret.forget();
 }
@@ -49,7 +49,7 @@ nsTransactionStack::PopBottom()
   if (mDeque.empty()) {
     return nullptr;
   }
-  RefPtr<nsTransactionItem> ret = mDeque.front().forget();
+  nsRefPtr<nsTransactionItem> ret = mDeque.front().forget();
   mDeque.pop_front();
   return ret.forget();
 }
@@ -60,7 +60,7 @@ nsTransactionStack::Peek()
   if (mDeque.empty()) {
     return nullptr;
   }
-  RefPtr<nsTransactionItem> ret = mDeque.back();
+  nsRefPtr<nsTransactionItem> ret = mDeque.back();
   return ret.forget();
 }
 
@@ -70,7 +70,7 @@ nsTransactionStack::GetItem(int32_t aIndex)
   if (aIndex < 0 || aIndex >= static_cast<int32_t>(mDeque.size())) {
     return nullptr;
   }
-  RefPtr<nsTransactionItem> ret = mDeque[aIndex];
+  nsRefPtr<nsTransactionItem> ret = mDeque[aIndex];
   return ret.forget();
 }
 
@@ -78,7 +78,7 @@ void
 nsTransactionStack::Clear()
 {
   while (!mDeque.empty()) {
-    RefPtr<nsTransactionItem> tx = mType == FOR_UNDO ? Pop() : PopBottom();
+    nsRefPtr<nsTransactionItem> tx = mType == FOR_UNDO ? Pop() : PopBottom();
   };
 }
 

@@ -166,7 +166,7 @@ protected:
 
   nsXBLPrototypeBinding* mPrototypeBinding; // Weak, but we're holding a ref to the docinfo
   nsCOMPtr<nsIContent> mContent; // Strong. Our anonymous content stays around with us.
-  RefPtr<nsXBLBinding> mNextBinding; // Strong. The derived binding owns the base class bindings.
+  nsRefPtr<nsXBLBinding> mNextBinding; // Strong. The derived binding owns the base class bindings.
 
   nsIContent* mBoundElement; // [WEAK] We have a reference, but we don't own it.
 
@@ -176,9 +176,9 @@ protected:
   // attribute. These points must be up-to-date with respect to their parent's
   // children, even if their parent has another binding attached to it,
   // preventing us from rendering their contents directly.
-  RefPtr<mozilla::dom::XBLChildrenElement> mDefaultInsertionPoint;
-  nsTArray<RefPtr<mozilla::dom::XBLChildrenElement> > mInsertionPoints;
-  RefPtr<nsAnonymousContentList> mAnonymousContentList;
+  nsRefPtr<mozilla::dom::XBLChildrenElement> mDefaultInsertionPoint;
+  nsTArray<nsRefPtr<mozilla::dom::XBLChildrenElement> > mInsertionPoints;
+  nsRefPtr<nsAnonymousContentList> mAnonymousContentList;
 
   mozilla::dom::XBLChildrenElement* FindInsertionPointForInternal(nsIContent* aChild);
 };

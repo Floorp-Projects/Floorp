@@ -114,7 +114,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTENTPERMISSIONREQUEST
 
-  MediaPermissionRequest(RefPtr<dom::GetUserMediaRequest> &aRequest,
+  MediaPermissionRequest(nsRefPtr<dom::GetUserMediaRequest> &aRequest,
                          nsTArray<nsCOMPtr<nsIMediaDevice> > &aDevices);
 
   already_AddRefed<nsPIDOMWindow> GetOwner();
@@ -127,7 +127,7 @@ private:
 
   bool mAudio; // Request for audio permission
   bool mVideo; // Request for video permission
-  RefPtr<dom::GetUserMediaRequest> mRequest;
+  nsRefPtr<dom::GetUserMediaRequest> mRequest;
   nsTArray<nsCOMPtr<nsIMediaDevice> > mAudioDevices; // candidate audio devices
   nsTArray<nsCOMPtr<nsIMediaDevice> > mVideoDevices; // candidate video devices
   nsCOMPtr<nsIContentPermissionRequester> mRequester;
@@ -136,7 +136,7 @@ private:
 // MediaPermissionRequest
 NS_IMPL_ISUPPORTS(MediaPermissionRequest, nsIContentPermissionRequest)
 
-MediaPermissionRequest::MediaPermissionRequest(RefPtr<dom::GetUserMediaRequest> &aRequest,
+MediaPermissionRequest::MediaPermissionRequest(nsRefPtr<dom::GetUserMediaRequest> &aRequest,
                                                nsTArray<nsCOMPtr<nsIMediaDevice> > &aDevices)
   : mRequest(aRequest)
 {
@@ -330,15 +330,15 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIGETUSERMEDIADEVICESSUCCESSCALLBACK
 
-  MediaDeviceSuccessCallback(RefPtr<dom::GetUserMediaRequest> &aRequest)
+  MediaDeviceSuccessCallback(nsRefPtr<dom::GetUserMediaRequest> &aRequest)
     : mRequest(aRequest) {}
 
 protected:
   virtual ~MediaDeviceSuccessCallback() {}
 
 private:
-  nsresult DoPrompt(RefPtr<MediaPermissionRequest> &req);
-  RefPtr<dom::GetUserMediaRequest> mRequest;
+  nsresult DoPrompt(nsRefPtr<MediaPermissionRequest> &req);
+  nsRefPtr<dom::GetUserMediaRequest> mRequest;
 };
 
 NS_IMPL_ISUPPORTS(MediaDeviceSuccessCallback, nsIGetUserMediaDevicesSuccessCallback)
@@ -373,7 +373,7 @@ MediaDeviceSuccessCallback::OnSuccess(nsIVariant* aDevices)
   free(rawArray); // explicitly free for the memory from nsIVariant::GetAsArray
 
   // Send MediaPermissionRequest
-  RefPtr<MediaPermissionRequest> req = new MediaPermissionRequest(mRequest, devices);
+  nsRefPtr<MediaPermissionRequest> req = new MediaPermissionRequest(mRequest, devices);
   rv = DoPrompt(req);
 
   NS_ENSURE_SUCCESS(rv, rv);
@@ -382,7 +382,7 @@ MediaDeviceSuccessCallback::OnSuccess(nsIVariant* aDevices)
 
 // Trigger permission prompt UI
 nsresult
-MediaDeviceSuccessCallback::DoPrompt(RefPtr<MediaPermissionRequest> &req)
+MediaDeviceSuccessCallback::DoPrompt(nsRefPtr<MediaPermissionRequest> &req)
 {
   nsCOMPtr<nsPIDOMWindow> window(req->GetOwner());
   return dom::nsContentPermissionUtils::AskPermission(req, window);
@@ -411,7 +411,7 @@ NS_IMPL_ISUPPORTS(MediaDeviceErrorCallback, nsIDOMGetUserMediaErrorCallback)
 NS_IMETHODIMP
 MediaDeviceErrorCallback::OnError(nsISupports* aError)
 {
-  RefPtr<MediaStreamError> error = do_QueryObject(aError);
+  nsRefPtr<MediaStreamError> error = do_QueryObject(aError);
   if (!error) {
     return NS_ERROR_NO_INTERFACE;
   }
@@ -468,7 +468,7 @@ MediaPermissionManager::Observe(nsISupports* aSubject, const char* aTopic,
 {
   nsresult rv;
   if (!strcmp(aTopic, "getUserMedia:request")) {
-    RefPtr<dom::GetUserMediaRequest> req =
+    nsRefPtr<dom::GetUserMediaRequest> req =
         static_cast<dom::GetUserMediaRequest*>(aSubject);
     rv = HandleRequest(req);
 
@@ -488,7 +488,7 @@ MediaPermissionManager::Observe(nsISupports* aSubject, const char* aTopic,
 
 // Handle GetUserMediaRequest, query available media device first.
 nsresult
-MediaPermissionManager::HandleRequest(RefPtr<dom::GetUserMediaRequest> &req)
+MediaPermissionManager::HandleRequest(nsRefPtr<dom::GetUserMediaRequest> &req)
 {
   nsString callID;
   req->GetCallID(callID);
@@ -508,7 +508,7 @@ MediaPermissionManager::HandleRequest(RefPtr<dom::GetUserMediaRequest> &req)
   dom::MediaStreamConstraints constraints;
   req->GetConstraints(constraints);
 
-  RefPtr<MediaManager> MediaMgr = MediaManager::GetInstance();
+  nsRefPtr<MediaManager> MediaMgr = MediaManager::GetInstance();
   nsresult rv = MediaMgr->GetUserMediaDevices(innerWindow, constraints, onSuccess, onError);
   NS_ENSURE_SUCCESS(rv, rv);
 

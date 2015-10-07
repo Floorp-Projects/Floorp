@@ -334,7 +334,7 @@ IterPerformanceStats(JSContext* cx,
             continue;
         }
         js::AutoCompartment autoCompartment(cx, compartment);
-        RefPtr<PerformanceGroup> group = compartment->performanceMonitoring.getSharedGroup(cx);
+        nsRefPtr<PerformanceGroup> group = compartment->performanceMonitoring.getSharedGroup(cx);
         if (group->data.ticks == 0) {
             // Don't report compartments that have never been used.
             continue;
@@ -371,12 +371,12 @@ IterPerformanceStats(JSContext* cx,
             continue;
         }
         js::AutoCompartment autoCompartment(cx, compartment);
-        RefPtr<PerformanceGroup> ownGroup = compartment->performanceMonitoring.getOwnGroup();
+        nsRefPtr<PerformanceGroup> ownGroup = compartment->performanceMonitoring.getOwnGroup();
         if (ownGroup->data.ticks == 0) {
             // Don't report compartments that have never been used.
             continue;
         }
-        RefPtr<PerformanceGroup> sharedGroup = compartment->performanceMonitoring.getSharedGroup(cx);
+        nsRefPtr<PerformanceGroup> sharedGroup = compartment->performanceMonitoring.getSharedGroup(cx);
         if (!(*walker)(cx,
                        ownGroup->data, ownGroup->uid, &sharedGroup->uid,
                        closure)) {

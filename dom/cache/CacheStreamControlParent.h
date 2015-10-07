@@ -61,7 +61,7 @@ private:
   // Cycle with StreamList via a weak-ref to us.  Cleanup occurs when the actor
   // is deleted by the PBackground manager.  ActorDestroy() then calls
   // StreamList::RemoveStreamControl() to clear the weak ref.
-  RefPtr<StreamList> mStreamList;
+  nsRefPtr<StreamList> mStreamList;
 
   NS_DECL_OWNINGTHREAD
 };

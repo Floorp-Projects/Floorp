@@ -73,7 +73,7 @@ protected:
 
 private:
   bool mInitialized;
-  RefPtr<nsFrameMessageManager> mMessageManager;
+  nsRefPtr<nsFrameMessageManager> mMessageManager;
 };
 
 } // namespace dom

@@ -46,7 +46,7 @@ nsFtpControlConnection::OnInputStreamReady(nsIAsyncInputStream *stream)
     // It's important that we null out mListener before calling one of its
     // methods as it may call WaitData, which would queue up another read.
 
-    RefPtr<nsFtpControlConnectionListener> listener;
+    nsRefPtr<nsFtpControlConnectionListener> listener;
     listener.swap(mListener);
 
     if (!listener)

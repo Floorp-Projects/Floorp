@@ -50,11 +50,11 @@ public:
   // The base element that this specification refers to.
   // For SYNCBASE types, this is the timebase
   // For EVENT and REPEAT types, this is the eventbase
-  RefPtr<nsIAtom> mDependentElemID;
+  nsRefPtr<nsIAtom> mDependentElemID;
 
   // The event to respond to.
   // Only used for EVENT types.
-  RefPtr<nsIAtom> mEventSymbol;
+  nsRefPtr<nsIAtom> mEventSymbol;
 
   // Indicates if this specification refers to the begin or end of the dependent
   // element.

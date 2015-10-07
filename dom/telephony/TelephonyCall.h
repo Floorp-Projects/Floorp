@@ -22,16 +22,16 @@ namespace dom {
 
 class TelephonyCall final : public DOMEventTargetHelper
 {
-  RefPtr<Telephony> mTelephony;
-  RefPtr<TelephonyCallGroup> mGroup;
+  nsRefPtr<Telephony> mTelephony;
+  nsRefPtr<TelephonyCallGroup> mGroup;
 
-  RefPtr<TelephonyCallId> mId;
-  RefPtr<TelephonyCallId> mSecondId;
+  nsRefPtr<TelephonyCallId> mId;
+  nsRefPtr<TelephonyCallId> mSecondId;
 
   uint32_t mServiceId;
   nsString mState;
   bool mEmergency;
-  RefPtr<DOMError> mError;
+  nsRefPtr<DOMError> mError;
   Nullable<TelephonyCallDisconnectedReason> mDisconnectedReason;
 
   bool mSwitchable;

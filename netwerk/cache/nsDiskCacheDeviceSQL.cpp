@@ -127,7 +127,7 @@ class EvictionObserver
 
   private:
     mozIStorageConnection *mDB;
-    RefPtr<nsOfflineCacheEvictionFunction> mEvictionFunction;
+    nsRefPtr<nsOfflineCacheEvictionFunction> mEvictionFunction;
 };
 
 #define DCACHE_HASH_MAX  INT64_MAX
@@ -261,7 +261,7 @@ public:
   }
 
 private:
-  RefPtr<nsOfflineCacheDevice> mDevice;
+  nsRefPtr<nsOfflineCacheDevice> mDevice;
   nsCString mGroup;
   nsCString mClientID;
 };
@@ -1626,7 +1626,7 @@ nsOfflineCacheDevice::BindEntry(nsCacheEntry *entry)
     return NS_ERROR_UNEXPECTED;
 
   // create binding, pick best generation number
-  RefPtr<nsOfflineCacheBinding> binding =
+  nsRefPtr<nsOfflineCacheBinding> binding =
       nsOfflineCacheBinding::Create(mCacheDirectory, entry->Key(), -1);
   if (!binding)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1863,7 +1863,7 @@ nsOfflineCacheDevice::Visit(nsICacheVisitor *visitor)
   // SELECT * from moz_cache;
 
   nsOfflineCacheRecord rec;
-  RefPtr<nsOfflineCacheEntryInfo> info = new nsOfflineCacheEntryInfo;
+  nsRefPtr<nsOfflineCacheEntryInfo> info = new nsOfflineCacheEntryInfo;
   if (!info)
     return NS_ERROR_OUT_OF_MEMORY;
   info->mRec = &rec;
@@ -2715,7 +2715,7 @@ nsOfflineCacheDevice::AutoShutdown(nsIApplicationCache * aAppCache)
 
   Shutdown();
 
-  RefPtr<nsCacheService> cacheService = nsCacheService::GlobalInstance();
+  nsRefPtr<nsCacheService> cacheService = nsCacheService::GlobalInstance();
   cacheService->RemoveCustomOfflineDevice(this);
 
   nsAutoCString clientID;

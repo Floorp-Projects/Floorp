@@ -227,7 +227,7 @@ private:
   nsCString mData;
   uint32_t mLength;
   uint32_t mOffset;
-  RefPtr<nsIStreamingProtocolMetaData> mMetaData;
+  nsRefPtr<nsIStreamingProtocolMetaData> mMetaData;
   nsCOMPtr<nsIStreamingProtocolListener> mListener;
 };
 
@@ -239,7 +239,7 @@ RtspController::OnMediaDataAvailable(uint8_t index,
                                      nsIStreamingProtocolMetaData *meta)
 {
   if (mListener && mState == CONNECTED) {
-    RefPtr<SendMediaDataTask> task =
+    nsRefPtr<SendMediaDataTask> task =
       new SendMediaDataTask(mListener, index, data, length, offset, meta);
     return NS_DispatchToMainThread(task);
   }
@@ -267,7 +267,7 @@ public:
 private:
   nsCOMPtr<nsIStreamingProtocolListener> mListener;
   uint8_t mIndex;
-  RefPtr<nsIStreamingProtocolMetaData> mMetaData;
+  nsRefPtr<nsIStreamingProtocolMetaData> mMetaData;
 };
 
 
@@ -278,7 +278,7 @@ RtspController::OnConnected(uint8_t index,
   LOG(("RtspController::OnConnected()"));
   mState = CONNECTED;
   if (mListener) {
-    RefPtr<SendOnConnectedTask> task =
+    nsRefPtr<SendOnConnectedTask> task =
       new SendOnConnectedTask(mListener, index, meta);
     return NS_DispatchToMainThread(task);
   }
@@ -317,7 +317,7 @@ RtspController::OnDisconnected(uint8_t index,
   mState = DISCONNECTED;
 
   if (mListener) {
-    RefPtr<SendOnDisconnectedTask> task =
+    nsRefPtr<SendOnDisconnectedTask> task =
       new SendOnDisconnectedTask(mListener, index, reason);
     // Break the cycle reference between the Listener (RtspControllerParent) and
     // us.

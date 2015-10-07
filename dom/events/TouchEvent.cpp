@@ -244,6 +244,6 @@ NS_NewDOMTouchEvent(EventTarget* aOwner,
                     nsPresContext* aPresContext,
                     WidgetTouchEvent* aEvent)
 {
-  RefPtr<TouchEvent> it = new TouchEvent(aOwner, aPresContext, aEvent);
+  nsRefPtr<TouchEvent> it = new TouchEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

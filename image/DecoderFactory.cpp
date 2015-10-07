@@ -6,7 +6,7 @@
 #include "DecoderFactory.h"
 
 #include "nsMimeTypes.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsString.h"
 
 #include "Decoder.h"
@@ -72,7 +72,7 @@ DecoderFactory::GetDecoder(DecoderType aType,
                            RasterImage* aImage,
                            bool aIsRedecode)
 {
-  RefPtr<Decoder> decoder;
+  nsRefPtr<Decoder> decoder;
 
   switch (aType) {
     case DecoderType::PNG:
@@ -117,7 +117,7 @@ DecoderFactory::CreateDecoder(DecoderType aType,
     return nullptr;
   }
 
-  RefPtr<Decoder> decoder =
+  nsRefPtr<Decoder> decoder =
     GetDecoder(aType, aImage, bool(aDecoderFlags & DecoderFlags::IS_REDECODE));
   MOZ_ASSERT(decoder, "Should have a decoder now");
 
@@ -156,7 +156,7 @@ DecoderFactory::CreateAnimationDecoder(DecoderType aType,
   MOZ_ASSERT(aType == DecoderType::GIF || aType == DecoderType::PNG,
              "Calling CreateAnimationDecoder for non-animating DecoderType");
 
-  RefPtr<Decoder> decoder =
+  nsRefPtr<Decoder> decoder =
     GetDecoder(aType, aImage, /* aIsRedecode = */ true);
   MOZ_ASSERT(decoder, "Should have a decoder now");
 
@@ -184,7 +184,7 @@ DecoderFactory::CreateMetadataDecoder(DecoderType aType,
     return nullptr;
   }
 
-  RefPtr<Decoder> decoder =
+  nsRefPtr<Decoder> decoder =
     GetDecoder(aType, aImage, /* aIsRedecode = */ false);
   MOZ_ASSERT(decoder, "Should have a decoder now");
 
@@ -210,7 +210,7 @@ DecoderFactory::CreateAnonymousDecoder(DecoderType aType,
     return nullptr;
   }
 
-  RefPtr<Decoder> decoder =
+  nsRefPtr<Decoder> decoder =
     GetDecoder(aType, /* aImage = */ nullptr, /* aIsRedecode = */ false);
   MOZ_ASSERT(decoder, "Should have a decoder now");
 
@@ -248,7 +248,7 @@ DecoderFactory::CreateAnonymousMetadataDecoder(DecoderType aType,
     return nullptr;
   }
 
-  RefPtr<Decoder> decoder =
+  nsRefPtr<Decoder> decoder =
     GetDecoder(aType, /* aImage = */ nullptr, /* aIsRedecode = */ false);
   MOZ_ASSERT(decoder, "Should have a decoder now");
 

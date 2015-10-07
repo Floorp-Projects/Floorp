@@ -15,7 +15,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsIContentPolicy.h"
 #include "nsContentUtils.h"
@@ -1156,13 +1156,13 @@ AsyncFaviconDataReady::OnComplete(nsIURI *aFaviconURI,
                                 getter_AddRefs(container));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  RefPtr<SourceSurface> surface =
+  nsRefPtr<SourceSurface> surface =
     container->GetFrame(imgIContainer::FRAME_FIRST,
                         imgIContainer::FLAG_SYNC_DECODE |
                         imgIContainer::FLAG_ASYNC_NOTIFY);
   NS_ENSURE_TRUE(surface, NS_ERROR_FAILURE);
 
-  RefPtr<DataSourceSurface> dataSurface;
+  nsRefPtr<DataSourceSurface> dataSurface;
   IntSize size;
 
   if (mURLShortcut) {
@@ -1178,7 +1178,7 @@ AsyncFaviconDataReady::OnComplete(nsIURI *aFaviconURI,
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<DrawTarget> dt =
+    nsRefPtr<DrawTarget> dt =
       Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                        map.mData,
                                        dataSurface->GetSize(),
@@ -1256,7 +1256,7 @@ NS_IMETHODIMP AsyncEncodeAndWriteIcon::Run()
 
   // Note that since we're off the main thread we can't use
   // gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget()
-  RefPtr<DataSourceSurface> surface =
+  nsRefPtr<DataSourceSurface> surface =
     Factory::CreateWrappingDataSourceSurface(mBuffer, mStride,
                                              IntSize(mWidth, mHeight),
                                              SurfaceFormat::B8G8R8A8);

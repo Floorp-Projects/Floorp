@@ -337,7 +337,7 @@ static nsresult GetDownloadDirectory(nsIFile **_directory,
   nsDOMDeviceStorage::GetDefaultStorageName(NS_LITERAL_STRING("sdcard"),
                                             storageName);
 
-  RefPtr<DeviceStorageFile> dsf(
+  nsRefPtr<DeviceStorageFile> dsf(
     new DeviceStorageFile(NS_LITERAL_STRING("sdcard"),
                           storageName,
                           NS_LITERAL_STRING("downloads")));
@@ -733,7 +733,7 @@ nsExternalHelperAppService::DoContentContentProcessHelper(const nsACString& aMim
 
   uint32_t reason = nsIHelperAppLauncherDialog::REASON_CANTHANDLE;
 
-  RefPtr<nsExternalAppHandler> handler =
+  nsRefPtr<nsExternalAppHandler> handler =
     new nsExternalAppHandler(nullptr, EmptyCString(), aContentContext, aWindowContext, this,
                              fileName, reason, aForceSave);
   if (!handler) {
@@ -2293,7 +2293,7 @@ void nsExternalAppHandler::RequestSaveDestination(const nsAFlatString &aDefaultF
   // picker is up would cause Cancel() to be called, and the dialog would be
   // released, which would release this object too, which would crash.
   // See Bug 249143
-  RefPtr<nsExternalAppHandler> kungFuDeathGrip(this);
+  nsRefPtr<nsExternalAppHandler> kungFuDeathGrip(this);
   nsCOMPtr<nsIHelperAppLauncherDialog> dlg(mDialog);
 
   rv = mDialog->PromptForSaveToFileAsync(this,
@@ -2757,7 +2757,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromExtension(const nsACString&
     return NS_OK;
 
   // Try the plugins
-  RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
+  nsRefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
   if (pluginHost &&
       pluginHost->HavePluginForExtension(aFileExt, aContentType)) {
     return NS_OK;

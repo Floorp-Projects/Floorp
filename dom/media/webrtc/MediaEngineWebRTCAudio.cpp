@@ -601,7 +601,7 @@ MediaEngineWebRTCMicrophoneSource::Process(int channel,
 
   uint32_t len = mSources.Length();
   for (uint32_t i = 0; i < len; i++) {
-    RefPtr<SharedBuffer> buffer = SharedBuffer::Create(length * sizeof(sample));
+    nsRefPtr<SharedBuffer> buffer = SharedBuffer::Create(length * sizeof(sample));
 
     sample* dest = static_cast<sample*>(buffer->Data());
     memcpy(dest, audio10ms, length * sizeof(sample));

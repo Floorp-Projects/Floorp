@@ -1511,7 +1511,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
      [aNativeEvent modifierFlags], GetCharacters([aNativeEvent characters]),
      GetCharacters([aNativeEvent charactersIgnoringModifiers])));
 
-  RefPtr<nsChildView> kungFuDeathGrip(mWidget);
+  nsRefPtr<nsChildView> kungFuDeathGrip(mWidget);
 
   KeyEventState* currentKeyEvent = PushKeyEvent(aNativeEvent);
   AutoKeyEventStateCleaner remover(this);
@@ -1682,7 +1682,7 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
     return;
   }
 
-  RefPtr<nsChildView> kungFuDeathGrip(mWidget);
+  nsRefPtr<nsChildView> kungFuDeathGrip(mWidget);
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p TextInputHandler::HandleFlagsChanged, aNativeEvent=%p, "
@@ -2098,7 +2098,7 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
       return;
     }
     // Delete the selected range.
-    RefPtr<TextInputHandler> kungFuDeathGrip(this);
+    nsRefPtr<TextInputHandler> kungFuDeathGrip(this);
     WidgetContentCommandEvent deleteCommandEvent(true, eContentCommandDelete,
                                                  mWidget);
     DispatchEvent(deleteCommandEvent);
@@ -2118,7 +2118,7 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
     return;
   }
 
-  RefPtr<nsChildView> kungFuDeathGrip(mWidget);
+  nsRefPtr<nsChildView> kungFuDeathGrip(mWidget);
 
   // If the replacement range is specified, select the range.  Then, the
   // selection will be replaced by the later keypress event.
@@ -2175,7 +2175,7 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
 bool
 TextInputHandler::DoCommandBySelector(const char* aSelector)
 {
-  RefPtr<nsChildView> kungFuDeathGrip(mWidget);
+  nsRefPtr<nsChildView> kungFuDeathGrip(mWidget);
 
   KeyEventState* currentKeyEvent = GetCurrentKeyEvent();
 
@@ -2650,7 +2650,7 @@ IMEInputHandler::CreateTextRangeArray(NSAttributedString *aAttrString,
   // we change the implementation of validAttributesForMarkedText.
   NSRange limitRange = NSMakeRange(0, [aAttrString length]);
   uint32_t rangeCount = GetRangeCount(aAttrString);
-  RefPtr<mozilla::TextRangeArray> textRangeArray =
+  nsRefPtr<mozilla::TextRangeArray> textRangeArray =
                                       new mozilla::TextRangeArray();
   for (uint32_t i = 0; i < rangeCount && limitRange.length > 0; i++) {
     NSRange effectiveRange;
@@ -2755,7 +2755,7 @@ IMEInputHandler::DispatchCompositionChangeEvent(const nsString& aText,
 
   NS_ASSERTION(mIsIMEComposing, "We're not in composition");
 
-  RefPtr<IMEInputHandler> kungFuDeathGrip(this);
+  nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   WidgetCompositionEvent compositionChangeEvent(true, eCompositionChange,
                                                 mWidget);
@@ -2803,7 +2803,7 @@ IMEInputHandler::DispatchCompositionCommitEvent(const nsAString* aCommitString)
 
   NS_ASSERTION(mIsIMEComposing, "We're not in composition");
 
-  RefPtr<IMEInputHandler> kungFuDeathGrip(this);
+  nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   if (!Destroyed()) {
     EventMessage message =
@@ -2896,7 +2896,7 @@ IMEInputHandler::InsertTextAsCommittingComposition(
     }
   }
 
-  RefPtr<IMEInputHandler> kungFuDeathGrip(this);
+  nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   nsString str;
   nsCocoaUtils::GetStringForNSString([aAttrString string], str);
@@ -2954,7 +2954,7 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
     return;
   }
 
-  RefPtr<IMEInputHandler> kungFuDeathGrip(this);
+  nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   // First, commit current composition with the latest composition string if the
   // replacement range is different from marked range.
@@ -3026,7 +3026,7 @@ IMEInputHandler::ConversationIdentifier()
     return reinterpret_cast<NSInteger>(mView);
   }
 
-  RefPtr<IMEInputHandler> kungFuDeathGrip(this);
+  nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   // NOTE: The size of NSInteger is same as pointer size.
   WidgetQueryContentEvent textContent(true, eQueryTextContent, mWidget);
@@ -3062,7 +3062,7 @@ IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange,
     return nil;
   }
 
-  RefPtr<IMEInputHandler> kungFuDeathGrip(this);
+  nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   // If we're in composing, the queried range may be in the composition string.
   // In such case, we should use mIMECompositionString since if the composition
@@ -3190,7 +3190,7 @@ IMEInputHandler::SelectedRange()
     return mSelectedRange;
   }
 
-  RefPtr<IMEInputHandler> kungFuDeathGrip(this);
+  nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   WidgetQueryContentEvent selection(true, eQuerySelectedText, mWidget);
   DispatchEvent(selection);
@@ -3276,7 +3276,7 @@ IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange,
     return rect;
   }
 
-  RefPtr<IMEInputHandler> kungFuDeathGrip(this);
+  nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   LayoutDeviceIntRect r;
   bool useCaretRect = (aRange.length == 0);
@@ -3379,7 +3379,7 @@ IMEInputHandler::GetValidAttributesForMarkedText()
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::GetValidAttributesForMarkedText", this));
 
-  //RefPtr<IMEInputHandler> kungFuDeathGrip(this);
+  //nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   //return [NSArray arrayWithObjects:NSUnderlineStyleAttributeName,
   //                                 NSMarkedClauseSegmentAttributeName,
@@ -4006,7 +4006,7 @@ TextInputHandlerBase::SetSelection(NSRange& aRange)
 {
   MOZ_ASSERT(!Destroyed());
 
-  RefPtr<TextInputHandlerBase> kungFuDeathGrip(this);
+  nsRefPtr<TextInputHandlerBase> kungFuDeathGrip(this);
   WidgetSelectionEvent selectionEvent(true, eSetSelection, mWidget);
   selectionEvent.mOffset = aRange.location;
   selectionEvent.mLength = aRange.length;

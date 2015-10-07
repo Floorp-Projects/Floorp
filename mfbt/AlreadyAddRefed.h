@@ -84,13 +84,13 @@ struct MOZ_MUST_USE MOZ_NON_AUTOABLE already_AddRefed
    *  already_AddRefed<BaseClass>
    *  Foo()
    *  {
-   *    RefPtr<SubClass> x = ...;
+   *    nsRefPtr<SubClass> x = ...;
    *    return x.forget();
    *  }
    *
    * The autoconversion allows one to omit the idiom
    *
-   *    RefPtr<BaseClass> y = x.forget();
+   *    nsRefPtr<BaseClass> y = x.forget();
    *    return y.forget();
    *
    * Note that nsRefPtr is the XPCOM reference counting smart pointer class.

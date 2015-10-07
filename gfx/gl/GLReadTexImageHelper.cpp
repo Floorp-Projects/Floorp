@@ -410,7 +410,7 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
                                                destFormat, destType,
                                                &readFormat, &readType);
 
-    RefPtr<DataSourceSurface> tempSurf;
+    nsRefPtr<DataSourceSurface> tempSurf;
     DataSourceSurface* readSurf = dest;
     int readAlignment = GuessAlignment(dest->GetSize().width,
                                        destPixelSize,
@@ -536,7 +536,7 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
 static already_AddRefed<DataSourceSurface>
 YInvertImageSurface(DataSourceSurface* aSurf)
 {
-    RefPtr<DataSourceSurface> temp =
+    nsRefPtr<DataSourceSurface> temp =
       Factory::CreateDataSourceSurfaceWithStride(aSurf->GetSize(),
                                                  aSurf->GetFormat(),
                                                  aSurf->Stride());
@@ -549,7 +549,7 @@ YInvertImageSurface(DataSourceSurface* aSurf)
         return nullptr;
     }
 
-    RefPtr<DrawTarget> dt =
+    nsRefPtr<DrawTarget> dt =
       Factory::CreateDrawTargetForData(BackendType::CAIRO,
                                        map.mData,
                                        temp->GetSize(),
@@ -581,7 +581,7 @@ ReadBackSurface(GLContext* gl, GLuint aTexture, bool aYInvert, SurfaceFormat aFo
     gl->fGetTexLevelParameteriv(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_TEXTURE_WIDTH, &size.width);
     gl->fGetTexLevelParameteriv(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_TEXTURE_HEIGHT, &size.height);
 
-    RefPtr<DataSourceSurface> surf =
+    nsRefPtr<DataSourceSurface> surf =
       Factory::CreateDataSourceSurfaceWithStride(size, SurfaceFormat::B8G8R8A8,
                                                  GetAlignedStride<4>(size.width * BytesPerPixel(SurfaceFormat::B8G8R8A8)));
 
@@ -633,7 +633,7 @@ GLReadTexImageHelper::ReadTexImage(GLuint aTextureId,
 
     /* Allocate resulting image surface */
     int32_t stride = aSize.width * BytesPerPixel(SurfaceFormat::R8G8B8A8);
-    RefPtr<DataSourceSurface> isurf =
+    nsRefPtr<DataSourceSurface> isurf =
         Factory::CreateDataSourceSurfaceWithStride(aSize,
                                                    SurfaceFormat::R8G8B8A8,
                                                    stride);

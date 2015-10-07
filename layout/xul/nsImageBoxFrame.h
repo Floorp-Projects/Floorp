@@ -116,7 +116,7 @@ private:
   nsSize mIntrinsicSize;
   nsSize mImageSize;
 
-  RefPtr<imgRequestProxy> mImageRequest;
+  nsRefPtr<imgRequestProxy> mImageRequest;
   nsCOMPtr<imgINotificationObserver> mListener;
 
   int32_t mLoadFlags;

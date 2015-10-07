@@ -15,7 +15,7 @@
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
@@ -53,9 +53,9 @@ public:
 
 private:
   OutputStreamManager* mOwner;
-  RefPtr<ProcessedMediaStream> mStream;
+  nsRefPtr<ProcessedMediaStream> mStream;
   // mPort connects our mStream to an input stream.
-  RefPtr<MediaInputPort> mPort;
+  nsRefPtr<MediaInputPort> mPort;
 };
 
 class OutputStreamManager {
@@ -84,7 +84,7 @@ public:
 private:
   // Keep the input stream so we can connect the output streams that
   // are added after Connect().
-  RefPtr<MediaStream> mInputStream;
+  nsRefPtr<MediaStream> mInputStream;
   nsTArray<OutputStreamData> mStreams;
 };
 
@@ -100,7 +100,7 @@ public:
   const PlaybackParams& GetPlaybackParams() const override;
   void SetPlaybackParams(const PlaybackParams& aParams) override;
 
-  RefPtr<GenericPromise> OnEnded(TrackType aType) override;
+  nsRefPtr<GenericPromise> OnEnded(TrackType aType) override;
   int64_t GetEndTime(TrackType aType) const override;
   int64_t GetPosition(TimeStamp* aTimeStamp = nullptr) const override;
   bool HasUnplayedFrames(TrackType aType) const override
@@ -147,7 +147,7 @@ private:
   void ConnectListener();
   void DisconnectListener();
 
-  const RefPtr<AbstractThread> mOwnerThread;
+  const nsRefPtr<AbstractThread> mOwnerThread;
 
   /*
    * Main thread only members.
@@ -161,7 +161,7 @@ private:
    * Worker thread only members.
    */
   UniquePtr<DecodedStreamData> mData;
-  RefPtr<GenericPromise> mFinishPromise;
+  nsRefPtr<GenericPromise> mFinishPromise;
 
   bool mPlaying;
   bool mSameOrigin;

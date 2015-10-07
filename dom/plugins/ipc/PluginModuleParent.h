@@ -100,7 +100,7 @@ public:
     explicit PluginModuleParent(bool aIsChrome, bool aAllowAsyncInit);
     virtual ~PluginModuleParent();
 
-    bool RemovePendingSurrogate(const RefPtr<PluginAsyncSurrogate>& aSurrogate);
+    bool RemovePendingSurrogate(const nsRefPtr<PluginAsyncSurrogate>& aSurrogate);
 
     /** @return the state of the pref that controls async plugin init */
     bool IsStartingAsync() const { return mIsStartingAsync; }
@@ -315,7 +315,7 @@ protected:
     nsString mPluginDumpID;
     nsString mBrowserDumpID;
     nsString mHangID;
-    RefPtr<nsIObserver> mProfilerObserver;
+    nsRefPtr<nsIObserver> mProfilerObserver;
     TimeDuration mTimeBlocked;
     nsCString mPluginName;
     nsCString mPluginVersion;
@@ -336,7 +336,7 @@ protected:
     bool              mIsStartingAsync;
     bool              mNPInitialized;
     bool              mIsNPShutdownPending;
-    nsTArray<RefPtr<PluginAsyncSurrogate>> mSurrogateInstances;
+    nsTArray<nsRefPtr<PluginAsyncSurrogate>> mSurrogateInstances;
     nsresult          mAsyncNewRv;
     uint32_t          mRunID;
 };
@@ -613,7 +613,7 @@ private:
     dom::ContentParent* mContentParent;
     nsCOMPtr<nsIObserver> mOfflineObserver;
 #ifdef MOZ_ENABLE_PROFILER_SPS
-    RefPtr<mozilla::ProfileGatherer> mGatherer;
+    nsRefPtr<mozilla::ProfileGatherer> mGatherer;
 #endif
     nsCString mProfile;
     bool mIsBlocklisted;

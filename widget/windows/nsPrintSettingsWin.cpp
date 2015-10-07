@@ -115,7 +115,7 @@ NS_IMETHODIMP nsPrintSettingsWin::SetDevMode(DEVMODEW * aDevMode)
 nsresult 
 nsPrintSettingsWin::_Clone(nsIPrintSettings **_retval)
 {
-  RefPtr<nsPrintSettingsWin> printSettings = new nsPrintSettingsWin(*this);
+  nsRefPtr<nsPrintSettingsWin> printSettings = new nsPrintSettingsWin(*this);
   printSettings.forget(_retval);
   return NS_OK;
 }

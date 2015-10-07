@@ -166,7 +166,7 @@ nsSVGUseFrame::AttributeChanged(int32_t         aNameSpaceID,
 void
 nsSVGUseFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
-  RefPtr<SVGUseElement> use = static_cast<SVGUseElement*>(mContent);
+  nsRefPtr<SVGUseElement> use = static_cast<SVGUseElement*>(mContent);
   nsSVGUseFrameBase::DestroyFrom(aDestructRoot);
   use->DestroyAnonymousContent();
 }

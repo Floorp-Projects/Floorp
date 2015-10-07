@@ -1640,7 +1640,7 @@ public:
 private:
   const char* mShutdownTimeFilename;
   nsCOMPtr<nsIFile> mFailedProfileLockFile;
-  RefPtr<TelemetryImpl> mTelemetry;
+  nsRefPtr<TelemetryImpl> mTelemetry;
   nsCOMPtr<nsIFile> mProfileDir;
 
 public:

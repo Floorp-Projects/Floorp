@@ -35,7 +35,7 @@ private:
   THUMBBUTTON&            Button();
   nsresult                Update();
 
-  RefPtr<TaskbarWindowPreview> mPreview;
+  nsRefPtr<TaskbarWindowPreview> mPreview;
   uint32_t                mIndex;
   nsString                mTooltip;
   nsCOMPtr<imgIContainer> mImage;

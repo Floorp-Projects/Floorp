@@ -122,7 +122,7 @@ nsDSURIContentListener::DoContent(const nsACString& aContentType,
                  aContentType.EqualsLiteral("image/jpeg");
 
   if (mExistingJPEGStreamListener && reuseCV) {
-    RefPtr<nsIStreamListener> copy(mExistingJPEGStreamListener);
+    nsRefPtr<nsIStreamListener> copy(mExistingJPEGStreamListener);
     copy.forget(aContentHandler);
     rv = NS_OK;
   } else {
@@ -223,7 +223,7 @@ NS_IMETHODIMP
 nsDSURIContentListener::SetLoadCookie(nsISupports* aLoadCookie)
 {
 #ifdef DEBUG
-  RefPtr<nsDocLoader> cookieAsDocLoader =
+  nsRefPtr<nsDocLoader> cookieAsDocLoader =
     nsDocLoader::GetAsDocLoader(aLoadCookie);
   NS_ASSERTION(cookieAsDocLoader && cookieAsDocLoader == mDocShell,
                "Invalid load cookie being set!");

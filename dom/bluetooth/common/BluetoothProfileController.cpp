@@ -46,7 +46,7 @@ private:
     mController = nullptr;
   }
 
-  RefPtr<BluetoothProfileController> mController;
+  nsRefPtr<BluetoothProfileController> mController;
 };
 
 BluetoothProfileController::BluetoothProfileController(

@@ -159,7 +159,7 @@ private:
   Transport* mTransport;
   // This keeps us alive until ActorDestroy(), at which point we do a
   // deferred destruction of ourselves.
-  RefPtr<ImageBridgeParent> mSelfRef;
+  nsRefPtr<ImageBridgeParent> mSelfRef;
 
   bool mSetChildThreadPriority;
 
@@ -170,7 +170,7 @@ private:
 
   static MessageLoop* sMainLoop;
 
-  RefPtr<CompositorThreadHolder> mCompositorThreadHolder;
+  nsRefPtr<CompositorThreadHolder> mCompositorThreadHolder;
 };
 
 } // namespace layers

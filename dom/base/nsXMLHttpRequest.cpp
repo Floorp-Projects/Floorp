@@ -1330,7 +1330,7 @@ nsXMLHttpRequest::GetAllResponseHeaders(nsCString& aResponseHeaders)
   }
 
   if (nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel()) {
-    RefPtr<nsHeaderVisitor> visitor = new nsHeaderVisitor(this, httpChannel);
+    nsRefPtr<nsHeaderVisitor> visitor = new nsHeaderVisitor(this, httpChannel);
     if (NS_SUCCEEDED(httpChannel->VisitResponseHeaders(visitor))) {
       aResponseHeaders = visitor->Headers();
     }
@@ -1463,7 +1463,7 @@ nsXMLHttpRequest::GetLoadGroup() const
 nsresult
 nsXMLHttpRequest::CreateReadystatechangeEvent(nsIDOMEvent** aDOMEvent)
 {
-  RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
+  nsRefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
   event.forget(aDOMEvent);
 
   (*aDOMEvent)->InitEvent(NS_LITERAL_STRING(READYSTATE_STR),
@@ -1501,7 +1501,7 @@ nsXMLHttpRequest::DispatchProgressEvent(DOMEventTargetHelper* aTarget,
   init.mLoaded = aLoaded;
   init.mTotal = (aTotal == -1) ? 0 : aTotal;
 
-  RefPtr<ProgressEvent> event =
+  nsRefPtr<ProgressEvent> event =
     ProgressEvent::Constructor(aTarget, aType, init);
   event->SetTrusted(true);
 
@@ -2845,7 +2845,7 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
   if (!IsSystemXHR()) {
     // Always create a nsCORSListenerProxy here even if it's
     // a same-origin request right now, since it could be redirected.
-    RefPtr<nsCORSListenerProxy> corsListener =
+    nsRefPtr<nsCORSListenerProxy> corsListener =
       new nsCORSListenerProxy(listener, mPrincipal, withCredentials);
     rv = corsListener->Init(mChannel, DataURIHandling::Allow);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3351,7 +3351,7 @@ public:
 private:
   ~AsyncVerifyRedirectCallbackForwarder() {}
 
-  RefPtr<nsXMLHttpRequest> mXHR;
+  nsRefPtr<nsXMLHttpRequest> mXHR;
 };
 
 NS_IMPL_CYCLE_COLLECTION(AsyncVerifyRedirectCallbackForwarder, mXHR)
@@ -3399,7 +3399,7 @@ nsXMLHttpRequest::AsyncOnChannelRedirect(nsIChannel *aOldChannel,
   mNewRedirectChannel = aNewChannel;
 
   if (mChannelEventSink) {
-    RefPtr<AsyncVerifyRedirectCallbackForwarder> fwd =
+    nsRefPtr<AsyncVerifyRedirectCallbackForwarder> fwd =
       new AsyncVerifyRedirectCallbackForwarder(this);
 
     rv = mChannelEventSink->AsyncOnChannelRedirect(aOldChannel,
@@ -3644,7 +3644,7 @@ nsXMLHttpRequest::GetInterface(const nsIID & aIID, void **aResult)
 
     // ... user agents should prompt the end user for their username and password.
     if (!showPrompt) {
-      RefPtr<XMLHttpRequestAuthPrompt> prompt = new XMLHttpRequestAuthPrompt();
+      nsRefPtr<XMLHttpRequestAuthPrompt> prompt = new XMLHttpRequestAuthPrompt();
       if (!prompt)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -3705,7 +3705,7 @@ nsXMLHttpRequest::Upload()
 NS_IMETHODIMP
 nsXMLHttpRequest::GetUpload(nsIXMLHttpRequestUpload** aUpload)
 {
-  RefPtr<nsXMLHttpRequestUpload> upload = Upload();
+  nsRefPtr<nsXMLHttpRequestUpload> upload = Upload();
   upload.forget(aUpload);
   return NS_OK;
 }
@@ -3794,7 +3794,7 @@ nsXMLHttpRequest::EnsureXPCOMifier()
   if (!mXPCOMifier) {
     mXPCOMifier = new nsXMLHttpRequestXPCOMifier(this);
   }
-  RefPtr<nsXMLHttpRequestXPCOMifier> newRef(mXPCOMifier);
+  nsRefPtr<nsXMLHttpRequestXPCOMifier> newRef(mXPCOMifier);
   return newRef.forget();
 }
 
@@ -4001,7 +4001,7 @@ ArrayBufferBuilder::mapToFileInPackage(const nsCString& aFile,
   nsresult rv;
 
   // Open Jar file to get related attributes of target file.
-  RefPtr<nsZipArchive> zip = new nsZipArchive();
+  nsRefPtr<nsZipArchive> zip = new nsZipArchive();
   rv = zip->OpenArchive(aJarFile);
   if (NS_FAILED(rv)) {
     return rv;

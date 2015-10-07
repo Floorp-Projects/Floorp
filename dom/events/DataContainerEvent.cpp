@@ -92,7 +92,7 @@ NS_NewDOMDataContainerEvent(EventTarget* aOwner,
                             nsPresContext* aPresContext,
                             WidgetEvent* aEvent)
 {
-  RefPtr<DataContainerEvent> it =
+  nsRefPtr<DataContainerEvent> it =
     new DataContainerEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

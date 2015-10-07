@@ -127,14 +127,14 @@ protected:
     android::sp<android::DisplaySurface> mDisplaySurface;
 #endif
     bool mIsMirroring; // Non-primary screen only
-    RefPtr<nsScreenGonk> mMirroringScreen; // Primary screen only
+    nsRefPtr<nsScreenGonk> mMirroringScreen; // Primary screen only
 
     // Accessed and updated only on compositor thread
     GonkDisplay::DisplayType mDisplayType;
     hwc_display_t mEGLDisplay;
     hwc_surface_t mEGLSurface;
-    RefPtr<mozilla::gl::GLContext> mGLContext;
-    RefPtr<nsWindow> mMirroringWidget; // Primary screen only
+    nsRefPtr<mozilla::gl::GLContext> mGLContext;
+    nsRefPtr<nsWindow> mMirroringWidget; // Primary screen only
 };
 
 class nsScreenManagerGonk final : public nsIScreenManager
@@ -166,9 +166,9 @@ protected:
     bool IsScreenConnected(uint32_t aId);
 
     bool mInitialized;
-    nsTArray<RefPtr<nsScreenGonk>> mScreens;
-    RefPtr<nsRunnable> mScreenOnEvent;
-    RefPtr<nsRunnable> mScreenOffEvent;
+    nsTArray<nsRefPtr<nsScreenGonk>> mScreens;
+    nsRefPtr<nsRunnable> mScreenOnEvent;
+    nsRefPtr<nsRunnable> mScreenOffEvent;
 };
 
 #endif /* nsScreenManagerGonk_h___ */

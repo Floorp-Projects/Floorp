@@ -306,7 +306,7 @@ private:
   SingleAccIterator(const SingleAccIterator&);
   SingleAccIterator& operator = (const SingleAccIterator&);
 
-  RefPtr<Accessible> mAcc;
+  nsRefPtr<Accessible> mAcc;
 };
 
 

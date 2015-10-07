@@ -38,7 +38,7 @@ RtspMediaCodecReader::CreateExtractor()
   return mExtractor != nullptr;
 }
 
-RefPtr<MediaDecoderReader::SeekPromise>
+nsRefPtr<MediaDecoderReader::SeekPromise>
 RtspMediaCodecReader::Seek(int64_t aTime, int64_t aEndTime)
 {
   // The seek function of Rtsp is time-based, we call the SeekTime function in
@@ -73,14 +73,14 @@ RtspMediaCodecReader::EnsureActive()
   mRtspResource->SetSuspend(false);
 }
 
-RefPtr<MediaDecoderReader::AudioDataPromise>
+nsRefPtr<MediaDecoderReader::AudioDataPromise>
 RtspMediaCodecReader::RequestAudioData()
 {
   EnsureActive();
   return MediaCodecReader::RequestAudioData();
 }
 
-RefPtr<MediaDecoderReader::VideoDataPromise>
+nsRefPtr<MediaDecoderReader::VideoDataPromise>
 RtspMediaCodecReader::RequestVideoData(bool aSkipToNextKeyframe,
                                        int64_t aTimeThreshold)
 {
@@ -88,13 +88,13 @@ RtspMediaCodecReader::RequestVideoData(bool aSkipToNextKeyframe,
   return MediaCodecReader::RequestVideoData(aSkipToNextKeyframe, aTimeThreshold);
 }
 
-RefPtr<MediaDecoderReader::MetadataPromise>
+nsRefPtr<MediaDecoderReader::MetadataPromise>
 RtspMediaCodecReader::AsyncReadMetadata()
 {
   mRtspResource->DisablePlayoutDelay();
   EnsureActive();
 
-  RefPtr<MediaDecoderReader::MetadataPromise> p =
+  nsRefPtr<MediaDecoderReader::MetadataPromise> p =
     MediaCodecReader::AsyncReadMetadata();
 
   // Send a PAUSE to the RTSP server because the underlying media resource is

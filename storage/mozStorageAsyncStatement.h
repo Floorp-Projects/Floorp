@@ -82,7 +82,7 @@ private:
    * Holds the array of parameters to bind to this statement when we execute
    * it asynchronously.
    */
-  RefPtr<BindingParamsArray> mParamsArray;
+  nsRefPtr<BindingParamsArray> mParamsArray;
 
   /**
    * Caches the JS 'params' helper for this statement.

@@ -68,7 +68,7 @@ private:
     public:
         FontSetByLangEntry(PangoLanguage *aLang, gfxFcFontSet *aFontSet);
         PangoLanguage *mLang;
-        RefPtr<gfxFcFontSet> mFontSet;
+        nsRefPtr<gfxFcFontSet> mFontSet;
     };
     // There is only one of entry in this array unless characters from scripts
     // of other languages are measured.

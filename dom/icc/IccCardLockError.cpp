@@ -24,7 +24,7 @@ IccCardLockError::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  RefPtr<IccCardLockError> result =
+  nsRefPtr<IccCardLockError> result =
     new IccCardLockError(window, aName, aRetryCount);
   return result.forget();
 }

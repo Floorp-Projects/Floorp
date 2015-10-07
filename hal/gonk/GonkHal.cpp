@@ -53,7 +53,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Preferences.h"
@@ -502,7 +502,7 @@ protected:
   ~BatteryObserver() {}
 
 private:
-  RefPtr<BatteryUpdater> mUpdater;
+  nsRefPtr<BatteryUpdater> mUpdater;
 };
 
 // sBatteryObserver is owned by the IO thread. Only the IO thread may
@@ -1025,7 +1025,7 @@ DisableScreenConfigurationNotifications()
 void
 GetCurrentScreenConfiguration(hal::ScreenConfiguration* aScreenConfiguration)
 {
-  RefPtr<nsScreenGonk> screen = nsScreenManagerGonk::GetPrimaryScreen();
+  nsRefPtr<nsScreenGonk> screen = nsScreenManagerGonk::GetPrimaryScreen();
   *aScreenConfiguration = screen->GetConfiguration();
 }
 
@@ -1125,7 +1125,7 @@ WaitForAlarm(void* aData)
       // *on time* (the system won't sleep during the process in any way),
       // we need to acquire a CPU wake lock before firing the alarm event.
       InternalLockCpu();
-      RefPtr<AlarmFiredEvent> event =
+      nsRefPtr<AlarmFiredEvent> event =
         new AlarmFiredEvent(alarmData->mGeneration);
       NS_DispatchToMainThread(event);
     }
@@ -1826,7 +1826,7 @@ EnsureKernelLowMemKillerParamsSet()
   }
 
   // Ensure OOM events appear in logcat
-  RefPtr<OomVictimLogger> oomLogger = new OomVictimLogger();
+  nsRefPtr<OomVictimLogger> oomLogger = new OomVictimLogger();
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
     os->AddObserver(oomLogger, "ipc:content-shutdown", false);

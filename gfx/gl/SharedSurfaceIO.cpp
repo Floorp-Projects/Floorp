@@ -15,7 +15,7 @@ namespace mozilla {
 namespace gl {
 
 /*static*/ UniquePtr<SharedSurface_IOSurface>
-SharedSurface_IOSurface::Create(const RefPtr<MacIOSurface>& ioSurf,
+SharedSurface_IOSurface::Create(const nsRefPtr<MacIOSurface>& ioSurf,
                                 GLContext* gl,
                                 bool hasAlpha)
 {
@@ -145,7 +145,7 @@ BackTextureWithIOSurf(GLContext* gl, GLuint tex, MacIOSurface* ioSurf)
     ioSurf->CGLTexImageIOSurface2D(cgl);
 }
 
-SharedSurface_IOSurface::SharedSurface_IOSurface(const RefPtr<MacIOSurface>& ioSurf,
+SharedSurface_IOSurface::SharedSurface_IOSurface(const nsRefPtr<MacIOSurface>& ioSurf,
                                                  GLContext* gl,
                                                  const gfx::IntSize& size,
                                                  bool hasAlpha)
@@ -187,7 +187,7 @@ SharedSurface_IOSurface::ToSurfaceDescriptor(layers::SurfaceDescriptor* const ou
 
 /*static*/ UniquePtr<SurfaceFactory_IOSurface>
 SurfaceFactory_IOSurface::Create(GLContext* gl, const SurfaceCaps& caps,
-                                 const RefPtr<layers::ISurfaceAllocator>& allocator,
+                                 const nsRefPtr<layers::ISurfaceAllocator>& allocator,
                                  const layers::TextureFlags& flags)
 {
     gfx::IntSize maxDims(MacIOSurface::GetMaxWidth(),
@@ -208,7 +208,7 @@ SurfaceFactory_IOSurface::CreateShared(const gfx::IntSize& size)
     }
 
     bool hasAlpha = mReadCaps.alpha;
-    RefPtr<MacIOSurface> ioSurf;
+    nsRefPtr<MacIOSurface> ioSurf;
     ioSurf = MacIOSurface::CreateIOSurface(size.width, size.height, 1.0,
                                            hasAlpha);
 

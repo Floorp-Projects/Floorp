@@ -43,7 +43,7 @@ public:
 protected:
   virtual ~EditAggregateTxn();
 
-  nsTArray< RefPtr<EditTxn> > mChildren;
+  nsTArray< nsRefPtr<EditTxn> > mChildren;
   nsCOMPtr<nsIAtom> mName;
 };
 

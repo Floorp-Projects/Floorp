@@ -306,7 +306,7 @@ RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader,
     return;
   }
 
-  RefPtr<LayerManager> lm = GetFrom(mFrameLoader);
+  nsRefPtr<LayerManager> lm = GetFrom(mFrameLoader);
 
   mAsyncPanZoomEnabled = lm && lm->AsyncPanZoomEnabled();
 
@@ -397,7 +397,7 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nullptr;
   }
 
-  RefPtr<Layer> layer =
+  nsRefPtr<Layer> layer =
     (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aItem));
   if (!layer) {
     layer = aManager->CreateRefLayer();
@@ -428,7 +428,7 @@ RenderFrameParent::OwnerContentChanged(nsIContent* aContent)
   MOZ_ASSERT(!mFrameLoader || mFrameLoader->GetOwnerContent() == aContent,
              "Don't build new map if owner is same!");
 
-  RefPtr<LayerManager> lm = mFrameLoader ? GetFrom(mFrameLoader) : nullptr;
+  nsRefPtr<LayerManager> lm = mFrameLoader ? GetFrom(mFrameLoader) : nullptr;
   // Perhaps the document containing this frame currently has no presentation?
   if (lm && lm->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
     ClientLayerManager *clientManager =
@@ -600,7 +600,7 @@ RenderFrameParent::HitTest(const nsRect& aRect)
 void
 RenderFrameParent::GetTextureFactoryIdentifier(TextureFactoryIdentifier* aTextureFactoryIdentifier)
 {
-  RefPtr<LayerManager> lm = mFrameLoader ? GetFrom(mFrameLoader) : nullptr;
+  nsRefPtr<LayerManager> lm = mFrameLoader ? GetFrom(mFrameLoader) : nullptr;
   // Perhaps the document containing this frame currently has no presentation?
   if (lm && lm->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
     *aTextureFactoryIdentifier =
@@ -659,7 +659,7 @@ nsDisplayRemote::BuildLayer(nsDisplayListBuilder* aBuilder,
   int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
   nsIntRect visibleRect = GetVisibleRect().ToNearestPixels(appUnitsPerDevPixel);
   visibleRect += aContainerParameters.mOffset;
-  RefPtr<Layer> layer = mRemoteFrame->BuildLayer(aBuilder, mFrame, aManager, visibleRect, this, aContainerParameters);
+  nsRefPtr<Layer> layer = mRemoteFrame->BuildLayer(aBuilder, mFrame, aManager, visibleRect, this, aContainerParameters);
   if (layer && layer->AsContainerLayer()) {
     layer->AsContainerLayer()->SetEventRegionsOverride(mEventRegionsOverride);
   }

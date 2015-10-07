@@ -427,7 +427,7 @@ nsJSON::DecodeInternal(JSContext* cx,
   if (!jsonChannel || NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
-  RefPtr<nsJSONListener> jsonListener =
+  nsRefPtr<nsJSONListener> jsonListener =
     new nsJSONListener(cx, aRetval.address(), aNeedsConverter);
 
   //XXX this stream pattern should be consolidated in netwerk

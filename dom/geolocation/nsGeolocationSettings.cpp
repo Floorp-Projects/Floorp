@@ -53,7 +53,7 @@ nsGeolocationSettings::GetGeolocationSettings()
     return nullptr;
   }
 
-  RefPtr<nsGeolocationSettings> result;
+  nsRefPtr<nsGeolocationSettings> result;
   if (nsGeolocationSettings::sSettings) {
     result = nsGeolocationSettings::sSettings;
     return result.forget();

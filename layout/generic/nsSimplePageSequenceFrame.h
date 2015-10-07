@@ -154,7 +154,7 @@ protected:
   int32_t      mFromPageNum;
   int32_t      mToPageNum;
   nsTArray<int32_t> mPageRanges;
-  nsTArray<RefPtr<mozilla::dom::HTMLCanvasElement> > mCurrentCanvasList;
+  nsTArray<nsRefPtr<mozilla::dom::HTMLCanvasElement> > mCurrentCanvasList;
 
   // Selection Printing Info
   nscoord      mSelectionHeight;

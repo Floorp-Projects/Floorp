@@ -243,7 +243,7 @@ private:
 
   // Strong ref to our element to keep it alive. We hold this not only for
   // ourself, but also for our DOMSVGPathSeg items too.
-  RefPtr<nsSVGElement> mElement;
+  nsRefPtr<nsSVGElement> mElement;
 
   bool mIsAnimValList;
 };

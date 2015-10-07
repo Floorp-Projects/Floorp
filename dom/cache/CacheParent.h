@@ -45,7 +45,7 @@ private:
   virtual bool
   RecvTeardown() override;
 
-  RefPtr<cache::Manager> mManager;
+  nsRefPtr<cache::Manager> mManager;
   const CacheId mCacheId;
 };
 

@@ -20,7 +20,7 @@ DNSListenerProxy::OnLookupComplete(nsICancelable* aRequest,
                                    nsIDNSRecord* aRecord,
                                    nsresult aStatus)
 {
-  RefPtr<OnLookupCompleteRunnable> r =
+  nsRefPtr<OnLookupCompleteRunnable> r =
     new OnLookupCompleteRunnable(mListener, aRequest, aRecord, aStatus);
   return mTargetThread->Dispatch(r, NS_DISPATCH_NORMAL);
 }

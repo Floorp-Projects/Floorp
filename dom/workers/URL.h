@@ -139,8 +139,8 @@ private:
   void UpdateURLSearchParams();
 
   WorkerPrivate* mWorkerPrivate;
-  RefPtr<URLProxy> mURLProxy;
-  RefPtr<URLSearchParams> mSearchParams;
+  nsRefPtr<URLProxy> mURLProxy;
+  nsRefPtr<URLSearchParams> mSearchParams;
 };
 
 END_WORKERS_NAMESPACE

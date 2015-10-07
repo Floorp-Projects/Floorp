@@ -315,7 +315,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
       return NS_ERROR_FAILURE;
   }
 
-  RefPtr<nsPresContext> presContext = presShell->GetPresContext();
+  nsRefPtr<nsPresContext> presContext = presShell->GetPresContext();
 
   if (!presContext)
     return NS_ERROR_FAILURE;
@@ -720,7 +720,7 @@ nsTypeAheadFind::GetSearchContainers(nsISupports *aContainer,
 
   nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
 
-  RefPtr<nsPresContext> presContext;
+  nsRefPtr<nsPresContext> presContext;
   docShell->GetPresContext(getter_AddRefs(presContext));
 
   if (!presShell || !presContext)
@@ -1154,7 +1154,7 @@ nsTypeAheadFind::IsRangeVisible(nsIDOMRange *aRange,
 
   // Set up the arguments needed to check if a range is visible.
   nsCOMPtr<nsIPresShell> presShell (docShell->GetPresShell());
-  RefPtr<nsPresContext> presContext = presShell->GetPresContext();
+  nsRefPtr<nsPresContext> presContext = presShell->GetPresContext();
   nsCOMPtr<nsIDOMRange> startPointRange = new nsRange(presShell->GetDocument());
   *aResult = IsRangeVisible(presShell, presContext, aRange,
                             aMustBeInViewPort, false,

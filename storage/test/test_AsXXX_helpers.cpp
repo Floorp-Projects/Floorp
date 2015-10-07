@@ -110,7 +110,7 @@ test_asyncNULLFallback()
   do_check_true(NS_SUCCEEDED(stmt->ExecuteAsync(nullptr, getter_AddRefs(pendingStmt))));
   do_check_true(pendingStmt);
   stmt->Finalize();
-  RefPtr<Spinner> asyncSpin(new Spinner());
+  nsRefPtr<Spinner> asyncSpin(new Spinner());
   db->AsyncClose(asyncSpin);
   asyncSpin->SpinUntilCompleted();
 

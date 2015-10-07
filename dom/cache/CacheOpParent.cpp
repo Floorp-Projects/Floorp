@@ -53,7 +53,7 @@ CacheOpParent::Execute(ManagerId* aManagerId)
   MOZ_ASSERT(!mManager);
   MOZ_ASSERT(!mVerifier);
 
-  RefPtr<Manager> manager;
+  nsRefPtr<Manager> manager;
   nsresult rv = Manager::GetOrCreate(aManagerId, getter_AddRefs(manager));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     unused << Send__delete__(this, ErrorResult(rv), void_t());

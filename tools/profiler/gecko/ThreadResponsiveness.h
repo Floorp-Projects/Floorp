@@ -30,7 +30,7 @@ public:
   }
 private:
   ThreadProfile* mThreadProfile;
-  RefPtr<CheckResponsivenessTask> mActiveTracerEvent;
+  nsRefPtr<CheckResponsivenessTask> mActiveTracerEvent;
   mozilla::TimeStamp mLastTracerTime;
 };
 

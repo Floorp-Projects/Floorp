@@ -85,7 +85,7 @@ class BluetoothRequestChild : public PBluetoothRequestChild
 {
   friend class mozilla::dom::bluetooth::BluetoothChild;
 
-  RefPtr<BluetoothReplyRunnable> mReplyRunnable;
+  nsRefPtr<BluetoothReplyRunnable> mReplyRunnable;
 
 public:
   BluetoothRequestChild(BluetoothReplyRunnable* aReplyRunnable);

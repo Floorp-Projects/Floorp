@@ -99,7 +99,7 @@ struct nsFont {
   nsTArray<gfxAlternateValue> alternateValues;
 
   // -- object used to look these up once the font is matched
-  RefPtr<gfxFontFeatureValueSet> featureValueLookup;
+  nsRefPtr<gfxFontFeatureValueSet> featureValueLookup;
 
   // Font features from CSS font-feature-settings
   nsTArray<gfxFontFeature> fontFeatureSettings;

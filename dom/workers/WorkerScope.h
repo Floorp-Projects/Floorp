@@ -52,12 +52,12 @@ class WorkerGlobalScope : public DOMEventTargetHelper,
 {
   typedef mozilla::dom::indexedDB::IDBFactory IDBFactory;
 
-  RefPtr<Console> mConsole;
-  RefPtr<WorkerLocation> mLocation;
-  RefPtr<WorkerNavigator> mNavigator;
-  RefPtr<Performance> mPerformance;
-  RefPtr<IDBFactory> mIndexedDB;
-  RefPtr<cache::CacheStorage> mCacheStorage;
+  nsRefPtr<Console> mConsole;
+  nsRefPtr<WorkerLocation> mLocation;
+  nsRefPtr<WorkerNavigator> mNavigator;
+  nsRefPtr<Performance> mPerformance;
+  nsRefPtr<IDBFactory> mIndexedDB;
+  nsRefPtr<cache::CacheStorage> mCacheStorage;
 
   uint32_t mWindowInteractionsAllowed;
 
@@ -229,8 +229,8 @@ public:
 class ServiceWorkerGlobalScope final : public WorkerGlobalScope
 {
   const nsString mScope;
-  RefPtr<ServiceWorkerClients> mClients;
-  RefPtr<ServiceWorkerRegistrationWorkerThread> mRegistration;
+  nsRefPtr<ServiceWorkerClients> mClients;
+  nsRefPtr<ServiceWorkerRegistrationWorkerThread> mRegistration;
 
   ~ServiceWorkerGlobalScope();
 

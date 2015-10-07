@@ -46,7 +46,7 @@ public:
 protected:
     GLContext* mCurConsGL;
     GLuint mConsTex;
-    RefPtr<TextureGarbageBin> mGarbageBin;
+    nsRefPtr<TextureGarbageBin> mGarbageBin;
     EGLSync mSync;
 
     SharedSurface_EGLImage(GLContext* gl,
@@ -90,14 +90,14 @@ public:
     // Fallible:
     static UniquePtr<SurfaceFactory_EGLImage> Create(GLContext* prodGL,
                                                      const SurfaceCaps& caps,
-                                                     const RefPtr<layers::ISurfaceAllocator>& allocator,
+                                                     const nsRefPtr<layers::ISurfaceAllocator>& allocator,
                                                      const layers::TextureFlags& flags);
 
 protected:
     const EGLContext mContext;
 
     SurfaceFactory_EGLImage(GLContext* prodGL, const SurfaceCaps& caps,
-                            const RefPtr<layers::ISurfaceAllocator>& allocator,
+                            const nsRefPtr<layers::ISurfaceAllocator>& allocator,
                             const layers::TextureFlags& flags,
                             EGLContext context)
         : SurfaceFactory(SharedSurfaceType::EGLImageShare, prodGL, caps, allocator, flags)

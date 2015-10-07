@@ -198,7 +198,7 @@ nsresult nsZipHandle::Init(nsIFile *file, nsZipHandle **ret,
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<nsZipHandle> handle = new nsZipHandle();
+  nsRefPtr<nsZipHandle> handle = new nsZipHandle();
   if (!handle) {
     PR_MemUnmap(buf, (uint32_t) size);
     PR_CloseFileMap(map);
@@ -223,7 +223,7 @@ nsresult nsZipHandle::Init(nsIFile *file, nsZipHandle **ret,
 nsresult nsZipHandle::Init(nsZipArchive *zip, const char *entry,
                            nsZipHandle **ret)
 {
-  RefPtr<nsZipHandle> handle = new nsZipHandle();
+  nsRefPtr<nsZipHandle> handle = new nsZipHandle();
   if (!handle)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -245,7 +245,7 @@ nsresult nsZipHandle::Init(nsZipArchive *zip, const char *entry,
 nsresult nsZipHandle::Init(const uint8_t* aData, uint32_t aLen,
                            nsZipHandle **aRet)
 {
-  RefPtr<nsZipHandle> handle = new nsZipHandle();
+  nsRefPtr<nsZipHandle> handle = new nsZipHandle();
 
   handle->mFileData = aData;
   handle->mLen = aLen;
@@ -309,7 +309,7 @@ nsresult nsZipArchive::OpenArchive(nsZipHandle *aZipHandle, PRFileDesc *aFd)
 
 nsresult nsZipArchive::OpenArchive(nsIFile *aFile)
 {
-  RefPtr<nsZipHandle> handle;
+  nsRefPtr<nsZipHandle> handle;
 #if defined(XP_WIN)
   mozilla::AutoFDClose fd;
   nsresult rv = nsZipHandle::Init(aFile, getter_AddRefs(handle),

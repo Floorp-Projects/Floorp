@@ -254,7 +254,7 @@ DOMStorageDBChild::RecvLoadDone(const nsCString& aScope, const nsresult& aRv)
 bool
 DOMStorageDBChild::RecvLoadUsage(const nsCString& aScope, const int64_t& aUsage)
 {
-  RefPtr<DOMStorageUsageBridge> scopeUsage = mManager->GetScopeUsage(aScope);
+  nsRefPtr<DOMStorageUsageBridge> scopeUsage = mManager->GetScopeUsage(aScope);
   scopeUsage->LoadUsage(aUsage);
   return true;
 }
@@ -330,7 +330,7 @@ private:
     return NS_OK;
   }
 
-  RefPtr<DOMStorageDBParent> mParent;
+  nsRefPtr<DOMStorageDBParent> mParent;
 };
 
 } // namespace
@@ -348,7 +348,7 @@ DOMStorageDBParent::DOMStorageDBParent()
 
   // Cannot send directly from here since the channel
   // is not completely built at this moment.
-  RefPtr<SendInitialChildDataRunnable> r =
+  nsRefPtr<SendInitialChildDataRunnable> r =
     new SendInitialChildDataRunnable(this);
   NS_DispatchToCurrentThread(r);
 }
@@ -406,7 +406,7 @@ DOMStorageDBParent::RecvAsyncGetUsage(const nsCString& aScope)
   }
 
   // The object releases it self in LoadUsage method
-  RefPtr<UsageParentBridge> usage = new UsageParentBridge(this, aScope);
+  nsRefPtr<UsageParentBridge> usage = new UsageParentBridge(this, aScope);
   db->AsyncGetUsage(usage);
   return true;
 }
@@ -495,7 +495,7 @@ DOMStorageDBParent::RecvPreload(const nsCString& aScope,
     return false;
   }
 
-  RefPtr<SyncLoadCacheHelper> cache(
+  nsRefPtr<SyncLoadCacheHelper> cache(
     new SyncLoadCacheHelper(aScope, aAlreadyLoadedCount, aKeys, aValues, aRv));
 
   db->SyncPreload(cache, true);
@@ -638,7 +638,7 @@ public:
   { }
 
 private:
-  RefPtr<DOMStorageDBParent> mParent;
+  nsRefPtr<DOMStorageDBParent> mParent;
   TaskType mType;
   nsCString mScope;
   nsString mKey;
@@ -678,7 +678,7 @@ DOMStorageDBParent::CacheParentBridge::LoadItem(const nsAString& aKey, const nsS
 
   ++mLoadedCount;
 
-  RefPtr<LoadRunnable> r =
+  nsRefPtr<LoadRunnable> r =
     new LoadRunnable(mParent, LoadRunnable::loadItem, mScope, aKey, aValue);
   NS_DispatchToMainThread(r);
   return true;
@@ -694,7 +694,7 @@ DOMStorageDBParent::CacheParentBridge::LoadDone(nsresult aRv)
 
   mLoaded = true;
 
-  RefPtr<LoadRunnable> r =
+  nsRefPtr<LoadRunnable> r =
     new LoadRunnable(mParent, LoadRunnable::loadDone, mScope, aRv);
   NS_DispatchToMainThread(r);
 }
@@ -730,7 +730,7 @@ private:
     return NS_OK;
   }
 
-  RefPtr<DOMStorageDBParent> mParent;
+  nsRefPtr<DOMStorageDBParent> mParent;
   nsCString mScope;
   int64_t mUsage;
 };
@@ -740,7 +740,7 @@ private:
 void
 DOMStorageDBParent::UsageParentBridge::LoadUsage(const int64_t aUsage)
 {
-  RefPtr<UsageRunnable> r = new UsageRunnable(mParent, mScope, aUsage);
+  nsRefPtr<UsageRunnable> r = new UsageRunnable(mParent, mScope, aUsage);
   NS_DispatchToMainThread(r);
 }
 

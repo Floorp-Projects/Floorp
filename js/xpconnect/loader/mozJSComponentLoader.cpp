@@ -515,7 +515,7 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
     bool createdNewGlobal = false;
 
     if (!mLoaderGlobal) {
-        RefPtr<BackstagePass> backstagePass;
+        nsRefPtr<BackstagePass> backstagePass;
         rv = NS_NewBackstagePass(getter_AddRefs(backstagePass));
         NS_ENSURE_SUCCESS(rv, nullptr);
 

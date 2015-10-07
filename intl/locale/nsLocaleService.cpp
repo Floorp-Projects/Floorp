@@ -119,7 +119,7 @@ nsLocaleService::nsLocaleService(void)
     NS_ENSURE_SUCCESS_VOID(rv);
 #endif
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
-    RefPtr<nsLocale> resultLocale(new nsLocale());
+    nsRefPtr<nsLocale> resultLocale(new nsLocale());
     NS_ENSURE_TRUE_VOID(resultLocale);
 
 #ifdef MOZ_WIDGET_QT
@@ -213,7 +213,7 @@ nsLocaleService::NewLocale(const nsAString &aLocale, nsILocale **_retval)
 
     *_retval = nullptr;
 
-    RefPtr<nsLocale> resultLocale(new nsLocale());
+    nsRefPtr<nsLocale> resultLocale(new nsLocale());
     if (!resultLocale) return NS_ERROR_OUT_OF_MEMORY;
 
     for (int32_t i = 0; i < LocaleListLength; i++) {

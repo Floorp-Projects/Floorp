@@ -13,7 +13,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/layers/FenceUtils.h"  // for FenceHandle
 #include "mozilla/Monitor.h"      // for Monitor
-#include "mozilla/RefPtr.h"       // for AtomicRefCounted
+#include "mozilla/nsRefPtr.h"       // for AtomicRefCounted
 
 namespace mozilla {
 namespace layers {
@@ -130,7 +130,7 @@ protected:
   }
 
   uint64_t mSerial;
-  RefPtr<AsyncTransactionWaiter> mWaiter;
+  nsRefPtr<AsyncTransactionWaiter> mWaiter;
   DebugOnly<bool> mCompleted;
 
   /**
@@ -200,7 +200,7 @@ protected:
   uint64_t mSerial;
 
   bool mIsTrackersHolderDestroyed;
-  std::map<uint64_t, RefPtr<AsyncTransactionTracker> > mAsyncTransactionTrackers;
+  std::map<uint64_t, nsRefPtr<AsyncTransactionTracker> > mAsyncTransactionTrackers;
 
   /**
    * gecko does not provide atomic operation for uint64_t.

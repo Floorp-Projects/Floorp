@@ -229,7 +229,7 @@ protected:
 private:
   nsCString mCoreAppsBasePath;
   nsCString mWebAppsBasePath;
-  RefPtr<OfflineObserver> mObserver;
+  nsRefPtr<OfflineObserver> mObserver;
 };
 
 /**

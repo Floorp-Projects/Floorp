@@ -672,7 +672,7 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
 
   // Do the load.
   nsCOMPtr<nsIStreamListener> listener;
-  RefPtr<imgRequestProxy>& req = PrepareNextRequest(eImageLoadType_Normal);
+  nsRefPtr<imgRequestProxy>& req = PrepareNextRequest(eImageLoadType_Normal);
   nsresult rv = loader->
     LoadImageWithChannel(aChannel, this, doc,
                          getter_AddRefs(listener),
@@ -952,7 +952,7 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
   }
 
   // Not blocked. Do the load.
-  RefPtr<imgRequestProxy>& req = PrepareNextRequest(aImageLoadType);
+  nsRefPtr<imgRequestProxy>& req = PrepareNextRequest(aImageLoadType);
   nsCOMPtr<nsIContent> content =
       do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   nsresult rv = nsContentUtils::LoadImage(aNewURI, aDocument,
@@ -1144,7 +1144,7 @@ nsImageLoadingContent::UseAsPrimaryRequest(imgRequestProxy* aRequest,
   ClearCurrentRequest(NS_BINDING_ABORTED, ON_NONVISIBLE_REQUEST_DISCARD);
 
   // Clone the request we were given.
-  RefPtr<imgRequestProxy>& req = PrepareNextRequest(aImageLoadType);
+  nsRefPtr<imgRequestProxy>& req = PrepareNextRequest(aImageLoadType);
   nsresult rv = aRequest->Clone(this, getter_AddRefs(req));
   if (NS_SUCCEEDED(rv)) {
     TrackImage(req);
@@ -1232,14 +1232,14 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
 
   nsCOMPtr<nsINode> thisNode = do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
 
-  RefPtr<AsyncEventDispatcher> loadBlockingAsyncDispatcher =
+  nsRefPtr<AsyncEventDispatcher> loadBlockingAsyncDispatcher =
     new LoadBlockingAsyncEventDispatcher(thisNode, aEventType, false, false);
   loadBlockingAsyncDispatcher->PostDOMEvent();
 
   return NS_OK;
 }
 
-RefPtr<imgRequestProxy>&
+nsRefPtr<imgRequestProxy>&
 nsImageLoadingContent::PrepareNextRequest(ImageLoadType aImageLoadType)
 {
   nsImageFrame* frame = do_QueryFrame(GetOurPrimaryFrame());
@@ -1297,7 +1297,7 @@ nsImageLoadingContent::SetBlockedRequest(nsIURI* aURI, int16_t aContentDecision)
   }
 }
 
-RefPtr<imgRequestProxy>&
+nsRefPtr<imgRequestProxy>&
 nsImageLoadingContent::PrepareCurrentRequest(ImageLoadType aImageLoadType)
 {
   // Blocked images go through SetBlockedRequest, which is a separate path. For
@@ -1320,7 +1320,7 @@ nsImageLoadingContent::PrepareCurrentRequest(ImageLoadType aImageLoadType)
   return mCurrentRequest;
 }
 
-RefPtr<imgRequestProxy>&
+nsRefPtr<imgRequestProxy>&
 nsImageLoadingContent::PreparePendingRequest(ImageLoadType aImageLoadType)
 {
   // Get rid of anything that was there previously.

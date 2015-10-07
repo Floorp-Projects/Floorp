@@ -164,7 +164,7 @@ MediaKeySession::GenerateRequest(const nsAString& aInitDataType,
                                  const ArrayBufferViewOrArrayBuffer& aInitData,
                                  ErrorResult& aRv)
 {
-  RefPtr<DetailedPromise> promise(MakePromise(aRv,
+  nsRefPtr<DetailedPromise> promise(MakePromise(aRv,
     NS_LITERAL_CSTRING("MediaKeySession.generateRequest")));
   if (aRv.Failed()) {
     return nullptr;
@@ -214,7 +214,7 @@ MediaKeySession::GenerateRequest(const nsAString& aInitDataType,
 already_AddRefed<Promise>
 MediaKeySession::Load(const nsAString& aSessionId, ErrorResult& aRv)
 {
-  RefPtr<DetailedPromise> promise(MakePromise(aRv,
+  nsRefPtr<DetailedPromise> promise(MakePromise(aRv,
     NS_LITERAL_CSTRING("MediaKeySession.load")));
   if (aRv.Failed()) {
     return nullptr;
@@ -240,7 +240,7 @@ MediaKeySession::Load(const nsAString& aSessionId, ErrorResult& aRv)
 
   // We now know the sessionId being loaded into this session. Remove the
   // session from its owning MediaKey's set of sessions awaiting a sessionId.
-  RefPtr<MediaKeySession> session(mKeys->GetPendingSession(Token()));
+  nsRefPtr<MediaKeySession> session(mKeys->GetPendingSession(Token()));
   MOZ_ASSERT(session == this, "Session should be awaiting id on its own token");
 
   // Associate with the known sessionId.
@@ -258,7 +258,7 @@ MediaKeySession::Load(const nsAString& aSessionId, ErrorResult& aRv)
 already_AddRefed<Promise>
 MediaKeySession::Update(const ArrayBufferViewOrArrayBuffer& aResponse, ErrorResult& aRv)
 {
-  RefPtr<DetailedPromise> promise(MakePromise(aRv,
+  nsRefPtr<DetailedPromise> promise(MakePromise(aRv,
     NS_LITERAL_CSTRING("MediaKeySession.update")));
   if (aRv.Failed()) {
     return nullptr;
@@ -303,7 +303,7 @@ MediaKeySession::Update(const ArrayBufferViewOrArrayBuffer& aResponse, ErrorResu
 already_AddRefed<Promise>
 MediaKeySession::Close(ErrorResult& aRv)
 {
-  RefPtr<DetailedPromise> promise(MakePromise(aRv,
+  nsRefPtr<DetailedPromise> promise(MakePromise(aRv,
     NS_LITERAL_CSTRING("MediaKeySession.close")));
   if (aRv.Failed()) {
     return nullptr;
@@ -346,7 +346,7 @@ MediaKeySession::IsClosed() const
 already_AddRefed<Promise>
 MediaKeySession::Remove(ErrorResult& aRv)
 {
-  RefPtr<DetailedPromise> promise(MakePromise(aRv,
+  nsRefPtr<DetailedPromise> promise(MakePromise(aRv,
     NS_LITERAL_CSTRING("MediaKeySession.remove")));
   if (aRv.Failed()) {
     return nullptr;
@@ -386,9 +386,9 @@ MediaKeySession::DispatchKeyMessage(MediaKeyMessageType aMessageType,
             ToBase64(aMessage).get());
   }
 
-  RefPtr<MediaKeyMessageEvent> event(
+  nsRefPtr<MediaKeyMessageEvent> event(
     MediaKeyMessageEvent::Constructor(this, aMessageType, aMessage));
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this, event);
   asyncDispatcher->PostDOMEvent();
 }
@@ -399,8 +399,8 @@ MediaKeySession::DispatchKeyError(uint32_t aSystemCode)
   EME_LOG("MediaKeySession[%p,'%s'] DispatchKeyError() systemCode=%u.",
           this, NS_ConvertUTF16toUTF8(mSessionId).get(), aSystemCode);
 
-  RefPtr<MediaKeyError> event(new MediaKeyError(this, aSystemCode));
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+  nsRefPtr<MediaKeyError> event(new MediaKeyError(this, aSystemCode));
+  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this, event);
   asyncDispatcher->PostDOMEvent();
 }
@@ -414,7 +414,7 @@ MediaKeySession::DispatchKeyStatusesChange()
 
   UpdateKeyStatusMap();
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this, NS_LITERAL_STRING("keystatuseschange"), false);
   asyncDispatcher->PostDOMEvent();
 }

@@ -1116,8 +1116,8 @@ protected:
   nsCOMPtr<nsIContent> mContent;
   DocAccessible* mDoc;
 
-  RefPtr<Accessible> mParent;
-  nsTArray<RefPtr<Accessible> > mChildren;
+  nsRefPtr<Accessible> mParent;
+  nsTArray<nsRefPtr<Accessible> > mChildren;
   int32_t mIndexInParent;
 
   static const uint8_t kChildrenFlagsBits = 2;

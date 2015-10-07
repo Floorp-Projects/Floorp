@@ -26,7 +26,7 @@ StaticRefPtr<RequestSyncWifiService> sService;
 /* static */ void
 RequestSyncWifiService::Init()
 {
-  RefPtr<RequestSyncWifiService> service = GetInstance();
+  nsRefPtr<RequestSyncWifiService> service = GetInstance();
   if (!service) {
     NS_WARNING("Failed to initialize RequestSyncWifiService.");
   }
@@ -41,7 +41,7 @@ RequestSyncWifiService::GetInstance()
     ClearOnShutdown(&sService);
   }
 
-  RefPtr<RequestSyncWifiService> service = sService.get();
+  nsRefPtr<RequestSyncWifiService> service = sService.get();
   return service.forget();
 }
 

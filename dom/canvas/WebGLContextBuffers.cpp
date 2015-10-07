@@ -377,7 +377,7 @@ WebGLContext::CreateBuffer()
     MakeContextCurrent();
     gl->fGenBuffers(1, &buf);
 
-    RefPtr<WebGLBuffer> globj = new WebGLBuffer(this, buf);
+    nsRefPtr<WebGLBuffer> globj = new WebGLBuffer(this, buf);
     return globj.forget();
 }
 

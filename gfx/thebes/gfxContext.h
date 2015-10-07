@@ -502,14 +502,14 @@ private:
 
     mozilla::gfx::CompositionOp op;
     Color color;
-    RefPtr<gfxPattern> pattern;
-    RefPtr<gfxASurface> sourceSurfCairo;
-    RefPtr<SourceSurface> sourceSurface;
+    nsRefPtr<gfxPattern> pattern;
+    nsRefPtr<gfxASurface> sourceSurfCairo;
+    nsRefPtr<SourceSurface> sourceSurface;
     mozilla::gfx::Point sourceSurfaceDeviceOffset;
     Matrix surfTransform;
     Matrix transform;
     struct PushedClip {
-      RefPtr<Path> path;
+      nsRefPtr<Path> path;
       Rect rect;
       Matrix transform;
     };
@@ -518,8 +518,8 @@ private:
     bool clipWasReset;
     mozilla::gfx::FillRule fillRule;
     StrokeOptions strokeOptions;
-    RefPtr<DrawTarget> drawTarget;
-    RefPtr<DrawTarget> parentTarget;
+    nsRefPtr<DrawTarget> drawTarget;
+    nsRefPtr<DrawTarget> parentTarget;
     mozilla::gfx::AntialiasMode aaMode;
     bool patternTransformChanged;
     Matrix patternTransform;
@@ -545,8 +545,8 @@ private:
   bool mTransformChanged;
   Matrix mPathTransform;
   Rect mRect;
-  RefPtr<PathBuilder> mPathBuilder;
-  RefPtr<Path> mPath;
+  nsRefPtr<PathBuilder> mPathBuilder;
+  nsRefPtr<Path> mPath;
   Matrix mTransform;
   nsTArray<AzureState> mStateStack;
 
@@ -555,8 +555,8 @@ private:
 
   cairo_t *mRefCairo;
 
-  RefPtr<DrawTarget> mDT;
-  RefPtr<DrawTarget> mOriginalDT;
+  nsRefPtr<DrawTarget> mDT;
+  nsRefPtr<DrawTarget> mOriginalDT;
 };
 
 /**
@@ -671,7 +671,7 @@ public:
     }
 
 private:
-    RefPtr<mozilla::gfx::DrawTarget> mDT;
+    nsRefPtr<mozilla::gfx::DrawTarget> mDT;
     bool mSubpixelAntialiasingEnabled;
 };
 

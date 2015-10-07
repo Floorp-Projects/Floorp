@@ -23,7 +23,7 @@ public:
     mClosingService = nullptr;
   }
 
-  RefPtr<mozilla::net::ClosingService> mClosingService;
+  nsRefPtr<mozilla::net::ClosingService> mClosingService;
 };
 
 namespace mozilla {

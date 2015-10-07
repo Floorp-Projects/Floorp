@@ -28,7 +28,7 @@ public:
 
     static already_AddRefed<nsIdleServiceWin> GetInstance()
     {
-        RefPtr<nsIdleServiceWin> idleService =
+        nsRefPtr<nsIdleServiceWin> idleService =
             nsIdleService::GetInstance().downcast<nsIdleServiceWin>();
         if (!idleService) {
             idleService = new nsIdleServiceWin();

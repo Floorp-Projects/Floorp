@@ -133,11 +133,11 @@ public:
             nsIGlobalObject* global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
             MOZ_ASSERT(global);
 
-            // RefPtr<File> needs to go out of scope before toObjectOrNull() is called because
+            // nsRefPtr<File> needs to go out of scope before toObjectOrNull() is called because
             // otherwise the static analysis thinks it can gc the JSObject via the stack.
             JS::Rooted<JS::Value> val(aCx);
             {
-                RefPtr<Blob> blob = Blob::Create(global, mBlobImpls[idx]);
+                nsRefPtr<Blob> blob = Blob::Create(global, mBlobImpls[idx]);
                 if (!ToJSValue(aCx, blob, &val)) {
                     return nullptr;
                 }
@@ -156,7 +156,7 @@ public:
           // Prevent the return value from being trashed by a GC during ~nsRefPtr.
           JS::Rooted<JSObject*> result(aCx);
           {
-            RefPtr<MozNDEFRecord> ndefRecord = new MozNDEFRecord(global);
+            nsRefPtr<MozNDEFRecord> ndefRecord = new MozNDEFRecord(global);
             result = ndefRecord->ReadStructuredClone(aCx, aReader) ?
                      ndefRecord->WrapObject(aCx, nullptr) : nullptr;
           }
@@ -230,7 +230,7 @@ public:
     StackScopedCloneOptions* mOptions;
     AutoObjectVector mReflectors;
     AutoObjectVector mFunctions;
-    nsTArray<RefPtr<BlobImpl>> mBlobImpls;
+    nsTArray<nsRefPtr<BlobImpl>> mBlobImpls;
 };
 
 /*

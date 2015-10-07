@@ -38,7 +38,7 @@ public:
 private:
   ~CopierCallbacks() {}
 
-  RefPtr<PresentationSessionTransport> mOwner;
+  nsRefPtr<PresentationSessionTransport> mOwner;
 };
 
 NS_IMPL_ISUPPORTS(CopierCallbacks, nsIRequestObserver)
@@ -313,7 +313,7 @@ PresentationSessionTransport::EnsureCopying()
   }
 
   mAsyncCopierActive = true;
-  RefPtr<CopierCallbacks> callbacks = new CopierCallbacks(this);
+  nsRefPtr<CopierCallbacks> callbacks = new CopierCallbacks(this);
   NS_WARN_IF(NS_FAILED(mMultiplexStreamCopier->AsyncCopy(callbacks, nullptr)));
 }
 

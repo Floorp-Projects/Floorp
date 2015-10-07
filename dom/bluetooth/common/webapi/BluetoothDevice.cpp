@@ -90,7 +90,7 @@ public:
   }
 
 private:
-  RefPtr<BluetoothDevice> mDevice;
+  nsRefPtr<BluetoothDevice> mDevice;
 };
 
 BluetoothDevice::BluetoothDevice(nsPIDOMWindow* aWindow,
@@ -181,7 +181,7 @@ BluetoothDevice::FetchUuids(ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   // Ensure BluetoothService is available
@@ -204,7 +204,7 @@ BluetoothDevice::Create(nsPIDOMWindow* aWindow,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
 
-  RefPtr<BluetoothDevice> device = new BluetoothDevice(aWindow, aValue);
+  nsRefPtr<BluetoothDevice> device = new BluetoothDevice(aWindow, aValue);
   return device.forget();
 }
 
@@ -308,7 +308,7 @@ BluetoothDevice::DispatchAttributeEvent(const Sequence<nsString>& aTypes)
 
   BluetoothAttributeEventInit init;
   init.mAttrs = aTypes;
-  RefPtr<BluetoothAttributeEvent> event =
+  nsRefPtr<BluetoothAttributeEvent> event =
     BluetoothAttributeEvent::Constructor(
       this, NS_LITERAL_STRING(ATTRIBUTE_CHANGED_ID), init);
 

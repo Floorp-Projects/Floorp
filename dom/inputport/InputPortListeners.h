@@ -30,7 +30,7 @@ public:
 private:
   ~InputPortListener() {}
 
-  nsTArray<RefPtr<InputPort>> mInputPorts;
+  nsTArray<nsRefPtr<InputPort>> mInputPorts;
 };
 
 } // namespace dom

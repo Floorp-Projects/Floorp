@@ -192,7 +192,7 @@ nsProfiler::GetProfileDataAsync(double aSinceTime, JSContext* aCx,
   }
 
   ErrorResult result;
-  RefPtr<Promise> promise = Promise::Create(go, result);
+  nsRefPtr<Promise> promise = Promise::Create(go, result);
   if (NS_WARN_IF(result.Failed())) {
     return result.StealNSResult();
   }

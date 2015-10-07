@@ -54,7 +54,7 @@ public:
   void FixBegin();
   void FixEnd();
 
-  typedef nsTArray<RefPtr<nsSMILInstanceTime> > InstanceTimeList;
+  typedef nsTArray<nsRefPtr<nsSMILInstanceTime> > InstanceTimeList;
 
   void AddDependentTime(nsSMILInstanceTime& aTime);
   void RemoveDependentTime(const nsSMILInstanceTime& aTime);
@@ -64,8 +64,8 @@ public:
   bool IsDependencyChainLink() const;
 
 private:
-  RefPtr<nsSMILInstanceTime> mBegin;
-  RefPtr<nsSMILInstanceTime> mEnd;
+  nsRefPtr<nsSMILInstanceTime> mBegin;
+  nsRefPtr<nsSMILInstanceTime> mEnd;
 
   // nsSMILInstanceTimes to notify when this interval is changed or deleted.
   InstanceTimeList mDependentTimes;

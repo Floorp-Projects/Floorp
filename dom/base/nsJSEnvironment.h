@@ -204,7 +204,7 @@ public:
   }
 
 protected:
-  RefPtr<xpc::ErrorReport> mReport;
+  nsRefPtr<xpc::ErrorReport> mReport;
 };
 
 } // namespace dom

@@ -48,7 +48,7 @@ private:
   bool Init();
 
   nsString mUrl;
-  RefPtr<PresentationAvailability> mAvailability;
+  nsRefPtr<PresentationAvailability> mAvailability;
 };
 
 } // namespace dom

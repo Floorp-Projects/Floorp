@@ -352,7 +352,7 @@ mozInlineSpellStatus::FinishNavigationEvent(mozInlineSpellWordUtil& aWordUtil)
 
   // find the word on the old caret position, this is the one that we MAY need
   // to check
-  RefPtr<nsRange> oldWord;
+  nsRefPtr<nsRange> oldWord;
   rv = aWordUtil.GetRangeForWord(oldAnchorNode, oldAnchorOffset,
                                  getter_AddRefs(oldWord));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -512,7 +512,7 @@ public:
   }
 
 private:
-  RefPtr<mozInlineSpellChecker> mSpellChecker;
+  nsRefPtr<mozInlineSpellChecker> mSpellChecker;
 };
 NS_IMPL_ISUPPORTS(InitEditorSpellCheckCallback, nsIEditorSpellCheckCallback)
 
@@ -1207,7 +1207,7 @@ mozInlineSpellChecker::SpellCheckBetweenNodes(nsIDOMNode *aStartNode,
                                               nsIDOMNode *aEndNode,
                                               int32_t aEndOffset)
 {
-  RefPtr<nsRange> range;
+  nsRefPtr<nsRange> range;
   nsresult rv = MakeSpellCheckRange(aStartNode, aStartOffset,
                                     aEndNode, aEndOffset,
                                     getter_AddRefs(range));
@@ -1311,7 +1311,7 @@ mozInlineSpellChecker::ScheduleSpellCheck(const mozInlineSpellStatus& aStatus)
     return NS_OK;
   }
 
-  RefPtr<mozInlineSpellResume> resume =
+  nsRefPtr<mozInlineSpellResume> resume =
     new mozInlineSpellResume(aStatus, mDisabledAsyncToken);
   NS_ENSURE_TRUE(resume, NS_ERROR_OUT_OF_MEMORY);
 
@@ -1351,7 +1351,7 @@ mozInlineSpellChecker::DoSpellCheckSelection(mozInlineSpellWordUtil& aWordUtil,
   // Since we could be modifying the ranges for the spellCheckSelection while
   // looping on the spell check selection, keep a separate array of range
   // elements inside the selection
-  nsTArray<RefPtr<nsRange>> ranges;
+  nsTArray<nsRefPtr<nsRange>> ranges;
 
   int32_t count = aSpellCheckSelection->RangeCount();
 
@@ -1481,7 +1481,7 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
   PRTime beginTime = PR_Now();
 
   nsAutoString wordText;
-  RefPtr<nsRange> wordRange;
+  nsRefPtr<nsRange> wordRange;
   bool dontCheckWord;
   while (NS_SUCCEEDED(aWordUtil.GetNextWord(wordText,
                                             getter_AddRefs(wordRange),
@@ -1514,7 +1514,7 @@ nsresult mozInlineSpellChecker::DoSpellCheck(mozInlineSpellWordUtil& aWordUtil,
       // likewise, if this word is inside new text, we won't bother testing
       if (!aStatus->mCreatedRange ||
           !aStatus->mCreatedRange->IsPointInRange(*beginNode, beginOffset, erv)) {
-        nsTArray<RefPtr<nsRange>> ranges;
+        nsTArray<nsRefPtr<nsRange>> ranges;
         aSpellCheckSelection->GetRangesForInterval(*beginNode, beginOffset,
                                                    *endNode, endOffset,
                                                    true, ranges, erv);
@@ -1599,7 +1599,7 @@ public:
   }
 
 private:
-  RefPtr<mozInlineSpellChecker> mSpellChecker;
+  nsRefPtr<mozInlineSpellChecker> mSpellChecker;
   int32_t mDelta;
 };
 
@@ -1972,7 +1972,7 @@ public:
 private:
   ~UpdateCurrentDictionaryCallback() {}
 
-  RefPtr<mozInlineSpellChecker> mSpellChecker;
+  nsRefPtr<mozInlineSpellChecker> mSpellChecker;
   uint32_t mDisabledAsyncToken;
 };
 NS_IMPL_ISUPPORTS(UpdateCurrentDictionaryCallback, nsIEditorSpellCheckCallback)
@@ -1992,7 +1992,7 @@ NS_IMETHODIMP mozInlineSpellChecker::UpdateCurrentDictionary()
     mPreviousDictionary.Truncate();
   }
 
-  RefPtr<UpdateCurrentDictionaryCallback> cb =
+  nsRefPtr<UpdateCurrentDictionaryCallback> cb =
     new UpdateCurrentDictionaryCallback(this, mDisabledAsyncToken);
   NS_ENSURE_STATE(cb);
   nsresult rv = spellCheck->UpdateCurrentDictionary(cb);

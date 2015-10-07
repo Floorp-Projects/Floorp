@@ -12,7 +12,7 @@
 #include "nspr.h"
 #include "prlock.h"
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsComponentManagerUtils.h"
 #if !defined(MOZILLA_XPCOMRT_API)
@@ -87,7 +87,7 @@ public:
   }
 
   nsresult StorePipeline(const std::string& trackId,
-                         const RefPtr<MediaPipeline>& aPipeline);
+                         const nsRefPtr<MediaPipeline>& aPipeline);
 
   virtual void AddTrack(const std::string& trackId) { mTracks.insert(trackId); }
   void RemoveTrack(const std::string& trackId);
@@ -99,25 +99,25 @@ public:
 
   // This method exists for stats and the unittests.
   // It allows visibility into the pipelines and flows.
-  const std::map<std::string, RefPtr<MediaPipeline>>&
+  const std::map<std::string, nsRefPtr<MediaPipeline>>&
   GetPipelines() const { return mPipelines; }
-  RefPtr<MediaPipeline> GetPipelineByTrackId_m(const std::string& trackId);
+  nsRefPtr<MediaPipeline> GetPipelineByTrackId_m(const std::string& trackId);
   const std::string& GetId() const { return mId; }
 
   void DetachTransport_s();
   void DetachMedia_m();
   bool AnyCodecHasPluginID(uint64_t aPluginID);
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  RefPtr<mozilla::dom::VideoStreamTrack> GetVideoTrackByTrackId(const std::string& trackId);
+  nsRefPtr<mozilla::dom::VideoStreamTrack> GetVideoTrackByTrackId(const std::string& trackId);
 #endif
 protected:
-  RefPtr<DOMMediaStream> mMediaStream;
+  nsRefPtr<DOMMediaStream> mMediaStream;
   PeerConnectionMedia *mParent;
   const std::string mId;
   // These get set up before we generate our local description, the pipelines
   // and conduits are set up once offer/answer completes.
   std::set<std::string> mTracks;
-  std::map<std::string, RefPtr<MediaPipeline>> mPipelines;
+  std::map<std::string, nsRefPtr<MediaPipeline>> mPipelines;
 };
 
 // TODO(ekr@rtfm.com): Refactor {Local,Remote}SourceStreamInfo
@@ -132,7 +132,7 @@ public:
                         const std::string& aId)
      : SourceStreamInfo(aMediaStream, aParent, aId) {}
 
-  nsresult TakePipelineFrom(RefPtr<LocalSourceStreamInfo>& info,
+  nsresult TakePipelineFrom(nsRefPtr<LocalSourceStreamInfo>& info,
                             const std::string& oldTrackId,
                             const std::string& newTrackId);
 
@@ -159,7 +159,7 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
   {
   }
 
-  void SyncPipeline(RefPtr<MediaPipelineReceive> aPipeline);
+  void SyncPipeline(nsRefPtr<MediaPipelineReceive> aPipeline);
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   void UpdatePrincipal_m(nsIPrincipal* aPrincipal);
@@ -233,9 +233,9 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // WARNING: This destroys the object!
   void SelfDestruct();
 
-  RefPtr<NrIceCtx> ice_ctx() const { return mIceCtx; }
+  nsRefPtr<NrIceCtx> ice_ctx() const { return mIceCtx; }
 
-  RefPtr<NrIceMediaStream> ice_media_stream(size_t i) const {
+  nsRefPtr<NrIceMediaStream> ice_media_stream(size_t i) const {
     return mIceCtx->GetStream(i);
   }
 
@@ -292,7 +292,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   RemoteSourceStreamInfo* GetRemoteStreamById(const std::string& id);
 
   // Add a remote stream.
-  nsresult AddRemoteStream(RefPtr<RemoteSourceStreamInfo> aInfo);
+  nsresult AddRemoteStream(nsRefPtr<RemoteSourceStreamInfo> aInfo);
 
   nsresult ReplaceTrack(const std::string& oldStreamId,
                         const std::string& oldTrackId,
@@ -325,7 +325,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
   // Get a transport flow either RTP/RTCP for a particular stream
   // A stream can be of audio/video/datachannel/budled(?) types
-  RefPtr<TransportFlow> GetTransportFlow(int aStreamIndex, bool aIsRtcp) {
+  nsRefPtr<TransportFlow> GetTransportFlow(int aStreamIndex, bool aIsRtcp) {
     int index_inner = GetTransportFlowIndex(aStreamIndex, aIsRtcp);
 
     if (mTransportFlows.find(index_inner) == mTransportFlows.end())
@@ -336,15 +336,15 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
   // Add a transport flow
   void AddTransportFlow(int aIndex, bool aRtcp,
-                        const RefPtr<TransportFlow> &aFlow);
+                        const nsRefPtr<TransportFlow> &aFlow);
   void RemoveTransportFlow(int aIndex, bool aRtcp);
-  void ConnectDtlsListener_s(const RefPtr<TransportFlow>& aFlow);
+  void ConnectDtlsListener_s(const nsRefPtr<TransportFlow>& aFlow);
   void DtlsConnected_s(TransportLayer* aFlow,
                        TransportLayer::State state);
   static void DtlsConnected_m(const std::string& aParentHandle,
                               bool aPrivacyRequested);
 
-  RefPtr<AudioSessionConduit> GetAudioConduit(size_t level) {
+  nsRefPtr<AudioSessionConduit> GetAudioConduit(size_t level) {
     auto it = mConduits.find(level);
     if (it == mConduits.end()) {
       return nullptr;
@@ -355,11 +355,11 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
       return nullptr;
     }
 
-    return RefPtr<AudioSessionConduit>(
+    return nsRefPtr<AudioSessionConduit>(
         static_cast<AudioSessionConduit*>(it->second.second.get()));
   }
 
-  RefPtr<VideoSessionConduit> GetVideoConduit(size_t level) {
+  nsRefPtr<VideoSessionConduit> GetVideoConduit(size_t level) {
     auto it = mConduits.find(level);
     if (it == mConduits.end()) {
       return nullptr;
@@ -370,16 +370,16 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
       return nullptr;
     }
 
-    return RefPtr<VideoSessionConduit>(
+    return nsRefPtr<VideoSessionConduit>(
         static_cast<VideoSessionConduit*>(it->second.second.get()));
   }
 
   // Add a conduit
-  void AddAudioConduit(size_t level, const RefPtr<AudioSessionConduit> &aConduit) {
+  void AddAudioConduit(size_t level, const nsRefPtr<AudioSessionConduit> &aConduit) {
     mConduits[level] = std::make_pair(false, aConduit);
   }
 
-  void AddVideoConduit(size_t level, const RefPtr<VideoSessionConduit> &aConduit) {
+  void AddVideoConduit(size_t level, const nsRefPtr<VideoSessionConduit> &aConduit) {
     mConduits[level] = std::make_pair(true, aConduit);
   }
 
@@ -410,7 +410,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
    private:
     void SetProxyOnPcm(nsIProxyInfo& proxyinfo);
-    RefPtr<PeerConnectionMedia> pcm_;
+    nsRefPtr<PeerConnectionMedia> pcm_;
     virtual ~ProtocolProxyQueryHandler() {}
   };
 #endif // !defined(MOZILLA_XPCOMRT_API)
@@ -481,22 +481,22 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
   // A list of streams returned from GetUserMedia
   // This is only accessed on the main thread (with one special exception)
-  nsTArray<RefPtr<LocalSourceStreamInfo> > mLocalSourceStreams;
+  nsTArray<nsRefPtr<LocalSourceStreamInfo> > mLocalSourceStreams;
 
   // A list of streams provided by the other side
   // This is only accessed on the main thread (with one special exception)
-  nsTArray<RefPtr<RemoteSourceStreamInfo> > mRemoteSourceStreams;
+  nsTArray<nsRefPtr<RemoteSourceStreamInfo> > mRemoteSourceStreams;
 
-  std::map<size_t, std::pair<bool, RefPtr<MediaSessionConduit>>> mConduits;
+  std::map<size_t, std::pair<bool, nsRefPtr<MediaSessionConduit>>> mConduits;
 
   // ICE objects
-  RefPtr<NrIceCtx> mIceCtx;
+  nsRefPtr<NrIceCtx> mIceCtx;
 
   // DNS
-  RefPtr<NrIceResolver> mDNSResolver;
+  nsRefPtr<NrIceResolver> mDNSResolver;
 
   // Transport flows: even is RTP, odd is RTCP
-  std::map<int, RefPtr<TransportFlow> > mTransportFlows;
+  std::map<int, nsRefPtr<TransportFlow> > mTransportFlows;
 
   // UUID Generator
   UniquePtr<PCUuidGenerator> mUuidGen;

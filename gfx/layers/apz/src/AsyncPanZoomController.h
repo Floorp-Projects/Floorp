@@ -15,7 +15,7 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/ReentrantMonitor.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Atomics.h"
 #include "InputData.h"
@@ -101,7 +101,7 @@ public:
 
   AsyncPanZoomController(uint64_t aLayersId,
                          APZCTreeManager* aTreeManager,
-                         const RefPtr<InputQueue>& aInputQueue,
+                         const nsRefPtr<InputQueue>& aInputQueue,
                          GeckoContentController* aController,
                          TaskThrottler* aPaintThrottler,
                          GestureBehavior aGestures = DEFAULT_GESTURES);
@@ -611,7 +611,7 @@ protected:
   /**
    * Gets a ref to the input queue that is shared across the entire tree manager.
    */
-  const RefPtr<InputQueue>& GetInputQueue() const;
+  const nsRefPtr<InputQueue>& GetInputQueue() const;
 
   /**
    * Timeout function for mozbrowserasyncscroll event. Because we throttle
@@ -648,14 +648,14 @@ protected:
   void OverscrollAnimationEnding();
 
   uint64_t mLayersId;
-  RefPtr<CompositorParent> mCompositorParent;
-  RefPtr<TaskThrottler> mPaintThrottler;
+  nsRefPtr<CompositorParent> mCompositorParent;
+  nsRefPtr<TaskThrottler> mPaintThrottler;
 
   /* Access to the following two fields is protected by the mRefPtrMonitor,
      since they are accessed on the UI thread but can be cleared on the
      compositor thread. */
-  RefPtr<GeckoContentController> mGeckoContentController;
-  RefPtr<GestureEventListener> mGestureEventListener;
+  nsRefPtr<GeckoContentController> mGeckoContentController;
+  nsRefPtr<GestureEventListener> mGestureEventListener;
   mutable Monitor mRefPtrMonitor;
 
   // This is a raw pointer to avoid introducing a reference cycle between
@@ -740,7 +740,7 @@ private:
   // ensures the last mozbrowserasyncscroll event is always been fired.
   CancelableTask* mAsyncScrollTimeoutTask;
 
-  RefPtr<AsyncPanZoomAnimation> mAnimation;
+  nsRefPtr<AsyncPanZoomAnimation> mAnimation;
 
   friend class Axis;
 
@@ -836,7 +836,7 @@ public:
 private:
   void CancelAnimationAndGestureState();
 
-  RefPtr<InputQueue> mInputQueue;
+  nsRefPtr<InputQueue> mInputQueue;
   TouchBlockState* CurrentTouchBlock();
   bool HasReadyTouchBlock();
 
@@ -865,7 +865,7 @@ public:
    *            fling.
    */
   bool AttemptFling(ParentLayerPoint& aVelocity,
-                    const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
+                    const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
                     bool aHandoff);
 
 private:
@@ -885,13 +885,13 @@ private:
   // later in the handoff chain, or if there are no takers, continuing the
   // fling and entering an overscrolled state.
   void HandleFlingOverscroll(const ParentLayerPoint& aVelocity,
-                             const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain);
+                             const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain);
 
   void HandleSmoothScrollOverscroll(const ParentLayerPoint& aVelocity);
 
   // Helper function used by TakeOverFling() and HandleFlingOverscroll().
   void AcceptFling(ParentLayerPoint& aVelocity,
-                   const RefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
+                   const nsRefPtr<const OverscrollHandoffChain>& aOverscrollHandoffChain,
                    bool aHandoff);
 
   // Start an overscroll animation with the given initial velocity.
@@ -937,7 +937,7 @@ private:
   // |mTreeManager| belongs in this section but it's declaration is a bit
   // further above due to initialization-order constraints.
 
-  RefPtr<AsyncPanZoomController> mParent;
+  nsRefPtr<AsyncPanZoomController> mParent;
 
 
   /* ===================================================================
@@ -993,16 +993,16 @@ public:
    *   - When passing the chain to a function that uses it without storing it,
    *     pass it by reference-to-const (as in |const OverscrollHandoffChain&|).
    *   - When storing the chain, store it by RefPtr-to-const (as in
-   *     |RefPtr<const OverscrollHandoffChain>|). This ensures the chain is
+   *     |nsRefPtr<const OverscrollHandoffChain>|). This ensures the chain is
    *     kept alive. Note that queueing a task that uses the chain as an
    *     argument constitutes storing, as the task may outlive its queuer.
    *   - When passing the chain to a function that will store it, pass it as
-   *     |const RefPtr<const OverscrollHandoffChain>&|. This allows the
-   *     function to copy it into the |RefPtr<const OverscrollHandoffChain>|
+   *     |const nsRefPtr<const OverscrollHandoffChain>&|. This allows the
+   *     function to copy it into the |nsRefPtr<const OverscrollHandoffChain>|
    *     that will store it, while avoiding an unnecessary copy (and thus
    *     AddRef() and Release()) when passing it.
    */
-  RefPtr<const OverscrollHandoffChain> BuildOverscrollHandoffChain();
+  nsRefPtr<const OverscrollHandoffChain> BuildOverscrollHandoffChain();
 
 private:
   /**
@@ -1071,7 +1071,7 @@ private:
    * shared FrameMeterics used in progressive tile painting. */
   const uint32_t mAPZCId;
 
-  RefPtr<ipc::SharedMemoryBasic> mSharedFrameMetricsBuffer;
+  nsRefPtr<ipc::SharedMemoryBasic> mSharedFrameMetricsBuffer;
   CrossProcessMutex* mSharedLock;
   /**
    * Called when ever mFrameMetrics is updated so that if it is being

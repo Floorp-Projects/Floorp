@@ -111,7 +111,7 @@ nsSVGNumber2::SetAnimValue(float aValue, nsSVGElement *aSVGElement)
 already_AddRefed<SVGAnimatedNumber>
 nsSVGNumber2::ToDOMAnimatedNumber(nsSVGElement* aSVGElement)
 {
-  RefPtr<DOMAnimatedNumber> domAnimatedNumber =
+  nsRefPtr<DOMAnimatedNumber> domAnimatedNumber =
     sSVGAnimatedNumberTearoffTable.GetTearoff(this);
   if (!domAnimatedNumber) {
     domAnimatedNumber = new DOMAnimatedNumber(this, aSVGElement);

@@ -26,7 +26,7 @@ public:
     if (major < 54 && !sFFmpegDecoderEnabled) {
       return nullptr;
     }
-    RefPtr<PlatformDecoderModule> pdm = new FFmpegDecoderModule();
+    nsRefPtr<PlatformDecoderModule> pdm = new FFmpegDecoderModule();
 
     return pdm.forget();
   }
@@ -50,7 +50,7 @@ public:
                      FlushableTaskQueue* aVideoTaskQueue,
                      MediaDataDecoderCallback* aCallback) override
   {
-    RefPtr<MediaDataDecoder> decoder =
+    nsRefPtr<MediaDataDecoder> decoder =
       new FFmpegH264Decoder<V>(aVideoTaskQueue, aCallback, aConfig,
                                aImageContainer);
     return decoder.forget();
@@ -61,7 +61,7 @@ public:
                      FlushableTaskQueue* aAudioTaskQueue,
                      MediaDataDecoderCallback* aCallback) override
   {
-    RefPtr<MediaDataDecoder> decoder =
+    nsRefPtr<MediaDataDecoder> decoder =
       new FFmpegAudioDecoder<V>(aAudioTaskQueue, aCallback, aConfig);
     return decoder.forget();
   }

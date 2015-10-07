@@ -352,10 +352,10 @@ nsPluginStreamListenerPeer::SetupPluginCacheFile(nsIChannel* channel)
   nsresult rv = NS_OK;
 
   bool useExistingCacheFile = false;
-  RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
+  nsRefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
 
   // Look for an existing cache file for the URI.
-  nsTArray< RefPtr<nsNPAPIPluginInstance> > *instances = pluginHost->InstanceArray();
+  nsTArray< nsRefPtr<nsNPAPIPluginInstance> > *instances = pluginHost->InstanceArray();
   for (uint32_t i = 0; i < instances->Length(); i++) {
     // most recent streams are at the end of list
     nsTArray<nsPluginStreamListenerPeer*> *streamListeners = instances->ElementAt(i)->FileCachedStreamListeners();
@@ -487,7 +487,7 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
     return rv;
 
   // Check ShouldProcess with content policy
-  RefPtr<nsPluginInstanceOwner> owner;
+  nsRefPtr<nsPluginInstanceOwner> owner;
   if (mPluginInstance) {
     owner = mPluginInstance->GetOwner();
   }
@@ -673,7 +673,7 @@ nsPluginStreamListenerPeer::RequestRead(NPByteRange* rangeList)
 
   nsresult rv = NS_OK;
 
-  RefPtr<nsPluginInstanceOwner> owner = mPluginInstance->GetOwner();
+  nsRefPtr<nsPluginInstanceOwner> owner = mPluginInstance->GetOwner();
   nsCOMPtr<nsIDOMElement> element;
   nsCOMPtr<nsIDocument> doc;
   if (owner) {
@@ -781,7 +781,7 @@ nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
   // mPluginInstance->Stop calls mPStreamListener->CleanUpStream(), so stream will be properly clean up
   mPluginInstance->Stop();
   mPluginInstance->Start();
-  RefPtr<nsPluginInstanceOwner> owner = mPluginInstance->GetOwner();
+  nsRefPtr<nsPluginInstanceOwner> owner = mPluginInstance->GetOwner();
   if (owner) {
     NPWindow* window = nullptr;
     owner->GetWindow(window);
@@ -1066,7 +1066,7 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<nsNPAPIPluginStreamListener> streamListener;
+    nsRefPtr<nsNPAPIPluginStreamListener> streamListener;
     rv = mPluginInstance->NewStreamListener(nullptr, nullptr,
                                             getter_AddRefs(streamListener));
     if (NS_FAILED(rv) || !streamListener) {
@@ -1236,7 +1236,7 @@ nsPluginStreamListenerPeer::GetInterfaceGlobal(const nsIID& aIID, void** result)
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<nsPluginInstanceOwner> owner = mPluginInstance->GetOwner();
+  nsRefPtr<nsPluginInstanceOwner> owner = mPluginInstance->GetOwner();
   if (owner) {
     nsCOMPtr<nsIDocument> doc;
     nsresult rv = owner->GetDocument(getter_AddRefs(doc));

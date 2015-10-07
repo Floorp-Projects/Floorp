@@ -105,7 +105,7 @@ NS_NewDOMScrollAreaEvent(EventTarget* aOwner,
                          nsPresContext* aPresContext,
                          InternalScrollAreaEvent* aEvent)
 {
-  RefPtr<ScrollAreaEvent> ev =
+  nsRefPtr<ScrollAreaEvent> ev =
     new ScrollAreaEvent(aOwner, aPresContext, aEvent);
   return ev.forget();
 }

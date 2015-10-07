@@ -124,7 +124,7 @@ nsWifiMonitor::Onready(uint32_t count, nsIWifiScanResult **results)
   nsCOMArray<nsWifiAccessPoint> accessPoints;
 
   for (uint32_t i = 0; i < count; i++) {
-    RefPtr<nsWifiAccessPoint> ap = new nsWifiAccessPoint();
+    nsRefPtr<nsWifiAccessPoint> ap = new nsWifiAccessPoint();
 
     nsString temp;
     results[i]->GetBssid(temp);

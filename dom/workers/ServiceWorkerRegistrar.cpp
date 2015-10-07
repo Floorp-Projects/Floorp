@@ -75,7 +75,7 @@ ServiceWorkerRegistrar::Get()
   MOZ_ASSERT(XRE_IsParentProcess());
 
   MOZ_ASSERT(gServiceWorkerRegistrar);
-  RefPtr<ServiceWorkerRegistrar> service = gServiceWorkerRegistrar.get();
+  nsRefPtr<ServiceWorkerRegistrar> service = gServiceWorkerRegistrar.get();
   return service.forget();
 }
 
@@ -407,12 +407,12 @@ public:
   NS_IMETHODIMP
   Run()
   {
-    RefPtr<ServiceWorkerRegistrar> service = ServiceWorkerRegistrar::Get();
+    nsRefPtr<ServiceWorkerRegistrar> service = ServiceWorkerRegistrar::Get();
     MOZ_ASSERT(service);
 
     service->SaveData();
 
-    RefPtr<nsRunnable> runnable =
+    nsRefPtr<nsRunnable> runnable =
       NS_NewRunnableMethod(service, &ServiceWorkerRegistrar::DataSaved);
     nsresult rv = mThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -436,7 +436,7 @@ ServiceWorkerRegistrar::ScheduleSaveData()
     do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
   MOZ_ASSERT(target, "Must have stream transport service");
 
-  RefPtr<nsRunnable> runnable =
+  nsRefPtr<nsRunnable> runnable =
     new ServiceWorkerRegistrarSaveDataRunnable();
   nsresult rv = target->Dispatch(runnable, NS_DISPATCH_NORMAL);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -486,7 +486,7 @@ ServiceWorkerRegistrar::MaybeScheduleShutdownCompleted()
     return;
   }
 
-  RefPtr<nsRunnable> runnable =
+  nsRefPtr<nsRunnable> runnable =
      NS_NewRunnableMethod(this, &ServiceWorkerRegistrar::ShutdownCompleted);
   nsresult rv = NS_DispatchToMainThread(runnable);
   if (NS_WARN_IF(NS_FAILED(rv))) {

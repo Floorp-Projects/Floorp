@@ -219,10 +219,10 @@ DOMStorage::BroadcastChangeNotification(const nsSubstring& aKey,
 
   // Note, this DOM event should never reach JS. It is cloned later in
   // nsGlobalWindow.
-  RefPtr<StorageEvent> event =
+  nsRefPtr<StorageEvent> event =
     StorageEvent::Constructor(nullptr, NS_LITERAL_STRING("storage"), dict);
 
-  RefPtr<StorageNotifierRunnable> r =
+  nsRefPtr<StorageNotifierRunnable> r =
     new StorageNotifierRunnable(event,
                                 GetType() == LocalStorage
                                   ? MOZ_UTF16("localStorage")

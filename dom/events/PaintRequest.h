@@ -98,7 +98,7 @@ public:
 private:
   ~PaintRequestList() {}
 
-  nsTArray< RefPtr<PaintRequest> > mArray;
+  nsTArray< nsRefPtr<PaintRequest> > mArray;
   nsCOMPtr<nsIDOMEvent> mParent;
 };
 

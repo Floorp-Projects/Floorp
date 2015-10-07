@@ -36,7 +36,7 @@ private:
   void InitTags(nsTArray<nsCString>& aTags) override;
   nsCString GetNodeId() override;
 
-  RefPtr<CDMProxy> mProxy;
+  nsRefPtr<CDMProxy> mProxy;
 };
 
 } // namespace mozilla

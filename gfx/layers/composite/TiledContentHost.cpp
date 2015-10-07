@@ -141,7 +141,7 @@ bool
 GetCopyOnWriteLock(const TileLock& ipcLock, TileHost& aTile, ISurfaceAllocator* aAllocator) {
   MOZ_ASSERT(aAllocator);
 
-  RefPtr<gfxSharedReadLock> sharedLock;
+  nsRefPtr<gfxSharedReadLock> sharedLock;
   if (ipcLock.type() == TileLock::TShmemSection) {
     sharedLock = gfxShmSharedReadLock::Open(aAllocator, ipcLock.get_ShmemSection());
   } else {
@@ -477,7 +477,7 @@ TiledContentHost::RenderTile(TileHost& aTile,
     return;
   }
 
-  RefPtr<TexturedEffect> effect =
+  nsRefPtr<TexturedEffect> effect =
     CreateTexturedEffect(aTile.mTextureSource,
                          aTile.mTextureSourceOnWhite,
                          aFilter,

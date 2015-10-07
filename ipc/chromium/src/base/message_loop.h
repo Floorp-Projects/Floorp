@@ -415,7 +415,7 @@ public:
   // once we're out of nested message loops.
   TaskQueue deferred_non_nestable_work_queue_;
 
-  RefPtr<base::MessagePump> pump_;
+  nsRefPtr<base::MessagePump> pump_;
 
   base::ObserverList<DestructionObserver> destruction_observers_;
 

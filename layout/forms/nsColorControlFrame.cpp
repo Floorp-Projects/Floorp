@@ -73,7 +73,7 @@ nsColorControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCSSPseudoElements::Type pseudoType = nsCSSPseudoElements::ePseudo_mozColorSwatch;
-  RefPtr<nsStyleContext> newStyleContext = PresContext()->StyleSet()->
+  nsRefPtr<nsStyleContext> newStyleContext = PresContext()->StyleSet()->
     ResolvePseudoElementStyle(mContent->AsElement(), pseudoType,
                               StyleContext(), mColorContent->AsElement());
   if (!aElements.AppendElement(ContentInfo(mColorContent, newStyleContext))) {

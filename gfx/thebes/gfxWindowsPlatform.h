@@ -28,7 +28,7 @@
 #include "nsTArray.h"
 #include "nsDataHashtable.h"
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 #include <windows.h>
 #include <objbase.h>
@@ -159,7 +159,7 @@ public:
     void VerifyD2DDevice(bool aAttemptForce);
 
 #ifdef CAIRO_HAS_D2D_SURFACE
-    HRESULT CreateDevice(RefPtr<IDXGIAdapter1> &adapter1, int featureLevelIndex);
+    HRESULT CreateDevice(nsRefPtr<IDXGIAdapter1> &adapter1, int featureLevelIndex);
 #endif
 
     /**
@@ -253,7 +253,7 @@ public:
     // Create a D3D11 device to be used for DXVA decoding.
     already_AddRefed<ID3D11Device> CreateD3D11DecoderDevice();
     bool CreateD3D11DecoderDeviceHelper(
-      IDXGIAdapter1* aAdapter, RefPtr<ID3D11Device>& aDevice,
+      IDXGIAdapter1* aAdapter, nsRefPtr<ID3D11Device>& aDevice,
       HRESULT& aResOut);
 
     mozilla::layers::ReadbackManagerD3D11* GetReadbackManager();
@@ -348,17 +348,17 @@ private:
     bool IsDeviceReset(HRESULT hr, DeviceResetReason* aReason);
 
 #ifdef CAIRO_HAS_DWRITE_FONT
-    RefPtr<IDWriteFactory> mDWriteFactory;
-    RefPtr<IDWriteRenderingParams> mRenderingParams[TEXT_RENDERING_COUNT];
+    nsRefPtr<IDWriteFactory> mDWriteFactory;
+    nsRefPtr<IDWriteRenderingParams> mRenderingParams[TEXT_RENDERING_COUNT];
     DWRITE_MEASURING_MODE mMeasuringMode;
 #endif
-    RefPtr<IDXGIAdapter1> mAdapter;
-    RefPtr<mozilla::layers::DeviceManagerD3D9> mDeviceManager;
-    RefPtr<ID3D10Device1> mD3D10Device;
-    RefPtr<ID3D11Device> mD3D11Device;
-    RefPtr<ID3D11Device> mD3D11ContentDevice;
-    RefPtr<ID3D11Device> mD3D11ImageBridgeDevice;
-    RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
+    nsRefPtr<IDXGIAdapter1> mAdapter;
+    nsRefPtr<mozilla::layers::DeviceManagerD3D9> mDeviceManager;
+    nsRefPtr<ID3D10Device1> mD3D10Device;
+    nsRefPtr<ID3D11Device> mD3D11Device;
+    nsRefPtr<ID3D11Device> mD3D11ContentDevice;
+    nsRefPtr<ID3D11Device> mD3D11ImageBridgeDevice;
+    nsRefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
     bool mIsWARP;
     bool mHasDeviceReset;
     bool mHasFakeDeviceReset;

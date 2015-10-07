@@ -82,7 +82,7 @@ private:
       LOADED = 3U
     };
 
-    RefPtr<nsOfflineCacheUpdate> mUpdate;
+    nsRefPtr<nsOfflineCacheUpdate> mUpdate;
     nsCOMPtr<nsIChannel>           mChannel;
     uint16_t                       mState;
 
@@ -291,11 +291,11 @@ private:
 
     nsCOMPtr<nsIObserverService> mObserverService;
 
-    RefPtr<nsOfflineManifestItem> mManifestItem;
+    nsRefPtr<nsOfflineManifestItem> mManifestItem;
 
     /* Items being updated */
     uint32_t mItemsInProgress;
-    nsTArray<RefPtr<nsOfflineCacheUpdateItem> > mItems;
+    nsTArray<nsRefPtr<nsOfflineCacheUpdateItem> > mItems;
 
     /* Clients watching this update for changes */
     nsCOMArray<nsIWeakReference> mWeakObservers;
@@ -312,7 +312,7 @@ private:
      * increaded. */
     uint32_t mPinnedEntryRetriesCount;
 
-    RefPtr<nsOfflineCacheUpdate> mImplicitUpdate;
+    nsRefPtr<nsOfflineCacheUpdate> mImplicitUpdate;
 
     bool                           mPinned;
 
@@ -372,7 +372,7 @@ private:
 
     nsresult ProcessNextUpdate();
 
-    nsTArray<RefPtr<nsOfflineCacheUpdate> > mUpdates;
+    nsTArray<nsRefPtr<nsOfflineCacheUpdate> > mUpdates;
     static nsTHashtable<nsCStringHashKey>* mAllowedDomains;
 
     bool mDisabled;

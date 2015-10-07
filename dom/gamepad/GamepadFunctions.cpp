@@ -33,7 +33,7 @@ NotifyGamepadChange(const T& aInfo)
   }
   // If we have a GamepadService in the main process, send directly to it.
   if (GamepadService::IsServiceRunning()) {
-    RefPtr<GamepadService> svc = GamepadService::GetService();
+    nsRefPtr<GamepadService> svc = GamepadService::GetService();
     svc->Update(e);
   }
 }

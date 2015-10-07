@@ -86,7 +86,7 @@ void
 nsScriptLoadRequestList::Clear()
 {
   while (!isEmpty()) {
-    RefPtr<nsScriptLoadRequest> first = StealFirst();
+    nsRefPtr<nsScriptLoadRequest> first = StealFirst();
     first->Cancel();
     // And just let it go out of scope and die.
   }
@@ -364,7 +364,7 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
 
   if (aRequest->mCORSMode != CORS_NONE) {
     bool withCredentials = (aRequest->mCORSMode == CORS_USE_CREDENTIALS);
-    RefPtr<nsCORSListenerProxy> corsListener =
+    nsRefPtr<nsCORSListenerProxy> corsListener =
       new nsCORSListenerProxy(listener, mDocument->NodePrincipal(),
                               withCredentials);
     rv = corsListener->Init(channel, DataURIHandling::Allow);
@@ -390,8 +390,8 @@ nsScriptLoader::PreloadURIComparator::Equals(const PreloadInfo &aPi,
 class nsScriptRequestProcessor : public nsRunnable
 {
 private:
-  RefPtr<nsScriptLoader> mLoader;
-  RefPtr<nsScriptLoadRequest> mRequest;
+  nsRefPtr<nsScriptLoader> mLoader;
+  nsRefPtr<nsScriptLoadRequest> mRequest;
 public:
   nsScriptRequestProcessor(nsScriptLoader* aLoader,
                            nsScriptLoadRequest* aRequest)
@@ -510,7 +510,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 
   // Step 14. in the HTML5 spec
   nsresult rv = NS_OK;
-  RefPtr<nsScriptLoadRequest> request;
+  nsRefPtr<nsScriptLoadRequest> request;
   if (aElement->GetScriptExternal()) {
     // external script
     nsCOMPtr<nsIURI> scriptURI = aElement->GetScriptURI();
@@ -739,8 +739,8 @@ namespace {
 
 class NotifyOffThreadScriptLoadCompletedRunnable : public nsRunnable
 {
-  RefPtr<nsScriptLoadRequest> mRequest;
-  RefPtr<nsScriptLoader> mLoader;
+  nsRefPtr<nsScriptLoadRequest> mRequest;
+  nsRefPtr<nsScriptLoader> mLoader;
   void *mToken;
 
 public:
@@ -812,8 +812,8 @@ NotifyOffThreadScriptLoadCompletedRunnable::Run()
 
   // We want these to be dropped on the main thread, once we return from this
   // function.
-  RefPtr<nsScriptLoadRequest> request = mRequest.forget();
-  RefPtr<nsScriptLoader> loader = mLoader.forget();
+  nsRefPtr<nsScriptLoadRequest> request = mRequest.forget();
+  nsRefPtr<nsScriptLoader> loader = mLoader.forget();
 
   request->mOffThreadToken = mToken;
   nsresult rv = loader->ProcessOffThreadRequest(request);
@@ -824,7 +824,7 @@ NotifyOffThreadScriptLoadCompletedRunnable::Run()
 static void
 OffThreadScriptLoaderCallback(void *aToken, void *aCallbackData)
 {
-  RefPtr<NotifyOffThreadScriptLoadCompletedRunnable> aRunnable =
+  nsRefPtr<NotifyOffThreadScriptLoadCompletedRunnable> aRunnable =
     dont_AddRef(static_cast<NotifyOffThreadScriptLoadCompletedRunnable*>(aCallbackData));
   aRunnable->SetToken(aToken);
   NS_DispatchToMainThread(aRunnable);
@@ -857,7 +857,7 @@ nsScriptLoader::AttemptAsyncScriptCompile(nsScriptLoadRequest* aRequest)
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<NotifyOffThreadScriptLoadCompletedRunnable> runnable =
+  nsRefPtr<NotifyOffThreadScriptLoadCompletedRunnable> runnable =
     new NotifyOffThreadScriptLoadCompletedRunnable(aRequest, this);
 
   if (!JS::CompileOffThread(cx, options,
@@ -1174,7 +1174,7 @@ nsScriptLoader::ProcessPendingRequestsAsync()
 void
 nsScriptLoader::ProcessPendingRequests()
 {
-  RefPtr<nsScriptLoadRequest> request;
+  nsRefPtr<nsScriptLoadRequest> request;
 
   if (mParserBlockingRequest &&
       mParserBlockingRequest->IsReadyToRun() &&
@@ -1219,7 +1219,7 @@ nsScriptLoader::ProcessPendingRequests()
   }
 
   while (!mPendingChildLoaders.IsEmpty() && ReadyToExecuteScripts()) {
-    RefPtr<nsScriptLoader> child = mPendingChildLoaders[0];
+    nsRefPtr<nsScriptLoader> child = mPendingChildLoaders[0];
     mPendingChildLoaders.RemoveElementAt(0);
     child->RemoveExecuteBlocker();
   }
@@ -1263,8 +1263,8 @@ nsScriptLoader::ReadyToExecuteScripts()
   }
 
   if (mDocument && !mDocument->IsMasterDocument()) {
-    RefPtr<ImportManager> im = mDocument->ImportManager();
-    RefPtr<ImportLoader> loader = im->Find(mDocument);
+    nsRefPtr<ImportManager> im = mDocument->ImportManager();
+    nsRefPtr<ImportLoader> loader = im->Find(mDocument);
     MOZ_ASSERT(loader, "How can we have an import document without a loader?");
 
     // The referring link that counts in the execution order calculation
@@ -1276,7 +1276,7 @@ nsScriptLoader::ReadyToExecuteScripts()
     // wait with script execution until all the predecessors are done.
     // Technically it means we have to wait for the last one to finish,
     // which is the neares one to us in the order.
-    RefPtr<ImportLoader> lastPred = im->GetNearestPredecessor(referrer);
+    nsRefPtr<ImportLoader> lastPred = im->GetNearestPredecessor(referrer);
     if (!lastPred) {
       // If there is no predecessor we can run.
       return true;
@@ -1453,23 +1453,23 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
 
     if (request->mIsDefer) {
       if (request->isInList()) {
-        RefPtr<nsScriptLoadRequest> req = mDeferRequests.Steal(request);
+        nsRefPtr<nsScriptLoadRequest> req = mDeferRequests.Steal(request);
         FireScriptAvailable(rv, req);
       }
     } else if (request->mIsAsync) {
       if (request->isInList()) {
-        RefPtr<nsScriptLoadRequest> req = mLoadingAsyncRequests.Steal(request);
+        nsRefPtr<nsScriptLoadRequest> req = mLoadingAsyncRequests.Steal(request);
         FireScriptAvailable(rv, req);
       }
     } else if (request->mIsNonAsyncScriptInserted) {
       if (request->isInList()) {
-        RefPtr<nsScriptLoadRequest> req =
+        nsRefPtr<nsScriptLoadRequest> req =
           mNonAsyncExternalScriptInsertedRequests.Steal(request);
         FireScriptAvailable(rv, req);
       }
     } else if (request->mIsXSLT) {
       if (request->isInList()) {
-        RefPtr<nsScriptLoadRequest> req = mXSLTRequests.Steal(request);
+        nsRefPtr<nsScriptLoadRequest> req = mXSLTRequests.Steal(request);
         FireScriptAvailable(rv, req);
       }
     } else if (mParserBlockingRequest == request) {
@@ -1624,7 +1624,7 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
   if (aRequest->mIsAsync) {
     MOZ_ASSERT(aRequest->isInList());
     if (aRequest->isInList()) {
-      RefPtr<nsScriptLoadRequest> req = mLoadingAsyncRequests.Steal(aRequest);
+      nsRefPtr<nsScriptLoadRequest> req = mLoadingAsyncRequests.Steal(aRequest);
       mLoadedAsyncRequests.AppendElement(req);
     }
   }
@@ -1679,7 +1679,7 @@ nsScriptLoader::PreloadURI(nsIURI *aURI, const nsAString &aCharset,
     SRICheck::IntegrityMetadata(aIntegrity, mDocument, &sriMetadata);
   }
 
-  RefPtr<nsScriptLoadRequest> request =
+  nsRefPtr<nsScriptLoadRequest> request =
     new nsScriptLoadRequest(nullptr, 0,
                             Element::StringToCORSMode(aCrossOrigin),
                             sriMetadata);

@@ -13,7 +13,7 @@
 
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 class nsSimpleArrayEnumerator final : public nsISimpleEnumerator
 {
@@ -92,7 +92,7 @@ nsSimpleArrayEnumerator::GetNext(nsISupports** aResult)
 nsresult
 NS_NewArrayEnumerator(nsISimpleEnumerator** aResult, nsIArray* aArray)
 {
-  RefPtr<nsSimpleArrayEnumerator> enumer = new nsSimpleArrayEnumerator(aArray);
+  nsRefPtr<nsSimpleArrayEnumerator> enumer = new nsSimpleArrayEnumerator(aArray);
   enumer.forget(aResult);
   return NS_OK;
 }
@@ -207,7 +207,7 @@ nsresult
 NS_NewArrayEnumerator(nsISimpleEnumerator** aResult,
                       const nsCOMArray_base& aArray)
 {
-  RefPtr<nsCOMArrayEnumerator> enumerator = new (aArray) nsCOMArrayEnumerator();
+  nsRefPtr<nsCOMArrayEnumerator> enumerator = new (aArray) nsCOMArrayEnumerator();
   enumerator.forget(aResult);
   return NS_OK;
 }

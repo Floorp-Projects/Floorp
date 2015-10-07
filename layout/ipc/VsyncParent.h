@@ -9,7 +9,7 @@
 #include "mozilla/layout/PVsyncParent.h"
 #include "mozilla/VsyncDispatcher.h"
 #include "nsCOMPtr.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 class nsIThread;
 
@@ -46,7 +46,7 @@ private:
   bool mObservingVsync;
   bool mDestroyed;
   nsCOMPtr<nsIThread> mBackgroundThread;
-  RefPtr<RefreshTimerVsyncDispatcher> mVsyncDispatcher;
+  nsRefPtr<RefreshTimerVsyncDispatcher> mVsyncDispatcher;
 };
 
 } // namespace layout

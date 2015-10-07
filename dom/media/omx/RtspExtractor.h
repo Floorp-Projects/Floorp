@@ -45,7 +45,7 @@ private:
   RtspMediaResource* mRtspResource;
   // Through the mController in mRtspResource, we can get the essential
   // information for the extractor.
-  RefPtr<nsIStreamingProtocolController> mController;
+  nsRefPtr<nsIStreamingProtocolController> mController;
 };
 
 } // namespace mozilla

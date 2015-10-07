@@ -104,7 +104,7 @@ IDBRequest::Create(IDBDatabase* aDatabase,
   MOZ_ASSERT(aDatabase);
   aDatabase->AssertIsOnOwningThread();
 
-  RefPtr<IDBRequest> request = new IDBRequest(aDatabase);
+  nsRefPtr<IDBRequest> request = new IDBRequest(aDatabase);
   CaptureCaller(request->mFilename, &request->mLineNo, &request->mColumn);
 
   request->mTransaction = aTransaction;
@@ -122,7 +122,7 @@ IDBRequest::Create(IDBObjectStore* aSourceAsObjectStore,
   MOZ_ASSERT(aSourceAsObjectStore);
   aSourceAsObjectStore->AssertIsOnOwningThread();
 
-  RefPtr<IDBRequest> request = Create(aDatabase, aTransaction);
+  nsRefPtr<IDBRequest> request = Create(aDatabase, aTransaction);
 
   request->mSourceAsObjectStore = aSourceAsObjectStore;
 
@@ -138,7 +138,7 @@ IDBRequest::Create(IDBIndex* aSourceAsIndex,
   MOZ_ASSERT(aSourceAsIndex);
   aSourceAsIndex->AssertIsOnOwningThread();
 
-  RefPtr<IDBRequest> request = Create(aDatabase, aTransaction);
+  nsRefPtr<IDBRequest> request = Create(aDatabase, aTransaction);
 
   request->mSourceAsIndex = aSourceAsIndex;
 
@@ -526,7 +526,7 @@ IDBOpenDBRequest::CreateForWindow(IDBFactory* aFactory,
 
   bool fileHandleDisabled = !IndexedDatabaseManager::IsFileHandleEnabled();
 
-  RefPtr<IDBOpenDBRequest> request =
+  nsRefPtr<IDBOpenDBRequest> request =
     new IDBOpenDBRequest(aFactory, aOwner, fileHandleDisabled);
   CaptureCaller(request->mFilename, &request->mLineNo, &request->mColumn);
 
@@ -546,7 +546,7 @@ IDBOpenDBRequest::CreateForJS(IDBFactory* aFactory,
 
   bool fileHandleDisabled = !IndexedDatabaseManager::IsFileHandleEnabled();
 
-  RefPtr<IDBOpenDBRequest> request =
+  nsRefPtr<IDBOpenDBRequest> request =
     new IDBOpenDBRequest(aFactory, nullptr, fileHandleDisabled);
   CaptureCaller(request->mFilename, &request->mLineNo, &request->mColumn);
 

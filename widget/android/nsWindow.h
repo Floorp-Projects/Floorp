@@ -211,7 +211,7 @@ protected:
         }
     };
 
-    RefPtr<mozilla::TextComposition> GetIMEComposition();
+    nsRefPtr<mozilla::TextComposition> GetIMEComposition();
     void RemoveIMEComposition();
     void SendIMEDummyKeyEvents();
     void AddIMETextChange(const IMEChange& aChange);
@@ -238,7 +238,7 @@ protected:
 
     bool mIMEMaskSelectionUpdate;
     int32_t mIMEMaskEventsCount; // Mask events when > 0
-    RefPtr<mozilla::TextRangeArray> mIMERanges;
+    nsRefPtr<mozilla::TextRangeArray> mIMERanges;
     bool mIMEUpdatingContext;
     nsAutoTArray<mozilla::AndroidGeckoEvent, 8> mIMEKeyEvents;
     nsAutoTArray<IMEChange, 4> mIMETextChanges;

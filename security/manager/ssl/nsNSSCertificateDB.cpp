@@ -565,7 +565,7 @@ nsNSSCertificateDB::ImportEmailCertificate(uint8_t * data, uint32_t length,
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
+  nsRefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
 
   certdb = CERT_GetDefaultCertDB();
@@ -770,7 +770,7 @@ nsresult
 nsNSSCertificateDB::ImportValidCACertsInList(CERTCertList *certList, nsIInterfaceRequestor *ctx,
                                              const nsNSSShutDownPreventionLock &proofOfLock)
 {
-  RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
+  nsRefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   if (!certVerifier)
     return NS_ERROR_UNEXPECTED;
 
@@ -1239,7 +1239,7 @@ nsNSSCertificateDB::getCertNames(CERTCertList *certList,
        !CERT_LIST_END(node, certList);
        node = CERT_LIST_NEXT(node)) {
     if (getCertType(node->cert) == type) {
-      RefPtr<nsNSSCertificate> pipCert(new nsNSSCertificate(node->cert));
+      nsRefPtr<nsNSSCertificate> pipCert(new nsNSSCertificate(node->cert));
       char *dbkey = nullptr;
       char *namestr = nullptr;
       nsAutoString certstr;
@@ -1350,7 +1350,7 @@ nsNSSCertificateDB::FindCertByEmailAddress(nsISupports *aToken, const char *aEma
     return NS_ERROR_NOT_AVAILABLE;
   }
   
-  RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
+  nsRefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
 
   ScopedCERTCertList certlist(
@@ -1386,7 +1386,7 @@ nsNSSCertificateDB::FindCertByEmailAddress(nsISupports *aToken, const char *aEma
   }
 
   // node now contains the first valid certificate with correct usage 
-  RefPtr<nsNSSCertificate> nssCert = nsNSSCertificate::Create(node->cert);
+  nsRefPtr<nsNSSCertificate> nssCert = nsNSSCertificate::Create(node->cert);
   if (!nssCert)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1728,7 +1728,7 @@ VerifyCertAtTime(nsIX509Cert* aCert,
     return NS_ERROR_INVALID_ARG;
   }
 
-  RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
+  nsRefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_FAILURE);
 
   ScopedCERTCertList resultChain;
@@ -1824,7 +1824,7 @@ nsNSSCertificateDB::ClearOCSPCache()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
+  nsRefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_FAILURE);
   certVerifier->ClearOCSPCache();
   return NS_OK;

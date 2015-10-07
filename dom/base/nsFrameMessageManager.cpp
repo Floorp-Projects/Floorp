@@ -282,7 +282,7 @@ BuildClonedMessageData(typename BlobTraits<Flavor>::ConcreteContentManagerType* 
   SerializedStructuredCloneBuffer& buffer = aClonedData.data();
   buffer.data = aData.Data();
   buffer.dataLength = aData.DataLength();
-  const nsTArray<RefPtr<BlobImpl>>& blobImpls = aData.BlobImpls();
+  const nsTArray<nsRefPtr<BlobImpl>>& blobImpls = aData.BlobImpls();
 
   if (!blobImpls.IsEmpty()) {
     typedef typename BlobTraits<Flavor>::ProtocolType ProtocolType;
@@ -336,7 +336,7 @@ UnpackClonedMessageData(const ClonedMessageData& aClonedData,
         static_cast<typename BlobTraits<Flavor>::BlobType*>(blobs[i]);
       MOZ_ASSERT(blob);
 
-      RefPtr<BlobImpl> blobImpl = blob->GetBlobImpl();
+      nsRefPtr<BlobImpl> blobImpl = blob->GetBlobImpl();
       MOZ_ASSERT(blobImpl);
 
       aData.BlobImpls().AppendElement(blobImpl);
@@ -532,7 +532,7 @@ nsFrameMessageManager::LoadScript(const nsAString& aURL,
   }
 
   for (int32_t i = 0; i < mChildManagers.Count(); ++i) {
-    RefPtr<nsFrameMessageManager> mm =
+    nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(mChildManagers[i]);
     if (mm) {
       // Use false here, so that child managers don't cache the script, which
@@ -1051,7 +1051,7 @@ public:
   }
 
   bool mWasHandlingMessage;
-  RefPtr<nsFrameMessageManager> mMM;
+  nsRefPtr<nsFrameMessageManager> mMM;
 };
 
 
@@ -1281,7 +1281,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
       }
     }
   }
-  RefPtr<nsFrameMessageManager> kungfuDeathGrip = mParentManager;
+  nsRefPtr<nsFrameMessageManager> kungfuDeathGrip = mParentManager;
   return mParentManager ? mParentManager->ReceiveMessage(aTarget, aTargetFrameLoader,
                                                          aTargetClosed, aMessage,
                                                          aIsSync, aCloneData,
@@ -1294,8 +1294,8 @@ nsFrameMessageManager::AddChildManager(nsFrameMessageManager* aManager)
 {
   mChildManagers.AppendObject(aManager);
 
-  RefPtr<nsFrameMessageManager> kungfuDeathGrip = this;
-  RefPtr<nsFrameMessageManager> kungfuDeathGrip2 = aManager;
+  nsRefPtr<nsFrameMessageManager> kungfuDeathGrip = this;
+  nsRefPtr<nsFrameMessageManager> kungfuDeathGrip2 = aManager;
 
   LoadPendingScripts(this, aManager);
 }
@@ -1322,7 +1322,7 @@ nsFrameMessageManager::LoadPendingScripts(nsFrameMessageManager* aManager,
 void
 nsFrameMessageManager::LoadPendingScripts()
 {
-  RefPtr<nsFrameMessageManager> kungfuDeathGrip = this;
+  nsRefPtr<nsFrameMessageManager> kungfuDeathGrip = this;
   LoadPendingScripts(this, this);
 }
 
@@ -1539,7 +1539,7 @@ MessageManagerReporter::CountReferents(nsFrameMessageManager* aMessageManager,
   // Add referent count in child managers because the listeners
   // participate in messages dispatched from parent message manager.
   for (uint32_t i = 0; i < aMessageManager->mChildManagers.Length(); ++i) {
-    RefPtr<nsFrameMessageManager> mm =
+    nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(aMessageManager->mChildManagers[i]);
     CountReferents(mm, aReferentCount);
   }
@@ -1603,7 +1603,7 @@ MessageManagerReporter::CollectReports(nsIMemoryReporterCallback* aCb,
     nsCOMPtr<nsIMessageBroadcaster> globalmm =
       do_GetService("@mozilla.org/globalmessagemanager;1");
     if (globalmm) {
-      RefPtr<nsFrameMessageManager> mm =
+      nsRefPtr<nsFrameMessageManager> mm =
         static_cast<nsFrameMessageManager*>(globalmm.get());
       MessageManagerReferentCount count;
       CountReferents(mm, &count);
@@ -1637,7 +1637,7 @@ NS_NewGlobalMessageManager(nsIMessageBroadcaster** aResult)
 {
   NS_ENSURE_TRUE(XRE_IsParentProcess(),
                  NS_ERROR_NOT_AVAILABLE);
-  RefPtr<nsFrameMessageManager> mm = new nsFrameMessageManager(nullptr,
+  nsRefPtr<nsFrameMessageManager> mm = new nsFrameMessageManager(nullptr,
                                                                  nullptr,
                                                                  MM_CHROME | MM_GLOBAL | MM_BROADCASTER);
   RegisterStrongMemoryReporter(new MessageManagerReporter());
@@ -1657,7 +1657,7 @@ nsMessageManagerScriptExecutor::DidCreateGlobal()
     sCachedScripts =
       new nsDataHashtable<nsStringHashKey, nsMessageManagerScriptHolder*>;
 
-    RefPtr<nsScriptCacheCleaner> scriptCacheCleaner =
+    nsRefPtr<nsScriptCacheCleaner> scriptCacheCleaner =
       new nsScriptCacheCleaner();
     scriptCacheCleaner.forget(&sScriptCacheCleaner);
   }
@@ -1684,7 +1684,7 @@ nsMessageManagerScriptExecutor::Shutdown()
     delete sCachedScripts;
     sCachedScripts = nullptr;
 
-    RefPtr<nsScriptCacheCleaner> scriptCacheCleaner;
+    nsRefPtr<nsScriptCacheCleaner> scriptCacheCleaner;
     scriptCacheCleaner.swap(sScriptCacheCleaner);
   }
 }
@@ -2089,7 +2089,7 @@ public:
 
     if (nsFrameMessageManager::sSameProcessParentManager) {
       SameProcessCpowHolder cpows(js::GetRuntime(aCx), aCpows);
-      RefPtr<nsFrameMessageManager> ppm = nsFrameMessageManager::sSameProcessParentManager;
+      nsRefPtr<nsFrameMessageManager> ppm = nsFrameMessageManager::sSameProcessParentManager;
       ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()), nullptr, aMessage,
                           true, &aData, &cpows, aPrincipal, aRetVal);
     }
@@ -2103,7 +2103,7 @@ public:
                                   nsIPrincipal* aPrincipal) override
   {
     SameProcessMessageQueue* queue = SameProcessMessageQueue::Get();
-    RefPtr<nsAsyncMessageToSameProcessParent> ev =
+    nsRefPtr<nsAsyncMessageToSameProcessParent> ev =
       new nsAsyncMessageToSameProcessParent(aCx, aMessage, aData, aCpows, aPrincipal);
     queue->Push(ev);
     return true;
@@ -2118,7 +2118,7 @@ NS_NewParentProcessMessageManager(nsIMessageBroadcaster** aResult)
 {
   NS_ASSERTION(!nsFrameMessageManager::sParentProcessManager,
                "Re-creating sParentProcessManager");
-  RefPtr<nsFrameMessageManager> mm = new nsFrameMessageManager(nullptr,
+  nsRefPtr<nsFrameMessageManager> mm = new nsFrameMessageManager(nullptr,
                                                                  nullptr,
                                                                  MM_CHROME | MM_PROCESSMANAGER | MM_BROADCASTER);
   nsFrameMessageManager::sParentProcessManager = mm;
@@ -2171,7 +2171,7 @@ NS_NewChildProcessMessageManager(nsISyncMessageSender** aResult)
                                                         nullptr,
                                                         MM_PROCESSMANAGER | MM_OWNSCALLBACK);
   nsFrameMessageManager::SetChildProcessManager(mm);
-  RefPtr<ProcessGlobal> global = new ProcessGlobal(mm);
+  nsRefPtr<ProcessGlobal> global = new ProcessGlobal(mm);
   NS_ENSURE_TRUE(global->Init(), NS_ERROR_UNEXPECTED);
   global.forget(aResult);
   return NS_OK;
@@ -2229,7 +2229,7 @@ nsSameProcessAsyncMessageBase::ReceiveMessage(nsISupports* aTarget,
   if (aManager) {
     SameProcessCpowHolder cpows(mRuntime, mCpows);
 
-    RefPtr<nsFrameMessageManager> mm = aManager;
+    nsRefPtr<nsFrameMessageManager> mm = aManager;
     mm->ReceiveMessage(aTarget, aTargetFrameLoader, mMessage, false, &mData,
                        &cpows, mPrincipal, nullptr);
   }

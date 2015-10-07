@@ -124,8 +124,8 @@ void
 ContentClientBasic::CreateBuffer(ContentType aType,
                                  const IntRect& aRect,
                                  uint32_t aFlags,
-                                 RefPtr<gfx::DrawTarget>* aBlackDT,
-                                 RefPtr<gfx::DrawTarget>* aWhiteDT)
+                                 nsRefPtr<gfx::DrawTarget>* aBlackDT,
+                                 nsRefPtr<gfx::DrawTarget>* aWhiteDT)
 {
   MOZ_ASSERT(!(aFlags & BUFFER_COMPONENT_ALPHA));
 
@@ -184,7 +184,7 @@ public:
         continue;
       }
 
-      RefPtr<gfxContext> ctx =
+      nsRefPtr<gfxContext> ctx =
         sink->BeginUpdate(update.mUpdateRect + offset, update.mSequenceCounter);
 
       if (!ctx) {
@@ -203,7 +203,7 @@ public:
 private:
   nsTArray<ReadbackProcessor::Update> mReadbackUpdates;
   // This array is used to keep the layers alive until the callback.
-  vector<RefPtr<Layer>> mLayerRefs;
+  vector<nsRefPtr<Layer>> mLayerRefs;
 
   IntRect mBufferRect;
   nsIntPoint mBufferRotation;
@@ -242,7 +242,7 @@ ContentClientRemoteBuffer::EndPaint(nsTArray<ReadbackProcessor::Update>* aReadba
 
   if (mTextureClient && mTextureClient->IsLocked()) {
     if (aReadbackUpdates->Length() > 0) {
-      RefPtr<TextureReadbackSink> readbackSink = new RemoteBufferReadbackProcessor(aReadbackUpdates, mBufferRect, mBufferRotation);
+      nsRefPtr<TextureReadbackSink> readbackSink = new RemoteBufferReadbackProcessor(aReadbackUpdates, mBufferRect, mBufferRotation);
 
       mTextureClient->SetReadbackSink(readbackSink);
     }
@@ -317,8 +317,8 @@ void
 ContentClientRemoteBuffer::CreateBuffer(ContentType aType,
                                         const IntRect& aRect,
                                         uint32_t aFlags,
-                                        RefPtr<gfx::DrawTarget>* aBlackDT,
-                                        RefPtr<gfx::DrawTarget>* aWhiteDT)
+                                        nsRefPtr<gfx::DrawTarget>* aBlackDT,
+                                        nsRefPtr<gfx::DrawTarget>* aWhiteDT)
 {
   BuildTextureClients(gfxPlatform::GetPlatform()->Optimal2DFormatForContent(aType), aRect, aFlags);
   if (!mTextureClient) {
@@ -447,8 +447,8 @@ ContentClientDoubleBuffered::Updated(const nsIntRegion& aRegionToDraw,
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
   if (mFrontClient) {
     // remove old buffer from CompositableHost
-    RefPtr<AsyncTransactionWaiter> waiter = new AsyncTransactionWaiter();
-    RefPtr<AsyncTransactionTracker> tracker =
+    nsRefPtr<AsyncTransactionWaiter> waiter = new AsyncTransactionWaiter();
+    nsRefPtr<AsyncTransactionTracker> tracker =
         new RemoveTextureFromCompositableTracker(waiter);
     // Hold TextureClient until transaction complete.
     tracker->SetTextureClient(mFrontClient);
@@ -459,8 +459,8 @@ ContentClientDoubleBuffered::Updated(const nsIntRegion& aRegionToDraw,
 
   if (mFrontClientOnWhite) {
     // remove old buffer from CompositableHost
-    RefPtr<AsyncTransactionWaiter> waiter = new AsyncTransactionWaiter();
-    RefPtr<AsyncTransactionTracker> tracker =
+    nsRefPtr<AsyncTransactionWaiter> waiter = new AsyncTransactionWaiter();
+    nsRefPtr<AsyncTransactionTracker> tracker =
         new RemoveTextureFromCompositableTracker(waiter);
     // Hold TextureClient until transaction complete.
     tracker->SetTextureClient(mFrontClientOnWhite);
@@ -476,7 +476,7 @@ ContentClientDoubleBuffered::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
 {
   mFrontUpdatedRegion = aFrontUpdatedRegion;
 
-  RefPtr<TextureClient> oldBack = mTextureClient;
+  nsRefPtr<TextureClient> oldBack = mTextureClient;
   mTextureClient = mFrontClient;
   mFrontClient = oldBack;
 
@@ -582,8 +582,8 @@ ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
     // Restrict the DrawTargets and frontBuffer to a scope to make
     // sure there is no more external references to the DrawTargets
     // when we Unlock the TextureClients.
-    RefPtr<SourceSurface> surf = mFrontClient->BorrowDrawTarget()->Snapshot();
-    RefPtr<SourceSurface> surfOnWhite = mFrontClientOnWhite
+    nsRefPtr<SourceSurface> surf = mFrontClient->BorrowDrawTarget()->Snapshot();
+    nsRefPtr<SourceSurface> surfOnWhite = mFrontClientOnWhite
       ? mFrontClientOnWhite->BorrowDrawTarget()->Snapshot()
       : nullptr;
     SourceRotatedBuffer frontBuffer(surf,

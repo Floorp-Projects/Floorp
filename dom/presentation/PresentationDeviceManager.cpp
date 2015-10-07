@@ -234,7 +234,7 @@ PresentationDeviceManager::OnSessionRequest(nsIPresentationDevice* aDevice,
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   NS_ENSURE_TRUE(obs, NS_ERROR_FAILURE);
 
-  RefPtr<PresentationSessionRequest> request =
+  nsRefPtr<PresentationSessionRequest> request =
     new PresentationSessionRequest(aDevice, aUrl, aPresentationId, aControlChannel);
   obs->NotifyObservers(request,
                        PRESENTATION_SESSION_REQUEST_TOPIC,

@@ -1228,7 +1228,7 @@ nsPrintOptions::SavePrintSettingsToPrefs(nsIPrintSettings *aPS,
     // If we're in the content process, we can't directly write to the
     // Preferences service - we have to proxy the save up to the
     // parent process.
-    RefPtr<nsPrintingProxy> proxy = nsPrintingProxy::GetInstance();
+    nsRefPtr<nsPrintingProxy> proxy = nsPrintingProxy::GetInstance();
     return proxy->SavePrintSettings(aPS, aUsePrinterNamePrefix, aFlags);
   }
 

@@ -107,7 +107,7 @@ NS_IMETHODIMP EditAggregateTxn::AppendChild(EditTxn *aTxn)
     return NS_ERROR_NULL_POINTER;
   }
 
-  RefPtr<EditTxn> *slot = mChildren.AppendElement();
+  nsRefPtr<EditTxn> *slot = mChildren.AppendElement();
   if (!slot) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

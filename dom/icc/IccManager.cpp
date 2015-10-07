@@ -45,7 +45,7 @@ IccManager::IccManager(nsPIDOMWindow* aWindow)
     mozilla::Preferences::GetUint("ril.numRadioInterfaces", 1);
 
   for (uint32_t i = 0; i < numberOfServices; i++) {
-    RefPtr<IccListener> iccListener = new IccListener(this, i);
+    nsRefPtr<IccListener> iccListener = new IccListener(this, i);
     mIccListeners.AppendElement(iccListener);
   }
 }
@@ -81,11 +81,11 @@ IccManager::NotifyIccAdd(const nsAString& aIccId)
   init.mCancelable = false;
   init.mIccId = aIccId;
 
-  RefPtr<IccChangeEvent> event =
+  nsRefPtr<IccChangeEvent> event =
     IccChangeEvent::Constructor(this, NS_LITERAL_STRING("iccdetected"), init);
   event->SetTrusted(true);
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this, event);
 
   return asyncDispatcher->PostDOMEvent();
@@ -101,11 +101,11 @@ IccManager::NotifyIccRemove(const nsAString& aIccId)
   init.mCancelable = false;
   init.mIccId = aIccId;
 
-  RefPtr<IccChangeEvent> event =
+  nsRefPtr<IccChangeEvent> event =
     IccChangeEvent::Constructor(this, NS_LITERAL_STRING("iccundetected"), init);
   event->SetTrusted(true);
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this, event);
 
   return asyncDispatcher->PostDOMEvent();
@@ -116,7 +116,7 @@ IccManager::NotifyIccRemove(const nsAString& aIccId)
 void
 IccManager::GetIccIds(nsTArray<nsString>& aIccIds)
 {
-  nsTArray<RefPtr<IccListener>>::size_type i;
+  nsTArray<nsRefPtr<IccListener>>::size_type i;
   for (i = 0; i < mIccListeners.Length(); ++i) {
     Icc* icc = mIccListeners[i]->GetIcc();
     if (icc) {
@@ -128,7 +128,7 @@ IccManager::GetIccIds(nsTArray<nsString>& aIccIds)
 Icc*
 IccManager::GetIccById(const nsAString& aIccId) const
 {
-  nsTArray<RefPtr<IccListener>>::size_type i;
+  nsTArray<nsRefPtr<IccListener>>::size_type i;
   for (i = 0; i < mIccListeners.Length(); ++i) {
     Icc* icc = mIccListeners[i]->GetIcc();
     if (icc && aIccId == icc->GetIccId()) {

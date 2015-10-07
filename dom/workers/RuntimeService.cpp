@@ -673,7 +673,7 @@ ContentSecurityPolicyAllows(JSContext* aCx)
       JS_ReportPendingException(aCx);
     }
 
-    RefPtr<LogViolationDetailsRunnable> runnable =
+    nsRefPtr<LogViolationDetailsRunnable> runnable =
         new LogViolationDetailsRunnable(worker, fileName, lineNum);
 
     if (!runnable->Dispatch(aCx)) {
@@ -1082,12 +1082,12 @@ private:
 class WorkerThreadPrimaryRunnable final : public nsRunnable
 {
   WorkerPrivate* mWorkerPrivate;
-  RefPtr<WorkerThread> mThread;
+  nsRefPtr<WorkerThread> mThread;
   JSRuntime* mParentRuntime;
 
   class FinishedRunnable final : public nsRunnable
   {
-    RefPtr<WorkerThread> mThread;
+    nsRefPtr<WorkerThread> mThread;
 
   public:
     explicit FinishedRunnable(already_AddRefed<WorkerThread> aThread)
@@ -1129,7 +1129,7 @@ private:
 
 class WorkerTaskRunnable final : public WorkerRunnable
 {
-  RefPtr<WorkerTask> mTask;
+  nsRefPtr<WorkerTask> mTask;
 
 public:
   WorkerTaskRunnable(WorkerPrivate* aWorkerPrivate, WorkerTask* aTask)
@@ -1305,7 +1305,7 @@ WorkerCrossThreadDispatcher::PostTask(WorkerTask* aTask)
     return false;
   }
 
-  RefPtr<WorkerTaskRunnable> runnable =
+  nsRefPtr<WorkerTaskRunnable> runnable =
     new WorkerTaskRunnable(mWorkerPrivate, aTask);
   return runnable->Dispatch(nullptr);
 }
@@ -1362,7 +1362,7 @@ END_WORKERS_NAMESPACE
 
 struct RuntimeService::IdleThreadInfo
 {
-  RefPtr<WorkerThread> mThread;
+  nsRefPtr<WorkerThread> mThread;
   mozilla::TimeStamp mExpirationTime;
 };
 
@@ -1708,7 +1708,7 @@ RuntimeService::ScheduleWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     return true;
   }
 
-  RefPtr<WorkerThread> thread;
+  nsRefPtr<WorkerThread> thread;
   {
     MutexAutoLock lock(mMutex);
     if (!mIdleThreadArray.IsEmpty()) {
@@ -1764,7 +1764,7 @@ RuntimeService::ShutdownIdleThreads(nsITimer* aTimer, void* /* aClosure */)
 
   TimeStamp nextExpiration;
 
-  nsAutoTArray<RefPtr<WorkerThread>, 20> expiredThreads;
+  nsAutoTArray<nsRefPtr<WorkerThread>, 20> expiredThreads;
   {
     MutexAutoLock lock(runtime->mMutex);
 
@@ -1776,7 +1776,7 @@ RuntimeService::ShutdownIdleThreads(nsITimer* aTimer, void* /* aClosure */)
         break;
       }
 
-      RefPtr<WorkerThread>* thread = expiredThreads.AppendElement();
+      nsRefPtr<WorkerThread>* thread = expiredThreads.AppendElement();
       thread->swap(info.mThread);
     }
 
@@ -1814,7 +1814,7 @@ RuntimeService::Init()
   // Make sure PBackground actors are connected as soon as possible for the main
   // thread in case workers clone remote blobs here.
   if (!BackgroundChild::GetForCurrentThread()) {
-    RefPtr<BackgroundChildCallback> callback = new BackgroundChildCallback();
+    nsRefPtr<BackgroundChildCallback> callback = new BackgroundChildCallback();
     if (!BackgroundChild::GetOrCreateForCurrentThread(callback)) {
       MOZ_CRASH("Unable to connect PBackground actor for the main thread!");
     }
@@ -2081,7 +2081,7 @@ RuntimeService::Cleanup()
 
       // Shut down any idle threads.
       if (!mIdleThreadArray.IsEmpty()) {
-        nsAutoTArray<RefPtr<WorkerThread>, 20> idleThreads;
+        nsAutoTArray<nsRefPtr<WorkerThread>, 20> idleThreads;
 
         uint32_t idleThreadCount = mIdleThreadArray.Length();
         idleThreads.SetLength(idleThreadCount);
@@ -2439,7 +2439,7 @@ RuntimeService::CreateSharedWorkerFromLoadInfo(JSContext* aCx,
   MOZ_ASSERT(aLoadInfo);
   MOZ_ASSERT(aLoadInfo->mResolvedScriptURI);
 
-  RefPtr<WorkerPrivate> workerPrivate;
+  nsRefPtr<WorkerPrivate> workerPrivate;
   {
     MutexAutoLock lock(mMutex);
 
@@ -2484,12 +2484,12 @@ RuntimeService::CreateSharedWorkerFromLoadInfo(JSContext* aCx,
 
   // We don't actually care about this MessageChannel, but we use it to 'steal'
   // its 2 connected ports.
-  RefPtr<MessageChannel> channel = MessageChannel::Constructor(window, rv);
+  nsRefPtr<MessageChannel> channel = MessageChannel::Constructor(window, rv);
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
   }
 
-  RefPtr<SharedWorker> sharedWorker = new SharedWorker(window, workerPrivate,
+  nsRefPtr<SharedWorker> sharedWorker = new SharedWorker(window, workerPrivate,
                                                          channel->Port1());
 
   if (!workerPrivate->RegisterSharedWorker(aCx, sharedWorker,
@@ -2774,7 +2774,7 @@ LogViolationDetailsRunnable::Run()
     }
   }
 
-  RefPtr<MainThreadStopSyncLoopRunnable> response =
+  nsRefPtr<MainThreadStopSyncLoopRunnable> response =
     new MainThreadStopSyncLoopRunnable(mWorkerPrivate, mSyncLoopTarget.forget(),
                                        true);
   MOZ_ALWAYS_TRUE(response->Dispatch(nullptr));
@@ -2893,7 +2893,7 @@ WorkerThreadPrimaryRunnable::Run()
   nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
   MOZ_ASSERT(mainThread);
 
-  RefPtr<FinishedRunnable> finishedRunnable =
+  nsRefPtr<FinishedRunnable> finishedRunnable =
     new FinishedRunnable(mThread.forget());
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mainThread->Dispatch(finishedRunnable,
                                                     NS_DISPATCH_NORMAL)));
@@ -2938,7 +2938,7 @@ WorkerThreadPrimaryRunnable::FinishedRunnable::Run()
 {
   AssertIsOnMainThread();
 
-  RefPtr<WorkerThread> thread;
+  nsRefPtr<WorkerThread> thread;
   mThread.swap(thread);
 
   RuntimeService* rts = RuntimeService::GetService();

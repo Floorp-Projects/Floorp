@@ -169,7 +169,7 @@ class MOZ_STACK_CLASS AutoEventEnqueuer
     mEventQueue->EndForcedQueueing();
   }
  private:
-  RefPtr<ChannelEventQueue> mEventQueue;
+  nsRefPtr<ChannelEventQueue> mEventQueue;
 };
 
 } // namespace net

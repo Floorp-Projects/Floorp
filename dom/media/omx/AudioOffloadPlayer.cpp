@@ -331,14 +331,14 @@ void AudioOffloadPlayer::Reset()
   WakeLockRelease();
 }
 
-RefPtr<MediaDecoder::SeekPromise> AudioOffloadPlayer::Seek(SeekTarget aTarget)
+nsRefPtr<MediaDecoder::SeekPromise> AudioOffloadPlayer::Seek(SeekTarget aTarget)
 {
   MOZ_ASSERT(NS_IsMainThread());
   android::Mutex::Autolock autoLock(mLock);
 
   mSeekPromise.RejectIfExists(true, __func__);
   mSeekTarget = aTarget;
-  RefPtr<MediaDecoder::SeekPromise> p = mSeekPromise.Ensure(__func__);
+  nsRefPtr<MediaDecoder::SeekPromise> p = mSeekPromise.Ensure(__func__);
   DoSeek();
   return p;
 }
@@ -729,7 +729,7 @@ void AudioOffloadPlayer::WakeLockCreate()
   MOZ_ASSERT(NS_IsMainThread());
   AUDIO_OFFLOAD_LOG(LogLevel::Debug, ("%s", __FUNCTION__));
   if (!mWakeLock) {
-    RefPtr<dom::power::PowerManagerService> pmService =
+    nsRefPtr<dom::power::PowerManagerService> pmService =
       dom::power::PowerManagerService::GetInstance();
     NS_ENSURE_TRUE_VOID(pmService);
 

@@ -308,7 +308,7 @@ nsTableCellFrame::DecorateForSelection(nsRenderingContext& aRenderingContext,
   nsPresContext* presContext = PresContext();
   displaySelection = DisplaySelection(presContext);
   if (displaySelection) {
-    RefPtr<nsFrameSelection> frameSelection =
+    nsRefPtr<nsFrameSelection> frameSelection =
       presContext->PresShell()->FrameSelection();
 
     if (frameSelection->GetTableCellSelection()) {

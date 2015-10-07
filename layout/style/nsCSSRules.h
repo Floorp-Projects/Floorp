@@ -98,7 +98,7 @@ public:
 protected:
   void AppendConditionText(nsAString& aOutput);
 
-  RefPtr<nsMediaList> mMedia;
+  nsRefPtr<nsMediaList> mMedia;
 };
 
 class DocumentRule final : public GroupRule,
@@ -286,7 +286,7 @@ protected:
 // nsFontFaceRuleContainer - used for associating sheet type with
 // specific @font-face rules
 struct nsFontFaceRuleContainer {
-  RefPtr<nsCSSFontFaceRule> mRule;
+  nsRefPtr<nsCSSFontFaceRule> mRule;
   uint8_t mSheetType;
 };
 
@@ -433,7 +433,7 @@ private:
   nsTArray<float>                            mKeys;
   nsAutoPtr<mozilla::css::Declaration>       mDeclaration;
   // lazily created when needed:
-  RefPtr<nsCSSKeyframeStyleDeclaration>    mDOMDeclaration;
+  nsRefPtr<nsCSSKeyframeStyleDeclaration>    mDOMDeclaration;
 };
 
 class nsCSSKeyframesRule final : public mozilla::css::GroupRule,
@@ -562,8 +562,8 @@ public:
 private:
   nsAutoPtr<mozilla::css::Declaration>    mDeclaration;
   // lazily created when needed:
-  RefPtr<nsCSSPageStyleDeclaration>     mDOMDeclaration;
-  RefPtr<mozilla::css::ImportantRule>   mImportantRule;
+  nsRefPtr<nsCSSPageStyleDeclaration>     mDOMDeclaration;
+  nsRefPtr<mozilla::css::ImportantRule>   mImportantRule;
 };
 
 namespace mozilla {

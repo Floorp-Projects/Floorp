@@ -36,7 +36,7 @@ public:
       return nullptr;
     }
 
-    RefPtr<Activity> activity = new Activity(window);
+    nsRefPtr<Activity> activity = new Activity(window);
     aRv = activity->Initialize(window, aOwner.Context(), aOptions);
     return activity.forget();
   }

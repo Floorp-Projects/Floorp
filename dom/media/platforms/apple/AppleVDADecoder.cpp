@@ -78,7 +78,7 @@ AppleVDADecoder::~AppleVDADecoder()
   MOZ_COUNT_DTOR(AppleVDADecoder);
 }
 
-RefPtr<MediaDataDecoder::InitPromise>
+nsRefPtr<MediaDataDecoder::InitPromise>
 AppleVDADecoder::Init()
 {
   return InitPromise::CreateAndResolve(TrackType::kVideoTrack, __func__);
@@ -124,10 +124,10 @@ AppleVDADecoder::Input(MediaRawData* aSample)
   mInputIncoming++;
 
   nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableMethodWithArg<RefPtr<MediaRawData>>(
+      NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(
           this,
           &AppleVDADecoder::SubmitFrame,
-          RefPtr<MediaRawData>(aSample));
+          nsRefPtr<MediaRawData>(aSample));
   mTaskQueue->Dispatch(runnable.forget());
   return NS_OK;
 }
@@ -318,7 +318,7 @@ AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
   }
 
   // Where our resulting image will end up.
-  RefPtr<VideoData> data;
+  nsRefPtr<VideoData> data;
   // Bounds.
   VideoInfo info;
   info.mDisplay = nsIntSize(mDisplayWidth, mDisplayHeight);
@@ -385,9 +385,9 @@ AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
     IOSurfacePtr surface = MacIOSurfaceLib::CVPixelBufferGetIOSurface(aImage);
     MOZ_ASSERT(surface, "Decoder didn't return an IOSurface backed buffer");
 
-    RefPtr<MacIOSurface> macSurface = new MacIOSurface(surface);
+    nsRefPtr<MacIOSurface> macSurface = new MacIOSurface(surface);
 
-    RefPtr<layers::Image> image =
+    nsRefPtr<layers::Image> image =
       mImageContainer->CreateImage(ImageFormat::MAC_IOSURFACE);
     layers::MacIOSurfaceImage* videoImage =
       static_cast<layers::MacIOSurfaceImage*>(image.get());
@@ -652,7 +652,7 @@ AppleVDADecoder::CreateVDADecoder(
     return nullptr;
   }
 
-  RefPtr<AppleVDADecoder> decoder =
+  nsRefPtr<AppleVDADecoder> decoder =
     new AppleVDADecoder(aConfig, aVideoTaskQueue, aCallback, aImageContainer);
 
   if (NS_FAILED(decoder->InitializeSession())) {

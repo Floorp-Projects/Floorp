@@ -157,20 +157,20 @@ protected:
   // It is necessary to hold a reference to the associated nsXBLBinding
   // because the binding holds a reference on the nsXBLDocumentInfo that
   // owns |mProtoBinding|.
-  RefPtr<nsXBLBinding> mAssociatedBinding;
+  nsRefPtr<nsXBLBinding> mAssociatedBinding;
 
-  RefPtr<ShadowRootStyleSheetList> mStyleSheetList;
+  nsRefPtr<ShadowRootStyleSheetList> mStyleSheetList;
 
   // The current shadow insertion point of this ShadowRoot.
   HTMLShadowElement* mShadowElement;
 
   // The ShadowRoot that was created by the host element before
   // this ShadowRoot was created.
-  RefPtr<ShadowRoot> mOlderShadow;
+  nsRefPtr<ShadowRoot> mOlderShadow;
 
   // The ShadowRoot that was created by the host element after
   // this ShadowRoot was created.
-  RefPtr<ShadowRoot> mYoungerShadow;
+  nsRefPtr<ShadowRoot> mYoungerShadow;
 
   // A boolean that indicates that an insertion point was added or removed
   // from this ShadowRoot and that the nodes need to be redistributed into
@@ -206,7 +206,7 @@ public:
 protected:
   virtual ~ShadowRootStyleSheetList();
 
-  RefPtr<ShadowRoot> mShadowRoot;
+  nsRefPtr<ShadowRoot> mShadowRoot;
 };
 
 } // namespace dom

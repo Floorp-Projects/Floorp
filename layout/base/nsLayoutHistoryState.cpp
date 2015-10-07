@@ -49,7 +49,7 @@ private:
 already_AddRefed<nsILayoutHistoryState>
 NS_NewLayoutHistoryState()
 {
-  RefPtr<nsLayoutHistoryState> state = new nsLayoutHistoryState();
+  nsRefPtr<nsLayoutHistoryState> state = new nsLayoutHistoryState();
   return state.forget();
 }
 

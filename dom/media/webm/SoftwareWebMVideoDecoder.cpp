@@ -53,7 +53,7 @@ SoftwareWebMVideoDecoder::Create(WebMReader* aReader)
   return new SoftwareWebMVideoDecoder(aReader);
 }
 
-RefPtr<InitPromise>
+nsRefPtr<InitPromise>
 SoftwareWebMVideoDecoder::Init(unsigned int aWidth, unsigned int aHeight)
 {
   nsresult rv = InitDecoder(aWidth, aHeight);
@@ -93,7 +93,7 @@ SoftwareWebMVideoDecoder::DecodeVideoFrame(bool &aKeyframeSkip,
   // stats counters using the AutoNotifyDecoded stack-based class.
   AbstractMediaDecoder::AutoNotifyDecoded a(mReader->GetDecoder());
 
-  RefPtr<NesteggPacketHolder> holder(mReader->NextPacket(WebMReader::VIDEO));
+  nsRefPtr<NesteggPacketHolder> holder(mReader->NextPacket(WebMReader::VIDEO));
   if (!holder) {
     return false;
   }
@@ -123,7 +123,7 @@ SoftwareWebMVideoDecoder::DecodeVideoFrame(bool &aKeyframeSkip,
   // end of the resource, use the file's duration as the end time of this
   // video frame.
   int64_t next_tstamp = 0;
-  RefPtr<NesteggPacketHolder> next_holder(mReader->NextPacket(WebMReader::VIDEO));
+  nsRefPtr<NesteggPacketHolder> next_holder(mReader->NextPacket(WebMReader::VIDEO));
   if (next_holder) {
     next_tstamp = next_holder->Timestamp();
     mReader->PushVideoPacket(next_holder);
@@ -214,7 +214,7 @@ SoftwareWebMVideoDecoder::DecodeVideoFrame(bool &aKeyframeSkip,
     }
 
     VideoInfo videoInfo = mReader->GetMediaInfo().mVideo;
-    RefPtr<VideoData> v = VideoData::Create(videoInfo,
+    nsRefPtr<VideoData> v = VideoData::Create(videoInfo,
                                               mReader->GetDecoder()->GetImageContainer(),
                                               holder->Offset(),
                                               tstamp,

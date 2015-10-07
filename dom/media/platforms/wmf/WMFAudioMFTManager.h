@@ -9,7 +9,7 @@
 
 #include "WMF.h"
 #include "MFTDecoder.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "WMFMediaDataDecoder.h"
 
 extern const GUID CLSID_WebmMfVp8Dec;
@@ -30,7 +30,7 @@ public:
   // presumably they're the preroll samples, and we strip them. We may return
   // a null aOutput in this case.
   HRESULT Output(int64_t aStreamOffset,
-                         RefPtr<MediaData>& aOutput) override;
+                         nsRefPtr<MediaData>& aOutput) override;
 
   void Shutdown() override;
 

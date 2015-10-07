@@ -195,7 +195,7 @@ txMozillaXMLOutput::comment(const nsString& aData)
 
     TX_ENSURE_CURRENTNODE;
 
-    RefPtr<Comment> comment = new Comment(mNodeInfoManager);
+    nsRefPtr<Comment> comment = new Comment(mNodeInfoManager);
 
     rv = comment->SetText(aData, false);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -523,7 +523,7 @@ txMozillaXMLOutput::startElementInternal(nsIAtom* aPrefix,
     mOpenedElementIsHTML = false;
 
     // Create the element
-    RefPtr<NodeInfo> ni =
+    nsRefPtr<NodeInfo> ni =
         mNodeInfoManager->GetNodeInfo(aLocalName, aPrefix, aNsID,
                                       nsIDOMNode::ELEMENT_NODE);
 
@@ -594,7 +594,7 @@ txMozillaXMLOutput::closePrevious(bool aFlushText)
             rv = createTxWrapper();
             NS_ENSURE_SUCCESS(rv, rv);
         }
-        RefPtr<nsTextNode> text = new nsTextNode(mNodeInfoManager);
+        nsRefPtr<nsTextNode> text = new nsTextNode(mNodeInfoManager);
 
         rv = text->SetText(mText, false);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -920,7 +920,7 @@ txMozillaXMLOutput::createHTMLElement(nsIAtom* aName,
 
     *aResult = nullptr;
 
-    RefPtr<NodeInfo> ni;
+    nsRefPtr<NodeInfo> ni;
     ni = mNodeInfoManager->GetNodeInfo(aName, nullptr,
                                        kNameSpaceID_XHTML,
                                        nsIDOMNode::ELEMENT_NODE);

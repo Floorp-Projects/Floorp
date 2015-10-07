@@ -39,10 +39,10 @@ PerformanceObserverEntryList::WrapObject(JSContext* aCx, JS::Handle<JSObject*> a
 void
 PerformanceObserverEntryList::GetEntries(
   const PerformanceEntryFilterOptions& aFilter,
-  nsTArray<RefPtr<PerformanceEntry>>& aRetval)
+  nsTArray<nsRefPtr<PerformanceEntry>>& aRetval)
 {
   aRetval.Clear();
-  for (const RefPtr<PerformanceEntry>& entry : mEntries) {
+  for (const nsRefPtr<PerformanceEntry>& entry : mEntries) {
     if (aFilter.mInitiatorType.WasPassed()) {
       const PerformanceResourceTiming* resourceEntry =
         entry->ToResourceTiming();
@@ -71,10 +71,10 @@ PerformanceObserverEntryList::GetEntries(
 void
 PerformanceObserverEntryList::GetEntriesByType(
   const nsAString& aEntryType,
-  nsTArray<RefPtr<PerformanceEntry>>& aRetval)
+  nsTArray<nsRefPtr<PerformanceEntry>>& aRetval)
 {
   aRetval.Clear();
-  for (const RefPtr<PerformanceEntry>& entry : mEntries) {
+  for (const nsRefPtr<PerformanceEntry>& entry : mEntries) {
     if (entry->GetEntryType().Equals(aEntryType)) {
       aRetval.AppendElement(entry);
     }
@@ -85,10 +85,10 @@ void
 PerformanceObserverEntryList::GetEntriesByName(
   const nsAString& aName,
   const Optional<nsAString>& aEntryType,
-  nsTArray<RefPtr<PerformanceEntry>>& aRetval)
+  nsTArray<nsRefPtr<PerformanceEntry>>& aRetval)
 {
   aRetval.Clear();
-  for (const RefPtr<PerformanceEntry>& entry : mEntries) {
+  for (const nsRefPtr<PerformanceEntry>& entry : mEntries) {
     if (entry->GetName().Equals(aName)) {
       aRetval.AppendElement(entry);
     }

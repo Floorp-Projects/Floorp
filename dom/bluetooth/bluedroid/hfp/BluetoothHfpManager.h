@@ -223,7 +223,7 @@ private:
 
   nsTArray<Call> mCurrentCallArray;
   nsAutoPtr<BluetoothRilListener> mListener;
-  RefPtr<BluetoothProfileController> mController;
+  nsRefPtr<BluetoothProfileController> mController;
 
   // CDMA-specific variable
   Call mCdmaSecondCall;

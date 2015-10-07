@@ -46,8 +46,8 @@ public:
 
 TEST_F(TestSyncRunnable, TestDispatch)
 {
-  RefPtr<TestRunnable> r(new TestRunnable());
-  RefPtr<SyncRunnable> s(new SyncRunnable(r));
+  nsRefPtr<TestRunnable> r(new TestRunnable());
+  nsRefPtr<SyncRunnable> s(new SyncRunnable(r));
   s->DispatchToThread(gThread);
 
   ASSERT_TRUE(r->ran());
@@ -55,7 +55,7 @@ TEST_F(TestSyncRunnable, TestDispatch)
 
 TEST_F(TestSyncRunnable, TestDispatchStatic)
 {
-  RefPtr<TestRunnable> r(new TestRunnable());
+  nsRefPtr<TestRunnable> r(new TestRunnable());
   SyncRunnable::DispatchToThread(gThread, r);
   ASSERT_TRUE(r->ran());
 }

@@ -321,7 +321,7 @@ def _runtimeAbort(msg):
         ExprCall(ExprVar('NS_RUNTIMEABORT'), args=[ msg ]))
 
 def _refptr(T):
-    return Type('RefPtr', T=T)
+    return Type('nsRefPtr', T=T)
 
 def _refptrGet(expr):
     return ExprCall(ExprSelect(expr, '.', 'get'))
@@ -3676,7 +3676,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                          [ idvar ])))
 
             # SharedMemory* CreateSharedMemory(size_t aSize, Type aType, bool aUnsafe, id_t* aId):
-            #   RefPtr<SharedMemory> segment(Shmem::Alloc(aSize, aType, aUnsafe));
+            #   nsRefPtr<SharedMemory> segment(Shmem::Alloc(aSize, aType, aUnsafe));
             #   if (!segment)
             #     return nullptr;
             #   Shmem shmem(segment.get(), [nextshmemid]);

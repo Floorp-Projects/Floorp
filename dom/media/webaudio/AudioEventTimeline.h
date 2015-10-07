@@ -114,7 +114,7 @@ struct AudioTimelineEvent final
   // duration of D, we sample the buffer at floor(mCurveLength*(T-T0)/D)
   // if T<T0+D, and just take the last sample in the buffer otherwise.
   float* mCurve;
-  RefPtr<MediaStream> mStream;
+  nsRefPtr<MediaStream> mStream;
   double mTimeConstant;
   double mDuration;
 #ifdef DEBUG

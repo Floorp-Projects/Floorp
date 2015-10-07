@@ -49,7 +49,7 @@ already_AddRefed<nsShmImage>
 nsShmImage::Create(const IntSize& aSize,
                    Display* aDisplay, Visual* aVisual, unsigned int aDepth)
 {
-    RefPtr<nsShmImage> shm = new nsShmImage();
+    nsRefPtr<nsShmImage> shm = new nsShmImage();
     shm->mDisplay = aDisplay;
     shm->mImage = XShmCreateImage(aDisplay, aVisual, aDepth,
                                   ZPixmap, nullptr,
@@ -182,7 +182,7 @@ nsShmImage::Put(QWindow* aWindow, QRect& aRect)
 already_AddRefed<DrawTarget>
 nsShmImage::EnsureShmImage(const IntSize& aSize,
                            Display* aDisplay, Visual* aVisual, unsigned int aDepth,
-                           RefPtr<nsShmImage>& aImage)
+                           nsRefPtr<nsShmImage>& aImage)
 {
     if (!aImage || aImage->Size() != aSize) {
         // Because we XSync() after XShmAttach() to trap errors, we

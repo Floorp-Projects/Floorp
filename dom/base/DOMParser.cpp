@@ -381,7 +381,7 @@ DOMParser::Constructor(const GlobalObject& aOwner,
     rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
-  RefPtr<DOMParser> domParser = new DOMParser(aOwner.GetAsSupports());
+  nsRefPtr<DOMParser> domParser = new DOMParser(aOwner.GetAsSupports());
   rv = domParser->InitInternal(aOwner.GetAsSupports(), aPrincipal, aDocumentURI,
                                aBaseURI);
   if (rv.Failed()) {
@@ -394,7 +394,7 @@ DOMParser::Constructor(const GlobalObject& aOwner,
 DOMParser::Constructor(const GlobalObject& aOwner,
                        ErrorResult& rv)
 {
-  RefPtr<DOMParser> domParser = new DOMParser(aOwner.GetAsSupports());
+  nsRefPtr<DOMParser> domParser = new DOMParser(aOwner.GetAsSupports());
   rv = domParser->InitInternal(aOwner.GetAsSupports(),
                                nsContentUtils::SubjectPrincipal(),
                                nullptr, nullptr);

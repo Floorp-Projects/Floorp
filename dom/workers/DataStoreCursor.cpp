@@ -71,7 +71,7 @@ public:
 // thread.
 class DataStoreCursorNextRunnable final : public DataStoreCursorRunnable
 {
-  RefPtr<PromiseWorkerProxy> mPromiseWorkerProxy;
+  nsRefPtr<PromiseWorkerProxy> mPromiseWorkerProxy;
   ErrorResult& mRv;
 
 public:
@@ -107,7 +107,7 @@ protected:
   {
     AssertIsOnMainThread();
 
-    RefPtr<Promise> promise = mBackingCursor->Next(mRv);
+    nsRefPtr<Promise> promise = mBackingCursor->Next(mRv);
     promise->AppendNativeHandler(mPromiseWorkerProxy);
     return true;
   }
@@ -152,7 +152,7 @@ WorkerDataStoreCursor::GetStore(JSContext* aCx, ErrorResult& aRv)
   // WorkerDataStoreCursor, so that the WorkerDataStoreCursor.store can be
   // tested as equal to the WorkerDataStore owning this WorkerDataStoreCursor.
   MOZ_ASSERT(mWorkerStore);
-  RefPtr<WorkerDataStore> workerStore = mWorkerStore;
+  nsRefPtr<WorkerDataStore> workerStore = mWorkerStore;
   return workerStore.forget();
 }
 
@@ -163,12 +163,12 @@ WorkerDataStoreCursor::Next(JSContext* aCx, ErrorResult& aRv)
   MOZ_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
 
-  RefPtr<Promise> promise = Promise::Create(workerPrivate->GlobalScope(), aRv);
+  nsRefPtr<Promise> promise = Promise::Create(workerPrivate->GlobalScope(), aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
 
-  RefPtr<DataStoreCursorNextRunnable> runnable =
+  nsRefPtr<DataStoreCursorNextRunnable> runnable =
     new DataStoreCursorNextRunnable(workerPrivate,
                                     mBackingCursor,
                                     promise,
@@ -185,7 +185,7 @@ WorkerDataStoreCursor::Close(JSContext* aCx, ErrorResult& aRv)
   MOZ_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
 
-  RefPtr<DataStoreCursorCloseRunnable> runnable =
+  nsRefPtr<DataStoreCursorCloseRunnable> runnable =
     new DataStoreCursorCloseRunnable(workerPrivate, mBackingCursor, aRv);
   runnable->Dispatch(aCx);
 }

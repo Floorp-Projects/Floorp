@@ -33,7 +33,7 @@ protected:
   TCPServerSocketChildBase();
   virtual ~TCPServerSocketChildBase();
 
-  RefPtr<TCPServerSocket> mServerSocket;
+  nsRefPtr<TCPServerSocket> mServerSocket;
   bool mIPCOpen;
 };
 

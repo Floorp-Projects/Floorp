@@ -14,7 +14,7 @@ txNumberExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
     *aResult = nullptr;
 
-    RefPtr<txAExprResult> exprRes;
+    nsRefPtr<txAExprResult> exprRes;
     nsresult rv = mRightExpr->evaluate(aContext, getter_AddRefs(exprRes));
     NS_ENSURE_SUCCESS(rv, rv);
 

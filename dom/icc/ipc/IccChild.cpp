@@ -148,7 +148,7 @@ IccChild::UpdateIccInfo(const OptionalIccInfoData& aInfoData) {
 
   NS_ENSURE_TRUE_VOID(aInfoData.type() == OptionalIccInfoData::TIccInfoData);
 
-  RefPtr<IccInfo> iccInfo;
+  nsRefPtr<IccInfo> iccInfo;
   const IccInfoData& infoData = aInfoData.get_IccInfoData();
   if (infoData.iccType().EqualsLiteral("sim")
       || infoData.iccType().EqualsLiteral("usim")) {

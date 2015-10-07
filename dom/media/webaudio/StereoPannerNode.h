@@ -60,7 +60,7 @@ protected:
   virtual ~StereoPannerNode();
 
 private:
-  RefPtr<AudioParam> mPan;
+  nsRefPtr<AudioParam> mPan;
 };
 
 } // namespace dom

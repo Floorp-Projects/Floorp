@@ -57,11 +57,11 @@ protected:
   HandlerCallback() override;
 
 private:
-  RefPtr<Promise> mPromise;
+  nsRefPtr<Promise> mPromise;
   nsString mDirRealPath;
   // This cannot be a File because this object will be used on a different
   // thread and File is not thread-safe. Let's use the BlobImpl instead.
-  RefPtr<BlobImpl> mTargetBlobImpl;
+  nsRefPtr<BlobImpl> mTargetBlobImpl;
   nsString mTargetRealPath;
   bool mRecursive;
   bool mReturnValue;

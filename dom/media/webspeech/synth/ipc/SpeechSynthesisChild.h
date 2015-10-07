@@ -66,7 +66,7 @@ protected:
   virtual bool RecvOnMark(const nsString& aName, const float& aElapsedTime,
                           const uint32_t& aCharIndex) override;
 
-  RefPtr<SpeechTaskChild> mTask;
+  nsRefPtr<SpeechTaskChild> mTask;
 };
 
 class SpeechTaskChild : public nsSpeechTask

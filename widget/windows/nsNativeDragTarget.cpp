@@ -435,7 +435,7 @@ nsNativeDragTarget::Drop(LPDATAOBJECT pData,
 
   // NOTE: ProcessDrag spins the event loop which may destroy arbitrary objects.
   // We use strong refs to prevent it from destroying these:
-  RefPtr<nsNativeDragTarget> kungFuDeathGrip = this;
+  nsRefPtr<nsNativeDragTarget> kungFuDeathGrip = this;
   nsCOMPtr<nsIDragService> serv = mDragService;
 
   // Now process the native drag state and then dispatch the event

@@ -432,7 +432,7 @@ AccessibleCaretEventHub::Terminate()
     return;
   }
 
-  RefPtr<nsDocShell> docShell(mDocShell.get());
+  nsRefPtr<nsDocShell> docShell(mDocShell.get());
   if (docShell) {
     docShell->RemoveWeakReflowObserver(this);
     docShell->RemoveWeakScrollObserver(this);

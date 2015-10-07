@@ -81,7 +81,7 @@ private:
 
   Class* mInstance;
   Callback mCallback;
-  Tuple<RefPtr<Args> ...> mArgs;
+  Tuple<nsRefPtr<Args> ...> mArgs;
 };
 
 /**
@@ -161,7 +161,7 @@ public:
       return;
     }
 
-    RefPtr<Notification> notification =
+    nsRefPtr<Notification> notification =
       new TNotification<Class, Arg>(aInstance, aMethod, aArg);
     if (notification && mNotifications.AppendElement(notification))
       ScheduleProcessing();
@@ -177,7 +177,7 @@ public:
   inline void ScheduleNotification(Class* aInstance,
                                    typename TNotification<Class>::Callback aMethod)
   {
-    RefPtr<Notification> notification =
+    nsRefPtr<Notification> notification =
       new TNotification<Class>(aInstance, aMethod);
     if (notification && mNotifications.AppendElement(notification))
       ScheduleProcessing();
@@ -227,7 +227,7 @@ private:
   /**
    * Child documents that needs to be bound to the tree.
    */
-  nsTArray<RefPtr<DocAccessible> > mHangingChildDocuments;
+  nsTArray<nsRefPtr<DocAccessible> > mHangingChildDocuments;
 
   /**
    * Storage for content inserted notification information.
@@ -257,7 +257,7 @@ private:
     DocAccessible* mDocument;
 
     // The container accessible that content insertion occurs within.
-    RefPtr<Accessible> mContainer;
+    nsRefPtr<Accessible> mContainer;
 
     // Array of inserted contents.
     nsTArray<nsCOMPtr<nsIContent> > mInsertedContent;
@@ -267,7 +267,7 @@ private:
    * A pending accessible tree update notifications for content insertions.
    * Don't make this an nsAutoTArray; we use SwapElements() on it.
    */
-  nsTArray<RefPtr<ContentInsertion> > mContentInsertions;
+  nsTArray<nsRefPtr<ContentInsertion> > mContentInsertions;
 
   template<class T>
   class nsCOMPtrHashKey : public PLDHashEntryHdr
@@ -302,7 +302,7 @@ private:
    * Other notifications like DOM events. Don't make this an nsAutoTArray; we
    * use SwapElements() on it.
    */
-  nsTArray<RefPtr<Notification> > mNotifications;
+  nsTArray<nsRefPtr<Notification> > mNotifications;
 };
 
 } // namespace a11y

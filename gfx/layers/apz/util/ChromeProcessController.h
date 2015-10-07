@@ -8,7 +8,7 @@
 
 #include "mozilla/layers/GeckoContentController.h"
 #include "nsCOMPtr.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 class nsIDOMWindowUtils;
 class nsIDocument;
@@ -61,8 +61,8 @@ public:
   virtual void NotifyFlushComplete() override;
 private:
   nsCOMPtr<nsIWidget> mWidget;
-  RefPtr<APZEventState> mAPZEventState;
-  RefPtr<APZCTreeManager> mAPZCTreeManager;
+  nsRefPtr<APZEventState> mAPZEventState;
+  nsRefPtr<APZCTreeManager> mAPZCTreeManager;
   MessageLoop* mUILoop;
 
   void InitializeRoot();

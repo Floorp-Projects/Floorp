@@ -128,7 +128,7 @@ TextTrackManager::AddTextTrack(TextTrackKind aKind, const nsAString& aLabel,
   if (!mMediaElement || !mTextTracks) {
     return nullptr;
   }
-  RefPtr<TextTrack> ttrack =
+  nsRefPtr<TextTrack> ttrack =
     mTextTracks->AddTextTrack(aKind, aLabel, aLanguage, aMode, aReadyState,
                               aTextTrackSource, CompareTextTracks(mMediaElement));
   AddCues(ttrack);
@@ -210,7 +210,7 @@ TextTrackManager::UpdateCueDisplay()
     return;
   }
 
-  nsTArray<RefPtr<TextTrackCue> > activeCues;
+  nsTArray<nsRefPtr<TextTrackCue> > activeCues;
   mTextTracks->UpdateAndGetShowingCues(activeCues);
 
   if (activeCues.Length() > 0) {

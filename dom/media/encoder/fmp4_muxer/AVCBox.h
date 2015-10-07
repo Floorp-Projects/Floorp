@@ -44,7 +44,7 @@ public:
 class AVCSampleEntry : public VisualSampleEntry {
 public:
   // ISO BMFF members
-  RefPtr<AVCConfigurationBox> avcConfigBox;
+  nsRefPtr<AVCConfigurationBox> avcConfigBox;
 
   // MuxerOperation methods
   nsresult Generate(uint32_t* aBoxSize) override;

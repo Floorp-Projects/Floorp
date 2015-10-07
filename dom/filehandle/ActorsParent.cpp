@@ -65,10 +65,10 @@ class FileHandleThreadPool::FileHandleQueue final
 {
   friend class FileHandleThreadPool;
 
-  RefPtr<FileHandleThreadPool> mOwningFileHandleThreadPool;
-  RefPtr<FileHandle> mFileHandle;
-  nsTArray<RefPtr<FileHandleOp>> mQueue;
-  RefPtr<FileHandleOp> mCurrentOp;
+  nsRefPtr<FileHandleThreadPool> mOwningFileHandleThreadPool;
+  nsRefPtr<FileHandle> mFileHandle;
+  nsTArray<nsRefPtr<FileHandleOp>> mQueue;
+  nsRefPtr<FileHandleOp> mCurrentOp;
   bool mShouldFinish;
 
 public:
@@ -93,8 +93,8 @@ private:
 
 struct FileHandleThreadPool::DelayedEnqueueInfo
 {
-  RefPtr<FileHandle> mFileHandle;
-  RefPtr<FileHandleOp> mFileHandleOp;
+  nsRefPtr<FileHandle> mFileHandle;
+  nsRefPtr<FileHandleOp> mFileHandleOp;
   bool mFinish;
 };
 
@@ -102,8 +102,8 @@ class FileHandleThreadPool::DirectoryInfo
 {
   friend class FileHandleThreadPool;
 
-  RefPtr<FileHandleThreadPool> mOwningFileHandleThreadPool;
-  nsTArray<RefPtr<FileHandleQueue>> mFileHandleQueues;
+  nsRefPtr<FileHandleThreadPool> mOwningFileHandleThreadPool;
+  nsTArray<nsRefPtr<FileHandleQueue>> mFileHandleQueues;
   nsTArray<DelayedEnqueueInfo> mDelayedEnqueueInfos;
   nsTHashtable<nsStringHashKey> mFilesReading;
   nsTHashtable<nsStringHashKey> mFilesWriting;
@@ -184,7 +184,7 @@ class FileHandle
 
   class FinishOp;
 
-  RefPtr<BackgroundMutableFileParentBase> mMutableFile;
+  nsRefPtr<BackgroundMutableFileParentBase> mMutableFile;
   nsCOMPtr<nsISupports> mStream;
   uint64_t mActiveRequestCount;
   FileHandleStorage mStorage;
@@ -368,7 +368,7 @@ class FileHandleOp
 {
 protected:
   nsCOMPtr<nsIEventTarget> mOwningThread;
-  RefPtr<FileHandle> mFileHandle;
+  nsRefPtr<FileHandle> mFileHandle;
 
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileHandleOp)
@@ -572,7 +572,7 @@ protected:
 class CopyFileHandleOp::ProgressRunnable final
   : public nsRunnable
 {
-  RefPtr<CopyFileHandleOp> mCopyFileHandleOp;
+  nsRefPtr<CopyFileHandleOp> mCopyFileHandleOp;
   uint64_t mProgress;
   uint64_t mProgressMax;
 
@@ -802,7 +802,7 @@ FileHandleThreadPool::Create()
 {
   AssertIsOnBackgroundThread();
 
-  RefPtr<FileHandleThreadPool> fileHandleThreadPool =
+  nsRefPtr<FileHandleThreadPool> fileHandleThreadPool =
     new FileHandleThreadPool();
   fileHandleThreadPool->AssertIsOnOwningThread();
 
@@ -1145,7 +1145,7 @@ FileHandleQueue::Run()
   MOZ_ASSERT(mCurrentOp);
 
   if (IsOnBackgroundThread()) {
-    RefPtr<FileHandleOp> currentOp;
+    nsRefPtr<FileHandleOp> currentOp;
 
     mCurrentOp.swap(currentOp);
     ProcessQueue();
@@ -1168,7 +1168,7 @@ FileHandleThreadPool::
 DirectoryInfo::CreateFileHandleQueue(FileHandle* aFileHandle)
   -> FileHandleQueue*
 {
-  RefPtr<FileHandleQueue>* fileHandleQueue =
+  nsRefPtr<FileHandleQueue>* fileHandleQueue =
     mFileHandleQueues.AppendElement();
   *fileHandleQueue = new FileHandleQueue(mOwningFileHandleThreadPool,
                                          aFileHandle);
@@ -1181,7 +1181,7 @@ DirectoryInfo::GetFileHandleQueue(FileHandle* aFileHandle) -> FileHandleQueue*
 {
   uint32_t count = mFileHandleQueues.Length();
   for (uint32_t index = 0; index < count; index++) {
-    RefPtr<FileHandleQueue>& fileHandleQueue = mFileHandleQueues[index];
+    nsRefPtr<FileHandleQueue>& fileHandleQueue = mFileHandleQueues[index];
     if (fileHandleQueue->mFileHandle == aFileHandle) {
       return fileHandleQueue;
     }
@@ -1332,7 +1332,7 @@ BackgroundMutableFileParentBase::Invalidate()
         return true;
       }
 
-      FallibleTArray<RefPtr<FileHandle>> fileHandles;
+      FallibleTArray<nsRefPtr<FileHandle>> fileHandles;
       if (NS_WARN_IF(!fileHandles.SetCapacity(count, fallible))) {
         return false;
       }
@@ -1346,7 +1346,7 @@ BackgroundMutableFileParentBase::Invalidate()
 
       if (count) {
         for (uint32_t index = 0; index < count; index++) {
-          RefPtr<FileHandle> fileHandle = fileHandles[index].forget();
+          nsRefPtr<FileHandle> fileHandle = fileHandles[index].forget();
           MOZ_ASSERT(fileHandle);
 
           fileHandle->Invalidate();
@@ -1466,7 +1466,7 @@ BackgroundMutableFileParentBase::AllocPBackgroundFileHandleParent(
     return nullptr;
   }
 
-  RefPtr<FileHandle> fileHandle = new FileHandle(this, aMode);
+  nsRefPtr<FileHandle> fileHandle = new FileHandle(this, aMode);
 
   return fileHandle.forget().take();
 }
@@ -1506,7 +1506,7 @@ BackgroundMutableFileParentBase::DeallocPBackgroundFileHandleParent(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
 
-  RefPtr<FileHandle> fileHandle =
+  nsRefPtr<FileHandle> fileHandle =
     dont_AddRef(static_cast<FileHandle*>(aActor));
   return true;
 }
@@ -1806,7 +1806,7 @@ FileHandle::FinishOrAbort()
     return;
   }
 
-  RefPtr<FinishOp> finishOp = new FinishOp(this, mAborted);
+  nsRefPtr<FinishOp> finishOp = new FinishOp(this, mAborted);
 
   FileHandleThreadPool* fileHandleThreadPool =
     GetFileHandleThreadPoolFor(mStorage);
@@ -1900,7 +1900,7 @@ FileHandle::AllocPBackgroundFileRequestParent(const FileRequestParams& aParams)
     return nullptr;
   }
 
-  RefPtr<NormalFileHandleOp> actor;
+  nsRefPtr<NormalFileHandleOp> actor;
 
   switch (aParams.type()) {
     case FileRequestParams::TFileRequestGetMetadataParams:
@@ -1965,7 +1965,7 @@ FileHandle::DeallocPBackgroundFileRequestParent(
   MOZ_ASSERT(aActor);
 
   // Transfer ownership back from IPDL.
-  RefPtr<NormalFileHandleOp> actor =
+  nsRefPtr<NormalFileHandleOp> actor =
     dont_AddRef(static_cast<NormalFileHandleOp*>(aActor));
   return true;
 }
@@ -2409,7 +2409,7 @@ MemoryOutputStream::Create(uint64_t aSize)
     return nullptr;
   }
 
-  RefPtr<MemoryOutputStream> stream = new MemoryOutputStream();
+  nsRefPtr<MemoryOutputStream> stream = new MemoryOutputStream();
 
   char* dummy;
   uint32_t length = stream->mData.GetMutableData(&dummy, aSize, fallible);
@@ -2530,7 +2530,7 @@ WriteOp::Init(FileHandle* aFileHandle)
 
       auto blobActor = static_cast<BlobParent*>(blobData.blobParent());
 
-      RefPtr<BlobImpl> blobImpl = blobActor->GetBlobImpl();
+      nsRefPtr<BlobImpl> blobImpl = blobActor->GetBlobImpl();
 
       ErrorResult rv;
       blobImpl->GetInternalStream(getter_AddRefs(inputStream), rv);
@@ -2642,7 +2642,7 @@ GetFileOp::GetResponse(FileRequestResponse& aResponse)
 {
   AssertIsOnOwningThread();
 
-  RefPtr<BlobImpl> blobImpl = mFileHandle->GetMutableFile()->CreateBlobImpl();
+  nsRefPtr<BlobImpl> blobImpl = mFileHandle->GetMutableFile()->CreateBlobImpl();
   MOZ_ASSERT(blobImpl);
 
   PBlobParent* actor =

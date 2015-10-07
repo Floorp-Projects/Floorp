@@ -152,7 +152,7 @@ public:
 
   bool IsFromExtension() const;
 
-  RefPtr<nsPluginTag> mNext;
+  nsRefPtr<nsPluginTag> mNext;
   uint32_t      mId;
 
   // Number of PluginModuleParents living in all content processes.
@@ -162,7 +162,7 @@ public:
   bool          mHadLocalInstance;
 
   PRLibrary     *mLibrary;
-  RefPtr<nsNPAPIPlugin> mPlugin;
+  nsRefPtr<nsNPAPIPlugin> mPlugin;
   bool          mIsJavaPlugin;
   bool          mIsFlashPlugin;
   bool          mSupportsAsyncInit;

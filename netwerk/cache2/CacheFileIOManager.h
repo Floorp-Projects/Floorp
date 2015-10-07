@@ -93,8 +93,8 @@ public:
   nsresult GetHandle(const SHA1Sum::Hash *aHash, CacheFileHandle **_retval);
   nsresult NewHandle(const SHA1Sum::Hash *aHash, bool aPriority, CacheFileHandle **_retval);
   void     RemoveHandle(CacheFileHandle *aHandlle);
-  void     GetAllHandles(nsTArray<RefPtr<CacheFileHandle> > *_retval);
-  void     GetActiveHandles(nsTArray<RefPtr<CacheFileHandle> > *_retval);
+  void     GetAllHandles(nsTArray<nsRefPtr<CacheFileHandle> > *_retval);
+  void     GetActiveHandles(nsTArray<nsRefPtr<CacheFileHandle> > *_retval);
   void     ClearAll();
   uint32_t HandleCount();
 
@@ -143,7 +143,7 @@ public:
     void AddHandle(CacheFileHandle* aHandle);
     void RemoveHandle(CacheFileHandle* aHandle);
     already_AddRefed<CacheFileHandle> GetNewestHandle();
-    void GetHandles(nsTArray<RefPtr<CacheFileHandle> > &aResult);
+    void GetHandles(nsTArray<nsRefPtr<CacheFileHandle> > &aResult);
 
     SHA1Sum::Hash *Hash() const { return mHash; }
     bool IsEmpty() const { return mHandles.Length() == 0; }
@@ -383,7 +383,7 @@ private:
   static CacheFileIOManager           *gInstance;
   TimeStamp                            mStartTime;
   bool                                 mShuttingDown;
-  RefPtr<CacheIOThread>              mIOThread;
+  nsRefPtr<CacheIOThread>              mIOThread;
   nsCOMPtr<nsIFile>                    mCacheDirectory;
 #if defined(MOZ_WIDGET_ANDROID)
   // On Android we add the active profile directory name between the path
@@ -396,7 +396,7 @@ private:
   CacheFileHandles                     mHandles;
   nsTArray<CacheFileHandle *>          mHandlesByLastUsed;
   nsTArray<CacheFileHandle *>          mSpecialHandles;
-  nsTArray<RefPtr<CacheFile> >       mScheduledMetadataWrites;
+  nsTArray<nsRefPtr<CacheFile> >       mScheduledMetadataWrites;
   nsCOMPtr<nsITimer>                   mMetadataWritesTimer;
   bool                                 mOverLimitEvicting;
   bool                                 mRemovingTrashDirs;
@@ -404,7 +404,7 @@ private:
   nsCOMPtr<nsIFile>                    mTrashDir;
   nsCOMPtr<nsIDirectoryEnumerator>     mTrashDirEnumerator;
   nsTArray<nsCString>                  mFailedTrashDirs;
-  RefPtr<CacheFileContextEvictor>    mContextEvictor;
+  nsRefPtr<CacheFileContextEvictor>    mContextEvictor;
   TimeStamp                            mLastSmartSizeTime;
 };
 

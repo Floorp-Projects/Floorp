@@ -14,7 +14,7 @@
 namespace mozilla {
 
 class AndroidMediaPluginHost {
-  RefPtr<AndroidMediaResourceServer> mResourceServer;
+  nsRefPtr<AndroidMediaResourceServer> mResourceServer;
   nsTArray<MPAPI::Manifest *> mPlugins;
 
   MPAPI::Manifest *FindPlugin(const nsACString& aMimeType);

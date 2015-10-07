@@ -507,7 +507,7 @@ nsBlockFrame::GetCaretBaseline() const
       return bp.top + firstLine->mFirstChild->GetCaretBaseline();
     }
   }
-  RefPtr<nsFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   float inflation = nsLayoutUtils::FontSizeInflationFor(this);
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm), inflation);
   nscoord lineHeight =
@@ -2591,7 +2591,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
         }
       }
 
-      RefPtr<nsFontMetrics> fm;
+      nsRefPtr<nsFontMetrics> fm;
       nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
         nsLayoutUtils::FontSizeInflationFor(this));
 
@@ -6796,7 +6796,7 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
        pseudo == nsCSSAnonBoxes::mozSVGText) &&
       GetType() != nsGkAtoms::comboboxControlFrame &&
       !IsFrameOfType(eMathML) &&
-      RefPtr<nsStyleContext>(GetFirstLetterStyle(presContext)) != nullptr;
+      nsRefPtr<nsStyleContext>(GetFirstLetterStyle(presContext)) != nullptr;
     NS_ASSERTION(haveFirstLetterStyle ==
                  ((mState & NS_BLOCK_HAS_FIRST_LETTER_STYLE) != 0),
                  "NS_BLOCK_HAS_FIRST_LETTER_STYLE state out of sync");
@@ -6838,7 +6838,7 @@ nsBlockFrame::SetInitialChildList(ChildListID     aListID,
       nsStyleContext* parentStyle =
         CorrectStyleParentFrame(this,
           nsCSSPseudoElements::GetPseudoAtom(pseudoType))->StyleContext();
-      RefPtr<nsStyleContext> kidSC = shell->StyleSet()->
+      nsRefPtr<nsStyleContext> kidSC = shell->StyleSet()->
         ResolvePseudoElementStyle(mContent->AsElement(), pseudoType,
                                   parentStyle, nullptr);
 

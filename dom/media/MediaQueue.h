@@ -18,7 +18,7 @@ namespace mozilla {
 template <class T>
 class MediaQueueDeallocator : public nsDequeFunctor {
   virtual void* operator() (void* aObject) {
-    RefPtr<T> releaseMe = dont_AddRef(static_cast<T*>(aObject));
+    nsRefPtr<T> releaseMe = dont_AddRef(static_cast<T*>(aObject));
     return nullptr;
   }
 };
@@ -59,7 +59,7 @@ public:
 
   inline already_AddRefed<T> PopFront() {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    RefPtr<T> rv = dont_AddRef(static_cast<T*>(nsDeque::PopFront()));
+    nsRefPtr<T> rv = dont_AddRef(static_cast<T*>(nsDeque::PopFront()));
     if (rv) {
       mPopEvent.Notify(rv);
     }
@@ -79,7 +79,7 @@ public:
   void Reset() {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     while (GetSize() > 0) {
-      RefPtr<T> x = PopFront();
+      nsRefPtr<T> x = PopFront();
     }
     mEndOfStream = false;
   }
@@ -122,7 +122,7 @@ public:
 
   // Extracts elements from the queue into aResult, in order.
   // Elements whose start time is before aTime are ignored.
-  void GetElementsAfter(int64_t aTime, nsTArray<RefPtr<T>>* aResult) {
+  void GetElementsAfter(int64_t aTime, nsTArray<nsRefPtr<T>>* aResult) {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     if (!GetSize())
       return;
@@ -135,12 +135,12 @@ public:
     // Elements less than i have a end time before aTime. It's also possible
     // that the element at i has a end time before aTime, but that's OK.
     for (; i < GetSize(); ++i) {
-      RefPtr<T> elem = static_cast<T*>(ObjectAt(i));
+      nsRefPtr<T> elem = static_cast<T*>(ObjectAt(i));
       aResult->AppendElement(elem);
     }
   }
 
-  void GetFirstElements(uint32_t aMaxElements, nsTArray<RefPtr<T>>* aResult) {
+  void GetFirstElements(uint32_t aMaxElements, nsTArray<nsRefPtr<T>>* aResult) {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     for (int32_t i = 0; i < (int32_t)aMaxElements && i < GetSize(); ++i) {
       *aResult->AppendElement() = static_cast<T*>(ObjectAt(i));
@@ -157,7 +157,7 @@ public:
     return frames;
   }
 
-  MediaEventSource<RefPtr<T>>& PopEvent() {
+  MediaEventSource<nsRefPtr<T>>& PopEvent() {
     return mPopEvent;
   }
 
@@ -171,7 +171,7 @@ public:
 
 private:
   mutable ReentrantMonitor mReentrantMonitor;
-  MediaEventProducer<RefPtr<T>> mPopEvent;
+  MediaEventProducer<nsRefPtr<T>> mPopEvent;
   MediaEventProducer<void> mPushEvent;
   MediaEventProducer<void> mFinishEvent;
   // True when we've decoded the last frame of data in the

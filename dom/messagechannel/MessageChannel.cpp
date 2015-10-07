@@ -67,7 +67,7 @@ MessageChannel::Constructor(nsPIDOMWindow* aWindow, ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<MessageChannel> channel = new MessageChannel(aWindow);
+  nsRefPtr<MessageChannel> channel = new MessageChannel(aWindow);
 
   channel->mPort1 = MessagePort::Create(aWindow, portUUID1, portUUID2, aRv);
   if (NS_WARN_IF(aRv.Failed())) {

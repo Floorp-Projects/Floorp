@@ -45,9 +45,9 @@ private:
 
   uint32_t GetByteSize() const;
 
-  RefPtr<ID2D1Bitmap> mBitmap;
+  nsRefPtr<ID2D1Bitmap> mBitmap;
   // We need to keep this pointer here to check surface validity.
-  RefPtr<ID3D10Device> mDevice;
+  nsRefPtr<ID3D10Device> mDevice;
   SurfaceFormat mFormat;
   IntSize mSize;
 };
@@ -75,7 +75,7 @@ public:
 private:
   void EnsureMappedTexture();
 
-  RefPtr<ID3D10Texture2D> mTexture;
+  nsRefPtr<ID3D10Texture2D> mTexture;
 
   D3D10_MAPPED_TEXTURE2D mData;
 

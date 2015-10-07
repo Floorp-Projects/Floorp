@@ -475,7 +475,7 @@ private:
 protected:
 
   // Database handle.
-  RefPtr<mozilla::places::Database> mDB;
+  nsRefPtr<mozilla::places::Database> mDB;
 
   /**
    * Decays frecency and inputhistory values.  Runs on idle-daily.

@@ -145,9 +145,9 @@ private:
    * GetDBConn(), so never use it directly, or, if you really need, always
    * invoke GetDBConn() before.
    */
-  RefPtr<mozilla::places::Database> mDB;
+  nsRefPtr<mozilla::places::Database> mDB;
 
-  RefPtr<ConcurrentStatementsHolder> mConcurrentStatementsHolder;
+  nsRefPtr<ConcurrentStatementsHolder> mConcurrentStatementsHolder;
 
   /**
    * Remove any memory references to tasks and do not take on any more.

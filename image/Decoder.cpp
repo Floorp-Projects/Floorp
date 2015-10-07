@@ -319,7 +319,7 @@ Decoder::AllocateFrameInternal(uint32_t aFrameNum,
     return RawAccessFrameRef();
   }
 
-  RefPtr<imgFrame> frame = new imgFrame();
+  nsRefPtr<imgFrame> frame = new imgFrame();
   bool nonPremult = bool(mSurfaceFlags & SurfaceFlags::NO_PREMULTIPLY_ALPHA);
   if (NS_FAILED(frame->InitForDecoder(aTargetSize, aFrameRect, aFormat,
                                       aPaletteDepth, nonPremult))) {

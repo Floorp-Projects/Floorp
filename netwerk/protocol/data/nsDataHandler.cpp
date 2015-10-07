@@ -64,7 +64,7 @@ nsDataHandler::NewURI(const nsACString &aSpec,
                       nsIURI *aBaseURI,
                       nsIURI **result) {
     nsresult rv;
-    RefPtr<nsIURI> uri;
+    nsRefPtr<nsIURI> uri;
 
     nsCString spec(aSpec);
 

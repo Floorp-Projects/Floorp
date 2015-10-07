@@ -1789,7 +1789,7 @@ public:
   }
 
 private:
-  RefPtr<HttpBaseChannel> mChannel;
+  nsRefPtr<HttpBaseChannel> mChannel;
   NS_ConvertASCIItoUTF16 mCookie;
 };
 
@@ -1812,7 +1812,7 @@ HttpBaseChannel::SetCookie(const char *aCookieHeader)
     cs->SetCookieStringFromHttp(mURI, nullptr, nullptr, aCookieHeader,
                                 mResponseHead->PeekHeader(nsHttp::Date), this);
   if (NS_SUCCEEDED(rv)) {
-    RefPtr<CookieNotifierRunnable> r =
+    nsRefPtr<CookieNotifierRunnable> r =
       new CookieNotifierRunnable(this, aCookieHeader);
     NS_DispatchToMainThread(r);
   }

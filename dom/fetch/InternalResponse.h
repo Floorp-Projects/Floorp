@@ -37,7 +37,7 @@ public:
   static already_AddRefed<InternalResponse>
   NetworkError()
   {
-    RefPtr<InternalResponse> response = new InternalResponse(0, EmptyCString());
+    nsRefPtr<InternalResponse> response = new InternalResponse(0, EmptyCString());
     ErrorResult result;
     response->Headers()->SetGuard(HeadersGuardEnum::Immutable, result);
     MOZ_ASSERT(!result.Failed());
@@ -234,7 +234,7 @@ private:
   nsCString mURL;
   const uint16_t mStatus;
   const nsCString mStatusText;
-  RefPtr<InternalHeaders> mHeaders;
+  nsRefPtr<InternalHeaders> mHeaders;
   nsCOMPtr<nsIInputStream> mBody;
   ChannelInfo mChannelInfo;
   UniquePtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
@@ -243,7 +243,7 @@ private:
   // Cache, and SW interception should always serialize/access the underlying
   // unfiltered headers and when deserializing, create an InternalResponse
   // with the unfiltered headers followed by wrapping it.
-  RefPtr<InternalResponse> mWrappedResponse;
+  nsRefPtr<InternalResponse> mWrappedResponse;
 };
 
 } // namespace dom

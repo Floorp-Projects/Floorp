@@ -169,7 +169,7 @@ private:
   bool mRegistered;
 
 protected:
-  RefPtr<URLSearchParams> mSearchParams;
+  nsRefPtr<URLSearchParams> mSearchParams;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Link, MOZILLA_DOM_LINK_IMPLEMENTATION_IID)

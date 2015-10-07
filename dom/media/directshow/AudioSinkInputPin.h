@@ -9,7 +9,7 @@
 
 #include "BaseInputPin.h"
 #include "DirectShowUtils.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsAutoPtr.h"
 
 namespace mozilla {

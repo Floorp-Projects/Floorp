@@ -129,7 +129,7 @@ nsGeoGridFuzzer::FuzzLocation(const GeolocationSetting & aSetting,
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   // return a position at sea level, N heading, 0 speed, 0 error.
-  RefPtr<nsGeoPosition> pos = new nsGeoPosition(lat, lon, 0.0, 0.0,
+  nsRefPtr<nsGeoPosition> pos = new nsGeoPosition(lat, lon, 0.0, 0.0,
                                                   0.0, 0.0, 0.0, ts);
   return pos.forget();
 }

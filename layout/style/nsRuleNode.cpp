@@ -70,7 +70,7 @@ using namespace mozilla::dom;
   if ((context_)->PresContext()->IsDynamic()) {                               \
     method_(request_);                                                      \
   } else {                                                                  \
-    RefPtr<imgRequestProxy> req = nsContentUtils::GetStaticRequest(request_); \
+    nsRefPtr<imgRequestProxy> req = nsContentUtils::GetStaticRequest(request_); \
     method_(req);                                                           \
   }
 
@@ -303,7 +303,7 @@ GetMetricsFor(nsPresContext* aPresContext,
       orientation = gfxFont::eVertical;
     }
   }
-  RefPtr<nsFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   aPresContext->DeviceContext()->GetMetricsFor(font,
                                                aStyleFont->mLanguage,
                                                aStyleFont->mExplicitLanguage,
@@ -469,7 +469,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       } else {
         // This is not the root element or we are calculating something other
         // than font size, so rem is relative to the root element's font size.
-        RefPtr<nsStyleContext> rootStyle;
+        nsRefPtr<nsStyleContext> rootStyle;
         const nsStyleFont *rootStyleFont = styleFont;
         Element* docElement = aPresContext->Document()->GetRootElement();
 
@@ -512,7 +512,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
     }
     case eCSSUnit_XHeight: {
       aPresContext->SetUsesExChUnits(true);
-      RefPtr<nsFontMetrics> fm =
+      nsRefPtr<nsFontMetrics> fm =
         GetMetricsFor(aPresContext, aStyleContext, styleFont,
                       aFontSize, aUseUserFontSet);
       aConditions.SetUncacheable();
@@ -520,7 +520,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
     }
     case eCSSUnit_Char: {
       aPresContext->SetUsesExChUnits(true);
-      RefPtr<nsFontMetrics> fm =
+      nsRefPtr<nsFontMetrics> fm =
         GetMetricsFor(aPresContext, aStyleContext, styleFont,
                       aFontSize, aUseUserFontSet);
       gfxFloat zeroWidth =
@@ -4051,7 +4051,7 @@ nsRuleNode::GetShadowData(const nsCSSValueList* aList,
 
   MOZ_ASSERT(arrayLength > 0,
              "Non-null text-shadow list, yet we counted 0 items.");
-  RefPtr<nsCSSShadowArray> shadowList =
+  nsRefPtr<nsCSSShadowArray> shadowList =
     new(arrayLength) nsCSSShadowArray(arrayLength);
 
   if (!shadowList)
@@ -6206,7 +6206,7 @@ ComputePositionValue(nsStyleContext* aStyleContext,
   NS_ASSERTION(aValue.GetUnit() == eCSSUnit_Array,
                "unexpected unit for CSS <position> value");
 
-  RefPtr<nsCSSValue::Array> positionArray = aValue.GetArrayValue();
+  nsRefPtr<nsCSSValue::Array> positionArray = aValue.GetArrayValue();
   const nsCSSValue &xEdge   = positionArray->Item(0);
   const nsCSSValue &xOffset = positionArray->Item(1);
   const nsCSSValue &yEdge   = positionArray->Item(2);
@@ -7540,7 +7540,7 @@ SetGridTrackList(const nsCSSValue& aValue,
 
 static void
 SetGridTemplateAreas(const nsCSSValue& aValue,
-                     RefPtr<css::GridTemplateAreasValue>* aResult,
+                     nsRefPtr<css::GridTemplateAreasValue>* aResult,
                      css::GridTemplateAreasValue* aParentValue,
                      RuleNodeCacheConditions& aConditions)
 {
@@ -8924,7 +8924,7 @@ nsRuleNode::SetStyleClipPathToCSSValue(nsStyleClipPath* aStyleClipPath,
   const nsCSSValueList* cur = aValue->GetListValue();
 
   uint8_t sizingBox = NS_STYLE_CLIP_SHAPE_SIZING_NOBOX;
-  RefPtr<nsStyleBasicShape> basicShape;
+  nsRefPtr<nsStyleBasicShape> basicShape;
   for (unsigned i = 0; i < 2; ++i) {
     if (!cur) {
       break;
@@ -9119,7 +9119,7 @@ nsRuleNode::SetStyleFilterToCSSValue(nsStyleFilter* aStyleFilter,
                             type);
   MOZ_ASSERT(foundKeyword, "unknown filter type");
   if (type == NS_STYLE_FILTER_DROP_SHADOW) {
-    RefPtr<nsCSSShadowArray> shadowArray = GetShadowData(
+    nsRefPtr<nsCSSShadowArray> shadowArray = GetShadowData(
       filterFunction->Item(1).GetListValue(),
       aStyleContext,
       false,

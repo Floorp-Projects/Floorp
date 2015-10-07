@@ -23,7 +23,7 @@ namespace dom {
 already_AddRefed<InternalRequest>
 InternalRequest::GetRequestConstructorCopy(nsIGlobalObject* aGlobal, ErrorResult& aRv) const
 {
-  RefPtr<InternalRequest> copy = new InternalRequest();
+  nsRefPtr<InternalRequest> copy = new InternalRequest();
   copy->mURL.Assign(mURL);
   copy->SetMethod(mMethod);
   copy->mHeaders = new InternalHeaders(*mHeaders);
@@ -50,7 +50,7 @@ InternalRequest::GetRequestConstructorCopy(nsIGlobalObject* aGlobal, ErrorResult
 already_AddRefed<InternalRequest>
 InternalRequest::Clone()
 {
-  RefPtr<InternalRequest> clone = new InternalRequest(*this);
+  nsRefPtr<InternalRequest> clone = new InternalRequest(*this);
 
   if (!mBodyStream) {
     return clone.forget();

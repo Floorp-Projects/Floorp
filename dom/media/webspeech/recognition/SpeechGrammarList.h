@@ -54,7 +54,7 @@ private:
 
   nsCOMPtr<nsISupports> mParent;
 
-  nsTArray<RefPtr<SpeechGrammar>> mItems;
+  nsTArray<nsRefPtr<SpeechGrammar>> mItems;
 };
 
 } // namespace dom

@@ -455,7 +455,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
     } while (0 != decorMask &&
              (f = nsLayoutUtils::GetParentOrPlaceholderFor(f)));
 
-    RefPtr<nsFontMetrics> fontMet;
+    nsRefPtr<nsFontMetrics> fontMet;
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
     fontMet->SetVertical(wm.IsVertical());
     fontMet->SetTextOrientation(StyleVisibility()->mTextOrientation);
@@ -476,7 +476,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
         presContext->RoundAppUnitsToNearestDevPixels(aTextRect.y + ascent);
     }
 
-    RefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
+    nsRefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
     gfxPoint pt(presContext->AppUnitsToGfxUnits(aTextRect.x),
                 presContext->AppUnitsToGfxUnits(aTextRect.y));
     gfxFloat width = presContext->AppUnitsToGfxUnits(aTextRect.width);
@@ -629,7 +629,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
         return 0;
     }
 
-    RefPtr<nsFontMetrics> fm;
+    nsRefPtr<nsFontMetrics> fm;
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
 
     // see if the text will completely fit in the width given
@@ -959,7 +959,7 @@ nsTextBoxFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
     nsRect scrollBounds(nsPoint(0, 0), GetSize());
     nsRect textRect = mTextDrawRect;
     
-    RefPtr<nsFontMetrics> fontMet;
+    nsRefPtr<nsFontMetrics> fontMet;
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
     nsBoundingMetrics metrics = 
       fontMet->GetInkBoundsForVisualOverflow(mCroppedTitle.get(),
@@ -1021,7 +1021,7 @@ nsTextBoxFrame::GetTextSize(nsPresContext* aPresContext,
                             const nsString& aString,
                             nsSize& aSize, nscoord& aAscent)
 {
-    RefPtr<nsFontMetrics> fontMet;
+    nsRefPtr<nsFontMetrics> fontMet;
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
     aSize.height = fontMet->MaxHeight();
     aSize.width =

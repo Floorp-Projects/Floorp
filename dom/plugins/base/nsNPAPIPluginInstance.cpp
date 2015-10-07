@@ -87,7 +87,7 @@ private:
   bool mCanceled;
 };
 
-static RefPtr<GLContext> sPluginContext = nullptr;
+static nsRefPtr<GLContext> sPluginContext = nullptr;
 
 static bool EnsureGLContext()
 {
@@ -334,7 +334,7 @@ nsresult nsNPAPIPluginInstance::Stop()
 
   // clean up open streams
   while (mStreamListeners.Length() > 0) {
-    RefPtr<nsNPAPIPluginStreamListener> currentListener(mStreamListeners[0]);
+    nsRefPtr<nsNPAPIPluginStreamListener> currentListener(mStreamListeners[0]);
     currentListener->CleanUpStream(NPRES_USER_BREAK);
     mStreamListeners.RemoveElement(currentListener);
   }
@@ -378,14 +378,14 @@ nsNPAPIPluginInstance::GetDOMWindow()
   if (!mOwner)
     return nullptr;
 
-  RefPtr<nsPluginInstanceOwner> deathGrip(mOwner);
+  nsRefPtr<nsPluginInstanceOwner> deathGrip(mOwner);
 
   nsCOMPtr<nsIDocument> doc;
   mOwner->GetDocument(getter_AddRefs(doc));
   if (!doc)
     return nullptr;
 
-  RefPtr<nsPIDOMWindow> window = doc->GetWindow();
+  nsRefPtr<nsPIDOMWindow> window = doc->GetWindow();
 
   return window.forget();
 }
@@ -592,7 +592,7 @@ nsresult
 nsNPAPIPluginInstance::NewStreamListener(const char* aURL, void* notifyData,
                                          nsNPAPIPluginStreamListener** listener)
 {
-  RefPtr<nsNPAPIPluginStreamListener> sl = new nsNPAPIPluginStreamListener(this, notifyData, aURL);
+  nsRefPtr<nsNPAPIPluginStreamListener> sl = new nsNPAPIPluginStreamListener(this, notifyData, aURL);
 
   mStreamListeners.AppendElement(sl);
 
@@ -888,7 +888,7 @@ void* nsNPAPIPluginInstance::GetJavaSurface()
 void nsNPAPIPluginInstance::PostEvent(void* event)
 {
   PluginEventRunnable *r = new PluginEventRunnable(this, (ANPEvent*)event);
-  mPostedEvents.AppendElement(RefPtr<PluginEventRunnable>(r));
+  mPostedEvents.AppendElement(nsRefPtr<PluginEventRunnable>(r));
 
   NS_DispatchToMainThread(r);
 }
@@ -965,7 +965,7 @@ already_AddRefed<AndroidSurfaceTexture> nsNPAPIPluginInstance::CreateSurfaceText
   if (!texture)
     return nullptr;
 
-  RefPtr<AndroidSurfaceTexture> surface = AndroidSurfaceTexture::Create(TexturePoolOGL::GetGLContext(),
+  nsRefPtr<AndroidSurfaceTexture> surface = AndroidSurfaceTexture::Create(TexturePoolOGL::GetGLContext(),
                                                                         texture);
   if (!surface) {
     return nullptr;
@@ -1014,7 +1014,7 @@ nsNPAPIPluginInstance::AsSurfaceTexture()
 
 void* nsNPAPIPluginInstance::AcquireVideoWindow()
 {
-  RefPtr<AndroidSurfaceTexture> surface = CreateSurfaceTexture();
+  nsRefPtr<AndroidSurfaceTexture> surface = CreateSurfaceTexture();
   if (!surface) {
     return nullptr;
   }
@@ -1571,7 +1571,7 @@ nsNPAPIPluginInstance::GetJSContext(JSContext* *outContext)
   if (!mOwner)
     return NS_ERROR_FAILURE;
 
-  RefPtr<nsPluginInstanceOwner> deathGrip(mOwner);
+  nsRefPtr<nsPluginInstanceOwner> deathGrip(mOwner);
 
   *outContext = nullptr;
   nsCOMPtr<nsIDocument> document;
@@ -1712,7 +1712,7 @@ nsNPAPIPluginInstance::CheckJavaC2PJSObjectQuirk(uint16_t paramCount,
     return;
   }
 
-  RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
+  nsRefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
   if (!pluginHost) {
     return;
   }

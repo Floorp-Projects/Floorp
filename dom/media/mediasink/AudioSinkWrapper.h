@@ -9,7 +9,7 @@
 
 #include "mozilla/AbstractThread.h"
 #include "mozilla/dom/AudioChannelBinding.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 
@@ -59,7 +59,7 @@ public:
   const PlaybackParams& GetPlaybackParams() const override;
   void SetPlaybackParams(const PlaybackParams& aParams) override;
 
-  RefPtr<GenericPromise> OnEnded(TrackType aType) override;
+  nsRefPtr<GenericPromise> OnEnded(TrackType aType) override;
   int64_t GetEndTime(TrackType aType) const override;
   int64_t GetPosition(TimeStamp* aTimeStamp = nullptr) const override;
   bool HasUnplayedFrames(TrackType aType) const override;
@@ -87,10 +87,10 @@ private:
 
   void OnAudioEnded();
 
-  const RefPtr<AbstractThread> mOwnerThread;
+  const nsRefPtr<AbstractThread> mOwnerThread;
   UniquePtr<Creator> mCreator;
-  RefPtr<AudioSink> mAudioSink;
-  RefPtr<GenericPromise> mEndPromise;
+  nsRefPtr<AudioSink> mAudioSink;
+  nsRefPtr<GenericPromise> mEndPromise;
 
   bool mIsStarted;
   PlaybackParams mParams;

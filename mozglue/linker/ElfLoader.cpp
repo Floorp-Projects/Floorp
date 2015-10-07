@@ -52,7 +52,7 @@ using namespace mozilla;
 void *
 __wrap_dlopen(const char *path, int flags)
 {
-  RefPtr<LibHandle> handle = ElfLoader::Singleton.Load(path, flags);
+  nsRefPtr<LibHandle> handle = ElfLoader::Singleton.Load(path, flags);
   if (handle)
     handle->AddDirectRef();
   return handle;
@@ -94,7 +94,7 @@ __wrap_dlclose(void *handle)
 int
 __wrap_dladdr(void *addr, Dl_info *info)
 {
-  RefPtr<LibHandle> handle = ElfLoader::Singleton.GetHandleByPtr(addr);
+  nsRefPtr<LibHandle> handle = ElfLoader::Singleton.GetHandleByPtr(addr);
   if (!handle) {
     return dladdr(addr, info);
   }
@@ -141,7 +141,7 @@ __wrap_dl_iterate_phdr(dl_phdr_cb callback, void *data)
 const void *
 __wrap___gnu_Unwind_Find_exidx(void *pc, int *pcount)
 {
-  RefPtr<LibHandle> handle = ElfLoader::Singleton.GetHandleByPtr(pc);
+  nsRefPtr<LibHandle> handle = ElfLoader::Singleton.GetHandleByPtr(pc);
   if (handle)
     return handle->FindExidx(pcount);
   if (__gnu_Unwind_Find_exidx)
@@ -268,7 +268,7 @@ SystemElf::Load(const char *path, int flags)
   if (handle) {
     SystemElf *elf = new SystemElf(path, handle);
     ElfLoader::Singleton.Register(elf);
-    RefPtr<LibHandle> lib(elf);
+    nsRefPtr<LibHandle> lib(elf);
     return lib.forget();
   }
   return nullptr;
@@ -341,7 +341,7 @@ ElfLoader::Load(const char *path, int flags, LibHandle *parent)
   if (!self_elf)
     Init();
 
-  RefPtr<LibHandle> handle;
+  nsRefPtr<LibHandle> handle;
 
   /* Handle dlopen(nullptr) directly. */
   if (!path) {
@@ -412,7 +412,7 @@ ElfLoader::GetHandleByPtr(void *addr)
   /* Scan the list of handles we already have for a match */
   for (LibHandleList::iterator it = handles.begin(); it < handles.end(); ++it) {
     if ((*it)->Contains(addr)) {
-      RefPtr<LibHandle> lib = *it;
+      nsRefPtr<LibHandle> lib = *it;
       return lib.forget();
     }
   }
@@ -424,7 +424,7 @@ ElfLoader::GetMappableFromPath(const char *path)
 {
   const char *name = LeafName(path);
   Mappable *mappable = nullptr;
-  RefPtr<Zip> zip;
+  nsRefPtr<Zip> zip;
   const char *subpath;
   if ((subpath = strchr(path, '!'))) {
     char *zip_path = strndup(path, subpath - path);
@@ -1209,7 +1209,7 @@ void SEGVHandler::handler(int signum, siginfo_t *info, void *context)
   /* Check whether we segfaulted in the address space of a CustomElf. We're
    * only expecting that to happen as an access error. */
   if (info->si_code == SEGV_ACCERR) {
-    RefPtr<LibHandle> handle =
+    nsRefPtr<LibHandle> handle =
       ElfLoader::Singleton.GetHandleByPtr(info->si_addr);
     BaseElf *elf;
     if (handle && (elf = handle->AsBaseElf())) {

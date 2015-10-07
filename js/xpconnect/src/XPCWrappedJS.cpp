@@ -331,7 +331,7 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
     }
 
     bool allowNonScriptable = mozilla::jsipc::IsWrappedCPOW(jsObj);
-    RefPtr<nsXPCWrappedJSClass> clasp = nsXPCWrappedJSClass::GetNewOrUsed(cx, aIID,
+    nsRefPtr<nsXPCWrappedJSClass> clasp = nsXPCWrappedJSClass::GetNewOrUsed(cx, aIID,
                                                                             allowNonScriptable);
     if (!clasp)
         return NS_ERROR_FAILURE;
@@ -341,9 +341,9 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
         return NS_ERROR_FAILURE;
 
     nsresult rv = NS_ERROR_FAILURE;
-    RefPtr<nsXPCWrappedJS> root = map->Find(rootJSObj);
+    nsRefPtr<nsXPCWrappedJS> root = map->Find(rootJSObj);
     if (root) {
-        RefPtr<nsXPCWrappedJS> wrapper = root->FindOrFindInherited(aIID);
+        nsRefPtr<nsXPCWrappedJS> wrapper = root->FindOrFindInherited(aIID);
         if (wrapper) {
             wrapper.forget(wrapperResult);
             return NS_OK;
@@ -353,7 +353,7 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
         // Make a new root wrapper, because there is no existing
         // root wrapper, and the wrapper we are trying to make isn't
         // a root.
-        RefPtr<nsXPCWrappedJSClass> rootClasp = nsXPCWrappedJSClass::GetNewOrUsed(cx, NS_GET_IID(nsISupports));
+        nsRefPtr<nsXPCWrappedJSClass> rootClasp = nsXPCWrappedJSClass::GetNewOrUsed(cx, NS_GET_IID(nsISupports));
         if (!rootClasp)
             return NS_ERROR_FAILURE;
 
@@ -363,7 +363,7 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
         }
     }
 
-    RefPtr<nsXPCWrappedJS> wrapper = new nsXPCWrappedJS(cx, jsObj, clasp, root, &rv);
+    nsRefPtr<nsXPCWrappedJS> wrapper = new nsXPCWrappedJS(cx, jsObj, clasp, root, &rv);
     if (NS_FAILED(rv)) {
         return rv;
     }

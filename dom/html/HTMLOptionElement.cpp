@@ -388,11 +388,11 @@ HTMLOptionElement::Option(const GlobalObject& aGlobal,
                                         kNameSpaceID_XHTML,
                                         nsIDOMNode::ELEMENT_NODE);
 
-  RefPtr<HTMLOptionElement> option = new HTMLOptionElement(nodeInfo);
+  nsRefPtr<HTMLOptionElement> option = new HTMLOptionElement(nodeInfo);
 
   if (aText.WasPassed()) {
     // Create a new text node and append it to the option
-    RefPtr<nsTextNode> textContent =
+    nsRefPtr<nsTextNode> textContent =
       new nsTextNode(option->NodeInfo()->NodeInfoManager());
 
     textContent->SetText(aText.Value(), false);

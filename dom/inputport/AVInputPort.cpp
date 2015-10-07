@@ -25,7 +25,7 @@ AVInputPort::Create(nsPIDOMWindow* aWindow,
                     nsIInputPortData* aData,
                     ErrorResult& aRv)
 {
-  RefPtr<AVInputPort> inputport = new AVInputPort(aWindow);
+  nsRefPtr<AVInputPort> inputport = new AVInputPort(aWindow);
   inputport->Init(aData, aListener, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;

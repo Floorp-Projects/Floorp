@@ -77,10 +77,10 @@ private:
   nsresult DispatchCurrentSourceChangedEvent(TVSource* aSource);
 
   nsCOMPtr<nsITVService> mTVService;
-  RefPtr<DOMMediaStream> mStream;
+  nsRefPtr<DOMMediaStream> mStream;
   uint16_t mStreamType;
-  RefPtr<TVSource> mCurrentSource;
-  nsTArray<RefPtr<TVSource>> mSources;
+  nsRefPtr<TVSource> mCurrentSource;
+  nsTArray<nsRefPtr<TVSource>> mSources;
   nsString mId;
   nsTArray<TVSourceType> mSupportedSourceTypes;
 };

@@ -52,7 +52,7 @@ public:
 
   void OnEnd(const nsSpeechTask* aTask);
 
-  void GetVoices(nsTArray< RefPtr<SpeechSynthesisVoice> >& aResult);
+  void GetVoices(nsTArray< nsRefPtr<SpeechSynthesisVoice> >& aResult);
 
   void ForceEnd();
 
@@ -63,9 +63,9 @@ private:
 
   nsCOMPtr<nsPIDOMWindow> mParent;
 
-  nsTArray<RefPtr<SpeechSynthesisUtterance> > mSpeechQueue;
+  nsTArray<nsRefPtr<SpeechSynthesisUtterance> > mSpeechQueue;
 
-  RefPtr<nsSpeechTask> mCurrentTask;
+  nsRefPtr<nsSpeechTask> mCurrentTask;
 
   nsRefPtrHashtable<nsStringHashKey, SpeechSynthesisVoice> mVoiceCache;
 

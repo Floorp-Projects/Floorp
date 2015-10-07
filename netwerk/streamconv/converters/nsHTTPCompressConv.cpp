@@ -628,7 +628,7 @@ NS_NewHTTPCompressConv(mozilla::net::nsHTTPCompressConv **aHTTPCompressConv)
     return NS_ERROR_NULL_POINTER;
   }
 
-  RefPtr<mozilla::net::nsHTTPCompressConv> outVal =
+  nsRefPtr<mozilla::net::nsHTTPCompressConv> outVal =
     new mozilla::net::nsHTTPCompressConv();
   if (!outVal) {
     return NS_ERROR_OUT_OF_MEMORY;

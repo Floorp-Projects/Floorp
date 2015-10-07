@@ -1133,7 +1133,7 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
   // Set font and color
   aRenderingContext.ThebesContext()->
     SetColor(Color::FromABGR(StyleColor()->mColor));
-  RefPtr<nsFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
     nsLayoutUtils::FontSizeInflationFor(this));
 
@@ -1416,9 +1416,9 @@ nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
                     size/2 - twoPX, size/2 - twoPX);
       devPxRect =
         ToRect(nsLayoutUtils::RectToGfxRect(rect, PresContext()->AppUnitsPerDevPixel()));
-      RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
+      nsRefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder();
       AppendEllipseToPath(builder, devPxRect.Center(), devPxRect.Size());
-      RefPtr<Path> ellipse = builder->Finish();
+      nsRefPtr<Path> ellipse = builder->Finish();
       drawTarget->Fill(ellipse, color);
     }
 
@@ -1650,13 +1650,13 @@ nsDisplayImage::BuildLayer(nsDisplayListBuilder* aBuilder,
                  ? imgIContainer::FLAG_SYNC_DECODE
                  : imgIContainer::FLAG_NONE;
 
-  RefPtr<ImageContainer> container =
+  nsRefPtr<ImageContainer> container =
     mImage->GetImageContainer(aManager, flags);
   if (!container) {
     return nullptr;
   }
 
-  RefPtr<ImageLayer> layer = static_cast<ImageLayer*>
+  nsRefPtr<ImageLayer> layer = static_cast<ImageLayer*>
     (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
   if (!layer) {
     layer = aManager->CreateImageLayer();
@@ -2080,7 +2080,7 @@ nsImageFrame::GetCursor(const nsPoint& aPoint,
       // technically correct, but it's probably the right thing to do
       // here, since it means that areas on which the cursor isn't
       // specified will inherit the style from the image.
-      RefPtr<nsStyleContext> areaStyle = 
+      nsRefPtr<nsStyleContext> areaStyle = 
         PresContext()->PresShell()->StyleSet()->
           ResolveStyleFor(area->AsElement(), StyleContext());
       FillCursorInformationFromStyle(areaStyle->StyleUserInterface(),
@@ -2197,7 +2197,7 @@ nsImageFrame::LoadIcon(const nsAString& aSpec,
   nsCOMPtr<nsIURI> realURI;
   SpecToURI(aSpec, sIOService, getter_AddRefs(realURI));
 
-  RefPtr<imgLoader> il =
+  nsRefPtr<imgLoader> il =
     nsContentUtils::GetImgLoaderForDocument(aPresContext->Document());
 
   nsCOMPtr<nsILoadGroup> loadGroup;

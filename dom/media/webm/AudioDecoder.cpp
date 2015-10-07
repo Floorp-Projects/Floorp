@@ -47,7 +47,7 @@ ogg_packet InitOggPacket(const unsigned char* aData, size_t aLength,
 class VorbisDecoder : public WebMAudioDecoder
 {
 public:
-  RefPtr<InitPromise> Init() override;
+  nsRefPtr<InitPromise> Init() override;
   void Shutdown() override;
   nsresult ResetDecode() override;
   nsresult DecodeHeader(const unsigned char* aData, size_t aLength) override;
@@ -58,7 +58,7 @@ public:
   explicit VorbisDecoder(WebMReader* aReader);
   ~VorbisDecoder();
 private:
-  RefPtr<WebMReader> mReader;
+  nsRefPtr<WebMReader> mReader;
 
   // Vorbis decoder state
   vorbis_info mVorbisInfo;
@@ -94,7 +94,7 @@ VorbisDecoder::Shutdown()
   mReader = nullptr;
 }
 
-RefPtr<InitPromise>
+nsRefPtr<InitPromise>
 VorbisDecoder::Init()
 {
   vorbis_info_init(&mVorbisInfo);
@@ -229,7 +229,7 @@ VorbisDecoder::Decode(const unsigned char* aData, size_t aLength,
 class OpusDecoder : public WebMAudioDecoder
 {
 public:
-  RefPtr<InitPromise> Init() override;
+  nsRefPtr<InitPromise> Init() override;
   void Shutdown() override;
   nsresult ResetDecode() override;
   nsresult DecodeHeader(const unsigned char* aData, size_t aLength) override;
@@ -240,7 +240,7 @@ public:
   explicit OpusDecoder(WebMReader* aReader);
   ~OpusDecoder();
 private:
-  RefPtr<WebMReader> mReader;
+  nsRefPtr<WebMReader> mReader;
 
   // Opus decoder state
   nsAutoPtr<OpusParser> mOpusParser;
@@ -277,7 +277,7 @@ OpusDecoder::Shutdown()
   mReader = nullptr;
 }
 
-RefPtr<InitPromise>
+nsRefPtr<InitPromise>
 OpusDecoder::Init()
 {
   return InitPromise::CreateAndResolve(TrackType::kAudioTrack, __func__);

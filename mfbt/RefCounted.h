@@ -43,8 +43,8 @@ namespace mozilla {
  * do so will abort DEBUG builds.
  *
  * Live RefCounted<T> have refcount > 0.  The lifetime (refcounts) of
- * live RefCounted<T> are controlled by RefPtr<T> and
- * RefPtr<super/subclass of T>.  Upon a transition from refcounted==1
+ * live RefCounted<T> are controlled by nsRefPtr<T> and
+ * nsRefPtr<super/subclass of T>.  Upon a transition from refcounted==1
  * to 0, the RefCounted<T> "dies" and is destroyed.  The "destroyed"
  * state is represented in DEBUG builds by refcount==0xffffdead.  This
  * state distinguishes use-before-ref (refcount==0) from

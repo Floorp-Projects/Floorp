@@ -439,7 +439,7 @@ nsLayoutStylesheetCache::InitFromProfile()
 
 /* static */ void
 nsLayoutStylesheetCache::LoadSheetURL(const char* aURL,
-                                      RefPtr<CSSStyleSheet>& aSheet,
+                                      nsRefPtr<CSSStyleSheet>& aSheet,
                                       bool aEnableUnsafeRules)
 {
   nsCOMPtr<nsIURI> uri;
@@ -451,7 +451,7 @@ nsLayoutStylesheetCache::LoadSheetURL(const char* aURL,
 }
 
 void
-nsLayoutStylesheetCache::LoadSheetFile(nsIFile* aFile, RefPtr<CSSStyleSheet>& aSheet)
+nsLayoutStylesheetCache::LoadSheetFile(nsIFile* aFile, nsRefPtr<CSSStyleSheet>& aSheet)
 {
   bool exists = false;
   aFile->Exists(&exists);
@@ -477,7 +477,7 @@ ErrorLoadingBuiltinSheet(nsIURI* aURI, const char* aMsg)
 
 void
 nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,
-                                   RefPtr<CSSStyleSheet>& aSheet,
+                                   nsRefPtr<CSSStyleSheet>& aSheet,
                                    bool aEnableUnsafeRules)
 {
   if (!aURI) {
@@ -504,7 +504,7 @@ nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,
 }
 
 /* static */ void
-nsLayoutStylesheetCache::InvalidateSheet(RefPtr<CSSStyleSheet>& aSheet)
+nsLayoutStylesheetCache::InvalidateSheet(nsRefPtr<CSSStyleSheet>& aSheet)
 {
   MOZ_ASSERT(gCSSLoader, "pref changed before we loaded a sheet?");
 
@@ -560,7 +560,7 @@ nsLayoutStylesheetCache::AppendPreferenceColorRule(CSSStyleSheet* aSheet,
 }
 
 void
-nsLayoutStylesheetCache::BuildPreferenceSheet(RefPtr<CSSStyleSheet>& aSheet,
+nsLayoutStylesheetCache::BuildPreferenceSheet(nsRefPtr<CSSStyleSheet>& aSheet,
                                               nsPresContext* aPresContext)
 {
   aSheet = new CSSStyleSheet(CORS_NONE, mozilla::net::RP_Default);

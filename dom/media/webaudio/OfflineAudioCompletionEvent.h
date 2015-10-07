@@ -43,7 +43,7 @@ protected:
   virtual ~OfflineAudioCompletionEvent();
 
 private:
-  RefPtr<AudioBuffer> mRenderedBuffer;
+  nsRefPtr<AudioBuffer> mRenderedBuffer;
 };
 
 } // namespace dom

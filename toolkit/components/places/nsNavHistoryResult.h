@@ -140,7 +140,7 @@ public:
                 uint32_t aQueryCount,
                 nsNavHistoryQueryOptions *aOptions);
 
-  RefPtr<nsNavHistoryContainerResultNode> mRootNode;
+  nsRefPtr<nsNavHistoryContainerResultNode> mRootNode;
 
   nsCOMArray<nsINavHistoryQuery> mQueries;
   nsCOMPtr<nsNavHistoryQueryOptions> mOptions;
@@ -161,15 +161,15 @@ public:
   bool mIsBookmarkFolderObserver;
   bool mIsAllBookmarksObserver;
 
-  typedef nsTArray< RefPtr<nsNavHistoryQueryResultNode> > QueryObserverList;
+  typedef nsTArray< nsRefPtr<nsNavHistoryQueryResultNode> > QueryObserverList;
   QueryObserverList mHistoryObservers;
   QueryObserverList mAllBookmarksObservers;
 
-  typedef nsTArray< RefPtr<nsNavHistoryFolderResultNode> > FolderObserverList;
+  typedef nsTArray< nsRefPtr<nsNavHistoryFolderResultNode> > FolderObserverList;
   nsDataHashtable<nsTrimInt64HashKey, FolderObserverList*> mBookmarkFolderObservers;
   FolderObserverList* BookmarkFolderObserversForId(int64_t aFolderId, bool aCreate);
 
-  typedef nsTArray< RefPtr<nsNavHistoryContainerResultNode> > ContainerObserverList;
+  typedef nsTArray< nsRefPtr<nsNavHistoryContainerResultNode> > ContainerObserverList;
 
   void RecursiveExpandCollapse(nsNavHistoryContainerResultNode* aContainer,
                                bool aExpand);
@@ -348,7 +348,7 @@ public:
     return reinterpret_cast<nsNavHistoryQueryResultNode*>(this);
   }
 
-  RefPtr<nsNavHistoryContainerResultNode> mParent;
+  nsRefPtr<nsNavHistoryContainerResultNode> mParent;
   nsCString mURI; // not necessarily valid for containers, call GetUri
   nsCString mTitle;
   nsString mTags;
@@ -459,7 +459,7 @@ public:
   // their result pointer set so we can quickly get to the result without having
   // to walk the tree. Yet, this also saves us from storing a million pointers
   // for every leaf node to the result.
-  RefPtr<nsNavHistoryResult> mResult;
+  nsRefPtr<nsNavHistoryResult> mResult;
 
   // For example, RESULT_TYPE_QUERY. Query and Folder results override GetType
   // so this is not used, but is still kept in sync.

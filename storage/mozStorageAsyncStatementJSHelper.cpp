@@ -56,7 +56,7 @@ AsyncStatementJSHelper::getParams(AsyncStatement *aStatement,
       getter_AddRefs(holder)
     );
     NS_ENSURE_SUCCESS(rv, rv);
-    RefPtr<AsyncStatementParamsHolder> paramsHolder =
+    nsRefPtr<AsyncStatementParamsHolder> paramsHolder =
       new AsyncStatementParamsHolder(holder);
     aStatement->mStatementParamsHolder =
       new nsMainThreadPtrHolder<nsIXPConnectJSObjectHolder>(paramsHolder);

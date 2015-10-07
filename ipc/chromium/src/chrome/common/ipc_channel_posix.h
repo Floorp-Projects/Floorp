@@ -150,7 +150,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
 #if defined(OS_MACOSX)
   struct PendingDescriptors {
     uint32_t id;
-    RefPtr<FileDescriptorSet> fds;
+    nsRefPtr<FileDescriptorSet> fds;
 
     PendingDescriptors() : id(0) { }
     PendingDescriptors(uint32_t id, FileDescriptorSet *fds)

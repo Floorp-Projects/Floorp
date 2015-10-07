@@ -79,7 +79,7 @@ IMETextTxn::UndoTransaction()
 {
   // Get the selection first so we'll fail before making any changes if we
   // can't get it
-  RefPtr<Selection> selection = mEditor.GetSelection();
+  nsRefPtr<Selection> selection = mEditor.GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
 
   nsresult res = mTextNode->DeleteData(mOffset, mStringToInsert.Length());
@@ -106,7 +106,7 @@ IMETextTxn::Merge(nsITransaction* aTransaction, bool* aDidMerge)
   }
 
   // If aTransaction is another IMETextTxn then absorb it
-  RefPtr<IMETextTxn> otherTxn = do_QueryObject(aTransaction);
+  nsRefPtr<IMETextTxn> otherTxn = do_QueryObject(aTransaction);
   if (otherTxn) {
     // We absorb the next IME transaction by adopting its insert string
     mStringToInsert = otherTxn->mStringToInsert;
@@ -167,7 +167,7 @@ IMETextTxn::SetIMESelection(nsEditor& aEditor,
                             uint32_t aLengthOfCompositionString,
                             const TextRangeArray* aRanges)
 {
-  RefPtr<Selection> selection = aEditor.GetSelection();
+  nsRefPtr<Selection> selection = aEditor.GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
 
   nsresult rv = selection->StartBatchChanges();
@@ -238,7 +238,7 @@ IMETextTxn::SetIMESelection(nsEditor& aEditor,
       continue;
     }
 
-    RefPtr<nsRange> clauseRange;
+    nsRefPtr<nsRange> clauseRange;
     int32_t startOffset = static_cast<int32_t>(
       aOffsetInNode +
         std::min(textRange.mStartOffset, aLengthOfCompositionString));

@@ -203,7 +203,7 @@ ToJSValue(JSContext* aCx,
 template <typename T>
 MOZ_WARN_UNUSED_RESULT bool
 ToJSValue(JSContext* aCx,
-          const RefPtr<T>& aArgument,
+          const nsRefPtr<T>& aArgument,
           JS::MutableHandle<JS::Value> aValue)
 {
   return ToJSValue(aCx, *aArgument.get(), aValue);

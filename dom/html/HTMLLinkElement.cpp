@@ -247,7 +247,7 @@ HTMLLinkElement::CreateAndDispatchEvent(nsIDocument* aDoc,
                       strings, eIgnoreCase) != ATTR_VALUE_NO_MATCH)
     return;
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this, aEventName, true, true);
   // Always run async in order to avoid running script when the content
   // sink isn't expecting it.
@@ -290,7 +290,7 @@ HTMLLinkElement::UpdateImport()
     return;
   }
 
-  RefPtr<ImportManager> manager = doc->ImportManager();
+  nsRefPtr<ImportManager> manager = doc->ImportManager();
   MOZ_ASSERT(manager, "ImportManager should be created lazily when needed");
 
   {
@@ -537,7 +537,7 @@ HTMLLinkElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 already_AddRefed<nsIDocument>
 HTMLLinkElement::GetImport()
 {
-  return mImportLoader ? RefPtr<nsIDocument>(mImportLoader->GetImport()).forget() : nullptr;
+  return mImportLoader ? nsRefPtr<nsIDocument>(mImportLoader->GetImport()).forget() : nullptr;
 }
 
 } // namespace dom

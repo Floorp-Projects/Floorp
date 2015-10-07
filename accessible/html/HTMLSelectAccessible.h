@@ -196,7 +196,7 @@ protected:
   Accessible* SelectedOption() const;
 
 private:
-  RefPtr<HTMLComboboxListAccessible> mListAccessible;
+  nsRefPtr<HTMLComboboxListAccessible> mListAccessible;
 };
 
 /*

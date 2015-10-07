@@ -69,7 +69,7 @@ static_assert(sizeof(void*) == sizeof(nullptr),
 nsresult
 NS_NewSVGElement(Element **aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
 {
-  RefPtr<nsSVGElement> it = new nsSVGElement(aNodeInfo);
+  nsRefPtr<nsSVGElement> it = new nsSVGElement(aNodeInfo);
   nsresult rv = it->Init();
 
   if (NS_FAILED(rv)) {
@@ -1227,7 +1227,7 @@ MappedAttrParser::CreateStyleRule()
     return nullptr; // No mapped attributes were parsed
   }
 
-  RefPtr<css::StyleRule> rule = new css::StyleRule(nullptr, mDecl, 0, 0);
+  nsRefPtr<css::StyleRule> rule = new css::StyleRule(nullptr, mDecl, 0, 0);
   mDecl = nullptr; // We no longer own the declaration -- drop our pointer to it
   return rule.forget();
 }
@@ -1345,7 +1345,7 @@ nsSVGElement::UpdateAnimatedContentStyleRule()
   doc->PropertyTable(SMIL_MAPPED_ATTR_ANIMVAL)->
     Enumerate(this, ParseMappedAttrAnimValueCallback, &mappedAttrParser);
  
-  RefPtr<css::StyleRule>
+  nsRefPtr<css::StyleRule>
     animContentStyleRule(mappedAttrParser.CreateStyleRule());
 
   if (animContentStyleRule) {

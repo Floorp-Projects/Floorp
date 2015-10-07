@@ -11,7 +11,7 @@
 #include "mozilla/CondVar.h"
 #include "mozilla/DebugOnly.h"
 #include "nsISupportsImpl.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsThread.h"
 
 class nsIRunnable;
@@ -49,7 +49,7 @@ class WorkerThread final
   WorkerPrivate* mWorkerPrivate;
 
   // Only touched on the target thread.
-  RefPtr<Observer> mObserver;
+  nsRefPtr<Observer> mObserver;
 
   // Protected by nsThread::mLock and waited on with mWorkerPrivateCondVar.
   uint32_t mOtherThreadsDispatchingViaEventTarget;

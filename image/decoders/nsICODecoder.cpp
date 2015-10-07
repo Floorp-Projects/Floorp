@@ -477,7 +477,7 @@ nsICODecoder::ReadBIH(const char* aData)
   // contained resource over our own information.
   // XXX(seth): Is this ever different than the value we obtained from
   // ReadBPP() above?
-  RefPtr<nsBMPDecoder> bmpDecoder =
+  nsRefPtr<nsBMPDecoder> bmpDecoder =
     static_cast<nsBMPDecoder*>(mContainedDecoder.get());
   mBPP = bmpDecoder->GetBitsPerPixel();
 
@@ -513,7 +513,7 @@ nsICODecoder::ReadBMP(const char* aData, uint32_t aLen)
 LexerTransition<ICOState>
 nsICODecoder::PrepareForMask()
 {
-  RefPtr<nsBMPDecoder> bmpDecoder =
+  nsRefPtr<nsBMPDecoder> bmpDecoder =
     static_cast<nsBMPDecoder*>(mContainedDecoder.get());
 
   uint16_t numColors = GetNumColors();
@@ -587,7 +587,7 @@ nsICODecoder::ReadMaskRow(const char* aData)
 
     decoded = reinterpret_cast<uint32_t*>(mDownscaler->RowBuffer());
   } else {
-    RefPtr<nsBMPDecoder> bmpDecoder =
+    nsRefPtr<nsBMPDecoder> bmpDecoder =
       static_cast<nsBMPDecoder*>(mContainedDecoder.get());
     uint32_t* imageData = bmpDecoder->GetImageData();
     if (!imageData) {
@@ -637,7 +637,7 @@ nsICODecoder::FinishMask()
   // mMaskBuffer. We just need to transfer them to the image.
   if (mDownscaler) {
     // Retrieve the image data.
-    RefPtr<nsBMPDecoder> bmpDecoder =
+    nsRefPtr<nsBMPDecoder> bmpDecoder =
       static_cast<nsBMPDecoder*>(mContainedDecoder.get());
     uint8_t* imageData = reinterpret_cast<uint8_t*>(bmpDecoder->GetImageData());
     if (!imageData) {
@@ -656,7 +656,7 @@ nsICODecoder::FinishMask()
   if (mHasMaskAlpha) {
     PostHasTransparency();
 
-    RefPtr<nsBMPDecoder> bmpDecoder =
+    nsRefPtr<nsBMPDecoder> bmpDecoder =
       static_cast<nsBMPDecoder*>(mContainedDecoder.get());
     bmpDecoder->SetHasAlphaData();
   }

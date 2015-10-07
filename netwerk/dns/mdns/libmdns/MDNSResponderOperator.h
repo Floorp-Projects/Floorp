@@ -11,7 +11,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDNSServiceDiscovery.h"
 #include "nsIThread.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -37,7 +37,7 @@ private:
   class ServiceWatcher;
 
   DNSServiceRef mService;
-  RefPtr<ServiceWatcher> mWatcher;
+  nsRefPtr<ServiceWatcher> mWatcher;
   nsCOMPtr<nsIThread> mThread; // remember caller thread for callback
   Atomic<bool> mIsCancelled;
 };
@@ -130,7 +130,7 @@ private:
   nsCOMPtr<nsIDNSServiceResolveListener> mListener;
 
   // hold self until callback is made.
-  RefPtr<ResolveOperator> mDeleteProtector;
+  nsRefPtr<ResolveOperator> mDeleteProtector;
 };
 
 } // namespace net

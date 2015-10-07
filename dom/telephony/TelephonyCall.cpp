@@ -49,7 +49,7 @@ TelephonyCall::Create(Telephony* aTelephony, TelephonyCallId* aId,
   NS_ASSERTION(aId, "Null aId pointer!");
   NS_ASSERTION(aCallIndex >= 1, "Invalid call index!");
 
-  RefPtr<TelephonyCall> call = new TelephonyCall(aTelephony->GetOwner());
+  nsRefPtr<TelephonyCall> call = new TelephonyCall(aTelephony->GetOwner());
 
   call->mTelephony = aTelephony;
   call->mId = aId;
@@ -85,7 +85,7 @@ TelephonyCall::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 void
 TelephonyCall::ChangeStateInternal(uint16_t aCallState, bool aFireEvents)
 {
-  RefPtr<TelephonyCall> kungFuDeathGrip(this);
+  nsRefPtr<TelephonyCall> kungFuDeathGrip(this);
 
   mCallState = aCallState;
   switch (aCallState) {
@@ -156,7 +156,7 @@ TelephonyCall::DispatchCallEvent(const nsAString& aType,
   init.mCancelable = false;
   init.mCall = aCall;
 
-  RefPtr<CallEvent> event = CallEvent::Constructor(this, aType, init);
+  nsRefPtr<CallEvent> event = CallEvent::Constructor(this, aType, init);
 
   return DispatchTrustedEvent(event);
 }
@@ -170,7 +170,7 @@ TelephonyCall::CreatePromise(ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -245,35 +245,35 @@ NS_IMPL_RELEASE_INHERITED(TelephonyCall, DOMEventTargetHelper)
 already_AddRefed<TelephonyCallId>
 TelephonyCall::Id() const
 {
-  RefPtr<TelephonyCallId> id = mId;
+  nsRefPtr<TelephonyCallId> id = mId;
   return id.forget();
 }
 
 already_AddRefed<TelephonyCallId>
 TelephonyCall::GetSecondId() const
 {
-  RefPtr<TelephonyCallId> id = mSecondId;
+  nsRefPtr<TelephonyCallId> id = mSecondId;
   return id.forget();
 }
 
 already_AddRefed<DOMError>
 TelephonyCall::GetError() const
 {
-  RefPtr<DOMError> error = mError;
+  nsRefPtr<DOMError> error = mError;
   return error.forget();
 }
 
 already_AddRefed<TelephonyCallGroup>
 TelephonyCall::GetGroup() const
 {
-  RefPtr<TelephonyCallGroup> group = mGroup;
+  nsRefPtr<TelephonyCallGroup> group = mGroup;
   return group.forget();
 }
 
 already_AddRefed<Promise>
 TelephonyCall::Answer(ErrorResult& aRv)
 {
-  RefPtr<Promise> promise = CreatePromise(aRv);
+  nsRefPtr<Promise> promise = CreatePromise(aRv);
   if (!promise) {
     return nullptr;
   }
@@ -295,7 +295,7 @@ TelephonyCall::Answer(ErrorResult& aRv)
 already_AddRefed<Promise>
 TelephonyCall::HangUp(ErrorResult& aRv)
 {
-  RefPtr<Promise> promise = CreatePromise(aRv);
+  nsRefPtr<Promise> promise = CreatePromise(aRv);
   if (!promise) {
     return nullptr;
   }
@@ -319,7 +319,7 @@ TelephonyCall::HangUp(ErrorResult& aRv)
 already_AddRefed<Promise>
 TelephonyCall::Hold(ErrorResult& aRv)
 {
-  RefPtr<Promise> promise = CreatePromise(aRv);
+  nsRefPtr<Promise> promise = CreatePromise(aRv);
   if (!promise) {
     return nullptr;
   }
@@ -337,7 +337,7 @@ TelephonyCall::Hold(ErrorResult& aRv)
 already_AddRefed<Promise>
 TelephonyCall::Resume(ErrorResult& aRv)
 {
-  RefPtr<Promise> promise = CreatePromise(aRv);
+  nsRefPtr<Promise> promise = CreatePromise(aRv);
   if (!promise) {
     return nullptr;
   }

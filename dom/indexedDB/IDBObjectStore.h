@@ -49,7 +49,7 @@ class IDBObjectStore final
 
   static const JSClass sDummyPropJSClass;
 
-  RefPtr<IDBTransaction> mTransaction;
+  nsRefPtr<IDBTransaction> mTransaction;
   JS::Heap<JS::Value> mCachedKeyPath;
 
   // This normally points to the ObjectStoreSpec owned by the parent IDBDatabase
@@ -59,7 +59,7 @@ class IDBObjectStore final
   const ObjectStoreSpec* mSpec;
   nsAutoPtr<ObjectStoreSpec> mDeletedSpec;
 
-  nsTArray<RefPtr<IDBIndex>> mIndexes;
+  nsTArray<nsRefPtr<IDBIndex>> mIndexes;
 
   const int64_t mId;
   bool mRooted;

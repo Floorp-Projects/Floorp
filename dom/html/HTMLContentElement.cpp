@@ -55,7 +55,7 @@ HTMLContentElement::BindToTree(nsIDocument* aDocument,
                                nsIContent* aBindingParent,
                                bool aCompileEventHandlers)
 {
-  RefPtr<ShadowRoot> oldContainingShadow = GetContainingShadow();
+  nsRefPtr<ShadowRoot> oldContainingShadow = GetContainingShadow();
 
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
                                                  aBindingParent,
@@ -86,7 +86,7 @@ HTMLContentElement::BindToTree(nsIDocument* aDocument,
 void
 HTMLContentElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
-  RefPtr<ShadowRoot> oldContainingShadow = GetContainingShadow();
+  nsRefPtr<ShadowRoot> oldContainingShadow = GetContainingShadow();
 
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 
@@ -293,7 +293,7 @@ HTMLContentElement::Match(nsIContent* aContent)
 already_AddRefed<DistributedContentList>
 HTMLContentElement::GetDistributedNodes()
 {
-  RefPtr<DistributedContentList> list = new DistributedContentList(this);
+  nsRefPtr<DistributedContentList> list = new DistributedContentList(this);
   return list.forget();
 }
 

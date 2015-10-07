@@ -137,7 +137,7 @@ class DOMSVGAnimatedPreserveAspectRatio final : public nsISupports,
 protected:
   // kept alive because it belongs to content:
   SVGAnimatedPreserveAspectRatio* mVal;
-  RefPtr<nsSVGElement> mSVGElement;
+  nsRefPtr<nsSVGElement> mSVGElement;
 };
 
 } // namespace dom

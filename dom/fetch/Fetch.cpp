@@ -55,7 +55,7 @@ class WorkerFetchResolver final : public FetchDriverObserver
   friend class WorkerFetchResponseEndRunnable;
   friend class WorkerFetchResponseRunnable;
 
-  RefPtr<PromiseWorkerProxy> mPromiseProxy;
+  nsRefPtr<PromiseWorkerProxy> mPromiseProxy;
 public:
   // Returns null if worker is shutting down.
   static already_AddRefed<WorkerFetchResolver>
@@ -63,12 +63,12 @@ public:
   {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
-    RefPtr<PromiseWorkerProxy> proxy = PromiseWorkerProxy::Create(aWorkerPrivate, aPromise);
+    nsRefPtr<PromiseWorkerProxy> proxy = PromiseWorkerProxy::Create(aWorkerPrivate, aPromise);
     if (!proxy) {
       return nullptr;
     }
 
-    RefPtr<WorkerFetchResolver> r = new WorkerFetchResolver(proxy);
+    nsRefPtr<WorkerFetchResolver> r = new WorkerFetchResolver(proxy);
     return r.forget();
   }
 
@@ -92,8 +92,8 @@ private:
 
 class MainThreadFetchResolver final : public FetchDriverObserver
 {
-  RefPtr<Promise> mPromise;
-  RefPtr<Response> mResponse;
+  nsRefPtr<Promise> mPromise;
+  nsRefPtr<Response> mResponse;
 
   NS_DECL_OWNINGTHREAD
 public:
@@ -108,8 +108,8 @@ private:
 
 class MainThreadFetchRunnable : public nsRunnable
 {
-  RefPtr<WorkerFetchResolver> mResolver;
-  RefPtr<InternalRequest> mRequest;
+  nsRefPtr<WorkerFetchResolver> mResolver;
+  nsRefPtr<InternalRequest> mRequest;
 
 public:
   MainThreadFetchRunnable(WorkerFetchResolver* aResolver,
@@ -124,7 +124,7 @@ public:
   Run()
   {
     AssertIsOnMainThread();
-    RefPtr<PromiseWorkerProxy> proxy = mResolver->mPromiseProxy;
+    nsRefPtr<PromiseWorkerProxy> proxy = mResolver->mPromiseProxy;
     MutexAutoLock lock(proxy->Lock());
     if (proxy->CleanedUp()) {
       NS_WARNING("Aborting Fetch because worker already shut down");
@@ -135,7 +135,7 @@ public:
     MOZ_ASSERT(principal);
     nsCOMPtr<nsILoadGroup> loadGroup = proxy->GetWorkerPrivate()->GetLoadGroup();
     MOZ_ASSERT(loadGroup);
-    RefPtr<FetchDriver> fetch = new FetchDriver(mRequest, principal, loadGroup);
+    nsRefPtr<FetchDriver> fetch = new FetchDriver(mRequest, principal, loadGroup);
     nsIDocument* doc = proxy->GetWorkerPrivate()->GetDocument();
     if (doc) {
       fetch->SetDocument(doc);
@@ -154,7 +154,7 @@ already_AddRefed<Promise>
 FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
              const RequestInit& aInit, ErrorResult& aRv)
 {
-  RefPtr<Promise> p = Promise::Create(aGlobal, aRv);
+  nsRefPtr<Promise> p = Promise::Create(aGlobal, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -166,12 +166,12 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
   JS::Rooted<JSObject*> jsGlobal(cx, aGlobal->GetGlobalJSObject());
   GlobalObject global(cx, jsGlobal);
 
-  RefPtr<Request> request = Request::Constructor(global, aInput, aInit, aRv);
+  nsRefPtr<Request> request = Request::Constructor(global, aInput, aInit, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  RefPtr<InternalRequest> r = request->GetInternalRequest();
+  nsRefPtr<InternalRequest> r = request->GetInternalRequest();
 
   if (NS_IsMainThread()) {
     nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal);
@@ -201,8 +201,8 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
 
     Telemetry::Accumulate(Telemetry::FETCH_IS_MAINTHREAD, 1);
 
-    RefPtr<MainThreadFetchResolver> resolver = new MainThreadFetchResolver(p);
-    RefPtr<FetchDriver> fetch = new FetchDriver(r, principal, loadGroup);
+    nsRefPtr<MainThreadFetchResolver> resolver = new MainThreadFetchResolver(p);
+    nsRefPtr<FetchDriver> fetch = new FetchDriver(r, principal, loadGroup);
     fetch->SetDocument(doc);
     aRv = fetch->Fetch(resolver);
     if (NS_WARN_IF(aRv.Failed())) {
@@ -218,14 +218,14 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
       r->SetSkipServiceWorker();
     }
 
-    RefPtr<WorkerFetchResolver> resolver = WorkerFetchResolver::Create(worker, p);
+    nsRefPtr<WorkerFetchResolver> resolver = WorkerFetchResolver::Create(worker, p);
     if (!resolver) {
       NS_WARNING("Could not add WorkerFetchResolver feature to worker");
       aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
       return nullptr;
     }
 
-    RefPtr<MainThreadFetchRunnable> run = new MainThreadFetchRunnable(resolver, r);
+    nsRefPtr<MainThreadFetchRunnable> run = new MainThreadFetchRunnable(resolver, r);
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(run)));
   }
 
@@ -261,9 +261,9 @@ MainThreadFetchResolver::~MainThreadFetchResolver()
 
 class WorkerFetchResponseRunnable final : public WorkerRunnable
 {
-  RefPtr<WorkerFetchResolver> mResolver;
+  nsRefPtr<WorkerFetchResolver> mResolver;
   // Passed from main thread to worker thread after being initialized.
-  RefPtr<InternalResponse> mInternalResponse;
+  nsRefPtr<InternalResponse> mInternalResponse;
 public:
   WorkerFetchResponseRunnable(WorkerPrivate* aWorkerPrivate,
                               WorkerFetchResolver* aResolver,
@@ -280,11 +280,11 @@ public:
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
 
-    RefPtr<Promise> promise = mResolver->mPromiseProxy->WorkerPromise();
+    nsRefPtr<Promise> promise = mResolver->mPromiseProxy->WorkerPromise();
 
     if (mInternalResponse->Type() != ResponseType::Error) {
-      RefPtr<nsIGlobalObject> global = aWorkerPrivate->GlobalScope();
-      RefPtr<Response> response = new Response(global, mInternalResponse);
+      nsRefPtr<nsIGlobalObject> global = aWorkerPrivate->GlobalScope();
+      nsRefPtr<Response> response = new Response(global, mInternalResponse);
       promise->MaybeResolve(response);
     } else {
       ErrorResult result;
@@ -297,7 +297,7 @@ public:
 
 class WorkerFetchResponseEndRunnable final : public WorkerRunnable
 {
-  RefPtr<WorkerFetchResolver> mResolver;
+  nsRefPtr<WorkerFetchResolver> mResolver;
 public:
   WorkerFetchResponseEndRunnable(WorkerPrivate* aWorkerPrivate,
                                  WorkerFetchResolver* aResolver)
@@ -327,7 +327,7 @@ WorkerFetchResolver::OnResponseAvailableInternal(InternalResponse* aResponse)
     return;
   }
 
-  RefPtr<WorkerFetchResponseRunnable> r =
+  nsRefPtr<WorkerFetchResponseRunnable> r =
     new WorkerFetchResponseRunnable(mPromiseProxy->GetWorkerPrivate(), this,
                                     aResponse);
 
@@ -347,7 +347,7 @@ WorkerFetchResolver::OnResponseEnd()
     return;
   }
 
-  RefPtr<WorkerFetchResponseEndRunnable> r =
+  nsRefPtr<WorkerFetchResponseEndRunnable> r =
     new WorkerFetchResponseEndRunnable(mPromiseProxy->GetWorkerPrivate(), this);
 
   AutoJSAPI jsapi;
@@ -384,7 +384,7 @@ nsresult
 ExtractFromBlob(const Blob& aBlob, nsIInputStream** aStream,
                 nsCString& aContentType)
 {
-  RefPtr<BlobImpl> impl = aBlob.Impl();
+  nsRefPtr<BlobImpl> impl = aBlob.Impl();
   ErrorResult rv;
   impl->GetInternalStream(aStream, rv);
   if (NS_WARN_IF(rv.Failed())) {
@@ -498,7 +498,7 @@ private:
 class MOZ_STACK_CLASS FormDataParser
 {
 private:
-  RefPtr<nsFormData> mFormData;
+  nsRefPtr<nsFormData> mFormData;
   nsCString mMimeType;
   nsCString mData;
 
@@ -722,7 +722,7 @@ private:
       }
       p = nullptr;
 
-      RefPtr<Blob> file =
+      nsRefPtr<Blob> file =
         File::CreateMemoryFile(mParentObject,
                                reinterpret_cast<void *>(copy), body.Length(),
                                NS_ConvertUTF8toUTF16(mFilename),
@@ -1003,7 +1003,7 @@ public:
     AssertIsOnMainThread();
     if (mBody) {
       if (mBody->mWorkerPrivate) {
-        RefPtr<FailConsumeBodyWorkerRunnable<Derived>> r =
+        nsRefPtr<FailConsumeBodyWorkerRunnable<Derived>> r =
           new FailConsumeBodyWorkerRunnable<Derived>(mBody);
         AutoSafeJSContext cx;
         if (!r->Dispatch(cx)) {
@@ -1051,7 +1051,7 @@ public:
 
     uint8_t* nonconstResult = const_cast<uint8_t*>(aResult);
     if (mFetchBody->mWorkerPrivate) {
-      RefPtr<ContinueConsumeBodyRunnable<Derived>> r =
+      nsRefPtr<ContinueConsumeBodyRunnable<Derived>> r =
         new ContinueConsumeBodyRunnable<Derived>(mFetchBody,
                                         aStatus,
                                         aResultLength,
@@ -1301,7 +1301,7 @@ FetchBody<Derived>::BeginConsumeBodyMainThread()
     return;
   }
 
-  RefPtr<ConsumeBodyDoneObserver<Derived>> p = new ConsumeBodyDoneObserver<Derived>(this);
+  nsRefPtr<ConsumeBodyDoneObserver<Derived>> p = new ConsumeBodyDoneObserver<Derived>(this);
   nsCOMPtr<nsIStreamLoader> loader;
   rv = NS_NewStreamLoader(getter_AddRefs(loader), p);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1345,9 +1345,9 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
   AutoFreeBuffer autoFree(aResult);
 
   MOZ_ASSERT(mConsumePromise);
-  RefPtr<Promise> localPromise = mConsumePromise.forget();
+  nsRefPtr<Promise> localPromise = mConsumePromise.forget();
 
-  RefPtr<Derived> kungfuDeathGrip = DerivedClass();
+  nsRefPtr<Derived> kungfuDeathGrip = DerivedClass();
   ReleaseObject();
 
   if (NS_WARN_IF(NS_FAILED(aStatus))) {
@@ -1368,7 +1368,7 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
         // canceled on the main thread. This ensures that OnStreamComplete has
         // a valid FetchBody around to call CancelPump and we don't release the
         // FetchBody on the main thread.
-        RefPtr<CancelPumpRunnable<Derived>> r =
+        nsRefPtr<CancelPumpRunnable<Derived>> r =
           new CancelPumpRunnable<Derived>(this);
         if (!r->Dispatch(mWorkerPrivate->GetJSContext())) {
           NS_WARNING("Could not dispatch CancelPumpRunnable. Nothing we can do here");
@@ -1413,7 +1413,7 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
       break;
     }
     case CONSUME_BLOB: {
-      RefPtr<dom::Blob> blob = FetchUtil::ConsumeBlob(
+      nsRefPtr<dom::Blob> blob = FetchUtil::ConsumeBlob(
         DerivedClass()->GetParentObject(), NS_ConvertUTF8toUTF16(mMimeType),
         aResultLength, aResult, error);
       error.WouldReportJSException();
@@ -1429,7 +1429,7 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
       data.Adopt(reinterpret_cast<char*>(aResult), aResultLength);
       autoFree.Reset();
 
-      RefPtr<nsFormData> fd = FetchUtil::ConsumeFormData(
+      nsRefPtr<nsFormData> fd = FetchUtil::ConsumeFormData(
         DerivedClass()->GetParentObject(),
         mMimeType, data, error);
       if (!error.Failed()) {
@@ -1493,7 +1493,7 @@ FetchBody<Derived>::ConsumeBody(ConsumeType aType, ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<Promise> promise = mConsumePromise;
+  nsRefPtr<Promise> promise = mConsumePromise;
   return promise.forget();
 }
 

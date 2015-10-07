@@ -27,7 +27,7 @@
 #include "nsDebug.h"
 #include "mozilla/layers/TextureClient.h"
 #include "CameraPreferences.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 21
 #include "GonkBufferQueueProducer.h"
 #endif
@@ -71,7 +71,7 @@ GonkCameraHardware::OnNewFrame()
   if (mClosing) {
     return;
   }
-  RefPtr<TextureClient> buffer = mNativeWindow->getCurrentBuffer();
+  nsRefPtr<TextureClient> buffer = mNativeWindow->getCurrentBuffer();
   if (!buffer) {
     DOM_CAMERA_LOGE("received null frame");
     return;

@@ -29,7 +29,7 @@ public:
 
 public:
   MessagePortList(nsISupports* aOwner,
-                  const nsTArray<RefPtr<MessagePort>>& aPorts)
+                  const nsTArray<nsRefPtr<MessagePort>>& aPorts)
     : mOwner(aOwner)
     , mPorts(aPorts)
   {
@@ -68,7 +68,7 @@ public:
 
 public:
   nsCOMPtr<nsISupports> mOwner;
-  nsTArray<RefPtr<MessagePort>> mPorts;
+  nsTArray<nsRefPtr<MessagePort>> mPorts;
 };
 
 } // namespace dom

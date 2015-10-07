@@ -188,7 +188,7 @@ XMLStylesheetProcessingInstruction::CloneDataNode(mozilla::dom::NodeInfo *aNodeI
 {
   nsAutoString data;
   nsGenericDOMDataNode::GetData(data);
-  RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   return new XMLStylesheetProcessingInstruction(ni.forget(), data);
 }
 

@@ -441,7 +441,7 @@ struct RenderTargetSetOculus : public VRHMDRenderingSupport::RenderTargetSet
     currentRenderTarget = (currentRenderTarget + 1) % renderTargets.Length();
     textureSet->CurrentIndex = currentRenderTarget;
     renderTargets[currentRenderTarget]->ClearOnBind();
-    RefPtr<layers::CompositingRenderTarget> rt = renderTargets[currentRenderTarget];
+    nsRefPtr<layers::CompositingRenderTarget> rt = renderTargets[currentRenderTarget];
     return rt.forget();
   }
 
@@ -462,7 +462,7 @@ struct RenderTargetSetOculus : public VRHMDRenderingSupport::RenderTargetSet
     Destroy();
   }
 
-  RefPtr<HMDInfoOculus> hmd;
+  nsRefPtr<HMDInfoOculus> hmd;
   ovrSwapTextureSet *textureSet;
 };
 
@@ -492,7 +492,7 @@ struct RenderTargetSetD3D11 : public RenderTargetSetOculus
 
     for (int i = 0; i < aTS->TextureCount; ++i) {
       ovrD3D11Texture *tex11;
-      RefPtr<layers::CompositingRenderTargetD3D11> rt;
+      nsRefPtr<layers::CompositingRenderTargetD3D11> rt;
       
       tex11 = (ovrD3D11Texture*)&aTS->Textures[i];
       rt = new layers::CompositingRenderTargetD3D11(tex11->D3D11.pTexture, IntPoint(0, 0));
@@ -520,7 +520,7 @@ HMDInfoOculus::CreateRenderTargetSet(layers::Compositor *aCompositor, const IntS
       return nullptr;
     }
 
-    RefPtr<RenderTargetSetD3D11> rts = new RenderTargetSetD3D11(comp11, aSize, this, ts);
+    nsRefPtr<RenderTargetSetD3D11> rts = new RenderTargetSetD3D11(comp11, aSize, this, ts);
     return rts.forget();
   }
 #endif
@@ -621,7 +621,7 @@ VRHMDManagerOculus::Init()
     ovrHmd hmd;
     orv = ovrHmd_Create(i, &hmd);
     if (orv == ovrSuccess) {
-      RefPtr<HMDInfoOculus> oc = new HMDInfoOculus(hmd);
+      nsRefPtr<HMDInfoOculus> oc = new HMDInfoOculus(hmd);
       mOculusHMDs.AppendElement(oc);
     }
   }
@@ -634,7 +634,7 @@ VRHMDManagerOculus::Init()
     ovrHmd hmd;
     orv = ovrHmd_CreateDebug(ovrHmd_DK2, &hmd);
     if (orv == ovrSuccess) {
-      RefPtr<HMDInfoOculus> oc = new HMDInfoOculus(hmd);
+      nsRefPtr<HMDInfoOculus> oc = new HMDInfoOculus(hmd);
       mOculusHMDs.AppendElement(oc);
     }
   }
@@ -660,7 +660,7 @@ VRHMDManagerOculus::Destroy()
 }
 
 void
-VRHMDManagerOculus::GetHMDs(nsTArray<RefPtr<VRHMDInfo>>& aHMDResult)
+VRHMDManagerOculus::GetHMDs(nsTArray<nsRefPtr<VRHMDInfo>>& aHMDResult)
 {
   Init();
   for (size_t i = 0; i < mOculusHMDs.Length(); ++i) {

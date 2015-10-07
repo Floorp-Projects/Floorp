@@ -269,7 +269,7 @@ public:
   bool HandleAppCommandMessage() const;
 
 private:
-  RefPtr<nsWindowBase> mWidget;
+  nsRefPtr<nsWindowBase> mWidget;
   HKL mKeyboardLayout;
   MSG mMsg;
 
@@ -676,7 +676,7 @@ public:
 
   private:
     bool mCancel;
-    RefPtr<nsWindowBase> mWidget;
+    nsRefPtr<nsWindowBase> mWidget;
     const MSG &mMsg;
   };
 

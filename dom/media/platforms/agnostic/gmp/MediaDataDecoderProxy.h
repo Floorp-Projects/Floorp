@@ -8,7 +8,7 @@
 #define MediaDataDecoderProxy_h_
 
 #include "PlatformDecoderModule.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsThreadUtils.h"
 #include "nscore.h"
 
@@ -28,8 +28,8 @@ public:
   }
 
 private:
-  RefPtr<MediaDataDecoder> mDecoder;
-  RefPtr<MediaRawData> mSample;
+  nsRefPtr<MediaDataDecoder> mDecoder;
+  nsRefPtr<MediaRawData> mSample;
 };
 
 template<typename T>
@@ -132,7 +132,7 @@ public:
   // Init and Shutdown run synchronously on the proxy thread, all others are
   // asynchronously and responded to via the MediaDataDecoderCallback.
   // Note: the nsresults returned by the proxied decoder are lost.
-  RefPtr<InitPromise> Init() override;
+  nsRefPtr<InitPromise> Init() override;
   nsresult Input(MediaRawData* aSample) override;
   nsresult Flush() override;
   nsresult Drain() override;
@@ -142,7 +142,7 @@ public:
   void FlushComplete();
 
 private:
-  RefPtr<InitPromise> InternalInit();
+  nsRefPtr<InitPromise> InternalInit();
 
 #ifdef DEBUG
   bool IsOnProxyThread() {
@@ -153,9 +153,9 @@ private:
   friend class InputTask;
   friend class InitTask;
 
-  RefPtr<MediaDataDecoder> mProxyDecoder;
+  nsRefPtr<MediaDataDecoder> mProxyDecoder;
   nsCOMPtr<nsIThread> mProxyThread;
-  RefPtr<AbstractThread> mProxyThreadWrapper;
+  nsRefPtr<AbstractThread> mProxyThreadWrapper;
 
   MediaDataDecoderCallbackProxy mProxyCallback;
 

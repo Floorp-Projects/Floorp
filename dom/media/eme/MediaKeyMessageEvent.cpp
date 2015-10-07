@@ -67,7 +67,7 @@ MediaKeyMessageEvent::Constructor(EventTarget* aOwner,
                                   MediaKeyMessageType aMessageType,
                                   const nsTArray<uint8_t>& aMessage)
 {
-  RefPtr<MediaKeyMessageEvent> e = new MediaKeyMessageEvent(aOwner);
+  nsRefPtr<MediaKeyMessageEvent> e = new MediaKeyMessageEvent(aOwner);
   e->InitEvent(NS_LITERAL_STRING("message"), false, false);
   e->mMessageType = aMessageType;
   e->mRawMessage = aMessage;
@@ -82,7 +82,7 @@ MediaKeyMessageEvent::Constructor(const GlobalObject& aGlobal,
                                   ErrorResult& aRv)
 {
   nsCOMPtr<EventTarget> owner = do_QueryInterface(aGlobal.GetAsSupports());
-  RefPtr<MediaKeyMessageEvent> e = new MediaKeyMessageEvent(owner);
+  nsRefPtr<MediaKeyMessageEvent> e = new MediaKeyMessageEvent(owner);
   bool trusted = e->Init(owner);
   e->InitEvent(aType, aEventInitDict.mBubbles, aEventInitDict.mCancelable);
   const uint8_t* data = nullptr;

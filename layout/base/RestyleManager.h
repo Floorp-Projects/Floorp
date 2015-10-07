@@ -251,7 +251,7 @@ public:
   static bool
   TryStartingTransition(nsPresContext* aPresContext, nsIContent* aContent,
                         nsStyleContext* aOldStyleContext,
-                        RefPtr<nsStyleContext>* aNewStyleContext /* inout */);
+                        nsRefPtr<nsStyleContext>* aNewStyleContext /* inout */);
 
   // AnimationsWithDestroyedFrame is used to stop animations on elements that
   // have no frame at the end of the restyling process.
@@ -287,7 +287,7 @@ public:
     void StopAnimationsForElementsWithoutFrames();
 
   private:
-    void StopAnimationsWithoutFrame(nsTArray<RefPtr<nsIContent>>& aArray,
+    void StopAnimationsWithoutFrame(nsTArray<nsRefPtr<nsIContent>>& aArray,
                                     nsCSSPseudoElements::Type aPseudoType);
 
     RestyleManager* mRestyleManager;
@@ -299,9 +299,9 @@ public:
     // mBeforeContents and mAfterContents hold the real element rather than
     // the content node for the generated content (which might change during
     // a reframe)
-    nsTArray<RefPtr<nsIContent>> mContents;
-    nsTArray<RefPtr<nsIContent>> mBeforeContents;
-    nsTArray<RefPtr<nsIContent>> mAfterContents;
+    nsTArray<nsRefPtr<nsIContent>> mContents;
+    nsTArray<nsRefPtr<nsIContent>> mBeforeContents;
+    nsTArray<nsRefPtr<nsIContent>> mAfterContents;
   };
 
   /**
@@ -586,7 +586,7 @@ public:
   typedef mozilla::dom::Element Element;
 
   struct ContextToClear {
-    RefPtr<nsStyleContext> mStyleContext;
+    nsRefPtr<nsStyleContext> mStyleContext;
     uint32_t mStructs;
   };
 
@@ -600,7 +600,7 @@ public:
                   TreeMatchContext& aTreeMatchContext,
                   nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement,
                   nsTArray<ContextToClear>& aContextsToClear,
-                  nsTArray<RefPtr<nsStyleContext>>& aSwappedStructOwners);
+                  nsTArray<nsRefPtr<nsStyleContext>>& aSwappedStructOwners);
 
   // Construct for an element whose parent is being restyled.
   enum ConstructorFlags {
@@ -631,7 +631,7 @@ public:
                   TreeMatchContext& aTreeMatchContext,
                   nsTArray<nsIContent*>& aVisibleKidsOfHiddenElement,
                   nsTArray<ContextToClear>& aContextsToClear,
-                  nsTArray<RefPtr<nsStyleContext>>& aSwappedStructOwners);
+                  nsTArray<nsRefPtr<nsStyleContext>>& aSwappedStructOwners);
 
   /**
    * Restyle our frame's element and its subtree.
@@ -676,7 +676,7 @@ public:
                                     nsRestyleHint      aRestyleHint,
                                     const RestyleHintData& aRestyleHintData,
                                     nsTArray<ContextToClear>& aContextsToClear,
-                                    nsTArray<RefPtr<nsStyleContext>>&
+                                    nsTArray<nsRefPtr<nsStyleContext>>&
                                       aSwappedStructOwners);
 
 #ifdef RESTYLE_LOGGING
@@ -709,8 +709,8 @@ private:
 
   struct SwapInstruction
   {
-    RefPtr<nsStyleContext> mOldContext;
-    RefPtr<nsStyleContext> mNewContext;
+    nsRefPtr<nsStyleContext> mOldContext;
+    nsRefPtr<nsStyleContext> mNewContext;
     uint32_t mStructsToSwap;
   };
 
@@ -890,7 +890,7 @@ private:
   // Style contexts that had old structs swapped into it and which should
   // stay alive until the end of the restyle.  (See comment in
   // ElementRestyler::Restyle.)
-  nsTArray<RefPtr<nsStyleContext>>& mSwappedStructOwners;
+  nsTArray<nsRefPtr<nsStyleContext>>& mSwappedStructOwners;
   // Whether this is the root of the restyle.
   bool mIsRootOfRestyle;
 

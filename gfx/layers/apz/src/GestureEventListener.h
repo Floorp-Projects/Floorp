@@ -140,7 +140,7 @@ private:
    */
   void SetState(GestureState aState);
 
-  RefPtr<AsyncPanZoomController> mAsyncPanZoomController;
+  nsRefPtr<AsyncPanZoomController> mAsyncPanZoomController;
 
   /**
    * Array containing all active touches. When a touch happens it, gets added to

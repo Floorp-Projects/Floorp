@@ -637,7 +637,7 @@ private:
 
   nsSVGClass mClassAttribute;
   nsAutoPtr<nsAttrValue> mClassAnimAttr;
-  RefPtr<mozilla::css::StyleRule> mContentStyleRule;
+  nsRefPtr<mozilla::css::StyleRule> mContentStyleRule;
 };
 
 /**
@@ -648,7 +648,7 @@ nsresult                                                                     \
 NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
                                  already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)  \
 {                                                                            \
-  RefPtr<nsSVG##_elementName##Element> it =                                \
+  nsRefPtr<nsSVG##_elementName##Element> it =                                \
     new nsSVG##_elementName##Element(aNodeInfo);                             \
                                                                              \
   nsresult rv = it->Init();                                                  \
@@ -667,7 +667,7 @@ nsresult                                                                     \
 NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
                                  already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)  \
 {                                                                            \
-  RefPtr<mozilla::dom::SVG##_elementName##Element> it =                    \
+  nsRefPtr<mozilla::dom::SVG##_elementName##Element> it =                    \
     new mozilla::dom::SVG##_elementName##Element(aNodeInfo);                 \
                                                                              \
   nsresult rv = it->Init();                                                  \
@@ -687,7 +687,7 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
                                  already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,  \
                                  mozilla::dom::FromParser aFromParser)       \
 {                                                                            \
-  RefPtr<mozilla::dom::SVG##_elementName##Element> it =                    \
+  nsRefPtr<mozilla::dom::SVG##_elementName##Element> it =                    \
     new mozilla::dom::SVG##_elementName##Element(aNodeInfo, aFromParser);    \
                                                                              \
   nsresult rv = it->Init();                                                  \

@@ -559,7 +559,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(gfxContext& aContext,
   aContext.PopGroupToSource();
 
   Matrix maskTransform;
-  RefPtr<SourceSurface> maskSurface =
+  nsRefPtr<SourceSurface> maskSurface =
     maskFrame ? maskFrame->GetMaskForMaskedFrame(&aContext,
                                                  aFrame, cssPxToDevPxMatrix,
                                                  opacity, &maskTransform)
@@ -570,7 +570,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(gfxContext& aContext,
 
     nsresult rv = clipPathFrame->ApplyClipOrPaintClipMask(aContext, aFrame, cssPxToDevPxMatrix);
     Matrix clippedMaskTransform;
-    RefPtr<SourceSurface> clipMaskSurface = aContext.PopGroupToSurface(&clippedMaskTransform);
+    nsRefPtr<SourceSurface> clipMaskSurface = aContext.PopGroupToSurface(&clippedMaskTransform);
 
     if (NS_SUCCEEDED(rv) && clipMaskSurface) {
       // Still more set after clipping, so clip to another surface
@@ -732,7 +732,7 @@ nsSVGIntegrationUtils::DrawableFromPaintServer(nsIFrame*         aFrame,
     gfxRect overrideBounds(0, 0,
                            aPaintServerSize.width, aPaintServerSize.height);
     overrideBounds.ScaleInverse(aFrame->PresContext()->AppUnitsPerDevPixel());
-    RefPtr<gfxPattern> pattern =
+    nsRefPtr<gfxPattern> pattern =
     server->GetPaintServerPattern(aTarget, aDrawTarget,
                                   aContextMatrix, &nsStyleSVG::mFill, 1.0,
                                   &overrideBounds);
@@ -749,15 +749,15 @@ nsSVGIntegrationUtils::DrawableFromPaintServer(nsIFrame*         aFrame,
     gfxFloat scaleY = overrideBounds.Height() / aRenderSize.height;
     gfxMatrix scaleMatrix = gfxMatrix::Scaling(scaleX, scaleY);
     pattern->SetMatrix(scaleMatrix * pattern->GetMatrix());
-    RefPtr<gfxDrawable> drawable =
+    nsRefPtr<gfxDrawable> drawable =
       new gfxPatternDrawable(pattern, aRenderSize);
     return drawable.forget();
   }
 
   // We don't want to paint into a surface as long as we don't need to, so we
   // set up a drawing callback.
-  RefPtr<gfxDrawingCallback> cb =
+  nsRefPtr<gfxDrawingCallback> cb =
     new PaintFrameCallback(aFrame, aPaintServerSize, aRenderSize, aFlags);
-  RefPtr<gfxDrawable> drawable = new gfxCallbackDrawable(cb, aRenderSize);
+  nsRefPtr<gfxDrawable> drawable = new gfxCallbackDrawable(cb, aRenderSize);
   return drawable.forget();
 }

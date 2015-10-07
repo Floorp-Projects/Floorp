@@ -39,7 +39,7 @@ NS_NewXBLContentSink(nsIXMLContentSink** aResult,
 {
   NS_ENSURE_ARG_POINTER(aResult);
 
-  RefPtr<nsXBLContentSink> it = new nsXBLContentSink();
+  nsRefPtr<nsXBLContentSink> it = new nsXBLContentSink();
   nsresult rv = it->Init(aDoc, aURI, aContainer);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -389,7 +389,7 @@ nsXBLContentSink::OnOpenContainer(const char16_t **aAtts,
     ENSURE_XBL_STATE(mState == eXBL_InDocument);
 
     NS_ASSERTION(mDocument, "Must have a document!");
-    RefPtr<nsXBLDocumentInfo> info = new nsXBLDocumentInfo(mDocument);
+    nsRefPtr<nsXBLDocumentInfo> info = new nsXBLDocumentInfo(mDocument);
 
     // We keep a weak ref. We're creating a cycle between doc/binding manager/doc info.
     mDocInfo = info;
@@ -867,7 +867,7 @@ nsXBLContentSink::CreateElement(const char16_t** aAtts, uint32_t aAttsCount,
   // Note that this needs to match the code in nsXBLPrototypeBinding::ReadContentNode.
 
   *aAppendContent = true;
-  RefPtr<nsXULPrototypeElement> prototype = new nsXULPrototypeElement();
+  nsRefPtr<nsXULPrototypeElement> prototype = new nsXULPrototypeElement();
 
   prototype->mNodeInfo = aNodeInfo;
 
@@ -921,7 +921,7 @@ nsXBLContentSink::AddAttributesToXULPrototype(const char16_t **aAtts,
       attrs[i].mName.SetTo(localName);
     }
     else {
-      RefPtr<NodeInfo> ni;
+      nsRefPtr<NodeInfo> ni;
       ni = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID,
                                          nsIDOMNode::ATTRIBUTE_NODE);
       attrs[i].mName.SetTo(ni);

@@ -308,7 +308,7 @@ public:
   virtual const SizeConstraints& GetSizeConstraints() const override;
   virtual void SetSizeConstraints(const SizeConstraints& aConstraints) override;
 
-  virtual bool CaptureWidgetOnScreen(RefPtr<mozilla::gfx::DrawTarget> aDT) override {
+  virtual bool CaptureWidgetOnScreen(nsRefPtr<mozilla::gfx::DrawTarget> aDT) override {
     return false;
   }
 
@@ -330,7 +330,7 @@ public:
     ~AutoLayerManagerSetup();
   private:
     nsBaseWidget* mWidget;
-    RefPtr<BasicLayerManager> mLayerManager;
+    nsRefPtr<BasicLayerManager> mLayerManager;
   };
   friend class AutoLayerManagerSetup;
 
@@ -492,15 +492,15 @@ protected:
   nsIWidgetListener* mWidgetListener;
   nsIWidgetListener* mAttachedWidgetListener;
   nsIWidgetListener* mPreviouslyAttachedWidgetListener;
-  RefPtr<LayerManager> mLayerManager;
-  RefPtr<CompositorChild> mCompositorChild;
-  RefPtr<CompositorParent> mCompositorParent;
-  RefPtr<mozilla::CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
-  RefPtr<APZCTreeManager> mAPZC;
-  RefPtr<APZEventState> mAPZEventState;
+  nsRefPtr<LayerManager> mLayerManager;
+  nsRefPtr<CompositorChild> mCompositorChild;
+  nsRefPtr<CompositorParent> mCompositorParent;
+  nsRefPtr<mozilla::CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
+  nsRefPtr<APZCTreeManager> mAPZC;
+  nsRefPtr<APZEventState> mAPZEventState;
   SetAllowedTouchBehaviorCallback mSetAllowedTouchBehaviorCallback;
-  RefPtr<WidgetShutdownObserver> mShutdownObserver;
-  RefPtr<TextEventDispatcher> mTextEventDispatcher;
+  nsRefPtr<WidgetShutdownObserver> mShutdownObserver;
+  nsRefPtr<TextEventDispatcher> mTextEventDispatcher;
   nsCursor          mCursor;
   nsBorderStyle     mBorderStyle;
   nsIntRect         mBounds;

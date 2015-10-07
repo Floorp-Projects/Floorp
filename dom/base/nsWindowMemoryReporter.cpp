@@ -444,7 +444,7 @@ CollectWindowReports(nsGlobalWindow *aWindow,
   return NS_OK;
 }
 
-typedef nsTArray< RefPtr<nsGlobalWindow> > WindowArray;
+typedef nsTArray< nsRefPtr<nsGlobalWindow> > WindowArray;
 
 static
 PLDHashOperator
@@ -926,7 +926,7 @@ nsWindowMemoryReporter::UnlinkGhostWindows()
       continue;
     }
 
-    RefPtr<nsGlobalWindow> window = windowsById->Get(iter.Get()->GetKey());
+    nsRefPtr<nsGlobalWindow> window = windowsById->Get(iter.Get()->GetKey());
     if (window) {
       window->RiskyUnlink();
     }

@@ -796,7 +796,7 @@ protected:
   nsIDocShell* MOZ_NON_OWNING_REF mDocShell;  // Weak Reference
 
   // mPerformance is only used on inner windows.
-  RefPtr<nsPerformance>       mPerformance;
+  nsRefPtr<nsPerformance>       mPerformance;
 
   uint32_t               mModalStateDepth;
 

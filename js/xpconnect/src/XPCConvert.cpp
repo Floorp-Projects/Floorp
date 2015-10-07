@@ -726,7 +726,7 @@ CreateHolderIfNeeded(HandleObject obj, MutableHandleValue d,
     if (dest) {
         if (!obj)
             return false;
-        RefPtr<XPCJSObjectHolder> objHolder = new XPCJSObjectHolder(obj);
+        nsRefPtr<XPCJSObjectHolder> objHolder = new XPCJSObjectHolder(obj);
         objHolder.forget(dest);
     }
 
@@ -820,7 +820,7 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
         }
     }
 
-    RefPtr<XPCWrappedNative> wrapper;
+    nsRefPtr<XPCWrappedNative> wrapper;
     nsresult rv = XPCWrappedNative::GetNewOrUsed(aHelper, xpcscope, iface,
                                                  getter_AddRefs(wrapper));
     if (NS_FAILED(rv) && pErr)
@@ -857,7 +857,7 @@ XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
         } else {
             if (!flat)
                 return false;
-            RefPtr<XPCJSObjectHolder> objHolder = new XPCJSObjectHolder(flat);
+            nsRefPtr<XPCJSObjectHolder> objHolder = new XPCJSObjectHolder(flat);
             objHolder.forget(dest);
         }
     }
@@ -927,7 +927,7 @@ XPCConvert::JSObject2NativeInterface(void** dest, HandleObject src,
         }
     }
 
-    RefPtr<nsXPCWrappedJS> wrapper;
+    nsRefPtr<nsXPCWrappedJS> wrapper;
     nsresult rv = nsXPCWrappedJS::GetNewOrUsed(src, *iid, getter_AddRefs(wrapper));
     if (pErr)
         *pErr = rv;
@@ -986,7 +986,7 @@ XPCConvert::ConstructException(nsresult rv, const char* message,
     if (ifaceName && methodName)
         msgStr.AppendPrintf(format, msg, ifaceName, methodName);
 
-    RefPtr<Exception> e = new Exception(msgStr, rv, EmptyCString(), nullptr, data);
+    nsRefPtr<Exception> e = new Exception(msgStr, rv, EmptyCString(), nullptr, data);
 
     if (cx && jsExceptionPtr) {
         e->StowJSVal(*jsExceptionPtr);
@@ -1195,7 +1195,7 @@ XPCConvert::JSErrorToXPCException(const char* message,
 {
     AutoJSContext cx;
     nsresult rv = NS_ERROR_FAILURE;
-    RefPtr<nsScriptError> data;
+    nsRefPtr<nsScriptError> data;
     if (report) {
         nsAutoString bestMessage;
         if (report && report->ucmessage) {

@@ -132,7 +132,7 @@ protected:
   virtual ~PerformanceResourceTiming();
 
   nsString mInitiatorType;
-  RefPtr<nsPerformanceTiming> mTiming;
+  nsRefPtr<nsPerformanceTiming> mTiming;
 };
 
 } // namespace dom

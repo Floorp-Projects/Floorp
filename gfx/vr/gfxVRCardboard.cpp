@@ -342,7 +342,7 @@ VRHMDManagerCardboard::Init()
   if (mCardboardInitialized)
     return true;
 
-  RefPtr<HMDInfoCardboard> hmd = new HMDInfoCardboard();
+  nsRefPtr<HMDInfoCardboard> hmd = new HMDInfoCardboard();
   mCardboardHMDs.AppendElement(hmd);
 
   mCardboardInitialized = true;
@@ -364,7 +364,7 @@ VRHMDManagerCardboard::Destroy()
 }
 
 void
-VRHMDManagerCardboard::GetHMDs(nsTArray<RefPtr<VRHMDInfo>>& aHMDResult)
+VRHMDManagerCardboard::GetHMDs(nsTArray<nsRefPtr<VRHMDInfo>>& aHMDResult)
 {
   Init();
   for (size_t i = 0; i < mCardboardHMDs.Length(); ++i) {

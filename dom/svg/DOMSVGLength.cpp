@@ -160,7 +160,7 @@ DOMSVGLength::GetTearOff(nsSVGLength2* aVal, nsSVGElement* aSVGElement,
                          bool aAnimVal)
 {
   auto& table = aAnimVal ? sAnimSVGLengthTearOffTable : sBaseSVGLengthTearOffTable;
-  RefPtr<DOMSVGLength> domLength = table.GetTearoff(aVal);
+  nsRefPtr<DOMSVGLength> domLength = table.GetTearoff(aVal);
   if (!domLength) {
     domLength = new DOMSVGLength(aVal, aSVGElement, aAnimVal);
     table.AddTearoff(aVal, domLength);

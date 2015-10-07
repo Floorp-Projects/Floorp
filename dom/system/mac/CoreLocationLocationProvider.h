@@ -43,7 +43,7 @@ private:
 
   CoreLocationObjects* mCLObjects;
   nsCOMPtr<nsIGeolocationUpdate> mCallback;
-  RefPtr<MLSFallback> mMLSFallbackProvider;
+  nsRefPtr<MLSFallback> mMLSFallbackProvider;
 
   class MLSUpdate : public nsIGeolocationUpdate
   {

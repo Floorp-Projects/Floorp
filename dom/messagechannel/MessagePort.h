@@ -150,14 +150,14 @@ private:
 
   nsAutoPtr<workers::WorkerFeature> mWorkerFeature;
 
-  RefPtr<DispatchEventRunnable> mDispatchRunnable;
+  nsRefPtr<DispatchEventRunnable> mDispatchRunnable;
 
-  RefPtr<MessagePortChild> mActor;
+  nsRefPtr<MessagePortChild> mActor;
 
-  RefPtr<MessagePort> mUnshippedEntangledPort;
+  nsRefPtr<MessagePort> mUnshippedEntangledPort;
 
-  nsTArray<RefPtr<SharedMessagePortMessage>> mMessages;
-  nsTArray<RefPtr<SharedMessagePortMessage>> mMessagesForTheOtherPort;
+  nsTArray<nsRefPtr<SharedMessagePortMessage>> mMessages;
+  nsTArray<nsRefPtr<SharedMessagePortMessage>> mMessagesForTheOtherPort;
 
   nsAutoPtr<MessagePortIdentifier> mIdentifier;
 

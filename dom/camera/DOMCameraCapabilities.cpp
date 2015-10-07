@@ -36,7 +36,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    RefPtr<T> listener = mListener.get();
+    nsRefPtr<T> listener = mListener.get();
     if (listener) {
       listener->OnHardwareClosed();
     }
@@ -265,7 +265,7 @@ CameraRecorderProfiles::NamedGetter(const nsAString& aName, bool& aFound)
 
   CameraRecorderProfile* profile = mProfiles.GetWeak(aName, &aFound);
   if (!aFound || !profile) {
-    RefPtr<ICameraControl::RecorderProfile> p = mCameraControl->GetProfileInfo(aName);
+    nsRefPtr<ICameraControl::RecorderProfile> p = mCameraControl->GetProfileInfo(aName);
     if (p) {
       profile = new CameraRecorderProfile(this, *p);
       mProfiles.Put(aName, profile);
@@ -582,7 +582,7 @@ CameraCapabilities::RecorderProfiles()
     return nullptr;
   }
 
-  RefPtr<CameraRecorderProfiles> profiles =
+  nsRefPtr<CameraRecorderProfiles> profiles =
     new CameraRecorderProfiles(this, mCameraControl);
   return profiles;
 }

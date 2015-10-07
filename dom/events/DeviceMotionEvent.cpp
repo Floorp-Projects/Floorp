@@ -63,7 +63,7 @@ DeviceMotionEvent::Constructor(const GlobalObject& aGlobal,
                                ErrorResult& aRv)
 {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
-  RefPtr<DeviceMotionEvent> e = new DeviceMotionEvent(t, nullptr, nullptr);
+  nsRefPtr<DeviceMotionEvent> e = new DeviceMotionEvent(t, nullptr, nullptr);
   aRv = e->InitEvent(aType, aEventInitDict.mBubbles, aEventInitDict.mCancelable);
   if (aRv.Failed()) {
     return nullptr;
@@ -150,7 +150,7 @@ NS_NewDOMDeviceMotionEvent(EventTarget* aOwner,
                            nsPresContext* aPresContext,
                            WidgetEvent* aEvent) 
 {
-  RefPtr<DeviceMotionEvent> it =
+  nsRefPtr<DeviceMotionEvent> it =
     new DeviceMotionEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

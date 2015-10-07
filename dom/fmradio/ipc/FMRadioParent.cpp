@@ -50,7 +50,7 @@ FMRadioParent::RecvGetStatusInfo(StatusInfo* aStatusInfo)
 PFMRadioRequestParent*
 FMRadioParent::AllocPFMRadioRequestParent(const FMRadioRequestArgs& aArgs)
 {
-  RefPtr<FMRadioRequestParent> requestParent = new FMRadioRequestParent();
+  nsRefPtr<FMRadioRequestParent> requestParent = new FMRadioRequestParent();
 
   switch (aArgs.type()) {
     case FMRadioRequestArgs::TEnableRequestArgs:

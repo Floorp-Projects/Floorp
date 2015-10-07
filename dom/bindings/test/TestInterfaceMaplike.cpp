@@ -36,7 +36,7 @@ TestInterfaceMaplike::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  RefPtr<TestInterfaceMaplike> r = new TestInterfaceMaplike(window);
+  nsRefPtr<TestInterfaceMaplike> r = new TestInterfaceMaplike(window);
   return r.forget();
 }
 

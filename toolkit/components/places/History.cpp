@@ -498,7 +498,7 @@ public:
     nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
     NS_ENSURE_STATE(navHistory);
     if (navHistory->hasEmbedVisit(aURI)) {
-      RefPtr<VisitedQuery> cb = new VisitedQuery(aURI, callback, true);
+      nsRefPtr<VisitedQuery> cb = new VisitedQuery(aURI, callback, true);
       NS_ENSURE_TRUE(cb, NS_ERROR_OUT_OF_MEMORY);
       // As per IHistory contract, we must notify asynchronously.
       nsCOMPtr<nsIRunnable> event =
@@ -510,7 +510,7 @@ public:
 
     History* history = History::GetService();
     NS_ENSURE_STATE(history);
-    RefPtr<VisitedQuery> cb = new VisitedQuery(aURI, callback);
+    nsRefPtr<VisitedQuery> cb = new VisitedQuery(aURI, callback);
     NS_ENSURE_TRUE(cb, NS_ERROR_OUT_OF_MEMORY);
     nsresult rv = history->GetIsVisitedStatement(cb);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -675,7 +675,7 @@ public:
 private:
   VisitData mPlace;
   VisitData mReferrer;
-  RefPtr<History> mHistory;
+  nsRefPtr<History> mHistory;
 };
 
 /**
@@ -888,7 +888,7 @@ public:
 
     nsMainThreadPtrHandle<mozIVisitInfoCallback>
       callback(new nsMainThreadPtrHolder<mozIVisitInfoCallback>(aCallback));
-    RefPtr<InsertVisitedURIs> event =
+    nsRefPtr<InsertVisitedURIs> event =
       new InsertVisitedURIs(aConnection, aPlaces, callback);
 
     // Get the target thread, and then start the work!
@@ -1305,7 +1305,7 @@ private:
    * Strong reference to the History object because we do not want it to
    * disappear out from under us.
    */
-  RefPtr<History> mHistory;
+  nsRefPtr<History> mHistory;
 };
 
 class GetPlaceInfo final : public nsRunnable {
@@ -1320,7 +1320,7 @@ public:
 
     nsMainThreadPtrHandle<mozIVisitInfoCallback>
       callback(new nsMainThreadPtrHolder<mozIVisitInfoCallback>(aCallback));
-    RefPtr<GetPlaceInfo> event = new GetPlaceInfo(aPlace, callback);
+    nsRefPtr<GetPlaceInfo> event = new GetPlaceInfo(aPlace, callback);
 
     // Get the target thread, and then start the work!
     nsCOMPtr<nsIEventTarget> target = do_GetInterface(aConnection);
@@ -1362,7 +1362,7 @@ private:
 
   VisitData mPlace;
   nsMainThreadPtrHandle<mozIVisitInfoCallback> mCallback;
-  RefPtr<History> mHistory;
+  nsRefPtr<History> mHistory;
 };
 
 /**
@@ -1392,7 +1392,7 @@ public:
     nsresult rv = aURI->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    RefPtr<SetPageTitle> event = new SetPageTitle(spec, aTitle);
+    nsRefPtr<SetPageTitle> event = new SetPageTitle(spec, aTitle);
 
     // Get the target thread, and then start the work!
     nsCOMPtr<nsIEventTarget> target = do_GetInterface(aConnection);
@@ -1471,7 +1471,7 @@ private:
    * Strong reference to the History object because we do not want it to
    * disappear out from under us.
    */
-  RefPtr<History> mHistory;
+  nsRefPtr<History> mHistory;
 };
 
 /**
@@ -1572,7 +1572,7 @@ private:
    * Strong reference to the History object because we do not want it to
    * disappear out from under us.
    */
-  RefPtr<History> mHistory;
+  nsRefPtr<History> mHistory;
 };
 NS_IMPL_ISUPPORTS(
   SetDownloadAnnotations,
@@ -1656,7 +1656,7 @@ private:
    * Strong reference to the History object because we do not want it to
    * disappear out from under us.
    */
-  RefPtr<History> mHistory;
+  nsRefPtr<History> mHistory;
 };
 
 /**
@@ -1678,7 +1678,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread(), "This should be called on the main thread");
 
-    RefPtr<RemoveVisits> event = new RemoveVisits(aConnection, aFilter);
+    nsRefPtr<RemoveVisits> event = new RemoveVisits(aConnection, aFilter);
 
     // Get the target thread, and then start the work!
     nsCOMPtr<nsIEventTarget> target = do_GetInterface(aConnection);
@@ -1889,7 +1889,7 @@ private:
    * Strong reference to the History object because we do not want it to
    * disappear out from under us.
    */
-  RefPtr<History> mHistory;
+  nsRefPtr<History> mHistory;
 };
 
 /**

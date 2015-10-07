@@ -288,7 +288,7 @@ nsSplitterFrame::Init(nsIContent*       aContent,
         aContent->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
                           NS_LITERAL_STRING("vertical"), false);
         nsStyleContext* parentStyleContext = StyleContext()->GetParent();
-        RefPtr<nsStyleContext> newContext = PresContext()->StyleSet()->
+        nsRefPtr<nsStyleContext> newContext = PresContext()->StyleSet()->
           ResolveStyleFor(aContent->AsElement(), parentStyleContext);
         SetStyleContextWithoutNotification(newContext);
       }
@@ -387,7 +387,7 @@ nsSplitterFrame::HandleEvent(nsPresContext* aPresContext,
   }
 
   nsWeakFrame weakFrame(this);
-  RefPtr<nsSplitterFrameInner> kungFuDeathGrip(mInner);
+  nsRefPtr<nsSplitterFrameInner> kungFuDeathGrip(mInner);
   switch (aEvent->mMessage) {
     case eMouseMove: 
       mInner->MouseDrag(aPresContext, aEvent);

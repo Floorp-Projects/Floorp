@@ -195,8 +195,8 @@ protected:
 } // namespace dom
 
 struct TransitionEventInfo {
-  RefPtr<dom::Element> mElement;
-  RefPtr<dom::Animation> mAnimation;
+  nsRefPtr<dom::Element> mElement;
+  nsRefPtr<dom::Animation> mAnimation;
   InternalTransitionEvent mEvent;
   TimeStamp mTimeStamp;
 
@@ -263,7 +263,7 @@ public:
    */
   void StyleContextChanged(mozilla::dom::Element *aElement,
                            nsStyleContext *aOldStyleContext,
-                           RefPtr<nsStyleContext>* aNewStyleContext /* inout */);
+                           nsRefPtr<nsStyleContext>* aNewStyleContext /* inout */);
 
   /**
    * When we're resolving style for an element that previously didn't have

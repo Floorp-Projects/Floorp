@@ -643,7 +643,7 @@ already_AddRefed<MediaResource> ChannelMediaResource::CloneData(MediaDecoder* aD
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   NS_ASSERTION(mCacheStream.IsAvailableForSharing(), "Stream can't be cloned");
 
-  RefPtr<ChannelMediaResource> resource =
+  nsRefPtr<ChannelMediaResource> resource =
     new ChannelMediaResource(aDecoder,
                              nullptr,
                              mURI,
@@ -717,7 +717,7 @@ ChannelMediaResource::MediaReadAt(int64_t aOffset, uint32_t aCount)
 {
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
 
-  RefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
+  nsRefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
   bool ok = bytes->SetLength(aCount, fallible);
   NS_ENSURE_TRUE(ok, nullptr);
   char* curr = reinterpret_cast<char*>(bytes->Elements());
@@ -925,7 +925,7 @@ public:
     return NS_OK;
   }
 private:
-  RefPtr<MediaDecoder> mDecoder;
+  nsRefPtr<MediaDecoder> mDecoder;
   nsresult               mStatus;
 };
 
@@ -1441,7 +1441,7 @@ already_AddRefed<MediaResource> FileMediaResource::CloneData(MediaDecoder* aDeco
   if (NS_FAILED(rv))
     return nullptr;
 
-  RefPtr<MediaResource> resource(new FileMediaResource(aDecoder, channel, mURI, GetContentType()));
+  nsRefPtr<MediaResource> resource(new FileMediaResource(aDecoder, channel, mURI, GetContentType()));
   return resource.forget();
 }
 
@@ -1516,7 +1516,7 @@ FileMediaResource::MediaReadAt(int64_t aOffset, uint32_t aCount)
 already_AddRefed<MediaByteBuffer>
 FileMediaResource::UnsafeMediaReadAt(int64_t aOffset, uint32_t aCount)
 {
-  RefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
+  nsRefPtr<MediaByteBuffer> bytes = new MediaByteBuffer();
   bool ok = bytes->SetLength(aCount, fallible);
   NS_ENSURE_TRUE(ok, nullptr);
   nsresult rv = UnsafeSeek(nsISeekableStream::NS_SEEK_SET, aOffset);
@@ -1578,7 +1578,7 @@ MediaResource::Create(MediaDecoder* aDecoder, nsIChannel* aChannel)
   aChannel->GetContentType(contentType);
 
   nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(aChannel);
-  RefPtr<MediaResource> resource;
+  nsRefPtr<MediaResource> resource;
   if (fc || IsBlobURI(uri)) {
     resource = new FileMediaResource(aDecoder, aChannel, uri, contentType);
   } else if (IsRtspURI(uri)) {
@@ -1679,7 +1679,7 @@ public:
     return NS_OK;
   }
 
-  RefPtr<MediaDecoder> mDecoder;
+  nsRefPtr<MediaDecoder> mDecoder;
   int64_t mNumBytes;
   int64_t mOffset;
 };
@@ -1689,7 +1689,7 @@ void BaseMediaResource::DispatchBytesConsumed(int64_t aNumBytes, int64_t aOffset
   if (aNumBytes <= 0) {
     return;
   }
-  RefPtr<nsIRunnable> event(new DispatchBytesConsumedEvent(mDecoder, aNumBytes, aOffset));
+  nsRefPtr<nsIRunnable> event(new DispatchBytesConsumedEvent(mDecoder, aNumBytes, aOffset));
   NS_DispatchToMainThread(event);
 }
 

@@ -29,7 +29,7 @@ public:
                                                  void** aInstancePtr);
 
 private:
-  RefPtr<AccessibleWrap> mAccessible;
+  nsRefPtr<AccessibleWrap> mAccessible;
 };
 
 }

@@ -506,7 +506,7 @@ XPCShellEnvironment::Init()
         fprintf(stderr, "+++ Failed to get ScriptSecurityManager service, running without principals");
     }
 
-    RefPtr<BackstagePass> backstagePass;
+    nsRefPtr<BackstagePass> backstagePass;
     rv = NS_NewBackstagePass(getter_AddRefs(backstagePass));
     if (NS_FAILED(rv)) {
         NS_ERROR("Failed to create backstage pass!");

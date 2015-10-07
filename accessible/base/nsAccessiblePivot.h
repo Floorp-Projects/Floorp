@@ -114,17 +114,17 @@ private:
   /*
    * The root accessible.
    */
-  RefPtr<Accessible> mRoot;
+  nsRefPtr<Accessible> mRoot;
 
   /*
    * The temporary modal root accessible.
    */
-  RefPtr<Accessible> mModalRoot;
+  nsRefPtr<Accessible> mModalRoot;
 
   /*
    * The current pivot position.
    */
-  RefPtr<Accessible> mPosition;
+  nsRefPtr<Accessible> mPosition;
 
   /*
    * The text start offset ofthe pivot.

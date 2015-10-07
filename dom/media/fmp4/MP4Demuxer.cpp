@@ -39,15 +39,15 @@ public:
 
   virtual UniquePtr<TrackInfo> GetInfo() const override;
 
-  virtual RefPtr<SeekPromise> Seek(media::TimeUnit aTime) override;
+  virtual nsRefPtr<SeekPromise> Seek(media::TimeUnit aTime) override;
 
-  virtual RefPtr<SamplesPromise> GetSamples(int32_t aNumSamples = 1) override;
+  virtual nsRefPtr<SamplesPromise> GetSamples(int32_t aNumSamples = 1) override;
 
   virtual void Reset() override;
 
   virtual nsresult GetNextRandomAccessPoint(media::TimeUnit* aTime) override;
 
-  RefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold) override;
+  nsRefPtr<SkipAccessPointPromise> SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold) override;
 
   virtual media::TimeIntervals GetBuffered() override;
 
@@ -56,20 +56,20 @@ public:
 private:
   friend class MP4Demuxer;
   void NotifyDataArrived();
-  void UpdateSamples(nsTArray<RefPtr<MediaRawData>>& aSamples);
+  void UpdateSamples(nsTArray<nsRefPtr<MediaRawData>>& aSamples);
   void EnsureUpToDateIndex();
   void SetNextKeyFrameTime();
-  RefPtr<MP4Demuxer> mParent;
-  RefPtr<mp4_demuxer::ResourceStream> mStream;
+  nsRefPtr<MP4Demuxer> mParent;
+  nsRefPtr<mp4_demuxer::ResourceStream> mStream;
   UniquePtr<TrackInfo> mInfo;
   // We do not actually need a monitor, however MoofParser (in mIndex) will
   // assert if a monitor isn't held.
   Monitor mMonitor;
-  RefPtr<mp4_demuxer::Index> mIndex;
+  nsRefPtr<mp4_demuxer::Index> mIndex;
   UniquePtr<mp4_demuxer::SampleIterator> mIterator;
   Maybe<media::TimeUnit> mNextKeyframeTime;
   // Queued samples extracted by the demuxer, but not yet returned.
-  RefPtr<MediaRawData> mQueuedSample;
+  nsRefPtr<MediaRawData> mQueuedSample;
   bool mNeedReIndex;
   bool mNeedSPSForTelemetry;
 };
@@ -118,7 +118,7 @@ MP4Demuxer::MP4Demuxer(MediaResource* aResource)
 {
 }
 
-RefPtr<MP4Demuxer::InitPromise>
+nsRefPtr<MP4Demuxer::InitPromise>
 MP4Demuxer::Init()
 {
   AutoPinned<mp4_demuxer::ResourceStream> stream(mStream);
@@ -134,7 +134,7 @@ MP4Demuxer::Init()
     return InitPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
   }
 
-  RefPtr<mp4_demuxer::BufferStream> bufferstream =
+  nsRefPtr<mp4_demuxer::BufferStream> bufferstream =
     new mp4_demuxer::BufferStream(mInitData);
 
   mMetadata = MakeUnique<mp4_demuxer::MP4Metadata>(bufferstream);
@@ -173,7 +173,7 @@ MP4Demuxer::GetTrackDemuxer(TrackInfo::TrackType aType, uint32_t aTrackNumber)
   if (!mMetadata->ReadTrackIndex(indices, info->mTrackId)) {
     return nullptr;
   }
-  RefPtr<MP4TrackDemuxer> e = new MP4TrackDemuxer(this, Move(info), indices);
+  nsRefPtr<MP4TrackDemuxer> e = new MP4TrackDemuxer(this, Move(info), indices);
   mDemuxers.AppendElement(e);
 
   return e.forget();
@@ -277,7 +277,7 @@ MP4TrackDemuxer::EnsureUpToDateIndex()
   mNeedReIndex = false;
 }
 
-RefPtr<MP4TrackDemuxer::SeekPromise>
+nsRefPtr<MP4TrackDemuxer::SeekPromise>
 MP4TrackDemuxer::Seek(media::TimeUnit aTime)
 {
   int64_t seekTime = aTime.ToMicroseconds();
@@ -296,11 +296,11 @@ MP4TrackDemuxer::Seek(media::TimeUnit aTime)
   return SeekPromise::CreateAndResolve(media::TimeUnit::FromMicroseconds(seekTime), __func__);
 }
 
-RefPtr<MP4TrackDemuxer::SamplesPromise>
+nsRefPtr<MP4TrackDemuxer::SamplesPromise>
 MP4TrackDemuxer::GetSamples(int32_t aNumSamples)
 {
   EnsureUpToDateIndex();
-  RefPtr<SamplesHolder> samples = new SamplesHolder;
+  nsRefPtr<SamplesHolder> samples = new SamplesHolder;
   if (!aNumSamples) {
     return SamplesPromise::CreateAndReject(DemuxerFailureReason::DEMUXER_ERROR, __func__);
   }
@@ -311,7 +311,7 @@ MP4TrackDemuxer::GetSamples(int32_t aNumSamples)
     aNumSamples--;
   }
   MonitorAutoLock mon(mMonitor);
-  RefPtr<MediaRawData> sample;
+  nsRefPtr<MediaRawData> sample;
   while (aNumSamples && (sample = mIterator->GetNext())) {
     samples->mSamples.AppendElement(sample);
     aNumSamples--;
@@ -347,13 +347,13 @@ MP4TrackDemuxer::Reset()
 }
 
 void
-MP4TrackDemuxer::UpdateSamples(nsTArray<RefPtr<MediaRawData>>& aSamples)
+MP4TrackDemuxer::UpdateSamples(nsTArray<nsRefPtr<MediaRawData>>& aSamples)
 {
   for (size_t i = 0; i < aSamples.Length(); i++) {
     MediaRawData* sample = aSamples[i];
     // Collect telemetry from h264 Annex B SPS.
     if (mNeedSPSForTelemetry && mp4_demuxer::AnnexB::HasSPS(sample)) {
-      RefPtr<MediaByteBuffer> extradata =
+      nsRefPtr<MediaByteBuffer> extradata =
         mp4_demuxer::AnnexB::ExtractExtraData(sample);
       mNeedSPSForTelemetry = AccumulateSPSTelemetry(extradata);
     }
@@ -386,7 +386,7 @@ MP4TrackDemuxer::GetNextRandomAccessPoint(media::TimeUnit* aTime)
   return NS_OK;
 }
 
-RefPtr<MP4TrackDemuxer::SkipAccessPointPromise>
+nsRefPtr<MP4TrackDemuxer::SkipAccessPointPromise>
 MP4TrackDemuxer::SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold)
 {
   MonitorAutoLock mon(mMonitor);
@@ -394,7 +394,7 @@ MP4TrackDemuxer::SkipToNextRandomAccessPoint(media::TimeUnit aTimeThreshold)
   // Loop until we reach the next keyframe after the threshold.
   uint32_t parsed = 0;
   bool found = false;
-  RefPtr<MediaRawData> sample;
+  nsRefPtr<MediaRawData> sample;
   while (!found && (sample = mIterator->GetNext())) {
     parsed++;
     if (sample->mKeyframe && sample->mTime >= aTimeThreshold.ToMicroseconds()) {

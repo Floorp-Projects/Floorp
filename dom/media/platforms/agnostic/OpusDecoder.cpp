@@ -46,7 +46,7 @@ OpusDataDecoder::Shutdown()
   return NS_OK;
 }
 
-RefPtr<MediaDataDecoder::InitPromise>
+nsRefPtr<MediaDataDecoder::InitPromise>
 OpusDataDecoder::Init()
 {
   size_t length = mInfo.mCodecSpecificConfig->Length();
@@ -114,9 +114,9 @@ nsresult
 OpusDataDecoder::Input(MediaRawData* aSample)
 {
   nsCOMPtr<nsIRunnable> runnable(
-    NS_NewRunnableMethodWithArg<RefPtr<MediaRawData>>(
+    NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(
       this, &OpusDataDecoder::Decode,
-      RefPtr<MediaRawData>(aSample)));
+      nsRefPtr<MediaRawData>(aSample)));
   mTaskQueue->Dispatch(runnable.forget());
 
   return NS_OK;
@@ -280,7 +280,7 @@ OpusDataDecoder::DoDrain()
 nsresult
 OpusDataDecoder::Drain()
 {
-  RefPtr<nsIRunnable> runnable(
+  nsRefPtr<nsIRunnable> runnable(
     NS_NewRunnableMethod(this, &OpusDataDecoder::DoDrain));
   mTaskQueue->Dispatch(runnable.forget());
   return NS_OK;

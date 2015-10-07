@@ -14,7 +14,7 @@
 #include "nsIInputStream.h"
 #include "nsIRunnable.h"
 #include "nsIThread.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
 
@@ -35,7 +35,7 @@ TEST(ImageDecodeToSurface, ImageModuleAvailable)
 class DecodeToSurfaceRunnable : public nsRunnable
 {
 public:
-  DecodeToSurfaceRunnable(RefPtr<SourceSurface>& aSurface,
+  DecodeToSurfaceRunnable(nsRefPtr<SourceSurface>& aSurface,
                           nsIInputStream* aInputStream,
                           const ImageTestCase& aTestCase)
     : mSurface(aSurface)
@@ -67,7 +67,7 @@ public:
   }
 
 private:
-  RefPtr<SourceSurface>& mSurface;
+  nsRefPtr<SourceSurface>& mSurface;
   nsCOMPtr<nsIInputStream> mInputStream;
   ImageTestCase mTestCase;
 };
@@ -84,7 +84,7 @@ RunDecodeToSurface(const ImageTestCase& aTestCase)
 
   // We run the DecodeToSurface tests off-main-thread to ensure that
   // DecodeToSurface doesn't require any main-thread-only code.
-  RefPtr<SourceSurface> surface;
+  nsRefPtr<SourceSurface> surface;
   nsCOMPtr<nsIRunnable> runnable =
     new DecodeToSurfaceRunnable(surface, inputStream, aTestCase);
   thread->Dispatch(runnable, nsIThread::DISPATCH_SYNC);
@@ -119,7 +119,7 @@ TEST(ImageDecodeToSurface, Corrupt)
   nsCOMPtr<nsIInputStream> inputStream = LoadFile(testCase.mPath);
   ASSERT_TRUE(inputStream != nullptr);
 
-  RefPtr<SourceSurface> surface =
+  nsRefPtr<SourceSurface> surface =
     ImageOps::DecodeToSurface(inputStream,
                               nsAutoCString(testCase.mMimeType),
                               imgIContainer::DECODE_FLAGS_DEFAULT);

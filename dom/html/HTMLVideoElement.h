@@ -123,7 +123,7 @@ protected:
   void UpdateScreenWakeLock();
 
   bool mUseScreenWakeLock;
-  RefPtr<WakeLock> mScreenWakeLock;
+  nsRefPtr<WakeLock> mScreenWakeLock;
 
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,

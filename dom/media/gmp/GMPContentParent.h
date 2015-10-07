@@ -89,12 +89,12 @@ private:
     PGMPContentParent::Close();
   }
 
-  nsTArray<RefPtr<GMPVideoDecoderParent>> mVideoDecoders;
-  nsTArray<RefPtr<GMPVideoEncoderParent>> mVideoEncoders;
-  nsTArray<RefPtr<GMPDecryptorParent>> mDecryptors;
-  nsTArray<RefPtr<GMPAudioDecoderParent>> mAudioDecoders;
+  nsTArray<nsRefPtr<GMPVideoDecoderParent>> mVideoDecoders;
+  nsTArray<nsRefPtr<GMPVideoEncoderParent>> mVideoEncoders;
+  nsTArray<nsRefPtr<GMPDecryptorParent>> mDecryptors;
+  nsTArray<nsRefPtr<GMPAudioDecoderParent>> mAudioDecoders;
   nsCOMPtr<nsIThread> mGMPThread;
-  RefPtr<GMPParent> mParent;
+  nsRefPtr<GMPParent> mParent;
   nsCString mDisplayName;
   uint32_t mPluginId;
 };

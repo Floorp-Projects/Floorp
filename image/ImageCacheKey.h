@@ -47,7 +47,7 @@ private:
   static uint32_t ComputeHash(ImageURL* aURI,
                               const Maybe<uint64_t>& aBlobSerial);
 
-  RefPtr<ImageURL> mURI;
+  nsRefPtr<ImageURL> mURI;
   Maybe<uint64_t> mBlobSerial;
   uint32_t mHash;
   bool mIsChrome;

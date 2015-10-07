@@ -62,7 +62,7 @@ TaskQueue::DispatchLocked(already_AddRefed<nsIRunnable> aRunnable,
   if (mIsRunning) {
     return NS_OK;
   }
-  RefPtr<nsIRunnable> runner(new Runner(this));
+  nsRefPtr<nsIRunnable> runner(new Runner(this));
   nsresult rv = mPool->Dispatch(runner.forget(), NS_DISPATCH_NORMAL);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch runnable to run TaskQueue");
@@ -110,7 +110,7 @@ TaskQueue::AwaitShutdownAndIdle()
   AwaitIdleLocked();
 }
 
-RefPtr<ShutdownPromise>
+nsRefPtr<ShutdownPromise>
 TaskQueue::BeginShutdown()
 {
   // Dispatch any tasks for this queue waiting in the caller's tail dispatcher,
@@ -121,7 +121,7 @@ TaskQueue::BeginShutdown()
 
   MonitorAutoLock mon(mQueueMonitor);
   mIsShutdown = true;
-  RefPtr<ShutdownPromise> p = mShutdownPromise.Ensure(__func__);
+  nsRefPtr<ShutdownPromise> p = mShutdownPromise.Ensure(__func__);
   MaybeResolveShutdown();
   mon.NotifyAll();
   return p;
@@ -145,7 +145,7 @@ TaskQueue::IsCurrentThreadIn()
 nsresult
 TaskQueue::Runner::Run()
 {
-  RefPtr<nsIRunnable> event;
+  nsRefPtr<nsIRunnable> event;
   {
     MonitorAutoLock mon(mQueue->mQueueMonitor);
     MOZ_ASSERT(mQueue->mIsRunning);

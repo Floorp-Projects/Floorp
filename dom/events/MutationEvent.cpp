@@ -124,6 +124,6 @@ NS_NewDOMMutationEvent(EventTarget* aOwner,
                        nsPresContext* aPresContext,
                        InternalMutationEvent* aEvent) 
 {
-  RefPtr<MutationEvent> it = new MutationEvent(aOwner, aPresContext, aEvent);
+  nsRefPtr<MutationEvent> it = new MutationEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

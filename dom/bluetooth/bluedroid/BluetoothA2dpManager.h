@@ -65,7 +65,7 @@ private:
                               const BluetoothAddress& aBdAddr) override;
 
   nsString mDeviceAddress;
-  RefPtr<BluetoothProfileController> mController;
+  nsRefPtr<BluetoothProfileController> mController;
 
   // A2DP data member
   bool mA2dpConnected;

@@ -461,7 +461,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
         continue;
       }
 
-      RefPtr<SourceSurface> surface =
+      nsRefPtr<SourceSurface> surface =
         image->GetFrame(imgIContainer::FRAME_CURRENT,
                         imgIContainer::FLAG_SYNC_DECODE);
       if (!surface) {

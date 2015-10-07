@@ -12,7 +12,7 @@
 #include "nsError.h"
 #include "nsDebug.h"
 #include "nsISupportsImpl.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/TypeTraits.h"
 
 /**
@@ -137,7 +137,7 @@ CallQueryInterface(T* aSource, DestinationType** aDestination)
 
 template <class SourceType, class DestinationType>
 inline nsresult
-CallQueryInterface(RefPtr<SourceType>& aSourcePtr, DestinationType** aDestPtr)
+CallQueryInterface(nsRefPtr<SourceType>& aSourcePtr, DestinationType** aDestPtr)
 {
   return CallQueryInterface(aSourcePtr.get(), aDestPtr);
 }

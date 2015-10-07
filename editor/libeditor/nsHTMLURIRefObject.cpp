@@ -248,7 +248,7 @@ nsHTMLURIRefObject::SetNode(nsIDOMNode *aNode)
 
 nsresult NS_NewHTMLURIRefObject(nsIURIRefObject** aResult, nsIDOMNode* aNode)
 {
-  RefPtr<nsHTMLURIRefObject> refObject = new nsHTMLURIRefObject();
+  nsRefPtr<nsHTMLURIRefObject> refObject = new nsHTMLURIRefObject();
   nsresult rv = refObject->SetNode(aNode);
   if (NS_FAILED(rv)) {
     *aResult = 0;

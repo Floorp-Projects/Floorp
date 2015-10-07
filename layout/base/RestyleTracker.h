@@ -318,7 +318,7 @@ public:
     // with the same invariant as mRestyleRoots.  The elements here are those
     // that we called AddPendingRestyle for and found the element this is
     // the RestyleData for as its nearest restyle root.
-    nsTArray<RefPtr<Element>> mDescendants;
+    nsTArray<nsRefPtr<Element>> mDescendants;
 #if defined(MOZ_ENABLE_PROFILER_SPS) && !defined(MOZILLA_XPCOMRT_API)
     UniquePtr<ProfilerBacktrace> mBacktrace;
 #endif
@@ -357,7 +357,7 @@ public:
    * ancestors appear after descendants.
    */
   void AddRestyleRootsIfAwaitingRestyle(
-                                  const nsTArray<RefPtr<Element>>& aElements);
+                                  const nsTArray<nsRefPtr<Element>>& aElements);
 
   /**
    * Converts any eRestyle_SomeDescendants restyle hints in the pending restyle
@@ -394,7 +394,7 @@ private:
                                 const RestyleHintData& aRestyleHintData);
 
   typedef nsClassHashtable<nsISupportsHashKey, RestyleData> PendingRestyleTable;
-  typedef nsAutoTArray< RefPtr<Element>, 32> RestyleRootArray;
+  typedef nsAutoTArray< nsRefPtr<Element>, 32> RestyleRootArray;
   // Our restyle bits.  These will be a subset of ELEMENT_ALL_RESTYLE_FLAGS, and
   // will include one flag from ELEMENT_PENDING_RESTYLE_FLAGS, one flag
   // from ELEMENT_POTENTIAL_RESTYLE_ROOT_FLAGS, and might also include

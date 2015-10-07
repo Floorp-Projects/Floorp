@@ -88,7 +88,7 @@ txXSLTNumber::getValueList(Expr* aValueExpr, txPattern* aCountPattern,
 
     // If the value attribute exists then use that
     if (aValueExpr) {
-        RefPtr<txAExprResult> result;
+        nsRefPtr<txAExprResult> result;
         rv = aValueExpr->evaluate(aContext, getter_AddRefs(result));
         NS_ENSURE_SUCCESS(rv, rv);
 

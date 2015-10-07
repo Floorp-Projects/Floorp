@@ -283,7 +283,7 @@ private:
   const nsStyleImage*       mImage;
   nsStyleImageType          mType;
   nsCOMPtr<imgIContainer>   mImageContainer;
-  RefPtr<nsStyleGradient> mGradientData;
+  nsRefPtr<nsStyleGradient> mGradientData;
   nsIFrame*                 mPaintServerFrame;
   nsLayoutUtils::SurfaceFromElementResult mImageElementSurface;
   bool                      mIsReady;
@@ -993,7 +993,7 @@ protected:
                                      bool aConstrainSpreadRadius = true);
 
   gfxAlphaBoxBlur mAlphaBoxBlur;
-  RefPtr<gfxContext> mContext;
+  nsRefPtr<gfxContext> mContext;
   gfxContext* mDestinationCtx;
 
   /* This is true if the blur already has it's content transformed

@@ -759,7 +759,7 @@ GLContextGLX::CreateGLContext(
     }
 
     GLXContext context;
-    RefPtr<GLContextGLX> glContext;
+    nsRefPtr<GLContextGLX> glContext;
     bool error;
 
     ScopedXErrorHandler xErrorHandler;
@@ -1007,7 +1007,7 @@ GLContextProviderGLX::CreateWrappingExisting(void* aContext, void* aSurface)
 
     if (aContext && aSurface) {
         SurfaceCaps caps = SurfaceCaps::Any();
-        RefPtr<GLContextGLX> glContext =
+        nsRefPtr<GLContextGLX> glContext =
             new GLContextGLX(caps,
                              nullptr, // SharedContext
                              false, // Offscreen
@@ -1119,7 +1119,7 @@ GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget)
     GLContextGLX *shareContext = GetGlobalContextGLX();
 
     SurfaceCaps caps = SurfaceCaps::Any();
-    RefPtr<GLContextGLX> glContext = GLContextGLX::CreateGLContext(caps,
+    nsRefPtr<GLContextGLX> glContext = GLContextGLX::CreateGLContext(caps,
                                                                      shareContext,
                                                                      false,
                                                                      display,
@@ -1216,7 +1216,7 @@ CreateOffscreenPixmapContext(const IntSize& size, const SurfaceCaps& minCaps)
     GLXPixmap pixmap;
 
     gfx::IntSize dummySize(16, 16);
-    RefPtr<gfxXlibSurface> surface = gfxXlibSurface::Create(DefaultScreenOfDisplay(display),
+    nsRefPtr<gfxXlibSurface> surface = gfxXlibSurface::Create(DefaultScreenOfDisplay(display),
                                                             visual,
                                                             dummySize);
     if (surface->CairoStatus() != 0) {
@@ -1269,7 +1269,7 @@ GLContextProviderGLX::CreateOffscreen(const IntSize& size,
         minBackbufferCaps.stencil = false;
     }
 
-    RefPtr<GLContext> gl;
+    nsRefPtr<GLContext> gl;
     gl = CreateOffscreenPixmapContext(size, minBackbufferCaps);
     if (!gl)
         return nullptr;
@@ -1305,7 +1305,7 @@ GLContextProviderGLX::GetGlobalContext()
         // StaticPtr doesn't support assignments from already_AddRefed,
         // so use a temporary nsRefPtr to make the reference counting
         // fall out correctly.
-        RefPtr<GLContext> holder;
+        nsRefPtr<GLContext> holder;
         holder = CreateOffscreenPixmapContext(dummySize, dummyCaps);
         gGlobalContext = holder;
     }

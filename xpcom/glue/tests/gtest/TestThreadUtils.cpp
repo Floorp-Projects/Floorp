@@ -284,7 +284,7 @@ TEST(ThreadUtils, main)
   static_assert(IsParameterStorageClass<StoreCopyPassByPtr<int>>::value,
                 "StoreCopyPassByPtr<int> should be recognized as Storage Class");
 
-  RefPtr<ThreadUtilsObject> rpt(new ThreadUtilsObject);
+  nsRefPtr<ThreadUtilsObject> rpt(new ThreadUtilsObject);
   int count = 0;
 
   // Test legacy functions.
@@ -446,8 +446,8 @@ TEST(ThreadUtils, main)
                                 StorensRefPtrPassByPtr<SpyWithISupports>>::value,
                 "ParameterStorage<SpyWithISupports*>::Type should be StorensRefPtrPassByPtr<SpyWithISupports>");
   static_assert(mozilla::IsSame<StorensRefPtrPassByPtr<SpyWithISupports>::stored_type,
-                                RefPtr<SpyWithISupports>>::value,
-                "StorensRefPtrPassByPtr<SpyWithISupports>::stored_type should be RefPtr<SpyWithISupports>");
+                                nsRefPtr<SpyWithISupports>>::value,
+                "StorensRefPtrPassByPtr<SpyWithISupports>::stored_type should be nsRefPtr<SpyWithISupports>");
   static_assert(mozilla::IsSame<StorensRefPtrPassByPtr<SpyWithISupports>::passed_type,
                                 SpyWithISupports*>::value,
                 "StorensRefPtrPassByPtr<SpyWithISupports>::passed_type should be SpyWithISupports*");
@@ -843,9 +843,9 @@ TEST(ThreadUtils, main)
   { // Block around nsCOMPtr lifetime.
     nsCOMPtr<nsIRunnable> r10;
     SpyWithISupports* ptr = 0;
-    { // Block around RefPtr<Spy> lifetime.
-      if (gDebug) { printf("%d - RefPtr<SpyWithISupports> s(new SpyWithISupports(45))\n", __LINE__); }
-      RefPtr<SpyWithISupports> s(new SpyWithISupports(45));
+    { // Block around nsRefPtr<Spy> lifetime.
+      if (gDebug) { printf("%d - nsRefPtr<SpyWithISupports> s(new SpyWithISupports(45))\n", __LINE__); }
+      nsRefPtr<SpyWithISupports> s(new SpyWithISupports(45));
       ptr = s.get();
       EXPECT_EQ(1, gConstructions);
       EXPECT_EQ(1, gAlive);
@@ -855,7 +855,7 @@ TEST(ThreadUtils, main)
       EXPECT_LE(0, gAllConstructions);
       EXPECT_EQ(1, gAlive);
       Spy::ClearActions();
-      if (gDebug) { printf("%d - End block with RefPtr<Spy> s\n", __LINE__); }
+      if (gDebug) { printf("%d - End block with nsRefPtr<Spy> s\n", __LINE__); }
     }
     EXPECT_EQ(0, gDestructions);
     EXPECT_EQ(1, gAlive);

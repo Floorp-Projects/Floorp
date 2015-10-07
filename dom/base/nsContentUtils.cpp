@@ -403,7 +403,7 @@ protected:          // declared protected to silence clang warnings
   const void *mKey; // must be first, to look like PLDHashEntryStub
 
 public:
-  RefPtr<EventListenerManager> mListenerManager;
+  nsRefPtr<EventListenerManager> mListenerManager;
 };
 
 static void
@@ -487,7 +487,7 @@ nsContentUtils::Init()
 
   // We use the constructor here because we want infallible initialization; we
   // apparently don't care whether sNullSubjectPrincipal has a sane URI or not.
-  RefPtr<nsNullPrincipal> nullPrincipal = new nsNullPrincipal();
+  nsRefPtr<nsNullPrincipal> nullPrincipal = new nsNullPrincipal();
   nullPrincipal->Init();
   nullPrincipal.forget(&sNullSubjectPrincipal);
 
@@ -1751,7 +1751,7 @@ nsContentUtils::IsControlledByServiceWorker(nsIDocument* aDocument)
     return false;
   }
 
-  RefPtr<workers::ServiceWorkerManager> swm =
+  nsRefPtr<workers::ServiceWorkerManager> swm =
     workers::ServiceWorkerManager::GetInstance();
   MOZ_ASSERT(swm);
 
@@ -3211,7 +3211,7 @@ already_AddRefed<imgRequestProxy>
 nsContentUtils::GetStaticRequest(imgRequestProxy* aRequest)
 {
   NS_ENSURE_TRUE(aRequest, nullptr);
-  RefPtr<imgRequestProxy> retval;
+  nsRefPtr<imgRequestProxy> retval;
   aRequest->GetStaticRequest(getter_AddRefs(retval));
   return retval.forget();
 }
@@ -4224,7 +4224,7 @@ nsContentUtils::RemoveListenerManager(nsINode *aNode)
     auto entry = static_cast<EventListenerManagerMapEntry*>
                             (sEventListenerManagersHash->Search(aNode));
     if (entry) {
-      RefPtr<EventListenerManager> listenerManager;
+      nsRefPtr<EventListenerManager> listenerManager;
       listenerManager.swap(entry->mListenerManager);
       // Remove the entry and *then* do operations that could cause further
       // modification of sEventListenerManagersHash.  See bug 334177.
@@ -4305,7 +4305,7 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
 #endif
 
   if (isHTML) {
-    RefPtr<DocumentFragment> frag =
+    nsRefPtr<DocumentFragment> frag =
       new DocumentFragment(document->NodeInfoManager());
     
     nsCOMPtr<nsIContent> contextAsContent = do_QueryInterface(aContextNode);
@@ -4635,7 +4635,7 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
     return NS_OK;
   }
 
-  RefPtr<nsTextNode> textContent =
+  nsRefPtr<nsTextNode> textContent =
     new nsTextNode(aContent->NodeInfo()->NodeInfoManager());
 
   textContent->SetText(aValue, true);
@@ -6207,7 +6207,7 @@ nsContentUtils::CreateBlobBuffer(JSContext* aCx,
 {
   uint32_t blobLen = aData.Length();
   void* blobData = malloc(blobLen);
-  RefPtr<Blob> blob;
+  nsRefPtr<Blob> blob;
   if (blobData) {
     memcpy(blobData, aData.BeginReading(), blobLen);
     blob = mozilla::dom::Blob::CreateMemoryBlob(aParent, blobData, blobLen,
@@ -6536,7 +6536,7 @@ LayerManagerForDocumentInternal(const nsIDocument *aDoc, bool aRequirePersistent
 {
   nsIWidget *widget = nsContentUtils::WidgetForDocument(aDoc);
   if (widget) {
-    RefPtr<LayerManager> manager =
+    nsRefPtr<LayerManager> manager =
       widget->GetLayerManager(aRequirePersistent ? nsIWidget::LAYER_MANAGER_PERSISTENT : 
                               nsIWidget::LAYER_MANAGER_CURRENT,
                               aAllowRetaining);
@@ -6814,7 +6814,7 @@ CheckForWindowedPlugins(nsISupports* aSupports, void* aResult)
   if (!olc) {
     return;
   }
-  RefPtr<nsNPAPIPluginInstance> plugin;
+  nsRefPtr<nsNPAPIPluginInstance> plugin;
   olc->GetPluginInstance(getter_AddRefs(plugin));
   if (!plugin) {
     return;
@@ -7492,11 +7492,11 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
           // Images to be placed on the clipboard are imgIContainers.
           nsCOMPtr<imgIContainer> image(do_QueryInterface(data));
           if (image) {
-            RefPtr<mozilla::gfx::SourceSurface> surface =
+            nsRefPtr<mozilla::gfx::SourceSurface> surface =
               image->GetFrame(imgIContainer::FRAME_CURRENT,
                               imgIContainer::FLAG_SYNC_DECODE);
             if (surface) {
-              RefPtr<mozilla::gfx::DataSourceSurface> dataSurface =
+              nsRefPtr<mozilla::gfx::DataSourceSurface> dataSurface =
                 surface->GetDataSurface();
               size_t length;
               int32_t stride;

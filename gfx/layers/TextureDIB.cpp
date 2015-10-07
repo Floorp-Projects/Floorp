@@ -31,8 +31,8 @@ TextureClientDIB::Unlock()
   MOZ_ASSERT(mIsLocked, "Unlocked called while the texture is not locked!");
   if (mDrawTarget) {
     if (mReadbackSink) {
-      RefPtr<SourceSurface> snapshot = mDrawTarget->Snapshot();
-      RefPtr<DataSourceSurface> dataSurf = snapshot->GetDataSurface();
+      nsRefPtr<SourceSurface> snapshot = mDrawTarget->Snapshot();
+      nsRefPtr<DataSourceSurface> dataSurf = snapshot->GetDataSurface();
       mReadbackSink->ProcessReadback(dataSurf);
     }
 
@@ -61,9 +61,9 @@ TextureClientDIB::UpdateFromSurface(gfx::SourceSurface* aSurface)
 {
   MOZ_ASSERT(mIsLocked && IsAllocated());
 
-  RefPtr<gfxImageSurface> imgSurf = mSurface->GetAsImageSurface();
+  nsRefPtr<gfxImageSurface> imgSurf = mSurface->GetAsImageSurface();
 
-  RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
+  nsRefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
 
   if (!srcSurf) {
     gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface.";
@@ -99,7 +99,7 @@ already_AddRefed<TextureClient>
 TextureClientMemoryDIB::CreateSimilar(TextureFlags aFlags,
                                       TextureAllocationFlags aAllocFlags) const
 {
-  RefPtr<TextureClient> tex = new TextureClientMemoryDIB(mAllocator, mFormat,
+  nsRefPtr<TextureClient> tex = new TextureClientMemoryDIB(mAllocator, mFormat,
                                                          mFlags | aFlags);
 
   if (!tex->AllocateForSurface(mSize, aAllocFlags)) {
@@ -167,7 +167,7 @@ already_AddRefed<TextureClient>
 TextureClientShmemDIB::CreateSimilar(TextureFlags aFlags,
                                      TextureAllocationFlags aAllocFlags) const
 {
-  RefPtr<TextureClient> tex = new TextureClientShmemDIB(mAllocator, mFormat,
+  nsRefPtr<TextureClient> tex = new TextureClientShmemDIB(mAllocator, mFormat,
                                                         mFlags | aFlags);
 
   if (!tex->AllocateForSurface(mSize, aAllocFlags)) {
@@ -334,9 +334,9 @@ DIBTextureHost::UpdatedInternal(const nsIntRegion* aRegion)
     mTextureSource = mCompositor->CreateDataTextureSource(mFlags);
   }
 
-  RefPtr<gfxImageSurface> imgSurf = mSurface->GetAsImageSurface();
+  nsRefPtr<gfxImageSurface> imgSurf = mSurface->GetAsImageSurface();
 
-  RefPtr<DataSourceSurface> surf = Factory::CreateWrappingDataSourceSurface(imgSurf->Data(), imgSurf->Stride(), mSize, mFormat);
+  nsRefPtr<DataSourceSurface> surf = Factory::CreateWrappingDataSourceSurface(imgSurf->Data(), imgSurf->Stride(), mSize, mFormat);
 
   if (!mTextureSource->Update(surf, const_cast<nsIntRegion*>(aRegion))) {
     mTextureSource = nullptr;
@@ -371,7 +371,7 @@ TextureHostFileMapping::UpdatedInternal(const nsIntRegion* aRegion)
   uint8_t* data = (uint8_t*)::MapViewOfFile(mFileMapping, FILE_MAP_READ, 0, 0, mSize.width * mSize.height * BytesPerPixel(mFormat));
 
   if (data) {
-    RefPtr<DataSourceSurface> surf = Factory::CreateWrappingDataSourceSurface(data, mSize.width * BytesPerPixel(mFormat), mSize, mFormat);
+    nsRefPtr<DataSourceSurface> surf = Factory::CreateWrappingDataSourceSurface(data, mSize.width * BytesPerPixel(mFormat), mSize, mFormat);
 
     if (!mTextureSource->Update(surf, const_cast<nsIntRegion*>(aRegion))) {
       mTextureSource = nullptr;

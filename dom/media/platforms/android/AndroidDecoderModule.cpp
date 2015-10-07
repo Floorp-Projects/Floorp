@@ -63,7 +63,7 @@ public:
 
   }
 
-  RefPtr<InitPromise> Init() override {
+  nsRefPtr<InitPromise> Init() override {
     mSurfaceTexture = AndroidSurfaceTexture::Create();
     if (!mSurfaceTexture) {
       NS_WARNING("Failed to create SurfaceTexture for video decode\n");
@@ -127,7 +127,7 @@ public:
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<layers::Image> img = mImageContainer->CreateImage(ImageFormat::SURFACE_TEXTURE);
+    nsRefPtr<layers::Image> img = mImageContainer->CreateImage(ImageFormat::SURFACE_TEXTURE);
     layers::SurfaceTextureImage::Data data;
     data.mSurfTex = mSurfaceTexture.get();
     data.mSize = mConfig.mDisplay;
@@ -180,7 +180,7 @@ public:
     int64_t presentationTimeUs;
     NS_ENSURE_SUCCESS(rv = aInfo->PresentationTimeUs(&presentationTimeUs), rv);
 
-    RefPtr<VideoData> v =
+    nsRefPtr<VideoData> v =
       VideoData::CreateFromImage(mConfig,
                                  mImageContainer,
                                  offset,
@@ -208,8 +208,8 @@ protected:
 
   layers::ImageContainer* mImageContainer;
   const VideoInfo& mConfig;
-  RefPtr<AndroidSurfaceTexture> mSurfaceTexture;
-  RefPtr<GLContext> mGLContext;
+  nsRefPtr<AndroidSurfaceTexture> mSurfaceTexture;
+  nsRefPtr<GLContext> mGLContext;
 };
 
 class AudioDataDecoder : public MediaCodecDataDecoder {
@@ -257,7 +257,7 @@ public:
     int64_t presentationTimeUs;
     NS_ENSURE_SUCCESS(rv = aInfo->PresentationTimeUs(&presentationTimeUs), rv);
 
-    RefPtr<AudioData> data = new AudioData(offset, presentationTimeUs,
+    nsRefPtr<AudioData> data = new AudioData(offset, presentationTimeUs,
                                              aDuration.ToMicroseconds(),
                                              numFrames,
                                              audio,
@@ -304,7 +304,7 @@ AndroidDecoderModule::CreateVideoDecoder(
       aConfig.mDisplay.height,
       &format), nullptr);
 
-  RefPtr<MediaDataDecoder> decoder =
+  nsRefPtr<MediaDataDecoder> decoder =
     new VideoDataDecoder(aConfig, format, aCallback, aImageContainer);
 
   return decoder.forget();
@@ -325,7 +325,7 @@ AndroidDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
       aConfig.mChannels,
       &format), nullptr);
 
-  RefPtr<MediaDataDecoder> decoder =
+  nsRefPtr<MediaDataDecoder> decoder =
     new AudioDataDecoder(aConfig, format, aCallback);
 
   return decoder.forget();
@@ -365,7 +365,7 @@ MediaCodecDataDecoder::~MediaCodecDataDecoder()
   Shutdown();
 }
 
-RefPtr<MediaDataDecoder::InitPromise> MediaCodecDataDecoder::Init()
+nsRefPtr<MediaDataDecoder::InitPromise> MediaCodecDataDecoder::Init()
 {
   nsresult rv = InitDecoder(nullptr);
 
@@ -444,7 +444,7 @@ void MediaCodecDataDecoder::DecoderLoop()
   bool waitingEOF = false;
 
   AutoLocalJNIFrame frame(jni::GetEnvForThread(), 1);
-  RefPtr<MediaRawData> sample;
+  nsRefPtr<MediaRawData> sample;
 
   MediaFormat::LocalRef outputFormat(frame.GetEnv());
   nsresult res;

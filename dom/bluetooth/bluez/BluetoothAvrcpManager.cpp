@@ -145,7 +145,7 @@ BluetoothAvrcpManager::OnConnect(const nsAString& aErrorStr)
    */
   NS_ENSURE_TRUE_VOID(mController);
 
-  RefPtr<BluetoothProfileController> controller = mController.forget();
+  nsRefPtr<BluetoothProfileController> controller = mController.forget();
   controller->NotifyCompletion(aErrorStr);
 }
 
@@ -160,7 +160,7 @@ BluetoothAvrcpManager::OnDisconnect(const nsAString& aErrorStr)
    */
   NS_ENSURE_TRUE_VOID(mController);
 
-  RefPtr<BluetoothProfileController> controller = mController.forget();
+  nsRefPtr<BluetoothProfileController> controller = mController.forget();
   controller->NotifyCompletion(aErrorStr);
 
   Reset();

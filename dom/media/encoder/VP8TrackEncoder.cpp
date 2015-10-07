@@ -160,7 +160,7 @@ VP8TrackEncoder::GetMetadata()
     return nullptr;
   }
 
-  RefPtr<VP8Metadata> meta = new VP8Metadata();
+  nsRefPtr<VP8Metadata> meta = new VP8Metadata();
   meta->mWidth = mFrameWidth;
   meta->mHeight = mFrameHeight;
   meta->mDisplayWidth = mDisplayWidth;
@@ -251,7 +251,7 @@ static bool isYUV444(const PlanarYCbCrImage::Data *aData)
 
 nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
 {
-  RefPtr<Image> img;
+  nsRefPtr<Image> img;
   if (aChunk.mFrame.GetForceBlack() || aChunk.IsNull()) {
     if (!mMuteFrame) {
       mMuteFrame = VideoFrame::CreateBlackImage(gfx::IntSize(mFrameWidth, mFrameHeight));
@@ -370,13 +370,13 @@ nsresult VP8TrackEncoder::PrepareRawFrame(VideoChunk &aChunk)
   } else {
     // Not YCbCr at all. Try to get access to the raw data and convert.
 
-    RefPtr<SourceSurface> surf = img->GetAsSourceSurface();
+    nsRefPtr<SourceSurface> surf = img->GetAsSourceSurface();
     if (!surf) {
       VP8LOG("Getting surface from %s image failed\n", Stringify(format).c_str());
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<DataSourceSurface> data = surf->GetDataSurface();
+    nsRefPtr<DataSourceSurface> data = surf->GetDataSurface();
     if (!data) {
       VP8LOG("Getting data surface from %s image with %s (%s) surface failed\n",
              Stringify(format).c_str(), Stringify(surf->GetType()).c_str(),
@@ -596,7 +596,7 @@ VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
         // SKIP_FRAME
         // Extend the duration of the last encoded data in aData
         // because this frame will be skip.
-        RefPtr<EncodedFrame> last = nullptr;
+        nsRefPtr<EncodedFrame> last = nullptr;
         last = aData.GetEncodedFrames().LastElement();
         if (last) {
           last->SetDuration(last->GetDuration() + encodedDuration);

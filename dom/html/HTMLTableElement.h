@@ -218,8 +218,8 @@ protected:
     return nullptr;
   }
 
-  RefPtr<nsContentList> mTBodies;
-  RefPtr<TableRowsCollection> mRows;
+  nsRefPtr<nsContentList> mTBodies;
+  nsRefPtr<TableRowsCollection> mRows;
   // Sentinel value of TABLE_ATTRS_DIRTY indicates that this is dirty and needs
   // to be recalculated.
   nsMappedAttributes *mTableInheritedAttributes;

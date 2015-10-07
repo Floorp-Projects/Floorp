@@ -95,8 +95,8 @@ private:
   void DispatchSimpleEvent(const char* aName);
   void QueueAsyncSimpleEvent(const char* aName);
 
-  RefPtr<MediaSource> mMediaSource;
-  nsTArray<RefPtr<SourceBuffer> > mSourceBuffers;
+  nsRefPtr<MediaSource> mMediaSource;
+  nsTArray<nsRefPtr<SourceBuffer> > mSourceBuffers;
 };
 
 } // namespace dom

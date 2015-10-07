@@ -7,7 +7,7 @@
 #include "ImageContainer.h"             // for AutoLockImage, etc
 #include "ImageLayers.h"                // for ImageLayer
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/RefPtr.h"             // for RefPtr
+#include "mozilla/nsRefPtr.h"             // for RefPtr
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/ImageClient.h"  // for ImageClient, etc
 #include "mozilla/layers/LayersMessages.h"  // for ImageLayerAttributes, etc
@@ -120,7 +120,7 @@ protected:
     return mImageClientTypeContainer;
   }
 
-  RefPtr<ImageClient> mImageClient;
+  nsRefPtr<ImageClient> mImageClient;
   CompositableType mImageClientTypeContainer;
 };
 
@@ -165,7 +165,7 @@ already_AddRefed<ImageLayer>
 ClientLayerManager::CreateImageLayer()
 {
   NS_ASSERTION(InConstruction(), "Only allowed in construction phase");
-  RefPtr<ClientImageLayer> layer =
+  nsRefPtr<ClientImageLayer> layer =
     new ClientImageLayer(this);
   CREATE_SHADOW(Image);
   return layer.forget();

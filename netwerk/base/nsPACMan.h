@@ -78,7 +78,7 @@ public:
   nsString                   mAppOrigin;
 
 private:
-  RefPtr<nsPACManCallback> mCallback;
+  nsRefPtr<nsPACManCallback> mCallback;
   bool                       mOnMainThreadOnly;
 };
 

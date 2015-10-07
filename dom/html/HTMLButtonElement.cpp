@@ -391,7 +391,7 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
           // TODO: removing this code and have the submit event sent by the form
           // see bug 592124.
           // Hold a strong ref while dispatching
-          RefPtr<HTMLFormElement> form(mForm);
+          nsRefPtr<HTMLFormElement> form(mForm);
           presShell->HandleDOMEventWithTarget(mForm, &event, &status);
           aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
         }

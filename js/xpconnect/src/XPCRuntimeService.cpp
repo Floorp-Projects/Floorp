@@ -184,7 +184,7 @@ BackstagePass::PreCreate(nsISupports* nativeObj, JSContext* cx,
 nsresult
 NS_NewBackstagePass(BackstagePass** ret)
 {
-    RefPtr<BackstagePass> bsp = new BackstagePass(
+    nsRefPtr<BackstagePass> bsp = new BackstagePass(
         nsContentUtils::GetSystemPrincipal());
     bsp.forget(ret);
     return NS_OK;

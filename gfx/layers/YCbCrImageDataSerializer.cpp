@@ -281,7 +281,7 @@ YCbCrImageDataSerializer::CopyData(const uint8_t* aYData,
 already_AddRefed<DataSourceSurface>
 YCbCrImageDataDeserializer::ToDataSourceSurface()
 {
-  RefPtr<DataSourceSurface> result =
+  nsRefPtr<DataSourceSurface> result =
     Factory::CreateDataSourceSurface(GetYSize(), gfx::SurfaceFormat::B8G8R8X8);
   if (NS_WARN_IF(!result)) {
     return nullptr;

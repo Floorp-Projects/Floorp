@@ -1058,7 +1058,7 @@ nsFirstLineFrame::Init(nsIContent*       aContent,
     // we behave as if an anonymous (unstyled) span was the child
     // of the parent frame.
     nsStyleContext* parentContext = aParent->StyleContext();
-    RefPtr<nsStyleContext> newSC = PresContext()->StyleSet()->
+    nsRefPtr<nsStyleContext> newSC = PresContext()->StyleSet()->
       ResolveAnonymousBoxStyle(nsCSSAnonBoxes::mozLineFrame, parentContext);
     SetStyleContext(newSC);
   } else {

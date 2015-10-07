@@ -44,7 +44,7 @@ SourceSurfaceD2D1::GetDataSurface()
     return nullptr;
   }
 
-  RefPtr<ID2D1Bitmap1> softwareBitmap;
+  nsRefPtr<ID2D1Bitmap1> softwareBitmap;
   D2D1_BITMAP_PROPERTIES1 props;
   props.dpiX = 96;
   props.dpiY = 96;
@@ -85,7 +85,7 @@ SourceSurfaceD2D1::EnsureRealizedBitmap()
     return false;
   }
 
-  RefPtr<ID2D1DeviceContext> dc;
+  nsRefPtr<ID2D1DeviceContext> dc;
   device->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, getter_AddRefs(dc));
 
   D2D1_BITMAP_PROPERTIES1 props;
@@ -111,7 +111,7 @@ SourceSurfaceD2D1::DrawTargetWillChange()
   // At this point in time this should always be true here.
   MOZ_ASSERT(mRealizedBitmap);
 
-  RefPtr<ID2D1Bitmap1> oldBitmap = mRealizedBitmap;
+  nsRefPtr<ID2D1Bitmap1> oldBitmap = mRealizedBitmap;
 
   D2D1_BITMAP_PROPERTIES1 props;
   props.dpiX = 96;

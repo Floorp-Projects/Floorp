@@ -42,7 +42,7 @@ private:
   {
     nsString name;
     nsString stringValue;
-    RefPtr<File> fileValue;
+    nsRefPtr<File> fileValue;
     bool valueIsFile;
   };
 

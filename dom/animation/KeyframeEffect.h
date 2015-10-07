@@ -311,7 +311,7 @@ public:
   // Animation for the current time except any properties already contained
   // in |aSetProperties|.
   // Any updated properties are added to |aSetProperties|.
-  void ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
+  void ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
                     nsCSSPropertySet& aSetProperties);
   bool IsRunningOnCompositor() const;
   void SetIsRunningOnCompositor(nsCSSProperty aProperty, bool aIsRunning);

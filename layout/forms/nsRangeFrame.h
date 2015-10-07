@@ -189,7 +189,7 @@ private:
   /**
    * Cached style context for -moz-focus-outer CSS pseudo-element style.
    */
-  RefPtr<nsStyleContext> mOuterFocusStyle;
+  nsRefPtr<nsStyleContext> mOuterFocusStyle;
 
   class DummyTouchListener final : public nsIDOMEventListener
   {
@@ -208,7 +208,7 @@ private:
   /**
    * A no-op touch-listener used for APZ purposes (see nsRangeFrame::Init).
    */
-  RefPtr<DummyTouchListener> mDummyTouchListener;
+  nsRefPtr<DummyTouchListener> mDummyTouchListener;
 };
 
 #endif

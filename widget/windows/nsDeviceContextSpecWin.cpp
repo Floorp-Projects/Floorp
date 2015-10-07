@@ -270,7 +270,7 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
 {
   NS_ASSERTION(mDevMode, "DevMode can't be NULL here");
 
-  RefPtr<gfxASurface> newSurface;
+  nsRefPtr<gfxASurface> newSurface;
 
   int16_t outputFormat = 0;
   if (mPrintSettings) {
@@ -644,7 +644,7 @@ nsPrinterEnumeratorWin::InitPrintSettingsFromPrinter(const char16_t *aPrinterNam
     return NS_OK;
   }
 
-  RefPtr<nsDeviceContextSpecWin> devSpecWin = new nsDeviceContextSpecWin();
+  nsRefPtr<nsDeviceContextSpecWin> devSpecWin = new nsDeviceContextSpecWin();
   if (!devSpecWin) return NS_ERROR_OUT_OF_MEMORY;
 
   if (NS_FAILED(GlobalPrinters::GetInstance()->EnumeratePrinterList())) {

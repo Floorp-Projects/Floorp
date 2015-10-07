@@ -706,7 +706,7 @@ public:
   }
 
 private:
-  RefPtr<nsIPresShell> mPresShell;
+  nsRefPtr<nsIPresShell> mPresShell;
   uint64_t mInputBlockId;
   nsTArray<ScrollableLayerGuid> mTargets;
 };

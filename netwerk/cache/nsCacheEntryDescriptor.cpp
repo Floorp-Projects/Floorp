@@ -64,7 +64,7 @@ public:
     }
 
 private:
-    RefPtr<nsCacheEntryDescriptor> mDescriptor;
+    nsRefPtr<nsCacheEntryDescriptor> mDescriptor;
     nsICacheListener                *mListener;
     nsCOMPtr<nsIThread>              mThread;
 };
@@ -555,8 +555,8 @@ nsCacheEntryDescriptor::MarkValid()
 NS_IMETHODIMP
 nsCacheEntryDescriptor::Close()
 {
-    RefPtr<nsOutputStreamWrapper> outputWrapper;
-    nsTArray<RefPtr<nsInputStreamWrapper> > inputWrappers;
+    nsRefPtr<nsOutputStreamWrapper> outputWrapper;
+    nsTArray<nsRefPtr<nsInputStreamWrapper> > inputWrappers;
 
     {
         nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHEENTRYDESCRIPTOR_CLOSE));
@@ -659,7 +659,7 @@ nsCacheEntryDescriptor::nsInputStreamWrapper::Release()
 {
     // Holding a reference to descriptor ensures that cache service won't go
     // away. Do not grab cache service lock if there is no descriptor.
-    RefPtr<nsCacheEntryDescriptor> desc;
+    nsRefPtr<nsCacheEntryDescriptor> desc;
 
     {
         mozilla::MutexAutoLock lock(mLock);
@@ -851,7 +851,7 @@ nsCacheEntryDescriptor::nsDecompressInputStreamWrapper::Release()
 {
     // Holding a reference to descriptor ensures that cache service won't go
     // away. Do not grab cache service lock if there is no descriptor.
-    RefPtr<nsCacheEntryDescriptor> desc;
+    nsRefPtr<nsCacheEntryDescriptor> desc;
 
     {
         mozilla::MutexAutoLock lock(mLock);
@@ -1041,7 +1041,7 @@ nsCacheEntryDescriptor::nsOutputStreamWrapper::Release()
 {
     // Holding a reference to descriptor ensures that cache service won't go
     // away. Do not grab cache service lock if there is no descriptor.
-    RefPtr<nsCacheEntryDescriptor> desc;
+    nsRefPtr<nsCacheEntryDescriptor> desc;
 
     {
         mozilla::MutexAutoLock lock(mLock);
@@ -1271,7 +1271,7 @@ nsCacheEntryDescriptor::nsCompressOutputStreamWrapper::Release()
 {
     // Holding a reference to descriptor ensures that cache service won't go
     // away. Do not grab cache service lock if there is no descriptor.
-    RefPtr<nsCacheEntryDescriptor> desc;
+    nsRefPtr<nsCacheEntryDescriptor> desc;
 
     {
         mozilla::MutexAutoLock lock(mLock);

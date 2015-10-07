@@ -14,7 +14,7 @@
 #include <queue>
 
 #include "nsITimer.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 namespace mozilla {
 
@@ -42,7 +42,7 @@ public:
   NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
   NS_IMETHOD_(MozExternalRefCountType) Release(void);
 
-  RefPtr<MediaTimerPromise> WaitUntil(const TimeStamp& aTimeStamp, const char* aCallSite);
+  nsRefPtr<MediaTimerPromise> WaitUntil(const TimeStamp& aTimeStamp, const char* aCallSite);
 
 private:
   virtual ~MediaTimer() { MOZ_ASSERT(OnMediaTimerThread()); }
@@ -78,7 +78,7 @@ private:
   struct Entry
   {
     TimeStamp mTimeStamp;
-    RefPtr<MediaTimerPromise::Private> mPromise;
+    nsRefPtr<MediaTimerPromise::Private> mPromise;
 
     explicit Entry(const TimeStamp& aTimeStamp, const char* aCallSite)
       : mTimeStamp(aTimeStamp)

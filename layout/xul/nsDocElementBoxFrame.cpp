@@ -91,7 +91,7 @@ nsDocElementBoxFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   nsNodeInfoManager *nodeInfoManager = doc->NodeInfoManager();
 
   // create the top-secret popupgroup node. shhhhh!
-  RefPtr<NodeInfo> nodeInfo;
+  nsRefPtr<NodeInfo> nodeInfo;
   nodeInfo = nodeInfoManager->GetNodeInfo(nsGkAtoms::popupgroup,
                                           nullptr, kNameSpaceID_XUL,
                                           nsIDOMNode::ELEMENT_NODE);

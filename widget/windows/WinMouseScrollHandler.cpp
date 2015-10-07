@@ -624,7 +624,7 @@ MouseScrollHandler::HandleMouseWheelMessage(nsWindowBase* aWidget,
   ModifierKeyState modKeyState = GetModifierKeyState(aMessage);
 
   // Grab the widget, it might be destroyed by a DOM event handler.
-  RefPtr<nsWindowBase> kungFuDethGrip(aWidget);
+  nsRefPtr<nsWindowBase> kungFuDethGrip(aWidget);
 
   WidgetWheelEvent wheelEvent(true, eWheel, aWidget);
   if (mLastEventInfo.InitWheelEvent(aWidget, wheelEvent, modKeyState)) {

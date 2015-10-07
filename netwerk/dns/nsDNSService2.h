@@ -43,7 +43,7 @@ private:
 
     uint16_t GetAFForLookup(const nsACString &host, uint32_t flags);
 
-    RefPtr<nsHostResolver>  mResolver;
+    nsRefPtr<nsHostResolver>  mResolver;
     nsCOMPtr<nsIIDNService>   mIDN;
 
     // mLock protects access to mResolver and mIPv4OnlyDomains

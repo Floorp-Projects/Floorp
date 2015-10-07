@@ -86,9 +86,9 @@ FetchEvent::Constructor(const GlobalObject& aGlobal,
                         const FetchEventInit& aOptions,
                         ErrorResult& aRv)
 {
-  RefPtr<EventTarget> owner = do_QueryObject(aGlobal.GetAsSupports());
+  nsRefPtr<EventTarget> owner = do_QueryObject(aGlobal.GetAsSupports());
   MOZ_ASSERT(owner);
-  RefPtr<FetchEvent> e = new FetchEvent(owner);
+  nsRefPtr<FetchEvent> e = new FetchEvent(owner);
   bool trusted = e->Init(owner);
   e->InitEvent(aType, aOptions.mBubbles, aOptions.mCancelable);
   e->SetTrusted(trusted);
@@ -106,7 +106,7 @@ namespace {
 class FinishResponse final : public nsRunnable
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
-  RefPtr<InternalResponse> mInternalResponse;
+  nsRefPtr<InternalResponse> mInternalResponse;
   ChannelInfo mWorkerChannelInfo;
   const nsCString mScriptSpec;
 
@@ -229,7 +229,7 @@ private:
 struct RespondWithClosure
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mInterceptedChannel;
-  RefPtr<InternalResponse> mInternalResponse;
+  nsRefPtr<InternalResponse> mInternalResponse;
   ChannelInfo mWorkerChannelInfo;
   const nsCString mScriptSpec;
 
@@ -263,7 +263,7 @@ void RespondWithCopyComplete(void* aClosure, nsresult aStatus)
 
 class MOZ_STACK_CLASS AutoCancel
 {
-  RefPtr<RespondWithHandler> mOwner;
+  nsRefPtr<RespondWithHandler> mOwner;
   nsresult mStatus;
 
 public:
@@ -304,7 +304,7 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
     return;
   }
 
-  RefPtr<Response> response;
+  nsRefPtr<Response> response;
   nsresult rv = UNWRAP_OBJECT(Response, &aValue.toObject(), response);
   if (NS_FAILED(rv)) {
     return;
@@ -351,7 +351,7 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
     return;
   }
 
-  RefPtr<InternalResponse> ir = response->GetInternalResponse();
+  nsRefPtr<InternalResponse> ir = response->GetInternalResponse();
   if (NS_WARN_IF(!ir)) {
     return;
   }
@@ -420,10 +420,10 @@ FetchEvent::RespondWith(Promise& aArg, ErrorResult& aRv)
   if (!mPromise) {
     mPromise = &aArg;
   }
-  RefPtr<InternalRequest> ir = mRequest->GetInternalRequest();
+  nsRefPtr<InternalRequest> ir = mRequest->GetInternalRequest();
   StopImmediatePropagation();
   mWaitToRespond = true;
-  RefPtr<RespondWithHandler> handler =
+  nsRefPtr<RespondWithHandler> handler =
     new RespondWithHandler(mChannel, mRequest->Mode(), ir->IsClientRequest(),
                            ir->IsNavigationRequest(), mScriptSpec);
   aArg.AppendNativeHandler(handler);
@@ -439,11 +439,11 @@ FetchEvent::GetClient()
 
     WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(worker);
-    RefPtr<nsIGlobalObject> global = worker->GlobalScope();
+    nsRefPtr<nsIGlobalObject> global = worker->GlobalScope();
 
     mClient = new ServiceWorkerClient(global, *mClientInfo);
   }
-  RefPtr<ServiceWorkerClient> client = mClient;
+  nsRefPtr<ServiceWorkerClient> client = mClient;
   return client.forget();
 }
 
@@ -484,7 +484,7 @@ ExtendableEvent::GetPromise()
   GlobalObject global(worker->GetJSContext(), worker->GlobalScope()->GetGlobalJSObject());
 
   ErrorResult result;
-  RefPtr<Promise> p = Promise::All(global, Move(mPromises), result);
+  nsRefPtr<Promise> p = Promise::All(global, Move(mPromises), result);
   if (NS_WARN_IF(result.Failed())) {
     return nullptr;
   }
@@ -622,7 +622,7 @@ PushMessageData::Blob(ErrorResult& aRv)
 {
   uint8_t* data = GetContentsCopy();
   if (data) {
-    RefPtr<mozilla::dom::Blob> blob = FetchUtil::ConsumeBlob(
+    nsRefPtr<mozilla::dom::Blob> blob = FetchUtil::ConsumeBlob(
       mOwner, EmptyString(), mBytes.Length(), data, aRv);
     if (blob) {
       return blob.forget();
@@ -672,7 +672,7 @@ PushEvent::Constructor(mozilla::dom::EventTarget* aOwner,
                        const PushEventInit& aOptions,
                        ErrorResult& aRv)
 {
-  RefPtr<PushEvent> e = new PushEvent(aOwner);
+  nsRefPtr<PushEvent> e = new PushEvent(aOwner);
   bool trusted = e->Init(aOwner);
   e->InitEvent(aType, aOptions.mBubbles, aOptions.mCancelable);
   e->SetTrusted(trusted);

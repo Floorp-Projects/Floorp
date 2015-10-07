@@ -192,7 +192,7 @@ DOMRequest::FireEvent(const nsAString& aType, bool aBubble, bool aCancelable)
     return;
   }
 
-  RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
+  nsRefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
   nsresult rv = event->InitEvent(aType, aBubble, aCancelable);
   if (NS_FAILED(rv)) {
     return;
@@ -314,7 +314,7 @@ public:
            const JS::Value& aResult)
   {
     mozilla::ThreadsafeAutoSafeJSContext cx;
-    RefPtr<FireSuccessAsyncTask> asyncTask = new FireSuccessAsyncTask(cx, aRequest, aResult);
+    nsRefPtr<FireSuccessAsyncTask> asyncTask = new FireSuccessAsyncTask(cx, aRequest, aResult);
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToCurrentThread(asyncTask)));
     return NS_OK;
   }
@@ -327,7 +327,7 @@ public:
   }
 
 private:
-  RefPtr<DOMRequest> mReq;
+  nsRefPtr<DOMRequest> mReq;
   JS::PersistentRooted<JS::Value> mResult;
 };
 
@@ -348,7 +348,7 @@ public:
     return NS_OK;
   }
 private:
-  RefPtr<DOMRequest> mReq;
+  nsRefPtr<DOMRequest> mReq;
   nsString mError;
 };
 

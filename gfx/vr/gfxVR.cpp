@@ -106,7 +106,7 @@ VRHMDManager::ManagerInit()
 
   sManagers = new VRHMDManagerArray();
 
-  RefPtr<VRHMDManager> mgr;
+  nsRefPtr<VRHMDManager> mgr;
 
   // we'll only load the 0.5.0 oculus runtime if
   // the >= 0.6.0 one failed to load; otherwise
@@ -150,7 +150,7 @@ VRHMDManager::ManagerDestroy()
 }
 
 /* static */ void
-VRHMDManager::GetAllHMDs(nsTArray<RefPtr<VRHMDInfo>>& aHMDResult)
+VRHMDManager::GetAllHMDs(nsTArray<nsRefPtr<VRHMDInfo>>& aHMDResult)
 {
   if (!sManagers)
     return;

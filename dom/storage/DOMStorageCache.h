@@ -173,11 +173,11 @@ private:
   // cache) we need to refer our manager since removal of the cache from the hash
   // table is handled in the destructor by call to the manager.
   // Cache could potentially overlive the manager, hence the hard ref.
-  RefPtr<DOMStorageManager> mManager;
+  nsRefPtr<DOMStorageManager> mManager;
 
   // Reference to the usage counter object we check on for eTLD+1 quota limit.
   // Obtained from the manager during initialization (Init method).
-  RefPtr<DOMStorageUsage> mUsage;
+  nsRefPtr<DOMStorageUsage> mUsage;
 
   // Timer that holds this cache alive for a while after it has been preloaded.
   nsCOMPtr<nsITimer> mKeepAliveTimer;

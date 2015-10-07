@@ -1384,7 +1384,7 @@ nsCORSListenerProxy::StartCORSPreflight(nsIChannel* aRequestChannel,
     rv = preflightChannel->AsyncOpen2(preflightListener);
   }
   else {
-    RefPtr<nsCORSListenerProxy> corsListener =
+    nsRefPtr<nsCORSListenerProxy> corsListener =
       new nsCORSListenerProxy(preflightListener, aPrincipal,
                               aWithCredentials, method,
                               aUnsafeHeaders);

@@ -132,7 +132,7 @@ class TransportLayerLoopback : public TransportLayer {
   nsCOMPtr<nsITimer> timer_;
   std::queue<QueuedPacket *> packets_;
   PRLock *packets_lock_;
-  RefPtr<Deliverer> deliverer_;
+  nsRefPtr<Deliverer> deliverer_;
 };
 
 }  // close namespace

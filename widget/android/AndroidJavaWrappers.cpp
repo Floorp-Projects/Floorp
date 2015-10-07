@@ -743,7 +743,7 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
         nsIntPoint radii(
             PointRadii()[i].x * scale.scale,
             PointRadii()[i].y * scale.scale);
-        RefPtr<Touch> t = new Touch(PointIndicies()[i],
+        nsRefPtr<Touch> t = new Touch(PointIndicies()[i],
                                       pt,
                                       radii,
                                       Orientations()[i],

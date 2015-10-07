@@ -1170,7 +1170,7 @@ nsCacheService::Init()
 // static
 PLDHashOperator
 nsCacheService::ShutdownCustomCacheDeviceEnum(const nsAString& aProfileDir,
-                                              RefPtr<nsOfflineCacheDevice>& aDevice,
+                                              nsRefPtr<nsOfflineCacheDevice>& aDevice,
                                               void* aUserArg)
 {
     aDevice->Shutdown();
@@ -1311,7 +1311,7 @@ nsCacheService::CreateSessionInternal(const char *          clientID,
                                       bool                  streamBased,
                                       nsICacheSession     **result)
 {
-    RefPtr<nsCacheSession> session =
+    nsRefPtr<nsCacheSession> session =
         new nsCacheSession(clientID, storagePolicy, streamBased);
     session.forget(result);
 
@@ -1361,7 +1361,7 @@ nsresult
 nsCacheService::EvictEntriesForClient(const char *          clientID,
                                       nsCacheStoragePolicy  storagePolicy)
 {
-    RefPtr<EvictionNotifierRunnable> r =
+    nsRefPtr<EvictionNotifierRunnable> r =
         new EvictionNotifierRunnable(NS_ISUPPORTS_CAST(nsICacheService*, this));
     NS_DispatchToMainThread(r);
 
@@ -1972,7 +1972,7 @@ nsCacheService::ProcessRequest(nsCacheRequest *           request,
             // Failsafe check: this is implemented only for offline cache atm.
             rv = NS_ERROR_FAILURE;
         } else {
-            RefPtr<nsOfflineCacheDevice> customCacheDevice;
+            nsRefPtr<nsOfflineCacheDevice> customCacheDevice;
             rv = GetCustomOfflineDevice(request->mProfileDir, -1,
                                         getter_AddRefs(customCacheDevice));
             if (NS_SUCCEEDED(rv))
@@ -2949,8 +2949,8 @@ nsCacheService::DoomActiveEntries(DoomCheckFn check)
 void
 nsCacheService::CloseAllStreams()
 {
-    nsTArray<RefPtr<nsCacheEntryDescriptor::nsInputStreamWrapper> > inputs;
-    nsTArray<RefPtr<nsCacheEntryDescriptor::nsOutputStreamWrapper> > outputs;
+    nsTArray<nsRefPtr<nsCacheEntryDescriptor::nsInputStreamWrapper> > inputs;
+    nsTArray<nsRefPtr<nsCacheEntryDescriptor::nsOutputStreamWrapper> > outputs;
 
     {
         nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_CLOSEALLSTREAMS));
@@ -2978,7 +2978,7 @@ nsCacheService::CloseAllStreams()
         for (size_t i = 0; i < entries.Length(); i++) {
             entry = entries.ElementAt(i);
 
-            nsTArray<RefPtr<nsCacheEntryDescriptor> > descs;
+            nsTArray<nsRefPtr<nsCacheEntryDescriptor> > descs;
             entry->GetDescriptors(descs);
 
             for (uint32_t j = 0 ; j < descs.Length() ; j++) {

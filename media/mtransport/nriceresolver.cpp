@@ -149,7 +149,7 @@ int NrIceResolver::resolve(nr_resolver_resource *resource,
   int _status;
   MOZ_ASSERT(allocated_resolvers_ > 0);
   ASSERT_ON_THREAD(sts_thread_);
-  RefPtr<PendingResolution> pr;
+  nsRefPtr<PendingResolution> pr;
   uint32_t resolve_flags = 0;
 
   if (resource->transport_protocol != IPPROTO_UDP &&

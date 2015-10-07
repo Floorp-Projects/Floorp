@@ -32,7 +32,7 @@ protected:
   nsTaskbarProgressState mProgressState;
   double mProgressFraction;
   nsCOMPtr<nsITimer> mProgressTimer;
-  RefPtr<nsNativeThemeCocoa> mTheme;
+  nsRefPtr<nsNativeThemeCocoa> mTheme;
 
   static void RedrawIconCallback(nsITimer* aTimer, void* aClosure);
 

@@ -123,7 +123,7 @@ public:
    *
    * @param aDevices [out] Devices array to return
    */
-  void GetPairedDevices(nsTArray<RefPtr<BluetoothDevice> >& aDevices);
+  void GetPairedDevices(nsTArray<nsRefPtr<BluetoothDevice> >& aDevices);
 
   // Connection related methods
   already_AddRefed<DOMRequest>
@@ -432,12 +432,12 @@ private:
    * end of its life. When |GetGattServer| is called after the adapter has been
    * enabled again, a new GATT server object will be created.
    */
-  RefPtr<BluetoothGattServer> mGattServer;
+  nsRefPtr<BluetoothGattServer> mGattServer;
 
   /**
    * Handle to fire pairing requests of different pairing types.
    */
-  RefPtr<BluetoothPairingListener> mPairingReqs;
+  nsRefPtr<BluetoothPairingListener> mPairingReqs;
 
   /**
    * Handle to fire 'ondevicefound' event handler for discovered device.
@@ -446,7 +446,7 @@ private:
    * starts discovery, and is reset to nullptr when discovery is stopped by
    * some adapter.
    */
-  RefPtr<BluetoothDiscoveryHandle> mDiscoveryHandleInUse;
+  nsRefPtr<BluetoothDiscoveryHandle> mDiscoveryHandleInUse;
 
   /**
    * Handles to fire 'ondevicefound' event handler for scanned device
@@ -454,7 +454,7 @@ private:
    * Each non-stopped LeScan process has a LeScan handle which is
    * responsible to dispatch LeDeviceEvent.
    */
-  nsTArray<RefPtr<BluetoothDiscoveryHandle> > mLeScanHandleArray;
+  nsTArray<nsRefPtr<BluetoothDiscoveryHandle> > mLeScanHandleArray;
 
   /**
    * nsRefPtr array of BluetoothDevices created by this adapter. The array is
@@ -472,7 +472,7 @@ private:
    *      this new discovery starts.
    *   3) adapter unpaired with a device: The unpaired device will be removed.
    */
-  nsTArray<RefPtr<BluetoothDevice> > mDevices;
+  nsTArray<nsRefPtr<BluetoothDevice> > mDevices;
 };
 
 END_BLUETOOTH_NAMESPACE

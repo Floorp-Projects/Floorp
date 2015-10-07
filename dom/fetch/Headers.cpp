@@ -28,8 +28,8 @@ Headers::Constructor(const GlobalObject& aGlobal,
                      const Optional<HeadersOrByteStringSequenceSequenceOrByteStringMozMap>& aInit,
                      ErrorResult& aRv)
 {
-  RefPtr<InternalHeaders> ih = new InternalHeaders();
-  RefPtr<Headers> headers = new Headers(aGlobal.GetAsSupports(), ih);
+  nsRefPtr<InternalHeaders> ih = new InternalHeaders();
+  nsRefPtr<Headers> headers = new Headers(aGlobal.GetAsSupports(), ih);
 
   if (!aInit.WasPassed()) {
     return headers.forget();
@@ -65,8 +65,8 @@ Headers::Create(nsIGlobalObject* aGlobal,
                 const OwningHeadersOrByteStringSequenceSequenceOrByteStringMozMap& aInit,
                 ErrorResult& aRv)
 {
-  RefPtr<InternalHeaders> ih = new InternalHeaders();
-  RefPtr<Headers> headers = new Headers(aGlobal, ih);
+  nsRefPtr<InternalHeaders> ih = new InternalHeaders();
+  nsRefPtr<Headers> headers = new Headers(aGlobal, ih);
 
   if (aInit.IsHeaders()) {
     ih->Fill(*(aInit.GetAsHeaders().get()->mInternalHeaders), aRv);

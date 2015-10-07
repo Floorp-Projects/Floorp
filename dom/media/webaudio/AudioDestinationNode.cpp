@@ -131,7 +131,7 @@ public:
 
     NS_IMETHOD Run() override
     {
-      RefPtr<OfflineAudioCompletionEvent> event =
+      nsRefPtr<OfflineAudioCompletionEvent> event =
           new OfflineAudioCompletionEvent(mAudioContext, nullptr, nullptr);
       event->InitEvent(mRenderedBuffer);
       mAudioContext->DispatchTrustedEvent(event);
@@ -139,8 +139,8 @@ public:
       return NS_OK;
     }
   private:
-    RefPtr<AudioContext> mAudioContext;
-    RefPtr<AudioBuffer> mRenderedBuffer;
+    nsRefPtr<AudioContext> mAudioContext;
+    nsRefPtr<AudioBuffer> mRenderedBuffer;
   };
 
   void FireOfflineCompletionEvent(AudioDestinationNode* aNode)
@@ -159,7 +159,7 @@ public:
 
     // Create the input buffer
     ErrorResult rv;
-    RefPtr<AudioBuffer> renderedBuffer =
+    nsRefPtr<AudioBuffer> renderedBuffer =
       AudioBuffer::Create(context, mNumberOfChannels, mLength, mSampleRate,
                           mBuffer.forget(), cx, rv);
     if (rv.Failed()) {
@@ -168,7 +168,7 @@ public:
 
     aNode->ResolvePromise(renderedBuffer);
 
-    RefPtr<OnCompleteTask> onCompleteTask =
+    nsRefPtr<OnCompleteTask> onCompleteTask =
       new OnCompleteTask(context, renderedBuffer);
     NS_DispatchToMainThread(onCompleteTask);
 
@@ -191,7 +191,7 @@ private:
   // The input to the destination node is recorded in mBuffer.
   // When this buffer fills up with mLength frames, the buffered input is sent
   // to the main thread in order to dispatch OfflineAudioCompletionEvent.
-  RefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
+  nsRefPtr<ThreadSharedFloatArrayBufferList> mBuffer;
   // An index representing the next offset in mBuffer to be written to.
   uint32_t mWriteIndex;
   uint32_t mNumberOfChannels;
@@ -214,10 +214,10 @@ public:
   NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
-    RefPtr<AudioNode> node = mStream->Engine()->NodeMainThread();
+    nsRefPtr<AudioNode> node = mStream->Engine()->NodeMainThread();
 
     if (node) {
-      RefPtr<AudioDestinationNode> destinationNode =
+      nsRefPtr<AudioDestinationNode> destinationNode =
         static_cast<AudioDestinationNode*>(node.get());
       destinationNode->InputMuted(mInputMuted);
     }
@@ -225,7 +225,7 @@ public:
   }
 
 private:
-  RefPtr<AudioNodeStream> mStream;
+  nsRefPtr<AudioNodeStream> mStream;
   bool mInputMuted;
 };
 
@@ -258,7 +258,7 @@ public:
     if (newInputMuted != mLastInputMuted) {
       mLastInputMuted = newInputMuted;
 
-      RefPtr<InputMutedRunnable> runnable =
+      nsRefPtr<InputMutedRunnable> runnable =
         new InputMutedRunnable(aStream, newInputMuted);
       aStream->Graph()->
         DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());

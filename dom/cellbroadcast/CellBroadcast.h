@@ -55,7 +55,7 @@ public:
   IMPL_EVENT_HANDLER(received)
 
 private:
-  RefPtr<Listener> mListener;
+  nsRefPtr<Listener> mListener;
 };
 
 } // namespace dom

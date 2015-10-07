@@ -76,7 +76,7 @@ int main()
     nsCOMPtr<nsISupports> mySupportsCOMPtr = mySupportsPtr;
     CallQueryInterface(mySupportsCOMPtr, &myITestService);
 
-    RefPtr<nsTestService> myTestServiceRefPtr = myTestService;
+    nsRefPtr<nsTestService> myTestServiceRefPtr = myTestService;
     CallQueryInterface(myTestServiceRefPtr, &mySupportsWeakRef);
 
     /* Test CallQueryReferent */

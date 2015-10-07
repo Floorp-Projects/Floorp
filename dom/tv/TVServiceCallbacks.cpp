@@ -272,14 +272,14 @@ TVServiceTunerGetterCallback::NotifySuccess(nsIArray* aDataList)
   nsresult rv = aDataList->GetLength(&length);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsTArray<RefPtr<TVTuner>> tuners(length);
+  nsTArray<nsRefPtr<TVTuner>> tuners(length);
   for (uint32_t i = 0; i < length; i++) {
     nsCOMPtr<nsITVTunerData> tunerData = do_QueryElementAt(aDataList, i);
     if (NS_WARN_IF(!tunerData)) {
       continue;
     }
 
-    RefPtr<TVTuner> tuner = TVTuner::Create(mManager->GetOwner(), tunerData);
+    nsRefPtr<TVTuner> tuner = TVTuner::Create(mManager->GetOwner(), tunerData);
     NS_ENSURE_TRUE(tuner, NS_ERROR_DOM_ABORT_ERR);
 
     tuners.AppendElement(tuner);
@@ -352,7 +352,7 @@ TVServiceChannelGetterCallback::NotifySuccess(nsIArray* aDataList)
     return rv;
   }
 
-  nsTArray<RefPtr<TVChannel>> channels(length);
+  nsTArray<nsRefPtr<TVChannel>> channels(length);
   for (uint32_t i = 0; i < length; i++) {
     nsCOMPtr<nsITVChannelData> channelData = do_QueryElementAt(aDataList, i);
     if (NS_WARN_IF(!channelData)) {
@@ -360,7 +360,7 @@ TVServiceChannelGetterCallback::NotifySuccess(nsIArray* aDataList)
       return NS_ERROR_DOM_ABORT_ERR;
     }
 
-    RefPtr<TVChannel> channel =
+    nsRefPtr<TVChannel> channel =
       TVChannel::Create(mSource->GetOwner(), mSource, channelData);
     channels.AppendElement(channel);
   }
@@ -445,13 +445,13 @@ TVServiceProgramGetterCallback::NotifySuccess(nsIArray* aDataList)
       return NS_ERROR_DOM_ABORT_ERR;
     }
 
-    RefPtr<TVProgram> program = new TVProgram(mChannel->GetOwner(), mChannel,
+    nsRefPtr<TVProgram> program = new TVProgram(mChannel->GetOwner(), mChannel,
                                                 programData);
     mPromise->MaybeResolve(program);
     return NS_OK;
   }
 
-  nsTArray<RefPtr<TVProgram>> programs(length);
+  nsTArray<nsRefPtr<TVProgram>> programs(length);
   for (uint32_t i = 0; i < length; i++) {
     nsCOMPtr<nsITVProgramData> programData = do_QueryElementAt(aDataList, i);
     if (NS_WARN_IF(!programData)) {
@@ -459,7 +459,7 @@ TVServiceProgramGetterCallback::NotifySuccess(nsIArray* aDataList)
       return NS_ERROR_DOM_ABORT_ERR;
     }
 
-    RefPtr<TVProgram> program = new TVProgram(mChannel->GetOwner(), mChannel,
+    nsRefPtr<TVProgram> program = new TVProgram(mChannel->GetOwner(), mChannel,
                                                 programData);
     programs.AppendElement(program);
   }

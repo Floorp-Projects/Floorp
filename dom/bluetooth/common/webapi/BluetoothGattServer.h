@@ -38,7 +38,7 @@ public:
    * Attribute Getters
    ***************************************************************************/
   void GetServices(
-    nsTArray<RefPtr<BluetoothGattService>>& aServices) const
+    nsTArray<nsRefPtr<BluetoothGattService>>& aServices) const
   {
     aServices = mServices;
   }
@@ -126,8 +126,8 @@ private:
     { }
 
     BluetoothAttributeHandle mHandle;
-    RefPtr<BluetoothGattCharacteristic> mCharacteristic;
-    RefPtr<BluetoothGattDescriptor> mDescriptor;
+    nsRefPtr<BluetoothGattCharacteristic> mCharacteristic;
+    nsRefPtr<BluetoothGattDescriptor> mDescriptor;
   };
 
   void HandleServerRegistered(const BluetoothValue& aValue);
@@ -160,12 +160,12 @@ private:
   /**
    * Array of services for this server.
    */
-  nsTArray<RefPtr<BluetoothGattService>> mServices;
+  nsTArray<nsRefPtr<BluetoothGattService>> mServices;
 
   /**
    * The service that is being added to this server.
    */
-  RefPtr<BluetoothGattService> mPendingService;
+  nsRefPtr<BluetoothGattService> mPendingService;
 
   /**
    * Map request information from the request ID.

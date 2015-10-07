@@ -26,7 +26,7 @@ AsyncEventDispatcher::AsyncEventDispatcher(EventTarget* aTarget,
   , mOnlyChromeDispatch(false)
 {
   MOZ_ASSERT(mTarget);
-  RefPtr<Event> event =
+  nsRefPtr<Event> event =
     EventDispatcher::CreateEvent(aTarget, nullptr, &aEvent, EmptyString());
   mEvent = do_QueryInterface(event);
   NS_ASSERTION(mEvent, "Should never fail to create an event");
@@ -37,7 +37,7 @@ AsyncEventDispatcher::AsyncEventDispatcher(EventTarget* aTarget,
 NS_IMETHODIMP
 AsyncEventDispatcher::Run()
 {
-  RefPtr<Event> event = mEvent ? mEvent->InternalDOMEvent() : nullptr;
+  nsRefPtr<Event> event = mEvent ? mEvent->InternalDOMEvent() : nullptr;
   if (!event) {
     event = NS_NewDOMEvent(mTarget, nullptr, nullptr);
     nsresult rv = event->InitEvent(mEventType, mBubbles, false);
@@ -56,14 +56,14 @@ AsyncEventDispatcher::Run()
 nsresult
 AsyncEventDispatcher::PostDOMEvent()
 {
-  RefPtr<AsyncEventDispatcher> ensureDeletionWhenFailing = this;
+  nsRefPtr<AsyncEventDispatcher> ensureDeletionWhenFailing = this;
   return NS_DispatchToCurrentThread(this);
 }
 
 void
 AsyncEventDispatcher::RunDOMEventWhenSafe()
 {
-  RefPtr<AsyncEventDispatcher> ensureDeletionWhenFailing = this;
+  nsRefPtr<AsyncEventDispatcher> ensureDeletionWhenFailing = this;
   nsContentUtils::AddScriptRunner(this);
 }
 

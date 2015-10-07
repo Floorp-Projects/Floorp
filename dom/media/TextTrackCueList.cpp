@@ -111,9 +111,9 @@ TextTrackCueList::RemoveAll()
 }
 
 void
-TextTrackCueList::GetArray(nsTArray<RefPtr<TextTrackCue> >& aCues)
+TextTrackCueList::GetArray(nsTArray<nsRefPtr<TextTrackCue> >& aCues)
 {
-  aCues = nsTArray<RefPtr<TextTrackCue> >(mList);
+  aCues = nsTArray<nsRefPtr<TextTrackCue> >(mList);
 }
 
 

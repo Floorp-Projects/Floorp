@@ -108,7 +108,7 @@ private:
   SVGStringList &InternalList() const;
 
   // Strong ref to our element to keep it alive.
-  RefPtr<nsSVGElement> mElement;
+  nsRefPtr<nsSVGElement> mElement;
 
   uint8_t mAttrEnum;
 

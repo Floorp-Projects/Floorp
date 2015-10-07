@@ -155,7 +155,7 @@ MouseEvent::Constructor(const GlobalObject& aGlobal,
                         ErrorResult& aRv)
 {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
-  RefPtr<MouseEvent> e = new MouseEvent(t, nullptr, nullptr);
+  nsRefPtr<MouseEvent> e = new MouseEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
   e->InitMouseEvent(aType, aParam.mBubbles, aParam.mCancelable,
                     aParam.mView, aParam.mDetail, aParam.mScreenX,
@@ -510,6 +510,6 @@ NS_NewDOMMouseEvent(EventTarget* aOwner,
                     nsPresContext* aPresContext,
                     WidgetMouseEvent* aEvent)
 {
-  RefPtr<MouseEvent> it = new MouseEvent(aOwner, aPresContext, aEvent);
+  nsRefPtr<MouseEvent> it = new MouseEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

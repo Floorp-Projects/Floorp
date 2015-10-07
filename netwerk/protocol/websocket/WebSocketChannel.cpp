@@ -604,8 +604,8 @@ public:
 private:
   ~CallOnMessageAvailable() {}
 
-  RefPtr<WebSocketChannel> mChannel;
-  RefPtr<BaseWebSocketChannel::ListenerAndContextContainer> mListenerMT;
+  nsRefPtr<WebSocketChannel> mChannel;
+  nsRefPtr<BaseWebSocketChannel::ListenerAndContextContainer> mListenerMT;
   nsCString mData;
   int32_t mLen;
 };
@@ -642,8 +642,8 @@ public:
 private:
   ~CallOnStop() {}
 
-  RefPtr<WebSocketChannel> mChannel;
-  RefPtr<BaseWebSocketChannel::ListenerAndContextContainer> mListenerMT;
+  nsRefPtr<WebSocketChannel> mChannel;
+  nsRefPtr<BaseWebSocketChannel::ListenerAndContextContainer> mListenerMT;
   nsresult mReason;
 };
 NS_IMPL_ISUPPORTS(CallOnStop, nsIRunnable)
@@ -679,8 +679,8 @@ public:
 private:
   ~CallOnServerClose() {}
 
-  RefPtr<WebSocketChannel> mChannel;
-  RefPtr<BaseWebSocketChannel::ListenerAndContextContainer> mListenerMT;
+  nsRefPtr<WebSocketChannel> mChannel;
+  nsRefPtr<BaseWebSocketChannel::ListenerAndContextContainer> mListenerMT;
   uint16_t mCode;
   nsCString mReason;
 };
@@ -713,8 +713,8 @@ public:
 private:
   ~CallAcknowledge() {}
 
-  RefPtr<WebSocketChannel> mChannel;
-  RefPtr<BaseWebSocketChannel::ListenerAndContextContainer> mListenerMT;
+  nsRefPtr<WebSocketChannel> mChannel;
+  nsRefPtr<BaseWebSocketChannel::ListenerAndContextContainer> mListenerMT;
   uint32_t mSize;
 };
 
@@ -745,7 +745,7 @@ public:
 private:
   ~CallOnTransportAvailable() {}
 
-  RefPtr<WebSocketChannel>     mChannel;
+  nsRefPtr<WebSocketChannel>     mChannel;
   nsCOMPtr<nsISocketTransport>   mTransport;
   nsCOMPtr<nsIAsyncInputStream>  mSocketIn;
   nsCOMPtr<nsIAsyncOutputStream> mSocketOut;
@@ -1111,7 +1111,7 @@ public:
 private:
   ~OutboundEnqueuer() {}
 
-  RefPtr<WebSocketChannel>  mChannel;
+  nsRefPtr<WebSocketChannel>  mChannel;
   OutboundMessage            *mMessage;
 };
 NS_IMPL_ISUPPORTS(OutboundEnqueuer, nsIRunnable)
@@ -2170,7 +2170,7 @@ namespace {
 
 class RemoveObserverRunnable : public nsRunnable
 {
-  RefPtr<WebSocketChannel> mChannel;
+  nsRefPtr<WebSocketChannel> mChannel;
 
 public:
   explicit RemoveObserverRunnable(WebSocketChannel* aChannel)
@@ -2331,7 +2331,7 @@ WebSocketChannel::StopSession(nsresult reason)
 
     nsWSAdmissionManager::OnStopSession(this, reason);
 
-    RefPtr<CallOnStop> runnable = new CallOnStop(this, reason);
+    nsRefPtr<CallOnStop> runnable = new CallOnStop(this, reason);
     mTargetThread->Dispatch(runnable, NS_DISPATCH_NORMAL);
   }
 }
@@ -3859,7 +3859,7 @@ WebSocketChannel::SaveNetworkStats(bool enforce)
 
   // Create the event to save the network statistics.
   // the event is then dispathed to the main thread.
-  RefPtr<nsRunnable> event =
+  nsRefPtr<nsRunnable> event =
     new SaveNetworkStatsEvent(mAppId, mIsInBrowser, mActiveNetworkInfo,
                               countRecv, countSent, false);
   NS_DispatchToMainThread(event);

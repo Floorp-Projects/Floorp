@@ -112,7 +112,7 @@ class GonkRecorderProfile
 {
 public:
   static nsresult GetAll(uint32_t aCameraId,
-                         nsTArray<RefPtr<ICameraControl::RecorderProfile>>& aProfiles);
+                         nsTArray<nsRefPtr<ICameraControl::RecorderProfile>>& aProfiles);
 
 #ifdef MOZ_WIDGET_GONK
   // Configures the specified recorder using the specified profile.

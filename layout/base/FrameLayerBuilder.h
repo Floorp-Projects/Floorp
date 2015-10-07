@@ -492,9 +492,9 @@ public:
     void EndUpdate();
 
     LayerManagerData* mParent;
-    RefPtr<Layer> mLayer;
-    RefPtr<Layer> mOptLayer;
-    RefPtr<BasicLayerManager> mInactiveManager;
+    nsRefPtr<Layer> mLayer;
+    nsRefPtr<Layer> mOptLayer;
+    nsRefPtr<BasicLayerManager> mInactiveManager;
     nsAutoTArray<nsIFrame*, 1> mFrameList;
     nsAutoPtr<nsDisplayItemGeometry> mGeometry;
     DisplayItemClip mClip;
@@ -592,7 +592,7 @@ protected:
      * layer, then this stores the layer manager being
      * used for the inactive transaction.
      */
-    RefPtr<LayerManager> mInactiveLayerManager;
+    nsRefPtr<LayerManager> mInactiveLayerManager;
 
     uint32_t mContainerLayerGeneration;
 
@@ -699,7 +699,7 @@ protected:
   /**
    * The root prescontext for the display list builder reference frame
    */
-  RefPtr<nsRootPresContext>         mRootPresContext;
+  nsRefPtr<nsRootPresContext>         mRootPresContext;
 
   /**
    * The display list builder being used.

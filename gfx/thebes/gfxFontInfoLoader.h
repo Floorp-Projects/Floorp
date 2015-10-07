@@ -33,7 +33,7 @@ struct FontFaceData {
 
     nsString mFullName;
     nsString mPostscriptName;
-    RefPtr<gfxCharacterMap> mCharacterMap;
+    nsRefPtr<gfxCharacterMap> mCharacterMap;
     uint32_t mUVSOffset;
     bool mSymbolFont;
 };
@@ -88,7 +88,7 @@ public:
 
         aUVSOffset = faceData.mUVSOffset;
         aSymbolFont = faceData.mSymbolFont;
-        RefPtr<gfxCharacterMap> cmap = faceData.mCharacterMap;
+        nsRefPtr<gfxCharacterMap> cmap = faceData.mCharacterMap;
         return cmap.forget();
     }
 
@@ -244,7 +244,7 @@ protected:
     TimerState mState;
 
     // after async font loader completes, data is stored here
-    RefPtr<FontInfoData> mFontInfo;
+    nsRefPtr<FontInfoData> mFontInfo;
 
     // time spent on the loader thread
     mozilla::TimeDuration mLoadTime;

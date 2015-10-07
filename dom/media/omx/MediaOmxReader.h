@@ -99,16 +99,16 @@ public:
 
   virtual void ReleaseMediaResources();
 
-  virtual RefPtr<MediaDecoderReader::MetadataPromise> AsyncReadMetadata() override;
+  virtual nsRefPtr<MediaDecoderReader::MetadataPromise> AsyncReadMetadata() override;
 
-  virtual RefPtr<SeekPromise>
+  virtual nsRefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) override;
 
   virtual bool IsMediaSeekable() override;
 
   virtual void SetIdle() override;
 
-  virtual RefPtr<ShutdownPromise> Shutdown() override;
+  virtual nsRefPtr<ShutdownPromise> Shutdown() override;
 
   android::sp<android::MediaSource> GetAudioOffloadTrack();
 

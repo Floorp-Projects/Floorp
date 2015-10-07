@@ -274,7 +274,7 @@ AsyncBindingParams::BindByName(const nsACString &aName,
 {
   NS_ENSURE_FALSE(mLocked, NS_ERROR_UNEXPECTED);
 
-  RefPtr<Variant_base> variant = convertVariantToStorageVariant(aValue);
+  nsRefPtr<Variant_base> variant = convertVariantToStorageVariant(aValue);
   if (!variant)
     return NS_ERROR_UNEXPECTED;
 
@@ -396,7 +396,7 @@ BindingParams::BindByIndex(uint32_t aIndex,
   ENSURE_INDEX_VALUE(aIndex, mParamCount);
 
   // Store the variant for later use.
-  RefPtr<Variant_base> variant = convertVariantToStorageVariant(aValue);
+  nsRefPtr<Variant_base> variant = convertVariantToStorageVariant(aValue);
   if (!variant)
     return NS_ERROR_UNEXPECTED;
   if (mParameters.Length() <= aIndex) {
@@ -418,7 +418,7 @@ AsyncBindingParams::BindByIndex(uint32_t aIndex,
   // In the asynchronous case we do not know how many parameters there are to
   // bind to, so we cannot check the validity of aIndex.
 
-  RefPtr<Variant_base> variant = convertVariantToStorageVariant(aValue);
+  nsRefPtr<Variant_base> variant = convertVariantToStorageVariant(aValue);
   if (!variant)
     return NS_ERROR_UNEXPECTED;
   if (mParameters.Length() <= aIndex) {

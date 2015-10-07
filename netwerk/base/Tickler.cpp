@@ -261,7 +261,7 @@ NS_IMPL_ISUPPORTS(TicklerTimer, nsITimerCallback)
 
 NS_IMETHODIMP TicklerTimer::Notify(nsITimer *timer)
 {
-  RefPtr<Tickler> tickler = do_QueryReferent(mTickler);
+  nsRefPtr<Tickler> tickler = do_QueryReferent(mTickler);
   if (!tickler)
     return NS_ERROR_FAILURE;
   MutexAutoLock lock(tickler->mLock);

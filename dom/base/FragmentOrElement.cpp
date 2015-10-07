@@ -645,7 +645,7 @@ FragmentOrElement::~FragmentOrElement()
 already_AddRefed<nsINodeList>
 FragmentOrElement::GetChildren(uint32_t aFilter)
 {
-  RefPtr<nsSimpleContentList> list = new nsSimpleContentList(this);
+  nsRefPtr<nsSimpleContentList> list = new nsSimpleContentList(this);
   AllChildrenIterator iter(this, aFilter);
   while (nsIContent* kid = iter.GetNextChild()) {
     list->AppendElement(kid);
@@ -1022,7 +1022,7 @@ FragmentOrElement::SetXBLBinding(nsXBLBinding* aBinding,
   // constructor twice (if aBinding inherits from it) or firing its constructor
   // after aContent has been deleted (if aBinding is null and the content node
   // dies before we process mAttachedStack).
-  RefPtr<nsXBLBinding> oldBinding = GetXBLBinding();
+  nsRefPtr<nsXBLBinding> oldBinding = GetXBLBinding();
   if (oldBinding) {
     bindingManager->RemoveFromAttachedQueue(oldBinding);
   }
@@ -1285,7 +1285,7 @@ public:
     if (this == sContentUnbinder) {
       sContentUnbinder = nullptr;
       if (mNext) {
-        RefPtr<ContentUnbinder> next;
+        nsRefPtr<ContentUnbinder> next;
         next.swap(mNext);
         sContentUnbinder = next;
         next->mLast = mLast;
@@ -1298,7 +1298,7 @@ public:
 
   static void UnbindAll()
   {
-    RefPtr<ContentUnbinder> ub = sContentUnbinder;
+    nsRefPtr<ContentUnbinder> ub = sContentUnbinder;
     sContentUnbinder = nullptr;
     while (ub) {
       ub->Run();
@@ -1325,7 +1325,7 @@ public:
 private:
   nsAutoTArray<nsCOMPtr<nsIContent>,
                SUBTREE_UNBINDINGS_PER_RUNNABLE> mSubtreeRoots;
-  RefPtr<ContentUnbinder>                     mNext;
+  nsRefPtr<ContentUnbinder>                     mNext;
   ContentUnbinder*                              mLast;
   static ContentUnbinder*                       sContentUnbinder;
 };
@@ -2860,7 +2860,7 @@ FragmentOrElement::SetInnerHTMLInternal(const nsAString& aInnerHTML, ErrorResult
     nsContentUtils::FireMutationEventsForDirectParsing(doc, target,
                                                        oldChildCount);
   } else {
-    RefPtr<DocumentFragment> df =
+    nsRefPtr<DocumentFragment> df =
       nsContentUtils::CreateContextualFragment(target, aInnerHTML, true, aError);
     if (!aError.Failed()) {
       // Suppress assertion about node removal mutation events that can't have

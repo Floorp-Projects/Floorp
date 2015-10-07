@@ -358,7 +358,7 @@ ProxyAutoConfig::ResolveAddress(const nsCString &aHostName,
   if (!dns)
     return false;
 
-  RefPtr<PACResolver> helper = new PACResolver();
+  nsRefPtr<PACResolver> helper = new PACResolver();
 
   if (NS_FAILED(dns->AsyncResolve(aHostName,
                                   nsIDNSService::RESOLVE_PRIORITY_MEDIUM,

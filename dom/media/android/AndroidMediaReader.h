@@ -35,7 +35,7 @@ class AndroidMediaReader : public MediaDecoderReader
   nsIntSize mInitialFrame;
   int64_t mVideoSeekTimeUs;
   int64_t mAudioSeekTimeUs;
-  RefPtr<VideoData> mLastVideoFrame;
+  nsRefPtr<VideoData> mLastVideoFrame;
   MozPromiseHolder<MediaDecoderReader::SeekPromise> mSeekPromise;
   MozPromiseRequestHolder<MediaDecoderReader::VideoDataPromise> mSeekRequest;
 public:
@@ -67,10 +67,10 @@ public:
 
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
                                 MetadataTags** aTags);
-  virtual RefPtr<SeekPromise>
+  virtual nsRefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) override;
 
-  virtual RefPtr<ShutdownPromise> Shutdown() override;
+  virtual nsRefPtr<ShutdownPromise> Shutdown() override;
 
   class ImageBufferCallback : public MPAPI::BufferCallback {
     typedef mozilla::layers::Image Image;
@@ -85,7 +85,7 @@ public:
     uint8_t *CreateI420Image(size_t aWidth, size_t aHeight);
 
     mozilla::layers::ImageContainer *mImageContainer;
-    RefPtr<Image> mImage;
+    nsRefPtr<Image> mImage;
   };
 
 };

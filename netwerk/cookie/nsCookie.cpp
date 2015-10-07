@@ -83,7 +83,7 @@ nsCookie::Create(const nsACString &aName,
 {
   // Ensure mValue contains a valid UTF-8 sequence. Otherwise XPConnect will
   // truncate the string after the first invalid octet.
-  RefPtr<nsUTF8ConverterService> converter = new nsUTF8ConverterService();
+  nsRefPtr<nsUTF8ConverterService> converter = new nsUTF8ConverterService();
   nsAutoCString aUTF8Value;
   converter->ConvertStringToUTF8(aValue, "UTF-8", false, true, 1, aUTF8Value);
 

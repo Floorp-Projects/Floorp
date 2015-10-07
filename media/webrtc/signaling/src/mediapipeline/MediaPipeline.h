@@ -80,9 +80,9 @@ class MediaPipeline : public sigslot::has_slots<> {
                 MediaStream *stream,
                 const std::string& track_id,
                 int level,
-                RefPtr<MediaSessionConduit> conduit,
-                RefPtr<TransportFlow> rtp_transport,
-                RefPtr<TransportFlow> rtcp_transport,
+                nsRefPtr<MediaSessionConduit> conduit,
+                nsRefPtr<TransportFlow> rtp_transport,
+                nsRefPtr<TransportFlow> rtcp_transport,
                 nsAutoPtr<MediaPipelineFilter> filter)
       : direction_(direction),
         stream_(stream),
@@ -134,13 +134,13 @@ class MediaPipeline : public sigslot::has_slots<> {
   virtual nsresult Init();
 
   void UpdateTransport_m(int level,
-                         RefPtr<TransportFlow> rtp_transport,
-                         RefPtr<TransportFlow> rtcp_transport,
+                         nsRefPtr<TransportFlow> rtp_transport,
+                         nsRefPtr<TransportFlow> rtcp_transport,
                          nsAutoPtr<MediaPipelineFilter> filter);
 
   void UpdateTransport_s(int level,
-                         RefPtr<TransportFlow> rtp_transport,
-                         RefPtr<TransportFlow> rtcp_transport,
+                         nsRefPtr<TransportFlow> rtp_transport,
+                         nsRefPtr<TransportFlow> rtcp_transport,
                          nsAutoPtr<MediaPipelineFilter> filter);
 
   virtual Direction direction() const { return direction_; }
@@ -202,7 +202,7 @@ class MediaPipeline : public sigslot::has_slots<> {
 
   class TransportInfo {
     public:
-      TransportInfo(RefPtr<TransportFlow> flow, RtpType type) :
+      TransportInfo(nsRefPtr<TransportFlow> flow, RtpType type) :
         transport_(flow),
         state_(MP_CONNECTING),
         type_(type) {
@@ -216,10 +216,10 @@ class MediaPipeline : public sigslot::has_slots<> {
         recv_srtp_ = nullptr;
       }
 
-      RefPtr<TransportFlow> transport_;
+      nsRefPtr<TransportFlow> transport_;
       State state_;
-      RefPtr<SrtpFlow> send_srtp_;
-      RefPtr<SrtpFlow> recv_srtp_;
+      nsRefPtr<SrtpFlow> send_srtp_;
+      nsRefPtr<SrtpFlow> recv_srtp_;
       RtpType type_;
   };
 
@@ -252,7 +252,7 @@ class MediaPipeline : public sigslot::has_slots<> {
                       size_t len);
 
   Direction direction_;
-  RefPtr<MediaStream> stream_;  // A pointer to the stream we are servicing.
+  nsRefPtr<MediaStream> stream_;  // A pointer to the stream we are servicing.
                                 // Written on the main thread.
                                 // Used on STS and MediaStreamGraph threads.
                                 // May be changed by rtpSender.replaceTrack()
@@ -263,7 +263,7 @@ class MediaPipeline : public sigslot::has_slots<> {
   // this value is updated from STS, but read on main, and we don't want to
   // bother with dispatches just to get an int occasionally.
   Atomic<int> level_;
-  RefPtr<MediaSessionConduit> conduit_;  // Our conduit. Written on the main
+  nsRefPtr<MediaSessionConduit> conduit_;  // Our conduit. Written on the main
                                          // thread. Read on STS thread.
 
   // The transport objects. Read/written on STS thread.
@@ -277,7 +277,7 @@ class MediaPipeline : public sigslot::has_slots<> {
 
   // Created on Init. Referenced by the conduit and eventually
   // destroyed on the STS thread.
-  RefPtr<PipelineTransport> transport_;
+  nsRefPtr<PipelineTransport> transport_;
 
   // Only safe to access from STS thread.
   // Build into TransportInfo?
@@ -356,7 +356,7 @@ class GenericReceiveCallback : public TrackAddedCallback
   }
 
  private:
-  RefPtr<GenericReceiveListener> listener_;
+  nsRefPtr<GenericReceiveListener> listener_;
 };
 
 class ConduitDeleteEvent: public nsRunnable
@@ -368,7 +368,7 @@ public:
   /* we exist solely to proxy release of the conduit */
   NS_IMETHOD Run() { return NS_OK; }
 private:
-  RefPtr<MediaSessionConduit> mConduit;
+  nsRefPtr<MediaSessionConduit> mConduit;
 };
 
 // A specialization of pipeline for reading from an input device
@@ -383,9 +383,9 @@ public:
                         const std::string& track_id,
                         int level,
                         bool is_video,
-                        RefPtr<MediaSessionConduit> conduit,
-                        RefPtr<TransportFlow> rtp_transport,
-                        RefPtr<TransportFlow> rtcp_transport,
+                        nsRefPtr<MediaSessionConduit> conduit,
+                        nsRefPtr<TransportFlow> rtp_transport,
+                        nsRefPtr<TransportFlow> rtcp_transport,
                         nsAutoPtr<MediaPipelineFilter> filter) :
       MediaPipeline(pc, TRANSMIT, main_thread, sts_thread,
                     domstream->GetOwnedStream(), track_id, level,
@@ -439,7 +439,7 @@ public:
   class PipelineListener : public MediaStreamDirectListener {
    friend class MediaPipelineTransmit;
    public:
-    explicit PipelineListener(const RefPtr<MediaSessionConduit>& conduit)
+    explicit PipelineListener(const nsRefPtr<MediaSessionConduit>& conduit)
       : conduit_(conduit),
         track_id_(TRACK_INVALID),
         mMutex("MediaPipelineTransmit::PipelineListener"),
@@ -510,7 +510,7 @@ public:
     virtual void ProcessVideoChunk(VideoSessionConduit *conduit,
                                    VideoChunk& chunk);
 #endif
-    RefPtr<MediaSessionConduit> conduit_;
+    nsRefPtr<MediaSessionConduit> conduit_;
 
     // May be TRACK_INVALID until we see data from the track
     TrackID track_id_; // this is the current TrackID this listener is attached to
@@ -534,7 +534,7 @@ public:
   };
 
  private:
-  RefPtr<PipelineListener> listener_;
+  nsRefPtr<PipelineListener> listener_;
   DOMMediaStream *domstream_;
   bool is_video_;
 };
@@ -551,9 +551,9 @@ class MediaPipelineReceive : public MediaPipeline {
                        MediaStream *stream,
                        const std::string& track_id,
                        int level,
-                       RefPtr<MediaSessionConduit> conduit,
-                       RefPtr<TransportFlow> rtp_transport,
-                       RefPtr<TransportFlow> rtcp_transport,
+                       nsRefPtr<MediaSessionConduit> conduit,
+                       nsRefPtr<TransportFlow> rtp_transport,
+                       nsRefPtr<TransportFlow> rtcp_transport,
                        nsAutoPtr<MediaPipelineFilter> filter) :
       MediaPipeline(pc, RECEIVE, main_thread, sts_thread,
                     stream, track_id, level, conduit, rtp_transport,
@@ -586,9 +586,9 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
                             // used by MediaStreamGraph
                             TrackID numeric_track_id,
                             int level,
-                            RefPtr<AudioSessionConduit> conduit,
-                            RefPtr<TransportFlow> rtp_transport,
-                            RefPtr<TransportFlow> rtcp_transport,
+                            nsRefPtr<AudioSessionConduit> conduit,
+                            nsRefPtr<TransportFlow> rtp_transport,
+                            nsRefPtr<TransportFlow> rtcp_transport,
                             nsAutoPtr<MediaPipelineFilter> filter,
                             bool queue_track) :
       MediaPipelineReceive(pc, main_thread, sts_thread,
@@ -613,7 +613,7 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
   class PipelineListener : public GenericReceiveListener {
    public:
     PipelineListener(SourceMediaStream * source, TrackID track_id,
-                     const RefPtr<MediaSessionConduit>& conduit,
+                     const nsRefPtr<MediaSessionConduit>& conduit,
                      bool queue_track);
 
     ~PipelineListener()
@@ -637,10 +637,10 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
     virtual void NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) override;
 
    private:
-    RefPtr<MediaSessionConduit> conduit_;
+    nsRefPtr<MediaSessionConduit> conduit_;
   };
 
-  RefPtr<PipelineListener> listener_;
+  nsRefPtr<PipelineListener> listener_;
 };
 
 
@@ -660,9 +660,9 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
                             // used by MediaStreamGraph
                             TrackID numeric_track_id,
                             int level,
-                            RefPtr<VideoSessionConduit> conduit,
-                            RefPtr<TransportFlow> rtp_transport,
-                            RefPtr<TransportFlow> rtcp_transport,
+                            nsRefPtr<VideoSessionConduit> conduit,
+                            nsRefPtr<TransportFlow> rtp_transport,
+                            nsRefPtr<TransportFlow> rtcp_transport,
                             nsAutoPtr<MediaPipelineFilter> filter,
                             bool queue_track) :
       MediaPipelineReceive(pc, main_thread, sts_thread,
@@ -748,16 +748,16 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
                           unsigned int buffer_size,
                           uint32_t time_stamp,
                           int64_t render_time,
-                          const RefPtr<layers::Image>& video_image);
+                          const nsRefPtr<layers::Image>& video_image);
 
    private:
     int width_;
     int height_;
 #if defined(MOZILLA_XPCOMRT_API)
-    RefPtr<mozilla::SimpleImageBuffer> image_;
+    nsRefPtr<mozilla::SimpleImageBuffer> image_;
 #elif defined(MOZILLA_INTERNAL_API)
-    RefPtr<layers::ImageContainer> image_container_;
-    RefPtr<layers::Image> image_;
+    nsRefPtr<layers::ImageContainer> image_container_;
+    nsRefPtr<layers::Image> image_;
 #endif
     mozilla::ReentrantMonitor monitor_; // Monitor for processing WebRTC frames.
                                         // Protects image_ against:
@@ -767,8 +767,8 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
 
   friend class PipelineRenderer;
 
-  RefPtr<PipelineRenderer> renderer_;
-  RefPtr<PipelineListener> listener_;
+  nsRefPtr<PipelineRenderer> renderer_;
+  nsRefPtr<PipelineListener> listener_;
 };
 
 

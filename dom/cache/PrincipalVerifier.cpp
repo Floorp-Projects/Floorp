@@ -36,7 +36,7 @@ PrincipalVerifier::CreateAndDispatch(Listener* aListener,
   // only works on the PBackground thread.
   AssertIsOnBackgroundThread();
 
-  RefPtr<PrincipalVerifier> verifier = new PrincipalVerifier(aListener,
+  nsRefPtr<PrincipalVerifier> verifier = new PrincipalVerifier(aListener,
                                                                aActor,
                                                                aPrincipalInfo);
 
@@ -112,11 +112,11 @@ PrincipalVerifier::VerifyOnMainThread()
 
   // No matter what happens, we need to release the actor before leaving
   // this method.
-  RefPtr<ContentParent> actor;
+  nsRefPtr<ContentParent> actor;
   actor.swap(mActor);
 
   nsresult rv;
-  RefPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(mPrincipalInfo,
+  nsRefPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(mPrincipalInfo,
                                                               &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     DispatchToInitiatingThread(rv);

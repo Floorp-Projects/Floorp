@@ -61,7 +61,7 @@ protected:
   class PushParametersDelegate;
   class PullParametersDelegate;
 
-  nsresult WaitWhileRunningOnMainThread(RefPtr<ControlMessage> aRunnable);
+  nsresult WaitWhileRunningOnMainThread(nsRefPtr<ControlMessage> aRunnable);
 
   nsCOMPtr<nsIDOMEventListener> mDomListener;
   nsCOMPtr<nsIThread> mCameraThread;

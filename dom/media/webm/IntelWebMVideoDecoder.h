@@ -22,13 +22,13 @@ namespace mozilla {
 
 class VP8Sample;
 
-typedef std::deque<RefPtr<VP8Sample>> VP8SampleQueue;
+typedef std::deque<nsRefPtr<VP8Sample>> VP8SampleQueue;
 
 class IntelWebMVideoDecoder : public WebMVideoDecoder, public MediaDataDecoderCallback
 {
 public:
   static WebMVideoDecoder* Create(WebMReader* aReader);
-  virtual RefPtr<InitPromise> Init(unsigned int aWidth = 0,
+  virtual nsRefPtr<InitPromise> Init(unsigned int aWidth = 0,
                                      unsigned int aHeight = 0) override;
   virtual nsresult Flush() override;
   virtual void Shutdown() override;
@@ -56,7 +56,7 @@ private:
 
   bool Decode();
 
-  bool Demux(RefPtr<VP8Sample>& aSample, bool* aEOS);
+  bool Demux(nsRefPtr<VP8Sample>& aSample, bool* aEOS);
 
   bool SkipVideoDemuxToNextKeyFrame(int64_t aTimeThreshold, uint32_t& parsed);
 
@@ -64,13 +64,13 @@ private:
 
   already_AddRefed<VP8Sample> PopSample();
 
-  RefPtr<WebMReader> mReader;
-  RefPtr<PlatformDecoderModule> mPlatform;
-  RefPtr<MediaDataDecoder> mMediaDataDecoder;
+  nsRefPtr<WebMReader> mReader;
+  nsRefPtr<PlatformDecoderModule> mPlatform;
+  nsRefPtr<MediaDataDecoder> mMediaDataDecoder;
 
   // TaskQueue on which decoder can choose to decode.
   // Only non-null up until the decoder is created.
-  RefPtr<FlushableTaskQueue> mTaskQueue;
+  nsRefPtr<FlushableTaskQueue> mTaskQueue;
 
   // Monitor that protects all non-threadsafe state; the primitives
   // that follow.
@@ -78,7 +78,7 @@ private:
   nsAutoPtr<VideoInfo> mDecoderConfig;
 
   VP8SampleQueue mSampleQueue;
-  RefPtr<VP8Sample> mQueuedVideoSample;
+  nsRefPtr<VP8Sample> mQueuedVideoSample;
   uint64_t mNumSamplesInput;
   uint64_t mNumSamplesOutput;
   uint64_t mLastReportedNumDecodedFrames;

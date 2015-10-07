@@ -41,14 +41,14 @@ public:
   virtual ~GStreamerReader();
 
   virtual nsresult Init(MediaDecoderReader* aCloneDonor) override;
-  virtual RefPtr<ShutdownPromise> Shutdown() override;
+  virtual nsRefPtr<ShutdownPromise> Shutdown() override;
   virtual nsresult ResetDecode() override;
   virtual bool DecodeAudioData() override;
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
                                 int64_t aTimeThreshold) override;
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
                                 MetadataTags** aTags) override;
-  virtual RefPtr<SeekPromise>
+  virtual nsRefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) override;
   virtual media::TimeIntervals GetBuffered() override;
 
@@ -72,8 +72,8 @@ public:
 private:
 
   void ReadAndPushData(guint aLength);
-  RefPtr<layers::PlanarYCbCrImage> GetImageFromBuffer(GstBuffer* aBuffer);
-  void CopyIntoImageBuffer(GstBuffer *aBuffer, GstBuffer** aOutBuffer, RefPtr<layers::PlanarYCbCrImage> &image);
+  nsRefPtr<layers::PlanarYCbCrImage> GetImageFromBuffer(GstBuffer* aBuffer);
+  void CopyIntoImageBuffer(GstBuffer *aBuffer, GstBuffer** aOutBuffer, nsRefPtr<layers::PlanarYCbCrImage> &image);
   GstCaps* BuildAudioSinkCaps();
   void InstallPadCallbacks();
 
@@ -158,7 +158,7 @@ private:
   static GstFlowReturn AllocateVideoBufferCb(GstPad* aPad, guint64 aOffset, guint aSize,
                                              GstCaps* aCaps, GstBuffer** aBuf);
   GstFlowReturn AllocateVideoBufferFull(GstPad* aPad, guint64 aOffset, guint aSize,
-                                     GstCaps* aCaps, GstBuffer** aBuf, RefPtr<layers::PlanarYCbCrImage>& aImage);
+                                     GstCaps* aCaps, GstBuffer** aBuf, nsRefPtr<layers::PlanarYCbCrImage>& aImage);
   GstFlowReturn AllocateVideoBuffer(GstPad* aPad, guint64 aOffset, guint aSize,
                                      GstCaps* aCaps, GstBuffer** aBuf);
 #endif

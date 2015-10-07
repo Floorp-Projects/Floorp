@@ -370,14 +370,14 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
                             patternHeight / surfaceSize.height);
   }
 
-  RefPtr<DrawTarget> dt =
+  nsRefPtr<DrawTarget> dt =
     aDrawTarget->CreateSimilarDrawTarget(surfaceSize, SurfaceFormat::B8G8R8A8);
   if (!dt) {
     return nullptr;
   }
   dt->ClearRect(Rect(0, 0, surfaceSize.width, surfaceSize.height));
 
-  RefPtr<gfxContext> gfx = new gfxContext(dt);
+  nsRefPtr<gfxContext> gfx = new gfxContext(dt);
 
   if (aGraphicOpacity != 1.0f) {
     gfx->Save();
@@ -704,13 +704,13 @@ nsSVGPatternFrame::GetPaintServerPattern(nsIFrame *aSource,
                                          const gfxRect *aOverrideBounds)
 {
   if (aGraphicOpacity == 0.0f) {
-    RefPtr<gfxPattern> pattern = new gfxPattern(Color());
+    nsRefPtr<gfxPattern> pattern = new gfxPattern(Color());
     return pattern.forget();
   }
 
   // Paint it!
   Matrix pMatrix;
-  RefPtr<SourceSurface> surface =
+  nsRefPtr<SourceSurface> surface =
     PaintPattern(aDrawTarget, &pMatrix, ToMatrix(aContextMatrix), aSource,
                  aFillOrStroke, aGraphicOpacity, aOverrideBounds);
 
@@ -718,7 +718,7 @@ nsSVGPatternFrame::GetPaintServerPattern(nsIFrame *aSource,
     return nullptr;
   }
 
-  RefPtr<gfxPattern> pattern = new gfxPattern(surface, pMatrix);
+  nsRefPtr<gfxPattern> pattern = new gfxPattern(surface, pMatrix);
 
   if (!pattern || pattern->CairoStatus())
     return nullptr;

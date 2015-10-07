@@ -36,8 +36,8 @@ protected:
   TCPSocketParentBase();
   virtual ~TCPSocketParentBase();
 
-  RefPtr<TCPSocket> mSocket;
-  RefPtr<mozilla::net::OfflineObserver> mObserver;
+  nsRefPtr<TCPSocket> mSocket;
+  nsRefPtr<mozilla::net::OfflineObserver> mObserver;
   bool mIPCOpen;
 };
 

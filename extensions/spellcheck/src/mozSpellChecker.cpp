@@ -390,7 +390,7 @@ mozSpellChecker::SetCurrentDictionary(const nsAString &aDictionary)
   }
 
   // Calls to mozISpellCheckingEngine::SetDictionary might destroy us
-  RefPtr<mozSpellChecker> kungFuDeathGrip = this;
+  nsRefPtr<mozSpellChecker> kungFuDeathGrip = this;
 
   mSpellCheckingEngine = nullptr;
 

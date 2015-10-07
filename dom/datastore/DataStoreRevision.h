@@ -42,8 +42,8 @@ public:
 
 private:
   ~DataStoreRevision() {}
-  RefPtr<DataStoreRevisionCallback> mCallback;
-  RefPtr<indexedDB::IDBRequest> mRequest;
+  nsRefPtr<DataStoreRevisionCallback> mCallback;
+  nsRefPtr<indexedDB::IDBRequest> mRequest;
   nsString mRevisionID;
 };
 

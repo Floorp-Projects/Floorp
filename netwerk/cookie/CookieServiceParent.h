@@ -48,7 +48,7 @@ protected:
   CloneProtocol(Channel* aChannel,
                 mozilla::ipc::ProtocolCloneContext* aCtx) override;
 
-  RefPtr<nsCookieService> mCookieService;
+  nsRefPtr<nsCookieService> mCookieService;
 };
 
 } // namespace net

@@ -452,7 +452,7 @@ nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
   Set the preferred size on the aShellItem.
   */
 
-  RefPtr<nsPresContext> presContext;
+  nsRefPtr<nsPresContext> presContext;
   mWebBrowser->mDocShell->GetPresContext(getter_AddRefs(presContext));
   NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 

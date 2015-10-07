@@ -67,9 +67,9 @@ public:
     CANCELED
   };
 
-  typedef MozPromise<RefPtr<MetadataHolder>, ReadMetadataFailureReason, /* IsExclusive = */ true> MetadataPromise;
-  typedef MozPromise<RefPtr<MediaData>, NotDecodedReason, /* IsExclusive = */ true> AudioDataPromise;
-  typedef MozPromise<RefPtr<MediaData>, NotDecodedReason, /* IsExclusive = */ true> VideoDataPromise;
+  typedef MozPromise<nsRefPtr<MetadataHolder>, ReadMetadataFailureReason, /* IsExclusive = */ true> MetadataPromise;
+  typedef MozPromise<nsRefPtr<MediaData>, NotDecodedReason, /* IsExclusive = */ true> AudioDataPromise;
+  typedef MozPromise<nsRefPtr<MediaData>, NotDecodedReason, /* IsExclusive = */ true> VideoDataPromise;
   typedef MozPromise<int64_t, nsresult, /* IsExclusive = */ true> SeekPromise;
 
   // Note that, conceptually, WaitForData makes sense in a non-exclusive sense.
@@ -106,7 +106,7 @@ public:
   // This is different from ReleaseMediaResources() as it is irreversable,
   // whereas ReleaseMediaResources() is.  Must be called on the decode
   // thread.
-  virtual RefPtr<ShutdownPromise> Shutdown();
+  virtual nsRefPtr<ShutdownPromise> Shutdown();
 
   virtual bool OnTaskQueue() const
   {
@@ -133,7 +133,7 @@ public:
   // be resolved when it is complete. Don't hold the decoder
   // monitor while calling this, as the implementation may try to wait
   // on something that needs the monitor and deadlock.
-  virtual RefPtr<AudioDataPromise> RequestAudioData();
+  virtual nsRefPtr<AudioDataPromise> RequestAudioData();
 
   // Requests one video sample from the reader.
   //
@@ -141,7 +141,7 @@ public:
   // may try to wait on something that needs the monitor and deadlock.
   // If aSkipToKeyframe is true, the decode should skip ahead to the
   // the next keyframe at or after aTimeThreshold microseconds.
-  virtual RefPtr<VideoDataPromise>
+  virtual nsRefPtr<VideoDataPromise>
   RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold);
 
   friend class ReRequestVideoWithSkipTask;
@@ -151,7 +151,7 @@ public:
   // in buffering mode. Some readers support a promise-based mechanism by which
   // they notify the state machine when the data arrives.
   virtual bool IsWaitForDataSupported() { return false; }
-  virtual RefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType) { MOZ_CRASH(); }
+  virtual nsRefPtr<WaitForDataPromise> WaitForData(MediaData::Type aType) { MOZ_CRASH(); }
 
   virtual bool HasAudio() = 0;
   virtual bool HasVideo() = 0;
@@ -159,7 +159,7 @@ public:
   // The default implementation of AsyncReadMetadata is implemented in terms of
   // synchronous ReadMetadata() calls. Implementations may also
   // override AsyncReadMetadata to create a more proper async implementation.
-  virtual RefPtr<MetadataPromise> AsyncReadMetadata();
+  virtual nsRefPtr<MetadataPromise> AsyncReadMetadata();
 
   // Read header data for all bitstreams in the file. Fills aInfo with
   // the data required to present the media, and optionally fills *aTags
@@ -175,7 +175,7 @@ public:
   // Moves the decode head to aTime microseconds. aEndTime denotes the end
   // time of the media in usecs. This is only needed for OggReader, and should
   // probably be removed somehow.
-  virtual RefPtr<SeekPromise>
+  virtual nsRefPtr<SeekPromise>
   Seek(int64_t aTime, int64_t aEndTime) = 0;
 
   // Called to move the reader into idle state. When the reader is
@@ -268,7 +268,7 @@ public:
   // trigger-happy with notifications anyway.
   void DispatchNotifyDataArrived(uint32_t aLength, int64_t aOffset, bool aThrottleUpdates)
   {
-    RefPtr<nsRunnable> r =
+    nsRefPtr<nsRunnable> r =
       NS_NewRunnableMethodWithArg<media::Interval<int64_t>>(this, aThrottleUpdates ? &MediaDecoderReader::ThrottledNotifyDataArrived
                                                                                    : &MediaDecoderReader::NotifyDataArrived,
                                                             media::Interval<int64_t>(aOffset, aOffset + aLength));
@@ -286,7 +286,7 @@ public:
     return mDecoder;
   }
 
-  RefPtr<VideoDataPromise> DecodeToFirstVideoData();
+  nsRefPtr<VideoDataPromise> DecodeToFirstVideoData();
 
   MediaInfo GetMediaInfo() { return mInfo; }
 
@@ -296,7 +296,7 @@ public:
 
   void DispatchSetStartTime(int64_t aStartTime)
   {
-    RefPtr<MediaDecoderReader> self = this;
+    nsRefPtr<MediaDecoderReader> self = this;
     nsCOMPtr<nsIRunnable> r =
       NS_NewRunnableFunction([self, aStartTime] () -> void
     {
@@ -367,13 +367,13 @@ protected:
   AbstractMediaDecoder* mDecoder;
 
   // Decode task queue.
-  RefPtr<TaskQueue> mTaskQueue;
+  nsRefPtr<TaskQueue> mTaskQueue;
 
   // State-watching manager.
   WatchManager<MediaDecoderReader> mWatchManager;
 
   // MediaTimer.
-  RefPtr<MediaTimer> mTimer;
+  nsRefPtr<MediaTimer> mTimer;
 
   // Buffered range.
   Canonical<media::TimeIntervals> mBuffered;

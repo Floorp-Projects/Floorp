@@ -158,8 +158,8 @@ BasicTextureImage::EndUpdate()
 
     // FIXME: this is the slow boat.  Make me fast (with GLXPixmap?).
 
-    RefPtr<gfx::SourceSurface> updateSnapshot = mUpdateDrawTarget->Snapshot();
-    RefPtr<gfx::DataSourceSurface> updateData = updateSnapshot->GetDataSurface();
+    nsRefPtr<gfx::SourceSurface> updateSnapshot = mUpdateDrawTarget->Snapshot();
+    nsRefPtr<gfx::DataSourceSurface> updateData = updateSnapshot->GetDataSurface();
 
     bool relative = FinishedSurfaceUpdate();
 
@@ -463,7 +463,7 @@ TiledTextureImage::BeginUpdate(nsIntRegion& aRegion)
             // adjust for tile offset
             aRegion.MoveBy(-xPos, -yPos);
             // forward the actual call
-            RefPtr<gfx::DrawTarget> drawTarget = mImages[i]->BeginUpdate(aRegion);
+            nsRefPtr<gfx::DrawTarget> drawTarget = mImages[i]->BeginUpdate(aRegion);
             // caller expects container space
             aRegion.MoveBy(xPos, yPos);
             // we don't have a temp surface
@@ -503,8 +503,8 @@ TiledTextureImage::EndUpdate()
         return;
     }
 
-    RefPtr<gfx::SourceSurface> updateSnapshot = mUpdateDrawTarget->Snapshot();
-    RefPtr<gfx::DataSourceSurface> updateData = updateSnapshot->GetDataSurface();
+    nsRefPtr<gfx::SourceSurface> updateSnapshot = mUpdateDrawTarget->Snapshot();
+    nsRefPtr<gfx::DataSourceSurface> updateData = updateSnapshot->GetDataSurface();
 
     // upload tiles from temp surface
     for (unsigned i = 0; i < mImages.Length(); i++) {
@@ -664,7 +664,7 @@ void TiledTextureImage::Resize(const gfx::IntSize& aSize)
             }
 
             // Create a new tile.
-            RefPtr<TextureImage> teximg =
+            nsRefPtr<TextureImage> teximg =
                 TileGenFunc(mGL, size, mContentType, mFlags, mImageFormat);
             if (replace)
                 mImages.ReplaceElementAt(i, teximg);
@@ -723,7 +723,7 @@ CreateBasicTextureImage(GLContext* aGL,
     aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, aWrapMode);
     aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, aWrapMode);
 
-    RefPtr<BasicTextureImage> texImage =
+    nsRefPtr<BasicTextureImage> texImage =
         new BasicTextureImage(texture, aSize, aWrapMode, aContentType,
                               aGL, aFlags, aImageFormat);
     return texImage.forget();

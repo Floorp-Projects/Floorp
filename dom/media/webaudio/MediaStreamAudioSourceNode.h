@@ -70,8 +70,8 @@ protected:
   virtual ~MediaStreamAudioSourceNode();
 
 private:
-  RefPtr<MediaInputPort> mInputPort;
-  RefPtr<DOMMediaStream> mInputStream;
+  nsRefPtr<MediaInputPort> mInputPort;
+  nsRefPtr<DOMMediaStream> mInputStream;
 };
 
 } // namespace dom

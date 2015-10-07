@@ -1536,7 +1536,7 @@ nsContentSink::DropParserAndPerfHint(void)
   // actually broken.
   // Drop our reference to the parser to get rid of a circular
   // reference.
-  RefPtr<nsParserBase> kungFuDeathGrip(mParser.forget());
+  nsRefPtr<nsParserBase> kungFuDeathGrip(mParser.forget());
 
   if (mDynamicLowerValue) {
     // Reset the performance hint which was set to FALSE

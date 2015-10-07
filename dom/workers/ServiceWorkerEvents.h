@@ -51,11 +51,11 @@ public:
 class FetchEvent final : public Event
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
-  RefPtr<ServiceWorkerClient> mClient;
-  RefPtr<Request> mRequest;
+  nsRefPtr<ServiceWorkerClient> mClient;
+  nsRefPtr<Request> mRequest;
   nsCString mScriptSpec;
   UniquePtr<ServiceWorkerClientInfo> mClientInfo;
-  RefPtr<Promise> mPromise;
+  nsRefPtr<Promise> mPromise;
   bool mIsReload;
   bool mWaitToRespond;
 protected:
@@ -109,7 +109,7 @@ public:
   already_AddRefed<Promise>
   GetPromise() const
   {
-    RefPtr<Promise> p = mPromise;
+    nsRefPtr<Promise> p = mPromise;
     return p.forget();
   }
 
@@ -122,7 +122,7 @@ public:
 
 class ExtendableEvent : public Event
 {
-  nsTArray<RefPtr<Promise>> mPromises;
+  nsTArray<nsRefPtr<Promise>> mPromises;
 
 protected:
   explicit ExtendableEvent(mozilla::dom::EventTarget* aOwner);
@@ -143,7 +143,7 @@ public:
               const nsAString& aType,
               const EventInit& aOptions)
   {
-    RefPtr<ExtendableEvent> e = new ExtendableEvent(aOwner);
+    nsRefPtr<ExtendableEvent> e = new ExtendableEvent(aOwner);
     bool trusted = e->Init(aOwner);
     e->InitEvent(aType, aOptions.mBubbles, aOptions.mCancelable);
     e->SetTrusted(trusted);
@@ -210,7 +210,7 @@ private:
 
 class PushEvent final : public ExtendableEvent
 {
-  RefPtr<PushMessageData> mData;
+  nsRefPtr<PushMessageData> mData;
 
 protected:
   explicit PushEvent(mozilla::dom::EventTarget* aOwner);

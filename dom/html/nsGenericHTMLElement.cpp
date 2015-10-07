@@ -161,7 +161,7 @@ private:
   // NOTE: nsGenericHTMLFormElement is saved as a nsGenericHTMLElement
   // because AddRef/Release are ambiguous with nsGenericHTMLFormElement
   // and Focus() is declared (and defined) in nsGenericHTMLElement class.
-  RefPtr<nsGenericHTMLElement> mElement;
+  nsRefPtr<nsGenericHTMLElement> mElement;
 };
 
 class nsGenericHTMLElementTearoff : public nsIDOMElementCSSInlineStyle
@@ -187,7 +187,7 @@ class nsGenericHTMLElementTearoff : public nsIDOMElementCSSInlineStyle
                                            nsIDOMElementCSSInlineStyle)
 
 private:
-  RefPtr<nsGenericHTMLElement> mElement;
+  nsRefPtr<nsGenericHTMLElement> mElement;
 };
 
 NS_IMPL_CYCLE_COLLECTION(nsGenericHTMLElementTearoff, mElement)
@@ -229,8 +229,8 @@ nsGenericHTMLElement::CopyInnerTo(Element* aDst)
       // We can't just set this as a string, because that will fail
       // to reparse the string into style data until the node is
       // inserted into the document.  Clone the Rule instead.
-      RefPtr<mozilla::css::Rule> ruleClone = value->GetCSSStyleRuleValue()->Clone();
-      RefPtr<mozilla::css::StyleRule> styleRule = do_QueryObject(ruleClone);
+      nsRefPtr<mozilla::css::Rule> ruleClone = value->GetCSSStyleRuleValue()->Clone();
+      nsRefPtr<mozilla::css::StyleRule> styleRule = do_QueryObject(ruleClone);
       NS_ENSURE_TRUE(styleRule, NS_ERROR_UNEXPECTED);
 
       rv = aDst->SetInlineStyleRule(styleRule, &valStr, false);
@@ -258,7 +258,7 @@ nsGenericHTMLElement::Dataset()
     slots->mDataset = new nsDOMStringMap(this);
   }
 
-  RefPtr<nsDOMStringMap> ret = slots->mDataset;
+  nsRefPtr<nsDOMStringMap> ret = slots->mDataset;
   return ret.forget();
 }
 
@@ -852,7 +852,7 @@ nsGenericHTMLElement::GetOn##name_()                                          \
       nsGlobalWindow* globalWin = nsGlobalWindow::FromSupports(supports);     \
       OnErrorEventHandlerNonNull* errorHandler = globalWin->GetOn##name_();   \
       if (errorHandler) {                                                     \
-        RefPtr<EventHandlerNonNull> handler =                               \
+        nsRefPtr<EventHandlerNonNull> handler =                               \
           new EventHandlerNonNull(errorHandler);                              \
         return handler.forget();                                              \
       }                                                                       \
@@ -860,7 +860,7 @@ nsGenericHTMLElement::GetOn##name_()                                          \
     return nullptr;                                                           \
   }                                                                           \
                                                                               \
-  RefPtr<EventHandlerNonNull> handler = nsINode::GetOn##name_();            \
+  nsRefPtr<EventHandlerNonNull> handler = nsINode::GetOn##name_();            \
   return handler.forget();                                                    \
 }                                                                             \
 void                                                                          \
@@ -874,7 +874,7 @@ nsGenericHTMLElement::SetOn##name_(EventHandlerNonNull* handler)              \
                                                                               \
     nsCOMPtr<nsISupports> supports = do_QueryInterface(win);                  \
     nsGlobalWindow* globalWin = nsGlobalWindow::FromSupports(supports);       \
-    RefPtr<OnErrorEventHandlerNonNull> errorHandler;                        \
+    nsRefPtr<OnErrorEventHandlerNonNull> errorHandler;                        \
     if (handler) {                                                            \
       errorHandler = new OnErrorEventHandlerNonNull(handler);                 \
     }                                                                         \
@@ -1064,7 +1064,7 @@ nsGenericHTMLElement::ParseBackgroundAttribute(int32_t aNamespaceID,
     }
 
     nsString value(aValue);
-    RefPtr<nsStringBuffer> buffer = nsCSSValue::BufferFromString(value);
+    nsRefPtr<nsStringBuffer> buffer = nsCSSValue::BufferFromString(value);
     if (MOZ_UNLIKELY(!buffer)) {
       return false;
     }
@@ -1848,7 +1848,7 @@ nsGenericHTMLElement::GetUndoManager()
 {
   nsDOMSlots* slots = GetExistingDOMSlots();
   if (slots && slots->mUndoManager) {
-    RefPtr<UndoManager> undoManager = slots->mUndoManager;
+    nsRefPtr<UndoManager> undoManager = slots->mUndoManager;
     return undoManager.forget();
   } else {
     return nullptr;
@@ -2639,7 +2639,7 @@ nsGenericHTMLElement::Click()
   nsCOMPtr<nsIDocument> doc = GetComposedDoc();
 
   nsCOMPtr<nsIPresShell> shell;
-  RefPtr<nsPresContext> context;
+  nsRefPtr<nsPresContext> context;
   if (doc) {
     shell = doc->GetShell();
     if (shell) {
@@ -3201,7 +3201,7 @@ nsGenericHTMLElement::GetProperties(nsISupports** aProperties)
 }
 
 nsSize
-nsGenericHTMLElement::GetWidthHeightForImage(RefPtr<imgRequestProxy>& aImageRequest)
+nsGenericHTMLElement::GetWidthHeightForImage(nsRefPtr<imgRequestProxy>& aImageRequest)
 {
   nsSize size(0,0);
 

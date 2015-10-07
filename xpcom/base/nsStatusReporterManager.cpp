@@ -48,7 +48,7 @@ void
 doStatusReport(const nsCString& aInputStr)
 {
   LOG("FifoWatcher(%s) dispatching status report runnable.", aInputStr.get());
-  RefPtr<DumpStatusInfoToTempDirRunnable> runnable =
+  nsRefPtr<DumpStatusInfoToTempDirRunnable> runnable =
     new DumpStatusInfoToTempDirRunnable();
   NS_DispatchToMainThread(runnable);
 }

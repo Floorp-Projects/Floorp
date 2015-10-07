@@ -263,7 +263,7 @@ protected:
   bool IsChrome(JSContext* aCx) const;
 
   mozilla::WidgetEvent*       mEvent;
-  RefPtr<nsPresContext>     mPresContext;
+  nsRefPtr<nsPresContext>     mPresContext;
   nsCOMPtr<EventTarget>       mExplicitOriginalTarget;
   nsCOMPtr<nsIGlobalObject>   mOwner;
   bool                        mEventIsInternal;

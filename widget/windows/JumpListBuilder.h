@@ -42,7 +42,7 @@ protected:
   static bool sBuildingList; 
 
 private:
-  RefPtr<ICustomDestinationList> mJumpListMgr;
+  nsRefPtr<ICustomDestinationList> mJumpListMgr;
   uint32_t mMaxItems;
   bool mHasCommit;
   nsCOMPtr<nsIThread> mIOThread;

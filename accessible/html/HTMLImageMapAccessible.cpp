@@ -87,7 +87,7 @@ HTMLImageMapAccessible::UpdateChildAreas(bool aDoFireEvents)
 
   bool treeChanged = false;
   AutoTreeMutation mut(this);
-  RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(this);
+  nsRefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(this);
 
   // Remove areas that are not a valid part of the image map anymore.
   for (int32_t childIdx = mChildren.Length() - 1; childIdx >= 0; childIdx--) {
@@ -96,7 +96,7 @@ HTMLImageMapAccessible::UpdateChildAreas(bool aDoFireEvents)
       continue;
 
     if (aDoFireEvents) {
-      RefPtr<AccHideEvent> event = new AccHideEvent(area, area->GetContent());
+      nsRefPtr<AccHideEvent> event = new AccHideEvent(area, area->GetContent());
       mDoc->FireDelayedEvent(event);
       reorderEvent->AddSubMutationEvent(event);
     }
@@ -112,7 +112,7 @@ HTMLImageMapAccessible::UpdateChildAreas(bool aDoFireEvents)
 
     Accessible* area = mChildren.SafeElementAt(idx);
     if (!area || area->GetContent() != areaContent) {
-      RefPtr<Accessible> area = new HTMLAreaAccessible(areaContent, mDoc);
+      nsRefPtr<Accessible> area = new HTMLAreaAccessible(areaContent, mDoc);
       mDoc->BindToDocument(area, aria::GetRoleMap(areaContent));
 
       if (!InsertChildAt(idx, area)) {
@@ -121,7 +121,7 @@ HTMLImageMapAccessible::UpdateChildAreas(bool aDoFireEvents)
       }
 
       if (aDoFireEvents) {
-        RefPtr<AccShowEvent> event = new AccShowEvent(area, areaContent);
+        nsRefPtr<AccShowEvent> event = new AccShowEvent(area, areaContent);
         mDoc->FireDelayedEvent(event);
         reorderEvent->AddSubMutationEvent(event);
       }

@@ -50,7 +50,7 @@ NS_IMETHODIMP nsNativeMenuServiceX::CreateNativeMenuBar(nsIWidget* aParent, nsIC
 {
   NS_ASSERTION(NS_IsMainThread(), "Attempting to create native menu bar on wrong thread!");
 
-  RefPtr<nsMenuBarX> mb = new nsMenuBarX();
+  nsRefPtr<nsMenuBarX> mb = new nsMenuBarX();
   if (!mb)
     return NS_ERROR_OUT_OF_MEMORY;
 

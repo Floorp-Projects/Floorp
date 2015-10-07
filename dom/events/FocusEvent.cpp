@@ -63,7 +63,7 @@ FocusEvent::Constructor(const GlobalObject& aGlobal,
                         ErrorResult& aRv)
 {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
-  RefPtr<FocusEvent> e = new FocusEvent(t, nullptr, nullptr);
+  nsRefPtr<FocusEvent> e = new FocusEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
   aRv = e->InitFocusEvent(aType, aParam.mBubbles, aParam.mCancelable, aParam.mView,
                           aParam.mDetail, aParam.mRelatedTarget);
@@ -82,6 +82,6 @@ NS_NewDOMFocusEvent(EventTarget* aOwner,
                     nsPresContext* aPresContext,
                     InternalFocusEvent* aEvent)
 {
-  RefPtr<FocusEvent> it = new FocusEvent(aOwner, aPresContext, aEvent);
+  nsRefPtr<FocusEvent> it = new FocusEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

@@ -763,7 +763,7 @@ private:
 
   nsresult HandleResults();
 
-  RefPtr<nsUrlClassifierDBService> mDBService;
+  nsRefPtr<nsUrlClassifierDBService> mDBService;
   nsAutoPtr<LookupResultArray> mResults;
 
   // Completed results to send back to the worker for caching.
@@ -1246,7 +1246,7 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
     return NS_OK;
   }
 
-  RefPtr<nsUrlClassifierClassifyCallback> callback =
+  nsRefPtr<nsUrlClassifierClassifyCallback> callback =
     new nsUrlClassifierClassifyCallback(c, mCheckMalware, mCheckPhishing,
                                         mCheckTracking);
   if (!callback) return NS_ERROR_OUT_OF_MEMORY;

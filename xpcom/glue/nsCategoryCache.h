@@ -89,7 +89,7 @@ private:
   nsCategoryCache(const nsCategoryCache<T>&);
 
   nsCString mCategoryName;
-  RefPtr<nsCategoryObserver> mObserver;
+  nsRefPtr<nsCategoryObserver> mObserver;
 };
 
 #endif

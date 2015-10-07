@@ -56,7 +56,7 @@ private:
   nsMainThreadPtrHandle<DataStoreCursor> mBackingCursor;
 
   // Keep track of the WorkerDataStore which owns this WorkerDataStoreCursor.
-  RefPtr<WorkerDataStore> mWorkerStore;
+  nsRefPtr<WorkerDataStore> mWorkerStore;
 };
 
 } //namespace workers

@@ -10,7 +10,7 @@
 #include "nsStringBuffer.h"
 #include "nsReadableUtils.h"
 #include "nsCRTGlue.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsTArray.h"
 #include "gtest/gtest.h"
 
@@ -669,7 +669,7 @@ TEST(Strings, stringbuffer)
 {
   const char kData[] = "hello world";
 
-  RefPtr<nsStringBuffer> buf;
+  nsRefPtr<nsStringBuffer> buf;
 
   buf = nsStringBuffer::Alloc(sizeof(kData));
   EXPECT_TRUE(!!buf);

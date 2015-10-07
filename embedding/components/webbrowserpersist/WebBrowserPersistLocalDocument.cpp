@@ -277,7 +277,7 @@ public:
     NS_DECL_ISUPPORTS
 
 private:
-    RefPtr<WebBrowserPersistLocalDocument> mParent;
+    nsRefPtr<WebBrowserPersistLocalDocument> mParent;
     nsCOMPtr<nsIWebBrowserPersistResourceVisitor> mVisitor;
     nsCOMPtr<nsIURI> mCurrentBaseURI;
     uint32_t mPersistFlags;
@@ -342,7 +342,7 @@ ResourceReader::OnWalkSubframe(nsIDOMNode* aNode)
 {
     nsCOMPtr<nsIFrameLoaderOwner> loaderOwner = do_QueryInterface(aNode);
     NS_ENSURE_STATE(loaderOwner);
-    RefPtr<nsFrameLoader> loader = loaderOwner->GetFrameLoader();
+    nsRefPtr<nsFrameLoader> loader = loaderOwner->GetFrameLoader();
     NS_ENSURE_STATE(loader);
 
     ++mOutstandingDocuments;
@@ -653,7 +653,7 @@ public:
     NS_DECL_NSIDOCUMENTENCODERNODEFIXUP
 private:
     virtual ~PersistNodeFixup() { }
-    RefPtr<WebBrowserPersistLocalDocument> mParent;
+    nsRefPtr<WebBrowserPersistLocalDocument> mParent;
     nsClassHashtable<nsCStringHashKey, nsCString> mMap;
     nsCOMPtr<nsIURI> mCurrentBaseURI;
     nsCOMPtr<nsIURI> mTargetBaseURI;
@@ -1218,7 +1218,7 @@ PersistNodeFixup::FixupNode(nsIDOMNode *aNodeIn,
             NS_NAMED_LITERAL_STRING(valueAttr, "value");
             // Update element node attributes with user-entered form state
             nsCOMPtr<nsIContent> content = do_QueryInterface(*aNodeOut);
-            RefPtr<dom::HTMLInputElement> outElt =
+            nsRefPtr<dom::HTMLInputElement> outElt =
               dom::HTMLInputElement::FromContentOrNull(content);
             nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(*aNodeOut);
             switch (formControl->GetType()) {
@@ -1304,7 +1304,7 @@ WebBrowserPersistLocalDocument::ReadResources(nsIWebBrowserPersistResourceVisito
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
     MOZ_ASSERT(walker);
 
-    RefPtr<ResourceReader> reader = new ResourceReader(this, aVisitor);
+    nsRefPtr<ResourceReader> reader = new ResourceReader(this, aVisitor);
     nsCOMPtr<nsIDOMNode> currentNode;
     walker->GetCurrentNode(getter_AddRefs(currentNode));
     while (currentNode) {

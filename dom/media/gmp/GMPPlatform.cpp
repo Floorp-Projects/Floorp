@@ -120,7 +120,7 @@ RunOnMainThread(GMPTask* aTask)
     return GMPGenericErr;
   }
 
-  RefPtr<Runnable> r = new Runnable(aTask);
+  nsRefPtr<Runnable> r = new Runnable(aTask);
   sMainLoop->PostTask(FROM_HERE, NewRunnableMethod(r.get(), &Runnable::Run));
 
   return GMPNoErr;
@@ -133,7 +133,7 @@ SyncRunOnMainThread(GMPTask* aTask)
     return GMPGenericErr;
   }
 
-  RefPtr<SyncRunnable> r = new SyncRunnable(aTask, sMainLoop);
+  nsRefPtr<SyncRunnable> r = new SyncRunnable(aTask, sMainLoop);
 
   r->Post();
 
@@ -252,7 +252,7 @@ GMPThreadImpl::Post(GMPTask* aTask)
     }
   }
 
-  RefPtr<Runnable> r = new Runnable(aTask);
+  nsRefPtr<Runnable> r = new Runnable(aTask);
 
   mThread.message_loop()->PostTask(FROM_HERE, NewRunnableMethod(r.get(), &Runnable::Run));
 }

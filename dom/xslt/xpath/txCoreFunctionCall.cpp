@@ -86,7 +86,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     switch (mType) {
         case COUNT:
         {
-            RefPtr<txNodeSet> nodes;
+            nsRefPtr<txNodeSet> nodes;
             rv = evaluateToNodeSet(mParams[0], aContext,
                                    getter_AddRefs(nodes));
             NS_ENSURE_SUCCESS(rv, rv);
@@ -96,11 +96,11 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         }
         case ID:
         {
-            RefPtr<txAExprResult> exprResult;
+            nsRefPtr<txAExprResult> exprResult;
             rv = mParams[0]->evaluate(aContext, getter_AddRefs(exprResult));
             NS_ENSURE_SUCCESS(rv, rv);
 
-            RefPtr<txNodeSet> resultSet;
+            nsRefPtr<txNodeSet> resultSet;
             rv = aContext->recycler()->getNodeSet(getter_AddRefs(resultSet));
             NS_ENSURE_SUCCESS(rv, rv);
 
@@ -148,7 +148,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         case NAMESPACE_URI:
         {
             // Check for optional arg
-            RefPtr<txNodeSet> nodes;
+            nsRefPtr<txNodeSet> nodes;
             if (!mParams.IsEmpty()) {
                 rv = evaluateToNodeSet(mParams[0], aContext,
                                        getter_AddRefs(nodes));
@@ -221,7 +221,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
         case CONCAT:
         {
-            RefPtr<StringResult> strRes;
+            nsRefPtr<StringResult> strRes;
             rv = aContext->recycler()->getStringResult(getter_AddRefs(strRes));
             NS_ENSURE_SUCCESS(rv, rv);
 
@@ -267,7 +267,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                                                   resultStr);
             }
 
-            RefPtr<StringResult> strRes;
+            nsRefPtr<StringResult> strRes;
             rv = aContext->recycler()->getStringResult(getter_AddRefs(strRes));
             NS_ENSURE_SUCCESS(rv, rv);
 
@@ -319,7 +319,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         }
         case STRING:
         {
-            RefPtr<StringResult> strRes;
+            nsRefPtr<StringResult> strRes;
             rv = aContext->recycler()->getStringResult(getter_AddRefs(strRes));
             NS_ENSURE_SUCCESS(rv, rv);
 
@@ -470,7 +470,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 return NS_OK;
             }
             
-            RefPtr<StringResult> strRes;
+            nsRefPtr<StringResult> strRes;
             rv = aContext->recycler()->getStringResult(getter_AddRefs(strRes));
             NS_ENSURE_SUCCESS(rv, rv);
 
@@ -563,7 +563,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
         }
         case SUM:
         {
-            RefPtr<txNodeSet> nodes;
+            nsRefPtr<txNodeSet> nodes;
             nsresult rv = evaluateToNodeSet(mParams[0], aContext,
                                             getter_AddRefs(nodes));
             NS_ENSURE_SUCCESS(rv, rv);

@@ -66,7 +66,7 @@ public:
 private:
   virtual ~DynamicImage() { }
 
-  RefPtr<gfxDrawable> mDrawable;
+  nsRefPtr<gfxDrawable> mDrawable;
 };
 
 } // namespace image

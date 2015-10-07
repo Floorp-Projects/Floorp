@@ -177,7 +177,7 @@ private:
 public:
   already_AddRefed<LoadContextInfo> Parse()
   {
-    RefPtr<LoadContextInfo> info;
+    nsRefPtr<LoadContextInfo> info;
     if (ParseTags())
       info = GetLoadContextInfo(isPrivate, appId, isInBrowser, isAnonymous);
 
@@ -208,7 +208,7 @@ ParseKey(const nsCSubstring &aKey,
   aKey.EndReading(end);
 
   KeyParser parser(caret, end);
-  RefPtr<LoadContextInfo> info = parser.Parse();
+  nsRefPtr<LoadContextInfo> info = parser.Parse();
 
   if (info) {
     if (aIdEnhance)

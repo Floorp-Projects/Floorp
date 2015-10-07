@@ -68,7 +68,7 @@ protected:
   nsMenuGroupOwnerX*        mMenuGroupOwner;      // [weak]
   nsCOMPtr<nsIContent>      mCommandContent;
   // The icon object should never outlive its creating nsMenuItemX object.
-  RefPtr<nsMenuItemIconX> mIcon;
+  nsRefPtr<nsMenuItemIconX> mIcon;
   bool                      mIsChecked;
 };
 

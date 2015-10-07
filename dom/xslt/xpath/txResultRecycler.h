@@ -72,9 +72,9 @@ private:
     txStack mStringResults;
     txStack mNodeSetResults;
     txStack mNumberResults;
-    RefPtr<StringResult> mEmptyStringResult;
-    RefPtr<BooleanResult> mTrueResult;
-    RefPtr<BooleanResult> mFalseResult;
+    nsRefPtr<StringResult> mEmptyStringResult;
+    nsRefPtr<BooleanResult> mTrueResult;
+    nsRefPtr<BooleanResult> mFalseResult;
 };
 
 #endif //txResultRecycler_h__

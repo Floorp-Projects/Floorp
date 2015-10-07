@@ -326,7 +326,7 @@ private:
   // The owning database.
   // The cycle is broken in method Complete(), once the connection
   // has been closed by mozStorage.
-  RefPtr<Database> mDatabase;
+  nsRefPtr<Database> mDatabase;
 
   // The current state, used both internally and for
   // forensics/debugging purposes.
@@ -697,7 +697,7 @@ Database::Init()
   // If the database connection still cannot be opened, it may just be locked
   // by third parties.  Send out a notification and interrupt initialization.
   if (NS_FAILED(rv)) {
-    RefPtr<PlacesEvent> lockedEvent = new PlacesEvent(TOPIC_DATABASE_LOCKED);
+    nsRefPtr<PlacesEvent> lockedEvent = new PlacesEvent(TOPIC_DATABASE_LOCKED);
     (void)NS_DispatchToMainThread(lockedEvent);
     return rv;
   }
@@ -734,7 +734,7 @@ Database::Init()
   // Notify we have finished database initialization.
   // Enqueue the notification, so if we init another service that requires
   // nsNavHistoryService we don't recursive try to get it.
-  RefPtr<PlacesEvent> completeEvent =
+  nsRefPtr<PlacesEvent> completeEvent =
     new PlacesEvent(TOPIC_PLACES_INIT_COMPLETE);
   rv = NS_DispatchToMainThread(completeEvent);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1928,7 +1928,7 @@ Database::Shutdown()
   mMainThreadStatements.FinalizeStatements();
   mMainThreadAsyncStatements.FinalizeStatements();
 
-  RefPtr< FinalizeStatementCacheProxy<mozIStorageStatement> > event =
+  nsRefPtr< FinalizeStatementCacheProxy<mozIStorageStatement> > event =
     new FinalizeStatementCacheProxy<mozIStorageStatement>(
           mAsyncThreadStatements,
           NS_ISUPPORTS_CAST(nsIObserver*, this)

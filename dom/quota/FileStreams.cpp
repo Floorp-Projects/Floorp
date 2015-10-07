@@ -98,7 +98,7 @@ FileInputStream::Create(PersistenceType aPersistenceType,
                         nsIFile* aFile, int32_t aIOFlags, int32_t aPerm,
                         int32_t aBehaviorFlags)
 {
-  RefPtr<FileInputStream> stream =
+  nsRefPtr<FileInputStream> stream =
     new FileInputStream(aPersistenceType, aGroup, aOrigin);
   nsresult rv = stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags);
   NS_ENSURE_SUCCESS(rv, nullptr);
@@ -113,7 +113,7 @@ FileOutputStream::Create(PersistenceType aPersistenceType,
                          nsIFile* aFile, int32_t aIOFlags, int32_t aPerm,
                          int32_t aBehaviorFlags)
 {
-  RefPtr<FileOutputStream> stream =
+  nsRefPtr<FileOutputStream> stream =
     new FileOutputStream(aPersistenceType, aGroup, aOrigin);
   nsresult rv = stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags);
   NS_ENSURE_SUCCESS(rv, nullptr);
@@ -127,7 +127,7 @@ FileStream::Create(PersistenceType aPersistenceType, const nsACString& aGroup,
                    const nsACString& aOrigin, nsIFile* aFile, int32_t aIOFlags,
                    int32_t aPerm, int32_t aBehaviorFlags)
 {
-  RefPtr<FileStream> stream =
+  nsRefPtr<FileStream> stream =
     new FileStream(aPersistenceType, aGroup, aOrigin);
   nsresult rv = stream->Init(aFile, aIOFlags, aPerm, aBehaviorFlags);
   NS_ENSURE_SUCCESS(rv, nullptr);

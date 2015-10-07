@@ -40,7 +40,7 @@ NS_IMETHODIMP nsSystemAlertsService::ShowAlertNotification(const nsAString & aIm
                                                            nsIPrincipal * aPrincipal,
                                                            bool aInPrivateBrowsing)
 {
-  RefPtr<nsAlertsIconListener> alertListener = new nsAlertsIconListener();
+  nsRefPtr<nsAlertsIconListener> alertListener = new nsAlertsIconListener();
   if (!alertListener)
     return NS_ERROR_OUT_OF_MEMORY;
 

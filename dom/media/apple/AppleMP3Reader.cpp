@@ -478,7 +478,7 @@ AppleMP3Reader::SetupDecoder()
 }
 
 
-RefPtr<MediaDecoderReader::SeekPromise>
+nsRefPtr<MediaDecoderReader::SeekPromise>
 AppleMP3Reader::Seek(int64_t aTime, int64_t aEndTime)
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -523,7 +523,7 @@ AppleMP3Reader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
 
   IntervalSet<int64_t> intervals = mFilter.NotifyDataArrived(aLength, aOffset);
   for (const auto& interval : intervals) {
-    RefPtr<MediaByteBuffer> bytes =
+    nsRefPtr<MediaByteBuffer> bytes =
       mResource.MediaReadAt(interval.mStart, interval.Length());
     NS_ENSURE_TRUE_VOID(bytes);
     mMP3FrameParser.Parse(bytes->Elements(), interval.Length(), interval.mStart);

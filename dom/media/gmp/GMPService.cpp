@@ -69,13 +69,13 @@ static StaticRefPtr<GeckoMediaPluginService> sSingletonService;
 
 class GMPServiceCreateHelper final : public nsRunnable
 {
-  RefPtr<GeckoMediaPluginService> mService;
+  nsRefPtr<GeckoMediaPluginService> mService;
 
 public:
   static already_AddRefed<GeckoMediaPluginService>
   GetOrCreate()
   {
-    RefPtr<GeckoMediaPluginService> service;
+    nsRefPtr<GeckoMediaPluginService> service;
 
     if (NS_IsMainThread()) {
       service = GetOrCreateOnMainThread();
@@ -83,7 +83,7 @@ public:
       nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
       MOZ_ASSERT(mainThread);
 
-      RefPtr<GMPServiceCreateHelper> createHelper = new GMPServiceCreateHelper();
+      nsRefPtr<GMPServiceCreateHelper> createHelper = new GMPServiceCreateHelper();
 
       mozilla::SyncRunnable::DispatchToThread(mainThread, createHelper, true);
 
@@ -110,12 +110,12 @@ private:
 
     if (!sSingletonService) {
       if (XRE_IsParentProcess()) {
-        RefPtr<GeckoMediaPluginServiceParent> service =
+        nsRefPtr<GeckoMediaPluginServiceParent> service =
           new GeckoMediaPluginServiceParent();
         service->Init();
         sSingletonService = service;
       } else {
-        RefPtr<GeckoMediaPluginServiceChild> service =
+        nsRefPtr<GeckoMediaPluginServiceChild> service =
           new GeckoMediaPluginServiceChild();
         service->Init();
         sSingletonService = service;
@@ -124,7 +124,7 @@ private:
       ClearOnShutdown(&sSingletonService);
     }
 
-    RefPtr<GeckoMediaPluginService> service = sSingletonService.get();
+    nsRefPtr<GeckoMediaPluginService> service = sSingletonService.get();
     return service.forget();
   }
 
@@ -163,7 +163,7 @@ GeckoMediaPluginService::RemoveObsoletePluginCrashCallbacks()
 {
   MOZ_ASSERT(NS_IsMainThread());
   for (size_t i = mPluginCrashCallbacks.Length(); i != 0; --i) {
-    RefPtr<GMPCrashCallback>& callback = mPluginCrashCallbacks[i - 1];
+    nsRefPtr<GMPCrashCallback>& callback = mPluginCrashCallbacks[i - 1];
     if (!callback->IsStillValid()) {
       LOGD(("%s::%s - Removing obsolete callback for pluginId %i",
             __CLASS__, __FUNCTION__, callback->GetPluginId()));
@@ -204,7 +204,7 @@ GeckoMediaPluginService::GMPCrashCallback::Run(const nsACString& aPluginName)
     return;
   }
 
-  RefPtr<dom::PluginCrashedEvent> event =
+  nsRefPtr<dom::PluginCrashedEvent> event =
     dom::PluginCrashedEvent::Constructor(document, NS_LITERAL_STRING("PluginCrashed"), init);
   event->SetTrusted(true);
   event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
@@ -253,7 +253,7 @@ GeckoMediaPluginService::AddPluginCrashedEventTarget(const uint32_t aPluginId,
   if (NS_WARN_IF(!doc)) {
     return;
   }
-  RefPtr<GMPCrashCallback> callback(new GMPCrashCallback(aPluginId, aParentWindow, doc));
+  nsRefPtr<GMPCrashCallback> callback(new GMPCrashCallback(aPluginId, aParentWindow, doc));
   RemoveObsoletePluginCrashCallbacks();
 
   // If the plugin with that ID has already crashed without being handled,
@@ -283,7 +283,7 @@ GeckoMediaPluginService::RunPluginCrashCallbacks(const uint32_t aPluginId,
   RemoveObsoletePluginCrashCallbacks();
 
   for (size_t i = mPluginCrashCallbacks.Length(); i != 0; --i) {
-    RefPtr<GMPCrashCallback>& callback = mPluginCrashCallbacks[i - 1];
+    nsRefPtr<GMPCrashCallback>& callback = mPluginCrashCallbacks[i - 1];
     if (callback->GetPluginId() == aPluginId) {
       LOGD(("%s::%s(%i) - Running #%u",
           __CLASS__, __FUNCTION__, aPluginId, i - 1));

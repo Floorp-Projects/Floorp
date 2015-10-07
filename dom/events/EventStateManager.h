@@ -841,7 +841,7 @@ private:
                                   EventStates aState,
                                   bool aAddState);
   static PLDHashOperator ResetLastOverForContent(const uint32_t& aIdx,
-                                                 RefPtr<OverOutElementsWrapper>& aChunk,
+                                                 nsRefPtr<OverOutElementsWrapper>& aChunk,
                                                  void* aClosure);
   void PostHandleKeyboardEvent(WidgetKeyboardEvent* aKeyboardEvent,
                                nsEventStatus& aStatus,
@@ -896,7 +896,7 @@ private:
   nsPresContext* mPresContext;      // Not refcnted
   nsCOMPtr<nsIDocument> mDocument;   // Doesn't necessarily need to be owner
 
-  RefPtr<IMEContentObserver> mIMEContentObserver;
+  nsRefPtr<IMEContentObserver> mIMEContentObserver;
 
   uint32_t mLClickCount;
   uint32_t mMClickCount;
@@ -907,7 +907,7 @@ private:
   // Time at which we began handling user input.
   static TimeStamp sHandlingInputStart;
 
-  RefPtr<OverOutElementsWrapper> mMouseEnterLeaveHelper;
+  nsRefPtr<OverOutElementsWrapper> mMouseEnterLeaveHelper;
   nsRefPtrHashtable<nsUint32HashKey, OverOutElementsWrapper> mPointersEnterLeaveHelper;
 
 public:

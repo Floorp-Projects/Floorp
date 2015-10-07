@@ -44,7 +44,7 @@ private:
   bool mCacheValid;
   bool mCacheWillInvalidate;
 
-  RefPtr<mozilla::widget::ScreenProxy> mPrimaryScreen;
+  nsRefPtr<mozilla::widget::ScreenProxy> mPrimaryScreen;
 
   // nsScreenManagerProxy caches the results to repeated calls to
   // ScreenForNativeWidget, which can be triggered indirectly by
@@ -57,8 +57,8 @@ private:
   // the event loop.
   struct ScreenCacheEntry
   {
-    RefPtr<mozilla::widget::ScreenProxy> mScreenProxy;
-    RefPtr<mozilla::dom::TabChild> mTabChild;
+    nsRefPtr<mozilla::widget::ScreenProxy> mScreenProxy;
+    nsRefPtr<mozilla::dom::TabChild> mTabChild;
   };
 
   nsTArray<ScreenCacheEntry> mScreenCache;

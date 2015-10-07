@@ -34,7 +34,7 @@ nsScreen::Create(nsPIDOMWindow* aWindow)
     do_QueryInterface(static_cast<nsPIDOMWindow*>(aWindow));
   NS_ENSURE_TRUE(sgo, nullptr);
 
-  RefPtr<nsScreen> screen = new nsScreen(aWindow);
+  nsRefPtr<nsScreen> screen = new nsScreen(aWindow);
   return screen.forget();
 }
 

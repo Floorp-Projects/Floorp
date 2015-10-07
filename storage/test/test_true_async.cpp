@@ -81,7 +81,7 @@ test_AsyncCancellation()
   // -- wedge the thread
   nsCOMPtr<nsIThread> target(get_conn_async_thread(db));
   do_check_true(target);
-  RefPtr<ThreadWedger> wedger (new ThreadWedger(target));
+  nsRefPtr<ThreadWedger> wedger (new ThreadWedger(target));
 
   // -- create statements and cancel them
   // - async
@@ -91,7 +91,7 @@ test_AsyncCancellation()
     getter_AddRefs(asyncStmt)
   );
 
-  RefPtr<AsyncStatementSpinner> asyncSpin(new AsyncStatementSpinner());
+  nsRefPtr<AsyncStatementSpinner> asyncSpin(new AsyncStatementSpinner());
   nsCOMPtr<mozIStoragePendingStatement> asyncPend;
   (void)asyncStmt->ExecuteAsync(asyncSpin, getter_AddRefs(asyncPend));
   do_check_true(asyncPend);
@@ -104,7 +104,7 @@ test_AsyncCancellation()
     getter_AddRefs(syncStmt)
   );
 
-  RefPtr<AsyncStatementSpinner> syncSpin(new AsyncStatementSpinner());
+  nsRefPtr<AsyncStatementSpinner> syncSpin(new AsyncStatementSpinner());
   nsCOMPtr<mozIStoragePendingStatement> syncPend;
   (void)syncStmt->ExecuteAsync(syncSpin, getter_AddRefs(syncPend));
   do_check_true(syncPend);

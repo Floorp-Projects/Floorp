@@ -16,7 +16,7 @@
 
 namespace mozilla {
 
-typedef std::queue<RefPtr<MediaRawData>> SampleQueue;
+typedef std::queue<nsRefPtr<MediaRawData>> SampleQueue;
 
 class AndroidDecoderModule : public PlatformDecoderModule {
 public:
@@ -52,7 +52,7 @@ public:
 
   virtual ~MediaCodecDataDecoder();
 
-  RefPtr<MediaDataDecoder::InitPromise> Init() override;
+  nsRefPtr<MediaDataDecoder::InitPromise> Init() override;
   nsresult Flush() override;
   nsresult Drain() override;
   nsresult Shutdown() override;

@@ -2509,7 +2509,7 @@ nsCocoaWindow::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
   // app modally. If one of those is up then we want it to retain its menu bar.
   if ([NSApp _isRunningAppModal])
     return;
-  RefPtr<nsMenuBarX> hiddenWindowMenuBar = nsMenuUtilsX::GetHiddenWindowMenuBar();
+  nsRefPtr<nsMenuBarX> hiddenWindowMenuBar = nsMenuUtilsX::GetHiddenWindowMenuBar();
   if (hiddenWindowMenuBar) {
     // printf("painting hidden window menu bar due to window losing main status\n");
     hiddenWindowMenuBar->Paint();

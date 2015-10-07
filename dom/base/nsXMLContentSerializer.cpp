@@ -47,7 +47,7 @@ using namespace mozilla::dom;
 nsresult
 NS_NewXMLContentSerializer(nsIContentSerializer** aSerializer)
 {
-  RefPtr<nsXMLContentSerializer> it = new nsXMLContentSerializer();
+  nsRefPtr<nsXMLContentSerializer> it = new nsXMLContentSerializer();
   it.forget(aSerializer);
   return NS_OK;
 }

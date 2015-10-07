@@ -262,7 +262,7 @@ protected:
     /**
      * @see nsIContent::GetContainingShadow
      */
-    RefPtr<mozilla::dom::ShadowRoot> mContainingShadow;
+    nsRefPtr<mozilla::dom::ShadowRoot> mContainingShadow;
 
     /**
      * @see nsIContent::GetDestInsertionPoints

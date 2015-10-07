@@ -1101,7 +1101,7 @@ SpdySession31::HandleSynStream(SpdySession31 *self)
   }
 
   // Create the buffering transaction and push stream
-  RefPtr<SpdyPush31TransactionBuffer> transactionBuffer =
+  nsRefPtr<SpdyPush31TransactionBuffer> transactionBuffer =
     new SpdyPush31TransactionBuffer();
   transactionBuffer->SetConnection(self);
   SpdyPushedStream31 *pushedStream =
@@ -2402,7 +2402,7 @@ SpdySession31::Close(nsresult aReason)
 nsHttpConnectionInfo *
 SpdySession31::ConnectionInfo()
 {
-  RefPtr<nsHttpConnectionInfo> ci;
+  nsRefPtr<nsHttpConnectionInfo> ci;
   GetConnectionInfo(getter_AddRefs(ci));
   return ci.get();
 }
@@ -2678,7 +2678,7 @@ SpdySession31::CreateTunnel(nsHttpTransaction *trans,
   // transaction so that an auth created by the connect can be mappped
   // to the correct security callbacks
 
-  RefPtr<SpdyConnectTransaction> connectTrans =
+  nsRefPtr<SpdyConnectTransaction> connectTrans =
     new SpdyConnectTransaction(ci, aCallbacks, trans->Caps(), trans, this);
   AddStream(connectTrans, nsISupportsPriority::PRIORITY_NORMAL, false, nullptr);
   SpdyStream31 *tunnel = mStreamTransactionHash.Get(connectTrans);
@@ -2924,8 +2924,8 @@ static PLDHashOperator
              nsAutoPtr<SpdyStream31> &stream,
              void *closure)
 {
-  nsTArray<RefPtr<nsAHttpTransaction> > *list =
-    static_cast<nsTArray<RefPtr<nsAHttpTransaction> > *>(closure);
+  nsTArray<nsRefPtr<nsAHttpTransaction> > *list =
+    static_cast<nsTArray<nsRefPtr<nsAHttpTransaction> > *>(closure);
 
   list->AppendElement(key);
 
@@ -2936,7 +2936,7 @@ static PLDHashOperator
 
 nsresult
 SpdySession31::TakeSubTransactions(
-  nsTArray<RefPtr<nsAHttpTransaction> > &outTransactions)
+  nsTArray<nsRefPtr<nsAHttpTransaction> > &outTransactions)
 {
   // Generally this cannot be done with spdy as transactions are
   // started right away.

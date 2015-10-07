@@ -56,7 +56,7 @@ private:
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  RefPtr<ServiceWorkerManagerService> mService;
+  nsRefPtr<ServiceWorkerManagerService> mService;
 
   // We use this ID in the Service in order to avoid the sending of messages to
   // ourself.

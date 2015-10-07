@@ -255,7 +255,7 @@ struct WorkerLoadInfo
   };
 
   // Only set if we have a custom overriden load group
-  RefPtr<InterfaceRequestor> mInterfaceRequestor;
+  nsRefPtr<InterfaceRequestor> mInterfaceRequestor;
 
   nsAutoPtr<mozilla::ipc::PrincipalInfo> mPrincipalInfo;
   nsCString mDomain;

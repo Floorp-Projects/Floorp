@@ -68,9 +68,9 @@ public:
 private:
   ~WrapperPromiseCallback();
 
-  RefPtr<Promise> mNextPromise;
+  nsRefPtr<Promise> mNextPromise;
   JS::Heap<JSObject*> mGlobal;
-  RefPtr<AnyCallback> mCallback;
+  nsRefPtr<AnyCallback> mCallback;
 };
 
 // ResolvePromiseCallback calls aPromise->ResolveFunction() with the value
@@ -95,7 +95,7 @@ public:
 private:
   ~ResolvePromiseCallback();
 
-  RefPtr<Promise> mPromise;
+  nsRefPtr<Promise> mPromise;
   JS::Heap<JSObject*> mGlobal;
 };
 
@@ -121,7 +121,7 @@ public:
 private:
   ~RejectPromiseCallback();
 
-  RefPtr<Promise> mPromise;
+  nsRefPtr<Promise> mPromise;
   JS::Heap<JSObject*> mGlobal;
 };
 
@@ -147,7 +147,7 @@ public:
 private:
   ~NativePromiseCallback();
 
-  RefPtr<PromiseNativeHandler> mHandler;
+  nsRefPtr<PromiseNativeHandler> mHandler;
   Promise::PromiseState mState;
 };
 

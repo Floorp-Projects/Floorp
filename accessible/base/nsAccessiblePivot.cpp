@@ -89,7 +89,7 @@ nsAccessiblePivot::GetPosition(nsIAccessible** aPosition)
 NS_IMETHODIMP
 nsAccessiblePivot::SetPosition(nsIAccessible* aPosition)
 {
-  RefPtr<Accessible> position = nullptr;
+  nsRefPtr<Accessible> position = nullptr;
 
   if (aPosition) {
     position = aPosition->ToInternalAccessible();
@@ -168,7 +168,7 @@ nsAccessiblePivot::SetTextRange(nsIAccessibleText* aTextAccessible,
   nsCOMPtr<nsIAccessible> xpcAcc = do_QueryInterface(aTextAccessible);
   NS_ENSURE_ARG(xpcAcc);
 
-  RefPtr<Accessible> acc = xpcAcc->ToInternalAccessible();
+  nsRefPtr<Accessible> acc = xpcAcc->ToInternalAccessible();
   NS_ENSURE_ARG(acc);
 
   HyperTextAccessible* position = acc->AsHyperText();
@@ -643,7 +643,7 @@ nsAccessiblePivot::MovePivotInternal(Accessible* aPosition,
                                      PivotMoveReason aReason,
                                      bool aIsFromUserInput)
 {
-  RefPtr<Accessible> oldPosition = mPosition.forget();
+  nsRefPtr<Accessible> oldPosition = mPosition.forget();
   mPosition = aPosition;
   int32_t oldStart = mStartOffset, oldEnd = mEndOffset;
   mStartOffset = mEndOffset = -1;

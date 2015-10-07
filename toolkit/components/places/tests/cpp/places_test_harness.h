@@ -347,7 +347,7 @@ do_wait_async_updates() {
 
   db->CreateAsyncStatement(NS_LITERAL_CSTRING("COMMIT"),
                            getter_AddRefs(stmt));
-  RefPtr<AsyncStatementSpinner> spinner = new AsyncStatementSpinner();
+  nsRefPtr<AsyncStatementSpinner> spinner = new AsyncStatementSpinner();
   (void)stmt->ExecuteAsync(spinner, getter_AddRefs(pending));
 
   spinner->SpinUntilCompleted();
@@ -375,7 +375,7 @@ static const char TOPIC_PLACES_CONNECTION_CLOSED[] = "places-connection-closed";
 
 class WaitForConnectionClosed final : public nsIObserver
 {
-  RefPtr<WaitForTopicSpinner> mSpinner;
+  nsRefPtr<WaitForTopicSpinner> mSpinner;
 
   ~WaitForConnectionClosed() {}
 

@@ -71,7 +71,7 @@ nsGNOMERegistry::GetFromExtension(const nsACString& aFileExt)
     return nullptr;
   }
 
-  RefPtr<nsMIMEInfoBase> mi = GetFromType(mimeType);
+  nsRefPtr<nsMIMEInfoBase> mi = GetFromType(mimeType);
   if (mi) {
     mi->AppendExtension(aFileExt);
   }
@@ -82,7 +82,7 @@ nsGNOMERegistry::GetFromExtension(const nsACString& aFileExt)
 /* static */ already_AddRefed<nsMIMEInfoBase>
 nsGNOMERegistry::GetFromType(const nsACString& aMIMEType)
 {
-  RefPtr<nsMIMEInfoUnix> mimeInfo = new nsMIMEInfoUnix(aMIMEType);
+  nsRefPtr<nsMIMEInfoUnix> mimeInfo = new nsMIMEInfoUnix(aMIMEType);
   NS_ENSURE_TRUE(mimeInfo, nullptr);
 
   nsAutoCString name;

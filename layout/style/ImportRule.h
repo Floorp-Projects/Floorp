@@ -64,8 +64,8 @@ public:
 
 private:
   nsString  mURLSpec;
-  RefPtr<nsMediaList> mMedia;
-  RefPtr<CSSStyleSheet> mChildSheet;
+  nsRefPtr<nsMediaList> mMedia;
+  nsRefPtr<CSSStyleSheet> mChildSheet;
 };
 
 } // namespace css

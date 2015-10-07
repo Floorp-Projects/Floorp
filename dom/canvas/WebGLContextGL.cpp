@@ -51,7 +51,7 @@
 #include "mozilla/dom/ImageData.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/Endian.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 namespace mozilla {
 
@@ -317,7 +317,7 @@ WebGLContext::CreateProgram()
 {
     if (IsContextLost())
         return nullptr;
-    RefPtr<WebGLProgram> globj = new WebGLProgram(this);
+    nsRefPtr<WebGLProgram> globj = new WebGLProgram(this);
     return globj.forget();
 }
 
@@ -334,7 +334,7 @@ WebGLContext::CreateShader(GLenum type)
         return nullptr;
     }
 
-    RefPtr<WebGLShader> shader = new WebGLShader(this, type);
+    nsRefPtr<WebGLShader> shader = new WebGLShader(this, type);
     return shader.forget();
 }
 
@@ -650,7 +650,7 @@ WebGLContext::GetActiveUniform(WebGLProgram* prog, GLuint index)
 
 void
 WebGLContext::GetAttachedShaders(WebGLProgram* prog,
-                                 dom::Nullable<nsTArray<RefPtr<WebGLShader>>>& retval)
+                                 dom::Nullable<nsTArray<nsRefPtr<WebGLShader>>>& retval)
 {
     retval.SetNull();
     if (IsContextLost())
@@ -985,7 +985,7 @@ WebGLContext::CreateTexture()
     MakeContextCurrent();
     gl->fGenTextures(1, &tex);
 
-    RefPtr<WebGLTexture> globj = new WebGLTexture(this, tex);
+    nsRefPtr<WebGLTexture> globj = new WebGLTexture(this, tex);
     return globj.forget();
 }
 
@@ -1861,14 +1861,14 @@ WebGLContext::StencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail, GLenum
 
 nsresult
 WebGLContext::SurfaceFromElementResultToImageSurface(nsLayoutUtils::SurfaceFromElementResult& res,
-                                                     RefPtr<DataSourceSurface>& imageOut,
+                                                     nsRefPtr<DataSourceSurface>& imageOut,
                                                      WebGLTexelFormat* format)
 {
    *format = WebGLTexelFormat::None;
 
     if (!res.mSourceSurface)
         return NS_OK;
-    RefPtr<DataSourceSurface> data = res.mSourceSurface->GetDataSurface();
+    nsRefPtr<DataSourceSurface> data = res.mSourceSurface->GetDataSurface();
     if (!data) {
         // SurfaceFromElement lied!
         return NS_OK;
@@ -2292,7 +2292,7 @@ WebGLContext::CreateFramebuffer()
     MakeContextCurrent();
     gl->fGenFramebuffers(1, &fbo);
 
-    RefPtr<WebGLFramebuffer> globj = new WebGLFramebuffer(this, fbo);
+    nsRefPtr<WebGLFramebuffer> globj = new WebGLFramebuffer(this, fbo);
     return globj.forget();
 }
 
@@ -2301,7 +2301,7 @@ WebGLContext::CreateRenderbuffer()
 {
     if (IsContextLost())
         return nullptr;
-    RefPtr<WebGLRenderbuffer> globj = new WebGLRenderbuffer(this);
+    nsRefPtr<WebGLRenderbuffer> globj = new WebGLRenderbuffer(this);
     return globj.forget();
 }
 
@@ -2406,7 +2406,7 @@ WebGLContext::GetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype)
       gl->fGetShaderPrecisionFormat(shadertype, precisiontype, range, &precision);
     }
 
-    RefPtr<WebGLShaderPrecisionFormat> retShaderPrecisionFormat
+    nsRefPtr<WebGLShaderPrecisionFormat> retShaderPrecisionFormat
         = new WebGLShaderPrecisionFormat(this, range[0], range[1], precision);
     return retShaderPrecisionFormat.forget();
 }

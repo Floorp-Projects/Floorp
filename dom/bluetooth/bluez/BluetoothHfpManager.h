@@ -205,21 +205,21 @@ private:
   nsTArray<Call> mCurrentCallArray;
   nsAutoPtr<BluetoothRilListener> mListener;
 #endif
-  RefPtr<BluetoothProfileController> mController;
-  RefPtr<BluetoothReplyRunnable> mScoRunnable;
+  nsRefPtr<BluetoothProfileController> mController;
+  nsRefPtr<BluetoothReplyRunnable> mScoRunnable;
 
   // If a connection has been established, mSocket will be the socket
   // communicating with the remote socket. We maintain the invariant that if
   // mSocket is non-null, mHandsfreeSocket and mHeadsetSocket must be null (and
   // vice versa).
-  RefPtr<BluetoothSocket> mSocket;
+  nsRefPtr<BluetoothSocket> mSocket;
 
   // Server sockets. Once an inbound connection is established, it will hand
   // over the ownership to mSocket, and get a new server socket while Listen()
   // is called.
-  RefPtr<BluetoothSocket> mHandsfreeSocket;
-  RefPtr<BluetoothSocket> mHeadsetSocket;
-  RefPtr<BluetoothSocket> mScoSocket;
+  nsRefPtr<BluetoothSocket> mHandsfreeSocket;
+  nsRefPtr<BluetoothSocket> mHeadsetSocket;
+  nsRefPtr<BluetoothSocket> mScoSocket;
   mozilla::ipc::SocketConnectionStatus mScoSocketStatus;
 
 #ifdef MOZ_B2G_RIL

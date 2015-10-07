@@ -114,7 +114,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 protected:
   virtual ~DistributedContentList();
-  RefPtr<HTMLContentElement> mParent;
+  nsRefPtr<HTMLContentElement> mParent;
   nsCOMArray<nsIContent> mDistributedNodes;
 };
 

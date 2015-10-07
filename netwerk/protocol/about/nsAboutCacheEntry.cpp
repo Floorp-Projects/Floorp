@@ -467,7 +467,7 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsICacheEntry *entry)
         return NS_OK;
     }
 
-    RefPtr<nsInputStreamPump> pump;
+    nsRefPtr<nsInputStreamPump> pump;
     rv = nsInputStreamPump::Create(getter_AddRefs(pump), stream);
     if (NS_FAILED(rv)) {
         return NS_OK; // just ignore

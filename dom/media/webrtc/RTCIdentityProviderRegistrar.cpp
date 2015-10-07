@@ -56,7 +56,7 @@ RTCIdentityProviderRegistrar::Register(RTCIdentityProvider& aIdp)
 already_AddRefed<RTCIdentityProvider>
 RTCIdentityProviderRegistrar::GetIdp()
 {
-  RefPtr<RTCIdentityProvider> idp = mIdp;
+  nsRefPtr<RTCIdentityProvider> idp = mIdp;
   return idp.forget();
 }
 

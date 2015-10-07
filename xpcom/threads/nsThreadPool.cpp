@@ -264,7 +264,7 @@ nsThreadPool::Dispatch(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFlags)
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    RefPtr<nsThreadSyncDispatch> wrapper =
+    nsRefPtr<nsThreadSyncDispatch> wrapper =
       new nsThreadSyncDispatch(thread, Move(aEvent));
     PutEvent(wrapper);
 

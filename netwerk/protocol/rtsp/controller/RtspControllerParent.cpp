@@ -42,7 +42,7 @@ RtspControllerParent::Destroy()
   if (!NS_IsMainThread()) {
     nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
     NS_ENSURE_TRUE_VOID(mainThread);
-    RefPtr<RtspControllerParent> doomed(this);
+    nsRefPtr<RtspControllerParent> doomed(this);
     if (NS_FAILED(NS_ProxyRelease(mainThread,
             static_cast<nsIStreamingProtocolListener*>(doomed), true))) {
       NS_WARNING("Failed to proxy release to main thread!");

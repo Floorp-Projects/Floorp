@@ -38,7 +38,7 @@ nsTransformedTextRun::Create(const gfxTextRunFactory::Parameters* aParams,
                              gfxFontGroup* aFontGroup,
                              const char16_t* aString, uint32_t aLength,
                              const uint32_t aFlags,
-                             nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
+                             nsTArray<nsRefPtr<nsTransformedCharStyle>>&& aStyles,
                              bool aOwnsFactory)
 {
   NS_ASSERTION(!(aFlags & gfxTextRunFactory::TEXT_IS_8BIT),
@@ -104,7 +104,7 @@ nsTransformedTextRun*
 nsTransformingTextRunFactory::MakeTextRun(const char16_t* aString, uint32_t aLength,
                                           const gfxTextRunFactory::Parameters* aParams,
                                           gfxFontGroup* aFontGroup, uint32_t aFlags,
-                                          nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
+                                          nsTArray<nsRefPtr<nsTransformedCharStyle>>&& aStyles,
                                           bool aOwnsFactory)
 {
   return nsTransformedTextRun::Create(aParams, this, aFontGroup,
@@ -116,7 +116,7 @@ nsTransformedTextRun*
 nsTransformingTextRunFactory::MakeTextRun(const uint8_t* aString, uint32_t aLength,
                                           const gfxTextRunFactory::Parameters* aParams,
                                           gfxFontGroup* aFontGroup, uint32_t aFlags,
-                                          nsTArray<RefPtr<nsTransformedCharStyle>>&& aStyles,
+                                          nsTArray<nsRefPtr<nsTransformedCharStyle>>&& aStyles,
                                           bool aOwnsFactory)
 {
   // We'll only have a Unicode code path to minimize the amount of code needed
@@ -283,7 +283,7 @@ nsCaseTransformTextRunFactory::TransformString(
     nsTArray<bool>& aDeletedCharsArray,
     nsTransformedTextRun* aTextRun,
     nsTArray<uint8_t>* aCanBreakBeforeArray,
-    nsTArray<RefPtr<nsTransformedCharStyle>>* aStyleArray)
+    nsTArray<nsRefPtr<nsTransformedCharStyle>>* aStyleArray)
 {
   NS_PRECONDITION(!aTextRun || (aCanBreakBeforeArray && aStyleArray),
                   "either none or all three optional parameters required");
@@ -311,7 +311,7 @@ nsCaseTransformTextRunFactory::TransformString(
   for (uint32_t i = 0; i < length; ++i) {
     uint32_t ch = str[i];
 
-    RefPtr<nsTransformedCharStyle> charStyle;
+    nsRefPtr<nsTransformedCharStyle> charStyle;
     if (aTextRun) {
       charStyle = aTextRun->mStyles[i];
       style = aAllUppercase ? NS_STYLE_TEXT_TRANSFORM_UPPERCASE :
@@ -609,7 +609,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   nsAutoTArray<bool,50> charsToMergeArray;
   nsAutoTArray<bool,50> deletedCharsArray;
   nsAutoTArray<uint8_t,50> canBreakBeforeArray;
-  nsAutoTArray<RefPtr<nsTransformedCharStyle>,50> styleArray;
+  nsAutoTArray<nsRefPtr<nsTransformedCharStyle>,50> styleArray;
 
   bool mergeNeeded = TransformString(aTextRun->mString,
                                      convertedString,

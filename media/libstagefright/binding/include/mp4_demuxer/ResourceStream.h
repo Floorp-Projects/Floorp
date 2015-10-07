@@ -7,7 +7,7 @@
 
 #include "MediaResource.h"
 #include "mp4_demuxer/Stream.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 namespace mp4_demuxer
 {
@@ -40,7 +40,7 @@ protected:
   virtual ~ResourceStream();
 
 private:
-  RefPtr<mozilla::MediaResource> mResource;
+  nsRefPtr<mozilla::MediaResource> mResource;
   uint32_t mPinCount;
 };
 

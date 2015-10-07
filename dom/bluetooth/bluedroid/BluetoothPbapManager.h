@@ -186,12 +186,12 @@ private:
   // If a connection has been established, mSocket will be the socket
   // communicating with the remote socket. We maintain the invariant that if
   // mSocket is non-null, mServerSocket must be null (and vice versa).
-  RefPtr<BluetoothSocket> mSocket;
+  nsRefPtr<BluetoothSocket> mSocket;
 
   // Server socket. Once an inbound connection is established, it will hand
   // over the ownership to mSocket, and get a new server socket while Listen()
   // is called.
-  RefPtr<BluetoothSocket> mServerSocket;
+  nsRefPtr<BluetoothSocket> mServerSocket;
 
   /**
    * The vCard data stream for current processing response

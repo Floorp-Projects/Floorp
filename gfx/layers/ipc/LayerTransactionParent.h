@@ -176,11 +176,11 @@ protected:
   friend class layout::RenderFrameParent;
 
 private:
-  RefPtr<LayerManagerComposite> mLayerManager;
+  nsRefPtr<LayerManagerComposite> mLayerManager;
   ShadowLayersManager* mShadowLayersManager;
   // Hold the root because it might be grafted under various
   // containers in the "real" layer tree
-  RefPtr<Layer> mRoot;
+  nsRefPtr<Layer> mRoot;
   // When this is nonzero, it refers to a layer tree owned by the
   // compositor thread.  It is always true that
   //   mId != 0 => mRoot == null

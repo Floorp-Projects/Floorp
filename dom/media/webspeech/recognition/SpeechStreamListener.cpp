@@ -78,7 +78,7 @@ SpeechStreamListener::ConvertAndDispatchAudioChunk(int aDuration, float aVolume,
                                                    SampleFormatType* aData,
                                                    TrackRate aTrackRate)
 {
-  RefPtr<SharedBuffer> samples(SharedBuffer::Create(aDuration *
+  nsRefPtr<SharedBuffer> samples(SharedBuffer::Create(aDuration *
                                                       1 * // channel
                                                       sizeof(int16_t)));
 

@@ -65,9 +65,9 @@ protected:
 
   void InitUnmappedProperties();
 
-  RefPtr<ID2D1Effect> mEffect;
-  std::vector<RefPtr<FilterNodeD2D1>> mInputFilters;
-  std::vector<RefPtr<SourceSurface>> mInputSurfaces;
+  nsRefPtr<ID2D1Effect> mEffect;
+  std::vector<nsRefPtr<FilterNodeD2D1>> mInputFilters;
+  std::vector<nsRefPtr<SourceSurface>> mInputSurfaces;
   FilterType mType;
 };
 
@@ -91,8 +91,8 @@ private:
   void UpdateOffset();
   void UpdateSourceRect();
 
-  RefPtr<ID2D1Effect> mExtendInputEffect;
-  RefPtr<ID2D1Effect> mBorderEffect;
+  nsRefPtr<ID2D1Effect> mExtendInputEffect;
+  nsRefPtr<ID2D1Effect> mBorderEffect;
   ConvolveMatrixEdgeMode mEdgeMode;
   IntPoint mTarget;
   IntSize mKernelSize;
@@ -109,8 +109,8 @@ public:
   virtual ID2D1Effect* OutputEffect() override { return mWrappedFilterNode->OutputEffect(); }
 
 private:
-  RefPtr<FilterNodeD2D1> mWrappedFilterNode;
-  RefPtr<ID2D1Effect> mExtendInputEffect;
+  nsRefPtr<FilterNodeD2D1> mWrappedFilterNode;
+  nsRefPtr<ID2D1Effect> mExtendInputEffect;
 };
 
 class FilterNodePremultiplyAdapterD2D1 : public FilterNodeD2D1
@@ -123,8 +123,8 @@ public:
   virtual ID2D1Effect* OutputEffect() override { return mPostUnpremultiplyEffect.get(); }
 
 private:
-  RefPtr<ID2D1Effect> mPrePremultiplyEffect;
-  RefPtr<ID2D1Effect> mPostUnpremultiplyEffect;
+  nsRefPtr<ID2D1Effect> mPrePremultiplyEffect;
+  nsRefPtr<ID2D1Effect> mPostUnpremultiplyEffect;
 };
 
 }

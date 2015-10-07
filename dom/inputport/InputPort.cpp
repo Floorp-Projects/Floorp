@@ -89,7 +89,7 @@ InputPort::NotifyConnectionChanged(bool aIsConnected)
   MOZ_ASSERT(mIsConnected != aIsConnected);
   mIsConnected = aIsConnected;
 
-  RefPtr<AsyncEventDispatcher> asyncDispatcher =
+  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this,
                              aIsConnected ? NS_LITERAL_STRING("connect") :
                                             NS_LITERAL_STRING("disconnect"),

@@ -151,7 +151,7 @@ bool
 AccessibleCaretManager::IsCaretDisplayableInCursorMode(nsIFrame** aOutFrame,
                                                        int32_t* aOutOffset) const
 {
-  RefPtr<nsCaret> caret = mPresShell->GetCaret();
+  nsRefPtr<nsCaret> caret = mPresShell->GetCaret();
   if (!caret || !caret->IsVisible()) {
     return false;
   }
@@ -517,7 +517,7 @@ AccessibleCaretManager::OnKeyboardEvent()
 Selection*
 AccessibleCaretManager::GetSelection() const
 {
-  RefPtr<nsFrameSelection> fs = GetFrameSelection();
+  nsRefPtr<nsFrameSelection> fs = GetFrameSelection();
   if (!fs) {
     return nullptr;
   }
@@ -543,7 +543,7 @@ AccessibleCaretManager::GetFrameSelection() const
 
     // Prevent us from touching the nsFrameSelection associated with other
     // PresShell.
-    RefPtr<nsFrameSelection> fs = focusFrame->GetFrameSelection();
+    nsRefPtr<nsFrameSelection> fs = focusFrame->GetFrameSelection();
     if (!fs || fs->GetShell() != mPresShell) {
       return nullptr;
     }
@@ -643,7 +643,7 @@ AccessibleCaretManager::SelectWord(nsIFrame* aFrame, const nsPoint& aPoint) cons
 void
 AccessibleCaretManager::SetSelectionDragState(bool aState) const
 {
-  RefPtr<nsFrameSelection> fs = GetFrameSelection();
+  nsRefPtr<nsFrameSelection> fs = GetFrameSelection();
   if (fs) {
     fs->SetDragState(aState);
   }
@@ -663,7 +663,7 @@ AccessibleCaretManager::ClearMaintainedSelection() const
 {
   // Selection made by double-clicking for example will maintain the original
   // word selection. We should clear it so that we can drag caret freely.
-  RefPtr<nsFrameSelection> fs = GetFrameSelection();
+  nsRefPtr<nsFrameSelection> fs = GetFrameSelection();
   if (fs) {
     fs->MaintainSelection(eSelectNoAmount);
   }
@@ -685,12 +685,12 @@ AccessibleCaretManager::FindFirstNodeWithFrame(bool aBackward,
     return nullptr;
   }
 
-  RefPtr<Selection> selection = GetSelection();
+  nsRefPtr<Selection> selection = GetSelection();
   if (!selection) {
     return nullptr;
   }
 
-  RefPtr<nsFrameSelection> fs = GetFrameSelection();
+  nsRefPtr<nsFrameSelection> fs = GetFrameSelection();
   if (!fs) {
     return nullptr;
   }
@@ -701,9 +701,9 @@ AccessibleCaretManager::FindFirstNodeWithFrame(bool aBackward,
   }
 
   nsRange* range = selection->GetRangeAt(aBackward ? rangeCount - 1 : 0);
-  RefPtr<nsINode> startNode =
+  nsRefPtr<nsINode> startNode =
     aBackward ? range->GetEndParent() : range->GetStartParent();
-  RefPtr<nsINode> endNode =
+  nsRefPtr<nsINode> endNode =
     aBackward ? range->GetStartParent() : range->GetEndParent();
   int32_t offset = aBackward ? range->EndOffset() : range->StartOffset();
   nsCOMPtr<nsIContent> startContent = do_QueryInterface(startNode);
@@ -717,7 +717,7 @@ AccessibleCaretManager::FindFirstNodeWithFrame(bool aBackward,
   }
 
   ErrorResult err;
-  RefPtr<TreeWalker> walker = mPresShell->GetDocument()->CreateTreeWalker(
+  nsRefPtr<TreeWalker> walker = mPresShell->GetDocument()->CreateTreeWalker(
     *startNode, nsIDOMNodeFilter::SHOW_ALL, nullptr, err);
 
   if (!walker) {
@@ -750,7 +750,7 @@ AccessibleCaretManager::CompareRangeWithContentOffset(nsIFrame::ContentOffsets& 
   MOZ_ASSERT(rangeCount > 0);
 
   int32_t rangeIndex = (mActiveCaret == mFirstCaret.get() ? rangeCount - 1 : 0);
-  RefPtr<nsRange> range = selection->GetRangeAt(rangeIndex);
+  nsRefPtr<nsRange> range = selection->GetRangeAt(rangeIndex);
 
   nsINode* node = nullptr;
   int32_t nodeOffset = 0;
@@ -772,7 +772,7 @@ AccessibleCaretManager::CompareRangeWithContentOffset(nsIFrame::ContentOffsets& 
   }
   nsCOMPtr<nsIContent> content = do_QueryInterface(node);
 
-  RefPtr<nsFrameSelection> fs = GetFrameSelection();
+  nsRefPtr<nsFrameSelection> fs = GetFrameSelection();
   if (!fs) {
     return false;
   }
@@ -846,7 +846,7 @@ AccessibleCaretManager::DragCaretInternal(const nsPoint& aPoint)
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<nsFrameSelection> fs = GetFrameSelection();
+  nsRefPtr<nsFrameSelection> fs = GetFrameSelection();
   if (!fs) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -1011,7 +1011,7 @@ AccessibleCaretManager::DispatchCaretStateChangedEvent(CaretChangedReason aReaso
     commonAncestorNode = sel->GetFrameSelection()->GetAncestorLimiter();
   }
 
-  RefPtr<DOMRect> domRect = new DOMRect(ToSupports(doc));
+  nsRefPtr<DOMRect> domRect = new DOMRect(ToSupports(doc));
   nsRect rect = nsContentUtils::GetSelectionBoundingRect(sel);
 
   nsIFrame* commonAncestorFrame = nullptr;
@@ -1045,7 +1045,7 @@ AccessibleCaretManager::DispatchCaretStateChangedEvent(CaretChangedReason aReaso
                        mSecondCaret->IsLogicallyVisible();
   sel->Stringify(init.mSelectedTextContent);
 
-  RefPtr<CaretStateChangedEvent> event =
+  nsRefPtr<CaretStateChangedEvent> event =
     CaretStateChangedEvent::Constructor(doc, NS_LITERAL_STRING("mozcaretstatechanged"), init);
 
   event->SetTrusted(true);

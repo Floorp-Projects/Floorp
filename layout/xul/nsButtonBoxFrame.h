@@ -69,7 +69,7 @@ private:
     nsButtonBoxFrame* mButtonBoxFrame;
   };
 
-  RefPtr<nsButtonBoxListener> mButtonBoxListener;
+  nsRefPtr<nsButtonBoxListener> mButtonBoxListener;
   bool mIsHandlingKeyEvent;
 }; // class nsButtonBoxFrame
 

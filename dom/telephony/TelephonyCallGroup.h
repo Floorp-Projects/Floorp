@@ -15,11 +15,11 @@ namespace dom {
 
 class TelephonyCallGroup final : public DOMEventTargetHelper
 {
-  RefPtr<Telephony> mTelephony;
+  nsRefPtr<Telephony> mTelephony;
 
-  nsTArray<RefPtr<TelephonyCall> > mCalls;
+  nsTArray<nsRefPtr<TelephonyCall> > mCalls;
 
-  RefPtr<CallsList> mCallsList;
+  nsRefPtr<CallsList> mCallsList;
 
   nsString mState;
 
@@ -88,7 +88,7 @@ public:
   already_AddRefed<TelephonyCall>
   GetCall(uint32_t aServiceId, uint32_t aCallIndex);
 
-  const nsTArray<RefPtr<TelephonyCall> >&
+  const nsTArray<nsRefPtr<TelephonyCall> >&
   CallsArray() const
   {
     return mCalls;

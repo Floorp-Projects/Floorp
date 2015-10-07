@@ -114,7 +114,7 @@ protected: // IPDL methods
                                 const IPC::Principal& aPrincipal);
 
 protected: // members
-  RefPtr<nsFrameMessageManager> mMessageManager;
+  nsRefPtr<nsFrameMessageManager> mMessageManager;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIContentParent, NS_ICONTENTPARENT_IID)

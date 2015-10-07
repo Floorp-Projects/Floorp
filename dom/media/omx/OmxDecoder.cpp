@@ -217,9 +217,9 @@ static bool isInEmulator()
   return !strncmp(propQemu, "1", 1);
 }
 
-RefPtr<mozilla::MediaOmxCommonReader::MediaResourcePromise> OmxDecoder::AllocateMediaResources()
+nsRefPtr<mozilla::MediaOmxCommonReader::MediaResourcePromise> OmxDecoder::AllocateMediaResources()
 {
-  RefPtr<MediaResourcePromise> p = mMediaResourcePromise.Ensure(__func__);
+  nsRefPtr<MediaResourcePromise> p = mMediaResourcePromise.Ensure(__func__);
 
   if ((mVideoTrack != nullptr) && (mVideoSource == nullptr)) {
     // OMXClient::connect() always returns OK and abort's fatally if
@@ -631,7 +631,7 @@ bool OmxDecoder::ReadVideo(VideoFrame *aFrame, int64_t aTimeUs,
       unreadable = 0;
     }
 
-    RefPtr<mozilla::layers::TextureClient> textureClient;
+    nsRefPtr<mozilla::layers::TextureClient> textureClient;
     if ((mVideoBuffer->graphicBuffer().get())) {
       textureClient = mNativeWindow->getTextureClientFromBuffer(mVideoBuffer->graphicBuffer().get());
     }
@@ -865,7 +865,7 @@ void OmxDecoder::ReleaseAllPendingVideoBuffersLocked()
     MediaBuffer *buffer;
     buffer = releasingVideoBuffers[i].mMediaBuffer;
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-    RefPtr<FenceHandle::FdObj> fdObj = releasingVideoBuffers.editItemAt(i).mReleaseFenceHandle.GetAndResetFdObj();
+    nsRefPtr<FenceHandle::FdObj> fdObj = releasingVideoBuffers.editItemAt(i).mReleaseFenceHandle.GetAndResetFdObj();
     int fenceFd = fdObj->GetAndResetFd();
 
     MOZ_ASSERT(buffer->refcount() == 1);

@@ -30,7 +30,7 @@ WebGL2Context::FenceSync(GLenum condition, GLbitfield flags)
    }
 
    MakeContextCurrent();
-   RefPtr<WebGLSync> globj = new WebGLSync(this, condition, flags);
+   nsRefPtr<WebGLSync> globj = new WebGLSync(this, condition, flags);
    return globj.forget();
 }
 

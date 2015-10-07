@@ -34,7 +34,7 @@ already_AddRefed<GeckoMediaPluginServiceChild>
 GeckoMediaPluginServiceChild::GetSingleton()
 {
   MOZ_ASSERT(!XRE_IsParentProcess());
-  RefPtr<GeckoMediaPluginService> service(
+  nsRefPtr<GeckoMediaPluginService> service(
     GeckoMediaPluginService::GetGeckoMediaPluginService());
 #ifdef DEBUG
   if (service) {
@@ -80,7 +80,7 @@ public:
       return;
     }
 
-    RefPtr<GMPContentParent> parent;
+    nsRefPtr<GMPContentParent> parent;
     aGMPServiceChild->GetBridgedGMPContentParent(otherProcess,
                                                  getter_AddRefs(parent));
     if (!alreadyBridgedTo.Contains(otherProcess)) {
@@ -325,7 +325,7 @@ GMPServiceChild::AllocPGMPContentParent(Transport* aTransport,
   nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
   MOZ_ASSERT(mainThread);
 
-  RefPtr<GMPContentParent> parent = new GMPContentParent();
+  nsRefPtr<GMPContentParent> parent = new GMPContentParent();
 
   DebugOnly<bool> ok = parent->Open(aTransport, aOtherPid,
                                     XRE_GetIOMessageLoop(),
@@ -347,7 +347,7 @@ void
 GMPServiceChild::RemoveGMPContentParent(GMPContentParent* aGMPContentParent)
 {
   for (auto iter = mContentParents.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<GMPContentParent>& parent = iter.Data();
+    nsRefPtr<GMPContentParent>& parent = iter.Data();
     if (parent == aGMPContentParent) {
       iter.Remove();
       break;
@@ -379,7 +379,7 @@ public:
 
   NS_IMETHOD Run()
   {
-    RefPtr<GeckoMediaPluginServiceChild> gmp =
+    nsRefPtr<GeckoMediaPluginServiceChild> gmp =
       GeckoMediaPluginServiceChild::GetSingleton();
     MOZ_ASSERT(!gmp->mServiceChild);
     if (mGMPServiceChild->Open(mTransport, mOtherPid, XRE_GetIOMessageLoop(),
@@ -401,7 +401,7 @@ private:
 PGMPServiceChild*
 GMPServiceChild::Create(Transport* aTransport, ProcessId aOtherPid)
 {
-  RefPtr<GeckoMediaPluginServiceChild> gmp =
+  nsRefPtr<GeckoMediaPluginServiceChild> gmp =
     GeckoMediaPluginServiceChild::GetSingleton();
   MOZ_ASSERT(!gmp->mServiceChild);
 

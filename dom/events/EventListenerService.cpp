@@ -376,7 +376,7 @@ EventListenerService::NotifyAboutMainThreadListenerChangeInternal(dom::EventTarg
     NS_DispatchToCurrentThread(runnable);
   }
 
-  RefPtr<EventListenerChange> changes = mPendingListenerChangesSet.Get(aTarget);
+  nsRefPtr<EventListenerChange> changes = mPendingListenerChangesSet.Get(aTarget);
   if (!changes) {
     changes = new EventListenerChange(aTarget);
     mPendingListenerChanges->AppendElement(changes, false);

@@ -566,7 +566,7 @@ private:
   // Style to be used instead for the R, G, and B components of color,
   // background-color, and border-*-color if the nearest ancestor link
   // element is visited (see RelevantLinkVisited()).
-  RefPtr<nsStyleContext> mStyleIfVisited;
+  nsRefPtr<nsStyleContext> mStyleIfVisited;
 
   // If this style context is for a pseudo-element or anonymous box,
   // the relevant atom.

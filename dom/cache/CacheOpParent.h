@@ -67,8 +67,8 @@ private:
   const CacheId mCacheId;
   const Namespace mNamespace;
   const CacheOpArgs mOpArgs;
-  RefPtr<Manager> mManager;
-  RefPtr<PrincipalVerifier> mVerifier;
+  nsRefPtr<Manager> mManager;
+  nsRefPtr<PrincipalVerifier> mVerifier;
 
   NS_DECL_OWNINGTHREAD
 };

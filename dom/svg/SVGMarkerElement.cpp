@@ -90,7 +90,7 @@ nsSVGOrientType::SetBaseValue(uint16_t aValue,
 already_AddRefed<SVGAnimatedEnumeration>
 nsSVGOrientType::ToDOMAnimatedEnum(nsSVGElement *aSVGElement)
 {
-  RefPtr<SVGAnimatedEnumeration> toReturn =
+  nsRefPtr<SVGAnimatedEnumeration> toReturn =
     new DOMAnimatedEnum(this, aSVGElement);
   return toReturn.forget();
 }

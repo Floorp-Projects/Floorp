@@ -59,7 +59,7 @@ USSDSession::CreatePromise(ErrorResult& aRv)
     return nullptr;
   }
 
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -86,14 +86,14 @@ USSDSession::Constructor(const GlobalObject& aGlobal, uint32_t aServiceId,
     return nullptr;
   }
 
-  RefPtr<USSDSession> session = new USSDSession(window, ril, aServiceId);
+  nsRefPtr<USSDSession> session = new USSDSession(window, ril, aServiceId);
   return session.forget();
 }
 
 already_AddRefed<Promise>
 USSDSession::Send(const nsAString& aUssd, ErrorResult& aRv)
 {
-  RefPtr<Promise> promise = CreatePromise(aRv);
+  nsRefPtr<Promise> promise = CreatePromise(aRv);
   if (!promise) {
     return nullptr;
   }
@@ -111,7 +111,7 @@ USSDSession::Send(const nsAString& aUssd, ErrorResult& aRv)
 already_AddRefed<Promise>
 USSDSession::Cancel(ErrorResult& aRv)
 {
-  RefPtr<Promise> promise = CreatePromise(aRv);
+  nsRefPtr<Promise> promise = CreatePromise(aRv);
   if (!promise) {
     return nullptr;
   }

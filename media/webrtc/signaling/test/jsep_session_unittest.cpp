@@ -11,7 +11,7 @@
 #include "nss.h"
 #include "ssl.h"
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/Tuple.h"
 
 #define GTEST_HAS_RTTI 0
@@ -202,12 +202,12 @@ protected:
     for (auto track = mediatypes.begin(); track != mediatypes.end(); ++track) {
       ASSERT_TRUE(uuid_gen.Generate(&track_id));
 
-      RefPtr<JsepTrack> mst(new JsepTrack(*track, stream_id, track_id));
+      nsRefPtr<JsepTrack> mst(new JsepTrack(*track, stream_id, track_id));
       side.AddTrack(mst);
     }
   }
 
-  bool HasMediaStream(std::vector<RefPtr<JsepTrack>> tracks) const {
+  bool HasMediaStream(std::vector<nsRefPtr<JsepTrack>> tracks) const {
     for (auto i = tracks.begin(); i != tracks.end(); ++i) {
       if ((*i)->GetMediaType() != SdpMediaSection::kApplication) {
         return 1;
@@ -222,7 +222,7 @@ protected:
   }
 
   std::vector<std::string>
-  GetMediaStreamIds(std::vector<RefPtr<JsepTrack>> tracks) const {
+  GetMediaStreamIds(std::vector<nsRefPtr<JsepTrack>> tracks) const {
     std::vector<std::string> ids;
     for (auto i = tracks.begin(); i != tracks.end(); ++i) {
       // data channels don't have msid's
@@ -262,7 +262,7 @@ protected:
     return sortUniqueStrVector(GetRemoteMediaStreamIds(side));
   }
 
-  RefPtr<JsepTrack> GetTrack(JsepSessionImpl& side,
+  nsRefPtr<JsepTrack> GetTrack(JsepSessionImpl& side,
                              SdpMediaSection::MediaType type,
                              size_t index) const {
     auto tracks = side.GetLocalTracks();
@@ -280,15 +280,15 @@ protected:
       return *i;
     }
 
-    return RefPtr<JsepTrack>(nullptr);
+    return nsRefPtr<JsepTrack>(nullptr);
   }
 
-  RefPtr<JsepTrack> GetTrackOff(size_t index,
+  nsRefPtr<JsepTrack> GetTrackOff(size_t index,
                                 SdpMediaSection::MediaType type) {
     return GetTrack(mSessionOff, type, index);
   }
 
-  RefPtr<JsepTrack> GetTrackAns(size_t index,
+  nsRefPtr<JsepTrack> GetTrackAns(size_t index,
                                 SdpMediaSection::MediaType type) {
     return GetTrack(mSessionAns, type, index);
   }
@@ -1262,7 +1262,7 @@ TEST_P(JsepSessionTest, RenegotiationOffererRemovesTrack)
   auto offererPairs = GetTrackPairsByLevel(mSessionOff);
   auto answererPairs = GetTrackPairsByLevel(mSessionAns);
 
-  RefPtr<JsepTrack> removedTrack = GetTrackOff(0, types.front());
+  nsRefPtr<JsepTrack> removedTrack = GetTrackOff(0, types.front());
   ASSERT_TRUE(removedTrack);
   ASSERT_EQ(NS_OK, mSessionOff.RemoveTrack(removedTrack->GetStreamId(),
                                            removedTrack->GetTrackId()));
@@ -1340,7 +1340,7 @@ TEST_P(JsepSessionTest, RenegotiationAnswererRemovesTrack)
   auto offererPairs = GetTrackPairsByLevel(mSessionOff);
   auto answererPairs = GetTrackPairsByLevel(mSessionAns);
 
-  RefPtr<JsepTrack> removedTrack = GetTrackAns(0, types.front());
+  nsRefPtr<JsepTrack> removedTrack = GetTrackAns(0, types.front());
   ASSERT_TRUE(removedTrack);
   ASSERT_EQ(NS_OK, mSessionAns.RemoveTrack(removedTrack->GetStreamId(),
                                            removedTrack->GetTrackId()));
@@ -1418,12 +1418,12 @@ TEST_P(JsepSessionTest, RenegotiationBothRemoveTrack)
   auto offererPairs = GetTrackPairsByLevel(mSessionOff);
   auto answererPairs = GetTrackPairsByLevel(mSessionAns);
 
-  RefPtr<JsepTrack> removedTrackAnswer = GetTrackAns(0, types.front());
+  nsRefPtr<JsepTrack> removedTrackAnswer = GetTrackAns(0, types.front());
   ASSERT_TRUE(removedTrackAnswer);
   ASSERT_EQ(NS_OK, mSessionAns.RemoveTrack(removedTrackAnswer->GetStreamId(),
                                            removedTrackAnswer->GetTrackId()));
 
-  RefPtr<JsepTrack> removedTrackOffer = GetTrackOff(0, types.front());
+  nsRefPtr<JsepTrack> removedTrackOffer = GetTrackOff(0, types.front());
   ASSERT_TRUE(removedTrackOffer);
   ASSERT_EQ(NS_OK, mSessionOff.RemoveTrack(removedTrackOffer->GetStreamId(),
                                            removedTrackOffer->GetTrackId()));
@@ -1507,12 +1507,12 @@ TEST_P(JsepSessionTest, RenegotiationBothRemoveThenAddTrack)
 
   OfferAnswer();
 
-  RefPtr<JsepTrack> removedTrackAnswer = GetTrackAns(0, removedType);
+  nsRefPtr<JsepTrack> removedTrackAnswer = GetTrackAns(0, removedType);
   ASSERT_TRUE(removedTrackAnswer);
   ASSERT_EQ(NS_OK, mSessionAns.RemoveTrack(removedTrackAnswer->GetStreamId(),
                                            removedTrackAnswer->GetTrackId()));
 
-  RefPtr<JsepTrack> removedTrackOffer = GetTrackOff(0, removedType);
+  nsRefPtr<JsepTrack> removedTrackOffer = GetTrackOff(0, removedType);
   ASSERT_TRUE(removedTrackOffer);
   ASSERT_EQ(NS_OK, mSessionOff.RemoveTrack(removedTrackOffer->GetStreamId(),
                                            removedTrackOffer->GetTrackId()));
@@ -1575,13 +1575,13 @@ TEST_P(JsepSessionTest, RenegotiationBothRemoveTrackDifferentMsection)
   auto offererPairs = GetTrackPairsByLevel(mSessionOff);
   auto answererPairs = GetTrackPairsByLevel(mSessionAns);
 
-  RefPtr<JsepTrack> removedTrackAnswer = GetTrackAns(0, types.front());
+  nsRefPtr<JsepTrack> removedTrackAnswer = GetTrackAns(0, types.front());
   ASSERT_TRUE(removedTrackAnswer);
   ASSERT_EQ(NS_OK, mSessionAns.RemoveTrack(removedTrackAnswer->GetStreamId(),
                                            removedTrackAnswer->GetTrackId()));
 
   // Second instance of the same type
-  RefPtr<JsepTrack> removedTrackOffer = GetTrackOff(1, types.front());
+  nsRefPtr<JsepTrack> removedTrackOffer = GetTrackOff(1, types.front());
   ASSERT_TRUE(removedTrackOffer);
   ASSERT_EQ(NS_OK, mSessionOff.RemoveTrack(removedTrackOffer->GetStreamId(),
                                            removedTrackOffer->GetTrackId()));
@@ -1678,11 +1678,11 @@ TEST_P(JsepSessionTest, RenegotiationOffererReplacesTrack)
   auto offererPairs = GetTrackPairsByLevel(mSessionOff);
   auto answererPairs = GetTrackPairsByLevel(mSessionAns);
 
-  RefPtr<JsepTrack> removedTrack = GetTrackOff(0, types.front());
+  nsRefPtr<JsepTrack> removedTrack = GetTrackOff(0, types.front());
   ASSERT_TRUE(removedTrack);
   ASSERT_EQ(NS_OK, mSessionOff.RemoveTrack(removedTrack->GetStreamId(),
                                            removedTrack->GetTrackId()));
-  RefPtr<JsepTrack> addedTrack(
+  nsRefPtr<JsepTrack> addedTrack(
       new JsepTrack(types.front(), "newstream", "newtrack"));
   ASSERT_EQ(NS_OK, mSessionOff.AddTrack(addedTrack));
 
@@ -2564,11 +2564,11 @@ TEST_F(JsepSessionTest, OfferToReceiveVideoNotUsed)
 
 TEST_F(JsepSessionTest, CreateOfferNoDatachannelDefault)
 {
-  RefPtr<JsepTrack> msta(
+  nsRefPtr<JsepTrack> msta(
       new JsepTrack(SdpMediaSection::kAudio, "offerer_stream", "a1"));
   mSessionOff.AddTrack(msta);
 
-  RefPtr<JsepTrack> mstv1(
+  nsRefPtr<JsepTrack> mstv1(
       new JsepTrack(SdpMediaSection::kVideo, "offerer_stream", "v1"));
   mSessionOff.AddTrack(mstv1);
 
@@ -2589,10 +2589,10 @@ TEST_F(JsepSessionTest, ValidateOfferedCodecParams)
   types.push_back(SdpMediaSection::kAudio);
   types.push_back(SdpMediaSection::kVideo);
 
-  RefPtr<JsepTrack> msta(
+  nsRefPtr<JsepTrack> msta(
       new JsepTrack(SdpMediaSection::kAudio, "offerer_stream", "a1"));
   mSessionOff.AddTrack(msta);
-  RefPtr<JsepTrack> mstv1(
+  nsRefPtr<JsepTrack> mstv1(
       new JsepTrack(SdpMediaSection::kVideo, "offerer_stream", "v2"));
   mSessionOff.AddTrack(mstv1);
 
@@ -2710,10 +2710,10 @@ TEST_F(JsepSessionTest, ValidateAnsweredCodecParams)
   types.push_back(SdpMediaSection::kAudio);
   types.push_back(SdpMediaSection::kVideo);
 
-  RefPtr<JsepTrack> msta(
+  nsRefPtr<JsepTrack> msta(
       new JsepTrack(SdpMediaSection::kAudio, "offerer_stream", "a1"));
   mSessionOff.AddTrack(msta);
-  RefPtr<JsepTrack> mstv1(
+  nsRefPtr<JsepTrack> mstv1(
       new JsepTrack(SdpMediaSection::kVideo, "offerer_stream", "v1"));
   mSessionOff.AddTrack(mstv1);
 
@@ -2721,10 +2721,10 @@ TEST_F(JsepSessionTest, ValidateAnsweredCodecParams)
   SetLocalOffer(offer);
   SetRemoteOffer(offer);
 
-  RefPtr<JsepTrack> msta_ans(
+  nsRefPtr<JsepTrack> msta_ans(
       new JsepTrack(SdpMediaSection::kAudio, "answerer_stream", "a1"));
   mSessionAns.AddTrack(msta);
-  RefPtr<JsepTrack> mstv1_ans(
+  nsRefPtr<JsepTrack> mstv1_ans(
       new JsepTrack(SdpMediaSection::kVideo, "answerer_stream", "v1"));
   mSessionAns.AddTrack(mstv1);
 
@@ -2864,7 +2864,7 @@ GetCodec(JsepSession& session,
   *codecOut = nullptr;
   ASSERT_LT(pairIndex, session.GetNegotiatedTrackPairs().size());
   JsepTrackPair pair(session.GetNegotiatedTrackPairs().front());
-  RefPtr<JsepTrack> track(
+  nsRefPtr<JsepTrack> track(
       (direction == sdp::kSend) ? pair.mSending : pair.mReceiving);
   ASSERT_TRUE(track);
   ASSERT_TRUE(track->GetNegotiatedDetails());
@@ -3358,7 +3358,7 @@ TEST_F(JsepSessionTest, TestRtcpFbStar)
   SetRemoteAnswer(answer, CHECK_SUCCESS);
 
   ASSERT_EQ(1U, mSessionAns.GetRemoteTracks().size());
-  RefPtr<JsepTrack> track = mSessionAns.GetRemoteTracks()[0];
+  nsRefPtr<JsepTrack> track = mSessionAns.GetRemoteTracks()[0];
   ASSERT_TRUE(track->GetNegotiatedDetails());
   auto* details = track->GetNegotiatedDetails();
   for (size_t i = 0; i < details->GetCodecCount(); ++i) {
@@ -3651,7 +3651,7 @@ size_t GetActiveTransportCount(const JsepSession& session)
 {
   auto transports = session.GetTransports();
   size_t activeTransportCount = 0;
-  for (RefPtr<JsepTransport>& transport : transports) {
+  for (nsRefPtr<JsepTransport>& transport : transports) {
     activeTransportCount += transport->mComponents;
   }
   return activeTransportCount;

@@ -40,7 +40,7 @@ public:
   void Init();
   void Invalidate();
 
-  void GetMimeTypes(nsTArray<RefPtr<nsMimeType>>& aMimeTypes);
+  void GetMimeTypes(nsTArray<nsRefPtr<nsMimeType>>& aMimeTypes);
 
   // PluginArray WebIDL methods
 
@@ -60,7 +60,7 @@ private:
   void EnsurePlugins();
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
-  nsTArray<RefPtr<nsPluginElement> > mPlugins;
+  nsTArray<nsRefPtr<nsPluginElement> > mPlugins;
 };
 
 class nsPluginElement final : public nsISupports,
@@ -94,7 +94,7 @@ public:
   uint32_t Length();
   void GetSupportedNames(unsigned, nsTArray<nsString>& retval);
 
-  nsTArray<RefPtr<nsMimeType> >& MimeTypes();
+  nsTArray<nsRefPtr<nsMimeType> >& MimeTypes();
 
 protected:
   ~nsPluginElement();
@@ -103,7 +103,7 @@ protected:
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsCOMPtr<nsIInternalPluginTag> mPluginTag;
-  nsTArray<RefPtr<nsMimeType> > mMimeTypes;
+  nsTArray<nsRefPtr<nsMimeType> > mMimeTypes;
 };
 
 #endif /* nsPluginArray_h___ */
