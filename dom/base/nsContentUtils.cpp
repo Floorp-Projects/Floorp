@@ -3494,6 +3494,8 @@ nsContentUtils::MaybeReportInterceptionErrorToConsole(nsIDocument* aDocument,
     messageName = "BadOpaqueRedirectInterception";
   } else if (aError == NS_ERROR_INTERCEPTION_CANCELED) {
     messageName = "InterceptionCanceled";
+  } else if (aError == NS_ERROR_REJECTED_RESPONSE_INTERCEPTION) {
+    messageName = "InterceptionRejectedResponse";
   }
 
   if (messageName) {
