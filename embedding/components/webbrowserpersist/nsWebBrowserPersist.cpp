@@ -2278,17 +2278,17 @@ nsWebBrowserPersist::FinishDownload()
 void
 nsWebBrowserPersist::EndDownload(nsresult aResult)
 {
+    // Store the error code in the result if it is an error
+    if (NS_SUCCEEDED(mPersistResult) && NS_FAILED(aResult))
+    {
+        mPersistResult = aResult;
+    }
+
     // State stop notification
     if (mProgressListener) {
         mProgressListener->OnStateChange(nullptr, nullptr,
             nsIWebProgressListener::STATE_STOP
             | nsIWebProgressListener::STATE_IS_NETWORK, mPersistResult);
-    }
-
-    // Store the error code in the result if it is an error
-    if (NS_SUCCEEDED(mPersistResult) && NS_FAILED(aResult))
-    {
-        mPersistResult = aResult;
     }
 
     // Do file cleanup if required
