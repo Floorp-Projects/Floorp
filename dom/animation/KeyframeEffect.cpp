@@ -109,7 +109,8 @@ namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(KeyframeEffectReadOnly,
                                    AnimationEffectReadOnly,
-                                   mTarget)
+                                   mTarget,
+                                   mAnimation)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(KeyframeEffectReadOnly,
                                                AnimationEffectReadOnly)
@@ -149,14 +150,15 @@ KeyframeEffectReadOnly::SetParentTime(Nullable<TimeDuration> aParentTime)
 }
 
 void
-KeyframeEffectReadOnly::SetTiming(const AnimationTiming& aTiming,
-                                  Animation& aOwningAnimation)
+KeyframeEffectReadOnly::SetTiming(const AnimationTiming& aTiming)
 {
   if (mTiming == aTiming) {
     return;
   }
   mTiming = aTiming;
-  aOwningAnimation.NotifyEffectTimingUpdated();
+  if (mAnimation) {
+    mAnimation->NotifyEffectTimingUpdated();
+  }
 }
 
 ComputedTiming
@@ -306,9 +308,9 @@ KeyframeEffectReadOnly::ActiveDuration(const AnimationTiming& aTiming)
 
 // https://w3c.github.io/web-animations/#in-play
 bool
-KeyframeEffectReadOnly::IsInPlay(const Animation& aAnimation) const
+KeyframeEffectReadOnly::IsInPlay() const
 {
-  if (aAnimation.PlayState() == AnimationPlayState::Finished) {
+  if (!mAnimation || mAnimation->PlayState() == AnimationPlayState::Finished) {
     return false;
   }
 
@@ -317,9 +319,9 @@ KeyframeEffectReadOnly::IsInPlay(const Animation& aAnimation) const
 
 // https://w3c.github.io/web-animations/#current
 bool
-KeyframeEffectReadOnly::IsCurrent(const Animation& aAnimation) const
+KeyframeEffectReadOnly::IsCurrent() const
 {
-  if (aAnimation.PlayState() == AnimationPlayState::Finished) {
+  if (!mAnimation || mAnimation->PlayState() == AnimationPlayState::Finished) {
     return false;
   }
 
@@ -334,6 +336,12 @@ KeyframeEffectReadOnly::IsInEffect() const
 {
   ComputedTiming computedTiming = GetComputedTiming();
   return computedTiming.mProgress != ComputedTiming::kNullProgress;
+}
+
+void
+KeyframeEffectReadOnly::SetAnimation(Animation* aAnimation)
+{
+  mAnimation = aAnimation;
 }
 
 const AnimationProperty*
@@ -493,6 +501,12 @@ KeyframeEffectReadOnly::SetIsRunningOnCompositor(nsCSSProperty aProperty,
       return;
     }
   }
+}
+
+// We need to define this here since Animation is an incomplete type
+// (forward-declared) in the header.
+KeyframeEffectReadOnly::~KeyframeEffectReadOnly()
+{
 }
 
 void

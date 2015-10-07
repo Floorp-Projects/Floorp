@@ -51,14 +51,18 @@ Animation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 void
 Animation::SetEffect(KeyframeEffectReadOnly* aEffect)
 {
+  nsRefPtr<Animation> kungFuDeathGrip(this);
+
   if (mEffect == aEffect) {
     return;
   }
   if (mEffect) {
+    mEffect->SetAnimation(nullptr);
     mEffect->SetParentTime(Nullable<TimeDuration>());
   }
   mEffect = aEffect;
   if (mEffect) {
+    mEffect->SetAnimation(this);
     mEffect->SetParentTime(GetCurrentTime());
   }
 
