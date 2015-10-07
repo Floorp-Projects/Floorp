@@ -201,6 +201,10 @@ public:
   nsHttpRequestHead *RequestHead() override final;
   void Close(nsresult reason) override final;
 
+  // ConnectedReadyForInput() tests whether the spdy connect transaction is attached to
+  // an nsHttpConnection that can properly deal with flow control, etc..
+  bool ConnectedReadyForInput();
+
 private:
   friend class InputStreamShim;
   friend class OutputStreamShim;
