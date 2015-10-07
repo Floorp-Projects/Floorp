@@ -38,7 +38,7 @@ public:
 
 private:
   // We are going to buffer layer content on this xlib draw target
-  RefPtr<mozilla::gfx::DrawTarget> mBufferDrawTarget;
+  nsRefPtr<mozilla::gfx::DrawTarget> mBufferDrawTarget;
 };
 
 class X11BasicCompositor : public BasicCompositor

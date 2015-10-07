@@ -23,7 +23,7 @@
 #include "GonkNativeWindowJB.h"
 #include "GrallocImages.h"
 #include "mozilla/layers/ImageBridgeChild.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 #define BI_LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, __VA_ARGS__)
 #define BI_LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
@@ -120,7 +120,7 @@ GonkNativeWindow::getCurrentBuffer() {
         return NULL;
     }
 
-    RefPtr<TextureClient> textureClient =
+    nsRefPtr<TextureClient> textureClient =
       mBufferQueue->getTextureClientFromBuffer(item.mGraphicBuffer.get());
     if (!textureClient) {
         return NULL;

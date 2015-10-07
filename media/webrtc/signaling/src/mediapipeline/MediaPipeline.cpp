@@ -137,8 +137,8 @@ MediaPipeline::AttachTransport_s()
 
 void
 MediaPipeline::UpdateTransport_m(int level,
-                                 RefPtr<TransportFlow> rtp_transport,
-                                 RefPtr<TransportFlow> rtcp_transport,
+                                 nsRefPtr<TransportFlow> rtp_transport,
+                                 nsRefPtr<TransportFlow> rtcp_transport,
                                  nsAutoPtr<MediaPipelineFilter> filter)
 {
   RUN_ON_THREAD(sts_thread_,
@@ -154,8 +154,8 @@ MediaPipeline::UpdateTransport_m(int level,
 
 void
 MediaPipeline::UpdateTransport_s(int level,
-                                 RefPtr<TransportFlow> rtp_transport,
-                                 RefPtr<TransportFlow> rtcp_transport,
+                                 nsRefPtr<TransportFlow> rtp_transport,
+                                 nsRefPtr<TransportFlow> rtcp_transport,
                                  nsAutoPtr<MediaPipelineFilter> filter)
 {
   bool rtcp_mux = false;
@@ -760,7 +760,7 @@ nsresult MediaPipeline::PipelineTransport::SendRtpPacket(
 
     RUN_ON_THREAD(sts_thread_,
                   WrapRunnable(
-                      RefPtr<MediaPipeline::PipelineTransport>(this),
+                      nsRefPtr<MediaPipeline::PipelineTransport>(this),
                       &MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s,
                       buf, true),
                   NS_DISPATCH_NORMAL);
@@ -827,7 +827,7 @@ nsresult MediaPipeline::PipelineTransport::SendRtcpPacket(
 
     RUN_ON_THREAD(sts_thread_,
                   WrapRunnable(
-                      RefPtr<MediaPipeline::PipelineTransport>(this),
+                      nsRefPtr<MediaPipeline::PipelineTransport>(this),
                       &MediaPipeline::PipelineTransport::SendRtpRtcpPacket_s,
                       buf, false),
                   NS_DISPATCH_NORMAL);
@@ -1160,13 +1160,13 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
     }
   }
 
-  RefPtr<SourceSurface> surf = img->GetAsSourceSurface();
+  nsRefPtr<SourceSurface> surf = img->GetAsSourceSurface();
   if (!surf) {
     MOZ_MTLOG(ML_ERROR, "Getting surface from " << Stringify(format) << " image failed");
     return;
   }
 
-  RefPtr<DataSourceSurface> data = surf->GetDataSurface();
+  nsRefPtr<DataSourceSurface> data = surf->GetDataSurface();
   if (!data) {
     MOZ_MTLOG(ML_ERROR, "Getting data surface from " << Stringify(format)
                         << " image with " << Stringify(surf->GetType()) << "("
@@ -1246,7 +1246,7 @@ nsresult MediaPipelineReceiveAudio::Init() {
 static void AddTrackAndListener(MediaStream* source,
                                 TrackID track_id, TrackRate track_rate,
                                 MediaStreamListener* listener, MediaSegment* segment,
-                                const RefPtr<TrackAddedCallback>& completed,
+                                const nsRefPtr<TrackAddedCallback>& completed,
                                 bool queue_track) {
   // This both adds the listener and the track
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
@@ -1254,7 +1254,7 @@ static void AddTrackAndListener(MediaStream* source,
    public:
     Message(MediaStream* stream, TrackID track, TrackRate rate,
             MediaSegment* segment, MediaStreamListener* listener,
-            const RefPtr<TrackAddedCallback>& completed)
+            const nsRefPtr<TrackAddedCallback>& completed)
       : ControlMessage(stream),
         track_id_(track),
         track_rate_(rate),
@@ -1299,7 +1299,7 @@ static void AddTrackAndListener(MediaStream* source,
     TrackRate track_rate_;
     nsAutoPtr<MediaSegment> segment_;
     nsRefPtr<MediaStreamListener> listener_;
-    const RefPtr<TrackAddedCallback> completed_;
+    const nsRefPtr<TrackAddedCallback> completed_;
   };
 
   MOZ_ASSERT(listener);
@@ -1329,14 +1329,14 @@ static void AddTrackAndListener(MediaStream* source,
 }
 
 void GenericReceiveListener::AddSelf(MediaSegment* segment) {
-  RefPtr<TrackAddedCallback> callback = new GenericReceiveCallback(this);
+  nsRefPtr<TrackAddedCallback> callback = new GenericReceiveCallback(this);
   AddTrackAndListener(source_, track_id_, track_rate_, this, segment, callback,
                       queue_track_);
 }
 
 MediaPipelineReceiveAudio::PipelineListener::PipelineListener(
     SourceMediaStream * source, TrackID track_id,
-    const RefPtr<MediaSessionConduit>& conduit, bool queue_track)
+    const nsRefPtr<MediaSessionConduit>& conduit, bool queue_track)
   : GenericReceiveListener(source, track_id, DEFAULT_SAMPLE_RATE, queue_track), // XXX rate assumption
     conduit_(conduit)
 {
@@ -1466,7 +1466,7 @@ void MediaPipelineReceiveVideo::PipelineListener::RenderVideoFrame(
     unsigned int buffer_size,
     uint32_t time_stamp,
     int64_t render_time,
-    const RefPtr<Image>& video_image) {
+    const nsRefPtr<Image>& video_image) {
 
 #ifdef MOZILLA_INTERNAL_API
   ReentrantMonitorAutoEnter enter(monitor_);

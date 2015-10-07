@@ -488,7 +488,7 @@ void nsDoubleBufferCARenderer::Render() {
 }
 
 void nsDoubleBufferCARenderer::SwapSurfaces() {
-  RefPtr<MacIOSurface> prevFrontSurface = mFrontSurface;
+  nsRefPtr<MacIOSurface> prevFrontSurface = mFrontSurface;
   mFrontSurface = mBackSurface;
   mBackSurface = prevFrontSurface;
 

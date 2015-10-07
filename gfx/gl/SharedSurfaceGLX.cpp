@@ -30,7 +30,7 @@ SharedSurface_GLXDrawable::Create(GLContext* prodGL,
     Screen* screen = XDefaultScreenOfDisplay(display);
     Visual* visual = gfxXlibSurface::FindVisual(screen, gfxImageFormat::ARGB32);
 
-    RefPtr<gfxXlibSurface> surf = gfxXlibSurface::Create(screen, visual, size);
+    nsRefPtr<gfxXlibSurface> surf = gfxXlibSurface::Create(screen, visual, size);
     if (!deallocateClient)
         surf->ReleasePixmap();
 
@@ -42,7 +42,7 @@ SharedSurface_GLXDrawable::Create(GLContext* prodGL,
 SharedSurface_GLXDrawable::SharedSurface_GLXDrawable(GLContext* gl,
                                                      const gfx::IntSize& size,
                                                      bool inSameProcess,
-                                                     const RefPtr<gfxXlibSurface>& xlibSurface)
+                                                     const nsRefPtr<gfxXlibSurface>& xlibSurface)
     : SharedSurface(SharedSurfaceType::GLXDrawable,
                     AttachmentType::Screen,
                     gl,
@@ -87,7 +87,7 @@ SharedSurface_GLXDrawable::ToSurfaceDescriptor(layers::SurfaceDescriptor* const 
 UniquePtr<SurfaceFactory_GLXDrawable>
 SurfaceFactory_GLXDrawable::Create(GLContext* prodGL,
                                    const SurfaceCaps& caps,
-                                   const RefPtr<layers::ISurfaceAllocator>& allocator,
+                                   const nsRefPtr<layers::ISurfaceAllocator>& allocator,
                                    const layers::TextureFlags& flags)
 {
     MOZ_ASSERT(caps.alpha, "GLX surfaces require an alpha channel!");

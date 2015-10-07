@@ -46,7 +46,7 @@ public:
 
   nsCertAddonInfo() : mUsageCount(0) {}
 
-  mozilla::RefPtr<nsIX509Cert> mCert;
+  nsRefPtr<nsIX509Cert> mCert;
   // how many display entries reference this?
   // (and therefore depend on the underlying cert)
   int32_t mUsageCount;
@@ -64,7 +64,7 @@ public:
   nsCertTreeDispInfo();
   nsCertTreeDispInfo(nsCertTreeDispInfo &other);
 
-  mozilla::RefPtr<nsCertAddonInfo> mAddonInfo;
+  nsRefPtr<nsCertAddonInfo> mAddonInfo;
   enum {
     direct_db, host_port_override
   } mTypeOfEntry;
@@ -118,7 +118,7 @@ protected:
 private:
   static const uint32_t kInitialCacheLength = 64;
 
-  nsTArray< mozilla::RefPtr<nsCertTreeDispInfo> > mDispInfo;
+  nsTArray< nsRefPtr<nsCertTreeDispInfo> > mDispInfo;
   nsCOMPtr<nsITreeBoxObject>  mTree;
   nsCOMPtr<nsITreeSelection>  mSelection;
   treeArrayEl                *mTreeArray;
@@ -127,7 +127,7 @@ private:
   PLDHashTable mCompareCache;
   nsCOMPtr<nsINSSComponent> mNSSComponent;
   nsCOMPtr<nsICertOverrideService> mOverrideService;
-  mozilla::RefPtr<nsCertOverrideService> mOriginalOverrideService;
+  nsRefPtr<nsCertOverrideService> mOriginalOverrideService;
 
   treeArrayEl *GetThreadDescAtIndex(int32_t _index);
   already_AddRefed<nsIX509Cert> 

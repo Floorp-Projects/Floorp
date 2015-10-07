@@ -51,7 +51,7 @@ SamplesWaitingForKey::NotifyUsable(const CencKeyId& aKeyId)
   size_t i = 0;
   while (i < mSamples.Length()) {
     if (aKeyId == mSamples[i]->mCrypto.mKeyId) {
-      RefPtr<nsIRunnable> task;
+      nsRefPtr<nsIRunnable> task;
       task = NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(mDecoder,
                                                      &MediaDataDecoder::Input,
                                                      nsRefPtr<MediaRawData>(mSamples[i]));

@@ -1271,7 +1271,7 @@ protected:
 
     nsresult
     SurfaceFromElementResultToImageSurface(nsLayoutUtils::SurfaceFromElementResult& res,
-                                           RefPtr<gfx::DataSourceSurface>& imageOut,
+                                           nsRefPtr<gfx::DataSourceSurface>& imageOut,
                                            WebGLTexelFormat* format);
 
     // Returns false if `object` is null or not valid.
@@ -1341,7 +1341,7 @@ protected:
     void ResolveTexturesForDraw() const;
 
     WebGLRefPtr<WebGLProgram> mCurrentProgram;
-    RefPtr<const webgl::LinkedProgramInfo> mActiveProgramLinkInfo;
+    nsRefPtr<const webgl::LinkedProgramInfo> mActiveProgramLinkInfo;
 
     GLenum LastColorAttachment() const {
         return LOCAL_GL_COLOR_ATTACHMENT0 + mGLMaxColorAttachments - 1;
@@ -1434,7 +1434,7 @@ protected:
     GLsizei mViewportHeight;
     bool mAlreadyWarnedAboutViewportLargerThanDest;
 
-    RefPtr<WebGLContextLossHandler> mContextLossHandler;
+    nsRefPtr<WebGLContextLossHandler> mContextLossHandler;
     bool mAllowContextRestore;
     bool mLastLossWasSimulated;
     ContextStatus mContextStatus;

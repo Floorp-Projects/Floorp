@@ -15,7 +15,7 @@
 #include "gfxPlatform.h"
 #include "mozilla/dom/SVGPathElementBinding.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsComputedDOMStyle.h"
 #include "nsGkAtoms.h"
@@ -71,14 +71,14 @@ SVGPathElement::PathLength()
 float
 SVGPathElement::GetTotalLength()
 {
-  RefPtr<Path> flat = GetOrBuildPathForMeasuring();
+  nsRefPtr<Path> flat = GetOrBuildPathForMeasuring();
   return flat ? flat->ComputeLength() : 0.f;
 }
 
 already_AddRefed<nsISVGPoint>
 SVGPathElement::GetPointAtLength(float distance, ErrorResult& rv)
 {
-  RefPtr<Path> path = GetOrBuildPathForMeasuring();
+  nsRefPtr<Path> path = GetOrBuildPathForMeasuring();
   if (!path) {
     rv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -341,7 +341,7 @@ SVGPathElement::GetPathLengthScale(PathLengthScaleForType aFor)
   if (mPathLength.IsExplicitlySet()) {
     float authorsPathLengthEstimate = mPathLength.GetAnimValue();
     if (authorsPathLengthEstimate > 0) {
-      RefPtr<Path> path = GetOrBuildPathForMeasuring();
+      nsRefPtr<Path> path = GetOrBuildPathForMeasuring();
       if (!path) {
         // The path is empty or invalid so its length must be zero and
         // we know that 0 / authorsPathLengthEstimate = 0.
@@ -353,7 +353,7 @@ SVGPathElement::GetPathLengthScale(PathLengthScaleForType aFor)
         // we need to take that into account.
         gfxMatrix matrix = PrependLocalTransformsTo(gfxMatrix());
         if (!matrix.IsIdentity()) {
-          RefPtr<PathBuilder> builder =
+          nsRefPtr<PathBuilder> builder =
             path->TransformedCopyToBuilder(ToMatrix(matrix));
           path = builder->Finish();
         }

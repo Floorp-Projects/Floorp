@@ -12,7 +12,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/IndexSequence.h"
 #include "mozilla/Move.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/Tuple.h"
 
 // Abstract base class for all of our templates

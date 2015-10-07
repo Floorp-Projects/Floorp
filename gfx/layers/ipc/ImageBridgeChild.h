@@ -9,7 +9,7 @@
 #include <stddef.h>                     // for size_t
 #include <stdint.h>                     // for uint32_t, uint64_t
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/RefPtr.h"             // for already_AddRefed
+#include "mozilla/nsRefPtr.h"             // for already_AddRefed
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
 #include "mozilla/layers/AsyncTransactionTracker.h" // for AsyncTransactionTrackerHolder
 #include "mozilla/layers/CompositableForwarder.h"

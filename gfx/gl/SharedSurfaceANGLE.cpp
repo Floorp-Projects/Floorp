@@ -70,7 +70,7 @@ SharedSurface_ANGLEShareHandle::Create(GLContext* gl, EGLConfig config,
                                    pbuffer,
                                    LOCAL_EGL_DXGI_KEYED_MUTEX_ANGLE,
                                    &opaqueKeyedMutex);
-    RefPtr<IDXGIKeyedMutex> keyedMutex = static_cast<IDXGIKeyedMutex*>(opaqueKeyedMutex);
+    nsRefPtr<IDXGIKeyedMutex> keyedMutex = static_cast<IDXGIKeyedMutex*>(opaqueKeyedMutex);
 
     GLuint fence = 0;
     if (gl->IsExtensionSupported(GLContext::NV_fence)) {
@@ -96,7 +96,7 @@ SharedSurface_ANGLEShareHandle::SharedSurface_ANGLEShareHandle(GLContext* gl,
                                                                bool hasAlpha,
                                                                EGLSurface pbuffer,
                                                                HANDLE shareHandle,
-                                                               const RefPtr<IDXGIKeyedMutex>& keyedMutex,
+                                                               const nsRefPtr<IDXGIKeyedMutex>& keyedMutex,
                                                                GLuint fence)
     : SharedSurface(SharedSurfaceType::EGLSurfaceANGLE,
                     AttachmentType::Screen,
@@ -196,14 +196,14 @@ void
 SharedSurface_ANGLEShareHandle::ConsumerAcquireImpl()
 {
     if (!mConsumerTexture) {
-        RefPtr<ID3D11Texture2D> tex;
+        nsRefPtr<ID3D11Texture2D> tex;
         HRESULT hr = gfxWindowsPlatform::GetPlatform()->GetD3D11Device()->OpenSharedResource(mShareHandle,
                                                                                              __uuidof(ID3D11Texture2D),
-                                                                                             (void**)(ID3D11Texture2D**)byRef(tex));
+                                                                                             (void**)(ID3D11Texture2D**)getter_AddRefs(tex));
         if (SUCCEEDED(hr)) {
             mConsumerTexture = tex;
-            RefPtr<IDXGIKeyedMutex> mutex;
-            hr = tex->QueryInterface((IDXGIKeyedMutex**)byRef(mutex));
+            nsRefPtr<IDXGIKeyedMutex> mutex;
+            hr = tex->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
 
             if (SUCCEEDED(hr)) {
                 mConsumerKeyedMutex = mutex;
@@ -278,7 +278,7 @@ SharedSurface_ANGLEShareHandle::ToSurfaceDescriptor(layers::SurfaceDescriptor* c
 
 /*static*/ UniquePtr<SurfaceFactory_ANGLEShareHandle>
 SurfaceFactory_ANGLEShareHandle::Create(GLContext* gl, const SurfaceCaps& caps,
-                                        const RefPtr<layers::ISurfaceAllocator>& allocator,
+                                        const nsRefPtr<layers::ISurfaceAllocator>& allocator,
                                         const layers::TextureFlags& flags)
 {
     GLLibraryEGL* egl = &sEGLLibrary;
@@ -298,7 +298,7 @@ SurfaceFactory_ANGLEShareHandle::Create(GLContext* gl, const SurfaceCaps& caps,
 
 SurfaceFactory_ANGLEShareHandle::SurfaceFactory_ANGLEShareHandle(GLContext* gl,
                                                                  const SurfaceCaps& caps,
-                                                                 const RefPtr<layers::ISurfaceAllocator>& allocator,
+                                                                 const nsRefPtr<layers::ISurfaceAllocator>& allocator,
                                                                  const layers::TextureFlags& flags,
                                                                  GLLibraryEGL* egl,
                                                                  EGLConfig config)

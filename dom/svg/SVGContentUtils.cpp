@@ -15,7 +15,7 @@
 #include "gfxSVGGlyphs.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/dom/SVGSVGElement.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsComputedDOMStyle.h"
 #include "nsFontMetrics.h"
 #include "nsIFrame.h"
@@ -845,9 +845,9 @@ SVGContentUtils::GetPath(const nsAString& aPathString)
     return NULL;
   }
 
-  RefPtr<DrawTarget> drawTarget =
+  nsRefPtr<DrawTarget> drawTarget =
     gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
-  RefPtr<PathBuilder> builder =
+  nsRefPtr<PathBuilder> builder =
     drawTarget->CreatePathBuilder(FillRule::FILL_WINDING);
 
   return pathData.BuildPath(builder, NS_STYLE_STROKE_LINECAP_BUTT, 1);

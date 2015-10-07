@@ -124,7 +124,7 @@ struct GonkBufferSlot {
     bool mAttachedByConsumer;
 
     // mTextureClient is a thin abstraction over remotely allocated GraphicBuffer.
-    mozilla::RefPtr<TextureClient> mTextureClient;
+    nsRefPtr<TextureClient> mTextureClient;
 };
 
 } // namespace android

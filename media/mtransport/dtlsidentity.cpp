@@ -23,7 +23,7 @@ DtlsIdentity::~DtlsIdentity() {
   }
 }
 
-RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
+nsRefPtr<DtlsIdentity> DtlsIdentity::Generate() {
   ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
   if (!slot) {
     return nullptr;
@@ -152,7 +152,7 @@ RefPtr<DtlsIdentity> DtlsIdentity::Generate() {
   }
   certificate->derCert = *signedCert;
 
-  RefPtr<DtlsIdentity> identity =
+  nsRefPtr<DtlsIdentity> identity =
       new DtlsIdentity(private_key.forget(), certificate.forget(), ssl_kea_ecdh);
   return identity.forget();
 }

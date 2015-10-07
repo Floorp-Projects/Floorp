@@ -14,7 +14,7 @@
 
 #include "sigslot.h"
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/Scoped.h"
 #include "nsCOMPtr.h"
 #include "nsIEventTarget.h"
@@ -35,8 +35,8 @@ class TransportLayerIce : public TransportLayer {
 
   virtual ~TransportLayerIce();
 
-  void SetParameters(RefPtr<NrIceCtx> ctx,
-                     RefPtr<NrIceMediaStream> stream,
+  void SetParameters(nsRefPtr<NrIceCtx> ctx,
+                     nsRefPtr<NrIceMediaStream> stream,
                      int component);
 
   // Transport layer overrides.
@@ -56,8 +56,8 @@ class TransportLayerIce : public TransportLayer {
   void PostSetup();
 
   const std::string name_;
-  RefPtr<NrIceCtx> ctx_;
-  RefPtr<NrIceMediaStream> stream_;
+  nsRefPtr<NrIceCtx> ctx_;
+  nsRefPtr<NrIceMediaStream> stream_;
   int component_;
 };
 

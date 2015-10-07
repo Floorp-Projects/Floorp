@@ -95,7 +95,7 @@ FilterPrimitiveDescription
 SVGFEDisplacementMapElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
                                                      const IntRect& aFilterSubregion,
                                                      const nsTArray<bool>& aInputsAreTainted,
-                                                     nsTArray<RefPtr<SourceSurface>>& aInputImages)
+                                                     nsTArray<nsRefPtr<SourceSurface>>& aInputImages)
 {
   if (aInputsAreTainted[1]) {
     // If the map is tainted, refuse to apply the effect and act as a

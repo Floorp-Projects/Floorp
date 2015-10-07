@@ -105,7 +105,7 @@ CropAndCopyDataSourceSurface(DataSourceSurface* aSurface, const IntRect& aCropRe
   const uint32_t dstStride = dstSize.width * bytesPerPixel;
 
   // Create a new SourceSurface.
-  RefPtr<DataSourceSurface> dstDataSurface =
+  nsRefPtr<DataSourceSurface> dstDataSurface =
     Factory::CreateDataSourceSurfaceWithStride(dstSize, format, dstStride, true);
 
   if (NS_WARN_IF(!dstDataSurface)) {
@@ -181,7 +181,7 @@ CreateSurfaceFromRawData(const gfx::IntSize& aSize,
   MOZ_ASSERT(aBuffer);
 
   // Wrap the source buffer into a SourceSurface.
-  RefPtr<DataSourceSurface> dataSurface =
+  nsRefPtr<DataSourceSurface> dataSurface =
     Factory::CreateWrappingDataSourceSurface(aBuffer, aStride, aSize, aFormat);
 
   if (NS_WARN_IF(!dataSurface)) {
@@ -194,7 +194,7 @@ CreateSurfaceFromRawData(const gfx::IntSize& aSize,
   const IntRect cropRect = aCropRect.valueOr(IntRect(0, 0, aSize.width, aSize.height));
 
   // Copy the source buffer in the _cropRect_ area into a new SourceSurface.
-  RefPtr<DataSourceSurface> result = CropAndCopyDataSourceSurface(dataSurface, cropRect);
+  nsRefPtr<DataSourceSurface> result = CropAndCopyDataSourceSurface(dataSurface, cropRect);
 
   if (NS_WARN_IF(!result)) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
@@ -216,7 +216,7 @@ CreateImageFromRawData(const gfx::IntSize& aSize,
   MOZ_ASSERT(NS_IsMainThread());
 
   // Copy and crop the source buffer into a SourceSurface.
-  RefPtr<SourceSurface> rgbaSurface =
+  nsRefPtr<SourceSurface> rgbaSurface =
     CreateSurfaceFromRawData(aSize, aStride, aFormat,
                              aBuffer, aBufferLength,
                              aCropRect, aRv);
@@ -226,8 +226,8 @@ CreateImageFromRawData(const gfx::IntSize& aSize,
   }
 
   // Convert RGBA to BGRA
-  RefPtr<DataSourceSurface> rgbaDataSurface = rgbaSurface->GetDataSurface();
-  RefPtr<DataSourceSurface> bgraDataSurface =
+  nsRefPtr<DataSourceSurface> rgbaDataSurface = rgbaSurface->GetDataSurface();
+  nsRefPtr<DataSourceSurface> bgraDataSurface =
     Factory::CreateDataSourceSurfaceWithStride(rgbaDataSurface->GetSize(),
                                                SurfaceFormat::B8G8R8A8,
                                                rgbaDataSurface->Stride());
@@ -368,7 +368,7 @@ GetSurfaceFromElement(nsIGlobalObject* aGlobal, HTMLElementType& aElement, Error
     return nullptr;
   }
 
-  RefPtr<SourceSurface> surface(res.mSourceSurface);
+  nsRefPtr<SourceSurface> surface(res.mSourceSurface);
   return surface.forget();
 }
 
@@ -435,7 +435,7 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
     return nullptr;
   }
 
-  RefPtr<DrawTarget> target = aTarget;
+  nsRefPtr<DrawTarget> target = aTarget;
   IntRect surfRect(0, 0, mSurface->GetSize().width, mSurface->GetSize().height);
 
   // Check if we still need to crop our surface
@@ -446,7 +446,7 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
     // the crop lies entirely outside the surface area, nothing to draw
     if (surfPortion.IsEmpty()) {
       mSurface = nullptr;
-      RefPtr<gfx::SourceSurface> surface(mSurface);
+      nsRefPtr<gfx::SourceSurface> surface(mSurface);
       return surface.forget();
     }
 
@@ -461,7 +461,7 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
 
     if (!target) {
       mSurface = nullptr;
-      RefPtr<gfx::SourceSurface> surface(mSurface);
+      nsRefPtr<gfx::SourceSurface> surface(mSurface);
       return surface.forget();
     }
 
@@ -475,10 +475,10 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
     // if the mPictureRect is not starts from the upper-left point.
     if (target->GetBackendType() == BackendType::DIRECT2D1_1 &&
         mSurface->GetType() != SurfaceType::D2D1_1_IMAGE) {
-      RefPtr<DataSourceSurface> dataSurface = mSurface->GetDataSurface();
+      nsRefPtr<DataSourceSurface> dataSurface = mSurface->GetDataSurface();
       if (NS_WARN_IF(!dataSurface)) {
         mSurface = nullptr;
-        RefPtr<gfx::SourceSurface> surface(mSurface);
+        nsRefPtr<gfx::SourceSurface> surface(mSurface);
         return surface.forget();
       }
 
@@ -497,7 +497,7 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
   // This call should be a no-op for already-optimized surfaces
   mSurface = target->OptimizeSourceSurface(mSurface);
 
-  RefPtr<gfx::SourceSurface> surface(mSurface);
+  nsRefPtr<gfx::SourceSurface> surface(mSurface);
   return surface.forget();
 }
 
@@ -519,7 +519,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLImageElement& aImageEl
 
   // Get the SourceSurface out from the image element and then do security
   // checking.
-  RefPtr<SourceSurface> surface = GetSurfaceFromElement(aGlobal, aImageEl, aRv);
+  nsRefPtr<SourceSurface> surface = GetSurfaceFromElement(aGlobal, aImageEl, aRv);
 
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -596,14 +596,14 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLCanvasElement& aCanvas
     return nullptr;
   }
 
-  RefPtr<SourceSurface> surface = GetSurfaceFromElement(aGlobal, aCanvasEl, aRv);
+  nsRefPtr<SourceSurface> surface = GetSurfaceFromElement(aGlobal, aCanvasEl, aRv);
 
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
   // Crop the source surface if needed.
-  RefPtr<SourceSurface> croppedSurface;
+  nsRefPtr<SourceSurface> croppedSurface;
   IntRect cropRect = aCropRect.valueOr(IntRect());
 
   // If the HTMLCanvasElement's rendering context is WebGL, then the snapshot
@@ -616,7 +616,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLCanvasElement& aCanvas
     MOZ_ASSERT(surface->GetType() == SurfaceType::DATA,
                "The snapshot SourceSurface from WebGL rendering contest is not \
                DataSourceSurface.");
-    RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
+    nsRefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
     croppedSurface = CropAndCopyDataSourceSurface(dataSurface, cropRect);
     cropRect.MoveTo(0, 0);
   }
@@ -713,7 +713,7 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, CanvasRenderingContext2D& 
     return nullptr;
   }
 
-  RefPtr<SourceSurface> surface = aCanvasCtx.GetSurfaceSnapshot();
+  nsRefPtr<SourceSurface> surface = aCanvasCtx.GetSurfaceSnapshot();
 
   if (NS_WARN_IF(!surface)) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
@@ -863,7 +863,7 @@ DecodeBlob(Blob& aBlob, ErrorResult& aRv)
   // Get the surface out.
   uint32_t frameFlags = imgIContainer::FLAG_SYNC_DECODE | imgIContainer::FLAG_WANT_DATA_SURFACE;
   uint32_t whichFrame = imgIContainer::FRAME_FIRST;
-  RefPtr<SourceSurface> surface = imgContainer->GetFrame(whichFrame, frameFlags);
+  nsRefPtr<SourceSurface> surface = imgContainer->GetFrame(whichFrame, frameFlags);
 
   if (NS_WARN_IF(!surface)) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
@@ -877,14 +877,14 @@ static already_AddRefed<layers::Image>
 DecodeAndCropBlob(Blob& aBlob, Maybe<IntRect>& aCropRect, ErrorResult& aRv)
 {
   // Decode the blob into a SourceSurface.
-  RefPtr<SourceSurface> surface = DecodeBlob(aBlob, aRv);
+  nsRefPtr<SourceSurface> surface = DecodeBlob(aBlob, aRv);
 
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
   // Crop the source surface if needed.
-  RefPtr<SourceSurface> croppedSurface = surface;
+  nsRefPtr<SourceSurface> croppedSurface = surface;
 
   if (aCropRect.isSome()) {
     // The blob is just decoded into a RasterImage and not optimized yet, so the
@@ -899,7 +899,7 @@ DecodeAndCropBlob(Blob& aBlob, Maybe<IntRect>& aCropRect, ErrorResult& aRv)
     // TODO: Bug1189632 is going to refactor this create-from-blob part to
     //       decode the blob off the main thread. Re-check if we should do
     //       cropping at this moment again there.
-    RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
+    nsRefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
     croppedSurface = CropAndCopyDataSourceSurface(dataSurface, aCropRect.ref());
     aCropRect->MoveTo(0, 0);
   }
@@ -964,7 +964,7 @@ protected:
 
   nsRefPtr<Promise> mPromise;
   nsCOMPtr<nsIGlobalObject> mGlobalObject;
-  RefPtr<mozilla::dom::Blob> mBlob;
+  nsRefPtr<mozilla::dom::Blob> mBlob;
   Maybe<IntRect> mCropRect;
 };
 

@@ -459,7 +459,7 @@ Volume::RegisterVolumeObserver(Volume::EventObserver* aObserver, const char* aNa
   // Send an initial event to the observer (for each volume)
   size_t numVolumes = VolumeManager::NumVolumes();
   for (size_t volIndex = 0; volIndex < numVolumes; volIndex++) {
-    RefPtr<Volume> vol = VolumeManager::GetVolume(volIndex);
+    nsRefPtr<Volume> vol = VolumeManager::GetVolume(volIndex);
     aObserver->Notify(vol);
   }
 }
@@ -486,7 +486,7 @@ Volume::UpdateMountLock(const nsACString& aVolumeName,
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
 
-  RefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
+  nsRefPtr<Volume> vol = VolumeManager::FindVolumeByName(aVolumeName);
   if (!vol || (vol->mMountGeneration != aMountGeneration)) {
     return;
   }

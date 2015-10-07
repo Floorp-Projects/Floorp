@@ -50,7 +50,7 @@ AndroidSurfaceTexture::Create(GLContext* aContext, GLuint aTexture)
     return nullptr;
   }
 
-  RefPtr<AndroidSurfaceTexture> st = new AndroidSurfaceTexture();
+  nsRefPtr<AndroidSurfaceTexture> st = new AndroidSurfaceTexture();
   if (!st->Init(aContext, aTexture)) {
     printf_stderr("Failed to initialize AndroidSurfaceTexture");
     st = nullptr;

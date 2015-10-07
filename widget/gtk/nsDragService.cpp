@@ -434,7 +434,7 @@ nsDragService::SetAlphaPixmap(SourceSurface *aSurface,
     if (!xPixmapSurface)
       return false;
 
-    RefPtr<DrawTarget> dt =
+    nsRefPtr<DrawTarget> dt =
     gfxPlatform::GetPlatform()->
       CreateDrawTargetForSurface(xPixmapSurface, IntSize(dragRect.width, dragRect.height));
     if (!dt)
@@ -466,7 +466,7 @@ nsDragService::SetAlphaPixmap(SourceSurface *aSurface,
     if (!surf)
         return false;
 
-    RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->
+    nsRefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->
         CreateDrawTargetForData(cairo_image_surface_get_data(surf),
                                 dragRect.Size(),
                                 cairo_image_surface_get_stride(surf),
@@ -1627,7 +1627,7 @@ void nsDragService::SetDragIcon(GdkDragContext* aContext)
 
     nsIntRect dragRect;
     nsPresContext* pc;
-    RefPtr<SourceSurface> surface;
+    nsRefPtr<SourceSurface> surface;
     DrawDrag(mSourceNode, mSourceRegion, mScreenX, mScreenY,
              &dragRect, &surface, &pc);
     if (!pc)

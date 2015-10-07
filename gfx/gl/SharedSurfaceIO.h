@@ -6,7 +6,7 @@
 #ifndef SHARED_SURFACEIO_H_
 #define SHARED_SURFACEIO_H_
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "SharedSurface.h"
 
 class MacIOSurface;
@@ -17,16 +17,16 @@ namespace gl {
 class SharedSurface_IOSurface : public SharedSurface
 {
 private:
-    const RefPtr<MacIOSurface> mIOSurf;
+    const nsRefPtr<MacIOSurface> mIOSurf;
     GLuint mProdTex;
 
 public:
-    static UniquePtr<SharedSurface_IOSurface> Create(const RefPtr<MacIOSurface>& ioSurf,
+    static UniquePtr<SharedSurface_IOSurface> Create(const nsRefPtr<MacIOSurface>& ioSurf,
                                                      GLContext* gl,
                                                      bool hasAlpha);
 
 private:
-    SharedSurface_IOSurface(const RefPtr<MacIOSurface>& ioSurf,
+    SharedSurface_IOSurface(const nsRefPtr<MacIOSurface>& ioSurf,
                             GLContext* gl, const gfx::IntSize& size,
                             bool hasAlpha);
 
@@ -76,13 +76,13 @@ public:
     // Infallible.
     static UniquePtr<SurfaceFactory_IOSurface> Create(GLContext* gl,
                                                       const SurfaceCaps& caps,
-                                                      const RefPtr<layers::ISurfaceAllocator>& allocator,
+                                                      const nsRefPtr<layers::ISurfaceAllocator>& allocator,
                                                       const layers::TextureFlags& flags);
 protected:
     const gfx::IntSize mMaxDims;
 
     SurfaceFactory_IOSurface(GLContext* gl, const SurfaceCaps& caps,
-                             const RefPtr<layers::ISurfaceAllocator>& allocator,
+                             const nsRefPtr<layers::ISurfaceAllocator>& allocator,
                              const layers::TextureFlags& flags,
                              const gfx::IntSize& maxDims)
         : SurfaceFactory(SharedSurfaceType::IOSurface, gl, caps, allocator, flags)

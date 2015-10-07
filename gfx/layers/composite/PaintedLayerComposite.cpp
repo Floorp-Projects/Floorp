@@ -116,7 +116,7 @@ PaintedLayerComposite::RenderLayer(const gfx::IntRect& aClipRect)
 
 #ifdef MOZ_DUMP_PAINTING
   if (gfxUtils::sDumpCompositorTextures) {
-    RefPtr<gfx::DataSourceSurface> surf = mBuffer->GetAsSurface();
+    nsRefPtr<gfx::DataSourceSurface> surf = mBuffer->GetAsSurface();
     if (surf) {
       WriteSnapshotToDumpFile(this, surf);
     }

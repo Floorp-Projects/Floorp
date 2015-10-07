@@ -938,7 +938,7 @@ PackagedAppService::PackagedAppDownloader::OnVerified(bool aIsManifest,
     return NS_OK;
   }
 
-  RefPtr<ResourceCacheInfo> info =
+  nsRefPtr<ResourceCacheInfo> info =
     new ResourceCacheInfo(aUri, aCacheEntry, aStatusCode, aIsLastPart);
 
   aIsManifest ? OnManifestVerified(info, aVerificationSuccess)

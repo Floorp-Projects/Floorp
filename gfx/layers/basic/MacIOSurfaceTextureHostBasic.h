@@ -42,9 +42,9 @@ public:
   virtual void SetCompositor(Compositor* aCompositor) override;
 
 protected:
-  RefPtr<BasicCompositor> mCompositor;
-  RefPtr<MacIOSurface> mSurface;
-  RefPtr<gfx::SourceSurface> mSourceSurface;
+  nsRefPtr<BasicCompositor> mCompositor;
+  nsRefPtr<MacIOSurface> mSurface;
+  nsRefPtr<gfx::SourceSurface> mSourceSurface;
 };
 
 /**
@@ -82,9 +82,9 @@ public:
 #endif
 
 protected:
-  RefPtr<BasicCompositor> mCompositor;
-  RefPtr<MacIOSurfaceTextureSourceBasic> mTextureSource;
-  RefPtr<MacIOSurface> mSurface;
+  nsRefPtr<BasicCompositor> mCompositor;
+  nsRefPtr<MacIOSurfaceTextureSourceBasic> mTextureSource;
+  nsRefPtr<MacIOSurface> mSurface;
 };
 
 } // namespace layers

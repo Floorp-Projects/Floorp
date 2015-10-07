@@ -305,7 +305,7 @@ RTCCertificate::~RTCCertificate()
 // RTCPeerConnection provides this guarantee by holding a strong reference to
 // the RTCCertificate.  It will cleanup any DtlsIdentity instances that it
 // creates before the RTCCertificate reference is released.
-RefPtr<DtlsIdentity>
+nsRefPtr<DtlsIdentity>
 RTCCertificate::CreateDtlsIdentity() const
 {
   nsNSSShutDownPreventionLock locker;
@@ -314,7 +314,7 @@ RTCCertificate::CreateDtlsIdentity() const
   }
   SECKEYPrivateKey* key = SECKEY_CopyPrivateKey(mPrivateKey);
   CERTCertificate* cert = CERT_DupCertificate(mCertificate);
-  RefPtr<DtlsIdentity> id = new DtlsIdentity(key, cert, mAuthType);
+  nsRefPtr<DtlsIdentity> id = new DtlsIdentity(key, cert, mAuthType);
   return id;
 }
 

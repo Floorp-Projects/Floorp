@@ -9,7 +9,7 @@
 
 #include "mozilla/HangAnnotations.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 
 #include "nsString.h"
 
@@ -112,7 +112,7 @@ class BackgroundHangMonitor
 private:
   friend BackgroundHangManager;
 
-  RefPtr<BackgroundHangThread> mThread;
+  nsRefPtr<BackgroundHangThread> mThread;
 
   static bool ShouldDisableOnBeta(const nsCString &);
   static bool DisableOnBeta();

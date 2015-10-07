@@ -7,7 +7,7 @@
 #ifndef SharedSSLState_h
 #define SharedSSLState_h
 
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsNSSIOLayer.h"
 
 class nsClientAuthRememberService;
@@ -52,7 +52,7 @@ private:
   void Cleanup();
 
   nsCOMPtr<nsIObserver> mObserver;
-  RefPtr<nsClientAuthRememberService> mClientAuthRemember;
+  nsRefPtr<nsClientAuthRememberService> mClientAuthRemember;
   nsSSLIOLayerHelpers mIOLayerHelpers;
 
   // True if any sockets have been created that use this shared data.

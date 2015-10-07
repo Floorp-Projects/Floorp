@@ -140,7 +140,7 @@ protected:
     // If we're using a BasicCompositor, these fields are temporarily
     // set during frame composition.  They wrap the hardware
     // framebuffer.
-    mozilla::RefPtr<mozilla::gfx::DrawTarget> mFramebufferTarget;
+    nsRefPtr<mozilla::gfx::DrawTarget> mFramebufferTarget;
     ANativeWindowBuffer* mFramebuffer;
     // If we're using a BasicCompositor, this is our window back
     // buffer.  The gralloc framebuffer driver expects us to draw the
@@ -150,7 +150,7 @@ protected:
     //
     // Only accessed on the compositor thread, except during
     // destruction.
-    mozilla::RefPtr<mozilla::gfx::DrawTarget> mBackBuffer;
+    nsRefPtr<mozilla::gfx::DrawTarget> mBackBuffer;
 
     virtual ~nsWindow();
 

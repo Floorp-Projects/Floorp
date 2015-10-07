@@ -38,7 +38,7 @@ already_AddRefed<TextureClient>
 TextureClientX11::CreateSimilar(TextureFlags aFlags,
                                 TextureAllocationFlags aAllocFlags) const
 {
-  RefPtr<TextureClient> tex = new TextureClientX11(mAllocator, mFormat, mFlags);
+  nsRefPtr<TextureClient> tex = new TextureClientX11(mAllocator, mFormat, mFlags);
 
   // mSize is guaranteed to be non-negative
   MOZ_ASSERT(mSize.width >= 0 && mSize.height >= 0);

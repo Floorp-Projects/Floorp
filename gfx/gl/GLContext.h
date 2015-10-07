@@ -34,7 +34,7 @@
 #endif
 
 #include "../../mfbt/Maybe.h"
-#include "../../mfbt/RefPtr.h"
+#include "../../mfbt/nsRefPtr.h"
 #include "../../mfbt/UniquePtr.h"
 
 #include "GLDefs.h"
@@ -3344,7 +3344,7 @@ public:
     }
 
 protected:
-    RefPtr<GLContext> mSharedContext;
+    nsRefPtr<GLContext> mSharedContext;
 
     // The thread id which this context was created.
     PlatformThreadId mOwningThreadId;
@@ -3478,7 +3478,7 @@ public:
     bool IsDrawingToDefaultFramebuffer();
 
 protected:
-    RefPtr<TextureGarbageBin> mTexGarbageBin;
+    nsRefPtr<TextureGarbageBin> mTexGarbageBin;
 
 public:
     TextureGarbageBin* TexGarbageBin() {

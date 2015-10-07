@@ -10,7 +10,7 @@
 #include "ScopedNSSTypes.h"
 #include "certt.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "nsDataHashtable.h"
 #include "nsIAssociatedContentSecurity.h"
 #include "nsIInterfaceRequestor.h"
@@ -102,7 +102,7 @@ private:
   nsXPIDLCString mHostName;
 
   /* SSL Status */
-  mozilla::RefPtr<nsSSLStatus> mSSLStatus;
+  nsRefPtr<nsSSLStatus> mSSLStatus;
 
   /* Peer cert chain for failed connections (for error reporting) */
   nsCOMPtr<nsIX509CertList> mFailedCertChain;

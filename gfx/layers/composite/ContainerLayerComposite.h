@@ -39,14 +39,14 @@ class ContainerLayerComposite : public ContainerLayer,
   friend void RenderIntermediate(ContainerT* aContainer,
                    LayerManagerComposite* aManager,
                    const gfx::IntRect& aClipRect,
-                   RefPtr<CompositingRenderTarget> surface);
+                   nsRefPtr<CompositingRenderTarget> surface);
   template<class ContainerT>
-  friend RefPtr<CompositingRenderTarget>
+  friend nsRefPtr<CompositingRenderTarget>
   CreateTemporaryTargetAndCopyFromBackground(ContainerT* aContainer,
                                              LayerManagerComposite* aManager,
                                              const RenderTargetIntRect& aClipRect);
   template<class ContainerT>
-  friend RefPtr<CompositingRenderTarget>
+  friend nsRefPtr<CompositingRenderTarget>
   CreateOrRecycleTarget(ContainerT* aContainer,
                         LayerManagerComposite* aManager,
                         const RenderTargetIntRect& aClipRect);
@@ -115,8 +115,8 @@ public:
   virtual const char* Name() const override { return "ContainerLayerComposite"; }
   UniquePtr<PreparedData> mPrepared;
 
-  RefPtr<CompositingRenderTarget> mLastIntermediateSurface;
-  RefPtr<gfx::VRHMDRenderingSupport::RenderTargetSet> mVRRenderTargetSet;
+  nsRefPtr<CompositingRenderTarget> mLastIntermediateSurface;
+  nsRefPtr<gfx::VRHMDRenderingSupport::RenderTargetSet> mVRRenderTargetSet;
 };
 
 class RefLayerComposite : public RefLayer,
@@ -138,14 +138,14 @@ class RefLayerComposite : public RefLayer,
   friend void RenderIntermediate(ContainerT* aContainer,
                    LayerManagerComposite* aManager,
                    const gfx::IntRect& aClipRect,
-                   RefPtr<CompositingRenderTarget> surface);
+                   nsRefPtr<CompositingRenderTarget> surface);
   template<class ContainerT>
-  friend RefPtr<CompositingRenderTarget>
+  friend nsRefPtr<CompositingRenderTarget>
   CreateTemporaryTargetAndCopyFromBackground(ContainerT* aContainer,
                                              LayerManagerComposite* aManager,
                                              const gfx::IntRect& aClipRect);
   template<class ContainerT>
-  friend RefPtr<CompositingRenderTarget>
+  friend nsRefPtr<CompositingRenderTarget>
   CreateTemporaryTarget(ContainerT* aContainer,
                         LayerManagerComposite* aManager,
                         const gfx::IntRect& aClipRect);
@@ -181,7 +181,7 @@ public:
 
   virtual const char* Name() const override { return "RefLayerComposite"; }
   UniquePtr<PreparedData> mPrepared;
-  RefPtr<CompositingRenderTarget> mLastIntermediateSurface;
+  nsRefPtr<CompositingRenderTarget> mLastIntermediateSurface;
   nsRefPtr<gfx::VRHMDRenderingSupport::RenderTargetSet> mVRRenderTargetSet;
 };
 

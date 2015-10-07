@@ -8,7 +8,7 @@
 #define mozilla_layers_AsyncPanZoomAnimation_h_
 
 #include "base/message_loop.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Vector.h"
 #include "FrameMetrics.h"

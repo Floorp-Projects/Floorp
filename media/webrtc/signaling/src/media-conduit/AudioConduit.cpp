@@ -41,7 +41,7 @@ const unsigned int WebrtcAudioConduit::CODEC_PLNAME_SIZE = 32;
 /**
  * Factory Method for AudioConduit
  */
-mozilla::RefPtr<AudioSessionConduit> AudioSessionConduit::Create()
+nsRefPtr<AudioSessionConduit> AudioSessionConduit::Create()
 {
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
@@ -330,7 +330,7 @@ MediaConduitErrorCode WebrtcAudioConduit::Init()
 
 // AudioSessionConduit Implementation
 MediaConduitErrorCode
-WebrtcAudioConduit::SetTransmitterTransport(mozilla::RefPtr<TransportInterface> aTransport)
+WebrtcAudioConduit::SetTransmitterTransport(nsRefPtr<TransportInterface> aTransport)
 {
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
 
@@ -341,7 +341,7 @@ WebrtcAudioConduit::SetTransmitterTransport(mozilla::RefPtr<TransportInterface> 
 }
 
 MediaConduitErrorCode
-WebrtcAudioConduit::SetReceiverTransport(mozilla::RefPtr<TransportInterface> aTransport)
+WebrtcAudioConduit::SetReceiverTransport(nsRefPtr<TransportInterface> aTransport)
 {
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
 

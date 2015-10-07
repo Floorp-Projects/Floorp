@@ -280,7 +280,7 @@ OpusDataDecoder::DoDrain()
 nsresult
 OpusDataDecoder::Drain()
 {
-  RefPtr<nsIRunnable> runnable(
+  nsRefPtr<nsIRunnable> runnable(
     NS_NewRunnableMethod(this, &OpusDataDecoder::DoDrain));
   mTaskQueue->Dispatch(runnable.forget());
   return NS_OK;

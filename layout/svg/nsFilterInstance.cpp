@@ -34,7 +34,7 @@ nsFilterInstance::GetFilterDescription(nsIContent* aFilteredElement,
                                        const nsTArray<nsStyleFilter>& aFilterChain,
                                        const UserSpaceMetrics& aMetrics,
                                        const gfxRect& aBBox,
-                                       nsTArray<mozilla::RefPtr<SourceSurface>>& aOutAdditionalImages)
+                                       nsTArray<nsRefPtr<SourceSurface>>& aOutAdditionalImages)
 {
   gfxMatrix unused; // aPaintTransform arg not used since we're not painting
   nsFilterInstance instance(nullptr, aFilteredElement, aMetrics,
@@ -351,7 +351,7 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
   MOZ_ASSERT(mTargetFrame);
   nsIntRect neededRect = aSource->mNeededBounds;
 
-  RefPtr<DrawTarget> offscreenDT =
+  nsRefPtr<DrawTarget> offscreenDT =
     gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
       neededRect.Size(), SurfaceFormat::B8G8R8A8);
   if (!offscreenDT) {
@@ -415,7 +415,7 @@ nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
     return NS_OK;
   }
 
-  RefPtr<DrawTarget> offscreenDT =
+  nsRefPtr<DrawTarget> offscreenDT =
     gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
       neededRect.Size(), SurfaceFormat::B8G8R8A8);
   if (!offscreenDT) {
@@ -468,7 +468,7 @@ nsFilterInstance::Render(gfxContext* aContext)
     return NS_OK;
   }
 
-  RefPtr<DrawTarget> dt = aContext->GetDrawTarget();
+  nsRefPtr<DrawTarget> dt = aContext->GetDrawTarget();
 
   AutoRestoreTransform autoRestoreTransform(dt);
   Matrix newTM = ToMatrix(ctm).PreTranslate(filterRect.x, filterRect.y) * dt->GetTransform();

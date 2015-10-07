@@ -8,7 +8,7 @@
 
 #include "Units.h"                      // for ScreenPoint
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/RefPtr.h"             // for already_AddRefed, RefCounted
+#include "mozilla/nsRefPtr.h"             // for already_AddRefed, RefCounted
 #include "mozilla/gfx/Point.h"          // for IntSize, Point
 #include "mozilla/gfx/Rect.h"           // for Rect, IntRect
 #include "mozilla/gfx/Types.h"          // for Float
@@ -538,7 +538,7 @@ protected:
 
   virtual gfx::IntSize GetWidgetSize() const = 0;
 
-  RefPtr<gfx::DrawTarget> mTarget;
+  nsRefPtr<gfx::DrawTarget> mTarget;
   gfx::IntRect mTargetBounds;
 
 private:

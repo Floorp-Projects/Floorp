@@ -262,7 +262,7 @@ DecodedAudioDataSink::InitializeAudioStream()
   // AudioStream initialization can block for extended periods in unusual
   // circumstances, so we take care to drop the decoder monitor while
   // initializing.
-  RefPtr<AudioStream> audioStream(new AudioStream());
+  nsRefPtr<AudioStream> audioStream(new AudioStream());
   nsresult rv = audioStream->Init(mInfo.mChannels, mInfo.mRate, mChannel);
   if (NS_FAILED(rv)) {
     audioStream->Shutdown();

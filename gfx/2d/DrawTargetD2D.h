@@ -30,10 +30,10 @@ const int32_t kLayerCacheSize = 5;
 
 struct PrivateD3D10DataD2D
 {
-  RefPtr<ID3D10Effect> mEffect;
-  RefPtr<ID3D10InputLayout> mInputLayout;
-  RefPtr<ID3D10Buffer> mVB;
-  RefPtr<ID3D10BlendState> mBlendStates[size_t(CompositionOp::OP_COUNT)];
+  nsRefPtr<ID3D10Effect> mEffect;
+  nsRefPtr<ID3D10InputLayout> mInputLayout;
+  nsRefPtr<ID3D10Buffer> mVB;
+  nsRefPtr<ID3D10BlendState> mBlendStates[size_t(CompositionOp::OP_COUNT)];
 };
 
 class DrawTargetD2D : public DrawTarget
@@ -227,30 +227,30 @@ private:
 
   IntSize mSize;
 
-  RefPtr<ID3D10Device1> mDevice;
-  RefPtr<ID3D10Texture2D> mTexture;
-  RefPtr<ID3D10Texture2D> mCurrentClipMaskTexture;
-  RefPtr<ID2D1Geometry> mCurrentClippedGeometry;
+  nsRefPtr<ID3D10Device1> mDevice;
+  nsRefPtr<ID3D10Texture2D> mTexture;
+  nsRefPtr<ID3D10Texture2D> mCurrentClipMaskTexture;
+  nsRefPtr<ID2D1Geometry> mCurrentClippedGeometry;
   // This is only valid if mCurrentClippedGeometry is non-null. And will
   // only be the intersection of all pixel-aligned retangular clips. This is in
   // device space.
   IntRect mCurrentClipBounds;
-  mutable RefPtr<ID2D1RenderTarget> mRT;
+  mutable nsRefPtr<ID2D1RenderTarget> mRT;
 
   // We store this to prevent excessive SetTextRenderingParams calls.
-  RefPtr<IDWriteRenderingParams> mTextRenderingParams;
+  nsRefPtr<IDWriteRenderingParams> mTextRenderingParams;
 
   // Temporary texture and render target used for supporting alternative operators.
-  RefPtr<ID3D10Texture2D> mTempTexture;
-  RefPtr<ID3D10RenderTargetView> mRTView;
-  RefPtr<ID3D10ShaderResourceView> mSRView;
-  RefPtr<ID2D1RenderTarget> mTempRT;
-  RefPtr<ID3D10RenderTargetView> mTempRTView;
+  nsRefPtr<ID3D10Texture2D> mTempTexture;
+  nsRefPtr<ID3D10RenderTargetView> mRTView;
+  nsRefPtr<ID3D10ShaderResourceView> mSRView;
+  nsRefPtr<ID2D1RenderTarget> mTempRT;
+  nsRefPtr<ID3D10RenderTargetView> mTempRTView;
 
   // List of pushed clips.
   struct PushedClip
   {
-    RefPtr<ID2D1Layer> mLayer;
+    nsRefPtr<ID2D1Layer> mLayer;
     D2D1_RECT_F mBounds;
     union {
       // If mPath is non-nullptr, the mTransform member will be used, otherwise
@@ -258,7 +258,7 @@ private:
       D2D1_MATRIX_3X2_F mTransform;
       bool mIsPixelAligned;
     };
-    RefPtr<PathD2D> mPath;
+    nsRefPtr<PathD2D> mPath;
   };
   std::vector<PushedClip> mPushedClips;
 
@@ -266,12 +266,12 @@ private:
   // serve as the temporary surfaces for these operations. As texture creation
   // is quite expensive this considerably improved performance.
   // Careful here, RAII will not ensure destruction of the RefPtrs.
-  RefPtr<ID2D1Layer> mCachedLayers[kLayerCacheSize];
+  nsRefPtr<ID2D1Layer> mCachedLayers[kLayerCacheSize];
   uint32_t mCurrentCachedLayer;
   
   // The latest snapshot of this surface. This needs to be told when this
   // target is modified. We keep it alive as a cache.
-  RefPtr<SourceSurfaceD2DTarget> mSnapshot;
+  nsRefPtr<SourceSurfaceD2DTarget> mSnapshot;
   // A list of targets we need to flush when we're modified.
   TargetSet mDependentTargets;
   // A list of targets which have this object in their mDependentTargets set

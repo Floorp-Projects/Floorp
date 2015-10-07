@@ -9,7 +9,7 @@
 #include "Layers.h"                     // for Layer (ptr only), etc
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/RefPtr.h"             // for RefPtr
+#include "mozilla/nsRefPtr.h"             // for RefPtr
 #include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite, etc
 #include "mozilla/layers/LayersTypes.h"  // for LayerRenderState, etc
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
@@ -83,7 +83,7 @@ private:
   gfx::Filter GetEffectFilter() { return gfx::Filter::LINEAR; }
 
 private:
-  RefPtr<ContentHost> mBuffer;
+  nsRefPtr<ContentHost> mBuffer;
 };
 
 } // namespace layers

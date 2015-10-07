@@ -40,8 +40,8 @@ public:
 protected:
     GLLibraryEGL* const mEGL;
     EGLSync mSync;
-    RefPtr<layers::ISurfaceAllocator> mAllocator;
-    RefPtr<layers::GrallocTextureClientOGL> mTextureClient;
+    nsRefPtr<layers::ISurfaceAllocator> mAllocator;
+    nsRefPtr<layers::GrallocTextureClientOGL> mTextureClient;
     const GLuint mProdTex;
 
     SharedSurface_Gralloc(GLContext* prodGL,
@@ -82,7 +82,7 @@ class SurfaceFactory_Gralloc
 {
 public:
     SurfaceFactory_Gralloc(GLContext* prodGL, const SurfaceCaps& caps,
-                           const RefPtr<layers::ISurfaceAllocator>& allocator,
+                           const nsRefPtr<layers::ISurfaceAllocator>& allocator,
                            const layers::TextureFlags& flags);
 
     virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) override {

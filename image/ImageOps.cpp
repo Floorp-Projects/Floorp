@@ -135,7 +135,7 @@ ImageOps::DecodeToSurface(nsIInputStream* aInputStream,
     return nullptr;
   }
 
-  RefPtr<SourceSurface> surface = frame->GetSurface();
+  nsRefPtr<SourceSurface> surface = frame->GetSurface();
   if (!surface) {
     return nullptr;
   }

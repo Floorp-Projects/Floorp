@@ -120,7 +120,7 @@ gfxCallbackDrawable::MakeSurfaceDrawable(const GraphicsFilter aFilter)
 {
     SurfaceFormat format =
         gfxPlatform::GetPlatform()->Optimal2DFormatForContent(gfxContentType::COLOR_ALPHA);
-    RefPtr<DrawTarget> dt =
+    nsRefPtr<DrawTarget> dt =
         gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(mSize,
                                                                      format);
     if (!dt)
@@ -129,7 +129,7 @@ gfxCallbackDrawable::MakeSurfaceDrawable(const GraphicsFilter aFilter)
     nsRefPtr<gfxContext> ctx = new gfxContext(dt);
     Draw(ctx, gfxRect(0, 0, mSize.width, mSize.height), false, aFilter);
 
-    RefPtr<SourceSurface> surface = dt->Snapshot();
+    nsRefPtr<SourceSurface> surface = dt->Snapshot();
     if (surface) {
         nsRefPtr<gfxSurfaceDrawable> drawable = new gfxSurfaceDrawable(surface, mSize);
         return drawable.forget();

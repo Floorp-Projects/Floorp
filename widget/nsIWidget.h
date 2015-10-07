@@ -21,7 +21,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/layers/LayersTypes.h"
-#include "mozilla/RefPtr.h"
+#include "mozilla/nsRefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/widget/IMEData.h"
@@ -1674,7 +1674,7 @@ class nsIWidget : public nsISupports {
      * compositor for SnapshotWidgetOnScreen(), and should not be called
      * otherwise.
      */
-    virtual bool CaptureWidgetOnScreen(mozilla::RefPtr<mozilla::gfx::DrawTarget> aDT) = 0;
+    virtual bool CaptureWidgetOnScreen(nsRefPtr<mozilla::gfx::DrawTarget> aDT) = 0;
 
 private:
   class LongTapInfo
