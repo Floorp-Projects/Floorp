@@ -151,10 +151,10 @@ TCPServerSocketParent::RecvRequestDelete()
 void
 TCPServerSocketParent::OnConnect(TCPServerSocketEvent* event)
 {
-  nsRefPtr<TCPSocket> socket = event->Socket();
+  RefPtr<TCPSocket> socket = event->Socket();
   socket->SetAppIdAndBrowser(GetAppId(), GetInBrowser());
 
-  nsRefPtr<TCPSocketParent> socketParent = new TCPSocketParent();
+  RefPtr<TCPSocketParent> socketParent = new TCPSocketParent();
   socketParent->SetSocket(socket);
 
   socket->SetSocketBridgeParent(socketParent);

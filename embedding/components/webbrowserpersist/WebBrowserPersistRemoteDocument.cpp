@@ -138,7 +138,7 @@ WebBrowserPersistRemoteDocument::ReadResources(nsIWebBrowserPersistResourceVisit
     if (!mActor) {
         return NS_ERROR_FAILURE;
     }
-    nsRefPtr<WebBrowserPersistResourcesParent> subActor =
+    RefPtr<WebBrowserPersistResourcesParent> subActor =
         new WebBrowserPersistResourcesParent(this, aVisitor);
     return mActor->SendPWebBrowserPersistResourcesConstructor(
         subActor.forget().take())

@@ -235,7 +235,7 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
   // SVG specification says that no stops should be treated like
   // the corresponding fill or stroke had "none" specified.
   if (nStops == 0) {
-    nsRefPtr<gfxPattern> pattern = new gfxPattern(Color());
+    RefPtr<gfxPattern> pattern = new gfxPattern(Color());
     return pattern.forget();
   }
 
@@ -247,7 +247,7 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
 
     Color stopColor2 = Color::FromABGR(stopColor);
     stopColor2.a *= stopOpacity * aGraphicOpacity;
-    nsRefPtr<gfxPattern> pattern = new gfxPattern(stopColor2);
+    RefPtr<gfxPattern> pattern = new gfxPattern(stopColor2);
     return pattern.forget();
   }
 
@@ -272,7 +272,7 @@ nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
     return nullptr;
   }
 
-  nsRefPtr<gfxPattern> gradient = CreateGradient();
+  RefPtr<gfxPattern> gradient = CreateGradient();
   if (!gradient || gradient->CairoStatus())
     return nullptr;
 
@@ -499,7 +499,7 @@ nsSVGLinearGradientFrame::CreateGradient()
   x2 = GetLengthValue(dom::SVGLinearGradientElement::ATTR_X2);
   y2 = GetLengthValue(dom::SVGLinearGradientElement::ATTR_Y2);
 
-  nsRefPtr<gfxPattern> pattern = new gfxPattern(x1, y1, x2, y2);
+  RefPtr<gfxPattern> pattern = new gfxPattern(x1, y1, x2, y2);
   return pattern.forget();
 }
 
@@ -644,7 +644,7 @@ nsSVGRadialGradientFrame::CreateGradient()
     }
   }
 
-  nsRefPtr<gfxPattern> pattern = new gfxPattern(fx, fy, 0, cx, cy, r);
+  RefPtr<gfxPattern> pattern = new gfxPattern(fx, fy, 0, cx, cy, r);
   return pattern.forget();
 }
 

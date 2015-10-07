@@ -452,12 +452,12 @@ protected:
   bool mIsFirstTimeToggleOffBt;
 
   // Runnable arrays
-  nsTArray<nsRefPtr<BluetoothReplyRunnable>> mChangeAdapterStateRunnables;
-  nsTArray<nsRefPtr<BluetoothReplyRunnable>> mSetAdapterPropertyRunnables;
-  nsTArray<nsRefPtr<BluetoothReplyRunnable>> mChangeDiscoveryRunnables;
-  nsTArray<nsRefPtr<BluetoothReplyRunnable>> mFetchUuidsRunnables;
-  nsTArray<nsRefPtr<BluetoothReplyRunnable>> mCreateBondRunnables;
-  nsTArray<nsRefPtr<BluetoothReplyRunnable>> mRemoveBondRunnables;
+  nsTArray<RefPtr<BluetoothReplyRunnable>> mChangeAdapterStateRunnables;
+  nsTArray<RefPtr<BluetoothReplyRunnable>> mSetAdapterPropertyRunnables;
+  nsTArray<RefPtr<BluetoothReplyRunnable>> mChangeDiscoveryRunnables;
+  nsTArray<RefPtr<BluetoothReplyRunnable>> mFetchUuidsRunnables;
+  nsTArray<RefPtr<BluetoothReplyRunnable>> mCreateBondRunnables;
+  nsTArray<RefPtr<BluetoothReplyRunnable>> mRemoveBondRunnables;
 
   // Array of get device requests. Each request remembers
   // 1) remaining device count to receive properties,

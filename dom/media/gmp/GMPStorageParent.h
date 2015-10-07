@@ -53,7 +53,7 @@ private:
   UniquePtr<GMPStorage> mStorage;
 
   const nsCString mNodeId;
-  nsRefPtr<GMPParent> mPlugin;
+  RefPtr<GMPParent> mPlugin;
   bool mShutdown;
 };
 

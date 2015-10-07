@@ -130,7 +130,7 @@ SVGTextContentElement::GetExtentOfChar(uint32_t charnum, ErrorResult& rv)
     return nullptr;
   }
 
-  nsRefPtr<SVGIRect> rect;
+  RefPtr<SVGIRect> rect;
   rv = textFrame->GetExtentOfChar(this, charnum, getter_AddRefs(rect));
   return rect.forget();
 }

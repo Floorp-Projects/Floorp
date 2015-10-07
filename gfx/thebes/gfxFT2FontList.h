@@ -140,7 +140,7 @@ public:
         return static_cast<gfxFT2FontList*>(gfxPlatformFontList::PlatformFontList());
     }
 
-    virtual void GetFontFamilyList(nsTArray<nsRefPtr<gfxFontFamily> >& aFamilyArray);
+    virtual void GetFontFamilyList(nsTArray<RefPtr<gfxFontFamily> >& aFamilyArray);
 
 protected:
     typedef enum {

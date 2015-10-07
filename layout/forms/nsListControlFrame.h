@@ -437,7 +437,7 @@ protected:
   // are translucent.
   nscolor mLastDropdownBackstopColor;
   
-  nsRefPtr<nsListEventListener> mEventListener;
+  RefPtr<nsListEventListener> mEventListener;
 
   static nsListControlFrame * mFocused;
   static nsString * sIncrementalString;

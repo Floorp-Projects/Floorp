@@ -136,7 +136,7 @@ RejectPromise(nsPIDOMWindow* aWindow, Promise* aPromise, nsresult aRv)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(NS_FAILED(aRv));
 
-  nsRefPtr<DOMError> error;
+  RefPtr<DOMError> error;
   if (aRv == NS_ERROR_DOM_SECURITY_ERR) {
     error = new DOMError(aWindow, NS_LITERAL_STRING("SecurityError"),
                          NS_LITERAL_STRING("Access denied"));
@@ -154,7 +154,7 @@ DeleteDatabase(const nsAString& aName,
 {
   MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
 
-  nsRefPtr<DataStoreDB> db = new DataStoreDB(aManifestURL, aName);
+  RefPtr<DataStoreDB> db = new DataStoreDB(aManifestURL, aName);
   db->Delete();
 }
 
@@ -306,7 +306,7 @@ void
 HomeScreenPrefCallback(const char* aPrefName, void* /* aClosure */)
 {
   MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
-  nsRefPtr<DataStoreService> service = DataStoreService::Get();
+  RefPtr<DataStoreService> service = DataStoreService::Get();
   if (!service) {
     return;
   }
@@ -332,7 +332,7 @@ public:
   }
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
-  nsRefPtr<Promise> mPromise;
+  RefPtr<Promise> mPromise;
   nsTArray<DataStoreInfo> mStores;
 
   // This array contains the list of manifestURLs of the DataStores that are
@@ -365,7 +365,7 @@ public:
   {
     MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
 
-    nsRefPtr<DataStoreService> service = DataStoreService::Get();
+    RefPtr<DataStoreService> service = DataStoreService::Get();
     MOZ_ASSERT(service);
 
     service->EnableDataStore(mAppId, mName, mManifestURL);
@@ -410,7 +410,7 @@ public:
     if (aStatus == Success) {
       mTxn = aDb->Transaction();
 
-      nsRefPtr<IDBObjectStore> store =
+      RefPtr<IDBObjectStore> store =
       mTxn->ObjectStore(NS_LITERAL_STRING(DATASTOREDB_REVISION), error);
       if (NS_WARN_IF(error.Failed())) {
         return;
@@ -448,14 +448,14 @@ public:
     MOZ_ASSERT(aTxn);
 
     ErrorResult error;
-    nsRefPtr<IDBObjectStore> store =
+    RefPtr<IDBObjectStore> store =
       aTxn->ObjectStore(NS_LITERAL_STRING(DATASTOREDB_REVISION), error);
     if (NS_WARN_IF(error.Failed())) {
       return error.StealNSResult();
     }
     MOZ_ASSERT(store);
 
-    nsRefPtr<RevisionAddedEnableStoreCallback> callback =
+    RefPtr<RevisionAddedEnableStoreCallback> callback =
       new RevisionAddedEnableStoreCallback(mAppId, mName, mManifestURL);
 
     // Note: this cx is only used for rooting and AddRevision, neither of which
@@ -463,7 +463,7 @@ public:
     AutoSafeJSContext cx;
 
     // If the revision doesn't exist, let's create it.
-    nsRefPtr<DataStoreRevision> revision = new DataStoreRevision();
+    RefPtr<DataStoreRevision> revision = new DataStoreRevision();
     nsresult rv = revision->AddRevision(cx, store, 0,
                                         DataStoreRevision::RevisionVoid,
                                         callback);
@@ -480,10 +480,10 @@ public:
   {
     MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
 
-    nsRefPtr<IDBRequest> request;
+    RefPtr<IDBRequest> request;
     request.swap(mRequest);
 
-    nsRefPtr<IDBTransaction> txn;
+    RefPtr<IDBTransaction> txn;
     txn.swap(mTxn);
 
     request->RemoveEventListener(NS_LITERAL_STRING("success"), this, false);
@@ -516,7 +516,7 @@ public:
       MOZ_ASSERT(!error.Failed());
 #endif
 
-      nsRefPtr<DataStoreService> service = DataStoreService::Get();
+      RefPtr<DataStoreService> service = DataStoreService::Get();
       MOZ_ASSERT(service);
 
       return service->EnableDataStore(mAppId, mName, mManifestURL);
@@ -533,8 +533,8 @@ public:
 private:
   ~FirstRevisionIdCallback() {}
 
-  nsRefPtr<IDBRequest> mRequest;
-  nsRefPtr<IDBTransaction> mTxn;
+  RefPtr<IDBRequest> mRequest;
+  RefPtr<IDBTransaction> mTxn;
 
   uint32_t mAppId;
   nsString mName;
@@ -608,10 +608,10 @@ private:
                                 js::GetFunctionNativeReserved(&args.callee(), 0));
     uint32_t id = value.toInt32();
 
-    nsRefPtr<DataStoreService> service = DataStoreService::Get();
+    RefPtr<DataStoreService> service = DataStoreService::Get();
     MOZ_ASSERT(service);
 
-    nsRefPtr<RetrieveRevisionsCounter> counter = service->GetCounter(id);
+    RefPtr<RetrieveRevisionsCounter> counter = service->GetCounter(id);
     MOZ_ASSERT(counter);
 
     // When all the callbacks are called, we can resolve the promise and remove
@@ -625,8 +625,8 @@ private:
     return true;
   }
 
-  nsRefPtr<Promise> mPromise;
-  nsTArray<nsRefPtr<DataStore>> mResults;
+  RefPtr<Promise> mPromise;
+  nsTArray<RefPtr<DataStore>> mResults;
 
   uint32_t mId;
   uint32_t mCount;
@@ -638,7 +638,7 @@ DataStoreService::GetOrCreate()
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!gDataStoreService) {
-    nsRefPtr<DataStoreService> service = new DataStoreService();
+    RefPtr<DataStoreService> service = new DataStoreService();
     if (NS_WARN_IF(NS_FAILED(service->Init()))) {
       return nullptr;
     }
@@ -646,7 +646,7 @@ DataStoreService::GetOrCreate()
     gDataStoreService = service;
   }
 
-  nsRefPtr<DataStoreService> service = gDataStoreService.get();
+  RefPtr<DataStoreService> service = gDataStoreService.get();
   return service.forget();
 }
 
@@ -655,7 +655,7 @@ DataStoreService::Get()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsRefPtr<DataStoreService> service = gDataStoreService.get();
+  RefPtr<DataStoreService> service = gDataStoreService.get();
   return service.forget();
 }
 
@@ -806,7 +806,7 @@ DataStoreService::GetDataStores(nsIDOMWindow* aWindow,
 
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(window);
   ErrorResult rv;
-  nsRefPtr<Promise> promise = Promise::Create(global, rv);
+  RefPtr<Promise> promise = Promise::Create(global, rv);
   if (rv.Failed()) {
     return rv.StealNSResult();
   }
@@ -907,7 +907,7 @@ DataStoreService::GetDataStoresResolve(nsPIDOMWindow* aWindow,
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!aStores.Length()) {
-    nsTArray<nsRefPtr<DataStore>> results;
+    nsTArray<RefPtr<DataStore>> results;
     aPromise->MaybeResolve(results);
     return;
   }
@@ -916,7 +916,7 @@ DataStoreService::GetDataStoresResolve(nsPIDOMWindow* aWindow,
 
   // The counter will finish this task once all the DataStores will know their
   // first revision Ids.
-  nsRefPtr<RetrieveRevisionsCounter> counter =
+  RefPtr<RetrieveRevisionsCounter> counter =
     new RetrieveRevisionsCounter(++gCounterID, aPromise, aStores.Length());
   mPendingCounters.Put(gCounterID, counter);
 
@@ -948,10 +948,10 @@ DataStoreService::GetDataStoresResolve(nsPIDOMWindow* aWindow,
     MOZ_ASSERT(global);
 
     JSAutoCompartment ac(cx, dataStoreJS);
-    nsRefPtr<DataStoreImpl> dataStoreObj = new DataStoreImpl(dataStoreJS,
+    RefPtr<DataStoreImpl> dataStoreObj = new DataStoreImpl(dataStoreJS,
                                                              global);
 
-    nsRefPtr<DataStore> exposedStore = new DataStore(aWindow);
+    RefPtr<DataStore> exposedStore = new DataStore(aWindow);
 
     ErrorResult error;
     exposedStore->SetDataStoreImpl(*dataStoreObj, error);
@@ -1295,9 +1295,9 @@ DataStoreService::CreateFirstRevisionId(uint32_t aAppId,
 {
   MOZ_ASSERT(XRE_IsParentProcess() && NS_IsMainThread());
 
-  nsRefPtr<DataStoreDB> db = new DataStoreDB(aManifestURL, aName);
+  RefPtr<DataStoreDB> db = new DataStoreDB(aManifestURL, aName);
 
-  nsRefPtr<FirstRevisionIdCallback> callback =
+  RefPtr<FirstRevisionIdCallback> callback =
     new FirstRevisionIdCallback(aAppId, aName, aManifestURL);
 
   Sequence<nsString> dbs;
@@ -1372,7 +1372,7 @@ DataStoreService::GetCounter(uint32_t aId) const
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsRefPtr<RetrieveRevisionsCounter> counter;
+  RefPtr<RetrieveRevisionsCounter> counter;
   return mPendingCounters.Get(aId, getter_AddRefs(counter))
            ? counter.forget() : nullptr;
 }

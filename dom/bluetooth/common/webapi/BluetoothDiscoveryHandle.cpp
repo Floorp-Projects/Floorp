@@ -49,7 +49,7 @@ BluetoothDiscoveryHandle::Create(nsPIDOMWindow* aWindow)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
 
-  nsRefPtr<BluetoothDiscoveryHandle> handle =
+  RefPtr<BluetoothDiscoveryHandle> handle =
     new BluetoothDiscoveryHandle(aWindow);
   return handle.forget();
 }
@@ -63,7 +63,7 @@ BluetoothDiscoveryHandle::Create(
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
 
-  nsRefPtr<BluetoothDiscoveryHandle> handle =
+  RefPtr<BluetoothDiscoveryHandle> handle =
     new BluetoothDiscoveryHandle(aWindow, aServiceUuids, aLeScanUuid);
   return handle.forget();
 }
@@ -76,7 +76,7 @@ BluetoothDiscoveryHandle::DispatchDeviceEvent(BluetoothDevice* aDevice)
   BluetoothDeviceEventInit init;
   init.mDevice = aDevice;
 
-  nsRefPtr<BluetoothDeviceEvent> event =
+  RefPtr<BluetoothDeviceEvent> event =
     BluetoothDeviceEvent::Constructor(this,
                                       NS_LITERAL_STRING("devicefound"),
                                       init);
@@ -116,7 +116,7 @@ BluetoothDiscoveryHandle::DispatchLeDeviceEvent(BluetoothDevice* aLeDevice,
   //  - the service UUID in the scan record matches one of the given UUIDs.
   //  - the given UUIDs is empty.
   if (matched || mServiceUuids.IsEmpty()) {
-    nsRefPtr<BluetoothLeDeviceEvent> event =
+    RefPtr<BluetoothLeDeviceEvent> event =
       BluetoothLeDeviceEvent::Constructor(this,
                                           NS_LITERAL_STRING("devicefound"),
                                           aLeDevice,

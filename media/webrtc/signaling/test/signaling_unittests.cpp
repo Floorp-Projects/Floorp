@@ -404,7 +404,7 @@ TestObserver::OnAddStream(DOMMediaStream &stream, ER&)
 
   // We know that the media stream is secretly a Fake_SourceMediaStream,
   // so now we can start it pulling from us
-  nsRefPtr<Fake_SourceMediaStream> fs =
+  RefPtr<Fake_SourceMediaStream> fs =
     static_cast<Fake_SourceMediaStream *>(stream.GetStream());
 
   test_utils->sts_target()->Dispatch(
@@ -631,7 +631,7 @@ class PCDispatchWrapper : public nsSupportsWeakReference
   virtual ~PCDispatchWrapper() {}
 
  public:
-  explicit PCDispatchWrapper(const nsRefPtr<PeerConnectionImpl>& peerConnection)
+  explicit PCDispatchWrapper(const RefPtr<PeerConnectionImpl>& peerConnection)
     : pc_(peerConnection) {}
 
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -640,7 +640,7 @@ class PCDispatchWrapper : public nsSupportsWeakReference
     return pc_;
   }
 
-  const nsRefPtr<PeerConnectionMedia>& media() const {
+  const RefPtr<PeerConnectionMedia>& media() const {
     return pc_->media();
   }
 
@@ -869,8 +869,8 @@ class PCDispatchWrapper : public nsSupportsWeakReference
   }
 
  private:
-  nsRefPtr<PeerConnectionImpl> pc_;
-  nsRefPtr<TestObserver> observer_;
+  RefPtr<PeerConnectionImpl> pc_;
+  RefPtr<TestObserver> observer_;
 };
 
 NS_IMPL_ISUPPORTS(PCDispatchWrapper, nsISupportsWeakReference)
@@ -1076,10 +1076,10 @@ class SignalingAgent {
       stream = audio_stream;
     }
 
-    nsRefPtr<DOMMediaStream> domMediaStream = new DOMMediaStream(stream);
+    RefPtr<DOMMediaStream> domMediaStream = new DOMMediaStream(stream);
     domMediaStream->SetHintContents(hint);
 
-    nsTArray<nsRefPtr<MediaStreamTrack>> tracks;
+    nsTArray<RefPtr<MediaStreamTrack>> tracks;
     domMediaStream->GetTracks(tracks);
     for (uint32_t i = 0; i < tracks.Length(); i++) {
       Msid msid = {domMediaStream->GetId(), tracks[i]->GetId()};
@@ -1136,7 +1136,7 @@ class SignalingAgent {
 
     ASSERT_TRUE(info) << "No such local stream id: " << streamId;
 
-    nsRefPtr<MediaPipeline> pipeline;
+    RefPtr<MediaPipeline> pipeline;
 
     mozilla::SyncRunnable::DispatchToThread(
         gMainThread,
@@ -1183,7 +1183,7 @@ class SignalingAgent {
 
     ASSERT_TRUE(info) << "No such remote stream id: " << streamId;
 
-    nsRefPtr<MediaPipeline> pipeline;
+    RefPtr<MediaPipeline> pipeline;
 
     mozilla::SyncRunnable::DispatchToThread(
         gMainThread,
@@ -1228,7 +1228,7 @@ class SignalingAgent {
   void RemoveTrack(size_t streamIndex, bool videoTrack = false)
   {
     ASSERT_LT(streamIndex, domMediaStreams_.size());
-    nsTArray<nsRefPtr<MediaStreamTrack>> tracks;
+    nsTArray<RefPtr<MediaStreamTrack>> tracks;
     domMediaStreams_[streamIndex]->GetTracks(tracks);
     for (size_t i = 0; i < tracks.Length(); ++i) {
       if (!!tracks[i]->AsVideoStreamTrack() == videoTrack) {
@@ -1242,7 +1242,7 @@ class SignalingAgent {
   }
 
   void RemoveStream(size_t index) {
-    nsTArray<nsRefPtr<MediaStreamTrack>> tracks;
+    nsTArray<RefPtr<MediaStreamTrack>> tracks;
     domMediaStreams_[index]->GetTracks(tracks);
     for (uint32_t i = 0; i < tracks.Length(); i++) {
       ASSERT_EQ(pc->RemoveTrack(tracks[i]), NS_OK);
@@ -1506,7 +1506,7 @@ class SignalingAgent {
   // the SDP. For now, we just specify audio/video, since a given DOMMediaStream
   // can have only one of each anyway. Once this is fixed, we will need to
   // pass a real track id if we want to test that case.
-  nsRefPtr<mozilla::MediaPipeline> GetMediaPipeline(
+  RefPtr<mozilla::MediaPipeline> GetMediaPipeline(
     bool local, size_t stream, bool video) {
     SourceStreamInfo* streamInfo;
     if (local) {
@@ -1541,11 +1541,11 @@ class SignalingAgent {
   }
 
 public:
-  nsRefPtr<PCDispatchWrapper> pc;
-  nsRefPtr<TestObserver> pObserver;
+  RefPtr<PCDispatchWrapper> pc;
+  RefPtr<TestObserver> pObserver;
   std::string offer_;
   std::string answer_;
-  std::vector<nsRefPtr<DOMMediaStream>> domMediaStreams_;
+  std::vector<RefPtr<DOMMediaStream>> domMediaStreams_;
   PeerConnectionConfiguration cfg_;
   const std::string name;
   bool mBundleEnabled;
@@ -1576,8 +1576,8 @@ static void AddIceCandidateToPeer(nsWeakPtr weak_observer,
     return;
   }
 
-  nsRefPtr<nsSupportsWeakReference> tmp2 = do_QueryObject(tmp);
-  nsRefPtr<TestObserver> observer = static_cast<TestObserver*>(&*tmp2);
+  RefPtr<nsSupportsWeakReference> tmp2 = do_QueryObject(tmp);
+  RefPtr<TestObserver> observer = static_cast<TestObserver*>(&*tmp2);
 
   if (!observer) {
     return;
@@ -4051,7 +4051,7 @@ TEST_P(SignalingTest, MaxFsFrCalleeCodec)
 
   // Checking callee's video sending configuration does respect max-fs and
   // max-fr in SDP offer.
-  nsRefPtr<mozilla::MediaPipeline> pipeline =
+  RefPtr<mozilla::MediaPipeline> pipeline =
     a2_->GetMediaPipeline(1, 0, 1);
   ASSERT_TRUE(pipeline);
   mozilla::MediaSessionConduit *conduit = pipeline->Conduit();
@@ -4096,7 +4096,7 @@ TEST_P(SignalingTest, MaxFsFrCallerCodec)
 
   // Checking caller's video sending configuration does respect max-fs and
   // max-fr in SDP answer.
-  nsRefPtr<mozilla::MediaPipeline> pipeline =
+  RefPtr<mozilla::MediaPipeline> pipeline =
     a1_->GetMediaPipeline(1, 0, 1);
   ASSERT_TRUE(pipeline);
   mozilla::MediaSessionConduit *conduit = pipeline->Conduit();

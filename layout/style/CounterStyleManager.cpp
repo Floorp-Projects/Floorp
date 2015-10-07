@@ -1127,7 +1127,7 @@ private:
   // frames are released.
   CounterStyleManager* mManager;
 
-  nsRefPtr<nsCSSCounterStyleRule> mRule;
+  RefPtr<nsCSSCounterStyleRule> mRule;
   uint32_t mRuleGeneration;
 
   uint8_t mSystem;
@@ -2062,13 +2062,13 @@ struct InvalidateOldStyleData
   }
 
   nsPresContext* mPresContext;
-  nsTArray<nsRefPtr<CounterStyle>> mToBeRemoved;
+  nsTArray<RefPtr<CounterStyle>> mToBeRemoved;
   bool mChanged;
 };
 
 static PLDHashOperator
 InvalidateOldStyle(const nsSubstring& aKey,
-                   nsRefPtr<CounterStyle>& aStyle,
+                   RefPtr<CounterStyle>& aStyle,
                    void* aArg)
 {
   InvalidateOldStyleData* data = static_cast<InvalidateOldStyleData*>(aArg);

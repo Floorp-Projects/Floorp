@@ -430,7 +430,7 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
         switch (type) {
             case eNODESET:
             {
-                nsRefPtr<txNodeSet> nodes;
+                RefPtr<txNodeSet> nodes;
                 rv = evaluateToNodeSet(expr, aContext, getter_AddRefs(nodes));
                 NS_ENSURE_SUCCESS(rv, rv);
 
@@ -479,7 +479,7 @@ txXPCOMExtensionFunctionCall::evaluate(txIEvalContext* aContext,
             }
             case eOBJECT:
             {
-              nsRefPtr<txAExprResult> exprRes;
+              RefPtr<txAExprResult> exprRes;
               rv = expr->evaluate(aContext, getter_AddRefs(exprRes));
               NS_ENSURE_SUCCESS(rv, rv);
 

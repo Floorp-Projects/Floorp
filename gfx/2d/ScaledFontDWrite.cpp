@@ -294,7 +294,7 @@ ScaledFontDWrite::ScaledFontDWrite(uint8_t *aData, uint32_t aSize,
   key.mData = aData;
   key.mSize = aSize;
 
-  nsRefPtr<IDWriteFontFile> fontFile;
+  RefPtr<IDWriteFontFile> fontFile;
   if (FAILED(factory->CreateCustomFontFileReference(&key, sizeof(ffReferenceKey), DWriteFontFileLoader::Instance(), getter_AddRefs(fontFile)))) {
     gfxWarning() << "Failed to load font file from data!";
     return;
@@ -313,7 +313,7 @@ ScaledFontDWrite::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget 
     return ScaledFontBase::GetPathForGlyphs(aBuffer, aTarget);
   }
 
-  nsRefPtr<PathBuilder> pathBuilder = aTarget->CreatePathBuilder();
+  RefPtr<PathBuilder> pathBuilder = aTarget->CreatePathBuilder();
 
   PathBuilderD2D *pathBuilderD2D =
     static_cast<PathBuilderD2D*>(pathBuilder.get());
@@ -370,7 +370,7 @@ ScaledFontDWrite::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton
     return false;
   }
 
-  nsRefPtr<IDWriteFontFile> file;
+  RefPtr<IDWriteFontFile> file;
   mFontFace->GetFiles(&fileCount, getter_AddRefs(file));
 
   const void *referenceKey;
@@ -381,10 +381,10 @@ ScaledFontDWrite::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton
   // have to happen inside thebes.
   file->GetReferenceKey(&referenceKey, &refKeySize);
 
-  nsRefPtr<IDWriteFontFileLoader> loader;
+  RefPtr<IDWriteFontFileLoader> loader;
   file->GetLoader(getter_AddRefs(loader));
   
-  nsRefPtr<IDWriteFontFileStream> stream;
+  RefPtr<IDWriteFontFileStream> stream;
   loader->CreateStreamFromKey(referenceKey, refKeySize, getter_AddRefs(stream));
 
   UINT64 fileSize64;

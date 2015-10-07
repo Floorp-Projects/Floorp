@@ -153,7 +153,7 @@ nsTextControlFrame::CalcIntrinsicSize(nsRenderingContext* aRenderingContext,
   nscoord charWidth   = 0;
   nscoord charMaxAdvance  = 0;
 
-  nsRefPtr<nsFontMetrics> fontMet;
+  RefPtr<nsFontMetrics> fontMet;
   nsresult rv =
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet),
                                           aFontSizeInflation);
@@ -349,7 +349,7 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     nsCSSPseudoElements::Type pseudoType =
       nsCSSPseudoElements::ePseudo_mozPlaceholder;
 
-    nsRefPtr<nsStyleContext> placeholderStyleContext =
+    RefPtr<nsStyleContext> placeholderStyleContext =
       PresContext()->StyleSet()->ResolvePseudoElementStyle(
           mContent->AsElement(), pseudoType, StyleContext(),
           placeholderNode->AsElement());
@@ -522,7 +522,7 @@ nsTextControlFrame::Reflow(nsPresContext*   aPresContext,
     lineHeight = nsHTMLReflowState::CalcLineHeight(GetContent(), StyleContext(),
                                                    NS_AUTOHEIGHT, inflation);
   }
-  nsRefPtr<nsFontMetrics> fontMet;
+  RefPtr<nsFontMetrics> fontMet;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet),
                                         inflation);
   // now adjust for our borders and padding
@@ -654,7 +654,7 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint)
   if (!ourSel) return;
 
   nsIPresShell* presShell = PresContext()->GetPresShell();
-  nsRefPtr<nsCaret> caret = presShell->GetCaret();
+  RefPtr<nsCaret> caret = presShell->GetCaret();
   if (!caret) return;
 
   // Scroll the current selection into view
@@ -671,7 +671,7 @@ void nsTextControlFrame::SetFocus(bool aOn, bool aRepaint)
       }
     }
     if (!(lastFocusMethod & nsIFocusManager::FLAG_BYMOUSE)) {
-      nsRefPtr<ScrollOnFocusEvent> event = new ScrollOnFocusEvent(this);
+      RefPtr<ScrollOnFocusEvent> event = new ScrollOnFocusEvent(this);
       nsresult rv = NS_DispatchToCurrentThread(event);
       if (NS_SUCCEEDED(rv)) {
         mScrollEvent = event;
@@ -750,7 +750,7 @@ nsTextControlFrame::SetSelectionInternal(nsIDOMNode *aStartNode,
   // Note that we use a new range to avoid having to do
   // isIncreasing checks to avoid possible errors.
 
-  nsRefPtr<nsRange> range = new nsRange(mContent);
+  RefPtr<nsRange> range = new nsRange(mContent);
   nsresult rv = range->SetStart(aStartNode, aStartOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1292,7 +1292,7 @@ nsTextControlFrame::UpdateValueDisplay(bool aNotify,
   nsIContent *textContent = rootNode->GetChildAt(0);
   if (!textContent) {
     // Set up a textnode with our value
-    nsRefPtr<nsTextNode> textNode =
+    RefPtr<nsTextNode> textNode =
       new nsTextNode(mContent->NodeInfo()->NodeInfoManager());
 
     NS_ASSERTION(textNode, "Must have textcontent!\n");

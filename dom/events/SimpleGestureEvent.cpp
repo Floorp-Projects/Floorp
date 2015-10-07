@@ -152,7 +152,7 @@ NS_NewDOMSimpleGestureEvent(EventTarget* aOwner,
                             nsPresContext* aPresContext,
                             WidgetSimpleGestureEvent* aEvent)
 {
-  nsRefPtr<SimpleGestureEvent> it =
+  RefPtr<SimpleGestureEvent> it =
     new SimpleGestureEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

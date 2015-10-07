@@ -100,7 +100,7 @@ private:
   static void* operator new(size_t) CPP_THROW_NEW { return 0; }
   static void operator delete(void*, size_t) {}
   /** The select element which option list is being mutated. */
-  nsRefPtr<HTMLSelectElement> mSelect;
+  RefPtr<HTMLSelectElement> mSelect;
   /** true if the current mutation is the first one in the stack. */
   bool                       mTopLevelMutation;
   /** true if it is known that the option list must be recreated. */
@@ -618,7 +618,7 @@ protected:
   }
 
   /** The options[] array */
-  nsRefPtr<HTMLOptionsCollection> mOptions;
+  RefPtr<HTMLOptionsCollection> mOptions;
   nsContentUtils::AutocompleteAttrState mAutocompleteAttrState;
   /** false if the parser is in the middle of adding children. */
   bool            mIsDoneAddingChildren;
@@ -667,7 +667,7 @@ protected:
   /**
    * The live list of selected options.
   */
-  nsRefPtr<nsContentList> mSelectedOptions;
+  RefPtr<nsContentList> mSelectedOptions;
 
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,

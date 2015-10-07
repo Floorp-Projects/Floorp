@@ -77,7 +77,7 @@ nsDOMCSSAttributeDeclaration::SetCSSDeclaration(css::Declaration* aDecl)
     mElement->GetInlineStyleRule();
   NS_ASSERTION(oldRule, "Element must have rule");
 
-  nsRefPtr<css::StyleRule> newRule =
+  RefPtr<css::StyleRule> newRule =
     oldRule->DeclarationChanged(aDecl, false);
   if (!newRule) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -140,7 +140,7 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(Operation aOperation)
   // cannot fail
   css::Declaration *decl = new css::Declaration();
   decl->InitializeEmpty();
-  nsRefPtr<css::StyleRule> newRule = new css::StyleRule(nullptr, decl, 0, 0);
+  RefPtr<css::StyleRule> newRule = new css::StyleRule(nullptr, decl, 0, 0);
 
   // this *can* fail (inside SetAttrAndNotify, at least).
   nsresult rv;

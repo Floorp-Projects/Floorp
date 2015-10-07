@@ -515,7 +515,7 @@ IsElementClickableAndReadable(nsIFrame* aFrame, WidgetGUIEvent* aEvent, const Ev
   }
 
   if (testFontSize) {
-    nsRefPtr<nsFontMetrics> fm;
+    RefPtr<nsFontMetrics> fm;
     nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm),
       nsLayoutUtils::FontSizeInflationFor(aFrame));
     if (fm && fm->EmHeight() > 0 && // See bug 1171731

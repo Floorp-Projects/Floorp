@@ -9,7 +9,7 @@
 
 #include "EventForwards.h"
 #include "mozilla/layers/AxisPhysicsMSDModel.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "nsRefreshDriver.h"
 #include "Units.h"
@@ -77,7 +77,7 @@ protected:
   bool SendSwipeEvent(EventMessage aMsg, uint32_t aDirection, double aDelta);
 
   nsChildView& mWidget;
-  nsRefPtr<nsRefreshDriver> mRefreshDriver;
+  RefPtr<nsRefreshDriver> mRefreshDriver;
   layers::AxisPhysicsMSDModel mAxis;
   const LayoutDeviceIntPoint mEventPosition;
   TimeStamp mLastEventTimeStamp;

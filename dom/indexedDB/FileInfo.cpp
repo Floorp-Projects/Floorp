@@ -52,7 +52,7 @@ private:
 class CleanupFileRunnable final
   : public nsRunnable
 {
-  nsRefPtr<FileManager> mFileManager;
+  RefPtr<FileManager> mFileManager;
   int64_t mFileId;
 
 public:
@@ -205,7 +205,7 @@ FileInfo::Cleanup()
 
   // IndexedDatabaseManager is main-thread only.
   if (!NS_IsMainThread()) {
-    nsRefPtr<CleanupFileRunnable> cleaner =
+    RefPtr<CleanupFileRunnable> cleaner =
       new CleanupFileRunnable(mFileManager, id);
 
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(cleaner)));
@@ -227,7 +227,7 @@ CleanupFileRunnable::DoCleanup(FileManager* aFileManager, int64_t aFileId)
     return;
   }
 
-  nsRefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::Get();
+  RefPtr<IndexedDatabaseManager> mgr = IndexedDatabaseManager::Get();
   MOZ_ASSERT(mgr);
 
   if (NS_FAILED(mgr->AsyncDeleteFile(aFileManager, aFileId))) {

@@ -40,13 +40,13 @@ CreateIframe(Element* aOpenerFrameElement, const nsAString& aName, bool aRemote)
   nsNodeInfoManager *nodeInfoManager =
     aOpenerFrameElement->OwnerDoc()->NodeInfoManager();
 
-  nsRefPtr<NodeInfo> nodeInfo =
+  RefPtr<NodeInfo> nodeInfo =
     nodeInfoManager->GetNodeInfo(nsGkAtoms::iframe,
                                  /* aPrefix = */ nullptr,
                                  kNameSpaceID_XHTML,
                                  nsIDOMNode::ELEMENT_NODE);
 
-  nsRefPtr<HTMLIFrameElement> popupFrameElement =
+  RefPtr<HTMLIFrameElement> popupFrameElement =
     static_cast<HTMLIFrameElement*>(
       NS_NewHTMLIFrameElement(nodeInfo.forget(), mozilla::dom::NOT_FROM_PARSER));
 
@@ -97,12 +97,12 @@ DispatchCustomDOMEvent(Element* aFrameElement, const nsAString& aEventName,
 {
   NS_ENSURE_TRUE(aFrameElement, false);
   nsIPresShell *shell = aFrameElement->OwnerDoc()->GetShell();
-  nsRefPtr<nsPresContext> presContext;
+  RefPtr<nsPresContext> presContext;
   if (shell) {
     presContext = shell->GetPresContext();
   }
 
-  nsRefPtr<CustomEvent> event =
+  RefPtr<CustomEvent> event =
     NS_NewDOMCustomEvent(aFrameElement, presContext, nullptr);
 
   ErrorResult res;
@@ -209,7 +209,7 @@ BrowserElementParent::OpenWindowOOP(TabParent* aOpenerTabParent,
   nsCOMPtr<Element> openerFrameElement = aOpenerTabParent->GetOwnerElement();
   NS_ENSURE_TRUE(openerFrameElement,
                  BrowserElementParent::OPEN_WINDOW_IGNORED);
-  nsRefPtr<HTMLIFrameElement> popupFrameElement =
+  RefPtr<HTMLIFrameElement> popupFrameElement =
     CreateIframe(openerFrameElement, aName, /* aRemote = */ true);
 
   // Normally an <iframe> element will try to create a frameLoader when the
@@ -267,7 +267,7 @@ BrowserElementParent::OpenWindowInProcess(nsIDOMWindow* aOpenerWindow,
   NS_ENSURE_TRUE(openerFrameElement, BrowserElementParent::OPEN_WINDOW_IGNORED);
 
 
-  nsRefPtr<HTMLIFrameElement> popupFrameElement =
+  RefPtr<HTMLIFrameElement> popupFrameElement =
     CreateIframe(openerFrameElement, aName, /* aRemote = */ false);
   NS_ENSURE_TRUE(popupFrameElement, BrowserElementParent::OPEN_WINDOW_IGNORED);
 
@@ -315,7 +315,7 @@ public:
   NS_IMETHOD Run();
 
 private:
-  nsRefPtr<TabParent> mTabParent;
+  RefPtr<TabParent> mTabParent;
   const CSSRect mContentRect;
   const CSSSize mContentSize;
 };
@@ -370,7 +370,7 @@ BrowserElementParent::DispatchAsyncScrollEvent(TabParent* aTabParent,
     return true;
   }
 
-  nsRefPtr<DispatchAsyncScrollEventRunnable> runnable =
+  RefPtr<DispatchAsyncScrollEventRunnable> runnable =
     new DispatchAsyncScrollEventRunnable(aTabParent, aContentRect,
                                          aContentSize);
   return NS_SUCCEEDED(NS_DispatchToMainThread(runnable));

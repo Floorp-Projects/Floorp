@@ -140,8 +140,8 @@ public:
 protected:
     UniquePtr<SurfaceFactory> mFactory;
 
-    nsRefPtr<layers::SharedSurfaceTextureClient> mBack;
-    nsRefPtr<layers::SharedSurfaceTextureClient> mFront;
+    RefPtr<layers::SharedSurfaceTextureClient> mBack;
+    RefPtr<layers::SharedSurfaceTextureClient> mFront;
 
     UniquePtr<DrawBuffer> mDraw;
     UniquePtr<ReadBuffer> mRead;
@@ -173,7 +173,7 @@ public:
         return mFactory.get();
     }
 
-    const nsRefPtr<layers::SharedSurfaceTextureClient>& Front() const {
+    const RefPtr<layers::SharedSurfaceTextureClient>& Front() const {
         return mFront;
     }
 

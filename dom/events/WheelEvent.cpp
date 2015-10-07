@@ -155,7 +155,7 @@ WheelEvent::Constructor(const GlobalObject& aGlobal,
                         ErrorResult& aRv)
 {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
-  nsRefPtr<WheelEvent> e = new WheelEvent(t, nullptr, nullptr);
+  RefPtr<WheelEvent> e = new WheelEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
   aRv = e->InitWheelEvent(aType, aParam.mBubbles, aParam.mCancelable,
                           aParam.mView, aParam.mDetail,
@@ -180,6 +180,6 @@ NS_NewDOMWheelEvent(EventTarget* aOwner,
                     nsPresContext* aPresContext,
                     WidgetWheelEvent* aEvent)
 {
-  nsRefPtr<WheelEvent> it = new WheelEvent(aOwner, aPresContext, aEvent);
+  RefPtr<WheelEvent> it = new WheelEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

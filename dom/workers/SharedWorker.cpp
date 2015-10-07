@@ -63,7 +63,7 @@ SharedWorker::Constructor(const GlobalObject& aGlobal, JSContext* aCx,
     name = NS_ConvertUTF16toUTF8(aName.Value());
   }
 
-  nsRefPtr<SharedWorker> sharedWorker;
+  RefPtr<SharedWorker> sharedWorker;
   nsresult rv = rts->CreateSharedWorker(aGlobal, aScriptURL, name,
                                         getter_AddRefs(sharedWorker));
   if (NS_FAILED(rv)) {

@@ -69,7 +69,7 @@ private:
   StreamTime mRemainingTicks;
 
   // Muted frame, we only create it once.
-  nsRefPtr<layers::Image> mMuteFrame;
+  RefPtr<layers::Image> mMuteFrame;
 
   // I420 frame, for converting to I420.
   nsTArray<uint8_t> mI420Frame;

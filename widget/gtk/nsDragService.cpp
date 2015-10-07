@@ -273,7 +273,7 @@ GetGtkWindow(nsIDOMDocument *aDocument)
     if (!presShell)
         return nullptr;
 
-    nsRefPtr<nsViewManager> vm = presShell->GetViewManager();
+    RefPtr<nsViewManager> vm = presShell->GetViewManager();
     if (!vm)
         return nullptr;
 
@@ -428,13 +428,13 @@ nsDragService::SetAlphaPixmap(SourceSurface *aSurface,
     gdk_drawable_set_colormap(GDK_DRAWABLE(pixmap), alphaColormap);
 
     // Make a gfxXlibSurface wrapped around the pixmap to render on
-    nsRefPtr<gfxASurface> xPixmapSurface =
+    RefPtr<gfxASurface> xPixmapSurface =
          nsWindow::GetSurfaceForGdkDrawable(GDK_DRAWABLE(pixmap),
                                             dragRect.Size());
     if (!xPixmapSurface)
       return false;
 
-    nsRefPtr<DrawTarget> dt =
+    RefPtr<DrawTarget> dt =
     gfxPlatform::GetPlatform()->
       CreateDrawTargetForSurface(xPixmapSurface, IntSize(dragRect.width, dragRect.height));
     if (!dt)
@@ -466,7 +466,7 @@ nsDragService::SetAlphaPixmap(SourceSurface *aSurface,
     if (!surf)
         return false;
 
-    nsRefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->
+    RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->
         CreateDrawTargetForData(cairo_image_surface_get_data(surf),
                                 dragRect.Size(),
                                 cairo_image_surface_get_stride(surf),
@@ -1627,7 +1627,7 @@ void nsDragService::SetDragIcon(GdkDragContext* aContext)
 
     nsIntRect dragRect;
     nsPresContext* pc;
-    nsRefPtr<SourceSurface> surface;
+    RefPtr<SourceSurface> surface;
     DrawDrag(mSourceNode, mSourceRegion, mScreenX, mScreenY,
              &dragRect, &surface, &pc);
     if (!pc)
@@ -1853,7 +1853,7 @@ nsDragService::Schedule(DragTask aTask, nsWindow *aWindow,
 gboolean
 nsDragService::TaskDispatchCallback(gpointer data)
 {
-    nsRefPtr<nsDragService> dragService = static_cast<nsDragService*>(data);
+    RefPtr<nsDragService> dragService = static_cast<nsDragService*>(data);
     return dragService->RunScheduledTask();
 }
 

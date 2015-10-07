@@ -53,7 +53,7 @@ protected:
   HandlerCallback() override;
 
 private:
-  nsRefPtr<Promise> mPromise;
+  RefPtr<Promise> mPromise;
   nsString mTargetRealPath;
 };
 

@@ -55,7 +55,7 @@ protected:
   nsresult CreateSyntheticPluginDocument();
 
   nsCOMPtr<Element>                        mPluginContent;
-  nsRefPtr<MediaDocumentStreamListener>    mStreamListener;
+  RefPtr<MediaDocumentStreamListener>    mStreamListener;
   nsCString                                mMimeType;
 };
 
@@ -68,7 +68,7 @@ public:
   {}
   NS_IMETHOD OnStartRequest(nsIRequest* request, nsISupports *ctxt);
 private:
-  nsRefPtr<PluginDocument> mPluginDoc;
+  RefPtr<PluginDocument> mPluginDoc;
 };
 
 
@@ -219,7 +219,7 @@ PluginDocument::CreateSyntheticPluginDocument()
 
 
   // make plugin content
-  nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
+  RefPtr<mozilla::dom::NodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::embed, nullptr,
                                            kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);
@@ -265,7 +265,7 @@ PluginDocument::Print()
   nsIObjectFrame* objectFrame =
     do_QueryFrame(mPluginContent->GetPrimaryFrame());
   if (objectFrame) {
-    nsRefPtr<nsNPAPIPluginInstance> pi;
+    RefPtr<nsNPAPIPluginInstance> pi;
     objectFrame->GetPluginInstance(getter_AddRefs(pi));
     if (pi) {
       NPPrint npprint;

@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_PresentationCallbacks_h
 #define mozilla_dom_PresentationCallbacks_h
 
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIPresentationService.h"
 #include "nsIWebProgressListener.h"
@@ -37,9 +37,9 @@ public:
 private:
   ~PresentationRequesterCallback();
 
-  nsRefPtr<PresentationRequest> mRequest;
+  RefPtr<PresentationRequest> mRequest;
   nsString mSessionId;
-  nsRefPtr<Promise> mPromise;
+  RefPtr<Promise> mPromise;
 };
 
 class PresentationResponderLoadingCallback final : public nsIWebProgressListener

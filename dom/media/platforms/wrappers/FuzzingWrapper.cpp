@@ -34,7 +34,7 @@ DecoderFuzzingWrapper::~DecoderFuzzingWrapper()
   DFW_LOGV("");
 }
 
-nsRefPtr<MediaDataDecoder::InitPromise>
+RefPtr<MediaDataDecoder::InitPromise>
 DecoderFuzzingWrapper::Init()
 {
   DFW_LOGV("");
@@ -149,14 +149,14 @@ DecoderCallbackFuzzingWrapper::Output(MediaData* aData)
     if (!mPreviousOutput.IsNull()) {
       if (!mDelayedOutput.empty()) {
         // We already have some delayed frames, just add this one to the queue.
-        mDelayedOutput.push_back(MakePair<nsRefPtr<MediaData>, bool>(aData, false));
+        mDelayedOutput.push_back(MakePair<RefPtr<MediaData>, bool>(aData, false));
         CFW_LOGD("delaying output of sample@%lld, total queued:%d",
                  aData->mTime, int(mDelayedOutput.size()));
         return;
       }
       if (TimeStamp::Now() < mPreviousOutput + mFrameOutputMinimumInterval) {
         // Frame arriving too soon after the previous one, start queuing.
-        mDelayedOutput.push_back(MakePair<nsRefPtr<MediaData>, bool>(aData, false));
+        mDelayedOutput.push_back(MakePair<RefPtr<MediaData>, bool>(aData, false));
         CFW_LOGD("delaying output of sample@%lld, first queued", aData->mTime);
         if (!mDelayedOutputTimer) {
           mDelayedOutputTimer = new MediaTimer();
@@ -257,7 +257,7 @@ void
 DecoderCallbackFuzzingWrapper::ScheduleOutputDelayedFrame()
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-  nsRefPtr<DecoderCallbackFuzzingWrapper> self = this;
+  RefPtr<DecoderCallbackFuzzingWrapper> self = this;
   mDelayedOutputTimer->WaitUntil(
     mPreviousOutput + mFrameOutputMinimumInterval,
     __func__)

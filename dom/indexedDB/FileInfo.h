@@ -24,7 +24,7 @@ class FileInfo
   ThreadSafeAutoRefCnt mDBRefCnt;
   ThreadSafeAutoRefCnt mSliceRefCnt;
 
-  nsRefPtr<FileManager> mFileManager;
+  RefPtr<FileManager> mFileManager;
 
 public:
   static

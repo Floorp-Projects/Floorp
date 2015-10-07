@@ -10,7 +10,7 @@
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/BorrowedContext.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 class gfxQuartzNativeDrawing {
     typedef mozilla::gfx::DrawTarget DrawTarget;
@@ -59,8 +59,8 @@ private:
     const gfxQuartzNativeDrawing& operator=(const gfxQuartzNativeDrawing&) = delete;
 
     // Final destination context
-    nsRefPtr<DrawTarget> mDrawTarget;
-    nsRefPtr<DrawTarget> mTempDrawTarget;
+    RefPtr<DrawTarget> mDrawTarget;
+    RefPtr<DrawTarget> mTempDrawTarget;
     mozilla::gfx::BorrowedCGContext mBorrowedContext;
     mozilla::gfx::Rect mNativeRect;
 

@@ -169,7 +169,7 @@ nsAboutProtocolHandler::NewChannel2(nsIURI* uri,
                 (*result)->SetOwner(nullptr);
             }
 
-            nsRefPtr<nsNestedAboutURI> aboutURI;
+            RefPtr<nsNestedAboutURI> aboutURI;
             nsresult rv2 = uri->QueryInterface(kNestedAboutURICID,
                                                getter_AddRefs(aboutURI));
             if (NS_SUCCEEDED(rv2) && aboutURI->GetBaseURI()) {

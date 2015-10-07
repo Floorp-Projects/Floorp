@@ -85,10 +85,10 @@ NS_IMETHODIMP
 MobileConnectionCallback::NotifyGetNetworksSuccess(uint32_t aCount,
                                                    nsIMobileNetworkInfo** aNetworks)
 {
-  nsTArray<nsRefPtr<MobileNetworkInfo>> results;
+  nsTArray<RefPtr<MobileNetworkInfo>> results;
   for (uint32_t i = 0; i < aCount; i++)
   {
-    nsRefPtr<MobileNetworkInfo> networkInfo = new MobileNetworkInfo(mWindow);
+    RefPtr<MobileNetworkInfo> networkInfo = new MobileNetworkInfo(mWindow);
     networkInfo->Update(aNetworks[i]);
     results.AppendElement(networkInfo);
   }

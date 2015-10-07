@@ -40,7 +40,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 PresentationReceiver::Create(nsPIDOMWindow* aWindow,
                              const nsAString& aSessionId)
 {
-  nsRefPtr<PresentationReceiver> receiver = new PresentationReceiver(aWindow);
+  RefPtr<PresentationReceiver> receiver = new PresentationReceiver(aWindow);
   return NS_WARN_IF(!receiver->Init(aSessionId)) ? nullptr : receiver.forget();
 }
 
@@ -123,7 +123,7 @@ PresentationReceiver::GetSession(ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -149,7 +149,7 @@ PresentationReceiver::GetSessions(ErrorResult& aRv) const
     return nullptr;
   }
 
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -166,7 +166,7 @@ PresentationReceiver::NotifySessionConnect(uint64_t aWindowId,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsRefPtr<PresentationSession> session =
+  RefPtr<PresentationSession> session =
     PresentationSession::Create(GetOwner(), aSessionId,
                                 PresentationSessionState::Disconnected);
   if (NS_WARN_IF(!session)) {
@@ -188,7 +188,7 @@ PresentationReceiver::NotifySessionConnect(uint64_t aWindowId,
 nsresult
 PresentationReceiver::DispatchSessionAvailableEvent()
 {
-  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
+  RefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this, NS_LITERAL_STRING("sessionavailable"), false);
   return asyncDispatcher->PostDOMEvent();
 }

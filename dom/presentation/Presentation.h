@@ -42,8 +42,8 @@ private:
 
   bool Init();
 
-  nsRefPtr<PresentationRequest> mDefaultRequest;
-  nsRefPtr<PresentationReceiver> mReceiver;
+  RefPtr<PresentationRequest> mDefaultRequest;
+  RefPtr<PresentationReceiver> mReceiver;
 };
 
 } // namespace dom

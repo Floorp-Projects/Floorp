@@ -79,7 +79,7 @@ MakeAnonButton(nsIDocument* aDoc, const char* labelKey,
                HTMLInputElement* aInputElement,
                const nsAString& aAccessKey)
 {
-  nsRefPtr<Element> button = aDoc->CreateHTMLElement(nsGkAtoms::button);
+  RefPtr<Element> button = aDoc->CreateHTMLElement(nsGkAtoms::button);
   // NOTE: SetIsNativeAnonymousRoot() has to be called before setting any
   // attribute.
   button->SetIsNativeAnonymousRoot();
@@ -93,7 +93,7 @@ MakeAnonButton(nsIDocument* aDoc, const char* labelKey,
 
   // Set the browse button text. It's a bit of a pain to do because we want to
   // make sure we are not notifying.
-  nsRefPtr<nsTextNode> textContent =
+  RefPtr<nsTextNode> textContent =
     new nsTextNode(button->NodeInfo()->NodeInfoManager());
 
   textContent->SetText(buttonTxt, false);
@@ -105,7 +105,7 @@ MakeAnonButton(nsIDocument* aDoc, const char* labelKey,
 
   // Make sure access key and tab order for the element actually redirect to the
   // file picking button.
-  nsRefPtr<HTMLButtonElement> buttonElement =
+  RefPtr<HTMLButtonElement> buttonElement =
     HTMLButtonElement::FromContentOrNull(button);
 
   if (!aAccessKey.IsEmpty()) {
@@ -131,7 +131,7 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   bool isDirPicker = Preferences::GetBool("dom.input.dirpicker", false) &&
                      content && content->HasAttr(kNameSpaceID_None, nsGkAtoms::directory);
 
-  nsRefPtr<HTMLInputElement> fileContent = HTMLInputElement::FromContentOrNull(mContent);
+  RefPtr<HTMLInputElement> fileContent = HTMLInputElement::FromContentOrNull(mContent);
 
   // The access key is transferred to the "Choose files..." button only. In
   // effect that access key allows access to the control via that button, then
@@ -158,7 +158,7 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   }
 
   // Create and setup the text showing the selected files.
-  nsRefPtr<NodeInfo> nodeInfo;
+  RefPtr<NodeInfo> nodeInfo;
   nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::label, nullptr,
                                                  kNameSpaceID_XUL,
                                                  nsIDOMNode::ELEMENT_NODE);
@@ -286,7 +286,7 @@ nsFileControlFrame::DnDListener::IsValidDropData(nsIDOMDataTransfer* aDOMDataTra
   NS_ENSURE_TRUE(dataTransfer, false);
 
   // We only support dropping files onto a file upload control
-  nsRefPtr<DOMStringList> types = dataTransfer->Types();
+  RefPtr<DOMStringList> types = dataTransfer->Types();
   return types->Contains(NS_LITERAL_STRING("Files"));
 }
 

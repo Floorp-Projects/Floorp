@@ -68,7 +68,7 @@ public:
                                                 const nsTArray<nsStyleFilter>& aFilterChain,
                                                 const UserSpaceMetrics& aMetrics,
                                                 const gfxRect& aBBox,
-                                                nsTArray<nsRefPtr<SourceSurface>>& aOutAdditionalImages);
+                                                nsTArray<RefPtr<SourceSurface>>& aOutAdditionalImages);
 
   /**
    * Paint the given filtered frame.
@@ -157,7 +157,7 @@ public:
    */
   nsresult Render(gfxContext* aContext);
 
-  const FilterDescription& ExtractDescriptionAndAdditionalImages(nsTArray<nsRefPtr<SourceSurface>>& aOutAdditionalImages)
+  const FilterDescription& ExtractDescriptionAndAdditionalImages(nsTArray<RefPtr<SourceSurface>>& aOutAdditionalImages)
   {
     mInputImages.SwapElements(aOutAdditionalImages);
     return mFilterDescription;
@@ -206,7 +206,7 @@ private:
 
     // The surface that contains the input rendering.
     // Set by BuildSourceImage / BuildSourcePaint.
-    nsRefPtr<SourceSurface> mSourceSurface;
+    RefPtr<SourceSurface> mSourceSurface;
 
     // The position and size of mSourceSurface in filter space.
     // Set by BuildSourceImage / BuildSourcePaint.
@@ -364,7 +364,7 @@ private:
    */
   gfxMatrix               mPaintTransform;
 
-  nsTArray<nsRefPtr<SourceSurface>> mInputImages;
+  nsTArray<RefPtr<SourceSurface>> mInputImages;
   nsTArray<FilterPrimitiveDescription> mPrimitiveDescriptions;
   FilterDescription mFilterDescription;
   bool mInitialized;

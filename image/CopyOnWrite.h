@@ -11,7 +11,7 @@
 #ifndef mozilla_image_CopyOnWrite_h
 #define mozilla_image_CopyOnWrite_h
 
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "MainThreadUtils.h"
 #include "nsISupportsImpl.h"
 
@@ -33,8 +33,8 @@ public:
   explicit CopyOnWriteValue(T* aValue) : mValue(aValue) { }
   explicit CopyOnWriteValue(already_AddRefed<T>& aValue) : mValue(aValue) { }
   explicit CopyOnWriteValue(already_AddRefed<T>&& aValue) : mValue(aValue) { }
-  explicit CopyOnWriteValue(const nsRefPtr<T>& aValue) : mValue(aValue) { }
-  explicit CopyOnWriteValue(nsRefPtr<T>&& aValue) : mValue(aValue) { }
+  explicit CopyOnWriteValue(const RefPtr<T>& aValue) : mValue(aValue) { }
+  explicit CopyOnWriteValue(RefPtr<T>&& aValue) : mValue(aValue) { }
 
   T* get() { return mValue.get(); }
   const T* get() const { return mValue.get(); }
@@ -77,7 +77,7 @@ private:
 
   ~CopyOnWriteValue() { }
 
-  nsRefPtr<T> mValue;
+  RefPtr<T> mValue;
   uint64_t mReaders = 0;
   bool mWriter = false;
 };
@@ -122,11 +122,11 @@ public:
     : mValue(new CopyOnWriteValue(aValue))
   { }
 
-  explicit CopyOnWrite(const nsRefPtr<T>& aValue)
+  explicit CopyOnWrite(const RefPtr<T>& aValue)
     : mValue(new CopyOnWriteValue(aValue))
   { }
 
-  explicit CopyOnWrite(nsRefPtr<T>&& aValue)
+  explicit CopyOnWrite(RefPtr<T>&& aValue)
     : mValue(new CopyOnWriteValue(aValue))
   { }
 
@@ -149,7 +149,7 @@ public:
     MOZ_ASSERT(CanRead());
 
     // Run the provided function while holding a read lock.
-    nsRefPtr<CopyOnWriteValue> cowValue = mValue;
+    RefPtr<CopyOnWriteValue> cowValue = mValue;
     typename CopyOnWriteValue::AutoReadLock lock(cowValue);
     return aReader(cowValue->get());
   }
@@ -205,7 +205,7 @@ public:
     }
 
     // Run the provided function while holding a write lock.
-    nsRefPtr<CopyOnWriteValue> cowValue = mValue;
+    RefPtr<CopyOnWriteValue> cowValue = mValue;
     typename CopyOnWriteValue::AutoWriteLock lock(cowValue);
     return aWriter(cowValue->get());
   }
@@ -241,7 +241,7 @@ private:
   CopyOnWrite(const CopyOnWrite&) = delete;
   CopyOnWrite(CopyOnWrite&&) = delete;
 
-  nsRefPtr<CopyOnWriteValue> mValue;
+  RefPtr<CopyOnWriteValue> mValue;
 };
 
 } // namespace image

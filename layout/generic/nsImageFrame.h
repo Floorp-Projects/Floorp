@@ -313,7 +313,7 @@ private:
   void InvalidateSelf(const nsIntRect* aLayerInvalidRect,
                       const nsRect* aFrameInvalidRect);
 
-  nsRefPtr<nsImageMap> mImageMap;
+  RefPtr<nsImageMap> mImageMap;
 
   nsCOMPtr<imgINotificationObserver> mListener;
 
@@ -374,8 +374,8 @@ private:
 
 
   public:
-    nsRefPtr<imgRequestProxy> mLoadingImage;
-    nsRefPtr<imgRequestProxy> mBrokenImage;
+    RefPtr<imgRequestProxy> mLoadingImage;
+    RefPtr<imgRequestProxy> mBrokenImage;
     bool             mPrefForceInlineAltText;
     bool             mPrefShowPlaceholders;
     bool             mPrefShowLoadingPlaceholder;

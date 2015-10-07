@@ -10,7 +10,7 @@
 #include "mozilla/dom/cache/ActorChild.h"
 #include "mozilla/dom/cache/PCacheOpChild.h"
 #include "mozilla/dom/cache/TypeUtils.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 class nsIGlobalObject;
 
@@ -72,7 +72,7 @@ private:
   // Hold the parent Cache or CacheStorage object alive until this async
   // operation completes.
   nsCOMPtr<nsISupports> mParent;
-  nsRefPtr<Promise> mPromise;
+  RefPtr<Promise> mPromise;
 
   NS_DECL_OWNINGTHREAD
 };

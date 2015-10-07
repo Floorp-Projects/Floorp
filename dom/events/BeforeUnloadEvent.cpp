@@ -41,7 +41,7 @@ NS_NewDOMBeforeUnloadEvent(EventTarget* aOwner,
                            nsPresContext* aPresContext,
                            WidgetEvent* aEvent) 
 {
-  nsRefPtr<BeforeUnloadEvent> it =
+  RefPtr<BeforeUnloadEvent> it =
     new BeforeUnloadEvent(aOwner, aPresContext, aEvent);
   return it.forget();
 }

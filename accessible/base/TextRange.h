@@ -243,9 +243,9 @@ private:
                     HyperTextAccessible* aStopContainer = nullptr,
                     int32_t aStopOffset = 0);
 
-  nsRefPtr<HyperTextAccessible> mRoot;
-  nsRefPtr<HyperTextAccessible> mStartContainer;
-  nsRefPtr<HyperTextAccessible> mEndContainer;
+  RefPtr<HyperTextAccessible> mRoot;
+  RefPtr<HyperTextAccessible> mStartContainer;
+  RefPtr<HyperTextAccessible> mEndContainer;
   int32_t mStartOffset;
   int32_t mEndOffset;
 };

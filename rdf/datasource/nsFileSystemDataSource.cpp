@@ -200,7 +200,7 @@ FileSystemDataSource::Create(nsISupports* aOuter, const nsIID& aIID, void **aRes
 {
     NS_ENSURE_NO_AGGREGATION(aOuter);
 
-    nsRefPtr<FileSystemDataSource> self = new FileSystemDataSource();
+    RefPtr<FileSystemDataSource> self = new FileSystemDataSource();
     if (!self)
         return NS_ERROR_OUT_OF_MEMORY;
      

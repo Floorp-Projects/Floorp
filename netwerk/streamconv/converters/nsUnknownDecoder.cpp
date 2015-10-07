@@ -716,7 +716,7 @@ nsUnknownDecoder::ConvertEncodedData(nsIRequest* request,
   nsCOMPtr<nsIEncodedChannel> encodedChannel(do_QueryInterface(request));
   if (encodedChannel) {
 
-    nsRefPtr<ConvertedStreamListener> strListener =
+    RefPtr<ConvertedStreamListener> strListener =
       new ConvertedStreamListener(this);
 
     nsCOMPtr<nsIStreamListener> listener;

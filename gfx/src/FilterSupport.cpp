@@ -101,7 +101,7 @@ namespace FilterWrappers {
   static already_AddRefed<FilterNode>
   Unpremultiply(DrawTarget* aDT, FilterNode* aInput)
   {
-    nsRefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::UNPREMULTIPLY);
+    RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::UNPREMULTIPLY);
     if (filter) {
       filter->SetInput(IN_UNPREMULTIPLY_IN, aInput);
       return filter.forget();
@@ -112,7 +112,7 @@ namespace FilterWrappers {
   static already_AddRefed<FilterNode>
   Premultiply(DrawTarget* aDT, FilterNode* aInput)
   {
-    nsRefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::PREMULTIPLY);
+    RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::PREMULTIPLY);
     if (filter) {
       filter->SetInput(IN_PREMULTIPLY_IN, aInput);
       return filter.forget();
@@ -123,7 +123,7 @@ namespace FilterWrappers {
   static already_AddRefed<FilterNode>
   LinearRGBToSRGB(DrawTarget* aDT, FilterNode* aInput)
   {
-    nsRefPtr<FilterNode> transfer = aDT->CreateFilter(FilterType::DISCRETE_TRANSFER);
+    RefPtr<FilterNode> transfer = aDT->CreateFilter(FilterType::DISCRETE_TRANSFER);
     if (transfer) {
       transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_R, false);
       transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_R, glinearRGBTosRGBMap, 256);
@@ -141,7 +141,7 @@ namespace FilterWrappers {
   static already_AddRefed<FilterNode>
   SRGBToLinearRGB(DrawTarget* aDT, FilterNode* aInput)
   {
-    nsRefPtr<FilterNode> transfer = aDT->CreateFilter(FilterType::DISCRETE_TRANSFER);
+    RefPtr<FilterNode> transfer = aDT->CreateFilter(FilterType::DISCRETE_TRANSFER);
     if (transfer) {
       transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_R, false);
       transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_R, gsRGBToLinearRGBMap, 256);
@@ -159,7 +159,7 @@ namespace FilterWrappers {
   static already_AddRefed<FilterNode>
   Crop(DrawTarget* aDT, FilterNode* aInputFilter, const IntRect& aRect)
   {
-    nsRefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::CROP);
+    RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::CROP);
     if (filter) {
       filter->SetAttribute(ATT_CROP_RECT, Rect(aRect));
       filter->SetInput(IN_CROP_IN, aInputFilter);
@@ -171,7 +171,7 @@ namespace FilterWrappers {
   static already_AddRefed<FilterNode>
   Offset(DrawTarget* aDT, FilterNode* aInputFilter, const IntPoint& aOffset)
   {
-    nsRefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::TRANSFORM);
+    RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::TRANSFORM);
     if (filter) {
       filter->SetAttribute(ATT_TRANSFORM_MATRIX, Matrix::Translation(aOffset.x, aOffset.y));
       filter->SetInput(IN_TRANSFORM_IN, aInputFilter);
@@ -186,7 +186,7 @@ namespace FilterWrappers {
     float stdX = float(std::min(aStdDeviation.width, kMaxStdDeviation));
     float stdY = float(std::min(aStdDeviation.height, kMaxStdDeviation));
     if (stdX == stdY) {
-      nsRefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::GAUSSIAN_BLUR);
+      RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::GAUSSIAN_BLUR);
       if (filter) {
         filter->SetAttribute(ATT_GAUSSIAN_BLUR_STD_DEVIATION, stdX);
         filter->SetInput(IN_GAUSSIAN_BLUR_IN, aInputFilter);
@@ -194,8 +194,8 @@ namespace FilterWrappers {
       }
       return nullptr;
     }
-    nsRefPtr<FilterNode> filterH = aDT->CreateFilter(FilterType::DIRECTIONAL_BLUR);
-    nsRefPtr<FilterNode> filterV = aDT->CreateFilter(FilterType::DIRECTIONAL_BLUR);
+    RefPtr<FilterNode> filterH = aDT->CreateFilter(FilterType::DIRECTIONAL_BLUR);
+    RefPtr<FilterNode> filterV = aDT->CreateFilter(FilterType::DIRECTIONAL_BLUR);
     if (filterH && filterV) {
       filterH->SetAttribute(ATT_DIRECTIONAL_BLUR_DIRECTION, (uint32_t)BLUR_DIRECTION_X);
       filterH->SetAttribute(ATT_DIRECTIONAL_BLUR_STD_DEVIATION, stdX);
@@ -211,7 +211,7 @@ namespace FilterWrappers {
   static already_AddRefed<FilterNode>
   Clear(DrawTarget* aDT)
   {
-    nsRefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::FLOOD);
+    RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::FLOOD);
     if (filter) {
       filter->SetAttribute(ATT_FLOOD_COLOR, Color(0, 0, 0, 0));
       return filter.forget();
@@ -223,7 +223,7 @@ namespace FilterWrappers {
   ForSurface(DrawTarget* aDT, SourceSurface* aSurface,
              const IntPoint& aSurfacePosition)
   {
-    nsRefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::TRANSFORM);
+    RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::TRANSFORM);
     if (filter) {
       filter->SetAttribute(ATT_TRANSFORM_MATRIX,
         Matrix::Translation(aSurfacePosition.x, aSurfacePosition.y));
@@ -237,7 +237,7 @@ namespace FilterWrappers {
   ToAlpha(DrawTarget* aDT, FilterNode* aInput)
   {
     float zero = 0.0f;
-    nsRefPtr<FilterNode> transfer = aDT->CreateFilter(FilterType::DISCRETE_TRANSFER);
+    RefPtr<FilterNode> transfer = aDT->CreateFilter(FilterType::DISCRETE_TRANSFER);
     if (transfer) {
       transfer->SetAttribute(ATT_DISCRETE_TRANSFER_DISABLE_R, false);
       transfer->SetAttribute(ATT_DISCRETE_TRANSFER_TABLE_R, &zero, 1);
@@ -281,11 +281,11 @@ private:
   // Create the required FilterNode that will be cached by ForColorModel.
   already_AddRefed<FilterNode> WrapForColorModel(ColorModel aColorModel);
 
-  nsRefPtr<DrawTarget> mDT;
+  RefPtr<DrawTarget> mDT;
   ColorModel mOriginalColorModel;
 
   // This array is indexed by ColorModel::ToIndex.
-  nsRefPtr<FilterNode> mFilterForColorModel[4];
+  RefPtr<FilterNode> mFilterForColorModel[4];
 
   ~FilterCachedColorModels() {}
 };
@@ -299,7 +299,7 @@ FilterCachedColorModels::FilterCachedColorModels(DrawTarget* aDT,
   if (aFilter) {
     mFilterForColorModel[aOriginalColorModel.ToIndex()] = aFilter;
   } else {
-    nsRefPtr<FilterNode> clear = FilterWrappers::Clear(aDT);
+    RefPtr<FilterNode> clear = FilterWrappers::Clear(aDT);
     mFilterForColorModel[0] = clear;
     mFilterForColorModel[1] = clear;
     mFilterForColorModel[2] = clear;
@@ -313,7 +313,7 @@ FilterCachedColorModels::ForColorModel(ColorModel aColorModel)
   if (!mFilterForColorModel[aColorModel.ToIndex()]) {
     mFilterForColorModel[aColorModel.ToIndex()] = WrapForColorModel(aColorModel);
   }
-  nsRefPtr<FilterNode> filter(mFilterForColorModel[aColorModel.ToIndex()]);
+  RefPtr<FilterNode> filter(mFilterForColorModel[aColorModel.ToIndex()]);
   return filter.forget();
 }
 
@@ -327,19 +327,19 @@ FilterCachedColorModels::WrapForColorModel(ColorModel aColorModel)
   // unpremultiplied color channels.
 
   if (aColorModel.mAlphaModel == AlphaModel::Premultiplied) {
-    nsRefPtr<FilterNode> unpre =
+    RefPtr<FilterNode> unpre =
       ForColorModel(ColorModel(aColorModel.mColorSpace, AlphaModel::Unpremultiplied));
     return FilterWrappers::Premultiply(mDT, unpre);
   }
 
   MOZ_ASSERT(aColorModel.mAlphaModel == AlphaModel::Unpremultiplied);
   if (aColorModel.mColorSpace == mOriginalColorModel.mColorSpace) {
-    nsRefPtr<FilterNode> premultiplied =
+    RefPtr<FilterNode> premultiplied =
       ForColorModel(ColorModel(aColorModel.mColorSpace, AlphaModel::Premultiplied));
     return FilterWrappers::Unpremultiply(mDT, premultiplied);
   }
 
-  nsRefPtr<FilterNode> unpremultipliedOriginal =
+  RefPtr<FilterNode> unpremultipliedOriginal =
     ForColorModel(ColorModel(mOriginalColorModel.mColorSpace, AlphaModel::Unpremultiplied));
   if (aColorModel.mColorSpace == ColorSpace::LinearRGB) {
     return FilterWrappers::SRGBToLinearRGB(mDT, unpremultipliedOriginal);
@@ -536,10 +536,10 @@ static void
 ConvertComponentTransferFunctionToFilter(const AttributeMap& aFunctionAttributes,
                                          int32_t aChannel,
                                          DrawTarget* aDT,
-                                         nsRefPtr<FilterNode>& aTableTransfer,
-                                         nsRefPtr<FilterNode>& aDiscreteTransfer,
-                                         nsRefPtr<FilterNode>& aLinearTransfer,
-                                         nsRefPtr<FilterNode>& aGammaTransfer)
+                                         RefPtr<FilterNode>& aTableTransfer,
+                                         RefPtr<FilterNode>& aDiscreteTransfer,
+                                         RefPtr<FilterNode>& aLinearTransfer,
+                                         RefPtr<FilterNode>& aGammaTransfer)
 {
   static const TransferAtts disableAtt[4] = {
     ATT_TRANSFER_DISABLE_R,
@@ -548,7 +548,7 @@ ConvertComponentTransferFunctionToFilter(const AttributeMap& aFunctionAttributes
     ATT_TRANSFER_DISABLE_A
   };
 
-  nsRefPtr<FilterNode> filter;
+  RefPtr<FilterNode> filter;
 
   uint32_t type = aFunctionAttributes.GetUint(eComponentTransferFunctionType);
 
@@ -692,9 +692,9 @@ const int32_t kMorphologyMaxRadius = 100000;
 static already_AddRefed<FilterNode>
 FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescription,
                                    DrawTarget* aDT,
-                                   nsTArray<nsRefPtr<FilterNode> >& aSources,
+                                   nsTArray<RefPtr<FilterNode> >& aSources,
                                    nsTArray<IntRect>& aSourceRegions,
-                                   nsTArray<nsRefPtr<SourceSurface>>& aInputImages)
+                                   nsTArray<RefPtr<SourceSurface>>& aInputImages)
 {
   const AttributeMap& atts = aDescription.Attributes();
   switch (aDescription.Type()) {
@@ -705,7 +705,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
     case PrimitiveType::Blend:
     {
       uint32_t mode = atts.GetUint(eBlendBlendmode);
-      nsRefPtr<FilterNode> filter;
+      RefPtr<FilterNode> filter;
       if (mode == SVG_FEBLEND_MODE_UNKNOWN) {
         return nullptr;
       }
@@ -756,7 +756,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       const nsTArray<float>& values = atts.GetFloats(eColorMatrixValues);
       if (NS_FAILED(ComputeColorMatrix(type, values, colorMatrix)) ||
           PodEqual(colorMatrix, identityMatrix)) {
-        nsRefPtr<FilterNode> filter(aSources[0]);
+        RefPtr<FilterNode> filter(aSources[0]);
         return filter.forget();
       }
       Matrix5x4 matrix(colorMatrix[0], colorMatrix[5], colorMatrix[10],  colorMatrix[15],
@@ -764,7 +764,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
                        colorMatrix[2], colorMatrix[7], colorMatrix[12],  colorMatrix[17],
                        colorMatrix[3], colorMatrix[8], colorMatrix[13],  colorMatrix[18],
                        colorMatrix[4], colorMatrix[9], colorMatrix[14],  colorMatrix[19]);
-      nsRefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::COLOR_MATRIX);
+      RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::COLOR_MATRIX);
       if (!filter) {
         return nullptr;
       }
@@ -794,7 +794,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       MorphologyOperator op = atts.GetUint(eMorphologyOperator) == SVG_OPERATOR_ERODE ?
         MORPHOLOGY_OPERATOR_ERODE : MORPHOLOGY_OPERATOR_DILATE;
 
-      nsRefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::MORPHOLOGY);
+      RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::MORPHOLOGY);
       if (!filter) {
         return nullptr;
       }
@@ -807,7 +807,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
     case PrimitiveType::Flood:
     {
       Color color = atts.GetColor(eFloodColor);
-      nsRefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::FLOOD);
+      RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::FLOOD);
       if (!filter) {
         return nullptr;
       }
@@ -817,7 +817,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
 
     case PrimitiveType::Tile:
     {
-      nsRefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::TILE);
+      RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::TILE);
       if (!filter) {
         return nullptr;
       }
@@ -828,7 +828,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
 
     case PrimitiveType::ComponentTransfer:
     {
-      nsRefPtr<FilterNode> filters[4]; // one for each FILTER_*_TRANSFER type
+      RefPtr<FilterNode> filters[4]; // one for each FILTER_*_TRANSFER type
       static const AttributeName componentFunctionNames[4] = {
         eComponentTransferFunctionR,
         eComponentTransferFunctionG,
@@ -843,7 +843,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       }
 
       // Connect all used filters nodes.
-      nsRefPtr<FilterNode> lastFilter = aSources[0];
+      RefPtr<FilterNode> lastFilter = aSources[0];
       for (int32_t i = 0; i < 4; i++) {
         if (filters[i]) {
           filters[i]->SetInput(0, lastFilter);
@@ -856,7 +856,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
 
     case PrimitiveType::ConvolveMatrix:
     {
-      nsRefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::CONVOLVE_MATRIX);
+      RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::CONVOLVE_MATRIX);
       if (!filter) {
         return nullptr;
       }
@@ -896,7 +896,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
 
     case PrimitiveType::DisplacementMap:
     {
-      nsRefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::DISPLACEMENT_MAP);
+      RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::DISPLACEMENT_MAP);
       if (!filter) {
         return nullptr;
       }
@@ -920,7 +920,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
 
     case PrimitiveType::Turbulence:
     {
-      nsRefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::TURBULENCE);
+      RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::TURBULENCE);
       if (!filter) {
         return nullptr;
       }
@@ -946,7 +946,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
 
     case PrimitiveType::Composite:
     {
-      nsRefPtr<FilterNode> filter;
+      RefPtr<FilterNode> filter;
       uint32_t op = atts.GetUint(eCompositeOperator);
       if (op == SVG_FECOMPOSITE_OPERATOR_ARITHMETIC) {
         const nsTArray<float>& coefficients = atts.GetFloats(eCompositeCoefficients);
@@ -988,10 +988,10 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
         return nullptr;
       }
       if (aSources.Length() == 1) {
-        nsRefPtr<FilterNode> filter(aSources[0]);
+        RefPtr<FilterNode> filter(aSources[0]);
         return filter.forget();
       }
-      nsRefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::COMPOSITE);
+      RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::COMPOSITE);
       if (!filter) {
         return nullptr;
       }
@@ -1010,12 +1010,12 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
 
     case PrimitiveType::DropShadow:
     {
-      nsRefPtr<FilterNode> alpha = FilterWrappers::ToAlpha(aDT, aSources[0]);
-      nsRefPtr<FilterNode> blur = FilterWrappers::GaussianBlur(aDT, alpha,
+      RefPtr<FilterNode> alpha = FilterWrappers::ToAlpha(aDT, aSources[0]);
+      RefPtr<FilterNode> blur = FilterWrappers::GaussianBlur(aDT, alpha,
                                   atts.GetSize(eDropShadowStdDeviation));
-      nsRefPtr<FilterNode> offsetBlur = FilterWrappers::Offset(aDT, blur,
+      RefPtr<FilterNode> offsetBlur = FilterWrappers::Offset(aDT, blur,
                                         atts.GetIntPoint(eDropShadowOffset));
-      nsRefPtr<FilterNode> flood = aDT->CreateFilter(FilterType::FLOOD);
+      RefPtr<FilterNode> flood = aDT->CreateFilter(FilterType::FLOOD);
       if (!flood) {
         return nullptr;
       }
@@ -1028,7 +1028,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       }
       flood->SetAttribute(ATT_FLOOD_COLOR, color);
 
-      nsRefPtr<FilterNode> composite = aDT->CreateFilter(FilterType::COMPOSITE);
+      RefPtr<FilterNode> composite = aDT->CreateFilter(FilterType::COMPOSITE);
       if (!composite) {
         return nullptr;
       }
@@ -1036,7 +1036,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
       composite->SetInput(IN_COMPOSITE_IN_START, offsetBlur);
       composite->SetInput(IN_COMPOSITE_IN_START + 1, flood);
 
-      nsRefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::COMPOSITE);
+      RefPtr<FilterNode> filter = aDT->CreateFilter(FilterType::COMPOSITE);
       if (!filter) {
         return nullptr;
       }
@@ -1070,7 +1070,7 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
         { FilterType::POINT_DIFFUSE, FilterType::SPOT_DIFFUSE, FilterType::DISTANT_DIFFUSE },
         { FilterType::POINT_SPECULAR, FilterType::SPOT_SPECULAR, FilterType::DISTANT_SPECULAR }
       };
-      nsRefPtr<FilterNode> filter =
+      RefPtr<FilterNode> filter =
         aDT->CreateFilter(filterType[isSpecular][lightType]);
       if (!filter) {
         return nullptr;
@@ -1130,10 +1130,10 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
 
       // Pull the image from the additional image list using the index that's
       // stored in the primitive description.
-      nsRefPtr<SourceSurface> inputImage =
+      RefPtr<SourceSurface> inputImage =
         aInputImages[atts.GetUint(eImageInputIndex)];
 
-      nsRefPtr<FilterNode> transform = aDT->CreateFilter(FilterType::TRANSFORM);
+      RefPtr<FilterNode> transform = aDT->CreateFilter(FilterType::TRANSFORM);
       if (!transform) {
         return nullptr;
       }
@@ -1228,20 +1228,20 @@ FilterNodeGraphFromDescription(DrawTarget* aDT,
                                const IntRect& aFillPaintRect,
                                SourceSurface* aStrokePaint,
                                const IntRect& aStrokePaintRect,
-                               nsTArray<nsRefPtr<SourceSurface>>& aAdditionalImages)
+                               nsTArray<RefPtr<SourceSurface>>& aAdditionalImages)
 {
   const nsTArray<FilterPrimitiveDescription>& primitives = aFilter.mPrimitives;
 
   Rect resultNeededRect(aResultNeededRect);
   resultNeededRect.RoundOut();
 
-  nsRefPtr<FilterCachedColorModels> sourceFilters[4];
-  nsTArray<nsRefPtr<FilterCachedColorModels> > primitiveFilters;
+  RefPtr<FilterCachedColorModels> sourceFilters[4];
+  nsTArray<RefPtr<FilterCachedColorModels> > primitiveFilters;
 
   for (size_t i = 0; i < primitives.Length(); ++i) {
     const FilterPrimitiveDescription& descr = primitives[i];
 
-    nsTArray<nsRefPtr<FilterNode> > inputFilterNodes;
+    nsTArray<RefPtr<FilterNode> > inputFilterNodes;
     nsTArray<IntRect> inputSourceRects;
     nsTArray<AlphaModel> inputAlphaModels;
 
@@ -1254,7 +1254,7 @@ FilterNodeGraphFromDescription(DrawTarget* aDT,
         inputSourceRects.AppendElement(primitives[inputIndex].PrimitiveSubregion());
       }
 
-      nsRefPtr<FilterCachedColorModels> inputFilter;
+      RefPtr<FilterCachedColorModels> inputFilter;
       if (inputIndex >= 0) {
         MOZ_ASSERT(inputIndex < (int64_t)primitiveFilters.Length(), "out-of-bounds input index!");
         inputFilter = primitiveFilters[inputIndex];
@@ -1265,11 +1265,11 @@ FilterNodeGraphFromDescription(DrawTarget* aDT,
         MOZ_ASSERT(sourceIndex < 4, "invalid source index");
         inputFilter = sourceFilters[sourceIndex];
         if (!inputFilter) {
-          nsRefPtr<FilterNode> sourceFilterNode;
+          RefPtr<FilterNode> sourceFilterNode;
 
           nsTArray<SourceSurface*> primitiveSurfaces;
           nsTArray<IntRect> primitiveSurfaceRects;
-          nsRefPtr<SourceSurface> surf =
+          RefPtr<SourceSurface> surf =
             ElementForIndex(inputIndex, primitiveSurfaces,
                             aSourceGraphic, aFillPaint, aStrokePaint);
           IntRect surfaceRect =
@@ -1307,7 +1307,7 @@ FilterNodeGraphFromDescription(DrawTarget* aDT,
       inputFilterNodes.AppendElement(inputFilter->ForColorModel(inputColorModel));
     }
 
-    nsRefPtr<FilterNode> primitiveFilterNode =
+    RefPtr<FilterNode> primitiveFilterNode =
       FilterNodeFromPrimitiveDescription(descr, aDT, inputFilterNodes,
                                          inputSourceRects, aAdditionalImages);
 
@@ -1318,7 +1318,7 @@ FilterNodeGraphFromDescription(DrawTarget* aDT,
 
     ColorModel outputColorModel(descr.OutputColorSpace(),
       OutputAlphaModelForPrimitive(descr, inputAlphaModels));
-    nsRefPtr<FilterCachedColorModels> primitiveFilter =
+    RefPtr<FilterCachedColorModels> primitiveFilter =
       new FilterCachedColorModels(aDT, primitiveFilterNode, outputColorModel);
 
     primitiveFilters.AppendElement(primitiveFilter);
@@ -1339,11 +1339,11 @@ FilterSupport::RenderFilterDescription(DrawTarget* aDT,
                                        const IntRect& aFillPaintRect,
                                        SourceSurface* aStrokePaint,
                                        const IntRect& aStrokePaintRect,
-                                       nsTArray<nsRefPtr<SourceSurface>>& aAdditionalImages,
+                                       nsTArray<RefPtr<SourceSurface>>& aAdditionalImages,
                                        const Point& aDestPoint,
                                        const DrawOptions& aOptions)
 {
-  nsRefPtr<FilterNode> resultFilter =
+  RefPtr<FilterNode> resultFilter =
     FilterNodeGraphFromDescription(aDT, aFilter, aRenderRect,
                                    aSourceGraphic, aSourceGraphicRect, aFillPaint, aFillPaintRect,
                                    aStrokePaint, aStrokePaintRect, aAdditionalImages);

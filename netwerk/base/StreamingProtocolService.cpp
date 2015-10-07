@@ -31,14 +31,14 @@ StreamingProtocolControllerService::GetInstance()
     sSingleton = new StreamingProtocolControllerService();
     ClearOnShutdown(&sSingleton);
   }
-  nsRefPtr<StreamingProtocolControllerService> service = sSingleton.get();
+  RefPtr<StreamingProtocolControllerService> service = sSingleton.get();
   return service.forget();
 }
 
 NS_IMETHODIMP
 StreamingProtocolControllerService::Create(nsIChannel *aChannel, nsIStreamingProtocolController **aResult)
 {
-  nsRefPtr<nsIStreamingProtocolController> mediacontroller;
+  RefPtr<nsIStreamingProtocolController> mediacontroller;
   nsCOMPtr<nsIURI> uri;
   nsAutoCString scheme;
 

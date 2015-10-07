@@ -121,7 +121,7 @@ Throw(JSContext* aCx, nsresult aRv, const char* aMessage)
     }
   }
 
-  nsRefPtr<Exception> finalException = CreateException(aCx, aRv, aMessage);
+  RefPtr<Exception> finalException = CreateException(aCx, aRv, aMessage);
 
   MOZ_ASSERT(finalException);
   if (!ThrowExceptionObject(aCx, finalException)) {
@@ -165,7 +165,7 @@ CreateException(JSContext* aCx, nsresult aRv, const char* aMessage)
 
   // If not, use the default.
   // aMessage can be null, so we can't use nsDependentCString on it.
-  nsRefPtr<Exception> exception =
+  RefPtr<Exception> exception =
     new Exception(nsCString(aMessage), aRv,
                   EmptyCString(), nullptr, nullptr);
   return exception.forget();

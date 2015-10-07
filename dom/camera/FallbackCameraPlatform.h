@@ -85,7 +85,7 @@ namespace android {
     T* operator->() const { return get(); }
 
   private:
-    nsRefPtr<T> mPtr;
+    RefPtr<T> mPtr;
   };
 
   typedef uint64_t nsecs_t;

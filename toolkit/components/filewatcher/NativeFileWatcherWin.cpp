@@ -894,7 +894,7 @@ NativeFileWatcherIOTask::DeactivateRunnableMethod()
   }
 
   // Now we just need to reschedule a final call to Shutdown() back to the main thread.
-  nsRefPtr<NativeWatcherIOShutdownTask> shutdownRunnable =
+  RefPtr<NativeWatcherIOShutdownTask> shutdownRunnable =
     new NativeWatcherIOShutdownTask();
 
   return NS_DispatchToMainThread(shutdownRunnable);
@@ -949,7 +949,7 @@ NativeFileWatcherIOTask::ReportChange(
   const nsMainThreadPtrHandle<nsINativeFileWatcherCallback>& aOnChange,
   const nsAString& aChangedResource)
 {
-  nsRefPtr<WatchedChangeEvent> changeRunnable =
+  RefPtr<WatchedChangeEvent> changeRunnable =
     new WatchedChangeEvent(aOnChange, aChangedResource);
   return NS_DispatchToMainThread(changeRunnable);
 }
@@ -1007,7 +1007,7 @@ NativeFileWatcherIOTask::ReportError(
   const nsMainThreadPtrHandle<nsINativeFileWatcherErrorCallback>& aOnError,
   nsresult anError, DWORD anOSError)
 {
-  nsRefPtr<WatchedErrorEvent> errorRunnable =
+  RefPtr<WatchedErrorEvent> errorRunnable =
     new WatchedErrorEvent(aOnError, anError, anOSError);
   return NS_DispatchToMainThread(errorRunnable);
 }
@@ -1027,7 +1027,7 @@ NativeFileWatcherIOTask::ReportSuccess(
   const nsMainThreadPtrHandle<nsINativeFileWatcherSuccessCallback>& aOnSuccess,
   const nsAString& aResource)
 {
-  nsRefPtr<WatchedSuccessEvent> successRunnable =
+  RefPtr<WatchedSuccessEvent> successRunnable =
     new WatchedSuccessEvent(aOnSuccess, aResource);
   return NS_DispatchToMainThread(successRunnable);
 }

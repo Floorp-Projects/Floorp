@@ -11,7 +11,7 @@
 #include "CopyableCanvasLayer.h"        // for CopyableCanvasLayer
 #include "Layers.h"                     // for CanvasLayer, etc
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/nsRefPtr.h"             // for RefPtr
+#include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/layers/LayersMessages.h"  // for CanvasLayerAttributes, etc
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsAutoPtr.h"                  // for nsRefPtr
@@ -91,7 +91,7 @@ protected:
 
   CanvasClientType GetCanvasClientType();
 
-  nsRefPtr<CanvasClient> mCanvasClient;
+  RefPtr<CanvasClient> mCanvasClient;
 
   UniquePtr<gl::SurfaceFactory> mFactory;
 

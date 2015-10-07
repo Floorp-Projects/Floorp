@@ -10,7 +10,7 @@
 #include <windows.h>
 #include <list>
 
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/gfx/CriticalSection.h"
 #include "mozilla/RefCounted.h"
 

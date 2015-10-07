@@ -235,7 +235,7 @@ public:
   MediaByteRange FirstCompleteMediaHeader();
 
   mozilla::MediaByteRange mInitRange;
-  nsRefPtr<Stream> mSource;
+  RefPtr<Stream> mSource;
   uint64_t mOffset;
   nsTArray<uint64_t> mMoofOffsets;
   Mvhd mMvhd;

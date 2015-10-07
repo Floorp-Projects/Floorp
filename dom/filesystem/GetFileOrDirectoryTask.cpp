@@ -64,7 +64,7 @@ already_AddRefed<Promise>
 GetFileOrDirectoryTask::GetPromise()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  return nsRefPtr<Promise>(mPromise).forget();
+  return RefPtr<Promise>(mPromise).forget();
 }
 
 FileSystemParams
@@ -199,7 +199,7 @@ GetFileOrDirectoryTask::HandlerCallback()
   }
 
   if (HasError()) {
-    nsRefPtr<DOMError> domError = new DOMError(mFileSystem->GetWindow(),
+    RefPtr<DOMError> domError = new DOMError(mFileSystem->GetWindow(),
       mErrorValue);
     mPromise->MaybeRejectBrokenly(domError);
     mPromise = nullptr;
@@ -207,13 +207,13 @@ GetFileOrDirectoryTask::HandlerCallback()
   }
 
   if (mIsDirectory) {
-    nsRefPtr<Directory> dir = new Directory(mFileSystem, mTargetRealPath);
+    RefPtr<Directory> dir = new Directory(mFileSystem, mTargetRealPath);
     mPromise->MaybeResolve(dir);
     mPromise = nullptr;
     return;
   }
 
-  nsRefPtr<Blob> blob = Blob::Create(mFileSystem->GetWindow(), mTargetBlobImpl);
+  RefPtr<Blob> blob = Blob::Create(mFileSystem->GetWindow(), mTargetBlobImpl);
   mPromise->MaybeResolve(blob);
   mPromise = nullptr;
 }

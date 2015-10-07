@@ -1632,7 +1632,7 @@ SpdyStream31::ClearTransactionsBlockedOnTunnel()
 void
 SpdyStream31::MapStreamToPlainText()
 {
-  nsRefPtr<SpdyConnectTransaction> qiTrans(mTransaction->QuerySpdyConnectTransaction());
+  RefPtr<SpdyConnectTransaction> qiTrans(mTransaction->QuerySpdyConnectTransaction());
   MOZ_ASSERT(qiTrans);
   mPlainTextTunnel = true;
   qiTrans->ForcePlainText();
@@ -1641,7 +1641,7 @@ SpdyStream31::MapStreamToPlainText()
 void
 SpdyStream31::MapStreamToHttpConnection()
 {
-  nsRefPtr<SpdyConnectTransaction> qiTrans(mTransaction->QuerySpdyConnectTransaction());
+  RefPtr<SpdyConnectTransaction> qiTrans(mTransaction->QuerySpdyConnectTransaction());
   MOZ_ASSERT(qiTrans);
   qiTrans->MapStreamToHttpConnection(mSocketTransport,
                                      mTransaction->ConnectionInfo());

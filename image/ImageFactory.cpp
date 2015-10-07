@@ -104,7 +104,7 @@ ImageFactory::CreateImage(nsIRequest* aRequest,
 // Marks an image as having an error before returning it.
 template <typename T>
 static already_AddRefed<Image>
-BadImage(const char* aMessage, nsRefPtr<T>& aImage)
+BadImage(const char* aMessage, RefPtr<T>& aImage)
 {
   NS_WARNING(aMessage);
   aImage->SetHasError();
@@ -116,9 +116,9 @@ ImageFactory::CreateAnonymousImage(const nsCString& aMimeType)
 {
   nsresult rv;
 
-  nsRefPtr<RasterImage> newImage = new RasterImage();
+  RefPtr<RasterImage> newImage = new RasterImage();
 
-  nsRefPtr<ProgressTracker> newTracker = new ProgressTracker();
+  RefPtr<ProgressTracker> newTracker = new ProgressTracker();
   newTracker->SetImage(newImage);
   newImage->SetProgressTracker(newTracker);
 
@@ -137,7 +137,7 @@ ImageFactory::CreateMultipartImage(Image* aFirstPart,
   MOZ_ASSERT(aFirstPart);
   MOZ_ASSERT(aProgressTracker);
 
-  nsRefPtr<MultipartImage> newImage = new MultipartImage(aFirstPart);
+  RefPtr<MultipartImage> newImage = new MultipartImage(aFirstPart);
   aProgressTracker->SetImage(newImage);
   newImage->SetProgressTracker(aProgressTracker);
 
@@ -201,7 +201,7 @@ ImageFactory::CreateRasterImage(nsIRequest* aRequest,
 
   nsresult rv;
 
-  nsRefPtr<RasterImage> newImage = new RasterImage(aURI);
+  RefPtr<RasterImage> newImage = new RasterImage(aURI);
   aProgressTracker->SetImage(newImage);
   newImage->SetProgressTracker(aProgressTracker);
 
@@ -265,7 +265,7 @@ ImageFactory::CreateVectorImage(nsIRequest* aRequest,
 
   nsresult rv;
 
-  nsRefPtr<VectorImage> newImage = new VectorImage(aURI);
+  RefPtr<VectorImage> newImage = new VectorImage(aURI);
   aProgressTracker->SetImage(newImage);
   newImage->SetProgressTracker(aProgressTracker);
 

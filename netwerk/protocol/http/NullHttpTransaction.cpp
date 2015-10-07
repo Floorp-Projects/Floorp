@@ -62,7 +62,7 @@ public:
       return NS_OK;
     }
 
-    nsRefPtr<NullHttpChannel> channel = new NullHttpChannel();
+    RefPtr<NullHttpChannel> channel = new NullHttpChannel();
     channel->Init(uri, 0, nullptr, 0, nullptr);
     mActivityDistributor->ObserveActivity(
       nsCOMPtr<nsISupports>(do_QueryObject(channel)),
@@ -269,7 +269,7 @@ NullHttpTransaction::RequestHead()
 
 nsresult
 NullHttpTransaction::TakeSubTransactions(
-  nsTArray<nsRefPtr<nsAHttpTransaction> > &outTransactions)
+  nsTArray<RefPtr<nsAHttpTransaction> > &outTransactions)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

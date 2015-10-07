@@ -52,7 +52,7 @@ class GonkPermissionChecker : public nsRunnable {
 public:
   static already_AddRefed<GonkPermissionChecker> Inspect(int32_t pid)
   {
-    nsRefPtr<GonkPermissionChecker> that = new GonkPermissionChecker(pid);
+    RefPtr<GonkPermissionChecker> that = new GonkPermissionChecker(pid);
     nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
     MOZ_ASSERT(mainThread);
     SyncRunnable::DispatchToThread(mainThread, that);
@@ -152,7 +152,7 @@ GonkPermissionService::checkPermission(const String16& permission, int32_t pid,
 
   // Camera/audio record permissions are allowed for apps with the
   // "camera" permission.
-  nsRefPtr<GonkPermissionChecker> checker =
+  RefPtr<GonkPermissionChecker> checker =
     GonkPermissionChecker::Inspect(pid);
   bool canUseCamera = checker->CanUseCamera();
   if (!canUseCamera) {

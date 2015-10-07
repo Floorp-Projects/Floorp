@@ -161,7 +161,7 @@ PluginInstanceParent::InitMetadata(const nsACString& aMimeType,
         return false;
     }
     // Ensure that the src attribute is absolute
-    nsRefPtr<nsPluginInstanceOwner> owner = GetOwner();
+    RefPtr<nsPluginInstanceOwner> owner = GetOwner();
     if (!owner) {
         return false;
     }
@@ -535,7 +535,7 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
          updatedRect.bottom - updatedRect.top));
 
     // XXXjwatt rewrite to use Moz2D
-    nsRefPtr<gfxASurface> surface;
+    RefPtr<gfxASurface> surface;
     if (newSurface.type() == SurfaceDescriptor::TShmem) {
         if (!newSurface.get_Shmem().IsReadable()) {
             NS_WARNING("back surface not readable");
@@ -547,7 +547,7 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
     else if (newSurface.type() == SurfaceDescriptor::TIOSurfaceDescriptor) {
         IOSurfaceDescriptor iodesc = newSurface.get_IOSurfaceDescriptor();
 
-        nsRefPtr<MacIOSurface> newIOSurface =
+        RefPtr<MacIOSurface> newIOSurface =
           MacIOSurface::LookupSurface(iodesc.surfaceId(),
                                       iodesc.contentsScaleFactor());
 
@@ -617,7 +617,7 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
         surface->MarkDirty(ur);
 
         ImageContainer *container = GetImageContainer();
-        nsRefPtr<Image> image = container->CreateImage(ImageFormat::CAIRO_SURFACE);
+        RefPtr<Image> image = container->CreateImage(ImageFormat::CAIRO_SURFACE);
         NS_ASSERTION(image->GetFormat() == ImageFormat::CAIRO_SURFACE, "Wrong format?");
         CairoImage* cairoImage = static_cast<CairoImage*>(image.get());
         CairoImage::Data cairoData;
@@ -698,7 +698,7 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
 
 #ifdef XP_MACOSX
     if (ioSurface) {
-        nsRefPtr<Image> image = container->CreateImage(ImageFormat::MAC_IOSURFACE);
+        RefPtr<Image> image = container->CreateImage(ImageFormat::MAC_IOSURFACE);
         if (!image) {
             return NS_ERROR_FAILURE;
         }
@@ -800,9 +800,9 @@ PluginInstanceParent::BeginUpdateBackground(const nsIntRect& aRect,
                "Update outside of background area");
 #endif
 
-    nsRefPtr<gfx::DrawTarget> dt = gfxPlatform::GetPlatform()->
+    RefPtr<gfx::DrawTarget> dt = gfxPlatform::GetPlatform()->
       CreateDrawTargetForSurface(mBackground, gfx::IntSize(sz.width, sz.height));
-    nsRefPtr<gfxContext> ctx = new gfxContext(dt);
+    RefPtr<gfxContext> ctx = new gfxContext(dt);
     ctx.forget(aCtx);
 
     return NS_OK;

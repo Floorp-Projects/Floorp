@@ -99,7 +99,7 @@ ISOMediaWriter::WriteEncodedTrack(const EncodedFrameContainer& aData,
     return NS_OK;
   }
   for (uint32_t i = 0; i < len; i++) {
-    nsRefPtr<EncodedFrame> frame(aData.GetEncodedFrames()[i]);
+    RefPtr<EncodedFrame> frame(aData.GetEncodedFrames()[i]);
     EncodedFrame::FrameType type = frame->GetFrameType();
     if (type == EncodedFrame::AAC_AUDIO_FRAME ||
         type == EncodedFrame::AAC_CSD ||

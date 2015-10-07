@@ -248,7 +248,7 @@ private:
 
   nsCString mSpec;
   bool mAllowlistOnly;
-  nsRefPtr<PendingLookup> mPendingLookup;
+  RefPtr<PendingLookup> mPendingLookup;
   nsresult LookupSpecInternal(const nsACString& aSpec);
 };
 
@@ -448,7 +448,7 @@ PendingLookup::LookupNext()
     // Check the source URI, referrer and redirect chain.
     spec = mAnylistSpecs[index];
     mAnylistSpecs.RemoveElementAt(index);
-    nsRefPtr<PendingDBLookup> lookup(new PendingDBLookup(this));
+    RefPtr<PendingDBLookup> lookup(new PendingDBLookup(this));
     return lookup->LookupSpec(spec, false);
   }
   // If any of mAnylistSpecs matched the blocklist, go ahead and block.
@@ -465,7 +465,7 @@ PendingLookup::LookupNext()
     spec = mAllowlistSpecs[index];
     LOG(("PendingLookup::LookupNext: checking %s on allowlist", spec.get()));
     mAllowlistSpecs.RemoveElementAt(index);
-    nsRefPtr<PendingDBLookup> lookup(new PendingDBLookup(this));
+    RefPtr<PendingDBLookup> lookup(new PendingDBLookup(this));
     return lookup->LookupSpec(spec, true);
   }
   // There are no more URIs to check against local list. If the file is
@@ -1177,7 +1177,7 @@ nsresult ApplicationReputationService::QueryReputationInternal(
   NS_ENSURE_STATE(uri);
 
   // Create a new pending lookup and start the call chain.
-  nsRefPtr<PendingLookup> lookup(new PendingLookup(aQuery, aCallback));
+  RefPtr<PendingLookup> lookup(new PendingLookup(aQuery, aCallback));
   NS_ENSURE_STATE(lookup);
 
   return lookup->StartLookup();

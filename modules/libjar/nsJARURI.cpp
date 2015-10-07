@@ -255,7 +255,7 @@ nsJARURI::SetSpecWithBase(const nsACString &aSpec, nsIURI* aBaseURL)
         if (!aBaseURL)
             return NS_ERROR_MALFORMED_URI;
 
-        nsRefPtr<nsJARURI> otherJAR;
+        RefPtr<nsJARURI> otherJAR;
         aBaseURL->QueryInterface(NS_GET_IID(nsJARURI), getter_AddRefs(otherJAR));
         NS_ENSURE_TRUE(otherJAR, NS_NOINTERFACE);
 
@@ -471,7 +471,7 @@ nsJARURI::EqualsInternal(nsIURI *other,
     if (!other)
         return NS_OK;	// not equal
 
-    nsRefPtr<nsJARURI> otherJAR;
+    RefPtr<nsJARURI> otherJAR;
     other->QueryInterface(NS_GET_IID(nsJARURI), getter_AddRefs(otherJAR));
     if (!otherJAR)
         return NS_OK;   // not equal

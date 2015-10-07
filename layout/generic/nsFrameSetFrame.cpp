@@ -311,7 +311,7 @@ nsHTMLFramesetFrame::Init(nsIContent*       aContent,
       continue;
 
     if (child->IsAnyOfHTMLElements(nsGkAtoms::frameset, nsGkAtoms::frame)) {
-      nsRefPtr<nsStyleContext> kidSC;
+      RefPtr<nsStyleContext> kidSC;
 
       kidSC = shell->StyleSet()->ResolveStyleFor(child->AsElement(),
                                                  mStyleContext);
@@ -344,7 +344,7 @@ nsHTMLFramesetFrame::Init(nsIContent*       aContent,
   mNonBlankChildCount = mChildCount;
   // add blank frames for frameset cells that had no content provided
   for (int blankX = mChildCount; blankX < numCells; blankX++) {
-    nsRefPtr<nsStyleContext> pseudoStyleContext;
+    RefPtr<nsStyleContext> pseudoStyleContext;
     pseudoStyleContext = shell->StyleSet()->
       ResolveAnonymousBoxStyle(nsCSSAnonBoxes::framesetBlank, mStyleContext);
 
@@ -913,7 +913,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
       offset.y += lastSize.height;
       if (firstTime) { // create horizontal border
 
-        nsRefPtr<nsStyleContext> pseudoStyleContext;
+        RefPtr<nsStyleContext> pseudoStyleContext;
         pseudoStyleContext = styleSet->
           ResolveAnonymousBoxStyle(nsCSSAnonBoxes::horizontalFramesetBorder,
                                    mStyleContext);
@@ -943,7 +943,7 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
         if (0 == cellIndex.y) { // in 1st row
           if (firstTime) { // create vertical border
 
-            nsRefPtr<nsStyleContext> pseudoStyleContext;
+            RefPtr<nsStyleContext> pseudoStyleContext;
             pseudoStyleContext = styleSet->
               ResolveAnonymousBoxStyle(nsCSSAnonBoxes::verticalFramesetBorder,
                                        mStyleContext);

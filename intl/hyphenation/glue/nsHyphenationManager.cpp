@@ -83,7 +83,7 @@ nsHyphenationManager::~nsHyphenationManager()
 already_AddRefed<nsHyphenator>
 nsHyphenationManager::GetHyphenator(nsIAtom *aLocale)
 {
-  nsRefPtr<nsHyphenator> hyph;
+  RefPtr<nsHyphenator> hyph;
   mHyphenators.Get(aLocale, getter_AddRefs(hyph));
   if (hyph) {
     return hyph.forget();
@@ -179,7 +179,7 @@ nsHyphenationManager::LoadPatternListFromOmnijar(Omnijar::Type aType)
     return;
   }
 
-  nsRefPtr<nsZipArchive> zip = Omnijar::GetReader(aType);
+  RefPtr<nsZipArchive> zip = Omnijar::GetReader(aType);
   if (!zip) {
     return;
   }

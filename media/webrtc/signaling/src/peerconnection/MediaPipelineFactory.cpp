@@ -133,8 +133,8 @@ JsepCodecDescToCodecConfig(const JsepCodecDescription& aCodec,
 // have enqueued this function unless it was still active and
 // the ICE data is destroyed on the STS.
 static void
-FinalizeTransportFlow_s(nsRefPtr<PeerConnectionMedia> aPCMedia,
-                        nsRefPtr<TransportFlow> aFlow, size_t aLevel,
+FinalizeTransportFlow_s(RefPtr<PeerConnectionMedia> aPCMedia,
+                        RefPtr<TransportFlow> aFlow, size_t aLevel,
                         bool aIsRtcp,
                         nsAutoPtr<PtrVector<TransportLayer> > aLayerList)
 {
@@ -157,10 +157,10 @@ MediaPipelineFactory::CreateOrGetTransportFlow(
     size_t aLevel,
     bool aIsRtcp,
     const JsepTransport& aTransport,
-    nsRefPtr<TransportFlow>* aFlowOutparam)
+    RefPtr<TransportFlow>* aFlowOutparam)
 {
   nsresult rv;
-  nsRefPtr<TransportFlow> flow;
+  RefPtr<TransportFlow> flow;
 
   flow = mPCMedia->GetTransportFlow(aLevel, aIsRtcp);
   if (flow) {
@@ -181,7 +181,7 @@ MediaPipelineFactory::CreateOrGetTransportFlow(
                     ? TransportLayerDtls::CLIENT
                     : TransportLayerDtls::SERVER);
 
-  nsRefPtr<DtlsIdentity> pcid = mPC->Identity();
+  RefPtr<DtlsIdentity> pcid = mPC->Identity();
   if (!pcid) {
     MOZ_MTLOG(ML_ERROR, "Failed to get DTLS identity.");
     return NS_ERROR_FAILURE;
@@ -254,8 +254,8 @@ MediaPipelineFactory::GetTransportParameters(
     const JsepTrackPair& aTrackPair,
     const JsepTrack& aTrack,
     size_t* aLevelOut,
-    nsRefPtr<TransportFlow>* aRtpOut,
-    nsRefPtr<TransportFlow>* aRtcpOut,
+    RefPtr<TransportFlow>* aRtpOut,
+    RefPtr<TransportFlow>* aRtcpOut,
     nsAutoPtr<MediaPipelineFilter>* aFilterOut)
 {
   *aLevelOut = aTrackPair.mLevel;
@@ -331,8 +331,8 @@ MediaPipelineFactory::CreateOrUpdateMediaPipeline(
   bool receiving = aTrack.GetDirection() == sdp::kRecv;
 
   size_t level;
-  nsRefPtr<TransportFlow> rtpFlow;
-  nsRefPtr<TransportFlow> rtcpFlow;
+  RefPtr<TransportFlow> rtpFlow;
+  RefPtr<TransportFlow> rtcpFlow;
   nsAutoPtr<MediaPipelineFilter> filter;
 
   nsresult rv = GetTransportParameters(aTrackPair,
@@ -375,7 +375,7 @@ MediaPipelineFactory::CreateOrUpdateMediaPipeline(
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<MediaSessionConduit> conduit;
+  RefPtr<MediaSessionConduit> conduit;
   if (aTrack.GetMediaType() == SdpMediaSection::kAudio) {
     rv = GetOrCreateAudioConduit(aTrackPair, aTrack, &conduit);
     if (NS_FAILED(rv))
@@ -389,7 +389,7 @@ MediaPipelineFactory::CreateOrUpdateMediaPipeline(
     return NS_OK;
   }
 
-  nsRefPtr<MediaPipeline> pipeline =
+  RefPtr<MediaPipeline> pipeline =
     stream->GetPipelineByTrackId_m(aTrack.GetTrackId());
 
   if (pipeline && pipeline->level() != static_cast<int>(level)) {
@@ -437,16 +437,16 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
     const JsepTrackPair& aTrackPair,
     const JsepTrack& aTrack,
     size_t aLevel,
-    nsRefPtr<TransportFlow> aRtpFlow,
-    nsRefPtr<TransportFlow> aRtcpFlow,
+    RefPtr<TransportFlow> aRtpFlow,
+    RefPtr<TransportFlow> aRtcpFlow,
     nsAutoPtr<MediaPipelineFilter> aFilter,
-    const nsRefPtr<MediaSessionConduit>& aConduit)
+    const RefPtr<MediaSessionConduit>& aConduit)
 {
   // We will error out earlier if this isn't here.
-  nsRefPtr<RemoteSourceStreamInfo> stream =
+  RefPtr<RemoteSourceStreamInfo> stream =
       mPCMedia->GetRemoteStreamById(aTrack.GetStreamId());
 
-  nsRefPtr<MediaPipelineReceive> pipeline;
+  RefPtr<MediaPipelineReceive> pipeline;
 
   TrackID numericTrackId = stream->GetNumericTrackId(aTrack.GetTrackId());
   MOZ_ASSERT(numericTrackId != TRACK_INVALID);
@@ -497,7 +497,7 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
   }
 
   rv = stream->StorePipeline(aTrack.GetTrackId(),
-                             nsRefPtr<MediaPipeline>(pipeline));
+                             RefPtr<MediaPipeline>(pipeline));
   if (NS_FAILED(rv)) {
     MOZ_MTLOG(ML_ERROR, "Couldn't store receiving pipeline " <<
                         static_cast<unsigned>(rv));
@@ -514,19 +514,19 @@ MediaPipelineFactory::CreateMediaPipelineSending(
     const JsepTrackPair& aTrackPair,
     const JsepTrack& aTrack,
     size_t aLevel,
-    nsRefPtr<TransportFlow> aRtpFlow,
-    nsRefPtr<TransportFlow> aRtcpFlow,
+    RefPtr<TransportFlow> aRtpFlow,
+    RefPtr<TransportFlow> aRtcpFlow,
     nsAutoPtr<MediaPipelineFilter> aFilter,
-    const nsRefPtr<MediaSessionConduit>& aConduit)
+    const RefPtr<MediaSessionConduit>& aConduit)
 {
   nsresult rv;
 
   // This is checked earlier
-  nsRefPtr<LocalSourceStreamInfo> stream =
+  RefPtr<LocalSourceStreamInfo> stream =
       mPCMedia->GetLocalStreamById(aTrack.GetStreamId());
 
   // Now we have all the pieces, create the pipeline
-  nsRefPtr<MediaPipelineTransmit> pipeline = new MediaPipelineTransmit(
+  RefPtr<MediaPipelineTransmit> pipeline = new MediaPipelineTransmit(
       mPC->GetHandle(),
       mPC->GetMainThread().get(),
       mPC->GetSTSThread(),
@@ -558,7 +558,7 @@ MediaPipelineFactory::CreateMediaPipelineSending(
   }
 
   rv = stream->StorePipeline(aTrack.GetTrackId(),
-                             nsRefPtr<MediaPipeline>(pipeline));
+                             RefPtr<MediaPipeline>(pipeline));
   if (NS_FAILED(rv)) {
     MOZ_MTLOG(ML_ERROR, "Couldn't store receiving pipeline " <<
                         static_cast<unsigned>(rv));
@@ -581,7 +581,7 @@ nsresult
 MediaPipelineFactory::GetOrCreateAudioConduit(
     const JsepTrackPair& aTrackPair,
     const JsepTrack& aTrack,
-    nsRefPtr<MediaSessionConduit>* aConduitp)
+    RefPtr<MediaSessionConduit>* aConduitp)
 {
 
   if (!aTrack.GetNegotiatedDetails()) {
@@ -591,7 +591,7 @@ MediaPipelineFactory::GetOrCreateAudioConduit(
 
   bool receiving = aTrack.GetDirection() == sdp::kRecv;
 
-  nsRefPtr<AudioSessionConduit> conduit =
+  RefPtr<AudioSessionConduit> conduit =
     mPCMedia->GetAudioConduit(aTrackPair.mLevel);
 
   if (!conduit) {
@@ -691,7 +691,7 @@ nsresult
 MediaPipelineFactory::GetOrCreateVideoConduit(
     const JsepTrackPair& aTrackPair,
     const JsepTrack& aTrack,
-    nsRefPtr<MediaSessionConduit>* aConduitp)
+    RefPtr<MediaSessionConduit>* aConduitp)
 {
 
   if (!aTrack.GetNegotiatedDetails()) {
@@ -701,7 +701,7 @@ MediaPipelineFactory::GetOrCreateVideoConduit(
 
   bool receiving = aTrack.GetDirection() == sdp::kRecv;
 
-  nsRefPtr<VideoSessionConduit> conduit =
+  RefPtr<VideoSessionConduit> conduit =
     mPCMedia->GetVideoConduit(aTrackPair.mLevel);
 
   if (!conduit) {
@@ -816,11 +816,11 @@ MediaPipelineFactory::ConfigureVideoCodecMode(const JsepTrack& aTrack,
                                               VideoSessionConduit& aConduit)
 {
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  nsRefPtr<LocalSourceStreamInfo> stream =
+  RefPtr<LocalSourceStreamInfo> stream =
     mPCMedia->GetLocalStreamById(aTrack.GetStreamId());
 
   //get video track
-  nsRefPtr<mozilla::dom::VideoStreamTrack> videotrack =
+  RefPtr<mozilla::dom::VideoStreamTrack> videotrack =
     stream->GetVideoTrackByTrackId(aTrack.GetTrackId());
 
   if (!videotrack) {
@@ -829,7 +829,7 @@ MediaPipelineFactory::ConfigureVideoCodecMode(const JsepTrack& aTrack,
   }
 
   //get video source type
-  nsRefPtr<DOMMediaStream> mediastream =
+  RefPtr<DOMMediaStream> mediastream =
     mPCMedia->GetLocalStreamById(aTrack.GetStreamId())->GetMediaStream();
 
   DOMLocalMediaStream* domLocalStream = mediastream->AsDOMLocalMediaStream();

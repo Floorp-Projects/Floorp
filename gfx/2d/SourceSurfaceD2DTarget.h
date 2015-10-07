@@ -47,14 +47,14 @@ private:
   // this may happen on destruction or copying.
   void MarkIndependent();
 
-  nsRefPtr<ID3D10ShaderResourceView> mSRView;
-  nsRefPtr<ID2D1Bitmap> mBitmap;
+  RefPtr<ID3D10ShaderResourceView> mSRView;
+  RefPtr<ID2D1Bitmap> mBitmap;
   // Non-null if this is a "lazy copy" of the given draw target.
   // Null if we've made a copy. The target is not kept alive, otherwise we'd
   // have leaks since it might keep us alive. If the target is destroyed, it
   // will notify us.
   DrawTargetD2D* mDrawTarget;
-  mutable nsRefPtr<ID3D10Texture2D> mTexture;
+  mutable RefPtr<ID3D10Texture2D> mTexture;
   SurfaceFormat mFormat;
   bool mOwnsCopy;
 };
@@ -78,7 +78,7 @@ private:
   friend class SourceSurfaceD2DTarget;
   void EnsureMapped();
 
-  mutable nsRefPtr<ID3D10Texture2D> mTexture;
+  mutable RefPtr<ID3D10Texture2D> mTexture;
   SurfaceFormat mFormat;
   D3D10_MAPPED_TEXTURE2D mMap;
   bool mMapped;

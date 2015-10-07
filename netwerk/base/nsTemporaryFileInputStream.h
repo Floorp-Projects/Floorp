@@ -47,7 +47,7 @@ public:
 private:
   virtual ~nsTemporaryFileInputStream() { }
 
-  nsRefPtr<FileDescOwner> mFileDescOwner;
+  RefPtr<FileDescOwner> mFileDescOwner;
   uint64_t mStartPos;
   uint64_t mEndPos;
   bool mClosed;

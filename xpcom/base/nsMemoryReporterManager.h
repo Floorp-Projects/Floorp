@@ -214,7 +214,7 @@ private:
     // This is a pointer to an nsTArray because otherwise C++ is
     // unhappy unless this header includes ContentParent.h, which not
     // everything that includes this header knows how to find.
-    nsTArray<nsRefPtr<mozilla::dom::ContentParent>>* mChildrenPending;
+    nsTArray<RefPtr<mozilla::dom::ContentParent>>* mChildrenPending;
     uint32_t                             mNumProcessesRunning;
     uint32_t                             mNumProcessesCompleted;
     uint32_t                             mConcurrencyLimit;

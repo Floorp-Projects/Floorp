@@ -104,7 +104,7 @@ XPathEvaluator::Evaluate(const nsAString & aExpression,
     }
 
     nsCOMPtr<nsIXPathResult> inResult = do_QueryInterface(aInResult);
-    nsRefPtr<XPathResult> result =
+    RefPtr<XPathResult> result =
         expression->Evaluate(*node, aType,
                              static_cast<XPathResult*>(inResult.get()), rv);
     if (rv.Failed()) {
@@ -174,7 +174,7 @@ already_AddRefed<XPathEvaluator>
 XPathEvaluator::Constructor(const GlobalObject& aGlobal,
                             ErrorResult& rv)
 {
-    nsRefPtr<XPathEvaluator> newObj = new XPathEvaluator(nullptr);
+    RefPtr<XPathEvaluator> newObj = new XPathEvaluator(nullptr);
     return newObj.forget();
 }
 

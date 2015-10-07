@@ -80,7 +80,7 @@ public:
 protected:
   ~ScrollAreaEvent() {}
 
-  nsRefPtr<DOMRect> mClientArea;
+  RefPtr<DOMRect> mClientArea;
 };
 
 } // namespace dom

@@ -363,7 +363,7 @@ nsXULTemplateQueryProcessorRDF::CompileQuery(nsIXULTemplateBuilder* aBuilder,
                                              nsIAtom* aMemberVariable,
                                              nsISupports** _retval)
 {
-    nsRefPtr<nsRDFQuery> query = new nsRDFQuery(this);
+    RefPtr<nsRDFQuery> query = new nsRDFQuery(this);
     if (!query)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -559,7 +559,7 @@ nsXULTemplateQueryProcessorRDF::AddBinding(nsIDOMNode* aRuleNode,
     if (NS_FAILED(rv))
         return rv;
 
-    nsRefPtr<RDFBindingSet> bindings = mRuleToBindingsMap.GetWeak(aRuleNode);
+    RefPtr<RDFBindingSet> bindings = mRuleToBindingsMap.GetWeak(aRuleNode);
     if (!bindings) {
         bindings = new RDFBindingSet();
         mRuleToBindingsMap.Put(aRuleNode, bindings);
@@ -581,7 +581,7 @@ nsXULTemplateQueryProcessorRDF::TranslateRef(nsISupports* aDatasource,
     nsCOMPtr<nsIRDFResource> uri;
     gRDFService->GetUnicodeResource(aRefString, getter_AddRefs(uri));
 
-    nsRefPtr<nsXULTemplateResultRDF> refresult = new nsXULTemplateResultRDF(uri);
+    RefPtr<nsXULTemplateResultRDF> refresult = new nsXULTemplateResultRDF(uri);
     if (! refresult)
         return NS_ERROR_OUT_OF_MEMORY;
 

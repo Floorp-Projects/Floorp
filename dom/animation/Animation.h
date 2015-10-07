@@ -289,7 +289,7 @@ public:
    * the style rule on the next refresh driver tick as well (because it
    * is running and has an effect to sample).
    */
-  void ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
+  void ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
                     nsCSSPropertySet& aSetProperties,
                     bool& aNeedsRefreshes);
 
@@ -370,8 +370,8 @@ protected:
   virtual CommonAnimationManager* GetAnimationManager() const = 0;
   AnimationCollection* GetCollection() const;
 
-  nsRefPtr<AnimationTimeline> mTimeline;
-  nsRefPtr<KeyframeEffectReadOnly> mEffect;
+  RefPtr<AnimationTimeline> mTimeline;
+  RefPtr<KeyframeEffectReadOnly> mEffect;
   // The beginning of the delay period.
   Nullable<TimeDuration> mStartTime; // Timeline timescale
   Nullable<TimeDuration> mHoldTime;  // Animation timescale
@@ -383,14 +383,14 @@ protected:
   // and fulfilled when Play() is successfully completed.
   // This object is lazily created by GetReady.
   // See http://w3c.github.io/web-animations/#current-ready-promise
-  nsRefPtr<Promise> mReady;
+  RefPtr<Promise> mReady;
 
   // A Promise that is resolved when we reach the end of the effect, or
   // 0 when playing backwards. The Promise is replaced if the animation is
   // finished but then a state change makes it not finished.
   // This object is lazily created by GetFinished.
   // See http://w3c.github.io/web-animations/#current-finished-promise
-  nsRefPtr<Promise> mFinished;
+  RefPtr<Promise> mFinished;
 
   // Indicates if the animation is in the pending state (and what state it is
   // waiting to enter when it finished pending). We use this rather than

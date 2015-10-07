@@ -22,7 +22,7 @@ namespace EXPERIMENTAL {
 /** Easy mode interface to SkRecord-based SkCanvas recording.
  *
  *  scoped_ptr<SkRecording> recording(new SkRecording(1920, 1080));
- *  skia::nsRefPtr<SkCanvas> canvas(skia::SharePtr(recording->canvas()));
+ *  skia::RefPtr<SkCanvas> canvas(skia::SharePtr(recording->canvas()));
  *
  *  canvas->drawThis();
  *  canvas->clipThat();

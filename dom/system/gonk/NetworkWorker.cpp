@@ -148,7 +148,7 @@ NetworkWorker::FactoryCreate()
     ClearOnShutdown(&gNetworkUtils);
   }
 
-  nsRefPtr<NetworkWorker> worker = gNetworkWorker.get();
+  RefPtr<NetworkWorker> worker = gNetworkWorker.get();
   return worker.forget();
 }
 

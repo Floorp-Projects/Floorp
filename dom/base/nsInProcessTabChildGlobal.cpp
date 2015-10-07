@@ -37,7 +37,7 @@ nsInProcessTabChildGlobal::DoSendBlockingMessage(JSContext* aCx,
 
   if (mChromeMessageManager) {
     SameProcessCpowHolder cpows(js::GetRuntime(aCx), aCpows);
-    nsRefPtr<nsFrameMessageManager> mm = mChromeMessageManager;
+    RefPtr<nsFrameMessageManager> mm = mChromeMessageManager;
     nsCOMPtr<nsIFrameLoader> fl = GetFrameLoader();
     mm->ReceiveMessage(mOwner, fl, aMessage, true, &aData, &cpows, aPrincipal,
                        aRetVal);
@@ -66,7 +66,7 @@ public:
     ReceiveMessage(mTabChild->mOwner, fl, mTabChild->mChromeMessageManager);
     return NS_OK;
   }
-  nsRefPtr<nsInProcessTabChildGlobal> mTabChild;
+  RefPtr<nsInProcessTabChildGlobal> mTabChild;
 };
 
 bool
@@ -77,7 +77,7 @@ nsInProcessTabChildGlobal::DoSendAsyncMessage(JSContext* aCx,
                                               nsIPrincipal* aPrincipal)
 {
   SameProcessMessageQueue* queue = SameProcessMessageQueue::Get();
-  nsRefPtr<nsAsyncMessageToParent> ev =
+  RefPtr<nsAsyncMessageToParent> ev =
     new nsAsyncMessageToParent(aCx, this, aMessage, aData, aCpows, aPrincipal);
   queue->Push(ev);
   return true;
@@ -259,7 +259,7 @@ nsInProcessTabChildGlobal::PreHandleEvent(EventChainPreVisitor& aVisitor)
 #ifdef DEBUG
   if (mOwner) {
     nsCOMPtr<nsIFrameLoaderOwner> owner = do_QueryInterface(mOwner);
-    nsRefPtr<nsFrameLoader> fl = owner->GetFrameLoader();
+    RefPtr<nsFrameLoader> fl = owner->GetFrameLoader();
     if (fl) {
       NS_ASSERTION(this == fl->GetTabChildGlobalAsEventTarget(),
                    "Wrong event target!");
@@ -320,7 +320,7 @@ public:
     mTabChild->LoadFrameScript(mURL, mRunInGlobalScope);
     return NS_OK;
   }
-  nsRefPtr<nsInProcessTabChildGlobal> mTabChild;
+  RefPtr<nsInProcessTabChildGlobal> mTabChild;
   nsString mURL;
   bool mRunInGlobalScope;
 };

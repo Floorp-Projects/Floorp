@@ -211,7 +211,7 @@ FileHandleBase::Read(uint64_t aSize, bool aHasEncoding,
   params.offset() = mLocation;
   params.size() = aSize;
 
-  nsRefPtr<FileRequestBase> fileRequest = GenerateFileRequest();
+  RefPtr<FileRequestBase> fileRequest = GenerateFileRequest();
   if (aHasEncoding) {
     fileRequest->SetEncoding(aEncoding);
   }
@@ -255,7 +255,7 @@ FileHandleBase::Truncate(const Optional<uint64_t>& aSize, ErrorResult& aRv)
   FileRequestTruncateParams params;
   params.offset() = location;
 
-  nsRefPtr<FileRequestBase> fileRequest = GenerateFileRequest();
+  RefPtr<FileRequestBase> fileRequest = GenerateFileRequest();
 
   StartRequest(fileRequest, params);
 
@@ -283,7 +283,7 @@ FileHandleBase::Flush(ErrorResult& aRv)
 
   FileRequestFlushParams params;
 
-  nsRefPtr<FileRequestBase> fileRequest = GenerateFileRequest();
+  RefPtr<FileRequestBase> fileRequest = GenerateFileRequest();
 
   StartRequest(fileRequest, params);
 
@@ -588,7 +588,7 @@ FileHandleBase::WriteInternal(const FileRequestData& aData,
   params.data() = aData;
   params.dataLength() = aDataLength;
 
-  nsRefPtr<FileRequestBase> fileRequest = GenerateFileRequest();
+  RefPtr<FileRequestBase> fileRequest = GenerateFileRequest();
   MOZ_ASSERT(fileRequest);
 
   StartRequest(fileRequest, params);

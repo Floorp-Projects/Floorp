@@ -208,7 +208,7 @@ private:
    */
   AlignedArray<uint8_t> mData;
 
-  nsRefPtr<SourceSurfaceCGContext> mSnapshot;
+  RefPtr<SourceSurfaceCGContext> mSnapshot;
   bool mMayContainInvalidPremultipliedData;
 };
 

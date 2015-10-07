@@ -156,7 +156,7 @@ protected:
    */
   nsIFrame* ObtainIntrinsicSizeFrame();
 
-  nsRefPtr<nsFrameLoader> mFrameLoader;
+  RefPtr<nsFrameLoader> mFrameLoader;
   nsView* mInnerView;
   bool mIsInline;
   bool mPostedReflowCallback;

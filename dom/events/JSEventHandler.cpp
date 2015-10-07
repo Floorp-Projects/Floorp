@@ -161,7 +161,7 @@ JSEventHandler::HandleEvent(nsIDOMEvent* aEvent)
       msgOrEvent.SetAsEvent() = aEvent->InternalDOMEvent();
     }
 
-    nsRefPtr<OnErrorEventHandlerNonNull> handler =
+    RefPtr<OnErrorEventHandlerNonNull> handler =
       mTypedHandler.OnErrorEventHandler();
     ErrorResult rv;
     bool handled = handler->Call(mTarget, msgOrEvent, fileName, lineNumber,
@@ -179,7 +179,7 @@ JSEventHandler::HandleEvent(nsIDOMEvent* aEvent)
   if (mTypedHandler.Type() == TypedEventHandler::eOnBeforeUnload) {
     MOZ_ASSERT(mEventName == nsGkAtoms::onbeforeunload);
 
-    nsRefPtr<OnBeforeUnloadEventHandlerNonNull> handler =
+    RefPtr<OnBeforeUnloadEventHandlerNonNull> handler =
       mTypedHandler.OnBeforeUnloadEventHandler();
     ErrorResult rv;
     nsString retval;
@@ -210,7 +210,7 @@ JSEventHandler::HandleEvent(nsIDOMEvent* aEvent)
 
   MOZ_ASSERT(mTypedHandler.Type() == TypedEventHandler::eNormal);
   ErrorResult rv;
-  nsRefPtr<EventHandlerNonNull> handler = mTypedHandler.NormalEventHandler();
+  RefPtr<EventHandlerNonNull> handler = mTypedHandler.NormalEventHandler();
   JS::Rooted<JS::Value> retval(CycleCollectedJSRuntime::Get()->Runtime());
   handler->Call(mTarget, *(aEvent->InternalDOMEvent()), &retval, rv);
   if (rv.Failed()) {

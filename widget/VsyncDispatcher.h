@@ -10,7 +10,7 @@
 #include "mozilla/TimeStamp.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 namespace mozilla {
 
@@ -57,7 +57,7 @@ private:
   void ObserveVsync(bool aEnable);
 
   Mutex mCompositorObserverLock;
-  nsRefPtr<VsyncObserver> mCompositorVsyncObserver;
+  RefPtr<VsyncObserver> mCompositorVsyncObserver;
   bool mDidShutdown;
 };
 
@@ -89,8 +89,8 @@ private:
   bool NeedsVsync();
 
   Mutex mRefreshTimersLock;
-  nsRefPtr<VsyncObserver> mParentRefreshTimer;
-  nsTArray<nsRefPtr<VsyncObserver>> mChildRefreshTimers;
+  RefPtr<VsyncObserver> mParentRefreshTimer;
+  nsTArray<RefPtr<VsyncObserver>> mChildRefreshTimers;
 };
 
 } // namespace mozilla

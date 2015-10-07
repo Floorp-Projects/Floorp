@@ -2940,7 +2940,7 @@ void
 SVGTextDrawPathCallbacks::HandleTextGeometry()
 {
   if (IsClipPathChild()) {
-    nsRefPtr<Path> path = gfx->GetPath();
+    RefPtr<Path> path = gfx->GetPath();
     ColorPattern white(Color(1.f, 1.f, 1.f, 1.f)); // for masking, so no ToDeviceColor
     gfx->GetDrawTarget()->Fill(path, white);
   } else {
@@ -3009,12 +3009,12 @@ SVGTextDrawPathCallbacks::FillGeometry()
   GeneralPattern fillPattern;
   MakeFillPattern(&fillPattern);
   if (fillPattern.GetPattern()) {
-    nsRefPtr<Path> path = gfx->GetPath();
+    RefPtr<Path> path = gfx->GetPath();
     FillRule fillRule = nsSVGUtils::ToFillRule(IsClipPathChild() ?
                           mFrame->StyleSVG()->mClipRule :
                           mFrame->StyleSVG()->mFillRule);
     if (fillRule != path->GetFillRule()) {
-      nsRefPtr<PathBuilder> builder = path->CopyToBuilder(fillRule);
+      RefPtr<PathBuilder> builder = path->CopyToBuilder(fillRule);
       path = builder->Finish();
     }
     gfx->GetDrawTarget()->Fill(path, fillPattern);
@@ -3046,7 +3046,7 @@ SVGTextDrawPathCallbacks::StrokeGeometry()
           gfx->Multiply(outerSVGToUser);
         }
 
-        nsRefPtr<Path> path = gfx->GetPath();
+        RefPtr<Path> path = gfx->GetPath();
         SVGContentUtils::AutoStrokeOptions strokeOptions;
         SVGContentUtils::GetStrokeOptions(&strokeOptions, svgOwner,
                                           mFrame->StyleContext(),
@@ -3085,7 +3085,7 @@ SVGTextContextPaint::Paint::GetPattern(const DrawTarget* aDrawTarget,
                                        nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                                        const gfxMatrix& aCTM)
 {
-  nsRefPtr<gfxPattern> pattern;
+  RefPtr<gfxPattern> pattern;
   if (mPatternCache.Get(aOpacity, getter_AddRefs(pattern))) {
     // Set the pattern matrix just in case it was messed with by a previous
     // caller. We should get the same matrix each time a pattern is constructed
@@ -3738,7 +3738,7 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
   aContext.Multiply(canvasTMForChildren);
   gfxMatrix currentMatrix = aContext.CurrentMatrix();
 
-  nsRefPtr<nsCaret> caret = presContext->PresShell()->GetCaret();
+  RefPtr<nsCaret> caret = presContext->PresShell()->GetCaret();
   nsRect caretRect;
   nsIFrame* caretFrame = caret->GetPaintGeometry(&caretRect);
 
@@ -4162,7 +4162,7 @@ SVGTextFrame::SelectSubString(nsIContent* aContent,
   chit.NextWithinSubtree(nchars);
   nchars = chit.TextElementCharIndex() - charnum;
 
-  nsRefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
+  RefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
 
   frameSelection->HandleClick(content, charnum, charnum + nchars,
                               false, false, CARET_ASSOCIATE_BEFORE);
@@ -4954,14 +4954,14 @@ SVGTextFrame::GetTextPath(nsIFrame* aTextPathFrame)
     return nullptr;
   }
 
-  nsRefPtr<Path> path = element->GetOrBuildPathForMeasuring();
+  RefPtr<Path> path = element->GetOrBuildPathForMeasuring();
   if (!path) {
     return nullptr;
   }
 
   gfxMatrix matrix = element->PrependLocalTransformsTo(gfxMatrix());
   if (!matrix.IsIdentity()) {
-    nsRefPtr<PathBuilder> builder =
+    RefPtr<PathBuilder> builder =
       path->TransformedCopyToBuilder(ToMatrix(matrix));
     path = builder->Finish();
   }
@@ -4988,7 +4988,7 @@ SVGTextFrame::GetStartOffset(nsIFrame* aTextPathFrame)
     &tp->mLengthAttributes[dom::SVGTextPathElement::STARTOFFSET];
 
   if (length->IsPercentage()) {
-    nsRefPtr<Path> data = GetTextPath(aTextPathFrame);
+    RefPtr<Path> data = GetTextPath(aTextPathFrame);
     return data ?
       length->GetAnimValInSpecifiedUnits() * data->ComputeLength() / 100.0 :
       0.0;
@@ -5011,7 +5011,7 @@ SVGTextFrame::DoTextPathLayout()
     }
 
     // Get the path itself.
-    nsRefPtr<Path> path = GetTextPath(textPathFrame);
+    RefPtr<Path> path = GetTextPath(textPathFrame);
     if (!path) {
       it.AdvancePastCurrentTextPathFrame();
       continue;
@@ -5204,7 +5204,7 @@ SVGTextFrame::DoGlyphPositioning()
     float actualTextLength =
       static_cast<float>(presContext->AppUnitsToGfxUnits(frameLength) * factor);
 
-    nsRefPtr<SVGAnimatedEnumeration> lengthAdjustEnum = element->LengthAdjust();
+    RefPtr<SVGAnimatedEnumeration> lengthAdjustEnum = element->LengthAdjust();
     uint16_t lengthAdjust = lengthAdjustEnum->AnimVal();
     switch (lengthAdjust) {
       case SVG_LENGTHADJUST_SPACINGANDGLYPHS:
@@ -5771,7 +5771,7 @@ SetupInheritablePaint(const DrawTarget* aDrawTarget,
     nsSVGEffects::GetPaintServer(aFrame, &(style->*aFillOrStroke), aProperty);
 
   if (ps) {
-    nsRefPtr<gfxPattern> pattern =
+    RefPtr<gfxPattern> pattern =
       ps->GetPaintServerPattern(aFrame, aDrawTarget, aContextMatrix,
                                 aFillOrStroke, aOpacity);
     if (pattern) {
@@ -5780,7 +5780,7 @@ SetupInheritablePaint(const DrawTarget* aDrawTarget,
     }
   }
   if (aOuterContextPaint) {
-    nsRefPtr<gfxPattern> pattern;
+    RefPtr<gfxPattern> pattern;
     switch ((style->*aFillOrStroke).mType) {
     case eStyleSVGPaintType_ContextFill:
       pattern = aOuterContextPaint->GetFillPattern(aDrawTarget, aOpacity,

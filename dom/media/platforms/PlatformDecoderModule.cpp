@@ -126,12 +126,12 @@ PlatformDecoderModule::CreateCDMWrapper(CDMProxy* aProxy)
 
   // We always create a default PDM in order to decode
   // non-encrypted tracks.
-  nsRefPtr<PlatformDecoderModule> pdm = Create();
+  RefPtr<PlatformDecoderModule> pdm = Create();
   if (!pdm) {
     return nullptr;
   }
 
-  nsRefPtr<PlatformDecoderModule> emepdm(
+  RefPtr<PlatformDecoderModule> emepdm(
     new EMEDecoderModule(aProxy, pdm, cdmDecodesAudio, cdmDecodesVideo));
   return emepdm.forget();
 }
@@ -143,7 +143,7 @@ PlatformDecoderModule::Create()
 {
   // Note: This (usually) runs on the decode thread.
 
-  nsRefPtr<PlatformDecoderModule> m(CreatePDM());
+  RefPtr<PlatformDecoderModule> m(CreatePDM());
 
   if (m && NS_SUCCEEDED(m->Startup())) {
     return m.forget();
@@ -156,12 +156,12 @@ already_AddRefed<PlatformDecoderModule>
 PlatformDecoderModule::CreatePDM()
 {
   if (sGMPDecoderEnabled) {
-    nsRefPtr<PlatformDecoderModule> m(new GMPDecoderModule());
+    RefPtr<PlatformDecoderModule> m(new GMPDecoderModule());
     return m.forget();
   }
 #ifdef MOZ_WIDGET_ANDROID
   if(sAndroidMCDecoderPreferred && sAndroidMCDecoderEnabled){
-    nsRefPtr<PlatformDecoderModule> m(new AndroidDecoderModule());
+    RefPtr<PlatformDecoderModule> m(new AndroidDecoderModule());
     return m.forget();
   }
 #endif
@@ -169,28 +169,28 @@ PlatformDecoderModule::CreatePDM()
     return CreateBlankDecoderModule();
   }
 #ifdef XP_WIN
-  nsRefPtr<PlatformDecoderModule> m(new WMFDecoderModule());
+  RefPtr<PlatformDecoderModule> m(new WMFDecoderModule());
   return m.forget();
 #endif
 #ifdef MOZ_FFMPEG
-  nsRefPtr<PlatformDecoderModule> mffmpeg = FFmpegRuntimeLinker::CreateDecoderModule();
+  RefPtr<PlatformDecoderModule> mffmpeg = FFmpegRuntimeLinker::CreateDecoderModule();
   if (mffmpeg) {
     return mffmpeg.forget();
   }
 #endif
 #ifdef MOZ_APPLEMEDIA
-  nsRefPtr<PlatformDecoderModule> m(new AppleDecoderModule());
+  RefPtr<PlatformDecoderModule> m(new AppleDecoderModule());
   return m.forget();
 #endif
 #ifdef MOZ_GONK_MEDIACODEC
   if (sGonkDecoderEnabled) {
-    nsRefPtr<PlatformDecoderModule> m(new GonkDecoderModule());
+    RefPtr<PlatformDecoderModule> m(new GonkDecoderModule());
     return m.forget();
   }
 #endif
 #ifdef MOZ_WIDGET_ANDROID
   if(sAndroidMCDecoderEnabled){
-    nsRefPtr<PlatformDecoderModule> m(new AndroidDecoderModule());
+    RefPtr<PlatformDecoderModule> m(new AndroidDecoderModule());
     return m.forget();
   }
 #endif
@@ -204,7 +204,7 @@ PlatformDecoderModule::CreateDecoder(const TrackInfo& aConfig,
                                      layers::LayersBackend aLayersBackend,
                                      layers::ImageContainer* aImageContainer)
 {
-  nsRefPtr<MediaDataDecoder> m;
+  RefPtr<MediaDataDecoder> m;
 
   bool hasPlatformDecoder = SupportsMimeType(aConfig.mMimeType);
 
@@ -230,7 +230,7 @@ PlatformDecoderModule::CreateDecoder(const TrackInfo& aConfig,
   }
 
   MediaDataDecoderCallback* callback = aCallback;
-  nsRefPtr<DecoderCallbackFuzzingWrapper> callbackWrapper;
+  RefPtr<DecoderCallbackFuzzingWrapper> callbackWrapper;
   if (sEnableFuzzingWrapper) {
     callbackWrapper = new DecoderCallbackFuzzingWrapper(aCallback);
     callbackWrapper->SetVideoOutputMinimumInterval(
@@ -240,7 +240,7 @@ PlatformDecoderModule::CreateDecoder(const TrackInfo& aConfig,
   }
 
   if (H264Converter::IsH264(aConfig)) {
-    nsRefPtr<H264Converter> h
+    RefPtr<H264Converter> h
       = new H264Converter(this,
                           *aConfig.GetAsVideoInfo(),
                           aLayersBackend,

@@ -23,7 +23,7 @@ Feature::Create(WorkerPrivate* aWorkerPrivate)
 {
   MOZ_ASSERT(aWorkerPrivate);
 
-  nsRefPtr<Feature> feature = new Feature(aWorkerPrivate);
+  RefPtr<Feature> feature = new Feature(aWorkerPrivate);
 
   if (!aWorkerPrivate->AddFeature(aWorkerPrivate->GetJSContext(), feature)) {
     return nullptr;

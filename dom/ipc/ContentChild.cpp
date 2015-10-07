@@ -843,7 +843,7 @@ ContentChild::InitXPCOM()
     }
 
     // This object is held alive by the observer service.
-    nsRefPtr<SystemMessageHandledObserver> sysMsgObserver =
+    RefPtr<SystemMessageHandledObserver> sysMsgObserver =
         new SystemMessageHandledObserver();
     sysMsgObserver->Init();
 
@@ -887,7 +887,7 @@ public:
 private:
     ~MemoryReportCallback() {}
 
-    nsRefPtr<MemoryReportRequestChild> mActor;
+    RefPtr<MemoryReportRequestChild> mActor;
     const nsCString mProcess;
 };
 NS_IMPL_ISUPPORTS(
@@ -929,7 +929,7 @@ NS_IMETHODIMP MemoryReportRequestChild::Run()
 
     // Run the reporters.  The callback will turn each measurement into a
     // MemoryReport.
-    nsRefPtr<MemoryReportCallback> cb =
+    RefPtr<MemoryReportCallback> cb =
         new MemoryReportCallback(this, process);
     mgr->GetReportsForThisProcessExtended(cb, nullptr, mAnonymize,
                                           FileDescriptorToFILE(mDMDFile, "wb"));
@@ -943,7 +943,7 @@ ContentChild::RecvDataStoreNotify(const uint32_t& aAppId,
                                   const nsString& aName,
                                   const nsString& aManifestURL)
 {
-  nsRefPtr<DataStoreService> service = DataStoreService::GetOrCreate();
+  RefPtr<DataStoreService> service = DataStoreService::GetOrCreate();
   if (NS_WARN_IF(!service)) {
     return false;
   }
@@ -980,7 +980,7 @@ ContentChild::RecvPCycleCollectWithLogsConstructor(PCycleCollectWithLogsChild* a
                                                    const FileDescriptor& aCCLog)
 {
     // Take a reference here, where the XPCOM type is regained.
-    nsRefPtr<CycleCollectWithLogsChild> sink = static_cast<CycleCollectWithLogsChild*>(aActor);
+    RefPtr<CycleCollectWithLogsChild> sink = static_cast<CycleCollectWithLogsChild*>(aActor);
     nsCOMPtr<nsIMemoryInfoDumper> dumper = do_GetService("@mozilla.org/memory-info-dumper;1");
 
     dumper->DumpGCAndCCLogsToSink(aDumpAllTraces, sink);
@@ -1195,7 +1195,7 @@ ContentChild::RecvSpeakerManagerNotify()
 {
 #ifdef MOZ_WIDGET_GONK
     // Only notify the process which has the SpeakerManager instance.
-    nsRefPtr<SpeakerManagerService> service =
+    RefPtr<SpeakerManagerService> service =
         SpeakerManagerService::GetSpeakerManagerService();
     if (service) {
         service->Notify();
@@ -1645,7 +1645,7 @@ PPSMContentDownloaderChild*
 ContentChild::AllocPPSMContentDownloaderChild(const uint32_t& aCertType)
 {
     // NB: We don't need aCertType in the child actor.
-    nsRefPtr<PSMContentDownloaderChild> child = new PSMContentDownloaderChild();
+    RefPtr<PSMContentDownloaderChild> child = new PSMContentDownloaderChild();
     return child.forget().take();
 }
 
@@ -1653,7 +1653,7 @@ bool
 ContentChild::DeallocPPSMContentDownloaderChild(PPSMContentDownloaderChild* aListener)
 {
     auto* listener = static_cast<PSMContentDownloaderChild*>(aListener);
-    nsRefPtr<PSMContentDownloaderChild> child = dont_AddRef(listener);
+    RefPtr<PSMContentDownloaderChild> child = dont_AddRef(listener);
     return true;
 }
 
@@ -2031,7 +2031,7 @@ bool
 ContentChild::RecvSystemMemoryAvailable(const uint64_t& aGetterId,
                                         const uint32_t& aMemoryAvailable)
 {
-    nsRefPtr<Promise> p = dont_AddRef(reinterpret_cast<Promise*>(aGetterId));
+    RefPtr<Promise> p = dont_AddRef(reinterpret_cast<Promise*>(aGetterId));
 
     if (!aMemoryAvailable) {
         p->MaybeReject(NS_ERROR_NOT_AVAILABLE);
@@ -2096,7 +2096,7 @@ ContentChild::RecvAsyncMessage(const nsString& aMsg,
                                InfallibleTArray<CpowEntry>&& aCpows,
                                const IPC::Principal& aPrincipal)
 {
-    nsRefPtr<nsFrameMessageManager> cpm = nsFrameMessageManager::GetChildProcessManager();
+    RefPtr<nsFrameMessageManager> cpm = nsFrameMessageManager::GetChildProcessManager();
     if (cpm) {
         StructuredCloneData data;
         ipc::UnpackClonedMessageDataForChild(aData, data);
@@ -2325,7 +2325,7 @@ bool
 ContentChild::RecvVolumes(nsTArray<VolumeInfo>&& aVolumes)
 {
 #ifdef MOZ_WIDGET_GONK
-    nsRefPtr<nsVolumeService> vs = nsVolumeService::GetSingleton();
+    RefPtr<nsVolumeService> vs = nsVolumeService::GetSingleton();
     if (vs) {
         vs->RecvVolumesFromParent(aVolumes);
     }
@@ -2346,7 +2346,7 @@ ContentChild::RecvFilePathUpdate(const nsString& aStorageType,
         return true;
     }
 
-    nsRefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(aStorageType, aStorageName, aPath);
+    RefPtr<DeviceStorageFile> dsf = new DeviceStorageFile(aStorageType, aStorageName, aPath);
 
     nsString reason;
     CopyASCIItoUTF16(aReason, reason);
@@ -2369,12 +2369,12 @@ ContentChild::RecvFileSystemUpdate(const nsString& aFsName,
                                    const bool& aIsHotSwappable)
 {
 #ifdef MOZ_WIDGET_GONK
-    nsRefPtr<nsVolume> volume = new nsVolume(aFsName, aVolumeName, aState,
+    RefPtr<nsVolume> volume = new nsVolume(aFsName, aVolumeName, aState,
                                              aMountGeneration, aIsMediaPresent,
                                              aIsSharing, aIsFormatting, aIsFake,
                                              aIsUnmounting, aIsRemovable, aIsHotSwappable);
 
-    nsRefPtr<nsVolumeService> vs = nsVolumeService::GetSingleton();
+    RefPtr<nsVolumeService> vs = nsVolumeService::GetSingleton();
     if (vs) {
         vs->UpdateVolume(volume);
     }
@@ -2399,7 +2399,7 @@ bool
 ContentChild::RecvVolumeRemoved(const nsString& aFsName)
 {
 #ifdef MOZ_WIDGET_GONK
-    nsRefPtr<nsVolumeService> vs = nsVolumeService::GetSingleton();
+    RefPtr<nsVolumeService> vs = nsVolumeService::GetSingleton();
     if (vs) {
         vs->RemoveVolumeByName(aFsName);
     }
@@ -2417,7 +2417,7 @@ ContentChild::RecvNotifyProcessPriorityChanged(
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     NS_ENSURE_TRUE(os, true);
 
-    nsRefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
+    RefPtr<nsHashPropertyBag> props = new nsHashPropertyBag();
     props->SetPropertyAsInt32(NS_LITERAL_STRING("priority"),
                               static_cast<int32_t>(aPriority));
 
@@ -2803,7 +2803,7 @@ bool
 ContentChild::RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent)
 {
 #ifdef MOZ_GAMEPAD
-    nsRefPtr<GamepadService> svc(GamepadService::GetService());
+    RefPtr<GamepadService> svc(GamepadService::GetService());
     if (svc) {
         svc->Update(aGamepadEvent);
     }
@@ -2872,7 +2872,7 @@ ContentChild::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
             variant->SetAsAString(data);
           } else if (item.data().type() == IPCDataTransferData::TPBlobChild) {
             BlobChild* blob = static_cast<BlobChild*>(item.data().get_PBlobChild());
-            nsRefPtr<BlobImpl> blobImpl = blob->GetBlobImpl();
+            RefPtr<BlobImpl> blobImpl = blob->GetBlobImpl();
             variant->SetAsISupports(blobImpl);
           } else {
             continue;

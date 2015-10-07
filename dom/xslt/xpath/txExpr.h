@@ -679,7 +679,7 @@ public:
     TX_DECL_EXPR
 
 private:
-    nsRefPtr<txAExprResult> mValue;
+    RefPtr<txAExprResult> mValue;
 };
 
 /**

@@ -113,10 +113,10 @@ nsRangeFrame::MakeAnonymousDiv(Element** aResult,
                                nsTArray<ContentInfo>& aElements)
 {
   nsCOMPtr<nsIDocument> doc = mContent->GetComposedDoc();
-  nsRefPtr<Element> resultElement = doc->CreateHTMLElement(nsGkAtoms::div);
+  RefPtr<Element> resultElement = doc->CreateHTMLElement(nsGkAtoms::div);
 
   // Associate the pseudo-element with the anonymous child.
-  nsRefPtr<nsStyleContext> newStyleContext =
+  RefPtr<nsStyleContext> newStyleContext =
     PresContext()->StyleSet()->ResolvePseudoElementStyle(mContent->AsElement(),
                                                          aPseudoType,
                                                          StyleContext(),

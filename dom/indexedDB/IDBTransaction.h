@@ -74,11 +74,11 @@ public:
   };
 
 private:
-  nsRefPtr<IDBDatabase> mDatabase;
-  nsRefPtr<DOMError> mError;
+  RefPtr<IDBDatabase> mDatabase;
+  RefPtr<DOMError> mError;
   nsTArray<nsString> mObjectStoreNames;
-  nsTArray<nsRefPtr<IDBObjectStore>> mObjectStores;
-  nsTArray<nsRefPtr<IDBObjectStore>> mDeletedObjectStores;
+  nsTArray<RefPtr<IDBObjectStore>> mObjectStores;
+  nsTArray<RefPtr<IDBObjectStore>> mDeletedObjectStores;
   nsAutoPtr<WorkerFeature> mWorkerFeature;
 
   // Tagged with mMode. If mMode is VERSION_CHANGE then mBackgroundActor will be

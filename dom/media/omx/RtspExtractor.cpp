@@ -44,7 +44,7 @@ public:
   virtual status_t read(MediaBuffer** buffer,
                         const ReadOptions* options = nullptr) override ;
 private:
-  nsRefPtr<RtspMediaResource> mRtspResource;
+  RefPtr<RtspMediaResource> mRtspResource;
   sp<MetaData> mFormat;
   uint32_t mTrackIdx;
   ReentrantMonitor mMonitor;

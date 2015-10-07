@@ -163,7 +163,7 @@ private:
   // The WorkerPrivate object can only be closed by this class or by the
   // RuntimeService class if gecko is shutting down. Closing the worker
   // multiple times is OK, since the second attempt will be a no-op.
-  nsRefPtr<WorkerPrivate> mWorkerPrivate;
+  RefPtr<WorkerPrivate> mWorkerPrivate;
 
   nsCOMPtr<nsITimer> mIdleWorkerTimer;
 
@@ -174,7 +174,7 @@ private:
 
   // We keep a token for |dom.serviceWorkers.idle_timeout| seconds to give the
   // worker a grace period after each event.
-  nsRefPtr<KeepAliveToken> mKeepAliveToken;
+  RefPtr<KeepAliveToken> mKeepAliveToken;
 
   uint64_t mTokenCount;
 };

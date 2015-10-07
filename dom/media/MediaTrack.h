@@ -91,7 +91,7 @@ protected:
   void SetTrackList(MediaTrackList* aList);
   void Init(nsPIDOMWindow* aOwnerWindow);
 
-  nsRefPtr<MediaTrackList> mList;
+  RefPtr<MediaTrackList> mList;
   nsString mId;
   nsString mKind;
   nsString mLabel;

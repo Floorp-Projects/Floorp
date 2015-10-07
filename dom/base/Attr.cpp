@@ -144,7 +144,7 @@ Attr::SetOwnerDocument(nsIDocument* aDocument)
   NS_ASSERTION(doc != aDocument, "bad call to Attr::SetOwnerDocument");
   doc->DeleteAllPropertiesFor(this);
 
-  nsRefPtr<mozilla::dom::NodeInfo> newNodeInfo;
+  RefPtr<mozilla::dom::NodeInfo> newNodeInfo;
   newNodeInfo = aDocument->NodeInfoManager()->
     GetNodeInfo(mNodeInfo->NameAtom(), mNodeInfo->GetPrefixAtom(),
                 mNodeInfo->NamespaceID(),
@@ -261,7 +261,7 @@ Attr::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
   nsAutoString value;
   const_cast<Attr*>(this)->GetValue(value);
 
-  nsRefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
+  RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   *aResult = new Attr(nullptr, ni.forget(), value, mNsAware);
   if (!*aResult) {
     return NS_ERROR_OUT_OF_MEMORY;

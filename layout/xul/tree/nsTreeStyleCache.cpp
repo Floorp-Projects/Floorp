@@ -76,7 +76,7 @@ nsTreeStyleCache::GetStyleContext(nsICSSPseudoComparator* aComparator,
   }
   if (!result) {
     // We missed the cache. Resolve this pseudo-style.
-    nsRefPtr<nsStyleContext> newResult = aPresContext->StyleSet()->
+    RefPtr<nsStyleContext> newResult = aPresContext->StyleSet()->
       ResolveXULTreePseudoStyle(aContent->AsElement(), aPseudoElement,
                                 aContext, aComparator);
 

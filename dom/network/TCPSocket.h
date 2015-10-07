@@ -192,9 +192,9 @@ private:
   bool mSsl;
 
   // The associated IPC actor in a child process.
-  nsRefPtr<TCPSocketChild> mSocketBridgeChild;
+  RefPtr<TCPSocketChild> mSocketBridgeChild;
   // The associated IPC actor in a parent process.
-  nsRefPtr<TCPSocketParent> mSocketBridgeParent;
+  RefPtr<TCPSocketParent> mSocketBridgeParent;
 
   // Raw socket streams
   nsCOMPtr<nsISocketTransport> mTransport;

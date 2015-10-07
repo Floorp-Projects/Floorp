@@ -10,7 +10,7 @@
 #include "mozilla/Attributes.h"
 
 #include "nsCOMPtr.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 /*****************************************************************************/
 
@@ -78,7 +78,7 @@ do_QueryObject(nsCOMPtr<T>& aRawPtr)
 
 template<class T>
 inline nsQueryObject<T>
-do_QueryObject(nsRefPtr<T>& aRawPtr)
+do_QueryObject(RefPtr<T>& aRawPtr)
 {
   return nsQueryObject<T>(aRawPtr);
 }
@@ -99,7 +99,7 @@ do_QueryObject(nsCOMPtr<T>& aRawPtr, nsresult* aErrorPtr)
 
 template<class T>
 inline nsQueryObjectWithError<T>
-do_QueryObject(nsRefPtr<T>& aRawPtr, nsresult* aErrorPtr)
+do_QueryObject(RefPtr<T>& aRawPtr, nsresult* aErrorPtr)
 {
   return nsQueryObjectWithError<T>(aRawPtr, aErrorPtr);
 }

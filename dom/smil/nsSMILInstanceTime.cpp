@@ -58,7 +58,7 @@ nsSMILInstanceTime::~nsSMILInstanceTime()
 void
 nsSMILInstanceTime::Unlink()
 {
-  nsRefPtr<nsSMILInstanceTime> deathGrip(this);
+  RefPtr<nsSMILInstanceTime> deathGrip(this);
   if (mBaseInterval) {
     mBaseInterval->RemoveDependentTime(*this);
     mBaseInterval = nullptr;
@@ -93,7 +93,7 @@ nsSMILInstanceTime::HandleChangedInterval(
   mozilla::AutoRestore<bool> setVisited(mVisited);
   mVisited = true;
 
-  nsRefPtr<nsSMILInstanceTime> deathGrip(this);
+  RefPtr<nsSMILInstanceTime> deathGrip(this);
   mCreator->HandleChangedInstanceTime(*GetBaseTime(), aSrcContainer, *this,
                                       objectChanged);
 }
@@ -109,7 +109,7 @@ nsSMILInstanceTime::HandleDeletedInterval()
   mBaseInterval = nullptr;
   mFlags &= ~kMayUpdate; // Can't update without a base interval
 
-  nsRefPtr<nsSMILInstanceTime> deathGrip(this);
+  RefPtr<nsSMILInstanceTime> deathGrip(this);
   mCreator->HandleDeletedInstanceTime(*this);
   mCreator = nullptr;
 }

@@ -178,7 +178,7 @@ protected:
   int32_t ToRowIndex(nscoord aPos) const;
   void RemoveChildFrame(nsBoxLayoutState &aState, nsIFrame *aChild);
 
-  nsTArray< nsRefPtr<nsPositionChangedEvent> > mPendingPositionChangeEvents;
+  nsTArray< RefPtr<nsPositionChangedEvent> > mPendingPositionChangeEvents;
   nsCOMPtr<nsPIBoxObject> mBoxObject;
 
   // frame markers

@@ -80,7 +80,7 @@ private:
     MOZ_COUNT_DTOR(MobileMessageCursorCallback);
   }
 
-  nsRefPtr<MobileMessageCursor> mDOMCursor;
+  RefPtr<MobileMessageCursor> mDOMCursor;
 };
 
 } // namespace mobilemessage

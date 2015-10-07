@@ -57,7 +57,7 @@ struct gfxFontFaceSrc {
     mozilla::net::ReferrerPolicy mReferrerPolicy;
     nsCOMPtr<nsIPrincipal> mOriginPrincipal; // principal if url
 
-    nsRefPtr<gfxFontFaceBufferSource> mBuffer;
+    RefPtr<gfxFontFaceBufferSource> mBuffer;
 };
 
 inline bool
@@ -137,7 +137,7 @@ public:
     // add the given font entry to the end of the family's list
     void AddFontEntry(gfxFontEntry* aFontEntry) {
         // keep ref while removing existing entry
-        nsRefPtr<gfxFontEntry> fe = aFontEntry;
+        RefPtr<gfxFontEntry> fe = aFontEntry;
         // remove existing entry, if already present
         mAvailableFonts.RemoveElement(aFontEntry);
         // insert at the beginning so that the last-defined font is the first
@@ -644,7 +644,7 @@ protected:
 
     bool                     mUnsupportedFormat;
 
-    nsRefPtr<gfxFontEntry>   mPlatformFontEntry;
+    RefPtr<gfxFontEntry>   mPlatformFontEntry;
     nsTArray<gfxFontFaceSrc> mSrcList;
     uint32_t                 mSrcIndex; // index of loading src item
     // This field is managed by the nsFontFaceLoader. In the destructor and Cancel()

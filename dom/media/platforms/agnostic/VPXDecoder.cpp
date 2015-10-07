@@ -53,7 +53,7 @@ VPXDecoder::Shutdown()
   return NS_OK;
 }
 
-nsRefPtr<MediaDataDecoder::InitPromise>
+RefPtr<MediaDataDecoder::InitPromise>
 VPXDecoder::Init()
 {
   vpx_codec_iface_t* dx = nullptr;
@@ -124,7 +124,7 @@ VPXDecoder::DoDecodeFrame(MediaRawData* aSample)
 
     VideoInfo info;
     info.mDisplay = mInfo.mDisplay;
-    nsRefPtr<VideoData> v = VideoData::Create(info,
+    RefPtr<VideoData> v = VideoData::Create(info,
                                               mImageContainer,
                                               aSample->mOffset,
                                               aSample->mTime,
@@ -159,9 +159,9 @@ nsresult
 VPXDecoder::Input(MediaRawData* aSample)
 {
   nsCOMPtr<nsIRunnable> runnable(
-    NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(
+    NS_NewRunnableMethodWithArg<RefPtr<MediaRawData>>(
       this, &VPXDecoder::DecodeFrame,
-      nsRefPtr<MediaRawData>(aSample)));
+      RefPtr<MediaRawData>(aSample)));
   mTaskQueue->Dispatch(runnable.forget());
 
   return NS_OK;

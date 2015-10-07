@@ -124,7 +124,7 @@ public:
    *         it.
    * @return The open connections.
    */
-  void getConnections(nsTArray<nsRefPtr<Connection> >& aConnections);
+  void getConnections(nsTArray<RefPtr<Connection> >& aConnections);
 
 private:
   Service();
@@ -148,7 +148,7 @@ private:
    * The list of connections we have created.  Modifications to it are
    * protected by |mRegistrationMutex|.
    */
-  nsTArray<nsRefPtr<Connection> > mConnections;
+  nsTArray<RefPtr<Connection> > mConnections;
 
   /**
    * Frees as much heap memory as possible from all of the known open

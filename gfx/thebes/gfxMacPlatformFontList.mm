@@ -158,7 +158,7 @@ MacOSFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
         return NS_OK;
     }
 
-    nsRefPtr<gfxCharacterMap> charmap;
+    RefPtr<gfxCharacterMap> charmap;
     nsresult rv;
     bool symbolFont = false; // currently ignored
 
@@ -1105,7 +1105,7 @@ MacFontInfo::LoadFontFamilyData(const nsAString& aFamilyName)
                 const uint8_t *cmapData =
                     (const uint8_t*)CFDataGetBytePtr(cmapTable);
                 uint32_t cmapLen = CFDataGetLength(cmapTable);
-                nsRefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
+                RefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
                 uint32_t offset;
                 bool unicodeFont = false; // ignored
                 bool symbolFont = false;
@@ -1159,7 +1159,7 @@ gfxMacPlatformFontList::CreateFontInfoData()
     bool loadCmaps = !UsesSystemFallback() ||
         gfxPlatform::GetPlatform()->UseCmapsDuringSystemFallback();
 
-    nsRefPtr<MacFontInfo> fi =
+    RefPtr<MacFontInfo> fi =
         new MacFontInfo(true, NeedFullnamePostscriptNames(), loadCmaps);
     return fi.forget();
 }

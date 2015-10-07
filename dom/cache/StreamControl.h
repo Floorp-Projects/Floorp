@@ -8,7 +8,7 @@
 #define mozilla_dom_cache_StreamControl_h
 
 #include "mozilla/dom/cache/ReadStream.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsTObserverArray.h"
 
 struct nsID;
@@ -85,7 +85,7 @@ protected:
 private:
   // Hold strong references to ReadStream object.  When the stream is closed
   // it should call NoteClosed() or ForgetReadStream() to release this ref.
-  typedef nsTObserverArray<nsRefPtr<ReadStream::Controllable>> ReadStreamList;
+  typedef nsTObserverArray<RefPtr<ReadStream::Controllable>> ReadStreamList;
   ReadStreamList mReadStreamList;
 };
 

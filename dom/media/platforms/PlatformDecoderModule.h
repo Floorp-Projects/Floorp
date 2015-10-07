@@ -12,7 +12,7 @@
 #include "mozilla/MozPromise.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "nsTArray.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include <queue>
 
 namespace mozilla {
@@ -227,7 +227,7 @@ public:
   // it can call Shutdown() to cancel this operation. Any initialization
   // that requires blocking the calling thread in this function *must*
   // be done here so that it can be canceled by calling Shutdown()!
-  virtual nsRefPtr<InitPromise> Init() = 0;
+  virtual RefPtr<InitPromise> Init() = 0;
 
   // Inserts a sample into the decoder's decode pipeline.
   virtual nsresult Input(MediaRawData* aSample) = 0;

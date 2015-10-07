@@ -134,7 +134,7 @@ private:
 
   // Helper functions called by UpdateCurrentStyleSources.
   void ClearStyleContext();
-  void SetResolvedStyleContext(nsRefPtr<nsStyleContext>&& aContext);
+  void SetResolvedStyleContext(RefPtr<nsStyleContext>&& aContext);
   void SetFrameStyleContext(nsStyleContext* aContext);
 
 #define STYLE_STRUCT(name_, checkdata_cb_)                              \

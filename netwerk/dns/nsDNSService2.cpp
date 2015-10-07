@@ -71,7 +71,7 @@ public:
 private:
     virtual ~nsDNSRecord() {}
 
-    nsRefPtr<nsHostRecord>  mHostRecord;
+    RefPtr<nsHostRecord>  mHostRecord;
     NetAddrElement         *mIter;
     int                     mIterGenCnt; // the generation count of
                                          // mHostRecord->addr_info when we
@@ -324,7 +324,7 @@ public:
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf) const override;
 
-    nsRefPtr<nsHostResolver> mResolver;
+    RefPtr<nsHostResolver> mResolver;
     nsCString                mHost; // hostname we're resolving
     nsCOMPtr<nsIDNSListener> mListener;
     uint16_t                 mFlags;
@@ -409,7 +409,7 @@ public:
 
     bool                   mDone;
     nsresult               mStatus;
-    nsRefPtr<nsHostRecord> mHostRecord;
+    RefPtr<nsHostRecord> mHostRecord;
 
 private:
     PRMonitor             *mMonitor;
@@ -605,7 +605,7 @@ nsDNSService::Init()
 
     nsCOMPtr<nsIIDNService> idn = do_GetService(NS_IDNSERVICE_CONTRACTID);
 
-    nsRefPtr<nsHostResolver> res;
+    RefPtr<nsHostResolver> res;
     nsresult rv = nsHostResolver::Create(maxCacheEntries,
                                          defaultCacheLifetime,
                                          defaultGracePeriod,
@@ -648,7 +648,7 @@ nsDNSService::Shutdown()
     UnregisterWeakMemoryReporter(this);
 #endif // !defined(MOZILLA_XPCOMRT_API)
 
-    nsRefPtr<nsHostResolver> res;
+    RefPtr<nsHostResolver> res;
     {
         MutexAutoLock lock(mLock);
         res = mResolver;
@@ -737,7 +737,7 @@ nsDNSService::AsyncResolveExtended(const nsACString  &aHostname,
 {
     // grab reference to global host resolver and IDN service.  beware
     // simultaneous shutdown!!
-    nsRefPtr<nsHostResolver> res;
+    RefPtr<nsHostResolver> res;
     nsCOMPtr<nsIIDNService> idn;
     nsCOMPtr<nsIEventTarget> target = target_;
     bool localDomain = false;
@@ -820,7 +820,7 @@ nsDNSService::CancelAsyncResolveExtended(const nsACString  &aHostname,
 {
     // grab reference to global host resolver and IDN service.  beware
     // simultaneous shutdown!!
-    nsRefPtr<nsHostResolver> res;
+    RefPtr<nsHostResolver> res;
     nsCOMPtr<nsIIDNService> idn;
     bool localDomain = false;
     {
@@ -855,7 +855,7 @@ nsDNSService::Resolve(const nsACString &aHostname,
 {
     // grab reference to global host resolver and IDN service.  beware
     // simultaneous shutdown!!
-    nsRefPtr<nsHostResolver> res;
+    RefPtr<nsHostResolver> res;
     nsCOMPtr<nsIIDNService> idn;
     bool localDomain = false;
     {

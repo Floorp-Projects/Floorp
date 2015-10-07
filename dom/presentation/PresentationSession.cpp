@@ -49,7 +49,7 @@ PresentationSession::Create(nsPIDOMWindow* aWindow,
                             const nsAString& aId,
                             PresentationSessionState aState)
 {
-  nsRefPtr<PresentationSession> session =
+  RefPtr<PresentationSession> session =
     new PresentationSession(aWindow, aId, aState);
   return NS_WARN_IF(!session->Init()) ? nullptr : session.forget();
 }
@@ -247,7 +247,7 @@ PresentationSession::NotifyMessage(const nsAString& aSessionId,
 nsresult
 PresentationSession::DispatchStateChangeEvent()
 {
-  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
+  RefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this, NS_LITERAL_STRING("statechange"), false);
   return asyncDispatcher->PostDOMEvent();
 }
@@ -267,7 +267,7 @@ PresentationSession::DispatchMessageEvent(JS::Handle<JS::Value> aData)
     return rv;
   }
 
-  nsRefPtr<MessageEvent> messageEvent =
+  RefPtr<MessageEvent> messageEvent =
     NS_NewDOMMessageEvent(this, nullptr, nullptr);
 
   rv = messageEvent->InitMessageEvent(NS_LITERAL_STRING("message"),
@@ -281,7 +281,7 @@ PresentationSession::DispatchMessageEvent(JS::Handle<JS::Value> aData)
 
   messageEvent->SetTrusted(true);
 
-  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
+  RefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this, static_cast<Event*>(messageEvent));
   return asyncDispatcher->PostDOMEvent();
 }

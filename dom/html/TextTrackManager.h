@@ -93,14 +93,14 @@ public:
   void AddListeners();
 
   // The HTMLMediaElement that this TextTrackManager manages the TextTracks of.
-  nsRefPtr<HTMLMediaElement> mMediaElement;
+  RefPtr<HTMLMediaElement> mMediaElement;
 private:
   // List of the TextTrackManager's owning HTMLMediaElement's TextTracks.
-  nsRefPtr<TextTrackList> mTextTracks;
+  RefPtr<TextTrackList> mTextTracks;
   // List of text track objects awaiting loading.
-  nsRefPtr<TextTrackList> mPendingTextTracks;
+  RefPtr<TextTrackList> mPendingTextTracks;
   // List of newly introduced Text Track cues.
-  nsRefPtr<TextTrackCueList> mNewCues;
+  RefPtr<TextTrackCueList> mNewCues;
 
   static StaticRefPtr<nsIWebVTTParserWrapper> sParserWrapper;
 

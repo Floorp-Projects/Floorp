@@ -211,7 +211,7 @@ SubstitutingProtocolHandler::NewURI(const nsACString &aSpec,
 {
   nsresult rv;
 
-  nsRefPtr<SubstitutingURL> url = new SubstitutingURL();
+  RefPtr<SubstitutingURL> url = new SubstitutingURL();
   if (!url)
     return NS_ERROR_OUT_OF_MEMORY;
 

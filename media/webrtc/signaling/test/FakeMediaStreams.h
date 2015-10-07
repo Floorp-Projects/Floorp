@@ -190,7 +190,7 @@ class Fake_SourceMediaStream : public Fake_MediaStream {
     ADDTRACK_QUEUED    = 0x01 // Queue track add until FinishAddTracks()
   };
 
-  void AddVideoSink(const nsRefPtr<Fake_VideoSink>& aSink) {
+  void AddVideoSink(const RefPtr<Fake_VideoSink>& aSink) {
     mSink  = aSink;
   }
 
@@ -279,8 +279,8 @@ class Fake_SourceMediaStream : public Fake_MediaStream {
   uint64_t mDesiredTime;
   bool mPullEnabled;
   bool mStop;
-  nsRefPtr<Fake_MediaPeriodic> mPeriodic;
-  nsRefPtr<Fake_VideoSink> mSink;
+  RefPtr<Fake_MediaPeriodic> mPeriodic;
+  RefPtr<Fake_VideoSink> mSink;
   nsCOMPtr<nsITimer> mTimer;
 };
 
@@ -355,7 +355,7 @@ public:
   CreateSourceStream(nsIDOMWindow* aWindow, mozilla::MediaStreamGraph* aGraph, uint32_t aHintContents = 0) {
     Fake_SourceMediaStream *source = new Fake_SourceMediaStream();
 
-    nsRefPtr<Fake_DOMMediaStream> ds = new Fake_DOMMediaStream(source);
+    RefPtr<Fake_DOMMediaStream> ds = new Fake_DOMMediaStream(source);
     ds->SetHintContents(aHintContents);
 
     return ds.forget();
@@ -384,13 +384,13 @@ public:
   void SetHintContents(uint32_t aHintContents) { mHintContents = aHintContents; }
 
   void
-  GetTracks(nsTArray<nsRefPtr<Fake_MediaStreamTrack> >& aTracks)
+  GetTracks(nsTArray<RefPtr<Fake_MediaStreamTrack> >& aTracks)
   {
     GetAudioTracks(aTracks);
     GetVideoTracks(aTracks);
   }
 
-  void GetAudioTracks(nsTArray<nsRefPtr<Fake_MediaStreamTrack> >& aTracks)
+  void GetAudioTracks(nsTArray<RefPtr<Fake_MediaStreamTrack> >& aTracks)
   {
     if (mHintContents & HINT_CONTENTS_AUDIO) {
       aTracks.AppendElement(mAudioTrack);
@@ -398,7 +398,7 @@ public:
   }
 
   void
-  GetVideoTracks(nsTArray<nsRefPtr<Fake_MediaStreamTrack> >& aTracks)
+  GetVideoTracks(nsTArray<RefPtr<Fake_MediaStreamTrack> >& aTracks)
   {
     if (mHintContents & HINT_CONTENTS_VIDEO) {
       aTracks.AppendElement(mVideoTrack);
@@ -439,13 +439,13 @@ public:
   void RemovePrincipalChangeObserver(void* ignoredObserver) {}
 
 private:
-  nsRefPtr<Fake_MediaStream> mMediaStream;
+  RefPtr<Fake_MediaStream> mMediaStream;
 
   // tells the SDP generator about whether this
   // MediaStream probably has audio and/or video
   uint32_t mHintContents;
-  nsRefPtr<Fake_MediaStreamTrack> mVideoTrack;
-  nsRefPtr<Fake_MediaStreamTrack> mAudioTrack;
+  RefPtr<Fake_MediaStreamTrack> mVideoTrack;
+  RefPtr<Fake_MediaStreamTrack> mAudioTrack;
 
   std::string mID;
 };
@@ -463,7 +463,7 @@ class Fake_MediaStreamBase : public Fake_MediaStream {
 
  private:
   nsCOMPtr<nsITimer> mTimer;
-  nsRefPtr<Fake_MediaPeriodic> mPeriodic;
+  RefPtr<Fake_MediaPeriodic> mPeriodic;
 };
 
 

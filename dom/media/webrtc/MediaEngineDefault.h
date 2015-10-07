@@ -93,9 +93,9 @@ protected:
   // image changes).  Note that mSources is not accessed from other threads
   // for video and is not protected.
   Monitor mMonitor;
-  nsRefPtr<layers::Image> mImage;
+  RefPtr<layers::Image> mImage;
 
-  nsRefPtr<layers::ImageContainer> mImageContainer;
+  RefPtr<layers::ImageContainer> mImageContainer;
 
   MediaEnginePrefs mOpts;
   int mCb;
@@ -175,9 +175,9 @@ public:
   {}
 
   virtual void EnumerateVideoDevices(dom::MediaSourceEnum,
-                                     nsTArray<nsRefPtr<MediaEngineVideoSource> >*) override;
+                                     nsTArray<RefPtr<MediaEngineVideoSource> >*) override;
   virtual void EnumerateAudioDevices(dom::MediaSourceEnum,
-                                     nsTArray<nsRefPtr<MediaEngineAudioSource> >*) override;
+                                     nsTArray<RefPtr<MediaEngineAudioSource> >*) override;
   virtual void Shutdown() override {
     MutexAutoLock lock(mMutex);
 
@@ -196,8 +196,8 @@ private:
   Mutex mMutex;
   // protected with mMutex:
 
-  nsTArray<nsRefPtr<MediaEngineVideoSource> > mVSources;
-  nsTArray<nsRefPtr<MediaEngineAudioSource> > mASources;
+  nsTArray<RefPtr<MediaEngineVideoSource> > mVSources;
+  nsTArray<RefPtr<MediaEngineAudioSource> > mASources;
 };
 
 } // namespace mozilla

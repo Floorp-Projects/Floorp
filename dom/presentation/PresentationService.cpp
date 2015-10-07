@@ -96,7 +96,7 @@ PresentationDeviceRequest::Select(nsIPresentationDevice* aDevice)
   }
 
   // Update device in the session info.
-  nsRefPtr<PresentationSessionInfo> info =
+  RefPtr<PresentationSessionInfo> info =
     static_cast<PresentationService*>(service.get())->GetSessionInfo(mId);
   if (NS_WARN_IF(!info)) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -129,7 +129,7 @@ PresentationDeviceRequest::Cancel()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsRefPtr<PresentationSessionInfo> info =
+  RefPtr<PresentationSessionInfo> info =
     static_cast<PresentationService*>(service.get())->GetSessionInfo(mId);
   if (NS_WARN_IF(!info)) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -308,7 +308,7 @@ PresentationService::HandleSessionRequest(nsIPresentationSessionRequest* aReques
 #endif
 
   // Create or reuse session info.
-  nsRefPtr<PresentationSessionInfo> info = GetSessionInfo(sessionId);
+  RefPtr<PresentationSessionInfo> info = GetSessionInfo(sessionId);
   if (NS_WARN_IF(info)) {
     // TODO Bug 1195605. Update here after session join/resume becomes supported.
     ctrlChannel->Close(NS_ERROR_DOM_OPERATION_ERR);
@@ -392,7 +392,7 @@ PresentationService::StartSession(const nsAString& aUrl,
 
   // Create session info  and set the callback. The callback is called when the
   // request is finished.
-  nsRefPtr<PresentationSessionInfo> info =
+  RefPtr<PresentationSessionInfo> info =
     new PresentationControllingInfo(aUrl, aSessionId, aCallback);
   mSessionInfo.Put(aSessionId, info);
 
@@ -420,7 +420,7 @@ PresentationService::SendSessionMessage(const nsAString& aSessionId,
   MOZ_ASSERT(aStream);
   MOZ_ASSERT(!aSessionId.IsEmpty());
 
-  nsRefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId);
+  RefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId);
   if (NS_WARN_IF(!info)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -434,7 +434,7 @@ PresentationService::Terminate(const nsAString& aSessionId)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!aSessionId.IsEmpty());
 
-  nsRefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId);
+  RefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId);
   if (NS_WARN_IF(!info)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -471,7 +471,7 @@ PresentationService::RegisterSessionListener(const nsAString& aSessionId,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aListener);
 
-  nsRefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId);
+  RefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId);
   if (NS_WARN_IF(!info)) {
     // Notify the listener of TERMINATED since no correspondent session info is
     // available possibly due to establishment failure. This would be useful at
@@ -493,7 +493,7 @@ PresentationService::UnregisterSessionListener(const nsAString& aSessionId)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsRefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId);
+  RefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId);
   if (info) {
     NS_WARN_IF(NS_FAILED(info->Close(NS_OK)));
     UntrackSessionInfo(aSessionId);
@@ -546,7 +546,7 @@ NS_IMETHODIMP
 PresentationService::NotifyReceiverReady(const nsAString& aSessionId,
                                          uint64_t aWindowId)
 {
-  nsRefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId);
+  RefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId);
   if (NS_WARN_IF(!info)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -581,7 +581,7 @@ bool
 PresentationService::IsSessionAccessible(const nsAString& aSessionId,
                                          base::ProcessId aProcessId)
 {
-  nsRefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId);
+  RefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId);
   if (NS_WARN_IF(!info)) {
     return false;
   }

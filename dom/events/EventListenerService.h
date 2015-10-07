@@ -74,7 +74,7 @@ protected:
 
   nsString mType;
   // nsReftPtr because that is what nsListenerStruct uses too.
-  nsRefPtr<nsIDOMEventListener> mListener;
+  RefPtr<nsIDOMEventListener> mListener;
   bool mCapturing;
   bool mAllowsUntrusted;
   bool mInSystemEventGroup;
@@ -102,7 +102,7 @@ private:
                                                    nsIAtom* aName);
   nsTObserverArray<nsCOMPtr<nsIListenerChangeListener>> mChangeListeners;
   nsCOMPtr<nsIMutableArray> mPendingListenerChanges;
-  nsDataHashtable<nsISupportsHashKey, nsRefPtr<EventListenerChange>> mPendingListenerChangesSet;
+  nsDataHashtable<nsISupportsHashKey, RefPtr<EventListenerChange>> mPendingListenerChangesSet;
 
   static EventListenerService* sInstance;
 };

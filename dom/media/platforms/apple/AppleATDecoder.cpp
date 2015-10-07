@@ -50,7 +50,7 @@ AppleATDecoder::~AppleATDecoder()
   MOZ_ASSERT(!mConverter);
 }
 
-nsRefPtr<MediaDataDecoder::InitPromise>
+RefPtr<MediaDataDecoder::InitPromise>
 AppleATDecoder::Init()
 {
   if (!mFormatID) {
@@ -73,10 +73,10 @@ AppleATDecoder::Input(MediaRawData* aSample)
 
   // Queue a task to perform the actual decoding on a separate thread.
   nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(
+      NS_NewRunnableMethodWithArg<RefPtr<MediaRawData>>(
         this,
         &AppleATDecoder::SubmitSample,
-        nsRefPtr<MediaRawData>(aSample));
+        RefPtr<MediaRawData>(aSample));
   mTaskQueue->Dispatch(runnable.forget());
 
   return NS_OK;
@@ -275,7 +275,7 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
 
   nsAutoArrayPtr<AudioDataValue> data(new AudioDataValue[outputData.Length()]);
   PodCopy(data.get(), &outputData[0], outputData.Length());
-  nsRefPtr<AudioData> audio = new AudioData(aSample->mOffset,
+  RefPtr<AudioData> audio = new AudioData(aSample->mOffset,
                                             aSample->mTime,
                                             duration.ToMicroseconds(),
                                             numFrames,
@@ -461,7 +461,7 @@ nsresult
 AppleATDecoder::GetImplicitAACMagicCookie(const MediaRawData* aSample)
 {
   // Prepend ADTS header to AAC audio.
-  nsRefPtr<MediaRawData> adtssample(aSample->Clone());
+  RefPtr<MediaRawData> adtssample(aSample->Clone());
   if (!adtssample) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

@@ -16,7 +16,7 @@
 #define mozilla_widget_PuppetWidget_h__
 
 #include "mozilla/gfx/2D.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsBaseScreen.h"
 #include "nsBaseWidget.h"
 #include "nsIScreenManager.h"
@@ -310,13 +310,13 @@ private:
   TabChild* mTabChild;
   // The "widget" to which we delegate events if we don't have an
   // event handler.
-  nsRefPtr<PuppetWidget> mChild;
+  RefPtr<PuppetWidget> mChild;
   nsIntRegion mDirtyRegion;
   nsRevocableEventPtr<PaintTask> mPaintTask;
-  nsRefPtr<MemoryPressureObserver> mMemoryPressureObserver;
+  RefPtr<MemoryPressureObserver> mMemoryPressureObserver;
   // XXX/cjones: keeping this around until we teach LayerManager to do
   // retained-content-only transactions
-  nsRefPtr<DrawTarget> mDrawTarget;
+  RefPtr<DrawTarget> mDrawTarget;
   // IME
   nsIMEUpdatePreference mIMEPreferenceOfParent;
   ContentCacheInChild mContentCache;

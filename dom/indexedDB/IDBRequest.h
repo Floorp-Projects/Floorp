@@ -46,18 +46,18 @@ class IDBRequest
 protected:
   // mSourceAsObjectStore and mSourceAsIndex are exclusive and one must always
   // be set. mSourceAsCursor is sometimes set also.
-  nsRefPtr<IDBObjectStore> mSourceAsObjectStore;
-  nsRefPtr<IDBIndex> mSourceAsIndex;
-  nsRefPtr<IDBCursor> mSourceAsCursor;
+  RefPtr<IDBObjectStore> mSourceAsObjectStore;
+  RefPtr<IDBIndex> mSourceAsIndex;
+  RefPtr<IDBCursor> mSourceAsCursor;
 
-  nsRefPtr<IDBTransaction> mTransaction;
+  RefPtr<IDBTransaction> mTransaction;
 
 #ifdef DEBUG
   PRThread* mOwningThread;
 #endif
 
   JS::Heap<JS::Value> mResultVal;
-  nsRefPtr<DOMError> mError;
+  RefPtr<DOMError> mError;
 
   nsString mFilename;
   uint64_t mLoggingSerialNumber;
@@ -229,7 +229,7 @@ class IDBOpenDBRequest final
   class WorkerFeature;
 
   // Only touched on the owning thread.
-  nsRefPtr<IDBFactory> mFactory;
+  RefPtr<IDBFactory> mFactory;
 
   nsAutoPtr<WorkerFeature> mWorkerFeature;
 

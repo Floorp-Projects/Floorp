@@ -39,8 +39,8 @@ private:
   // if the underlying CreateDataSourceSurface fails for some reason.
   void EnsureInitialized();
 
-  nsRefPtr<Compositor> mCompositor;
-  nsRefPtr<gfx::DataSourceSurface> mGlyphBitmaps;
+  RefPtr<Compositor> mCompositor;
+  RefPtr<gfx::DataSourceSurface> mGlyphBitmaps;
   gfx::DataSourceSurface::MappedSurface mMap;
 };
 

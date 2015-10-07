@@ -365,7 +365,7 @@ KeyframeEffectReadOnly::HasAnimationOfProperties(
 }
 
 void
-KeyframeEffectReadOnly::ComposeStyle(nsRefPtr<AnimValuesStyleRule>& aStyleRule,
+KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
                                      nsCSSPropertySet& aSetProperties)
 {
   ComputedTiming computedTiming = GetComputedTiming();

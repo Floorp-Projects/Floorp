@@ -39,7 +39,7 @@ nsresult
 nsShutdownThread::Shutdown(nsIThread *aThread)
 {
   nsresult rv;
-  nsRefPtr<nsDestroyThreadEvent> ev = new nsDestroyThreadEvent(aThread);
+  RefPtr<nsDestroyThreadEvent> ev = new nsDestroyThreadEvent(aThread);
   rv = NS_DispatchToMainThread(ev);
   if (NS_FAILED(rv)) {
     NS_WARNING("Dispatching event in nsShutdownThread::Shutdown failed!");
@@ -52,7 +52,7 @@ nsShutdownThread::BlockingShutdown(nsIThread *aThread)
 {
   nsresult rv;
 
-  nsRefPtr<nsShutdownThread> st = new nsShutdownThread(aThread);
+  RefPtr<nsShutdownThread> st = new nsShutdownThread(aThread);
   nsCOMPtr<nsIThread> workerThread;
 
   rv = NS_NewNamedThread("thread shutdown", getter_AddRefs(workerThread));

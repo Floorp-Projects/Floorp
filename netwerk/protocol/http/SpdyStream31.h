@@ -165,7 +165,7 @@ private:
   // in the SpdySession31 mStreamTransactionHash so it is important to
   // keep a reference to it as long as this stream is a member of that hash.
   // (i.e. don't change it or release it after it is set in the ctor).
-  nsRefPtr<nsAHttpTransaction> mTransaction;
+  RefPtr<nsAHttpTransaction> mTransaction;
 
   // The underlying socket transport object is needed to propogate some events
   nsISocketTransport         *mSocketTransport;

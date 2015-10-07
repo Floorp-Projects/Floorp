@@ -189,7 +189,7 @@ public:
    */
   bool GetNextMilestoneInParentTime(nsSMILMilestone& aNextMilestone) const;
 
-  typedef nsTArray<nsRefPtr<mozilla::dom::SVGAnimationElement> > AnimElemArray;
+  typedef nsTArray<RefPtr<mozilla::dom::SVGAnimationElement> > AnimElemArray;
 
   /*
    * Removes and returns the timebase elements from the start of the list of
@@ -283,7 +283,7 @@ protected:
     }
 
     nsSMILMilestone mMilestone; // In container time.
-    nsRefPtr<mozilla::dom::SVGAnimationElement> mTimebase;
+    RefPtr<mozilla::dom::SVGAnimationElement> mTimebase;
   };
 
   // Queue of elements with registered milestones. Used to update the model with

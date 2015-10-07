@@ -120,7 +120,7 @@ public:
   }
 
 private:
-  nsRefPtr<Stream> mStream;
+  RefPtr<Stream> mStream;
 };
 
 bool
@@ -130,7 +130,7 @@ MoofParser::BlockingReadNextMoof()
   mSource->Length(&length);
   nsTArray<MediaByteRange> byteRanges;
   byteRanges.AppendElement(MediaByteRange(0, length));
-  nsRefPtr<mp4_demuxer::BlockingStream> stream = new BlockingStream(mSource);
+  RefPtr<mp4_demuxer::BlockingStream> stream = new BlockingStream(mSource);
 
   BoxContext context(stream, byteRanges);
   for (Box box(&context, mOffset); box.IsAvailable(); box = box.Next()) {
@@ -151,7 +151,7 @@ MoofParser::ScanForMetadata(mozilla::MediaByteRange& aFtyp,
   mSource->Length(&length);
   nsTArray<MediaByteRange> byteRanges;
   byteRanges.AppendElement(MediaByteRange(0, length));
-  nsRefPtr<mp4_demuxer::BlockingStream> stream = new BlockingStream(mSource);
+  RefPtr<mp4_demuxer::BlockingStream> stream = new BlockingStream(mSource);
 
   BoxContext context(stream, byteRanges);
   for (Box box(&context, mOffset); box.IsAvailable(); box = box.Next()) {
@@ -185,13 +185,13 @@ MoofParser::Metadata()
   if (!ftyp.Length() || !moov.Length()) {
     return nullptr;
   }
-  nsRefPtr<MediaByteBuffer> metadata = new MediaByteBuffer();
+  RefPtr<MediaByteBuffer> metadata = new MediaByteBuffer();
   if (!metadata->SetLength(ftyp.Length() + moov.Length(), fallible)) {
     // OOM
     return nullptr;
   }
 
-  nsRefPtr<mp4_demuxer::BlockingStream> stream = new BlockingStream(mSource);
+  RefPtr<mp4_demuxer::BlockingStream> stream = new BlockingStream(mSource);
   size_t read;
   bool rv =
     stream->ReadAt(ftyp.mStart, metadata->Elements(), ftyp.Length(), &read);

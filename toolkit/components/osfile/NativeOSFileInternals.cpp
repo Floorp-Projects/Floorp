@@ -440,7 +440,7 @@ public:
   // main thread.
   nsMainThreadPtrHandle<nsINativeOSFileSuccessCallback> mOnSuccess;
   nsMainThreadPtrHandle<nsINativeOSFileErrorCallback> mOnError;
-  nsRefPtr<AbstractResult> mDiscardedResult;
+  RefPtr<AbstractResult> mDiscardedResult;
   int32_t mOSError;
   nsCString mOperation;
 };
@@ -490,7 +490,7 @@ public:
   // main thread.
   nsMainThreadPtrHandle<nsINativeOSFileSuccessCallback> mOnSuccess;
   nsMainThreadPtrHandle<nsINativeOSFileErrorCallback> mOnError;
-  nsRefPtr<nsINativeOSFileResult> mResult;
+  RefPtr<nsINativeOSFileResult> mResult;
 };
 
 
@@ -519,7 +519,7 @@ public:
             already_AddRefed<AbstractResult>&& aDiscardedResult,
             int32_t aOSError = 0) {
     Resolve();
-    nsRefPtr<ErrorEvent> event = new ErrorEvent(mOnSuccess,
+    RefPtr<ErrorEvent> event = new ErrorEvent(mOnSuccess,
                                                 mOnError,
                                                 aDiscardedResult,
                                                 aOperation,
@@ -539,7 +539,7 @@ public:
    */
   void Succeed(already_AddRefed<nsINativeOSFileResult>&& aResult) {
     Resolve();
-    nsRefPtr<SuccessEvent> event = new SuccessEvent(mOnSuccess,
+    RefPtr<SuccessEvent> event = new SuccessEvent(mOnSuccess,
                                                     mOnError,
                                                     aResult);
     nsresult rv = NS_DispatchToMainThread(event);
@@ -762,7 +762,7 @@ protected:
   }
 
  private:
-  nsRefPtr<TypedArrayResult> mResult;
+  RefPtr<TypedArrayResult> mResult;
 };
 
 /**
@@ -853,7 +853,7 @@ protected:
  private:
   nsCString mEncoding;
   nsCOMPtr<nsIUnicodeDecoder> mDecoder;
-  nsRefPtr<StringResult> mResult;
+  RefPtr<StringResult> mResult;
 };
 
 } // namespace
@@ -896,7 +896,7 @@ NativeOSFileInternalsService::Read(const nsAString& aPath,
   nsMainThreadPtrHandle<nsINativeOSFileErrorCallback> onErrorHandle(
     new nsMainThreadPtrHolder<nsINativeOSFileErrorCallback>(onError));
 
-  nsRefPtr<AbstractDoEvent> event;
+  RefPtr<AbstractDoEvent> event;
   if (encoding.IsEmpty()) {
     event = new DoReadToTypedArrayEvent(aPath, bytes,
                                         onSuccessHandle,

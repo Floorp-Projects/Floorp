@@ -112,7 +112,7 @@ Icc::NotifyStkEvent(const nsAString& aName, nsIStkProactiveCmd* aStkProactiveCmd
   init.mCancelable = false;
   init.mCommand = value;
 
-  nsRefPtr<MozStkCommandEvent> event =
+  RefPtr<MozStkCommandEvent> event =
     MozStkCommandEvent::Constructor(this, aName, init);
 
   return DispatchTrustedEvent(event);
@@ -311,10 +311,10 @@ Icc::GetCardLock(IccLockType aLockType, ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
+  RefPtr<DOMRequest> request = new DOMRequest(GetOwner());
   // TODO: Bug 1125018 - Simplify The Result of GetCardLock and
   // getCardLockRetryCount in MozIcc.webidl without a wrapper object.
-  nsRefPtr<IccCallback> requestCallback =
+  RefPtr<IccCallback> requestCallback =
     new IccCallback(GetOwner(), request, true);
   nsresult rv = mHandler->GetCardLockEnabled(static_cast<uint32_t>(aLockType),
                                              requestCallback);
@@ -334,8 +334,8 @@ Icc::UnlockCardLock(const IccUnlockCardLockOptions& aOptions, ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
-  nsRefPtr<IccCallback> requestCallback =
+  RefPtr<DOMRequest> request = new DOMRequest(GetOwner());
+  RefPtr<IccCallback> requestCallback =
     new IccCallback(GetOwner(), request);
   const nsString& password = IsPukCardLockType(aOptions.mLockType)
                            ? aOptions.mPuk : aOptions.mPin;
@@ -359,8 +359,8 @@ Icc::SetCardLock(const IccSetCardLockOptions& aOptions, ErrorResult& aRv)
   }
 
   nsresult rv;
-  nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
-  nsRefPtr<IccCallback> requestCallback =
+  RefPtr<DOMRequest> request = new DOMRequest(GetOwner());
+  RefPtr<IccCallback> requestCallback =
     new IccCallback(GetOwner(), request);
 
   if (aOptions.mEnabled.WasPassed()) {
@@ -396,8 +396,8 @@ Icc::GetCardLockRetryCount(IccLockType aLockType, ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
-  nsRefPtr<IccCallback> requestCallback =
+  RefPtr<DOMRequest> request = new DOMRequest(GetOwner());
+  RefPtr<IccCallback> requestCallback =
     new IccCallback(GetOwner(), request);
   nsresult rv = mHandler->GetCardLockRetryCount(static_cast<uint32_t>(aLockType),
                                                 requestCallback);
@@ -417,8 +417,8 @@ Icc::ReadContacts(IccContactType aContactType, ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
-  nsRefPtr<IccCallback> requestCallback =
+  RefPtr<DOMRequest> request = new DOMRequest(GetOwner());
+  RefPtr<IccCallback> requestCallback =
     new IccCallback(GetOwner(), request);
 
   nsresult rv = mHandler->ReadContacts(static_cast<uint32_t>(aContactType),
@@ -440,8 +440,8 @@ Icc::UpdateContact(IccContactType aContactType, mozContact& aContact,
     return nullptr;
   }
 
-  nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
-  nsRefPtr<IccCallback> requestCallback =
+  RefPtr<DOMRequest> request = new DOMRequest(GetOwner());
+  RefPtr<IccCallback> requestCallback =
     new IccCallback(GetOwner(), request);
 
   nsCOMPtr<nsIIccContact> iccContact;
@@ -472,8 +472,8 @@ Icc::MatchMvno(IccMvnoType aMvnoType, const nsAString& aMvnoData,
     return nullptr;
   }
 
-  nsRefPtr<DOMRequest> request = new DOMRequest(GetOwner());
-  nsRefPtr<IccCallback> requestCallback =
+  RefPtr<DOMRequest> request = new DOMRequest(GetOwner());
+  RefPtr<IccCallback> requestCallback =
     new IccCallback(GetOwner(), request);
   nsresult rv = mHandler->MatchMvno(static_cast<uint32_t>(aMvnoType),
                                     aMvnoData, requestCallback);
@@ -498,12 +498,12 @@ Icc::GetServiceState(IccService aService, ErrorResult& aRv)
     return nullptr;
   }
 
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
 
-  nsRefPtr<IccCallback> requestCallback =
+  RefPtr<IccCallback> requestCallback =
     new IccCallback(GetOwner(), promise);
 
   nsresult rv =

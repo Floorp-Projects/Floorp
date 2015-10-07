@@ -84,7 +84,7 @@ private:
   ~nsAnnotationService();
 
 protected:
-  nsRefPtr<mozilla::places::Database> mDB;
+  RefPtr<mozilla::places::Database> mDB;
 
   nsCOMArray<nsIAnnotationObserver> mObservers;
   bool mHasSessionAnnotations;

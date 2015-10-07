@@ -8,7 +8,7 @@
 nsresult
 Expr::evaluateToBool(txIEvalContext* aContext, bool& aResult)
 {
-    nsRefPtr<txAExprResult> exprRes;
+    RefPtr<txAExprResult> exprRes;
     nsresult rv = evaluate(aContext, getter_AddRefs(exprRes));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -20,7 +20,7 @@ Expr::evaluateToBool(txIEvalContext* aContext, bool& aResult)
 nsresult
 Expr::evaluateToString(txIEvalContext* aContext, nsString& aResult)
 {
-    nsRefPtr<txAExprResult> exprRes;
+    RefPtr<txAExprResult> exprRes;
     nsresult rv = evaluate(aContext, getter_AddRefs(exprRes));
     NS_ENSURE_SUCCESS(rv, rv);
 

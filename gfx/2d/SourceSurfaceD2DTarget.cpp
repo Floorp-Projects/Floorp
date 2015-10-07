@@ -53,7 +53,7 @@ SourceSurfaceD2DTarget::GetFormat() const
 already_AddRefed<DataSourceSurface>
 SourceSurfaceD2DTarget::GetDataSurface()
 {
-  nsRefPtr<DataSourceSurfaceD2DTarget> dataSurf =
+  RefPtr<DataSourceSurfaceD2DTarget> dataSurf =
     new DataSourceSurfaceD2DTarget(mFormat);
 
   D3D10_TEXTURE2D_DESC desc;
@@ -103,7 +103,7 @@ SourceSurfaceD2DTarget::GetSRView()
 void
 SourceSurfaceD2DTarget::DrawTargetWillChange()
 {
-  nsRefPtr<ID3D10Texture2D> oldTexture = mTexture;
+  RefPtr<ID3D10Texture2D> oldTexture = mTexture;
 
   D3D10_TEXTURE2D_DESC desc;
   mTexture->GetDesc(&desc);
@@ -139,7 +139,7 @@ SourceSurfaceD2DTarget::GetBitmap(ID2D1RenderTarget *aRT)
 
   IntSize size(desc.Width, desc.Height);
   
-  nsRefPtr<IDXGISurface> surf;
+  RefPtr<IDXGISurface> surf;
   hr = mTexture->QueryInterface((IDXGISurface**)getter_AddRefs(surf));
 
   if (FAILED(hr)) {
@@ -161,7 +161,7 @@ SourceSurfaceD2DTarget::GetBitmap(ID2D1RenderTarget *aRT)
       return nullptr;
     }
 
-    nsRefPtr<ID2D1RenderTarget> rt;
+    RefPtr<ID2D1RenderTarget> rt;
 
     if (mDrawTarget) {
       rt = mDrawTarget->mRT;
@@ -171,7 +171,7 @@ SourceSurfaceD2DTarget::GetBitmap(ID2D1RenderTarget *aRT)
       // Okay, we already separated from our drawtarget. And we're an A8
       // surface the only way we can get to a bitmap is by creating a
       // a rendertarget and from there copying to a bitmap! Terrible!
-      nsRefPtr<IDXGISurface> surface;
+      RefPtr<IDXGISurface> surface;
 
       hr = mTexture->QueryInterface((IDXGISurface**)getter_AddRefs(surface));
 

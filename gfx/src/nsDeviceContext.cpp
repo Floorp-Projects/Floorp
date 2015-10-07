@@ -396,7 +396,7 @@ nsDeviceContext::CreateRenderingContext()
 {
     MOZ_ASSERT(mWidth > 0 && mHeight > 0);
 
-    nsRefPtr<gfxASurface> printingSurface = mPrintingSurface;
+    RefPtr<gfxASurface> printingSurface = mPrintingSurface;
 #ifdef XP_MACOSX
     // CreateRenderingContext() can be called (on reflow) after EndPage()
     // but before BeginPage().  On OS X (and only there) mPrintingSurface
@@ -409,7 +409,7 @@ nsDeviceContext::CreateRenderingContext()
     }
 #endif
 
-    nsRefPtr<gfx::DrawTarget> dt =
+    RefPtr<gfx::DrawTarget> dt =
       gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(printingSurface,
                                                              gfx::IntSize(mWidth, mHeight));
 
@@ -425,7 +425,7 @@ nsDeviceContext::CreateRenderingContext()
 #endif
     dt->AddUserData(&sDisablePixelSnapping, (void*)0x1, nullptr);
 
-    nsRefPtr<gfxContext> pContext = new gfxContext(dt);
+    RefPtr<gfxContext> pContext = new gfxContext(dt);
     pContext->SetMatrix(gfxMatrix::Scaling(mPrintingScale, mPrintingScale));
     return pContext.forget();
 }

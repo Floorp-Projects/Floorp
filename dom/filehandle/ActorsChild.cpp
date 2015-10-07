@@ -321,10 +321,10 @@ ConvertActorToFile(FileHandleBase* aFileHandle,
                             lastModified.get_int64_t(),
                             BlobDirState::eUnknownIfDir);
 
-  nsRefPtr<BlobImpl> blobImpl = actor->GetBlobImpl();
+  RefPtr<BlobImpl> blobImpl = actor->GetBlobImpl();
   MOZ_ASSERT(blobImpl);
 
-  nsRefPtr<File> file = mutableFile->CreateFileFor(blobImpl, aFileHandle);
+  RefPtr<File> file = mutableFile->CreateFileFor(blobImpl, aFileHandle);
   return file.forget();
 }
 
@@ -333,11 +333,11 @@ HandleSuccess(ResultHelper* aResultHelper)
 {
   MOZ_ASSERT(aResultHelper);
 
-  nsRefPtr<FileRequestBase> fileRequest = aResultHelper->FileRequest();
+  RefPtr<FileRequestBase> fileRequest = aResultHelper->FileRequest();
   MOZ_ASSERT(fileRequest);
   fileRequest->AssertIsOnOwningThread();
 
-  nsRefPtr<FileHandleBase> fileHandle = aResultHelper->FileHandle();
+  RefPtr<FileHandleBase> fileHandle = aResultHelper->FileHandle();
   MOZ_ASSERT(fileHandle);
 
   if (fileHandle->IsAborted()) {
@@ -363,8 +363,8 @@ HandleError(FileRequestBase* aFileRequest,
   MOZ_ASSERT(NS_ERROR_GET_MODULE(aErrorCode) == NS_ERROR_MODULE_DOM_FILEHANDLE);
   MOZ_ASSERT(aFileHandle);
 
-  nsRefPtr<FileRequestBase> fileRequest = aFileRequest;
-  nsRefPtr<FileHandleBase> fileHandle = aFileHandle;
+  RefPtr<FileRequestBase> fileRequest = aFileRequest;
+  RefPtr<FileHandleBase> fileHandle = aFileHandle;
 
   AutoSetCurrentFileHandle ascfh(aFileHandle);
 
@@ -615,7 +615,7 @@ BackgroundFileRequestChild::HandleResponse(
 {
   AssertIsOnOwningThread();
 
-  nsRefPtr<File> file = ConvertActorToFile(mFileHandle, aResponse);
+  RefPtr<File> file = ConvertActorToFile(mFileHandle, aResponse);
 
   ResultHelper helper(mFileRequest, mFileHandle, file);
 

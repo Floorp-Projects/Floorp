@@ -256,7 +256,7 @@ HTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
         selectFrame->AddOption(i);
       }
 
-      nsRefPtr<HTMLOptionElement> option = Item(i);
+      RefPtr<HTMLOptionElement> option = Item(i);
       if (option && option->Selected()) {
         // Clear all other options
         if (!HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
@@ -755,14 +755,14 @@ HTMLSelectElement::SetLength(uint32_t aLength, ErrorResult& aRv)
       return;
     }
 
-    nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
+    RefPtr<mozilla::dom::NodeInfo> nodeInfo;
 
     nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::option,
                                 getter_AddRefs(nodeInfo));
 
     nsCOMPtr<nsINode> node = NS_NewHTMLOptionElement(nodeInfo.forget());
 
-    nsRefPtr<nsTextNode> text = new nsTextNode(mNodeInfo->NodeInfoManager());
+    RefPtr<nsTextNode> text = new nsTextNode(mNodeInfo->NodeInfoManager());
 
     aRv = node->AppendChildTo(text, false);
     if (aRv.Failed()) {
@@ -885,7 +885,7 @@ HTMLSelectElement::OnOptionSelected(nsISelectControlFrame* aSelectFrame,
 
   if (aChangeOptionState) {
     // Tell the option to get its bad self selected
-    nsRefPtr<HTMLOptionElement> option = Item(static_cast<uint32_t>(aIndex));
+    RefPtr<HTMLOptionElement> option = Item(static_cast<uint32_t>(aIndex));
     if (option) {
       option->SetSelectedInternal(aSelected, aNotify);
     }
@@ -1009,7 +1009,7 @@ HTMLSelectElement::SetOptionsSelectedByIndex(int32_t aStartIndex,
       for (uint32_t optIndex = AssertedCast<uint32_t>(aStartIndex);
            optIndex <= AssertedCast<uint32_t>(aEndIndex);
            optIndex++) {
-        nsRefPtr<HTMLOptionElement> option = Item(optIndex);
+        RefPtr<HTMLOptionElement> option = Item(optIndex);
 
         // Ignore disabled options.
         if (!(aOptionsMask & SET_DISABLED)) {
@@ -1114,7 +1114,7 @@ NS_IMETHODIMP
 HTMLSelectElement::IsOptionDisabled(int32_t aIndex, bool* aIsDisabled)
 {
   *aIsDisabled = false;
-  nsRefPtr<HTMLOptionElement> option = Item(aIndex);
+  RefPtr<HTMLOptionElement> option = Item(aIndex);
   NS_ENSURE_TRUE(option, NS_ERROR_FAILURE);
 
   *aIsDisabled = IsOptionDisabled(option);
@@ -1140,7 +1140,7 @@ HTMLSelectElement::IsOptionDisabled(HTMLOptionElement* aOption)
         return false;
       }
 
-      nsRefPtr<HTMLOptGroupElement> optGroupElement =
+      RefPtr<HTMLOptGroupElement> optGroupElement =
         HTMLOptGroupElement::FromContent(node);
 
       if (!optGroupElement) {
@@ -1175,7 +1175,7 @@ HTMLSelectElement::GetValue(DOMString& aValue)
     return;
   }
 
-  nsRefPtr<HTMLOptionElement> option =
+  RefPtr<HTMLOptionElement> option =
     Item(static_cast<uint32_t>(selectedIndex));
 
   if (!option) {
@@ -1192,7 +1192,7 @@ HTMLSelectElement::SetValue(const nsAString& aValue)
   uint32_t length = Length();
 
   for (uint32_t i = 0; i < length; i++) {
-    nsRefPtr<HTMLOptionElement> option = Item(i);
+    RefPtr<HTMLOptionElement> option = Item(i);
     if (!option) {
       continue;
     }
@@ -1581,7 +1581,7 @@ HTMLSelectElement::IntrinsicState() const
 NS_IMETHODIMP
 HTMLSelectElement::SaveState()
 {
-  nsRefPtr<SelectState> state = new SelectState();
+  RefPtr<SelectState> state = new SelectState();
 
   uint32_t len = Length();
 
@@ -1668,7 +1668,7 @@ HTMLSelectElement::Reset()
   uint32_t numOptions = Length();
 
   for (uint32_t i = 0; i < numOptions; i++) {
-    nsRefPtr<HTMLOptionElement> option = Item(i);
+    RefPtr<HTMLOptionElement> option = Item(i);
     if (option) {
       //
       // Reset the option to its default value
@@ -1817,7 +1817,7 @@ HTMLSelectElement::IsValueMissing()
   uint32_t length = Length();
 
   for (uint32_t i = 0; i < length; ++i) {
-    nsRefPtr<HTMLOptionElement> option = Item(i);
+    RefPtr<HTMLOptionElement> option = Item(i);
     if (!option->Selected()) {
       continue;
     }

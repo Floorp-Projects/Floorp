@@ -64,7 +64,7 @@ nsProgressFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
   // Associate ::-moz-progress-bar pseudo-element to the anonymous child.
   nsCSSPseudoElements::Type pseudoType = nsCSSPseudoElements::ePseudo_mozProgressBar;
-  nsRefPtr<nsStyleContext> newStyleContext = PresContext()->StyleSet()->
+  RefPtr<nsStyleContext> newStyleContext = PresContext()->StyleSet()->
     ResolvePseudoElementStyle(mContent->AsElement(), pseudoType,
                               StyleContext(), mBarDiv->AsElement());
 
@@ -248,7 +248,7 @@ nsProgressFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
 nscoord
 nsProgressFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
-  nsRefPtr<nsFontMetrics> fontMet;
+  RefPtr<nsFontMetrics> fontMet;
   NS_ENSURE_SUCCESS(
       nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet)), 0);
 

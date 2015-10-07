@@ -1722,12 +1722,12 @@ protected:
   // These are the same Document and PresContext owned by the DocViewer.
   // we must share ownership.
   nsCOMPtr<nsIDocument>     mDocument;
-  nsRefPtr<nsPresContext>   mPresContext;
+  RefPtr<nsPresContext>   mPresContext;
   nsStyleSet*               mStyleSet;      // [OWNS]
   nsCSSFrameConstructor*    mFrameConstructor; // [OWNS]
   nsViewManager*           mViewManager;   // [WEAK] docViewer owns it so I don't have to
   nsPresArena               mFrameArena;
-  nsRefPtr<nsFrameSelection> mSelection;
+  RefPtr<nsFrameSelection> mSelection;
   // Pointer into mFrameConstructor - this is purely so that FrameManager() and
   // GetRootFrame() can be inlined:
   nsFrameManagerBase*       mFrameManager;
@@ -1817,7 +1817,7 @@ protected:
   // same update block we have already had other changes that require
   // the whole document to be restyled (i.e., mStylesHaveChanged is already
   // true), then we don't bother adding the scope root here.
-  nsAutoTArray<nsRefPtr<mozilla::dom::Element>,1> mChangedScopeStyleRoots;
+  nsAutoTArray<RefPtr<mozilla::dom::Element>,1> mChangedScopeStyleRoots;
 
   static nsIContent*        gKeyDownTarget;
 

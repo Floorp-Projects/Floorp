@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "CC_Common.h"
 #include "CSFAudioControl.h"
 
@@ -37,6 +37,6 @@ namespace CSF
 	private:
 		virtual ~AudioControlWrapper();
 
-		nsRefPtr<AudioControl> _realAudioControl;
+		RefPtr<AudioControl> _realAudioControl;
 	};
 };

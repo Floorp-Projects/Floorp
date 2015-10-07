@@ -78,7 +78,7 @@ private:
   int mClientFd;
   unsigned char mLen;
   uint8_t mBuf[MSG1_SIZE + MSG2_SIZE];
-  nsRefPtr<BluetoothSocketResultHandler> mRes;
+  RefPtr<BluetoothSocketResultHandler> mRes;
 };
 
 /* |SocketMessageWatcherTask| starts a SocketMessageWatcher

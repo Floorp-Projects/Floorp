@@ -43,7 +43,7 @@ TVTuner::~TVTuner()
 TVTuner::Create(nsPIDOMWindow* aWindow,
                 nsITVTunerData* aData)
 {
-  nsRefPtr<TVTuner> tuner = new TVTuner(aWindow);
+  RefPtr<TVTuner> tuner = new TVTuner(aWindow);
   return (tuner->Init(aData)) ? tuner.forget() : nullptr;
 }
 
@@ -70,7 +70,7 @@ TVTuner::Init(nsITVTunerData* aData)
     }
 
     // Generate the source instance based on the supported source type.
-    nsRefPtr<TVSource> source = TVSource::Create(GetOwner(), sourceType, this);
+    RefPtr<TVSource> source = TVSource::Create(GetOwner(), sourceType, this);
     if (NS_WARN_IF(!source)) {
       continue;
     }
@@ -146,7 +146,7 @@ TVTuner::GetSources(ErrorResult& aRv)
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   MOZ_ASSERT(global);
 
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -162,7 +162,7 @@ TVTuner::SetCurrentSource(const TVSourceType aSourceType, ErrorResult& aRv)
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   MOZ_ASSERT(global);
 
-  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -188,14 +188,14 @@ TVTuner::GetId(nsAString& aId) const
 already_AddRefed<TVSource>
 TVTuner::GetCurrentSource() const
 {
-  nsRefPtr<TVSource> currentSource = mCurrentSource;
+  RefPtr<TVSource> currentSource = mCurrentSource;
   return currentSource.forget();
 }
 
 already_AddRefed<DOMMediaStream>
 TVTuner::GetStream() const
 {
-  nsRefPtr<DOMMediaStream> stream = mStream;
+  RefPtr<DOMMediaStream> stream = mStream;
   return stream.forget();
 }
 
@@ -209,7 +209,7 @@ nsresult
 TVTuner::InitMediaStream()
 {
   nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(GetOwner());
-  nsRefPtr<DOMMediaStream> stream = nullptr;
+  RefPtr<DOMMediaStream> stream = nullptr;
   if (mStreamType == nsITVTunerData::TV_STREAM_TYPE_HW) {
     stream = DOMHwMediaStream::CreateHwStream(window);
   } else if (mStreamType == nsITVTunerData::TV_STREAM_TYPE_SIMULATOR) {
@@ -229,7 +229,7 @@ TVTuner::CreateSimulatedMediaStream()
   if (NS_WARN_IF(!doc)) {
     return nullptr;
   }
-  nsRefPtr<Element> element = doc->CreateElement(VIDEO_TAG, error);
+  RefPtr<Element> element = doc->CreateElement(VIDEO_TAG, error);
   if (NS_WARN_IF(error.Failed())) {
     return nullptr;
   }
@@ -268,7 +268,7 @@ TVTuner::CreateSimulatedMediaStream()
     return nullptr;
   }
 
-  nsRefPtr<TVChannel> currentChannel = mCurrentSource->GetCurrentChannel();
+  RefPtr<TVChannel> currentChannel = mCurrentSource->GetCurrentChannel();
   if (NS_WARN_IF(!currentChannel)) {
     return nullptr;
   }
@@ -296,7 +296,7 @@ TVTuner::CreateSimulatedMediaStream()
 
   // See Media Capture from DOM Elements spec.
   // http://www.w3.org/TR/mediacapture-fromelement/
-  nsRefPtr<DOMMediaStream> stream = mediaElement->MozCaptureStream(error);
+  RefPtr<DOMMediaStream> stream = mediaElement->MozCaptureStream(error);
   if (NS_WARN_IF(error.Failed())) {
     return nullptr;
   }

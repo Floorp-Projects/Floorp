@@ -9,7 +9,7 @@
 #include <fcntl.h>
 #include "APKOpen.h"
 #include "Zip.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 extern "C"
 __attribute__ ((visibility("default")))
@@ -62,7 +62,7 @@ Java_org_mozilla_gecko_mozglue_NativeZip_getZip(JNIEnv *jenv, jclass, jstring pa
         JNI_Throw(jenv, "java/lang/IllegalArgumentException", "Invalid path");
         return 0;
     }
-    nsRefPtr<Zip> zip = ZipCollection::GetZip(str);
+    RefPtr<Zip> zip = ZipCollection::GetZip(str);
     jenv->ReleaseStringUTFChars(path, str);
     if (!zip) {
         JNI_Throw(jenv, "java/lang/IllegalArgumentException", "Invalid path or invalid zip");
@@ -79,7 +79,7 @@ Java_org_mozilla_gecko_mozglue_NativeZip_getZipFromByteBuffer(JNIEnv *jenv, jcla
 {
     void *buf = jenv->GetDirectBufferAddress(buffer);
     size_t size = jenv->GetDirectBufferCapacity(buffer);
-    nsRefPtr<Zip> zip = Zip::Create(buf, size);
+    RefPtr<Zip> zip = Zip::Create(buf, size);
     if (!zip) {
         JNI_Throw(jenv, "java/lang/IllegalArgumentException", "Invalid zip");
         return 0;

@@ -99,9 +99,9 @@ public:
     return NS_OK;
   }
 private:
-  nsRefPtr<nsIStreamListener> mListener;
-  nsRefPtr<nsIRequest> mRequest;
-  nsRefPtr<nsISupports> mContext;
+  RefPtr<nsIStreamListener> mListener;
+  RefPtr<nsIRequest> mRequest;
+  RefPtr<nsISupports> mContext;
 };
 
 NS_IMETHODIMP
@@ -201,9 +201,9 @@ public:
     return NS_OK;
   }
 private:
-  nsRefPtr<nsIStreamListener> mListener;
-  nsRefPtr<nsIRequest> mRequest;
-  nsRefPtr<nsISupports> mContext;
+  RefPtr<nsIStreamListener> mListener;
+  RefPtr<nsIRequest> mRequest;
+  RefPtr<nsISupports> mContext;
   nsresult mStatus;
 };
 

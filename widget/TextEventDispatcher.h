@@ -270,7 +270,7 @@ private:
 
   private:
     nsAutoString mString;
-    nsRefPtr<TextRangeArray> mClauses;
+    RefPtr<TextRangeArray> mClauses;
     TextRange mCaret;
 
     void EnsureClauseArray();

@@ -61,9 +61,9 @@ private:
 
   BackgroundCursorChild* mBackgroundActor;
 
-  nsRefPtr<IDBRequest> mRequest;
-  nsRefPtr<IDBObjectStore> mSourceObjectStore;
-  nsRefPtr<IDBIndex> mSourceIndex;
+  RefPtr<IDBRequest> mRequest;
+  RefPtr<IDBObjectStore> mSourceObjectStore;
+  RefPtr<IDBIndex> mSourceIndex;
 
   // mSourceObjectStore or mSourceIndex will hold this alive.
   IDBTransaction* mTransaction;

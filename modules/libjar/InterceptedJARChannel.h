@@ -13,7 +13,7 @@
 #include "nsIInputStreamPump.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIOutputStream.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 #include "mozilla/Maybe.h"
 
@@ -33,7 +33,7 @@ class InterceptedJARChannel : public nsIInterceptedChannel
   nsCOMPtr<nsINetworkInterceptController> mController;
 
   // The actual channel being intercepted.
-  nsRefPtr<nsJARChannel> mChannel;
+  RefPtr<nsJARChannel> mChannel;
 
   // Reader-side of the synthesized response body.
   nsCOMPtr<nsIInputStream> mSynthesizedInput;

@@ -12,7 +12,7 @@
 struct DeviceStorageFileDescriptor final
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DeviceStorageFileDescriptor)
-  nsRefPtr<DeviceStorageFile> mDSFile;
+  RefPtr<DeviceStorageFile> mDSFile;
   mozilla::ipc::FileDescriptor mFileDescriptor;
 private:
   ~DeviceStorageFileDescriptor() {}

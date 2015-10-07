@@ -46,7 +46,7 @@ const unsigned int WebrtcVideoConduit::CODEC_PLNAME_SIZE = 32;
 /**
  * Factory Method for VideoConduit
  */
-nsRefPtr<VideoSessionConduit>
+RefPtr<VideoSessionConduit>
 VideoSessionConduit::Create()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
@@ -510,7 +510,7 @@ WebrtcVideoConduit::SyncTo(WebrtcAudioConduit *aConduit)
 }
 
 MediaConduitErrorCode
-WebrtcVideoConduit::AttachRenderer(nsRefPtr<VideoRenderer> aVideoRenderer)
+WebrtcVideoConduit::AttachRenderer(RefPtr<VideoRenderer> aVideoRenderer)
 {
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
 
@@ -564,7 +564,7 @@ WebrtcVideoConduit::DetachRenderer()
 }
 
 MediaConduitErrorCode
-WebrtcVideoConduit::SetTransmitterTransport(nsRefPtr<TransportInterface> aTransport)
+WebrtcVideoConduit::SetTransmitterTransport(RefPtr<TransportInterface> aTransport)
 {
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
 
@@ -575,7 +575,7 @@ WebrtcVideoConduit::SetTransmitterTransport(nsRefPtr<TransportInterface> aTransp
 }
 
 MediaConduitErrorCode
-WebrtcVideoConduit::SetReceiverTransport(nsRefPtr<TransportInterface> aTransport)
+WebrtcVideoConduit::SetReceiverTransport(RefPtr<TransportInterface> aTransport)
 {
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
 

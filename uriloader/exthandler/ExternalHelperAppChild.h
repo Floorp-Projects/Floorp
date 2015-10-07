@@ -35,7 +35,7 @@ private:
     virtual ~ExternalHelperAppChild();
     nsresult DivertToParent(nsIDivertableChannel *divertable, nsIRequest *request);
 
-    nsRefPtr<nsExternalAppHandler> mHandler;
+    RefPtr<nsExternalAppHandler> mHandler;
     nsresult mStatus;
 };
 

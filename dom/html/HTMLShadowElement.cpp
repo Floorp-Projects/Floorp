@@ -110,7 +110,7 @@ HTMLShadowElement::BindToTree(nsIDocument* aDocument,
                               nsIContent* aBindingParent,
                               bool aCompileEventHandlers)
 {
-  nsRefPtr<ShadowRoot> oldContainingShadow = GetContainingShadow();
+  RefPtr<ShadowRoot> oldContainingShadow = GetContainingShadow();
 
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
                                                  aBindingParent,
@@ -164,7 +164,7 @@ HTMLShadowElement::BindToTree(nsIDocument* aDocument,
 void
 HTMLShadowElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
-  nsRefPtr<ShadowRoot> oldContainingShadow = GetContainingShadow();
+  RefPtr<ShadowRoot> oldContainingShadow = GetContainingShadow();
 
   if (mIsInsertionPoint && oldContainingShadow) {
     // Propagate UnbindFromTree call to previous projected shadow

@@ -10,7 +10,7 @@
 #include "nsIScreen.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/EnumeratedArray.h"
@@ -140,9 +140,9 @@ public:
     
     NS_INLINE_DECL_REFCOUNTING(RenderTargetSet)
 
-    nsRefPtr<layers::Compositor> compositor;
+    RefPtr<layers::Compositor> compositor;
     IntSize size;
-    nsTArray<nsRefPtr<layers::CompositingRenderTarget>> renderTargets;
+    nsTArray<RefPtr<layers::CompositingRenderTarget>> renderTargets;
     int32_t currentRenderTarget;
 
     virtual already_AddRefed<layers::CompositingRenderTarget> GetNextRenderTarget() = 0;
@@ -245,12 +245,12 @@ class VRHMDManager {
 public:
   static void ManagerInit();
   static void ManagerDestroy();
-  static void GetAllHMDs(nsTArray<nsRefPtr<VRHMDInfo>>& aHMDResult);
+  static void GetAllHMDs(nsTArray<RefPtr<VRHMDInfo>>& aHMDResult);
   static uint32_t AllocateDeviceIndex();
   static already_AddRefed<nsIScreen> MakeFakeScreen(int32_t x, int32_t y, uint32_t width, uint32_t height);
 
 protected:
-  typedef nsTArray<nsRefPtr<VRHMDManager>> VRHMDManagerArray;
+  typedef nsTArray<RefPtr<VRHMDManager>> VRHMDManagerArray;
   static VRHMDManagerArray *sManagers;
   static Atomic<uint32_t> sDeviceBase;
 
@@ -260,7 +260,7 @@ public:
   virtual bool PlatformInit() = 0;
   virtual bool Init() = 0;
   virtual void Destroy() = 0;
-  virtual void GetHMDs(nsTArray<nsRefPtr<VRHMDInfo>>& aHMDResult) = 0;
+  virtual void GetHMDs(nsTArray<RefPtr<VRHMDInfo>>& aHMDResult) = 0;
 
 protected:
   VRHMDManager() { }

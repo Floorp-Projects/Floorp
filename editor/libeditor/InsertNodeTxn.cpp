@@ -64,7 +64,7 @@ InsertNodeTxn::DoTransaction()
 
   // Only set selection to insertion point if editor gives permission
   if (mEditor.GetShouldTxnSetSelection()) {
-    nsRefPtr<Selection> selection = mEditor.GetSelection();
+    RefPtr<Selection> selection = mEditor.GetSelection();
     NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
     // Place the selection just after the inserted element
     selection->Collapse(mParent, mOffset + 1);

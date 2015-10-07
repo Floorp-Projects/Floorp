@@ -73,11 +73,11 @@ MediaKeys::Terminated()
   KeySessionHashMap keySessions;
   // Remove entries during iteration will screw it. Make a copy first.
   for (auto iter = mKeySessions.Iter(); !iter.Done(); iter.Next()) {
-    nsRefPtr<MediaKeySession>& session = iter.Data();
+    RefPtr<MediaKeySession>& session = iter.Data();
     keySessions.Put(session->GetSessionId(), session);
   }
   for (auto iter = keySessions.Iter(); !iter.Done(); iter.Next()) {
-    nsRefPtr<MediaKeySession>& session = iter.Data();
+    RefPtr<MediaKeySession>& session = iter.Data();
     session->OnClosed();
   }
   keySessions.Clear();
@@ -99,10 +99,10 @@ MediaKeys::Shutdown()
     mProxy = nullptr;
   }
 
-  nsRefPtr<MediaKeys> kungFuDeathGrip = this;
+  RefPtr<MediaKeys> kungFuDeathGrip = this;
 
   for (auto iter = mPromises.Iter(); !iter.Done(); iter.Next()) {
-    nsRefPtr<dom::DetailedPromise>& promise = iter.Data();
+    RefPtr<dom::DetailedPromise>& promise = iter.Data();
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
                          NS_LITERAL_CSTRING("Promise still outstanding at MediaKeys shutdown"));
     Release();
@@ -131,7 +131,7 @@ MediaKeys::GetKeySystem(nsString& aOutKeySystem) const
 already_AddRefed<DetailedPromise>
 MediaKeys::SetServerCertificate(const ArrayBufferViewOrArrayBuffer& aCert, ErrorResult& aRv)
 {
-  nsRefPtr<DetailedPromise> promise(MakePromise(aRv,
+  RefPtr<DetailedPromise> promise(MakePromise(aRv,
     NS_LITERAL_CSTRING("MediaKeys.setServerCertificate")));
   if (aRv.Failed()) {
     return nullptr;
@@ -191,7 +191,7 @@ MediaKeys::RetrievePromise(PromiseId aId)
     NS_WARNING(nsPrintfCString("Tried to retrieve a non-existent promise id=%d", aId).get());
     return nullptr;
   }
-  nsRefPtr<DetailedPromise> promise;
+  RefPtr<DetailedPromise> promise;
   mPromises.Remove(aId, getter_AddRefs(promise));
   Release();
   return promise.forget();
@@ -203,7 +203,7 @@ MediaKeys::RejectPromise(PromiseId aId, nsresult aExceptionCode,
 {
   EME_LOG("MediaKeys[%p]::RejectPromise(%d, 0x%x)", this, aId, aExceptionCode);
 
-  nsRefPtr<DetailedPromise> promise(RetrievePromise(aId));
+  RefPtr<DetailedPromise> promise(RetrievePromise(aId));
   if (!promise) {
     return;
   }
@@ -251,14 +251,14 @@ MediaKeys::ResolvePromise(PromiseId aId)
 {
   EME_LOG("MediaKeys[%p]::ResolvePromise(%d)", this, aId);
 
-  nsRefPtr<DetailedPromise> promise(RetrievePromise(aId));
+  RefPtr<DetailedPromise> promise(RetrievePromise(aId));
   if (!promise) {
     return;
   }
   if (mPendingSessions.Contains(aId)) {
     // We should only resolve LoadSession calls via this path,
     // not CreateSession() promises.
-    nsRefPtr<MediaKeySession> session;
+    RefPtr<MediaKeySession> session;
     if (!mPendingSessions.Get(aId, getter_AddRefs(session)) ||
         !session ||
         session->GetSessionId().IsEmpty()) {
@@ -279,7 +279,7 @@ MediaKeys::ResolvePromise(PromiseId aId)
 already_AddRefed<DetailedPromise>
 MediaKeys::Init(ErrorResult& aRv)
 {
-  nsRefPtr<DetailedPromise> promise(MakePromise(aRv,
+  RefPtr<DetailedPromise> promise(MakePromise(aRv,
     NS_LITERAL_CSTRING("MediaKeys::Init()")));
   if (aRv.Failed()) {
     return nullptr;
@@ -368,12 +368,12 @@ MediaKeys::Init(ErrorResult& aRv)
 void
 MediaKeys::OnCDMCreated(PromiseId aId, const nsACString& aNodeId, const uint32_t aPluginId)
 {
-  nsRefPtr<DetailedPromise> promise(RetrievePromise(aId));
+  RefPtr<DetailedPromise> promise(RetrievePromise(aId));
   if (!promise) {
     return;
   }
   mNodeId = aNodeId;
-  nsRefPtr<MediaKeys> keys(this);
+  RefPtr<MediaKeys> keys(this);
   EME_LOG("MediaKeys[%p]::OnCDMCreated() resolve promise id=%d", this, aId);
   promise->MaybeResolve(keys);
   if (mCreatePromiseId == aId) {
@@ -386,7 +386,7 @@ MediaKeys::OnCDMCreated(PromiseId aId, const nsACString& aNodeId, const uint32_t
 
   if (aPluginId) {
     // Prepare plugin crash reporter.
-    nsRefPtr<gmp::GeckoMediaPluginService> service =
+    RefPtr<gmp::GeckoMediaPluginService> service =
       gmp::GeckoMediaPluginService::GetGeckoMediaPluginService();
     if (NS_WARN_IF(!service)) {
       return;
@@ -413,7 +413,7 @@ MediaKeys::CreateSession(JSContext* aCx,
 
   EME_LOG("MediaKeys[%p] Creating session", this);
 
-  nsRefPtr<MediaKeySession> session = new MediaKeySession(aCx,
+  RefPtr<MediaKeySession> session = new MediaKeySession(aCx,
                                                           GetParentObject(),
                                                           this,
                                                           mKeySystem,
@@ -434,7 +434,7 @@ MediaKeys::CreateSession(JSContext* aCx,
 void
 MediaKeys::OnSessionLoaded(PromiseId aId, bool aSuccess)
 {
-  nsRefPtr<DetailedPromise> promise(RetrievePromise(aId));
+  RefPtr<DetailedPromise> promise(RetrievePromise(aId));
   if (!promise) {
     return;
   }
@@ -454,7 +454,7 @@ MediaKeys::OnSessionClosed(MediaKeySession* aSession)
 already_AddRefed<MediaKeySession>
 MediaKeys::GetSession(const nsAString& aSessionId)
 {
-  nsRefPtr<MediaKeySession> session;
+  RefPtr<MediaKeySession> session;
   mKeySessions.Get(aSessionId, getter_AddRefs(session));
   return session.forget();
 }
@@ -462,7 +462,7 @@ MediaKeys::GetSession(const nsAString& aSessionId)
 already_AddRefed<MediaKeySession>
 MediaKeys::GetPendingSession(uint32_t aToken)
 {
-  nsRefPtr<MediaKeySession> session;
+  RefPtr<MediaKeySession> session;
   mPendingSessions.Get(aToken, getter_AddRefs(session));
   mPendingSessions.Remove(aToken);
   return session.forget();

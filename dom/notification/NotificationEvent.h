@@ -39,7 +39,7 @@ public:
               const NotificationEventInit& aOptions,
               ErrorResult& aRv)
   {
-    nsRefPtr<NotificationEvent> e = new NotificationEvent(aOwner);
+    RefPtr<NotificationEvent> e = new NotificationEvent(aOwner);
     bool trusted = e->Init(aOwner);
     e->InitEvent(aType, aOptions.mBubbles, aOptions.mCancelable);
     e->SetTrusted(trusted);
@@ -61,12 +61,12 @@ public:
   already_AddRefed<Notification>
   Notification_()
   {
-    nsRefPtr<Notification> n = mNotification;
+    RefPtr<Notification> n = mNotification;
     return n.forget();
   }
 
 private:
-  nsRefPtr<Notification> mNotification;
+  RefPtr<Notification> mNotification;
 };
 
 END_WORKERS_NAMESPACE

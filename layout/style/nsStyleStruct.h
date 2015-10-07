@@ -1033,7 +1033,7 @@ struct nsStyleBorder {
 
 public:
   nsBorderColors** mBorderColors;        // [reset] composite (stripe) colors
-  nsRefPtr<nsCSSShadowArray> mBoxShadow; // [reset] nullptr for 'none'
+  RefPtr<nsCSSShadowArray> mBoxShadow; // [reset] nullptr for 'none'
 
 public:
   nsStyleCorners mBorderRadius;       // [reset] coord, percent
@@ -1237,8 +1237,8 @@ struct nsStyleList {
   uint8_t   mListStylePosition;         // [inherited]
 private:
   nsString  mListStyleType;             // [inherited]
-  nsRefPtr<mozilla::CounterStyle> mCounterStyle; // [inherited]
-  nsRefPtr<imgRequestProxy> mListStyleImage; // [inherited]
+  RefPtr<mozilla::CounterStyle> mCounterStyle; // [inherited]
+  RefPtr<imgRequestProxy> mListStyleImage; // [inherited]
   nsStyleList& operator=(const nsStyleList& aOther) = delete;
 public:
   nsRect        mImageRegion;           // [inherited] the rect to use within an image
@@ -1418,7 +1418,7 @@ struct nsStylePosition {
   nsStyleGridTemplate mGridTemplateRows;
 
   // nullptr for 'none'
-  nsRefPtr<mozilla::css::GridTemplateAreasValue> mGridTemplateAreas;
+  RefPtr<mozilla::css::GridTemplateAreasValue> mGridTemplateAreas;
 
   nsStyleGridLine mGridColumnStart;
   nsStyleGridLine mGridColumnEnd;
@@ -1685,7 +1685,7 @@ struct nsStyleText {
   nsStyleCoord  mLineHeight;            // [inherited] coord, factor, normal
   nsStyleCoord  mTextIndent;            // [inherited] coord, percent, calc
 
-  nsRefPtr<nsCSSShadowArray> mTextShadow; // [inherited] nullptr in case of a zero-length
+  RefPtr<nsCSSShadowArray> mTextShadow; // [inherited] nullptr in case of a zero-length
 
   bool WhiteSpaceIsSignificant() const {
     return mWhiteSpace == NS_STYLE_WHITESPACE_PRE ||
@@ -2141,7 +2141,7 @@ struct nsStyleDisplay {
 
   // We guarantee that if mBinding is non-null, so are mBinding->GetURI() and
   // mBinding->mOriginPrincipal.
-  nsRefPtr<mozilla::css::URLValue> mBinding;    // [reset]
+  RefPtr<mozilla::css::URLValue> mBinding;    // [reset]
   nsRect  mClip;                // [reset] offsets from upper-left border edge
   float   mOpacity;             // [reset]
   uint8_t mDisplay;             // [reset] see nsStyleConsts.h NS_STYLE_DISPLAY_*
@@ -2190,7 +2190,7 @@ struct nsStyleDisplay {
   uint8_t mBackfaceVisibility;
   uint8_t mTransformStyle;
   uint8_t mTransformBox;        // [reset] see nsStyleConsts.h
-  nsRefPtr<nsCSSValueSharedList> mSpecifiedTransform; // [reset]
+  RefPtr<nsCSSValueSharedList> mSpecifiedTransform; // [reset]
   nsStyleCoord mTransformOrigin[3]; // [reset] percent, coord, calc, 3rd param is coord, calc only
   nsStyleCoord mChildPerspective; // [reset] none, coord
   nsStyleCoord mPerspectiveOrigin[2]; // [reset] percent, coord, calc

@@ -20,7 +20,7 @@ using namespace mozilla;
 nsresult
 NS_SerializeToString(nsISerializable* obj, nsCSubstring& str)
 {
-  nsRefPtr<nsBase64Encoder> stream(new nsBase64Encoder());
+  RefPtr<nsBase64Encoder> stream(new nsBase64Encoder());
   if (!stream)
     return NS_ERROR_OUT_OF_MEMORY;
 

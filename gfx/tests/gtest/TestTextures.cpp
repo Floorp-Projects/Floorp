@@ -10,7 +10,7 @@
 #include "mozilla/gfx/Tools.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureHost.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "gfx2DGlue.h"
 #include "gfxImageSurface.h"
 #include "gfxTypes.h"
@@ -86,8 +86,8 @@ void AssertSurfacesEqual(SourceSurface* surface1,
   ASSERT_EQ(surface1->GetSize(), surface2->GetSize());
   ASSERT_EQ(surface1->GetFormat(), surface2->GetFormat());
 
-  nsRefPtr<DataSourceSurface> dataSurface1 = surface1->GetDataSurface();
-  nsRefPtr<DataSourceSurface> dataSurface2 = surface2->GetDataSurface();
+  RefPtr<DataSourceSurface> dataSurface1 = surface1->GetDataSurface();
+  RefPtr<DataSourceSurface> dataSurface2 = surface2->GetDataSurface();
   DataSourceSurface::MappedSurface map1;
   DataSourceSurface::MappedSurface map2;
   if (!dataSurface1->Map(DataSourceSurface::READ, &map1)) {
@@ -153,12 +153,12 @@ void TestTextureClientSurface(TextureClient* texture, gfxImageSurface* surface) 
 
   ASSERT_TRUE(texture->Lock(OpenMode::OPEN_READ_WRITE));
   // client painting
-  nsRefPtr<DrawTarget> dt = texture->BorrowDrawTarget();
-  nsRefPtr<SourceSurface> source =
+  RefPtr<DrawTarget> dt = texture->BorrowDrawTarget();
+  RefPtr<SourceSurface> source =
     gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, surface);
   dt->CopySurface(source, IntRect(IntPoint(), source->GetSize()), IntPoint());
 
-  nsRefPtr<SourceSurface> snapshot = dt->Snapshot();
+  RefPtr<SourceSurface> snapshot = dt->Snapshot();
 
   AssertSurfacesEqual(snapshot, source);
 
@@ -172,7 +172,7 @@ void TestTextureClientSurface(TextureClient* texture, gfxImageSurface* surface) 
   ASSERT_NE(descriptor.type(), SurfaceDescriptor::Tnull_t);
 
   // host deserialization
-  nsRefPtr<TextureHost> host = CreateBackendIndependentTextureHost(descriptor, nullptr,
+  RefPtr<TextureHost> host = CreateBackendIndependentTextureHost(descriptor, nullptr,
                                                                  texture->GetFlags());
 
   ASSERT_TRUE(host.get() != nullptr);
@@ -185,9 +185,9 @@ void TestTextureClientSurface(TextureClient* texture, gfxImageSurface* surface) 
   // not sure it'll be worth it. Maybe always test against a BasicCompositor,
   // but the latter needs a widget...
   if (host->Lock()) {
-    nsRefPtr<mozilla::gfx::DataSourceSurface> hostDataSurface = host->GetAsSurface();
+    RefPtr<mozilla::gfx::DataSourceSurface> hostDataSurface = host->GetAsSurface();
 
-    nsRefPtr<gfxImageSurface> hostSurface =
+    RefPtr<gfxImageSurface> hostSurface =
       new gfxImageSurface(hostDataSurface->GetData(),
                           hostDataSurface->GetSize(),
                           hostDataSurface->Stride(),
@@ -220,10 +220,10 @@ void TestTextureClientYCbCr(TextureClient* client, PlanarYCbCrData& ycbcrData) {
   ASSERT_NE(descriptor.type(), SurfaceDescriptor::Tnull_t);
 
   // host deserialization
-  nsRefPtr<TextureHost> textureHost = CreateBackendIndependentTextureHost(descriptor, nullptr,
+  RefPtr<TextureHost> textureHost = CreateBackendIndependentTextureHost(descriptor, nullptr,
                                                                         client->GetFlags());
 
-  nsRefPtr<BufferTextureHost> host = static_cast<BufferTextureHost*>(textureHost.get());
+  RefPtr<BufferTextureHost> host = static_cast<BufferTextureHost*>(textureHost.get());
 
   ASSERT_TRUE(host.get() != nullptr);
   ASSERT_EQ(host->GetFlags(), client->GetFlags());
@@ -269,11 +269,11 @@ TEST(Layers, TextureSerialization) {
   };
 
   for (int f = 0; f < 3; ++f) {
-    nsRefPtr<gfxImageSurface> surface = new gfxImageSurface(IntSize(400,300), formats[f]);
+    RefPtr<gfxImageSurface> surface = new gfxImageSurface(IntSize(400,300), formats[f]);
     SetupSurface(surface.get());
     AssertSurfacesEqual(surface, surface);
 
-    nsRefPtr<TextureClient> client
+    RefPtr<TextureClient> client
       = new MemoryTextureClient(nullptr,
                                 mozilla::gfx::ImageFormatToSurfaceFormat(surface->Format()),
                                 gfx::BackendType::CAIRO,
@@ -286,9 +286,9 @@ TEST(Layers, TextureSerialization) {
 }
 
 TEST(Layers, TextureYCbCrSerialization) {
-  nsRefPtr<gfxImageSurface> ySurface = new gfxImageSurface(IntSize(400,300), gfxImageFormat::A8);
-  nsRefPtr<gfxImageSurface> cbSurface = new gfxImageSurface(IntSize(200,150), gfxImageFormat::A8);
-  nsRefPtr<gfxImageSurface> crSurface = new gfxImageSurface(IntSize(200,150), gfxImageFormat::A8);
+  RefPtr<gfxImageSurface> ySurface = new gfxImageSurface(IntSize(400,300), gfxImageFormat::A8);
+  RefPtr<gfxImageSurface> cbSurface = new gfxImageSurface(IntSize(200,150), gfxImageFormat::A8);
+  RefPtr<gfxImageSurface> crSurface = new gfxImageSurface(IntSize(200,150), gfxImageFormat::A8);
   SetupSurface(ySurface.get());
   SetupSurface(cbSurface.get());
   SetupSurface(crSurface.get());
@@ -310,7 +310,7 @@ TEST(Layers, TextureYCbCrSerialization) {
   clientData.mPicX = 0;
   clientData.mPicX = 0;
 
-  nsRefPtr<TextureClient> client
+  RefPtr<TextureClient> client
     = new MemoryTextureClient(nullptr,
                               mozilla::gfx::SurfaceFormat::YUV,
                               gfx::BackendType::CAIRO,

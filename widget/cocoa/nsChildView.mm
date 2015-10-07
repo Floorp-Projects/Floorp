@@ -287,7 +287,7 @@ public:
                       const nsIntRegion& aDirtyRegion,
                       void (^aCallback)(gfx::DrawTarget*, const nsIntRegion&))
   {
-    nsRefPtr<gfx::DrawTarget> drawTarget = BeginUpdate(aNewSize, aDirtyRegion);
+    RefPtr<gfx::DrawTarget> drawTarget = BeginUpdate(aNewSize, aDirtyRegion);
     if (drawTarget) {
       aCallback(drawTarget, GetUpdateRegion());
       EndUpdate();
@@ -311,7 +311,7 @@ public:
 
 protected:
 
-  nsRefPtr<gfx::DrawTarget> mUpdateDrawTarget;
+  RefPtr<gfx::DrawTarget> mUpdateDrawTarget;
   GLContext* mGLContext;
   nsIntRegion mUpdateRegion;
   nsIntSize mUsedSize;
@@ -330,7 +330,7 @@ class GLPresenter : public GLManager
 public:
   static GLPresenter* CreateForWindow(nsIWidget* aWindow)
   {
-    nsRefPtr<GLContext> context = gl::GLContextProvider::CreateForWindow(aWindow);
+    RefPtr<GLContext> context = gl::GLContextProvider::CreateForWindow(aWindow);
     return context ? new GLPresenter(context) : nullptr;
   }
 
@@ -365,7 +365,7 @@ public:
   }
 
 protected:
-  nsRefPtr<mozilla::gl::GLContext> mGLContext;
+  RefPtr<mozilla::gl::GLContext> mGLContext;
   nsAutoPtr<mozilla::layers::ShaderProgramOGL> mRGBARectProgram;
   gfx::Matrix4x4 mProjMatrix;
   GLuint mQuadVBO;
@@ -2343,9 +2343,9 @@ nsChildView::MaybeDrawRoundedCorners(GLManager* aManager, const nsIntRect& aRect
   nsIntSize size(mDevPixelCornerRadius, mDevPixelCornerRadius);
   mCornerMaskImage->UpdateIfNeeded(size, nsIntRegion(), ^(gfx::DrawTarget* drawTarget, const nsIntRegion& updateRegion) {
     ClearRegion(drawTarget, updateRegion);
-    nsRefPtr<gfx::PathBuilder> builder = drawTarget->CreatePathBuilder();
+    RefPtr<gfx::PathBuilder> builder = drawTarget->CreatePathBuilder();
     builder->Arc(gfx::Point(mDevPixelCornerRadius, mDevPixelCornerRadius), mDevPixelCornerRadius, 0, 2.0f * M_PI);
-    nsRefPtr<gfx::Path> path = builder->Finish();
+    RefPtr<gfx::Path> path = builder->Finish();
     drawTarget->Fill(path,
                      gfx::ColorPattern(gfx::Color(1.0, 1.0, 1.0, 1.0)),
                      gfx::DrawOptions(1.0f, gfx::CompositionOp::OP_SOURCE));
@@ -2656,7 +2656,7 @@ nsChildView::StartRemoteDrawing()
     mBasicCompositorImage = new RectTextureImage(mGLPresenter->gl());
   }
 
-  nsRefPtr<gfx::DrawTarget> drawTarget =
+  RefPtr<gfx::DrawTarget> drawTarget =
     mBasicCompositorImage->BeginUpdate(renderSize, dirtyRegion);
 
   if (!drawTarget) {
@@ -2866,7 +2866,7 @@ nsChildView::GetDocumentAccessible()
     return nullptr;
 
   if (mAccessible) {
-    nsRefPtr<a11y::Accessible> ret;
+    RefPtr<a11y::Accessible> ret;
     CallQueryReferent(mAccessible.get(),
                       static_cast<a11y::Accessible**>(getter_AddRefs(ret)));
     return ret.forget();
@@ -2874,7 +2874,7 @@ nsChildView::GetDocumentAccessible()
 
   // need to fetch the accessible anew, because it has gone away.
   // cache the accessible in our weak ptr
-  nsRefPtr<a11y::Accessible> acc = GetRootAccessible();
+  RefPtr<a11y::Accessible> acc = GetRootAccessible();
   mAccessible = do_GetWeakReference(acc.get());
 
   return acc.forget();
@@ -2925,7 +2925,7 @@ RectTextureImage::BeginUpdate(const nsIntSize& aNewSize,
 
   mInUpdate = true;
 
-  nsRefPtr<gfx::DrawTarget> drawTarget = mUpdateDrawTarget;
+  RefPtr<gfx::DrawTarget> drawTarget = mUpdateDrawTarget;
   return drawTarget.forget();
 }
 
@@ -2953,8 +2953,8 @@ RectTextureImage::EndUpdate(bool aKeepSurface)
     updateRegion = gfx::IntRect(gfx::IntPoint(0, 0), mTextureSize);
   }
 
-  nsRefPtr<gfx::SourceSurface> snapshot = mUpdateDrawTarget->Snapshot();
-  nsRefPtr<gfx::DataSourceSurface> dataSnapshot = snapshot->GetDataSurface();
+  RefPtr<gfx::SourceSurface> snapshot = mUpdateDrawTarget->Snapshot();
+  RefPtr<gfx::DataSourceSurface> dataSnapshot = snapshot->GetDataSurface();
 
   UploadSurfaceToTexture(mGLContext,
                          dataSnapshot,
@@ -2981,11 +2981,11 @@ RectTextureImage::UpdateFromCGContext(const nsIntSize& aNewSize,
   gfx::IntSize size = gfx::IntSize(CGBitmapContextGetWidth(aCGContext),
                                    CGBitmapContextGetHeight(aCGContext));
   mBufferSize.SizeTo(size.width, size.height);
-  nsRefPtr<gfx::DrawTarget> dt = BeginUpdate(aNewSize, aDirtyRegion);
+  RefPtr<gfx::DrawTarget> dt = BeginUpdate(aNewSize, aDirtyRegion);
   if (dt) {
     gfx::Rect rect(0, 0, size.width, size.height);
     gfxUtils::ClipToRegion(dt, GetUpdateRegion());
-    nsRefPtr<gfx::SourceSurface> sourceSurface =
+    RefPtr<gfx::SourceSurface> sourceSurface =
       dt->CreateSourceSurfaceFromData(static_cast<uint8_t *>(CGBitmapContextGetData(aCGContext)),
                                       size,
                                       CGBitmapContextGetBytesPerRow(aCGContext),
@@ -3718,15 +3718,15 @@ NSEvent* gLastDragMouseDownEvent = nil;
   nsIntRegion region = [self nativeDirtyRegionWithBoundingRect:aRect];
 
   // Create Cairo objects.
-  nsRefPtr<gfxQuartzSurface> targetSurface;
+  RefPtr<gfxQuartzSurface> targetSurface;
 
-  nsRefPtr<gfx::DrawTarget> dt =
+  RefPtr<gfx::DrawTarget> dt =
     gfx::Factory::CreateDrawTargetForCairoCGContext(aContext,
                                                     gfx::IntSize(backingSize.width,
                                                                  backingSize.height));
   MOZ_ASSERT(dt); // see implementation
   dt->AddUserData(&gfxContext::sDontUseAsSourceKey, dt, nullptr);
-  nsRefPtr<gfxContext> targetContext = new gfxContext(dt);
+  RefPtr<gfxContext> targetContext = new gfxContext(dt);
 
   // Set up the clip region.
   nsIntRegionRectIterator iter(region);
@@ -6188,7 +6188,7 @@ PanGestureTypeForEvent(NSEvent* aEvent)
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   nsCOMPtr<nsIWidget> kungFuDeathGrip2(mGeckoChild);
-  nsRefPtr<a11y::Accessible> accessible = mGeckoChild->GetDocumentAccessible();
+  RefPtr<a11y::Accessible> accessible = mGeckoChild->GetDocumentAccessible();
   if (!accessible)
     return nil;
 

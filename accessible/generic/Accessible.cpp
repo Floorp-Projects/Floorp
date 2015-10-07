@@ -1786,7 +1786,7 @@ Accessible::DoCommand(nsIContent *aContent, uint32_t aActionIndex)
     }
 
   private:
-    nsRefPtr<Accessible> mAcc;
+    RefPtr<Accessible> mAcc;
     nsCOMPtr<nsIContent> mContent;
     uint32_t mIdx;
   };
@@ -1822,7 +1822,7 @@ Accessible::DispatchClickEvent(nsIContent *aContent, uint32_t aActionIndex)
 
   nsSize size = frame->GetSize();
 
-  nsRefPtr<nsPresContext> presContext = presShell->GetPresContext();
+  RefPtr<nsPresContext> presContext = presShell->GetPresContext();
   int32_t x = presContext->AppUnitsToDevPixels(point.x + size.width / 2);
   int32_t y = presContext->AppUnitsToDevPixels(point.y + size.height / 2);
 

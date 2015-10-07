@@ -125,8 +125,8 @@ protected:
   nsIDocument* GetOurCurrentDoc() const;
 
   mozilla::LogicalMargin mPadding;
-  nsRefPtr<imgRequestProxy> mImageRequest;
-  nsRefPtr<nsBulletListener> mListener;
+  RefPtr<imgRequestProxy> mImageRequest;
+  RefPtr<nsBulletListener> mListener;
 
   mozilla::LogicalSize mIntrinsicSize;
   int32_t mOrdinal;

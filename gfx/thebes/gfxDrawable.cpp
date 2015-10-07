@@ -120,18 +120,18 @@ gfxCallbackDrawable::MakeSurfaceDrawable(const GraphicsFilter aFilter)
 {
     SurfaceFormat format =
         gfxPlatform::GetPlatform()->Optimal2DFormatForContent(gfxContentType::COLOR_ALPHA);
-    nsRefPtr<DrawTarget> dt =
+    RefPtr<DrawTarget> dt =
         gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(mSize,
                                                                      format);
     if (!dt)
         return nullptr;
 
-    nsRefPtr<gfxContext> ctx = new gfxContext(dt);
+    RefPtr<gfxContext> ctx = new gfxContext(dt);
     Draw(ctx, gfxRect(0, 0, mSize.width, mSize.height), false, aFilter);
 
-    nsRefPtr<SourceSurface> surface = dt->Snapshot();
+    RefPtr<SourceSurface> surface = dt->Snapshot();
     if (surface) {
-        nsRefPtr<gfxSurfaceDrawable> drawable = new gfxSurfaceDrawable(surface, mSize);
+        RefPtr<gfxSurfaceDrawable> drawable = new gfxSurfaceDrawable(surface, mSize);
         return drawable.forget();
     }
     return nullptr;
@@ -188,15 +188,15 @@ public:
                                aTransform);
     }
 private:
-    nsRefPtr<gfxDrawable> mDrawable;
+    RefPtr<gfxDrawable> mDrawable;
 };
 
 already_AddRefed<gfxCallbackDrawable>
 gfxPatternDrawable::MakeCallbackDrawable()
 {
-    nsRefPtr<gfxDrawingCallback> callback =
+    RefPtr<gfxDrawingCallback> callback =
         new DrawingCallbackFromDrawable(this);
-    nsRefPtr<gfxCallbackDrawable> callbackDrawable =
+    RefPtr<gfxCallbackDrawable> callbackDrawable =
         new gfxCallbackDrawable(callback, mSize);
     return callbackDrawable.forget();
 }
@@ -222,7 +222,7 @@ gfxPatternDrawable::Draw(gfxContext* aContext,
         // gfxCallbackDrawable and gfxSurfaceDrawable already know how to do
         // those things, so we use them here. Drawing mPattern into the surface
         // will happen through this Draw() method with aRepeat = false.
-        nsRefPtr<gfxCallbackDrawable> callbackDrawable = MakeCallbackDrawable();
+        RefPtr<gfxCallbackDrawable> callbackDrawable = MakeCallbackDrawable();
         return callbackDrawable->Draw(aContext, aFillRect, true, aFilter,
                                       aOpacity, aTransform);
     }

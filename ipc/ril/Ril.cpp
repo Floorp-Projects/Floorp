@@ -75,7 +75,7 @@ protected:
   void Close();
 
 private:
-  nsRefPtr<RilSocket> mSocket;
+  RefPtr<RilSocket> mSocket;
   nsCString mAddress;
   bool mShutdown;
 };
@@ -385,13 +385,13 @@ public:
 
 private:
   unsigned int mClientId;
-  nsRefPtr<WorkerCrossThreadDispatcher> mDispatcher;
+  RefPtr<WorkerCrossThreadDispatcher> mDispatcher;
 };
 
 nsresult
 RilWorker::RegisterConsumer(unsigned int aClientId)
 {
-  nsRefPtr<RegisterConsumerTask> task = new RegisterConsumerTask(aClientId,
+  RefPtr<RegisterConsumerTask> task = new RegisterConsumerTask(aClientId,
                                                                  mDispatcher);
   if (!mDispatcher->PostTask(task)) {
     NS_WARNING("Failed to post register-consumer task.");
@@ -426,7 +426,7 @@ private:
 void
 RilWorker::UnregisterConsumer(unsigned int aClientId)
 {
-  nsRefPtr<UnregisterConsumerTask> task =
+  RefPtr<UnregisterConsumerTask> task =
     new UnregisterConsumerTask(aClientId);
 
   if (!mDispatcher->PostTask(task)) {

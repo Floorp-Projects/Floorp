@@ -47,7 +47,7 @@ nsTextEditRules::CheckBidiLevelForDeletion(Selection* aSelection,
 
   nsBidiLevel levelBefore;
   nsBidiLevel levelAfter;
-  nsRefPtr<nsFrameSelection> frameSelection =
+  RefPtr<nsFrameSelection> frameSelection =
     static_cast<Selection*>(aSelection)->GetFrameSelection();
   NS_ENSURE_TRUE(frameSelection, NS_ERROR_NULL_POINTER);
 
@@ -91,7 +91,7 @@ nsTextEditRules::UndefineCaretBidiLevel(Selection* aSelection)
    * So we set the caret Bidi level to UNDEFINED here, and the caret code will
    * set it correctly later
    */
-  nsRefPtr<nsFrameSelection> frameSelection = aSelection->GetFrameSelection();
+  RefPtr<nsFrameSelection> frameSelection = aSelection->GetFrameSelection();
   if (frameSelection) {
     frameSelection->UndefineCaretBidiLevel();
   }

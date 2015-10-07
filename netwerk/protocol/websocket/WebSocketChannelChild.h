@@ -69,7 +69,7 @@ class WebSocketChannelChild final : public BaseWebSocketChannel,
 
   void MaybeReleaseIPCObject();
 
-  nsRefPtr<ChannelEventQueue> mEventQ;
+  RefPtr<ChannelEventQueue> mEventQ;
   nsString mEffectiveURL;
 
   // This variable is protected by mutex.

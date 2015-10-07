@@ -9,7 +9,7 @@
 #include <stdio.h>                      // for FILE
 #include "CompositableHost.h"           // for CompositableHost
 #include "mozilla/Attributes.h"         // for override
-#include "mozilla/nsRefPtr.h"             // for RefPtr
+#include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/gfx/Point.h"          // for Point
 #include "mozilla/gfx/Rect.h"           // for Rect
 #include "mozilla/gfx/Types.h"          // for Filter

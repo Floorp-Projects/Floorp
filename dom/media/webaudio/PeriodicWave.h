@@ -52,8 +52,8 @@ public:
 private:
   ~PeriodicWave() {}
 
-  nsRefPtr<AudioContext> mContext;
-  nsRefPtr<ThreadSharedFloatArrayBufferList> mCoefficients;
+  RefPtr<AudioContext> mContext;
+  RefPtr<ThreadSharedFloatArrayBufferList> mCoefficients;
   uint32_t mLength;
 };
 

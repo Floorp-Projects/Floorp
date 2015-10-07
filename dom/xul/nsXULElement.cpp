@@ -228,8 +228,8 @@ already_AddRefed<nsXULElement>
 nsXULElement::Create(nsXULPrototypeElement* aPrototype, mozilla::dom::NodeInfo *aNodeInfo,
                      bool aIsScriptable, bool aIsRoot)
 {
-    nsRefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
-    nsRefPtr<nsXULElement> element = new nsXULElement(ni.forget());
+    RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
+    RefPtr<nsXULElement> element = new nsXULElement(ni.forget());
     if (element) {
         if (aPrototype->mHasIdAttribute) {
             element->SetHasID();
@@ -280,7 +280,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
+    RefPtr<mozilla::dom::NodeInfo> nodeInfo;
     if (aDocument) {
         mozilla::dom::NodeInfo* ni = aPrototype->mNodeInfo;
         nodeInfo = aDocument->NodeInfoManager()->
@@ -290,7 +290,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
         nodeInfo = aPrototype->mNodeInfo;
     }
 
-    nsRefPtr<nsXULElement> element = Create(aPrototype, nodeInfo,
+    RefPtr<nsXULElement> element = Create(aPrototype, nodeInfo,
                                             aIsScriptable, aIsRoot);
     element.forget(aResult);
 
@@ -300,7 +300,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
 nsresult
 NS_NewXULElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
 {
-    nsRefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
+    RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
 
     NS_PRECONDITION(ni, "need nodeinfo for non-proto Create");
 
@@ -318,7 +318,7 @@ void
 NS_TrustedNewXULElement(nsIContent** aResult,
                         already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
 {
-    nsRefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
+    RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
     NS_PRECONDITION(ni, "need nodeinfo for non-proto Create");
 
     // Create an nsXULElement with the specified namespace and tag.
@@ -367,8 +367,8 @@ nsXULElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
 {
     *aResult = nullptr;
 
-    nsRefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
-    nsRefPtr<nsXULElement> element = new nsXULElement(ni.forget());
+    RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
+    RefPtr<nsXULElement> element = new nsXULElement(ni.forget());
 
     // XXX TODO: set up RDF generic builder n' stuff if there is a
     // 'datasources' attribute? This is really kind of tricky,
@@ -386,13 +386,13 @@ nsXULElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
 
         // Style rules need to be cloned.
         if (originalValue->Type() == nsAttrValue::eCSSStyleRule) {
-            nsRefPtr<css::Rule> ruleClone =
+            RefPtr<css::Rule> ruleClone =
                 originalValue->GetCSSStyleRuleValue()->Clone();
 
             nsString stringValue;
             originalValue->ToString(stringValue);
 
-            nsRefPtr<css::StyleRule> styleRule = do_QueryObject(ruleClone);
+            RefPtr<css::StyleRule> styleRule = do_QueryObject(ruleClone);
             attrValue.SetTo(styleRule, &stringValue);
         } else {
             attrValue.SetTo(*originalValue);
@@ -440,7 +440,7 @@ nsXULElement::GetElementsByAttribute(const nsAString& aAttribute,
 {
     nsCOMPtr<nsIAtom> attrAtom(do_GetAtom(aAttribute));
     void* attrValue = new nsString(aValue);
-    nsRefPtr<nsContentList> list =
+    RefPtr<nsContentList> list =
         new nsContentList(this,
                           XULDocument::MatchAttribute,
                           nsContentUtils::DestroyMatchString,
@@ -482,7 +482,7 @@ nsXULElement::GetElementsByAttributeNS(const nsAString& aNamespaceURI,
     }
 
     void* attrValue = new nsString(aValue);
-    nsRefPtr<nsContentList> list =
+    RefPtr<nsContentList> list =
         new nsContentList(this,
                           XULDocument::MatchAttribute,
                           nsContentUtils::DestroyMatchString,
@@ -1614,7 +1614,7 @@ nsXULElement::GetFrameLoader()
     if (!slots)
         return nullptr;
 
-    nsRefPtr<nsFrameLoader> loader = slots->mFrameLoader;
+    RefPtr<nsFrameLoader> loader = slots->mFrameLoader;
     return loader.forget();
 }
 
@@ -1746,7 +1746,7 @@ nsXULElement::ClickWithInputSource(uint16_t aInputSource)
         nsCOMPtr<nsIPresShell> shell = doc->GetShell();
         if (shell) {
             // strong ref to PresContext so events don't destroy it
-            nsRefPtr<nsPresContext> context = shell->GetPresContext();
+            RefPtr<nsPresContext> context = shell->GetPresContext();
 
             bool isCallerChrome = nsContentUtils::IsCallerChrome();
 
@@ -1866,13 +1866,13 @@ nsXULElement::MakeHeavyweight(nsXULPrototypeElement* aPrototype)
 
         // Style rules need to be cloned.
         if (protoattr->mValue.Type() == nsAttrValue::eCSSStyleRule) {
-            nsRefPtr<css::Rule> ruleClone =
+            RefPtr<css::Rule> ruleClone =
                 protoattr->mValue.GetCSSStyleRuleValue()->Clone();
 
             nsString stringValue;
             protoattr->mValue.ToString(stringValue);
 
-            nsRefPtr<css::StyleRule> styleRule = do_QueryObject(ruleClone);
+            RefPtr<css::StyleRule> styleRule = do_QueryObject(ruleClone);
             attrValue.SetTo(styleRule, &stringValue);
         } else {
             attrValue.SetTo(protoattr->mValue);
@@ -2169,7 +2169,7 @@ nsXULPrototypeAttribute::~nsXULPrototypeAttribute()
 nsresult
 nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
                                  nsXULPrototypeDocument* aProtoDoc,
-                                 const nsTArray<nsRefPtr<mozilla::dom::NodeInfo>> *aNodeInfos)
+                                 const nsTArray<RefPtr<mozilla::dom::NodeInfo>> *aNodeInfos)
 {
     nsresult rv;
 
@@ -2193,7 +2193,7 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
     nsAutoString attributeValue;
     uint32_t i;
     for (i = 0; i < mNumAttributes; ++i) {
-        nsRefPtr<mozilla::dom::NodeInfo> ni;
+        RefPtr<mozilla::dom::NodeInfo> ni;
         if (mAttributes[i].mName.IsAtom()) {
             ni = mNodeInfo->NodeInfoManager()->
                 GetNodeInfo(mAttributes[i].mName.Atom(), nullptr,
@@ -2281,7 +2281,7 @@ nsresult
 nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                                    nsXULPrototypeDocument* aProtoDoc,
                                    nsIURI* aDocumentURI,
-                                   const nsTArray<nsRefPtr<mozilla::dom::NodeInfo>> *aNodeInfos)
+                                   const nsTArray<RefPtr<mozilla::dom::NodeInfo>> *aNodeInfos)
 {
     NS_PRECONDITION(aNodeInfos, "missing nodeinfo array");
 
@@ -2337,7 +2337,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
             if (NS_WARN_IF(NS_FAILED(rv))) return rv;
             Type childType = (Type)number;
 
-            nsRefPtr<nsXULPrototypeNode> child;
+            RefPtr<nsXULPrototypeNode> child;
 
             switch (childType) {
             case eType_Element:
@@ -2360,7 +2360,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
                 break;
             case eType_Script: {
                 // language version/options obtained during deserialization.
-                nsRefPtr<nsXULPrototypeScript> script = new nsXULPrototypeScript(0, 0);
+                RefPtr<nsXULPrototypeScript> script = new nsXULPrototypeScript(0, 0);
 
                 rv = aStream->ReadBoolean(&script->mOutOfLine);
                 if (NS_WARN_IF(NS_FAILED(rv))) return rv;
@@ -2440,7 +2440,7 @@ nsXULPrototypeElement::SetAttrAt(uint32_t aPos, const nsAString& aValue,
     } else if (mAttributes[aPos].mName.Equals(nsGkAtoms::style)) {
         mHasStyleAttribute = true;
         // Parse the element's 'style' attribute
-        nsRefPtr<css::StyleRule> rule;
+        RefPtr<css::StyleRule> rule;
 
         nsCSSParser parser;
 
@@ -2514,7 +2514,7 @@ nsXULPrototypeScript::~nsXULPrototypeScript()
 nsresult
 nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
                                 nsXULPrototypeDocument* aProtoDoc,
-                                const nsTArray<nsRefPtr<mozilla::dom::NodeInfo>> *aNodeInfos)
+                                const nsTArray<RefPtr<mozilla::dom::NodeInfo>> *aNodeInfos)
 {
     NS_ENSURE_TRUE(aProtoDoc, NS_ERROR_UNEXPECTED);
     AutoSafeJSContext cx;
@@ -2596,7 +2596,7 @@ nsresult
 nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
                                   nsXULPrototypeDocument* aProtoDoc,
                                   nsIURI* aDocumentURI,
-                                  const nsTArray<nsRefPtr<mozilla::dom::NodeInfo>> *aNodeInfos)
+                                  const nsTArray<RefPtr<mozilla::dom::NodeInfo>> *aNodeInfos)
 {
     nsresult rv;
     NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nullptr ||
@@ -2694,7 +2694,7 @@ nsXULPrototypeScript::DeserializeOutOfLine(nsIObjectInputStream* aInput,
 
 class NotifyOffThreadScriptCompletedRunnable : public nsRunnable
 {
-    nsRefPtr<nsIOffThreadScriptReceiver> mReceiver;
+    RefPtr<nsIOffThreadScriptReceiver> mReceiver;
     void *mToken;
 
 public:
@@ -2730,7 +2730,7 @@ OffThreadScriptReceiverCallback(void *aToken, void *aCallbackData)
     // Be careful not to adjust the refcount on the receiver, as this callback
     // may be invoked off the main thread.
     nsIOffThreadScriptReceiver* aReceiver = static_cast<nsIOffThreadScriptReceiver*>(aCallbackData);
-    nsRefPtr<NotifyOffThreadScriptCompletedRunnable> notify =
+    RefPtr<NotifyOffThreadScriptCompletedRunnable> notify =
         new NotifyOffThreadScriptCompletedRunnable(
             already_AddRefed<nsIOffThreadScriptReceiver>(aReceiver), aToken);
     NS_DispatchToMainThread(notify);
@@ -2825,7 +2825,7 @@ nsXULPrototypeScript::Set(JSScript* aObject)
 nsresult
 nsXULPrototypeText::Serialize(nsIObjectOutputStream* aStream,
                               nsXULPrototypeDocument* aProtoDoc,
-                              const nsTArray<nsRefPtr<mozilla::dom::NodeInfo>> *aNodeInfos)
+                              const nsTArray<RefPtr<mozilla::dom::NodeInfo>> *aNodeInfos)
 {
     nsresult rv;
 
@@ -2844,7 +2844,7 @@ nsresult
 nsXULPrototypeText::Deserialize(nsIObjectInputStream* aStream,
                                 nsXULPrototypeDocument* aProtoDoc,
                                 nsIURI* aDocumentURI,
-                                const nsTArray<nsRefPtr<mozilla::dom::NodeInfo>> *aNodeInfos)
+                                const nsTArray<RefPtr<mozilla::dom::NodeInfo>> *aNodeInfos)
 {
     nsresult rv = aStream->ReadString(mValue);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2861,7 +2861,7 @@ nsXULPrototypeText::Deserialize(nsIObjectInputStream* aStream,
 nsresult
 nsXULPrototypePI::Serialize(nsIObjectOutputStream* aStream,
                             nsXULPrototypeDocument* aProtoDoc,
-                            const nsTArray<nsRefPtr<mozilla::dom::NodeInfo>> *aNodeInfos)
+                            const nsTArray<RefPtr<mozilla::dom::NodeInfo>> *aNodeInfos)
 {
     nsresult rv;
 
@@ -2884,7 +2884,7 @@ nsresult
 nsXULPrototypePI::Deserialize(nsIObjectInputStream* aStream,
                               nsXULPrototypeDocument* aProtoDoc,
                               nsIURI* aDocumentURI,
-                              const nsTArray<nsRefPtr<mozilla::dom::NodeInfo>> *aNodeInfos)
+                              const nsTArray<RefPtr<mozilla::dom::NodeInfo>> *aNodeInfos)
 {
     nsresult rv;
 

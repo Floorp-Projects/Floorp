@@ -88,7 +88,7 @@ SVGDocument::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
   NS_ASSERTION(aNodeInfo->NodeInfoManager() == mNodeInfoManager,
                "Can't import this document into another document!");
 
-  nsRefPtr<SVGDocument> clone = new SVGDocument();
+  RefPtr<SVGDocument> clone = new SVGDocument();
   nsresult rv = CloneDocHelper(clone.get());
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -147,7 +147,7 @@ SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded()
             nsCOMPtr<nsIURI> uri;
             NS_NewURI(getter_AddRefs(uri), spec);
             if (uri) {
-              nsRefPtr<CSSStyleSheet> cssSheet;
+              RefPtr<CSSStyleSheet> cssSheet;
               cssLoader->LoadSheetSync(uri, true, true, getter_AddRefs(cssSheet));
               if (cssSheet) {
                 EnsureOnDemandBuiltInUASheet(cssSheet);
@@ -193,7 +193,7 @@ SVGDocument::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 nsresult
 NS_NewSVGDocument(nsIDocument** aInstancePtrResult)
 {
-  nsRefPtr<SVGDocument> doc = new SVGDocument();
+  RefPtr<SVGDocument> doc = new SVGDocument();
 
   nsresult rv = doc->Init();
   if (NS_FAILED(rv)) {

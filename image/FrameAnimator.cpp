@@ -479,7 +479,7 @@ FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
 
   // Create the Compositing Frame
   if (!mCompositingFrame) {
-    nsRefPtr<imgFrame> newFrame = new imgFrame;
+    RefPtr<imgFrame> newFrame = new imgFrame;
     nsresult rv = newFrame->InitForDecoder(mSize,
                                            SurfaceFormat::B8G8R8A8);
     if (NS_FAILED(rv)) {
@@ -622,7 +622,7 @@ FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
     // It would be better if we just stored the area that nextFrame is going to
     // overwrite.
     if (!mCompositingPrevFrame) {
-      nsRefPtr<imgFrame> newFrame = new imgFrame;
+      RefPtr<imgFrame> newFrame = new imgFrame;
       nsresult rv = newFrame->InitForDecoder(mSize,
                                              SurfaceFormat::B8G8R8A8);
       if (NS_FAILED(rv)) {

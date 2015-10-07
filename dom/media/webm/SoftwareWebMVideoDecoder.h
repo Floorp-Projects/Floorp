@@ -17,7 +17,7 @@ class SoftwareWebMVideoDecoder : public WebMVideoDecoder
 public:
   static WebMVideoDecoder* Create(WebMReader* aReader);
 
-  virtual nsRefPtr<InitPromise> Init(unsigned int aWidth = 0,
+  virtual RefPtr<InitPromise> Init(unsigned int aWidth = 0,
                                      unsigned int aHeight = 0) override;
 
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
@@ -30,7 +30,7 @@ public:
 
 private:
   nsresult InitDecoder(unsigned int aWidth, unsigned int aHeight);
-  nsRefPtr<WebMReader> mReader;
+  RefPtr<WebMReader> mReader;
 
   // VPx decoder state
   vpx_codec_ctx_t mVPX;

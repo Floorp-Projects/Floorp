@@ -144,7 +144,7 @@ private:
   int8_t mCropStyle;
   int8_t mTextAlignment;
 
-  nsRefPtr<nsTreeColumn> mNext;
+  RefPtr<nsTreeColumn> mNext;
   nsTreeColumn* mPrevious;
 };
 
@@ -211,7 +211,7 @@ private:
    * XXX this means that new nsTreeColumn objects are unnecessarily created
    *     for untouched columns.
    */
-  nsRefPtr<nsTreeColumn> mFirstColumn;
+  RefPtr<nsTreeColumn> mFirstColumn;
 };
 
 #endif // nsTreeColumns_h__

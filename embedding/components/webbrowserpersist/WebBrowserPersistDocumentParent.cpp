@@ -69,7 +69,7 @@ WebBrowserPersistDocumentParent::RecvAttributes(const Attrs& aAttrs,
         return false;
     }
     mReflection = new WebBrowserPersistRemoteDocument(this, aAttrs, postData);
-    nsRefPtr<WebBrowserPersistRemoteDocument> reflection = mReflection;
+    RefPtr<WebBrowserPersistRemoteDocument> reflection = mReflection;
     mOnReady->OnDocumentReady(reflection);
     mOnReady = nullptr;
     return true;
@@ -98,7 +98,7 @@ bool
 WebBrowserPersistDocumentParent::DeallocPWebBrowserPersistResourcesParent(PWebBrowserPersistResourcesParent* aActor)
 {
     // Turn the ref held by IPC back into an nsRefPtr.
-    nsRefPtr<WebBrowserPersistResourcesParent> actor =
+    RefPtr<WebBrowserPersistResourcesParent> actor =
         already_AddRefed<WebBrowserPersistResourcesParent>(
             static_cast<WebBrowserPersistResourcesParent*>(aActor));
     return true;

@@ -61,7 +61,7 @@ public:
   }
 
 private:
-  nsRefPtr<GMPContentParent> mToRelease;
+  RefPtr<GMPContentParent> mToRelease;
 };
 
 void
@@ -124,7 +124,7 @@ GMPContentParent::CrashPluginNow(GMPCrashReason aReason)
   if (mParent) {
     mParent->Crash(aReason);
   } else {
-    nsRefPtr<GeckoMediaPluginServiceChild> gmp(
+    RefPtr<GeckoMediaPluginServiceChild> gmp(
       GeckoMediaPluginServiceChild::GetSingleton());
     gmp->CrashPluginNow(mPluginId, aReason);
   }
@@ -137,12 +137,12 @@ GMPContentParent::CloseIfUnused()
       mDecryptors.IsEmpty() &&
       mVideoDecoders.IsEmpty() &&
       mVideoEncoders.IsEmpty()) {
-    nsRefPtr<GMPContentParent> toClose;
+    RefPtr<GMPContentParent> toClose;
     if (mParent) {
       toClose = mParent->ForgetGMPContentParent();
     } else {
       toClose = this;
-      nsRefPtr<GeckoMediaPluginServiceChild> gmp(
+      RefPtr<GeckoMediaPluginServiceChild> gmp(
         GeckoMediaPluginServiceChild::GetSingleton());
       gmp->RemoveGMPContentParent(toClose);
     }

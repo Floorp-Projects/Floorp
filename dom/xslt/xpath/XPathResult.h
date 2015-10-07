@@ -191,7 +191,7 @@ private:
     void Invalidate(const nsIContent* aChangeRoot);
 
     nsCOMPtr<nsINode> mParent;
-    nsRefPtr<txAExprResult> mResult;
+    RefPtr<txAExprResult> mResult;
     nsCOMArray<nsINode> mResultNodes;
     nsCOMPtr<nsIDocument> mDocument;
     nsWeakPtr mContextNode;

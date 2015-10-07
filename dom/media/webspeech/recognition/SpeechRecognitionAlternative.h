@@ -42,7 +42,7 @@ public:
 private:
   ~SpeechRecognitionAlternative();
 
-  nsRefPtr<SpeechRecognition> mParent;
+  RefPtr<SpeechRecognition> mParent;
 };
 
 } // namespace dom

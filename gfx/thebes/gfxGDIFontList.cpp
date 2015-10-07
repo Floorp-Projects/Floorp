@@ -157,7 +157,7 @@ GDIFontEntry::ReadCMAP(FontInfoData *aFontInfoData)
         return NS_ERROR_FAILURE;
     }
 
-    nsRefPtr<gfxCharacterMap> charmap;
+    RefPtr<gfxCharacterMap> charmap;
     nsresult rv;
     bool unicodeFont = false, symbolFont = false;
 
@@ -311,7 +311,7 @@ GDIFontEntry::TestCharacterMap(uint32_t aCh)
             fakeStyle.style = NS_FONT_STYLE_ITALIC;
         fakeStyle.weight = mWeight * 100;
 
-        nsRefPtr<gfxFont> tempFont = FindOrMakeFont(&fakeStyle, false);
+        RefPtr<gfxFont> tempFont = FindOrMakeFont(&fakeStyle, false);
         if (!tempFont || !tempFont->Valid())
             return false;
         gfxGDIFont *font = static_cast<gfxGDIFont*>(tempFont.get());
@@ -690,7 +690,7 @@ gfxGDIFontList::EnumFontFamExProc(ENUMLOGFONTEXW *lpelfe,
 
     if (!fontList->mFontFamilies.GetWeak(name)) {
         nsDependentString faceName(lf.lfFaceName);
-        nsRefPtr<gfxFontFamily> family = new GDIFontFamily(faceName);
+        RefPtr<gfxFontFamily> family = new GDIFontFamily(faceName);
         fontList->mFontFamilies.Put(name, family);
 
         // if locale is such that CJK font names are the default coming from
@@ -1022,7 +1022,7 @@ int CALLBACK GDIFontInfo::EnumerateFontsForFamily(
             ::GetFontData(hdc, kCMAP, 0, cmapData.Elements(), cmapSize);
             bool cmapLoaded = false;
             bool unicodeFont = false, symbolFont = false;
-            nsRefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
+            RefPtr<gfxCharacterMap> charmap = new gfxCharacterMap();
             uint32_t offset;
 
             if (NS_SUCCEEDED(gfxFontUtils::ReadCMAP(cmapData.Elements(),
@@ -1075,7 +1075,7 @@ gfxGDIFontList::CreateFontInfoData()
     bool loadCmaps = !UsesSystemFallback() ||
         gfxPlatform::GetPlatform()->UseCmapsDuringSystemFallback();
 
-    nsRefPtr<GDIFontInfo> fi =
+    RefPtr<GDIFontInfo> fi =
         new GDIFontInfo(true, NeedFullnamePostscriptNames(), loadCmaps);
 
     return fi.forget();

@@ -1798,7 +1798,7 @@ NS_IMETHODIMP
 nsSHistory::GetSHistoryEnumerator(nsISimpleEnumerator** aEnumerator)
 {
   NS_ENSURE_ARG_POINTER(aEnumerator);
-  nsRefPtr<nsSHEnumerator> iterator = new nsSHEnumerator(this);
+  RefPtr<nsSHEnumerator> iterator = new nsSHEnumerator(this);
   iterator.forget(aEnumerator);
   return NS_OK;
 }

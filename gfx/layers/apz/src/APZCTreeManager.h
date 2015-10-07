@@ -393,13 +393,13 @@ public:
    */
   void DispatchFling(AsyncPanZoomController* aApzc,
                      ParentLayerPoint& aVelocity,
-                     nsRefPtr<const OverscrollHandoffChain> aOverscrollHandoffChain,
+                     RefPtr<const OverscrollHandoffChain> aOverscrollHandoffChain,
                      bool aHandoff);
 
   /*
    * Build the chain of APZCs that will handle overscroll for a pan starting at |aInitialTarget|.
    */
-  nsRefPtr<const OverscrollHandoffChain> BuildOverscrollHandoffChain(const nsRefPtr<AsyncPanZoomController>& aInitialTarget);
+  RefPtr<const OverscrollHandoffChain> BuildOverscrollHandoffChain(const RefPtr<AsyncPanZoomController>& aInitialTarget);
 
 protected:
   // Protected destructor, to discourage deletion outside of Release():
@@ -420,7 +420,7 @@ public:
      about it going away. These are public for testing code and generally should not be
      used by other production code.
   */
-  nsRefPtr<HitTestingTreeNode> GetRootNode() const;
+  RefPtr<HitTestingTreeNode> GetRootNode() const;
   already_AddRefed<AsyncPanZoomController> GetTargetAPZC(const ScreenPoint& aPoint,
                                                          HitTestResult* aOutHitResult);
   gfx::Matrix4x4 GetScreenToApzcTransform(const AsyncPanZoomController *aApzc) const;
@@ -509,7 +509,7 @@ protected:
   /* The input queue where input events are held until we know enough to
    * figure out where they're going. Protected so gtests can access it.
    */
-  nsRefPtr<InputQueue> mInputQueue;
+  RefPtr<InputQueue> mInputQueue;
 
 private:
   /* Whenever walking or mutating the tree rooted at mRootNode, mTreeLock must be held.
@@ -520,20 +520,20 @@ private:
    * Finally, the lock needs to be held when accessing mZoomConstraints.
    * IMPORTANT: See the note about lock ordering at the top of this file. */
   mutable mozilla::Monitor mTreeLock;
-  nsRefPtr<HitTestingTreeNode> mRootNode;
+  RefPtr<HitTestingTreeNode> mRootNode;
   /* Holds the zoom constraints for scrollable layers, as determined by the
    * the main-thread gecko code. */
   std::map<ScrollableLayerGuid, ZoomConstraints> mZoomConstraints;
   /* Stores a paint throttler for each layers id. There is one for each layers
    * id to ensure that one child process painting slowly doesn't hold up
    * another. */
-  std::map<uint64_t, nsRefPtr<TaskThrottler>> mPaintThrottlerMap;
+  std::map<uint64_t, RefPtr<TaskThrottler>> mPaintThrottlerMap;
   /* This tracks the APZC that should receive all inputs for the current input event block.
    * This allows touch points to move outside the thing they started on, but still have the
    * touch events delivered to the same initial APZC. This will only ever be touched on the
    * input delivery thread, and so does not require locking.
    */
-  nsRefPtr<AsyncPanZoomController> mApzcForInputBlock;
+  RefPtr<AsyncPanZoomController> mApzcForInputBlock;
   /* The hit result for the current input event block; this should always be in
    * sync with mApzcForInputBlock.
    */

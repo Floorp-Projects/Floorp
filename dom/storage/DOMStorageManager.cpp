@@ -248,7 +248,7 @@ DOMStorageManager::GetCache(const nsACString& aScope) const
 already_AddRefed<DOMStorageUsage>
 DOMStorageManager::GetScopeUsage(const nsACString& aScope)
 {
-  nsRefPtr<DOMStorageUsage> usage;
+  RefPtr<DOMStorageUsage> usage;
   if (mUsages.Get(aScope, &usage)) {
     return usage.forget();
   }
@@ -272,7 +272,7 @@ DOMStorageManager::PutCache(const nsACString& aScope,
                             nsIPrincipal* aPrincipal)
 {
   DOMStorageCacheHashKey* entry = mCaches.PutEntry(aScope);
-  nsRefPtr<DOMStorageCache> cache = entry->cache();
+  RefPtr<DOMStorageCache> cache = entry->cache();
 
   nsAutoCString quotaScope;
   CreateQuotaDBKey(aPrincipal, quotaScope);
@@ -322,7 +322,7 @@ DOMStorageManager::GetStorageInternal(bool aCreate,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsRefPtr<DOMStorageCache> cache = GetCache(scope);
+  RefPtr<DOMStorageCache> cache = GetCache(scope);
 
   // Get or create a cache for the given scope
   if (!cache) {
@@ -400,7 +400,7 @@ DOMStorageManager::CloneStorage(nsIDOMStorage* aStorage)
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  nsRefPtr<DOMStorage> storage = static_cast<DOMStorage*>(aStorage);
+  RefPtr<DOMStorage> storage = static_cast<DOMStorage*>(aStorage);
   if (!storage) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -415,7 +415,7 @@ DOMStorageManager::CloneStorage(nsIDOMStorage* aStorage)
 
   // Since this manager is sessionStorage manager, PutCache hard references
   // the cache in our hashtable.
-  nsRefPtr<DOMStorageCache> newCache = PutCache(origCache->Scope(),
+  RefPtr<DOMStorageCache> newCache = PutCache(origCache->Scope(),
                                                 origCache->Principal());
 
   newCache->CloneFrom(origCache);
@@ -427,7 +427,7 @@ DOMStorageManager::CheckStorage(nsIPrincipal* aPrincipal,
                                 nsIDOMStorage* aStorage,
                                 bool* aRetval)
 {
-  nsRefPtr<DOMStorage> storage = static_cast<DOMStorage*>(aStorage);
+  RefPtr<DOMStorage> storage = static_cast<DOMStorage*>(aStorage);
   if (!storage) {
     return NS_ERROR_UNEXPECTED;
   }

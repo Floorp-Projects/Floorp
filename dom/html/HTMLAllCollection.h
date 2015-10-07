@@ -81,8 +81,8 @@ private:
    */
   nsContentList* GetDocumentAllList(const nsAString& aID);
 
-  nsRefPtr<nsHTMLDocument> mDocument;
-  nsRefPtr<nsContentList> mCollection;
+  RefPtr<nsHTMLDocument> mDocument;
+  RefPtr<nsContentList> mCollection;
   nsRefPtrHashtable<nsStringHashKey, nsContentList> mNamedMap;
 };
 

@@ -58,10 +58,10 @@ public:
 private:
   virtual ~nsDOMCSSRGBColor(void);
 
-  nsRefPtr<nsROCSSPrimitiveValue> mRed;
-  nsRefPtr<nsROCSSPrimitiveValue> mGreen;
-  nsRefPtr<nsROCSSPrimitiveValue> mBlue;
-  nsRefPtr<nsROCSSPrimitiveValue> mAlpha;
+  RefPtr<nsROCSSPrimitiveValue> mRed;
+  RefPtr<nsROCSSPrimitiveValue> mGreen;
+  RefPtr<nsROCSSPrimitiveValue> mBlue;
+  RefPtr<nsROCSSPrimitiveValue> mAlpha;
   bool mHasAlpha;
 };
 

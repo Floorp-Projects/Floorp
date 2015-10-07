@@ -435,7 +435,7 @@ nsresult
 nsHTMLCSSUtils::SetCSSProperty(Element& aElement, nsIAtom& aProperty,
                                const nsAString& aValue, bool aSuppressTxn)
 {
-  nsRefPtr<ChangeStyleTxn> txn =
+  RefPtr<ChangeStyleTxn> txn =
     CreateCSSPropertyTxn(aElement, aProperty, aValue, ChangeStyleTxn::eSet);
   if (aSuppressTxn) {
     return txn->DoTransaction();
@@ -460,7 +460,7 @@ nsresult
 nsHTMLCSSUtils::RemoveCSSProperty(Element& aElement, nsIAtom& aProperty,
                                   const nsAString& aValue, bool aSuppressTxn)
 {
-  nsRefPtr<ChangeStyleTxn> txn =
+  RefPtr<ChangeStyleTxn> txn =
     CreateCSSPropertyTxn(aElement, aProperty, aValue, ChangeStyleTxn::eRemove);
   if (aSuppressTxn) {
     return txn->DoTransaction();
@@ -473,7 +473,7 @@ nsHTMLCSSUtils::CreateCSSPropertyTxn(Element& aElement, nsIAtom& aAttribute,
                                      const nsAString& aValue,
                                      ChangeStyleTxn::EChangeType aChangeType)
 {
-  nsRefPtr<ChangeStyleTxn> txn =
+  RefPtr<ChangeStyleTxn> txn =
     new ChangeStyleTxn(aElement, aAttribute, aValue, aChangeType);
   return txn.forget();
 }
@@ -505,7 +505,7 @@ nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsINode* aNode, nsIAtom* aProperty,
 
   if (aStyleType == eComputed) {
     // Get the all the computed css styles attached to the element node
-    nsRefPtr<nsComputedDOMStyle> cssDecl = GetComputedStyle(element);
+    RefPtr<nsComputedDOMStyle> cssDecl = GetComputedStyle(element);
     NS_ENSURE_STATE(cssDecl);
 
     // from these declarations, get the one we want and that one only
@@ -516,7 +516,7 @@ nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsINode* aNode, nsIAtom* aProperty,
   }
 
   MOZ_ASSERT(aStyleType == eSpecified);
-  nsRefPtr<css::StyleRule> rule = element->GetInlineStyleRule();
+  RefPtr<css::StyleRule> rule = element->GetInlineStyleRule();
   if (!rule) {
     return NS_OK;
   }
@@ -540,7 +540,7 @@ nsHTMLCSSUtils::GetComputedStyle(dom::Element* aElement)
   nsIPresShell* presShell = doc->GetShell();
   NS_ENSURE_TRUE(presShell, nullptr);
 
-  nsRefPtr<nsComputedDOMStyle> style =
+  RefPtr<nsComputedDOMStyle> style =
     NS_NewComputedDOMStyle(aElement, EmptyString(), presShell);
 
   return style.forget();

@@ -51,8 +51,8 @@ CompositorChild::~CompositorChild()
   }
 }
 
-static void DeferredDestroyCompositor(nsRefPtr<CompositorParent> aCompositorParent,
-                                      nsRefPtr<CompositorChild> aCompositorChild)
+static void DeferredDestroyCompositor(RefPtr<CompositorParent> aCompositorParent,
+                                      RefPtr<CompositorChild> aCompositorChild)
 {
     // Bug 848949 needs to be fixed before
     // we can close the channel properly
@@ -74,7 +74,7 @@ CompositorChild::Destroy()
   // Destroying the layer manager may cause all sorts of things to happen, so
   // let's make sure there is still a reference to keep this alive whatever
   // happens.
-  nsRefPtr<CompositorChild> selfRef = this;
+  RefPtr<CompositorChild> selfRef = this;
 
   SendWillStop();
   // The call just made to SendWillStop can result in IPC from the
@@ -95,7 +95,7 @@ CompositorChild::Destroy()
   // start from the end of the array because Destroy() can cause the
   // LayerTransactionChild to be removed from the array.
   for (int i = ManagedPLayerTransactionChild().Length() - 1; i >= 0; --i) {
-    nsRefPtr<LayerTransactionChild> layers =
+    RefPtr<LayerTransactionChild> layers =
       static_cast<LayerTransactionChild*>(ManagedPLayerTransactionChild()[i]);
     layers->Destroy();
   }
@@ -126,7 +126,7 @@ CompositorChild::Create(Transport* aTransport, ProcessId aOtherPid)
   // There's only one compositor per child process.
   MOZ_ASSERT(!sCompositor);
 
-  nsRefPtr<CompositorChild> child(new CompositorChild(nullptr));
+  RefPtr<CompositorChild> child(new CompositorChild(nullptr));
   if (!child->Open(aTransport, aOtherPid, XRE_GetIOMessageLoop(), ipc::ChildSide)) {
     NS_RUNTIMEABORT("Couldn't Open() Compositor channel.");
     return nullptr;
@@ -495,7 +495,7 @@ CompositorChild::RecvRemotePaintIsReady()
   // XPCOM gives a soup of compiler errors when trying to do_QueryReference
   // so I'm using static_cast<>
   MOZ_LAYERS_LOG(("[RemoteGfx] CompositorChild received RemotePaintIsReady"));
-  nsRefPtr<nsISupports> iTabChildBase(do_QueryReferent(mWeakTabChild));
+  RefPtr<nsISupports> iTabChildBase(do_QueryReferent(mWeakTabChild));
   if (!iTabChildBase) {
     MOZ_LAYERS_LOG(("[RemoteGfx] Note: TabChild was released before RemotePaintIsReady. "
         "MozAfterRemotePaint will not be sent to listener."));
@@ -521,7 +521,7 @@ CompositorChild::RequestNotifyAfterRemotePaint(TabChild* aTabChild)
 void
 CompositorChild::CancelNotifyAfterRemotePaint(TabChild* aTabChild)
 {
-  nsRefPtr<nsISupports> iTabChildBase(do_QueryReferent(mWeakTabChild));
+  RefPtr<nsISupports> iTabChildBase(do_QueryReferent(mWeakTabChild));
   if (!iTabChildBase) {
     return;
   }

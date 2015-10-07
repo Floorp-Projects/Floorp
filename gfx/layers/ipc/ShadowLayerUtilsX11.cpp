@@ -96,7 +96,7 @@ SurfaceDescriptorX11::OpenForeign() const
   Display* display = DefaultXDisplay();
   Screen* screen = DefaultScreenOfDisplay(display);
 
-  nsRefPtr<gfxXlibSurface> surf;
+  RefPtr<gfxXlibSurface> surf;
   XRenderPictFormat* pictFormat = GetXRenderPictFormatFromId(display, mFormat);
   if (pictFormat) {
     surf = new gfxXlibSurface(screen, mId, pictFormat, mSize);

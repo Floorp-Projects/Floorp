@@ -51,7 +51,7 @@ private:
   virtual ~nsDOMStringMap();
 
 protected:
-  nsRefPtr<nsGenericHTMLElement> mElement;
+  RefPtr<nsGenericHTMLElement> mElement;
   // Flag to guard against infinite recursion.
   bool mRemovingProp;
   static bool DataPropToAttr(const nsAString& aProp, nsAutoString& aResult);

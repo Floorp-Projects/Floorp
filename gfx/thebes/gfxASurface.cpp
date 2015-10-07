@@ -156,7 +156,7 @@ gfxASurface::SetSurfaceWrapper(cairo_surface_t *csurf, gfxASurface *asurf)
 already_AddRefed<gfxASurface>
 gfxASurface::Wrap (cairo_surface_t *csurf, const IntSize& aSize)
 {
-    nsRefPtr<gfxASurface> result;
+    RefPtr<gfxASurface> result;
 
     /* Do we already have a wrapper for this surface? */
     result = GetSurfaceWrapper(csurf);
@@ -334,7 +334,7 @@ gfxASurface::CreateSimilarSurface(gfxContentType aContent,
         return nullptr;
     }
 
-    nsRefPtr<gfxASurface> result = Wrap(surface, aSize);
+    RefPtr<gfxASurface> result = Wrap(surface, aSize);
     cairo_surface_destroy(surface);
     return result.forget();
 }
@@ -342,7 +342,7 @@ gfxASurface::CreateSimilarSurface(gfxContentType aContent,
 already_AddRefed<gfxImageSurface>
 gfxASurface::GetAsReadableARGB32ImageSurface()
 {
-    nsRefPtr<gfxImageSurface> imgSurface = GetAsImageSurface();
+    RefPtr<gfxImageSurface> imgSurface = GetAsImageSurface();
     if (!imgSurface || imgSurface->Format() != gfxImageFormat::ARGB32) {
       imgSurface = CopyToARGB32ImageSurface();
     }
@@ -357,11 +357,11 @@ gfxASurface::CopyToARGB32ImageSurface()
     }
 
     const IntSize size = GetSize();
-    nsRefPtr<gfxImageSurface> imgSurface =
+    RefPtr<gfxImageSurface> imgSurface =
         new gfxImageSurface(size, gfxImageFormat::ARGB32);
 
-    nsRefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(imgSurface, IntSize(size.width, size.height));
-    nsRefPtr<SourceSurface> source = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, this);
+    RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(imgSurface, IntSize(size.width, size.height));
+    RefPtr<SourceSurface> source = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, this);
 
     dt->CopySurface(source, IntRect(0, 0, size.width, size.height), IntPoint());
 

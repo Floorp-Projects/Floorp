@@ -86,7 +86,7 @@ NS_NewXMLContentSink(nsIXMLContentSink** aResult,
   if (nullptr == aResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsRefPtr<nsXMLContentSink> it = new nsXMLContentSink();
+  RefPtr<nsXMLContentSink> it = new nsXMLContentSink();
 
   nsresult rv = it->Init(aDoc, aURI, aContainer, aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -204,7 +204,7 @@ nsXMLContentSink::MaybePrettyPrint()
     mCSSLoader->SetEnabled(true);
   }
 
-  nsRefPtr<nsXMLPrettyPrinter> printer;
+  RefPtr<nsXMLPrettyPrinter> printer;
   nsresult rv = NS_NewXMLPrettyPrinter(getter_AddRefs(printer));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -464,8 +464,8 @@ nsXMLContentSink::CreateElement(const char16_t** aAtts, uint32_t aAttsCount,
   *aAppendContent = true;
   nsresult rv = NS_OK;
 
-  nsRefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
-  nsRefPtr<Element> content;
+  RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
+  RefPtr<Element> content;
   rv = NS_NewElement(getter_AddRefs(content), ni.forget(), aFromParser);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -799,7 +799,7 @@ nsXMLContentSink::FlushText(bool aReleaseTextNode)
         mTextLength = 0;
       }
     } else {
-      nsRefPtr<nsTextNode> textContent = new nsTextNode(mNodeInfoManager);
+      RefPtr<nsTextNode> textContent = new nsTextNode(mNodeInfoManager);
 
       mLastTextNode = textContent;
 
@@ -984,7 +984,7 @@ nsXMLContentSink::HandleStartElement(const char16_t *aName,
     return NS_OK;
   }
 
-  nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
+  RefPtr<mozilla::dom::NodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID,
                                            nsIDOMNode::ELEMENT_NODE);
 
@@ -1133,7 +1133,7 @@ nsXMLContentSink::HandleComment(const char16_t *aName)
 {
   FlushText();
 
-  nsRefPtr<Comment> comment = new Comment(mNodeInfoManager);
+  RefPtr<Comment> comment = new Comment(mNodeInfoManager);
   comment->SetText(nsDependentString(aName), false);
   nsresult rv = AddContentAsLeaf(comment);
   DidAddContent();
@@ -1153,7 +1153,7 @@ nsXMLContentSink::HandleCDataSection(const char16_t *aData,
 
   FlushText();
 
-  nsRefPtr<CDATASection> cdata = new CDATASection(mNodeInfoManager);
+  RefPtr<CDATASection> cdata = new CDATASection(mNodeInfoManager);
   cdata->SetText(aData, aLength, false);
   nsresult rv = AddContentAsLeaf(cdata);
   DidAddContent();

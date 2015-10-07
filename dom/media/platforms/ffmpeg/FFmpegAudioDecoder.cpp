@@ -26,7 +26,7 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(
   mExtraData->AppendElements(*aConfig.mCodecSpecificConfig);
 }
 
-nsRefPtr<MediaDataDecoder::InitPromise>
+RefPtr<MediaDataDecoder::InitPromise>
 FFmpegAudioDecoder<LIBAV_VER>::Init()
 {
   nsresult rv = InitDecoder();
@@ -126,7 +126,7 @@ FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MediaRawData* aSample)
         return;
       }
 
-      nsRefPtr<AudioData> data = new AudioData(samplePosition,
+      RefPtr<AudioData> data = new AudioData(samplePosition,
                                                pts.ToMicroseconds(),
                                                duration.ToMicroseconds(),
                                                mFrame->nb_samples,
@@ -154,8 +154,8 @@ FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MediaRawData* aSample)
 nsresult
 FFmpegAudioDecoder<LIBAV_VER>::Input(MediaRawData* aSample)
 {
-  nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(
-    this, &FFmpegAudioDecoder::DecodePacket, nsRefPtr<MediaRawData>(aSample)));
+  nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableMethodWithArg<RefPtr<MediaRawData>>(
+    this, &FFmpegAudioDecoder::DecodePacket, RefPtr<MediaRawData>(aSample)));
   mTaskQueue->Dispatch(runnable.forget());
   return NS_OK;
 }

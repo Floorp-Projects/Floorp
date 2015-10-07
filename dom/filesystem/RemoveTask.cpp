@@ -80,7 +80,7 @@ already_AddRefed<Promise>
 RemoveTask::GetPromise()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread!");
-  return nsRefPtr<Promise>(mPromise).forget();
+  return RefPtr<Promise>(mPromise).forget();
 }
 
 FileSystemParams
@@ -92,7 +92,7 @@ RemoveTask::GetRequestParams(const nsString& aFileSystem) const
   param.directory() = mDirRealPath;
   param.recursive() = mRecursive;
   if (mTargetBlobImpl) {
-    nsRefPtr<Blob> blob = Blob::Create(mFileSystem->GetWindow(),
+    RefPtr<Blob> blob = Blob::Create(mFileSystem->GetWindow(),
                                        mTargetBlobImpl);
     BlobChild* actor
       = ContentChild::GetSingleton()->GetOrCreateActorForBlob(blob);
@@ -187,7 +187,7 @@ RemoveTask::HandlerCallback()
   }
 
   if (HasError()) {
-    nsRefPtr<DOMError> domError = new DOMError(mFileSystem->GetWindow(),
+    RefPtr<DOMError> domError = new DOMError(mFileSystem->GetWindow(),
       mErrorValue);
     mPromise->MaybeRejectBrokenly(domError);
     mPromise = nullptr;

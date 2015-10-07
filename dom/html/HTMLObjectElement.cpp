@@ -438,7 +438,7 @@ HTMLObjectElement::SubmitNamesValues(nsFormSubmission *aFormSubmission)
     return NS_OK;
   }
 
-  nsRefPtr<nsNPAPIPluginInstance> pi;
+  RefPtr<nsNPAPIPluginInstance> pi;
   objFrame->GetPluginInstance(getter_AddRefs(pi));
   if (!pi)
     return NS_OK;

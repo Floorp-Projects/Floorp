@@ -12,7 +12,7 @@
 #include "platform.h"
 #include "ProfileJSONWriter.h"
 #include "ProfilerBacktrace.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include <string>
 #include <map>
 #ifndef SPS_STANDALONE

@@ -42,7 +42,7 @@ nsEventShell::FireEvent(uint32_t aEventType, Accessible* aAccessible,
 {
   NS_ENSURE_TRUE_VOID(aAccessible);
 
-  nsRefPtr<AccEvent> event = new AccEvent(aEventType, aAccessible,
+  RefPtr<AccEvent> event = new AccEvent(aEventType, aAccessible,
                                           aIsFromUserInput);
 
   FireEvent(event);

@@ -61,7 +61,7 @@ class IDBDatabase final
   // The factory must be kept alive when IndexedDB is used in multiple
   // processes. If it dies then the entire actor tree will be destroyed with it
   // and the world will explode.
-  nsRefPtr<IDBFactory> mFactory;
+  RefPtr<IDBFactory> mFactory;
 
   nsAutoPtr<DatabaseSpec> mSpec;
 
@@ -77,7 +77,7 @@ class IDBDatabase final
 
   nsTHashtable<nsISupportsHashKey> mReceivedBlobs;
 
-  nsRefPtr<Observer> mObserver;
+  RefPtr<Observer> mObserver;
 
   // Weak refs, IDBMutableFile strongly owns this IDBDatabase object.
   nsTArray<IDBMutableFile*> mLiveMutableFiles;

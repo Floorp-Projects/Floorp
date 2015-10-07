@@ -109,7 +109,7 @@ CacheChild::StartDestroy()
     return;
   }
 
-  nsRefPtr<Cache> listener = mListener;
+  RefPtr<Cache> listener = mListener;
 
   // StartDestroy() can get called from either Cache or the Feature.
   // Theoretically we can get double called if the right race happens.  Handle
@@ -131,7 +131,7 @@ void
 CacheChild::ActorDestroy(ActorDestroyReason aReason)
 {
   NS_ASSERT_OWNINGTHREAD(CacheChild);
-  nsRefPtr<Cache> listener = mListener;
+  RefPtr<Cache> listener = mListener;
   if (listener) {
     listener->DestroyInternal(this);
     // Cache listener should call ClearListener() in DestroyInternal()

@@ -460,7 +460,7 @@ bool
 TextAttrsMgr::FontFamilyTextAttr::
   GetFontFamily(nsIFrame* aFrame, nsString& aFamily)
 {
-  nsRefPtr<nsFontMetrics> fm;
+  RefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm));
 
   gfxFontGroup* fontGroup = fm->GetThebesFontGroup();
@@ -618,7 +618,7 @@ TextAttrsMgr::FontWeightTextAttr::
 {
   // nsFont::width isn't suitable here because it's necessary to expose real
   // value of font weight (used font might not have some font weight values).
-  nsRefPtr<nsFontMetrics> fm;
+  RefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm));
 
   gfxFontGroup *fontGroup = fm->GetThebesFontGroup();

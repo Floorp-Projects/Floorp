@@ -52,14 +52,14 @@ PathExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     // We need to evaluate the first step with the current context since it
     // can depend on the context size and position. For example:
     // key('books', concat('book', position()))
-    nsRefPtr<txAExprResult> res;
+    RefPtr<txAExprResult> res;
     nsresult rv = mItems[0].expr->evaluate(aContext, getter_AddRefs(res));
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ENSURE_TRUE(res->getResultType() == txAExprResult::NODESET,
                    NS_ERROR_XSLT_NODESET_EXPECTED);
 
-    nsRefPtr<txNodeSet> nodes = static_cast<txNodeSet*>
+    RefPtr<txNodeSet> nodes = static_cast<txNodeSet*>
                                            (static_cast<txAExprResult*>
                                                        (res));
     if (nodes->isEmpty()) {
@@ -73,12 +73,12 @@ PathExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     uint32_t i, len = mItems.Length();
     for (i = 1; i < len; ++i) {
         PathExprItem& pxi = mItems[i];
-        nsRefPtr<txNodeSet> tmpNodes;
+        RefPtr<txNodeSet> tmpNodes;
         txNodeSetContext eContext(nodes, aContext);
         while (eContext.hasNext()) {
             eContext.next();
 
-            nsRefPtr<txNodeSet> resNodes;
+            RefPtr<txNodeSet> resNodes;
             if (pxi.pathOp == DESCENDANT_OP) {
                 rv = aContext->recycler()->getNodeSet(getter_AddRefs(resNodes));
                 NS_ENSURE_SUCCESS(rv, rv);
@@ -88,7 +88,7 @@ PathExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 NS_ENSURE_SUCCESS(rv, rv);
             }
             else {
-                nsRefPtr<txAExprResult> res;
+                RefPtr<txAExprResult> res;
                 rv = pxi.expr->evaluate(&eContext, getter_AddRefs(res));
                 NS_ENSURE_SUCCESS(rv, rv);
 
@@ -103,7 +103,7 @@ PathExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 
             if (tmpNodes) {
                 if (!resNodes->isEmpty()) {
-                    nsRefPtr<txNodeSet> oldSet;
+                    RefPtr<txNodeSet> oldSet;
                     oldSet.swap(tmpNodes);
                     rv = aContext->recycler()->
                         getNonSharedNodeSet(oldSet, getter_AddRefs(tmpNodes));
@@ -142,7 +142,7 @@ PathExpr::evalDescendants(Expr* aStep, const txXPathNode& aNode,
                           txIMatchContext* aContext, txNodeSet* resNodes)
 {
     txSingleNodeContext eContext(aNode, aContext);
-    nsRefPtr<txAExprResult> res;
+    RefPtr<txAExprResult> res;
     nsresult rv = aStep->evaluate(&eContext, getter_AddRefs(res));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -153,7 +153,7 @@ PathExpr::evalDescendants(Expr* aStep, const txXPathNode& aNode,
 
     txNodeSet* oldSet = static_cast<txNodeSet*>
                                    (static_cast<txAExprResult*>(res));
-    nsRefPtr<txNodeSet> newSet;
+    RefPtr<txNodeSet> newSet;
     rv = aContext->recycler()->getNonSharedNodeSet(oldSet,
                                                    getter_AddRefs(newSet));
     NS_ENSURE_SUCCESS(rv, rv);

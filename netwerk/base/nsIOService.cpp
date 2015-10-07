@@ -1765,8 +1765,8 @@ public:
     { }
 
 private:
-    nsRefPtr<nsIInterfaceRequestor> mCallbacks;
-    nsRefPtr<nsIOService>           mIOService;
+    RefPtr<nsIInterfaceRequestor> mCallbacks;
+    RefPtr<nsIOService>           mIOService;
 };
 
 NS_IMPL_ISUPPORTS(IOServiceProxyCallback, nsIProtocolProxyCallback)
@@ -1861,7 +1861,7 @@ nsIOService::SpeculativeConnectInternal(nsIURI *aURI,
     }
 
     nsCOMPtr<nsICancelable> cancelable;
-    nsRefPtr<IOServiceProxyCallback> callback =
+    RefPtr<IOServiceProxyCallback> callback =
         new IOServiceProxyCallback(aCallbacks, this);
     nsCOMPtr<nsIProtocolProxyService2> pps2 = do_QueryInterface(pps);
     if (pps2) {
@@ -1895,7 +1895,7 @@ nsIOService::NotifyAppOfflineStatus(uint32_t appId, int32_t state)
     MOZ_ASSERT(observerService, "The observer service should not be null");
 
     if (observerService) {
-        nsRefPtr<nsAppOfflineInfo> info = new nsAppOfflineInfo(appId, state);
+        RefPtr<nsAppOfflineInfo> info = new nsAppOfflineInfo(appId, state);
         observerService->NotifyObservers(
             info,
             NS_IOSERVICE_APP_OFFLINE_STATUS_TOPIC,

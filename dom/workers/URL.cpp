@@ -63,7 +63,7 @@ private:
      MOZ_ASSERT(!mURL);
   }
 
-  nsRefPtr<mozilla::dom::URL> mURL;
+  RefPtr<mozilla::dom::URL> mURL;
 };
 
 // This class creates an URL from a DOM Blob on the main thread.
@@ -95,7 +95,7 @@ public:
 
     AssertIsOnMainThread();
 
-    nsRefPtr<BlobImpl> newBlobImplHolder;
+    RefPtr<BlobImpl> newBlobImplHolder;
 
     if (nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(mBlobImpl)) {
       if (BlobChild* blobChild = remoteBlob->GetBlobChild()) {
@@ -220,10 +220,10 @@ private:
   const nsString mURL;
 
   nsString mBase; // IsVoid() if we have no base URI string.
-  nsRefPtr<URLProxy> mBaseProxy;
+  RefPtr<URLProxy> mBaseProxy;
   mozilla::ErrorResult& mRv;
 
-  nsRefPtr<URLProxy> mRetval;
+  RefPtr<URLProxy> mRetval;
 
 public:
   ConstructorRunnable(WorkerPrivate* aWorkerPrivate,
@@ -258,7 +258,7 @@ public:
   {
     AssertIsOnMainThread();
 
-    nsRefPtr<mozilla::dom::URL> url;
+    RefPtr<mozilla::dom::URL> url;
     if (mBaseProxy) {
       url = mozilla::dom::URL::Constructor(nullptr, mURL, mBaseProxy->URI(),
                                            mRv);
@@ -302,7 +302,7 @@ public:
   }
 
 private:
-  nsRefPtr<URLProxy> mURLProxy;
+  RefPtr<URLProxy> mURLProxy;
 };
 
 // This class is the generic getter for any URL property.
@@ -393,7 +393,7 @@ public:
 private:
   nsAString& mValue;
   GetterType mType;
-  nsRefPtr<URLProxy> mURLProxy;
+  RefPtr<URLProxy> mURLProxy;
 };
 
 // This class is the generic setter for any URL property.
@@ -478,7 +478,7 @@ public:
 private:
   const nsString mValue;
   SetterType mType;
-  nsRefPtr<URLProxy> mURLProxy;
+  RefPtr<URLProxy> mURLProxy;
   mozilla::ErrorResult& mRv;
 };
 
@@ -502,7 +502,7 @@ URL::Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
   JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
 
-  nsRefPtr<ConstructorRunnable> runnable =
+  RefPtr<ConstructorRunnable> runnable =
     new ConstructorRunnable(workerPrivate, aUrl, aBase.GetURLProxy(), aRv);
 
   return FinishConstructor(cx, workerPrivate, runnable, aRv);
@@ -516,7 +516,7 @@ URL::Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
   JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
 
-  nsRefPtr<ConstructorRunnable> runnable =
+  RefPtr<ConstructorRunnable> runnable =
     new ConstructorRunnable(workerPrivate, aUrl, aBase, aRv);
 
   return FinishConstructor(cx, workerPrivate, runnable, aRv);
@@ -532,7 +532,7 @@ URL::Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
 
   Optional<nsAString> base;
   base = &aBase;
-  nsRefPtr<ConstructorRunnable> runnable =
+  RefPtr<ConstructorRunnable> runnable =
     new ConstructorRunnable(workerPrivate, aUrl, base, aRv);
 
   return FinishConstructor(cx, workerPrivate, runnable, aRv);
@@ -551,13 +551,13 @@ URL::FinishConstructor(JSContext* aCx, WorkerPrivate* aPrivate,
     return nullptr;
   }
 
-  nsRefPtr<URLProxy> proxy = aRunnable->GetURLProxy();
+  RefPtr<URLProxy> proxy = aRunnable->GetURLProxy();
   if (!proxy) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return nullptr;
   }
 
-  nsRefPtr<URL> url = new URL(aPrivate, proxy);
+  RefPtr<URL> url = new URL(aPrivate, proxy);
   return url.forget();
 }
 
@@ -573,7 +573,7 @@ URL::~URL()
   MOZ_COUNT_DTOR(workers::URL);
 
   if (mURLProxy) {
-    nsRefPtr<TeardownURLRunnable> runnable =
+    RefPtr<TeardownURLRunnable> runnable =
       new TeardownURLRunnable(mURLProxy);
     mURLProxy = nullptr;
 
@@ -592,7 +592,7 @@ URL::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 void
 URL::GetHref(nsAString& aHref, ErrorResult& aRv) const
 {
-  nsRefPtr<GetterRunnable> runnable =
+  RefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterHref, aHref,
                        mURLProxy);
 
@@ -604,7 +604,7 @@ URL::GetHref(nsAString& aHref, ErrorResult& aRv) const
 void
 URL::SetHref(const nsAString& aHref, ErrorResult& aRv)
 {
-  nsRefPtr<SetterRunnable> runnable =
+  RefPtr<SetterRunnable> runnable =
     new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterHref, aHref,
                        mURLProxy, aRv);
 
@@ -618,7 +618,7 @@ URL::SetHref(const nsAString& aHref, ErrorResult& aRv)
 void
 URL::GetOrigin(nsAString& aOrigin, ErrorResult& aRv) const
 {
-  nsRefPtr<GetterRunnable> runnable =
+  RefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterOrigin, aOrigin,
                        mURLProxy);
 
@@ -630,7 +630,7 @@ URL::GetOrigin(nsAString& aOrigin, ErrorResult& aRv) const
 void
 URL::GetProtocol(nsAString& aProtocol, ErrorResult& aRv) const
 {
-  nsRefPtr<GetterRunnable> runnable =
+  RefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterProtocol, aProtocol,
                        mURLProxy);
 
@@ -643,7 +643,7 @@ void
 URL::SetProtocol(const nsAString& aProtocol, ErrorResult& aRv)
 {
   ErrorResult rv;
-  nsRefPtr<SetterRunnable> runnable =
+  RefPtr<SetterRunnable> runnable =
     new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterProtocol,
                        aProtocol, mURLProxy, rv);
 
@@ -655,7 +655,7 @@ URL::SetProtocol(const nsAString& aProtocol, ErrorResult& aRv)
 void
 URL::GetUsername(nsAString& aUsername, ErrorResult& aRv) const
 {
-  nsRefPtr<GetterRunnable> runnable =
+  RefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterUsername, aUsername,
                        mURLProxy);
 
@@ -668,7 +668,7 @@ void
 URL::SetUsername(const nsAString& aUsername, ErrorResult& aRv)
 {
   ErrorResult rv;
-  nsRefPtr<SetterRunnable> runnable =
+  RefPtr<SetterRunnable> runnable =
     new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterUsername,
                        aUsername, mURLProxy, rv);
 
@@ -680,7 +680,7 @@ URL::SetUsername(const nsAString& aUsername, ErrorResult& aRv)
 void
 URL::GetPassword(nsAString& aPassword, ErrorResult& aRv) const
 {
-  nsRefPtr<GetterRunnable> runnable =
+  RefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterPassword, aPassword,
                        mURLProxy);
 
@@ -693,7 +693,7 @@ void
 URL::SetPassword(const nsAString& aPassword, ErrorResult& aRv)
 {
   ErrorResult rv;
-  nsRefPtr<SetterRunnable> runnable =
+  RefPtr<SetterRunnable> runnable =
     new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterPassword,
                        aPassword, mURLProxy, rv);
 
@@ -705,7 +705,7 @@ URL::SetPassword(const nsAString& aPassword, ErrorResult& aRv)
 void
 URL::GetHost(nsAString& aHost, ErrorResult& aRv) const
 {
-  nsRefPtr<GetterRunnable> runnable =
+  RefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterHost, aHost,
                        mURLProxy);
 
@@ -718,7 +718,7 @@ void
 URL::SetHost(const nsAString& aHost, ErrorResult& aRv)
 {
   ErrorResult rv;
-  nsRefPtr<SetterRunnable> runnable =
+  RefPtr<SetterRunnable> runnable =
     new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterHost,
                        aHost, mURLProxy, rv);
 
@@ -730,7 +730,7 @@ URL::SetHost(const nsAString& aHost, ErrorResult& aRv)
 void
 URL::GetHostname(nsAString& aHostname, ErrorResult& aRv) const
 {
-  nsRefPtr<GetterRunnable> runnable =
+  RefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterHostname, aHostname,
                        mURLProxy);
 
@@ -743,7 +743,7 @@ void
 URL::SetHostname(const nsAString& aHostname, ErrorResult& aRv)
 {
   ErrorResult rv;
-  nsRefPtr<SetterRunnable> runnable =
+  RefPtr<SetterRunnable> runnable =
     new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterHostname,
                        aHostname, mURLProxy, rv);
 
@@ -755,7 +755,7 @@ URL::SetHostname(const nsAString& aHostname, ErrorResult& aRv)
 void
 URL::GetPort(nsAString& aPort, ErrorResult& aRv) const
 {
-  nsRefPtr<GetterRunnable> runnable =
+  RefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterPort, aPort,
                        mURLProxy);
 
@@ -768,7 +768,7 @@ void
 URL::SetPort(const nsAString& aPort, ErrorResult& aRv)
 {
   ErrorResult rv;
-  nsRefPtr<SetterRunnable> runnable =
+  RefPtr<SetterRunnable> runnable =
     new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterPort,
                        aPort, mURLProxy, rv);
 
@@ -780,7 +780,7 @@ URL::SetPort(const nsAString& aPort, ErrorResult& aRv)
 void
 URL::GetPathname(nsAString& aPathname, ErrorResult& aRv) const
 {
-  nsRefPtr<GetterRunnable> runnable =
+  RefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterPathname, aPathname,
                        mURLProxy);
 
@@ -793,7 +793,7 @@ void
 URL::SetPathname(const nsAString& aPathname, ErrorResult& aRv)
 {
   ErrorResult rv;
-  nsRefPtr<SetterRunnable> runnable =
+  RefPtr<SetterRunnable> runnable =
     new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterPathname,
                        aPathname, mURLProxy, rv);
 
@@ -805,7 +805,7 @@ URL::SetPathname(const nsAString& aPathname, ErrorResult& aRv)
 void
 URL::GetSearch(nsAString& aSearch, ErrorResult& aRv) const
 {
-  nsRefPtr<GetterRunnable> runnable =
+  RefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterSearch, aSearch,
                        mURLProxy);
 
@@ -825,7 +825,7 @@ void
 URL::SetSearchInternal(const nsAString& aSearch)
 {
   ErrorResult rv;
-  nsRefPtr<SetterRunnable> runnable =
+  RefPtr<SetterRunnable> runnable =
     new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterSearch,
                        aSearch, mURLProxy, rv);
 
@@ -844,7 +844,7 @@ URL::SearchParams()
 void
 URL::GetHash(nsAString& aHash, ErrorResult& aRv) const
 {
-  nsRefPtr<GetterRunnable> runnable =
+  RefPtr<GetterRunnable> runnable =
     new GetterRunnable(mWorkerPrivate, GetterRunnable::GetterHash, aHash,
                        mURLProxy);
 
@@ -857,7 +857,7 @@ void
 URL::SetHash(const nsAString& aHash, ErrorResult& aRv)
 {
   ErrorResult rv;
-  nsRefPtr<SetterRunnable> runnable =
+  RefPtr<SetterRunnable> runnable =
     new SetterRunnable(mWorkerPrivate, SetterRunnable::SetterHash,
                        aHash, mURLProxy, rv);
 
@@ -875,7 +875,7 @@ URL::CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
   JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
 
-  nsRefPtr<BlobImpl> blobImpl = aBlob.Impl();
+  RefPtr<BlobImpl> blobImpl = aBlob.Impl();
   MOZ_ASSERT(blobImpl);
 
   aRv = blobImpl->SetMutable(false);
@@ -883,7 +883,7 @@ URL::CreateObjectURL(const GlobalObject& aGlobal, Blob& aBlob,
     return;
   }
 
-  nsRefPtr<CreateURLRunnable> runnable =
+  RefPtr<CreateURLRunnable> runnable =
     new CreateURLRunnable(workerPrivate, blobImpl, aOptions, aResult);
 
   if (!runnable->Dispatch(cx)) {
@@ -910,7 +910,7 @@ URL::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aUrl,
   JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
 
-  nsRefPtr<RevokeURLRunnable> runnable =
+  RefPtr<RevokeURLRunnable> runnable =
     new RevokeURLRunnable(workerPrivate, aUrl);
 
   if (!runnable->Dispatch(cx)) {

@@ -4,7 +4,7 @@
 
 #include "pk11func.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/nsRefPtr.h"
+#include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "PSMRunnable.h"
 #include "nsString.h"
@@ -84,7 +84,7 @@ NS_IMETHODIMP nsProtectedAuthThread::GetTokenName(nsAString &_retval)
 
 NS_IMETHODIMP nsProtectedAuthThread::GetSlot(nsIPKCS11Slot **_retval)
 {
-    nsRefPtr<nsPKCS11Slot> slot;
+    RefPtr<nsPKCS11Slot> slot;
     {
         MutexAutoLock lock(mMutex);
         slot = new nsPKCS11Slot(mSlot);

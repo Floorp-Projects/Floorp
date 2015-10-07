@@ -403,7 +403,7 @@ StructuredCloneHolder::ReadFullySerializableObjects(JSContext* aCx,
     // Prevent the return value from being trashed by a GC during ~nsRefPtr.
     JS::Rooted<JSObject*> result(aCx);
     {
-      nsRefPtr<CryptoKey> key = new CryptoKey(global);
+      RefPtr<CryptoKey> key = new CryptoKey(global);
       if (!key->ReadStructuredClone(aReader)) {
         result = nullptr;
       } else {
@@ -451,7 +451,7 @@ StructuredCloneHolder::ReadFullySerializableObjects(JSContext* aCx,
     // Prevent the return value from being trashed by a GC during ~nsRefPtr.
     JS::Rooted<JSObject*> result(aCx);
     {
-      nsRefPtr<MozNDEFRecord> ndefRecord = new MozNDEFRecord(global);
+      RefPtr<MozNDEFRecord> ndefRecord = new MozNDEFRecord(global);
       result = ndefRecord->ReadStructuredClone(aCx, aReader) ?
                ndefRecord->WrapObject(aCx, nullptr) : nullptr;
     }
@@ -473,7 +473,7 @@ StructuredCloneHolder::ReadFullySerializableObjects(JSContext* aCx,
     // Prevent the return value from being trashed by a GC during ~nsRefPtr.
     JS::Rooted<JSObject*> result(aCx);
     {
-      nsRefPtr<RTCCertificate> cert = new RTCCertificate(global);
+      RefPtr<RTCCertificate> cert = new RTCCertificate(global);
       if (!cert->ReadStructuredClone(aReader)) {
         result = nullptr;
       } else {
@@ -563,9 +563,9 @@ EnsureBlobForBackgroundManager(BlobImpl* aBlobImpl,
     MOZ_ASSERT(aManager);
   }
 
-  nsRefPtr<BlobImpl> blobImpl = aBlobImpl;
+  RefPtr<BlobImpl> blobImpl = aBlobImpl;
 
-  const nsTArray<nsRefPtr<BlobImpl>>* subBlobImpls =
+  const nsTArray<RefPtr<BlobImpl>>* subBlobImpls =
     aBlobImpl->GetSubBlobImpls();
 
   if (!subBlobImpls || !subBlobImpls->Length()) {
@@ -591,16 +591,16 @@ EnsureBlobForBackgroundManager(BlobImpl* aBlobImpl,
   const uint32_t subBlobCount = subBlobImpls->Length();
   MOZ_ASSERT(subBlobCount);
 
-  nsTArray<nsRefPtr<BlobImpl>> newSubBlobImpls;
+  nsTArray<RefPtr<BlobImpl>> newSubBlobImpls;
   newSubBlobImpls.SetLength(subBlobCount);
 
   bool newBlobImplNeeded = false;
 
   for (uint32_t index = 0; index < subBlobCount; index++) {
-    const nsRefPtr<BlobImpl>& subBlobImpl = subBlobImpls->ElementAt(index);
+    const RefPtr<BlobImpl>& subBlobImpl = subBlobImpls->ElementAt(index);
     MOZ_ASSERT(subBlobImpl);
 
-    nsRefPtr<BlobImpl>& newSubBlobImpl = newSubBlobImpls[index];
+    RefPtr<BlobImpl>& newSubBlobImpl = newSubBlobImpls[index];
 
     newSubBlobImpl = EnsureBlobForBackgroundManager(subBlobImpl, aManager);
     MOZ_ASSERT(newSubBlobImpl);
@@ -636,19 +636,19 @@ ReadBlob(JSContext* aCx,
 {
   MOZ_ASSERT(aHolder);
   MOZ_ASSERT(aIndex < aHolder->BlobImpls().Length());
-  nsRefPtr<BlobImpl> blobImpl = aHolder->BlobImpls()[aIndex];
+  RefPtr<BlobImpl> blobImpl = aHolder->BlobImpls()[aIndex];
 
   blobImpl = EnsureBlobForBackgroundManager(blobImpl);
   MOZ_ASSERT(blobImpl);
 
-  // nsRefPtr<File> needs to go out of scope before toObjectOrNull() is
+  // RefPtr<File> needs to go out of scope before toObjectOrNull() is
   // called because the static analysis thinks dereferencing XPCOM objects
   // can GC (because in some cases it can!), and a return statement with a
   // JSObject* type means that JSObject* is on the stack as a raw pointer
   // while destructors are running.
   JS::Rooted<JS::Value> val(aCx);
   {
-    nsRefPtr<Blob> blob = Blob::Create(aHolder->ParentDuringRead(), blobImpl);
+    RefPtr<Blob> blob = Blob::Create(aHolder->ParentDuringRead(), blobImpl);
     if (!ToJSValue(aCx, blob, &val)) {
       return nullptr;
     }
@@ -666,7 +666,7 @@ WriteBlob(JSStructuredCloneWriter* aWriter,
   MOZ_ASSERT(aBlob);
   MOZ_ASSERT(aHolder);
 
-  nsRefPtr<BlobImpl> blobImpl = EnsureBlobForBackgroundManager(aBlob->Impl());
+  RefPtr<BlobImpl> blobImpl = EnsureBlobForBackgroundManager(aBlob->Impl());
   MOZ_ASSERT(blobImpl);
 
   // We store the position of the blobImpl in the array as index.
@@ -691,7 +691,7 @@ ReadFileList(JSContext* aCx,
 
   JS::Rooted<JS::Value> val(aCx);
   {
-    nsRefPtr<FileList> fileList = new FileList(aHolder->ParentDuringRead());
+    RefPtr<FileList> fileList = new FileList(aHolder->ParentDuringRead());
 
     uint32_t tag, offset;
     // Offset is the index of the blobImpl from which we can find the blobImpl
@@ -707,13 +707,13 @@ ReadFileList(JSContext* aCx,
       uint32_t index = offset + i;
       MOZ_ASSERT(index < aHolder->BlobImpls().Length());
 
-      nsRefPtr<BlobImpl> blobImpl = aHolder->BlobImpls()[index];
+      RefPtr<BlobImpl> blobImpl = aHolder->BlobImpls()[index];
       MOZ_ASSERT(blobImpl->IsFile());
 
       blobImpl = EnsureBlobForBackgroundManager(blobImpl);
       MOZ_ASSERT(blobImpl);
 
-      nsRefPtr<File> file = File::Create(aHolder->ParentDuringRead(), blobImpl);
+      RefPtr<File> file = File::Create(aHolder->ParentDuringRead(), blobImpl);
       if (!fileList->Append(file)) {
         return nullptr;
       }
@@ -750,7 +750,7 @@ WriteFileList(JSStructuredCloneWriter* aWriter,
   }
 
   for (uint32_t i = 0; i < aFileList->Length(); ++i) {
-    nsRefPtr<BlobImpl> blobImpl =
+    RefPtr<BlobImpl> blobImpl =
       EnsureBlobForBackgroundManager(aFileList->Item(i)->Impl());
     MOZ_ASSERT(blobImpl);
 
@@ -774,7 +774,7 @@ ReadFormData(JSContext* aCx,
   // See the serialization of the FormData for the format.
   JS::Rooted<JS::Value> val(aCx);
   {
-    nsRefPtr<nsFormData> formData =
+    RefPtr<nsFormData> formData =
       new nsFormData(aHolder->ParentDuringRead());
 
     Optional<nsAString> thirdArg;
@@ -792,11 +792,11 @@ ReadFormData(JSContext* aCx,
       if (tag == SCTAG_DOM_BLOB) {
         MOZ_ASSERT(indexOrLengthOfString < aHolder->BlobImpls().Length());
 
-        nsRefPtr<BlobImpl> blobImpl =
+        RefPtr<BlobImpl> blobImpl =
           aHolder->BlobImpls()[indexOrLengthOfString];
         MOZ_ASSERT(blobImpl->IsFile());
 
-        nsRefPtr<File> file =
+        RefPtr<File> file =
           File::Create(aHolder->ParentDuringRead(), blobImpl);
         MOZ_ASSERT(file);
 
@@ -997,7 +997,7 @@ StructuredCloneHolder::CustomReadTransferHandler(JSContext* aCx,
 
     // aExtraData is the index of this port identifier.
     ErrorResult rv;
-    nsRefPtr<MessagePort> port =
+    RefPtr<MessagePort> port =
       MessagePort::Create(window, portIdentifier, rv);
     if (NS_WARN_IF(rv.Failed())) {
       return false;

@@ -61,11 +61,11 @@ class TestNrSocketTest : public ::testing::Test {
     sts_ = nullptr;
   }
 
-  nsRefPtr<TestNrSocket> CreateTestNrSocket_s(const char *ip_str,
+  RefPtr<TestNrSocket> CreateTestNrSocket_s(const char *ip_str,
                                               TestNat *nat) {
     // If no nat is supplied, we create a default NAT which is disabled. This
     // is how we simulate a non-natted socket.
-    nsRefPtr<TestNrSocket> sock(new TestNrSocket(nat ? nat : new TestNat));
+    RefPtr<TestNrSocket> sock(new TestNrSocket(nat ? nat : new TestNat));
     nr_transport_addr address;
     nr_str_port_to_transport_addr(ip_str, 0, IPPROTO_UDP, &address);
     int r = sock->create(&address);
@@ -92,9 +92,9 @@ class TestNrSocketTest : public ::testing::Test {
     }
   }
 
-  nsRefPtr<TestNat> CreatePrivateAddrs(size_t size,
+  RefPtr<TestNat> CreatePrivateAddrs(size_t size,
                                        const char* ip_str = "127.0.0.1") {
-    nsRefPtr<TestNat> result;
+    RefPtr<TestNat> result;
     sts_->Dispatch(
         WrapRunnableRet(&result,
                         this,
@@ -105,8 +105,8 @@ class TestNrSocketTest : public ::testing::Test {
     return result;
   }
 
-  nsRefPtr<TestNat> CreatePrivateAddrs_s(size_t count, const char* ip_str) {
-    nsRefPtr<TestNat> nat(new TestNat);
+  RefPtr<TestNat> CreatePrivateAddrs_s(size_t count, const char* ip_str) {
+    RefPtr<TestNat> nat(new TestNat);
     while (count--) {
       auto sock = CreateTestNrSocket_s(ip_str, nat);
       if (!sock) {
@@ -264,9 +264,9 @@ class TestNrSocketTest : public ::testing::Test {
   Atomic<bool> wait_done_for_main_;
 
   nsCOMPtr<nsIEventTarget> sts_;
-  std::vector<nsRefPtr<TestNrSocket>> public_addrs_;
-  std::vector<nsRefPtr<TestNrSocket>> private_addrs_;
-  std::vector<nsRefPtr<TestNat>> nats_;
+  std::vector<RefPtr<TestNrSocket>> public_addrs_;
+  std::vector<RefPtr<TestNrSocket>> private_addrs_;
+  std::vector<RefPtr<TestNat>> nats_;
 };
 
 } // namespace mozilla
@@ -284,7 +284,7 @@ TEST_F(TestNrSocketTest, PublicConnectivity) {
 }
 
 TEST_F(TestNrSocketTest, PrivateConnectivity) {
-  nsRefPtr<TestNat> nat(CreatePrivateAddrs(2));
+  RefPtr<TestNat> nat(CreatePrivateAddrs(2));
   nat->filtering_type_ = TestNat::ENDPOINT_INDEPENDENT;
   nat->mapping_type_ = TestNat::ENDPOINT_INDEPENDENT;
 
@@ -295,7 +295,7 @@ TEST_F(TestNrSocketTest, PrivateConnectivity) {
 }
 
 TEST_F(TestNrSocketTest, NoConnectivityWithoutPinhole) {
-  nsRefPtr<TestNat> nat(CreatePrivateAddrs(1));
+  RefPtr<TestNat> nat(CreatePrivateAddrs(1));
   nat->filtering_type_ = TestNat::ENDPOINT_INDEPENDENT;
   nat->mapping_type_ = TestNat::ENDPOINT_INDEPENDENT;
   CreatePublicAddrs(1);
@@ -304,10 +304,10 @@ TEST_F(TestNrSocketTest, NoConnectivityWithoutPinhole) {
 }
 
 TEST_F(TestNrSocketTest, NoConnectivityBetweenSubnets) {
-  nsRefPtr<TestNat> nat1(CreatePrivateAddrs(1));
+  RefPtr<TestNat> nat1(CreatePrivateAddrs(1));
   nat1->filtering_type_ = TestNat::ENDPOINT_INDEPENDENT;
   nat1->mapping_type_ = TestNat::ENDPOINT_INDEPENDENT;
-  nsRefPtr<TestNat> nat2(CreatePrivateAddrs(1));
+  RefPtr<TestNat> nat2(CreatePrivateAddrs(1));
   nat2->filtering_type_ = TestNat::ENDPOINT_INDEPENDENT;
   nat2->mapping_type_ = TestNat::ENDPOINT_INDEPENDENT;
 
@@ -318,7 +318,7 @@ TEST_F(TestNrSocketTest, NoConnectivityBetweenSubnets) {
 }
 
 TEST_F(TestNrSocketTest, FullConeAcceptIngress) {
-  nsRefPtr<TestNat> nat(CreatePrivateAddrs(1));
+  RefPtr<TestNat> nat(CreatePrivateAddrs(1));
   nat->filtering_type_ = TestNat::ENDPOINT_INDEPENDENT;
   nat->mapping_type_ = TestNat::ENDPOINT_INDEPENDENT;
   CreatePublicAddrs(2);
@@ -341,7 +341,7 @@ TEST_F(TestNrSocketTest, FullConeAcceptIngress) {
 }
 
 TEST_F(TestNrSocketTest, FullConeOnePinhole) {
-  nsRefPtr<TestNat> nat(CreatePrivateAddrs(1));
+  RefPtr<TestNat> nat(CreatePrivateAddrs(1));
   nat->filtering_type_ = TestNat::ENDPOINT_INDEPENDENT;
   nat->mapping_type_ = TestNat::ENDPOINT_INDEPENDENT;
   CreatePublicAddrs(2);
@@ -373,7 +373,7 @@ TEST_F(TestNrSocketTest, FullConeOnePinhole) {
 // does allow this, it has other behavior (see below) that prevents this test
 // from working.
 TEST_F(TestNrSocketTest, DISABLED_AddressRestrictedCone) {
-  nsRefPtr<TestNat> nat(CreatePrivateAddrs(1));
+  RefPtr<TestNat> nat(CreatePrivateAddrs(1));
   nat->filtering_type_ = TestNat::ADDRESS_DEPENDENT;
   nat->mapping_type_ = TestNat::ENDPOINT_INDEPENDENT;
   CreatePublicAddrs(2, "127.0.0.1");
@@ -441,7 +441,7 @@ TEST_F(TestNrSocketTest, DISABLED_AddressRestrictedCone) {
 }
 
 TEST_F(TestNrSocketTest, RestrictedCone) {
-  nsRefPtr<TestNat> nat(CreatePrivateAddrs(1));
+  RefPtr<TestNat> nat(CreatePrivateAddrs(1));
   nat->filtering_type_ = TestNat::PORT_DEPENDENT;
   nat->mapping_type_ = TestNat::ENDPOINT_INDEPENDENT;
   CreatePublicAddrs(2);
@@ -480,7 +480,7 @@ TEST_F(TestNrSocketTest, RestrictedCone) {
 }
 
 TEST_F(TestNrSocketTest, PortDependentMappingFullCone) {
-  nsRefPtr<TestNat> nat(CreatePrivateAddrs(1));
+  RefPtr<TestNat> nat(CreatePrivateAddrs(1));
   nat->filtering_type_ = TestNat::ENDPOINT_INDEPENDENT;
   nat->mapping_type_ = TestNat::PORT_DEPENDENT;
   CreatePublicAddrs(2);
@@ -524,7 +524,7 @@ TEST_F(TestNrSocketTest, PortDependentMappingFullCone) {
 }
 
 TEST_F(TestNrSocketTest, Symmetric) {
-  nsRefPtr<TestNat> nat(CreatePrivateAddrs(1));
+  RefPtr<TestNat> nat(CreatePrivateAddrs(1));
   nat->filtering_type_ = TestNat::PORT_DEPENDENT;
   nat->mapping_type_ = TestNat::PORT_DEPENDENT;
   CreatePublicAddrs(2);
@@ -561,7 +561,7 @@ TEST_F(TestNrSocketTest, Symmetric) {
 }
 
 TEST_F(TestNrSocketTest, BlockUdp) {
-  nsRefPtr<TestNat> nat(CreatePrivateAddrs(2));
+  RefPtr<TestNat> nat(CreatePrivateAddrs(2));
   nat->block_udp_ = true;
   CreatePublicAddrs(1);
 
@@ -578,7 +578,7 @@ TEST_F(TestNrSocketTest, BlockUdp) {
 }
 
 TEST_F(TestNrSocketTest, DenyHairpinning) {
-  nsRefPtr<TestNat> nat(CreatePrivateAddrs(2));
+  RefPtr<TestNat> nat(CreatePrivateAddrs(2));
   nat->filtering_type_ = TestNat::ENDPOINT_INDEPENDENT;
   nat->mapping_type_ = TestNat::ENDPOINT_INDEPENDENT;
   CreatePublicAddrs(1);
@@ -596,7 +596,7 @@ TEST_F(TestNrSocketTest, DenyHairpinning) {
 }
 
 TEST_F(TestNrSocketTest, AllowHairpinning) {
-  nsRefPtr<TestNat> nat(CreatePrivateAddrs(2));
+  RefPtr<TestNat> nat(CreatePrivateAddrs(2));
   nat->filtering_type_ = TestNat::ENDPOINT_INDEPENDENT;
   nat->mapping_type_ = TestNat::ENDPOINT_INDEPENDENT;
   nat->mapping_timeout_ = 30000;
@@ -616,7 +616,7 @@ TEST_F(TestNrSocketTest, AllowHairpinning) {
 }
 
 TEST_F(TestNrSocketTest, FullConeTimeout) {
-  nsRefPtr<TestNat> nat(CreatePrivateAddrs(1));
+  RefPtr<TestNat> nat(CreatePrivateAddrs(1));
   nat->filtering_type_ = TestNat::ENDPOINT_INDEPENDENT;
   nat->mapping_type_ = TestNat::ENDPOINT_INDEPENDENT;
   nat->mapping_timeout_ = 200;

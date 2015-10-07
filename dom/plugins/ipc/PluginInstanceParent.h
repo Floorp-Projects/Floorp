@@ -340,7 +340,7 @@ private:
 
 private:
     PluginModuleParent* mParent;
-    nsRefPtr<PluginAsyncSurrogate> mSurrogate;
+    RefPtr<PluginAsyncSurrogate> mSurrogate;
     bool mUseSurrogate;
     NPP mNPP;
     const NPNetscapeFuncs* mNPNIface;
@@ -388,12 +388,12 @@ private:
     uint16_t               mShWidth;
     uint16_t               mShHeight;
     CGColorSpaceRef        mShColorSpace;
-    nsRefPtr<MacIOSurface> mIOSurface;
-    nsRefPtr<MacIOSurface> mFrontIOSurface;
+    RefPtr<MacIOSurface> mIOSurface;
+    RefPtr<MacIOSurface> mFrontIOSurface;
 #endif // definied(MOZ_WIDGET_COCOA)
 
     // ObjectFrame layer wrapper
-    nsRefPtr<gfxASurface>    mFrontSurface;
+    RefPtr<gfxASurface>    mFrontSurface;
     // For windowless+transparent instances, this surface contains a
     // "pretty recent" copy of the pixels under its <object> frame.
     // On the plugin side, we use this surface to avoid doing alpha
@@ -403,9 +403,9 @@ private:
     // We have explicitly chosen not to provide any guarantees about
     // the consistency of the pixels in |mBackground|.  A plugin may
     // be able to observe partial updates to the background.
-    nsRefPtr<gfxASurface>    mBackground;
+    RefPtr<gfxASurface>    mBackground;
 
-    nsRefPtr<ImageContainer> mImageContainer;
+    RefPtr<ImageContainer> mImageContainer;
 };
 
 

@@ -89,7 +89,7 @@ public:
                                    gfxSparseBitSet* aUnicodeRanges) override;
 
   private:
-    nsRefPtr<FontFaceSet> mFontFaceSet;
+    RefPtr<FontFaceSet> mFontFaceSet;
   };
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -225,7 +225,7 @@ private:
   // make sure to update FontFaceSet's cycle collection macros
   // accordingly.
   struct FontFaceRecord {
-    nsRefPtr<FontFace> mFontFace;
+    RefPtr<FontFace> mFontFace;
     uint8_t mSheetType;  // only relevant for mRuleFaces entries
 
     // When true, indicates that when finished loading, the FontFace should be
@@ -277,7 +277,7 @@ private:
 
   void ParseFontShorthandForMatching(
               const nsAString& aFont,
-              nsRefPtr<mozilla::css::FontFamilyListRefCnt>& aFamilyList,
+              RefPtr<mozilla::css::FontFamilyListRefCnt>& aFamilyList,
               uint32_t& aWeight,
               int32_t& aStretch,
               uint32_t& aItalicStyle,
@@ -287,7 +287,7 @@ private:
                              nsTArray<FontFace*>& aFontFaces,
                              mozilla::ErrorResult& aRv);
 
-  nsRefPtr<UserFontSet> mUserFontSet;
+  RefPtr<UserFontSet> mUserFontSet;
 
   // The document this is a FontFaceSet for.
   nsCOMPtr<nsIDocument> mDocument;
@@ -298,7 +298,7 @@ private:
   // any of those fonts failed to load.  mReady is replaced with
   // a new Promise object whenever mReady is settled and another
   // FontFace in mRuleFaces or mNonRuleFaces starts to load.
-  nsRefPtr<mozilla::dom::Promise> mReady;
+  RefPtr<mozilla::dom::Promise> mReady;
 
   // Set of all loaders pointing to us. These are not strong pointers,
   // but that's OK because nsFontFaceLoader always calls RemoveLoader on
