@@ -2239,11 +2239,6 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
     }
   }
 
-  sheet = nsLayoutStylesheetCache::FullScreenOverrideSheet();
-  if (sheet) {
-    styleSet->PrependStyleSheet(nsStyleSet::eOverrideSheet, sheet);
-  }
-
   if (!aDocument->IsSVGDocument()) {
     // !!! IMPORTANT - KEEP THIS BLOCK IN SYNC WITH
     // !!! SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded.

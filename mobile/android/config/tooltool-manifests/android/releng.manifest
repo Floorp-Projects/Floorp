@@ -54,12 +54,5 @@
 "algorithm": "sha512",
 "filename": "java_home-1.7.0-openjdk-1.7.0.85.x86_64.tar.xz",
 "unpack": true
-},
-{
-"size": 31078810,
-"digest": "2dffe4e5419a0c0c9908dc52b01cc07379a42e2aa8481be7a26bb8750b586b95bbac3fe57e64f5d37b43e206516ea70ad938a2e45858fdcf1e28258e70ae8d8c",
-"algorithm": "sha512",
-"filename": "moz-tt.tar.bz2",
-"unpack": true
 }
 ]

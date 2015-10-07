@@ -55,7 +55,6 @@
 #include "mozilla/Telemetry.h"
 #include "gfxUtils.h"
 #include "gfxGradientCache.h"
-#include "GraphicsFilter.h"
 #include "nsInlineFrame.h"
 #include <algorithm>
 
@@ -4958,7 +4957,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     return DrawResult::SUCCESS;
   }
 
-  GraphicsFilter filter = nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
+  Filter filter = nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
 
   switch (mType) {
     case eStyleImageType_Image:
@@ -5191,14 +5190,13 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
       subImage = ImageOps::Clip(image, srcRect);
     }
 
-    GraphicsFilter graphicsFilter =
-      nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
+    Filter filter = nsLayoutUtils::GetGraphicsFilterForFrame(mForFrame);
 
     if (!RequiresScaling(aFill, aHFill, aVFill, aUnitSize)) {
       nsLayoutUtils::DrawSingleImage(*aRenderingContext.ThebesContext(),
                                      aPresContext,
                                      subImage,
-                                     graphicsFilter,
+                                     filter,
                                      aFill, aDirtyRect,
                                      nullptr,
                                      imgIContainer::FLAG_NONE);
@@ -5209,7 +5207,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
     nsLayoutUtils::DrawImage(*aRenderingContext.ThebesContext(),
                              aPresContext,
                              subImage,
-                             graphicsFilter,
+                             filter,
                              tile, aFill, tile.TopLeft(), aDirtyRect,
                              imgIContainer::FLAG_NONE);
     return;

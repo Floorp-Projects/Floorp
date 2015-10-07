@@ -1228,6 +1228,16 @@ class LDefVar : public LCallInstructionHelper<0, 1, 0>
     }
 };
 
+class LDefLexical : public LCallInstructionHelper<0, 0, 0>
+{
+  public:
+    LIR_HEADER(DefLexical)
+
+    MDefLexical* mir() const {
+        return mir_->toDefLexical();
+    }
+};
+
 class LDefFun : public LCallInstructionHelper<0, 1, 0>
 {
   public:
@@ -7118,6 +7128,16 @@ class LThrowUninitializedLexical : public LCallInstructionHelper<0, 0, 0>
 
     MLexicalCheck* mir() {
         return mir_->toLexicalCheck();
+    }
+};
+
+class LGlobalNameConflictsCheck : public LInstructionHelper<0, 0, 0>
+{
+  public:
+    LIR_HEADER(GlobalNameConflictsCheck)
+
+    MGlobalNameConflictsCheck* mir() {
+        return mir_->toGlobalNameConflictsCheck();
     }
 };
 

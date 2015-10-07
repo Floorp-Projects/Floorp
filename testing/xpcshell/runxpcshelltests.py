@@ -981,10 +981,10 @@ class XPCShellTests(object):
                             nodeMozInfo['hasNode'] = True
                             searchObj = re.search( r'SPDY server listening on port (.*)', msg, 0)
                             if searchObj:
-                              self.env["MOZSPDY-PORT"] = searchObj.group(1)
+                              self.env["MOZSPDY_PORT"] = searchObj.group(1)
                             searchObj = re.search( r'HTTP2 server listening on port (.*)', msg, 0)
                             if searchObj:
-                              self.env["MOZHTTP2-PORT"] = searchObj.group(1)
+                              self.env["MOZHTTP2_PORT"] = searchObj.group(1)
                     except OSError, e:
                         # This occurs if the subprocess couldn't be started
                         self.log.error('Could not run %s server: %s' % (name, str(e)))
@@ -992,6 +992,9 @@ class XPCShellTests(object):
             myDir = os.path.split(os.path.abspath(__file__))[0]
             startServer('moz-spdy', os.path.join(myDir, 'moz-spdy', 'moz-spdy.js'))
             startServer('moz-http2', os.path.join(myDir, 'moz-http2', 'moz-http2.js'))
+        elif os.getenv('MOZ_ASSUME_NODE_RUNNING', None):
+            self.log.info('Assuming required node servers are already running')
+            nodeMozInfo['hasNode'] = True
 
         mozinfo.update(nodeMozInfo)
 

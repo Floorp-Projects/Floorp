@@ -35,8 +35,6 @@
 
 #include "jsscriptinlines.h"
 
-#include "jit/AtomicOperations-inl.h"
-
 #include "vm/NativeObject-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"

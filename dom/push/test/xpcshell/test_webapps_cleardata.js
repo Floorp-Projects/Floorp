@@ -26,6 +26,9 @@ add_task(function* test_webapps_cleardata() {
   let db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(() => {return db.drop().then(_ => db.close());});
 
+  let unregisterDone;
+  let unregisterPromise = new Promise(resolve => unregisterDone = resolve);
+
   PushService.init({
     serverURI: "wss://push.example.org",
     networkInfo: new MockDesktopNetworkInfo(),
@@ -50,7 +53,10 @@ add_task(function* test_webapps_cleardata() {
             uaid: userAgentID,
             pushEndpoint: 'https://example.com/update/' + Math.random(),
           }));
-        }
+        },
+        onUnregister(data) {
+          unregisterDone();
+        },
       });
     }
   });
@@ -84,5 +90,8 @@ add_task(function* test_webapps_cleardata() {
     'https://example.org/1',
     ChromeUtils.originAttributesToSuffix({ appId: 1, inBrowser: true }));
   ok(registration, 'Registration for { 1, true } should still exist.');
+
+  yield waitForPromise(unregisterPromise, DEFAULT_TIMEOUT,
+    'Timed out waiting for unregister');
 });
 

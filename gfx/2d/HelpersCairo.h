@@ -119,6 +119,8 @@ GfxFilterToCairoFilter(Filter filter)
       return CAIRO_FILTER_BILINEAR;
     case Filter::POINT:
       return CAIRO_FILTER_NEAREST;
+    default:
+      MOZ_CRASH("bad filter");
   }
 
   return CAIRO_FILTER_BILINEAR;

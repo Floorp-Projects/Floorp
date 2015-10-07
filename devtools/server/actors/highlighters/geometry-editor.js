@@ -19,7 +19,7 @@ const GEOMETRY_LABEL_SIZE = 6;
  * Element geometry properties helper that gives names of position and size
  * properties.
  */
-let GeoProp = {
+var GeoProp = {
   SIDES: ["top", "right", "bottom", "left"],
   SIZES: ["width", "height"],
 

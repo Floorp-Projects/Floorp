@@ -1,7 +1,7 @@
 // Regression test for bug 379841 - nsIZipReader's last modified time ignores seconds
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 const path = "data/test_bug379841.zip";
 // Retrieved time should be within 2 seconds of original file's time.
 const MAX_TIME_DIFF = 2000000;

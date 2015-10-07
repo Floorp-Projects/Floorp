@@ -109,7 +109,8 @@ namespace dom {
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(KeyframeEffectReadOnly,
                                    AnimationEffectReadOnly,
-                                   mTarget)
+                                   mTarget,
+                                   mAnimation)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(KeyframeEffectReadOnly,
                                                AnimationEffectReadOnly)
@@ -143,20 +144,27 @@ KeyframeEffectReadOnly::WrapObject(JSContext* aCx,
 }
 
 void
-KeyframeEffectReadOnly::SetParentTime(Nullable<TimeDuration> aParentTime)
-{
-  mParentTime = aParentTime;
-}
-
-void
-KeyframeEffectReadOnly::SetTiming(const AnimationTiming& aTiming,
-                                  Animation& aOwningAnimation)
+KeyframeEffectReadOnly::SetTiming(const AnimationTiming& aTiming)
 {
   if (mTiming == aTiming) {
     return;
   }
   mTiming = aTiming;
-  aOwningAnimation.NotifyEffectTimingUpdated();
+  if (mAnimation) {
+    mAnimation->NotifyEffectTimingUpdated();
+  }
+}
+
+Nullable<TimeDuration>
+KeyframeEffectReadOnly::GetLocalTime() const
+{
+  // Since the *animation* start time is currently always zero, the local
+  // time is equal to the parent time.
+  Nullable<TimeDuration> result;
+  if (mAnimation) {
+    result = mAnimation->GetCurrentTime();
+  }
+  return result;
 }
 
 ComputedTiming
@@ -304,22 +312,22 @@ KeyframeEffectReadOnly::ActiveDuration(const AnimationTiming& aTiming)
     aTiming.mIterationDuration.MultDouble(aTiming.mIterationCount));
 }
 
-// http://w3c.github.io/web-animations/#in-play
+// https://w3c.github.io/web-animations/#in-play
 bool
-KeyframeEffectReadOnly::IsInPlay(const Animation& aAnimation) const
+KeyframeEffectReadOnly::IsInPlay() const
 {
-  if (aAnimation.PlayState() == AnimationPlayState::Finished) {
+  if (!mAnimation || mAnimation->PlayState() == AnimationPlayState::Finished) {
     return false;
   }
 
   return GetComputedTiming().mPhase == ComputedTiming::AnimationPhase_Active;
 }
 
-// http://w3c.github.io/web-animations/#current
+// https://w3c.github.io/web-animations/#current
 bool
-KeyframeEffectReadOnly::IsCurrent(const Animation& aAnimation) const
+KeyframeEffectReadOnly::IsCurrent() const
 {
-  if (aAnimation.PlayState() == AnimationPlayState::Finished) {
+  if (!mAnimation || mAnimation->PlayState() == AnimationPlayState::Finished) {
     return false;
   }
 
@@ -328,11 +336,18 @@ KeyframeEffectReadOnly::IsCurrent(const Animation& aAnimation) const
          computedTiming.mPhase == ComputedTiming::AnimationPhase_Active;
 }
 
+// https://w3c.github.io/web-animations/#in-effect
 bool
 KeyframeEffectReadOnly::IsInEffect() const
 {
   ComputedTiming computedTiming = GetComputedTiming();
   return computedTiming.mProgress != ComputedTiming::kNullProgress;
+}
+
+void
+KeyframeEffectReadOnly::SetAnimation(Animation* aAnimation)
+{
+  mAnimation = aAnimation;
 }
 
 const AnimationProperty*
@@ -492,6 +507,12 @@ KeyframeEffectReadOnly::SetIsRunningOnCompositor(nsCSSProperty aProperty,
       return;
     }
   }
+}
+
+// We need to define this here since Animation is an incomplete type
+// (forward-declared) in the header.
+KeyframeEffectReadOnly::~KeyframeEffectReadOnly()
+{
 }
 
 void

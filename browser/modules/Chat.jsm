@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kDefaultButtonSet = new Set(["minimize", "swap", "close"]);
 const kHiddenDefaultButtons = new Set(["minimize", "close"]);
-let gCustomButtons = new Map();
+var gCustomButtons = new Map();
 
 // A couple of internal helper function.
 function isWindowChromeless(win) {

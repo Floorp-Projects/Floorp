@@ -36,7 +36,7 @@ function test() {
 function expandGlobalScope() {
   let deferred = promise.defer();
 
-  let globalScope = gVariables.getScopeAtIndex(1);
+  let globalScope = gVariables.getScopeAtIndex(2);
   is(globalScope.expanded, false,
     "The global scope should not be expanded by default.");
 
@@ -51,7 +51,7 @@ function expandGlobalScope() {
 
 function performTest() {
   let deferred = promise.defer();
-  let globalScope = gVariables.getScopeAtIndex(1);
+  let globalScope = gVariables.getScopeAtIndex(2);
 
   let buttonVar = globalScope.get("button");
   let buttonAsProtoVar = globalScope.get("buttonAsProto");

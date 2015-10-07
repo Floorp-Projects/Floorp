@@ -88,6 +88,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitInitPropGetterSetter(MInitPropGetterSetter* ins);
     void visitCheckOverRecursed(MCheckOverRecursed* ins);
     void visitDefVar(MDefVar* ins);
+    void visitDefLexical(MDefLexical* ins);
     void visitDefFun(MDefFun* ins);
     void visitCreateThisWithTemplate(MCreateThisWithTemplate* ins);
     void visitCreateThisWithProto(MCreateThisWithProto* ins);
@@ -300,6 +301,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitUnknownValue(MUnknownValue* ins);
     void visitLexicalCheck(MLexicalCheck* ins);
     void visitThrowUninitializedLexical(MThrowUninitializedLexical* ins);
+    void visitGlobalNameConflictsCheck(MGlobalNameConflictsCheck* ins);
     void visitDebugger(MDebugger* ins);
     void visitNewTarget(MNewTarget* ins);
     void visitArrowNewTarget(MArrowNewTarget* ins);

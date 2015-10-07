@@ -235,7 +235,7 @@ SVGFEImageElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
   Matrix TM = viewBoxTM;
   TM.PostTranslate(aFilterSubregion.x, aFilterSubregion.y);
 
-  Filter filter = ToFilter(nsLayoutUtils::GetGraphicsFilterForFrame(frame));
+  Filter filter = nsLayoutUtils::GetGraphicsFilterForFrame(frame);
 
   FilterPrimitiveDescription descr(PrimitiveType::Image);
   descr.Attributes().Set(eImageFilter, (uint32_t)filter);

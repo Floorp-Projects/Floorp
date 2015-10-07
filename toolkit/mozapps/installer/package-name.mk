@@ -132,6 +132,9 @@ SYMBOL_ARCHIVE_BASENAME = $(PKG_BASENAME).crashreporter-symbols
 # Code coverage package naming
 CODE_COVERAGE_ARCHIVE_BASENAME = $(PKG_BASENAME).code-coverage-gcno
 
+# Mozharness naming
+MOZHARNESS_PACKAGE = mozharness.zip
+
 # Test package naming
 TEST_PACKAGE = $(PKG_BASENAME).common.tests.zip
 CPP_TEST_PACKAGE = $(PKG_BASENAME).cppunittest.tests.zip

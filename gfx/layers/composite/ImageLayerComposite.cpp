@@ -166,7 +166,7 @@ ImageLayerComposite::CleanupResources()
 gfx::Filter
 ImageLayerComposite::GetEffectFilter()
 {
-  return gfx::ToFilter(mFilter);
+  return mFilter;
 }
 
 void

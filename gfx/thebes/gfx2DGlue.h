@@ -1,10 +1,11 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef GFX_2D_GLUE_H
 #define GFX_2D_GLUE_H
-
 
 #include "gfxPlatform.h"
 #include "gfxRect.h"
@@ -58,28 +59,6 @@ inline IntMargin ToIntMargin(const nsIntMargin& aMargin)
 inline Size ToSize(const gfxSize &aSize)
 {
   return Size(Float(aSize.width), Float(aSize.height));
-}
-
-inline Filter ToFilter(GraphicsFilter aFilter)
-{
-  switch (aFilter) {
-  case GraphicsFilter::FILTER_NEAREST:
-    return Filter::POINT;
-  case GraphicsFilter::FILTER_GOOD:
-    return Filter::GOOD;
-  default:
-    return Filter::LINEAR;
-  }
-}
-
-inline GraphicsFilter ThebesFilter(Filter aFilter)
-{
-  switch (aFilter) {
-  case Filter::POINT:
-    return GraphicsFilter::FILTER_NEAREST;
-  default:
-    return GraphicsFilter::FILTER_BEST;
-  }
 }
 
 inline gfxPoint ThebesPoint(const Point &aPoint)
