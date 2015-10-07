@@ -2314,9 +2314,12 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   // dirty rect in child-relative coordinates
   nsRect dirty = aDirtyRect - child->GetOffsetTo(this);
 
+  const nsStyleDisplay* disp;
   nsIAtom* childType = child->GetType();
   nsDisplayListBuilder::OutOfFlowDisplayData* savedOutOfFlowData = nullptr;
-  if (childType == nsGkAtoms::placeholderFrame) {
+  if (childType != nsGkAtoms::placeholderFrame) {
+    disp = child->StyleDisplay();
+  } else {
     nsPlaceholderFrame* placeholder = static_cast<nsPlaceholderFrame*>(child);
     child = placeholder->GetOutOfFlowFrame();
     NS_ASSERTION(child, "No out of flow frame?");
@@ -2326,6 +2329,16 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
     if (!child || nsLayoutUtils::IsPopup(child) ||
         (child->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT))
       return;
+    MOZ_ASSERT(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW);
+    disp = child->StyleDisplay();
+    // If the out-of-flow frame is in the top layer, the viewport frame
+    // will paint it. Skip it here. Note that, only out-of-flow frames
+    // with this property should be skipped, because non-HTML elements
+    // may stop their children from being out-of-flow. Those frames
+    // should still be handled in the normal in-flow path.
+    if (disp->mTopLayer != NS_STYLE_TOP_LAYER_NONE) {
+      return;
+    }
     // Make sure that any attempt to use childType below is disappointed. We
     // could call GetType again but since we don't currently need it, let's
     // avoid the virtual call.
@@ -2403,7 +2416,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
 
   // Child is composited if it's transformed, partially transparent, or has
   // SVG effects or a blend mode..
-  const nsStyleDisplay* disp = child->StyleDisplay();
   const nsStylePosition* pos = child->StylePosition();
   bool isVisuallyAtomic = child->HasOpacity()
     || child->IsTransformed()
