@@ -1089,7 +1089,7 @@ nsDOMCameraControl::ReleaseAudioChannelAgent()
 {
 #ifdef MOZ_B2G
   if (mAudioChannelAgent) {
-    mAudioChannelAgent->NotifyStoppedPlaying(nsIAudioChannelAgent::AUDIO_AGENT_DONT_NOTIFY);
+    mAudioChannelAgent->NotifyStoppedPlaying();
     mAudioChannelAgent = nullptr;
   }
 #endif
