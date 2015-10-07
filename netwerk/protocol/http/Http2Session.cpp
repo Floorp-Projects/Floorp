@@ -3189,7 +3189,8 @@ Http2Session::OnWriteSegment(char *buf,
     return NS_ERROR_FAILURE;
   }
 
-  if (mDownstreamState == NOT_USING_NETWORK) {
+  if (mDownstreamState == NOT_USING_NETWORK ||
+      mDownstreamState == BUFFERING_FRAME_HEADER) {
     return NS_BASE_STREAM_WOULD_BLOCK;
   }
 
@@ -3271,6 +3272,7 @@ Http2Session::OnWriteSegment(char *buf,
     return NS_OK;
   }
 
+  MOZ_ASSERT(false);
   return NS_ERROR_UNEXPECTED;
 }
 
