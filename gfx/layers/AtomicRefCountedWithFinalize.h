@@ -62,6 +62,9 @@ protected:
 
 public:
     // Mark user classes that are considered flawless.
+    template<typename U>
+    friend class RefPtr;
+
     template<class U>
     friend class ::mozilla::StaticRefPtr;
 
