@@ -2222,7 +2222,14 @@ class MethodDefiner(PropertyDefiner):
             return (any("@@iterator" in m.aliases for m in methods) or
                     any("@@iterator" == r["name"] for r in regular))
 
-        if (any(m.isGetter() and m.isIndexed() for m in methods)):
+        # Check whether we need to output an @@iterator due to having an indexed
+        # getter.  We only do this while outputting non-static and
+        # non-unforgeable methods, since the @@iterator function will be
+        # neither.
+        if (not static and
+            not unforgeable and
+            descriptor.supportsIndexedProperties() and
+            isMaybeExposedIn(descriptor.operations['IndexedGetter'], descriptor)):
             if hasIterator(methods, self.regular):
                 raise TypeError("Cannot have indexed getter/attr on "
                                 "interface %s with other members "
