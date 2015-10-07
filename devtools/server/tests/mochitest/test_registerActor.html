@@ -67,7 +67,7 @@ window.onload = function() {
 }
 
 function checkActorState(helloActor, callback) {
-  getCount(helloActor, response => {
+getCount(helloActor, response => {
     ok(!response.error, "No error");
     is(response.count, 1, "The counter must be valid");
 

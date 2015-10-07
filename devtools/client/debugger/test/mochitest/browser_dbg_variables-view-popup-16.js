@@ -42,7 +42,7 @@ function test() {
     }
 
     function expandGlobalScope() {
-      let globalScope = variables.getScopeAtIndex(1);
+      let globalScope = variables.getScopeAtIndex(2);
       is(globalScope.expanded, false,
         "The globalScope should not be expanded yet.");
 

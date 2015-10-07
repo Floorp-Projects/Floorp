@@ -12,6 +12,15 @@ const FRAME_SCRIPT_URL = "chrome://global/content/backgroundPageThumbsContent.js
 
 const TELEMETRY_HISTOGRAM_ID_PREFIX = "FX_THUMBNAILS_BG_";
 
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const HTML_NS = "http://www.w3.org/1999/xhtml";
+
+const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://gre/modules/PageThumbs.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
 // possible FX_THUMBNAILS_BG_CAPTURE_DONE_REASON_2 telemetry values
 const TEL_CAPTURE_DONE_OK = 0;
 const TEL_CAPTURE_DONE_TIMEOUT = 1;
@@ -19,13 +28,11 @@ const TEL_CAPTURE_DONE_TIMEOUT = 1;
 const TEL_CAPTURE_DONE_CRASHED = 4;
 const TEL_CAPTURE_DONE_BAD_URI = 5;
 
-const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-const HTML_NS = "http://www.w3.org/1999/xhtml";
-
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
-Cu.import("resource://gre/modules/PageThumbs.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
+// These are looked up on the global as properties below.
+XPCOMUtils.defineConstant(this, "TEL_CAPTURE_DONE_OK", TEL_CAPTURE_DONE_OK);
+XPCOMUtils.defineConstant(this, "TEL_CAPTURE_DONE_TIMEOUT", TEL_CAPTURE_DONE_TIMEOUT);
+XPCOMUtils.defineConstant(this, "TEL_CAPTURE_DONE_CRASHED", TEL_CAPTURE_DONE_CRASHED);
+XPCOMUtils.defineConstant(this, "TEL_CAPTURE_DONE_BAD_URI", TEL_CAPTURE_DONE_BAD_URI);
 
 const global = this;
 
@@ -251,6 +258,12 @@ const BackgroundPageThumbs = {
   _destroyBrowserTimeout: DESTROY_BROWSER_TIMEOUT,
 };
 
+Object.defineProperty(this, "BackgroundPageThumbs", {
+  value: BackgroundPageThumbs,
+  enumerable: true,
+  writable: false
+});
+
 /**
  * Represents a single capture request in the capture queue.
  *
@@ -353,8 +366,9 @@ Capture.prototype = {
     let { captureCallback, doneCallbacks, options } = this;
     this.destroy();
 
-    if (typeof(reason) != "number")
+    if (typeof(reason) != "number") {
       throw new Error("A done reason must be given.");
+    }
     tel("CAPTURE_DONE_REASON_2", reason);
     if (data && data.telemetry) {
       // Telemetry is currently disabled in the content process (bug 680508).

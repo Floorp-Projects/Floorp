@@ -23,7 +23,7 @@ function getCurrentFeatureDir() {
 }
 
 // Build the test sets
-let dir = FileUtils.getDir("ProfD", ["features", "prefilled"], true);
+var dir = FileUtils.getDir("ProfD", ["features", "prefilled"], true);
 do_get_file("data/system_addons/system2_2.xpi").copyTo(dir, "system2@tests.mozilla.org.xpi");
 do_get_file("data/system_addons/system3_2.xpi").copyTo(dir, "system3@tests.mozilla.org.xpi");
 
@@ -57,10 +57,10 @@ registerDirectory("XREAppFeat", distroDir);
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "2");
 
-let testserver = new HttpServer();
+var testserver = new HttpServer();
 testserver.registerDirectory("/data/", do_get_file("data/system_addons"));
 testserver.start();
-let root = testserver.identity.primaryScheme + "://" +
+var root = testserver.identity.primaryScheme + "://" +
            testserver.identity.primaryHost + ":" +
            testserver.identity.primaryPort + "/data/"
 Services.prefs.setCharPref(PREF_SYSTEM_ADDON_UPDATE_URL, root + "update.xml");

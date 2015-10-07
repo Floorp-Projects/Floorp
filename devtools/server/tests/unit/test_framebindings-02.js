@@ -36,7 +36,8 @@ function test_pause_frame()
     do_check_eq(vars.stopMe.value.class, "Function");
     do_check_true(!!vars.stopMe.value.actor);
 
-    parentEnv = parentEnv.parent.parent;
+    // Skip both the eval lexical scope and the global lexical scope.
+    parentEnv = parentEnv.parent.parent.parent;
     do_check_neq(parentEnv, undefined);
     let objClient = gThreadClient.pauseGrip(parentEnv.object);
     objClient.getPrototypeAndProperties(function(aResponse) {

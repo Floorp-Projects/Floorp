@@ -211,8 +211,8 @@ function modemHelperGenerator() {
   return modems;
 }
 
-let Modems = modemHelperGenerator();
-let Modem = Modems[0];
+var Modems = modemHelperGenerator();
+var Modem = Modems[0];
 
 /**
  * Telephony related helper functions.

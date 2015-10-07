@@ -35,27 +35,35 @@ function test() {
 
 function initialChecks() {
   let scopeNodes = gDebugger.document.querySelectorAll(".variables-view-scope");
-  is(scopeNodes.length, 2,
-    "There should be 2 scopes available.");
+  is(scopeNodes.length, 3,
+    "There should be 3 scopes available.");
 
   ok(scopeNodes[0].querySelector(".name").getAttribute("value").includes("[test]"),
     "The local scope should be properly identified.");
-  ok(scopeNodes[1].querySelector(".name").getAttribute("value").includes("[Window]"),
+  ok(scopeNodes[1].querySelector(".name").getAttribute("value").includes("Block"),
+    "The global lexical scope should be properly identified.");
+  ok(scopeNodes[2].querySelector(".name").getAttribute("value").includes("[Window]"),
     "The global scope should be properly identified.");
 
   is(gVariables.getScopeAtIndex(0).target, scopeNodes[0],
     "getScopeAtIndex(0) didn't return the expected scope.");
   is(gVariables.getScopeAtIndex(1).target, scopeNodes[1],
     "getScopeAtIndex(1) didn't return the expected scope.");
+  is(gVariables.getScopeAtIndex(2).target, scopeNodes[2],
+    "getScopeAtIndex(2) didn't return the expected scope.");
 
   is(gVariables.getItemForNode(scopeNodes[0]).target, scopeNodes[0],
     "getItemForNode([0]) didn't return the expected scope.");
   is(gVariables.getItemForNode(scopeNodes[1]).target, scopeNodes[1],
     "getItemForNode([1]) didn't return the expected scope.");
+  is(gVariables.getItemForNode(scopeNodes[2]).target, scopeNodes[2],
+    "getItemForNode([2]) didn't return the expected scope.");
 
   is(gVariables.getItemForNode(scopeNodes[0]).expanded, true,
     "The local scope should be expanded by default.");
   is(gVariables.getItemForNode(scopeNodes[1]).expanded, false,
+    "The global lexical scope should not be collapsed by default.");
+  is(gVariables.getItemForNode(scopeNodes[2]).expanded, false,
     "The global scope should not be collapsed by default.");
 }
 
