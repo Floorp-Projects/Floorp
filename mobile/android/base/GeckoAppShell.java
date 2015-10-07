@@ -132,8 +132,6 @@ public class GeckoAppShell
     // We have static members only.
     private GeckoAppShell() { }
 
-    private static GeckoEditableListener editableListener;
-
     private static final CrashHandler CRASH_HANDLER = new CrashHandler() {
         @Override
         protected String getAppPackageName() {
@@ -324,17 +322,6 @@ public class GeckoAppShell
             return;
         }
         sLayerView = lv;
-
-        // We should have a unique GeckoEditable instance per nsWindow instance,
-        // so even though we have a new view here, the underlying nsWindow is the same,
-        // and we don't create a new GeckoEditable.
-        if (editableListener == null) {
-            // Starting up; istall new Gecko-to-Java editable listener.
-            editableListener = new GeckoEditable();
-        } else {
-            // Bind the existing GeckoEditable instance to the new LayerView
-            GeckoAppShell.notifyIMEContext(GeckoEditableListener.IME_STATE_DISABLED, "", "", "");
-        }
     }
 
     @RobocopTarget
@@ -417,31 +404,6 @@ public class GeckoAppShell
     @WrapForJNI(allowMultithread = true, noThrow = true)
     public static void handleUncaughtException(Thread thread, Throwable e) {
         CRASH_HANDLER.uncaughtException(thread, e);
-    }
-
-    @WrapForJNI
-    public static void notifyIME(int type) {
-        if (editableListener != null) {
-            editableListener.notifyIME(type);
-        }
-    }
-
-    @WrapForJNI
-    public static void notifyIMEContext(int state, String typeHint,
-                                        String modeHint, String actionHint) {
-        if (editableListener != null) {
-            editableListener.notifyIMEContext(state, typeHint,
-                                               modeHint, actionHint);
-        }
-    }
-
-    @WrapForJNI
-    public static void notifyIMEChange(String text, int start, int end, int newEnd) {
-        if (newEnd < 0) { // Selection change
-            editableListener.onSelectionChange(start, end);
-        } else { // Text change
-            editableListener.onTextChange(text, start, end, newEnd);
-        }
     }
 
     private static final Object sEventAckLock = new Object();
