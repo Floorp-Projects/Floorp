@@ -161,7 +161,7 @@ function testNextRemove() {
 
 ok(navigator.getDeviceStorage, "Should have getDeviceStorage.");
 
-gStorage = navigator.getDeviceStorage("pictures");
+let gStorage = navigator.getDeviceStorage("pictures");
 ok(gStorage, "Should have gotten a storage.");
 
 // Test "removeDeep" first.

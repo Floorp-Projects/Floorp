@@ -779,11 +779,9 @@
 #endif
       </field>
       <field name="TelemetryStopwatch" readonly="true">
-        {
-          let tmp = {};
-          Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", tmp);
-          tmp.TelemetryStopwatch;
-        }
+        let tmp = {};
+        Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", tmp);
+        tmp.TelemetryStopwatch;
       </field>
     </implementation>
 

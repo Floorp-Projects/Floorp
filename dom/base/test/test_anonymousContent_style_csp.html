@@ -19,7 +19,7 @@
   let style = anonymousContent.setAttributeForElement("test-element",
                                                       "style", "color:green;");
 
-  style = anonymousContent.getAttributeForElement("test-element", "style");
+  let style = anonymousContent.getAttributeForElement("test-element", "style");
   is(style, "color:green;", "The anonymous content exists with CSP");
 
   chromeDocument.removeAnonymousContent(anonymousContent);

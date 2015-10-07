@@ -104,7 +104,6 @@ Cu.import("resource:///modules/devtools/client/shared/widgets/ViewHelpers.jsm");
 
 Cu.import("resource:///modules/devtools/client/shared/browser-loader.js");
 const require = BrowserLoader("resource:///modules/devtools/client/debugger/", this).require;
-XPCOMUtils.defineConstant(this, "require", require);
 
 const {TargetFactory} = require("devtools/client/framework/target");
 const {Toolbox} = require("devtools/client/framework/toolbox");
@@ -114,8 +113,6 @@ const Editor = require("devtools/client/sourceeditor/editor");
 const DebuggerEditor = require("devtools/client/sourceeditor/debugger");
 const {Tooltip} = require("devtools/client/shared/widgets/Tooltip");
 const FastListWidget = require("devtools/client/shared/widgets/FastListWidget");
-
-XPCOMUtils.defineConstant(this, "EVENTS", EVENTS);
 
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");

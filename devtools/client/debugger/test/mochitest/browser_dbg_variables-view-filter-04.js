@@ -44,110 +44,108 @@ function testVariablesAndPropertiesFiltering() {
   let localScope = gVariables.getScopeAtIndex(0);
   let withScope = gVariables.getScopeAtIndex(1);
   let functionScope = gVariables.getScopeAtIndex(2);
-  let globalLexicalScope = gVariables.getScopeAtIndex(3);
-  let globalScope = gVariables.getScopeAtIndex(4);
+  let globalScope = gVariables.getScopeAtIndex(3);
   let step = 0;
 
   let tests = [
     function() {
-      assertExpansion([true, false, false, false, false]);
+      assertExpansion([true, false, false, false]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
     function() {
-      assertExpansion([true, false, false, false, false]);
+      assertExpansion([true, false, false, false]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
     function() {
-      assertExpansion([true, false, false, false, false]);
+      assertExpansion([true, false, false, false]);
       gEditor.focus();
     },
     function() {
-      assertExpansion([true, false, false, false, false]);
+      assertExpansion([true, false, false, false]);
       typeText(gSearchBox, "*");
     },
     function() {
-      assertExpansion([true, true, true, true, true]);
+      assertExpansion([true, true, true, true]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
     function() {
-      assertExpansion([true, true, true, true, true]);
+      assertExpansion([true, true, true, true]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
     function() {
-      assertExpansion([true, true, true, true, true]);
+      assertExpansion([true, true, true, true]);
       gEditor.focus();
     },
     function() {
-      assertExpansion([true, true, true, true, true]);
+      assertExpansion([true, true, true, true]);
       backspaceText(gSearchBox, 1);
     },
     function() {
-      assertExpansion([true, true, true, true, true]);
+      assertExpansion([true, true, true, true]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
     function() {
-      assertExpansion([true, true, true, true, true]);
+      assertExpansion([true, true, true, true]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
     function() {
-      assertExpansion([true, true, true, true, true]);
+      assertExpansion([true, true, true, true]);
       gEditor.focus();
     },
     function() {
-      assertExpansion([true, true, true, true, true]);
+      assertExpansion([true, true, true, true]);
       localScope.collapse();
       withScope.collapse();
       functionScope.collapse();
-      globalLexicalScope.collapse();
       globalScope.collapse();
     },
     function() {
-      assertExpansion([false, false, false, false, false]);
+      assertExpansion([false, false, false, false]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
     function() {
-      assertExpansion([false, false, false, false, false]);
+      assertExpansion([false, false, false, false]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
     function() {
-      assertExpansion([false, false, false, false, false]);
+      assertExpansion([false, false, false, false]);
       gEditor.focus();
     },
     function() {
-      assertExpansion([false, false, false, false, false]);
+      assertExpansion([false, false, false, false]);
       clearText(gSearchBox);
       typeText(gSearchBox, "*");
     },
     function() {
-      assertExpansion([true, true, true, true, true]);
+      assertExpansion([true, true, true, true]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
     function() {
-      assertExpansion([true, true, true, true, true]);
+      assertExpansion([true, true, true, true]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
     function() {
-      assertExpansion([true, true, true, true, true]);
+      assertExpansion([true, true, true, true]);
       gEditor.focus();
     },
     function() {
-      assertExpansion([true, true, true, true, true]);
+      assertExpansion([true, true, true, true]);
       backspaceText(gSearchBox, 1);
     },
     function() {
-      assertExpansion([true, true, true, true, true]);
+      assertExpansion([true, true, true, true]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
     function() {
-      assertExpansion([true, true, true, true, true]);
+      assertExpansion([true, true, true, true]);
       EventUtils.sendKey("RETURN", gDebugger);
     },
     function() {
-      assertExpansion([true, true, true, true, true]);
+      assertExpansion([true, true, true, true]);
       gEditor.focus();
     },
     function() {
-      assertExpansion([true, true, true, true, true]);
+      assertExpansion([true, true, true, true]);
     }
   ];
 
@@ -164,12 +162,8 @@ function testVariablesAndPropertiesFiltering() {
       "The functionScope should " + (aFlags[2] ? "" : "not ") +
       "be expanded at this point (" + step + ").");
 
-    is(globalLexicalScope.expanded, aFlags[3],
-      "The globalLexicalScope should " + (aFlags[3] ? "" : "not ") +
-      "be expanded at this point (" + step + ").");
-
-    is(globalScope.expanded, aFlags[4],
-      "The globalScope should " + (aFlags[4] ? "" : "not ") +
+    is(globalScope.expanded, aFlags[3],
+      "The globalScope should " + (aFlags[3] ? "" : "not ") +
       "be expanded at this point (" + step + ").");
 
     step++;
@@ -184,8 +178,7 @@ function prepareVariablesAndProperties() {
   let localScope = gVariables.getScopeAtIndex(0);
   let withScope = gVariables.getScopeAtIndex(1);
   let functionScope = gVariables.getScopeAtIndex(2);
-  let globalLexicalScope = gVariables.getScopeAtIndex(3);
-  let globalScope = gVariables.getScopeAtIndex(4);
+  let globalScope = gVariables.getScopeAtIndex(3);
 
   is(localScope.expanded, true,
     "The localScope should be expanded.");
@@ -193,8 +186,6 @@ function prepareVariablesAndProperties() {
     "The withScope should not be expanded yet.");
   is(functionScope.expanded, false,
     "The functionScope should not be expanded yet.");
-  is(globalLexicalScope.expanded, false,
-    "The globalLexicalScope should not be expanded yet.");
   is(globalScope.expanded, false,
     "The globalScope should not be expanded yet.");
 
@@ -207,14 +198,11 @@ function prepareVariablesAndProperties() {
       "The withScope should now be expanded.");
     is(functionScope.expanded, true,
       "The functionScope should now be expanded.");
-    is(globalLexicalScope.expanded, true,
-      "The globalLexicalScope should now be expanded.");
     is(globalScope.expanded, true,
       "The globalScope should now be expanded.");
 
     withScope.collapse();
     functionScope.collapse();
-    globalLexicalScope.collapse();
     globalScope.collapse();
 
     deferred.resolve();
@@ -222,7 +210,6 @@ function prepareVariablesAndProperties() {
 
   withScope.expand();
   functionScope.expand();
-  globalLexicalScope.expand();
   globalScope.expand();
 
   return deferred.promise;
