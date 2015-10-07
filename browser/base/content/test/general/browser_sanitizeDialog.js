@@ -30,19 +30,18 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
                                   "resource://testing-common/PlacesTestUtils.jsm");
 
 var tempScope = {};
-Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
-                                           .loadSubScript("chrome://browser/content/sanitize.js", tempScope);
+Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js", tempScope);
 var Sanitizer = tempScope.Sanitizer;
 
 const kMsecPerMin = 60 * 1000;
 const kUsecPerMin = 60 * 1000000;
 
 add_task(function* init() {
-  requestLongerTimeout(2);
-  blankSlate();
-  registerCleanupFunction(() => {
-    blankSlate();
-    return PlacesTestUtils.promiseAsyncUpdates();
+  requestLongerTimeout(3);
+  yield blankSlate();
+  registerCleanupFunction(function* () {
+    yield blankSlate();
+    yield PlacesTestUtils.promiseAsyncUpdates();
   });
 });
 
@@ -60,7 +59,7 @@ add_task(function* default_state() {
     this.acceptDialog();
   };
   wh.open();
-  return wh.promiseClosed;
+  yield wh.promiseClosed;
 });
 
 /**
@@ -76,32 +75,30 @@ add_task(function* test_cancel() {
     places.push({uri: pURI, visitDate: visitTimeForMinutesAgo(i)});
     uris.push(pURI);
   }
+  yield PlacesTestUtils.addVisits(places);
 
-  return new Promise(resolve => {
-    PlacesTestUtils.addVisits(places).then(() => {
-    let wh = new WindowHelper();
-    wh.onload = function () {
-      this.selectDuration(Sanitizer.TIMESPAN_HOUR);
-      this.checkPrefCheckbox("history", false);
-      this.checkDetails(false);
+  let wh = new WindowHelper();
+  wh.onload = function () {
+    this.selectDuration(Sanitizer.TIMESPAN_HOUR);
+    this.checkPrefCheckbox("history", false);
+    this.checkDetails(false);
 
-      // Show details
-      this.toggleDetails();
-      this.checkDetails(true);
+    // Show details
+    this.toggleDetails();
+    this.checkDetails(true);
 
-      // Hide details
-      this.toggleDetails();
-      this.checkDetails(false);
-      this.cancelDialog();
-    };
-    wh.onunload = function* () {
-      yield promiseHistoryClearedState(uris, false);
-      yield blankSlate();
-      yield promiseHistoryClearedState(uris, true);
-    };
-    wh.promiseClosed.then(resolve);
-    wh.open();
-  })});
+    // Hide details
+    this.toggleDetails();
+    this.checkDetails(false);
+    this.cancelDialog();
+  };
+  wh.onunload = function* () {
+    yield promiseHistoryClearedState(uris, false);
+    yield blankSlate();
+    yield promiseHistoryClearedState(uris, true);
+  };
+  wh.open();
+  yield wh.promiseClosed;
 });
 
 /**
@@ -138,46 +135,43 @@ add_task(function* test_history_downloads_checked() {
   }
   let promiseSanitized = promiseSanitizationComplete();
 
-  return new Promise(resolve => {
-    PlacesTestUtils.addVisits(places).then(() => {
-      let totalHistoryVisits = uris.length + olderURIs.length;
+  yield PlacesTestUtils.addVisits(places);
+  let totalHistoryVisits = uris.length + olderURIs.length;
 
-      let wh = new WindowHelper();
-      wh.onload = function () {
-        this.selectDuration(Sanitizer.TIMESPAN_HOUR);
-        this.checkPrefCheckbox("history", true);
-        this.acceptDialog();
-      };
-      wh.onunload = function* () {
-        intPrefIs("sanitize.timeSpan", Sanitizer.TIMESPAN_HOUR,
-                  "timeSpan pref should be hour after accepting dialog with " +
-                  "hour selected");
-        boolPrefIs("cpd.history", true,
-                   "history pref should be true after accepting dialog with " +
-                   "history checkbox checked");
-        boolPrefIs("cpd.downloads", true,
-                   "downloads pref should be true after accepting dialog with " +
-                   "history checkbox checked");
+  let wh = new WindowHelper();
+  wh.onload = function () {
+    this.selectDuration(Sanitizer.TIMESPAN_HOUR);
+    this.checkPrefCheckbox("history", true);
+    this.acceptDialog();
+  };
+  wh.onunload = function* () {
+    intPrefIs("sanitize.timeSpan", Sanitizer.TIMESPAN_HOUR,
+              "timeSpan pref should be hour after accepting dialog with " +
+              "hour selected");
+    boolPrefIs("cpd.history", true,
+               "history pref should be true after accepting dialog with " +
+               "history checkbox checked");
+    boolPrefIs("cpd.downloads", true,
+               "downloads pref should be true after accepting dialog with " +
+               "history checkbox checked");
 
-        yield promiseSanitized;
+    yield promiseSanitized;
 
-        // History visits and downloads within one hour should be cleared.
-        yield promiseHistoryClearedState(uris, true);
-        yield ensureDownloadsClearedState(downloadIDs, true);
+    // History visits and downloads within one hour should be cleared.
+    yield promiseHistoryClearedState(uris, true);
+    yield ensureDownloadsClearedState(downloadIDs, true);
 
-        // Visits and downloads > 1 hour should still exist.
-        yield promiseHistoryClearedState(olderURIs, false);
-        yield ensureDownloadsClearedState(olderDownloadIDs, false);
+    // Visits and downloads > 1 hour should still exist.
+    yield promiseHistoryClearedState(olderURIs, false);
+    yield ensureDownloadsClearedState(olderDownloadIDs, false);
 
-        // OK, done, cleanup after ourselves.
-        yield blankSlate();
-        yield promiseHistoryClearedState(olderURIs, true);
-        yield ensureDownloadsClearedState(olderDownloadIDs, true);
-      };
-      wh.promiseClosed.then(resolve);
-      wh.open();
-    });
-  });
+    // OK, done, cleanup after ourselves.
+    yield blankSlate();
+    yield promiseHistoryClearedState(olderURIs, true);
+    yield ensureDownloadsClearedState(olderDownloadIDs, true);
+  };
+  wh.open();
+  yield wh.promiseClosed;
 });
 
 /**
@@ -209,49 +203,46 @@ add_task(function* test_history_downloads_unchecked() {
     uris.push(pURI);
   }
 
-  return new Promise(resolve => {
-    PlacesTestUtils.addVisits(places).then(() => {
-      let wh = new WindowHelper();
-      wh.onload = function () {
-        is(this.isWarningPanelVisible(), false,
-           "Warning panel should be hidden after previously accepting dialog " +
-           "with a predefined timespan");
-        this.selectDuration(Sanitizer.TIMESPAN_HOUR);
+  yield PlacesTestUtils.addVisits(places);
+  let wh = new WindowHelper();
+  wh.onload = function () {
+    is(this.isWarningPanelVisible(), false,
+       "Warning panel should be hidden after previously accepting dialog " +
+       "with a predefined timespan");
+    this.selectDuration(Sanitizer.TIMESPAN_HOUR);
 
-        // Remove only form entries, leave history (including downloads).
-        this.checkPrefCheckbox("history", false);
-        this.checkPrefCheckbox("formdata", true);
-        this.acceptDialog();
-      };
-      wh.onunload = function* () {
-        intPrefIs("sanitize.timeSpan", Sanitizer.TIMESPAN_HOUR,
-                  "timeSpan pref should be hour after accepting dialog with " +
-                  "hour selected");
-        boolPrefIs("cpd.history", false,
-                   "history pref should be false after accepting dialog with " +
-                   "history checkbox unchecked");
-        boolPrefIs("cpd.downloads", false,
-                   "downloads pref should be false after accepting dialog with " +
-                   "history checkbox unchecked");
+    // Remove only form entries, leave history (including downloads).
+    this.checkPrefCheckbox("history", false);
+    this.checkPrefCheckbox("formdata", true);
+    this.acceptDialog();
+  };
+  wh.onunload = function* () {
+    intPrefIs("sanitize.timeSpan", Sanitizer.TIMESPAN_HOUR,
+              "timeSpan pref should be hour after accepting dialog with " +
+              "hour selected");
+    boolPrefIs("cpd.history", false,
+               "history pref should be false after accepting dialog with " +
+               "history checkbox unchecked");
+    boolPrefIs("cpd.downloads", false,
+               "downloads pref should be false after accepting dialog with " +
+               "history checkbox unchecked");
 
-        // Of the three only form entries should be cleared.
-        yield promiseHistoryClearedState(uris, false);
-        yield ensureDownloadsClearedState(downloadIDs, false);
+    // Of the three only form entries should be cleared.
+    yield promiseHistoryClearedState(uris, false);
+    yield ensureDownloadsClearedState(downloadIDs, false);
 
-        formEntries.forEach(function (entry) {
-          let exists = yield formNameExists(entry);
-          is(exists, false, "form entry " + entry + " should no longer exist");
-        });
+    for (let entry of formEntries) {
+      let exists = yield formNameExists(entry);
+      is(exists, false, "form entry " + entry + " should no longer exist");
+    }
 
-        // OK, done, cleanup after ourselves.
-        yield blankSlate();
-        yield promiseHistoryClearedState(uris, true);
-        yield ensureDownloadsClearedState(downloadIDs, true);
-      };
-      wh.promiseClosed.then(resolve);
-      wh.open();
-    });
-  });
+    // OK, done, cleanup after ourselves.
+    yield blankSlate();
+    yield promiseHistoryClearedState(uris, true);
+    yield ensureDownloadsClearedState(downloadIDs, true);
+  };
+  wh.open();
+  yield wh.promiseClosed;
 });
 
 /**
@@ -262,7 +253,7 @@ add_task(function* test_everything() {
   let uris = [];
   let places = [];
   let pURI;
-  // within past hour, within past two hours, within past four hours and 
+  // within past hour, within past two hours, within past four hours and
   // outside past four hours
   [10, 70, 130, 250].forEach(function(aValue) {
     pURI = makeURI("http://" + aValue + "-minutes-ago.com/");
@@ -272,39 +263,36 @@ add_task(function* test_everything() {
 
   let promiseSanitized = promiseSanitizationComplete();
 
-  return new Promise(resolve => {
-    PlacesTestUtils.addVisits(places).then(() => {
-      let wh = new WindowHelper();
-      wh.onload = function () {
-        is(this.isWarningPanelVisible(), false,
-           "Warning panel should be hidden after previously accepting dialog " +
-           "with a predefined timespan");
-        this.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
-        this.checkPrefCheckbox("history", true);
-        this.checkDetails(true);
+  yield PlacesTestUtils.addVisits(places);
+  let wh = new WindowHelper();
+  wh.onload = function () {
+    is(this.isWarningPanelVisible(), false,
+       "Warning panel should be hidden after previously accepting dialog " +
+       "with a predefined timespan");
+    this.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
+    this.checkPrefCheckbox("history", true);
+    this.checkDetails(true);
 
-        // Hide details
-        this.toggleDetails();
-        this.checkDetails(false);
+    // Hide details
+    this.toggleDetails();
+    this.checkDetails(false);
 
-        // Show details
-        this.toggleDetails();
-        this.checkDetails(true);
+    // Show details
+    this.toggleDetails();
+    this.checkDetails(true);
 
-        this.acceptDialog();
-      };
-      wh.onunload = function () {
-        yield promiseSanitized;
-        intPrefIs("sanitize.timeSpan", Sanitizer.TIMESPAN_EVERYTHING,
-                  "timeSpan pref should be everything after accepting dialog " +
-                  "with everything selected");
+    this.acceptDialog();
+  };
+  wh.onunload = function* () {
+    yield promiseSanitized;
+    intPrefIs("sanitize.timeSpan", Sanitizer.TIMESPAN_EVERYTHING,
+              "timeSpan pref should be everything after accepting dialog " +
+              "with everything selected");
 
-        yield promiseHistoryClearedState(uris, true);
-      };
-      wh.promiseClosed.then(resolve);
-      wh.open();
-    });
-  });
+    yield promiseHistoryClearedState(uris, true);
+  };
+  wh.open();
+  yield wh.promiseClosed;
 });
 
 /**
@@ -326,30 +314,27 @@ add_task(function* test_everything_warning() {
 
   let promiseSanitized = promiseSanitizationComplete();
 
-  return new Promise(resolve => {
-    PlacesTestUtils.addVisits(places).then(() => {
-      let wh = new WindowHelper();
-      wh.onload = function () {
-        is(this.isWarningPanelVisible(), true,
-           "Warning panel should be visible after previously accepting dialog " +
-           "with clearing everything");
-        this.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
-        this.checkPrefCheckbox("history", true);
-        this.acceptDialog();
-      };
-      wh.onunload = function () {
-        intPrefIs("sanitize.timeSpan", Sanitizer.TIMESPAN_EVERYTHING,
-                  "timeSpan pref should be everything after accepting dialog " +
-                  "with everything selected");
+  yield PlacesTestUtils.addVisits(places);
+  let wh = new WindowHelper();
+  wh.onload = function () {
+    is(this.isWarningPanelVisible(), true,
+       "Warning panel should be visible after previously accepting dialog " +
+       "with clearing everything");
+    this.selectDuration(Sanitizer.TIMESPAN_EVERYTHING);
+    this.checkPrefCheckbox("history", true);
+    this.acceptDialog();
+  };
+  wh.onunload = function* () {
+    intPrefIs("sanitize.timeSpan", Sanitizer.TIMESPAN_EVERYTHING,
+              "timeSpan pref should be everything after accepting dialog " +
+              "with everything selected");
 
-        yield promiseSanitized;
+    yield promiseSanitized;
 
-        yield promiseHistoryClearedState(uris, true);
-      };
-      wh.promiseClosed.then(resolve);
-      wh.open();
-    });
-  });
+    yield promiseHistoryClearedState(uris, true);
+  };
+  wh.open();
+ yield wh.promiseClosed;
 });
 
 /**
@@ -365,38 +350,35 @@ add_task(function* test_cannot_clear_history() {
 
   // Add history.
   let pURI = makeURI("http://" + 10 + "-minutes-ago.com/");
-  return new Promise(resolve => {
-    PlacesTestUtils.addVisits({uri: pURI, visitDate: visitTimeForMinutesAgo(10)}).then(() => {
-      let uris = [ pURI ];
+  yield PlacesTestUtils.addVisits({uri: pURI, visitDate: visitTimeForMinutesAgo(10)});
+  let uris = [ pURI ];
 
-      let wh = new WindowHelper();
-      wh.onload = function() {
-        // Check that the relevant checkboxes are enabled
-        var cb = this.win.document.querySelectorAll(
-                   "#itemList > [preference='privacy.cpd.formdata']");
-        ok(cb.length == 1 && !cb[0].disabled, "There is formdata, checkbox to " +
-           "clear formdata should be enabled.");
+  let wh = new WindowHelper();
+  wh.onload = function() {
+    // Check that the relevant checkboxes are enabled
+    var cb = this.win.document.querySelectorAll(
+               "#itemList > [preference='privacy.cpd.formdata']");
+    ok(cb.length == 1 && !cb[0].disabled, "There is formdata, checkbox to " +
+       "clear formdata should be enabled.");
 
-        var cb = this.win.document.querySelectorAll(
-                   "#itemList > [preference='privacy.cpd.history']");
-        ok(cb.length == 1 && !cb[0].disabled, "There is history, checkbox to " +
-           "clear history should be enabled.");
+    var cb = this.win.document.querySelectorAll(
+               "#itemList > [preference='privacy.cpd.history']");
+    ok(cb.length == 1 && !cb[0].disabled, "There is history, checkbox to " +
+       "clear history should be enabled.");
 
-        this.checkAllCheckboxes();
-        this.acceptDialog();
-      };
-      wh.onunload = function () {
-        yield promiseSanitized;
+    this.checkAllCheckboxes();
+    this.acceptDialog();
+  };
+  wh.onunload = function* () {
+    yield promiseSanitized;
 
-        yield promiseHistoryClearedState(uris, true);
+    yield promiseHistoryClearedState(uris, true);
 
-        let exists = yield formNameExists(formEntries[0]);
-        is(exists, false, "form entry " + formEntries[0] + " should no longer exist");
-      };
-      wh.promiseClosed.then(resolve);
-      wh.open();
-    });
-  });
+    let exists = yield formNameExists(formEntries[0]);
+    is(exists, false, "form entry " + formEntries[0] + " should no longer exist");
+  };
+  wh.open();
+  yield wh.promiseClosed;
 });
 
 add_task(function* test_no_formdata_history_to_clear() {
@@ -409,14 +391,6 @@ add_task(function* test_no_formdata_history_to_clear() {
     boolPrefIs("cpd.formdata", true,
                "formdata pref should be true after accepting dialog with " +
                "formdata checkbox checked");
-
-    // Even though the formdata pref is true, because there is no history
-    // left to clear, the checkbox will be disabled.
-    var cb = this.win.document.querySelectorAll(
-               "#itemList > [preference='privacy.cpd.formdata']");
-    ok(cb.length == 1 && cb[0].disabled && !cb[0].checked,
-       "There is no formdata history, checkbox should be disabled and be " +
-       "cleared to reduce user confusion (bug 497664).");
 
     var cb = this.win.document.querySelectorAll(
                "#itemList > [preference='privacy.cpd.history']");
@@ -452,13 +426,13 @@ add_task(function* test_form_entries() {
 
     this.acceptDialog();
   };
-  wh.onunload = function () {
+  wh.onunload = function* () {
     yield promiseSanitized;
     let exists = yield formNameExists(formEntry);
     is(exists, false, "form entry " + formEntry + " should no longer exist");
   };
   wh.open();
-  return wh.promiseClosed;
+  yield wh.promiseClosed;
 });
 
 
@@ -570,30 +544,19 @@ add_task(function* test_toggling_details_persists() {
 add_task(function* test_offline_cache() {
   // Prepare stuff, we will work with www.example.com
   var URL = "http://www.example.com";
-
-  var ios = Cc["@mozilla.org/network/io-service;1"]
-            .getService(Ci.nsIIOService);
-  var URI = ios.newURI(URL, null, null);
-
-  var sm = Cc["@mozilla.org/scriptsecuritymanager;1"]
-           .getService(Ci.nsIScriptSecurityManager);
-  var principal = sm.getNoAppCodebasePrincipal(URI);
+  var URI = makeURI(URL);
+  var principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(URI);
 
   // Give www.example.com privileges to store offline data
-  var pm = Cc["@mozilla.org/permissionmanager;1"]
-           .getService(Ci.nsIPermissionManager);
-  pm.addFromPrincipal(principal, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
-  pm.addFromPrincipal(principal, "offline-app", Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN);
+  Services.perms.addFromPrincipal(principal, "offline-app", Ci.nsIPermissionManager.ALLOW_ACTION);
+  Services.perms.addFromPrincipal(principal, "offline-app", Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN);
 
   // Store something to the offline cache
   var appcacheserv = Cc["@mozilla.org/network/application-cache-service;1"]
                      .getService(Ci.nsIApplicationCacheService);
   var appcachegroupid = appcacheserv.buildGroupID(makeURI(URL + "/manifest"), LoadContextInfo.default);
   var appcache = appcacheserv.createApplicationCache(appcachegroupid);
-
-  var cacheserv = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
-                  .getService(Ci.nsICacheStorageService);
-  var storage = cacheserv.appCacheStorage(LoadContextInfo.default, appcache);
+  var storage = Services.cache2.appCacheStorage(LoadContextInfo.default, appcache);
 
   // Open the dialog
   let wh = new WindowHelper();
@@ -634,21 +597,15 @@ add_task(function* test_offline_cache() {
   };
 
   storage.asyncOpenURI(makeURI(URL), "", Ci.nsICacheStorage.OPEN_TRUNCATE, cacheListener);
-  return wh.promiseClosed;
+  yield wh.promiseClosed;
 });
 
 // Test for offline apps permission deletion
 add_task(function* test_offline_apps_permissions() {
   // Prepare stuff, we will work with www.example.com
   var URL = "http://www.example.com";
-
-  var ios = Cc["@mozilla.org/network/io-service;1"]
-            .getService(Ci.nsIIOService);
-  var URI = ios.newURI(URL, null, null);
-
-  var sm = Cc["@mozilla.org/scriptsecuritymanager;1"]
-           .getService(Ci.nsIScriptSecurityManager);
-  var principal = sm.createCodebasePrincipal(URI, {});
+  var URI = makeURI(URL);
+  var principal = Services.scriptSecurityManager.createCodebasePrincipal(URI, {});
 
   let promiseSanitized = promiseSanitizationComplete();
 
@@ -663,16 +620,14 @@ add_task(function* test_offline_apps_permissions() {
     this.checkPrefCheckbox("siteSettings", true);
     this.acceptDialog();
   };
-  wh.onunload = function () {
+  wh.onunload = function* () {
     yield promiseSanitized;
 
     // Check all has been deleted (privileges, data, cache)
-    var pm = Cc["@mozilla.org/permissionmanager;1"]
-             .getService(Ci.nsIPermissionManager);
-    is(pm.testPermissionFromPrincipal(principal, "offline-app"), 0, "offline-app permissions removed");
+    is(Services.perms.testPermissionFromPrincipal(principal, "offline-app"), 0, "offline-app permissions removed");
   };
   wh.open();
-  return wh.promiseClosed;
+  yield wh.promiseClosed;
 });
 
 var now_mSec = Date.now();
@@ -834,8 +789,6 @@ WindowHelper.prototype = {
       var loaded = false;
       let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
 
-      let promiseDialogReady = promiseSanitizationDialogReady();
-
       win.addEventListener("load", function onload(event) {
         win.removeEventListener("load", onload, false);
 
@@ -844,12 +797,7 @@ WindowHelper.prototype = {
 
         wh.win = win;
         loaded = true;
-
-        Task.spawn(function*() {
-          yield promiseDialogReady;
-          yield new Promise(resolve => setTimeout(resolve, 0));
-          yield wh.onload();
-        });
+        executeSoon(() => wh.onload());
       }, false);
 
       win.addEventListener("unload", function onunload(event) {
@@ -867,7 +815,7 @@ WindowHelper.prototype = {
 
         // Some exceptions that reach here don't reach the test harness, but
         // ok()/is() do...
-        Task.spawn(function*() {
+        Task.spawn(function* () {
           if (wh.onunload) {
             yield wh.onunload();
           }
@@ -910,10 +858,6 @@ WindowHelper.prototype = {
   }
 };
 
-function promiseSanitizationDialogReady() {
-  return promiseTopicObserved("sanitize-dialog-setup-complete");
-}
-
 function promiseSanitizationComplete() {
   return promiseTopicObserved("sanitizer-sanitization-complete");
 }
@@ -924,7 +868,7 @@ function promiseSanitizationComplete() {
  * @param aMinutesAgo
  *        The download will be downloaded this many minutes ago
  */
-function addDownloadWithMinutesAgo(aExpectedPathList, aMinutesAgo) {
+function* addDownloadWithMinutesAgo(aExpectedPathList, aMinutesAgo) {
   let publicList = yield Downloads.getList(Downloads.PUBLIC);
 
   let name = "fakefile-" + aMinutesAgo + "-minutes-ago";
@@ -957,14 +901,14 @@ function promiseAddFormEntryWithMinutesAgo(aMinutesAgo) {
 
   return new Promise((resolve, reject) =>
     FormHistory.update({ op: "add", fieldname: name, value: "dummy", firstUsed: timestamp },
-                     { handleError: function (error) {
-                         do_throw("Error occurred updating form history: " + error);
-                         reject();
-                       },
-                       handleCompletion: function (reason) {
-                         resolve(name);
-                       }
-                     })
+                       { handleError: function (error) {
+                           do_throw("Error occurred updating form history: " + error);
+                           reject();
+                         },
+                         handleCompletion: function (reason) {
+                           resolve(name);
+                         }
+                       })
    )
 }
 
@@ -973,44 +917,41 @@ function promiseAddFormEntryWithMinutesAgo(aMinutesAgo) {
  */
 function formNameExists(name)
 {
-  let deferred = Promise.defer();
-
-  let count = 0;
-  FormHistory.count({ fieldname: name },
-                    { handleResult: result => count = result,
-                      handleError: function (error) {
-                        do_throw("Error occurred searching form history: " + error);
-                        deferred.reject(error);
-                      },
-                      handleCompletion: function (reason) {
-                          if (!reason) deferred.resolve(count);
-                      }
-                    });
-
-  return deferred.promise;
+  return new Promise((resolve, reject) => {
+    let count = 0;
+    FormHistory.count({ fieldname: name },
+                      { handleResult: result => count = result,
+                        handleError: function (error) {
+                          do_throw("Error occurred searching form history: " + error);
+                          reject(error);
+                        },
+                        handleCompletion: function (reason) {
+                          if (!reason) {
+                            resolve(count);
+                          }
+                        }
+                      });
+  });
 }
 
 /**
  * Removes all history visits, downloads, and form entries.
  */
-function blankSlate() {
-  let deleteDownloads = Task.spawn(function* deleteAllDownloads() {
-    let publicList = yield Downloads.getList(Downloads.PUBLIC);
-    let downloads = yield publicList.getAll();
-    for (let download of downloads) {
-      yield publicList.remove(download);
-      yield download.finalize(true);
-    }
-  }).then(null, Components.utils.reportError);
+function* blankSlate() {
+  let publicList = yield Downloads.getList(Downloads.PUBLIC);
+  let downloads = yield publicList.getAll();
+  for (let download of downloads) {
+    yield publicList.remove(download);
+    yield download.finalize(true);
+  }
 
-  let updateFormHistory = new Promise((resolve, reject) => {
+  yield new Promise((resolve, reject) => {
     FormHistory.update({op: "remove"}, {
       handleCompletion(reason) {
         if (!reason) {
           resolve();
         }
       },
-
       handleError(error) {
         do_throw("Error occurred updating form history: " + error);
         reject(error);
@@ -1018,8 +959,7 @@ function blankSlate() {
     });
   });
 
-  return Promise.all([
-    PlacesTestUtils.clearHistory(), deleteDownloads, updateFormHistory]);
+  yield PlacesTestUtils.clearHistory();
 }
 
 /**
@@ -1043,13 +983,10 @@ function boolPrefIs(aPrefName, aExpectedVal, aMsg) {
  *         The path of the download to check
  * @return True if the download exists, false otherwise
  */
-function downloadExists(aPath)
-{
-  return Task.spawn(function() {
-    let publicList = yield Downloads.getList(Downloads.PUBLIC);
-    let listArray = yield publicList.getAll();
-    throw new Task.Result(listArray.some(i => i.target.path == aPath));
-  });
+function* downloadExists(aPath) {
+  let publicList = yield Downloads.getList(Downloads.PUBLIC);
+  let listArray = yield publicList.getAll();
+  return listArray.some(i => i.target.path == aPath);
 }
 
 /**
@@ -1060,12 +997,12 @@ function downloadExists(aPath)
  * @param aShouldBeCleared
  *        True if each download should be cleared, false otherwise
  */
-function ensureDownloadsClearedState(aDownloadIDs, aShouldBeCleared) {
+function* ensureDownloadsClearedState(aDownloadIDs, aShouldBeCleared) {
   let niceStr = aShouldBeCleared ? "no longer" : "still";
-  aDownloadIDs.forEach(function (id) {
+  for (let id of aDownloadIDs) {
     is((yield downloadExists(id)), !aShouldBeCleared,
        "download " + id + " should " + niceStr + " exist");
-  });
+  }
 }
 
 /**
