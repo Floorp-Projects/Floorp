@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window title="Test for WorkerDebugger with suspended workers"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript" src="dom_worker_helper.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    const WORKER_URL = "WorkerDebugger_suspended_worker.js";
+    const DEBUGGER_URL = BASE_URL + "WorkerDebugger_suspended_debugger.js";
+
+    function test() {
+      Task.spawn(function* () {
+        SimpleTest.waitForExplicitFinish();
+
+        info("Create a worker, wait for its debugger to be registered, and " +
+             "initialize it.");
+        let promise = waitForRegister(WORKER_URL, DEBUGGER_URL);
+        let worker = new Worker(WORKER_URL);
+        let dbg = yield promise;
+
+        info("Send a request to the worker. This should cause both the " +
+             "worker and the worker debugger to send a response.");
+        promise = waitForMultiple([
+          waitForWorkerMessage(worker, "worker"),
+          waitForDebuggerMessage(dbg, "debugger")
+        ]);
+        worker.postMessage("ping");
+        yield promise;
+
+        info("Suspend the workers for this window, and send another request " +
+             "to the worker. This should cause only the worker debugger to " +
+             "send a response.");
+        let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIDOMWindowUtils);
+        windowUtils.suspendTimeouts();
+        function onmessage() {
+          ok(false, "The worker should not send a response.");
+        };
+        worker.addEventListener("message", onmessage);
+        promise = waitForDebuggerMessage(dbg, "debugger");
+        worker.postMessage("ping");
+        yield promise;
+        worker.removeEventListener("message", onmessage);
+
+        info("Resume the workers for this window. This should cause the " +
+             "worker to send a response to the previous request.");
+        promise = waitForWorkerMessage(worker, "worker");
+        windowUtils.resumeTimeouts();
+        yield promise;
+
+        SimpleTest.finish();
+      });
+    }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+  <label id="test-result"/>
+</window>

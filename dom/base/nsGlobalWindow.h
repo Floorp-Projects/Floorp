@@ -445,8 +445,10 @@ public:
   virtual already_AddRefed<nsISupports> SaveWindowState() override;
   virtual nsresult RestoreWindowState(nsISupports *aState) override;
   virtual void SuspendTimeouts(uint32_t aIncrease = 1,
-                               bool aFreezeChildren = true) override;
-  virtual nsresult ResumeTimeouts(bool aThawChildren = true) override;
+                               bool aFreezeChildren = true,
+                               bool aFreezeWorkers = true) override;
+  virtual nsresult ResumeTimeouts(bool aThawChildren = true,
+                                  bool aThawWorkers = true) override;
   virtual uint32_t TimeoutSuspendCount() override;
   virtual nsresult FireDelayedDOMEvents() override;
   virtual bool IsFrozen() const override
