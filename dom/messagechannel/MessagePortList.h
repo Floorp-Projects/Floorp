@@ -66,7 +66,7 @@ public:
     return mPorts[aIndex];
   }
 
-private:
+public:
   nsCOMPtr<nsISupports> mOwner;
   nsTArray<nsRefPtr<MessagePort>> mPorts;
 };
