@@ -23,8 +23,8 @@ add_task(function*() {
   let widget = new CSSFilterEditorWidget(container, "grayscale(0%) url(test.svg)");
 
   const filters = widget.el.querySelector("#filters");
-  const grayscale = filters.children[0],
-        url = filters.children[1];
+  const grayscale = filters.children[0];
+  const url = filters.children[1];
 
   info("Test label-dragging on number-type filters without modifiers");
   widget._mouseDown({
@@ -40,7 +40,8 @@ add_task(function*() {
     shiftKey: false
   });
   let expected = DEFAULT_VALUE_MULTIPLIER * 12;
-  is(widget.getValueAt(0), `${expected}%`,
+  is(widget.getValueAt(0),
+     `${expected}%`,
      "Should update value correctly without modifiers");
 
   info("Test label-dragging on number-type filters with alt");
@@ -51,7 +52,8 @@ add_task(function*() {
   });
 
   expected = expected + SLOW_VALUE_MULTIPLIER * 8;
-  is(widget.getValueAt(0), `${expected}%`,
+  is(widget.getValueAt(0),
+     `${expected}%`,
      "Should update value correctly with alt key");
 
   info("Test label-dragging on number-type filters with shift");
@@ -62,7 +64,8 @@ add_task(function*() {
   });
 
   expected = expected + FAST_VALUE_MULTIPLIER * 5;
-  is(widget.getValueAt(0), `${expected}%`,
+  is(widget.getValueAt(0),
+     `${expected}%`,
      "Should update value correctly with shift key");
 
   info("Test releasing mouse and dragging again");
@@ -83,7 +86,8 @@ add_task(function*() {
   });
 
   expected = expected + DEFAULT_VALUE_MULTIPLIER * 5;
-  is(widget.getValueAt(0), `${expected}%`,
+  is(widget.getValueAt(0),
+     `${expected}%`,
      "Should reset multiplier to default");
 
   info("Test value ranges");
@@ -95,7 +99,8 @@ add_task(function*() {
   });
 
   expected = GRAYSCALE_MAX;
-  is(widget.getValueAt(0), `${expected}%`,
+  is(widget.getValueAt(0),
+     `${expected}%`,
      "Shouldn't allow values higher than max");
 
   widget._mouseMove({
@@ -105,7 +110,8 @@ add_task(function*() {
   });
 
   expected = GRAYSCALE_MIN;
-  is(widget.getValueAt(0), `${expected}%`,
+  is(widget.getValueAt(0),
+     `${expected}%`,
      "Shouldn't allow values less than min");
 
   widget._mouseUp();
@@ -127,6 +133,7 @@ add_task(function*() {
     shiftKey: true
   });
 
-  is(widget.getValueAt(1), "chrome://devtools/content/shared/widgets/test.svg",
+  is(widget.getValueAt(1),
+     "test.svg",
      "Label-dragging on string-type filters shouldn't affect their value");
 });

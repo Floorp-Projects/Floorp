@@ -131,8 +131,7 @@ function* testPropertyChange6(inspector, ruleView, testElement) {
     "Added a property");
   validateTextProp(rule.textProps[4], true, "background",
                    "red url(\"chrome://branding/content/about-logo.png\") repeat scroll 0% 0%",
-                   "shortcut property correctly set",
-                   "#F00 url(\"chrome://branding/content/about-logo.png\") repeat scroll 0% 0%");
+                   "shortcut property correctly set");
 }
 
 function* changeElementStyle(testElement, style, inspector) {
@@ -141,8 +140,7 @@ function* changeElementStyle(testElement, style, inspector) {
   yield onRefreshed;
 }
 
-function validateTextProp(aProp, aEnabled, aName, aValue, aDesc,
-    valueSpanText) {
+function validateTextProp(aProp, aEnabled, aName, aValue, aDesc) {
   is(aProp.enabled, aEnabled, aDesc + ": enabled.");
   is(aProp.name, aName, aDesc + ": name.");
   is(aProp.value, aValue, aDesc + ": value.");
@@ -151,5 +149,5 @@ function validateTextProp(aProp, aEnabled, aName, aValue, aDesc,
     aDesc + ": enabled checkbox.");
   is(aProp.editor.nameSpan.textContent, aName, aDesc + ": name span.");
   is(aProp.editor.valueSpan.textContent,
-    valueSpanText || aValue, aDesc + ": value span.");
+    aValue, aDesc + ": value span.");
 }

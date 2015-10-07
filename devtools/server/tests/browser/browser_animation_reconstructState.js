@@ -7,28 +7,19 @@
 // Check that, even though the AnimationPlayerActor only sends the bits of its
 // state that change, the front reconstructs the whole state everytime.
 
-const {AnimationsFront} = require("devtools/server/actors/animation");
-const {InspectorFront} = require("devtools/server/actors/inspector");
-
 add_task(function*() {
-  yield addTab(MAIN_DOMAIN + "animation.html");
+  let {client, walker, animations} =
+    yield initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
-  initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
-  let inspector = InspectorFront(client, form);
-  let walker = yield inspector.getWalker();
-  let front = AnimationsFront(client, form);
-
-  yield playerHasCompleteStateAtAllTimes(walker, front);
+  yield playerHasCompleteStateAtAllTimes(walker, animations);
 
   yield closeDebuggerClient(client);
   gBrowser.removeCurrentTab();
 });
 
-function* playerHasCompleteStateAtAllTimes(walker, front) {
+function* playerHasCompleteStateAtAllTimes(walker, animations) {
   let node = yield walker.querySelector(walker.rootNode, ".simple-animation");
-  let [player] = yield front.getAnimationPlayersForNode(node);
+  let [player] = yield animations.getAnimationPlayersForNode(node);
   yield player.ready();
 
   // Get the list of state key names from the initialstate.
