@@ -79,6 +79,7 @@
 #include "mozilla/plugins/PPluginWidgetParent.h"
 #include "../plugins/ipc/PluginWidgetParent.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/unused.h"
@@ -285,16 +286,23 @@ nsFrameLoader::SwitchProcessAndLoadURI(nsIURI* aURI)
   MutableTabContext context;
   nsCOMPtr<mozIApplication> ownApp = GetOwnApp();
   nsCOMPtr<mozIApplication> containingApp = GetContainingApp();
+  OriginAttributes attrs = OriginAttributes();
+  attrs.mInBrowser = OwnerIsBrowserFrame();
 
-  bool tabContextUpdated = true;
+  // Get the AppId from ownApp
+  uint32_t appId = nsIScriptSecurityManager::NO_APP_ID;
   if (ownApp) {
-    tabContextUpdated = context.SetTabContextForAppFrame(ownApp, containingApp);
-  } else if (OwnerIsBrowserFrame()) {
-    // The |else| above is unnecessary; OwnerIsBrowserFrame() implies !ownApp.
-    tabContextUpdated = context.SetTabContextForBrowserFrame(containingApp);
-  } else {
-    tabContextUpdated = context.SetTabContextForNormalFrame();
+    nsresult rv = ownApp->GetLocalId(&appId);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_STATE(appId != nsIScriptSecurityManager::NO_APP_ID);
+  } else if (containingApp) {
+    nsresult rv = containingApp->GetLocalId(&appId);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_STATE(appId != nsIScriptSecurityManager::NO_APP_ID);
   }
+  attrs.mAppId = appId;
+
+  bool tabContextUpdated = context.SetTabContext(ownApp, containingApp, attrs);
   NS_ENSURE_STATE(tabContextUpdated);
 
   nsCOMPtr<Element> ownerElement = mOwnerContent;
@@ -2271,16 +2279,24 @@ nsFrameLoader::TryRemoteBrowser()
   MutableTabContext context;
   nsCOMPtr<mozIApplication> ownApp = GetOwnApp();
   nsCOMPtr<mozIApplication> containingApp = GetContainingApp();
+  OriginAttributes attrs = OriginAttributes();
+  attrs.mInBrowser = OwnerIsBrowserFrame();
+
+  // Get the AppId from ownApp
+  uint32_t appId = nsIScriptSecurityManager::NO_APP_ID;
+  if (ownApp) {
+    nsresult rv = ownApp->GetLocalId(&appId);
+    NS_ENSURE_SUCCESS(rv, false);
+    NS_ENSURE_TRUE(appId != nsIScriptSecurityManager::NO_APP_ID, false);
+  } else if (containingApp) {
+    nsresult rv = containingApp->GetLocalId(&appId);
+    NS_ENSURE_SUCCESS(rv, false);
+    NS_ENSURE_TRUE(appId != nsIScriptSecurityManager::NO_APP_ID, false);
+  }
+  attrs.mAppId = appId;
 
   bool rv = true;
-  if (ownApp) {
-    rv = context.SetTabContextForAppFrame(ownApp, containingApp);
-  } else if (OwnerIsBrowserFrame()) {
-    // The |else| above is unnecessary; OwnerIsBrowserFrame() implies !ownApp.
-    rv = context.SetTabContextForBrowserFrame(containingApp);
-  } else {
-    rv = context.SetTabContextForNormalFrame();
-  }
+  rv = context.SetTabContext(ownApp, containingApp, attrs);
   NS_ENSURE_TRUE(rv, false);
 
   nsCOMPtr<Element> ownerElement = mOwnerContent;
