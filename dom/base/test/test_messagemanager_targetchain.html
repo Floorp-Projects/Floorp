@@ -104,11 +104,13 @@
       var principal = SpecialPowers.wrap(document).nodePrincipal;
       SpecialPowers.pushPermissions([
         { "type": "browser", "allow": 1, "context": { "url": principal.URI.spec,
-                                                      "appId": principal.appId,
-                                                      "isInBrowserElement": false }},
+                                                      "originAttributes": {
+                                                        "appId": principal.appId
+                                                      }}},
         { "type": "browser", "allow": 1, "context": { "url": principal.URI.spec,
-                                                      "appId": principal.appId,
-                                                      "isInBrowserElement": true }}
+                                                      "originAttributes": {
+                                                        "appId": principal.appId,
+                                                        "inBrowser": true }}}
       ], () => {
         SpecialPowers.pushPrefEnv({
           "set": [
