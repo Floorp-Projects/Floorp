@@ -7,12 +7,14 @@
 // Tests that the rule view search filter works properly in the computed list
 // for color values.
 
-const SEARCH = "background-color: #F3F3F3";
+// The color format here is chosen to match the default returned by
+// CssColor.toString.
+const SEARCH = "background-color: rgb(243, 243, 243)";
 
 const TEST_URI = `
   <style type="text/css">
     .testclass {
-      background: #F3F3F3 none repeat scroll 0% 0%;
+      background: rgb(243, 243, 243) none repeat scroll 0% 0%;
     }
   </style>
   <div class="testclass">Styled Node</h1>

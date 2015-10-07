@@ -27,7 +27,7 @@ function checkColorCycling(container, inspector) {
   let valueNode = container.querySelector(".ruleview-color");
   let win = inspector.sidebar.getWindowForTab("ruleview");
 
-  // Hex (default)
+  // Hex
   is(valueNode.textContent, "#F00", "Color displayed as a hex value.");
 
   // HSL
@@ -48,15 +48,16 @@ function checkColorCycling(container, inspector) {
   is(valueNode.textContent, "red",
                             "Color displayed as a color name.");
 
-  // "Authored" (currently the computed value)
-  EventUtils.synthesizeMouseAtCenter(swatch,
-                                     {type: "mousedown", shiftKey: true}, win);
-  is(valueNode.textContent, "rgb(255, 0, 0)",
-                            "Color displayed as an RGB value.");
-
-  // Back to hex
+  // "Authored"
   EventUtils.synthesizeMouseAtCenter(swatch,
                                      {type: "mousedown", shiftKey: true}, win);
   is(valueNode.textContent, "#F00",
-                            "Color displayed as hex again.");
+                            "Color displayed as an authored value.");
+
+  // One more click skips hex, because it is the same as authored, and
+  // instead goes back to HSL.
+  EventUtils.synthesizeMouseAtCenter(swatch,
+                                     {type: "mousedown", shiftKey: true}, win);
+  is(valueNode.textContent, "hsl(0, 100%, 50%)",
+                            "Color displayed as an HSL value again.");
 }

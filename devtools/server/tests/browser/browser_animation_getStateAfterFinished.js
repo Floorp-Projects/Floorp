@@ -10,18 +10,9 @@
 // See devtools/server/actors/animation.js |getPlayerIndex| for more
 // information.
 
-const {AnimationsFront} = require("devtools/server/actors/animation");
-const {InspectorFront} = require("devtools/server/actors/inspector");
-
 add_task(function*() {
-  yield addTab(MAIN_DOMAIN + "animation.html");
-
-  initDebuggerServer();
-  let client = new DebuggerClient(DebuggerServer.connectPipe());
-  let form = yield connectDebuggerClient(client);
-  let inspector = InspectorFront(client, form);
-  let walker = yield inspector.getWalker();
-  let front = AnimationsFront(client, form);
+  let {client, walker, animations} =
+    yield initAnimationsFrontForUrl(MAIN_DOMAIN + "animation.html");
 
   info("Retrieve a non animated node");
   let node = yield walker.querySelector(walker.rootNode, ".not-animated");
@@ -33,14 +24,14 @@ add_task(function*() {
 
   info("Get the list of players, by the time this executes, the first, " +
        "short, animation should have ended.");
-  let players = yield front.getAnimationPlayersForNode(node);
+  let players = yield animations.getAnimationPlayersForNode(node);
   if (players.length === 3) {
     info("The short animation hasn't ended yet, wait for a bit.");
     // The animation lasts for 500ms, so 1000ms should do it.
     yield new Promise(resolve => setTimeout(resolve, 1000));
 
     info("And get the list again");
-    players = yield front.getAnimationPlayersForNode(node);
+    players = yield animations.getAnimationPlayersForNode(node);
   }
 
   is(players.length, 2, "2 animations remain on the node");
